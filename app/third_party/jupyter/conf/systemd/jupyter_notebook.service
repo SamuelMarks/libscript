@@ -1,0 +1,25 @@
+[Unit]
+Description=Job that runs the jupyter_notebook daemon
+
+[Service]
+User=${JUPYTER_NOTEBOOK_SERVICE_USER}
+Group=${JUPYTER_NOTEBOOK_SERVICE_GROUP}
+Environment=VIRTUAL_ENV=${JUPYTER_NOTEBOOK_VENV}
+Environment=PYTHONPATH=${JUPYTER_NOTEBOOK_VENV}
+WorkingDirectory=${JUPYTER_NOTEBOOK_VENV}
+ExecStart=${JUPYTER_NOTEBOOK_VENV}/bin/jupyter notebook \
+  --NotebookApp.notebook_dir='${JUPYTER_NOTEBOOK_DIR}' \
+  --NotebookApp.ip='${SERVICE_IP}' \
+  --NotebookApp.port='${SERVICE_PORT}' \
+  --Session.username='${JUPYTER_NOTEBOOK_USERNAME}' \
+  --NotebookApp.password='${JUPYTER_NOTEBOOK_PASSWORD}' \
+  --NotebookApp.password_required=True \
+  --NotebookApp.allow_remote_access=True \
+  --NotebookApp.iopub_data_rate_limit='2147483647' \
+  --no-browser \
+  --NotebookApp.open_browser=False
+#  --NotebookApp.certfile='/etc/letsencrypt/live/REPLACE_WITH_DNS_NAME/fullchain.pem' \
+#   --NotebookApp.keyfile='/etc/letsencrypt/live/REPLACE_WITH_DNS_NAME/privkey.pem' \
+
+[Install]
+WantedBy=multi-user.target

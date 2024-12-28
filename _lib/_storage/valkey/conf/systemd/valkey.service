@@ -1,0 +1,11 @@
+[Unit]
+Description=Valkey
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/valkey-server /etc/valkey.conf
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
