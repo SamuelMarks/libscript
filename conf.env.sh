@@ -3,7 +3,7 @@
 realpath -- "${0}"
 set -xv
 guard='H_'"$(realpath -- "${0}" | sed 's/[^a-zA-Z0-9_]/_/g')"
-if env | grep -qF "${guard}"; then return ; fi
+if env | grep -qF "${guard}"'=1'; then return ; fi
 export "${guard}"=1
 
 export BUILD_DIR="${BUILD_DIR:-./build}"
@@ -17,7 +17,7 @@ export NODEJS_VERSION="${NODEJS_VERSION:-lts}"
 export PYTHON_INSTALL="${PYTHON_INSTALL:-1}"
 export PYTHON_VERSION="${PYTHON_VERSION:-3.10}"
 
-export PYTHON_VENV="${PYTHON_VERSION:-/opt/venvs/venv-${PYTHON_VERSION}}"
+export PYTHON_VENV="${PYTHON_VENV:-/opt/venvs/venv-${PYTHON_VERSION}}"
 
 export POSTGRESQL_INSTALL="${POSTGRESQL_INSTALL:-1}"
 export POSTGRESQL_VERSION="${POSTGRESQL_VERSION:-17}"
@@ -33,6 +33,7 @@ export NGINX_DAEMOM="${NGINX_DAEMOM:-1}"
 
 export CELERY_INSTALL="${CELERY_INSTALL:-1}"
 export CELERY_DAEMOM="${CELERY_DAEMOM:-1}"
+export CELERY_VENV="${CELERY_VENV:-${PYTHON_VENV}}"
 
 export WWWROOT_INSTALL="${WWWROOT_INSTALL:-1}"
 
