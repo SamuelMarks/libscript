@@ -1,12 +1,12 @@
 #!/bin/sh
 
 realpath -- "${0}"
-set -xv
+set -x
 guard='H_'"$(sed 's/[^a-zA-Z0-9_]/_/g' "${0}")"
 if env | grep -qF "${guard}"'=1'; then return ; fi
 export "${guard}"=1 
 if [ -n "${ZSH_VERSION}" ] || [ -n "${BASH_VERSION}" ]; then
-  set -xveuo pipefail
+  set -xeuo pipefail
 fi
 DIR="$( dirname -- "${0}" )"
 export DIR
