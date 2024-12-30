@@ -6,11 +6,12 @@ guard='H_'"$(realpath -- "${0}" | sed 's/[^a-zA-Z0-9_]/_/g')"
 if env | grep -qF "${guard}"'=1'; then return ; fi
 export "${guard}"=1
 
-if [ -n "${ZSH_VERSION}" ] || [ -n "${BASH_VERSION}" ]; then
+if [ "${ZSH_VERSION+x}" ] || [ "${BASH_VERSION+x}" ]; then
+  # shellcheck disable=SC3040
   set -xeuo pipefail
 fi
 
-if [ -z ${UNAME+x} ]; then
+if [ -z ${UNAME+s} ]; then
     UNAME="$(uname)"
     case "${UNAME}" in
     'Darwin')

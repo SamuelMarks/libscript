@@ -20,8 +20,9 @@ Deployment scripts.
 All the aforementioned advantages, plus:
 
   - [SunOS](https://en.wikipedia.org/wiki/SunOS) / [illumos](https://en.wikipedia.org/wiki/Illumos) are useful for native usage on mainframes, both native and in virtualised / zones / container systems like [SmartOS](https://en.wikipedia.org/wiki/SmartOS);
-  - [*BSD](https://en.wikipedia.org/wiki/Comparison_of_BSD_operating_systems) useful in jails, and natively
+  - [*BSD](https://en.wikipedia.org/wiki/Comparison_of_BSD_operating_systems) useful in jails, and natively;
   - [OS/360](https://en.wikipedia.org/wiki/OS/360_and_successors) useful natively (expected as a proof-of-concept only);
+  - [DOS](https://en.wikipedia.org/wiki/Comparison_of_DOS_operating_systems) useful natively (expected as a proof-of-concept only);
   - [z/OS](https://en.wikipedia.org/wiki/Z/OS) for native mainframe deployment.
 
 ## Usage
