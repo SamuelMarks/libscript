@@ -1,31 +1,24 @@
 #!/bin/sh
 
-if [ -n "${BASH_VERSION}" ]; then
-  # shellcheck disable=SC3028 disable=SC3054
+set -feu
+if [ ! -z "${BASH_VERSION+x}" ]; then
   this_file="${BASH_SOURCE[0]}"
   # shellcheck disable=SC3040
-  set -xeuo pipefail
-elif [ -n "${ZSH_VERSION}" ]; then
+  set -o pipefail
+elif [ ! -z "${ZSH_VERSION+x}" ]; then
   # shellcheck disable=SC2296
   this_file="${(%):-%x}"
   # shellcheck disable=SC3040
-  set -xeuo pipefail
+  set -o pipefail
 else
   this_file="${0}"
-  printf '\nargv[%d] = "%s"\n' "0" "${0}";
-  printf 'argv[%d] = "%s"\n' "1" "${1}";
-  printf 'argv[%d] = "%s"\n\n' "2" "${2}";
 fi
+set -feu
 
-guard='H_'"$(sed 's/[^a-zA-Z0-9_]/_/g' "${this_file}")"
-
-if env | grep -qF "${guard}"'=1'; then
-  echo 'EXIT      setup.sh guard '"${guard}"
-  return ;
-else
-  echo 'CONTINUE  setup.sh guard '"${guard}"
-fi
+guard='H_'"$(printf '%s' "${this_file}" | sed 's/[^a-zA-Z0-9_]/_/g')"
+test "${guard}" && return
 export "${guard}"=1
+
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 export DIR
 
