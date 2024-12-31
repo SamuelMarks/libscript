@@ -1,6 +1,5 @@
 #!/bin/sh
 
-set -feu
 if [ ! -z "${BASH_VERSION+x}" ]; then
   this_file="${BASH_SOURCE[0]}"
   # shellcheck disable=SC3040
@@ -16,7 +15,12 @@ fi
 set -feu
 
 guard='H_'"$(printf '%s' "${this_file}" | sed 's/[^a-zA-Z0-9_]/_/g')"
-test "${guard}" && return
+if test "${guard}" ; then
+  echo '[STOP]     processing '"${this_file}"
+  return
+else
+  echo '[CONTINUE] processing '"${this_file}"
+fi
 export "${guard}"=1
 
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)

@@ -15,11 +15,17 @@ else
 fi
 set -feu
 
-guard='H_'"$(realpath -- "${this_file}" | sed 's/[^a-zA-Z0-9_]/_/g')"
-test "${guard}" && return
+guard='H_'"$(printf '%s' "${this_file}" | sed 's/[^a-zA-Z0-9_]/_/g')"
+if test "${guard}" ; then
+  echo '[STOP]     processing '"${this_file}"
+  return
+else
+  echo '[CONTINUE] processing '"${this_file}"
+fi
 export "${guard}"=1
 
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+export DIR
 SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "$d" ]; then echo "$d"; else echo './'"$d"; fi)}"
 
 # shellcheck disable=SC1091
