@@ -1,1 +1,1 @@
-./_lib/_common/setup.sh
+../../../_lib/_common/setup.sh
