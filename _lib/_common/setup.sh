@@ -12,20 +12,20 @@ elif [ -n "${ZSH_VERSION}" ]; then
   set -xeuo pipefail
 else
   this_file="${0}"
-  printf 'argv[%d] = "%s"\n' "0" "${0}";
+  printf '\nargv[%d] = "%s"\n' "0" "${0}";
   printf 'argv[%d] = "%s"\n' "1" "${1}";
-  printf 'argv[%d] = "%s"\n' "2" "${2}";
+  printf 'argv[%d] = "%s"\n\n' "2" "${2}";
 fi
 
-guard='H_'"$(realpath -- "${this_file}" | sed 's/[^a-zA-Z0-9_]/_/g')"
+guard='H_'"$(sed 's/[^a-zA-Z0-9_]/_/g' "${this_file}")"
 
-if env | grep -qF "${guard}"'=1'; then return ; fi
+if env | grep -qF "${guard}"'=1'; then
+  echo 'EXIT      setup.sh guard '"${guard}"
+  return ;
+else
+  echo 'CONTINUE  setup.sh guard '"${guard}"
+fi
 export "${guard}"=1
-
-if [ "${ZSH_VERSION+x}" ] || [ "${BASH_VERSION+x}" ]; then
-  # shellcheck disable=SC3040
-  set -xeuo pipefail
-fi
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 export DIR
 

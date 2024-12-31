@@ -20,10 +20,10 @@ fi
 guard='H_'"$(realpath -- "${this_file}" | sed 's/[^a-zA-Z0-9_]/_/g')"
 
 if env | grep -qF "${guard}"'=1'; then
-  echo 'YES jupyter/setup_generic.sh guard '"${guard}"
+  echo 'EXIT      jupyter/setup_generic.sh guard '"${guard}"
   return ;
 else
-  echo 'NO  jupyter/setup_generic.sh guard '"${guard}"
+  echo 'CONTINUE  jupyter/setup_generic.sh guard '"${guard}"
 fi
 export "${guard}"=1
 
