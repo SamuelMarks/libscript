@@ -1,16 +1,26 @@
 #!/bin/sh
 
-realpath -- "${0}"
-set -xv
-
-if [ "${ZSH_VERSION+x}" ] || [ "${BASH_VERSION+x}" ]; then
+if [ -n "${BASH_VERSION}" ]; then
+  # shellcheck disable=SC3028 disable=SC3054
+  this_file="${BASH_SOURCE[0]}"
   # shellcheck disable=SC3040
   set -xeuo pipefail
+elif [ -n "${ZSH_VERSION}" ]; then
+  # shellcheck disable=SC2296
+  this_file="${(%):-%x}"
+  # shellcheck disable=SC3040
+  set -xeuo pipefail
+else
+  this_file="${0}"
+  printf 'argv[%d] = "%s"\n' "0" "${0}";
+  printf 'argv[%d] = "%s"\n' "1" "${1}";
+  printf 'argv[%d] = "%s"\n' "2" "${2}";
 fi
 
-SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")}"
-DIR="$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${0}" )")" && pwd)"
+DIR="$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${this_file}" )")" && pwd)"
+SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$DIR}"
 export DIR
+export SCRIPT_ROOT_DIR
 
 # shellcheck disable=SC1091
 . "${DIR}"'/_lib/_common/os_info.sh'

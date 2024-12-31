@@ -1,18 +1,34 @@
 #!/bin/sh
 
-realpath -- "${0}"
-set -x
-guard='H_'"$(realpath -- "${0}" | sed 's/[^a-zA-Z0-9_]/_/g')"
-if env | grep -qF "${guard}"'=1'; then return ; fi
-export "${guard}"=1 
-
-if [ "${ZSH_VERSION+x}" ] || [ "${BASH_VERSION+x}" ]; then
+if [ -n "${BASH_VERSION}" ]; then
+  # shellcheck disable=SC3028 disable=SC3054
+  this_file="${BASH_SOURCE[0]}"
   # shellcheck disable=SC3040
   set -xeuo pipefail
+elif [ -n "${ZSH_VERSION}" ]; then
+  # shellcheck disable=SC2296
+  this_file="${(%):-%x}"
+  # shellcheck disable=SC3040
+  set -xeuo pipefail
+else
+  this_file="${0}"
+  printf 'argv[%d] = "%s"\n' "0" "${0}";
+  printf 'argv[%d] = "%s"\n' "1" "${1}";
+  printf 'argv[%d] = "%s"\n' "2" "${2}";
 fi
 
-DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
-SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${0}" )" )" )")}"
+guard='H_'"$(realpath -- "${this_file}" | sed 's/[^a-zA-Z0-9_]/_/g')"
+
+if env | grep -qF "${guard}"'=1'; then
+  echo 'YES jupyter/setup_generic.sh guard '"${guard}"
+  return ;
+else
+  echo 'NO  jupyter/setup_generic.sh guard '"${guard}"
+fi
+export "${guard}"=1
+
+DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "$d" ]; then echo "$d"; else echo './'"$d"; fi)}"
 
 # shellcheck disable=SC1091
 . "${SCRIPT_ROOT_DIR}"'/conf.env.sh'
@@ -39,8 +55,9 @@ if [ -d '/etc/systemd/system' ]; then
 
   service_name='jupyter_notebook'"${JUPYTER_NOTEBOOK_IP}"'_'"${JUPYTER_NOTEBOOK_PORT}"
   service='/etc/systemd/system/'"${service_name}"'.service'
-  envsubst < "${DIR}"'/conf/systemd/jupyter_notebook.service' > '/tmp/'"${service_name}"
-  "${PRIV}" mv '/tmp/'"${service_name}" "${service}"
+  tmp="${TMPDIR:-/tmp}"'/'"${service_name}"
+  envsubst < "${DIR}"'/conf/systemd/jupyter_notebook.service' > "${tmp}"
+  "${PRIV}" mv "${tmp}" "${service}"
   "${PRIV}" chmod 0644 "${service}"
   "${PRIV}" systemctl stop "${service_name}" || true
   "${PRIV}" systemctl daemon-reload
