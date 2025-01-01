@@ -29,23 +29,14 @@ esac
 STACK="${STACK}${this_file}"':'
 export STACK
 
-git_get() {
-    repo="${0}"
-    target="${1}"
-    branch="${2:-''}"
-    GIT_DIR_="${target}"'/.git'
-    if [ -d "${GIT_DIR_}" ]; then
-        if [ "${branch}" = '' ]; then
-            GIT_WORK_TREE="${target}" GIT_DIR="${GIT_DIR_}" git pull
-        else
-            GIT_WORK_TREE="${target}" GIT_DIR="${GIT_DIR_}" git fetch origin "${branch}":"${branch}"
-        fi
-    else
-        mkdir -p "${target}"
-        if [ "${branch}" = '' ]; then
-            git clone --depth=1 --single-branch "${repo}" "${target}"
-        else
-            git clone --depth=1 --single-branch --branch "${branch}" "${repo}" "${target}"
-        fi
-    fi
-}
+if [ ! -z "${PRIV+x}" ]; then
+  true;
+elif [ "$(id -u)" = "0" ]; then
+  PRIV='';
+elif command -v sudo >/dev/null 2>&1 ; then
+  PRIV='sudo';
+else
+  >&2 echo "Error: This script must be run as root or with sudo privileges."
+  exit 1
+fi
+export PRIV;

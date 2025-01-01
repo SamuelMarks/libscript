@@ -27,9 +27,18 @@ All the aforementioned advantages, plus:
 
 ## Usage
 
-    ./install.sh
+Run from the same directory as this [README.md](README.md) file.
+Alternatively, set `SCRIPT_NAME` to the correct `install.sh` location and run it anywhere.
 
-See [`conf.env.sh`](./conf.env.sh) for options that can be overriden by setting environment variables.
+    $ # Disable all options (so don't install anything)
+    $ . ~/repos/deploy-sh/conf-no-all.env.sh
+    $ # Enable installation of *just* Jupyter Notebook
+    $ export JUPYTER_NOTEBOOK_INSTALL=1 
+    $ # Set script location. Only use $(pwd) if its in your current working directory, otherwise specify.
+    $ export SCRIPT_NAME="$(pwd)"'/install.sh'
+    $ . "${SCRIPT_NAME}"
+
+See [`conf.env.sh`](./conf.env.sh) for options that can be override by setting environment variables.
 
 ### Docker usage
 

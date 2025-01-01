@@ -21,7 +21,7 @@ set -feu
 STACK="${STACK:-:}"
 case "${STACK}" in
   *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s" found in "%s"\n' "${this_file}" "${STACK}"
+    printf '[STOP]     processing "%s"\n' "${this_file}"
     return ;;
   *)
     printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
@@ -37,8 +37,13 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/common.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
+
 # shellcheck disable=SC1091
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_os/_apt/apt.sh'
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/priv.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
@@ -47,8 +52,6 @@ SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_git/git.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
-
-get_priv
 
 apt_depends git build-essential libsystemd-dev
 

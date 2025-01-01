@@ -21,28 +21,20 @@ set -feu
 STACK="${STACK:-:}"
 case "${STACK}" in
   *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s" found in "%s"\n' "${this_file}" "${STACK}"
+    printf '[STOP]     processing "%s"\n' "${this_file}"
     return ;;
   *)
     printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
 esac
 STACK="${STACK}${this_file}"':'
 export STACK
-export DEBIAN_FRONTEND='noninteractive'
 
-get_priv() {
-    if [ -n "${PRIV}" ]; then
-      true;
-    elif [ "$(id -u)" = "0" ]; then
-      PRIV='';
-    elif command -v sudo >/dev/null 2>&1; then
-      PRIV='sudo';
-    else
-      >&2 echo "Error: This script must be run as root or with sudo privileges."
-      exit 1
-    fi
-    export PRIV;
-}
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/priv.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
+
+export DEBIAN_FRONTEND='noninteractive'
 
 is_installed() {
     # dpkg-query --showformat='${Version}' --show "${1}" 2>/dev/null;
@@ -57,7 +49,6 @@ apt_depends() {
         fi
     done
     if [ -n "${pkgs2install}" ]; then
-        get_priv
         "${PRIV}" apt-get install -y -- "${pkgs2install}"
     fi
 }

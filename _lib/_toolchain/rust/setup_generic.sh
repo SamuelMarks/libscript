@@ -21,13 +21,16 @@ set -feu
 STACK="${STACK:-:}"
 case "${STACK}" in
   *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s" found in "%s"\n' "${this_file}" "${STACK}"
+    printf '[STOP]     processing "%s"\n' "${this_file}"
     return ;;
   *)
     printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
 esac
 STACK="${STACK}${this_file}"':'
 export STACK
+
+DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+export DIR
 
 SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "$d" ]; then echo "$d"; else echo './'"$d"; fi)}"
 

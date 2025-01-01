@@ -21,13 +21,16 @@ set -feu
 STACK="${STACK:-:}"
 case "${STACK}" in
   *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s" found in "%s"\n' "${this_file}" "${STACK}"
+    printf '[STOP]     processing "%s"\n' "${this_file}"
     return ;;
   *)
     printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
 esac
 STACK="${STACK}${this_file}"':'
 export STACK
+
+DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+export DIR
 
 SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "$d" ]; then echo "$d"; else echo './'"$d"; fi)}"
 
@@ -38,21 +41,18 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-get_priv() {
-    if [ -n "${PRIV}" ]; then
-      true;
-    elif [ "$(id -u)" = "0" ]; then
-      PRIV='';
-    elif cmd_avail sudo; then
-      PRIV='sudo';
-    else
-      >&2 echo "Error: This script must be run as root or with sudo privileges."
-      exit 1
-    fi
-    export PRIV;
-}
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_os/_apt/apt.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
+
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/priv.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
 
 ensure_available() {
+  # TODO: use https://repology.org to match names
   case "${PKG_MGR}" in
     'apk') apk add "${0}" ;;
     'apt-get') apt_depends "${0}" ;;

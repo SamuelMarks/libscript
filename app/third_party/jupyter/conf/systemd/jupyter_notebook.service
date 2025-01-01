@@ -9,8 +9,8 @@ Environment=PYTHONPATH=${JUPYTER_NOTEBOOK_VENV}
 WorkingDirectory=${JUPYTER_NOTEBOOK_VENV}
 ExecStart=${JUPYTER_NOTEBOOK_VENV}/bin/jupyter notebook \
   --NotebookApp.notebook_dir='${JUPYTER_NOTEBOOK_DIR}' \
-  --NotebookApp.ip='${SERVICE_IP}' \
-  --NotebookApp.port='${SERVICE_PORT}' \
+  --NotebookApp.ip='${JUPYTER_NOTEBOOK_IP}' \
+  --NotebookApp.port='${JUPYTER_NOTEBOOK_PORT}' \
   --Session.username='${JUPYTER_NOTEBOOK_USERNAME}' \
   --NotebookApp.password='${JUPYTER_NOTEBOOK_PASSWORD}' \
   --NotebookApp.password_required=True \

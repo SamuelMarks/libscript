@@ -21,7 +21,7 @@ set -feu
 STACK="${STACK:-:}"
 case "${STACK}" in
   *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s" found in "%s"\n' "${this_file}" "${STACK}"
+    printf '[STOP]     processing "%s"\n' "${this_file}"
     return ;;
   *)
     printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;

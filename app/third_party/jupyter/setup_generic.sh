@@ -21,7 +21,7 @@ set -feu
 STACK="${STACK:-:}"
 case "${STACK}" in
   *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s" found in "%s"\n' "${this_file}" "${STACK}"
+    printf '[STOP]     processing "%s"\n' "${this_file}"
     return ;;
   *)
     printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
@@ -30,7 +30,6 @@ STACK="${STACK}${this_file}"':'
 export STACK
 
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
-export DIR
 SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "$d" ]; then echo "$d"; else echo './'"$d"; fi)}"
 
 SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/conf.env.sh'
@@ -43,12 +42,10 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/common.sh'
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/priv.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
-
-get_priv
 
 if [ ! -d "${JUPYTER_NOTEBOOK_VENV}" ]; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/python/setup.sh'
@@ -57,11 +54,13 @@ if [ ! -d "${JUPYTER_NOTEBOOK_VENV}" ]; then
   . "${SCRIPT_NAME}"
 
   "${PRIV}" mkdir -p "${JUPYTER_NOTEBOOK_VENV}"
-  "${PRIV}" chown -R "$USER":"$GROUP" "${JUPYTER_NOTEBOOK_VENV}"
+  "${PRIV}" chown -R "${USER}":"${GROUP:-$USER}" "${JUPYTER_NOTEBOOK_VENV}"
   uv venv --python "${PYTHON_VERSION}" "${JUPYTER_NOTEBOOK_VENV}"
+  "${JUPYTER_NOTEBOOK_VENV}"'/bin/python' -m ensurepip
+  "${JUPYTER_NOTEBOOK_VENV}"'/bin/python' -m pip install -U pip
+  "${JUPYTER_NOTEBOOK_VENV}"'/bin/python' -m pip install -U setuptools wheel
+  "${JUPYTER_NOTEBOOK_VENV}"'/bin/python' -m pip install -U jupyter notebook
 fi
-
-get_priv
 
 "${PRIV}" mkdir -p "${JUPYTER_NOTEBOOK_DIR}"
 "${PRIV}" chown -R "${JUPYTER_NOTEBOOK_SERVICE_USER}":"${JUPYTER_NOTEBOOK_SERVICE_GROUP}" "${JUPYTER_NOTEBOOK_DIR}" "${JUPYTER_NOTEBOOK_VENV}"
@@ -75,7 +74,7 @@ if [ -d '/etc/systemd/system' ]; then
   service_name='jupyter_notebook'"${JUPYTER_NOTEBOOK_IP}"'_'"${JUPYTER_NOTEBOOK_PORT}"
   service='/etc/systemd/system/'"${service_name}"'.service'
   tmp="${TMPDIR:-/tmp}"'/'"${service_name}"
-  envsubst < "${DIR}"'/conf/systemd/jupyter_notebook.service' > "${tmp}"
+  envsubst < "${SCRIPT_ROOT_DIR}"'/app/third_party/jupyter/conf/systemd/jupyter_notebook.service' > "${tmp}"
   "${PRIV}" mv "${tmp}" "${service}"
   "${PRIV}" chmod 0644 "${service}"
   "${PRIV}" systemctl stop "${service_name}" || true

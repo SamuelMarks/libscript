@@ -21,7 +21,7 @@ set -feu
 STACK="${STACK:-:}"
 case "${STACK}" in
   *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s" found in "%s"\n' "${this_file}" "${STACK}"
+    printf '[STOP]     processing "%s"\n' "${this_file}"
     return ;;
   *)
     printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
@@ -29,6 +29,12 @@ esac
 STACK="${STACK}${this_file}"':'
 export STACK
 
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/common.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
+
+ensure_available curl
 curl -LsSf https://astral.sh/uv/install.sh | sh
 . "$HOME"'/.local/bin/env'
 uv python install "${PYTHON_VERSION}"
