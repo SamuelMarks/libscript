@@ -36,12 +36,21 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/common.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
+
+get_priv
+
 if [ ! -d "${PYTHON_VENV}" ]; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/python/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 
+  "${PRIV}" mkdir -p "${PYTHON_VENV}"
+  "${PRIV}" chown -R "$USER":"$GROUP" "${PYTHON_VENV}"
   uv venv --python "${PYTHON_VERSION}" "${PYTHON_VENV}"
 fi
 
@@ -49,7 +58,7 @@ if [ -d '/etc/systemd/system' ]; then
   if [ ! -d '/home/celery/' ]; then
     mkdir -p /var/run/celery /var/log/celery
     adduser "${JUPYTER_NOTEBOOK_SERVICE_USER}" --home '/home/'"${JUPYTER_NOTEBOOK_SERVICE_USER}"'/' --gecos ''
-    chown -R celery:celery /var/run/celery /var/log/celery
+    chown -R celery:celery /var/run/celery /var/log/celery "${PYTHON_VENV}"
   fi
 
   service_name='celery'

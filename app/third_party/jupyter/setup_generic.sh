@@ -43,12 +43,21 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/common.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
+
+get_priv
+
 if [ ! -d "${JUPYTER_NOTEBOOK_VENV}" ]; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/python/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 
+  "${PRIV}" mkdir -p "${JUPYTER_NOTEBOOK_VENV}"
+  "${PRIV}" chown -R "$USER":"$GROUP" "${JUPYTER_NOTEBOOK_VENV}"
   uv venv --python "${PYTHON_VERSION}" "${JUPYTER_NOTEBOOK_VENV}"
 fi
 
@@ -61,6 +70,7 @@ if [ -d '/etc/systemd/system' ]; then
   if [ ! -d '/home/'"${JUPYTER_NOTEBOOK_SERVICE_USER}"'/' ]; then
     adduser "${JUPYTER_NOTEBOOK_SERVICE_USER}" --home '/home/'"${JUPYTER_NOTEBOOK_SERVICE_USER}"'/' --gecos ''
   fi
+  "${PRIV}" chown -R "${JUPYTER_NOTEBOOK_SERVICE_USER}":"${JUPYTER_NOTEBOOK_SERVICE_USER}" "${JUPYTER_NOTEBOOK_VENV}"
 
   service_name='jupyter_notebook'"${JUPYTER_NOTEBOOK_IP}"'_'"${JUPYTER_NOTEBOOK_PORT}"
   service='/etc/systemd/system/'"${service_name}"'.service'

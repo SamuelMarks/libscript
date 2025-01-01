@@ -30,5 +30,5 @@ STACK="${STACK}${this_file}"':'
 export STACK
 
 curl -LsSf https://astral.sh/uv/install.sh | sh
-
+. "$HOME"'/.local/bin/env'
 uv python install "${PYTHON_VERSION}"

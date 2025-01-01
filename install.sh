@@ -35,33 +35,51 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 if [ "${POSTGRESQL_INSTALL:-0}" -eq 1 ]; then
-  "${SCRIPT_ROOT_DIR}"'/_lib/_storage/postgres/setup.sh'
+  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_storage/postgres/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
 fi
-if [ -n "${DATABASE_URL+s}" ]; then 
+if [ ! -z "${DATABASE_URL+x}" ]; then
   >&2 printf 'DATABASE_URL must be set\n';
   exit 3
 fi
 
 if [ "${VALKEY_INSTALL:-0}" -eq 1 ]; then
-  "${SCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/setup.sh'
+  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
 fi
-if [ -n "${REDIS_URL+s}" ]; then 
+if [ ! -z "${REDIS_URL+x}" ]; then
   >&2 printf 'REDIS_URL must be set\n';
   exit 3
 fi
 
 if [ "${RUST_INSTALL:-0}" -eq 1 ]; then
-  "${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/rust/setup.sh'
+  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/rust/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
 fi
 if [ "${NODEJS_INSTALL:-0}" -eq 1 ]; then
-  "${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/nodejs/setup.sh'
+  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/nodejs/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
 fi
 if [ "${PYTHON_INSTALL:-0}" -eq 1 ]; then
-  "${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/python/setup.sh'
+  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/python/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
 fi
 
 if [ "${NGINX_INSTALL:-0}" -eq 1 ]; then
-  "${SCRIPT_ROOT_DIR}"'/_lib/_server/nginx/setup.sh'
+  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_server/nginx/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
 fi
 
 # # uses `WWWROOT`
@@ -70,10 +88,16 @@ fi
 # fi
 
 if [ "${JUPYTER_NOTEBOOK_INSTALL:-0}" -eq 1 ]; then
-  "${SCRIPT_ROOT_DIR}"'/app/third_party/jupyter/setup.sh'
+  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/app/third_party/jupyter/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
 fi
 
 # uses `PYTHON_VENV` and `REDIS_URL`
 if [ "${CELERY_INSTALL:-0}" -eq 1 ]; then
-  "${SCRIPT_ROOT_DIR}"'/app/_storage/celery/setup.sh'
+  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/app/_storage/celery/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
 fi
