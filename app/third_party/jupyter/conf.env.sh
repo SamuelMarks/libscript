@@ -1,7 +1,9 @@
 #!/bin/sh
 
 # shellcheck disable=SC2236
-if [ ! -z "${BASH_VERSION+x}" ]; then
+if [ ! -z "${SCRIPT_NAME+x}" ]; then
+  this_file="${SCRIPT_NAME}"
+elif [ ! -z "${BASH_VERSION+x}" ]; then
   # shellcheck disable=SC3028 disable=SC3054
   this_file="${BASH_SOURCE[0]}"
   # shellcheck disable=SC3040
@@ -16,14 +18,17 @@ else
 fi
 set -feu
 
-guard='H_'"$(printf '%s' "${this_file}" | sed 's/[^a-zA-Z0-9_]/_/g')"
-if test "${guard}" ; then
-  echo '[STOP]     processing '"${this_file}"
-  return
-else
-  echo '[CONTINUE] processing '"${this_file}"
-fi
-export "${guard}"=1
+STACK="${STACK:-:}"
+case "${STACK}" in
+  *':'"${this_file}"':'*)
+    printf '[STOP]     processing "%s" found in "%s"\n' "${this_file}" "${STACK}"
+    return ;;
+  *)
+    printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+esac
+STACK="${STACK}${this_file}"':'
+export STACK
+
 export PYTHON_VERSION="${PYTHON_VERSION:-3.10}"
 
 export JUPYTER_NOTEBOOK_DIR="${JUPYTER_NOTEBOOK_DIR:-/opt/notebooks}"

@@ -1,7 +1,9 @@
 #!/bin/sh
 
 # shellcheck disable=SC2236
-if [ ! -z "${BASH_VERSION+x}" ]; then
+if [ ! -z "${SCRIPT_NAME+x}" ]; then
+  this_file="${SCRIPT_NAME}"
+elif [ ! -z "${BASH_VERSION+x}" ]; then
   # shellcheck disable=SC3028 disable=SC3054
   this_file="${BASH_SOURCE[0]}"
   # shellcheck disable=SC3040
@@ -19,10 +21,18 @@ set -feu
 SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${this_file}" )")" && pwd)}"
 export SCRIPT_ROOT_DIR
 
-# shellcheck disable=SC1091
-. "${SCRIPT_ROOT_DIR}"'/_lib/_common/os_info.sh'
-# shellcheck disable=SC1091
-. "${SCRIPT_ROOT_DIR}"'/conf.env.sh'
+STACK="${STACK:-:}${this_file}"':'
+export STACK
+
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/os_info.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
+
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/conf.env.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
 
 if [ "${POSTGRESQL_INSTALL:-0}" -eq 1 ]; then
   "${SCRIPT_ROOT_DIR}"'/_lib/_storage/postgres/setup.sh'

@@ -1,7 +1,9 @@
 #!/bin/sh
 
 # shellcheck disable=SC2236
-if [ ! -z "${BASH_VERSION+x}" ]; then
+if [ ! -z "${SCRIPT_NAME+x}" ]; then
+  this_file="${SCRIPT_NAME}"
+elif [ ! -z "${BASH_VERSION+x}" ]; then
   # shellcheck disable=SC3028 disable=SC3054
   this_file="${BASH_SOURCE[0]}"
   # shellcheck disable=SC3040
@@ -16,23 +18,29 @@ else
 fi
 set -feu
 
-guard='H_'"$(printf '%s' "${this_file}" | sed 's/[^a-zA-Z0-9_]/_/g')"
-if test "${guard}" ; then
-  echo '[STOP]     processing '"${this_file}"
-  return
-else
-  echo '[CONTINUE] processing '"${this_file}"
-fi
-export "${guard}"=1
+STACK="${STACK:-:}"
+case "${STACK}" in
+  *':'"${this_file}"':'*)
+    printf '[STOP]     processing "%s" found in "%s"\n' "${this_file}" "${STACK}"
+    return ;;
+  *)
+    printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+esac
+STACK="${STACK}${this_file}"':'
+export STACK
 
 SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "$d" ]; then echo "$d"; else echo './'"$d"; fi)}"
 
-# shellcheck disable=SC1091
-. "${SCRIPT_ROOT_DIR}"'/conf.env.sh'
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/conf.env.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
 
 if [ ! -d "${PYTHON_VENV}" ]; then
-  # shellcheck disable=SC1091
-  . "${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/python/setup.sh'
+  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/python/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
 
   uv venv --python "${PYTHON_VERSION}" "${PYTHON_VENV}"
 fi

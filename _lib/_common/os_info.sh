@@ -1,7 +1,9 @@
 #!/bin/sh
 
 # shellcheck disable=SC2236
-if [ ! -z "${BASH_VERSION+x}" ]; then
+if [ ! -z "${SCRIPT_NAME+x}" ]; then
+  this_file="${SCRIPT_NAME}"
+elif [ ! -z "${BASH_VERSION+x}" ]; then
   # shellcheck disable=SC3028 disable=SC3054
   this_file="${BASH_SOURCE[0]}"
   # shellcheck disable=SC3040
@@ -15,15 +17,18 @@ else
   this_file="${0}"
 fi
 set -feu
+echo '[os_info] this_file='"${this_file}"
 
-guard='H_'"$(printf '%s' "${this_file}" | sed 's/[^a-zA-Z0-9_]/_/g')"
-if test "${guard}" ; then
-  echo '[STOP]     processing '"${this_file}"
-  return
-else
-  echo '[CONTINUE] processing '"${this_file}"
-fi
-export "${guard}"=1
+STACK="${STACK:-:}"
+case "${STACK}" in
+  *':'"${this_file}"':'*)
+    printf '[STOP]     processing "%s" found in "%s"\n' "${this_file}" "${STACK}"
+    return ;;
+  *)
+    printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+esac
+STACK="${STACK}${this_file}"':'
+export STACK
 
 if [ -z ${UNAME+s} ]; then
     UNAME="$(uname)"
@@ -37,7 +42,7 @@ if [ -z ${UNAME+s} ]; then
         ;;
     'Linux')
         ID="$(. /etc/os-release; printf '%s' "${ID}")"
-        ID_LIKE="$(. /etc/os-release; printf '%s' "${ID_LIKE}")"
+        ID_LIKE="$(. /etc/os-release; printf '%s' "${ID_LIKE-}")"
         export NGINX_SERVERS_ROOT='/etc/nginx/conf.d/sites-available'
         case "${ID}" in
         'alpine') export PKG_MGR='apk' ;;
@@ -73,6 +78,7 @@ if [ -z ${UNAME+s} ]; then
         exit 3
         ;;
     esac
+    echo 'UNAME='"${UNAME}"'; TARGET_OS='"${TARGET_OS}"
     export UNAME
     export TARGET_OS
 fi
