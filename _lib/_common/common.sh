@@ -56,7 +56,12 @@ ensure_available() {
   case "${PKG_MGR}" in
     'apk') apk add "${0}" ;;
     'apt-get') apt_depends "${0}" ;;
+    'brew') brew install "${0}" ;;
     'dnf') dnf install "${0}" ;;
+    'pacman') pacman -S "${0}" ;;
+    'pkg') pkg install "${0}" ;;
+    'pkgutil') pkgutil -i "${0}" ;;
+    'zypper') zypper install "${0}" ;;
     *) >&2 printf 'Unimplemented, package manager %s\n' "${PKG_MGR}"
   esac
 }

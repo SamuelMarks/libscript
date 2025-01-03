@@ -1,0 +1,110 @@
+{
+  "name": "my_installer",
+  "description": "Example installer JSON",
+  "version": "0.0.1",
+  "url": "https://github.com/SamuelMarks/deploy-sh",
+  "license": "Apache-2.0 OR MIT OR CC0",
+  "scripts_root": "${SCRIPT_ROOT_DIR}",
+  "wwwroot": [
+    {
+      "name": "example.com",
+      "path": "./my_symlinked_wwwroot",
+      "https": {
+        "provider": "letsencrypt"
+      },
+      "builder": [
+        {
+          "shell": "*",
+          "commands": [
+            "npm i -g @angular/cli",
+            "ng build --configuration production"
+          ],
+          "output": [
+            "./dist/my-www"
+          ]
+        }
+      ]
+    }
+  ],
+  "dependencies": {
+    "required": {
+      "databases": [
+        {
+          "name": "PostgreSQL",
+          "version": ">17",
+          "env": "POSTGRES_URL",
+          "target_env": [
+            "DATABASE_URL"
+          ]
+        },
+        {
+          "name": "Valkey",
+          "version": "*",
+          "env": "REDIS_URL",
+          "target_env": [
+            "REDIS_URL",
+            "VALKEY_URL"
+          ]
+        }
+      ],
+      "toolchains": [
+        {
+          "name": "NodeJS",
+          "version": "lts",
+          "env": "NODEJS_INSTALL_DIR"
+        },
+        {
+          "name": "Python",
+          "version": "3.10",
+          "env": "PYTHON_INSTALL_DIR"
+        },
+        {
+          "name": "Rust",
+          "version": "nightly",
+          "env": "RUST_INSTALL_DIR"
+        }
+      ],
+      "servers": [
+        {
+          "location": "https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold",
+          "builder": [
+            {
+              "shell": "*",
+              "commands": [
+                "cargo build --release"
+              ],
+              "output": [
+                "./target/release/serve-actix-diesel-auth-scaffold"
+              ]
+            }
+          ],
+          "daemon": {
+            "os_native": true,
+            "env": [
+              "POSTGRES_URL",
+              "REDIS_URL"
+            ]
+          }
+        },
+        {
+          "name": "JupyterHub",
+          "daemon": {
+            "os_native": true
+          }
+        }
+      ]
+    },
+    "optional": {
+      "databases": [
+        {
+          "name": "RabbitMQ",
+          "version": "*",
+          "env": "AMQP_URL"
+        }
+      ]
+    }
+  },
+  "log_server": {
+    "optional": true
+  }
+}
