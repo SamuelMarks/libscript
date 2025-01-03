@@ -33,7 +33,7 @@ Alternatively, set `SCRIPT_NAME` to the correct `install.sh` location and run it
     $ # Disable all options (so don't install anything)
     $ . ~/repos/deploy-sh/conf-no-all.env.sh
     $ # Enable installation of *just* Jupyter Notebook
-    $ export JUPYTER_NOTEBOOK_INSTALL=1 
+    $ export JUPYTERHUB_INSTALL=1 
     $ # Set script location. Only use $(pwd) if its in your current working directory, otherwise specify.
     $ export SCRIPT_NAME="$(pwd)"'/install.sh'
     $ . "${SCRIPT_NAME}"

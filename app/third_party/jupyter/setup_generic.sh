@@ -47,34 +47,42 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-if [ ! -d "${JUPYTER_NOTEBOOK_VENV}" ]; then
+if [ ! -d "${JUPYTERHUB_VENV}" ]; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/python/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 
-  "${PRIV}" mkdir -p "${JUPYTER_NOTEBOOK_VENV}"
-  "${PRIV}" chown -R "${USER}":"${GROUP:-$USER}" "${JUPYTER_NOTEBOOK_VENV}"
-  uv venv --python "${PYTHON_VERSION}" "${JUPYTER_NOTEBOOK_VENV}"
-  "${JUPYTER_NOTEBOOK_VENV}"'/bin/python' -m ensurepip
-  "${JUPYTER_NOTEBOOK_VENV}"'/bin/python' -m pip install -U pip
-  "${JUPYTER_NOTEBOOK_VENV}"'/bin/python' -m pip install -U setuptools wheel
-  "${JUPYTER_NOTEBOOK_VENV}"'/bin/python' -m pip install -U jupyter notebook
+  "${PRIV}" mkdir -p "${JUPYTERHUB_VENV}"
+  "${PRIV}" chown -R "${USER}":"${GROUP:-$USER}" "${JUPYTERHUB_VENV}"
+  uv venv --python "${PYTHON_VERSION}" "${JUPYTERHUB_VENV}"
+  "${JUPYTERHUB_VENV}"'/bin/python' -m ensurepip
+  "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U pip
+  "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U setuptools wheel
+  "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U jupyverse[auth,jupyterlab] fps-jupyterlab fps-auth jupyter-collaboration oauthenticator jupyterhub-nativeauthenticator
+  # "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U jupyter notebook pyright python-language-server python-lsp-server
 fi
 
-"${PRIV}" mkdir -p "${JUPYTER_NOTEBOOK_DIR}"
-"${PRIV}" chown -R "${JUPYTER_NOTEBOOK_SERVICE_USER}":"${JUPYTER_NOTEBOOK_SERVICE_GROUP}" "${JUPYTER_NOTEBOOK_DIR}" "${JUPYTER_NOTEBOOK_VENV}"
+if ! cmd_avail npm ; then
+  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/nodejs/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+fi
+npm install -g configurable-http-proxy
+"${PRIV}" mkdir -p "${JUPYTERHUB_NOTEBOOK_DIR}"
+"${PRIV}" chown -R "${JUPYTERHUB_SERVICE_USER}":"${JUPYTERHUB_SERVICE_GROUP}" "${JUPYTERHUB_NOTEBOOK_DIR}" "${JUPYTERHUB_VENV}"
 
 if [ -d '/etc/systemd/system' ]; then
-  if [ ! -d '/home/'"${JUPYTER_NOTEBOOK_SERVICE_USER}"'/' ]; then
-    adduser "${JUPYTER_NOTEBOOK_SERVICE_USER}" --home '/home/'"${JUPYTER_NOTEBOOK_SERVICE_USER}"'/' --gecos ''
+  if [ ! -d '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' ]; then
+    adduser "${JUPYTERHUB_SERVICE_USER}" --home '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' --gecos ''
   fi
-  "${PRIV}" chown -R "${JUPYTER_NOTEBOOK_SERVICE_USER}":"${JUPYTER_NOTEBOOK_SERVICE_USER}" "${JUPYTER_NOTEBOOK_VENV}"
+  "${PRIV}" chown -R "${JUPYTERHUB_SERVICE_USER}":"${JUPYTERHUB_SERVICE_USER}" "${JUPYTERHUB_VENV}"
 
-  service_name='jupyter_notebook'"${JUPYTER_NOTEBOOK_IP}"'_'"${JUPYTER_NOTEBOOK_PORT}"
+  service_name='jupyterhub_'"${JUPYTERHUB_IP}"'_'"${JUPYTERHUB_PORT}"
   service='/etc/systemd/system/'"${service_name}"'.service'
   tmp="${TMPDIR:-/tmp}"'/'"${service_name}"
-  envsubst < "${SCRIPT_ROOT_DIR}"'/app/third_party/jupyter/conf/systemd/jupyter_notebook.service' > "${tmp}"
+  envsubst < "${SCRIPT_ROOT_DIR}"'/app/third_party/jupyter/conf/systemd/jupyverse.service' > "${tmp}"
   "${PRIV}" mv "${tmp}" "${service}"
   "${PRIV}" chmod 0644 "${service}"
   "${PRIV}" systemctl stop "${service_name}" || true
@@ -84,12 +92,12 @@ elif [ -d '/Library/LaunchDaemons' ]; then
   >&2 echo 'TODO: macOS service'
   exit 3
 else
-  "${JUPYTER_NOTEBOOK_VENV}"'/bin/jupyter' notebook \
-    --NotebookApp.notebook_dir="${JUPYTER_NOTEBOOK_DIR}" \
-    --NotebookApp.ip="${JUPYTER_NOTEBOOK_IP}" \
-    --NotebookApp.port="${JUPYTER_NOTEBOOK_PORT}" \
-    --Session.username="${JUPYTER_NOTEBOOK_USERNAME}" \
-    --NotebookApp.password="${JUPYTER_NOTEBOOK_PASSWORD}" \
+  "${JUPYTERHUB_VENV}"'/bin/jupyter' notebook \
+    --NotebookApp.notebook_dir="${JUPYTERHUB_NOTEBOOK_DIR}" \
+    --NotebookApp.ip="${JUPYTERHUB_IP}" \
+    --NotebookApp.port="${JUPYTERHUB_PORT}" \
+    --Session.username="${JUPYTERHUB_USERNAME}" \
+    --NotebookApp.password="${JUPYTERHUB_PASSWORD}" \
     --NotebookApp.password_required=True \
     --NotebookApp.allow_remote_access=True \
     --NotebookApp.iopub_data_rate_limit=2147483647 \

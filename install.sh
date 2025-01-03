@@ -87,7 +87,7 @@ fi
 # 
 # fi
 
-if [ "${JUPYTER_NOTEBOOK_INSTALL:-0}" -eq 1 ]; then
+if [ "${JUPYTERHUB_INSTALL:-0}" -eq 1 ]; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/app/third_party/jupyter/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090

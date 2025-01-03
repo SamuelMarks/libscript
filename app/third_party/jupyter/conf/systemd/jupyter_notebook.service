@@ -2,17 +2,17 @@
 Description=Job that runs the jupyter_notebook daemon
 
 [Service]
-User=${JUPYTER_NOTEBOOK_SERVICE_USER}
-Group=${JUPYTER_NOTEBOOK_SERVICE_GROUP}
-Environment=VIRTUAL_ENV=${JUPYTER_NOTEBOOK_VENV}
-Environment=PYTHONPATH=${JUPYTER_NOTEBOOK_VENV}
-WorkingDirectory=${JUPYTER_NOTEBOOK_VENV}
-ExecStart=${JUPYTER_NOTEBOOK_VENV}/bin/jupyter notebook \
-  --NotebookApp.notebook_dir='${JUPYTER_NOTEBOOK_DIR}' \
-  --NotebookApp.ip='${JUPYTER_NOTEBOOK_IP}' \
-  --NotebookApp.port='${JUPYTER_NOTEBOOK_PORT}' \
-  --Session.username='${JUPYTER_NOTEBOOK_USERNAME}' \
-  --NotebookApp.password='${JUPYTER_NOTEBOOK_PASSWORD}' \
+User=${JUPYTERHUB_SERVICE_USER}
+Group=${JUPYTERHUB_SERVICE_GROUP}
+Environment=VIRTUAL_ENV=${JUPYTERHUB_VENV}
+Environment=PYTHONPATH=${JUPYTERHUB_VENV}
+WorkingDirectory=${JUPYTERHUB_VENV}
+ExecStart=${JUPYTERHUB_VENV}/bin/jupyter notebook \
+  --NotebookApp.notebook_dir='${JUPYTERHUB_NOTEBOOK_DIR}' \
+  --NotebookApp.ip='${JUPYTERHUB_IP}' \
+  --NotebookApp.port='${JUPYTERHUB_PORT}' \
+  --Session.username='${JUPYTERHUB_USERNAME}' \
+  --NotebookApp.password='${JUPYTERHUB_PASSWORD}' \
   --NotebookApp.password_required=True \
   --NotebookApp.allow_remote_access=True \
   --NotebookApp.iopub_data_rate_limit='2147483647' \

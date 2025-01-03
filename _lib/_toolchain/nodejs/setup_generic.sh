@@ -39,5 +39,37 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-curl -fsSL https://raw.githubusercontent.com/tj/n/master/bin/n | sh bash -s install lts
-npm i -g npm
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/common.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
+
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/os_info.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
+
+# TODO: latest version dance function and wrap this up
+DOWNLOAD_DIR=${DOWNLOAD_DIR:-${SCRIPT_ROOT_DIR}/Downloads}
+version='v1.38.1'
+if ! [ -f "${DOWNLOAD_DIR}"'/bin/fnm' ] ; then
+  ensure_available curl unzip
+  os="$(echo "${TARGET_OS}" | tr '[:upper:]' '[:lower:]')"
+  case "${os}" in
+    'macos'*) ;;
+    *) os='linux' ;;
+  esac
+  archive='fnm-'"${os}"'.zip'
+  mkdir -p "${DOWNLOAD_DIR}"'/bin'
+  previous_wd="$(pwd)"
+  cd "${DOWNLOAD_DIR}"
+  # https://github.com/Schniz/fnm/releases/download/v1.38.1/fnm-linux.zip
+  # https://github.com/Schniz/fnm/releases/download/v1.38.1/fnm-debian.zip
+  echo 'https://github.com/Schniz/fnm/releases/download/'${version}'/'"${archive}"
+  curl -OL 'https://github.com/Schniz/fnm/releases/download/'${version}'/'"${archive}"
+  unzip "${archive}"
+  mv fnm "${DOWNLOAD_DIR}"'/bin/'
+  cd "${previous_wd}"
+fi
+"${DOWNLOAD_DIR}"'/bin/fnm' install '22.12.0'
+# ${NODEJS_VERSION}

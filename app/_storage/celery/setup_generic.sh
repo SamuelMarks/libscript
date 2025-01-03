@@ -58,7 +58,7 @@ fi
 if [ -d '/etc/systemd/system' ]; then
   if [ ! -d '/home/celery/' ]; then
     mkdir -p /var/run/celery /var/log/celery
-    adduser "${JUPYTER_NOTEBOOK_SERVICE_USER}" --home '/home/'"${JUPYTER_NOTEBOOK_SERVICE_USER}"'/' --gecos ''
+    adduser "${JUPYTERHUB_SERVICE_USER}" --home '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' --gecos ''
     chown -R celery:celery /var/run/celery /var/log/celery "${PYTHON_VENV}"
   fi
 

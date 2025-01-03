@@ -1,0 +1,31 @@
+[Unit]
+Description=Job that runs the jupyverse (replacement for Jupyter Notebook) daemon
+
+[Service]
+#User=${JUPYTERHUB_SERVICE_USER}
+#Group=${JUPYTERHUB_SERVICE_GROUP}
+User=root
+Group=root
+Environment=VIRTUAL_ENV=${JUPYTERHUB_VENV}
+Environment=PYTHONPATH=${JUPYTERHUB_VENV}
+WorkingDirectory=${JUPYTERHUB_VENV}
+#  --set frontend.collaborative=true \
+#  --set auth.mode=user \
+ExecStart=${JUPYTERHUB_VENV}/bin/jupyterhub \
+  --Spawner.notebook_dir='${JUPYTERHUB_NOTEBOOK_DIR}' \
+  --LocalProcessSpawner.notebook_dir='${JUPYTERHUB_NOTEBOOK_DIR}' \
+  --SimpleLocalProcessSpawner.notebook_dir='${JUPYTERHUB_NOTEBOOK_DIR}' \
+  --FileContentsManager.preferred_dir='${JUPYTERHUB_NOTEBOOK_DIR}' \
+  --ip='${JUPYTERHUB_IP}' \
+  --port='${JUPYTERHUB_PORT}' \
+  --LocalAuthenticator.create_system_users=True \
+  --JupyterHub.authenticator_class='jupyterhub.auth.DummyAuthenticator' \
+  --DummyAuthenticator.allow_all=True \
+  --allow_existing_users=True
+#  --DummyAuthenticator.password="${JUPYTERHUB_PASSWORD}" \
+#   --c.JupyterHub.db_url='sqlite:////opt/jupyter/jupyter.sqlite' \
+#  --NotebookApp.certfile='/etc/letsencrypt/live/REPLACE_WITH_DNS_NAME/fullchain.pem' \
+#   --NotebookApp.keyfile='/etc/letsencrypt/live/REPLACE_WITH_DNS_NAME/privkey.pem' \
+
+[Install]
+WantedBy=multi-user.target

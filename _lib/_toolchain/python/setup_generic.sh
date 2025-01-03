@@ -35,6 +35,8 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 ensure_available curl
-curl -LsSf https://astral.sh/uv/install.sh | sh
+if [ ! -f "$HOME"'/.local/bin/uv' ]; then
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+fi
 . "$HOME"'/.local/bin/env'
 uv python install "${PYTHON_VERSION}"

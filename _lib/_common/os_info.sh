@@ -17,7 +17,6 @@ else
   this_file="${0}"
 fi
 set -feu
-echo '[os_info] this_file='"${this_file}"
 
 STACK="${STACK:-:}"
 case "${STACK}" in
