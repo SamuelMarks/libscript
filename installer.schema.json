@@ -1,0 +1,241 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Schema for install JSON file",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "url": {
+      "type": "string"
+    },
+    "license": {
+      "type": "string"
+    },
+    "scripts_root": {
+      "type": "string"
+    },
+    "wwwroot": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "https": {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "builder": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "shell": {
+                  "type": "string"
+                },
+                "commands": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "output": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "commands"
+              ]
+            }
+          }
+        },
+        "required": [
+          "name"
+        ]
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "properties": {
+        "required": {
+          "type": "object",
+          "properties": {
+            "databases": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "string"
+                  },
+                  "env": {
+                    "type": "string"
+                  },
+                  "target_env": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "version",
+                  "env"
+                ]
+              }
+            },
+            "toolchains": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "string"
+                  },
+                  "env": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "version",
+                  "env"
+                ]
+              }
+            },
+            "servers": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "location": {
+                    "type": "string"
+                  },
+                  "builder": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "shell": {
+                          "type": "string"
+                        },
+                        "commands": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "output": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "required": ["commands"]
+                    }
+                  },
+                  "daemon": {
+                    "type": "object",
+                    "properties": {
+                      "os_native": {
+                        "type": "boolean"
+                      },
+                      "env": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "os_native"
+                    ]
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "daemon"
+                ]
+              }
+            }
+          },
+          "required": []
+        },
+        "optional": {
+          "type": "object",
+          "properties": {
+            "databases": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "string"
+                  },
+                  "env": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "version",
+                  "env"
+                ]
+              }
+            }
+          },
+          "required": []
+        }
+      },
+      "required": []
+    },
+    "log_server": {
+      "type": "object",
+      "properties": {
+        "optional": {
+          "type": "boolean"
+        }
+      },
+      "required": []
+    }
+  },
+  "required": [
+    "name",
+    "scripts_root",
+    "dependencies"
+  ]
+}

@@ -17,6 +17,7 @@
           "shell": "*",
           "commands": [
             "npm i -g @angular/cli",
+            "npm i",
             "ng build --configuration production"
           ],
           "output": [
