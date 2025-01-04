@@ -32,7 +32,7 @@ export SCRIPT_NAME
 verbose=0
 all_deps=0
 help=0
-output_file='-'
+output_folder="${SCRIPT_ROOT_DIR}"'/tmp'
 
 while getopts ':a:f:h:o:v' opt; do
     case $opt in
@@ -40,7 +40,7 @@ while getopts ':a:f:h:o:v' opt; do
             verbose=$(expr "${verbose}" + 1) ;;
       (f)   filename=$OPTARG ;;
       (a)   all_deps=$OPTARG ;;
-      (o)   output_file=$OPTARG ;;
+      (o)   output_folder=$OPTARG ;;
       (h)   help=$OPTARG ;;
       (*) ;;
     esac
@@ -54,7 +54,7 @@ if [ "${help}" -ge 1 ]; then
   # shellcheck disable=SC2016
   >&2 printf 'Create install.sh from JSON.\n
 \t-f filename
-\t-o output file (use `-` or omit for stdout)
+\t-o output folder (defaults to ./tmp)
 \t-a whether to install all dependencies (required AND optional)
 \t-v verbosity (can be specified multiple times)
 \t-h show help text\n\n'
@@ -73,7 +73,8 @@ if [ -n "${remaining}" ]; then
   >&2 printf '[W] Extra arguments provided: %s\n' "${remaining}"
 fi
 
-export output_file
+mkdir -p "${output_folder}"
+export output_folder
 export all_deps
 
 parse_json "${filename}"
