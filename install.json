@@ -24,14 +24,15 @@
             "./dist/my-www"
           ]
         }
-      ]
+      ],
+      "env": "WWWROOT_example_com_INSTALL"
     }
   ],
   "dependencies": {
     "required": {
       "databases": [
         {
-          "name": "PostgreSQL",
+          "name": "POSTGRES",
           "version": ">17",
           "env": "POSTGRES_URL",
           "target_env": [
@@ -39,7 +40,7 @@
           ]
         },
         {
-          "name": "Valkey",
+          "name": "VALKEY",
           "version": "*",
           "env": "REDIS_URL",
           "target_env": [
@@ -50,17 +51,17 @@
       ],
       "toolchains": [
         {
-          "name": "NodeJS",
+          "name": "NODEJS",
           "version": "lts",
           "env": "NODEJS_INSTALL_DIR"
         },
         {
-          "name": "Python",
+          "name": "PYTHON",
           "version": "3.10",
           "env": "PYTHON_INSTALL_DIR"
         },
         {
-          "name": "Rust",
+          "name": "RUST",
           "version": "nightly",
           "env": "RUST_INSTALL_DIR"
         }

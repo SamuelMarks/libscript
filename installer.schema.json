@@ -68,10 +68,16 @@
                 "commands"
               ]
             }
+          },
+          "env": {
+            "type": "string"
+          },
+          "listen": {
+            "type": "string"
           }
         },
         "required": [
-          "name"
+          "name", "env"
         ]
       }
     },

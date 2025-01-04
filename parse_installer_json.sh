@@ -25,6 +25,7 @@ STACK="${STACK:-:}${this_file}"':'
 export STACK
 
 verbose="${verbose:-0}"
+all_deps="${all_deps:-0}"
 
 output_folder=${output_folder:-${SCRIPT_ROOT_DIR}/tmp}
 false_env_file="${output_folder}"'/false_env.sh'
@@ -32,9 +33,17 @@ true_env_file="${output_folder}"'/env.sh'
 install_file="${output_folder}"'/install_gen.sh'
 [ -d "${output_folder}" ] || mkdir -p "${output_folder}"
 prelude="$(cat "${SCRIPT_ROOT_DIR}"'/prelude.sh')"
-[ ! -f "${install_file}" ] && printf '%s\n' "${prelude}" > "${install_file}"
+[ ! -f "${install_file}" ] && printf '%s\n\n' "${prelude}" > "${install_file}"
 [ ! -f "${true_env_file}" ] && printf '#!/bin/sh\n\n' > "${true_env_file}"
 [ ! -f "${false_env_file}" ] && printf '#!/bin/sh\n\n' > "${false_env_file}"
+
+header_tpl='#############################\n#\t\t%s\t#\n#############################\n\n'
+wwwroot_header_req=0
+databases_header_req=0
+databases_header_opt=0
+toolchains_header_req=0
+toolchains_header_opt=0
+
 # Extra check in case a different `SCRIPT_ROOT_DIR` is found in the JSON
 if ! command -v jq >/dev/null 2>&1; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/jq/setup.sh'
@@ -52,8 +61,8 @@ update_generated_files() {
 
   {
     # shellcheck disable=SC2016
-    if [ "${dep_group_name}" = 'Required' ]; then
-      printf 'export %s="${%s?}"\n' "${env}" "${env}"
+    if [ "${dep_group_name}" = 'Required' ] || [ "${all_deps}" -ge 1 ]; then
+      printf 'export %s="${%s:-1}"\n' "${env}" "${env}"
     else
       printf 'export %s=0\n' "${env}"
     fi
@@ -77,7 +86,7 @@ parse_name() {
     name="$(jq -r '.name' "${JSON_FILE}")"
     rc="$?"
     export name
-    ${rc}
+    return "${rc}"
 }
 
 # parse the "description" field
@@ -136,14 +145,47 @@ parse_wwwroot_item() {
     www_json="${1}"
     name=$(printf '%s' "${www_json}" | jq -r '.name')
     path=$(printf '%s' "${www_json}" | jq -r '.path // empty')
+    env=$(printf '%s' "${www_json}" | jq -r '.env')
+    listen=$(printf '%s' "${www_json}" | jq -r '.listen // empty')
     https_provider=$(printf '%s' "${www_json}" | jq -r '.https.provider // empty')
+    vendor='nginx' # only supported one now
+
+    printf 'export %s="${%s:-1}"\n' "${env}" "${env}" >> "${true_env_file}"
+    printf 'export %s=0\n' "${env}" >> "${false_env_file}"
 
     if [ "${verbose}" -ge 3 ]; then
       printf 'wwwroot Item:\n'
       printf '  Name: %s\n' "${name}"
     fi
+    # clean_name="$(printf '%s' "${name}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
+    {
+      if [ "${wwwroot_header_req}" -lt 1 ]; then
+          wwwroot_header_req=1
+          # shellcheck disable=SC2059
+          printf "${header_tpl}" '      WWWROOT(s)      '
+      fi
+      printf 'if [ "${%s:-0}" -eq 1 ]; then\n' "${env}"
+      printf '  WWWROOT_NAME='"'"'%s'"'"'\n' "${name}"
+      printf '  WWWROOT_VENDOR='"'"'%s'"'"'\n' "${vendor}"
+      printf '  WWWROOT_PATH='"'"'%s'"'"'\n' "${path:-/}"
+      printf '  WWWROOT_LISTEN='"'"'%s'"'"'\n' "${listen:-80}"
+    } >> "${install_file}"
     [ "${verbose}" -ge 3 ] && [ -n "${path}" ] && printf '  Path: %s\n' "${path}"
-    [ "${verbose}" -ge 3 ] && [ -n "${https_provider}" ] && printf '  HTTPS Provider: %s\n' "${https_provider}"
+    if [ -n "${https_provider}" ]; then
+      printf '  WWWROOT_HTTPS_PROVIDER='"'"'%s'"'"'\n' "${https_provider}" >> "${install_file}"
+      [ "${verbose}" -ge 3 ] && printf '  HTTPS Provider: %s\n' "${https_provider}"
+    fi
+    {
+      printf '  if [ "${WWWROOT_VENDOR:-nginx}" = '"'"'nginx'"'"' ]; then\n'
+
+      printf '    SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'"'"'/_server/nginx/setup.sh'"'"'\n'
+      printf '    export SCRIPT_NAME\n'
+      printf '    # shellcheck disable=SC1090\n'
+      printf '    . "${SCRIPT_NAME}"\n'
+
+      printf '  fi\n'
+      printf 'fi\n\n'
+    } >> "${install_file}"
 
     parse_wwwroot_builders "${www_json}"
 }
@@ -217,6 +259,15 @@ parse_database_item() {
     [ "${verbose}" -ge 3 ] && printf '    Version: %s\n' "${version}"
     [ "${verbose}" -ge 3 ] && printf '    Env: %s\n' "${env}"
 
+    if [ "${dep_group_name}" = "Required" ] && [ "${databases_header_req}" -lt 1 ]; then
+        databases_header_req=1
+        # shellcheck disable=SC2059
+        printf "${header_tpl}" 'Database(s) [required]' >> "${install_file}"
+    elif [ "${databases_header_opt}" -lt 1 ]; then
+        databases_header_opt=1
+        # shellcheck disable=SC2059
+        printf "${header_tpl}" 'Database(s) [optional]' >> "${install_file}"
+    fi
     update_generated_files "${name}" "${version}" "${env}" '_lib/_storage' "${dep_group_name}"
 
     if [ -n "${target_env}" ]; then
@@ -249,6 +300,15 @@ parse_toolchain_item() {
     [ "${verbose}" -ge 3 ] && printf '    Version: %s\n' "${version}"
     [ "${verbose}" -ge 3 ] && printf '    Env: %s\n' "${env}"
 
+    if [ "${dep_group_name}" = "Required" ] && [ "${toolchains_header_req}" -lt 1 ]; then
+        toolchains_header_req=1
+        # shellcheck disable=SC2059
+        printf "${header_tpl}" 'Toolchain(s) [required]' >> "${install_file}"
+    elif [ "${toolchains_header_opt}" -lt 1 ]; then
+        toolchains_header_opt=1
+        # shellcheck disable=SC2059
+        printf "${header_tpl}" 'Toolchain(s) [optional]' >> "${install_file}"
+    fi
     update_generated_files "${name}" "${version}" "${env}" '_lib/_toolchain' "${dep_group_name}"
 }
 
@@ -339,12 +399,17 @@ parse_json() {
 
     check_required_fields
 
+    parse_name
+    parse_description || true
+    parse_version || true
+    parse_url || true
+    parse_license || true
     if [ "${verbose}" -ge 3 ]; then
-      printf 'Name: %s\n' "$(parse_name)"
-      printf 'Description: %s\n' "$(parse_description)"
-      printf 'Version: %s\n' "$(parse_version)"
-      printf 'URL: %s\n' "$(parse_url)"
-      printf 'License: %s\n' "$(parse_license)"
+      printf 'Name: %s\n' "${name}"
+      [ -n "${description}" ] && printf 'Description: %s\n' "${description}"
+      [ -n "${version}" ] && printf 'Version: %s\n' "${version}"
+      [ -n "${url}" ] && printf 'URL: %s\n' "${url}"
+      [ -n "${license}" ] && printf 'License: %s\n' "${license}"
     fi
 
     parse_scripts_root
