@@ -64,8 +64,9 @@ export JUPYTERHUB_INSTALL="${JUPYTERHUB_INSTALL:-1}"
 export JUPYTERHUB_NOTEBOOK_DIR="${JUPYTERHUB_NOTEBOOK_DIR:-/opt/notebooks}"
 export JUPYTERHUB_IP="${JUPYTERHUB_IP:-127.0.0.1}"
 # Don't actually use the plaintext password this represents in production!
+# shellcheck disable=SC2016
 default_password='-argon2:$argon2id$v=19$m=10240,t=10,p=8$HeC4C022haY1PxTUcAPk+A$ULz24zkP3jNHvScVul9t/OAOjhdgTNJYfPUvMWSOGcg'
-export JUPYTERHUB_PASSWORD="${JUPYTERHUB_PASSWORD:-$default_password}"
+export JUPYTERHUB_PASSWORD="${JUPYTERHUB_PASSWORD:-${default_password}}"
 export JUPYTERHUB_PORT="${JUPYTERHUB_PORT:-8888}"
 export JUPYTERHUB_SERVICE_GROUP="${JUPYTERHUB_SERVICE_GROUP:-jupyter}"
 export JUPYTERHUB_SERVICE_USER="${JUPYTERHUB_SERVICE_USER:-jupyter}"

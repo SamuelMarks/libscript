@@ -40,7 +40,9 @@ if [ -z ${UNAME+x} ]; then
         TARGET_OS="$(sw_vers --productName)"
         ;;
       'Linux')
+        # shellcheck disable=SC1091
         ID="$(. /etc/os-release; printf '%s' "${ID}")"
+        # shellcheck disable=SC1091
         ID_LIKE="$(. /etc/os-release; printf '%s' "${ID_LIKE-}")"
         export NGINX_SERVERS_ROOT='/etc/nginx/conf.d/sites-available'
         case "${ID}" in

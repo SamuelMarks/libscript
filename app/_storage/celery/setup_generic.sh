@@ -51,7 +51,7 @@ if [ ! -d "${PYTHON_VENV}" ]; then
   . "${SCRIPT_NAME}"
 
   "${PRIV}" mkdir -p "${PYTHON_VENV}"
-  "${PRIV}" chown -R "$USER":"$GROUP" "${PYTHON_VENV}"
+  "${PRIV}" chown -R "${USER}":"${GROUP}" "${PYTHON_VENV}"
   uv venv --python "${PYTHON_VERSION}" "${PYTHON_VENV}"
 fi
 

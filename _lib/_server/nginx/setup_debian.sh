@@ -58,7 +58,7 @@ apt_depends curl gnupg2 ca-certificates lsb-release debian-archive-keyring
   http://nginx.org/packages/debian $(lsb_release -cs) nginx" \
     | "${PRIV}" tee /etc/apt/sources.list.d/nginx.list
 [ -f '/etc/apt/preferences.d/99nginx' ] || \
-  echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" \
+  printf 'Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n' \
     | "${PRIV}" tee /etc/apt/preferences.d/99nginx && \
   "${PRIV}" apt update -qq
 

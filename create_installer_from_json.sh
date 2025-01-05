@@ -34,14 +34,17 @@ all_deps=0
 help=0
 output_folder="${SCRIPT_ROOT_DIR}"'/tmp'
 
-while getopts ':a:f:h:o:v' opt; do
+while getopts 'a:f:o:v:h:' opt; do
     case $opt in
+      (a)   all_deps=$OPTARG ;;
+      (f)   filename=$OPTARG ;;
+      (o)   output_folder=$OPTARG ;;
       (v)   # shellcheck disable=SC2003
             verbose=$(expr "${verbose}" + 1) ;;
-      (f)   filename=$OPTARG ;;
-      (a)   all_deps=$OPTARG ;;
-      (o)   output_folder=$OPTARG ;;
-      (h)   help=$OPTARG ;;
+      (h)   if test "$OPTARG" = "$(eval echo '$'$((OPTIND - 1)))"; then
+              OPTIND=$((OPTIND - 1));
+            fi
+            help=1 ;;
       (*) ;;
     esac
 done
@@ -50,20 +53,25 @@ export verbose
 shift "$((OPTIND - 1))"
 remaining="$*"
 
-if [ "${help}" -ge 1 ]; then
-  # shellcheck disable=SC2016
-  >&2 printf 'Create install.sh from JSON.\n
+help() {
+    >&2 printf 'Create install scripts from JSON.\n
+\t-a whether to install all dependencies (required AND optional)
 \t-f filename
 \t-o output folder (defaults to ./tmp)
-\t-a whether to install all dependencies (required AND optional)
 \t-v verbosity (can be specified multiple times)
 \t-h show help text\n\n'
+}
+if [ "${help}" -ge 1 ]; then
+  # shellcheck disable=SC2016
+  help
   exit 2
 elif [ -z "${filename+x}" ]; then
+  help
   # shellcheck disable=SC2016
   >&2 printf 'JSON file must be specified with `-f`\n'
   exit 2
 elif [ ! -f "${filename}" ]; then
+  help
   # shellcheck disable=SC2016
   >&2 printf 'JSON file specified with `-f` must exist\n'
   exit 2

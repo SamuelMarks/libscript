@@ -54,12 +54,12 @@ if [ ! -d "${JUPYTERHUB_VENV}" ]; then
   . "${SCRIPT_NAME}"
 
   "${PRIV}" mkdir -p "${JUPYTERHUB_VENV}"
-  "${PRIV}" chown -R "${USER}":"${GROUP:-$USER}" "${JUPYTERHUB_VENV}"
+  "${PRIV}" chown -R "${USER}":"${GROUP:-${USER}}" "${JUPYTERHUB_VENV}"
   uv venv --python "${PYTHON_VERSION}" "${JUPYTERHUB_VENV}"
   "${JUPYTERHUB_VENV}"'/bin/python' -m ensurepip
   "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U pip
   "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U setuptools wheel
-  "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U jupyverse[auth,jupyterlab] fps-jupyterlab fps-auth jupyter-collaboration oauthenticator jupyterhub-nativeauthenticator
+  "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U "jupyverse[auth,jupyterlab]" fps-jupyterlab fps-auth jupyter-collaboration oauthenticator jupyterhub-nativeauthenticator
   # "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U jupyter notebook pyright python-language-server python-lsp-server
 fi
 

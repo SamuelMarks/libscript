@@ -31,18 +31,28 @@ output_folder=${output_folder:-${SCRIPT_ROOT_DIR}/tmp}
 false_env_file="${output_folder}"'/false_env.sh'
 true_env_file="${output_folder}"'/env.sh'
 install_file="${output_folder}"'/install_gen.sh'
+install_parallel_file="${output_folder}"'/install_parallel_gen.sh'
 [ -d "${output_folder}" ] || mkdir -p "${output_folder}"
 prelude="$(cat "${SCRIPT_ROOT_DIR}"'/prelude.sh')"
 [ ! -f "${install_file}" ] && printf '%s\n\n' "${prelude}" > "${install_file}"
+# shellcheck disable=SC2016
+[ ! -f "${install_parallel_file}" ] && printf '%s\nDIR=$(CDPATH='"''"' cd -- "$(dirname -- "${this_file}")" && pwd)\n\n' "${prelude}"  > "${install_parallel_file}"
 [ ! -f "${true_env_file}" ] && printf '#!/bin/sh\n\n' > "${true_env_file}"
-[ ! -f "${false_env_file}" ] && printf '#!/bin/sh\n\n' > "${false_env_file}"
+[ ! -f "${false_env_file}" ] && printf '#!/bin/sh\n' > "${false_env_file}"
 
 header_tpl='#############################\n#\t\t%s\t#\n#############################\n\n'
-wwwroot_header_req=0
-databases_header_req=0
-databases_header_opt=0
+
+# shellcheck disable=SC2016
+run_tpl='SCRIPT_NAME="${DIR}"'"'"'/%s'"'"'\nexport SCRIPT_NAME\n# shellcheck disable=SC1090\n. "${SCRIPT_NAME}"'
+
+toolchains_len=0
 toolchains_header_req=0
 toolchains_header_opt=0
+databases_len=0
+databases_header_req=0
+databases_header_opt=0
+wwwroot_len=0
+wwwroot_header_req=0
 
 # Extra check in case a different `SCRIPT_ROOT_DIR` is found in the JSON
 if ! command -v jq >/dev/null 2>&1; then
@@ -67,7 +77,9 @@ update_generated_files() {
       printf 'export %s=0\n' "${env}"
     fi
     printf 'export %s_VERSION='"'"'%s'"'"'\n\n' "${name}" "${version}"
-  } >> "${true_env_file}"
+  } | tee -a "${install_parallel_file}" "${true_env_file}"
+  # shellcheck disable=SC2059
+  printf "${run_tpl}"' &\n\n' 'install_gen.sh' >> "${install_parallel_file}"
   printf 'export %s=0\n' "${env}" >> "${false_env_file}"
   # shellcheck disable=SC2016
   {
@@ -150,7 +162,17 @@ parse_wwwroot_item() {
     https_provider=$(printf '%s' "${www_json}" | jq -r '.https.provider // empty')
     vendor='nginx' # only supported one now
 
-    printf 'export %s="${%s:-1}"\n' "${env}" "${env}" >> "${true_env_file}"
+    if [ "${wwwroot_header_req}" -lt 1 ]; then
+        wwwroot_header_req=1
+        printf '\n' >> "${false_env_file}"
+        # shellcheck disable=SC2059
+        printf "${header_tpl}" '      WWWROOT(s)      ' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}"
+    fi
+    # shellcheck disable=SC2003
+    wwwroot_len=$(expr "${wwwroot_len}" + 1)
+
+    # shellcheck disable=SC2016
+    printf 'export %s="${%s:-1}"\n' "${env}" "${env}" | tee -a "${install_parallel_file}" "${true_env_file}"
     printf 'export %s=0\n' "${env}" >> "${false_env_file}"
 
     if [ "${verbose}" -ge 3 ]; then
@@ -159,11 +181,7 @@ parse_wwwroot_item() {
     fi
     # clean_name="$(printf '%s' "${name}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
     {
-      if [ "${wwwroot_header_req}" -lt 1 ]; then
-          wwwroot_header_req=1
-          # shellcheck disable=SC2059
-          printf "${header_tpl}" '      WWWROOT(s)      '
-      fi
+      # shellcheck disable=SC2016
       printf 'if [ "${%s:-0}" -eq 1 ]; then\n' "${env}"
       printf '  WWWROOT_NAME='"'"'%s'"'"'\n' "${name}"
       printf '  WWWROOT_VENDOR='"'"'%s'"'"'\n' "${vendor}"
@@ -176,16 +194,21 @@ parse_wwwroot_item() {
       [ "${verbose}" -ge 3 ] && printf '  HTTPS Provider: %s\n' "${https_provider}"
     fi
     {
+      # shellcheck disable=SC2016
       printf '  if [ "${WWWROOT_VENDOR:-nginx}" = '"'"'nginx'"'"' ]; then\n'
 
+      # shellcheck disable=SC2016
       printf '    SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'"'"'/_server/nginx/setup.sh'"'"'\n'
       printf '    export SCRIPT_NAME\n'
       printf '    # shellcheck disable=SC1090\n'
+      # shellcheck disable=SC2016
       printf '    . "${SCRIPT_NAME}"\n'
 
       printf '  fi\n'
       printf 'fi\n\n'
     } >> "${install_file}"
+    # shellcheck disable=SC2059
+    printf "${run_tpl}"' &\n\n' 'install_gen.sh' >> "${install_parallel_file}"
 
     parse_wwwroot_builders "${www_json}"
 }
@@ -193,9 +216,14 @@ parse_wwwroot_item() {
 # parse "builder" array within a "wwwroot" item
 parse_wwwroot_builders() {
     www_json="${1}"
-    printf '%s' "${www_json}" | jq -c '.builder[]?' | while read -r builder_item; do
+    printf '%s' "${www_json}" | jq -c '.builder[]?' | {
+      while read -r builder_item; do
         parse_builder_item "${builder_item}"
-    done
+      done
+      if [ "${wwwroot_len}" -ge 1 ]; then
+        printf 'wait\n\n' >> "${install_parallel_file}"
+      fi
+    }
 }
 
 # parse a builder item
@@ -231,18 +259,77 @@ parse_dependency_group() {
     dep_group_name="${2}"
     [ "${verbose}" -ge 3 ] && printf '%s Dependencies:\n' "${dep_group_name}"
 
-    parse_databases "${dep_group_query}"'.databases' "${dep_group_name}"
     parse_toolchains "${dep_group_query}"'.toolchains' "${dep_group_name}"
+    echo '1.2'
+    parse_databases "${dep_group_query}"'.databases' "${dep_group_name}"
+    echo '1.3'
     parse_servers "${dep_group_query}"'.servers' "${dep_group_name}"
+}
+
+# parse "toolchains" array
+parse_toolchains() {
+    tc_query="${1}"
+    dep_group_name="${2}"
+    jq -c "${tc_query}"'[]?' "${JSON_FILE}" |
+    {
+        while read -r tc_item; do
+          parse_toolchain_item "${tc_item}" "${dep_group_name}"
+        done
+        if [ "${toolchains_len}" -ge 1 ]; then
+          printf 'wait\n\n' >> "${install_parallel_file}"
+        fi
+    }
+}
+
+# parse a single toolchain item
+parse_toolchain_item() {
+    tc_json="${1}"
+    name=$(printf '%s' "${tc_json}" | jq -r '.name')
+    version=$(printf '%s' "${tc_json}" | jq -r '.version')
+    env=$(printf '%s' "${tc_json}" | jq -r '.env')
+    dep_group_name="${2}"
+
+    [ "${verbose}" -ge 3 ] && printf '  Toolchain:\n'
+    [ "${verbose}" -ge 3 ] && printf '    Name: %s\n' "${name}"
+    [ "${verbose}" -ge 3 ] && printf '    Version: %s\n' "${version}"
+    [ "${verbose}" -ge 3 ] && printf '    Env: %s\n' "${env}"
+
+    if [ "${dep_group_name}" = "Required" ] ; then
+        if [ "${toolchains_header_req}" -lt 1 ]; then
+          toolchains_header_req=1
+          printf '\n' >> "${false_env_file}"
+          # shellcheck disable=SC2059
+          printf "${header_tpl}" 'Toolchain(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}"
+          # shellcheck disable=SC2059
+          printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
+        fi
+    elif [ "${toolchains_header_opt}" -lt 1 ]; then
+        toolchains_header_opt=1
+        printf '\n' >> "${false_env_file}"
+        # shellcheck disable=SC2059
+        printf "${header_tpl}" 'Toolchain(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}"
+        # shellcheck disable=SC2059
+        [ "${all_deps}" -ge 0 ] && printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
+    fi
+    # shellcheck disable=SC2003
+    toolchains_len=$(expr "${toolchains_len}" + 1)
+    update_generated_files "${name}" "${version}" "${env}" '_lib/_toolchain' "${dep_group_name}"
 }
 
 # parse "databases" array
 parse_databases() {
     db_query="${1}"
     dep_group_name="${2}"
-    jq -c "${db_query}"'[]?' "${JSON_FILE}" | while read -r db_item; do
+    jq -c "${db_query}"'[]?' "${JSON_FILE}" | {
+      echo '1.1 while'
+      while read -r db_item; do
         parse_database_item "${db_item}" "${dep_group_name}"
-    done
+      done
+      echo '1.1 done'
+      if [ "${databases_len}" -ge 1 ]; then
+        printf 'wait\n\n' >> "${install_parallel_file}"
+      fi
+    }
 }
 
 # parse a single database item
@@ -259,57 +346,38 @@ parse_database_item() {
     [ "${verbose}" -ge 3 ] && printf '    Version: %s\n' "${version}"
     [ "${verbose}" -ge 3 ] && printf '    Env: %s\n' "${env}"
 
-    if [ "${dep_group_name}" = "Required" ] && [ "${databases_header_req}" -lt 1 ]; then
-        databases_header_req=1
-        # shellcheck disable=SC2059
-        printf "${header_tpl}" 'Database(s) [required]' >> "${install_file}"
+    if [ "${dep_group_name}" = "Required" ] ; then
+        if [ "${databases_header_req}" -lt 1 ]; then
+          databases_header_req=1
+          # shellcheck disable=SC2059
+          printf "${header_tpl}" 'Database(s) [required]' | tee -a "${install_file}" "${install_parallel_file}"
+
+          # shellcheck disable=SC2059
+          printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
+        fi
     elif [ "${databases_header_opt}" -lt 1 ]; then
         databases_header_opt=1
+        printf '\n' >> "${false_env_file}"
         # shellcheck disable=SC2059
-        printf "${header_tpl}" 'Database(s) [optional]' >> "${install_file}"
+        printf "${header_tpl}" 'Database(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}"
+        # shellcheck disable=SC2059
+        [ "${all_deps}" -ge 0 ] && printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
     fi
+
+    # shellcheck disable=SC2003
+    databases_len=$(expr "${databases_len}" + 1)
+
     update_generated_files "${name}" "${version}" "${env}" '_lib/_storage' "${dep_group_name}"
 
     if [ -n "${target_env}" ]; then
         [ "${verbose}" -ge 3 ] && printf '    Target Env:\n'
+
         printf '%s' "${db_json}" | jq -r '.target_env[]' | while read -r env_var; do
             [ "${verbose}" -ge 3 ] && printf '      %s\n' "${env_var}"
         done
+        echo '[in] parse_database_item'
     fi
-}
-
-# parse "toolchains" array
-parse_toolchains() {
-    tc_query="${1}"
-    dep_group_name="${2}"
-    jq -c "${tc_query}"'[]?' "${JSON_FILE}" | while read -r tc_item; do
-        parse_toolchain_item "${tc_item}" "${dep_group_name}"
-    done
-}
-
-# parse a single toolchain item
-parse_toolchain_item() {
-    tc_json="${1}"
-    name=$(printf '%s' "${tc_json}" | jq -r '.name')
-    version=$(printf '%s' "${tc_json}" | jq -r '.version')
-    env=$(printf '%s' "${tc_json}" | jq -r '.env')
-    dep_group_name="${2}"
-
-    [ "${verbose}" -ge 3 ] && printf '  Toolchain:\n'
-    [ "${verbose}" -ge 3 ] && printf '    Name: %s\n' "${name}"
-    [ "${verbose}" -ge 3 ] && printf '    Version: %s\n' "${version}"
-    [ "${verbose}" -ge 3 ] && printf '    Env: %s\n' "${env}"
-
-    if [ "${dep_group_name}" = "Required" ] && [ "${toolchains_header_req}" -lt 1 ]; then
-        toolchains_header_req=1
-        # shellcheck disable=SC2059
-        printf "${header_tpl}" 'Toolchain(s) [required]' >> "${install_file}"
-    elif [ "${toolchains_header_opt}" -lt 1 ]; then
-        toolchains_header_opt=1
-        # shellcheck disable=SC2059
-        printf "${header_tpl}" 'Toolchain(s) [optional]' >> "${install_file}"
-    fi
-    update_generated_files "${name}" "${version}" "${env}" '_lib/_toolchain' "${dep_group_name}"
+    echo '[done] parse_database_item'
 }
 
 # parse "servers" array
@@ -404,6 +472,7 @@ parse_json() {
     parse_version || true
     parse_url || true
     parse_license || true
+
     if [ "${verbose}" -ge 3 ]; then
       printf 'Name: %s\n' "${name}"
       [ -n "${description}" ] && printf 'Description: %s\n' "${description}"
@@ -414,7 +483,10 @@ parse_json() {
 
     parse_scripts_root
 
-    parse_wwwroot
     parse_dependencies
+    echo '2'
+    parse_wwwroot
+    echo '3'
     parse_log_server
+    echo '4'
 }
