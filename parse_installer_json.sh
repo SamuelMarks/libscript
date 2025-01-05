@@ -77,14 +77,14 @@ update_generated_files() {
       printf 'export %s=0\n' "${env}"
     fi
     printf 'export %s_VERSION='"'"'%s'"'"'\n\n' "${name}" "${version}"
-  } | tee -a "${install_parallel_file}" "${true_env_file}"
+  } | tee -a "${install_parallel_file}" "${true_env_file}" >/dev/null
   # shellcheck disable=SC2059
   printf "${run_tpl}"' &\n\n' 'install_gen.sh' >> "${install_parallel_file}"
   printf 'export %s=0\n' "${env}" >> "${false_env_file}"
   # shellcheck disable=SC2016
   {
     printf 'if [ "${%s:-0}" -eq 1 ]; then\n' "${env}"
-    name_lower="$(echo "${name}" | tr '[:upper:]' '[:lower:]')"
+    name_lower="$(printf '%s' "${name}" | tr '[:upper:]' '[:lower:]')"
     printf '  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'"'"'/%s/%s/setup.sh'"'"'\n' "${location}" "${name_lower}"
     printf '  export SCRIPT_NAME\n'
     printf '  # shellcheck disable=SC1090\n'
@@ -166,13 +166,13 @@ parse_wwwroot_item() {
         wwwroot_header_req=1
         printf '\n' >> "${false_env_file}"
         # shellcheck disable=SC2059
-        printf "${header_tpl}" '      WWWROOT(s)      ' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}"
+        printf "${header_tpl}" '      WWWROOT(s)      ' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
     fi
     # shellcheck disable=SC2003
     wwwroot_len=$(expr "${wwwroot_len}" + 1)
 
     # shellcheck disable=SC2016
-    printf 'export %s="${%s:-1}"\n' "${env}" "${env}" | tee -a "${install_parallel_file}" "${true_env_file}"
+    printf 'export %s="${%s:-1}"\n' "${env}" "${env}" | tee -a "${install_parallel_file}" "${true_env_file}" >/dev/null
     printf 'export %s=0\n' "${env}" >> "${false_env_file}"
 
     if [ "${verbose}" -ge 3 ]; then
@@ -188,10 +188,10 @@ parse_wwwroot_item() {
       printf '  WWWROOT_PATH='"'"'%s'"'"'\n' "${path:-/}"
       printf '  WWWROOT_LISTEN='"'"'%s'"'"'\n' "${listen:-80}"
     } >> "${install_file}"
-    [ "${verbose}" -ge 3 ] && [ -n "${path}" ] && printf '  Path: %s\n' "${path}"
+    if [ "${verbose}" -ge 3 ] && [ -n "${path}" ]; then printf '  Path: %s\n' "${path}"; fi
     if [ -n "${https_provider}" ]; then
       printf '  WWWROOT_HTTPS_PROVIDER='"'"'%s'"'"'\n' "${https_provider}" >> "${install_file}"
-      [ "${verbose}" -ge 3 ] && printf '  HTTPS Provider: %s\n' "${https_provider}"
+      if [ "${verbose}" -ge 3 ]; then printf '  HTTPS Provider: %s\n' "${https_provider}"; fi
     fi
     {
       # shellcheck disable=SC2016
@@ -230,19 +230,23 @@ parse_wwwroot_builders() {
 parse_builder_item() {
     builder_json="${1}"
     shell=$(printf '%s' "${builder_json}" | jq -r '.shell // "*"' )
-    [ "${verbose}" -ge 3 ] && printf '  Builder:\n'
-    [ "${verbose}" -ge 3 ] && printf '    Shell: %s\n' "${shell}"
+    if [ "${verbose}" -ge 3 ]; then
+      printf '  Builder:\n'
+      printf '    Shell: %s\n' "${shell}"
 
-    [ "${verbose}" -ge 3 ] && printf '    Commands:\n'
+      printf '    Commands:\n'
+    fi
     printf '%s' "${builder_json}" | jq -r '.commands[]' | while read -r cmd; do
-        [ "${verbose}" -ge 3 ] && printf '      %s\n' "${cmd}"
+        if [ "${verbose}" -ge 3 ]; then
+          printf '      %s\n' "${cmd}"
+        fi
     done
 
     outputs=$(printf '%s' "${builder_json}" | jq -c '.output[]?')
     if [ -n "${outputs}" ]; then
-        [ "${verbose}" -ge 3 ] && printf '    Outputs:\n'
+        if [ "${verbose}" -ge 3 ]; then printf '    Outputs:\n'; fi
         printf '%s' "${builder_json}" | jq -r '.output[]' | while read -r out; do
-            [ "${verbose}" -ge 3 ] && printf '      %s\n' "${out}"
+            if [ "${verbose}" -ge 3 ]; then printf '      %s\n' "${out}"; fi
         done
     fi
 }
@@ -257,12 +261,10 @@ parse_dependencies() {
 parse_dependency_group() {
     dep_group_query="${1}"
     dep_group_name="${2}"
-    [ "${verbose}" -ge 3 ] && printf '%s Dependencies:\n' "${dep_group_name}"
+    if [ "${verbose}" -ge 3 ]; then printf '%s Dependencies:\n' "${dep_group_name}"; fi
 
     parse_toolchains "${dep_group_query}"'.toolchains' "${dep_group_name}"
-    echo '1.2'
     parse_databases "${dep_group_query}"'.databases' "${dep_group_name}"
-    echo '1.3'
     parse_servers "${dep_group_query}"'.servers' "${dep_group_name}"
 }
 
@@ -289,17 +291,19 @@ parse_toolchain_item() {
     env=$(printf '%s' "${tc_json}" | jq -r '.env')
     dep_group_name="${2}"
 
-    [ "${verbose}" -ge 3 ] && printf '  Toolchain:\n'
-    [ "${verbose}" -ge 3 ] && printf '    Name: %s\n' "${name}"
-    [ "${verbose}" -ge 3 ] && printf '    Version: %s\n' "${version}"
-    [ "${verbose}" -ge 3 ] && printf '    Env: %s\n' "${env}"
+    if [ "${verbose}" -ge 3 ]; then
+      printf '  Toolchain:\n'
+      printf '    Name: %s\n' "${name}"
+      printf '    Version: %s\n' "${version}"
+      printf '    Env: %s\n' "${env}"
+    fi
 
     if [ "${dep_group_name}" = "Required" ] ; then
         if [ "${toolchains_header_req}" -lt 1 ]; then
           toolchains_header_req=1
           printf '\n' >> "${false_env_file}"
           # shellcheck disable=SC2059
-          printf "${header_tpl}" 'Toolchain(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}"
+          printf "${header_tpl}" 'Toolchain(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
           # shellcheck disable=SC2059
           printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
         fi
@@ -307,7 +311,7 @@ parse_toolchain_item() {
         toolchains_header_opt=1
         printf '\n' >> "${false_env_file}"
         # shellcheck disable=SC2059
-        printf "${header_tpl}" 'Toolchain(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}"
+        printf "${header_tpl}" 'Toolchain(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
         # shellcheck disable=SC2059
         [ "${all_deps}" -ge 0 ] && printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
     fi
@@ -321,11 +325,9 @@ parse_databases() {
     db_query="${1}"
     dep_group_name="${2}"
     jq -c "${db_query}"'[]?' "${JSON_FILE}" | {
-      echo '1.1 while'
       while read -r db_item; do
         parse_database_item "${db_item}" "${dep_group_name}"
       done
-      echo '1.1 done'
       if [ "${databases_len}" -ge 1 ]; then
         printf 'wait\n\n' >> "${install_parallel_file}"
       fi
@@ -341,16 +343,18 @@ parse_database_item() {
     env=$(printf '%s' "${db_json}" | jq -r '.env')
     target_env=$(printf '%s' "${db_json}" | jq -c '.target_env[]?')
 
-    [ "${verbose}" -ge 3 ] && printf '  Database:\n'
-    [ "${verbose}" -ge 3 ] && printf '    Name: %s\n' "${name}"
-    [ "${verbose}" -ge 3 ] && printf '    Version: %s\n' "${version}"
-    [ "${verbose}" -ge 3 ] && printf '    Env: %s\n' "${env}"
+    if [ "${verbose}" -ge 3 ]; then
+      printf '  Database:\n'
+      printf '    Name: %s\n' "${name}"
+      printf '    Version: %s\n' "${version}"
+      printf '    Env: %s\n' "${env}"
+    fi
 
     if [ "${dep_group_name}" = "Required" ] ; then
         if [ "${databases_header_req}" -lt 1 ]; then
           databases_header_req=1
           # shellcheck disable=SC2059
-          printf "${header_tpl}" 'Database(s) [required]' | tee -a "${install_file}" "${install_parallel_file}"
+          printf "${header_tpl}" 'Database(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" >/dev/null
 
           # shellcheck disable=SC2059
           printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
@@ -359,7 +363,7 @@ parse_database_item() {
         databases_header_opt=1
         printf '\n' >> "${false_env_file}"
         # shellcheck disable=SC2059
-        printf "${header_tpl}" 'Database(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}"
+        printf "${header_tpl}" 'Database(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
         # shellcheck disable=SC2059
         [ "${all_deps}" -ge 0 ] && printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
     fi
@@ -368,16 +372,13 @@ parse_database_item() {
     databases_len=$(expr "${databases_len}" + 1)
 
     update_generated_files "${name}" "${version}" "${env}" '_lib/_storage' "${dep_group_name}"
-
     if [ -n "${target_env}" ]; then
-        [ "${verbose}" -ge 3 ] && printf '    Target Env:\n'
+        if [ "${verbose}" -ge 3 ]; then printf '    Target Env:\n'; fi
 
         printf '%s' "${db_json}" | jq -r '.target_env[]' | while read -r env_var; do
-            [ "${verbose}" -ge 3 ] && printf '      %s\n' "${env_var}"
+            if [ "${verbose}" -ge 3 ]; then printf '      %s\n' "${env_var}"; fi
         done
-        echo '[in] parse_database_item'
     fi
-    echo '[done] parse_database_item'
 }
 
 # parse "servers" array
@@ -396,9 +397,9 @@ parse_server_item() {
     name=$(printf '%s' "${server_json}" | jq -r '.name // empty')
     location=$(printf '%s' "${server_json}" | jq -r '.location // empty')
 
-    [ "${verbose}" -ge 3 ] && printf '  Server:\n'
-    [ "${verbose}" -ge 3 ] && [ -n "${name}" ] && printf '    Name: %s\n' "${name}"
-    [ "${verbose}" -ge 3 ] && [ -n "${location}" ] && printf '    Location: %s\n' "${location}"
+    if [ "${verbose}" -ge 3 ]; then printf '  Server:\n'; fi
+    if [ "${verbose}" -ge 3 ] && [ -n "${name}" ]; then printf '    Name: %s\n' "${name}"; fi
+    if [ "${verbose}" -ge 3 ] && [ -n "${location}" ]; then printf '    Location: %s\n' "${location}"; fi
 
     parse_server_builders "${server_json}"
     parse_daemon "${server_json}"
@@ -418,14 +419,16 @@ parse_daemon() {
     daemon_json=$(printf '%s' "${server_json}" | jq -c '.daemon // empty')
     if [ -n "${daemon_json}" ]; then
         os_native=$(printf '%s' "${daemon_json}" | jq -r '.os_native')
-        [ "${verbose}" -ge 3 ] && printf '    Daemon:\n'
-        [ "${verbose}" -ge 3 ] && printf '      OS Native: %s\n' "${os_native}"
+        if [ "${verbose}" -ge 3 ]; then
+          printf '    Daemon:\n'
+          printf '      OS Native: %s\n' "${os_native}"
+        fi
 
         env_vars=$(printf '%s' "${daemon_json}" | jq -c '.env[]?')
         if [ -n "${env_vars}" ]; then
-            [ "${verbose}" -ge 3 ] && printf '      Env Vars:\n'
+            if [ "${verbose}" -ge 3 ]; then printf '      Env Vars:\n'; fi
             printf '%s' "${daemon_json}" | jq -r '.env[]' | while read -r env_var; do
-                [ "${verbose}" -ge 3 ] && printf '        %s\n' "${env_var}"
+                if [ "${verbose}" -ge 3 ]; then printf '        %s\n' "${env_var}"; fi
             done
         fi
     fi
@@ -435,8 +438,10 @@ parse_daemon() {
 parse_log_server() {
     optional=$(jq -r '.log_server.optional // empty' "${JSON_FILE}")
     if [ -n "${optional}" ]; then
-        [ "${verbose}" -ge 3 ] && printf 'Log Server:\n'
-        [ "${verbose}" -ge 3 ] && printf '  Optional: %s\n' "${optional}"
+        if [ "${verbose}" -ge 3 ]; then
+          printf 'Log Server:\n'
+          printf '  Optional: %s\n' "${optional}"
+        fi
     fi
 }
 
@@ -484,9 +489,6 @@ parse_json() {
     parse_scripts_root
 
     parse_dependencies
-    echo '2'
     parse_wwwroot
-    echo '3'
     parse_log_server
-    echo '4'
 }
