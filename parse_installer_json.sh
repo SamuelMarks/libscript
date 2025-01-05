@@ -72,14 +72,14 @@ update_generated_files() {
   {
     # shellcheck disable=SC2016
     if [ "${dep_group_name}" = 'Required' ] || [ "${all_deps}" -ge 1 ]; then
-      printf 'export %s="${%s:-1}"\n' "${env}" "${env}"
+      printf '(\n  export %s="${%s:-1}"\n' "${env}" "${env}"
     else
-      printf 'export %s=0\n' "${env}"
+      printf '(\n  export %s=0\n' "${env}"
     fi
     printf 'export %s_VERSION='"'"'%s'"'"'\n\n' "${name}" "${version}"
   } | tee -a "${install_parallel_file}" "${true_env_file}" >/dev/null
   # shellcheck disable=SC2059
-  printf "${run_tpl}"' &\n\n' 'install_gen.sh' >> "${install_parallel_file}"
+  printf "${run_tpl}"' ) &\n\n' 'install_gen.sh' >> "${install_parallel_file}"
   printf 'export %s=0\n' "${env}" >> "${false_env_file}"
   # shellcheck disable=SC2016
   {
@@ -172,6 +172,7 @@ parse_wwwroot_item() {
     wwwroot_len=$(expr "${wwwroot_len}" + 1)
 
     # shellcheck disable=SC2016
+    printf '( \n' >> "${install_parallel_file}"
     printf 'export %s="${%s:-1}"\n' "${env}" "${env}" | tee -a "${install_parallel_file}" "${true_env_file}" >/dev/null
     printf 'export %s=0\n' "${env}" >> "${false_env_file}"
 
@@ -208,7 +209,7 @@ parse_wwwroot_item() {
       printf 'fi\n\n'
     } >> "${install_file}"
     # shellcheck disable=SC2059
-    printf "${run_tpl}"' &\n\n' 'install_gen.sh' >> "${install_parallel_file}"
+    printf "${run_tpl}"' ) &\n\n' 'install_gen.sh' >> "${install_parallel_file}"
 
     parse_wwwroot_builders "${www_json}"
 }
