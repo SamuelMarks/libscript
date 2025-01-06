@@ -30,42 +30,21 @@ STACK="${STACK}${this_file}"':'
 export STACK
 
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
-export DIR
-
 SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "$d" ]; then echo "$d"; else echo './'"$d"; fi)}"
 
-#DIR="$( dirname -- "$( readlink -nf -- "${0}" )")"
-
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/os_info.sh'
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/conf.env.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_os/_apt/apt.sh'
+SCRIPT_NAME="${DIR}"'/conf.env.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/priv.sh'
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/common.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-ensure_available() {
-  # TODO: use https://repology.org to match names
-  case "${PKG_MGR}" in
-    'apk') apk add "$*" ;;
-    'apt-get') apt_depends "$*" ;;
-    'brew') brew install "$*" ;;
-    'dnf') dnf install "$*" ;;
-    'pacman') pacman -S "$*" ;;
-    'pkg') pkg install "$*" ;;
-    'pkgutil') pkgutil -i "$*" ;;
-    'zypper') zypper install "$*" ;;
-    *) >&2 printf 'Unimplemented, package manager %s\n' "${PKG_MGR}"
-  esac
-}
-
-cmd_avail() {
-  command -v "${1}" >/dev/null 2>&1
-}
+ensure_available openvpn

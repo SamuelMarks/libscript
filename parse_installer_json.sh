@@ -51,6 +51,8 @@ toolchains_header_opt=0
 databases_len=0
 databases_header_req=0
 databases_header_opt=0
+servers_len=0
+servers_header_req=0
 wwwroot_len=0
 wwwroot_header_req=0
 
@@ -71,10 +73,12 @@ update_generated_files() {
 
   {
     # shellcheck disable=SC2016
+    printf '(\n  ' >> "${install_parallel_file}"
     if [ "${dep_group_name}" = 'Required' ] || [ "${all_deps}" -ge 1 ]; then
-      printf '(\n  export %s="${%s:-1}"\n' "${env}" "${env}"
+      # shellcheck disable=SC2016
+      printf 'export %s="${%s:-1}"\n' "${env}" "${env}"
     else
-      printf '(\n  export %s=0\n' "${env}"
+      printf 'export %s=0\n' "${env}"
     fi
     printf 'export %s_VERSION='"'"'%s'"'"'\n\n' "${name}" "${version}"
   } | tee -a "${install_parallel_file}" "${true_env_file}" >/dev/null
@@ -388,6 +392,9 @@ parse_servers() {
     dep_group_name="${2}"
     jq -c "${server_query}"'[]?' "${JSON_FILE}" | while read -r server_item; do
         parse_server_item "${server_item}" "${dep_group_name}"
+        if [ "${servers_len}" -ge 1 ]; then
+            printf 'wait\n\n' >> "${install_parallel_file}"
+        fi
     done
 }
 
@@ -399,7 +406,19 @@ parse_server_item() {
     location=$(printf '%s' "${server_json}" | jq -r '.location // empty')
 
     if [ "${verbose}" -ge 3 ]; then printf '  Server:\n'; fi
-    if [ "${verbose}" -ge 3 ] && [ -n "${name}" ]; then printf '    Name: %s\n' "${name}"; fi
+    if [ -n "${name}" ]; then
+      if [ "${servers_header_req}" -lt 1 ]; then
+        servers_header_req=1
+        # shellcheck disable=SC2059
+        printf "${header_tpl}" 'Server(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
+
+        # shellcheck disable=SC2059
+        printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
+      fi
+      if [ "${verbose}" -ge 3 ]; then printf '    Name: %s\n' "${name}"; fi
+      name_upper="$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')"
+      update_generated_files "${name}" '*' "${name_upper}" 'app/third_party' "${dep_group_name}"
+    fi
     if [ "${verbose}" -ge 3 ] && [ -n "${location}" ]; then printf '    Location: %s\n' "${location}"; fi
 
     parse_server_builders "${server_json}"
