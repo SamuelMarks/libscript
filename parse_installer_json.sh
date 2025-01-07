@@ -38,11 +38,11 @@ base="${BASE:-alpine:latest debian:bookworm-slim}"
 
 [ -d "${output_folder}" ] || mkdir -p "${output_folder}"
 prelude="$(cat "${SCRIPT_ROOT_DIR}"'/prelude.sh')"
-[ ! -f "${install_file}" ] && printf '%s\n\n' "${prelude}" > "${install_file}"
+if [ ! -f "${install_file}" ]; then printf '%s\n\n' "${prelude}" > "${install_file}" ; fi
 # shellcheck disable=SC2016
-[ ! -f "${install_parallel_file}" ] && printf '%s\nDIR=$(CDPATH='"''"' cd -- "$(dirname -- "${this_file}")" && pwd)\n\n' "${prelude}"  > "${install_parallel_file}"
-[ ! -f "${true_env_file}" ] && printf '#!/bin/sh\n\n' > "${true_env_file}"
-[ ! -f "${false_env_file}" ] && printf '#!/bin/sh\n' > "${false_env_file}"
+if [ ! -f "${install_parallel_file}" ]; then printf '%s\nDIR=$(CDPATH='"''"' cd -- "$(dirname -- "${this_file}")" && pwd)\n\n' "${prelude}"  > "${install_parallel_file}" ; fi
+if [ ! -f "${true_env_file}" ]; then printf '#!/bin/sh\n\n' > "${true_env_file}" ; fi
+if [ ! -f "${false_env_file}" ]; then printf '#!/bin/sh\n' > "${false_env_file}" ; fi
 
 header_tpl='#############################\n#\t\t%s\t#\n#############################\n\n'
 
@@ -322,7 +322,7 @@ parse_toolchain_item() {
         # shellcheck disable=SC2059
         printf "${header_tpl}" 'Toolchain(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
         # shellcheck disable=SC2059
-        [ "${all_deps}" -ge 0 ] && printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
+        if [ "${all_deps}" -ge 0 ]; then printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}" ; fi
     fi
     # shellcheck disable=SC2003
     toolchains_len=$(expr "${toolchains_len}" + 1)
@@ -374,7 +374,7 @@ parse_database_item() {
         # shellcheck disable=SC2059
         printf "${header_tpl}" 'Database(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
         # shellcheck disable=SC2059
-        [ "${all_deps}" -ge 0 ] && printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
+        if [ "${all_deps}" -ge 0 ]; then printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}" ; fi
     fi
 
     # shellcheck disable=SC2003
@@ -504,10 +504,10 @@ parse_json() {
 
     if [ "${verbose}" -ge 3 ]; then
       printf 'Name: %s\n' "${name}"
-      [ -n "${description}" ] && printf 'Description: %s\n' "${description}"
-      [ -n "${version}" ] && printf 'Version: %s\n' "${version}"
-      [ -n "${url}" ] && printf 'URL: %s\n' "${url}"
-      [ -n "${license}" ] && printf 'License: %s\n' "${license}"
+      if [ -n "${description}" ]; then printf 'Description: %s\n' "${description}" ; fi
+      if [ -n "${version}" ]; then printf 'Version: %s\n' "${version}" ; fi
+      if [ -n "${url}" ]; then printf 'URL: %s\n' "${url}" ; fi
+      if [ -n "${license}" ]; then printf 'License: %s\n' "${license}" ; fi
     fi
 
     parse_scripts_root
