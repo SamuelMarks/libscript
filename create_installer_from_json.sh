@@ -33,6 +33,7 @@ verbose=0
 all_deps=0
 help=0
 output_folder="${SCRIPT_ROOT_DIR}"'/tmp'
+base="${BASE:-alpine:latest debian:bookworm-slim}"
 
 while getopts 'a:f:o:v:h:' opt; do
     case $opt in
@@ -59,6 +60,7 @@ help() {
 \t-f filename
 \t-o output folder (defaults to ./tmp)
 \t-v verbosity (can be specified multiple times)
+\t-b base images for docker (space seperated, default: "alpine:latest debian:bookworm-slim")
 \t-h show help text\n\n'
 }
 if [ "${help}" -ge 1 ]; then
@@ -84,5 +86,6 @@ fi
 mkdir -p "${output_folder}"
 export output_folder
 export all_deps
+export base
 
 parse_json "${filename}"

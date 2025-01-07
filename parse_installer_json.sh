@@ -24,6 +24,8 @@ export SCRIPT_ROOT_DIR
 STACK="${STACK:-:}${this_file}"':'
 export STACK
 
+DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+
 verbose="${verbose:-0}"
 all_deps="${all_deps:-0}"
 
@@ -32,6 +34,8 @@ false_env_file="${output_folder}"'/false_env.sh'
 true_env_file="${output_folder}"'/env.sh'
 install_file="${output_folder}"'/install_gen.sh'
 install_parallel_file="${output_folder}"'/install_parallel_gen.sh'
+base="${BASE:-alpine:latest debian:bookworm-slim}"
+
 [ -d "${output_folder}" ] || mkdir -p "${output_folder}"
 prelude="$(cat "${SCRIPT_ROOT_DIR}"'/prelude.sh')"
 [ ! -f "${install_file}" ] && printf '%s\n\n' "${prelude}" > "${install_file}"
@@ -511,4 +515,14 @@ parse_json() {
     parse_dependencies
     parse_wwwroot
     parse_log_server
+
+    for image in ${base}; do
+      image_no_tag="$(printf '%s' "${image}" | cut -d ':' -f1)"
+      dockerfile="${output_folder}"'/'"${image_no_tag}"'.Dockerfile'
+      if [ ! -f "${dockerfile}" ]; then
+        # env -i image="${image}" "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.tpl' > "${dockerfile}"
+        # shellcheck disable=SC2016
+        sed 's/${image}/'"${image}"'/' "${SCRIPT_ROOT_DIR}"'/Dockerfile.tpl' > "${dockerfile}"
+      fi
+    done
 }

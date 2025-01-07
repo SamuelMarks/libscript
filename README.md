@@ -3,6 +3,21 @@ deploy-sh
 
 Deployment scripts.
 
+## Features
+
+OS support for:
+
+  - Linux (Debian, Alpine, &etc.)
+  - macOS
+  - FreeBSD (coming soon!)
+  - Windows (coming soon!)
+
+Relocatable; no need to `cd` into the scripts directory.
+
+Plenty of guards everywhere—idempotency style—so scripts can be rerun without worry.
+
+Dockerfiles are generated. Coming soon: these will be optimised for Docker's cache mechanism.
+
 ## History / roadmap:
 
   0. First version was written in [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) (59+ repos with ["off" prefix](https://github.com/offscale?q=off&language=python)) for mostly [Linux](https://en.wikipedia.org/wiki/Linux) ([Ubuntu](https://en.wikipedia.org/wiki/Ubuntu)) with a bit of work for [Debian](https://en.wikipedia.org/wiki/Debian) support;
@@ -53,6 +68,7 @@ To simplify usage, a JSON file format is provided. See [./install.json](./instal
         -f filename
         -o output folder (defaults to ./tmp)
         -v verbosity (can be specified multiple times)
+        -b base images for docker (space seperated, default: "alpine:latest debian:bookworm-slim")
         -h show help text
 
 Which will create these files:
