@@ -34,15 +34,18 @@ false_env_file="${output_folder}"'/false_env.sh'
 true_env_file="${output_folder}"'/env.sh'
 install_file="${output_folder}"'/install_gen.sh'
 install_parallel_file="${output_folder}"'/install_parallel_gen.sh'
+docker_scratch_file="${output_folder}"'/docker.tmp'
 base="${BASE:-alpine:latest debian:bookworm-slim}"
 
 [ -d "${output_folder}" ] || mkdir -p "${output_folder}"
-prelude="$(cat "${SCRIPT_ROOT_DIR}"'/prelude.sh')"
+prelude="$(cat -- "${SCRIPT_ROOT_DIR}"'/prelude.sh'; printf 'a')"
+prelude="${prelude%a}"
 if [ ! -f "${install_file}" ]; then printf '%s\n\n' "${prelude}" > "${install_file}" ; fi
 # shellcheck disable=SC2016
 if [ ! -f "${install_parallel_file}" ]; then printf '%s\nDIR=$(CDPATH='"''"' cd -- "$(dirname -- "${this_file}")" && pwd)\n\n' "${prelude}"  > "${install_parallel_file}" ; fi
 if [ ! -f "${true_env_file}" ]; then printf '#!/bin/sh\n\n' > "${true_env_file}" ; fi
 if [ ! -f "${false_env_file}" ]; then printf '#!/bin/sh\n' > "${false_env_file}" ; fi
+printf '' > "${docker_scratch_file}"
 
 header_tpl='#############################\n#\t\t%s\t#\n#############################\n\n'
 
@@ -59,6 +62,7 @@ servers_len=0
 servers_header_req=0
 wwwroot_len=0
 wwwroot_header_req=0
+dockerfile_env=''
 
 # Extra check in case a different `SCRIPT_ROOT_DIR` is found in the JSON
 if ! command -v jq >/dev/null 2>&1; then
@@ -80,10 +84,15 @@ update_generated_files() {
     printf '(\n  ' >> "${install_parallel_file}"
     if [ "${dep_group_name}" = 'Required' ] || [ "${all_deps}" -ge 1 ]; then
       # shellcheck disable=SC2016
+      printf 'ARG %s="${%s:-1}"\n' "${env}" "${env}" >> "${docker_scratch_file}"
+      # shellcheck disable=SC2016
       printf 'export %s="${%s:-1}"\n' "${env}" "${env}"
     else
+      # shellcheck disable=SC2016
+      printf 'ARG %s=0\n' "${env}" >> "${docker_scratch_file}"
       printf 'export %s=0\n' "${env}"
     fi
+    printf 'ARG %s_VERSION='"'"'%s'"'"'\n\n' "${name}" "${version}" >> "${docker_scratch_file}"
     printf 'export %s_VERSION='"'"'%s'"'"'\n\n' "${name}" "${version}"
   } | tee -a "${install_parallel_file}" "${true_env_file}" >/dev/null
   # shellcheck disable=SC2059
@@ -516,13 +525,16 @@ parse_json() {
     parse_wwwroot
     parse_log_server
 
+    docker_s="$(cat "${docker_scratch_file}"; printf 'a')"
+    docker_s="${docker_s%a}"
     for image in ${base}; do
       image_no_tag="$(printf '%s' "${image}" | cut -d ':' -f1)"
       dockerfile="${output_folder}"'/'"${image_no_tag}"'.Dockerfile'
       if [ ! -f "${dockerfile}" ]; then
-        # env -i image="${image}" "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.tpl' > "${dockerfile}"
         # shellcheck disable=SC2016
-        sed 's/${image}/'"${image}"'/' "${SCRIPT_ROOT_DIR}"'/Dockerfile.tpl' > "${dockerfile}"
+        env -i ENV="${docker_s}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
+          "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.tpl' > "${dockerfile}"
       fi
     done
+    rm "${docker_scratch_file}"
 }

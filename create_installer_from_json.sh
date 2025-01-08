@@ -24,11 +24,6 @@ export SCRIPT_ROOT_DIR
 STACK="${STACK:-:}${this_file}"':'
 export STACK
 
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/parse_installer_json.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
-
 verbose=0
 all_deps=0
 help=0
@@ -83,9 +78,13 @@ if [ -n "${remaining}" ]; then
   >&2 printf '[W] Extra arguments provided: %s\n' "${remaining}"
 fi
 
-mkdir -p "${output_folder}"
 export output_folder
 export all_deps
 export base
+
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/parse_installer_json.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
 
 parse_json "${filename}"

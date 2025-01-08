@@ -18,6 +18,8 @@ Plenty of guards everywhere—idempotency style—so scripts can be rerun withou
 
 Dockerfiles are generated. Coming soon: these will be optimised for Docker's cache mechanism.
 
+Example of generated files are found in the [`gen`](./gen) directory.
+
 ## History / roadmap:
 
   0. First version was written in [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) (59+ repos with ["off" prefix](https://github.com/offscale?q=off&language=python)) for mostly [Linux](https://en.wikipedia.org/wiki/Linux) ([Ubuntu](https://en.wikipedia.org/wiki/Ubuntu)) with a bit of work for [Debian](https://en.wikipedia.org/wiki/Debian) support;
