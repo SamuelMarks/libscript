@@ -35,6 +35,10 @@ true_env_file="${output_folder}"'/env.sh'
 install_file="${output_folder}"'/install_gen.sh'
 install_parallel_file="${output_folder}"'/install_parallel_gen.sh'
 docker_scratch_file="${output_folder}"'/docker.tmp'
+toolchain_scratch_file="${output_folder}"'/toolchain.tmp'
+storage_scratch_file="${output_folder}"'/storage.tmp'
+server_scratch_file="${output_folder}"'/database.tmp'
+wwwroot_scratch_file="${output_folder}"'/wwwroot.tmp'
 base="${BASE:-alpine:latest debian:bookworm-slim}"
 
 [ -d "${output_folder}" ] || mkdir -p "${output_folder}"
@@ -45,7 +49,9 @@ if [ ! -f "${install_file}" ]; then printf '%s\n\n' "${prelude}" > "${install_fi
 if [ ! -f "${install_parallel_file}" ]; then printf '%s\nDIR=$(CDPATH='"''"' cd -- "$(dirname -- "${this_file}")" && pwd)\n\n' "${prelude}"  > "${install_parallel_file}" ; fi
 if [ ! -f "${true_env_file}" ]; then printf '#!/bin/sh\n\n' > "${true_env_file}" ; fi
 if [ ! -f "${false_env_file}" ]; then printf '#!/bin/sh\n' > "${false_env_file}" ; fi
-printf '' > "${docker_scratch_file}"
+printf '' | tee "${docker_scratch_file}" "${toolchain_scratch_file}" \
+                "${storage_scratch_file}" "${server_scratch_file}" \
+                "${wwwroot_scratch_file}"
 
 header_tpl='#############################\n#\t\t%s\t#\n#############################\n\n'
 
@@ -62,7 +68,6 @@ servers_len=0
 servers_header_req=0
 wwwroot_len=0
 wwwroot_header_req=0
-dockerfile_env=''
 
 # Extra check in case a different `SCRIPT_ROOT_DIR` is found in the JSON
 if ! command -v jq >/dev/null 2>&1; then
@@ -72,6 +77,100 @@ if ! command -v jq >/dev/null 2>&1; then
   . "${SCRIPT_NAME}"
 fi
 
+path2key() {
+  case "${1}" in
+    '_lib/_toolchain') export res='toolchain' ;;
+    '_lib/_storage') export res='storage' ;;
+    'app/third_party') export res='third_party' ;;
+    **) export res="${1}" ;;
+  esac
+}
+
+key2path() {
+  case "${1}" in
+    'toolchain') export res='_lib/_toolchain' ;;
+    'storage') export res='_lib/_storage' ;;
+    'third_party') export res='app/third_party' ;;
+    **) export res="${1}" ;;
+  esac
+}
+
+scratch2key() {
+  case "${1}" in
+    "${toolchain_scratch_file}") export res='toolchain' ;;
+    "${server_scratch_file}") export res='server' ;;
+    "${wwwroot_scratch_file}") export res='wwwroot' ;;
+    'storage'|**) export res='storage' ;;
+  esac
+}
+
+key2scratch() {
+  case "${1}" in
+    'toolchain') export res="${toolchain_scratch_file}" ;;
+    'server') export res="${server_scratch_file}" ;;
+    'wwwroot') export res="${wwwroot_scratch_file}" ;;
+    'storage'|**) export res="${storage_scratch_file}" ;;
+  esac
+}
+
+add_missing_line_continuation() {
+  in_run_block=0
+  starts_with_run=0
+  if_count=0
+  while_count=0
+  for_count=0
+  printf '' > "${2}"
+  # TODO: Read a word [token] at a time not a line at a time, so `if foo; fi` style can be handled
+  while read -r line; do
+    case "${line}" in
+      'RUN '*)
+        in_run_block=1 ;
+        starts_with_run=1 ;;
+      'if '*)
+        # shellcheck disable=SC2003
+        if_count="$(expr "${if_count}" + 1)" ;;
+      'while '*|*' while')
+        # shellcheck disable=SC2003
+        while_count="$(expr "${while_count}" + 1)" ;;
+      'for '*|*' for')
+        # shellcheck disable=SC2003
+        for_count="$(expr "${for_count}" + 1)" ;;
+      *'\;'|'\done'|'\fi'|'\if') starts_with_run=0 ;;
+      'fi'|*' fi'|'fi '*)
+        # shellcheck disable=SC2003
+        if_count="$(expr "${if_count}" - 1)"
+        if [ "${if_count}" -eq 0 ] && [ "${while_count}" -eq 0 ] && [ "${for_count}" -eq 0 ] ; then
+          in_run_block=0
+        fi
+        starts_with_run=0 ;;
+      *' done'|'done'|'done '*)
+        # shellcheck disable=SC2003
+        done_count="$(expr "${done_count}" - 1)"
+        if [ "${if_count}" -eq 0 ] && [ "${while_count}" -eq 0 ] && [ "${for_count}" -eq 0 ] ; then
+          in_run_block=0
+        fi
+        starts_with_run=0
+        ;;
+      *';'|'[:space:]')
+        if [ "${if_count}" -eq 0 ] && [ "${while_count}" -eq 0 ] && [ "${for_count}" -eq 0 ] ; then
+          in_run_block=0
+        fi
+        starts_with_run=0 ;;
+      **) starts_with_run=0 ;;
+    esac
+    {
+      if [ "${starts_with_run}" -eq 1 ]; then
+        printf '%s %s\n' "${line}" '\'
+      elif [ "${in_run_block}" -eq 1 ]; then
+        # shellcheck disable=SC1003
+        printf '  %s %s\n' "${line}" '\'
+      else
+        printf '%s\n' "${line}"
+      fi
+    } >> "${2}"
+  done<"${1}"
+}
+
 update_generated_files() {
   name="${1}"
   version="${2}"
@@ -79,25 +178,31 @@ update_generated_files() {
   location="${4}"
   dep_group_name="${5}"
 
+  path2key "${location}"
+  key2scratch "${res}"
+  scratch_file="${res}"
+
   {
     # shellcheck disable=SC2016
     printf '(\n  ' >> "${install_parallel_file}"
     if [ "${dep_group_name}" = 'Required' ] || [ "${all_deps}" -ge 1 ]; then
       # shellcheck disable=SC2016
-      printf 'ARG %s="${%s:-1}"\n' "${env}" "${env}" >> "${docker_scratch_file}"
+      printf 'ARG %s=1\n' "${env}" "${env}" | tee -a "${docker_scratch_file}" "${scratch_file}" >/dev/null
       # shellcheck disable=SC2016
       printf 'export %s="${%s:-1}"\n' "${env}" "${env}"
     else
       # shellcheck disable=SC2016
-      printf 'ARG %s=0\n' "${env}" >> "${docker_scratch_file}"
+      printf 'ARG %s=0\n' "${env}" | tee -a "${docker_scratch_file}" "${scratch_file}" >/dev/null
       printf 'export %s=0\n' "${env}"
     fi
-    printf 'ARG %s_VERSION='"'"'%s'"'"'\n\n' "${name}" "${version}" >> "${docker_scratch_file}"
+    printf 'ARG %s_VERSION='"'"'%s'"'"'\n\n' "${name}" "${version}" | tee -a "${docker_scratch_file}" "${scratch_file}" >/dev/null
     printf 'export %s_VERSION='"'"'%s'"'"'\n\n' "${name}" "${version}"
   } | tee -a "${install_parallel_file}" "${true_env_file}" >/dev/null
   # shellcheck disable=SC2059
   printf "${run_tpl}"' ) &\n\n' 'install_gen.sh' >> "${install_parallel_file}"
   printf 'export %s=0\n' "${env}" >> "${false_env_file}"
+
+  printf 'RUN ' >> "${scratch_file}"
   # shellcheck disable=SC2016
   {
     printf 'if [ "${%s:-0}" -eq 1 ]; then\n' "${env}"
@@ -107,7 +212,7 @@ update_generated_files() {
     printf '  # shellcheck disable=SC1090\n'
     printf '  . "${SCRIPT_NAME}"\n'
     printf 'fi\n\n'
-  } >> "${install_file}"
+  } | tee -a "${scratch_file}" "${install_file}" >/dev/null
 }
 
 # parse the "name" field
@@ -198,6 +303,7 @@ parse_wwwroot_item() {
       printf '  Name: %s\n' "${name}"
     fi
     # clean_name="$(printf '%s' "${name}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
+    printf 'RUN ' >> "${wwwroot_scratch_file}"
     {
       # shellcheck disable=SC2016
       printf 'if [ "${%s:-0}" -eq 1 ]; then\n' "${env}"
@@ -205,7 +311,7 @@ parse_wwwroot_item() {
       printf '  WWWROOT_VENDOR='"'"'%s'"'"'\n' "${vendor}"
       printf '  WWWROOT_PATH='"'"'%s'"'"'\n' "${path:-/}"
       printf '  WWWROOT_LISTEN='"'"'%s'"'"'\n' "${listen:-80}"
-    } >> "${install_file}"
+    } | tee -a "${install_file}" "${wwwroot_scratch_file}" >/dev/null
     if [ "${verbose}" -ge 3 ] && [ -n "${path}" ]; then printf '  Path: %s\n' "${path}"; fi
     if [ -n "${https_provider}" ]; then
       printf '  WWWROOT_HTTPS_PROVIDER='"'"'%s'"'"'\n' "${https_provider}" >> "${install_file}"
@@ -224,7 +330,7 @@ parse_wwwroot_item() {
 
       printf '  fi\n'
       printf 'fi\n\n'
-    } >> "${install_file}"
+    } | tee -a "${install_file}" "${wwwroot_scratch_file}" >/dev/null
     # shellcheck disable=SC2059
     printf "${run_tpl}"' ) &\n\n' 'install_gen.sh' >> "${install_parallel_file}"
 
@@ -525,16 +631,34 @@ parse_json() {
     parse_wwwroot
     parse_log_server
 
-    docker_s="$(cat "${docker_scratch_file}"; printf 'a')"
+    docker_s="$(cat -- "${docker_scratch_file}"; printf 'a')"
     docker_s="${docker_s%a}"
+
     for image in ${base}; do
       image_no_tag="$(printf '%s' "${image}" | cut -d ':' -f1)"
       dockerfile="${output_folder}"'/'"${image_no_tag}"'.Dockerfile'
+      for section in "${toolchain_scratch_file}" "${storage_scratch_file}" \
+                     "${server_scratch_file}" "${wwwroot_scratch_file}"; do
+        docker_sec="$(cat -- "${section}"; printf 'a')"
+        docker_sec="${docker_sec%a}"
+        scratch2key "${section}"
+        dockerfile_by_section="${output_folder}"'/'"${image_no_tag}"'.'"${res}"'.Dockerfile'
+        if [ ! -f "${dockerfile_by_section}" ]; then
+          add_missing_line_continuation "${section}" "${section}"'.tmp'
+          mv "${section}"'.tmp' "${section}"
+          sec_contents="$(cat -- "${section}"; printf 'a')"
+          sec_contents="${sec_contents%a}"
+          env -i BODY="${sec_contents}" ENV="${docker_sec}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
+                    "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${dockerfile_by_section}"
+        fi
+      done
+
       if [ ! -f "${dockerfile}" ]; then
         # shellcheck disable=SC2016
         env -i ENV="${docker_s}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
           "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.tpl' > "${dockerfile}"
       fi
     done
-    rm "${docker_scratch_file}"
+    rm "${docker_scratch_file}" "${toolchain_scratch_file}" "${storage_scratch_file}" \
+       "${server_scratch_file}" "${wwwroot_scratch_file}"
 }

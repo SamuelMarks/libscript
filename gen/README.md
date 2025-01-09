@@ -8,5 +8,5 @@ This folder—excluding this `README.md` and the relatively-symlinked [`_lib`](.
 Which uses the [`install.json`](../install.json) file to create:
 
   - `Dockerfile`s
-  - Environment files (`false_env.sh`, `env.sh`)
-  - Install files (`install_gen.sh`, `install_gen.sh`)
+  - Environment files (`false_env.sh`; `env.sh`)
+  - Install files (`install_gen.sh`; `install_parallel_gen.sh`)

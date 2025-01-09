@@ -31,7 +31,7 @@ export JupyterHub_VERSION='*'
 #############################
 
 export AMQP_URL=0
-export RabbitMQ_VERSION='*'
+export RABBITMQ_VERSION='*'
 
 #############################
 #		      WWWROOT(s)      	#

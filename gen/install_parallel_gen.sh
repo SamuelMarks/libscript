@@ -23,6 +23,7 @@ export SCRIPT_ROOT_DIR
 
 STACK="${STACK:-:}${this_file}"':'
 export STACK
+
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 
 #############################
@@ -121,7 +122,7 @@ export SCRIPT_NAME
 
 (
   export AMQP_URL=0
-export RabbitMQ_VERSION='*'
+export RABBITMQ_VERSION='*'
 
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
