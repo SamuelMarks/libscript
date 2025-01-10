@@ -114,61 +114,100 @@ key2scratch() {
 }
 
 add_missing_line_continuation() {
-  in_run_block=0
-  starts_with_run=0
   if_count=0
-  while_count=0
-  for_count=0
-  printf '' > "${2}"
-  # TODO: Read a word [token] at a time not a line at a time, so `if foo; fi` style can be handled
-  while read -r line; do
-    case "${line}" in
-      'RUN '*)
-        in_run_block=1 ;
-        starts_with_run=1 ;;
-      'if '*)
-        # shellcheck disable=SC2003
-        if_count="$(expr "${if_count}" + 1)" ;;
-      'while '*|*' while')
-        # shellcheck disable=SC2003
-        while_count="$(expr "${while_count}" + 1)" ;;
-      'for '*|*' for')
-        # shellcheck disable=SC2003
-        for_count="$(expr "${for_count}" + 1)" ;;
-      *'\;'|'\done'|'\fi'|'\if') starts_with_run=0 ;;
-      'fi'|*' fi'|'fi '*)
-        # shellcheck disable=SC2003
-        if_count="$(expr "${if_count}" - 1)"
-        if [ "${if_count}" -eq 0 ] && [ "${while_count}" -eq 0 ] && [ "${for_count}" -eq 0 ] ; then
-          in_run_block=0
-        fi
-        starts_with_run=0 ;;
-      *' done'|'done'|'done '*)
-        # shellcheck disable=SC2003
-        done_count="$(expr "${done_count}" - 1)"
-        if [ "${if_count}" -eq 0 ] && [ "${while_count}" -eq 0 ] && [ "${for_count}" -eq 0 ] ; then
-          in_run_block=0
-        fi
-        starts_with_run=0
-        ;;
-      *';'|'[:space:]')
-        if [ "${if_count}" -eq 0 ] && [ "${while_count}" -eq 0 ] && [ "${for_count}" -eq 0 ] ; then
-          in_run_block=0
-        fi
-        starts_with_run=0 ;;
-      **) starts_with_run=0 ;;
-    esac
-    {
-      if [ "${starts_with_run}" -eq 1 ]; then
-        printf '%s %s\n' "${line}" '\'
-      elif [ "${in_run_block}" -eq 1 ]; then
-        # shellcheck disable=SC1003
-        printf '  %s %s\n' "${line}" '\'
-      else
-        printf '%s\n' "${line}"
-      fi
-    } >> "${2}"
-  done<"${1}"
+  loop_count=0
+  in_sq=0
+  in_dq=0
+  in_comment=0
+  printf ''
+
+  src="$(cat -- "${1}"; printf 'a')"
+  src="${src%a}"
+  src_len=${#src}
+  i=0
+  tmp="${src}"
+  prev_ch=''
+  token=''
+  line=''
+  while [ -n "${tmp}" ]; do
+      rest="${tmp#?}"
+      ch="${tmp%"$rest"}"
+      # shellcheck disable=SC2003
+      i=$(expr "${i}" + 1);
+      >&2 printf 'src[%d] = '"'"'%s'"'"' (prev: '"'"'%s'"'"')\n' "${i}" "${ch}" "${prev_ch}"
+      NL='
+'
+      case "${ch}" in
+        "${NL}")
+          maybe_cont=''
+          # shellcheck disable=SC2003
+          cond=$(dc -e "${in_dq}"' '"${in_sq}"' '"${in_comment}"' '"${if_count}"' '"${loop_count}"' 0d[+z1<a]dsaxp')
+          if [ "${cond}" -gt 0 ]; then
+            >&2 printf '[in_dq: %d; in_sq: %d; in_comment: %d; if_count: %d; loop_count: %d] cont for line: %s\n' "${in_dq}" "${in_sq}" "${in_comment}" "${if_count}" "${loop_count}" "${line}"
+            maybe_cont=' \'
+          fi
+          >&2 printf '%s%s%s' "${line}" "${maybe_cont}" "${NL}"
+          printf '%s%s%s' "${line}" "${maybe_cont}" "${NL}"
+          line=''
+          ch=''
+          token=''
+          in_comment=0
+          ;;
+        "#")
+          # shellcheck disable=SC1003
+          if [ "${in_comment}" -eq 0 ] \
+             && [ ! "${prev_ch}" = '\\' ] \
+             && [ "${in_dq}" -eq 0 ] \
+             && [ "${in_sq}" -eq 0 ]; then
+            in_comment=1
+          fi ;;
+        "'")
+          # shellcheck disable=SC1003
+          if [ "${in_comment}" -eq 0 ] && [ ! "${prev_ch}" = '\\' ]; then
+            if [ "${in_sq}" -eq 1 ]; then
+              in_sq=0;
+            else
+              in_sq=1;
+            fi
+          fi ;;
+        '"')
+          # shellcheck disable=SC1003
+          if [ "${in_comment}" -eq 0 ] && [ ! "${prev_ch}" = '\\' ]; then
+            if [ "${in_dq}" -eq 1 ]; then
+              in_dq=0;
+            else
+              in_dq=1;
+            fi
+          fi ;;
+        [a-zA-Z0-9_])
+          token="${token}${ch}"
+          ;;
+        *)
+          case "${token}" in
+            'if')
+              # shellcheck disable=SC2003
+              if_count="$(expr "${if_count}" + 1)" ;;
+            'fi')
+              # shellcheck disable=SC2003
+              if_count="$(expr "${if_count}" - 1)" ;;
+            'for'|'while')
+              # shellcheck disable=SC2003
+              loop_count="$(expr "${loop_count}" + 1)" ;;
+            'done')
+              # shellcheck disable=SC2003
+              loop_count="$(expr "${loop_count}" - 1)" ;;
+          esac
+          token=''
+          ;;
+      esac
+      line="${line}${ch}"
+      tmp="${rest}"
+      prev_ch="${ch}"
+  done
+  if [ "${i}" -ne "${src_len}" ]; then
+    >&2 printf 'Did not parse all of src: %d != %d\n' "${i}" "${src_len}"
+    exit 4
+  fi
 }
 
 update_generated_files() {
@@ -644,12 +683,12 @@ parse_json() {
         scratch2key "${section}"
         dockerfile_by_section="${output_folder}"'/'"${image_no_tag}"'.'"${res}"'.Dockerfile'
         if [ ! -f "${dockerfile_by_section}" ]; then
-          add_missing_line_continuation "${section}" "${section}"'.tmp'
+          add_missing_line_continuation "${section}" > "${section}"'.tmp'
           mv "${section}"'.tmp' "${section}"
           sec_contents="$(cat -- "${section}"; printf 'a')"
           sec_contents="${sec_contents%a}"
           env -i BODY="${sec_contents}" ENV="${docker_sec}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
-                    "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${dockerfile_by_section}"
+            "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${dockerfile_by_section}"
         fi
       done
 
