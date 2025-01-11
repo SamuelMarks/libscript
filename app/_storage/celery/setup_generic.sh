@@ -32,7 +32,7 @@ export STACK
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 export DIR
 
-SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "$d" ]; then echo "$d"; else echo './'"$d"; fi)}"
+SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "${d}" ]; then echo "${d}"; else echo './'"${d}"; fi)}"
 
 SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/conf.env.sh'
 export SCRIPT_NAME
@@ -50,16 +50,16 @@ if [ ! -d "${PYTHON_VENV}" ]; then
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 
-  "${PRIV}" mkdir -p "${PYTHON_VENV}"
-  "${PRIV}" chown -R "${USER}":"${GROUP}" "${PYTHON_VENV}"
-  uv venv --python "${PYTHON_VERSION}" "${PYTHON_VENV}"
+  "${PRIV}" mkdir -p -- "${PYTHON_VENV}"
+  "${PRIV}" chown -R -- "${USER}":"${GROUP}" "${PYTHON_VENV}"
+  uv venv --python "${PYTHON_VERSION}" -- "${PYTHON_VENV}"
 fi
 
 if [ -d '/etc/systemd/system' ]; then
   if [ ! -d '/home/celery/' ]; then
-    mkdir -p /var/run/celery /var/log/celery
+    mkdir -p '/var/run/celery' '/var/log/celery'
     adduser "${JUPYTERHUB_SERVICE_USER}" --home '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' --gecos ''
-    chown -R celery:celery /var/run/celery /var/log/celery "${PYTHON_VENV}"
+    chown -R -- celery:celery '/var/run/celery' '/var/log/celery' "${PYTHON_VENV}"
   fi
 
   service_name='celery'

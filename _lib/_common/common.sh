@@ -32,7 +32,7 @@ export STACK
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 export DIR
 
-SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "$d" ]; then echo "$d"; else echo './'"$d"; fi)}"
+SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "${d}" ]; then echo "${d}"; else echo './'"${d}"; fi)}"
 
 #DIR="$( dirname -- "$( readlink -nf -- "${0}" )")"
 
@@ -67,5 +67,5 @@ ensure_available() {
 }
 
 cmd_avail() {
-  command -v "${1}" >/dev/null 2>&1
+  command -v -- "${1}" >/dev/null 2>&1
 }

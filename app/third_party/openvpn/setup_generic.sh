@@ -30,7 +30,7 @@ STACK="${STACK}${this_file}"':'
 export STACK
 
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
-SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "$d" ]; then echo "$d"; else echo './'"$d"; fi)}"
+SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "${d}" ]; then echo "${d}"; else echo './'"${d}"; fi)}"
 
 SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/conf.env.sh'
 export SCRIPT_NAME

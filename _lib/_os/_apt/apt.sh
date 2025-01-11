@@ -38,7 +38,7 @@ export DEBIAN_FRONTEND='noninteractive'
 
 is_installed() {
     # dpkg-query --showformat='${Version}' --show "${1}" 2>/dev/null;
-    dpkg -s "${1}" >/dev/null 2>&1
+    dpkg -s -- "${1}" >/dev/null 2>&1
 }
 
 apt_depends() {

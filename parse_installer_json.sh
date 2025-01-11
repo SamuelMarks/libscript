@@ -41,6 +41,9 @@ server_scratch_file="${output_folder}"'/database.tmp'
 wwwroot_scratch_file="${output_folder}"'/wwwroot.tmp'
 base="${BASE:-alpine:latest debian:bookworm-slim}"
 
+NL='
+'
+
 [ -d "${output_folder}" ] || mkdir -p "${output_folder}"
 prelude="$(cat -- "${SCRIPT_ROOT_DIR}"'/prelude.sh'; printf 'a')"
 prelude="${prelude%a}"
@@ -49,9 +52,9 @@ if [ ! -f "${install_file}" ]; then printf '%s\n\n' "${prelude}" > "${install_fi
 if [ ! -f "${install_parallel_file}" ]; then printf '%s\nDIR=$(CDPATH='"''"' cd -- "$(dirname -- "${this_file}")" && pwd)\n\n' "${prelude}"  > "${install_parallel_file}" ; fi
 if [ ! -f "${true_env_file}" ]; then printf '#!/bin/sh\n\n' > "${true_env_file}" ; fi
 if [ ! -f "${false_env_file}" ]; then printf '#!/bin/sh\n' > "${false_env_file}" ; fi
-printf '' | tee "${docker_scratch_file}" "${toolchain_scratch_file}" \
-                "${storage_scratch_file}" "${server_scratch_file}" \
-                "${wwwroot_scratch_file}"
+touch "${docker_scratch_file}" "${toolchain_scratch_file}" \
+      "${storage_scratch_file}" "${server_scratch_file}" \
+      "${wwwroot_scratch_file}"
 
 header_tpl='#############################\n#\t\t%s\t#\n#############################\n\n'
 
@@ -82,7 +85,7 @@ path2key() {
     '_lib/_toolchain') export res='toolchain' ;;
     '_lib/_storage') export res='storage' ;;
     'app/third_party') export res='third_party' ;;
-    **) export res="${1}" ;;
+    *) export res="${1}" ;;
   esac
 }
 
@@ -91,7 +94,7 @@ key2path() {
     'toolchain') export res='_lib/_toolchain' ;;
     'storage') export res='_lib/_storage' ;;
     'third_party') export res='app/third_party' ;;
-    **) export res="${1}" ;;
+    *) export res="${1}" ;;
   esac
 }
 
@@ -100,7 +103,7 @@ scratch2key() {
     "${toolchain_scratch_file}") export res='toolchain' ;;
     "${server_scratch_file}") export res='server' ;;
     "${wwwroot_scratch_file}") export res='wwwroot' ;;
-    'storage'|**) export res='storage' ;;
+    'storage'|*) export res='storage' ;;
   esac
 }
 
@@ -109,7 +112,7 @@ key2scratch() {
     'toolchain') export res="${toolchain_scratch_file}" ;;
     'server') export res="${server_scratch_file}" ;;
     'wwwroot') export res="${wwwroot_scratch_file}" ;;
-    'storage'|**) export res="${storage_scratch_file}" ;;
+    'storage'|*) export res="${storage_scratch_file}" ;;
   esac
 }
 
@@ -119,7 +122,6 @@ add_missing_line_continuation() {
   in_sq=0
   in_dq=0
   in_comment=0
-  printf ''
 
   src="$(cat -- "${1}"; printf 'a')"
   src="${src%a}"
@@ -134,70 +136,110 @@ add_missing_line_continuation() {
       ch="${tmp%"$rest"}"
       # shellcheck disable=SC2003
       i=$(expr "${i}" + 1);
-      >&2 printf 'src[%d] = '"'"'%s'"'"' (prev: '"'"'%s'"'"')\n' "${i}" "${ch}" "${prev_ch}"
-      NL='
-'
-      case "${ch}" in
-        "${NL}")
-          maybe_cont=''
+      # >&2 printf 'src[%d] = '"'"'%s'"'"' (prev: '"'"'%s'"'"')\n' "${i}" "${ch}" "${prev_ch}"
+      # >&2 printf 'token = "%s"\n' "${token}"
+      case "${token}" in
+        'if')
           # shellcheck disable=SC2003
-          cond=$(dc -e "${in_dq}"' '"${in_sq}"' '"${in_comment}"' '"${if_count}"' '"${loop_count}"' 0d[+z1<a]dsaxp')
-          if [ "${cond}" -gt 0 ]; then
-            >&2 printf '[in_dq: %d; in_sq: %d; in_comment: %d; if_count: %d; loop_count: %d] cont for line: %s\n' "${in_dq}" "${in_sq}" "${in_comment}" "${if_count}" "${loop_count}" "${line}"
-            maybe_cont=' \'
-          fi
-          >&2 printf '%s%s%s' "${line}" "${maybe_cont}" "${NL}"
-          printf '%s%s%s' "${line}" "${maybe_cont}" "${NL}"
-          line=''
-          ch=''
-          token=''
-          in_comment=0
-          ;;
-        "#")
-          # shellcheck disable=SC1003
-          if [ "${in_comment}" -eq 0 ] \
-             && [ ! "${prev_ch}" = '\\' ] \
-             && [ "${in_dq}" -eq 0 ] \
-             && [ "${in_sq}" -eq 0 ]; then
-            in_comment=1
-          fi ;;
-        "'")
-          # shellcheck disable=SC1003
-          if [ "${in_comment}" -eq 0 ] && [ ! "${prev_ch}" = '\\' ]; then
-            if [ "${in_sq}" -eq 1 ]; then
-              in_sq=0;
-            else
-              in_sq=1;
-            fi
-          fi ;;
-        '"')
-          # shellcheck disable=SC1003
-          if [ "${in_comment}" -eq 0 ] && [ ! "${prev_ch}" = '\\' ]; then
-            if [ "${in_dq}" -eq 1 ]; then
-              in_dq=0;
-            else
-              in_dq=1;
-            fi
-          fi ;;
-        [a-zA-Z0-9_])
-          token="${token}${ch}"
-          ;;
+          if_count="$(expr "${if_count}" + 1)" ;;
+        'fi')
+          # shellcheck disable=SC2003
+          if_count="$(expr "${if_count}" - 1)" ;;
+        'for'|'while')
+          # shellcheck disable=SC2003
+          loop_count="$(expr "${loop_count}" + 1)" ;;
+        'done')
+          # shellcheck disable=SC2003
+          loop_count="$(expr "${loop_count}" - 1)" ;;
         *)
-          case "${token}" in
-            'if')
+          case "${ch}" in
+            "${NL}")
+              token="${token}${ch}"
+              case "${token}" in
+                'if')
+                  # shellcheck disable=SC2003
+                  if_count="$(expr "${if_count}" + 1)" ;;
+                'fi')
+                  # shellcheck disable=SC2003
+                  if_count="$(expr "${if_count}" - 1)" ;;
+                'for'|'while')
+                  # shellcheck disable=SC2003
+                  loop_count="$(expr "${loop_count}" + 1)" ;;
+                'done')
+                  # shellcheck disable=SC2003
+                  loop_count="$(expr "${loop_count}" - 1)" ;;
+              esac
+
+              maybe_cont=''
               # shellcheck disable=SC2003
-              if_count="$(expr "${if_count}" + 1)" ;;
-            'fi')
-              # shellcheck disable=SC2003
-              if_count="$(expr "${if_count}" - 1)" ;;
-            'for'|'while')
-              # shellcheck disable=SC2003
-              loop_count="$(expr "${loop_count}" + 1)" ;;
-            'done')
-              # shellcheck disable=SC2003
-              loop_count="$(expr "${loop_count}" - 1)" ;;
+              cond=$(dc -e "${in_dq}"' '"${in_sq}"' '"${in_comment}"' '"${if_count}"' '"${loop_count}"' 0d[+z1<a]dsaxp')
+              >&2 printf '[in_dq: %d; in_sq: %d; in_comment: %d; if_count: %d; loop_count: %d]\n' "${in_dq}" "${in_sq}" "${in_comment}" "${if_count}" "${loop_count}"
+              >&2 printf 'line: %s\n' "${line}"
+              if [ "${cond}" -gt 0 ]; then
+                maybe_cont=' \'
+              fi
+              # >&2 printf 'token="%s"\n' "${token}"
+              # >&2 printf '%s%s%s' "${line}" "${maybe_cont}" "${NL}"
+              printf '%s%s%s' "${line}" "${maybe_cont}" "${NL}"
+              line=''
+              ch=''
+              token=''
+              in_comment=0
+              ;;
+            "#")
+              cond=$(dc -e "${in_dq}"' '"${in_sq}"' '"${in_comment}"' 0d[+z1<a]dsaxp')
+              # shellcheck disable=SC1003
+              if [ "${cond}" -eq 0 ] && [ ! "${prev_ch}" = '\\' ]; then
+                in_comment=1
+              fi
+              token="${token}${ch}"
+              ;;
+            "'")
+              # shellcheck disable=SC1003
+              if [ "${in_comment}" -eq 0 ] && [ ! "${prev_ch}" = '\\' ]; then
+                if [ "${in_sq}" -eq 1 ]; then
+                  in_sq=0;
+                else
+                  in_sq=1;
+                fi
+              fi
+              token="${token}${ch}"
+              ;;
+            '"')
+              # shellcheck disable=SC1003
+              if [ "${in_comment}" -eq 0 ] && [ ! "${prev_ch}" = '\\' ]; then
+                if [ "${in_dq}" -eq 1 ]; then
+                  in_dq=0;
+                else
+                  in_dq=1;
+                fi
+              fi
+              token="${token}${ch}"
+              ;;
+            [[:graph:]]) token="${token}${ch}" ;;
+            ';'|[[:space:]]|*)
+              cond=$(dc -e "${in_dq}"' '"${in_sq}"' '"${in_comment}"' 0d[+z1<a]dsaxp')
+              # shellcheck disable=SC1003
+              if [ "${cond}" -eq 0 ] && [ ! "${prev_ch}" = '\\' ]; then
+                case "${token}" in
+                  'if')
+                    # shellcheck disable=SC2003
+                    if_count="$(expr "${if_count}" + 1)" ;;
+                  'fi')
+                    # shellcheck disable=SC2003
+                    if_count="$(expr "${if_count}" - 1)" ;;
+                  'for'|'while')
+                    # shellcheck disable=SC2003
+                    loop_count="$(expr "${loop_count}" + 1)" ;;
+                  'done')
+                    # shellcheck disable=SC2003
+                    loop_count="$(expr "${loop_count}" - 1)" ;;
+                  *) ;;
+                esac
+                token=''
+              fi
+              ;;
           esac
-          token=''
           ;;
       esac
       line="${line}${ch}"
@@ -682,13 +724,17 @@ parse_json() {
         docker_sec="${docker_sec%a}"
         scratch2key "${section}"
         dockerfile_by_section="${output_folder}"'/'"${image_no_tag}"'.'"${res}"'.Dockerfile'
-        if [ ! -f "${dockerfile_by_section}" ]; then
-          add_missing_line_continuation "${section}" > "${section}"'.tmp'
-          mv "${section}"'.tmp' "${section}"
-          sec_contents="$(cat -- "${section}"; printf 'a')"
-          sec_contents="${sec_contents%a}"
-          env -i BODY="${sec_contents}" ENV="${docker_sec}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
-            "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${dockerfile_by_section}"
+        if [ ! -f "${dockerfile_by_section}" ] && [ -f "${section}" ]; then
+           >&2 printf '$$$$$$$$$$$\n# %s #\n%s\n$$$$$$$$$$$$$$$\n\n' "${section}" "$(cat -- "${section}")"
+           tmp_f="${section}"'.tmp'
+           [ -f "${tmp_f}" ] || touch "${tmp_f}"
+           cp "${section}" "${tmp_f}"
+           #add_missing_line_continuation "${section}" > "${tmp_f}"
+           mv "${tmp_f}" "${section}"
+           sec_contents="$(cat -- "${section}"; printf 'a')"
+           sec_contents="${sec_contents%a}"
+           env -i BODY="${sec_contents}" ENV="" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
+             "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${dockerfile_by_section}"
         fi
       done
 
@@ -698,6 +744,7 @@ parse_json() {
           "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.tpl' > "${dockerfile}"
       fi
     done
+
     rm "${docker_scratch_file}" "${toolchain_scratch_file}" "${storage_scratch_file}" \
        "${server_scratch_file}" "${wwwroot_scratch_file}"
 }

@@ -30,7 +30,7 @@ STACK="${STACK}${this_file}"':'
 export STACK
 
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
-SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "$d" ]; then echo "$d"; else echo './'"$d"; fi)}"
+SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "${d}" ]; then echo "${d}"; else echo './'"${d}"; fi)}"
 
 SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/conf.env.sh'
 export SCRIPT_NAME
@@ -53,9 +53,9 @@ if [ ! -d "${JUPYTERHUB_VENV}" ]; then
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 
-  "${PRIV}" mkdir -p "${JUPYTERHUB_VENV}"
-  "${PRIV}" chown -R "${USER}":"${GROUP:-${USER}}" "${JUPYTERHUB_VENV}"
-  uv venv --python "${PYTHON_VERSION}" "${JUPYTERHUB_VENV}"
+  "${PRIV}" mkdir -p -- "${JUPYTERHUB_VENV}"
+  "${PRIV}" chown -R -- "${USER}":"${GROUP:-${USER}}" "${JUPYTERHUB_VENV}"
+  uv venv --python "${PYTHON_VERSION}" -- "${JUPYTERHUB_VENV}"
   "${JUPYTERHUB_VENV}"'/bin/python' -m ensurepip
   "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U pip
   "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U setuptools wheel
@@ -70,26 +70,26 @@ if ! cmd_avail npm ; then
   . "${SCRIPT_NAME}"
 fi
 npm install -g configurable-http-proxy
-"${PRIV}" mkdir -p "${JUPYTERHUB_NOTEBOOK_DIR}"
-"${PRIV}" chown -R "${JUPYTERHUB_SERVICE_USER}":"${JUPYTERHUB_SERVICE_GROUP}" "${JUPYTERHUB_NOTEBOOK_DIR}" "${JUPYTERHUB_VENV}"
+"${PRIV}" mkdir -p -- "${JUPYTERHUB_NOTEBOOK_DIR}"
+"${PRIV}" chown -R -- "${JUPYTERHUB_SERVICE_USER}":"${JUPYTERHUB_SERVICE_GROUP}" "${JUPYTERHUB_NOTEBOOK_DIR}" "${JUPYTERHUB_VENV}"
 
 if [ -d '/etc/systemd/system' ]; then
   if [ ! -d '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' ]; then
     adduser "${JUPYTERHUB_SERVICE_USER}" --home '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' --gecos ''
   fi
-  "${PRIV}" chown -R "${JUPYTERHUB_SERVICE_USER}":"${JUPYTERHUB_SERVICE_USER}" "${JUPYTERHUB_VENV}"
+  "${PRIV}" chown -R -- "${JUPYTERHUB_SERVICE_USER}":"${JUPYTERHUB_SERVICE_USER}" "${JUPYTERHUB_VENV}"
 
   service_name='jupyterhub_'"${JUPYTERHUB_IP}"'_'"${JUPYTERHUB_PORT}"
   service='/etc/systemd/system/'"${service_name}"'.service'
   tmp="${TMPDIR:-/tmp}"'/'"${service_name}"
   envsubst < "${SCRIPT_ROOT_DIR}"'/app/third_party/jupyter/conf/systemd/jupyverse.service' > "${tmp}"
-  "${PRIV}" mv "${tmp}" "${service}"
-  "${PRIV}" chmod 0644 "${service}"
-  "${PRIV}" systemctl stop "${service_name}" || true
+  "${PRIV}" mv -- "${tmp}" "${service}"
+  "${PRIV}" chmod 0644 -- "${service}"
+  "${PRIV}" systemctl stop -- "${service_name}" || true
   "${PRIV}" systemctl daemon-reload
-  "${PRIV}" systemctl start "${service_name}"
+  "${PRIV}" systemctl start -- "${service_name}"
 elif [ -d '/Library/LaunchDaemons' ]; then
-  >&2 echo 'TODO: macOS service'
+  >&2 printf 'TODO: macOS service\n'
   exit 3
 else
   "${JUPYTERHUB_VENV}"'/bin/jupyter' notebook \

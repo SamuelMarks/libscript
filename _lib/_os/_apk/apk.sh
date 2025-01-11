@@ -30,5 +30,5 @@ STACK="${STACK}${this_file}"':'
 export STACK
 
 is_installed() {
-   apk list --installed "${1}"
+   apk list --installed -- "${1}"
 }
