@@ -35,5 +35,5 @@ ARG WWWROOT_example_com_INSTALL_VERSION='0.0.1'
 COPY . /scripts
 WORKDIR /scripts
 
-RUN export SCRIPT_NAME='/scripts/tmp/install_gen.sh' && \
+RUN export SCRIPT_NAME='/scripts/install_gen.sh' && \
     . "${SCRIPT_NAME}"

@@ -102,6 +102,21 @@ For debugging, you might want to run something like:
     $ distro='debian' # or 'alpine'
     $ docker build --file "${distro}"'.Dockerfile' --progress='plain' --no-cache --tag "${PWD##*/}":"${distro}" .
 
+### Docker builder
+
+To make things more convenient, use this docker builder; setting `-i` to same as `-o` of `./create_installer_from_json.sh`:
+
+    $ ./build_docker_images.sh -h
+    Build Docker images.
+
+      -p prefix ($DOCKER_IMAGE_PREFIX, default: "deploysh")
+      -s suffix ($DOCKER_IMAGE_SUFFIX, default: "-latest")
+      -i input directory (`cd`s if provided, defaults to current working directory)
+      -v verbosity (can be specified multiple times)
+      -h show help text
+
+    $ ./build_docker_images.sh -o ./tmp
+
 <hr/>
 
 ## License

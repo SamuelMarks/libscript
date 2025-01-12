@@ -40,6 +40,9 @@ storage_scratch_file="${output_folder}"'/storage.tmp'
 server_scratch_file="${output_folder}"'/database.tmp'
 wwwroot_scratch_file="${output_folder}"'/wwwroot.tmp'
 third_party_scratch_file="${output_folder}"'/third_party.tmp'
+_lib_folder="${output_folder}"'/_lib'
+app_folder="${output_folder}"'/app'
+
 base="${BASE:-alpine:latest debian:bookworm-slim}"
 
 [ -d "${output_folder}" ] || mkdir -p "${output_folder}"
@@ -50,6 +53,8 @@ if [ ! -f "${install_file}" ]; then printf '%s\n\n' "${prelude}" > "${install_fi
 if [ ! -f "${install_parallel_file}" ]; then printf '%s\nDIR=$(CDPATH='"''"' cd -- "$(dirname -- "${this_file}")" && pwd)\n\n' "${prelude}"  > "${install_parallel_file}" ; fi
 if [ ! -f "${true_env_file}" ]; then printf '#!/bin/sh\n\n' > "${true_env_file}" ; fi
 if [ ! -f "${false_env_file}" ]; then printf '#!/bin/sh\n' > "${false_env_file}" ; fi
+if [ ! -e "${_lib_folder}" ]; then ln -s "${SCRIPT_ROOT_DIR}"'/_lib' "${_lib_folder}" ; fi
+if [ ! -e "${app_folder}" ]; then ln -s "${SCRIPT_ROOT_DIR}"'/app' "${app_folder}" ; fi
 touch "${docker_scratch_file}" "${toolchain_scratch_file}" \
       "${storage_scratch_file}" "${server_scratch_file}" \
       "${wwwroot_scratch_file}" "${third_party_scratch_file}"
