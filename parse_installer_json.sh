@@ -139,7 +139,7 @@ update_generated_files() {
       # shellcheck disable=SC2016
       printf 'ARG %s=1\n' "${env_clean}" | tee -a "${docker_scratch_file}" "${scratch_file}" >/dev/null
       # shellcheck disable=SC2016
-      printf 'export %s="${%s:-1}"\n' "${env_clean}" "${env_clean}"
+      printf 'export %s=1\n' "${env_clean}"
     else
       # shellcheck disable=SC2016
       printf 'ARG %s=0\n' "${env_clean}" | tee -a "${docker_scratch_file}" "${scratch_file}" >/dev/null
@@ -249,9 +249,7 @@ parse_wwwroot_item() {
     wwwroot_len=$(expr "${wwwroot_len}" + 1)
 
     # shellcheck disable=SC2016
-    printf '( \n' >> "${install_parallel_file}"
-    # shellcheck disable=SC2016
-    printf 'export %s="${%s:-1}"\n' "${env}" "${env}" | tee -a "${install_parallel_file}" "${true_env_file}" >/dev/null
+    printf 'export %s=1\n' "${env}" "${env}" | tee -a "${install_parallel_file}" "${true_env_file}" >/dev/null
     printf 'export %s=0\n' "${env}" >> "${false_env_file}"
 
     if [ "${verbose}" -ge 3 ]; then
@@ -261,15 +259,28 @@ parse_wwwroot_item() {
     clean_name="$(printf '%s' "${name}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
 
     if [ "${verbose}" -ge 3 ] && [ -n "${path}" ]; then printf '  Path: %s\n' "${path}"; fi
+    extra=''
     if [ -n "${https_provider}" ]; then
-      printf '  WWWROOT_HTTPS_PROVIDER='"'"'%s'"'"'\n' "${https_provider}" >> "${install_file}"
+      # shellcheck disable=SC2016
+      extra=$(printf '  WWWROOT_HTTPS_PROVIDER="${WWWROOT_HTTPS_PROVIDER:-'"%s"'}"\n\n' "${https_provider}")
       if [ "${verbose}" -ge 3 ]; then printf '  HTTPS Provider: %s\n' "${https_provider}"; fi
     fi
-    extra=$(
-      printf '  WWWROOT_NAME='"'"'%s'"'"'\n' "${name}"
-      printf '  WWWROOT_VENDOR='"'"'%s'"'"'\n' "${vendor}"
-      printf '  WWWROOT_PATH='"'"'%s'"'"'\n' "${path:-/}"
-      printf '  WWWROOT_LISTEN='"'"'%s'"'"'\n' "${listen:-80}"
+    {
+      printf 'ARG WWWROOT_NAME='"'"'%s'"'"'\n' "${name}"
+      printf 'ARG WWWROOT_VENDOR='"'"'%s'"'"'\n' "${vendor}"
+      printf 'ARG WWWROOT_PATH='"'"'%s'"'"'\n' "${path:-/}"
+      printf 'ARG WWWROOT_LISTEN='"'"'%s'"'"'\n' "${listen:-80}"
+    } | tee -a "${wwwroot_scratch_file}" "${docker_scratch_file}" 2>/dev/null
+    alt_if_body=$(
+      # shellcheck disable=SC2016
+      printf '  WWWROOT_NAME="${WWWROOT_NAME:-'"%s"'}"\n' "${name}"
+      # shellcheck disable=SC2016
+      printf '  WWWROOT_VENDOR="${WWWROOT_VENDOR:-'"%s"'}"\n' "${vendor}"
+      # shellcheck disable=SC2016
+      printf '  WWWROOT_PATH="${WWWROOT_PATH:-'"%s"'}"\n' "${path:-/}"
+      # shellcheck disable=SC2016
+      printf '  WWWROOT_LISTEN="${WWWROOT_LISTEN:-'"%s"'}"\n' "${listen:-80}"
+      if [ -n "${extra}" ]; then printf '%s\n' "${extra}"; fi
 
       # shellcheck disable=SC2016
       printf '  if [ "${WWWROOT_VENDOR:-nginx}" = '"'"'nginx'"'"' ]; then\n'
@@ -284,7 +295,7 @@ parse_wwwroot_item() {
       printf '  fi\n'
       printf 'fi\n\n'
     )
-    update_generated_files "${clean_name}" "${version}" "${env}" 'wwwroot' "${dep_group_name}" "${extra}"
+    update_generated_files "${clean_name}" "${version}" "${env}" 'wwwroot' "${dep_group_name}" "${alt_if_body}"
 
     parse_wwwroot_builders "${www_json}"
 }
