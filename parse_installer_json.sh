@@ -154,7 +154,6 @@ add_missing_line_continuation() {
         *)
           case "${ch}" in
             "${NL}")
-              token="${token}${ch}"
               case "${token}" in
                 'if')
                   # shellcheck disable=SC2003
@@ -173,7 +172,8 @@ add_missing_line_continuation() {
               maybe_cont=''
               # shellcheck disable=SC2003
               cond=$(dc -e "${in_dq}"' '"${in_sq}"' '"${in_comment}"' '"${if_count}"' '"${loop_count}"' 0d[+z1<a]dsaxp')
-              >&2 printf '[in_dq: %d; in_sq: %d; in_comment: %d; if_count: %d; loop_count: %d]\n' "${in_dq}" "${in_sq}" "${in_comment}" "${if_count}" "${loop_count}"
+              >&2 printf '[in_dq: %d; in_sq: %d; in_comment: %d; if_count: %d; loop_count: %d]\n' \
+                "${in_dq}" "${in_sq}" "${in_comment}" "${if_count}" "${loop_count}"
               >&2 printf 'line: %s\n' "${line}"
               if [ "${cond}" -gt 0 ]; then
                 maybe_cont=' \'
@@ -376,6 +376,7 @@ parse_wwwroot_item() {
 
     # shellcheck disable=SC2016
     printf '( \n' >> "${install_parallel_file}"
+    # shellcheck disable=SC2016
     printf 'export %s="${%s:-1}"\n' "${env}" "${env}" | tee -a "${install_parallel_file}" "${true_env_file}" >/dev/null
     printf 'export %s=0\n' "${env}" >> "${false_env_file}"
 
@@ -518,7 +519,7 @@ parse_toolchain_item() {
         # shellcheck disable=SC2059
         printf "${header_tpl}" 'Toolchain(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
         # shellcheck disable=SC2059
-        if [ "${all_deps}" -ge 0 ]; then printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}" ; fi
+        if [ "${all_deps}" -eq 0 ]; then printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}" ; fi
     fi
     # shellcheck disable=SC2003
     toolchains_len=$(expr "${toolchains_len}" + 1)
@@ -570,7 +571,7 @@ parse_database_item() {
         # shellcheck disable=SC2059
         printf "${header_tpl}" 'Database(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
         # shellcheck disable=SC2059
-        if [ "${all_deps}" -ge 0 ]; then printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}" ; fi
+        if [ "${all_deps}" -eq 0 ]; then printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}" ; fi
     fi
 
     # shellcheck disable=SC2003
@@ -619,7 +620,9 @@ parse_server_item() {
       name_upper="$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')"
       update_generated_files "${name}" '*' "${name_upper}" 'app/third_party' "${dep_group_name}"
     fi
-    if [ "${verbose}" -ge 3 ] && [ -n "${location}" ]; then printf '    Location: %s\n' "${location}"; fi
+    if [ "${verbose}" -ge 3 ] && [ -n "${location}" ]; then
+      printf '    Location: %s\n' "${location}";
+    fi
 
     parse_server_builders "${server_json}"
     parse_daemon "${server_json}"
