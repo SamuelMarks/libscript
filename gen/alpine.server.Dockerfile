@@ -1,6 +1,5 @@
-FROM ${image}
+FROM alpine:latest
 
 COPY . /scripts
 WORKDIR /scripts
 
-${BODY}

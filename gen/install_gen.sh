@@ -72,6 +72,13 @@ fi
 #		Server(s) [required]	#
 #############################
 
+if [ "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD:-0}" -eq 1 ]; then
+  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/app/third_party/serve-actix-diesel-auth-scaffold/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+fi
+
 if [ "${JUPYTERHUB:-0}" -eq 1 ]; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/app/third_party/jupyterhub/setup.sh'
   export SCRIPT_NAME
@@ -94,12 +101,12 @@ fi
 #		      WWWROOT(s)      	#
 #############################
 
+  WWWROOT_HTTPS_PROVIDER='letsencrypt'
 if [ "${WWWROOT_example_com_INSTALL:-0}" -eq 1 ]; then
   WWWROOT_NAME='example.com'
   WWWROOT_VENDOR='nginx'
   WWWROOT_PATH='./my_symlinked_wwwroot'
   WWWROOT_LISTEN='80'
-  WWWROOT_HTTPS_PROVIDER='letsencrypt'
   if [ "${WWWROOT_VENDOR:-nginx}" = 'nginx' ]; then
     SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_server/nginx/setup.sh'
     export SCRIPT_NAME
@@ -107,4 +114,3 @@ if [ "${WWWROOT_example_com_INSTALL:-0}" -eq 1 ]; then
     . "${SCRIPT_NAME}"
   fi
 fi
-

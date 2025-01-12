@@ -1,6 +1,5 @@
-FROM ${image}
+FROM debian:bookworm-slim
 
 COPY . /scripts
 WORKDIR /scripts
 
-${BODY}

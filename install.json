@@ -68,8 +68,15 @@
       ],
       "servers": [
         {
-          "location": "https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold",
+          "name": "serve-actix-diesel-auth-scaffold",
+          "dest": "/tmp",
           "builder": [
+            {
+              "shell": "*",
+              "commands": [
+                "git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold"
+              ]
+            },
             {
               "shell": "*",
               "commands": [
@@ -99,7 +106,7 @@
     "optional": {
       "databases": [
         {
-          "name": "RabbitMQ",
+          "name": "RABBITMQ",
           "version": "*",
           "env": "AMQP_URL"
         }

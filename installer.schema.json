@@ -142,7 +142,7 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "location": {
+                  "dest": {
                     "type": "string"
                   },
                   "builder": {
