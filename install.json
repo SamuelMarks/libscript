@@ -33,8 +33,13 @@
       "databases": [
         {
           "name": "POSTGRES",
-          "version": ">17",
+          "version": "17",
           "env": "POSTGRES_URL",
+          "secrets": {
+            "POSTGRES_USER": "rest_user",
+            "POSTGRES_PASSWORD": "rest_pass",
+            "POSTGRES_DB": "rest_db"
+          },
           "target_env": [
             "DATABASE_URL"
           ]

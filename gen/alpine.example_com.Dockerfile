@@ -1,14 +1,10 @@
-FROM debian:bookworm-slim
+FROM alpine:latest
 
 ENV SCRIPT_ROOT_DIR='/scripts'
 
 COPY . /scripts
 WORKDIR /scripts
 
-ARG WWWROOT_NAME='example.com'
-ARG WWWROOT_VENDOR='nginx'
-ARG WWWROOT_PATH='./my_symlinked_wwwroot'
-ARG WWWROOT_LISTEN='80'
 ARG WWWROOT_example_com_INSTALL=0
 ARG example_com_VERSION='0.0.1'
 

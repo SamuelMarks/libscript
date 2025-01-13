@@ -106,6 +106,9 @@
                     "items": {
                       "type": "string"
                     }
+                  },
+                  "secrets": {
+                    "type": "object"
                   }
                 },
                 "required": [
@@ -214,6 +217,9 @@
                   },
                   "env": {
                     "type": "string"
+                  },
+                  "secrets": {
+                    "type": "object"
                   }
                 },
                 "required": [

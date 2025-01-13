@@ -124,6 +124,12 @@ key2scratch() {
   esac
 }
 
+object2key_val() {
+  obj="${1}"
+  prefix="${2:-}"
+  printf '%s' "${obj}" | jq -rc '. | to_entries[] | "'"${prefix}"'\(.key)=\"\(.value)\""'
+}
+
 update_generated_files() {
   name="${1}"
   version="${2}"
@@ -132,32 +138,39 @@ update_generated_files() {
   location="${4}"
   dep_group_name="${5}"
   alt_if_body="${6:-}"
+  extra_env_vars="${7:-}"
 
   path2key "${location}"
   key2scratch "${res}"
   scratch_file="${res}"
+
+  scratch="$(mktemp)"
 
   {
     # shellcheck disable=SC2016
     printf '(\n  ' >> "${install_parallel_file}"
     if [ "${dep_group_name}" = 'Required' ] || [ "${all_deps}" -eq 1 ]; then
       # shellcheck disable=SC2016
-      printf 'ARG %s=1\n' "${env_clean}" | tee -a "${docker_scratch_file}" "${scratch_file}" >/dev/null
+      printf 'ARG %s=1\n' "${env_clean}" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
       # shellcheck disable=SC2016
       printf 'export %s=1\n' "${env_clean}"
     else
       # shellcheck disable=SC2016
-      printf 'ARG %s=0\n' "${env_clean}" | tee -a "${docker_scratch_file}" "${scratch_file}" >/dev/null
+      printf 'ARG %s=0\n' "${env_clean}" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
       printf 'export %s=0\n' "${env_clean}"
     fi
-    printf 'ARG %s_VERSION='"'"'%s'"'"'\n\n' "${env_clean}" "${version}" | tee -a "${docker_scratch_file}" "${scratch_file}" >/dev/null
-    printf 'export %s_VERSION='"'"'%s'"'"'\n\n' "${env_clean}" "${version}"
+    if [ -n "${extra_env_vars}" ] && [ ! "${extra_env_vars}" = 'null' ] ; then
+      object2key_val "${extra_env_vars}" 'ARG ' | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
+      object2key_val "${extra_env_vars}" 'export '
+    fi
+    printf 'ARG %s_VERSION='"'"'%s'"'"'\n\n' "${name}" "${version}" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
+    printf 'export %s_VERSION='"'"'%s'"'"'\n\n' "${name}" "${version}"
   } | tee -a "${install_parallel_file}" "${true_env_file}" >/dev/null
   # shellcheck disable=SC2059
   printf "${run_tpl}"' ) &\n\n' 'install_gen.sh' >> "${install_parallel_file}"
   printf 'export %s=0\n' "${env_clean}" >> "${false_env_file}"
 
-  printf 'RUN <<-EOF\n\n' >> "${scratch_file}"
+  printf 'RUN <<-EOF\n\n' | tee -a "${scratch_file}" "${scratch}" >/dev/null
   # shellcheck disable=SC2016
   {
     printf 'if [ "${%s:-0}" -eq 1 ]; then\n' "${env_clean}"
@@ -171,8 +184,21 @@ update_generated_files() {
       printf '  . "${SCRIPT_NAME}"\n'
       printf 'fi\n\n'
    fi
-  } | tee -a "${scratch_file}" "${install_file}" >/dev/null
-  printf 'EOF\n\n\n' >> "${scratch_file}"
+  } | tee -a "${scratch_file}" "${scratch}" "${install_file}" >/dev/null
+  printf 'EOF\n\n\n' | tee -a "${scratch_file}" "${scratch}" >/dev/null
+
+  scratch_contents="$(cat -- "${scratch}"; printf 'a')"
+  scratch_contents="${scratch_contents%a}"
+  name_lower="$(printf '%s' "${name}" | tr '[:upper:]' '[:lower:]')"
+  for image in ${base}; do
+    image_no_tag="$(printf '%s' "${image}" | cut -d ':' -f1)"
+    name_file="${output_folder}"'/'"${image_no_tag}"'.'"${name_lower}"'.Dockerfile'
+
+    # shellcheck disable=SC2016
+    env -i BODY="${scratch_contents}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
+                 "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${name_file}"
+  done
+  rm -f "${scratch}"
 }
 
 # parse the "name" field
@@ -434,12 +460,14 @@ parse_database_item() {
     version=$(printf '%s' "${db_json}" | jq -r '.version')
     env=$(printf '%s' "${db_json}" | jq -r '.env')
     target_env=$(printf '%s' "${db_json}" | jq -c '.target_env[]?')
+    secrets=$(printf '%s' "${db_json}" | jq -c '.secrets?')
 
     if [ "${verbose}" -ge 3 ]; then
       printf '  Database:\n'
       printf '    Name: %s\n' "${name}"
       printf '    Version: %s\n' "${version}"
       printf '    Env: %s\n' "${env}"
+      printf '    Secrets: %s\n' "${secrets}"
     fi
 
     if [ "${dep_group_name}" = "Required" ] ; then
@@ -463,7 +491,7 @@ parse_database_item() {
     # shellcheck disable=SC2003
     databases_len=$(expr "${databases_len}" + 1)
 
-    update_generated_files "${name}" "${version}" "${env}" '_lib/_storage' "${dep_group_name}"
+    update_generated_files "${name}" "${version}" "${env}" '_lib/_storage' "${dep_group_name}" '' "${secrets}"
     if [ -n "${target_env}" ]; then
         if [ "${verbose}" -ge 3 ]; then printf '    Target Env:\n'; fi
 

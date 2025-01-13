@@ -37,7 +37,7 @@ export SCRIPT_NAME
 
 (
   export NODEJS_INSTALL_DIR=1
-export NODEJS_INSTALL_DIR_VERSION='lts'
+export NODEJS_VERSION='lts'
 
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
@@ -46,7 +46,7 @@ export SCRIPT_NAME
 
 (
   export PYTHON_INSTALL_DIR=1
-export PYTHON_INSTALL_DIR_VERSION='3.10'
+export PYTHON_VERSION='3.10'
 
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
@@ -55,7 +55,7 @@ export SCRIPT_NAME
 
 (
   export RUST_INSTALL_DIR=1
-export RUST_INSTALL_DIR_VERSION='nightly'
+export RUST_VERSION='nightly'
 
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
@@ -75,7 +75,10 @@ export SCRIPT_NAME
 
 (
   export POSTGRES_URL=1
-export POSTGRES_URL_VERSION='>17'
+export POSTGRES_USER="rest_user"
+export POSTGRES_PASSWORD="rest_pass"
+export POSTGRES_DB="rest_db"
+export POSTGRES_VERSION='17'
 
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
@@ -84,7 +87,7 @@ export SCRIPT_NAME
 
 (
   export REDIS_URL=1
-export REDIS_URL_VERSION='*'
+export VALKEY_VERSION='*'
 
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
@@ -104,7 +107,7 @@ export SCRIPT_NAME
 
 (
   export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD=1
-export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_VERSION='*'
+export serve-actix-diesel-auth-scaffold_VERSION='*'
 
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
@@ -113,7 +116,7 @@ export SCRIPT_NAME
 
 (
   export JUPYTERHUB=1
-export JUPYTERHUB_VERSION='*'
+export JupyterHub_VERSION='*'
 
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
@@ -131,7 +134,7 @@ export SCRIPT_NAME
 
 (
   export AMQP_URL=0
-export AMQP_URL_VERSION='*'
+export RABBITMQ_VERSION='*'
 
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
@@ -148,7 +151,7 @@ export WWWROOT_example_com_INSTALL=1
 export WWWROOT_example_com_INSTALL=1
 (
   export WWWROOT_example_com_INSTALL=0
-export WWWROOT_example_com_INSTALL_VERSION='0.0.1'
+export example_com_VERSION='0.0.1'
 
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
