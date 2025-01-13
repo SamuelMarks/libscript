@@ -20,4 +20,6 @@ Make sure you have the latest folders in place; or delete the folders and `creat
 For example, I usually run:
 
     $ rm -rf gen/{*.Dockerfile,*.sh,_lib,app} ; sh ./create_installer_from_json.sh -f ./install.json -o gen
-    $ sh ./build_docker_images.sh -i gen -vvv
+    $ sh ./create_docker_builder.sh -i gen -vvv
+    $ cd gen && sh ./docker_builder.sh
+    # or docker_builder_parallel.sh ^
