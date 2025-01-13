@@ -133,7 +133,7 @@ EOF
       name=''
       tag=''
     fi
-    printf 'docker build --file "%s" %s --tag "%s%s":"%s%s" .%s' "${dockerfile}" "${build_args}" "${prefix}" "${name}" "${tag}" "${suffix}" "${end}"
+    printf 'docker build --file '"'"'%s'"'"' %s --tag '"'"'%s%s'"'"':'"'"'%s%s'"'"' .%s' "${dockerfile}" "${build_args}" "${prefix}" "${name}" "${tag}" "${suffix}" "${end}"
 }
 
 section2name() {
@@ -148,7 +148,7 @@ section2name() {
   export res;
 }
 
-DOCKER_BUILD_ARGS=${DOCKER_BUILD_ARGS:---progress plain --no-cache}
+DOCKER_BUILD_ARGS=${DOCKER_BUILD_ARGS:---progress=\'plain\' --no-cache}
 build_args="$(printf '%s' "${DOCKER_BUILD_ARGS}")"
 
 for section in "${toolchain_dfs}" "${server_dfs}" "${storage_dfs}" "${third_party_dfs}" "${wwwroot_dfs}" "${remaining}"; do
