@@ -1,3 +1,5 @@
 .idea
 .vscode
 tmp
+gen/_lib
+gen/app

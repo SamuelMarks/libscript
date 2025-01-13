@@ -30,17 +30,14 @@ help=0
 output_folder="${SCRIPT_ROOT_DIR}"'/tmp'
 base="${BASE:-alpine:latest debian:bookworm-slim}"
 
-while getopts 'a:f:o:v:h:' opt; do
+while getopts 'a:f:o:vh' opt; do
     case ${opt} in
       (a)   all_deps="${OPTARG}" ;;
       (f)   filename="${OPTARG}" ;;
       (o)   output_folder="${OPTARG}" ;;
       (v)   # shellcheck disable=SC2003
             verbose=$(expr "${verbose}" + 1) ;;
-      (h)   if test "${OPTARG}" = "$(eval echo '$'$((OPTIND - 1)))"; then
-              OPTIND=$((OPTIND - 1));
-            fi
-            help=1 ;;
+      (h)   help=1 ;;
       (*) ;;
     esac
 done

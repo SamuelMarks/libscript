@@ -8,7 +8,8 @@ elif [ ! -z "${ZSH_VERSION+x}" ]; then
   # shellcheck disable=SC3040
   set -o pipefail
 fi
-set -feu
+set -eu
+set +f # in case anyone else set this; we use glob here!!
 
 prefix="${DOCKER_IMAGE_PREFIX:-deploysh}"
 suffix="${DOCKER_IMAGE_SUFFIX:--latest}"
@@ -18,18 +19,15 @@ verbose=0
 input_directory=''
 help=0
 
-while getopts 'p:s:i:v:h:' opt; do
+while getopts 'p:s:i:vh' opt; do
     case ${opt} in
-      (p)   prefix="${OPTARG}" ;;
-      (s)   suffix="${OPTARG}" ;;
-      (i)   input_directory="${OPTARG}" ;;
-      (v)   # shellcheck disable=SC2003
+      'p')  prefix="${OPTARG}" ;;
+      's')  suffix="${OPTARG}" ;;
+      'i')  input_directory="${OPTARG}" ;;
+      'v')  # shellcheck disable=SC2003
             verbose=$(expr "${verbose}" + 1) ;;
-      (h)   if test "${OPTARG}" = "$(eval echo '$'$((OPTIND - 1)))"; then
-              OPTIND=$((OPTIND - 1));
-            fi
-            help=1 ;;
-      (*) ;;
+      'h')  help=1 ;;
+      *) ;;
     esac
 done
 export verbose
@@ -65,11 +63,29 @@ printf 'input_directory = %s\n' "${input_directory}"
 cwd=$(pwd)
 printf 'cwd = %s\n' "${cwd}"
 
-server_dfs="$(ls -- *.server.Dockerfile)"
-storage_dfs="$(echo -- *.storage.Dockerfile)"
-third_party_dfs="$(echo -- *.third_party.Dockerfile)"
-toolchain_dfs="$(echo -- *.toolchain.Dockerfile)"
-wwwroot_dfs="$(echo -- *.wwwroot.Dockerfile)"
+collect_when_pattern() {
+  pattern="$1"
+    result=''
+
+    # Expand the pattern into positional parameters
+    set -- $pattern
+
+    for f in "$@"; do
+      # Check if the file exists and is a regular file
+      if [ -f "$f" ]; then
+        result="${result} $f"
+      fi
+    done
+
+    # Output the result, trimming leading whitespace
+    echo "$result" | sed 's/^ *//'
+}
+
+server_dfs="$(collect_when_pattern '*.server.Dockerfile')"
+storage_dfs="$(collect_when_pattern '*.storage.Dockerfile')"
+third_party_dfs="$(collect_when_pattern '*.third_party.Dockerfile')"
+toolchain_dfs="$(collect_when_pattern '*.toolchain.Dockerfile')"
+wwwroot_dfs="$(collect_when_pattern '*.wwwroot.Dockerfile')"
 verbose=0
 
 processed=' '"${server_dfs}"' '"${storage_dfs}"' '"${third_party_dfs}"' '"${toolchain_dfs}"' '"${wwwroot_dfs}"' '

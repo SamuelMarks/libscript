@@ -53,8 +53,8 @@ if [ ! -f "${install_file}" ]; then printf '%s\n\n' "${prelude}" > "${install_fi
 if [ ! -f "${install_parallel_file}" ]; then printf '%s\nDIR=$(CDPATH='"''"' cd -- "$(dirname -- "${this_file}")" && pwd)\n\n' "${prelude}"  > "${install_parallel_file}" ; fi
 if [ ! -f "${true_env_file}" ]; then printf '#!/bin/sh\n\n' > "${true_env_file}" ; fi
 if [ ! -f "${false_env_file}" ]; then printf '#!/bin/sh\n' > "${false_env_file}" ; fi
-if [ ! -e "${_lib_folder}" ]; then ln -s "${SCRIPT_ROOT_DIR}"'/_lib' "${_lib_folder}" ; fi
-if [ ! -e "${app_folder}" ]; then ln -s "${SCRIPT_ROOT_DIR}"'/app' "${app_folder}" ; fi
+if [ ! -e "${_lib_folder}" ]; then cp -r "${SCRIPT_ROOT_DIR}"'/_lib' "${_lib_folder}" ; fi
+if [ ! -e "${app_folder}" ]; then cp -r "${SCRIPT_ROOT_DIR}"'/app' "${app_folder}" ; fi
 touch "${docker_scratch_file}" "${toolchain_scratch_file}" \
       "${storage_scratch_file}" "${server_scratch_file}" \
       "${wwwroot_scratch_file}" "${third_party_scratch_file}"
@@ -275,7 +275,7 @@ parse_wwwroot_item() {
       printf 'ARG WWWROOT_VENDOR='"'"'%s'"'"'\n' "${vendor}"
       printf 'ARG WWWROOT_PATH='"'"'%s'"'"'\n' "${path:-/}"
       printf 'ARG WWWROOT_LISTEN='"'"'%s'"'"'\n' "${listen:-80}"
-    } | tee -a "${wwwroot_scratch_file}" "${docker_scratch_file}" 2>/dev/null
+    } | tee -a "${wwwroot_scratch_file}" "${docker_scratch_file}" >/dev/null
     alt_if_body=$(
       # shellcheck disable=SC2016
       printf '  WWWROOT_NAME="${WWWROOT_NAME:-'"%s"'}"\n' "${name}"
@@ -618,7 +618,6 @@ parse_json() {
         scratch2key "${section}"
         dockerfile_by_section="${output_folder}"'/'"${image_no_tag}"'.'"${res}"'.Dockerfile'
         if [ ! -f "${dockerfile_by_section}" ] && [ -f "${section}" ]; then
-           >&2 printf '$$$$$$$$$$$\n# %s #\n%s\n$$$$$$$$$$$$$$$\n\n' "${section}" "$(cat -- "${section}")"
            sec_contents="$(cat -- "${section}"; printf 'a')"
            sec_contents="${sec_contents%a}"
            env -i BODY="${sec_contents}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \

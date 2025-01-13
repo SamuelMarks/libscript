@@ -30,25 +30,13 @@ STACK="${STACK}${this_file}"':'
 export STACK
 
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
-export DIR
-
-SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "${d}" ]; then echo "${d}"; else echo './'"${d}"; fi)}"
 
 SCRIPT_NAME="${DIR}"'/conf.env.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/priv.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
-
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_os/_apt/apt.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
-
-apt_depends postgresql-common
-"${PRIV}" /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
-apt_depends postgresql-server-dev-"${POSTGRESQL_VERSION}" postgresql-"${POSTGRESQL_VERSION}"
+apk add postgresql"${POSTGRESQL_VERSION}" postgresql"${POSTGRESQL_VERSION}"-contrib postgresql"${POSTGRESQL_VERSION}"-openrc
+rc-update add postgresql || true
+rc-service postgresql stop || true
+rc-service postgresql start

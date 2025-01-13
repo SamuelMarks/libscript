@@ -65,7 +65,7 @@ To simplify usage, a JSON file format is provided. See [./install.json](./instal
 
     $ ./create_installer_from_json.sh -h
     Create install scripts from JSON.
-    
+
         -a whether to install all dependencies (required AND optional)
         -f filename
         -o output folder (defaults to ./tmp)
