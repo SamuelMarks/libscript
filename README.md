@@ -9,14 +9,16 @@ OS support for:
 
   - Linux (Debian, Alpine, &etc.)
   - macOS
-  - FreeBSD (coming soon!)
+  - *BSDs [NetBSD, FreeBSD, OpenBSD] (coming soon!)
   - Windows (coming soon!)
 
 Relocatable; no need to `cd` into the scripts directory.
 
-Plenty of guards everywhere—idempotency style—so scripts can be rerun without worry.
+Library directory structure is super-readable and modular.
 
-Dockerfiles are generated. Coming soon: these will be optimised for Docker's cache mechanism.
+Plenty of guards everywhere—idempotency style—so scripts can be interdependent—and rerun—without worry.
+
+Dockerfiles are generated. These are well optimised for Docker's cache mechanism.
 
 Example of generated files are found in the [`gen`](./gen) directory.
 
@@ -114,6 +116,8 @@ To make things more convenient, use this docker builder; setting `-i` to same as
       -i input directory (`cd`s if provided, defaults to current working directory; adds scripts here also)
       -v verbosity (can be specified multiple times)
       -h show help text
+
+#### Example
 
     $ ./build_docker_images.sh -o ./tmp
     $ cd ./tmp && sh ./docker_builder.sh

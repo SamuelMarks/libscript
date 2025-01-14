@@ -38,7 +38,8 @@
           "secrets": {
             "POSTGRES_USER": "rest_user",
             "POSTGRES_PASSWORD": "rest_pass",
-            "POSTGRES_DB": "rest_db"
+            "POSTGRES_DB": "rest_db",
+            "POSTGRES_PASSWORD_FILE": null
           },
           "target_env": [
             "DATABASE_URL"

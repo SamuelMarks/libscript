@@ -1,11 +1,11 @@
 Roadmap
 =======
 
-  - [ ] Docker cache layer per component
-  - [ ] Docker cache layer per component group (e.g., toolchains; databases; servers)
-  - [ ] Dockerfile per component group
-  - [ ] Dockerfile per component
+  - [x] Docker cache layer per component
+  - [x] Docker cache layer per component group (e.g., toolchains; databases; servers)
+  - [x] Dockerfile per component group
+  - [x] Dockerfile per component
   - [ ] Docker Compose
   - [ ] Kubernetes configuration
-  - [ ] FreeBSD support
+  - [ ] (FreeBSD, NetBSD, OpenBSD) support
   - [ ] Windows support

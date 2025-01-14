@@ -127,7 +127,7 @@ key2scratch() {
 object2key_val() {
   obj="${1}"
   prefix="${2:-}"
-  printf '%s' "${obj}" | jq -rc '. | to_entries[] | "'"${prefix}"'\(.key)=\"\(.value)\""'
+  printf '%s' "${obj}" | jq --arg q "'" -rc '. | to_entries[] | "'"${prefix}"'"+ .key + if .value == null then "" else "="+$q+.value+$q end'
 }
 
 update_generated_files() {

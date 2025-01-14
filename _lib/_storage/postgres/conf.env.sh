@@ -32,3 +32,9 @@ export STACK
 export POSTGRES_URL="${POSTGRES_URL:-1}"
 export POSTGRES_VERSION="${POSTGRES_URL_VERSION:-${POSTGRES_VERSION:-${POSTGRESQL_VERSION:-16}}}"
 export POSTGRESQL_VERSION="${POSTGRES_VERSION}"
+if [ ! -z "${POSTGRES_PASSWORD_FILE+x}" ] && [ -n "${POSTGRES_PASSWORD_FILE}" ] && [ -f "${POSTGRES_PASSWORD_FILE}" ]; then
+  pass_contents="$(cat -- "${POSTGRES_PASSWORD_FILE}"; printf 'a')"
+  pass_contents="${pass_contents%a}"
+  # TODO(security): Audit
+  export POSTGRES_PASSWORD="${pass_contents}"
+fi
