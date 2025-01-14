@@ -31,15 +31,23 @@ Example of generated files are found in the [`gen`](./gen) directory.
 ## Advantage of this repo
 
   - [Linux](https://en.wikipedia.org/wiki/Linux) variants are useful in [Docker](https://en.wikipedia.org/wiki/Docker_(software)), other image types [e.g., see [Packer](https://www.packer.io), [Unikernels](https://en.wikipedia.org/wiki/Unikernel)], and natively;
-  - [macOS](https://en.wikipedia.org/wiki/MacOS) variant is useful for native usage;
+  - [macOS](https://en.wikipedia.org/wiki/MacOS) variant is useful primarily natively;
+  - [*BSDs](https://en.wikipedia.org/wiki/Comparison_of_BSD_operating_systems) [[NetBSD](https://en.wikipedia.org/wiki/NetBSD), [FreeBSD](https://en.wikipedia.org/wiki/FreeBSD), [OpenBSD](https://en.wikipedia.org/wiki/OpenBSD)] (coming soon!) are useful in jails or natively;
   - [Windows](https://en.wikipedia.org/wiki/Microsoft_Windows)—coming soon—is useful for [Windows Containers](https://learn.microsoft.com/en-us/virtualization/windowscontainers/about/), other image types, and natively.
+
+Generally these scripts are extremely portable and could be used to benchmark and security-audit any:
+
+  - Platform virtualization software: https://en.wikipedia.org/wiki/Comparison_of_platform_virtualization_software
+  - OS-level virtualization software: https://en.wikipedia.org/wiki/OS-level_virtualization#IMPLEMENTATIONS
+  - μ-kernel: https://en.wikipedia.org/wiki/Microkernel
+  - Unikernel: https://en.wikipedia.org/wiki/Unikernel
+  - Any other kernel: https://en.wikipedia.org/wiki/Comparison_of_operating_system_kernels
 
 ## Advantage of C repo(s)
 
 All the aforementioned advantages, plus:
 
   - [SunOS](https://en.wikipedia.org/wiki/SunOS) / [illumos](https://en.wikipedia.org/wiki/Illumos) are useful for native usage on mainframes, both native and in virtualised / zones / container systems like [SmartOS](https://en.wikipedia.org/wiki/SmartOS);
-  - [*BSD](https://en.wikipedia.org/wiki/Comparison_of_BSD_operating_systems) useful in jails, and natively;
   - [OS/360](https://en.wikipedia.org/wiki/OS/360_and_successors) useful natively (expected as a proof-of-concept only);
   - [DOS](https://en.wikipedia.org/wiki/Comparison_of_DOS_operating_systems) useful natively (expected as a proof-of-concept only);
   - [z/OS](https://en.wikipedia.org/wiki/Z/OS) for native mainframe deployment.
