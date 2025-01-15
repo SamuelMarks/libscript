@@ -18,6 +18,10 @@ export POSTGRES_USER='rest_user'
 export POSTGRES_PASSWORD='rest_pass'
 export POSTGRES_DB='rest_db'
 export POSTGRES_PASSWORD_FILE
+SET POSTGRES_USER="rest_user"
+SET POSTGRES_PASSWORD="rest_pass"
+SET POSTGRES_DB="rest_db"
+SET POSTGRES_PASSWORD_FILE
 export POSTGRES_VERSION='17'
 
 export REDIS_URL=1

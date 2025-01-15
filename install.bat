@@ -12,7 +12,6 @@ IF NOT DEFINED STACK (
 
 SETLOCAL ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
 
-SET this_file=%~nx0
 SET "searchVal=;%this_file%;"
 IF NOT x!str1:%searchVal%=!"=="x%str1% (
   echo [STOP]     processing "%this_file%"

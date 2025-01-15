@@ -8,4 +8,4 @@ Roadmap
   - [ ] Docker Compose
   - [ ] Kubernetes configuration
   - [ ] (FreeBSD, NetBSD, OpenBSD) support
-  - [ ] Windows support
+  - [x] Windows support

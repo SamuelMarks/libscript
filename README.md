@@ -10,7 +10,7 @@ OS support for:
   - Linux (Debian, Alpine, &etc.)
   - macOS
   - *BSDs [NetBSD, FreeBSD, OpenBSD] (coming soon!)
-  - Windows (coming soon!)
+  - Windows
 
 Relocatable; no need to `cd` into the scripts directory.
 
@@ -33,7 +33,7 @@ Example of generated files are found in the [`gen`](./gen) directory.
   - [Linux](https://en.wikipedia.org/wiki/Linux) variants are useful in [Docker](https://en.wikipedia.org/wiki/Docker_(software)), other image types [e.g., see [Packer](https://www.packer.io), [Unikernels](https://en.wikipedia.org/wiki/Unikernel)], and natively;
   - [macOS](https://en.wikipedia.org/wiki/MacOS) variant is useful primarily natively;
   - [*BSDs](https://en.wikipedia.org/wiki/Comparison_of_BSD_operating_systems) [[NetBSD](https://en.wikipedia.org/wiki/NetBSD), [FreeBSD](https://en.wikipedia.org/wiki/FreeBSD), [OpenBSD](https://en.wikipedia.org/wiki/OpenBSD)] (coming soon!) are useful in jails or natively;
-  - [Windows](https://en.wikipedia.org/wiki/Microsoft_Windows)—coming soon—is useful for [Windows Containers](https://learn.microsoft.com/en-us/virtualization/windowscontainers/about/), other image types, and natively.
+  - [Windows](https://en.wikipedia.org/wiki/Microsoft_Windows) is useful for [Windows Containers](https://learn.microsoft.com/en-us/virtualization/windowscontainers/about/), other image types, and natively.
 
 Generally these scripts are extremely portable and could be used to benchmark and security-audit any:
 

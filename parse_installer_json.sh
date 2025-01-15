@@ -31,8 +31,11 @@ all_deps="${all_deps:-0}"
 
 output_folder=${output_folder:-${SCRIPT_ROOT_DIR}/tmp}
 false_env_file="${output_folder}"'/false_env.sh'
+false_env_cmd_file="${output_folder}"'/false_env.cmd'
 true_env_file="${output_folder}"'/env.sh'
+true_env_cmd_file="${output_folder}"'/env.cmd'
 install_file="${output_folder}"'/install_gen.sh'
+install_cmd_file="${output_folder}"'/install_gen.cmd'
 install_parallel_file="${output_folder}"'/install_parallel_gen.sh'
 docker_scratch_file="${output_folder}"'/docker.tmp'
 toolchain_scratch_file="${output_folder}"'/toolchain.tmp'
@@ -55,14 +58,43 @@ if [ ! -f "${true_env_file}" ]; then printf '#!/bin/sh\n\n' > "${true_env_file}"
 if [ ! -f "${false_env_file}" ]; then printf '#!/bin/sh\n' > "${false_env_file}" ; fi
 if [ ! -e "${_lib_folder}" ]; then cp -r "${SCRIPT_ROOT_DIR}"'/_lib' "${_lib_folder}" ; fi
 if [ ! -e "${app_folder}" ]; then cp -r "${SCRIPT_ROOT_DIR}"'/app' "${app_folder}" ; fi
-touch "${docker_scratch_file}" "${toolchain_scratch_file}" \
-      "${storage_scratch_file}" "${server_scratch_file}" \
-      "${wwwroot_scratch_file}" "${third_party_scratch_file}"
 
 header_tpl='#############################\n#\t\t%s\t#\n#############################\n\n'
+header_cmd_tpl=':: ##############################\n:: #\t%s\t#\n:: ##############################\n\n'
 
 # shellcheck disable=SC2016
 run_tpl='SCRIPT_NAME="${DIR}"'"'"'/%s'"'"'\nexport SCRIPT_NAME\n# shellcheck disable=SC1090\n. "${SCRIPT_NAME}"'
+prelude_cmd='SET "SCRIPT_ROOT_DIR=%~dp0"
+SET "SCRIPT_ROOT_DIR=%SCRIPT_ROOT_DIR:~0,-1%"
+
+:: Initialize STACK variable
+IF NOT DEFINED STACK (
+   SET "STACK=;%~nx0;"
+) ELSE (
+   SET "STACK=%STACK%%~nx0;"
+)
+
+SETLOCAL ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
+
+SET "searchVal=;%this_file%;"
+IF NOT x!str1:%searchVal%=!"=="x%str1% (
+ echo [STOP]     processing "%this_file%"
+ SET ERRORLEVEL=0
+ goto end
+) else (
+ echo [CONTINUE] processing "%this_file%"
+)'
+end_prelude_cmd='ENDLOCAL
+
+:end
+@%COMSPEC% /C exit %ERRORLEVEL% >nul'
+
+if [ ! -f "${install_cmd_file}" ]; then printf '%s\n\n' "${prelude_cmd}" > "${install_cmd_file}"; fi
+
+touch "${docker_scratch_file}" "${toolchain_scratch_file}" \
+      "${storage_scratch_file}" "${server_scratch_file}" \
+      "${wwwroot_scratch_file}" "${third_party_scratch_file}" \
+      "${true_env_cmd_file}" "${false_env_cmd_file}"
 
 toolchains_len=0
 toolchains_header_req=0
@@ -127,11 +159,14 @@ key2scratch() {
 object2key_val() {
   obj="${1}"
   prefix="${2:-}"
-  printf '%s' "${obj}" | jq --arg q "'" -rc '. | to_entries[] | "'"${prefix}"'"+ .key + if .value == null then "" else "="+$q+.value+$q end'
+  q="${3:-\'}"
+  printf '%s' "${obj}" | jq --arg q "${q}" -rc '. | to_entries[] | "'"${prefix}"'"+ .key + if .value == null then "" else "="+$q+.value+$q end'
 }
 
 update_generated_files() {
   name="${1}"
+  name_lower="$(printf '%s' "${name}" | tr '[:upper:]' '[:lower:]')"
+  name_clean="$(printf '%s' "${name}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
   version="${2}"
   env="${3}"
   env_clean="$(printf '%s' "${env}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
@@ -152,29 +187,32 @@ update_generated_files() {
     if [ "${dep_group_name}" = 'Required' ] || [ "${all_deps}" -eq 1 ]; then
       # shellcheck disable=SC2016
       printf 'ARG %s=1\n' "${env_clean}" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
-      # shellcheck disable=SC2016
+      printf 'SET %s=1\n' "${env_clean}" >> "${true_env_cmd_file}"
       printf 'export %s=1\n' "${env_clean}"
     else
       # shellcheck disable=SC2016
       printf 'ARG %s=0\n' "${env_clean}" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
+      printf 'SET %s=0\n' "${env_clean}" >> "${false_env_cmd_file}"
       printf 'export %s=0\n' "${env_clean}"
     fi
     if [ -n "${extra_env_vars}" ] && [ ! "${extra_env_vars}" = 'null' ] ; then
-      object2key_val "${extra_env_vars}" 'ARG ' | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
-      object2key_val "${extra_env_vars}" 'export '
+      object2key_val "${extra_env_vars}" 'ARG ' "'" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
+      object2key_val "${extra_env_vars}" 'export ' "'"
+      object2key_val "${extra_env_vars}" 'SET ' '"'
     fi
     printf 'ARG %s_VERSION='"'"'%s'"'"'\n\n' "${name}" "${version}" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
+    printf 'SET %s_VERSION="%s"\n\n' "${name_clean}" "${version}" >> "${true_env_cmd_file}"
     printf 'export %s_VERSION='"'"'%s'"'"'\n\n' "${name}" "${version}"
   } | tee -a "${install_parallel_file}" "${true_env_file}" >/dev/null
   # shellcheck disable=SC2059
   printf "${run_tpl}"' ) &\n\n' 'install_gen.sh' >> "${install_parallel_file}"
   printf 'export %s=0\n' "${env_clean}" >> "${false_env_file}"
+  printf 'SET %s=0\n' "${env_clean}" >> "${false_env_cmd_file}"
 
   printf 'RUN <<-EOF\n\n' | tee -a "${scratch_file}" "${scratch}" >/dev/null
   # shellcheck disable=SC2016
   {
     printf 'if [ "${%s:-0}" -eq 1 ]; then\n' "${env_clean}"
-    name_lower="$(printf '%s' "${name}" | tr '[:upper:]' '[:lower:]')"
     if [ -n "${alt_if_body}" ]; then
       printf '%s\n' "${alt_if_body}"
     else
@@ -187,9 +225,27 @@ update_generated_files() {
   } | tee -a "${scratch_file}" "${scratch}" "${install_file}" >/dev/null
   printf 'EOF\n\n\n' | tee -a "${scratch_file}" "${scratch}" >/dev/null
 
+  {
+    # shellcheck disable=SC1003
+    location_win=$(printf '%s' "${location}" | tr '/' '\\')
+    printf 'IF "%%'
+    printf '%s%%' "${env_clean}"
+    # shellcheck disable=SC2183
+    printf '"=="1" (
+  SET "SCRIPT_NAME=%%SCRIPT_ROOT_DIR%%'
+    printf '\%s\%s\setup.cmd"' "${location_win}" "${name_lower}"
+  # shellcheck disable=SC2183
+  printf '\n      IF NOT EXIST "%%SCRIPT_NAME%%" (
+      >&2 ECHO File not found "%%SCRIPT_NAME%%"
+      SET ERRORLEVEL=2
+      goto end
+  )
+  CALL "%%SCRIPT_NAME%%"
+)\n\n'
+  } >> "${install_cmd_file}"
+
   scratch_contents="$(cat -- "${scratch}"; printf 'a')"
   scratch_contents="${scratch_contents%a}"
-  name_lower="$(printf '%s' "${name}" | tr '[:upper:]' '[:lower:]')"
   for image in ${base}; do
     image_no_tag="$(printf '%s' "${image}" | cut -d ':' -f1)"
     name_file="${output_folder}"'/'"${image_no_tag}"'.'"${name_lower}"'.Dockerfile'
@@ -275,6 +331,8 @@ parse_wwwroot_item() {
         printf '\n' >> "${false_env_file}"
         # shellcheck disable=SC2059
         printf "${header_tpl}" '      WWWROOT(s)      ' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
+        # shellcheck disable=SC2059
+        printf "${header_cmd_tpl}" '      WWWROOT(s)      ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
     fi
     # shellcheck disable=SC2003
     wwwroot_len=$(expr "${wwwroot_len}" + 1)
@@ -282,6 +340,7 @@ parse_wwwroot_item() {
     # shellcheck disable=SC2016
     printf 'export %s=1\n' "${env}" "${env}" | tee -a "${install_parallel_file}" "${true_env_file}" >/dev/null
     printf 'export %s=0\n' "${env}" >> "${false_env_file}"
+    printf 'SET %s=1\n' "${env}" >> "${false_env_cmd_file}"
 
     if [ "${verbose}" -ge 3 ]; then
       printf 'wwwroot Item:\n'
@@ -423,6 +482,8 @@ parse_toolchain_item() {
           # shellcheck disable=SC2059
           printf "${header_tpl}" 'Toolchain(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
           # shellcheck disable=SC2059
+          printf "${header_cmd_tpl}" 'Toolchain(s) [required]' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
+          # shellcheck disable=SC2059
           printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
         fi
     elif [ "${toolchains_header_opt}" -eq 0 ]; then
@@ -430,6 +491,8 @@ parse_toolchain_item() {
         printf '\n' >> "${false_env_file}"
         # shellcheck disable=SC2059
         printf "${header_tpl}" 'Toolchain(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
+        # shellcheck disable=SC2059
+        printf "${header_cmd_tpl}" 'Toolchain(s) [optional]' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
         # shellcheck disable=SC2059
         if [ "${all_deps}" -eq 0 ]; then printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}" ; fi
     fi
@@ -475,6 +538,8 @@ parse_database_item() {
           databases_header_req=1
           # shellcheck disable=SC2059
           printf "${header_tpl}" 'Database(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" >/dev/null
+          # shellcheck disable=SC2059
+          printf "${header_cmd_tpl}" 'Database(s) [required]' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
 
           # shellcheck disable=SC2059
           printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
@@ -484,6 +549,8 @@ parse_database_item() {
         printf '\n' >> "${false_env_file}"
         # shellcheck disable=SC2059
         printf "${header_tpl}" 'Database(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
+        # shellcheck disable=SC2059
+        printf "${header_cmd_tpl}" 'Database(s) [required]' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
         # shellcheck disable=SC2059
         if [ "${all_deps}" -eq 0 ]; then printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}" ; fi
     fi
@@ -526,6 +593,8 @@ parse_server_item() {
         servers_header_req=1
         # shellcheck disable=SC2059
         printf "${header_tpl}" 'Server(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
+        # shellcheck disable=SC2059
+        printf "${header_cmd_tpl}" 'Server(s) [required]' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
 
         # shellcheck disable=SC2059
         printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
@@ -659,6 +728,8 @@ parse_json() {
           "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.tpl' > "${dockerfile}"
       fi
     done
+
+    printf '%s\n\n' "${end_prelude_cmd}" >> "${install_cmd_file}"
 
     rm "${docker_scratch_file}" "${toolchain_scratch_file}" "${storage_scratch_file}" \
        "${server_scratch_file}" "${wwwroot_scratch_file}" "${third_party_scratch_file}"
