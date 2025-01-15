@@ -1,9 +1,9 @@
 Dependencies
 ============
 
-Basic POSIX utilities, `curl`, and `jq`. They're usually included; unless you're on Windows.
+Basic POSIX utilities. They're usually included; unless you're on Windows. Also: `curl`, `jq`, and `envsubst`.
 
-Specifically these are used:
+Specifically these from POSIX are used:
 
   - `.` (for `source`ing)
   - `/bin/sh`
@@ -14,7 +14,6 @@ Specifically these are used:
   - `dirname`
   - `echo`
   - `env`
-  - `envsubst`
   - `expr`
   - `grep` [no GNU extensions used]
   - `mkdir` & `mkdir -p`
@@ -38,7 +37,7 @@ Specifically these are used:
   - Heredoc: `<<EOF`, `EOF`
   - Quotes: `'`, `"`
 
-With the aforementioned `curl` and `jq` acquired if not found in system `PATH`. And:
+With `jq` and the aforementioned `curl` & `envsubst` acquired if not found in system `PATH`. And:
 
   - `/bin/bash` on macOS [to acquire `brew`]
   - `docker`, only if using Docker, for `docker_builder.sh` and `docker_builder_parallel.sh` (or manually for any `*Dockerfile`)
