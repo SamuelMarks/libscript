@@ -13,18 +13,17 @@ SET previous_wd=%cd%
 
 :: Fallback for IA64, EM64T, X86
 SET ARCH="x86"
-IF %PROCESSOR_ARCHITECTURE% EQ "AMD64" (
+IF %PROCESSOR_ARCHITECTURE% == "AMD64" (
   SET ARCH="x86_64"
-) ELSE IF %PROCESSOR_ARCHITECTURE% EQ "ARM64" (
+) ELSE IF %PROCESSOR_ARCHITECTURE% == "ARM64" (
   SET ARCH=%PROCESSOR_ARCHITECTURE%
 )
 
 WHERE curl >nul 2>nul
 IF %ERRORLEVEL% NEQ 0 (
-  ECHO "TODO: Fallback as per WINDOWS.md, to download curl.exe" && exit %ERRORLEVEL%
   IF NOT EXIST %TOOLS_DIR% md %TOOLS_DIR%
   cd %TOOLS_DIR%
-  IF %ARCH% EQ "x86_64" (
+  IF %ARCH% == "x86_64" (
     curl -L -o curl.zip https://github.com/lordmulder/cURL-build-win32/releases/download/2024-12-14/curl-8.11.1-windows-x64.2024-12-14.zip
   ) ELSE (
     curl -L -o curl.zip https://github.com/lordmulder/cURL-build-win32/releases/download/2024-12-14/curl-8.11.1-windows-x86.2024-12-14.zip
@@ -35,10 +34,9 @@ IF %ERRORLEVEL% NEQ 0 (
 
 WHERE tar >nul 2>nul
 IF %ERRORLEVEL% NEQ 0 (
-  ECHO "TODO: Install tar.exe" && exit %ERRORLEVEL%
   IF NOT EXIST %TOOLS_DIR% md %TOOLS_DIR%
   cd %TOOLS_DIR%
-  IF %ARCH% EQ "x86_64" (
+  IF %ARCH% == "x86_64" (
       curl -L -o tar.exe https://github.com/aspect-build/bsdtar-prebuilt/releases/download/v3.7.5-2/tar_windows_x86_64.exe
     ) ELSE (
       curl -L -o bsdtar.zip https://sourceforge.net/projects/bsdtar/files/bsdtar-3.2.0_win32.zip/download
@@ -56,9 +54,9 @@ IF %ERRORLEVEL% NEQ 0 (
         ECHO "TODO: Install busybox.exe as per WINDOWS.md" && exit %ERRORLEVEL%
         IF NOT EXIST %TOOLS_DIR% md %TOOLS_DIR%
         cd %TOOLS_DIR%
-        IF %ARCH% EQ "x86_64" (
+        IF %ARCH% == "x86_64" (
           curl -L -o busybox.exe https://frippery.org/files/busybox/busybox64u.exe
-        ) ELSE IF %ARCH% EQ "ARM64" (
+        ) ELSE IF %ARCH% == "ARM64" (
           curl -L -o busybox.exe https://frippery.org/files/busybox/busybox64a.exe
         ) ELSE (
           curl -L -o busybox.exe https://frippery.org/files/busybox/busybox.exe
@@ -71,10 +69,9 @@ IF %ERRORLEVEL% NEQ 0 (
 
 WHERE jq >nul 2>nul
 IF %ERRORLEVEL% NEQ 0 (
-  ECHO "TODO: Install jq.exe" && exit %ERRORLEVEL%
   IF NOT EXIST %TOOLS_DIR% md %TOOLS_DIR%
   cd %TOOLS_DIR%
-  IF %ARCH% EQ "x86_64" (
+  IF %ARCH% == "x86_64" (
     curl -L -o jq.exe https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-windows-amd64.exe
   ) ELSE (
     curl -L -o jq.exe https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-windows-i386.exe
