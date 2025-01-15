@@ -11,6 +11,8 @@ First look in `PATH` for git bash, MSYS, Cygwin; if none are found then download
   5. Fallback to `cscript` with a `ActiveXObject` (e.g., follow [this code](https://superuser.com/a/536400))
   6. Fail with error. E.g., on DOS recommend manual downloading of `curl` from http://mik.dyndns.pro/dos-stuff/
 
+NOTE: `curl` and `tar` were first introduced in [2017](https://blogs.windows.com/windows-insider/2017/12/19/announcing-windows-10-insider-preview-build-17063-pc/]) to Microsoft Windows; so should be usually available.
+
 ## Ports
 
   - BSD-3-clause `bc` and `dc` implementation: https://git.gavinhoward.com/gavin/bc
