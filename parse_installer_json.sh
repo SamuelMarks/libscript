@@ -207,7 +207,6 @@ update_generated_files() {
     if [ -n "${extra_env_vars}" ] && [ ! "${extra_env_vars}" = 'null' ] ; then
       object2key_val "${extra_env_vars}" 'ARG ' "'" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
       object2key_val "${extra_env_vars}" 'export ' "'"
-      object2key_val "${extra_env_vars}" 'SET ' '"'
     fi
     printf 'ARG %s_VERSION='"'"'%s'"'"'\n\n' "${name}" "${version}" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
     printf 'SET %s_VERSION="%s"\n\n' "${name_clean}" "${version}" >> "${true_env_cmd_file}"
@@ -239,6 +238,10 @@ update_generated_files() {
     location_win=$(printf '%s' "${location}" | tr '/' '\\')
     printf 'IF "%%'
     printf '%s%%%s' "${env_clean}" '"==1 ('
+    if [ -n "${extra_env_vars}" ] && [ ! "${extra_env_vars}" = 'null' ] ; then
+      printf '\n'
+      object2key_val "${extra_env_vars}" '  SET ' '"'
+    fi
     if [ -n "${alt_if_body_cmd}" ]; then
       printf '\n%s\n' "${alt_if_body_cmd}"
     fi

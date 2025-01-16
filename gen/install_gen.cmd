@@ -62,6 +62,11 @@ IF "%RUST_INSTALL_DIR%"==1 (
 
 IF NOT DEFINED POSTGRES_URL ( SET POSTGRES_URL=1 )
 IF "%POSTGRES_URL%"==1 (
+  SET POSTGRES_USER="rest_user"
+  SET POSTGRES_PASSWORD="rest_pass"
+  SET POSTGRES_DB="rest_db"
+  SET POSTGRES_PASSWORD_FILE
+
   SET "SCRIPT_NAME=%SCRIPT_ROOT_DIR%\_lib\_storage\postgres\setup.cmd"
       IF NOT EXIST "%SCRIPT_NAME%" (
       >&2 ECHO File not found "%SCRIPT_NAME%"
