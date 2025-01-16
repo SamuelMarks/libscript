@@ -29,21 +29,21 @@ export STACK
 #		Toolchain(s) [required]	#
 #############################
 
-if [ "${NODEJS_INSTALL_DIR:-0}" -eq 1 ]; then
+if [ "${NODEJS_INSTALL_DIR:-1}" -eq 1 ]; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/nodejs/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 fi
 
-if [ "${PYTHON_INSTALL_DIR:-0}" -eq 1 ]; then
+if [ "${PYTHON_INSTALL_DIR:-1}" -eq 1 ]; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/python/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 fi
 
-if [ "${RUST_INSTALL_DIR:-0}" -eq 1 ]; then
+if [ "${RUST_INSTALL_DIR:-1}" -eq 1 ]; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/rust/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
@@ -54,14 +54,14 @@ fi
 #		Database(s) [required]	#
 #############################
 
-if [ "${POSTGRES_URL:-0}" -eq 1 ]; then
+if [ "${POSTGRES_URL:-1}" -eq 1 ]; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_storage/postgres/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 fi
 
-if [ "${REDIS_URL:-0}" -eq 1 ]; then
+if [ "${REDIS_URL:-1}" -eq 1 ]; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
@@ -72,14 +72,14 @@ fi
 #		Server(s) [required]	#
 #############################
 
-if [ "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD:-0}" -eq 1 ]; then
+if [ "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD:-1}" -eq 1 ]; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/app/third_party/serve-actix-diesel-auth-scaffold/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 fi
 
-if [ "${JUPYTERHUB:-0}" -eq 1 ]; then
+if [ "${JUPYTERHUB:-1}" -eq 1 ]; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/app/third_party/jupyterhub/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090

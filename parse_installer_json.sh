@@ -173,22 +173,29 @@ update_generated_files() {
   location="${4}"
   dep_group_name="${5}"
   alt_if_body="${6:-}"
-  extra_env_vars="${7:-}"
+  alt_if_body_cmd="${7:-}"
+  extra_env_vars="${8:-}"
 
   path2key "${location}"
   key2scratch "${res}"
   scratch_file="${res}"
 
   scratch="$(mktemp)"
+  required=0
+  if [ "${dep_group_name}" = 'Required' ] || [ "${all_deps}" -eq 1 ]; then
+    required=1
+  fi
 
   {
     # shellcheck disable=SC2016
     printf '(\n  ' >> "${install_parallel_file}"
-    if [ "${dep_group_name}" = 'Required' ] || [ "${all_deps}" -eq 1 ]; then
+    if [ "${required}" -eq 1 ]; then
       # shellcheck disable=SC2016
       printf 'ARG %s=1\n' "${env_clean}" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
       printf 'SET %s=1\n' "${env_clean}" >> "${true_env_cmd_file}"
-      printf 'IF NOT DEFINED "%s" ( SET %s=1 )\n' "${env_clean}" "${env_clean}" >> "${install_cmd_file}"
+      # shellcheck disable=SC2016
+      export default_val=1
+      printf 'IF NOT DEFINED %s ( SET %s=1 )\n' "${env_clean}" "${env_clean}" >> "${install_cmd_file}"
       printf 'export %s=1\n' "${env_clean}"
     else
       # shellcheck disable=SC2016
@@ -214,7 +221,7 @@ update_generated_files() {
   printf 'RUN <<-EOF\n\n' | tee -a "${scratch_file}" "${scratch}" >/dev/null
   # shellcheck disable=SC2016
   {
-    printf 'if [ "${%s:-0}" -eq 1 ]; then\n' "${env_clean}"
+    printf 'if [ "${%s:-%d}" -eq 1 ]; then\n' "${env_clean}" "${required}" | tee -a "${scratch_file}" "${scratch}" "${install_file}" >/dev/null
     if [ -n "${alt_if_body}" ]; then
       printf '%s\n' "${alt_if_body}"
     else
@@ -231,9 +238,12 @@ update_generated_files() {
     # shellcheck disable=SC1003
     location_win=$(printf '%s' "${location}" | tr '/' '\\')
     printf 'IF "%%'
-    printf '%s%%' "${env_clean}"
+    printf '%s%%%s' "${env_clean}" '"==1 ('
+    if [ -n "${alt_if_body_cmd}" ]; then
+      printf '\n%s\n' "${alt_if_body_cmd}"
+    fi
     # shellcheck disable=SC2183
-    printf '"==1 (
+    printf '
   SET "SCRIPT_NAME=%%SCRIPT_ROOT_DIR%%'
     printf '\%s\%s\setup.cmd"' "${location_win}" "${name_lower}"
   # shellcheck disable=SC2183
@@ -255,7 +265,7 @@ update_generated_files() {
 
     # shellcheck disable=SC2016
     env -i BODY="${scratch_contents}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
-                 "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${name_file}"
+      "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${name_file}"
   done
   rm -f "${scratch}"
 }
@@ -388,7 +398,13 @@ parse_wwwroot_item() {
       printf '  fi\n'
       printf 'fi\n\n'
     )
-    update_generated_files "${clean_name}" "${version}" "${env}" 'wwwroot' "${dep_group_name}" "${alt_if_body}"
+    alt_if_body_cmd=$(
+      printf '  IF NOT DEFINED WWWROOT_NAME ( SET WWWROOT_NAME="%s" )\n' "${name}"
+      printf '  IF NOT DEFINED WWWROOT_VENDOR ( SET WWWROOT_VENDOR="%s" )\n' "${vendor}"
+      printf '  IF NOT DEFINED WWWROOT_PATH ( SET WWWROOT_PATH="%s" )\n' "${path:-/}"
+      printf '  IF NOT DEFINED WWWROOT_LISTEN ( SET WWWROOT_LISTEN="%s" )\n' "${listen:-80}"
+    )
+    update_generated_files "${clean_name}" "${version}" "${env}" 'wwwroot' "${dep_group_name}" "${alt_if_body}" "${alt_if_body_cmd}"
 
     parse_wwwroot_builders "${www_json}"
 }
@@ -561,7 +577,7 @@ parse_database_item() {
     # shellcheck disable=SC2003
     databases_len=$(expr "${databases_len}" + 1)
 
-    update_generated_files "${name}" "${version}" "${env}" '_lib/_storage' "${dep_group_name}" '' "${secrets}"
+    update_generated_files "${name}" "${version}" "${env}" '_lib/_storage' "${dep_group_name}" '' '' "${secrets}"
     if [ -n "${target_env}" ]; then
         if [ "${verbose}" -ge 3 ]; then printf '    Target Env:\n'; fi
 

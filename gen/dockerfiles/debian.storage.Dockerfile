@@ -14,7 +14,7 @@ ARG POSTGRES_VERSION='17'
 
 RUN <<-EOF
 
-if [ "${POSTGRES_URL:-0}" -eq 1 ]; then
+if [ "${POSTGRES_URL:-1}" -eq 1 ]; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_storage/postgres/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
@@ -29,7 +29,7 @@ ARG VALKEY_VERSION='*'
 
 RUN <<-EOF
 
-if [ "${REDIS_URL:-0}" -eq 1 ]; then
+if [ "${REDIS_URL:-1}" -eq 1 ]; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090

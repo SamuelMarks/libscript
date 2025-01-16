@@ -10,7 +10,7 @@ ARG PYTHON_VERSION='3.10'
 
 RUN <<-EOF
 
-if [ "${PYTHON_INSTALL_DIR:-0}" -eq 1 ]; then
+if [ "${PYTHON_INSTALL_DIR:-1}" -eq 1 ]; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/python/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
