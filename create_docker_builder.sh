@@ -14,8 +14,10 @@ set +f # in case anyone else set this; we use glob here!!
 prefix="${DOCKER_IMAGE_PREFIX:-deploysh-}"
 suffix="${DOCKER_IMAGE_SUFFIX:--latest}"
 docker_builder='docker_builder.sh'
+docker_builder_cmd='docker_builder.cmd'
 docker_builder_parallel='docker_builder_parallel.sh'
 header_tpl='###################\n#\t\t%s\t#\n###################\n\n'
+header_cmd_tpl=':: ###################\n:: #\t%s #\n:: ###################\n\n'
 
 verbose=0
 input_directory=''
@@ -81,6 +83,7 @@ collect_when_pattern() {
     result=''
 
     # Expand the pattern into positional parameters
+    # shellcheck disable=SC2086
     set -- $pattern
 
     for f in "$@"; do
@@ -94,19 +97,20 @@ collect_when_pattern() {
     echo "$result" | sed 's/^ *//'
 }
 
-server_dfs="$(collect_when_pattern '*.server.Dockerfile')"
-storage_dfs="$(collect_when_pattern '*.storage.Dockerfile')"
-third_party_dfs="$(collect_when_pattern '*.third_party.Dockerfile')"
-toolchain_dfs="$(collect_when_pattern '*.toolchain.Dockerfile')"
-wwwroot_dfs="$(collect_when_pattern '*.wwwroot.Dockerfile')"
+server_dfs="$(collect_when_pattern 'dockerfiles/*.server.Dockerfile')"
+storage_dfs="$(collect_when_pattern 'dockerfiles/*.storage.Dockerfile')"
+third_party_dfs="$(collect_when_pattern 'dockerfiles/*.third_party.Dockerfile')"
+toolchain_dfs="$(collect_when_pattern 'dockerfiles/*.toolchain.Dockerfile')"
+wwwroot_dfs="$(collect_when_pattern 'dockerfiles/*.wwwroot.Dockerfile')"
 
 processed=' '"${server_dfs}"' '"${storage_dfs}"' '"${third_party_dfs}"' '"${toolchain_dfs}"' '"${wwwroot_dfs}"' '
 remaining=''
-for dockerfile in *Dockerfile; do
+for dockerfile in dockerfiles/*Dockerfile; do
   case "${processed}" in
-    *[[:space:]]"${dockerfile}"[[:space:]]*) ;;
+    *[[:space:]]"${dockerfile}"[[:space:]]*|'*Dockerfile') ;;
     *)
-      remaining="${remaining}${dockerfile}"' ' ;;
+      if [ ! "${dockerfile}" = '*Dockerfile' ]; then remaining="${remaining}${dockerfile}"' ' ; fi
+      ;;
   esac
 done
 
@@ -123,6 +127,7 @@ NL='
 process_one_dockerfile() {
   dockerfile="${1}";
   end="${2:-${NL}}"
+  q="${3:-\'}"
 IFS=. read -r tag name _ <<EOF
   ${dockerfile}
 EOF
@@ -133,7 +138,13 @@ EOF
       name=''
       tag=''
     fi
-    printf 'docker build --file '"'"'%s'"'"' %s --tag '"'"'%s%s'"'"':'"'"'%s%s'"'"' .%s' "${dockerfile}" "${build_args}" "${prefix}" "${name}" "${tag}" "${suffix}" "${end}"
+    build_args_="${build_args}"
+    if [ "${q}" = '"' ]; then
+      build_args_="${build_args_dq}";
+      # shellcheck disable=SC1003
+      dockerfile="$(printf '%s' "${dockerfile}" | tr '/' '\\')"
+    fi
+    printf 'docker build --file '"${q}"'%s'"${q}"' %s --tag '"${q}"'%s%s'"${q}"':'"${q}"'%s%s'"${q}"' .%s' "${dockerfile}" "${build_args_}" "${prefix}" "${name}" "${tag}" "${suffix}" "${end}"
 }
 
 section2name() {
@@ -150,18 +161,24 @@ section2name() {
 
 DOCKER_BUILD_ARGS=${DOCKER_BUILD_ARGS:---progress=\'plain\' --no-cache}
 build_args="$(printf '%s' "${DOCKER_BUILD_ARGS}")"
+build_args_dq="$(printf '%s' "${DOCKER_BUILD_ARGS}" | tr "'" '"')"
 
 for section in "${toolchain_dfs}" "${server_dfs}" "${storage_dfs}" "${third_party_dfs}" "${wwwroot_dfs}" "${remaining}"; do
   section2name "${section}"
   # shellcheck disable=SC2059
   printf "${header_tpl}" "${res}" | tee -a "${docker_builder}" "${docker_builder_parallel}" >/dev/null
+  # shellcheck disable=SC2059
+  printf "${header_cmd_tpl}" "${res}" >> "${docker_builder_cmd}"
   for dockerfile in ${section}; do
     process_one_dockerfile "${dockerfile}" ' &
-' >> "${docker_builder_parallel}"
-    process_one_dockerfile "${dockerfile}" >> "${docker_builder}"
+' "'" >> "${docker_builder_parallel}"
+    process_one_dockerfile "${dockerfile}" '
+' "'" >> "${docker_builder}"
+    process_one_dockerfile "${dockerfile}" '
+' '"' >> "${docker_builder_cmd}"
   done
   printf 'wait\n\n' >> "${docker_builder_parallel}"
-  printf '\n' >> "${docker_builder}"
+  printf '\n' | tee -a "${docker_builder}" "${docker_builder_cmd}" >/dev/null
 done
 
 if [ ! -z "${input_directory+x}" ]; then

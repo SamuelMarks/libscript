@@ -32,7 +32,7 @@ SET JUPYTERHUB=1
 SET JupyterHub_VERSION="*"
 
 :: ##############################
-:: #	Database(s) [required]	#
+:: #	Database(s) [optional]	#
 :: ##############################
 
 SET RABBITMQ_VERSION="*"

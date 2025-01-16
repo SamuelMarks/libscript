@@ -78,11 +78,11 @@ SETLOCAL ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
 
 SET "searchVal=;%this_file%;"
 IF NOT x!str1:%searchVal%=!"=="x%str1% (
- echo [STOP]     processing "%this_file%"
+ ECHO [STOP]     processing "%this_file%"
  SET ERRORLEVEL=0
- goto end
-) else (
- echo [CONTINUE] processing "%this_file%"
+ GOTO end
+) ELSE (
+ ECHO [CONTINUE] processing "%this_file%"
 )'
 end_prelude_cmd='ENDLOCAL
 
@@ -188,11 +188,13 @@ update_generated_files() {
       # shellcheck disable=SC2016
       printf 'ARG %s=1\n' "${env_clean}" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
       printf 'SET %s=1\n' "${env_clean}" >> "${true_env_cmd_file}"
+      printf 'IF NOT DEFINED "%s" ( SET %s=1 )\n' "${env_clean}" "${env_clean}" >> "${install_cmd_file}"
       printf 'export %s=1\n' "${env_clean}"
     else
       # shellcheck disable=SC2016
       printf 'ARG %s=0\n' "${env_clean}" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
       printf 'SET %s=0\n' "${env_clean}" >> "${false_env_cmd_file}"
+      printf 'IF NOT DEFINED "%s" ( SET %s=0 )\n' "${env_clean}" "${env_clean}" >> "${install_cmd_file}"
       printf 'export %s=0\n' "${env_clean}"
     fi
     if [ -n "${extra_env_vars}" ] && [ ! "${extra_env_vars}" = 'null' ] ; then
@@ -231,14 +233,14 @@ update_generated_files() {
     printf 'IF "%%'
     printf '%s%%' "${env_clean}"
     # shellcheck disable=SC2183
-    printf '"=="1" (
+    printf '"==1 (
   SET "SCRIPT_NAME=%%SCRIPT_ROOT_DIR%%'
     printf '\%s\%s\setup.cmd"' "${location_win}" "${name_lower}"
   # shellcheck disable=SC2183
   printf '\n      IF NOT EXIST "%%SCRIPT_NAME%%" (
       >&2 ECHO File not found "%%SCRIPT_NAME%%"
       SET ERRORLEVEL=2
-      goto end
+      GOTO end
   )
   CALL "%%SCRIPT_NAME%%"
 )\n\n'
@@ -246,9 +248,10 @@ update_generated_files() {
 
   scratch_contents="$(cat -- "${scratch}"; printf 'a')"
   scratch_contents="${scratch_contents%a}"
+  [ -d "${output_folder}"'/dockerfiles' ] || mkdir "${output_folder}"'/dockerfiles'
   for image in ${base}; do
     image_no_tag="$(printf '%s' "${image}" | cut -d ':' -f1)"
-    name_file="${output_folder}"'/'"${image_no_tag}"'.'"${name_lower}"'.Dockerfile'
+    name_file="${output_folder}"'/dockerfiles/'"${image_no_tag}"'.'"${name_lower}"'.Dockerfile'
 
     # shellcheck disable=SC2016
     env -i BODY="${scratch_contents}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
@@ -550,7 +553,7 @@ parse_database_item() {
         # shellcheck disable=SC2059
         printf "${header_tpl}" 'Database(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
         # shellcheck disable=SC2059
-        printf "${header_cmd_tpl}" 'Database(s) [required]' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
+        printf "${header_cmd_tpl}" 'Database(s) [optional]' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
         # shellcheck disable=SC2059
         if [ "${all_deps}" -eq 0 ]; then printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}" ; fi
     fi
@@ -704,16 +707,17 @@ parse_json() {
     docker_s="$(cat -- "${docker_scratch_file}"; printf 'a')"
     docker_s="${docker_s%a}"
 
+    [ -d "${output_folder}"'/dockerfiles' ] || mkdir "${output_folder}"'/dockerfiles'
     for image in ${base}; do
       image_no_tag="$(printf '%s' "${image}" | cut -d ':' -f1)"
-      dockerfile="${output_folder}"'/'"${image_no_tag}"'.Dockerfile'
+      dockerfile="${output_folder}"'/dockerfiles/'"${image_no_tag}"'.Dockerfile'
       for section in "${toolchain_scratch_file}" "${storage_scratch_file}" \
                      "${server_scratch_file}" "${wwwroot_scratch_file}" \
                      "${third_party_scratch_file}"; do
         docker_sec="$(cat -- "${section}"; printf 'a')"
         docker_sec="${docker_sec%a}"
         scratch2key "${section}"
-        dockerfile_by_section="${output_folder}"'/'"${image_no_tag}"'.'"${res}"'.Dockerfile'
+        dockerfile_by_section="${output_folder}"'/dockerfiles/'"${image_no_tag}"'.'"${res}"'.Dockerfile'
         if [ ! -f "${dockerfile_by_section}" ] && [ -f "${section}" ]; then
            sec_contents="$(cat -- "${section}"; printf 'a')"
            sec_contents="${sec_contents%a}"
