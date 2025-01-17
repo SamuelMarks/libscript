@@ -40,7 +40,7 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-env_script="${DIR}"'/conf.env.sh'
+env_script="${DIR}"'/env.sh'
 if [ -f "${env_script}" ]; then
   SCRIPT_NAME="${env_script}"
   export SCRIPT_NAME

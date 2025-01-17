@@ -19,7 +19,7 @@ ARG REDIS_URL=1
 ARG VALKEY_VERSION='*'
 
 ARG SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD=1
-ARG serve-actix-diesel-auth-scaffold_VERSION='*'
+ARG serve_actix_diesel_auth_scaffold_VERSION='*'
 
 ARG JUPYTERHUB=1
 ARG JupyterHub_VERSION='*'

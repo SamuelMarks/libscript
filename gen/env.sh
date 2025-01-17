@@ -28,7 +28,7 @@ export VALKEY_VERSION='*'
 #############################
 
 export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD=1
-export serve-actix-diesel-auth-scaffold_VERSION='*'
+export serve_actix_diesel_auth_scaffold_VERSION='*'
 
 export JUPYTERHUB=1
 export JupyterHub_VERSION='*'

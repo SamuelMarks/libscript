@@ -108,7 +108,7 @@ export SCRIPT_NAME
 
 (
   export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD=1
-export serve-actix-diesel-auth-scaffold_VERSION='*'
+export serve_actix_diesel_auth_scaffold_VERSION='*'
 
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME

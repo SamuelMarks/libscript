@@ -34,7 +34,7 @@ export DIR
 
 SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "${d}" ]; then echo "${d}"; else echo './'"${d}"; fi)}"
 
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/conf.env.sh'
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/env.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"

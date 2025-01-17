@@ -32,7 +32,15 @@ export STACK
 previous_wd="$(pwd)"
 SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "${d}" ]; then echo "${d}"; else echo './'"${d}"; fi)}"
 
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/conf.env.sh'
+DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+export DIR
+
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/env.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
+
+SCRIPT_NAME="${DIR}"'/env.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
@@ -55,7 +63,7 @@ export SCRIPT_NAME
 
 apt_depends git build-essential libsystemd-dev
 
-target="${BUILD_DIR}"'/valkey'
+target="${VALKEY_BUILD_DIR}"'/valkey'
 git_get https://github.com/valkey-io/valkey "${target}"
 # shellcheck disable=SC2164
 cd "${target}"

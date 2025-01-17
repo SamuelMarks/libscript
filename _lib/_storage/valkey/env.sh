@@ -29,28 +29,4 @@ esac
 STACK="${STACK}${this_file}"':'
 export STACK
 
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/priv.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
-
-export DEBIAN_FRONTEND='noninteractive'
-
-is_installed() {
-    # dpkg-query --showformat='${Version}' --show "${1}" 2>/dev/null;
-    dpkg -s -- "${1}" >/dev/null 2>&1
-}
-
-apt_depends() {
-    pkgs2install=""
-    for pkg in; do
-        if ! is_installed "${pkg}"; then
-            pkgs2install="${pkgs2install:+${pkgs2install} }${pkg}"
-        fi
-    done
-    if [ -n "${pkgs2install}" ]; then
-        >&2 printf 'pkgs2install = "%s"\n' "${pkgs2install}"
-        # shellcheck disable=SC2086
-        "${PRIV}" apt-get install -y -- ${pkgs2install}
-    fi
-}
+export VALKEY_BUILD_DIR="${VALKEY_BUILD_DIR:-${BUILD_DIR:-${TMPDIR:-/tmp}}/valkey}"

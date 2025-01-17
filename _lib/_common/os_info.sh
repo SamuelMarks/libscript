@@ -79,7 +79,7 @@ if [ -z ${UNAME+x} ]; then
         exit 3
         ;;
     esac
-    printf 'UNAME="%s"; TARGET_OS="%s"' "${UNAME}" "${TARGET_OS}"
+    printf 'UNAME="%s"; TARGET_OS="%s"\n' "${UNAME}" "${TARGET_OS}"
     export UNAME
     export TARGET_OS
 fi

@@ -29,7 +29,7 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/conf.env.sh'
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/env.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"

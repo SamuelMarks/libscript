@@ -57,6 +57,9 @@ if [ ! -f "${false_env_file}" ]; then printf '#!/bin/sh\n' > "${false_env_file}"
 if [ ! -e "${_lib_folder}" ]; then cp -r "${SCRIPT_ROOT_DIR}"'/_lib' "${_lib_folder}" ; fi
 if [ ! -e "${app_folder}" ]; then cp -r "${SCRIPT_ROOT_DIR}"'/app' "${app_folder}" ; fi
 
+chmod +x "${false_env_file}" "${true_env_file}" \
+  "${install_file}" "${install_parallel_file}"
+
 header_tpl='#############################\n#\t\t%s\t#\n#############################\n\n'
 header_cmd_tpl=':: ##############################\n:: #\t%s\t#\n:: ##############################\n\n'
 
@@ -209,9 +212,9 @@ update_generated_files() {
       object2key_val "${extra_env_vars}" 'export ' "'"
       object2key_val "${extra_env_vars}" 'SET ' '"' >> "${true_env_cmd_file}"
     fi
-    printf 'ARG %s_VERSION='"'"'%s'"'"'\n\n' "${name}" "${version}" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
+    printf 'ARG %s_VERSION='"'"'%s'"'"'\n\n' "${name_clean}" "${version}" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
     printf 'SET %s_VERSION="%s"\n\n' "${name_clean}" "${version}" >> "${true_env_cmd_file}"
-    printf 'export %s_VERSION='"'"'%s'"'"'\n\n' "${name}" "${version}"
+    printf 'export %s_VERSION='"'"'%s'"'"'\n\n' "${name_clean}" "${version}"
   } | tee -a "${install_parallel_file}" "${true_env_file}" >/dev/null
   # shellcheck disable=SC2059
   printf "${run_tpl}"' ) &\n\n' 'install_gen.sh' >> "${install_parallel_file}"

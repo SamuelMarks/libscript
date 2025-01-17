@@ -34,11 +34,11 @@ Example of generated files are found in the [`gen`](./gen) directory.
 
   - [Linux](https://en.wikipedia.org/wiki/Linux) variants are useful in [Docker](https://en.wikipedia.org/wiki/Docker_(software)), other image types [e.g., see [Packer](https://www.packer.io), [Unikernels](https://en.wikipedia.org/wiki/Unikernel)], and natively;
   - [macOS](https://en.wikipedia.org/wiki/MacOS) variant is useful primarily natively;
-  - [*BSDs](https://en.wikipedia.org/wiki/Comparison_of_BSD_operating_systems) [coming soon!] [[NetBSD](https://en.wikipedia.org/wiki/NetBSD), [FreeBSD](https://en.wikipedia.org/wiki/FreeBSD), [OpenBSD](https://en.wikipedia.org/wiki/OpenBSD)] are useful in jails or natively;
+  - [coming soon!] [*BSDs](https://en.wikipedia.org/wiki/Comparison_of_BSD_operating_systems) [[NetBSD](https://en.wikipedia.org/wiki/NetBSD), [FreeBSD](https://en.wikipedia.org/wiki/FreeBSD), [OpenBSD](https://en.wikipedia.org/wiki/OpenBSD)] are useful in jails or natively;
   - [Windows](https://en.wikipedia.org/wiki/Microsoft_Windows) is useful for [Windows Containers](https://learn.microsoft.com/en-us/virtualization/windowscontainers/about/), other image types, and natively;
-  - [SunOS](https://en.wikipedia.org/wiki/SunOS) / [illumos](https://en.wikipedia.org/wiki/Illumos) are useful for native usage on mainframes, both native and in virtualised / zones / container systems like [SmartOS](https://en.wikipedia.org/wiki/SmartOS);
-  - [IBM's z/OS](https://en.wikipedia.org/wiki/Z/OS) [coming soon!] useful in mainframes and for testing [OS/360](https://en.wikipedia.org/wiki/OS/360_and_successors) (from the 1960s); and
-  - [HP's Unix (HP/UX)](https://en.wikipedia.org/wiki/HP-UX) [coming soon!] (also specifically useful in mainframes).
+  - [coming soon!] [SunOS](https://en.wikipedia.org/wiki/SunOS) / [illumos](https://en.wikipedia.org/wiki/Illumos) are useful for native usage on mainframes, both native and in virtualised / zones / container systems like [SmartOS](https://en.wikipedia.org/wiki/SmartOS);
+  - [coming soon!] [IBM's z/OS](https://en.wikipedia.org/wiki/Z/OS) [coming soon!] useful in mainframes and for testing [OS/360](https://en.wikipedia.org/wiki/OS/360_and_successors) (from the 1960s); and
+  - [coming soon!] [HP's Unix (HP/UX)](https://en.wikipedia.org/wiki/HP-UX) [coming soon!] (also specifically useful in mainframes).
 
 Generally these [scripts](https://en.wikipedia.org/wiki/Scripting_language) are extremely portable and could be used to benchmark and security-audit any:
 
@@ -61,14 +61,15 @@ Run from the same directory as this [README.md](README.md) file.
 Alternatively, set `SCRIPT_NAME` to the correct `install.sh` location and run it anywhere.
 
     $ # Disable all options (so don't install anything)
-    $ . ~/repos/libscript/conf-no-all.env.sh
+    $ . libscript/conf-no-all.env.sh
     $ # Enable installation of *just* Jupyter Notebook
     $ export JUPYTERHUB_INSTALL=1 
-    $ # Set script location. Only use $(pwd) if its in your current working directory, otherwise specify.
-    $ export SCRIPT_NAME="$(pwd)"'/install.sh'
+    $ # Set script location.
+    $ # Replace `$(pwd)` if 'libscript' isn't in current directory.
+    $ export SCRIPT_NAME="$(pwd)"'/libscript/install.sh'
     $ . "${SCRIPT_NAME}"
 
-See [`conf.env.sh`](./conf.env.sh) for options that can be overridden by setting environment variables.
+See [`env.sh`](./env.sh) for options that can be overridden by setting environment variables.
 
 ## Usage (JSON)
 

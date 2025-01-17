@@ -34,7 +34,7 @@ export DIR
 
 SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "${d}" ]; then echo "${d}"; else echo './'"${d}"; fi)}"
 
-SCRIPT_NAME="${DIR}"'/conf.env.sh'
+SCRIPT_NAME="${DIR}"'/env.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
@@ -50,5 +50,5 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 apt_depends postgresql-common
-"${PRIV}" /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
+yes '' | "${PRIV}" /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
 apt_depends postgresql-server-dev-"${POSTGRESQL_VERSION}" postgresql-"${POSTGRESQL_VERSION}"

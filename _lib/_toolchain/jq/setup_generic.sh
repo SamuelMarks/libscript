@@ -34,4 +34,4 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-ensure_available jq
+ensure_available 'jq'

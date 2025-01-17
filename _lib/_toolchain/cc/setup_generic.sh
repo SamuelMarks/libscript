@@ -35,4 +35,4 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 # could do clang!
-ensure_available gcc g++
+ensure_available 'gcc' 'g++'

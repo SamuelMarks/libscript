@@ -34,7 +34,7 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-ensure_available curl
+ensure_available 'curl'
 if [ ! -f "${HOME}"'/.local/bin/uv' ]; then
   curl -LsSf https://astral.sh/uv/install.sh | sh
 fi

@@ -34,7 +34,7 @@ export DIR
 
 SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "${d}" ]; then echo "${d}"; else echo './'"${d}"; fi)}"
 
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/conf.env.sh'
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/env.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
@@ -49,11 +49,16 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
+if cmd_avail node ; then
+  # TODO: Check version is correct and install correct one if incorrect
+  return
+fi
+
 # TODO: latest version dance function and wrap this up
 DOWNLOAD_DIR=${DOWNLOAD_DIR:-${SCRIPT_ROOT_DIR}/Downloads}
 version='v1.38.1'
 if ! [ -f "${DOWNLOAD_DIR}"'/bin/fnm' ] ; then
-  ensure_available curl unzip
+  ensure_available 'curl' 'unzip'
   os="$(printf '%s' "${TARGET_OS}" | tr '[:upper:]' '[:lower:]')"
   case "${os}" in
     'macos'*) ;;
