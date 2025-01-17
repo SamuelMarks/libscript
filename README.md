@@ -1,41 +1,46 @@
 libscript
 =========
 
-Cross-platform—`/bin/sh`; `cmd.exe`—scripts library for: Windows; Linux; macOS; FreeBSD; SunOS; &etc.
+[Cross-platform](https://en.wikipedia.org/wiki/Cross-platform_software)—[`/bin/sh`](https://en.wikipedia.org/wiki/Bourne_shell); [`cmd.exe`](https://en.wikipedia.org/wiki/Cmd.exe)—[scripts library](https://en.wikipedia.org/wiki/Library_(computing)) for: [Windows](https://en.wikipedia.org/wiki/Microsoft_Windows); [Linux](https://en.wikipedia.org/wiki/Linux); [macOS](https://en.wikipedia.org/wiki/MacOS); [FreeBSD](https://en.wikipedia.org/wiki/FreeBSD); [SunOS](https://en.wikipedia.org/wiki/SunOS); &etc.
 
 ## Features
 
-OS support for:
+[OS](https://en.wikipedia.org/wiki/Operating_system) support for:
 
-  - Linux (Debian, Alpine, &etc.)
-  - macOS
-  - *BSDs [NetBSD, FreeBSD, OpenBSD] (coming soon!)
-  - Windows
+  - [Windows](https://en.wikipedia.org/wiki/Microsoft_Windows)
+  - [Linux](https://en.wikipedia.org/wiki/Linux) ([Debian](https://en.wikipedia.org/wiki/Debian), [Alpine](https://en.wikipedia.org/wiki/Alpine_Linux), &etc.); inside/outside of [Docker](https://en.wikipedia.org/wiki/Docker_(software))
+  - [macOS](https://en.wikipedia.org/wiki/MacOS)
+  - [coming soon!] [*BSDs](https://en.wikipedia.org/wiki/Comparison_of_BSD_operating_systems) [[NetBSD](https://en.wikipedia.org/wiki/NetBSD), [FreeBSD](https://en.wikipedia.org/wiki/FreeBSD), [OpenBSD](https://en.wikipedia.org/wiki/OpenBSD)]
+  - [coming soon!] [SunOS](https://en.wikipedia.org/wiki/SunOS) and derivatives | [forks](https://en.wikipedia.org/wiki/Fork_(software_development)) such as [illumos](https://en.wikipedia.org/wiki/Illumos)
+  - [coming soon!] Other [UNIX](https://en.wikipedia.org/wiki/Unix)'s like: [IBM's z/OS](https://en.wikipedia.org/wiki/Z/OS); and [HP's Unix (HP/UX)](https://en.wikipedia.org/wiki/HP-UX).
 
-Relocatable; no need to `cd` into the scripts directory.
+Relocatable; no need to [`cd`](https://en.wikipedia.org/wiki/Cd_(command)) into the scripts [directory](https://en.wikipedia.org/wiki/Directory_(computing)).
 
-Library directory structure is super-readable and modular.
+Library [directory structure](https://en.wikipedia.org/wiki/Path_(computing)) is super-readable and [modular](https://en.wikipedia.org/wiki/Modular_programming).
 
-Plenty of guards everywhere—idempotency style—so scripts can be interdependent—and rerun—without worry.
+Plenty of [guards](https://en.wikipedia.org/wiki/Include_guard) everywhere—[idempotency style](https://en.wikipedia.org/wiki/Idempotence#Computer_science_meaning)—so scripts can be interdependent—and [rerun](https://en.wikipedia.org/wiki/Pure_function)—without worry.
 
-Dockerfiles are generated. These are well optimised for Docker's cache mechanism.
+[**Dockerfiles**](https://en.wikipedia.org/wiki/Docker_(software)#Dockerfile_(example)) are generated. These are well optimised for Docker's cache mechanism.
 
 Example of generated files are found in the [`gen`](./gen) directory.
 
 ## History / roadmap:
 
-  0. First version was written in [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) (59+ repos with ["off" prefix](https://github.com/offscale?q=off&language=python)) for mostly [Linux](https://en.wikipedia.org/wiki/Linux) ([Ubuntu](https://en.wikipedia.org/wiki/Ubuntu)) with a bit of work for [Debian](https://en.wikipedia.org/wiki/Debian) support;
-  1. Second version being written in [`/bin/sh`](https://en.wikipedia.org/wiki/Bourne_shell) [this repo] targeting [macOS](https://en.wikipedia.org/wiki/MacOS); [Linux](https://en.wikipedia.org/wiki/Linux) ([.deb](https://en.wikipedia.org/wiki/Deb_(file_format)), [.rpm](https://en.wikipedia.org/wiki/RPM_Package_Manager), and [.apk (Alpine Linux)](https://en.wikipedia.org/wiki/Alpine_Linux) distributions); and a little bit of [PowerShell](https://en.wikipedia.org/wiki/PowerShell#Scripting) for modern [Windows](https://en.wikipedia.org/wiki/Microsoft_Windows);
-  2. Third version being written in [C](https://en.wikipedia.org/wiki/C_(programming_language)) [[C89](https://en.wikipedia.org/wiki/ANSI_C#C89)], targeting [SunOS](https://en.wikipedia.org/wiki/SunOS) / [illumos](https://en.wikipedia.org/wiki/Illumos) based distributions; [*BSD](https://en.wikipedia.org/wiki/Comparison_of_BSD_operating_systems); [macOS](https://en.wikipedia.org/wiki/MacOS); [DOS](https://en.wikipedia.org/wiki/Comparison_of_DOS_operating_systems); [Windows](https://en.wikipedia.org/wiki/Microsoft_Windows); [Linux](https://en.wikipedia.org/wiki/Linux); [OS/360](https://en.wikipedia.org/wiki/OS/360_and_successors); and [z/OS](https://en.wikipedia.org/wiki/Z/OS). [libacquire](https://github.com/offscale/libacquire) will become the base of this.
+  0. First version was written in [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) (59+ [repos](https://en.wikipedia.org/wiki/Software_repository) with ["off" prefix](https://github.com/offscale?q=off&language=python)) for mostly [Linux](https://en.wikipedia.org/wiki/Linux) ([Ubuntu](https://en.wikipedia.org/wiki/Ubuntu)) with a bit of work for [Debian](https://en.wikipedia.org/wiki/Debian) support;
+  1. Second version being written in [`/bin/sh`](https://en.wikipedia.org/wiki/Bourne_shell) [this repo] targeting [macOS](https://en.wikipedia.org/wiki/MacOS); [Linux](https://en.wikipedia.org/wiki/Linux) ([.deb](https://en.wikipedia.org/wiki/Deb_(file_format)), [.rpm](https://en.wikipedia.org/wiki/RPM_Package_Manager), [.apk (Alpine Linux)](https://en.wikipedia.org/wiki/Alpine_Linux) distributions); [SunOS](https://en.wikipedia.org/wiki/SunOS); [*BSDs](https://en.wikipedia.org/wiki/Comparison_of_BSD_operating_systems); and [`cmd.exe`](https://en.wikipedia.org/wiki/Cmd.exe) for [Windows](https://en.wikipedia.org/wiki/Microsoft_Windows);
+  2. Third version being written in [C](https://en.wikipedia.org/wiki/C_(programming_language)) [[C89](https://en.wikipedia.org/wiki/ANSI_C#C89)], targeting all the above + [DOS](https://en.wikipedia.org/wiki/Comparison_of_DOS_operating_systems) and [OS/360](https://en.wikipedia.org/wiki/OS/360_and_successors). [libacquire](https://github.com/offscale/libacquire) will become the base of this.
 
 ## Advantage of this repo
 
   - [Linux](https://en.wikipedia.org/wiki/Linux) variants are useful in [Docker](https://en.wikipedia.org/wiki/Docker_(software)), other image types [e.g., see [Packer](https://www.packer.io), [Unikernels](https://en.wikipedia.org/wiki/Unikernel)], and natively;
   - [macOS](https://en.wikipedia.org/wiki/MacOS) variant is useful primarily natively;
-  - [*BSDs](https://en.wikipedia.org/wiki/Comparison_of_BSD_operating_systems) [[NetBSD](https://en.wikipedia.org/wiki/NetBSD), [FreeBSD](https://en.wikipedia.org/wiki/FreeBSD), [OpenBSD](https://en.wikipedia.org/wiki/OpenBSD)] (coming soon!) are useful in jails or natively;
-  - [Windows](https://en.wikipedia.org/wiki/Microsoft_Windows) is useful for [Windows Containers](https://learn.microsoft.com/en-us/virtualization/windowscontainers/about/), other image types, and natively.
+  - [*BSDs](https://en.wikipedia.org/wiki/Comparison_of_BSD_operating_systems) [coming soon!] [[NetBSD](https://en.wikipedia.org/wiki/NetBSD), [FreeBSD](https://en.wikipedia.org/wiki/FreeBSD), [OpenBSD](https://en.wikipedia.org/wiki/OpenBSD)] are useful in jails or natively;
+  - [Windows](https://en.wikipedia.org/wiki/Microsoft_Windows) is useful for [Windows Containers](https://learn.microsoft.com/en-us/virtualization/windowscontainers/about/), other image types, and natively;
+  - [SunOS](https://en.wikipedia.org/wiki/SunOS) / [illumos](https://en.wikipedia.org/wiki/Illumos) are useful for native usage on mainframes, both native and in virtualised / zones / container systems like [SmartOS](https://en.wikipedia.org/wiki/SmartOS);
+  - [IBM's z/OS](https://en.wikipedia.org/wiki/Z/OS) [coming soon!] useful in mainframes and for testing [OS/360](https://en.wikipedia.org/wiki/OS/360_and_successors) (from the 1960s); and
+  - [HP's Unix (HP/UX)](https://en.wikipedia.org/wiki/HP-UX) [coming soon!] (also specifically useful in mainframes).
 
-Generally these scripts are extremely portable and could be used to benchmark and security-audit any:
+Generally these [scripts](https://en.wikipedia.org/wiki/Scripting_language) are extremely portable and could be used to benchmark and security-audit any:
 
   - Platform virtualization software: https://en.wikipedia.org/wiki/Comparison_of_platform_virtualization_software
   - OS-level virtualization software: https://en.wikipedia.org/wiki/OS-level_virtualization#IMPLEMENTATIONS
@@ -47,10 +52,8 @@ Generally these scripts are extremely portable and could be used to benchmark an
 
 All the aforementioned advantages, plus:
 
-  - [SunOS](https://en.wikipedia.org/wiki/SunOS) / [illumos](https://en.wikipedia.org/wiki/Illumos) are useful for native usage on mainframes, both native and in virtualised / zones / container systems like [SmartOS](https://en.wikipedia.org/wiki/SmartOS);
   - [OS/360](https://en.wikipedia.org/wiki/OS/360_and_successors) useful natively (expected as a proof-of-concept only);
-  - [DOS](https://en.wikipedia.org/wiki/Comparison_of_DOS_operating_systems) useful natively (expected as a proof-of-concept only);
-  - [z/OS](https://en.wikipedia.org/wiki/Z/OS) for native mainframe deployment.
+  - [DOS](https://en.wikipedia.org/wiki/Comparison_of_DOS_operating_systems) useful natively (expected as a proof-of-concept only).
 
 ## Usage
 
