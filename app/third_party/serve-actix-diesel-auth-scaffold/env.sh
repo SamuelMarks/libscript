@@ -29,24 +29,5 @@ esac
 STACK="${STACK}${this_file}"':'
 export STACK
 
-git_get() {
-    repo="${1}"
-    target="${2}"
-    branch="${3:-}"
-
-    GIT_DIR_="${target}"'/.git'
-    if [ -d "${GIT_DIR_}" ]; then
-        if [ -n "${branch}" ]; then
-            GIT_WORK_TREE="${target}" GIT_DIR="${GIT_DIR_}" git fetch origin "${branch}":"${branch}"
-        else
-            GIT_WORK_TREE="${target}" GIT_DIR="${GIT_DIR_}" git pull --ff-only
-        fi
-    else
-        mkdir -p "${target}"
-        if [ -n "${branch}" ]; then
-            git clone --depth=1 --single-branch --branch "${branch}" -- "${repo}" "${target}"
-        else
-            git clone --depth=1 --single-branch -- "${repo}" "${target}"
-        fi
-    fi
-}
+export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DIR="${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DIR:-${REPOS_DIR:-${TMPDIR:-/tmp}/serve-actix-diesel-auth-scaffold}/serve-actix-diesel-auth-scaffold}"
+export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR="${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR:-${BUILD_DIR:-${TMPDIR:-/tmp}/serve-actix-diesel-auth-scaffold}/serve-actix-diesel-auth-scaffold}"

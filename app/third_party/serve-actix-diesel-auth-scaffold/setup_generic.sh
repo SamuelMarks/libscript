@@ -34,23 +34,33 @@ export DIR
 
 SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "${d}" ]; then echo "${d}"; else echo './'"${d}"; fi)}"
 
-SCRIPT_NAME="${DIR}"'/env.sh'
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/env.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/priv.sh'
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/common.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_os/_apt/apt.sh'
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/os_info.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-apt_depends postgresql-common
-if ! dpkg -s -- postgresql-server-dev-"${POSTGRESQL_VERSION}" >/dev/null 2>&1; then
-  yes '' | "${PRIV}" /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
+SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/rust/setup.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
+
+previous_wd="$(pwd)"
+git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DIR}"
+cd -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DIR}"
+d="$( dirname -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DIR}" )"'/rust-actix-diesel-auth-scaffold'
+git_get https://github.com/offscale/rust-actix-diesel-auth-scaffold "${d}"
+~/.cargo/bin/cargo build --release
+if [ ! "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DIR}" = "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR}" ]; then
+  cp -r -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DIR}"'/target' "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR}"'/'
 fi
-apt_depends postgresql-server-dev-"${POSTGRESQL_VERSION}" postgresql-"${POSTGRESQL_VERSION}"
+cd -- "${previous_wd}"
