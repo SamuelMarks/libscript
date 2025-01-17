@@ -73,7 +73,7 @@ if [ -d '/etc/systemd/system' ]; then
   "${PRIV}" systemctl daemon-reload
   "${PRIV}" systemctl start "${service_name}"
 elif [ -d '/Library/LaunchDaemons' ]; then
-  >&2 echo 'TODO: macOS service'
+  >&2 printf 'TODO: macOS service\n'
   exit 3
 else
   "${PYTHON_VENV}"'/bin/celery' &

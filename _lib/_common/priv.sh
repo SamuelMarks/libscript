@@ -36,7 +36,7 @@ elif [ "$(id -u)" = "0" ]; then
 elif command -v sudo >/dev/null 2>&1 ; then
   PRIV='sudo';
 else
-  >&2 echo "Error: This script must be run as root or with sudo privileges."
+  >&2 printf "Error: This script must be run as root or with sudo privileges.\n"
   exit 1
 fi
 export PRIV;

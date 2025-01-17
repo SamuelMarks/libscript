@@ -24,8 +24,6 @@ export SCRIPT_ROOT_DIR
 STACK="${STACK:-:}${this_file}"':'
 export STACK
 
-DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
-
 verbose="${verbose:-0}"
 all_deps="${all_deps:-0}"
 
@@ -624,7 +622,7 @@ parse_server_item() {
       name_upper="$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')"
       update_generated_files "${name}" '*' "${name_upper}" 'app/third_party' "${dep_group_name}"
     else
-      echo 'no name for server'
+      >&2 printf 'no name for server\n'
       exit 4
     fi
     if [ "${verbose}" -ge 3 ] && [ -n "${location}" ]; then
@@ -739,6 +737,7 @@ parse_json() {
         if [ ! -f "${dockerfile_by_section}" ] && [ -f "${section}" ]; then
            sec_contents="$(cat -- "${section}"; printf 'a')"
            sec_contents="${sec_contents%a}"
+           # shellcheck disable=SC2016
            env -i BODY="${sec_contents}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
              "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${dockerfile_by_section}"
         fi

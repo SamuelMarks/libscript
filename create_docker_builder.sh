@@ -94,7 +94,7 @@ collect_when_pattern() {
     done
 
     # Output the result, trimming leading whitespace
-    echo "$result" | sed 's/^ *//'
+    printf '%s\n' "${result}" | sed 's/^ *//'
 }
 
 server_dfs="$(collect_when_pattern 'dockerfiles/*.server.Dockerfile')"
