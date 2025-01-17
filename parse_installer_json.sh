@@ -247,10 +247,10 @@ update_generated_files() {
   SET "SCRIPT_NAME=%%SCRIPT_ROOT_DIR%%'
     printf '\%s\%s\setup.cmd"' "${location_win}" "${name_lower}"
   # shellcheck disable=SC2183
-  printf '\n      IF NOT EXIST "%%SCRIPT_NAME%%" (
-      >&2 ECHO File not found "%%SCRIPT_NAME%%"
-      SET ERRORLEVEL=2
-      GOTO end
+  printf '\n  IF NOT EXIST "%%SCRIPT_NAME%%" (
+    >&2 ECHO File not found "%%SCRIPT_NAME%%"
+    SET ERRORLEVEL=2
+    GOTO end
   )
   CALL "%%SCRIPT_NAME%%"
 )\n\n'

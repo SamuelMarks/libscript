@@ -2,7 +2,7 @@
   "name": "openvpn installer",
   "description": "OpenVPN installer JSON",
   "version": "0.0.1",
-  "url": "https://github.com/SamuelMarks/deploy-sh",
+  "url": "https://github.com/SamuelMarks/libscript",
   "license": "Apache-2.0 OR MIT OR CC0",
   "scripts_root": "${SCRIPT_ROOT_DIR}",
   "wwwroot": [],

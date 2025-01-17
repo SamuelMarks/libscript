@@ -1,7 +1,7 @@
-deploy-sh
+libscript
 =========
 
-Deployment scripts.
+Cross-platform—`/bin/sh`; `cmd.exe`—scripts library for: Windows; Linux; macOS; FreeBSD; SunOS; &etc.
 
 ## Features
 
@@ -58,7 +58,7 @@ Run from the same directory as this [README.md](README.md) file.
 Alternatively, set `SCRIPT_NAME` to the correct `install.sh` location and run it anywhere.
 
     $ # Disable all options (so don't install anything)
-    $ . ~/repos/deploy-sh/conf-no-all.env.sh
+    $ . ~/repos/libscript/conf-no-all.env.sh
     $ # Enable installation of *just* Jupyter Notebook
     $ export JUPYTERHUB_INSTALL=1 
     $ # Set script location. Only use $(pwd) if its in your current working directory, otherwise specify.
