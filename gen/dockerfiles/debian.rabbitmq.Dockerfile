@@ -6,6 +6,9 @@ ENV SCRIPT_ROOT_DIR='/scripts'
 COPY . /scripts
 WORKDIR /scripts
 
+##########################
+# Database(s) [optional] #
+##########################
 ARG AMQP_URL=0
 ARG RABBITMQ_VERSION='*'
 

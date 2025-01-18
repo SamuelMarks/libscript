@@ -1,5 +1,8 @@
 FROM debian:bookworm-slim
 
+###########################
+# Toolchain(s) [required] #
+###########################
 ARG NODEJS_INSTALL_DIR=1
 ARG NODEJS_VERSION='lts'
 
@@ -15,6 +18,7 @@ ARG POSTGRES_PASSWORD='rest_pass'
 ARG POSTGRES_DB='rest_db'
 ARG POSTGRES_PASSWORD_FILE
 ARG POSTGRES_VERSION=17
+
 
 ARG REDIS_URL=1
 ARG VALKEY_VERSION='*'

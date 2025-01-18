@@ -12,6 +12,9 @@ export PYTHON_VERSION='3.10'
 export RUST_INSTALL_DIR=1
 export RUST_VERSION='nightly'
 
+##########################
+# Database(s) [required] #
+##########################
 export POSTGRES_URL=1
 export POSTGRES_USER='rest_user'
 export POSTGRES_PASSWORD='rest_pass'

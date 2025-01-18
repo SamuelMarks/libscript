@@ -6,6 +6,9 @@ ENV SCRIPT_ROOT_DIR='/scripts'
 COPY . /scripts
 WORKDIR /scripts
 
+########################
+# Server(s) [required] #
+########################
 ARG JUPYTERHUB=0
 
 RUN <<-EOF

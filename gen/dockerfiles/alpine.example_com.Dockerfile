@@ -6,6 +6,9 @@ ENV SCRIPT_ROOT_DIR='/scripts'
 COPY . /scripts
 WORKDIR /scripts
 
+##############
+# WWWROOT(s) #
+##############
 ARG WWWROOT_example_com_INSTALL=0
 ARG WWWROOT_example_com_COMMAND_FOLDER='_lib/_toolchain/nodejs'
 

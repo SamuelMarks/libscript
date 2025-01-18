@@ -6,6 +6,9 @@ ENV SCRIPT_ROOT_DIR='/scripts'
 COPY . /scripts
 WORKDIR /scripts
 
+###########################
+# Toolchain(s) [required] #
+###########################
 ARG NODEJS_INSTALL_DIR=1
 ARG NODEJS_VERSION='lts'
 

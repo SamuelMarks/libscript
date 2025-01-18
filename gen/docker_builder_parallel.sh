@@ -22,8 +22,6 @@ wait
 #		Servers	#
 ###################
 
-docker build --file 'dockerfiles/alpine.server.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-server':'dockerfiles/alpine-latest' . &
-docker build --file 'dockerfiles/debian.server.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-server':'dockerfiles/debian-latest' . &
 wait
 
 ###################

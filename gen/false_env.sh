@@ -9,6 +9,9 @@ export PYTHON_INSTALL_DIR=0
 
 export RUST_INSTALL_DIR=0
 
+##########################
+# Database(s) [required] #
+##########################
 export POSTGRES_URL=0
 
 export REDIS_URL=0

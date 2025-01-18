@@ -6,6 +6,7 @@ ENV SCRIPT_ROOT_DIR='/scripts'
 COPY . /scripts
 WORKDIR /scripts
 
+
 ARG REDIS_URL=1
 ARG VALKEY_VERSION='*'
 

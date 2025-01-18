@@ -6,6 +6,9 @@ ENV SCRIPT_ROOT_DIR='/scripts'
 COPY . /scripts
 WORKDIR /scripts
 
+###########################
+# Toolchain(s) [required] #
+###########################
 ARG PYTHON_INSTALL_DIR=1
 ARG PYTHON_VERSION='3.10'
 

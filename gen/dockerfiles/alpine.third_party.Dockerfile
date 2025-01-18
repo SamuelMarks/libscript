@@ -6,6 +6,9 @@ ENV SCRIPT_ROOT_DIR='/scripts'
 COPY . /scripts
 WORKDIR /scripts
 
+########################
+# Server(s) [required] #
+########################
 ARG SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD=1
 ARG SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST='/tmp/serve-actix-diesel-auth-scaffold'
 

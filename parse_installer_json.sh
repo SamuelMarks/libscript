@@ -233,9 +233,10 @@ update_generated_files() {
   env_clean="$(printf '%s' "${env}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
   location="${4}"
   dep_group_name="${5}"
-  alt_if_body="${6:-}"
-  alt_if_body_cmd="${7:-}"
-  extra_env_vars_as_json="${8:-}"
+  extra_before_str="${6:-}"
+  alt_if_body="${7:-}"
+  alt_if_body_cmd="${8:-}"
+  extra_env_vars_as_json="${9:-}"
 
   path2key "${location}"
   key2scratch "${res}"
@@ -250,6 +251,12 @@ update_generated_files() {
   {
     # shellcheck disable=SC2016
     printf '(\n  ' >> "${install_parallel_file}"
+    for f in "${docker_scratch_file}" "${scratch_file}" "${scratch}"; do
+      if ! grep -Fvq -- "${extra_before_str}" "${f}"; then
+        printf '%s\n' "${extra_before_str}" >> "${f}"
+      fi
+    done
+
     if [ "${required}" -eq 1 ]; then
       printf 'IF NOT DEFINED %s ( SET %s=1 )\n' "${env_clean}" "${env_clean}" >> "${install_cmd_file}"
       lang_set 'cmd' "${env_clean}" '1' >> "${true_env_cmd_file}"
@@ -328,9 +335,11 @@ update_generated_files() {
     image_no_tag="$(printf '%s' "${image}" | cut -d ':' -f1)"
     name_file="${output_folder}"'/dockerfiles/'"${image_no_tag}"'.'"${name_lower}"'.Dockerfile'
 
-    # shellcheck disable=SC2016
-    env -i BODY="${scratch_contents}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
-      "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${name_file}"
+    if [ -n "${scratch_contents}" ]; then
+      # shellcheck disable=SC2016
+      env -i BODY="${scratch_contents}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
+        "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${name_file}"
+    fi
   done
   rm -f "${scratch}"
 }
@@ -410,7 +419,7 @@ parse_wwwroot_item() {
     if [ "${wwwroot_header_req}" -eq 0 ]; then
         wwwroot_header_req=1
         printf '\n' >> "${false_env_file}"
-        print_header 'WWWROOT(s)' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
+        extra_before_str=$(print_header 'WWWROOT(s)' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}")
         print_header 'WWWROOT(s)' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
     fi
     # shellcheck disable=SC2003
@@ -473,7 +482,7 @@ parse_wwwroot_item() {
       printf '  IF NOT DEFINED WWWROOT_LISTEN ( SET WWWROOT_LISTEN="%s" )\n' "${listen:-80}"
     )
     extra_env_vars_as_json="$(parse_wwwroot_builders "${www_json}" "${name_clean}")"
-    update_generated_files "${name_upper_clean}" "${version}" "${env}" 'wwwroot' "${dep_group_name}" "${alt_if_body}" "${alt_if_body_cmd}" "${extra_env_vars_as_json}"
+    update_generated_files "${name_upper_clean}" "${version}" "${env}" 'wwwroot' "${dep_group_name}" "${extra_before_str}" "${alt_if_body}" "${alt_if_body_cmd}" "${extra_env_vars_as_json}"
 }
 
 # parse "builder" array within a "wwwroot" item
@@ -584,7 +593,7 @@ parse_toolchain_item() {
         if [ "${toolchains_header_req}" -eq 0 ]; then
           toolchains_header_req=1
           printf '\n' >> "${false_env_file}"
-          print_header 'Toolchain(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
+          extra_before_str=$(print_header 'Toolchain(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}")
           print_header 'Toolchain(s) [required]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
           # shellcheck disable=SC2059
           printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
@@ -592,14 +601,14 @@ parse_toolchain_item() {
     elif [ "${toolchains_header_opt}" -eq 0 ]; then
         toolchains_header_opt=1
         printf '\n' >> "${false_env_file}"
-        print_header 'Toolchain(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
+        extra_before_str=$(print_header 'Toolchain(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}")
         print_header 'Toolchain(s) [optional]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
         # shellcheck disable=SC2059
         if [ "${all_deps}" -eq 0 ]; then printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}" ; fi
     fi
     # shellcheck disable=SC2003
     toolchains_len=$(expr "${toolchains_len}" + 1)
-    update_generated_files "${name}" "${version}" "${env}" '_lib/_toolchain' "${dep_group_name}"
+    update_generated_files "${name}" "${version}" "${env}" '_lib/_toolchain' "${dep_group_name}" "${extra_before_str}" '' '' ''
 }
 
 # parse "databases" array
@@ -625,6 +634,7 @@ parse_database_item() {
     env=$(printf '%s' "${db_json}" | jq -r '.env')
     target_env=$(printf '%s' "${db_json}" | jq -c '.target_env[]?')
     secrets=$(printf '%s' "${db_json}" | jq -c '.secrets?')
+    extra_before_str=''
 
     if [ "${verbose}" -ge 3 ]; then
       printf '  Database:\n'
@@ -637,7 +647,7 @@ parse_database_item() {
     if [ "${dep_group_name}" = "Required" ] ; then
         if [ "${databases_header_req}" -eq 0 ]; then
           databases_header_req=1
-          print_header 'Database(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" >/dev/null
+          extra_before_str=$(print_header 'Database(s) [required]' |  tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}")
           print_header 'Database(s) [required]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
 
           # shellcheck disable=SC2059
@@ -646,7 +656,7 @@ parse_database_item() {
     elif [ "${databases_header_opt}" -eq 0 ]; then
         databases_header_opt=1
         printf '\n' >> "${false_env_file}"
-        print_header 'Database(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
+        extra_before_str=$(print_header 'Database(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}")
         print_header 'Database(s) [optional]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
         # shellcheck disable=SC2059
         if [ "${all_deps}" -eq 0 ]; then printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}" ; fi
@@ -655,7 +665,7 @@ parse_database_item() {
     # shellcheck disable=SC2003
     databases_len=$(expr "${databases_len}" + 1)
 
-    update_generated_files "${name}" "${version}" "${env}" '_lib/_storage' "${dep_group_name}" '' '' "${secrets}"
+    update_generated_files "${name}" "${version}" "${env}" '_lib/_storage' "${dep_group_name}" "${extra_before_str}" '' '' "${secrets}"
     if [ -n "${target_env}" ]; then
         if [ "${verbose}" -ge 3 ]; then printf '    Target Env:\n'; fi
 
@@ -700,13 +710,13 @@ parse_server_item() {
     if [ -n "${name}" ]; then
       if [ "${servers_header_req}" -eq 0 ]; then
         servers_header_req=1
-        print_header 'Server(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
+        extra_before_str=$(print_header 'Server(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}")
         print_header 'Server(s) [required]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
 
         # shellcheck disable=SC2059
         printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
       else
-        print_header 'Server(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
+        extra_before_str=$(print_header 'Server(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}")
         print_header 'Server(s) [optional]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
       fi
       if [ "${verbose}" -ge 3 ]; then printf '    Name: %s\n' "${name}"; fi
@@ -720,7 +730,7 @@ parse_server_item() {
           extra_env_vars_as_json="${js}"
         fi
       fi
-      update_generated_files "${name}" "${version}" "${name_upper}" 'app/third_party' "${dep_group_name}" '' '' "${extra_env_vars_as_json}"
+      update_generated_files "${name}" "${version}" "${name_upper}" 'app/third_party' "${dep_group_name}" "${extra_before_str}" '' '' "${extra_env_vars_as_json}"
     fi
     if [ -n "${dest}" ] && [ "${verbose}" -ge 3 ] ; then
       printf '    Dest: %s\n' "${dest}"
@@ -837,13 +847,15 @@ parse_json() {
         if [ ! -f "${dockerfile_by_section}" ] && [ -f "${section}" ]; then
            sec_contents="$(cat -- "${section}"; printf 'a')"
            sec_contents="${sec_contents%a}"
-           # shellcheck disable=SC2016
-           env -i BODY="${sec_contents}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
-             "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${dockerfile_by_section}"
+           if [ -n "${sec_contents}" ]; then
+             # shellcheck disable=SC2016
+             env -i BODY="${sec_contents}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
+               "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${dockerfile_by_section}"
+           fi
         fi
       done
 
-      if [ ! -f "${dockerfile}" ]; then
+      if [ ! -f "${dockerfile}" ] && [ -n "${docker_s}" ]; then
         # shellcheck disable=SC2016
         env -i ENV="${docker_s}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
           "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.tpl' > "${dockerfile}"
