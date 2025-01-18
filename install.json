@@ -15,6 +15,13 @@
       "builder": [
         {
           "shell": "*",
+          "command_file": "_lib/_toolchain/nodejs",
+          "env": {
+            "NODEJS_VERSION": "lts"
+          }
+        },
+        {
+          "shell": "*",
           "commands": [
             "npm i -g @angular/cli",
             "npm i",
@@ -75,7 +82,7 @@
       "servers": [
         {
           "name": "serve-actix-diesel-auth-scaffold",
-          "dest": "/tmp",
+          "dest": "/tmp/serve-actix-diesel-auth-scaffold",
           "builder": [
             {
               "shell": "*",
@@ -100,12 +107,6 @@
               "REDIS_URL"
             ]
           }
-        },
-        {
-          "name": "JupyterHub",
-          "daemon": {
-            "os_native": true
-          }
         }
       ]
     },
@@ -115,6 +116,14 @@
           "name": "RABBITMQ",
           "version": "*",
           "env": "AMQP_URL"
+        }
+      ],
+      "servers": [
+        {
+          "name": "JupyterHub",
+          "daemon": {
+            "os_native": true
+          }
         }
       ]
     }

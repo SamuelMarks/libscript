@@ -30,10 +30,8 @@ SET VALKEY_VERSION="*"
 :: ##############################
 
 SET SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD=1
-SET serve_actix_diesel_auth_scaffold_VERSION="*"
-
-SET JUPYTERHUB=1
-SET JupyterHub_VERSION="*"
+SET SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST="/tmp/serve-actix-diesel-auth-scaffold"
+SET SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_VERSION="*"
 
 :: ##############################
 :: #	Database(s) [optional]	#
@@ -42,8 +40,14 @@ SET JupyterHub_VERSION="*"
 SET RABBITMQ_VERSION="*"
 
 :: ##############################
+:: #	Server(s) [required]	#
+:: ##############################
+
+SET JUPYTERHUB_VERSION="*"
+
+:: ##############################
 :: #	      WWWROOT(s)      	#
 :: ##############################
 
-SET example_com_VERSION="0.0.1"
+SET EXAMPLE_COM_VERSION="0.0.1"
 

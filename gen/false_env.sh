@@ -14,13 +14,17 @@ export REDIS_URL=0
 #############################
 
 export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD=0
-export JUPYTERHUB=0
 
 #############################
 #		Database(s) [optional]	#
 #############################
 
 export AMQP_URL=0
+#############################
+#		Server(s) [required]	#
+#############################
+
+export JUPYTERHUB=0
 
 #############################
 #		      WWWROOT(s)      	#

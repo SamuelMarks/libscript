@@ -10,7 +10,7 @@ ARG WWWROOT_VENDOR='nginx'
 ARG WWWROOT_PATH='./my_symlinked_wwwroot'
 ARG WWWROOT_LISTEN='80'
 ARG WWWROOT_example_com_INSTALL=0
-ARG example_com_VERSION='0.0.1'
+ARG EXAMPLE_COM_VERSION='0.0.1'
 
 RUN <<-EOF
 

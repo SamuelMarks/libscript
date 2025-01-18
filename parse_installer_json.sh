@@ -169,7 +169,7 @@ object2key_val() {
 update_generated_files() {
   name="${1}"
   name_lower="$(printf '%s' "${name}" | tr '[:upper:]' '[:lower:]')"
-  name_clean="$(printf '%s' "${name}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
+  name_upper_clean="$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]' | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
   version="${2}"
   env="${3}"
   env_clean="$(printf '%s' "${env}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
@@ -212,9 +212,9 @@ update_generated_files() {
       object2key_val "${extra_env_vars}" 'export ' "'"
       object2key_val "${extra_env_vars}" 'SET ' '"' >> "${true_env_cmd_file}"
     fi
-    printf 'ARG %s_VERSION='"'"'%s'"'"'\n\n' "${name_clean}" "${version}" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
-    printf 'SET %s_VERSION="%s"\n\n' "${name_clean}" "${version}" >> "${true_env_cmd_file}"
-    printf 'export %s_VERSION='"'"'%s'"'"'\n\n' "${name_clean}" "${version}"
+    printf 'ARG %s_VERSION='"'"'%s'"'"'\n\n' "${name_upper_clean}" "${version}" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
+    printf 'SET %s_VERSION="%s"\n\n' "${name_upper_clean}" "${version}" >> "${true_env_cmd_file}"
+    printf 'export %s_VERSION='"'"'%s'"'"'\n\n' "${name_upper_clean}" "${version}"
   } | tee -a "${install_parallel_file}" "${true_env_file}" >/dev/null
   # shellcheck disable=SC2059
   printf "${run_tpl}"' ) &\n\n' 'install_gen.sh' >> "${install_parallel_file}"
@@ -429,6 +429,7 @@ parse_wwwroot_builders() {
 parse_builder_item() {
     builder_json="${1}"
     shell=$(printf '%s' "${builder_json}" | jq -r '.shell // "*"' )
+    command_file=$(printf '%s' "${builder_json}" | jq -r '.command_file // empty' )
     if [ "${verbose}" -ge 3 ]; then
       printf '  Builder:\n'
       printf '    Shell: %s\n' "${shell}"
@@ -440,6 +441,12 @@ parse_builder_item() {
           printf '      %s\n' "${cmd}"
         fi
     done
+
+    if [ -n "${command_file}" ]; then
+      if [ "${verbose}" -ge 3 ]; then
+        printf '   Command_file: %s\n' "${command_file}"
+      fi
+    fi
 
     outputs=$(printf '%s' "${builder_json}" | jq -c '.output[]?')
     if [ -n "${outputs}" ]; then
@@ -608,6 +615,8 @@ parse_server_item() {
     dep_group_name="${2}"
     name=$(printf '%s' "${server_json}" | jq -r '.name // empty')
     location=$(printf '%s' "${server_json}" | jq -r '.location // empty')
+    dest=$(printf '%s' "${server_json}" | jq -r '.dest // empty')
+    extra_env_vars=''
 
     if [ "${verbose}" -ge 3 ]; then printf '  Server:\n'; fi
     if [ -n "${name}" ]; then
@@ -623,10 +632,17 @@ parse_server_item() {
       fi
       if [ "${verbose}" -ge 3 ]; then printf '    Name: %s\n' "${name}"; fi
       name_upper="$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')"
-      update_generated_files "${name}" '*' "${name_upper}" 'app/third_party' "${dep_group_name}"
+      name_upper_clean="$(printf '%s' "${name_upper}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
+      if [ -n "${dest}" ]; then
+        extra_env_vars="$(printf '{"%s_DEST": "%s"}' "${name_upper_clean}" "${dest}")"
+      fi
+      update_generated_files "${name}" '*' "${name_upper}" 'app/third_party' "${dep_group_name}" '' '' "${extra_env_vars}"
     else
       >&2 printf 'no name for server\n'
       exit 4
+    fi
+    if [ -n "${dest}" ] && [ "${verbose}" -ge 3 ] ; then
+      printf '    Dest: %s\n' "${dest}"
     fi
     if [ "${verbose}" -ge 3 ] && [ -n "${location}" ]; then
       printf '    Location: %s\n' "${location}";

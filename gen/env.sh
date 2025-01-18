@@ -28,10 +28,8 @@ export VALKEY_VERSION='*'
 #############################
 
 export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD=1
-export serve_actix_diesel_auth_scaffold_VERSION='*'
-
-export JUPYTERHUB=1
-export JupyterHub_VERSION='*'
+export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST='/tmp/serve-actix-diesel-auth-scaffold'
+export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_VERSION='*'
 
 #############################
 #		Database(s) [optional]	#
@@ -41,11 +39,18 @@ export AMQP_URL=0
 export RABBITMQ_VERSION='*'
 
 #############################
+#		Server(s) [required]	#
+#############################
+
+export JUPYTERHUB=0
+export JUPYTERHUB_VERSION='*'
+
+#############################
 #		      WWWROOT(s)      	#
 #############################
 
 export WWWROOT_example_com_INSTALL=1
 export WWWROOT_example_com_INSTALL=1
 export WWWROOT_example_com_INSTALL=0
-export example_com_VERSION='0.0.1'
+export EXAMPLE_COM_VERSION='0.0.1'
 

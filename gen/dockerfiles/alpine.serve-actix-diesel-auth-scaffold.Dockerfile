@@ -6,7 +6,8 @@ COPY . /scripts
 WORKDIR /scripts
 
 ARG SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD=1
-ARG serve_actix_diesel_auth_scaffold_VERSION='*'
+ARG SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST='/tmp/serve-actix-diesel-auth-scaffold'
+ARG SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_VERSION='*'
 
 RUN <<-EOF
 

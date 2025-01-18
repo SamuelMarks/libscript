@@ -97,9 +97,13 @@ IF "%SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD%"==1 (
   CALL "%SCRIPT_NAME%"
 )
 
-IF NOT DEFINED JUPYTERHUB ( SET JUPYTERHUB=1 )
-IF "%JUPYTERHUB%"==1 (
-  SET "SCRIPT_NAME=%SCRIPT_ROOT_DIR%\app\third_party\jupyterhub\setup.cmd"
+:: ##############################
+:: #	Database(s) [optional]	#
+:: ##############################
+
+IF NOT DEFINED "AMQP_URL" ( SET AMQP_URL=0 )
+IF "%AMQP_URL%"==1 (
+  SET "SCRIPT_NAME=%SCRIPT_ROOT_DIR%\_lib\_storage\rabbitmq\setup.cmd"
   IF NOT EXIST "%SCRIPT_NAME%" (
     >&2 ECHO File not found "%SCRIPT_NAME%"
     SET ERRORLEVEL=2
@@ -109,12 +113,12 @@ IF "%JUPYTERHUB%"==1 (
 )
 
 :: ##############################
-:: #	Database(s) [optional]	#
+:: #	Server(s) [required]	#
 :: ##############################
 
-IF NOT DEFINED "AMQP_URL" ( SET AMQP_URL=0 )
-IF "%AMQP_URL%"==1 (
-  SET "SCRIPT_NAME=%SCRIPT_ROOT_DIR%\_lib\_storage\rabbitmq\setup.cmd"
+IF NOT DEFINED "JUPYTERHUB" ( SET JUPYTERHUB=0 )
+IF "%JUPYTERHUB%"==1 (
+  SET "SCRIPT_NAME=%SCRIPT_ROOT_DIR%\app\third_party\jupyterhub\setup.cmd"
   IF NOT EXIST "%SCRIPT_NAME%" (
     >&2 ECHO File not found "%SCRIPT_NAME%"
     SET ERRORLEVEL=2

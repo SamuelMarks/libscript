@@ -108,16 +108,8 @@ export SCRIPT_NAME
 
 (
   export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD=1
-export serve_actix_diesel_auth_scaffold_VERSION='*'
-
-SCRIPT_NAME="${DIR}"'/install_gen.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}" ) &
-
-(
-  export JUPYTERHUB=1
-export JupyterHub_VERSION='*'
+export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST='/tmp/serve-actix-diesel-auth-scaffold'
+export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_VERSION='*'
 
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
@@ -145,6 +137,24 @@ export SCRIPT_NAME
 wait
 
 #############################
+#		Server(s) [required]	#
+#############################
+
+SCRIPT_NAME="${DIR}"'/false_env.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
+
+(
+  export JUPYTERHUB=0
+export JUPYTERHUB_VERSION='*'
+
+SCRIPT_NAME="${DIR}"'/install_gen.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}" ) &
+
+#############################
 #		      WWWROOT(s)      	#
 #############################
 
@@ -152,7 +162,7 @@ export WWWROOT_example_com_INSTALL=1
 export WWWROOT_example_com_INSTALL=1
 (
   export WWWROOT_example_com_INSTALL=0
-export example_com_VERSION='0.0.1'
+export EXAMPLE_COM_VERSION='0.0.1'
 
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME

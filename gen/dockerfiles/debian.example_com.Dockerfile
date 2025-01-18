@@ -6,7 +6,7 @@ COPY . /scripts
 WORKDIR /scripts
 
 ARG WWWROOT_example_com_INSTALL=0
-ARG example_com_VERSION='0.0.1'
+ARG EXAMPLE_COM_VERSION='0.0.1'
 
 RUN <<-EOF
 

@@ -29,5 +29,5 @@ esac
 STACK="${STACK}${this_file}"':'
 export STACK
 
-export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DIR="${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DIR:-${REPOS_DIR:-${TMPDIR:-/tmp}/serve-actix-diesel-auth-scaffold}/serve-actix-diesel-auth-scaffold}"
+export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST="${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST:-${REPOS_DIR:-${TMPDIR:-/tmp}/serve-actix-diesel-auth-scaffold}/serve-actix-diesel-auth-scaffold}"
 export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR="${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR:-${BUILD_DIR:-${TMPDIR:-/tmp}/serve-actix-diesel-auth-scaffold}/serve-actix-diesel-auth-scaffold}"

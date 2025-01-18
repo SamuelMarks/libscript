@@ -16,13 +16,18 @@ SET REDIS_URL=0
 :: ##############################
 
 SET SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD=0
-SET JUPYTERHUB=0
 :: ##############################
 :: #	Database(s) [optional]	#
 :: ##############################
 
 SET AMQP_URL=0
 SET AMQP_URL=0
+:: ##############################
+:: #	Server(s) [required]	#
+:: ##############################
+
+SET JUPYTERHUB=0
+SET JUPYTERHUB=0
 :: ##############################
 :: #	      WWWROOT(s)      	#
 :: ##############################

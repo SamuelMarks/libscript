@@ -6,7 +6,8 @@ COPY . /scripts
 WORKDIR /scripts
 
 ARG SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD=1
-ARG serve_actix_diesel_auth_scaffold_VERSION='*'
+ARG SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST='/tmp/serve-actix-diesel-auth-scaffold'
+ARG SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_VERSION='*'
 
 RUN <<-EOF
 
@@ -20,12 +21,12 @@ fi
 EOF
 
 
-ARG JUPYTERHUB=1
-ARG JupyterHub_VERSION='*'
+ARG JUPYTERHUB=0
+ARG JUPYTERHUB_VERSION='*'
 
 RUN <<-EOF
 
-if [ "${JUPYTERHUB:-1}" -eq 1 ]; then
+if [ "${JUPYTERHUB:-0}" -eq 1 ]; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/app/third_party/jupyterhub/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090

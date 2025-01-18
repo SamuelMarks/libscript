@@ -55,12 +55,12 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 previous_wd="$(pwd)"
-git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DIR}"
-cd -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DIR}"
-d="$( dirname -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DIR}" )"'/rust-actix-diesel-auth-scaffold'
+git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}"
+cd -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}"
+d="$( dirname -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}" )"'/rust-actix-diesel-auth-scaffold'
 git_get https://github.com/offscale/rust-actix-diesel-auth-scaffold "${d}"
 ~/.cargo/bin/cargo build --release
-if [ ! "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DIR}" = "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR}" ]; then
-  cp -r -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DIR}"'/target' "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR}"'/'
+if [ ! "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}" = "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR}" ]; then
+  cp -r -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}"'/target' "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR}"'/'
 fi
 cd -- "${previous_wd}"
