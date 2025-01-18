@@ -19,10 +19,9 @@ IF NOT x!str1:%searchVal%=!"=="x%str1% (
  ECHO [CONTINUE] processing "%this_file%"
 )
 
-:: ##############################
-:: #	Toolchain(s) [required]	#
-:: ##############################
-
+:: ###########################
+:: # Toolchain(s) [required] #
+:: ###########################
 IF NOT DEFINED NODEJS_INSTALL_DIR ( SET NODEJS_INSTALL_DIR=1 )
 IF "%NODEJS_INSTALL_DIR%"==1 (
   SET "SCRIPT_NAME=%SCRIPT_ROOT_DIR%\_lib\_toolchain\nodejs\setup.cmd"
@@ -56,10 +55,9 @@ IF "%RUST_INSTALL_DIR%"==1 (
   CALL "%SCRIPT_NAME%"
 )
 
-:: ##############################
-:: #	Database(s) [required]	#
-:: ##############################
-
+:: ##########################
+:: # Database(s) [required] #
+:: ##########################
 IF NOT DEFINED POSTGRES_URL ( SET POSTGRES_URL=1 )
 IF "%POSTGRES_URL%"==1 (
   SET "SCRIPT_NAME=%SCRIPT_ROOT_DIR%\_lib\_storage\postgres\setup.cmd"
@@ -82,10 +80,9 @@ IF "%REDIS_URL%"==1 (
   CALL "%SCRIPT_NAME%"
 )
 
-:: ##############################
-:: #	Server(s) [required]	#
-:: ##############################
-
+:: ########################
+:: # Server(s) [required] #
+:: ########################
 IF NOT DEFINED SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD ( SET SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD=1 )
 IF "%SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD%"==1 (
   SET "SCRIPT_NAME=%SCRIPT_ROOT_DIR%\app\third_party\serve-actix-diesel-auth-scaffold\setup.cmd"
@@ -97,10 +94,9 @@ IF "%SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD%"==1 (
   CALL "%SCRIPT_NAME%"
 )
 
-:: ##############################
-:: #	Database(s) [optional]	#
-:: ##############################
-
+:: ##########################
+:: # Database(s) [optional] #
+:: ##########################
 IF NOT DEFINED "AMQP_URL" ( SET AMQP_URL=0 )
 IF "%AMQP_URL%"==1 (
   SET "SCRIPT_NAME=%SCRIPT_ROOT_DIR%\_lib\_storage\rabbitmq\setup.cmd"
@@ -112,10 +108,9 @@ IF "%AMQP_URL%"==1 (
   CALL "%SCRIPT_NAME%"
 )
 
-:: ##############################
-:: #	Server(s) [required]	#
-:: ##############################
-
+:: ########################
+:: # Server(s) [required] #
+:: ########################
 IF NOT DEFINED "JUPYTERHUB" ( SET JUPYTERHUB=0 )
 IF "%JUPYTERHUB%"==1 (
   SET "SCRIPT_NAME=%SCRIPT_ROOT_DIR%\app\third_party\jupyterhub\setup.cmd"
@@ -127,10 +122,9 @@ IF "%JUPYTERHUB%"==1 (
   CALL "%SCRIPT_NAME%"
 )
 
-:: ##############################
-:: #	      WWWROOT(s)      	#
-:: ##############################
-
+:: ##############
+:: # WWWROOT(s) #
+:: ##############
 IF NOT DEFINED "WWWROOT_example_com_INSTALL" ( SET WWWROOT_example_com_INSTALL=0 )
 IF "%WWWROOT_example_com_INSTALL%"==1 (
   IF NOT DEFINED WWWROOT_NAME ( SET WWWROOT_NAME="example.com" )

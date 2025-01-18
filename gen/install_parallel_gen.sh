@@ -26,10 +26,9 @@ export STACK
 
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 
-#############################
-#		Toolchain(s) [required]	#
-#############################
-
+###########################
+# Toolchain(s) [required] #
+###########################
 SCRIPT_NAME="${DIR}"'/false_env.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
@@ -61,10 +60,9 @@ export SCRIPT_NAME
 
 wait
 
-#############################
-#		Database(s) [required]	#
-#############################
-
+##########################
+# Database(s) [required] #
+##########################
 SCRIPT_NAME="${DIR}"'/false_env.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
@@ -92,10 +90,9 @@ export SCRIPT_NAME
 
 wait
 
-#############################
-#		Server(s) [required]	#
-#############################
-
+########################
+# Server(s) [required] #
+########################
 SCRIPT_NAME="${DIR}"'/false_env.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
@@ -109,10 +106,9 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}" ) &
 
-#############################
-#		Database(s) [optional]	#
-#############################
-
+##########################
+# Database(s) [optional] #
+##########################
 SCRIPT_NAME="${DIR}"'/false_env.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
@@ -128,10 +124,9 @@ export SCRIPT_NAME
 
 wait
 
-#############################
-#		Server(s) [required]	#
-#############################
-
+########################
+# Server(s) [required] #
+########################
 SCRIPT_NAME="${DIR}"'/false_env.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
@@ -144,10 +139,9 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}" ) &
 
-#############################
-#		      WWWROOT(s)      	#
-#############################
-
+##############
+# WWWROOT(s) #
+##############
 export WWWROOT_example_com_INSTALL=1
 wait
 

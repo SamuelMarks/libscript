@@ -60,8 +60,18 @@ if [ ! -e "${app_folder}" ]; then cp -r "${SCRIPT_ROOT_DIR}"'/app' "${app_folder
 chmod +x "${false_env_file}" "${true_env_file}" \
   "${install_file}" "${install_parallel_file}"
 
-header_tpl='#############################\n#\t\t%s\t#\n#############################\n\n'
-header_cmd_tpl=':: ##############################\n:: #\t%s\t#\n:: ##############################\n\n'
+print_header() {
+  name="${1}"
+  prefix="${2:-}"
+  i=${#name}
+  # shellcheck disable=SC2003
+  i="$(expr "${i}" + 2)"
+  leading='#'
+  for _ in $(seq "${i}" 0); do
+    leading="${leading}"'#'
+  done
+  printf '%s%s\n%s# %s #\n%s%s\n' "${prefix}" "${leading}" "${prefix}" "${name}" "${prefix}" "${leading}"
+}
 
 # shellcheck disable=SC2016
 run_tpl='SCRIPT_NAME="${DIR}"'"'"'/%s'"'"'\nexport SCRIPT_NAME\n# shellcheck disable=SC1090\n. "${SCRIPT_NAME}"'
@@ -400,10 +410,8 @@ parse_wwwroot_item() {
     if [ "${wwwroot_header_req}" -eq 0 ]; then
         wwwroot_header_req=1
         printf '\n' >> "${false_env_file}"
-        # shellcheck disable=SC2059
-        printf "${header_tpl}" '      WWWROOT(s)      ' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
-        # shellcheck disable=SC2059
-        printf "${header_cmd_tpl}" '      WWWROOT(s)      ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
+        print_header 'WWWROOT(s)' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
+        print_header 'WWWROOT(s)' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
     fi
     # shellcheck disable=SC2003
     wwwroot_len=$(expr "${wwwroot_len}" + 1)
@@ -576,20 +584,16 @@ parse_toolchain_item() {
         if [ "${toolchains_header_req}" -eq 0 ]; then
           toolchains_header_req=1
           printf '\n' >> "${false_env_file}"
-          # shellcheck disable=SC2059
-          printf "${header_tpl}" 'Toolchain(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
-          # shellcheck disable=SC2059
-          printf "${header_cmd_tpl}" 'Toolchain(s) [required]' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
+          print_header 'Toolchain(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
+          print_header 'Toolchain(s) [required]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
           # shellcheck disable=SC2059
           printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
         fi
     elif [ "${toolchains_header_opt}" -eq 0 ]; then
         toolchains_header_opt=1
         printf '\n' >> "${false_env_file}"
-        # shellcheck disable=SC2059
-        printf "${header_tpl}" 'Toolchain(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
-        # shellcheck disable=SC2059
-        printf "${header_cmd_tpl}" 'Toolchain(s) [optional]' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
+        print_header 'Toolchain(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
+        print_header 'Toolchain(s) [optional]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
         # shellcheck disable=SC2059
         if [ "${all_deps}" -eq 0 ]; then printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}" ; fi
     fi
@@ -633,10 +637,8 @@ parse_database_item() {
     if [ "${dep_group_name}" = "Required" ] ; then
         if [ "${databases_header_req}" -eq 0 ]; then
           databases_header_req=1
-          # shellcheck disable=SC2059
-          printf "${header_tpl}" 'Database(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" >/dev/null
-          # shellcheck disable=SC2059
-          printf "${header_cmd_tpl}" 'Database(s) [required]' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
+          print_header 'Database(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" >/dev/null
+          print_header 'Database(s) [required]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
 
           # shellcheck disable=SC2059
           printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
@@ -644,10 +646,8 @@ parse_database_item() {
     elif [ "${databases_header_opt}" -eq 0 ]; then
         databases_header_opt=1
         printf '\n' >> "${false_env_file}"
-        # shellcheck disable=SC2059
-        printf "${header_tpl}" 'Database(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
-        # shellcheck disable=SC2059
-        printf "${header_cmd_tpl}" 'Database(s) [optional]' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
+        print_header 'Database(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
+        print_header 'Database(s) [optional]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
         # shellcheck disable=SC2059
         if [ "${all_deps}" -eq 0 ]; then printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}" ; fi
     fi
@@ -700,18 +700,14 @@ parse_server_item() {
     if [ -n "${name}" ]; then
       if [ "${servers_header_req}" -eq 0 ]; then
         servers_header_req=1
-        # shellcheck disable=SC2059
-        printf "${header_tpl}" 'Server(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
-        # shellcheck disable=SC2059
-        printf "${header_cmd_tpl}" 'Server(s) [required]' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
+        print_header 'Server(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
+        print_header 'Server(s) [required]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
 
         # shellcheck disable=SC2059
         printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
       else
-        # shellcheck disable=SC2059
-        printf "${header_tpl}" 'Server(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
-        # shellcheck disable=SC2059
-        printf "${header_cmd_tpl}" 'Server(s) [optional]' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
+        print_header 'Server(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
+        print_header 'Server(s) [optional]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
       fi
       if [ "${verbose}" -ge 3 ]; then printf '    Name: %s\n' "${name}"; fi
       name_upper="$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')"

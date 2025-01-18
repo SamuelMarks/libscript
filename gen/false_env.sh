@@ -1,9 +1,8 @@
 #!/bin/sh
 
-#############################
-#		Toolchain(s) [required]	#
-#############################
-
+###########################
+# Toolchain(s) [required] #
+###########################
 export NODEJS_INSTALL_DIR=0
 
 export PYTHON_INSTALL_DIR=0
@@ -14,30 +13,26 @@ export POSTGRES_URL=0
 
 export REDIS_URL=0
 
-#############################
-#		Server(s) [required]	#
-#############################
-
+########################
+# Server(s) [required] #
+########################
 export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD=0
 
 
-#############################
-#		Database(s) [optional]	#
-#############################
-
+##########################
+# Database(s) [optional] #
+##########################
 export AMQP_URL=0
 
-#############################
-#		Server(s) [required]	#
-#############################
-
+########################
+# Server(s) [required] #
+########################
 export JUPYTERHUB=0
 
 
-#############################
-#		      WWWROOT(s)      	#
-#############################
-
+##############
+# WWWROOT(s) #
+##############
 export WWWROOT_example_com_INSTALL=0
 export WWWROOT_example_com_INSTALL=0
 

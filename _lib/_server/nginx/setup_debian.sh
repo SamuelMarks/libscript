@@ -18,11 +18,12 @@ else
 fi
 set -feu
 
+run_before=0
 STACK="${STACK:-:}"
 case "${STACK}" in
   *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s"\n' "${this_file}"
-    return ;;
+    # printf '[STOP]     processing "%s"\n' "${this_file}"
+    run_before=1 ;;
   *)
     printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
 esac
@@ -49,17 +50,21 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-apt_depends curl gnupg2 ca-certificates lsb-release debian-archive-keyring
-[ -f '/usr/share/keyrings/nginx-archive-keyring.gpg' ] || \
-  curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
-    | "${PRIV}" tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
-[ -f '/etc/apt/sources.list.d/nginx.list' ] || \
-  printf 'deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
-  http://nginx.org/packages/debian %s nginx\n' "$(lsb_release -cs)" \
-    | "${PRIV}" tee /etc/apt/sources.list.d/nginx.list
-[ -f '/etc/apt/preferences.d/99nginx' ] || \
-  printf 'Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n' \
-    | "${PRIV}" tee /etc/apt/preferences.d/99nginx && \
-  "${PRIV}" apt update -qq
+if [ "${run_before}" -eq 0 ]; then
+  apt_depends curl gnupg2 ca-certificates lsb-release debian-archive-keyring
+  [ -f '/usr/share/keyrings/nginx-archive-keyring.gpg' ] || \
+    curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
+      | "${PRIV}" tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+  [ -f '/etc/apt/sources.list.d/nginx.list' ] || \
+    printf 'deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
+    http://nginx.org/packages/debian %s nginx\n' "$(lsb_release -cs)" \
+      | "${PRIV}" tee /etc/apt/sources.list.d/nginx.list
+  [ -f '/etc/apt/preferences.d/99nginx' ] || \
+    printf 'Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n' \
+      | "${PRIV}" tee /etc/apt/preferences.d/99nginx && \
+    "${PRIV}" apt update -qq
 
-apt_depends nginx
+  apt_depends nginx
+fi
+
+# TODO: Install to sites-available

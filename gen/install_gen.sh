@@ -25,10 +25,9 @@ STACK="${STACK:-:}${this_file}"':'
 export STACK
 
 
-#############################
-#		Toolchain(s) [required]	#
-#############################
-
+###########################
+# Toolchain(s) [required] #
+###########################
 if [ "${NODEJS_INSTALL_DIR:-1}" -eq 1 ]; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/nodejs/setup.sh'
   export SCRIPT_NAME
@@ -50,10 +49,9 @@ if [ "${RUST_INSTALL_DIR:-1}" -eq 1 ]; then
   . "${SCRIPT_NAME}"
 fi
 
-#############################
-#		Database(s) [required]	#
-#############################
-
+##########################
+# Database(s) [required] #
+##########################
 if [ "${POSTGRES_URL:-1}" -eq 1 ]; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_storage/postgres/setup.sh'
   export SCRIPT_NAME
@@ -68,10 +66,9 @@ if [ "${REDIS_URL:-1}" -eq 1 ]; then
   . "${SCRIPT_NAME}"
 fi
 
-#############################
-#		Server(s) [required]	#
-#############################
-
+########################
+# Server(s) [required] #
+########################
 if [ "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD:-1}" -eq 1 ]; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/app/third_party/serve-actix-diesel-auth-scaffold/setup.sh'
   export SCRIPT_NAME
@@ -79,10 +76,9 @@ if [ "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD:-1}" -eq 1 ]; then
   . "${SCRIPT_NAME}"
 fi
 
-#############################
-#		Database(s) [optional]	#
-#############################
-
+##########################
+# Database(s) [optional] #
+##########################
 if [ "${AMQP_URL:-0}" -eq 1 ]; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_storage/rabbitmq/setup.sh'
   export SCRIPT_NAME
@@ -90,10 +86,9 @@ if [ "${AMQP_URL:-0}" -eq 1 ]; then
   . "${SCRIPT_NAME}"
 fi
 
-#############################
-#		Server(s) [required]	#
-#############################
-
+########################
+# Server(s) [required] #
+########################
 if [ "${JUPYTERHUB:-0}" -eq 1 ]; then
   SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/app/third_party/jupyterhub/setup.sh'
   export SCRIPT_NAME
@@ -101,10 +96,9 @@ if [ "${JUPYTERHUB:-0}" -eq 1 ]; then
   . "${SCRIPT_NAME}"
 fi
 
-#############################
-#		      WWWROOT(s)      	#
-#############################
-
+##############
+# WWWROOT(s) #
+##############
 if [ "${WWWROOT_example_com_INSTALL:-0}" -eq 1 ]; then
   export WWWROOT_NAME="${WWWROOT_example_com_NAME:-example.com}"
   export WWWROOT_VENDOR="${WWWROOT_example_com_VENDOR:-nginx}"
