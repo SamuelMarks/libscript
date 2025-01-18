@@ -226,7 +226,6 @@ update_generated_files() {
   alt_if_body="${6:-}"
   alt_if_body_cmd="${7:-}"
   extra_env_vars_as_json="${8:-}"
-  after_env="${9:-}"
 
   path2key "${location}"
   key2scratch "${res}"
@@ -258,9 +257,6 @@ update_generated_files() {
       object2key_val "${extra_env_vars_as_json}" 'ARG ' "'" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
       object2key_val "${extra_env_vars_as_json}" 'export ' "'"
       object2key_val "${extra_env_vars_as_json}" 'SET ' '"' >> "${true_env_cmd_file}"
-    fi
-    if [ -n "${after_env}" ]; then
-      printf '%s' "${after_env}" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}"
     fi
     if [ -n "${version}" ]; then
       lang_set 'cmd' "${name_upper_clean}"'_VERSION' "${version}" >> "${true_env_cmd_file}"
@@ -447,6 +443,9 @@ parse_wwwroot_item() {
       if [ -n "${extra}" ]; then printf '%s\n' "${extra}"; fi
 
       # shellcheck disable=SC2016
+      printf '  export WWWROOT_COMMAND_FOLDER="${%s:-}"\n' 'WWWROOT_'"${name_clean}"'_COMMAND_FOLDER'
+
+      # shellcheck disable=SC2016
       printf '  if [ "${WWWROOT_VENDOR:-nginx}" = '"'"'nginx'"'"' ]; then\n'
 
       # shellcheck disable=SC2016
@@ -465,8 +464,8 @@ parse_wwwroot_item() {
       printf '  IF NOT DEFINED WWWROOT_PATH ( SET WWWROOT_PATH="%s" )\n' "${path:-/}"
       printf '  IF NOT DEFINED WWWROOT_LISTEN ( SET WWWROOT_LISTEN="%s" )\n' "${listen:-80}"
     )
-    after_env="$(parse_wwwroot_builders "${www_json}" "${name_clean}")"
-    update_generated_files "${name_upper_clean}" "${version}" "${env}" 'wwwroot' "${dep_group_name}" "${alt_if_body}" "${alt_if_body_cmd}"
+    extra_env_vars_as_json="$(parse_wwwroot_builders "${www_json}" "${name_clean}")"
+    update_generated_files "${name_upper_clean}" "${version}" "${env}" 'wwwroot' "${dep_group_name}" "${alt_if_body}" "${alt_if_body_cmd}" "${extra_env_vars_as_json}"
 }
 
 # parse "builder" array within a "wwwroot" item
@@ -514,7 +513,7 @@ parse_builder_item() {
       lang_set 'sh' 'WWWROOT_'"${name}"'_COMMAND_FOLDER' "${command_folder}" >> "${true_env_file}"
 
       # Expose to callee by `printf`ing
-      lang_set 'sh' 'WWWROOT_'"${name}"'_COMMAND_FOLDER' "${command_folder} "
+      printf '{"WWWROOT_%s_COMMAND_FOLDER": "%s"}\n' "${name}" "${command_folder}"
     fi
 
     outputs=$(printf '%s' "${builder_json}" | jq -c '.output[]?')
@@ -695,7 +694,7 @@ parse_server_item() {
       exit 4
     fi
 
-    after_env="$(parse_server_builders "${server_json}" "${name_clean}")"
+    extra_env_vars_as_json="$(parse_server_builders "${server_json}" "${name_clean}")"
 
     if [ "${verbose}" -ge 3 ]; then printf '  Server:\n'; fi
     if [ -n "${name}" ]; then
@@ -718,9 +717,14 @@ parse_server_item() {
       name_upper="$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')"
       name_upper_clean="$(printf '%s' "${name_upper}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
       if [ -n "${dest}" ]; then
-        extra_env_vars_as_json="$(printf '{"%s_DEST": "%s"}' "${name_upper_clean}" "${dest}")"
+        js="$(printf '{"%s_DEST": "%s"}' "${name_upper_clean}" "${dest}")"
+        if [ -n "${extra_env_vars_as_json}" ]; then
+          extra_env_vars_as_json="$(printf '%s %s' "${extra_env_vars_as_json}" "${js}" | jq -s add)"
+        else
+          extra_env_vars_as_json="${js}"
+        fi
       fi
-      update_generated_files "${name}" "${version}" "${name_upper}" 'app/third_party' "${dep_group_name}" '' '' "${extra_env_vars_as_json}" "${after_env}"
+      update_generated_files "${name}" "${version}" "${name_upper}" 'app/third_party' "${dep_group_name}" '' '' "${extra_env_vars_as_json}"
     fi
     if [ -n "${dest}" ] && [ "${verbose}" -ge 3 ] ; then
       printf '    Dest: %s\n' "${dest}"

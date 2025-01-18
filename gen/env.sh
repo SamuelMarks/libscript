@@ -50,4 +50,5 @@ export JUPYTERHUB=0
 export WWWROOT_example_com_INSTALL=1
 export WWWROOT_example_com_COMMAND_FOLDER='_lib/_toolchain/nodejs'
 export WWWROOT_example_com_INSTALL=0
+export WWWROOT_example_com_COMMAND_FOLDER='_lib/_toolchain/nodejs'
 

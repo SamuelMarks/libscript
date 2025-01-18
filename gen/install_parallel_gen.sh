@@ -153,6 +153,7 @@ wait
 
 (
   export WWWROOT_example_com_INSTALL=0
+export WWWROOT_example_com_COMMAND_FOLDER='_lib/_toolchain/nodejs'
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090

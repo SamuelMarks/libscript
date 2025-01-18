@@ -48,4 +48,5 @@ SET RABBITMQ_VERSION="*"
 :: ##############################
 
 SET WWWROOT_example_com_COMMAND_FOLDER="_lib\_toolchain\nodejs"
+SET WWWROOT_example_com_COMMAND_FOLDER="_lib/_toolchain/nodejs"
 
