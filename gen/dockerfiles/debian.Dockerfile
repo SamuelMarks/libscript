@@ -35,7 +35,6 @@ ARG WWWROOT_example_com_NAME='example.com'
 ARG WWWROOT_example_com_VENDOR='nginx'
 ARG WWWROOT_example_com_PATH='./my_symlinked_wwwroot'
 ARG WWWROOT_example_com_LISTEN=80
-ARG WWWROOT_example_com_COMMAND_FOLDER='_lib/_toolchain/nodejs'
 ARG WWWROOT_example_com_INSTALL=0
 ARG WWWROOT_example_com_COMMAND_FOLDER='_lib/_toolchain/nodejs'
 

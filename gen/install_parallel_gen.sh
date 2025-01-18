@@ -142,7 +142,6 @@ export SCRIPT_NAME
 ##############
 # WWWROOT(s) #
 ##############
-export WWWROOT_example_com_INSTALL=1
 wait
 
 (

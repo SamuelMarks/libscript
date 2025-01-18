@@ -185,6 +185,7 @@ lang_set() {
     'cmd')
       prefix='SET'
       quote='"'
+      # shellcheck disable=SC1003
       var_value="$(printf '%s' "${var_value}" | tr '/' '\\')"
       ;;
     'docker')
@@ -272,7 +273,7 @@ update_generated_files() {
     fi
     if [ -n "${extra_env_vars_as_json}" ] && [ ! "${extra_env_vars_as_json}" = 'null' ] ; then
       object2key_val "${extra_env_vars_as_json}" 'ARG ' "'" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
-      object2key_val "${extra_env_vars_as_json}" 'export ' "'"
+      object2key_val "${extra_env_vars_as_json}" 'export ' "'" # TODO: Use default value here on `install_parallel_file`
       object2key_val "${extra_env_vars_as_json}" 'SET ' '"' >> "${true_env_cmd_file}"
     fi
     if [ -n "${version}" ]; then
@@ -426,8 +427,6 @@ parse_wwwroot_item() {
     wwwroot_len=$(expr "${wwwroot_len}" + 1)
 
 
-    lang_set 'sh' "${env}" '1' | tee -a "${install_parallel_file}" "${true_env_file}" >/dev/null
-    lang_set 'sh' "${env}" '0' >> "${false_env_file}"
     lang_set 'cmd' "${env}" '1' >> "${false_env_cmd_file}"
 
     if [ "${verbose}" -ge 3 ]; then
@@ -506,10 +505,10 @@ parse_builder_item() {
     shell=$(printf '%s' "${builder_json}" | jq -r '.shell // "*"' )
     command_folder=$(printf '%s' "${builder_json}" | jq -r '.command_folder // empty' )
     if [ "${verbose}" -ge 3 ]; then
-      printf '  Builder:\n'
-      printf '    Shell: %s\n' "${shell}"
+      >&2 printf '  Builder:\n'
+      >&2 printf '    Shell: %s\n' "${shell}"
 
-      printf '    Commands:\n'
+      >&2 printf '    Commands:\n'
     fi
 
     commands="$(printf '%s' "${builder_json}" | jq -r '.commands[]?')"
@@ -523,21 +522,17 @@ parse_builder_item() {
 
     if [ -n "${command_folder}" ]; then
       if [ "${verbose}" -ge 3 ]; then
-        printf '      Command_folder: %s\n' "${command_folder}"
+        >&2 printf '      Command_folder: %s\n' "${command_folder}"
       fi
-      lang_set 'cmd' 'WWWROOT_'"${name}"'_COMMAND_FOLDER' "${command_folder}" >> "${true_env_cmd_file}"
-      lang_set 'docker' 'WWWROOT_'"${name}"'_COMMAND_FOLDER' "${command_folder}" >> "${docker_scratch_file}"
-      lang_set 'sh' 'WWWROOT_'"${name}"'_COMMAND_FOLDER' "${command_folder}" >> "${true_env_file}"
-
       # Expose to callee by `printf`ing
       printf '{"WWWROOT_%s_COMMAND_FOLDER": "%s"}\n' "${name}" "${command_folder}"
     fi
 
     outputs=$(printf '%s' "${builder_json}" | jq -c '.output[]?')
     if [ -n "${outputs}" ]; then
-        if [ "${verbose}" -ge 3 ]; then printf '    Outputs:\n'; fi
+        if [ "${verbose}" -ge 3 ]; then >&2 printf '    Outputs:\n'; fi
         printf '%s' "${builder_json}" | jq -r '.output[]' | while read -r out; do
-            if [ "${verbose}" -ge 3 ]; then printf '      %s\n' "${out}"; fi
+            if [ "${verbose}" -ge 3 ]; then >&2 printf '      %s\n' "${out}"; fi
         done
     fi
 }
