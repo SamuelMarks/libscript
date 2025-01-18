@@ -2,20 +2,20 @@ FROM debian:bookworm-slim
 
 ENV SCRIPT_ROOT_DIR='/scripts'
 
+
 COPY . /scripts
 WORKDIR /scripts
 
 ARG WWWROOT_example_com_INSTALL=0
-ARG EXAMPLE_COM_VERSION='0.0.1'
 
 RUN <<-EOF
 
 if [ "${WWWROOT_example_com_INSTALL:-0}" -eq 1 ]; then
-  WWWROOT_NAME="${WWWROOT_NAME:-example.com}"
-  WWWROOT_VENDOR="${WWWROOT_VENDOR:-nginx}"
-  WWWROOT_PATH="${WWWROOT_PATH:-./my_symlinked_wwwroot}"
-  WWWROOT_LISTEN="${WWWROOT_LISTEN:-80}"
-  WWWROOT_HTTPS_PROVIDER="${WWWROOT_HTTPS_PROVIDER:-letsencrypt}"
+  export WWWROOT_NAME="${WWWROOT_example_com_NAME:-example.com}"
+  export WWWROOT_VENDOR="${WWWROOT_example_com_VENDOR:-nginx}"
+  export WWWROOT_PATH="${WWWROOT_example_com_PATH:-./my_symlinked_wwwroot}"
+  export WWWROOT_LISTEN="${80:-WWWROOT_example_com_LISTEN}"
+  export WWWROOT_HTTPS_PROVIDER="${WWWROOT_example_com_HTTPS_PROVIDER:-letsencrypt}"
   if [ "${WWWROOT_VENDOR:-nginx}" = 'nginx' ]; then
     SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_server/nginx/setup.sh'
     export SCRIPT_NAME

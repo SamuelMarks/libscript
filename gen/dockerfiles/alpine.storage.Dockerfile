@@ -2,6 +2,7 @@ FROM alpine:latest
 
 ENV SCRIPT_ROOT_DIR='/scripts'
 
+
 COPY . /scripts
 WORKDIR /scripts
 
@@ -10,7 +11,7 @@ ARG POSTGRES_USER='rest_user'
 ARG POSTGRES_PASSWORD='rest_pass'
 ARG POSTGRES_DB='rest_db'
 ARG POSTGRES_PASSWORD_FILE
-ARG POSTGRES_VERSION='17'
+ARG POSTGRES_VERSION=17
 
 RUN <<-EOF
 

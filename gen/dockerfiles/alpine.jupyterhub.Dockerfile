@@ -2,11 +2,11 @@ FROM alpine:latest
 
 ENV SCRIPT_ROOT_DIR='/scripts'
 
+
 COPY . /scripts
 WORKDIR /scripts
 
 ARG JUPYTERHUB=0
-ARG JUPYTERHUB_VERSION='*'
 
 RUN <<-EOF
 

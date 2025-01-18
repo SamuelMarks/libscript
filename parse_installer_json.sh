@@ -46,7 +46,7 @@ app_folder="${output_folder}"'/app'
 
 base="${BASE:-alpine:latest debian:bookworm-slim}"
 
-[ -d "${output_folder}" ] || mkdir -p "${output_folder}"
+[ -d "${output_folder}"'/dockerfiles' ] || mkdir -p "${output_folder}"'/dockerfiles'
 prelude="$(cat -- "${SCRIPT_ROOT_DIR}"'/prelude.sh'; printf 'a')"
 prelude="${prelude%a}"
 if [ ! -f "${install_file}" ]; then printf '%s\n\n' "${prelude}" > "${install_file}" ; fi
@@ -118,42 +118,90 @@ fi
 
 path2key() {
   case "${1}" in
-    '_lib/_server') export res='server' ;;
-    '_lib/_storage') export res='storage' ;;
-    'app/third_party') export res='third_party' ;;
-    '_lib/_toolchain') export res='toolchain' ;;
-    *) export res="${1}" ;;
+    '_lib/_server') res='server' ;;
+    '_lib/_storage') res='storage' ;;
+    'app/third_party') res='third_party' ;;
+    '_lib/_toolchain') res='toolchain' ;;
+    *) res="${1}" ;;
   esac
+  export res
 }
 
 key2path() {
   case "${1}" in
-    'server') export res='_lib/_server' ;;
-    'storage') export res='_lib/_storage' ;;
-    'third_party') export res='app/third_party' ;;
-    'toolchain') export res='_lib/_toolchain' ;;
-    *) export res="${1}" ;;
+    'server') res='_lib/_server' ;;
+    'storage') res='_lib/_storage' ;;
+    'third_party') res='app/third_party' ;;
+    'toolchain') res='_lib/_toolchain' ;;
+    *) res="${1}" ;;
   esac
+  export res
 }
 
 scratch2key() {
   case "${1}" in
-    "${server_scratch_file}") export res='server' ;;
-    "${storage_scratch_file}") export res='storage' ;;
-    "${third_party_scratch_file}") export res='third_party' ;;
-    "${toolchain_scratch_file}") export res='toolchain' ;;
-    "${wwwroot_scratch_file}") export res='wwwroot' ;;
-    *) export res="${1}" ;;
+    "${server_scratch_file}") res='server' ;;
+    "${storage_scratch_file}") res='storage' ;;
+    "${third_party_scratch_file}") res='third_party' ;;
+    "${toolchain_scratch_file}") res='toolchain' ;;
+    "${wwwroot_scratch_file}") res='wwwroot' ;;
+    *) res="${1}" ;;
   esac
+  export res
 }
 
 key2scratch() {
   case "${1}" in
-    'server') export res="${server_scratch_file}" ;;
-    'storage') export res="${storage_scratch_file}" ;;
-    'third_party') export res="${third_party_scratch_file}" ;;
-    'toolchain') export res="${toolchain_scratch_file}" ;;
-    'wwwroot') export res="${wwwroot_scratch_file}" ;;
+    'server') res="${server_scratch_file}" ;;
+    'storage') res="${storage_scratch_file}" ;;
+    'third_party') res="${third_party_scratch_file}" ;;
+    'toolchain') res="${toolchain_scratch_file}" ;;
+    'wwwroot') res="${wwwroot_scratch_file}" ;;
+  esac
+  export res
+}
+
+lang_set() {
+  language="${1}"
+  var_name="${2}"
+  var_value="${3}"
+
+  is_digit=1
+  case "${var_value}" in
+      ''|*[![:digit:]]*) is_digit=0 ;;
+  esac
+
+  case "${language}" in
+    'cmd')
+      prefix='SET'
+      quote='"'
+      var_value="$(printf '%s' "${var_value}" | tr '/' '\\')"
+      ;;
+    'docker')
+      prefix='ARG'
+      quote="'"
+      ;;
+    'sh')
+      prefix='export'
+      quote="'"
+      ;;
+    *)
+      >&2 printf 'Unsupported language: %s\n' "${language}"
+      exit 5
+      ;;
+  esac
+  if [ "${is_digit}" -eq 1 ]; then quote=''; fi
+
+  case "${language}" in
+    'cmd')
+      printf '%s %s=%s%s%s\n' "${prefix}" "${var_name}" "${quote}" "${var_value}" "${quote}"
+      ;;
+    'docker')
+      printf '%s %s=%s%s%s\n' "${prefix}" "${var_name}" "${quote}" "${var_value}" "${quote}"
+      ;;
+    'sh')
+      printf '%s %s=%s%s%s\n' "${prefix}" "${var_name}" "${quote}" "${var_value}" "${quote}"
+      ;;
   esac
 }
 
@@ -170,14 +218,15 @@ update_generated_files() {
   name="${1}"
   name_lower="$(printf '%s' "${name}" | tr '[:upper:]' '[:lower:]')"
   name_upper_clean="$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]' | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
-  version="${2}"
+  version="${2:-}"
   env="${3}"
   env_clean="$(printf '%s' "${env}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
   location="${4}"
   dep_group_name="${5}"
   alt_if_body="${6:-}"
   alt_if_body_cmd="${7:-}"
-  extra_env_vars="${8:-}"
+  extra_env_vars_as_json="${8:-}"
+  after_env="${9:-}"
 
   path2key "${location}"
   key2scratch "${res}"
@@ -193,33 +242,40 @@ update_generated_files() {
     # shellcheck disable=SC2016
     printf '(\n  ' >> "${install_parallel_file}"
     if [ "${required}" -eq 1 ]; then
-      # shellcheck disable=SC2016
-      printf 'ARG %s=1\n' "${env_clean}" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
-      printf 'SET %s=1\n' "${env_clean}" >> "${true_env_cmd_file}"
-      # shellcheck disable=SC2016
-      export default_val=1
       printf 'IF NOT DEFINED %s ( SET %s=1 )\n' "${env_clean}" "${env_clean}" >> "${install_cmd_file}"
-      printf 'export %s=1\n' "${env_clean}"
+      lang_set 'cmd' "${env_clean}" '1' >> "${true_env_cmd_file}"
+      lang_set 'docker' "${env_clean}" '1' | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
+      lang_set 'sh' "${env_clean}" '1'
+      export default_val=1
     else
-      # shellcheck disable=SC2016
-      printf 'ARG %s=0\n' "${env_clean}" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
-      printf 'SET %s=0\n' "${env_clean}" >> "${false_env_cmd_file}"
       printf 'IF NOT DEFINED "%s" ( SET %s=0 )\n' "${env_clean}" "${env_clean}" >> "${install_cmd_file}"
-      printf 'export %s=0\n' "${env_clean}"
+      lang_set 'cmd' "${env_clean}" '0' >> "${false_env_cmd_file}"
+      lang_set 'docker' "${env_clean}" '0' | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
+      lang_set 'sh' "${env_clean}" '0'
+      export default_val=0
     fi
-    if [ -n "${extra_env_vars}" ] && [ ! "${extra_env_vars}" = 'null' ] ; then
-      object2key_val "${extra_env_vars}" 'ARG ' "'" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
-      object2key_val "${extra_env_vars}" 'export ' "'"
-      object2key_val "${extra_env_vars}" 'SET ' '"' >> "${true_env_cmd_file}"
+    if [ -n "${extra_env_vars_as_json}" ] && [ ! "${extra_env_vars_as_json}" = 'null' ] ; then
+      object2key_val "${extra_env_vars_as_json}" 'ARG ' "'" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
+      object2key_val "${extra_env_vars_as_json}" 'export ' "'"
+      object2key_val "${extra_env_vars_as_json}" 'SET ' '"' >> "${true_env_cmd_file}"
     fi
-    printf 'ARG %s_VERSION='"'"'%s'"'"'\n\n' "${name_upper_clean}" "${version}" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
-    printf 'SET %s_VERSION="%s"\n\n' "${name_upper_clean}" "${version}" >> "${true_env_cmd_file}"
-    printf 'export %s_VERSION='"'"'%s'"'"'\n\n' "${name_upper_clean}" "${version}"
+    if [ -n "${after_env}" ]; then
+      printf '%s' "${after_env}" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}"
+    fi
+    if [ -n "${version}" ]; then
+      lang_set 'cmd' "${name_upper_clean}"'_VERSION' "${version}" >> "${true_env_cmd_file}"
+      lang_set 'docker' "${name_upper_clean}"'_VERSION' "${version}" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
+      lang_set 'sh' "${name_upper_clean}"'_VERSION' "${version}"
+    fi
   } | tee -a "${install_parallel_file}" "${true_env_file}" >/dev/null
   # shellcheck disable=SC2059
-  printf "${run_tpl}"' ) &\n\n' 'install_gen.sh' >> "${install_parallel_file}"
-  printf 'export %s=0\n' "${env_clean}" >> "${false_env_file}"
-  printf 'SET %s=0\n' "${env_clean}" >> "${false_env_cmd_file}"
+  printf "${run_tpl}"' ) &\n' 'install_gen.sh' >> "${install_parallel_file}"
+  lang_set 'cmd' "${env_clean}" '0' >> "${false_env_cmd_file}"
+  lang_set 'sh' "${env_clean}" '0' >> "${false_env_file}"
+
+  printf '\n' | tee -a "${install_parallel_file}" "${true_env_file}" "${true_env_cmd_file}" \
+                       "${docker_scratch_file}" "${scratch_file}" "${scratch}" \
+                       "${false_env_cmd_file}" "${false_env_file}" >/dev/null
 
   printf 'RUN <<-EOF\n\n' | tee -a "${scratch_file}" "${scratch}" >/dev/null
   # shellcheck disable=SC2016
@@ -336,6 +392,9 @@ parse_wwwroot() {
 parse_wwwroot_item() {
     www_json="${1}"
     name=$(printf '%s' "${www_json}" | jq -r '.name')
+    name_clean="$(printf '%s' "${name}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
+    name_upper_clean="$(printf '%s' "${name_clean}" | tr '[:lower:]' '[:upper:]')"
+    version=$(printf '%s' "${www_json}" | jq -r '.version // empty')
     path=$(printf '%s' "${www_json}" | jq -r '.path // empty')
     env=$(printf '%s' "${www_json}" | jq -r '.env')
     listen=$(printf '%s' "${www_json}" | jq -r '.listen // empty')
@@ -353,39 +412,38 @@ parse_wwwroot_item() {
     # shellcheck disable=SC2003
     wwwroot_len=$(expr "${wwwroot_len}" + 1)
 
-    # shellcheck disable=SC2016
-    printf 'export %s=1\n' "${env}" "${env}" | tee -a "${install_parallel_file}" "${true_env_file}" >/dev/null
-    printf 'export %s=0\n' "${env}" >> "${false_env_file}"
-    printf 'SET %s=1\n' "${env}" >> "${false_env_cmd_file}"
+
+    lang_set 'sh' "${env}" '1' | tee -a "${install_parallel_file}" "${true_env_file}" >/dev/null
+    lang_set 'sh' "${env}" '0' >> "${false_env_file}"
+    lang_set 'cmd' "${env}" '1' >> "${false_env_cmd_file}"
 
     if [ "${verbose}" -ge 3 ]; then
       printf 'wwwroot Item:\n'
       printf '  Name: %s\n' "${name}"
     fi
-    clean_name="$(printf '%s' "${name}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
 
     if [ "${verbose}" -ge 3 ] && [ -n "${path}" ]; then printf '  Path: %s\n' "${path}"; fi
     extra=''
     if [ -n "${https_provider}" ]; then
       # shellcheck disable=SC2016
-      extra=$(printf '  WWWROOT_HTTPS_PROVIDER="${WWWROOT_HTTPS_PROVIDER:-'"%s"'}"\n\n' "${https_provider}")
+      extra=$(printf '  export WWWROOT_HTTPS_PROVIDER="${WWWROOT_'"${name_clean}"'_HTTPS_PROVIDER:-'"%s"'}"\n\n' "${https_provider}")
       if [ "${verbose}" -ge 3 ]; then printf '  HTTPS Provider: %s\n' "${https_provider}"; fi
     fi
     {
-      printf 'ARG WWWROOT_NAME='"'"'%s'"'"'\n' "${name}"
-      printf 'ARG WWWROOT_VENDOR='"'"'%s'"'"'\n' "${vendor}"
-      printf 'ARG WWWROOT_PATH='"'"'%s'"'"'\n' "${path:-/}"
-      printf 'ARG WWWROOT_LISTEN='"'"'%s'"'"'\n' "${listen:-80}"
+      lang_set 'docker' 'WWWROOT_'"${name_clean}"'_NAME' "${name}"
+      lang_set 'docker' 'WWWROOT_'"${name_clean}"'_VENDOR' "${vendor}"
+      lang_set 'docker' 'WWWROOT_'"${name_clean}"'_PATH' "${path:-/}"
+      lang_set 'docker' 'WWWROOT_'"${name_clean}"'_LISTEN' "${listen:-80}"
     } | tee -a "${wwwroot_scratch_file}" "${docker_scratch_file}" >/dev/null
     alt_if_body=$(
       # shellcheck disable=SC2016
-      printf '  WWWROOT_NAME="${WWWROOT_NAME:-'"%s"'}"\n' "${name}"
+      printf '  export WWWROOT_NAME="${%s:-'"%s"'}"\n' 'WWWROOT_'"${name_clean}"'_NAME' "${name}"
       # shellcheck disable=SC2016
-      printf '  WWWROOT_VENDOR="${WWWROOT_VENDOR:-'"%s"'}"\n' "${vendor}"
+      printf '  export WWWROOT_VENDOR="${%s:-'"%s"'}"\n' 'WWWROOT_'"${name_clean}"'_VENDOR' "${vendor}"
       # shellcheck disable=SC2016
-      printf '  WWWROOT_PATH="${WWWROOT_PATH:-'"%s"'}"\n' "${path:-/}"
+      printf '  export WWWROOT_PATH="${%s:-'"%s"'}"\n' 'WWWROOT_'"${name_clean}"'_PATH' "${path:-/}"
       # shellcheck disable=SC2016
-      printf '  WWWROOT_LISTEN="${WWWROOT_LISTEN:-'"%s"'}"\n' "${listen:-80}"
+      printf '  export WWWROOT_LISTEN="${%s:-'"%s"'}"\n' "${listen:-80}" 'WWWROOT_'"${name_clean}"'_LISTEN'
       if [ -n "${extra}" ]; then printf '%s\n' "${extra}"; fi
 
       # shellcheck disable=SC2016
@@ -407,17 +465,17 @@ parse_wwwroot_item() {
       printf '  IF NOT DEFINED WWWROOT_PATH ( SET WWWROOT_PATH="%s" )\n' "${path:-/}"
       printf '  IF NOT DEFINED WWWROOT_LISTEN ( SET WWWROOT_LISTEN="%s" )\n' "${listen:-80}"
     )
-    update_generated_files "${clean_name}" "${version}" "${env}" 'wwwroot' "${dep_group_name}" "${alt_if_body}" "${alt_if_body_cmd}"
-
-    parse_wwwroot_builders "${www_json}"
+    after_env="$(parse_wwwroot_builders "${www_json}" "${name_clean}")"
+    update_generated_files "${name_upper_clean}" "${version}" "${env}" 'wwwroot' "${dep_group_name}" "${alt_if_body}" "${alt_if_body_cmd}"
 }
 
 # parse "builder" array within a "wwwroot" item
 parse_wwwroot_builders() {
     www_json="${1}"
+    name="${2}"
     printf '%s' "${www_json}" | jq -c '.builder[]?' | {
       while read -r builder_item; do
-        parse_builder_item "${builder_item}"
+        parse_builder_item "${builder_item}" "${name}"
       done
       if [ "${wwwroot_len}" -ge 1 ]; then
         printf 'wait\n\n' >> "${install_parallel_file}"
@@ -428,24 +486,35 @@ parse_wwwroot_builders() {
 # parse a builder item
 parse_builder_item() {
     builder_json="${1}"
+    name="${2}"
     shell=$(printf '%s' "${builder_json}" | jq -r '.shell // "*"' )
-    command_file=$(printf '%s' "${builder_json}" | jq -r '.command_file // empty' )
+    command_folder=$(printf '%s' "${builder_json}" | jq -r '.command_folder // empty' )
     if [ "${verbose}" -ge 3 ]; then
       printf '  Builder:\n'
       printf '    Shell: %s\n' "${shell}"
 
       printf '    Commands:\n'
     fi
-    printf '%s' "${builder_json}" | jq -r '.commands[]' | while read -r cmd; do
+
+    commands="$(printf '%s' "${builder_json}" | jq -r '.commands[]?')"
+    if [ -n "${commands}" ]; then
+      printf '%s' "${commands}" | while read -r cmd; do
         if [ "${verbose}" -ge 3 ]; then
           printf '      %s\n' "${cmd}"
         fi
-    done
+      done
+    fi
 
-    if [ -n "${command_file}" ]; then
+    if [ -n "${command_folder}" ]; then
       if [ "${verbose}" -ge 3 ]; then
-        printf '   Command_file: %s\n' "${command_file}"
+        printf '      Command_folder: %s\n' "${command_folder}"
       fi
+      lang_set 'cmd' 'WWWROOT_'"${name}"'_COMMAND_FOLDER' "${command_folder}" >> "${true_env_cmd_file}"
+      lang_set 'docker' 'WWWROOT_'"${name}"'_COMMAND_FOLDER' "${command_folder}" >> "${docker_scratch_file}"
+      lang_set 'sh' 'WWWROOT_'"${name}"'_COMMAND_FOLDER' "${command_folder}" >> "${true_env_file}"
+
+      # Expose to callee by `printf`ing
+      lang_set 'sh' 'WWWROOT_'"${name}"'_COMMAND_FOLDER' "${command_folder} "
     fi
 
     outputs=$(printf '%s' "${builder_json}" | jq -c '.output[]?')
@@ -614,9 +683,19 @@ parse_server_item() {
     server_json="${1}"
     dep_group_name="${2}"
     name=$(printf '%s' "${server_json}" | jq -r '.name // empty')
+    version=$(printf '%s' "${server_json}" | jq -r '.version // empty')
     location=$(printf '%s' "${server_json}" | jq -r '.location // empty')
     dest=$(printf '%s' "${server_json}" | jq -r '.dest // empty')
-    extra_env_vars=''
+    extra_env_vars_as_json=''
+    name_clean="$(printf '%s' "${name}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
+    name_upper_clean="$(printf '%s' "${name_clean}" | tr '[:lower:]' '[:upper:]')"
+
+    if [ ! -n "${name}" ]; then
+      >&2 printf 'no name for server\n'
+      exit 4
+    fi
+
+    after_env="$(parse_server_builders "${server_json}" "${name_clean}")"
 
     if [ "${verbose}" -ge 3 ]; then printf '  Server:\n'; fi
     if [ -n "${name}" ]; then
@@ -629,17 +708,19 @@ parse_server_item() {
 
         # shellcheck disable=SC2059
         printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
+      else
+        # shellcheck disable=SC2059
+        printf "${header_tpl}" 'Server(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}" >/dev/null
+        # shellcheck disable=SC2059
+        printf "${header_cmd_tpl}" 'Server(s) [optional]' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
       fi
       if [ "${verbose}" -ge 3 ]; then printf '    Name: %s\n' "${name}"; fi
       name_upper="$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')"
       name_upper_clean="$(printf '%s' "${name_upper}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
       if [ -n "${dest}" ]; then
-        extra_env_vars="$(printf '{"%s_DEST": "%s"}' "${name_upper_clean}" "${dest}")"
+        extra_env_vars_as_json="$(printf '{"%s_DEST": "%s"}' "${name_upper_clean}" "${dest}")"
       fi
-      update_generated_files "${name}" '*' "${name_upper}" 'app/third_party' "${dep_group_name}" '' '' "${extra_env_vars}"
-    else
-      >&2 printf 'no name for server\n'
-      exit 4
+      update_generated_files "${name}" "${version}" "${name_upper}" 'app/third_party' "${dep_group_name}" '' '' "${extra_env_vars_as_json}" "${after_env}"
     fi
     if [ -n "${dest}" ] && [ "${verbose}" -ge 3 ] ; then
       printf '    Dest: %s\n' "${dest}"
@@ -648,15 +729,15 @@ parse_server_item() {
       printf '    Location: %s\n' "${location}";
     fi
 
-    parse_server_builders "${server_json}"
     parse_daemon "${server_json}"
 }
 
 # parse "builder" array within a server
 parse_server_builders() {
     server_json="${1}"
+    name="${2}"
     printf '%s' "${server_json}" | jq -c '.builder[]?' | while read -r builder_item; do
-        parse_builder_item "${builder_item}"
+        parse_builder_item "${builder_item}" "${name}"
     done
 }
 

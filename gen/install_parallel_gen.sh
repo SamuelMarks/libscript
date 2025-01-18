@@ -38,7 +38,6 @@ export SCRIPT_NAME
 (
   export NODEJS_INSTALL_DIR=1
 export NODEJS_VERSION='lts'
-
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
@@ -47,7 +46,6 @@ export SCRIPT_NAME
 (
   export PYTHON_INSTALL_DIR=1
 export PYTHON_VERSION='3.10'
-
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
@@ -56,7 +54,6 @@ export SCRIPT_NAME
 (
   export RUST_INSTALL_DIR=1
 export RUST_VERSION='nightly'
-
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
@@ -79,8 +76,7 @@ export POSTGRES_USER='rest_user'
 export POSTGRES_PASSWORD='rest_pass'
 export POSTGRES_DB='rest_db'
 export POSTGRES_PASSWORD_FILE
-export POSTGRES_VERSION='17'
-
+export POSTGRES_VERSION=17
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
@@ -89,7 +85,6 @@ export SCRIPT_NAME
 (
   export REDIS_URL=1
 export VALKEY_VERSION='*'
-
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
@@ -109,8 +104,6 @@ export SCRIPT_NAME
 (
   export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD=1
 export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST='/tmp/serve-actix-diesel-auth-scaffold'
-export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_VERSION='*'
-
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
@@ -128,7 +121,6 @@ export SCRIPT_NAME
 (
   export AMQP_URL=0
 export RABBITMQ_VERSION='*'
-
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
@@ -147,8 +139,6 @@ export SCRIPT_NAME
 
 (
   export JUPYTERHUB=0
-export JUPYTERHUB_VERSION='*'
-
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
@@ -159,15 +149,12 @@ export SCRIPT_NAME
 #############################
 
 export WWWROOT_example_com_INSTALL=1
-export WWWROOT_example_com_INSTALL=1
+wait
+
 (
   export WWWROOT_example_com_INSTALL=0
-export EXAMPLE_COM_VERSION='0.0.1'
-
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}" ) &
-
-wait
 

@@ -1,4 +1,5 @@
 FROM ${image}
+
 ${ENV}
 
 COPY . /scripts

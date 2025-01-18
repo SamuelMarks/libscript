@@ -18,7 +18,7 @@ export POSTGRES_USER='rest_user'
 export POSTGRES_PASSWORD='rest_pass'
 export POSTGRES_DB='rest_db'
 export POSTGRES_PASSWORD_FILE
-export POSTGRES_VERSION='17'
+export POSTGRES_VERSION=17
 
 export REDIS_URL=1
 export VALKEY_VERSION='*'
@@ -29,7 +29,6 @@ export VALKEY_VERSION='*'
 
 export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD=1
 export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST='/tmp/serve-actix-diesel-auth-scaffold'
-export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_VERSION='*'
 
 #############################
 #		Database(s) [optional]	#
@@ -43,14 +42,12 @@ export RABBITMQ_VERSION='*'
 #############################
 
 export JUPYTERHUB=0
-export JUPYTERHUB_VERSION='*'
 
 #############################
 #		      WWWROOT(s)      	#
 #############################
 
 export WWWROOT_example_com_INSTALL=1
-export WWWROOT_example_com_INSTALL=1
+export WWWROOT_example_com_COMMAND_FOLDER='_lib/_toolchain/nodejs'
 export WWWROOT_example_com_INSTALL=0
-export EXAMPLE_COM_VERSION='0.0.1'
 

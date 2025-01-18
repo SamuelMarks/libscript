@@ -20,7 +20,7 @@ SET POSTGRES_USER="rest_user"
 SET POSTGRES_PASSWORD="rest_pass"
 SET POSTGRES_DB="rest_db"
 SET POSTGRES_PASSWORD_FILE=
-SET POSTGRES_VERSION="17"
+SET POSTGRES_VERSION=17
 
 SET REDIS_URL=1
 SET VALKEY_VERSION="*"
@@ -31,7 +31,6 @@ SET VALKEY_VERSION="*"
 
 SET SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD=1
 SET SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST="/tmp/serve-actix-diesel-auth-scaffold"
-SET SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_VERSION="*"
 
 :: ##############################
 :: #	Database(s) [optional]	#
@@ -43,11 +42,10 @@ SET RABBITMQ_VERSION="*"
 :: #	Server(s) [required]	#
 :: ##############################
 
-SET JUPYTERHUB_VERSION="*"
 
 :: ##############################
 :: #	      WWWROOT(s)      	#
 :: ##############################
 
-SET EXAMPLE_COM_VERSION="0.0.1"
+SET WWWROOT_example_com_COMMAND_FOLDER="_lib\_toolchain\nodejs"
 

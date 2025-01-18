@@ -15,7 +15,7 @@
       "builder": [
         {
           "shell": "*",
-          "command_file": "_lib/_toolchain/nodejs",
+          "command_folder": "_lib/_toolchain/nodejs",
           "env": {
             "NODEJS_VERSION": "lts"
           }

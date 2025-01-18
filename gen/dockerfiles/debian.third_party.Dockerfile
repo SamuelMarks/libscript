@@ -2,12 +2,12 @@ FROM debian:bookworm-slim
 
 ENV SCRIPT_ROOT_DIR='/scripts'
 
+
 COPY . /scripts
 WORKDIR /scripts
 
 ARG SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD=1
 ARG SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST='/tmp/serve-actix-diesel-auth-scaffold'
-ARG SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_VERSION='*'
 
 RUN <<-EOF
 
@@ -22,7 +22,6 @@ EOF
 
 
 ARG JUPYTERHUB=0
-ARG JUPYTERHUB_VERSION='*'
 
 RUN <<-EOF
 
