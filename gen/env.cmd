@@ -32,14 +32,17 @@ SET SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST="/tmp/serve-actix-diesel-auth-scaffold
 :: ##########################
 :: # Database(s) [optional] #
 :: ##########################
+SET AMQP_URL=0
 SET RABBITMQ_VERSION="*"
 
 :: ########################
 :: # Server(s) [required] #
 :: ########################
+SET JUPYTERHUB=0
 
 :: ##############
 :: # WWWROOT(s) #
 :: ##############
+SET WWWROOT_example_com_INSTALL=0
 SET WWWROOT_example_com_COMMAND_FOLDER="_lib/_toolchain/nodejs"
 

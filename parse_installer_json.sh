@@ -60,19 +60,6 @@ if [ ! -e "${app_folder}" ]; then cp -r "${SCRIPT_ROOT_DIR}"'/app' "${app_folder
 chmod +x "${false_env_file}" "${true_env_file}" \
   "${install_file}" "${install_parallel_file}"
 
-print_header() {
-  name="${1}"
-  prefix="${2:-}"
-  i=${#name}
-  # shellcheck disable=SC2003
-  i="$(expr "${i}" + 2)"
-  leading='#'
-  for _ in $(seq "${i}" 0); do
-    leading="${leading}"'#'
-  done
-  printf '%s%s\n%s# %s #\n%s%s\n' "${prefix}" "${leading}" "${prefix}" "${name}" "${prefix}" "${leading}"
-}
-
 # shellcheck disable=SC2016
 run_tpl='SCRIPT_NAME="${DIR}"'"'"'/%s'"'"'\nexport SCRIPT_NAME\n# shellcheck disable=SC1090\n. "${SCRIPT_NAME}"'
 prelude_cmd='SET "SCRIPT_ROOT_DIR=%~dp0"
@@ -125,6 +112,19 @@ if ! command -v jq >/dev/null 2>&1; then
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 fi
+
+print_header() {
+  name="${1}"
+  prefix="${2:-}"
+  i=${#name}
+  # shellcheck disable=SC2003
+  i="$(expr "${i}" + 2)"
+  leading='#'
+  for _ in $(seq "${i}" 0); do
+    leading="${leading}"'#'
+  done
+  printf '%s%s\n%s# %s #\n%s%s\n' "${prefix}" "${leading}" "${prefix}" "${name}" "${prefix}" "${leading}"
+}
 
 path2key() {
   case "${1}" in
@@ -261,15 +261,15 @@ update_generated_files() {
     if [ "${required}" -eq 1 ]; then
       printf 'IF NOT DEFINED %s ( SET %s=1 )\n' "${env_clean}" "${env_clean}" >> "${install_cmd_file}"
       lang_set 'cmd' "${env_clean}" '1' >> "${true_env_cmd_file}"
+      lang_set 'cmd' "${env_clean}" '0' >> "${false_env_cmd_file}"
       lang_set 'docker' "${env_clean}" '1' | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
       lang_set 'sh' "${env_clean}" '1'
-      export default_val=1
+      lang_set 'sh' "${env_clean}" '0' >> "${false_env_file}"
     else
       printf 'IF NOT DEFINED "%s" ( SET %s=0 )\n' "${env_clean}" "${env_clean}" >> "${install_cmd_file}"
-      lang_set 'cmd' "${env_clean}" '0' >> "${false_env_cmd_file}"
+      lang_set 'cmd' "${env_clean}" '0' | tee -a "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
       lang_set 'docker' "${env_clean}" '0' | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
-      lang_set 'sh' "${env_clean}" '0'
-      export default_val=0
+      lang_set 'sh' "${env_clean}" '0' | tee -a "${false_env_file}"
     fi
     if [ -n "${extra_env_vars_as_json}" ] && [ ! "${extra_env_vars_as_json}" = 'null' ] ; then
       object2key_val "${extra_env_vars_as_json}" 'ARG ' "'" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
@@ -284,8 +284,6 @@ update_generated_files() {
   } | tee -a "${install_parallel_file}" "${true_env_file}" >/dev/null
   # shellcheck disable=SC2059
   printf "${run_tpl}"' ) &\n' 'install_gen.sh' >> "${install_parallel_file}"
-  lang_set 'cmd' "${env_clean}" '0' >> "${false_env_cmd_file}"
-  lang_set 'sh' "${env_clean}" '0' >> "${false_env_file}"
 
   printf '\n' | tee -a "${install_parallel_file}" "${true_env_file}" "${true_env_cmd_file}" \
                        "${docker_scratch_file}" "${scratch_file}" "${scratch}" \
@@ -425,9 +423,6 @@ parse_wwwroot_item() {
     fi
     # shellcheck disable=SC2003
     wwwroot_len=$(expr "${wwwroot_len}" + 1)
-
-
-    lang_set 'cmd' "${env}" '1' >> "${false_env_cmd_file}"
 
     if [ "${verbose}" -ge 3 ]; then
       printf 'wwwroot Item:\n'
