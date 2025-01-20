@@ -33,7 +33,7 @@ previous_wd="$(pwd)"
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
-export DIR
+printf 'DIR here = %s\n' "${DIR}"
 
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
 export SCRIPT_NAME
@@ -61,6 +61,11 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/priv.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
+
 apt_depends git build-essential libsystemd-dev
 
 target="${VALKEY_BUILD_DIR}"'/valkey'
@@ -72,3 +77,14 @@ make BUILD_TLS='yes' USE_SYSTEMD='yes'
 
 # shellcheck disable=SC2164
 cd "${previous_wd}"
+
+service_name='valkey'
+"${PRIV}" systemctl stop "${service_name}" || true
+"${PRIV}" cp "${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/conf/valkey.conf' /etc/
+"${PRIV}" cp "${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/conf/systemd/'"${service_name}"'.service' /etc/systemd/system/
+"${PRIV}" chmod 0644 /etc/valkey.conf '/etc/systemd/system/'"${service_name}"'.service'
+"${PRIV}" chown root:root /etc/valkey.conf '/etc/systemd/system/'"${service_name}"'.service'
+# Could use `install` over `cp` + `chmod` + `chown`^
+"${PRIV}" systemctl daemon-reload
+"${PRIV}" systemctl stop "${service_name}" || true
+"${PRIV}" systemctl start "${service_name}"
