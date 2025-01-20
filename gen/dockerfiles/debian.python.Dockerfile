@@ -1,6 +1,6 @@
 FROM debian:bookworm-slim
 
-ENV SCRIPT_ROOT_DIR='/scripts'
+ENV LIBSCRIPT_ROOT_DIR='/scripts'
 
 
 COPY . /scripts
@@ -15,7 +15,7 @@ ARG PYTHON_VERSION='3.10'
 RUN <<-EOF
 
 if [ "${PYTHON_INSTALL_DIR:-1}" -eq 1 ]; then
-  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/python/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_toolchain/python/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"

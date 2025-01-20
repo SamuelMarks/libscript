@@ -1,6 +1,6 @@
 FROM debian:bookworm-slim
 
-ENV SCRIPT_ROOT_DIR='/scripts'
+ENV LIBSCRIPT_ROOT_DIR='/scripts'
 
 
 COPY . /scripts
@@ -19,7 +19,7 @@ ARG POSTGRES_VERSION=17
 RUN <<-EOF
 
 if [ "${POSTGRES_URL:-1}" -eq 1 ]; then
-  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_storage/postgres/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/postgres/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"

@@ -1,6 +1,6 @@
 FROM debian:bookworm-slim
 
-ENV SCRIPT_ROOT_DIR='/scripts'
+ENV LIBSCRIPT_ROOT_DIR='/scripts'
 
 
 COPY . /scripts
@@ -13,7 +13,7 @@ ARG VALKEY_VERSION='*'
 RUN <<-EOF
 
 if [ "${REDIS_URL:-1}" -eq 1 ]; then
-  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"

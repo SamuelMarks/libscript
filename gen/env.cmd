@@ -1,3 +1,5 @@
+SET "LIBSCRIPT_DATA_DIR=%LIBSCRIPT_DATA_DIR:~0,-1%"
+
 :: ###########################
 :: # Toolchain(s) [required] #
 :: ###########################

@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-ENV SCRIPT_ROOT_DIR='/scripts'
+ENV LIBSCRIPT_ROOT_DIR='/scripts'
 
 
 COPY . /scripts
@@ -19,7 +19,7 @@ ARG POSTGRES_VERSION=17
 RUN <<-EOF
 
 if [ "${POSTGRES_URL:-1}" -eq 1 ]; then
-  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_storage/postgres/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/postgres/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
@@ -35,7 +35,7 @@ ARG VALKEY_VERSION='*'
 RUN <<-EOF
 
 if [ "${REDIS_URL:-1}" -eq 1 ]; then
-  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
@@ -50,7 +50,7 @@ ARG RABBITMQ_VERSION='*'
 RUN <<-EOF
 
 if [ "${AMQP_URL:-0}" -eq 1 ]; then
-  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_storage/rabbitmq/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/rabbitmq/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"

@@ -29,7 +29,7 @@ esac
 STACK="${STACK}${this_file}"':'
 export STACK
 
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/common.sh'
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/common.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"

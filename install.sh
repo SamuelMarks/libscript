@@ -18,24 +18,24 @@ else
 fi
 set -feu
 
-SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${this_file}" )")" && pwd)}"
-export SCRIPT_ROOT_DIR
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${this_file}" )")" && pwd)}"
+export LIBSCRIPT_ROOT_DIR
 
 STACK="${STACK:-:}${this_file}"':'
 export STACK
 
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/os_info.sh'
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/os_info.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/env.sh'
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
 if [ "${POSTGRESQL_INSTALL:-0}" -eq 1 ]; then
-  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_storage/postgres/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/postgres/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
@@ -46,7 +46,7 @@ if [ ! -z "${DATABASE_URL+x}" ]; then
 fi
 
 if [ "${VALKEY_INSTALL:-0}" -eq 1 ]; then
-  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
@@ -57,26 +57,26 @@ if [ ! -z "${REDIS_URL+x}" ]; then
 fi
 
 if [ "${RUST_INSTALL:-0}" -eq 1 ]; then
-  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/rust/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_toolchain/rust/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 fi
 if [ "${NODEJS_INSTALL:-0}" -eq 1 ]; then
-  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/nodejs/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_toolchain/nodejs/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 fi
 if [ "${PYTHON_INSTALL:-0}" -eq 1 ]; then
-  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/python/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_toolchain/python/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 fi
 
 if [ "${NGINX_INSTALL:-0}" -eq 1 ]; then
-  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_server/nginx/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_server/nginx/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
@@ -88,7 +88,7 @@ fi
 # fi
 
 if [ "${JUPYTERHUB_INSTALL:-0}" -eq 1 ]; then
-  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/app/third_party/jupyter/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/app/third_party/jupyter/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
@@ -96,7 +96,7 @@ fi
 
 # uses `PYTHON_VENV` and `REDIS_URL`
 if [ "${CELERY_INSTALL:-0}" -eq 1 ]; then
-  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/app/_storage/celery/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/app/_storage/celery/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"

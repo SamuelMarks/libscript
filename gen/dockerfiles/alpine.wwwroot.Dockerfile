@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-ENV SCRIPT_ROOT_DIR='/scripts'
+ENV LIBSCRIPT_ROOT_DIR='/scripts'
 
 
 COPY . /scripts
@@ -23,7 +23,7 @@ if [ "${WWWROOT_example_com_INSTALL:-0}" -eq 1 ]; then
   export WWWROOT_HTTPS_PROVIDER="${WWWROOT_example_com_HTTPS_PROVIDER:-letsencrypt}"
   export WWWROOT_COMMAND_FOLDER="${WWWROOT_example_com_COMMAND_FOLDER:-}"
   if [ "${WWWROOT_VENDOR:-nginx}" = 'nginx' ]; then
-    SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_server/nginx/setup.sh'
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_server/nginx/setup.sh'
     export SCRIPT_NAME
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"

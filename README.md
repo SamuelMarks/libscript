@@ -57,6 +57,8 @@ All the aforementioned advantages, plus:
 
 ## Usage
 
+NOTE: You might want to manually set `LIBSCRIPT_DATA_DIR` and `LIBSCRIPT_TOOLS_DIR`.
+
 Run from the same directory as this [README.md](README.md) file.
 Alternatively, set `SCRIPT_NAME` to the correct `install.sh` location and run it anywhere.
 
@@ -69,7 +71,7 @@ Alternatively, set `SCRIPT_NAME` to the correct `install.sh` location and run it
     $ export SCRIPT_NAME="$(pwd)"'/libscript/install.sh'
     $ . "${SCRIPT_NAME}"
 
-See [`env.sh`](./env.sh) for options that can be overridden by setting environment variables.
+See [`gen/env.sh`](./gen/env.sh) for options that can be overridden by setting environment variables.
 
 ## Usage (JSON)
 

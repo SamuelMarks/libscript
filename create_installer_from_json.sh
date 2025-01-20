@@ -18,8 +18,8 @@ else
 fi
 set -feu
 
-SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${this_file}" )")" && pwd)}"
-export SCRIPT_ROOT_DIR
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${this_file}" )")" && pwd)}"
+export LIBSCRIPT_ROOT_DIR
 
 STACK="${STACK:-:}${this_file}"':'
 export STACK
@@ -27,7 +27,7 @@ export STACK
 verbose=0
 all_deps=0
 help=0
-output_folder="${SCRIPT_ROOT_DIR}"'/tmp'
+output_folder="${LIBSCRIPT_ROOT_DIR}"'/tmp'
 base="${BASE:-alpine:latest debian:bookworm-slim}"
 
 while getopts 'a:f:o:vh' opt; do
@@ -79,7 +79,7 @@ export output_folder
 export all_deps
 export base
 
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/parse_installer_json.sh'
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/parse_installer_json.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"

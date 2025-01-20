@@ -1,5 +1,8 @@
 #!/bin/sh
 
+LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
+export LIBSCRIPT_DATA_DIR
+
 ###########################
 # Toolchain(s) [required] #
 ###########################

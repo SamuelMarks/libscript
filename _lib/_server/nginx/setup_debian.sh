@@ -33,19 +33,19 @@ export STACK
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 export DIR
 
-SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "${d}" ]; then echo "${d}"; else echo './'"${d}"; fi)}"
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/env.sh'
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/priv.sh'
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/priv.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_os/_apt/apt.sh'
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_os/_apt/apt.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"

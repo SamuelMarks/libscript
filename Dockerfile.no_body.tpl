@@ -1,6 +1,6 @@
 FROM ${image}
 
-ENV SCRIPT_ROOT_DIR='/scripts'
+ENV LIBSCRIPT_ROOT_DIR='/scripts'
 ${ENV}
 
 COPY . /scripts

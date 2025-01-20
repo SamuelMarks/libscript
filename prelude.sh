@@ -18,8 +18,11 @@ else
 fi
 set -feu
 
-SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${this_file}" )")" && pwd)}"
-export SCRIPT_ROOT_DIR
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${this_file}" )")" && pwd)}"
+export LIBSCRIPT_ROOT_DIR
 
 STACK="${STACK:-:}${this_file}"':'
 export STACK
+
+LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
+export LIBSCRIPT_DATA_DIR

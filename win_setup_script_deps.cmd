@@ -6,9 +6,9 @@
 
 :: SETLOCAL ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
 
-SET SCRIPT_ROOT_DIR=%~dp0
-IF NOT DEFINED %TOOLS_DIR% SET TOOLS_DIR=%~dp0\tools
-SET PATH=%TOOLS_DIR%;%PATH%
+SET LIBSCRIPT_ROOT_DIR=%~dp0
+IF NOT DEFINED %LIBSCRIPT_TOOLS_DIR% SET LIBSCRIPT_TOOLS_DIR=%~dp0\tools
+SET PATH=%LIBSCRIPT_TOOLS_DIR%;%PATH%
 SET previous_wd=%cd%
 
 :: Fallback for IA64, EM64T, X86
@@ -21,8 +21,8 @@ IF %PROCESSOR_ARCHITECTURE% == "AMD64" (
 
 WHERE curl >nul 2>nul
 IF %ERRORLEVEL% NEQ 0 (
-  IF NOT EXIST %TOOLS_DIR% md %TOOLS_DIR%
-  cd %TOOLS_DIR%
+  IF NOT EXIST %LIBSCRIPT_TOOLS_DIR% md %LIBSCRIPT_TOOLS_DIR%
+  cd %LIBSCRIPT_TOOLS_DIR%
   IF %ARCH% == "x86_64" (
     curl -L -o curl.zip https://github.com/lordmulder/cURL-build-win32/releases/download/2024-12-14/curl-8.11.1-windows-x64.2024-12-14.zip
   ) ELSE (
@@ -34,8 +34,8 @@ IF %ERRORLEVEL% NEQ 0 (
 
 WHERE tar >nul 2>nul
 IF %ERRORLEVEL% NEQ 0 (
-  IF NOT EXIST %TOOLS_DIR% md %TOOLS_DIR%
-  cd %TOOLS_DIR%
+  IF NOT EXIST %LIBSCRIPT_TOOLS_DIR% md %LIBSCRIPT_TOOLS_DIR%
+  cd %LIBSCRIPT_TOOLS_DIR%
   IF %ARCH% == "x86_64" (
       curl -L -o tar.exe https://github.com/aspect-build/bsdtar-prebuilt/releases/download/v3.7.5-2/tar_windows_x86_64.exe
     ) ELSE (
@@ -52,8 +52,8 @@ IF %ERRORLEVEL% NEQ 0 (
       WHERE busybox >nul 2>nul
       IF %ERRORLEVEL% NEQ 0 (
         ECHO "TODO: Install busybox.exe as per WINDOWS.md" && exit %ERRORLEVEL%
-        IF NOT EXIST %TOOLS_DIR% md %TOOLS_DIR%
-        cd %TOOLS_DIR%
+        IF NOT EXIST %LIBSCRIPT_TOOLS_DIR% md %LIBSCRIPT_TOOLS_DIR%
+        cd %LIBSCRIPT_TOOLS_DIR%
         IF %ARCH% == "x86_64" (
           curl -L -o busybox.exe https://frippery.org/files/busybox/busybox64u.exe
         ) ELSE IF %ARCH% == "ARM64" (
@@ -69,8 +69,8 @@ IF %ERRORLEVEL% NEQ 0 (
 
 WHERE jq >nul 2>nul
 IF %ERRORLEVEL% NEQ 0 (
-  IF NOT EXIST %TOOLS_DIR% md %TOOLS_DIR%
-  cd %TOOLS_DIR%
+  IF NOT EXIST %LIBSCRIPT_TOOLS_DIR% md %LIBSCRIPT_TOOLS_DIR%
+  cd %LIBSCRIPT_TOOLS_DIR%
   IF %ARCH% == "x86_64" (
     curl -L -o jq.exe https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-windows-amd64.exe
   ) ELSE (
@@ -81,8 +81,8 @@ IF %ERRORLEVEL% NEQ 0 (
 
 WHERE envsubst >nul 2>nul
 IF %ERRORLEVEL% NEQ 0 (
-  IF NOT EXIST %TOOLS_DIR% md %TOOLS_DIR%
-  cd %TOOLS_DIR%
+  IF NOT EXIST %LIBSCRIPT_TOOLS_DIR% md %LIBSCRIPT_TOOLS_DIR%
+  cd %LIBSCRIPT_TOOLS_DIR%
   curl -OL https://github.com/SamuelMarks/win-bin/releases/download/0th/envsubst.zip && tar -xf envsubst.zip
   cd %previous_wd%
 )

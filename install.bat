@@ -1,7 +1,7 @@
 @echo on
 
-SET "SCRIPT_ROOT_DIR=%~dp0"
-SET "SCRIPT_ROOT_DIR=%SCRIPT_ROOT_DIR:~0,-1%"
+SET "LIBSCRIPT_ROOT_DIR=%~dp0"
+SET "LIBSCRIPT_ROOT_DIR=%LIBSCRIPT_ROOT_DIR:~0,-1%"
 
 :: Initialize STACK variable
 IF NOT DEFINED STACK (
@@ -26,7 +26,7 @@ IF NOT x!str1:%searchVal%=!"=="x%str1% (
 :: ------------------------------------------------------------------------------
 
 IF "%NODEJS_INSTALL_DIR%"=="1" (
-    SET "SCRIPT_NAME=%SCRIPT_ROOT_DIR%\_lib\_toolchain\nodejs\setup.cmd"
+    SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\_toolchain\nodejs\setup.cmd"
     IF NOT EXIST "%SCRIPT_NAME%" (
         >&2 ECHO Unable to setup Node.js toolchain, as file not found "%SCRIPT_NAME%"
         SET ERRORLEVEL=2
@@ -36,7 +36,7 @@ IF "%NODEJS_INSTALL_DIR%"=="1" (
 )
 
 IF "%PYTHON_INSTALL_DIR%"=="1" (
-    SET "SCRIPT_NAME=%SCRIPT_ROOT_DIR%\_lib\_toolchain\python\setup.cmd"
+    SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\_toolchain\python\setup.cmd"
     IF NOT EXIST "%SCRIPT_NAME%" (
         >&2 ECHO Unable to setup Python toolchain, as file not found "%SCRIPT_NAME%"
         SET ERRORLEVEL=2
@@ -46,7 +46,7 @@ IF "%PYTHON_INSTALL_DIR%"=="1" (
 )
 
 IF "%RUST_INSTALL_DIR%"=="1" (
-    SET "SCRIPT_NAME=%SCRIPT_ROOT_DIR%\_lib\_toolchain\rust\setup.cmd"
+    SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\_toolchain\rust\setup.cmd"
     IF NOT EXIST "%SCRIPT_NAME%" (
         >&2 ECHO Unable to setup Rust toolchain, as file not found "%SCRIPT_NAME%"
         SET ERRORLEVEL=2
@@ -60,7 +60,7 @@ IF "%RUST_INSTALL_DIR%"=="1" (
 :: ------------------------------------------------------------------------------
 
 IF "%POSTGRES_URL%"=="1" (
-    SET "SCRIPT_NAME=%SCRIPT_ROOT_DIR%\_lib\_storage\postgres\setup.cmd"
+    SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\_storage\postgres\setup.cmd"
     IF NOT EXIST "%SCRIPT_NAME%" (
         >&2 ECHO Unable to setup PostgreSQL, as file not found "%SCRIPT_NAME%"
         SET ERRORLEVEL=2
@@ -71,7 +71,7 @@ IF "%POSTGRES_URL%"=="1" (
 
 :: Check and set up Redis
 IF "%REDIS_URL%"=="1" (
-    SET "SCRIPT_NAME=%SCRIPT_ROOT_DIR%\_lib\_storage\valkey\setup.cmd"
+    SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\_storage\valkey\setup.cmd"
     IF NOT EXIST "%SCRIPT_NAME%" (
         >&2 ECHO Unable to setup Valkey, as file not found "%SCRIPT_NAME%"
         SET ERRORLEVEL=2
@@ -85,7 +85,7 @@ IF "%REDIS_URL%"=="1" (
 :: ------------------------------------------------------------------------------
 
 IF "%SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD%"=="1" (
-    SET "SCRIPT_NAME=%SCRIPT_ROOT_DIR%\app\third_party\serve-actix-diesel-auth-scaffold\setup.cmd"
+    SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\app\third_party\serve-actix-diesel-auth-scaffold\setup.cmd"
     IF NOT EXIST "%SCRIPT_NAME%" (
         >&2 ECHO Unable to setup serve-actix-diesel-auth-scaffold, as file not found "%SCRIPT_NAME%"
         SET ERRORLEVEL=2
@@ -95,7 +95,7 @@ IF "%SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD%"=="1" (
 )
 
 IF "%JUPYTERHUB%"=="1" (
-    SET "SCRIPT_NAME=%SCRIPT_ROOT_DIR%\app\third_party\jupyterhub\setup.cmd"
+    SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\app\third_party\jupyterhub\setup.cmd"
     IF NOT EXIST "%SCRIPT_NAME%" (
         >&2 ECHO Unable to setup JupyterHub, as file not found "%SCRIPT_NAME%"
         SET ERRORLEVEL=2
@@ -109,7 +109,7 @@ IF "%JUPYTERHUB%"=="1" (
 :: ------------------------------------------------------------------------------
 
 IF "%AMQP_URL%"=="1" (
-    SET "SCRIPT_NAME=%SCRIPT_ROOT_DIR%\_lib\_storage\rabbitmq\setup.cmd"
+    SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\_storage\rabbitmq\setup.cmd"
     IF NOT EXIST "%SCRIPT_NAME%" (
         >&2 ECHO Unable to setup RabbitMQ, as file not found "%SCRIPT_NAME%"
         SET ERRORLEVEL=2
@@ -135,7 +135,7 @@ IF "%WWWROOT_example_com_INSTALL%"=="1" (
 
     :: Check if the vendor is nginx
     IF /I "%WWWROOT_VENDOR%"=="nginx" (
-        SET "SCRIPT_NAME=%SCRIPT_ROOT_DIR%\_server\nginx\setup.cmd"
+        SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_server\nginx\setup.cmd"
         IF NOT EXIST "%SCRIPT_NAME%" (
             >&2 ECHO Unable to setup NGINX, as file not found "%SCRIPT_NAME%"
             SET ERRORLEVEL=2

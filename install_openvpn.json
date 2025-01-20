@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "url": "https://github.com/SamuelMarks/libscript",
   "license": "Apache-2.0 OR MIT OR CC0",
-  "scripts_root": "${SCRIPT_ROOT_DIR}",
+  "scripts_root": "${LIBSCRIPT_ROOT_DIR}",
   "wwwroot": [],
   "dependencies": {
     "required": {

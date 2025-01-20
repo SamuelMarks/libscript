@@ -18,8 +18,8 @@ else
 fi
 set -feu
 
-SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${this_file}" )")" && pwd)}"
-export SCRIPT_ROOT_DIR
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${this_file}" )")" && pwd)}"
+export LIBSCRIPT_ROOT_DIR
 
 STACK="${STACK:-:}${this_file}"':'
 export STACK
@@ -27,7 +27,7 @@ export STACK
 verbose="${verbose:-0}"
 all_deps="${all_deps:-0}"
 
-output_folder=${output_folder:-${SCRIPT_ROOT_DIR}/tmp}
+output_folder=${output_folder:-${LIBSCRIPT_ROOT_DIR}/tmp}
 false_env_file="${output_folder}"'/false_env.sh'
 false_env_cmd_file="${output_folder}"'/false_env.cmd'
 true_env_file="${output_folder}"'/env.sh'
@@ -47,23 +47,27 @@ app_folder="${output_folder}"'/app'
 base="${BASE:-alpine:latest debian:bookworm-slim}"
 
 [ -d "${output_folder}"'/dockerfiles' ] || mkdir -p "${output_folder}"'/dockerfiles'
-prelude="$(cat -- "${SCRIPT_ROOT_DIR}"'/prelude.sh'; printf 'a')"
+prelude="$(cat -- "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh'; printf 'a')"
 prelude="${prelude%a}"
 if [ ! -f "${install_file}" ]; then printf '%s\n\n' "${prelude}" > "${install_file}" ; fi
 # shellcheck disable=SC2016
 if [ ! -f "${install_parallel_file}" ]; then printf '%s\nDIR=$(CDPATH='"''"' cd -- "$(dirname -- "${this_file}")" && pwd)\n\n' "${prelude}"  > "${install_parallel_file}" ; fi
-if [ ! -f "${true_env_file}" ]; then printf '#!/bin/sh\n\n' > "${true_env_file}" ; fi
+if [ ! -f "${true_env_file}" ]; then
+  # shellcheck disable=SC2016
+  printf '#!/bin/sh\n\n%s\nexport LIBSCRIPT_DATA_DIR\n\n' 'LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"' > "${true_env_file}"
+fi
 if [ ! -f "${false_env_file}" ]; then printf '#!/bin/sh\n' > "${false_env_file}" ; fi
-if [ ! -e "${_lib_folder}" ]; then cp -r "${SCRIPT_ROOT_DIR}"'/_lib' "${_lib_folder}" ; fi
-if [ ! -e "${app_folder}" ]; then cp -r "${SCRIPT_ROOT_DIR}"'/app' "${app_folder}" ; fi
+if [ ! -e "${_lib_folder}" ]; then cp -r "${LIBSCRIPT_ROOT_DIR}"'/_lib' "${_lib_folder}" ; fi
+if [ ! -e "${app_folder}" ]; then cp -r "${LIBSCRIPT_ROOT_DIR}"'/app' "${app_folder}" ; fi
 
 chmod +x "${false_env_file}" "${true_env_file}" \
   "${install_file}" "${install_parallel_file}"
 
 # shellcheck disable=SC2016
 run_tpl='SCRIPT_NAME="${DIR}"'"'"'/%s'"'"'\nexport SCRIPT_NAME\n# shellcheck disable=SC1090\n. "${SCRIPT_NAME}"'
-prelude_cmd='SET "SCRIPT_ROOT_DIR=%~dp0"
-SET "SCRIPT_ROOT_DIR=%SCRIPT_ROOT_DIR:~0,-1%"
+prelude_cmd='SET "LIBSCRIPT_ROOT_DIR=%~dp0"
+SET "LIBSCRIPT_ROOT_DIR=%LIBSCRIPT_ROOT_DIR:~0,-1%"
+SET "LIBSCRIPT_DATA_DIR=%LIBSCRIPT_DATA_DIR:~0,-1%"
 
 :: Initialize STACK variable
 IF NOT DEFINED STACK (
@@ -88,11 +92,12 @@ end_prelude_cmd='ENDLOCAL
 @%COMSPEC% /C exit %ERRORLEVEL% >nul'
 
 if [ ! -f "${install_cmd_file}" ]; then printf '%s\n\n' "${prelude_cmd}" > "${install_cmd_file}"; fi
+if [ ! -f "${true_env_cmd_file}" ]; then printf '%s\n\n' 'SET "LIBSCRIPT_DATA_DIR=%LIBSCRIPT_DATA_DIR:~0,-1%"' > "${true_env_cmd_file}"; fi
 
 touch "${docker_scratch_file}" "${toolchain_scratch_file}" \
       "${storage_scratch_file}" "${server_scratch_file}" \
       "${wwwroot_scratch_file}" "${third_party_scratch_file}" \
-      "${true_env_cmd_file}" "${false_env_cmd_file}"
+       "${false_env_cmd_file}"
 
 toolchains_len=0
 toolchains_header_req=0
@@ -105,9 +110,9 @@ servers_header_req=0
 wwwroot_len=0
 wwwroot_header_req=0
 
-# Extra check in case a different `SCRIPT_ROOT_DIR` is found in the JSON
+# Extra check in case a different `LIBSCRIPT_ROOT_DIR` is found in the JSON
 if ! command -v jq >/dev/null 2>&1; then
-  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/jq/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_toolchain/jq/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
@@ -296,7 +301,7 @@ update_generated_files() {
     if [ -n "${alt_if_body}" ]; then
       printf '%s\n' "${alt_if_body}"
     else
-      printf '  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'"'"'/%s/%s/setup.sh'"'"'\n' "${location}" "${name_lower}"
+      printf '  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'"'"'/%s/%s/setup.sh'"'"'\n' "${location}" "${name_lower}"
       printf '  export SCRIPT_NAME\n'
       printf '  # shellcheck disable=SC1090\n'
       printf '  . "${SCRIPT_NAME}"\n'
@@ -315,7 +320,7 @@ update_generated_files() {
     fi
     # shellcheck disable=SC2183
     printf '
-  SET "SCRIPT_NAME=%%SCRIPT_ROOT_DIR%%'
+  SET "SCRIPT_NAME=%%LIBSCRIPT_ROOT_DIR%%'
     printf '\%s\%s\setup.cmd"' "${location_win}" "${name_lower}"
   # shellcheck disable=SC2183
   printf '\n  IF NOT EXIST "%%SCRIPT_NAME%%" (
@@ -337,7 +342,7 @@ update_generated_files() {
     if [ -n "${scratch_contents}" ]; then
       # shellcheck disable=SC2016
       env -i BODY="${scratch_contents}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
-        "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${name_file}"
+        "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${name_file}"
     fi
   done
   rm -f "${scratch}"
@@ -388,8 +393,8 @@ parse_scripts_root() {
     rc="$?"
     export scripts_root
     if [ -d "${scripts_root}" ]; then
-      SCRIPT_ROOT_DIR="${scripts_root}"
-      export SCRIPT_ROOT_DIR
+      LIBSCRIPT_ROOT_DIR="${scripts_root}"
+      export LIBSCRIPT_ROOT_DIR
     fi
     if [ "${verbose}" -ge 3 ]; then
       printf 'Scripts Root: %s\n' "${scripts_root}"
@@ -460,7 +465,7 @@ parse_wwwroot_item() {
       printf '  if [ "${WWWROOT_VENDOR:-nginx}" = '"'"'nginx'"'"' ]; then\n'
 
       # shellcheck disable=SC2016
-      printf '    SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'"'"'/_server/nginx/setup.sh'"'"'\n'
+      printf '    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'"'"'/_server/nginx/setup.sh'"'"'\n'
       printf '    export SCRIPT_NAME\n'
       printf '    # shellcheck disable=SC1090\n'
       # shellcheck disable=SC2016
@@ -840,7 +845,7 @@ parse_json() {
            if [ -n "${sec_contents}" ]; then
              # shellcheck disable=SC2016
              env -i BODY="${sec_contents}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
-               "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${dockerfile_by_section}"
+               "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${dockerfile_by_section}"
            fi
         fi
       done
@@ -848,7 +853,7 @@ parse_json() {
       if [ ! -f "${dockerfile}" ] && [ -n "${docker_s}" ]; then
         # shellcheck disable=SC2016
         env -i ENV="${docker_s}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
-          "$(which envsubst)" < "${SCRIPT_ROOT_DIR}"'/Dockerfile.tpl' > "${dockerfile}"
+          "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/Dockerfile.tpl' > "${dockerfile}"
       fi
     done
 

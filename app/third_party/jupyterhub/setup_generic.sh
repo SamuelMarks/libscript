@@ -30,9 +30,9 @@ STACK="${STACK}${this_file}"':'
 export STACK
 
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
-SCRIPT_ROOT_DIR="${SCRIPT_ROOT_DIR:-$(d="$(CDPATH='' cd -- "$(dirname -- "$(dirname -- "$( dirname -- "${DIR}" )" )" )")"; if [ -d "${d}" ]; then echo "${d}"; else echo './'"${d}"; fi)}"
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/env.sh'
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
@@ -42,13 +42,13 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_common/priv.sh'
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/priv.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
 if [ ! -d "${JUPYTERHUB_VENV}" ]; then
-  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/python/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_toolchain/python/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
@@ -64,7 +64,7 @@ if [ ! -d "${JUPYTERHUB_VENV}" ]; then
 fi
 
 if ! cmd_avail npm ; then
-  SCRIPT_NAME="${SCRIPT_ROOT_DIR}"'/_lib/_toolchain/nodejs/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_toolchain/nodejs/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
@@ -82,7 +82,7 @@ if [ -d '/etc/systemd/system' ]; then
   service_name='jupyterhub_'"${JUPYTERHUB_IP}"'_'"${JUPYTERHUB_PORT}"
   service='/etc/systemd/system/'"${service_name}"'.service'
   tmp="${TMPDIR:-/tmp}"'/'"${service_name}"
-  envsubst < "${SCRIPT_ROOT_DIR}"'/app/third_party/jupyter/conf/systemd/jupyverse.service' > "${tmp}"
+  envsubst < "${LIBSCRIPT_ROOT_DIR}"'/app/third_party/jupyter/conf/systemd/jupyverse.service' > "${tmp}"
   "${PRIV}" mv -- "${tmp}" "${service}"
   "${PRIV}" chmod 0644 -- "${service}"
   "${PRIV}" systemctl stop -- "${service_name}" || true
