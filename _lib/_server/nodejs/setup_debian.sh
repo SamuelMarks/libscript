@@ -49,7 +49,7 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_toolchain/rust/setup.sh'
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_toolchain/nodejs/setup.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
@@ -67,18 +67,34 @@ else
 fi
 name=' '"${service_name}"
 cd "${DEST}"
-. "${HOME}"'/.cargo/env'
 
-cargo build --release
+if [ -f 'package.json' ]; then
+  npm i
+fi
 
 ENV=''
 if [ -f "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' ]; then
   ENV="$(cut -c8- "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' | tr -d "'" | sort -u | xargs printf 'Environment="%s"\n')"
 fi
-EXEC_START="$(pwd)"'/'"$(find target/release -depth -maxdepth 1 -type f -executable -print -quit)"
-
+#EXEC_START="$(pwd)"'/'"$(find target/release -depth -maxdepth 1 -type f -executable -print -quit)"
+# TODO: Check if there's a start for `npm start` then parse out that
+cwd="$(pwd)"
+script=''
+for _script in 'main.js' 'app.js' 'start.js' 'src/main.js' 'src/app.js' 'src/start.js'; do
+  __script="${cwd}"'/'"${_script}"
+  if [ -f "${__script}" ]; then
+    script="${__script}"
+    break
+  fi
+done
+if [ ! -n "${script}" ]; then
+  >&2 printf 'No idea how to start Node.js script for daemon\n'
+  >&2 printf '%s contains: %s\n' "$(pwd)" "$(ls)"
+  exit 2
+fi
+EXEC_START="$(which node)"' "'"${script}"'"'
 name_file="$(mktemp)"
-env -i DESCRIPTION='Rust server'"${name}" ENV="${ENV}" EXEC_START="${EXEC_START}" \
+env -i DESCRIPTION='Node.js server'"${name}" ENV="${ENV}" EXEC_START="${EXEC_START}" \
       "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/_daemon/systemd/simple.service' > "${name_file}"
 "${PRIV}" install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
 

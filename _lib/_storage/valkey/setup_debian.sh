@@ -29,6 +29,11 @@ esac
 STACK="${STACK}${this_file}"':'
 export STACK
 
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
+export LIBSCRIPT_ROOT_DIR
+LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
+export LIBSCRIPT_DATA_DIR
+
 previous_wd="$(pwd)"
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 
@@ -85,3 +90,11 @@ service_name='valkey'
 "${PRIV}" systemctl daemon-reload
 "${PRIV}" systemctl stop "${service_name}" || true
 "${PRIV}" systemctl start "${service_name}"
+
+[ -d "${LIBSCRIPT_DATA_DIR}" ] || mkdir -p "${LIBSCRIPT_DATA_DIR}"
+val='redis://localhost'
+for key in 'REDIS_URL' 'VALKEY_URL'; do
+  lang_export 'cmd' "${key}" "${val}" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.cmd'
+  lang_export 'sh' "${key}" "${val}" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
+  lang_export 'sqlite' "${key}" "${val}"
+done

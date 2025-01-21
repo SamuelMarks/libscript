@@ -1,0 +1,12 @@
+[Unit]
+Description=${DESCRIPTION}
+After=network-online.target
+
+[Service]
+ExecStart=${EXEC_START}
+Restart=always
+${ENV}
+
+[Install]
+WantedBy=multi-user.target
+

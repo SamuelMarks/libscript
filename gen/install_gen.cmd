@@ -95,6 +95,34 @@ IF "%SADAS%"==1 (
   CALL "%SCRIPT_NAME%"
 )
 
+:: ########################
+:: # Server(s) [optional] #
+:: ########################
+IF NOT DEFINED NODEJS_HTTP_SERVER ( SET NODEJS_HTTP_SERVER=1 )
+IF "%NODEJS_HTTP_SERVER%"==1 (
+  SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\app\third_party\nodejs-http-server\setup.cmd"
+  IF NOT EXIST "%SCRIPT_NAME%" (
+    >&2 ECHO File not found "%SCRIPT_NAME%"
+    SET ERRORLEVEL=2
+    GOTO end
+  )
+  CALL "%SCRIPT_NAME%"
+)
+
+:: ########################
+:: # Server(s) [optional] #
+:: ########################
+IF NOT DEFINED PYTHON_SERVER ( SET PYTHON_SERVER=1 )
+IF "%PYTHON_SERVER%"==1 (
+  SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\app\third_party\python-server\setup.cmd"
+  IF NOT EXIST "%SCRIPT_NAME%" (
+    >&2 ECHO File not found "%SCRIPT_NAME%"
+    SET ERRORLEVEL=2
+    GOTO end
+  )
+  CALL "%SCRIPT_NAME%"
+)
+
 :: ##########################
 :: # Database(s) [optional] #
 :: ##########################

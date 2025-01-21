@@ -21,6 +21,16 @@ export REDIS_URL=0
 ########################
 export SADAS=0
 
+########################
+# Server(s) [optional] #
+########################
+export NODEJS_HTTP_SERVER=0
+
+########################
+# Server(s) [optional] #
+########################
+export PYTHON_SERVER=0
+
 
 ##########################
 # Database(s) [optional] #

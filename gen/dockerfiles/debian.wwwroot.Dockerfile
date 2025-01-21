@@ -14,7 +14,7 @@ ARG WWWROOT_example_com_INSTALL=0
 
 ARG example_com='./my_symlinked_wwwroot'
 ARG WWWROOT_example_com_COMMAND_FOLDER='_lib/_toolchain/nodejs'
-ARG WWWROOT_example_com_COMMANDS='npm i -g @angular/cli && \
+ARG WWWROOT_example_com_COMMANDS_BEFORE='npm i -g @angular/cli && \
 npm i && \
 ng build --configuration production'
 
@@ -34,21 +34,25 @@ if [ "${WWWROOT_example_com_INSTALL:-0}" -eq 1 ]; then
   export WWWROOT_LISTEN="${80:-WWWROOT_example_com_LISTEN}"
   export WWWROOT_HTTPS_PROVIDER="${WWWROOT_example_com_HTTPS_PROVIDER:-letsencrypt}"
   export WWWROOT_COMMAND_FOLDER="${WWWROOT_example_com_COMMAND_FOLDER:-}"
-  export WWWROOT_COMMANDS="${WWWROOT_example_com_COMMANDS:-}"
+  export WWWROOT_COMMANDS_BEFORE="${WWWROOT_example_com_COMMANDS_BEFORE:-}"
   if [ "${WWWROOT_VENDOR:-nginx}" = 'nginx' ]; then
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${WWWROOT_COMMAND_FOLDER:-_server/nginx}"'/setup.sh'
-    export SCRIPT_NAME
-    # shellcheck disable=SC1090
-    if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-    if [ ! -z "${WWWROOT_COMMANDS+x}" ]; then
+    if [ ! -z "${WWWROOT_COMMANDS_BEFORE+x}" ]; then
       SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_example_com.sh'
       export SCRIPT_NAME
       install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
-      printf '%s' "${WWWROOT_COMMANDS}" >> "${SCRIPT_NAME}"
+      printf '%s' "${WWWROOT_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
       # shellcheck disable=SC1090
       . "${SCRIPT_NAME}"
     fi
   fi
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${WWWROOT_COMMAND_FOLDER:-_server/nginx}"'/setup.sh'
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090
+    if [ -f "${SCRIPT_NAME}" ]; then
+      . "${SCRIPT_NAME}";
+    else
+      >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
+    fi
 fi
 EOF
 

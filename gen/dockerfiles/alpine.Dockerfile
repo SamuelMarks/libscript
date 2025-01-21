@@ -26,9 +26,24 @@ ARG VALKEY_VERSION='*'
 
 ARG SADAS=1
 
-ARG SADAS_COMMANDS='git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold "${SADAS_DEST}"'
+ARG SADAS_COMMANDS_BEFORE='git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold "${SADAS_DEST}"'
 ARG SADAS_COMMAND_FOLDER='_lib/_server/rust'
 ARG SADAS_DEST='/tmp/serve-actix-diesel-auth-scaffold'
+
+ARG NODEJS_HTTP_SERVER=1
+
+ARG nodejs_http_server_COMMANDS_BEFORE='git_get https://github.com/mohammadhasanii/Node-HTTP3 "${NODEJS_HTTP_SERVER_DEST}"'
+ARG nodejs_http_server_COMMAND_FOLDER='_lib/_server/nodejs'
+ARG NODEJS_HTTP_SERVER_DEST='/tmp/nodejs-http-server'
+
+ARG PYTHON_SERVER=1
+
+ARG python_server_COMMANDS_BEFORE='git_get https://github.com/digitalocean/sample-python "${PYTHON_SERVER_DEST}" \
+uv venv --python 3.12 venv-3-12 \
+venv-3-12/bin/python -m ensurepip \
+venv-3-12/bin/python -m pip install -r requirements.txt'
+ARG python_server_COMMAND_FOLDER='_lib/_server/python'
+ARG PYTHON_SERVER_DEST='/tmp/python-server'
 
 ARG AMQP_URL=0
 ARG RABBITMQ_VERSION='*'
@@ -43,7 +58,7 @@ ARG WWWROOT_example_com_INSTALL=0
 
 ARG example_com='./my_symlinked_wwwroot'
 ARG WWWROOT_example_com_COMMAND_FOLDER='_lib/_toolchain/nodejs'
-ARG WWWROOT_example_com_COMMANDS='npm i -g @angular/cli && \
+ARG WWWROOT_example_com_COMMANDS_BEFORE='npm i -g @angular/cli && \
 npm i && \
 ng build --configuration production'
 

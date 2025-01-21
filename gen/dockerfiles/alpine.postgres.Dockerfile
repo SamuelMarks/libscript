@@ -27,17 +27,21 @@ if [ "${POSTGRES_URL:-1}" -eq 1 ]; then
     [ -d "${DEST}" ] || mkdir -p "${DEST}"
     cd "${DEST}"
   fi
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${POSTGRES_COMMAND_FOLDER:-_lib/_storage}"'/setup.sh'
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-  if [ ! -z "${POSTGRES_COMMANDS+x}" ]; then
-    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_postgres.sh'
+  if [ ! -z "${POSTGRES_COMMANDS_BEFORE+x}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_before_postgres.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
-    printf '%s' "${POSTGRES_COMMANDS}" >> "${SCRIPT_NAME}"
+    printf '%s' "${POSTGRES_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
+  fi
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${POSTGRES_COMMAND_FOLDER:-_lib/_storage/postgres}"'/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  if [ -f "${SCRIPT_NAME}" ]; then
+    . "${SCRIPT_NAME}";
+  else
+    >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
   if [ ! -z "${POSTGRES_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi

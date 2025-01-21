@@ -29,9 +29,28 @@ SET VALKEY_VERSION="*"
 :: # Server(s) [required] #
 :: ########################
 SET SADAS=1
-SET SADAS_COMMANDS="git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold "${SADAS_DEST}""
+SET SADAS_COMMANDS_BEFORE="git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold "${SADAS_DEST}""
 SET SADAS_COMMAND_FOLDER="_lib/_server/rust"
 SET SADAS_DEST="/tmp/serve-actix-diesel-auth-scaffold"
+
+:: ########################
+:: # Server(s) [optional] #
+:: ########################
+SET NODEJS_HTTP_SERVER=1
+SET nodejs_http_server_COMMANDS_BEFORE="git_get https://github.com/mohammadhasanii/Node-HTTP3 "${NODEJS_HTTP_SERVER_DEST}""
+SET nodejs_http_server_COMMAND_FOLDER="_lib/_server/nodejs"
+SET NODEJS_HTTP_SERVER_DEST="/tmp/nodejs-http-server"
+
+:: ########################
+:: # Server(s) [optional] #
+:: ########################
+SET PYTHON_SERVER=1
+SET python_server_COMMANDS_BEFORE="git_get https://github.com/digitalocean/sample-python "${PYTHON_SERVER_DEST}"
+uv venv --python 3.12 venv-3-12
+venv-3-12/bin/python -m ensurepip
+venv-3-12/bin/python -m pip install -r requirements.txt"
+SET python_server_COMMAND_FOLDER="_lib/_server/python"
+SET PYTHON_SERVER_DEST="/tmp/python-server"
 
 :: ##########################
 :: # Database(s) [optional] #
@@ -50,7 +69,7 @@ SET JUPYTERHUB=0
 SET WWWROOT_example_com_INSTALL=0
 SET example_com="./my_symlinked_wwwroot"
 SET WWWROOT_example_com_COMMAND_FOLDER="_lib/_toolchain/nodejs"
-SET WWWROOT_example_com_COMMANDS="npm i -g @angular/cli &&
+SET WWWROOT_example_com_COMMANDS_BEFORE="npm i -g @angular/cli &&
 npm i &&
 ng build --configuration production"
 

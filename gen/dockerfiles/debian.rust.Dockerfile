@@ -22,17 +22,21 @@ if [ "${RUST_INSTALL_DIR:-1}" -eq 1 ]; then
     [ -d "${DEST}" ] || mkdir -p "${DEST}"
     cd "${DEST}"
   fi
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${RUST_COMMAND_FOLDER:-_lib/_toolchain}"'/setup.sh'
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-  if [ ! -z "${RUST_COMMANDS+x}" ]; then
-    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_rust.sh'
+  if [ ! -z "${RUST_COMMANDS_BEFORE+x}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_before_rust.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
-    printf '%s' "${RUST_COMMANDS}" >> "${SCRIPT_NAME}"
+    printf '%s' "${RUST_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
+  fi
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${RUST_COMMAND_FOLDER:-_lib/_toolchain/rust}"'/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  if [ -f "${SCRIPT_NAME}" ]; then
+    . "${SCRIPT_NAME}";
+  else
+    >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
   if [ ! -z "${RUST_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi

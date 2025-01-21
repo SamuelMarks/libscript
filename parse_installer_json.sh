@@ -387,25 +387,33 @@ update_generated_files() {
     if [ -n "${alt_if_body}" ]; then
       printf '%s\n' "${alt_if_body}"
     else
-      printf '  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'"'"'/'"'"'"%s"'"'"'/setup.sh'"'"'\n' '${'"${name_upper_clean}"'_COMMAND_FOLDER:-'"${location}"'}'
-      printf '  export SCRIPT_NAME\n'
-      printf '  # shellcheck disable=SC1090\n'
-      printf '  if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi\n'
-
       # shellcheck disable=SC2016
-      printf '  if [ ! -z "${%s_COMMANDS+x}" ]; then\n' "${name_upper_clean}"
+      printf '  if [ ! -z "${%s_COMMANDS_BEFORE+x}" ]; then\n' "${name_clean}"
       # shellcheck disable=SC2016
-      printf '    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'"'"'/setup_%s.sh'"'"'\n' "${name_lower_clean}"
+      printf '    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'"'"'/setup_before_%s.sh'"'"'\n' "${name_lower_clean}"
       printf '    export SCRIPT_NAME\n'
       # shellcheck disable=SC2016
       printf '    install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'"'"'/prelude.sh'"'"' "${SCRIPT_NAME}"\n'
 
       # shellcheck disable=SC2016
-      printf '    printf '"'"'%%s'"'"' "${%s_COMMANDS}" >> "${SCRIPT_NAME}"\n' "${name_upper_clean}"
+      printf '    printf '"'"'%%s'"'"' "${%s_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"\n' "${name_clean}"
       printf '    # shellcheck disable=SC1090\n'
       # shellcheck disable=SC2016
       printf '    . "${SCRIPT_NAME}"\n'
       printf '  fi\n'
+
+      printf '  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'"'"'/'"'"'"%s"'"'"'/setup.sh'"'"'\n' '${'"${name_clean}"'_COMMAND_FOLDER:-'"${location}/${name_lower}"'}'
+      printf '  export SCRIPT_NAME\n'
+      printf '  # shellcheck disable=SC1090\n'
+      # shellcheck disable=SC2016
+      printf '  if [ -f "${SCRIPT_NAME}" ]; then\n'
+      # shellcheck disable=SC2016
+      printf '    . "${SCRIPT_NAME}";\n'
+      printf '  else\n'
+      # shellcheck disable=SC2016
+      printf '    >&2 printf '"'"'Not found, SCRIPT_NAME of %%s\\n'"'"' "${SCRIPT_NAME}"\n'
+      printf '  fi\n'
+
       printf '  if [ ! -z "${%s_DEST+x}" ]; then cd "${previous_wd}"; fi\n' "${name_upper_clean}"
       printf 'fi\n\n'
    fi
@@ -569,10 +577,25 @@ parse_wwwroot_item() {
       printf '  export WWWROOT_COMMAND_FOLDER="${%s:-}"\n' 'WWWROOT_'"${name_clean}"'_COMMAND_FOLDER'
 
       # shellcheck disable=SC2016
-      printf '  export WWWROOT_COMMANDS="${%s:-}"\n' 'WWWROOT_'"${name_clean}"'_COMMANDS'
+      printf '  export WWWROOT_COMMANDS_BEFORE="${%s:-}"\n' 'WWWROOT_'"${name_clean}"'_COMMANDS_BEFORE'
 
       # shellcheck disable=SC2016
       printf '  if [ "${WWWROOT_VENDOR:-nginx}" = '"'"'nginx'"'"' ]; then\n'
+
+      # shellcheck disable=SC2016
+      printf '    if [ ! -z "${WWWROOT_COMMANDS_BEFORE+x}" ]; then\n'
+      # shellcheck disable=SC2016
+      printf '      SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'"'"'/setup_%s.sh'"'"'\n' "${name_clean}"
+      printf '      export SCRIPT_NAME\n'
+      # shellcheck disable=SC2016
+      printf '      install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'"'"'/prelude.sh'"'"' "${SCRIPT_NAME}"\n'
+      # shellcheck disable=SC2016
+      printf '      printf '"'"'%%s'"'"' "${WWWROOT_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"\n'
+      printf '      # shellcheck disable=SC1090\n'
+      # shellcheck disable=SC2016
+      printf '      . "${SCRIPT_NAME}"\n'
+      printf '    fi\n'
+      printf '  fi\n'
 
       # shellcheck disable=SC2016
       printf '    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'"'"'/'"'"'"%s"'"'"'/setup.sh'"'"'\n' '${WWWROOT_COMMAND_FOLDER:-_server/nginx}'
@@ -580,21 +603,14 @@ parse_wwwroot_item() {
       # shellcheck disable=SC1126
       printf '    # shellcheck disable=SC1090\n'
       # shellcheck disable=SC2016
-      printf '    if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi\n'
+      printf '    if [ -f "${SCRIPT_NAME}" ]; then\n'
       # shellcheck disable=SC2016
-      printf '    if [ ! -z "${WWWROOT_COMMANDS+x}" ]; then\n'
+      printf '      . "${SCRIPT_NAME}";\n'
+      printf '    else\n'
       # shellcheck disable=SC2016
-      printf '      SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'"'"'/setup_%s.sh'"'"'\n' "${name_clean}"
-      printf '      export SCRIPT_NAME\n'
-      # shellcheck disable=SC2016
-      printf '      install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'"'"'/prelude.sh'"'"' "${SCRIPT_NAME}"\n'
-      # shellcheck disable=SC2016
-      printf '      printf '"'"'%%s'"'"' "${WWWROOT_COMMANDS}" >> "${SCRIPT_NAME}"\n'
-      printf '      # shellcheck disable=SC1090\n'
-      # shellcheck disable=SC2016
-      printf '      . "${SCRIPT_NAME}"\n'
+      printf '      >&2 printf '"'"'Not found, SCRIPT_NAME of %%s\\n'"'"' "${SCRIPT_NAME}"\n'
       printf '    fi\n'
-      printf '  fi\n'
+
       printf 'fi\n\n'
     )
     alt_if_body_cmd=$(
@@ -637,20 +653,20 @@ parse_builder_item() {
       >&2 printf '  Builder:\n'
       >&2 printf '    Shell: %s\n' "${shell}"
 
-      >&2 printf '    Commands:\n'
+      >&2 printf '    Commands before:\n'
     fi
 
-    commands="$(printf '%s' "${builder_json}" | jq -r '.commands[]?')"
-    if [ -n "${commands}" ]; then
-      printf '%s' "${commands}" | while read -r cmd; do
+    commands_before="$(printf '%s' "${builder_json}" | jq -r '.commands_before[]?')"
+    if [ -n "${commands_before}" ]; then
+      printf '%s' "${commands_before}" | while read -r cmd; do
         if [ "${verbose}" -ge 3 ]; then
           >&2 printf '      %s\n' "${cmd}"
         fi
         # >&2 printf '"%s"\n' "${cmd}"
       done
       # Expose to callee by `printf`ing
-      commands_js="$(printf '%s' "${builder_json}" | jq '.commands')"
-      printf '{"%s%s_COMMANDS": %s}\n' "${prefix}" "${name}" "${commands_js}"
+      commands_before_js="$(printf '%s' "${builder_json}" | jq '.commands_before')"
+      printf '{"%s%s_COMMANDS_BEFORE": %s}\n' "${prefix}" "${name}" "${commands_before_js}"
     fi
 
     if [ -n "${command_folder}" ]; then

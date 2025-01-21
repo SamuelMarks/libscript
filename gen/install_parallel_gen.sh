@@ -103,9 +103,38 @@ export SCRIPT_NAME
 
 (
   export SADAS=1
-export SADAS_COMMANDS='git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold "${SADAS_DEST}"'
+export SADAS_COMMANDS_BEFORE='git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold "${SADAS_DEST}"'
 export SADAS_COMMAND_FOLDER='_lib/_server/rust'
 export SADAS_DEST='/tmp/serve-actix-diesel-auth-scaffold'
+SCRIPT_NAME="${DIR}"'/install_gen.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}" ) &
+
+########################
+# Server(s) [optional] #
+########################
+(
+  export NODEJS_HTTP_SERVER=1
+export nodejs_http_server_COMMANDS_BEFORE='git_get https://github.com/mohammadhasanii/Node-HTTP3 "${NODEJS_HTTP_SERVER_DEST}"'
+export nodejs_http_server_COMMAND_FOLDER='_lib/_server/nodejs'
+export NODEJS_HTTP_SERVER_DEST='/tmp/nodejs-http-server'
+SCRIPT_NAME="${DIR}"'/install_gen.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}" ) &
+
+########################
+# Server(s) [optional] #
+########################
+(
+  export PYTHON_SERVER=1
+export python_server_COMMANDS_BEFORE='git_get https://github.com/digitalocean/sample-python "${PYTHON_SERVER_DEST}"
+uv venv --python 3.12 venv-3-12
+venv-3-12/bin/python -m ensurepip
+venv-3-12/bin/python -m pip install -r requirements.txt'
+export python_server_COMMAND_FOLDER='_lib/_server/python'
+export PYTHON_SERVER_DEST='/tmp/python-server'
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
@@ -153,7 +182,7 @@ wait
   export WWWROOT_example_com_INSTALL=0
 export example_com='./my_symlinked_wwwroot'
 export WWWROOT_example_com_COMMAND_FOLDER='_lib/_toolchain/nodejs'
-export WWWROOT_example_com_COMMANDS='npm i -g @angular/cli &&
+export WWWROOT_example_com_COMMANDS_BEFORE='npm i -g @angular/cli &&
 npm i &&
 ng build --configuration production'
 SCRIPT_NAME="${DIR}"'/install_gen.sh'

@@ -39,17 +39,21 @@ if [ "${NODEJS_INSTALL_DIR:-1}" -eq 1 ]; then
     [ -d "${DEST}" ] || mkdir -p "${DEST}"
     cd "${DEST}"
   fi
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${NODEJS_COMMAND_FOLDER:-_lib/_toolchain}"'/setup.sh'
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-  if [ ! -z "${NODEJS_COMMANDS+x}" ]; then
-    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_nodejs.sh'
+  if [ ! -z "${NODEJS_COMMANDS_BEFORE+x}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_before_nodejs.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
-    printf '%s' "${NODEJS_COMMANDS}" >> "${SCRIPT_NAME}"
+    printf '%s' "${NODEJS_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
+  fi
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${NODEJS_COMMAND_FOLDER:-_lib/_toolchain/nodejs}"'/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  if [ -f "${SCRIPT_NAME}" ]; then
+    . "${SCRIPT_NAME}";
+  else
+    >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
   if [ ! -z "${NODEJS_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi
@@ -62,17 +66,21 @@ if [ "${PYTHON_INSTALL_DIR:-1}" -eq 1 ]; then
     [ -d "${DEST}" ] || mkdir -p "${DEST}"
     cd "${DEST}"
   fi
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${PYTHON_COMMAND_FOLDER:-_lib/_toolchain}"'/setup.sh'
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-  if [ ! -z "${PYTHON_COMMANDS+x}" ]; then
-    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_python.sh'
+  if [ ! -z "${PYTHON_COMMANDS_BEFORE+x}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_before_python.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
-    printf '%s' "${PYTHON_COMMANDS}" >> "${SCRIPT_NAME}"
+    printf '%s' "${PYTHON_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
+  fi
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${PYTHON_COMMAND_FOLDER:-_lib/_toolchain/python}"'/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  if [ -f "${SCRIPT_NAME}" ]; then
+    . "${SCRIPT_NAME}";
+  else
+    >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
   if [ ! -z "${PYTHON_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi
@@ -85,17 +93,21 @@ if [ "${RUST_INSTALL_DIR:-1}" -eq 1 ]; then
     [ -d "${DEST}" ] || mkdir -p "${DEST}"
     cd "${DEST}"
   fi
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${RUST_COMMAND_FOLDER:-_lib/_toolchain}"'/setup.sh'
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-  if [ ! -z "${RUST_COMMANDS+x}" ]; then
-    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_rust.sh'
+  if [ ! -z "${RUST_COMMANDS_BEFORE+x}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_before_rust.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
-    printf '%s' "${RUST_COMMANDS}" >> "${SCRIPT_NAME}"
+    printf '%s' "${RUST_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
+  fi
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${RUST_COMMAND_FOLDER:-_lib/_toolchain/rust}"'/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  if [ -f "${SCRIPT_NAME}" ]; then
+    . "${SCRIPT_NAME}";
+  else
+    >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
   if [ ! -z "${RUST_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi
@@ -111,17 +123,21 @@ if [ "${POSTGRES_URL:-1}" -eq 1 ]; then
     [ -d "${DEST}" ] || mkdir -p "${DEST}"
     cd "${DEST}"
   fi
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${POSTGRES_COMMAND_FOLDER:-_lib/_storage}"'/setup.sh'
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-  if [ ! -z "${POSTGRES_COMMANDS+x}" ]; then
-    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_postgres.sh'
+  if [ ! -z "${POSTGRES_COMMANDS_BEFORE+x}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_before_postgres.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
-    printf '%s' "${POSTGRES_COMMANDS}" >> "${SCRIPT_NAME}"
+    printf '%s' "${POSTGRES_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
+  fi
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${POSTGRES_COMMAND_FOLDER:-_lib/_storage/postgres}"'/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  if [ -f "${SCRIPT_NAME}" ]; then
+    . "${SCRIPT_NAME}";
+  else
+    >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
   if [ ! -z "${POSTGRES_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi
@@ -134,17 +150,21 @@ if [ "${REDIS_URL:-1}" -eq 1 ]; then
     [ -d "${DEST}" ] || mkdir -p "${DEST}"
     cd "${DEST}"
   fi
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${VALKEY_COMMAND_FOLDER:-_lib/_storage}"'/setup.sh'
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-  if [ ! -z "${VALKEY_COMMANDS+x}" ]; then
-    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_valkey.sh'
+  if [ ! -z "${VALKEY_COMMANDS_BEFORE+x}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_before_valkey.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
-    printf '%s' "${VALKEY_COMMANDS}" >> "${SCRIPT_NAME}"
+    printf '%s' "${VALKEY_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
+  fi
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${VALKEY_COMMAND_FOLDER:-_lib/_storage/valkey}"'/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  if [ -f "${SCRIPT_NAME}" ]; then
+    . "${SCRIPT_NAME}";
+  else
+    >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
   if [ ! -z "${VALKEY_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi
@@ -160,19 +180,83 @@ if [ "${SADAS:-1}" -eq 1 ]; then
     [ -d "${DEST}" ] || mkdir -p "${DEST}"
     cd "${DEST}"
   fi
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${SADAS_COMMAND_FOLDER:-app/third_party}"'/setup.sh'
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-  if [ ! -z "${SADAS_COMMANDS+x}" ]; then
-    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_sadas.sh'
+  if [ ! -z "${SADAS_COMMANDS_BEFORE+x}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_before_sadas.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
-    printf '%s' "${SADAS_COMMANDS}" >> "${SCRIPT_NAME}"
+    printf '%s' "${SADAS_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
   fi
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${SADAS_COMMAND_FOLDER:-app/third_party/sadas}"'/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  if [ -f "${SCRIPT_NAME}" ]; then
+    . "${SCRIPT_NAME}";
+  else
+    >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
+  fi
   if [ ! -z "${SADAS_DEST+x}" ]; then cd "${previous_wd}"; fi
+fi
+
+########################
+# Server(s) [optional] #
+########################
+if [ "${NODEJS_HTTP_SERVER:-1}" -eq 1 ]; then
+  if [ ! -z "${NODEJS_HTTP_SERVER_DEST+x}" ]; then
+    previous_wd="$(pwd)"
+    DEST="${NODEJS_HTTP_SERVER_DEST}"
+    export DEST
+    [ -d "${DEST}" ] || mkdir -p "${DEST}"
+    cd "${DEST}"
+  fi
+  if [ ! -z "${nodejs_http_server_COMMANDS_BEFORE+x}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_before_nodejs-http-server.sh'
+    export SCRIPT_NAME
+    install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+    printf '%s' "${nodejs_http_server_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+  fi
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${nodejs_http_server_COMMAND_FOLDER:-app/third_party/nodejs-http-server}"'/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  if [ -f "${SCRIPT_NAME}" ]; then
+    . "${SCRIPT_NAME}";
+  else
+    >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
+  fi
+  if [ ! -z "${NODEJS_HTTP_SERVER_DEST+x}" ]; then cd "${previous_wd}"; fi
+fi
+
+########################
+# Server(s) [optional] #
+########################
+if [ "${PYTHON_SERVER:-1}" -eq 1 ]; then
+  if [ ! -z "${PYTHON_SERVER_DEST+x}" ]; then
+    previous_wd="$(pwd)"
+    DEST="${PYTHON_SERVER_DEST}"
+    export DEST
+    [ -d "${DEST}" ] || mkdir -p "${DEST}"
+    cd "${DEST}"
+  fi
+  if [ ! -z "${python_server_COMMANDS_BEFORE+x}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_before_python-server.sh'
+    export SCRIPT_NAME
+    install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+    printf '%s' "${python_server_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+  fi
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${python_server_COMMAND_FOLDER:-app/third_party/python-server}"'/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  if [ -f "${SCRIPT_NAME}" ]; then
+    . "${SCRIPT_NAME}";
+  else
+    >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
+  fi
+  if [ ! -z "${PYTHON_SERVER_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi
 
 ##########################
@@ -186,17 +270,21 @@ if [ "${AMQP_URL:-0}" -eq 1 ]; then
     [ -d "${DEST}" ] || mkdir -p "${DEST}"
     cd "${DEST}"
   fi
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${RABBITMQ_COMMAND_FOLDER:-_lib/_storage}"'/setup.sh'
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-  if [ ! -z "${RABBITMQ_COMMANDS+x}" ]; then
-    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_rabbitmq.sh'
+  if [ ! -z "${RABBITMQ_COMMANDS_BEFORE+x}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_before_rabbitmq.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
-    printf '%s' "${RABBITMQ_COMMANDS}" >> "${SCRIPT_NAME}"
+    printf '%s' "${RABBITMQ_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
+  fi
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${RABBITMQ_COMMAND_FOLDER:-_lib/_storage/rabbitmq}"'/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  if [ -f "${SCRIPT_NAME}" ]; then
+    . "${SCRIPT_NAME}";
+  else
+    >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
   if [ ! -z "${RABBITMQ_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi
@@ -212,17 +300,21 @@ if [ "${JUPYTERHUB:-0}" -eq 1 ]; then
     [ -d "${DEST}" ] || mkdir -p "${DEST}"
     cd "${DEST}"
   fi
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${JUPYTERHUB_COMMAND_FOLDER:-app/third_party}"'/setup.sh'
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-  if [ ! -z "${JUPYTERHUB_COMMANDS+x}" ]; then
-    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_jupyterhub.sh'
+  if [ ! -z "${JupyterHub_COMMANDS_BEFORE+x}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_before_jupyterhub.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
-    printf '%s' "${JUPYTERHUB_COMMANDS}" >> "${SCRIPT_NAME}"
+    printf '%s' "${JupyterHub_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
+  fi
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${JupyterHub_COMMAND_FOLDER:-app/third_party/jupyterhub}"'/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  if [ -f "${SCRIPT_NAME}" ]; then
+    . "${SCRIPT_NAME}";
+  else
+    >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
   if [ ! -z "${JUPYTERHUB_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi
@@ -244,19 +336,23 @@ if [ "${WWWROOT_example_com_INSTALL:-0}" -eq 1 ]; then
   export WWWROOT_LISTEN="${80:-WWWROOT_example_com_LISTEN}"
   export WWWROOT_HTTPS_PROVIDER="${WWWROOT_example_com_HTTPS_PROVIDER:-letsencrypt}"
   export WWWROOT_COMMAND_FOLDER="${WWWROOT_example_com_COMMAND_FOLDER:-}"
-  export WWWROOT_COMMANDS="${WWWROOT_example_com_COMMANDS:-}"
+  export WWWROOT_COMMANDS_BEFORE="${WWWROOT_example_com_COMMANDS_BEFORE:-}"
   if [ "${WWWROOT_VENDOR:-nginx}" = 'nginx' ]; then
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${WWWROOT_COMMAND_FOLDER:-_server/nginx}"'/setup.sh'
-    export SCRIPT_NAME
-    # shellcheck disable=SC1090
-    if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-    if [ ! -z "${WWWROOT_COMMANDS+x}" ]; then
+    if [ ! -z "${WWWROOT_COMMANDS_BEFORE+x}" ]; then
       SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_example_com.sh'
       export SCRIPT_NAME
       install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
-      printf '%s' "${WWWROOT_COMMANDS}" >> "${SCRIPT_NAME}"
+      printf '%s' "${WWWROOT_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
       # shellcheck disable=SC1090
       . "${SCRIPT_NAME}"
     fi
   fi
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${WWWROOT_COMMAND_FOLDER:-_server/nginx}"'/setup.sh'
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090
+    if [ -f "${SCRIPT_NAME}" ]; then
+      . "${SCRIPT_NAME}";
+    else
+      >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
+    fi
 fi

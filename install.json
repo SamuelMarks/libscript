@@ -22,7 +22,7 @@
         },
         {
           "shell": "*",
-          "commands": [
+          "commands_before": [
             "npm i -g @angular/cli &&",
             "npm i &&",
             "ng build --configuration production"
@@ -85,12 +85,57 @@
           "dest": "/tmp/serve-actix-diesel-auth-scaffold",
           "builder": [
             {
-              "commands": [
+              "commands_before": [
                 "git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold \"${SADAS_DEST}\""
               ]
             },
             {
               "command_folder": "_lib/_server/rust"
+            }
+          ],
+          "daemon": {
+            "os_native": true,
+            "env": [
+              "POSTGRES_URL",
+              "REDIS_URL"
+            ]
+          }
+        },
+        {
+          "name": "nodejs-http-server",
+          "dest": "/tmp/nodejs-http-server",
+          "builder": [
+            {
+              "commands_before": [
+                "git_get https://github.com/mohammadhasanii/Node-HTTP3 \"${NODEJS_HTTP_SERVER_DEST}\""
+              ]
+            },
+            {
+              "command_folder": "_lib/_server/nodejs"
+            }
+          ],
+          "daemon": {
+            "os_native": true,
+            "env": [
+              "POSTGRES_URL",
+              "REDIS_URL"
+            ]
+          }
+        },
+        {
+          "name": "python-server",
+          "dest": "/tmp/python-server",
+          "builder": [
+            {
+              "commands_before": [
+                "git_get https://github.com/digitalocean/sample-python \"${PYTHON_SERVER_DEST}\"",
+                "uv venv --python 3.12 venv-3-12",
+                "venv-3-12/bin/python -m ensurepip",
+                "venv-3-12/bin/python -m pip install -r requirements.txt"
+              ]
+            },
+            {
+              "command_folder": "_lib/_server/python"
             }
           ],
           "daemon": {
