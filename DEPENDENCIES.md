@@ -2,6 +2,7 @@ Dependencies
 ============
 
 Basic POSIX utilities. They're usually included; unless you're on Windows. Also: `curl`, `jq`, and `envsubst`.
+Optionally `sqlite3` for a config store; regardless `dyn_env.sh` and `dyn_env.cmd` are generated for everything dynamically set by the system.
 
 Specifically these from POSIX are used:
 

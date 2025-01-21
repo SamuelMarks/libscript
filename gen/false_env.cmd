@@ -17,7 +17,7 @@ SET REDIS_URL=0
 :: ########################
 :: # Server(s) [required] #
 :: ########################
-SET SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD=0
+SET SADAS=0
 
 :: ##########################
 :: # Database(s) [optional] #

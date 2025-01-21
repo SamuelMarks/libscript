@@ -26,6 +26,8 @@ export STACK
 
 verbose="${verbose:-0}"
 all_deps="${all_deps:-0}"
+NL='
+'
 
 output_folder=${output_folder:-${LIBSCRIPT_ROOT_DIR}/tmp}
 false_env_file="${output_folder}"'/false_env.sh'
@@ -186,6 +188,7 @@ lang_set() {
       ''|*[![:digit:]]*) is_digit=0 ;;
   esac
 
+  quote="'"
   case "${language}" in
     'cmd')
       prefix='SET'
@@ -195,12 +198,9 @@ lang_set() {
       ;;
     'docker')
       prefix='ARG'
-      quote="'"
+      # var_value="$(printf '%s' "${var_value}" | tr "${NL}" '/n')"
       ;;
-    'sh')
-      prefix='export'
-      quote="'"
-      ;;
+    'sh') prefix='export' ;;
     *)
       >&2 printf 'Unsupported language: %s\n' "${language}"
       exit 5
@@ -227,7 +227,477 @@ object2key_val() {
   q="${3:-\'}"
   s=''
   if [ "${q}" = '"' ]; then s='=';  fi
-  printf '%s' "${obj}" | jq --arg q "${q}" -rc '. | to_entries[] | "'"${prefix}"'"+ .key + if .value == null then "'"${s}"'" else "="+$q+.value+$q end'
+  printf '%s' "${obj}" | jq --arg q "${q}" -rc '. | to_entries[] | "'"${prefix}"'"+ .key + (if .value == null then "'"${s}"'" else if (.value | type) == "array" then "=" + $q + (.value | join("\n")) + $q else "=" + $q + (.value | tostring) + $q end end)'
+}
+
+add_missing_line_continuation() {
+  in_single_quote=0
+  in_double_quote=0
+
+  if [ -f "${1}" ]; then
+    src="$(cat -- "${1}"; printf 'a')"
+    src="${src%a}"
+  else
+    src="${1}"
+  fi
+  src_len=${#src}
+
+  eaten=0
+  tmp="${src}"
+  prev_ch=''
+  token=''
+  line=''
+
+  while [ -n "${tmp}" ]; do
+    rest="${tmp#?}"
+    ch="${tmp%"$rest"}"
+    # shellcheck disable=SC2003
+    eaten="$(expr "${eaten}" + 1)"
+    if [ "${ch}" = "${NL}" ]; then
+      continues=$(dc -e "${in_single_quote}"' '"${in_double_quote}"' 0d[+z1<a]dsaxp')
+      if [ "${continues}" -ge 1 ]; then
+        suffix=' \'
+      else
+        suffix=''
+      fi
+      printf '%s%s\n' "${line}" "${suffix}"
+      line=''
+      ch=''
+    elif [ "${prev_ch}" != '\' ]; then
+      case "${ch}" in
+        "'")
+          if [ "${in_single_quote}" -eq 0 ]; then
+            in_single_quote=1
+          else
+            in_single_quote=0
+          fi
+          ;;
+        '"')
+          if [ "${in_double_quote}" -eq 0 ]; then
+            in_double_quote=1
+          else
+            in_double_quote=0
+          fi
+          ;;
+      esac
+    fi
+    line="${line}${ch}"
+    tmp="${rest}"
+    prev_ch="${ch}"
+  done
+  if [ -n "${line}" ]; then
+    printf '%s' "${line}"
+    line=''
+  fi
+  if [ "${eaten}" -ne "${src_len}" ]; then
+    >&2 printf 'Did not parse all of src: %d != %d\n' "${eaten}" "${src_len}"
+    exit 4
+  fi
+}
+
+add_missing_line_continuation_NEW() {
+  # Initialize counts and flags outside the loop to maintain state across lines
+  sq_open=0          # Single quote open flag
+  dq_open=0          # Double quote open flag
+  bq_open=0          # Backtick open flag
+  par_level=0        # Parentheses nesting level
+  brace_level=0      # Braces nesting level
+  if_level=0         # if-fi nesting level
+  loop_level=0       # for/while-do-done nesting level
+  in_comment=0       # Comment #
+  token=''
+
+  # Read input from "$1" (multi-line string)
+  if [ -f "${1}" ]; then
+    src="$(cat -- "${1}"; printf 'a')"
+    input="${src%a}"
+  else
+    input="${1}"
+  fi
+
+  # Split the input into lines
+  IFS='
+'
+  set -f  # Disable globbing
+  for line in $input; do
+    prev_ch=''
+    pos=1
+    len=$(printf '%s' "$line" | wc -c)
+
+    token=''
+    in_comment=0  # Reset comment flag at the start of each line
+
+    while [ $pos -le $len ]; do
+      ch=$(printf '%s' "$line" | cut -c "$pos")
+
+      case "$ch" in
+        '#')
+          if [ "$in_comment" -eq 0 ] && [ "$prev_ch" != '\' ] && [ "$sq_open" -eq 0 ] && [ "$dq_open" -eq 0 ]; then
+            in_comment=1
+          fi
+          ;;
+      esac
+
+      if [ "$in_comment" -eq 0 ]; then
+        case "$ch" in
+          "'")
+            if [ "$dq_open" -eq 0 ] && [ "$prev_ch" != '\' ]; then
+              sq_open=$((1 - sq_open))
+            fi
+            ;;
+          '"')
+            if [ "$sq_open" -eq 0 ] && [ "$prev_ch" != '\' ]; then
+              dq_open=$((1 - dq_open))
+            fi
+            ;;
+          '`')
+            if [ "$prev_ch" != '\' ]; then
+              bq_open=$((1 - bq_open))
+            fi
+            ;;
+          '(')
+            if [ "$sq_open" -eq 0 ] && [ "$dq_open" -eq 0 ] && [ "$prev_ch" != '\' ]; then
+              par_level=$((par_level + 1))
+            fi
+            ;;
+          ')')
+            if [ "$sq_open" -eq 0 ] && [ "$dq_open" -eq 0 ] && [ "$prev_ch" != '\' ]; then
+              if [ "$par_level" -gt 0 ]; then
+                par_level=$((par_level - 1))
+              fi
+            fi
+            ;;
+          '{')
+            if [ "$sq_open" -eq 0 ] && [ "$dq_open" -eq 0 ] && [ "$prev_ch" != '\' ]; then
+              brace_level=$((brace_level + 1))
+            fi
+            ;;
+          '}')
+            if [ "$sq_open" -eq 0 ] && [ "$dq_open" -eq 0 ] && [ "$prev_ch" != '\' ]; then
+              if [ "$brace_level" -gt 0 ]; then
+                brace_level=$((brace_level - 1))
+              fi
+            fi
+            ;;
+          ';'|' '|$'\t')
+            if [ -n "$token" ]; then
+              case "$token" in
+                if)
+                  if_level=$((if_level + 1))
+                  ;;
+                then)
+                  ;;
+                fi)
+                  if [ "$if_level" -gt 0 ]; then
+                    if_level=$((if_level - 1))
+                  fi
+                  ;;
+                for|while|until|select)
+                  loop_level=$((loop_level + 1))
+                  ;;
+                do)
+                  ;;
+                done)
+                  if [ "$loop_level" -gt 0 ]; then
+                    loop_level=$((loop_level - 1))
+                  fi
+                  ;;
+              esac
+              token=''
+            fi
+            ;;
+          *)
+            if [ "$sq_open" -eq 0 ] && [ "$dq_open" -eq 0 ] && [ "$in_comment" -eq 0 ]; then
+              if printf '%s' "$ch" | grep -Eq '[a-zA-Z0-9_]'; then
+                token="${token}${ch}"
+              else
+                token=''
+              fi
+            fi
+            ;;
+        esac
+      fi
+
+      prev_ch="$ch"
+      pos=$((pos + 1))
+    done
+
+    # Process any remaining token at end of line
+    if [ -n "$token" ]; then
+      case "$token" in
+        if)
+          if_level=$((if_level + 1))
+          ;;
+        fi)
+          if [ "$if_level" -gt 0 ]; then
+            if_level=$((if_level - 1))
+          fi
+          ;;
+        for|while|until|select)
+          loop_level=$((loop_level + 1))
+          ;;
+        done)
+          if [ "$loop_level" -gt 0 ]; then
+            loop_level=$((loop_level - 1))
+          fi
+          ;;
+      esac
+      token=''
+    fi
+
+    # Decide if we need to add a line continuation character
+    if [ "$sq_open" -ne 0 ] || [ "$dq_open" -ne 0 ] || [ "$par_level" -gt 0 ] || \
+       [ "$brace_level" -gt 0 ] || [ "$if_level" -gt 0 ] || [ "$loop_level" -gt 0 ] || \
+       [ "$bq_open" -ne 0 ]; then
+      printf '%s \\\n' "$line"
+    else
+      printf '%s\n' "$line"
+    fi
+
+    # Reset comment flag at the end of the line
+    in_comment=0
+  done
+  set +f  # Re-enable globbing
+}
+
+
+add_missing_line_continuation_OLD() {
+  if_count=0 # if
+  loop_count=0 # while|for
+  sq_count=0 # '
+  dq_count=0 # "
+  in_comment=0 # #
+  bq_count=0 # `
+  par_count=0 # (
+  brace_count=0 # {
+  dollar_par_count=0 # $(
+  dollar_par2_count=0 # $((
+  dollar_brace_count=0 # ${
+  dollar_brace2_count=0 # ${{
+
+  if [ -f "${1}" ]; then
+    src="$(cat -- "${1}"; printf 'a')"
+    src="${src%a}"
+  else
+    src="${1}"
+  fi
+  src_len=${#src}
+  i=0
+  tmp="${src}"
+  prev_ch=''
+  token=''
+  line=''
+  while [ -n "${tmp}" ]; do
+      >&2 printf 'here\n'
+      rest="${tmp#?}"
+      ch="${tmp%"$rest"}"
+      # shellcheck disable=SC2003
+      i=$(expr "${i}" + 1);
+      # >&2 printf 'src[%d] = '"'"'%s'"'"' (prev: '"'"'%s'"'"')\n' "${i}" "${ch}" "${prev_ch}"
+      # >&2 printf 'token = "%s"\n' "${token}"
+      case "${token}" in
+        'if')
+          # shellcheck disable=SC2003
+          if_count="$(expr "${if_count}" + 1)" ;;
+        'fi')
+          # shellcheck disable=SC2003
+          if_count="$(expr "${if_count}" - 1)" ;;
+        'for'|'while')
+          # shellcheck disable=SC2003
+          loop_count="$(expr "${loop_count}" + 1)" ;;
+        'done')
+          # shellcheck disable=SC2003
+          loop_count="$(expr "${loop_count}" - 1)" ;;
+        '`')
+          # shellcheck disable=SC2003
+          bq_count="$(expr "${bq_count}" + 1)" ;;
+        '$(')
+          # shellcheck disable=SC2003
+          dollar_par_count="$(expr "${dollar_par_count}" + 1)" ;;
+        ')')
+          if [ "${par_count}" -ge 1 ]; then
+            # shellcheck disable=SC2003
+            par_count="$(expr "${par_count}" - 1)"
+          else
+            # shellcheck disable=SC2003
+            dollar_par_count="$(expr "${dollar_par_count}" - 1)"
+          fi
+          ;;
+        '$((')
+          # shellcheck disable=SC2003
+          dollar_par2_count="$(expr "${dollar_par2_count}" + 1)" ;;
+        '))')
+          # shellcheck disable=SC2003
+          dollar_par2_count="$(expr "${dollar_par2_count}" - 1)" ;;
+        '(')
+          # shellcheck disable=SC2003
+          par_count="$(expr "${par_count}" + 1)" ;;
+        '{')
+          # shellcheck disable=SC2003
+          brace_count="$(expr "${brace_count}" + 1)" ;;
+        '${')
+          # shellcheck disable=SC2003
+          dollar_brace_count="$(expr "${dollar_brace_count}" + 1)" ;;
+        '}')
+          if [ "${brace_count}" -ge 1 ]; then
+            # shellcheck disable=SC2003
+            brace_count="$(expr "${brace_count}" - 1)"
+          else
+            # shellcheck disable=SC2003
+            brace_count="$(expr "${brace_count}" - 1)"
+          fi
+          ;;
+        '${{')
+          # shellcheck disable=SC2003
+          dollar_brace2_count="$(expr "${dollar_brace2_count}" + 1)" ;;
+        '}}')
+          # shellcheck disable=SC2003
+          dollar_brace2_count="$(expr "${dollar_brace2_count}" - 1)" ;;
+        *)
+          case "${ch}" in
+            "${NL}")
+              case "${token}" in
+                'if')
+                  # shellcheck disable=SC2003
+                  if_count="$(expr "${if_count}" + 1)" ;;
+                'fi')
+                  # shellcheck disable=SC2003
+                  if_count="$(expr "${if_count}" - 1)" ;;
+                'for'|'while')
+                  # shellcheck disable=SC2003
+                  loop_count="$(expr "${loop_count}" + 1)" ;;
+                'done')
+                  # shellcheck disable=SC2003
+                  loop_count="$(expr "${loop_count}" - 1)" ;;
+              esac
+
+              maybe_cont=''
+              # shellcheck disable=SC2003
+              cond=$(dc -e "${dq_count}"' '"${sq_count}"' '"${in_comment}"' '"${if_count}"' '"${loop_count}"' 0d[+z1<a]dsaxp')
+              #>&2 printf '[dq_count: %d; sq_count: %d; in_comment: %d; if_count: %d; loop_count: %d]\n' \
+              #  "${dq_count}" "${sq_count}" "${in_comment}" "${if_count}" "${loop_count}"
+              #>&2 printf 'line: %s\n' "${line}"
+              if [ "${cond}" -gt 0 ]; then
+                maybe_cont=' \'
+              fi
+              # >&2 printf 'token="%s"\n' "${token}"
+              # >&2 printf '%s%s%s' "${line}" "${maybe_cont}" "${NL}"
+              printf '%s%s%s' "${line}" "${maybe_cont}" "${NL}"
+              line=''
+              ch=''
+              token=''
+              in_comment=0
+              ;;
+            "#")
+              cond=$(dc -e "${dq_count}"' '"${sq_count}"' '"${in_comment}"' 0d[+z1<a]dsaxp')
+              # shellcheck disable=SC1003
+              if [ "${cond}" -eq 0 ] && [ ! "${prev_ch}" = '\\' ]; then
+                in_comment=1
+              fi
+              token="${token}${ch}"
+              ;;
+            "'")
+              # shellcheck disable=SC1003
+              if [ "${in_comment}" -eq 0 ] && [ ! "${prev_ch}" = '\\' ]; then
+                if [ "${sq_count}" -eq 1 ]; then
+                  sq_count=0;
+                else
+                  sq_count=1;
+                fi
+              fi
+              token="${token}${ch}"
+              ;;
+            '"')
+              # shellcheck disable=SC1003
+              if [ "${in_comment}" -eq 0 ] && [ ! "${prev_ch}" = '\\' ]; then
+                if [ "${dq_count}" -eq 1 ]; then
+                  dq_count=0;
+                else
+                  dq_count=1;
+                fi
+              fi
+              token="${token}${ch}"
+              ;;
+            [[:graph:]]) token="${token}${ch}" ;;
+            ';'|[[:space:]]|*)
+              cond=$(dc -e "${dq_count}"' '"${sq_count}"' '"${in_comment}"' 0d[+z1<a]dsaxp')
+              # shellcheck disable=SC1003
+              if [ "${cond}" -eq 0 ] && [ ! "${prev_ch}" = '\\' ]; then
+                case "${token}" in
+                  'if')
+                    # shellcheck disable=SC2003
+                    if_count="$(expr "${if_count}" + 1)" ;;
+                  'fi')
+                    # shellcheck disable=SC2003
+                    if_count="$(expr "${if_count}" - 1)" ;;
+                  'for'|'while')
+                    # shellcheck disable=SC2003
+                    loop_count="$(expr "${loop_count}" + 1)" ;;
+                  'done')
+                    # shellcheck disable=SC2003
+                    loop_count="$(expr "${loop_count}" - 1)" ;;
+                  '`')
+                    # shellcheck disable=SC2003
+                    bq_count="$(expr "${bq_count}" + 1)" ;;
+                  '$(')
+                    # shellcheck disable=SC2003
+                    dollar_par_count="$(expr "${dollar_par_count}" + 1)" ;;
+                  ')')
+                    if [ "${par_count}" -ge 1 ]; then
+                      # shellcheck disable=SC2003
+                      par_count="$(expr "${par_count}" - 1)"
+                    else
+                      # shellcheck disable=SC2003
+                      dollar_par_count="$(expr "${dollar_par_count}" - 1)"
+                    fi
+                    ;;
+                  '$((')
+                    # shellcheck disable=SC2003
+                    dollar_par2_count="$(expr "${dollar_par2_count}" + 1)" ;;
+                  '))')
+                    # shellcheck disable=SC2003
+                    dollar_par2_count="$(expr "${dollar_par2_count}" - 1)" ;;
+                  '(')
+                    # shellcheck disable=SC2003
+                    par_count="$(expr "${par_count}" + 1)" ;;
+                  '{')
+                    # shellcheck disable=SC2003
+                    brace_count="$(expr "${brace_count}" + 1)" ;;
+                  '${')
+                    # shellcheck disable=SC2003
+                    dollar_brace_count="$(expr "${dollar_brace_count}" + 1)" ;;
+                  '}')
+                    if [ "${brace_count}" -ge 1 ]; then
+                      # shellcheck disable=SC2003
+                      brace_count="$(expr "${brace_count}" - 1)"
+                    else
+                      # shellcheck disable=SC2003
+                      brace_count="$(expr "${brace_count}" - 1)"
+                    fi
+                    ;;
+                  '${{')
+                    # shellcheck disable=SC2003
+                    dollar_brace2_count="$(expr "${dollar_brace2_count}" + 1)" ;;
+                  '}}')
+                    # shellcheck disable=SC2003
+                    dollar_brace2_count="$(expr "${dollar_brace2_count}" - 1)" ;;
+                  *) ;;
+                esac
+                token=''
+              fi
+              ;;
+          esac
+          ;;
+      esac
+      line="${line}${ch}"
+      tmp="${rest}"
+      prev_ch="${ch}"
+      printf 'ch = '"'"'%c'"'"'\n' "${ch}"
+  done
+  if [ "${i}" -ne "${src_len}" ]; then
+    >&2 printf 'Did not parse all of src: %d != %d\n' "${i}" "${src_len}"
+    exit 4
+  fi
 }
 
 update_generated_files() {
@@ -277,7 +747,14 @@ update_generated_files() {
       lang_set 'sh' "${env_clean}" '0' | tee -a "${false_env_file}"
     fi
     if [ -n "${extra_env_vars_as_json}" ] && [ ! "${extra_env_vars_as_json}" = 'null' ] ; then
-      object2key_val "${extra_env_vars_as_json}" 'ARG ' "'" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
+      {
+        printf '\n'
+        out="$(object2key_val "${extra_env_vars_as_json}" 'ARG ' "'")"
+        add_missing_line_continuation "${out}"
+        #>&2 printf '[out]\n%s\n[/out]' "${out}"
+        #printf '%s' "${out}"
+        printf '\n'
+      } | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
       object2key_val "${extra_env_vars_as_json}" 'export ' "'" # TODO: Use default value here on `install_parallel_file`
       object2key_val "${extra_env_vars_as_json}" 'SET ' '"' >> "${true_env_cmd_file}"
     fi
@@ -462,6 +939,9 @@ parse_wwwroot_item() {
       printf '  export WWWROOT_COMMAND_FOLDER="${%s:-}"\n' 'WWWROOT_'"${name_clean}"'_COMMAND_FOLDER'
 
       # shellcheck disable=SC2016
+      printf '  export WWWROOT_COMMANDS="${%s:-}"\n' 'WWWROOT_'"${name_clean}"'_COMMANDS'
+
+      # shellcheck disable=SC2016
       printf '  if [ "${WWWROOT_VENDOR:-nginx}" = '"'"'nginx'"'"' ]; then\n'
 
       # shellcheck disable=SC2016
@@ -490,7 +970,7 @@ parse_wwwroot_builders() {
     name="${2}"
     printf '%s' "${www_json}" | jq -c '.builder[]?' | {
       while read -r builder_item; do
-        parse_builder_item "${builder_item}" "${name}"
+        parse_builder_item "${builder_item}" "${name}" 'WWWROOT_'
       done
       if [ "${wwwroot_len}" -ge 1 ]; then
         printf 'wait\n\n' >> "${install_parallel_file}"
@@ -502,6 +982,7 @@ parse_wwwroot_builders() {
 parse_builder_item() {
     builder_json="${1}"
     name="${2}"
+    prefix="${3:-}"
     shell=$(printf '%s' "${builder_json}" | jq -r '.shell // "*"' )
     command_folder=$(printf '%s' "${builder_json}" | jq -r '.command_folder // empty' )
     if [ "${verbose}" -ge 3 ]; then
@@ -515,9 +996,13 @@ parse_builder_item() {
     if [ -n "${commands}" ]; then
       printf '%s' "${commands}" | while read -r cmd; do
         if [ "${verbose}" -ge 3 ]; then
-          printf '      %s\n' "${cmd}"
+          >&2 printf '      %s\n' "${cmd}"
         fi
+        # >&2 printf '"%s"\n' "${cmd}"
       done
+      # Expose to callee by `printf`ing
+      commands_js="$(printf '%s' "${builder_json}" | jq '.commands')"
+      printf '{"%s%s_COMMANDS": %s}\n' "${prefix}" "${name}" "${commands_js}"
     fi
 
     if [ -n "${command_folder}" ]; then
@@ -525,7 +1010,7 @@ parse_builder_item() {
         >&2 printf '      Command_folder: %s\n' "${command_folder}"
       fi
       # Expose to callee by `printf`ing
-      printf '{"WWWROOT_%s_COMMAND_FOLDER": "%s"}\n' "${name}" "${command_folder}"
+      printf '{"%s%s_COMMAND_FOLDER": "%s"}\n' "${prefix}" "${name}" "${command_folder}"
     fi
 
     outputs=$(printf '%s' "${builder_json}" | jq -c '.output[]?')
@@ -698,8 +1183,7 @@ parse_server_item() {
       >&2 printf 'no name for server\n'
       exit 4
     fi
-
-    extra_env_vars_as_json="$(parse_server_builders "${server_json}" "${name_clean}")"
+    extra_env_vars_as_json="$(parse_server_builders "${server_json}" "${name_clean}" | jq -n 'reduce inputs as $in (null; . + $in)')"
 
     if [ "${verbose}" -ge 3 ]; then printf '  Server:\n'; fi
     if [ -n "${name}" ]; then
@@ -720,7 +1204,7 @@ parse_server_item() {
       if [ -n "${dest}" ]; then
         js="$(printf '{"%s_DEST": "%s"}' "${name_upper_clean}" "${dest}")"
         if [ -n "${extra_env_vars_as_json}" ]; then
-          extra_env_vars_as_json="$(printf '%s %s' "${extra_env_vars_as_json}" "${js}" | jq -s add)"
+          extra_env_vars_as_json="$(printf '%s %s' "${extra_env_vars_as_json}" "${js}" | jq -n 'reduce inputs as $in (null; . + $in)')"
         else
           extra_env_vars_as_json="${js}"
         fi
@@ -799,8 +1283,83 @@ check_required_fields() {
     fi
 }
 
+test_assert_eq() {
+  expect="${1}"
+  actual="${2}"
+  name="${3:-test}"
+  if [ "${expect}" = "${actual}" ]; then
+    printf '[%s] passed\n' "${name}";
+  else
+    >&2 printf '[%s] failed "%s" != "%s"\n' "${name}" "${mock0}" "${res}";
+    exit 4
+  fi
+}
+
+test_add_missing_line_continuation() {
+  # Test cases
+  mock0='foo'
+  mock1='bar can'
+  mock2='foo="bar
+can"'
+  mock3='foo=bar
+can"'
+  mock4='if [ "$x" -eq 1 ]
+then
+echo "x is 1"
+fi'
+  mock5='for i in 1 2 3
+do
+echo $i
+done'
+  mock6="ARG SADAS_COMMANDS='git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold
+git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold'"
+
+  # Test 0
+  res="$(add_missing_line_continuation "${mock0}")"
+  test_assert_eq "${mock0}" "${res}" 'test0'
+
+  # Test 1
+  res="$(add_missing_line_continuation "${mock1}")"
+  test_assert_eq "${mock1}" "${res}" 'test1'
+
+  # Test 2
+  res="$(add_missing_line_continuation "${mock2}")"
+  expect='foo="bar \
+can"'
+  test_assert_eq "${expect}" "${res}" 'test2'
+
+  # Test 3
+  res="$(add_missing_line_continuation "${mock3}")"
+  expect="${mock3}"
+  #test_assert_eq "${expect}" "${res}" 'test3'
+
+  # Test 4 (Handling 'if' statement)
+  res="$(add_missing_line_continuation "${mock4}")"
+  expect='if [ "$x" -eq 1 ] \
+then \
+echo "x is 1" \
+fi'
+  test_assert_eq "${expect}" "${res}" 'test4'
+
+  # Test 5 (Handling 'for' loop)
+  res="$(add_missing_line_continuation "${mock5}")"
+  expect='for i in 1 2 3 \
+do \
+echo $i \
+done'
+  test_assert_eq "${expect}" "${res}" 'test5'
+
+  # Test 6 (Multiline single-quoted string)
+  res="$(add_missing_line_continuation "${mock6}")"
+  expect="ARG SADAS_COMMANDS='git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold \
+git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold'"
+  test_assert_eq "${expect}" "${res}" 'test6'
+}
+
 # Main function
 parse_json() {
+    # test_add_missing_line_continuation
+
     JSON_FILE="${1}"
 
     check_required_fields

@@ -72,8 +72,8 @@ fi
 ########################
 # Server(s) [required] #
 ########################
-if [ "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD:-1}" -eq 1 ]; then
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/app/third_party/serve-actix-diesel-auth-scaffold/setup.sh'
+if [ "${SADAS:-1}" -eq 1 ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/app/third_party/sadas/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"

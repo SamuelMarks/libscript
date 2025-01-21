@@ -23,8 +23,8 @@
         {
           "shell": "*",
           "commands": [
-            "npm i -g @angular/cli",
-            "npm i",
+            "npm i -g @angular/cli &&",
+            "npm i &&",
             "ng build --configuration production"
           ],
           "output": [
@@ -81,23 +81,17 @@
       ],
       "servers": [
         {
-          "name": "serve-actix-diesel-auth-scaffold",
+          "name": "SADAS",
           "dest": "/tmp/serve-actix-diesel-auth-scaffold",
           "builder": [
             {
-              "shell": "*",
               "commands": [
+                "git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold &&",
                 "git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold"
               ]
             },
             {
-              "shell": "*",
-              "commands": [
-                "cargo build --release"
-              ],
-              "output": [
-                "./target/release/serve-actix-diesel-auth-scaffold"
-              ]
+              "command_folder": "_lib/_server/rust"
             }
           ],
           "daemon": {

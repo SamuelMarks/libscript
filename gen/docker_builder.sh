@@ -55,7 +55,7 @@ docker build --file 'dockerfiles/alpine.postgres.Dockerfile' --progress='plain' 
 docker build --file 'dockerfiles/alpine.python.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-python':'dockerfiles/alpine-latest' .
 docker build --file 'dockerfiles/alpine.rabbitmq.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-rabbitmq':'dockerfiles/alpine-latest' .
 docker build --file 'dockerfiles/alpine.rust.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-rust':'dockerfiles/alpine-latest' .
-docker build --file 'dockerfiles/alpine.serve-actix-diesel-auth-scaffold.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-serve-actix-diesel-auth-scaffold':'dockerfiles/alpine-latest' .
+docker build --file 'dockerfiles/alpine.sadas.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-sadas':'dockerfiles/alpine-latest' .
 docker build --file 'dockerfiles/alpine.valkey.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-valkey':'dockerfiles/alpine-latest' .
 docker build --file 'dockerfiles/debian.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-':'dockerfiles/debian-latest' .
 docker build --file 'dockerfiles/debian.example_com.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-example_com':'dockerfiles/debian-latest' .
@@ -65,6 +65,6 @@ docker build --file 'dockerfiles/debian.postgres.Dockerfile' --progress='plain' 
 docker build --file 'dockerfiles/debian.python.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-python':'dockerfiles/debian-latest' .
 docker build --file 'dockerfiles/debian.rabbitmq.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-rabbitmq':'dockerfiles/debian-latest' .
 docker build --file 'dockerfiles/debian.rust.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-rust':'dockerfiles/debian-latest' .
-docker build --file 'dockerfiles/debian.serve-actix-diesel-auth-scaffold.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-serve-actix-diesel-auth-scaffold':'dockerfiles/debian-latest' .
+docker build --file 'dockerfiles/debian.sadas.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-sadas':'dockerfiles/debian-latest' .
 docker build --file 'dockerfiles/debian.valkey.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-valkey':'dockerfiles/debian-latest' .
 

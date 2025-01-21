@@ -84,9 +84,9 @@ IF "%REDIS_URL%"==1 (
 :: ########################
 :: # Server(s) [required] #
 :: ########################
-IF NOT DEFINED SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD ( SET SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD=1 )
-IF "%SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD%"==1 (
-  SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\app\third_party\serve-actix-diesel-auth-scaffold\setup.cmd"
+IF NOT DEFINED SADAS ( SET SADAS=1 )
+IF "%SADAS%"==1 (
+  SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\app\third_party\sadas\setup.cmd"
   IF NOT EXIST "%SCRIPT_NAME%" (
     >&2 ECHO File not found "%SCRIPT_NAME%"
     SET ERRORLEVEL=2

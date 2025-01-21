@@ -28,8 +28,11 @@ SET VALKEY_VERSION="*"
 :: ########################
 :: # Server(s) [required] #
 :: ########################
-SET SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD=1
-SET SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST="/tmp/serve-actix-diesel-auth-scaffold"
+SET SADAS=1
+SET SADAS_COMMANDS="git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold &&
+git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold"
+SET SADAS_COMMAND_FOLDER="_lib/_server/rust"
+SET SADAS_DEST="/tmp/serve-actix-diesel-auth-scaffold"
 
 :: ##########################
 :: # Database(s) [optional] #
@@ -47,4 +50,7 @@ SET JUPYTERHUB=0
 :: ##############
 SET WWWROOT_example_com_INSTALL=0
 SET WWWROOT_example_com_COMMAND_FOLDER="_lib/_toolchain/nodejs"
+SET WWWROOT_example_com_COMMANDS="npm i -g @angular/cli &&
+npm i &&
+ng build --configuration production"
 

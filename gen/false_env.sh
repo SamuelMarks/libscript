@@ -19,7 +19,7 @@ export REDIS_URL=0
 ########################
 # Server(s) [required] #
 ########################
-export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD=0
+export SADAS=0
 
 
 ##########################

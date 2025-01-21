@@ -10,6 +10,7 @@ WORKDIR /scripts
 # Database(s) [required] #
 ##########################
 ARG POSTGRES_URL=1
+
 ARG POSTGRES_USER='rest_user'
 ARG POSTGRES_PASSWORD='rest_pass'
 ARG POSTGRES_DB='rest_db'

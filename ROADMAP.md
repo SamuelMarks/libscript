@@ -7,6 +7,7 @@ Roadmap
   - [x] Dockerfile per component
   - [x] Dockerfile per component group
   - [ ] Example `Vagrantfile`s
+  - [ ] Secret storage & retrieval (e.g., using [OpenBao](https://openbao.org); the open-source [Hashicorp Vault](https://www.vaultproject.io) fork)
   - [ ] HP/UX support
   - [ ] Kubernetes configuration
   - [ ] SunOS support

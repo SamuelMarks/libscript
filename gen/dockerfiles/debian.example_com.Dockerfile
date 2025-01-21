@@ -10,7 +10,11 @@ WORKDIR /scripts
 # WWWROOT(s) #
 ##############
 ARG WWWROOT_example_com_INSTALL=0
+
 ARG WWWROOT_example_com_COMMAND_FOLDER='_lib/_toolchain/nodejs'
+ARG WWWROOT_example_com_COMMANDS='npm i -g @angular/cli && \
+npm i && \
+ng build --configuration production'
 
 RUN <<-EOF
 
