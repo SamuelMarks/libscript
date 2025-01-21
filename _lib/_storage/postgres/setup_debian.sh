@@ -48,11 +48,11 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-apt_depends postgresql-common
 if ! dpkg -s -- postgresql-server-dev-"${POSTGRESQL_VERSION}" >/dev/null 2>&1; then
+  apt_depends postgresql-common
   yes '' | "${PRIV}" /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
+  apt_depends postgresql-server-dev-"${POSTGRESQL_VERSION}" postgresql-"${POSTGRESQL_VERSION}"
 fi
-apt_depends postgresql-server-dev-"${POSTGRESQL_VERSION}" postgresql-"${POSTGRESQL_VERSION}"
 
 SCRIPT_NAME="${DIR}"'/user_db_setup.sh'
 export SCRIPT_NAME

@@ -28,7 +28,7 @@ ARG SADAS=1
 
 ARG SADAS_COMMANDS='git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold "${SADAS_DEST}"'
 ARG SADAS_COMMAND_FOLDER='_lib/_server/rust'
-ARG SADAS_DEST='/opt/serve-actix-diesel-auth-scaffold'
+ARG SADAS_DEST='/tmp/serve-actix-diesel-auth-scaffold'
 
 ARG AMQP_URL=0
 ARG RABBITMQ_VERSION='*'

@@ -64,10 +64,9 @@ if [ -d '/etc/systemd/system' ]; then
   service_name='celery'
   service='/etc/systemd/system/'"${service_name}"'.service'
   envsubst < "${DIR}"'/conf/systemd/celery.service' > '/tmp/'"${service_name}"
-  "${PRIV}" mv '/tmp/'"${service_name}" "${service}"
-  "${PRIV}" chmod 0644 "${service}"
-  "${PRIV}" mkdir -p /etc/conf.d/
-  "${PRIV}" cp "${DIR}"'/conf/celery_env' /etc/conf.d/
+
+  "${PRIV}" install -m 0644 -- '/tmp/'"${service_name}" "${service}"
+  "${PRIV}" install -D -m 0644 -- "${DIR}"'/conf/celery_env' /etc/conf.d/
   "${PRIV}" systemctl stop "${service_name}" || true
   "${PRIV}" systemctl daemon-reload
   "${PRIV}" systemctl start "${service_name}"

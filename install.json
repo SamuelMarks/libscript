@@ -82,7 +82,7 @@
       "servers": [
         {
           "name": "SADAS",
-          "dest": "/opt/serve-actix-diesel-auth-scaffold",
+          "dest": "/tmp/serve-actix-diesel-auth-scaffold",
           "builder": [
             {
               "commands": [

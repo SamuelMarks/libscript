@@ -83,8 +83,7 @@ if [ -d '/etc/systemd/system' ]; then
   service='/etc/systemd/system/'"${service_name}"'.service'
   tmp="${TMPDIR:-/tmp}"'/'"${service_name}"
   envsubst < "${LIBSCRIPT_ROOT_DIR}"'/app/third_party/jupyter/conf/systemd/jupyverse.service' > "${tmp}"
-  "${PRIV}" mv -- "${tmp}" "${service}"
-  "${PRIV}" chmod 0644 -- "${service}"
+  "${PRIV}" install -m 0644 -- "${tmp}" "${service}"
   "${PRIV}" systemctl stop -- "${service_name}" || true
   "${PRIV}" systemctl daemon-reload
   "${PRIV}" systemctl start -- "${service_name}"

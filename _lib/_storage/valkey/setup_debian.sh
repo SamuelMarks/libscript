@@ -80,11 +80,8 @@ cd "${previous_wd}"
 
 service_name='valkey'
 "${PRIV}" systemctl stop "${service_name}" || true
-"${PRIV}" cp "${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/conf/valkey.conf' /etc/
-"${PRIV}" cp "${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/conf/systemd/'"${service_name}"'.service' /etc/systemd/system/
-"${PRIV}" chmod 0644 /etc/valkey.conf '/etc/systemd/system/'"${service_name}"'.service'
-"${PRIV}" chown root:root /etc/valkey.conf '/etc/systemd/system/'"${service_name}"'.service'
-# Could use `install` over `cp` + `chmod` + `chown`^
+"${PRIV}" install -m 0644 -o 'root' -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/conf/valkey.conf' /etc/
+"${PRIV}" install -m 0644 -o 'root' -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/conf/systemd/'"${service_name}"'.service' /etc/systemd/system/
 "${PRIV}" systemctl daemon-reload
 "${PRIV}" systemctl stop "${service_name}" || true
 "${PRIV}" systemctl start "${service_name}"

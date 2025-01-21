@@ -31,7 +31,7 @@ SET VALKEY_VERSION="*"
 SET SADAS=1
 SET SADAS_COMMANDS="git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold "${SADAS_DEST}""
 SET SADAS_COMMAND_FOLDER="_lib/_server/rust"
-SET SADAS_DEST="/opt/serve-actix-diesel-auth-scaffold"
+SET SADAS_DEST="/tmp/serve-actix-diesel-auth-scaffold"
 
 :: ##########################
 :: # Database(s) [optional] #

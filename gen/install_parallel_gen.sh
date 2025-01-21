@@ -105,7 +105,7 @@ export SCRIPT_NAME
   export SADAS=1
 export SADAS_COMMANDS='git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold "${SADAS_DEST}"'
 export SADAS_COMMAND_FOLDER='_lib/_server/rust'
-export SADAS_DEST='/opt/serve-actix-diesel-auth-scaffold'
+export SADAS_DEST='/tmp/serve-actix-diesel-auth-scaffold'
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090

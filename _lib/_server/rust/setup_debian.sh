@@ -57,7 +57,8 @@ previous_wd="$(pwd)"
 if [ -z "${DEST+x}" ]; then
   LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
   DEST="${LIBSCRIPT_DATA_DIR}"'/'"$(env LC_CTYPE='C' tr -cd '[:lower:]' < '/dev/urandom' | head -c 8)"
-  [ -d "${DEST}" ] || mkdir -p "${DEST}"
+  export DEST
+  mkdir -p "${DEST}"
 fi
 cd "${DEST}"
 . "${HOME}"'/.cargo/env'
