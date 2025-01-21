@@ -20,10 +20,18 @@ ARG POSTGRES_VERSION=17
 RUN <<-EOF
 
 if [ "${POSTGRES_URL:-1}" -eq 1 ]; then
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/postgres/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${POSTGRES_COMMAND_FOLDER:-_lib/_storage}"'/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
-  . "${SCRIPT_NAME}"
+  if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
+  if [ -n "${POSTGRES_COMMANDS}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_postgres.sh'
+    export SCRIPT_NAME
+    cp "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+    printf '%s' "${POSTGRES_COMMANDS}" >> "${SCRIPT_NAME}"
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+  fi
 fi
 
 EOF

@@ -19,10 +19,18 @@ ARG SADAS_DEST='/tmp/serve-actix-diesel-auth-scaffold'
 RUN <<-EOF
 
 if [ "${SADAS:-1}" -eq 1 ]; then
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/app/third_party/sadas/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${SADAS_COMMAND_FOLDER:-app/third_party}"'/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
-  . "${SCRIPT_NAME}"
+  if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
+  if [ -n "${SADAS_COMMANDS}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_sadas.sh'
+    export SCRIPT_NAME
+    cp "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+    printf '%s' "${SADAS_COMMANDS}" >> "${SCRIPT_NAME}"
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+  fi
 fi
 
 EOF
@@ -33,10 +41,18 @@ ARG JUPYTERHUB=0
 RUN <<-EOF
 
 if [ "${JUPYTERHUB:-0}" -eq 1 ]; then
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/app/third_party/jupyterhub/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${JUPYTERHUB_COMMAND_FOLDER:-app/third_party}"'/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
-  . "${SCRIPT_NAME}"
+  if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
+  if [ -n "${JUPYTERHUB_COMMANDS}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_jupyterhub.sh'
+    export SCRIPT_NAME
+    cp "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+    printf '%s' "${JUPYTERHUB_COMMANDS}" >> "${SCRIPT_NAME}"
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+  fi
 fi
 
 EOF
