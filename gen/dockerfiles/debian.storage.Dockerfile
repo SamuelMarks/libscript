@@ -20,18 +20,26 @@ ARG POSTGRES_VERSION=17
 RUN <<-EOF
 
 if [ "${POSTGRES_URL:-1}" -eq 1 ]; then
+  if [ ! -z "${POSTGRES_DEST+x}" ]; then
+    previous_wd="$(pwd)"
+    DEST="${POSTGRES_DEST}"
+    export DEST
+    [ -d "${DEST}" ] || mkdir -p "${DEST}"
+    cd "${DEST}"
+  fi
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${POSTGRES_COMMAND_FOLDER:-_lib/_storage}"'/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-  if [ -n "${POSTGRES_COMMANDS}" ]; then
+  if [ ! -z "${POSTGRES_COMMANDS+x}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_postgres.sh'
     export SCRIPT_NAME
-    cp "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+    install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
     printf '%s' "${POSTGRES_COMMANDS}" >> "${SCRIPT_NAME}"
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
   fi
+  if [ ! -z "${POSTGRES_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi
 
 EOF
@@ -44,18 +52,26 @@ ARG VALKEY_VERSION='*'
 RUN <<-EOF
 
 if [ "${REDIS_URL:-1}" -eq 1 ]; then
+  if [ ! -z "${VALKEY_DEST+x}" ]; then
+    previous_wd="$(pwd)"
+    DEST="${VALKEY_DEST}"
+    export DEST
+    [ -d "${DEST}" ] || mkdir -p "${DEST}"
+    cd "${DEST}"
+  fi
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${VALKEY_COMMAND_FOLDER:-_lib/_storage}"'/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-  if [ -n "${VALKEY_COMMANDS}" ]; then
+  if [ ! -z "${VALKEY_COMMANDS+x}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_valkey.sh'
     export SCRIPT_NAME
-    cp "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+    install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
     printf '%s' "${VALKEY_COMMANDS}" >> "${SCRIPT_NAME}"
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
   fi
+  if [ ! -z "${VALKEY_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi
 
 EOF
@@ -67,18 +83,26 @@ ARG RABBITMQ_VERSION='*'
 RUN <<-EOF
 
 if [ "${AMQP_URL:-0}" -eq 1 ]; then
+  if [ ! -z "${RABBITMQ_DEST+x}" ]; then
+    previous_wd="$(pwd)"
+    DEST="${RABBITMQ_DEST}"
+    export DEST
+    [ -d "${DEST}" ] || mkdir -p "${DEST}"
+    cd "${DEST}"
+  fi
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${RABBITMQ_COMMAND_FOLDER:-_lib/_storage}"'/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-  if [ -n "${RABBITMQ_COMMANDS}" ]; then
+  if [ ! -z "${RABBITMQ_COMMANDS+x}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_rabbitmq.sh'
     export SCRIPT_NAME
-    cp "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+    install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
     printf '%s' "${RABBITMQ_COMMANDS}" >> "${SCRIPT_NAME}"
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
   fi
+  if [ ! -z "${RABBITMQ_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi
 
 EOF

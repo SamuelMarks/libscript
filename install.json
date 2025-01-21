@@ -82,12 +82,11 @@
       "servers": [
         {
           "name": "SADAS",
-          "dest": "/tmp/serve-actix-diesel-auth-scaffold",
+          "dest": "/opt/serve-actix-diesel-auth-scaffold",
           "builder": [
             {
               "commands": [
-                "git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold &&",
-                "git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold"
+                "git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold \"${SADAS_DEST}\""
               ]
             },
             {

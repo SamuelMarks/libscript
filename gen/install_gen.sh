@@ -32,141 +32,212 @@ export LIBSCRIPT_DATA_DIR
 # Toolchain(s) [required] #
 ###########################
 if [ "${NODEJS_INSTALL_DIR:-1}" -eq 1 ]; then
+  if [ ! -z "${NODEJS_DEST+x}" ]; then
+    previous_wd="$(pwd)"
+    DEST="${NODEJS_DEST}"
+    export DEST
+    [ -d "${DEST}" ] || mkdir -p "${DEST}"
+    cd "${DEST}"
+  fi
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${NODEJS_COMMAND_FOLDER:-_lib/_toolchain}"'/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-  if [ -n "${NODEJS_COMMANDS}" ]; then
+  if [ ! -z "${NODEJS_COMMANDS+x}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_nodejs.sh'
     export SCRIPT_NAME
-    cp "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+    install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
     printf '%s' "${NODEJS_COMMANDS}" >> "${SCRIPT_NAME}"
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
   fi
+  if [ ! -z "${NODEJS_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi
 
 if [ "${PYTHON_INSTALL_DIR:-1}" -eq 1 ]; then
+  if [ ! -z "${PYTHON_DEST+x}" ]; then
+    previous_wd="$(pwd)"
+    DEST="${PYTHON_DEST}"
+    export DEST
+    [ -d "${DEST}" ] || mkdir -p "${DEST}"
+    cd "${DEST}"
+  fi
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${PYTHON_COMMAND_FOLDER:-_lib/_toolchain}"'/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-  if [ -n "${PYTHON_COMMANDS}" ]; then
+  if [ ! -z "${PYTHON_COMMANDS+x}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_python.sh'
     export SCRIPT_NAME
-    cp "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+    install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
     printf '%s' "${PYTHON_COMMANDS}" >> "${SCRIPT_NAME}"
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
   fi
+  if [ ! -z "${PYTHON_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi
 
 if [ "${RUST_INSTALL_DIR:-1}" -eq 1 ]; then
+  if [ ! -z "${RUST_DEST+x}" ]; then
+    previous_wd="$(pwd)"
+    DEST="${RUST_DEST}"
+    export DEST
+    [ -d "${DEST}" ] || mkdir -p "${DEST}"
+    cd "${DEST}"
+  fi
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${RUST_COMMAND_FOLDER:-_lib/_toolchain}"'/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-  if [ -n "${RUST_COMMANDS}" ]; then
+  if [ ! -z "${RUST_COMMANDS+x}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_rust.sh'
     export SCRIPT_NAME
-    cp "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+    install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
     printf '%s' "${RUST_COMMANDS}" >> "${SCRIPT_NAME}"
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
   fi
+  if [ ! -z "${RUST_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi
 
 ##########################
 # Database(s) [required] #
 ##########################
 if [ "${POSTGRES_URL:-1}" -eq 1 ]; then
+  if [ ! -z "${POSTGRES_DEST+x}" ]; then
+    previous_wd="$(pwd)"
+    DEST="${POSTGRES_DEST}"
+    export DEST
+    [ -d "${DEST}" ] || mkdir -p "${DEST}"
+    cd "${DEST}"
+  fi
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${POSTGRES_COMMAND_FOLDER:-_lib/_storage}"'/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-  if [ -n "${POSTGRES_COMMANDS}" ]; then
+  if [ ! -z "${POSTGRES_COMMANDS+x}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_postgres.sh'
     export SCRIPT_NAME
-    cp "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+    install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
     printf '%s' "${POSTGRES_COMMANDS}" >> "${SCRIPT_NAME}"
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
   fi
+  if [ ! -z "${POSTGRES_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi
 
 if [ "${REDIS_URL:-1}" -eq 1 ]; then
+  if [ ! -z "${VALKEY_DEST+x}" ]; then
+    previous_wd="$(pwd)"
+    DEST="${VALKEY_DEST}"
+    export DEST
+    [ -d "${DEST}" ] || mkdir -p "${DEST}"
+    cd "${DEST}"
+  fi
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${VALKEY_COMMAND_FOLDER:-_lib/_storage}"'/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-  if [ -n "${VALKEY_COMMANDS}" ]; then
+  if [ ! -z "${VALKEY_COMMANDS+x}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_valkey.sh'
     export SCRIPT_NAME
-    cp "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+    install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
     printf '%s' "${VALKEY_COMMANDS}" >> "${SCRIPT_NAME}"
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
   fi
+  if [ ! -z "${VALKEY_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi
 
 ########################
 # Server(s) [required] #
 ########################
 if [ "${SADAS:-1}" -eq 1 ]; then
+  if [ ! -z "${SADAS_DEST+x}" ]; then
+    previous_wd="$(pwd)"
+    DEST="${SADAS_DEST}"
+    export DEST
+    [ -d "${DEST}" ] || mkdir -p "${DEST}"
+    cd "${DEST}"
+  fi
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${SADAS_COMMAND_FOLDER:-app/third_party}"'/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-  if [ -n "${SADAS_COMMANDS}" ]; then
+  if [ ! -z "${SADAS_COMMANDS+x}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_sadas.sh'
     export SCRIPT_NAME
-    cp "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+    install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
     printf '%s' "${SADAS_COMMANDS}" >> "${SCRIPT_NAME}"
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
   fi
+  if [ ! -z "${SADAS_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi
 
 ##########################
 # Database(s) [optional] #
 ##########################
 if [ "${AMQP_URL:-0}" -eq 1 ]; then
+  if [ ! -z "${RABBITMQ_DEST+x}" ]; then
+    previous_wd="$(pwd)"
+    DEST="${RABBITMQ_DEST}"
+    export DEST
+    [ -d "${DEST}" ] || mkdir -p "${DEST}"
+    cd "${DEST}"
+  fi
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${RABBITMQ_COMMAND_FOLDER:-_lib/_storage}"'/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-  if [ -n "${RABBITMQ_COMMANDS}" ]; then
+  if [ ! -z "${RABBITMQ_COMMANDS+x}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_rabbitmq.sh'
     export SCRIPT_NAME
-    cp "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+    install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
     printf '%s' "${RABBITMQ_COMMANDS}" >> "${SCRIPT_NAME}"
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
   fi
+  if [ ! -z "${RABBITMQ_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi
 
 ########################
 # Server(s) [required] #
 ########################
 if [ "${JUPYTERHUB:-0}" -eq 1 ]; then
+  if [ ! -z "${JUPYTERHUB_DEST+x}" ]; then
+    previous_wd="$(pwd)"
+    DEST="${JUPYTERHUB_DEST}"
+    export DEST
+    [ -d "${DEST}" ] || mkdir -p "${DEST}"
+    cd "${DEST}"
+  fi
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${JUPYTERHUB_COMMAND_FOLDER:-app/third_party}"'/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-  if [ -n "${JUPYTERHUB_COMMANDS}" ]; then
+  if [ ! -z "${JUPYTERHUB_COMMANDS+x}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_jupyterhub.sh'
     export SCRIPT_NAME
-    cp "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+    install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
     printf '%s' "${JUPYTERHUB_COMMANDS}" >> "${SCRIPT_NAME}"
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
   fi
+  if [ ! -z "${JUPYTERHUB_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi
 
 ##############
 # WWWROOT(s) #
 ##############
 if [ "${WWWROOT_example_com_INSTALL:-0}" -eq 1 ]; then
+  if [ ! -z "${EXAMPLE_COM_DEST+x}" ]; then
+    previous_wd="$(pwd)"
+    DEST="${EXAMPLE_COM_DEST}"
+    export DEST
+    [ -d "${DEST}" ] || mkdir -p "${DEST}"
+    cd "${DEST}"
+  fi
   export WWWROOT_NAME="${WWWROOT_example_com_NAME:-example.com}"
   export WWWROOT_VENDOR="${WWWROOT_example_com_VENDOR:-nginx}"
   export WWWROOT_PATH="${WWWROOT_example_com_PATH:-./my_symlinked_wwwroot}"
@@ -179,10 +250,10 @@ if [ "${WWWROOT_example_com_INSTALL:-0}" -eq 1 ]; then
     export SCRIPT_NAME
     # shellcheck disable=SC1090
     if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi
-    if [ -n "${WWWROOT_COMMANDS}" ]; then
+    if [ ! -z "${WWWROOT_COMMANDS+x}" ]; then
       SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_example_com.sh'
       export SCRIPT_NAME
-      cp "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+      install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
       printf '%s' "${WWWROOT_COMMANDS}" >> "${SCRIPT_NAME}"
       # shellcheck disable=SC1090
       . "${SCRIPT_NAME}"

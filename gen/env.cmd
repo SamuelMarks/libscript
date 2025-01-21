@@ -29,10 +29,9 @@ SET VALKEY_VERSION="*"
 :: # Server(s) [required] #
 :: ########################
 SET SADAS=1
-SET SADAS_COMMANDS="git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold &&
-git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold"
+SET SADAS_COMMANDS="git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold "${SADAS_DEST}""
 SET SADAS_COMMAND_FOLDER="_lib/_server/rust"
-SET SADAS_DEST="/tmp/serve-actix-diesel-auth-scaffold"
+SET SADAS_DEST="/opt/serve-actix-diesel-auth-scaffold"
 
 :: ##########################
 :: # Database(s) [optional] #
@@ -49,6 +48,7 @@ SET JUPYTERHUB=0
 :: # WWWROOT(s) #
 :: ##############
 SET WWWROOT_example_com_INSTALL=0
+SET example_com="./my_symlinked_wwwroot"
 SET WWWROOT_example_com_COMMAND_FOLDER="_lib/_toolchain/nodejs"
 SET WWWROOT_example_com_COMMANDS="npm i -g @angular/cli &&
 npm i &&

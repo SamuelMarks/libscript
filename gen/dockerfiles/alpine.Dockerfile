@@ -26,10 +26,9 @@ ARG VALKEY_VERSION='*'
 
 ARG SADAS=1
 
-ARG SADAS_COMMANDS='git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold && \
-git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold'
+ARG SADAS_COMMANDS='git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold "${SADAS_DEST}"'
 ARG SADAS_COMMAND_FOLDER='_lib/_server/rust'
-ARG SADAS_DEST='/tmp/serve-actix-diesel-auth-scaffold'
+ARG SADAS_DEST='/opt/serve-actix-diesel-auth-scaffold'
 
 ARG AMQP_URL=0
 ARG RABBITMQ_VERSION='*'
@@ -42,6 +41,7 @@ ARG WWWROOT_example_com_PATH='./my_symlinked_wwwroot'
 ARG WWWROOT_example_com_LISTEN=80
 ARG WWWROOT_example_com_INSTALL=0
 
+ARG example_com='./my_symlinked_wwwroot'
 ARG WWWROOT_example_com_COMMAND_FOLDER='_lib/_toolchain/nodejs'
 ARG WWWROOT_example_com_COMMANDS='npm i -g @angular/cli && \
 npm i && \

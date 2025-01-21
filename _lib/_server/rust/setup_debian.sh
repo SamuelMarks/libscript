@@ -54,9 +54,14 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 previous_wd="$(pwd)"
-[ -d "${WORKDIR}" ] || mkdir -p "${WORKDIR}"
-cd "${WORKDIR}"
+if [ -z "${DEST+x}" ]; then
+  LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
+  DEST="${LIBSCRIPT_DATA_DIR}"'/'"$(env LC_CTYPE='C' tr -cd '[:lower:]' < '/dev/urandom' | head -c 8)"
+  [ -d "${DEST}" ] || mkdir -p "${DEST}"
+fi
+cd "${DEST}"
+. "${HOME}"'/.cargo/env'
 
-# TODO
+cargo build --release
 
 cd "${previous_wd}"

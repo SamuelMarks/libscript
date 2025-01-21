@@ -377,6 +377,13 @@ update_generated_files() {
   # shellcheck disable=SC2016
   {
     printf 'if [ "${%s:-%d}" -eq 1 ]; then\n' "${env_clean}" "${required}" | tee -a "${scratch_file}" "${scratch}" "${install_file}" >/dev/null
+    printf '  if [ ! -z "${%s_DEST+x}" ]; then\n' "${name_upper_clean}"
+    printf '    previous_wd="$(pwd)"\n'
+    printf '    DEST="${%s_DEST}"\n' "${name_upper_clean}"
+    printf '    export DEST\n'
+    printf '    [ -d "${DEST}" ] || mkdir -p "${DEST}"\n'
+    printf '    cd "${DEST}"\n'
+    printf '  fi\n'
     if [ -n "${alt_if_body}" ]; then
       printf '%s\n' "${alt_if_body}"
     else
@@ -386,18 +393,20 @@ update_generated_files() {
       printf '  if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi\n'
 
       # shellcheck disable=SC2016
-      printf '  if [ -n "${%s_COMMANDS}" ]; then\n' "${name_upper_clean}"
+      printf '  if [ ! -z "${%s_COMMANDS+x}" ]; then\n' "${name_upper_clean}"
       # shellcheck disable=SC2016
       printf '    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'"'"'/setup_%s.sh'"'"'\n' "${name_lower_clean}"
       printf '    export SCRIPT_NAME\n'
       # shellcheck disable=SC2016
-      printf '    cp "${LIBSCRIPT_ROOT_DIR}"'"'"'/prelude.sh'"'"' "${SCRIPT_NAME}"\n'
+      printf '    install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'"'"'/prelude.sh'"'"' "${SCRIPT_NAME}"\n'
+
       # shellcheck disable=SC2016
       printf '    printf '"'"'%%s'"'"' "${%s_COMMANDS}" >> "${SCRIPT_NAME}"\n' "${name_upper_clean}"
       printf '    # shellcheck disable=SC1090\n'
       # shellcheck disable=SC2016
       printf '    . "${SCRIPT_NAME}"\n'
       printf '  fi\n'
+      printf '  if [ ! -z "${%s_DEST+x}" ]; then cd "${previous_wd}"; fi\n' "${name_upper_clean}"
       printf 'fi\n\n'
    fi
   } | tee -a "${scratch_file}" "${scratch}" "${install_file}" >/dev/null
@@ -513,6 +522,8 @@ parse_wwwroot_item() {
     https_provider=$(printf '%s' "${www_json}" | jq -r '.https.provider // empty')
     vendor='nginx' # only supported one now
 
+    extra_env_vars_as_json=''
+
     if [ "${wwwroot_header_req}" -eq 0 ]; then
         wwwroot_header_req=1
         printf '\n' >> "${false_env_file}"
@@ -527,7 +538,10 @@ parse_wwwroot_item() {
       printf '  Name: %s\n' "${name}"
     fi
 
-    if [ "${verbose}" -ge 3 ] && [ -n "${path}" ]; then printf '  Path: %s\n' "${path}"; fi
+    if [ -n "${path}" ]; then
+      if [ "${verbose}" -ge 3 ] ; then printf '  Path: %s\n' "${path}"; fi
+      extra_env_vars_as_json='{"'"${name_clean}"'": "'"${path}"'"}'
+    fi
     extra=''
     if [ -n "${https_provider}" ]; then
       # shellcheck disable=SC2016
@@ -563,16 +577,17 @@ parse_wwwroot_item() {
       # shellcheck disable=SC2016
       printf '    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'"'"'/'"'"'"%s"'"'"'/setup.sh'"'"'\n' '${WWWROOT_COMMAND_FOLDER:-_server/nginx}'
       printf '    export SCRIPT_NAME\n'
+      # shellcheck disable=SC1126
       printf '    # shellcheck disable=SC1090\n'
       # shellcheck disable=SC2016
       printf '    if [ -f "${SCRIPT_NAME}" ]; then . "${SCRIPT_NAME}"; fi\n'
       # shellcheck disable=SC2016
-      printf '    if [ -n "${WWWROOT_COMMANDS}" ]; then\n'
+      printf '    if [ ! -z "${WWWROOT_COMMANDS+x}" ]; then\n'
       # shellcheck disable=SC2016
       printf '      SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'"'"'/setup_%s.sh'"'"'\n' "${name_clean}"
       printf '      export SCRIPT_NAME\n'
       # shellcheck disable=SC2016
-      printf '      cp "${LIBSCRIPT_ROOT_DIR}"'"'"'/prelude.sh'"'"' "${SCRIPT_NAME}"\n'
+      printf '      install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'"'"'/prelude.sh'"'"' "${SCRIPT_NAME}"\n'
       # shellcheck disable=SC2016
       printf '      printf '"'"'%%s'"'"' "${WWWROOT_COMMANDS}" >> "${SCRIPT_NAME}"\n'
       printf '      # shellcheck disable=SC1090\n'
@@ -588,7 +603,12 @@ parse_wwwroot_item() {
       printf '  IF NOT DEFINED WWWROOT_PATH ( SET WWWROOT_PATH="%s" )\n' "${path:-/}"
       printf '  IF NOT DEFINED WWWROOT_LISTEN ( SET WWWROOT_LISTEN="%s" )\n' "${listen:-80}"
     )
-    extra_env_vars_as_json="$(parse_wwwroot_builders "${www_json}" "${name_clean}")"
+    js="$(parse_wwwroot_builders "${www_json}" "${name_clean}")"
+    if [ -n "${extra_env_vars_as_json}" ]; then
+      extra_env_vars_as_json="$(printf '%s %s' "${extra_env_vars_as_json}" "${js}" | jq -n 'reduce inputs as $in (null; . + $in)')"
+    else
+      extra_env_vars_as_json="${js}"
+    fi
     update_generated_files "${name_upper_clean}" "${version}" "${env}" 'wwwroot' "${dep_group_name}" "${extra_before_str}" "${alt_if_body}" "${alt_if_body_cmd}" "${extra_env_vars_as_json}"
 }
 
@@ -803,6 +823,7 @@ parse_server_item() {
     version=$(printf '%s' "${server_json}" | jq -r '.version // empty')
     location=$(printf '%s' "${server_json}" | jq -r '.location // empty')
     dest=$(printf '%s' "${server_json}" | jq -r '.dest // empty')
+
     extra_env_vars_as_json=''
     name_clean="$(printf '%s' "${name}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
     name_upper_clean="$(printf '%s' "${name_clean}" | tr '[:lower:]' '[:upper:]')"
@@ -831,16 +852,13 @@ parse_server_item() {
       name_upper_clean="$(printf '%s' "${name_upper}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
       if [ -n "${dest}" ]; then
         js="$(printf '{"%s_DEST": "%s"}' "${name_upper_clean}" "${dest}")"
-        if [ -n "${extra_env_vars_as_json}" ]; then
-          extra_env_vars_as_json="$(printf '%s %s' "${extra_env_vars_as_json}" "${js}" | jq -n 'reduce inputs as $in (null; . + $in)')"
-        else
-          extra_env_vars_as_json="${js}"
+        extra_env_vars_as_json="$(printf '%s %s' "${extra_env_vars_as_json}" "${js}" | jq -n 'reduce inputs as $in (null; . + $in)')"
+
+        if [ "${verbose}" -ge 3 ] ; then
+          printf '    Dest: %s\n' "${dest}"
         fi
       fi
       update_generated_files "${name}" "${version}" "${name_upper}" 'app/third_party' "${dep_group_name}" "${extra_before_str}" '' '' "${extra_env_vars_as_json}"
-    fi
-    if [ -n "${dest}" ] && [ "${verbose}" -ge 3 ] ; then
-      printf '    Dest: %s\n' "${dest}"
     fi
     if [ "${verbose}" -ge 3 ] && [ -n "${location}" ]; then
       printf '    Location: %s\n' "${location}";

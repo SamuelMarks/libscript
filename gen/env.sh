@@ -32,10 +32,9 @@ export VALKEY_VERSION='*'
 # Server(s) [required] #
 ########################
 export SADAS=1
-export SADAS_COMMANDS='git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold &&
-git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold'
+export SADAS_COMMANDS='git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold "${SADAS_DEST}"'
 export SADAS_COMMAND_FOLDER='_lib/_server/rust'
-export SADAS_DEST='/tmp/serve-actix-diesel-auth-scaffold'
+export SADAS_DEST='/opt/serve-actix-diesel-auth-scaffold'
 
 ##########################
 # Database(s) [optional] #
@@ -52,6 +51,7 @@ export JUPYTERHUB=0
 # WWWROOT(s) #
 ##############
 export WWWROOT_example_com_INSTALL=0
+export example_com='./my_symlinked_wwwroot'
 export WWWROOT_example_com_COMMAND_FOLDER='_lib/_toolchain/nodejs'
 export WWWROOT_example_com_COMMANDS='npm i -g @angular/cli &&
 npm i &&
