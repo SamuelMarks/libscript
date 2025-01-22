@@ -126,6 +126,47 @@ fi
 EOF
 
 
+ARG BUILD_STATIC_FILES0=1
+
+ARG build_static_files0_COMMANDS_BEFORE='git_get https://github.com/SamuelMarks/ng-material-scaffold "${BUILD_STATIC_FILES0_DEST}" && \
+npm i -g npm && npm i -g @angular/cli && \
+npm i \
+ng build --configuration production'
+ARG build_static_files0_COMMAND_FOLDER='_lib/_common/_noop'
+ARG BUILD_STATIC_FILES0_DEST='/tmp/ng-material-scaffold'
+
+RUN <<-EOF
+
+if [ "${BUILD_STATIC_FILES0:-1}" -eq 1 ]; then
+  if [ ! -z "${BUILD_STATIC_FILES0_DEST+x}" ]; then
+    previous_wd="$(pwd)"
+    DEST="${BUILD_STATIC_FILES0_DEST}"
+    export DEST
+    [ -d "${DEST}" ] || mkdir -p "${DEST}"
+    cd "${DEST}"
+  fi
+  if [ ! -z "${build_static_files0_COMMANDS_BEFORE+x}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_before_build-static-files0.sh'
+    export SCRIPT_NAME
+    install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+    printf '%s' "${build_static_files0_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+  fi
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${build_static_files0_COMMAND_FOLDER:-app/third_party/build-static-files0}"'/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  if [ -f "${SCRIPT_NAME}" ]; then
+    . "${SCRIPT_NAME}";
+  else
+    >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
+  fi
+  if [ ! -z "${BUILD_STATIC_FILES0_DEST+x}" ]; then cd "${previous_wd}"; fi
+fi
+
+EOF
+
+
 ARG JUPYTERHUB=0
 
 RUN <<-EOF

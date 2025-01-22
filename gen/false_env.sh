@@ -31,6 +31,11 @@ export NODEJS_HTTP_SERVER=0
 ########################
 export PYTHON_SERVER=0
 
+########################
+# Server(s) [optional] #
+########################
+export BUILD_STATIC_FILES0=0
+
 
 ##########################
 # Database(s) [optional] #
@@ -41,10 +46,4 @@ export AMQP_URL=0
 # Server(s) [required] #
 ########################
 export JUPYTERHUB=0
-
-
-##############
-# WWWROOT(s) #
-##############
-export WWWROOT_example_com_INSTALL=0
 

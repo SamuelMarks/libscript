@@ -18,14 +18,17 @@ else
 fi
 set -feu
 
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${this_file}" )")" && pwd)}"
-export LIBSCRIPT_ROOT_DIR
-
 STACK="${STACK:-:}${this_file}"':'
 export STACK
 
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${this_file}" )")" && pwd)}"
+export LIBSCRIPT_ROOT_DIR
+
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 export LIBSCRIPT_DATA_DIR
+
+PATH="${HOME}"'/.cargo/bin:'"${HOME}"'/.local/share/fnm/aliases/default/bin:'"${LIBSCRIPT_DATA_DIR}"'/bin:'"${PATH}"
+export PATH
 
 
 ###########################
@@ -259,6 +262,36 @@ if [ "${PYTHON_SERVER:-1}" -eq 1 ]; then
   if [ ! -z "${PYTHON_SERVER_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi
 
+########################
+# Server(s) [optional] #
+########################
+if [ "${BUILD_STATIC_FILES0:-1}" -eq 1 ]; then
+  if [ ! -z "${BUILD_STATIC_FILES0_DEST+x}" ]; then
+    previous_wd="$(pwd)"
+    DEST="${BUILD_STATIC_FILES0_DEST}"
+    export DEST
+    [ -d "${DEST}" ] || mkdir -p "${DEST}"
+    cd "${DEST}"
+  fi
+  if [ ! -z "${build_static_files0_COMMANDS_BEFORE+x}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_before_build-static-files0.sh'
+    export SCRIPT_NAME
+    install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+    printf '%s' "${build_static_files0_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+  fi
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${build_static_files0_COMMAND_FOLDER:-app/third_party/build-static-files0}"'/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  if [ -f "${SCRIPT_NAME}" ]; then
+    . "${SCRIPT_NAME}";
+  else
+    >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
+  fi
+  if [ ! -z "${BUILD_STATIC_FILES0_DEST+x}" ]; then cd "${previous_wd}"; fi
+fi
+
 ##########################
 # Database(s) [optional] #
 ##########################
@@ -319,40 +352,3 @@ if [ "${JUPYTERHUB:-0}" -eq 1 ]; then
   if [ ! -z "${JUPYTERHUB_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi
 
-##############
-# WWWROOT(s) #
-##############
-if [ "${WWWROOT_example_com_INSTALL:-0}" -eq 1 ]; then
-  if [ ! -z "${EXAMPLE_COM_DEST+x}" ]; then
-    previous_wd="$(pwd)"
-    DEST="${EXAMPLE_COM_DEST}"
-    export DEST
-    [ -d "${DEST}" ] || mkdir -p "${DEST}"
-    cd "${DEST}"
-  fi
-  export WWWROOT_NAME="${WWWROOT_example_com_NAME:-example.com}"
-  export WWWROOT_VENDOR="${WWWROOT_example_com_VENDOR:-nginx}"
-  export WWWROOT_PATH="${WWWROOT_example_com_PATH:-./my_symlinked_wwwroot}"
-  export WWWROOT_LISTEN="${80:-WWWROOT_example_com_LISTEN}"
-  export WWWROOT_HTTPS_PROVIDER="${WWWROOT_example_com_HTTPS_PROVIDER:-letsencrypt}"
-  export WWWROOT_COMMAND_FOLDER="${WWWROOT_example_com_COMMAND_FOLDER:-}"
-  export WWWROOT_COMMANDS_BEFORE="${WWWROOT_example_com_COMMANDS_BEFORE:-}"
-  if [ "${WWWROOT_VENDOR:-nginx}" = 'nginx' ]; then
-    if [ ! -z "${WWWROOT_COMMANDS_BEFORE+x}" ]; then
-      SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_example_com.sh'
-      export SCRIPT_NAME
-      install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
-      printf '%s' "${WWWROOT_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
-      # shellcheck disable=SC1090
-      . "${SCRIPT_NAME}"
-    fi
-  fi
-    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${WWWROOT_COMMAND_FOLDER:-_server/nginx}"'/setup.sh'
-    export SCRIPT_NAME
-    # shellcheck disable=SC1090
-    if [ -f "${SCRIPT_NAME}" ]; then
-      . "${SCRIPT_NAME}";
-    else
-      >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
-    fi
-fi

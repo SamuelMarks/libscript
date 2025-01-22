@@ -45,22 +45,19 @@ venv-3-12/bin/python -m pip install -r requirements.txt'
 ARG python_server_COMMAND_FOLDER='_lib/_server/python'
 ARG PYTHON_SERVER_DEST='/tmp/python-server'
 
+ARG BUILD_STATIC_FILES0=1
+
+ARG build_static_files0_COMMANDS_BEFORE='git_get https://github.com/SamuelMarks/ng-material-scaffold "${BUILD_STATIC_FILES0_DEST}" && \
+npm i -g npm && npm i -g @angular/cli && \
+npm i \
+ng build --configuration production'
+ARG build_static_files0_COMMAND_FOLDER='_lib/_common/_noop'
+ARG BUILD_STATIC_FILES0_DEST='/tmp/ng-material-scaffold'
+
 ARG AMQP_URL=0
 ARG RABBITMQ_VERSION='*'
 
 ARG JUPYTERHUB=0
-
-ARG WWWROOT_example_com_NAME='example.com'
-ARG WWWROOT_example_com_VENDOR='nginx'
-ARG WWWROOT_example_com_PATH='./my_symlinked_wwwroot'
-ARG WWWROOT_example_com_LISTEN=80
-ARG WWWROOT_example_com_INSTALL=0
-
-ARG example_com='./my_symlinked_wwwroot'
-ARG WWWROOT_example_com_COMMAND_FOLDER='_lib/_toolchain/nodejs'
-ARG WWWROOT_example_com_COMMANDS_BEFORE='npm i -g @angular/cli && \
-npm i && \
-ng build --configuration production'
 
 
 

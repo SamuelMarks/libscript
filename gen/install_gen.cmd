@@ -123,6 +123,20 @@ IF "%PYTHON_SERVER%"==1 (
   CALL "%SCRIPT_NAME%"
 )
 
+:: ########################
+:: # Server(s) [optional] #
+:: ########################
+IF NOT DEFINED BUILD_STATIC_FILES0 ( SET BUILD_STATIC_FILES0=1 )
+IF "%BUILD_STATIC_FILES0%"==1 (
+  SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\app\third_party\build-static-files0\setup.cmd"
+  IF NOT EXIST "%SCRIPT_NAME%" (
+    >&2 ECHO File not found "%SCRIPT_NAME%"
+    SET ERRORLEVEL=2
+    GOTO end
+  )
+  CALL "%SCRIPT_NAME%"
+)
+
 :: ##########################
 :: # Database(s) [optional] #
 :: ##########################
@@ -143,25 +157,6 @@ IF "%AMQP_URL%"==1 (
 IF NOT DEFINED "JUPYTERHUB" ( SET JUPYTERHUB=0 )
 IF "%JUPYTERHUB%"==1 (
   SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\app\third_party\jupyterhub\setup.cmd"
-  IF NOT EXIST "%SCRIPT_NAME%" (
-    >&2 ECHO File not found "%SCRIPT_NAME%"
-    SET ERRORLEVEL=2
-    GOTO end
-  )
-  CALL "%SCRIPT_NAME%"
-)
-
-:: ##############
-:: # WWWROOT(s) #
-:: ##############
-IF NOT DEFINED "WWWROOT_example_com_INSTALL" ( SET WWWROOT_example_com_INSTALL=0 )
-IF "%WWWROOT_example_com_INSTALL%"==1 (
-  IF NOT DEFINED WWWROOT_NAME ( SET WWWROOT_NAME="example.com" )
-  IF NOT DEFINED WWWROOT_VENDOR ( SET WWWROOT_VENDOR="nginx" )
-  IF NOT DEFINED WWWROOT_PATH ( SET WWWROOT_PATH="./my_symlinked_wwwroot" )
-  IF NOT DEFINED WWWROOT_LISTEN ( SET WWWROOT_LISTEN="80" )
-
-  SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\wwwroot\example_com\setup.cmd"
   IF NOT EXIST "%SCRIPT_NAME%" (
     >&2 ECHO File not found "%SCRIPT_NAME%"
     SET ERRORLEVEL=2

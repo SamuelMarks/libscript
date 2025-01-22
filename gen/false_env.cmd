@@ -29,6 +29,11 @@ SET NODEJS_HTTP_SERVER=0
 :: ########################
 SET PYTHON_SERVER=0
 
+:: ########################
+:: # Server(s) [optional] #
+:: ########################
+SET BUILD_STATIC_FILES0=0
+
 :: ##########################
 :: # Database(s) [optional] #
 :: ##########################
@@ -38,9 +43,4 @@ SET AMQP_URL=0
 :: # Server(s) [required] #
 :: ########################
 SET JUPYTERHUB=0
-
-:: ##############
-:: # WWWROOT(s) #
-:: ##############
-SET WWWROOT_example_com_INSTALL=0
 

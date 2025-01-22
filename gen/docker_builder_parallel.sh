@@ -41,11 +41,9 @@ docker build --file 'dockerfiles/debian.third_party.Dockerfile' --progress='plai
 wait
 
 ###################
-#		WWWROOT(s)	#
+#		Servers	#
 ###################
 
-docker build --file 'dockerfiles/alpine.wwwroot.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-wwwroot':'dockerfiles/alpine-latest' . &
-docker build --file 'dockerfiles/debian.wwwroot.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-wwwroot':'dockerfiles/debian-latest' . &
 wait
 
 ###################
@@ -53,7 +51,7 @@ wait
 ###################
 
 docker build --file 'dockerfiles/alpine.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-':'dockerfiles/alpine-latest' . &
-docker build --file 'dockerfiles/alpine.example_com.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-example_com':'dockerfiles/alpine-latest' . &
+docker build --file 'dockerfiles/alpine.build-static-files0.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-build-static-files0':'dockerfiles/alpine-latest' . &
 docker build --file 'dockerfiles/alpine.jupyterhub.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-jupyterhub':'dockerfiles/alpine-latest' . &
 docker build --file 'dockerfiles/alpine.nodejs-http-server.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-nodejs-http-server':'dockerfiles/alpine-latest' . &
 docker build --file 'dockerfiles/alpine.nodejs.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-nodejs':'dockerfiles/alpine-latest' . &
@@ -65,7 +63,7 @@ docker build --file 'dockerfiles/alpine.rust.Dockerfile' --progress='plain' --no
 docker build --file 'dockerfiles/alpine.sadas.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-sadas':'dockerfiles/alpine-latest' . &
 docker build --file 'dockerfiles/alpine.valkey.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-valkey':'dockerfiles/alpine-latest' . &
 docker build --file 'dockerfiles/debian.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-':'dockerfiles/debian-latest' . &
-docker build --file 'dockerfiles/debian.example_com.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-example_com':'dockerfiles/debian-latest' . &
+docker build --file 'dockerfiles/debian.build-static-files0.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-build-static-files0':'dockerfiles/debian-latest' . &
 docker build --file 'dockerfiles/debian.jupyterhub.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-jupyterhub':'dockerfiles/debian-latest' . &
 docker build --file 'dockerfiles/debian.nodejs-http-server.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-nodejs-http-server':'dockerfiles/debian-latest' . &
 docker build --file 'dockerfiles/debian.nodejs.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-nodejs':'dockerfiles/debian-latest' . &

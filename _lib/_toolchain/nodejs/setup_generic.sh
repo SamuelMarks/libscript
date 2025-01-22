@@ -38,6 +38,15 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
+NODEJS_VERSION_LTS='v22.13.1'
+# latest lts ^
+
+printf 'b4 ${NODEJS_VERSION} = "%s"\n' "${NODEJS_VERSION}"
+if [ "${NODEJS_VERSION}" = 'lts' ]; then
+  NODEJS_VERSION="${NODEJS_VERSION_LTS}"
+fi
+printf 'l8 ${NODEJS_VERSION} = "%s"\n' "${NODEJS_VERSION}"
+
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/common.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
@@ -49,12 +58,17 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 if cmd_avail node ; then
-  # TODO: Check version is correct and install correct one if incorrect
-  return
+  version="$(node --version)"
+  printf '${version} = "%s"\n' "${version}"
+  if [ "${version}" = "${NODEJS_VERSION}" ]; then
+    return
+  fi
 fi
+printf '${NODEJS_VERSION} = "%s"\n' "${NODEJS_VERSION}"
 
 # TODO: latest version dance function and wrap this up
-DOWNLOAD_DIR=${DOWNLOAD_DIR:-${LIBSCRIPT_ROOT_DIR}/Downloads}
+LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
+DOWNLOAD_DIR=${DOWNLOAD_DIR:-${LIBSCRIPT_DATA_DIR}/Downloads}
 version='v1.38.1'
 if ! [ -f "${DOWNLOAD_DIR}"'/bin/fnm' ] ; then
   ensure_available 'curl' 'unzip'
@@ -75,5 +89,5 @@ if ! [ -f "${DOWNLOAD_DIR}"'/bin/fnm' ] ; then
   mv fnm "${DOWNLOAD_DIR}"'/bin/'
   cd "${previous_wd}"
 fi
-"${DOWNLOAD_DIR}"'/bin/fnm' install '22.12.0'
-# ${NODEJS_VERSION}
+"${DOWNLOAD_DIR}"'/bin/fnm' install "${NODEJS_VERSION}"
+export PATH="${HOME}"'/.local/share/fnm/aliases/default/bin:'"${PATH}"

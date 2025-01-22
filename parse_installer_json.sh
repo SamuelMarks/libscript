@@ -41,7 +41,6 @@ docker_scratch_file="${output_folder}"'/docker.tmp'
 toolchain_scratch_file="${output_folder}"'/toolchain.tmp'
 storage_scratch_file="${output_folder}"'/storage.tmp'
 server_scratch_file="${output_folder}"'/database.tmp'
-wwwroot_scratch_file="${output_folder}"'/wwwroot.tmp'
 third_party_scratch_file="${output_folder}"'/third_party.tmp'
 _lib_folder="${output_folder}"'/_lib'
 app_folder="${output_folder}"'/app'
@@ -101,8 +100,7 @@ if [ ! -f "${true_env_cmd_file}" ]; then printf '%s\n\n' 'SET "LIBSCRIPT_DATA_DI
 
 touch "${docker_scratch_file}" "${toolchain_scratch_file}" \
       "${storage_scratch_file}" "${server_scratch_file}" \
-      "${wwwroot_scratch_file}" "${third_party_scratch_file}" \
-       "${false_env_cmd_file}"
+      "${third_party_scratch_file}" "${false_env_cmd_file}"
 
 toolchains_len=0
 toolchains_header_req=0
@@ -112,8 +110,6 @@ databases_header_req=0
 databases_header_opt=0
 servers_len=0
 servers_header_req=0
-wwwroot_len=0
-wwwroot_header_req=0
 
 # Extra check in case a different `LIBSCRIPT_ROOT_DIR` is found in the JSON
 if ! command -v jq >/dev/null 2>&1; then
@@ -164,7 +160,6 @@ scratch2key() {
     "${storage_scratch_file}") res='storage' ;;
     "${third_party_scratch_file}") res='third_party' ;;
     "${toolchain_scratch_file}") res='toolchain' ;;
-    "${wwwroot_scratch_file}") res='wwwroot' ;;
     *) res="${1}" ;;
   esac
   export res
@@ -176,7 +171,6 @@ key2scratch() {
     'storage') res="${storage_scratch_file}" ;;
     'third_party') res="${third_party_scratch_file}" ;;
     'toolchain') res="${toolchain_scratch_file}" ;;
-    'wwwroot') res="${wwwroot_scratch_file}" ;;
   esac
   export res
 }
@@ -512,134 +506,17 @@ parse_scripts_root() {
     return "${rc}"
 }
 
-parse_wwwroot() {
-    jq -c '.wwwroot[]?' "${JSON_FILE}" | while read -r www_item; do
-        parse_wwwroot_item "${www_item}"
-    done
-}
-
-parse_wwwroot_item() {
-    www_json="${1}"
-    name=$(printf '%s' "${www_json}" | jq -r '.name')
-    name_clean="$(printf '%s' "${name}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
-    name_upper_clean="$(printf '%s' "${name_clean}" | tr '[:lower:]' '[:upper:]')"
-    version=$(printf '%s' "${www_json}" | jq -r '.version // empty')
-    path=$(printf '%s' "${www_json}" | jq -r '.path // empty')
-    env=$(printf '%s' "${www_json}" | jq -r '.env')
-    listen=$(printf '%s' "${www_json}" | jq -r '.listen // empty')
-    https_provider=$(printf '%s' "${www_json}" | jq -r '.https.provider // empty')
-    vendor='nginx' # only supported one now
-
-    extra_env_vars_as_json=''
-
-    if [ "${wwwroot_header_req}" -eq 0 ]; then
-        wwwroot_header_req=1
-        printf '\n' >> "${false_env_file}"
-        extra_before_str=$(print_header 'WWWROOT(s)' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}")
-        print_header 'WWWROOT(s)' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
-    fi
-    # shellcheck disable=SC2003
-    wwwroot_len=$(expr "${wwwroot_len}" + 1)
-
+parse_build_root() {
+    build_root="$(jq -r '.build_root' "${JSON_FILE}")"
+    rc="$?"
+    export build_root
+    [ -d "${build_root}" ] || mkdir -p "${build_root}"
+    LIBSCRIPT_BUILD_DIR="${build_root}"
+    export LIBSCRIPT_BUILD_DIR
     if [ "${verbose}" -ge 3 ]; then
-      printf 'wwwroot Item:\n'
-      printf '  Name: %s\n' "${name}"
+      printf 'Build Root: %s\n' "${build_root}"
     fi
-
-    if [ -n "${path}" ]; then
-      if [ "${verbose}" -ge 3 ] ; then printf '  Path: %s\n' "${path}"; fi
-      extra_env_vars_as_json='{"'"${name_clean}"'": "'"${path}"'"}'
-    fi
-    extra=''
-    if [ -n "${https_provider}" ]; then
-      # shellcheck disable=SC2016
-      extra=$(printf '  export WWWROOT_HTTPS_PROVIDER="${WWWROOT_'"${name_clean}"'_HTTPS_PROVIDER:-'"%s"'}"\n\n' "${https_provider}")
-      if [ "${verbose}" -ge 3 ]; then printf '  HTTPS Provider: %s\n' "${https_provider}"; fi
-    fi
-    {
-      lang_set 'docker' 'WWWROOT_'"${name_clean}"'_NAME' "${name}"
-      lang_set 'docker' 'WWWROOT_'"${name_clean}"'_VENDOR' "${vendor}"
-      lang_set 'docker' 'WWWROOT_'"${name_clean}"'_PATH' "${path:-/}"
-      lang_set 'docker' 'WWWROOT_'"${name_clean}"'_LISTEN' "${listen:-80}"
-    } | tee -a "${wwwroot_scratch_file}" "${docker_scratch_file}" >/dev/null
-    alt_if_body=$(
-      # shellcheck disable=SC2016
-      printf '  export WWWROOT_NAME="${%s:-'"%s"'}"\n' 'WWWROOT_'"${name_clean}"'_NAME' "${name}"
-      # shellcheck disable=SC2016
-      printf '  export WWWROOT_VENDOR="${%s:-'"%s"'}"\n' 'WWWROOT_'"${name_clean}"'_VENDOR' "${vendor}"
-      # shellcheck disable=SC2016
-      printf '  export WWWROOT_PATH="${%s:-'"%s"'}"\n' 'WWWROOT_'"${name_clean}"'_PATH' "${path:-/}"
-      # shellcheck disable=SC2016
-      printf '  export WWWROOT_LISTEN="${%s:-'"%s"'}"\n' "${listen:-80}" 'WWWROOT_'"${name_clean}"'_LISTEN'
-      if [ -n "${extra}" ]; then printf '%s\n' "${extra}"; fi
-
-      # shellcheck disable=SC2016
-      printf '  export WWWROOT_COMMAND_FOLDER="${%s:-}"\n' 'WWWROOT_'"${name_clean}"'_COMMAND_FOLDER'
-
-      # shellcheck disable=SC2016
-      printf '  export WWWROOT_COMMANDS_BEFORE="${%s:-}"\n' 'WWWROOT_'"${name_clean}"'_COMMANDS_BEFORE'
-
-      # shellcheck disable=SC2016
-      printf '  if [ "${WWWROOT_VENDOR:-nginx}" = '"'"'nginx'"'"' ]; then\n'
-
-      # shellcheck disable=SC2016
-      printf '    if [ ! -z "${WWWROOT_COMMANDS_BEFORE+x}" ]; then\n'
-      # shellcheck disable=SC2016
-      printf '      SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'"'"'/setup_%s.sh'"'"'\n' "${name_clean}"
-      printf '      export SCRIPT_NAME\n'
-      # shellcheck disable=SC2016
-      printf '      install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'"'"'/prelude.sh'"'"' "${SCRIPT_NAME}"\n'
-      # shellcheck disable=SC2016
-      printf '      printf '"'"'%%s'"'"' "${WWWROOT_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"\n'
-      printf '      # shellcheck disable=SC1090\n'
-      # shellcheck disable=SC2016
-      printf '      . "${SCRIPT_NAME}"\n'
-      printf '    fi\n'
-      printf '  fi\n'
-
-      # shellcheck disable=SC2016
-      printf '    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'"'"'/'"'"'"%s"'"'"'/setup.sh'"'"'\n' '${WWWROOT_COMMAND_FOLDER:-_server/nginx}'
-      printf '    export SCRIPT_NAME\n'
-      # shellcheck disable=SC1126
-      printf '    # shellcheck disable=SC1090\n'
-      # shellcheck disable=SC2016
-      printf '    if [ -f "${SCRIPT_NAME}" ]; then\n'
-      # shellcheck disable=SC2016
-      printf '      . "${SCRIPT_NAME}";\n'
-      printf '    else\n'
-      # shellcheck disable=SC2016
-      printf '      >&2 printf '"'"'Not found, SCRIPT_NAME of %%s\\n'"'"' "${SCRIPT_NAME}"\n'
-      printf '    fi\n'
-
-      printf 'fi\n\n'
-    )
-    alt_if_body_cmd=$(
-      printf '  IF NOT DEFINED WWWROOT_NAME ( SET WWWROOT_NAME="%s" )\n' "${name}"
-      printf '  IF NOT DEFINED WWWROOT_VENDOR ( SET WWWROOT_VENDOR="%s" )\n' "${vendor}"
-      printf '  IF NOT DEFINED WWWROOT_PATH ( SET WWWROOT_PATH="%s" )\n' "${path:-/}"
-      printf '  IF NOT DEFINED WWWROOT_LISTEN ( SET WWWROOT_LISTEN="%s" )\n' "${listen:-80}"
-    )
-    js="$(parse_wwwroot_builders "${www_json}" "${name_clean}")"
-    if [ -n "${extra_env_vars_as_json}" ]; then
-      extra_env_vars_as_json="$(printf '%s %s' "${extra_env_vars_as_json}" "${js}" | jq -n 'reduce inputs as $in (null; . + $in)')"
-    else
-      extra_env_vars_as_json="${js}"
-    fi
-    update_generated_files "${name_upper_clean}" "${version}" "${env}" 'wwwroot' "${dep_group_name}" "${extra_before_str}" "${alt_if_body}" "${alt_if_body_cmd}" "${extra_env_vars_as_json}"
-}
-
-# parse "builder" array within a "wwwroot" item
-parse_wwwroot_builders() {
-    www_json="${1}"
-    name="${2}"
-    printf '%s' "${www_json}" | jq -c '.builder[]?' | {
-      while read -r builder_item; do
-        parse_builder_item "${builder_item}" "${name}" 'WWWROOT_'
-      done
-      if [ "${wwwroot_len}" -ge 1 ]; then
-        printf 'wait\n\n' >> "${install_parallel_file}"
-      fi
-    }
+    return "${rc}"
 }
 
 # parse a builder item
@@ -1044,10 +921,10 @@ parse_json() {
       if [ -n "${license}" ]; then printf 'License: %s\n' "${license}" ; fi
     fi
 
+    parse_build_root
     parse_scripts_root
 
     parse_dependencies
-    parse_wwwroot
     parse_log_server
 
     docker_s="$(cat -- "${docker_scratch_file}"; printf 'a')"
@@ -1058,8 +935,7 @@ parse_json() {
       image_no_tag="$(printf '%s' "${image}" | cut -d ':' -f1)"
       dockerfile="${output_folder}"'/dockerfiles/'"${image_no_tag}"'.Dockerfile'
       for section in "${toolchain_scratch_file}" "${storage_scratch_file}" \
-                     "${server_scratch_file}" "${wwwroot_scratch_file}" \
-                     "${third_party_scratch_file}"; do
+                     "${server_scratch_file}" "${third_party_scratch_file}"; do
         docker_sec="$(cat -- "${section}"; printf 'a')"
         docker_sec="${docker_sec%a}"
         scratch2key "${section}"
@@ -1085,5 +961,5 @@ parse_json() {
     printf '%s\n\n' "${end_prelude_cmd}" >> "${install_cmd_file}"
 
     rm "${docker_scratch_file}" "${toolchain_scratch_file}" "${storage_scratch_file}" \
-       "${server_scratch_file}" "${wwwroot_scratch_file}" "${third_party_scratch_file}"
+       "${server_scratch_file}" "${third_party_scratch_file}"
 }

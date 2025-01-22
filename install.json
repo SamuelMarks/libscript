@@ -5,36 +5,7 @@
   "url": "https://github.com/SamuelMarks/libscript",
   "license": "Apache-2.0 OR MIT OR CC0",
   "scripts_root": "${LIBSCRIPT_ROOT_DIR}",
-  "wwwroot": [
-    {
-      "name": "example.com",
-      "path": "./my_symlinked_wwwroot",
-      "https": {
-        "provider": "letsencrypt"
-      },
-      "builder": [
-        {
-          "shell": "*",
-          "command_folder": "_lib/_toolchain/nodejs",
-          "env": {
-            "NODEJS_VERSION": "lts"
-          }
-        },
-        {
-          "shell": "*",
-          "commands_before": [
-            "npm i -g @angular/cli &&",
-            "npm i &&",
-            "ng build --configuration production"
-          ],
-          "output": [
-            "./dist/my-www"
-          ]
-        }
-      ],
-      "env": "WWWROOT_example_com_INSTALL"
-    }
-  ],
+  "build_root": "${LIBSCRIPT_BUILD_DIR}",
   "dependencies": {
     "required": {
       "databases": [
@@ -136,6 +107,30 @@
             },
             {
               "command_folder": "_lib/_server/python"
+            }
+          ],
+          "daemon": {
+            "os_native": true,
+            "env": [
+              "POSTGRES_URL",
+              "REDIS_URL"
+            ]
+          }
+        },
+        {
+          "name": "build-static-files0",
+          "dest": "/tmp/ng-material-scaffold",
+          "builder": [
+            {
+              "commands_before": [
+                "git_get https://github.com/SamuelMarks/ng-material-scaffold \"${BUILD_STATIC_FILES0_DEST}\" &&",
+                "npm i -g npm && npm i -g @angular/cli &&",
+                "npm i",
+                "ng build --configuration production"
+              ]
+            },
+            {
+              "command_folder": "_lib/_common/_noop"
             }
           ],
           "daemon": {

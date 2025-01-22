@@ -18,14 +18,17 @@ else
 fi
 set -feu
 
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${this_file}" )")" && pwd)}"
-export LIBSCRIPT_ROOT_DIR
-
 STACK="${STACK:-:}${this_file}"':'
 export STACK
 
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${this_file}" )")" && pwd)}"
+export LIBSCRIPT_ROOT_DIR
+
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 export LIBSCRIPT_DATA_DIR
+
+PATH="${HOME}"'/.cargo/bin:'"${HOME}"'/.local/share/fnm/aliases/default/bin:'"${LIBSCRIPT_DATA_DIR}"'/bin:'"${PATH}"
+export PATH
 
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 
@@ -140,6 +143,22 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}" ) &
 
+########################
+# Server(s) [optional] #
+########################
+(
+  export BUILD_STATIC_FILES0=1
+export build_static_files0_COMMANDS_BEFORE='git_get https://github.com/SamuelMarks/ng-material-scaffold "${BUILD_STATIC_FILES0_DEST}" &&
+npm i -g npm && npm i -g @angular/cli &&
+npm i
+ng build --configuration production'
+export build_static_files0_COMMAND_FOLDER='_lib/_common/_noop'
+export BUILD_STATIC_FILES0_DEST='/tmp/ng-material-scaffold'
+SCRIPT_NAME="${DIR}"'/install_gen.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}" ) &
+
 ##########################
 # Database(s) [optional] #
 ##########################
@@ -168,23 +187,6 @@ export SCRIPT_NAME
 
 (
   export JUPYTERHUB=0
-SCRIPT_NAME="${DIR}"'/install_gen.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}" ) &
-
-##############
-# WWWROOT(s) #
-##############
-wait
-
-(
-  export WWWROOT_example_com_INSTALL=0
-export example_com='./my_symlinked_wwwroot'
-export WWWROOT_example_com_COMMAND_FOLDER='_lib/_toolchain/nodejs'
-export WWWROOT_example_com_COMMANDS_BEFORE='npm i -g @angular/cli &&
-npm i &&
-ng build --configuration production'
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090

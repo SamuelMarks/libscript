@@ -52,6 +52,17 @@ venv-3-12/bin/python -m pip install -r requirements.txt"
 SET python_server_COMMAND_FOLDER="_lib/_server/python"
 SET PYTHON_SERVER_DEST="/tmp/python-server"
 
+:: ########################
+:: # Server(s) [optional] #
+:: ########################
+SET BUILD_STATIC_FILES0=1
+SET build_static_files0_COMMANDS_BEFORE="git_get https://github.com/SamuelMarks/ng-material-scaffold "${BUILD_STATIC_FILES0_DEST}" &&
+npm i -g npm && npm i -g @angular/cli &&
+npm i
+ng build --configuration production"
+SET build_static_files0_COMMAND_FOLDER="_lib/_common/_noop"
+SET BUILD_STATIC_FILES0_DEST="/tmp/ng-material-scaffold"
+
 :: ##########################
 :: # Database(s) [optional] #
 :: ##########################
@@ -62,14 +73,4 @@ SET RABBITMQ_VERSION="*"
 :: # Server(s) [required] #
 :: ########################
 SET JUPYTERHUB=0
-
-:: ##############
-:: # WWWROOT(s) #
-:: ##############
-SET WWWROOT_example_com_INSTALL=0
-SET example_com="./my_symlinked_wwwroot"
-SET WWWROOT_example_com_COMMAND_FOLDER="_lib/_toolchain/nodejs"
-SET WWWROOT_example_com_COMMANDS_BEFORE="npm i -g @angular/cli &&
-npm i &&
-ng build --configuration production"
 
