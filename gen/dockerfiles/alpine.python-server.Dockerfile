@@ -14,9 +14,11 @@ WORKDIR /scripts
 ARG PYTHON_SERVER=1
 
 ARG python_server_COMMANDS_BEFORE='git_get https://github.com/digitalocean/sample-python "${PYTHON_SERVER_DEST}" \
-uv venv --python 3.12 venv-3-12 \
-venv-3-12/bin/python -m ensurepip \
-venv-3-12/bin/python -m pip install -r requirements.txt'
+if [ ! -f "venv-3-12/bin/python" ]; then \
+  uv venv --python 3.12 venv-3-12 \
+  venv-3-12/bin/python -m ensurepip \
+  venv-3-12/bin/python -m pip install -r requirements.txt \
+fi'
 ARG python_server_COMMAND_FOLDER='_lib/_server/python'
 ARG PYTHON_SERVER_DEST='/tmp/python-server'
 

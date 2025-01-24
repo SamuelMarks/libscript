@@ -96,9 +96,11 @@ EOF
 ARG PYTHON_SERVER=1
 
 ARG python_server_COMMANDS_BEFORE='git_get https://github.com/digitalocean/sample-python "${PYTHON_SERVER_DEST}" \
-uv venv --python 3.12 venv-3-12 \
-venv-3-12/bin/python -m ensurepip \
-venv-3-12/bin/python -m pip install -r requirements.txt'
+if [ ! -f "venv-3-12/bin/python" ]; then \
+  uv venv --python 3.12 venv-3-12 \
+  venv-3-12/bin/python -m ensurepip \
+  venv-3-12/bin/python -m pip install -r requirements.txt \
+fi'
 ARG python_server_COMMAND_FOLDER='_lib/_server/python'
 ARG PYTHON_SERVER_DEST='/tmp/python-server'
 
@@ -140,13 +142,15 @@ EOF
 ARG BUILD_STATIC_FILES0=1
 
 ARG build_static_files0_COMMANDS_BEFORE='git_get https://github.com/SamuelMarks/ng-material-scaffold "${BUILD_STATIC_FILES0_DEST}" && \
-npm i -g npm && npm i -g @angular/cli && \
-npm i && \
-ng build --configuration production && \
-echo install -d -D "${BUILD_STATIC_FILES0_DEST}"/dist/ng-material-scaffold/browser "${LIBSCRIPT_BUILD_DIR}"/ng-material-scaffold && \
-install -d -D "${BUILD_STATIC_FILES0_DEST}"/dist/ng-material-scaffold/browser "${LIBSCRIPT_BUILD_DIR}"/ng-material-scaffold && \
-echo GOT HERE && \
-echo GOT FURTHER FURTHER HERE'
+hash=$(git rev-list HEAD -1) \
+hash_f=dist/ng-material-scaffold/browser/"${hash}" \
+if [ ! -f "${hash_f}" ]; then \
+  npm i -g npm && npm i -g @angular/cli && \
+  npm i && \
+  ng build --configuration production && \
+  touch "${hash_f}" \
+  install -d -D "${BUILD_STATIC_FILES0_DEST}"/dist/ng-material-scaffold/browser "${LIBSCRIPT_BUILD_DIR}"/ng-material-scaffold \
+fi'
 ARG build_static_files0_COMMAND_FOLDER='_lib/_common/_noop'
 ARG BUILD_STATIC_FILES0_DEST='/tmp/ng-material-scaffold'
 

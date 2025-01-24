@@ -76,10 +76,31 @@ clear_environment() {
 # unset ENV_SAVED_FILE
 
 object2key_val() {
-  obj="${1}"
+  obj="$1"
   prefix="${2:-}"
-  q="${3:-\'}"
-  s=''
-  if [ "${q}" = '"' ]; then s='=';  fi
-  printf '%s' "${obj}" | jq --arg q "${q}" -rc '. | to_entries[] | "'"${prefix}"'"+ .key + (if .value == null then "'"${s}"'" else if (.value | type) == "array" then "=" + $q + (.value | join("\n")) + $q else "=" + $q + (.value | tostring) + $q end end)'
+  sq="'"
+  q="${3:-$sq}"
+  s='='
+  #s=''
+  #if [ "${q}" = '"' ]; then s='=';  fi
+
+  printf '%s' "$obj" | jq --arg q "${q}" --arg sq "${sq}" --arg dq '"' -r '
+    def custom_format(value):
+      if value == null then
+        ""
+      elif value | type == "number" then
+        "\(value)"
+      elif value | type == "string" then
+        if value | any(.; test("^[0-9]+$", $sq, $dq)) then
+          value
+        else
+          $q + value + $q
+        end
+      elif value | type == "array" then
+        $q + (value | join(",")) + $q
+      else
+        "\(value)"
+      end;
+    to_entries[] | "'"${prefix}"'\(.key)'"${s}"'\(custom_format(.value))"
+  '
 }

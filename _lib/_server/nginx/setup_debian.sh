@@ -74,29 +74,31 @@ if [ ! -z "${VARS+x}" ]; then
   . "${SCRIPT_NAME}"
 
   # shellcheck disable=SC1090
-  OTHER_SCRIPT_FILE="${LIBSCRIPT_DATA_DIR}"'/libscript.other.sh'
-  install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe.sh' "${OTHER_SCRIPT_FILE}"
-  {
-    object2key_val "${VARS}" 'export ' ''
-    cat "${DIR}"'/scratch.sh'
-  } >> "${OTHER_SCRIPT_FILE}"
+  OTHER_SCRIPT_FILE=$(mktemp -t 'libscript_XXX_other')
+  ENV_SCRIPT_FILE=$(mktemp -t 'libscript_XXX_env')
+  SITE_CONF_FILE=$(mktemp -t 'libscript_XXX_site_conf')
 
-  SITE_CONF_FILENAME="${LIBSCRIPT_DATA_DIR}"'/SITE_CONF_FILENAME'
+  install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe.sh' "${OTHER_SCRIPT_FILE}"
+  object2key_val "${VARS}" 'export ' "'" > "${ENV_SCRIPT_FILE}"
+  cat "${ENV_SCRIPT_FILE}" "${DIR}"'/scratch.sh' >> "${OTHER_SCRIPT_FILE}"
+
   env -i PATH="${PATH}" \
-         SITE_CONF_FILENAME="${SITE_CONF_FILENAME}" \
-         LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" \
+         SITE_CONF_FILENAME="${SITE_CONF_FILE}" \
+         LIBSCRIPT_BUILD_DIR="${LIBSCRIPT_BUILD_DIR}" \
          LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR}" \
+         LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" \
          /bin/sh "${OTHER_SCRIPT_FILE}"
-  cat "${OTHER_SCRIPT_FILE}"
-  site_conf="$(cat -- "${SITE_CONF_FILENAME}"; printf 'a')"
+  site_conf="$(cat -- "${SITE_CONF_FILE}"; printf 'a')"
   site_conf="${site_conf%a}"
+  # shellcheck disable=SC1090
+  SERVER_NAME="$(. "${ENV_SCRIPT_FILE}"; printf '%s' "${SERVER_NAME}")"
 
   # TODO: each location in separate 'fragment'; then merge them into one `server {}`
   # TODO: final thing joins them all to avoid race condition; rather than this next line:
+  "${PRIV}" install "${site_conf}" '/etc/nginx/conf.d/'"${SERVER_NAME}"'.conf'
 
-  "${PRIV}" cp "${site_conf}" '/etc/nginx/conf.d/'"${SERVER_NAME}"'TEST_TEST.conf'
-
-  rm -f "${SITE_CONF_FILENAME}" "${OTHER_SCRIPT_FILE}"
+  rm -f "${SITE_CONF_FILE}" "${OTHER_SCRIPT_FILE}" "${ENV_SCRIPT_FILE}"
   unset OTHER_SCRIPT_FILE
-  unset SITE_CONF_FILENAME
+  unset SITE_CONF_FILE
+  unset ENV_SCRIPT_FILE
 fi

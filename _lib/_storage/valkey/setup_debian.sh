@@ -76,7 +76,7 @@ target="${VALKEY_BUILD_DIR}"'/valkey'
 git_get https://github.com/valkey-io/valkey "${target}"
 # shellcheck disable=SC2164
 cd "${target}"
-hash="$(git log --format='format:%H' -1)"
+hash="$(git rev-list HEAD -1)"
 
 build_install() {
   [ -d 'build' ] || mkdir -p 'build'

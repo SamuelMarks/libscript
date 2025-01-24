@@ -57,12 +57,10 @@ export SCRIPT_NAME
 
 if cmd_avail node ; then
   version="$(node --version)"
-  printf '${version} = "%s"\n' "${version}"
   if [ "${version}" = "${NODEJS_VERSION}" ]; then
     return
   fi
 fi
-printf '${NODEJS_VERSION} = "%s"\n' "${NODEJS_VERSION}"
 
 # TODO: latest version dance function and wrap this up
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
