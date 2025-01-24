@@ -38,7 +38,6 @@ previous_wd="$(pwd)"
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
-printf 'DIR here = %s\n' "${DIR}"
 
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
 export SCRIPT_NAME
@@ -77,19 +76,39 @@ target="${VALKEY_BUILD_DIR}"'/valkey'
 git_get https://github.com/valkey-io/valkey "${target}"
 # shellcheck disable=SC2164
 cd "${target}"
-make BUILD_TLS='yes' USE_SYSTEMD='yes'
-"${PRIV}" make install
+hash="$(git log --format='format:%H' -1)"
+
+build_install() {
+  [ -d 'build' ] || mkdir -p 'build'
+  touch 'build/'"${hash}"
+  make BUILD_TLS='yes' USE_SYSTEMD='yes'
+  "${PRIV}" make install
+}
+
+noop=0
+
+if [ -f 'build/'"${hash}" ]; then
+  noop=1
+elif [ -f './src/rand.o' ]; then
+  make distclean
+  build_install
+else
+  build_install
+fi
+
 
 # shellcheck disable=SC2164
 cd "${previous_wd}"
 
-service_name='valkey'
-"${PRIV}" systemctl stop "${service_name}" || true
-"${PRIV}" install -m 0644 -o 'root' -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/conf/valkey.conf' /etc/
-"${PRIV}" install -m 0644 -o 'root' -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/conf/systemd/'"${service_name}"'.service' /etc/systemd/system/
-"${PRIV}" systemctl daemon-reload
-"${PRIV}" systemctl stop "${service_name}" || true
-"${PRIV}" systemctl start "${service_name}"
+if [ "${noop}" -eq 0 ]; then
+  service_name='valkey'
+  "${PRIV}" systemctl stop "${service_name}" || true
+  "${PRIV}" install -m 0644 -o 'root' -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/conf/valkey.conf' /etc/
+  "${PRIV}" install -m 0644 -o 'root' -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/conf/systemd/'"${service_name}"'.service' /etc/systemd/system/
+  "${PRIV}" systemctl daemon-reload
+  "${PRIV}" systemctl stop "${service_name}" || true
+  "${PRIV}" systemctl start "${service_name}"
+fi
 
 [ -d "${LIBSCRIPT_DATA_DIR}" ] || mkdir -p "${LIBSCRIPT_DATA_DIR}"
 val='redis://localhost'
