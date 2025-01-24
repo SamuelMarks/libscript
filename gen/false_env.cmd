@@ -34,6 +34,11 @@ SET PYTHON_SERVER=0
 :: ########################
 SET BUILD_STATIC_FILES0=0
 
+:: ########################
+:: # Server(s) [optional] #
+:: ########################
+SET NGINX_CONFIG_BUILDER=0
+
 :: ##########################
 :: # Database(s) [optional] #
 :: ##########################

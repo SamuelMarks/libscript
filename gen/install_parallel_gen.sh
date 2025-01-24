@@ -24,6 +24,9 @@ export STACK
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${this_file}" )")" && pwd)}"
 export LIBSCRIPT_ROOT_DIR
 
+LIBSCRIPT_BUILD_DIR="${LIBSCRIPT_BUILD_DIR:-${TMPDIR:-/tmp}/libscript_build}"
+export LIBSCRIPT_BUILD_DIR
+
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 export LIBSCRIPT_DATA_DIR
 
@@ -150,10 +153,26 @@ export SCRIPT_NAME
   export BUILD_STATIC_FILES0=1
 export build_static_files0_COMMANDS_BEFORE='git_get https://github.com/SamuelMarks/ng-material-scaffold "${BUILD_STATIC_FILES0_DEST}" &&
 npm i -g npm && npm i -g @angular/cli &&
-npm i
-ng build --configuration production'
+npm i &&
+ng build --configuration production &&
+echo install -d -D "${BUILD_STATIC_FILES0_DEST}"/dist/ng-material-scaffold/browser "${LIBSCRIPT_BUILD_DIR}"/ng-material-scaffold &&
+install -d -D "${BUILD_STATIC_FILES0_DEST}"/dist/ng-material-scaffold/browser "${LIBSCRIPT_BUILD_DIR}"/ng-material-scaffold &&
+echo GOT HERE &&
+echo GOT FURTHER FURTHER HERE'
 export build_static_files0_COMMAND_FOLDER='_lib/_common/_noop'
 export BUILD_STATIC_FILES0_DEST='/tmp/ng-material-scaffold'
+SCRIPT_NAME="${DIR}"'/install_gen.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}" ) &
+
+########################
+# Server(s) [optional] #
+########################
+(
+  export NGINX_CONFIG_BUILDER=1
+export nginx_config_builder_COMMAND_FOLDER='_lib/_server/nginx'
+export NGINX_CONFIG_BUILDER_VARS='{"SERVER_NAME":"example.com","WWWROOT":"\"${LIBSCRIPT_BUILD_DIR}\"/ng-material-scaffold","HTTPS_ALWAYS":1,"HTTPS_VENDOR":"letsencrypt"}'
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090

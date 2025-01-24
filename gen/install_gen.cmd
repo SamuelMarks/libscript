@@ -137,6 +137,20 @@ IF "%BUILD_STATIC_FILES0%"==1 (
   CALL "%SCRIPT_NAME%"
 )
 
+:: ########################
+:: # Server(s) [optional] #
+:: ########################
+IF NOT DEFINED NGINX_CONFIG_BUILDER ( SET NGINX_CONFIG_BUILDER=1 )
+IF "%NGINX_CONFIG_BUILDER%"==1 (
+  SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\app\third_party\nginx-config-builder\setup.cmd"
+  IF NOT EXIST "%SCRIPT_NAME%" (
+    >&2 ECHO File not found "%SCRIPT_NAME%"
+    SET ERRORLEVEL=2
+    GOTO end
+  )
+  CALL "%SCRIPT_NAME%"
+)
+
 :: ##########################
 :: # Database(s) [optional] #
 :: ##########################

@@ -53,6 +53,7 @@ wait
 docker build --file 'dockerfiles/alpine.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-':'dockerfiles/alpine-latest' . &
 docker build --file 'dockerfiles/alpine.build-static-files0.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-build-static-files0':'dockerfiles/alpine-latest' . &
 docker build --file 'dockerfiles/alpine.jupyterhub.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-jupyterhub':'dockerfiles/alpine-latest' . &
+docker build --file 'dockerfiles/alpine.nginx-config-builder.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-nginx-config-builder':'dockerfiles/alpine-latest' . &
 docker build --file 'dockerfiles/alpine.nodejs-http-server.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-nodejs-http-server':'dockerfiles/alpine-latest' . &
 docker build --file 'dockerfiles/alpine.nodejs.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-nodejs':'dockerfiles/alpine-latest' . &
 docker build --file 'dockerfiles/alpine.postgres.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-postgres':'dockerfiles/alpine-latest' . &
@@ -65,6 +66,7 @@ docker build --file 'dockerfiles/alpine.valkey.Dockerfile' --progress='plain' --
 docker build --file 'dockerfiles/debian.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-':'dockerfiles/debian-latest' . &
 docker build --file 'dockerfiles/debian.build-static-files0.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-build-static-files0':'dockerfiles/debian-latest' . &
 docker build --file 'dockerfiles/debian.jupyterhub.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-jupyterhub':'dockerfiles/debian-latest' . &
+docker build --file 'dockerfiles/debian.nginx-config-builder.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-nginx-config-builder':'dockerfiles/debian-latest' . &
 docker build --file 'dockerfiles/debian.nodejs-http-server.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-nodejs-http-server':'dockerfiles/debian-latest' . &
 docker build --file 'dockerfiles/debian.nodejs.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-nodejs':'dockerfiles/debian-latest' . &
 docker build --file 'dockerfiles/debian.postgres.Dockerfile' --progress='plain' --no-cache --tag 'deploysh-postgres':'dockerfiles/debian-latest' . &

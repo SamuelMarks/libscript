@@ -55,7 +55,9 @@ if [ ! -f "${install_file}" ]; then printf '%s\n\n' "${prelude}" > "${install_fi
 if [ ! -f "${install_parallel_file}" ]; then printf '%s\nDIR=$(CDPATH='"''"' cd -- "$(dirname -- "${this_file}")" && pwd)\n\n' "${prelude}"  > "${install_parallel_file}" ; fi
 if [ ! -f "${true_env_file}" ]; then
   # shellcheck disable=SC2016
-  printf '#!/bin/sh\n\n%s\nexport LIBSCRIPT_DATA_DIR\n\n' 'LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"' > "${true_env_file}"
+  printf '#!/bin/sh\n\n%s\nexport LIBSCRIPT_DATA_DIR\n\n' \
+    'LIBSCRIPT_BUILD_DIR="${LIBSCRIPT_BUILD_DIR:-${TMPDIR:-/tmp}/libscript_build}"' \
+    'LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"' > "${true_env_file}"
 fi
 if [ ! -f "${false_env_file}" ]; then printf '#!/bin/sh\n' > "${false_env_file}" ; fi
 if [ ! -e "${_lib_folder}" ]; then cp -r "${LIBSCRIPT_ROOT_DIR}"'/_lib' "${_lib_folder}" ; fi
@@ -378,13 +380,16 @@ update_generated_files() {
     printf '    [ -d "${DEST}" ] || mkdir -p "${DEST}"\n'
     printf '    cd "${DEST}"\n'
     printf '  fi\n'
+    printf '  if [ ! -z "${%s_VARS+x}" ]; then\n' "${name_upper_clean}"
+    printf '    export VARS="${%s_VARS}"\n' "${name_upper_clean}"
+    printf '  fi\n'
     if [ -n "${alt_if_body}" ]; then
       printf '%s\n' "${alt_if_body}"
     else
       # shellcheck disable=SC2016
       printf '  if [ ! -z "${%s_COMMANDS_BEFORE+x}" ]; then\n' "${name_clean}"
       # shellcheck disable=SC2016
-      printf '    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'"'"'/setup_before_%s.sh'"'"'\n' "${name_lower_clean}"
+      printf '    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'"'"'/setup_before_%s.sh'"'"'\n' "${name_lower_clean}"
       printf '    export SCRIPT_NAME\n'
       # shellcheck disable=SC2016
       printf '    install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'"'"'/prelude.sh'"'"' "${SCRIPT_NAME}"\n'
@@ -716,6 +721,7 @@ parse_server_item() {
     version=$(printf '%s' "${server_json}" | jq -r '.version // empty')
     location=$(printf '%s' "${server_json}" | jq -r '.location // empty')
     dest=$(printf '%s' "${server_json}" | jq -r '.dest // empty')
+    vars=$(printf '%s' "${server_json}" | jq -r '.vars // empty')
 
     extra_env_vars_as_json=''
     name_clean="$(printf '%s' "${name}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
@@ -749,6 +755,14 @@ parse_server_item() {
 
         if [ "${verbose}" -ge 3 ] ; then
           printf '    Dest: %s\n' "${dest}"
+        fi
+      fi
+      if [ -n "${vars}" ]; then
+        js="$(printf '{"%s_VARS": %s}' "${name_upper_clean}" "${vars}")"
+        extra_env_vars_as_json="$(printf '%s %s' "${extra_env_vars_as_json}" "${js}" | jq -n 'reduce inputs as $in (null; . + $in)')"
+
+        if [ "${verbose}" -ge 3 ] ; then
+          printf '    Vars: %s\n' "${vars}"
         fi
       fi
       update_generated_files "${name}" "${version}" "${name_upper}" 'app/third_party' "${dep_group_name}" "${extra_before_str}" '' '' "${extra_env_vars_as_json}"

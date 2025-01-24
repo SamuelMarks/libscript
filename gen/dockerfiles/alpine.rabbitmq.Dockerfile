@@ -1,6 +1,8 @@
 FROM alpine:latest
 
 ENV LIBSCRIPT_ROOT_DIR='/scripts'
+ENV LIBSCRIPT_BUILD_DIR='/libscript_build'
+ENV LIBSCRIPT_DATA_DIR='/libscript_data'
 
 
 COPY . /scripts
@@ -22,8 +24,11 @@ if [ "${AMQP_URL:-0}" -eq 1 ]; then
     [ -d "${DEST}" ] || mkdir -p "${DEST}"
     cd "${DEST}"
   fi
+  if [ ! -z "${RABBITMQ_VARS+x}" ]; then
+    export VARS="${RABBITMQ_VARS}"
+  fi
   if [ ! -z "${RABBITMQ_COMMANDS_BEFORE+x}" ]; then
-    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_before_rabbitmq.sh'
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_rabbitmq.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
     printf '%s' "${RABBITMQ_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"

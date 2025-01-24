@@ -67,3 +67,36 @@ if [ "${run_before}" -eq 0 ]; then
 fi
 
 # TODO: Install to sites-available
+if [ ! -z "${VARS+x}" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/environ.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+
+  # shellcheck disable=SC1090
+  OTHER_SCRIPT_FILE="${LIBSCRIPT_DATA_DIR}"'/libscript.other.sh'
+  install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe.sh' "${OTHER_SCRIPT_FILE}"
+  {
+    object2key_val "${VARS}" 'export ' ''
+    cat "${DIR}"'/scratch.sh'
+  } >> "${OTHER_SCRIPT_FILE}"
+
+  SITE_CONF_FILENAME="${LIBSCRIPT_DATA_DIR}"'/SITE_CONF_FILENAME'
+  env -i PATH="${PATH}" \
+         SITE_CONF_FILENAME="${SITE_CONF_FILENAME}" \
+         LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" \
+         LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR}" \
+         /bin/sh "${OTHER_SCRIPT_FILE}"
+  cat "${OTHER_SCRIPT_FILE}"
+  site_conf="$(cat -- "${SITE_CONF_FILENAME}"; printf 'a')"
+  site_conf="${site_conf%a}"
+
+  # TODO: each location in separate 'fragment'; then merge them into one `server {}`
+  # TODO: final thing joins them all to avoid race condition; rather than this next line:
+
+  "${PRIV}" cp "${site_conf}" '/etc/nginx/conf.d/'"${SERVER_NAME}"'TEST_TEST.conf'
+
+  rm -f "${SITE_CONF_FILENAME}" "${OTHER_SCRIPT_FILE}"
+  unset OTHER_SCRIPT_FILE
+  unset SITE_CONF_FILENAME
+fi

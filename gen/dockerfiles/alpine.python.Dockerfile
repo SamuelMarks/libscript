@@ -1,6 +1,8 @@
 FROM alpine:latest
 
 ENV LIBSCRIPT_ROOT_DIR='/scripts'
+ENV LIBSCRIPT_BUILD_DIR='/libscript_build'
+ENV LIBSCRIPT_DATA_DIR='/libscript_data'
 
 
 COPY . /scripts
@@ -22,8 +24,11 @@ if [ "${PYTHON_INSTALL_DIR:-1}" -eq 1 ]; then
     [ -d "${DEST}" ] || mkdir -p "${DEST}"
     cd "${DEST}"
   fi
+  if [ ! -z "${PYTHON_VARS+x}" ]; then
+    export VARS="${PYTHON_VARS}"
+  fi
   if [ ! -z "${PYTHON_COMMANDS_BEFORE+x}" ]; then
-    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_before_python.sh'
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_python.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
     printf '%s' "${PYTHON_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"

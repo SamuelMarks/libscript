@@ -1,6 +1,8 @@
 FROM alpine:latest
 
 ENV LIBSCRIPT_ROOT_DIR='/scripts'
+ENV LIBSCRIPT_BUILD_DIR='/libscript_build'
+ENV LIBSCRIPT_DATA_DIR='/libscript_data'
 
 
 COPY . /scripts
@@ -13,8 +15,12 @@ ARG BUILD_STATIC_FILES0=1
 
 ARG build_static_files0_COMMANDS_BEFORE='git_get https://github.com/SamuelMarks/ng-material-scaffold "${BUILD_STATIC_FILES0_DEST}" && \
 npm i -g npm && npm i -g @angular/cli && \
-npm i \
-ng build --configuration production'
+npm i && \
+ng build --configuration production && \
+echo install -d -D "${BUILD_STATIC_FILES0_DEST}"/dist/ng-material-scaffold/browser "${LIBSCRIPT_BUILD_DIR}"/ng-material-scaffold && \
+install -d -D "${BUILD_STATIC_FILES0_DEST}"/dist/ng-material-scaffold/browser "${LIBSCRIPT_BUILD_DIR}"/ng-material-scaffold && \
+echo GOT HERE && \
+echo GOT FURTHER FURTHER HERE'
 ARG build_static_files0_COMMAND_FOLDER='_lib/_common/_noop'
 ARG BUILD_STATIC_FILES0_DEST='/tmp/ng-material-scaffold'
 
@@ -28,8 +34,11 @@ if [ "${BUILD_STATIC_FILES0:-1}" -eq 1 ]; then
     [ -d "${DEST}" ] || mkdir -p "${DEST}"
     cd "${DEST}"
   fi
+  if [ ! -z "${BUILD_STATIC_FILES0_VARS+x}" ]; then
+    export VARS="${BUILD_STATIC_FILES0_VARS}"
+  fi
   if [ ! -z "${build_static_files0_COMMANDS_BEFORE+x}" ]; then
-    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_before_build-static-files0.sh'
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_build-static-files0.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
     printf '%s' "${build_static_files0_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"

@@ -1,6 +1,8 @@
 FROM debian:bookworm-slim
 
 ENV LIBSCRIPT_ROOT_DIR='/scripts'
+ENV LIBSCRIPT_BUILD_DIR='/libscript_build'
+ENV LIBSCRIPT_DATA_DIR='/libscript_data'
 
 
 COPY . /scripts
@@ -22,8 +24,11 @@ if [ "${RUST_INSTALL_DIR:-1}" -eq 1 ]; then
     [ -d "${DEST}" ] || mkdir -p "${DEST}"
     cd "${DEST}"
   fi
+  if [ ! -z "${RUST_VARS+x}" ]; then
+    export VARS="${RUST_VARS}"
+  fi
   if [ ! -z "${RUST_COMMANDS_BEFORE+x}" ]; then
-    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_before_rust.sh'
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_rust.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
     printf '%s' "${RUST_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"

@@ -41,11 +41,9 @@ export SCRIPT_NAME
 NODEJS_VERSION_LTS='v22.13.1'
 # latest lts ^
 
-printf 'b4 ${NODEJS_VERSION} = "%s"\n' "${NODEJS_VERSION}"
 if [ "${NODEJS_VERSION}" = 'lts' ]; then
   NODEJS_VERSION="${NODEJS_VERSION_LTS}"
 fi
-printf 'l8 ${NODEJS_VERSION} = "%s"\n' "${NODEJS_VERSION}"
 
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/common.sh'
 export SCRIPT_NAME

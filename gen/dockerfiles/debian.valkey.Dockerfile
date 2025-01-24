@@ -1,6 +1,8 @@
 FROM debian:bookworm-slim
 
 ENV LIBSCRIPT_ROOT_DIR='/scripts'
+ENV LIBSCRIPT_BUILD_DIR='/libscript_build'
+ENV LIBSCRIPT_DATA_DIR='/libscript_data'
 
 
 COPY . /scripts
@@ -20,8 +22,11 @@ if [ "${REDIS_URL:-1}" -eq 1 ]; then
     [ -d "${DEST}" ] || mkdir -p "${DEST}"
     cd "${DEST}"
   fi
+  if [ ! -z "${VALKEY_VARS+x}" ]; then
+    export VARS="${VALKEY_VARS}"
+  fi
   if [ ! -z "${VALKEY_COMMANDS_BEFORE+x}" ]; then
-    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"'/setup_before_valkey.sh'
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_valkey.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
     printf '%s' "${VALKEY_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
