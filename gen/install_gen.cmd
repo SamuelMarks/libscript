@@ -140,9 +140,65 @@ IF "%BUILD_STATIC_FILES0%"==1 (
 :: ########################
 :: # Server(s) [optional] #
 :: ########################
-IF NOT DEFINED NGINX_CONFIG_BUILDER ( SET NGINX_CONFIG_BUILDER=1 )
-IF "%NGINX_CONFIG_BUILDER%"==1 (
-  SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\app\third_party\nginx-config-builder\setup.cmd"
+IF NOT DEFINED NGINX_CONFIG_BUILDER__FRONTEND ( SET NGINX_CONFIG_BUILDER__FRONTEND=1 )
+IF "%NGINX_CONFIG_BUILDER__FRONTEND%"==1 (
+  SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\app\third_party\nginx-config-builder__frontend\setup.cmd"
+  IF NOT EXIST "%SCRIPT_NAME%" (
+    >&2 ECHO File not found "%SCRIPT_NAME%"
+    SET ERRORLEVEL=2
+    GOTO end
+  )
+  CALL "%SCRIPT_NAME%"
+)
+
+:: ########################
+:: # Server(s) [optional] #
+:: ########################
+IF NOT DEFINED NGINX_CONFIG_BUILDER__DOCS ( SET NGINX_CONFIG_BUILDER__DOCS=1 )
+IF "%NGINX_CONFIG_BUILDER__DOCS%"==1 (
+  SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\app\third_party\nginx-config-builder__docs\setup.cmd"
+  IF NOT EXIST "%SCRIPT_NAME%" (
+    >&2 ECHO File not found "%SCRIPT_NAME%"
+    SET ERRORLEVEL=2
+    GOTO end
+  )
+  CALL "%SCRIPT_NAME%"
+)
+
+:: ########################
+:: # Server(s) [optional] #
+:: ########################
+IF NOT DEFINED NGINX_CONFIG_BUILDER__CRAWL ( SET NGINX_CONFIG_BUILDER__CRAWL=1 )
+IF "%NGINX_CONFIG_BUILDER__CRAWL%"==1 (
+  SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\app\third_party\nginx-config-builder__crawl\setup.cmd"
+  IF NOT EXIST "%SCRIPT_NAME%" (
+    >&2 ECHO File not found "%SCRIPT_NAME%"
+    SET ERRORLEVEL=2
+    GOTO end
+  )
+  CALL "%SCRIPT_NAME%"
+)
+
+:: ########################
+:: # Server(s) [optional] #
+:: ########################
+IF NOT DEFINED NGINX_CONFIG_BUILDER__SWAP ( SET NGINX_CONFIG_BUILDER__SWAP=1 )
+IF "%NGINX_CONFIG_BUILDER__SWAP%"==1 (
+  SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\app\third_party\nginx-config-builder__swap\setup.cmd"
+  IF NOT EXIST "%SCRIPT_NAME%" (
+    >&2 ECHO File not found "%SCRIPT_NAME%"
+    SET ERRORLEVEL=2
+    GOTO end
+  )
+  CALL "%SCRIPT_NAME%"
+)
+
+:: ########################
+:: # Server(s) [optional] #
+:: ########################
+IF NOT DEFINED NGINX_CONFIG_BUILDER__DATA ( SET NGINX_CONFIG_BUILDER__DATA=1 )
+IF "%NGINX_CONFIG_BUILDER__DATA%"==1 (
+  SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\app\third_party\nginx-config-builder__data\setup.cmd"
   IF NOT EXIST "%SCRIPT_NAME%" (
     >&2 ECHO File not found "%SCRIPT_NAME%"
     SET ERRORLEVEL=2

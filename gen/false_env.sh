@@ -39,7 +39,27 @@ export BUILD_STATIC_FILES0=0
 ########################
 # Server(s) [optional] #
 ########################
-export NGINX_CONFIG_BUILDER=0
+export NGINX_CONFIG_BUILDER__FRONTEND=0
+
+########################
+# Server(s) [optional] #
+########################
+export NGINX_CONFIG_BUILDER__DOCS=0
+
+########################
+# Server(s) [optional] #
+########################
+export NGINX_CONFIG_BUILDER__CRAWL=0
+
+########################
+# Server(s) [optional] #
+########################
+export NGINX_CONFIG_BUILDER__SWAP=0
+
+########################
+# Server(s) [optional] #
+########################
+export NGINX_CONFIG_BUILDER__DATA=0
 
 
 ##########################

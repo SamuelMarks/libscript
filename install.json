@@ -143,7 +143,7 @@
           ]
         },
         {
-          "name": "nginx-config-builder",
+          "name": "nginx-config-builder__frontend",
           "builder": [
             {
               "command_folder": "_lib/_server/nginx"
@@ -154,6 +154,68 @@
             "WWWROOT": "\"${LIBSCRIPT_BUILD_DIR}\"/ng-material-scaffold",
             "HTTPS_ALWAYS": 1,
             "HTTPS_VENDOR": "letsencrypt"
+          }
+        },
+        {
+          "name": "nginx-config-builder__docs",
+          "builder": [
+            {
+              "command_folder": "_lib/_server/nginx"
+            }
+          ],
+          "vars": {
+            "SERVER_NAME": "example.com",
+            "LOCATION_EXPR": "~* /(api|redoc|rapidoc|scalar|secured)",
+            "HTTPS_ALWAYS": 1,
+            "HTTPS_VENDOR": "letsencrypt",
+            "PROXY_PASS": "http://localhost:3000"
+          }
+        },
+        {
+          "name": "nginx-config-builder__crawl",
+          "builder": [
+            {
+              "command_folder": "_lib/_server/nginx"
+            }
+          ],
+          "vars": {
+            "SERVER_NAME": "example.com",
+            "LOCATION_EXPR": "/v1/crawl",
+            "HTTPS_ALWAYS": 1,
+            "HTTPS_VENDOR": "letsencrypt",
+            "PROXY_PASS": "http://localhost:3002"
+          }
+        },
+        {
+          "name": "nginx-config-builder__swap",
+          "builder": [
+            {
+              "command_folder": "_lib/_server/nginx"
+            }
+          ],
+          "vars": {
+            "SERVER_NAME": "example.com",
+            "LOCATION_EXPR": "/v1/swap",
+            "HTTPS_ALWAYS": 1,
+            "HTTPS_VENDOR": "letsencrypt",
+            "PROXY_WEBSOCKETS": 1,
+            "PROXY_PASS": "http://localhost:3003"
+          }
+        },
+        {
+          "name": "nginx-config-builder__data",
+          "builder": [
+            {
+              "command_folder": "_lib/_server/nginx"
+            }
+          ],
+          "vars": {
+            "SERVER_NAME": "example.com",
+            "LOCATION_EXPR": "/data",
+            "HTTPS_ALWAYS": 1,
+            "HTTPS_VENDOR": "letsencrypt",
+            "WWWROOT": "/opt/repos/E4S2024",
+            "PROXY_PASS": "http://localhost:3003"
           }
         }
       ]

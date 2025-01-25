@@ -65,10 +65,30 @@ fi'
 ARG build_static_files0_COMMAND_FOLDER='_lib/_common/_noop'
 ARG BUILD_STATIC_FILES0_DEST='/tmp/ng-material-scaffold'
 
-ARG NGINX_CONFIG_BUILDER=1
+ARG NGINX_CONFIG_BUILDER__FRONTEND=1
 
-ARG nginx_config_builder_COMMAND_FOLDER='_lib/_server/nginx'
-ARG NGINX_CONFIG_BUILDER_VARS='{"SERVER_NAME":"example.com","WWWROOT":"\"${LIBSCRIPT_BUILD_DIR}\"/ng-material-scaffold","HTTPS_ALWAYS":1,"HTTPS_VENDOR":"letsencrypt"}'
+ARG nginx_config_builder__frontend_COMMAND_FOLDER='_lib/_server/nginx'
+ARG NGINX_CONFIG_BUILDER__FRONTEND_VARS='{"SERVER_NAME":"example.com","WWWROOT":"\"${LIBSCRIPT_BUILD_DIR}\"/ng-material-scaffold","HTTPS_ALWAYS":1,"HTTPS_VENDOR":"letsencrypt"}'
+
+ARG NGINX_CONFIG_BUILDER__DOCS=1
+
+ARG nginx_config_builder__docs_COMMAND_FOLDER='_lib/_server/nginx'
+ARG NGINX_CONFIG_BUILDER__DOCS_VARS='{"SERVER_NAME":"example.com","LOCATION_EXPR":"~* /(api|redoc|rapidoc|scalar|secured)","HTTPS_ALWAYS":1,"HTTPS_VENDOR":"letsencrypt","PROXY_PASS":"http://localhost:3000"}'
+
+ARG NGINX_CONFIG_BUILDER__CRAWL=1
+
+ARG nginx_config_builder__crawl_COMMAND_FOLDER='_lib/_server/nginx'
+ARG NGINX_CONFIG_BUILDER__CRAWL_VARS='{"SERVER_NAME":"example.com","LOCATION_EXPR":"/v1/crawl","HTTPS_ALWAYS":1,"HTTPS_VENDOR":"letsencrypt","PROXY_PASS":"http://localhost:3002"}'
+
+ARG NGINX_CONFIG_BUILDER__SWAP=1
+
+ARG nginx_config_builder__swap_COMMAND_FOLDER='_lib/_server/nginx'
+ARG NGINX_CONFIG_BUILDER__SWAP_VARS='{"SERVER_NAME":"example.com","LOCATION_EXPR":"/v1/swap","HTTPS_ALWAYS":1,"HTTPS_VENDOR":"letsencrypt","PROXY_WEBSOCKETS":1,"PROXY_PASS":"http://localhost:3003"}'
+
+ARG NGINX_CONFIG_BUILDER__DATA=1
+
+ARG nginx_config_builder__data_COMMAND_FOLDER='_lib/_server/nginx'
+ARG NGINX_CONFIG_BUILDER__DATA_VARS='{"SERVER_NAME":"example.com","LOCATION_EXPR":"/data","HTTPS_ALWAYS":1,"HTTPS_VENDOR":"letsencrypt","WWWROOT":"/opt/repos/E4S2024","PROXY_PASS":"http://localhost:3003"}'
 
 ARG AMQP_URL=0
 ARG RABBITMQ_VERSION='*'

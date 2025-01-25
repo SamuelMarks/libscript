@@ -66,39 +66,115 @@ if [ "${run_before}" -eq 0 ]; then
   apt_depends nginx
 fi
 
-# TODO: Install to sites-available
+rtrim() {
+  trimmed="${1}"
+  while :
+  do
+    case "$trimmed" in
+      *[[:space:]] )
+          trimmed=${trimmed%?}
+          ;;
+      * )
+          break
+          ;;
+    esac
+  done
+  printf '%s' "$trimmed"
+}
+
+merge_location_into_nginx_server() {
+  conf_existing="${1}"
+  location_conf="${2}"
+
+  if [ -z "${conf_existing}" ]; then
+    >&2 printf 'Error: conf_existing is empty.\n'
+    return 1
+  fi
+
+  if [ -z "${location_conf}" ]; then
+    >&2 printf 'Error: location_conf is empty.\n'
+    return 1
+  fi
+
+  if printf '%s' "${conf_existing}" | grep -qF "${location_conf}"; then
+    return
+  fi
+  >&2 printf 'merge_location_into_nginx_server::conf_existing "%s"\n' "${conf_existing}"
+  >&2 printf 'merge_location_into_nginx_server::location_conf "%s"\n\n' "${location_conf}"
+
+  rtrimmed_conf=$(rtrim "${conf_existing}")
+  printf '%s%s\n}\n' "${rtrimmed_conf%}" "${location_conf}"
+  printf 'WHY DOES THIS TEXT NEVER APPEAR\n'
+}
+
 if [ ! -z "${VARS+x}" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/environ.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 
-  # shellcheck disable=SC1090
-  OTHER_SCRIPT_FILE=$(mktemp -t 'libscript_XXX_other')
+  TMP_FILE=$(mktemp -t 'libscript_XXX_tmp')
   ENV_SCRIPT_FILE=$(mktemp -t 'libscript_XXX_env')
-  SITE_CONF_FILE=$(mktemp -t 'libscript_XXX_site_conf')
-
-  install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe.sh' "${OTHER_SCRIPT_FILE}"
+  chmod +x "${ENV_SCRIPT_FILE}"
   object2key_val "${VARS}" 'export ' "'" > "${ENV_SCRIPT_FILE}"
-  cat "${ENV_SCRIPT_FILE}" "${DIR}"'/scratch.sh' >> "${OTHER_SCRIPT_FILE}"
 
-  env -i PATH="${PATH}" \
-         SITE_CONF_FILENAME="${SITE_CONF_FILE}" \
-         LIBSCRIPT_BUILD_DIR="${LIBSCRIPT_BUILD_DIR}" \
-         LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR}" \
-         LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" \
-         /bin/sh "${OTHER_SCRIPT_FILE}"
-  site_conf="$(cat -- "${SITE_CONF_FILE}"; printf 'a')"
-  site_conf="${site_conf%a}"
   # shellcheck disable=SC1090
   SERVER_NAME="$(. "${ENV_SCRIPT_FILE}"; printf '%s' "${SERVER_NAME}")"
 
+  LOCATION_CONF_FILE=$(mktemp -t 'libscript_'"${SERVER_NAME}"'_XXX_location_conf')
+
+  env -i PATH="${PATH}" \
+         ENV_SCRIPT_FILE="${ENV_SCRIPT_FILE}" \
+         LIBSCRIPT_BUILD_DIR="${LIBSCRIPT_BUILD_DIR}" \
+         LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR}" \
+         LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" \
+         "${DIR}"'/create_location_block.sh' > "${LOCATION_CONF_FILE}"
+  location_conf="$(cat -- "${LOCATION_CONF_FILE}"; printf 'a')"
+  location_conf="${location_conf%a}"
+
   # TODO: each location in separate 'fragment'; then merge them into one `server {}`
   # TODO: final thing joins them all to avoid race condition; rather than this next line:
-  "${PRIV}" install "${site_conf}" '/etc/nginx/conf.d/'"${SERVER_NAME}"'.conf'
 
-  rm -f "${SITE_CONF_FILE}" "${OTHER_SCRIPT_FILE}" "${ENV_SCRIPT_FILE}"
-  unset OTHER_SCRIPT_FILE
-  unset SITE_CONF_FILE
+  # TODO: lock file if not implementing "final thing" lifecycle
+
+  site_conf_install_location='/etc/nginx/conf.d/'"${SERVER_NAME}"'.conf'
+  if [ -f "${site_conf_install_location}" ]; then
+    conf_existing="$(cat -- "${site_conf_install_location}"; printf 'a')"
+    conf_existing="${conf_existing%a}"
+    if [ ${#conf_existing} -eq 0 ]; then
+      >&2 printf 'Existing conf unexpectedly empty at: "%s"\n' "${site_conf_install_location}"
+      exit 5
+    fi
+
+    out="$(merge_location_into_nginx_server "${conf_existing}" "${location_conf}")"
+    merge_location_into_nginx_server "${conf_existing}" "${location_conf}"
+    merge_location_into_nginx_server "${conf_existing}" "${location_conf}" > "${TMP_FILE}"
+    if [ ${#out} -eq 0 ]; then
+      >&2 printf 'merge_location_into_nginx_server result unexpectedly empty\n'
+      #exit 5
+    fi
+    printf '[merge_location_into_nginx_server out] "%s"\n' "${out}"
+    printf '%s' "${out}" | sudo dd of="${site_conf_install_location}"
+    "${PRIV}" cp "${TMP_FILE}" "${site_conf_install_location}"
+    # | "${PRIV}" tee "${site_conf_install_location}" >/dev/null
+    printf '#------------AFTER MERGE---------------------#\n'
+    cat "${site_conf_install_location}"
+  else
+    env -i PATH="${PATH}" \
+           ENV_SCRIPT_FILE="${ENV_SCRIPT_FILE}" \
+           LIBSCRIPT_BUILD_DIR="${LIBSCRIPT_BUILD_DIR}" \
+           LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR}" \
+           LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" \
+           LOCATIONS="${location_conf}" \
+           "${DIR}"'/create_server_block.sh' | "${PRIV}" dd of="${site_conf_install_location}"
+    printf '#############NO MERGE#######################\n'
+    cat "${site_conf_install_location}"
+    #printf '\n\nsleeping for 10 seconds\n'
+    #sleep 10s
+  fi
+
+  rm -f "${ENV_SCRIPT_FILE}" "${LOCATION_CONF_FILE}" "${TMP_FILE}"
   unset ENV_SCRIPT_FILE
+  unset LOCATION_CONF_FILE
+  unset TMP_FILE
 fi

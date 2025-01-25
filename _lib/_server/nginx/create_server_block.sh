@@ -21,30 +21,25 @@ set -feu
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
-export LIBSCRIPT_ROOT_DIR
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/os_info.sh'
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-env_script="${DIR}"'/env.sh'
-if [ -f "${env_script}" ]; then
-  SCRIPT_NAME="${env_script}"
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  . "${SCRIPT_NAME}"
+if [ -z "${ENV_SCRIPT_FILE+x}" ]; then
+  >&2 printf 'ENV_SCRIPT_FILE must be set'
+  exit 3
 fi
 
-os_setup_script="${DIR}"'/setup_'"${TARGET_OS}"'.sh'
-if [ -f "${os_setup_script}" ]; then
-  SCRIPT_NAME="${os_setup_script}"
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  . "${SCRIPT_NAME}"
+# shellcheck disable=SC1090
+. "${ENV_SCRIPT_FILE}"
+
+if [ -z "${HTTPS_ALWAYS+x}" ] && { [ "${HTTPS_ALWAYS}" -eq 1 ] || [ "${HTTPS_ALWAYS}" = 'true' ]; }; then
+  conf_tpl="${LIBSCRIPT_ROOT_DIR}"'/_lib/_server/nginx/conf/simple_secure.conf'
 else
-  SCRIPT_NAME="${DIR}"'/setup_generic.sh'
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  . "${SCRIPT_NAME}"
+  export LISTEN="${LISTEN:-80}"
+  conf_tpl="${LIBSCRIPT_ROOT_DIR}"'/_lib/_server/nginx/conf/simple_insecure.conf'
 fi
+
+envsubst_safe < "${conf_tpl}"

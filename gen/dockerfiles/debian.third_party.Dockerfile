@@ -189,33 +189,33 @@ fi
 EOF
 
 
-ARG NGINX_CONFIG_BUILDER=1
+ARG NGINX_CONFIG_BUILDER__FRONTEND=1
 
-ARG nginx_config_builder_COMMAND_FOLDER='_lib/_server/nginx'
-ARG NGINX_CONFIG_BUILDER_VARS='{"SERVER_NAME":"example.com","WWWROOT":"\"${LIBSCRIPT_BUILD_DIR}\"/ng-material-scaffold","HTTPS_ALWAYS":1,"HTTPS_VENDOR":"letsencrypt"}'
+ARG nginx_config_builder__frontend_COMMAND_FOLDER='_lib/_server/nginx'
+ARG NGINX_CONFIG_BUILDER__FRONTEND_VARS='{"SERVER_NAME":"example.com","WWWROOT":"\"${LIBSCRIPT_BUILD_DIR}\"/ng-material-scaffold","HTTPS_ALWAYS":1,"HTTPS_VENDOR":"letsencrypt"}'
 
 RUN <<-EOF
 
-if [ "${NGINX_CONFIG_BUILDER:-1}" -eq 1 ]; then
-  if [ ! -z "${NGINX_CONFIG_BUILDER_DEST+x}" ]; then
+if [ "${NGINX_CONFIG_BUILDER__FRONTEND:-1}" -eq 1 ]; then
+  if [ ! -z "${NGINX_CONFIG_BUILDER__FRONTEND_DEST+x}" ]; then
     previous_wd="$(pwd)"
-    DEST="${NGINX_CONFIG_BUILDER_DEST}"
+    DEST="${NGINX_CONFIG_BUILDER__FRONTEND_DEST}"
     export DEST
     [ -d "${DEST}" ] || mkdir -p "${DEST}"
     cd "${DEST}"
   fi
-  if [ ! -z "${NGINX_CONFIG_BUILDER_VARS+x}" ]; then
-    export VARS="${NGINX_CONFIG_BUILDER_VARS}"
+  if [ ! -z "${NGINX_CONFIG_BUILDER__FRONTEND_VARS+x}" ]; then
+    export VARS="${NGINX_CONFIG_BUILDER__FRONTEND_VARS}"
   fi
-  if [ ! -z "${nginx_config_builder_COMMANDS_BEFORE+x}" ]; then
-    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_nginx-config-builder.sh'
+  if [ ! -z "${nginx_config_builder__frontend_COMMANDS_BEFORE+x}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_nginx-config-builder__frontend.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
-    printf '%s' "${nginx_config_builder_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
+    printf '%s' "${nginx_config_builder__frontend_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
     # shellcheck disable=SC1090
     . "${SCRIPT_NAME}"
   fi
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${nginx_config_builder_COMMAND_FOLDER:-app/third_party/nginx-config-builder}"'/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${nginx_config_builder__frontend_COMMAND_FOLDER:-app/third_party/nginx-config-builder__frontend}"'/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   if [ -f "${SCRIPT_NAME}" ]; then
@@ -223,7 +223,167 @@ if [ "${NGINX_CONFIG_BUILDER:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${NGINX_CONFIG_BUILDER_DEST+x}" ]; then cd "${previous_wd}"; fi
+  if [ ! -z "${NGINX_CONFIG_BUILDER__FRONTEND_DEST+x}" ]; then cd "${previous_wd}"; fi
+fi
+
+EOF
+
+
+ARG NGINX_CONFIG_BUILDER__DOCS=1
+
+ARG nginx_config_builder__docs_COMMAND_FOLDER='_lib/_server/nginx'
+ARG NGINX_CONFIG_BUILDER__DOCS_VARS='{"SERVER_NAME":"example.com","LOCATION_EXPR":"~* /(api|redoc|rapidoc|scalar|secured)","HTTPS_ALWAYS":1,"HTTPS_VENDOR":"letsencrypt","PROXY_PASS":"http://localhost:3000"}'
+
+RUN <<-EOF
+
+if [ "${NGINX_CONFIG_BUILDER__DOCS:-1}" -eq 1 ]; then
+  if [ ! -z "${NGINX_CONFIG_BUILDER__DOCS_DEST+x}" ]; then
+    previous_wd="$(pwd)"
+    DEST="${NGINX_CONFIG_BUILDER__DOCS_DEST}"
+    export DEST
+    [ -d "${DEST}" ] || mkdir -p "${DEST}"
+    cd "${DEST}"
+  fi
+  if [ ! -z "${NGINX_CONFIG_BUILDER__DOCS_VARS+x}" ]; then
+    export VARS="${NGINX_CONFIG_BUILDER__DOCS_VARS}"
+  fi
+  if [ ! -z "${nginx_config_builder__docs_COMMANDS_BEFORE+x}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_nginx-config-builder__docs.sh'
+    export SCRIPT_NAME
+    install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+    printf '%s' "${nginx_config_builder__docs_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+  fi
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${nginx_config_builder__docs_COMMAND_FOLDER:-app/third_party/nginx-config-builder__docs}"'/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  if [ -f "${SCRIPT_NAME}" ]; then
+    . "${SCRIPT_NAME}";
+  else
+    >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
+  fi
+  if [ ! -z "${NGINX_CONFIG_BUILDER__DOCS_DEST+x}" ]; then cd "${previous_wd}"; fi
+fi
+
+EOF
+
+
+ARG NGINX_CONFIG_BUILDER__CRAWL=1
+
+ARG nginx_config_builder__crawl_COMMAND_FOLDER='_lib/_server/nginx'
+ARG NGINX_CONFIG_BUILDER__CRAWL_VARS='{"SERVER_NAME":"example.com","LOCATION_EXPR":"/v1/crawl","HTTPS_ALWAYS":1,"HTTPS_VENDOR":"letsencrypt","PROXY_PASS":"http://localhost:3002"}'
+
+RUN <<-EOF
+
+if [ "${NGINX_CONFIG_BUILDER__CRAWL:-1}" -eq 1 ]; then
+  if [ ! -z "${NGINX_CONFIG_BUILDER__CRAWL_DEST+x}" ]; then
+    previous_wd="$(pwd)"
+    DEST="${NGINX_CONFIG_BUILDER__CRAWL_DEST}"
+    export DEST
+    [ -d "${DEST}" ] || mkdir -p "${DEST}"
+    cd "${DEST}"
+  fi
+  if [ ! -z "${NGINX_CONFIG_BUILDER__CRAWL_VARS+x}" ]; then
+    export VARS="${NGINX_CONFIG_BUILDER__CRAWL_VARS}"
+  fi
+  if [ ! -z "${nginx_config_builder__crawl_COMMANDS_BEFORE+x}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_nginx-config-builder__crawl.sh'
+    export SCRIPT_NAME
+    install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+    printf '%s' "${nginx_config_builder__crawl_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+  fi
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${nginx_config_builder__crawl_COMMAND_FOLDER:-app/third_party/nginx-config-builder__crawl}"'/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  if [ -f "${SCRIPT_NAME}" ]; then
+    . "${SCRIPT_NAME}";
+  else
+    >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
+  fi
+  if [ ! -z "${NGINX_CONFIG_BUILDER__CRAWL_DEST+x}" ]; then cd "${previous_wd}"; fi
+fi
+
+EOF
+
+
+ARG NGINX_CONFIG_BUILDER__SWAP=1
+
+ARG nginx_config_builder__swap_COMMAND_FOLDER='_lib/_server/nginx'
+ARG NGINX_CONFIG_BUILDER__SWAP_VARS='{"SERVER_NAME":"example.com","LOCATION_EXPR":"/v1/swap","HTTPS_ALWAYS":1,"HTTPS_VENDOR":"letsencrypt","PROXY_WEBSOCKETS":1,"PROXY_PASS":"http://localhost:3003"}'
+
+RUN <<-EOF
+
+if [ "${NGINX_CONFIG_BUILDER__SWAP:-1}" -eq 1 ]; then
+  if [ ! -z "${NGINX_CONFIG_BUILDER__SWAP_DEST+x}" ]; then
+    previous_wd="$(pwd)"
+    DEST="${NGINX_CONFIG_BUILDER__SWAP_DEST}"
+    export DEST
+    [ -d "${DEST}" ] || mkdir -p "${DEST}"
+    cd "${DEST}"
+  fi
+  if [ ! -z "${NGINX_CONFIG_BUILDER__SWAP_VARS+x}" ]; then
+    export VARS="${NGINX_CONFIG_BUILDER__SWAP_VARS}"
+  fi
+  if [ ! -z "${nginx_config_builder__swap_COMMANDS_BEFORE+x}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_nginx-config-builder__swap.sh'
+    export SCRIPT_NAME
+    install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+    printf '%s' "${nginx_config_builder__swap_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+  fi
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${nginx_config_builder__swap_COMMAND_FOLDER:-app/third_party/nginx-config-builder__swap}"'/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  if [ -f "${SCRIPT_NAME}" ]; then
+    . "${SCRIPT_NAME}";
+  else
+    >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
+  fi
+  if [ ! -z "${NGINX_CONFIG_BUILDER__SWAP_DEST+x}" ]; then cd "${previous_wd}"; fi
+fi
+
+EOF
+
+
+ARG NGINX_CONFIG_BUILDER__DATA=1
+
+ARG nginx_config_builder__data_COMMAND_FOLDER='_lib/_server/nginx'
+ARG NGINX_CONFIG_BUILDER__DATA_VARS='{"SERVER_NAME":"example.com","LOCATION_EXPR":"/data","HTTPS_ALWAYS":1,"HTTPS_VENDOR":"letsencrypt","WWWROOT":"/opt/repos/E4S2024","PROXY_PASS":"http://localhost:3003"}'
+
+RUN <<-EOF
+
+if [ "${NGINX_CONFIG_BUILDER__DATA:-1}" -eq 1 ]; then
+  if [ ! -z "${NGINX_CONFIG_BUILDER__DATA_DEST+x}" ]; then
+    previous_wd="$(pwd)"
+    DEST="${NGINX_CONFIG_BUILDER__DATA_DEST}"
+    export DEST
+    [ -d "${DEST}" ] || mkdir -p "${DEST}"
+    cd "${DEST}"
+  fi
+  if [ ! -z "${NGINX_CONFIG_BUILDER__DATA_VARS+x}" ]; then
+    export VARS="${NGINX_CONFIG_BUILDER__DATA_VARS}"
+  fi
+  if [ ! -z "${nginx_config_builder__data_COMMANDS_BEFORE+x}" ]; then
+    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_nginx-config-builder__data.sh'
+    export SCRIPT_NAME
+    install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
+    printf '%s' "${nginx_config_builder__data_COMMANDS_BEFORE}" >> "${SCRIPT_NAME}"
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+  fi
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${nginx_config_builder__data_COMMAND_FOLDER:-app/third_party/nginx-config-builder__data}"'/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  if [ -f "${SCRIPT_NAME}" ]; then
+    . "${SCRIPT_NAME}";
+  else
+    >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
+  fi
+  if [ ! -z "${NGINX_CONFIG_BUILDER__DATA_DEST+x}" ]; then cd "${previous_wd}"; fi
 fi
 
 EOF
