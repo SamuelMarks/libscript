@@ -26,6 +26,37 @@ Plenty of [guards](https://en.wikipedia.org/wiki/Include_guard) everywhere—[id
 
 Example of generated files are found in the [`gen`](./gen) directory.
 
+## Current ‘installables’
+
+### Toolchains
+
+   | Name                          | Parameters        |
+   |-------------------------------|-------------------|
+   | [Node.js](https://nodejs.org) | `NODEJS_VERSION`* |
+   | [Python](https://python.org)  | `PYTHON_VERSION`* |
+   | [Rust](https://rust-lang.org) | `RUST_VERSION`*   |
+
+* required
+
+### Databases / storage layers
+
+   | Name                | Parameters                                                                                                                |
+   |---------------------|---------------------------------------------------------------------------------------------------------------------------|
+   | PostgreSQL          | `POSTGRESQL_VERSION`†; `POSTGRES_USER`†; `POSTGRES_PASSWORD`‡; `POSTGRES_PASSWORD_FILE`‡; `POSTGRES_HOST`; `POSTGRES_DB`† |
+   | Valkey [Redis fork] |                                                                                                                           |
+
+  - † required
+  - ‡ needs one-and-only-one
+
+### Servers
+
+
+   | Name  | Parameters |
+   |-------|------------|
+   | nginx | `VARS`‡    |
+
+  - ‡`VARS`—if provided—must include `SERVER_NAME` and: `NGINX_FRAGMENT_CONF`; xor `WWWROOT` with optional `WWWROOT_AUTOINDEX`; xor `PROXY_PASS` with optional `PROXY_WEBSOCKETS`. 
+
 ## History / roadmap:
 
   0. First version was written in [Python](https://en.wikipedia.org/wiki/Python_(programming_language)) (59+ [repos](https://en.wikipedia.org/wiki/Software_repository) with ["off" prefix](https://github.com/offscale?q=off&language=python)) for mostly [Linux](https://en.wikipedia.org/wiki/Linux) ([Ubuntu](https://en.wikipedia.org/wiki/Ubuntu)) with a bit of work for [Debian](https://en.wikipedia.org/wiki/Debian) support;
@@ -59,7 +90,7 @@ All the aforementioned advantages, plus:
 
 ## Usage
 
-NOTE: You might want to manually set `LIBSCRIPT_DATA_DIR` and `LIBSCRIPT_TOOLS_DIR`.
+NOTE: You might want to manually set `LIBSCRIPT_DATA_DIR`; `LIBSCRIPT_BUILD_DIR`; and `LIBSCRIPT_TOOLS_DIR`.
 
 Run from the same directory as this [README.md](README.md) file.
 Alternatively, set `SCRIPT_NAME` to the correct `install.sh` location and run it anywhere.
