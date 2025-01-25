@@ -3,6 +3,8 @@ libscript
 
 [Cross-platform](https://en.wikipedia.org/wiki/Cross-platform_software)—[`/bin/sh`](https://en.wikipedia.org/wiki/Bourne_shell); [`cmd.exe`](https://en.wikipedia.org/wiki/Cmd.exe)—[scripts library](https://en.wikipedia.org/wiki/Library_(computing)) for: [Windows](https://en.wikipedia.org/wiki/Microsoft_Windows); [Linux](https://en.wikipedia.org/wiki/Linux); [macOS](https://en.wikipedia.org/wiki/MacOS); [FreeBSD](https://en.wikipedia.org/wiki/FreeBSD); [SunOS](https://en.wikipedia.org/wiki/SunOS); &etc.
 
+See also libscript's: [WHY.md](WHY.md); and [ROADMAP.md](ROADMAP.md).
+
 ## Features
 
 [OS](https://en.wikipedia.org/wiki/Operating_system) support for:
