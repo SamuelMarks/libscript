@@ -40,10 +40,10 @@ Example of generated files are found in the [`gen`](./gen) directory.
 
 ### Databases / storage layers
 
-   | Name                | Parameters                                                                                                                |
-   |---------------------|---------------------------------------------------------------------------------------------------------------------------|
-   | PostgreSQL          | `POSTGRESQL_VERSION`†; `POSTGRES_USER`†; `POSTGRES_PASSWORD`‡; `POSTGRES_PASSWORD_FILE`‡; `POSTGRES_HOST`; `POSTGRES_DB`† |
-   | Valkey [Redis fork] |                                                                                                                           |
+   | Name                                     | Parameters                                                                                                                |
+   |------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
+   | [PostgreSQL](https://postgresql.org)     | `POSTGRESQL_VERSION`†; `POSTGRES_USER`†; `POSTGRES_PASSWORD`‡; `POSTGRES_PASSWORD_FILE`‡; `POSTGRES_HOST`; `POSTGRES_DB`† |
+   | [Valkey](https://valkey.io) [Redis fork] |                                                                                                                           |
 
   - † required
   - ‡ needs one-and-only-one
@@ -51,9 +51,9 @@ Example of generated files are found in the [`gen`](./gen) directory.
 ### Servers
 
 
-   | Name  | Parameters |
-   |-------|------------|
-   | nginx | `VARS`‡    |
+   | Name                       | Parameters |
+   |----------------------------|------------|
+   | [nginx](https://nginx.org) | `VARS`‡    |
 
   - ‡`VARS`—if provided—must include `SERVER_NAME` and: `NGINX_FRAGMENT_CONF`; xor `WWWROOT` with optional `WWWROOT_AUTOINDEX`; xor `PROXY_PASS` with optional `PROXY_WEBSOCKETS`. 
 
@@ -94,15 +94,17 @@ NOTE: You might want to manually set `LIBSCRIPT_DATA_DIR`; `LIBSCRIPT_BUILD_DIR`
 
 Run from the same directory as this [README.md](README.md) file.
 Alternatively, set `SCRIPT_NAME` to the correct `install.sh` location and run it anywhere.
-
-    $ # Disable all options (so don't install anything)
-    $ . libscript/conf-no-all.env.sh
-    $ # Enable installation of *just* Jupyter Notebook
-    $ export JUPYTERHUB_INSTALL=1 
-    $ # Set script location.
-    $ # Replace `$(pwd)` if 'libscript' isn't in current directory.
-    $ export SCRIPT_NAME="$(pwd)"'/libscript/install.sh'
-    $ . "${SCRIPT_NAME}"
+```sh
+$ # Replace `$(pwd)` if not in the 'libscript' directory.
+$ export LIBSCRIPT_ROOT_DIR="$(pwd)"
+$ # Disable all options (everything set to do-*not*-install)
+$ . "${LIBSCRIPT_ROOT_DIR}"'/conf-no-all.env.sh'
+$ # Enable installation of *just* Jupyter Hub
+$ export JUPYTERHUB_INSTALL=1
+$ # Set script location.
+$ export SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/install.sh'
+$ . "${SCRIPT_NAME}"
+```
 
 See [`gen/env.sh`](./gen/env.sh) for options that can be overridden by setting environment variables.
 
@@ -112,33 +114,37 @@ To simplify usage, a JSON file format is provided. See [./install.json](./instal
 
 ## Usage (JSON) CLI
 
-    $ ./create_installer_from_json.sh -h
-    Create install scripts from JSON.
+```sh
+$ ./create_installer_from_json.sh -h
+Create install scripts from JSON.
 
-        -a whether to install all dependencies (required AND optional)
-        -f filename
-        -o output folder (defaults to ./tmp)
-        -v verbosity (can be specified multiple times)
-        -b base images for docker (space seperated, default: "alpine:latest debian:bookworm-slim")
-        -h show help text
+  -a whether to install all dependencies (required AND optional)
+  -f filename
+  -o output folder (defaults to ./tmp)
+  -v verbosity (can be specified multiple times)
+  -b base images for docker (space seperated, default: "alpine:latest debian:bookworm-slim")
+  -h show help text
+```
 
 Which will create these files:
 
-### `env.sh`
+### `env.sh` ; `env.cmd`
 
 Default environment. When nothing preexists in your env, this sets everything to install.
 
-### `false_env.sh`
+### `false_env.sh` ; `false_env.cmd`
 
 False environment. This sets everything to *not* install.
 
-### `install_gen.sh`
+### `install_gen.sh` ; `install_gen.cmd`
 
 The actual installation script. Execute this like so:
-    
-    $ # Set script location. Only use $(pwd) if its in your current working directory, otherwise specify.
-    $ export SCRIPT_NAME="$(pwd)"'/install_gen.sh'
-    $ . "${SCRIPT_NAME}"
+```sh
+$ # Set script location. Change from `pwd` if 'install_gen.sh' isn't in current dir.
+$ export LIBSCRIPT_ROOT_DIR="$(pwd)"
+$ export SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/install_gen.sh'
+$ . "${SCRIPT_NAME}"
+```
 
 ### `install_parallel_gen.sh`
 
@@ -148,27 +154,33 @@ Parallel version of the above installation script. Execute same way.
 
 For debugging, you might want to run something like:
 
-    $ distro='debian' # or 'alpine'
-    $ docker build --file "${distro}"'.Dockerfile' --progress='plain' --no-cache --tag "${PWD##*/}":"${distro}" .
+```sh
+$ distro='debian' # or 'alpine'
+$ docker build --file "${distro}"'.Dockerfile' --progress='plain' --no-cache --tag "${PWD##*/}":"${distro}" .
+```
 
 ### Docker builder
 
 To make things more convenient, use this docker builder; setting `-i` to same as `-o` of `./create_installer_from_json.sh`:
 
-    $ ./create_docker_builder.sh -h
-    Create Docker image builder scripts.
+```sh
+$ ./create_docker_builder.sh -h
+Create Docker image builder scripts.
 
-      -p prefix ($DOCKER_IMAGE_PREFIX, default: "deploysh")
-      -s suffix ($DOCKER_IMAGE_SUFFIX, default: "-latest")
-      -i input directory (`cd`s if provided, defaults to current working directory; adds scripts here also)
-      -v verbosity (can be specified multiple times)
-      -h show help text
+-p prefix ($DOCKER_IMAGE_PREFIX, default: "deploysh")
+-s suffix ($DOCKER_IMAGE_SUFFIX, default: "-latest")
+-i input directory (`cd`s if provided, defaults to current working directory; adds scripts here also)
+-v verbosity (can be specified multiple times)
+-h show help text
+```
 
 #### Example
 
-    $ ./build_docker_images.sh -o ./tmp
-    $ cd ./tmp && sh ./docker_builder.sh
-    # or docker_builder_parallel.sh ^
+```sh
+$ ./build_docker_images.sh -o ./tmp
+$ cd ./tmp && sh ./docker_builder.sh
+# or docker_builder_parallel.sh ^
+```
 
 <hr/>
 

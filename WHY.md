@@ -49,3 +49,6 @@ These can work directly with `Dockerfile`s:
   - Cross-platform. Actually.
   - Docker should be optional.
   - Docker is terrible; stop using it. Also: we make your Docker images better.
+  - Python scripts? - No: Python packages. - Bash scripts? - No: `*.sh` & `*.bat` packages.
+  - Make shell scripting software-engineering
+  - Shell scripting? - No: shell software-engineering.

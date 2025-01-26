@@ -11,12 +11,15 @@ Specifically these from POSIX are used:
   - `cat`
   - `command`
   - `cp` and `cp -r`
+  - `cut`
   - `dc`
+  - `dd`
   - `dirname`
   - `echo`
   - `env`
   - `expr`
   - `grep` [no GNU extensions used]
+  - `head`
   - `mkdir` & `mkdir -p`
   - `mktemp`
   - `printf`
@@ -29,7 +32,9 @@ Specifically these from POSIX are used:
   - `test` and shorthand: `[` `]`
   - `touch`
   - `tr`
+  - `true`
   - `uname`
+  - `yes`
 
   - POSIX standard char ranges (`[:upper:]`; `[:lower:]`; `[:space:]`; `[:alpha:]`; `[:alnum:]`)
   - Keywords: `if`, `then`, `else`, `fi`, `for`, `while`, `do`, `done`, `case`, `in`, `esac`, `wait`, `export`, `exit`, `return`
