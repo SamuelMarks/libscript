@@ -159,7 +159,7 @@ For example, set `POSTGRES_PASSWORD` to `null` in the json like so:
   "name": "POSTGRES",
   "version": "17",
   "env": "POSTGRES_URL",
-  "secrets": {
+  "vars": {
     "POSTGRES_USER": "rest_user",
     "POSTGRES_PASSWORD": null,
     "POSTGRES_DB": "rest_db",

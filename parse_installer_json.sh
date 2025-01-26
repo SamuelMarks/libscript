@@ -695,7 +695,7 @@ parse_database_item() {
     version=$(printf '%s' "${db_json}" | jq -r '.version')
     env=$(printf '%s' "${db_json}" | jq -r '.env')
     target_env=$(printf '%s' "${db_json}" | jq -c '.target_env[]?')
-    secrets=$(printf '%s' "${db_json}" | jq -c '.secrets?')
+    vars=$(printf '%s' "${db_json}" | jq -c '.vars?')
     extra_before_str=''
 
     if [ "${verbose}" -ge 3 ]; then
@@ -703,7 +703,7 @@ parse_database_item() {
       printf '    Name: %s\n' "${name}"
       printf '    Version: %s\n' "${version}"
       printf '    Env: %s\n' "${env}"
-      printf '    Secrets: %s\n' "${secrets}"
+      printf '    Vars: %s\n' "${vars}"
     fi
 
     if [ "${dep_group_name}" = "Required" ] ; then
@@ -727,7 +727,7 @@ parse_database_item() {
     # shellcheck disable=SC2003
     databases_len=$(expr "${databases_len}" + 1)
 
-    update_generated_files "${name}" "${version}" "${env}" '_lib/_storage' "${dep_group_name}" "${extra_before_str}" '' '' "${secrets}"
+    update_generated_files "${name}" "${version}" "${env}" '_lib/_storage' "${dep_group_name}" "${extra_before_str}" '' '' "${vars}"
     if [ -n "${target_env}" ]; then
         if [ "${verbose}" -ge 3 ]; then printf '    Target Env:\n'; fi
 
