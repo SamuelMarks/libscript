@@ -8,7 +8,7 @@ Think about [dokku](https://dokku.com) and other [PaaS](https://en.wikipedia.org
 For example:
 
 - [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) project
-- Healthcheck (status-check) project
+- [Healthcheck (status-check)](https://en.wikipedia.org/wiki/Network_monitoring) project
   - This could be built by adding a `test.sh` to each `port'.
   - Example: [`_lib/_storage/postgres/test.sh`](_lib/_storage/postgres/test.sh)
 - See logs of project
@@ -26,8 +26,20 @@ This would additionally require every non shared-library / shared-toolchain unde
 - `INSTALL_DIR="${LIBSCRIPT_PROJECT_DIR}"'/'"${project_name}"`
 - `HERMETIC_BUILD=1`
 
-Finally, because network isolation isn't builtin, maybe some dry-run checks like:
-- Port availability
-- Socket availability
+Penultimately, because network isolation isn't builtin, maybe some dry-run checks like:
+- [Port](https://en.wikipedia.org/wiki/Port_(computer_networking)) availability
+- [Socket](https://en.wikipedia.org/wiki/Unix_domain_socket) availability
 - Database name availability
   - E.g., with PostgreSQL you can have multiple databases made with `CREATE DATABSE`|`createdb`. So rather than error naïvely that port `5432` is in use, try and create a database and only error if port `5432` is in use and database already exists. 
+
+Finally, there's the whole day-2 operations stuff, like:
+- [Backups](https://en.wikipedia.org/wiki/Backup)
+  - [Snapshots](https://en.wikipedia.org/wiki/Snapshot_(computer_storage))
+  - [Rollbacks](https://en.wikipedia.org/wiki/Rollback_(data_management))
+- [Canary deployments](https://en.wikipedia.org/wiki/Feature_toggle#Canary_release)
+- Clustered deployments
+- [Deployment of clusters](https://en.wikipedia.org/wiki/Computer_cluster)
+- Centralised monitoring
+- Centralised [logging](https://en.wikipedia.org/wiki/Logging_(computing))
+- [Upgrades](https://en.wikipedia.org/wiki/Upgrade)
+- [Downgrades](https://en.wikipedia.org/wiki/Downgrade)
