@@ -29,7 +29,7 @@ all_deps="${all_deps:-0}"
 NL='
 '
 
-output_folder=${output_folder:-${LIBSCRIPT_ROOT_DIR}/tmp}
+output_folder="${output_folder:-${LIBSCRIPT_ROOT_DIR}/tmp}"
 false_env_file="${output_folder}"'/false_env.sh'
 false_env_cmd_file="${output_folder}"'/false_env.cmd'
 true_env_file="${output_folder}"'/env.sh'
@@ -221,12 +221,48 @@ lang_set() {
 }
 
 object2key_val() {
-  obj="${1}"
+  obj="$1"
   prefix="${2:-}"
-  q="${3:-\'}"
-  s=''
-  if [ "${q}" = '"' ]; then s='=';  fi
-  printf '%s' "${obj}" | jq --arg q "${q}" -rc '. | to_entries[] | "'"${prefix}"'"+ .key + (if .value == null then "'"${s}"'" else if (.value | type) == "array" then "=" + $q + (.value | join("\n")) + $q else "=" + $q + (.value | tostring) + $q end end)'
+  sq="'"
+  q="${3:-$sq}"
+  null_setter=''
+  join_arr_on="${NL}"
+  if [ "${prefix}" = 'SET ' ]; then
+    null_setter='=';
+    join_arr_on=' ';
+  fi
+
+  printf '%s' "$obj" | jq --arg null_setter "${null_setter}" \
+                          --arg join_arr_on "${join_arr_on}" \
+                          --arg lbrace '{' --arg prefix "${prefix}" \
+                          --arg q "${q}" --arg sq "${sq}" --arg dq '"' -r '
+    # Build the pattern dynamically using $sq and $dq
+    ("^(" + "\\\\{" + "|" + $dq + "\\\\{" + "|" + $sq + "\\\\{" + ")") as $pattern_start |
+    ("(" + "\\\\}" + "|" + "\\\\}" + $dq + "|" + "\\\\}" + $sq + ")$") as $pattern_end |
+    ($pattern_start + ".*" + $pattern_end) as $full_pattern |
+
+    def custom_format(value):
+      if value == null then
+        $null_setter+""
+      elif value | type == "number" then
+        "=\(value)"
+      elif value | type == "string" then
+        if value | any(.; test($full_pattern)) then
+          "=" + $q + value + $q
+        elif value | any(.; test("^[0-9]+$", $sq, $dq)) then
+          "=" + value
+        else
+          "=" + $q + value + $q
+        end
+      elif value | type == "array" then
+        "=" + $q + (value | join($join_arr_on)) + $q
+      elif value | type == "object" then
+        "=" + $q + "\(value)" + $q
+      else
+        "=\(value)"
+      end;
+    to_entries[] | $prefix+"\(.key)\(custom_format(.value))"
+  '
 }
 
 add_missing_line_continuation() {

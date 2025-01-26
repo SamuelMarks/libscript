@@ -55,7 +55,7 @@ Example of generated files are found in the [`gen`](./gen) directory.
    |----------------------------|------------|
    | [nginx](https://nginx.org) | `VARS`‡    |
 
-  - ‡`VARS`—if provided—must include `SERVER_NAME` and: `NGINX_FRAGMENT_CONF`; xor `WWWROOT` with optional `WWWROOT_AUTOINDEX`; xor `PROXY_PASS` with optional `PROXY_WEBSOCKETS`. 
+  - ‡`VARS`—if provided—must include `SERVER_NAME` and: `NGINX_FRAGMENT_CONF`; xor `WWWROOT` with optional `WWWROOT_AUTOINDEX`; xor `PROXY_PASS` with optional `PROXY_WEBSOCKETS`.
 
 ## History / roadmap:
 
@@ -149,6 +149,26 @@ $ . "${SCRIPT_NAME}"
 ### `install_parallel_gen.sh`
 
 Parallel version of the above installation script. Execute same way.
+
+## Secrets / passwords
+
+For example, set `POSTGRES_PASSWORD` to `null` in the json like so:
+
+```json
+{
+  "name": "POSTGRES",
+  "version": "17",
+  "env": "POSTGRES_URL",
+  "secrets": {
+    "POSTGRES_USER": "rest_user",
+    "POSTGRES_PASSWORD": null,
+    "POSTGRES_DB": "rest_db",
+    "POSTGRES_PASSWORD_FILE": null
+  }
+}
+```
+
+Then `SET` or `export` it manually before execution of `install_gen.sh`.
 
 ## Docker usage
 

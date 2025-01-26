@@ -10,7 +10,7 @@ For example:
 - [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) project
 - [Healthcheck (status-check)](https://en.wikipedia.org/wiki/Network_monitoring) project
   - This could be built by adding a `test.sh` to each `port'.
-  - Example: [`_lib/_storage/postgres/test.sh`](_lib/_storage/postgres/test.sh)
+  - Example: [`_lib/_storage/postgres/test.sh`](https://github.com/SamuelMarks/libscript/blob/master/_lib/_storage/postgres/test.sh)
 - See logs of project
   - `logs -f project_name33`
 - Start|stop project

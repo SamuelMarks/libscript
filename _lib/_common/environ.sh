@@ -29,6 +29,9 @@ esac
 STACK="${STACK}${this_file}"':'
 export STACK
 
+export NL='
+'
+
 save_environment() {
   env | while IFS='' read -r line || [ -n "${line}" ]; do
     case "${line}" in
@@ -80,27 +83,42 @@ object2key_val() {
   prefix="${2:-}"
   sq="'"
   q="${3:-$sq}"
-  s='='
-  #s=''
-  #if [ "${q}" = '"' ]; then s='=';  fi
+  null_setter=''
+  join_arr_on="${NL}"
+  if [ "${prefix}" = 'SET ' ]; then
+    null_setter='=';
+    join_arr_on=' ';
+  fi
 
-  printf '%s' "$obj" | jq --arg q "${q}" --arg sq "${sq}" --arg dq '"' -r '
+  printf '%s' "$obj" | jq --arg null_setter "${null_setter}" \
+                          --arg join_arr_on "${join_arr_on}" \
+                          --arg lbrace '{' --arg prefix "${prefix}" \
+                          --arg q "${q}" --arg sq "${sq}" --arg dq '"' -r '
+    # Build the pattern dynamically using $sq and $dq
+    ("^(" + "\\\\{" + "|" + $dq + "\\\\{" + "|" + $sq + "\\\\{" + ")") as $pattern_start |
+    ("(" + "\\\\}" + "|" + "\\\\}" + $dq + "|" + "\\\\}" + $sq + ")$") as $pattern_end |
+    ($pattern_start + ".*" + $pattern_end) as $full_pattern |
+
     def custom_format(value):
       if value == null then
-        ""
+        $null_setter+""
       elif value | type == "number" then
-        "\(value)"
+        "=\(value)"
       elif value | type == "string" then
-        if value | any(.; test("^[0-9]+$", $sq, $dq)) then
-          value
+        if value | any(.; test($full_pattern)) then
+          "=" + $q + value + $q
+        elif value | any(.; test("^[0-9]+$", $sq, $dq)) then
+          "=" + value
         else
-          $q + value + $q
+          "=" + $q + value + $q
         end
       elif value | type == "array" then
-        $q + (value | join(",")) + $q
+        "=" + $q + (value | join($join_arr_on)) + $q
+      elif value | type == "object" then
+        "=" + $q + "\(value)" + $q
       else
-        "\(value)"
+        "=\(value)"
       end;
-    to_entries[] | "'"${prefix}"'\(.key)'"${s}"'\(custom_format(.value))"
+    to_entries[] | $prefix+"\(.key)\(custom_format(.value))"
   '
 }

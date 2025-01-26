@@ -67,6 +67,7 @@ else
 fi
 name=' '"${service_name}"
 cd "${DEST}"
+# shellcheck disable=SC1091
 . "${HOME}"'/.cargo/env'
 
 cargo build --release
