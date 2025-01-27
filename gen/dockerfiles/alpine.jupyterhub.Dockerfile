@@ -20,8 +20,8 @@ if [ "${JUPYTERHUB:-0}" -eq 1 ]; then
     previous_wd="$(pwd)"
     DEST="${JUPYTERHUB_DEST}"
     export DEST
-    [ -d "${DEST}" ] || mkdir -p "${DEST}"
-    cd "${DEST}"
+    [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
+    cd -- "${DEST}"
   fi
   if [ ! -z "${JUPYTERHUB_VARS+x}" ]; then
     export VARS="${JUPYTERHUB_VARS}"
@@ -42,7 +42,7 @@ if [ "${JUPYTERHUB:-0}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${JUPYTERHUB_DEST+x}" ]; then cd "${previous_wd}"; fi
+  if [ ! -z "${JUPYTERHUB_DEST+x}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF

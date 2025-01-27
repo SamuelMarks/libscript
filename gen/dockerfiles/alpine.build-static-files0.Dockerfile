@@ -33,8 +33,8 @@ if [ "${BUILD_STATIC_FILES0:-1}" -eq 1 ]; then
     previous_wd="$(pwd)"
     DEST="${BUILD_STATIC_FILES0_DEST}"
     export DEST
-    [ -d "${DEST}" ] || mkdir -p "${DEST}"
-    cd "${DEST}"
+    [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
+    cd -- "${DEST}"
   fi
   if [ ! -z "${BUILD_STATIC_FILES0_VARS+x}" ]; then
     export VARS="${BUILD_STATIC_FILES0_VARS}"
@@ -55,7 +55,7 @@ if [ "${BUILD_STATIC_FILES0:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${BUILD_STATIC_FILES0_DEST+x}" ]; then cd "${previous_wd}"; fi
+  if [ ! -z "${BUILD_STATIC_FILES0_DEST+x}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF

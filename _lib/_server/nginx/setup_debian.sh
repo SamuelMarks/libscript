@@ -180,7 +180,7 @@ if [ ! -z "${VARS+x}" ]; then
            "${DIR}"'/create_server_block.sh' | "${PRIV}" dd of="${site_conf_install_location}" status='none'
   fi
 
-  rm -f "${ENV_SCRIPT_FILE}" "${LOCATION_CONF_FILE}"
+  rm -f -- "${ENV_SCRIPT_FILE}" "${LOCATION_CONF_FILE}"
   unset ENV_SCRIPT_FILE
   unset LOCATION_CONF_FILE
 fi

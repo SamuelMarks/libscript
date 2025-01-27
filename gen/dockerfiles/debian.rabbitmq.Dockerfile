@@ -21,8 +21,8 @@ if [ "${AMQP_URL:-0}" -eq 1 ]; then
     previous_wd="$(pwd)"
     DEST="${RABBITMQ_DEST}"
     export DEST
-    [ -d "${DEST}" ] || mkdir -p "${DEST}"
-    cd "${DEST}"
+    [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
+    cd -- "${DEST}"
   fi
   if [ ! -z "${RABBITMQ_VARS+x}" ]; then
     export VARS="${RABBITMQ_VARS}"
@@ -43,7 +43,7 @@ if [ "${AMQP_URL:-0}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${RABBITMQ_DEST+x}" ]; then cd "${previous_wd}"; fi
+  if [ ! -z "${RABBITMQ_DEST+x}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF

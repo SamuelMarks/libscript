@@ -67,7 +67,7 @@ else
 fi
 
 val='postgres://'"${POSTGRES_USER}"':'"${POSTGRES_PASSWORD}"'@'"${POSTGRES_HOST}"'/'"${POSTGRES_DB}"
-[ -d "${LIBSCRIPT_DATA_DIR}" ] || mkdir -p "${LIBSCRIPT_DATA_DIR}"
+[ -d "${LIBSCRIPT_DATA_DIR}" ] || mkdir -p -- "${LIBSCRIPT_DATA_DIR}"
 for key in 'POSTGRES_URL' 'DATABASE_URL'; do
   lang_export 'cmd' "${key}" "${val}" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.cmd'
   lang_export 'sh' "${key}" "${val}" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'

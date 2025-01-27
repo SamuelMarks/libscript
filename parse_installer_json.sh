@@ -47,7 +47,7 @@ app_folder="${output_folder}"'/app'
 
 base="${BASE:-alpine:latest debian:bookworm-slim}"
 
-[ -d "${output_folder}"'/dockerfiles' ] || mkdir -p "${output_folder}"'/dockerfiles'
+[ -d "${output_folder}"'/dockerfiles' ] || mkdir -p -- "${output_folder}"'/dockerfiles'
 prelude="$(cat -- "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh'; printf 'a')"
 prelude="${prelude%a}"
 if [ ! -f "${install_file}" ]; then printf '%s\n\n' "${prelude}" > "${install_file}" ; fi
@@ -100,9 +100,9 @@ end_prelude_cmd='ENDLOCAL
 if [ ! -f "${install_cmd_file}" ]; then printf '%s\n\n' "${prelude_cmd}" > "${install_cmd_file}"; fi
 if [ ! -f "${true_env_cmd_file}" ]; then printf '%s\n\n' 'SET "LIBSCRIPT_DATA_DIR=%LIBSCRIPT_DATA_DIR:~0,-1%"' > "${true_env_cmd_file}"; fi
 
-touch "${docker_scratch_file}" "${toolchain_scratch_file}" \
-      "${storage_scratch_file}" "${server_scratch_file}" \
-      "${third_party_scratch_file}" "${false_env_cmd_file}"
+touch -- "${docker_scratch_file}" "${toolchain_scratch_file}" \
+         "${storage_scratch_file}" "${server_scratch_file}" \
+         "${third_party_scratch_file}" "${false_env_cmd_file}"
 
 toolchains_len=0
 toolchains_header_req=0
@@ -413,8 +413,8 @@ update_generated_files() {
     printf '    previous_wd="$(pwd)"\n'
     printf '    DEST="${%s_DEST}"\n' "${name_upper_clean}"
     printf '    export DEST\n'
-    printf '    [ -d "${DEST}" ] || mkdir -p "${DEST}"\n'
-    printf '    cd "${DEST}"\n'
+    printf '    [ -d "${DEST}" ] || mkdir -p -- "${DEST}"\n'
+    printf '    cd -- "${DEST}"\n'
     printf '  fi\n'
     printf '  if [ ! -z "${%s_VARS+x}" ]; then\n' "${name_upper_clean}"
     printf '    export VARS="${%s_VARS}"\n' "${name_upper_clean}"
@@ -449,7 +449,7 @@ update_generated_files() {
       printf '    >&2 printf '"'"'Not found, SCRIPT_NAME of %%s\\n'"'"' "${SCRIPT_NAME}"\n'
       printf '  fi\n'
 
-      printf '  if [ ! -z "${%s_DEST+x}" ]; then cd "${previous_wd}"; fi\n' "${name_upper_clean}"
+      printf '  if [ ! -z "${%s_DEST+x}" ]; then cd -- "${previous_wd}"; fi\n' "${name_upper_clean}"
       printf 'fi\n\n'
    fi
   } | tee -a "${scratch_file}" "${scratch}" "${install_file}" >/dev/null
@@ -479,7 +479,7 @@ update_generated_files() {
 
   scratch_contents="$(cat -- "${scratch}"; printf 'a')"
   scratch_contents="${scratch_contents%a}"
-  [ -d "${output_folder}"'/dockerfiles' ] || mkdir "${output_folder}"'/dockerfiles'
+  [ -d "${output_folder}"'/dockerfiles' ] || mkdir -- "${output_folder}"'/dockerfiles'
   for image in ${base}; do
     image_no_tag="$(printf '%s' "${image}" | cut -d ':' -f1)"
     name_file="${output_folder}"'/dockerfiles/'"${image_no_tag}"'.'"${name_lower}"'.Dockerfile'
@@ -490,12 +490,12 @@ update_generated_files() {
         "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${name_file}"
     fi
   done
-  rm -f "${scratch}"
+  rm -f -- "${scratch}"
 }
 
 # parse the "name" field
 parse_name() {
-    name="$(jq -r '.name' "${JSON_FILE}")"
+    name="$(jq -r '.name' "${1}")"
     rc="$?"
     export name
     return "${rc}"
@@ -503,7 +503,7 @@ parse_name() {
 
 # parse the "description" field
 parse_description() {
-    description="$(jq -r '.description // empty' "${JSON_FILE}")"
+    description="$(jq -r '.description // empty' "${1}")"
     rc="$?"
     export description
     return "${rc}"
@@ -511,7 +511,7 @@ parse_description() {
 
 # parse the "version" field
 parse_version() {
-    version="$(jq -r '.version // empty' "${JSON_FILE}")"
+    version="$(jq -r '.version // empty' "${1}")"
     rc="$?"
     export version
     return "${rc}"
@@ -519,7 +519,7 @@ parse_version() {
 
 # parse the "url" field
 parse_url() {
-    url="$(jq -r '.url // empty' "${JSON_FILE}")"
+    url="$(jq -r '.url // empty' "${1}")"
     rc="$?"
     export url
     return "${rc}"
@@ -527,14 +527,14 @@ parse_url() {
 
 # parse the "license" field
 parse_license() {
-    license="$(jq -r '.license // empty' "${JSON_FILE}")"
+    license="$(jq -r '.license // empty' "${1}")"
     rc="$?"
     export license
     return "${rc}"
 }
 
 parse_scripts_root() {
-    scripts_root="$(jq -r '.scripts_root' "${JSON_FILE}")"
+    scripts_root="$(jq -r '.scripts_root' "${1}")"
     rc="$?"
     export scripts_root
     if [ -d "${scripts_root}" ]; then
@@ -548,10 +548,22 @@ parse_scripts_root() {
 }
 
 parse_build_root() {
-    build_root="$(jq -r '.build_root' "${JSON_FILE}")"
+    build_root="$(jq -r '.build_root' "${1}")"
     rc="$?"
+#    case "${build_root}" in
+#    '$'*)
+#        tmp_stdout="$(mktemp)"
+#        if ! eval "printf '%s' ${build_root}" > "${tmp_stdout}" 2>/dev/null; then
+#           true
+#        else
+#          build_root="$(cat -- "${tmp_stdout}"; printf 'a')"
+#          build_root="${tmp_stdout%a}"
+#        fi
+#        rm -- "${tmp_stdout}"
+#        ;;
+#    esac
     export build_root
-    [ -d "${build_root}" ] || mkdir -p "${build_root}"
+    [ -d "${build_root}" ] || mkdir -p -- "${build_root}"
     LIBSCRIPT_BUILD_DIR="${build_root}"
     export LIBSCRIPT_BUILD_DIR
     if [ "${verbose}" -ge 3 ]; then
@@ -606,26 +618,26 @@ parse_builder_item() {
 
 # parse "dependencies" field
 parse_dependencies() {
-    parse_dependency_group '.dependencies.required' 'Required'
-    parse_dependency_group '.dependencies.optional' 'Optional'
+    parse_dependency_group "${1}" '.dependencies.required' 'Required'
+    parse_dependency_group "${1}" '.dependencies.optional' 'Optional'
 }
 
 # parse a dependency group (required|optional)
 parse_dependency_group() {
-    dep_group_query="${1}"
-    dep_group_name="${2}"
+    dep_group_query="${2}"
+    dep_group_name="${3}"
     if [ "${verbose}" -ge 3 ]; then printf '%s Dependencies:\n' "${dep_group_name}"; fi
 
-    parse_toolchains "${dep_group_query}"'.toolchains' "${dep_group_name}"
-    parse_databases "${dep_group_query}"'.databases' "${dep_group_name}"
-    parse_servers "${dep_group_query}"'.servers' "${dep_group_name}"
+    parse_toolchains "${1}" "${dep_group_query}"'.toolchains' "${dep_group_name}"
+    parse_databases "${1}" "${dep_group_query}"'.databases' "${dep_group_name}"
+    parse_servers "${1}" "${dep_group_query}"'.servers' "${dep_group_name}"
 }
 
 # parse "toolchains" array
 parse_toolchains() {
-    tc_query="${1}"
-    dep_group_name="${2}"
-    jq -c "${tc_query}"'[]?' "${JSON_FILE}" |
+    tc_query="${2}"
+    dep_group_name="${3}"
+    jq -c "${tc_query}"'[]?' "${1}" |
     {
         while read -r tc_item; do
           parse_toolchain_item "${tc_item}" "${dep_group_name}"
@@ -675,9 +687,9 @@ parse_toolchain_item() {
 
 # parse "databases" array
 parse_databases() {
-    db_query="${1}"
-    dep_group_name="${2}"
-    jq -c "${db_query}"'[]?' "${JSON_FILE}" | {
+    db_query="${2}"
+    dep_group_name="${3}"
+    jq -c "${db_query}"'[]?' "${1}" | {
       while read -r db_item; do
         parse_database_item "${db_item}" "${dep_group_name}"
       done
@@ -739,9 +751,9 @@ parse_database_item() {
 
 # parse "servers" array
 parse_servers() {
-    server_query="${1}"
-    dep_group_name="${2}"
-    jq -c "${server_query}"'[]?' "${JSON_FILE}" | while read -r server_item; do
+    server_query="${2}"
+    dep_group_name="${3}"
+    jq -c "${server_query}"'[]?' "${1}" | while read -r server_item; do
         parse_server_item "${server_item}" "${dep_group_name}"
         if [ "${servers_len}" -ge 1 ]; then
             printf 'wait\n\n' >> "${install_parallel_file}"
@@ -842,7 +854,7 @@ parse_daemon() {
 
 # parse "log_server" field
 parse_log_server() {
-    optional=$(jq -r '.log_server.optional // empty' "${JSON_FILE}")
+    optional=$(jq -r '.log_server.optional // empty' "${1}")
     if [ -n "${optional}" ]; then
         if [ "${verbose}" -ge 3 ]; then
           printf 'Log Server:\n'
@@ -860,7 +872,7 @@ check_required_fields() {
     required_root_fields='["name", "scripts_root", "dependencies"]'
 
     for field in $(printf '%s' "${required_root_fields}" | jq -r '.[]'); do
-        value=$(jq -r ".${field} // empty" "${JSON_FILE}")
+        value=$(jq -r ".${field} // empty" "${1}")
         if [ -z "${value}" ]; then
             missing_fields="${missing_fields} ${field}"
         fi
@@ -955,13 +967,13 @@ parse_json() {
 
     JSON_FILE="${1}"
 
-    check_required_fields
+    check_required_fields "${JSON_FILE}"
 
-    parse_name
-    parse_description || true
-    parse_version || true
-    parse_url || true
-    parse_license || true
+    parse_name "${JSON_FILE}"
+    parse_description "${JSON_FILE}" || true
+    parse_version "${JSON_FILE}" || true
+    parse_url "${JSON_FILE}" || true
+    parse_license "${JSON_FILE}" || true
 
     if [ "${verbose}" -ge 3 ]; then
       printf 'Name: %s\n' "${name}"
@@ -971,16 +983,16 @@ parse_json() {
       if [ -n "${license}" ]; then printf 'License: %s\n' "${license}" ; fi
     fi
 
-    parse_build_root
-    parse_scripts_root
+    parse_build_root "${JSON_FILE}"
+    parse_scripts_root "${JSON_FILE}"
 
-    parse_dependencies
-    parse_log_server
+    parse_dependencies "${JSON_FILE}"
+    parse_log_server "${JSON_FILE}"
 
     docker_s="$(cat -- "${docker_scratch_file}"; printf 'a')"
     docker_s="${docker_s%a}"
 
-    [ -d "${output_folder}"'/dockerfiles' ] || mkdir "${output_folder}"'/dockerfiles'
+    [ -d "${output_folder}"'/dockerfiles' ] || mkdir -- "${output_folder}"'/dockerfiles'
     for image in ${base}; do
       image_no_tag="$(printf '%s' "${image}" | cut -d ':' -f1)"
       dockerfile="${output_folder}"'/dockerfiles/'"${image_no_tag}"'.Dockerfile'
@@ -1010,6 +1022,6 @@ parse_json() {
 
     printf '%s\n\n' "${end_prelude_cmd}" >> "${install_cmd_file}"
 
-    rm "${docker_scratch_file}" "${toolchain_scratch_file}" "${storage_scratch_file}" \
-       "${server_scratch_file}" "${third_party_scratch_file}"
+    rm -- "${docker_scratch_file}" "${toolchain_scratch_file}" "${storage_scratch_file}" \
+          "${server_scratch_file}" "${third_party_scratch_file}"
 }

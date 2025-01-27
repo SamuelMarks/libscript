@@ -5,6 +5,7 @@ After=network-online.target
 [Service]
 ExecStart=${EXEC_START}
 Restart=always
+WorkingDirectory=${WORKING_DIR}
 ${ENV}
 
 [Install]

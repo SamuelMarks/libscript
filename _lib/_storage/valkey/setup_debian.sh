@@ -75,11 +75,11 @@ apt_depends git build-essential libsystemd-dev
 target="${VALKEY_BUILD_DIR}"'/valkey'
 git_get https://github.com/valkey-io/valkey "${target}"
 # shellcheck disable=SC2164
-cd "${target}"
+cd -- "${target}"
 hash="$(git rev-list HEAD -1)"
 
 build_install() {
-  [ -d 'build' ] || mkdir -p 'build'
+  [ -d 'build' ] || mkdir -p -- 'build'
   touch 'build/'"${hash}"
   make BUILD_TLS='yes' USE_SYSTEMD='yes'
   "${PRIV}" make install
@@ -98,7 +98,7 @@ fi
 
 
 # shellcheck disable=SC2164
-cd "${previous_wd}"
+cd -- "${previous_wd}"
 
 if [ "${noop}" -eq 0 ]; then
   service_name='valkey'
@@ -110,7 +110,7 @@ if [ "${noop}" -eq 0 ]; then
   "${PRIV}" systemctl start "${service_name}"
 fi
 
-[ -d "${LIBSCRIPT_DATA_DIR}" ] || mkdir -p "${LIBSCRIPT_DATA_DIR}"
+[ -d "${LIBSCRIPT_DATA_DIR}" ] || mkdir -p -- "${LIBSCRIPT_DATA_DIR}"
 val='redis://localhost'
 for key in 'REDIS_URL' 'VALKEY_URL'; do
   lang_export 'cmd' "${key}" "${val}" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.cmd'

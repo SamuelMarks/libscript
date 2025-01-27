@@ -41,3 +41,9 @@ fi
 # shellcheck disable=SC1091
 . "${HOME}"'/.local/bin/env'
 uv python install "${PYTHON_VERSION}"
+if [ ! -z "${VENV+x}" ] && [ ! -f "${VENV}"'/bin/python' ]; then
+  uv venv --python "${PYTHON_VERSION}" "${VENV}"
+  "${VENV}"'/bin/python' -m ensurepip
+  "${VENV}"'/bin/python' -m pip install -U pip
+  "${VENV}"'/bin/python' -m pip install -U setuptools wheel
+fi

@@ -53,9 +53,9 @@ if ! rc-service postgresql start >"${stdout}" 2>"${stderr}"; then
   if [ ! "${stderr}" = ' * WARNING: postgresql is already starting' ]; then
     >&2 printf '%s\n' "${stderr}";
     printf '%s\n' "${stdout}";
-    rm -f "${stdout}" "${stderr}"
+    rm -f -- "${stdout}" "${stderr}"
     exit "${rc}"
   fi
 fi
 
-rm -f "${stdout}" "${stderr}"
+rm -f -- "${stdout}" "${stderr}"

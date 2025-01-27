@@ -73,7 +73,7 @@ infer_locations() {
      # shellcheck disable=SC1090
      . "${ENV_SAVED_FILE}"
 
-     rm -f "${ENV_SAVED_FILE}"
+     rm -f -- "${ENV_SAVED_FILE}"
      unset ENV_SAVED_FILE
   fi
 }

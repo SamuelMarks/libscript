@@ -61,7 +61,7 @@ fi
 
 previous_wd="$(pwd)"
 if [ ! -z "${input_directory+x}" ]; then
-  cd "${input_directory}"
+  cd -- "${input_directory}"
 fi
 
 # shellcheck disable=SC2016
@@ -182,5 +182,5 @@ for section in "${toolchain_dfs}" "${server_dfs}" "${storage_dfs}" "${third_part
 done
 
 if [ ! -z "${input_directory+x}" ]; then
-  cd "${previous_wd}"
+  cd -- "${previous_wd}"
 fi

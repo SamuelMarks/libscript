@@ -36,12 +36,12 @@ export SCRIPT_NAME
 
 if [ ! -f /usr/local/bin/wait4x ]; then
   DOWNLOAD_DIR=${DOWNLOAD_DIR:-${LIBSCRIPT_DATA_DIR}/Downloads}
-  [ -d "${DOWNLOAD_DIR}" ] || mkdir -p "${DOWNLOAD_DIR}"
+  [ -d "${DOWNLOAD_DIR}" ] || mkdir -p -- "${DOWNLOAD_DIR}"
   previous_wd="$(pwd)"
-  cd "${DOWNLOAD_DIR}"
+  cd -- "${DOWNLOAD_DIR}"
   curl -#LO https://github.com/atkrad/wait4x/releases/latest/download/wait4x-linux-amd64.tar.gz
   tar --one-top-level -xvf wait4x-linux-amd64.tar.gz
   "${PRIV}" install ./wait4x-linux-amd64/wait4x /usr/local/bin/wait4x
-  # rm wait4x-linux-amd64.tar.gz
-  cd "${previous_wd}"
+  # rm -- wait4x-linux-amd64.tar.gz
+  cd -- "${previous_wd}"
 fi

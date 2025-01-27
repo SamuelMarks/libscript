@@ -60,13 +60,13 @@ if [ -z "${DEST+x}" ]; then
   rand="$(env LC_CTYPE='C' tr -cd '[:lower:]' < '/dev/urandom' | head -c 8)"
   DEST="${LIBSCRIPT_DATA_DIR}"'/'"${rand}"
   export DEST
-  mkdir -p "${DEST}"
+  mkdir -p -- "${DEST}"
   service_name='rust-'"${rand}"
 else
   service_name="$(basename -- "${DEST}")"
 fi
 name=' '"${service_name}"
-cd "${DEST}"
+cd -- "${DEST}"
 
 if [ -f 'package.json' ]; then
   npm i
@@ -101,7 +101,7 @@ if which python > "${python_out}" ; then
   python_executable="$(cat -- "${python_out}"; printf 'a')"
   python_executable="${python_executable%a}"
   >&2 printf 'taking from cat\n'
-  rm "${python_out}"
+  rm -- "${python_out}"
 else
   python_executable="$(find "$(pwd)" -name python -executable)"
 fi
@@ -111,10 +111,13 @@ if [ "${python_executable}" = '' ]; then
 fi
 EXEC_START="${python_executable}"' "'"${script}"'"'
 name_file="$(mktemp)"
-env -i DESCRIPTION='Python server'"${name}" ENV="${ENV}" EXEC_START="${EXEC_START}" \
-      "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/_daemon/systemd/simple.service' > "${name_file}"
+env -i DESCRIPTION='Python server'"${name}" \
+       WORKING_DIR="${DEST}" \
+       ENV="${ENV}" \
+       EXEC_START="${EXEC_START}" \
+       "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/_daemon/systemd/simple.service' > "${name_file}"
 "${PRIV}" install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
 
-rm "${name_file}"
+rm -- "${name_file}"
 
-cd "${previous_wd}"
+cd -- "${previous_wd}"

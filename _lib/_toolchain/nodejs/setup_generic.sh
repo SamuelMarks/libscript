@@ -74,16 +74,16 @@ if ! [ -f "${DOWNLOAD_DIR}"'/bin/fnm' ] ; then
     *) os='linux' ;;
   esac
   archive='fnm-'"${os}"'.zip'
-  mkdir -p "${DOWNLOAD_DIR}"'/bin'
+  mkdir -p -- "${DOWNLOAD_DIR}"'/bin'
   previous_wd="$(pwd)"
-  cd "${DOWNLOAD_DIR}"
+  cd -- "${DOWNLOAD_DIR}"
   # https://github.com/Schniz/fnm/releases/download/v1.38.1/fnm-linux.zip
   # https://github.com/Schniz/fnm/releases/download/v1.38.1/fnm-debian.zip
   printf 'https://github.com/Schniz/fnm/releases/download/%s/%s\n' "${version}" "${archive}"
   curl -OL 'https://github.com/Schniz/fnm/releases/download/'${version}'/'"${archive}"
   unzip "${archive}"
   mv fnm "${DOWNLOAD_DIR}"'/bin/'
-  cd "${previous_wd}"
+  cd -- "${previous_wd}"
 fi
 "${DOWNLOAD_DIR}"'/bin/fnm' install "${NODEJS_VERSION}"
 export PATH="${HOME}"'/.local/share/fnm/aliases/default/bin:'"${PATH}"

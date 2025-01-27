@@ -21,8 +21,8 @@ if [ "${NODEJS_INSTALL_DIR:-1}" -eq 1 ]; then
     previous_wd="$(pwd)"
     DEST="${NODEJS_DEST}"
     export DEST
-    [ -d "${DEST}" ] || mkdir -p "${DEST}"
-    cd "${DEST}"
+    [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
+    cd -- "${DEST}"
   fi
   if [ ! -z "${NODEJS_VARS+x}" ]; then
     export VARS="${NODEJS_VARS}"
@@ -43,7 +43,7 @@ if [ "${NODEJS_INSTALL_DIR:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${NODEJS_DEST+x}" ]; then cd "${previous_wd}"; fi
+  if [ ! -z "${NODEJS_DEST+x}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF
@@ -59,8 +59,8 @@ if [ "${PYTHON_INSTALL_DIR:-1}" -eq 1 ]; then
     previous_wd="$(pwd)"
     DEST="${PYTHON_DEST}"
     export DEST
-    [ -d "${DEST}" ] || mkdir -p "${DEST}"
-    cd "${DEST}"
+    [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
+    cd -- "${DEST}"
   fi
   if [ ! -z "${PYTHON_VARS+x}" ]; then
     export VARS="${PYTHON_VARS}"
@@ -81,7 +81,7 @@ if [ "${PYTHON_INSTALL_DIR:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${PYTHON_DEST+x}" ]; then cd "${previous_wd}"; fi
+  if [ ! -z "${PYTHON_DEST+x}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF
@@ -97,8 +97,8 @@ if [ "${RUST_INSTALL_DIR:-1}" -eq 1 ]; then
     previous_wd="$(pwd)"
     DEST="${RUST_DEST}"
     export DEST
-    [ -d "${DEST}" ] || mkdir -p "${DEST}"
-    cd "${DEST}"
+    [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
+    cd -- "${DEST}"
   fi
   if [ ! -z "${RUST_VARS+x}" ]; then
     export VARS="${RUST_VARS}"
@@ -119,7 +119,7 @@ if [ "${RUST_INSTALL_DIR:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${RUST_DEST+x}" ]; then cd "${previous_wd}"; fi
+  if [ ! -z "${RUST_DEST+x}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF

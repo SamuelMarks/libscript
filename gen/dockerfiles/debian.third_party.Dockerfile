@@ -24,8 +24,8 @@ if [ "${SADAS:-1}" -eq 1 ]; then
     previous_wd="$(pwd)"
     DEST="${SADAS_DEST}"
     export DEST
-    [ -d "${DEST}" ] || mkdir -p "${DEST}"
-    cd "${DEST}"
+    [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
+    cd -- "${DEST}"
   fi
   if [ ! -z "${SADAS_VARS+x}" ]; then
     export VARS="${SADAS_VARS}"
@@ -46,7 +46,7 @@ if [ "${SADAS:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${SADAS_DEST+x}" ]; then cd "${previous_wd}"; fi
+  if [ ! -z "${SADAS_DEST+x}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF
@@ -65,8 +65,8 @@ if [ "${NODEJS_HTTP_SERVER:-1}" -eq 1 ]; then
     previous_wd="$(pwd)"
     DEST="${NODEJS_HTTP_SERVER_DEST}"
     export DEST
-    [ -d "${DEST}" ] || mkdir -p "${DEST}"
-    cd "${DEST}"
+    [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
+    cd -- "${DEST}"
   fi
   if [ ! -z "${NODEJS_HTTP_SERVER_VARS+x}" ]; then
     export VARS="${NODEJS_HTTP_SERVER_VARS}"
@@ -87,7 +87,7 @@ if [ "${NODEJS_HTTP_SERVER:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${NODEJS_HTTP_SERVER_DEST+x}" ]; then cd "${previous_wd}"; fi
+  if [ ! -z "${NODEJS_HTTP_SERVER_DEST+x}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF
@@ -111,8 +111,8 @@ if [ "${PYTHON_SERVER:-1}" -eq 1 ]; then
     previous_wd="$(pwd)"
     DEST="${PYTHON_SERVER_DEST}"
     export DEST
-    [ -d "${DEST}" ] || mkdir -p "${DEST}"
-    cd "${DEST}"
+    [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
+    cd -- "${DEST}"
   fi
   if [ ! -z "${PYTHON_SERVER_VARS+x}" ]; then
     export VARS="${PYTHON_SERVER_VARS}"
@@ -133,7 +133,7 @@ if [ "${PYTHON_SERVER:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${PYTHON_SERVER_DEST+x}" ]; then cd "${previous_wd}"; fi
+  if [ ! -z "${PYTHON_SERVER_DEST+x}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF
@@ -161,8 +161,8 @@ if [ "${BUILD_STATIC_FILES0:-1}" -eq 1 ]; then
     previous_wd="$(pwd)"
     DEST="${BUILD_STATIC_FILES0_DEST}"
     export DEST
-    [ -d "${DEST}" ] || mkdir -p "${DEST}"
-    cd "${DEST}"
+    [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
+    cd -- "${DEST}"
   fi
   if [ ! -z "${BUILD_STATIC_FILES0_VARS+x}" ]; then
     export VARS="${BUILD_STATIC_FILES0_VARS}"
@@ -183,7 +183,7 @@ if [ "${BUILD_STATIC_FILES0:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${BUILD_STATIC_FILES0_DEST+x}" ]; then cd "${previous_wd}"; fi
+  if [ ! -z "${BUILD_STATIC_FILES0_DEST+x}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF
@@ -201,8 +201,8 @@ if [ "${NGINX_CONFIG_BUILDER__FRONTEND:-1}" -eq 1 ]; then
     previous_wd="$(pwd)"
     DEST="${NGINX_CONFIG_BUILDER__FRONTEND_DEST}"
     export DEST
-    [ -d "${DEST}" ] || mkdir -p "${DEST}"
-    cd "${DEST}"
+    [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
+    cd -- "${DEST}"
   fi
   if [ ! -z "${NGINX_CONFIG_BUILDER__FRONTEND_VARS+x}" ]; then
     export VARS="${NGINX_CONFIG_BUILDER__FRONTEND_VARS}"
@@ -223,7 +223,7 @@ if [ "${NGINX_CONFIG_BUILDER__FRONTEND:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${NGINX_CONFIG_BUILDER__FRONTEND_DEST+x}" ]; then cd "${previous_wd}"; fi
+  if [ ! -z "${NGINX_CONFIG_BUILDER__FRONTEND_DEST+x}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF
@@ -241,8 +241,8 @@ if [ "${NGINX_CONFIG_BUILDER__DOCS:-1}" -eq 1 ]; then
     previous_wd="$(pwd)"
     DEST="${NGINX_CONFIG_BUILDER__DOCS_DEST}"
     export DEST
-    [ -d "${DEST}" ] || mkdir -p "${DEST}"
-    cd "${DEST}"
+    [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
+    cd -- "${DEST}"
   fi
   if [ ! -z "${NGINX_CONFIG_BUILDER__DOCS_VARS+x}" ]; then
     export VARS="${NGINX_CONFIG_BUILDER__DOCS_VARS}"
@@ -263,7 +263,7 @@ if [ "${NGINX_CONFIG_BUILDER__DOCS:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${NGINX_CONFIG_BUILDER__DOCS_DEST+x}" ]; then cd "${previous_wd}"; fi
+  if [ ! -z "${NGINX_CONFIG_BUILDER__DOCS_DEST+x}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF
@@ -281,8 +281,8 @@ if [ "${NGINX_CONFIG_BUILDER__CRAWL:-1}" -eq 1 ]; then
     previous_wd="$(pwd)"
     DEST="${NGINX_CONFIG_BUILDER__CRAWL_DEST}"
     export DEST
-    [ -d "${DEST}" ] || mkdir -p "${DEST}"
-    cd "${DEST}"
+    [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
+    cd -- "${DEST}"
   fi
   if [ ! -z "${NGINX_CONFIG_BUILDER__CRAWL_VARS+x}" ]; then
     export VARS="${NGINX_CONFIG_BUILDER__CRAWL_VARS}"
@@ -303,7 +303,7 @@ if [ "${NGINX_CONFIG_BUILDER__CRAWL:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${NGINX_CONFIG_BUILDER__CRAWL_DEST+x}" ]; then cd "${previous_wd}"; fi
+  if [ ! -z "${NGINX_CONFIG_BUILDER__CRAWL_DEST+x}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF
@@ -321,8 +321,8 @@ if [ "${NGINX_CONFIG_BUILDER__SWAP:-1}" -eq 1 ]; then
     previous_wd="$(pwd)"
     DEST="${NGINX_CONFIG_BUILDER__SWAP_DEST}"
     export DEST
-    [ -d "${DEST}" ] || mkdir -p "${DEST}"
-    cd "${DEST}"
+    [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
+    cd -- "${DEST}"
   fi
   if [ ! -z "${NGINX_CONFIG_BUILDER__SWAP_VARS+x}" ]; then
     export VARS="${NGINX_CONFIG_BUILDER__SWAP_VARS}"
@@ -343,7 +343,7 @@ if [ "${NGINX_CONFIG_BUILDER__SWAP:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${NGINX_CONFIG_BUILDER__SWAP_DEST+x}" ]; then cd "${previous_wd}"; fi
+  if [ ! -z "${NGINX_CONFIG_BUILDER__SWAP_DEST+x}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF
@@ -361,8 +361,8 @@ if [ "${NGINX_CONFIG_BUILDER__DATA:-1}" -eq 1 ]; then
     previous_wd="$(pwd)"
     DEST="${NGINX_CONFIG_BUILDER__DATA_DEST}"
     export DEST
-    [ -d "${DEST}" ] || mkdir -p "${DEST}"
-    cd "${DEST}"
+    [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
+    cd -- "${DEST}"
   fi
   if [ ! -z "${NGINX_CONFIG_BUILDER__DATA_VARS+x}" ]; then
     export VARS="${NGINX_CONFIG_BUILDER__DATA_VARS}"
@@ -383,7 +383,7 @@ if [ "${NGINX_CONFIG_BUILDER__DATA:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${NGINX_CONFIG_BUILDER__DATA_DEST+x}" ]; then cd "${previous_wd}"; fi
+  if [ ! -z "${NGINX_CONFIG_BUILDER__DATA_DEST+x}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF
@@ -398,8 +398,8 @@ if [ "${JUPYTERHUB:-0}" -eq 1 ]; then
     previous_wd="$(pwd)"
     DEST="${JUPYTERHUB_DEST}"
     export DEST
-    [ -d "${DEST}" ] || mkdir -p "${DEST}"
-    cd "${DEST}"
+    [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
+    cd -- "${DEST}"
   fi
   if [ ! -z "${JUPYTERHUB_VARS+x}" ]; then
     export VARS="${JUPYTERHUB_VARS}"
@@ -420,7 +420,7 @@ if [ "${JUPYTERHUB:-0}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${JUPYTERHUB_DEST+x}" ]; then cd "${previous_wd}"; fi
+  if [ ! -z "${JUPYTERHUB_DEST+x}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF

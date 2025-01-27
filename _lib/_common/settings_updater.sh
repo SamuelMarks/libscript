@@ -53,7 +53,7 @@ STACK="${STACK:-:}"
 case "${STACK}" in
   *':'"${this_file}"':'*) ;;
   *)
-    mkdir -p "${LIBSCRIPT_DATA_DIR}"
+    mkdir -p -- "${LIBSCRIPT_DATA_DIR}"
     try_create_table ;;
 esac
 STACK="${STACK}${this_file}"':'

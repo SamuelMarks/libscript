@@ -42,7 +42,7 @@ git_get() {
             GIT_WORK_TREE="${target}" GIT_DIR="${GIT_DIR_}" git pull --ff-only
         fi
     else
-        mkdir -p "${target}"
+        mkdir -p -- "${target}"
         if [ -n "${branch}" ]; then
             git clone --depth=1 --single-branch --branch "${branch}" -- "${repo}" "${target}"
         else
