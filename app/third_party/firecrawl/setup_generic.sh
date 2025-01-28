@@ -70,6 +70,15 @@ if [ ! -f "${hash_loc}" ]; then
   cd -- "${DEST}"
 fi
 
+if [ ! -z "${VARS+x}" ]; then
+  object2key_val "${VARS}" 'export ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
+fi
+ENV=''
+if [ -f "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' ]; then
+  chmod +x "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
+  ENV="$(cut -c8- "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' | awk '{arr[i++]=$0} END {while (i>0) print arr[--i] }' | tr -d "'" | awk -F= '!seen[$1]++' | xargs printf 'Environment="%s"\n')"
+fi
+
 if [ -d '/etc/systemd/system' ]; then
   name_file="$(mktemp)"
   service_name='firecrawl_workers'
