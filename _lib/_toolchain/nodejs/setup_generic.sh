@@ -45,15 +45,12 @@ if [ "${NODEJS_VERSION}" = 'lts' ]; then
   NODEJS_VERSION="${NODEJS_VERSION_LTS}"
 fi
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/common.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
-
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/os_info.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
+for lib in '_lib/_common/pkg_mgr.sh' '_lib/_common/os_info.sh'; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+done
 
 if cmd_avail node ; then
   version="$(node --version)"
@@ -67,7 +64,7 @@ LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 DOWNLOAD_DIR=${DOWNLOAD_DIR:-${LIBSCRIPT_DATA_DIR}/Downloads}
 version='v1.38.1'
 if ! [ -f "${DOWNLOAD_DIR}"'/bin/fnm' ] ; then
-  ensure_available 'curl' 'unzip'
+  depends 'curl' 'unzip'
   os="$(printf '%s' "${TARGET_OS}" | tr '[:upper:]' '[:lower:]')"
   case "${os}" in
     'macos'*) ;;

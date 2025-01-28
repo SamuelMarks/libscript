@@ -35,11 +35,13 @@ fi
 # shellcheck disable=SC1090
 . "${ENV_SCRIPT_FILE}"
 
-if [ -z "${HTTPS_ALWAYS+x}" ] && { [ "${HTTPS_ALWAYS}" -eq 1 ] || [ "${HTTPS_ALWAYS}" = 'true' ]; }; then
-  conf_tpl="${LIBSCRIPT_ROOT_DIR}"'/_lib/_server/nginx/conf/simple_secure.conf'
-else
-  export LISTEN="${LISTEN:-80}"
-  conf_tpl="${LIBSCRIPT_ROOT_DIR}"'/_lib/_server/nginx/conf/simple_insecure.conf'
-fi
+case "${HTTPS_ALWAYS:-}" in
+  '1'|'true')
+    conf_tpl="${LIBSCRIPT_ROOT_DIR}"'/_lib/_server/nginx/conf/simple_secure.conf' ;;
+  *)
+    export LISTEN="${LISTEN:-80}"
+    conf_tpl="${LIBSCRIPT_ROOT_DIR}"'/_lib/_server/nginx/conf/simple_insecure.conf'
+    ;;
+esac
 
 envsubst_safe < "${conf_tpl}"

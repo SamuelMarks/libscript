@@ -34,23 +34,15 @@ DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
-
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/priv.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
-
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_os/_apt/apt.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
+for lib in 'env.sh' '_lib/_common/priv.sh' '_lib/_common/pkg_mgr.sh'; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+done
 
 if [ "${run_before}" -eq 0 ]; then
-  apt_depends curl gnupg2 ca-certificates lsb-release debian-archive-keyring
+  depends curl gnupg2 ca-certificates lsb-release debian-archive-keyring
   [ -f '/usr/share/keyrings/nginx-archive-keyring.gpg' ] || \
     curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
       | "${PRIV}" tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
@@ -63,7 +55,7 @@ if [ "${run_before}" -eq 0 ]; then
       | "${PRIV}" tee /etc/apt/preferences.d/99nginx && \
     "${PRIV}" apt update -qq
 
-  apt_depends nginx
+  depends nginx
 fi
 
 rtrim() {

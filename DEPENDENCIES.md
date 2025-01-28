@@ -8,6 +8,7 @@ Specifically these from POSIX are used:
 
   - `.` (for `source`ing)
   - `/bin/sh`
+  - `awk` (no GNU extensions)
   - `cat`
   - `command`
   - `cp` and `cp -r`

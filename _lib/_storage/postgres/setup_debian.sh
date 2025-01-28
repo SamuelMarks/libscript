@@ -33,25 +33,22 @@ DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 
+for lib in 'env.sh' '_lib/_common/pkg_mgr.sh' '_lib/_common/priv.sh' ; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+done
+
 SCRIPT_NAME="${DIR}"'/env.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/priv.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
-
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_os/_apt/apt.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
-
 if ! dpkg -s -- postgresql-server-dev-"${POSTGRESQL_VERSION}" >/dev/null 2>&1; then
-  apt_depends postgresql-common
+  depends postgresql-common
   yes '' | "${PRIV}" /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
-  apt_depends postgresql-server-dev-"${POSTGRESQL_VERSION}" postgresql-"${POSTGRESQL_VERSION}"
+  depends postgresql-server-dev-"${POSTGRESQL_VERSION}" postgresql-"${POSTGRESQL_VERSION}"
 fi
 
 SCRIPT_NAME="${DIR}"'/user_db_setup.sh'

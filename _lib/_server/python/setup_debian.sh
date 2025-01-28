@@ -34,25 +34,12 @@ DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
-
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/common.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
-
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_git/git.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
-
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_toolchain/nodejs/setup.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
+for lib in 'env.sh' '_lib/_common/pkg_mgr.sh' '_lib/_git/git.sh' '_lib/_toolchain/python/setup.sh'; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+done
 
 previous_wd="$(pwd)"
 service_name=''
@@ -68,13 +55,9 @@ fi
 name=' '"${service_name}"
 cd -- "${DEST}"
 
-if [ -f 'package.json' ]; then
-  npm i
-fi
-
 ENV=''
 if [ -f "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' ]; then
-  ENV="$(cut -c8- "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' | tr -d "'" | sort -u | xargs printf 'Environment="%s"\n')"
+  ENV="$(cut -c8- "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' | tr -d "'" | awk -F= '!seen[$1]++' | xargs printf 'Environment="%s"\n')"
 fi
 #EXEC_START="$(pwd)"'/'"$(find target/release -depth -maxdepth 1 -type f -executable -print -quit)"
 # TODO: Check if there a main in `setup.py` or `pyproject.toml` or `setup.cfg` then parse out that
@@ -96,14 +79,17 @@ if [ ! -n "${script}" ]; then
   exit 2
 fi
 # TODO: Should check PYTHONPATH VENV and other env vars first
-python_out="$(mktemp)"
-if which python > "${python_out}" ; then
-  python_executable="$(cat -- "${python_out}"; printf 'a')"
-  python_executable="${python_executable%a}"
-  >&2 printf 'taking from cat\n'
-  rm -- "${python_out}"
+if [ ! -z "${VENV+x}" ]; then
+  true
 else
-  python_executable="$(find "$(pwd)" -name python -executable)"
+  python_out="$(mktemp)"
+  if which python > "${python_out}" ; then
+    python_executable="$(cat -- "${python_out}"; printf 'a')"
+    python_executable="${python_executable%a}"
+    rm -- "${python_out}"
+  else
+    python_executable="$(find "$(pwd)" -name python -executable)"
+  fi
 fi
 if [ "${python_executable}" = '' ]; then
   >&2 printf 'python_executable could not be found, only got "%s"\n' "${python_executable}"

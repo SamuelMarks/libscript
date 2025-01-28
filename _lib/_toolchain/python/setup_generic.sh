@@ -29,12 +29,12 @@ esac
 STACK="${STACK}${this_file}"':'
 export STACK
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/common.sh'
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/pkg_mgr.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-ensure_available 'curl'
+depends 'curl'
 if [ ! -f "${HOME}"'/.local/bin/uv' ]; then
   curl -LsSf https://astral.sh/uv/install.sh | sh
 fi
@@ -46,4 +46,11 @@ if [ ! -z "${VENV+x}" ] && [ ! -f "${VENV}"'/bin/python' ]; then
   "${VENV}"'/bin/python' -m ensurepip
   "${VENV}"'/bin/python' -m pip install -U pip
   "${VENV}"'/bin/python' -m pip install -U setuptools wheel
+  # For safety only install package and its deps inside a venv
+  if [ -f 'requirements.txt' ]; then
+      "${VENV}"'/bin/python' -m pip install -r 'requirements.txt'
+  fi
+  if [ -f 'setup.py' ] || [ -f 'setup.cfg' ] || [ -f 'pyproject.toml' ]; then
+    "${VENV}"'/bin/python' -m pip install -e .
+  fi
 fi
