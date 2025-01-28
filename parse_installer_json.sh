@@ -534,42 +534,31 @@ parse_license() {
 }
 
 parse_scripts_root() {
-    scripts_root="$(jq -r '.scripts_root' "${1}")"
-    rc="$?"
-    export scripts_root
-    if [ -d "${scripts_root}" ]; then
-      LIBSCRIPT_ROOT_DIR="${scripts_root}"
-      export LIBSCRIPT_ROOT_DIR
-    fi
-    if [ "${verbose}" -ge 3 ]; then
-      printf 'Scripts Root: %s\n' "${scripts_root}"
-    fi
-    return "${rc}"
+  json_file="${1}"
+  scripts_root="$(jq -r '.scripts_root' "${json_file}")"
+  rc="$?"
+  export scripts_root
+  if [ -d "${scripts_root}" ]; then
+    LIBSCRIPT_ROOT_DIR="${scripts_root}"
+    export LIBSCRIPT_ROOT_DIR
+  fi
+  if [ "${verbose}" -ge 3 ]; then
+    printf 'Scripts Root: %s\n' "${scripts_root}"
+  fi
+  return "${rc}"
 }
 
 parse_build_root() {
-    build_root="$(jq -r '.build_root' "${1}")"
-    rc="$?"
-#    case "${build_root}" in
-#    '$'*)
-#        tmp_stdout="$(mktemp)"
-#        if ! eval "printf '%s' ${build_root}" > "${tmp_stdout}" 2>/dev/null; then
-#           true
-#        else
-#          build_root="$(cat -- "${tmp_stdout}"; printf 'a')"
-#          build_root="${tmp_stdout%a}"
-#        fi
-#        rm -- "${tmp_stdout}"
-#        ;;
-#    esac
-    export build_root
-    [ -d "${build_root}" ] || mkdir -p -- "${build_root}"
-    LIBSCRIPT_BUILD_DIR="${build_root}"
-    export LIBSCRIPT_BUILD_DIR
-    if [ "${verbose}" -ge 3 ]; then
-      printf 'Build Root: %s\n' "${build_root}"
-    fi
-    return "${rc}"
+  json_file="${1}"
+  build_root="$(jq -r '.build_root' "${json_file}")"
+  rc="$?"
+  export build_root
+  LIBSCRIPT_BUILD_DIR="${build_root}"
+  export LIBSCRIPT_BUILD_DIR
+  if [ "${verbose}" -ge 3 ]; then
+    printf 'Build Root: %s\n' "${build_root}"
+  fi
+  return "${rc}"
 }
 
 # parse a builder item
@@ -618,270 +607,276 @@ parse_builder_item() {
 
 # parse "dependencies" field
 parse_dependencies() {
-    parse_dependency_group "${1}" '.dependencies.required' 'Required'
-    parse_dependency_group "${1}" '.dependencies.optional' 'Optional'
+  json_file="${1}"
+  parse_dependency_group "${json_file}" '.dependencies.required' 'Required'
+  parse_dependency_group "${json_file}" '.dependencies.optional' 'Optional'
 }
 
 # parse a dependency group (required|optional)
 parse_dependency_group() {
-    dep_group_query="${2}"
-    dep_group_name="${3}"
-    if [ "${verbose}" -ge 3 ]; then printf '%s Dependencies:\n' "${dep_group_name}"; fi
+  json_file="${1}"
+  dep_group_query="${2}"
+  dep_group_name="${3}"
+  if [ "${verbose}" -ge 3 ]; then printf '%s Dependencies:\n' "${dep_group_name}"; fi
 
-    parse_toolchains "${1}" "${dep_group_query}"'.toolchains' "${dep_group_name}"
-    parse_databases "${1}" "${dep_group_query}"'.databases' "${dep_group_name}"
-    parse_servers "${1}" "${dep_group_query}"'.servers' "${dep_group_name}"
+  parse_toolchains "${json_file}" "${dep_group_query}"'.toolchains' "${dep_group_name}"
+  parse_databases "${json_file}" "${dep_group_query}"'.databases' "${dep_group_name}"
+  parse_servers "${json_file}" "${dep_group_query}"'.servers' "${dep_group_name}"
 }
 
 # parse "toolchains" array
 parse_toolchains() {
-    tc_query="${2}"
-    dep_group_name="${3}"
-    jq -c "${tc_query}"'[]?' "${1}" |
-    {
-        while read -r tc_item; do
-          parse_toolchain_item "${tc_item}" "${dep_group_name}"
-        done
-        if [ "${toolchains_len}" -ge 1 ]; then
-          printf 'wait\n\n' >> "${install_parallel_file}"
-        fi
-    }
+  json_file="${1}"
+  tc_query="${2}"
+  dep_group_name="${3}"
+  jq -c "${tc_query}"'[]?' "${json_file}" |
+  {
+    while read -r tc_item; do
+      parse_toolchain_item "${tc_item}" "${dep_group_name}"
+    done
+    if [ "${toolchains_len}" -ge 1 ]; then
+      printf 'wait\n\n' >> "${install_parallel_file}"
+    fi
+  }
 }
 
 # parse a single toolchain item
 parse_toolchain_item() {
-    tc_json="${1}"
-    name=$(printf '%s' "${tc_json}" | jq -r '.name')
-    version=$(printf '%s' "${tc_json}" | jq -r '.version')
-    env=$(printf '%s' "${tc_json}" | jq -r '.env')
-    dep_group_name="${2}"
+  tc_json="${1}"
+  name=$(printf '%s' "${tc_json}" | jq -r '.name')
+  version=$(printf '%s' "${tc_json}" | jq -r '.version')
+  env=$(printf '%s' "${tc_json}" | jq -r '.env')
+  dep_group_name="${2}"
 
-    if [ "${verbose}" -ge 3 ]; then
-      printf '  Toolchain:\n'
-      printf '    Name: %s\n' "${name}"
-      printf '    Version: %s\n' "${version}"
-      printf '    Env: %s\n' "${env}"
-    fi
+  if [ "${verbose}" -ge 3 ]; then
+    printf '  Toolchain:\n'
+    printf '    Name: %s\n' "${name}"
+    printf '    Version: %s\n' "${version}"
+    printf '    Env: %s\n' "${env}"
+  fi
 
-    if [ "${dep_group_name}" = "Required" ] ; then
-        if [ "${toolchains_header_req}" -eq 0 ]; then
-          toolchains_header_req=1
-          printf '\n' >> "${false_env_file}"
-          extra_before_str=$(print_header 'Toolchain(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}")
-          print_header 'Toolchain(s) [required]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
-          # shellcheck disable=SC2059
-          printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
-        fi
-    elif [ "${toolchains_header_opt}" -eq 0 ]; then
-        toolchains_header_opt=1
-        printf '\n' >> "${false_env_file}"
-        extra_before_str=$(print_header 'Toolchain(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}")
-        print_header 'Toolchain(s) [optional]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
-        # shellcheck disable=SC2059
-        if [ "${all_deps}" -eq 0 ]; then printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}" ; fi
+  if [ "${dep_group_name}" = "Required" ] ; then
+    if [ "${toolchains_header_req}" -eq 0 ]; then
+      toolchains_header_req=1
+      printf '\n' >> "${false_env_file}"
+      extra_before_str=$(print_header 'Toolchain(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}")
+      print_header 'Toolchain(s) [required]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
+      # shellcheck disable=SC2059
+      printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
     fi
-    # shellcheck disable=SC2003
-    toolchains_len=$(expr "${toolchains_len}" + 1)
-    update_generated_files "${name}" "${version}" "${env}" '_lib/_toolchain' "${dep_group_name}" "${extra_before_str}" '' '' ''
+  elif [ "${toolchains_header_opt}" -eq 0 ]; then
+    toolchains_header_opt=1
+    printf '\n' >> "${false_env_file}"
+    extra_before_str=$(print_header 'Toolchain(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}")
+    print_header 'Toolchain(s) [optional]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
+    # shellcheck disable=SC2059
+    if [ "${all_deps}" -eq 0 ]; then printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}" ; fi
+  fi
+  # shellcheck disable=SC2003
+  toolchains_len=$(expr "${toolchains_len}" + 1)
+  update_generated_files "${name}" "${version}" "${env}" '_lib/_toolchain' "${dep_group_name}" "${extra_before_str}" '' '' ''
 }
 
 # parse "databases" array
 parse_databases() {
-    db_query="${2}"
-    dep_group_name="${3}"
-    jq -c "${db_query}"'[]?' "${1}" | {
-      while read -r db_item; do
-        parse_database_item "${db_item}" "${dep_group_name}"
-      done
-      if [ "${databases_len}" -ge 1 ]; then
-        printf 'wait\n\n' >> "${install_parallel_file}"
-      fi
-    }
+  json_file="${1}"
+  db_query="${2}"
+  dep_group_name="${3}"
+  jq -c "${db_query}"'[]?' "${json_file}" | {
+    while read -r db_item; do
+      parse_database_item "${db_item}" "${dep_group_name}"
+    done
+    if [ "${databases_len}" -ge 1 ]; then
+      printf 'wait\n\n' >> "${install_parallel_file}"
+    fi
+  }
 }
 
 # parse a single database item
 parse_database_item() {
-    db_json="${1}"
-    dep_group_name="${2}"
-    name=$(printf '%s' "${db_json}" | jq -r '.name')
-    version=$(printf '%s' "${db_json}" | jq -r '.version')
-    env=$(printf '%s' "${db_json}" | jq -r '.env')
-    target_env=$(printf '%s' "${db_json}" | jq -c '.target_env[]?')
-    vars=$(printf '%s' "${db_json}" | jq -c '.vars?')
-    extra_before_str=''
+  db_json="${1}"
+  dep_group_name="${2}"
+  name=$(printf '%s' "${db_json}" | jq -r '.name')
+  version=$(printf '%s' "${db_json}" | jq -r '.version')
+  env=$(printf '%s' "${db_json}" | jq -r '.env')
+  target_env=$(printf '%s' "${db_json}" | jq -c '.target_env[]?')
+  vars=$(printf '%s' "${db_json}" | jq -c '.vars?')
+  extra_before_str=''
 
-    if [ "${verbose}" -ge 3 ]; then
-      printf '  Database:\n'
-      printf '    Name: %s\n' "${name}"
-      printf '    Version: %s\n' "${version}"
-      printf '    Env: %s\n' "${env}"
-      printf '    Vars: %s\n' "${vars}"
+  if [ "${verbose}" -ge 3 ]; then
+    printf '  Database:\n'
+    printf '    Name: %s\n' "${name}"
+    printf '    Version: %s\n' "${version}"
+    printf '    Env: %s\n' "${env}"
+    printf '    Vars: %s\n' "${vars}"
+  fi
+
+  if [ "${dep_group_name}" = "Required" ] ; then
+    if [ "${databases_header_req}" -eq 0 ]; then
+      databases_header_req=1
+      extra_before_str=$(print_header 'Database(s) [required]' |  tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}")
+      print_header 'Database(s) [required]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
+
+      # shellcheck disable=SC2059
+      printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
     fi
+  elif [ "${databases_header_opt}" -eq 0 ]; then
+    databases_header_opt=1
+    printf '\n' >> "${false_env_file}"
+    extra_before_str=$(print_header 'Database(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}")
+    print_header 'Database(s) [optional]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
+    # shellcheck disable=SC2059
+    if [ "${all_deps}" -eq 0 ]; then printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}" ; fi
+  fi
 
-    if [ "${dep_group_name}" = "Required" ] ; then
-        if [ "${databases_header_req}" -eq 0 ]; then
-          databases_header_req=1
-          extra_before_str=$(print_header 'Database(s) [required]' |  tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}")
-          print_header 'Database(s) [required]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
+  # shellcheck disable=SC2003
+  databases_len=$(expr "${databases_len}" + 1)
 
-          # shellcheck disable=SC2059
-          printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
-        fi
-    elif [ "${databases_header_opt}" -eq 0 ]; then
-        databases_header_opt=1
-        printf '\n' >> "${false_env_file}"
-        extra_before_str=$(print_header 'Database(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}")
-        print_header 'Database(s) [optional]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
-        # shellcheck disable=SC2059
-        if [ "${all_deps}" -eq 0 ]; then printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}" ; fi
-    fi
+  update_generated_files "${name}" "${version}" "${env}" '_lib/_storage' "${dep_group_name}" "${extra_before_str}" '' '' "${vars}"
+  if [ -n "${target_env}" ]; then
+    if [ "${verbose}" -ge 3 ]; then printf '    Target Env:\n'; fi
 
-    # shellcheck disable=SC2003
-    databases_len=$(expr "${databases_len}" + 1)
-
-    update_generated_files "${name}" "${version}" "${env}" '_lib/_storage' "${dep_group_name}" "${extra_before_str}" '' '' "${vars}"
-    if [ -n "${target_env}" ]; then
-        if [ "${verbose}" -ge 3 ]; then printf '    Target Env:\n'; fi
-
-        printf '%s' "${db_json}" | jq -r '.target_env[]' | while read -r env_var; do
-            if [ "${verbose}" -ge 3 ]; then printf '      %s\n' "${env_var}"; fi
-        done
-    fi
+    printf '%s' "${db_json}" | jq -r '.target_env[]' | while read -r env_var; do
+      if [ "${verbose}" -ge 3 ]; then printf '      %s\n' "${env_var}"; fi
+    done
+  fi
 }
 
 # parse "servers" array
 parse_servers() {
-    server_query="${2}"
-    dep_group_name="${3}"
-    jq -c "${server_query}"'[]?' "${1}" | while read -r server_item; do
-        parse_server_item "${server_item}" "${dep_group_name}"
-        if [ "${servers_len}" -ge 1 ]; then
-            printf 'wait\n\n' >> "${install_parallel_file}"
-        fi
-    done
+  json_file="${1}"
+  server_query="${2}"
+  dep_group_name="${3}"
+  jq -c "${server_query}"'[]?' "${json_file}" | while read -r server_item; do
+    parse_server_item "${server_item}" "${dep_group_name}"
+    if [ "${servers_len}" -ge 1 ]; then
+      printf 'wait\n\n' >> "${install_parallel_file}"
+    fi
+  done
 }
 
 # parse a single server item
 parse_server_item() {
-    server_json="${1}"
-    dep_group_name="${2}"
-    name=$(printf '%s' "${server_json}" | jq -r '.name // empty')
-    version=$(printf '%s' "${server_json}" | jq -r '.version // empty')
-    location=$(printf '%s' "${server_json}" | jq -r '.location // empty')
-    dest=$(printf '%s' "${server_json}" | jq -r '.dest // empty')
-    vars=$(printf '%s' "${server_json}" | jq -r '.vars // empty')
+  server_json="${1}"
+  dep_group_name="${2}"
+  name=$(printf '%s' "${server_json}" | jq -r '.name // empty')
+  version=$(printf '%s' "${server_json}" | jq -r '.version // empty')
+  location=$(printf '%s' "${server_json}" | jq -r '.location // empty')
+  dest=$(printf '%s' "${server_json}" | jq -r '.dest // empty')
+  vars=$(printf '%s' "${server_json}" | jq -r '.vars // empty')
 
-    extra_env_vars_as_json=''
-    name_clean="$(printf '%s' "${name}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
-    name_upper_clean="$(printf '%s' "${name_clean}" | tr '[:lower:]' '[:upper:]')"
+  extra_env_vars_as_json=''
+  name_clean="$(printf '%s' "${name}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
+  name_upper_clean="$(printf '%s' "${name_clean}" | tr '[:lower:]' '[:upper:]')"
 
-    if [ ! -n "${name}" ]; then
-      >&2 printf 'no name for server\n'
-      exit 4
+  if [ ! -n "${name}" ]; then
+    >&2 printf 'no name for server\n'
+    exit 4
+  fi
+  extra_env_vars_as_json="$(parse_server_builders "${server_json}" "${name_clean}" | jq -n 'reduce inputs as $in (null; . + $in)')"
+
+  if [ "${verbose}" -ge 3 ]; then printf '  Server:\n'; fi
+  if [ -n "${name}" ]; then
+    if [ "${servers_header_req}" -eq 0 ]; then
+      servers_header_req=1
+      extra_before_str=$(print_header 'Server(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}")
+      print_header 'Server(s) [required]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
+
+      # shellcheck disable=SC2059
+      printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
+    else
+      extra_before_str=$(print_header 'Server(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}")
+      print_header 'Server(s) [optional]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
     fi
-    extra_env_vars_as_json="$(parse_server_builders "${server_json}" "${name_clean}" | jq -n 'reduce inputs as $in (null; . + $in)')"
+    if [ "${verbose}" -ge 3 ]; then printf '    Name: %s\n' "${name}"; fi
+    name_upper="$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')"
+    name_upper_clean="$(printf '%s' "${name_upper}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
+    if [ -n "${dest}" ]; then
+      js="$(printf '{"%s_DEST": "%s"}' "${name_upper_clean}" "${dest}")"
+      extra_env_vars_as_json="$(printf '%s %s' "${extra_env_vars_as_json}" "${js}" | jq -n 'reduce inputs as $in (null; . + $in)')"
 
-    if [ "${verbose}" -ge 3 ]; then printf '  Server:\n'; fi
-    if [ -n "${name}" ]; then
-      if [ "${servers_header_req}" -eq 0 ]; then
-        servers_header_req=1
-        extra_before_str=$(print_header 'Server(s) [required]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}")
-        print_header 'Server(s) [required]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
-
-        # shellcheck disable=SC2059
-        printf "${run_tpl}"'\n\n' 'false_env.sh' >> "${install_parallel_file}"
-      else
-        extra_before_str=$(print_header 'Server(s) [optional]' | tee -a "${install_file}" "${install_parallel_file}" "${true_env_file}" "${false_env_file}")
-        print_header 'Server(s) [optional]' ':: ' | tee -a "${install_cmd_file}" "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
+      if [ "${verbose}" -ge 3 ] ; then
+        printf '    Dest: %s\n' "${dest}"
       fi
-      if [ "${verbose}" -ge 3 ]; then printf '    Name: %s\n' "${name}"; fi
-      name_upper="$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')"
-      name_upper_clean="$(printf '%s' "${name_upper}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
-      if [ -n "${dest}" ]; then
-        js="$(printf '{"%s_DEST": "%s"}' "${name_upper_clean}" "${dest}")"
-        extra_env_vars_as_json="$(printf '%s %s' "${extra_env_vars_as_json}" "${js}" | jq -n 'reduce inputs as $in (null; . + $in)')"
-
-        if [ "${verbose}" -ge 3 ] ; then
-          printf '    Dest: %s\n' "${dest}"
-        fi
-      fi
-      if [ -n "${vars}" ]; then
-        js="$(printf '{"%s_VARS": %s}' "${name_upper_clean}" "${vars}")"
-        extra_env_vars_as_json="$(printf '%s %s' "${extra_env_vars_as_json}" "${js}" | jq -n 'reduce inputs as $in (null; . + $in)')"
-
-        if [ "${verbose}" -ge 3 ] ; then
-          printf '    Vars: %s\n' "${vars}"
-        fi
-      fi
-      update_generated_files "${name}" "${version}" "${name_upper}" 'app/third_party' "${dep_group_name}" "${extra_before_str}" '' '' "${extra_env_vars_as_json}"
     fi
-    if [ "${verbose}" -ge 3 ] && [ -n "${location}" ]; then
-      printf '    Location: %s\n' "${location}";
-    fi
+    if [ -n "${vars}" ]; then
+      js="$(printf '{"%s_VARS": %s}' "${name_upper_clean}" "${vars}")"
+      extra_env_vars_as_json="$(printf '%s %s' "${extra_env_vars_as_json}" "${js}" | jq -n 'reduce inputs as $in (null; . + $in)')"
 
-    parse_daemon "${server_json}"
+      if [ "${verbose}" -ge 3 ] ; then
+        printf '    Vars: %s\n' "${vars}"
+      fi
+    fi
+    update_generated_files "${name}" "${version}" "${name_upper}" 'app/third_party' "${dep_group_name}" "${extra_before_str}" '' '' "${extra_env_vars_as_json}"
+  fi
+  if [ "${verbose}" -ge 3 ] && [ -n "${location}" ]; then
+    printf '    Location: %s\n' "${location}";
+  fi
+
+  parse_daemon "${server_json}"
 }
 
 # parse "builder" array within a server
 parse_server_builders() {
-    server_json="${1}"
-    name="${2}"
-    printf '%s' "${server_json}" | jq -c '.builder[]?' | while read -r builder_item; do
-        parse_builder_item "${builder_item}" "${name}"
-    done
+  server_json="${1}"
+  name="${2}"
+  printf '%s' "${server_json}" | jq -c '.builder[]?' | while read -r builder_item; do
+    parse_builder_item "${builder_item}" "${name}"
+  done
 }
 
 # parse "daemon" field within a server
 parse_daemon() {
-    server_json="${1}"
-    daemon_json=$(printf '%s' "${server_json}" | jq -c '.daemon // empty')
-    if [ -n "${daemon_json}" ]; then
-        os_native=$(printf '%s' "${daemon_json}" | jq -r '.os_native')
-        if [ "${verbose}" -ge 3 ]; then
-          printf '    Daemon:\n'
-          printf '      OS Native: %s\n' "${os_native}"
-        fi
-
-        env_vars=$(printf '%s' "${daemon_json}" | jq -c '.env[]?')
-        if [ -n "${env_vars}" ]; then
-            if [ "${verbose}" -ge 3 ]; then printf '      Env Vars:\n'; fi
-            printf '%s' "${daemon_json}" | jq -r '.env[]' | while read -r env_var; do
-                if [ "${verbose}" -ge 3 ]; then printf '        %s\n' "${env_var}"; fi
-            done
-        fi
+  server_json="${1}"
+  daemon_json=$(printf '%s' "${server_json}" | jq -c '.daemon // empty')
+  if [ -n "${daemon_json}" ]; then
+    os_native=$(printf '%s' "${daemon_json}" | jq -r '.os_native')
+    if [ "${verbose}" -ge 3 ]; then
+      printf '    Daemon:\n'
+      printf '      OS Native: %s\n' "${os_native}"
     fi
+
+    env_vars=$(printf '%s' "${daemon_json}" | jq -c '.env[]?')
+    if [ -n "${env_vars}" ]; then
+      if [ "${verbose}" -ge 3 ]; then printf '      Env Vars:\n'; fi
+      printf '%s' "${daemon_json}" | jq -r '.env[]' | while read -r env_var; do
+        if [ "${verbose}" -ge 3 ]; then printf '        %s\n' "${env_var}"; fi
+      done
+    fi
+  fi
 }
 
 # parse "log_server" field
 parse_log_server() {
-    optional=$(jq -r '.log_server.optional // empty' "${1}")
-    if [ -n "${optional}" ]; then
-        if [ "${verbose}" -ge 3 ]; then
-          printf 'Log Server:\n'
-          printf '  Optional: %s\n' "${optional}"
-        fi
+  optional=$(jq -r '.log_server.optional // empty' "${1}")
+  if [ -n "${optional}" ]; then
+    if [ "${verbose}" -ge 3 ]; then
+      printf 'Log Server:\n'
+      printf '  Optional: %s\n' "${optional}"
     fi
+  fi
 }
 
 # check required fields based on the schema.
 # Could use a proper json-schema validator instead…
 check_required_fields() {
-    missing_fields=""
+  json_file="${1}"
+  missing_fields=""
 
-    # Required fields at the root level
-    required_root_fields='["name", "scripts_root", "dependencies"]'
+  # Required fields at the root level
+  required_root_fields='["name", "scripts_root", "dependencies"]'
 
-    for field in $(printf '%s' "${required_root_fields}" | jq -r '.[]'); do
-        value=$(jq -r ".${field} // empty" "${1}")
-        if [ -z "${value}" ]; then
-            missing_fields="${missing_fields} ${field}"
-        fi
-    done
-
-    if [ -n "${missing_fields}" ]; then
-        >&2 printf 'Error: Missing required field(s): %s\n' "${missing_fields}"
-        exit 1
+  for field in $(printf '%s' "${required_root_fields}" | jq -r '.[]'); do
+    value=$(jq -r ".${field} // empty" "${json_file}")
+    if [ -z "${value}" ]; then
+        missing_fields="${missing_fields} ${field}"
     fi
+  done
+
+  if [ -n "${missing_fields}" ]; then
+    >&2 printf 'Error: Missing required field(s): %s\n' "${missing_fields}"
+    exit 1
+  fi
 }
 
 test_assert_eq() {
@@ -963,65 +958,98 @@ git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold'"
 
 # Main function
 parse_json() {
-    # test_add_missing_line_continuation
+  # test_add_missing_line_continuation
 
-    JSON_FILE="${1}"
+  json_file="${1}"
 
-    check_required_fields "${JSON_FILE}"
+  check_required_fields "${json_file}"
 
-    parse_name "${JSON_FILE}"
-    parse_description "${JSON_FILE}" || true
-    parse_version "${JSON_FILE}" || true
-    parse_url "${JSON_FILE}" || true
-    parse_license "${JSON_FILE}" || true
+  parse_name "${json_file}"
+  parse_description "${json_file}" || true
+  parse_version "${json_file}" || true
+  parse_url "${json_file}" || true
+  parse_license "${json_file}" || true
 
-    if [ "${verbose}" -ge 3 ]; then
-      printf 'Name: %s\n' "${name}"
-      if [ -n "${description}" ]; then printf 'Description: %s\n' "${description}" ; fi
-      if [ -n "${version}" ]; then printf 'Version: %s\n' "${version}" ; fi
-      if [ -n "${url}" ]; then printf 'URL: %s\n' "${url}" ; fi
-      if [ -n "${license}" ]; then printf 'License: %s\n' "${license}" ; fi
-    fi
+  if [ "${verbose}" -ge 3 ]; then
+    printf 'Name: %s\n' "${name}"
+    if [ -n "${description}" ]; then printf 'Description: %s\n' "${description}" ; fi
+    if [ -n "${version}" ]; then printf 'Version: %s\n' "${version}" ; fi
+    if [ -n "${url}" ]; then printf 'URL: %s\n' "${url}" ; fi
+    if [ -n "${license}" ]; then printf 'License: %s\n' "${license}" ; fi
+  fi
 
-    parse_build_root "${JSON_FILE}"
-    parse_scripts_root "${JSON_FILE}"
+  parse_scripts_root "${json_file}"
+  case "${scripts_root}" in
+    *'$'*|''|'null') ;;
+    *)
+      printf 'export LIBSCRIPT_ROOT_DIR='"'"'%s'"'"'\n\n' "${scripts_root}" >> "${true_env_file}"
+      ;;
+  esac
+  parse_build_root "${json_file}"
+  case "${build_root}" in
+    '$'*|''|'null') ;;
+    *)
+      printf 'export LIBSCRIPT_BUILD_DIR='"'"'%s'"'"'\n\n' "${build_root}" >> "${true_env_file}"
+      ;;
+  esac
 
-    parse_dependencies "${JSON_FILE}"
-    parse_log_server "${JSON_FILE}"
+  tmp0="$(mktemp)"
+  awk '
+    /^#!\/bin\/sh/ {
+      if (shebang++) next
+    }
+    /^export LIBSCRIPT_ROOT_DIR=/ {
+      if (export_root++) next
+    }
+    /^LIBSCRIPT_ROOT_DIR=/ {
+      if (root++) next
+    }
+    /^export LIBSCRIPT_BUILD_DIR=/ {
+      if (export_build++) next
+    }
+    /^LIBSCRIPT_BUILD_DIR=/ {
+      if (build++) next
+    }
+    { print }
+  ' "${true_env_file}" > "${tmp0}" && mv "${tmp0}" "${true_env_file}"
+  chmod +x "${true_env_file}"
 
-    docker_s="$(cat -- "${docker_scratch_file}"; printf 'a')"
-    docker_s="${docker_s%a}"
+  parse_dependencies "${json_file}"
+  parse_log_server "${json_file}"
 
-    [ -d "${output_folder}"'/dockerfiles' ] || mkdir -- "${output_folder}"'/dockerfiles'
-    for image in ${base}; do
-      image_no_tag="$(printf '%s' "${image}" | cut -d ':' -f1)"
-      dockerfile="${output_folder}"'/dockerfiles/'"${image_no_tag}"'.Dockerfile'
-      for section in "${toolchain_scratch_file}" "${storage_scratch_file}" \
-                     "${server_scratch_file}" "${third_party_scratch_file}"; do
-        docker_sec="$(cat -- "${section}"; printf 'a')"
-        docker_sec="${docker_sec%a}"
-        scratch2key "${section}"
-        dockerfile_by_section="${output_folder}"'/dockerfiles/'"${image_no_tag}"'.'"${res}"'.Dockerfile'
-        if [ ! -f "${dockerfile_by_section}" ] && [ -f "${section}" ]; then
-           sec_contents="$(cat -- "${section}"; printf 'a')"
-           sec_contents="${sec_contents%a}"
-           if [ -n "${sec_contents}" ]; then
-             # shellcheck disable=SC2016
-             env -i BODY="${sec_contents}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
-               "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${dockerfile_by_section}"
-           fi
-        fi
-      done
+  docker_s="$(cat -- "${docker_scratch_file}"; printf 'a')"
+  docker_s="${docker_s%a}"
 
-      if [ ! -f "${dockerfile}" ] && [ -n "${docker_s}" ]; then
-        # shellcheck disable=SC2016
-        env -i ENV="${docker_s}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
-          "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/Dockerfile.tpl' > "${dockerfile}"
+  [ -d "${output_folder}"'/dockerfiles' ] || mkdir -- "${output_folder}"'/dockerfiles'
+  for image in ${base}; do
+    image_no_tag="$(printf '%s' "${image}" | cut -d ':' -f1)"
+    dockerfile="${output_folder}"'/dockerfiles/'"${image_no_tag}"'.Dockerfile'
+    for section in "${toolchain_scratch_file}" "${storage_scratch_file}" \
+                   "${server_scratch_file}" "${third_party_scratch_file}"; do
+      docker_sec="$(cat -- "${section}"; printf 'a')"
+      docker_sec="${docker_sec%a}"
+      scratch2key "${section}"
+      dockerfile_by_section="${output_folder}"'/dockerfiles/'"${image_no_tag}"'.'"${res}"'.Dockerfile'
+      if [ ! -f "${dockerfile_by_section}" ] && [ -f "${section}" ]; then
+         sec_contents="$(cat -- "${section}"; printf 'a')"
+         sec_contents="${sec_contents%a}"
+         if [ -n "${sec_contents}" ]; then
+           # shellcheck disable=SC2016
+           env -i BODY="${sec_contents}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
+             "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${dockerfile_by_section}"
+         fi
       fi
     done
 
-    printf '%s\n\n' "${end_prelude_cmd}" >> "${install_cmd_file}"
+    if [ ! -f "${dockerfile}" ] && [ -n "${docker_s}" ]; then
+      # shellcheck disable=SC2016
+      env -i ENV="${docker_s}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
+        "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/Dockerfile.tpl' > "${dockerfile}"
+    fi
+  done
 
-    rm -- "${docker_scratch_file}" "${toolchain_scratch_file}" "${storage_scratch_file}" \
-          "${server_scratch_file}" "${third_party_scratch_file}"
+  printf '%s\n\n' "${end_prelude_cmd}" >> "${install_cmd_file}"
+
+  rm -- "${docker_scratch_file}" "${toolchain_scratch_file}" "${storage_scratch_file}" \
+        "${server_scratch_file}" "${third_party_scratch_file}"
 }

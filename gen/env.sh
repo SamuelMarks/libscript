@@ -3,7 +3,6 @@
 LIBSCRIPT_BUILD_DIR="${LIBSCRIPT_BUILD_DIR:-${TMPDIR:-/tmp}/libscript_build}"
 export LIBSCRIPT_DATA_DIR
 
-#!/bin/sh
 
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 export LIBSCRIPT_DATA_DIR

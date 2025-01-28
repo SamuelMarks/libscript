@@ -63,10 +63,11 @@ cd -- "${DEST}"
 
 hash="$(git rev-list HEAD -1)"
 hash_loc="${DEST}"'/apps/api/node_modules/'"${hash}"
-if [ -f "${hash_loc}" ]; then
+if [ ! -f "${hash_loc}" ]; then
   touch -- "${hash_loc}"
   cd -- apps/api
   pnpm install
+  cd -- "${DEST}"
 fi
 
 if [ -d '/etc/systemd/system' ]; then
@@ -74,10 +75,14 @@ if [ -d '/etc/systemd/system' ]; then
   service_name='firecrawl_workers'
   env -i DESCRIPTION='Firecrawl workers' \
          ENV="${ENV}" \
-         WORKING_DIR="${DEST}" \
+         WORKING_DIR="${DEST}"'/apps/api' \
          EXEC_START="$(which pnpm)"' run workers' \
         "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/_daemon/systemd/simple.service' > "${name_file}"
+  "${PRIV}" systemctl stop "${service_name}" || true
   "${PRIV}" install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
+  "${PRIV}" systemctl daemon-reload
+  "${PRIV}" systemctl stop "${service_name}" || true
+  "${PRIV}" systemctl start "${service_name}"
 
   rm "${name_file}"
 
@@ -85,10 +90,14 @@ if [ -d '/etc/systemd/system' ]; then
   service_name='firecrawl_serve'
   env -i DESCRIPTION='Firecrawl serve' \
          ENV="${ENV}" \
-         WORKING_DIR="${DEST}" \
+         WORKING_DIR="${DEST}"'/apps/api' \
          EXEC_START="$(which pnpm)"' run start' \
         "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/_daemon/systemd/simple.service' > "${name_file}"
+  "${PRIV}" systemctl stop "${service_name}" || true
   "${PRIV}" install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
+  "${PRIV}" systemctl daemon-reload
+  "${PRIV}" systemctl stop "${service_name}" || true
+  "${PRIV}" systemctl start "${service_name}"
 fi
 
 cd -- "${previous_wd}"

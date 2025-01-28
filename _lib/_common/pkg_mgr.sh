@@ -35,7 +35,7 @@ LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROO
 
 #DIR="$( dirname -- "$( readlink -nf -- "${0}" )")"
 
-for lib in '_lib/_common/os_info.sh' '_lib/_os/_apt/apt.sh' '_lib/_common/priv.sh'; do
+for lib in '_lib/_common/os_info.sh' '_lib/_common/priv.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
