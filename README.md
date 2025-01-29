@@ -55,7 +55,7 @@ Example of generated files are found in the [`gen`](./gen) directory.
    |----------------------------|------------|
    | [nginx](https://nginx.org) | `VARS`‡    |
 
-  - ‡`VARS`—if provided—must include `SERVER_NAME` and: `NGINX_FRAGMENT_CONF`; xor `WWWROOT` with optional `WWWROOT_AUTOINDEX`; xor `PROXY_PASS` with optional `PROXY_WEBSOCKETS`.
+  - ‡`VARS`—if provided—must include `SERVER_NAME` and: `NGINX_FRAGMENT_CONF`; xor `WWWROOT` with optional `WWWROOT_AUTOINDEX`; xor `PROXY_PASS` with optional (`PROXY_WEBSOCKETS` with optional `PROXY_WEBSOCKETS_ADVANCED`).
 
 ## History / roadmap:
 

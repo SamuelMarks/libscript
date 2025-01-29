@@ -34,7 +34,9 @@ DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 
-for lib in 'env.sh' '_lib/_common/priv.sh' '_lib/_common/pkg_mgr.sh'; do
+for lib in 'env.sh' '_lib/_common/priv.sh' '_lib/_common/pkg_mgr.sh' \
+           '_lib/_server/nginx/merge_location_into_server.sh' \
+           '_lib/_common/environ.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
@@ -122,11 +124,6 @@ merge_location_into_nginx_server() {
 }
 
 if [ ! -z "${VARS+x}" ]; then
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/environ.sh'
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  . "${SCRIPT_NAME}"
-
   ENV_SCRIPT_FILE=$(mktemp -t 'libscript_XXX_env')
   chmod +x "${ENV_SCRIPT_FILE}"
   object2key_val "${VARS}" 'export ' "'" > "${ENV_SCRIPT_FILE}"
@@ -158,7 +155,7 @@ if [ ! -z "${VARS+x}" ]; then
       >&2 printf 'Existing conf unexpectedly empty at: "%s"\n' "${site_conf_install_location}"
       exit 5
     fi
-    if ! merge_location_into_nginx_server "${conf_existing}" "${location_conf}" | "${PRIV}" dd of="${site_conf_install_location}" status='none'; then
+    if ! merge_location_into_server "${conf_existing}" "${location_conf}" "${SERVER_NAME}" | "${PRIV}" dd of="${site_conf_install_location}" status='none'; then
       >&2 printf 'merge_location_into_nginx_server failed.\n'
       exit 1
     fi

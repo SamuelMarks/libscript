@@ -62,7 +62,11 @@ elif [ ! -z "${WWWROOT+x}" ]; then
   fi
 elif [ ! -z "${PROXY_PASS+x}" ]; then
   if [ ! -z "${PROXY_WEBSOCKETS+x}" ]; then
-    conf_child_tpl="${LIBSCRIPT_ROOT_DIR}"'/_lib/_server/nginx/conf/simple_location_proxy_websockets.conf'
+    if [ ! -z "${PROXY_WEBSOCKETS_ADVANCED+x}" ]; then
+      conf_child_tpl="${LIBSCRIPT_ROOT_DIR}"'/_lib/_server/nginx/conf/location_proxy_websockets.conf'
+    else
+      conf_child_tpl="${LIBSCRIPT_ROOT_DIR}"'/_lib/_server/nginx/conf/simple_location_proxy_websockets.conf'
+    fi
   else
     conf_child_tpl="${LIBSCRIPT_ROOT_DIR}"'/_lib/_server/nginx/conf/simple_location_proxy.conf'
   fi

@@ -6,8 +6,10 @@ Description=Job that runs the jupyverse (replacement for Jupyter Notebook) daemo
 #Group=${JUPYTERHUB_SERVICE_GROUP}
 User=root
 Group=root
-Environment=VIRTUAL_ENV=${JUPYTERHUB_VENV}
-Environment=PYTHONPATH=${JUPYTERHUB_VENV}
+Environment="VIRTUAL_ENV=${JUPYTERHUB_VENV}"
+Environment="PYTHONPATH=${JUPYTERHUB_VENV}:${JUPYTERHUB_VENV}/bin"
+Environment="PATH=${JUPYTERHUB_VENV}/bin:${PATH}"
+${ENV}
 WorkingDirectory=${JUPYTERHUB_VENV}
 #  --set frontend.collaborative=true \
 #  --set auth.mode=user \
@@ -18,15 +20,15 @@ ExecStart=${JUPYTERHUB_VENV}/bin/jupyterhub \
   --FileContentsManager.preferred_dir='${JUPYTERHUB_NOTEBOOK_DIR}' \
   --ip='${JUPYTERHUB_IP}' \
   --port='${JUPYTERHUB_PORT}' \
-  --Authenticator.allowed_users='ling,samuel' \
-  --Authenticator.whitelist='ling,samuel' \
-  --Authenticator.admin_users='samuel' \
+  --Authenticator.allowed_users='${JUPYTERHUB_ALLOWED_USERS}' \
+  --Authenticator.whitelist='${JUPYTERHUB_ALLOWED_USERS}' \
+  --Authenticator.admin_users='${JUPYTERHUB_ADMIN_USER}' \
   --LocalAuthenticator.create_system_users=True \
   --JupyterHub.authenticator_class='jupyterhub.auth.DummyAuthenticator' \
-  --DummyAuthenticator.password='FromRussiaWithLove' \
+  --DummyAuthenticator.password='${JUPYTERHUB_PASSWORD}' \
   --DummyAuthenticator.allow_all=True \
   --allow_existing_users=True \
-  --DummyAuthenticator.allowed_users='ling,samuel'
+  --DummyAuthenticator.allowed_users='${JUPYTERHUB_ALLOWED_USERS}'
 #  --DummyAuthenticator.password="${JUPYTERHUB_PASSWORD}" \
 #   --c.JupyterHub.db_url='sqlite:////opt/jupyterhub/jupyter.sqlite' \
 #  --NotebookApp.certfile='/etc/letsencrypt/live/REPLACE_WITH_DNS_NAME/fullchain.pem' \
