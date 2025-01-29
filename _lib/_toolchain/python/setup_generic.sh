@@ -40,7 +40,10 @@ if [ ! -f "${HOME}"'/.local/bin/uv' ]; then
 fi
 # shellcheck disable=SC1091
 . "${HOME}"'/.local/bin/env'
-uv python install "${PYTHON_VERSION}"
+# uv python install "${PYTHON_VERSION}"
+if [ -z "${VENV+x}" ] && [ ! -z "${PYTHON_VENV+x}" ]; then
+  export VENV="${PYTHON_VENV}"
+fi
 if [ ! -z "${VENV+x}" ] && [ ! -f "${VENV}"'/bin/python' ]; then
   uv venv --python "${PYTHON_VERSION}" "${VENV}"
   "${VENV}"'/bin/python' -m ensurepip

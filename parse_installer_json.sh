@@ -44,6 +44,7 @@ server_scratch_file="${output_folder}"'/database.tmp'
 third_party_scratch_file="${output_folder}"'/third_party.tmp'
 _lib_folder="${output_folder}"'/_lib'
 app_folder="${output_folder}"'/app'
+global_docker_exports=''
 
 base="${BASE:-alpine:latest debian:bookworm-slim}"
 
@@ -486,7 +487,7 @@ update_generated_files() {
 
     if [ -n "${scratch_contents}" ]; then
       # shellcheck disable=SC2016
-      env -i BODY="${scratch_contents}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
+      env -i BODY="${global_docker_exports}${scratch_contents}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
         "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${name_file}"
     fi
   done
@@ -557,6 +558,38 @@ parse_build_root() {
   export LIBSCRIPT_BUILD_DIR
   if [ "${verbose}" -ge 3 ]; then
     printf 'Build Root: %s\n' "${build_root}"
+  fi
+  return "${rc}"
+}
+
+parse_global_vars() {
+  json_file="${1}"
+  global_vars="$(jq -r '.global_vars // empty' "${json_file}")"
+  rc="$?"
+  export global_vars
+  if [ -n "${global_vars}" ]; then
+    if ! grep -Fvq -- 'Env (explicit)' "${true_env_file}"; then
+      print_header 'Env (explicit)' ':: ' >> "${true_env_file}"
+    fi
+    {
+      object2key_val "${global_vars}" 'export ' "'"
+      printf '\n'
+    } >> "${true_env_file}"
+
+    if ! grep -Fvq -- 'Env (explicit)' "${true_env_file}"; then
+      print_header 'Env (explicit)' ':: ' >> "${true_env_cmd_file}"
+    fi
+    {
+      object2key_val "${global_vars}" 'SET ' '"'
+      printf '\n'
+    } >> "${true_env_cmd_file}"
+
+    global_docker_exports="$(object2key_val "${global_vars}" 'ARG ' "'")${NL}"
+    export global_docker_exports
+  fi
+
+  if [ "${verbose}" -ge 3 ]; then
+    printf 'Global Vars: %s\n' "${global_vars}"
   fi
   return "${rc}"
 }
@@ -1014,6 +1047,8 @@ parse_json() {
   ' "${true_env_file}" > "${tmp0}" && mv "${tmp0}" "${true_env_file}"
   chmod +x "${true_env_file}"
 
+  parse_global_vars "${json_file}"
+
   parse_dependencies "${json_file}"
   parse_log_server "${json_file}"
 
@@ -1035,7 +1070,7 @@ parse_json() {
          sec_contents="${sec_contents%a}"
          if [ -n "${sec_contents}" ]; then
            # shellcheck disable=SC2016
-           env -i BODY="${sec_contents}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
+           env -i BODY="${global_docker_exports}${sec_contents}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
              "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${dockerfile_by_section}"
          fi
       fi
@@ -1043,7 +1078,7 @@ parse_json() {
 
     if [ ! -f "${dockerfile}" ] && [ -n "${docker_s}" ]; then
       # shellcheck disable=SC2016
-      env -i ENV="${docker_s}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
+      env -i ENV="${global_docker_exports}${docker_s}" image="${image}" SCRIPT_NAME='${SCRIPT_NAME}' \
         "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/Dockerfile.tpl' > "${dockerfile}"
     fi
   done

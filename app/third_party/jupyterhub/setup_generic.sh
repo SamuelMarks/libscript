@@ -69,7 +69,9 @@ if ! cmd_avail npm ; then
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 fi
-npm install -g configurable-http-proxy
+if ! cmd_avail configurable-http-proxy; then
+  npm install -g configurable-http-proxy
+fi
 "${PRIV}" mkdir -p -- "${JUPYTERHUB_NOTEBOOK_DIR}"
 "${PRIV}" chown -R -- "${JUPYTERHUB_SERVICE_USER}":"${JUPYTERHUB_SERVICE_GROUP}" "${JUPYTERHUB_NOTEBOOK_DIR}" "${JUPYTERHUB_VENV}"
 
@@ -82,7 +84,7 @@ if [ -d '/etc/systemd/system' ]; then
   service_name='jupyterhub_'"${JUPYTERHUB_IP}"'_'"${JUPYTERHUB_PORT}"
   service='/etc/systemd/system/'"${service_name}"'.service'
   tmp="${TMPDIR:-/tmp}"'/'"${service_name}"
-  envsubst < "${LIBSCRIPT_ROOT_DIR}"'/app/third_party/jupyter/conf/systemd/jupyverse.service' > "${tmp}"
+  envsubst < "${LIBSCRIPT_ROOT_DIR}"'/app/third_party/jupyterhub/conf/systemd/jupyverse.service' > "${tmp}"
   "${PRIV}" install -m 0644 -- "${tmp}" "${service}"
   "${PRIV}" systemctl stop -- "${service_name}" || true
   "${PRIV}" systemctl daemon-reload

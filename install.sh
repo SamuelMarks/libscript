@@ -88,7 +88,7 @@ fi
 # fi
 
 if [ "${JUPYTERHUB_INSTALL:-0}" -eq 1 ]; then
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/app/third_party/jupyter/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/app/third_party/jupyterhub/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"

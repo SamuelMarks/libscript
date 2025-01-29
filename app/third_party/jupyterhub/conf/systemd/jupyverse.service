@@ -28,7 +28,7 @@ ExecStart=${JUPYTERHUB_VENV}/bin/jupyterhub \
   --allow_existing_users=True \
   --DummyAuthenticator.allowed_users='ling,samuel'
 #  --DummyAuthenticator.password="${JUPYTERHUB_PASSWORD}" \
-#   --c.JupyterHub.db_url='sqlite:////opt/jupyter/jupyter.sqlite' \
+#   --c.JupyterHub.db_url='sqlite:////opt/jupyterhub/jupyter.sqlite' \
 #  --NotebookApp.certfile='/etc/letsencrypt/live/REPLACE_WITH_DNS_NAME/fullchain.pem' \
 #   --NotebookApp.keyfile='/etc/letsencrypt/live/REPLACE_WITH_DNS_NAME/privkey.pem' \
 
