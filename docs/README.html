@@ -1,0 +1,345 @@
+<h1 id="libscript">libscript</h1>
+<p><a
+href="https://en.wikipedia.org/wiki/Cross-platform_software">Cross-platform</a>—<a
+href="https://en.wikipedia.org/wiki/Bourne_shell"><code>/bin/sh</code></a>;
+<a
+href="https://en.wikipedia.org/wiki/Cmd.exe"><code>cmd.exe</code></a>—<a
+href="https://en.wikipedia.org/wiki/Library_(computing)">scripts
+library</a> for: <a
+href="https://en.wikipedia.org/wiki/Microsoft_Windows">Windows</a>; <a
+href="https://en.wikipedia.org/wiki/Linux">Linux</a>; <a
+href="https://en.wikipedia.org/wiki/MacOS">macOS</a>; <a
+href="https://en.wikipedia.org/wiki/FreeBSD">FreeBSD</a>; <a
+href="https://en.wikipedia.org/wiki/SunOS">SunOS</a>; &amp;etc.</p>
+<p>See also libscript’s: <a href="WHY.md">WHY.md</a>; <a
+href="ROADMAP.md">ROADMAP.md</a>; and <a
+href="IDEAS.md">IDEAS.md</a>.</p>
+<h2 id="features">Features</h2>
+<p><a href="https://en.wikipedia.org/wiki/Operating_system">OS</a>
+support for:</p>
+<ul>
+<li><a
+href="https://en.wikipedia.org/wiki/Microsoft_Windows">Windows</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Linux">Linux</a> (<a
+href="https://en.wikipedia.org/wiki/Debian">Debian</a>, <a
+href="https://en.wikipedia.org/wiki/Alpine_Linux">Alpine</a>,
+&amp;etc.); inside/outside of <a
+href="https://en.wikipedia.org/wiki/Docker_(software)">Docker</a></li>
+<li><a href="https://en.wikipedia.org/wiki/MacOS">macOS</a></li>
+<li>[coming soon!] <a
+href="https://en.wikipedia.org/wiki/Comparison_of_BSD_operating_systems">*BSDs</a>
+[<a href="https://en.wikipedia.org/wiki/NetBSD">NetBSD</a>, <a
+href="https://en.wikipedia.org/wiki/FreeBSD">FreeBSD</a>, <a
+href="https://en.wikipedia.org/wiki/OpenBSD">OpenBSD</a>]</li>
+<li>[coming soon!] <a
+href="https://en.wikipedia.org/wiki/SunOS">SunOS</a> and derivatives |
+<a
+href="https://en.wikipedia.org/wiki/Fork_(software_development)">forks</a>
+such as <a href="https://en.wikipedia.org/wiki/Illumos">illumos</a></li>
+<li>[coming soon!] Other <a
+href="https://en.wikipedia.org/wiki/Unix">UNIX</a>’s like: <a
+href="https://en.wikipedia.org/wiki/Z/OS">IBM’s z/OS</a>; and <a
+href="https://en.wikipedia.org/wiki/HP-UX">HP’s Unix (HP/UX)</a>.</li>
+</ul>
+<p>Relocatable; no need to <a
+href="https://en.wikipedia.org/wiki/Cd_(command)"><code>cd</code></a>
+into the scripts <a
+href="https://en.wikipedia.org/wiki/Directory_(computing)">directory</a>.</p>
+<p>Library <a
+href="https://en.wikipedia.org/wiki/Path_(computing)">directory
+structure</a> is super-readable and <a
+href="https://en.wikipedia.org/wiki/Modular_programming">modular</a>.</p>
+<p>Plenty of <a
+href="https://en.wikipedia.org/wiki/Include_guard">guards</a>
+everywhere—<a
+href="https://en.wikipedia.org/wiki/Idempotence#Computer_science_meaning">idempotency
+style</a>—so scripts can be interdependent—and <a
+href="https://en.wikipedia.org/wiki/Pure_function">rerun</a>—without
+worry.</p>
+<p><a
+href="https://en.wikipedia.org/wiki/Docker_(software)#Dockerfile_(example)"><strong>Dockerfiles</strong></a>
+are generated. These are well optimised for Docker’s cache
+mechanism.</p>
+<p>Example of generated files are found in the <a
+href="./gen"><code>gen</code></a> directory.</p>
+<h2 id="current-installables">Current ‘installables’</h2>
+<h3 id="toolchains">Toolchains</h3>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://nodejs.org">Node.js</a></td>
+<td><code>NODEJS_VERSION</code>*</td>
+</tr>
+<tr>
+<td><a href="https://python.org">Python</a></td>
+<td><code>PYTHON_VERSION</code>*</td>
+</tr>
+<tr>
+<td><a href="https://rust-lang.org">Rust</a></td>
+<td><code>RUST_VERSION</code>*</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>required</li>
+</ul>
+<h3 id="databases-storage-layers">Databases / storage layers</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 74%" />
+</colgroup>
+<thead>
+<tr>
+<th>Name</th>
+<th>Parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://postgresql.org">PostgreSQL</a></td>
+<td><code>POSTGRESQL_VERSION</code>†; <code>POSTGRES_USER</code>†;
+<code>POSTGRES_PASSWORD</code>‡; <code>POSTGRES_PASSWORD_FILE</code>‡;
+<code>POSTGRES_HOST</code>; <code>POSTGRES_DB</code>†</td>
+</tr>
+<tr>
+<td><a href="https://valkey.io">Valkey</a> [Redis fork]</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>† required</li>
+<li>‡ needs one-and-only-one</li>
+</ul>
+<h3 id="servers">Servers</h3>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://nginx.org">nginx</a></td>
+<td><code>VARS</code>‡</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>‡<code>VARS</code>—if provided—must include <code>SERVER_NAME</code>
+and: <code>NGINX_FRAGMENT_CONF</code>; xor <code>WWWROOT</code> with
+optional <code>WWWROOT_AUTOINDEX</code>; xor <code>PROXY_PASS</code>
+with optional (<code>PROXY_WEBSOCKETS</code> with optional
+<code>PROXY_WEBSOCKETS_ADVANCED</code>).</li>
+</ul>
+<h2 id="history-roadmap">History / roadmap:</h2>
+<ol start="0" type="1">
+<li>First version was written in <a
+href="https://en.wikipedia.org/wiki/Python_(programming_language)">Python</a>
+(59+ <a
+href="https://en.wikipedia.org/wiki/Software_repository">repos</a> with
+<a href="https://github.com/offscale?q=off&amp;language=python">“off”
+prefix</a>) for mostly <a
+href="https://en.wikipedia.org/wiki/Linux">Linux</a> (<a
+href="https://en.wikipedia.org/wiki/Ubuntu">Ubuntu</a>) with a bit of
+work for <a href="https://en.wikipedia.org/wiki/Debian">Debian</a>
+support;</li>
+<li>Second version being written in <a
+href="https://en.wikipedia.org/wiki/Bourne_shell"><code>/bin/sh</code></a>
+[this repo] targeting <a
+href="https://en.wikipedia.org/wiki/MacOS">macOS</a>; <a
+href="https://en.wikipedia.org/wiki/Linux">Linux</a> (<a
+href="https://en.wikipedia.org/wiki/Deb_(file_format)">.deb</a>, <a
+href="https://en.wikipedia.org/wiki/RPM_Package_Manager">.rpm</a>, <a
+href="https://en.wikipedia.org/wiki/Alpine_Linux">.apk (Alpine
+Linux)</a> distributions); <a
+href="https://en.wikipedia.org/wiki/SunOS">SunOS</a>; <a
+href="https://en.wikipedia.org/wiki/Comparison_of_BSD_operating_systems">*BSDs</a>;
+and <a
+href="https://en.wikipedia.org/wiki/Cmd.exe"><code>cmd.exe</code></a>
+for <a
+href="https://en.wikipedia.org/wiki/Microsoft_Windows">Windows</a>;</li>
+<li>Third version being written in <a
+href="https://en.wikipedia.org/wiki/C_(programming_language)">C</a> [<a
+href="https://en.wikipedia.org/wiki/ANSI_C#C89">C89</a>], targeting all
+the above + <a
+href="https://en.wikipedia.org/wiki/Comparison_of_DOS_operating_systems">DOS</a>
+and <a
+href="https://en.wikipedia.org/wiki/OS/360_and_successors">OS/360</a>.
+<a href="https://github.com/offscale/libacquire">libacquire</a> will
+become the base of this.</li>
+</ol>
+<h2 id="advantage-of-this-repo">Advantage of this repo</h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Linux">Linux</a> variants are
+useful in <a
+href="https://en.wikipedia.org/wiki/Docker_(software)">Docker</a>, other
+image types [e.g., see <a href="https://www.packer.io">Packer</a>, <a
+href="https://en.wikipedia.org/wiki/Unikernel">Unikernels</a>], and
+natively;</li>
+<li><a href="https://en.wikipedia.org/wiki/MacOS">macOS</a> variant is
+useful primarily natively;</li>
+<li>[coming soon!] <a
+href="https://en.wikipedia.org/wiki/Comparison_of_BSD_operating_systems">*BSDs</a>
+[<a href="https://en.wikipedia.org/wiki/NetBSD">NetBSD</a>, <a
+href="https://en.wikipedia.org/wiki/FreeBSD">FreeBSD</a>, <a
+href="https://en.wikipedia.org/wiki/OpenBSD">OpenBSD</a>] are useful in
+jails or natively;</li>
+<li><a
+href="https://en.wikipedia.org/wiki/Microsoft_Windows">Windows</a> is
+useful for <a
+href="https://learn.microsoft.com/en-us/virtualization/windowscontainers/about/">Windows
+Containers</a>, other image types, and natively;</li>
+<li>[coming soon!] <a
+href="https://en.wikipedia.org/wiki/SunOS">SunOS</a> / <a
+href="https://en.wikipedia.org/wiki/Illumos">illumos</a> are useful for
+native usage on mainframes, both native and in virtualised / zones /
+container systems like <a
+href="https://en.wikipedia.org/wiki/SmartOS">SmartOS</a>;</li>
+<li>[coming soon!] <a href="https://en.wikipedia.org/wiki/Z/OS">IBM’s
+z/OS</a> [coming soon!] useful in mainframes and for testing <a
+href="https://en.wikipedia.org/wiki/OS/360_and_successors">OS/360</a>
+(from the 1960s); and</li>
+<li>[coming soon!] <a href="https://en.wikipedia.org/wiki/HP-UX">HP’s
+Unix (HP/UX)</a> [coming soon!] (also specifically useful in
+mainframes).</li>
+</ul>
+<p>Generally these <a
+href="https://en.wikipedia.org/wiki/Scripting_language">scripts</a> are
+extremely portable and could be used to benchmark and security-audit
+any:</p>
+<ul>
+<li>Platform virtualization software:
+https://en.wikipedia.org/wiki/Comparison_of_platform_virtualization_software</li>
+<li>OS-level virtualization software:
+https://en.wikipedia.org/wiki/OS-level_virtualization#IMPLEMENTATIONS</li>
+<li>μ-kernel: https://en.wikipedia.org/wiki/Microkernel</li>
+<li>Unikernel: https://en.wikipedia.org/wiki/Unikernel</li>
+<li>Any other kernel:
+https://en.wikipedia.org/wiki/Comparison_of_operating_system_kernels</li>
+</ul>
+<h2 id="advantage-of-c-repos">Advantage of C repo(s)</h2>
+<p>All the aforementioned advantages, plus:</p>
+<ul>
+<li><a
+href="https://en.wikipedia.org/wiki/OS/360_and_successors">OS/360</a>
+useful natively (expected as a proof-of-concept only);</li>
+<li><a
+href="https://en.wikipedia.org/wiki/Comparison_of_DOS_operating_systems">DOS</a>
+useful natively (expected as a proof-of-concept only).</li>
+</ul>
+<h2 id="usage">Usage</h2>
+<p>NOTE: You might want to manually set <code>LIBSCRIPT_DATA_DIR</code>;
+<code>LIBSCRIPT_BUILD_DIR</code>; and
+<code>LIBSCRIPT_TOOLS_DIR</code>.</p>
+<p>Run from the same directory as this <a href="README.md">README.md</a>
+file. Alternatively, set <code>SCRIPT_NAME</code> to the correct
+<code>install.sh</code> location and run it anywhere.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> <span class="co"># Replace `$(pwd)` if not in the &#39;libscript&#39; directory.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> export LIBSCRIPT_ROOT_DIR=<span class="st">&quot;</span><span class="va">$(</span><span class="bu">pwd</span><span class="va">)</span><span class="st">&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> <span class="co"># Disable all options (everything set to do-*not*-install)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> . <span class="st">&quot;</span><span class="va">${LIBSCRIPT_ROOT_DIR}</span><span class="st">&quot;&#39;/conf-no-all.env.sh&#39;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> <span class="co"># Enable installation of *just* Jupyter Hub</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> export JUPYTERHUB_INSTALL=1</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> <span class="co"># Set script location.</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> export SCRIPT_NAME=<span class="st">&quot;</span><span class="va">${LIBSCRIPT_ROOT_DIR}</span><span class="st">&quot;&#39;/install.sh&#39;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> . <span class="st">&quot;</span><span class="va">${SCRIPT_NAME}</span><span class="st">&quot;</span></span></code></pre></div>
+<p>See <a href="./gen/env.sh"><code>gen/env.sh</code></a> for options
+that can be overridden by setting environment variables.</p>
+<h2 id="usage-json">Usage (JSON)</h2>
+<p>To simplify usage, a JSON file format is provided. See <a
+href="./install.json">./install.json</a> for an example.</p>
+<h2 id="usage-json-cli">Usage (JSON) CLI</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ./create_installer_from_json.sh <span class="at">-h</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Create</span> install scripts from JSON.</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-a</span> whether to install all dependencies <span class="er">(</span><span class="ex">required</span> AND optional<span class="kw">)</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-f</span> filename</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-o</span> output folder <span class="er">(</span><span class="ex">defaults</span> to ./tmp<span class="kw">)</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-v</span> verbosity <span class="er">(</span><span class="ex">can</span> be specified multiple times<span class="kw">)</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-b</span> base images for docker <span class="er">(</span><span class="ex">space</span> seperated, default: <span class="st">&quot;alpine:latest debian:bookworm-slim&quot;</span><span class="kw">)</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-h</span> show help text</span></code></pre></div>
+<p>Which will create these files:</p>
+<h3 id="env.sh-env.cmd"><code>env.sh</code> ; <code>env.cmd</code></h3>
+<p>Default environment. When nothing preexists in your env, this sets
+everything to install.</p>
+<h3 id="false_env.sh-false_env.cmd"><code>false_env.sh</code> ;
+<code>false_env.cmd</code></h3>
+<p>False environment. This sets everything to <em>not</em> install.</p>
+<h3 id="install_gen.sh-install_gen.cmd"><code>install_gen.sh</code> ;
+<code>install_gen.cmd</code></h3>
+<p>The actual installation script. Execute this like so:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> <span class="co"># Set script location. Change from `pwd` if &#39;install_gen.sh&#39; isn&#39;t in current dir.</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> export LIBSCRIPT_ROOT_DIR=<span class="st">&quot;</span><span class="va">$(</span><span class="bu">pwd</span><span class="va">)</span><span class="st">&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> export SCRIPT_NAME=<span class="st">&quot;</span><span class="va">${LIBSCRIPT_ROOT_DIR}</span><span class="st">&quot;&#39;/install_gen.sh&#39;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> . <span class="st">&quot;</span><span class="va">${SCRIPT_NAME}</span><span class="st">&quot;</span></span></code></pre></div>
+<h3
+id="install_parallel_gen.sh"><code>install_parallel_gen.sh</code></h3>
+<p>Parallel version of the above installation script. Execute same
+way.</p>
+<h2 id="secrets-passwords">Secrets / passwords</h2>
+<p>For example, set <code>POSTGRES_PASSWORD</code> to <code>null</code>
+in the json like so:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;POSTGRES&quot;</span><span class="fu">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="st">&quot;17&quot;</span><span class="fu">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;env&quot;</span><span class="fu">:</span> <span class="st">&quot;POSTGRES_URL&quot;</span><span class="fu">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;vars&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;POSTGRES_USER&quot;</span><span class="fu">:</span> <span class="st">&quot;rest_user&quot;</span><span class="fu">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;POSTGRES_PASSWORD&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;POSTGRES_DB&quot;</span><span class="fu">:</span> <span class="st">&quot;rest_db&quot;</span><span class="fu">,</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;POSTGRES_PASSWORD_FILE&quot;</span><span class="fu">:</span> <span class="kw">null</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Then <code>SET</code> or <code>export</code> it manually before
+execution of <code>install_gen.sh</code>.</p>
+<h2 id="docker-usage">Docker usage</h2>
+<p>For debugging, you might want to run something like:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> distro=<span class="st">&#39;debian&#39;</span> <span class="co"># or &#39;alpine&#39;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> docker build <span class="at">--file</span> <span class="st">&quot;</span><span class="va">${distro}</span><span class="st">&quot;&#39;.Dockerfile&#39;</span> <span class="at">--progress</span><span class="op">=</span><span class="st">&#39;plain&#39;</span> <span class="at">--no-cache</span> <span class="at">--tag</span> <span class="st">&quot;</span><span class="va">${PWD</span><span class="op">##</span><span class="pp">*</span>/<span class="va">}</span><span class="st">&quot;</span>:<span class="st">&quot;</span><span class="va">${distro}</span><span class="st">&quot;</span> .</span></code></pre></div>
+<h3 id="docker-builder">Docker builder</h3>
+<p>To make things more convenient, use this docker builder; setting
+<code>-i</code> to same as <code>-o</code> of
+<code>./create_installer_from_json.sh</code>:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ./create_docker_builder.sh <span class="at">-h</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Create</span> Docker image builder scripts.</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="ex">-p</span> prefix <span class="er">(</span><span class="va">$DOCKER_IMAGE_PREFIX</span><span class="ex">,</span> default: <span class="st">&quot;deploysh&quot;</span><span class="kw">)</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="ex">-s</span> suffix <span class="er">(</span><span class="va">$DOCKER_IMAGE_SUFFIX</span><span class="ex">,</span> default: <span class="st">&quot;-latest&quot;</span><span class="kw">)</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="ex">-i</span> input directory <span class="er">(</span><span class="kw">`</span><span class="bu">cd</span><span class="kw">`</span>s if provided, defaults to current working directory<span class="kw">;</span> <span class="ex">adds</span> scripts here also<span class="kw">)</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="ex">-v</span> verbosity <span class="er">(</span><span class="ex">can</span> be specified multiple times<span class="kw">)</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="ex">-h</span> show help text</span></code></pre></div>
+<h4 id="example">Example</h4>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ./build_docker_images.sh <span class="at">-o</span> ./tmp</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd ./tmp <span class="kw">&amp;&amp;</span> <span class="fu">sh</span> ./docker_builder.sh</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># or docker_builder_parallel.sh ^</span></span></code></pre></div>
+<hr/>
+<h2 id="license">License</h2>
+<p>Licensed under any of:</p>
+<ul>
+<li>Apache License, Version 2.0 (<a
+href="LICENSE-APACHE">LICENSE-APACHE</a> or <a
+href="https://www.apache.org/licenses/LICENSE-2.0"
+class="uri">https://www.apache.org/licenses/LICENSE-2.0</a>)</li>
+<li>MIT license (<a href="LICENSE-MIT">LICENSE-MIT</a> or <a
+href="https://opensource.org/licenses/MIT"
+class="uri">https://opensource.org/licenses/MIT</a>)</li>
+<li>CC0 license (<a href="LICENSE-CC0">LICENSE-CC0</a> or <a
+href="https://creativecommons.org/publicdomain/zero/1.0/legalcode"
+class="uri">https://creativecommons.org/publicdomain/zero/1.0/legalcode</a>)</li>
+</ul>
+<p>at your option.</p>
+<h3 id="contribution">Contribution</h3>
+<p>Unless you explicitly state otherwise, any contribution intentionally
+submitted for inclusion in the work by you, as defined in the Apache-2.0
+license, shall be licensed as above, without any additional terms or
+conditions.</p>
