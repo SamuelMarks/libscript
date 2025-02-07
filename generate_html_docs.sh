@@ -24,6 +24,9 @@ export LIBSCRIPT_ROOT_DIR
 LIBSCRIPT_DOCS_DIR="${LIBSCRIPT_DOCS_DIR:-./docs/latest}"
 export LIBSCRIPT_DOCS_DIR
 
+LIBSCRIPT_ASSETS_DIR="${LIBSCRIPT_ASSETS_DIR:-${LIBSCRIPT_DOCS_DIR}}"
+export LIBSCRIPT_ASSETS_DIR
+
 HTML_ROOT="${HTML_ROOT:-$LIBSCRIPT_ROOT_DIR}"
 export HTML_ROOT
 
@@ -33,7 +36,7 @@ export HTML_ROOT
 #cp 'styles.css' "${LIBSCRIPT_DOCS_DIR}"'/'
 urls_js='['
 urls=''
-for f in $(find -s "${LIBSCRIPT_ROOT_DIR}" -type f -name '*.md'); do
+for f in $(find "${LIBSCRIPT_ROOT_DIR}" -type f -name '*.md'); do
   out="${LIBSCRIPT_DOCS_DIR}${f#"${LIBSCRIPT_ROOT_DIR}"}"
   parent="$(dirname -- "${out}")"
 
@@ -80,6 +83,7 @@ for url in ${urls}; do
   env -i url="${url}" \
       REPLACE_THIS="${urls_js}" \
       LIBSCRIPT_DOCS_DIR="${LIBSCRIPT_DOCS_DIR#.}" \
+      LIBSCRIPT_ASSETS_DIR="${LIBSCRIPT_ASSETS_DIR}" \
       "$(which envsubst)" < "${url}" > "${url}"'.tmp'
   if [ "$(crc32 "${url}")" = "$(crc32 "${url}"'.tmp')" ]; then
     rm -- "${url}"'.tmp'
