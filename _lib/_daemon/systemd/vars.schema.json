@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "properties": [
+    {
+      "name": "EXEC_START",
+      "description": "Executor"
+    },
+    {
+      "name": "WORKING_DIR",
+      "description": "Working directory that `EXEC_START` will be run from"
+    },
+    {
+      "name": "ENV",
+      "description": "Optional additional properties as key/value pairs"
+    }
+  ]
+}

@@ -51,7 +51,7 @@ if [ ! -z "${VENV+x}" ] && [ ! -f "${VENV}"'/bin/python' ]; then
   "${VENV}"'/bin/python' -m pip install -U setuptools wheel
   # For safety only install package and its deps inside a venv
   if [ -f 'requirements.txt' ]; then
-      "${VENV}"'/bin/python' -m pip install -r 'requirements.txt'
+    "${VENV}"'/bin/python' -m pip install -r 'requirements.txt'
   fi
   if [ -f 'setup.py' ] || [ -f 'setup.cfg' ] || [ -f 'pyproject.toml' ]; then
     "${VENV}"'/bin/python' -m pip install -e .

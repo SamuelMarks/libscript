@@ -19,14 +19,18 @@ fi
 set -feu
 
 STACK="${STACK:-:}"
+RERUN_SCRIPT=$(printf '%d' "$(eval printf '%s' "\$${SCRIPT_NAME}_RERUN_SCRIPT")")
 case "${STACK}" in
   *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s"\n' "${this_file}"
-    return ;;
+    if [ "${RERUN_SCRIPT}" -ne 1 ]; then
+      printf '[STOP]     processing "%s"\n' "${this_file}"
+      return
+    fi
+    ;;
   *)
-    printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+    STACK="${STACK}${this_file}"':' ;;
 esac
-STACK="${STACK}${this_file}"':'
+printf '[CONTINUE] processing "%s"\n' "${this_file}"
 export STACK
 
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)

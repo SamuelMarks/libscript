@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_server/nginx/vars.schema.json",
+  "title": "nginx vars",
+  "description": "nginx vars that can be set",
+  "type": "object",
+  "properties": {
+    "EXEC_START": {
+      "description": "Executor",
+      "type": "string"
+    },
+    "WORKING_DIR": {
+      "description": "Working directory that `EXEC_START` will be run from",
+      "type": "string"
+    },
+    "ENV": {
+      "description": "Optional additional properties as key/value pairs",
+      "type": "string"
+    }
+  },
+  "required": [ "EXEC_START" ]
+}

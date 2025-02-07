@@ -24,15 +24,12 @@ export LIBSCRIPT_ROOT_DIR
 STACK="${STACK:-:}${this_file}"':'
 export STACK
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/os_info.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
-
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
+for lib in '_lib/_common/os_info.sh' 'env.sh'; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+done
 
 if [ "${POSTGRESQL_INSTALL:-0}" -eq 1 ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/postgres/setup.sh'

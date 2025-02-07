@@ -34,17 +34,14 @@ export LIBSCRIPT_ROOT_DIR
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 export LIBSCRIPT_DATA_DIR
 
+for lib in 'env.sh' '_lib/_common/settings_updater.sh'; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+done
+
 SCRIPT_NAME="${DIR}"'/env.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
-
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
-
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/settings_updater.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
