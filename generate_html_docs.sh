@@ -85,7 +85,7 @@ for url in ${urls}; do
       LIBSCRIPT_DOCS_DIR="${LIBSCRIPT_DOCS_DIR#.}" \
       LIBSCRIPT_ASSETS_DIR="${LIBSCRIPT_ASSETS_DIR}" \
       "$(which envsubst)" < "${url}" > "${url}"'.tmp'
-  if [ "$(crc32 "${url}")" = "$(crc32 "${url}"'.tmp')" ]; then
+  if [ "$(cksum "${url}")" = "$(cksum "${url}"'.tmp')" ]; then
     rm -- "${url}"'.tmp'
   else
     mv -- "${url}"'.tmp' "${url}"
