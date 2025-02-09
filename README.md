@@ -15,6 +15,8 @@ See also libscript's: [WHY.md](WHY.md); [ROADMAP.md](ROADMAP.md); and [IDEAS.md]
   - [coming soon!] [*BSDs](https://en.wikipedia.org/wiki/Comparison_of_BSD_operating_systems) [[NetBSD](https://en.wikipedia.org/wiki/NetBSD), [FreeBSD](https://en.wikipedia.org/wiki/FreeBSD), [OpenBSD](https://en.wikipedia.org/wiki/OpenBSD)]
   - [coming soon!] [SunOS](https://en.wikipedia.org/wiki/SunOS) and derivatives | [forks](https://en.wikipedia.org/wiki/Fork_(software_development)) such as [illumos](https://en.wikipedia.org/wiki/Illumos)
   - [coming soon!] Other [UNIX](https://en.wikipedia.org/wiki/Unix)'s like: [IBM's z/OS](https://en.wikipedia.org/wiki/Z/OS); and [HP's Unix (HP/UX)](https://en.wikipedia.org/wiki/HP-UX).
+  - [coming soon!] [Android](https://en.wikipedia.org/wiki/Android_(operating_system))
+  - [coming soon!] [iOS](https://en.wikipedia.org/wiki/IOS)
 
 Relocatable; no need to [`cd`](https://en.wikipedia.org/wiki/Cd_(command)) into the scripts [directory](https://en.wikipedia.org/wiki/Directory_(computing)).
 

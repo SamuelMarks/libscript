@@ -66,7 +66,6 @@ for f in $(find "${LIBSCRIPT_ROOT_DIR}" -type f -name '*.md'); do
 
   html="${out%%.md}"'.html'
 
-  cp "${HTML_ROOT}"'/top.html' "${html}"
   iconv -t utf-8 "${f}" | sed 's/.md)/.html)/g' | pandoc -f markdown -t html5 | iconv -f utf-8 >> "${html}"
   json_schema="${out%%.md}"'.schema.json'
   if [ -f "${json_schema}" ]; then
@@ -77,15 +76,17 @@ for f in $(find "${LIBSCRIPT_ROOT_DIR}" -type f -name '*.md'); do
   urls="${urls}"' '"${html}"
 done
 urls_js="${urls_js%,}"']'
-printf '%s\n' "${urls_js}"
+# printf '%s\n' "${urls_js}"
 
 for url in ${urls}; do
+  title="${url#.}"
   env -i url="${url}" \
-      REPLACE_THIS="${urls_js}" \
+      TITLE='VerMan.io – '"${title##*/}" \
+      URLS="${urls_js}" \
       LIBSCRIPT_DOCS_DIR="${LIBSCRIPT_DOCS_DIR#.}" \
       LIBSCRIPT_ASSETS_DIR="${LIBSCRIPT_ASSETS_DIR}" \
       "$(which envsubst)" < "${url}" > "${url}"'.tmp'
-  if [ "$(cksum "${url}")" = "$(cksum "${url}"'.tmp')" ]; then
+  if [ "$(crc32 "${url}")" = "$(crc32 "${url}"'.tmp')" ]; then
     rm -- "${url}"'.tmp'
   else
     mv -- "${url}"'.tmp' "${url}"
