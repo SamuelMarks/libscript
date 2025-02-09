@@ -61,10 +61,10 @@ if [ ! -f "${true_env_file}" ]; then
     'LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"' > "${true_env_file}"
 fi
 if [ ! -f "${false_env_file}" ]; then printf '#!/bin/sh\n' > "${false_env_file}" ; fi
-if [ ! -e "${_lib_folder}" ]; then cp -r "${LIBSCRIPT_ROOT_DIR}"'/_lib' "${_lib_folder}" ; fi
-if [ ! -e "${app_folder}" ]; then cp -r "${LIBSCRIPT_ROOT_DIR}"'/app' "${app_folder}" ; fi
+if [ ! -e "${_lib_folder}" ]; then cp -r -- "${LIBSCRIPT_ROOT_DIR}"'/_lib' "${_lib_folder}" ; fi
+if [ ! -e "${app_folder}" ]; then cp -r -- "${LIBSCRIPT_ROOT_DIR}"'/app' "${app_folder}" ; fi
 
-cp "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${output_folder}"'/'
+cp -- "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${output_folder}"'/'
 
 chmod +x "${false_env_file}" "${true_env_file}" \
   "${install_file}" "${install_parallel_file}" \

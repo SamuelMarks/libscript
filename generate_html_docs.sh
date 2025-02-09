@@ -66,6 +66,7 @@ for f in $(find "${LIBSCRIPT_ROOT_DIR}" -type f -name '*.md'); do
 
   html="${out%%.md}"'.html'
 
+  cp -- "${HTML_ROOT}"'/top.html' "${html}"
   iconv -t utf-8 "${f}" | sed 's/.md)/.html)/g' | pandoc -f markdown -t html5 | iconv -f utf-8 >> "${html}"
   json_schema="${out%%.md}"'.schema.json'
   if [ -f "${json_schema}" ]; then
