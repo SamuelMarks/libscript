@@ -80,9 +80,14 @@ urls_js="${urls_js%,}"']'
 # printf '%s\n' "${urls_js}"
 
 for url in ${urls}; do
-  title="${url#.}"
+  title="${url##*/}"
+  if [ "${title}" = 'README.html' ]; then
+    p="${url%/*}"
+    p="${p##*/}"
+    title="${p}"  #'/'"${title}"
+  fi
   env -i url="${url}" \
-      TITLE='VerMan.io – '"${title##*/}" \
+      TITLE='VerMan.io – '"${title%%.html}" \
       URLS="${urls_js}" \
       LIBSCRIPT_DOCS_DIR="${LIBSCRIPT_DOCS_DIR#.}" \
       LIBSCRIPT_ASSETS_DIR="${LIBSCRIPT_ASSETS_DIR}" \
