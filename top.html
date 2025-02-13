@@ -7,6 +7,12 @@
     <script type="application/javascript">
         let firstRun = true;
 
+        const nicerName = (s) => {
+            const last_slash = s.lastIndexOf("/");
+            const base = s.substring(last_slash);
+            return base === "README" ? s.substring(0, last_slash-1) : s;
+        };
+
         const toggleSidebar = () => {
             const sideNav = document.querySelector('.tui-sidenav');
 
@@ -23,7 +29,7 @@
                         const ul = sideNav.querySelector('ul');
                         for (const url of urls) {
                             const cls = window.location.pathname === url? ' class="active-navlink"' : '';
-                            ul.innerHTML += '<li'+cls+'><a href="' + url + '">'+(url.length > 25? '…' + url.substring(url.length-29, url.length-5): url)+'</a></li>'
+                            ul.innerHTML += '<li'+cls+'><a href="' + url + '">'+nicerName(url.length > 25? '…' + url.substring(url.length-29, url.length-5): url)+'</a></li>'
                         }
                     }
                 }

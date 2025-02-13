@@ -77,12 +77,8 @@ while IFS= read -r f; do
       case "${json_schema##*/}" in
         'installer.schema.json'|'*'*) ;;
         *)
-          [ -d "${f%/*}" ] || mkdir -p -- "${f%/*}"
-          [ -d "${html%/*}" ] || mkdir -p -- "${html%/*}"
-          touch -- "${html}"
-          printf 'processing schema %s and appending to %s\n' "${f%/*}"'/'"${json_schema}" "${html}"
-          wetzel --headerLevel 2 -k '**MUST**' -- "${f%/*}"'/'"${json_schema}" | iconv -t utf-8 \
-            | pandoc -f markdown -t html5 | iconv -f utf-8 >> "${html}"
+          printf 'processing schema %s and appending to %s\n\n' "${f%/*}"'/'"${json_schema}" "${html}"
+          iconv -t utf-8 -- "${json_schema}" | wetzel --headerLevel 2 -k '**MUST**' | pandoc -f markdown -t html5 | iconv -f utf-8 >> "${html}"
           ;;
       esac
       # npm install -g wetzel
