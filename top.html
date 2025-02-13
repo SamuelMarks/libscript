@@ -10,7 +10,8 @@
         const nicerName = (s) => {
             const last_slash = s.lastIndexOf("/");
             const base = s.substring(last_slash);
-            return base === "/README" ? s.substring(0, last_slash-1) : s;
+            const name = base === "/README" ? s.substring(0, last_slash) : s;
+            return name.length > 25 ? '…' + name.substring(name.length-29, name.length-5): name;
         };
 
         const toggleSidebar = () => {
@@ -29,7 +30,7 @@
                         const ul = sideNav.querySelector('ul');
                         for (const url of urls) {
                             const cls = window.location.pathname === url? ' class="active-navlink"' : '';
-                            ul.innerHTML += '<li'+cls+'><a href="' + url + '">'+nicerName(url.length > 25? '…' + url.substring(url.length-29, url.length-5): url)+'</a></li>'
+                            ul.innerHTML += '<li' + cls + '><a href="' + url + '">' + nicerName(url) + '</a></li>'
                         }
                     }
                 }
