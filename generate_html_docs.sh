@@ -80,6 +80,7 @@ while IFS= read -r f; do
           [ -d "${f%/*}" ] || mkdir -p -- "${f%/*}"
           [ -d "${html%/*}" ] || mkdir -p -- "${html%/*}"
           touch -- "${html}"
+          printf 'processing schema %s and appending to %s\n' "${f%/*}"'/'"${json_schema}" "${html}"
           wetzel --headerLevel 2 -k '**MUST**' -- "${f%/*}"'/'"${json_schema}" | iconv -t utf-8 \
             | pandoc -f markdown -t html5 | iconv -f utf-8 >> "${html}"
           ;;
@@ -89,8 +90,8 @@ while IFS= read -r f; do
   done
   cd -- "${previous_wd}"
   cat -- "${HTML_ROOT}"'/bottom.html' >> "${html}"
-  h="${html#.}"
   if [ -n "${LIBSCRIPT_DOCS_PREFIX}" ]; then
+    h="${html#.}"
     urls_js="${urls_js}"'"'"${h#"${LIBSCRIPT_DOCS_PREFIX}"}"'",'
     urls="${urls}"' '"${html#"${LIBSCRIPT_DOCS_PREFIX}"}"
   else
@@ -104,10 +105,10 @@ printf '%s\n' "${urls_js}"
 
 for url in ${urls}; do
   title="${url##*/}"
-  if [ "${title}" = 'README.html' ]; then
-    p="${url%/*}"
-    p="${p##*/}"
-    title="${p}"  #'/'"${title}"
+  p="${url%/*}"
+  p="${p##*/}"
+  if [ "${title}" != 'README.html' ]; then
+    title="${p}"'/'"${title}"
   fi
   if [ -n "${LIBSCRIPT_DOCS_PREFIX}" ]; then
     url="${LIBSCRIPT_DOCS_PREFIX}"'/'"${url}"
