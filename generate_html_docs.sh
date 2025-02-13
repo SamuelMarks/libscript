@@ -76,6 +76,8 @@ for f in $(find "${LIBSCRIPT_ROOT_DIR}" -type f -name '*.md'); do
         'installer.schema.json'|'*'*) ;;
         *)
           [ -d "${f%/*}" ] || mkdir -p -- "${f%/*}"
+          [ -d "${html%/*}" ] || mkdir -p -- "${html%/*}"
+          touch -- "${html}"
           wetzel --headerLevel 2 -k '**MUST**' -- "${f%/*}"'/'"${json_schema}" | iconv -t utf-8 \
             | pandoc -f markdown -t html5 | iconv -f utf-8 >> "${html}"
           ;;
