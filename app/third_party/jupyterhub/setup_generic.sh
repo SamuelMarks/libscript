@@ -83,9 +83,8 @@ if [ -d '/etc/systemd/system' ]; then
   envsubst_safe < "${LIBSCRIPT_ROOT_DIR}"'/app/third_party/jupyterhub/conf/systemd/jupyverse.service' > "${tmp00}"
   if [ -f "${service}" ]; then "${PRIV}" rm -f -- "${service}"; fi
   "${PRIV}" install -m 0644 -- "${tmp00}" "${service}"
-  "${PRIV}" systemctl stop -- "${service_name}" || true
   "${PRIV}" systemctl daemon-reload
-  "${PRIV}" systemctl start -- "${service_name}"
+  "${PRIV}" systemctl reload-or-restart -- "${service_name}"
   rm "${tmp00}"
 elif [ -d '/Library/LaunchDaemons' ]; then
   >&2 printf 'TODO: macOS service\n'

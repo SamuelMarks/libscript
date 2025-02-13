@@ -83,12 +83,10 @@ cd -- "${previous_wd}"
 
 if [ "${noop}" -eq 0 ]; then
   service_name='valkey'
-  "${PRIV}" systemctl stop "${service_name}" || true
   "${PRIV}" install -m 0644 -o 'root' -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/conf/valkey.conf' /etc/
   "${PRIV}" install -m 0644 -o 'root' -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/conf/systemd/'"${service_name}"'.service' /etc/systemd/system/
   "${PRIV}" systemctl daemon-reload
-  "${PRIV}" systemctl stop "${service_name}" || true
-  "${PRIV}" systemctl start "${service_name}"
+  "${PRIV}" systemctl reload-or-restart -- "${service_name}"
 fi
 
 [ -d "${LIBSCRIPT_DATA_DIR}" ] || mkdir -p -- "${LIBSCRIPT_DATA_DIR}"

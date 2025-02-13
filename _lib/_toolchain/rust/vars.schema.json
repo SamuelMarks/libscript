@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_toolchain/rust/vars.schema.json",
+  "title": "rust toolchain vars",
+  "description": "rust toolchain vars that can be set",
+  "type": "object",
+  "properties": {
+    "RUST_VERSION": {
+      "description": "Version of Rust demanded. Can be \"nightly\"|\"beta\"|\"stable\" xor a specific version",
+      "type": "string"
+    }
+  }
+}

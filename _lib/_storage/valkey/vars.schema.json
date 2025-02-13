@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_server/valkey/vars.schema.json",
+  "title": "valkey server vars",
+  "description": "valkey vars that can be set",
+  "type": "object",
+  "properties": {
+    "VALKEY_BUILD_DIR": {
+      "description": "Directory to build valkey from",
+      "type": "string"
+    }
+  }
+}

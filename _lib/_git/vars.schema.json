@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_server/nginx/vars.schema.json",
+  "title": "git_get args",
+  "description": "git_get function arguments",
+  "type": "object",
+  "properties": {
+    "1": {
+      "description": "repository",
+      "type": "string"
+    },
+    "2": {
+      "description": "target directory",
+      "type": "string"
+    },
+    "3": {
+      "description": "branch",
+      "type": "string"
+    }
+  },
+  "required": ["1", "2"]
+}

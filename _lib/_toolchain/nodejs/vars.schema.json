@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_toolchain/nodejs/vars.schema.json",
+  "title": "nodejs toolchain vars",
+  "description": "nodejs toolchain vars that can be set",
+  "type": "object",
+  "properties": {
+    "NODEJS_VERSION": {
+      "description": "Version of Node.js demanded. Can be \"lts\" or a specific numeric version number",
+      "type": "string"
+    }
+  }
+}

@@ -87,11 +87,9 @@ if [ -d '/etc/systemd/system' ]; then
          WORKING_DIR="${DEST}"'/apps/api' \
          EXEC_START="$(which pnpm)"' run workers' \
         "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/_daemon/systemd/simple.service' > "${name_file}"
-  "${PRIV}" systemctl stop "${service_name}" || true
   "${PRIV}" install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
   "${PRIV}" systemctl daemon-reload
-  "${PRIV}" systemctl stop "${service_name}" || true
-  "${PRIV}" systemctl start "${service_name}"
+  "${PRIV}" systemctl reload-or-restart -- "${service_name}"
 
   rm "${name_file}"
 
@@ -102,11 +100,9 @@ if [ -d '/etc/systemd/system' ]; then
          WORKING_DIR="${DEST}"'/apps/api' \
          EXEC_START="$(which pnpm)"' run start' \
         "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/_daemon/systemd/simple.service' > "${name_file}"
-  "${PRIV}" systemctl stop "${service_name}" || true
   "${PRIV}" install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
   "${PRIV}" systemctl daemon-reload
-  "${PRIV}" systemctl stop "${service_name}" || true
-  "${PRIV}" systemctl start "${service_name}"
+  "${PRIV}" systemctl reload-or-restart -- "${service_name}"
 fi
 
 cd -- "${previous_wd}"

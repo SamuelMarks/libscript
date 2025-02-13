@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_toolchain/python/vars.schema.json",
+  "title": "python toolchain vars",
+  "description": "python toolchain vars that can be set",
+  "type": "object",
+  "properties": {
+    "PYTHON_VERSION": {
+      "description": "Version of Python demanded. Needs to be a specific numeric version number",
+      "type": "string"
+    },
+    "VENV": {
+      "description": "Path to a Python virtualenv (will create if nonexistent)",
+      "type": "string"
+    }
+  }
+}

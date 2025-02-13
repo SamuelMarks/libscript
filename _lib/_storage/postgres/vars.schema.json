@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_server/postgres/vars.schema.json",
+  "title": "postgres server vars",
+  "description": "postgres vars that can be set",
+  "type": "object",
+  "properties": {
+    "POSTGRESQL_VERSION": {
+      "description": "Version of PostgreSQL demanded",
+      "type": "string"
+    },
+    "POSTGRES_USER": {
+      "description": "Username to create inside postgres",
+      "type": "string"
+    },
+    "POSTGRES_PASSWORD": {
+      "description": "Password for created user inside postgres",
+      "type": "string"
+    },
+    "POSTGRES_PASSWORD_FILE": {
+      "description": "Password file, its contents used as password for created user inside postgres",
+      "type": "string"
+    },
+    "POSTGRES_HOST": {
+      "description": "Hostname to serve postgres from",
+      "type": "string"
+    },
+    "POSTGRES_DB": {
+      "description": "Database to create within postgres",
+      "type": "string"
+    }
+  }
+}

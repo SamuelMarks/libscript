@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_server/python/vars.schema.json",
+  "title": "python server vars",
+  "description": "python server vars that can be set",
+  "type": "object",
+  "properties": {
+    "DEST": {
+      "description": "Destination (working directory)",
+      "type": "string"
+    },
+    "VARS": {
+      "description": "Key/value in JSON format (as an escaped string)",
+      "type": "string"
+    },
+    "VENV": {
+      "description": "Path to a Python virtualenv",
+      "type": "string"
+    }
+  }
+}

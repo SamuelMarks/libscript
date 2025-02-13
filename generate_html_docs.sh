@@ -16,7 +16,7 @@ elif [ ! -z "${ZSH_VERSION+x}" ]; then
 else
   this_file="${0}"
 fi
-set -eu
+set -eu +f
 
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${this_file}" )")" && pwd)}"
 export LIBSCRIPT_ROOT_DIR
@@ -36,6 +36,7 @@ export HTML_ROOT
 #cp 'styles.css' "${LIBSCRIPT_DOCS_DIR}"'/'
 urls_js='['
 urls=''
+export LIBSCRIPT_DOCS_PREFIX="${LIBSCRIPT_DOCS_PREFIX:-}"
 for f in $(find "${LIBSCRIPT_ROOT_DIR}" -type f -name '*.md'); do
   out="${LIBSCRIPT_DOCS_DIR}${f#"${LIBSCRIPT_ROOT_DIR}"}"
   parent="$(dirname -- "${out}")"
@@ -62,22 +63,33 @@ for f in $(find "${LIBSCRIPT_ROOT_DIR}" -type f -name '*.md'); do
       [ -d "${parent}" ] || mkdir -p -- "${parent}"
       ;;
   esac
-  # npm install -g @adobe/jsonschema2md
 
   html="${out%%.md}"'.html'
 
   cp -- "${HTML_ROOT}"'/top.html' "${html}"
-  iconv -t utf-8 "${f}" | sed 's/.md)/.html)/g' | pandoc -f markdown -t html5 | iconv -f utf-8 >> "${html}"
-  json_schema="${out%%.md}"'.schema.json'
-  if [ -f "${json_schema}" ]; then
-    true  # TODO
-  fi
+  iconv -t utf-8 -- "${f}" | sed 's/.md)/.html)/g' | pandoc -f markdown -t html5 | iconv -f utf-8 >> "${html}"
+  previous_wd="$(pwd)"
+  cd -- "${f%/*}"
+  for json_schema in *'.schema.json'; do
+    if [ -f "${json_schema}" ]; then
+      case "${json_schema##*/}" in
+        'installer.schema.json'|'*'*) ;;
+        *)
+          wetzel --headerLevel 2 -k '**MUST**' -- "${f%/*}"'/'"${json_schema}" | iconv -t utf-8 \
+            | pandoc -f markdown -t html5 | iconv -f utf-8 >> "${html}"
+          ;;
+      esac
+      # npm install -g wetzel
+    fi
+  done
+  cd -- "${previous_wd}"
   cat -- "${HTML_ROOT}"'/bottom.html' >> "${html}"
-  urls_js="${urls_js}"'"'"${html#.}"'",'
-  urls="${urls}"' '"${html}"
+  h="${html#.}"
+  urls_js="${urls_js}"'"'"${h#"${LIBSCRIPT_DOCS_PREFIX}"}"'",'
+  urls="${urls}"' '"${html#"${LIBSCRIPT_DOCS_PREFIX}"}"
 done
 urls_js="${urls_js%,}"']'
-# printf '%s\n' "${urls_js}"
+printf '%s\n' "${urls_js}"
 
 for url in ${urls}; do
   title="${url##*/}"
@@ -85,6 +97,9 @@ for url in ${urls}; do
     p="${url%/*}"
     p="${p##*/}"
     title="${p}"  #'/'"${title}"
+  fi
+  if [ -n "${LIBSCRIPT_DOCS_PREFIX}" ]; then
+    url="${LIBSCRIPT_DOCS_PREFIX}"'/'"${url}"
   fi
   env -i url="${url}" \
       TITLE='VerMan.io – '"${title%%.html}" \
@@ -98,3 +113,5 @@ for url in ${urls}; do
     mv -- "${url}"'.tmp' "${url}"
   fi
 done
+
+set -f

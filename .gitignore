@@ -5,3 +5,4 @@ gen/_lib
 gen/app
 docs
 .ssh
+*.html

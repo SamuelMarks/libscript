@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_toolchain/cc/vars.schema.json",
+  "title": "cc toolchain vars",
+  "description": "cc toolchain vars that can be set",
+  "type": "object",
+  "properties": {}
+}
