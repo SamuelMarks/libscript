@@ -10,7 +10,7 @@
         const nicerName = (s) => {
             const last_slash = s.lastIndexOf("/");
             const base = s.substring(last_slash);
-            return base === "README" ? s.substring(0, last_slash-1) : s;
+            return base === "/README" ? s.substring(0, last_slash-1) : s;
         };
 
         const toggleSidebar = () => {
