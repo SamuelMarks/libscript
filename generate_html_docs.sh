@@ -37,7 +37,9 @@ export HTML_ROOT
 urls_js='['
 urls=''
 export LIBSCRIPT_DOCS_PREFIX="${LIBSCRIPT_DOCS_PREFIX:-}"
-for f in $(find "${LIBSCRIPT_ROOT_DIR}" -type f -name '*.md'); do
+find_res="$(mktemp)"
+find "${LIBSCRIPT_ROOT_DIR}" -type f -name '*.md' > "${find_res}"
+while IFS= read -r f; do
   out="${LIBSCRIPT_DOCS_DIR}${f#"${LIBSCRIPT_ROOT_DIR}"}"
   parent="$(dirname -- "${out}")"
 
@@ -88,9 +90,15 @@ for f in $(find "${LIBSCRIPT_ROOT_DIR}" -type f -name '*.md'); do
   cd -- "${previous_wd}"
   cat -- "${HTML_ROOT}"'/bottom.html' >> "${html}"
   h="${html#.}"
-  urls_js="${urls_js}"'"'"${h#"${LIBSCRIPT_DOCS_PREFIX}"}"'",'
-  urls="${urls}"' '"${html#"${LIBSCRIPT_DOCS_PREFIX}"}"
-done
+  if [ -n "${LIBSCRIPT_DOCS_PREFIX}" ]; then
+    urls_js="${urls_js}"'"'"${h#"${LIBSCRIPT_DOCS_PREFIX}"}"'",'
+    urls="${urls}"' '"${html#"${LIBSCRIPT_DOCS_PREFIX}"}"
+  else
+    urls_js="${urls_js}"'"'"${html#.}"'",'
+    urls="${urls}"' '"${html}"
+  fi
+done < "${find_res}"
+rm -- "${find_res}"
 urls_js="${urls_js%,}"']'
 printf '%s\n' "${urls_js}"
 
