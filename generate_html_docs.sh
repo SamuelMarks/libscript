@@ -68,25 +68,34 @@ while IFS= read -r f; do
 
   html="${out%%.md}"'.html'
 
-  cp -- "${HTML_ROOT}"'/top.html' "${html}"
+  cp -- "${HTML_ROOT}"'/html/top.html' "${html}"
   iconv -t utf-8 -- "${f}" | sed 's/.md)/.html)/g' | pandoc -f markdown -t html5 | iconv -f utf-8 >> "${html}"
   previous_wd="$(pwd)"
-  cd -- "${f%/*}"
+  new_wd="${f%/*}"
+  cd -- "${new_wd}"
   for json_schema in *'.schema.json'; do
     if [ -f "${json_schema}" ]; then
       case "${json_schema##*/}" in
         'installer.schema.json'|'*'*) ;;
         *)
           cd -- "${previous_wd}"
-          wetzel --headerLevel 2 -k '**MUST**' -- "${f%/*}"'/'"${json_schema}" | iconv -t utf-8  | pandoc -f markdown -t html5 | iconv -f utf-8 >> "${html}"
-          cd -- "${f%/*}"
+          PORT_PATH="${new_wd##*/libscript}"
+          env -i PORT_PATH="${PORT_PATH}" \
+                 PORT_PATH_WIN="$(printf '%s' "${PORT_PATH}" | tr '/' '\\')" \
+                 "$(which envsubst)" < "${HTML_ROOT}"'/html/usage.html' >> "${html}"'.usage'
+          sed 's/55//g' "${html}"'.usage' > "${html}"'.usage.tmp'
+          mv -- "${html}"'.usage.tmp' "${html}"'.usage'
+          # shellcheck disable=SC2016
+          printf '${USAGE}' >> "${html}"
+          wetzel -k '**MUST**' -- "${new_wd}"'/'"${json_schema}" | iconv -t utf-8  | pandoc -f markdown -t html5 | sed 's/<table>/<table class="tui-table hovered-purple striped-purple">/g' | iconv -f utf-8 >> "${html}"
+          cd -- "${new_wd}"
           ;;
       esac
       # npm install -g wetzel
     fi
   done
   cd -- "${previous_wd}"
-  cat -- "${HTML_ROOT}"'/bottom.html' >> "${html}"
+  cat -- "${HTML_ROOT}"'/html/bottom.html' >> "${html}"
   if [ -n "${LIBSCRIPT_DOCS_PREFIX}" ]; then
     h="${html#.}"
     urls_js="${urls_js}"'"'"${h#"${LIBSCRIPT_DOCS_PREFIX}"}"'",'
@@ -110,16 +119,33 @@ for url in ${urls}; do
   if [ -n "${LIBSCRIPT_DOCS_PREFIX}" ]; then
     url="${LIBSCRIPT_DOCS_PREFIX}"'/'"${url}"
   fi
+  USAGE=''
+  previous_wd="$(pwd)"
+  cd -- "${url%/*}"
+  for f in *'.usage'; do
+    case "${f}" in
+      '*'*) ;;
+      *)
+        usage_="$(cat -- "${f}"; printf 'a')"
+        usage_="${usage_%a}"
+        USAGE="${USAGE}${usage_}"
+        ;;
+    esac
+  done
+  cd -- "${previous_wd}"
   env -i url="${url}" \
-      TITLE='VerMan.io – '"${title%%.html}" \
-      URLS="${urls_js}" \
-      LIBSCRIPT_DOCS_DIR="${LIBSCRIPT_DOCS_DIR#.}" \
-      LIBSCRIPT_ASSETS_DIR="${LIBSCRIPT_ASSETS_DIR}" \
-      "$(which envsubst)" < "${url}" > "${url}"'.tmp'
-  if [ "$(crc32 "${url}")" = "$(crc32 "${url}"'.tmp')" ]; then
-    rm -- "${url}"'.tmp'
+         TITLE='VerMan.io – '"${title%%.html}" \
+         URLS="${urls_js}" \
+         LIBSCRIPT_DOCS_DIR="${LIBSCRIPT_DOCS_DIR#.}" \
+         LIBSCRIPT_ASSETS_DIR="${LIBSCRIPT_ASSETS_DIR}" \
+         USAGE='${USAGE}' \
+         "$(which envsubst)" < "${url}" > "${url}"'.tmp0'
+  env -i USAGE="${USAGE}" \
+         "$(which envsubst)" < "${url}"'.tmp0' > "${url}"'.tmp1'
+  if [ "$(crc32 "${url}")" = "$(crc32 "${url}"'.tmp1')" ]; then
+    rm -- "${url}"'.tmp1'
   else
-    mv -- "${url}"'.tmp' "${url}"
+    mv -- "${url}"'.tmp1' "${url}"
   fi
 done
 

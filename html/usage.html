@@ -1,0 +1,28 @@
+<!-- Usage -->
+<h3>Usage</h3>
+<div class="tui-tabs">
+    <ul>
+        <li><a class="tui-tab active" data-tab-content="unix-content">UNIX</a></li>
+        <li><a class="tui-tab" data-tab-content="windows-content">Windows</a></li>
+    </ul>
+</div>
+<div id="unix-content" class="tui-tab-content tui-window">
+    <fieldset class="tui-fieldset no-legend">
+<pre>$ # Replace `$(pwd)` if not in the 'libscript' directory or a generated one.
+$ export LIBSCRIPT_ROOT_DIR="$(pwd)"
+$ # `export` any variables now (see below for variable docs). Then:
+$ # Set script location:
+$ export SCRIPT_NAME="$55{LIBSCRIPT_ROOT_DIR}"'${PORT_PATH}/setup.sh'
+$ . "$55{SCRIPT_NAME}"</pre>
+    </fieldset>
+</div>
+<div id="windows-content" class="tui-tab-content tui-window">
+    <fieldset class="tui-fieldset no-legend">
+<pre>> :: Replace `%cd%` if not in the 'libscript' directory or a generated one.
+> SET "LIBSCRIPT_ROOT_DIR=%cd%"
+> :: `SET` any variables now (see below for variable docs). Then:
+> :: Set script location:
+> SET SCRIPT_NAME="%LIBSCRIPT_ROOT_DIR%${PORT_PATH_WIN}\setup.cmd"
+> CALL "%SCRIPT_NAME%"</pre>
+    </fieldset>
+</div>
