@@ -30,6 +30,8 @@ Example of generated files are found in the [`gen`](./gen) directory.
 
 ## Current ‘installables’
 
+Care is taken to use open-source alternatives. For example: [Valkey](https://valkey.io) [and [Garnet](https://github.com/microsoft/garnet) for Windows] over [Redis](https://redis.io); and [FerretDB](https://ferretdb.com) over [MongoDB](https://mongodb.com).
+
 ### Toolchains
 
    | Name                          | Parameters        |
