@@ -21,10 +21,11 @@ set -feu
 STACK="${STACK:-:}"
 case "${STACK}" in
   *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s"\n' "${this_file}"
+    #printf '[STOP]     processing "%s"\n' "${this_file}"
     return ;;
   *)
-    printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+    #printf '[CONTINUE] processing "%s"\n' "${this_file}"
+    ;;
 esac
 STACK="${STACK}${this_file}"':'
 export STACK
