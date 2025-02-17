@@ -2,9 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>libscript $TITLE</title>
-    <link rel="stylesheet" href="$LIBSCRIPT_ASSETS_DIR/tuicss.min.css" type="text/css">
-    <link rel="stylesheet" href="$LIBSCRIPT_ASSETS_DIR/styles.css" type="text/css">
+    <meta itemprop="name" content="libscript &ndash; ${TITLE}">
+    <meta name="description" content="Deploy ${TITLE} with this cross-platform open-source alternative to Hashicorp Packer">
+    <meta name="keywords" content="docker packer hashicorp shell libscript verman package-manager">
+    <link rel="author" href="https://github.com/SamuelMarks" />
+    <link rel="canonical" href="https://verMan.io${URL_PATHNAME}" />
+    <title>${TITLE} from libscript @ VerMan.io</title>
+    <link rel="stylesheet" href="${LIBSCRIPT_ASSETS_DIR}/tuicss.min.css" type="text/css">
+    <link rel="stylesheet" href="${LIBSCRIPT_ASSETS_DIR}/styles.css" type="text/css">
     <style>
         .active-navlink {
             background-color: rgb(255, 255, 0);
@@ -59,7 +64,7 @@
                 }
             }
         }
-        const urls = $URLS;
+        const urls = ${URLS};
     </script>
 </head>
 <body onload="toggleSidebar()">
@@ -95,17 +100,17 @@
                         <div class="tui-dropdown-content">
                             <ul>
                                 <li>
-                                    <a href="$LIBSCRIPT_DOCS_DIR/_lib/_toolchain/README.html">
+                                    <a href="${LIBSCRIPT_DOCS_DIR}/_lib/_toolchain/README.html">
                                         <span class="red-168-text">T</span>oolchains
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="$LIBSCRIPT_DOCS_DIR/_lib/_storage/README.html">
+                                    <a href="${LIBSCRIPT_DOCS_DIR}/_lib/_storage/README.html">
                                         <span class="red-168-text">D</span>atabases
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="$LIBSCRIPT_DOCS_DIR/_lib/_server/README.html">
+                                    <a href="${LIBSCRIPT_DOCS_DIR}/_lib/_server/README.html">
                                         <span class="red-168-text">S</span>ervers
                                     </a>
                                 </li>
@@ -136,3 +141,4 @@
     </ul>
 </nav>
 <div class="content container" id="actual-body" style="margin-left: 250px">
+<a href="${GIT_HTTP_LINK}" aria-label="Open on GitHub">Open on GitHub</a>

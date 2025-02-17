@@ -30,6 +30,8 @@ export LIBSCRIPT_ASSETS_DIR
 HTML_ROOT="${HTML_ROOT:-$LIBSCRIPT_ROOT_DIR}"
 export HTML_ROOT
 
+export GIT_REPO="${GIT_REPO:-https://github.com/SamuelMarks/libscript}"
+
 [ -d "${LIBSCRIPT_DOCS_DIR}" ] || mkdir -p "${LIBSCRIPT_DOCS_DIR}"
 #cp 'tuicss.min.css' "${LIBSCRIPT_DOCS_DIR}"'/'
 #cp 'tuicss.min.js' "${LIBSCRIPT_DOCS_DIR}"'/'
@@ -82,9 +84,9 @@ while IFS= read -r f; do
           PORT_PATH="${new_wd##*/libscript}"
           env -i PORT_PATH="${PORT_PATH}" \
                  PORT_PATH_WIN="$(printf '%s' "${PORT_PATH}" | tr '/' '\\')" \
-                 "$(which envsubst)" < "${HTML_ROOT}"'/html/usage.html' >> "${html}"'.usage'
-          sed 's/55//g' "${html}"'.usage' > "${html}"'.usage.tmp'
-          mv -- "${html}"'.usage.tmp' "${html}"'.usage'
+                 "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${HTML_ROOT}"'/html/usage.html' >> "${html}"'.usage'
+          #sed 's/55//g' "${html}"'.usage' > "${html}"'.usage.tmp'
+          #mv -- "${html}"'.usage.tmp' "${html}"'.usage'
           # shellcheck disable=SC2016
           printf '${USAGE}' >> "${html}"
           wetzel -k '**MUST**' -- "${new_wd}"'/'"${json_schema}" | iconv -t utf-8  | pandoc -f markdown -t html5 | sed 's/<table>/<table class="tui-table hovered-purple striped-purple">/g' | iconv -f utf-8 >> "${html}"
@@ -113,7 +115,9 @@ for url in ${urls}; do
   title="${url##*/}"
   p="${url%/*}"
   p="${p##*/}"
-  if [ "${title}" != 'README.html' ]; then
+  if [ "${title}" = 'README.html' ]; then
+    title="${p}"
+  else
     title="${p}"'/'"${title}"
   fi
   if [ -n "${LIBSCRIPT_DOCS_PREFIX}" ]; then
@@ -133,20 +137,38 @@ for url in ${urls}; do
     esac
   done
   cd -- "${previous_wd}"
+  URL_PATHNAME="${url}"
+  if [ -n "${LIBSCRIPT_DOCS_PREFIX}" ]; then
+    URL_PATHNAME="${URL_PATHNAME#"${LIBSCRIPT_DOCS_PREFIX}"}"
+    # URL_PATHNAME="${URL_PATHNAME#"${LIBSCRIPT_DOCS_PREFIX}"}"
+  fi
+  URL_PATHNAME="${URL_PATHNAME##/}"
+
+  #cat "${url}"
+  #exit
+  sed 's/55//g' "${url}" > "${url}"'.tmp0'
+  GIT_HTTP_LINK="${GIT_REPO}""$(printf '%s' "${URL_PATHNAME}" | sed 's/docs/blob/; s/latest/master/; s/html/md/')"
+  #printf 'GIT_HTTP_LINK = "%s"\n' "${GIT_HTTP_LINK}"
+  #printf 'url = "%s"\n' "${url}"
+  #printf 'LIBSCRIPT_DOCS_DIR = "%s"\n' "${LIBSCRIPT_DOCS_DIR}"
+  #printf 'URL_PATHNAME = "%s"\n' "${URL_PATHNAME}"
   env -i url="${url}" \
-         TITLE='VerMan.io – '"${title%%.html}" \
+         TITLE="${title%%.html}" \
          URLS="${urls_js}" \
          LIBSCRIPT_DOCS_DIR="${LIBSCRIPT_DOCS_DIR#.}" \
          LIBSCRIPT_ASSETS_DIR="${LIBSCRIPT_ASSETS_DIR}" \
-         USAGE='${USAGE}' \
-         "$(which envsubst)" < "${url}" > "${url}"'.tmp0'
-  env -i USAGE="${USAGE}" \
-         "$(which envsubst)" < "${url}"'.tmp0' > "${url}"'.tmp1'
+         USAGE="${USAGE}" \
+         URL_PATHNAME="${URL_PATHNAME}" \
+         GIT_HTTP_LINK="${GIT_REPO}""$(printf '%s' "${URL_PATHNAME}" | sed 's/docs/blob/; s/latest/master/; s/html/md/')"
+         "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${url}"'.tmp0' > "${url}"'.tmp1'
+         #"$(which envsubst)"
+  # "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh'
   if [ "$(crc32 "${url}")" = "$(crc32 "${url}"'.tmp1')" ]; then
     rm -- "${url}"'.tmp1'
   else
     mv -- "${url}"'.tmp1' "${url}"
   fi
+  rm -- "${url}"'.tmp0'
 done
 
 set -f
