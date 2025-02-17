@@ -82,11 +82,10 @@ while IFS= read -r f; do
         *)
           cd -- "${previous_wd}"
           PORT_PATH="${new_wd##*/libscript}"
-          env -i PORT_PATH="${PORT_PATH}" \
+          env -i PATH="$(which awk cat env printenv sort grep | sort -u | xargs dirname | tr '\n' ':')" \
+                 PORT_PATH="${PORT_PATH}" \
                  PORT_PATH_WIN="$(printf '%s' "${PORT_PATH}" | tr '/' '\\')" \
                  "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${HTML_ROOT}"'/html/usage.html' >> "${html}"'.usage'
-          #sed 's/55//g' "${html}"'.usage' > "${html}"'.usage.tmp'
-          #mv -- "${html}"'.usage.tmp' "${html}"'.usage'
           # shellcheck disable=SC2016
           printf '${USAGE}' >> "${html}"
           wetzel -k '**MUST**' -- "${new_wd}"'/'"${json_schema}" | iconv -t utf-8  | pandoc -f markdown -t html5 | sed 's/<table>/<table class="tui-table hovered-purple striped-purple">/g' | iconv -f utf-8 >> "${html}"
@@ -140,35 +139,49 @@ for url in ${urls}; do
   URL_PATHNAME="${url}"
   if [ -n "${LIBSCRIPT_DOCS_PREFIX}" ]; then
     URL_PATHNAME="${URL_PATHNAME#"${LIBSCRIPT_DOCS_PREFIX}"}"
-    # URL_PATHNAME="${URL_PATHNAME#"${LIBSCRIPT_DOCS_PREFIX}"}"
   fi
   URL_PATHNAME="${URL_PATHNAME##/}"
 
-  #cat "${url}"
-  #exit
-  sed 's/55//g' "${url}" > "${url}"'.tmp0'
   GIT_HTTP_LINK="${GIT_REPO}""$(printf '%s' "${URL_PATHNAME}" | sed 's/docs/blob/; s/latest/master/; s/html/md/')"
-  #printf 'GIT_HTTP_LINK = "%s"\n' "${GIT_HTTP_LINK}"
-  #printf 'url = "%s"\n' "${url}"
-  #printf 'LIBSCRIPT_DOCS_DIR = "%s"\n' "${LIBSCRIPT_DOCS_DIR}"
-  #printf 'URL_PATHNAME = "%s"\n' "${URL_PATHNAME}"
-  env -i url="${url}" \
+
+  GIT_HTTP_LINK="$(printf '%s' "${GIT_HTTP_LINK}" | sed 's/docs/blob/; s/latest/master/; s/html/md/')"
+  env -i PATH="$(which awk cat env printenv sort grep | sort -u | xargs dirname | tr '\n' ':')" \
+         url="${url}" \
          TITLE="${title%%.html}" \
          URLS="${urls_js}" \
          LIBSCRIPT_DOCS_DIR="${LIBSCRIPT_DOCS_DIR#.}" \
          LIBSCRIPT_ASSETS_DIR="${LIBSCRIPT_ASSETS_DIR}" \
          USAGE="${USAGE}" \
          URL_PATHNAME="${URL_PATHNAME}" \
-         GIT_HTTP_LINK="${GIT_REPO}""$(printf '%s' "${URL_PATHNAME}" | sed 's/docs/blob/; s/latest/master/; s/html/md/')"
-         "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${url}"'.tmp0' > "${url}"'.tmp1'
-         #"$(which envsubst)"
-  # "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh'
-  if [ "$(crc32 "${url}")" = "$(crc32 "${url}"'.tmp1')" ]; then
-    rm -- "${url}"'.tmp1'
+         GIT_HTTP_LINK="${GIT_HTTP_LINK}" \
+         "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${url}" > "${url}"'.tmp'
+
+  open_on_gh='<a href="'"${GIT_HTTP_LINK}"'" aria-label="Open on GitHub">Open on GitHub</a>'
+  awk -v search='</h1>' -v replace='</h1>\n'"${open_on_gh}" '
+  {
+    if (!found) {
+      idx = index($0, search)
+      if (idx > 0) {
+        # Replace the first occurrence
+        before = substr($0, 1, idx - 1)
+        after = substr($0, idx + length(search))
+        print before replace after
+        found = 1
+      } else {
+        print $0
+      }
+    } else {
+      print $0
+    }
+  }
+  ' "${url}"'.tmp' > "${url}"'.tmp1'
+  mv -- "${url}"'.tmp1' "${url}"'.tmp'
+
+  if [ "$(crc32 "${url}")" = "$(crc32 "${url}"'.tmp')" ]; then
+    rm -- "${url}"'.tmp'
   else
-    mv -- "${url}"'.tmp1' "${url}"
+    mv -- "${url}"'.tmp' "${url}"
   fi
-  rm -- "${url}"'.tmp0'
 done
 
 set -f
