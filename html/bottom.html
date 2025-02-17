@@ -11,4 +11,36 @@
    alt="Email me"
 >📧</a>
 <script src="${LIBSCRIPT_ASSETS_DIR}/tuicss.min.js" type="application/javascript"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script>
+    const copyURI = (evt) => {
+        evt.preventDefault();
+        navigator.clipboard.writeText("https://github.com/SamuelMarks/libscript").then(() =>
+                Toastify({
+                    text: "Copied GitHub link to clipboard",
+                    className: "info",
+                    offset: {
+                        y: 12
+                    },
+                    style: {
+                        background: "#0000a8",
+                    }
+                }).showToast(),
+            () => console.error('clipboard write failed')
+        );
+    }
+
+    const TODO = () => {
+        Toastify({
+            text: "TODO",
+            className: "info",
+            offset: {
+                y: 12
+            },
+            style: {
+                background: "#0000a8",
+            }
+        }).showToast()
+    }
+</script>
 </body>

@@ -156,8 +156,11 @@ for url in ${urls}; do
          GIT_HTTP_LINK="${GIT_HTTP_LINK}" \
          "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${url}" > "${url}"'.tmp'
 
-  open_on_gh='<a href="'"${GIT_HTTP_LINK}"'" aria-label="Open on GitHub">Open on GitHub</a>'
-  awk -v search='</h1>' -v replace='</h1>\n'"${open_on_gh}" '
+  after_first_header='<div class="flex"><a class="cell" href="'"${GIT_HTTP_LINK}"'" aria-label="Open on GitHub"><img class="deploy-img" src="/assets/github-badge-small.png" alt="Open on GitHub"/></a>'
+  after_first_header="${after_first_header}"'<a class="cell" onclick="TODO()"><img class="deploy-img" src="https://aka.ms/deploytoazurebutton" alt="Deploy to Azure"/></a>'
+  after_first_header="${after_first_header}"'<a class="cell" onclick="TODO()"><img class="deploy-img" src="https://www.deploytodo.com/do-btn-blue.svg" alt="Deploy to Digital Ocean"/></a>'
+  after_first_header="${after_first_header}"'<a class="cell" onclick="TODO()"><img class="deploy-img" src="https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png" alt="Deploy to AWS"></a></div>'
+  awk -v search='</h1>' -v replace='</h1>\n'"${after_first_header}" '
   {
     if (!found) {
       idx = index($0, search)
