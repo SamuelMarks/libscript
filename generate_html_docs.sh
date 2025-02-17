@@ -142,7 +142,7 @@ for url in ${urls}; do
   fi
   URL_PATHNAME="${URL_PATHNAME##/}"
 
-  GIT_HTTP_LINK="${GIT_REPO}""$(printf '%s' "${URL_PATHNAME}" | sed 's/docs/blob/; s/latest/master/; s/html/md/')"
+  GIT_HTTP_LINK="${GIT_REPO}""$(printf '%s' "${URL_PATHNAME#.}" | sed 's/docs/blob/; s/latest/master/; s/html/md/')"
 
   GIT_HTTP_LINK="$(printf '%s' "${GIT_HTTP_LINK}" | sed 's/docs/blob/; s/latest/master/; s/html/md/')"
   env -i PATH="$(which awk cat env printenv sort grep | sort -u | xargs dirname | tr '\n' ':')" \
