@@ -191,6 +191,8 @@ for url in ${urls}; do
     after_first_header="${after_first_header}"'</fieldset>'
     after_first_header="${after_first_header}"'</div>'
 
+    after_first_header="${after_first_header}"'<h2 class="line-thru">or</h2>'
+
     after_first_header="${after_first_header}"'<div class="tui-window" style="width: 100%">'
     after_first_header="${after_first_header}"'<fieldset class="tui-fieldset">'
     after_first_header="${after_first_header}"'<legend class="center">2-click deploy</legend>'
@@ -199,6 +201,9 @@ for url in ${urls}; do
     after_first_header="${after_first_header}"'</div>'
     after_first_header="${after_first_header}"'<div class="flex">'
     after_first_header="${after_first_header}"'<label for="log_server" class="flex-item">Metrics/logs (server)............: </label><input class="tui-input flex-item" name="log_server" id="log_server" placeholder="If == ↑domain then deploy"/><br>'
+    after_first_header="${after_first_header}"'</div>'
+    after_first_header="${after_first_header}"'<div class="flex">'
+    after_first_header="${after_first_header}"'<label for="backup_url" class="flex-item">Backup (object storage)..........: </label><input class="tui-input flex-item" name="backup_url" id="backup_url" placeholder="Object storage—e.g., s3—URL"/><br>'
     after_first_header="${after_first_header}"'</div>'
     #after_first_header="${after_first_header}"'<label for="json">Additional vars (JSON format).......:</label>'
     after_first_header="${after_first_header}"'<textarea class="tui-input" style="width: 100%" placeholder="Additional vars (JSON format)" name="json" id="json"></textarea></br>'

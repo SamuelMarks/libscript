@@ -61,6 +61,22 @@
             width: 100%;
             transition: all 0.4s ease;
         }
+        .line-thru {
+            display: flex;
+            flex-direction: row;
+        }
+        .line-thru:before, .line-thru:after {
+            content: "";
+            flex: 1 1;
+            border-bottom: 1px solid;
+            margin: auto;
+        }
+        .line-thru:before {
+            margin-right: 10px
+        }
+        .line-thru:after {
+            margin-left: 10px
+        }
     </style>
     <script type="application/javascript">
         let firstRun = true;
