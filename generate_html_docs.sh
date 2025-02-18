@@ -156,11 +156,7 @@ for url in ${urls}; do
          GIT_HTTP_LINK="${GIT_HTTP_LINK}" \
          "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${url}" > "${url}"'.tmp'
 
-  after_first_header='<div class="flex"><a class="cell" href="'"${GIT_HTTP_LINK}"'" aria-label="Open on GitHub"><img class="deploy-img" src="/assets/github-badge-small.png" alt="Open on GitHub"/></a>'
-  after_first_header="${after_first_header}"'<a class="cell" onclick="TODO()"><img class="deploy-img" src="https://aka.ms/deploytoazurebutton" alt="Deploy to Azure"/></a>'
-  after_first_header="${after_first_header}"'<a class="cell" onclick="TODO()"><img class="deploy-img" src="https://www.deploytodo.com/do-btn-blue.svg" alt="Deploy to Digital Ocean"/></a>'
-  after_first_header="${after_first_header}"'<a class="cell" onclick="TODO()"><img class="deploy-img" src="https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png" alt="Deploy to AWS"></a></div>'
-  awk -v search='</h1>' -v replace='</h1>\n'"${after_first_header}" '
+  awk_src='
   {
     if (!found) {
       idx = index($0, search)
@@ -177,8 +173,45 @@ for url in ${urls}; do
       print $0
     }
   }
-  ' "${url}"'.tmp' > "${url}"'.tmp1'
+  '
+
+  within_first_header='<a class="right" href="'"${GIT_HTTP_LINK}"'" aria-label="Open on GitHub"><img class="deploy-img" src="/assets/github-badge-small.png" alt="Open on GitHub"/></a>'
+  awk -v search='</h1>' -v replace="${within_first_header}"'</h1>' "${awk_src}" "${url}"'.tmp' > "${url}"'.tmp1'
   mv -- "${url}"'.tmp1' "${url}"'.tmp'
+
+  if [ -n "${USAGE}" ]; then
+    after_first_header='<div class="tui-window" style="width: 100%">'
+    after_first_header="${after_first_header}"'<fieldset class="tui-fieldset">'
+    after_first_header="${after_first_header}"'<legend class="center">1-click deploy</legend>'
+    after_first_header="${after_first_header}"'<ul class="flex-ul-prefer-hor">'
+    after_first_header="${after_first_header}"'<li><a onclick="TODO()"><img class="deploy-img" src="https://aka.ms/deploytoazurebutton" alt="Deploy to Azure"/></a></li>'
+    after_first_header="${after_first_header}"'<li><a onclick="TODO()"><img class="deploy-img" src="https://www.deploytodo.com/do-btn-blue.svg" alt="Deploy to Digital Ocean"/></a></li>'
+    after_first_header="${after_first_header}"'<li><a onclick="TODO()"><img class="deploy-img" src="https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png" alt="Deploy to AWS"></a></li>'
+    after_first_header="${after_first_header}"'</ul>'
+    after_first_header="${after_first_header}"'</fieldset>'
+    after_first_header="${after_first_header}"'</div>'
+
+    after_first_header="${after_first_header}"'<div class="tui-window" style="width: 100%">'
+    after_first_header="${after_first_header}"'<fieldset class="tui-fieldset">'
+    after_first_header="${after_first_header}"'<legend class="center">2-click deploy</legend>'
+    after_first_header="${after_first_header}"'<div class="flex">'
+    after_first_header="${after_first_header}"'<label for="cname" class="flex-item">     CNAME............................: </label><input class="tui-input flex-item" name="cname" id="cname" placeholder="Domain name" /><br>'
+    after_first_header="${after_first_header}"'</div>'
+    after_first_header="${after_first_header}"'<div class="flex">'
+    after_first_header="${after_first_header}"'<label for="log_server" class="flex-item">Metrics/logs (server)............: </label><input class="tui-input flex-item" name="log_server" id="log_server" placeholder="If == ↑domain then deploy"/><br>'
+    after_first_header="${after_first_header}"'</div>'
+    #after_first_header="${after_first_header}"'<label for="json">Additional vars (JSON format).......:</label>'
+    after_first_header="${after_first_header}"'<textarea class="tui-input" style="width: 100%" placeholder="Additional vars (JSON format)" name="json" id="json"></textarea></br>'
+    after_first_header="${after_first_header}"'</fieldset>'
+    after_first_header="${after_first_header}"'<ul class="flex-ul-prefer-hor">'
+    after_first_header="${after_first_header}"'<li><a onclick="TODO()"><img class="deploy-img" src="https://aka.ms/deploytoazurebutton" alt="Deploy to Azure"/></a></li>'
+    after_first_header="${after_first_header}"'<li><a onclick="TODO()"><img class="deploy-img" src="https://www.deploytodo.com/do-btn-blue.svg" alt="Deploy to Digital Ocean"/></a></li>'
+    after_first_header="${after_first_header}"'<li><a onclick="TODO()"><img class="deploy-img" src="https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png" alt="Deploy to AWS"></a></li>'
+    after_first_header="${after_first_header}"'</ul>'
+    after_first_header="${after_first_header}"'</div>'
+    awk -v search='</h1>' -v replace='</h1>\n'"${after_first_header}" "${awk_src}" "${url}"'.tmp' > "${url}"'.tmp1'
+    mv -- "${url}"'.tmp1' "${url}"'.tmp'
+  fi
 
   if [ "$(crc32 "${url}")" = "$(crc32 "${url}"'.tmp')" ]; then
     rm -- "${url}"'.tmp'

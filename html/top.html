@@ -40,6 +40,27 @@
             padding: 120px;
             margin: 42px;
         }*/
+        .flex-ul-prefer-hor {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            list-style: none;
+            justify-content: space-between;
+        }
+        .right {
+            float: right;
+            width: 50%;
+        }
+        label {
+            width: 50%;
+        }
+        .flex-item {
+            flex-grow: 1;
+            flex-shrink: 1;
+            /*width: calc(100% / 2);*/
+            width: 100%;
+            transition: all 0.4s ease;
+        }
     </style>
     <script type="application/javascript">
         let firstRun = true;
