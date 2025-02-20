@@ -103,6 +103,7 @@
                     if (firstRun) {
                         firstRun = false;
                         sideNav.classList.add('active');
+                        /*
                         const ul = sideNav.querySelector('ul');
                         for (const url of urls) {
                             const listItem = document.createElement("li");
@@ -114,6 +115,7 @@
                             listItem.appendChild(anchor);
                             ul.appendChild(listItem);
                         }
+                        */
                         /*document.getElementsByTagName('table').forEach((table) =>
                             table.classList.add('tui-table')
                         );*/
@@ -123,10 +125,44 @@
         }
         const urls = $URLS;
     </script>
+    <style>
+        /* Tree Styles */
+        .tree,
+        .tree ul {
+            list-style-type: none;
+            margin: 0;
+            padding-left: 1em;
+            line-height: 1.5em;
+        }
+
+        .tree-node,
+        .tree-leaf {
+            cursor: pointer;
+            position: relative;
+            padding-left: 1.2em;
+        }
+
+        /* Expand/Collapse Icons */
+        .tree-node::before {
+            content: '\u25B6'; /* Right-pointing triangle */
+            position: absolute;
+            left: 0;
+        }
+
+        .tree-node.expanded::before {
+            content: '\u25BC'; /* Down-pointing triangle */
+        }
+
+        /* Collapsed Nodes */
+        li.collapsed > ul {
+            display: none;
+        }
+    </style>
 </head>
 <body onload="toggleSidebar()">
 <!-- Sidenav -->
 <nav class="tui-sidenav absolute" style="height: unset !important;">
+    <div id="tree-container"></div>
     <ul>
     </ul>
 </nav>

@@ -59,4 +59,87 @@
         console.info("json.value:", json.value, ';');
     }
 </script>
+<script>
+    // Function to build the tree data structure
+    const buildTree = (paths) => {
+        const root = {};
+
+        paths.forEach((path) => {
+            const parts = path.split('/').filter(Boolean);
+            let current = root;
+
+            parts.forEach((part) => {
+                if (!current[part]) {
+                    current[part] = {};
+                }
+                current = current[part];
+            });
+        });
+
+        return root;
+    }
+
+    // Function to render the tree into HTML
+    const renderTree = (node, parent, options = {}) => {
+        const ul = document.createElement('ul');
+        if (options.root) {
+            ul.classList.add('tree');
+        }
+
+        for (const key in node) {
+            const li = document.createElement('li');
+            const span = document.createElement('span');
+            span.textContent = key;
+
+            const hasChildren = Object.keys(node[key]).length > 0;
+
+            if (hasChildren) {
+                span.classList.add('tree-node');
+                if (options.startCollapsed)
+                    li.classList.add('collapsed');
+                else
+                    li.classList.remove('collapsed');
+                span.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.parentElement.classList.toggle('collapsed');
+                    this.classList.toggle('expanded');
+                });
+                // Initially mark expanded nodes
+                if (!options.startCollapsed) {
+                    span.classList.add('expanded');
+                }
+            } else {
+                span.classList.add('tree-leaf');
+                span.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    window.location.assign(`/docs/latest/${key}`);
+                });
+            }
+
+            li.appendChild(span);
+
+            if (hasChildren) {
+                renderTree(node[key], li, options);
+            }
+
+            ul.appendChild(li);
+        }
+
+        parent.appendChild(ul);
+    }
+
+    // Build the tree data
+    const treeData = buildTree(urls);
+
+    // Select the container and render the tree
+    const treeContainer = document.getElementById('tree-container');
+
+    // Set options for rendering
+    const options = {
+        root: true,
+        startCollapsed: false // true to start collapsed, false to start expanded
+    };
+
+    renderTree(treeData, treeContainer, options);
+</script>
 </body>

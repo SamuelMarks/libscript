@@ -110,6 +110,104 @@ rm -- "${find_res}"
 urls_js="${urls_js%,}"']'
 printf '%s\n' "${urls_js}"
 
+to_html_tree() {
+
+  # Read input from argument or stdin
+  if [ "$#" -gt 0 ] && [ -n "$1" ]; then
+    input_json="$1"
+  else
+    # If no arguments, read from stdin
+    if [ -t 0 ]; then
+      printf 'No input provided.\n' >&2
+      exit 2
+    else
+      input_json="$(cat)"
+    fi
+  fi
+
+  # Check if jq is installed
+  if ! command -v jq >/dev/null 2>&1; then
+    printf 'Error: jq is required but not installed.\n' >&2
+    exit 1
+  fi
+
+  # Parse JSON to get the paths
+  paths=$(echo "$input_json" | jq -r '.[]')
+
+  # Generate subpaths with levels
+  (
+    # Include the root directory
+    echo "/	1"
+
+    # Process each path
+    echo "$paths" | while IFS= read -r path; do
+      echo "$path" | awk -F'/' '{
+        n = split($0, arr, "/")
+        subpath = ""
+        for (i = 2; i <= n; i++) {
+          subpath = subpath "/" arr[i]
+          level = i
+          printf "%s\t%d\n", subpath, level
+        }
+      }'
+    done
+  ) | sort -u > subpaths.txt
+
+  # Process subpaths to generate the nested HTML lists
+  awk -F'\t' '
+  BEGIN {
+    prev_level = 0
+    indent = ""
+  }
+
+  {
+    path = $1
+    level = $2
+
+    # Close tags if moving up
+    while (prev_level > level) {
+      print indent "  </li>"
+      indent = substr(indent, 1, length(indent) - 2)
+      print indent "</ul>"
+      prev_level--
+    }
+
+    # If same level, close previous <li>
+    if (prev_level == level && prev_level != 0) {
+      print indent "  </li>"
+    }
+
+    # Open new levels
+    if (prev_level < level) {
+      for (i = prev_level; i < level; i++) {
+        print indent "<ul>"
+        indent = indent "  "
+        prev_level++
+      }
+    }
+
+    # Print current item
+    print indent "<li>" path
+  }
+
+  END {
+    # Close any remaining open tags
+    while (prev_level > 0) {
+      print indent "  </li>"
+      indent = substr(indent, 1, length(indent) - 2)
+      print indent "</ul>"
+      prev_level--
+    }
+  }
+  ' subpaths.txt
+
+  # Clean up temporary file
+  rm -f subpaths.txt
+}
+
+#to_html_tree "${urls}"
+#to_html_tree "${urls_js}"
+#exit 5
 for url in ${urls}; do
   title="${url##*/}"
   p="${url%/*}"
@@ -156,6 +254,7 @@ for url in ${urls}; do
          GIT_HTTP_LINK="${GIT_HTTP_LINK}" \
          "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${url}" > "${url}"'.tmp'
 
+  # shellcheck disable=SC2016
   awk_src='
   {
     if (!found) {
@@ -209,6 +308,7 @@ for url in ${urls}; do
     #after_first_header="${after_first_header}"'<label for="json">Additional vars (JSON format).......:</label>'
     after_first_header="${after_first_header}"'<textarea class="tui-input" style="width: 100%" placeholder="Additional vars (JSON format)" name="json" id="json"></textarea></br>'
     after_first_header="${after_first_header}"'</fieldset>'
+
     after_first_header="${after_first_header}"'<ul class="flex-ul-prefer-hor">'
     after_first_header="${after_first_header}"'<li><button type="submit" id="azure_button" formaction="https://azure/" formenctype="text/plain" onclick=twoClickDeploy(this)><img class="deploy-img" src="https://aka.ms/deploytoazurebutton" alt="Deploy to Azure"/></button></li>'
     after_first_header="${after_first_header}"'<li><button type="submit" id="digitalocean_button" formaction="https://digitalocean/" formenctype="text/plain" onclick=twoClickDeploy(this)><img class="deploy-img" src="https://www.deploytodo.com/do-btn-blue.svg" alt="Deploy to Digital Ocean"/></button></li>'
