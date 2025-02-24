@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/app/_storage/vars.schema.json",
+  "title": "celery storage vars",
+  "description": "celery storage vars that can be set",
+  "type": "object",
+  "properties": {
+    "JUPYTERHUB_SERVICE_USER": {
+      "description": "User (try-create); use for the daemon",
+      "type": "string"
+    },
+    "PYTHON_VENV": {
+      "description": "Python virtualenv to install & then start the celery daemon from",
+      "type": "string"
+    }
+  }
+}

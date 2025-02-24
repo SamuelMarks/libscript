@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/app/third_party/firecrawl/vars.schema.json",
+  "title": "firecrawl third-party vars",
+  "description": "firecrawl third-party vars that can be set",
+  "type": "object",
+  "properties": {
+    "FIRECRAWL_BUILD_DIR": {
+      "description": "Build dir",
+      "type": "string"
+    },
+    "FIRECRAWL_DEST": {
+      "description": "Dest to clone|pull firecrawl into",
+      "type": "string"
+    },
+    "PYTHON_VENV": {
+      "description": "Python virtualenv to install & then start the celery daemon from",
+      "type": "string"
+    }
+  }
+}

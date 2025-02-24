@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/app/third_party/jupyterhub/vars.schema.json",
+  "title": "jupyterhub third-party vars",
+  "description": "jupyterhub third-party vars that can be set",
+  "type": "object",
+  "properties": {
+    "JUPYTERHUB_SERVICE_USER": {
+      "description": "Username to use for the install + daemon serve (creates user if nonexistent)",
+      "type": "string"
+    },
+    "JUPYTERHUB_IP": {
+      "description": "IP address to server from",
+      "type": "string"
+    },
+    "JUPYTERHUB_PORT": {
+      "description": "IP port to server from",
+      "type": "string"
+    },
+    "JUPYTERHUB_NOTEBOOK_DIR": {
+      "description": "Notebook directory (creates if nonexistent)",
+      "type": "string"
+    },
+    "JUPYTERHUB_VENV": {
+      "description": "Python virtualenv to use (creates if nonexistent)",
+      "type": "string"
+    },
+    "JUPYTERHUB_PASSWORD": {
+      "description": "Preferably (hashed+salted argon2) password to use",
+      "type": "string"
+    }
+  }
+}
