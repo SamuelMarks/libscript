@@ -5,6 +5,8 @@ libscript
 
 See also libscript's: [WHY.md](WHY.md); [ROADMAP.md](ROADMAP.md); and [IDEAS.md](IDEAS.md).
 
+Finally, see the official website with generating cross-linked hosted libscript documentation @ https://verMan.io
+
 ## Features
 
 [OS](https://en.wikipedia.org/wiki/Operating_system) support for:
