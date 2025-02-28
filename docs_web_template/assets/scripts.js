@@ -1,0 +1,126 @@
+const copyURI = (evt) => {
+    evt.preventDefault();
+    navigator.clipboard.writeText("https://github.com/SamuelMarks/libscript").then(() =>
+            Toastify({
+                text: "Copied GitHub link to clipboard",
+                className: "info",
+                offset: {
+                    y: 12
+                },
+                style: {
+                    background: "#0000a8",
+                }
+            }).showToast(),
+        () => console.error('clipboard write failed')
+    );
+}
+
+const TODO = () => {
+    Toastify({
+        text: "TODO",
+        className: "info",
+        offset: {
+            y: 12
+        },
+        style: {
+            background: "#0000a8",
+        }
+    }).showToast()
+}
+
+const twoClickDeploy = (submitButton) => {
+    /*
+    console.info('submitButton.id:', submitButton.id, ';');
+    console.info('submitButton:', submitButton, ';');
+    */
+    // const twoClickForm = document.getElementById("twoClickForm");
+    const cname = document.getElementById("cname");
+    const log_server = document.getElementById("log_server");
+    const backup_url = document.getElementById("backup_url");
+    const json = document.getElementById("json");
+    console.info("cname.value:", cname.value, ';');
+    console.info("log_server.value:", log_server.value, ';');
+    console.info("backup_url.value:", backup_url.value, ';');
+    console.info("json.value:", json.value, ';');
+}
+// Function to build the tree data structure
+const buildTree = (paths) => {
+    const root = {};
+
+    paths.forEach((path) => {
+        const parts = path.split('/').filter(Boolean);
+        let current = root;
+
+        parts.forEach((part) => {
+            if (!current[part]) {
+                current[part] = {};
+            }
+            current = current[part];
+        });
+    });
+
+    return root;
+}
+
+// Function to render the tree into HTML
+const renderTree = (node, parent, options = {}) => {
+    const ul = document.createElement('ul');
+    if (options.root) {
+        ul.classList.add('tree');
+    }
+
+    for (const key in node) {
+        const li = document.createElement('li');
+        const span = document.createElement('span');
+        span.textContent = key;
+
+        const hasChildren = Object.keys(node[key]).length > 0;
+
+        if (hasChildren) {
+            span.classList.add('tree-node');
+            if (options.startCollapsed)
+                li.classList.add('collapsed');
+            else
+                li.classList.remove('collapsed');
+            span.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.parentElement.classList.toggle('collapsed');
+                this.classList.toggle('expanded');
+            });
+            // Initially mark expanded nodes
+            if (!options.startCollapsed) {
+                span.classList.add('expanded');
+            }
+        } else {
+            span.classList.add('tree-leaf');
+            span.addEventListener('click', (e) => {
+                e.stopPropagation();
+                window.location.assign(`/docs/latest/${key}`);
+            });
+        }
+
+        li.appendChild(span);
+
+        if (hasChildren) {
+            renderTree(node[key], li, options);
+        }
+
+        ul.appendChild(li);
+    }
+
+    parent.appendChild(ul);
+}
+
+// Build the tree data
+const treeData = buildTree(urls);
+
+// Select the container and render the tree
+const treeContainer = document.getElementById('tree-container');
+
+// Set options for rendering
+const options = {
+    root: true,
+    startCollapsed: false // true to start collapsed, false to start expanded
+};
+
+renderTree(treeData, treeContainer, options);

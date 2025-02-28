@@ -1,0 +1,96 @@
+#actual-body {
+    max-width: 70%;
+}
+.active-navlink {
+    background-color: rgb(255, 255, 0);
+}
+table {
+    background-color: rgb(0, 0, 168);
+    width: 90%;
+}
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+.deploy-img {
+    height: 100%;
+    width: 144px;
+}
+.flex {
+    display: flex;
+    justify-content: space-between;
+}
+/*.cell {
+    display: flex;
+    text-decoration: none;
+    padding: 120px;
+    margin: 42px;
+}*/
+.flex-ul-prefer-hor {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    list-style: none;
+    justify-content: space-between;
+}
+.right {
+    float: right;
+    width: 50%;
+}
+label {
+    width: 50%;
+}
+.flex-item {
+    flex-grow: 1;
+    flex-shrink: 1;
+    /*width: calc(100% / 2);*/
+    width: 100%;
+    transition: all 0.4s ease;
+}
+.line-beside {
+    display: flex;
+    flex-direction: row;
+}
+.line-beside:before, .line-beside:after {
+    content: "";
+    flex: 1 1;
+    border-bottom: 1px solid;
+    margin: auto;
+}
+.line-beside:before {
+    margin-right: 10px
+}
+.line-beside:after {
+    margin-left: 10px
+}
+/* Tree Styles */
+.tree,
+.tree ul {
+    list-style-type: none;
+    margin: 0;
+    padding-left: 1em;
+    line-height: 1.5em;
+}
+
+.tree-node,
+.tree-leaf {
+    cursor: pointer;
+    position: relative;
+    padding-left: 1.2em;
+}
+
+/* Expand/Collapse Icons */
+.tree-node::before {
+    content: '\u25B6'; /* Right-pointing triangle */
+    position: absolute;
+    left: 0;
+}
+
+.tree-node.expanded::before {
+    content: '\u25BC'; /* Down-pointing triangle */
+}
+
+/* Collapsed Nodes */
+li.collapsed > ul {
+    display: none;
+}

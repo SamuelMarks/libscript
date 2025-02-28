@@ -27,10 +27,15 @@ export LIBSCRIPT_DOCS_DIR
 LIBSCRIPT_ASSETS_DIR="${LIBSCRIPT_ASSETS_DIR:-${LIBSCRIPT_DOCS_DIR}}"
 export LIBSCRIPT_ASSETS_DIR
 
-HTML_ROOT="${HTML_ROOT:-$LIBSCRIPT_ROOT_DIR}"
-export HTML_ROOT
+if [ -z "${HTML_ROOT+x}" ]; then
+   HTML_ROOT="${LIBSCRIPT_ROOT_DIR}"'/docs_web_template'
+   export HTML_ROOT
+fi
 
 export GIT_REPO="${GIT_REPO:-https://github.com/SamuelMarks/libscript}"
+
+ENVSUBST_PATH="$(which awk cat env printenv sort grep | sort -u | xargs dirname | tr '\n' ':')"
+export ENVSUBST_PATH
 
 [ -d "${LIBSCRIPT_DOCS_DIR}" ] || mkdir -p "${LIBSCRIPT_DOCS_DIR}"
 #cp 'tuicss.min.css' "${LIBSCRIPT_DOCS_DIR}"'/'
@@ -70,7 +75,7 @@ while IFS= read -r f; do
 
   html="${out%%.md}"'.html'
 
-  cp -- "${HTML_ROOT}"'/html/top.html' "${html}"
+  cp -- "${HTML_ROOT}"'/top.html' "${html}"
   iconv -t utf-8 -- "${f}" | sed 's/.md)/.html)/g' | pandoc -f markdown -t html5 | iconv -f utf-8 >> "${html}"
   previous_wd="$(pwd)"
   new_wd="${f%/*}"
@@ -82,10 +87,10 @@ while IFS= read -r f; do
         *)
           cd -- "${previous_wd}"
           PORT_PATH="${new_wd##*/libscript}"
-          env -i PATH="$(which awk cat env printenv sort grep | sort -u | xargs dirname | tr '\n' ':')" \
+          env -i PATH="${ENVSUBST_PATH}" \
                  PORT_PATH="${PORT_PATH}" \
                  PORT_PATH_WIN="$(printf '%s' "${PORT_PATH}" | tr '/' '\\')" \
-                 "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${HTML_ROOT}"'/html/usage.html' >> "${html}"'.usage'
+                 "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${HTML_ROOT}"'/usage.html' >> "${html}"'.usage'
           # shellcheck disable=SC2016
           printf '${USAGE}' >> "${html}"
           wetzel -k '**MUST**' -- "${new_wd}"'/'"${json_schema}" | iconv -t utf-8  | pandoc -f markdown -t html5 | sed 's/<table>/<table class="tui-table hovered-purple striped-purple">/g' | iconv -f utf-8 >> "${html}"
@@ -96,7 +101,7 @@ while IFS= read -r f; do
     fi
   done
   cd -- "${previous_wd}"
-  cat -- "${HTML_ROOT}"'/html/bottom.html' >> "${html}"
+  cat -- "${HTML_ROOT}"'/bottom.html' >> "${html}"
   if [ -n "${LIBSCRIPT_DOCS_PREFIX}" ]; then
     h="${html#.}"
     urls_js="${urls_js}"'"'"${h#"${LIBSCRIPT_DOCS_PREFIX}"}"'",'
@@ -243,10 +248,9 @@ for url in ${urls}; do
   GIT_HTTP_LINK="${GIT_REPO}""$(printf '%s' "${URL_PATHNAME#.}" | sed 's/docs/blob/; s/latest/master/; s/html/md/')"
 
   GIT_HTTP_LINK="$(printf '%s' "${GIT_HTTP_LINK}" | sed 's/docs/blob/; s/latest/master/; s/html/md/')"
-  env -i PATH="$(which awk cat env printenv sort grep | sort -u | xargs dirname | tr '\n' ':')" \
+  env -i PATH="${ENVSUBST_PATH}" \
          url="${url}" \
          TITLE="${title%%.html}" \
-         URLS="${urls_js}" \
          LIBSCRIPT_DOCS_DIR="${LIBSCRIPT_DOCS_DIR#.}" \
          LIBSCRIPT_ASSETS_DIR="${LIBSCRIPT_ASSETS_DIR}" \
          USAGE="${USAGE}" \
@@ -326,5 +330,13 @@ for url in ${urls}; do
     mv -- "${url}"'.tmp' "${url}"
   fi
 done
+
+# Could be fancier with a crc32 here also
+[ -d "${LIBSCRIPT_ASSETS_DIR}" ] || mkdir -p -- "${LIBSCRIPT_ASSETS_DIR}"
+cp -- "${HTML_ROOT}"'/assets/'*'.css' "${LIBSCRIPT_ASSETS_DIR}"
+cp -- "${HTML_ROOT}"'/assets/'*'.js' "${LIBSCRIPT_ASSETS_DIR}"
+env -i PATH="${ENVSUBST_PATH}" \
+       URLS="${urls_js}" \
+       "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${HTML_ROOT}"'/assets/first_scripts.js' > "${LIBSCRIPT_ASSETS_DIR}"'/first_scripts.js'
 
 set -f
