@@ -21,7 +21,7 @@ const toggleSidebar = () => {
             actualBodyStyle.maxWidth = '70%';
             if (firstRun) {
                 firstRun = false;
-                sideNav.classList.add('active');
+                /*sideNav.classList.add('active');*/
                 /*
                 const ul = sideNav.querySelector('ul');
                 for (const url of urls) {

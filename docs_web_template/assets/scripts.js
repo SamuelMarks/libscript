@@ -43,84 +43,70 @@ const twoClickDeploy = (submitButton) => {
     console.info("backup_url.value:", backup_url.value, ';');
     console.info("json.value:", json.value, ';');
 }
-// Function to build the tree data structure
-const buildTree = (paths) => {
-    const root = {};
 
-    paths.forEach((path) => {
-        const parts = path.split('/').filter(Boolean);
-        let current = root;
-
-        parts.forEach((part) => {
-            if (!current[part]) {
-                current[part] = {};
-            }
-            current = current[part];
-        });
-    });
-
-    return root;
-}
-
-// Function to render the tree into HTML
-const renderTree = (node, parent, options = {}) => {
-    const ul = document.createElement('ul');
-    if (options.root) {
-        ul.classList.add('tree');
-    }
-
-    for (const key in node) {
-        const li = document.createElement('li');
-        const span = document.createElement('span');
-        span.textContent = key;
-
-        const hasChildren = Object.keys(node[key]).length > 0;
-
-        if (hasChildren) {
-            span.classList.add('tree-node');
-            if (options.startCollapsed)
-                li.classList.add('collapsed');
-            else
-                li.classList.remove('collapsed');
-            span.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.parentElement.classList.toggle('collapsed');
-                this.classList.toggle('expanded');
-            });
-            // Initially mark expanded nodes
-            if (!options.startCollapsed) {
-                span.classList.add('expanded');
-            }
-        } else {
-            span.classList.add('tree-leaf');
-            span.addEventListener('click', (e) => {
-                e.stopPropagation();
-                window.location.assign(`/docs/latest/${key}`);
-            });
-        }
-
-        li.appendChild(span);
-
-        if (hasChildren) {
-            renderTree(node[key], li, options);
-        }
-
-        ul.appendChild(li);
-    }
-
-    parent.appendChild(ul);
-}
+document.addEventListener('DOMContentLoaded', () => {
+// Define the current page
+    const currentPage = window.location.pathname;
 
 // Build the tree data
-const treeData = buildTree(urls);
+    const treeData = buildTreeJsData(urls, currentPage);
 
-// Select the container and render the tree
-const treeContainer = document.getElementById('tree-container');
+// Initialize the tree
+    const tree = new Tree('#tree-container', {
+        data: treeData,
+        onChange: () => {
+            if (tree.selectedNodes.length > 0) {
+                const last = tree.selectedNodes[tree.selectedNodes.length - 1];
+                if (last.class === "file-node"
+                    && last.opened === true
+                    && last.text.endsWith(".html")) {
+                    tree.selectedNodes.length = 0;
+                    tree.disabledNodes.length = 0;
+                    window.location.assign(last.id);
+                }
+            }
+        }
+    });
 
-// Set options for rendering
-const options = {
-    root: true,
-    startCollapsed: false // true to start collapsed, false to start expanded
-};
+// Function to build tree data for Treejs
+    function buildTreeJsData(paths, currentPage) {
+        const root = [];
 
-renderTree(treeData, treeContainer, options);
+        paths.forEach((path) => {
+            const parts = path.split('/').filter(Boolean);
+            let currentLevel = root;
+            let fullPath = '';
+
+            parts.forEach((part, index) => {
+                fullPath += '/' + part;
+                let existingNode = currentLevel.find(node => node.text === part);
+
+                if (!existingNode) {
+                    const isFile = index === parts.length - 1 && part.includes('.');
+                    existingNode = {
+                        id: fullPath,
+                        text: part,
+                        children: [],
+                        opened: false, // Nodes are collapsed by default
+                        class: isFile ? 'file-node' : 'folder-node', // Add classes for icons
+                    };
+                    currentLevel.push(existingNode);
+                }
+
+                // Expand nodes along the current page path
+                if (currentPage.startsWith(fullPath)) {
+                    existingNode.opened = true;
+                }
+
+                // Highlight the current page node
+                if (fullPath === currentPage) {
+                    existingNode.class += ' current-page-node'; // Append the class
+                }
+
+                currentLevel = existingNode.children;
+            });
+        });
+
+        return root;
+    }
+});

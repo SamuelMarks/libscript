@@ -12,6 +12,23 @@ html, body {
     max-width: 100%;
     overflow-x: hidden;
 }
+.my-sidenav {
+    z-index: 8;
+    top: 0;
+    left: 0;
+    background-color: #00a8a8;
+    padding: 6px;
+    box-shadow: 10px 10px #000 !important;
+    min-width: 200px;
+    max-width: 50%;
+}
+.tui-sidenav ul {
+    margin-top: unset;
+    border-top: 2px #000 solid;
+}
+.tui-sidenav ul li:hover {
+    background-color: unset;
+}
 .deploy-img {
     height: 100%;
     width: 144px;
@@ -63,34 +80,35 @@ label {
 .line-beside:after {
     margin-left: 10px
 }
+
 /* Tree Styles */
-.tree,
-.tree ul {
-    list-style-type: none;
-    margin: 0;
-    padding-left: 1em;
-    line-height: 1.5em;
+
+/* Treejs overrides and custom styles */
+
+/* Highlight the current page node */
+.current-page-node {
+    font-weight: bold;
+    color: blue;
 }
 
-.tree-node,
-.tree-leaf {
-    cursor: pointer;
-    position: relative;
-    padding-left: 1.2em;
+/* Folder icon */
+.folder-node .tree-branch-head > .tree-entry-text:before {
+    content: "\1F4C1"; /* 📁 Closed folder icon */
+    margin-right: 5px;
 }
 
-/* Expand/Collapse Icons */
-.tree-node::before {
-    content: '\u25B6'; /* Right-pointing triangle */
-    position: absolute;
-    left: 0;
+/* Open folder icon */
+.folder-node.open > .tree-branch-head > .tree-entry-text:before {
+    content: "\1F4C2"; /* 📂 Open folder icon */
 }
 
-.tree-node.expanded::before {
-    content: '\u25BC'; /* Down-pointing triangle */
+/* File icon */
+.file-node .tree-leaf-head > .tree-entry-text:before {
+    content: "\1F4C4"; /* 📄 File icon */
+    margin-right: 5px;
 }
 
-/* Collapsed Nodes */
-li.collapsed > ul {
-    display: none;
+/* Adjust the tree node text */
+.tree-entry-text {
+    vertical-align: middle;
 }
