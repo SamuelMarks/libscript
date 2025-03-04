@@ -33,10 +33,7 @@ html, body {
     height: 100%;
     width: 144px;
 }
-.flex {
-    display: flex;
-    justify-content: space-between;
-}
+
 /*.cell {
     display: flex;
     text-decoration: none;
@@ -56,13 +53,6 @@ html, body {
 }
 label {
     width: 50%;
-}
-.flex-item {
-    flex-grow: 1;
-    flex-shrink: 1;
-    /*width: calc(100% / 2);*/
-    width: 100%;
-    transition: all 0.4s ease;
 }
 .line-beside {
     display: flex;

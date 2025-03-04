@@ -41,7 +41,7 @@ Then execute:
 
 Now to actually test you can do something like:
 
-    $ export LIBSCRIPT_ROOT_DIR='/path/to/libscript'
+    $ export LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-/path/to/libscript}"
     $ rsync -az "${LIBSCRIPT_ROOT_DIR}" alpine321:/opt/repos/
     $ # implicit test
     $ ssh alpine321 '/opt/repos/libscript/_lib/_toolchain/jq/test.sh'
@@ -58,3 +58,24 @@ PuTTy instructions are also available at https://github.com/SamuelMarks/libscrip
 
 ## NetBSD; FreeBSD; OpenBSD; SunOS / OpenSolaris / illumos; HP/UX; z/OS
 (guide coming soon; hopefully I find an open-source alternative to Vagrant for this!)
+
+## Android
+
+Install Python on your host machine—e.g., using [_lib/_toolchain/python/setup.sh](_lib/_toolchain/python/setup.sh)—then follow the guide here to setup your Android and SDK https://github.com/jb2170/better-adb-sync finishing by running:
+
+    $ python -m pip install BetterADBSync
+    $ export LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-/path/to/libscript}"
+    $ adbsync push --delete "${LIBSCRIPT_ROOT_DIR}" /sdcard/repos/
+
+Then use [termux](https://termux.dev/en/) to access that directory and execute commands. [scrcpy](https://github.com/Genymobile/scrcpy) is popular to remotely control the screen+keyboard, and [escrcpy](https://github.com/viarotel-org/escrcpy) appears to allow remote execution of scripts (though remains to be tested & checked for security flaws).
+
+Or alternatively the docs say you can edit your .ssh/config with:
+
+    Host sshelper
+        Port 2222
+        ProxyCommand adb-channel tcp:%p com.arachnoid.sshelper/.SSHelperActivity 1
+
+(though SSHelper seems to be unmaintained and won't work on new Android's)
+
+## iOS
+(guide coming soon)
