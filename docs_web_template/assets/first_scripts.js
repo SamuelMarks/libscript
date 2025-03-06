@@ -21,23 +21,7 @@ const toggleSidebar = () => {
             actualBodyStyle.maxWidth = '70%';
             if (firstRun) {
                 firstRun = false;
-                /*sideNav.classList.add('active');*/
-                /*
-                const ul = sideNav.querySelector('ul');
-                for (const url of urls) {
-                    const listItem = document.createElement("li");
-                    if (window.location.pathname === url)
-                        listItem.className = 'active-navlink';
-                    const anchor = document.createElement("a");
-                    anchor.href = url;
-                    anchor.textContent = nicerName(url);
-                    listItem.appendChild(anchor);
-                    ul.appendChild(listItem);
-                }
-                */
-                /*document.getElementsByTagName('table').forEach((table) =>
-                    table.classList.add('tui-table')
-                );*/
+                sideNav.classList.add('active');
             }
         }
     }
