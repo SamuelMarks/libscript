@@ -1,3 +1,5 @@
+const currentPage = window.location.pathname;
+
 const copyURI = (evt) => {
     evt.preventDefault();
     navigator.clipboard.writeText("https://github.com/SamuelMarks/libscript").then(() =>
@@ -44,69 +46,89 @@ const twoClickDeploy = (submitButton) => {
     console.info("json.value:", json.value, ';');
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-// Define the current page
-    const currentPage = window.location.pathname;
+function buildTree(urls) {
+    const root = {};
 
-// Build the tree data
-    const treeData = buildTreeJsData(urls, currentPage);
+    urls.forEach(url => {
+        const parts = url.split('/').filter(part => part !== '');
+        let currentNode = root;
 
-// Initialize the tree
-    const tree = new Tree('#tree-container', {
-        data: treeData,
-        onChange: () => {
-            if (tree.selectedNodes.length > 0) {
-                const last = tree.selectedNodes[tree.selectedNodes.length - 1];
-                if (last.class === "file-node"
-                    && last.opened === true
-                    && last.text.endsWith(".html")) {
-                    tree.selectedNodes.length = 0;
-                    tree.disabledNodes.length = 0;
-                    window.location.assign(last.id);
-                }
+        for (let i = 0; i < parts.length; i++) {
+            const part = parts[i];
+            if (!currentNode[part]) {
+                currentNode[part] = {
+                    __meta: {
+                        isFile: i === parts.length - 1 && part.includes('.'),
+                        fullPath: '/' + parts.slice(0, i + 1).join('/')
+                    },
+                    children: {}
+                };
             }
+            currentNode = currentNode[part].children;
         }
     });
 
-// Function to build tree data for Treejs
-    function buildTreeJsData(paths, currentPage) {
-        const root = [];
+    return root;
+}
 
-        paths.forEach((path) => {
-            const parts = path.split('/').filter(Boolean);
-            let currentLevel = root;
-            let fullPath = '';
+function renderTree(node, currentPage) {
+    const ul = document.createElement('ul');
 
-            parts.forEach((part, index) => {
-                fullPath += '/' + part;
-                let existingNode = currentLevel.find(node => node.text === part);
+    for (const key in node) {
+        if (node.hasOwnProperty(key)) {
+            const item = node[key];
+            const li = document.createElement('li');
+            const isFile = item.__meta.isFile;
+            const fullPath = item.__meta.fullPath;
+            const shouldExpand = currentPage.startsWith(fullPath);
 
-                if (!existingNode) {
-                    const isFile = index === parts.length - 1 && part.includes('.');
-                    existingNode = {
-                        id: fullPath,
-                        text: part,
-                        children: [],
-                        opened: false, // Nodes are collapsed by default
-                        class: isFile ? 'file-node' : 'folder-node', // Add classes for icons
-                    };
-                    currentLevel.push(existingNode);
-                }
-
-                // Expand nodes along the current page path
-                if (currentPage.startsWith(fullPath)) {
-                    existingNode.opened = true;
-                }
-
-                // Highlight the current page node
+            if (isFile) {
+                const a = document.createElement('a');
+                a.href = fullPath;
+                a.textContent = key;
                 if (fullPath === currentPage) {
-                    existingNode.class += ' current-page-node'; // Append the class
+                    li.classList.add('current-page');
+                }
+                li.classList.add('file');
+                li.appendChild(a);
+            } else {
+                li.classList.add('folder');
+                if (shouldExpand) {
+                    li.classList.add('expanded');
+                }
+                const span = document.createElement('span');
+                span.textContent = key;
+                span.classList.add('folder-name');
+
+                const childrenContainer = renderTree(item.children, currentPage);
+
+                if (!shouldExpand) {
+                    childrenContainer.classList.add('hidden');
                 }
 
-                currentLevel = existingNode.children;
-            });
-        });
+                span.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    li.classList.toggle('expanded');
+                    if (li.classList.contains('expanded')) {
+                        childrenContainer.classList.remove('hidden');
+                    } else {
+                        childrenContainer.classList.add('hidden');
+                    }
+                });
 
-        return root;
+                li.appendChild(span);
+                li.appendChild(childrenContainer);
+            }
+            ul.appendChild(li);
+        }
     }
+    return ul;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const treeData = buildTree(urls);
+
+    const treeContainer = document.getElementById('tree-container');
+    const tree = renderTree(treeData, currentPage);
+    treeContainer.appendChild(tree);
 });

@@ -1,17 +1,21 @@
 #actual-body {
     max-width: 70%;
 }
+
 .active-navlink {
     background-color: rgb(255, 255, 0);
 }
+
 table {
     background-color: rgb(0, 0, 168);
     width: 90%;
 }
+
 html, body {
     max-width: 100%;
     overflow-x: hidden;
 }
+
 .my-sidenav {
     z-index: 8;
     top: 0;
@@ -22,13 +26,16 @@ html, body {
     min-width: 200px;
     max-width: 50%;
 }
+
 .tui-sidenav ul {
     margin-top: unset;
     border-top: 2px #000 solid;
 }
+
 .tui-sidenav ul li:hover {
     background-color: unset;
 }
+
 .deploy-img {
     height: 100%;
     width: 144px;
@@ -47,58 +54,84 @@ html, body {
     list-style: none;
     justify-content: space-between;
 }
+
 .right {
     float: right;
     width: 50%;
 }
+
 label {
     width: 50%;
 }
+
 .line-beside {
     display: flex;
     flex-direction: row;
 }
+
 .line-beside:before, .line-beside:after {
     content: "";
     flex: 1 1;
     border-bottom: 1px solid;
     margin: auto;
 }
+
 .line-beside:before {
     margin-right: 10px
 }
+
 .line-beside:after {
     margin-left: 10px
 }
 
 /* Tree Styles */
 
-/* Treejs overrides and custom styles */
+#tree-container ul {
+    list-style-type: none;
+    margin-left: 20px;
+    padding-left: 0;
+}
 
-/* Highlight the current page node */
-.current-page-node {
+#tree-container li {
+    position: relative;
+}
+
+#tree-container .folder:before {
+    content: '\25B6'; /* Right-pointing triangle */
+    position: absolute;
+    left: -15px;
+    cursor: pointer;
+}
+
+#tree-container .folder.expanded:before {
+    content: '\25BC'; /* Down-pointing triangle */
+}
+
+#tree-container .file:before {
+    content: '';
+    position: absolute;
+    left: -15px;
+}
+
+#tree-container .hidden {
+    display: none;
+}
+
+.current-page > a {
     font-weight: bold;
     color: blue;
+    text-decoration: underline;
 }
 
-/* Folder icon */
-.folder-node .tree-branch-head > .tree-entry-text:before {
-    content: "\1F4C1"; /* 📁 Closed folder icon */
-    margin-right: 5px;
+a {
+    text-decoration: none;
+    color: black;
 }
 
-/* Open folder icon */
-.folder-node.open > .tree-branch-head > .tree-entry-text:before {
-    content: "\1F4C2"; /* 📂 Open folder icon */
+a:hover {
+    text-decoration: underline;
 }
 
-/* File icon */
-.file-node .tree-leaf-head > .tree-entry-text:before {
-    content: "\1F4C4"; /* 📄 File icon */
-    margin-right: 5px;
-}
-
-/* Adjust the tree node text */
-.tree-entry-text {
-    vertical-align: middle;
+.folder-name {
+    cursor: pointer;
 }
