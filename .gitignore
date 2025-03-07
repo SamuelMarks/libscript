@@ -6,3 +6,4 @@ gen/app
 docs
 .ssh
 *.html
+node_modules
