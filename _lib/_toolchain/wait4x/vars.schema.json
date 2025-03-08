@@ -3,6 +3,5 @@
   "$id": "/_lib/_toolchain/jq/vars.schema.json",
   "title": "jq toolchain vars",
   "description": "jq toolchain vars that can be set",
-  "type": "object",
-  "properties": {}
+  "type": "object"
 }

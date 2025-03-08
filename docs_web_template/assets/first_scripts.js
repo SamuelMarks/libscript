@@ -18,7 +18,7 @@ const toggleSidebar = () => {
             actualBodyStyle.maxWidth = '100%';
         } else {
             actualBodyStyle.marginLeft = '390px';
-            actualBodyStyle.maxWidth = '70%';
+            actualBodyStyle.maxWidth = '65%';
             if (firstRun) {
                 firstRun = false;
                 sideNav.classList.add('active');
