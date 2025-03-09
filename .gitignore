@@ -7,3 +7,4 @@ docs
 .ssh
 *.html
 node_modules
+assets
