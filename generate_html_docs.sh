@@ -357,6 +357,8 @@ env -i PATH="${ENVSUBST_PATH}" \
 set +f
 printf 'LIBSCRIPT_ASSETS_DIR = "%s"\n' "${LIBSCRIPT_ASSETS_DIR}"
 printf 'LIBSCRIPT_ROOT_DIR = "%s"\n' "${LIBSCRIPT_ROOT_DIR}"
+LIBSCRIPT_ASSETS_DIR=$(CDPATH='' cd -P -- "${LIBSCRIPT_ASSETS_DIR}" && pwd -P)
+printf 'now LIBSCRIPT_ASSETS_DIR = "%s"\n' "${LIBSCRIPT_ASSETS_DIR}"
 if [ ! "${LIBSCRIPT_ASSETS_DIR}" = "${LIBSCRIPT_ROOT_DIR}"'/assets' ]; then
   cp -- "${LIBSCRIPT_ASSETS_DIR}"/*.css "${LIBSCRIPT_ROOT_DIR}"'/assets/'
   cp -- "${LIBSCRIPT_ASSETS_DIR}"/*.js "${LIBSCRIPT_ROOT_DIR}"'/assets/'
