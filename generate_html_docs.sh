@@ -334,6 +334,8 @@ const editor = new JSONEditor(document.getElementById("editor_holder"),
   { schema: '"${SCHEMA}"'});
 editor.on("ready", () => {
   const editor_holder = document.getElementById("editor_holder");
+  let longest = 0;
+  let STYLES = "";
   for (const formControl of editor_holder.getElementsByClassName("form-control")) {
       let input = null;
       formControl.classList.add("flex");
@@ -341,9 +343,15 @@ editor.on("ready", () => {
           switch (child.tagName.toLowerCase()) {
               case "input":
                   input = child;
+                  child.classList.add("flex-item");
+                  break;
 
               case "label":
                   child.classList.add("flex-item");
+                  // .replace("]", "").replace("[", "")
+                  child.id = `label-${child.htmlFor}`;
+                  const n = child.textContent.length;
+                  if (n > longest) longest = n;
                   break;
 
               case "p":
@@ -357,7 +365,28 @@ editor.on("ready", () => {
                   break;
           }
       }
+
+      for (const child of formControl.children) {
+          if (child.tagName.toLowerCase() === "input") {
+              let l = 20 + (longest - child.textContent.length);
+              let dots = "";
+              for (let i=0; i<l; i++) {
+                  dots += ".";
+              }
+              dots += ": ";
+              STYLES += `#label-${child.id}:after { content: "${dots}"; }\n`;
+          }
+      }
   }
+  console.info("STYLES:", STYLES, ";");
+  const style = document.createElement("style");
+  style.type = "text/css";
+  if (style.styleSheet) style.styleSheet.cssText = STYLES;
+  else style.appendChild(document.createTextNode(STYLES));
+  document.getElementsByTagName("head")[0].appendChild(style);
+  const sheet = new CSSStyleSheet()
+  sheet.replaceSync(STYLES)
+  document.adoptedStyleSheets = [sheet]
 });
 const submitButton = document.getElementById("submit");
 submitButton.onsubmit = "return false;";

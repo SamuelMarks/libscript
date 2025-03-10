@@ -174,6 +174,10 @@ json-schema-form {
     border-radius: 0;
 }
 
+#editor_holder {
+    width: 100%;
+}
+
 .form-control {
     width: 100%;
 }
@@ -190,9 +194,9 @@ json-schema-form {
     display: unset !important;
 }
 
-.form-control label:after {
+/*.form-control label:after {
     content: "......: ";
-}
+}*/
 
 .je-indented-panel {
     padding: 0 !important;
