@@ -344,7 +344,9 @@ done
 # Could be fancier with a crc32 here also
 [ -d "${LIBSCRIPT_ASSETS_DIR}" ] || mkdir -p -- "${LIBSCRIPT_ASSETS_DIR}"
 rsync -a -- "${HTML_ROOT}"'/assets/' "${LIBSCRIPT_ASSETS_DIR}"
-rsync -a -- "${LIBSCRIPT_ROOT_DIR}"'/node_modules/tuicss/dist/' "${LIBSCRIPT_ASSETS_DIR}"
+if [ -d "${LIBSCRIPT_ROOT_DIR}"'/node_modules/tuicss' ]; then
+  rsync -a -- "${LIBSCRIPT_ROOT_DIR}"'/node_modules/tuicss/dist/' "${LIBSCRIPT_ASSETS_DIR}"
+fi
 env -i PATH="${ENVSUBST_PATH}" \
        URLS="${urls_js}" \
        "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${HTML_ROOT}"'/assets/first_scripts.js' > "${LIBSCRIPT_ASSETS_DIR}"'/first_scripts.js'
