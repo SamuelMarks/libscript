@@ -343,7 +343,9 @@ done
 
 # Could be fancier with a crc32 here also
 [ -d "${LIBSCRIPT_ASSETS_DIR}" ] || mkdir -p -- "${LIBSCRIPT_ASSETS_DIR}"
-rsync -a -- "${HTML_ROOT}"'/assets/' "${LIBSCRIPT_ASSETS_DIR}"
+if [ ! "${HTML_ROOT}"'/assets' = "${LIBSCRIPT_ASSETS_DIR}" ]; then
+  rsync -a -- "${HTML_ROOT}"'/assets/' "${LIBSCRIPT_ASSETS_DIR}"
+fi
 if [ -d "${LIBSCRIPT_ROOT_DIR}"'/node_modules/tuicss' ]; then
   rsync -a -- "${LIBSCRIPT_ROOT_DIR}"'/node_modules/tuicss/dist/' "${LIBSCRIPT_ASSETS_DIR}"
 fi
@@ -353,6 +355,8 @@ env -i PATH="${ENVSUBST_PATH}" \
 [ -d "${LIBSCRIPT_ROOT_DIR}"'/assets/' ] || mkdir -- "${LIBSCRIPT_ROOT_DIR}"'/assets/'
 
 set +f
+printf 'LIBSCRIPT_ASSETS_DIR = "%s"\n' "${LIBSCRIPT_ASSETS_DIR}"
+printf 'LIBSCRIPT_ROOT_DIR = "%s"\n' "${LIBSCRIPT_ROOT_DIR}"
 if [ ! "${LIBSCRIPT_ASSETS_DIR}" = "${LIBSCRIPT_ROOT_DIR}"'/assets' ]; then
   cp -- "${LIBSCRIPT_ASSETS_DIR}"/*.css "${LIBSCRIPT_ROOT_DIR}"'/assets/'
   cp -- "${LIBSCRIPT_ASSETS_DIR}"/*.js "${LIBSCRIPT_ROOT_DIR}"'/assets/'
