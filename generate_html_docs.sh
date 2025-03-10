@@ -353,8 +353,10 @@ env -i PATH="${ENVSUBST_PATH}" \
 [ -d "${LIBSCRIPT_ROOT_DIR}"'/assets/' ] || mkdir -- "${LIBSCRIPT_ROOT_DIR}"'/assets/'
 
 set +f
-cp -- "${LIBSCRIPT_ASSETS_DIR}"/*.css "${LIBSCRIPT_ROOT_DIR}"'/assets/'
-cp -- "${LIBSCRIPT_ASSETS_DIR}"/*.js "${LIBSCRIPT_ROOT_DIR}"'/assets/'
+if [ ! "${LIBSCRIPT_ASSETS_DIR}" = "${LIBSCRIPT_ROOT_DIR}"'/assets' ]; then
+  cp -- "${LIBSCRIPT_ASSETS_DIR}"/*.css "${LIBSCRIPT_ROOT_DIR}"'/assets/'
+  cp -- "${LIBSCRIPT_ASSETS_DIR}"/*.js "${LIBSCRIPT_ROOT_DIR}"'/assets/'
+fi
 rsync -a -- "${LIBSCRIPT_ASSETS_DIR}"'/images' "${LIBSCRIPT_ROOT_DIR}"'/assets/'
 if [ -d "${LIBSCRIPT_ROOT_DIR}"'/../verman-tui-www/assets' ]; then
   rsync -a -r -- "${LIBSCRIPT_ROOT_DIR}"'/../verman-tui-www/assets/' "${LIBSCRIPT_ROOT_DIR}"'/assets/'
