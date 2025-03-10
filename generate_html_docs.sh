@@ -96,7 +96,7 @@ while IFS= read -r f; do
           # shellcheck disable=SC2016
           printf '${USAGE}' >> "${html}"
           wetzel -k '**MUST**' -- "${new_wd}"'/'"${json_schema}" | iconv -t utf-8  | pandoc -f markdown -t html5 | sed 's/<table>/<table class="tui-table hovered-purple striped-purple">/g' | iconv -f utf-8 >> "${html}"
-          jq -c . "${new_wd}"'/'"${json_schema}" >> "${previous_wd}"'/'"${html%.html}"'.schema.json'
+          jq -c . "${new_wd}"'/'"${json_schema}" >> "${html%.html}"'.schema.json'
           cd -- "${new_wd}"
           ;;
       esac
