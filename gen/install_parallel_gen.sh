@@ -36,7 +36,6 @@ export PATH
 [ -d "${LIBSCRIPT_BUILD_DIR}" ] || mkdir -p -- "${LIBSCRIPT_BUILD_DIR}"
 [ -d "${LIBSCRIPT_DATA_DIR}" ] || mkdir -p -- "${LIBSCRIPT_DATA_DIR}"
 
-
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 
 ###########################

@@ -37,7 +37,6 @@ export PATH
 [ -d "${LIBSCRIPT_DATA_DIR}" ] || mkdir -p -- "${LIBSCRIPT_DATA_DIR}"
 
 
-
 ###########################
 # Toolchain(s) [required] #
 ###########################

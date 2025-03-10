@@ -29,64 +29,60 @@ esac
 STACK="${STACK}${this_file}"':'
 export STACK
 
-convert_newlines() {
-    printf '%s' "$1" | awk '{
-        gsub(/\\n/, "\n")
-        printf "%s", $0
-    }'
-}
-
-choose_delim() {
-    for delim in @ % + - _ = : / \| \# \\; do
-        case "$1$2" in
-            *"$delim"*)
-                continue
-                ;;
-            *)
-                printf '%s' "$delim"
-                return 0
-                ;;
-        esac
-    done
-    >&2 printf 'Error: Unable to find suitable delimiter.\n'
-    exit 1
-}
-
-escape_search() {
-    printf '%s' "$1" | sed -e 's/[.\[\*^$]/\\&/g' -e "s/[$delim\\\\]/\\\\&/g"
-}
-
-escape_replace() {
-    printf '%s' "$1" | sed -e 's/[&]/\\&/g' -e "s/[$delim\\\\]/\\\\&/g" -e 's/$/\\n/g' -e 's/\\\\n$//'
-}
-
 find_replace() {
   if [ "$#" -ne 3 ]; then
-      >&2 printf "Usage: find_replace 'search_string' 'replacement_string' filename"
-      exit 1
+    >&2 printf 'Usage: find_replace '"'"'find'"'"' '"'"'replace'"'"' filename'
+    exit 1
   fi
 
-  search_string="$1"
-  replacement_string="$2"
-  filename="$3"
+  search_string="${1}"
+  replacement_string="${2}"
+  filename="${3}"
 
-  if [ ! -w "$filename" ]; then
-      >&2 printf 'Error: Cannot write to file "%s".\n' "${filename}"
-      exit 1
+  if [ ! -r "${filename}" ]; then
+    >&2 printf 'Error: Cannot read file "%s"\n' "${filename}"
+    exit 1
   fi
 
-  search_plain="$(convert_newlines "$search_string")"
-  replace_plain="$(convert_newlines "$replacement_string")"
+  awk_script='
+  BEGIN {
+    search = ARGV[1]
+    replace = ARGV[2]
 
-  delim="$(choose_delim "$search_plain" "$replace_plain")"
+    delete ARGV[1]
+    delete ARGV[2]
+  }
+  {
+     file_content = file_content $0 "\n"
+  }
+  END {
+    result = ""
+    pos = 1
+    search_len = length(search)
+    content_len = length(file_content)
 
-  search_escaped="$(escape_search "$search_plain")"
-  replace_escaped="$(escape_replace "$replace_plain")"
+    while (pos <= content_len) {
+      idx = index(substr(file_content, pos), search)
+      if (idx == 0) {
+        result = result substr(file_content, pos)
+        break
+      } else {
+        idx = idx + pos - 1
+        result = result substr(file_content, pos, idx - pos) replace
+        pos = idx + search_len
+      }
+    }
 
-  ed_script=$(printf '1,$s%s%s%s%s%sg\nw\n' "$delim" "$search_escaped" "$delim" "$replace_escaped" "$delim")
+    printf "%s", result
+  }
+  '
 
-  if printf '%s' "$ed_script" | ed -s "$filename"; then
-      >&2 printf 'Error: Failed to process file.\n'
-      exit 1
+  new_content="$(mktemp)"
+  trap 'rm -f -- "${new_content}"' EXIT HUP INT QUIT TERM
+  if awk "${awk_script}" "${search_string}" "${replacement_string}" "${filename}" > "${new_content}"; then
+    cat -- "${new_content}"
+  else
+    >&2 printf 'Error: Failed to process "%s"\n' "${filename}"
+    exit 1
   fi
 }

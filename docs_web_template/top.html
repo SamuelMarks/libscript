@@ -14,13 +14,34 @@
     <link rel="stylesheet" href="/assets/libscript_styles.css" type="text/css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script type="application/javascript" charset="utf-8" src="/assets/first_scripts.js"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "lit": "https://ga.jspm.io/npm:lit@2.8.0/index.js",
+                "lit/": "https://ga.jspm.io/npm:lit@2.8.0/",
+                "lit-html": "https://ga.jspm.io/npm:lit-html@2.8.0/lit-html.js",
+                "lit-html/": "https://ga.jspm.io/npm:lit-html@2.8.0/",
+                "lit-element/": "https://ga.jspm.io/npm:lit-element@3.3.3/",
+                "@lit/reactive-element": "https://ga.jspm.io/npm:@lit/reactive-element@1.6.3/reactive-element.js",
+                "@lit/reactive-element/": "https://ga.jspm.io/npm:@lit/reactive-element@1.6.1/",
+
+                "@shoelace-style/shoelace/": "https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.3.0/",
+
+                "lodash-es/set": "https://unpkg.com/lodash-es@4.17.21/set.js",
+
+                "@jsfe/core": "https://unpkg.com/@jsfe/core@0.0.5/dist/esm-min"
+            }
+        }
+    </script>
+    <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.9.0/cdn/themes/dark.css"
+    />
 </head>
 <body onload="toggleSidebar()">
 <!-- Sidenav -->
 <nav class="tui-sidenav absolute" style="height: unset !important;">
     <div id="tree-container"></div>
-    <ul>
-    </ul>
 </nav>
 
 <!-- Navbar -->
