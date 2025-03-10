@@ -308,16 +308,13 @@ for url in ${urls}; do
       <div class="flex">
         <label for="backup_url" class="flex-item">Backup (object storage).......: </label><input class="tui-input flex-item" name="backup_url" id="backup_url" placeholder="Object storage—e.g., s3—URL"/>
       </div>
+
       <div class="flex">
-        <json-schema-form name="json" id="json" schema='"'"'%s'"'"'></json-schema-form>
+        <div id="editor_holder"></div>
       </div>
+
       <div class="flex">
-        <json-schema-form
-      			id="myForm"
-      			schema='"'"'{"title": "CDN demo","description": "Pretty neat, huh?","properties": {            "foo": {             "type": "string"            },            "bar": {             "type": "boolean"            }           }          }'"'"'
-      			data='"'"'{"foo": "Hello"}'"'"'
-      			ui-schema='"'"'{"bar": { "ui:widget": "switch" }}'"'"'>
-      	</json-schema-form>
+        <button class="tui-button" id="submit" type="submit" onclick="submitButtonFunc($event)" onsubmit="return false;">Deploy</button>
       </div>
 
       <ul class="flex-ul-prefer-hor">
@@ -327,9 +324,51 @@ for url in ${urls}; do
       </ul>
     </fieldset>
   </form>
-</div>' "${SCHEMA}");
+</div>');
     find_replace '</h1>' '</h1>\n'"${after_first_header}" "${url}"'.tmp' > "${url}"'.tmp1'
-    mv -- "${url}"'.tmp1' "${url}"'.tmp'
+    find_replace 'first_scripts.js"></script>' 'first_scripts.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@json-editor/json-editor@latest/dist/jsoneditor.min.js"></script>' "${url}"'.tmp1' > "${url}"'.tmp'
+    find_replace '/scripts.js"></script>' '/scripts.js"></script>
+<script>
+const editor = new JSONEditor(document.getElementById("editor_holder"),
+  { schema: '"${SCHEMA}"'});
+editor.on("ready", () => {
+  const editor_holder = document.getElementById("editor_holder");
+  for (const formControl of editor_holder.getElementsByClassName("form-control")) {
+      let input = null;
+      formControl.classList.add("flex");
+      for (const child of formControl.children) {
+          switch (child.tagName.toLowerCase()) {
+              case "input":
+                  input = child;
+
+              case "label":
+                  child.classList.add("flex-item");
+                  break;
+
+              case "p":
+                  if (child.id.endsWith("-description")) {
+                      input.placeholder = child.textContent;
+                      formControl.removeChild(child);
+                  }
+                  break;
+
+              default:
+                  break;
+          }
+      }
+  }
+});
+const submitButton = document.getElementById("submit");
+submitButton.onsubmit = "return false;";
+const submitButtonFunc = (e) => {
+  e.preventDefault();
+  console.log(editor.getValue());
+  return false;
+};
+submitButton.addEventListener("click", submitButtonFunc);
+</script>' "${url}"'.tmp' > "${url}"'.tmp1'
+  mv -- "${url}"'.tmp1' "${url}"'.tmp'
   #else
   #  >&2 printf 'USAGE not found for %s\n' "${url}"
   fi

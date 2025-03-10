@@ -144,3 +144,62 @@ json-schema-form {
     margin: 2rem;
     width: calc(50rem + 5vw);
 }
+
+.json-editor-btntype-properties i {
+    display: none;
+}
+
+.json-editor-btntype-properties span {
+    display: none;
+}
+
+.json-editor-btntype-toggle {
+    display: none;
+}
+
+.json-editor-btn-edit_properties {
+    display: none;
+}
+
+.json-editor-btn-edit {
+    display: inline-block;
+    outline: 0;
+    padding: 1px 10px;
+    background-color: #00a800;
+    color: #000;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+    box-shadow: 10px 10px #000;
+    border-radius: 0;
+}
+
+.form-control {
+    width: 100%;
+}
+
+.form-control input {
+    background-color: #000;
+    color: #fff;
+    outline: 0;
+    border: none;
+    border-radius: 0;
+}
+
+.form-control label {
+    display: unset !important;
+}
+
+.form-control label:after {
+    content: "......: ";
+}
+
+.je-indented-panel {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+}
+
+.row {
+    width: 100%;
+}
