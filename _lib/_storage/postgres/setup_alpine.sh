@@ -36,26 +36,24 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-apk add openrc postgresql"${POSTGRESQL_VERSION}" postgresql"${POSTGRESQL_VERSION}"-contrib postgresql"${POSTGRESQL_VERSION}"-openrc
+apk add 'openrc' 'postgresql'"${POSTGRESQL_VERSION}" 'postgresql'"${POSTGRESQL_VERSION}"'-contrib' 'postgresql'"${POSTGRESQL_VERSION}"'-openrc'
 existed=0
 if [ -f /etc/init.d/postgresql ]; then
   existed=1
 fi
 if [ "${existed}" -ne 1 ]; then
-  rc-update add postgresql
+  rc-update add 'postgresql'
 fi
 
 stdout="$(mktemp >/dev/null)"
 stderr="$(mktemp >/dev/null)"
+trap 'rm -f -- "${stdout}" "${stderr}"' EXIT HUP INT QUIT TERM
 
 if ! rc-service postgresql start >"${stdout}" 2>"${stderr}"; then
   rc="${?}"
   if [ ! "${stderr}" = ' * WARNING: postgresql is already starting' ]; then
-    >&2 printf '%s\n' "${stderr}";
-    printf '%s\n' "${stdout}";
-    rm -f -- "${stdout}" "${stderr}"
+    >&2 printf '%s\n' "${stderr}"
+    printf '%s\n' "${stdout}"
     exit "${rc}"
   fi
 fi
-
-rm -f -- "${stdout}" "${stderr}"

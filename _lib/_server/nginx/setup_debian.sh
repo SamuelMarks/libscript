@@ -47,15 +47,15 @@ if [ "${run_before}" -eq 0 ]; then
   depends curl gnupg2 ca-certificates lsb-release debian-archive-keyring
   [ -f '/usr/share/keyrings/nginx-archive-keyring.gpg' ] || \
     curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
-      | "${PRIV}" tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+      | priv  tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
   [ -f '/etc/apt/sources.list.d/nginx.list' ] || \
     printf 'deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
     http://nginx.org/packages/debian %s nginx\n' "$(lsb_release -cs)" \
-      | "${PRIV}" tee /etc/apt/sources.list.d/nginx.list
+      | priv  tee /etc/apt/sources.list.d/nginx.list
   [ -f '/etc/apt/preferences.d/99nginx' ] || \
     printf 'Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n' \
-      | "${PRIV}" tee /etc/apt/preferences.d/99nginx && \
-    "${PRIV}" apt update -qq
+      | priv  tee /etc/apt/preferences.d/99nginx && \
+    priv  apt update -qq
 
   depends nginx
 fi
@@ -125,6 +125,7 @@ merge_location_into_nginx_server() {
 
 if [ ! -z "${VARS+x}" ]; then
   ENV_SCRIPT_FILE=$(mktemp -t 'libscript_XXX_env')
+  trap 'rm -f -- "${ENV_SCRIPT_FILE}"' EXIT HUP INT QUIT TERM
   chmod +x "${ENV_SCRIPT_FILE}"
   object2key_val "${VARS}" 'export ' "'" > "${ENV_SCRIPT_FILE}"
 
@@ -132,6 +133,7 @@ if [ ! -z "${VARS+x}" ]; then
   SERVER_NAME="$(. "${ENV_SCRIPT_FILE}"; printf '%s' "${SERVER_NAME}")"
 
   LOCATION_CONF_FILE=$(mktemp -t 'libscript_'"${SERVER_NAME}"'_XXX_location_conf')
+  trap 'rm -f -- "${LOCATION_CONF_FILE}"' EXIT HUP INT QUIT TERM
 
   env -i PATH="${PATH}" \
          ENV_SCRIPT_FILE="${ENV_SCRIPT_FILE}" \
@@ -155,7 +157,7 @@ if [ ! -z "${VARS+x}" ]; then
       >&2 printf 'Existing conf unexpectedly empty at: "%s"\n' "${site_conf_install_location}"
       exit 5
     fi
-    if ! merge_location_into_server "${conf_existing}" "${location_conf}" "${SERVER_NAME}" | "${PRIV}" dd of="${site_conf_install_location}" status='none'; then
+    if ! merge_location_into_server "${conf_existing}" "${location_conf}" "${SERVER_NAME}" | priv  dd of="${site_conf_install_location}" status='none'; then
       >&2 printf 'merge_location_into_nginx_server failed.\n'
       exit 1
     fi
@@ -166,10 +168,9 @@ if [ ! -z "${VARS+x}" ]; then
            LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR}" \
            LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" \
            LOCATIONS="${location_conf}" \
-           "${DIR}"'/create_server_block.sh' | "${PRIV}" dd of="${site_conf_install_location}" status='none'
+           "${DIR}"'/create_server_block.sh' | priv  dd of="${site_conf_install_location}" status='none'
   fi
 
-  rm -f -- "${ENV_SCRIPT_FILE}" "${LOCATION_CONF_FILE}"
   unset ENV_SCRIPT_FILE
   unset LOCATION_CONF_FILE
 fi

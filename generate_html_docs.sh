@@ -46,6 +46,7 @@ urls_js='['
 urls=''
 export LIBSCRIPT_DOCS_PREFIX="${LIBSCRIPT_DOCS_PREFIX:-}"
 find_res="$(mktemp)"
+trap 'rm -f -- "${find_res}"' EXIT HUP INT QUIT TERM
 find "${LIBSCRIPT_ROOT_DIR}" -type f -name '*.md' ! -path '*/node_modules/*' > "${find_res}"
 while IFS= read -r f; do
   out="${LIBSCRIPT_DOCS_DIR}${f#"${LIBSCRIPT_ROOT_DIR}"}"
@@ -115,7 +116,6 @@ while IFS= read -r f; do
     urls="${urls}"' '"${html}"
   fi
 done < "${find_res}"
-rm -- "${find_res}"
 urls_js="${urls_js%,}"']'
 #printf '%s\n' "${urls_js}"
 
@@ -149,7 +149,7 @@ to_html_tree() {
 
     # Process each path
     printf '%s\n' "${paths}" | while IFS= read -r path; do
-      printf '%s\n' "${path}" | awk -F'/' '{
+      printf '%s\n' "${path}" | awk -F'/' -- '{
         n = split($0, arr, "/")
         subpath = ""
         for (i = 2; i <= n; i++) {
@@ -162,7 +162,7 @@ to_html_tree() {
   ) | sort -u > subpaths.txt
 
   # Process subpaths to generate the nested HTML lists
-  awk -F'\t' '
+  awk -F'\t' -- '
   BEGIN {
     prev_level = 0
     indent = ""
@@ -314,7 +314,7 @@ for url in ${urls}; do
       </div>
 
       <div class="flex">
-        <button class="tui-button" id="submit" type="submit" onclick="submitButtonFunc($event)" onsubmit="return false;">Deploy</button>
+        <button class="tui-button" id="submit" type="submit" onclick="submitButtonFunc($event)" onsubmit="return false;">Set vars</button>
       </div>
 
       <ul class="flex-ul-prefer-hor">
@@ -337,26 +337,31 @@ editor.on("ready", () => {
   let longest = 0;
   let STYLES = "";
   for (const formControl of editor_holder.getElementsByClassName("form-control")) {
-      let input = null;
+      let inputElement = undefined;
+      let label = undefined;
       formControl.classList.add("flex");
       for (const child of formControl.children) {
           switch (child.tagName.toLowerCase()) {
               case "input":
-                  input = child;
-                  child.classList.add("flex-item");
+                  inputElement = child;
+                  inputElement.classList.add("flex-item");
+                  inputElement.classList.add("tui-input");
+                  if (inputElement.name != null && (inputElement.name.indexOf("SECRET") > -1 || inputElement.name.indexOf("PASSWORD") > -1))
+                      inputElement.type = "password";
                   break;
 
               case "label":
-                  child.classList.add("flex-item");
+                  label = child;
+                  label.classList.add("flex-item");
                   // .replace("]", "").replace("[", "")
-                  child.id = `label-${child.htmlFor}`;
-                  const n = child.textContent.length;
+                  label.id = `label-${label.htmlFor}`;
+                  const n = label.textContent.length;
                   if (n > longest) longest = n;
                   break;
 
               case "p":
                   if (child.id.endsWith("-description")) {
-                      input.placeholder = child.textContent;
+                      inputElement.placeholder = child.textContent;
                       formControl.removeChild(child);
                   }
                   break;
@@ -370,15 +375,12 @@ editor.on("ready", () => {
           if (child.tagName.toLowerCase() === "input") {
               let l = 20 + (longest - child.textContent.length);
               let dots = "";
-              for (let i=0; i<l; i++) {
-                  dots += ".";
-              }
+              for (let i=0; i<l; i++) dots += ".";
               dots += ": ";
               STYLES += `#label-${child.id}:after { content: "${dots}"; }\n`;
           }
       }
   }
-  console.info("STYLES:", STYLES, ";");
   const style = document.createElement("style");
   style.type = "text/css";
   if (style.styleSheet) style.styleSheet.cssText = STYLES;

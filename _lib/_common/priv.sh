@@ -31,12 +31,22 @@ export STACK
 
 if [ ! -z "${PRIV+x}" ]; then
   true;
+  printf '[priv.sh] 34\n'
 elif [ "$(id -u)" = "0" ]; then
   PRIV='';
+  printf '[priv.sh] 37\n'
 elif command -v sudo >/dev/null 2>&1 ; then
   PRIV='sudo';
+  printf '[priv.sh] 40\n'
 else
   >&2 printf "Error: This script must be run as root or with sudo privileges.\n"
   exit 1
 fi
+printf 'PRIV has value %s\n' priv
 export PRIV;
+
+if [ "${PRIV#}" -eq 0 ]; then
+  priv() { "${PRIV}" "$@"; }
+else
+  priv() { "$@"; }
+fi

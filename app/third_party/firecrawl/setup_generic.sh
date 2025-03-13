@@ -76,33 +76,33 @@ fi
 ENV=''
 if [ -f "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' ]; then
   chmod +x "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
-  ENV="$(cut -c8- "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' | awk '{arr[i++]=$0} END {while (i>0) print arr[--i] }' | tr -d "'" | awk -F= '!seen[$1]++' | xargs printf 'Environment="%s"\n')"
+  ENV="$(cut -c8- "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' | awk -- '{arr[i++]=$0} END {while (i>0) print arr[--i] }' | tr -d "'" | awk -F= '!seen[$1]++' | xargs printf 'Environment="%s"\n')"
 fi
 
 if [ -d '/etc/systemd/system' ]; then
   name_file="$(mktemp)"
+  trap 'rm -f -- "${name_file}"' EXIT HUP INT QUIT TERM
   service_name='firecrawl_workers'
   env -i DESCRIPTION='Firecrawl workers' \
          ENV="${ENV}" \
          WORKING_DIR="${DEST}"'/apps/api' \
          EXEC_START="$(which pnpm)"' run workers' \
         "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/_daemon/systemd/simple.service' > "${name_file}"
-  "${PRIV}" install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
-  "${PRIV}" systemctl daemon-reload
-  "${PRIV}" systemctl reload-or-restart -- "${service_name}"
-
-  rm "${name_file}"
+  priv  install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
+  priv  systemctl daemon-reload
+  priv  systemctl reload-or-restart -- "${service_name}"
 
   name_file="$(mktemp)"
+  trap 'rm -f -- "${name_file}"' EXIT HUP INT QUIT TERM
   service_name='firecrawl_serve'
   env -i DESCRIPTION='Firecrawl serve' \
          ENV="${ENV}" \
          WORKING_DIR="${DEST}"'/apps/api' \
          EXEC_START="$(which pnpm)"' run start' \
         "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/_daemon/systemd/simple.service' > "${name_file}"
-  "${PRIV}" install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
-  "${PRIV}" systemctl daemon-reload
-  "${PRIV}" systemctl reload-or-restart -- "${service_name}"
+  priv  install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
+  priv  systemctl daemon-reload
+  priv  systemctl reload-or-restart -- "${service_name}"
 fi
 
 cd -- "${previous_wd}"

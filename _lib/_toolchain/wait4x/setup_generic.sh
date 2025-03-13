@@ -41,7 +41,7 @@ if [ ! -f /usr/local/bin/wait4x ]; then
   cd -- "${DOWNLOAD_DIR}"
   curl -#LO https://github.com/atkrad/wait4x/releases/latest/download/wait4x-linux-amd64.tar.gz
   tar --one-top-level -xvf wait4x-linux-amd64.tar.gz
-  "${PRIV}" install ./wait4x-linux-amd64/wait4x /usr/local/bin/wait4x
+  priv  install ./wait4x-linux-amd64/wait4x /usr/local/bin/wait4x
   # rm -- wait4x-linux-amd64.tar.gz
   cd -- "${previous_wd}"
 fi

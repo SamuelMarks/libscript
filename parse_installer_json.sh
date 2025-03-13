@@ -354,6 +354,7 @@ update_generated_files() {
   scratch_file="${res}"
 
   scratch="$(mktemp)"
+  trap 'rm -f -- "${scratch}"' EXIT HUP INT QUIT TERM
   required=0
   if [ "${dep_group_name}" = 'Required' ] || [ "${all_deps}" -eq 1 ]; then
     required=1
@@ -491,7 +492,6 @@ update_generated_files() {
         "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/Dockerfile.no_body.tpl' > "${name_file}"
     fi
   done
-  rm -f -- "${scratch}"
 }
 
 # parse the "name" field
@@ -1027,7 +1027,7 @@ parse_json() {
   esac
 
   tmp0="$(mktemp)"
-  awk '
+  awk -- '
     /^#!\/bin\/sh/ {
       if (shebang++) next
     }

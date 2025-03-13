@@ -8,7 +8,7 @@
 </div>
 <div id="unix-content" class="tui-tab-content tui-window">
     <fieldset class="tui-fieldset no-legend">
-<pre>$ # Replace `$(pwd)` if not in the 'libscript' directory or a generated one.
+<pre id="usage-unix">$ # Replace `$(pwd)` if not in the 'libscript' directory or a generated one.
 $ export LIBSCRIPT_ROOT_DIR="$(pwd)"
 $ # `export` any variables now (see below for variable docs). Then:
 $ # Set script location:
@@ -18,7 +18,7 @@ $ . "${SCRIPT_NAME}"</pre>
 </div>
 <div id="windows-content" class="tui-tab-content tui-window">
     <fieldset class="tui-fieldset no-legend">
-<pre>> :: Replace `%cd%` if not in the 'libscript' directory or a generated one.
+<pre id="usage-win">> :: Replace `%cd%` if not in the 'libscript' directory or a generated one.
 > SET "LIBSCRIPT_ROOT_DIR=%cd%"
 > :: `SET` any variables now (see below for variable docs). Then:
 > :: Set script location:

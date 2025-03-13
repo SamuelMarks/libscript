@@ -63,7 +63,7 @@ build_install() {
   [ -d 'build' ] || mkdir -p -- 'build'
   touch 'build/'"${hash}"
   make BUILD_TLS='yes' USE_SYSTEMD='yes'
-  "${PRIV}" make install
+  priv  make install
 }
 
 noop=0
@@ -83,10 +83,10 @@ cd -- "${previous_wd}"
 
 if [ "${noop}" -eq 0 ]; then
   service_name='valkey'
-  "${PRIV}" install -m 0644 -o 'root' -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/conf/valkey.conf' /etc/
-  "${PRIV}" install -m 0644 -o 'root' -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/conf/systemd/'"${service_name}"'.service' /etc/systemd/system/
-  "${PRIV}" systemctl daemon-reload
-  "${PRIV}" systemctl reload-or-restart -- "${service_name}"
+  priv  install -m 0644 -o 'root' -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/conf/valkey.conf' /etc/
+  priv  install -m 0644 -o 'root' -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/conf/systemd/'"${service_name}"'.service' /etc/systemd/system/
+  priv  systemctl daemon-reload
+  priv  systemctl reload-or-restart -- "${service_name}"
 fi
 
 [ -d "${LIBSCRIPT_DATA_DIR}" ] || mkdir -p -- "${LIBSCRIPT_DATA_DIR}"

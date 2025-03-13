@@ -79,7 +79,7 @@ find_replace() {
 
   new_content="$(mktemp)"
   trap 'rm -f -- "${new_content}"' EXIT HUP INT QUIT TERM
-  if awk "${awk_script}" "${search_string}" "${replacement_string}" "${filename}" > "${new_content}"; then
+  if awk -- "${awk_script}" "${search_string}" "${replacement_string}" "${filename}" > "${new_content}"; then
     cat -- "${new_content}"
   else
     >&2 printf 'Error: Failed to process "%s"\n' "${filename}"

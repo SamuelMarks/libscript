@@ -49,8 +49,8 @@ if [ ! -d "${PYTHON_VENV}" ]; then
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 
-  "${PRIV}" mkdir -p -- "${PYTHON_VENV}"
-  "${PRIV}" chown -R -- "${USER}":"${GROUP}" "${PYTHON_VENV}"
+  priv  mkdir -p -- "${PYTHON_VENV}"
+  priv  chown -R -- "${USER}":"${GROUP}" "${PYTHON_VENV}"
   uv venv --python "${PYTHON_VERSION}" -- "${PYTHON_VENV}"
 fi
 
@@ -65,10 +65,10 @@ if [ -d '/etc/systemd/system' ]; then
   service='/etc/systemd/system/'"${service_name}"'.service'
   envsubst < "${DIR}"'/conf/systemd/celery.service' > '/tmp/'"${service_name}"
 
-  "${PRIV}" install -m 0644 -- '/tmp/'"${service_name}" "${service}"
-  "${PRIV}" install -D -m 0644 -- "${DIR}"'/conf/celery_env' /etc/conf.d/
-  "${PRIV}" systemctl daemon-reload
-  "${PRIV}" systemctl reload-or-restart -- "${service_name}"
+  priv  install -m 0644 -- '/tmp/'"${service_name}" "${service}"
+  priv  install -D -m 0644 -- "${DIR}"'/conf/celery_env' /etc/conf.d/
+  priv  systemctl daemon-reload
+  priv  systemctl reload-or-restart -- "${service_name}"
 elif [ -d '/Library/LaunchDaemons' ]; then
   >&2 printf 'TODO: macOS service\n'
   exit 3

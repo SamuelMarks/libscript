@@ -45,7 +45,7 @@ envsubst_safe() {
     fi
   else
     if [ -t 0 ]; then
-      printf 'No input provided.\n' >&2
+      >&2 printf 'No input provided.\n'
       exit 2
     else
       input="$(cat)"
@@ -101,8 +101,8 @@ envsubst_safe() {
   }
   ';
   if [ -n "${input_file:-}" ]; then
-    awk "${awk_script}" "${input_file}"
+    awk -- "${awk_script}" "${input_file}"
   else
-    printf '%s\n' "${input}" | awk "${awk_script}"
+    printf '%s\n' "${input}" | awk -- "${awk_script}"
   fi
 }

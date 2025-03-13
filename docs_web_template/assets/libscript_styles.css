@@ -182,21 +182,17 @@ json-schema-form {
     width: 100%;
 }
 
-.form-control input {
-    background-color: #000;
-    color: #fff;
-    outline: 0;
-    border: none;
-    border-radius: 0;
-}
-
 .form-control label {
     display: unset !important;
 }
 
-/*.form-control label:after {
-    content: "......: ";
-}*/
+.row {
+    margin-bottom: 0;
+}
+
+.form-control label:after {
+    content: "........: ";
+}
 
 .je-indented-panel {
     padding: 0 !important;

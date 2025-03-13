@@ -38,7 +38,7 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-brew install postgresql@"${POSTGRESQL_VERSION}"
+brew install 'postgresql@'"${POSTGRESQL_VERSION}"
 
 SCRIPT_NAME="${DIR}"'/user_db_setup.sh'
 export SCRIPT_NAME

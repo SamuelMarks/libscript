@@ -71,7 +71,7 @@ fi
 ENV=''
 if [ -f "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' ]; then
   chmod +x "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
-  ENV="$(cut -c8- "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' | awk '{arr[i++]=$0} END {while (i>0) print arr[--i] }' | tr -d "'" | awk -F= '!seen[$1]++' | xargs printf 'Environment="%s"\n')"
+  ENV="$(cut -c8- "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' | awk -- '{arr[i++]=$0} END {while (i>0) print arr[--i] }' | tr -d "'" | awk -F= '!seen[$1]++' | xargs printf 'Environment="%s"\n')"
 fi
 #EXEC_START="$(pwd)"'/'"$(find target/release -depth -maxdepth 1 -type f -executable -print -quit)"
 # TODO: Check if there's a start for `npm start` then parse out that
@@ -91,13 +91,12 @@ if [ ! -n "${script}" ]; then
 fi
 EXEC_START="$(which node)"' "'"${script}"'"'
 name_file="$(mktemp)"
+trap 'rm -f -- "${name_file}"' EXIT HUP INT QUIT TERM
 env -i DESCRIPTION='Node.js server'"${name}" \
        WORKING_DIR="${DEST}" \
        ENV="${ENV}" \
        EXEC_START="${EXEC_START}" \
       "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/_daemon/systemd/simple.service' > "${name_file}"
-"${PRIV}" install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
-
-rm -- "${name_file}"
+priv  install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
 
 cd -- "${previous_wd}"

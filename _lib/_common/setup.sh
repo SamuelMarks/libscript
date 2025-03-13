@@ -11,15 +11,18 @@ elif [ ! -z "${BASH_VERSION+x}" ]; then
 elif [ ! -z "${ZSH_VERSION+x}" ]; then
   # shellcheck disable=SC2296
   this_file="${(%):-%x}"
+  export SCRIPT_NAME="${this_file}"
   # shellcheck disable=SC3040
   set -o pipefail
 else
   this_file="${0}"
+  export SCRIPT_NAME="${this_file}"
 fi
 set -feu
 
 STACK="${STACK:-:}"
-RERUN_SCRIPT=$(printf '%d' "$(eval printf '%s' "\$${SCRIPT_NAME}_RERUN_SCRIPT")")
+RERUN_SCRIPT=0
+#RERUN_SCRIPT=$(printf '%d' "$(eval printf '%s' "\$${SCRIPT_NAME}_RERUN_SCRIPT")")
 case "${STACK}" in
   *':'"${this_file}"':'*)
     if [ "${RERUN_SCRIPT}" -ne 1 ]; then

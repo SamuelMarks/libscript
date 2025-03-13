@@ -42,6 +42,9 @@ for lib in '_lib/_common/os_info.sh' '_lib/_common/priv.sh'; do
   . "${SCRIPT_NAME}"
 done
 
+PKG_MGR_UPDATE_REGISTRY="${PKG_MGR_UPDATE_REGISTRY:-1}"
+export PKG_MGR_UPDATE_REGISTRY
+
 cmd_avail() {
   command -v -- "${1}" >/dev/null 2>&1
 }
@@ -74,7 +77,7 @@ detect_pkg_mgr() {
   elif cmd_avail eopkg; then
     PKG_MGR='eopkg'  # Solus
   else
-    >&2 printf 'Error: No supported package manager found'
+    >&2 printf 'Error: No supported package manager found\n'
     exit 1
   fi
   export PKG_MGR
@@ -114,19 +117,22 @@ depends() {
     case "${PKG_MGR}" in
       'apt-get')
         export DEBIAN_FRONTEND='noninteractive'
-                "${PRIV}" apt-get install -y    ${pkgs_to_install} ;;
-      'apk')    "${PRIV}" apk add --no-cache    ${pkgs_to_install} ;;
+        if [ "${PKG_MGR_UPDATE_REGISTRY}" -eq 1 ]; then
+          priv  apt-get update -qq
+        fi
+                priv  apt-get install -y    ${pkgs_to_install} ;;
+      'apk')    priv  apk add --no-cache    ${pkgs_to_install} ;;
       'brew')             brew install          ${pkgs_to_install} ;;
-      'dnf')    "${PRIV}" dnf install -y        ${pkgs_to_install} ;;
-      'emerge') "${PRIV}" emerge --quiet        ${pkgs_to_install} ;;
-      'eopkg')  "${PRIV}" eopkg install -y      ${pkgs_to_install} ;;
-      'pacman') "${PRIV}" pacman -S --noconfirm ${pkgs_to_install} ;;
-      'pkg')    "${PRIV}" pkg install -y        ${pkgs_to_install} ;;
-      'port')   "${PRIV}" port install          ${pkgs_to_install} ;;
-      'swupd')  "${PRIV}" swupd bundle-add      ${pkgs_to_install} ;;
-      'xbps')   "${PRIV}" xbps-install -Sy      ${pkgs_to_install} ;;
-      'yum')    "${PRIV}" yum install -y        ${pkgs_to_install} ;;
-      'zypper') "${PRIV}" zypper install -y     ${pkgs_to_install} ;;
+      'dnf')    priv  dnf install -y        ${pkgs_to_install} ;;
+      'emerge') priv  emerge --quiet        ${pkgs_to_install} ;;
+      'eopkg')  priv  eopkg install -y      ${pkgs_to_install} ;;
+      'pacman') priv  pacman -S --noconfirm ${pkgs_to_install} ;;
+      'pkg')    priv  pkg install -y        ${pkgs_to_install} ;;
+      'port')   priv  port install          ${pkgs_to_install} ;;
+      'swupd')  priv  swupd bundle-add      ${pkgs_to_install} ;;
+      'xbps')   priv  xbps-install -Sy      ${pkgs_to_install} ;;
+      'yum')    priv  yum install -y        ${pkgs_to_install} ;;
+      'zypper') priv  zypper install -y     ${pkgs_to_install} ;;
       *)
         >&2 printf 'Error: depends function not implemented for %s\n' "${PKG_MGR}"
         exit 1

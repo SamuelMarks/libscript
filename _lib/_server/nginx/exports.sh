@@ -59,6 +59,7 @@ infer_locations() {
      else
        ENV_SAVED_FILE='/tmp/nginx.env.sh'
      fi
+     trap 'rm -f -- "${ENV_SAVED_FILE}"' EXIT HUP INT QUIT TERM
 
      # shellcheck disable=SC1090
      LIBSCRIPT_ROOT_DIR="$(. "${ENV_SAVED_FILE}"; printf '%s' "${LIBSCRIPT_ROOT_DIR}")"
@@ -73,7 +74,6 @@ infer_locations() {
      # shellcheck disable=SC1090
      . "${ENV_SAVED_FILE}"
 
-     rm -f -- "${ENV_SAVED_FILE}"
      unset ENV_SAVED_FILE
   fi
 }

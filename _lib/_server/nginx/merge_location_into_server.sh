@@ -39,6 +39,7 @@ merge_location_into_server() {
     CONFIG_FILE="$EXISTING_CONFIG"
   else
     CONFIG_FILE=$(mktemp)
+    trap 'rm -f -- "${CONFIG_FILE}"' EXIT HUP INT QUIT TERM
     printf '%s' "$EXISTING_CONFIG" > "$CONFIG_FILE"
   fi
 
@@ -50,6 +51,8 @@ merge_location_into_server() {
   fi
 
   OUTPUT_FILE=$(mktemp)
+  trap 'rm -f -- "${OUTPUT_FILE}"' EXIT HUP INT QUIT TERM
+
 
   in_server_block=0
   brace_level=0
@@ -59,6 +62,7 @@ merge_location_into_server() {
 
   SERVER_BLOCK_TMP=$(mktemp)
   SERVER_LOCATIONS_TMP=$(mktemp)
+  trap 'rm -f -- "${SERVER_BLOCK_TMP}" "${SERVER_LOCATIONS_TMP}"' EXIT HUP INT QUIT TERM
 
   while IFS= read -r line || [ -n "$line" ]; do
     trimmed_line=$(printf '%s' "$line" | sed 's/^[ \t]*//;s/[ \t]*$//')
@@ -130,65 +134,63 @@ merge_location_into_server() {
 
           # Prepare the new location blocks, excluding duplicates
           NEW_LOCATION_BLOCK_TMP=$(mktemp)
+          trap 'rm -f -- "${NEW_LOCATION_BLOCK_TMP}"' EXIT HUP INT QUIT TERM
           printf '%s\n' "$NEW_LOCATION_BLOCK_CONTENT" > "$NEW_LOCATION_BLOCK_TMP"
 
           # Collect location expressions from new location block
           NEW_LOCATIONS_TMP=$(mktemp)
+          trap 'rm -f -- "${NEW_LOCATIONS_TMP}"' EXIT HUP INT QUIT TERM
           sed -n -E 's/^[ \t]*(location[ \t]+[^ \t{;]+([ \t]+[^ \t{;]+)*)[ \t]*[;{]?.*/\1/p' "$NEW_LOCATION_BLOCK_TMP" > "$NEW_LOCATIONS_TMP"
 
           # Exclude duplicate location blocks
           INSERT_BLOCK_TMP=$(mktemp)
-          awk 'FNR==NR {existing[$0]=1; next} {if ($0 in existing) {print "duplicate:" $0} else {print "new:" $0}}' "$SERVER_LOCATIONS_TMP" "$NEW_LOCATIONS_TMP" | while IFS=: read -r status loc_expr; do
-            if [ "$status" = "duplicate" ]; then
+          trap 'rm -f -- "${INSERT_BLOCK_TMP}"' EXIT HUP INT QUIT TERM
+          awk -- 'FNR==NR {existing[$0]=1; next} {if ($0 in existing) {print "duplicate:" $0} else {print "new:" $0}}' "$SERVER_LOCATIONS_TMP" "$NEW_LOCATIONS_TMP" | while IFS=: read -r status loc_expr; do
+            if [ "${status}" = "duplicate" ]; then
               # Location already exists, skip it
-              printf 'Debug: Skipping duplicate location "%s"\n' "$loc_expr" >&2
+              >&2 printf 'Debug: Skipping duplicate location "%s"\n' "${loc_expr}"
               continue
             else
               # Include this location block
               # Extract the corresponding block from NEW_LOCATION_BLOCK_TMP
-              awk -v loc_expr="$loc_expr" '
+              awk -v loc_expr="${loc_expr}" -- '
                 BEGIN {found=0}
                 $0 ~ "^[ \t]*"loc_expr"[ \t]*([;{]|$)" {found=1}
                 found {print}
-                found && /\}/ {found=0}' "$NEW_LOCATION_BLOCK_TMP" >> "$INSERT_BLOCK_TMP"
+                found && /\}/ {found=0}' "${NEW_LOCATION_BLOCK_TMP}" >> "${INSERT_BLOCK_TMP}"
             fi
           done
 
           # Append new location blocks with proper indentation
-          if [ -s "$INSERT_BLOCK_TMP" ]; then
-            printf '\n' >> "${SERVER_BLOCK_TMP}.processed"
-            sed "s/^/${indentation}/" "$INSERT_BLOCK_TMP" >> "${SERVER_BLOCK_TMP}.processed"
+          if [ -s "${INSERT_BLOCK_TMP}" ]; then
+            printf '\n' >> "${SERVER_BLOCK_TMP}"'.processed'
+            sed 's/^/'"${indentation}"'/' "${INSERT_BLOCK_TMP}" >> "${SERVER_BLOCK_TMP}"'.processed'
           fi
 
           # Add the closing brace back
           printf '%s\n' "$closing_brace_line" >> "${SERVER_BLOCK_TMP}.processed"
 
           # Output the processed server block
-          cat "${SERVER_BLOCK_TMP}.processed" >> "$OUTPUT_FILE"
+          cat -- "${SERVER_BLOCK_TMP}.processed" >> "${OUTPUT_FILE}"
 
           insert_done=1
 
           # Clean up temporary files
-          rm -f "$SERVER_BLOCK_TMP" "${SERVER_BLOCK_TMP}.processed" "$SERVER_LOCATIONS_TMP" "$NEW_LOCATION_BLOCK_TMP" "$NEW_LOCATIONS_TMP" "$INSERT_BLOCK_TMP"
+          rm -f -- "${SERVER_BLOCK_TMP}" "${SERVER_BLOCK_TMP}"'.processed' "${SERVER_LOCATIONS_TMP}" "${NEW_LOCATION_BLOCK_TMP}" "${NEW_LOCATIONS_TMP}" "${INSERT_BLOCK_TMP}"
         else
           # Output the server block as is
-          cat "$SERVER_BLOCK_TMP" >> "$OUTPUT_FILE"
-          rm -f "$SERVER_BLOCK_TMP" "$SERVER_LOCATIONS_TMP"
+          cat -- "${SERVER_BLOCK_TMP}" >> "${OUTPUT_FILE}"
         fi
       fi
     fi
-  done < "$CONFIG_FILE"
+  done < "${CONFIG_FILE}"
 
   # Check if insertion was done
-  if [ "$insert_done" -eq 0 ]; then
-    printf 'Error: No matching server block found.\n' >&2
-    rm -f "$OUTPUT_FILE"
-    [ "$CONFIG_FILE" != "$EXISTING_CONFIG" ] && rm -f "$CONFIG_FILE"
+  if [ "${insert_done}" -eq 0 ]; then
+    >&2 printf 'Error: No matching server block found.\n'
     exit 1
   else
     # Output the final configuration
-    cat "$OUTPUT_FILE"
-    rm -f "$OUTPUT_FILE"
-    [ "$CONFIG_FILE" != "$EXISTING_CONFIG" ] && rm -f "$CONFIG_FILE"
+    cat -- "${OUTPUT_FILE}"
   fi
 }
