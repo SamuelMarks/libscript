@@ -46,17 +46,13 @@ SCRIPT_NAME="${DIR}"'/env.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
-printf 'ghtis far\n'
 
 if ! dpkg -s -- 'postgresql-server-dev-'"${POSTGRESQL_VERSION}" >/dev/null 2>&1; then
-  printf 'depends\n'
   depends 'postgresql-common'
-  echo 'executing'priv ' ''/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh'
   yes '' | priv  '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh'
   depends 'postgresql-server-dev-'"${POSTGRESQL_VERSION}" 'postgresql-'"${POSTGRESQL_VERSION}"
 fi
 
-printf 'further\n'
 SCRIPT_NAME="${DIR}"'/user_db_setup.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090

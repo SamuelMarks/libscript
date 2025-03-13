@@ -29,17 +29,20 @@ esac
 STACK="${STACK}${this_file}"':'
 export STACK
 
+_DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+export DIR="${_DIR}"
+
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 export LIBSCRIPT_ROOT_DIR
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 export LIBSCRIPT_DATA_DIR
 
-for lib in 'env.sh' '_lib/_common/settings_updater.sh'; do
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  . "${SCRIPT_NAME}"
-done
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/settings_updater.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
+
+export DIR="${_DIR}"
 
 SCRIPT_NAME="${DIR}"'/env.sh'
 export SCRIPT_NAME
@@ -48,19 +51,19 @@ export SCRIPT_NAME
 
 POSTGRES_HOST="${POSTGRES_HOST:-localhost}"
 
-if sudo -upostgres psql -t -c '\du' | grep -Fq "${POSTGRES_USER}"; then
+if priv_as postgres psql -t -c '\du' | grep -Fq "${POSTGRES_USER}"; then
   true
 else
-  sudo -upostgres createuser "${POSTGRES_USER}"
+  priv_as postgres createuser "${POSTGRES_USER}"
   if [ -n "${POSTGRES_PASSWORD}" ]; then
-    sudo -upostgres psql -c 'ALTER USER '"${POSTGRES_USER}"' PASSWORD '"'${POSTGRES_PASSWORD}'"';';
+    priv_as postgres psql -c 'ALTER USER '"${POSTGRES_USER}"' PASSWORD '"'${POSTGRES_PASSWORD}'"';';
   fi
 fi
 
-if sudo -upostgres psql -lqt | cut -d \| -f 1 | grep -Fqw "${POSTGRES_DB}"; then
+if priv_as postgres psql -lqt | cut -d \| -f 1 | grep -Fqw "${POSTGRES_DB}"; then
   true
 else
-  sudo -upostgres createdb "${POSTGRES_DB}" --owner "${POSTGRES_USER}"
+  priv_as postgres createdb "${POSTGRES_DB}" --owner "${POSTGRES_USER}"
 fi
 
 val='postgres://'"${POSTGRES_USER}"':'"${POSTGRES_PASSWORD}"'@'"${POSTGRES_HOST}"'/'"${POSTGRES_DB}"

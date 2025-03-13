@@ -42,11 +42,25 @@ else
   >&2 printf "Error: This script must be run as root or with sudo privileges.\n"
   exit 1
 fi
-printf 'PRIV has value %s\n' priv
 export PRIV;
 
-if [ "${PRIV#}" -eq 0 ]; then
+if [ -n "${PRIV}" ]; then
   priv() { "${PRIV}" "$@"; }
 else
   priv() { "$@"; }
+fi
+
+
+if command -v sudo >/dev/null 2>&1; then
+  priv_as() {
+    user="${1}"
+    shift
+    sudo -u "${user}" "$@"
+  }
+else
+  priv_as() {
+    user="${1}"
+    shift
+    su "${user}" -- -x -c "$*"
+  }
 fi
