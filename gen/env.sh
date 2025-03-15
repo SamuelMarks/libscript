@@ -1,11 +1,10 @@
 #!/bin/sh
 
+export LANG="${LANG:-C.UTF-8}"
+export LC_ALL="${LC_ALL:-C.UTF-8}"
+
 LIBSCRIPT_BUILD_DIR="${LIBSCRIPT_BUILD_DIR:-${TMPDIR:-/tmp}/libscript_build}"
-export LIBSCRIPT_DATA_DIR
-
-
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
-export LIBSCRIPT_DATA_DIR
 
 ###########################
 # Toolchain(s) [required] #

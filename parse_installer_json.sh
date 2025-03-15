@@ -56,7 +56,9 @@ if [ ! -f "${install_file}" ]; then printf '%s\n\n' "${prelude}" > "${install_fi
 if [ ! -f "${install_parallel_file}" ]; then printf '%s\nDIR=$(CDPATH='"''"' cd -- "$(dirname -- "${this_file}")" && pwd)\n\n' "${prelude}"  > "${install_parallel_file}" ; fi
 if [ ! -f "${true_env_file}" ]; then
   # shellcheck disable=SC2016
-  printf '#!/bin/sh\n\n%s\nexport LIBSCRIPT_DATA_DIR\n\n' \
+  printf '#!/bin/sh\n\n%s\n%s\n\n%s\n%s\n\n' \
+    'export LANG="${LANG:-C.UTF-8}"' \
+    'export LC_ALL="${LC_ALL:-C.UTF-8}"' \
     'LIBSCRIPT_BUILD_DIR="${LIBSCRIPT_BUILD_DIR:-${TMPDIR:-/tmp}/libscript_build}"' \
     'LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"' > "${true_env_file}"
 fi

@@ -16,6 +16,6 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 if [ -z "${POSTGRES_URL+x}" ]; then
-  POSTGRES_URL='postgres://'"${POSTGRES_USER}"':'"${POSTGRES_PASSWORD}"'@'"${POSTGRES_HOST}"'/'"${POSTGRES_DB}"
+  POSTGRES_URL='postgres://'"${POSTGRES_USER?}"':'"${POSTGRES_PASSWORD?}"'@'"${POSTGRES_HOST?}"'/'"${POSTGRES_DB?}"
 fi
 /usr/local/bin/wait4x postgresql "${POSTGRES_URL}"'?sslmode=disable'

@@ -37,11 +37,12 @@ export LIBSCRIPT_ROOT_DIR
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 export LIBSCRIPT_DATA_DIR
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/settings_updater.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
-
+for lib in 'env.sh' '_lib/_common/settings_updater.sh'; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+done
 export DIR="${_DIR}"
 
 SCRIPT_NAME="${DIR}"'/env.sh'
@@ -51,22 +52,22 @@ export SCRIPT_NAME
 
 POSTGRES_HOST="${POSTGRES_HOST:-localhost}"
 
-if priv_as postgres psql -t -c '\du' | grep -Fq "${POSTGRES_USER}"; then
+if priv_as postgres psql -h "${POSTGRES_HOST}" -t -c '\du' | grep -Fq "${POSTGRES_USER?}"; then
   true
 else
-  priv_as postgres createuser "${POSTGRES_USER}"
-  if [ -n "${POSTGRES_PASSWORD}" ]; then
-    priv_as postgres psql -c 'ALTER USER '"${POSTGRES_USER}"' PASSWORD '"'${POSTGRES_PASSWORD}'"';';
+  priv_as postgres createuser -h "${POSTGRES_HOST}" "${POSTGRES_USER?}"
+  if [ -n "${POSTGRES_PASSWORD?}" ]; then
+    priv_as postgres psql -h "${POSTGRES_HOST}" -c 'ALTER USER '"${POSTGRES_USER?}"' PASSWORD '"'${POSTGRES_PASSWORD?}'"';';
   fi
 fi
 
-if priv_as postgres psql -lqt | cut -d \| -f 1 | grep -Fqw "${POSTGRES_DB}"; then
+if priv_as postgres psql -h "${POSTGRES_HOST}" -lqt | cut -d \| -f 1 | grep -Fqw "${POSTGRES_DB?}"; then
   true
 else
-  priv_as postgres createdb "${POSTGRES_DB}" --owner "${POSTGRES_USER}"
+  priv_as postgres createdb -h "${POSTGRES_HOST}" "${POSTGRES_DB?}" --owner "${POSTGRES_USER?}"
 fi
 
-val='postgres://'"${POSTGRES_USER}"':'"${POSTGRES_PASSWORD}"'@'"${POSTGRES_HOST}"'/'"${POSTGRES_DB}"
+val='postgres://'"${POSTGRES_USER?}"':'"${POSTGRES_PASSWORD?}"'@'"${POSTGRES_HOST?}"'/'"${POSTGRES_DB?}"
 [ -d "${LIBSCRIPT_DATA_DIR}" ] || mkdir -p -- "${LIBSCRIPT_DATA_DIR}"
 for key in 'POSTGRES_URL' 'DATABASE_URL'; do
   lang_export 'cmd' "${key}" "${val}" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.cmd'
