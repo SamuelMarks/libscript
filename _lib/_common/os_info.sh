@@ -29,8 +29,18 @@ esac
 STACK="${STACK}${this_file}"':'
 export STACK
 
+if [ -z ${ARCH+x} ]; then
+  ARCH="$(uname -m)"
+  case "${ARCH}" in
+    'aarch64') export ARCH_ALT='arm64' ;;
+  esac
+  export ARCH
+fi
+
 if [ -z ${UNAME+x} ]; then
     UNAME="$(uname)"
+    UNAME_LOWER="$(printf '%s' "${UNAME}" | tr '[:upper:]' '[:lower:]')"
+    export UNAME_LOWER
     case "${UNAME}" in
       'Darwin')
         export PKG_MGR='brew'

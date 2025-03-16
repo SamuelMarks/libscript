@@ -84,6 +84,7 @@ export SCRIPT_NAME
   export POSTGRES_URL=1
 export POSTGRES_USER='rest_user'
 export POSTGRES_PASSWORD='rest_pass'
+export POSTGRES_HOST='localhost'
 export POSTGRES_DB='rest_db'
 export POSTGRES_PASSWORD_FILE
 export POSTGRES_VERSION=17

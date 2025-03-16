@@ -59,8 +59,8 @@ if [ ! -f "${true_env_file}" ]; then
   printf '#!/bin/sh\n\n%s\n%s\n\n%s\n%s\n\n' \
     'export LANG="${LANG:-C.UTF-8}"' \
     'export LC_ALL="${LC_ALL:-C.UTF-8}"' \
-    'LIBSCRIPT_BUILD_DIR="${LIBSCRIPT_BUILD_DIR:-${TMPDIR:-/tmp}/libscript_build}"' \
-    'LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"' > "${true_env_file}"
+    'export LIBSCRIPT_BUILD_DIR="${LIBSCRIPT_BUILD_DIR:-${TMPDIR:-/tmp}/libscript_build}"' \
+    'export LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"' > "${true_env_file}"
 fi
 if [ ! -f "${false_env_file}" ]; then printf '#!/bin/sh\n' > "${false_env_file}" ; fi
 if [ ! -e "${_lib_folder}" ]; then cp -r -- "${LIBSCRIPT_ROOT_DIR}"'/_lib' "${_lib_folder}" ; fi

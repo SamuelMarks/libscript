@@ -38,3 +38,5 @@ if [ ! -z "${POSTGRES_PASSWORD_FILE+x}" ] && [ -n "${POSTGRES_PASSWORD_FILE}" ] 
   # TODO(security): Audit
   export POSTGRES_PASSWORD="${pass_contents}"
 fi
+export POSTGRES_SERVICE_USER="${POSTGRES_SERVICE_USER:-postgres}"
+export POSTGRES_SERVICE_GROUP="${POSTGRES_SERVICE_GROUP:-${POSTGRES_SERVICE_USER}}"

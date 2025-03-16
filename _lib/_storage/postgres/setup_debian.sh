@@ -47,9 +47,10 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
+_del='postgres://'"${POSTGRES_USER?}"':'"${POSTGRES_PASSWORD?}"'@'"${POSTGRES_HOST?}"'/'"${POSTGRES_DB?}"
 if ! dpkg -s -- 'postgresql-server-dev-'"${POSTGRESQL_VERSION}" >/dev/null 2>&1; then
   depends 'postgresql-common'
-  yes '' | priv  '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh'
+  yes '' | priv '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh'
   depends 'postgresql-server-dev-'"${POSTGRESQL_VERSION}" 'postgresql-'"${POSTGRESQL_VERSION}"
 fi
 

@@ -15,8 +15,19 @@ Vagrant.configure("2") do |config|
   #   vmware.memory = "1024"
   end
   config.vm.provision "shell", inline: <<-SHELL
-     apt-get update -qq
-     apt-get install -y rsync jq curl gettext-base pandoc libarchive-zip-perl
-     printf '%s' 'LIBSCRIPT_ROOT_DIR='"'"'/opt/repos/libscript'"'" >> /etc/environment
+     printf '%s\n%s\n%s\n' \
+       'LANG='"'"'C.UTF-8'"'"'' \
+       'LC_ALL='"'"'C.UTF-8'"'"'' \
+       'LIBSCRIPT_ROOT_DIR='"'"'/opt/repos/libscript'"'" >> /etc/environment
+     printf '%s\n%s\n' \
+       'export LANG='"'"'C.UTF-8'"'"'' \
+       'export LC_ALL='"'"'C.UTF-8'"'"'' >> /home/*/.bashrc
+     printf '%s\n' 'C.UTF-8 UTF-8' >> /etc/locale.gen
+     printf '%s\n' 'LANG='"'"'C.UTF-8'"'" >> /etc/locale.conf
+     # dpkg-reconfigure locales
+
+     apt-get -qq update
+     export DEBIAN_FRONTEND='noninteractive'
+     apt-get -qq install -y apt-utils curl gettext-base jq rsync libarchive-zip-perl pandoc
   SHELL
 end
