@@ -1,4 +1,4 @@
 _lib/_git
 =========
 
-`git` helpers
+[`git`](https://en.wikipedia.org/wiki/Git) helpers

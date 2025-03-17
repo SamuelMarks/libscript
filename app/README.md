@@ -1,4 +1,4 @@
 app
 ===
 
-Apps can rely on both toolchain(s) and server(s). 
+FYI: Apps can rely on both toolchains and servers. 

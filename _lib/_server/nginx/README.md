@@ -1,4 +1,4 @@
 _lib/_server/nginx
 ==================
 
-nginx installer, tester, configuration templates, and configuration merger.
+[nginx](https://en.wikipedia.org/wiki/Nginx) installer, tester, configuration templates, and configuration merger.

@@ -1,4 +1,4 @@
 _lib/_storage/postgres
 ======================
 
-PostgreSQL installer, user+database init, and tester.
+[PostgreSQL](https://en.wikipedia.org/wiki/PostgreSQL) installer, user+database init, and tester.

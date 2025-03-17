@@ -1,4 +1,4 @@
 _lib/_toolchain/jq
 ==================
 
-`jq` installer.
+[`jq`](https://en.wikipedia.org/wiki/Jq_(programming_language)) installer.

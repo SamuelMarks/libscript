@@ -1,4 +1,4 @@
 _lib/_daemon/systemd
 ====================
 
-systemd templates
+[systemd](https://en.wikipedia.org/wiki/Systemd) templates

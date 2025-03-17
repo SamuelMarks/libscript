@@ -33,6 +33,7 @@ if [ -z ${ARCH+x} ]; then
   ARCH="$(uname -m)"
   case "${ARCH}" in
     'aarch64') export ARCH_ALT='arm64' ;;
+    *) export ARCH_ALT="${ARCH}" ;;
   esac
   export ARCH
 fi
@@ -92,4 +93,59 @@ if [ -z ${UNAME+x} ]; then
     printf 'UNAME="%s"; TARGET_OS="%s"\n' "${UNAME}" "${TARGET_OS}"
     export UNAME
     export TARGET_OS
+fi
+
+if [ -z "${UNAME+x}" ]; then
+  UNAME="$(uname)"
+fi
+
+if [ -z "${INIT_SYS+x}" ]; then
+  if [ -f '/bin/launchctl' ]; then
+    # https://en.wikipedia.org/wiki/Launchd
+    export INIT_SYS='launchd'
+  elif [ -f '/sbin/openrc-run' ]; then
+    # https://en.wikipedia.org/wiki/OpenRC
+    export INIT_SYS='openrc'
+  else
+    case "${UNAME}" in
+        'Linux')
+          if [ ! -f '/sbin/init' ]; then
+            proc_comm="$(stat -- "$(which -- "$(cat -- '/proc/1/comm')")" | awk 'NR==1{ print $NF }')"
+            case "${proc_comm}" in
+               *'/bin/bash'|'dash'|'bash')
+                  >&2 printf 'No init system setup\n'
+                  exit 2 ;;
+               *)
+                 >&2 printf 'Unable to determine init system out of "%s"\n' "${proc_comm}"
+                 exit 2 ;;
+            esac
+          elif [ -f '/etc/inittab' ]; then
+            case "$(grep -F '::sysinit:' '/etc/inittab' | awk -F':/' '{print "/" $2}' | awk '{print $1}')" in
+              '/sbin/openrc'|*'/openrc')
+                # https://en.wikipedia.org/wiki/OpenRC
+                export INIT_SYS='openrc' ;;
+              *)
+                >&2 printf 'Unable to determine init system\n'
+                exit 2 ;;
+            esac
+          else
+            case "$(stat -- "$(which -- "$(cat -- '/proc/1/comm')")" | awk 'NR==1{ print $NF }')" in
+            # case "$(stat -- '/sbin/init' | awk 'NR==1{ print $NF }')" in
+              'busybox'|*'/busybox')
+                # https://en.wikipedia.org/wiki/BusyBox
+                export INIT_SYS='busybox' ;;
+              *'/systemd')
+                # https://en.wikipedia.org/wiki/Systemd
+                export INIT_SYS='systemd' ;;
+              *)
+                >&2 printf 'Unable to determine init system\n'
+                exit 2 ;;
+            esac
+          fi
+          ;;
+        *)
+          >&2 printf 'TODO: *BSD, minix, SunOS, illumos, &etc.\n'
+          exit 2 ;;
+    esac
+  fi
 fi
