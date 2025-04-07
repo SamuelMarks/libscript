@@ -72,6 +72,13 @@ fi
 if priv_as "${POSTGRES_SERVICE_USER}" psql"${host_flag}" -t -c '\du' | grep -Fq "${POSTGRES_USER?}"; then
   true
 else
+  (
+  set +f
+  set -- '/var/log/postgresql/'"${POSTGRESQL_VERSION}"'-main.log'*
+  if [ -f "${1}" ]; then
+    cat -- "${@}"
+  fi
+  )
   priv_as "${POSTGRES_SERVICE_USER}" createuser"${host_flag}" "${POSTGRES_USER?}"
   if [ -n "${POSTGRES_PASSWORD?}" ]; then
     priv_as "${POSTGRES_SERVICE_USER}" psql"${host_flag}" -c 'ALTER USER '"${POSTGRES_USER?}"' PASSWORD '"'${POSTGRES_PASSWORD?}'"';';

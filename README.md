@@ -208,6 +208,34 @@ $ cd ./tmp && sh ./docker_builder.sh
 # or docker_builder_parallel.sh ^
 ```
 
+## Vagrant usage
+
+First install [Vagrant](https://vagrantup.com). Then, for example, deploy the debian Vagrant box with:
+```sh
+cd libscript/vagrant/debian12
+vagrant up
+```
+
+### Example (PostgreSQL)
+
+Deploy PostgreSQL:
+
+```sh
+vagrant ssh -c '. ${LIBSCRIPT_ROOT_DIR}/env.sh && ${LIBSCRIPT_ROOT_DIR}/_lib/_storage/postgres/setup.sh'
+```
+
+Test whether the deployment succeeded:
+
+```sh
+vagrant ssh -c '. ${LIBSCRIPT_ROOT_DIR}/env.sh && ${LIBSCRIPT_ROOT_DIR}/_lib/_storage/postgres/test.sh'
+```
+
+Run the official REPL, connected to this newly deployed PostgreSQL:
+
+```sh
+vagrant ssh -c 'psql "postgres://rest_user:rest_pass@localhost/rest_db"'
+```
+
 <hr/>
 
 ## License
