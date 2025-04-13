@@ -44,42 +44,25 @@ find_replace() {
     exit 1
   fi
 
-  awk_script='
-  BEGIN {
-    search = ARGV[1]
-    replace = ARGV[2]
+  awk_script='{ rec = rec $0 RS }
+     END {
+         old = ENVIRON["old"]
+         new = ENVIRON["new"]
+         lgth = length(old)
 
-    delete ARGV[1]
-    delete ARGV[2]
-  }
-  {
-     file_content = file_content $0 "\n"
-  }
-  END {
-    result = ""
-    pos = 1
-    search_len = length(search)
-    content_len = length(file_content)
+         while ( beg = index(rec, old) ) {
+             print substr(rec, 1, beg-1) new
+             rec = substr(rec, beg+lgth)
+         }
 
-    while (pos <= content_len) {
-      idx = index(substr(file_content, pos), search)
-      if (idx == 0) {
-        result = result substr(file_content, pos)
-        break
-      } else {
-        idx = idx + pos - 1
-        result = result substr(file_content, pos, idx - pos) replace
-        pos = idx + search_len
-      }
-    }
-
-    printf "%s", result
-  }
-  '
+         print rec
+     }
+   '
 
   new_content="$(mktemp)"
   trap 'rm -f -- "${new_content}"' EXIT HUP INT QUIT TERM
-  if awk -- "${awk_script}" "${search_string}" "${replacement_string}" "${filename}" > "${new_content}"; then
+
+  if old="$search_string" new="$replacement_string" awk -v ORS= -- "${awk_script}" "${filename}" > "${new_content}"; then
     cat -- "${new_content}"
   else
     >&2 printf 'Error: Failed to process "%s"\n' "${filename}"
