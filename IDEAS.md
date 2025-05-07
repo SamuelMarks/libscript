@@ -21,6 +21,8 @@ For example:
 Also; maybe; consider:
 - [Multi-user](https://en.wikipedia.org/wiki/Multi-user_software)
 - [GitOps](https://about.gitlab.com/topics/gitops/)
+- [MLOps](https://en.wikipedia.org/wiki/MLOps)
+- [DevSecOps](https://en.wikipedia.org/wiki/DevSecOps)
 
 This would additionally require every non shared-library / shared-toolchain understand:
 - `INSTALL_DIR="${LIBSCRIPT_PROJECT_DIR}"'/'"${project_name}"`
