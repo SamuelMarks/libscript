@@ -48,7 +48,7 @@ export LOCATION_EXPR="${LOCATION_EXPR:-/}"
 
 # guess which template is correct
 # shellcheck disable=SC2236
-if [ ! -z "${NGINX_FRAGMENT_CONF+x}" ]; then
+if [ "${NGINX_FRAGMENT_CONF-}" ]; then
   if [ -f "${NGINX_FRAGMENT_CONF}" ]; then
     conf_child_tpl="${NGINX_FRAGMENT_CONF}"
   else
@@ -58,15 +58,15 @@ if [ ! -z "${NGINX_FRAGMENT_CONF+x}" ]; then
       exit 2
     fi
   fi
-elif [ ! -z "${WWWROOT+x}" ]; then
-  if [ ! -z "${WWWROOT_AUTOINDEX+x}" ]; then
+elif [ "${WWWROOT-}" ]; then
+  if [ "${WWWROOT_AUTOINDEX-}" ]; then
     conf_child_tpl="${LIBSCRIPT_ROOT_DIR}"'/_lib/_server/nginx/conf/simple_location_wwwroot_autoindex.conf'
   else
     conf_child_tpl="${LIBSCRIPT_ROOT_DIR}"'/_lib/_server/nginx/conf/simple_location_wwwroot.conf'
   fi
-elif [ ! -z "${PROXY_PASS+x}" ]; then
-  if [ ! -z "${PROXY_WEBSOCKETS+x}" ]; then
-    if [ ! -z "${PROXY_WEBSOCKETS_ADVANCED+x}" ]; then
+elif [ "${PROXY_PASS-}" ]; then
+  if [ "${PROXY_WEBSOCKETS-}" ]; then
+    if [ "${PROXY_WEBSOCKETS_ADVANCED-}" ]; then
       conf_child_tpl="${LIBSCRIPT_ROOT_DIR}"'/_lib/_server/nginx/conf/location_proxy_websockets.conf'
     else
       conf_child_tpl="${LIBSCRIPT_ROOT_DIR}"'/_lib/_server/nginx/conf/simple_location_proxy_websockets.conf'

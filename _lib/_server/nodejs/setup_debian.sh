@@ -58,7 +58,7 @@ if [ -f 'package.json' ]; then
   fi
 fi
 
-if [ ! -z "${VARS+x}" ]; then
+if [ "${VARS-}" ]; then
   object2key_val "${VARS}" 'export ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
 fi
 ENV=''
@@ -77,7 +77,7 @@ for _script in 'main.js' 'app.js' 'start.js' 'src/main.js' 'src/app.js' 'src/sta
     break
   fi
 done
-if [ ! -n "${script}" ]; then
+if [ ! "${script-}" ]; then
   >&2 printf 'No idea how to start Node.js script for daemon\n'
   >&2 printf '%s contains: %s\n' "$(pwd)" "$(ls)"
   exit 2

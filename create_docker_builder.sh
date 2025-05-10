@@ -1,15 +1,22 @@
 #!/bin/sh
 
-# shellcheck disable=SC2236
-if [ ! -z "${BASH_VERSION+x}" ]; then
-  # shellcheck disable=SC3040
+set -feu
+# shellcheck disable=SC2296,SC3028,SC3040,SC3054
+if [ "${SCRIPT_NAME-}" ]; then
+  this_file="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE+x}" ]; then
+  this_file="${BASH_SOURCE[0]}"
   set -o pipefail
-elif [ ! -z "${ZSH_VERSION+x}" ]; then
-  # shellcheck disable=SC3040
+elif [ "${ZSH_VERSION+x}" ]; then
+  this_file="${(%):-%x}"
   set -o pipefail
+else
+  this_file="${0}"
 fi
-set -eu
-set +f # in case anyone else set this; we use glob here!!
+
+set +f
+
+DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 
 prefix="${DOCKER_IMAGE_PREFIX:-deploysh-}"
 suffix="${DOCKER_IMAGE_SUFFIX:--latest}"
@@ -20,7 +27,7 @@ header_tpl='###################\n#\t\t%s\t#\n###################\n\n'
 header_cmd_tpl=':: ###################\n:: #\t%s #\n:: ###################\n\n'
 
 verbose=0
-input_directory=''
+input_directory=
 help=0
 
 while getopts 'p:s:i:vh' opt; do
@@ -60,22 +67,11 @@ if [ -n "${remaining}" ]; then
 fi
 
 previous_wd="$(pwd)"
-if [ ! -z "${input_directory+x}" ]; then
+if [ "${input_directory-}" ]; then
   cd -- "${input_directory}"
 fi
 
-# shellcheck disable=SC2016
-printf '#!/bin/sh
-
-# shellcheck disable=SC2236
-if [ ! -z "${BASH_VERSION+x}" ]; then
-  # shellcheck disable=SC3040
-  set -o pipefail
-elif [ ! -z "${ZSH_VERSION+x}" ]; then
-  # shellcheck disable=SC3040
-  set -o pipefail
-fi
-set -feu\n\n' | tee "${docker_builder}" "${docker_builder_parallel}" >/dev/null
+awk 'NR==1,/^fi$/' "${DIR}"'/prelude.sh' | tee -a "${docker_builder}" "${docker_builder_parallel}" >/dev/null
 chmod +x "${docker_builder}" "${docker_builder_parallel}"
 
 collect_when_pattern() {
@@ -181,6 +177,6 @@ for section in "${toolchain_dfs}" "${server_dfs}" "${storage_dfs}" "${third_part
   printf '\n' | tee -a "${docker_builder}" "${docker_builder_cmd}" >/dev/null
 done
 
-if [ ! -z "${input_directory+x}" ]; then
+if [ "${input_directory-}" ]; then
   cd -- "${previous_wd}"
 fi

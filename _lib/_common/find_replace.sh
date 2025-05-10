@@ -47,6 +47,7 @@ find_replace() {
     exit 1
   fi
 
+  # shellcheck disable=SC2016
   awk_script='{ rec = rec $0 RS }
      END {
          old = ENVIRON["old"]

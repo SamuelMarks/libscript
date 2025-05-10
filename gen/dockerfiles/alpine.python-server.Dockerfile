@@ -27,17 +27,17 @@ ARG PYTHON_SERVER_DEST='/tmp/python-server'
 RUN <<-EOF
 
 if [ "${PYTHON_SERVER:-1}" -eq 1 ]; then
-  if [ ! -z "${PYTHON_SERVER_DEST+x}" ]; then
+  if [ "${PYTHON_SERVER_DEST-}" ]; then
     previous_wd="$(pwd)"
     DEST="${PYTHON_SERVER_DEST}"
     export DEST
     [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
     cd -- "${DEST}"
   fi
-  if [ ! -z "${PYTHON_SERVER_VARS+x}" ]; then
+  if [ "${PYTHON_SERVER_VARS-}" ]; then
     export VARS="${PYTHON_SERVER_VARS}"
   fi
-  if [ ! -z "${python_server_COMMANDS_BEFORE+x}" ]; then
+  if [ "${python_server_COMMANDS_BEFORE-}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_python-server.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
@@ -53,7 +53,7 @@ if [ "${PYTHON_SERVER:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${PYTHON_SERVER_DEST+x}" ]; then cd -- "${previous_wd}"; fi
+  if [ "${PYTHON_SERVER_DEST-}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF

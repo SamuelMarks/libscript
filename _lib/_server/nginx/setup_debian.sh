@@ -125,7 +125,7 @@ merge_location_into_nginx_server() {
   printf '%s\n\n%s}\n\n' "${rtrimmed_one_lbrace_off_conf}" "${location_conf}"
 }
 
-if [ ! -z "${VARS+x}" ]; then
+if [ "${VARS-}" ]; then
   ENV_SCRIPT_FILE=$(mktemp -t 'libscript_XXX_env')
   trap 'rm -f -- "${ENV_SCRIPT_FILE}"' EXIT HUP INT QUIT TERM
   chmod +x "${ENV_SCRIPT_FILE}"

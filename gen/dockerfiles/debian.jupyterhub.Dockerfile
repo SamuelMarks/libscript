@@ -18,17 +18,17 @@ ARG JUPYTERHUB=0
 RUN <<-EOF
 
 if [ "${JUPYTERHUB:-0}" -eq 1 ]; then
-  if [ ! -z "${JUPYTERHUB_DEST+x}" ]; then
+  if [ "${JUPYTERHUB_DEST-}" ]; then
     previous_wd="$(pwd)"
     DEST="${JUPYTERHUB_DEST}"
     export DEST
     [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
     cd -- "${DEST}"
   fi
-  if [ ! -z "${JUPYTERHUB_VARS+x}" ]; then
+  if [ "${JUPYTERHUB_VARS-}" ]; then
     export VARS="${JUPYTERHUB_VARS}"
   fi
-  if [ ! -z "${JupyterHub_COMMANDS_BEFORE+x}" ]; then
+  if [ "${JupyterHub_COMMANDS_BEFORE-}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_jupyterhub.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
@@ -44,7 +44,7 @@ if [ "${JUPYTERHUB:-0}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${JUPYTERHUB_DEST+x}" ]; then cd -- "${previous_wd}"; fi
+  if [ "${JUPYTERHUB_DEST-}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF

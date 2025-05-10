@@ -1,15 +1,18 @@
 #!/bin/sh
 
-# shellcheck disable=SC2236
-if [ ! -z "${BASH_VERSION+x}" ]; then
-  # shellcheck disable=SC3040
-  set -o pipefail
-elif [ ! -z "${ZSH_VERSION+x}" ]; then
-  # shellcheck disable=SC3040
-  set -o pipefail
-fi
 set -feu
-
+# shellcheck disable=SC2296,SC3028,SC3040,SC3054
+if [ "${SCRIPT_NAME-}" ]; then
+  this_file="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE+x}" ]; then
+  this_file="${BASH_SOURCE[0]}"
+  set -o pipefail
+elif [ "${ZSH_VERSION+x}" ]; then
+  this_file="${(%):-%x}"
+  set -o pipefail
+else
+  this_file="${0}"
+fi
 ###################
 #		Toolchain(s)	#
 ###################

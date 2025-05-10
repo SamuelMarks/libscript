@@ -25,17 +25,17 @@ ARG POSTGRES_VERSION=17
 RUN <<-EOF
 
 if [ "${POSTGRES_URL:-1}" -eq 1 ]; then
-  if [ ! -z "${POSTGRES_DEST+x}" ]; then
+  if [ "${POSTGRES_DEST-}" ]; then
     previous_wd="$(pwd)"
     DEST="${POSTGRES_DEST}"
     export DEST
     [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
     cd -- "${DEST}"
   fi
-  if [ ! -z "${POSTGRES_VARS+x}" ]; then
+  if [ "${POSTGRES_VARS-}" ]; then
     export VARS="${POSTGRES_VARS}"
   fi
-  if [ ! -z "${POSTGRES_COMMANDS_BEFORE+x}" ]; then
+  if [ "${POSTGRES_COMMANDS_BEFORE-}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_postgres.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
@@ -51,7 +51,7 @@ if [ "${POSTGRES_URL:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${POSTGRES_DEST+x}" ]; then cd -- "${previous_wd}"; fi
+  if [ "${POSTGRES_DEST-}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF
@@ -64,17 +64,17 @@ ARG VALKEY_VERSION='*'
 RUN <<-EOF
 
 if [ "${REDIS_URL:-1}" -eq 1 ]; then
-  if [ ! -z "${VALKEY_DEST+x}" ]; then
+  if [ "${VALKEY_DEST-}" ]; then
     previous_wd="$(pwd)"
     DEST="${VALKEY_DEST}"
     export DEST
     [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
     cd -- "${DEST}"
   fi
-  if [ ! -z "${VALKEY_VARS+x}" ]; then
+  if [ "${VALKEY_VARS-}" ]; then
     export VARS="${VALKEY_VARS}"
   fi
-  if [ ! -z "${VALKEY_COMMANDS_BEFORE+x}" ]; then
+  if [ "${VALKEY_COMMANDS_BEFORE-}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_valkey.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
@@ -90,7 +90,7 @@ if [ "${REDIS_URL:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${VALKEY_DEST+x}" ]; then cd -- "${previous_wd}"; fi
+  if [ "${VALKEY_DEST-}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF
@@ -102,17 +102,17 @@ ARG RABBITMQ_VERSION='*'
 RUN <<-EOF
 
 if [ "${AMQP_URL:-0}" -eq 1 ]; then
-  if [ ! -z "${RABBITMQ_DEST+x}" ]; then
+  if [ "${RABBITMQ_DEST-}" ]; then
     previous_wd="$(pwd)"
     DEST="${RABBITMQ_DEST}"
     export DEST
     [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
     cd -- "${DEST}"
   fi
-  if [ ! -z "${RABBITMQ_VARS+x}" ]; then
+  if [ "${RABBITMQ_VARS-}" ]; then
     export VARS="${RABBITMQ_VARS}"
   fi
-  if [ ! -z "${RABBITMQ_COMMANDS_BEFORE+x}" ]; then
+  if [ "${RABBITMQ_COMMANDS_BEFORE-}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_rabbitmq.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
@@ -128,7 +128,7 @@ if [ "${AMQP_URL:-0}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${RABBITMQ_DEST+x}" ]; then cd -- "${previous_wd}"; fi
+  if [ "${RABBITMQ_DEST-}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF

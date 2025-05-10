@@ -58,9 +58,9 @@ if [ -z ${UNAME+x} ]; then
           *)
             case "${ID_LIKE}" in
               'arch') export PKG_MGR='pacman' ;;
-              *debian*) export PKG_MGR='apt-get' ;;
-              *rhel*) export PKG_MGR='dnf' ;;
-              *suse*) export PKG_MGR='zypper' ;;
+              *'debian'*) export PKG_MGR='apt-get' ;;
+              *'rhel'*) export PKG_MGR='dnf' ;;
+              *'suse'*) export PKG_MGR='zypper' ;;
               *) ;;
             esac
           ;;
@@ -78,6 +78,9 @@ if [ -z ${UNAME+x} ]; then
             ;;
         esac
         ;;
+      'FreeBSD')
+        export PKG_MGR='pkg'
+        TARGET_OS='freebsd' ;;
       *)
         >&2 printf 'Unimplemented for %s\n' "${UNAME}"
         exit 3
@@ -134,6 +137,13 @@ if [ -z "${INIT_SYS+x}" ]; then
                 >&2 printf 'Unable to determine init system\n'
                 exit 2 ;;
             esac
+          fi
+          ;;
+        'FreeBSD')
+          if [ -d '/etc/inittab' ]; then
+            export INIT_SYS='systemv_init'
+          elif [ -f '/sbib/init' ]; then
+            export INIT_SYS='bsd_init'
           fi
           ;;
         *)

@@ -417,21 +417,21 @@ update_generated_files() {
   # shellcheck disable=SC2016
   {
     printf 'if [ "${%s:-%d}" -eq 1 ]; then\n' "${env_clean}" "${required}" | tee -a "${scratch_file}" "${scratch}" "${install_file}" >/dev/null
-    printf '  if [ ! -z "${%s_DEST+x}" ]; then\n' "${name_upper_clean}"
+    printf '  if [ "${%s_DEST-}" ]; then\n' "${name_upper_clean}"
     printf '    previous_wd="$(pwd)"\n'
     printf '    DEST="${%s_DEST}"\n' "${name_upper_clean}"
     printf '    export DEST\n'
     printf '    [ -d "${DEST}" ] || mkdir -p -- "${DEST}"\n'
     printf '    cd -- "${DEST}"\n'
     printf '  fi\n'
-    printf '  if [ ! -z "${%s_VARS+x}" ]; then\n' "${name_upper_clean}"
+    printf '  if [ "${%s_VARS-}" ]; then\n' "${name_upper_clean}"
     printf '    export VARS="${%s_VARS}"\n' "${name_upper_clean}"
     printf '  fi\n'
     if [ -n "${alt_if_body}" ]; then
       printf '%s\n' "${alt_if_body}"
     else
       # shellcheck disable=SC2016
-      printf '  if [ ! -z "${%s_COMMANDS_BEFORE+x}" ]; then\n' "${name_clean}"
+      printf '  if [ "${%s_COMMANDS_BEFORE-}" ]; then\n' "${name_clean}"
       # shellcheck disable=SC2016
       printf '    SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'"'"'/setup_before_%s.sh'"'"'\n' "${name_lower_clean}"
       printf '    export SCRIPT_NAME\n'
@@ -457,7 +457,7 @@ update_generated_files() {
       printf '    >&2 printf '"'"'Not found, SCRIPT_NAME of %%s\\n'"'"' "${SCRIPT_NAME}"\n'
       printf '  fi\n'
 
-      printf '  if [ ! -z "${%s_DEST+x}" ]; then cd -- "${previous_wd}"; fi\n' "${name_upper_clean}"
+      printf '  if [ "${%s_DEST-}" ]; then cd -- "${previous_wd}"; fi\n' "${name_upper_clean}"
       printf 'fi\n\n'
    fi
   } | tee -a "${scratch_file}" "${scratch}" "${install_file}" >/dev/null
@@ -808,7 +808,7 @@ parse_server_item() {
   name_clean="$(printf '%s' "${name}" | tr -c '^[:alpha:]+_+[:alnum:]' '_')"
   name_upper_clean="$(printf '%s' "${name_clean}" | tr '[:lower:]' '[:upper:]')"
 
-  if [ ! -n "${name}" ]; then
+  if [ ! "${name-}" ]; then
     >&2 printf 'no name for server\n'
     exit 4
   fi

@@ -54,7 +54,7 @@ fi
 
 if [ -d '/etc/systemd/system' ]; then
   ENV=''
-  if [ ! -z "${VARS+x}" ]; then
+  if [ "${VARS-}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/environ.sh'
     export SCRIPT_NAME
     # shellcheck disable=SC1090

@@ -1,0 +1,32 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/freebsd-14"
+  config.vm.box_version = "202502.21.0"
+
+  # config.vm.synced_folder "../../gen", "/opt/repos/libscript"
+
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  config.vm.provider :vmware_desktop do |vmware|
+      vmware.vmx["ethernet0.pcislotnumber"] = "160"
+      vmware.gui = false
+  #   vmware.memory = "1024"
+  end
+  config.vm.provision "shell", inline: <<-SHELL
+     printf 'export %s\n' \
+       'LANG='"'"'C.UTF-8'"'"'' \
+       'LC_ALL='"'"'C.UTF-8'"'"'' \
+       'LIBSCRIPT_ROOT_DIR='"'"'/opt/repos/libscript'"'" | tee -a /etc/profile > /usr/share/skel/dot.profile
+     printf 'setenv %s\n' \
+       'LIBSCRIPT_ROOT_DIR '"'"'/opt/repos/libscript'"'" | tee -a /etc/csh.cshrc >> /etc/csh.login
+     printf 'standard:\n\t\t%s\n' \
+       ':LIBSCRIPT_ROOT_DIR='"'"'/opt/repos/libscript'"'" | tee -a /etc/login.conf >/dev/null
+     pkg update && pkg upgrade
+     pkg install -y git rsync
+     mkdir -p /opt/repos
+     git clone --depth=1 --single-branch https://github.com/SamuelMarks/libscript /opt/repos/libscript
+     chown -R vagrant:vagrant /opt/repos/libscript
+  SHELL
+end

@@ -1,17 +1,13 @@
 #!/bin/sh
 
-# shellcheck disable=SC2236
-if [ ! -z "${SCRIPT_NAME+x}" ]; then
+# shellcheck disable=SC2296,SC3028,SC3040,SC3054
+if [ "${SCRIPT_NAME-}" ]; then
   this_file="${SCRIPT_NAME}"
-elif [ ! -z "${BASH_VERSION+x}" ]; then
-  # shellcheck disable=SC3028 disable=SC3054
+elif [ "${BASH_SOURCE+x}" ]; then
   this_file="${BASH_SOURCE[0]}"
-  # shellcheck disable=SC3040
   set -o pipefail
-elif [ ! -z "${ZSH_VERSION+x}" ]; then
-  # shellcheck disable=SC2296
+elif [ "${ZSH_VERSION+x}" ]; then
   this_file="${(%):-%x}"
-  # shellcheck disable=SC3040
   set -o pipefail
 else
   this_file="${0}"
@@ -90,6 +86,7 @@ while IFS= read -r f; do
         *)
           cd -- "${previous_wd}"
           PORT_PATH="${new_wd##*/libscript}"
+          # shellcheck disable=SC1003
           env -i PATH="${ENVSUBST_PATH}" \
                  PORT_PATH="${PORT_PATH}" \
                  PORT_PATH_WIN="$(printf '%s' "${PORT_PATH}" | tr '/' '\\')" \
@@ -281,6 +278,7 @@ for url in ${urls}; do
   mv -- "${url}"'.tmp1' "${url}"'.tmp'
 
   if [ -n "${USAGE}" ]; then
+    # shellcheck disable=SC2016
     after_first_header=$(printf '
 <div class="tui-window" style="width: 100%%">
   <fieldset class="tui-fieldset">
@@ -328,6 +326,7 @@ for url in ${urls}; do
     find_replace '</h1>' '</h1>\n'"${after_first_header}" "${url}"'.tmp' > "${url}"'.tmp1'
     find_replace 'first_scripts.js"></script>' 'first_scripts.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@json-editor/json-editor@latest/dist/jsoneditor.min.js"></script>' "${url}"'.tmp1' > "${url}"'.tmp'
+    # shellcheck disable=SC2016
     find_replace '/scripts.js"></script>' '/scripts.js"></script>
 <script>
 const editor = new JSONEditor(document.getElementById("editor_holder"),

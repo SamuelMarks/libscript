@@ -96,7 +96,7 @@ is_installed() {
     'emerge')             eix -I "${pkg}" >/dev/null 2>&1 ;;
     'eopkg')              eopkg list-installed | grep -q '^'"${pkg}"'[[:space:]]' ;;
     'pacman')             pacman -Q "${pkg}" >/dev/null 2>&1 ;;
-    'pkg')                pkg info "${pkg}" >/dev/null 2>&1 ;;
+    'pkg')                pkg info -e "${pkg}" ;;
     'port')               port installed "${pkg}" | grep -q 'active' ;;
     'swupd')              swupd bundle-list | grep -qx "${pkg}" ;;
     'xbps')               xbps-query -Rs '^'"${pkg}"'$' | grep -q '\[installed\]' ;;
@@ -125,7 +125,7 @@ depends() {
         fi
                 priv  apt-get install -y    ${pkgs_to_install} ;;
       'apk')    priv  apk add --no-cache    ${pkgs_to_install} ;;
-      'brew')             brew install          ${pkgs_to_install} ;;
+      'brew')         brew install          ${pkgs_to_install} ;;
       'dnf')    priv  dnf install -y        ${pkgs_to_install} ;;
       'emerge') priv  emerge --quiet        ${pkgs_to_install} ;;
       'eopkg')  priv  eopkg install -y      ${pkgs_to_install} ;;
@@ -144,6 +144,6 @@ depends() {
   fi
 }
 
-if [ ! -z "${PKG_MGR+x}" ]; then
+if [ "${PKG_MGR-}" ]; then
   detect_pkg_mgr
 fi

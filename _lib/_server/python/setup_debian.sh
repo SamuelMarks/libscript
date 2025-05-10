@@ -48,7 +48,7 @@ fi
 name=' '"${service_name}"
 cd -- "${DEST}"
 
-if [ ! -z "${VARS+x}" ]; then
+if [ "${VARS-}" ]; then
   object2key_val "${VARS}" 'export ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
 fi
 ENV=''
@@ -59,7 +59,7 @@ fi
 #EXEC_START="$(pwd)"'/'"$(find target/release -depth -maxdepth 1 -type f -executable -print -quit)"
 # TODO: Check if there a main in `setup.py` or `pyproject.toml` or `setup.cfg` then parse out that
 cwd="$(pwd)"
-script=''
+script=
 for _script in 'main.py' 'app.py' 'start.py' 'server.py' \
                'src/main.py' 'src/app.py' 'src/start.py' 'src/server.py' \
                "${service_name}"'/main.py' "${service_name}"'/app.py' \
@@ -70,13 +70,13 @@ for _script in 'main.py' 'app.py' 'start.py' 'server.py' \
     break
   fi
 done
-if [ ! -n "${script}" ]; then
+if [ ! "${script-}" ]; then
   >&2 printf 'No idea how to start Python script for daemon\n'
   >&2 printf '%s contains: %s\n' "$(pwd)" "$(ls)"
   exit 2
 fi
 # TODO: Should check PYTHONPATH VENV and other env vars first
-if [ ! -z "${VENV+x}" ]; then
+if [ "${VENV-}" ]; then
   true
 else
   python_out="$(mktemp)"

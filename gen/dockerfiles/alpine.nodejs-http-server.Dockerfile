@@ -22,17 +22,17 @@ ARG NODEJS_HTTP_SERVER_DEST='/tmp/nodejs-http-server'
 RUN <<-EOF
 
 if [ "${NODEJS_HTTP_SERVER:-1}" -eq 1 ]; then
-  if [ ! -z "${NODEJS_HTTP_SERVER_DEST+x}" ]; then
+  if [ "${NODEJS_HTTP_SERVER_DEST-}" ]; then
     previous_wd="$(pwd)"
     DEST="${NODEJS_HTTP_SERVER_DEST}"
     export DEST
     [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
     cd -- "${DEST}"
   fi
-  if [ ! -z "${NODEJS_HTTP_SERVER_VARS+x}" ]; then
+  if [ "${NODEJS_HTTP_SERVER_VARS-}" ]; then
     export VARS="${NODEJS_HTTP_SERVER_VARS}"
   fi
-  if [ ! -z "${nodejs_http_server_COMMANDS_BEFORE+x}" ]; then
+  if [ "${nodejs_http_server_COMMANDS_BEFORE-}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_nodejs-http-server.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
@@ -48,7 +48,7 @@ if [ "${NODEJS_HTTP_SERVER:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${NODEJS_HTTP_SERVER_DEST+x}" ]; then cd -- "${previous_wd}"; fi
+  if [ "${NODEJS_HTTP_SERVER_DEST-}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF

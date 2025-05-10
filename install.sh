@@ -41,7 +41,7 @@ if [ "${POSTGRESQL_INSTALL:-0}" -eq 1 ]; then
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 fi
-if [ ! -z "${DATABASE_URL+x}" ]; then
+if [ "${DATABASE_URL-}" ]; then
   >&2 printf 'DATABASE_URL must be set\n';
   exit 3
 fi
@@ -52,7 +52,7 @@ if [ "${VALKEY_INSTALL:-0}" -eq 1 ]; then
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 fi
-if [ ! -z "${REDIS_URL+x}" ]; then
+if [ "${REDIS_URL-}" ]; then
   >&2 printf 'REDIS_URL must be set\n';
   exit 3
 fi

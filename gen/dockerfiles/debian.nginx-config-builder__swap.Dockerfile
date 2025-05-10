@@ -21,17 +21,17 @@ ARG NGINX_CONFIG_BUILDER__SWAP_VARS='{"SERVER_NAME":"example.com","LOCATION_EXPR
 RUN <<-EOF
 
 if [ "${NGINX_CONFIG_BUILDER__SWAP:-1}" -eq 1 ]; then
-  if [ ! -z "${NGINX_CONFIG_BUILDER__SWAP_DEST+x}" ]; then
+  if [ "${NGINX_CONFIG_BUILDER__SWAP_DEST-}" ]; then
     previous_wd="$(pwd)"
     DEST="${NGINX_CONFIG_BUILDER__SWAP_DEST}"
     export DEST
     [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
     cd -- "${DEST}"
   fi
-  if [ ! -z "${NGINX_CONFIG_BUILDER__SWAP_VARS+x}" ]; then
+  if [ "${NGINX_CONFIG_BUILDER__SWAP_VARS-}" ]; then
     export VARS="${NGINX_CONFIG_BUILDER__SWAP_VARS}"
   fi
-  if [ ! -z "${nginx_config_builder__swap_COMMANDS_BEFORE+x}" ]; then
+  if [ "${nginx_config_builder__swap_COMMANDS_BEFORE-}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_nginx-config-builder__swap.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
@@ -47,7 +47,7 @@ if [ "${NGINX_CONFIG_BUILDER__SWAP:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${NGINX_CONFIG_BUILDER__SWAP_DEST+x}" ]; then cd -- "${previous_wd}"; fi
+  if [ "${NGINX_CONFIG_BUILDER__SWAP_DEST-}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF

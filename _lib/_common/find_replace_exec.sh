@@ -1,24 +1,20 @@
 #!/bin/sh
 
-# Usage: ./find_replace_exec.sh "search_string" "replacement_string" filename
-
-# shellcheck disable=SC2236
-if [ ! -z "${SCRIPT_NAME+x}" ]; then
+set -feu
+# shellcheck disable=SC2296,SC3028,SC3040,SC3054
+if [ "${SCRIPT_NAME-}" ]; then
   this_file="${SCRIPT_NAME}"
-elif [ ! -z "${BASH_VERSION+x}" ]; then
-  # shellcheck disable=SC3028 disable=SC3054
+elif [ "${BASH_SOURCE+x}" ]; then
   this_file="${BASH_SOURCE[0]}"
-  # shellcheck disable=SC3040
   set -o pipefail
-elif [ ! -z "${ZSH_VERSION+x}" ]; then
-  # shellcheck disable=SC2296
+elif [ "${ZSH_VERSION+x}" ]; then
   this_file="${(%):-%x}"
-  # shellcheck disable=SC3040
   set -o pipefail
 else
   this_file="${0}"
 fi
-set -feu
+
+# Usage: ./find_replace_exec.sh "search_string" "replacement_string" filename
 
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 

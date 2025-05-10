@@ -19,17 +19,17 @@ ARG PYTHON_VERSION='3.10'
 RUN <<-EOF
 
 if [ "${PYTHON_INSTALL_DIR:-1}" -eq 1 ]; then
-  if [ ! -z "${PYTHON_DEST+x}" ]; then
+  if [ "${PYTHON_DEST-}" ]; then
     previous_wd="$(pwd)"
     DEST="${PYTHON_DEST}"
     export DEST
     [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
     cd -- "${DEST}"
   fi
-  if [ ! -z "${PYTHON_VARS+x}" ]; then
+  if [ "${PYTHON_VARS-}" ]; then
     export VARS="${PYTHON_VARS}"
   fi
-  if [ ! -z "${PYTHON_COMMANDS_BEFORE+x}" ]; then
+  if [ "${PYTHON_COMMANDS_BEFORE-}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_python.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
@@ -45,7 +45,7 @@ if [ "${PYTHON_INSTALL_DIR:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${PYTHON_DEST+x}" ]; then cd -- "${previous_wd}"; fi
+  if [ "${PYTHON_DEST-}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF

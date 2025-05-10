@@ -22,17 +22,17 @@ ARG SADAS_DEST='/tmp/serve-actix-diesel-auth-scaffold'
 RUN <<-EOF
 
 if [ "${SADAS:-1}" -eq 1 ]; then
-  if [ ! -z "${SADAS_DEST+x}" ]; then
+  if [ "${SADAS_DEST-}" ]; then
     previous_wd="$(pwd)"
     DEST="${SADAS_DEST}"
     export DEST
     [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
     cd -- "${DEST}"
   fi
-  if [ ! -z "${SADAS_VARS+x}" ]; then
+  if [ "${SADAS_VARS-}" ]; then
     export VARS="${SADAS_VARS}"
   fi
-  if [ ! -z "${SADAS_COMMANDS_BEFORE+x}" ]; then
+  if [ "${SADAS_COMMANDS_BEFORE-}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_sadas.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
@@ -48,7 +48,7 @@ if [ "${SADAS:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${SADAS_DEST+x}" ]; then cd -- "${previous_wd}"; fi
+  if [ "${SADAS_DEST-}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF

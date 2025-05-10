@@ -53,7 +53,7 @@ cd -- "${DEST}"
 
 cargo build --release
 
-if [ ! -z "${VARS+x}" ]; then
+if [ "${VARS-}" ]; then
   object2key_val "${VARS}" 'export ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
 fi
 ENV=''

@@ -31,17 +31,17 @@ ARG BUILD_STATIC_FILES0_DEST='/tmp/ng-material-scaffold'
 RUN <<-EOF
 
 if [ "${BUILD_STATIC_FILES0:-1}" -eq 1 ]; then
-  if [ ! -z "${BUILD_STATIC_FILES0_DEST+x}" ]; then
+  if [ "${BUILD_STATIC_FILES0_DEST-}" ]; then
     previous_wd="$(pwd)"
     DEST="${BUILD_STATIC_FILES0_DEST}"
     export DEST
     [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
     cd -- "${DEST}"
   fi
-  if [ ! -z "${BUILD_STATIC_FILES0_VARS+x}" ]; then
+  if [ "${BUILD_STATIC_FILES0_VARS-}" ]; then
     export VARS="${BUILD_STATIC_FILES0_VARS}"
   fi
-  if [ ! -z "${build_static_files0_COMMANDS_BEFORE+x}" ]; then
+  if [ "${build_static_files0_COMMANDS_BEFORE-}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_build-static-files0.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
@@ -57,7 +57,7 @@ if [ "${BUILD_STATIC_FILES0:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${BUILD_STATIC_FILES0_DEST+x}" ]; then cd -- "${previous_wd}"; fi
+  if [ "${BUILD_STATIC_FILES0_DEST-}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF

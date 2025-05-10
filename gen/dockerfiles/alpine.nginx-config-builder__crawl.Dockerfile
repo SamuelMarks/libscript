@@ -21,17 +21,17 @@ ARG NGINX_CONFIG_BUILDER__CRAWL_VARS='{"SERVER_NAME":"example.com","LOCATION_EXP
 RUN <<-EOF
 
 if [ "${NGINX_CONFIG_BUILDER__CRAWL:-1}" -eq 1 ]; then
-  if [ ! -z "${NGINX_CONFIG_BUILDER__CRAWL_DEST+x}" ]; then
+  if [ "${NGINX_CONFIG_BUILDER__CRAWL_DEST-}" ]; then
     previous_wd="$(pwd)"
     DEST="${NGINX_CONFIG_BUILDER__CRAWL_DEST}"
     export DEST
     [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
     cd -- "${DEST}"
   fi
-  if [ ! -z "${NGINX_CONFIG_BUILDER__CRAWL_VARS+x}" ]; then
+  if [ "${NGINX_CONFIG_BUILDER__CRAWL_VARS-}" ]; then
     export VARS="${NGINX_CONFIG_BUILDER__CRAWL_VARS}"
   fi
-  if [ ! -z "${nginx_config_builder__crawl_COMMANDS_BEFORE+x}" ]; then
+  if [ "${nginx_config_builder__crawl_COMMANDS_BEFORE-}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_nginx-config-builder__crawl.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
@@ -47,7 +47,7 @@ if [ "${NGINX_CONFIG_BUILDER__CRAWL:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${NGINX_CONFIG_BUILDER__CRAWL_DEST+x}" ]; then cd -- "${previous_wd}"; fi
+  if [ "${NGINX_CONFIG_BUILDER__CRAWL_DEST-}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF

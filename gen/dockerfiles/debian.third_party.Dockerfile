@@ -22,17 +22,17 @@ ARG SADAS_DEST='/tmp/serve-actix-diesel-auth-scaffold'
 RUN <<-EOF
 
 if [ "${SADAS:-1}" -eq 1 ]; then
-  if [ ! -z "${SADAS_DEST+x}" ]; then
+  if [ "${SADAS_DEST-}" ]; then
     previous_wd="$(pwd)"
     DEST="${SADAS_DEST}"
     export DEST
     [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
     cd -- "${DEST}"
   fi
-  if [ ! -z "${SADAS_VARS+x}" ]; then
+  if [ "${SADAS_VARS-}" ]; then
     export VARS="${SADAS_VARS}"
   fi
-  if [ ! -z "${SADAS_COMMANDS_BEFORE+x}" ]; then
+  if [ "${SADAS_COMMANDS_BEFORE-}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_sadas.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
@@ -48,7 +48,7 @@ if [ "${SADAS:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${SADAS_DEST+x}" ]; then cd -- "${previous_wd}"; fi
+  if [ "${SADAS_DEST-}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF
@@ -63,17 +63,17 @@ ARG NODEJS_HTTP_SERVER_DEST='/tmp/nodejs-http-server'
 RUN <<-EOF
 
 if [ "${NODEJS_HTTP_SERVER:-1}" -eq 1 ]; then
-  if [ ! -z "${NODEJS_HTTP_SERVER_DEST+x}" ]; then
+  if [ "${NODEJS_HTTP_SERVER_DEST-}" ]; then
     previous_wd="$(pwd)"
     DEST="${NODEJS_HTTP_SERVER_DEST}"
     export DEST
     [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
     cd -- "${DEST}"
   fi
-  if [ ! -z "${NODEJS_HTTP_SERVER_VARS+x}" ]; then
+  if [ "${NODEJS_HTTP_SERVER_VARS-}" ]; then
     export VARS="${NODEJS_HTTP_SERVER_VARS}"
   fi
-  if [ ! -z "${nodejs_http_server_COMMANDS_BEFORE+x}" ]; then
+  if [ "${nodejs_http_server_COMMANDS_BEFORE-}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_nodejs-http-server.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
@@ -89,7 +89,7 @@ if [ "${NODEJS_HTTP_SERVER:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${NODEJS_HTTP_SERVER_DEST+x}" ]; then cd -- "${previous_wd}"; fi
+  if [ "${NODEJS_HTTP_SERVER_DEST-}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF
@@ -109,17 +109,17 @@ ARG PYTHON_SERVER_DEST='/tmp/python-server'
 RUN <<-EOF
 
 if [ "${PYTHON_SERVER:-1}" -eq 1 ]; then
-  if [ ! -z "${PYTHON_SERVER_DEST+x}" ]; then
+  if [ "${PYTHON_SERVER_DEST-}" ]; then
     previous_wd="$(pwd)"
     DEST="${PYTHON_SERVER_DEST}"
     export DEST
     [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
     cd -- "${DEST}"
   fi
-  if [ ! -z "${PYTHON_SERVER_VARS+x}" ]; then
+  if [ "${PYTHON_SERVER_VARS-}" ]; then
     export VARS="${PYTHON_SERVER_VARS}"
   fi
-  if [ ! -z "${python_server_COMMANDS_BEFORE+x}" ]; then
+  if [ "${python_server_COMMANDS_BEFORE-}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_python-server.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
@@ -135,7 +135,7 @@ if [ "${PYTHON_SERVER:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${PYTHON_SERVER_DEST+x}" ]; then cd -- "${previous_wd}"; fi
+  if [ "${PYTHON_SERVER_DEST-}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF
@@ -159,17 +159,17 @@ ARG BUILD_STATIC_FILES0_DEST='/tmp/ng-material-scaffold'
 RUN <<-EOF
 
 if [ "${BUILD_STATIC_FILES0:-1}" -eq 1 ]; then
-  if [ ! -z "${BUILD_STATIC_FILES0_DEST+x}" ]; then
+  if [ "${BUILD_STATIC_FILES0_DEST-}" ]; then
     previous_wd="$(pwd)"
     DEST="${BUILD_STATIC_FILES0_DEST}"
     export DEST
     [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
     cd -- "${DEST}"
   fi
-  if [ ! -z "${BUILD_STATIC_FILES0_VARS+x}" ]; then
+  if [ "${BUILD_STATIC_FILES0_VARS-}" ]; then
     export VARS="${BUILD_STATIC_FILES0_VARS}"
   fi
-  if [ ! -z "${build_static_files0_COMMANDS_BEFORE+x}" ]; then
+  if [ "${build_static_files0_COMMANDS_BEFORE-}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_build-static-files0.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
@@ -185,7 +185,7 @@ if [ "${BUILD_STATIC_FILES0:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${BUILD_STATIC_FILES0_DEST+x}" ]; then cd -- "${previous_wd}"; fi
+  if [ "${BUILD_STATIC_FILES0_DEST-}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF
@@ -199,17 +199,17 @@ ARG NGINX_CONFIG_BUILDER__FRONTEND_VARS='{"SERVER_NAME":"example.com","WWWROOT":
 RUN <<-EOF
 
 if [ "${NGINX_CONFIG_BUILDER__FRONTEND:-1}" -eq 1 ]; then
-  if [ ! -z "${NGINX_CONFIG_BUILDER__FRONTEND_DEST+x}" ]; then
+  if [ "${NGINX_CONFIG_BUILDER__FRONTEND_DEST-}" ]; then
     previous_wd="$(pwd)"
     DEST="${NGINX_CONFIG_BUILDER__FRONTEND_DEST}"
     export DEST
     [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
     cd -- "${DEST}"
   fi
-  if [ ! -z "${NGINX_CONFIG_BUILDER__FRONTEND_VARS+x}" ]; then
+  if [ "${NGINX_CONFIG_BUILDER__FRONTEND_VARS-}" ]; then
     export VARS="${NGINX_CONFIG_BUILDER__FRONTEND_VARS}"
   fi
-  if [ ! -z "${nginx_config_builder__frontend_COMMANDS_BEFORE+x}" ]; then
+  if [ "${nginx_config_builder__frontend_COMMANDS_BEFORE-}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_nginx-config-builder__frontend.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
@@ -225,7 +225,7 @@ if [ "${NGINX_CONFIG_BUILDER__FRONTEND:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${NGINX_CONFIG_BUILDER__FRONTEND_DEST+x}" ]; then cd -- "${previous_wd}"; fi
+  if [ "${NGINX_CONFIG_BUILDER__FRONTEND_DEST-}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF
@@ -239,17 +239,17 @@ ARG NGINX_CONFIG_BUILDER__DOCS_VARS='{"SERVER_NAME":"example.com","LOCATION_EXPR
 RUN <<-EOF
 
 if [ "${NGINX_CONFIG_BUILDER__DOCS:-1}" -eq 1 ]; then
-  if [ ! -z "${NGINX_CONFIG_BUILDER__DOCS_DEST+x}" ]; then
+  if [ "${NGINX_CONFIG_BUILDER__DOCS_DEST-}" ]; then
     previous_wd="$(pwd)"
     DEST="${NGINX_CONFIG_BUILDER__DOCS_DEST}"
     export DEST
     [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
     cd -- "${DEST}"
   fi
-  if [ ! -z "${NGINX_CONFIG_BUILDER__DOCS_VARS+x}" ]; then
+  if [ "${NGINX_CONFIG_BUILDER__DOCS_VARS-}" ]; then
     export VARS="${NGINX_CONFIG_BUILDER__DOCS_VARS}"
   fi
-  if [ ! -z "${nginx_config_builder__docs_COMMANDS_BEFORE+x}" ]; then
+  if [ "${nginx_config_builder__docs_COMMANDS_BEFORE-}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_nginx-config-builder__docs.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
@@ -265,7 +265,7 @@ if [ "${NGINX_CONFIG_BUILDER__DOCS:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${NGINX_CONFIG_BUILDER__DOCS_DEST+x}" ]; then cd -- "${previous_wd}"; fi
+  if [ "${NGINX_CONFIG_BUILDER__DOCS_DEST-}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF
@@ -279,17 +279,17 @@ ARG NGINX_CONFIG_BUILDER__CRAWL_VARS='{"SERVER_NAME":"example.com","LOCATION_EXP
 RUN <<-EOF
 
 if [ "${NGINX_CONFIG_BUILDER__CRAWL:-1}" -eq 1 ]; then
-  if [ ! -z "${NGINX_CONFIG_BUILDER__CRAWL_DEST+x}" ]; then
+  if [ "${NGINX_CONFIG_BUILDER__CRAWL_DEST-}" ]; then
     previous_wd="$(pwd)"
     DEST="${NGINX_CONFIG_BUILDER__CRAWL_DEST}"
     export DEST
     [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
     cd -- "${DEST}"
   fi
-  if [ ! -z "${NGINX_CONFIG_BUILDER__CRAWL_VARS+x}" ]; then
+  if [ "${NGINX_CONFIG_BUILDER__CRAWL_VARS-}" ]; then
     export VARS="${NGINX_CONFIG_BUILDER__CRAWL_VARS}"
   fi
-  if [ ! -z "${nginx_config_builder__crawl_COMMANDS_BEFORE+x}" ]; then
+  if [ "${nginx_config_builder__crawl_COMMANDS_BEFORE-}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_nginx-config-builder__crawl.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
@@ -305,7 +305,7 @@ if [ "${NGINX_CONFIG_BUILDER__CRAWL:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${NGINX_CONFIG_BUILDER__CRAWL_DEST+x}" ]; then cd -- "${previous_wd}"; fi
+  if [ "${NGINX_CONFIG_BUILDER__CRAWL_DEST-}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF
@@ -319,17 +319,17 @@ ARG NGINX_CONFIG_BUILDER__SWAP_VARS='{"SERVER_NAME":"example.com","LOCATION_EXPR
 RUN <<-EOF
 
 if [ "${NGINX_CONFIG_BUILDER__SWAP:-1}" -eq 1 ]; then
-  if [ ! -z "${NGINX_CONFIG_BUILDER__SWAP_DEST+x}" ]; then
+  if [ "${NGINX_CONFIG_BUILDER__SWAP_DEST-}" ]; then
     previous_wd="$(pwd)"
     DEST="${NGINX_CONFIG_BUILDER__SWAP_DEST}"
     export DEST
     [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
     cd -- "${DEST}"
   fi
-  if [ ! -z "${NGINX_CONFIG_BUILDER__SWAP_VARS+x}" ]; then
+  if [ "${NGINX_CONFIG_BUILDER__SWAP_VARS-}" ]; then
     export VARS="${NGINX_CONFIG_BUILDER__SWAP_VARS}"
   fi
-  if [ ! -z "${nginx_config_builder__swap_COMMANDS_BEFORE+x}" ]; then
+  if [ "${nginx_config_builder__swap_COMMANDS_BEFORE-}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_nginx-config-builder__swap.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
@@ -345,7 +345,7 @@ if [ "${NGINX_CONFIG_BUILDER__SWAP:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${NGINX_CONFIG_BUILDER__SWAP_DEST+x}" ]; then cd -- "${previous_wd}"; fi
+  if [ "${NGINX_CONFIG_BUILDER__SWAP_DEST-}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF
@@ -359,17 +359,17 @@ ARG NGINX_CONFIG_BUILDER__DATA_VARS='{"SERVER_NAME":"example.com","LOCATION_EXPR
 RUN <<-EOF
 
 if [ "${NGINX_CONFIG_BUILDER__DATA:-1}" -eq 1 ]; then
-  if [ ! -z "${NGINX_CONFIG_BUILDER__DATA_DEST+x}" ]; then
+  if [ "${NGINX_CONFIG_BUILDER__DATA_DEST-}" ]; then
     previous_wd="$(pwd)"
     DEST="${NGINX_CONFIG_BUILDER__DATA_DEST}"
     export DEST
     [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
     cd -- "${DEST}"
   fi
-  if [ ! -z "${NGINX_CONFIG_BUILDER__DATA_VARS+x}" ]; then
+  if [ "${NGINX_CONFIG_BUILDER__DATA_VARS-}" ]; then
     export VARS="${NGINX_CONFIG_BUILDER__DATA_VARS}"
   fi
-  if [ ! -z "${nginx_config_builder__data_COMMANDS_BEFORE+x}" ]; then
+  if [ "${nginx_config_builder__data_COMMANDS_BEFORE-}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_nginx-config-builder__data.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
@@ -385,7 +385,7 @@ if [ "${NGINX_CONFIG_BUILDER__DATA:-1}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${NGINX_CONFIG_BUILDER__DATA_DEST+x}" ]; then cd -- "${previous_wd}"; fi
+  if [ "${NGINX_CONFIG_BUILDER__DATA_DEST-}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF
@@ -396,17 +396,17 @@ ARG JUPYTERHUB=0
 RUN <<-EOF
 
 if [ "${JUPYTERHUB:-0}" -eq 1 ]; then
-  if [ ! -z "${JUPYTERHUB_DEST+x}" ]; then
+  if [ "${JUPYTERHUB_DEST-}" ]; then
     previous_wd="$(pwd)"
     DEST="${JUPYTERHUB_DEST}"
     export DEST
     [ -d "${DEST}" ] || mkdir -p -- "${DEST}"
     cd -- "${DEST}"
   fi
-  if [ ! -z "${JUPYTERHUB_VARS+x}" ]; then
+  if [ "${JUPYTERHUB_VARS-}" ]; then
     export VARS="${JUPYTERHUB_VARS}"
   fi
-  if [ ! -z "${JupyterHub_COMMANDS_BEFORE+x}" ]; then
+  if [ "${JupyterHub_COMMANDS_BEFORE-}" ]; then
     SCRIPT_NAME="${LIBSCRIPT_DATA_DIR}"'/setup_before_jupyterhub.sh'
     export SCRIPT_NAME
     install -D -m 0755 "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh' "${SCRIPT_NAME}"
@@ -422,7 +422,7 @@ if [ "${JUPYTERHUB:-0}" -eq 1 ]; then
   else
     >&2 printf 'Not found, SCRIPT_NAME of %s\n' "${SCRIPT_NAME}"
   fi
-  if [ ! -z "${JUPYTERHUB_DEST+x}" ]; then cd -- "${previous_wd}"; fi
+  if [ "${JUPYTERHUB_DEST-}" ]; then cd -- "${previous_wd}"; fi
 fi
 
 EOF

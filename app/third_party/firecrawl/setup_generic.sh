@@ -37,7 +37,7 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-if [ ! -z "${FIRECRAWL_DEST+x}" ]; then
+if [ "${FIRECRAWL_DEST-}" ]; then
   DEST="${FIRECRAWL_DEST}"
 elif [ -z "${DEST+x}" ]; then
   rand="$(env LC_CTYPE='C' tr -cd '[:lower:]' < '/dev/urandom' | head -c 8)"
@@ -63,7 +63,7 @@ if [ ! -f "${hash_loc}" ]; then
   cd -- "${DEST}"
 fi
 
-if [ ! -z "${VARS+x}" ]; then
+if [ "${VARS-}" ]; then
   object2key_val "${VARS}" 'export ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
 fi
 ENV=''
