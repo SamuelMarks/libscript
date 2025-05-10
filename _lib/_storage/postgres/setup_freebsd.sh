@@ -36,11 +36,18 @@ for lib in '_lib/_common/pkg_mgr.sh' '_lib/_common/priv.sh' ; do
   . "${SCRIPT_NAME}"
 done
 
-depends 'postgresql'"${POSTGRESQL_VERSION}"'-server' 'postgresql'"${POSTGRESQL_VERSION}"'-client'
+# depends 'postgresql'"${POSTGRESQL_VERSION}"'-server' 'postgresql'"${POSTGRESQL_VERSION}"'-client'
+for pkg in 'postgresql'"${POSTGRESQL_VERSION}"'-server' 'postgresql'"${POSTGRESQL_VERSION}"'-client'; do
+  if ! pkg info -e "${pkg}"; then
+    priv pkg install -y "${pkg}"
+  fi
+done
 
 priv sysrc postgresql_enable='YES'
-priv /usr/local/etc/rc.d/postgresql initdb
-priv service postgresql start
+if [ ! -d '/var/db/postgres/data'"${POSTGRESQL_VERSION}" ]; then
+  priv /usr/local/etc/rc.d/postgresql initdb
+fi
+priv service postgresql status | grep -Fq ' server is running' || priv service postgresql start
 
 SCRIPT_NAME="${DIR}"'/user_db_setup.sh'
 export SCRIPT_NAME

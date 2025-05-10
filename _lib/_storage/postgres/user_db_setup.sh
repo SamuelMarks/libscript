@@ -46,14 +46,14 @@ export SCRIPT_NAME
 # Defined here so ? throws errors early
 conn='postgres://'"${POSTGRES_USER?}"':'"${POSTGRES_PASSWORD?}"'@'"${POSTGRES_HOST?}"'/'"${POSTGRES_DB?}"
 
-if ! id "${POSTGRES_SERVICE_USER?}" >/dev/null 2>&1; then
-  priv adduser --disabled-password --gecos "" "${POSTGRES_SERVICE_USER}"
-  printf '%s:%s\n' "${POSTGRES_SERVICE_USER}" "${POSTGRES_SERVICE_USER_PASSWORD:-${POSTGRES_SERVICE_USER}}" | priv chpasswd
-fi
-
 if ! id "${POSTGRES_USER?}" >/dev/null 2>&1; then
-  priv adduser --disabled-password --gecos "" "${POSTGRES_USER}"
-  printf '%s:%s\n' "${POSTGRES_USER}" "${POSTGRES_PASSWORD:-${POSTGRES_USER}}" | priv chpasswd
+  if [ -f '/usr/sbin/pw' ]; then
+    priv pw user add -n "${POSTGRES_USER?}"
+    printf '%s\n' "${POSTGRES_PASSWORD:-${POSTGRES_USER}}" | priv pw usermod "${POSTGRES_USER?}" -h 0
+  else
+    priv adduser --disabled-password --gecos "" "${POSTGRES_USER?}"
+    printf '%s:%s\n' "${POSTGRES_USER}" "${POSTGRES_PASSWORD:-${POSTGRES_USER}}" | priv chpasswd
+  fi
 fi
 
 if [ "${POSTGRES_HOST}" = 'localhost' ]; then

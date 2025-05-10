@@ -14,7 +14,8 @@ Finally, see the official website with generated cross-linked hosted libscript d
   - [Windows](https://en.wikipedia.org/wiki/Microsoft_Windows)
   - [Linux](https://en.wikipedia.org/wiki/Linux) ([Debian](https://en.wikipedia.org/wiki/Debian), [Alpine](https://en.wikipedia.org/wiki/Alpine_Linux), &etc.); inside/outside of [Docker](https://en.wikipedia.org/wiki/Docker_(software))
   - [macOS](https://en.wikipedia.org/wiki/MacOS)
-  - [coming soon!] [*BSDs](https://en.wikipedia.org/wiki/Comparison_of_BSD_operating_systems) [[NetBSD](https://en.wikipedia.org/wiki/NetBSD), [FreeBSD](https://en.wikipedia.org/wiki/FreeBSD), [OpenBSD](https://en.wikipedia.org/wiki/OpenBSD)]
+  - [FreeBSD](https://en.wikipedia.org/wiki/FreeBSD)
+  - [coming soon!] [*BSDs](https://en.wikipedia.org/wiki/Comparison_of_BSD_operating_systems) [[NetBSD](https://en.wikipedia.org/wiki/NetBSD), [OpenBSD](https://en.wikipedia.org/wiki/OpenBSD)]
   - [coming soon!] [SunOS](https://en.wikipedia.org/wiki/SunOS) and derivatives | [forks](https://en.wikipedia.org/wiki/Fork_(software_development)) such as [illumos](https://en.wikipedia.org/wiki/Illumos)
   - [coming soon!] Other [UNIX](https://en.wikipedia.org/wiki/Unix)'s like: [IBM's z/OS](https://en.wikipedia.org/wiki/Z/OS); and [HP's Unix (HP/UX)](https://en.wikipedia.org/wiki/HP-UX).
   - [coming soon!] [Android](https://en.wikipedia.org/wiki/Android_(operating_system))

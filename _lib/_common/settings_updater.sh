@@ -33,7 +33,7 @@ export SCRIPT_NAME
 db_file="${LIBSCRIPT_DATA_DIR}"'/libscript.db'
 
 if [ -z "${sql3+x}" ]; then
-  if cmd_avail 'sqlite3'; then
+  if command -v -- 'sqlite3' >/dev/null 2>&1; then
     sql3=1
   else
     sql3=0
