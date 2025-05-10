@@ -61,6 +61,7 @@ if [ -d '/etc/systemd/system' ]; then
     . "${SCRIPT_NAME}"
 
     object2key_val "${VARS}" 'export ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
+    object2key_val "${VARS}" 'setenv ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.csh'
     chmod +x "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
     ENV="$(cut -c8- "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' | awk -- '{arr[i++]=$0} END {while (i>0) print arr[--i] }' | tr -d "'" | awk -F= '!seen[$1]++' | xargs printf 'Environment="%s"\n')"
   fi

@@ -36,8 +36,10 @@ NL='
 output_folder="${output_folder:-${LIBSCRIPT_ROOT_DIR}/tmp}"
 false_env_file="${output_folder}"'/false_env.sh'
 false_env_cmd_file="${output_folder}"'/false_env.cmd'
+false_env_csh_file="${output_folder}"'/false_env.csh'
 true_env_file="${output_folder}"'/env.sh'
 true_env_cmd_file="${output_folder}"'/env.cmd'
+true_env_csh_file="${output_folder}"'/env.csh'
 install_file="${output_folder}"'/install_gen.sh'
 install_cmd_file="${output_folder}"'/install_gen.cmd'
 install_parallel_file="${output_folder}"'/install_parallel_gen.sh'
@@ -106,6 +108,8 @@ end_prelude_cmd='ENDLOCAL
 
 if [ ! -f "${install_cmd_file}" ]; then printf '%s\n\n' "${prelude_cmd}" > "${install_cmd_file}"; fi
 if [ ! -f "${true_env_cmd_file}" ]; then printf '%s\n\n' 'SET "LIBSCRIPT_DATA_DIR=%LIBSCRIPT_DATA_DIR:~0,-1%"' > "${true_env_cmd_file}"; fi
+if [ ! -f "${true_env_csh_file}" ]; then printf '#!/bin/csh\n\n' > "${true_env_csh_file}" ; fi
+if [ ! -f "${false_env_csh_file}" ]; then printf '#!/bin/csh\n\n' > "${false_env_csh_file}" ; fi
 
 touch -- "${docker_scratch_file}" "${toolchain_scratch_file}" \
          "${storage_scratch_file}" "${server_scratch_file}" \
@@ -206,6 +210,7 @@ lang_set() {
       prefix='ARG'
       # var_value="$(printf '%s' "${var_value}" | tr "${NL}" '/n')"
       ;;
+    'csh') prefix='setenv' ;;
     'sh') prefix='export' ;;
     *)
       >&2 printf 'Unsupported language: %s\n' "${language}"
@@ -217,6 +222,9 @@ lang_set() {
   case "${language}" in
     'cmd')
       printf '%s %s=%s%s%s\n' "${prefix}" "${var_name}" "${quote}" "${var_value}" "${quote}"
+      ;;
+    'csh')
+      printf '%s %s %s%s%s\n' "${prefix}" "${var_name}" "${quote}" "${var_value}" "${quote}"
       ;;
     'docker')
       printf '%s %s=%s%s%s\n' "${prefix}" "${var_name}" "${quote}" "${var_value}" "${quote}"
@@ -379,12 +387,15 @@ update_generated_files() {
       printf 'IF NOT DEFINED %s ( SET %s=1 )\n' "${env_clean}" "${env_clean}" >> "${install_cmd_file}"
       lang_set 'cmd' "${env_clean}" '1' >> "${true_env_cmd_file}"
       lang_set 'cmd' "${env_clean}" '0' >> "${false_env_cmd_file}"
+      lang_set 'csh' "${env_clean}" '1' >> "${true_env_csh_file}"
+      lang_set 'csh' "${env_clean}" '0' >> "${false_env_csh_file}"
       lang_set 'docker' "${env_clean}" '1' | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
       lang_set 'sh' "${env_clean}" '1'
       lang_set 'sh' "${env_clean}" '0' >> "${false_env_file}"
     else
       printf 'IF NOT DEFINED "%s" ( SET %s=0 )\n' "${env_clean}" "${env_clean}" >> "${install_cmd_file}"
       lang_set 'cmd' "${env_clean}" '0' | tee -a "${true_env_cmd_file}" "${false_env_cmd_file}" >/dev/null
+      lang_set 'csh' "${env_clean}" '0' | tee -a "${true_env_csh_file}" "${false_env_csh_file}" >/dev/null
       lang_set 'docker' "${env_clean}" '0' | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
       lang_set 'sh' "${env_clean}" '0' | tee -a "${false_env_file}"
     fi
@@ -402,6 +413,7 @@ update_generated_files() {
     fi
     if [ -n "${version}" ]; then
       lang_set 'cmd' "${name_upper_clean}"'_VERSION' "${version}" >> "${true_env_cmd_file}"
+      lang_set 'csh' "${name_upper_clean}"'_VERSION' "${version}" >> "${true_env_csh_file}"
       lang_set 'docker' "${name_upper_clean}"'_VERSION' "${version}" | tee -a "${docker_scratch_file}" "${scratch_file}" "${scratch}" >/dev/null
       lang_set 'sh' "${name_upper_clean}"'_VERSION' "${version}"
     fi

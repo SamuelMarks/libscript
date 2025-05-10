@@ -65,6 +65,7 @@ fi
 
 if [ "${VARS-}" ]; then
   object2key_val "${VARS}" 'export ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
+  object2key_val "${VARS}" 'setenv ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.csh'
 fi
 ENV=''
 if [ -f "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' ]; then

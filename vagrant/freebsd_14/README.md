@@ -24,4 +24,4 @@ For some reason the -c syntax doesn't work so you have to use `<<<` which limits
 Also, you need to manually copy files over as the vagrant/hypervisor folder sync feature doesn't work.
 For example—assuming you've exported `vagrant ssh-config` and named it `freebsd_14`—run:
 
-    rsync -avz --exclude='**/.vagrant' ~/repos/libscript freebsd_14:/opt/repos/
+    rsync -avz --exclude='**/.vagrant' /path/to/libscript freebsd_14:/opt/repos/

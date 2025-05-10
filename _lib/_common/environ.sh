@@ -78,15 +78,23 @@ object2key_val() {
   q="${3:-$sq}"
   null_setter=''
   join_arr_on="${NL}"
-  if [ "${prefix}" = 'SET ' ]; then
-    null_setter='=';
-    join_arr_on=' ';
-  fi
+  eq='='
+  case "${prefix}" in
+    'SET ')
+      null_setter='=';
+      join_arr_on=' ' ;;
+    'setenv ') eq='' ;;
+  esac
 
   printf '%s' "$obj" | jq --arg null_setter "${null_setter}" \
                           --arg join_arr_on "${join_arr_on}" \
-                          --arg lbrace '{' --arg prefix "${prefix}" \
-                          --arg q "${q}" --arg sq "${sq}" --arg dq '"' -r '
+                          --arg eq "${eq}" \
+                          --arg lbrace '{' \
+                          --arg prefix "${prefix}" \
+                          --arg q "${q}" \
+                          --arg sq "${sq}" \
+                          --arg dq '"' \
+                          -r '
     # Build the pattern dynamically using $sq and $dq
     ("^(" + "\\\\{" + "|" + $dq + "\\\\{" + "|" + $sq + "\\\\{" + ")") as $pattern_start |
     ("(" + "\\\\}" + "|" + "\\\\}" + $dq + "|" + "\\\\}" + $sq + ")$") as $pattern_end |
@@ -99,18 +107,18 @@ object2key_val() {
         "=\(value)"
       elif value | type == "string" then
         if value | any(.; test($full_pattern)) then
-          "=" + $q + value + $q
+          $eq + $q + value + $q
         elif value | any(.; test("^[0-9]+$", $sq, $dq)) then
-          "=" + value
+          $eq + value
         else
-          "=" + $q + value + $q
+          $eq + $q + value + $q
         end
       elif value | type == "array" then
-        "=" + $q + (value | join($join_arr_on)) + $q
+        $eq + $q + (value | join($join_arr_on)) + $q
       elif value | type == "object" then
-        "=" + $q + "\(value)" + $q
+        $eq + $q + "\(value)" + $q
       else
-        "=\(value)"
+        $eq + "\(value)"
       end;
     to_entries[] | $prefix+"\(.key)\(custom_format(.value))"
   '
