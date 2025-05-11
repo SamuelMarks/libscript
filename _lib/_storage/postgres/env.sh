@@ -4,10 +4,10 @@ set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   this_file="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE+x}" ]; then
+elif [ "${BASH_SOURCE-}" ]; then
   this_file="${BASH_SOURCE[0]}"
   set -o pipefail
-elif [ "${ZSH_VERSION+x}" ]; then
+elif [ "${ZSH_VERSION-}" ]; then
   this_file="${(%):-%x}"
   set -o pipefail
 else

@@ -47,10 +47,11 @@ Care is taken to use open-source alternatives. For example: [Valkey](https://val
 
 ### Databases / storage layers
 
-   | Name                                     | Parameters                                                                                                                |
-   |------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
-   | [PostgreSQL](https://postgresql.org)     | `POSTGRESQL_VERSION`†; `POSTGRES_USER`†; `POSTGRES_PASSWORD`‡; `POSTGRES_PASSWORD_FILE`‡; `POSTGRES_HOST`; `POSTGRES_DB`† |
-   | [Valkey](https://valkey.io) [Redis fork] |                                                                                                                           |
+   | Name                                         | Parameters                                                                                                                |
+   |----------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
+   | [etcd](https://en.wikipedia.org/wiki/Etcd)   | `ETCD_VERSION`†                                                                                                           |
+   | [PostgreSQL](https://postgresql.org)         | `POSTGRESQL_VERSION`†; `POSTGRES_USER`†; `POSTGRES_PASSWORD`‡; `POSTGRES_PASSWORD_FILE`‡; `POSTGRES_HOST`; `POSTGRES_DB`† |
+   | [Valkey](https://valkey.io) [Redis fork]     |                                                                                                                           |
 
   - † required
   - ‡ needs one-and-only-one

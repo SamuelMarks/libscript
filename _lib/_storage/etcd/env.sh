@@ -22,4 +22,13 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${this_file}"':'
 
-export FIRECRAWL_BUILD_DIR="${FIRECRAWL_BUILD_DIR:-${BUILD_DIR:-${TMPDIR:-/tmp}}/firecrawl}"
+export ETCD_URL="${ETCD_URL:-1}"
+export ETCD_VERSION="${ETCD_VERSION:-v3.5.21}"
+if [ "${ETCD_PASSWORD_FILE-}" ] && [ -f "${ETCD_PASSWORD_FILE}" ]; then
+  pass_contents="$(cat -- "${ETCD_PASSWORD_FILE}"; printf 'a')"
+  pass_contents="${pass_contents%a}"
+  # TODO(security): Audit
+  export ETCD_PASSWORD="${pass_contents}"
+fi
+export ETCD_SERVICE_USER="${ETCD_SERVICE_USER:-etcd}"
+export ETCD_SERVICE_GROUP="${ETCD_SERVICE_GROUP:-${ETCD_SERVICE_USER}}"

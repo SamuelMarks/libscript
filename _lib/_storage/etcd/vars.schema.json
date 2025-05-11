@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_server/etcd/vars.schema.json",
+  "title": "etcd server vars",
+  "description": "etcd vars that can be set",
+  "type": "object",
+  "properties": {
+    "ETCD_VERSION": {
+      "description": "Version of PostgreSQL demanded",
+      "type": "string"
+    }
+  }
+}

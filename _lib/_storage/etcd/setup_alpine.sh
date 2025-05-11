@@ -22,4 +22,13 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${this_file}"':'
 
-export FIRECRAWL_BUILD_DIR="${FIRECRAWL_BUILD_DIR:-${BUILD_DIR:-${TMPDIR:-/tmp}}/firecrawl}"
+DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+
+SCRIPT_NAME="${DIR}"'/env.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
+if [ "${ETCD_VERSION}" = 'v3.5.16' ]; then
+  ETCD_VERSION='3.5.16-r6'
+fi
+apk add 'etcd=='"${ETCD_VERSION}"
