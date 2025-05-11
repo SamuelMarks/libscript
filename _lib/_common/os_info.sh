@@ -95,6 +95,26 @@ if [ -z "${UNAME+x}" ]; then
   UNAME="$(uname)"
 fi
 
+_fallback() {
+  possible="$(cat -- '/proc/1/comm')"
+  if [ "${possible}" = 'systemd' ]; then
+    export INIT_SYS='systemd'
+    return
+  fi
+  case "$(stat -- "$(which -- "${possible}")" | awk 'NR==1{ print $NF }')" in
+    # case "$(stat -- '/sbin/init' | awk 'NR==1{ print $NF }')" in
+    'busybox'|*'/busybox')
+      # https://en.wikipedia.org/wiki/BusyBox
+      export INIT_SYS='busybox' ;;
+    *'/systemd')
+      # https://en.wikipedia.org/wiki/Systemd
+      export INIT_SYS='systemd' ;;
+    *)
+      >&2 printf 'Unable to determine init system\n'
+      return 2 ;;
+  esac
+}
+
 if [ -z "${INIT_SYS+x}" ]; then
   if [ -f '/bin/launchctl' ]; then
     # https://en.wikipedia.org/wiki/Launchd
@@ -121,22 +141,10 @@ if [ -z "${INIT_SYS+x}" ]; then
                 # https://en.wikipedia.org/wiki/OpenRC
                 export INIT_SYS='openrc' ;;
               *)
-                >&2 printf 'Unable to determine init system\n'
-                exit 2 ;;
+                _fallback
             esac
           else
-            case "$(stat -- "$(which -- "$(cat -- '/proc/1/comm')")" | awk 'NR==1{ print $NF }')" in
-            # case "$(stat -- '/sbin/init' | awk 'NR==1{ print $NF }')" in
-              'busybox'|*'/busybox')
-                # https://en.wikipedia.org/wiki/BusyBox
-                export INIT_SYS='busybox' ;;
-              *'/systemd')
-                # https://en.wikipedia.org/wiki/Systemd
-                export INIT_SYS='systemd' ;;
-              *)
-                >&2 printf 'Unable to determine init system\n'
-                exit 2 ;;
-            esac
+            _fallback
           fi
           ;;
         'FreeBSD')

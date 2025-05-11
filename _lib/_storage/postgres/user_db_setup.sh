@@ -51,7 +51,11 @@ if ! id "${POSTGRES_USER?}" >/dev/null 2>&1; then
     priv pw user add -n "${POSTGRES_USER?}"
     printf '%s\n' "${POSTGRES_PASSWORD:-${POSTGRES_USER}}" | priv pw usermod "${POSTGRES_USER?}" -h 0
   else
-    priv adduser --disabled-password --gecos "" "${POSTGRES_USER?}"
+    if [ -s '/usr/sbin/adduser' ]; then
+      priv adduser "${POSTGRES_USER?}"
+    else
+      priv adduser --disabled-password --gecos "" "${POSTGRES_USER?}"
+    fi
     printf '%s:%s\n' "${POSTGRES_USER}" "${POSTGRES_PASSWORD:-${POSTGRES_USER}}" | priv chpasswd
   fi
 fi

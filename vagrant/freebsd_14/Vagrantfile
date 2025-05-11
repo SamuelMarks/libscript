@@ -24,7 +24,7 @@ Vagrant.configure("2") do |config|
      printf 'standard:\n\t\t%s\n' \
        ':LIBSCRIPT_ROOT_DIR='"'"'/opt/repos/libscript'"'" | tee -a /etc/login.conf >/dev/null
      pkg update && pkg upgrade
-     pkg install -y git rsync
+     pkg install -y git hs-pandoc rsync jq
      mkdir -p /opt/repos
      git clone --depth=1 --single-branch https://github.com/SamuelMarks/libscript /opt/repos/libscript
      chown -R vagrant:vagrant /opt/repos/libscript
