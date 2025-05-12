@@ -43,9 +43,27 @@ if test "$(hostname)" = 'master'; then
 else
   [ -d /home/vagrant/.ssh ] || mkdir /home/vagrant/.ssh
   chmod 700 /home/vagrant/.ssh
-  for i in $(dc -e '0 1 '"${NODE_COUNT}"'  stsisb[pli+dlt>a]salblax'); do
+  sudo sed -i \
+    -e 's/^#*PermitRootLogin.*/PermitRootLogin yes/' \
+    -e 's/^#PubkeyAuthentication yes/PubkeyAuthentication yes/' \
+    -e 's/^#PasswordAuthentication yes/PasswordAuthentication no/' \
+    /etc/ssh/sshd_config
+  printf '\nHost jump
+  HostName 10.0.0.10
+  User vagrant
+  IdentityFile /home/vagrant/.ssh/id_rsa
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+
+Host server
+  HostName 10.0.0.11
+  User vagrant
+  IdentityFile /home/vagrant/.ssh/id_rsa
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null\n' >> /home/vagrant/.ssh/config
+  for i in $(dc -e '1 1 '"${NODE_COUNT}"'  stsisb[pli+dlt>a]salblax'); do
       # shellcheck disable=SC2003
-      last_oct="$(expr "${i}" + 10)"
+      last_oct="$(expr "${i}" + 11)"
 
       printf '\nHost node%d
   HostName 10.0.0.%d
@@ -53,9 +71,4 @@ else
   UserKnownHostsFile /dev/null
   IdentityFile /home/vagrant/.ssh/id_rsa\n' "${i}" "${last_oct}" >> /home/vagrant/.ssh/config
   done
-  printf '\nHost master
-  HostName 10.0.0.10
-  StrictHostKeyChecking no
-  UserKnownHostsFile /dev/null
-  IdentityFile /home/vagrant/.ssh/id_rsa\n' >> /home/vagrant/.ssh/config
 fi

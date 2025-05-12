@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_server/kubernetes_thw/vars.schema.json",
+  "title": "kubernetes_thw (Kubernetes - The Hard Way) server vars",
+  "description": "kubernetes_thw vars that can be set",
+  "type": "object",
+  "properties": {
+    "DEST": {
+      "description": "Destination (working directory)",
+      "type": "string"
+    },
+    "VARS": {
+      "description": "Key/value in JSON format (as an escaped string)",
+      "type": "string"
+    }
+  }
+}
