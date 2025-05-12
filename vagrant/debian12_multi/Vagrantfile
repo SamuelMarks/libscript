@@ -1,0 +1,83 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+NODE_COUNT = 3
+BOX_IMAGE = "bento/debian-12.9"
+
+Vagrant.configure("2") do |config|
+  config.vm.define "master" do |subconfig|
+    subconfig.vm.box = BOX_IMAGE
+    subconfig.vm.hostname = "master"
+    subconfig.vm.network :private_network, ip: "10.0.0.10"
+  end
+  config.vm.box = BOX_IMAGE
+  config.vm.box_version = "202502.21.0"
+
+  (1..NODE_COUNT).each do |i|
+    config.vm.define "node#{i - 1}" do |subconfig|
+      subconfig.vm.box = BOX_IMAGE
+      subconfig.vm.hostname = "node#{i - 1}"
+      subconfig.vm.network :private_network, ip: "10.0.0.#{i + 10}"
+    end
+  end
+
+  config.vm.synced_folder "../../gen", "/opt/repos/libscript"
+
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  config.vm.provider :vmware_desktop do |vmware|
+      vmware.vmx["ethernet0.pcislotnumber"] = "160"
+      vmware.gui = false
+  #   vmware.memory = "1024"
+  end
+  config.vm.provision "shell", path: "./init.sh", env: { 'NODE_COUNT' => NODE_COUNT }
+  config.vm.provision "file", source: File.join("vagrant_ssh", "id_rsa"), destination: "/home/vagrant/.ssh/id_rsa"
+  public_key = File.read(File.join("vagrant_ssh", "id_rsa.pub"))
+  config.vm.provision :shell, :inline => "
+       echo 'Copying ansible-vm public SSH Keys to the VM'
+       [ -d /home/vagrant/.ssh ] || mkdir -p /home/vagrant/.ssh
+       chmod 700 /home/vagrant/.ssh
+       echo '#{public_key}' >> /home/vagrant/.ssh/authorized_keys
+       chmod -R 600 /home/vagrant/.ssh/authorized_keys
+       printf 'Host 10.0.*.*
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+
+Host master
+  HostName 10.0.0.10
+  User vagrant
+  IdentityFile /home/vagrant/.ssh/id_rsa
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+
+Host node0
+  HostName 10.0.0.11
+  User vagrant
+  IdentityFile /home/vagrant/.ssh/id_rsa
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+
+Host node1
+  HostName 10.0.0.12
+  User vagrant
+  IdentityFile /home/vagrant/.ssh/id_rsa
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+
+Host node2
+  HostName 10.0.0.13
+  User vagrant
+  IdentityFile /home/vagrant/.ssh/id_rsa
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+
+Host node3
+  HostName 10.0.0.14
+  User vagrant
+  IdentityFile /home/vagrant/.ssh/id_rsa
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+ ' > /home/vagrant/.ssh/config
+   chmod -R 600 /home/vagrant/.ssh/config
+   chown -R vagrant:vagrant /home/vagrant/.ssh", privileged: true
+end
