@@ -58,10 +58,11 @@ Care is taken to use open-source alternatives. For example: [Valkey](https://val
 
 ### Servers
 
-
-   | Name                       | Parameters |
-   |----------------------------|------------|
-   | [nginx](https://nginx.org) | `VARS`‡    |
+   | Name                                                                                       | Parameters  |
+   |--------------------------------------------------------------------------------------------|-------------|
+   | [nginx](https://nginx.org)                                                                 | `VARS`‡     |
+   | [kubernetes](https://kubernetes.io) ([thw](https://joostvdg.github.io/kubernetes/khw-gce)) | `VARS`      |
+   | [kubernetes](https://kubernetes.io) ([k0](https://k0sproject.io))                          | `VARS`      |
 
   - ‡`VARS`—if provided—must include `SERVER_NAME` and: `NGINX_FRAGMENT_CONF`; xor `WWWROOT` with optional `WWWROOT_AUTOINDEX`; xor `PROXY_PASS` with optional (`PROXY_WEBSOCKETS` with optional `PROXY_WEBSOCKETS_ADVANCED`).
 

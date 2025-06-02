@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_server/kubernetes_k0s/vars.schema.json",
+  "title": "kubernetes_k0s (k0s https://k0sproject.io) server vars",
+  "description": "kubernetes_k0s vars that can be set",
+  "type": "object",
+  "properties": {
+    "DEST": {
+      "description": "Destination (working directory)",
+      "type": "string"
+    },
+    "VARS": {
+      "description": "Key/value in JSON format (as an escaped string)",
+      "type": "string"
+    }
+  }
+}
