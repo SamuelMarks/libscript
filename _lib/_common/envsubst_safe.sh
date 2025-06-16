@@ -22,17 +22,6 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${this_file}"':'
 
-STACK="${STACK:-:}"
-case "${STACK}" in
-  *':'"${this_file}"':'*)
-    #printf '[STOP]     processing "%s"\n' "${this_file}"
-    return ;;
-  *)
-    #printf '[CONTINUE] processing "%s"\n' "${this_file}"
-    ;;
-esac
-export STACK="${STACK:-}${this_file}"':'
-
 # A safe version of `envsubst`
 # If a var is not found it leaves it
 # env -i BAR='haz'   "FOO ${BAR} CAN" -> "FOO haz CAN"

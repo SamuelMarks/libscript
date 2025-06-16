@@ -22,16 +22,6 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${this_file}"':'
 
-STACK="${STACK:-:}"
-case "${STACK}" in
-  *':'"${this_file}"':'*)
-  printf '[STOP]   processing "%s"\n' "${this_file}"
-  return ;;
-  *)
-  printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
-esac
-export STACK="${STACK:-}${this_file}"':'
-
 find_replace() {
   if [ "$#" -ne 3 ]; then
     >&2 printf 'Usage: find_replace '"'"'find'"'"' '"'"'replace'"'"' filename'
