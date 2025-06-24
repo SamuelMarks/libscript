@@ -16,9 +16,10 @@ fi
 
 case "${STACK+x}" in
   *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s"\n' "${this_file}"
+    # printf '[STOP]     processing "%s"\n' "${this_file}"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+  *) # printf '[CONTINUE] processing "%s"\n' "${this_file}"
+    ;;
 esac
 export STACK="${STACK:-}${this_file}"':'
 
