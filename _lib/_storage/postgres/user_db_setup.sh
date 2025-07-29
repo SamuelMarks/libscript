@@ -30,7 +30,7 @@ export LIBSCRIPT_ROOT_DIR
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 export LIBSCRIPT_DATA_DIR
 
-for lib in 'env.sh' '_lib/_common/settings_updater.sh'; do
+for lib in 'env.sh' '_lib/_common/settings_updater.sh' '_lib/_common/priv.sh' '_lib/_common/pkg_mgr.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
@@ -51,12 +51,38 @@ if ! id "${POSTGRES_USER?}" >/dev/null 2>&1; then
     priv pw user add -n "${POSTGRES_USER?}"
     printf '%s\n' "${POSTGRES_PASSWORD:-${POSTGRES_USER}}" | priv pw usermod "${POSTGRES_USER?}" -h 0
   else
-    if [ -s '/usr/sbin/adduser' ]; then
+    if [ -s '/usr/sbin/adduser' ] || command -v -- 'add_user' >/dev/null 2>&1 ; then
       priv adduser "${POSTGRES_USER?}"
+    elif [ -s '/usr/bin/dscl' ] || command -v -- 'dscl' >/dev/null 2>&1 ; then
+      if ! dscl . -read /Users/postgres >/dev/null 2>&1; then
+#        priv sysadminctl -addUser postgres \
+#                         -fullName "PostgreSQL User ${POSTGRES_USER?}" \
+#                         -UID 502 \
+#                         -GID 20 \
+#                         -shell /bin/bash \
+#                         -password "${POSTGRES_PASSWORD:-${POSTGRES_USER}}" \
+#                         -home /Users/postgres
+        priv dscl . -create /Users/"${POSTGRES_SERVICE_USER}" IsHidden 1
+        priv dscl . -create /Users/"${POSTGRES_SERVICE_USER}" UserShell /bin/bash
+        priv dscl . -create /Users/"${POSTGRES_SERVICE_USER}" RealName "PostgreSQL User ${POSTGRES_USER?}"
+        priv dscl . -create /Users/"${POSTGRES_SERVICE_USER}" UniqueID "505"
+        priv dscl . -create /Users/"${POSTGRES_SERVICE_USER}" PrimaryGroupID "20" # 'staff' group
+        priv dscl . -create /Users/"${POSTGRES_SERVICE_USER}" NFSHomeDirectory /Users/"${POSTGRES_SERVICE_USER}"
+        priv dscl . -passwd /Users/"${POSTGRES_SERVICE_USER}" "${POSTGRES_SERVICE_PASSWORD:-${POSTGRES_PASSWORD:-${POSTGRES_USER}}}"
+        priv createhomedir -u "${POSTGRES_SERVICE_USER}" -c
+        if psql "${POSTGRES_SERVICE_USER}" -c 'CREATE ROLE tmp0 LOGIN SUPERUSER;'; then
+          if psql "${POSTGRES_SERVICE_USER}" -U tmp0 -c 'ALTER USER '"$USER"' RENAME TO '"${POSTGRES_SERVICE_USER}"';'; then
+            priv_as "${POSTGRES_SERVICE_USER}" psql "${POSTGRES_SERVICE_USER}" -c 'DROP ROLE tmp0;'
+          fi
+        fi
+      fi
     else
-      priv adduser --disabled-password --gecos "" "${POSTGRES_USER?}"
+      >&2 printf 'NotImplemented'
+      exit 5
     fi
-    printf '%s:%s\n' "${POSTGRES_USER}" "${POSTGRES_PASSWORD:-${POSTGRES_USER}}" | priv chpasswd
+    if command -v -- 'chpasswd' >/dev/null 2>&1; then
+      printf '%s:%s\n' "${POSTGRES_USER}" "${POSTGRES_PASSWORD:-${POSTGRES_USER}}" | priv chpasswd
+    fi
   fi
 fi
 
@@ -66,7 +92,8 @@ else
   host_flag=' -h '"${POSTGRES_HOST}"' '
 fi
 
-if priv_as "${POSTGRES_SERVICE_USER}" psql"${host_flag}" -t -c '\du' | grep -Fq "${POSTGRES_USER?}"; then
+user_present="$(priv_as "${POSTGRES_SERVICE_USER}" psql"${host_flag}" -tc "SELECT 1 FROM pg_roles WHERE rolname = '""${POSTGRES_USER?}""';")"
+if [ "$user_present" -eq 1 ]; then
   true
 else
   (
@@ -82,13 +109,14 @@ else
   fi
 fi
 
-if priv_as "${POSTGRES_SERVICE_USER}" psql"${host_flag}" -lqt | cut -d \| -f 1 | grep -Fqw "${POSTGRES_DB?}"; then
+db_present="$(priv_as "${POSTGRES_SERVICE_USER}" psql"${host_flag}" -tc "SELECT 1 FROM pg_database WHERE datname = '""${POSTGRES_DB?}""';")"
+if [ "$db_present" -eq 1 ]; then
   true
 else
   priv_as "${POSTGRES_SERVICE_USER}" createdb"${host_flag}" "${POSTGRES_DB?}" --owner "${POSTGRES_USER?}"
 fi
 
-[ -d "${LIBSCRIPT_DATA_DIR}" ] || mkdir -p -- "${LIBSCRIPT_DATA_DIR}"
+[ -d "${LIBSCRIPT_DATA_DIR?}" ] || mkdir -p -- "${LIBSCRIPT_DATA_DIR}"
 for key in 'POSTGRES_URL' 'DATABASE_URL'; do
   lang_export 'cmd' "${key}" "${conn}" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.cmd'
   lang_export 'sh' "${key}" "${conn}" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'

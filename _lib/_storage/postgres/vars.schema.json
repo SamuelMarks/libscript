@@ -21,6 +21,14 @@
       "description": "Password file, its contents used as password for created user inside postgres",
       "type": "string"
     },
+    "POSTGRES_SERVICE_USER": {
+      "description": "Username for superuser & system role",
+      "type": "string"
+    },
+    "POSTGRES_SERVICE_PASSWORD": {
+      "description": "Password for postgres user; fallsback to `POSTGRES_PASSWORD`",
+      "type": "string"
+    },
     "POSTGRES_HOST": {
       "description": "Hostname to serve postgres from",
       "type": "string"

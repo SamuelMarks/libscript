@@ -43,12 +43,12 @@ fi
 try_create_table() {
   if [ "${sql3}" -eq 1 ] ; then
     sqlite3 "${db_file}" '
-      CREATE TABLE T(
+      CREATE TABLE IF NOT EXISTS T(
         location text,
         key text PRIMARY_KEY,
         val text,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-      ) IF NOT EXISTS;'
+      );'
   fi
 }
 
@@ -100,6 +100,7 @@ lang_export() {
       ;;
     'sqlite')
       if [ "${sql3}" -eq 1 ] ; then
+        try_create_table
         sqlite3 "${db_file}" '
           INSERT INTO T (key, val) VALUES
             ( '"'${var_name}'"', '"'${var_value}'"' );'

@@ -32,6 +32,9 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 brew install 'postgresql@'"${POSTGRESQL_VERSION}"
+if ! pg_isready >/dev/null 2>&1 ; then
+  brew services start 'postgresql@'"${POSTGRESQL_VERSION}"
+fi
 
 SCRIPT_NAME="${DIR}"'/user_db_setup.sh'
 export SCRIPT_NAME
