@@ -7,7 +7,7 @@ setenv PYTHON_VERSION '3.10'
 setenv RUST_INSTALL_DIR 1
 setenv RUST_VERSION 'nightly'
 setenv POSTGRES_URL 1
-setenv POSTGRES_VERSION 17
+setenv POSTGRES_VERSION 18
 setenv REDIS_URL 1
 setenv VALKEY_VERSION '*'
 setenv SADAS 1

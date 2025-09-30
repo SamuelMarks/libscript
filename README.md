@@ -166,7 +166,7 @@ For example, set `POSTGRES_PASSWORD` to `null` in the json like so:
 ```json
 {
   "name": "POSTGRES",
-  "version": "17",
+  "version": "18",
   "env": "POSTGRES_URL",
   "vars": {
     "POSTGRES_USER": "rest_user",

@@ -36,5 +36,5 @@ if [ ! -f '/opt/homebrew/bin/valkey-server' ]; then
 fi
 running="$(brew services list | grep -F valkey)"
 if [ "${running}" = 'valkey        none                   ' ]; then
-    brew services start valkey
+  brew services start valkey
 fi

@@ -11,7 +11,7 @@
       "databases": [
         {
           "name": "POSTGRES",
-          "version": "17",
+          "version": "18",
           "env": "POSTGRES_URL",
           "vars": {
             "POSTGRES_USER": "rest_user",

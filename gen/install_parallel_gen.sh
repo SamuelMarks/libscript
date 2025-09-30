@@ -91,7 +91,7 @@ export POSTGRES_PASSWORD='rest_pass'
 export POSTGRES_HOST='localhost'
 export POSTGRES_DB='rest_db'
 export POSTGRES_PASSWORD_FILE
-export POSTGRES_VERSION=17
+export POSTGRES_VERSION=18
 SCRIPT_NAME="${DIR}"'/install_gen.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090
