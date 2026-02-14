@@ -92,6 +92,9 @@ else
   host_flag=' -h '"${POSTGRES_HOST}"' '
 fi
 
+if ! priv_as "${POSTGRES_SERVICE_USER}" psql -tc 'SELECT 1' 2>/dev/null >/dev/null; then
+  createuser -s postgres
+fi
 user_present="$(priv_as "${POSTGRES_SERVICE_USER}" psql"${host_flag}" -tc "SELECT 1 FROM pg_roles WHERE rolname = '""${POSTGRES_USER?}""';")"
 if [ "$user_present" -eq 1 ]; then
   true
@@ -104,7 +107,7 @@ else
   fi
   )
   priv_as "${POSTGRES_SERVICE_USER}" createuser"${host_flag}" "${POSTGRES_USER?}"
-  if [ -n "${POSTGRES_PASSWORD?}" ]; then
+  if [ "${POSTGRES_PASSWORD#}" -gt 0 ]; then
     priv_as "${POSTGRES_SERVICE_USER}" psql"${host_flag}" -c 'ALTER USER '"${POSTGRES_USER?}"' PASSWORD '"'${POSTGRES_PASSWORD?}'"';';
   fi
 fi
