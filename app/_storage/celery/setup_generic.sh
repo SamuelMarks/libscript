@@ -54,7 +54,7 @@ if [ -d '/etc/systemd/system' ]; then
     chown -R -- celery:celery '/var/run/celery' '/var/log/celery' "${PYTHON_VENV}"
   fi
 
-  service_name='celery'
+  service_name="${LIBSCRIPT_SERVICE_NAME:-celery}"
   service='/etc/systemd/system/'"${service_name}"'.service'
   envsubst < "${DIR}"'/conf/systemd/celery.service' > '/tmp/'"${service_name}"
 

@@ -85,7 +85,7 @@ else
   
   case "${INIT_SYS}" in
     'systemd')
-      service_name='etcd'
+      service_name="${LIBSCRIPT_SERVICE_NAME:-etcd}"
       name_file="$(mktemp)"
       trap 'rm -f -- "${name_file}"' EXIT HUP INT QUIT TERM
   #         ENV='Environment="ETCD_ADVERTISE_CLIENT_URLS=http://%(public_ipv4)s:%(ADVERT_PORT)s"

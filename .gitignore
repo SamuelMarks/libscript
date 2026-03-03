@@ -1,17 +1,20 @@
 .idea
 .vscode
 tmp
-gen/_lib
-gen/app
-docs
+/docs
 .ssh
-*.html
+/*.html
 node_modules
-assets
+/assets
 .vagrant
 vagrant_ssh
 %temp%/
 "%temp%\schema_help.txt"
+
+# Ignore generated folder contents
+gen/*
+!gen/README.md
+!gen/ROOT
 
 # Ad-hoc dev scripts
 fix_*.sh
@@ -22,3 +25,24 @@ test_*.cmd
 test_*.sh
 update_docs.sh
 README_patch.sh
+fix_*.py
+fix_*.cmd
+fix_*.bat
+update_*.py
+update_*.cmd
+update_*.sh
+test_*.bat
+gen_table.*
+update_git.sh
+
+# Local data & logs
+run_log.txt
+*.sqlite
+jobs.json
+jobs_status.json
+
+# Ignored outputs
+table.md
+*_gen.sh
+/cache/
+/dockerfiles/

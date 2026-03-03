@@ -23,6 +23,7 @@ show_help() {
   echo "  which <package_name> <version>"
   echo "  exec <package_name> <version> <cmd> [args...]"
   echo "  ls <package_name>"
+  echo "  download <package_name> <version>"
   echo "  ls-remote <package_name> [version]"
   echo ""
   echo "Description:"
@@ -44,6 +45,8 @@ show_help() {
   fi
   echo ""
   echo "  --prefix=<dir>                      Set local installation prefix"
+  echo "  --service-name=<name>               Set a custom service/daemon name"
+  echo "  --secrets=<dir|url>                 Save generated secrets to a directory or OpenBao/Vault URL"
   echo "  --help, -h, /?                      Show this help message"
   echo "  --version, -v                       Show version"
   echo ""
@@ -76,7 +79,7 @@ case "$1" in
     fi
     shift 3
     ;;
-  run|which|exec)
+  run|which|exec|env|serve|route)
     ACTION="$1"
     PACKAGE_NAME="$2"
     VERSION="$3"
@@ -90,7 +93,7 @@ case "$1" in
     fi
     shift 3
     ;;
-  ls|ls-remote)
+  ls|ls-remote|download)
     ACTION="$1"
     PACKAGE_NAME="$2"
     VERSION="$3"
@@ -170,6 +173,14 @@ while [ $# -gt 0 ]; do
       export PREFIX="${1#*=}"
       shift
       ;;
+    --service-name=*)
+      export LIBSCRIPT_SERVICE_NAME="${1#*=}"
+      shift
+      ;;
+    --secrets=*)
+      export LIBSCRIPT_SECRETS="${1#*=}"
+      shift
+      ;;
     --*=*)
       key="${1%%=*}"
       key="${key#--}"
@@ -185,7 +196,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-if [ "$ACTION" = "run" ] || [ "$ACTION" = "which" ] || [ "$ACTION" = "exec" ] || [ "$ACTION" = "ls" ] || [ "$ACTION" = "ls-remote" ]; then
+if [ "$ACTION" = "run" ] || [ "$ACTION" = "which" ] || [ "$ACTION" = "exec" ] || [ "$ACTION" = "env" ] || [ "$ACTION" = "serve" ] || [ "$ACTION" = "route" ] || [ "$ACTION" = "ls" ] || [ "$ACTION" = "ls-remote" ] || [ "$ACTION" = "download" ] || [ "$ACTION" = "uninstall" ] || [ "$ACTION" = "remove" ] || [ "$ACTION" = "uninstall_daemon" ] || [ "$ACTION" = "uninstall_service" ] || [ "$ACTION" = "remove_daemon" ] || [ "$ACTION" = "remove_service" ]; then
   # Action logic
   INSTALLED_DIR="${PREFIX:-$LIBSCRIPT_ROOT_DIR/installed/$PACKAGE_NAME}"
   BIN_PATH="$INSTALLED_DIR/bin/$PACKAGE_NAME"
@@ -214,22 +225,153 @@ if [ "$ACTION" = "run" ] || [ "$ACTION" = "which" ] || [ "$ACTION" = "exec" ] ||
       export PATH="$INSTALLED_DIR/bin:$PATH"
       exec "$@"
       ;;
+    env)
+      FORMAT="${FORMAT:-${format:-sh}}"
+      if [ "$FORMAT" = "docker" ]; then
+        echo "ENV PATH=\"$INSTALLED_DIR/bin:\$PATH\""
+      elif [ "$FORMAT" = "csh" ]; then
+        echo "setenv PATH \"$INSTALLED_DIR/bin:\$PATH\""
+      elif [ "$FORMAT" = "powershell" ]; then
+        echo "\$env:PATH=\"$INSTALLED_DIR/bin;\" + \$env:PATH"
+      elif [ "$FORMAT" = "docker_compose" ]; then
+        # docker-compose usually manages PATH differently, but we can emit it
+        echo "PATH=$INSTALLED_DIR/bin:\$PATH"
+      elif [ "$FORMAT" = "cmd" ]; then
+        echo "SET PATH=\"$INSTALLED_DIR/bin;%PATH%\""
+      else
+        echo "export PATH=\"$INSTALLED_DIR/bin:\$PATH\""
+      fi
+      if [ -f "$SCRIPT_DIR/env.sh" ]; then
+        # Use env to capture exported variables
+        env -i PATH="$PATH" FORMAT="$FORMAT" SCRIPT_NAME="$SCRIPT_DIR/env.sh" sh -c "
+          . '$SCRIPT_DIR/env.sh' >/dev/null 2>&1
+          env | grep -vE '^(PWD|SHLVL|_|PATH|FORMAT)=' | while read -r line; do
+            key=\"\${line%%=*}\"
+            val=\"\${line#*=}\"
+            if [ \"\$FORMAT\" = \"docker\" ]; then
+              echo \"ENV \$key=\\\"\$val\\\"\"
+            elif [ \"\$FORMAT\" = \"csh\" ]; then
+              echo \"setenv \$key \\\"\$val\\\"\"
+            elif [ \"\$FORMAT\" = \"powershell\" ]; then
+              echo \"\\\$env:\$key=\\\"\$val\\\"\"
+            elif [ \"\$FORMAT\" = \"docker_compose\" ]; then
+              echo \"\$key=\$val\"
+            elif [ \"\$FORMAT\" = \"cmd\" ]; then
+              echo \"SET \$key=\\\"\$val\\\"\"
+            else
+              echo \"export \$key=\\\"\$val\\\"\"
+            fi
+          done
+        "
+      fi
+      ;;
+    serve)
+      if [ ! -x "$BIN_PATH" ]; then
+        echo "Error: $PACKAGE_NAME version $VERSION not installed at $BIN_PATH"
+        exit 1
+      fi
+      SERVE_FROM="${SERVE_FROM:-${serve_from:-background-process}}"
+      LOGS_DIR="${LOGS_DIR:-${logs_dir:-$LIBSCRIPT_ROOT_DIR/logs}}"
+      if [ "$SERVE_FROM" = "background-process" ]; then
+        mkdir -p "$LOGS_DIR"
+        service_name="${LIBSCRIPT_SERVICE_NAME:-${PACKAGE_NAME}_${VERSION}}"
+        log_file="$LOGS_DIR/${service_name}.log"
+        echo "Starting $service_name in background..."
+        nohup "$BIN_PATH" "$@" > "$log_file" 2>&1 &
+        echo "PID: $!"
+        echo "Logs: $log_file"
+      else
+        echo "Error: serve_from '$SERVE_FROM' is not fully implemented yet." >&2
+        exit 1
+      fi
+      ;;
+    route)
+      if [ -x "$SCRIPT_DIR/route.sh" ]; then
+        exec "$SCRIPT_DIR/route.sh" "$@"
+      elif [ -f "$SCRIPT_DIR/route.sh" ]; then
+        exec sh "$SCRIPT_DIR/route.sh" "$@"
+      else
+        echo "Info: Route action is not natively supported for $PACKAGE_NAME yet (no route.sh found)." >&2
+        exit 0
+      fi
+      ;;
     ls)
       if [ -d "$INSTALLED_DIR" ]; then
         echo "Installed at $INSTALLED_DIR:"
         /bin/ls -1 "$INSTALLED_DIR"
       else
-        echo "No installed versions found at $INSTALLED_DIR"
+        echo "Error: No installed versions found at $INSTALLED_DIR or listing is not natively supported for this package." >&2
+        exit 1
       fi
       ;;
     ls-remote)
-      echo "Remote listing not natively supported for generic packages yet."
+      echo "Error: Remote listing not natively supported for generic packages yet." >&2
+      exit 1
+      ;;
+    download)
+      if [ -x "$SCRIPT_DIR/download.sh" ]; then
+        exec "$SCRIPT_DIR/download.sh"
+      elif [ -f "$SCRIPT_DIR/download.sh" ]; then
+        exec sh "$SCRIPT_DIR/download.sh"
+      else
+        echo "Info: Download action is not natively supported for $PACKAGE_NAME yet (no download.sh found)." >&2
+        exit 0
+      fi
+      ;;
+    uninstall|remove|uninstall_daemon|uninstall_service|remove_daemon|remove_service)
+      if [ -x "$SCRIPT_DIR/uninstall.sh" ]; then
+        exec "$SCRIPT_DIR/uninstall.sh"
+      elif [ -f "$SCRIPT_DIR/uninstall.sh" ]; then
+        exec sh "$SCRIPT_DIR/uninstall.sh"
+      elif [ -x "$LIBSCRIPT_ROOT_DIR/_lib/_common/uninstall.sh" ]; then
+        exec "$LIBSCRIPT_ROOT_DIR/_lib/_common/uninstall.sh"
+      elif [ -f "$LIBSCRIPT_ROOT_DIR/_lib/_common/uninstall.sh" ]; then
+        exec sh "$LIBSCRIPT_ROOT_DIR/_lib/_common/uninstall.sh"
+      else
+        echo "Error: Uninstallation is not natively supported for this package yet." >&2
+        exit 1
+      fi
       ;;
   esac
   exit 0
 fi
 
 # Run setup
+run_setup() {
+  if [ -x "$SCRIPT_DIR/setup.sh" ]; then
+    "$SCRIPT_DIR/setup.sh"
+  elif [ -f "$SCRIPT_DIR/setup.sh" ]; then
+    sh "$SCRIPT_DIR/setup.sh"
+  else
+    echo "Error: setup.sh not found in $SCRIPT_DIR"
+    exit 1
+  fi
+}
+
+if [ "$ACTION" = "install" ] || [ "$ACTION" = "install_daemon" ] || [ "$ACTION" = "install_service" ]; then
+  if [ -n "$LIBSCRIPT_SECRETS" ]; then
+    run_setup
+    
+    if echo "$LIBSCRIPT_SECRETS" | grep -q "^http"; then
+      if command -v jq >/dev/null; then
+         json_data=$(FORMAT=docker_compose "$0" env "$PACKAGE_NAME" "$VERSION" | grep -vE '^(PATH=)' | jq -R 'split("=") | {(.[0]): (.[1:] | join("="))} ' | jq -s 'add | {data: .}')
+         curl -s -k -X POST -H "X-Vault-Token: ${VAULT_TOKEN:-}" -H "Content-Type: application/json" -d "$json_data" "$LIBSCRIPT_SECRETS/${PACKAGE_NAME}_${VERSION}" || true
+      else
+         echo "Warning: jq is required for saving secrets to OpenBao/Vault" >&2
+      fi
+    else
+      mkdir -p "$LIBSCRIPT_SECRETS"
+      FORMAT=sh "$0" env "$PACKAGE_NAME" "$VERSION" >> "$LIBSCRIPT_SECRETS/env.sh"
+      FORMAT=csh "$0" env "$PACKAGE_NAME" "$VERSION" >> "$LIBSCRIPT_SECRETS/env.csh"
+      FORMAT=powershell "$0" env "$PACKAGE_NAME" "$VERSION" >> "$LIBSCRIPT_SECRETS/env.ps1"
+      FORMAT=docker "$0" env "$PACKAGE_NAME" "$VERSION" >> "$LIBSCRIPT_SECRETS/env.docker"
+      FORMAT=docker_compose "$0" env "$PACKAGE_NAME" "$VERSION" >> "$LIBSCRIPT_SECRETS/env.env"
+      FORMAT=cmd "$0" env "$PACKAGE_NAME" "$VERSION" >> "$LIBSCRIPT_SECRETS/env.cmd"
+    fi
+    exit 0
+  fi
+fi
+
 if [ -x "$SCRIPT_DIR/setup.sh" ]; then
   exec "$SCRIPT_DIR/setup.sh"
 elif [ -f "$SCRIPT_DIR/setup.sh" ]; then

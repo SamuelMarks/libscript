@@ -18,7 +18,7 @@ export SCRIPT_NAME
 
 if [ "${TARGET_OS}" = "windows" ] || [ "${TARGET_OS}" = "mingw" ] || [ "${TARGET_OS}" = "cygwin" ]; then
     >&2 printf "Valkey is not available on Windows natively. Exiting gracefully...\n"
-    exit 0
+    exit 1
 fi
 
 if depends 'valkey'; then
@@ -28,7 +28,8 @@ else
         >&2 printf "Required build tools for Valkey are missing. Exiting...\n"
         exit 1
     }
-    >&2 printf "Building valkey from source...\n"
+    >&2 printf "Building valkey from source is not implemented. Exiting...\n"
+    exit 1
 fi
 # Simplified for generic systems
 # Could pull from git and build...

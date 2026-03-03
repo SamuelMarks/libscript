@@ -33,7 +33,7 @@ export SCRIPT_NAME
 
 BUN_INSTALL_METHOD="${BUN_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-source}}"
 if [ "${BUN_INSTALL_METHOD}" = 'system' ]; then
-  depends 'bun' || echo "Bun package not widely available, defaulting to from-source"
+  depends 'bun' || { echo "Bun package not widely available, defaulting to from-source"; exit 1; }
 else
   depends 'curl' 'unzip'
   if ! cmd_avail bun; then

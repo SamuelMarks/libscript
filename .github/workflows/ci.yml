@@ -93,12 +93,10 @@ jobs:
             source ./env.sh
           fi
 
-          if [ -x ./cli.sh ]; then
-            ./cli.sh || echo "CLI script failed but continuing..."
-          elif [ -f ./setup.sh ]; then
-            sh ./setup.sh || echo "Setup script failed but continuing..."
+          if [ -f ./setup.sh ]; then
+            sh ./setup.sh 
           elif [ -f ./setup_generic.sh ]; then
-            sh ./setup_generic.sh || echo "Generic setup script failed but continuing..."
+            sh ./setup_generic.sh 
           fi
           
           if [ -x ./test.sh ]; then
@@ -112,6 +110,6 @@ jobs:
         shell: cmd
         run: |
           cd ${{ matrix.component }}
-          if exist setup.cmd ( call setup.cmd || echo "Setup CMD failed but continuing..." )
-          if exist setup_win.ps1 ( powershell -ExecutionPolicy Bypass -File setup_win.ps1 || echo "Setup PS1 failed but continuing..." )
-          if exist test.cmd ( call test.cmd ) else ( echo "No test.cmd found" )
+          if exist setup.cmd ( call setup.cmd || exit /b 1 )
+          if exist setup_win.ps1 ( powershell -ExecutionPolicy Bypass -File setup_win.ps1 || exit /b 1 )
+          if exist test.cmd ( call test.cmd || exit /b 1 ) else ( echo "No test.cmd found" )

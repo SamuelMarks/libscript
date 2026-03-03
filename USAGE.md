@@ -1,6 +1,10 @@
 # Usage Guide
 
-LibScript is designed to be invoked globally via the `libscript.sh` (Unix) or `libscript.cmd` (Windows) entrypoints, or locally by directly running a component's `cli.sh`.
+## Purpose & Current State
+
+**Purpose**: This document is a comprehensive user guide covering component installation, environment configuration, global command aliases (`run`, `exec`, `which`), and advanced JSON-based declarative deployments. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+
+**Current State**: LibScript functions as a comprehensive global and per-component package manager, featuring a robust core CLI (`libscript.sh`, `libscript.cmd`, `libscript.bat`). It includes multi-platform toolchain support (Rust, Python, Node, Go, Java, C/C++), servers (Postgres, Nginx, Valkey), and advanced environment querying (`env` subcommand). It natively supports generating deployment configurations (`package_as docker`, `package_as docker_compose`, `package_as msi`, `package_as innosetup`, `package_as nsis`, `package_as TUI`) with deep installer customization, automated parallel dependency downloading and resolution via `libscript.json`, and robust uninstall lifecycle hooks (`uninstall.sh`/`uninstall.cmd`) for cleanly removing binaries, configs, and services. It natively handles deep semantic versioning, global `--secrets` extraction, caching, OpenBao/Vault generation, local caching via SQLite (`db-search`, `update-db`), explicit error handling for unsupported actions, and background process serving. Ongoing development targets extended registry integrations and dynamic web server routing.
 
 ## Global Invocation
 
@@ -22,6 +26,18 @@ To install a component, pass its name to the CLI:
 ./libscript.sh install rust latest
 ./libscript.sh install postgres 16
 ./libscript.sh install nginx 1.25
+```
+
+### Accessing Component Environment
+
+You can extract the shell environment variables exported by a component (like its internal `PATH` addition or `DATABASE_URL`) using the `env` subcommand:
+
+```sh
+# Print the export commands
+./libscript.sh env postgres 16
+
+# Source them into your current shell
+eval $(./libscript.sh env postgres 16)
 ```
 
 ### Passing Options
@@ -74,5 +90,7 @@ The libscript suite has been enhanced globally to standardize path environments 
 Global Options:
 - `--cache-dir=<dir>` : Rebind internal caching from ROOT/cache/downloads.
 - `--prefix=<dir>` : Relocate local package directory from internally routed target directories.
+- `--secrets=<dir|url>` : Set global output path for generated environments or OpenBao/Vault URL. Defaults to ROOT/secrets.
 
 All components inherit this architecture cleanly across both `sh` and Windows `.cmd`.
+

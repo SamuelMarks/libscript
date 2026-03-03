@@ -38,7 +38,7 @@ depends curl
 
 if [ "${TARGET_OS}" = "windows" ] || [ "${TARGET_OS}" = "mingw" ] || [ "${TARGET_OS}" = "cygwin" ]; then
     >&2 printf "k0s is not available on Windows natively. Exiting gracefully...\n"
-    exit 0
+    exit 1
 fi
 
 curl --proto '=https' --tlsv1.2 -sSf https://get.k0s.sh | sudo sh

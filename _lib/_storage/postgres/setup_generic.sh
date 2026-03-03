@@ -24,12 +24,12 @@ fi
 
 case "${INIT_SYS-}" in
   'systemd')
-    systemctl enable postgresql || true
-    systemctl start postgresql || true
+    systemctl enable "${LIBSCRIPT_SERVICE_NAME:-postgresql}" || true
+    systemctl start "${LIBSCRIPT_SERVICE_NAME:-postgresql}" || true
     ;;
   'openrc')
-    rc-update add postgresql || true
-    rc-service postgresql start || true
+    rc-update add "${LIBSCRIPT_SERVICE_NAME:-postgresql}" || true
+    rc-service "${LIBSCRIPT_SERVICE_NAME:-postgresql}" start || true
     ;;
   *)
     >&2 printf 'Warning: Postgres installation successful, but init system %s not supported for auto-start

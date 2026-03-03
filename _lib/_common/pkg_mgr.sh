@@ -147,11 +147,12 @@ fi
 # Caching downloader hook
 libscript_fetch() {
   local url="$1"
-  local dest="$2"
+  local dest="${2:-}"
+  local expected_checksum="${3:-}"
   # Optional: allow override of download dir or fallback to global cache dir
   local dl_dir="${DOWNLOAD_DIR:-}"
   local cache_dir="${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache/downloads}"
-  
+
   if [ -z "$dl_dir" ]; then
      dl_dir="$cache_dir"
      if [ -n "${PACKAGE_NAME:-}" ]; then
@@ -160,7 +161,7 @@ libscript_fetch() {
        dl_dir="$dl_dir/unknown"
      fi
   fi
-  
+
   mkdir -p -- "$dl_dir"
   local filename
   filename="$(basename "$url")"
@@ -177,6 +178,37 @@ libscript_fetch() {
       wget -q --show-progress -O "$cache_file" "$url"
     else
       >&2 printf 'Error: curl or wget required.\n'
+      return 1
+    fi
+
+    # Check filesize > 0
+    local fsize=0
+    if command -v wc >/dev/null 2>&1; then
+      fsize=$(wc -c < "$cache_file" | tr -d ' ')
+    elif command -v stat >/dev/null 2>&1; then
+      # BSD/macOS stat vs GNU stat
+      fsize=$(stat -c%s "$cache_file" 2>/dev/null || stat -f%z "$cache_file" 2>/dev/null || echo "1")
+    fi
+    if [ "$fsize" = "0" ]; then
+      >&2 printf 'Error: Downloaded file %s is empty.\n' "$cache_file"
+      rm -f "$cache_file"
+      return 1
+    fi
+  fi
+
+  # Checksum validation
+  if [ -n "$expected_checksum" ]; then
+    local actual_checksum=""
+    if command -v sha256sum >/dev/null 2>&1; then
+      actual_checksum=$(sha256sum "$cache_file" | awk '{print $1}')
+    elif command -v shasum >/dev/null 2>&1; then
+      actual_checksum=$(shasum -a 256 "$cache_file" | awk '{print $1}')
+    else
+      >&2 printf 'Warning: sha256sum/shasum not found, skipping checksum validation.\n'
+    fi
+    if [ -n "$actual_checksum" ] && [ "$actual_checksum" != "$expected_checksum" ]; then
+      >&2 printf 'Error: Checksum mismatch for %s. Expected: %s, Got: %s\n' "$cache_file" "$expected_checksum" "$actual_checksum"
+      rm -f "$cache_file"
       return 1
     fi
   fi

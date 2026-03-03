@@ -31,18 +31,18 @@ export SCRIPT_NAME
 
 apk add 'openrc' 'postgresql'"${POSTGRESQL_VERSION}" 'postgresql'"${POSTGRESQL_VERSION}"'-contrib' 'postgresql'"${POSTGRESQL_VERSION}"'-openrc'
 existed=0
-if [ -f /etc/init.d/postgresql ]; then
+if [ -f "/etc/init.d/${LIBSCRIPT_SERVICE_NAME:-postgresql}" ]; then
   existed=1
 fi
 if [ "${existed}" -ne 1 ]; then
-  rc-update add 'postgresql'
+  rc-update add "${LIBSCRIPT_SERVICE_NAME:-postgresql}"
 fi
 
 stdout="$(mktemp >/dev/null)"
 stderr="$(mktemp >/dev/null)"
 trap 'rm -f -- "${stdout}" "${stderr}"' EXIT HUP INT QUIT TERM
 
-if ! rc-service postgresql start >"${stdout}" 2>"${stderr}"; then
+if ! rc-service "${LIBSCRIPT_SERVICE_NAME:-postgresql}" start >"${stdout}" 2>"${stderr}"; then
   rc="${?}"
   if [ ! "${stderr}" = ' * WARNING: postgresql is already starting' ]; then
     >&2 printf '%s\n' "${stderr}"

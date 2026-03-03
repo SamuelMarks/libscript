@@ -75,7 +75,7 @@ fi
 cd -- "${previous_wd}"
 
 if [ "${noop}" -eq 0 ]; then
-  service_name='valkey'
+  service_name="${LIBSCRIPT_SERVICE_NAME:-valkey}"
   priv  install -m 0644 -o 'root' -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/conf/valkey.conf' /etc/
   priv  install -m 0644 -o 'root' -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/conf/systemd/'"${service_name}"'.service' /etc/systemd/system/
   priv  systemctl daemon-reload

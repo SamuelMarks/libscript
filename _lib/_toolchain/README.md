@@ -1,9 +1,11 @@
 _lib/_toolchain
 ===============
 
-[Toolchains](https://en.wikipedia.org/wiki/Toolchain). Generally for a specific [language](https://en.wikipedia.org/wiki/Programming_language) like [Rust](https://en.wikipedia.org/wiki/Rust_(programming_language)), [Python](https://en.wikipedia.org/wiki/Python_(programming_language)), or [`jq`](https://en.wikipedia.org/wiki/Jq_(programming_language)). Sometimes for a specific tool, like [`wait4x`](https://github.com/atkrad/wait4x) to healthcheck [deployments](https://en.wikipedia.org/wiki/System_deployment).
+## Purpose & Current State
 
+**Purpose**: This document provides context and technical details for the `_toolchain` component (part of `_lib`) within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
 
+**Current State**: LibScript functions as a comprehensive global and per-component package manager, featuring a robust core CLI (`libscript.sh`, `libscript.cmd`, `libscript.bat`). It includes multi-platform toolchain support (Rust, Python, Node, Go, Java, C/C++), servers (Postgres, Nginx, Valkey), and advanced environment querying (`env` subcommand). It natively supports generating deployment configurations (`package_as docker`, `package_as docker_compose`, `package_as msi`, `package_as innosetup`, `package_as nsis`, `package_as TUI`) with deep installer customization, automated parallel dependency downloading and resolution via `libscript.json`, and robust uninstall lifecycle hooks (`uninstall.sh`/`uninstall.cmd`) for cleanly removing binaries, configs, and services. It natively handles deep semantic versioning, global `--secrets` extraction, caching, OpenBao/Vault generation, local caching via SQLite (`db-search`, `update-db`), explicit error handling for unsupported actions, and background process serving. Ongoing development targets extended registry integrations and dynamic web server routing.
 
 ## Dependency Installation Methods
 

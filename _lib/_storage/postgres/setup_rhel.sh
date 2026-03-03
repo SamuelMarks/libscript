@@ -47,8 +47,9 @@ sudo dnf install -y \
 sudo dnf -qy module disable 'postgresql'
 sudo dnf install -y 'postgresql'"${POSTGRESQL_VERSION}"'-server'
 sudo '/usr/pgsql-'"${POSTGRESQL_VERSION}"'/bin/postgresql-'"${POSTGRESQL_VERSION}"'-setup' initdb
-sudo systemctl enable 'postgresql-'"${POSTGRESQL_VERSION}"
-sudo systemctl start 'postgresql-'"${POSTGRESQL_VERSION}"
+service_name="${LIBSCRIPT_SERVICE_NAME:-postgresql-${POSTGRESQL_VERSION}}"
+sudo systemctl enable "${service_name}"
+sudo systemctl start "${service_name}"
 
 SCRIPT_NAME="${DIR}"'/user_db_setup.sh'
 export SCRIPT_NAME

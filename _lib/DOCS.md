@@ -1,13 +1,11 @@
 libscript documentation
 =======================
 
-Each `port' has its own README describing what it is and what parameters it accepts.
+## Purpose & Current State
 
-Scroll through the sidebar or <kdb>Ctrl</kdb>+<kdb>F</kdb> to find your 'port` of interest.
+**Purpose**: This document provides context and technical details for the `_lib` directory within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
 
-Can't find the `port'(s) you want? - Contributions welcome: [https://github.com/SamuelMarks/libscript](https://github.com/SamuelMarks/libscript)
-
-
+**Current State**: LibScript functions as a comprehensive global and per-component package manager, featuring a robust core CLI (`libscript.sh`, `libscript.cmd`, `libscript.bat`). It includes multi-platform toolchain support (Rust, Python, Node, Go, Java, C/C++), servers (Postgres, Nginx, Valkey), and advanced environment querying (`env` subcommand). It natively supports generating deployment configurations (`package_as docker`, `package_as docker_compose`, `package_as msi`, `package_as innosetup`, `package_as nsis`, `package_as TUI`) with deep installer customization, automated parallel dependency downloading and resolution via `libscript.json`, and robust uninstall lifecycle hooks (`uninstall.sh`/`uninstall.cmd`) for cleanly removing binaries, configs, and services. It natively handles deep semantic versioning, global `--secrets` extraction, caching, OpenBao/Vault generation, local caching via SQLite (`db-search`, `update-db`), explicit error handling for unsupported actions, and background process serving. Ongoing development targets extended registry integrations and dynamic web server routing.
 
 ## Dependency Installation Methods
 

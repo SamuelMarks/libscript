@@ -33,7 +33,7 @@ export SCRIPT_NAME
 
 DENO_INSTALL_METHOD="${DENO_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-source}}"
 if [ "${DENO_INSTALL_METHOD}" = 'system' ]; then
-  depends 'deno' || echo "Deno package not widely available, defaulting to from-source"
+  depends 'deno' || { echo "Deno package not widely available, defaulting to from-source"; exit 1; }
 else
   depends 'curl' 'unzip'
   if ! cmd_avail deno; then

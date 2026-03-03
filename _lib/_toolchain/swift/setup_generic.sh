@@ -33,7 +33,7 @@ export SCRIPT_NAME
 
 SWIFT_INSTALL_METHOD="${SWIFT_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 if [ "${SWIFT_INSTALL_METHOD}" = 'system' ]; then
-  depends 'swift' || echo "Swift package not available natively on all OSs"
+  depends 'swift' || { echo "Swift package not available natively on all OSs"; exit 1; }
 else
   depends 'curl' 'tar'
   echo "Downloading Swift binary..."
