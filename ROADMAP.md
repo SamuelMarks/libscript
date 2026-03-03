@@ -1,21 +1,26 @@
-Roadmap
-=======
+# Roadmap
 
-  - [ ] Docs
-  - [ ] Doc site generator (see [DOCS_ROADMAP.md](DOCS_ROADMAP.md))
-  - [x] [Docker](https://en.wikipedia.org/wiki/Docker_(software)) cache layer per component
-  - [x] [Docker](https://docker.com) cache layer per component group (e.g., toolchains; databases; servers)
-  - [x] Dockerfile per component
-  - [x] Dockerfile per component group
-  - [ ] [Docker Compose](https://docs.docker.com/compose)
-  - [ ] [HP/UX](https://en.wikipedia.org/wiki/HP-UX) support
-  - [ ] [Kubernetes](https://en.wikipedia.org/wiki/Kubernetes) example configuration
-  - [ ] Secret storage & retrieval (e.g., using [OpenBao](https://openbao.org); the open-source [Hashicorp Vault](https://www.vaultproject.io) fork)
-  - [ ] [SunOS](https://en.wikipedia.org/wiki/SunOS) support
-  - [ ] Testing (e.g., using [`wait4x`](https://github.com/atkrad/wait4x) as a generic health-checker for databases and servers; and file existence checks for everything else)
-  - [ ] [Vagrant](https://en.wikipedia.org/wiki/Vagrant_(software))file examples
-  - [ ] Windows installer (with integrated [win_setup_script_deps.cmd](win_setup_script_deps.cmd) execution)
-  - [ ] Windows installer generator (with tree-shaking!)
-  - [x] Windows support
-  - [ ] [z/OS](https://en.wikipedia.org/wiki/Z/OS) support
-  - [ ] {[FreeBSD](https://en.wikipedia.org/wiki/FreeBSD), [NetBSD](https://en.wikipedia.org/wiki/NetBSD), [OpenBSD](https://en.wikipedia.org/wiki/OpenBSD)} support
+## Phase 1: Foundation (Complete)
+- [x] Base architecture established (`cli.sh`, `setup.sh`, `env.sh`).
+- [x] Package manager abstraction (`pkg_mgr.sh`, `pkg_mapper.sh`).
+- [x] Core toolchains (Rust, Python, Node, Go, Java, C/C++).
+- [x] Core servers and databases (Postgres, Nginx, Valkey).
+- [x] Verification scripts (`test.sh`, `test.cmd`).
+- [x] GitHub Actions CI Matrix.
+
+## Phase 2: Windows Parity (In Progress)
+- [x] Root `libscript.cmd` router.
+- [x] Component-level `cli.cmd` scaffolding.
+- [x] Windows verification scripts (`test.cmd`).
+- [ ] Implement robust `setup_win.ps1` scripts for all toolchains.
+- [ ] Implement Windows Service registration for databases.
+
+## Phase 3: Advanced Orchestration
+- [ ] Fully functional `install.json` processor with dependency resolution.
+- [ ] Parallel execution of component installations.
+- [ ] Deep integration with Vagrant for automated cross-distribution regression testing.
+- [ ] Formal `libscript` CLI binary (written in Rust or Go) to replace the shell-script router for improved performance and UX, while maintaining shell scripts for the actual setup logic.
+
+## Phase 4: Application Ecosystem
+- [ ] Add more heavy-weight applications to `app/third_party/`.
+- [ ] Standardize the configuration injection for applications (e.g., passing DB credentials from the Postgres component into the application component automatically).

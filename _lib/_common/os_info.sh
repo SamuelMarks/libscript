@@ -78,6 +78,19 @@ if [ -z ${UNAME+x} ]; then
             ;;
         esac
         ;;
+
+      'CYGWIN_NT'*)
+        export PKG_MGR='apt-cyg'
+        TARGET_OS='cygwin'
+        ;;
+      'MINGW'* | 'MSYS'*)
+        export PKG_MGR='pacman'
+        TARGET_OS='mingw'
+        ;;
+      'Windows_NT')
+        export PKG_MGR="${LIBSCRIPT_WINDOWS_PKG_MGR:-winget}"
+        TARGET_OS='windows'
+        ;;
       'FreeBSD')
         export PKG_MGR='pkg'
         TARGET_OS='freebsd' ;;
@@ -147,7 +160,20 @@ if [ -z "${INIT_SYS+x}" ]; then
             _fallback
           fi
           ;;
-        'FreeBSD')
+  
+      'CYGWIN_NT'*)
+        export PKG_MGR='apt-cyg'
+        TARGET_OS='cygwin'
+        ;;
+      'MINGW'* | 'MSYS'*)
+        export PKG_MGR='pacman'
+        TARGET_OS='mingw'
+        ;;
+      'Windows_NT')
+        export PKG_MGR="${LIBSCRIPT_WINDOWS_PKG_MGR:-winget}"
+        TARGET_OS='windows'
+        ;;
+      'FreeBSD')
           if [ -d '/etc/inittab' ]; then
             export INIT_SYS='systemv_init'
           elif [ -f '/sbib/init' ]; then

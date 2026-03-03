@@ -1,20 +1,22 @@
-Docs: Roadmap
-=============
+# Documentation Roadmap
 
-Each directory containing a `setup.sh` will also contain:
+Good documentation is critical for adoption. Here is the plan for expanding the LibScript documentation ecosystem.
 
-  - README.md
-  - libscript.json (modelled after vcpkg.json)
-    - static analyses of source-code will enable auto-inference of:
-      - `.dependencies`
-      - `.description` (first text line after title heading)
-      - `.os_support`
+## Current State
+- Root markdown files (`README.md`, `ARCHITECTURE.md`, `DEVELOPING.md`, `USAGE.md`, `DEPENDENCIES.md`, `TEST.md`, `WINDOWS.md`) provide a comprehensive overview.
+- Component-level `README.md` files exist but are sparse.
 
-Then a separate static site generator will take all these and create:
+## Next Steps
 
-  - Versioned drop-down selectable docs
-  - Docs having the README.md for each `port' (to use vcpkg nomenclature)
-  - For each port also infer and auto-document what parameters are taken and/or settable in env vars
-  - Outside of libscript's website, tree-shake to produce a website just for this port and its dependencies
+1. **Component Documentation Consistency:**
+   - Every directory in `_lib/` and `app/` needs a standardized `README.md` explaining what it installs, the configuration options (`vars.schema.json`), and any OS-specific caveats.
+   - Script a generator that converts `vars.schema.json` into markdown tables for the component READMEs.
 
-[outside DOCS_ROADMAP.md scope: but this could then be used to tree-shake so only used libraries are the libscript-for-your-project]
+2. **Examples Repository:**
+   - Create a `examples/` directory containing complete `install.json` manifests for common setups (e.g., "LEMP stack", "Data Science Workspace", "Rust Web Backend").
+
+3. **Inline Script Documentation:**
+   - Add detailed comments to the core functions in `_lib/_common/` (e.g., `pkg_mgr.sh`, `os_info.sh`) explaining the parameters and expected returns.
+
+4. **Static Site:**
+   - Compile the markdown files using MkDocs or Docusaurus and host them on GitHub Pages.

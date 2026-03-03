@@ -1,0 +1,117 @@
+name: CI Tests
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+
+jobs:
+  test:
+    name: ${{ matrix.component }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        component:
+          - "app/_storage/celery"
+          - "app/third_party/firecrawl"
+          - "app/third_party/jupyterhub"
+          - "app/third_party/openvpn"
+          - "app/third_party/serve-actix-diesel-auth-scaffold"
+          - "_lib/_git"
+          - "_lib/_server/kubernetes_k0s"
+          - "_lib/_server/kubernetes_thw"
+          - "_lib/_server/nginx"
+          - "_lib/_server/nodejs"
+          - "_lib/_server/python"
+          - "_lib/_server/rust"
+          - "_lib/_storage/etcd"
+          - "_lib/_storage/postgres"
+          - "_lib/_storage/rabbitmq"
+          - "_lib/_storage/valkey"
+          - "_lib/_toolchain/bun"
+          - "_lib/_toolchain/c"
+          - "_lib/_toolchain/cc"
+          - "_lib/_toolchain/cpp"
+          - "_lib/_toolchain/csharp"
+          - "_lib/_toolchain/deno"
+          - "_lib/_toolchain/go"
+          - "_lib/_toolchain/java"
+          - "_lib/_toolchain/jq"
+          - "_lib/_toolchain/kotlin"
+          - "_lib/_toolchain/nodejs"
+          - "_lib/_toolchain/php"
+          - "_lib/_toolchain/python"
+          - "_lib/_toolchain/ruby"
+          - "_lib/_toolchain/rust"
+          - "_lib/_toolchain/sh"
+          - "_lib/_toolchain/swift"
+          - "_lib/_toolchain/wait4x"
+        exclude:
+          - os: macos-latest
+            component: "_lib/_server/kubernetes_k0s"
+          - os: windows-latest
+            component: "_lib/_server/kubernetes_k0s"
+          - os: windows-latest
+            component: "_lib/_server/kubernetes_thw"
+          - os: windows-latest
+            component: "_lib/_server/nginx"
+          - os: windows-latest
+            component: "_lib/_storage/postgres"
+          - os: windows-latest
+            component: "_lib/_storage/rabbitmq"
+          - os: windows-latest
+            component: "_lib/_storage/etcd"
+          - os: windows-latest
+            component: "app/third_party/jupyterhub"
+          - os: windows-latest
+            component: "app/third_party/serve-actix-diesel-auth-scaffold"
+          - os: windows-latest
+            component: "app/third_party/firecrawl"
+          - os: windows-latest
+            component: "app/third_party/openvpn"
+          - os: windows-latest
+            component: "app/_storage/celery"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup & Test (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          echo "$HOME/.bun/bin" >> $GITHUB_PATH
+          echo "$HOME/.deno/bin" >> $GITHUB_PATH
+          echo "/usr/local/go/bin" >> $GITHUB_PATH
+
+          export PATH="$HOME/.cargo/bin:$HOME/.bun/bin:$HOME/.deno/bin:/usr/local/go/bin:$PATH"
+
+          cd ${{ matrix.component }}
+          
+          if [ -f "env.sh" ]; then
+            source ./env.sh
+          fi
+
+          if [ -x ./cli.sh ]; then
+            ./cli.sh || echo "CLI script failed but continuing..."
+          elif [ -f ./setup.sh ]; then
+            sh ./setup.sh || echo "Setup script failed but continuing..."
+          elif [ -f ./setup_generic.sh ]; then
+            sh ./setup_generic.sh || echo "Generic setup script failed but continuing..."
+          fi
+          
+          if [ -x ./test.sh ]; then
+            ./test.sh
+          else
+            echo "No test.sh found"
+          fi
+
+      - name: Setup & Test (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          cd ${{ matrix.component }}
+          if exist setup.cmd ( call setup.cmd || echo "Setup CMD failed but continuing..." )
+          if exist setup_win.ps1 ( powershell -ExecutionPolicy Bypass -File setup_win.ps1 || echo "Setup PS1 failed but continuing..." )
+          if exist test.cmd ( call test.cmd ) else ( echo "No test.cmd found" )

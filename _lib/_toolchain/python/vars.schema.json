@@ -6,12 +6,41 @@
   "type": "object",
   "properties": {
     "PYTHON_VERSION": {
-      "description": "Version of Python demanded. Needs to be a specific numeric version number",
-      "type": "string"
+      "description": "Version of Python demanded. Can be a specific numeric version number or an alias",
+      "type": "string",
+      "default": "3.11",
+      "versionAliases": ["latest", "cpython"]
     },
     "VENV": {
       "description": "Path to a Python virtualenv (will create if nonexistent)",
       "type": "string"
+    },
+    "LIBSCRIPT_GLOBAL_INSTALL_METHOD": {
+      "description": "Global override for how software should be installed across all systems (e.g. system package manager vs downloaded binaries/from-source).",
+      "type": "string",
+      "enum": [
+        "system",
+        "source"
+      ],
+      "default": "system"
+    },
+    "LIBSCRIPT_WINDOWS_PKG_MGR": {
+      "description": "Global package manager override for Windows targets (e.g. winget, choco).",
+      "type": "string",
+      "enum": [
+        "winget",
+        "choco"
+      ],
+      "default": "winget"
+    },
+    "PYTHON_INSTALL_METHOD": {
+      "description": "How to install PYTHON. 'system' uses the native OS package manager, 'source' compiles/downloads binaries.",
+      "type": "string",
+      "enum": [
+        "system",
+        "source"
+      ],
+      "default": "system"
     }
   }
 }

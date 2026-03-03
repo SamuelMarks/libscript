@@ -1,81 +1,37 @@
-Testing instructions
-====================
+# Testing
 
-When contributing new `ports' it's important to test on different OSs and distributions.
+LibScript ensures reliability through a rigorous testing philosophy. Each component must be capable of verifying its own installation.
 
-## Alpine Linux, Debian, Ubuntu
+## Component Verification (`test.sh` and `test.cmd`)
 
-Convenience Docker Images have been setup here https://github.com/SamuelMarks/libscript-docker-images
+Every component contains a `test.sh` (and `test.cmd` for Windows) that performs an active check.
 
-### Usage
-(see repo for how to setup ssh keys or alternative password solution)
+- **Toolchains:** These tests do more than check `--version`. They generate a "Hello World" source file, compile it, run the executable, and assert standard output.
+- **Servers:** Web servers (like Nginx) run configuration syntax checks (`nginx -t`).
+- **Storage/Databases:** Databases run a client connection and execute a ping or query (e.g., `psql -c "SELECT 1;"` or `redis-cli PING`).
 
-[optional] Modify your `~/.ssh/config` with:
+### Running Tests Locally
 
-    Host alpine321
-        HostName 127.0.0.1
-        Port 2222
-        User root
-        PreferredAuthentications publickey
-        PubkeyAuthentication yes
-        PasswordAuthentication no
-        ServerAliveInterval 10
-        IdentityFile /tmp/.ssh/id_rsa
+You can run the test script for any component manually:
+```sh
+./libscript.sh test rust
+```
 
-Then execute:
+To run all tests across the repository, use a find command:
+```sh
+find . -name "test.sh" -exec {} \;
+```
 
-    $ docker run --name alpine-server-3-2-1 \
-        -p 2222:22 \
-        -e USER_PASSWORD='null' \
-        -e USER_PUBKEY="$(cat -- /tmp.ssh/id_rsa.pub)" \
-        samuelmarks/libscript-docker-images:alpine-3.21
-    $ # remove previous ssh host verification with
-    $ ssh-keygen -R '[127.0.0.1]:2222'
-    $ ssh alpine321 cat /etc/os-release
-    NAME="Alpine Linux"
-    ID=alpine
-    VERSION_ID=3.21.3
-    PRETTY_NAME="Alpine Linux v3.21"
-    HOME_URL="https://alpinelinux.org/"
-    BUG_REPORT_URL="https://gitlab.alpinelinux.org/alpine/aports/-/issues"
+## Continuous Integration (CI)
 
-Now to actually test you can do something like:
+We utilize GitHub Actions (`.github/workflows/ci.yml`) to automatically test components across multiple operating systems.
 
-    $ export LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-/path/to/libscript}"
-    $ rsync -az "${LIBSCRIPT_ROOT_DIR}" alpine321:/opt/repos/
-    $ # implicit test
-    $ ssh alpine321 '/opt/repos/libscript/_lib/_toolchain/jq/test.sh'
-    $ # explicit handwritten test
-    $ ssh alpine321 jq --version
+The CI Matrix covers:
+- **Operating Systems:** `ubuntu-latest`, `macos-latest`, `windows-latest`.
+- **Components:** Every toolchain, server, and storage component in `_lib/` and `app/`.
 
-### Usage (Windows)
-You can essentially follow same steps as above; for `rsync` use the Cygwin version. Alternatively copy files over using `scp` or whatever your preferred approach is.
+If a component is inherently incompatible with a specific OS (e.g., `kubernetes_k0s` on Windows), it is specifically excluded in the CI matrix configuration.
 
-PuTTy instructions are also available at https://github.com/SamuelMarks/libscript-docker-images
+## Vagrant Integration
 
-## Windows
-(guide coming soon)
-
-## NetBSD; FreeBSD; OpenBSD; SunOS / OpenSolaris / illumos; HP/UX; z/OS
-(guide coming soon; hopefully I find an open-source alternative to Vagrant for this!)
-
-## Android
-
-Install Python on your host machine—e.g., using [_lib/_toolchain/python/setup.sh](_lib/_toolchain/python/setup.sh)—then follow the guide here to setup your Android and SDK https://github.com/jb2170/better-adb-sync finishing by running:
-
-    $ python -m pip install BetterADBSync
-    $ export LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-/path/to/libscript}"
-    $ adbsync push --delete "${LIBSCRIPT_ROOT_DIR}" /sdcard/repos/
-
-Then use [termux](https://termux.dev/en/) to access that directory and execute commands. [scrcpy](https://github.com/Genymobile/scrcpy) is popular to remotely control the screen+keyboard, and [escrcpy](https://github.com/viarotel-org/escrcpy) appears to allow remote execution of scripts (though remains to be tested & checked for security flaws).
-
-Or alternatively the docs say you can edit your .ssh/config with:
-
-    Host sshelper
-        Port 2222
-        ProxyCommand adb-channel tcp:%p com.arachnoid.sshelper/.SSHelperActivity 1
-
-(though SSHelper seems to be unmaintained and won't work on new Android's)
-
-## iOS
-(guide coming soon)
+For deeper, multi-distribution local testing (Debian, AlmaLinux, Alpine, FreeBSD), the `vagrant/` directory provides configurations to spin up ephemeral VMs, mount the `libscript` repository, and run installation scripts in pristine environments.

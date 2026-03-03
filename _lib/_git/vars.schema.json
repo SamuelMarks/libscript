@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/_lib/_server/nginx/vars.schema.json",
+  "$id": "/_lib/_git/vars.schema.json",
   "title": "git_get args",
   "description": "git_get function arguments",
   "type": "object",
@@ -18,5 +18,8 @@
       "type": "string"
     }
   },
-  "required": ["1", "2"]
+  "required": [
+    "1",
+    "2"
+  ]
 }

@@ -488,13 +488,13 @@ update_generated_files() {
   SET "SCRIPT_NAME=%%LIBSCRIPT_ROOT_DIR%%'
     printf '\%s\%s\setup.cmd"' "${location_win}" "${name_lower}"
   # shellcheck disable=SC2183
-  printf '\n  IF NOT EXIST "%%SCRIPT_NAME%%" (
+  printf '\n  IF NOT EXIST "%%SCRIPT_NAME%%" (\n    SET "SCRIPT_NAME=%%LIBSCRIPT_ROOT_DIR%%\%s\%s\setup.bat"\n  )\n  IF NOT EXIST "%%SCRIPT_NAME%%" (
     >&2 ECHO File not found "%%SCRIPT_NAME%%"
     SET ERRORLEVEL=2
     GOTO end
   )
   CALL "%%SCRIPT_NAME%%"
-)\n\n'
+)\n\n' "${location_win}" "${name_lower}"
   } >> "${install_cmd_file}"
 
   scratch_contents="$(cat -- "${scratch}"; printf 'a')"

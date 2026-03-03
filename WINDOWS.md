@@ -1,24 +1,34 @@
-Windows support
-===============
+# Windows and MS-DOS Support
 
-First look in `PATH` for git bash, MSYS, Cygwin; if none are found then download the [ports](#ports) below using:
+LibScript aims to be a truly cross-platform framework, which includes native support for Windows without requiring WSL (Windows Subsystem for Linux), though WSL is also fully supported via the standard Unix scripts. We also include pure MS-DOS support (`.bat` files) for legacy environments.
 
-  0. `curl` ([installed by default since 2019's Windows 10](https://techcommunity.microsoft.com/blog/containers/tar-and-curl-come-to-windows/382409))
-  1. Fallback to PowerShell's `iwr`
-  2. Fallback to `wget`
-  3. Fallback to `certutil`
-  4. Fallback to `bitsadmin`
-  5. Fallback to `cscript` with a `ActiveXObject` (e.g., follow [this code](https://superuser.com/a/536400))
-  6. Fail with error. E.g., on DOS recommend manual downloading of `curl` from http://mik.dyndns.pro/dos-stuff/
+## Windows Architecture
 
-NOTE: `curl` and `tar` were first introduced in [2017](https://blogs.windows.com/windows-insider/2017/12/19/announcing-windows-10-insider-preview-build-17063-pc/]) to Microsoft Windows; so should be usually available.
+Instead of `.sh` files, Windows utilizes `.cmd` (Batch) and `.ps1` (PowerShell) files.
 
-## Ports
+Every component should ideally contain:
+- `cli.cmd`: The entrypoint for parameter parsing on Windows.
+- `setup.cmd`: A wrapper that handles pre-PowerShell DOS portability hooks and calls the actual setup logic.
+- `setup_win.ps1`: The core installation logic written in PowerShell. It handles downloading MSI installers, extracting zip archives, modifying the Windows Registry, and updating the Machine/User `PATH`.
+- `test.cmd`: The verification script (e.g., compiling a "Hello World" in C# via `dotnet`).
 
-  - BSD-3-clause `bc` and `dc` implementation: https://git.gavinhoward.com/gavin/bc
-  - Consider porting dash—the most popular `/bin/sh`—from http://gondor.apana.org.au/~herbert/dash to Windows
-  - `envsubst` looks trivial to port to Windows (MSVC): https://github.com/nekopsykose/envsubst
+## MS-DOS Architecture (.bat)
 
-There also seems to be a busybox port for Windows: https://frippery.org/busybox/release-notes/current.html
-Worth investigating if this busybox can generate all the scripts.
-Or maybe busybox + https://github.com/SamuelMarks/win-bin/releases/download/0th/envsubst.zip (from 2005's GnuWin32 project)
+To support MS-DOS and early Windows environments that lack modern `cmd.exe` features (like delayed expansion) or PowerShell, LibScript supports `.bat` file fallbacks:
+- `dos_setup_script_deps.bat`: Bootstraps necessary tools (like `curl` and `jq`) onto a bare MS-DOS machine using native `ftp` and pre-compiled 32-bit binaries.
+- `libscript.bat`: A global router for DOS that delegates to components without modern command extensions.
+- When `libscript.bat` invokes a component, or when `install.bat` runs, they will prioritize `cli.bat` and `setup.bat` if present, falling back to `.cmd` equivalents. This ensures that legacy components remain decoupled and purely DOS-compatible without breaking the modern Windows experience.
+
+## The Global Router
+
+Just like `libscript.sh`, Windows users can use `libscript.cmd` (or `libscript.bat` on DOS) from the root of the repository to list, search, and invoke components.
+
+```cmd
+libscript.cmd list
+libscript.cmd install rust latest
+```
+
+## Known Limitations
+
+- **Package Managers:** Windows does not have a single unified package manager universally available like `apt`. `winget`, `choco`, or `scoop` can be utilized inside `setup_win.ps1` if available, but the primary fallback strategy on Windows is direct download and extraction of pre-compiled binaries.
+- **Services:** Systemd and OpenRC do not exist on Windows. For components that run as background services (e.g., Postgres, Valkey), they must be installed as Windows Services using utilities like `sc.exe` or `NSSM` (Non-Sucking Service Manager).

@@ -27,5 +27,12 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
-# could do clang!
-depends 'gcc' 'g++'
+CC_INSTALL_METHOD="${CC_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
+
+if [ "${CC_INSTALL_METHOD}" = 'system' ]; then
+  # could do clang!
+  depends 'gcc' 'g++'
+else
+  >&2 printf 'Building C/C++ from source is not supported, using gcc/g++\n'
+  depends 'gcc' 'g++'
+fi

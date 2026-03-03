@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/_lib/_server/nginx/vars.schema.json",
-  "title": "nginx vars",
-  "description": "nginx vars that can be set",
+  "$id": "/_lib/_daemon/systemd/vars.schema.json",
+  "title": "systemd daemon vars",
+  "description": "Variables to configure systemd services",
   "type": "object",
   "properties": {
     "EXEC_START": {

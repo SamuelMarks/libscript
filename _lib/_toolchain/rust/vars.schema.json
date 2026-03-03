@@ -7,7 +7,36 @@
   "properties": {
     "RUST_VERSION": {
       "description": "Version of Rust demanded. Can be \"nightly\"|\"beta\"|\"stable\" xor a specific version",
-      "type": "string"
+      "type": "string",
+      "default": "stable",
+      "versionAliases": ["stable", "beta", "nightly"]
+    },
+    "LIBSCRIPT_GLOBAL_INSTALL_METHOD": {
+      "description": "Global override for how software should be installed across all systems (e.g. system package manager vs downloaded binaries/from-source).",
+      "type": "string",
+      "enum": [
+        "system",
+        "source"
+      ],
+      "default": "system"
+    },
+    "LIBSCRIPT_WINDOWS_PKG_MGR": {
+      "description": "Global package manager override for Windows targets (e.g. winget, choco).",
+      "type": "string",
+      "enum": [
+        "winget",
+        "choco"
+      ],
+      "default": "winget"
+    },
+    "RUST_INSTALL_METHOD": {
+      "description": "How to install RUST. 'system' uses the native OS package manager, 'source' compiles/downloads binaries.",
+      "type": "string",
+      "enum": [
+        "system",
+        "source"
+      ],
+      "default": "system"
     }
   }
 }

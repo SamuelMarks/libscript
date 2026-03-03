@@ -33,5 +33,11 @@ for lib in 'env.sh' '_lib/_common/pkg_mgr.sh'; do
   . "${SCRIPT_NAME}"
 done
 
-depends 'curl'
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain "${RUST_VERSION}" -y
+RUST_INSTALL_METHOD="${RUST_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-source}}"
+
+if [ "${RUST_INSTALL_METHOD}" = 'system' ]; then
+  depends 'rust'
+else
+  depends 'curl'
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain "${RUST_VERSION:-stable}" -y
+fi

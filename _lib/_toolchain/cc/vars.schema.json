@@ -3,5 +3,34 @@
   "$id": "/_lib/_toolchain/cc/vars.schema.json",
   "title": "cc toolchain vars",
   "description": "cc toolchain vars that can be set",
-  "type": "object"
+  "type": "object",
+  "properties": {
+    "LIBSCRIPT_GLOBAL_INSTALL_METHOD": {
+      "description": "Global override for how software should be installed across all systems (e.g. system package manager vs downloaded binaries/from-source).",
+      "type": "string",
+      "enum": [
+        "system",
+        "source"
+      ],
+      "default": "system"
+    },
+    "LIBSCRIPT_WINDOWS_PKG_MGR": {
+      "description": "Global package manager override for Windows targets (e.g. winget, choco).",
+      "type": "string",
+      "enum": [
+        "winget",
+        "choco"
+      ],
+      "default": "winget"
+    },
+    "CC_INSTALL_METHOD": {
+      "description": "How to install CC. 'system' uses the native OS package manager, 'source' compiles/downloads binaries.",
+      "type": "string",
+      "enum": [
+        "system",
+        "source"
+      ],
+      "default": "system"
+    }
+  }
 }

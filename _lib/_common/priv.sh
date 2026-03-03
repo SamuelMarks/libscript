@@ -22,7 +22,14 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${this_file}"':'
 
-if [ "${PRIV+x}" = 'x' ]; then
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-$(dirname "$this_file")/..}/_lib/_common/os_info.sh"
+. "${SCRIPT_NAME}" 2>/dev/null || true
+
+
+
+if [ "${TARGET_OS}" = "windows" ] || [ "${TARGET_OS}" = "mingw" ] || [ "${TARGET_OS}" = "cygwin" ]; then
+  PRIV=''
+elif [ "${PRIV+x}" = 'x' ]; then
   true;
 elif [ "$(id -u)" = "0" ]; then
   PRIV='';

@@ -10,3 +10,15 @@ node_modules
 assets
 .vagrant
 vagrant_ssh
+%temp%/
+"%temp%\schema_help.txt"
+
+# Ad-hoc dev scripts
+fix_*.sh
+patch_*.sh
+rewrite_*.sh
+run_cmd.sh
+test_*.cmd
+test_*.sh
+update_docs.sh
+README_patch.sh

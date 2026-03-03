@@ -30,8 +30,10 @@ for lib in '_lib/_common/priv.sh' '_lib/_common/os_info.sh' '_lib/_common/pkg_mg
 done
 
 if ! cmd_avail wait4x; then
-  if [ ! -f /usr/local/bin/wait4x ]; then
-    DOWNLOAD_DIR=${DOWNLOAD_DIR:-${LIBSCRIPT_DATA_DIR}/Downloads}
+  if depends wait4x; then
+    >&2 printf "wait4x installed via package manager\n"
+  elif [ ! -f /usr/local/bin/wait4x ]; then
+    DOWNLOAD_DIR=${DOWNLOAD_DIR:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache/downloads}/wait4x}
     [ -d "${DOWNLOAD_DIR}" ] || mkdir -p -- "${DOWNLOAD_DIR}"
     previous_wd="$(pwd)"
     cd -- "${DOWNLOAD_DIR}"

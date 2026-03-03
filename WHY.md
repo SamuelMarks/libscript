@@ -1,54 +1,18 @@
-Why
-===
+# Why LibScript?
 
-## Overhead
+In a world full of configuration management tools (Ansible, Chef, Puppet) and containerization solutions (Docker, Kubernetes), why build a shell-script-based provisioning framework?
 
-Overhead of Docker is extreme, in terms of:
+## 1. Zero Dependencies (The Bootstrap Problem)
+If you want to run Ansible, you need Python installed on the target machine. If you want to run Chef, you need Ruby. LibScript solves the "bootstrap problem." It requires strictly POSIX-compliant `/bin/sh` (or `cmd.exe` on Windows). You can curl a LibScript bundle and run it on a completely bare, freshly installed operating system without installing anything else first.
 
-  - Disk usage
-  - Build time
-  - Other resource usage overhead vs native (CPU, GPU, disk, kernel)
+## 2. Inspectability and Debuggability
+When a configuration management tool fails, you often have to dig through complex DSLs (Domain Specific Languages) and abstract error traces. When a LibScript component fails, it's just a shell script. You can run it with `sh -x setup.sh` and see exactly which command failed, right down to the native package manager call.
 
-## Alternatives to Docker
+## 3. Native OS Integration vs Containers
+Docker is excellent for packaging applications, but terrible for configuring a developer's local workstation or setting up an OS-native environment where performance, direct hardware access, or deep OS integration (like GUI apps, VPNs, or system daemons) is required. LibScript targets the host OS natively.
 
-There are many alternatives to Docker.
-These are rarely benchmarked, security-audited, or otherwise compared with Docker based solutions.
+## 4. Composability
+LibScript acts as a standard library for shell scripts. Instead of copying and pasting the same 50 lines of "how to detect the OS and install curl" across every project you own, you simply depend on `_lib/_common/os_info.sh` and `pkg_mgr.sh`.
 
-Some alternatives follow.
-
-### Docker directly comparable
-
-These can work directly with `Dockerfile`s:
-
-  - [Podman](https://podman.io)
-  - [nerdctl](https://github.com/containerd/nerdctl)
-
-### Linux specific
-
-  - [cgroups](https://en.wikipedia.org/wiki/Cgroups)
-  - [namespaces](https://en.wikipedia.org/wiki/Linux_namespaces)
-  - [OCI](https://en.wikipedia.org/wiki/Open_Container_Initiative) (at least until [FreeBSD support is merged](https://github.com/opencontainers/wg-freebsd-runtime)! - Windows Containers not sure how this fits into OCI…)
-
-### Other
-
-  - [Zones (SunOS)](https://en.wikipedia.org/wiki/Solaris_Containers)
-  - [Jails (*BSD)](https://en.wikipedia.org/wiki/FreeBSD_jail)
-  - [Windows Containers](https://learn.microsoft.com/en-us/virtualization/windowscontainers/about/)
-  - Platform virtualization software: https://en.wikipedia.org/wiki/Comparison_of_platform_virtualization_software
-  - OS-level virtualization software: https://en.wikipedia.org/wiki/OS-level_virtualization#IMPLEMENTATIONS
-  - μ-kernel: https://en.wikipedia.org/wiki/Microkernel
-  - Unikernel: https://en.wikipedia.org/wiki/Unikernel
-  - Any other kernel: https://en.wikipedia.org/wiki/Comparison_of_operating_system_kernels
-
-## Slogans
-
-  - Mutable dev; immutable prod.
-  - Develop quickly. Production? - Produce images.
-  - PaaS. Native.
-  - PaaS. Native. Actually.
-  - Cross-platform. Actually.
-  - Docker should be optional.
-  - Docker is terrible; stop using it. Also: we make your Docker images better.
-  - Python scripts? - No: Python packages. - Bash scripts? - No: `*.sh` & `*.bat` packages.
-  - Make shell scripting software-engineering
-  - Shell scripting? - No: shell software-engineering.
+## 5. Idempotency without the Overhead
+While shell scripts are typically imperative and not idempotent, LibScript enforces idempotent design patterns in its components. This brings the primary benefit of declarative systems (you can run it 10 times and the result is the same) without the massive footprint.

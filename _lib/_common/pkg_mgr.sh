@@ -22,23 +22,13 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${this_file}"':'
 
-STACK="${STACK:-:}"
-case "${STACK}" in
-  *':'"${this_file}"':'*)
-  printf '[STOP]   processing "%s"\n' "${this_file}"
-  return ;;
-  *)
-  printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
-esac
-export STACK="${STACK:-}${this_file}"':'
-
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 
 #DIR="$( dirname -- "$( readlink -nf -- "${0}" )")"
 
-for lib in '_lib/_common/os_info.sh' '_lib/_common/priv.sh'; do
+for lib in '_lib/_common/os_info.sh' '_lib/_common/priv.sh' '_lib/_common/pkg_mapper.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
@@ -110,10 +100,16 @@ is_installed() {
 depends() {
   pkgs_to_install=''
   for pkg in "$@"; do
-    # >&2 printf 'Checking if package is installed (%s): %s\n' "${PKG_MGR}" "${pkg}"
-    if ! is_installed "${pkg}"; then
-      pkgs_to_install="${pkgs_to_install:+"${pkgs_to_install}" }${pkg}"
-    fi
+    mapped_pkgs="$(map_package "${pkg}")" || {
+      >&2 printf 'Warning: Package "%s" not available via package manager "%s"\n' "${pkg}" "${PKG_MGR}"
+      return 1
+    }
+    for mapped_pkg in ${mapped_pkgs}; do
+      # >&2 printf 'Checking if package is installed (%s): %s\n' "${PKG_MGR}" "${mapped_pkg}"
+      if ! is_installed "${mapped_pkg}"; then
+        pkgs_to_install="${pkgs_to_install:+"${pkgs_to_install}" }${mapped_pkg}"
+      fi
+    done
   done
   if [ -n "${pkgs_to_install}" ]; then
     # >&2 printf 'Installing packages (%s): %s\n' "${PKG_MGR}" "${pkgs_to_install}"
@@ -147,3 +143,45 @@ depends() {
 if [ "${PKG_MGR-}" ]; then
   detect_pkg_mgr
 fi
+
+# Caching downloader hook
+libscript_fetch() {
+  local url="$1"
+  local dest="$2"
+  # Optional: allow override of download dir or fallback to global cache dir
+  local dl_dir="${DOWNLOAD_DIR:-}"
+  local cache_dir="${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache/downloads}"
+  
+  if [ -z "$dl_dir" ]; then
+     dl_dir="$cache_dir"
+     if [ -n "${PACKAGE_NAME:-}" ]; then
+       dl_dir="$dl_dir/$PACKAGE_NAME"
+     else
+       dl_dir="$dl_dir/unknown"
+     fi
+  fi
+  
+  mkdir -p -- "$dl_dir"
+  local filename
+  filename="$(basename "$url")"
+  # Sometimes urls end in text/scripts without nice extensions. This is basic caching.
+  local cache_file="$dl_dir/$filename"
+
+  if [ -f "$cache_file" ]; then
+    >&2 printf '[CACHED] %s\n' "$url"
+  else
+    >&2 printf '[DOWNLOADING] %s\n' "$url"
+    if command -v curl >/dev/null 2>&1; then
+      curl -#L "$url" -o "$cache_file"
+    elif command -v wget >/dev/null 2>&1; then
+      wget -q --show-progress -O "$cache_file" "$url"
+    else
+      >&2 printf 'Error: curl or wget required.\n'
+      return 1
+    fi
+  fi
+  
+  if [ -n "$dest" ]; then
+    cp "$cache_file" "$dest"
+  fi
+}

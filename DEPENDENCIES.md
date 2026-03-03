@@ -1,53 +1,40 @@
-Dependencies
-============
+# Dependency Management
 
-Basic POSIX utilities. They're usually included; unless you're on Windows. Also: `curl`, `jq`, and `envsubst`.
-Optionally `sqlite3` for a config store; regardless `dyn_env.sh` and `dyn_env.cmd` are generated for everything dynamically set by the system.
+LibScript uses a custom, lightweight dependency mapper to abstract over the differences between operating system package managers.
 
-Specifically these from POSIX are used:
+## How it Works
 
-  - `.` (for `source`ing)
-  - `/bin/sh`
-  - `awk` (no GNU extensions)
-  - `cat`
-  - `command`
-  - `cp` and `cp -r`
-  - `cut`
-  - `dc`
-  - `dd`
-  - `dirname`
-  - `echo`
-  - `env`
-  - `expr`
-  - `grep` [no GNU extensions used]
-  - `head`
-  - `mkdir` & `mkdir -p`
-  - `mktemp`
-  - `printf`
-  - `pwd`
-  - `read`
-  - `rm`
-  - `sed` [no GNU extensions used]
-  - `set`
-  - `tee`
-  - `test` and shorthand: `[` `]`
-  - `touch`
-  - `tr`
-  - `true`
-  - `uname`
-  - `yes`
+When a component script calls `depends curl jq libssl-dev`, the following lifecycle occurs:
 
-  - POSIX standard char ranges (`[:upper:]`; `[:lower:]`; `[:space:]`; `[:alpha:]`; `[:alnum:]`)
-  - Keywords: `if`, `then`, `else`, `fi`, `for`, `while`, `do`, `done`, `case`, `in`, `esac`, `wait`, `export`, `exit`, `return`
-  - Operators: `!`, `&&`, `&`, `||`, `>`, `<`, `>>`, `=`, `;`, `(`, `)`, `{`, `}`, `${`, `}`
-  - Expansions: `${VAR:-default}` for default; `%` for substr
-  - Heredoc: `<<EOF`, `EOF`
-  - Quotes: `'`, `"`
+1. **OS Detection:** `_lib/_common/os_info.sh` determines the OS (Linux, macOS, FreeBSD, etc.) and distribution (Debian, Alpine, RHEL, etc.).
+2. **Package Manager Detection:** `_lib/_common/pkg_mgr.sh` iterates through known package managers (`apt-get`, `apk`, `dnf`, `brew`, `pacman`, etc.) and sets `$PKG_MGR` to the first available one.
+3. **Package Mapping:** `_lib/_common/pkg_mapper.sh` intercepts the requested package names. Since different distributions name packages differently (e.g., `libssl-dev` on Debian vs `openssl-dev` on Alpine), `pkg_mapper.sh` translates the generic name to the OS-specific name.
+4. **Verification:** The script checks if the mapped package is already installed (e.g., via `dpkg-query`, `apk info`, `rpm -q`).
+5. **Installation:** If not installed, the package manager is invoked non-interactively to install the dependency.
 
-With `jq` and the aforementioned `curl` & `envsubst` acquired if not found in system `PATH`. And:
+## Package Mapper
 
-  - `/bin/bash` on macOS [to acquire `brew`]
-  - `docker`, only if using Docker, for `docker_builder.sh` and `docker_builder_parallel.sh` (or manually for any `*Dockerfile`)
-  - `lsb_release` on Linux
-  - `readlink`
-  - `sw_vers` on macOS
+The `pkg_mapper.sh` file contains a mapping function `map_package`. If you add a new dependency to a script and find it fails on Alpine or RHEL because the package name is different, you must update `pkg_mapper.sh` to include a translation case.
+
+Example:
+```sh
+map_package() {
+  pkg="${1}"
+  case "${pkg}" in
+    'libssl-dev')
+      case "${TARGET_OS}" in
+        'alpine') printf 'openssl-dev' ;;
+        'rhel'|'fedora'|'centos') printf 'openssl-devel' ;;
+        *) printf 'libssl-dev' ;;
+      esac
+      ;;
+    *)
+      printf '%s' "${pkg}"
+      ;;
+  esac
+}
+```
+
+## Global vs Local Install Methods
+
+As mentioned in the component READMEs, you can define `LIBSCRIPT_GLOBAL_INSTALL_METHOD` (e.g., `system`, `source`) to dictate how higher-level tools (like Python or Node.js) are installed. The package manager abstraction strictly handles OS-level dependencies (C libraries, basic utilities like `curl` or `tar`).
