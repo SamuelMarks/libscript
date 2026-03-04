@@ -361,10 +361,33 @@ if /i "%~2"=="dockerfile" set "is_docker=1"
 if defined is_docker (
     set "base_image=debian:bookworm-slim"
     set "layer_filter="
+    set "artifact_type="
     shift
     shift
     
     :docker_parse_flags
+    if /i "%~1"=="--artifact" (
+        set "artifact_type=%~2"
+        if /i "%~2"=="deb" set "base_image=debian:bookworm-slim"
+        if /i "%~2"=="rpm" set "base_image=almalinux:9"
+        if /i "%~2"=="apk" set "base_image=alpine:latest"
+        if /i "%~2"=="msi" set "base_image=mcr.microsoft.com/windows/servercore:ltsc2022"
+        if /i "%~2"=="exe" set "base_image=mcr.microsoft.com/windows/servercore:ltsc2022"
+        shift
+        shift
+        goto docker_parse_flags
+    )
+    if /i "%~1"=="-a" (
+        set "artifact_type=%~2"
+        if /i "%~2"=="deb" set "base_image=debian:bookworm-slim"
+        if /i "%~2"=="rpm" set "base_image=almalinux:9"
+        if /i "%~2"=="apk" set "base_image=alpine:latest"
+        if /i "%~2"=="msi" set "base_image=mcr.microsoft.com/windows/servercore:ltsc2022"
+        if /i "%~2"=="exe" set "base_image=mcr.microsoft.com/windows/servercore:ltsc2022"
+        shift
+        shift
+        goto docker_parse_flags
+    )
     if /i "%~1"=="--base" (
         set "base_image=%~2"
         if /i "%~2"=="debian" set "base_image=debian:bookworm-slim"
@@ -430,7 +453,7 @@ if defined is_docker (
         if defined is_url (
             echo ENV !pkg_up!_URL="!override!">> "!tmp_env_add!"
             for %%F in ("!override!") do set "filename=%%~nxF"
-            echo ADD ${!pkg_up!_URL} /opt/libscript_cache/!pkg!/!filename!>> "!tmp_env_add!"
+            if "!artifact_type!"=="" echo ADD ${!pkg_up!_URL} /opt/libscript_cache/!pkg!/!filename!>> "!tmp_env_add!"
             shift
             shift
             shift
@@ -443,7 +466,19 @@ if defined is_docker (
             )
         )
         
-        echo RUN ./libscript.sh install !pkg! ${!pkg_up!_VERSION}>> "!tmp_run!"
+        if "!artifact_type!"=="deb" (
+            echo RUN apt-get update ^&^& apt-get install -y /opt/libscript/*-!pkg!_*.deb>> "!tmp_run!"
+        ) else if "!artifact_type!"=="rpm" (
+            echo RUN dnf install -y /opt/libscript/*-!pkg!-*.rpm>> "!tmp_run!"
+        ) else if "!artifact_type!"=="apk" (
+            echo RUN apk add --allow-untrusted /opt/libscript/*-!pkg!-*.apk>> "!tmp_run!"
+        ) else if "!artifact_type!"=="msi" (
+            echo RUN for %%I in ^(C:\opt\libscript\*-!pkg!-*.msi^) do msiexec /i "%%I" /qn /norestart>> "!tmp_run!"
+        ) else if "!artifact_type!"=="exe" (
+            echo RUN for %%I in ^(C:\opt\libscript\*-!pkg!-*.exe^) do "%%I" /SILENT /VERYSILENT>> "!tmp_run!"
+        ) else (
+            echo RUN ./libscript.sh install !pkg! ${!pkg_up!_VERSION}>> "!tmp_run!"
+        )
         
         REM Call libscript.sh env to get docker formatted ENV vars, not cmd because we're emitting a linux dockerfile
         set "PREFIX=/opt/libscript/installed/!pkg!"
@@ -471,9 +506,23 @@ if defined is_docker (
                     if not "%%c"=="" if not "%%c"=="null" (
                         echo ENV !pkg_up!_URL="%%c">> "!tmp_env_add!"
                         for %%F in ("%%c") do set "filename=%%~nxF"
-            echo ADD ${!pkg_up!_URL} /opt/libscript_cache/%%a/!filename!>> "!tmp_env_add!"
+                        if "!artifact_type!"=="" echo ADD ${!pkg_up!_URL} /opt/libscript_cache/%%a/!filename!>> "!tmp_env_add!"
                     )
-                    echo RUN ./libscript.sh install %%a ${!pkg_up!_VERSION}>> "!tmp_run!"
+                    
+                    if "!artifact_type!"=="deb" (
+                        echo RUN apt-get update ^&^& apt-get install -y /opt/libscript/*-%%a_*.deb>> "!tmp_run!"
+                    ) else if "!artifact_type!"=="rpm" (
+                        echo RUN dnf install -y /opt/libscript/*-%%a-*.rpm>> "!tmp_run!"
+                    ) else if "!artifact_type!"=="apk" (
+                        echo RUN apk add --allow-untrusted /opt/libscript/*-%%a-*.apk>> "!tmp_run!"
+                    ) else if "!artifact_type!"=="msi" (
+                        echo RUN for %%%%I in ^(C:\opt\libscript\*-%%a-*.msi^) do msiexec /i "%%%%I" /qn /norestart>> "!tmp_run!"
+                    ) else if "!artifact_type!"=="exe" (
+                        echo RUN for %%%%I in ^(C:\opt\libscript\*-%%a-*.exe^) do "%%%%I" /SILENT /VERYSILENT>> "!tmp_run!"
+                    ) else (
+                        echo RUN ./libscript.sh install %%a ${!pkg_up!_VERSION}>> "!tmp_run!"
+                    )
+                    
                     set "PREFIX=/opt/libscript/installed/%%a"
                     for /f "delims=" %%i in ('call "%~dp0libscript.cmd" env %%a %%b --format=docker 2^>nul') do (
             echo %%i | findstr /b /v "ENV STACK=" | findstr /b /v "ENV SCRIPT_NAME=">> "!tmp_run!"

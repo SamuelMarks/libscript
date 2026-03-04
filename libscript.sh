@@ -285,10 +285,24 @@ if [ "$cmd" = "package_as" ]; then
   if [ "$pkg_type" = "docker" ] || [ "$pkg_type" = "dockerfile" ]; then
     base_image="debian:bookworm-slim"
     layer_filter=""
+    artifact_type=""
     while [ $# -gt 0 ]; do
       case "$1" in
         --layer|-l)
           layer_filter="$2"
+          shift 2
+          ;;
+        --artifact|-a)
+          artifact_type="$2"
+          if [ "$artifact_type" = "deb" ]; then
+            base_image="debian:bookworm-slim"
+          elif [ "$artifact_type" = "rpm" ]; then
+            base_image="almalinux:9"
+          elif [ "$artifact_type" = "apk" ]; then
+            base_image="alpine:latest"
+          elif [ "$artifact_type" = "msi" ] || [ "$artifact_type" = "exe" ]; then
+            base_image="mcr.microsoft.com/windows/servercore:ltsc2022"
+          fi
           shift 2
           ;;
         --base|--base-image)
@@ -320,6 +334,7 @@ if [ "$cmd" = "package_as" ]; then
     tmp_add=$(mktemp)
     tmp_run=$(mktemp)
     
+    OUT_DIR="$(cd "$OUT_DIR" && pwd)"
     deps_list=""
     if [ $# -gt 0 ]; then
       while [ $# -gt 0 ]; do
@@ -342,7 +357,7 @@ if [ "$cmd" = "package_as" ]; then
     fi
 
     if [ -n "$deps_list" ]; then
-      gen_script=$(printf '%b\n' "$deps_list" | awk -v l_filter="$layer_filter" '
+      gen_script=$(printf '%b\n' "$deps_list" | awk -v l_filter="$layer_filter" -v artifact_type="$artifact_type" '
 
       BEGIN {
          if (l_filter != "") {
@@ -405,13 +420,37 @@ if [ "$cmd" = "package_as" ]; then
 
              print "echo '\''ENV " pkg_up "_VERSION=\"" ver "\"'\'' >> \"$tmp_env_add\""
              print "echo '\''ENV " pkg_up "_URL=\"" url "\"'\'' >> \"$tmp_env_add\""
-             print "echo '\''ADD ${" pkg_up "_URL} /opt/libscript_cache/" pkg "/" filename "'\'' >> \"$tmp_add\""
-             print "echo '\''RUN ./libscript.sh install " pkg " ${" pkg_up "_VERSION}'\'' >> \"$tmp_run\""
+             if (artifact_type == "deb") {
+                 print "echo '\''RUN apt-get update && apt-get install -y /opt/libscript/*-" pkg "_*.deb'\'' >> \"$tmp_run\""
+             } else if (artifact_type == "rpm") {
+                 print "echo '\''RUN dnf install -y /opt/libscript/*-" pkg "-*.rpm'\'' >> \"$tmp_run\""
+             } else if (artifact_type == "apk") {
+                 print "echo '\''RUN apk add --allow-untrusted /opt/libscript/*-" pkg "-*.apk'\'' >> \"$tmp_run\""
+             } else if (artifact_type == "msi") {
+                 print "echo '\''RUN for %I in (C:\\opt\\libscript\\*-" pkg "-*.msi) do msiexec /i \"%I\" /qn /norestart'\'' >> \"$tmp_run\""
+             } else if (artifact_type == "exe") {
+                 print "echo '\''RUN for %I in (C:\\opt\\libscript\\*-" pkg "-*.exe) do \"%I\" /SILENT /VERYSILENT'\'' >> \"$tmp_run\""
+             } else {
+                 print "echo '\''ADD ${" pkg_up "_URL} /opt/libscript_cache/" pkg "/" filename "'\'' >> \"$tmp_add\""
+                 print "echo '\''RUN ./libscript.sh install " pkg " ${" pkg_up "_VERSION}'\'' >> \"$tmp_run\""
+             }
              print "PREFIX=\"/opt/libscript/installed/" pkg "\" \"$0\" env \"" pkg "\" \"" ver "\" --format=docker | grep -vE \"^(ENV STACK=|ENV SCRIPT_NAME=)\" >> \"$tmp_run\" || true"
          } else {
              if (ver == "" || ver == "null") ver = "latest"
              print "echo '\''ENV " pkg_up "_VERSION=\"" ver "\"'\'' >> \"$tmp_env_add\""
-             print "echo '\''RUN ./libscript.sh install " pkg " ${" pkg_up "_VERSION}'\'' >> \"$tmp_run\""
+             if (artifact_type == "deb") {
+                 print "echo '\''RUN apt-get update && apt-get install -y /opt/libscript/*-" pkg "_*.deb'\'' >> \"$tmp_run\""
+             } else if (artifact_type == "rpm") {
+                 print "echo '\''RUN dnf install -y /opt/libscript/*-" pkg "-*.rpm'\'' >> \"$tmp_run\""
+             } else if (artifact_type == "apk") {
+                 print "echo '\''RUN apk add --allow-untrusted /opt/libscript/*-" pkg "-*.apk'\'' >> \"$tmp_run\""
+             } else if (artifact_type == "msi") {
+                 print "echo '\''RUN for %I in (C:\\opt\\libscript\\*-" pkg "-*.msi) do msiexec /i \"%I\" /qn /norestart'\'' >> \"$tmp_run\""
+             } else if (artifact_type == "exe") {
+                 print "echo '\''RUN for %I in (C:\\opt\\libscript\\*-" pkg "-*.exe) do \"%I\" /SILENT /VERYSILENT'\'' >> \"$tmp_run\""
+             } else {
+                 print "echo '\''RUN ./libscript.sh install " pkg " ${" pkg_up "_VERSION}'\'' >> \"$tmp_run\""
+             }
              print "PREFIX=\"/opt/libscript/installed/" pkg "\" \"$0\" env \"" pkg "\" \"" ver "\" --format=docker | grep -vE \"^(ENV STACK=|ENV SCRIPT_NAME=)\" >> \"$tmp_run\" || true"
          }
       }')
@@ -499,6 +538,223 @@ else
 fi
 EOF
     exit 0
+  elif [ "$pkg_type" = "deb" ] || [ "$pkg_type" = "rpm" ] || [ "$pkg_type" = "apk" ]; then
+    APP_NAME="libscript"
+    APP_VERSION="1.0.0"
+    APP_PUBLISHER="LibScript"
+    APP_URL="https://example.com"
+    OUT_DIR="."
+
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --app-name) APP_NAME="$2"; shift 2 ;;
+        --app-version) APP_VERSION="$2"; shift 2 ;;
+        --app-publisher) APP_PUBLISHER="$2"; shift 2 ;;
+        --app-url) APP_URL="$2"; shift 2 ;;
+        --out-dir) OUT_DIR="$2"; shift 2 ;;
+        -*) echo "Error: Unknown option $1" >&2; exit 1 ;;
+        *) break ;;
+      esac
+    OUT_DIR="$(cd "$OUT_DIR" && pwd)"
+    done
+
+    deps_list=""
+    if [ $# -gt 0 ]; then
+      while [ $# -gt 0 ]; do
+        deps_list="$deps_list $1 ${2:-latest}"
+        if [ "$2" != "" ]; then shift 2; else shift; fi
+      done
+    elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+      deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == \"string\" then .value else (.value.version // \"latest\") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+    fi
+
+    if [ "$pkg_type" = "deb" ]; then
+      echo "#!/bin/sh"
+      echo "set -e"
+      echo "OUT_DIR=\"$OUT_DIR\""
+      echo "mkdir -p \"\$OUT_DIR\""
+      meta_depends=""
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        pkg_name="${APP_NAME}-${pkg}"
+        if [ -n "$meta_depends" ]; then meta_depends="${meta_depends}, "; fi
+        meta_depends="${meta_depends}${pkg_name} (= ${APP_VERSION})"
+        echo "echo \"Building $pkg_name ...\""
+        echo "BUILD_DIR=\"/tmp/${pkg_name}_build\""
+        echo "rm -rf \"\$BUILD_DIR\" && mkdir -p \"\$BUILD_DIR/DEBIAN\""
+        echo "cat << 'EOF' > \"\$BUILD_DIR/DEBIAN/control\""
+        echo "Package: $pkg_name"
+        echo "Version: $APP_VERSION"
+        echo "Architecture: all"
+        echo "Maintainer: $APP_PUBLISHER"
+        echo "Description: $APP_NAME deployment - $pkg"
+        echo "EOF"
+        echo "cat << 'EOF' > \"\$BUILD_DIR/DEBIAN/postinst\""
+        echo "#!/bin/sh"
+        echo "set -e"
+        echo "if command -v libscript.sh >/dev/null; then libscript.sh install_service $pkg $ver; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh install_service $pkg $ver; fi"
+        echo "EOF"
+        echo "chmod 0755 \"\$BUILD_DIR/DEBIAN/postinst\""
+        echo "cat << 'EOF' > \"\$BUILD_DIR/DEBIAN/prerm\""
+        echo "#!/bin/sh"
+        echo "set -e"
+        echo "if command -v libscript.sh >/dev/null; then libscript.sh uninstall $pkg --purge-data; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh uninstall $pkg --purge-data; fi"
+        echo "EOF"
+        echo "chmod 0755 \"\$BUILD_DIR/DEBIAN/prerm\""
+        echo "mkdir -p \"\$BUILD_DIR/opt/libscript\""
+        echo "dpkg-deb --build \"\$BUILD_DIR\" \"\$OUT_DIR/${pkg_name}_${APP_VERSION}_all.deb\""
+        echo "rm -rf \"\$BUILD_DIR\""
+      done
+      echo "echo \"Building ${APP_NAME}-meta ...\""
+      echo "BUILD_DIR=\"/tmp/${APP_NAME}-meta_build\""
+      echo "rm -rf \"\$BUILD_DIR\" && mkdir -p \"\$BUILD_DIR/DEBIAN\""
+      echo "cat << 'EOF' > \"\$BUILD_DIR/DEBIAN/control\""
+      echo "Package: ${APP_NAME}-meta"
+      echo "Version: $APP_VERSION"
+      echo "Architecture: all"
+      echo "Maintainer: $APP_PUBLISHER"
+      if [ -n "$meta_depends" ]; then echo "Depends: $meta_depends"; fi
+      echo "Description: $APP_NAME deployment metapackage"
+      echo "EOF"
+      echo "mkdir -p \"\$BUILD_DIR/opt/libscript\""
+      echo "dpkg-deb --build \"\$BUILD_DIR\" \"\$OUT_DIR/${APP_NAME}-meta_${APP_VERSION}_all.deb\""
+      echo "rm -rf \"\$BUILD_DIR\""
+      echo "echo \"Done!\""
+      exit 0
+    elif [ "$pkg_type" = "rpm" ]; then
+      echo "#!/bin/sh"
+      echo "set -e"
+      echo "OUT_DIR=\"$OUT_DIR\""
+      echo "mkdir -p \"\$OUT_DIR\""
+      meta_depends=""
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        pkg_name="${APP_NAME}-${pkg}"
+        if [ -n "$meta_depends" ]; then meta_depends="${meta_depends}, "; fi
+        meta_depends="${meta_depends}${pkg_name} = ${APP_VERSION}"
+        echo "echo \"Building $pkg_name ...\""
+        echo "BUILD_DIR=\"/tmp/${pkg_name}_rpmbuild\""
+        echo "mkdir -p \"\$BUILD_DIR/BUILD\" \"\$BUILD_DIR/RPMS\" \"\$BUILD_DIR/SOURCES\" \"\$BUILD_DIR/SPECS\" \"\$BUILD_DIR/SRPMS\""
+        echo "cat << 'EOF' > \"\$BUILD_DIR/SPECS/${pkg_name}.spec\""
+        echo "Name: $pkg_name"
+        echo "Version: $APP_VERSION"
+        echo "Release: 1%{?dist}"
+        echo "Summary: $APP_NAME deployment - $pkg"
+        echo "License: MIT"
+        echo "BuildArch: noarch"
+        echo "%description"
+        echo "$APP_NAME deployment - $pkg"
+        echo "%install"
+        echo "mkdir -p %{buildroot}/opt/libscript"
+        echo "touch %{buildroot}/var/lib/libscript/.${pkg_name}_installed"
+        echo "%post"
+        echo "if command -v libscript.sh >/dev/null; then libscript.sh install_service $pkg $ver; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh install_service $pkg $ver; fi"
+        echo "%preun"
+        echo "if command -v libscript.sh >/dev/null; then libscript.sh uninstall $pkg --purge-data; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh uninstall $pkg --purge-data; fi"
+        echo "%files"
+        echo "/var/lib/libscript/.${pkg_name}_installed"
+        echo "EOF"
+        echo "rpmbuild --define \"_topdir \$BUILD_DIR\" -bb \"\$BUILD_DIR/SPECS/${pkg_name}.spec\""
+        echo "find \"\$BUILD_DIR/RPMS\" -name \"*.rpm\" -exec cp {} \"\$OUT_DIR/\" \\;"
+        echo "rm -rf \"\$BUILD_DIR\""
+      done
+      echo "echo \"Building ${APP_NAME}-meta ...\""
+      echo "BUILD_DIR=\"/tmp/${APP_NAME}-meta_rpmbuild\""
+      echo "mkdir -p \"\$BUILD_DIR/BUILD\" \"\$BUILD_DIR/RPMS\" \"\$BUILD_DIR/SOURCES\" \"\$BUILD_DIR/SPECS\" \"\$BUILD_DIR/SRPMS\""
+      echo "cat << 'EOF' > \"\$BUILD_DIR/SPECS/${APP_NAME}-meta.spec\""
+      echo "Name: ${APP_NAME}-meta"
+      echo "Version: $APP_VERSION"
+      echo "Release: 1%{?dist}"
+      echo "Summary: $APP_NAME deployment metapackage"
+      echo "License: MIT"
+      echo "BuildArch: noarch"
+      if [ -n "$meta_depends" ]; then echo "Requires: $meta_depends"; fi
+      echo "%description"
+      echo "$APP_NAME deployment metapackage"
+      echo "%install"
+      echo "mkdir -p %{buildroot}/opt/libscript"
+      echo "touch %{buildroot}/var/lib/libscript/.${APP_NAME}-meta_installed"
+      echo "%files"
+      echo "/var/lib/libscript/.${APP_NAME}-meta_installed"
+      echo "EOF"
+      echo "rpmbuild --define \"_topdir \$BUILD_DIR\" -bb \"\$BUILD_DIR/SPECS/${APP_NAME}-meta.spec\""
+      echo "find \"\$BUILD_DIR/RPMS\" -name \"*.rpm\" -exec cp {} \"\$OUT_DIR/\" \\;"
+      echo "rm -rf \"\$BUILD_DIR\""
+      echo "echo \"Done!\""
+      exit 0
+    elif [ "$pkg_type" = "apk" ]; then
+      echo "#!/bin/sh"
+      echo "set -e"
+      echo "OUT_DIR=\"$OUT_DIR\""
+      echo "mkdir -p \"\$OUT_DIR\""
+      meta_depends=""
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        pkg_name="${APP_NAME}-${pkg}"
+        if [ -n "$meta_depends" ]; then meta_depends="${meta_depends} "; fi
+        meta_depends="${meta_depends}${pkg_name}"
+        echo "echo \"Building $pkg_name ...\""
+        echo "BUILD_DIR=\"/tmp/${pkg_name}_apkbuild\""
+        echo "mkdir -p \"\$BUILD_DIR\""
+        echo "cat << 'EOF' > \"\$BUILD_DIR/APKBUILD\""
+        echo "pkgname=\"$pkg_name\""
+        echo "pkgver=\"$APP_VERSION\""
+        echo "pkgrel=1"
+        echo "pkgdesc=\"$APP_NAME deployment - $pkg\""
+        echo "url=\"$APP_URL\""
+        echo "arch=\"noarch\""
+        echo "license=\"MIT\""
+        echo "depends=\"\""
+        echo "install=\"\$pkgname.post-install \$pkgname.pre-deinstall\""
+        echo "build() { return 0; }"
+        echo "package() {"
+        echo "  mkdir -p \"\$pkgdir/var/lib/libscript\""
+        echo "  touch \"\$pkgdir/var/lib/libscript/.${pkg_name}_installed\""
+        echo "}"
+        echo "EOF"
+        echo "cat << 'EOF' > \"\$BUILD_DIR/${pkg_name}.post-install\""
+        echo "#!/bin/sh"
+        echo "if command -v libscript.sh >/dev/null; then libscript.sh install_service $pkg $ver; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh install_service $pkg $ver; fi"
+        echo "EOF"
+        echo "chmod +x \"\$BUILD_DIR/${pkg_name}.post-install\""
+        echo "cat << 'EOF' > \"\$BUILD_DIR/${pkg_name}.pre-deinstall\""
+        echo "#!/bin/sh"
+        echo "if command -v libscript.sh >/dev/null; then libscript.sh uninstall $pkg --purge-data; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh uninstall $pkg --purge-data; fi"
+        echo "EOF"
+        echo "chmod +x \"\$BUILD_DIR/${pkg_name}.pre-deinstall\""
+        echo "if [ \"\$(id -u)\" = \"0\" ]; then ABUILD_OPTS=\"-F\"; else ABUILD_OPTS=\"\"; fi"
+        echo "cd \"\$BUILD_DIR\" && abuild \$ABUILD_OPTS -P \"\$BUILD_DIR/out\" rootpkg"
+        echo "find \"\$BUILD_DIR/out\" -name \"*.apk\" -exec cp {} \"\$OUT_DIR/\" \\;"
+        echo "rm -rf \"\$BUILD_DIR\""
+      done
+      echo "echo \"Building ${APP_NAME}-meta ...\""
+      echo "BUILD_DIR=\"/tmp/${APP_NAME}-meta_apkbuild\""
+      echo "mkdir -p \"\$BUILD_DIR\""
+      echo "cat << 'EOF' > \"\$BUILD_DIR/APKBUILD\""
+      echo "pkgname=\"${APP_NAME}-meta\""
+      echo "pkgver=\"$APP_VERSION\""
+      echo "pkgrel=1"
+      echo "pkgdesc=\"$APP_NAME deployment metapackage\""
+      echo "url=\"$APP_URL\""
+      echo "arch=\"noarch\""
+      echo "license=\"MIT\""
+      echo "depends=\"$meta_depends\""
+      echo "build() { return 0; }"
+      echo "package() {"
+      echo "  mkdir -p \"\$pkgdir/var/lib/libscript\""
+      echo "  touch \"\$pkgdir/var/lib/libscript/.${APP_NAME}-meta_installed\""
+      echo "}"
+      echo "EOF"
+      echo "if [ \"\$(id -u)\" = \"0\" ]; then ABUILD_OPTS=\"-F\"; else ABUILD_OPTS=\"\"; fi"
+      echo "cd \"\$BUILD_DIR\" && abuild \$ABUILD_OPTS -P \"\$BUILD_DIR/out\" rootpkg"
+      echo "find \"\$BUILD_DIR/out\" -name \"*.apk\" -exec cp {} \"\$OUT_DIR/\" \\;"
+      echo "rm -rf \"\$BUILD_DIR\""
+      echo "echo \"Done!\""
+      exit 0
+    fi
   elif [ "$pkg_type" = "msi" ] || [ "$pkg_type" = "innosetup" ] || [ "$pkg_type" = "nsis" ]; then
     install_scope="perMachine"
     inno_priv="admin"

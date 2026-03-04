@@ -48,3 +48,7 @@ table.md
 *_gen.sh
 /cache/
 /dockerfiles/
+*_test.sh
+*_test.cmd
+*_test.bat
+*.tmp
