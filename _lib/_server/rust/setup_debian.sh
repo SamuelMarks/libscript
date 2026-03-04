@@ -51,6 +51,7 @@ cd -- "${DEST}"
 # shellcheck disable=SC1091
 . "${HOME}"'/.cargo/env'
 
+[ -f Cargo.toml ] || cargo init --bin
 cargo build --release
 
 if [ "${VARS-}" ]; then

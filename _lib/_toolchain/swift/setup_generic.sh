@@ -33,10 +33,16 @@ export SCRIPT_NAME
 
 SWIFT_INSTALL_METHOD="${SWIFT_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 if [ "${SWIFT_INSTALL_METHOD}" = 'system' ]; then
-  depends 'swift' || { echo "Swift package not available natively on all OSs"; exit 1; }
-else
+  if ! depends 'swift'; then
+    echo "Swift package not available natively on all OSs, falling back to download"
+    SWIFT_INSTALL_METHOD='download'
+  fi
+fi
+
+if [ "${SWIFT_INSTALL_METHOD}" != 'system' ]; then
   depends 'curl' 'tar'
   echo "Downloading Swift binary..."
-  libscript_download https://download.swift.org/swift-5.9-release/ubuntu2204/swift-5.9-RELEASE/swift-5.9-RELEASE-ubuntu22.04.tar.gz /tmp/swift.tar.gz
-  priv tar -xzf /tmp/swift.tar.gz -C /opt
+  libscript_download https://download.swift.org/swift-5.10-release/ubuntu2204/swift-5.10-RELEASE/swift-5.10-RELEASE-ubuntu22.04.tar.gz /tmp/swift.tar.gz
+  priv mkdir -p /opt/swift
+  priv tar -xzf /tmp/swift.tar.gz -C /opt/swift --strip-components=1
 fi

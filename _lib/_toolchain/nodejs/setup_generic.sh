@@ -84,5 +84,6 @@ else
     cd -- "${previous_wd}"
   fi
   "${DOWNLOAD_DIR}"'/bin/fnm' install "${NODEJS_VERSION}"
+  "${DOWNLOAD_DIR}"'/bin/fnm' default "${NODEJS_VERSION}"
   export PATH="${HOME}"'/.local/share/fnm/aliases/default/bin:'"${PATH}"
 fi

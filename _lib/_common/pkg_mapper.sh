@@ -28,6 +28,42 @@ map_package() {
         *) return 1 ;;
       esac
       ;;
+    'mongodb')
+      case "${PKG_MGR}" in
+        'brew') printf 'mongodb/brew/mongodb-community\n' ;;
+        *) printf 'mongodb\n' ;;
+      esac
+      ;;
+    'rabbitmq-server')
+      case "${PKG_MGR}" in
+        'brew') printf 'rabbitmq\n' ;;
+        *) printf 'rabbitmq-server\n' ;;
+      esac
+      ;;
+    'clang')
+      case "${PKG_MGR}" in
+        'brew') printf 'llvm\n' ;;
+        *) printf 'clang\n' ;;
+      esac
+      ;;
+    'libpq-dev')
+      case "${PKG_MGR}" in
+        'brew') printf 'libpq\n' ;;
+        *) printf 'libpq-dev\n' ;;
+      esac
+      ;;
+    'libsqlite3-dev')
+      case "${PKG_MGR}" in
+        'brew') printf 'sqlite\n' ;;
+        *) printf 'libsqlite3-dev\n' ;;
+      esac
+      ;;
+    'default-libmysqlclient-dev')
+      case "${PKG_MGR}" in
+        'brew') printf 'mysql-client\n' ;;
+        *) printf 'default-libmysqlclient-dev\n' ;;
+      esac
+      ;;
     'c_compiler')
       case "${PKG_MGR}" in
         'apk') printf 'gcc musl-dev\n' ;;
@@ -83,6 +119,7 @@ map_package() {
         'apk') printf 'g++ musl-dev\n' ;;
         'apt-get') printf 'build-essential\n' ;;
         'winget') printf 'MSYS2.MSYS2\n' ;;
+        'brew') printf 'gcc\n' ;;
         *) printf 'g++\n' ;;
       esac
       ;;
@@ -259,7 +296,7 @@ map_package() {
       ;;
     'wait4x')
       case "${PKG_MGR}" in
-        'brew') printf 'wait4x/wait4x/wait4x\n' ;;
+        'brew') printf 'wait4x\n' ;;
         *) return 1 ;;
       esac
       ;;

@@ -34,9 +34,11 @@ for lib in 'env.sh' '_lib/_common/pkg_mgr.sh' '_lib/_git/git.sh' '_lib/_toolchai
 done
 
 previous_wd="$(pwd)"
+depends 'libpq-dev' 'libsqlite3-dev' 'default-libmysqlclient-dev'
 git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}"
 cd -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}"
 d="$( dirname -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}" )"'/rust-actix-diesel-auth-scaffold'
+depends 'libpq-dev' 'libsqlite3-dev' 'default-libmysqlclient-dev'
 git_get https://github.com/offscale/rust-actix-diesel-auth-scaffold "${d}"
 ~/.cargo/bin/cargo build --release
 if [ ! "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}" = "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR}" ]; then

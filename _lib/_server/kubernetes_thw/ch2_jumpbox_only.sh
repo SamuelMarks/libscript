@@ -82,7 +82,7 @@ for d in 'client' 'cni-plugins' 'controller' 'worker'; do
   chmod +x 'downloads/'"${d}"'/'*
 done
 set -f
-cp 'downloads/client/kubectl' '/usr/local/bin/'
+priv  cp 'downloads/client/kubectl' '/usr/local/bin/'
 kubectl version --client
 
 cd -- "${previous_wd}"

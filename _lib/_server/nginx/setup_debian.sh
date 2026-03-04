@@ -50,10 +50,10 @@ if [ "${run_before}" -eq 0 ]; then
   [ -f '/usr/share/keyrings/nginx-archive-keyring.gpg' ] || \
     curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
       | priv  tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
-  [ -f '/etc/apt/sources.list.d/nginx.list' ] || \
-    printf 'deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
-    http://nginx.org/packages/debian %s nginx\n' "$(lsb_release -cs)" \
-      | priv  tee /etc/apt/sources.list.d/nginx.list
+  if [ ! -f '/etc/apt/sources.list.d/nginx.list' ]; then
+    ID="$(. /etc/os-release && printf "%s" "${ID}")"
+    printf 'deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] http://nginx.org/packages/%s %s nginx\n' "${ID}" "$(lsb_release -cs)" | priv  tee /etc/apt/sources.list.d/nginx.list
+  fi
   [ -f '/etc/apt/preferences.d/99nginx' ] || \
     printf 'Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n' \
       | priv  tee /etc/apt/preferences.d/99nginx && \

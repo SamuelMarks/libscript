@@ -1,3 +1,4 @@
 #!/bin/sh
 set -feu
-jupyterhub --version
+. ./env.sh
+"${JUPYTERHUB_VENV}/bin/jupyterhub" --version

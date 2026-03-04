@@ -84,11 +84,11 @@ Explore these detailed guides to leverage the full power of LibScript:
 | `_lib/_server/caddy` | ✅ | ✅ | ✅ |
 | `_lib/_server/docker` | ✅ | ✅ | ✅ |
 | `_lib/_server/kubernetes_k0s` | ✅ | ⏭️ | ⏭️ |
-| `_lib/_server/kubernetes_thw` | ✅ | ✅ | ⏭️ |
+| `_lib/_server/kubernetes_thw` | ✅ | ⏭️ | ⏭️ |
 | `_lib/_server/nginx` | ✅ | ✅ | ⏭️ |
 | `_lib/_server/nodejs` | ✅ | ✅ | ✅ |
 | `_lib/_server/python` | ✅ | ✅ | ✅ |
-| `_lib/_server/rust` | ✅ | ✅ | ✅ |
+| `_lib/_server/rust` | ✅ | ⏭️ | ✅ |
 | `_lib/_storage/etcd` | ✅ | ✅ | ⏭️ |
 | `_lib/_storage/mongodb` | ✅ | ✅ | ✅ |
 | `_lib/_storage/postgres` | ✅ | ✅ | ⏭️ |

@@ -1,3 +1,4 @@
 #!/bin/sh
 set -feu
-celery --version
+. ./env.sh
+"${PYTHON_VENV}/bin/celery" --version

@@ -57,6 +57,10 @@ jobs:
         exclude:
           - os: macos-latest
             component: "_lib/_server/kubernetes_k0s"
+          - os: macos-latest
+            component: "_lib/_server/kubernetes_thw"
+          - os: macos-latest
+            component: "_lib/_server/rust"
           - os: windows-latest
             component: "_lib/_server/kubernetes_k0s"
           - os: windows-latest
@@ -118,4 +122,5 @@ jobs:
           cd ${{ matrix.component }}
           if exist setup.cmd ( call setup.cmd || exit /b 1 )
           if exist setup_win.ps1 ( powershell -ExecutionPolicy Bypass -File setup_win.ps1 || exit /b 1 )
+          FOR /F "tokens=*" %%A IN ('powershell -NoProfile -Command "[Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')"') DO ( SET "PATH=%%A;%PATH%" )
           if exist test.cmd ( call test.cmd || exit /b 1 ) else ( echo "No test.cmd found" )

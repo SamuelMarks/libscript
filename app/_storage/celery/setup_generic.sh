@@ -45,13 +45,15 @@ if [ ! -d "${PYTHON_VENV}" ]; then
   priv  mkdir -p -- "${PYTHON_VENV}"
   priv  chown -R -- "${USER}":"${GROUP}" "${PYTHON_VENV}"
   uv venv --python "${PYTHON_VERSION}" -- "${PYTHON_VENV}"
+  uv pip install --python "${PYTHON_VENV}" celery
 fi
 
 if [ -d '/etc/systemd/system' ]; then
   if [ ! -d '/home/celery/' ]; then
-    mkdir -p -- '/var/run/celery' '/var/log/celery'
-    adduser "${JUPYTERHUB_SERVICE_USER}" --home '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' --gecos ''
-    chown -R -- celery:celery '/var/run/celery' '/var/log/celery' "${PYTHON_VENV}"
+  CELERY_SERVICE_USER="${CELERY_SERVICE_USER:-celery}"
+    priv mkdir -p -- '/var/run/celery' '/var/log/celery'
+    priv adduser "${CELERY_SERVICE_USER}" --home '/home/'"${CELERY_SERVICE_USER}"'/' --gecos ''
+    priv chown -R -- celery:celery '/var/run/celery' '/var/log/celery' "${PYTHON_VENV}"
   fi
 
   service_name="${LIBSCRIPT_SERVICE_NAME:-celery}"

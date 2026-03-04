@@ -1,3 +1,3 @@
 #!/bin/sh
 set -feu
-rabbitmqctl status
+rabbitmqctl version

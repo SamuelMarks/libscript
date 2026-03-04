@@ -41,7 +41,7 @@ if [ ! -d "${JUPYTERHUB_VENV}" ]; then
   "${JUPYTERHUB_VENV}"'/bin/python' -m ensurepip
   "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U pip
   "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U setuptools wheel
-  "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U "jupyverse[auth,jupyterlab]" fps-jupyterlab fps-auth jupyter-collaboration oauthenticator jupyterhub-nativeauthenticator
+  "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U "jupyverse[auth,jupyterlab]" jupyterhub fps-jupyterlab fps-auth jupyter-collaboration oauthenticator jupyterhub-nativeauthenticator
   # "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U jupyter notebook pyright python-language-server python-lsp-server
 fi
 if ! cmd_avail configurable-http-proxy; then
@@ -67,7 +67,7 @@ if [ -d '/etc/systemd/system' ]; then
   fi
 
   if [ ! -d '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' ]; then
-    adduser "${JUPYTERHUB_SERVICE_USER}" --home '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' --gecos ''
+    priv adduser "${JUPYTERHUB_SERVICE_USER}" --home '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' --gecos ''
   fi
   priv  chown -R -- "${JUPYTERHUB_SERVICE_USER}":"${JUPYTERHUB_SERVICE_USER}" "${JUPYTERHUB_VENV}"
 

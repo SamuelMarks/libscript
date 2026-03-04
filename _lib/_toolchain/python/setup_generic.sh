@@ -58,7 +58,7 @@ else # uv
     curl -LsSf https://astral.sh/uv/install.sh | sh
   fi
   # shellcheck disable=SC1091
-  . "${HOME}"'/.local/bin/env'
+  
   # uv python install "${PYTHON_VERSION}"
   if [ "${VENV-}" ] && [ "${PYTHON_VENV-}" ]; then
     export VENV="${PYTHON_VENV}"

@@ -6,6 +6,9 @@ if [ "${BASH_SOURCE-}" ] || [ "${ZSH_VERSION-}" ]; then
   set -o pipefail
 fi
 
+if command -v -- etcd >/dev/null 2>&1; then 
+  etcd & sleep 2; 
+fi
 if command -v -- etcdctl >/dev/null 2>&1; then
   etcdctl endpoint health
 else
