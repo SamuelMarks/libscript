@@ -1,28 +1,22 @@
 # LibScript
 
-## Purpose & Current State
+[![CI Status](https://github.com/SamuelMarks/libscript/actions/workflows/ci.yml/badge.svg)](https://github.com/SamuelMarks/libscript/actions/workflows/ci.yml)
 
-**Purpose**: This document serves as the main entrypoint and high-level overview of the LibScript project, providing quick start instructions, links to other core documentation, and the current CI status. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning. It functions as a comprehensive global and per-component package manager across Linux, macOS, DOS, and Windows.
 
-**Current State**: LibScript functions as a comprehensive global and per-component package manager across Linux, macOS, DOS, and Windows. It features a robust core CLI (`libscript.sh`, `libscript.cmd`, `libscript.bat`), supports generating deployment configurations (Docker, MSI, InnoSetup, NSIS), handles semantic versioning, and provides native background serving. Recent updates have stabilized Windows installer generation and expanded macOS native service provisioning.
+## Key Features
 
-## Overview
-
-LibScript provides a unified interface (`libscript.sh`, `libscript.cmd`, or `libscript.bat`) to install a wide variety of "components" ranging from language compilers (Rust, Go, Python) to databases (PostgreSQL, Valkey) to entire applications (JupyterHub).
-
-It embraces a philosophy of transparent, inspectable shell scripts that are composable and idempotent. By utilizing native package managers (`apt`, `dnf`, `apk`, `brew`, `pacman`, etc.) where appropriate and falling back to direct downloads or source builds, LibScript bridges the gap between ad-hoc setup scripts and heavyweight configuration management tools like Ansible or Chef.
-
-## Core Documentation
-
-To understand the project better, consult the following guides:
-
-- **[USAGE.md](USAGE.md):** How to use LibScript to install components on your system.
-- **[ARCHITECTURE.md](ARCHITECTURE.md):** The internal structure, lifecycle, and design patterns of LibScript components.
-- **[DEVELOPING.md](DEVELOPING.md):** How to contribute and add new components to the library.
-- **[DEPENDENCIES.md](DEPENDENCIES.md):** Details on the cross-platform package manager abstraction.
-- **[WINDOWS.md](WINDOWS.md):** Specific information regarding Windows and DOS support (Batch and PowerShell).
-- **[TEST.md](TEST.md):** Information on the test suite, CI workflows, and local testing.
-- **[WHY.md](WHY.md):** The philosophy and rationale behind creating LibScript.
+- **Cross-Platform Provisioning**: Works seamlessly across Linux (Ubuntu, Debian, Alpine, RHEL, etc.), macOS, and Windows (Batch and PowerShell).
+- **Unified Interface**: Use `libscript.sh`, `libscript.cmd`, or `libscript.bat` to manage your environment intuitively.
+- **Vast Component Library**:
+  - **Toolchains**: Install modern toolchains natively (Rust, Go, Python, Node.js, C, C++, Zig, Java, PHP, Ruby, Bun, Deno, Swift, etc.).
+  - **Servers & Web**: Provision servers like Caddy, Nginx, Docker, Node.js, and Kubernetes (k0s, thw).
+  - **Databases & Storage**: Effortlessly stand up PostgreSQL, MongoDB, SQLite, Valkey, Etcd, RabbitMQ, and more.
+  - **Third-Party Applications**: Deploy complex applications and services like JupyterHub, OpenVPN, Firecrawl, and Celery stacks.
+- **Native Package Manager Abstraction**: Intelligently utilizes underlying package managers (`apt`, `dnf`, `apk`, `brew`, `pacman`, `choco`, `winget`) when available, falling back to direct binary downloads or building from source.
+- **Deployment & Config Generation**: Autogenerates deployment formats from configurations. Supports creating Dockerfiles (`debian.Dockerfile`, `alpine.Dockerfile`), Windows installers (MSI, InnoSetup, NSIS), and Vagrant test beds out-of-the-box.
+- **Semantic Versioning & Scoping**: Resolves and installs specific versions of tools. Caches tools globally (in `$LIBSCRIPT_ROOT_DIR/cache/downloads`) or creates reproducible local environments with the `--prefix` option.
+- **Idempotent & Composable**: Core execution is strictly inspectable, deterministic, and safe to re-run.
 
 ## Quick Start
 
@@ -30,48 +24,75 @@ To understand the project better, consult the following guides:
 # List all available components
 ./libscript.sh list
 
-# Search for a component
-./libscript.sh search python
+# Search for a specific component
+./libscript.sh search nodejs
 
-# Install a component (e.g., Rust)
+# Install a component globally or prefixed
 ./libscript.sh install rust latest
+./libscript.sh install rust 1.70.0 --prefix=/opt/myenv
 
-# View options for a component
+# Run a command in the environment of the tool without modifying global $PATH
+./libscript.sh run python latest --version
+
+# View installation options for a component
 ./libscript.sh install rust latest --help
 ```
 
-### Extended Command Set
-The entire package ecosystem natively hooks the following runtime commands across Linux `sh` and Windows `cmd`:
-- `install <package> <version>` : Download and Setup locally (Use `--prefix` to relocate).
+### Command Set
+
+The core ecosystem supports the following operations across all OS environments:
+- `install <package> <version>` : Download and setup locally.
 - `run <package> <version> [args...]` : Bind the local execution logic to an arbitrary shell argument string directly.
 - `exec <package> <version> <cmd> [args...]` : Force `$PATH` updates targeting configured components.
-- `which <package> <version>` : Query internally installed bins natively.
-- `ls <package>` : Scan installed versions.
-- `ls-remote <package>` : Poll upstream sources.
+- `which <package> <version>` : Query natively installed binary paths.
+- `ls <package>` : Scan installed versions on the system.
+- `ls-remote <package>` : Poll upstream sources for available versions.
 
-A global caching protocol ensures tools download directly to `$LIBSCRIPT_ROOT_DIR/cache/downloads`. You can enforce system-wide bounds by using `--cache-dir=<folder>`.
+## System Architecture
+
+LibScript bridges the gap between ad-hoc setup scripts and heavyweight configuration management tools (like Ansible, Chef, or Puppet). Instead of requiring a runtime language or agent, it uses POSIX `sh` on Unix and `cmd`/`bat` on Windows.
+
+- **`_lib/`**: Contains core reusable toolchains, storage solutions, server definitions, and daemon service managers (Systemd, OpenRC, Windows Services).
+- **`app/`**: Compositions of complex third-party applications orchestrating multiple dependencies.
+- **`netctl/`**: Built-in network control tools to manage reverse proxies and web application setups.
+
+To delve into the internals, check out the [Architecture Guide](ARCHITECTURE.md) and our design rationale in [WHY.md](WHY.md).
+
+## Core Documentation
+
+Explore these detailed guides to leverage the full power of LibScript:
+
+- **[USAGE.md](USAGE.md)**: Deep dive into usage patterns, environment scoping, and flags.
+- **[ARCHITECTURE.md](ARCHITECTURE.md)**: Explore the internal directory structure, module lifecycles, and design patterns.
+- **[DEPENDENCIES.md](DEPENDENCIES.md)**: How LibScript handles multi-OS package dependencies.
+- **[WINDOWS.md](WINDOWS.md)**: Specific nuances and constraints for Windows/DOS and PowerShell operations.
+- **[DEVELOPING.md](DEVELOPING.md)**: A guide for contributing and developing new LibScript components.
+- **[TEST.md](TEST.md)**: Information on Vagrant local testing and our CI workflows.
+
 ## CI Checks Matrix
+
+[![CI](https://github.com/SamuelMarks/libscript/actions/workflows/ci.yml/badge.svg)](https://github.com/SamuelMarks/libscript/actions/workflows/ci.yml)
 
 | Component | Ubuntu | macOS | Windows |
 |---|---|---|---|
-| `app/_storage/celery` | ✅ | ✅ | ❌ |
-| `app/third_party/firecrawl` | ✅ | ✅ | ❌ |
-| `app/third_party/jupyterhub` | ✅ | ✅ | ❌ |
-| `app/third_party/openvpn` | ✅ | ✅ | ❌ |
-| `app/third_party/serve-actix-diesel-auth-scaffold` | ✅ | ✅ | ❌ |
+| `app/_storage/celery` | ✅ | ✅ | ⏭️ |
+| `app/third_party/firecrawl` | ✅ | ✅ | ⏭️ |
+| `app/third_party/jupyterhub` | ✅ | ✅ | ⏭️ |
+| `app/third_party/openvpn` | ✅ | ✅ | ⏭️ |
+| `app/third_party/serve-actix-diesel-auth-scaffold` | ✅ | ✅ | ⏭️ |
 | `_lib/_git` | ✅ | ✅ | ✅ |
 | `_lib/_server/caddy` | ✅ | ✅ | ✅ |
 | `_lib/_server/docker` | ✅ | ✅ | ✅ |
-| `_lib/_server/kubernetes_k0s` | ✅ | ❌ | ❌ |
-| `_lib/_server/kubernetes_thw` | ✅ | ✅ | ❌ |
-| `_lib/_server/nginx` | ✅ | ✅ | ❌ |
+| `_lib/_server/kubernetes_k0s` | ✅ | ⏭️ | ⏭️ |
+| `_lib/_server/kubernetes_thw` | ✅ | ✅ | ⏭️ |
+| `_lib/_server/nginx` | ✅ | ✅ | ⏭️ |
 | `_lib/_server/nodejs` | ✅ | ✅ | ✅ |
 | `_lib/_server/python` | ✅ | ✅ | ✅ |
 | `_lib/_server/rust` | ✅ | ✅ | ✅ |
-| `_lib/_storage/etcd` | ✅ | ✅ | ❌ |
+| `_lib/_storage/etcd` | ✅ | ✅ | ⏭️ |
 | `_lib/_storage/mongodb` | ✅ | ✅ | ✅ |
-| `_lib/_storage/postgres` | ✅ | ✅ | ❌ |
-| `_lib/_storage/rabbitmq` | ✅ | ✅ | ❌ |
+| `_lib/_storage/postgres` | ✅ | ✅ | ⏭️ |
+| `_lib/_storage/rabbitmq` | ✅ | ✅ | ⏭️ |
 | `_lib/_storage/sqlite` | ✅ | ✅ | ✅ |
 | `_lib/_storage/valkey` | ✅ | ✅ | ✅ |
 | `_lib/_toolchain/bun` | ✅ | ✅ | ✅ |

@@ -22,6 +22,8 @@ echo "Updating CI Checks Matrix in README.md..."
 cat << 'TABLE' > ci_results.tmp
 ## CI Checks Matrix
 
+[![CI](https://github.com/SamuelMarks/libscript/actions/workflows/ci.yml/badge.svg)](https://github.com/SamuelMarks/libscript/actions/workflows/ci.yml)
+
 | Component | Ubuntu | macOS | Windows |
 |---|---|---|---|
 TABLE
@@ -33,10 +35,10 @@ for comp in $components; do
 
     # Check exclusions
     if grep -A 2 "\- os: macos-latest" .github/workflows/ci.yml | grep -q "\"$comp\""; then
-        macos="❌"
+        macos="⏭️"
     fi
     if grep -A 2 "\- os: windows-latest" .github/workflows/ci.yml | grep -q "\"$comp\""; then
-        windows="❌"
+        windows="⏭️"
     fi
 
     echo "| \`$comp\` | $ubuntu | $macos | $windows |" >> ci_results.tmp
