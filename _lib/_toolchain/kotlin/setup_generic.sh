@@ -36,6 +36,6 @@ if [ "${KOTLIN_INSTALL_METHOD}" = 'system' ]; then
   depends 'kotlin' || true
 else
   depends 'curl' 'unzip'
-  curl -L -o /tmp/kotlin.zip https://github.com/JetBrains/kotlin/releases/download/v1.9.20/kotlin-compiler-1.9.20.zip
+  libscript_download https://github.com/JetBrains/kotlin/releases/download/v1.9.20/kotlin-compiler-1.9.20.zip /tmp/kotlin.zip
   priv unzip -o /tmp/kotlin.zip -d /opt
 fi

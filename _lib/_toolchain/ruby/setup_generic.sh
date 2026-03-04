@@ -45,7 +45,7 @@ if [ "${RUBY_INSTALL_METHOD}" = 'system' ]; then
   depends 'ruby'
 else
   depends 'curl' 'tar' 'make' 'gcc'
-  curl -L -o /tmp/ruby.tar.gz "https://cache.ruby-lang.org/pub/ruby/${ruby_major}/ruby-${RUBY_VERSION}.tar.gz"
+  libscript_download "https://cache.ruby-lang.org/pub/ruby/${ruby_major}/ruby-${RUBY_VERSION}.tar.gz" /tmp/ruby.tar.gz
   tar -xzf /tmp/ruby.tar.gz -C /tmp
   cd "/tmp/ruby-${RUBY_VERSION}" && ./configure && make && priv make install
 fi

@@ -37,6 +37,6 @@ if [ "${SWIFT_INSTALL_METHOD}" = 'system' ]; then
 else
   depends 'curl' 'tar'
   echo "Downloading Swift binary..."
-  curl -L -o /tmp/swift.tar.gz https://download.swift.org/swift-5.9-release/ubuntu2204/swift-5.9-RELEASE/swift-5.9-RELEASE-ubuntu22.04.tar.gz
+  libscript_download https://download.swift.org/swift-5.9-release/ubuntu2204/swift-5.9-RELEASE/swift-5.9-RELEASE-ubuntu22.04.tar.gz /tmp/swift.tar.gz
   priv tar -xzf /tmp/swift.tar.gz -C /opt
 fi

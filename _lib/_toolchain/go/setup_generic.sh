@@ -53,7 +53,7 @@ else
     *) ;;
   esac
   archive="go${GO_VERSION}.${os}-${arch}.tar.gz"
-  curl -L -o "/tmp/${archive}" "https://go.dev/dl/${archive}"
+  libscript_download "https://go.dev/dl/${archive}" "/tmp/${archive}"
   priv rm -rf /usr/local/go
   priv tar -C /usr/local -xzf "/tmp/${archive}"
   # shellcheck disable=SC2016

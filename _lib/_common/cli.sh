@@ -150,12 +150,16 @@ export PACKAGE_NAME
 export VERSION
 
 if [ -n "$PACKAGE_NAME" ] && [ -n "$VERSION" ]; then
-  pkg_upper=$(echo "$PACKAGE_NAME" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
+  pkg_upper=$(echo "${PACKAGE_NAME##*/}" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
   var_name="${pkg_upper}_VERSION"
   export "$var_name"="$VERSION"
 fi
 
 # Parse remaining args
+if [ "$VERSION" = "latest" ] || [ "$VERSION" = "lts" ] || [ "$VERSION" = "stable" ]; then
+  export LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1
+fi
+
 while [ $# -gt 0 ]; do
   if [ "$ACTION" = "run" ] || [ "$ACTION" = "exec" ]; then
     break
@@ -175,6 +179,38 @@ while [ $# -gt 0 ]; do
       ;;
     --service-name=*)
       export LIBSCRIPT_SERVICE_NAME="${1#*=}"
+      shift
+      ;;
+      --listen=*)
+        listen_str="${1#*=}"
+        if echo "$listen_str" | grep -q "^unix:"; then
+          export LIBSCRIPT_LISTEN_SOCKET="${listen_str#unix:}"
+        elif echo "$listen_str" | grep -q ":"; then
+          export LIBSCRIPT_LISTEN_ADDRESS="${listen_str%%:*}"
+          export LIBSCRIPT_LISTEN_PORT="${listen_str##*:}"
+        else
+          export LIBSCRIPT_LISTEN_PORT="$listen_str"
+        fi
+        shift
+        ;;
+    --listen-port=*)
+      export LIBSCRIPT_LISTEN_PORT="${1#*=}"
+      shift
+      ;;
+    --listen-address=*)
+      export LIBSCRIPT_LISTEN_ADDRESS="${1#*=}"
+      shift
+      ;;
+    --listen-socket=*)
+      export LIBSCRIPT_LISTEN_SOCKET="${1#*=}"
+      shift
+      ;;
+    --never-refresh-checksum-db)
+      export LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1
+      shift
+      ;;
+    --export-aria2-downloads=*)
+      export LIBSCRIPT_ARIA2_EXPORT_FILE="${1#*=}"
       shift
       ;;
     --secrets=*)

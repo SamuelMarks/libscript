@@ -39,7 +39,7 @@ if ! cmd_avail wait4x; then
     cd -- "${DOWNLOAD_DIR}"
     name='wait4x-'"${UNAME_LOWER}"'-'"${ARCH_ALT}"
     archive="${name}"'.tar.gz'
-    curl -#LO 'https://github.com/atkrad/wait4x/releases/latest/download/'"${archive}"
+    libscript_download 'https://github.com/atkrad/wait4x/releases/latest/download/'"${archive}" ""
     tar --one-top-level -xvf "${archive}"
     priv install .'/'"${name}"'/wait4x' '/usr/local/bin/wait4x'
     # rm -- wait4x-linux-amd64.tar.gz

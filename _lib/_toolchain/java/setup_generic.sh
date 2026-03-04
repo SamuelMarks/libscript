@@ -36,7 +36,7 @@ if [ "${JAVA_INSTALL_METHOD}" = 'system' ]; then
   depends 'java'
 else
   depends 'curl' 'tar'
-  curl -L -o /tmp/jdk.tar.gz https://download.java.net/java/GA/jdk17/0d483333a00540d886896bac774ff48b/35/GPL/openjdk-17_linux-x64_bin.tar.gz
+  libscript_download https://download.java.net/java/GA/jdk17/0d483333a00540d886896bac774ff48b/35/GPL/openjdk-17_linux-x64_bin.tar.gz /tmp/jdk.tar.gz
   priv mkdir -p /opt/java
   priv tar -xzf /tmp/jdk.tar.gz -C /opt/java --strip-components=1
 fi

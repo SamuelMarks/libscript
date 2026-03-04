@@ -9,7 +9,10 @@
       "description": "Specific version of caddy to install. Can be a numeric version or an alias.",
       "type": "string",
       "default": "latest",
-      "versionAliases": ["latest", "stable"]
+      "versionAliases": [
+        "latest",
+        "stable"
+      ]
     },
     "LIBSCRIPT_GLOBAL_INSTALL_METHOD": {
       "description": "Global override for how software should be installed across all systems (e.g. system package manager vs downloaded binaries/from-source).",
@@ -37,6 +40,36 @@
         "source"
       ],
       "default": "system"
+    },
+    "LIBSCRIPT_LISTEN_PORT": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Global port to listen on"
+    },
+    "LIBSCRIPT_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Global address to listen on"
+    },
+    "LIBSCRIPT_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Global unix socket to listen on"
+    },
+    "CADDY_LISTEN_PORT": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Port for CADDY to listen on"
+    },
+    "CADDY_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Address for CADDY to listen on"
+    },
+    "CADDY_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Unix socket for CADDY to listen on"
     }
   }
 }

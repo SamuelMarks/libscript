@@ -1,0 +1,14 @@
+{
+  "properties": {
+    "ARIA2_VERSION": {
+      "type": "string",
+      "default": "latest",
+      "description": "Version of aria2 to install."
+    },
+    "ARIA2_INSTALL_METHOD": {
+      "type": "string",
+      "default": "system",
+      "description": "Install method for aria2 ('system' or 'source')"
+    }
+  }
+}

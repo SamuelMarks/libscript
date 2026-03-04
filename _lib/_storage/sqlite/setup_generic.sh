@@ -38,3 +38,11 @@ else
   echo "[WARN] From-source or alternative installation requested for sqlite, but currently only system package manager is fully supported."
   depends 'sqlite'
 fi
+
+if [ -n "${SQLITE_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
+  "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "unix:${SQLITE_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 || true
+elif [ -n "${SQLITE_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ] && [ -n "${SQLITE_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
+  "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${SQLITE_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${SQLITE_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 || true
+elif [ -n "${SQLITE_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
+  "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${SQLITE_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 || true
+fi

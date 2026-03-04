@@ -9,7 +9,10 @@
       "description": "Specific version of mongodb to install. Can be a numeric version or an alias.",
       "type": "string",
       "default": "latest",
-      "versionAliases": ["latest", "stable"]
+      "versionAliases": [
+        "latest",
+        "stable"
+      ]
     },
     "LIBSCRIPT_GLOBAL_INSTALL_METHOD": {
       "description": "Global override for how software should be installed across all systems (e.g. system package manager vs downloaded binaries/from-source).",
@@ -37,6 +40,53 @@
         "source"
       ],
       "default": "system"
+    },
+    "LIBSCRIPT_LISTEN_PORT": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Global port to listen on"
+    },
+    "LIBSCRIPT_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Global address to listen on"
+    },
+    "LIBSCRIPT_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Global unix socket to listen on"
+    },
+    "MONGODB_LISTEN_PORT": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Port for MONGODB to listen on"
+    },
+    "MONGODB_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Address for MONGODB to listen on"
+    },
+    "MONGODB_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Unix socket for MONGODB to listen on"
+    },
+    "MONGODB_DATA_DIR": {
+      "description": "Directory for MongoDB data",
+      "type": "string"
+    },
+    "MONGODB_SERVICE_RUN_AS_USER": {
+      "description": "Windows local user account to run the service (leave empty for Network Service)",
+      "type": "string"
+    },
+    "MONGODB_SERVICE_RUN_AS_PASSWORD": {
+      "description": "Password for the local user account (if applicable)",
+      "type": "string"
+    },
+    "MONGODB_SERVICE_NAME": {
+      "description": "Custom name for the Windows Service (allows side-by-side installations)",
+      "type": "string",
+      "default": "libscript_mongodb"
     }
   }
 }

@@ -217,3 +217,168 @@ libscript_fetch() {
     cp "$cache_file" "$dest"
   fi
 }
+
+
+libscript_download() {
+  url="$1"
+  out_file="$2"
+  provided_checksum="${3:-}"
+  
+  if [ -z "$out_file" ]; then out_file="$(basename "$url")"; fi
+  
+  # Ensure LIBSCRIPT_CHECKSUM_DB is defined
+  checksum_db="${LIBSCRIPT_ROOT_DIR}/checksums.txt"
+  
+  expected_checksum="$provided_checksum"
+  if [ -z "$expected_checksum" ] && [ -f "$checksum_db" ]; then
+    # try to find the checksum
+    expected_checksum="$(grep -F "$url" "$checksum_db" | head -n 1 | awk '{print $2}')"
+  fi
+  
+  # if --export-aria2-downloads is set, just write to it and return
+  if [ -n "${LIBSCRIPT_ARIA2_EXPORT_FILE:-}" ]; then
+    printf "%s\n" "$url" >> "$LIBSCRIPT_ARIA2_EXPORT_FILE"
+    printf "  out=%s\n" "$(basename "$out_file")" >> "$LIBSCRIPT_ARIA2_EXPORT_FILE"
+    if [ -n "$expected_checksum" ]; then
+      printf "  checksum=sha-256=%s\n" "${expected_checksum#sha-256=}" >> "$LIBSCRIPT_ARIA2_EXPORT_FILE"
+    fi
+    return 0
+  fi
+  
+  download_success=0
+
+  # 1. aria2c
+  if [ "$download_success" -eq 0 ] && command -v aria2c >/dev/null 2>&1; then
+    # aria2c can fail if directory exists but is a file, handle normally
+    if aria2c -d "$(dirname "$out_file")" -o "$(basename "$out_file")" --allow-overwrite=true "$url"; then
+      download_success=1
+    fi
+  fi
+
+  # 2. curl
+  if [ "$download_success" -eq 0 ] && command -v curl >/dev/null 2>&1; then
+    if curl -fL -o "$out_file" "$url"; then
+      download_success=1
+    fi
+  fi
+
+  # 3. wget
+  if [ "$download_success" -eq 0 ] && command -v wget >/dev/null 2>&1; then
+    if wget -O "$out_file" "$url"; then
+      download_success=1
+    fi
+  fi
+
+  # 4. nc (netcat) fallback for HTTP (does not support HTTPS natively without OpenSSL, but we try)
+  if [ "$download_success" -eq 0 ] && command -v nc >/dev/null 2>&1; then
+    local host="${url#*://}"
+    local path="/${host#*/}"
+    host="${host%%/*}"
+    if echo "$url" | grep -q "^http://"; then
+      printf "GET %s HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n" "$path" "$host" | nc "$host" 80 > "${out_file}.tmp"
+      # safely strip headers
+      {
+        while IFS= read -r line; do
+          line="$(echo "$line" | tr -d '\r\n')"
+          [ -z "$line" ] && break
+        done
+        cat
+      } < "${out_file}.tmp" > "$out_file"
+      rm -f "${out_file}.tmp"
+      download_success=1
+    fi
+  fi
+
+  # 5. /dev/tcp native bash fallback
+  if [ "$download_success" -eq 0 ]; then
+    local host="${url#*://}"
+    local path="/${host#*/}"
+    host="${host%%/*}"
+    if echo "$url" | grep -q "^http://"; then
+      if exec 3<>/dev/tcp/"$host"/80 2>/dev/null; then
+        printf "GET %s HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n" "$path" "$host" >&3
+        {
+          while IFS= read -r line <&3; do
+            line="$(echo "$line" | tr -d '\r\n')"
+            [ -z "$line" ] && break
+          done
+          cat <&3
+        } > "$out_file"
+        exec 3<&-
+        download_success=1
+      fi
+    fi
+  fi
+
+  if [ "$download_success" -eq 0 ]; then
+    echo "Error: Failed to download $url via aria2c, curl, wget, nc, or /dev/tcp." >&2
+    return 1
+  fi
+  
+  # Checksum handling
+  # Compute sha256
+  actual_checksum=""
+  if command -v sha256sum >/dev/null 2>&1; then
+    actual_checksum="$(sha256sum "$out_file" | awk '{print $1}')"
+  elif command -v shasum >/dev/null 2>&1; then
+    actual_checksum="$(shasum -a 256 "$out_file" | awk '{print $1}')"
+  fi
+  
+  if [ -n "$actual_checksum" ]; then
+    local stripped_expected="${expected_checksum#sha-256=}"
+    if [ -n "$stripped_expected" ]; then
+      if [ "$actual_checksum" != "$stripped_expected" ]; then
+        echo "Error: checksum mismatch for $url" >&2
+        echo "Expected: $stripped_expected" >&2
+        echo "Actual:   $actual_checksum" >&2
+        return 1
+      fi
+    else
+      # Not found, add it if not prevented
+      if [ "${LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB:-0}" != "1" ]; then
+        echo "$url $actual_checksum" >> "$checksum_db"
+      fi
+    fi
+  fi
+}
+
+libscript_process_aria2_file() {
+  local list_file="$1"
+  if [ ! -f "$list_file" ]; then
+    echo "Error: File not found: $list_file" >&2
+    return 1
+  fi
+
+  local url=""
+  local out=""
+  local checksum=""
+
+  process_entry() {
+    if [ -n "$url" ]; then
+      echo "Processing $url ..."
+      libscript_download "$url" "$out" "$checksum"
+    fi
+    url=""
+    out=""
+    checksum=""
+  }
+
+  while IFS= read -r line || [ -n "$line" ]; do
+    # skip empty lines safely
+    [ -z "$(echo "$line" | tr -d '[:space:]')" ] && continue
+    
+    if echo "$line" | grep -q '^[[:space:]]'; then
+      local opt
+      opt="$(echo "$line" | sed 's/^[[:space:]]*//')"
+      if echo "$opt" | grep -q '^out='; then
+        out="${opt#out=}"
+      elif echo "$opt" | grep -q '^checksum='; then
+        checksum="${opt#checksum=}"
+      fi
+    else
+      process_entry
+      url="$line"
+    fi
+  done < "$list_file"
+  process_entry
+}

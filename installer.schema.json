@@ -98,6 +98,9 @@
                   "version": {
                     "type": "string"
                   },
+                  "listen": {
+                    "type": "string"
+                  },
                   "env": {
                     "type": "string"
                   },
@@ -129,6 +132,9 @@
                   "version": {
                     "type": "string"
                   },
+                  "listen": {
+                    "type": "string"
+                  },
                   "env": {
                     "type": "string"
                   }
@@ -146,6 +152,9 @@
                 "type": "object",
                 "properties": {
                   "dest": {
+                    "type": "string"
+                  },
+                  "listen": {
                     "type": "string"
                   },
                   "builder": {
@@ -178,6 +187,9 @@
                       "os_native": {
                         "type": "boolean"
                       },
+                  "listen": {
+                    "type": "string"
+                  },
                       "env": {
                         "type": "array",
                         "items": {
@@ -213,6 +225,9 @@
                     "type": "string"
                   },
                   "version": {
+                    "type": "string"
+                  },
+                  "listen": {
                     "type": "string"
                   },
                   "env": {

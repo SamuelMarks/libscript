@@ -44,6 +44,63 @@
         "choco"
       ],
       "default": "winget"
+    },
+    "LIBSCRIPT_LISTEN_PORT_SECURE": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Global secure port to listen on"
+    },
+    "LIBSCRIPT_LISTEN_PORT": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Global port to listen on"
+    },
+    "LIBSCRIPT_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Global address to listen on"
+    },
+    "LIBSCRIPT_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Global unix socket to listen on"
+    },
+    "NGINX_LISTEN_PORT_SECURE": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Secure port for NGINX to listen on"
+    },
+    "NGINX_LISTEN_PORT": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Port for NGINX to listen on"
+    },
+    "NGINX_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Address for NGINX to listen on"
+    },
+    "NGINX_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Unix socket for NGINX to listen on"
+    },
+    "NGINX_SERVICE_RUN_AS_USER": {
+      "description": "Windows local user account to run the service (leave empty for Network Service)",
+      "type": "string"
+    },
+    "NGINX_SERVICE_RUN_AS_PASSWORD": {
+      "description": "Password for the local user account (if applicable)",
+      "type": "string"
+    },
+    "NGINX_SERVICE_NAME": {
+      "description": "Custom name for the Windows Service (allows side-by-side installations)",
+      "type": "string",
+      "default": "libscript_nginx"
     }
   }
 }

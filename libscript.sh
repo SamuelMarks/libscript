@@ -12,6 +12,7 @@ show_help() {
   echo "Commands:"
   echo "  list                        List all available components"
   echo "  search <query>              Search available components by name or description"
+  echo "  process-downloads [file]    Process an aria2-formatted download list"
   echo "  env <component> <version>   Print environment variables for a component"
   echo "  install-deps [file]         Install all dependencies defined in a JSON file (default: libscript.json)"
   echo "  package_as <format> [args]  Package libscript usage (e.g., docker, docker_compose)"
@@ -19,10 +20,13 @@ show_help() {
   echo ""
   echo "Options:"
   echo "  --help, -h, /?              Show this extensive help text"
-  echo "  --prefix=<dir>              Set local installation prefix
-  --service-name=<name>       Set a custom service/daemon name
-  --secrets=<dir|url>         Save generated secrets to a directory or OpenBao/Vault URL"
+  echo "  --prefix=<dir>              Set local installation prefix"
+  echo "  --service-name=<name>       Set a custom service/daemon name"
   echo "  --secrets=<dir|url>         Save generated secrets to a directory or OpenBao/Vault URL"
+  echo "  --listen=<str>                Global listen (port, addr:port, unix:socket)
+  --listen-port=<port>        Global port to listen on"
+  echo "  --listen-address=<addr>     Global address to listen on"
+  echo "  --listen-socket=<socket>    Global unix socket to listen on"
   echo ""
   echo "Examples:"
   echo "  $0 list"
@@ -69,6 +73,30 @@ while [ $# -gt 0 ]; do
       export PREFIX="${1#*=}"
       shift
       ;;
+    --listen=*)
+      listen_str="${1#*=}"
+      if echo "$listen_str" | grep -q "^unix:"; then
+        export LIBSCRIPT_LISTEN_SOCKET="${listen_str#unix:}"
+      elif echo "$listen_str" | grep -q ":"; then
+        export LIBSCRIPT_LISTEN_ADDRESS="${listen_str%%:*}"
+        export LIBSCRIPT_LISTEN_PORT="${listen_str##*:}"
+      else
+        export LIBSCRIPT_LISTEN_PORT="$listen_str"
+      fi
+      shift
+      ;;
+    --listen-port=*)
+      export LIBSCRIPT_LISTEN_PORT="${1#*=}"
+      shift
+      ;;
+    --listen-address=*)
+      export LIBSCRIPT_LISTEN_ADDRESS="${1#*=}"
+      shift
+      ;;
+    --listen-socket=*)
+      export LIBSCRIPT_LISTEN_SOCKET="${1#*=}"
+      shift
+      ;;
     --service-name=*)
       export LIBSCRIPT_SERVICE_NAME="${1#*=}"
       shift
@@ -105,6 +133,13 @@ if [ "$cmd" = "list" ]; then
       printf "  %s\n" "$comp"
     fi
   done
+  exit 0
+fi
+
+if [ "$cmd" = "process-downloads" ]; then
+  list_file="$1"
+  . "$SCRIPT_DIR/_lib/_common/pkg_mgr.sh"
+  libscript_process_aria2_file "$list_file"
   exit 0
 fi
 
@@ -247,36 +282,151 @@ fi
 if [ "$cmd" = "package_as" ]; then
   pkg_type="$1"
   shift
-  if [ "$pkg_type" = "docker" ]; then
-    echo "FROM debian:bookworm-slim"
+  if [ "$pkg_type" = "docker" ] || [ "$pkg_type" = "dockerfile" ]; then
+    base_image="debian:bookworm-slim"
+    layer_filter=""
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --layer|-l)
+          layer_filter="$2"
+          shift 2
+          ;;
+        --base|--base-image)
+          base_image="$2"
+          if [ "$base_image" = "debian" ]; then
+    base_image="debian:bookworm-slim"
+    layer_filter=""
+          elif [ "$base_image" = "alpine" ]; then
+            base_image="alpine:latest"
+          fi
+          shift 2
+          ;;
+        *)
+          break
+          ;;
+      esac
+    done
+
+    echo "FROM $base_image"
+    echo "ARG TARGETOS=linux"
+    echo "ARG TARGETARCH=amd64"
     echo "ENV LC_ALL=C.UTF-8 LANG=C.UTF-8"
-    echo "COPY . /opt/libscript"
-    echo "WORKDIR /opt/libscript"
+    echo "ENV LIBSCRIPT_ROOT_DIR=\"/opt/libscript\""
+    echo "ENV LIBSCRIPT_BUILD_DIR=\"/opt/libscript_build\""
+    echo "ENV LIBSCRIPT_DATA_DIR=\"/opt/libscript_data\""
+    echo "ENV LIBSCRIPT_CACHE_DIR=\"/opt/libscript_cache\""
+    
+    tmp_env_add=$(mktemp)
+    tmp_add=$(mktemp)
+    tmp_run=$(mktemp)
+    
+    deps_list=""
     if [ $# -gt 0 ]; then
       while [ $# -gt 0 ]; do
         pkg="$1"
         ver="${2:-latest}"
-        echo "RUN ./libscript.sh install $pkg $ver"
-        PREFIX="/opt/libscript/installed/$pkg" "$0" env "$pkg" "$ver" --format=docker | grep -vE '^(ENV STACK=|ENV SCRIPT_NAME=)' || true
-        if [ "$2" != "" ]; then shift 2; else shift; fi
+        if echo "$3" | grep -q "^http"; then
+          override="$3"
+          shift 3
+        elif [ "$2" != "" ]; then
+          override=""
+          shift 2
+        else
+          override=""
+          shift
+        fi
+        deps_list="${deps_list}cli ${pkg} ${ver} ${override}\n"
       done
     elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
-      deps=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end) \(if (.value | type) == "object" and .value.override then .value.override else "" end)" else empty end' "libscript.json" 2>/dev/null)
-      echo "$deps" | while read -r pkg ver override; do
-        if [ -n "$pkg" ]; then
-          if [ "$ver" = "null" ]; then ver="latest"; fi
-          if [ -n "$override" ] && [ "$override" != "null" ]; then
-            pkg_up=$(echo "$pkg" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
-            echo "ENV ${pkg_up}_URL=\"$override\""
-          else
-            echo "RUN ./libscript.sh install $pkg $ver"
-            PREFIX="/opt/libscript/installed/$pkg" "$0" env "$pkg" "$ver" --format=docker | grep -vE '^(ENV STACK=|ENV SCRIPT_NAME=)' || true
-          fi
-        fi
-      done
-    else
-      echo "RUN ./install_gen.sh"
+      deps_list=$(jq -r 'to_entries[] | .key as $layer | if ($layer | IN("deps", "toolchains", "servers", "databases", "third_party", "storage")) then (.value | to_entries[] | "\($layer) \(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end) \(if (.value | type) == "object" and .value.override then .value.override else "" end)") else empty end' "libscript.json" 2>/dev/null)
     fi
+
+    if [ -n "$deps_list" ]; then
+      gen_script=$(printf '%b\n' "$deps_list" | awk -v l_filter="$layer_filter" '
+
+      BEGIN {
+         if (l_filter != "") {
+            split(l_filter, f_arr, ",")
+            for (f in f_arr) {
+               allowed_layers[f_arr[f]] = 1
+               allowed_layers[f_arr[f] "s"] = 1
+            }
+         }
+      }
+      NF > 0 {
+         layer = $1
+         pkg = $2
+         ver = $3
+         url = $4
+         
+         if (l_filter != "" && !(layer in allowed_layers) && layer != "cli") next;
+         
+         if (seen[pkg]) next;
+         seen[pkg] = 1;
+
+         pkg_up = toupper(pkg)
+         sub(/^.*\//, "", pkg_up); gsub(/-/, "_", pkg_up)
+
+         if (url != "" && url != "null") {
+             extracted_ver = ""
+             if (match(url, /[0-9]+\.[0-9]+(\.[0-9]+)?/)) {
+                 extracted_ver = substr(url, RSTART, RLENGTH)
+             }
+
+             if ((ver == "" || ver == "latest" || ver == "null") && extracted_ver != "") {
+                 ver = extracted_ver
+             }
+             
+             if (ver == "" || ver == "null") ver = "latest"
+
+             if (ver != "latest") {
+                 escaped_ver = ver
+                 temp_url = ""
+                 remaining = url
+                 while (i = index(remaining, ver)) {
+                     temp_url = temp_url substr(remaining, 1, i - 1) "${" pkg_up "_VERSION}"
+                     remaining = substr(remaining, i + length(ver))
+                 }
+                 url = temp_url remaining
+             }
+             
+             if (match(url, /(amd64|arm64|x86_64|aarch64|386|armv7l|x64)/)) {
+                 arch_str = substr(url, RSTART, RLENGTH)
+                 gsub(arch_str, "${TARGETARCH}", url)
+             }
+             if (match(url, /(linux|darwin|windows)/)) {
+                 os_str = substr(url, RSTART, RLENGTH)
+                 gsub(os_str, "${TARGETOS}", url)
+             }
+
+             n = split(url, parts, "/")
+             filename = parts[n]
+             sub(/\?.*$/, "", filename)
+
+             print "echo '\''ENV " pkg_up "_VERSION=\"" ver "\"'\'' >> \"$tmp_env_add\""
+             print "echo '\''ENV " pkg_up "_URL=\"" url "\"'\'' >> \"$tmp_env_add\""
+             print "echo '\''ADD ${" pkg_up "_URL} /opt/libscript_cache/" pkg "/" filename "'\'' >> \"$tmp_add\""
+             print "echo '\''RUN ./libscript.sh install " pkg " ${" pkg_up "_VERSION}'\'' >> \"$tmp_run\""
+             print "PREFIX=\"/opt/libscript/installed/" pkg "\" \"$0\" env \"" pkg "\" \"" ver "\" --format=docker | grep -vE \"^(ENV STACK=|ENV SCRIPT_NAME=)\" >> \"$tmp_run\" || true"
+         } else {
+             if (ver == "" || ver == "null") ver = "latest"
+             print "echo '\''ENV " pkg_up "_VERSION=\"" ver "\"'\'' >> \"$tmp_env_add\""
+             print "echo '\''RUN ./libscript.sh install " pkg " ${" pkg_up "_VERSION}'\'' >> \"$tmp_run\""
+             print "PREFIX=\"/opt/libscript/installed/" pkg "\" \"$0\" env \"" pkg "\" \"" ver "\" --format=docker | grep -vE \"^(ENV STACK=|ENV SCRIPT_NAME=)\" >> \"$tmp_run\" || true"
+         }
+      }')
+      eval "$gen_script"
+    else
+      echo "RUN ./install_gen.sh" >> "$tmp_run"
+    fi
+    
+    cat "$tmp_env_add"
+    cat "$tmp_add"
+    echo "COPY . /opt/libscript"
+    echo "WORKDIR /opt/libscript"
+    cat "$tmp_run"
+    
+    rm -f "$tmp_env_add" "$tmp_add" "$tmp_run"
     exit 0
   elif [ "$pkg_type" = "docker_compose" ]; then
     echo "version: '3.8'"
@@ -332,7 +482,6 @@ EOF
           echo "  \"$pkg\" \"$ver\" ON \\"
         fi
       done
-    else
       # list all available components
       find_components | sort | while read -r comp; do
         echo "  \"$comp\" \"latest\" OFF \\"
@@ -385,13 +534,13 @@ EOF
     done
 
     if [ "$pkg_type" = "msi" ]; then
-      cat << EOF
+      cat << EOF2
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <Product Id="*" Name="$APP_NAME" Language="1033" Version="$APP_VERSION" Manufacturer="$APP_PUBLISHER" UpgradeCode="$UPGRADE_CODE">
     <Package InstallerVersion="200" Compressed="yes" InstallScope="$install_scope" Description="$WELCOME_TEXT" />
     <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
-EOF
+EOF2
       if [ -n "$ICON_PATH" ]; then
         echo "    <Icon Id=\"AppIcon.ico\" SourceFile=\"$ICON_PATH\"/>"
         echo "    <Property Id=\"ARPPRODUCTICON\" Value=\"AppIcon.ico\" />"
@@ -399,96 +548,416 @@ EOF
       if [ -n "$APP_URL" ]; then
         echo "    <Property Id=\"ARPURLINFOABOUT\" Value=\"$APP_URL\" />"
       fi
-      cat << EOF
-    <Directory Id="TARGETDIR" Name="SourceDir">
-      <Directory Id="ProgramFilesFolder">
-        <Directory Id="INSTALLFOLDER" Name="$APP_NAME" />
-      <Directory/>
-    </Directory/>
-    <Feature Id="MainFeature" Title="Main Feature" Level="1">
-      <ComponentGroupRef Id="ProductComponents" />
-    </Feature>
-    
-    <!-- Custom Actions for Installation -->
-EOF
+      
+      deps_list=""
       if [ $# -gt 0 ]; then
         while [ $# -gt 0 ]; do
-          pkg="$1"
-          ver="${2:-latest}"
-          echo "    <CustomAction Id=\"Install$pkg\" Directory=\"INSTALLFOLDER\" ExeCommand=\"cmd.exe /c libscript.cmd install $pkg $ver\" Execute=\"deferred\" Return=\"check\" Impersonate=\"no\" />"
+          deps_list="$deps_list $1 ${2:-latest}"
           if [ "$2" != "" ]; then shift 2; else shift; fi
         done
       elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
-        deps=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null)
-        echo "$deps" | while read -r pkg ver; do
-          if [ -n "$pkg" ]; then
-            if [ "$ver" = "null" ]; then ver="latest"; fi
-            echo "    <CustomAction Id=\"Install$pkg\" Directory=\"INSTALLFOLDER\" ExeCommand=\"cmd.exe /c libscript.cmd install $pkg $ver\" Execute=\"deferred\" Return=\"check\" Impersonate=\"no\" />"
-          fi
-        done
+        deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
       fi
-      cat << 'EOF'
-    <InstallExecuteSequence>
-      <Custom Action="InstallMain" After="InstallFiles">NOT Installed</Custom>
-    </InstallExecuteSequence>
-  </Product>
-  <Fragment>
-    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
-      <!-- Add your files here -->
-    </ComponentGroup>
-  </Fragment>
-</Wix>
-EOF
+
+      echo "    <Directory Id=\"TARGETDIR\" Name=\"SourceDir\">"
+      echo "      <Directory Id=\"ProgramFilesFolder\">"
+      echo "        <Directory Id=\"INSTALLFOLDER\" Name=\"$APP_NAME\" />"
+      echo "      </Directory>"
+      echo "    </Directory>"
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "Function CheckPorts_$pkg()" > "validate_${pkg}.vbs"
+        echo "  Session.Property(\"VALID_$pkg\") = \"1\"" >> "validate_${pkg}.vbs"
+        echo "  Dim shell, exec, port" >> "validate_${pkg}.vbs"
+        echo "  Set shell = CreateObject(\"WScript.Shell\")" >> "validate_${pkg}.vbs"
+        
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            for varname in $vars_json; do
+              if case "$varname" in *"_PORT"* | *"_PORT_SECURE"*) true;; *) false;; esac; then
+                echo "  port = Session.Property(\"PROP_${pkg}_${varname}\")" >> "validate_${pkg}.vbs"
+                echo "  If port <> \"\" Then" >> "validate_${pkg}.vbs"
+                echo "    Set exec = shell.Exec(\"cmd.exe /c netstat -an | findstr /R /C:"":\" & port & \" .*LISTENING\"\"\")" >> "validate_${pkg}.vbs"
+                echo "    exec.StdOut.ReadAll()" >> "validate_${pkg}.vbs"
+                echo "    If exec.ExitCode = 0 Then" >> "validate_${pkg}.vbs"
+                echo "      MsgBox \"Port \" & port & \" is already in use.\", 16, \"Validation Error\"" >> "validate_${pkg}.vbs"
+                echo "      Session.Property(\"VALID_$pkg\") = \"0\"" >> "validate_${pkg}.vbs"
+                echo "    End If" >> "validate_${pkg}.vbs"
+                echo "  End If" >> "validate_${pkg}.vbs"
+              fi
+            done
+          fi
+        fi
+        echo "End Function" >> "validate_${pkg}.vbs"
+        echo "    <Binary Id=\"Bin_Val_$pkg\" SourceFile=\"validate_${pkg}.vbs\" />"
+        echo "    <CustomAction Id=\"CA_Val_$pkg\" BinaryKey=\"Bin_Val_$pkg\" VBScriptCall=\"CheckPorts_$pkg\" Return=\"check\" />"
+      done
+
+      # Features
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "    <Feature Id=\"Feature_$pkg\" Title=\"Install $pkg\" Level=\"1\">"
+        echo "      <ComponentGroupRef Id=\"ProductComponents\" />"
+        echo "    </Feature>"
+      done
+
+      # UI Generation
+      echo "    <UI Id=\"CustomUI\">"
+      echo "      <Property Id=\"DefaultUIFont\" Value=\"WixUI_Font_Normal\" />"
+      
+      echo "      <Dialog Id=\"Dlg_Features\" Width=\"370\" Height=\"270\" Title=\"Select Components\">"
+      echo "        <Control Id=\"Lbl_Select\" Type=\"Text\" X=\"20\" Y=\"10\" Width=\"330\" Height=\"15\" Text=\"Select the components you want to install:\" />"
+      y=30
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "        <Control Id=\"Chk_$pkg\" Type=\"CheckBox\" X=\"20\" Y=\"${y}\" Width=\"330\" Height=\"15\" Property=\"INSTALL_$pkg\" CheckBoxValue=\"1\" Text=\"Install $pkg\" />"
+        y=$((y + 20))
+      done
+      echo "        <Control Id=\"Next\" Type=\"PushButton\" X=\"236\" Y=\"243\" Width=\"56\" Height=\"17\" Default=\"yes\" Text=\"Next\">"
+      echo "          <Publish Event=\"EndDialog\" Value=\"Return\">1</Publish>"
+      echo "        </Control>"
+      echo "      </Dialog>"
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "      <Property Id=\"INSTALL_$pkg\" Value=\"1\" Secure=\"yes\" />"
+      done
+      
+      set -- $deps_list
+      has_custom_ui=0
+      dialogs=""
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            has_custom_ui=1
+            echo "      <Dialog Id=\"Dlg_${pkg}\" Width=\"370\" Height=\"270\" Title=\"Configuration for ${pkg}\">"
+            y=20
+            echo "$vars_json" | while read -r item; do
+              varname=$(echo "$item" | jq -r '.key')
+              desc=$(echo "$item" | jq -r '.desc')
+              defval=$(echo "$item" | jq -r '.def')
+              
+              if [ $y -gt 220 ]; then break; fi
+              
+              echo "        <Control Id=\"Lbl_${varname}\" Type=\"Text\" X=\"20\" Y=\"${y}\" Width=\"330\" Height=\"15\" Text=\"${desc}:\" />"
+              y=$((y + 15))
+              if case "$varname" in *"_PASSWORD"*) true;; *) false;; esac; then
+                echo "        <Control Id=\"Txt_${varname}\" Type=\"Edit\" X=\"20\" Y=\"${y}\" Width=\"330\" Height=\"18\" Property=\"PROP_${pkg}_${varname}\" Password=\"yes\" />"
+              else
+                echo "        <Control Id=\"Txt_${varname}\" Type=\"Edit\" X=\"20\" Y=\"${y}\" Width=\"330\" Height=\"18\" Property=\"PROP_${pkg}_${varname}\" />"
+              fi
+              y=$((y + 20))
+            done
+            echo "        <Control Id=\"Next\" Type=\"PushButton\" X=\"236\" Y=\"243\" Width=\"56\" Height=\"17\" Default=\"yes\" Text=\"Next\">"
+            echo "          <Publish Event=\"DoAction\" Value=\"CA_Val_$pkg\">1</Publish>"
+            echo "          <Publish Event=\"EndDialog\" Value=\"Return\"><![CDATA[VALID_$pkg=\"1\"]]></Publish>"
+            echo "        </Control>"
+            echo "      </Dialog>"
+            
+            echo "$vars_json" | while read -r item; do
+              varname=$(echo "$item" | jq -r '.key')
+              defval=$(echo "$item" | jq -r '.def')
+              echo "    <Property Id=\"PROP_${pkg}_${varname}\" Value=\"${defval}\" Secure=\"yes\" />"
+            done
+            
+            dialogs="$dialogs Dlg_${pkg}"
+          fi
+        fi
+      done
+
+      # MSI Uninstaller Confirmations
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "      <Dialog Id=\"Dlg_Uninst_${pkg}\" Width=\"370\" Height=\"270\" Title=\"Uninstall $pkg\">"
+        echo "        <Control Id=\"Msg\" Type=\"Text\" X=\"20\" Y=\"20\" Width=\"330\" Height=\"30\" Text=\"Do you want to completely remove the Data Directory and all records for $pkg?\" />"
+        echo "        <Control Id=\"YesBtn\" Type=\"PushButton\" X=\"100\" Y=\"100\" Width=\"56\" Height=\"17\" Text=\"Yes\">"
+        echo "          <Publish Property=\"PURGE_$pkg\" Value=\"--purge-data\">1</Publish>"
+        echo "          <Publish Event=\"EndDialog\" Value=\"Return\">1</Publish>"
+        echo "        </Control>"
+        echo "        <Control Id=\"NoBtn\" Type=\"PushButton\" X=\"170\" Y=\"100\" Width=\"56\" Height=\"17\" Default=\"yes\" Text=\"No\">"
+        echo "          <Publish Property=\"PURGE_$pkg\" Value=\"\">1</Publish>"
+        echo "          <Publish Event=\"EndDialog\" Value=\"Return\">1</Publish>"
+        echo "        </Control>"
+        echo "      </Dialog>"
+        echo "      <Property Id=\"PURGE_$pkg\" Value=\"\" Secure=\"yes\" />"
+        dialogs="$dialogs Dlg_Uninst_${pkg}"
+      done
+      
+      echo "      <InstallUISequence>"
+      echo "        <Show Dialog=\"Dlg_Features\" After=\"CostFinalize\">NOT Installed</Show>"
+      last_dlg="Dlg_Features"
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        has_dlg=0
+        for d in $dialogs; do
+          if [ "$d" = "Dlg_${pkg}" ]; then has_dlg=1; break; fi
+        done
+        if [ "$has_dlg" = "1" ]; then
+          echo "        <Show Dialog=\"Dlg_${pkg}\" After=\"$last_dlg\"><![CDATA[NOT Installed AND INSTALL_$pkg=\"1\"]]></Show>"
+          last_dlg="Dlg_${pkg}"
+        fi
+      done
+      
+      # UI sequence for uninstall
+      last_uninst_dlg="CostFinalize"
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "        <Show Dialog=\"Dlg_Uninst_${pkg}\" After=\"$last_uninst_dlg\">REMOVE=\"ALL\"</Show>"
+        last_uninst_dlg="Dlg_Uninst_${pkg}"
+      done
+      echo "      </InstallUISequence>"
+      echo "    </UI>"
+
+      # Install Actions
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        run_params="/c libscript.cmd install_service $pkg $ver"
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"[PROP_%s_%s]\"", $1, pkg, $1}')
+            run_params="$run_params$append_params"
+          fi
+        fi
+        echo "    <CustomAction Id=\"Install$pkg\" Directory=\"INSTALLFOLDER\" ExeCommand=\"cmd.exe $run_params\" Execute=\"deferred\" Return=\"check\" Impersonate=\"no\" />"
+        
+        # Uninstall Actions
+        echo "    <CustomAction Id=\"Uninstall$pkg\" Directory=\"INSTALLFOLDER\" ExeCommand=\"cmd.exe /c libscript.cmd uninstall $pkg [PURGE_$pkg] --service-name [PROP_${pkg}_$(echo $pkg | tr "a-z" "A-Z")_SERVICE_NAME]\" Execute=\"deferred\" Return=\"check\" Impersonate=\"no\" />"
+      done
+
+      echo "    <InstallExecuteSequence>"
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "      <Custom Action=\"Install$pkg\" Before=\"InstallFinalize\"><![CDATA[NOT Installed AND INSTALL_$pkg=\"1\"]]></Custom>"
+        echo "      <Custom Action=\"Uninstall$pkg\" Before=\"RemoveFiles\">REMOVE=\"ALL\"</Custom>"
+      done
+      echo "    </InstallExecuteSequence>"
+      
+      echo "  </Product>"
+      echo "  <Fragment>"
+      echo "    <ComponentGroup Id=\"ProductComponents\" Directory=\"INSTALLFOLDER\">"
+      echo "    </ComponentGroup>"
+      echo "  </Fragment>"
+      echo "</Wix>"
       exit 0
     elif [ "$pkg_type" = "innosetup" ]; then
-      cat << EOF
+      cat << EOF2
 [Setup]
 AppName=$APP_NAME
 AppVersion=$APP_VERSION
 AppPublisher=$APP_PUBLISHER
-EOF
+EOF2
       if [ -n "$APP_URL" ]; then
         echo "AppPublisherURL=$APP_URL"
         echo "AppSupportURL=$APP_URL"
         echo "AppUpdatesURL=$APP_URL"
       fi
-      cat << EOF
+      cat << EOF2
 DefaultDirName={autopf}\\$APP_NAME
 PrivilegesRequired=$inno_priv
 OutputDir=.
 OutputBaseFilename=$OUT_FILE
-EOF
+EOF2
       if [ "$UPGRADE_CODE" != "PUT-GUID-HERE" ]; then echo "AppId=$UPGRADE_CODE"; fi
       if [ -n "$ICON_PATH" ]; then echo "SetupIconFile=$ICON_PATH"; fi
       if [ -n "$IMAGE_PATH" ]; then echo "WizardImageFile=$IMAGE_PATH"; fi
       if [ -n "$LICENSE_PATH" ]; then echo "LicenseFile=$LICENSE_PATH"; fi
-      cat << EOF
 
-[Run]
-EOF
+      deps_list=""
       if [ $# -gt 0 ]; then
         while [ $# -gt 0 ]; do
-          pkg="$1"
-          ver="${2:-latest}"
-          echo "Filename: \"cmd.exe\"; Parameters: \"/c libscript.cmd install $pkg $ver\"; Flags: runhidden"
+          deps_list="$deps_list $1 ${2:-latest}"
           if [ "$2" != "" ]; then shift 2; else shift; fi
         done
       elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
-        deps=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null)
-        echo "$deps" | while read -r pkg ver; do
-          if [ -n "$pkg" ]; then
-            if [ "$ver" = "null" ]; then ver="latest"; fi
-            echo "Filename: \"cmd.exe\"; Parameters: \"/c libscript.cmd install $pkg $ver\"; Flags: runhidden"
-          fi
-        done
+        deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
       fi
+
+      echo ""
+      echo "[Types]"
+      echo "Name: \"custom\"; Description: \"Custom installation\"; Flags: iscustom"
+      echo "Name: \"full\"; Description: \"Full installation\""
+      echo ""
+      echo "[Components]"
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "Name: \"$pkg\"; Description: \"$pkg\"; Types: full custom"
+      done
+
+      echo ""
+      echo "[Code]"
+      echo "var"
+
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "  Page_$pkg: TInputQueryWizardPage;"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "  Var_${pkg}_${varname}: String;"
+            done
+          fi
+        fi
+      done
+
+      echo "procedure InitializeWizard;"
+      echo "begin"
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "  Page_$pkg := CreateInputQueryPage(wpSelectComponents, 'Configuration for $pkg', 'Please specify settings', '');"
+            var_idx=0
+            echo "$vars_json" | while read -r item; do
+              desc=$(echo "$item" | jq -r '.desc')
+              defval=$(echo "$item" | jq -r '.def')
+              varname=$(echo "$item" | jq -r '.key')
+              if case "$varname" in *"_PASSWORD"*) true;; *) false;; esac; then
+                echo "  Page_$pkg.Add('$desc:', True);"
+              else
+                echo "  Page_$pkg.Add('$desc:', False);"
+              fi
+              echo "  Page_$pkg.Values[$var_idx] := '$defval';"
+              var_idx=$((var_idx + 1))
+            done
+          fi
+        fi
+      done
+      echo "end;"
+
+      echo "function ShouldSkipPage(PageID: Integer): Boolean;"
+      echo "begin"
+      echo "  Result := False;"
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          if [ -n "$(jq -c '.properties' "$schema_file")" ]; then
+            echo "  if (PageID = Page_$pkg.ID) and not IsComponentSelected('$pkg') then"
+            echo "    Result := True;"
+          fi
+        fi
+      done
+      echo "end;"
+
+      echo "function NextButtonClick(PageId: Integer): Boolean;"
+      echo "var"
+      echo "  ResultCode: Integer;"
+      echo "begin"
+      echo "  Result := True;"
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "  if PageId = Page_$pkg.ID then begin"
+            var_idx=0
+            for varname in $vars_json; do
+              if case "$varname" in *"_PORT"* | *"_PORT_SECURE"*) true;; *) false;; esac; then
+                echo "    if (Page_$pkg.Values[$var_idx] <> '') then begin"
+                echo "      if Exec('cmd.exe', '/c netstat -an | findstr /R /C:"":'' + Page_$pkg.Values[$var_idx] + '' .*LISTENING""', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin"
+                echo "        if ResultCode = 0 then begin"
+                echo "          MsgBox('Port ' + Page_$pkg.Values[$var_idx] + ' is already in use. Please select a different port.', mbError, MB_OK);"
+                echo "          Result := False;"
+                echo "          Exit;"
+                echo "        end;"
+                echo "      end;"
+                echo "    end;"
+              fi
+              var_idx=$((var_idx + 1))
+            done
+            echo "  end;"
+          fi
+        fi
+      done
+      echo "end;"
+
+      # Uninstallation Hooks
+      echo "procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);"
+      echo "var"
+      echo "  ResultCode: Integer;"
+      echo "begin"
+      echo "  if CurUninstallStep = usUninstall then begin"
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "    if MsgBox('Do you want to completely remove the Data Directory and all records for $pkg?', mbConfirmation, MB_YESNO) = idYes then begin"
+        echo "      Exec('cmd.exe', '/c libscript.cmd uninstall $pkg --purge-data --service-name ' + Get_${pkg}_$(echo $pkg | tr "a-z" "A-Z")_SERVICE_NAME(''), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);"
+        echo "    end else begin"
+        echo "      Exec('cmd.exe', '/c libscript.cmd uninstall $pkg --service-name ' + Get_${pkg}_$(echo $pkg | tr "a-z" "A-Z")_SERVICE_NAME(''), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);"
+        echo "    end;"
+      done
+      echo "  end;"
+      echo "end;"
+
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            var_idx=0
+            for varname in $vars_json; do
+              echo "function Get_${pkg}_${varname}(Param: String): String;"
+              echo "begin"
+              echo "  Result := Page_$pkg.Values[$var_idx];"
+              echo "end;"
+              var_idx=$((var_idx + 1))
+            done
+          fi
+        fi
+      done
+
+      echo ""
+      echo "[Run]"
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        run_params="/c libscript.cmd install_service $pkg $ver"
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"{code:Get_%s_%s}\"", $1, pkg, $1}')
+            run_params="$run_params$append_params"
+          fi
+        fi
+        echo "Filename: \"cmd.exe\"; Parameters: \"$run_params\"; Components: $pkg; Flags: runhidden"
+      done
       exit 0
     elif [ "$pkg_type" = "nsis" ]; then
-      cat << EOF
+      cat << EOF2
 !define APP_NAME "$APP_NAME"
 !define APP_VERSION "$APP_VERSION"
 !define APP_PUBLISHER "$APP_PUBLISHER"
-Name "$APP_NAME $APP_VERSION"
+Name "$APP_NAME \$APP_VERSION"
 OutFile "${OUT_FILE}.exe"
 InstallDir "\$PROGRAMFILES\\$APP_NAME"
 RequestExecutionLevel $nsis_admin
@@ -498,29 +967,2414 @@ VIAddVersionKey "ProductName" "$APP_NAME"
 VIAddVersionKey "CompanyName" "$APP_PUBLISHER"
 VIAddVersionKey "FileDescription" "$WELCOME_TEXT"
 VIAddVersionKey "FileVersion" "$APP_VERSION"
-EOF
+EOF2
       if [ -n "$ICON_PATH" ]; then echo "Icon \"$ICON_PATH\""; fi
       echo ""
+      
+      deps_list=""
+      if [ $# -gt 0 ]; then
+        while [ $# -gt 0 ]; do
+          deps_list="$deps_list $1 ${2:-latest}"
+          if [ "$2" != "" ]; then shift 2; else shift; fi
+        done
+      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      fi
+
+      echo "Include nsDialogs.nsh"
+      echo "Page components"
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Var Dialog_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "Var HWND_${pkg}_${varname}"
+              echo "Var VAL_${pkg}_${varname}"
+            done
+            
+            echo "Page custom pgCustom_$pkg pgLeave_$pkg"
+          fi
+        fi
+      done
+      
+      if [ -n "$LICENSE_PATH" ]; then echo "Page license \"\" \"$LICENSE_PATH\""; fi
+      echo "Page instfiles"
+      echo ""
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "Section \"$pkg\" SEC_$pkg"
+        run_params="/c libscript.cmd install_service $pkg $ver"
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"\$VAL_%s_%s\"", $1, pkg, $1}')
+            run_params="$run_params$append_params"
+          fi
+        fi
+        echo "  ExecWait 'cmd.exe $run_params'"
+        echo "SectionEnd"
+      done
+
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Function pgCustom_$pkg"
+            echo "  SectionGetFlags \${SEC_$pkg} \$0"
+            echo "  IntOp \$0 \$0 & 1"
+            echo "  IntCmp \$0 1 +2"
+            echo "    Abort"
+            echo "  nsDialogs::Create 1018"
+            echo "  Pop \$Dialog_$pkg"
+            
+            y=0
+            echo "$vars_json" | while read -r item; do
+              varname=$(echo "$item" | jq -r '.key')
+              desc=$(echo "$item" | jq -r '.desc')
+              defval=$(echo "$item" | jq -r '.def')
+              if [ $y -gt 130 ]; then break; fi
+              
+              echo "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
+              echo "  Pop \$0"
+              y=$((y + 12))
+              
+              if case "$varname" in *"_PASSWORD"*) true;; *) false;; esac; then
+                echo "  \${NSD_CreatePassword} 0 ${y}u 100% 12u \"$defval\""
+              else
+                echo "  \${NSD_CreateText} 0 ${y}u 100% 12u \"$defval\""
+              fi
+              echo "  Pop \$HWND_${pkg}_${varname}"
+              y=$((y + 14))
+            done
+            echo "  nsDialogs::Show"
+            echo "FunctionEnd"
+            
+            echo "Function pgLeave_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
+              
+              if case "$varname" in *"_PORT"* | *"_PORT_SECURE"*) true;; *) false;; esac; then
+                echo "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
+                echo "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"
+                echo "  Pop \$0"
+                echo "  IntCmp \$0 0 0 +3"
+                echo "    MessageBox MB_ICONSTOP \"Port \$VAL_${pkg}_${varname} is already in use.\""
+                echo "    Abort"
+              fi
+            done
+            echo "FunctionEnd"
+          fi
+        fi
+      done
+
+      # Uninstaller
+      echo "Section \"Uninstall\""
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "  MessageBox MB_YESNO \"Do you want to completely remove the Data Directory and all records for $pkg?\" IDYES purge_$pkg IDNO keep_$pkg"
+        echo "  purge_$pkg:"
+        echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --purge-data --service-name \$VAL_${pkg}_$(echo $pkg | tr "a-z" "A-Z")_SERVICE_NAME'"
+        echo "    Goto end_$pkg"
+        echo "  keep_$pkg:"
+        echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --service-name \$VAL_${pkg}_$(echo $pkg | tr "a-z" "A-Z")_SERVICE_NAME'"
+        echo "  end_$pkg:"
+      done
+      echo "SectionEnd"
+
+      exit 0
+!define APP_NAME "$APP_NAME"
+!define APP_VERSION "$APP_VERSION"
+!define APP_PUBLISHER "$APP_PUBLISHER"
+Name "$APP_NAME \$APP_VERSION"
+OutFile "${OUT_FILE}.exe"
+InstallDir "\$PROGRAMFILES\\$APP_NAME"
+RequestExecutionLevel $nsis_admin
+
+VIProductVersion "$APP_VERSION"
+VIAddVersionKey "ProductName" "$APP_NAME"
+VIAddVersionKey "CompanyName" "$APP_PUBLISHER"
+VIAddVersionKey "FileDescription" "$WELCOME_TEXT"
+VIAddVersionKey "FileVersion" "$APP_VERSION"
+EOF2
+      if [ -n "$ICON_PATH" ]; then echo "Icon \"$ICON_PATH\""; fi
+      echo ""
+      
+      deps_list=""
+      if [ $# -gt 0 ]; then
+        while [ $# -gt 0 ]; do
+          deps_list="$deps_list $1 ${2:-latest}"
+          if [ "$2" != "" ]; then shift 2; else shift; fi
+        done
+      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      fi
+
+      echo "Include nsDialogs.nsh"
+      echo "Page components"
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Var Dialog_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "Var HWND_${pkg}_${varname}"
+              echo "Var VAL_${pkg}_${varname}"
+            done
+            
+            echo "Page custom pgCustom_$pkg pgLeave_$pkg"
+          fi
+        fi
+      done
+      
+      if [ -n "$LICENSE_PATH" ]; then echo "Page license \"\" \"$LICENSE_PATH\""; fi
+      echo "Page instfiles"
+      echo ""
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "Section \"$pkg\" SEC_$pkg"
+        run_params="/c libscript.cmd install_service $pkg $ver"
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"\$VAL_%s_%s\"", $1, pkg, $1}')
+            run_params="$run_params$append_params"
+          fi
+        fi
+        echo "  ExecWait 'cmd.exe $run_params'"
+        echo "SectionEnd"
+      done
+
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Function pgCustom_$pkg"
+            echo "  SectionGetFlags \${SEC_$pkg} \$0"
+            echo "  IntOp \$0 \$0 & 1"
+            echo "  IntCmp \$0 1 +2"
+            echo "    Abort"
+            echo "  nsDialogs::Create 1018"
+            echo "  Pop \$Dialog_$pkg"
+            
+            y=0
+            echo "$vars_json" | while read -r item; do
+              varname=$(echo "$item" | jq -r '.key')
+              desc=$(echo "$item" | jq -r '.desc')
+              defval=$(echo "$item" | jq -r '.def')
+              if [ $y -gt 130 ]; then break; fi
+              
+              echo "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
+              echo "  Pop \$0"
+              y=$((y + 12))
+              
+              if case "$varname" in *"_PASSWORD"*) true;; *) false;; esac; then
+                echo "  \${NSD_CreatePassword} 0 ${y}u 100% 12u \"$defval\""
+              else
+                echo "  \${NSD_CreateText} 0 ${y}u 100% 12u \"$defval\""
+              fi
+              echo "  Pop \$HWND_${pkg}_${varname}"
+              y=$((y + 14))
+            done
+            echo "  nsDialogs::Show"
+            echo "FunctionEnd"
+            
+            echo "Function pgLeave_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
+              
+              if case "$varname" in *"_PORT"* | *"_PORT_SECURE"*) true;; *) false;; esac; then
+                echo "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
+                echo "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"
+                echo "  Pop \$0"
+                echo "  IntCmp \$0 0 0 +3"
+                echo "    MessageBox MB_ICONSTOP \"Port \$VAL_${pkg}_${varname} is already in use.\""
+                echo "    Abort"
+              fi
+            done
+            echo "FunctionEnd"
+          fi
+        fi
+      done
+
+      # Uninstaller
+      echo "Section \"Uninstall\""
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "  MessageBox MB_YESNO \"Do you want to completely remove the Data Directory and all records for $pkg?\" IDYES purge_$pkg IDNO keep_$pkg"
+        echo "  purge_$pkg:"
+        echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --purge-data --service-name \$VAL_${pkg}_${pkg^^}_SERVICE_NAME'"
+        echo "    Goto end_$pkg"
+        echo "  keep_$pkg:"
+        echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --service-name \$VAL_${pkg}_${pkg^^}_SERVICE_NAME'"
+        echo "  end_$pkg:"
+      done
+      echo "SectionEnd"
+
+      exit 0
+!define APP_NAME "$APP_NAME"
+!define APP_VERSION "$APP_VERSION"
+!define APP_PUBLISHER "$APP_PUBLISHER"
+Name "$APP_NAME \$APP_VERSION"
+OutFile "${OUT_FILE}.exe"
+InstallDir "\$PROGRAMFILES\\$APP_NAME"
+RequestExecutionLevel $nsis_admin
+
+VIProductVersion "$APP_VERSION"
+VIAddVersionKey "ProductName" "$APP_NAME"
+VIAddVersionKey "CompanyName" "$APP_PUBLISHER"
+VIAddVersionKey "FileDescription" "$WELCOME_TEXT"
+VIAddVersionKey "FileVersion" "$APP_VERSION"
+EOF2
+      if [ -n "$ICON_PATH" ]; then echo "Icon \"$ICON_PATH\""; fi
+      echo ""
+      
+      deps_list=""
+      if [ $# -gt 0 ]; then
+        while [ $# -gt 0 ]; do
+          deps_list="$deps_list $1 ${2:-latest}"
+          if [ "$2" != "" ]; then shift 2; else shift; fi
+        done
+      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      fi
+
+      echo "Include nsDialogs.nsh"
+      echo "Page components"
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Var Dialog_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "Var HWND_${pkg}_${varname}"
+              echo "Var VAL_${pkg}_${varname}"
+            done
+            
+            echo "Page custom pgCustom_$pkg pgLeave_$pkg"
+          fi
+        fi
+      done
+      
+      if [ -n "$LICENSE_PATH" ]; then echo "Page license \"\" \"$LICENSE_PATH\""; fi
+      echo "Page instfiles"
+      echo ""
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "Section \"$pkg\" SEC_$pkg"
+        run_params="/c libscript.cmd install_service $pkg $ver"
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"\$VAL_%s_%s\"", $1, pkg, $1}')
+            run_params="$run_params$append_params"
+          fi
+        fi
+        echo "  ExecWait 'cmd.exe $run_params'"
+        echo "SectionEnd"
+      done
+
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Function pgCustom_$pkg"
+            echo "  SectionGetFlags \${SEC_$pkg} \$0"
+            echo "  IntOp \$0 \$0 & 1"
+            echo "  IntCmp \$0 1 +2"
+            echo "    Abort"
+            echo "  nsDialogs::Create 1018"
+            echo "  Pop \$Dialog_$pkg"
+            
+            y=0
+            echo "$vars_json" | while read -r item; do
+              varname=$(echo "$item" | jq -r '.key')
+              desc=$(echo "$item" | jq -r '.desc')
+              defval=$(echo "$item" | jq -r '.def')
+              if [ $y -gt 130 ]; then break; fi
+              
+              echo "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
+              echo "  Pop \$0"
+              y=$((y + 12))
+              
+              if case "$varname" in *"_PASSWORD"*) true;; *) false;; esac; then
+                echo "  \${NSD_CreatePassword} 0 ${y}u 100% 12u \"$defval\""
+              else
+                echo "  \${NSD_CreateText} 0 ${y}u 100% 12u \"$defval\""
+              fi
+              echo "  Pop \$HWND_${pkg}_${varname}"
+              y=$((y + 14))
+            done
+            echo "  nsDialogs::Show"
+            echo "FunctionEnd"
+            
+            echo "Function pgLeave_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
+              
+              if case "$varname" in *"_PORT"* | *"_PORT_SECURE"*) true;; *) false;; esac; then
+                echo "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
+                echo "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"
+                echo "  Pop \$0"
+                echo "  IntCmp \$0 0 0 +3"
+                echo "    MessageBox MB_ICONSTOP \"Port \$VAL_${pkg}_${varname} is already in use.\""
+                echo "    Abort"
+              fi
+            done
+            echo "FunctionEnd"
+          fi
+        fi
+      done
+
+      # Uninstaller
+      echo "Section \"Uninstall\""
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "  MessageBox MB_YESNO \"Do you want to completely remove the Data Directory and all records for $pkg?\" IDYES purge_$pkg IDNO keep_$pkg"
+        echo "  purge_$pkg:"
+        echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --purge-data --service-name \$VAL_${pkg}_${pkg^^}_SERVICE_NAME'"
+        echo "    Goto end_$pkg"
+        echo "  keep_$pkg:"
+        echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --service-name \$VAL_${pkg}_${pkg^^}_SERVICE_NAME'"
+        echo "  end_$pkg:"
+      done
+      echo "SectionEnd"
+
+      exit 0
+!define APP_NAME "$APP_NAME"
+!define APP_VERSION "$APP_VERSION"
+!define APP_PUBLISHER "$APP_PUBLISHER"
+Name "$APP_NAME \$APP_VERSION"
+OutFile "${OUT_FILE}.exe"
+InstallDir "\$PROGRAMFILES\\$APP_NAME"
+RequestExecutionLevel $nsis_admin
+
+VIProductVersion "$APP_VERSION"
+VIAddVersionKey "ProductName" "$APP_NAME"
+VIAddVersionKey "CompanyName" "$APP_PUBLISHER"
+VIAddVersionKey "FileDescription" "$WELCOME_TEXT"
+VIAddVersionKey "FileVersion" "$APP_VERSION"
+EOF2
+      if [ -n "$ICON_PATH" ]; then echo "Icon \"$ICON_PATH\""; fi
+      echo ""
+      
+      deps_list=""
+      if [ $# -gt 0 ]; then
+        while [ $# -gt 0 ]; do
+          deps_list="$deps_list $1 ${2:-latest}"
+          if [ "$2" != "" ]; then shift 2; else shift; fi
+        done
+      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      fi
+
+      echo "Include nsDialogs.nsh"
+      echo "Page components"
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Var Dialog_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "Var HWND_${pkg}_${varname}"
+              echo "Var VAL_${pkg}_${varname}"
+            done
+            
+            echo "Page custom pgCustom_$pkg pgLeave_$pkg"
+          fi
+        fi
+      done
+      
+      if [ -n "$LICENSE_PATH" ]; then echo "Page license \"\" \"$LICENSE_PATH\""; fi
+      echo "Page instfiles"
+      echo ""
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "Section \"$pkg\" SEC_$pkg"
+        run_params="/c libscript.cmd install_service $pkg $ver"
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"\$VAL_%s_%s\"", $1, pkg, $1}')
+            run_params="$run_params$append_params"
+          fi
+        fi
+        echo "  ExecWait 'cmd.exe $run_params'"
+        echo "SectionEnd"
+      done
+
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Function pgCustom_$pkg"
+            echo "  SectionGetFlags \${SEC_$pkg} \$0"
+            echo "  IntOp \$0 \$0 & 1"
+            echo "  IntCmp \$0 1 +2"
+            echo "    Abort"
+            echo "  nsDialogs::Create 1018"
+            echo "  Pop \$Dialog_$pkg"
+            
+            y=0
+            echo "$vars_json" | while read -r item; do
+              varname=$(echo "$item" | jq -r '.key')
+              desc=$(echo "$item" | jq -r '.desc')
+              defval=$(echo "$item" | jq -r '.def')
+              if [ $y -gt 130 ]; then break; fi
+              
+              echo "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
+              echo "  Pop \$0"
+              y=$((y + 12))
+              
+              if case "$varname" in *"_PASSWORD"*) true;; *) false;; esac; then
+                echo "  \${NSD_CreatePassword} 0 ${y}u 100% 12u \"$defval\""
+              else
+                echo "  \${NSD_CreateText} 0 ${y}u 100% 12u \"$defval\""
+              fi
+              echo "  Pop \$HWND_${pkg}_${varname}"
+              y=$((y + 14))
+            done
+            echo "  nsDialogs::Show"
+            echo "FunctionEnd"
+            
+            echo "Function pgLeave_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
+              
+              if case "$varname" in *"_PORT"* | *"_PORT_SECURE"*) true;; *) false;; esac; then
+                echo "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
+                echo "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"
+                echo "  Pop \$0"
+                echo "  IntCmp \$0 0 0 +3"
+                echo "    MessageBox MB_ICONSTOP \"Port \$VAL_${pkg}_${varname} is already in use.\""
+                echo "    Abort"
+              fi
+            done
+            echo "FunctionEnd"
+          fi
+        fi
+      done
+
+      # Uninstaller
+      echo "Section \"Uninstall\""
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "  MessageBox MB_YESNO \"Do you want to completely remove the Data Directory and all records for $pkg?\" IDYES purge_$pkg IDNO keep_$pkg"
+        echo "  purge_$pkg:"
+        echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --purge-data --service-name $VAL_${pkg}_${pkg^^}_SERVICE_NAME'"
+        echo "    Goto end_$pkg"
+        echo "  keep_$pkg:"
+        echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --service-name $VAL_${pkg}_${pkg^^}_SERVICE_NAME'"
+        echo "  end_$pkg:"
+      done
+      echo "SectionEnd"
+
+      exit 0
+!define APP_NAME "$APP_NAME"
+!define APP_VERSION "$APP_VERSION"
+!define APP_PUBLISHER "$APP_PUBLISHER"
+Name "$APP_NAME \$APP_VERSION"
+OutFile "${OUT_FILE}.exe"
+InstallDir "\$PROGRAMFILES\\$APP_NAME"
+RequestExecutionLevel $nsis_admin
+
+VIProductVersion "$APP_VERSION"
+VIAddVersionKey "ProductName" "$APP_NAME"
+VIAddVersionKey "CompanyName" "$APP_PUBLISHER"
+VIAddVersionKey "FileDescription" "$WELCOME_TEXT"
+VIAddVersionKey "FileVersion" "$APP_VERSION"
+EOF2
+      if [ -n "$ICON_PATH" ]; then echo "Icon \"$ICON_PATH\""; fi
+      echo ""
+      
+      deps_list=""
+      if [ $# -gt 0 ]; then
+        while [ $# -gt 0 ]; do
+          deps_list="$deps_list $1 ${2:-latest}"
+          if [ "$2" != "" ]; then shift 2; else shift; fi
+        done
+      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      fi
+
+      echo "Include nsDialogs.nsh"
+      echo "Page components"
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Var Dialog_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "Var HWND_${pkg}_${varname}"
+              echo "Var VAL_${pkg}_${varname}"
+            done
+            
+            echo "Page custom pgCustom_$pkg pgLeave_$pkg"
+          fi
+        fi
+      done
+      
+      if [ -n "$LICENSE_PATH" ]; then echo "Page license \"\" \"$LICENSE_PATH\""; fi
+      echo "Page instfiles"
+      echo ""
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "Section \"$pkg\" SEC_$pkg"
+        run_params="/c libscript.cmd install_service $pkg $ver"
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"\$VAL_%s_%s\"", $1, pkg, $1}')
+            run_params="$run_params$append_params"
+          fi
+        fi
+        echo "  ExecWait 'cmd.exe $run_params'"
+        echo "SectionEnd"
+      done
+
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Function pgCustom_$pkg"
+            echo "  SectionGetFlags \${SEC_$pkg} \$0"
+            echo "  IntOp \$0 \$0 & 1"
+            echo "  IntCmp \$0 1 +2"
+            echo "    Abort"
+            echo "  nsDialogs::Create 1018"
+            echo "  Pop \$Dialog_$pkg"
+            
+            y=0
+            echo "$vars_json" | while read -r item; do
+              varname=$(echo "$item" | jq -r '.key')
+              desc=$(echo "$item" | jq -r '.desc')
+              defval=$(echo "$item" | jq -r '.def')
+              if [ $y -gt 130 ]; then break; fi
+              
+              echo "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
+              echo "  Pop \$0"
+              y=$((y + 12))
+              
+              if case "$varname" in *"_PASSWORD"*) true;; *) false;; esac; then
+                echo "  \${NSD_CreatePassword} 0 ${y}u 100% 12u \"$defval\""
+              else
+                echo "  \${NSD_CreateText} 0 ${y}u 100% 12u \"$defval\""
+              fi
+              echo "  Pop \$HWND_${pkg}_${varname}"
+              y=$((y + 14))
+            done
+            echo "  nsDialogs::Show"
+            echo "FunctionEnd"
+            
+            echo "Function pgLeave_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
+              
+              if case "$varname" in *"_PORT"* | *"_PORT_SECURE"*) true;; *) false;; esac; then
+                echo "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
+                echo "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"
+                echo "  Pop \$0"
+                echo "  IntCmp \$0 0 0 +3"
+                echo "    MessageBox MB_ICONSTOP \"Port \$VAL_${pkg}_${varname} is already in use.\""
+                echo "    Abort"
+              fi
+            done
+            echo "FunctionEnd"
+          fi
+        fi
+      done
+
+      # Uninstaller
+      echo "Section \"Uninstall\""
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "  MessageBox MB_YESNO \"Do you want to completely remove the Data Directory and all records for $pkg?\" IDYES purge_$pkg IDNO keep_$pkg"
+        echo "  purge_$pkg:"
+        echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --purge-data'"
+        echo "    Goto end_$pkg"
+        echo "  keep_$pkg:"
+        echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg'"
+        echo "  end_$pkg:"
+      done
+      echo "SectionEnd"
+
+      exit 0
+!define APP_NAME "$APP_NAME"
+!define APP_VERSION "$APP_VERSION"
+!define APP_PUBLISHER "$APP_PUBLISHER"
+Name "$APP_NAME \$APP_VERSION"
+OutFile "${OUT_FILE}.exe"
+InstallDir "\$PROGRAMFILES\\$APP_NAME"
+RequestExecutionLevel $nsis_admin
+
+VIProductVersion "$APP_VERSION"
+VIAddVersionKey "ProductName" "$APP_NAME"
+VIAddVersionKey "CompanyName" "$APP_PUBLISHER"
+VIAddVersionKey "FileDescription" "$WELCOME_TEXT"
+VIAddVersionKey "FileVersion" "$APP_VERSION"
+EOF2
+      if [ -n "$ICON_PATH" ]; then echo "Icon \"$ICON_PATH\""; fi
+      echo ""
+      
+      deps_list=""
+      if [ $# -gt 0 ]; then
+        while [ $# -gt 0 ]; do
+          deps_list="$deps_list $1 ${2:-latest}"
+          if [ "$2" != "" ]; then shift 2; else shift; fi
+        done
+      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      fi
+
+      echo "Include nsDialogs.nsh"
+      echo "Page components"
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Var Dialog_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "Var HWND_${pkg}_${varname}"
+              echo "Var VAL_${pkg}_${varname}"
+            done
+            
+            echo "Page custom pgCustom_$pkg pgLeave_$pkg"
+          fi
+        fi
+      done
+      
+      if [ -n "$LICENSE_PATH" ]; then echo "Page license \"\" \"$LICENSE_PATH\""; fi
+      echo "Page instfiles"
+      echo ""
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "Section \"$pkg\" SEC_$pkg"
+        run_params="/c libscript.cmd install_service $pkg $ver"
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"\$VAL_%s_%s\"", $1, pkg, $1}')
+            run_params="$run_params$append_params"
+          fi
+        fi
+        echo "  ExecWait 'cmd.exe $run_params'"
+        echo "SectionEnd"
+      done
+
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Function pgCustom_$pkg"
+            echo "  SectionGetFlags \${SEC_$pkg} \$0"
+            echo "  IntOp \$0 \$0 & 1"
+            echo "  IntCmp \$0 1 +2"
+            echo "    Abort"
+            echo "  nsDialogs::Create 1018"
+            echo "  Pop \$Dialog_$pkg"
+            
+            y=0
+            echo "$vars_json" | while read -r item; do
+              varname=$(echo "$item" | jq -r '.key')
+              desc=$(echo "$item" | jq -r '.desc')
+              defval=$(echo "$item" | jq -r '.def')
+              if [ $y -gt 130 ]; then break; fi
+              
+              echo "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
+              echo "  Pop \$0"
+              y=$((y + 12))
+              
+              if case "$varname" in *"_PASSWORD"*) true;; *) false;; esac; then
+                echo "  \${NSD_CreatePassword} 0 ${y}u 100% 12u \"$defval\""
+              else
+                echo "  \${NSD_CreateText} 0 ${y}u 100% 12u \"$defval\""
+              fi
+              echo "  Pop \$HWND_${pkg}_${varname}"
+              y=$((y + 14))
+            done
+            echo "  nsDialogs::Show"
+            echo "FunctionEnd"
+            
+            echo "Function pgLeave_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
+              
+              if case "$varname" in *"_PORT"* | *"_PORT_SECURE"*) true;; *) false;; esac; then
+                echo "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
+                echo "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"
+                echo "  Pop \$0"
+                echo "  IntCmp \$0 0 0 +3"
+                echo "    MessageBox MB_ICONSTOP \"Port \$VAL_${pkg}_${varname} is already in use.\""
+                echo "    Abort"
+              fi
+            done
+            echo "FunctionEnd"
+          fi
+        fi
+      done
+
+      # Uninstaller
+      echo "Section \"Uninstall\""
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "  MessageBox MB_YESNO \"Do you want to completely remove the Data Directory and all records for $pkg?\" IDYES purge_$pkg IDNO keep_$pkg"
+        echo "  purge_$pkg:"
+        echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --purge-data'"
+        echo "    Goto end_$pkg"
+        echo "  keep_$pkg:"
+        echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg'"
+        echo "  end_$pkg:"
+      done
+      echo "SectionEnd"
+
+      exit 0
+!define APP_NAME "$APP_NAME"
+!define APP_VERSION "$APP_VERSION"
+!define APP_PUBLISHER "$APP_PUBLISHER"
+Name "$APP_NAME \$APP_VERSION"
+OutFile "${OUT_FILE}.exe"
+InstallDir "\$PROGRAMFILES\\$APP_NAME"
+RequestExecutionLevel $nsis_admin
+
+VIProductVersion "$APP_VERSION"
+VIAddVersionKey "ProductName" "$APP_NAME"
+VIAddVersionKey "CompanyName" "$APP_PUBLISHER"
+VIAddVersionKey "FileDescription" "$WELCOME_TEXT"
+VIAddVersionKey "FileVersion" "$APP_VERSION"
+EOF2
+      if [ -n "$ICON_PATH" ]; then echo "Icon \"$ICON_PATH\""; fi
+      echo ""
+      
+      deps_list=""
+      if [ $# -gt 0 ]; then
+        while [ $# -gt 0 ]; do
+          deps_list="$deps_list $1 ${2:-latest}"
+          if [ "$2" != "" ]; then shift 2; else shift; fi
+        done
+      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      fi
+
+      echo "Include nsDialogs.nsh"
+      echo "Page components"
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Var Dialog_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "Var HWND_${pkg}_${varname}"
+              echo "Var VAL_${pkg}_${varname}"
+            done
+            
+            echo "Page custom pgCustom_$pkg pgLeave_$pkg"
+          fi
+        fi
+      done
+      
+      if [ -n "$LICENSE_PATH" ]; then echo "Page license \"\" \"$LICENSE_PATH\""; fi
+      echo "Page instfiles"
+      echo ""
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "Section \"$pkg\" SEC_$pkg"
+        run_params="/c libscript.cmd install_service $pkg $ver"
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"\$VAL_%s_%s\"", $1, pkg, $1}')
+            run_params="$run_params$append_params"
+          fi
+        fi
+        echo "  ExecWait 'cmd.exe $run_params'"
+        echo "SectionEnd"
+      done
+
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Function pgCustom_$pkg"
+            echo "  SectionGetFlags \${SEC_$pkg} \$0"
+            echo "  IntOp \$0 \$0 & 1"
+            echo "  IntCmp \$0 1 +2"
+            echo "    Abort"
+            echo "  nsDialogs::Create 1018"
+            echo "  Pop \$Dialog_$pkg"
+            
+            y=0
+            echo "$vars_json" | while read -r item; do
+              varname=$(echo "$item" | jq -r '.key')
+              desc=$(echo "$item" | jq -r '.desc')
+              defval=$(echo "$item" | jq -r '.def')
+              if [ $y -gt 130 ]; then break; fi
+              
+              echo "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
+              echo "  Pop \$0"
+              y=$((y + 12))
+              
+              if case "$varname" in *"_PASSWORD"*) true;; *) false;; esac; then
+                echo "  \${NSD_CreatePassword} 0 ${y}u 100% 12u \"$defval\""
+              else
+                echo "  \${NSD_CreateText} 0 ${y}u 100% 12u \"$defval\""
+              fi
+              echo "  Pop \$HWND_${pkg}_${varname}"
+              y=$((y + 14))
+            done
+            echo "  nsDialogs::Show"
+            echo "FunctionEnd"
+            
+            echo "Function pgLeave_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
+              
+              if case "$varname" in *"_PORT"* | *"_PORT_SECURE"*) true;; *) false;; esac; then
+                echo "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
+                echo "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"
+                echo "  Pop \$0"
+                echo "  IntCmp \$0 0 0 +3"
+                echo "    MessageBox MB_ICONSTOP \"Port \$VAL_${pkg}_${varname} is already in use.\""
+                echo "    Abort"
+              fi
+            done
+            echo "FunctionEnd"
+          fi
+        fi
+      done
+
+      # Uninstaller
+      echo "Section \"Uninstall\""
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "  MessageBox MB_YESNO \"Do you want to completely remove the Data Directory and all records for $pkg?\" IDYES purge_$pkg IDNO keep_$pkg"
+        echo "  purge_$pkg:"
+        echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --purge-data'"
+        echo "    Goto end_$pkg"
+        echo "  keep_$pkg:"
+        echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg'"
+        echo "  end_$pkg:"
+      done
+      echo "SectionEnd"
+
+      exit 0
+!define APP_NAME "$APP_NAME"
+!define APP_VERSION "$APP_VERSION"
+!define APP_PUBLISHER "$APP_PUBLISHER"
+Name "$APP_NAME \$APP_VERSION"
+OutFile "${OUT_FILE}.exe"
+InstallDir "\$PROGRAMFILES\\$APP_NAME"
+RequestExecutionLevel $nsis_admin
+
+VIProductVersion "$APP_VERSION"
+VIAddVersionKey "ProductName" "$APP_NAME"
+VIAddVersionKey "CompanyName" "$APP_PUBLISHER"
+VIAddVersionKey "FileDescription" "$WELCOME_TEXT"
+VIAddVersionKey "FileVersion" "$APP_VERSION"
+EOF2
+      if [ -n "$ICON_PATH" ]; then echo "Icon \"$ICON_PATH\""; fi
+      echo ""
+      
+      deps_list=""
+      if [ $# -gt 0 ]; then
+        while [ $# -gt 0 ]; do
+          deps_list="$deps_list $1 ${2:-latest}"
+          if [ "$2" != "" ]; then shift 2; else shift; fi
+        done
+      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) = "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      fi
+
+      echo "Include nsDialogs.nsh"
+      echo "Page components"
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Var Dialog_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "Var HWND_${pkg}_${varname}"
+              echo "Var VAL_${pkg}_${varname}"
+            done
+            
+            echo "Page custom pgCustom_$pkg pgLeave_$pkg"
+          fi
+        fi
+      done
+      
+      if [ -n "$LICENSE_PATH" ]; then echo "Page license \"\" \"$LICENSE_PATH\""; fi
+      echo "Page instfiles"
+      echo ""
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "Section \"$pkg\" SEC_$pkg"
+        run_params="/c libscript.cmd install_service $pkg $ver"
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"\$VAL_%s_%s\"", $1, pkg, $1}')
+            run_params="$run_params$append_params"
+          fi
+        fi
+        echo "  ExecWait 'cmd.exe $run_params'"
+        echo "SectionEnd"
+      done
+
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Function pgCustom_$pkg"
+            echo "  SectionGetFlags \${SEC_$pkg} \$0"
+            echo "  IntOp \$0 \$0 & 1"
+            echo "  IntCmp \$0 1 +2"
+            echo "    Abort"
+            echo "  nsDialogs::Create 1018"
+            echo "  Pop \$Dialog_$pkg"
+            
+            y=0
+            echo "$vars_json" | while read -r item; do
+              varname=$(echo "$item" | jq -r '.key')
+              desc=$(echo "$item" | jq -r '.desc')
+              defval=$(echo "$item" | jq -r '.def')
+              if [ $y -gt 130 ]; then break; fi
+              
+              echo "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
+              echo "  Pop \$0"
+              y=$((y + 12))
+              
+              if case "$varname" in *"_PASSWORD"*) true;; *) false;; esac; then
+                echo "  \${NSD_CreatePassword} 0 ${y}u 100% 12u \"$defval\""
+              else
+                echo "  \${NSD_CreateText} 0 ${y}u 100% 12u \"$defval\""
+              fi
+              echo "  Pop \$HWND_${pkg}_${varname}"
+              y=$((y + 14))
+            done
+            echo "  nsDialogs::Show"
+            echo "FunctionEnd"
+            
+            echo "Function pgLeave_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
+              
+              if case "$varname" in *"_PORT"* | *"_PORT_SECURE"*) true;; *) false;; esac; then
+                echo "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
+                echo "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"
+                echo "  Pop \$0"
+                echo "  IntCmp \$0 0 0 +3"
+                echo "    MessageBox MB_ICONSTOP \"Port \$VAL_${pkg}_${varname} is already in use.\""
+                echo "    Abort"
+              fi
+            done
+            echo "FunctionEnd"
+          fi
+        fi
+      done
+
+      exit 0
+!define APP_NAME "$APP_NAME"
+!define APP_VERSION "$APP_VERSION"
+!define APP_PUBLISHER "$APP_PUBLISHER"
+Name "$APP_NAME \$APP_VERSION"
+OutFile "${OUT_FILE}.exe"
+InstallDir "\$PROGRAMFILES\\$APP_NAME"
+RequestExecutionLevel $nsis_admin
+
+VIProductVersion "$APP_VERSION"
+VIAddVersionKey "ProductName" "$APP_NAME"
+VIAddVersionKey "CompanyName" "$APP_PUBLISHER"
+VIAddVersionKey "FileDescription" "$WELCOME_TEXT"
+VIAddVersionKey "FileVersion" "$APP_VERSION"
+EOF2
+      if [ -n "$ICON_PATH" ]; then echo "Icon \"$ICON_PATH\""; fi
+      echo ""
+      
+      deps_list=""
+      if [ $# -gt 0 ]; then
+        while [ $# -gt 0 ]; do
+          deps_list="$deps_list $1 ${2:-latest}"
+          if [ "$2" != "" ]; then shift 2; else shift; fi
+        done
+      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) = "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      fi
+
+      echo "Include nsDialogs.nsh"
+      echo "Page components"
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Var Dialog_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "Var HWND_${pkg}_${varname}"
+              echo "Var VAL_${pkg}_${varname}"
+            done
+            
+            echo "Page custom pgCustom_$pkg pgLeave_$pkg"
+          fi
+        fi
+      done
+      
+      if [ -n "$LICENSE_PATH" ]; then echo "Page license \"\" \"$LICENSE_PATH\""; fi
+      echo "Page instfiles"
+      echo ""
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "Section \"$pkg\" SEC_$pkg"
+        run_params="/c libscript.cmd install_service $pkg $ver"
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"\$VAL_%s_%s\"", $1, pkg, $1}')
+            run_params="$run_params$append_params"
+          fi
+        fi
+        echo "  ExecWait 'cmd.exe $run_params'"
+        echo "SectionEnd"
+      done
+
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Function pgCustom_$pkg"
+            echo "  SectionGetFlags \${SEC_$pkg} \$0"
+            echo "  IntOp \$0 \$0 & 1"
+            echo "  IntCmp \$0 1 +2"
+            echo "    Abort"
+            echo "  nsDialogs::Create 1018"
+            echo "  Pop \$Dialog_$pkg"
+            
+            y=0
+            echo "$vars_json" | while read -r item; do
+              varname=$(echo "$item" | jq -r '.key')
+              desc=$(echo "$item" | jq -r '.desc')
+              defval=$(echo "$item" | jq -r '.def')
+              if [ $y -gt 130 ]; then break; fi
+              
+              echo "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
+              echo "  Pop \$0"
+              y=$((y + 12))
+              
+              if [ "$varname" = *"_PASSWORD"* ]; then
+                echo "  \${NSD_CreatePassword} 0 ${y}u 100% 12u \"$defval\""
+              else
+                echo "  \${NSD_CreateText} 0 ${y}u 100% 12u \"$defval\""
+              fi
+              echo "  Pop \$HWND_${pkg}_${varname}"
+              y=$((y + 14))
+            done
+            echo "  nsDialogs::Show"
+            echo "FunctionEnd"
+            
+            echo "Function pgLeave_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
+              
+              if [ "$varname" = *"_PORT"* ] || [ "$varname" = *"_PORT_SECURE"* ]; then
+                echo "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
+                echo "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"
+                echo "  Pop \$0"
+                echo "  IntCmp \$0 0 0 +3"
+                echo "    MessageBox MB_ICONSTOP \"Port \$VAL_${pkg}_${varname} is already in use.\""
+                echo "    Abort"
+              fi
+            done
+            echo "FunctionEnd"
+          fi
+        fi
+      done
+
+      exit 0
+!define APP_NAME "$APP_NAME"
+!define APP_VERSION "$APP_VERSION"
+!define APP_PUBLISHER "$APP_PUBLISHER"
+Name "$APP_NAME \$APP_VERSION"
+OutFile "${OUT_FILE}.exe"
+InstallDir "\$PROGRAMFILES\\$APP_NAME"
+RequestExecutionLevel $nsis_admin
+
+VIProductVersion "$APP_VERSION"
+VIAddVersionKey "ProductName" "$APP_NAME"
+VIAddVersionKey "CompanyName" "$APP_PUBLISHER"
+VIAddVersionKey "FileDescription" "$WELCOME_TEXT"
+VIAddVersionKey "FileVersion" "$APP_VERSION"
+EOF2
+      if [ -n "$ICON_PATH" ]; then echo "Icon \"$ICON_PATH\""; fi
+      echo ""
+      
+      deps_list=""
+      if [ $# -gt 0 ]; then
+        while [ $# -gt 0 ]; do
+          deps_list="$deps_list $1 ${2:-latest}"
+          if [ "$2" != "" ]; then shift 2; else shift; fi
+        done
+      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      fi
+
+      echo "Include nsDialogs.nsh"
+      echo "Page components"
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Var Dialog_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "Var HWND_${pkg}_${varname}"
+              echo "Var VAL_${pkg}_${varname}"
+            done
+            
+            echo "Page custom pgCustom_$pkg pgLeave_$pkg"
+          fi
+        fi
+      done
+      
+      if [ -n "$LICENSE_PATH" ]; then echo "Page license \"\" \"$LICENSE_PATH\""; fi
+      echo "Page instfiles"
+      echo ""
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "Section \"$pkg\" SEC_$pkg"
+        run_params="/c libscript.cmd install_service $pkg $ver"
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"\$VAL_%s_%s\"", $1, pkg, $1}')
+            run_params="$run_params$append_params"
+          fi
+        fi
+        echo "  ExecWait 'cmd.exe $run_params'"
+        echo "SectionEnd"
+      done
+
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Function pgCustom_$pkg"
+            echo "  SectionGetFlags \${SEC_$pkg} \$0"
+            echo "  IntOp \$0 \$0 & 1"
+            echo "  IntCmp \$0 1 +2"
+            echo "    Abort"
+            echo "  nsDialogs::Create 1018"
+            echo "  Pop \$Dialog_$pkg"
+            
+            y=0
+            echo "$vars_json" | while read -r item; do
+              varname=$(echo "$item" | jq -r '.key')
+              desc=$(echo "$item" | jq -r '.desc')
+              defval=$(echo "$item" | jq -r '.def')
+              if [ $y -gt 130 ]; then break; fi
+              
+              echo "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
+              echo "  Pop \$0"
+              y=$((y + 12))
+              
+              if [[ "$varname" == *"_PASSWORD"* ]]; then
+                echo "  \${NSD_CreatePassword} 0 ${y}u 100% 12u \"$defval\""
+              else
+                echo "  \${NSD_CreateText} 0 ${y}u 100% 12u \"$defval\""
+              fi
+              echo "  Pop \$HWND_${pkg}_${varname}"
+              y=$((y + 14))
+            done
+            echo "  nsDialogs::Show"
+            echo "FunctionEnd"
+            
+            echo "Function pgLeave_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
+              
+              if [[ "$varname" == *"_PORT"* ]] || [[ "$varname" == *"_PORT_SECURE"* ]]; then
+                echo "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
+                echo "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"
+                echo "  Pop \$0"
+                echo "  IntCmp \$0 0 0 +3"
+                echo "    MessageBox MB_ICONSTOP \"Port \$VAL_${pkg}_${varname} is already in use.\""
+                echo "    Abort"
+              fi
+            done
+            echo "FunctionEnd"
+          fi
+        fi
+      done
+
+      exit 0
+!define APP_NAME "$APP_NAME"
+!define APP_VERSION "$APP_VERSION"
+!define APP_PUBLISHER "$APP_PUBLISHER"
+Name "$APP_NAME \$APP_VERSION"
+OutFile "${OUT_FILE}.exe"
+InstallDir "\$PROGRAMFILES\\$APP_NAME"
+RequestExecutionLevel $nsis_admin
+
+VIProductVersion "$APP_VERSION"
+VIAddVersionKey "ProductName" "$APP_NAME"
+VIAddVersionKey "CompanyName" "$APP_PUBLISHER"
+VIAddVersionKey "FileDescription" "$WELCOME_TEXT"
+VIAddVersionKey "FileVersion" "$APP_VERSION"
+EOF2
+      if [ -n "$ICON_PATH" ]; then echo "Icon \"$ICON_PATH\""; fi
+      echo ""
+      
+      deps_list=""
+      if [ $# -gt 0 ]; then
+        while [ $# -gt 0 ]; do
+          deps_list="$deps_list $1 ${2:-latest}"
+          if [ "$2" != "" ]; then shift 2; else shift; fi
+        done
+      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      fi
+
+      echo "Include nsDialogs.nsh"
+      echo "Page components"
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Var Dialog_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "Var HWND_${pkg}_${varname}"
+              echo "Var VAL_${pkg}_${varname}"
+            done
+            
+            echo "Page custom pgCustom_$pkg pgLeave_$pkg"
+          fi
+        fi
+      done
+      
+      if [ -n "$LICENSE_PATH" ]; then echo "Page license \"\" \"$LICENSE_PATH\""; fi
+      echo "Page instfiles"
+      echo ""
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "Section \"$pkg\" SEC_$pkg"
+        run_params="/c libscript.cmd install $pkg $ver"
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"\$VAL_%s_%s\"", $1, pkg, $1}')
+            run_params="$run_params$append_params"
+          fi
+        fi
+        echo "  ExecWait 'cmd.exe $run_params'"
+        echo "SectionEnd"
+      done
+
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Function pgCustom_$pkg"
+            echo "  SectionGetFlags \${SEC_$pkg} \$0"
+            echo "  IntOp \$0 \$0 & 1"
+            echo "  IntCmp \$0 1 +2"
+            echo "    Abort"
+            echo "  nsDialogs::Create 1018"
+            echo "  Pop \$Dialog_$pkg"
+            
+            y=0
+            echo "$vars_json" | while read -r item; do
+              varname=$(echo "$item" | jq -r '.key')
+              desc=$(echo "$item" | jq -r '.desc')
+              defval=$(echo "$item" | jq -r '.def')
+              if [ $y -gt 130 ]; then break; fi
+              
+              echo "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
+              echo "  Pop \$0"
+              y=$((y + 12))
+              
+              echo "  \${NSD_CreateText} 0 ${y}u 100% 12u \"$defval\""
+              echo "  Pop \$HWND_${pkg}_${varname}"
+              y=$((y + 14))
+            done
+            echo "  nsDialogs::Show"
+            echo "FunctionEnd"
+            
+            echo "Function pgLeave_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
+              
+              # Port Validation
+              if [[ "$varname" == *"_PORT"* ]] || [[ "$varname" == *"_PORT_SECURE"* ]]; then
+                echo "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
+                echo "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"
+                echo "  Pop \$0"
+                echo "  IntCmp \$0 0 0 +3"
+                echo "    MessageBox MB_ICONSTOP \"Port \$VAL_${pkg}_${varname} is already in use.\""
+                echo "    Abort"
+              fi
+            done
+            echo "FunctionEnd"
+          fi
+        fi
+      done
+
+      exit 0
+!define APP_NAME "$APP_NAME"
+!define APP_VERSION "$APP_VERSION"
+!define APP_PUBLISHER "$APP_PUBLISHER"
+Name "$APP_NAME \$APP_VERSION"
+OutFile "${OUT_FILE}.exe"
+InstallDir "\$PROGRAMFILES\\$APP_NAME"
+RequestExecutionLevel $nsis_admin
+
+VIProductVersion "$APP_VERSION"
+VIAddVersionKey "ProductName" "$APP_NAME"
+VIAddVersionKey "CompanyName" "$APP_PUBLISHER"
+VIAddVersionKey "FileDescription" "$WELCOME_TEXT"
+VIAddVersionKey "FileVersion" "$APP_VERSION"
+EOF2
+      if [ -n "$ICON_PATH" ]; then echo "Icon \"$ICON_PATH\""; fi
+      echo ""
+      
+      deps_list=""
+      if [ $# -gt 0 ]; then
+        while [ $# -gt 0 ]; do
+          deps_list="$deps_list $1 ${2:-latest}"
+          if [ "$2" != "" ]; then shift 2; else shift; fi
+        done
+      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      fi
+
+      echo "Include nsDialogs.nsh"
+      echo "Page components"
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Var Dialog_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "Var HWND_${pkg}_${varname}"
+              echo "Var VAL_${pkg}_${varname}"
+            done
+            
+            echo "Page custom pgCustom_$pkg pgLeave_$pkg"
+          fi
+        fi
+      done
+      
+      if [ -n "$LICENSE_PATH" ]; then echo "Page license \"\" \"$LICENSE_PATH\""; fi
+      echo "Page instfiles"
+      echo ""
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "Section \"$pkg\" SEC_$pkg"
+        run_params="/c libscript.cmd install $pkg $ver"
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"\$VAL_%s_%s\"", $1, pkg, $1}')
+            run_params="$run_params$append_params"
+          fi
+        fi
+        echo "  ExecWait 'cmd.exe $run_params'"
+        echo "SectionEnd"
+      done
+
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Function pgCustom_$pkg"
+            echo "  SectionGetFlags \${SEC_$pkg} \$0"
+            echo "  IntOp \$0 \$0 & 1"
+            echo "  IntCmp \$0 1 +2"
+            echo "    Abort"
+            echo "  nsDialogs::Create 1018"
+            echo "  Pop \$Dialog_$pkg"
+            
+            y=0
+            echo "$vars_json" | while read -r item; do
+              varname=$(echo "$item" | jq -r '.key')
+              desc=$(echo "$item" | jq -r '.desc')
+              defval=$(echo "$item" | jq -r '.def')
+              if [ $y -gt 130 ]; then break; fi
+              
+              echo "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
+              echo "  Pop \$0"
+              y=$((y + 12))
+              
+              echo "  \${NSD_CreateText} 0 ${y}u 100% 12u \"$defval\""
+              echo "  Pop \$HWND_${pkg}_${varname}"
+              y=$((y + 14))
+            done
+            echo "  nsDialogs::Show"
+            echo "FunctionEnd"
+            
+            echo "Function pgLeave_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
+              
+              # Port Validation
+              if [[ "$varname" == *"_PORT"* ]] || [[ "$varname" == *"_PORT_SECURE"* ]]; then
+                echo "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
+                echo "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"
+                echo "  Pop \$0"
+                echo "  IntCmp \$0 0 0 +3"
+                echo "    MessageBox MB_ICONSTOP \"Port \$VAL_${pkg}_${varname} is already in use.\""
+                echo "    Abort"
+              fi
+            done
+            echo "FunctionEnd"
+          fi
+        fi
+      done
+
+      exit 0
+!define APP_NAME "$APP_NAME"
+!define APP_VERSION "$APP_VERSION"
+!define APP_PUBLISHER "$APP_PUBLISHER"
+Name "$APP_NAME \$APP_VERSION"
+OutFile "${OUT_FILE}.exe"
+InstallDir "\$PROGRAMFILES\\$APP_NAME"
+RequestExecutionLevel $nsis_admin
+
+VIProductVersion "$APP_VERSION"
+VIAddVersionKey "ProductName" "$APP_NAME"
+VIAddVersionKey "CompanyName" "$APP_PUBLISHER"
+VIAddVersionKey "FileDescription" "$WELCOME_TEXT"
+VIAddVersionKey "FileVersion" "$APP_VERSION"
+EOF2
+      if [ -n "$ICON_PATH" ]; then echo "Icon \"$ICON_PATH\""; fi
+      echo ""
+      
+      deps_list=""
+      if [ $# -gt 0 ]; then
+        while [ $# -gt 0 ]; do
+          deps_list="$deps_list $1 ${2:-latest}"
+          if [ "$2" != "" ]; then shift 2; else shift; fi
+        done
+      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      fi
+
+      echo "Include nsDialogs.nsh"
+      echo "Page components"
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Var Dialog_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "Var HWND_${pkg}_${varname}"
+              echo "Var VAL_${pkg}_${varname}"
+            done
+            
+            echo "Page custom pgCustom_$pkg pgLeave_$pkg"
+          fi
+        fi
+      done
+      
+      if [ -n "$LICENSE_PATH" ]; then echo "Page license \"\" \"$LICENSE_PATH\""; fi
+      echo "Page instfiles"
+      echo ""
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "Section \"$pkg\" SEC_$pkg"
+        run_params="/c libscript.cmd install $pkg $ver"
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"\$VAL_%s_%s\"", $1, pkg, $1}')
+            run_params="$run_params$append_params"
+          fi
+        fi
+        echo "  ExecWait 'cmd.exe $run_params'"
+        echo "SectionEnd"
+      done
+
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Function pgCustom_$pkg"
+            echo "  SectionGetFlags \${SEC_$pkg} \$0"
+            echo "  IntOp \$0 \$0 & 1"
+            echo "  IntCmp \$0 1 +2"
+            echo "    Abort"
+            echo "  nsDialogs::Create 1018"
+            echo "  Pop \$Dialog_$pkg"
+            
+            y=0
+            echo "$vars_json" | while read -r item; do
+              varname=$(echo "$item" | jq -r '.key')
+              desc=$(echo "$item" | jq -r '.desc')
+              defval=$(echo "$item" | jq -r '.def')
+              if [ $y -gt 130 ]; then break; fi
+              
+              echo "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
+              echo "  Pop \$0"
+              y=$((y + 12))
+              
+              echo "  \${NSD_CreateText} 0 ${y}u 100% 12u \"$defval\""
+              echo "  Pop \$HWND_${pkg}_${varname}"
+              y=$((y + 14))
+            done
+            echo "  nsDialogs::Show"
+            echo "FunctionEnd"
+            
+            echo "Function pgLeave_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
+              
+              # Port Validation
+              if [[ "$varname" == *"_PORT"* ]] || [[ "$varname" == *"_PORT_SECURE"* ]]; then
+                echo "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
+                echo "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"
+                echo "  Pop \$0"
+                echo "  IntCmp \$0 0 0 +3"
+                echo "    MessageBox MB_ICONSTOP \"Port \$VAL_${pkg}_${varname} is already in use.\""
+                echo "    Abort"
+              fi
+            done
+            echo "FunctionEnd"
+          fi
+        fi
+      done
+
+      exit 0
+!define APP_NAME "$APP_NAME"
+!define APP_VERSION "$APP_VERSION"
+!define APP_PUBLISHER "$APP_PUBLISHER"
+Name "$APP_NAME \$APP_VERSION"
+OutFile "${OUT_FILE}.exe"
+InstallDir "\$PROGRAMFILES\\$APP_NAME"
+RequestExecutionLevel $nsis_admin
+
+VIProductVersion "$APP_VERSION"
+VIAddVersionKey "ProductName" "$APP_NAME"
+VIAddVersionKey "CompanyName" "$APP_PUBLISHER"
+VIAddVersionKey "FileDescription" "$WELCOME_TEXT"
+VIAddVersionKey "FileVersion" "$APP_VERSION"
+EOF2
+      if [ -n "$ICON_PATH" ]; then echo "Icon \"$ICON_PATH\""; fi
+      echo ""
+      
+      deps_list=""
+      if [ $# -gt 0 ]; then
+        while [ $# -gt 0 ]; do
+          deps_list="$deps_list $1 ${2:-latest}"
+          if [ "$2" != "" ]; then shift 2; else shift; fi
+        done
+      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      fi
+
+      echo "Include nsDialogs.nsh"
+      echo "Page components"
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Var Dialog_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "Var HWND_${pkg}_${varname}"
+              echo "Var VAL_${pkg}_${varname}"
+            done
+            
+            echo "Page custom pgCustom_$pkg pgLeave_$pkg"
+          fi
+        fi
+      done
+      
+      if [ -n "$LICENSE_PATH" ]; then echo "Page license \"\" \"$LICENSE_PATH\""; fi
+      echo "Page instfiles"
+      echo ""
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "Section \"$pkg\" SEC_$pkg"
+        run_params="/c libscript.cmd install $pkg $ver"
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"\$VAL_%s_%s\"", $1, pkg, $1}')
+            run_params="$run_params$append_params"
+          fi
+        fi
+        echo "  ExecWait 'cmd.exe $run_params'"
+        echo "SectionEnd"
+      done
+
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Function pgCustom_$pkg"
+            echo "  SectionGetFlags \${SEC_$pkg} \$0"
+            echo "  IntOp \$0 \$0 & 1"
+            echo "  IntCmp \$0 1 +2"
+            echo "    Abort"
+            echo "  nsDialogs::Create 1018"
+            echo "  Pop \$Dialog_$pkg"
+            
+            y=0
+            echo "$vars_json" | while read -r item; do
+              varname=$(echo "$item" | jq -r '.key')
+              desc=$(echo "$item" | jq -r '.desc')
+              defval=$(echo "$item" | jq -r '.def')
+              if [ $y -gt 130 ]; then break; fi
+              
+              echo "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
+              echo "  Pop \$0"
+              y=$((y + 12))
+              
+              echo "  \${NSD_CreateText} 0 ${y}u 100% 12u \"$defval\""
+              echo "  Pop \$HWND_${pkg}_${varname}"
+              y=$((y + 14))
+            done
+            echo "  nsDialogs::Show"
+            echo "FunctionEnd"
+            
+            echo "Function pgLeave_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
+              
+              # Port Validation
+              if [[ "$varname" == *"_PORT"* ]] || [[ "$varname" == *"_PORT_SECURE"* ]]; then
+                echo "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
+                echo "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"
+                echo "  Pop \$0"
+                echo "  IntCmp \$0 0 0 +3"
+                echo "    MessageBox MB_ICONSTOP \"Port \$VAL_${pkg}_${varname} is already in use.\""
+                echo "    Abort"
+              fi
+            done
+            echo "FunctionEnd"
+          fi
+        fi
+      done
+
+      exit 0
+!define APP_NAME "$APP_NAME"
+!define APP_VERSION "$APP_VERSION"
+!define APP_PUBLISHER "$APP_PUBLISHER"
+Name "$APP_NAME \$APP_VERSION"
+OutFile "${OUT_FILE}.exe"
+InstallDir "\$PROGRAMFILES\\$APP_NAME"
+RequestExecutionLevel $nsis_admin
+
+VIProductVersion "$APP_VERSION"
+VIAddVersionKey "ProductName" "$APP_NAME"
+VIAddVersionKey "CompanyName" "$APP_PUBLISHER"
+VIAddVersionKey "FileDescription" "$WELCOME_TEXT"
+VIAddVersionKey "FileVersion" "$APP_VERSION"
+EOF2
+      if [ -n "$ICON_PATH" ]; then echo "Icon \"$ICON_PATH\""; fi
+      echo ""
+      
+      deps_list=""
+      if [ $# -gt 0 ]; then
+        while [ $# -gt 0 ]; do
+          deps_list="$deps_list $1 ${2:-latest}"
+          if [ "$2" != "" ]; then shift 2; else shift; fi
+        done
+      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      fi
+
+      echo "Include nsDialogs.nsh"
+      echo "Page components"
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Var Dialog_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "Var HWND_${pkg}_${varname}"
+              echo "Var VAL_${pkg}_${varname}"
+            done
+            
+            echo "Page custom pgCustom_$pkg pgLeave_$pkg"
+          fi
+        fi
+      done
+      
+      if [ -n "$LICENSE_PATH" ]; then echo "Page license \"\" \"$LICENSE_PATH\""; fi
+      echo "Page instfiles"
+      echo ""
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "Section \"$pkg\" SEC_$pkg"
+        run_params="/c libscript.cmd install $pkg $ver"
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"\$VAL_%s_%s\"", $1, pkg, $1}')
+            run_params="$run_params$append_params"
+          fi
+        fi
+        echo "  ExecWait 'cmd.exe $run_params'"
+        echo "SectionEnd"
+      done
+
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Function pgCustom_$pkg"
+            echo "  SectionGetFlags \${SEC_$pkg} \$0"
+            echo "  IntOp \$0 \$0 & 1"
+            echo "  IntCmp \$0 1 +2"
+            echo "    Abort"
+            echo "  nsDialogs::Create 1018"
+            echo "  Pop \$Dialog_$pkg"
+            
+            y=0
+            echo "$vars_json" | while read -r item; do
+              varname=$(echo "$item" | jq -r '.key')
+              desc=$(echo "$item" | jq -r '.desc')
+              defval=$(echo "$item" | jq -r '.def')
+              if [ $y -gt 130 ]; then break; fi
+              
+              echo "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
+              echo "  Pop \$0"
+              y=$((y + 12))
+              
+              echo "  \${NSD_CreateText} 0 ${y}u 100% 12u \"$defval\""
+              echo "  Pop \$HWND_${pkg}_${varname}"
+              y=$((y + 14))
+            done
+            echo "  nsDialogs::Show"
+            echo "FunctionEnd"
+            
+            echo "Function pgLeave_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
+              
+              # Port Validation
+              if [[ "$varname" == *"_PORT"* ]] || [[ "$varname" == *"_PORT_SECURE"* ]]; then
+                echo "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
+                echo "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"
+                echo "  Pop \$0"
+                echo "  IntCmp \$0 0 0 +3"
+                echo "    MessageBox MB_ICONSTOP \"Port \$VAL_${pkg}_${varname} is already in use.\""
+                echo "    Abort"
+              fi
+            done
+            echo "FunctionEnd"
+          fi
+        fi
+      done
+
+      exit 0
+!define APP_NAME "$APP_NAME"
+!define APP_VERSION "$APP_VERSION"
+!define APP_PUBLISHER "$APP_PUBLISHER"
+Name "$APP_NAME \$APP_VERSION"
+OutFile "${OUT_FILE}.exe"
+InstallDir "\$PROGRAMFILES\\$APP_NAME"
+RequestExecutionLevel $nsis_admin
+
+VIProductVersion "$APP_VERSION"
+VIAddVersionKey "ProductName" "$APP_NAME"
+VIAddVersionKey "CompanyName" "$APP_PUBLISHER"
+VIAddVersionKey "FileDescription" "$WELCOME_TEXT"
+VIAddVersionKey "FileVersion" "$APP_VERSION"
+EOF2
+      if [ -n "$ICON_PATH" ]; then echo "Icon \"$ICON_PATH\""; fi
+      echo ""
+      
+      deps_list=""
+      if [ $# -gt 0 ]; then
+        while [ $# -gt 0 ]; do
+          deps_list="$deps_list $1 ${2:-latest}"
+          if [ "$2" != "" ]; then shift 2; else shift; fi
+        done
+      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      fi
+
+      echo "Include nsDialogs.nsh"
+      echo "Page components"
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Var Dialog_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "Var HWND_${pkg}_${varname}"
+              echo "Var VAL_${pkg}_${varname}"
+            done
+            
+            echo "Page custom pgCustom_$pkg pgLeave_$pkg"
+          fi
+        fi
+      done
+      
+      if [ -n "$LICENSE_PATH" ]; then echo "Page license \"\" \"$LICENSE_PATH\""; fi
+      echo "Page instfiles"
+      echo ""
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "Section \"$pkg\" SEC_$pkg"
+        run_params="/c libscript.cmd install $pkg $ver"
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"\$VAL_%s_%s\"", $1, pkg, $1}')
+            run_params="$run_params$append_params"
+          fi
+        fi
+        echo "  ExecWait 'cmd.exe $run_params'"
+        echo "SectionEnd"
+      done
+
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Function pgCustom_$pkg"
+            echo "  SectionGetFlags \${SEC_$pkg} \$0"
+            echo "  IntOp \$0 \$0 & 1"
+            echo "  IntCmp \$0 1 +2"
+            echo "    Abort"
+            echo "  nsDialogs::Create 1018"
+            echo "  Pop \$Dialog_$pkg"
+            
+            y=0
+            echo "$vars_json" | while read -r item; do
+              varname=$(echo "$item" | jq -r '.key')
+              desc=$(echo "$item" | jq -r '.desc')
+              defval=$(echo "$item" | jq -r '.def')
+              if [ $y -gt 130 ]; then break; fi
+              
+              echo "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
+              echo "  Pop \$0"
+              y=$((y + 12))
+              
+              echo "  \${NSD_CreateText} 0 ${y}u 100% 12u \"$defval\""
+              echo "  Pop \$HWND_${pkg}_${varname}"
+              y=$((y + 14))
+            done
+            echo "  nsDialogs::Show"
+            echo "FunctionEnd"
+            
+            echo "Function pgLeave_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
+              
+              # Port Validation
+              if [[ "$varname" == *"_PORT"* ]] || [[ "$varname" == *"_PORT_SECURE"* ]]; then
+                echo "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
+                echo "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"
+                echo "  Pop \$0"
+                echo "  IntCmp \$0 0 0 +3"
+                echo "    MessageBox MB_ICONSTOP \"Port \$VAL_${pkg}_${varname} is already in use.\""
+                echo "    Abort"
+              fi
+            done
+            echo "FunctionEnd"
+          fi
+        fi
+      done
+
+      exit 0
+!define APP_NAME "$APP_NAME"
+!define APP_VERSION "$APP_VERSION"
+!define APP_PUBLISHER "$APP_PUBLISHER"
+Name "$APP_NAME \$APP_VERSION"
+OutFile "${OUT_FILE}.exe"
+InstallDir "\$PROGRAMFILES\\$APP_NAME"
+RequestExecutionLevel $nsis_admin
+
+VIProductVersion "$APP_VERSION"
+VIAddVersionKey "ProductName" "$APP_NAME"
+VIAddVersionKey "CompanyName" "$APP_PUBLISHER"
+VIAddVersionKey "FileDescription" "$WELCOME_TEXT"
+VIAddVersionKey "FileVersion" "$APP_VERSION"
+EOF2
+      if [ -n "$ICON_PATH" ]; then echo "Icon \"$ICON_PATH\""; fi
+      echo ""
+      
+      deps_list=""
+      if [ $# -gt 0 ]; then
+        while [ $# -gt 0 ]; do
+          deps_list="$deps_list $1 ${2:-latest}"
+          if [ "$2" != "" ]; then shift 2; else shift; fi
+        done
+      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      fi
+
+      echo "Include nsDialogs.nsh"
+      echo "Page components"
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Var Dialog_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "Var HWND_${pkg}_${varname}"
+              echo "Var VAL_${pkg}_${varname}"
+            done
+            
+            echo "Page custom pgCustom_$pkg pgLeave_$pkg"
+          fi
+        fi
+      done
+      
+      if [ -n "$LICENSE_PATH" ]; then echo "Page license \"\" \"$LICENSE_PATH\""; fi
+      echo "Page instfiles"
+      echo ""
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "Section \"$pkg\" SEC_$pkg"
+        run_params="/c libscript.cmd install $pkg $ver"
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"\$VAL_%s_%s\"", $1, pkg, $1}')
+            run_params="$run_params$append_params"
+          fi
+        fi
+        echo "  ExecWait 'cmd.exe $run_params'"
+        echo "SectionEnd"
+      done
+
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Function pgCustom_$pkg"
+            echo "  SectionGetFlags \${SEC_$pkg} \$0"
+            echo "  IntOp \$0 \$0 & 1"
+            echo "  IntCmp \$0 1 +2"
+            echo "    Abort"
+            echo "  nsDialogs::Create 1018"
+            echo "  Pop \$Dialog_$pkg"
+            
+            y=0
+            echo "$vars_json" | while read -r item; do
+              varname=$(echo "$item" | jq -r '.key')
+              desc=$(echo "$item" | jq -r '.desc')
+              defval=$(echo "$item" | jq -r '.def')
+              if [ $y -gt 130 ]; then break; fi
+              
+              echo "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
+              echo "  Pop \$0"
+              y=$((y + 12))
+              
+              echo "  \${NSD_CreateText} 0 ${y}u 100% 12u \"$defval\""
+              echo "  Pop \$HWND_${pkg}_${varname}"
+              y=$((y + 14))
+            done
+            echo "  nsDialogs::Show"
+            echo "FunctionEnd"
+            
+            echo "Function pgLeave_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
+              
+              # Port Validation
+              if [[ "$varname" == *"_PORT"* ]] || [[ "$varname" == *"_PORT_SECURE"* ]]; then
+                echo "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
+                echo "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"
+                echo "  Pop \$0"
+                echo "  IntCmp \$0 0 0 +3"
+                echo "    MessageBox MB_ICONSTOP \"Port \$VAL_${pkg}_${varname} is already in use.\""
+                echo "    Abort"
+              fi
+            done
+            echo "FunctionEnd"
+          fi
+        fi
+      done
+
+      exit 0
+!define APP_NAME "$APP_NAME"
+!define APP_VERSION "$APP_VERSION"
+!define APP_PUBLISHER "$APP_PUBLISHER"
+Name "$APP_NAME \$APP_VERSION"
+OutFile "${OUT_FILE}.exe"
+InstallDir "\$PROGRAMFILES\\$APP_NAME"
+RequestExecutionLevel $nsis_admin
+
+VIProductVersion "$APP_VERSION"
+VIAddVersionKey "ProductName" "$APP_NAME"
+VIAddVersionKey "CompanyName" "$APP_PUBLISHER"
+VIAddVersionKey "FileDescription" "$WELCOME_TEXT"
+VIAddVersionKey "FileVersion" "$APP_VERSION"
+EOF2
+      if [ -n "$ICON_PATH" ]; then echo "Icon \"$ICON_PATH\""; fi
+      echo ""
+      
+      deps_list=""
+      if [ $# -gt 0 ]; then
+        while [ $# -gt 0 ]; do
+          deps_list="$deps_list $1 ${2:-latest}"
+          if [ "$2" != "" ]; then shift 2; else shift; fi
+        done
+      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      fi
+
+      echo "Include nsDialogs.nsh"
+      echo "Page components"
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Var Dialog_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "Var HWND_${pkg}_${varname}"
+              echo "Var VAL_${pkg}_${varname}"
+            done
+            
+            echo "Page custom pgCustom_$pkg pgLeave_$pkg"
+          fi
+        fi
+      done
+      
+      if [ -n "$LICENSE_PATH" ]; then echo "Page license \"\" \"$LICENSE_PATH\""; fi
+      echo "Page instfiles"
+      echo ""
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "Section \"$pkg\" SEC_$pkg"
+        run_params="/c libscript.cmd install $pkg $ver"
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"\$VAL_%s_%s\"", $1, pkg, $1}')
+            run_params="$run_params$append_params"
+          fi
+        fi
+        echo "  ExecWait 'cmd.exe $run_params'"
+        echo "SectionEnd"
+      done
+
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Function pgCustom_$pkg"
+            echo "  SectionGetFlags \${SEC_$pkg} \$0"
+            echo "  IntOp \$0 \$0 & 1"
+            echo "  IntCmp \$0 1 +2"
+            echo "    Abort"
+            echo "  nsDialogs::Create 1018"
+            echo "  Pop \$Dialog_$pkg"
+            
+            y=0
+            echo "$vars_json" | while read -r item; do
+              varname=$(echo "$item" | jq -r '.key')
+              desc=$(echo "$item" | jq -r '.desc')
+              defval=$(echo "$item" | jq -r '.def')
+              if [ $y -gt 130 ]; then break; fi
+              
+              echo "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
+              echo "  Pop \$0"
+              y=$((y + 12))
+              
+              echo "  \${NSD_CreateText} 0 ${y}u 100% 12u \"$defval\""
+              echo "  Pop \$HWND_${pkg}_${varname}"
+              y=$((y + 14))
+            done
+            echo "  nsDialogs::Show"
+            echo "FunctionEnd"
+            
+            echo "Function pgLeave_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
+            done
+            echo "FunctionEnd"
+          fi
+        fi
+      done
+
+      exit 0
+!define APP_NAME "$APP_NAME"
+!define APP_VERSION "$APP_VERSION"
+!define APP_PUBLISHER "$APP_PUBLISHER"
+Name "$APP_NAME \$APP_VERSION"
+OutFile "${OUT_FILE}.exe"
+InstallDir "\$PROGRAMFILES\\$APP_NAME"
+RequestExecutionLevel $nsis_admin
+
+VIProductVersion "$APP_VERSION"
+VIAddVersionKey "ProductName" "$APP_NAME"
+VIAddVersionKey "CompanyName" "$APP_PUBLISHER"
+VIAddVersionKey "FileDescription" "$WELCOME_TEXT"
+VIAddVersionKey "FileVersion" "$APP_VERSION"
+EOF2
+      if [ -n "$ICON_PATH" ]; then echo "Icon \"$ICON_PATH\""; fi
+      echo ""
+      
+      # Parse dependencies
+      deps_list=""
+      if [ $# -gt 0 ]; then
+        while [ $# -gt 0 ]; do
+          deps_list="$deps_list $1 ${2:-latest}"
+          if [ "$2" != "" ]; then shift 2; else shift; fi
+        done
+      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      fi
+
+      echo "Include nsDialogs.nsh"
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1
+        ver=$2
+        shift 2
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "Var Dialog_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "Var HWND_${pkg}_${varname}"
+              echo "Var VAL_${pkg}_${varname}"
+            done
+            
+            echo "Page custom pgCustom_$pkg pgLeave_$pkg"
+            echo "Function pgCustom_$pkg"
+            echo "  nsDialogs::Create 1018"
+            echo "  Pop \$Dialog_$pkg"
+            
+            y=0
+            echo "$vars_json" | while read -r item; do
+              varname=$(echo "$item" | jq -r '.key')
+              desc=$(echo "$item" | jq -r '.desc')
+              defval=$(echo "$item" | jq -r '.def')
+              
+              if [ $y -gt 130 ]; then break; fi # Simple overflow protection
+              
+              echo "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
+              echo "  Pop \$0"
+              y=$((y + 12))
+              
+              echo "  \${NSD_CreateText} 0 ${y}u 100% 12u \"$defval\""
+              echo "  Pop \$HWND_${pkg}_${varname}"
+              y=$((y + 14))
+            done
+            echo "  nsDialogs::Show"
+            echo "FunctionEnd"
+            
+            echo "Function pgLeave_$pkg"
+            echo "$vars_json" | jq -r '.key' | while read -r varname; do
+              echo "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
+            done
+            echo "FunctionEnd"
+          fi
+        fi
+      done
+      
       if [ -n "$LICENSE_PATH" ]; then echo "Page license \"\" \"$LICENSE_PATH\""; fi
       echo "Page instfiles"
       echo ""
       echo "Section \"MainSection\" SEC01"
-      if [ $# -gt 0 ]; then
-        while [ $# -gt 0 ]; do
-          pkg="$1"
-          ver="${2:-latest}"
-          echo "  ExecWait 'cmd.exe /c libscript.cmd install $pkg $ver'"
-          if [ "$2" != "" ]; then shift 2; else shift; fi
-        done
-      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
-        deps=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null)
-        echo "$deps" | while read -r pkg ver; do
-          if [ -n "$pkg" ]; then
-            if [ "$ver" = "null" ]; then ver="latest"; fi
-            echo "  ExecWait 'cmd.exe /c libscript.cmd install $pkg $ver'"
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1
+        ver=$2
+        shift 2
+        run_params="/c libscript.cmd install $pkg $ver"
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"$VAL_%s_%s\"", $1, pkg, $1}')
+            run_params="$run_params$append_params"
           fi
-        done
-      fi
+        fi
+        echo "  ExecWait 'cmd.exe $run_params'"
+      done
+
       echo "SectionEnd"
       exit 0
     fi
@@ -571,7 +3425,6 @@ else
     exact_count=$(echo "$exact_match" | grep -c . || true)
     if [ "$exact_count" -eq 1 ]; then
       target="$SCRIPT_DIR/$exact_match"
-    else
       echo "Error: Component '$action_pkg' is ambiguous. Matches:"
       echo "$matches" | sed 's/^/  /'
       exit 1

@@ -76,7 +76,20 @@ cd -- "${previous_wd}"
 
 if [ "${noop}" -eq 0 ]; then
   service_name="${LIBSCRIPT_SERVICE_NAME:-valkey}"
-  priv  install -m 0644 -o 'root' -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/conf/valkey.conf' /etc/
+  valkey_conf="/tmp/valkey_$$.conf"
+  cp -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/conf/valkey.conf' "${valkey_conf}"
+  if [ -n "${VALKEY_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
+    sed -i -e "s|^bind |# bind |g" -e "s|^port |port 0\n# port |g" -e "s|^# unixsocket .*|unixsocket ${VALKEY_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}\nunixsocketperm 777|" "${valkey_conf}"
+  else
+    if [ -n "${VALKEY_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ]; then
+      sed -i "s|^bind .*|bind ${VALKEY_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}|" "${valkey_conf}"
+    fi
+    if [ -n "${VALKEY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
+      sed -i "s|^port .*|port ${VALKEY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}|" "${valkey_conf}"
+    fi
+  fi
+  priv  install -m 0644 -o 'root' -- "${valkey_conf}" /etc/valkey.conf
+  rm -f -- "${valkey_conf}"
   priv  install -m 0644 -o 'root' -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/valkey/conf/systemd/'"${service_name}"'.service' /etc/systemd/system/
   priv  systemctl daemon-reload
   priv  systemctl reload-or-restart -- "${service_name}"
@@ -89,3 +102,11 @@ for key in 'REDIS_URL' 'VALKEY_URL'; do
   lang_export 'sh' "${key}" "${val}" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
   lang_export 'sqlite' "${key}" "${val}"
 done
+
+if [ -n "${VALKEY_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
+  "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "unix:${VALKEY_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 || true
+elif [ -n "${VALKEY_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ] && [ -n "${VALKEY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
+  "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${VALKEY_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${VALKEY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 || true
+elif [ -n "${VALKEY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
+  "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${VALKEY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 || true
+fi

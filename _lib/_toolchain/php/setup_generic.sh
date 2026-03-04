@@ -36,7 +36,7 @@ if [ "${PHP_INSTALL_METHOD}" = 'system' ]; then
   depends 'php'
 else
   depends 'curl' 'tar' 'make' 'gcc'
-  curl -L -o /tmp/php.tar.gz https://www.php.net/distributions/php-8.2.11.tar.gz
+  libscript_download https://www.php.net/distributions/php-8.2.11.tar.gz /tmp/php.tar.gz
   tar -xzf /tmp/php.tar.gz -C /tmp
   cd /tmp/php-8.2.11 && ./configure && make && priv make install
 fi

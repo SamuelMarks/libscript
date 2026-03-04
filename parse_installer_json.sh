@@ -1070,6 +1070,10 @@ parse_json() {
   parse_dependencies "${json_file}"
   parse_log_server "${json_file}"
 
+    netctl_docker="$(${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh --emit dockerfile 2>/dev/null || true)"
+    if [ -n "${netctl_docker}" ]; then
+      echo "${netctl_docker}" >> "${docker_scratch_file}"
+    fi
   docker_s="$(cat -- "${docker_scratch_file}"; printf 'a')"
   docker_s="${docker_s%a}"
 

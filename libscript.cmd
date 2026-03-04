@@ -354,31 +354,101 @@ if exist "%temp%\desc.txt" del "%temp%\desc.txt"
 exit /b 0
 
 :handle_package_as
-if /i "%~2"=="docker" (
-    echo FROM debian:bookworm-slim
+set "is_docker="
+if /i "%~2"=="docker" set "is_docker=1"
+if /i "%~2"=="dockerfile" set "is_docker=1"
+
+if defined is_docker (
+    set "base_image=debian:bookworm-slim"
+    set "layer_filter="
+    shift
+    shift
+    
+    :docker_parse_flags
+    if /i "%~1"=="--base" (
+        set "base_image=%~2"
+        if /i "%~2"=="debian" set "base_image=debian:bookworm-slim"
+    set "layer_filter="
+        if /i "%~2"=="alpine" set "base_image=alpine:latest"
+        shift
+        shift
+        goto docker_parse_flags
+    )
+    if /i "%~1"=="--layer" (
+        set "layer_filter=%~2"
+        shift
+        shift
+        goto docker_parse_flags
+    )
+    if /i "%~1"=="-l" (
+        set "layer_filter=%~2"
+        shift
+        shift
+        goto docker_parse_flags
+    )
+    if /i "%~1"=="--base-image" (
+        set "base_image=%~2"
+        if /i "%~2"=="debian" set "base_image=debian:bookworm-slim"
+    set "layer_filter="
+        if /i "%~2"=="alpine" set "base_image=alpine:latest"
+        shift
+        shift
+        goto docker_parse_flags
+    )
+
+    echo FROM !base_image!
+    echo ARG TARGETOS=windows
+    echo ARG TARGETARCH=amd64
     echo ENV LC_ALL=C.UTF-8 LANG=C.UTF-8
-    echo COPY . /opt/libscript
-    echo WORKDIR /opt/libscript
-    shift
-    shift
+    echo ENV LIBSCRIPT_ROOT_DIR="/opt/libscript"
+    echo ENV LIBSCRIPT_BUILD_DIR="/opt/libscript_build"
+    echo ENV LIBSCRIPT_DATA_DIR="/opt/libscript_data"
+    echo ENV LIBSCRIPT_CACHE_DIR="/opt/libscript_cache"
+    set "tmp_env_add=%temp%\libscript_env_add.tmp"
+    set "tmp_run=%temp%\libscript_run.tmp"
+    if exist "!tmp_env_add!" del "!tmp_env_add!"
+    if exist "!tmp_run!" del "!tmp_run!"
+    
     :docker_loop
     if not "%~1"=="" (
         set "pkg=%~1"
         set "ver=%~2"
+        set "override=%~3"
         if "!ver!"=="" set "ver=latest"
-        echo RUN ./libscript.sh install !pkg! !ver!
+        
+        set "is_url="
+        if not "!override!"=="" (
+            echo !override! | findstr /b "http" >nul
+            if not errorlevel 1 set "is_url=1"
+        )
+        
+        set "pkg_up=!pkg!"
+        for %%A in ("a=A" "b=B" "c=C" "d=D" "e=E" "f=F" "g=G" "h=H" "i=I" "j=J" "k=K" "l=L" "m=M" "n=N" "o=O" "p=P" "q=Q" "r=R" "s=S" "t=T" "u=U" "v=V" "w=W" "x=X" "y=Y" "z=Z" "-=_") do set "pkg_up=!pkg_up:%%~A!"
+        
+        echo ENV !pkg_up!_VERSION="!ver!">> "!tmp_env_add!"
+        
+        if defined is_url (
+            echo ENV !pkg_up!_URL="!override!">> "!tmp_env_add!"
+            for %%F in ("!override!") do set "filename=%%~nxF"
+            echo ADD ${!pkg_up!_URL} /opt/libscript_cache/!pkg!/!filename!>> "!tmp_env_add!"
+            shift
+            shift
+            shift
+        ) else (
+            if not "%~2"=="" (
+                shift
+                shift
+            ) else (
+                shift
+            )
+        )
+        
+        echo RUN ./libscript.sh install !pkg! ${!pkg_up!_VERSION}>> "!tmp_run!"
         
         REM Call libscript.sh env to get docker formatted ENV vars, not cmd because we're emitting a linux dockerfile
         set "PREFIX=/opt/libscript/installed/!pkg!"
         for /f "delims=" %%i in ('call "%~dp0libscript.cmd" env !pkg! !ver! --format=docker 2^>nul') do (
-            echo %%i | findstr /b /v "ENV STACK=" | findstr /b /v "ENV SCRIPT_NAME="
-        )
-        
-        if not "%~2"=="" (
-            shift
-            shift
-        ) else (
-            shift
+            echo %%i | findstr /b /v "ENV STACK=" | findstr /b /v "ENV SCRIPT_NAME=">> "!tmp_run!"
         )
         goto docker_loop
     ) else (
@@ -387,26 +457,43 @@ if /i "%~2"=="docker" (
             if not errorlevel 1 (
                 echo if .deps then .deps ^| to_entries[] ^| "\(.key) \(if (.value ^| type) == \"string\" then .value else (.value.version // \"latest\") end) \(if (.value ^| type) == \"object\" and .value.override then .value.override else \"\" end)" else empty end > "%temp%\libscript_deps.jq"
                 for /f "tokens=1,2,3" %%a in ('jq -r -f "%temp%\libscript_deps.jq" "libscript.json" 2^>nul') do (
-                    if not "%%c"=="" if not "%%c"=="null" (
-                        set "pkg_up=%%a"
-                        for %%A in ("a=A" "b=B" "c=C" "d=D" "e=E" "f=F" "g=G" "h=H" "i=I" "j=J" "k=K" "l=L" "m=M" "n=N" "o=O" "p=P" "q=Q" "r=R" "s=S" "t=T" "u=U" "v=V" "w=W" "x=X" "y=Y" "z=Z" "-=_") do set "pkg_up=!pkg_up:%%~A!"
-                        echo ENV !pkg_up!_URL="%%c"
+                    set "pkg_up=%%a"
+                    for %%A in ("a=A" "b=B" "c=C" "d=D" "e=E" "f=F" "g=G" "h=H" "i=I" "j=J" "k=K" "l=L" "m=M" "n=N" "o=O" "p=P" "q=Q" "r=R" "s=S" "t=T" "u=U" "v=V" "w=W" "x=X" "y=Y" "z=Z" "-=_") do set "pkg_up=!pkg_up:%%~A!"
+                    
+                    if "%%b"=="" (
+                        echo ENV !pkg_up!_VERSION="latest">> "!tmp_env_add!"
+                    ) else if "%%b"=="null" (
+                        echo ENV !pkg_up!_VERSION="latest">> "!tmp_env_add!"
                     ) else (
-                        echo RUN ./libscript.sh install %%a %%b
-                        set "PREFIX=/opt/libscript/installed/%%a"
-                        for /f "delims=" %%i in ('call "%~dp0libscript.cmd" env %%a %%b --format=docker 2^>nul') do (
-                            echo %%i | findstr /b /v "ENV STACK=" | findstr /b /v "ENV SCRIPT_NAME="
-                        )
+                        echo ENV !pkg_up!_VERSION="%%b">> "!tmp_env_add!"
+                    )
+                    
+                    if not "%%c"=="" if not "%%c"=="null" (
+                        echo ENV !pkg_up!_URL="%%c">> "!tmp_env_add!"
+                        for %%F in ("%%c") do set "filename=%%~nxF"
+            echo ADD ${!pkg_up!_URL} /opt/libscript_cache/%%a/!filename!>> "!tmp_env_add!"
+                    )
+                    echo RUN ./libscript.sh install %%a ${!pkg_up!_VERSION}>> "!tmp_run!"
+                    set "PREFIX=/opt/libscript/installed/%%a"
+                    for /f "delims=" %%i in ('call "%~dp0libscript.cmd" env %%a %%b --format=docker 2^>nul') do (
+            echo %%i | findstr /b /v "ENV STACK=" | findstr /b /v "ENV SCRIPT_NAME=">> "!tmp_run!"
                     )
                 )
                 if exist "%temp%\libscript_deps.jq" del "%temp%\libscript_deps.jq"
             ) else (
-                echo RUN ./install_gen.sh
+                echo RUN ./install_gen.sh>> "!tmp_run!"
             )
         ) else (
-            echo RUN ./install_gen.sh
+                echo RUN ./install_gen.sh>> "!tmp_run!"
         )
     )
+    if exist "!tmp_env_add!" type "!tmp_env_add!"
+    echo COPY . /opt/libscript
+    echo WORKDIR /opt/libscript
+    if exist "!tmp_run!" type "!tmp_run!"
+
+    if exist "!tmp_env_add!" del "!tmp_env_add!"
+    if exist "!tmp_run!" del "!tmp_run!"
     exit /b 0
 ) else if /i "%~2"=="docker_compose" (
     echo version: '3.8'
@@ -577,133 +664,14 @@ if /i "!pkg_type!"=="nsis" goto generate_nsis
 exit /b 1
 
 :generate_msi
-echo ^<?xml version="1.0" encoding="UTF-8"?^>
-echo ^<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"^>
-echo   ^<Product Id="*" Name="!APP_NAME!" Language="1033" Version="!APP_VERSION!" Manufacturer="!APP_PUBLISHER!" UpgradeCode="!UPGRADE_CODE!"^>
-echo     ^<Package InstallerVersion="200" Compressed="yes" InstallScope="!install_scope!" Description="!WELCOME_TEXT!" /^>
-echo     ^<Media Id="1" Cabinet="media1.cab" EmbedCab="yes" /^>
-if not "!ICON_PATH!"=="" (
-    echo     ^<Icon Id="AppIcon.ico" SourceFile="!ICON_PATH!"/^>
-    echo     ^<Property Id="ARPPRODUCTICON" Value="AppIcon.ico" /^>
-)
-if not "!APP_URL!"=="" echo     ^<Property Id="ARPURLINFOABOUT" Value="!APP_URL!" /^>
-echo     ^<Directory Id="TARGETDIR" Name="SourceDir"^>
-echo       ^<Directory Id="ProgramFilesFolder"^>
-echo         ^<Directory Id="INSTALLFOLDER" Name="!APP_NAME!" /^>
-echo       ^<Directory/^>
-echo     ^</Directory/^>
-echo     ^<Feature Id="MainFeature" Title="Main Feature" Level="1"^>
-echo       ^<ComponentGroupRef Id="ProductComponents" /^>
-echo     ^</Feature/^>
-echo     ^<!-- Custom Actions for Installation --^>
-if not "%~1"=="" (
-    :msi_loop
-    if not "%~1"=="" (
-        set "pkg=%~1"
-        set "ver=%~2"
-        if "!ver!"=="" set "ver=latest"
-        echo     ^<CustomAction Id="Install!pkg!" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c libscript.cmd install !pkg! !ver!" Execute="deferred" Return="check" Impersonate="no" /^>
-        if not "%~2"=="" ( shift & shift ) else ( shift )
-        goto msi_loop
-    )
-) else (
-    if exist "libscript.json" (
-        jq --version >nul 2>&1
-        if not errorlevel 1 (
-            echo if .deps then .deps ^| to_entries[] ^| "\(.key) \(if (.value ^| type) == \"string\" then .value else (.value.version // \"latest\") end)" else empty end > "%temp%\libscript_deps_msi.jq"
-            for /f "tokens=1,2" %%a in ('jq -r -f "%temp%\libscript_deps_msi.jq" "libscript.json" 2^>nul') do (
-                echo     ^<CustomAction Id="Install%%a" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c libscript.cmd install %%a %%b" Execute="deferred" Return="check" Impersonate="no" /^>
-            )
-            if exist "%temp%\libscript_deps_msi.jq" del "%temp%\libscript_deps_msi.jq"
-        )
-    )
-)
-echo     ^<InstallExecuteSequence^>
-echo       ^<Custom Action="InstallMain" After="InstallFiles"^>NOT Installed^</Custom^>
-echo     ^</InstallExecuteSequence^>
-echo   ^</Product^>
-echo   ^<Fragment^>
-echo     ^<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER"^>
-echo       ^<!-- Add your files here --^>
-echo     ^</ComponentGroup^>
-echo   ^</Fragment^>
-echo ^</Wix^>
-exit /b 0
-
+bash "%SCRIPT_DIR%libscript.sh" %*
+exit /b !errorlevel!
 :generate_inno
-echo [Setup]
-echo AppName=!APP_NAME!
-echo AppVersion=!APP_VERSION!
-echo AppPublisher=!APP_PUBLISHER!
-if not "!APP_URL!"=="" (
-    echo AppPublisherURL=!APP_URL!
-    echo AppSupportURL=!APP_URL!
-    echo AppUpdatesURL=!APP_URL!
-)
-echo DefaultDirName={autopf}\!APP_NAME!
-echo PrivilegesRequired=!inno_priv!
-echo OutputDir=.
-echo OutputBaseFilename=!OUT_FILE!
-if not "!UPGRADE_CODE!"=="PUT-GUID-HERE" echo AppId=!UPGRADE_CODE!
-if not "!ICON_PATH!"=="" echo SetupIconFile=!ICON_PATH!
-if not "!IMAGE_PATH!"=="" echo WizardImageFile=!IMAGE_PATH!
-if not "!LICENSE_PATH!"=="" echo LicenseFile=!LICENSE_PATH!
-echo.
-echo [Run]
-if not "%~1"=="" (
-    :inno_loop
-    if not "%~1"=="" (
-        set "pkg=%~1"
-        set "ver=%~2"
-        if "!ver!"=="" set "ver=latest"
-        echo Filename: "cmd.exe"; Parameters: "/c libscript.cmd install !pkg! !ver!"; Flags: runhidden
-        if not "%~2"=="" ( shift & shift ) else ( shift )
-        goto inno_loop
-    )
-) else (
-    if exist "libscript.json" (
-        jq --version >nul 2>&1
-        if not errorlevel 1 (
-            echo if .deps then .deps ^| to_entries[] ^| "\(.key) \(if (.value ^| type) == \"string\" then .value else (.value.version // \"latest\") end)" else empty end > "%temp%\libscript_deps_inno.jq"
-            for /f "tokens=1,2" %%a in ('jq -r -f "%temp%\libscript_deps_inno.jq" "libscript.json" 2^>nul') do (
-                echo Filename: "cmd.exe"; Parameters: "/c libscript.cmd install %%a %%b"; Flags: runhidden
-            )
-            if exist "%temp%\libscript_deps_inno.jq" del "%temp%\libscript_deps_inno.jq"
-        )
-    )
-)
-exit /b 0
-
+bash "%SCRIPT_DIR%libscript.sh" %*
+exit /b !errorlevel!
 :generate_nsis
-echo !define APP_NAME "!APP_NAME!"
-echo !define APP_VERSION "!APP_VERSION!"
-echo !define APP_PUBLISHER "!APP_PUBLISHER!"
-echo Name "!APP_NAME! !APP_VERSION!"
-echo OutFile "!OUT_FILE!.exe"
-echo InstallDir "$PROGRAMFILES\!APP_NAME!"
-echo RequestExecutionLevel !nsis_admin!
-echo.
-echo VIProductVersion "!APP_VERSION!"
-echo VIAddVersionKey "ProductName" "!APP_NAME!"
-echo VIAddVersionKey "CompanyName" "!APP_PUBLISHER!"
-echo VIAddVersionKey "FileDescription" "!WELCOME_TEXT!"
-echo VIAddVersionKey "FileVersion" "!APP_VERSION!"
-if not "!ICON_PATH!"=="" echo Icon "!ICON_PATH!"
-echo.
-if not "!LICENSE_PATH!"=="" echo Page license "" "!LICENSE_PATH!"
-echo Page instfiles
-echo.
-echo Section "MainSection" SEC01
-if not "%~1"=="" (
-    :nsis_loop
-    if not "%~1"=="" (
-        set "pkg=%~1"
-        set "ver=%~2"
-        if "!ver!"=="" set "ver=latest"
-        echo   ExecWait 'cmd.exe /c libscript.cmd install !pkg! !ver!'
-        if not "%~2"=="" ( shift & shift ) else ( shift )
-        goto nsis_loop
-    )
+bash "%SCRIPT_DIR%libscript.sh" %*
+exit /b !errorlevel!
 ) else (
     if exist "libscript.json" (
         jq --version >nul 2>&1

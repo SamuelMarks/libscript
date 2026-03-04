@@ -38,3 +38,21 @@ else
   echo "[WARN] From-source or alternative installation requested for mongodb, but currently only system package manager is fully supported."
   depends 'mongodb'
 fi
+
+mongo_conf="/etc/mongod.conf"
+if [ -f "${mongo_conf}" ]; then
+  if [ -n "${MONGODB_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
+    priv sed -i "s|^ *port: .*|  port: ${MONGODB_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}|" "${mongo_conf}"
+  fi
+  if [ -n "${MONGODB_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ]; then
+    priv sed -i "s|^ *bindIp: .*|  bindIp: ${MONGODB_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}|" "${mongo_conf}"
+  fi
+fi
+
+if [ -n "${MONGODB_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
+  "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "unix:${MONGODB_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 || true
+elif [ -n "${MONGODB_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ] && [ -n "${MONGODB_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
+  "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${MONGODB_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${MONGODB_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 || true
+elif [ -n "${MONGODB_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
+  "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${MONGODB_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 || true
+fi

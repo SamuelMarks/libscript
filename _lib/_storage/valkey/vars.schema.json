@@ -26,6 +26,53 @@
         "choco"
       ],
       "default": "winget"
+    },
+    "LIBSCRIPT_LISTEN_PORT": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Global port to listen on"
+    },
+    "LIBSCRIPT_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Global address to listen on"
+    },
+    "LIBSCRIPT_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Global unix socket to listen on"
+    },
+    "VALKEY_LISTEN_PORT": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Port for VALKEY to listen on"
+    },
+    "VALKEY_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Address for VALKEY to listen on"
+    },
+    "VALKEY_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Unix socket for VALKEY to listen on"
+    },
+    "VALKEY_DATA_DIR": {
+      "description": "Directory for Valkey data",
+      "type": "string"
+    },
+    "VALKEY_SERVICE_RUN_AS_USER": {
+      "description": "Windows local user account to run the service (leave empty for Network Service)",
+      "type": "string"
+    },
+    "VALKEY_SERVICE_RUN_AS_PASSWORD": {
+      "description": "Password for the local user account (if applicable)",
+      "type": "string"
+    },
+    "VALKEY_SERVICE_NAME": {
+      "description": "Custom name for the Windows Service (allows side-by-side installations)",
+      "type": "string",
+      "default": "libscript_valkey"
     }
   }
 }

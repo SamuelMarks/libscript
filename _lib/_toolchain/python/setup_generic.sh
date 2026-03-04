@@ -44,7 +44,7 @@ elif [ "${PYTHON_INSTALL_METHOD}" = 'pyenv' ]; then
 elif [ "${PYTHON_INSTALL_METHOD}" = 'from-source' ]; then
   depends 'curl' 'build-essential' 'libssl-dev' 'zlib1g-dev' 'libbz2-dev' 'libreadline-dev' 'libsqlite3-dev' 'wget' 'curl' 'llvm' 'libncurses5-dev' 'libncursesw5-dev' 'xz-utils' 'tk-dev' 'libffi-dev' 'liblzma-dev'
   PY_VER="${PYTHON_VERSION:-3.11.9}"
-  curl -O "https://www.python.org/ftp/python/${PY_VER}/Python-${PY_VER}.tgz"
+  libscript_download "https://www.python.org/ftp/python/${PY_VER}/Python-${PY_VER}.tgz" ""
   tar -xf "Python-${PY_VER}.tgz"
   cd "Python-${PY_VER}"
   ./configure --enable-optimizations

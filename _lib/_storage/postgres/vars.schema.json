@@ -54,6 +54,57 @@
         "choco"
       ],
       "default": "winget"
+    },
+    "LIBSCRIPT_LISTEN_PORT": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Global port to listen on"
+    },
+    "LIBSCRIPT_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Global address to listen on"
+    },
+    "LIBSCRIPT_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Global unix socket to listen on"
+    },
+    "POSTGRES_LISTEN_PORT": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Port for POSTGRES to listen on"
+    },
+    "POSTGRES_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Address for POSTGRES to listen on"
+    },
+    "POSTGRES_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Unix socket for POSTGRES to listen on"
+    },
+    "POSTGRES_DATA_DIR": {
+      "description": "Directory for PostgreSQL data cluster",
+      "type": "string"
+    },
+    "POSTGRES_LOCALE": {
+      "description": "Locale for PostgreSQL initdb (e.g. English, United States)",
+      "type": "string"
+    },
+    "POSTGRES_SERVICE_RUN_AS_USER": {
+      "description": "Windows local user account to run the service (leave empty for Network Service)",
+      "type": "string"
+    },
+    "POSTGRES_SERVICE_RUN_AS_PASSWORD": {
+      "description": "Password for the local user account (if applicable)",
+      "type": "string"
+    },
+    "POSTGRES_SERVICE_NAME": {
+      "description": "Custom name for the Windows Service (allows side-by-side installations)",
+      "type": "string",
+      "default": "libscript_postgres"
     }
   }
 }

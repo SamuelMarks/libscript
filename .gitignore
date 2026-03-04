@@ -1,3 +1,5 @@
+patch*
+validate_*
 .idea
 .vscode
 tmp

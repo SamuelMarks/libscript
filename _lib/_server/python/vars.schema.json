@@ -34,6 +34,36 @@
         "choco"
       ],
       "default": "winget"
+    },
+    "LIBSCRIPT_LISTEN_PORT": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Global port to listen on"
+    },
+    "LIBSCRIPT_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Global address to listen on"
+    },
+    "LIBSCRIPT_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Global unix socket to listen on"
+    },
+    "PYTHON_LISTEN_PORT": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Port for PYTHON to listen on"
+    },
+    "PYTHON_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Address for PYTHON to listen on"
+    },
+    "PYTHON_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Unix socket for PYTHON to listen on"
     }
   }
 }

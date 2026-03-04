@@ -45,3 +45,11 @@ curl --proto '=https' --tlsv1.2 -sSf https://get.k0s.sh | sudo sh
 
 priv k0s install controller --single
 priv k0s start
+
+if [ -n "${KUBERNETES_K0S_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
+  "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "unix:${KUBERNETES_K0S_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 || true
+elif [ -n "${KUBERNETES_K0S_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ] && [ -n "${KUBERNETES_K0S_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
+  "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${KUBERNETES_K0S_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${KUBERNETES_K0S_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 || true
+elif [ -n "${KUBERNETES_K0S_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
+  "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${KUBERNETES_K0S_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 || true
+fi

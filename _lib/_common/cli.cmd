@@ -88,7 +88,7 @@ if "!is_action!"=="1" (
 
     if not "!PACKAGE_NAME!"=="" (
         if not "!VERSION!"=="" (
-            set "pkg_upper=!PACKAGE_NAME!"
+            for %%F in ("!PACKAGE_NAME!") do set "pkg_upper=%%~nxF"
             for %%A in (
                 "a=A" "b=B" "c=C" "d=D" "e=E" "f=F" "g=G" "h=H" "i=I"
                 "j=J" "k=K" "l=L" "m=M" "n=N" "o=O" "p=P" "q=Q" "r=R"
@@ -103,6 +103,9 @@ if "!is_action!"=="1" (
     exit /b 1
 )
 
+if /i "%VERSION%"=="latest" set "LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1"
+if /i "%VERSION%"=="lts" set "LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1"
+if /i "%VERSION%"=="stable" set "LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB=1"
 :parse_args
 if "%~1"=="" goto run_action
 
@@ -425,5 +428,14 @@ if exist "%SCRIPT_DIR%setup.cmd" (
 ) else (
     echo Error: setup.cmd not found in %SCRIPT_DIR%
     exit /b 1
+)
+if /i "!ACTION!"=="install_service" (
+    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_win.ps1" (
+        call set "CURRENT_DATA_DIR=%%!pkg_upper!_DATA_DIR%%"
+        call set "CURRENT_RUN_AS_USER=%%!pkg_upper!_SERVICE_RUN_AS_USER%%"
+        call set "CURRENT_RUN_AS_PASSWORD=%%!pkg_upper!_SERVICE_RUN_AS_PASSWORD%%"
+        call set "CURRENT_SERVICE_NAME=%%!pkg_upper!_SERVICE_NAME%%"
+        powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_win.ps1" -PackageName "!PACKAGE_NAME!" -DataDir "!CURRENT_DATA_DIR!" -RunAsUser "!CURRENT_RUN_AS_USER!" -RunAsPassword "!CURRENT_RUN_AS_PASSWORD!" -BinPath "!BIN_PATH!.exe" -CustomServiceName "!CURRENT_SERVICE_NAME!"
+    )
 )
 exit /b 0

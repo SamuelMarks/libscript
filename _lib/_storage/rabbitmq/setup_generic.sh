@@ -13,10 +13,23 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 if depends 'rabbitmq'; then
+    conf_file="/etc/rabbitmq/rabbitmq.conf"
+    priv mkdir -p /etc/rabbitmq
+    if [ -n "${RABBITMQ_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
+      echo "listeners.tcp.default = ${RABBITMQ_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" | priv tee -a "${conf_file}" >/dev/null
+    fi
     >&2 printf "RabbitMQ installed via package manager.
 "
 else
     >&2 printf "RabbitMQ package not found for this OS.
 "
     exit 1
+fi
+
+if [ -n "${RABBITMQ_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
+  "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "unix:${RABBITMQ_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 || true
+elif [ -n "${RABBITMQ_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ] && [ -n "${RABBITMQ_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
+  "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${RABBITMQ_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${RABBITMQ_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 || true
+elif [ -n "${RABBITMQ_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
+  "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${RABBITMQ_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 || true
 fi
