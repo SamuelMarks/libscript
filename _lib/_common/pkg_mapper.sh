@@ -31,6 +31,13 @@ map_package() {
         *) return 1 ;;
       esac
       ;;
+    'postgres'|'postgresql')
+      case "${PKG_MGR}" in
+        'winget') printf 'PostgreSQL.PostgreSQL\n' ;;
+        'choco') printf 'postgresql\n' ;;
+        *) printf 'postgresql\n' ;;
+      esac
+      ;;
     'mariadb')
       case "${PKG_MGR}" in
         'apt-get'|'dnf'|'yum'|'zypper'|'pacman') printf 'mariadb-server\n' ;;
@@ -364,6 +371,7 @@ map_package() {
         'dnf') printf 'rabbitmq-server\n' ;;
         'yum') printf 'rabbitmq-server\n' ;;
         'zypper') printf 'rabbitmq-server\n' ;;
+        'brew') printf 'rabbitmq\n' ;;
         'winget') printf 'RabbitMQ.RabbitMQ\n' ;;
         'emerge') printf 'net-misc/rabbitmq-server\n' ;;
         *) printf 'rabbitmq-server\n' ;;

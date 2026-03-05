@@ -47,7 +47,7 @@ if [ ! -d "${JUPYTERHUB_VENV}" ]; then
   # "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U jupyter notebook pyright python-language-server python-lsp-server
 fi
 if ! cmd_avail configurable-http-proxy; then
-  priv npm install -g configurable-http-proxy
+  priv env "PATH=$PATH" npm install -g configurable-http-proxy
 fi
 if [ ! -d "${JUPYTERHUB_NOTEBOOK_DIR}" ]; then
   priv  mkdir -p -- "${JUPYTERHUB_NOTEBOOK_DIR}"

@@ -3,4 +3,7 @@ http://example.com/ fb91d75a6bb430787a61b0aec5e374f580030f2878e1613eab5ca6310f7b
 https://github.com/wait4x/wait4x/releases/latest/download/wait4x-linux-amd64.tar.gz 43270cb957487c1b92a426f8f0fcc41b71e06ebae78a58ee25a2899cf9fd7bc7
 https://download.swift.org/swift-5.10-release/ubuntu2204/swift-5.10-RELEASE/swift-5.10-RELEASE-ubuntu22.04.tar.gz ded6983736ab5e15862e5a924ebd5c4f9459802317eff719936442c832698d06
 https://github.com/Schniz/fnm/releases/download/v1.38.1/fnm-linux.zip b69e5c9a05c1e17e4a7de9a17df14ba430d049f2591af791a6f850a170296069
-https://pkgx.sh 80dc315471181b6750d7f9b831ef053bbc506603130019ce3ca24487abf66018
+https://pkgx.sh 49ec00204706e75632a4598c28a6eb1dfa89cb02e3ae35c274ff6cd15e5b55ba
+https://wordpress.org/latest.tar.gz 85c8436998870e42a39ae7558b096d19d294a0cd2adb7c87ee764db973b01953
+https://nixos.org/nix/install 78de59f69d95bdb7ba7d54949ddc402c9e98c1ba55c35c73704b21b432c66f8a
+https://raw.githubusercontent.com/PowerShell/PowerShell/master/tools/installpsh-debian.sh 1e0b2b707990d7039664e30dbbe2f1cf51fb7fef9d7929e18ea2f83b191efc0c
