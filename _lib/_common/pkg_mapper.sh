@@ -141,6 +141,13 @@ map_package() {
         *) printf 'curl\n' ;;
       esac
       ;;
+    'sqlite')
+      case "${PKG_MGR}" in
+        'apt-get'|'apk'|'dnf'|'yum'|'zypper'|'pacman') printf 'sqlite3\n' ;;
+        'brew') printf 'sqlite\n' ;;
+        *) printf 'sqlite3\n' ;;
+      esac
+      ;;
     'tar')
       case "${PKG_MGR}" in
         'brew') printf 'gnu-tar\n' ;;

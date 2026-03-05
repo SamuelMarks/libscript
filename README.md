@@ -62,10 +62,10 @@
 | `_lib/_git` | ✅ | ✅ | ✅ |
 | `_lib/_server/caddy` | ✅ | ✅ | ❌ |
 | `_lib/_server/docker` | ✅ | ❌ | ✅ |
-| `_lib/_server/fluentbit` | ❌ | ✅ | ❌ |
-| `_lib/_server/httpd` | ❌ | ❌ | ❌ |
+| `_lib/_server/fluentbit` | ❌ | ❌ | ❌ |
+| `_lib/_server/httpd` | ✅ | ✅ | ❌ |
 | `_lib/_server/kubernetes_k0s` | ✅ | ⏭️ | ⏭️ |
-| `_lib/_server/kubernetes_thw` | ❌ | ⏭️ | ⏭️ |
+| `_lib/_server/kubernetes_thw` | ❓ | ⏭️ | ⏭️ |
 | `_lib/_server/nginx` | ❌ | ✅ | ⏭️ |
 | `_lib/_server/nodejs` | ❌ | ❌ | ✅ |
 | `_lib/_server/python` | ❌ | ❌ | ✅ |
@@ -94,5 +94,5 @@
 | `_lib/_toolchain/rust` | ✅ | ✅ | ❌ |
 | `_lib/_toolchain/sh` | ✅ | ✅ | ❌ |
 | `_lib/_toolchain/swift` | ✅ | ✅ | ❌ |
-| `_lib/_toolchain/wait4x` | ❌ | ❌ | ❌ |
+| `_lib/_toolchain/wait4x` | ✅ | ✅ | ❌ |
 | `_lib/_toolchain/zig` | ❌ | ✅ | ✅ |

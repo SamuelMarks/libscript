@@ -23,6 +23,12 @@ fi
 
 if depends 'valkey'; then
     >&2 printf "Valkey installed via package manager.\n"
+elif depends 'valkey-server'; then
+    >&2 printf "Valkey-server installed via package manager.\n"
+elif depends 'redis'; then
+    >&2 printf "Redis installed via package manager as fallback.\n"
+elif depends 'redis-server'; then
+    >&2 printf "Redis-server installed via package manager as fallback.\n"
 else
     depends 'git' 'c_compiler' 'make' || {
         >&2 printf "Required build tools for Valkey are missing. Exiting...\n"

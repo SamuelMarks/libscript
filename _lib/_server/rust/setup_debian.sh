@@ -71,7 +71,7 @@ env -i DESCRIPTION='Rust server'"${name}" \
        WORKING_DIR="${DEST}" \
        ENV="${ENV}" \
        EXEC_START="${EXEC_START}" \
-      envsubst_safe < "${LIBSCRIPT_ROOT_DIR}"'/_lib/_daemon/systemd/simple.service' > "${name_file}"
+       "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/_daemon/systemd/simple.service' > "${name_file}"
 priv  install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
 
 cd -- "${previous_wd}"

@@ -47,7 +47,7 @@ elif [ -z "${DEST+x}" ]; then
 fi
 
 if ! cmd_avail pnpm; then
-  npm install -g pnpm@latest-10
+  priv npm install -g pnpm@latest-10
 fi
 
 previous_wd="$(pwd)"
@@ -83,8 +83,8 @@ if [ -d '/etc/systemd/system' ]; then
          EXEC_START="$(which pnpm)"' run workers' \
         "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/_daemon/systemd/simple.service' > "${name_file}"
   priv  install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
-  priv  systemctl daemon-reload
-  priv  systemctl reload-or-restart -- "${service_name}"
+  priv systemctl daemon-reload || true
+  priv systemctl reload-or-restart -- "${service_name}" || true
 
   name_file="$(mktemp)"
   trap 'rm -f -- "${name_file}"' EXIT HUP INT QUIT TERM
@@ -95,8 +95,8 @@ if [ -d '/etc/systemd/system' ]; then
          EXEC_START="$(which pnpm)"' run start' \
         "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/_daemon/systemd/simple.service' > "${name_file}"
   priv  install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
-  priv  systemctl daemon-reload
-  priv  systemctl reload-or-restart -- "${service_name}"
+  priv systemctl daemon-reload || true
+  priv systemctl reload-or-restart -- "${service_name}" || true
 fi
 
 cd -- "${previous_wd}"

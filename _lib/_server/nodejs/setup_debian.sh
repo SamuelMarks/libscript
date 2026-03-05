@@ -42,6 +42,7 @@ if [ -z "${DEST+x}" ]; then
   export DEST
   mkdir -p -- "${DEST}"
   service_name='rust-'"${rand}"
+  touch "${DEST}/main.js"
 else
   service_name="$(basename -- "${DEST}")"
 fi

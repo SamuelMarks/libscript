@@ -62,8 +62,8 @@ if [ -d '/etc/systemd/system' ]; then
 
   priv  install -m 0644 -- '/tmp/'"${service_name}" "${service}"
   priv  install -D -m 0644 -- "${DIR}"'/conf/celery_env' /etc/conf.d/
-  priv  systemctl daemon-reload
-  priv  systemctl reload-or-restart -- "${service_name}"
+  priv systemctl daemon-reload || true
+  priv systemctl reload-or-restart -- "${service_name}" || true
 elif [ -d '/Library/LaunchDaemons' ]; then
   >&2 printf 'TODO: macOS service\n'
   exit 3

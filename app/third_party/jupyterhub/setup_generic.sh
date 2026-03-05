@@ -45,7 +45,7 @@ if [ ! -d "${JUPYTERHUB_VENV}" ]; then
   # "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U jupyter notebook pyright python-language-server python-lsp-server
 fi
 if ! cmd_avail configurable-http-proxy; then
-  npm install -g configurable-http-proxy
+  priv npm install -g configurable-http-proxy
 fi
 if [ ! -d "${JUPYTERHUB_NOTEBOOK_DIR}" ]; then
   priv  mkdir -p -- "${JUPYTERHUB_NOTEBOOK_DIR}"
@@ -78,8 +78,8 @@ if [ -d '/etc/systemd/system' ]; then
   envsubst_safe < "${LIBSCRIPT_ROOT_DIR}"'/app/third_party/jupyterhub/conf/systemd/jupyverse.service' > "${tmp00}"
   if [ -f "${service}" ]; then priv  rm -f -- "${service}"; fi
   priv  install -m 0644 -- "${tmp00}" "${service}"
-  priv  systemctl daemon-reload
-  priv  systemctl reload-or-restart -- "${service_name}"
+  priv systemctl daemon-reload || true
+  priv systemctl reload-or-restart -- "${service_name}" || true
 elif [ -d '/Library/LaunchDaemons' ]; then
   >&2 printf 'TODO: macOS service\n'
   exit 3

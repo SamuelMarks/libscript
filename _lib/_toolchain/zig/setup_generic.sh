@@ -30,10 +30,19 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/priv.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
+
 ZIG_INSTALL_METHOD="${ZIG_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 
 if [ "${ZIG_INSTALL_METHOD}" = 'system' ]; then
-  depends 'zig'
+  if ! depends 'zig'; then
+    if command -v snap >/dev/null 2>&1; then
+      priv snap install zig --classic || true
+    fi
+  fi
 else
   echo "[WARN] From-source or alternative installation requested for zig, but currently only system package manager is fully supported."
   depends 'zig'

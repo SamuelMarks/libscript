@@ -39,11 +39,17 @@ if ! cmd_avail wait4x; then
     cd -- "${DOWNLOAD_DIR}"
     WAIT4X_ARCH="${ARCH_ALT}"
     [ "$WAIT4X_ARCH" = "x86_64" ] && WAIT4X_ARCH="amd64"
-    name='wait4x-'"${UNAME_LOWER}"'-'"${WAIT4X_ARCH}"
+    WAIT4X_OS="${UNAME_LOWER}"
+    [ "$WAIT4X_OS" = "windows_nt" ] && WAIT4X_OS="windows"
+    [ "$WAIT4X_OS" = "mingw64_nt-10.0-20348" ] && WAIT4X_OS="windows"
+    name='wait4x-'"${WAIT4X_OS}"'-'"${WAIT4X_ARCH}"
     archive="${name}"'.tar.gz'
     libscript_download 'https://github.com/wait4x/wait4x/releases/latest/download/'"${archive}" ""
-    tar --one-top-level -xvf "${archive}"
-    priv install .'/'"${name}"'/wait4x' '/usr/local/bin/wait4x'
+    mkdir -p -- "${name}"
+    tar -C "${name}" -xvf "${archive}"
+    WAIT4X_BIN="wait4x"
+    [ "${WAIT4X_OS}" = "windows" ] && WAIT4X_BIN="wait4x.exe"
+    priv install .'/'"${name}"'/'"${WAIT4X_BIN}" '/usr/local/bin/'"${WAIT4X_BIN}"
     # rm -- wait4x-linux-amd64.tar.gz
     cd -- "${previous_wd}"
   fi

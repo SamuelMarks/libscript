@@ -42,6 +42,7 @@ if [ -z "${DEST+x}" ]; then
   export DEST
   mkdir -p -- "${DEST}"
   service_name='rust-'"${rand}"
+  touch "${DEST}/main.py"
 else
   service_name="$(basename -- "${DEST}")"
 fi
@@ -82,11 +83,14 @@ if [ "${VENV-}" ]; then
 else
   python_out="$(mktemp)"
   trap 'rm -f -- "${python_out}"' EXIT HUP INT QUIT TERM
-  if which python > "${python_out}" ; then
+  if which python3 > "${python_out}" ; then
+    python_executable="$(cat -- "${python_out}"; printf 'a')"
+    python_executable="${python_executable%a}"
+  elif which python > "${python_out}" ; then
     python_executable="$(cat -- "${python_out}"; printf 'a')"
     python_executable="${python_executable%a}"
   else
-    python_executable="$(find "$(pwd)" -name python -executable)"
+    python_executable="$(find "$(pwd)" -name python -executable | head -n 1)"
   fi
 fi
 if [ "${python_executable}" = '' ]; then
