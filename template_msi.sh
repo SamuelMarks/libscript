@@ -5,7 +5,7 @@
       cat << EOF2
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="*" Name="$APP_NAME" Language="1033" Version="$APP_VERSION" Manufacturer="$APP_PUBLISHER" UpgradeCode="$UPGRADE_CODE">
+  <Product Id="$PRODUCT_CODE" Name="$APP_NAME" Language="1033" Version="$APP_VERSION" Manufacturer="$APP_PUBLISHER" UpgradeCode="$UPGRADE_CODE">
     <Package InstallerVersion="200" Compressed="yes" InstallScope="$install_scope" Description="$WELCOME_TEXT" />
     <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
 EOF2
@@ -33,7 +33,7 @@ EOF2
       echo "      </Directory>"
       echo "    </Directory>"
       
-      set -- "$deps_list"
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         echo "Function CheckPorts_$pkg()" > "validate_${pkg}.vbs"
@@ -66,7 +66,7 @@ EOF2
       done
 
       # Features
-      set -- "$deps_list"
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         echo "    <Feature Id=\"Feature_$pkg\" Title=\"Install $pkg\" Level=\"1\">"
@@ -81,7 +81,7 @@ EOF2
       echo "      <Dialog Id=\"Dlg_Features\" Width=\"370\" Height=\"270\" Title=\"Select Components\">"
       echo "        <Control Id=\"Lbl_Select\" Type=\"Text\" X=\"20\" Y=\"10\" Width=\"330\" Height=\"15\" Text=\"Select the components you want to install:\" />"
       y=30
-      set -- "$deps_list"
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         echo "        <Control Id=\"Chk_$pkg\" Type=\"CheckBox\" X=\"20\" Y=\"${y}\" Width=\"330\" Height=\"15\" Property=\"INSTALL_$pkg\" CheckBoxValue=\"1\" Text=\"Install $pkg\" />"
@@ -92,13 +92,13 @@ EOF2
       echo "        </Control>"
       echo "      </Dialog>"
       
-      set -- "$deps_list"
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         echo "      <Property Id=\"INSTALL_$pkg\" Value=\"1\" Secure=\"yes\" />"
       done
       
-      set -- "$deps_list"
+      set -- $deps_list
       has_custom_ui=0
       dialogs=""
       while [ $# -gt 0 ]; do
@@ -144,7 +144,7 @@ EOF2
       done
 
       # MSI Uninstaller Confirmations
-      set -- "$deps_list"
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         echo "      <Dialog Id=\"Dlg_Uninst_${pkg}\" Width=\"370\" Height=\"270\" Title=\"Uninstall $pkg\">"
@@ -165,7 +165,7 @@ EOF2
       echo "      <InstallUISequence>"
       echo "        <Show Dialog=\"Dlg_Features\" After=\"CostFinalize\">NOT Installed</Show>"
       last_dlg="Dlg_Features"
-      set -- "$deps_list"
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         has_dlg=0
@@ -180,7 +180,7 @@ EOF2
       
       # UI sequence for uninstall
       last_uninst_dlg="CostFinalize"
-      set -- "$deps_list"
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         echo "        <Show Dialog=\"Dlg_Uninst_${pkg}\" After=\"$last_uninst_dlg\">REMOVE=\"ALL\"</Show>"
@@ -190,7 +190,7 @@ EOF2
       echo "    </UI>"
 
       # Install Actions
-      set -- "$deps_list"
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         run_params="/c libscript.cmd install_service $pkg $ver"
@@ -209,7 +209,7 @@ EOF2
       done
 
       echo "    <InstallExecuteSequence>"
-      set -- "$deps_list"
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         echo "      <Custom Action=\"Install$pkg\" Before=\"InstallFinalize\"><![CDATA[NOT Installed AND INSTALL_$pkg=\"1\"]]></Custom>"
