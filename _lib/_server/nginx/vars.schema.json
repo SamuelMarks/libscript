@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/_server/nginx/vars.schema.json",
-  "title": "nginx vars",
-  "description": "Nginx configuration variables",
+  "title": "Nginx Web Server Configuration",
+  "description": "Configuration variables for deploying and configuring the Nginx high-performance Web Server and Reverse Proxy.",
   "type": "object",
   "properties": {
     "NGINX_INSTALL_METHOD": {
@@ -15,15 +15,15 @@
       "default": "system"
     },
     "WWWROOT_NAME": {
-      "description": "The server name/domain (e.g. example.com)",
+      "description": "The server_name or domain (e.g., example.com) to serve.",
       "type": "string"
     },
     "WWWROOT_PATH": {
-      "description": "The path to the document root",
+      "description": "The absolute path to the static document root to serve.",
       "type": "string"
     },
     "WWWROOT_LISTEN": {
-      "description": "The port Nginx should listen on",
+      "description": "The HTTP port Nginx should listen on (defaults to 80).",
       "type": "string",
       "default": "80"
     },

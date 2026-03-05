@@ -159,12 +159,36 @@ IF "%WWWROOT_example_com_INSTALL%"=="1" (
 
     :: Check if the vendor is nginx
     IF /I "%WWWROOT_VENDOR%"=="nginx" (
-        SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_server\nginx\setup.cmd"
+        SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\_server\nginx\setup.cmd"
     IF NOT EXIST "%SCRIPT_NAME%" (
-        SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_server\nginx\setup.bat"
+        SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\_server\nginx\setup.bat"
     )
     IF NOT EXIST "%SCRIPT_NAME%" (
             >&2 ECHO Unable to setup NGINX, as file not found "%SCRIPT_NAME%"
+                SET ERRORLEVEL=2
+            goto end
+        )
+        CALL "%SCRIPT_NAME%"
+    )
+    IF /I "%WWWROOT_VENDOR%"=="caddy" (
+        SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\_server\caddy\setup.cmd"
+    IF NOT EXIST "%SCRIPT_NAME%" (
+        SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\_server\caddy\setup.bat"
+    )
+    IF NOT EXIST "%SCRIPT_NAME%" (
+            >&2 ECHO Unable to setup CADDY, as file not found "%SCRIPT_NAME%"
+                SET ERRORLEVEL=2
+            goto end
+        )
+        CALL "%SCRIPT_NAME%"
+    )
+    IF /I "%WWWROOT_VENDOR%"=="httpd" (
+        SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\_server\httpd\setup.cmd"
+    IF NOT EXIST "%SCRIPT_NAME%" (
+        SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\_server\httpd\setup.bat"
+    )
+    IF NOT EXIST "%SCRIPT_NAME%" (
+            >&2 ECHO Unable to setup HTTPD, as file not found "%SCRIPT_NAME%"
                 SET ERRORLEVEL=2
             goto end
         )

@@ -38,6 +38,12 @@ if /i "%verb%"=="remove_service" ( set "is_action=1" & set "req_version=1" )
 
 if /i "%verb%"=="remove" set "is_action=1"
 if /i "%verb%"=="uninstall" set "is_action=1"
+if /i "%verb%"=="start" set "is_action=1"
+if /i "%verb%"=="stop" set "is_action=1"
+if /i "%verb%"=="restart" set "is_action=1"
+if /i "%verb%"=="logs" set "is_action=1"
+if /i "%verb%"=="up" set "is_action=1"
+if /i "%verb%"=="down" set "is_action=1"
 if /i "%verb%"=="status" set "is_action=1"
 if /i "%verb%"=="test" set "is_action=1"
 
@@ -129,6 +135,36 @@ if /i "%arg:~0,9%"=="--prefix=" (
     goto parse_args
 )
 
+if /i "%arg:~0,15%"=="--service-name=" (
+    set "LIBSCRIPT_SERVICE_NAME=%arg:~15%"
+    shift
+    goto parse_args
+)
+
+if /i "%arg:~0,13%"=="--log-driver=" (
+    set "LIBSCRIPT_LOG_DRIVER=%arg:~13%"
+    shift
+    goto parse_args
+)
+
+if /i "%arg:~0,11%"=="--log-host=" (
+    set "LIBSCRIPT_LOG_HOST=%arg:~11%"
+    shift
+    goto parse_args
+)
+
+if /i "%arg:~0,11%"=="--log-port=" (
+    set "LIBSCRIPT_LOG_PORT=%arg:~11%"
+    shift
+    goto parse_args
+)
+
+if /i "%arg:~0,10%"=="--log-cmd=" (
+    set "LIBSCRIPT_LOG_CMD=%arg:~10%"
+    shift
+    goto parse_args
+)
+
 if /i "%arg:~0,10%"=="--secrets=" (
     set "LIBSCRIPT_SECRETS=%arg:~10%"
     shift
@@ -168,7 +204,12 @@ echo   uninstall_daemon ^<package_name^> ^<version^>
 echo   uninstall_service ^<package_name^> ^<version^>
 echo   remove_daemon ^<package_name^> ^<version^>
 echo   remove_service ^<package_name^> ^<version^>
+echo   start ^<package_name^> [version]
+echo   stop ^<package_name^> [version]
+echo   restart ^<package_name^> [version]
+echo   logs ^<package_name^> [version] [-f|--follow]
 echo   status ^<package_name^> [version]
+echo   health ^<package_name^> [version]
 echo   test ^<package_name^> [version]
 echo   run ^<package_name^> ^<version^> [args...]
 echo   which ^<package_name^> ^<version^>
@@ -200,6 +241,11 @@ if exist "%SCHEMA_FILE%" (
 )
 echo.
 echo   --prefix=^<dir^>                      Set local installation prefix
+echo   --service-name=^<name^>               Set a custom service/daemon name
+echo   --log-driver=^<driver^>               Set log driver (file, syslog, tcp, json_file, custom) [default: file]
+echo   --log-host=^<host^>                   Set log host for tcp driver
+echo   --log-port=^<port^>                   Set log port for tcp driver
+echo   --log-cmd=^<cmd^>                     Set custom log command
 echo   --secrets=^<dir^|url^>                 Save generated secrets to a directory or OpenBao/Vault URL
 echo   --help, -h, /?                      Show this help message
 echo   --version, -v                       Show version
@@ -222,6 +268,14 @@ if /i "!ACTION!"=="uninstall_daemon" goto do_cmd
 if /i "!ACTION!"=="uninstall_service" goto do_cmd
 if /i "!ACTION!"=="remove_daemon" goto do_cmd
 if /i "!ACTION!"=="remove_service" goto do_cmd
+if /i "!ACTION!"=="start" goto do_cmd
+if /i "!ACTION!"=="stop" goto do_cmd
+if /i "!ACTION!"=="restart" goto do_cmd
+if /i "!ACTION!"=="status" goto do_cmd
+if /i "!ACTION!"=="health" goto do_cmd
+if /i "!ACTION!"=="logs" goto do_cmd
+if /i "!ACTION!"=="up" goto do_cmd
+if /i "!ACTION!"=="down" goto do_cmd
 
 goto run_setup
 
@@ -332,9 +386,23 @@ if /i "!ACTION!"=="serve" (
             set "service_name=!PACKAGE_NAME!_!VERSION!"
         )
         set "log_file=!LOGS_DIR!\!service_name!.log"
-        echo Starting !service_name! in background...
-        start "" /b cmd /c ""!BIN_PATH!" %* > "!log_file!" 2>&1"
-        echo Logs: !log_file!
+        set "log_driver=!LIBSCRIPT_LOG_DRIVER!"
+        if "!log_driver!"=="" set "log_driver=file"
+        echo Starting !service_name! in background ^(log driver: !log_driver!^)...
+        
+        if /i "!log_driver!"=="file" (
+            start "" /b cmd /c ""!BIN_PATH!" %* > "!log_file!" 2>&1"
+            echo Logs: !log_file!
+        ) else if /i "!log_driver!"=="custom" (
+            if "!LIBSCRIPT_LOG_CMD!"=="" (
+                echo Error: LIBSCRIPT_LOG_CMD is required for custom log driver 1>&2
+                exit /b 1
+            )
+            start "" /b cmd /c ""!BIN_PATH!" %* 2>&1 | !LIBSCRIPT_LOG_CMD!"
+        ) else (
+            echo Error: log driver '!log_driver!' is not natively implemented on Windows yet. Use 'file' or 'custom' ^(with --log-cmd^). 1>&2
+            exit /b 1
+        )
     ) else (
         echo Error: serve_from '!SERVE_FROM!' is not fully implemented yet on Windows. 1>&2
         exit /b 1
@@ -377,6 +445,96 @@ if /i "!ACTION!"=="ls-remote" (
 ) else if /i "!ACTION!"=="uninstall_service" goto run_uninstall
 ) else if /i "!ACTION!"=="remove_daemon" goto run_uninstall
 ) else if /i "!ACTION!"=="remove_service" goto run_uninstall
+) else if /i "!ACTION!"=="start" (
+    set "service_name=libscript_!PACKAGE_NAME!"
+    if not "!LIBSCRIPT_SERVICE_NAME!"=="" set "service_name=!LIBSCRIPT_SERVICE_NAME!"
+    echo Starting !service_name!...
+    sc start "!service_name!"
+    exit /b !errorlevel!
+) else if /i "!ACTION!"=="up" (
+    set "service_name=libscript_!PACKAGE_NAME!"
+    if not "!LIBSCRIPT_SERVICE_NAME!"=="" set "service_name=!LIBSCRIPT_SERVICE_NAME!"
+    echo Starting !service_name!...
+    sc start "!service_name!"
+    exit /b !errorlevel!
+) else if /i "!ACTION!"=="stop" (
+    set "service_name=libscript_!PACKAGE_NAME!"
+    if not "!LIBSCRIPT_SERVICE_NAME!"=="" set "service_name=!LIBSCRIPT_SERVICE_NAME!"
+    echo Stopping !service_name!...
+    sc stop "!service_name!"
+    exit /b !errorlevel!
+) else if /i "!ACTION!"=="down" (
+    set "service_name=libscript_!PACKAGE_NAME!"
+    if not "!LIBSCRIPT_SERVICE_NAME!"=="" set "service_name=!LIBSCRIPT_SERVICE_NAME!"
+    echo Stopping !service_name!...
+    sc stop "!service_name!"
+    exit /b !errorlevel!
+) else if /i "!ACTION!"=="restart" (
+    set "service_name=libscript_!PACKAGE_NAME!"
+    if not "!LIBSCRIPT_SERVICE_NAME!"=="" set "service_name=!LIBSCRIPT_SERVICE_NAME!"
+    echo Restarting !service_name!...
+    sc stop "!service_name!"
+    timeout /t 2 /nobreak >nul
+    sc start "!service_name!"
+    exit /b !errorlevel!
+) else if /i "!ACTION!"=="health" (
+    set "service_name=libscript_!PACKAGE_NAME!"
+    if not "!LIBSCRIPT_SERVICE_NAME!"=="" set "service_name=!LIBSCRIPT_SERVICE_NAME!"
+    set "json_file=libscript.json"
+    set "healthcheck="
+    if exist "!json_file!" jq --version >nul 2>&1 && (
+        for /f "delims=" %%H in ('jq -c "if (.deps[\"!PACKAGE_NAME!\"] | type) == \"object\" and .deps[\"!PACKAGE_NAME!\"].healthcheck != null then .deps[\"!PACKAGE_NAME!\"].healthcheck else empty end" "!json_file!" 2^>nul') do (
+            set "healthcheck=%%H"
+        )
+    )
+    if not "!healthcheck!"=="" (
+        for /f "delims=" %%C in ('echo !healthcheck! ^| jq -r "if type == \"string\" then . elif type == \"object\" and .test then (if (.test | type) == \"array\" then (if .test[0] == \"CMD-SHELL\" then .test[1] else .test | join(\" \") end) else .test end) else empty end" 2^>nul') do (
+            set "test_cmd=%%C"
+        )
+        if not "!test_cmd!"=="" if not "!test_cmd!"=="null" (
+            cmd /c "!test_cmd!"
+            if !errorlevel! equ 0 (
+                echo Status: healthy
+                exit /b 0
+            ) else (
+                echo Status: unhealthy
+                exit /b 1
+            )
+        )
+    )
+    echo No healthcheck defined, checking status...
+    call "%~f0" status !PACKAGE_NAME! !VERSION! %*
+    exit /b !errorlevel!
+) else if /i "!ACTION!"=="status" (
+    set "service_name=libscript_!PACKAGE_NAME!"
+    if not "!LIBSCRIPT_SERVICE_NAME!"=="" set "service_name=!LIBSCRIPT_SERVICE_NAME!"
+    sc query "!service_name!"
+    exit /b !errorlevel!
+) else if /i "!ACTION!"=="logs" (
+    set "service_name=libscript_!PACKAGE_NAME!"
+    if not "!LIBSCRIPT_SERVICE_NAME!"=="" set "service_name=!LIBSCRIPT_SERVICE_NAME!"
+    if not "!LOGS_DIR!"=="" (
+        set "LOGS_DIR=!LOGS_DIR!"
+    ) else if not "!logs_dir!"=="" (
+        set "LOGS_DIR=!logs_dir!"
+    ) else (
+        set "LOGS_DIR=!LIBSCRIPT_ROOT_DIR!\logs"
+    )
+    set "log_file=!LOGS_DIR!\!service_name!.log"
+    set "follow=0"
+    set "args=%*"
+    echo !args! | findstr /i "\-f" >nul && set "follow=1"
+    echo !args! | findstr /i "\-\-follow" >nul && set "follow=1"
+    if exist "!log_file!" (
+        if "!follow!"=="1" (
+        powershell -NoProfile -Command "Get-Content '!log_file!' -Wait -Tail 50"
+    ) else (
+        powershell -NoProfile -Command "Get-Content '!log_file!' -Tail 50"
+    )
+    ) else (
+        echo No logs found at !log_file!
+    )
+    exit /b 0
 exit /b 0
 
 :run_uninstall

@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/_lib/_server/caddy/vars.schema.json",
-  "title": "Caddy Web Server Configuration",
-  "description": "Configuration variables for deploying and configuring the Caddy Web Server, an automatic HTTPS capable reverse proxy.",
+  "$id": "/_lib/_server/httpd/vars.schema.json",
+  "title": "Apache HTTPD Web Server Configuration",
+  "description": "Configuration variables for deploying and configuring the Apache HTTP Server.",
   "type": "object",
   "properties": {
-    "CADDY_VERSION": {
-      "description": "Specific version of caddy to install. Can be a numeric version or an alias.",
+    "HTTPD_VERSION": {
+      "description": "Specific version of httpd to install. Can be a numeric version or an alias.",
       "type": "string",
       "default": "latest",
       "versionAliases": [
@@ -32,8 +32,8 @@
       ],
       "default": "winget"
     },
-    "CADDY_INSTALL_METHOD": {
-      "description": "How to install CADDY. 'system' uses the native OS package manager, 'source' compiles/downloads binaries.",
+    "HTTPD_INSTALL_METHOD": {
+      "description": "How to install HTTPD. 'system' uses the native OS package manager, 'source' compiles/downloads binaries.",
       "type": "string",
       "enum": [
         "system",
@@ -56,50 +56,46 @@
       "type": "string",
       "description": "Global unix socket to listen on"
     },
-    "CADDY_LISTEN_PORT": {
+    "HTTPD_LISTEN_PORT": {
       "type": [
         "string",
         "integer"
       ],
-      "description": "Port for CADDY to listen on"
+      "description": "Port for HTTPD to listen on"
     },
-    "CADDY_LISTEN_ADDRESS": {
+    "HTTPD_LISTEN_ADDRESS": {
       "type": "string",
-      "description": "Address for CADDY to listen on"
+      "description": "Address for HTTPD to listen on"
     },
-    "CADDY_LISTEN_SOCKET": {
+    "HTTPD_LISTEN_SOCKET": {
       "type": "string",
-      "description": "Unix socket for CADDY to listen on"
+      "description": "Unix socket for HTTPD to listen on"
     },
     "WWWROOT_NAME": {
-      "description": "The primary domain or server name (e.g., example.com) to bind the web server to.",
+      "description": "The primary domain or server name (ServerName) for Apache to bind to.",
       "type": "string"
     },
     "WWWROOT_PATH": {
-      "description": "The absolute path to the static site document root (where index.html resides).",
+      "description": "The absolute path to the DocumentRoot directory.",
       "type": "string"
     },
     "WWWROOT_LISTEN": {
-      "description": "The HTTP port Caddy should listen on (defaults to 80, but 443 is used automatically for HTTPS).",
+      "description": "The HTTP port Apache should listen on (defaults to 80).",
       "type": "string",
       "default": "80"
     },
-    "WWWROOT_HTTPS_PROVIDER": {
-      "description": "The HTTPS provider for automatic certificates. Usually 'letsencrypt' or 'zerossl' (Caddy uses both by default if not set).",
+    "HTTPD_SERVICE_RUN_AS_USER": {
+      "description": "Windows local user account to run the Apache service under (leave empty for default).",
       "type": "string"
     },
-    "CADDY_SERVICE_RUN_AS_USER": {
-      "description": "Windows local user account to run the service under (leave empty for Network Service).",
-      "type": "string"
-    },
-    "CADDY_SERVICE_RUN_AS_PASSWORD": {
+    "HTTPD_SERVICE_RUN_AS_PASSWORD": {
       "description": "Password for the Windows local user account (if applicable).",
       "type": "string"
     },
-    "CADDY_SERVICE_NAME": {
+    "HTTPD_SERVICE_NAME": {
       "description": "Custom name for the Windows Service (allows side-by-side installations).",
       "type": "string",
-      "default": "libscript_caddy"
+      "default": "libscript_httpd"
     }
   }
 }

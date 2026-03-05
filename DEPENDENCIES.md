@@ -1,44 +1,28 @@
 # Dependency Management
 
-## Purpose & Current State
+## Purpose
+This document explains how LibScript abstracts native OS package managers (`apt`, `apk`, `dnf`, `brew`, `pacman`, `choco`, `winget`) to achieve write-once, run-anywhere dependency resolution.
 
-**Purpose**: This document explains the cross-platform dependency management layer (`pkg_mapper.sh` and `pkg_mgr.sh`), which automatically resolves and installs native OS packages. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+## What Makes This Interesting?
+Handling dependencies across Alpine, Debian, RHEL, Arch, macOS, and Windows usually requires massive lookup tables or dedicated agents. LibScript solves this purely in shell using a unified mapping layer (`pkg_mapper.sh`) and a dynamic executor (`pkg_mgr.sh`). It intelligently falls back to building from source or grabbing static binaries if the native package manager is unavailable or missing a package.
 
-**Current State**: The dependency resolution layer successfully translates generic package names to OS-specific packages across Debian, Alpine, RHEL, Arch, macOS, and FreeBSD. Ongoing development focuses on expanding the `pkg_mapper.sh` dictionary and integrating cleanly with both global caching and environment-specific build tools.
+## The Resolution Lifecycle
+1. **Request**: A component script calls `depends libssl-dev jq curl`.
+2. **Detection**: `os_info.sh` identifies the host environment.
+3. **Mapping**: `pkg_mapper.sh` intercepts the request. It knows that `libssl-dev` on Debian is called `openssl-dev` on Alpine and `openssl-devel` on RHEL.
+4. **Validation**: The system queries the local package database to see if the mapped package is already installed, ensuring idempotency and speed.
+5. **Execution**: If missing, `pkg_mgr.sh` invokes the native package manager non-interactively to install it.
 
-## How it Works
+## Declarative Stack Dependencies (`libscript.json`)
+Beyond OS-level dependencies, LibScript handles macro-level stack dependencies via `libscript.json`. 
+Users can define an entire infrastructure stack (e.g., Postgres, Redis, Python, and an App). 
+Running `./libscript.sh install-deps` will:
+1. Parse the JSON using `jq`.
+2. Execute parallel downloads for all required components (using `aria2` if available).
+3. Sequentially install and configure the components based on their priority tiers.
 
-When a component script calls `depends curl jq libssl-dev`, the following lifecycle occurs:
-
-1. **OS Detection:** `_lib/_common/os_info.sh` determines the OS (Linux, macOS, FreeBSD, etc.) and distribution (Debian, Alpine, RHEL, etc.).
-2. **Package Manager Detection:** `_lib/_common/pkg_mgr.sh` iterates through known package managers (`apt-get`, `apk`, `dnf`, `brew`, `pacman`, etc.) and sets `$PKG_MGR` to the first available one.
-3. **Package Mapping:** `_lib/_common/pkg_mapper.sh` intercepts the requested package names. Since different distributions name packages differently (e.g., `libssl-dev` on Debian vs `openssl-dev` on Alpine), `pkg_mapper.sh` translates the generic name to the OS-specific name.
-4. **Verification:** The script checks if the mapped package is already installed (e.g., via `dpkg-query`, `apk info`, `rpm -q`).
-5. **Installation:** If not installed, the package manager is invoked non-interactively to install the dependency.
-
-## Package Mapper
-
-The `pkg_mapper.sh` file contains a mapping function `map_package`. If you add a new dependency to a script and find it fails on Alpine or RHEL because the package name is different, you must update `pkg_mapper.sh` to include a translation case.
-
-Example:
-```sh
-map_package() {
-  pkg="${1}"
-  case "${pkg}" in
-    'libssl-dev')
-      case "${TARGET_OS}" in
-        'alpine') printf 'openssl-dev' ;;
-        'rhel'|'fedora'|'centos') printf 'openssl-devel' ;;
-        *) printf 'libssl-dev' ;;
-      esac
-      ;;
-    *)
-      printf '%s' "${pkg}"
-      ;;
-  esac
-}
-```
-
-## Global vs Local Install Methods
-
-As mentioned in the component READMEs, you can define `LIBSCRIPT_GLOBAL_INSTALL_METHOD` (e.g., `system`, `source`) to dictate how higher-level tools (like Python or Node.js) are installed. The package manager abstraction strictly handles OS-level dependencies (C libraries, basic utilities like `curl` or `tar`).
+## Feature Enumeration
+- Automatic package name translation across distributions.
+- Idempotent execution (skips if installed).
+- Parallel downloads for complex component trees.
+- Graceful fallbacks for Windows (`winget`, `choco`, or direct binary fetch).

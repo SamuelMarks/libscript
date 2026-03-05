@@ -1,26 +1,14 @@
 # Documentation Roadmap
 
-## Purpose & Current State
+## Purpose
+Outlines the strategy for evolving LibScript's documentation from repository-level markdown files to a comprehensive, auto-generated static site.
 
-**Purpose**: This document outlines current documentation gaps and the future plan to standardize component-level READMEs, build a static site, and provide practical examples. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+## What Makes This Interesting?
+Because every component defines its configuration in `vars.schema.json` and its execution is strictly typed by the CLI router, our documentation can be procedurally generated. We don't just write docs; we compile them directly from the source truth of the components.
 
-**Current State**: Root-level architecture and usage guides are largely complete and maintained. Component-level documentation is auto-generated via `vars.schema.json` mapping, but narrative examples and a static site compilation process (e.g., MkDocs) remain pending milestones.
-
-## Current State
-- Root markdown files (`README.md`, `ARCHITECTURE.md`, `DEVELOPING.md`, `USAGE.md`, `DEPENDENCIES.md`, `TEST.md`, `WINDOWS.md`) provide a comprehensive overview.
-- Component-level `README.md` files exist but are sparse.
-
-## Next Steps
-
-1. **Component Documentation Consistency:**
-   - Every directory in `_lib/` and `app/` needs a standardized `README.md` explaining what it installs, the configuration options (`vars.schema.json`), and any OS-specific caveats.
-   - Script a generator that converts `vars.schema.json` into markdown tables for the component READMEs.
-
-2. **Examples Repository:**
-   - Create a `examples/` directory containing complete `install.json` manifests for common setups (e.g., "LEMP stack", "Data Science Workspace", "Rust Web Backend").
-
-3. **Inline Script Documentation:**
-   - Add detailed comments to the core functions in `_lib/_common/` (e.g., `pkg_mgr.sh`, `os_info.sh`) explaining the parameters and expected returns.
-
-4. **Static Site:**
-   - Compile the markdown files using MkDocs or Docusaurus and host them on GitHub Pages.
+## Current State & Next Steps
+- [x] Comprehensive root-level Markdown guides covering architecture, usage, and development.
+- [x] Standardized `vars.schema.json` format across all components.
+- [ ] **Static Site Generation**: Implement a generator (e.g., MkDocs or Docusaurus) that parses `vars.schema.json` files to auto-build feature matrices, configuration tables, and OS compatibility lists for every component.
+- [ ] **Examples Repository**: Curate a library of `libscript.json` templates (e.g., LEMP stack, Data Science stack) mapped to interactive tutorials.
+- [ ] **Inline Man Pages**: Enhance `libscript.sh --help` to format and paginate output dynamically like standard Unix man pages.

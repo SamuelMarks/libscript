@@ -15,21 +15,21 @@ export SCRIPT_NAME
 
 # Optional: Disable services first if possible
 if command -v systemctl >/dev/null 2>&1; then
-    sudo systemctl stop caddy || true
-    sudo systemctl disable caddy || true
+    sudo systemctl stop httpd apache2 || true
+    sudo systemctl disable httpd apache2 || true
 elif command -v rc-service >/dev/null 2>&1; then
-    sudo rc-service caddy stop || true
-    sudo rc-update del caddy || true
+    sudo rc-service apache2 stop || true
+    sudo rc-update del apache2 || true
 fi
 
 if [ -n "${PKG_MGR}" ]; then
     case "${PKG_MGR}" in
-        apt-get) sudo apt-get remove -y caddy ;;
-        apk)     sudo apk del caddy ;;
-        brew)    brew uninstall caddy ;;
-        dnf)     sudo dnf remove -y caddy ;;
-        pacman)  sudo pacman -Rns --noconfirm caddy ;;
-        zypper)  sudo zypper remove -y caddy ;;
+        apt-get) sudo apt-get remove -y apache2 ;;
+        apk)     sudo apk del apache2 ;;
+        brew)    brew uninstall httpd ;;
+        dnf)     sudo dnf remove -y httpd ;;
+        pacman)  sudo pacman -Rns --noconfirm apache ;;
+        zypper)  sudo zypper remove -y apache2 ;;
         *)       echo "Manual uninstallation required for $PKG_MGR." ;;
     esac
 fi

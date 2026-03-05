@@ -1,32 +1,29 @@
 # Roadmap
 
-## Purpose & Current State
+## Purpose
+Tracks the phased delivery of LibScript's capabilities from its foundational release to its ultimate form as a universal orchestrator.
 
-**Purpose**: This document tracks the project's long-term goals in phased milestones, from foundational architecture and Windows parity to advanced orchestration capabilities. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+## What Makes This Roadmap Interesting?
+It tracks the evolution from a simple script collection into a fully declarative, cross-compiling, multi-platform orchestrator capable of generating deployment artifacts (Docker, MSI, DEB) dynamically from its own runtime context.
 
-**Current State**: The project has successfully delivered on its foundational milestones, achieving zero-dependency bootstrapping, cross-platform abstractions, and comprehensive Windows/macOS service parity. Advanced packaging capabilities (MSI, InnoSetup, Docker) are now functional, shifting focus toward robust cleanup lifecycles and advanced orchestration.
+## Phase 1: Foundation (Completed)
+- [x] Zero-dependency shell execution framework.
+- [x] Package manager abstraction (`pkg_mgr.sh`).
+- [x] Vast component library (Rust, Python, Node, Postgres, Nginx).
+- [x] Verification scripts and CI Matrix.
 
-## Phase 1: Foundation (Complete)
-- [x] Base architecture established (`cli.sh`, `setup.sh`, `env.sh`).
-- [x] Package manager abstraction (`pkg_mgr.sh`, `pkg_mapper.sh`).
-- [x] Core toolchains (Rust, Python, Node, Go, Java, C/C++).
-- [x] Core servers and databases (Postgres, Nginx, Valkey).
-- [x] Verification scripts (`test.sh`, `test.cmd`).
-- [x] GitHub Actions CI Matrix.
+## Phase 2: Windows & Declarative Parity (Completed)
+- [x] Full MS-DOS (`.bat`), Windows Command (`.cmd`), and PowerShell (`.ps1`) support.
+- [x] Component-level CLI routing and JSON schema validation.
+- [x] Declarative installations via `libscript.json` (`install-deps`).
 
-## Phase 2: Windows Parity (In Progress)
-- [x] Root `libscript.cmd` router.
-- [x] Component-level `cli.cmd` scaffolding.
-- [x] Windows verification scripts (`test.cmd`).
-- [ ] Implement robust `setup_win.ps1` scripts for all toolchains.
-- [ ] Implement Windows Service registration for databases.
+## Phase 3: The Generator Engine (Current)
+- [x] `package_as docker` / `docker_compose` generator.
+- [x] `package_as` Windows Installers (MSI via WiX, InnoSetup, NSIS).
+- [x] `package_as` Native Packages (DEB, RPM, APK).
+- [ ] Stabilize dynamic configuration injection (passing generated database credentials directly to dependent application layers).
 
-## Phase 3: Advanced Orchestration
-- [ ] Fully functional `install.json` processor with dependency resolution.
-- [ ] Parallel execution of component installations.
-- [ ] Deep integration with Vagrant for automated cross-distribution regression testing.
-- [ ] Formal `libscript` CLI binary (written in Rust or Go) to replace the shell-script router for improved performance and UX, while maintaining shell scripts for the actual setup logic.
-
-## Phase 4: Application Ecosystem
-- [ ] Add more heavy-weight applications to `app/third_party/`.
-- [ ] Standardize the configuration injection for applications (e.g., passing DB credentials from the Postgres component into the application component automatically).
+## Phase 4: Advanced Orchestration (Next)
+- [ ] Concurrent DAG-based execution for `libscript.json`.
+- [ ] Full uninstall and state-rollback lifecycle.
+- [ ] Rewrite the top-level router in Rust/Go for speed, keeping scripts for execution.

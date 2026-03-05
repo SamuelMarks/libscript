@@ -52,3 +52,18 @@ table.md
 *_test.cmd
 *_test.bat
 *.tmp
+
+# Additional auto-generated and temp files
+*.log
+*.out
+*.rej
+*.patch
+*.diff
+*.tmpdeps
+Dockerfile.*
+!Dockerfile*.tpl
+!*.Dockerfile
+libscript.json
+fix*.awk
+patch*.awk
+*.svg

@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_server/fluentbit/vars.schema.json",
+  "title": "Fluent Bit Configuration",
+  "description": "Configuration variables for deploying and configuring Fluent Bit, a super fast, lightweight, and highly scalable logging and metrics processor and forwarder.",
+  "type": "object",
+  "properties": {
+    "FLUENTBIT_VERSION": {
+      "description": "Specific version of Fluent Bit to install. Can be a numeric version (e.g. '3.0.0') or an alias like 'latest'.",
+      "type": "string",
+      "default": "latest",
+      "versionAliases": [
+        "latest",
+        "stable"
+      ]
+    },
+    "LIBSCRIPT_GLOBAL_INSTALL_METHOD": {
+      "description": "Global override for how software should be installed across all systems (e.g. system package manager vs downloaded binaries).",
+      "type": "string",
+      "enum": [
+        "system",
+        "source"
+      ],
+      "default": "system"
+    },
+    "LIBSCRIPT_WINDOWS_PKG_MGR": {
+      "description": "Global package manager override for Windows targets (e.g. winget, choco).",
+      "type": "string",
+      "enum": [
+        "winget",
+        "choco"
+      ],
+      "default": "winget"
+    },
+    "FLUENTBIT_INSTALL_METHOD": {
+      "description": "How to install Fluent Bit. 'system' uses the native OS package manager, 'source' downloads the official binaries.",
+      "type": "string",
+      "enum": [
+        "system",
+        "source"
+      ],
+      "default": "system"
+    },
+    "FLUENTBIT_CONFIG_FILE": {
+      "description": "Absolute path to a pre-existing custom fluent-bit.conf file to use instead of the default configuration.",
+      "type": "string"
+    },
+    "FLUENTBIT_LOG_LEVEL": {
+      "description": "The logging verbosity level for the Fluent Bit daemon itself (e.g. info, debug, error).",
+      "type": "string",
+      "enum": [
+        "error",
+        "warning",
+        "info",
+        "debug",
+        "trace"
+      ],
+      "default": "info"
+    },
+    "FLUENTBIT_HTTP_SERVER": {
+      "description": "Enable the built-in HTTP server for metrics and health checks. Highly recommended for monitoring.",
+      "type": "string",
+      "enum": [
+        "On",
+        "Off"
+      ],
+      "default": "On"
+    },
+    "FLUENTBIT_LISTEN_PORT": {
+      "description": "Port for the Fluent Bit HTTP metrics interface to listen on.",
+      "type": [
+        "string",
+        "integer"
+      ],
+      "default": 2020
+    },
+    "FLUENTBIT_LISTEN_ADDRESS": {
+      "description": "Address for the Fluent Bit HTTP metrics interface to bind to.",
+      "type": "string",
+      "default": "0.0.0.0"
+    },
+    "FLUENTBIT_LISTEN_SOCKET": {
+      "description": "Optional: Unix socket for the Fluent Bit metrics interface to listen on (Linux/macOS only).",
+      "type": "string"
+    },
+    "FLUENTBIT_DEFAULT_INPUT": {
+      "description": "Default input plugin to configure for collecting data (e.g. 'tail', 'forward', 'cpu', 'dummy').",
+      "type": "string",
+      "default": "dummy"
+    },
+    "FLUENTBIT_DEFAULT_OUTPUT": {
+      "description": "Default output plugin to configure for routing data (e.g. 'stdout', 'es', 'loki', 'http').",
+      "type": "string",
+      "default": "stdout"
+    },
+    "FLUENTBIT_SERVICE_RUN_AS_USER": {
+      "description": "Windows local user account to run the service under (leave empty to use Network Service / Local System).",
+      "type": "string"
+    },
+    "FLUENTBIT_SERVICE_RUN_AS_PASSWORD": {
+      "description": "Password for the Windows local user account (if applicable).",
+      "type": "string"
+    },
+    "FLUENTBIT_SERVICE_NAME": {
+      "description": "Custom name for the Fluent Bit background service (allows side-by-side installations).",
+      "type": "string",
+      "default": "libscript_fluentbit"
+    }
+  }
+}

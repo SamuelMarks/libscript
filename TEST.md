@@ -1,41 +1,23 @@
-# Testing
+# Testing Strategy
 
-## Purpose & Current State
+## Purpose
+Details how LibScript ensures idempotent, error-free execution across a massively fragmented landscape of operating systems, architectures, and shells.
 
-**Purpose**: This document explains the LibScript testing strategy, covering local verification scripts (`test.sh`/`test.cmd`), continuous integration (GitHub Actions), and Vagrant VM setups. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+## What Makes The Testing Strategy Interesting?
+Because LibScript modifies the host OS natively, testing isn't just unit-testing code; it's testing state mutations on actual machines. We employ a multi-layered approach involving localized shell scripts, comprehensive CI matrices, and Vagrant VM orchestration.
 
-**Current State**: The testing strategy is actively enforced via GitHub Actions across Ubuntu, macOS, and Windows runners. Components utilize localized `test.sh` and `test.cmd` scripts for behavioral verification. Vagrant VM configurations are available for deeper multi-distro validation, though fully automated local VM orchestration remains in development.
+## Component Verification (`test.sh` / `test.cmd`)
+Every component ships with an active verification script.
+- **Toolchains**: Compiles a real program (e.g., C++ compiles a binary, Node.js runs an eval).
+- **Servers**: Runs configuration syntax checks (`nginx -t`) or hits health endpoints.
+- **Databases**: Executes native client commands (e.g., `psql -c "SELECT 1;"`) to ensure the daemon is actively accepting connections.
 
-## Component Verification (`test.sh` and `test.cmd`)
+## Continuous Integration (GitHub Actions)
+Our `ci.yml` matrix is exhaustive. It automatically provisions pristine environments across:
+- `ubuntu-latest`
+- `macos-latest`
+- `windows-latest`
+It installs each component, executes its tests, and asserts success, guaranteeing cross-platform parity.
 
-Every component contains a `test.sh` (and `test.cmd` for Windows) that performs an active check.
-
-- **Toolchains:** These tests do more than check `--version`. They generate a "Hello World" source file, compile it, run the executable, and assert standard output.
-- **Servers:** Web servers (like Nginx) run configuration syntax checks (`nginx -t`).
-- **Storage/Databases:** Databases run a client connection and execute a ping or query (e.g., `psql -c "SELECT 1;"` or `redis-cli PING`).
-
-### Running Tests Locally
-
-You can run the test script for any component manually:
-```sh
-./libscript.sh test rust
-```
-
-To run all tests across the repository, use a find command:
-```sh
-find . -name "test.sh" -exec {} \;
-```
-
-## Continuous Integration (CI)
-
-We utilize GitHub Actions (`.github/workflows/ci.yml`) to automatically test components across multiple operating systems.
-
-The CI Matrix covers:
-- **Operating Systems:** `ubuntu-latest`, `macos-latest`, `windows-latest`.
-- **Components:** Every toolchain, server, and storage component in `_lib/` and `app/`.
-
-If a component is inherently incompatible with a specific OS (e.g., `kubernetes_k0s` on Windows), it is specifically excluded in the CI matrix configuration.
-
-## Vagrant Integration
-
-For deeper, multi-distribution local testing (Debian, AlmaLinux, Alpine, FreeBSD), the `vagrant/` directory provides configurations to spin up ephemeral VMs, mount the `libscript` repository, and run installation scripts in pristine environments.
+## Deep Vagrant Validation
+For edge-case distributions (Alpine, FreeBSD, AlmaLinux), the `vagrant/` directory provides configurations to spin up ephemeral local VMs. This allows developers to mount the repository, run tests locally in a pristine shell, and destroy the environment in seconds.

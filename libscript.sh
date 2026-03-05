@@ -16,6 +16,14 @@ show_help() {
   echo "  env <component> <version>   Print environment variables for a component"
   echo "  install-deps [file]         Install all dependencies defined in a JSON file (default: libscript.json)"
   echo "  package_as <format> [args]  Package libscript usage (e.g., docker, docker_compose)"
+  echo "  start [package_name...]     Start services (or all deps in json)"
+  echo "  stop [package_name...]      Stop services"
+  echo "  status [package_name...]    Show service status"
+  echo "  health [package_name...]    Check service health"
+  echo "  restart [package_name...]   Restart services"
+  echo "  logs [-f] [package_name...]  Show service logs (real-time stream)"
+  echo "  up [package_name...]        Alias for start"
+  echo "  down [package_name...]      Alias for stop"
   echo "  <component> [OPTIONS...]    Invoke the CLI for a specific component"
   echo ""
   echo "Options:"
@@ -161,6 +169,69 @@ if [ "$cmd" = "search" ]; then
     fi
   done
   exit 0
+fi
+
+if [ "$cmd" = "start" ] || [ "$cmd" = "stop" ] || [ "$cmd" = "status" ] || [ "$cmd" = "health" ] || [ "$cmd" = "logs" ] || [ "$cmd" = "restart" ] || [ "$cmd" = "up" ] || [ "$cmd" = "down" ]; then
+  action="$cmd"
+  if [ "$action" = "up" ]; then action="start"; fi
+  if [ "$action" = "down" ]; then action="stop"; fi
+  follow_logs=0
+  new_args=""
+  for arg in "$@"; do
+    if [ "$arg" = "-f" ] || [ "$arg" = "--follow" ]; then
+      follow_logs=1
+    else
+      new_args="$new_args \"$arg\""
+    fi
+  done
+  eval "set -- $new_args"
+  
+  if [ $# -eq 0 ] || [ "$1" = "libscript.json" ] || [ "${1##*.}" = "json" ]; then
+    json_file="${1:-libscript.json}"
+    if [ ! -f "$json_file" ]; then
+      echo "Error: $json_file not found." >&2
+      exit 1
+    fi
+    if ! command -v jq >/dev/null 2>&1; then
+      echo "Error: jq is required to parse $json_file." >&2
+      exit 1
+    fi
+    deps=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "$json_file" 2>/dev/null)
+    if [ -z "$deps" ]; then
+      echo "No dependencies found in $json_file."
+      exit 0
+    fi
+    echo "$deps" > "$json_file.tmpdeps"
+    while read -r pkg ver; do
+      if [ -n "$pkg" ]; then
+        if [ "$ver" = "null" ]; then ver="latest"; fi
+        if [ "$action" = "logs" ] && [ "$follow_logs" = "1" ]; then
+          "$0" "$pkg" "$action" "$pkg" "$ver" -f 2>&1 | awk -v prefix="$pkg" '{print "\033[36m" prefix " |\033[0m " $0; fflush()}' &
+        elif [ "$action" = "status" ] || [ "$action" = "health" ] || [ "$action" = "logs" ]; then
+          echo "=== $pkg ==="
+          "$0" "$pkg" "$action" "$pkg" "$ver"
+        else
+          "$0" "$pkg" "$action" "$pkg" "$ver" &
+        fi
+      fi
+    done < "$json_file.tmpdeps"
+    rm -f "$json_file.tmpdeps"
+    wait
+    exit 0
+  else
+    for pkg in "$@"; do
+      if [ "$action" = "logs" ] && [ "$follow_logs" = "1" ]; then
+        "$0" "$pkg" "$action" "$pkg" "latest" -f 2>&1 | awk -v prefix="$pkg" '{print "\033[36m" prefix " |\033[0m " $0; fflush()}' &
+      elif [ "$action" = "status" ] || [ "$action" = "health" ] || [ "$action" = "logs" ]; then
+        echo "=== $pkg ==="
+        "$0" "$pkg" "$action" "$pkg" "latest"
+      else
+        "$0" "$pkg" "$action" "$pkg" "latest" &
+      fi
+    done
+    wait
+    exit 0
+  fi
 fi
 
 if [ "$cmd" = "install-deps" ]; then
@@ -468,36 +539,149 @@ if [ "$cmd" = "package_as" ]; then
     rm -f "$tmp_env_add" "$tmp_add" "$tmp_run"
     exit 0
   elif [ "$pkg_type" = "docker_compose" ]; then
-    echo "version: '3.8'"
-    echo "services:"
-    echo "  libscript-app:"
-    echo "    build:"
-    echo "      context: ."
-    echo "      dockerfile: Dockerfile"
+    base_image="debian:bookworm-slim"
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --base|--base-image)
+          base_image="$2"
+          if [ "$base_image" = "debian" ]; then
+            base_image="debian:bookworm-slim"
+          elif [ "$base_image" = "alpine" ]; then
+            base_image="alpine:latest"
+          fi
+          shift 2
+          ;;
+        *)
+          break
+          ;;
+      esac
+    done
+
+    deps_list=""
     if [ $# -gt 0 ]; then
-      echo "    environment:"
       while [ $# -gt 0 ]; do
         pkg="$1"
         ver="${2:-latest}"
-        PREFIX="/opt/libscript/installed/$pkg" "$0" env "$pkg" "$ver" --format=docker_compose | grep -vE '^(STACK=|SCRIPT_NAME=)' | sed 's/^/      - /g' || true
-        if [ "$2" != "" ]; then shift 2; else shift; fi
+        if echo "$3" | grep -q "^http"; then
+          override="$3"
+          shift 3
+        elif [ "$2" != "" ]; then
+          override=""
+          shift 2
+        else
+          override=""
+          shift
+        fi
+        deps_list="${deps_list}cli ${pkg} ${ver} ${override}\n"
       done
     elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
-      deps=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end) \(if (.value | type) == "object" and .value.override then .value.override else "" end)" else empty end' "libscript.json" 2>/dev/null)
-      if [ -n "$deps" ]; then
-        echo "    environment:"
-        echo "$deps" | while read -r pkg ver override; do
-          if [ -n "$pkg" ]; then
-            if [ "$ver" = "null" ]; then ver="latest"; fi
-            if [ -n "$override" ] && [ "$override" != "null" ]; then
-              pkg_up=$(echo "$pkg" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
-              echo "      - ${pkg_up}_URL=\"$override\""
-            else
-              PREFIX="/opt/libscript/installed/$pkg" "$0" env "$pkg" "$ver" --format=docker_compose | grep -vE '^(STACK=|SCRIPT_NAME=)' | sed 's/^/      - /g' || true
-            fi
+      deps_list=$(jq -r 'to_entries[] | .key as $layer | if ($layer | IN("deps", "toolchains", "servers", "databases", "third_party", "storage")) then (.value | to_entries[] | "\($layer) \(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end) \(if (.value | type) == "object" and .value.override then .value.override else "" end)") else empty end' "libscript.json" 2>/dev/null)
+    fi
+
+    if [ -n "$deps_list" ]; then
+      echo "version: '3.8'"
+      echo "services:"
+
+      sorted_deps=$(printf '%b\n' "$deps_list" | awk '
+      function get_priority(pkg) {
+          if (pkg ~ /^(fluentbit|docker|etcd|openvpn|kubernetes_k0s|kubernetes_thw)$/) return 10;
+          if (pkg ~ /^(postgres|mysql|mariadb|mongodb|redis|valkey|sqlite|rabbitmq|celery)$/) return 20;
+          if (pkg ~ /^(php|python|nodejs|ruby|java|go|rust|c|cpp|csharp|bun|deno|elixir|jq|kotlin|swift|wait4x|zig|sh|cc)$/) return 30;
+          if (pkg ~ /^(nginx|caddy|httpd|firecrawl|jupyterhub)$/) return 40;
+          return 50;
+      }
+      NF > 0 {
+          if (seen[$2]) next;
+          seen[$2] = 1;
+          lines[++count] = $0;
+          priorities[count] = get_priority($2);
+      }
+      END {
+          for (i = 1; i <= count; i++) {
+              for (j = i + 1; j <= count; j++) {
+                  if (priorities[i] > priorities[j]) {
+                      temp = lines[i]; lines[i] = lines[j]; lines[j] = temp;
+                      temp_p = priorities[i]; priorities[i] = priorities[j]; priorities[j] = temp_p;
+                  }
+              }
+          }
+          for (i = 1; i <= count; i++) {
+              print lines[i];
+          }
+      }')
+
+      prev_pkg=""
+      echo "$sorted_deps" | while read -r layer pkg ver override; do
+        if [ -n "$pkg" ]; then
+          if [ "$ver" = "null" ]; then ver="latest"; fi
+          
+          df="Dockerfile.$pkg"
+          echo "FROM $base_image" > "$df"
+          echo "ARG TARGETOS=linux" >> "$df"
+          echo "ARG TARGETARCH=amd64" >> "$df"
+          echo "ENV LC_ALL=C.UTF-8 LANG=C.UTF-8" >> "$df"
+          echo "ENV LIBSCRIPT_ROOT_DIR=\"/opt/libscript\"" >> "$df"
+          echo "ENV LIBSCRIPT_BUILD_DIR=\"/opt/libscript_build\"" >> "$df"
+          echo "ENV LIBSCRIPT_DATA_DIR=\"/opt/libscript_data\"" >> "$df"
+          echo "ENV LIBSCRIPT_CACHE_DIR=\"/opt/libscript_cache\"" >> "$df"
+          
+          pkg_up=$(echo "$pkg" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
+          echo "ENV ${pkg_up}_VERSION=\"$ver\"" >> "$df"
+          if [ -n "$override" ] && [ "$override" != "null" ]; then
+              echo "ENV ${pkg_up}_URL=\"$override\"" >> "$df"
+              filename=$(basename "${override%%\?*}")
+              echo "ADD \${${pkg_up}_URL} /opt/libscript_cache/$pkg/$filename" >> "$df"
           fi
-        done
-      fi
+          echo "COPY . /opt/libscript" >> "$df"
+          echo "WORKDIR /opt/libscript" >> "$df"
+          echo "RUN ./libscript.sh install $pkg \${${pkg_up}_VERSION}" >> "$df"
+
+          healthcheck="[\"CMD-SHELL\", \"echo '$pkg is ok' || exit 1\"]"
+          if [ "$pkg" = "postgres" ]; then healthcheck="[\"CMD\", \"pg_isready\", \"-U\", \"postgres\"]"; fi
+          if [ "$pkg" = "mysql" ] || [ "$pkg" = "mariadb" ]; then healthcheck="[\"CMD\", \"mysqladmin\", \"ping\", \"-h\", \"localhost\"]"; fi
+          if [ "$pkg" = "redis" ] || [ "$pkg" = "valkey" ]; then healthcheck="[\"CMD\", \"redis-cli\", \"ping\"]"; fi
+          if [ "$pkg" = "mongodb" ]; then healthcheck="[\"CMD\", \"mongosh\", \"--eval\", \"db.adminCommand('ping')\"]"; fi
+          if [ "$pkg" = "rabbitmq" ]; then healthcheck="[\"CMD\", \"rabbitmq-diagnostics\", \"ping\"]"; fi
+          if [ "$pkg" = "nginx" ] || [ "$pkg" = "caddy" ] || [ "$pkg" = "httpd" ]; then healthcheck="[\"CMD-SHELL\", \"curl -f http://localhost/ || exit 1\"]"; fi
+          if [ "$pkg" = "php" ]; then healthcheck="[\"CMD-SHELL\", \"php -v || exit 1\"]"; fi
+          if [ "$pkg" = "python" ]; then healthcheck="[\"CMD-SHELL\", \"python3 --version || exit 1\"]"; fi
+          if [ "$pkg" = "nodejs" ]; then healthcheck="[\"CMD-SHELL\", \"node -v || exit 1\"]"; fi
+          if [ "$pkg" = "fluentbit" ]; then healthcheck="[\"CMD-SHELL\", \"wget -qO- http://127.0.0.1:2020/api/v1/health || exit 1\"]"; fi
+
+          if [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+              custom_hc=$(jq -r ".deps[\"$pkg\"].healthcheck // .servers[\"$pkg\"].healthcheck // .databases[\"$pkg\"].healthcheck // .third_party[\"$pkg\"].healthcheck // .storage[\"$pkg\"].healthcheck // .toolchains[\"$pkg\"].healthcheck // empty | if type == \"object\" then .test | tojson elif type == \"string\" then \"[\\\"CMD-SHELL\\\", \\\"\" + . + \"\\\"]\" else empty end" libscript.json 2>/dev/null || true)
+              if [ -n "$custom_hc" ] && [ "$custom_hc" != "null" ]; then
+                  healthcheck="$custom_hc"
+              fi
+          fi
+
+          echo "  $pkg:"
+          echo "    build:"
+          echo "      context: ."
+          echo "      dockerfile: $df"
+          echo "    healthcheck:"
+          echo "      test: $healthcheck"
+          echo "      interval: 5s"
+          echo "      retries: 5"
+          echo "      start_period: 5s"
+          
+          if [ -n "$prev_pkg" ]; then
+              echo "    depends_on:"
+              echo "      $prev_pkg:"
+              echo "        condition: service_healthy"
+          fi
+          
+          echo "    environment:"
+          if [ -n "$override" ] && [ "$override" != "null" ]; then
+            echo "      - ${pkg_up}_URL=\"$override\""
+          fi
+          if env_out=$(PREFIX="/opt/libscript/installed/$pkg" "$0" env "$pkg" "$ver" --format=docker_compose 2>/dev/null); then
+            echo "$env_out" | grep -vE '^(STACK=|SCRIPT_NAME=)' | sed 's/^/      - /g'
+          fi
+          
+          prev_pkg="$pkg"
+        fi
+      done
     fi
     exit 0
   elif [ "$pkg_type" = "TUI" ]; then
@@ -3645,7 +3829,7 @@ req_version=0
 case "$cmd" in
   install|install_daemon|install_service|uninstall_daemon|uninstall_service|remove_daemon|remove_service)
     is_action=1; req_version=1 ;;
-  remove|uninstall|status|test|ls|ls-remote)
+  remove|uninstall|status|health|test|ls|ls-remote|start|stop|restart|logs|up|down)
     is_action=1 ;;
   run|which|exec|env|download|serve|route)
     is_action=1; req_version=1 ;;

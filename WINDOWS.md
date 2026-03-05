@@ -1,38 +1,29 @@
 # Windows and MS-DOS Support
 
-## Purpose & Current State
+## Purpose
+Details how LibScript seamlessly supports modern Windows (via `cmd` and PowerShell) and legacy MS-DOS environments, achieving parity with its Unix counterparts.
 
-**Purpose**: This document details the specific architectural decisions, workarounds, and scripting languages (`.cmd`, `.ps1`, `.bat`) used to support modern Windows and legacy MS-DOS environments. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+## What Makes This Interesting?
+Achieving infrastructure-as-code parity on Windows without forcing users into WSL or installing third-party runtimes is notoriously difficult. LibScript solves this by utilizing native `.cmd` files as a routing layer and delegating heavy lifting to PowerShell (`.ps1`), while maintaining a strict `.bat` fallback architecture for true legacy MS-DOS environments.
 
-**Current State**: Windows and DOS support is a first-class citizen in the ecosystem. The core logic natively utilizes `.cmd` and PowerShell for MSIs, Registry edits, and Path updates, with legacy `.bat` fallbacks for pure DOS environments. Recent advancements have stabilized the automated generation of Windows installers (MSI, InnoSetup, NSIS) directly from component definitions.
+## Modern Windows Architecture (`.cmd` and `.ps1`)
+Instead of `.sh` scripts, Windows components use:
+- `cli.cmd`: Parses arguments natively in the Command Prompt.
+- `setup.cmd`: Acts as the portability wrapper.
+- `setup_win.ps1`: The core execution engine. It handles downloading artifacts, silently installing MSIs, unpacking ZIPs, editing the Windows Registry, and securely updating the User/Machine `PATH`.
+- `test.cmd`: Idempotent verification tests.
 
-## Windows Architecture
-
-Instead of `.sh` files, Windows utilizes `.cmd` (Batch) and `.ps1` (PowerShell) files.
-
-Every component should ideally contain:
-- `cli.cmd`: The entrypoint for parameter parsing on Windows.
-- `setup.cmd`: A wrapper that handles pre-PowerShell DOS portability hooks and calls the actual setup logic.
-- `setup_win.ps1`: The core installation logic written in PowerShell. It handles downloading MSI installers, extracting zip archives, modifying the Windows Registry, and updating the Machine/User `PATH`.
-- `test.cmd`: The verification script (e.g., compiling a "Hello World" in C# via `dotnet`).
-
-## MS-DOS Architecture (.bat)
-
-To support MS-DOS and early Windows environments that lack modern `cmd.exe` features (like delayed expansion) or PowerShell, LibScript supports `.bat` file fallbacks:
-- `dos_setup_script_deps.bat`: Bootstraps necessary tools (like `curl` and `jq`) onto a bare MS-DOS machine using native `ftp` and pre-compiled 32-bit binaries.
-- `libscript.bat`: A global router for DOS that delegates to components without modern command extensions.
-- When `libscript.bat` invokes a component, or when `install.bat` runs, they will prioritize `cli.bat` and `setup.bat` if present, falling back to `.cmd` equivalents. This ensures that legacy components remain decoupled and purely DOS-compatible without breaking the modern Windows experience.
-
-## The Global Router
-
-Just like `libscript.sh`, Windows users can use `libscript.cmd` (or `libscript.bat` on DOS) from the root of the repository to list, search, and invoke components.
-
+## Global Routing
+The root router `libscript.cmd` behaves exactly like `libscript.sh`.
 ```cmd
-libscript.cmd list
-libscript.cmd install rust latest
+libscript.cmd install python 3.12
+libscript.cmd run python 3.12 script.py
 ```
 
-## Known Limitations
+## Background Services
+Since Windows lacks Systemd or OpenRC, LibScript natively translates background daemon configurations into Windows Services. Tools like Valkey or Postgres are installed, configured, and registered natively via standard Windows service utilities (`sc.exe`), controllable via `libscript.cmd start postgres`.
 
-- **Package Managers:** Windows does not have a single unified package manager universally available like `apt`. `winget`, `choco`, or `scoop` can be utilized inside `setup_win.ps1` if available, but the primary fallback strategy on Windows is direct download and extraction of pre-compiled binaries.
-- **Services:** Systemd and OpenRC do not exist on Windows. For components that run as background services (e.g., Postgres, Valkey), they must be installed as Windows Services using utilities like `sc.exe` or `NSSM` (Non-Sucking Service Manager).
+## Legacy MS-DOS Support (`.bat`)
+To support environments predating modern `cmd.exe` command extensions or PowerShell, LibScript utilizes `.bat` fallbacks:
+- `libscript.bat` prioritizes `cli.bat` and `setup.bat` if they exist.
+- `dos_setup_script_deps.bat` uses legacy FTP capabilities to bootstrap standard CLI tools (like `curl` and `jq`) onto raw MS-DOS setups, enabling them to interface with the modern LibScript ecosystem without breaking the mainline `.cmd` features.

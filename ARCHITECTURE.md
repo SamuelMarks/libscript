@@ -1,45 +1,32 @@
 # Architecture
 
-## Purpose & Current State
+## Purpose
+This document details the internal directory structure, execution lifecycle, and core abstractions (`os_info.sh`, `pkg_mgr.sh`) that power LibScript's zero-dependency, cross-platform provisioning engine.
 
-**Purpose**: This document details the internal directory structure, execution lifecycle, and core libraries (`os_info.sh`, `pkg_mgr.sh`) that power LibScript components. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+## What Makes This Architecture Interesting?
+LibScript eschews heavyweight agents and runtimes (like Python for Ansible or Go for Terraform) in favor of a strictly POSIX `sh` and Windows `cmd` routing layer. This architecture allows a component to define its schema via JSON (`vars.schema.json`), which the global router (`libscript.sh` / `libscript.cmd`) dynamically parses to generate CLI help text, parse arguments, generate environment variables, and compile advanced deployment artifacts (like MSIs or Dockerfiles).
 
-**Current State**: The architectural foundation currently supports a unified CLI router delegating to per-component setup scripts. Core libraries (`os_info.sh`, `pkg_mgr.sh`) abstract native package managers cleanly. The lifecycle now successfully handles declarative JSON manifests, cross-platform caching, and native background daemon execution via systemd, OpenRC, and newly enhanced macOS and Windows Service integrations.
+## Core Structure
+The repository is split into modular components:
+- `_lib/_toolchain/`: Compilers, interpreters, and CLI tools.
+- `_lib/_server/`: Web servers, proxies, and container runtimes.
+- `_lib/_storage/`: Databases, caches, and message queues.
+- `app/`: High-level third-party application stacks.
 
-## Component Structure
+Each component contains:
+- `cli.sh` / `cli.cmd`: Entrypoint that parses options against `vars.schema.json`.
+- `setup.sh` / `setup.cmd` / `setup_win.ps1`: The actual installation and configuration logic.
+- `test.sh` / `test.cmd`: Idempotent verification tests.
+- `vars.schema.json`: Configuration schema (ports, passwords, versions).
 
-Every component in LibScript (found in `_lib/` or `app/`) follows a predictable directory structure:
+## Execution Lifecycle
+1. **Invocation**: The user runs `./libscript.sh install <pkg> <version> [args]`.
+2. **Routing**: The global CLI locates the package and executes its `cli.sh`.
+3. **Configuration**: `cli.sh` maps CLI arguments to exported environment variables (e.g., `--PORT=8080` becomes `export LIBSCRIPT_GLOBAL_PORT=8080`).
+4. **Environment Detection**: `setup.sh` sources `os_info.sh` to determine `TARGET_OS`, `TARGET_ARCH`, and the init system (Systemd/OpenRC).
+5. **Dependency Resolution**: `pkg_mgr.sh` maps and installs native OS requirements via the native package manager.
+6. **Installation**: Binaries are downloaded, cached, extracted to the `--prefix`, and configured.
+7. **Service Registration**: If applicable, the component registers a background daemon natively.
 
-```
-_lib/_toolchain/rust/
-├── cli.sh              # CLI entrypoint for this specific component
-├── cli.cmd             # Windows CLI entrypoint
-├── cli.bat             # (Optional) MS-DOS CLI entrypoint
-├── env.sh              # Exports environment variables/defaults
-├── setup.sh            # Main Unix entrypoint for installation
-├── setup_generic.sh    # Cross-platform fallback setup logic
-├── setup_debian.sh     # (Optional) OS-specific setup logic
-├── setup.cmd           # Windows fallback setup logic
-├── setup.bat           # (Optional) MS-DOS fallback setup logic
-├── setup_win.ps1       # Windows PowerShell setup logic
-├── test.sh             # Verification script (Unix)
-├── test.cmd            # Verification script (Windows)
-├── test.bat            # (Optional) Verification script (MS-DOS)
-└── vars.schema.json    # JSON schema defining configurable parameters
-```
-
-## The Execution Lifecycle
-
-1. **Invocation**: A user runs `./libscript.sh <COMMAND> <PACKAGE_NAME> [VERSION] [OPTIONS]` (or `libscript.cmd`, `libscript.bat`). The global dispatcher locates the component and executes its CLI router.
-2. **Configuration**: The `cli.sh` parses arguments against `vars.schema.json` and exports them as environment variables.
-3. **Setup Resolution**: `cli.sh` calls `setup.sh`.
-4. **Environment Loading**: `setup.sh` sources common utilities (e.g., `_lib/_common/os_info.sh`) to detect the OS, distribution, and architecture.
-5. **OS Specific Execution**: If an OS-specific script exists (e.g., `setup_debian.sh` or `setup_alpine.sh`), it is executed. Otherwise, it falls back to `setup_generic.sh`.
-6. **Dependency Resolution**: Inside the setup scripts, `depends <package>` is called, which delegates to `pkg_mgr.sh` to translate the abstract package name into the OS-native package name and install it via `apt`, `apk`, `dnf`, `brew`, etc.
-7. **Verification**: After installation, the user or CI can invoke `test.sh` to verify the installation succeeded and works (e.g., compiling a Hello World program).
-
-## Core Libraries (`_lib/_common/`)
-
-- `os_info.sh`: Identifies the `UNAME`, `TARGET_OS`, `TARGET_ARCH`, and init system (`systemd`, `openrc`).
-- `pkg_mgr.sh`: The package manager abstraction layer. Detects the available package manager and executes the correct install commands.
-- `pkg_mapper.sh`: Translates generic package names (e.g., `libssl-dev`) into OS-specific names (e.g., `openssl-dev` on Alpine, `openssl-devel` on RHEL).
+## The Generator Layer (`package_as`)
+A standout architectural feature is the global CLI's ability to introspect components. By parsing the component schemas and utilizing the declarative `env` output, LibScript can synthesize standard installers (DEB, RPM, APK), Windows installers (WiX, InnoSetup, NSIS), Dockerfiles, and `docker-compose.yml` configurations on the fly without running the actual installation locally.

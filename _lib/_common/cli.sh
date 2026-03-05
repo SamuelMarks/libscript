@@ -18,6 +18,13 @@ show_help() {
   echo "  remove_daemon <package_name> <version>"
   echo "  remove_service <package_name> <version>"
   echo "  status <package_name> [version]"
+  echo "  health <package_name> [version]"
+  echo "  start <package_name> [version]"
+  echo "  stop <package_name> [version]"
+  echo "  restart <package_name> [version]"
+  echo "  logs <package_name> [version] [-f|--follow]"
+  echo "  up <package_name> [version]"
+  echo "  down <package_name> [version]"
   echo "  test <package_name> [version]"
   echo "  run <package_name> <version> [args...]"
   echo "  which <package_name> <version>"
@@ -46,6 +53,10 @@ show_help() {
   echo ""
   echo "  --prefix=<dir>                      Set local installation prefix"
   echo "  --service-name=<name>               Set a custom service/daemon name"
+  echo "  --log-driver=<driver>               Set log driver (file, syslog, tcp, json_file, custom) [default: file]"
+  echo "  --log-host=<host>                   Set log host for tcp driver"
+  echo "  --log-port=<port>                   Set log port for tcp driver"
+  echo "  --log-cmd=<cmd>                     Set custom log command (e.g., 'nc localhost 5170')"
   echo "  --secrets=<dir|url>                 Save generated secrets to a directory or OpenBao/Vault URL"
   echo "  --help, -h, /?                      Show this help message"
   echo "  --version, -v                       Show version"
@@ -113,7 +124,7 @@ case "$1" in
         ;;
     esac
     ;;
-  remove|uninstall|status|test)
+  remove|uninstall|status|health|test|start|stop|restart|logs|up|down)
     ACTION="$1"
     PACKAGE_NAME="$2"
     VERSION="$3"
@@ -161,7 +172,7 @@ if [ "$VERSION" = "latest" ] || [ "$VERSION" = "lts" ] || [ "$VERSION" = "stable
 fi
 
 while [ $# -gt 0 ]; do
-  if [ "$ACTION" = "run" ] || [ "$ACTION" = "exec" ]; then
+  if [ "$ACTION" = "start" ] || [ "$ACTION" = "stop" ] || [ "$ACTION" = "restart" ] || [ "$ACTION" = "status" ] || [ "$ACTION" = "health" ] || [ "$ACTION" = "logs" ] || [ "$ACTION" = "up" ] || [ "$ACTION" = "down" ] || [ "$ACTION" = "run" ] || [ "$ACTION" = "exec" ]; then
     break
   fi
   case "$1" in
@@ -179,6 +190,22 @@ while [ $# -gt 0 ]; do
       ;;
     --service-name=*)
       export LIBSCRIPT_SERVICE_NAME="${1#*=}"
+      shift
+      ;;
+    --log-driver=*)
+      export LIBSCRIPT_LOG_DRIVER="${1#*=}"
+      shift
+      ;;
+    --log-host=*)
+      export LIBSCRIPT_LOG_HOST="${1#*=}"
+      shift
+      ;;
+    --log-port=*)
+      export LIBSCRIPT_LOG_PORT="${1#*=}"
+      shift
+      ;;
+    --log-cmd=*)
+      export LIBSCRIPT_LOG_CMD="${1#*=}"
       shift
       ;;
       --listen=*)
@@ -232,7 +259,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-if [ "$ACTION" = "run" ] || [ "$ACTION" = "which" ] || [ "$ACTION" = "exec" ] || [ "$ACTION" = "env" ] || [ "$ACTION" = "serve" ] || [ "$ACTION" = "route" ] || [ "$ACTION" = "ls" ] || [ "$ACTION" = "ls-remote" ] || [ "$ACTION" = "download" ] || [ "$ACTION" = "uninstall" ] || [ "$ACTION" = "remove" ] || [ "$ACTION" = "uninstall_daemon" ] || [ "$ACTION" = "uninstall_service" ] || [ "$ACTION" = "remove_daemon" ] || [ "$ACTION" = "remove_service" ]; then
+if [ "$ACTION" = "start" ] || [ "$ACTION" = "stop" ] || [ "$ACTION" = "restart" ] || [ "$ACTION" = "status" ] || [ "$ACTION" = "health" ] || [ "$ACTION" = "logs" ] || [ "$ACTION" = "up" ] || [ "$ACTION" = "down" ] || [ "$ACTION" = "run" ] || [ "$ACTION" = "which" ] || [ "$ACTION" = "exec" ] || [ "$ACTION" = "env" ] || [ "$ACTION" = "serve" ] || [ "$ACTION" = "route" ] || [ "$ACTION" = "ls" ] || [ "$ACTION" = "ls-remote" ] || [ "$ACTION" = "download" ] || [ "$ACTION" = "uninstall" ] || [ "$ACTION" = "remove" ] || [ "$ACTION" = "uninstall_daemon" ] || [ "$ACTION" = "uninstall_service" ] || [ "$ACTION" = "remove_daemon" ] || [ "$ACTION" = "remove_service" ]; then
   # Action logic
   INSTALLED_DIR="${PREFIX:-$LIBSCRIPT_ROOT_DIR/installed/$PACKAGE_NAME}"
   BIN_PATH="$INSTALLED_DIR/bin/$PACKAGE_NAME"
@@ -301,6 +328,134 @@ if [ "$ACTION" = "run" ] || [ "$ACTION" = "which" ] || [ "$ACTION" = "exec" ] ||
         "
       fi
       ;;
+    start|up)
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME}}"
+      echo "Starting $service_name..."
+      if command -v systemctl >/dev/null 2>&1 && systemctl --quiet is-enabled "$service_name" 2>/dev/null || systemctl --user --quiet is-enabled "$service_name" 2>/dev/null; then
+        if systemctl --user --quiet is-enabled "$service_name" 2>/dev/null; then
+          systemctl --user start "$service_name"
+        else
+          sudo systemctl start "$service_name"
+        fi
+      elif command -v rc-service >/dev/null 2>&1; then
+        sudo rc-service "$service_name" start
+      elif command -v sc.exe >/dev/null 2>&1; then
+        sc.exe start "$service_name"
+      else
+        echo "Error: Service $service_name is not installed or service manager not found." >&2
+        exit 1
+      fi
+      ;;
+    stop|down)
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME}}"
+      echo "Stopping $service_name..."
+      if command -v systemctl >/dev/null 2>&1 && systemctl --quiet is-enabled "$service_name" 2>/dev/null || systemctl --user --quiet is-enabled "$service_name" 2>/dev/null; then
+        if systemctl --user --quiet is-enabled "$service_name" 2>/dev/null; then
+          systemctl --user stop "$service_name"
+        else
+          sudo systemctl stop "$service_name"
+        fi
+      elif command -v rc-service >/dev/null 2>&1; then
+        sudo rc-service "$service_name" stop
+      elif command -v sc.exe >/dev/null 2>&1; then
+        sc.exe stop "$service_name"
+      else
+        echo "Error: Service $service_name is not installed or service manager not found." >&2
+        exit 1
+      fi
+      ;;
+    restart)
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME}}"
+      echo "Restarting $service_name..."
+      if command -v systemctl >/dev/null 2>&1 && systemctl --quiet is-enabled "$service_name" 2>/dev/null || systemctl --user --quiet is-enabled "$service_name" 2>/dev/null; then
+        if systemctl --user --quiet is-enabled "$service_name" 2>/dev/null; then
+          systemctl --user restart "$service_name"
+        else
+          sudo systemctl restart "$service_name"
+        fi
+      elif command -v rc-service >/dev/null 2>&1; then
+        sudo rc-service "$service_name" restart
+      elif command -v sc.exe >/dev/null 2>&1; then
+        sc.exe stop "$service_name"
+        sleep 2
+        sc.exe start "$service_name"
+      else
+        echo "Error: Service $service_name is not installed or service manager not found." >&2
+        exit 1
+      fi
+      ;;
+    health)
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME}}"
+      json_file="libscript.json"
+      healthcheck=""
+      if [ -f "$json_file" ] && command -v jq >/dev/null 2>&1; then
+        healthcheck=$(jq -c "if (.deps[\"$PACKAGE_NAME\"] | type) == \"object\" and .deps[\"$PACKAGE_NAME\"].healthcheck != null then .deps[\"$PACKAGE_NAME\"].healthcheck else empty end" "$json_file" 2>/dev/null)
+      fi
+      if [ -n "$healthcheck" ]; then
+        test_cmd=$(echo "$healthcheck" | jq -r 'if type == "string" then . elif type == "object" and .test then (if (.test | type) == "array" then (if .test[0] == "CMD-SHELL" then .test[1] else .test | join(" ") end) else .test end) else empty end' 2>/dev/null)
+        if [ -n "$test_cmd" ] && [ "$test_cmd" != "null" ]; then
+          if sh -c "$test_cmd"; then
+            echo "Status: healthy"
+            exit 0
+          else
+            echo "Status: unhealthy"
+            exit 1
+          fi
+        fi
+      fi
+      # Fall back to status if no healthcheck is defined
+      echo "No healthcheck defined, checking status..."; "$0" "status" "$PACKAGE_NAME" "$VERSION" "$@"
+      ;;
+    status)
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME}}"
+      if command -v systemctl >/dev/null 2>&1 && systemctl --quiet is-enabled "$service_name" 2>/dev/null || systemctl --user --quiet is-enabled "$service_name" 2>/dev/null; then
+        if systemctl --user --quiet is-enabled "$service_name" 2>/dev/null; then
+          systemctl --user status "$service_name" --no-pager
+        else
+          sudo systemctl status "$service_name" --no-pager
+        fi
+      elif command -v rc-service >/dev/null 2>&1; then
+        sudo rc-service "$service_name" status
+      elif command -v sc.exe >/dev/null 2>&1; then
+        sc.exe query "$service_name"
+      else
+        echo "Error: Service $service_name is not installed or service manager not found." >&2
+        exit 1
+      fi
+      ;;
+    logs)
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME}}"
+      follow=0
+      for arg in "$@"; do
+        if [ "$arg" = "-f" ] || [ "$arg" = "--follow" ]; then
+          follow=1
+        fi
+      done
+
+      if command -v journalctl >/dev/null 2>&1; then
+        journalctl_args="-n 50 --no-pager"
+        if [ "$follow" = "1" ]; then
+          journalctl_args="-n 50 -f"
+        fi
+        if systemctl --user --quiet is-enabled "$service_name" 2>/dev/null; then
+          journalctl --user -u "$service_name" $journalctl_args
+        else
+          sudo journalctl -u "$service_name" $journalctl_args
+        fi
+      else
+        LOGS_DIR="${LOGS_DIR:-$LIBSCRIPT_ROOT_DIR/logs}"
+        log_file="$LOGS_DIR/${service_name}.log"
+        if [ -f "$log_file" ]; then
+          if [ "$follow" = "1" ]; then
+            tail -n 50 -f "$log_file"
+          else
+            tail -n 50 "$log_file"
+          fi
+        else
+          echo "No logs found at $log_file"
+        fi
+      fi
+      ;;
     serve)
       if [ ! -x "$BIN_PATH" ]; then
         echo "Error: $PACKAGE_NAME version $VERSION not installed at $BIN_PATH"
@@ -312,10 +467,46 @@ if [ "$ACTION" = "run" ] || [ "$ACTION" = "which" ] || [ "$ACTION" = "exec" ] ||
         mkdir -p "$LOGS_DIR"
         service_name="${LIBSCRIPT_SERVICE_NAME:-${PACKAGE_NAME}_${VERSION}}"
         log_file="$LOGS_DIR/${service_name}.log"
-        echo "Starting $service_name in background..."
-        nohup "$BIN_PATH" "$@" > "$log_file" 2>&1 &
-        echo "PID: $!"
-        echo "Logs: $log_file"
+        log_driver="${LIBSCRIPT_LOG_DRIVER:-file}"
+        echo "Starting $service_name in background (log driver: $log_driver)..."
+        
+        if [ "$log_driver" = "file" ]; then
+          nohup "$BIN_PATH" "$@" > "$log_file" 2>&1 &
+          echo "PID: $!"
+          echo "Logs: $log_file"
+        elif [ "$log_driver" = "json_file" ]; then
+          if command -v jq >/dev/null 2>&1; then
+            nohup sh -c 'CMD="$0"; TAG="$1"; OUT="$2"; shift 2; exec "$CMD" "$@" 2>&1 | jq -R -c --unbuffered --arg svc "$TAG" "{service: \$svc, message: .}" >> "$OUT"' "$BIN_PATH" "$service_name" "${log_file}.json" "$@" &
+          else
+            nohup sh -c 'CMD="$0"; TAG="$1"; OUT="$2"; shift 2; exec "$CMD" "$@" 2>&1 | awk -v svc="$TAG" '\''{ gsub(/\\/, "\\\\"); gsub(/"/, "\\\""); gsub(/\r/, ""); gsub(/\t/, "\\t"); printf "{\"service\":\"%s\",\"message\":\"%s\"}\n", svc, $0; fflush(); }'\'' >> "$OUT"' "$BIN_PATH" "$service_name" "${log_file}.json" "$@" &
+          fi
+          echo "PID: $!"
+          echo "Logs: ${log_file}.json"
+        elif [ "$log_driver" = "tcp" ] || [ "$log_driver" = "fluentbit" ]; then
+          host="${LIBSCRIPT_LOG_HOST:-127.0.0.1}"
+          port="${LIBSCRIPT_LOG_PORT:-5170}"
+          if command -v jq >/dev/null 2>&1; then
+            nohup sh -c 'CMD="$0"; TAG="$1"; HOST="$2"; PORT="$3"; shift 3; exec "$CMD" "$@" 2>&1 | jq -R -c --unbuffered --arg svc "$TAG" "{service: \$svc, message: .}" | nc "$HOST" "$PORT"' "$BIN_PATH" "$service_name" "$host" "$port" "$@" &
+          else
+            nohup sh -c 'CMD="$0"; TAG="$1"; HOST="$2"; PORT="$3"; shift 3; exec "$CMD" "$@" 2>&1 | awk -v svc="$TAG" '\''{ gsub(/\\/, "\\\\"); gsub(/"/, "\\\""); gsub(/\r/, ""); gsub(/\t/, "\\t"); printf "{\"service\":\"%s\",\"message\":\"%s\"}\n", svc, $0; fflush(); }'\'' | nc "$HOST" "$PORT"' "$BIN_PATH" "$service_name" "$host" "$port" "$@" &
+          fi
+          echo "PID: $!"
+          echo "Logs streaming to tcp://$host:$port"
+        elif [ "$log_driver" = "syslog" ]; then
+          nohup sh -c 'CMD="$0"; TAG="$1"; shift 1; exec "$CMD" "$@" 2>&1 | logger -t "$TAG"' "$BIN_PATH" "$service_name" "$@" &
+          echo "PID: $!"
+          echo "Logs sent to syslog"
+        elif [ "$log_driver" = "custom" ]; then
+          if [ -z "$LIBSCRIPT_LOG_CMD" ]; then
+            echo "Error: LIBSCRIPT_LOG_CMD is required for custom log driver" >&2
+            exit 1
+          fi
+          nohup sh -c 'CMD="$0"; LCMD="$1"; shift 1; eval "exec \"$CMD\" \"$@\" 2>&1 | $LCMD"' "$BIN_PATH" "$LIBSCRIPT_LOG_CMD" "$@" &
+          echo "PID: $!"
+        else
+          echo "Error: Unknown log driver '$log_driver'" >&2
+          exit 1
+        fi
       else
         echo "Error: serve_from '$SERVE_FROM' is not fully implemented yet." >&2
         exit 1

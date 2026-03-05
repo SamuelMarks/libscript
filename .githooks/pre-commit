@@ -28,12 +28,48 @@ cat << 'TABLE' > ci_results.tmp
 |---|---|---|---|
 TABLE
 
-for comp in $components; do
-    ubuntu="✅"
-    macos="✅"
-    windows="✅"
+echo "Fetching live CI matrix status from GitHub..."
+run_id=$(curl -s "https://api.github.com/repos/SamuelMarks/libscript/actions/runs?branch=master&event=push&status=completed&per_page=1" | jq -r '.workflow_runs[0].id' 2>/dev/null || echo "null")
+rm -f jobs_status.tmp
+if [ "$run_id" != "null" ] && [ -n "$run_id" ]; then
+    echo "Found latest run ID: $run_id"
+    page=1
+    while :; do
+        response=$(curl -s "https://api.github.com/repos/SamuelMarks/libscript/actions/runs/${run_id}/jobs?per_page=100&page=${page}")
+        jobs_count=$(echo "$response" | jq '.jobs | length' 2>/dev/null || echo "0")
+        if [ "$jobs_count" -eq 0 ]; then
+            break
+        fi
+        echo "$response" | jq -r '.jobs[] | "\(.name)|\(.conclusion)"' >> jobs_status.tmp
+        page=$((page + 1))
+    done
+else
+    echo "Failed to fetch run ID or jq not installed. Using fallback markers."
+fi
 
-    # Check exclusions
+get_job_status() {
+    local comp="$1"
+    local os="$2"
+    if [ -f jobs_status.tmp ]; then
+        local status=$(grep -F "${comp} on ${os}|" jobs_status.tmp | cut -d'|' -f2 | head -n1)
+        case "$status" in
+            "success") echo "✅" ;;
+            "failure") echo "❌" ;;
+            "skipped") echo "⏭️" ;;
+            "cancelled") echo "🛑" ;;
+            *) echo "❓" ;;
+        esac
+    else
+        echo "❓"
+    fi
+}
+
+for comp in $components; do
+    ubuntu=$(get_job_status "$comp" "ubuntu-latest")
+    macos=$(get_job_status "$comp" "macos-latest")
+    windows=$(get_job_status "$comp" "windows-latest")
+
+    # Check exclusions (overrides API status if excluded in ci.yml)
     if grep -A 2 "\- os: macos-latest" .github/workflows/ci.yml | grep -q "\"$comp\""; then
         macos="⏭️"
     fi
@@ -76,7 +112,7 @@ else
     echo "" >> README.md
     cat ci_results.tmp >> README.md
 fi
-rm -f ci_results.tmp
+rm -f ci_results.tmp jobs_status.tmp
 
 git add .github/workflows/ci.yml README.md
 echo "Pre-commit hook completed successfully."

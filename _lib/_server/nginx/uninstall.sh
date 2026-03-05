@@ -8,10 +8,35 @@ fi
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}/ROOT" ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/pkg_mgr.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
+
+# Optional: Disable services first if possible
+if command -v systemctl >/dev/null 2>&1; then
+    sudo systemctl stop nginx || true
+    sudo systemctl disable nginx || true
+elif command -v rc-service >/dev/null 2>&1; then
+    sudo rc-service nginx stop || true
+    sudo rc-update del nginx || true
+fi
+
+if [ -n "${PKG_MGR}" ]; then
+    case "${PKG_MGR}" in
+        apt-get) sudo apt-get remove -y nginx ;;
+        apk)     sudo apk del nginx ;;
+        brew)    brew uninstall nginx ;;
+        dnf)     sudo dnf remove -y nginx ;;
+        pacman)  sudo pacman -Rns --noconfirm nginx ;;
+        zypper)  sudo zypper remove -y nginx ;;
+        *)       echo "Manual uninstallation required for $PKG_MGR." ;;
+    esac
+fi
+
 if [ -n "$INSTALLED_DIR" ] && [ -d "$INSTALLED_DIR" ]; then
   echo "Removing $INSTALLED_DIR..."
   rm -rf "$INSTALLED_DIR"
 else
   echo "No local installation directory found for $PACKAGE_NAME at $INSTALLED_DIR."
 fi
-# Add background service removal logic here if applicable

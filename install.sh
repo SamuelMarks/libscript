@@ -83,6 +83,20 @@ if [ "${NGINX_INSTALL:-0}" -eq 1 ]; then
   . "${SCRIPT_NAME}"
 fi
 
+if [ "${CADDY_INSTALL:-0}" -eq 1 ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_server/caddy/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+fi
+
+if [ "${HTTPD_INSTALL:-0}" -eq 1 ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_server/httpd/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+fi
+
 # # uses `WWWROOT`
 # if [ "${WWWROOT_INSTALL:-0}" -eq 1 ]; then
 # 

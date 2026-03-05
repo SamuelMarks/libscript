@@ -300,6 +300,24 @@ map_package() {
         *) return 1 ;;
       esac
       ;;
+    'httpd'|'apache2')
+      case "${PKG_MGR}" in
+        'winget') printf 'Apache.HTTPD\n' ;;
+        'apt-get') printf 'apache2\n' ;;
+        'apk') printf 'apache2\n' ;;
+        'dnf'|'yum'|'pacman') printf 'httpd\n' ;;
+        'brew') printf 'httpd\n' ;;
+        *) printf 'apache2\n' ;;
+      esac
+      ;;
+    'caddy')
+      case "${PKG_MGR}" in
+        'winget') printf 'caddy.caddy\n' ;;
+        'brew') printf 'caddy\n' ;;
+        'apt-get') printf 'debian-keyring debian-archive-keyring apt-transport-https caddy\n' ;;
+        *) printf 'caddy\n' ;;
+      esac
+      ;;
     'nginx')
       case "${PKG_MGR}" in
         'winget') printf 'Nginx.Nginx\n' ;;

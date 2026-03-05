@@ -11,7 +11,18 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup_win.ps1"
 goto :eof
 
 :native_cmd
-echo [WARN] PowerShell not found. Native CMD/DOS installation not fully implemented for %~nx0.
-echo Please add native DOS/CMD commands here to support legacy systems.
-:: e.g., using bitsadmin, cscript, or pre-compiled binaries
-exit /b 1
+echo [INFO] PowerShell not found. Installing Caddy natively...
+set "PREFIX=%LIBSCRIPT_ROOT_DIR%\installed\caddy"
+if not exist "%PREFIX%" mkdir "%PREFIX%"
+set "CADDY_URL=https://caddyserver.com/api/download?os=windows&arch=amd64"
+if not exist "%PREFIX%\caddy.exe" (
+    echo [INFO] Downloading Caddy...
+    bitsadmin /transfer CaddyDownload /download /priority normal "%CADDY_URL%" "%PREFIX%\caddy.exe" >nul 2>&1 || certutil -urlcache -split -f "%CADDY_URL%" "%PREFIX%\caddy.exe" >nul 2>&1
+)
+if exist "%PREFIX%\caddy.exe" (
+    echo [INFO] Caddy installed successfully to %PREFIX%.
+    exit /b 0
+) else (
+    echo [ERROR] Failed to download Caddy.
+    exit /b 1
+)

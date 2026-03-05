@@ -31,6 +31,61 @@ if /i "%cmd%"=="-v" (
 if /i "%cmd%"=="list" goto list_components
 if /i "%cmd%"=="search" goto search_components
 
+if /i "%cmd%"=="start" if not "%LIBSCRIPT_INTERNAL_START%"=="1" set "is_docker_cmd=1"
+if /i "%cmd%"=="stop" if not "%LIBSCRIPT_INTERNAL_START%"=="1" set "is_docker_cmd=1"
+if /i "%cmd%"=="status" if not "%LIBSCRIPT_INTERNAL_START%"=="1" set "is_docker_cmd=1"
+if /i "%cmd%"=="health" if not "%LIBSCRIPT_INTERNAL_START%"=="1" set "is_docker_cmd=1"
+if /i "%cmd%"=="logs" if not "%LIBSCRIPT_INTERNAL_START%"=="1" set "is_docker_cmd=1"
+if /i "%cmd%"=="restart" if not "%LIBSCRIPT_INTERNAL_START%"=="1" set "is_docker_cmd=1"
+if /i "%cmd%"=="up" if not "%LIBSCRIPT_INTERNAL_START%"=="1" set "is_docker_cmd=1"
+if /i "%cmd%"=="down" if not "%LIBSCRIPT_INTERNAL_START%"=="1" set "is_docker_cmd=1"
+
+if "!is_docker_cmd!"=="1" (
+    set "action=%cmd%"
+    if /i "!action!"=="up" set "action=start"
+    if /i "!action!"=="down" set "action=stop"
+    set "arg1=%~2"
+    set "is_json=0"
+    if "!arg1!"=="" set "is_json=1"
+    if /i "!arg1!"=="libscript.json" set "is_json=1"
+    echo !arg1! | findstr /i "\.json$" >nul && set "is_json=1"
+
+    if "!is_json!"=="1" (
+        set "json_file=!arg1!"
+        if "!json_file!"=="" set "json_file=libscript.json"
+        if not exist "!json_file!" (
+            echo Error: !json_file! not found. 1>&2
+            exit /b 1
+        )
+        jq --version >nul 2>&1
+        if errorlevel 1 (
+            echo Error: jq is required to parse !json_file!. 1>&2
+            exit /b 1
+        )
+        echo if .deps then .deps ^^| to_entries[] ^^| "\(.key) \(if (.value ^^| type) == \"string\" then .value else (.value.version // \"latest\") end)" else empty end > "%temp%\libscript_start_deps.jq"
+        for /f "tokens=1,2 delims= " %%A in ('jq -r -f "%temp%\libscript_start_deps.jq" "!json_file!" 2^>nul') do (
+            set "pkg=%%A"
+            set "ver=%%B"
+            if "!ver!"=="null" set "ver=latest"
+            set "LIBSCRIPT_INTERNAL_START=1"
+            start "" /b cmd /c call "%~f0" !action! !pkg! !ver!
+        )
+        if exist "%temp%\libscript_start_deps.jq" del "%temp%\libscript_start_deps.jq"
+        exit /b 0
+    ) else (
+        rem Support multiple specific services: libscript.cmd start caddy postgres
+        :loop_services
+        set "pkg=%~2"
+        if not "!pkg!"=="" (
+            set "LIBSCRIPT_INTERNAL_START=1"
+            start "" /b cmd /c call "%~f0" !action! !pkg! latest
+            shift
+            goto loop_services
+        )
+        exit /b 0
+    )
+)
+
 if /i "%cmd%"=="install-deps" (
     set "json_file=%~2"
     if "!json_file!"=="" set "json_file=libscript.json"
@@ -149,6 +204,13 @@ if /i "%cmd%"=="remove_service" ( set "is_action=1" & set "req_version=1" )
 if /i "%cmd%"=="remove" set "is_action=1"
 if /i "%cmd%"=="uninstall" set "is_action=1"
 if /i "%cmd%"=="status" set "is_action=1"
+if /i "%cmd%"=="health" set "is_action=1"
+if /i "%cmd%"=="start" set "is_action=1"
+if /i "%cmd%"=="stop" set "is_action=1"
+if /i "%cmd%"=="restart" set "is_action=1"
+if /i "%cmd%"=="logs" set "is_action=1"
+if /i "%cmd%"=="up" set "is_action=1"
+if /i "%cmd%"=="down" set "is_action=1"
 if /i "%cmd%"=="test" set "is_action=1"
 if /i "%cmd%"=="run" ( set "is_action=1" & set "req_version=1" )
 if /i "%cmd%"=="which" ( set "is_action=1" & set "req_version=1" )
@@ -545,28 +607,41 @@ if defined is_docker (
     if exist "!tmp_run!" del "!tmp_run!"
     exit /b 0
 ) else if /i "%~2"=="docker_compose" (
+    set "base_image=debian:bookworm-slim"
+    shift
+    shift
+    :docker_compose_parse_flags
+    if /i "%~1"=="--base" (
+        set "base_image=%~2"
+        if /i "%~2"=="debian" set "base_image=debian:bookworm-slim"
+        if /i "%~2"=="alpine" set "base_image=alpine:latest"
+        shift
+        shift
+        goto docker_compose_parse_flags
+    )
+    if /i "%~1"=="--base-image" (
+        set "base_image=%~2"
+        if /i "%~2"=="debian" set "base_image=debian:bookworm-slim"
+        if /i "%~2"=="alpine" set "base_image=alpine:latest"
+        shift
+        shift
+        goto docker_compose_parse_flags
+    )
+
     echo version: '3.8'
     echo services:
-    echo   libscript-app:
-    echo     build:
-    echo       context: .
-    echo       dockerfile: Dockerfile
     
-    if not "%~3"=="" (
-        echo     environment:
-        shift
-        shift
+    set "prev_pkg="
+    
+    if not "%~1"=="" (
         :docker_compose_loop
         if not "%~1"=="" (
             set "pkg=%~1"
             set "ver=%~2"
             if "!ver!"=="" set "ver=latest"
+            set "override="
             
-            set "PREFIX=/opt/libscript/installed/!pkg!"
-            for /f "delims=" %%i in ('call "%~dp0libscript.cmd" env !pkg! !ver! --format=docker_compose 2^>nul') do (
-                echo %%i | findstr /b /v "STACK=" | findstr /b /v "SCRIPT_NAME=" > "%temp%\libscript_dc.txt"
-                for /f "delims=" %%j in (%temp%\libscript_dc.txt) do echo       - %%j
-            )
+            call :dc_gen_service "!pkg!" "!ver!" "!override!"
             
             if not "%~2"=="" (
                 shift
@@ -580,20 +655,15 @@ if defined is_docker (
         if exist "libscript.json" (
             jq --version >nul 2>&1
             if not errorlevel 1 (
-                echo     environment:
-                echo if .deps then .deps ^| to_entries[] ^| "\(.key) \(if (.value ^| type) == \"string\" then .value else (.value.version // \"latest\") end) \(if (.value ^| type) == \"object\" and .value.override then .value.override else \"\" end)" else empty end > "%temp%\libscript_deps_dc.jq"
+                echo to_entries[] ^| .key as $layer ^| if ($layer ^| IN("deps", "toolchains", "servers", "databases", "third_party", "storage"^)^) then (.value ^| to_entries[] ^| "\(.key) \(if (.value ^| type) == \"string\" then .value else (.value.version // \"latest\") end) \(if (.value ^| type) == \"object\" and .value.override then .value.override else \"\" end)"^) else empty end > "%temp%\libscript_deps_dc.jq"
                 for /f "tokens=1,2,3" %%a in ('jq -r -f "%temp%\libscript_deps_dc.jq" "libscript.json" 2^>nul') do (
-                    if not "%%c"=="" if not "%%c"=="null" (
-                        set "pkg_up=%%a"
-                        for %%A in ("a=A" "b=B" "c=C" "d=D" "e=E" "f=F" "g=G" "h=H" "i=I" "j=J" "k=K" "l=L" "m=M" "n=N" "o=O" "p=P" "q=Q" "r=R" "s=S" "t=T" "u=U" "v=V" "w=W" "x=X" "y=Y" "z=Z" "-=_") do set "pkg_up=!pkg_up:%%~A!"
-                        echo       - !pkg_up!_URL="%%c"
-                    ) else (
-                        set "PREFIX=/opt/libscript/installed/%%a"
-                        for /f "delims=" %%i in ('call "%~dp0libscript.cmd" env %%a %%b --format=docker_compose 2^>nul') do (
-                            echo %%i | findstr /b /v "STACK=" | findstr /b /v "SCRIPT_NAME=" > "%temp%\libscript_dc.txt"
-                            for /f "delims=" %%j in (%temp%\libscript_dc.txt) do echo       - %%j
-                        )
-                    )
+                    set "pkg=%%a"
+                    set "ver=%%b"
+                    set "override=%%c"
+                    if "!ver!"=="" set "ver=latest"
+                    if "!ver!"=="null" set "ver=latest"
+                    if "!override!"=="null" set "override="
+                    call :dc_gen_service "!pkg!" "!ver!" "!override!"
                 )
                 if exist "%temp%\libscript_deps_dc.jq" del "%temp%\libscript_deps_dc.jq"
             )
@@ -739,3 +809,77 @@ exit /b 0
     echo Error: Unsupported package format '%~2'. 1^>&2
     exit /b 1
 )
+
+goto :eof
+
+:dc_gen_service
+set "pkg=%~1"
+set "ver=%~2"
+set "override=%~3"
+set "df=Dockerfile.!pkg!"
+echo FROM !base_image!> "!df!"
+echo ARG TARGETOS=linux>> "!df!"
+echo ARG TARGETARCH=amd64>> "!df!"
+echo ENV LC_ALL=C.UTF-8 LANG=C.UTF-8>> "!df!"
+echo ENV LIBSCRIPT_ROOT_DIR="/opt/libscript">> "!df!"
+echo ENV LIBSCRIPT_BUILD_DIR="/opt/libscript_build">> "!df!"
+echo ENV LIBSCRIPT_DATA_DIR="/opt/libscript_data">> "!df!"
+echo ENV LIBSCRIPT_CACHE_DIR="/opt/libscript_cache">> "!df!"
+
+set "pkg_up=!pkg!"
+for %%A in ("a=A" "b=B" "c=C" "d=D" "e=E" "f=F" "g=G" "h=H" "i=I" "j=J" "k=K" "l=L" "m=M" "n=N" "o=O" "p=P" "q=Q" "r=R" "s=S" "t=T" "u=U" "v=V" "w=W" "x=X" "y=Y" "z=Z" "-=_") do set "pkg_up=!pkg_up:%%~A!"
+
+echo ENV !pkg_up!_VERSION="!ver!">> "!df!"
+if not "!override!"=="" (
+    echo ENV !pkg_up!_URL="!override!">> "!df!"
+    for %%F in ("!override!") do set "filename=%%~nxF"
+    echo ADD ${!pkg_up!_URL} /opt/libscript_cache/!pkg!/!filename!>> "!df!"
+)
+echo COPY . /opt/libscript>> "!df!"
+echo WORKDIR /opt/libscript>> "!df!"
+echo RUN ./libscript.sh install !pkg! ${!pkg_up!_VERSION}>> "!df!"
+
+set "healthcheck=[\"CMD-SHELL\", \"echo '!pkg!' is ok || exit 1\"]"
+if /i "!pkg!"=="postgres" set "healthcheck=[\"CMD\", \"pg_isready\", \"-U\", \"postgres\"]"
+if /i "!pkg!"=="mysql" set "healthcheck=[\"CMD\", \"mysqladmin\", \"ping\", \"-h\", \"localhost\"]"
+if /i "!pkg!"=="mariadb" set "healthcheck=[\"CMD\", \"mysqladmin\", \"ping\", \"-h\", \"localhost\"]"
+if /i "!pkg!"=="redis" set "healthcheck=[\"CMD\", \"redis-cli\", \"ping\"]"
+if /i "!pkg!"=="valkey" set "healthcheck=[\"CMD\", \"redis-cli\", \"ping\"]"
+if /i "!pkg!"=="mongodb" set "healthcheck=[\"CMD\", \"mongosh\", \"--eval\", \"db.adminCommand('ping')\"]"
+if /i "!pkg!"=="rabbitmq" set "healthcheck=[\"CMD\", \"rabbitmq-diagnostics\", \"ping\"]"
+if /i "!pkg!"=="nginx" set "healthcheck=[\"CMD-SHELL\", \"curl -f http://localhost/ || exit 1\"]"
+if /i "!pkg!"=="caddy" set "healthcheck=[\"CMD-SHELL\", \"curl -f http://localhost/ || exit 1\"]"
+if /i "!pkg!"=="httpd" set "healthcheck=[\"CMD-SHELL\", \"curl -f http://localhost/ || exit 1\"]"
+if /i "!pkg!"=="php" set "healthcheck=[\"CMD-SHELL\", \"php -v || exit 1\"]"
+if /i "!pkg!"=="python" set "healthcheck=[\"CMD-SHELL\", \"python3 --version || exit 1\"]"
+if /i "!pkg!"=="nodejs" set "healthcheck=[\"CMD-SHELL\", \"node -v || exit 1\"]"
+if /i "!pkg!"=="fluentbit" set "healthcheck=[\"CMD-SHELL\", \"wget -qO- http://127.0.0.1:2020/api/v1/health || exit 1\"]"
+
+echo   !pkg!:
+echo     build:
+echo       context: .
+echo       dockerfile: !df!
+echo     healthcheck:
+echo       test: !healthcheck!
+echo       interval: 5s
+echo       retries: 5
+echo       start_period: 5s
+
+if not "!prev_pkg!"=="" (
+    echo     depends_on:
+    echo       !prev_pkg!:
+    echo         condition: service_healthy
+)
+
+echo     environment:
+if not "!override!"=="" (
+    echo       - !pkg_up!_URL="!override!"
+)
+set "PREFIX=/opt/libscript/installed/!pkg!"
+call "%~dp0libscript.cmd" env !pkg! !ver! --format=docker_compose > "%temp%\libscript_dc.txt" 2>nul
+if not errorlevel 1 (
+    for /f "delims=" %%i in ('type "%temp%\libscript_dc.txt" ^| findstr /b /v "STACK=" ^| findstr /b /v "SCRIPT_NAME="') do echo       - %%i
+)
+
+set "prev_pkg=!pkg!"
+exit /b 0

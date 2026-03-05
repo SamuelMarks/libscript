@@ -1,4 +1,21 @@
 @echo off
+setlocal ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
+
+if not "%CADDY_SERVICE_NAME%"=="" (
+    sc stop %CADDY_SERVICE_NAME% >nul 2>&1
+    sc delete %CADDY_SERVICE_NAME% >nul 2>&1
+) else (
+    sc stop libscript_caddy >nul 2>&1
+    sc delete libscript_caddy >nul 2>&1
+)
+
+:: Try to uninstall via winget / choco if it was installed that way
+where winget >nul 2>&1
+if %ERRORLEVEL% equ 0 winget uninstall --id=caddy.caddy --silent >nul 2>&1
+
+where choco >nul 2>&1
+if %ERRORLEVEL% equ 0 choco uninstall caddy -y >nul 2>&1
+
 :: Default uninstall hook for Windows
 if not "%INSTALLED_DIR%"=="" (
     if exist "%INSTALLED_DIR%" (
@@ -10,5 +27,4 @@ if not "%INSTALLED_DIR%"=="" (
 ) else (
     echo INSTALLED_DIR is not set. Cannot perform default uninstallation.
 )
-:: Add background service removal logic here if applicable
 exit /b 0
