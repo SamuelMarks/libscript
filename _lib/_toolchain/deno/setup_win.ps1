@@ -14,10 +14,10 @@ if ([string]::IsNullOrEmpty($WinPkgMgr)) {
 }
 
 if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "winget") {
-    $WinPkgMgr install --id=DenoLand.Deno -e --accept-package-agreements --accept-source-agreements
+    $WinPkgMgr install --silent --force --id=DenoLand.Deno -e --accept-package-agreements --accept-source-agreements
 } elseif ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
     choco install -y DenoLand.Deno
 } else {
     Write-Host "From-source or alternative Windows package manager requested for deno."
-    winget install --id=DenoLand.Deno -e --accept-package-agreements --accept-source-agreements
+    winget install --silent --force --id=DenoLand.Deno -e --accept-package-agreements --accept-source-agreements
 }

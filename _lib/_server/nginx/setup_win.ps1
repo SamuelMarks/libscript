@@ -1,1 +1,1 @@
-winget install --id=Nginx.Nginx -e --accept-package-agreements --accept-source-agreements
+winget install --silent --force --id=Nginx.Nginx -e --accept-package-agreements --accept-source-agreements

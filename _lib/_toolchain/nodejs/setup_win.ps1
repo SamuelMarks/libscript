@@ -14,10 +14,10 @@ if ([string]::IsNullOrEmpty($WinPkgMgr)) {
 }
 
 if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "winget") {
-    winget install --id=OpenJS.NodeJS -e --accept-package-agreements --accept-source-agreements
+    winget install --silent --force --id=OpenJS.NodeJS -e --accept-package-agreements --accept-source-agreements
 } elseif ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
     choco install -y nodejs
 } else {
-    winget install --id=Schniz.fnm -e
+    winget install --silent --force --id=Schniz.fnm -e
     fnm install lts
 }

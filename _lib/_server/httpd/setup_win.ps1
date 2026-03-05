@@ -14,10 +14,10 @@ if ([string]::IsNullOrEmpty($WinPkgMgr)) {
 }
 
 if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "winget") {
-    winget install --id=Apache.HTTPD -e --accept-package-agreements --accept-source-agreements
+    winget install --silent --force --id=Apache.HTTPD -e --accept-package-agreements --accept-source-agreements
 } elseif ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
     choco install -y apache-httpd
 } else {
     Write-Host "From-source or alternative Windows package manager requested for httpd."
-    winget install --id=Apache.HTTPD -e --accept-package-agreements --accept-source-agreements
+    winget install --silent --force --id=Apache.HTTPD -e --accept-package-agreements --accept-source-agreements
 }

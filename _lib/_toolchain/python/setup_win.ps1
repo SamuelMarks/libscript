@@ -14,7 +14,7 @@ if ([string]::IsNullOrEmpty($WinPkgMgr)) {
 }
 
 if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "winget") {
-    winget install --id=Python.Python.3.11 -e --accept-package-agreements --accept-source-agreements
+    winget install --silent --force --id=Python.Python.3.11 -e --accept-package-agreements --accept-source-agreements
 } elseif ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
     choco install -y python311
 } else {

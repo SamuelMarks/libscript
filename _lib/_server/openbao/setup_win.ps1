@@ -14,10 +14,10 @@ if ([string]::IsNullOrEmpty($WinPkgMgr)) {
 }
 
 if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "winget") {
-    winget install --id=openbao.openbao -e --accept-package-agreements --accept-source-agreements
+    winget install --silent --force --id=openbao.openbao -e --accept-package-agreements --accept-source-agreements
 } elseif ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
     choco install -y openbao
 } else {
     Write-Host "From-source or alternative Windows package manager requested for openbao."
-    winget install --id=openbao.openbao -e --accept-package-agreements --accept-source-agreements
+    winget install --silent --force --id=openbao.openbao -e --accept-package-agreements --accept-source-agreements
 }

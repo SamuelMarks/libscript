@@ -14,10 +14,10 @@ if ([string]::IsNullOrEmpty($WinPkgMgr)) {
 }
 
 if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "winget") {
-    winget install --id=MariaDB.Server -e --accept-package-agreements --accept-source-agreements
+    winget install --silent --force --id=MariaDB.Server -e --accept-package-agreements --accept-source-agreements
 } elseif ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
     choco install -y mariadb
 } else {
     Write-Host "From-source or alternative Windows package manager requested for mariadb."
-    winget install --id=MariaDB.Server -e --accept-package-agreements --accept-source-agreements
+    winget install --silent --force --id=MariaDB.Server -e --accept-package-agreements --accept-source-agreements
 }

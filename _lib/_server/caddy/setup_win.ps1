@@ -14,10 +14,10 @@ if ([string]::IsNullOrEmpty($WinPkgMgr)) {
 }
 
 if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "winget") {
-    winget install --id=caddy.caddy -e --accept-package-agreements --accept-source-agreements
+    winget install --silent --force --id=caddy.caddy -e --accept-package-agreements --accept-source-agreements
 } elseif ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
     choco install -y caddy
 } else {
     Write-Host "From-source or alternative Windows package manager requested for caddy."
-    winget install --id=caddy.caddy -e --accept-package-agreements --accept-source-agreements
+    winget install --silent --force --id=caddy.caddy -e --accept-package-agreements --accept-source-agreements
 }

@@ -1,1 +1,1 @@
-winget install --id=PostgreSQL.PostgreSQL -e --accept-package-agreements --accept-source-agreements
+winget install --silent --force --id=PostgreSQL.PostgreSQL -e --accept-package-agreements --accept-source-agreements

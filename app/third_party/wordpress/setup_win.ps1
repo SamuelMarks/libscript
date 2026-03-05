@@ -14,12 +14,12 @@ Write-Host "Installing dependencies for WordPress ($WebServer)..."
 # We assume PHP and MariaDB are installed or we install them via winget
 if (-not (Get-Command "php" -ErrorAction SilentlyContinue)) {
     Write-Host "PHP not found. Attempting to install via Winget..."
-    winget install --id=PHP.PHP --accept-package-agreements --accept-source-agreements
+    winget install --silent --force --id=PHP.PHP --accept-package-agreements --accept-source-agreements
 }
 
 if (-not (Get-Command "mysql" -ErrorAction SilentlyContinue)) {
     Write-Host "MariaDB not found. Attempting to install via Winget..."
-    winget install --id=MariaDB.Server --accept-package-agreements --accept-source-agreements
+    winget install --silent --force --id=MariaDB.Server --accept-package-agreements --accept-source-agreements
 }
 
 if ($WebServer -eq "iis") {

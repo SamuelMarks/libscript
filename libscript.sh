@@ -741,6 +741,7 @@ EOF
     APP_PUBLISHER="LibScript"
     APP_URL="https://example.com"
     OUT_DIR="."
+    OFFLINE="0"
 
     while [ $# -gt 0 ]; do
       case "$1" in
@@ -749,6 +750,7 @@ EOF
         --app-publisher) APP_PUBLISHER="$2"; shift 2 ;;
         --app-url) APP_URL="$2"; shift 2 ;;
         --out-dir) OUT_DIR="$2"; shift 2 ;;
+        --offline) OFFLINE="1"; shift ;;
         -*) echo "Error: Unknown option $1" >&2; exit 1 ;;
         *) break ;;
       esac
@@ -763,6 +765,14 @@ EOF
       done
     elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
       deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == \"string\" then .value else (.value.version // \"latest\") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+    fi
+
+    if [ "$OFFLINE" = "1" ]; then
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        "$SCRIPT_DIR/libscript.sh" download "$pkg" "$ver" || true
+      done
     fi
 
     if [ "$pkg_type" = "deb" ]; then
@@ -799,7 +809,7 @@ EOF
         echo "if command -v libscript.sh >/dev/null; then libscript.sh uninstall $pkg --purge-data; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh uninstall $pkg --purge-data; fi"
         echo "EOF"
         echo "chmod 0755 \"\$BUILD_DIR/DEBIAN/prerm\""
-        echo "mkdir -p \"\$BUILD_DIR/opt/libscript\""
+        echo "mkdir -p \"\$BUILD_DIR/opt/libscript\""; if [ "$OFFLINE" = "1" ]; then echo "cp -a \"$SCRIPT_DIR\"/.* \"$SCRIPT_DIR\"/* \"\$BUILD_DIR/opt/libscript/\" 2>/dev/null || true"; echo "rm -rf \"\$BUILD_DIR/opt/libscript/.git\""; fi
         echo "dpkg-deb --build \"\$BUILD_DIR\" \"\$OUT_DIR/${pkg_name}_${APP_VERSION}_all.deb\""
         echo "rm -rf \"\$BUILD_DIR\""
       done
@@ -814,7 +824,7 @@ EOF
       if [ -n "$meta_depends" ]; then echo "Depends: $meta_depends"; fi
       echo "Description: $APP_NAME deployment metapackage"
       echo "EOF"
-      echo "mkdir -p \"\$BUILD_DIR/opt/libscript\""
+      echo "mkdir -p \"\$BUILD_DIR/opt/libscript\""; if [ "$OFFLINE" = "1" ]; then echo "cp -a \"$SCRIPT_DIR\"/.* \"$SCRIPT_DIR\"/* \"\$BUILD_DIR/opt/libscript/\" 2>/dev/null || true"; echo "rm -rf \"\$BUILD_DIR/opt/libscript/.git\""; fi
       echo "dpkg-deb --build \"\$BUILD_DIR\" \"\$OUT_DIR/${APP_NAME}-meta_${APP_VERSION}_all.deb\""
       echo "rm -rf \"\$BUILD_DIR\""
       echo "echo \"Done!\""
@@ -844,7 +854,7 @@ EOF
         echo "%description"
         echo "$APP_NAME deployment - $pkg"
         echo "%install"
-        echo "mkdir -p %{buildroot}/opt/libscript"
+        echo "mkdir -p %{buildroot}/opt/libscript"; if [ "$OFFLINE" = "1" ]; then echo "cp -a \"$SCRIPT_DIR\"/.* \"$SCRIPT_DIR\"/* %{buildroot}/opt/libscript/ 2>/dev/null || true"; echo "rm -rf %{buildroot}/opt/libscript/.git"; fi
         echo "touch %{buildroot}/var/lib/libscript/.${pkg_name}_installed"
         echo "%post"
         echo "if command -v libscript.sh >/dev/null; then libscript.sh install_service $pkg $ver; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh install_service $pkg $ver; fi"
@@ -871,7 +881,7 @@ EOF
       echo "%description"
       echo "$APP_NAME deployment metapackage"
       echo "%install"
-      echo "mkdir -p %{buildroot}/opt/libscript"
+      echo "mkdir -p %{buildroot}/opt/libscript"; if [ "$OFFLINE" = "1" ]; then echo "cp -a \"$SCRIPT_DIR\"/.* \"$SCRIPT_DIR\"/* %{buildroot}/opt/libscript/ 2>/dev/null || true"; echo "rm -rf %{buildroot}/opt/libscript/.git"; fi
       echo "touch %{buildroot}/var/lib/libscript/.${APP_NAME}-meta_installed"
       echo "%files"
       echo "/var/lib/libscript/.${APP_NAME}-meta_installed"
@@ -966,6 +976,7 @@ EOF
     IMAGE_PATH=""
     LICENSE_PATH=""
     WELCOME_TEXT="Welcome to the LibScript Deployment Installer"
+    OFFLINE="0"\n    OFFLINE="0"
 
     while [ $# -gt 0 ]; do
       case "$1" in
@@ -981,6 +992,7 @@ EOF
         --image) IMAGE_PATH="$2"; shift 2 ;;
         --license) LICENSE_PATH="$2"; shift 2 ;;
         --welcome) WELCOME_TEXT="$2"; shift 2 ;;
+        --offline) OFFLINE="1"; shift ;;
         -*) echo "Error: Unknown option $1" >&2; exit 1 ;;
         *) break ;;
       esac
@@ -1222,7 +1234,11 @@ EOF2
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
-        run_params="/c libscript.cmd install_service $pkg $ver"
+        if [ "$OFFLINE" = "1" ]; then
+          run_params="/c \"[INSTALLFOLDER]libscript.cmd\" install_service $pkg $ver"
+        else
+          run_params="/c libscript.cmd install_service $pkg $ver"
+        fi
         schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
@@ -1234,7 +1250,11 @@ EOF2
         echo "    <CustomAction Id=\"Install$pkg\" Directory=\"INSTALLFOLDER\" ExeCommand=\"cmd.exe $run_params\" Execute=\"deferred\" Return=\"check\" Impersonate=\"no\" />"
         
         # Uninstall Actions
-        echo "    <CustomAction Id=\"Uninstall$pkg\" Directory=\"INSTALLFOLDER\" ExeCommand=\"cmd.exe /c libscript.cmd uninstall $pkg [PURGE_$pkg] --service-name [PROP_${pkg}_$(echo "$pkg" | tr "a-z" "A-Z")_SERVICE_NAME]\" Execute=\"deferred\" Return=\"check\" Impersonate=\"no\" />"
+        if [ "$OFFLINE" = "1" ]; then
+          echo "    <CustomAction Id=\"Uninstall$pkg\" Directory=\"INSTALLFOLDER\" ExeCommand=\"cmd.exe /c \"\"\"[INSTALLFOLDER]libscript.cmd\"\"\" uninstall $pkg [PURGE_$pkg] --service-name [PROP_${pkg}_$(echo "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME]\" Execute=\"deferred\" Return=\"check\" Impersonate=\"no\" />"
+        else
+          echo "    <CustomAction Id=\"Uninstall$pkg\" Directory=\"INSTALLFOLDER\" ExeCommand=\"cmd.exe /c libscript.cmd uninstall $pkg [PURGE_$pkg] --service-name [PROP_${pkg}_$(echo "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME]\" Execute=\"deferred\" Return=\"check\" Impersonate=\"no\" />"
+        fi
       done
 
       echo "    <InstallExecuteSequence>"
@@ -1284,6 +1304,12 @@ EOF2
         done
       elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
         deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      fi
+
+      if [ "$OFFLINE" = "1" ]; then
+        echo ""
+        echo "[Files]"
+        echo "Source: \"$SCRIPT_DIR\\*\"; DestDir: \"{app}\"; Flags: ignoreversion recursesubdirs createallsubdirs"
       fi
 
       echo ""
@@ -1405,9 +1431,17 @@ EOF2
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         echo "    if MsgBox('Do you want to completely remove the Data Directory and all records for $pkg?', mbConfirmation, MB_YESNO) = idYes then begin"
-        echo "      Exec('cmd.exe', '/c libscript.cmd uninstall $pkg --purge-data --service-name ' + Get_${pkg}_$(echo "$pkg" | tr "a-z" "A-Z")_SERVICE_NAME(''), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);"
+        if [ "$OFFLINE" = "1" ]; then
+          echo "      Exec('cmd.exe', '/c \"\"{app}\\libscript.cmd\"\" uninstall $pkg --purge-data --service-name ' + Get_${pkg}_$(echo "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME(''), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);"
+        else
+          echo "      Exec('cmd.exe', '/c libscript.cmd uninstall $pkg --purge-data --service-name ' + Get_${pkg}_$(echo "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME(''), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);"
+        fi
         echo "    end else begin"
-        echo "      Exec('cmd.exe', '/c libscript.cmd uninstall $pkg --service-name ' + Get_${pkg}_$(echo "$pkg" | tr "a-z" "A-Z")_SERVICE_NAME(''), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);"
+        if [ "$OFFLINE" = "1" ]; then
+          echo "      Exec('cmd.exe', '/c \"\"{app}\\libscript.cmd\"\" uninstall $pkg --service-name ' + Get_${pkg}_$(echo "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME(''), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);"
+        else
+          echo "      Exec('cmd.exe', '/c libscript.cmd uninstall $pkg --service-name ' + Get_${pkg}_$(echo "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME(''), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);"
+        fi
         echo "    end;"
       done
       echo "  end;"
@@ -1437,7 +1471,11 @@ EOF2
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
-        run_params="/c libscript.cmd install_service $pkg $ver"
+        if [ "$OFFLINE" = "1" ]; then
+          run_params="/c \"\"{app}\\libscript.cmd\"\" install_service $pkg $ver"
+        else
+          run_params="/c libscript.cmd install_service $pkg $ver"
+        fi
         schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
@@ -1478,6 +1516,12 @@ EOF2
         deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
       fi
 
+      if [ "$OFFLINE" = "1" ]; then
+        echo "Section \"Core\""
+        echo "  SetOutPath \"\$INSTDIR\""
+        echo "  File /r \"$SCRIPT_DIR\\*.*\""
+        echo "SectionEnd"
+      fi
       echo "Include nsDialogs.nsh"
       echo "Page components"
       
@@ -1507,7 +1551,11 @@ EOF2
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         echo "Section \"$pkg\" SEC_$pkg"
-        run_params="/c libscript.cmd install_service $pkg $ver"
+        if [ "$OFFLINE" = "1" ]; then
+          run_params="/c \"\$INSTDIR\\libscript.cmd\" install_service $pkg $ver"
+        else
+          run_params="/c libscript.cmd install_service $pkg $ver"
+        fi
         schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
@@ -1582,10 +1630,18 @@ EOF2
         pkg=$1; ver=$2; shift 2
         echo "  MessageBox MB_YESNO \"Do you want to completely remove the Data Directory and all records for $pkg?\" IDYES purge_$pkg IDNO keep_$pkg"
         echo "  purge_$pkg:"
-        echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --purge-data --service-name \$VAL_${pkg}_$(echo "$pkg" | tr "a-z" "A-Z")_SERVICE_NAME'"
+        if [ "$OFFLINE" = "1" ]; then
+          echo "    ExecWait 'cmd.exe /c \"\$INSTDIR\\libscript.cmd\" uninstall $pkg --purge-data --service-name \$VAL_${pkg}_$(echo "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME'"
+        else
+          echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --purge-data --service-name \$VAL_${pkg}_$(echo "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME'"
+        fi
         echo "    Goto end_$pkg"
         echo "  keep_$pkg:"
-        echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --service-name \$VAL_${pkg}_$(echo "$pkg" | tr "a-z" "A-Z")_SERVICE_NAME'"
+        if [ "$OFFLINE" = "1" ]; then
+          echo "    ExecWait 'cmd.exe /c \"\$INSTDIR\\libscript.cmd\" uninstall $pkg --service-name \$VAL_${pkg}_$(echo "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME'"
+        else
+          echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --service-name \$VAL_${pkg}_$(echo "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME'"
+        fi
         echo "  end_$pkg:"
       done
       echo "SectionEnd"

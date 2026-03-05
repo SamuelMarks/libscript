@@ -14,10 +14,10 @@ if ([string]::IsNullOrEmpty($WinPkgMgr)) {
 }
 
 if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "winget") {
-    winget install --id=mongodb.mongodb -e --accept-package-agreements --accept-source-agreements
+    winget install --silent --force --id=mongodb.mongodb -e --accept-package-agreements --accept-source-agreements
 } elseif ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
     choco install -y mongodb
 } else {
     Write-Host "From-source or alternative Windows package manager requested for mongodb."
-    winget install --id=mongodb.mongodb -e --accept-package-agreements --accept-source-agreements
+    winget install --silent --force --id=mongodb.mongodb -e --accept-package-agreements --accept-source-agreements
 }

@@ -31,8 +31,16 @@ map_package() {
         *) return 1 ;;
       esac
       ;;
+    'mariadb')
+      case "${PKG_MGR}" in
+        'apt-get'|'dnf'|'yum'|'zypper'|'pacman') printf 'mariadb-server\n' ;;
+        'winget') printf 'MariaDB.MariaDB\n' ;;
+        *) printf 'mariadb\n' ;;
+      esac
+      ;;
     'mongodb')
       case "${PKG_MGR}" in
+        'apt-get') return 1 ;;
         'brew') printf 'mongodb/brew/mongodb-community\n' ;;
         *) printf 'mongodb\n' ;;
       esac
@@ -335,8 +343,15 @@ map_package() {
         *) printf 'nginx\n' ;;
       esac
       ;;
+    'openbao'|'bao')
+      case "${PKG_MGR}" in
+        'apt-get'|'apk'|'dnf'|'yum'|'zypper'|'pacman') return 1 ;;
+        *) printf 'openbao\n' ;;
+      esac
+      ;;
     'etcd')
       case "${PKG_MGR}" in
+        'apt-get') printf 'etcd-server etcd-client\n' ;;
         'winget') printf 'etcd.etcd\n' ;;
         'emerge') printf 'dev-db/etcd\n' ;;
         *) printf 'etcd\n' ;;

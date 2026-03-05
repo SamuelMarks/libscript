@@ -29,5 +29,5 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 if ! command -v apk >/dev/null 2>&1; then
-  depends 'apk-tools'
+  depends 'apk-tools' || true
 fi

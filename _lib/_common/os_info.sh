@@ -42,7 +42,9 @@ if [ -z ${UNAME+x} ]; then
         export PKG_MGR='brew'
         export HOMEBREW_INSTALL="${HOMEBREW_INSTALL:-1}"
         export NGINX_SERVERS_ROOT='/opt/homebrew/etc/nginx/servers'
-        [ -f '/opt/homebrew/bin/brew' ] || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        if [ ! -f '/opt/homebrew/bin/brew' ] && [ ! -f '/usr/local/bin/brew' ]; then
+          NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        fi
         TARGET_OS="$(sw_vers --productName)"
         ;;
       'Linux')
@@ -141,14 +143,20 @@ if [ -z "${INIT_SYS+x}" ]; then
     case "${UNAME}" in
         'Linux')
           if [ ! -f '/sbin/init' ]; then
-            proc_comm="$(stat -- "$(which -- "$(cat -- '/proc/1/comm')")" | awk 'NR==1{ print $NF }')"
+            comm_name="$(cat -- '/proc/1/comm' 2>/dev/null || true)"
+            comm_path="$(which -- "${comm_name}" 2>/dev/null || true)"
+            if [ -n "${comm_path}" ]; then
+              proc_comm="$(stat -- "${comm_path}" 2>/dev/null | awk 'NR==1{ print $NF }' || true)"
+            else
+              proc_comm="${comm_name}"
+            fi
             case "${proc_comm}" in
                *'/bin/bash'|'dash'|'bash')
                   >&2 printf 'No init system setup\n'
-                  exit 2 ;;
+                  export INIT_SYS='none' ;;
                *)
                  >&2 printf 'Unable to determine init system out of "%s"\n' "${proc_comm}"
-                 exit 2 ;;
+                 export INIT_SYS='none' ;;
             esac
           elif [ -f '/etc/inittab' ]; then
             case "$(grep -F '::sysinit:' '/etc/inittab' | awk -F':/' '{print "/" $2}' | awk '{print $1}')" in
@@ -184,7 +192,7 @@ if [ -z "${INIT_SYS+x}" ]; then
           ;;
         *)
           >&2 printf 'TODO: *BSD, minix, SunOS, illumos, &etc.\n'
-          exit 2 ;;
+          export INIT_SYS='none' ;;
     esac
   fi
 fi
