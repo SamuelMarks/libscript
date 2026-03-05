@@ -718,13 +718,47 @@ if defined is_docker (
         )
     )
     
-    echo set "ps_script=^!ps_script:~0,-1^!); $selected = $items | Out-GridView -Title 'LibScript Installer - Select components' -PassThru; foreach ($s in $selected) { Write-Output \"$($s.Name) $($s.Version)\" }"
-    echo for /f "tokens=1,2" %%%%a in ^('powershell -Command "^!ps_script^!"'^) do ^(
-    echo     if not "%%%%a"=="" ^(
-    echo         echo Installing %%%%a %%%%b...
-    echo         call "%%~dp0libscript.cmd" install "%%%%a" "%%%%b"
-    echo     ^)
+    echo set "ps_script=^!ps_script:~0,-1^!); $selected = $items | Out-GridView -Title 'LibScript Stack Builder - Select components' -PassThru; foreach ($s in $selected) { Write-Output \"$($s.Name) $($s.Version)\" }"
+    echo set "items="
+    echo set "tmp_sel=%%temp%%\libscript_tui_sel.txt"
+    echo powershell -Command "^!ps_script^!" ^> "^!tmp_sel^!"
+    echo for /f "usebackq tokens=1,2" %%%%a in ("^!tmp_sel^!") do ^(
+    echo     if not "%%%%a"=="" set "items=^!items^! %%%%a %%%%b"
     echo ^)
+    echo if "^!items^!"=="" exit /b 0
+    echo echo.
+    echo echo What would you like to produce?
+    echo echo 1. Install locally now
+    echo echo 2. Dockerfile
+    echo echo 3. Dockerfiles + docker-compose
+    echo echo 4. .msi installer
+    echo echo 5. .exe (InnoSetup)
+    echo echo 6. .exe (NSIS)
+    echo echo 7. .deb package
+    echo echo 8. .rpm package
+    echo choice /c 12345678 /n /m "Select option [1-8]:"
+    echo set "act="
+    echo if errorlevel 8 set act=rpm
+    echo if errorlevel 7 set act=deb
+    echo if errorlevel 6 set act=nsis
+    echo if errorlevel 5 set act=innosetup
+    echo if errorlevel 4 set act=msi
+    echo if errorlevel 3 set act=docker_compose
+    echo if errorlevel 2 if not errorlevel 3 set act=docker
+    echo if errorlevel 1 if not errorlevel 2 set act=install
+    echo echo.
+    echo set "extra_args="
+    echo choice /c YN /m "Enable --offline mode?"
+    echo if errorlevel 1 if not errorlevel 2 set extra_args=--offline
+    echo choice /c YN /m "Windows only components?"
+    echo if errorlevel 1 if not errorlevel 2 set extra_args=^!extra_args^! --windows-only
+    echo echo.
+    echo if "^!act^!"=="install" ^(
+    echo     for /f "usebackq tokens=1,2" %%%%a in ("^!tmp_sel^!") do call "%%~dp0libscript.cmd" install "%%%%a" "%%%%b"
+    echo ^) else ^(
+    echo     call "%%~dp0libscript.cmd" package_as "^!act^!" ^!items^! ^!extra_args^!
+    echo ^)
+    echo if exist "^!tmp_sel^!" del "^!tmp_sel^!"
     exit /b 0
 ) else if /i "%~2"=="msi" (
     goto install_gen_common

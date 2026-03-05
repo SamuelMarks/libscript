@@ -438,6 +438,8 @@ if [ "$cmd" = "package_as" ]; then
       done
     elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
       deps_list=$(jq -r 'to_entries[] | .key as $layer | if ($layer | IN("deps", "toolchains", "servers", "databases", "third_party", "storage")) then (.value | to_entries[] | "\($layer) \(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end) \(if (.value | type) == "object" and .value.override then .value.override else "" end)") else empty end' "libscript.json" 2>/dev/null)
+      else
+        deps_list=$(find_components | sort | awk '{printf "%s latest ", $1}')
     fi
 
     if [ -n "$deps_list" ]; then
@@ -589,6 +591,8 @@ if [ "$cmd" = "package_as" ]; then
       done
     elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
       deps_list=$(jq -r 'to_entries[] | .key as $layer | if ($layer | IN("deps", "toolchains", "servers", "databases", "third_party", "storage")) then (.value | to_entries[] | "\($layer) \(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end) \(if (.value | type) == "object" and .value.override then .value.override else "" end)") else empty end' "libscript.json" 2>/dev/null)
+      else
+        deps_list=$(find_components | sort | awk '{printf "%s latest ", $1}')
     fi
 
     if [ -n "$deps_list" ]; then
@@ -726,16 +730,45 @@ EOF
     cat << 'EOF'
   3>&1 1>&2 2>&3)
 if [ $? -eq 0 ] && [ -n "$selected" ]; then
-  for item in $(echo "$selected" | tr -d '"'); do
-    # Assuming user installs the default version for now, or parses it
-    ./libscript.sh install "$item" latest
-  done
+  action=$($DIALOG --title "Action" --menu "What would you like to produce?" 15 60 8 \
+    "install" "Install locally now" \
+    "dockerfile" "Dockerfile" \
+    "docker_compose" "Dockerfiles + docker-compose" \
+    "msi" ".msi installer" \
+    "innosetup" ".exe (InnoSetup)" \
+    "nsis" ".exe (NSIS)" \
+    "deb" ".deb package" \
+    "rpm" ".rpm package" \
+    3>&1 1>&2 2>&3)
+  
+  if [ -n "$action" ]; then
+    offline_ans=$($DIALOG --title "Options" --yesno "Enable --offline mode?" 10 40; echo $?)
+    win_ans=$($DIALOG --title "Options" --yesno "Windows only components?" 10 40; echo $?)
+    
+    extra_args=""
+    if [ "$offline_ans" = "0" ]; then extra_args="$extra_args --offline"; fi
+    if [ "$win_ans" = "0" ]; then extra_args="$extra_args --windows-only"; fi
+    
+    items=""
+    for item in $(echo "$selected" | tr -d '"'); do
+      items="$items $item latest"
+    done
+    
+    if [ "$action" = "install" ]; then
+      for item in $(echo "$selected" | tr -d '"'); do
+        ./libscript.sh install "$item" latest
+      done
+    else
+      if [ "$action" = "dockerfile" ]; then action="docker"; fi
+      ./libscript.sh package_as "$action" $items $extra_args
+    fi
+  else
+    echo "Cancelled."
+  fi
 else
   echo "Installation cancelled."
 fi
 EOF
-    exit 0
-  elif [ "$pkg_type" = "deb" ] || [ "$pkg_type" = "rpm" ] || [ "$pkg_type" = "apk" ]; then
     APP_NAME="libscript"
     APP_VERSION="1.0.0"
     APP_PUBLISHER="LibScript"
@@ -765,6 +798,8 @@ EOF
       done
     elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
       deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == \"string\" then .value else (.value.version // \"latest\") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      else
+        deps_list=$(find_components | sort | awk '{printf "%s latest ", $1}')
     fi
 
     if [ "$OFFLINE" = "1" ]; then
@@ -1043,6 +1078,10 @@ EOF
     fi
 
     if [ "$pkg_type" = "msi" ]; then
+      wxs_file="${OUT_FILE}.wxs"
+      exec 3>&1
+      exec 1> "$wxs_file"
+
       cat << EOF2
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
@@ -1066,6 +1105,8 @@ EOF2
         done
       elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
         deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      else
+        deps_list=$(find_components | sort | awk '{printf "%s latest ", $1}')
       fi
 
       echo "    <Directory Id=\"TARGETDIR\" Name=\"SourceDir\">"
@@ -1272,6 +1313,19 @@ EOF2
       echo "    </ComponentGroup>"
       echo "  </Fragment>"
       echo "</Wix>"
+
+      exec 1>&3 3>&-
+      
+      if [ "$OS" = "Windows_NT" ] || command -v candle.exe >/dev/null 2>&1 || command -v wix.exe >/dev/null 2>&1; then
+        if command -v wix.exe >/dev/null 2>&1; then
+          wix.exe build -ext WixToolset.UI.wixext -o "${OUT_FILE}.msi" "$wxs_file"
+        else
+          candle.exe "$wxs_file"
+          light.exe -ext WixUIExtension -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj"
+        fi
+      else
+        wixl -o "${OUT_FILE}.msi" "$wxs_file"
+      fi
       exit 0
     elif [ "$pkg_type" = "innosetup" ]; then
       cat << EOF2
@@ -1304,6 +1358,8 @@ EOF2
         done
       elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
         deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      else
+        deps_list=$(find_components | sort | awk '{printf "%s latest ", $1}')
       fi
 
       if [ "$OFFLINE" = "1" ]; then
@@ -1345,6 +1401,19 @@ EOF2
 
       echo "procedure InitializeWizard;"
       echo "begin"
+      echo "  ActionPage := CreateInputOptionPage(wpSelectComponents, 'Action', 'What would you like to produce?', 'Please select an action to perform with the selected components.', True, False);"
+      echo "  ActionPage.Add('Install locally now');"
+      echo "  ActionPage.Add('Dockerfile');"
+      echo "  ActionPage.Add('Dockerfiles + docker-compose');"
+      echo "  ActionPage.Add('.msi installer');"
+      echo "  ActionPage.Add('.exe (InnoSetup)');"
+      echo "  ActionPage.Add('.exe (NSIS)');"
+      echo "  ActionPage.Add('.deb package');"
+      echo "  ActionPage.Add('.rpm package');"
+      echo "  ActionPage.Values[0] := True;"
+      echo "  OfflinePage := CreateInputOptionPage(ActionPage.ID, 'Options', 'Additional generation options', '', False, False);"
+      echo "  OfflinePage.Add('Enable --offline mode');"
+      echo "  OfflinePage.Add('Windows only components');"
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
@@ -1446,6 +1515,8 @@ EOF2
       done
       echo "  end;"
       echo "end;"
+      echo "  ActionPage: TInputOptionWizardPage;"
+      echo "  OfflinePage: TInputOptionWizardPage;"
 
       set -- $deps_list
       while [ $# -gt 0 ]; do
@@ -1467,6 +1538,44 @@ EOF2
       done
 
       echo ""
+      echo "function GetAction(Param: String): String;"
+      echo "begin"
+      echo "  if ActionPage.Values[1] then Result := 'docker'"
+      echo "  else";
+      echo "  else";
+      echo "  else";
+      echo "  else";
+      echo "  else";
+      echo "  else";
+      echo "  else";
+      echo "end;"
+      echo "function GetExtraArgs(Param: String): String;"
+      echo "var S: String;"
+      echo "begin"
+      echo "  S := '';"
+      echo "  if OfflinePage.Values[0] then S := S + ' --offline';"
+      echo "  if OfflinePage.Values[1] then S := S + ' --windows-only';"
+      echo "  Result := S;"
+      echo "end;"
+      echo "function IsInstall: Boolean;"
+      echo "begin Result := ActionPage.Values[0]; end;"
+      echo "function IsGenerate: Boolean;"
+      echo "begin Result := not ActionPage.Values[0]; end;"
+      echo "function GetGenerateParams(Param: String): String;"
+      echo "var S: String;"
+      echo "begin"
+      echo "  if '{app}' <> '' then"
+      echo "    S := '/c \"\"\"{app}\\libscript.cmd\"\"\" package_as ' + GetAction('') + ' ';";
+      echo "  else";
+      echo "    S := '/c libscript.cmd package_as ' + GetAction('') + ' ';";
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        echo "  if IsComponentSelected('$pkg') then S := S + '$pkg $ver ';";
+      done
+      echo "  S := S + GetExtraArgs('');"
+      echo "  Result := S;"
+      echo "end;"
       echo "[Run]"
       set -- $deps_list
       while [ $# -gt 0 ]; do
@@ -1484,8 +1593,13 @@ EOF2
             run_params="$run_params$append_params"
           fi
         fi
-        echo "Filename: \"cmd.exe\"; Parameters: \"$run_params\"; Components: $pkg; Flags: runhidden"
+        echo "Filename: \"cmd.exe\"; Parameters: \"$run_params\"; Components: $pkg; Flags: runhidden; Check: IsInstall"
       done
+      if [ "$OFFLINE" = "1" ]; then
+        echo "Filename: \"cmd.exe\"; Parameters: \"{code:GetGenerateParams}\"; WorkingDir: \"{app}\"; Flags: runhidden; Check: IsGenerate"
+      else
+        echo "Filename: \"cmd.exe\"; Parameters: \"{code:GetGenerateParams}\"; Flags: runhidden; Check: IsGenerate"
+      fi
       exit 0
     elif [ "$pkg_type" = "nsis" ]; then
       cat << EOF2
@@ -1514,6 +1628,8 @@ EOF2
         done
       elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
         deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      else
+        deps_list=$(find_components | sort | awk '{printf "%s latest ", $1}')
       fi
 
       if [ "$OFFLINE" = "1" ]; then
