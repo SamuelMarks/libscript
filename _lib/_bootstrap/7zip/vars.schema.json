@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_bootstrap/7zip/vars.schema.json",
+  "title": "7zip toolchain vars",
+  "type": "object",
+  "properties": {}
+}

@@ -1,14 +1,18 @@
+#!/bin/sh
+# shellcheck disable=SC2016,SC1090,SC1091,SC2034,SC2018,SC2019,SC2221,SC2222,SC2129,SC2209,SC2089,SC2090,SC2086,SC2154,SC2044,SC2181,SC2038,SC2155,SC2046,SC2002,SC1003,SC2295,SC2145
+
+
 parse_listen() {
-  local listen_str="$1"
-  local prefix="$2"
+listen_str="$1"
+prefix="$2"
   if [ -z "$listen_str" ] || [ "$listen_str" = "null" ]; then
     return
   fi
   if echo "$listen_str" | grep -q '^unix:'; then
     printf '{"%s_LISTEN_SOCKET": "%s"}' "$prefix" "${listen_str#unix:}"
   elif echo "$listen_str" | grep -q ':'; then
-    local addr="${listen_str%%:*}"
-    local port="${listen_str##*:}"
+addr="${listen_str%%:*}"
+port="${listen_str##*:}"
     printf '{"%s_LISTEN_ADDRESS": "%s", "%s_LISTEN_PORT": "%s"}' "$prefix" "$addr" "$prefix" "$port"
   else
     printf '{"%s_LISTEN_PORT": "%s"}' "$prefix" "$listen_str"

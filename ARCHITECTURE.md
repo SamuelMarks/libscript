@@ -22,11 +22,14 @@ Each component contains:
 ## Execution Lifecycle
 1. **Invocation**: The user runs `./libscript.sh install <pkg> <version> [args]`.
 2. **Routing**: The global CLI locates the package and executes its `cli.sh`.
-3. **Configuration**: `cli.sh` maps CLI arguments to exported environment variables (e.g., `--PORT=8080` becomes `export LIBSCRIPT_GLOBAL_PORT=8080`).
-4. **Environment Detection**: `setup.sh` sources `os_info.sh` to determine `TARGET_OS`, `TARGET_ARCH`, and the init system (Systemd/OpenRC).
-5. **Dependency Resolution**: `pkg_mgr.sh` maps and installs native OS requirements via the native package manager.
-6. **Installation**: Binaries are downloaded, cached, extracted to the `--prefix`, and configured.
-7. **Service Registration**: If applicable, the component registers a background daemon natively.
+3. **Configuration Extraction**: `cli.sh` parses `vars.schema.json` to process the inputs and maps CLI arguments to exported environment variables (e.g., `--PORT=8080` becomes `export LIBSCRIPT_GLOBAL_PORT=8080`).
+4. **Schema Dependency Evaluation**: Before component execution, `cli.sh` intercepts properties flagged with `"is_libscript_dependency": true`.
+   - It probes the system globally (`command -v`) and locally (`libscript.sh which`) to locate the requested dependencies.
+   - Using the declared strategy (`--DEP_STRATEGY=reuse|overwrite|install-alongside`), it recursively installs any missing component dependencies dynamically.
+5. **Environment Detection**: `setup.sh` sources `os_info.sh` to determine `TARGET_OS`, `TARGET_ARCH`, and the init system (Systemd/OpenRC).
+6. **OS Package Resolution**: `pkg_mgr.sh` maps and installs native OS requirements (e.g. `libssl-dev`) via the native package manager.
+7. **Installation**: Binaries are downloaded, cached, extracted to the `--prefix`, and configured.
+8. **Service Registration**: If applicable, the component registers a background daemon natively.
 
 ## The Generator Layer (`package_as`)
 A standout architectural feature is the global CLI's ability to introspect components. By parsing the component schemas and utilizing the declarative `env` output, LibScript can synthesize standard installers (DEB, RPM, APK), Windows installers (WiX, InnoSetup, NSIS), Dockerfiles, and `docker-compose.yml` configurations on the fly without running the actual installation locally.

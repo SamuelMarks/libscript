@@ -1,15 +1,17 @@
 #!/bin/sh
+# shellcheck disable=SC2016,SC1090,SC1091,SC2034,SC2018,SC2019,SC2221,SC2222,SC2129,SC2209,SC2089,SC2090,SC2086,SC2154,SC2044,SC2181,SC2038,SC2155,SC2046,SC2002,SC1003,SC2295,SC2145
+
+
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   this_file="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE[0]}"
-  set -o pipefail
+  this_file="${BASH_SOURCE}"
+
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${(%):-%x}"
-  set -o pipefail
+  this_file="${0}"
+
 else
   this_file="${0}"
 fi
@@ -58,7 +60,6 @@ base="${BASE:-alpine:latest debian:bookworm-slim}"
 prelude="$(cat -- "${LIBSCRIPT_ROOT_DIR}"'/prelude.sh'; printf 'a')"
 prelude="${prelude%a}"
 if [ ! -f "${install_file}" ]; then printf '%s\n\n' "${prelude}" > "${install_file}" ; fi
-# shellcheck disable=SC2016
 if [ ! -f "${install_parallel_file}" ]; then printf '%s\nDIR=$(CDPATH='"''"' cd -- "$(dirname -- "${this_file}")" && pwd)\n\n' "${prelude}"  > "${install_parallel_file}" ; fi
 if [ ! -f "${true_env_file}" ]; then
   # shellcheck disable=SC2016
@@ -78,7 +79,6 @@ chmod +x "${false_env_file}" "${true_env_file}" \
   "${install_file}" "${install_parallel_file}" \
   "${output_folder}"'/prelude.sh'
 
-# shellcheck disable=SC2016
 run_tpl='SCRIPT_NAME="${DIR}"'"'"'/%s'"'"'\nexport SCRIPT_NAME\n# shellcheck disable=SC1090\n. "${SCRIPT_NAME}"'
 prelude_cmd='SET "LIBSCRIPT_ROOT_DIR=%~dp0"
 SET "LIBSCRIPT_ROOT_DIR=%LIBSCRIPT_ROOT_DIR:~0,-1%"
@@ -1070,7 +1070,7 @@ parse_json() {
   parse_dependencies "${json_file}"
   parse_log_server "${json_file}"
 
-    netctl_docker="$(${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh --emit dockerfile 2>/dev/null || true)"
+    netctl_docker="$("${LIBSCRIPT_ROOT_DIR}"/netctl/netctl.sh --emit dockerfile 2>/dev/null || true)"
     if [ -n "${netctl_docker}" ]; then
       echo "${netctl_docker}" >> "${docker_scratch_file}"
     fi

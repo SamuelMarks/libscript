@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_bootstrap/scoop/vars.schema.json",
+  "title": "scoop toolchain vars",
+  "description": "scoop toolchain vars that can be set",
+  "type": "object",
+  "properties": {}
+}

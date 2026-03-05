@@ -1,3 +1,7 @@
+#!/bin/sh
+# shellcheck disable=SC2016,SC1090,SC1091,SC2034,SC2018,SC2019,SC2221,SC2222,SC2129,SC2209,SC2089,SC2090,SC2086,SC2154,SC2044,SC2181,SC2038,SC2155,SC2046,SC2002,SC1003,SC2295,SC2145
+
+
       cat << EOF2
 !define APP_NAME "$APP_NAME"
 !define APP_VERSION "$APP_VERSION"
@@ -29,7 +33,7 @@ EOF2
       echo "Include nsDialogs.nsh"
       echo "Page components"
       
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
@@ -51,7 +55,7 @@ EOF2
       echo "Page instfiles"
       echo ""
       
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         echo "Section \"$pkg\" SEC_$pkg"
@@ -68,7 +72,7 @@ EOF2
         echo "SectionEnd"
       done
 
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
@@ -125,15 +129,15 @@ EOF2
 
       # Uninstaller
       echo "Section \"Uninstall\""
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         echo "  MessageBox MB_YESNO \"Do you want to completely remove the Data Directory and all records for $pkg?\" IDYES purge_$pkg IDNO keep_$pkg"
         echo "  purge_$pkg:"
-        echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --purge-data --service-name \$VAL_${pkg}_$(echo $pkg | tr "a-z" "A-Z")_SERVICE_NAME'"
+        echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --purge-data --service-name \$VAL_${pkg}_$(echo "$pkg" | tr "a-z" "A-Z")_SERVICE_NAME'"
         echo "    Goto end_$pkg"
         echo "  keep_$pkg:"
-        echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --service-name \$VAL_${pkg}_$(echo $pkg | tr "a-z" "A-Z")_SERVICE_NAME'"
+        echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --service-name \$VAL_${pkg}_$(echo "$pkg" | tr "a-z" "A-Z")_SERVICE_NAME'"
         echo "  end_$pkg:"
       done
       echo "SectionEnd"

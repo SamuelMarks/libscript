@@ -11,6 +11,9 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup_win.ps1"
 goto :eof
 
 :native_cmd
+call "%~dp0..\..\..\_lib\_bootstrap\powershell\setup.cmd"
+where powershell >nul 2>&1
+if %ERRORLEVEL% EQU 0 goto :run_powershell
 echo [INFO] PowerShell not found. Installing Caddy natively...
 set "PREFIX=%LIBSCRIPT_ROOT_DIR%\installed\caddy"
 if not exist "%PREFIX%" mkdir "%PREFIX%"

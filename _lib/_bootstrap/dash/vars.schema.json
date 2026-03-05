@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_bootstrap/dash/vars.schema.json",
+  "title": "dash toolchain vars",
+  "type": "object",
+  "properties": {}
+}

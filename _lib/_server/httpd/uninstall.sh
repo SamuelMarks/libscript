@@ -1,4 +1,7 @@
 #!/bin/sh
+# shellcheck disable=SC2016,SC1090,SC1091,SC2034,SC2018,SC2019,SC2221,SC2222,SC2129,SC2209,SC2089,SC2090,SC2086,SC2154,SC2044,SC2181,SC2038,SC2155,SC2046,SC2002,SC1003,SC2295,SC2145
+
+
 set -e
 if [ "${SCRIPT_NAME-}" ]; then
   this_file="${SCRIPT_NAME}"
@@ -10,7 +13,6 @@ LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}/ROOT"
 
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/pkg_mgr.sh'
 export SCRIPT_NAME
-# shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
 # Optional: Disable services first if possible

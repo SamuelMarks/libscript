@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_bootstrap/msys2/vars.schema.json",
+  "title": "msys2 toolchain vars",
+  "type": "object",
+  "properties": {}
+}

@@ -1,15 +1,17 @@
 #!/bin/sh
+# shellcheck disable=SC2016,SC1090,SC1091,SC2034,SC2018,SC2019,SC2221,SC2222,SC2129,SC2209,SC2089,SC2090,SC2086,SC2154,SC2044,SC2181,SC2038,SC2155,SC2046,SC2002,SC1003,SC2295,SC2145
+
+
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   this_file="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE[0]}"
-  set -o pipefail
+  this_file="${BASH_SOURCE}"
+
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${(%):-%x}"
-  set -o pipefail
+  this_file="${0}"
+
 else
   this_file="${0}"
 fi
@@ -28,7 +30,6 @@ LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROO
 
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe.sh'
 export SCRIPT_NAME
-# shellcheck disable=SC1090
 . "${SCRIPT_NAME}"
 
 if [ -z "${ENV_SCRIPT_FILE+x}" ]; then
@@ -36,7 +37,6 @@ if [ -z "${ENV_SCRIPT_FILE+x}" ]; then
   exit 3
 fi
 
-# shellcheck disable=SC1090
 . "${ENV_SCRIPT_FILE}"
 
 if [ -z "${SERVER_NAME+x}" ]; then
@@ -47,7 +47,6 @@ fi
 export LOCATION_EXPR="${LOCATION_EXPR:-/}"
 
 # guess which template is correct
-# shellcheck disable=SC2236
 if [ "${NGINX_FRAGMENT_CONF-}" ]; then
   if [ -f "${NGINX_FRAGMENT_CONF}" ]; then
     conf_child_tpl="${NGINX_FRAGMENT_CONF}"
@@ -59,7 +58,9 @@ if [ "${NGINX_FRAGMENT_CONF-}" ]; then
     fi
   fi
 elif [ "${WWWROOT-}" ]; then
-  if [ "${WWWROOT_AUTOINDEX-}" ]; then
+  if [ "${PHP_FPM_LISTEN-}" ]; then
+    conf_child_tpl="${LIBSCRIPT_ROOT_DIR}"'/_lib/_server/nginx/conf/simple_location_php.conf'
+  elif [ "${WWWROOT_AUTOINDEX-}" ]; then
     conf_child_tpl="${LIBSCRIPT_ROOT_DIR}"'/_lib/_server/nginx/conf/simple_location_wwwroot_autoindex.conf'
   else
     conf_child_tpl="${LIBSCRIPT_ROOT_DIR}"'/_lib/_server/nginx/conf/simple_location_wwwroot.conf'

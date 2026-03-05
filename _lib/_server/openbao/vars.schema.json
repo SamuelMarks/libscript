@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_server/openbao/vars.schema.json",
+  "title": "OpenBao Configuration",
+  "description": "Configuration variables for deploying and configuring OpenBao, an open-source secrets management tool.",
+  "type": "object",
+  "properties": {
+    "OPENBAO_VERSION": {
+      "description": "Specific version of openbao to install. Can be a numeric version or an alias.",
+      "type": "string",
+      "default": "latest",
+      "versionAliases": [
+        "latest",
+        "stable"
+      ]
+    },
+    "LIBSCRIPT_GLOBAL_INSTALL_METHOD": {
+      "description": "Global override for how software should be installed across all systems (e.g. system package manager vs downloaded binaries/from-source).",
+      "type": "string",
+      "enum": [
+        "system",
+        "source"
+      ],
+      "default": "system"
+    },
+    "LIBSCRIPT_WINDOWS_PKG_MGR": {
+      "description": "Global package manager override for Windows targets (e.g. winget, choco).",
+      "type": "string",
+      "enum": [
+        "winget",
+        "choco"
+      ],
+      "default": "winget"
+    },
+    "OPENBAO_INSTALL_METHOD": {
+      "description": "How to install OPENBAO. 'system' uses the native OS package manager, 'source' compiles/downloads binaries.",
+      "type": "string",
+      "enum": [
+        "system",
+        "source"
+      ],
+      "default": "system"
+    },
+    "LIBSCRIPT_LISTEN_PORT": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Global port to listen on"
+    },
+    "LIBSCRIPT_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Global address to listen on"
+    },
+    "LIBSCRIPT_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Global unix socket to listen on"
+    },
+    "OPENBAO_LISTEN_PORT": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Port for OPENBAO to listen on"
+    },
+    "OPENBAO_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Address for OPENBAO to listen on"
+    },
+    "OPENBAO_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Unix socket for OPENBAO to listen on"
+    },
+    "OPENBAO_SERVICE_RUN_AS_USER": {
+      "description": "Windows local user account to run the service under (leave empty for Network Service).",
+      "type": "string"
+    },
+    "OPENBAO_SERVICE_RUN_AS_PASSWORD": {
+      "description": "Password for the Windows local user account (if applicable).",
+      "type": "string"
+    },
+    "OPENBAO_SERVICE_NAME": {
+      "description": "Custom name for the Windows Service (allows side-by-side installations).",
+      "type": "string",
+      "default": "libscript_openbao"
+    }
+  }
+}

@@ -226,6 +226,7 @@ echo.
 echo Available Options:
 if exist "%SCHEMA_FILE%" (
     jq -r ".properties | to_entries[] | \"--\(.key)=VALUE|\(.value.description) [default: \(.value.default // \"none\")]\"" "%SCHEMA_FILE%" > "%temp%\schema_help.txt" 2^>nul
+    jq -r ".properties | to_entries[] | select(.value.is_libscript_dependency == true) | \"--\(.key)_STRATEGY=VALUE|Strategy for \(.key) (reuse, install-alongside, upgrade, downgrade, overwrite) [default: reuse]\"" "%SCHEMA_FILE%" >> "%temp%\schema_help.txt" 2^>nul
     if errorlevel 1 (
         echo   ^(jq is required to parse vars.schema.json for dynamic options^)
         echo   See %SCHEMA_FILE% for available variables.
@@ -556,6 +557,77 @@ if /i "!ACTION!"=="install_service" goto do_install
 goto do_run_setup
 
 :do_install
+if "!LIBSCRIPT_ROOT_DIR!"=="" (
+    set "d=!SCRIPT_DIR!"
+    :find_root
+    if exist "!d!\ROOT" (
+        set "LIBSCRIPT_ROOT_DIR=!d!"
+    ) else (
+        if not "!d!"=="" (
+            for %%I in ("!d!\..") do set "d=%%~fI"
+            if not "!d!"=="!SCRIPT_DIR!" goto find_root
+        )
+    )
+    if "!LIBSCRIPT_ROOT_DIR!"=="" set "LIBSCRIPT_ROOT_DIR=."
+)
+
+if exist "%SCHEMA_FILE%" (
+    jq -r ".properties | to_entries[] | select(.value.is_libscript_dependency == true) | \"\(.key)|\(.value.default // \"\")|\(if .value.enum then .value.enum | join(\",\") else \"\" end)\"" "%SCHEMA_FILE%" > "%temp%\schema_deps.txt" 2^>nul
+    for /f "tokens=1,2,3 delims=|" %%K in (%temp%\schema_deps.txt) do (
+        set "dep_key=%%K"
+        set "dep_default=%%L"
+        set "dep_enum=%%M"
+        
+        call set "dep_val=%%!dep_key!%%"
+        if "!dep_val!"=="" (
+            set "dep_val=!dep_default!"
+            set "!dep_key!=!dep_val!"
+        )
+        if not "!dep_val!"=="" (
+            call set "strategy_val=%%!dep_key!_STRATEGY%%"
+            if "!strategy_val!"=="" (
+                set "strategy_val=reuse"
+                set "!dep_key!_STRATEGY=!strategy_val!"
+            )
+            echo Checking dependency !dep_val! for !dep_key! ^(strategy: !strategy_val!^)...
+            set "is_installed=0"
+            where "!dep_val!" >nul 2>&1
+            if not errorlevel 1 set "is_installed=1"
+            if "!is_installed!"=="0" (
+                call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" which "!dep_val!" "latest" >nul 2>&1
+                if not errorlevel 1 set "is_installed=1"
+            )
+            
+            if "!is_installed!"=="1" (
+                set "do_install=0"
+                if /i "!strategy_val!"=="overwrite" set "do_install=1"
+                if /i "!strategy_val!"=="upgrade" set "do_install=1"
+                if /i "!strategy_val!"=="downgrade" set "do_install=1"
+                if /i "!strategy_val!"=="install-alongside" set "do_install=1"
+                
+                if "!do_install!"=="1" (
+                    echo Re-installing/installing-alongside dependency !dep_val!...
+                    call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install "!dep_val!" "latest"
+                    if errorlevel 1 (
+                        echo Error: Failed to install dependency !dep_val! 1^>^&2
+                        exit /b 1
+                    )
+                ) else (
+                    echo Reusing existing dependency !dep_val!.
+                )
+            ) else (
+                echo Installing missing dependency !dep_val!...
+                call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install "!dep_val!" "latest"
+                if errorlevel 1 (
+                    echo Error: Failed to install dependency !dep_val! 1^>^&2
+                    exit /b 1
+                )
+            )
+        )
+    )
+    del "%temp%\schema_deps.txt" 2^>nul
+)
+
 if not "!LIBSCRIPT_SECRETS!"=="" (
     call :do_run_setup
     

@@ -10,9 +10,10 @@ You don't need to learn a complex DSL or a new programming language. If you can 
 1. **Scaffold**: Create your directory (`_lib/_toolchain/my_tool`).
 2. **Symlink Core Routers**: Link `cli.sh` and `cli.cmd` from the `_common` directory to automatically gain CLI routing and JSON schema parsing.
 3. **Define Schema**: Create `vars.schema.json`. Define your variables, defaults, and descriptions. The framework will automatically generate `--help` documentation and wire these up as environment variables.
+   - *Component Dependencies*: To make your app depend on another LibScript tool (e.g., `nodejs` or `postgres`), add `"is_libscript_dependency": true` to the variable property. `cli.sh` and `cli.cmd` will automatically invoke the installation of the specified component, honoring the generated `_STRATEGY` properties, before `setup.sh` begins.
 4. **Write `setup.sh`**:
    - Source OS info: `. "$SCRIPT_DIR/../../_common/os_info.sh"`
-   - Install deps: `depends curl unzip`
+   - Install OS packages: `depends curl unzip`
    - Download, extract, and configure your tool.
 5. **Write Windows Support**: Create `setup_win.ps1` for PowerShell logic.
 6. **Write Tests**: Create `test.sh` to compile a Hello World or ping a service.

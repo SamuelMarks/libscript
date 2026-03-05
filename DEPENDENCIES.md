@@ -21,8 +21,38 @@ Running `./libscript.sh install-deps` will:
 2. Execute parallel downloads for all required components (using `aria2` if available).
 3. Sequentially install and configure the components based on their priority tiers.
 
+## Component-Level Dependencies
+Applications within LibScript can natively declare dependencies on other LibScript components using their `vars.schema.json` schema.
+
+By flagging a variable with `"is_libscript_dependency": true`, the global installer dynamically evaluates it before the component's internal `setup.sh`/`setup.cmd` ever runs.
+
+```json
+{
+  "properties": {
+    "WORDPRESS_DB": {
+      "is_libscript_dependency": true,
+      "default": "mariadb",
+      "enum": ["mariadb", "postgres"],
+      "description": "Database backend to use"
+    }
+  }
+}
+```
+
+### Resolution Strategies
+Dependencies are resolved through an auto-generated strategy property (`--<DEP>_STRATEGY=`), giving operators maximum flexibility over how components are satisfied.
+
+- **`reuse` (Default):** The framework checks if the dependency is already installed globally or locally. If found, it skips installation and safely reuses it (e.g., using an existing PostgreSQL instance to create a new database).
+- **`install-alongside`:** Forces a local, isolated installation of the dependency alongside any globally existing ones.
+- **`overwrite` / `upgrade` / `downgrade`:** Safely uninstalls the existing target and installs the new version in its place.
+
+These dependency inputs and strategy toggles are seamlessly bridged across all interfaces:
+- **Interactive Bash/Cmd Wizards:** Evaluated directly via arguments (`--WORDPRESS_DB_STRATEGY=install-alongside`) or auto-injected environment variables.
+- **Native GUI Wizards (MSI/InnoSetup):** The generator layer (`package_as`) maps these schema endpoints to interactive dropdowns and installation stages within the native wizard.
+
 ## Feature Enumeration
 - Automatic package name translation across distributions.
 - Idempotent execution (skips if installed).
+- Native schema-driven dependency strategies (`reuse`, `overwrite`).
 - Parallel downloads for complex component trees.
 - Graceful fallbacks for Windows (`winget`, `choco`, or direct binary fetch).

@@ -1,4 +1,7 @@
 #!/bin/sh
+# shellcheck disable=SC2016,SC1090,SC1091,SC2034,SC2018,SC2019,SC2221,SC2222,SC2129,SC2209,SC2089,SC2090,SC2086,SC2154,SC2044,SC2181,SC2038,SC2155,SC2046,SC2002,SC1003,SC2295,SC2145
+
+
 set -e
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
@@ -45,6 +48,11 @@ show_help() {
       .properties | to_entries[] | 
       def aliases: if .value.versionAliases then " [aliases: " + (.value.versionAliases | join(", ")) + "]" else "" end;
       "--\(.key)=VALUE|\(.value.description)\(aliases) [default: \(.value.default // "none")]"
+    ' "$SCHEMA_FILE" | awk -F'|' '{printf "  %-35s %s\n", $1, $2}'
+    
+    jq -r '
+      .properties | to_entries[] | select(.value.is_libscript_dependency == true) |
+      "--\(.key)_STRATEGY=VALUE|Strategy for \(.key) (reuse, install-alongside, upgrade, downgrade, overwrite) [default: reuse]"
     ' "$SCHEMA_FILE" | awk -F'|' '{printf "  %-35s %s\n", $1, $2}'
   else
     echo "  (jq is required to parse vars.schema.json for dynamic options)"
@@ -438,9 +446,9 @@ if [ "$ACTION" = "start" ] || [ "$ACTION" = "stop" ] || [ "$ACTION" = "restart" 
           journalctl_args="-n 50 -f"
         fi
         if systemctl --user --quiet is-enabled "$service_name" 2>/dev/null; then
-          journalctl --user -u "$service_name" $journalctl_args
+          journalctl --user -u "$service_name" "$journalctl_args"
         else
-          sudo journalctl -u "$service_name" $journalctl_args
+          sudo journalctl -u "$service_name" "$journalctl_args"
         fi
       else
         LOGS_DIR="${LOGS_DIR:-$LIBSCRIPT_ROOT_DIR/logs}"
@@ -576,6 +584,64 @@ run_setup() {
 }
 
 if [ "$ACTION" = "install" ] || [ "$ACTION" = "install_daemon" ] || [ "$ACTION" = "install_service" ]; then
+  if [ -z "${LIBSCRIPT_ROOT_DIR:-}" ]; then
+    _d="$SCRIPT_DIR"
+    while [ ! -f "$_d/ROOT" ] && [ "$_d" != "/" ]; do _d="$(dirname "$_d")"; done
+    if [ -f "$_d/ROOT" ]; then LIBSCRIPT_ROOT_DIR="$_d"; else LIBSCRIPT_ROOT_DIR="."; fi
+    export LIBSCRIPT_ROOT_DIR
+  fi
+
+  if [ -f "$SCHEMA_FILE" ] && command -v jq >/dev/null 2>&1; then
+    _deps=$(jq -r '.properties | to_entries[] | select(.value.is_libscript_dependency == true) | "\(.key)|\(.value.default // "")|\(if .value.enum then .value.enum | join(",") else "" end)"' "$SCHEMA_FILE" 2>/dev/null)
+    if [ -n "$_deps" ]; then
+      while IFS='|' read -r dep_key dep_default dep_enum; do
+        if [ -z "$dep_key" ]; then continue; fi
+        eval "dep_val=\"\${$dep_key:-}\""
+        if [ -z "$dep_val" ]; then
+          dep_val="$dep_default"
+          export "$dep_key"="$dep_val"
+        fi
+        if [ -n "$dep_val" ]; then
+          eval "strategy_val=\"\${${dep_key}_STRATEGY:-}\""
+          if [ -z "$strategy_val" ]; then
+            strategy_val="reuse"
+            export "${dep_key}_STRATEGY"="$strategy_val"
+          fi
+          echo "Checking dependency $dep_val for $dep_key (strategy: $strategy_val)..."
+          is_installed=0
+          if command -v "$dep_val" >/dev/null 2>&1 || "$LIBSCRIPT_ROOT_DIR/libscript.sh" which "$dep_val" "latest" >/dev/null 2>&1; then
+            is_installed=1
+          fi
+          if [ "$is_installed" = "1" ]; then
+            if [ "$strategy_val" = "overwrite" ] || [ "$strategy_val" = "upgrade" ] || [ "$strategy_val" = "downgrade" ]; then
+              echo "Re-installing existing dependency $dep_val..."
+              if ! "$LIBSCRIPT_ROOT_DIR/libscript.sh" install "$dep_val" "latest"; then
+                echo "Error: Failed to re-install dependency $dep_val" >&2
+                exit 1
+              fi
+            elif [ "$strategy_val" = "install-alongside" ]; then
+              echo "Installing $dep_val alongside existing..."
+              if ! "$LIBSCRIPT_ROOT_DIR/libscript.sh" install "$dep_val" "latest"; then
+                echo "Error: Failed to install dependency $dep_val" >&2
+                exit 1
+              fi
+            else
+              echo "Reusing existing dependency $dep_val."
+            fi
+          else
+            echo "Installing missing dependency $dep_val..."
+            if ! "$LIBSCRIPT_ROOT_DIR/libscript.sh" install "$dep_val" "latest"; then
+              echo "Error: Failed to install dependency $dep_val" >&2
+              exit 1
+            fi
+          fi
+        fi
+      done <<EOF
+$_deps
+EOF
+    fi
+  fi
+
   if [ -n "$LIBSCRIPT_SECRETS" ]; then
     run_setup
     

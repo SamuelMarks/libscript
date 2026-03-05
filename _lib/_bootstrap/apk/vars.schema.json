@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_bootstrap/apk/vars.schema.json",
+  "title": "apk toolchain vars",
+  "description": "apk toolchain vars that can be set",
+  "type": "object",
+  "properties": {}
+}

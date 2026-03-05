@@ -31,6 +31,22 @@ LibScript includes unified commands to manage background services, mapping them 
 ./libscript.sh stop postgres
 ```
 
+## Component Dependencies & Strategy Overrides
+When installing complex applications, LibScript parses the component's `vars.schema.json` to automatically resolve dependencies (like databases or web servers).
+
+By default, the installer attempts to `reuse` any existing dependencies found on the system. You can interactively override the dependency and its resolution strategy via auto-generated CLI flags or environment variables:
+
+```sh
+# Override the default database dependency (e.g. mariadb -> postgres)
+./libscript.sh install wordpress latest --WORDPRESS_DB=postgres
+
+# Tell LibScript to install this dependency locally, even if a global version exists
+./libscript.sh install wordpress latest --WORDPRESS_DB_STRATEGY=install-alongside
+
+# Downgrade an existing installation, if necessary
+./libscript.sh install wordpress latest --WORDPRESS_WEBSERVER_STRATEGY=downgrade
+```
+
 ## Declarative Environments (`libscript.json`)
 Create a `libscript.json` file to define your stack:
 ```json

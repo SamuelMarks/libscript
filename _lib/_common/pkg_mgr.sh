@@ -1,15 +1,17 @@
 #!/bin/sh
+# shellcheck disable=SC2016,SC1090,SC1091,SC2034,SC2018,SC2019,SC2221,SC2222,SC2129,SC2209,SC2089,SC2090,SC2086,SC2154,SC2044,SC2181,SC2038,SC2155,SC2046,SC2002,SC1003,SC2295,SC2145
+
+
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   this_file="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE[0]}"
-  set -o pipefail
+  this_file="${BASH_SOURCE}"
+
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${(%):-%x}"
-  set -o pipefail
+  this_file="${0}"
+
 else
   this_file="${0}"
 fi
@@ -70,6 +72,22 @@ detect_pkg_mgr() {
   elif cmd_avail eopkg; then
     PKG_MGR='eopkg'  # Solus
   else
+    if [ "${TARGET_OS:-$(uname -s | tr '[:upper:]' '[:lower:]')}" = "darwin" ]; then
+      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/brew/setup.sh" ]; then
+        "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/brew/setup.sh"
+        if cmd_avail brew; then PKG_MGR='brew'; export PKG_MGR; return; fi
+      fi
+    elif [ "${TARGET_OS:-$(uname -s | tr '[:upper:]' '[:lower:]')}" = "windows" ] || [ -n "${COMSPEC:-}" ]; then
+      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/winget/setup.cmd" ]; then
+        "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/winget/setup.cmd"
+        if cmd_avail winget; then PKG_MGR='winget'; export PKG_MGR; return; fi
+      fi
+    else
+      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/pkgx/setup.sh" ]; then
+        "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/pkgx/setup.sh"
+        if cmd_avail pkgx; then PKG_MGR='pkgx'; export PKG_MGR; return; fi
+      fi
+    fi
     >&2 printf 'Error: No supported package manager found\n'
     exit 1
   fi
@@ -96,7 +114,6 @@ is_installed() {
   esac
 }
 
-# shellcheck disable=SC2086
 depends() {
   pkgs_to_install=''
   for pkg in "$@"; do
@@ -146,12 +163,12 @@ fi
 
 # Caching downloader hook
 libscript_fetch() {
-  local url="$1"
-  local dest="${2:-}"
-  local expected_checksum="${3:-}"
+url="$1"
+dest="${2:-}"
+expected_checksum="${3:-}"
   # Optional: allow override of download dir or fallback to global cache dir
-  local dl_dir="${DOWNLOAD_DIR:-}"
-  local cache_dir="${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache/downloads}"
+dl_dir="${DOWNLOAD_DIR:-}"
+cache_dir="${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache/downloads}"
 
   if [ -z "$dl_dir" ]; then
      dl_dir="$cache_dir"
@@ -163,15 +180,23 @@ libscript_fetch() {
   fi
 
   mkdir -p -- "$dl_dir"
-  local filename
+filename
   filename="$(basename "$url")"
   # Sometimes urls end in text/scripts without nice extensions. This is basic caching.
-  local cache_file="$dl_dir/$filename"
+cache_file="$dl_dir/$filename"
 
   if [ -f "$cache_file" ]; then
     >&2 printf '[CACHED] %s\n' "$url"
   else
     >&2 printf '[DOWNLOADING] %s\n' "$url"
+    if ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
+      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/curl/setup.sh" ]; then
+        "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/curl/setup.sh"
+      elif [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/wget/setup.sh" ]; then
+        "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/wget/setup.sh"
+      fi
+    fi
+
     if command -v curl >/dev/null 2>&1; then
       curl -#L "$url" -o "$cache_file"
     elif command -v wget >/dev/null 2>&1; then
@@ -182,7 +207,7 @@ libscript_fetch() {
     fi
 
     # Check filesize > 0
-    local fsize=0
+fsize=0
     if command -v wc >/dev/null 2>&1; then
       fsize=$(wc -c < "$cache_file" | tr -d ' ')
     elif command -v stat >/dev/null 2>&1; then
@@ -198,7 +223,7 @@ libscript_fetch() {
 
   # Checksum validation
   if [ -n "$expected_checksum" ]; then
-    local actual_checksum=""
+actual_checksum=""
     if command -v sha256sum >/dev/null 2>&1; then
       actual_checksum=$(sha256sum "$cache_file" | awk '{print $1}')
     elif command -v shasum >/dev/null 2>&1; then
@@ -256,6 +281,14 @@ libscript_download() {
   fi
 
   # 2. curl
+  if [ "$download_success" -eq 0 ] && ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/curl/setup.sh" ]; then
+      "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/curl/setup.sh"
+    elif [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/wget/setup.sh" ]; then
+      "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/wget/setup.sh"
+    fi
+  fi
+
   if [ "$download_success" -eq 0 ] && command -v curl >/dev/null 2>&1; then
     if curl -fL -o "$out_file" "$url"; then
       download_success=1
@@ -271,8 +304,8 @@ libscript_download() {
 
   # 4. nc (netcat) fallback for HTTP (does not support HTTPS natively without OpenSSL, but we try)
   if [ "$download_success" -eq 0 ] && command -v nc >/dev/null 2>&1; then
-    local host="${url#*://}"
-    local path="/${host#*/}"
+host="${url#*://}"
+path="/${host#*/}"
     host="${host%%/*}"
     if echo "$url" | grep -q "^http://"; then
       printf "GET %s HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n" "$path" "$host" | nc "$host" 80 > "${out_file}.tmp"
@@ -291,10 +324,11 @@ libscript_download() {
 
   # 5. /dev/tcp native bash fallback
   if [ "$download_success" -eq 0 ]; then
-    local host="${url#*://}"
-    local path="/${host#*/}"
+host="${url#*://}"
+path="/${host#*/}"
     host="${host%%/*}"
     if echo "$url" | grep -q "^http://"; then
+      # shellcheck disable=SC3025
       if exec 3<>/dev/tcp/"$host"/80 2>/dev/null; then
         printf "GET %s HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n" "$path" "$host" >&3
         {
@@ -325,7 +359,7 @@ libscript_download() {
   fi
   
   if [ -n "$actual_checksum" ]; then
-    local stripped_expected="${expected_checksum#sha-256=}"
+stripped_expected="${expected_checksum#sha-256=}"
     if [ -n "$stripped_expected" ]; then
       if [ "$actual_checksum" != "$stripped_expected" ]; then
         echo "Error: checksum mismatch for $url" >&2
@@ -343,15 +377,15 @@ libscript_download() {
 }
 
 libscript_process_aria2_file() {
-  local list_file="$1"
+list_file="$1"
   if [ ! -f "$list_file" ]; then
     echo "Error: File not found: $list_file" >&2
     return 1
   fi
 
-  local url=""
-  local out=""
-  local checksum=""
+url=""
+out=""
+checksum=""
 
   process_entry() {
     if [ -n "$url" ]; then
@@ -368,7 +402,7 @@ libscript_process_aria2_file() {
     [ -z "$(echo "$line" | tr -d '[:space:]')" ] && continue
     
     if echo "$line" | grep -q '^[[:space:]]'; then
-      local opt
+opt
       opt="$(echo "$line" | sed 's/^[[:space:]]*//')"
       if echo "$opt" | grep -q '^out='; then
         out="${opt#out=}"

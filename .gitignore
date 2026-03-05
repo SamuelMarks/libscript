@@ -1,3 +1,4 @@
+kubernetes-the-hard-way/
 patch*
 validate_*
 .idea
@@ -67,3 +68,9 @@ libscript.json
 fix*.awk
 patch*.awk
 *.svg
+
+# Ad-hoc downloaded tools and files
+wait4x-*
+/run_*.sh
+/test.bat
+/vars.schema.json

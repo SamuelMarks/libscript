@@ -9,6 +9,7 @@
 - **Zero-Dependency Bootstrapping:** Needs nothing more than a POSIX shell or Windows command prompt. You can bootstrap a bare-metal machine instantly.
 - **Universal Package Management:** Abstracted package manager layer (`pkg_mgr.sh`) seamlessly translates and delegates to `apt`, `apk`, `dnf`, `brew`, `pacman`, `choco`, or `winget`.
 - **Deployment Generator (`package_as`):** Dynamically compile declarative manifests into Dockerfiles, `docker-compose.yml`, Debian/RPM/APK packages, or Windows Installers (MSI, InnoSetup, NSIS), and even interactive TUI installers.
+- **Native Component Dependencies:** Applications can natively declare dependencies (e.g., `mariadb`, `caddy`) in their `vars.schema.json`. LibScript automatically resolves these via selectable strategies (`reuse`, `install-alongside`, `overwrite`)—fully exposed to interactive CLIs, env vars, and generated UI wizards.
 - **Environment & Version Scoping:** Install multiple versions of toolchains and isolate their environments (using `--prefix` and `env`/`run`/`exec` commands).
 - **Daemon Management:** Built-in translation to Systemd, OpenRC, and Windows Services for persistent databases and web servers.
 
@@ -59,23 +60,41 @@
 | `app/third_party/jupyterhub` | ❌ | ❌ | ⏭️ |
 | `app/third_party/openvpn` | ✅ | ✅ | ⏭️ |
 | `app/third_party/serve-actix-diesel-auth-scaffold` | ❌ | ❌ | ⏭️ |
+| `app/third_party/wordpress` | ❓ | ❓ | ❓ |
+| `_lib/_bootstrap/7zip` | ❓ | ❓ | ❓ |
+| `_lib/_bootstrap/apk` | ❓ | ❓ | ❓ |
+| `_lib/_bootstrap/brew` | ❓ | ❓ | ❓ |
+| `_lib/_bootstrap/busybox` | ❓ | ❓ | ❓ |
+| `_lib/_bootstrap/choco` | ❓ | ❓ | ❓ |
+| `_lib/_bootstrap/curl` | ❓ | ❓ | ❓ |
+| `_lib/_bootstrap/dash` | ❓ | ❓ | ❓ |
+| `_lib/_bootstrap/msys2` | ❓ | ❓ | ❓ |
+| `_lib/_bootstrap/nix` | ❓ | ❓ | ❓ |
+| `_lib/_bootstrap/pkgx` | ❓ | ❓ | ❓ |
+| `_lib/_bootstrap/powershell` | ❓ | ❓ | ❓ |
+| `_lib/_bootstrap/scoop` | ❓ | ❓ | ❓ |
+| `_lib/_bootstrap/wget` | ❓ | ❓ | ❓ |
+| `_lib/_bootstrap/winget` | ❓ | ❓ | ❓ |
 | `_lib/_git` | ✅ | ✅ | ✅ |
 | `_lib/_server/caddy` | ✅ | ✅ | ❌ |
 | `_lib/_server/docker` | ✅ | ❌ | ✅ |
-| `_lib/_server/fluentbit` | ❌ | ❌ | ❌ |
+| `_lib/_server/fluentbit` | ✅ | ❌ | ❌ |
 | `_lib/_server/httpd` | ✅ | ✅ | ❌ |
+| `_lib/_server/iis` | ❓ | ❓ | ❓ |
 | `_lib/_server/kubernetes_k0s` | ✅ | ⏭️ | ⏭️ |
 | `_lib/_server/kubernetes_thw` | ❓ | ⏭️ | ⏭️ |
-| `_lib/_server/nginx` | ❌ | ✅ | ⏭️ |
-| `_lib/_server/nodejs` | ❌ | ❌ | ✅ |
-| `_lib/_server/python` | ❌ | ❌ | ✅ |
-| `_lib/_server/rust` | ❌ | ⏭️ | ✅ |
+| `_lib/_server/nginx` | ✅ | ✅ | ⏭️ |
+| `_lib/_server/nodejs` | ✅ | ✅ | ✅ |
+| `_lib/_server/openbao` | ❓ | ❓ | ❓ |
+| `_lib/_server/python` | ✅ | ✅ | ✅ |
+| `_lib/_server/rust` | ✅ | ⏭️ | ✅ |
 | `_lib/_storage/etcd` | ❌ | ✅ | ⏭️ |
+| `_lib/_storage/mariadb` | ❓ | ❓ | ❓ |
 | `_lib/_storage/mongodb` | ❌ | ✅ | ✅ |
 | `_lib/_storage/postgres` | ❌ | ❌ | ⏭️ |
 | `_lib/_storage/rabbitmq` | ❌ | ❌ | ⏭️ |
-| `_lib/_storage/sqlite` | ❌ | ✅ | ❌ |
-| `_lib/_storage/valkey` | ❌ | ❌ | ❌ |
+| `_lib/_storage/sqlite` | ✅ | ✅ | ❌ |
+| `_lib/_storage/valkey` | ❌ | ✅ | ❌ |
 | `_lib/_toolchain/bun` | ✅ | ✅ | ✅ |
 | `_lib/_toolchain/c` | ✅ | ✅ | ❌ |
 | `_lib/_toolchain/cc` | ✅ | ✅ | ❌ |

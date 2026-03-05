@@ -11,6 +11,9 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup_win.ps1"
 goto :eof
 
 :native_cmd
+call "%~dp0..\..\..\_lib\_bootstrap\powershell\setup.cmd"
+where powershell >nul 2>&1
+if %ERRORLEVEL% EQU 0 goto :run_powershell
 echo [INFO] PowerShell not found. Installing Apache HTTPD natively...
 set "HTTPD_VER=2.4.58"
 if defined HTTPD_VERSION set "HTTPD_VER=%HTTPD_VERSION%"

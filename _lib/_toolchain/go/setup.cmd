@@ -11,6 +11,9 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup_win.ps1"
 goto :eof
 
 :native_cmd
+call "%~dp0..\..\..\_lib\_bootstrap\powershell\setup.cmd"
+where powershell >nul 2>&1
+if %ERRORLEVEL% EQU 0 goto :run_powershell
 echo [WARN] PowerShell not found. Native CMD/DOS installation not fully implemented for %~nx0.
 echo Please add native DOS/CMD commands here to support legacy systems.
 :: e.g., using bitsadmin, cscript, or pre-compiled binaries

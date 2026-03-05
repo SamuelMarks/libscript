@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_bootstrap/brew/vars.schema.json",
+  "title": "brew toolchain vars",
+  "description": "brew toolchain vars that can be set",
+  "type": "object",
+  "properties": {}
+}

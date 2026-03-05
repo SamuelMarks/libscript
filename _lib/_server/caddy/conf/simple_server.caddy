@@ -1,0 +1,5 @@
+${SERVER_NAME}:${LISTEN} {
+    root * ${WWWROOT}
+    ${PHP_FPM_DIRECTIVE}
+    file_server
+}
