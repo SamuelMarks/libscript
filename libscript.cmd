@@ -750,8 +750,11 @@ if defined is_docker (
     echo set "extra_args="
     echo choice /c YN /m "Enable --offline mode?"
     echo if errorlevel 1 if not errorlevel 2 set extra_args=--offline
-    echo choice /c YN /m "Windows only components?"
-    echo if errorlevel 1 if not errorlevel 2 set extra_args=^!extra_args^! --windows-only
+    echo set "os_script=$os_list = @('windows','dos','linux','macos','bsd'); $selected = $os_list | Out-GridView -Title 'LibScript Stack Builder - Select OS Targets' -PassThru; foreach ($s in $selected) { Write-Output $s }"
+    echo set "tmp_os=%%temp%%\libscript_tui_os.txt"
+    echo powershell -Command "^!os_script^!" ^> "^!tmp_os^!"
+    echo for /f "usebackq" %%%%a in ("^!tmp_os^!") do set "extra_args=^!extra_args^! --os-%%%%a"
+    echo if exist "^!tmp_os^!" del "^!tmp_os^!"
     echo echo.
     echo if "^!act^!"=="install" ^(
     echo     for /f "usebackq tokens=1,2" %%%%a in ("^!tmp_sel^!") do call "%%~dp0libscript.cmd" install "%%%%a" "%%%%b"

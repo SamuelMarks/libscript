@@ -743,11 +743,19 @@ if [ $? -eq 0 ] && [ -n "$selected" ]; then
   
   if [ -n "$action" ]; then
     offline_ans=$($DIALOG --title "Options" --yesno "Enable --offline mode?" 10 40; echo $?)
-    win_ans=$($DIALOG --title "Options" --yesno "Windows only components?" 10 40; echo $?)
+    os_ans=$($DIALOG --title "Target OS" --checklist "Select OS targets:" 15 50 5 \
+      "windows" "Windows" ON \
+      "dos" "DOS" OFF \
+      "linux" "Linux" ON \
+      "macos" "macOS" OFF \
+      "bsd" "BSD" OFF \
+      3>&1 1>&2 2>&3)
     
     extra_args=""
     if [ "$offline_ans" = "0" ]; then extra_args="$extra_args --offline"; fi
-    if [ "$win_ans" = "0" ]; then extra_args="$extra_args --windows-only"; fi
+    for os in $(echo "$os_ans" | tr -d '"'); do
+      extra_args="$extra_args --os-$os"
+    done
     
     items=""
     for item in $(echo "$selected" | tr -d '"'); do
@@ -1411,9 +1419,15 @@ EOF2
       echo "  ActionPage.Add('.deb package');"
       echo "  ActionPage.Add('.rpm package');"
       echo "  ActionPage.Values[0] := True;"
-      echo "  OfflinePage := CreateInputOptionPage(ActionPage.ID, 'Options', 'Additional generation options', '', False, False);"
+      echo "  OfflinePage := CreateInputOptionPage(ActionPage.ID, 'Options & OS Targets', 'Select offline mode and Target OS', '', False, True);"
       echo "  OfflinePage.Add('Enable --offline mode');"
-      echo "  OfflinePage.Add('Windows only components');"
+      echo "  OfflinePage.Add('Target: Windows');"
+      echo "  OfflinePage.Add('Target: DOS');"
+      echo "  OfflinePage.Add('Target: Linux');"
+      echo "  OfflinePage.Add('Target: macOS');"
+      echo "  OfflinePage.Add('Target: BSD');"
+      echo "  OfflinePage.Values[1] := True;"
+      echo "  OfflinePage.Values[3] := True;"
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
@@ -1541,20 +1555,24 @@ EOF2
       echo "function GetAction(Param: String): String;"
       echo "begin"
       echo "  if ActionPage.Values[1] then Result := 'docker'"
-      echo "  else";
-      echo "  else";
-      echo "  else";
-      echo "  else";
-      echo "  else";
-      echo "  else";
-      echo "  else";
+      echo "  else if ActionPage.Values[2] then Result := 'docker_compose'"
+      echo "  else if ActionPage.Values[3] then Result := 'msi'"
+      echo "  else if ActionPage.Values[4] then Result := 'innosetup'"
+      echo "  else if ActionPage.Values[5] then Result := 'nsis'"
+      echo "  else if ActionPage.Values[6] then Result := 'deb'"
+      echo "  else if ActionPage.Values[7] then Result := 'rpm'"
+      echo "  else Result := 'install';"
       echo "end;"
       echo "function GetExtraArgs(Param: String): String;"
       echo "var S: String;"
       echo "begin"
       echo "  S := '';"
       echo "  if OfflinePage.Values[0] then S := S + ' --offline';"
-      echo "  if OfflinePage.Values[1] then S := S + ' --windows-only';"
+      echo "  if OfflinePage.Values[1] then S := S + ' --os-windows';"
+      echo "  if OfflinePage.Values[2] then S := S + ' --os-dos';"
+      echo "  if OfflinePage.Values[3] then S := S + ' --os-linux';"
+      echo "  if OfflinePage.Values[4] then S := S + ' --os-macos';"
+      echo "  if OfflinePage.Values[5] then S := S + ' --os-bsd';"
       echo "  Result := S;"
       echo "end;"
       echo "function IsInstall: Boolean;"
