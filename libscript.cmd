@@ -820,13 +820,13 @@ if /i "!pkg_type!"=="nsis" goto generate_nsis
 exit /b 1
 
 :generate_msi
-bash "%SCRIPT_DIR%libscript.sh" %*
+sh "%SCRIPT_DIR%libscript.sh" %*
 exit /b !errorlevel!
 :generate_inno
-bash "%SCRIPT_DIR%libscript.sh" %*
+sh "%SCRIPT_DIR%libscript.sh" %*
 exit /b !errorlevel!
 :generate_nsis
-bash "%SCRIPT_DIR%libscript.sh" %*
+sh "%SCRIPT_DIR%libscript.sh" %*
 exit /b !errorlevel!
 ) else (
     if exist "libscript.json" (

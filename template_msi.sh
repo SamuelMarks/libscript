@@ -2,6 +2,10 @@
 # shellcheck disable=SC2016,SC1090,SC1091,SC2034,SC2018,SC2019,SC2221,SC2222,SC2129,SC2209,SC2089,SC2090,SC2086,SC2154,SC2044,SC2181,SC2038,SC2155,SC2046,SC2002,SC1003,SC2295,SC2145
 
 
+      wxs_file="${OUT_FILE}.wxs"
+      exec 3>&1
+      exec 1> "$wxs_file"
+
       cat << EOF2
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
@@ -223,4 +227,17 @@ EOF2
       echo "    </ComponentGroup>"
       echo "  </Fragment>"
       echo "</Wix>"
+
+      exec 1>&3 3>&-
+      
+      if [ "$OS" = "Windows_NT" ] || command -v candle.exe >/dev/null 2>&1 || command -v wix.exe >/dev/null 2>&1; then
+        if command -v wix.exe >/dev/null 2>&1; then
+          wix.exe build -ext WixToolset.UI.wixext -o "${OUT_FILE}.msi" "$wxs_file"
+        else
+          candle.exe "$wxs_file"
+          light.exe -ext WixUIExtension -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj"
+        fi
+      else
+        wixl -o "${OUT_FILE}.msi" "$wxs_file"
+      fi
       exit 0
