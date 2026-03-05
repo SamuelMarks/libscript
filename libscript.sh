@@ -384,6 +384,8 @@ if [ "$cmd" = "package_as" ]; then
             base_image="almalinux:9"
           elif [ "$artifact_type" = "apk" ]; then
             base_image="alpine:latest"
+          elif [ "$artifact_type" = "txz" ]; then
+            base_image="freebsd"
           elif [ "$artifact_type" = "msi" ] || [ "$artifact_type" = "exe" ]; then
             base_image="mcr.microsoft.com/windows/servercore:ltsc2022"
           fi
@@ -512,6 +514,8 @@ if [ "$cmd" = "package_as" ]; then
                  print "echo '\''RUN dnf install -y /opt/libscript/*-" pkg "-*.rpm'\'' >> \"$tmp_run\""
              } else if (artifact_type == "apk") {
                  print "echo '\''RUN apk add --allow-untrusted /opt/libscript/*-" pkg "-*.apk'\'' >> \"$tmp_run\""
+             } else if (artifact_type == "txz") {
+                 print "echo '\''RUN pkg install -y /opt/libscript/*-" pkg "*.txz /opt/libscript/*-" pkg "*.pkg || true'\'' >> \"$tmp_run\""
              } else if (artifact_type == "msi") {
                  print "echo '\''RUN for %I in (C:\\opt\\libscript\\*-" pkg "-*.msi) do msiexec /i \"%I\" /qn /norestart'\'' >> \"$tmp_run\""
              } else if (artifact_type == "exe") {
@@ -530,6 +534,8 @@ if [ "$cmd" = "package_as" ]; then
                  print "echo '\''RUN dnf install -y /opt/libscript/*-" pkg "-*.rpm'\'' >> \"$tmp_run\""
              } else if (artifact_type == "apk") {
                  print "echo '\''RUN apk add --allow-untrusted /opt/libscript/*-" pkg "-*.apk'\'' >> \"$tmp_run\""
+             } else if (artifact_type == "txz") {
+                 print "echo '\''RUN pkg install -y /opt/libscript/*-" pkg "*.txz /opt/libscript/*-" pkg "*.pkg || true'\'' >> \"$tmp_run\""
              } else if (artifact_type == "msi") {
                  print "echo '\''RUN for %I in (C:\\opt\\libscript\\*-" pkg "-*.msi) do msiexec /i \"%I\" /qn /norestart'\'' >> \"$tmp_run\""
              } else if (artifact_type == "exe") {
@@ -737,6 +743,8 @@ if [ $? -eq 0 ] && [ -n "$selected" ]; then
     "msi" ".msi installer" \
     "innosetup" ".exe (InnoSetup)" \
     "nsis" ".exe (NSIS)" \
+    "pkg" "macOS .pkg installer" \
+    "dmg" "macOS .dmg installer" \
     "deb" ".deb package" \
     "rpm" ".rpm package" \
     3>&1 1>&2 2>&3)
@@ -1004,8 +1012,70 @@ EOF
       echo "rm -rf \"\$BUILD_DIR\""
       echo "echo \"Done!\""
       exit 0
+    elif [ "$pkg_type" = "txz" ]; then
+      echo "#!/bin/sh"
+      echo "set -e"
+      echo "OUT_DIR=\"$OUT_DIR\""
+      echo "mkdir -p \"\$OUT_DIR\""
+      meta_depends=""
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        pkg_name="${APP_NAME}-${pkg}"
+        if [ -n "$meta_depends" ]; then meta_depends="${meta_depends}, "; fi
+        meta_depends="${meta_depends}\"${pkg_name}\": {\"version\": \"$APP_VERSION\", \"origin\": \"misc/${pkg_name}\"}"
+        echo "echo \"Building $pkg_name ...\""
+        echo "BUILD_DIR=\"/tmp/${pkg_name}_pkgbuild\""
+        echo "mkdir -p \"\$BUILD_DIR/root/opt/libscript\""
+        echo "mkdir -p \"\$BUILD_DIR/root/var/lib/libscript\""
+        if [ "$OFFLINE" = "1" ]; then echo "cp -a \"$SCRIPT_DIR\"/.* \"$SCRIPT_DIR\"/* \"\$BUILD_DIR/root/opt/libscript/\" 2>/dev/null || true"; echo "rm -rf \"\$BUILD_DIR/root/opt/libscript/.git\""; fi
+        echo "touch \"\$BUILD_DIR/root/var/lib/libscript/.${pkg_name}_installed\""
+        echo "mkdir -p \"\$BUILD_DIR/meta\""
+        echo "cat << 'EOF' > \"\$BUILD_DIR/meta/+MANIFEST\""
+        echo "name: \"$pkg_name\""
+        echo "version: \"$APP_VERSION\""
+        echo "origin: \"misc/$pkg_name\""
+        echo "comment: \"$APP_NAME deployment - $pkg\""
+        echo "desc: \"$APP_NAME deployment - $pkg\""
+        echo "maintainer: \"$APP_PUBLISHER\""
+        echo "www: \"$APP_URL\""
+        echo "prefix: \"/\""
+        echo "scripts: {"
+        echo "  post-install: \"if command -v libscript.sh >/dev/null; then libscript.sh install_service $pkg $ver; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh install_service $pkg $ver; fi\","
+        echo "  pre-deinstall: \"if command -v libscript.sh >/dev/null; then libscript.sh uninstall $pkg --purge-data; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh uninstall $pkg --purge-data; fi\""
+        echo "}"
+        echo "EOF"
+        echo "cd \"\$BUILD_DIR/root\" && find . -type f -o -type l | sed -e 's|^./||' > \"\$BUILD_DIR/meta/pkg-plist\""
+        echo "pkg create -m \"\$BUILD_DIR/meta\" -r \"\$BUILD_DIR/root\" -o \"\$OUT_DIR\""
+        echo "rm -rf \"\$BUILD_DIR\""
+      done
+      echo "echo \"Building ${APP_NAME}-meta ...\""
+      echo "BUILD_DIR=\"/tmp/${APP_NAME}-meta_pkgbuild\""
+      echo "mkdir -p \"\$BUILD_DIR/root/var/lib/libscript\""
+      echo "touch \"\$BUILD_DIR/root/var/lib/libscript/.${APP_NAME}-meta_installed\""
+      echo "mkdir -p \"\$BUILD_DIR/meta\""
+      echo "cat << 'EOF' > \"\$BUILD_DIR/meta/+MANIFEST\""
+      echo "name: \"${APP_NAME}-meta\""
+      echo "version: \"$APP_VERSION\""
+      echo "origin: \"misc/${APP_NAME}-meta\""
+      echo "comment: \"$APP_NAME deployment metapackage\""
+      echo "desc: \"$APP_NAME deployment metapackage\""
+      echo "maintainer: \"$APP_PUBLISHER\""
+      echo "www: \"$APP_URL\""
+      echo "prefix: \"/\""
+      if [ -n "$meta_depends" ]; then
+        echo "deps: {"
+        echo "  $meta_depends"
+        echo "}"
+      fi
+      echo "EOF"
+      echo "cd \"\$BUILD_DIR/root\" && find . -type f -o -type l | sed -e 's|^./||' > \"\$BUILD_DIR/meta/pkg-plist\""
+      echo "pkg create -m \"\$BUILD_DIR/meta\" -r \"\$BUILD_DIR/root\" -o \"\$OUT_DIR\""
+      echo "rm -rf \"\$BUILD_DIR\""
+      echo "echo \"Done!\""
+      exit 0
     fi
-  elif [ "$pkg_type" = "msi" ] || [ "$pkg_type" = "innosetup" ] || [ "$pkg_type" = "nsis" ]; then
+  elif [ "$pkg_type" = "msi" ] || [ "$pkg_type" = "innosetup" ] || [ "$pkg_type" = "nsis" ] || [ "$pkg_type" = "pkg" ] || [ "$pkg_type" = "dmg" ]; then
     install_scope="perMachine"
     inno_priv="admin"
     nsis_admin="admin"
@@ -1482,6 +1552,8 @@ EOF2
       echo "  ActionPage.Add('.msi installer');"
       echo "  ActionPage.Add('.exe (InnoSetup)');"
       echo "  ActionPage.Add('.exe (NSIS)');"
+      echo "  ActionPage.Add('.pkg installer');"
+      echo "  ActionPage.Add('.dmg installer');"
       echo "  ActionPage.Add('.deb package');"
       echo "  ActionPage.Add('.rpm package');"
       echo "  ActionPage.Values[0] := True;"
@@ -1625,8 +1697,10 @@ EOF2
       echo "  else if ActionPage.Values[3] then Result := 'msi'"
       echo "  else if ActionPage.Values[4] then Result := 'innosetup'"
       echo "  else if ActionPage.Values[5] then Result := 'nsis'"
-      echo "  else if ActionPage.Values[6] then Result := 'deb'"
-      echo "  else if ActionPage.Values[7] then Result := 'rpm'"
+      echo "  else if ActionPage.Values[6] then Result := 'pkg'"
+      echo "  else if ActionPage.Values[7] then Result := 'dmg'"
+      echo "  else if ActionPage.Values[8] then Result := 'deb'"
+      echo "  else if ActionPage.Values[9] then Result := 'rpm'"
       echo "  else Result := 'install';"
       echo "end;"
       echo "function GetExtraArgs(Param: String): String;"
@@ -1685,7 +1759,7 @@ EOF2
         echo "Filename: \"cmd.exe\"; Parameters: \"{code:GetGenerateParams}\"; Flags: runhidden; Check: IsGenerate"
       fi
       exit 0
-    elif [ "$pkg_type" = "nsis" ]; then
+    elif [ "$pkg_type" = "nsis" ] || [ "$pkg_type" = "pkg" ] || [ "$pkg_type" = "dmg" ]; then
       cat << EOF2
 !define APP_NAME "$APP_NAME"
 !define APP_VERSION "$APP_VERSION"
@@ -1834,6 +1908,8 @@ EOF2
       echo "Var R_MSI"
       echo "Var R_Inno"
       echo "Var R_NSIS"
+      echo "Var R_PKG"
+      echo "Var R_DMG"
       echo "Var R_Deb"
       echo "Var R_RPM"
       echo "Var Action_Choice"
@@ -1868,9 +1944,13 @@ EOF2
       echo "  Pop \$R_Inno"
       echo "  \${NSD_CreateRadioButton} 0 90u 100% 12u \".exe (NSIS)\""
       echo "  Pop \$R_NSIS"
-      echo "  \${NSD_CreateRadioButton} 0 105u 100% 12u \".deb package\""
+      echo "  \${NSD_CreateRadioButton} 0 105u 100% 12u \".pkg installer\""
+      echo "  Pop \$R_PKG"
+      echo "  \${NSD_CreateRadioButton} 0 120u 100% 12u \".dmg installer\""
+      echo "  Pop \$R_DMG"
+      echo "  \${NSD_CreateRadioButton} 0 135u 100% 12u \".deb package\""
       echo "  Pop \$R_Deb"
-      echo "  \${NSD_CreateRadioButton} 0 120u 100% 12u \".rpm package\""
+      echo "  \${NSD_CreateRadioButton} 0 150u 100% 12u \".rpm package\""
       echo "  Pop \$R_RPM"
       echo "  nsDialogs::Show"
       echo "FunctionEnd"
@@ -2004,6 +2084,165 @@ EOF2
       echo "SectionEnd"
 
       exit 0
+    elif [ "$pkg_type" = "pkg" ] || [ "$pkg_type" = "dmg" ]; then
+      PKG_STAGE="${OUT_FILE}_stage"
+      rm -rf "$PKG_STAGE"
+      mkdir -p "$PKG_STAGE/packages" "$PKG_STAGE/resources" "$PKG_STAGE/scripts"
+      
+      if [ -n "$WELCOME_TEXT" ]; then
+        echo "<html><body><h1>Welcome</h1><p>$WELCOME_TEXT</p></body></html>" > "$PKG_STAGE/resources/welcome.html"
+      fi
+      if [ -n "$LICENSE_PATH" ] && [ -f "$LICENSE_PATH" ]; then
+        cp "$LICENSE_PATH" "$PKG_STAGE/resources/license.html"
+      fi
+      
+      deps_list=""
+      if [ $# -gt 0 ]; then
+        while [ $# -gt 0 ]; do
+          deps_list="$deps_list $1 ${2:-latest}"
+          if [ "$2" != "" ]; then shift 2; else shift; fi
+        done
+      elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+        deps_list=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == \"string\" then .value else (.value.version // \"latest\") end)" else empty end' "libscript.json" 2>/dev/null | tr '\n' ' ')
+      else
+        deps_list=$(find_components | sort | awk '{printf "%s latest ", $1}')
+      fi
+      
+      set -- $deps_list
+      while [ $# -gt 0 ]; do
+        pkg=$1; ver=$2; shift 2
+        comp_dir="$PKG_STAGE/comp_${pkg}"
+        mkdir -p "$comp_dir/root/opt/libscript"
+        mkdir -p "$comp_dir/scripts"
+        
+        cat << "EOF_SCRIPT" > "$comp_dir/scripts/postinstall"
+#!/bin/bash
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+USER_NAME=$(stat -f "%Su" /dev/console 2>/dev/null || echo "$SUDO_USER")
+if [ -z "$USER_NAME" ] || [ "$USER_NAME" = "root" ]; then
+  USER_NAME="$USER"
+fi
+EOF_SCRIPT
+
+        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        params=""
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          if [ -n "$vars_json" ]; then
+            echo "$vars_json" | while read -r item; do
+              varname=$(echo "$item" | jq -r '.key')
+              desc=$(echo "$item" | jq -r '.desc' | sed 's/"/\"/g')
+              defval=$(echo "$item" | jq -r '.def' | sed 's/"/\"/g')
+              
+              if case "$varname" in *"_PASSWORD"*) true;; *) false;; esac; then
+                hidden="with hidden answer"
+              else
+                hidden=""
+              fi
+              
+              cat << EOF_PROMPT >> "$comp_dir/scripts/postinstall"
+VAL_${varname}=\$(sudo -u "\$USER_NAME" osascript -e 'Tell application "System Events" to display dialog "Configuration for ${pkg}
+
+${desc}:" default answer "${defval}" ${hidden}' -e 'text returned of result' 2>/dev/null)
+export ${varname}="\$VAL_${varname}"
+EOF_PROMPT
+
+              if case "$varname" in *"_PORT"* | *"_PORT_SECURE"*) true;; *) false;; esac; then
+                cat << EOF_PROMPT >> "$comp_dir/scripts/postinstall"
+while netstat -an | grep -q "[.:]\$VAL_${varname} .*LISTEN"; do
+  VAL_${varname}=\$(sudo -u "\$USER_NAME" osascript -e 'Tell application "System Events" to display dialog "Port '"\$VAL_${varname}"' is already in use. Please enter a different port:" default answer ""' -e 'text returned of result' 2>/dev/null)
+  export ${varname}="\$VAL_${varname}"
+done
+EOF_PROMPT
+              fi
+            done
+            params=$(echo "$vars_json" | jq -r '.key' | awk -v pkg="$pkg" '{printf " --%s=\"$VAL_%s\"", $1, $1}')
+          fi
+        fi
+
+        cat << EOF_SCRIPT >> "$comp_dir/scripts/postinstall"
+if command -v libscript.sh >/dev/null 2>&1; then
+  libscript.sh install_service "$pkg" "$ver" $params
+elif [ -f "/opt/libscript/libscript.sh" ]; then
+  /opt/libscript/libscript.sh install_service "$pkg" "$ver" $params
+elif [ -f "\$0/../../../libscript.sh" ]; then
+  "\$0/../../../libscript.sh" install_service "$pkg" "$ver" $params
+else
+  sudo -u "\$USER_NAME" osascript -e 'Tell application "System Events" to display alert "libscript.sh not found. Installation of '"$pkg"' failed."'
+  exit 1
+fi
+
+cat << "EOF_UNINST" > "/opt/libscript/uninstall_${pkg}.command"
+#!/bin/bash
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+USER_NAME=\$(stat -f "%Su" /dev/console 2>/dev/null || echo "\\$SUDO_USER")
+if [ -z "\\$USER_NAME" ] || [ "\\$USER_NAME" = "root" ]; then
+  USER_NAME="\\$USER"
+fi
+
+ans=\$(sudo -u "\\$USER_NAME" osascript -e 'Tell application "System Events" to display dialog "Do you want to completely remove the Data Directory and all records for '"$pkg"'?" buttons {"Yes", "No"} default button "No"' -e 'button returned of result' 2>/dev/null)
+
+purge=""
+if [ "\\$ans" = "Yes" ]; then
+  purge="--purge-data"
+fi
+
+echo "Uninstalling $pkg..."
+sudo libscript.sh uninstall "$pkg" \\$purge
+echo "Uninstalled $pkg."
+sleep 2
+EOF_UNINST
+chmod +x "/opt/libscript/uninstall_${pkg}.command"
+EOF_SCRIPT
+
+        chmod +x "$comp_dir/scripts/postinstall"
+        
+        if command -v pkgbuild >/dev/null 2>&1; then
+          pkgbuild --root "$comp_dir/root" --scripts "$comp_dir/scripts" --identifier "com.libscript.comp.$pkg" --version "$APP_VERSION" "$PKG_STAGE/packages/$pkg.pkg"
+        fi
+      done
+
+      if command -v productbuild >/dev/null 2>&1; then
+        productbuild --synthesize --package-path "$PKG_STAGE/packages" "$PKG_STAGE/Distribution.xml"
+
+        sed_cmd="sed -i"
+        if [ "$(uname)" = "Darwin" ]; then sed_cmd="sed -i ''"; fi
+        
+        $sed_cmd -e '/<installer-gui-script/a\
+    <title>'"$APP_NAME"'</title>\
+    <options customize="always" require-scripts="false"/>' "$PKG_STAGE/Distribution.xml"
+
+        if [ -n "$WELCOME_TEXT" ]; then
+          $sed_cmd -e '/<installer-gui-script/a\
+    <welcome file="welcome.html"/>' "$PKG_STAGE/Distribution.xml"
+        fi
+        
+        if [ -n "$LICENSE_PATH" ] && [ -f "$LICENSE_PATH" ]; then
+          $sed_cmd -e '/<installer-gui-script/a\
+    <license file="license.html"/>' "$PKG_STAGE/Distribution.xml"
+        fi
+        
+        set -- $deps_list
+        while [ $# -gt 0 ]; do
+          pkg=$1; ver=$2; shift 2
+          $sed_cmd "s/choice id=\"com.libscript.comp.$pkg\" title=\"[^\"]*\"/choice id=\"com.libscript.comp.$pkg\" title=\"$pkg installer\"/g" "$PKG_STAGE/Distribution.xml"
+        done
+
+        productbuild --distribution "$PKG_STAGE/Distribution.xml" --package-path "$PKG_STAGE/packages" --resources "$PKG_STAGE/resources" "${OUT_FILE}.pkg"
+        
+        if [ "$pkg_type" = "dmg" ]; then
+          hdiutil create -volname "$APP_NAME" -srcfolder "${OUT_FILE}.pkg" -ov -format UDZO "${OUT_FILE}.dmg"
+          echo "Created ${OUT_FILE}.dmg"
+        else
+          echo "Created ${OUT_FILE}.pkg"
+        fi
+        rm -rf "$PKG_STAGE"
+      else
+        echo "Created source files in $PKG_STAGE"
+        echo "pkgbuild/productbuild not found. Cannot build .pkg natively." >&2
+      fi
+      exit 0
+
     fi
   else
     echo "Error: Unsupported package format '$pkg_type'." >&2

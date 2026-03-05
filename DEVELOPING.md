@@ -1,29 +1,21 @@
-# Developing LibScript
+# 🛠️ Developing LibScript: Join the Revolution!
 
-## Purpose
-A contributor's guide to scaffolding, implementing, and verifying new cross-platform components within the LibScript ecosystem.
+We are building a public-domain, completely open-source alternative to Docker and heavy configuration managers, and we want YOUR help to expand our massive library of components!
 
-## What Makes Developing for LibScript Interesting?
-You don't need to learn a complex DSL or a new programming language. If you can write a basic shell script, you can write a LibScript component. The framework abstracts away argument parsing, OS detection, help-text generation, and testing harnesses, letting you focus entirely on the core installation logic.
+## 🚀 Why Contribute?
+Every time you write a simple shell script for a new LibScript component, you aren't just making a native installer. Thanks to our dynamic architecture, you are automatically creating:
+- A way to generate **good quality Dockerfiles** for that component!
+- A way to generate **nice Windows/Linux/FreeBSD/macOS installers** for it!
+- A new building block for our **LAMP/WAMP and Generic Stack Maker**!
+- A way to write **cleaner, smaller Chef/Ansible recipes** for that software!
 
-## Developing a Component
-1. **Scaffold**: Create your directory (`_lib/_toolchain/my_tool`).
-2. **Symlink Core Routers**: Link `cli.sh` and `cli.cmd` from the `_common` directory to automatically gain CLI routing and JSON schema parsing.
-3. **Define Schema**: Create `vars.schema.json`. Define your variables, defaults, and descriptions. The framework will automatically generate `--help` documentation and wire these up as environment variables.
-   - *Component Dependencies*: To make your app depend on another LibScript tool (e.g., `nodejs` or `postgres`), add `"is_libscript_dependency": true` to the variable property. `cli.sh` and `cli.cmd` will automatically invoke the installation of the specified component, honoring the generated `_STRATEGY` properties, before `setup.sh` begins.
-4. **Write `setup.sh`**:
-   - Source OS info: `. "$SCRIPT_DIR/../../_common/os_info.sh"`
-   - Install OS packages: `depends curl unzip`
-   - Download, extract, and configure your tool.
-5. **Write Windows Support**: Create `setup_win.ps1` for PowerShell logic.
-6. **Write Tests**: Create `test.sh` to compile a Hello World or ping a service.
+## 🧩 How to Scaffold a Component
+It's incredibly easy. No DSLs, no Ruby, no Go. Just shell!
+1. **Create your folder** in `_lib/_toolchain/my_awesome_tool`.
+2. **Define `vars.schema.json`**: Tell LibScript what ports or dependencies your tool needs.
+3. **Write `setup.sh`**: Write a simple POSIX shell script to download and configure your tool.
+4. **Write `setup_win.ps1`**: Write a PowerShell script for our incredible Windows support.
 
-## Core Best Practices
-- **Idempotency**: Your `setup.sh` must be safe to run multiple times. Always check if a config line exists before appending it.
-- **Environment Scoping**: Respect the `$PREFIX` variable. Components should be capable of installing globally (e.g., `/usr/local`) or locally (e.g., `./my_env`).
-- **Headless Execution**: Never prompt the user for input during `setup.sh`. All inputs must be passed via CLI arguments defined in `vars.schema.json`.
+By simply defining dependencies in your JSON schema, LibScript will automatically link them up when users generate a `docker-compose.yml` or a native installer! 
 
-## Features Available to Developers
-- `pkg_mgr.sh` for universal dependency installation.
-- Built-in daemon registration functions for Systemd, OpenRC, and Windows Services.
-- Caching abstraction (downloads automatically hit `LIBSCRIPT_CACHE_DIR`).
+Let's build the ultimate cross-platform provisioning engine together!

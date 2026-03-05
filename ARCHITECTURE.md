@@ -1,35 +1,20 @@
-# Architecture
+# ⚙️ Architecture: The Engine Behind the Magic!
 
-## Purpose
-This document details the internal directory structure, execution lifecycle, and core abstractions (`os_info.sh`, `pkg_mgr.sh`) that power LibScript's zero-dependency, cross-platform provisioning engine.
+How do we build a viable alternative to Docker, Chef, and Ansible that runs entirely on zero-dependency shell scripts? By building an incredibly smart, highly dynamic routing and execution layer!
 
-## What Makes This Architecture Interesting?
-LibScript eschews heavyweight agents and runtimes (like Python for Ansible or Go for Terraform) in favor of a strictly POSIX `sh` and Windows `cmd` routing layer. This architecture allows a component to define its schema via JSON (`vars.schema.json`), which the global router (`libscript.sh` / `libscript.cmd`) dynamically parses to generate CLI help text, parse arguments, generate environment variables, and compile advanced deployment artifacts (like MSIs or Dockerfiles).
+## 🧠 The Zero-Dependency Core
+LibScript uses pure POSIX `sh` and Windows `cmd` to route commands. There are no heavy agents. When you ask LibScript to build a **LAMP/WAMP stack**, it dynamically parses `vars.schema.json` files for Apache, MySQL, and PHP, resolving their dependencies on the fly!
 
-## Core Structure
-The repository is split into modular components:
-- `_lib/_toolchain/`: Compilers, interpreters, and CLI tools.
-- `_lib/_server/`: Web servers, proxies, and container runtimes.
-- `_lib/_storage/`: Databases, caches, and message queues.
-- `app/`: High-level third-party application stacks.
+## 🏗️ The Incredible `package_as` Generator!
+This is where the real magic happens! Because LibScript understands the exact dependencies and environment variables needed for any stack, it can introspect itself!
 
-Each component contains:
-- `cli.sh` / `cli.cmd`: Entrypoint that parses options against `vars.schema.json`.
-- `setup.sh` / `setup.cmd` / `setup_win.ps1`: The actual installation and configuration logic.
-- `test.sh` / `test.cmd`: Idempotent verification tests.
-- `vars.schema.json`: Configuration schema (ports, passwords, versions).
+Instead of running the installation natively, LibScript's architecture allows it to compile the execution graph into:
+1. **Pristine, High-Quality Dockerfiles!**
+2. **Beautiful `docker-compose.yml` architectures!**
+3. **Native Windows Installers (MSI, NSIS, InnoSetup)!**
+4. **Native Linux Packages (DEB, RPM, APK)!**
+5. **Native FreeBSD Packages (TXZ)!**
+6. **Native macOS Installers (PKG, DMG)!**
 
-## Execution Lifecycle
-1. **Invocation**: The user runs `./libscript.sh install <pkg> <version> [args]`.
-2. **Routing**: The global CLI locates the package and executes its `cli.sh`.
-3. **Configuration Extraction**: `cli.sh` parses `vars.schema.json` to process the inputs and maps CLI arguments to exported environment variables (e.g., `--PORT=8080` becomes `export LIBSCRIPT_GLOBAL_PORT=8080`).
-4. **Schema Dependency Evaluation**: Before component execution, `cli.sh` intercepts properties flagged with `"is_libscript_dependency": true`.
-   - It probes the system globally (`command -v`) and locally (`libscript.sh which`) to locate the requested dependencies.
-   - Using the declared strategy (`--DEP_STRATEGY=reuse|overwrite|install-alongside`), it recursively installs any missing component dependencies dynamically.
-5. **Environment Detection**: `setup.sh` sources `os_info.sh` to determine `TARGET_OS`, `TARGET_ARCH`, and the init system (Systemd/OpenRC).
-6. **OS Package Resolution**: `pkg_mgr.sh` maps and installs native OS requirements (e.g. `libssl-dev`) via the native package manager.
-7. **Installation**: Binaries are downloaded, cached, extracted to the `--prefix`, and configured.
-8. **Service Registration**: If applicable, the component registers a background daemon natively.
-
-## The Generator Layer (`package_as`)
-A standout architectural feature is the global CLI's ability to introspect components. By parsing the component schemas and utilizing the declarative `env` output, LibScript can synthesize standard installers (DEB, RPM, APK), Windows installers (WiX, InnoSetup, NSIS), Dockerfiles, and `docker-compose.yml` configurations on the fly without running the actual installation locally.
+## 🧩 Smaller, Cleaner Recipes
+Because LibScript abstracts away OS differences (like translating `libssl-dev` to `openssl-devel`), you can use it to make your existing Chef, Ansible, or Puppet playbooks incredibly small and clean. Just call LibScript from your playbook, and let us handle the cross-platform nightmare!

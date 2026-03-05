@@ -1,14 +1,14 @@
-# Documentation Roadmap
+# 📚 Documentation Roadmap: Spreading the Word!
 
-## Purpose
-Outlines the strategy for evolving LibScript's documentation from repository-level markdown files to a comprehensive, auto-generated static site.
+To position LibScript as the ultimate, viable alternative to Docker, Chef, Ansible, and Puppet, we need world-class documentation that showcases its immense power!
 
-## What Makes This Interesting?
-Because every component defines its configuration in `vars.schema.json` and its execution is strictly typed by the CLI router, our documentation can be procedurally generated. We don't just write docs; we compile them directly from the source truth of the components.
+## 🎯 Our Documentation Goals
+- **Showcase the Magic:** Clearly demonstrate how LibScript is the easiest way to create **good quality Dockerfiles and docker-compose setups**.
+- **Highlight the Installers:** Provide rich tutorials on generating **nice installers for Windows, Linux, and FreeBSD, and macOS**!
+- **Simplify Configuration Management:** Show DevOps engineers how using LibScript can result in **cleaner, much smaller Chef, Ansible, and Puppet recipes**.
+- **Stack Examples:** Provide instant copy-paste templates for LAMP/WAMP stacks and complex generic stacks.
 
-## Current State & Next Steps
-- [x] Comprehensive root-level Markdown guides covering architecture, usage, and development.
-- [x] Standardized `vars.schema.json` format across all components.
-- [ ] **Static Site Generation**: Implement a generator (e.g., MkDocs or Docusaurus) that parses `vars.schema.json` files to auto-build feature matrices, configuration tables, and OS compatibility lists for every component.
-- [ ] **Examples Repository**: Curate a library of `libscript.json` templates (e.g., LEMP stack, Data Science stack) mapped to interactive tutorials.
-- [ ] **Inline Man Pages**: Enhance `libscript.sh --help` to format and paginate output dynamically like standard Unix man pages.
+## 🛠️ Next Steps for the Docs Site
+1. **Procedural Generation:** Because our components use strongly typed `vars.schema.json` files, we are building a system to auto-generate our static documentation site directly from the source code!
+2. **Interactive Stack Builder:** Embed a tool in the documentation that lets users click together a generic stack and instantly outputs the `libscript.json` or `docker-compose.yml`.
+3. **Cross-Platform Compatibility Matrices:** Auto-generate beautiful tables proving just how **VERY VERY cross-platform** we really are!

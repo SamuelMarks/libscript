@@ -1,29 +1,20 @@
-# Roadmap
+# 🗺️ Roadmap: Our Path to World Domination!
 
-## Purpose
-Tracks the phased delivery of LibScript's capabilities from its foundational release to its ultimate form as a universal orchestrator.
+LibScript is on a mission to become the ultimate open-source, public-domain alternative to Docker, Chef, Ansible, and Puppet! Here is our phased approach to making it happen.
 
-## What Makes This Roadmap Interesting?
-It tracks the evolution from a simple script collection into a fully declarative, cross-compiling, multi-platform orchestrator capable of generating deployment artifacts (Docker, MSI, DEB) dynamically from its own runtime context.
+## ✅ Phase 1: The Native Engine (Completed)
+- Build a VERY VERY cross-platform, zero-dependency shell execution framework.
+- Create a massive library of components (Node, Rust, Postgres, Nginx).
+- Establish the ultimate LAMP/WAMP and Generic Stack maker.
 
-## Phase 1: Foundation (Completed)
-- [x] Zero-dependency shell execution framework.
-- [x] Package manager abstraction (`pkg_mgr.sh`).
-- [x] Vast component library (Rust, Python, Node, Postgres, Nginx).
-- [x] Verification scripts and CI Matrix.
+## ✅ Phase 2: The Generator Layer (Completed)
+- Implement `package_as` to generate incredibly **good quality Dockerfiles and docker-compose configurations**.
+- Implement dynamic generation of **nice installers for Windows (MSI, InnoSetup, NSIS), Linux (DEB, RPM, APK), FreeBSD (TXZ), and macOS (PKG, DMG)**.
+- Prove that LibScript can be used to write **cleaner, much smaller Chef/Ansible recipes**.
 
-## Phase 2: Windows & Declarative Parity (Completed)
-- [x] Full MS-DOS (`.bat`), Windows Command (`.cmd`), and PowerShell (`.ps1`) support.
-- [x] Component-level CLI routing and JSON schema validation.
-- [x] Declarative installations via `libscript.json` (`install-deps`).
+## 🚀 Phase 3: Total Platform Parity (Current)
+- **Concurrent DAG Execution**: Make native stack provisioning faster than pulling container images.
+- **TUI Stack Builder**: A beautiful, interactive terminal UI to design and compile your generic stacks on the fly! (Completed)
+- **More OpenBSD and Illumos Support**: Add `.pkg` and native port generation for other operating systems.
 
-## Phase 3: The Generator Engine (Current)
-- [x] `package_as docker` / `docker_compose` generator.
-- [x] `package_as` Windows Installers (MSI via WiX, InnoSetup, NSIS).
-- [x] `package_as` Native Packages (DEB, RPM, APK).
-- [ ] Stabilize dynamic configuration injection (passing generated database credentials directly to dependent application layers).
-
-## Phase 4: Advanced Orchestration (Next)
-- [ ] Concurrent DAG-based execution for `libscript.json`.
-- [ ] Full uninstall and state-rollback lifecycle.
-- [ ] Rewrite the top-level router in Rust/Go for speed, keeping scripts for execution.
+Join us on this incredible journey to redefine infrastructure automation!

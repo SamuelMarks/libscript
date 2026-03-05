@@ -433,6 +433,7 @@ if defined is_docker (
         if /i "%~2"=="deb" set "base_image=debian:bookworm-slim"
         if /i "%~2"=="rpm" set "base_image=almalinux:9"
         if /i "%~2"=="apk" set "base_image=alpine:latest"
+        if /i "%~2"=="txz" set "base_image=freebsd"
         if /i "%~2"=="msi" set "base_image=mcr.microsoft.com/windows/servercore:ltsc2022"
         if /i "%~2"=="exe" set "base_image=mcr.microsoft.com/windows/servercore:ltsc2022"
         shift
@@ -444,6 +445,7 @@ if defined is_docker (
         if /i "%~2"=="deb" set "base_image=debian:bookworm-slim"
         if /i "%~2"=="rpm" set "base_image=almalinux:9"
         if /i "%~2"=="apk" set "base_image=alpine:latest"
+        if /i "%~2"=="txz" set "base_image=freebsd"
         if /i "%~2"=="msi" set "base_image=mcr.microsoft.com/windows/servercore:ltsc2022"
         if /i "%~2"=="exe" set "base_image=mcr.microsoft.com/windows/servercore:ltsc2022"
         shift
@@ -534,6 +536,8 @@ if defined is_docker (
             echo RUN dnf install -y /opt/libscript/*-!pkg!-*.rpm>> "!tmp_run!"
         ) else if "!artifact_type!"=="apk" (
             echo RUN apk add --allow-untrusted /opt/libscript/*-!pkg!-*.apk>> "!tmp_run!"
+        ) else if "!artifact_type!"=="txz" (
+            echo RUN pkg install -y /opt/libscript/*-!pkg!*.txz /opt/libscript/*-!pkg!*.pkg 2^>nul^|^|true>> "!tmp_run!"
         ) else if "!artifact_type!"=="msi" (
             echo RUN for %%I in ^(C:\opt\libscript\*-!pkg!-*.msi^) do msiexec /i "%%I" /qn /norestart>> "!tmp_run!"
         ) else if "!artifact_type!"=="exe" (
@@ -577,6 +581,8 @@ if defined is_docker (
                         echo RUN dnf install -y /opt/libscript/*-%%a-*.rpm>> "!tmp_run!"
                     ) else if "!artifact_type!"=="apk" (
                         echo RUN apk add --allow-untrusted /opt/libscript/*-%%a-*.apk>> "!tmp_run!"
+                    ) else if "!artifact_type!"=="txz" (
+                        echo RUN pkg install -y /opt/libscript/*-%%a*.txz /opt/libscript/*-%%a*.pkg 2^>nul^|^|true>> "!tmp_run!"
                     ) else if "!artifact_type!"=="msi" (
                         echo RUN for %%%%I in ^(C:\opt\libscript\*-%%a-*.msi^) do msiexec /i "%%%%I" /qn /norestart>> "!tmp_run!"
                     ) else if "!artifact_type!"=="exe" (
@@ -734,12 +740,16 @@ if defined is_docker (
     echo echo 4. .msi installer
     echo echo 5. .exe (InnoSetup)
     echo echo 6. .exe (NSIS)
-    echo echo 7. .deb package
-    echo echo 8. .rpm package
-    echo choice /c 12345678 /n /m "Select option [1-8]:"
+    echo echo 7. macOS .pkg installer
+    echo echo 8. macOS .dmg installer
+    echo echo 9. .deb package
+    echo echo 0. .rpm package
+    echo choice /c 1234567890 /n /m "Select option [1-0]:"
     echo set "act="
-    echo if errorlevel 8 set act=rpm
-    echo if errorlevel 7 set act=deb
+    echo if errorlevel 10 set act=rpm
+    echo if errorlevel 9 set act=deb
+    echo if errorlevel 8 set act=dmg
+    echo if errorlevel 7 set act=pkg
     echo if errorlevel 6 set act=nsis
     echo if errorlevel 5 set act=innosetup
     echo if errorlevel 4 set act=msi
@@ -768,6 +778,10 @@ if defined is_docker (
 ) else if /i "%~2"=="innosetup" (
     goto install_gen_common
 ) else if /i "%~2"=="nsis" (
+    goto install_gen_common
+) else if /i "%~2"=="pkg" (
+    goto install_gen_common
+) else if /i "%~2"=="dmg" (
     goto install_gen_common
 ) else (
     echo Error: Unsupported package format '%~2'. 1^>&2
@@ -817,6 +831,8 @@ if "!opt:~0,1!"=="-" (
 if /i "!pkg_type!"=="msi" goto generate_msi
 if /i "!pkg_type!"=="innosetup" goto generate_inno
 if /i "!pkg_type!"=="nsis" goto generate_nsis
+if /i "!pkg_type!"=="pkg" goto generate_pkg
+if /i "!pkg_type!"=="dmg" goto generate_dmg
 exit /b 1
 
 :generate_msi
@@ -826,6 +842,12 @@ exit /b !errorlevel!
 sh "%SCRIPT_DIR%libscript.sh" %*
 exit /b !errorlevel!
 :generate_nsis
+sh "%SCRIPT_DIR%libscript.sh" %*
+exit /b !errorlevel!
+:generate_pkg
+sh "%SCRIPT_DIR%libscript.sh" %*
+exit /b !errorlevel!
+:generate_dmg
 sh "%SCRIPT_DIR%libscript.sh" %*
 exit /b !errorlevel!
 ) else (
