@@ -22,16 +22,6 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${this_file}"':'
 
-run_before=0
-STACK="${STACK:-:}"
-case "${STACK}" in
-  *':'"${this_file}"':'*)
-    # printf '[STOP]     processing "%s"\n' "${this_file}"
-    run_before=1 ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
-esac
-export STACK="${STACK:-}${this_file}"':'
-
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
@@ -45,9 +35,9 @@ for lib in 'env.sh' '_lib/_common/priv.sh' '_lib/_common/pkg_mgr.sh' \
   . "${SCRIPT_NAME}"
 done
 
-if [ "${run_before}" -eq 0 ]; then
+
   depends 'nginx'
-fi
+
 
 rtrim() {
   trimmed="${1}"

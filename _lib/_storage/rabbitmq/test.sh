@@ -1,3 +1,4 @@
 #!/bin/sh
 set -feu
-rabbitmqctl version
+. ../../_common/priv.sh
+priv rabbitmqctl version

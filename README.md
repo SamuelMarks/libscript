@@ -62,8 +62,8 @@
 | `_lib/_git` | ✅ | ✅ | ✅ |
 | `_lib/_server/caddy` | ✅ | ✅ | ❌ |
 | `_lib/_server/docker` | ✅ | ❌ | ✅ |
-| `_lib/_server/fluentbit` | ❓ | ❓ | ❓ |
-| `_lib/_server/httpd` | ❓ | ❓ | ❓ |
+| `_lib/_server/fluentbit` | ❌ | ✅ | ❌ |
+| `_lib/_server/httpd` | ❌ | ❌ | ❌ |
 | `_lib/_server/kubernetes_k0s` | ✅ | ⏭️ | ⏭️ |
 | `_lib/_server/kubernetes_thw` | ❌ | ⏭️ | ⏭️ |
 | `_lib/_server/nginx` | ❌ | ✅ | ⏭️ |

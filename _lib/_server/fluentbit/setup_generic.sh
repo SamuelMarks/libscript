@@ -33,7 +33,11 @@ export SCRIPT_NAME
 FLUENTBIT_INSTALL_METHOD="${FLUENTBIT_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 
 if [ "${FLUENTBIT_INSTALL_METHOD}" = 'system' ]; then
-  depends 'fluent-bit'
+  if command -v curl >/dev/null 2>&1; then
+    curl https://raw.githubusercontent.com/fluent/fluent-bit/master/install.sh | sh
+  else
+    depends 'fluent-bit'
+  fi
 else
   echo "[WARN] From-source or alternative installation requested for fluent-bit, but currently only system package manager is fully supported."
   depends 'fluent-bit'

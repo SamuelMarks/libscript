@@ -1,3 +1,3 @@
 #!/bin/sh
 set -feu
-wait4x --version
+wait4x version
