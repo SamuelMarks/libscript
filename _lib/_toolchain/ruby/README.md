@@ -8,19 +8,34 @@
 
 ## Overview
 
-This directory contains the installation and configuration scripts for `ruby`. It is designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
+This directory contains the installation and configuration scripts for **Ruby**, a dynamic, open-source programming language with a focus on simplicity and productivity, featuring an elegant syntax that is natural to read and easy to write. It is designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
 
-### Installation
+Crucially, this component works both as a **local version manager** (similar to tools like `rvm`, `nvm`, `pyenv`, or `uv`), allowing you to isolate and manage specific versions of Ruby per project, and it can be seamlessly invoked from the **global version manager**, `libscript`.
 
-**Unix (Linux/macOS):**
+Furthermore, Ruby can be utilized by LibScript as a foundational dependency to **build bigger, complex application stacks** (such as WordPress, Open edX, Nextcloud, and more).
+
+### Lifecycle & Usage
+
+You can easily install, uninstall, start, stop, and package Ruby directly using LibScript:
+
+**Install / Uninstall:**
 ```sh
-./cli.sh <COMMAND> <PACKAGE_NAME> [VERSION] [OPTIONS]
+libscript install ruby [VERSION] [OPTIONS]
+libscript uninstall ruby
 ```
 
-**Windows:**
-```cmd
-cli.cmd <COMMAND> <PACKAGE_NAME> [VERSION] [OPTIONS]
+**Start / Stop (if configured as a background service):**
+```sh
+libscript start ruby
+libscript stop ruby
 ```
+
+**Package (e.g., as a Docker container):**
+```sh
+libscript package_as docker ruby
+```
+
+*Note: On Unix environments, you can also use `./cli.sh <COMMAND> ruby [VERSION] [OPTIONS]`. On Windows, use `libscript.cmd` or `cli.cmd`.*
 
 ## Configuration Options
 
@@ -39,4 +54,3 @@ The following environment variables can be passed to the CLI (`--KEY=VALUE`) or 
 - `setup_generic.sh`: Fallback installation logic using the package manager mapper.
 - `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning correctly.
 - `vars.schema.json`: The schema definition for the CLI arguments.
-

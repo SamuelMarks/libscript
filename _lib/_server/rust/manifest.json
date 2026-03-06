@@ -1,0 +1,13 @@
+{
+  "name": "RUST_SERVER",
+  "provides": [
+    "app-server",
+    "rust"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": []
+}

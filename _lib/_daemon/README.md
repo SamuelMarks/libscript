@@ -1,11 +1,41 @@
-_lib/_daemon
-============
+# Daemon Components (`_lib/_daemon`)
 
 ## Purpose & Current State
 
-**Purpose**: This document provides context and technical details for the `_daemon` component (part of `_lib`) within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+**Purpose**: This document provides context and technical details for the `_daemon` component (a directory under `_lib`) within the LibScript ecosystem. It describes the directory responsible for configuring and managing system service daemons and background tasks across different operating systems.
 
 **Current State**: LibScript functions as a comprehensive global and per-component package manager, featuring a robust core CLI (`libscript.sh`, `libscript.cmd`, `libscript.bat`). It includes multi-platform toolchain support (Rust, Python, Node, Go, Java, C/C++), servers (Postgres 18, Nginx, Valkey), and advanced environment querying (`env` subcommand). It natively supports generating deployment configurations (`package_as docker`, `package_as docker_compose`, `package_as msi`, `package_as innosetup`, `package_as nsis`, `package_as TUI`) with deep installer customization, automated parallel dependency downloading and resolution via `libscript.json`, and robust uninstall lifecycle hooks (`uninstall.sh`/`uninstall.cmd`) for cleanly removing binaries, configs, and services. It natively handles deep semantic versioning, global `--secrets` extraction, caching, OpenBao/Vault generation, local caching via SQLite (`db-search`, `update-db`), explicit error handling for unsupported actions, and background process serving. Recent advancements have stabilized major Windows installer generation (MSI, InnoSetup, NSIS) and expanded macOS native service provisioning.
+
+## Overview
+
+The components inside this directory work both as local version managers (similar to rvm, nvm, pyenv, uv) and can be invoked directly from the global version manager `libscript`. 
+
+Additionally, daemon controllers contained here can be used by libscript to build bigger stacks (like WordPress, Open edX, Nextcloud, etc.) by enabling components to run reliably in the background on system startup.
+
+### Usage with LibScript
+
+You can interact with specific daemon implementations using `libscript`. For instance, to manage a specific daemon component like systemd or openrc:
+
+**Install/Configure**:
+```sh
+./libscript.sh install <daemon-component>
+```
+
+**Uninstall**:
+```sh
+./libscript.sh uninstall <daemon-component>
+```
+
+**Start/Stop**:
+```sh
+./libscript.sh start <daemon-component>
+./libscript.sh stop <daemon-component>
+```
+
+**Package**:
+```sh
+./libscript.sh package_as docker <daemon-component>
+```
 
 ## Dependency Installation Methods
 

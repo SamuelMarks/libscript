@@ -1,15 +1,19 @@
-# 🌟 The Future is Bright!
+# Future Roadmap
 
-LibScript is evolving at lightning speed, and we are aggressively expanding our capabilities to become the undisputed champion of software provisioning!
+This document covers the long-term technical vision and planned architectural enhancements for the LibScript framework.
 
-## 🍏 Coming Soon: OpenBSD and Illumos Support!
-We already generate incredibly nice installers for Windows (MSI, InnoSetup, NSIS), Linux (DEB, RPM, APK), FreeBSD (TXZ), and macOS (PKG, DMG). Our next massive milestone is native generation for OpenBSD and Illumos!
+## Extended OS Support
 
-## 🚀 The Ultimate Docker Alternative
-We are refining our parallel execution graph to make native provisioning just as fast as pulling a Docker image. We want LibScript to be the default choice when developers say, "I need a generic stack, but I want it to run at native host speeds."
+The framework currently supports Windows, Linux, FreeBSD, and macOS. Future development will focus on adding robust, native execution and package generation capabilities for OpenBSD and Illumos.
 
-## 🧩 Perfecting the Generated Dockerfiles
-We are continuously optimizing our `package_as docker` engine to ensure it produces the most secure, minimal, and **good quality Dockerfiles** on the planet, complete with multi-stage builds and precise layer caching.
+## Execution Optimizations
 
-## 🪄 Revolutionizing Configuration Management
-We will continue building out integrations and plugins so that LibScript can act as the ultimate backend for tools like Chef, Ansible, and Puppet—allowing DevOps engineers to write **cleaner, much smaller recipes** while we handle the cross-platform execution!
+We plan to refine the dependency resolution engine to support concurrent execution of the component graph (DAG). This will reduce provisioning times for complex stacks on native hardware.
+
+## Generator Enhancements
+
+The `package_as docker` engine is under continuous optimization to improve the structural quality of the generated Dockerfiles. Upcoming improvements include deeper support for multi-stage builds and more precise layer caching directives.
+
+## Integration Strategies
+
+Future work will expand the ecosystem of plugins and integrations for existing configuration management tools, allowing DevOps teams to delegate cross-platform package resolution entirely to the LibScript engine.

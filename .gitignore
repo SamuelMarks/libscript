@@ -74,3 +74,12 @@ wait4x-*
 /run_*.sh
 /test.bat
 /vars.schema.json
+# Irrelevant root files
+/install*.json
+!/installer.schema.json
+/jq_test.json
+/styles.css
+/*.awk
+/conf.env.sh
+/dos_setup_script_deps.bat
+/win_setup_script_deps.cmd

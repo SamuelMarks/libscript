@@ -1,0 +1,16 @@
+{
+  "name": "DOCKER",
+  "provides": [
+    "docker",
+    "server"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [
+    "windows",
+    "darwin"
+  ],
+  "ports": []
+}

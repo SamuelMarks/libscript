@@ -1,0 +1,16 @@
+{
+  "name": "IIS",
+  "provides": [
+    "web-server",
+    "iis"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "windows"
+  ],
+  "os_blacklist": [],
+  "ports": [
+    80,
+    443
+  ]
+}

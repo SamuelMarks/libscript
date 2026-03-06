@@ -1,7 +1,18 @@
 # WordPress LibScript Module
 
-This module installs WordPress alongside a webserver and MariaDB database.
-It natively supports deploying to Nginx, Caddy, or HTTPD on POSIX systems, and Microsoft IIS on Windows.
+## Overview
+This document describes the `WordPress` component within the LibScript ecosystem. This module installs WordPress alongside a webserver and MariaDB database.
+
+It works both as a local version manager (similar to rvm, nvm, pyenv, uv) and can be invoked from the global version manager `libscript`. Furthermore, this component can be used by libscript to build bigger stacks (like WordPress, Open edX, nextcloud, etc.) by composing it with caching layers, load balancers, or other services.
+
+## LibScript Operations
+You can manage WordPress using the global `libscript` CLI or local scripts.
+
+- **Install:** `libscript install wordpress`
+- **Uninstall:** `libscript uninstall wordpress`
+- **Start:** `libscript start wordpress`
+- **Stop:** `libscript stop wordpress`
+- **Package:** `libscript package_as docker wordpress` (or `msi`, `docker_compose`, etc.)
 
 ## Environment Variables
 

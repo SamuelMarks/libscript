@@ -1,14 +1,15 @@
-# 📚 Documentation Roadmap: Spreading the Word!
+# Documentation Roadmap
 
-To position LibScript as the ultimate, viable alternative to Docker, Chef, Ansible, and Puppet, we need world-class documentation that showcases its immense power!
+This document outlines the planned improvements and ongoing initiatives for LibScript's documentation. The goal is to provide clear, technically accurate guides for utilizing the framework's native execution and generation capabilities.
 
-## 🎯 Our Documentation Goals
-- **Showcase the Magic:** Clearly demonstrate how LibScript is the easiest way to create **good quality Dockerfiles and docker-compose setups**.
-- **Highlight the Installers:** Provide rich tutorials on generating **nice installers for Windows, Linux, and FreeBSD, and macOS**!
-- **Simplify Configuration Management:** Show DevOps engineers how using LibScript can result in **cleaner, much smaller Chef, Ansible, and Puppet recipes**.
-- **Stack Examples:** Provide instant copy-paste templates for LAMP/WAMP stacks and complex generic stacks.
+## Current Objectives
 
-## 🛠️ Next Steps for the Docs Site
-1. **Procedural Generation:** Because our components use strongly typed `vars.schema.json` files, we are building a system to auto-generate our static documentation site directly from the source code!
-2. **Interactive Stack Builder:** Embed a tool in the documentation that lets users click together a generic stack and instantly outputs the `libscript.json` or `docker-compose.yml`.
-3. **Cross-Platform Compatibility Matrices:** Auto-generate beautiful tables proving just how **VERY VERY cross-platform** we really are!
+- **Generator Documentation:** Provide detailed examples of utilizing the `package_as` command to generate Dockerfiles, Docker Compose setups, and native OS installers (Windows, Linux, FreeBSD, macOS).
+- **Configuration Management Integration:** Detail how LibScript can be called from existing tools (like Chef, Ansible, and Puppet) to simplify playbook complexity.
+- **Stack Templates:** Document common stack definitions (e.g., LAMP, MEAN) using the `libscript.json` format.
+
+## Future Enhancements
+
+1. **Procedural Generation:** Develop tools (like `generate_html_docs.sh`) to automatically generate reference documentation from the `vars.schema.json` files of each component.
+2. **Interactive Examples:** Provide interactive CLI or TUI examples within the documentation to demonstrate stack building.
+3. **Compatibility Matrices:** Automatically maintain tables indicating which components are supported on which operating systems.

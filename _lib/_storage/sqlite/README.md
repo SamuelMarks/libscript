@@ -1,26 +1,50 @@
 # SQLite (Toolchain)
 
-## Purpose & Current State
+## Purpose & Overview
 
-**Purpose**: This document provides context and technical details for the `sqlite` component (part of `_storage`) within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+This document provides context and technical details for the **SQLite** component (part of the `_storage` module) within the LibScript ecosystem. SQLite is a C-language library that implements a small, fast, self-contained, high-reliability, full-featured, SQL database engine.
 
-**Current State**: LibScript functions as a comprehensive global and per-component package manager, featuring a robust core CLI (`libscript.sh`, `libscript.cmd`, `libscript.bat`). It includes multi-platform toolchain support (Rust, Python, Node, Go, Java, C/C++), servers (Postgres 18, Nginx, Valkey), and advanced environment querying (`env` subcommand). It natively supports generating deployment configurations (`package_as docker`, `package_as docker_compose`, `package_as msi`, `package_as innosetup`, `package_as nsis`, `package_as TUI`) with deep installer customization, automated parallel dependency downloading and resolution via `libscript.json`, and robust uninstall lifecycle hooks (`uninstall.sh`/`uninstall.cmd`) for cleanly removing binaries, configs, and services. It natively handles deep semantic versioning, global `--secrets` extraction, caching, OpenBao/Vault generation, local caching via SQLite (`db-search`, `update-db`), explicit error handling for unsupported actions, and background process serving. Recent advancements have stabilized major Windows installer generation (MSI, InnoSetup, NSIS) and expanded macOS native service provisioning.
+This component works both as a local version manager for SQLite (similar to `rvm`, `nvm`, `pyenv`, or `uv`) and can be natively invoked from the global version manager `libscript`. Because of this flexibility, SQLite can be used by LibScript to provision and build bigger, more complex software stacks (like WordPress, Open edX, Nextcloud, etc.).
 
-## Overview
+## Usage with LibScript
 
-This directory contains the installation and configuration scripts for `sqlite`. It is designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
+You can manage SQLite using the standard LibScript commands.
 
-### Installation
-
+### Install
 **Unix (Linux/macOS):**
 ```sh
-./cli.sh <COMMAND> <PACKAGE_NAME> [VERSION] [OPTIONS]
+./cli.sh install sqlite [VERSION] [OPTIONS]
+# or via global libscript:
+libscript install sqlite [VERSION]
 ```
 
 **Windows:**
 ```cmd
-cli.cmd <COMMAND> <PACKAGE_NAME> [VERSION] [OPTIONS]
+cli.cmd install sqlite [VERSION] [OPTIONS]
+# or via global libscript:
+libscript install sqlite [VERSION]
 ```
+
+### Start / Stop
+If you are running an application or service that utilizes SQLite in a persistent manner:
+```sh
+libscript start sqlite
+libscript stop sqlite
+```
+
+### Uninstall
+To clean up binaries, data, and configurations:
+```sh
+libscript uninstall sqlite
+```
+
+### Package
+To package SQLite or a stack depending on SQLite into an installer or container:
+```sh
+libscript package_as docker sqlite
+libscript package_as msi sqlite
+```
+*(Supports docker, docker_compose, msi, innosetup, nsis, and TUI).*
 
 ## Configuration Options
 
@@ -45,4 +69,3 @@ The following environment variables can be passed to the CLI (`--KEY=VALUE`) or 
 - `setup_generic.sh`: Fallback installation logic using the package manager mapper.
 - `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning correctly.
 - `vars.schema.json`: The schema definition for the CLI arguments.
-

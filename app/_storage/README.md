@@ -1,11 +1,43 @@
 app/_storage
 ============
 
-## Purpose & Current State
+## Purpose & Overview
 
-**Purpose**: This document provides context and technical details for the `_storage` component (part of `app`) within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+This document describes the `_storage` component (a collection of database and storage tools) within the LibScript ecosystem.
 
-**Current State**: LibScript functions as a comprehensive global and per-component package manager, featuring a robust core CLI (`libscript.sh`, `libscript.cmd`, `libscript.bat`). It includes multi-platform toolchain support (Rust, Python, Node, Go, Java, C/C++), servers (Postgres 18, Nginx, Valkey), and advanced environment querying (`env` subcommand). It natively supports generating deployment configurations (`package_as docker`, `package_as docker_compose`, `package_as msi`, `package_as innosetup`, `package_as nsis`, `package_as TUI`) with deep installer customization, automated parallel dependency downloading and resolution via `libscript.json`, and robust uninstall lifecycle hooks (`uninstall.sh`/`uninstall.cmd`) for cleanly removing binaries, configs, and services. It natively handles deep semantic versioning, global `--secrets` extraction, caching, OpenBao/Vault generation, local caching via SQLite (`db-search`, `update-db`), explicit error handling for unsupported actions, and background process serving. Recent advancements have stabilized major Windows installer generation (MSI, InnoSetup, NSIS) and expanded macOS native service provisioning.
+LibScript functions as both a comprehensive global version manager (invoked via the `libscript` command) and a local version manager (similar to `rvm`, `nvm`, `pyenv`, or `uv`) for these storage solutions. You can manage storage dependencies directly in an isolated, local context, or orchestrate them globally. 
+
+Furthermore, the `_storage` components can be seamlessly utilized by LibScript to build and provision larger, complex stacks (like WordPress, Open edX, Nextcloud, etc.) by defining them as dependencies in your deployment configurations.
+
+## Lifecycle Management with LibScript
+
+You can easily install, uninstall, start, stop, and package storage components (like PostgreSQL, MySQL, SQLite, etc.) using the LibScript CLI:
+
+### Installation
+**Unix (Linux/macOS):**
+```sh
+./cli.sh install <STORAGE_COMPONENT> [VERSION] [OPTIONS]
+# Or via global manager:
+libscript install <STORAGE_COMPONENT>
+```
+
+### Start & Stop
+```sh
+./cli.sh start <STORAGE_COMPONENT>
+./cli.sh stop <STORAGE_COMPONENT>
+```
+
+### Uninstallation
+```sh
+./cli.sh uninstall <STORAGE_COMPONENT>
+```
+
+### Packaging
+LibScript can package storage components into various deployment formats:
+```sh
+libscript package_as docker <STORAGE_COMPONENT>
+libscript package_as msi <STORAGE_COMPONENT>
+```
 
 ## Dependency Installation Methods
 

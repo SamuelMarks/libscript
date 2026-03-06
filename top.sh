@@ -186,7 +186,7 @@ if [ "$cmd" = "install-deps" ]; then
     fi
   fi
 
-  deps=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end) \(if (.value | type) == "object" and .value.override then .value.override else "" end)" else empty end' "$json_file" 2>/dev/null)
+  deps=$("${LIBSCRIPT_ROOT_DIR:-.}/scripts/resolve_stack.sh" "$json_file" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest") \(.override // "")"' 2>/dev/null || true)
   if [ -z "$deps" ]; then
     echo "No dependencies found in $json_file."
     exit 0
@@ -341,7 +341,7 @@ if [ "$cmd" = "package_as" ]; then
         deps_list="${deps_list}cli ${pkg} ${ver} ${override}\n"
       done
     elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
-      deps_list=$(jq -r 'to_entries[] | .key as $layer | if ($layer | IN("deps", "toolchains", "servers", "databases", "third_party", "storage")) then (.value | to_entries[] | "\($layer) \(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end) \(if (.value | type) == "object" and .value.override then .value.override else "" end)") else empty end' "libscript.json" 2>/dev/null)
+      deps_list=$("${LIBSCRIPT_ROOT_DIR:-.}/scripts/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.layer // "deps") \(.name) \(.version // "latest") \(.override // "")"' 2>/dev/null || true)
     fi
 
     if [ -n "$deps_list" ]; then
@@ -478,7 +478,7 @@ EOF
         if [ "$2" != "" ]; then shift 2; else shift; fi
       done
     elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
-      deps=$(jq -r 'if .deps then .deps | to_entries[] | "\(.key) \(if (.value | type) == "string" then .value else (.value.version // "latest") end)" else empty end' "libscript.json" 2>/dev/null)
+      deps=$("${LIBSCRIPT_ROOT_DIR:-.}/scripts/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null || true)
       echo "$deps" | while read -r pkg ver; do
         if [ -n "$pkg" ]; then
           if [ "$ver" = "null" ]; then ver="latest"; fi

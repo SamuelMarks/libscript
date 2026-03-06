@@ -76,6 +76,7 @@ while IFS= read -r f; do
 
   cp -- "${HTML_ROOT}"'/top.html' "${html}"
   iconv -t utf-8 -- "${f}" | sed 's/.md)/.html)/g' | pandoc -f markdown -t html5 | iconv -f utf-8 >> "${html}"
+  rm -f "${html%.html}"'.schema.json' "${html}"'.usage'
   previous_wd="$(pwd)"
   new_wd="${f%/*}"
   cd -- "${new_wd}"
@@ -94,7 +95,7 @@ while IFS= read -r f; do
                  "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${HTML_ROOT}"'/usage.html' >> "${html}"'.usage'
           # shellcheck disable=SC2016
           printf '${USAGE}' >> "${html}"
-          wetzel -k '**MUST**' -- "${new_wd}"'/'"${json_schema}" | iconv -t utf-8  | pandoc -f markdown -t html5 | sed 's/<table>/<table class="tui-table hovered-purple striped-purple">/g' | iconv -f utf-8 >> "${html}"
+#           wetzel -k '**MUST**' -- "${new_wd}"'/'"${json_schema}" | iconv -t utf-8  | pandoc -f markdown -t html5 | sed 's/<table>/<table class="tui-table hovered-purple striped-purple">/g' | iconv -f utf-8 >> "${html}"
           jq -c . "${new_wd}"'/'"${json_schema}" >> "${html%.html}"'.schema.json'
           cd -- "${new_wd}"
           ;;
@@ -284,6 +285,20 @@ for url in ${urls}; do
   mv -- "${url}"'.tmp1' "${url}"'.tmp'
 
   if [ -n "${USAGE}" ]; then
+    STATIC_FORM_HTML="$(printf '%s' "${SCHEMA}" | jq -r '
+      if type == "object" and has("properties") then
+        .properties | to_entries |
+        (map(.key | length) | max) as $max_len |
+        .[] |
+        ($max_len - (.key | length) + 20) as $dots_len |
+        (.key | tostring | sub("^\\["; "") | sub("\\]$"; "")) as $clean_key |
+        ($clean_key + ("." * $dots_len) + ": ") as $label_text |
+        "<div class=\"flex\">\n  <label for=\"\($clean_key)\" class=\"flex-item\" id=\"label-\($clean_key)\" style=\"white-space: pre;\">\( $label_text )</label>\n  <input class=\"tui-input flex-item\" name=\"\($clean_key)\" id=\"\($clean_key)\" placeholder=\"\(.value.description // "" | gsub("\""; "&quot;"))\" type=\"\(if ($clean_key | test("SECRET|PASSWORD")) then "password" else "text" end)\" />\n</div>"
+      else
+        empty
+      end
+    ')"
+
     # shellcheck disable=SC2016
     after_first_header=$(printf '
 <div class="tui-window" style="width: 100%%">
@@ -304,21 +319,21 @@ for url in ${urls}; do
     <fieldset class="tui-fieldset">
       <legend class="center">2-click deploy</legend>
       <div class="flex">
-        <label for="cname" class="flex-item">     CNAME.........................: </label><input class="tui-input flex-item" name="cname" id="cname" placeholder="Domain name" />
+        <label for="cname" class="flex-item" style="white-space: pre;">CNAME.........................: </label><input class="tui-input flex-item" name="cname" id="cname" placeholder="Domain name" />
       </div>
       <div class="flex">
-        <label for="log_server" class="flex-item">Metrics/logs (server).........: </label><input class="tui-input flex-item" name="log_server" id="log_server" placeholder="If == ↑domain then deploy"/>
+        <label for="log_server" class="flex-item" style="white-space: pre;">Metrics/logs (server).........: </label><input class="tui-input flex-item" name="log_server" id="log_server" placeholder="If == ↑domain then deploy"/>
       </div>
       <div class="flex">
-        <label for="backup_url" class="flex-item">Backup (object storage).......: </label><input class="tui-input flex-item" name="backup_url" id="backup_url" placeholder="Object storage—e.g., s3—URL"/>
+        <label for="backup_url" class="flex-item" style="white-space: pre;">Backup (object storage).......: </label><input class="tui-input flex-item" name="backup_url" id="backup_url" placeholder="Object storage—e.g., s3—URL"/>
+      </div>
+
+      <div class="flex-col">
+'"${STATIC_FORM_HTML}"'
       </div>
 
       <div class="flex">
-        <div id="editor_holder"></div>
-      </div>
-
-      <div class="flex">
-        <button class="tui-button" id="submit" type="submit" onclick="submitButtonFunc($event)" onsubmit="return false;">Set vars</button>
+        <button class="tui-button" id="submit" type="submit">Set vars</button>
       </div>
 
       <ul class="flex-ul-prefer-hor">
@@ -328,85 +343,17 @@ for url in ${urls}; do
       </ul>
     </fieldset>
   </form>
-</div>');
-    awk -v after_first_header="$after_first_header" '/<\/h1>/ && !done { sub(/<\/h1>/, "</h1>\\n" after_first_header); done=1 } 1' "${url}.tmp" > "${url}.tmp1"
-    find_replace 'first_scripts.js"></script>' 'first_scripts.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@json-editor/json-editor@latest/dist/jsoneditor.min.js"></script>' "${url}"'.tmp1' > "${url}"'.tmp'
-    # shellcheck disable=SC2016
-    find_replace '/scripts.js"></script>' '/scripts.js"></script>
-<script>
-const editor = new JSONEditor(document.getElementById("editor_holder"),
-  { schema: '"${SCHEMA}"'});
-editor.on("ready", () => {
-  const editor_holder = document.getElementById("editor_holder");
-  let longest = 0;
-  let STYLES = "";
-  for (const formControl of editor_holder.getElementsByClassName("form-control")) {
-      let inputElement = undefined;
-      let label = undefined;
-      formControl.classList.add("flex");
-      for (const child of formControl.children) {
-          switch (child.tagName.toLowerCase()) {
-              case "input":
-                  inputElement = child;
-                  inputElement.classList.add("flex-item");
-                  inputElement.classList.add("tui-input");
-                  if (inputElement.name != null && (inputElement.name.indexOf("SECRET") > -1 || inputElement.name.indexOf("PASSWORD") > -1))
-                      inputElement.type = "password";
-                  break;
-
-              case "label":
-                  label = child;
-                  label.classList.add("flex-item");
-                  // .replace("]", "").replace("[", "")
-                  label.id = `label-${label.htmlFor}`;
-                  const n = label.textContent.length;
-                  if (n > longest) longest = n;
-                  break;
-
-              case "p":
-                  if (child.id.endsWith("-description")) {
-                      inputElement.placeholder = child.textContent;
-                      formControl.removeChild(child);
-                  }
-                  break;
-
-              default:
-                  break;
-          }
+</div>')
+    after_first_header="$after_first_header" awk '
+      /<\/h1>/ && !done {
+        split($0, a, "</h1>");
+        print a[1] "</h1>\n" ENVIRON["after_first_header"] a[2];
+        done=1;
+        next;
       }
-
-      for (const child of formControl.children) {
-          if (child.tagName.toLowerCase() === "input") {
-              let l = 20 + (longest - child.textContent.length);
-              let dots = "";
-              for (let i=0; i<l; i++) dots += ".";
-              dots += ": ";
-              STYLES += `#label-${child.id}:after { content: "${dots}"; }\n`;
-          }
-      }
-  }
-  const style = document.createElement("style");
-  style.type = "text/css";
-  if (style.styleSheet) style.styleSheet.cssText = STYLES;
-  else style.appendChild(document.createTextNode(STYLES));
-  document.getElementsByTagName("head")[0].appendChild(style);
-  const sheet = new CSSStyleSheet()
-  sheet.replaceSync(STYLES)
-  document.adoptedStyleSheets = [sheet]
-});
-const submitButton = document.getElementById("submit");
-submitButton.onsubmit = "return false;";
-const submitButtonFunc = (e) => {
-  e.preventDefault();
-  console.log(editor.getValue());
-  return false;
-};
-submitButton.addEventListener("click", submitButtonFunc);
-</script>' "${url}"'.tmp' > "${url}"'.tmp1'
-  mv -- "${url}"'.tmp1' "${url}"'.tmp'
-  #else
-  #  >&2 printf 'USAGE not found for %s\n' "${url}"
+      1
+    ' "${url}.tmp" > "${url}.tmp1" 
+    mv -- "${url}.tmp1" "${url}.tmp"
   fi
 
   if [ "$(crc32 "${url}")" = "$(crc32 "${url}"'.tmp')" ]; then

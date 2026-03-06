@@ -1,16 +1,22 @@
-# 🔥 Usage Guide: Let's Build Some Stacks!
+# Usage Guide
 
-LibScript is incredibly powerful and shockingly easy to use! Whether you are building a generic stack, a LAMP/WAMP stack, or generating an installer, you have total control!
+This guide provides basic instructions for utilizing the LibScript CLI to provision software and generate artifacts.
 
-## 🛠️ The Generic Stack Maker
-Want to install a tool natively, completely bypassing Docker overhead?
+## Native Component Installation
+
+To install a tool natively, bypassing containerization, use the `install` subcommand:
+
 ```sh
 ./libscript.sh install nodejs 20
 ./libscript.sh install rust latest
 ```
 
-## 🌐 Building a LAMP / WAMP Stack
-Define your perfect stack in a `libscript.json` file!
+## Declarative Stack Building
+
+You can define a stack's requirements in a `libscript.json` file. The framework will resolve the necessary inter-component dependencies.
+
+Example `libscript.json` for a basic web stack:
+
 ```json
 {
   "deps": {
@@ -20,26 +26,27 @@ Define your perfect stack in a `libscript.json` file!
   }
 }
 ```
-Then provision the entire stack instantly:
-```sh
-./libscript.sh install-deps libscript.json
-```
-Boom! You have a native LAMP (Linux) or WAMP (Windows) stack running perfectly!
 
-## 🐳 Generating Good Quality Dockerfiles
-Need to containerize your stack? LibScript is the easiest way to generate top-tier Dockerfiles and Docker Compose files!
+To provision the stack natively:
+
 ```sh
-# Generate a perfect docker-compose setup!
-./libscript.sh package_as docker_compose postgres 16 redis latest > docker-compose.yml
+./libscript.sh apply
 ```
 
-## 📦 Generating Nice Installers!
-Ready to ship your application? Generate native installers without writing a single line of packaging code!
-```sh
-# Generate a Windows MSI Installer!
-./libscript.cmd package_as msi --app-name "My Awesome App" nodejs 20
+## Artifact Generation
 
-# Generate a Linux Debian Package!
-./libscript.sh package_as deb --app-name "My Awesome App" nodejs 20
+To generate artifacts from a component or stack, utilize the `package_as` subcommand.
+
+Generate a Dockerfile:
+
+```sh
+./libscript.sh package_as docker
 ```
-*(macOS and BSD installers are coming soon!)*
+
+Generate a Windows installer (requires appropriate toolchain if built on Linux):
+
+```sh
+./libscript.sh package_as msi
+```
+
+For advanced configuration options, see the specific module documentation in `_lib/DOCS.md` if available.

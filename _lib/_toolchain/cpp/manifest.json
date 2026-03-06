@@ -1,0 +1,16 @@
+{
+  "name": "CPP",
+  "provides": [
+    "compiler",
+    "c++",
+    "cpp",
+    "g++",
+    "clang++"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": []
+}

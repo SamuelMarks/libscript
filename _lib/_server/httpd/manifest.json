@@ -1,0 +1,17 @@
+{
+  "name": "HTTPD",
+  "provides": [
+    "web-server",
+    "apache",
+    "httpd"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": [
+    80,
+    443
+  ]
+}

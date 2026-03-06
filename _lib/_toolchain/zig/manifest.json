@@ -1,0 +1,13 @@
+{
+  "name": "ZIG",
+  "provides": [
+    "zig",
+    "toolchain"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": []
+}

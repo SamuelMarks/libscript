@@ -1,16 +1,20 @@
-# 💥 Dependency Management: Zero Headaches!
+# Dependency Management
 
-Dependency management is usually the worst part of cross-platform provisioning. Not anymore! LibScript abstracts everything so you can focus on building your generic stacks!
+LibScript uses an abstracted dependency management system to facilitate cross-platform software provisioning. This allows users to define stack components generically without writing OS-specific package manager commands.
 
-## 🌍 VERY VERY Cross-Platform!
-LibScript natively understands `apt`, `apk`, `dnf`, `brew`, `pacman`, `pkg`, `choco`, and `winget`. 
-When you declare a dependency on `libssl-dev`, LibScript automatically translates it to the correct package for Alpine, RHEL, macOS, and Windows!
+## Cross-Platform Package Translation
 
-This is exactly why LibScript is an incredible alternative to Chef, Ansible, and Puppet. Instead of writing massive, OS-specific `if/else` blocks in your playbooks, you can just call LibScript and let it do the translation! **Write cleaner, much smaller recipes!**
+The system inherently understands the package managers of supported environments (`apt`, `apk`, `dnf`, `brew`, `pacman`, `pkg`, `choco`, `winget`).
+When a component declares a generic dependency (e.g., `libssl-dev`), LibScript maps it to the appropriate local package format for Alpine, RHEL, macOS, or Windows at execution time.
 
-## 🔗 Automatic Stack Wiring
-When you build a **LAMP/WAMP stack** or a complex app, components naturally depend on each other (e.g., WordPress needs a Database). 
+## Component Wiring
 
-LibScript's dependency engine lets you seamlessly inject existing databases (`reuse`), install isolated ones (`install-alongside`), or completely replace them (`overwrite`).
+Components within a stack (such as a database and a web server) can declare dependencies on each other via their `vars.schema.json` files.
+LibScript supports different dependency resolution modes:
+- `reuse`: Links to an existing service or database.
+- `install-alongside`: Installs an isolated instance for the specific stack.
+- `overwrite`: Replaces the current installation.
 
-And because this is fully integrated, when you ask LibScript to generate a **good quality Docker Compose file**, it automatically maps these dependencies into perfect Docker networking links!
+## Automated Network Mapping
+
+When used in generator mode (e.g., outputting a `docker-compose.yml`), the dependency engine maps inter-component dependencies into the correct container network links and environment variables, ensuring consistent communication between services.

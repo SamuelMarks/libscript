@@ -1,0 +1,13 @@
+{
+  "name": "GO",
+  "provides": [
+    "compiler",
+    "go"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": []
+}

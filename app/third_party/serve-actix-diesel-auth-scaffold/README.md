@@ -1,33 +1,52 @@
-# Serve-Actix-Diesel-Auth-Scaffold (Third-Party Application)
+# Serve-Actix-Diesel-Auth-Scaffold
 
-## Purpose & Current State
+## Purpose & Overview
 
-**Purpose**: This document provides context and technical details for the `serve-actix-diesel-auth-scaffold` component (part of `third_party`) within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+This document describes the `serve-actix-diesel-auth-scaffold` component within the LibScript ecosystem. This component acts as a scaffolding tool and template for Rust-based web applications using Actix, Diesel, and authentication middleware.
 
-**Current State**: LibScript functions as a comprehensive global and per-component package manager, featuring a robust core CLI (`libscript.sh`, `libscript.cmd`, `libscript.bat`). It includes multi-platform toolchain support (Rust, Python, Node, Go, Java, C/C++), servers (Postgres 18, Nginx, Valkey), and advanced environment querying (`env` subcommand). It natively supports generating deployment configurations (`package_as docker`, `package_as docker_compose`, `package_as msi`, `package_as innosetup`, `package_as nsis`, `package_as TUI`) with deep installer customization, automated parallel dependency downloading and resolution via `libscript.json`, and robust uninstall lifecycle hooks (`uninstall.sh`/`uninstall.cmd`) for cleanly removing binaries, configs, and services. It natively handles deep semantic versioning, global `--secrets` extraction, caching, OpenBao/Vault generation, local caching via SQLite (`db-search`, `update-db`), explicit error handling for unsupported actions, and background process serving. Recent advancements have stabilized major Windows installer generation (MSI, InnoSetup, NSIS) and expanded macOS native service provisioning.
+LibScript functions as both a comprehensive global version manager (invoked via the `libscript` command) and a local version manager (similar to `rvm`, `nvm`, `pyenv`, or `uv`) for this component. You can manage `serve-actix-diesel-auth-scaffold` directly in an isolated, local context, or orchestrate it globally. 
 
-## Overview
+Furthermore, this component can be seamlessly utilized by LibScript to build and provision larger, complex stacks (like WordPress, Open edX, Nextcloud, custom SaaS platforms, etc.) by defining it as a dependency in your deployment configurations.
 
-This directory contains the installation and configuration scripts for `serve-actix-diesel-auth-scaffold`. It is designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
+## Lifecycle Management with LibScript
+
+You can easily install, uninstall, start, stop, and package this component using the LibScript CLI:
 
 ### Installation
-
 **Unix (Linux/macOS):**
 ```sh
-./cli.sh <COMMAND> <PACKAGE_NAME> [VERSION] [OPTIONS]
+./cli.sh install serve-actix-diesel-auth-scaffold [VERSION] [OPTIONS]
+# Or via global manager:
+libscript install serve-actix-diesel-auth-scaffold
 ```
-
 **Windows:**
 ```cmd
-cli.cmd <COMMAND> <PACKAGE_NAME> [VERSION] [OPTIONS]
+cli.cmd install serve-actix-diesel-auth-scaffold [VERSION] [OPTIONS]
+# Or via global manager:
+libscript.cmd install serve-actix-diesel-auth-scaffold
 ```
 
+### Start & Stop
+```sh
+./cli.sh start serve-actix-diesel-auth-scaffold
+./cli.sh stop serve-actix-diesel-auth-scaffold
+```
 
+### Uninstallation
+```sh
+./cli.sh uninstall serve-actix-diesel-auth-scaffold
+```
+
+### Packaging
+LibScript can package this component into various deployment formats:
+```sh
+libscript package_as docker serve-actix-diesel-auth-scaffold
+libscript package_as msi serve-actix-diesel-auth-scaffold
+```
 
 ## Architecture
 
-- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
+- `setup.sh`: The main entrypoint that resolves the OS and invokes the correct installation script.
 - `setup_generic.sh`: Fallback installation logic using the package manager mapper.
 - `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning correctly.
 - `vars.schema.json`: The schema definition for the CLI arguments.
-

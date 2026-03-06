@@ -62,15 +62,15 @@ if "!is_docker_cmd!"=="1" (
             echo Error: jq is required to parse !json_file!. 1>&2
             exit /b 1
         )
-        echo if .deps then .deps ^^| to_entries[] ^^| "\(.key) \(if (.value ^^| type) == \"string\" then .value else (.value.version // \"latest\") end)" else empty end > "%temp%\libscript_start_deps.jq"
-        for /f "tokens=1,2 delims= " %%A in ('jq -r -f "%temp%\libscript_start_deps.jq" "!json_file!" 2^>nul') do (
+        call "%~dp0scripts\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
+        for /f "tokens=1,2 delims= " %%A in (\'jq -r ".selected[] | \"\(.name) \(.version // \\\"latest\\\")\"" "!json_file!.resolved.json" 2^>nul\') do (
             set "pkg=%%A"
             set "ver=%%B"
             if "!ver!"=="null" set "ver=latest"
             set "LIBSCRIPT_INTERNAL_START=1"
             start "" /b cmd /c call "%~f0" !action! !pkg! !ver!
         )
-        if exist "%temp%\libscript_start_deps.jq" del "%temp%\libscript_start_deps.jq"
+        if exist "!json_file!.resolved.json" del "!json_file!.resolved.json"
         exit /b 0
     ) else (
         rem Support multiple specific services: libscript.cmd start caddy postgres
@@ -112,11 +112,10 @@ if /i "%cmd%"=="install-deps" (
         )
     )
 
-    echo if .deps then .deps ^| to_entries[] ^| "\(.key) \(if (.value ^| type) == \"string\" then .value else (.value.version // \"latest\") end) \(if (.value ^| type) == \"object\" and .value.override then .value.override else \"\" end)" else empty end > "%temp%\libscript_deps.jq"
-    
+    call "%~dp0scripts\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
     REM Parallel Download Phase
     echo Downloading dependencies in parallel...
-    for /f "tokens=1,2,3" %%a in ('jq -r -f "%temp%\libscript_deps.jq" "!json_file!" 2^>nul') do (
+    for /f "tokens=1,2,3" %%a in (\'jq -r ".selected[] | \"\(.name) \(.version // \\\"latest\\\") \(.override // \\\"\\\")\"" "!json_file!.resolved.json" 2^>nul\') do (
         if "%%c"=="" (
             start "" /b cmd /c "call "%~dp0libscript.cmd" download "%%a" "%%b""
         ) else if "%%c"=="null" (
@@ -132,7 +131,7 @@ if /i "%cmd%"=="install-deps" (
     
     REM Serial Install Phase
     echo Installing dependencies sequentially...
-    for /f "tokens=1,2,3" %%a in ('jq -r -f "%temp%\libscript_deps.jq" "!json_file!" 2^>nul') do (
+    for /f "tokens=1,2,3" %%a in (\'jq -r ".selected[] | \"\(.name) \(.version // \\\"latest\\\") \(.override // \\\"\\\")\"" "!json_file!.resolved.json" 2^>nul\') do (
         if not "%%c"=="" if not "%%c"=="null" (
             echo Skipping installation of %%a ^(override provided: %%c^)
         ) else (
@@ -140,7 +139,7 @@ if /i "%cmd%"=="install-deps" (
             call "%~dp0libscript.cmd" install "%%a" "%%b"
         )
     )
-    if exist "%temp%\libscript_deps.jq" del "%temp%\libscript_deps.jq"
+    if exist "!json_file!.resolved.json" del "!json_file!.resolved.json"
     exit /b 0
 )
 
@@ -556,8 +555,8 @@ if defined is_docker (
         if exist "libscript.json" (
             jq --version >nul 2>&1
             if not errorlevel 1 (
-                echo if .deps then .deps ^| to_entries[] ^| "\(.key) \(if (.value ^| type) == \"string\" then .value else (.value.version // \"latest\") end) \(if (.value ^| type) == \"object\" and .value.override then .value.override else \"\" end)" else empty end > "%temp%\libscript_deps.jq"
-                for /f "tokens=1,2,3" %%a in ('jq -r -f "%temp%\libscript_deps.jq" "libscript.json" 2^>nul') do (
+                call "%~dp0scripts\resolve_stack.cmd" "libscript.json" > "libscript.resolved.json" 2>nul
+                for /f "tokens=1,2,3" %%a in (\'jq -r ".selected[] | \"\(.name) \(.version // \\\"latest\\\") \(.override // \\\"\\\")\"" "libscript.resolved.json" 2^>nul\') do (
                     set "pkg_up=%%a"
                     for %%A in ("a=A" "b=B" "c=C" "d=D" "e=E" "f=F" "g=G" "h=H" "i=I" "j=J" "k=K" "l=L" "m=M" "n=N" "o=O" "p=P" "q=Q" "r=R" "s=S" "t=T" "u=U" "v=V" "w=W" "x=X" "y=Y" "z=Z" "-=_") do set "pkg_up=!pkg_up:%%~A!"
                     
@@ -596,7 +595,7 @@ if defined is_docker (
             echo %%i | findstr /b /v "ENV STACK=" | findstr /b /v "ENV SCRIPT_NAME=">> "!tmp_run!"
                     )
                 )
-                if exist "%temp%\libscript_deps.jq" del "%temp%\libscript_deps.jq"
+                if exist "!json_file!.resolved.json" del "!json_file!.resolved.json"
             ) else (
                 echo RUN ./install_gen.sh>> "!tmp_run!"
             )
@@ -661,8 +660,8 @@ if defined is_docker (
         if exist "libscript.json" (
             jq --version >nul 2>&1
             if not errorlevel 1 (
-                echo to_entries[] ^| .key as $layer ^| if ($layer ^| IN("deps", "toolchains", "servers", "databases", "third_party", "storage"^)^) then (.value ^| to_entries[] ^| "\(.key) \(if (.value ^| type) == \"string\" then .value else (.value.version // \"latest\") end) \(if (.value ^| type) == \"object\" and .value.override then .value.override else \"\" end)"^) else empty end > "%temp%\libscript_deps_dc.jq"
-                for /f "tokens=1,2,3" %%a in ('jq -r -f "%temp%\libscript_deps_dc.jq" "libscript.json" 2^>nul') do (
+                call "%~dp0scripts\resolve_stack.cmd" "libscript.json" > "libscript.resolved.json" 2>nul
+                for /f "tokens=1,2,3" %%a in (\'jq -r ".selected[] | \"\(.name) \(.version // \\\"latest\\\") \(.override // \\\"\\\")\"" "libscript.resolved.json" 2^>nul\') do (
                     set "pkg=%%a"
                     set "ver=%%b"
                     set "override=%%c"
@@ -671,7 +670,7 @@ if defined is_docker (
                     if "!override!"=="null" set "override="
                     call :dc_gen_service "!pkg!" "!ver!" "!override!"
                 )
-                if exist "%temp%\libscript_deps_dc.jq" del "%temp%\libscript_deps_dc.jq"
+                if exist "libscript.resolved.json" del "libscript.resolved.json"
             )
         )
     )
@@ -704,11 +703,11 @@ if defined is_docker (
         if exist "libscript.json" (
             jq --version >nul 2>&1
             if not errorlevel 1 (
-                echo if .deps then .deps ^| to_entries[] ^| "\(.key) \(if (.value ^| type) == \"string\" then .value else (.value.version // \"latest\") end)" else empty end > "%temp%\libscript_deps_tui.jq"
-                for /f "tokens=1,2" %%a in ('jq -r -f "%temp%\libscript_deps_tui.jq" "libscript.json" 2^>nul') do (
+                call "%~dp0scripts\resolve_stack.cmd" "libscript.json" > "libscript.resolved.json" 2>nul
+                for /f "tokens=1,2" %%a in (\'jq -r ".selected[] | \"\(.name) \(.version // \\\"latest\\\")\"" "libscript.resolved.json" 2^>nul\') do (
                     echo set "ps_script=^!ps_script^![pscustomobject]@{Name='%%a';Version='%%b'},"
                 )
-                if exist "%temp%\libscript_deps_tui.jq" del "%temp%\libscript_deps_tui.jq"
+                if exist "libscript.resolved.json" del "libscript.resolved.json"
             )
         ) else (
             for /f "delims=" %%f in ('dir /s /b /a:-d "%SCRIPT_DIR%\cli.cmd" 2^>nul') do (
@@ -854,11 +853,11 @@ exit /b !errorlevel!
     if exist "libscript.json" (
         jq --version >nul 2>&1
         if not errorlevel 1 (
-            echo if .deps then .deps ^| to_entries[] ^| "\(.key) \(if (.value ^| type) == \"string\" then .value else (.value.version // \"latest\") end)" else empty end > "%temp%\libscript_deps_nsis.jq"
-            for /f "tokens=1,2" %%a in ('jq -r -f "%temp%\libscript_deps_nsis.jq" "libscript.json" 2^>nul') do (
+            call "%~dp0scripts\resolve_stack.cmd" "libscript.json" > "libscript.resolved.json" 2>nul
+            for /f "tokens=1,2" %%a in (\'jq -r ".selected[] | \"\(.name) \(.version // \\\"latest\\\")\"" "libscript.resolved.json" 2^>nul\') do (
                 echo   ExecWait 'cmd.exe /c libscript.cmd install %%a %%b'
             )
-            if exist "%temp%\libscript_deps_nsis.jq" del "%temp%\libscript_deps_nsis.jq"
+            if exist "libscript.resolved.json" del "libscript.resolved.json"
         )
     )
 )

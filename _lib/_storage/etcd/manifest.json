@@ -1,0 +1,16 @@
+{
+  "name": "ETCD",
+  "provides": [
+    "kv-store",
+    "etcd"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": [
+    2379,
+    2380
+  ]
+}

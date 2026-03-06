@@ -8,19 +8,49 @@
 
 ## Overview
 
-This directory contains the installation and configuration scripts for `mariadb`. It is designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
+This directory contains the installation, configuration, and lifecycle management scripts for **MariaDB**. 
 
-### Installation
+Crucially, this component works both as a **local version manager** (similar to tools like `rvm`, `nvm`, `pyenv`, or `uv`) for managing isolated instances of MariaDB, and it can be invoked seamlessly from the **global version manager**, `libscript`. 
+
+Furthermore, `libscript` can utilize this MariaDB component as a foundational database building block to provision and build **bigger stacks** (such as WordPress, Open edX, Nextcloud, and more).
+
+### Lifecycle Management (Install, Start, Stop, Package, Uninstall)
+
+You can install, start, stop, package, and uninstall MariaDB using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**
 ```sh
-./cli.sh <COMMAND> <PACKAGE_NAME> [VERSION] [OPTIONS]
+# Install
+libscript install mariadb [VERSION] [OPTIONS]
+
+# Start and Stop
+libscript start mariadb
+libscript stop mariadb
+
+# Package (e.g., as Docker image)
+libscript package_as docker mariadb
+
+# Uninstall
+libscript uninstall mariadb
 ```
 
 **Windows:**
 ```cmd
-cli.cmd <COMMAND> <PACKAGE_NAME> [VERSION] [OPTIONS]
+:: Install
+libscript.cmd install mariadb [VERSION] [OPTIONS]
+
+:: Start and Stop
+libscript.cmd start mariadb
+libscript.cmd stop mariadb
+
+:: Package (e.g., as MSI installer)
+libscript.cmd package_as msi mariadb
+
+:: Uninstall
+libscript.cmd uninstall mariadb
 ```
+
+*Alternatively, you can execute these locally from within this directory using `./cli.sh <COMMAND> mariadb` or `cli.cmd <COMMAND> mariadb`.*
 
 ## Configuration Options
 

@@ -1,0 +1,16 @@
+{
+  "name": "MONGODB",
+  "provides": [
+    "database",
+    "document-db",
+    "mongodb"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": [
+    27017
+  ]
+}

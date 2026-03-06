@@ -1,0 +1,13 @@
+{
+  "name": "NODEJS_SERVER",
+  "provides": [
+    "app-server",
+    "nodejs"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": []
+}

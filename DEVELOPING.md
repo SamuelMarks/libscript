@@ -1,21 +1,17 @@
-# 🛠️ Developing LibScript: Join the Revolution!
+# Developing LibScript
 
-We are building a public-domain, completely open-source alternative to Docker and heavy configuration managers, and we want YOUR help to expand our massive library of components!
+LibScript is an open-source framework, and community contributions to expand its component library are welcome. Developing a new component leverages the existing cross-platform execution and generation architecture.
 
-## 🚀 Why Contribute?
-Every time you write a simple shell script for a new LibScript component, you aren't just making a native installer. Thanks to our dynamic architecture, you are automatically creating:
-- A way to generate **good quality Dockerfiles** for that component!
-- A way to generate **nice Windows/Linux/FreeBSD/macOS installers** for it!
-- A new building block for our **LAMP/WAMP and Generic Stack Maker**!
-- A way to write **cleaner, smaller Chef/Ansible recipes** for that software!
+## How to Scaffold a Component
 
-## 🧩 How to Scaffold a Component
-It's incredibly easy. No DSLs, no Ruby, no Go. Just shell!
-1. **Create your folder** in `_lib/_toolchain/my_awesome_tool`.
-2. **Define `vars.schema.json`**: Tell LibScript what ports or dependencies your tool needs.
-3. **Write `setup.sh`**: Write a simple POSIX shell script to download and configure your tool.
-4. **Write `setup_win.ps1`**: Write a PowerShell script for our incredible Windows support.
+Components are located within the `_lib` directory under relevant categories (e.g., `_lib/_toolchain/my_tool`).
 
-By simply defining dependencies in your JSON schema, LibScript will automatically link them up when users generate a `docker-compose.yml` or a native installer! 
+To create a new component:
+1. **Create the Component Directory**: Place it in the appropriate `_lib` subfolder.
+2. **Define `vars.schema.json`**: Outline the tool's dependencies, required environment variables, and exposed ports.
+3. **Write `setup.sh`**: Implement the POSIX shell script to download, extract, and configure the tool.
+4. **Write `setup_win.ps1` or `setup_win.cmd`**: Provide the Windows implementation for the tool's setup.
 
-Let's build the ultimate cross-platform provisioning engine together!
+## Contribution Benefits
+
+By defining a component with a `vars.schema.json` and basic setup scripts, it automatically inherits support for the `package_as` generators. The new component can immediately be compiled into a Dockerfile, an MSI installer, or integrated into a generated `docker-compose.yml` stack.

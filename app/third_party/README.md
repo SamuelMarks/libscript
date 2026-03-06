@@ -1,11 +1,18 @@
-app/third_party
-===============
+# app/third_party
 
-## Purpose & Current State
+## Overview
+This document describes the `third_party` folder within the LibScript ecosystem. This directory houses third-party application modules and integration scripts that are not developed natively as part of LibScript but are orchestrated by it.
 
-**Purpose**: This document provides context and technical details for the `third_party` component (part of `app`) within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+It works both as a local version manager (similar to rvm, nvm, pyenv, uv) and can be invoked from the global version manager `libscript`. The components within this folder can be used by libscript to build bigger stacks (like WordPress, Open edX, nextcloud, etc.) by pulling together various external dependencies and applications.
 
-**Current State**: LibScript functions as a comprehensive global and per-component package manager, featuring a robust core CLI (`libscript.sh`, `libscript.cmd`, `libscript.bat`). It includes multi-platform toolchain support (Rust, Python, Node, Go, Java, C/C++), servers (Postgres 18, Nginx, Valkey), and advanced environment querying (`env` subcommand). It natively supports generating deployment configurations (`package_as docker`, `package_as docker_compose`, `package_as msi`, `package_as innosetup`, `package_as nsis`, `package_as TUI`) with deep installer customization, automated parallel dependency downloading and resolution via `libscript.json`, and robust uninstall lifecycle hooks (`uninstall.sh`/`uninstall.cmd`) for cleanly removing binaries, configs, and services. It natively handles deep semantic versioning, global `--secrets` extraction, caching, OpenBao/Vault generation, local caching via SQLite (`db-search`, `update-db`), explicit error handling for unsupported actions, and background process serving. Recent advancements have stabilized major Windows installer generation (MSI, InnoSetup, NSIS) and expanded macOS native service provisioning.
+## LibScript Operations
+You can manage the `third_party` components using the global `libscript` CLI or the local `cli.sh`/`cli.cmd`.
+
+- **Install:** `libscript install third_party`
+- **Uninstall:** `libscript uninstall third_party`
+- **Start:** `libscript start third_party`
+- **Stop:** `libscript stop third_party`
+- **Package:** `libscript package_as docker third_party` (or `msi`, `docker_compose`, etc.)
 
 ## Dependency Installation Methods
 

@@ -8,19 +8,34 @@
 
 ## Overview
 
-This directory contains the installation and configuration scripts for `cpp`. It is designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
+This directory contains the installation and configuration scripts for **C++ (cpp)**, a powerful, high-performance, general-purpose programming language commonly used in systems programming, game development, and high-performance computing. It is designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
 
-### Installation
+Crucially, this component works both as a **local version manager** (similar to tools like `rvm`, `nvm`, `pyenv`, or `uv`), allowing you to isolate and manage specific versions of C++ toolchains per project, and it can be seamlessly invoked from the **global version manager**, `libscript`.
 
-**Unix (Linux/macOS):**
+Furthermore, C++ compilers can be utilized by LibScript as a foundational dependency to **build bigger, complex application stacks** (such as WordPress, Open edX, Nextcloud, and more) that require compilation of native extensions.
+
+### Lifecycle & Usage
+
+You can easily install, uninstall, start, stop, and package C++ toolchains directly using LibScript:
+
+**Install / Uninstall:**
 ```sh
-./cli.sh <COMMAND> <PACKAGE_NAME> [VERSION] [OPTIONS]
+libscript install cpp [VERSION] [OPTIONS]
+libscript uninstall cpp
 ```
 
-**Windows:**
-```cmd
-cli.cmd <COMMAND> <PACKAGE_NAME> [VERSION] [OPTIONS]
+**Start / Stop (if configured as a background service):**
+```sh
+libscript start cpp
+libscript stop cpp
 ```
+
+**Package (e.g., as a Docker container):**
+```sh
+libscript package_as docker cpp
+```
+
+*Note: On Unix environments, you can also use `./cli.sh <COMMAND> cpp [VERSION] [OPTIONS]`. On Windows, use `libscript.cmd` or `cli.cmd`.*
 
 ## Configuration Options
 
@@ -38,4 +53,3 @@ The following environment variables can be passed to the CLI (`--KEY=VALUE`) or 
 - `setup_generic.sh`: Fallback installation logic using the package manager mapper.
 - `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning correctly.
 - `vars.schema.json`: The schema definition for the CLI arguments.
-

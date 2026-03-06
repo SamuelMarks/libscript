@@ -1,0 +1,13 @@
+{
+  "name": "SQLITE",
+  "provides": [
+    "database",
+    "sqlite"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": []
+}

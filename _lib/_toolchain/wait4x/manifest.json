@@ -1,0 +1,13 @@
+{
+  "name": "WAIT4X",
+  "provides": [
+    "wait4x",
+    "toolchain"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": []
+}

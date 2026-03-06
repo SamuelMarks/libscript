@@ -1,0 +1,15 @@
+{
+  "name": "ELIXIR",
+  "provides": [
+    "compiler",
+    "elixir",
+    "erlang",
+    "beam"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": []
+}

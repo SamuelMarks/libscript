@@ -1,0 +1,19 @@
+{
+  "name": "KUBERNETES_K0S",
+  "provides": [
+    "kubernetes_k0s",
+    "server"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [
+    "windows"
+  ],
+  "ports": [
+    6443,
+    8132,
+    10250
+  ]
+}

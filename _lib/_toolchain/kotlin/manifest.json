@@ -1,0 +1,14 @@
+{
+  "name": "KOTLIN",
+  "provides": [
+    "compiler",
+    "kotlin",
+    "jvm"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": []
+}

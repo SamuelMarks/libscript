@@ -1,0 +1,13 @@
+{
+  "name": "SH",
+  "provides": [
+    "sh",
+    "toolchain"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": []
+}

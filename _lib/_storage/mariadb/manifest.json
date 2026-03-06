@@ -1,0 +1,25 @@
+{
+  "name": "MARIADB",
+  "provides": [
+    "database",
+    "mysql-compatible",
+    "mariadb"
+  ],
+  "conflicts": [
+    "mysql"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "versions": [
+    "10.4.31",
+    "10.5.22",
+    "10.6.15",
+    "10.11.5",
+    "11.1.2"
+  ],
+  "ports": [
+    3306
+  ]
+}

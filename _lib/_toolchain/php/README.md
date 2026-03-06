@@ -4,23 +4,59 @@
 
 **Purpose**: This document provides context and technical details for the `php` component (part of `_toolchain`) within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
 
+**What is PHP?**: PHP (Hypertext Preprocessor) is a widely-used open-source general-purpose scripting language that is especially suited for web development and can be embedded into HTML.
+
 **Current State**: LibScript functions as a comprehensive global and per-component package manager, featuring a robust core CLI (`libscript.sh`, `libscript.cmd`, `libscript.bat`). It includes multi-platform toolchain support (Rust, Python, Node, Go, Java, C/C++), servers (Postgres 18, Nginx, Valkey), and advanced environment querying (`env` subcommand). It natively supports generating deployment configurations (`package_as docker`, `package_as docker_compose`, `package_as msi`, `package_as innosetup`, `package_as nsis`, `package_as TUI`) with deep installer customization, automated parallel dependency downloading and resolution via `libscript.json`, and robust uninstall lifecycle hooks (`uninstall.sh`/`uninstall.cmd`) for cleanly removing binaries, configs, and services. It natively handles deep semantic versioning, global `--secrets` extraction, caching, OpenBao/Vault generation, local caching via SQLite (`db-search`, `update-db`), explicit error handling for unsupported actions, and background process serving. Recent advancements have stabilized major Windows installer generation (MSI, InnoSetup, NSIS) and expanded macOS native service provisioning.
 
 ## Overview
 
-This directory contains the installation and configuration scripts for `php`. It is designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
+This directory contains the installation and configuration scripts for `php`. 
 
-### Installation
+### Local and Global Version Management
+
+The `php` component works both as a **local version manager** (similar to tools like `rvm`, `nvm`, `pyenv`, or `uv`) and can be seamlessly invoked from the global version manager via `libscript`. This dual capability allows developers to manage specific versions per project locally or enforce system-wide global configurations.
+
+### Building Bigger Stacks
+
+Beyond isolated provisioning, this component can be deeply integrated by `libscript` to build, deploy, and manage larger stacks and complex applications. Whether you are scaffolding a CMS like WordPress, a learning platform like Open edX, or a collaboration suite like Nextcloud, LibScript can orchestrate `php` alongside databases, web servers, and other services to form a cohesive, reproducible stack.
+
+### Usage with LibScript
+
+You can easily install, uninstall, start, stop, or package `php` using LibScript.
 
 **Unix (Linux/macOS):**
 ```sh
-./cli.sh <COMMAND> <PACKAGE_NAME> [VERSION] [OPTIONS]
+# Install
+./libscript.sh install php [VERSION] [OPTIONS]
+
+# Uninstall
+./libscript.sh uninstall php
+
+# Start / Stop (if applicable as a service/daemon)
+./libscript.sh start php
+./libscript.sh stop php
+
+# Package
+./libscript.sh package_as docker php
 ```
 
 **Windows:**
 ```cmd
-cli.cmd <COMMAND> <PACKAGE_NAME> [VERSION] [OPTIONS]
+:: Install
+libscript.cmd install php [VERSION] [OPTIONS]
+
+:: Uninstall
+libscript.cmd uninstall php
+
+:: Start / Stop (if applicable as a service/daemon)
+libscript.cmd start php
+libscript.cmd stop php
+
+:: Package
+libscript.cmd package_as msi php
 ```
+
+*Note: Alternatively, you can use `cli.sh` or `cli.cmd` directly within this directory for localized execution.*
 
 ## Configuration Options
 
@@ -38,4 +74,3 @@ The following environment variables can be passed to the CLI (`--KEY=VALUE`) or 
 - `setup_generic.sh`: Fallback installation logic using the package manager mapper.
 - `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning correctly.
 - `vars.schema.json`: The schema definition for the CLI arguments.
-

@@ -1,0 +1,22 @@
+{
+  "name": "NGINX",
+  "provides": [
+    "web-server",
+    "reverse-proxy",
+    "nginx"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "versions": [
+    "1.22.1",
+    "1.24.0",
+    "1.25.3"
+  ],
+  "ports": [
+    80,
+    443
+  ]
+}

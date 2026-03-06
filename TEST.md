@@ -1,15 +1,17 @@
-# 🛡️ Testing: Bulletproof Stacks!
+# Testing Strategy
 
-How do we guarantee that LibScript is a truly viable alternative to Docker, Chef, Ansible, and Puppet? Through obsessive, exhaustive, cross-platform testing!
+LibScript relies on a comprehensive testing matrix to ensure reliable cross-platform execution and artifact generation. 
 
-## 🌍 The "VERY VERY Cross-Platform" Guarantee
-Our Continuous Integration matrix is huge. We automatically provision, install, and verify our components across:
-- **Linux (Ubuntu, Debian, Alpine, RHEL/AlmaLinux)**
-- **FreeBSD**
-- **macOS**
-- **Windows (Modern and Legacy)**
+## Cross-Platform Validation
 
-## 🐳 Validating Our Generated Artifacts
-Because LibScript is the easiest way to create **good quality Dockerfiles** and **nice installers**, our testing doesn't just check the native shell scripts. We actively validate that the `docker-compose.yml` files and native packages we generate are syntactically perfect and functionally sound.
+The Continuous Integration (CI) pipeline provisions, installs, and verifies components natively across the following environments:
+- Linux (Ubuntu, Debian, Alpine, RHEL/AlmaLinux)
+- FreeBSD
+- macOS
+- Windows (Modern and Legacy MS-DOS environments)
 
-Whether you are using LibScript to generate a generic stack, a LAMP/WAMP stack, or to write cleaner, smaller Chef recipes, you can trust that the output has been battle-tested across every major OS!
+## Artifact Verification
+
+Testing extends beyond native script execution. The CI pipeline actively validates the outputs of the `package_as` generator engine:
+- Generated `docker-compose.yml` files and Dockerfiles are linted and built to verify syntactic and functional correctness.
+- Native installers (MSI, DEB, RPM, etc.) are compiled and tested in isolated sandboxes to confirm they accurately reflect the declared component schemas.

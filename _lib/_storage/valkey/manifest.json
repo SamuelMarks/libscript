@@ -1,0 +1,20 @@
+{
+  "name": "VALKEY",
+  "provides": [
+    "kv-store",
+    "redis-compatible",
+    "valkey"
+  ],
+  "conflicts": [
+    "redis"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [
+    "windows"
+  ],
+  "ports": [
+    6379
+  ]
+}

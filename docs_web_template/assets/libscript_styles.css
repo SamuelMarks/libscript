@@ -407,3 +407,196 @@ json-schema-form {
     width: 100%;
 }
 
+
+/* Accessibility & UX Enhancements */
+body {
+    font-size: 16px; /* Prevent iOS zoom */
+}
+
+/* Ensure touch targets meet WCAG 2.5.5 Target Size (min 44x44) */
+.tui-input, .tui-button, select, button, a.tui-button {
+    min-height: 44px !important;
+    padding: 8px 16px;
+    font-size: 1rem;
+    line-height: 1.5;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+/* Label spacing and clickability */
+label {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.tui-radio input, .tui-checkbox input {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+}
+
+/* Improved focus states */
+*:focus, *:focus-visible {
+    outline: 3px solid #fcfc54 !important; /* Brighter, thicker yellow */
+    outline-offset: 3px;
+    z-index: 10;
+}
+
+/* Dark mode & High Contrast enhancements */
+@media (prefers-color-scheme: dark), (prefers-contrast: more) {
+    :root, html, body {
+        background-color: #000000 !important;
+        color: #ffffff !important;
+    }
+    
+    .tui-bg-blue-black, .tui-bg-red-black, .tui-bg-cyan-black {
+        background-color: #000000 !important;
+    }
+    
+    .tui-window, .tui-panel, .tui-fieldset {
+        border: 2px solid #ffffff !important;
+        background-color: #111111 !important;
+        box-shadow: none !important;
+    }
+
+    /* Enhance text contrast */
+    .red-168-text, .red-255-text { color: #ff5555 !important; font-weight: bold; }
+    .green-168-text, .green-255-text { color: #55ff55 !important; font-weight: bold; }
+    .cyan-168-text, .cyan-255-text { color: #55ffff !important; font-weight: bold; }
+    .orange-168-text { color: #ffaa00 !important; font-weight: bold; }
+    .yellow-168-text, .yellow-255-text { color: #ffff55 !important; font-weight: bold; }
+    .white-168-text, .white-text, .text-white { color: #ffffff !important; }
+    
+    /* Stronger button contrast */
+    .tui-button {
+        border: 2px solid #ffffff !important;
+        color: #ffffff !important;
+        background-color: #222222 !important;
+        font-weight: bold;
+    }
+    .tui-button:hover, .tui-button:focus {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+    }
+
+    /* Input contrast */
+    .tui-input, select, textarea {
+        background-color: #000000 !important;
+        color: #ffffff !important;
+        border: 2px solid #ffffff !important;
+    }
+
+    /* Links contrast */
+    a {
+        color: #55ffff !important;
+        text-decoration: underline;
+    }
+    a:hover, a:focus {
+        color: #ffff55 !important;
+        background-color: #222222;
+    }
+    
+    .tui-table th {
+        border-bottom: 2px solid #ffffff !important;
+    }
+    .tui-table td {
+        border-bottom: 1px solid #444444 !important;
+    }
+    
+    hr {
+        border-color: #ffffff !important;
+    }
+}
+
+/* Mobile responsive fixes */
+@media screen and (max-width: 768px) {
+    body {
+        padding-bottom: 70px; /* Space for the bottom navbar */
+    }
+    #actual-body {
+        margin-left: 0 !important;
+        max-width: 100% !important;
+        padding: 10px !important;
+    }
+    .tui-nav ul li.tui-dropdown {
+        position: static;
+    }
+    .tui-nav ul li.tui-dropdown .tui-dropdown-content {
+        width: 100%;
+        position: absolute;
+        left: 0;
+        top: 100%;
+    }
+    .tui-statusbar {
+        padding: 10px;
+        height: auto;
+        min-height: 44px;
+        flex-wrap: wrap;
+    }
+    .tui-statusbar ul li {
+        margin-bottom: 5px;
+    }
+    
+    /* Better table scrolling */
+    .tui-screen-800-600 {
+        border: none !important;
+        background: transparent !important;
+    }
+    .tui-table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+    }
+    
+    .add-btn {
+        bottom: 60px; /* move up so it doesn't overlap statusbar on mobile */
+    }
+}
+
+/* Visually hide but keep focusable for screen readers and keyboard a11y */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+#mobile-menu-toggle:focus-visible ~ nav .tui-sidenav-button label {
+    outline: 3px solid #fcfc54 !important;
+    outline-offset: 3px;
+    background-color: #000;
+}
+
+/* Better button wrap spacing */
+.tui-button, a.tui-button {
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+@media screen and (max-width: 768px) {
+    .tui-button, a.tui-button {
+        width: 100%;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+}
+
+/* Preserve add-btn fixed size on mobile */
+@media screen and (max-width: 768px) {
+    .add-btn {
+        width: 50px !important;
+        height: 50px !important;
+        border-radius: 50% !important;
+    }
+}

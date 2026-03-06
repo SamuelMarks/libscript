@@ -1,0 +1,14 @@
+{
+  "name": "RUST",
+  "provides": [
+    "compiler",
+    "rust",
+    "cargo"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": []
+}

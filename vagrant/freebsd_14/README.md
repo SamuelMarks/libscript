@@ -1,19 +1,35 @@
-FreeBSD 14 vagrant image
+FreeBSD 14 Vagrant Image
 ========================
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `freebsd_14` component (part of `vagrant`) within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+**Purpose**: This document describes the `freebsd_14` Vagrant folder and environment within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning.
 
-**Current State**: LibScript functions as a comprehensive global and per-component package manager, featuring a robust core CLI (`libscript.sh`, `libscript.cmd`, `libscript.bat`). It includes multi-platform toolchain support (Rust, Python, Node, Go, Java, C/C++), servers (Postgres 18, Nginx, Valkey), and advanced environment querying (`env` subcommand). It natively supports generating deployment configurations (`package_as docker`, `package_as docker_compose`, `package_as msi`, `package_as innosetup`, `package_as nsis`, `package_as TUI`) with deep installer customization, automated parallel dependency downloading and resolution via `libscript.json`, and robust uninstall lifecycle hooks (`uninstall.sh`/`uninstall.cmd`) for cleanly removing binaries, configs, and services. It natively handles deep semantic versioning, global `--secrets` extraction, caching, OpenBao/Vault generation, local caching via SQLite (`db-search`, `update-db`), explicit error handling for unsupported actions, and background process serving. Recent advancements have stabilized major Windows installer generation (MSI, InnoSetup, NSIS) and expanded macOS native service provisioning.
+**Capabilities**: 
+- It works both as a local version manager (similar to rvm, nvm, pyenv, uv) and can be invoked from the global version manager `libscript`.
+- It can be used by libscript to build bigger stacks (like WordPress, Open edX, nextcloud, etc.).
 
-## Usage
+**Current State**: LibScript functions as a comprehensive global and per-component package manager. It supports deep installer customization, automated parallel dependency downloading, and robust lifecycle hooks for cleanly managing environments.
+
+## Lifecycle Management with Libscript
+
+You can natively manage this Vagrant environment using `libscript`:
+
+- **Install**: `libscript install vagrant/freebsd_14`
+- **Start**: `libscript start vagrant/freebsd_14`
+- **Stop**: `libscript stop vagrant/freebsd_14`
+- **Uninstall**: `libscript uninstall vagrant/freebsd_14`
+- **Package**: `libscript package vagrant/freebsd_14`
+
+## Vagrant Usage
+
+You can also start it directly via Vagrant:
 
     vagrant up
 
-## Libscript usage
+## Libscript Usage over SSH
 
-Then you can use it like any other ssh host, e.g., to install PostgreSQL:
+Then you can use it like any other SSH host, e.g., to install PostgreSQL:
 
     vagrant ssh <<< '"${LIBSCRIPT_ROOT_DIR}"/_lib/_storage/postgres/setup.sh'
 
@@ -23,7 +39,7 @@ Then you can use it like any other ssh host, e.g., to install PostgreSQL:
 
     vagrant ssh <<< '. "${LIBSCRIPT_ROOT_DIR}"/env.sh && "${LIBSCRIPT_ROOT_DIR}"/_lib/_storage/postgres/test.sh'
 
-### FreeBSD specific notes
+### FreeBSD Specific Notes
 
 For some reason the -c syntax doesn't work so you have to use `<<<` which limits what host shell you are using.
 
@@ -31,8 +47,6 @@ Also, you need to manually copy files over as the vagrant/hypervisor folder sync
 For example—assuming you've exported `vagrant ssh-config` and named it `freebsd_14`—run:
 
     rsync -avz --exclude='**/.vagrant' /path/to/libscript freebsd_14:/opt/repos/
-
-
 
 ## Dependency Installation Methods
 

@@ -8,19 +8,49 @@
 
 ## Overview
 
-This directory contains the installation and configuration scripts for `valkey`. It is designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
+This directory contains the installation, configuration, and lifecycle management scripts for **Valkey**. 
 
-### Installation
+Crucially, this component works both as a **local version manager** (similar to tools like `rvm`, `nvm`, `pyenv`, or `uv`) for managing isolated instances of Valkey, and it can be invoked seamlessly from the **global version manager**, `libscript`. 
+
+Furthermore, `libscript` can utilize this Valkey component as a foundational building block to provision and build **bigger stacks** (such as WordPress, Open edX, Nextcloud, and more).
+
+### Lifecycle Management (Install, Start, Stop, Package, Uninstall)
+
+You can install, start, stop, package, and uninstall Valkey using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**
 ```sh
-./cli.sh <COMMAND> <PACKAGE_NAME> [VERSION] [OPTIONS]
+# Install
+libscript install valkey [VERSION] [OPTIONS]
+
+# Start and Stop
+libscript start valkey
+libscript stop valkey
+
+# Package (e.g., as Docker image)
+libscript package_as docker valkey
+
+# Uninstall
+libscript uninstall valkey
 ```
 
 **Windows:**
 ```cmd
-cli.cmd <COMMAND> <PACKAGE_NAME> [VERSION] [OPTIONS]
+:: Install
+libscript.cmd install valkey [VERSION] [OPTIONS]
+
+:: Start and Stop
+libscript.cmd start valkey
+libscript.cmd stop valkey
+
+:: Package (e.g., as MSI installer)
+libscript.cmd package_as msi valkey
+
+:: Uninstall
+libscript.cmd uninstall valkey
 ```
+
+*Alternatively, you can execute these locally from within this directory using `./cli.sh <COMMAND> valkey` or `cli.cmd <COMMAND> valkey`.*
 
 ## Configuration Options
 

@@ -1,19 +1,35 @@
-vagrant
-=======
+Vagrant Environments
+====================
 
-## Purpose & Current State
+## Overview
 
-**Purpose**: This document provides context and technical details for the `vagrant` directory within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+**Purpose**: This document describes the `vagrant` folder and its contained environments within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning.
 
-**Current State**: LibScript functions as a comprehensive global and per-component package manager, featuring a robust core CLI (`libscript.sh`, `libscript.cmd`, `libscript.bat`). It includes multi-platform toolchain support (Rust, Python, Node, Go, Java, C/C++), servers (Postgres 18, Nginx, Valkey), and advanced environment querying (`env` subcommand). It natively supports generating deployment configurations (`package_as docker`, `package_as docker_compose`, `package_as msi`, `package_as innosetup`, `package_as nsis`, `package_as TUI`) with deep installer customization, automated parallel dependency downloading and resolution via `libscript.json`, and robust uninstall lifecycle hooks (`uninstall.sh`/`uninstall.cmd`) for cleanly removing binaries, configs, and services. It natively handles deep semantic versioning, global `--secrets` extraction, caching, OpenBao/Vault generation, local caching via SQLite (`db-search`, `update-db`), explicit error handling for unsupported actions, and background process serving. Recent advancements have stabilized major Windows installer generation (MSI, InnoSetup, NSIS) and expanded macOS native service provisioning.
+**Capabilities**: 
+- It works both as a local version manager (similar to rvm, nvm, pyenv, uv) and can be invoked from the global version manager `libscript`.
+- It can be used by libscript to build bigger stacks (like WordPress, Open edX, nextcloud, etc.).
 
-## Usage
+**Current State**: LibScript functions as a comprehensive global and per-component package manager. It supports deep installer customization, automated parallel dependency downloading, and robust lifecycle hooks for cleanly managing environments.
+
+## Lifecycle Management with Libscript
+
+You can natively manage these Vagrant environments using `libscript`:
+
+- **Install**: `libscript install vagrant`
+- **Start**: `libscript start vagrant`
+- **Stop**: `libscript stop vagrant`
+- **Uninstall**: `libscript uninstall vagrant`
+- **Package**: `libscript package vagrant`
+
+## Vagrant Usage
+
+You can start specific environments directly via Vagrant:
 
     vagrant up
 
-## Libscript usage
+## Libscript Usage over SSH
 
-Then you can use it like any other ssh host, e.g., to install PostgreSQL:
+Then you can use it like any other SSH host, e.g., to install PostgreSQL:
 
     vagrant ssh -c '"${LIBSCRIPT_ROOT_DIR}"/_lib/_storage/postgres/setup.sh'
 
@@ -42,8 +58,6 @@ So you can run it in a loop, like:
     done
 
 (wrap in a subshell with a `&` at the end to run in parallel)
-
-
 
 ## Dependency Installation Methods
 

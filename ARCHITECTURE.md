@@ -1,20 +1,28 @@
-# ⚙️ Architecture: The Engine Behind the Magic!
+# Architecture
 
-How do we build a viable alternative to Docker, Chef, and Ansible that runs entirely on zero-dependency shell scripts? By building an incredibly smart, highly dynamic routing and execution layer!
+LibScript is a framework for cross-platform software provisioning and packaging, built on zero-dependency shell scripts. Its architecture consists of a routing execution layer that delegates to modular components.
 
-## 🧠 The Zero-Dependency Core
-LibScript uses pure POSIX `sh` and Windows `cmd` to route commands. There are no heavy agents. When you ask LibScript to build a **LAMP/WAMP stack**, it dynamically parses `vars.schema.json` files for Apache, MySQL, and PHP, resolving their dependencies on the fly!
+## The Core
 
-## 🏗️ The Incredible `package_as` Generator!
-This is where the real magic happens! Because LibScript understands the exact dependencies and environment variables needed for any stack, it can introspect itself!
+The framework uses native shell scripts (`sh` for POSIX systems, `cmd` and `bat` for Windows) to ensure it can run in environments without pre-installed language runtimes (like Python, Ruby, or Go).
 
-Instead of running the installation natively, LibScript's architecture allows it to compile the execution graph into:
-1. **Pristine, High-Quality Dockerfiles!**
-2. **Beautiful `docker-compose.yml` architectures!**
-3. **Native Windows Installers (MSI, NSIS, InnoSetup)!**
-4. **Native Linux Packages (DEB, RPM, APK)!**
-5. **Native FreeBSD Packages (TXZ)!**
-6. **Native macOS Installers (PKG, DMG)!**
+## Component Modules
 
-## 🧩 Smaller, Cleaner Recipes
-Because LibScript abstracts away OS differences (like translating `libssl-dev` to `openssl-devel`), you can use it to make your existing Chef, Ansible, or Puppet playbooks incredibly small and clean. Just call LibScript from your playbook, and let us handle the cross-platform nightmare!
+Components (like databases, web servers, or language toolchains) are organized within the `_lib` directory. Each component contains:
+- `vars.schema.json`: A strictly typed definition of the component's dependencies, environment variables, and metadata.
+- `setup.sh`: A POSIX shell script to download, configure, and install the component.
+- `setup_win.ps1` or `setup_win.cmd`: The equivalent installation script for Windows environments.
+- Optional daemon or service configurations.
+
+## Dynamic Resolution
+
+When a user requests a stack (either via the CLI or a `libscript.json` definition), LibScript parses the component schemas, resolves their cross-platform system dependencies, and constructs an execution graph.
+
+## The Generator Engine (`package_as`)
+
+Because LibScript maintains a full model of each component's requirements, it can perform alternative operations beyond native installation. The generator engine can output:
+- Dockerfiles
+- `docker-compose.yml` configurations
+- Native Windows installers (MSI via WiX, InnoSetup, NSIS)
+- Native Linux and BSD packages (DEB, RPM, APK, TXZ)
+- macOS installers (PKG, DMG)

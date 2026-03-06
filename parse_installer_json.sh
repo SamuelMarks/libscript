@@ -1009,9 +1009,47 @@ git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold'"
 
 # Main function
 parse_json() {
+  # --- NEW: Capability Resolution Hook ---
+  original_json="${1}"
+  resolved_json="${1}.resolved.json"
+  if ! "${LIBSCRIPT_ROOT_DIR}/scripts/resolve_stack.sh" "${original_json}" > "${resolved_json}" 2>/dev/null; then
+    echo "Warning: Capability resolution failed. Falling back to original JSON." >&2
+    resolved_json="${original_json}"
+  else
+    # We need to merge the resolved "selected" array back into the original JSON structure
+    # so parse_installer_json.sh can read them as explicitly declared dependencies.
+    jq '.dependencies.required = (.dependencies.required // {}) |
+       .dependencies.required.capabilities = null |
+       reduce $resolved[0].selected[] as $c (.; 
+         if ($c.provides | index("database") != null) then 
+            .dependencies.required.databases = ((.dependencies.required.databases // []) + [ { "name": $c.name, "env": ($c.name + "_ENV"), "version": ($c.version // "latest") } ])
+         elif ($c.provides | index("server") != null or ($c.provides | index("web-server") != null) or ($c.provides | index("app-server") != null)) then 
+            .dependencies.required.servers = ((.dependencies.required.servers // []) + [ { "name": $c.name, "daemon": {"os_native": true}, "ports": ($c.ports // null) } ])
+         elif ($c.provides | index("toolchain") != null or ($c.provides | index("runtime") != null) or ($c.provides | index("compiler") != null)) then 
+            .dependencies.required.toolchains = ((.dependencies.required.toolchains // []) + [ { "name": $c.name, "env": ($c.name + "_ENV"), "version": ($c.version // "latest") } ])
+         else . end
+       ) |
+       # --- Multi-stack wwwroot to web-server builder synthesis ---
+       reduce (.wwwroot[]?) as $w (.; 
+         # Default to NGINX builder config if a web-server is selected
+         if ($resolved[0].provided | index("reverse-proxy") != null or index("web-server") != null) then
+           .dependencies.required.servers = ((.dependencies.required.servers // []) + [{
+             "name": ($w.name + "-web-config"),
+             "builder": [ { "command_folder": "_lib/_server/nginx" } ],
+             "vars": {
+               "SERVER_NAME": ($w.domain // "localhost"),
+               "LOCATION_EXPR": ($w.subdomain | if . then "/~" + . else "/" end),
+               "WWWROOT": ($w.path // "/var/www/" + $w.name)
+             }
+           }])
+         else . end
+       )' --slurpfile resolved "${resolved_json}" "${original_json}" > "${resolved_json}.merged"
+    resolved_json="${resolved_json}.merged"
+  fi
+  json_file="${resolved_json}"
+  # --- END NEW ---
   # test_add_missing_line_continuation
 
-  json_file="${1}"
 
   check_required_fields "${json_file}"
 

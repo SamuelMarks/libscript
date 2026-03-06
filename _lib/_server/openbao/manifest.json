@@ -1,0 +1,16 @@
+{
+  "name": "OPENBAO",
+  "provides": [
+    "openbao",
+    "server"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": [
+    8200,
+    8201
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "PYTHON_SERVER",
+  "provides": [
+    "app-server",
+    "python",
+    "wsgi",
+    "asgi"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": []
+}

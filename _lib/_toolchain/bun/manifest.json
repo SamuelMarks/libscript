@@ -1,0 +1,15 @@
+{
+  "name": "BUN",
+  "provides": [
+    "runtime",
+    "javascript",
+    "typescript",
+    "bun"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": []
+}

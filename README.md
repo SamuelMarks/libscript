@@ -1,43 +1,60 @@
-# 🚀 LibScript: The Ultimate Cross-Platform Provisioning Engine & Stack Maker!
+# LibScript
 
 [![CI Status](https://github.com/SamuelMarks/libscript/actions/workflows/ci.yml/badge.svg)](https://github.com/SamuelMarks/libscript/actions/workflows/ci.yml)
 
-Welcome to **LibScript**! Get ready to completely rethink how you provision, deploy, and package software. We are building a **viable, open-source, public-domain, and VERY VERY cross-platform alternative to Docker**, heavy configuration managers (like Chef, Ansible, and Puppet), and complex deployment pipelines!
+LibScript is a cross-platform software provisioning framework, stack generator, and universal version manager. It operates entirely on zero-dependency shell scripts (`sh`, `cmd`, `bat`), providing a lightweight alternative to heavy configuration managers and a native complement to containerized environments.
 
-## 🔥 Why LibScript is an Absolute Game-Changer!
+## Core Capabilities
 
-- **A True Docker Alternative (or Best Friend!):** Run your stacks natively without container overhead, OR seamlessly generate incredibly high-quality `Dockerfile`s and `docker-compose.yml` files directly from your native setup! 
-- **The Ultimate Config Management Replacement:** Say goodbye to massive, bloated Ansible playbooks and Chef recipes. Use LibScript as a standalone alternative, OR use it to write *cleaner, much smaller* recipes for those tools!
-- **Universal Installer Generator:** Need to ship your software? LibScript dynamically generates beautiful, professional installers for Windows (MSI, InnoSetup, NSIS), Linux (DEB, RPM, APK), FreeBSD (TXZ), and macOS (PKG, DMG)! 
-- **The Ultimate LAMP / WAMP Stack Maker:** Instantly spin up a local Apache/MySQL/PHP stack natively on Linux or Windows in seconds.
-- **Generic Stack Maker:** Build *any* stack you can imagine—MEAN, MERN, specialized AI toolchains, you name it. It's fully declarative and incredibly fast!
-- **Zero Dependencies:** It runs on pure, native shell scripts (`sh`, `cmd`, `bat`). No Python, no Ruby, no Go agents required to bootstrap. It just works!
+- **Universal Version Manager:** LibScript functions powerfully as a local version manager for individual languages and tools (similar to `rvm`, `nvm`, `pyenv`, `uv`), while also acting as a global version manager that orchestrates the entire system.
+- **Stack Building & Orchestration:** You can invoke the global version manager `libscript` to seamlessly compose and build much bigger, complex stacks such as WordPress, Open edX, Nextcloud, custom applications, and more.
+- **Native Provisioning:** Run stack deployments directly on the host hardware without container virtualization overhead.
+- **Artifact Generation:** Use the `package_as` engine to parse your local stack and automatically generate structured `Dockerfile`s or `docker-compose.yml` configurations.
+- **Cross-Platform Installers:** Dynamically compile a generic stack into a native installer for various platforms:
+  - Windows: MSI (via WiX), InnoSetup, NSIS
+  - Linux: DEB, RPM, APK
+  - FreeBSD: TXZ
+  - macOS: PKG, DMG
+- **Declarative Stacks:** Define stacks (like LAMP, WAMP, or MEAN) using `libscript.json`. The framework handles cross-platform dependency mapping and environment variable configuration automatically.
+- **Zero-Dependency Architecture:** Requires no Python, Ruby, or Go agents to bootstrap.
 
-## ⚡ Quick Start: Experience the Magic!
+## Lifecycle Commands
 
+LibScript provides a unified interface for managing individual components or entire stacks across platforms.
+
+**Unix (Linux/macOS):**
 ```sh
-# List our massive library of supported components!
-./libscript.sh list
-
-# Instantly stand up a natively isolated PostgreSQL database!
-./libscript.sh install postgres 16 --prefix=/opt/db
-
-# ✨ MAGIC: Generate a pristine Docker Compose stack right from your command line!
-./libscript.sh package_as docker_compose postgres 16 redis latest > docker-compose.yml
-
-# ✨ MAGIC: Generate a native Linux package or Windows Installer!
-./libscript.sh package_as deb --app-name my-epic-stack postgres 16
+./libscript.sh install <COMPONENT> [VERSION]
+./libscript.sh start <COMPONENT>
+./libscript.sh stop <COMPONENT>
+./libscript.sh uninstall <COMPONENT>
+./libscript.sh package_as docker <COMPONENT>
 ```
 
-## 📚 Dive Deeper!
-- [WHY.md](WHY.md) - Why we are the ultimate Docker & Ansible alternative!
-- [ARCHITECTURE.md](ARCHITECTURE.md) - The genius zero-dependency engine under the hood.
-- [USAGE.md](USAGE.md) - Master the art of generating stacks and installers.
-- [DEPENDENCIES.md](DEPENDENCIES.md) - How we conquer cross-platform package management.
-- [DEVELOPING.md](DEVELOPING.md) - Add your own tools to the revolution!
-- [WINDOWS.md](WINDOWS.md) - WAMP stacks and native Windows power.
-- [TEST.md](TEST.md) - How we guarantee bulletproof reliability.
-- [ROADMAP.md](ROADMAP.md) / [FUTURE.md](FUTURE.md) / [IDEAS.md](IDEAS.md) - Our path to total world domination!
+**Windows:**
+```cmd
+libscript.cmd install <COMPONENT> [VERSION]
+libscript.cmd start <COMPONENT>
+libscript.cmd stop <COMPONENT>
+libscript.cmd uninstall <COMPONENT>
+libscript.cmd package_as msi <COMPONENT>
+```
+
+## Quick Start
+
+List the supported components and toolchains:
+
+```sh
+./libscript.sh list
+```
+
+Install a component directly (e.g., Node.js):
+
+```sh
+./libscript.sh install nodejs 20
+```
+
+For more details on building complex stacks and utilizing the generator engine, refer to `USAGE.md` and the individual `README.md` files located in each component directory.
 
 ## CI Checks Matrix
 

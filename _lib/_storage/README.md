@@ -1,11 +1,38 @@
-_lib/_storage
-=============
+# Storage Folder (`_storage`)
 
-## Purpose & Current State
+## Purpose & Overview
 
-**Purpose**: This document provides context and technical details for the `_storage` component (part of `_lib`) within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+**Purpose**: This document provides context and technical details for the **Storage folder (`_storage`)** component within the LibScript ecosystem. This directory houses various database and storage solutions (e.g., PostgreSQL, MongoDB, SQLite). 
 
-**Current State**: LibScript functions as a comprehensive global and per-component package manager, featuring a robust core CLI (`libscript.sh`, `libscript.cmd`, `libscript.bat`). It includes multi-platform toolchain support (Rust, Python, Node, Go, Java, C/C++), servers (Postgres 18, Nginx, Valkey), and advanced environment querying (`env` subcommand). It natively supports generating deployment configurations (`package_as docker`, `package_as docker_compose`, `package_as msi`, `package_as innosetup`, `package_as nsis`, `package_as TUI`) with deep installer customization, automated parallel dependency downloading and resolution via `libscript.json`, and robust uninstall lifecycle hooks (`uninstall.sh`/`uninstall.cmd`) for cleanly removing binaries, configs, and services. It natively handles deep semantic versioning, global `--secrets` extraction, caching, OpenBao/Vault generation, local caching via SQLite (`db-search`, `update-db`), explicit error handling for unsupported actions, and background process serving. Recent advancements have stabilized major Windows installer generation (MSI, InnoSetup, NSIS) and expanded macOS native service provisioning.
+The components inside this directory work both as local version managers (similar to `rvm`, `nvm`, `pyenv`, or `uv`) for their respective storage technologies, and can be invoked from the global version manager `libscript`. By providing these flexible storage primitives, LibScript can be used to seamlessly build bigger, more complex software stacks (like WordPress, Open edX, Nextcloud, etc.).
+
+**Current State**: LibScript functions as a comprehensive global and per-component package manager, featuring a robust core CLI (`libscript.sh`, `libscript.cmd`, `libscript.bat`). It includes multi-platform toolchain support, robust uninstall lifecycle hooks, and natively supports generating deployment configurations with deep installer customization.
+
+## Usage with LibScript
+
+Every component within the `_storage` directory follows a unified command interface.
+
+### Install
+```sh
+libscript install <storage_component> [VERSION]
+```
+
+### Start / Stop
+```sh
+libscript start <storage_component>
+libscript stop <storage_component>
+```
+
+### Uninstall
+```sh
+libscript uninstall <storage_component>
+```
+
+### Package
+```sh
+libscript package_as docker <storage_component>
+libscript package_as msi <storage_component>
+```
 
 ## Dependency Installation Methods
 

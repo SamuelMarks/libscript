@@ -74,14 +74,88 @@
           },
           "listen": {
             "type": "string"
+          },
+          "dependencies": {
+            "$ref": "#/definitions/Dependencies"
+          },
+          "domain": {
+            "type": "string"
+          },
+          "subdomain": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
           }
         },
         "required": [
-          "name", "env"
+          "name",
+          "env"
         ]
       }
     },
     "dependencies": {
+      "$ref": "#/definitions/Dependencies"
+    },
+    "log_server": {
+      "type": "object",
+      "properties": {
+        "optional": {
+          "type": "boolean"
+        }
+      },
+      "required": []
+    },
+    "provides": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Virtual capabilities this installer provides (e.g., ['database', 'mysql-compatible'])"
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Capabilities or components this conflicts with (e.g., ['mysql-compatible'])"
+    },
+    "os_whitelist": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of supported operating systems (e.g., ['linux', 'darwin', 'windows', 'all']). Default is ['all']."
+    },
+    "os_blacklist": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of explicitly unsupported operating systems (e.g., ['windows'])."
+    },
+    "versions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of explicit semantic versions this component can install (e.g., ['8.0.28', '8.1.17', '8.2.4']). If omitted, assumes it can satisfy any version request or 'latest'."
+    },
+    "ports": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "description": "List of default TCP/UDP ports this component binds to (e.g., [80, 443]). Used by the SAT solver for conflict detection."
+    }
+  },
+  "required": [
+    "name",
+    "scripts_root",
+    "dependencies"
+  ],
+  "definitions": {
+    "Dependencies": {
       "type": "object",
       "properties": {
         "required": {
@@ -112,12 +186,30 @@
                   },
                   "vars": {
                     "type": "object"
+                  },
+                  "anyOf": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "List of capabilities where at least one must be provided."
                   }
                 },
                 "required": [
-                  "name",
                   "version",
                   "env"
+                ],
+                "oneOf": [
+                  {
+                    "required": [
+                      "name"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "anyOf"
+                    ]
+                  }
                 ]
               }
             },
@@ -137,12 +229,30 @@
                   },
                   "env": {
                     "type": "string"
+                  },
+                  "anyOf": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "List of capabilities where at least one must be provided."
                   }
                 },
                 "required": [
-                  "name",
                   "version",
                   "env"
+                ],
+                "oneOf": [
+                  {
+                    "required": [
+                      "name"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "anyOf"
+                    ]
+                  }
                 ]
               }
             },
@@ -178,7 +288,9 @@
                           }
                         }
                       },
-                      "required": ["commands"]
+                      "required": [
+                        "commands"
+                      ]
                     }
                   },
                   "daemon": {
@@ -187,9 +299,9 @@
                       "os_native": {
                         "type": "boolean"
                       },
-                  "listen": {
-                    "type": "string"
-                  },
+                      "listen": {
+                        "type": "string"
+                      },
                       "env": {
                         "type": "array",
                         "items": {
@@ -203,12 +315,38 @@
                   },
                   "name": {
                     "type": "string"
+                  },
+                  "anyOf": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "List of capabilities where at least one must be provided."
                   }
                 },
                 "required": [
                   "daemon"
+                ],
+                "oneOf": [
+                  {
+                    "required": [
+                      "name"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "anyOf"
+                    ]
+                  }
                 ]
               }
+            },
+            "capabilities": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Virtual capabilities required by this installer (e.g., ['web-server'])"
             }
           },
           "required": []
@@ -235,34 +373,45 @@
                   },
                   "vars": {
                     "type": "object"
+                  },
+                  "anyOf": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "List of capabilities where at least one must be provided."
                   }
                 },
                 "required": [
-                  "name",
                   "version",
                   "env"
+                ],
+                "oneOf": [
+                  {
+                    "required": [
+                      "name"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "anyOf"
+                    ]
+                  }
                 ]
               }
+            },
+            "capabilities": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Virtual capabilities required by this installer (e.g., ['web-server'])"
             }
           },
           "required": []
         }
       },
       "required": []
-    },
-    "log_server": {
-      "type": "object",
-      "properties": {
-        "optional": {
-          "type": "boolean"
-        }
-      },
-      "required": []
     }
-  },
-  "required": [
-    "name",
-    "scripts_root",
-    "dependencies"
-  ]
+  }
 }

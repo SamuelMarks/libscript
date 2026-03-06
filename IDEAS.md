@@ -1,15 +1,19 @@
-# 🚀 Ideas & Explorations: Pushing the Limits!
+# Experimental Ideas
 
-LibScript's zero-dependency, open-source architecture unlocks use-cases that Docker and heavy configuration managers (Ansible, Chef) simply cannot touch. Here is what we are dreaming up!
+This document tracks experimental features and potential use-cases for LibScript's architecture. These concepts explore capabilities beyond standard software provisioning.
 
-## 🧠 AI and Machine Learning Stacks
-Imagine a generic stack maker that instantly provisions CUDA drivers, vLLM, and Jupyter locally on the host, maximizing GPU performance without container overhead! 
+## AI and Machine Learning Toolchains
 
-## 🌐 The Ultimate Interactive TUI Stack Builder
-We want to expand our installer generation to include a full Terminal User Interface. Select your components (LAMP/WAMP, MEAN, Custom), configure your ports, and hit "Export"—giving you a choice between a native installation, a **good quality Dockerfile**, or a **nice Windows/Linux installer**!
+Investigating the viability of generically provisioning complex, hardware-dependent stacks (such as CUDA drivers, vLLM, and Jupyter) locally on host machines to avoid the overhead associated with containerized GPU passthrough.
 
-## 💾 Immutable OS Generation
-By combining our declarative `libscript.json` with tools like `ostree`, we could generate entire custom, bootable Operating Systems. 
+## Interactive TUI Generation
 
-## 🔌 Smaller IoT & Edge Recipes
-Because LibScript requires no heavy runtimes, it's perfect for embedded devices. We envision LibScript completely replacing Ansible/Chef on Edge devices, allowing developers to write infinitely **cleaner, much smaller recipes** for resource-constrained hardware!
+Expanding the generator capabilities to include a full Terminal User Interface (`package_as TUI`). This would allow end-users to interactively configure environment variables and ports before finalizing an installation or generating an artifact.
+
+## Immutable OS Deployment
+
+Exploring integrations with tools like `ostree` to compile declarative `libscript.json` definitions into customized, bootable operating system images.
+
+## Edge Computing Constraints
+
+Because LibScript operates without heavy runtimes (like Python or Ruby), it presents an opportunity to provision resource-constrained embedded and edge devices more efficiently than traditional configuration management tools.

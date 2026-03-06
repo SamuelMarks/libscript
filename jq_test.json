@@ -1,5 +1,0 @@
-{
-  "deps": { "jq": "latest" },
-  "toolchains": { "nodejs": "18" },
-  "servers": { "caddy": "latest" }
-}

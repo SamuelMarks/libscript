@@ -1,0 +1,21 @@
+{
+  "name": "PYTHON",
+  "provides": [
+    "runtime",
+    "python",
+    "pip"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "versions": [
+    "3.8.18",
+    "3.9.18",
+    "3.10.13",
+    "3.11.6",
+    "3.12.0"
+  ],
+  "ports": []
+}

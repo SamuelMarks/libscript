@@ -1,0 +1,23 @@
+{
+  "name": "POSTGRES",
+  "provides": [
+    "database",
+    "postgres",
+    "postgresql"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "versions": [
+    "12.16",
+    "13.12",
+    "14.9",
+    "15.4",
+    "16.0"
+  ],
+  "ports": [
+    5432
+  ]
+}

@@ -1,11 +1,38 @@
 gen
 ===
 
-## Purpose & Current State
+## Purpose & Overview
 
-**Purpose**: This document provides context and technical details for the `gen` directory within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+This document describes the `gen` directory and generation utilities within the LibScript ecosystem. It is primarily used to generate deployment artifacts, Dockerfiles, and installer scripts from configuration files.
 
-**Current State**: LibScript functions as a comprehensive global and per-component package manager, featuring a robust core CLI (`libscript.sh`, `libscript.cmd`, `libscript.bat`). It includes multi-platform toolchain support (Rust, Python, Node, Go, Java, C/C++), servers (Postgres 18, Nginx, Valkey), and advanced environment querying (`env` subcommand). It natively supports generating deployment configurations (`package_as docker`, `package_as docker_compose`, `package_as msi`, `package_as innosetup`, `package_as nsis`, `package_as TUI`) with deep installer customization, automated parallel dependency downloading and resolution via `libscript.json`, and robust uninstall lifecycle hooks (`uninstall.sh`/`uninstall.cmd`) for cleanly removing binaries, configs, and services. It natively handles deep semantic versioning, global `--secrets` extraction, caching, OpenBao/Vault generation, local caching via SQLite (`db-search`, `update-db`), explicit error handling for unsupported actions, and background process serving. Recent advancements have stabilized major Windows installer generation (MSI, InnoSetup, NSIS) and expanded macOS native service provisioning.
+LibScript functions as both a comprehensive global version manager (invoked via the `libscript` command) and a local version manager (similar to `rvm`, `nvm`, `pyenv`, or `uv`) for the generation toolchain. You can manage generation scripts directly in an isolated, local context, or orchestrate them globally. 
+
+Furthermore, this `gen` component is a core part of how LibScript builds and provisions larger, complex stacks (like WordPress, Open edX, Nextcloud, etc.) by synthesizing the necessary infrastructure-as-code and packaging formats.
+
+## Lifecycle Management with LibScript
+
+You can easily install, uninstall, start, stop, and package generation components using the LibScript CLI:
+
+### Installation
+```sh
+libscript install gen
+```
+
+### Start & Stop
+```sh
+libscript start gen
+libscript stop gen
+```
+
+### Uninstallation
+```sh
+libscript uninstall gen
+```
+
+### Packaging
+```sh
+libscript package_as docker gen
+```
 
 ## Gotchas
 
@@ -20,8 +47,6 @@ $ sh ./create_docker_builder.sh -i gen -vvv
 $ cd gen && sh ./docker_builder.sh
 # or docker_builder_parallel.sh ^
 ```
-
-
 
 ## Dependency Installation Methods
 

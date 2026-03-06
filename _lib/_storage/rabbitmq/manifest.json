@@ -1,0 +1,16 @@
+{
+  "name": "RABBITMQ",
+  "provides": [
+    "message-broker",
+    "rabbitmq"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": [
+    5672,
+    15672
+  ]
+}

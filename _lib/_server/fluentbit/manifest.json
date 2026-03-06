@@ -1,0 +1,13 @@
+{
+  "name": "FLUENTBIT",
+  "provides": [
+    "fluentbit",
+    "server"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": []
+}

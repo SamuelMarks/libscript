@@ -8,19 +8,49 @@
 
 ## Overview
 
-This directory contains the installation and configuration scripts for `etcd`. It is designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
+This directory contains the installation, configuration, and lifecycle management scripts for **etcd**. 
 
-### Installation
+Crucially, this component works both as a **local version manager** (similar to tools like `rvm`, `nvm`, `pyenv`, or `uv`) for managing isolated instances of etcd, and it can be invoked seamlessly from the **global version manager**, `libscript`. 
+
+Furthermore, `libscript` can utilize this etcd component as a foundational building block to provision and build **bigger stacks** (such as WordPress, Open edX, Nextcloud, and more).
+
+### Lifecycle Management (Install, Start, Stop, Package, Uninstall)
+
+You can install, start, stop, package, and uninstall etcd using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**
 ```sh
-./cli.sh <COMMAND> <PACKAGE_NAME> [VERSION] [OPTIONS]
+# Install
+libscript install etcd [VERSION] [OPTIONS]
+
+# Start and Stop
+libscript start etcd
+libscript stop etcd
+
+# Package (e.g., as Docker image)
+libscript package_as docker etcd
+
+# Uninstall
+libscript uninstall etcd
 ```
 
 **Windows:**
 ```cmd
-cli.cmd <COMMAND> <PACKAGE_NAME> [VERSION] [OPTIONS]
+:: Install
+libscript.cmd install etcd [VERSION] [OPTIONS]
+
+:: Start and Stop
+libscript.cmd start etcd
+libscript.cmd stop etcd
+
+:: Package (e.g., as MSI installer)
+libscript.cmd package_as msi etcd
+
+:: Uninstall
+libscript.cmd uninstall etcd
 ```
+
+*Alternatively, you can execute these locally from within this directory using `./cli.sh <COMMAND> etcd` or `cli.cmd <COMMAND> etcd`.*
 
 ## Configuration Options
 

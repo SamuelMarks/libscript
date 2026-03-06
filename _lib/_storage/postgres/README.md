@@ -1,26 +1,50 @@
-# Postgres (Storage/Database)
+# PostgreSQL (Storage/Database)
 
-## Purpose & Current State
+## Purpose & Overview
 
-**Purpose**: This document provides context and technical details for the `postgres` component (part of `_storage`) within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+This document provides context and technical details for the **PostgreSQL** component (part of the `_storage` directory) within the LibScript ecosystem. PostgreSQL is a powerful, open-source object-relational database system.
 
-**Current State**: LibScript functions as a comprehensive global and per-component package manager, featuring a robust core CLI (`libscript.sh`, `libscript.cmd`, `libscript.bat`). It includes multi-platform toolchain support (Rust, Python, Node, Go, Java, C/C++), servers (Postgres 18, Nginx, Valkey), and advanced environment querying (`env` subcommand). It natively supports generating deployment configurations (`package_as docker`, `package_as docker_compose`, `package_as msi`, `package_as innosetup`, `package_as nsis`, `package_as TUI`) with deep installer customization, automated parallel dependency downloading and resolution via `libscript.json`, and robust uninstall lifecycle hooks (`uninstall.sh`/`uninstall.cmd`) for cleanly removing binaries, configs, and services. It natively handles deep semantic versioning, global `--secrets` extraction, caching, OpenBao/Vault generation, local caching via SQLite (`db-search`, `update-db`), explicit error handling for unsupported actions, and background process serving. Recent advancements have stabilized major Windows installer generation (MSI, InnoSetup, NSIS) and expanded macOS native service provisioning.
+This module works both as a local version manager for PostgreSQL (similar to `rvm`, `nvm`, `pyenv`, or `uv`) and can be directly invoked from the global version manager `libscript`. Because of this flexibility, PostgreSQL can be utilized by LibScript to provision and build bigger, more complex software stacks (such as WordPress, Open edX, Nextcloud, etc.).
 
-## Overview
+## Usage with LibScript
 
-This directory contains the installation and configuration scripts for `postgres`. It is designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
+You can manage your PostgreSQL instance via the LibScript CLI router or locally.
 
-### Installation
-
+### Install
 **Unix (Linux/macOS):**
 ```sh
-./cli.sh <COMMAND> <PACKAGE_NAME> [VERSION] [OPTIONS]
+./cli.sh install postgres [VERSION] [OPTIONS]
+# or via global libscript:
+libscript install postgres [VERSION]
 ```
 
 **Windows:**
 ```cmd
-cli.cmd <COMMAND> <PACKAGE_NAME> [VERSION] [OPTIONS]
+cli.cmd install postgres [VERSION] [OPTIONS]
+# or via global libscript:
+libscript install postgres [VERSION]
 ```
+
+### Start / Stop
+To manage the PostgreSQL service lifecycle:
+```sh
+libscript start postgres
+libscript stop postgres
+```
+
+### Uninstall
+To cleanly remove PostgreSQL binaries, services, and associated configurations:
+```sh
+libscript uninstall postgres
+```
+
+### Package
+To generate deployment configurations or installers containing PostgreSQL:
+```sh
+libscript package_as docker postgres
+libscript package_as msi postgres
+```
+*(Supports docker, docker_compose, msi, innosetup, nsis, and TUI).*
 
 ## Configuration Options
 
@@ -56,4 +80,3 @@ The following environment variables can be passed to the CLI (`--KEY=VALUE`) or 
 - `setup_generic.sh`: Fallback installation logic using the package manager mapper.
 - `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning correctly.
 - `vars.schema.json`: The schema definition for the CLI arguments.
-

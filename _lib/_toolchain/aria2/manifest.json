@@ -1,0 +1,13 @@
+{
+  "name": "ARIA2",
+  "provides": [
+    "aria2",
+    "toolchain"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": []
+}

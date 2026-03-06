@@ -1,0 +1,17 @@
+{
+  "name": "CADDY",
+  "provides": [
+    "web-server",
+    "reverse-proxy",
+    "caddy"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": [
+    80,
+    443
+  ]
+}

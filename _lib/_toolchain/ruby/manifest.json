@@ -1,0 +1,14 @@
+{
+  "name": "RUBY",
+  "provides": [
+    "runtime",
+    "ruby",
+    "gem"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": []
+}
