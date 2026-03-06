@@ -7,19 +7,30 @@ $DbUser = if ($env:WORDPRESS_DB_USER) { $env:WORDPRESS_DB_USER } else { "wordpre
 $DbPass = if ($env:WORDPRESS_DB_PASS) { $env:WORDPRESS_DB_PASS } else { "wordpress" }
 $ServerName = if ($env:WORDPRESS_SERVER_NAME) { $env:WORDPRESS_SERVER_NAME } else { "localhost" }
 $ListenPort = if ($env:WORDPRESS_LISTEN) { $env:WORDPRESS_LISTEN } else { "80" }
+$DbEngine = if ($env:WORDPRESS_DB_ENGINE) { $env:WORDPRESS_DB_ENGINE } else { "mariadb" }
 $WebServer = if ($env:WORDPRESS_WEBSERVER) { $env:WORDPRESS_WEBSERVER } else { "iis" }
 
 Write-Host "Installing dependencies for WordPress ($WebServer)..."
 # In LibScript Windows, dependencies should be explicitly resolved via CLI or here
-# We assume PHP and MariaDB are installed or we install them via winget
+# We assume PHP and DB are installed or we install them via winget
 if (-not (Get-Command "php" -ErrorAction SilentlyContinue)) {
     Write-Host "PHP not found. Attempting to install via Winget..."
     winget install --silent --force --id=PHP.PHP --accept-package-agreements --accept-source-agreements
 }
 
-if (-not (Get-Command "mysql" -ErrorAction SilentlyContinue)) {
-    Write-Host "MariaDB not found. Attempting to install via Winget..."
-    winget install --silent --force --id=MariaDB.Server --accept-package-agreements --accept-source-agreements
+if ($DbEngine -eq "sqlite") {
+    # SQLite is usually built into PHP or handled without extra services
+    Write-Host "Using SQLite..."
+} elseif ($DbEngine -match "postgres") {
+    if (-not (Get-Command "psql" -ErrorAction SilentlyContinue)) {
+        Write-Host "PostgreSQL not found. Attempting to install via Winget..."
+        winget install --silent --force --id=PostgreSQL.PostgreSQL --accept-package-agreements --accept-source-agreements
+    }
+} else {
+    if (-not (Get-Command "mysql" -ErrorAction SilentlyContinue)) {
+        Write-Host "MariaDB not found. Attempting to install via Winget..."
+        winget install --silent --force --id=MariaDB.Server --accept-package-agreements --accept-source-agreements
+    }
 }
 
 if ($WebServer -eq "iis") {
@@ -51,12 +62,48 @@ Remove-Item -Path $tmpZip -Force
 Remove-Item -Path $tmpExtDir -Recurse -Force
 
 Write-Host "Configuring Database..."
-# This assumes root has no password by default on a fresh mariadb install, or requires manual prep
-try {
-    $mysqlCmd = "CREATE DATABASE IF NOT EXISTS `$DbName`; CREATE USER IF NOT EXISTS '$DbUser'@'localhost' IDENTIFIED BY '$DbPass'; GRANT ALL PRIVILEGES ON `$DbName`.* TO '$DbUser'@'localhost'; FLUSH PRIVILEGES;"
-    mysql -u root -e $mysqlCmd
-} catch {
-    Write-Warning "Failed to automatically configure MariaDB. You may need to create the database manually."
+if ($DbEngine -eq "sqlite") {
+    $dbFile = Join-Path $WwwRoot "wp-content\db.php"
+    if (-not (Test-Path $dbFile)) {
+        $muDir = Join-Path $WwwRoot "wp-content\mu-plugins"
+        New-Item -ItemType Directory -Force -Path $muDir | Out-Null
+        $tmpSqlite = Join-Path $env:TEMP "sqlite-integration.zip"
+        $tmpSqliteDir = Join-Path $env:TEMP "sqlite-integration"
+        Invoke-WebRequest -Uri "https://downloads.wordpress.org/plugin/sqlite-database-integration.zip" -OutFile $tmpSqlite
+        Expand-Archive -Path $tmpSqlite -DestinationPath (Join-Path $WwwRoot "wp-content\plugins") -Force
+        Copy-Item -Path (Join-Path $WwwRoot "wp-content\plugins\sqlite-database-integration\db.copy") -Destination $dbFile -Force
+        Remove-Item -Path $tmpSqlite -Force
+        
+        $content = Get-Content $dbFile
+        $content = $content -replace '\{SQLITE_DB_DROPIN_VERSION\}', '1.0.0'
+        $content = $content -replace '\{SQLITE_PLUGIN\}', 'sqlite-database-integration/load.php'
+        Set-Content -Path $dbFile -Value $content
+        Write-Host "SQLite database integration plugin installed."
+    }
+} elseif ($DbEngine -match "postgres") {
+    $dbFile = Join-Path $WwwRoot "wp-content\db.php"
+    if (-not (Test-Path $dbFile)) {
+        $tmpPg = Join-Path $env:TEMP "pg4wp.zip"
+        Invoke-WebRequest -Uri "https://downloads.wordpress.org/plugin/postgresql-for-wordpress.zip" -OutFile $tmpPg
+        Expand-Archive -Path $tmpPg -DestinationPath (Join-Path $WwwRoot "wp-content") -Force
+        Move-Item -Path (Join-Path $WwwRoot "wp-content\postgresql-for-wordpress\pg4wp") -Destination (Join-Path $WwwRoot "wp-content") -Force
+        Copy-Item -Path (Join-Path $WwwRoot "wp-content\pg4wp\db.php") -Destination $dbFile -Force
+        Remove-Item -Path $tmpPg -Force
+        Write-Host "PostgreSQL drop-in installed."
+    }
+    try {
+        $pgCmd = "CREATE DATABASE `"$DbName`"; CREATE USER `"$DbUser`" WITH ENCRYPTED PASSWORD '$DbPass'; GRANT ALL PRIVILEGES ON DATABASE `"$DbName`" TO `"$DbUser`";"
+        psql -U postgres -c $pgCmd
+    } catch {
+        Write-Warning "Failed to automatically configure PostgreSQL. You may need to create the database manually."
+    }
+} else {
+    try {
+        $mysqlCmd = "CREATE DATABASE IF NOT EXISTS `$DbName`; CREATE USER IF NOT EXISTS '$DbUser'@'localhost' IDENTIFIED BY '$DbPass'; GRANT ALL PRIVILEGES ON `$DbName`.* TO '$DbUser'@'localhost'; FLUSH PRIVILEGES;"
+        mysql -u root -e $mysqlCmd
+    } catch {
+        Write-Warning "Failed to automatically configure MariaDB. You may need to create the database manually."
+    }
 }
 
 $wpConfigSample = Join-Path $WwwRoot "wp-config-sample.php"

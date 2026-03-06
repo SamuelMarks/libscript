@@ -31,13 +31,15 @@ for lib in '_lib/_common/pkg_mgr.sh' '_lib/_toolchain/nodejs/setup.sh' '_lib/_gi
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
+  # shellcheck source=/dev/null
   . "${SCRIPT_NAME}"
 done
 
 DIR="${_DIR}"
 SCRIPT_NAME="${DIR}"'/env.sh'
 export SCRIPT_NAME
-. "${SCRIPT_NAME}"
+# shellcheck source=/dev/null
+  . "${SCRIPT_NAME}"
 
 if [ "${FIRECRAWL_DEST-}" ]; then
   DEST="${FIRECRAWL_DEST}"

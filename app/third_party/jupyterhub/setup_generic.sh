@@ -33,6 +33,7 @@ for lib in '_lib/_common/priv.sh' '_lib/_common/envsubst_safe.sh' \
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
+  # shellcheck source=/dev/null
   . "${SCRIPT_NAME}"
 done
 
@@ -79,7 +80,8 @@ if [ -d '/etc/systemd/system' ]; then
     SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/environ.sh'
     export SCRIPT_NAME
     # shellcheck disable=SC1090
-    . "${SCRIPT_NAME}"
+    # shellcheck source=/dev/null
+  . "${SCRIPT_NAME}"
 
     object2key_val "${VARS}" 'export ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
     object2key_val "${VARS}" 'setenv ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.csh'

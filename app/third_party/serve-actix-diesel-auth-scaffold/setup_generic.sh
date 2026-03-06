@@ -32,6 +32,7 @@ for lib in '_lib/_common/pkg_mgr.sh' '_lib/_git/git.sh' '_lib/_toolchain/rust/se
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
+  # shellcheck source=/dev/null
   . "${SCRIPT_NAME}"
 done
 

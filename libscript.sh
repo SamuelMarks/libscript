@@ -1089,7 +1089,7 @@ EOF
     IMAGE_PATH=""
     LICENSE_PATH=""
     WELCOME_TEXT="Welcome to the LibScript Deployment Installer"
-    OFFLINE="0"\n    OFFLINE="0"
+    OFFLINE="0"
 
     while [ $# -gt 0 ]; do
       case "$1" in
@@ -2116,7 +2116,7 @@ EOF2
         mkdir -p "$comp_dir/scripts"
         
         cat << "EOF_SCRIPT" > "$comp_dir/scripts/postinstall"
-#!/bin/bash
+#!/bin/sh
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 USER_NAME=$(stat -f "%Su" /dev/console 2>/dev/null || echo "$SUDO_USER")
 if [ -z "$USER_NAME" ] || [ "$USER_NAME" = "root" ]; then
@@ -2173,7 +2173,7 @@ else
 fi
 
 cat << "EOF_UNINST" > "/opt/libscript/uninstall_${pkg}.command"
-#!/bin/bash
+#!/bin/sh
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 USER_NAME=\$(stat -f "%Su" /dev/console 2>/dev/null || echo "\\$SUDO_USER")
 if [ -z "\\$USER_NAME" ] || [ "\\$USER_NAME" = "root" ]; then

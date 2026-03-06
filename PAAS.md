@@ -36,7 +36,7 @@ This document outlines a 7-step plan to evolve the current `libscript` deploymen
 
 ## Step 6: The Web Interface (The "cPanel" Experience)
 **Goal:** Provide a graphical dashboard for users who prefer visual management over a CLI.
-*   **API Layer:** Build a lightweight API server (e.g., in Go, Python, or Node.js) that acts as a wrapper around the CLI commands, executing them securely.
+*   **API Layer:** Build a lightweight API server (e.g., in C89 with civitweb with OAuth2 password-grant flow; limit to SQLite but expand to PostgreSQL in future-work) that acts as a wrapper around the CLI commands, executing them securely.
 *   **Dashboard Features:** Allow users to view active apps, monitor resource usage, configure domains/paths, provision databases, and review logs directly from the browser.
 *   **Authentication & Access Control:** Ensure the Web UI is secured, potentially supporting multiple users with isolated application environments.
 

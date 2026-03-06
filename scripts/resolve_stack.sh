@@ -34,5 +34,6 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 # Run the resolution engine
+# shellcheck disable=SC2086
 jq --arg target_os "$TARGET_OS" -n '{install: input, manifests: [inputs]}' "$INSTALL_JSON" $MANIFESTS | jq -L "${SCRIPT_DIR}" --arg target_os "$TARGET_OS" -r -f "${SCRIPT_DIR}/resolve_stack.jq"
 
