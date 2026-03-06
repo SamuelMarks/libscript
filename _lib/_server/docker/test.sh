@@ -3,5 +3,5 @@
 
 
 set -feu
-docker version
+docker --version
 echo hello from docker

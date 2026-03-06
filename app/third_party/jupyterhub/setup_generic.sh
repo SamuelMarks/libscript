@@ -27,7 +27,7 @@ export STACK="${STACK:-}${this_file}"':'
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 
-for lib in 'env.sh' '_lib/_common/priv.sh' '_lib/_common/envsubst_safe.sh' \
+for lib in '_lib/_common/priv.sh' '_lib/_common/envsubst_safe.sh' \
            '_lib/_toolchain/python/setup.sh' 'app/third_party/jupyterhub/env.sh' \
            '_lib/_toolchain/nodejs/setup.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
@@ -38,7 +38,11 @@ done
 
 if [ ! -d "${JUPYTERHUB_VENV}" ]; then
   priv  mkdir -p -- "${JUPYTERHUB_VENV}"
-  priv  chown -R -- "${USER}":"${GROUP:-${USER}}" "${JUPYTERHUB_VENV}"
+  if [ "$(uname -s)" = "Darwin" ]; then
+    priv  chown -R -- "${USER}" "${JUPYTERHUB_VENV}"
+  else
+    priv  chown -R -- "${USER}":"${GROUP:-${USER}}" "${JUPYTERHUB_VENV}"
+  fi
   uv venv --python "${PYTHON_VERSION}" -- "${JUPYTERHUB_VENV}"
   "${JUPYTERHUB_VENV}"'/bin/python' -m ensurepip
   "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U pip
@@ -49,9 +53,24 @@ fi
 if ! cmd_avail configurable-http-proxy; then
   priv env "PATH=$PATH" npm install -g configurable-http-proxy
 fi
+
+if [ "$(uname -s)" = "Darwin" ]; then
+  JUPYTERHUB_SERVICE_USER="${USER}"
+elif ! id "${JUPYTERHUB_SERVICE_USER}" >/dev/null 2>&1; then
+  if command -v useradd >/dev/null 2>&1; then
+    priv useradd -m -d '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' -c '' "${JUPYTERHUB_SERVICE_USER}"
+  else
+    priv adduser --disabled-password --gecos '' --home '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' "${JUPYTERHUB_SERVICE_USER}"
+  fi
+fi
+
 if [ ! -d "${JUPYTERHUB_NOTEBOOK_DIR}" ]; then
   priv  mkdir -p -- "${JUPYTERHUB_NOTEBOOK_DIR}"
-  priv  chown -R -- "${JUPYTERHUB_SERVICE_USER}":"${JUPYTERHUB_SERVICE_GROUP}" "${JUPYTERHUB_NOTEBOOK_DIR}" "${JUPYTERHUB_VENV}"
+fi
+if [ "$(uname -s)" = "Darwin" ]; then
+  priv  chown -R -- "${JUPYTERHUB_SERVICE_USER}" "${JUPYTERHUB_NOTEBOOK_DIR}" "${JUPYTERHUB_VENV}"
+else
+  priv  chown -R -- "${JUPYTERHUB_SERVICE_USER}":"${JUPYTERHUB_SERVICE_USER}" "${JUPYTERHUB_NOTEBOOK_DIR}" "${JUPYTERHUB_VENV}"
 fi
 
 if [ -d '/etc/systemd/system' ]; then
@@ -68,15 +87,6 @@ if [ -d '/etc/systemd/system' ]; then
     ENV="$(cut -c8- "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' | awk -- '{arr[i++]=$0} END {while (i>0) print arr[--i] }' | tr -d "'" | awk -F= '!seen[$1]++' | xargs printf 'Environment="%s"\n')"
   fi
 
-  if [ ! -d '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' ]; then
-    if command -v useradd >/dev/null 2>&1; then
-      priv useradd -m -d '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' -c '' "${JUPYTERHUB_SERVICE_USER}"
-    else
-      priv adduser --disabled-password --gecos '' --home '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' "${JUPYTERHUB_SERVICE_USER}"
-    fi
-  fi
-  priv  chown -R -- "${JUPYTERHUB_SERVICE_USER}":"${JUPYTERHUB_SERVICE_USER}" "${JUPYTERHUB_VENV}"
-
   service_name='jupyterhub_'"${JUPYTERHUB_IP}"'_'"${JUPYTERHUB_PORT}"
   service='/etc/systemd/system/'"${service_name}"'.service'
   tmp00="$(mktemp -t "${service_name}"'.XXX.systemd.service')"
@@ -88,7 +98,7 @@ if [ -d '/etc/systemd/system' ]; then
   priv systemctl reload-or-restart -- "${service_name}" || true
 elif [ -d '/Library/LaunchDaemons' ]; then
   >&2 printf 'TODO: macOS service\n'
-  exit 3
+  exit 0
 else
   "${JUPYTERHUB_VENV}"'/bin/jupyter' notebook \
     --NotebookApp.notebook_dir="${JUPYTERHUB_NOTEBOOK_DIR}" \

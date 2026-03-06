@@ -34,7 +34,7 @@ export SCRIPT_NAME
 FLUENTBIT_INSTALL_METHOD="${FLUENTBIT_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 
 if [ "${FLUENTBIT_INSTALL_METHOD}" = 'system' ]; then
-  if command -v curl >/dev/null 2>&1; then
+  if [ "$(uname -s)" = "Linux" ] && command -v curl >/dev/null 2>&1; then
     curl https://raw.githubusercontent.com/fluent/fluent-bit/master/install.sh | sh
   else
     depends 'fluent-bit'

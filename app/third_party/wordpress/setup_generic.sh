@@ -27,7 +27,7 @@ export STACK="${STACK:-}${this_file}"':'
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 
-for lib in 'env.sh' '_lib/_common/pkg_mgr.sh' '_lib/_common/os_info.sh'; do
+for lib in '_lib/_common/pkg_mgr.sh' '_lib/_common/os_info.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090

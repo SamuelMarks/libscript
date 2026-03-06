@@ -9,14 +9,14 @@ if (Get-Command pkgx -ErrorAction SilentlyContinue) {
 Write-Host "[INFO] Bootstrapping pkgx for Windows..."
 Write-Host "Fetching latest release from GitHub API..."
 $rel = Invoke-RestMethod "https://api.github.com/repos/pkgxdev/pkgx/releases/latest"
-$asset = $rel.assets | Where-Object { $_.name -match "windows" -and $_.name -match "x86-64.tar.xz" }
+$asset = $rel.assets | Where-Object { $_.name -match "windows" -and $_.name -match "x86-64.zip" }
 
 if (-not $asset) {
     Write-Error "Could not find Windows asset in the latest pkgx release."
     exit 1
 }
 
-$outFile = "$env:TEMP\pkgx-windows.tar.xz"
+$outFile = "$env:TEMP\pkgx-windows.zip"
 Write-Host "Downloading $($asset.name)..."
 Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $outFile
 
@@ -30,8 +30,7 @@ if (Test-Path $extractDir) { Remove-Item -Recurse -Force $extractDir }
 New-Item -ItemType Directory -Force -Path $extractDir | Out-Null
 
 Write-Host "Extracting..."
-# Windows 10 build 17063+ includes a port of bsdtar simply named `tar`, which supports xz extraction natively.
-tar -xf $outFile -C $extractDir
+Expand-Archive -Path $outFile -DestinationPath $extractDir -Force
 
 # Search for the extracted binary (it's usually pkgx.exe inside a pkgx-v* folder)
 $exeFile = Get-ChildItem -Path $extractDir -Recurse -Filter "pkgx.exe" | Select-Object -First 1

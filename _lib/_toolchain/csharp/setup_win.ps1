@@ -14,7 +14,7 @@ if ([string]::IsNullOrEmpty($WinPkgMgr)) {
 }
 
 if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "winget") {
-    $WinPkgMgr install --silent --force --id=Microsoft.DotNet.SDK.8 -e --accept-package-agreements --accept-source-agreements
+    winget install --silent --force --id=Microsoft.DotNet.SDK.8 -e --accept-package-agreements --accept-source-agreements
 } elseif ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
     choco install -y Microsoft.DotNet.SDK.8
 } else {

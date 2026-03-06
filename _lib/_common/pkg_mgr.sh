@@ -24,9 +24,9 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${this_file}"':'
 
-DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+_PKG_MGR_DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${_PKG_MGR_DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 
 #DIR="$( dirname -- "$( readlink -nf -- "${0}" )")"
 

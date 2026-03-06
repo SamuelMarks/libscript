@@ -14,7 +14,7 @@ if ([string]::IsNullOrEmpty($WinPkgMgr)) {
 }
 
 if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "winget") {
-    $WinPkgMgr install --silent --force --id=MSYS2.MSYS2 -e --accept-package-agreements --accept-source-agreements
+    winget install --silent --force --id=MSYS2.MSYS2 -e --accept-package-agreements --accept-source-agreements
 } elseif ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
     choco install -y MSYS2.MSYS2
 } else {

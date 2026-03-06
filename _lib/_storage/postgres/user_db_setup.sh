@@ -32,7 +32,7 @@ export LIBSCRIPT_ROOT_DIR
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 export LIBSCRIPT_DATA_DIR
 
-for lib in 'env.sh' '_lib/_common/settings_updater.sh' '_lib/_common/priv.sh' '_lib/_common/pkg_mgr.sh'; do
+for lib in '_lib/_common/settings_updater.sh' '_lib/_common/priv.sh' '_lib/_common/pkg_mgr.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
@@ -43,6 +43,21 @@ export DIR="${_DIR}"
 SCRIPT_NAME="${DIR}"'/env.sh'
 export SCRIPT_NAME
 . "${SCRIPT_NAME}"
+
+if [ "$(uname -s)" = "Darwin" ]; then
+  export PATH="/opt/homebrew/opt/postgresql@${POSTGRESQL_VERSION}/bin:/usr/local/opt/postgresql@${POSTGRESQL_VERSION}/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+fi
+
+# Wait for postgres to be ready
+max_retries=30
+retry_count=0
+while [ $retry_count -lt $max_retries ]; do
+  if priv_as "${POSTGRES_SERVICE_USER:-postgres}" psql -tc "SELECT 1" >/dev/null 2>&1; then
+    break
+  fi
+  sleep 1
+  retry_count=$((retry_count + 1))
+done
 
 # Defined here so ? throws errors early
 conn='postgres://'"${POSTGRES_USER?}"':'"${POSTGRES_PASSWORD?}"'@'"${POSTGRES_HOST?}"'/'"${POSTGRES_DB?}"

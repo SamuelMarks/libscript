@@ -40,7 +40,7 @@ ZIG_INSTALL_METHOD="${ZIG_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-sys
 if [ "${ZIG_INSTALL_METHOD}" = 'system' ]; then
   if ! depends 'zig'; then
     if command -v snap >/dev/null 2>&1; then
-      priv snap install zig --classic || true
+      priv snap install zig --classic || priv snap install zig --classic --beta || true
     fi
   fi
 else

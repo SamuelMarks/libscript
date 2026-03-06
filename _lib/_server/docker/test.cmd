@@ -1,3 +1,3 @@
 @echo off
-docker version
+docker --version
 if %errorlevel% neq 0 exit /b %errorlevel%

@@ -35,8 +35,11 @@ case "${INIT_SYS-}" in
     rc-service "${LIBSCRIPT_SERVICE_NAME:-postgresql}" start || true
     ;;
   *)
-    >&2 printf 'Warning: Postgres installation successful, but init system %s not supported for auto-start
-' "${INIT_SYS-}"
+    if [ "$(uname -s)" = "Darwin" ]; then
+      brew services start postgresql@14 || brew services start postgresql || true
+    else
+      >&2 printf 'Warning: Postgres installation successful, but init system %s not supported for auto-start\n' "${INIT_SYS-}"
+    fi
     ;;
 esac
 

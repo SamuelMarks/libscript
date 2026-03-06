@@ -14,7 +14,10 @@ if ! command -v nix >/dev/null 2>&1; then
   echo "Bootstrapping Nix package manager..."
   libscript_download "https://nixos.org/nix/install" "/tmp/install-nix.sh"
   
-  if [ "$(id -u)" -eq 0 ]; then
+  if [ "$(uname -s)" = "Darwin" ]; then
+     echo "Running multi-user nix install for macOS..."
+     sh "/tmp/install-nix.sh" --daemon --yes
+  elif [ "$(id -u)" -eq 0 ]; then
      echo "Running multi-user nix install..."
      sh "/tmp/install-nix.sh" --daemon --yes
   else

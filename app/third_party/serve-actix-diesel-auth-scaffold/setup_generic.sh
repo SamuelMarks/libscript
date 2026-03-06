@@ -28,7 +28,7 @@ DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 
-for lib in 'env.sh' '_lib/_common/pkg_mgr.sh' '_lib/_git/git.sh' '_lib/_toolchain/rust/setup.sh'; do
+for lib in '_lib/_common/pkg_mgr.sh' '_lib/_git/git.sh' '_lib/_toolchain/rust/setup.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
@@ -42,8 +42,8 @@ cd -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}"
 d="$( dirname -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}" )"'/rust-actix-diesel-auth-scaffold'
 depends 'libpq-dev' 'libsqlite3-dev' 'default-libmysqlclient-dev'
 git_get https://github.com/offscale/rust-actix-diesel-auth-scaffold "${d}"
-rustup toolchain install nightly
-cargo +nightly check
+rustup toolchain install nightly || true
+RUSTC_BOOTSTRAP=1 cargo +nightly check || RUSTC_BOOTSTRAP=1 cargo check
 if [ ! "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}" = "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR}" ]; then
   cp -r -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}"'/target' "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR}"'/' || true
 fi

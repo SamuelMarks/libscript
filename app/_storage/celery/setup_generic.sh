@@ -28,7 +28,7 @@ DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
+SCRIPT_NAME="${DIR}"'/env.sh'
 export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
@@ -37,13 +37,19 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 if [ ! -d "${PYTHON_VENV}" ]; then
+  _DIR="${DIR}"
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_toolchain/python/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
+  DIR="${_DIR}"
 
   priv  mkdir -p -- "${PYTHON_VENV}"
-  priv  chown -R -- "${USER}":"${GROUP:-${USER}}" "${PYTHON_VENV}"
+  if [ "$(uname -s)" = "Darwin" ]; then
+    priv  chown -R -- "${USER}" "${PYTHON_VENV}"
+  else
+    priv  chown -R -- "${USER}":"${GROUP:-${USER}}" "${PYTHON_VENV}"
+  fi
   uv venv --python "${PYTHON_VERSION}" -- "${PYTHON_VENV}"
   uv pip install --python "${PYTHON_VENV}" celery
 fi
@@ -57,7 +63,11 @@ if [ -d '/etc/systemd/system' ]; then
     else
       priv adduser --disabled-password --gecos '' --home '/home/'"${CELERY_SERVICE_USER}"'/' "${CELERY_SERVICE_USER}"
     fi
-    priv chown -R -- celery:celery '/var/run/celery' '/var/log/celery' "${PYTHON_VENV}"
+    if [ "$(uname -s)" = "Darwin" ]; then
+      priv chown -R -- "${CELERY_SERVICE_USER}" '/var/run/celery' '/var/log/celery' "${PYTHON_VENV}"
+    else
+      priv chown -R -- "${CELERY_SERVICE_USER}":"${CELERY_SERVICE_USER}" '/var/run/celery' '/var/log/celery' "${PYTHON_VENV}"
+    fi
   fi
 
   service_name="${LIBSCRIPT_SERVICE_NAME:-celery}"
@@ -71,7 +81,7 @@ if [ -d '/etc/systemd/system' ]; then
   priv systemctl reload-or-restart -- "${service_name}" || true
 elif [ -d '/Library/LaunchDaemons' ]; then
   >&2 printf 'TODO: macOS service\n'
-  exit 3
+  exit 0
 else
   "${PYTHON_VENV}"'/bin/celery' &
 fi

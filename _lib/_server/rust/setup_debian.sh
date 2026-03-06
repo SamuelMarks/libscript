@@ -29,7 +29,7 @@ DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 
-for lib in 'env.sh' '_lib/_common/environ.sh' '_lib/_common/pkg_mgr.sh' \
+for lib in '_lib/_common/environ.sh' '_lib/_common/pkg_mgr.sh' \
            '_lib/_git/git.sh' '_lib/_toolchain/rust/setup.sh' '_lib/_common/envsubst_safe.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
   export SCRIPT_NAME

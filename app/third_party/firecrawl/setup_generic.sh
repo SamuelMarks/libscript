@@ -24,17 +24,17 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${this_file}"':'
 
-DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
+_DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${_DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 
-for lib in 'env.sh' '_lib/_common/pkg_mgr.sh' '_lib/_toolchain/nodejs/setup.sh' '_lib/_git/git.sh'; do
+for lib in '_lib/_common/pkg_mgr.sh' '_lib/_toolchain/nodejs/setup.sh' '_lib/_git/git.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 done
 
-DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+DIR="${_DIR}"
 SCRIPT_NAME="${DIR}"'/env.sh'
 export SCRIPT_NAME
 . "${SCRIPT_NAME}"
@@ -59,6 +59,7 @@ cd -- "${DEST}"
 hash="$(git rev-list HEAD -1)"
 hash_loc="${DEST}"'/apps/api/node_modules/'"${hash}"
 if [ ! -f "${hash_loc}" ]; then
+  mkdir -p -- "$(dirname -- "${hash_loc}")"
   touch -- "${hash_loc}"
   cd -- apps/api
   pnpm install

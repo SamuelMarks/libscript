@@ -62,12 +62,12 @@ For more details on building complex stacks and utilizing the generator engine, 
 
 | Component | Ubuntu | macOS | Windows |
 |---|---|---|---|
-| `app/_storage/celery` | ❌ | ❌ | ⏭️ |
-| `app/third_party/firecrawl` | ❌ | ❌ | ⏭️ |
-| `app/third_party/jupyterhub` | ❌ | ❌ | ⏭️ |
+| `app/_storage/celery` | ✅ | ❌ | ⏭️ |
+| `app/third_party/firecrawl` | ✅ | ✅ | ⏭️ |
+| `app/third_party/jupyterhub` | ✅ | ❌ | ⏭️ |
 | `app/third_party/openvpn` | ✅ | ✅ | ⏭️ |
-| `app/third_party/serve-actix-diesel-auth-scaffold` | ❌ | ⏭️ | ⏭️ |
-| `app/third_party/wordpress` | ✅ | ⏭️ | ⏭️ |
+| `app/third_party/serve-actix-diesel-auth-scaffold` | ✅ | ⏭️ | ⏭️ |
+| `app/third_party/wordpress` | ❓ | ⏭️ | ⏭️ |
 | `_lib/_bootstrap/7zip` | ✅ | ✅ | ✅ |
 | `_lib/_bootstrap/apk` | ✅ | ⏭️ | ✅ |
 | `_lib/_bootstrap/brew` | ✅ | ✅ | ✅ |
@@ -77,14 +77,14 @@ For more details on building complex stacks and utilizing the generator engine, 
 | `_lib/_bootstrap/dash` | ✅ | ✅ | ✅ |
 | `_lib/_bootstrap/msys2` | ✅ | ✅ | ✅ |
 | `_lib/_bootstrap/nix` | ✅ | ⏭️ | ⏭️ |
-| `_lib/_bootstrap/pkgx` | ❌ | ❌ | ❌ |
+| `_lib/_bootstrap/pkgx` | ✅ | ✅ | ✅ |
 | `_lib/_bootstrap/powershell` | ✅ | ✅ | ✅ |
 | `_lib/_bootstrap/scoop` | ✅ | ✅ | ✅ |
 | `_lib/_bootstrap/wget` | ✅ | ✅ | ✅ |
 | `_lib/_bootstrap/winget` | ✅ | ✅ | ✅ |
 | `_lib/_git` | ✅ | ✅ | ✅ |
 | `_lib/_server/caddy` | ✅ | ✅ | ⏭️ |
-| `_lib/_server/docker` | ✅ | ⏭️ | ✅ |
+| `_lib/_server/docker` | ✅ | ⏭️ | ❌ |
 | `_lib/_server/fluentbit` | ✅ | ⏭️ | ⏭️ |
 | `_lib/_server/httpd` | ✅ | ✅ | ⏭️ |
 | `_lib/_server/iis` | ❓ | ⏭️ | ✅ |
@@ -92,16 +92,16 @@ For more details on building complex stacks and utilizing the generator engine, 
 | `_lib/_server/kubernetes_thw` | ❓ | ⏭️ | ⏭️ |
 | `_lib/_server/nginx` | ✅ | ✅ | ⏭️ |
 | `_lib/_server/nodejs` | ✅ | ✅ | ✅ |
-| `_lib/_server/openbao` | ❌ | ✅ | ⏭️ |
+| `_lib/_server/openbao` | ❓ | ✅ | ⏭️ |
 | `_lib/_server/python` | ✅ | ✅ | ✅ |
 | `_lib/_server/rust` | ✅ | ⏭️ | ✅ |
 | `_lib/_storage/etcd` | ✅ | ✅ | ⏭️ |
 | `_lib/_storage/mariadb` | ✅ | ✅ | ✅ |
-| `_lib/_storage/mongodb` | ❌ | ✅ | ✅ |
-| `_lib/_storage/postgres` | ❌ | ⏭️ | ⏭️ |
+| `_lib/_storage/mongodb` | ❓ | ✅ | ✅ |
+| `_lib/_storage/postgres` | ❓ | ⏭️ | ⏭️ |
 | `_lib/_storage/rabbitmq` | ✅ | ✅ | ⏭️ |
 | `_lib/_storage/sqlite` | ✅ | ✅ | ✅ |
-| `_lib/_storage/valkey` | ❌ | ✅ | ✅ |
+| `_lib/_storage/valkey` | ❓ | ✅ | ✅ |
 | `_lib/_toolchain/bun` | ✅ | ✅ | ⏭️ |
 | `_lib/_toolchain/c` | ✅ | ✅ | ⏭️ |
 | `_lib/_toolchain/cc` | ✅ | ✅ | ⏭️ |
@@ -121,4 +121,4 @@ For more details on building complex stacks and utilizing the generator engine, 
 | `_lib/_toolchain/sh` | ✅ | ✅ | ⏭️ |
 | `_lib/_toolchain/swift` | ✅ | ✅ | ⏭️ |
 | `_lib/_toolchain/wait4x` | ✅ | ✅ | ⏭️ |
-| `_lib/_toolchain/zig` | ❌ | ✅ | ✅ |
+| `_lib/_toolchain/zig` | ❓ | ✅ | ✅ |
