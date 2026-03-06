@@ -43,7 +43,7 @@ if [ ! -d "${PYTHON_VENV}" ]; then
   . "${SCRIPT_NAME}"
 
   priv  mkdir -p -- "${PYTHON_VENV}"
-  priv  chown -R -- "${USER}":"${GROUP}" "${PYTHON_VENV}"
+  priv  chown -R -- "${USER}":"${GROUP:-${USER}}" "${PYTHON_VENV}"
   uv venv --python "${PYTHON_VERSION}" -- "${PYTHON_VENV}"
   uv pip install --python "${PYTHON_VENV}" celery
 fi
@@ -52,7 +52,11 @@ if [ -d '/etc/systemd/system' ]; then
   if [ ! -d '/home/celery/' ]; then
   CELERY_SERVICE_USER="${CELERY_SERVICE_USER:-celery}"
     priv mkdir -p -- '/var/run/celery' '/var/log/celery'
-    priv adduser "${CELERY_SERVICE_USER}" --home '/home/'"${CELERY_SERVICE_USER}"'/' --gecos ''
+    if command -v useradd >/dev/null 2>&1; then
+      priv useradd -m -d '/home/'"${CELERY_SERVICE_USER}"'/' -c '' "${CELERY_SERVICE_USER}"
+    else
+      priv adduser --disabled-password --gecos '' --home '/home/'"${CELERY_SERVICE_USER}"'/' "${CELERY_SERVICE_USER}"
+    fi
     priv chown -R -- celery:celery '/var/run/celery' '/var/log/celery' "${PYTHON_VENV}"
   fi
 
@@ -61,7 +65,8 @@ if [ -d '/etc/systemd/system' ]; then
   envsubst < "${DIR}"'/conf/systemd/celery.service' > '/tmp/'"${service_name}"
 
   priv  install -m 0644 -- '/tmp/'"${service_name}" "${service}"
-  priv  install -D -m 0644 -- "${DIR}"'/conf/celery_env' /etc/conf.d/
+  priv mkdir -p /etc/conf.d
+  priv install -D -m 0644 -- "${DIR}"'/conf/celery_env' /etc/conf.d/"${service_name}"
   priv systemctl daemon-reload || true
   priv systemctl reload-or-restart -- "${service_name}" || true
 elif [ -d '/Library/LaunchDaemons' ]; then

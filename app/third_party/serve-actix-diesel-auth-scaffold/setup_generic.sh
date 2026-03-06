@@ -42,7 +42,8 @@ cd -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}"
 d="$( dirname -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}" )"'/rust-actix-diesel-auth-scaffold'
 depends 'libpq-dev' 'libsqlite3-dev' 'default-libmysqlclient-dev'
 git_get https://github.com/offscale/rust-actix-diesel-auth-scaffold "${d}"
-cargo check
+rustup toolchain install nightly
+cargo +nightly check
 if [ ! "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}" = "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR}" ]; then
   cp -r -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}"'/target' "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR}"'/' || true
 fi

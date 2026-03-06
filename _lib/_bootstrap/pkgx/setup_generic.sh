@@ -12,6 +12,12 @@ SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-$(cd "$(dirname "$this_file")/../../.." && pw
 
 if ! command -v pkgx >/dev/null 2>&1; then
   echo "Bootstrapping pkgx single-binary package manager..."
-  libscript_download "https://pkgx.sh" "/tmp/install-pkgx.sh"
+  if command -v curl >/dev/null 2>&1; then
+    curl -SsfL "https://pkgx.sh" -o "/tmp/install-pkgx.sh"
+  elif command -v wget >/dev/null 2>&1; then
+    wget -qO "/tmp/install-pkgx.sh" "https://pkgx.sh"
+  else
+    libscript_download "https://pkgx.sh" "/tmp/install-pkgx.sh" "SKIP"
+  fi
   sh "/tmp/install-pkgx.sh"
 fi

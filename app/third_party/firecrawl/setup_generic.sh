@@ -34,6 +34,7 @@ for lib in 'env.sh' '_lib/_common/pkg_mgr.sh' '_lib/_toolchain/nodejs/setup.sh' 
   . "${SCRIPT_NAME}"
 done
 
+DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 SCRIPT_NAME="${DIR}"'/env.sh'
 export SCRIPT_NAME
 . "${SCRIPT_NAME}"

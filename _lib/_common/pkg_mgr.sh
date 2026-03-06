@@ -360,7 +360,7 @@ path="/${host#*/}"
   
   if [ -n "$actual_checksum" ]; then
 stripped_expected="${expected_checksum#sha-256=}"
-    if [ -n "$stripped_expected" ]; then
+    if [ -n "$stripped_expected" ] && [ "$stripped_expected" != "SKIP" ]; then
       if [ "$actual_checksum" != "$stripped_expected" ]; then
         echo "Error: checksum mismatch for $url" >&2
         echo "Expected: $stripped_expected" >&2

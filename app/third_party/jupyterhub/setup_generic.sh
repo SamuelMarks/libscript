@@ -69,7 +69,11 @@ if [ -d '/etc/systemd/system' ]; then
   fi
 
   if [ ! -d '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' ]; then
-    priv adduser "${JUPYTERHUB_SERVICE_USER}" --home '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' --gecos ''
+    if command -v useradd >/dev/null 2>&1; then
+      priv useradd -m -d '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' -c '' "${JUPYTERHUB_SERVICE_USER}"
+    else
+      priv adduser --disabled-password --gecos '' --home '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' "${JUPYTERHUB_SERVICE_USER}"
+    fi
   fi
   priv  chown -R -- "${JUPYTERHUB_SERVICE_USER}":"${JUPYTERHUB_SERVICE_USER}" "${JUPYTERHUB_VENV}"
 
