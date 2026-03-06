@@ -98,7 +98,7 @@ is_installed() {
   pkg="${1}"
   case "${PKG_MGR}" in
     'apk')                apk info -e "${pkg}" >/dev/null 2>&1 ;;
-    'apt-get')            dpkg-query --show "${pkg}" >/dev/null 2>&1 ;;
+    'apt-get')            dpkg-query -W -f='${Status}\n' "${pkg}" 2>/dev/null | grep -q 'install ok installed' ;;
     'brew')               brew list --formula "${pkg}" >/dev/null 2>&1 ;;
     'dnf'|'yum'|'zypper') rpm -q "${pkg}" >/dev/null 2>&1 ;;
     'emerge')             eix -I "${pkg}" >/dev/null 2>&1 ;;

@@ -77,6 +77,8 @@ jobs:
           - "_lib/_toolchain/wait4x"
           - "_lib/_toolchain/zig"
         exclude:
+          - os: ubuntu-latest
+            component: "_lib/_storage/valkey"
           - os: macos-latest
             component: "_lib/_bootstrap/apk"
           - os: macos-latest
@@ -122,65 +124,13 @@ jobs:
           - os: ubuntu-latest
             component: "_lib/_server/openbao"
           - os: ubuntu-latest
-            component: "_lib/_storage/postgres"
-          - os: ubuntu-latest
-            component: "_lib/_storage/valkey"
-          - os: ubuntu-latest
-            component: "_lib/_storage/mongodb"
-          - os: ubuntu-latest
             component: "app/third_party/wordpress"
-          - os: ubuntu-latest
-            component: "_lib/_toolchain/zig"
           - os: macos-latest
             component: "app/third_party/wordpress"
           - os: macos-latest
             component: "app/third_party/serve-actix-diesel-auth-scaffold"
           - os: macos-latest
             component: "_lib/_server/docker"
-          - os: macos-latest
-            component: "_lib/_server/fluentbit"
-          - os: macos-latest
-            component: "_lib/_storage/postgres"
-          - os: macos-latest
-            component: "_lib/_bootstrap/nix"
-          - os: windows-latest
-            component: "_lib/_server/fluentbit"
-          - os: windows-latest
-            component: "_lib/_server/httpd"
-          - os: windows-latest
-            component: "_lib/_toolchain/cpp"
-          - os: windows-latest
-            component: "_lib/_toolchain/elixir"
-          - os: windows-latest
-            component: "_lib/_toolchain/csharp"
-          - os: windows-latest
-            component: "_lib/_toolchain/c"
-          - os: windows-latest
-            component: "_lib/_toolchain/cc"
-          - os: windows-latest
-            component: "_lib/_toolchain/bun"
-          - os: windows-latest
-            component: "_lib/_toolchain/deno"
-          - os: windows-latest
-            component: "_lib/_toolchain/go"
-          - os: windows-latest
-            component: "_lib/_toolchain/rust"
-          - os: windows-latest
-            component: "_lib/_toolchain/kotlin"
-          - os: windows-latest
-            component: "_lib/_toolchain/php"
-          - os: windows-latest
-            component: "_lib/_server/openbao"
-          - os: windows-latest
-            component: "_lib/_toolchain/ruby"
-          - os: windows-latest
-            component: "_lib/_toolchain/java"
-          - os: windows-latest
-            component: "_lib/_toolchain/wait4x"
-          - os: windows-latest
-            component: "_lib/_toolchain/swift"
-          - os: windows-latest
-            component: "_lib/_toolchain/sh"
           - os: windows-latest
             component: "app/third_party/wordpress"
 

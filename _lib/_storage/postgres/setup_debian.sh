@@ -44,7 +44,15 @@ _del='postgres://'"${POSTGRES_USER?}"':'"${POSTGRES_PASSWORD?}"'@'"${POSTGRES_HO
 pid=
 if ! dpkg -s -- 'postgresql-server-dev-'"${POSTGRESQL_VERSION}" >/dev/null 2>&1; then
   depends 'postgresql-common'
-  yes '' | priv '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh'
+  if [ -x '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh' ]; then
+    yes '' | priv '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh'
+  else
+    depends 'curl' 'ca-certificates' 'gnupg'
+    priv install -d '/usr/share/postgresql-common/pgdg'
+    priv curl -o '/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc' --fail 'https://www.postgresql.org/media/keys/ACCC4CF8.asc'
+    printf 'deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt %s-pgdg main\n' "$(. /etc/os-release && printf '%s' "${VERSION_CODENAME}")" | priv dd status='none' of='/etc/apt/sources.list.d/pgdg.list'
+    priv apt-get update
+  fi
   depends 'postgresql-server-dev-'"${POSTGRESQL_VERSION}" 'postgresql-'"${POSTGRESQL_VERSION}"
   # non systemd for environments like docker
   if [ ! "$(ps -q 1 -o comm=)" = 'systemd' ]; then
