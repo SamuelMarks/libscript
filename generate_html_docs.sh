@@ -279,7 +279,7 @@ for url in ${urls}; do
          "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${url}" > "${url}"'.tmp'
 
   within_first_header='<a class="right" href="'"${GIT_HTTP_LINK}"'" aria-label="Open on GitHub"><img class="deploy-img" src="/assets/github-badge-small.png" alt="Open on GitHub"/></a>'
-  find_replace '</h1>' "${within_first_header}"'</h1>' "${url}"'.tmp' > "${url}"'.tmp1'
+  awk -v within_first_header="$within_first_header" '/<\/h1>/ && !done { sub(/<\/h1>/, within_first_header "</h1>"); done=1 } 1' "${url}.tmp" > "${url}.tmp1"
 
   mv -- "${url}"'.tmp1' "${url}"'.tmp'
 
@@ -329,7 +329,7 @@ for url in ${urls}; do
     </fieldset>
   </form>
 </div>');
-    find_replace '</h1>' '</h1>\n'"${after_first_header}" "${url}"'.tmp' > "${url}"'.tmp1'
+    awk -v after_first_header="$after_first_header" '/<\/h1>/ && !done { sub(/<\/h1>/, "</h1>\\n" after_first_header); done=1 } 1' "${url}.tmp" > "${url}.tmp1"
     find_replace 'first_scripts.js"></script>' 'first_scripts.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@json-editor/json-editor@latest/dist/jsoneditor.min.js"></script>' "${url}"'.tmp1' > "${url}"'.tmp'
     # shellcheck disable=SC2016
