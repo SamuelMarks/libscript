@@ -63,10 +63,18 @@ For more details on building complex stacks and utilizing the generator engine, 
 | Component | Ubuntu | macOS | Windows |
 |---|---|---|---|
 | `app/_storage/celery` | ✅ | ✅ | ⏭️ |
+| `app/third_party/drupal` | ❓ | ❓ | ❓ |
 | `app/third_party/firecrawl` | ✅ | ✅ | ⏭️ |
+| `app/third_party/joomla` | ❓ | ❓ | ❓ |
 | `app/third_party/jupyterhub` | ✅ | ✅ | ⏭️ |
+| `app/third_party/magento` | ❓ | ❓ | ❓ |
+| `app/third_party/nextcloud` | ❓ | ❓ | ❓ |
+| `app/third_party/odoo` | ❓ | ❓ | ❓ |
 | `app/third_party/openvpn` | ✅ | ✅ | ⏭️ |
+| `app/third_party/phpbb` | ❓ | ❓ | ❓ |
+| `app/third_party/prestashop` | ❓ | ❓ | ❓ |
 | `app/third_party/serve-actix-diesel-auth-scaffold` | ✅ | ⏭️ | ⏭️ |
+| `app/third_party/woocommerce` | ❓ | ❓ | ❓ |
 | `app/third_party/wordpress` | ❓ | ⏭️ | ⏭️ |
 | `_lib/_bootstrap/7zip` | ✅ | ✅ | ✅ |
 | `_lib/_bootstrap/apk` | ✅ | ⏭️ | ✅ |
@@ -105,6 +113,7 @@ For more details on building complex stacks and utilizing the generator engine, 
 | `_lib/_toolchain/bun` | ✅ | ✅ | ❓ |
 | `_lib/_toolchain/c` | ✅ | ✅ | ❓ |
 | `_lib/_toolchain/cc` | ✅ | ✅ | ❓ |
+| `_lib/_toolchain/composer` | ❓ | ❓ | ❓ |
 | `_lib/_toolchain/cpp` | ✅ | ✅ | ❓ |
 | `_lib/_toolchain/csharp` | ✅ | ✅ | ❓ |
 | `_lib/_toolchain/deno` | ✅ | ✅ | ❓ |
