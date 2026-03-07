@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/app/third_party/nextcloud/vars.schema.json",
+  "title": "nextcloud vars",
+  "type": "object",
+  "properties": {
+    "NEXTCLOUD_VERSION": {
+      "type": "string",
+      "description": "Variable NEXTCLOUD_VERSION."
+    },
+    "PHP_FPM_LISTEN": {
+      "type": "string",
+      "description": "Variable PHP_FPM_LISTEN."
+    },
+    "NEXTCLOUD_SERVER_NAME": {
+      "type": "string",
+      "description": "Variable NEXTCLOUD_SERVER_NAME."
+    },
+    "NEXTCLOUD_DB_PASS": {
+      "type": "string",
+      "description": "Variable NEXTCLOUD_DB_PASS."
+    },
+    "NEXTCLOUD_DB_USER": {
+      "type": "string",
+      "description": "Variable NEXTCLOUD_DB_USER."
+    },
+    "WWWROOT": {
+      "type": "string",
+      "description": "Variable WWWROOT."
+    },
+    "NEXTCLOUD_DB_NAME": {
+      "type": "string",
+      "description": "Variable NEXTCLOUD_DB_NAME."
+    },
+    "NEXTCLOUD_DB_TYPE": {
+      "type": "string",
+      "description": "Variable NEXTCLOUD_DB_TYPE."
+    },
+    "NEXTCLOUD_WEBSERVER": {
+      "type": "string",
+      "description": "Variable NEXTCLOUD_WEBSERVER."
+    },
+    "NEXTCLOUD_LISTEN": {
+      "type": "string",
+      "description": "Variable NEXTCLOUD_LISTEN."
+    }
+  }
+}

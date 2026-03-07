@@ -15,3 +15,7 @@ You can manage Scoop and its lifecycle using standard `libscript` commands:
 - **Start**: `libscript start scoop`
 - **Stop**: `libscript stop scoop`
 - **Package**: `libscript package scoop` (e.g., `libscript package_as innosetup scoop`)
+
+## Variables
+
+See `vars.schema.json` for details on available variables.

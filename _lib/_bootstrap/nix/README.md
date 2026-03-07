@@ -17,3 +17,7 @@ You can manage Nix using libscript with the following commands:
 - **Start**: `libscript start nix`
 - **Stop**: `libscript stop nix`
 - **Package**: `libscript package nix`
+
+## Variables
+
+See `vars.schema.json` for details on available variables.

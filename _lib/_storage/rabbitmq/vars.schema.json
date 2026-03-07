@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_storage/rabbitmq/vars.schema.json",
+  "title": "rabbitmq storage vars",
+  "description": "RabbitMQ message broker.",
+  "type": "object",
+  "properties": {
+    "RABBITMQ_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Address for RabbitMQ to listen on."
+    },
+    "RABBITMQ_LISTEN_PORT": {
+      "type": "string",
+      "description": "Port for RabbitMQ to listen on."
+    },
+    "RABBITMQ_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "UNIX socket path for RabbitMQ to listen on."
+    }
+  }
+}

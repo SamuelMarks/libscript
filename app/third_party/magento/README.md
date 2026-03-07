@@ -30,3 +30,7 @@ MAGENTO_WEBSERVER=nginx \
 MAGENTO_DB_DRIVER=mariadb \
 ./setup.sh
 ```
+
+## Variables
+
+See `vars.schema.json` for details on available variables.

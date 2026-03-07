@@ -1,0 +1,35 @@
+#!/bin/sh
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  this_file="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  this_file="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  this_file="${0}"
+else
+  this_file="${0}"
+fi
+case "${STACK+x}" in
+  *':'"${this_file}"':'*)
+    printf '[STOP]     processing "%s"\n' "${this_file}"
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+esac
+export STACK="${STACK:-}${this_file}"':'
+
+if ! command -v pkg >/dev/null 2>&1; then
+  if [ "$(uname)" = "FreeBSD" ]; then
+    if [ "$(id -u)" = "0" ]; then
+      env ASSUME_ALWAYS_YES=YES pkg bootstrap
+    else
+      if command -v sudo >/dev/null 2>&1; then
+        sudo ASSUME_ALWAYS_YES=YES pkg bootstrap
+      else
+        echo "Error: Must be root or have sudo to bootstrap pkg on FreeBSD." >&2
+        exit 1
+      fi
+    fi
+  else
+    echo "Warning: The 'pkg' package manager is only applicable on FreeBSD. Skipping." >&2
+  fi
+fi

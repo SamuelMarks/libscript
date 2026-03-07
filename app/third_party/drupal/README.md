@@ -13,3 +13,7 @@ Installs Drupal natively via release tarball with webserver and DB configuration
 - `DRUPAL_SERVER_NAME`: Web server domain name
 - `DRUPAL_LISTEN`: Web server port
 - `WWWROOT`: Path to install Drupal
+
+## Variables
+
+See `vars.schema.json` for details on available variables.

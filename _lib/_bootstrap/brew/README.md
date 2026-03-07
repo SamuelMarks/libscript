@@ -17,3 +17,7 @@ You can manage Homebrew using libscript with the following commands:
 - **Start**: `libscript start brew`
 - **Stop**: `libscript stop brew`
 - **Package**: `libscript package brew`
+
+## Variables
+
+See `vars.schema.json` for details on available variables.

@@ -2,43 +2,44 @@
 # shellcheck disable=SC2016,SC1090,SC1091,SC2034,SC2018,SC2019,SC2221,SC2222,SC2129,SC2209,SC2089,SC2090,SC2086,SC2154,SC2044,SC2181,SC2038,SC2155,SC2046,SC2002,SC1003,SC2295,SC2145
 
 
-set -e
+set -feu
+# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   this_file="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  this_file="${BASH_SOURCE[0]}"
+  set -o pipefail
+elif [ "${ZSH_VERSION-}" ]; then
+  this_file="${(%):-%x}"
+  set -o pipefail
 else
   this_file="${0}"
 fi
-DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}/ROOT" ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/pkg_mgr.sh'
-export SCRIPT_NAME
-. "${SCRIPT_NAME}"
+case "${STACK+x}" in
+  *':'"${this_file}"':'*)
+    printf '[STOP]     processing "%s"\n' "${this_file}"
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+esac
+export STACK="${STACK:-}${this_file}"':'
 
-# Optional: Disable services first if possible
-if command -v systemctl >/dev/null 2>&1; then
-    sudo systemctl stop caddy || true
-    sudo systemctl disable caddy || true
-elif command -v rc-service >/dev/null 2>&1; then
-    sudo rc-service caddy stop || true
-    sudo rc-update del caddy || true
-fi
+STACK="${STACK:-:}${this_file}"':'
+export STACK
 
-if [ -n "${PKG_MGR}" ]; then
-    case "${PKG_MGR}" in
-        apt-get) sudo apt-get remove -y caddy ;;
-        apk)     sudo apk del caddy ;;
-        brew)    brew uninstall caddy ;;
-        dnf)     sudo dnf remove -y caddy ;;
-        pacman)  sudo pacman -Rns --noconfirm caddy ;;
-        zypper)  sudo zypper remove -y caddy ;;
-        *)       echo "Manual uninstallation required for $PKG_MGR." ;;
-    esac
-fi
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${this_file}" )")" && pwd)}"
+export LIBSCRIPT_ROOT_DIR
 
-if [ -n "$INSTALLED_DIR" ] && [ -d "$INSTALLED_DIR" ]; then
-  echo "Removing $INSTALLED_DIR..."
-  rm -rf "$INSTALLED_DIR"
-else
-  echo "No local installation directory found for $PACKAGE_NAME at $INSTALLED_DIR."
-fi
+LIBSCRIPT_BUILD_DIR="${LIBSCRIPT_BUILD_DIR:-${TMPDIR:-/tmp}/libscript_build}"
+export LIBSCRIPT_BUILD_DIR
+
+LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
+export LIBSCRIPT_DATA_DIR
+
+PATH="${HOME}"'/.cargo/bin:'"${HOME}"'/.local/share/fnm/aliases/default/bin:'"${LIBSCRIPT_DATA_DIR}"'/bin:'"${PATH}"
+export PATH
+
+[ -d "${LIBSCRIPT_BUILD_DIR}" ] || mkdir -p -- "${LIBSCRIPT_BUILD_DIR}"
+[ -d "${LIBSCRIPT_DATA_DIR}" ] || mkdir -p -- "${LIBSCRIPT_DATA_DIR}"
+
+echo "Uninstalling caddy is not supported via this script."

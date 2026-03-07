@@ -17,3 +17,7 @@ You can manage curl using libscript with the following commands:
 - **Start**: `libscript start curl`
 - **Stop**: `libscript stop curl`
 - **Package**: `libscript package curl`
+
+## Variables
+
+See `vars.schema.json` for details on available variables.

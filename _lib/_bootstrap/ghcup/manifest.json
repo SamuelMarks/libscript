@@ -1,0 +1,6 @@
+{
+  "name": "ghcup",
+  "provides": ["package-manager", "ghcup"],
+  "os_whitelist": ["all"],
+  "os_blacklist": []
+}

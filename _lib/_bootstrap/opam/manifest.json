@@ -1,0 +1,6 @@
+{
+  "name": "opam",
+  "provides": ["package-manager", "opam"],
+  "os_whitelist": ["all"],
+  "os_blacklist": ["windows"]
+}

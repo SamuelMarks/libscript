@@ -33,3 +33,7 @@ You can efficiently manage pkgx with `libscript` using the standard lifecycle co
 ## Configuration
 
 *(There are currently no component-specific configuration tables or variables defined for this module.)*
+
+## Variables
+
+See `vars.schema.json` for details on available variables.

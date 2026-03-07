@@ -1,0 +1,6 @@
+{
+  "name": "volta",
+  "provides": ["package-manager", "volta"],
+  "os_whitelist": ["all"],
+  "os_blacklist": []
+}

@@ -59,3 +59,7 @@ For full configuration variables, please refer to the `vars.schema.json`.
 - `setup_generic.sh`: Fallback installation logic using the package manager mapper.
 - `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning correctly.
 - `vars.schema.json`: The schema definition for the CLI arguments.
+
+## Variables
+
+See `vars.schema.json` for details on available variables.

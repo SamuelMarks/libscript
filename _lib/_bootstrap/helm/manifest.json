@@ -1,0 +1,6 @@
+{
+  "name": "helm",
+  "provides": ["package-manager", "helm"],
+  "os_whitelist": ["all"],
+  "os_blacklist": []
+}

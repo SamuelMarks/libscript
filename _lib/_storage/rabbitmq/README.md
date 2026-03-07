@@ -61,3 +61,7 @@ libscript.cmd uninstall rabbitmq
 - `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning correctly.
 - `vars.schema.json`: The schema definition for the CLI arguments.
 
+
+## Variables
+
+See `vars.schema.json` for details on available variables.

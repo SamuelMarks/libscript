@@ -1,0 +1,6 @@
+{
+  "name": "nimble",
+  "provides": ["package-manager", "nimble"],
+  "os_whitelist": ["all"],
+  "os_blacklist": []
+}

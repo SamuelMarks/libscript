@@ -1,0 +1,2 @@
+@echo off
+echo "Uninstalling bun is not supported via this script."

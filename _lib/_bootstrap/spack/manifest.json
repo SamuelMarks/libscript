@@ -1,0 +1,6 @@
+{
+  "name": "spack",
+  "provides": ["package-manager", "spack"],
+  "os_whitelist": ["all"],
+  "os_blacklist": []
+}

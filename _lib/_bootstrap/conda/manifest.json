@@ -1,0 +1,6 @@
+{
+  "name": "conda",
+  "provides": ["version-manager", "package-manager", "conda"],
+  "os_whitelist": ["linux", "darwin"],
+  "os_blacklist": ["windows"]
+}

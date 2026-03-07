@@ -30,3 +30,7 @@ You can manage Odoo using the global `libscript` CLI or local scripts.
 This module adheres to LibScript's cross-platform conventions:
 - Supports Linux, macOS, FreeBSD, and Windows.
 - Uses `setup_win.ps1` for clean `.msi` or `.exe` Windows Installer generation, leveraging `winget` and native IIS PowerShell configuration blocks (`WebAdministration`).
+
+## Variables
+
+See `vars.schema.json` for details on available variables.

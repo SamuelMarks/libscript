@@ -1,0 +1,6 @@
+{
+  "name": "composer",
+  "provides": ["package-manager", "composer"],
+  "os_whitelist": ["all"],
+  "os_blacklist": []
+}

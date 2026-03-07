@@ -1,0 +1,6 @@
+{
+  "name": "go",
+  "provides": ["package-manager", "go"],
+  "os_whitelist": ["all"],
+  "os_blacklist": []
+}

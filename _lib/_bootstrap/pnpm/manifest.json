@@ -1,0 +1,6 @@
+{
+  "name": "pnpm",
+  "provides": ["package-manager", "pnpm"],
+  "os_whitelist": ["all"],
+  "os_blacklist": []
+}

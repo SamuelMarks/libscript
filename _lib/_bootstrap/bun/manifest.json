@@ -1,0 +1,6 @@
+{
+  "name": "bun",
+  "provides": ["package-manager", "bun"],
+  "os_whitelist": ["all"],
+  "os_blacklist": []
+}

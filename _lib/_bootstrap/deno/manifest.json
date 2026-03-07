@@ -1,0 +1,6 @@
+{
+  "name": "deno",
+  "provides": ["package-manager", "deno"],
+  "os_whitelist": ["all"],
+  "os_blacklist": []
+}

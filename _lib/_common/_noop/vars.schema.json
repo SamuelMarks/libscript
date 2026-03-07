@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_common/_noop/vars.schema.json",
+  "title": "_noop common vars",
+  "description": "No operation.",
+  "type": "object",
+  "properties": {}
+}

@@ -1,0 +1,6 @@
+{
+  "name": "luarocks",
+  "provides": ["package-manager", "luarocks"],
+  "os_whitelist": ["all"],
+  "os_blacklist": []
+}

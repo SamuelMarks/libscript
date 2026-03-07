@@ -1,0 +1,6 @@
+{
+  "name": "nuget",
+  "provides": ["package-manager", "nuget"],
+  "os_whitelist": ["all"],
+  "os_blacklist": []
+}

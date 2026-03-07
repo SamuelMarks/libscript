@@ -9,6 +9,18 @@
       "type": "string",
       "default": "system",
       "description": "Install method for aria2 ('system' or 'source')"
+    },
+    "DOWNLOAD_DIR": {
+      "type": "string",
+      "description": "Directory where downloads are stored."
+    },
+    "LIBSCRIPT_CACHE_DIR": {
+      "type": "string",
+      "description": "Directory where cached files are stored."
+    },
+    "LIBSCRIPT_GLOBAL_INSTALL_METHOD": {
+      "type": "string",
+      "description": "Global override for how software should be installed."
     }
   }
 }

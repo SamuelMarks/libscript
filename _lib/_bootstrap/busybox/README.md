@@ -35,3 +35,7 @@ libscript package_as docker busybox
 libscript package_as msi busybox
 ```
 *(Supports packaging as docker, docker_compose, msi, innosetup, nsis, or TUI).*
+
+## Variables
+
+See `vars.schema.json` for details on available variables.

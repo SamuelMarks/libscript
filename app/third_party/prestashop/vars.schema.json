@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/app/third_party/prestashop/vars.schema.json",
+  "title": "prestashop vars",
+  "type": "object",
+  "properties": {
+    "PHP_FPM_LISTEN": {
+      "type": "string",
+      "description": "Variable PHP_FPM_LISTEN."
+    },
+    "PRESTASHOP_DB_TYPE": {
+      "type": "string",
+      "description": "Variable PRESTASHOP_DB_TYPE."
+    },
+    "PRESTASHOP_WEBSERVER": {
+      "type": "string",
+      "description": "Variable PRESTASHOP_WEBSERVER."
+    },
+    "PRESTASHOP_DB_USER": {
+      "type": "string",
+      "description": "Variable PRESTASHOP_DB_USER."
+    },
+    "WWWROOT": {
+      "type": "string",
+      "description": "Variable WWWROOT."
+    },
+    "PRESTASHOP_VERSION": {
+      "type": "string",
+      "description": "Variable PRESTASHOP_VERSION."
+    },
+    "PRESTASHOP_LISTEN": {
+      "type": "string",
+      "description": "Variable PRESTASHOP_LISTEN."
+    },
+    "PRESTASHOP_SERVER_NAME": {
+      "type": "string",
+      "description": "Variable PRESTASHOP_SERVER_NAME."
+    },
+    "PRESTASHOP_DB_NAME": {
+      "type": "string",
+      "description": "Variable PRESTASHOP_DB_NAME."
+    },
+    "PRESTASHOP_DB_PASS": {
+      "type": "string",
+      "description": "Variable PRESTASHOP_DB_PASS."
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "uv",
+  "provides": ["package-manager", "uv"],
+  "os_whitelist": ["all"],
+  "os_blacklist": []
+}

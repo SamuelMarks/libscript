@@ -38,3 +38,7 @@ set JOOMLA_DB_TYPE=postgres
 set JOOMLA_VERSION=5.2.0
 setup.cmd
 ```
+
+## Variables
+
+See `vars.schema.json` for details on available variables.

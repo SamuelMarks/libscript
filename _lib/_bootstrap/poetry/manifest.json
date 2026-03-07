@@ -1,0 +1,6 @@
+{
+  "name": "poetry",
+  "provides": ["package-manager", "poetry"],
+  "os_whitelist": ["all"],
+  "os_blacklist": []
+}

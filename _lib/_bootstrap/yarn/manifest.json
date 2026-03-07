@@ -1,0 +1,6 @@
+{
+  "name": "yarn",
+  "provides": ["package-manager", "yarn"],
+  "os_whitelist": ["all"],
+  "os_blacklist": []
+}

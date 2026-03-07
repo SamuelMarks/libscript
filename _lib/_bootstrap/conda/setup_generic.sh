@@ -1,0 +1,62 @@
+#!/bin/sh
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  this_file="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  this_file="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  this_file="${0}"
+else
+  this_file="${0}"
+fi
+case "${STACK+x}" in
+  *':'"${this_file}"':'*)
+    printf '[STOP]     processing "%s"\n' "${this_file}"
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+esac
+export STACK="${STACK:-}${this_file}"':'
+
+if ! command -v conda >/dev/null 2>&1; then
+  echo "Installing Miniconda..."
+  OS="$(uname -s)"
+  ARCH="$(uname -m)"
+  
+  if [ "$OS" = "Linux" ]; then
+    if [ "$ARCH" = "x86_64" ]; then
+      URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
+    elif [ "$ARCH" = "aarch64" ]; then
+      URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-aarch64.sh"
+    else
+      echo "Error: Unsupported architecture $ARCH for Miniconda." >&2
+      exit 1
+    fi
+  elif [ "$OS" = "Darwin" ]; then
+    if [ "$ARCH" = "x86_64" ]; then
+      URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh"
+    elif [ "$ARCH" = "arm64" ]; then
+      URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh"
+    else
+      echo "Error: Unsupported architecture $ARCH for Miniconda." >&2
+      exit 1
+    fi
+  else
+    echo "Error: Unsupported OS $OS for miniconda automated install." >&2
+    exit 1
+  fi
+
+  tmp_sh="$(mktemp -d)/miniconda.sh"
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL "$URL" -o "$tmp_sh"
+  elif command -v wget >/dev/null 2>&1; then
+    wget -qO "$tmp_sh" "$URL"
+  else
+    echo "Error: curl or wget required." >&2
+    exit 1
+  fi
+
+  bash "$tmp_sh" -b -u -p "$HOME/miniconda3"
+  rm -f "$tmp_sh"
+  
+  export PATH="$HOME/miniconda3/bin:$PATH"
+fi

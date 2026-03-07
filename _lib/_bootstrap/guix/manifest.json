@@ -1,0 +1,6 @@
+{
+  "name": "guix",
+  "provides": ["package-manager", "guix"],
+  "os_whitelist": ["linux"],
+  "os_blacklist": ["darwin", "windows", "freebsd"]
+}

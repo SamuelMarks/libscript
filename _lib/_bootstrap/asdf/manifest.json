@@ -1,0 +1,6 @@
+{
+  "name": "asdf",
+  "provides": ["version-manager", "package-manager", "asdf"],
+  "os_whitelist": ["linux", "darwin"],
+  "os_blacklist": ["windows"]
+}

@@ -15,3 +15,7 @@ You can manage the PowerShell component using standard `libscript` lifecycle com
 - **Start**: `libscript start powershell` (Starts a session or background worker if applicable)
 - **Stop**: `libscript stop powershell`
 - **Package**: `libscript package powershell` (e.g., `libscript package_as msi powershell`)
+
+## Variables
+
+See `vars.schema.json` for details on available variables.

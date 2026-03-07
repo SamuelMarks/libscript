@@ -33,3 +33,7 @@ This module automates the setup of phpBB.
 - Caddy
 - Apache HTTPD
 - IIS
+
+## Variables
+
+See `vars.schema.json` for details on available variables.

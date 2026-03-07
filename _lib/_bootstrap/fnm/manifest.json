@@ -1,0 +1,6 @@
+{
+  "name": "fnm",
+  "provides": ["package-manager", "fnm"],
+  "os_whitelist": ["all"],
+  "os_blacklist": []
+}

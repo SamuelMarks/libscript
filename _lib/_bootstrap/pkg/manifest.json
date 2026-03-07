@@ -1,0 +1,6 @@
+{
+  "name": "pkg",
+  "provides": ["package-manager", "pkg"],
+  "os_whitelist": ["freebsd"],
+  "os_blacklist": ["linux", "darwin", "windows"]
+}

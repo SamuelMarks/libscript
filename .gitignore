@@ -83,3 +83,40 @@ wait4x-*
 /conf.env.sh
 /dos_setup_script_deps.bat
 /win_setup_script_deps.cmd
+
+# Local testing and ad-hoc execution
+/cli.cmd
+/cli.sh
+/conf.d/
+/conf.env.ps1
+/generate.sh
+/generate_font.js
+/generate_skeletons.sh
+/install.ps1
+/install.toml
+/package-lock.json
+/package.json
+/setup.cmd
+/setup.sh
+/setup_*.sh
+/setup_*.cmd
+/add_pkg.sh
+/analyze_vars.py
+/tuicss.min.css
+/tuicss.min.js
+
+# Backup files
+*.bak
+*.old
+*.yml-e
+*-e
+
+# Systemd specific test builds
+systemd.debian.Dockerfile
+
+# Local vagrant environments
+vagrant/debian12_multi/Vagrantfile.old
+vagrant/openbsd_7_6/
+vagrant/stromweld__windows_11/
+vagrant/windows_11/
+

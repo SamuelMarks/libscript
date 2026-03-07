@@ -17,3 +17,7 @@ You can manage wget using libscript with the following commands:
 - **Start**: `libscript start wget`
 - **Stop**: `libscript stop wget`
 - **Package**: `libscript package wget`
+
+## Variables
+
+See `vars.schema.json` for details on available variables.

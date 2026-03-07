@@ -15,3 +15,7 @@ The `apk` component is fully compatible with standard `libscript` commands:
 - **Start**: `libscript start apk`
 - **Stop**: `libscript stop apk`
 - **Package**: `libscript package apk` (e.g., `libscript package_as docker apk`)
+
+## Variables
+
+See `vars.schema.json` for details on available variables.

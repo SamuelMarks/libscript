@@ -1,0 +1,6 @@
+{
+  "name": "krew",
+  "provides": ["package-manager", "krew", "kubectl-krew"],
+  "os_whitelist": ["all"],
+  "os_blacklist": []
+}

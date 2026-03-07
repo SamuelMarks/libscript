@@ -1,0 +1,6 @@
+{
+  "name": "xbps",
+  "provides": ["package-manager", "xbps"],
+  "os_whitelist": ["linux"],
+  "os_blacklist": ["darwin", "windows", "freebsd"]
+}

@@ -33,3 +33,7 @@ You can easily control Dash with `libscript` using the following core commands:
 ## Configuration
 
 *(There are currently no component-specific configuration tables or variables defined for this module.)*
+
+## Variables
+
+See `vars.schema.json` for details on available variables.

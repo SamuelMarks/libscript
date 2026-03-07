@@ -31,9 +31,53 @@ jobs:
           - "app/third_party/woocommerce"
           - "app/third_party/wordpress"
           - "_lib/_bootstrap/7zip"
+          - "_lib/_bootstrap/apt"
+          - "_lib/_bootstrap/dnf"
+          - "_lib/_bootstrap/pacman"
+          - "_lib/_bootstrap/zypper"
+          - "_lib/_bootstrap/go"
+          - "_lib/_bootstrap/pnpm"
+          - "_lib/_bootstrap/yarn"
+          - "_lib/_bootstrap/pkg"
+          - "_lib/_bootstrap/uv"
+          - "_lib/_bootstrap/xbps"
+          - "_lib/_bootstrap/composer"
+          - "_lib/_bootstrap/nuget"
+          - "_lib/_bootstrap/helm"
+          - "_lib/_bootstrap/asdf"
+          - "_lib/_bootstrap/conda"
+          - "_lib/_bootstrap/guix"
+          - "_lib/_bootstrap/emerge"
+          - "_lib/_bootstrap/cargo"
+          - "_lib/_bootstrap/gem"
+          - "_lib/_bootstrap/npm"
+          - "_lib/_bootstrap/pip"
+          - "_lib/_bootstrap/flatpak"
+          - "_lib/_bootstrap/macports"
+          - "_lib/_bootstrap/maven"
+          - "_lib/_bootstrap/mise"
+          - "_lib/_bootstrap/snap"
+          - "_lib/_bootstrap/vcpkg"
           - "_lib/_bootstrap/apk"
           - "_lib/_bootstrap/brew"
           - "_lib/_bootstrap/busybox"
+          - "_lib/_bootstrap/pipx"
+          - "_lib/_bootstrap/mas"
+          - "_lib/_bootstrap/pub"
+          - "_lib/_bootstrap/cpanm"
+          - "_lib/_bootstrap/gradle"
+          - "_lib/_bootstrap/pdm"
+          - "_lib/_bootstrap/hatch"
+          - "_lib/_bootstrap/nvm"
+          - "_lib/_bootstrap/pyenv"
+
+          - "_lib/_bootstrap/conan"
+          - "_lib/_bootstrap/mix"
+          - "_lib/_bootstrap/cabal"
+          - "_lib/_bootstrap/swupd"
+
+          - "_lib/_bootstrap/rustup"
+
           - "_lib/_bootstrap/choco"
           - "_lib/_bootstrap/curl"
           - "_lib/_bootstrap/dash"
@@ -86,10 +130,75 @@ jobs:
           - "_lib/_toolchain/wait4x"
           - "_lib/_toolchain/zig"
         exclude:
+          - os: macos-latest
+            component: "_lib/_bootstrap/swupd"
+          - os: windows-latest
+            component: "_lib/_bootstrap/swupd"
+
+          - os: ubuntu-latest
+            component: "_lib/_bootstrap/mas"
+          - os: windows-latest
+            component: "_lib/_bootstrap/mas"
+
+          - os: windows-latest
+            component: "_lib/_bootstrap/conda"
+          - os: windows-latest
+            component: "_lib/_bootstrap/guix"
+          - os: macos-latest
+            component: "_lib/_bootstrap/guix"
+          - os: windows-latest
+            component: "_lib/_bootstrap/asdf"
+          - os: windows-latest
+            component: "_lib/_bootstrap/pkg"
+          - os: macos-latest
+            component: "_lib/_bootstrap/pkg"
+          - os: ubuntu-latest
+            component: "_lib/_bootstrap/pkg"
+          - os: windows-latest
+            component: "_lib/_bootstrap/xbps"
+          - os: macos-latest
+            component: "_lib/_bootstrap/xbps"
+          - os: ubuntu-latest
+            component: "_lib/_bootstrap/xbps"
+          - os: windows-latest
+            component: "_lib/_bootstrap/emerge"
+          - os: macos-latest
+            component: "_lib/_bootstrap/emerge"
+          - os: ubuntu-latest
+            component: "_lib/_bootstrap/emerge"
+
           - os: ubuntu-latest
             component: "_lib/_storage/valkey"
           - os: macos-latest
             component: "_lib/_bootstrap/apk"
+          - os: macos-latest
+            component: "_lib/_bootstrap/apt"
+          - os: windows-latest
+            component: "_lib/_bootstrap/apt"
+          - os: macos-latest
+            component: "_lib/_bootstrap/dnf"
+          - os: windows-latest
+            component: "_lib/_bootstrap/dnf"
+          - os: macos-latest
+            component: "_lib/_bootstrap/pacman"
+          - os: windows-latest
+            component: "_lib/_bootstrap/pacman"
+          - os: macos-latest
+            component: "_lib/_bootstrap/zypper"
+          - os: windows-latest
+            component: "_lib/_bootstrap/zypper"
+          - os: macos-latest
+            component: "_lib/_bootstrap/flatpak"
+          - os: windows-latest
+            component: "_lib/_bootstrap/flatpak"
+          - os: macos-latest
+            component: "_lib/_bootstrap/snap"
+          - os: windows-latest
+            component: "_lib/_bootstrap/snap"
+          - os: ubuntu-latest
+            component: "_lib/_bootstrap/macports"
+          - os: windows-latest
+            component: "_lib/_bootstrap/macports"
           - os: macos-latest
             component: "_lib/_bootstrap/busybox"
           - os: windows-latest

@@ -33,3 +33,7 @@ You can manage the lifecycle of Winget with `libscript` using these standard com
 ## Configuration
 
 *(There are currently no component-specific configuration tables or variables defined for this module.)*
+
+## Variables
+
+See `vars.schema.json` for details on available variables.

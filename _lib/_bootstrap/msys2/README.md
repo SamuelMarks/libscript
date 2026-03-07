@@ -17,3 +17,7 @@ You can manage MSYS2 using libscript with the following commands:
 - **Start**: `libscript start msys2`
 - **Stop**: `libscript stop msys2`
 - **Package**: `libscript package msys2`
+
+## Variables
+
+See `vars.schema.json` for details on available variables.

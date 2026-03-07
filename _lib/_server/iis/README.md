@@ -42,3 +42,7 @@ libscript.cmd package_as msi iis
 ## Supported Platforms
 
 - Windows
+
+## Variables
+
+See `vars.schema.json` for details on available variables.

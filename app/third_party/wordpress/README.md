@@ -29,3 +29,7 @@ You can manage WordPress using the global `libscript` CLI or local scripts.
 This module adheres to LibScript's cross-platform conventions:
 - Safely degrades system-level reloads (e.g. `systemctl`, `mysql`) during image build phases, ensuring `package_as docker` emits a single, functional container.
 - Uses `setup_win.ps1` for clean `.msi` or `.exe` Windows Installer generation, leveraging `winget` and native IIS PowerShell configuration blocks (`WebAdministration`).
+
+## Variables
+
+See `vars.schema.json` for details on available variables.

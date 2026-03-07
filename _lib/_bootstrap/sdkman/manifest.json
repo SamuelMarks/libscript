@@ -1,0 +1,6 @@
+{
+  "name": "sdkman",
+  "provides": ["package-manager", "sdkman"],
+  "os_whitelist": ["all"],
+  "os_blacklist": ["windows"]
+}
