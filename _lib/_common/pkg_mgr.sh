@@ -1,5 +1,5 @@
 #!/bin/sh
-# shellcheck disable=SC2016,SC1090,SC1091,SC2034,SC2018,SC2019,SC2221,SC2222,SC2129,SC2209,SC2089,SC2090,SC2086,SC2154,SC2044,SC2181,SC2038,SC2155,SC2046,SC2002,SC1003,SC2295,SC2145
+# shellcheck disable=SC3054,SC3040,SC2296,SC2128,SC2039,SC2016,SC1090,SC1091,SC2034,SC2018,SC2019,SC2221,SC2222,SC2129,SC2209,SC2089,SC2090,SC2086,SC2154,SC2044,SC2181,SC2038,SC2155,SC2046,SC2002,SC1003,SC2295,SC2145
 
 
 
@@ -34,6 +34,7 @@ for lib in '_lib/_common/os_info.sh' '_lib/_common/priv.sh' '_lib/_common/pkg_ma
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
+# shellcheck disable=SC1090,SC1091,SC2034
   . "${SCRIPT_NAME}"
 done
 
@@ -73,18 +74,18 @@ detect_pkg_mgr() {
     PKG_MGR='eopkg'  # Solus
   else
     if [ "${TARGET_OS:-$(uname -s | tr '[:upper:]' '[:lower:]')}" = "darwin" ]; then
-      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/brew/setup.sh" ]; then
-        "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/brew/setup.sh"
+      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/brew/setup.sh" ]; then
+        "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/brew/setup.sh"
         if cmd_avail brew; then PKG_MGR='brew'; export PKG_MGR; return; fi
       fi
     elif [ "${TARGET_OS:-$(uname -s | tr '[:upper:]' '[:lower:]')}" = "windows" ] || [ -n "${COMSPEC:-}" ]; then
-      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/winget/setup.cmd" ]; then
-        "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/winget/setup.cmd"
+      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/winget/setup.cmd" ]; then
+        "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/winget/setup.cmd"
         if cmd_avail winget; then PKG_MGR='winget'; export PKG_MGR; return; fi
       fi
     else
-      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/pkgx/setup.sh" ]; then
-        "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/pkgx/setup.sh"
+      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/pkgx/setup.sh" ]; then
+        "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/pkgx/setup.sh"
         if cmd_avail pkgx; then PKG_MGR='pkgx'; export PKG_MGR; return; fi
       fi
     fi
@@ -163,12 +164,12 @@ fi
 
 # Caching downloader hook
 libscript_fetch() {
-url="$1"
-dest="${2:-}"
-expected_checksum="${3:-}"
+  url="$1"
+  dest="${2:-}"
+  expected_checksum="${3:-}"
   # Optional: allow override of download dir or fallback to global cache dir
-dl_dir="${DOWNLOAD_DIR:-}"
-cache_dir="${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache/downloads}"
+  dl_dir="${DOWNLOAD_DIR:-}"
+  cache_dir="${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache/downloads}"
 
   if [ -z "$dl_dir" ]; then
      dl_dir="$cache_dir"
@@ -180,7 +181,6 @@ cache_dir="${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache/downloads}"
   fi
 
   mkdir -p -- "$dl_dir"
-filename
   filename="$(basename "$url")"
   # Sometimes urls end in text/scripts without nice extensions. This is basic caching.
 cache_file="$dl_dir/$filename"
@@ -190,10 +190,10 @@ cache_file="$dl_dir/$filename"
   else
     >&2 printf '[DOWNLOADING] %s\n' "$url"
     if ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
-      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/curl/setup.sh" ]; then
-        "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/curl/setup.sh"
-      elif [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/wget/setup.sh" ]; then
-        "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/wget/setup.sh"
+      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/curl/setup.sh" ]; then
+        "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/curl/setup.sh"
+      elif [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/wget/setup.sh" ]; then
+        "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/wget/setup.sh"
       fi
     fi
 
@@ -207,7 +207,7 @@ cache_file="$dl_dir/$filename"
     fi
 
     # Check filesize > 0
-fsize=0
+  fsize=0
     if command -v wc >/dev/null 2>&1; then
       fsize=$(wc -c < "$cache_file" | tr -d ' ')
     elif command -v stat >/dev/null 2>&1; then
@@ -223,7 +223,7 @@ fsize=0
 
   # Checksum validation
   if [ -n "$expected_checksum" ]; then
-actual_checksum=""
+  actual_checksum=""
     if command -v sha256sum >/dev/null 2>&1; then
       actual_checksum=$(sha256sum "$cache_file" | awk '{print $1}')
     elif command -v shasum >/dev/null 2>&1; then
@@ -282,10 +282,10 @@ libscript_download() {
 
   # 2. curl
   if [ "$download_success" -eq 0 ] && ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
-    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/curl/setup.sh" ]; then
-      "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/curl/setup.sh"
-    elif [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/wget/setup.sh" ]; then
-      "${LIBSCRIPT_ROOT_DIR}/_lib/_bootstrap/wget/setup.sh"
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/curl/setup.sh" ]; then
+      "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/curl/setup.sh"
+    elif [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/wget/setup.sh" ]; then
+      "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/wget/setup.sh"
     fi
   fi
 
@@ -304,8 +304,8 @@ libscript_download() {
 
   # 4. nc (netcat) fallback for HTTP (does not support HTTPS natively without OpenSSL, but we try)
   if [ "$download_success" -eq 0 ] && command -v nc >/dev/null 2>&1; then
-host="${url#*://}"
-path="/${host#*/}"
+  host="${url#*://}"
+  path="/${host#*/}"
     host="${host%%/*}"
     if echo "$url" | grep -q "^http://"; then
       printf "GET %s HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n" "$path" "$host" | nc "$host" 80 > "${out_file}.tmp"
@@ -324,8 +324,8 @@ path="/${host#*/}"
 
   # 5. /dev/tcp native bash fallback
   if [ "$download_success" -eq 0 ]; then
-host="${url#*://}"
-path="/${host#*/}"
+  host="${url#*://}"
+  path="/${host#*/}"
     host="${host%%/*}"
     if echo "$url" | grep -q "^http://"; then
       # shellcheck disable=SC3025
@@ -359,7 +359,7 @@ path="/${host#*/}"
   fi
   
   if [ -n "$actual_checksum" ]; then
-stripped_expected="${expected_checksum#sha-256=}"
+  stripped_expected="${expected_checksum#sha-256=}"
     if [ -n "$stripped_expected" ] && [ "$stripped_expected" != "SKIP" ]; then
       if [ "$actual_checksum" != "$stripped_expected" ]; then
         echo "Error: checksum mismatch for $url" >&2
@@ -383,9 +383,9 @@ list_file="$1"
     return 1
   fi
 
-url=""
-out=""
-checksum=""
+  url=""
+  out=""
+  checksum=""
 
   process_entry() {
     if [ -n "$url" ]; then

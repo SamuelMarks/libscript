@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/package-managers/apt/vars.schema.json",
+  "title": "apt bootstrap vars",
+  "description": "apt bootstrap variables that can be set. OS Compatibility: Linux (Debian/Ubuntu) only. Does not run on macOS or native Windows.",
+  "type": "object",
+  "properties": {
+    "LIBSCRIPT_SERVICE_NAME": {
+      "type": "string",
+      "description": "Overrides the default service name."
+    },
+    "FORMAT": {
+      "type": "string",
+      "description": "Output format (e.g., json, text)."
+    },
+    "LIBSCRIPT_LOG_DRIVER": {
+      "type": "string",
+      "description": "Logging driver to use (e.g., fluentd)."
+    },
+    "LOGS_DIR": {
+      "type": "string",
+      "description": "Directory where logs should be stored."
+    },
+    "VAULT_TOKEN": {
+      "type": "string",
+      "description": "Token for HashiCorp Vault authentication."
+    },
+    "PREFIX": {
+      "type": "string",
+      "description": "Installation prefix."
+    },
+    "SERVE_FROM": {
+      "type": "string",
+      "description": "Base directory or context path from which the service should be served."
+    },
+    "LIBSCRIPT_LOG_HOST": {
+      "type": "string",
+      "description": "Host for remote logging."
+    },
+    "LIBSCRIPT_VERSION": {
+      "type": "string",
+      "description": "Specifies the version of the package to use."
+    },
+    "LIBSCRIPT_LOG_PORT": {
+      "type": "string",
+      "description": "Port for remote logging."
+    }
+  }
+}

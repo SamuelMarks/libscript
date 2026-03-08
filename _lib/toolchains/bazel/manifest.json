@@ -1,0 +1,14 @@
+{
+  "name": "BAZEL",
+  "provides": [
+    "build-system",
+    "bazel",
+    "bazelisk"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": []
+}

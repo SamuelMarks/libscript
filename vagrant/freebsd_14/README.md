@@ -31,13 +31,13 @@ You can also start it directly via Vagrant:
 
 Then you can use it like any other SSH host, e.g., to install PostgreSQL:
 
-    vagrant ssh <<< '"${LIBSCRIPT_ROOT_DIR}"/_lib/_storage/postgres/setup.sh'
+    vagrant ssh <<< '"${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/setup.sh'
 
 ### Test
 
 …and to test PostgreSQL:
 
-    vagrant ssh <<< '. "${LIBSCRIPT_ROOT_DIR}"/env.sh && "${LIBSCRIPT_ROOT_DIR}"/_lib/_storage/postgres/test.sh'
+    vagrant ssh <<< '. "${LIBSCRIPT_ROOT_DIR}"/env.sh && "${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/test.sh'
 
 ### FreeBSD Specific Notes
 
@@ -77,7 +77,7 @@ export PYTHON_INSTALL_METHOD="uv"
 
 ### Python-Specific Support
 
-The Python toolchain (`_lib/_toolchain/python`) is extensively integrated with this feature and supports the following `PYTHON_INSTALL_METHOD` values:
+The Python toolchain (`_lib/languages/python`) is extensively integrated with this feature and supports the following `PYTHON_INSTALL_METHOD` values:
 - `uv` (default fallback): Installs Python and creates virtual environments using astral's `uv` tool.
 - `pyenv`: Installs Python versions using `pyenv`, managing them in `~/.pyenv`.
 - `system`: Uses the system's package manager to provide Python.

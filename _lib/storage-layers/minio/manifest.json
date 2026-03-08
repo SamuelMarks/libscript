@@ -1,0 +1,17 @@
+{
+  "name": "MINIO",
+  "provides": [
+    "object-storage",
+    "s3",
+    "minio"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": [
+    "9000",
+    "9001"
+  ]
+}

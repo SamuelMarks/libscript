@@ -1,8 +1,0 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/_lib/_bootstrap/cygwin/vars.schema.json",
-  "title": "cygwin bootstrap vars",
-  "description": "Cygwin POSIX environment for Windows.",
-  "type": "object",
-  "properties": {}
-}

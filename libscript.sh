@@ -45,7 +45,7 @@ show_help() {
   echo "  $0 ruby --help"
   echo "  $0 postgres --help"
   echo ""
-  echo "You can specify components by their short name (e.g., 'ruby' instead of '_lib/_toolchain/ruby')."
+  echo "You can specify components by their short name (e.g., 'ruby' instead of '_lib/languages/ruby')."
   echo "If there are multiple matches, it will ask you to be more specific."
   echo ""
 }
@@ -196,8 +196,8 @@ if [ "$cmd" = "start" ] || [ "$cmd" = "stop" ] || [ "$cmd" = "status" ] || [ "$c
       exit 1
     fi
     if ! command -v jq >/dev/null 2>&1; then
-    if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_toolchain/jq/setup.sh" ]; then
-      "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_toolchain/jq/setup.sh"
+    if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/utilities/jq/setup.sh" ]; then
+      "${LIBSCRIPT_ROOT_DIR:-.}/_lib/utilities/jq/setup.sh"
     fi
   fi
   if ! command -v jq >/dev/null 2>&1; then
@@ -249,8 +249,8 @@ if [ "$cmd" = "install-deps" ]; then
     exit 1
   fi
   if ! command -v jq >/dev/null 2>&1; then
-    if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_toolchain/jq/setup.sh" ]; then
-      "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_toolchain/jq/setup.sh"
+    if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/utilities/jq/setup.sh" ]; then
+      "${LIBSCRIPT_ROOT_DIR:-.}/_lib/utilities/jq/setup.sh"
     fi
   fi
   if ! command -v jq >/dev/null 2>&1; then

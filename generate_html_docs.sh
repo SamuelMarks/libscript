@@ -134,8 +134,8 @@ to_html_tree() {
 
   # Check if jq is installed
   if ! command -v jq >/dev/null 2>&1; then
-    if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_toolchain/jq/setup.sh" ]; then
-      "${LIBSCRIPT_ROOT_DIR:-.}/_lib/_toolchain/jq/setup.sh"
+    if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/utilities/jq/setup.sh" ]; then
+      "${LIBSCRIPT_ROOT_DIR:-.}/_lib/utilities/jq/setup.sh"
     fi
   fi
   if ! command -v jq >/dev/null 2>&1; then

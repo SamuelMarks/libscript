@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/stacks/ecommerce/magento/vars.schema.json",
+  "title": "magento vars",
+  "type": "object",
+  "properties": {
+    "PHP_FPM_LISTEN": {
+      "type": "string",
+      "description": "Variable PHP_FPM_LISTEN."
+    },
+    "MAGENTO_DB_HOST": {
+      "type": "string",
+      "description": "Variable MAGENTO_DB_HOST."
+    },
+    "MAGENTO_WEBSERVER": {
+      "type": "string",
+      "description": "Variable MAGENTO_WEBSERVER."
+    },
+    "MAGENTO_VERSION": {
+      "type": "string",
+      "description": "Variable MAGENTO_VERSION."
+    },
+    "MAGENTO_SERVER_NAME": {
+      "type": "string",
+      "description": "Variable MAGENTO_SERVER_NAME."
+    },
+    "WWWROOT": {
+      "type": "string",
+      "description": "Variable WWWROOT."
+    },
+    "MAGENTO_DB_PASS": {
+      "type": "string",
+      "description": "Variable MAGENTO_DB_PASS."
+    },
+    "MAGENTO_DB_DRIVER": {
+      "type": "string",
+      "description": "Variable MAGENTO_DB_DRIVER."
+    },
+    "MAGENTO_LISTEN": {
+      "type": "string",
+      "description": "Variable MAGENTO_LISTEN."
+    },
+    "MAGENTO_DB_USER": {
+      "type": "string",
+      "description": "Variable MAGENTO_DB_USER."
+    },
+    "MAGENTO_DB_NAME": {
+      "type": "string",
+      "description": "Variable MAGENTO_DB_NAME."
+    }
+  }
+}

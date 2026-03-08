@@ -120,3 +120,84 @@ vagrant/openbsd_7_6/
 vagrant/stromweld__windows_11/
 vagrant/windows_11/
 
+# Vagrant and VMs
+.vagrant/
+*.vmdk
+*.vdi
+*.vhd
+*.vhdx
+*.vmx
+*.vbox
+*.vbox-prev
+*.vmxf
+*.nvram
+
+# Node and UI/Build
+node_modules/
+dist/
+build/
+.next/
+.nuxt/
+
+# Temporary and Cache files
+.DS_Store
+*.swp
+*.swo
+*~
+.tmp/
+tmp/
+.cache/
+
+# IDE and Editor configs
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.project
+.classpath
+.settings/
+
+# Environment / Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+env.bak/
+venv.bak/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Other tools
+coverage/
+.nyc_output/
+.sass-cache/

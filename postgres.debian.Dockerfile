@@ -24,12 +24,12 @@ RUN <<-EOF
 apt-get -qq update
 apt-get -qq install ca-certificates procps
 if [ "${POSTGRES_URL}" -eq 1 ]; then
-  export SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/postgres/setup.sh'
+  export SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/databases/postgres/setup.sh'
   . "${SCRIPT_NAME}"
 fi
 rm -rf /var/lib/apt/lists/*
 EOF
 
-CMD "${LIBSCRIPT_ROOT_DIR}"'/_lib/_storage/postgres/test.sh'
+CMD "${LIBSCRIPT_ROOT_DIR}"'/_lib/databases/postgres/test.sh'
 
 ENTRYPOINT ["/bin/sh"]

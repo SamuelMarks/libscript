@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/web-servers/nginx/vars.schema.json",
+  "title": "Nginx Web Server Configuration",
+  "description": "Configuration variables for deploying and configuring the Nginx high-performance Web Server and Reverse Proxy.",
+  "type": "object",
+  "properties": {
+    "NGINX_INSTALL_METHOD": {
+      "description": "How to install Nginx.",
+      "type": "string",
+      "enum": [
+        "system",
+        "source"
+      ],
+      "default": "system"
+    },
+    "WWWROOT_NAME": {
+      "description": "The server_name or domain (e.g., example.com) to serve.",
+      "type": "string"
+    },
+    "WWWROOT_PATH": {
+      "description": "The absolute path to the static document root to serve.",
+      "type": "string"
+    },
+    "WWWROOT_LISTEN": {
+      "description": "The HTTP port Nginx should listen on (defaults to 80).",
+      "type": "string",
+      "default": "80"
+    },
+    "LIBSCRIPT_GLOBAL_INSTALL_METHOD": {
+      "description": "Global override for how software should be installed across all systems (e.g. system package manager vs downloaded binaries/from-source).",
+      "type": "string",
+      "enum": [
+        "system",
+        "source"
+      ],
+      "default": "system"
+    },
+    "LIBSCRIPT_WINDOWS_PKG_MGR": {
+      "description": "Global package manager override for Windows targets (e.g. winget, choco).",
+      "type": "string",
+      "enum": [
+        "winget",
+        "choco"
+      ],
+      "default": "winget"
+    },
+    "LIBSCRIPT_LISTEN_PORT_SECURE": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Global secure port to listen on"
+    },
+    "LIBSCRIPT_LISTEN_PORT": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Global port to listen on"
+    },
+    "LIBSCRIPT_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Global address to listen on"
+    },
+    "LIBSCRIPT_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Global unix socket to listen on"
+    },
+    "NGINX_LISTEN_PORT_SECURE": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Secure port for NGINX to listen on"
+    },
+    "NGINX_LISTEN_PORT": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Port for NGINX to listen on"
+    },
+    "NGINX_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Address for NGINX to listen on"
+    },
+    "NGINX_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Unix socket for NGINX to listen on"
+    },
+    "NGINX_SERVICE_RUN_AS_USER": {
+      "description": "Windows local user account to run the service (leave empty for Network Service)",
+      "type": "string"
+    },
+    "NGINX_SERVICE_RUN_AS_PASSWORD": {
+      "description": "Password for the local user account (if applicable)",
+      "type": "string"
+    },
+    "NGINX_SERVICE_NAME": {
+      "description": "Custom name for the Windows Service (allows side-by-side installations)",
+      "type": "string",
+      "default": "libscript_nginx"
+    },
+    "LIBSCRIPT_SERVICE_NAME": {
+      "type": "string",
+      "description": "Overrides the default service name."
+    },
+    "HTTPS_ALWAYS": {
+      "type": "string",
+      "description": "Whether to always redirect to HTTPS."
+    },
+    "VARS": {
+      "type": "string",
+      "description": "Additional variables."
+    },
+    "FORMAT": {
+      "type": "string",
+      "description": "Output format (e.g., json, text)."
+    },
+    "LIBSCRIPT_LOG_DRIVER": {
+      "type": "string",
+      "description": "Logging driver to use (e.g., fluentd)."
+    },
+    "LOGS_DIR": {
+      "type": "string",
+      "description": "Directory where logs should be stored."
+    },
+    "VAULT_TOKEN": {
+      "type": "string",
+      "description": "Token for HashiCorp Vault authentication."
+    },
+    "PREFIX": {
+      "type": "string",
+      "description": "Installation prefix."
+    },
+    "SERVE_FROM": {
+      "type": "string",
+      "description": "Base directory or context path from which the service should be served."
+    },
+    "LIBSCRIPT_LOG_HOST": {
+      "type": "string",
+      "description": "Host for remote logging."
+    },
+    "LOCATION_EXPR": {
+      "type": "string",
+      "description": "Nginx location expression."
+    },
+    "LIBSCRIPT_VERSION": {
+      "type": "string",
+      "description": "Specifies the version of the package to use."
+    },
+    "LIBSCRIPT_LOG_PORT": {
+      "type": "string",
+      "description": "Port for remote logging."
+    }
+  }
+}

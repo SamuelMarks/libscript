@@ -1,0 +1,12 @@
+{
+  "name": "CMAKE",
+  "provides": [
+    "cmake"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": []
+}

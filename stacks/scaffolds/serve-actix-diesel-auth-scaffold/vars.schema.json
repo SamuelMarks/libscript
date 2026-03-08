@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/stacks/scaffolds/serve-actix-diesel-auth-scaffold/vars.schema.json",
+  "title": "serve-actix-diesel-auth-scaffold vars",
+  "type": "object",
+  "properties": {
+    "SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR": {
+      "type": "string",
+      "description": "Variable SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR."
+    },
+    "BUILD_DIR": {
+      "type": "string",
+      "description": "Variable BUILD_DIR."
+    },
+    "REPOS_DIR": {
+      "type": "string",
+      "description": "Variable REPOS_DIR."
+    },
+    "SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST": {
+      "type": "string",
+      "description": "Variable SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST."
+    }
+  }
+}

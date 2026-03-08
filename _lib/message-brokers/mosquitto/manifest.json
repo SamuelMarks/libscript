@@ -1,0 +1,17 @@
+{
+  "name": "MOSQUITTO",
+  "provides": [
+    "mqtt",
+    "mosquitto",
+    "message-broker"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": [
+    "1883",
+    "8883"
+  ]
+}

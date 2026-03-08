@@ -1,0 +1,189 @@
+#!/bin/sh
+# shellcheck disable=SC3054,SC3040,SC2296,SC2128,SC2039,SC2016,SC1090,SC1091,SC2034,SC2018,SC2019,SC2221,SC2222,SC2129,SC2209,SC2089,SC2090,SC2086,SC2154,SC2044,SC2181,SC2038,SC2155,SC2046,SC2002,SC1003,SC2295,SC2145
+
+
+
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  this_file="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  this_file="${BASH_SOURCE}"
+
+elif [ "${ZSH_VERSION-}" ]; then
+  this_file="${0}"
+
+else
+  this_file="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${this_file}"':'*)
+    printf '[STOP]     processing "%s"\n' "${this_file}"
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+esac
+export STACK="${STACK:-}${this_file}"':'
+
+run_before=0
+STACK="${STACK:-:}"
+case "${STACK}" in
+  *':'"${this_file}"':'*)
+    # printf '[STOP]     processing "%s"\n' "${this_file}"
+    run_before=1 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+esac
+export STACK="${STACK:-}${this_file}"':'
+
+DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
+
+for lib in '_lib/_common/priv.sh' '_lib/_common/pkg_mgr.sh' \
+           '_lib/web-servers/nginx/merge_location_into_server.sh' \
+           '_lib/_common/environ.sh'; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+# shellcheck disable=SC1090,SC1091,SC2034
+  . "${SCRIPT_NAME}"
+done
+
+if [ "${run_before}" -eq 0 ]; then
+  depends curl gnupg2 ca-certificates lsb-release debian-archive-keyring
+  [ -f '/usr/share/keyrings/nginx-archive-keyring.gpg' ] || \
+    curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
+      | priv  tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+  if [ ! -f '/etc/apt/sources.list.d/nginx.list' ]; then
+    ID="$(. /etc/os-release && printf "%s" "${ID}")"
+    printf 'deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] http://nginx.org/packages/%s %s nginx\n' "${ID}" "$(lsb_release -cs)" | priv  tee /etc/apt/sources.list.d/nginx.list
+  fi
+  [ -f '/etc/apt/preferences.d/99nginx' ] || \
+    printf 'Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n' \
+      | priv  tee /etc/apt/preferences.d/99nginx && \
+    priv  apt update -qq
+
+  depends nginx
+fi
+
+rtrim() {
+  trimmed="${1}"
+  while :
+  do
+    case "$trimmed" in
+      *[[:space:]] )
+          trimmed=${trimmed%?}
+          ;;
+      * )
+          break
+          ;;
+    esac
+  done
+  printf '%s' "$trimmed"
+}
+
+remove_last() {
+  c="${1}"
+  s="${2}"
+
+  if [ -z "${c}" ]; then
+    # If 'c' is empty, return 's' unchanged
+    printf '%s' "${s}"
+    return
+  fi
+
+  case "$s" in
+    *"$c"*) ;;
+    *)
+      printf '%s' "$s"
+      return
+      ;;
+  esac
+
+  prefix="${s%"${c}"*}"
+  suffix="${s##*"${c}"}"
+
+  printf '%s%s' "${prefix}" "${suffix}"
+}
+
+merge_location_into_nginx_server() {
+  conf_existing="${1}"
+  location_conf="${2}"
+
+  if [ -z "${conf_existing}" ] || [ "${#conf_existing}" -eq 0 ]; then
+    >&2 printf 'Error: conf_existing is empty.\n'
+    return 1
+  fi
+
+  if [ -z "${location_conf}" ] || [ "${#location_conf}" -eq 0 ]; then
+    >&2 printf 'Error: location_conf is empty.\n'
+    return 1
+  fi
+
+  case "${conf_existing}" in
+    *"${location_conf}"*) return ;;
+  esac
+
+  rtrimmed=$(rtrim "${conf_existing}")
+  rtrimmed_one_lbrace_off_conf=$(remove_last '}' "${rtrimmed}")
+  printf '%s\n\n%s}\n\n' "${rtrimmed_one_lbrace_off_conf}" "${location_conf}"
+}
+
+if [ "${VARS-}" ]; then
+  ENV_SCRIPT_FILE=$(mktemp -t 'libscript_XXX_env')
+  trap 'rm -f -- "${ENV_SCRIPT_FILE}"' EXIT HUP INT QUIT TERM
+  chmod +x "${ENV_SCRIPT_FILE}"
+  object2key_val "${VARS}" 'export ' "'" > "${ENV_SCRIPT_FILE}"
+
+  # shellcheck disable=SC1090
+  SERVER_NAME="$(. "${ENV_SCRIPT_FILE}"; printf '%s' "${SERVER_NAME}")"
+
+  LOCATION_CONF_FILE=$(mktemp -t 'libscript_'"${SERVER_NAME}"'_XXX_location_conf')
+  trap 'rm -f -- "${LOCATION_CONF_FILE}"' EXIT HUP INT QUIT TERM
+
+  env -i PATH="${PATH}" \
+         ENV_SCRIPT_FILE="${ENV_SCRIPT_FILE}" \
+         LIBSCRIPT_BUILD_DIR="${LIBSCRIPT_BUILD_DIR}" \
+         LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR}" \
+         LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" \
+         "${DIR}"'/create_location_block.sh' > "${LOCATION_CONF_FILE}"
+  location_conf="$(cat -- "${LOCATION_CONF_FILE}"; printf 'a')"
+  location_conf="${location_conf%a}"
+
+  # TODO: each location in separate 'fragment'; then merge them into one `server {}`
+  # TODO: final thing joins them all to avoid race condition; rather than this next line:
+
+  # TODO: lock file if not implementing "final thing" lifecycle
+
+  site_conf_install_location='/etc/nginx/conf.d/'"${SERVER_NAME}"'.conf'
+  if [ -f "${site_conf_install_location}" ]; then
+    conf_existing="$(cat -- "${site_conf_install_location}"; printf 'a')"
+    conf_existing="${conf_existing%a}"
+    if [ ${#conf_existing} -eq 0 ]; then
+      >&2 printf 'Existing conf unexpectedly empty at: "%s"\n' "${site_conf_install_location}"
+      exit 5
+    fi
+    if ! merge_location_into_server "${conf_existing}" "${location_conf}" "${SERVER_NAME}" | priv  dd of="${site_conf_install_location}" status='none'; then
+      >&2 printf 'merge_location_into_nginx_server failed.\n'
+      exit 1
+    fi
+  else
+    env -i PATH="${PATH}" \
+           ENV_SCRIPT_FILE="${ENV_SCRIPT_FILE}" \
+           LIBSCRIPT_BUILD_DIR="${LIBSCRIPT_BUILD_DIR}" \
+           LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR}" \
+           LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" \
+           LOCATIONS="${location_conf}" \
+           "${DIR}"'/create_server_block.sh' | priv  dd of="${site_conf_install_location}" status='none'
+  fi
+
+  unset ENV_SCRIPT_FILE
+  unset LOCATION_CONF_FILE
+fi
+
+if [ -n "${NGINX_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
+  "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "unix:${NGINX_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 || true
+elif [ -n "${NGINX_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ] && [ -n "${NGINX_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
+  "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${NGINX_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${NGINX_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 || true
+elif [ -n "${NGINX_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
+  "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${NGINX_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 || true
+fi

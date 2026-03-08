@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/stacks/data-science/jupyterhub/vars.schema.json",
+  "title": "jupyterhub third-party vars",
+  "description": "jupyterhub third-party vars that can be set",
+  "type": "object",
+  "properties": {
+    "JUPYTERHUB_SERVICE_USER": {
+      "description": "Username to use for the install + daemon serve (creates user if nonexistent)",
+      "type": "string"
+    },
+    "JUPYTERHUB_IP": {
+      "description": "IP address to server from",
+      "type": "string"
+    },
+    "JUPYTERHUB_PORT": {
+      "description": "IP port to server from",
+      "type": "string"
+    },
+    "JUPYTERHUB_NOTEBOOK_DIR": {
+      "description": "Notebook directory (creates if nonexistent)",
+      "type": "string"
+    },
+    "JUPYTERHUB_VENV": {
+      "description": "Python virtualenv to use (creates if nonexistent)",
+      "type": "string"
+    },
+    "JUPYTERHUB_PASSWORD": {
+      "description": "Preferably (hashed+salted argon2) password to use",
+      "type": "string"
+    },
+    "PREFIX": {
+      "type": "string",
+      "description": "Installation prefix."
+    },
+    "LIBSCRIPT_LOG_DRIVER": {
+      "type": "string",
+      "description": "Logging driver to use (e.g., fluentd)."
+    },
+    "LIBSCRIPT_LOG_HOST": {
+      "type": "string",
+      "description": "Host for remote logging."
+    },
+    "JUPYTERHUB_SERVICE_GROUP": {
+      "type": "string",
+      "description": "Variable JUPYTERHUB_SERVICE_GROUP."
+    },
+    "GROUP": {
+      "type": "string",
+      "description": "Variable GROUP."
+    },
+    "LIBSCRIPT_LOG_PORT": {
+      "type": "string",
+      "description": "Port for remote logging."
+    },
+    "PYTHON_VERSION": {
+      "type": "string",
+      "description": "Variable PYTHON_VERSION."
+    },
+    "FORMAT": {
+      "type": "string",
+      "description": "Output format (e.g., json, text)."
+    },
+    "JUPYTERHUB_USERNAME": {
+      "type": "string",
+      "description": "Variable JUPYTERHUB_USERNAME."
+    },
+    "LOGS_DIR": {
+      "type": "string",
+      "description": "Directory where logs should be stored."
+    },
+    "SERVE_FROM": {
+      "type": "string",
+      "description": "Base directory or context path from which the service should be served."
+    },
+    "LIBSCRIPT_VERSION": {
+      "type": "string",
+      "description": "Specifies the version of the package to use."
+    },
+    "VAULT_TOKEN": {
+      "type": "string",
+      "description": "Token for HashiCorp Vault authentication."
+    },
+    "LIBSCRIPT_SERVICE_NAME": {
+      "type": "string",
+      "description": "Overrides the default service name."
+    }
+  }
+}

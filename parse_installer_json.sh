@@ -126,7 +126,7 @@ servers_header_req=0
 
 # Extra check in case a different `LIBSCRIPT_ROOT_DIR` is found in the JSON
 if ! command -v jq >/dev/null 2>&1; then
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_toolchain/jq/setup.sh'
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/utilities/jq/setup.sh'
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
@@ -147,10 +147,10 @@ print_header() {
 
 path2key() {
   case "${1}" in
-    '_lib/_server') res='server' ;;
-    '_lib/_storage') res='storage' ;;
-    'app/third_party') res='third_party' ;;
-    '_lib/_toolchain') res='toolchain' ;;
+    '_lib/web-servers') res='server' ;;
+    '_lib/databases') res='storage' ;;
+    'stacks') res='third_party' ;;
+    '_lib/toolchains') res='toolchain' ;;
     *) res="${1}" ;;
   esac
   export res
@@ -158,10 +158,10 @@ path2key() {
 
 key2path() {
   case "${1}" in
-    'server') res='_lib/_server' ;;
-    'storage') res='_lib/_storage' ;;
-    'third_party') res='app/third_party' ;;
-    'toolchain') res='_lib/_toolchain' ;;
+    'server') res='_lib/web-servers' ;;
+    'storage') res='_lib/databases' ;;
+    'third_party') res='stacks' ;;
+    'toolchain') res='_lib/toolchains' ;;
     *) res="${1}" ;;
   esac
   export res
@@ -725,7 +725,7 @@ parse_toolchain_item() {
   fi
   # shellcheck disable=SC2003
   toolchains_len=$(expr "${toolchains_len}" + 1)
-  update_generated_files "${name}" "${version}" "${env}" '_lib/_toolchain' "${dep_group_name}" "${extra_before_str}" '' '' ''
+  update_generated_files "${name}" "${version}" "${env}" '_lib/toolchains' "${dep_group_name}" "${extra_before_str}" '' '' ''
 }
 
 # parse "databases" array
@@ -783,7 +783,7 @@ parse_database_item() {
   # shellcheck disable=SC2003
   databases_len=$(expr "${databases_len}" + 1)
 
-  update_generated_files "${name}" "${version}" "${env}" '_lib/_storage' "${dep_group_name}" "${extra_before_str}" '' '' "${vars}"
+  update_generated_files "${name}" "${version}" "${env}" '_lib/databases' "${dep_group_name}" "${extra_before_str}" '' '' "${vars}"
   if [ -n "${target_env}" ]; then
     if [ "${verbose}" -ge 3 ]; then printf '    Target Env:\n'; fi
 
@@ -858,7 +858,7 @@ parse_server_item() {
         printf '    Vars: %s\n' "${vars}"
       fi
     fi
-    update_generated_files "${name}" "${version}" "${name_upper}" 'app/third_party' "${dep_group_name}" "${extra_before_str}" '' '' "${extra_env_vars_as_json}"
+    update_generated_files "${name}" "${version}" "${name_upper}" 'stacks' "${dep_group_name}" "${extra_before_str}" '' '' "${extra_env_vars_as_json}"
   fi
   if [ "${verbose}" -ge 3 ] && [ -n "${location}" ]; then
     printf '    Location: %s\n' "${location}";
@@ -1035,7 +1035,7 @@ parse_json() {
          if ($resolved[0].provided | index("reverse-proxy") != null or index("web-server") != null) then
            .dependencies.required.servers = ((.dependencies.required.servers // []) + [{
              "name": ($w.name + "-web-config"),
-             "builder": [ { "command_folder": "_lib/_server/nginx" } ],
+             "builder": [ { "command_folder": "_lib/web-servers/nginx" } ],
              "vars": {
                "SERVER_NAME": ($w.domain // "localhost"),
                "LOCATION_EXPR": ($w.subdomain | if . then "/~" + . else "/" end),

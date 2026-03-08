@@ -1,0 +1,93 @@
+#!/bin/sh
+# shellcheck disable=SC3054,SC3040,SC2296,SC2128,SC2039,SC2016,SC1090,SC1091,SC2034,SC2018,SC2019,SC2221,SC2222,SC2129,SC2209,SC2089,SC2090,SC2086,SC2154,SC2044,SC2181,SC2038,SC2155,SC2046,SC2002,SC1003,SC2295,SC2145
+
+
+
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  this_file="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  this_file="${BASH_SOURCE}"
+
+elif [ "${ZSH_VERSION-}" ]; then
+  this_file="${0}"
+
+else
+  this_file="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${this_file}"':'*)
+    printf '[STOP]     processing "%s"\n' "${this_file}"
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+esac
+export STACK="${STACK:-}${this_file}"':'
+
+DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
+
+if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+# shellcheck disable=SC1090,SC1091,SC2034
+  . "${SCRIPT_NAME}"
+fi
+
+NODEJS_VERSION_LTS='v22.13.1'
+# latest lts ^
+
+NODEJS_VERSION="${NODEJS_VERSION:-lts}"
+if [ "${NODEJS_VERSION}" = 'lts' ]; then
+  NODEJS_VERSION="${NODEJS_VERSION_LTS}"
+fi
+
+for lib in '_lib/_common/pkg_mgr.sh' '_lib/_common/os_info.sh'; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+# shellcheck disable=SC1090,SC1091,SC2034
+  . "${SCRIPT_NAME}"
+done
+
+NODEJS_INSTALL_METHOD="${NODEJS_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-source}}"
+
+if [ "${NODEJS_INSTALL_METHOD}" = 'system' ]; then
+  depends 'nodejs'
+else
+  if cmd_avail node ; then
+    version="$(node --version)"
+    if [ "${version}" = "${NODEJS_VERSION}" ]; then
+      return
+    fi
+  fi
+
+  # TODO: latest version dance function and wrap this up
+  LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
+  DOWNLOAD_DIR=${DOWNLOAD_DIR:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache/downloads}/nodejs}
+  version='v1.38.1'
+  if ! [ -f "${DOWNLOAD_DIR}"'/bin/fnm' ] ; then
+    depends 'curl' 'unzip'
+    os="$(printf '%s' "${TARGET_OS}" | tr '[:upper:]' '[:lower:]')"
+    case "${os}" in
+      'macos'*) ;;
+      *) os='linux' ;;
+    esac
+    archive='fnm-'"${os}"'.zip'
+    mkdir -p -- "${DOWNLOAD_DIR}"'/bin'
+    previous_wd="$(pwd)"
+    cd -- "${DOWNLOAD_DIR}"
+    # https://github.com/Schniz/fnm/releases/download/v1.38.1/fnm-linux.zip
+    # https://github.com/Schniz/fnm/releases/download/v1.38.1/fnm-debian.zip
+    printf 'https://github.com/Schniz/fnm/releases/download/%s/%s\n' "${version}" "${archive}"
+    libscript_download 'https://github.com/Schniz/fnm/releases/download/'${version}'/'"${archive}" ""
+    unzip "${archive}"
+    mv fnm "${DOWNLOAD_DIR}"'/bin/'
+    cd -- "${previous_wd}"
+  fi
+  "${DOWNLOAD_DIR}"'/bin/fnm' install "${NODEJS_VERSION}"
+  "${DOWNLOAD_DIR}"'/bin/fnm' default "${NODEJS_VERSION}"
+  export PATH="${HOME}"'/.local/share/fnm/aliases/default/bin:'"${PATH}"
+fi

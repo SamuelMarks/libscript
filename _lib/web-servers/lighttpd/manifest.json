@@ -1,0 +1,17 @@
+{
+  "name": "LIGHTTPD",
+  "provides": [
+    "web-server",
+    "lighttpd"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": [
+    "80",
+    "443",
+    "8080"
+  ]
+}

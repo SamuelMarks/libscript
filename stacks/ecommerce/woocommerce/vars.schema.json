@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/stacks/ecommerce/woocommerce/vars.schema.json",
+  "title": "woocommerce vars",
+  "type": "object",
+  "properties": {
+    "SERVER_NAME": {
+      "type": "string",
+      "description": "Variable SERVER_NAME."
+    },
+    "WOOCOMMERCE_LISTEN": {
+      "type": "string",
+      "description": "Variable WOOCOMMERCE_LISTEN."
+    },
+    "WOOCOMMERCE_VERSION": {
+      "type": "string",
+      "description": "Variable WOOCOMMERCE_VERSION."
+    },
+    "WWWROOT": {
+      "type": "string",
+      "description": "Variable WWWROOT."
+    }
+  }
+}

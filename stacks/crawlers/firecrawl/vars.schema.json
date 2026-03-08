@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/stacks/crawlers/firecrawl/vars.schema.json",
+  "title": "firecrawl third-party vars",
+  "description": "firecrawl third-party vars that can be set",
+  "type": "object",
+  "properties": {
+    "FIRECRAWL_BUILD_DIR": {
+      "description": "Build dir",
+      "type": "string"
+    },
+    "FIRECRAWL_DEST": {
+      "description": "Dest to clone|pull firecrawl into",
+      "type": "string"
+    },
+    "PYTHON_VENV": {
+      "description": "Python virtualenv to install & then start the celery daemon from",
+      "type": "string"
+    },
+    "PREFIX": {
+      "type": "string",
+      "description": "Installation prefix."
+    },
+    "LIBSCRIPT_LOG_DRIVER": {
+      "type": "string",
+      "description": "Logging driver to use (e.g., fluentd)."
+    },
+    "LIBSCRIPT_LOG_HOST": {
+      "type": "string",
+      "description": "Host for remote logging."
+    },
+    "BUILD_DIR": {
+      "type": "string",
+      "description": "Variable BUILD_DIR."
+    },
+    "LIBSCRIPT_LOG_PORT": {
+      "type": "string",
+      "description": "Port for remote logging."
+    },
+    "FORMAT": {
+      "type": "string",
+      "description": "Output format (e.g., json, text)."
+    },
+    "LOGS_DIR": {
+      "type": "string",
+      "description": "Directory where logs should be stored."
+    },
+    "SERVE_FROM": {
+      "type": "string",
+      "description": "Base directory or context path from which the service should be served."
+    },
+    "LIBSCRIPT_VERSION": {
+      "type": "string",
+      "description": "Specifies the version of the package to use."
+    },
+    "VAULT_TOKEN": {
+      "type": "string",
+      "description": "Token for HashiCorp Vault authentication."
+    },
+    "LIBSCRIPT_SERVICE_NAME": {
+      "type": "string",
+      "description": "Overrides the default service name."
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "KAFKA",
+  "provides": [
+    "message-broker",
+    "kafka"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": [
+    "9092"
+  ]
+}

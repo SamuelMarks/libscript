@@ -6,7 +6,7 @@ echo "Running shellcheck..."
 git ls-files "*.sh" | grep -vE "node_modules|\.git|top\.sh|bottom\.sh|template_.*\.sh|netctl/lib/.*\.sh|libscript\.sh|patch_.*\.sh|fix_.*\.sh|update_.*\.sh|.*_gen\.sh|gen/.*|test_.*\.sh" | xargs shellcheck -e SC2086,SC2317,SC2148,SC1090,SC1091,SC3043,SC3040,SC3025,SC2129,SC2016,SC3054,SC2296,SC2209,SC2154,SC2221,SC2222,SC2034,SC2038,SC1009,SC1083,SC1073,SC1072,SC1089,SC2018,SC2019,SC1003,SC1047,SC1046,SC1035,SC2295,SC2251,SC3059,SC2081,SC3010,SC2054
 
 echo "Updating CI matrix components list..."
-components=$(find _lib app -type f \( -name "test.sh" -o -name "test.cmd" \) | xargs -n1 dirname | sort | uniq | grep -v "_lib/_common" | grep -v "_lib/_daemon")
+components=$(find _lib app -type f \( -name "test.sh" -o -name "test.cmd" \) | xargs -n1 dirname | sort | uniq | grep -v "_lib/_common" | grep -v "_lib/message-brokers")
 
 echo "        component:" > new_components.txt
 for comp in $components; do

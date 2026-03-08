@@ -1,0 +1,16 @@
+{
+  "name": "GITEA",
+  "provides": [
+    "git-server",
+    "gitea"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": [
+    "3000",
+    "2222"
+  ]
+}

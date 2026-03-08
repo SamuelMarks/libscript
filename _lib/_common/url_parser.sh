@@ -47,5 +47,5 @@ git_args_from_url() {
   url_parser "${1}"
   printf "%s\n" "${protocol}${host}"
   repo="${0}"
-  branch="${2:-''}"
+  branch="${2:-''}"; export repo branch
 }

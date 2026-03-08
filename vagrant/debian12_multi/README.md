@@ -43,14 +43,14 @@ vagrant ssh -c 'libscript package_as docker postgres'
 vagrant ssh -c 'libscript uninstall postgres'
 ```
 
-*(Note: If the global `libscript` is not in your PATH inside the VM, you can invoke the scripts via absolute paths, e.g., `"${LIBSCRIPT_ROOT_DIR}"/_lib/_storage/postgres/setup.sh`)*
+*(Note: If the global `libscript` is not in your PATH inside the VM, you can invoke the scripts via absolute paths, e.g., `"${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/setup.sh`)*
 
 ### 3. Test Components
 
 You can test installed components by sourcing the environment and running the dedicated test script:
 
 ```sh
-vagrant ssh -c '. "${LIBSCRIPT_ROOT_DIR}"/env.sh && "${LIBSCRIPT_ROOT_DIR}"/_lib/_storage/postgres/test.sh'
+vagrant ssh -c '. "${LIBSCRIPT_ROOT_DIR}"/env.sh && "${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/test.sh'
 ```
 
 
@@ -84,7 +84,7 @@ export PYTHON_INSTALL_METHOD="uv"
 
 ### Python-Specific Support
 
-The Python toolchain (`_lib/_toolchain/python`) is extensively integrated with this feature and supports the following `PYTHON_INSTALL_METHOD` values:
+The Python toolchain (`_lib/languages/python`) is extensively integrated with this feature and supports the following `PYTHON_INSTALL_METHOD` values:
 - `uv` (default fallback): Installs Python and creates virtual environments using astral's `uv` tool.
 - `pyenv`: Installs Python versions using `pyenv`, managing them in `~/.pyenv`.
 - `system`: Uses the system's package manager to provide Python.

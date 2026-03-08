@@ -1,8 +1,0 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/_lib/_daemon/openrc/vars.schema.json",
-  "title": "openrc daemon vars",
-  "description": "OpenRC init system.",
-  "type": "object",
-  "properties": {}
-}

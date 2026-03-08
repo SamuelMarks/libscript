@@ -1,0 +1,13 @@
+{
+  "name": "JUST",
+  "provides": [
+    "task-runner",
+    "just"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": []
+}

@@ -4,7 +4,7 @@ LibScript is an open-source framework, and community contributions to expand its
 
 ## How to Scaffold a Component
 
-Components are located within the `_lib` directory under relevant categories (e.g., `_lib/_toolchain/my_tool`).
+Components are located within the `_lib` directory under relevant categories (e.g., `_lib/toolchains/my_tool`).
 
 To create a new component:
 1. **Create the Component Directory**: Place it in the appropriate `_lib` subfolder.

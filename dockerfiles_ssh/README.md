@@ -85,7 +85,7 @@ export PYTHON_INSTALL_METHOD="uv"
 
 ### Python-Specific Support
 
-The Python toolchain (`_lib/_toolchain/python`) is extensively integrated with this feature and supports the following `PYTHON_INSTALL_METHOD` values:
+The Python toolchain (`_lib/languages/python`) is extensively integrated with this feature and supports the following `PYTHON_INSTALL_METHOD` values:
 - `uv` (default fallback): Installs Python and creates virtual environments using astral's `uv` tool.
 - `pyenv`: Installs Python versions using `pyenv`, managing them in `~/.pyenv`.
 - `system`: Uses the system's package manager to provide Python.
