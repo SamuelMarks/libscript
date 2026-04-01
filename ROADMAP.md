@@ -1,18 +1,27 @@
-# Development Roadmap
+# Roadmap
 
-This document outlines the current and historical development phases of the LibScript framework.
+## Phase 1: Core Stability & Granular Management (Completed)
+- [x] Zero-dependency POSIX and Windows core.
+- [x] Granular version manager for languages and services.
+- [x] Dependency resolution engine.
+- [x] Support for major Windows and Linux installer formats.
 
-## Phase 1: The Native Engine (Completed)
-- Developed the cross-platform, zero-dependency shell execution core.
-- Established a standard library of toolchains and server components (e.g., Node, Rust, Postgres, Nginx).
-- Implemented dependency resolution for declarative stack building.
+## Phase 2: Multicloud Orchestration (Current)
+- [x] Unified `cloud` wrapper for AWS, Azure, and GCP.
+- [x] Resource tagging and filtered cleanup.
+- [x] Independent `node-group` provisioning.
+- [x] Automated cloud-native bootstrapping.
+- [x] Basic `cron` resource management.
 
-## Phase 2: The Generator Layer (Completed)
-- Introduced the `package_as` interface to generate Dockerfiles and Docker Compose configurations from component schemas.
-- Added dynamic compilation of native installers for Windows (MSI, InnoSetup, NSIS), Linux (DEB, RPM, APK), FreeBSD (TXZ), and macOS (PKG, DMG).
-- Validated integration workflows with external configuration management tools.
+## Phase 3: Advanced PaaS Features (Next)
+- [ ] High-availability cluster templates (e.g., 5-node Postgres).
+- [ ] Automated load balancer configuration.
+- [ ] Encrypted cross-node networking.
+- [ ] Git-driven deployment (`libscript deploy`).
+- [ ] Persistent volume management across providers.
 
-## Phase 3: Total Platform Parity (Current)
-- **Concurrent DAG Execution:** Implementing parallel processing for the native stack provisioning graph.
-- **Interactive Builders:** Finalizing a Terminal UI (TUI) for interactive stack design and compilation.
-- **Extended Platform Support:** Expanding native package generation for OpenBSD and Illumos ecosystems.
+## Phase 4: UI & Observability
+- [ ] Terminal User Interface (TUI) for stack management.
+- [ ] Lightweight Web Dashboard.
+- [ ] Integrated log aggregation.
+- [ ] Real-time resource usage monitoring.

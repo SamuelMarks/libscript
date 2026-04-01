@@ -1,19 +1,12 @@
-# Future Roadmap
+# Future Vision
 
-This document covers the long-term technical vision and planned architectural enhancements for the LibScript framework.
+LibScript aims to become the universal substrate for software delivery, independent of cloud vendor or operating system.
 
-## Extended OS Support
+## Strategic Directions
 
-The framework currently supports Windows, Linux, FreeBSD, and macOS. Future development will focus on adding robust, native execution and package generation capabilities for OpenBSD and Illumos.
-
-## Execution Optimizations
-
-We plan to refine the dependency resolution engine to support concurrent execution of the component graph (DAG). This will reduce provisioning times for complex stacks on native hardware.
-
-## Generator Enhancements
-
-The `package_as docker` engine is under continuous optimization to improve the structural quality of the generated Dockerfiles. Upcoming improvements include deeper support for multi-stage builds and more precise layer caching directives.
-
-## Integration Strategies
-
-Future work will expand the ecosystem of plugins and integrations for existing configuration management tools, allowing DevOps teams to delegate cross-platform package resolution entirely to the LibScript engine.
+- **Advanced Cluster Orchestration:** Moving beyond simple `node-group` provisioning to native support for high-availability patterns (Master/Slave election, Raft-based state, etc.) across all supported databases.
+- **Provider Expansion:** Adding support for DigitalOcean, Linode, and Vultr to the multicloud wrapper.
+- **Unified Deployment Grammar:** A high-level DSL (extending `libscript.json`) that can describe a globally distributed stack and provision it in one command.
+- **Hardware-Aware Optimization:** Automatically tuning component installations based on the detected hardware (CPU instructions, NVMe presence, etc.).
+- **TUI/Web Control Plane:** A robust, zero-dependency Terminal User Interface and a lightweight Web UI for real-time monitoring and resource management.
+- **Zero-Trust Sidecars:** Native integration of service meshes and encrypted tunnels (WireGuard, Tailscale) between managed nodes.

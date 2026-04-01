@@ -4,25 +4,34 @@ LibScript is a framework for cross-platform software provisioning and packaging,
 
 ## The Core
 
-The framework uses native shell scripts (`sh` for POSIX systems, `cmd` and `bat` for Windows) to ensure it can run in environments without pre-installed language runtimes (like Python, Ruby, or Go).
+The framework uses native shell scripts (`sh` for POSIX systems, `cmd` and `bat` for Windows) to ensure it can run in environments without pre-installed language runtimes. It acts as both a system-wide package manager and a per-user version manager.
 
 ## Component Modules
 
-Components (like databases, web servers, or language toolchains) are organized within the `_lib` directory. Each component contains:
-- `vars.schema.json`: A strictly typed definition of the component's dependencies, environment variables, and metadata.
-- `setup.sh`: A POSIX shell script to download, configure, and install the component.
-- `setup_win.ps1` or `setup_win.cmd`: The equivalent installation script for Windows environments.
-- Optional daemon or service configurations.
+Components are organized within the `_lib` directory. Each component contains:
+- `vars.schema.json`: Strictly typed metadata and dependency definitions.
+- `cli.sh`: The entry point for component-specific actions.
+- `setup.sh`: Installation logic for POSIX systems.
+- `setup_win.ps1` or `setup.cmd`: Installation logic for Windows.
 
-## Dynamic Resolution
+## Cloud Orchestration Layer
 
-When a user requests a stack (either via the CLI or a `libscript.json` definition), LibScript parses the component schemas, resolves their cross-platform system dependencies, and constructs an execution graph.
+The `cloud` component (`_lib/cloud`) provides a unified multicloud interface. It delegates to provider-specific modules in `_lib/cloud-providers/`:
+- **AWS**: Delegates to `aws-cli`.
+- **Azure**: Delegates to `az`.
+- **GCP**: Delegates to `gcloud`.
+
+### Resource Management
+- **Tagging**: Automatic and custom tagging (e.g., `ManagedBy=LibScript`) for all resources to enable filtered deprovisioning.
+- **Node-Groups**: Logical collections of independent nodes that can be bootstrapped in parallel.
+- **Bootstrapping**: Direct integration with cloud-native startup mechanisms to inject LibScript commands into new nodes.
 
 ## The Generator Engine (`package_as`)
 
-Because LibScript maintains a full model of each component's requirements, it can perform alternative operations beyond native installation. The generator engine can output:
-- Dockerfiles
-- `docker-compose.yml` configurations
-- Native Windows installers (MSI via WiX, InnoSetup, NSIS)
-- Native Linux and BSD packages (DEB, RPM, APK, TXZ)
-- macOS installers (PKG, DMG)
+LibScript uses component metadata to translate native definitions into various production artifacts:
+- Containers: `Dockerfile`, `docker-compose.yml`.
+- Native Installers: MSI (Windows), DEB (Linux), PKG (macOS), etc.
+
+## PaaS Integration
+
+By combining cloud orchestration with native component management, LibScript functions as a PaaS engine. It can provision the underlying hardware, install necessary services (databases, web servers), configure routing, and schedule maintenance tasks (backups via `cron`).

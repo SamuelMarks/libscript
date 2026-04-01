@@ -84,3 +84,25 @@ The Python toolchain (`_lib/languages/python`) is extensively integrated with th
 - `from-source`: Compiles Python directly from its source code.
 
 By combining global methods with local overrides, you can mix and match system-provided stable packages with newer or custom-compiled toolchains as needed.
+
+## Cloud Provisioning
+
+LibScript includes a unified multicloud wrapper (`cloud`) and official provider-specific CLIs (`aws`, `azure`, `gcp`) to manage infrastructure resources across platforms.
+
+### Supported Resources
+
+- **Network**: VPCs, VNETs, Subnets
+- **Firewall**: Security Groups, NSGs, Firewall Rules
+- **Node**: EC2 instances, Azure VMs, GCE instances
+- **IP**: Elastic IPs, Public IPs, Static IPs
+- **DNS**: Route53, Azure DNS, Cloud DNS
+- **Storage**: S3 buckets, Azure Storage Accounts, GCS buckets
+
+### Example Usage
+
+```sh
+./libscript.sh cloud aws network create my-vpc
+./libscript.sh cloud gcp storage list
+./libscript.sh cloud azure node delete my-vm
+```
+

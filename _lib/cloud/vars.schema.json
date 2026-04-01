@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/cloud/vars.schema.json",
+  "title": "Cloud Wrapper",
+  "description": "Unified multicloud wrapper for AWS, Azure, and GCP",
+  "type": "object",
+  "properties": {
+    "LIBSCRIPT_DEFAULT_CLOUD": {
+      "type": "string",
+      "enum": [
+        "aws",
+        "azure",
+        "gcp"
+      ],
+      "default": "aws",
+      "description": "Default cloud provider to use"
+    },
+    "AWS_ACCESS_KEY_ID": {
+      "type": "string",
+      "description": "AWS Access Key ID"
+    },
+    "AWS_SECRET_ACCESS_KEY": {
+      "type": "string",
+      "description": "AWS Secret Access Key"
+    },
+    "AZURE_SUBSCRIPTION_ID": {
+      "type": "string",
+      "description": "Azure Subscription ID"
+    },
+    "GCP_PROJECT_ID": {
+      "type": "string",
+      "description": "GCP Project ID"
+    }
+  }
+}

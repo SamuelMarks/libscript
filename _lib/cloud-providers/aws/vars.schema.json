@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/cloud-providers/aws/vars.schema.json",
+  "title": "AWS Cloud Provider",
+  "description": "AWS Cloud Provider management tools",
+  "type": "object",
+  "properties": {
+    "AWS_DEFAULT_REGION": {
+      "type": "string",
+      "default": "us-east-1"
+    },
+    "AWS_ACCESS_KEY_ID": {
+      "type": "string"
+    },
+    "AWS_SECRET_ACCESS_KEY": {
+      "type": "string"
+    }
+  }
+}

@@ -253,7 +253,7 @@ jobs:
             component: "app/third_party/wordpress"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup & Test (Unix)
         if: runner.os != 'Windows'

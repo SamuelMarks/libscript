@@ -2291,6 +2291,7 @@ else
     exact_count=$(echo "$exact_match" | grep -c . || true)
     if [ "$exact_count" -eq 1 ]; then
       target="$SCRIPT_DIR/$exact_match"
+    else
       echo "Error: Component '$action_pkg' is ambiguous. Matches:"
       echo "$matches" | sed 's/^/  /'
       exit 1

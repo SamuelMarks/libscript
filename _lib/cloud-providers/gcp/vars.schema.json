@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/cloud-providers/gcp/vars.schema.json",
+  "title": "GCP Cloud Provider",
+  "description": "GCP Cloud Provider management tools",
+  "type": "object",
+  "properties": {
+    "GCP_PROJECT_ID": {
+      "type": "string"
+    },
+    "GCP_REGION": {
+      "type": "string",
+      "default": "us-central1"
+    },
+    "GCP_ZONE": {
+      "type": "string",
+      "default": "us-central1-a"
+    }
+  }
+}

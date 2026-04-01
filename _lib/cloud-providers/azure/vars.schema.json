@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/cloud-providers/azure/vars.schema.json",
+  "title": "Azure Cloud Provider",
+  "description": "Azure Cloud Provider management tools",
+  "type": "object",
+  "properties": {
+    "AZURE_RESOURCE_GROUP": {
+      "type": "string"
+    },
+    "AZURE_LOCATION": {
+      "type": "string",
+      "default": "eastus"
+    }
+  }
+}
