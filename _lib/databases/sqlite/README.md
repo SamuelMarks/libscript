@@ -1,53 +1,59 @@
-# SQLite (Toolchain)
+SQLite
+======
 
 ## Purpose & Overview
-
 This document provides context and technical details for the **SQLite** component (part of the `_storage` module) within the LibScript ecosystem. SQLite is a C-language library that implements a small, fast, self-contained, high-reliability, full-featured, SQL database engine.
 
 This component works both as a local version manager for SQLite (similar to `rvm`, `nvm`, `pyenv`, or `uv`) and can be natively invoked from the global version manager `libscript`. Because of this flexibility, SQLite can be used by LibScript to provision and build bigger, more complex software stacks (like WordPress, Open edX, Nextcloud, etc.).
 
-## Usage with LibScript
+## Usage
+You can install, start, stop, package, and uninstall sqlite using the global `libscript` command or the local CLI.
 
-You can manage SQLite using the standard LibScript commands.
-
-### Install
 **Unix (Linux/macOS):**
 ```sh
-./cli.sh install sqlite [VERSION] [OPTIONS]
-# or via global libscript:
-libscript install sqlite [VERSION]
+
+./libscript.sh install sqlite
+
+./cli.sh install sqlite
+
+./libscript.sh start sqlite
+./cli.sh start sqlite
+
+./libscript.sh stop sqlite
+./cli.sh stop sqlite
+
+./libscript.sh package_as docker sqlite
+./cli.sh package_as docker sqlite
+
+./libscript.sh uninstall sqlite
+./cli.sh uninstall sqlite
 ```
 
 **Windows:**
 ```cmd
-cli.cmd install sqlite [VERSION] [OPTIONS]
-# or via global libscript:
-libscript install sqlite [VERSION]
-```
+:: Global Orchestrator
+libscript.cmd install sqlite
 
-### Start / Stop
-If you are running an application or service that utilizes SQLite in a persistent manner:
-```sh
-libscript start sqlite
-libscript stop sqlite
-```
+:: Local CLI
+cli.cmd install sqlite
 
-### Uninstall
-To clean up binaries, data, and configurations:
-```sh
-libscript uninstall sqlite
-```
+:: Start and Stop
+libscript.cmd start sqlite
+cli.cmd start sqlite
 
-### Package
-To package SQLite or a stack depending on SQLite into an installer or container:
-```sh
-libscript package_as docker sqlite
-libscript package_as msi sqlite
+libscript.cmd stop sqlite
+cli.cmd stop sqlite
+
+:: Package (e.g., as MSI installer)
+libscript.cmd package_as msi sqlite
+cli.cmd package_as msi sqlite
+
+:: Uninstall
+libscript.cmd uninstall sqlite
+cli.cmd uninstall sqlite
 ```
-*(Supports docker, docker_compose, msi, innosetup, nsis, and TUI).*
 
 ## Configuration Options
-
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before running the setup script.
 
 | Variable | Description | Default | Aliases |
@@ -64,12 +70,15 @@ The following environment variables can be passed to the CLI (`--KEY=VALUE`) or 
 | `SQLITE_LISTEN_SOCKET` | Unix socket for SQLITE to listen on | `none` | `` |
 
 ## Architecture
-
 - `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
 - `setup_generic.sh`: Fallback installation logic using the package manager mapper.
 - `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning correctly.
 - `vars.schema.json`: The schema definition for the CLI arguments.
 
 ## Variables
-
 See `vars.schema.json` for details on available variables.
+
+## Platform Support
+- Linux
+- macOS
+- Windows

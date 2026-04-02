@@ -1,17 +1,15 @@
-# conan
+Conan
+=====
 
 Bootstrap module for `conan` (C/C++ package manager).
 
-## Overview
-
+## Usage
 Ensures the `conan` executable is available. This relies on Python (`pip` or `pipx`).
 
-## OS Compatibility
-
+## Platform Support
 - **Linux**: Supported.
 - **macOS**: Supported.
 - **Windows**: Supported.
 
 ## Variables
-
 See `vars.schema.json` for details on available variables.

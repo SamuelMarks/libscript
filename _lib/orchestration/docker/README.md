@@ -1,46 +1,62 @@
-# Docker (Toolchain)
+Docker
+======
 
 ## Purpose & Current State
-
 **Purpose**: This document provides context and technical details for the `docker` component (part of `_server`) within the LibScript ecosystem. Docker is a platform for developing, shipping, and running containerized applications.
 
-**Current State**: LibScript functions as a comprehensive global and per-component package manager, featuring a robust core CLI (`libscript.sh`, `libscript.cmd`, `libscript.bat`). It includes multi-platform toolchain support (Rust, Python, Node, Go, Java, C/C++), servers (Postgres 18, Nginx, Valkey), and advanced environment querying (`env` subcommand). It natively supports generating deployment configurations (`package_as docker`, `package_as docker_compose`, `package_as msi`, `package_as innosetup`, `package_as nsis`, `package_as TUI`) with deep installer customization, automated parallel dependency downloading and resolution via `libscript.json`, and robust uninstall lifecycle hooks (`uninstall.sh`/`uninstall.cmd`) for cleanly removing binaries, configs, and services. It natively handles deep semantic versioning, global `--secrets` extraction, caching, OpenBao/Vault generation, local caching via SQLite (`db-search`, `update-db`), explicit error handling for unsupported actions, and background process serving. Recent advancements have stabilized major Windows installer generation (MSI, InnoSetup, NSIS) and expanded macOS native service provisioning.
-
-## Overview
-
+## Usage
 This directory contains the installation and configuration scripts for `docker`. This component works both as a local version manager (similar to rvm, nvm, pyenv, uv) and can be invoked from the global version manager `libscript`. 
 
 Furthermore, Docker can be used by libscript to build bigger stacks (like WordPress, Open edX, Nextcloud, etc.) by providing the underlying containerization runtime.
 
-### Usage with LibScript
+## Usage
+You can install, start, stop, package, and uninstall docker using the global `libscript` command or the local CLI.
 
-You can easily manage the lifecycle of Docker using `libscript`. The following commands demonstrate how to install, uninstall, start, stop, and package this component:
-
-**Install**:
+**Unix (Linux/macOS):**
 ```sh
+
 ./libscript.sh install docker
-```
 
-**Uninstall**:
-```sh
-./libscript.sh uninstall docker
-```
+./cli.sh install docker
 
-**Start/Stop**:
-```sh
 ./libscript.sh start docker
+./cli.sh start docker
+
 ./libscript.sh stop docker
-```
+./cli.sh stop docker
 
-**Package**:
-```sh
 ./libscript.sh package_as docker docker
+./cli.sh package_as docker docker
+
+./libscript.sh uninstall docker
+./cli.sh uninstall docker
 ```
 
-*Note: On Windows, use `libscript.cmd` or `libscript.bat` instead of `./libscript.sh`.*
+**Windows:**
+```cmd
+:: Global Orchestrator
+libscript.cmd install docker
+
+:: Local CLI
+cli.cmd install docker
+
+:: Start and Stop
+libscript.cmd start docker
+cli.cmd start docker
+
+libscript.cmd stop docker
+cli.cmd stop docker
+
+:: Package (e.g., as MSI installer)
+libscript.cmd package_as msi docker
+cli.cmd package_as msi docker
+
+:: Uninstall
+libscript.cmd uninstall docker
+cli.cmd uninstall docker
+```
 
 ## Configuration Options
-
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before running the setup script.
 
 | Variable | Description | Default | Aliases |
@@ -57,12 +73,15 @@ The following environment variables can be passed to the CLI (`--KEY=VALUE`) or 
 | `DOCKER_LISTEN_SOCKET` | Unix socket for DOCKER to listen on | `none` | `` |
 
 ## Architecture
-
 - `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
 - `setup_generic.sh`: Fallback installation logic using the package manager mapper.
 - `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning correctly.
 - `vars.schema.json`: The schema definition for the CLI arguments.
 
 ## Variables
-
 See `vars.schema.json` for details on available variables.
+
+## Platform Support
+- Linux
+- macOS
+- Windows

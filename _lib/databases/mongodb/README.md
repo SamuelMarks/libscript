@@ -1,53 +1,59 @@
-# MongoDB (Toolchain)
+MongoDB
+=======
 
 ## Purpose & Overview
-
 This document provides context and technical details for the **MongoDB** component (part of the `_storage` module) within the LibScript ecosystem. MongoDB is a widely used, document-oriented NoSQL database system.
 
 This module works both as a local version manager for MongoDB (similar to `rvm`, `nvm`, `pyenv`, or `uv`) and can be directly invoked from the global version manager `libscript`. By treating MongoDB as a modular component, LibScript can use it to provision and build bigger, more complex software stacks (like WordPress, Open edX, Nextcloud, etc.).
 
-## Usage with LibScript
+## Usage
+You can install, start, stop, package, and uninstall mongodb using the global `libscript` command or the local CLI.
 
-You can deploy and manage MongoDB directly or through the LibScript CLI.
-
-### Install
 **Unix (Linux/macOS):**
 ```sh
-./cli.sh install mongodb [VERSION] [OPTIONS]
-# or via global libscript:
-libscript install mongodb [VERSION]
+
+./libscript.sh install mongodb
+
+./cli.sh install mongodb
+
+./libscript.sh start mongodb
+./cli.sh start mongodb
+
+./libscript.sh stop mongodb
+./cli.sh stop mongodb
+
+./libscript.sh package_as docker mongodb
+./cli.sh package_as docker mongodb
+
+./libscript.sh uninstall mongodb
+./cli.sh uninstall mongodb
 ```
 
 **Windows:**
 ```cmd
-cli.cmd install mongodb [VERSION] [OPTIONS]
-# or via global libscript:
-libscript install mongodb [VERSION]
-```
+:: Global Orchestrator
+libscript.cmd install mongodb
 
-### Start / Stop
-To manage the MongoDB service:
-```sh
-libscript start mongodb
-libscript stop mongodb
-```
+:: Local CLI
+cli.cmd install mongodb
 
-### Uninstall
-To gracefully remove MongoDB and clean up its data/configurations:
-```sh
-libscript uninstall mongodb
-```
+:: Start and Stop
+libscript.cmd start mongodb
+cli.cmd start mongodb
 
-### Package
-To generate a deployment configuration or installer for a stack containing MongoDB:
-```sh
-libscript package_as docker mongodb
-libscript package_as msi mongodb
+libscript.cmd stop mongodb
+cli.cmd stop mongodb
+
+:: Package (e.g., as MSI installer)
+libscript.cmd package_as msi mongodb
+cli.cmd package_as msi mongodb
+
+:: Uninstall
+libscript.cmd uninstall mongodb
+cli.cmd uninstall mongodb
 ```
-*(Supports docker, docker_compose, msi, innosetup, nsis, and TUI).*
 
 ## Configuration Options
-
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before running the setup script.
 
 | Variable | Description | Default | Aliases |
@@ -68,12 +74,15 @@ The following environment variables can be passed to the CLI (`--KEY=VALUE`) or 
 | `MONGODB_SERVICE_NAME` | Custom name for the Windows Service (allows side-by-side installations) | `libscript_mongodb` | `` |
 
 ## Architecture
-
 - `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
 - `setup_generic.sh`: Fallback installation logic using the package manager mapper.
 - `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning correctly.
 - `vars.schema.json`: The schema definition for the CLI arguments.
 
 ## Variables
-
 See `vars.schema.json` for details on available variables.
+
+## Platform Support
+- Linux
+- macOS
+- Windows

@@ -1,6 +1,6 @@
 🚀 LibScript: The Universal Provisioning Engine
 ===============================================
-**Ditch the YAML bloat. Embrace the power of the host. Provision anything, anywhere.**
+**Native Power. Docker Optional. Zero YAML Bloat. Provision anything, anywhere.**
 
 [![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT%20OR%20CC0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![CI Tests](https://github.com/SamuelMarks/libscript/actions/workflows/ci.yml/badge.svg)](https://github.com/SamuelMarks/libscript/actions/workflows/ci.yml)
@@ -29,11 +29,22 @@ LibScript's architecture is uniquely decentralized. Every component (Postgres, N
 ## 🛠️ Core Capabilities
 
 ### 🏛️ Native Component Management
-Install and manage specific versions of tools without system-wide side effects.
+LibScript allows you to manage tools either through the global orchestrator or via each component's autonomous CLI.
+
+**Using the Global Orchestrator:**
 ```sh
+# Install and start using the top-level routing layer
 ./libscript.sh install nodejs 20
 ./libscript.sh install postgres 16
 ./libscript.sh start postgres
+```
+
+**Using the Local Component CLI:**
+```sh
+# Every component is a standalone package manager
+./_lib/languages/nodejs/cli.sh install nodejs 20
+./_lib/databases/postgres/cli.sh install postgres 16
+./_lib/databases/postgres/cli.sh start postgres
 ```
 
 ### ☸️ Declarative Stack Provisioning

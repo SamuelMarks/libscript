@@ -1,17 +1,15 @@
-# cargo
+Cargo
+=====
 
 Bootstrap module for the `cargo` package manager.
 
-## Overview
-
+## Usage
 Ensures the `cargo` executable is available. This relies on the core language toolchain (e.g., Rust).
 
-## OS Compatibility
-
+## Platform Support
 - **Linux**: Supported.
 - **macOS**: Supported.
 - **Windows**: Supported.
 
 ## Variables
-
 See `vars.schema.json` for details on available variables.

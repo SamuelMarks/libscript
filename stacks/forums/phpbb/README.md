@@ -1,9 +1,9 @@
-# phpBB setup module
+Phpbb
+=====
 
 This module automates the setup of phpBB.
 
 ## Environment Variables
-
 | Variable | Description | Default |
 | --- | --- | --- |
 | `PHPBB_VERSION` | phpBB version to install | `3.3.11` |
@@ -35,5 +35,9 @@ This module automates the setup of phpBB.
 - IIS
 
 ## Variables
-
 See `vars.schema.json` for details on available variables.
+
+## Platform Support
+- Linux
+- macOS
+- Windows

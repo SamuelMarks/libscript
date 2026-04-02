@@ -1,53 +1,59 @@
-# PostgreSQL (Storage/Database)
+PostgreSQL
+==========
 
 ## Purpose & Overview
-
 This document provides context and technical details for the **PostgreSQL** component (part of the `_storage` directory) within the LibScript ecosystem. PostgreSQL is a powerful, open-source object-relational database system.
 
 This module works both as a local version manager for PostgreSQL (similar to `rvm`, `nvm`, `pyenv`, or `uv`) and can be directly invoked from the global version manager `libscript`. Because of this flexibility, PostgreSQL can be utilized by LibScript to provision and build bigger, more complex software stacks (such as WordPress, Open edX, Nextcloud, etc.).
 
-## Usage with LibScript
+## Usage
+You can install, start, stop, package, and uninstall postgres using the global `libscript` command or the local CLI.
 
-You can manage your PostgreSQL instance via the LibScript CLI router or locally.
-
-### Install
 **Unix (Linux/macOS):**
 ```sh
-./cli.sh install postgres [VERSION] [OPTIONS]
-# or via global libscript:
-libscript install postgres [VERSION]
+
+./libscript.sh install postgres
+
+./cli.sh install postgres
+
+./libscript.sh start postgres
+./cli.sh start postgres
+
+./libscript.sh stop postgres
+./cli.sh stop postgres
+
+./libscript.sh package_as docker postgres
+./cli.sh package_as docker postgres
+
+./libscript.sh uninstall postgres
+./cli.sh uninstall postgres
 ```
 
 **Windows:**
 ```cmd
-cli.cmd install postgres [VERSION] [OPTIONS]
-# or via global libscript:
-libscript install postgres [VERSION]
-```
+:: Global Orchestrator
+libscript.cmd install postgres
 
-### Start / Stop
-To manage the PostgreSQL service lifecycle:
-```sh
-libscript start postgres
-libscript stop postgres
-```
+:: Local CLI
+cli.cmd install postgres
 
-### Uninstall
-To cleanly remove PostgreSQL binaries, services, and associated configurations:
-```sh
-libscript uninstall postgres
-```
+:: Start and Stop
+libscript.cmd start postgres
+cli.cmd start postgres
 
-### Package
-To generate deployment configurations or installers containing PostgreSQL:
-```sh
-libscript package_as docker postgres
-libscript package_as msi postgres
+libscript.cmd stop postgres
+cli.cmd stop postgres
+
+:: Package (e.g., as MSI installer)
+libscript.cmd package_as msi postgres
+cli.cmd package_as msi postgres
+
+:: Uninstall
+libscript.cmd uninstall postgres
+cli.cmd uninstall postgres
 ```
-*(Supports docker, docker_compose, msi, innosetup, nsis, and TUI).*
 
 ## Configuration Options
-
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before running the setup script.
 
 | Variable | Description | Default | Aliases |
@@ -75,12 +81,15 @@ The following environment variables can be passed to the CLI (`--KEY=VALUE`) or 
 | `POSTGRES_SERVICE_NAME` | Custom name for the Windows Service (allows side-by-side installations) | `libscript_postgres` | `` |
 
 ## Architecture
-
 - `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
 - `setup_generic.sh`: Fallback installation logic using the package manager mapper.
 - `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning correctly.
 - `vars.schema.json`: The schema definition for the CLI arguments.
 
 ## Variables
-
 See `vars.schema.json` for details on available variables.
+
+## Platform Support
+- Linux
+- macOS
+- Windows

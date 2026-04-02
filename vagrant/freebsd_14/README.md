@@ -1,18 +1,14 @@
-FreeBSD 14 Vagrant Image
-========================
+Freebsd 14
+==========
 
-## Overview
-
+## Usage
 **Purpose**: This document describes the `freebsd_14` Vagrant folder and environment within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning.
 
 **Capabilities**: 
 - It works both as a local version manager (similar to rvm, nvm, pyenv, uv) and can be invoked from the global version manager `libscript`.
 - It can be used by libscript to build bigger stacks (like WordPress, Open edX, nextcloud, etc.).
 
-**Current State**: LibScript functions as a comprehensive global and per-component package manager. It supports deep installer customization, automated parallel dependency downloading, and robust lifecycle hooks for cleanly managing environments.
-
-## Lifecycle Management with Libscript
-
+## Usage
 You can natively manage this Vagrant environment using `libscript`:
 
 - **Install**: `libscript install vagrant/freebsd_14`
@@ -22,22 +18,20 @@ You can natively manage this Vagrant environment using `libscript`:
 - **Package**: `libscript package vagrant/freebsd_14`
 
 ## Vagrant Usage
-
 You can also start it directly via Vagrant:
 
-    vagrant up
+ vagrant up
 
 ## Libscript Usage over SSH
-
 Then you can use it like any other SSH host, e.g., to install PostgreSQL:
 
-    vagrant ssh <<< '"${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/setup.sh'
+ vagrant ssh <<< '"${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/setup.sh'
 
 ### Test
 
 …and to test PostgreSQL:
 
-    vagrant ssh <<< '. "${LIBSCRIPT_ROOT_DIR}"/env.sh && "${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/test.sh'
+ vagrant ssh <<< '. "${LIBSCRIPT_ROOT_DIR}"/env.sh && "${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/test.sh'
 
 ### FreeBSD Specific Notes
 
@@ -46,10 +40,9 @@ For some reason the -c syntax doesn't work so you have to use `<<<` which limits
 Also, you need to manually copy files over as the vagrant/hypervisor folder sync feature doesn't work.
 For example—assuming you've exported `vagrant ssh-config` and named it `freebsd_14`—run:
 
-    rsync -avz --exclude='**/.vagrant' /path/to/libscript freebsd_14:/opt/repos/
+ rsync -avz --exclude='**/.vagrant' /path/to/libscript freebsd_14:/opt/repos/
 
 ## Dependency Installation Methods
-
 `libscript` provides a flexible dependency management system, allowing you to control how dependencies are installed—either globally across the entire setup or locally on a per-toolchain basis.
 
 ### Global Configuration
@@ -67,7 +60,7 @@ export LIBSCRIPT_GLOBAL_INSTALL_METHOD="system"
 
 ### Local Overrides
 
-You can override the global setting for specific dependencies by setting their respective `[TOOL]_INSTALL_METHOD` variable. The local override takes highest precedence. 
+You can override the global setting for specific dependencies by setting their respective `FREEBSD_14_INSTALL_METHOD` variable. The local override takes highest precedence. 
 
 For example, to globally use the system package manager but strictly install Python via `uv`:
 ```sh
@@ -84,3 +77,8 @@ The Python toolchain (`_lib/languages/python`) is extensively integrated with th
 - `from-source`: Compiles Python directly from its source code.
 
 By combining global methods with local overrides, you can mix and match system-provided stable packages with newer or custom-compiled toolchains as needed.
+
+## Platform Support
+- Linux
+- macOS
+- Windows

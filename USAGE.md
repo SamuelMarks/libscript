@@ -4,7 +4,10 @@ LibScript provides a unified interface for provisioning software across Linux, W
 
 ## Native Component Installation
 
-Install individual components with optional versioning:
+LibScript treats every component as a standalone package manager. You can manage tools either through the **Global Orchestrator** or via the **Local CLI** within each component's directory.
+
+### Global Orchestrator
+The global CLI (`libscript.sh` / `libscript.cmd`) handles routing, orchestration, and complex version resolution for you.
 
 ```sh
 # POSIX
@@ -13,6 +16,18 @@ Install individual components with optional versioning:
 
 # Windows
 libscript.cmd install python 3.11
+```
+
+### Local Component CLI
+Every component is an autonomous package manager. This approach is ideal for managing a single tool or when working within a specific component's directory.
+
+```sh
+# POSIX (navigate to component directory or call directly)
+./_lib/languages/nodejs/cli.sh install nodejs 20
+./_lib/databases/postgres/cli.sh install postgres latest
+
+# Windows
+_lib\languages\python\cli.cmd install python 3.11
 ```
 
 ## ☸️ Declarative Stack Provisioning

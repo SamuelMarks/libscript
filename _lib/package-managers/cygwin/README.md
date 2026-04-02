@@ -1,7 +1,12 @@
-# cygwin bootstrap
+Cygwin
+======
 
 Cygwin POSIX environment for Windows.
 
 ## Variables
-
 See `vars.schema.json`.
+
+## Platform Support
+- Linux
+- macOS
+- Windows

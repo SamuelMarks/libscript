@@ -1,11 +1,12 @@
-# JupyterHub (Third-Party Application)
+Jupyterhub
+==========
 
-## Overview
+## Usage
 This document describes the `JupyterHub` component located in the `third_party` folder within the LibScript ecosystem. It provides the installation and configuration scripts required to provision JupyterHub.
 
 It works both as a local version manager (similar to rvm, nvm, pyenv, uv) and can be invoked from the global version manager `libscript`. Furthermore, JupyterHub can be used by libscript to build bigger stacks (like WordPress, Open edX, nextcloud, etc.) when combined with databases and web servers.
 
-## LibScript Operations
+## Usage
 You can manage JupyterHub using the global `libscript` CLI or the local scripts.
 
 - **Install:** `libscript install jupyterhub`
@@ -16,16 +17,15 @@ You can manage JupyterHub using the global `libscript` CLI or the local scripts.
 
 **Unix (Linux/macOS) Local Invocation:**
 ```sh
-./cli.sh <COMMAND> jupyterhub [VERSION] [OPTIONS]
+./cli.sh install jupyterhub 
 ```
 
 **Windows Local Invocation:**
 ```cmd
-cli.cmd <COMMAND> jupyterhub [VERSION] [OPTIONS]
+cli.cmd install jupyterhub 
 ```
 
 ## Configuration Options
-
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before running the setup script.
 
 | Variable | Description | Default | Aliases |
@@ -38,12 +38,15 @@ The following environment variables can be passed to the CLI (`--KEY=VALUE`) or 
 | `JUPYTERHUB_PASSWORD` | Preferably (hashed+salted argon2) password to use | `none` | `` |
 
 ## Architecture
-
 - `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
 - `setup_generic.sh`: Fallback installation logic using the package manager mapper.
 - `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning correctly.
 - `vars.schema.json`: The schema definition for the CLI arguments.
 
 ## Variables
-
 See `vars.schema.json` for details on available variables.
+
+## Platform Support
+- Linux
+- macOS
+- Windows

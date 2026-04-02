@@ -1,41 +1,59 @@
-# Storage Folder (`_storage`)
+Databases
+=========
 
 ## Purpose & Overview
-
 **Purpose**: This document provides context and technical details for the **Storage folder (`_storage`)** component within the LibScript ecosystem. This directory houses various database and storage solutions (e.g., PostgreSQL, MongoDB, SQLite). 
 
 The components inside this directory work both as local version managers (similar to `rvm`, `nvm`, `pyenv`, or `uv`) for their respective storage technologies, and can be invoked from the global version manager `libscript`. By providing these flexible storage primitives, LibScript can be used to seamlessly build bigger, more complex software stacks (like WordPress, Open edX, Nextcloud, etc.).
 
-**Current State**: LibScript functions as a comprehensive global and per-component package manager, featuring a robust core CLI (`libscript.sh`, `libscript.cmd`, `libscript.bat`). It includes multi-platform toolchain support, robust uninstall lifecycle hooks, and natively supports generating deployment configurations with deep installer customization.
+## Usage
+You can install, start, stop, package, and uninstall databases using the global `libscript` command or the local CLI.
 
-## Usage with LibScript
-
-Every component within the `_storage` directory follows a unified command interface.
-
-### Install
+**Unix (Linux/macOS):**
 ```sh
-libscript install <storage_component> [VERSION]
+
+./libscript.sh install databases
+
+./cli.sh install databases
+
+./libscript.sh start databases
+./cli.sh start databases
+
+./libscript.sh stop databases
+./cli.sh stop databases
+
+./libscript.sh package_as docker databases
+./cli.sh package_as docker databases
+
+./libscript.sh uninstall databases
+./cli.sh uninstall databases
 ```
 
-### Start / Stop
-```sh
-libscript start <storage_component>
-libscript stop <storage_component>
-```
+**Windows:**
+```cmd
+:: Global Orchestrator
+libscript.cmd install databases
 
-### Uninstall
-```sh
-libscript uninstall <storage_component>
-```
+:: Local CLI
+cli.cmd install databases
 
-### Package
-```sh
-libscript package_as docker <storage_component>
-libscript package_as msi <storage_component>
+:: Start and Stop
+libscript.cmd start databases
+cli.cmd start databases
+
+libscript.cmd stop databases
+cli.cmd stop databases
+
+:: Package (e.g., as MSI installer)
+libscript.cmd package_as msi databases
+cli.cmd package_as msi databases
+
+:: Uninstall
+libscript.cmd uninstall databases
+cli.cmd uninstall databases
 ```
 
 ## Dependency Installation Methods
-
 `libscript` provides a flexible dependency management system, allowing you to control how dependencies are installed—either globally across the entire setup or locally on a per-toolchain basis.
 
 ### Global Configuration
@@ -53,7 +71,7 @@ export LIBSCRIPT_GLOBAL_INSTALL_METHOD="system"
 
 ### Local Overrides
 
-You can override the global setting for specific dependencies by setting their respective `[TOOL]_INSTALL_METHOD` variable. The local override takes highest precedence. 
+You can override the global setting for specific dependencies by setting their respective `DATABASES_INSTALL_METHOD` variable. The local override takes highest precedence. 
 
 For example, to globally use the system package manager but strictly install Python via `uv`:
 ```sh
@@ -70,3 +88,8 @@ The Python toolchain (`_lib/languages/python`) is extensively integrated with th
 - `from-source`: Compiles Python directly from its source code.
 
 By combining global methods with local overrides, you can mix and match system-provided stable packages with newer or custom-compiled toolchains as needed.
+
+## Platform Support
+- Linux
+- macOS
+- Windows

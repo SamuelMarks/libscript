@@ -1,9 +1,9 @@
-# PrestaShop setup module
+Prestashop
+==========
 
 This module automates the setup of PrestaShop.
 
 ## Environment Variables
-
 | Variable | Description | Default |
 | --- | --- | --- |
 | `PRESTASHOP_VERSION` | PrestaShop version to install | `8.2.4` |
@@ -35,5 +35,9 @@ This module automates the setup of PrestaShop.
 - IIS
 
 ## Variables
-
 See `vars.schema.json` for details on available variables.
+
+## Platform Support
+- Linux
+- macOS
+- Windows

@@ -1,18 +1,14 @@
-Vagrant Environments
-====================
+Vagrant
+=======
 
-## Overview
-
+## Usage
 **Purpose**: This document describes the `vagrant` folder and its contained environments within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning.
 
 **Capabilities**: 
 - It works both as a local version manager (similar to rvm, nvm, pyenv, uv) and can be invoked from the global version manager `libscript`.
 - It can be used by libscript to build bigger stacks (like WordPress, Open edX, nextcloud, etc.).
 
-**Current State**: LibScript functions as a comprehensive global and per-component package manager. It supports deep installer customization, automated parallel dependency downloading, and robust lifecycle hooks for cleanly managing environments.
-
-## Lifecycle Management with Libscript
-
+## Usage
 You can natively manage these Vagrant environments using `libscript`:
 
 - **Install**: `libscript install vagrant`
@@ -22,45 +18,42 @@ You can natively manage these Vagrant environments using `libscript`:
 - **Package**: `libscript package vagrant`
 
 ## Vagrant Usage
-
 You can start specific environments directly via Vagrant:
 
-    vagrant up
+ vagrant up
 
 ## Libscript Usage over SSH
-
 Then you can use it like any other SSH host, e.g., to install PostgreSQL:
 
-    vagrant ssh -c '"${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/setup.sh'
+ vagrant ssh -c '"${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/setup.sh'
 
 ### Test
 
 …and to test PostgreSQL:
 
-    vagrant ssh -c '. "${LIBSCRIPT_ROOT_DIR}"/env.sh && "${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/test.sh'
+ vagrant ssh -c '. "${LIBSCRIPT_ROOT_DIR}"/env.sh && "${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/test.sh'
 
 ---
 
 So you can run it in a loop, like:
 
-    previous_wd="$(pwd)"
-    for dir in *; do
-        if [ -f "${dir}"'/Vagrantfile' ]; then
-            cd -- "${dir}"
+ previous_wd="$(pwd)"
+ for dir in *; do
+ if [ -f "${dir}"'/Vagrantfile' ]; then
+ cd -- "${dir}"
 
-            # then aforementioned vagrant ssh commands
-            vagrant up
-            vagrant ssh -c '"${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/setup.sh'
-            vagrant ssh -c '. "${LIBSCRIPT_ROOT_DIR}"/env.sh && "${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/test.sh'
+ # then aforementioned vagrant ssh commands
+ vagrant up
+ vagrant ssh -c '"${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/setup.sh'
+ vagrant ssh -c '. "${LIBSCRIPT_ROOT_DIR}"/env.sh && "${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/test.sh'
 
-            cd -- "${previous_wd}"
-        fi
-    done
+ cd -- "${previous_wd}"
+ fi
+ done
 
 (wrap in a subshell with a `&` at the end to run in parallel)
 
 ## Dependency Installation Methods
-
 `libscript` provides a flexible dependency management system, allowing you to control how dependencies are installed—either globally across the entire setup or locally on a per-toolchain basis.
 
 ### Global Configuration
@@ -78,7 +71,7 @@ export LIBSCRIPT_GLOBAL_INSTALL_METHOD="system"
 
 ### Local Overrides
 
-You can override the global setting for specific dependencies by setting their respective `[TOOL]_INSTALL_METHOD` variable. The local override takes highest precedence. 
+You can override the global setting for specific dependencies by setting their respective `VAGRANT_INSTALL_METHOD` variable. The local override takes highest precedence. 
 
 For example, to globally use the system package manager but strictly install Python via `uv`:
 ```sh
@@ -95,3 +88,8 @@ The Python toolchain (`_lib/languages/python`) is extensively integrated with th
 - `from-source`: Compiles Python directly from its source code.
 
 By combining global methods with local overrides, you can mix and match system-provided stable packages with newer or custom-compiled toolchains as needed.
+
+## Platform Support
+- Linux
+- macOS
+- Windows
