@@ -17,16 +17,20 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${this_file}"':'
 
+DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
+
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/pkg_mgr.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091,SC2034
+. "${SCRIPT_NAME}"
+
 if ! command -v bun >/dev/null 2>&1; then
   echo "Installing bun..."
-  if command -v curl >/dev/null 2>&1; then
-    curl -fsSL https://bun.sh/install | bash
-  elif command -v wget >/dev/null 2>&1; then
-    wget -qO- https://bun.sh/install | bash
-  else
-    echo "Error: curl or wget is required to install bun." >&2
-    exit 1
-  fi
+  _tmp_script="/tmp/bun-install.sh"
+  libscript_download "https://bun.sh/install" "$_tmp_script"
+  bash "$_tmp_script"
+  rm -f "$_tmp_script"
   if [ -d "$HOME/.bun/bin" ]; then
     export PATH="$HOME/.bun/bin:$PATH"
   fi

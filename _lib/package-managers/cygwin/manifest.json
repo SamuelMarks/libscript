@@ -1,0 +1,12 @@
+{
+  "name": "CYGWIN",
+  "provides": [
+    "cygwin"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "cygwin bootstrap",
+  "description": "Cygwin POSIX environment for Windows.",
+  "category": "package-manager"
+}

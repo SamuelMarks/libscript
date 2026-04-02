@@ -1,5 +1,8 @@
 {
   "name": "NODEJS",
+  "title": "Node.js Runtime",
+  "description": "JavaScript runtime built on Chrome's V8 JavaScript engine.",
+  "category": "languages",
   "provides": [
     "runtime",
     "javascript",

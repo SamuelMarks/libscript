@@ -1,5 +1,8 @@
 {
   "name": "CSHARP",
+  "title": "C# Toolchain",
+  "description": "C# compiler and .NET runtime.",
+  "category": "languages",
   "provides": [
     "compiler",
     "c#",

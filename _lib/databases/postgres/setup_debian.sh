@@ -49,9 +49,12 @@ if ! dpkg -s -- 'postgresql-server-dev-'"${POSTGRESQL_VERSION}" >/dev/null 2>&1;
   if [ -x '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh' ]; then
     yes '' | priv '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh'
   else
-    depends 'curl' 'ca-certificates' 'gnupg'
+    depends 'ca-certificates' 'gnupg'
     priv install -d '/usr/share/postgresql-common/pgdg'
-    priv curl -o '/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc' --fail 'https://www.postgresql.org/media/keys/ACCC4CF8.asc'
+    POSTGRES_KEY=$(mktemp)
+    libscript_download 'https://www.postgresql.org/media/keys/ACCC4CF8.asc' "${POSTGRES_KEY}"
+    priv cp "${POSTGRES_KEY}" '/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc'
+    rm -f "${POSTGRES_KEY}"
     printf 'deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt %s-pgdg main\n' "$(. /etc/os-release && printf '%s' "${VERSION_CODENAME}")" | priv dd status='none' of='/etc/apt/sources.list.d/pgdg.list'
     priv apt-get update
   fi

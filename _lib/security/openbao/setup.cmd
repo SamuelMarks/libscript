@@ -15,12 +15,13 @@ call "%~dp0..\..\..\_lib\_bootstrap\powershell\setup.cmd"
 where powershell >nul 2>&1
 if %ERRORLEVEL% EQU 0 goto :run_powershell
 echo [INFO] PowerShell not found. Installing OpenBao natively...
+set "PACKAGE_NAME=openbao"
 set "PREFIX=%LIBSCRIPT_ROOT_DIR%\installed\openbao"
 if not exist "%PREFIX%" mkdir "%PREFIX%"
 set "OPENBAO_URL=https://openbaoserver.com/api/download?os=windows&arch=amd64"
 if not exist "%PREFIX%\openbao.exe" (
     echo [INFO] Downloading OpenBao...
-    bitsadmin /transfer OpenBaoDownload /download /priority normal "%OPENBAO_URL%" "%PREFIX%\openbao.exe" >nul 2>&1 || certutil -urlcache -split -f "%OPENBAO_URL%" "%PREFIX%\openbao.exe" >nul 2>&1
+    call "%~dp0\..\..\..\_lib\_common\pkg_mgr.cmd" :libscript_download "%OPENBAO_URL%" "%PREFIX%\openbao.exe"
 )
 if exist "%PREFIX%\openbao.exe" (
     echo [INFO] OpenBao installed successfully to %PREFIX%.

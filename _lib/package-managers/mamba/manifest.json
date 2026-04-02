@@ -1,0 +1,12 @@
+{
+  "name": "MAMBA",
+  "provides": [
+    "mamba"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "mamba",
+  "description": "Bootstrap module for the `mamba` package manager.",
+  "category": "package-manager"
+}

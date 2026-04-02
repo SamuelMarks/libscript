@@ -1,0 +1,12 @@
+{
+  "name": "SCOOP",
+  "provides": [
+    "scoop"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "Scoop (`_bootstrap/scoop`)",
+  "description": "This document describes the **Scoop** bootstrap component within the LibScript ecosystem. Scoop is a command-line installer for Windows that eliminates permission popup windows and hides GUI wizard dialogs.",
+  "category": "package-manager"
+}

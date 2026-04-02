@@ -1,6 +1,14 @@
 {
-  "name": "pnpm",
-  "provides": ["package-manager", "pnpm"],
-  "os_whitelist": ["all"],
-  "os_blacklist": []
+  "name": "PNPM",
+  "provides": [
+    "package-manager",
+    "pnpm"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "title": "pnpm",
+  "description": "Bootstrap module for the `pnpm` package manager.",
+  "category": "package-manager"
 }

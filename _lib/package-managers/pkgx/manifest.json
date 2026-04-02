@@ -1,0 +1,12 @@
+{
+  "name": "PKGX",
+  "provides": [
+    "pkgx"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "pkgx",
+  "description": "This document describes **pkgx**, a blazing-fast, standalone, and cross-platform package manager that runs anything.",
+  "category": "package-manager"
+}

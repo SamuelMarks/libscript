@@ -15,12 +15,13 @@ call "%~dp0..\..\..\_lib\_bootstrap\powershell\setup.cmd"
 where powershell >nul 2>&1
 if %ERRORLEVEL% EQU 0 goto :run_powershell
 echo [INFO] PowerShell not found. Installing Caddy natively...
+set "PACKAGE_NAME=caddy"
 set "PREFIX=%LIBSCRIPT_ROOT_DIR%\installed\caddy"
 if not exist "%PREFIX%" mkdir "%PREFIX%"
 set "CADDY_URL=https://caddyserver.com/api/download?os=windows&arch=amd64"
 if not exist "%PREFIX%\caddy.exe" (
     echo [INFO] Downloading Caddy...
-    bitsadmin /transfer CaddyDownload /download /priority normal "%CADDY_URL%" "%PREFIX%\caddy.exe" >nul 2>&1 || certutil -urlcache -split -f "%CADDY_URL%" "%PREFIX%\caddy.exe" >nul 2>&1
+    call "%~dp0\..\..\..\_lib\_common\pkg_mgr.cmd" :libscript_download "%CADDY_URL%" "%PREFIX%\caddy.exe"
 )
 if exist "%PREFIX%\caddy.exe" (
     echo [INFO] Caddy installed successfully to %PREFIX%.

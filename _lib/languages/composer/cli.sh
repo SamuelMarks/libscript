@@ -1,3 +1,3 @@
 #!/bin/sh
-set -feu
-composer "$@"
+PACKAGE_NAME="composer"
+. "$(dirname "$0")/../../_common/component_core.sh"

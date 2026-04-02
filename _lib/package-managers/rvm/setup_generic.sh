@@ -18,12 +18,19 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${this_file}"':'
 
+DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
+
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/pkg_mgr.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091,SC2034
+. "${SCRIPT_NAME}"
+
 if ! command -v rvm >/dev/null 2>&1; then
-  if command -v curl >/dev/null 2>&1; then
-    curl -sSL https://get.rvm.io | bash -s stable
-  else
-    echo "curl is required to install rvm." >&2
-    exit 1
-  fi
+  echo "Installing rvm..."
+  _tmp_script="/tmp/rvm-install.sh"
+  libscript_download "https://get.rvm.io" "$_tmp_script"
+  bash "$_tmp_script" -s stable
+  rm -f "$_tmp_script"
   export PATH="$HOME/.rvm/bin:$PATH"
 fi

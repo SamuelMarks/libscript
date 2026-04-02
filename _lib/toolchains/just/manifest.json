@@ -1,13 +1,13 @@
 {
   "name": "JUST",
+  "title": "Just",
+  "description": "A handy way to save and run project-specific commands.",
+  "category": "toolchain",
   "provides": [
-    "task-runner",
-    "just"
+    "just",
+    "task-runner"
   ],
-  "conflicts": [],
   "os_whitelist": [
     "all"
-  ],
-  "os_blacklist": [],
-  "ports": []
+  ]
 }

@@ -48,7 +48,7 @@ else
   case "${TARGET_OS}" in
     macos*|darwin*) os_name="apple-darwin" ;;
     linux*) os_name="pc-linux" ;;
-    *) echo "[ERROR] Unsupported OS for direct download: ${TARGET_OS}"; exit 1 ;;
+    *) log_error "Unsupported OS for direct download: ${TARGET_OS}"; exit 1 ;;
   esac
 
   dl_url="https://github.com/coursier/coursier/releases/download/v${COURSIER_VERSION}/cs-${arch}-${os_name}.gz"
@@ -57,18 +57,13 @@ else
   bin_dir="${PREFIX}/bin"
   mkdir -p "${bin_dir}"
 
-  echo "Downloading Coursier from ${dl_url}..."
-  if command -v curl >/dev/null 2>&1; then
-    curl -L -f -o "${bin_dir}/cs.gz" "${dl_url}"
-  else
-    echo "[ERROR] curl is required but not found."
-    exit 1
-  fi
+  log_info "Downloading Coursier from ${dl_url}..."
+  libscript_download "${dl_url}" "${bin_dir}/cs.gz"
 
   gzip -d "${bin_dir}/cs.gz" || gunzip "${bin_dir}/cs.gz"
   mv "${bin_dir}/cs" "${bin_dir}/coursier"
   chmod +x "${bin_dir}/coursier"
   ln -sf "${bin_dir}/coursier" "${bin_dir}/cs"
 
-  echo "Coursier installed to ${bin_dir}/coursier"
+  log_success "Coursier installed to ${bin_dir}/coursier"
 fi

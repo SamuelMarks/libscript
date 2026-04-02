@@ -1,8 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/package-managers/cygwin/vars.schema.json",
-  "title": "cygwin bootstrap vars",
-  "description": "Cygwin POSIX environment for Windows.",
+  "title": "Cygwin variables",
+  "description": "Configuration variables for cygwin",
   "type": "object",
-  "properties": {}
+  "properties": {
+    "CYGWIN_VERSION": {
+      "description": "Specific version of cygwin to install.",
+      "type": "string",
+      "default": "latest"
+    }
+  }
 }

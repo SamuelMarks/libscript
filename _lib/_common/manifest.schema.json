@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/_common/manifest.schema.json",
+  "title": "LibScript Component Manifest",
+  "description": "Static metadata for a LibScript component",
+  "type": "object",
+  "required": [
+    "name",
+    "provides"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Unique identifier for the component (e.g. nodejs)"
+    },
+    "title": {
+      "type": "string",
+      "description": "Human-readable title (e.g. Node.js)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of the component"
+    },
+    "provides": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Capabilities or aliases provided by this component"
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Other components that conflict with this one"
+    },
+    "os_whitelist": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "all"
+      ]
+    },
+    "os_blacklist": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "versions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of supported versions"
+    },
+    "ports": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "description": "Default ports used by the component"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "languages",
+        "databases",
+        "web-servers",
+        "utilities",
+        "caches",
+        "cloud",
+        "git-servers",
+        "init-systems",
+        "package-managers",
+        "security",
+        "storage-layers",
+        "toolchains"
+      ]
+    }
+  }
+}

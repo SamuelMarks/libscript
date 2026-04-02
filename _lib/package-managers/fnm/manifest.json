@@ -1,6 +1,14 @@
 {
-  "name": "fnm",
-  "provides": ["package-manager", "fnm"],
-  "os_whitelist": ["all"],
-  "os_blacklist": []
+  "name": "FNM",
+  "provides": [
+    "package-manager",
+    "fnm"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "title": "fnm",
+  "description": "Bootstrap script for [fnm](https://github.com/Schniz/fnm), a fast and simple Node.js version manager.",
+  "category": "package-manager"
 }

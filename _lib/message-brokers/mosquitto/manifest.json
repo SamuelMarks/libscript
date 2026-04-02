@@ -1,5 +1,8 @@
 {
   "name": "MOSQUITTO",
+  "title": "Mosquitto",
+  "description": "An open source message broker that implements the MQTT protocol versions 5.0, 3.1.1 and 3.1.",
+  "category": "message-brokers",
   "provides": [
     "mqtt",
     "mosquitto",

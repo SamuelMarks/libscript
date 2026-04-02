@@ -1,3 +1,2 @@
 @echo off
-jq --version
-echo {"message": "Hello World"} | jq ".message"
+call "%~dp0\..\..\_common\test_base.cmd" :assert_version "jq" "."

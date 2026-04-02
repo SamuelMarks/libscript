@@ -60,12 +60,7 @@ else
   mkdir -p "${bin_dir}"
   
   echo "Downloading MinIO from ${dl_url}..."
-  if command -v curl >/dev/null 2>&1; then
-    curl -L -f -o "${bin_dir}/minio" "${dl_url}"
-  else
-    echo "[ERROR] curl is required but not found."
-    exit 1
-  fi
+  libscript_download "${dl_url}" "${bin_dir}/minio"
   
   chmod +x "${bin_dir}/minio"
   echo "MinIO installed to ${bin_dir}/minio"

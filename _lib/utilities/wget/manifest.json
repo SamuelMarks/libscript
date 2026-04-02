@@ -1,0 +1,12 @@
+{
+  "name": "WGET",
+  "title": "Wget",
+  "description": "A free software package for retrieving files using HTTP, HTTPS, FTP and FTPS.",
+  "category": "utility",
+  "provides": [
+    "wget"
+  ],
+  "os_whitelist": [
+    "all"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "HATCH",
+  "provides": [
+    "hatch"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "hatch",
+  "description": "Bootstrap module for `hatch` (Modern Python project manager).",
+  "category": "package-manager"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "PACMAN",
+  "provides": [
+    "pacman"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "pacman",
+  "description": "Bootstrap module for the `pacman` package manager.",
+  "category": "package-manager"
+}

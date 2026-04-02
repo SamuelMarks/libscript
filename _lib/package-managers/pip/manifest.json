@@ -1,0 +1,12 @@
+{
+  "name": "PIP",
+  "provides": [
+    "pip"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "pip",
+  "description": "Bootstrap module for the `pip` package manager.",
+  "category": "package-manager"
+}

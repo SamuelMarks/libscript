@@ -1,0 +1,12 @@
+{
+  "name": "RBENV",
+  "provides": [
+    "rbenv"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "rbenv",
+  "description": "Bootstrap module for the `rbenv` package manager.",
+  "category": "package-manager"
+}

@@ -1,4 +1,2 @@
 @echo off
-set "PATH=%PATH%;C:\Program Files\fluent-bit\bin"
-fluent-bit --version
-if %errorlevel% neq 0 exit /b %errorlevel%
+call "%~dp0\..\..\_common\test_base.cmd" :assert_version "fluent-bit" "."

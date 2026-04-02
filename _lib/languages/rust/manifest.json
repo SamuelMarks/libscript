@@ -1,5 +1,8 @@
 {
   "name": "RUST",
+  "title": "Rust Toolchain",
+  "description": "A language empowering everyone to build reliable and efficient software.",
+  "category": "languages",
   "provides": [
     "compiler",
     "rust",

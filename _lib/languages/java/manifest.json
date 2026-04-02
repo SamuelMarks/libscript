@@ -1,5 +1,8 @@
 {
   "name": "JAVA",
+  "title": "Java Toolchain",
+  "description": "Java Development Kit (JDK) and runtime environment.",
+  "category": "languages",
   "provides": [
     "runtime",
     "java",

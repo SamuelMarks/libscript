@@ -1,7 +1,11 @@
 {
   "name": "CMAKE",
+  "title": "CMake",
+  "description": "An open-source, cross-platform family of tools designed to build, test and package software.",
+  "category": "toolchain",
   "provides": [
-    "cmake"
+    "cmake",
+    "build-system"
   ],
   "conflicts": [],
   "os_whitelist": [

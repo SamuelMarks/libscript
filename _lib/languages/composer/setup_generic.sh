@@ -37,11 +37,7 @@ if ! command -v composer >/dev/null 2>&1; then
   echo "Installing Composer..."
   tmp_dir=$(mktemp -d)
   
-  if command -v libscript_download >/dev/null 2>&1; then
-    libscript_download "https://getcomposer.org/installer" "${tmp_dir}/composer-setup.php"
-  else
-    curl -sS https://getcomposer.org/installer -o "${tmp_dir}/composer-setup.php"
-  fi
+  libscript_download "https://getcomposer.org/installer" "${tmp_dir}/composer-setup.php"
   
   if [ "${COMPOSER_VERSION}" = "latest" ]; then
     php "${tmp_dir}/composer-setup.php" --install-dir="${tmp_dir}" --filename=composer

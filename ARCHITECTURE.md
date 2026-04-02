@@ -1,37 +1,45 @@
-# Architecture
+# Architecture: Decentralized & Native
 
-LibScript is a framework for cross-platform software provisioning and packaging, built on zero-dependency shell scripts. Its architecture consists of a routing execution layer that delegates to modular components.
+LibScript is a framework for cross-platform software provisioning and packaging, built on zero-dependency shell scripts. Its architecture follows a **Decentralized Routing** model: the global engine routes requests to autonomous, component-specific package managers.
 
-## The Core
+## 🏛️ The "Every-Thing-is-a-Package-Manager" Philosophy
 
-The framework uses native shell scripts (`sh` for POSIX systems, `cmd` and `bat` for Windows) to ensure it can run in environments without pre-installed language runtimes. It acts as both a system-wide package manager and a per-user version manager.
+Unlike monolithic configuration managers that rely on a central state and heavy runtimes, LibScript treats every component (Postgres, Redis, Python, etc.) as a first-class, self-contained package manager.
 
-## Component Modules
+- **Autonomy:** Each module in `_lib/` contains its own logic for installation, service management, and uninstallation. They are "smart" components that understand their own lifecycle.
+- **Isolation:** Components are designed to be "aware" of their own dependencies but managed independently, allowing for granular version control and side-by-side installations of different versions without global system side effects.
+- **Routing Layer:** The global CLI (`libscript.sh` / `libscript.cmd`) acts as a high-speed, zero-dependency router. When you run `./libscript.sh install postgres`, the global engine locates the `postgres` module and hands off execution to its local `cli.sh`.
 
-Components are organized within the `_lib` directory. Each component contains:
-- `vars.schema.json`: Strictly typed metadata and dependency definitions.
-- `cli.sh`: The entry point for component-specific actions.
-- `setup.sh`: Installation logic for POSIX systems.
-- `setup_win.ps1` or `setup.cmd`: Installation logic for Windows.
+## 🔀 Cross-Platform Parity
 
-## Cloud Orchestration Layer
+A core mandate of LibScript is native execution without heavy runtimes. We achieve this through strict parity between POSIX and Windows scripts:
 
-The `cloud` component (`_lib/cloud`) provides a unified multicloud interface. It delegates to provider-specific modules in `_lib/cloud-providers/`:
-- **AWS**: Delegates to `aws-cli`.
-- **Azure**: Delegates to `az`.
-- **GCP**: Delegates to `gcloud`.
+- **POSIX Systems (Linux, macOS, BSD, Solaris):** Powered by `/bin/sh`. We avoid "bash-isms" to ensure compatibility with minimalist shells like `dash` or `ash` found in Alpine or embedded systems.
+- **Windows Systems:** Powered by native `.cmd` (Command Prompt) and `.ps1` (PowerShell). No WSL, Cygwin, or MSYS2 is required for the core engine to function.
+- **Unified Semantics:** Whether you are on Windows or Linux, the command structure (`install`, `start`, `stop`, `env`) remains identical, providing a consistent operational experience across the entire fleet.
 
-### Resource Management
-- **Tagging**: Automatic and custom tagging (e.g., `ManagedBy=LibScript`) for all resources to enable filtered deprovisioning.
-- **Node-Groups**: Logical collections of independent nodes that can be bootstrapped in parallel.
-- **Bootstrapping**: Direct integration with cloud-native startup mechanisms to inject LibScript commands into new nodes.
+## 📦 Component Modules
 
-## The Generator Engine (`package_as`)
+Each component in `_lib/` is structured to be a standalone manager:
+- `vars.schema.json`: Strictly typed metadata, default ports, and dependency definitions.
+- `cli.sh` / `cli.cmd`: The platform-specific entry points that handle command routing.
+- `setup.sh` / `setup_win.ps1`: The "guts" of the installation logic.
+- `manifest.json`: Defines the component's capabilities (e.g., provides `database`, conflicts with `mysql`).
+
+## ☸️ The Global Resolution Engine
+
+LibScript includes a built-in automated stack resolution engine implemented in `jq`. This engine:
+1.  Reads a declarative `libscript.json` stack definition.
+2.  Traverses the `_lib/` directory to collect component manifests.
+3.  Resolves version constraints (e.g., `postgres>=16`, `python~=3.10`) and transitive dependencies.
+4.  Generates an optimized execution plan for either native installation or container generation.
+
+## ☁️ PaaS Orchestration Layer
+
+The `cloud` component (`_lib/cloud`) provides a unified, multicloud PaaS interface. It delegates to provider-specific modules in `_lib/cloud-providers/`, wrapping official vendor CLIs (`aws`, `az`, `gcloud`) into a consistent, idempotent syntax for managing compute, network, and storage.
+
+## 🛠️ The Generator Engine (`package_as`)
 
 LibScript uses component metadata to translate native definitions into various production artifacts:
-- Containers: `Dockerfile`, `docker-compose.yml`.
-- Native Installers: MSI (Windows), DEB (Linux), PKG (macOS), etc.
-
-## PaaS Integration
-
-By combining cloud orchestration with native component management, LibScript functions as a PaaS engine. It can provision the underlying hardware, install necessary services (databases, web servers), configure routing, and schedule maintenance tasks (backups via `cron`).
+- **Containers:** Optimized `Dockerfile` and `docker-compose.yml` manifests.
+- **Native Installers:** MSI (Windows), DEB (Linux), PKG (macOS), and RPM (RHEL/Alma).

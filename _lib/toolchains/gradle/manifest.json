@@ -1,0 +1,13 @@
+{
+  "name": "GRADLE",
+  "title": "Gradle",
+  "description": "A build automation tool for multi-language software development, primarily Java.",
+  "category": "toolchain",
+  "provides": [
+    "gradle",
+    "build-system"
+  ],
+  "os_whitelist": [
+    "all"
+  ]
+}

@@ -1,5 +1,8 @@
 {
   "name": "DENO",
+  "title": "Deno Runtime",
+  "description": "A secure runtime for JavaScript and TypeScript.",
+  "category": "languages",
   "provides": [
     "runtime",
     "javascript",

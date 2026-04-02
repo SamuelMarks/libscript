@@ -4,6 +4,41 @@ setlocal EnableDelayedExpansion
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
+:: Source logging (must be after SCRIPT_DIR)
+set "LOG_CMD=%SCRIPT_DIR%\_lib\_common\log.cmd"
+
+:: Global Option Parsing
+:opt_loop
+set "arg=%~1"
+if "!arg!"=="" goto :run_cmd
+set "is_opt=0"
+if "!arg:~0,9!"=="--prefix=" (
+    set "PREFIX=!arg:~9!"
+    set "is_opt=1"
+)
+if "!arg:~0,13!"=="--log-format=" (
+    set "LIBSCRIPT_LOG_FORMAT=!arg:~13!"
+    set "is_opt=1"
+)
+if "!arg:~0,12!"=="--log-level=" (
+    set "LIBSCRIPT_LOG_LEVEL=!arg:~12!"
+    set "is_opt=1"
+)
+if "!arg:~0,11!"=="--log-file=" (
+    set "LIBSCRIPT_LOG_FILE=!arg:~11!"
+    set "is_opt=1"
+)
+if "!arg:~0,10!"=="--secrets=" (
+    set "LIBSCRIPT_SECRETS=!arg:~10!"
+    set "is_opt=1"
+)
+
+if "!is_opt!"=="1" (
+    shift
+    goto :opt_loop
+)
+
+:run_cmd
 set "cmd=%~1"
 if "%cmd%"=="" goto show_help
 if /i "%cmd%"=="--help" goto show_help
@@ -349,6 +384,9 @@ echo Options:
 echo   --help, -h, /?              Show this help text
 echo   --version, -v               Show version
 echo   --prefix=^<dir^>              Set local installation prefix
+echo   --log-format=^<text^|json^>      Set log output format
+echo   --log-level=^<0-4^>             Set minimum log level (0=DEBUG, 1=INFO, etc)
+echo   --log-file=^<path^>             Set a file to mirror all logs to
 echo   --secrets=^<dir^|url^>         Save generated secrets to a directory or OpenBao/Vault URL
 echo.
 exit /b 0

@@ -1,0 +1,12 @@
+{
+  "name": "CPANM",
+  "provides": [
+    "cpanm"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "cpanm",
+  "description": "Bootstrap module for `cpanm` (CPAN Minus - Perl).",
+  "category": "package-manager"
+}

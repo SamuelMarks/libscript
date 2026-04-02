@@ -39,6 +39,8 @@ RUST_INSTALL_METHOD="${RUST_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-s
 if [ "${RUST_INSTALL_METHOD}" = 'system' ]; then
   depends 'rust'
 else
-  depends 'curl'
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain "${RUST_VERSION:-stable}" -y
+  INSTALL_SH=$(mktemp)
+  libscript_download 'https://sh.rustup.rs' "${INSTALL_SH}"
+  sh "${INSTALL_SH}" -s -- --default-toolchain "${RUST_VERSION:-stable}" -y
+  rm -f "${INSTALL_SH}"
 fi

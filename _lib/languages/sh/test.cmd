@@ -1,2 +1,2 @@
 @echo off
-echo Hello World
+call "%~dp0\..\..\_common\test_base.cmd" :assert_version "sh" "."

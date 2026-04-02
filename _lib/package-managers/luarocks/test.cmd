@@ -1,8 +1,2 @@
 @echo off
-where luarocks >nul 2>nul
-if %ERRORLEVEL% EQU 0 (
-  luarocks --version || echo luarocks found
-) else (
-  echo luarocks skipped (not found)
-)
-exit /b 0
+call "%~dp0\..\..\_common\test_base.cmd" :assert_version "luarocks" "."

@@ -1,5 +1,8 @@
 {
   "name": "RUBY",
+  "title": "Ruby Runtime",
+  "description": "A dynamic, open source programming language with a focus on simplicity and productivity.",
+  "category": "languages",
   "provides": [
     "runtime",
     "ruby",

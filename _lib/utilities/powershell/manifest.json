@@ -1,0 +1,13 @@
+{
+  "name": "POWERSHELL",
+  "title": "PowerShell",
+  "description": "A cross-platform task automation solution made up of a command-line shell, a scripting language, and a configuration management framework.",
+  "category": "utility",
+  "provides": [
+    "powershell",
+    "pwsh"
+  ],
+  "os_whitelist": [
+    "all"
+  ]
+}

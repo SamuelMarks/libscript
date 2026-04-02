@@ -56,16 +56,12 @@ else
   mkdir -p "${bin_dir}"
   
   echo "Downloading NATS from ${dl_url}..."
-  if command -v curl >/dev/null 2>&1; then
-    curl -L -f -o "/tmp/${tar_name}.tar.gz" "${dl_url}"
-  else
-    echo "[ERROR] curl is required but not found."
-    exit 1
-  fi
+  NATS_TARBALL=$(mktemp)
+  libscript_download "${dl_url}" "${NATS_TARBALL}"
   
-  tar -xzf "/tmp/${tar_name}.tar.gz" -C "/tmp/"
+  tar -xzf "${NATS_TARBALL}" -C "/tmp/"
   mv "/tmp/${tar_name}/nats-server" "${bin_dir}/nats-server"
-  rm -rf "/tmp/${tar_name}.tar.gz" "/tmp/${tar_name}"
+  rm -rf "${NATS_TARBALL}" "/tmp/${tar_name}"
   
   chmod +x "${bin_dir}/nats-server"
   # Symlink to nats for easier access if preferred, though actual daemon is nats-server

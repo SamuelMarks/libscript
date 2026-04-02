@@ -1,2 +1,3 @@
 @echo off
-call "%~dp0\..\..\..\_lib\_common\cli.cmd" %*
+echo [ERROR] Kubernetes The Hard Way is not supported on Windows.
+exit /b 1

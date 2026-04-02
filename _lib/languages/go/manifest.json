@@ -1,5 +1,8 @@
 {
   "name": "GO",
+  "title": "Go Toolchain",
+  "description": "An open-source programming language that makes it easy to build simple, reliable, and efficient software.",
+  "category": "languages",
   "provides": [
     "compiler",
     "go"

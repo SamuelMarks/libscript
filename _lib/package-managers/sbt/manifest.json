@@ -1,0 +1,12 @@
+{
+  "name": "SBT",
+  "provides": [
+    "sbt"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "sbt",
+  "description": "Bootstrap module for the `sbt` package manager.",
+  "category": "package-manager"
+}

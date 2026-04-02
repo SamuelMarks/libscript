@@ -1,0 +1,12 @@
+{
+  "name": "REBAR3",
+  "provides": [
+    "rebar3"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "rebar3",
+  "description": "Bootstrap module for the `rebar3` package manager.",
+  "category": "package-manager"
+}

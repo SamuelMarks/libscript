@@ -1,103 +1,94 @@
 # Usage Guide
 
-This guide provides basic instructions for utilizing the LibScript CLI to provision software and generate artifacts.
+LibScript provides a unified interface for provisioning software across Linux, Windows, macOS, and BSD. All commands have strict parity across `./libscript.sh` (POSIX) and `libscript.cmd` (Windows).
 
 ## Native Component Installation
 
-To install a tool natively, bypassing containerization, use the `install` subcommand:
+Install individual components with optional versioning:
 
 ```sh
+# POSIX
 ./libscript.sh install nodejs 20
-./libscript.sh install rust latest
+./libscript.sh install postgres latest
+
+# Windows
+libscript.cmd install python 3.11
 ```
 
-## Declarative Stack Building
+## ☸️ Declarative Stack Provisioning
 
-You can define a stack's requirements in a `libscript.json` file. The framework will resolve the necessary inter-component dependencies.
+For complex stacks, LibScript uses a declarative `libscript.json` and a built-in resolution engine.
 
-Example `libscript.json` for a basic web stack:
+### Defining Your Stack
+
+Create a `libscript.json` to define your dependencies, including version constraints like `>16`, `~20`, or specific version aliases.
 
 ```json
 {
   "deps": {
-    "httpd": "latest",
-    "mariadb": "latest",
-    "php": "8.2"
+    "postgres": ">14",
+    "valkey": "latest",
+    "python": "3.11"
   }
 }
 ```
 
-To provision the stack natively:
+### Provisioning Locally
+
+Use the `install-deps` command to automatically resolve and install the entire stack.
 
 ```sh
-./libscript.sh apply
+# This resolves constraints, downloads binaries, and runs setup for all components
+./libscript.sh install-deps
 ```
 
-## Artifact Generation
+*Note: The resolution engine ensures that provided capabilities (e.g., "database") and port conflicts are addressed before installation begins.*
 
-To generate artifacts from a component or stack, utilize the `package_as` subcommand.
+## 🏗️ Artifact Generation (`package_as`)
 
-Generate a Dockerfile:
+Generate production-ready artifacts from your current stack definition.
 
+### Generate a Dockerfile
 ```sh
 ./libscript.sh package_as docker
 ```
 
-Generate a Windows installer (requires appropriate toolchain if built on Linux):
-
+### Generate a Windows Installer (.msi)
 ```sh
+# This transforms your shell logic into a WiX-based MSI installer
 ./libscript.sh package_as msi
 ```
 
-## Cloud Provisioning
+## 🌍 Cloud Orchestration
 
-LibScript includes a unified `cloud` wrapper for managing infrastructure across major cloud providers (AWS, Azure, GCP).
-
-### Quickstart
+LibScript wraps official cloud vendor CLIs into a unified, idempotent interface.
 
 ```sh
 # Create a Jump-box on AWS
-./libscript.sh cloud aws jumpbox create my-jumpbox ami-0c55b159cbfafe1f0
+./libscript.sh cloud aws jumpbox create my-jumpbox
 
-# List all resources created by LibScript across all clouds
+# Provision a 5-node group on GCP pre-installed with your stack
+./libscript.sh cloud gcp node-group create web-tier 5 \
+  --bootstrap "./libscript.sh install-deps"
+```
+
+### Resource Cleanup
+LibScript automatically tags all cloud resources (`ManagedBy=LibScript`) for safe deprovisioning.
+```sh
+# List all managed resources across all providers
 ./libscript.sh cloud list-managed
 
-# Safety-first cleanup (preserves storage buckets)
+# Safe cleanup (leaves data buckets untouched)
 ./libscript.sh cloud cleanup
-
-# Full cleanup (purges everything including storage)
-./libscript.sh cloud cleanup --force-buckets
 ```
 
-### Dry Run Testing
+## 🛠️ Service Management
 
-You can test your cloud commands without real credentials by setting `DRY_RUN=true`.
+All components support standard lifecycle commands:
 
 ```sh
-export DRY_RUN=true
-./libscript.sh cloud gcp storage list
+./libscript.sh start postgres
+./libscript.sh status nodejs
+./libscript.sh logs -f valkey
+./libscript.sh stop all
 ```
-
-## PaaS & High-Level Orchestration
-
-LibScript can orchestrate complex stacks involving multiple nodes and scheduled tasks.
-
-### Node-Group Provisioning
-Create a loose collection of nodes bootstrapped with LibScript components.
-
-```sh
-# Provision 5 independent nodes with Postgres pre-installed
-./libscript.sh cloud aws node-group create pg-nodes 5 ami-ubuntu-lts my-vpc \
-  --bootstrap "libscript.sh install postgres latest"
-```
-
-### Scheduled Maintenance (Cron)
-Set up recurring tasks (like backups) across your managed nodes.
-
-```sh
-# Schedule 2-hour backups to S3 on a specific node
-./libscript.sh cloud aws cron create pg-nodes-1 '0 */2 * * *' \
-  "libscript.sh backup-s3 run my-backups"
-```
-
-For advanced configuration options, see the specific module documentation in `_lib/cloud/DOCS.md`.

@@ -48,11 +48,12 @@ previous_wd="$(pwd)"
 
 cd kubernetes-the-hard-way
 ARCH="$(dpkg --print-architecture)"
-wget -q --show-progress \
-  --https-only \
-  --timestamping \
-  -P 'downloads' \
-  -i 'downloads-'"${ARCH}"'.txt'
+mkdir -p 'downloads'
+while read -r url || [ -n "$url" ]; do
+  [ -z "$url" ] && continue
+  url=$(printf '%s' "$url" | tr -d '\r')
+  libscript_download "$url" "downloads/$(basename "$url")"
+done < "downloads-${ARCH}.txt"
 
 mkdir -p 'downloads/client' 'downloads/cni-plugins' 'downloads/controller' 'downloads/worker'
 tar -xvf 'downloads/crictl-v1.32.0-linux-'"${ARCH}"'.tar.gz' \

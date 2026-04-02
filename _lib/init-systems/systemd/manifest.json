@@ -1,0 +1,12 @@
+{
+  "name": "systemd",
+  "provides": [
+    "systemd"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "Systemd (Component)",
+  "description": "**Purpose**: This document provides context and technical details for the `systemd` component (part of `_daemon`) within the LibScript ecosystem. This component configures and manages systemd unit files, enabling applications to run as standard background services on compatible Linux distributions.",
+  "category": "init-systems"
+}

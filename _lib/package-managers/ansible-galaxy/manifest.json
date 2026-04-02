@@ -1,0 +1,12 @@
+{
+  "name": "ANSIBLE_GALAXY",
+  "provides": [
+    "ansible-galaxy"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "ansible-galaxy",
+  "description": "Bootstrap module for the `ansible-galaxy` package manager.",
+  "category": "package-manager"
+}

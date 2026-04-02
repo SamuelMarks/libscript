@@ -1,0 +1,12 @@
+{
+  "name": "MAS",
+  "provides": [
+    "mas"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "mas",
+  "description": "Bootstrap module for the `mas` package manager (Mac App Store command line interface).",
+  "category": "package-manager"
+}

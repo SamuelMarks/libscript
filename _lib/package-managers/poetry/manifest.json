@@ -1,6 +1,14 @@
 {
-  "name": "poetry",
-  "provides": ["package-manager", "poetry"],
-  "os_whitelist": ["all"],
-  "os_blacklist": []
+  "name": "POETRY",
+  "provides": [
+    "package-manager",
+    "poetry"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "title": "poetry",
+  "description": "Bootstrap script for [Poetry](https://python-poetry.org/), a tool for Python dependency management and packaging. Requires Python 3 to be installed.",
+  "category": "package-manager"
 }

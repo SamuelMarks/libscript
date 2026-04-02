@@ -10,27 +10,15 @@ $ListenPort = if ($env:WORDPRESS_LISTEN) { $env:WORDPRESS_LISTEN } else { "80" }
 $DbEngine = if ($env:WORDPRESS_DB_ENGINE) { $env:WORDPRESS_DB_ENGINE } else { "mariadb" }
 $WebServer = if ($env:WORDPRESS_WEBSERVER) { $env:WORDPRESS_WEBSERVER } else { "iis" }
 
-Write-Host "Installing dependencies for WordPress ($WebServer)..."
-# In LibScript Windows, dependencies should be explicitly resolved via CLI or here
-# We assume PHP and DB are installed or we install them via winget
-if (-not (Get-Command "php" -ErrorAction SilentlyContinue)) {
-    Write-Host "PHP not found. Attempting to install via Winget..."
-    winget install --silent --force --id=PHP.PHP --accept-package-agreements --accept-source-agreements
-}
+log_info "Installing dependencies for WordPress ($WebServer)..."
+depends @("PHP.PHP")
 
 if ($DbEngine -eq "sqlite") {
-    # SQLite is usually built into PHP or handled without extra services
-    Write-Host "Using SQLite..."
+    log_info "Using SQLite..."
 } elseif ($DbEngine -match "postgres") {
-    if (-not (Get-Command "psql" -ErrorAction SilentlyContinue)) {
-        Write-Host "PostgreSQL not found. Attempting to install via Winget..."
-        winget install --silent --force --id=PostgreSQL.PostgreSQL --accept-package-agreements --accept-source-agreements
-    }
+    depends @("PostgreSQL.PostgreSQL")
 } else {
-    if (-not (Get-Command "mysql" -ErrorAction SilentlyContinue)) {
-        Write-Host "MariaDB not found. Attempting to install via Winget..."
-        winget install --silent --force --id=MariaDB.Server --accept-package-agreements --accept-source-agreements
-    }
+    depends @("MariaDB.Server")
 }
 
 if ($WebServer -eq "iis") {
@@ -45,7 +33,7 @@ if ($WebServer -eq "iis") {
     }
 }
 
-Write-Host "Downloading WordPress ($WordpressVersion)..."
+log_info "Downloading WordPress ($WordpressVersion)..."
 if (-not (Test-Path $WwwRoot)) {
     New-Item -ItemType Directory -Force -Path $WwwRoot | Out-Null
 }
@@ -54,22 +42,22 @@ $tmpZip = Join-Path $env:TEMP "wordpress_$(Get-Random).zip"
 $tmpExtDir = Join-Path $env:TEMP "wp_extract_$(Get-Random)"
 $dlUrl = if ($WordpressVersion -eq "latest") { "https://wordpress.org/latest.zip" } else { "https://wordpress.org/wordpress-$WordpressVersion.zip" }
 
-Invoke-WebRequest -Uri $dlUrl -OutFile $tmpZip
+libscript_download $dlUrl $tmpZip
 New-Item -ItemType Directory -Force -Path $tmpExtDir | Out-Null
 Expand-Archive -Path $tmpZip -DestinationPath $tmpExtDir -Force
 Copy-Item -Path (Join-Path $tmpExtDir "wordpress\*") -Destination $WwwRoot -Recurse -Force
 Remove-Item -Path $tmpZip -Force
 Remove-Item -Path $tmpExtDir -Recurse -Force
 
-Write-Host "Configuring Database..."
+log_info "Configuring Database..."
 if ($DbEngine -eq "sqlite") {
     $dbFile = Join-Path $WwwRoot "wp-content\db.php"
     if (-not (Test-Path $dbFile)) {
         $muDir = Join-Path $WwwRoot "wp-content\mu-plugins"
         New-Item -ItemType Directory -Force -Path $muDir | Out-Null
         $tmpSqlite = Join-Path $env:TEMP "sqlite-integration.zip"
-        $tmpSqliteDir = Join-Path $env:TEMP "sqlite-integration"
-        Invoke-WebRequest -Uri "https://downloads.wordpress.org/plugin/sqlite-database-integration.zip" -OutFile $tmpSqlite
+        $dlSqliteUrl = "https://downloads.wordpress.org/plugin/sqlite-database-integration.zip"
+        libscript_download $dlSqliteUrl $tmpSqlite
         Expand-Archive -Path $tmpSqlite -DestinationPath (Join-Path $WwwRoot "wp-content\plugins") -Force
         Copy-Item -Path (Join-Path $WwwRoot "wp-content\plugins\sqlite-database-integration\db.copy") -Destination $dbFile -Force
         Remove-Item -Path $tmpSqlite -Force
@@ -78,18 +66,19 @@ if ($DbEngine -eq "sqlite") {
         $content = $content -replace '\{SQLITE_DB_DROPIN_VERSION\}', '1.0.0'
         $content = $content -replace '\{SQLITE_PLUGIN\}', 'sqlite-database-integration/load.php'
         Set-Content -Path $dbFile -Value $content
-        Write-Host "SQLite database integration plugin installed."
+        log_success "SQLite database integration plugin installed."
     }
 } elseif ($DbEngine -match "postgres") {
     $dbFile = Join-Path $WwwRoot "wp-content\db.php"
     if (-not (Test-Path $dbFile)) {
         $tmpPg = Join-Path $env:TEMP "pg4wp.zip"
-        Invoke-WebRequest -Uri "https://downloads.wordpress.org/plugin/postgresql-for-wordpress.zip" -OutFile $tmpPg
+        $dlPgUrl = "https://downloads.wordpress.org/plugin/postgresql-for-wordpress.zip"
+        libscript_download $dlPgUrl $tmpPg
         Expand-Archive -Path $tmpPg -DestinationPath (Join-Path $WwwRoot "wp-content") -Force
         Move-Item -Path (Join-Path $WwwRoot "wp-content\postgresql-for-wordpress\pg4wp") -Destination (Join-Path $WwwRoot "wp-content") -Force
         Copy-Item -Path (Join-Path $WwwRoot "wp-content\pg4wp\db.php") -Destination $dbFile -Force
         Remove-Item -Path $tmpPg -Force
-        Write-Host "PostgreSQL drop-in installed."
+        log_success "PostgreSQL drop-in installed."
     }
     try {
         $pgCmd = "CREATE DATABASE `"$DbName`"; CREATE USER `"$DbUser`" WITH ENCRYPTED PASSWORD '$DbPass'; GRANT ALL PRIVILEGES ON DATABASE `"$DbName`" TO `"$DbUser`";"

@@ -1,7 +1,12 @@
 {
   "name": "FLUENTBIT",
+  "title": "Fluent Bit",
+  "description": "A super fast, lightweight, and highly scalable logging and metrics processor and forwarder.",
+  "category": "logging",
   "provides": [
     "fluentbit",
+    "logging",
+    "metrics",
     "server"
   ],
   "conflicts": [],
@@ -9,5 +14,7 @@
     "all"
   ],
   "os_blacklist": [],
-  "ports": []
+  "ports": [
+    2020
+  ]
 }

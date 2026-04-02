@@ -1,5 +1,8 @@
 {
   "name": "ZIG",
+  "title": "Zig Toolchain",
+  "description": "A general-purpose programming language and toolchain for maintaining robust, optimal, and reusable software.",
+  "category": "languages",
   "provides": [
     "zig",
     "toolchain"

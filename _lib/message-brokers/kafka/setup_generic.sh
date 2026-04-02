@@ -45,15 +45,11 @@ else
   mkdir -p "${PREFIX}"
 
   echo "Downloading Kafka from ${dl_url}..."
-  if command -v curl >/dev/null 2>&1; then
-    curl -L -f -o "/tmp/kafka.tgz" "${dl_url}"
-  else
-    echo "[ERROR] curl is required but not found."
-    exit 1
-  fi
+  KAFKA_TARBALL=$(mktemp)
+  libscript_download "${dl_url}" "${KAFKA_TARBALL}"
 
-  tar -xzf "/tmp/kafka.tgz" -C "${PREFIX}" --strip-components=1
-  rm -f "/tmp/kafka.tgz"
+  tar -xzf "${KAFKA_TARBALL}" -C "${PREFIX}" --strip-components=1
+  rm -f "${KAFKA_TARBALL}"
 
   echo "Kafka installed to ${PREFIX}"
 

@@ -1,27 +1,27 @@
 # Roadmap
 
-## Phase 1: Core Stability & Granular Management (Completed)
+## Phase 1: Core Stability & Decentralized Management (Completed)
 - [x] Zero-dependency POSIX and Windows core.
-- [x] Granular version manager for languages and services.
-- [x] Dependency resolution engine.
+- [x] "Every-Thing-is-a-Package-Manager" decentralized architecture.
+- [x] Automated stack resolution engine with version constraints.
 - [x] Support for major Windows and Linux installer formats.
 
-## Phase 2: Multicloud Orchestration (Current)
+## Phase 2: Multicloud PaaS Orchestration (Current)
 - [x] Unified `cloud` wrapper for AWS, Azure, and GCP.
-- [x] Resource tagging and filtered cleanup.
-- [x] Independent `node-group` provisioning.
-- [x] Automated cloud-native bootstrapping.
-- [x] Basic `cron` resource management.
+- [x] Resource tagging and filtered cleanup for managed stacks.
+- [x] Node-group provisioning with automated stack bootstrapping.
+- [x] Declarative PaaS lifecycle management via `libscript.json`.
+- [x] Sidecar service injection (Logging, Monitoring).
 
-## Phase 3: Advanced PaaS Features (Next)
-- [ ] High-availability cluster templates (e.g., 5-node Postgres).
-- [ ] Automated load balancer configuration.
-- [ ] Encrypted cross-node networking.
-- [ ] Git-driven deployment (`libscript deploy`).
-- [ ] Persistent volume management across providers.
+## Phase 3: Advanced PaaS & Cluster Mesh (Next)
+- [ ] High-availability cluster orchestration blueprints.
+- [ ] Automated global load balancer and reverse proxy configuration.
+- [ ] Encrypted cross-node mesh networking (WireGuard).
+- [ ] Git-driven deployment workflows (`libscript deploy`).
+- [ ] Cross-cloud persistent volume and state management.
 
 ## Phase 4: UI & Observability
-- [ ] Terminal User Interface (TUI) for stack management.
-- [ ] Lightweight Web Dashboard.
-- [ ] Integrated log aggregation.
-- [ ] Real-time resource usage monitoring.
+- [ ] Terminal User Interface (TUI) for stack and PaaS management.
+- [ ] Lightweight, decentralized Web Dashboard.
+- [ ] Integrated log aggregation and health monitoring.
+- [ ] Real-time multicloud resource cost and usage reporting.

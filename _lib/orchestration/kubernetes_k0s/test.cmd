@@ -1,2 +1,2 @@
 @echo off
-echo k0s is linux only
+call "%~dp0\..\..\_common\test_base.cmd" :assert_version "kubernetes_k0s" "."

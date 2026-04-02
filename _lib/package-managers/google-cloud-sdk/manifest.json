@@ -1,0 +1,12 @@
+{
+  "name": "GOOGLE_CLOUD_SDK",
+  "provides": [
+    "google-cloud-sdk"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "category": "package-manager",
+  "title": "Google Cloud Sdk",
+  "description": "Bootstrap module for the `google-cloud-sdk` package manager."
+}

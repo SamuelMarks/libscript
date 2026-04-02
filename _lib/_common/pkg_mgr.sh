@@ -28,6 +28,9 @@ _PKG_MGR_DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${_PKG_MGR_DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 
+# Source logging
+. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+
 #DIR="$( dirname -- "$( readlink -nf -- "${0}" )")"
 
 for lib in '_lib/_common/os_info.sh' '_lib/_common/priv.sh' '_lib/_common/pkg_mapper.sh'; do
@@ -89,7 +92,7 @@ detect_pkg_mgr() {
         if cmd_avail pkgx; then PKG_MGR='pkgx'; export PKG_MGR; return; fi
       fi
     fi
-    >&2 printf 'Error: No supported package manager found\n'
+    log_error 'No supported package manager found'
     exit 1
   fi
   export PKG_MGR
@@ -110,7 +113,7 @@ is_installed() {
     'swupd')              swupd bundle-list | grep -qx "${pkg}" ;;
     'xbps')               xbps-query -Rs '^'"${pkg}"'$' | grep -q '\[installed\]' ;;
     *)
-      >&2 printf 'Error: is_installed function not implemented for %s\n' "${PKG_MGR}"
+      log_error "is_installed function not implemented for ${PKG_MGR}"
       exit 1 ;;
   esac
 }
@@ -119,18 +122,18 @@ depends() {
   pkgs_to_install=''
   for pkg in "$@"; do
     mapped_pkgs="$(map_package "${pkg}")" || {
-      >&2 printf 'Warning: Package "%s" not available via package manager "%s"\n' "${pkg}" "${PKG_MGR}"
+      log_warn "Package \"${pkg}\" not available via package manager \"${PKG_MGR}\""
       return 1
     }
     for mapped_pkg in ${mapped_pkgs}; do
-      # >&2 printf 'Checking if package is installed (%s): %s\n' "${PKG_MGR}" "${mapped_pkg}"
+      # log_info "Checking if package is installed (${PKG_MGR}): ${mapped_pkg}"
       if ! is_installed "${mapped_pkg}"; then
         pkgs_to_install="${pkgs_to_install:+"${pkgs_to_install}" }${mapped_pkg}"
       fi
     done
   done
   if [ -n "${pkgs_to_install}" ]; then
-    # >&2 printf 'Installing packages (%s): %s\n' "${PKG_MGR}" "${pkgs_to_install}"
+    # log_info "Installing packages (${PKG_MGR}): ${pkgs_to_install}"
     case "${PKG_MGR}" in
       'apt-get')
         export DEBIAN_FRONTEND='noninteractive'
@@ -151,7 +154,7 @@ depends() {
       'yum')    priv  yum install -y        ${pkgs_to_install} ;;
       'zypper') priv  zypper install -y     ${pkgs_to_install} ;;
       *)
-        >&2 printf 'Error: depends function not implemented for %s\n' "${PKG_MGR}"
+        log_error "depends function not implemented for ${PKG_MGR}"
         exit 1
         ;;
     esac
@@ -162,12 +165,32 @@ if [ "${PKG_MGR-}" ]; then
   detect_pkg_mgr
 fi
 
-# Caching downloader hook
-libscript_fetch() {
+# Unified Caching Downloader
+libscript_download() {
   url="$1"
   dest="${2:-}"
-  expected_checksum="${3:-}"
-  # Optional: allow override of download dir or fallback to global cache dir
+  provided_checksum="${3:-}"
+  
+  if [ -z "$dest" ]; then dest="$(basename "$url")"; fi
+  
+  # 1. Checksum Resolution
+  checksum_db="${LIBSCRIPT_ROOT_DIR}/checksums.txt"
+  expected_checksum="$provided_checksum"
+  if [ -z "$expected_checksum" ] && [ -f "$checksum_db" ]; then
+    expected_checksum="$(grep -F "$url" "$checksum_db" | head -n 1 | awk '{print $2}')"
+  fi
+  
+  # 2. Aria2 Export Mode
+  if [ -n "${LIBSCRIPT_ARIA2_EXPORT_FILE:-}" ]; then
+    printf "%s\n" "$url" >> "$LIBSCRIPT_ARIA2_EXPORT_FILE"
+    printf "  out=%s\n" "$(basename "$dest")" >> "$LIBSCRIPT_ARIA2_EXPORT_FILE"
+    if [ -n "$expected_checksum" ]; then
+      printf "  checksum=sha-256=%s\n" "${expected_checksum#sha-256=}" >> "$LIBSCRIPT_ARIA2_EXPORT_FILE"
+    fi
+    return 0
+  fi
+
+  # 3. Cache Path Resolution
   dl_dir="${DOWNLOAD_DIR:-}"
   cache_dir="${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache/downloads}"
 
@@ -182,204 +205,111 @@ libscript_fetch() {
 
   mkdir -p -- "$dl_dir"
   filename="$(basename "$url")"
-  # Sometimes urls end in text/scripts without nice extensions. This is basic caching.
-cache_file="$dl_dir/$filename"
+  cache_file="$dl_dir/$filename"
 
+  # 4. Cache Check & Download
+  download_needed=1
   if [ -f "$cache_file" ]; then
-    >&2 printf '[CACHED] %s\n' "$url"
-  else
-    >&2 printf '[DOWNLOADING] %s\n' "$url"
-    if ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
-      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/curl/setup.sh" ]; then
-        "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/curl/setup.sh"
-      elif [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/wget/setup.sh" ]; then
-        "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/wget/setup.sh"
-      fi
+    log_info "[CACHED] ${url}"
+    download_needed=0
+  fi
+
+  if [ "$download_needed" -eq 1 ]; then
+    log_info "[DOWNLOADING] ${url}"
+    
+    # Ensure tools are available
+    if ! command -v aria2c >/dev/null 2>&1 && ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
+       [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/curl/setup.sh" ] && "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/curl/setup.sh"
     fi
 
-    if command -v curl >/dev/null 2>&1; then
-      curl -#L "$url" -o "$cache_file"
-    elif command -v wget >/dev/null 2>&1; then
-      wget -q --show-progress -O "$cache_file" "$url"
-    else
-      >&2 printf 'Error: curl or wget required.\n'
+    download_success=0
+    
+    # Strategy A: aria2c
+    if [ "$download_success" -eq 0 ] && command -v aria2c >/dev/null 2>&1; then
+      if aria2c -d "$dl_dir" -o "$filename" --allow-overwrite=true "$url"; then download_success=1; fi
+    fi
+
+    # Strategy B: curl
+    if [ "$download_success" -eq 0 ] && command -v curl >/dev/null 2>&1; then
+      if curl -#fL -o "$cache_file" "$url"; then download_success=1; fi
+    fi
+
+    # Strategy C: wget
+    if [ "$download_success" -eq 0 ] && command -v wget >/dev/null 2>&1; then
+      if wget -q --show-progress -O "$cache_file" "$url"; then download_success=1; fi
+    fi
+
+    # Strategy D: nc/tcp fallbacks (HTTP only)
+    if [ "$download_success" -eq 0 ] && echo "$url" | grep -q "^http://"; then
+       host="${url#*://}"; path="/${host#*/}"; host="${host%%/*}"
+       if command -v nc >/dev/null 2>&1; then
+         printf "GET %s HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n" "$path" "$host" | nc "$host" 80 > "${cache_file}.tmp"
+         { while IFS= read -r line; do line="$(echo "$line" | tr -d '\r\n')"; [ -z "$line" ] && break; done; cat; } < "${cache_file}.tmp" > "$cache_file"
+         rm -f "${cache_file}.tmp"
+         download_success=1
+       elif [ -e /dev/tcp/"$host"/80 ]; then
+         exec 3<>/dev/tcp/"$host"/80
+         printf "GET %s HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n" "$path" "$host" >&3
+         { while IFS= read -r line <&3; do line="$(echo "$line" | tr -d '\r\n')"; [ -z "$line" ] && break; done; cat <&3; } > "$cache_file"
+         exec 3<&-
+         download_success=1
+       fi
+    fi
+
+    if [ "$download_success" -eq 0 ]; then
+      log_error "Failed to download ${url}"
       return 1
     fi
 
-    # Check filesize > 0
-  fsize=0
-    if command -v wc >/dev/null 2>&1; then
-      fsize=$(wc -c < "$cache_file" | tr -d ' ')
-    elif command -v stat >/dev/null 2>&1; then
-      # BSD/macOS stat vs GNU stat
-      fsize=$(stat -c%s "$cache_file" 2>/dev/null || stat -f%z "$cache_file" 2>/dev/null || echo "1")
-    fi
+    # Verify size
+    fsize=$(wc -c < "$cache_file" | tr -d ' ' 2>/dev/null || stat -c%s "$cache_file" 2>/dev/null || stat -f%z "$cache_file" 2>/dev/null || echo "1")
     if [ "$fsize" = "0" ]; then
-      >&2 printf 'Error: Downloaded file %s is empty.\n' "$cache_file"
+      log_error "Downloaded file ${cache_file} is empty."
       rm -f "$cache_file"
       return 1
     fi
   fi
 
-  # Checksum validation
-  if [ -n "$expected_checksum" ]; then
-  actual_checksum=""
+  # 5. Checksum Validation
+  if [ -n "$expected_checksum" ] && [ "$expected_checksum" != "SKIP" ]; then
+    actual_checksum=""
+    clean_expected="${expected_checksum#sha-256=}"
     if command -v sha256sum >/dev/null 2>&1; then
       actual_checksum=$(sha256sum "$cache_file" | awk '{print $1}')
     elif command -v shasum >/dev/null 2>&1; then
       actual_checksum=$(shasum -a 256 "$cache_file" | awk '{print $1}')
-    else
-      >&2 printf 'Warning: sha256sum/shasum not found, skipping checksum validation.\n'
     fi
-    if [ -n "$actual_checksum" ] && [ "$actual_checksum" != "$expected_checksum" ]; then
-      >&2 printf 'Error: Checksum mismatch for %s. Expected: %s, Got: %s\n' "$cache_file" "$expected_checksum" "$actual_checksum"
-      rm -f "$cache_file"
-      return 1
+    
+    if [ -n "$actual_checksum" ]; then
+      if [ "$actual_checksum" != "$clean_expected" ]; then
+        log_error "Checksum mismatch for ${url}. Expected: ${clean_expected}, Got: ${actual_checksum}"
+        rm -f "$cache_file"
+        return 1
+      fi
+    fi
+  elif [ -n "$cache_file" ] && [ "${LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB:-0}" != "1" ] && [ -f "$cache_file" ]; then
+    # Auto-populate checksum DB if missing
+    if command -v sha256sum >/dev/null 2>&1; then
+       echo "$url $(sha256sum "$cache_file" | awk '{print $1}')" >> "$checksum_db"
     fi
   fi
   
-  if [ -n "$dest" ]; then
+  # 6. Final Placement
+  if [ -n "$dest" ] && [ "$dest" != "$cache_file" ]; then
+    mkdir -p "$(dirname "$dest")"
     cp "$cache_file" "$dest"
   fi
 }
 
-
-libscript_download() {
-  url="$1"
-  out_file="$2"
-  provided_checksum="${3:-}"
-  
-  if [ -z "$out_file" ]; then out_file="$(basename "$url")"; fi
-  
-  # Ensure LIBSCRIPT_CHECKSUM_DB is defined
-  checksum_db="${LIBSCRIPT_ROOT_DIR}/checksums.txt"
-  
-  expected_checksum="$provided_checksum"
-  if [ -z "$expected_checksum" ] && [ -f "$checksum_db" ]; then
-    # try to find the checksum
-    expected_checksum="$(grep -F "$url" "$checksum_db" | head -n 1 | awk '{print $2}')"
-  fi
-  
-  # if --export-aria2-downloads is set, just write to it and return
-  if [ -n "${LIBSCRIPT_ARIA2_EXPORT_FILE:-}" ]; then
-    printf "%s\n" "$url" >> "$LIBSCRIPT_ARIA2_EXPORT_FILE"
-    printf "  out=%s\n" "$(basename "$out_file")" >> "$LIBSCRIPT_ARIA2_EXPORT_FILE"
-    if [ -n "$expected_checksum" ]; then
-      printf "  checksum=sha-256=%s\n" "${expected_checksum#sha-256=}" >> "$LIBSCRIPT_ARIA2_EXPORT_FILE"
-    fi
-    return 0
-  fi
-  
-  download_success=0
-
-  # 1. aria2c
-  if [ "$download_success" -eq 0 ] && command -v aria2c >/dev/null 2>&1; then
-    # aria2c can fail if directory exists but is a file, handle normally
-    if aria2c -d "$(dirname "$out_file")" -o "$(basename "$out_file")" --allow-overwrite=true "$url"; then
-      download_success=1
-    fi
-  fi
-
-  # 2. curl
-  if [ "$download_success" -eq 0 ] && ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
-    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/curl/setup.sh" ]; then
-      "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/curl/setup.sh"
-    elif [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/wget/setup.sh" ]; then
-      "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/wget/setup.sh"
-    fi
-  fi
-
-  if [ "$download_success" -eq 0 ] && command -v curl >/dev/null 2>&1; then
-    if curl -fL -o "$out_file" "$url"; then
-      download_success=1
-    fi
-  fi
-
-  # 3. wget
-  if [ "$download_success" -eq 0 ] && command -v wget >/dev/null 2>&1; then
-    if wget -O "$out_file" "$url"; then
-      download_success=1
-    fi
-  fi
-
-  # 4. nc (netcat) fallback for HTTP (does not support HTTPS natively without OpenSSL, but we try)
-  if [ "$download_success" -eq 0 ] && command -v nc >/dev/null 2>&1; then
-  host="${url#*://}"
-  path="/${host#*/}"
-    host="${host%%/*}"
-    if echo "$url" | grep -q "^http://"; then
-      printf "GET %s HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n" "$path" "$host" | nc "$host" 80 > "${out_file}.tmp"
-      # safely strip headers
-      {
-        while IFS= read -r line; do
-          line="$(echo "$line" | tr -d '\r\n')"
-          [ -z "$line" ] && break
-        done
-        cat
-      } < "${out_file}.tmp" > "$out_file"
-      rm -f "${out_file}.tmp"
-      download_success=1
-    fi
-  fi
-
-  # 5. /dev/tcp native bash fallback
-  if [ "$download_success" -eq 0 ]; then
-  host="${url#*://}"
-  path="/${host#*/}"
-    host="${host%%/*}"
-    if echo "$url" | grep -q "^http://"; then
-      # shellcheck disable=SC3025
-      if exec 3<>/dev/tcp/"$host"/80 2>/dev/null; then
-        printf "GET %s HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n" "$path" "$host" >&3
-        {
-          while IFS= read -r line <&3; do
-            line="$(echo "$line" | tr -d '\r\n')"
-            [ -z "$line" ] && break
-          done
-          cat <&3
-        } > "$out_file"
-        exec 3<&-
-        download_success=1
-      fi
-    fi
-  fi
-
-  if [ "$download_success" -eq 0 ]; then
-    echo "Error: Failed to download $url via aria2c, curl, wget, nc, or /dev/tcp." >&2
-    return 1
-  fi
-  
-  # Checksum handling
-  # Compute sha256
-  actual_checksum=""
-  if command -v sha256sum >/dev/null 2>&1; then
-    actual_checksum="$(sha256sum "$out_file" | awk '{print $1}')"
-  elif command -v shasum >/dev/null 2>&1; then
-    actual_checksum="$(shasum -a 256 "$out_file" | awk '{print $1}')"
-  fi
-  
-  if [ -n "$actual_checksum" ]; then
-  stripped_expected="${expected_checksum#sha-256=}"
-    if [ -n "$stripped_expected" ] && [ "$stripped_expected" != "SKIP" ]; then
-      if [ "$actual_checksum" != "$stripped_expected" ]; then
-        echo "Error: checksum mismatch for $url" >&2
-        echo "Expected: $stripped_expected" >&2
-        echo "Actual:   $actual_checksum" >&2
-        return 1
-      fi
-    else
-      # Not found, add it if not prevented
-      if [ "${LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB:-0}" != "1" ]; then
-        echo "$url $actual_checksum" >> "$checksum_db"
-      fi
-    fi
-  fi
+libscript_fetch() {
+  libscript_download "$@"
 }
+
 
 libscript_process_aria2_file() {
 list_file="$1"
   if [ ! -f "$list_file" ]; then
-    echo "Error: File not found: $list_file" >&2
+    log_error "File not found: ${list_file}"
     return 1
   fi
 

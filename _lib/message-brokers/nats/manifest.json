@@ -1,5 +1,8 @@
 {
   "name": "NATS",
+  "title": "NATS",
+  "description": "A simple, secure and performant communications system for digital systems, services and devices.",
+  "category": "message-brokers",
   "provides": [
     "message-broker",
     "nats",

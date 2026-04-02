@@ -1,5 +1,8 @@
 {
   "name": "SH",
+  "title": "Shell Toolchain",
+  "description": "POSIX-compliant shell environment.",
+  "category": "languages",
   "provides": [
     "sh",
     "toolchain"

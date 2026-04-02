@@ -1,0 +1,10 @@
+{
+  "name": "azure",
+  "provides": [
+    "azure"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "category": "cloud"
+}

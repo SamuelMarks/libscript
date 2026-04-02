@@ -1,7 +1,12 @@
 {
   "name": "OPENBAO",
+  "title": "OpenBao",
+  "description": "An open-source tool for managing secrets and protecting sensitive data.",
+  "category": "security",
   "provides": [
     "openbao",
+    "security",
+    "secrets",
     "server"
   ],
   "conflicts": [],

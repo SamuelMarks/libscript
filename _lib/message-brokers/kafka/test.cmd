@@ -1,3 +1,2 @@
 @echo off
-kafka-server-start.sh --version
-if %errorlevel% neq 0 exit /b %errorlevel%
+call "%~dp0\..\..\_common\test_base.cmd" :assert_version "kafka-server-start.sh" "."

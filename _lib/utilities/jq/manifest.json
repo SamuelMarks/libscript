@@ -1,13 +1,12 @@
 {
   "name": "JQ",
+  "title": "jq",
+  "description": "A lightweight and flexible command-line JSON processor.",
+  "category": "utility",
   "provides": [
-    "jq",
-    "toolchain"
+    "jq"
   ],
-  "conflicts": [],
   "os_whitelist": [
     "all"
-  ],
-  "os_blacklist": [],
-  "ports": []
+  ]
 }

@@ -1,32 +1,30 @@
 # Platform-as-a-Service (PaaS) Engine
 
-LibScript is evolving from a provisioning framework into a complete, multicloud Platform-as-a-Service (PaaS). It bridges the gap between infrastructure-as-code and application deployment.
+LibScript is evolving from a provisioning framework into a complete, multicloud Platform-as-a-Service (PaaS). It bridges the gap between infrastructure-as-code and application deployment through its "Every-Thing-is-a-Package-Manager" philosophy.
 
-## Current Capabilities
+## Architectural Transition
 
-- **Infrastructure Orchestration:** Native support for provisioning compute, network, and storage resources across AWS, Azure, and GCP via a unified CLI.
-- **Node-Group Management:** Provision groups of independent nodes and automatically bootstrap them with LibScript components.
-- **Granular Database Brokering:** Automatically provision and configure database servers (e.g., Postgres, MariaDB) as part of a stack.
-- **Sidecar Services:** Integrated support for background tasks, logging (FluentBit), and monitoring.
-- **Scheduled Maintenance:** Built-in `cron` resource type for managing recurring tasks like off-site backups to object storage.
-- **Artifact Export:** Deploy stacks as native services, containers, or standalone installers.
+The core shift is from a system that merely executes scripts to an orchestration layer that manages the entire lifecycle of a stack. By treating every component (databases, runtimes, proxies) as an autonomous, self-healing package manager, LibScript provides a decentralized PaaS experience that can run on any infrastructure—from a single laptop to a distributed multicloud cluster.
 
-## Evolution Plan
+## PaaS Capabilities
 
-### Step 1: Application Specification & Manifests (Implemented)
-Utilize `libscript.json` and component `vars.schema.json` to define complex requirements.
+- **Multicloud Orchestration:** Native support for provisioning compute, network, and storage resources across AWS, Azure, and GCP via a unified, provider-agnostic interface.
+- **Dynamic Stack Resolution:** Automated resolution of complex dependency trees and version constraints using an integrated constraint-solving engine.
+- **Zero-Trust Sidecar Services:** Integrated support for background tasks, logging (FluentBit), and monitoring without requiring a global management agent.
+- **Automated Reverse Proxying:** Built-in support for Caddy and Nginx with automated, manifest-driven configuration for routing and TLS.
+- **Process & Resource Isolation:** Utilizing native OS primitives (`systemd` on Linux, native services on Windows) to provide isolation without virtualization overhead.
+- **Flexible Deployment Targets:** Stacks can be deployed as native system services, generated into `docker-compose` manifests, or bundled into standalone native installers.
 
-### Step 2: Dynamic Routing & Reverse Proxy (Ongoing)
-Expand support for Caddy and Nginx with automated API-based configuration for side-by-side app deployments.
+## Roadmap to Maturity
 
-### Step 3: Multicloud Convergence (Implemented)
-Unified `cloud` wrapper with resource tagging and filtered cleanup.
+### Phase 1: Declarative Stack Manifests (Implemented)
+Utilize `libscript.json` and component schemas to define and enforce the entire application state.
 
-### Step 4: Process Isolation
-Utilizing `systemd` on Linux and native services on Windows/macOS to provide sandboxed execution without virtualization overhead.
+### Phase 2: High-Level `deploy` Engine (Ongoing)
+Implementing a unified `deploy` command that chains infrastructure provisioning, dependency resolution, and service bootstrapping into a single atomic operation.
 
-### Step 5: The "Dokku-like" Experience
-Implementing higher-level `deploy` commands that chain infrastructure provisioning with application bootstrapping.
+### Phase 3: Global State Management (Ongoing)
+Development of a lightweight, distributed state store to track managed resources across multiple cloud providers and local nodes.
 
-### Step 6: Web Management Dashboard
-Planned lightweight API server to provide a visual interface for managing managed cloud resources and local stacks.
+### Phase 4: Edge-First Management Interface
+A decentralized management CLI and optional web dashboard for monitoring stack health and orchestrating updates across the fleet.

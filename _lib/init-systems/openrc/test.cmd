@@ -1,8 +1,2 @@
 @echo off
-where openrc >nul 2>nul
-if %ERRORLEVEL% EQU 0 (
-  openrc --version || echo openrc found
-) else (
-  echo openrc skipped (not found)
-)
-exit /b 0
+call "%~dp0\..\..\_common\test_base.cmd" :assert_version "openrc" "."

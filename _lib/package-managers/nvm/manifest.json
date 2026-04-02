@@ -1,0 +1,12 @@
+{
+  "name": "NVM",
+  "provides": [
+    "nvm"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "nvm",
+  "description": "Bootstrap module for `nvm` (Node Version Manager).",
+  "category": "package-manager"
+}

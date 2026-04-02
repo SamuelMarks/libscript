@@ -15,6 +15,7 @@ call "%~dp0..\..\..\_lib\_bootstrap\powershell\setup.cmd"
 where powershell >nul 2>&1
 if %ERRORLEVEL% EQU 0 goto :run_powershell
 echo [INFO] PowerShell not found. Installing Nginx natively...
+set "PACKAGE_NAME=nginx"
 set "NGINX_VER=1.25.3"
 if defined NGINX_VERSION set "NGINX_VER=%NGINX_VERSION%"
 if "%NGINX_VER%"=="latest" set "NGINX_VER=1.25.3"
@@ -24,7 +25,7 @@ set "NGINX_URL=http://nginx.org/download/nginx-%NGINX_VER%.zip"
 set "ZIP_FILE=%TEMP%\nginx-%NGINX_VER%.zip"
 if not exist "%ZIP_FILE%" (
     echo [INFO] Downloading Nginx %NGINX_VER%...
-    bitsadmin /transfer NginxDownload /download /priority normal "%NGINX_URL%" "%ZIP_FILE%" >nul 2>&1 || certutil -urlcache -split -f "%NGINX_URL%" "%ZIP_FILE%" >nul 2>&1
+    call "%~dp0\..\..\..\_lib\_common\pkg_mgr.cmd" :libscript_download "%NGINX_URL%" "%ZIP_FILE%"
 )
 if exist "%ZIP_FILE%" (
     tar -xf "%ZIP_FILE%" -C "%PREFIX%" --strip-components=1 >nul 2>&1 || powershell -command "Expand-Archive -Path '%ZIP_FILE%' -DestinationPath '%PREFIX%' -Force" >nul 2>&1

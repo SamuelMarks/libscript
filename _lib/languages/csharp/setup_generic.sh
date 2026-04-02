@@ -37,9 +37,12 @@ CSHARP_INSTALL_METHOD="${CSHARP_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHO
 if [ "${CSHARP_INSTALL_METHOD}" = 'system' ]; then
   depends 'csharp'
 else
-  depends 'curl' 'tar'
+  depends 'tar'
   if ! [ -f /usr/local/bin/dotnet ]; then
-    curl -fsSL https://dot.net/v1/dotnet-install.sh | bash -s -- -c 8.0 --install-dir /usr/local/dotnet
+    INSTALL_SH=$(mktemp)
+    libscript_download 'https://dot.net/v1/dotnet-install.sh' "${INSTALL_SH}"
+    bash "${INSTALL_SH}" -c 8.0 --install-dir /usr/local/dotnet
+    rm -f "${INSTALL_SH}"
     ln -sf /usr/local/dotnet/dotnet /usr/local/bin/dotnet
   fi
 fi

@@ -1,6 +1,14 @@
 {
-  "name": "yarn",
-  "provides": ["package-manager", "yarn"],
-  "os_whitelist": ["all"],
-  "os_blacklist": []
+  "name": "YARN",
+  "provides": [
+    "package-manager",
+    "yarn"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "title": "yarn",
+  "description": "Bootstrap module for the `yarn` package manager.",
+  "category": "package-manager"
 }

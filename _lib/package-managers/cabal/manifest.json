@@ -1,0 +1,12 @@
+{
+  "name": "CABAL",
+  "provides": [
+    "cabal"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "cabal",
+  "description": "Bootstrap module for `cabal` (Haskell package manager).",
+  "category": "package-manager"
+}

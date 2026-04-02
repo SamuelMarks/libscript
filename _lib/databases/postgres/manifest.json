@@ -1,5 +1,8 @@
 {
   "name": "POSTGRES",
+  "title": "PostgreSQL",
+  "description": "A powerful, open source object-relational database system.",
+  "category": "databases",
   "provides": [
     "database",
     "postgres",

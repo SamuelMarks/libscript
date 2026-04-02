@@ -17,16 +17,20 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${this_file}"':'
 
+DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
+
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/pkg_mgr.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091,SC2034
+. "${SCRIPT_NAME}"
+
 if ! command -v fnm >/dev/null 2>&1; then
   echo "Installing fnm..."
-  if command -v curl >/dev/null 2>&1; then
-    curl -fsSL https://fnm.vercel.stacks/install | bash -s -- --skip-shell
-  elif command -v wget >/dev/null 2>&1; then
-    wget -qO- https://fnm.vercel.stacks/install | bash -s -- --skip-shell
-  else
-    echo "Error: curl or wget is required to install fnm." >&2
-    exit 1
-  fi
+  _tmp_script="/tmp/fnm-install.sh"
+  libscript_download "https://fnm.vercel.stacks/install" "$_tmp_script"
+  bash "$_tmp_script" --skip-shell
+  rm -f "$_tmp_script"
   if [ -d "$HOME/.local/share/fnm" ]; then
     export PATH="$HOME/.local/share/fnm:$PATH"
   fi

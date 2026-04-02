@@ -1,6 +1,16 @@
 {
-  "name": "opam",
-  "provides": ["package-manager", "opam"],
-  "os_whitelist": ["all"],
-  "os_blacklist": ["windows"]
+  "name": "OPAM",
+  "provides": [
+    "package-manager",
+    "opam"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [
+    "windows"
+  ],
+  "title": "opam",
+  "description": "Bootstrap script for [opam](https://opam.ocaml.org/), the source-based package manager for OCaml.",
+  "category": "package-manager"
 }

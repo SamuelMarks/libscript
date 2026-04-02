@@ -17,19 +17,20 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${this_file}"':'
 
+DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
+
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/pkg_mgr.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091,SC2034
+. "${SCRIPT_NAME}"
+
 if ! command -v opam >/dev/null 2>&1; then
   echo "Installing opam..."
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-..}"'/_lib/_common/pkg_mgr.sh'
-  export SCRIPT_NAME
-# shellcheck disable=SC1090,SC1091,SC2034
-  . "${SCRIPT_NAME}"
-  
   if ! depends opam; then
-    if command -v curl >/dev/null 2>&1; then
-      echo | bash -c "sh <(curl -fsLS https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh) --no-setup"
-    else
-      echo "Error: curl or system package manager is required to install opam." >&2
-      exit 1
-    fi
+    _tmp_script="/tmp/opam-install.sh"
+    libscript_download "https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh" "$_tmp_script"
+    echo | sh "$_tmp_script" --no-setup
+    rm -f "$_tmp_script"
   fi
 fi

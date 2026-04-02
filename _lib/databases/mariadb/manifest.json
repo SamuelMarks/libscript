@@ -1,5 +1,8 @@
 {
   "name": "MARIADB",
+  "title": "MariaDB",
+  "description": "A community-developed, commercially supported fork of the MySQL relational database management system.",
+  "category": "databases",
   "provides": [
     "database",
     "mysql-compatible",

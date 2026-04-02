@@ -1,2 +1,2 @@
 @echo off
-echo 'Tested via firecrawl ping'
+call "%~dp0\..\..\..\_lib\_common\test_base.cmd"

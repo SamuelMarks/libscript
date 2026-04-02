@@ -1,5 +1,2 @@
 @echo off
-swift --version
-echo print("Hello World") > hw.swift
-swift hw.swift
-del hw.swift
+call "%~dp0\..\..\_common\test_base.cmd" :assert_version "swift" "."

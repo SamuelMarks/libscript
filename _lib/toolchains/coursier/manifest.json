@@ -1,5 +1,8 @@
 {
   "name": "COURSIER",
+  "title": "Coursier",
+  "description": "A Scala artifact fetcher and tool launcher.",
+  "category": "toolchain",
   "provides": [
     "scala",
     "java",

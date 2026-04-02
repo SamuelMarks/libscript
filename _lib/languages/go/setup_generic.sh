@@ -36,12 +36,15 @@ export SCRIPT_NAME
 GO_INSTALL_METHOD="${GO_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 GO_VERSION="${GO_VERSION:-latest}"
 if [ "${GO_VERSION}" = "latest" ] || [ "${GO_VERSION}" = "stable" ]; then
-  GO_VERSION=$(curl -sL "https://go.dev/VERSION?m=text" | head -n 1 | sed 's/^go//')
+  GO_VER_FILE=$(mktemp)
+  libscript_download "https://go.dev/VERSION?m=text" "${GO_VER_FILE}"
+  GO_VERSION=$(head -n 1 < "${GO_VER_FILE}" | sed 's/^go//')
+  rm -f "${GO_VER_FILE}"
 fi
 if [ "${GO_INSTALL_METHOD}" = 'system' ]; then
   depends 'go'
 else
-  depends 'curl' 'tar'
+  depends 'tar'
   os="$(uname -s | tr '[:upper:]' '[:lower:]')"
   case "${os}" in
     'darwin'*) os='darwin' ;;
@@ -55,9 +58,11 @@ else
     *) ;;
   esac
   archive="go${GO_VERSION}.${os}-${arch}.tar.gz"
-  libscript_download "https://go.dev/dl/${archive}" "/tmp/${archive}"
+  GO_TARBALL=$(mktemp)
+  libscript_download "https://go.dev/dl/${archive}" "${GO_TARBALL}"
   priv rm -rf /usr/local/go
-  priv tar -C /usr/local -xzf "/tmp/${archive}"
+  priv tar -C /usr/local -xzf "${GO_TARBALL}"
+  rm -f "${GO_TARBALL}"
   # shellcheck disable=SC2016
   echo 'export PATH=$PATH:/usr/local/go/bin' > /tmp/go_path.sh
   priv cp /tmp/go_path.sh /etc/profile.d/go.sh || true

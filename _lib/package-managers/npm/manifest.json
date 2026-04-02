@@ -1,0 +1,12 @@
+{
+  "name": "NPM",
+  "provides": [
+    "npm"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "npm",
+  "description": "Bootstrap module for the `npm` package manager.",
+  "category": "package-manager"
+}

@@ -26,8 +26,10 @@ export SCRIPT_NAME
 if ! command -v cargo-binstall >/dev/null 2>&1; then
   depends cargo || true
   
-  if command -v curl >/dev/null 2>&1; then
-    curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | sh
+  INSTALL_SH=$(mktemp)
+  if libscript_download 'https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh' "${INSTALL_SH}"; then
+    sh "${INSTALL_SH}"
+    rm -f "${INSTALL_SH}"
   else
     cargo install cargo-binstall || true
   fi

@@ -50,9 +50,12 @@ done
 
 if [ "${run_before}" -eq 0 ]; then
   depends curl gnupg2 ca-certificates lsb-release debian-archive-keyring
-  [ -f '/usr/share/keyrings/nginx-archive-keyring.gpg' ] || \
-    curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
-      | priv  tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+  if [ ! -f '/usr/share/keyrings/nginx-archive-keyring.gpg' ]; then
+    NGINX_KEY=$(mktemp)
+    libscript_download 'https://nginx.org/keys/nginx_signing.key' "${NGINX_KEY}"
+    gpg --dearmor < "${NGINX_KEY}" | priv tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+    rm -f "${NGINX_KEY}"
+  fi
   if [ ! -f '/etc/apt/sources.list.d/nginx.list' ]; then
     ID="$(. /etc/os-release && printf "%s" "${ID}")"
     printf 'deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] http://nginx.org/packages/%s %s nginx\n' "${ID}" "$(lsb_release -cs)" | priv  tee /etc/apt/sources.list.d/nginx.list

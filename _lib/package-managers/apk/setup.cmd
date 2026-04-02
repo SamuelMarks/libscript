@@ -29,5 +29,5 @@ if %ERRORLEVEL% EQU 0 goto :run_powershell
 
 echo [WARN] PowerShell not found. Native CMD/DOS installation not fully implemented for %~nx0.
 echo Please add native DOS/CMD commands here to support legacy systems.
-:: e.g., using bitsadmin, cscript, or pre-compiled binaries
+:: e.g., using libscript_download from _lib/_common/pkg_mgr.cmd
 exit /b 1

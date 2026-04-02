@@ -37,12 +37,15 @@ BUN_INSTALL_METHOD="${BUN_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-sou
 if [ "${BUN_INSTALL_METHOD}" = 'system' ]; then
   depends 'bun' || { echo "Bun package not widely available, defaulting to from-source"; exit 1; }
 else
-  depends 'curl' 'unzip'
+  depends 'unzip'
   if ! cmd_avail bun; then
+    INSTALL_SH=$(mktemp)
+    libscript_download 'https://bun.sh/install' "${INSTALL_SH}"
     if [ "${BUN_VERSION:-latest}" = 'latest' ]; then
-      curl -fsSL https://bun.sh/install | bash
+      bash "${INSTALL_SH}"
     else
-      curl -fsSL https://bun.sh/install | bash -s "${BUN_VERSION}"
+      bash "${INSTALL_SH}" "${BUN_VERSION}"
     fi
+    rm -f "${INSTALL_SH}"
   fi
 fi

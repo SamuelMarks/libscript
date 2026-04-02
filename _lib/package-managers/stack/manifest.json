@@ -1,0 +1,12 @@
+{
+  "name": "STACK",
+  "provides": [
+    "stack"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "stack",
+  "description": "Bootstrap module for the `stack` package manager.",
+  "category": "package-manager"
+}

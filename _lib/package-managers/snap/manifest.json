@@ -1,0 +1,12 @@
+{
+  "name": "SNAP",
+  "provides": [
+    "snap"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "snap",
+  "description": "Bootstrap module for the `snap` package manager/tool.",
+  "category": "package-manager"
+}

@@ -1,2 +1,3 @@
 @echo off
-composer %*
+set "PACKAGE_NAME=composer"
+call "%%~dp0\..\..\_common\component_core.cmd" %%*

@@ -44,7 +44,10 @@ if [ "${TARGET_OS}" = "windows" ] || [ "${TARGET_OS}" = "mingw" ] || [ "${TARGET
     exit 1
 fi
 
-curl --proto '=https' --tlsv1.2 -sSf https://get.k0s.sh | sudo sh
+INSTALL_SH=$(mktemp)
+libscript_download 'https://get.k0s.sh' "${INSTALL_SH}"
+priv sh "${INSTALL_SH}"
+rm -f "${INSTALL_SH}"
 
 priv /usr/local/bin/k0s install controller --single
 priv /usr/local/bin/k0s start

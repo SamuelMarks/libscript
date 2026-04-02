@@ -1,5 +1,8 @@
 {
   "name": "LIGHTTPD",
+  "title": "Lighttpd",
+  "description": "A secure, fast, compliant, and very flexible web-server that has been optimized for high-performance environments.",
+  "category": "web-servers",
   "provides": [
     "web-server",
     "lighttpd"

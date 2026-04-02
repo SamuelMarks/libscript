@@ -1,5 +1,8 @@
 {
   "name": "NODEJS_SERVER",
+  "title": "Node.js App Server",
+  "description": "Generic Node.js application server component.",
+  "category": "languages",
   "provides": [
     "app-server",
     "nodejs"

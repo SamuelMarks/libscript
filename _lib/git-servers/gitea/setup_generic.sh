@@ -58,12 +58,7 @@ else
   mkdir -p "${bin_dir}"
 
   echo "Downloading Gitea from ${dl_url}..."
-  if command -v curl >/dev/null 2>&1; then
-    curl -L -f -o "${bin_dir}/gitea" "${dl_url}"
-  else
-    echo "[ERROR] curl is required but not found."
-    exit 1
-  fi
+  libscript_download "${dl_url}" "${bin_dir}/gitea"
 
   chmod +x "${bin_dir}/gitea"
   echo "Gitea installed to ${bin_dir}/gitea"

@@ -1,5 +1,8 @@
 {
   "name": "RUST_SERVER",
+  "title": "Rust App Server",
+  "description": "Generic Rust application server component.",
+  "category": "languages",
   "provides": [
     "app-server",
     "rust"

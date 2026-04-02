@@ -1,2 +1,2 @@
 @echo off
-jupyterhub --version
+call "%~dp0\..\..\..\_lib\_common\test_base.cmd" :assert_version jupyterhub "."

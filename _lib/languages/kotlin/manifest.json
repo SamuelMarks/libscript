@@ -1,5 +1,8 @@
 {
   "name": "KOTLIN",
+  "title": "Kotlin Toolchain",
+  "description": "A modern programming language that makes developers happier.",
+  "category": "languages",
   "provides": [
     "compiler",
     "kotlin",

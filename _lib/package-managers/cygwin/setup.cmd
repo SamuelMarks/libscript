@@ -11,10 +11,11 @@ if exist "%CYGWIN_ROOT%\bin\cygcheck.exe" (
 )
 
 echo [INFO] Bootstrapping Cygwin environment natively for Windows...
+set "PACKAGE_NAME=cygwin"
 set "CYGWIN_URL=https://cygwin.com/setup-x86_64.exe"
 set "CYGWIN_OUT=%TEMP%\cygwin-setup.exe"
 
-certutil -urlcache -split -f "%CYGWIN_URL%" "%CYGWIN_OUT%" >nul
+call "%~dp0\..\..\_common\pkg_mgr.cmd" :libscript_download "%CYGWIN_URL%" "%CYGWIN_OUT%"
 if exist "%CYGWIN_OUT%" (
     echo [INFO] Running unattended Cygwin installation to %CYGWIN_ROOT%...
     "%CYGWIN_OUT%" --quiet-mode --root "%CYGWIN_ROOT%" --site http://mirrors.kernel.org/sourceware/cygwin/ --packages wget,curl,tar,gawk,bzip2,git

@@ -1,0 +1,12 @@
+{
+  "name": "RVM",
+  "provides": [
+    "rvm"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "rvm",
+  "description": "Bootstrap module for the `rvm` package manager.",
+  "category": "package-manager"
+}

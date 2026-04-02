@@ -36,7 +36,10 @@ export SCRIPT_NAME
 RUBY_INSTALL_METHOD="${RUBY_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 RUBY_VERSION="${RUBY_VERSION:-latest}"
 if [ "${RUBY_VERSION}" = "latest" ] || [ "${RUBY_VERSION}" = "stable" ]; then
-  RUBY_VERSION=$(curl -sL https://cache.ruby-lang.org/pub/ruby/index.txt | awk '{print $1}' | grep -E '^ruby-[0-9]+\.[0-9]+\.[0-9]+$' | tail -n 1 | sed 's/^ruby-//')
+  RUBY_INDEX=$(mktemp)
+  libscript_download 'https://cache.ruby-lang.org/pub/ruby/index.txt' "${RUBY_INDEX}"
+  RUBY_VERSION=$(awk '{print $1}' < "${RUBY_INDEX}" | grep -E '^ruby-[0-9]+\.[0-9]+\.[0-9]+$' | tail -n 1 | sed 's/^ruby-//')
+  rm -f "${RUBY_INDEX}"
 fi
 if [ -z "${RUBY_VERSION}" ]; then
   RUBY_VERSION="3.3.0"
@@ -47,7 +50,9 @@ if [ "${RUBY_INSTALL_METHOD}" = 'system' ]; then
   depends 'ruby'
 else
   depends 'curl' 'tar' 'make' 'gcc'
-  libscript_download "https://cache.ruby-lang.org/pub/ruby/${ruby_major}/ruby-${RUBY_VERSION}.tar.gz" /tmp/ruby.tar.gz
-  tar -xzf /tmp/ruby.tar.gz -C /tmp
+  RUBY_TARBALL=$(mktemp)
+  libscript_download "https://cache.ruby-lang.org/pub/ruby/${ruby_major}/ruby-${RUBY_VERSION}.tar.gz" "${RUBY_TARBALL}"
+  tar -xzf "${RUBY_TARBALL}" -C /tmp
+  rm -f "${RUBY_TARBALL}"
   cd "/tmp/ruby-${RUBY_VERSION}" && ./configure && make && priv make install
 fi

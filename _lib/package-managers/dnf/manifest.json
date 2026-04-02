@@ -1,0 +1,12 @@
+{
+  "name": "DNF",
+  "provides": [
+    "dnf"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "dnf",
+  "description": "Bootstrap module for the `dnf` package manager.",
+  "category": "package-manager"
+}

@@ -34,9 +34,12 @@ PYTHON_INSTALL_METHOD="${PYTHON_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHO
 if [ "${PYTHON_INSTALL_METHOD}" = 'system' ]; then
   depends 'python'
 elif [ "${PYTHON_INSTALL_METHOD}" = 'pyenv' ]; then
-  depends 'curl' 'git'
+  depends 'git'
   if [ ! -d "${HOME}/.pyenv" ]; then
-    curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
+    INSTALL_SH=$(mktemp)
+    libscript_download 'https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer' "${INSTALL_SH}"
+    bash "${INSTALL_SH}"
+    rm -f "${INSTALL_SH}"
   fi
   export PYENV_ROOT="${HOME}/.pyenv"
   export PATH="${PYENV_ROOT}/bin:${PATH}"
@@ -44,20 +47,24 @@ elif [ "${PYTHON_INSTALL_METHOD}" = 'pyenv' ]; then
   pyenv install -s "${PYTHON_VERSION:-3.11}"
   pyenv global "${PYTHON_VERSION:-3.11}"
 elif [ "${PYTHON_INSTALL_METHOD}" = 'from-source' ]; then
-  depends 'curl' 'build-essential' 'libssl-dev' 'zlib1g-dev' 'libbz2-dev' 'libreadline-dev' 'libsqlite3-dev' 'wget' 'curl' 'llvm' 'libncurses5-dev' 'libncursesw5-dev' 'xz-utils' 'tk-dev' 'libffi-dev' 'liblzma-dev'
+  depends 'build-essential' 'libssl-dev' 'zlib1g-dev' 'libbz2-dev' 'libreadline-dev' 'libsqlite3-dev' 'wget' 'curl' 'llvm' 'libncurses5-dev' 'libncursesw5-dev' 'xz-utils' 'tk-dev' 'libffi-dev' 'liblzma-dev'
   PY_VER="${PYTHON_VERSION:-3.11.9}"
-  libscript_download "https://www.python.org/ftp/python/${PY_VER}/Python-${PY_VER}.tgz" ""
-  tar -xf "Python-${PY_VER}.tgz"
+  PY_TARBALL=$(mktemp)
+  libscript_download "https://www.python.org/ftp/python/${PY_VER}/Python-${PY_VER}.tgz" "${PY_TARBALL}"
+  tar -xf "${PY_TARBALL}"
+  rm -f "${PY_TARBALL}"
   cd "Python-${PY_VER}"
   ./configure --enable-optimizations
   make -j"$(nproc)"
   sudo make altinstall
   cd ..
-  rm -rf "Python-${PY_VER}" "Python-${PY_VER}.tgz"
+  rm -rf "Python-${PY_VER}"
 else # uv
-  depends 'curl'
   if [ ! -f "${HOME}"'/.local/bin/uv' ]; then
-    curl -LsSf https://astral.sh/uv/install.sh | sh
+    INSTALL_SH=$(mktemp)
+    libscript_download 'https://astral.sh/uv/install.sh' "${INSTALL_SH}"
+    sh "${INSTALL_SH}"
+    rm -f "${INSTALL_SH}"
   fi
   # shellcheck disable=SC1091
   

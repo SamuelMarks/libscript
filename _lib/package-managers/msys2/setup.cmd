@@ -11,10 +11,11 @@ if exist "%MSYS2_ROOT%\usr\bin\pacman.exe" (
 )
 
 echo [INFO] Bootstrapping MSYS2 environment natively for Windows...
+set "PACKAGE_NAME=msys2"
 set "MSYS2_URL=https://github.com/msys2/msys2-installer/releases/download/2024-01-13/msys2-base-x86_64-20240113.sfx.exe"
 set "MSYS2_OUT=%TEMP%\msys2-installer.exe"
 
-certutil -urlcache -split -f "%MSYS2_URL%" "%MSYS2_OUT%" >nul
+call "%~dp0\..\..\..\_lib\_common\pkg_mgr.cmd" :libscript_download "%MSYS2_URL%" "%MSYS2_OUT%"
 if exist "%MSYS2_OUT%" (
     echo [INFO] Extracting MSYS2 base to %MSYS2_ROOT%...
     "%MSYS2_OUT%" -y -o"C:\"

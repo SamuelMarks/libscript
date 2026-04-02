@@ -1,5 +1,8 @@
 {
   "name": "BAZEL",
+  "title": "Bazel",
+  "description": "A fast, scalable, multi-language and extensible build system, installed via Bazelisk.",
+  "category": "toolchain",
   "provides": [
     "build-system",
     "bazel",

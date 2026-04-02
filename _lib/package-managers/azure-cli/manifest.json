@@ -1,0 +1,12 @@
+{
+  "name": "AZURE_CLI",
+  "provides": [
+    "azure-cli"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "category": "package-manager",
+  "title": "Azure Cli",
+  "description": "Bootstrap module for the `azure-cli` package manager."
+}

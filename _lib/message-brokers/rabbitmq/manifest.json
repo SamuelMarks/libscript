@@ -1,5 +1,8 @@
 {
   "name": "RABBITMQ",
+  "title": "RabbitMQ",
+  "description": "The most widely deployed open source message broker.",
+  "category": "message-brokers",
   "provides": [
     "message-broker",
     "rabbitmq"

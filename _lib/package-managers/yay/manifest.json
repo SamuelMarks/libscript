@@ -1,0 +1,12 @@
+{
+  "name": "YAY",
+  "provides": [
+    "yay"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "yay",
+  "description": "Bootstrap module for the `yay` package manager.",
+  "category": "package-manager"
+}

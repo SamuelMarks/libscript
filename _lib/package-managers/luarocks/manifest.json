@@ -1,6 +1,14 @@
 {
-  "name": "luarocks",
-  "provides": ["package-manager", "luarocks"],
-  "os_whitelist": ["all"],
-  "os_blacklist": []
+  "name": "LUAROCKS",
+  "provides": [
+    "package-manager",
+    "luarocks"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "title": "luarocks",
+  "description": "Bootstrap script for [LuaRocks](https://luarocks.org/), the package manager for Lua modules.",
+  "category": "package-manager"
 }

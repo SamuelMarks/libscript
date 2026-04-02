@@ -1,0 +1,12 @@
+{
+  "name": "R",
+  "provides": [
+    "R"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "R",
+  "description": "Bootstrap module for the `R` package manager.",
+  "category": "package-manager"
+}

@@ -1,2 +1,3 @@
 @echo off
-call "%~dp0\..\..\..\_lib\_common\cli.cmd" %*
+set "PACKAGE_NAME=scoop"
+call "%%~dp0\..\..\_common\component_core.cmd" %%*

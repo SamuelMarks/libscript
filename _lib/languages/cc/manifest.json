@@ -1,5 +1,8 @@
 {
   "name": "CC",
+  "title": "C Compiler",
+  "description": "Generic C compiler interface.",
+  "category": "languages",
   "provides": [
     "cc",
     "toolchain"

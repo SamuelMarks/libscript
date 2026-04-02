@@ -1,127 +1,73 @@
-kubernetes-the-hard-way/
-patch*
-validate_*
-.idea
-.vscode
-tmp
-/docs
-.ssh
-/*.html
-node_modules
-/assets
-.vagrant
-vagrant_ssh
+###############################################################################
+# libscript - .gitignore
+# Cleaned and reorganized into logical sections.
+###############################################################################
+
+### Core Files (Protected) ###
+# These files are essential for the project and should never be ignored.
+!libscript.sh
+!libscript.cmd
+!libscript.bat
+!install.sh
+!install.bat
+!libscript.json
+!installer.schema.json
+!prelude.sh
+!top.sh
+!bottom.sh
+
+### OS-Specific ###
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+Thumbs.db
+ehthumbs.db
 %temp%/
 "%temp%\schema_help.txt"
 
-# Ignore generated folder contents
-gen/*
-!gen/README.md
-!gen/ROOT
+### IDE-Specific ###
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+.project
+.classpath
+.settings/
 
-# Ad-hoc dev scripts
-fix_*.sh
-patch_*.sh
-rewrite_*.sh
-run_cmd.sh
-test_*.cmd
-test_*.sh
-update_docs.sh
-README_patch.sh
-fix_*.py
-fix_*.cmd
-fix_*.bat
-update_*.py
-update_*.cmd
-update_*.sh
-test_*.bat
-gen_table.*
-update_git.sh
+### Build Artifacts & Package Managers ###
+node_modules/
+dist/
+build/
+.next/
+.nuxt/
+package-lock.json
+package.json
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+env/
+venv/
+.venv/
+env.bak/
+venv.bak/
+coverage/
+.nyc_output/
+.sass-cache/
 
-# Local data & logs
-run_log.txt
-*.sqlite
-jobs.json
-jobs_status.json
-
-# Ignored outputs
-table.md
-*_gen.sh
-/cache/
-/dockerfiles/
-*_test.sh
-*_test.cmd
-*_test.bat
-*.tmp
-
-# Additional auto-generated and temp files
-*.log
-*.out
-*.rej
-*.patch
-*.diff
-*.tmpdeps
-Dockerfile.*
-!Dockerfile*.tpl
-!*.Dockerfile
-libscript.json
-fix*.awk
-patch*.awk
-*.svg
-
-# Ad-hoc downloaded tools and files
-wait4x-*
-/run_*.sh
-/test.bat
-/vars.schema.json
-# Irrelevant root files
-/install*.json
-!/installer.schema.json
-/jq_test.json
-/styles.css
-/*.awk
-/conf.env.sh
-/dos_setup_script_deps.bat
-/win_setup_script_deps.cmd
-
-# Local testing and ad-hoc execution
-/cli.cmd
-/cli.sh
-/conf.d/
-/conf.env.ps1
-/generate.sh
-/generate_font.js
-/generate_skeletons.sh
-/install.ps1
-/install.toml
-/package-lock.json
-/package.json
-/setup.cmd
-/setup.sh
-/setup_*.sh
-/setup_*.cmd
-/add_pkg.sh
-/analyze_vars.py
-/tuicss.min.css
-/tuicss.min.js
-
-# Backup files
-*.bak
-*.old
-*.yml-e
-*-e
-
-# Systemd specific test builds
-systemd.debian.Dockerfile
-
-# Local vagrant environments
-vagrant/debian12_multi/Vagrantfile.old
+### Virtualization & Containers ###
+.vagrant/
+vagrant_ssh
 vagrant/openbsd_7_6/
 vagrant/stromweld__windows_11/
 vagrant/windows_11/
-
-# Vagrant and VMs
-.vagrant/
 *.vmdk
 *.vdi
 *.vhd
@@ -131,36 +77,86 @@ vagrant/windows_11/
 *.vbox-prev
 *.vmxf
 *.nvram
+.ssh/
+Dockerfile.*
+!Dockerfile*.tpl
+!*.Dockerfile
+systemd.debian.Dockerfile
 
-# Node and UI/Build
-node_modules/
-dist/
-build/
-.next/
-.nuxt/
-
-# Temporary and Cache files
-.DS_Store
-*.swp
-*.swo
-*~
-.tmp/
+### Temporary, Log & Backup Files ###
+*.log
+*.tmp
+*.bak
+*.old
+*.rej
+*.out
+*.tmpdeps
+*.patch
+*.diff
+*.yml-e
+*-e
+run_log.txt
+*.sqlite
+*.svg
 tmp/
+.tmp/
 .cache/
 
-# IDE and Editor configs
-.idea/
-.vscode/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-.project
-.classpath
-.settings/
+### Local/Ad-hoc Scripts ###
+# Consolidate ad-hoc scripts (fix_*, patch_*, test_*, update_*, rewrite_*)
+fix_*
+patch_*
+test_*
+update_*
+rewrite_*
+validate_*
+# Exception for core test helpers
+!_lib/_common/test_base.*
+# Other ad-hoc dev files and generated outputs
+run_cmd.sh
+README_patch.sh
+gen_table.*
+*_gen.sh
+*_test.*
+wait4x-*
+add_pkg.sh
+analyze_vars.py
+/cli.cmd
+/cli.sh
+/conf.d/
+/conf.env.*
+/generate.sh
+/generate_font.js
+/generate_skeletons.sh
+/install.ps1
+/install.toml
+/setup.cmd
+/setup.sh
+/setup_*.sh
+/setup_*.cmd
+/install*.json
+/jq_test.json
+/styles.css
+/*.awk
+/dos_setup_script_deps.bat
+/win_setup_script_deps.cmd
+/tuicss.min.*
+table.md
+jobs.json
+jobs_status.json
 
-# Environment / Secrets
+### Project-Specific Rules ###
+/docs
+/assets
+/cache/
+/dockerfiles/
+gen/*
+!gen/README.md
+!gen/ROOT
+kubernetes-the-hard-way/
+/*.html
+
+### Environment / Secrets ###
 .env
 .env.*
 !.env.example
@@ -169,35 +165,3 @@ tmp/
 *.cert
 *.crt
 *.p12
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-.venv/
-env.bak/
-venv.bak/
-
-# Logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-# OS generated files
-Thumbs.db
-ehthumbs.db
-.AppleDouble
-.LSOverride
-Icon
-._*
-
-# Other tools
-coverage/
-.nyc_output/
-.sass-cache/

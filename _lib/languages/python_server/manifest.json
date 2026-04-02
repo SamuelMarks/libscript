@@ -1,5 +1,8 @@
 {
   "name": "PYTHON_SERVER",
+  "title": "Python App Server",
+  "description": "Generic Python application server component (WSGI/ASGI).",
+  "category": "languages",
   "provides": [
     "app-server",
     "python",

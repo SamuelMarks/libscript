@@ -1,6 +1,14 @@
 {
-  "name": "nuget",
-  "provides": ["package-manager", "nuget"],
-  "os_whitelist": ["all"],
-  "os_blacklist": []
+  "name": "NUGET",
+  "provides": [
+    "package-manager",
+    "nuget"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "title": "nuget",
+  "description": "Bootstrap module for the `nuget` package manager.",
+  "category": "package-manager"
 }

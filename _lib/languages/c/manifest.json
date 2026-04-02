@@ -1,5 +1,8 @@
 {
   "name": "C",
+  "title": "C Toolchain",
+  "description": "Standard C compiler and toolchain (GCC/Clang).",
+  "category": "languages",
   "provides": [
     "compiler",
     "c",

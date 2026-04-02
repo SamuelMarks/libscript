@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/languages/composer/vars.schema.json",
-  "title": "composer toolchain vars",
-  "description": "PHP dependency manager.",
+  "title": "composer vars",
+  "description": "Variables for Composer",
   "type": "object",
   "properties": {
     "COMPOSER_VERSION": {

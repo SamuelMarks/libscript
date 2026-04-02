@@ -1,0 +1,10 @@
+{
+  "name": "gcp",
+  "provides": [
+    "gcp"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "category": "cloud"
+}

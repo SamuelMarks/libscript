@@ -1,0 +1,12 @@
+{
+  "name": "RUSTUP",
+  "provides": [
+    "rustup"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "rustup",
+  "description": "Bootstrap module for `rustup` (Rust toolchain installer).",
+  "category": "package-manager"
+}

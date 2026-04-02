@@ -1,13 +1,12 @@
 {
   "name": "WAIT4X",
+  "title": "Wait4X",
+  "description": "A tool to wait for various services or resources to become available.",
+  "category": "utility",
   "provides": [
-    "wait4x",
-    "toolchain"
+    "wait4x"
   ],
-  "conflicts": [],
   "os_whitelist": [
     "all"
-  ],
-  "os_blacklist": [],
-  "ports": []
+  ]
 }

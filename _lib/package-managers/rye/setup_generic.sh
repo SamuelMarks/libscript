@@ -18,14 +18,19 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${this_file}"':'
 
+DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
+
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/pkg_mgr.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091,SC2034
+. "${SCRIPT_NAME}"
+
 if ! command -v rye >/dev/null 2>&1; then
-  if command -v curl >/dev/null 2>&1; then
-    curl -sSf https://rye.astral.sh/get | RYE_INSTALL_OPTION="--yes" bash
-  elif command -v wget >/dev/null 2>&1; then
-    wget -qO- https://rye.astral.sh/get | RYE_INSTALL_OPTION="--yes" bash
-  else
-    echo "curl or wget is required to install rye." >&2
-    exit 1
-  fi
+  echo "Installing rye..."
+  _tmp_script="/tmp/rye-install.sh"
+  libscript_download "https://rye.astral.sh/get" "$_tmp_script"
+  RYE_INSTALL_OPTION="--yes" bash "$_tmp_script"
+  rm -f "$_tmp_script"
   export PATH="$HOME/.rye/shims:$PATH"
 fi

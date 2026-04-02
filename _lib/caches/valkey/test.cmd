@@ -1,3 +1,2 @@
 @echo off
-echo skipped
-exit /b 0
+call "%~dp0\..\..\_common\test_base.cmd" :assert_version "valkey" "."

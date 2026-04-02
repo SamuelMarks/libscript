@@ -1,0 +1,12 @@
+{
+  "name": "WINGET",
+  "provides": [
+    "winget"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "winget",
+  "description": "This document describes **Winget**, the official Windows Package Manager CLI that allows users to discover, install, upgrade, remove, and configure applications on Windows 10 and Windows 11 computers.",
+  "category": "package-manager"
+}

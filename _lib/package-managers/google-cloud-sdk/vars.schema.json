@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Google Cloud Sdk variables",
+  "description": "Configuration variables for google-cloud-sdk",
+  "type": "object",
+  "properties": {
+    "GCLOUD_VERSION": {
+      "type": "string",
+      "default": "latest",
+      "description": "Version of Google Cloud SDK to install"
+    },
+    "GOOGLE_CLOUD_SDK_VERSION": {
+      "description": "Specific version of google-cloud-sdk to install.",
+      "type": "string",
+      "default": "latest"
+    }
+  }
+}

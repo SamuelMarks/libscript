@@ -1,0 +1,12 @@
+{
+  "name": "AWSCLI",
+  "provides": [
+    "awscli"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "category": "package-manager",
+  "title": "Awscli",
+  "description": "Bootstrap module for the `awscli` package manager."
+}

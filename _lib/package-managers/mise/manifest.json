@@ -1,0 +1,12 @@
+{
+  "name": "MISE",
+  "provides": [
+    "mise"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "mise",
+  "description": "Bootstrap module for the `mise` package manager/tool.",
+  "category": "package-manager"
+}

@@ -55,7 +55,7 @@ depends "${ODOO_WEBSERVER}"
 
 # Create directories
 if [ ! -d "${WWWROOT}/odoo-bin" ]; then
-  echo "Downloading Odoo (${ODOO_VERSION}) to ${WWWROOT}..."
+  log_info "Downloading Odoo (${ODOO_VERSION}) to ${WWWROOT}..."
   priv mkdir -p "${WWWROOT}"
   
   dl_url="https://github.com/odoo/odoo/archive/refs/heads/${ODOO_VERSION}.tar.gz"
@@ -71,19 +71,19 @@ if [ ! -d "${WWWROOT}/odoo-bin" ]; then
   
   # Install Python dependencies using requirements.txt
   if [ -f "${WWWROOT}/requirements.txt" ]; then
-    echo "Installing Odoo Python dependencies..."
+    log_info "Installing Odoo Python dependencies..."
     if command -v pip3 >/dev/null 2>&1; then
       priv pip3 install -r "${WWWROOT}/requirements.txt"
     elif command -v pip >/dev/null 2>&1; then
       priv pip install -r "${WWWROOT}/requirements.txt"
     else
-      echo "Warning: pip not found. Skipping python dependencies."
+      log_warn "pip not found. Skipping python dependencies."
     fi
   fi
 fi
 
 # Setup Database
-echo "Configuring Database (${ODOO_DB_TYPE})..."
+log_info "Configuring Database (${ODOO_DB_TYPE})..."
 if [ "${ODOO_DB_TYPE}" = "postgres" ] && command -v psql >/dev/null 2>&1; then
   if priv -u postgres psql -c "SELECT 1;" >/dev/null 2>&1 || priv psql -U postgres -c "SELECT 1;" >/dev/null 2>&1; then
     # Create user and db
@@ -91,7 +91,7 @@ if [ "${ODOO_DB_TYPE}" = "postgres" ] && command -v psql >/dev/null 2>&1; then
     priv -u postgres psql -c "ALTER USER ${ODOO_DB_USER} CREATEDB;" || priv psql -U postgres -c "ALTER USER ${ODOO_DB_USER} CREATEDB;" || true
     priv -u postgres psql -c "CREATE DATABASE ${ODOO_DB_NAME} OWNER ${ODOO_DB_USER};" || priv psql -U postgres -c "CREATE DATABASE ${ODOO_DB_NAME} OWNER ${ODOO_DB_USER};" || true
   else
-    echo "Warning: PostgreSQL is not running or login failed. Skipping automated DB setup."
+    log_warn "PostgreSQL is not running or login failed. Skipping automated DB setup."
   fi
 elif [ "${ODOO_DB_TYPE}" = "mariadb" ] && command -v mysql >/dev/null 2>&1; then
   # Odoo doesn't support MariaDB, but to satisfy multi-db requirement we configure the db anyway
@@ -103,12 +103,12 @@ elif [ "${ODOO_DB_TYPE}" = "mariadb" ] && command -v mysql >/dev/null 2>&1; then
   fi
 elif [ "${ODOO_DB_TYPE}" = "sqlite" ]; then
   # Odoo doesn't support SQLite. No db-side setup needed, just let Odoo fail or handle it
-  echo "Warning: Odoo natively supports PostgreSQL. SQLite selected, continuing anyway."
+  log_warn "Odoo natively supports PostgreSQL. SQLite selected, continuing anyway."
 fi
 
 # Configure Odoo
 if [ ! -f "${WWWROOT}/odoo.conf" ]; then
-  echo "Creating Odoo configuration..."
+  log_info "Creating Odoo configuration..."
   cat <<EOF | priv tee "${WWWROOT}/odoo.conf" >/dev/null
 [options]
 admin_passwd = admin
@@ -125,13 +125,13 @@ EOF
 fi
 
 # Start Odoo as a background service or daemon if possible (simplified start script)
-echo "Starting Odoo in the background..."
+log_info "Starting Odoo in the background..."
 if command -v python3 >/dev/null 2>&1; then
   priv -u www-data sh -c "cd ${WWWROOT} && python3 odoo-bin -c odoo.conf > odoo.log 2>&1 &" || \
   priv sh -c "cd ${WWWROOT} && python3 odoo-bin -c odoo.conf > odoo.log 2>&1 &" || true
 fi
 
-echo "Configuring webserver: ${ODOO_WEBSERVER}"
+log_info "Configuring webserver: ${ODOO_WEBSERVER}"
 
 ENV_SCRIPT_FILE=$(mktemp)
 cat <<EOF > "${ENV_SCRIPT_FILE}"
@@ -191,4 +191,4 @@ fi
 
 rm -f "${ENV_SCRIPT_FILE}"
 
-echo "Odoo setup complete on ${SERVER_NAME}:${LISTEN_PORT}"
+log_success "Odoo setup complete on ${SERVER_NAME}:${LISTEN_PORT}"

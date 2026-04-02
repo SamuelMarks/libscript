@@ -57,12 +57,7 @@ else
   mkdir -p "${bin_dir}"
 
   echo "Downloading Bazelisk (Bazel) from ${dl_url}..."
-  if command -v curl >/dev/null 2>&1; then
-    curl -L -f -o "${bin_dir}/bazel" "${dl_url}"
-  else
-    echo "[ERROR] curl is required but not found."
-    exit 1
-  fi
+  libscript_download "${dl_url}" "${bin_dir}/bazel"
 
   chmod +x "${bin_dir}/bazel"
   echo "Bazel installed to ${bin_dir}/bazel"

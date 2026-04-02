@@ -1,0 +1,12 @@
+{
+  "name": "ZYPPER",
+  "provides": [
+    "zypper"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "zypper",
+  "description": "Bootstrap module for the `zypper` package manager.",
+  "category": "package-manager"
+}

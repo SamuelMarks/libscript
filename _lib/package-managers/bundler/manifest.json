@@ -1,0 +1,12 @@
+{
+  "name": "BUNDLER",
+  "provides": [
+    "bundler"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "bundler",
+  "description": "Bootstrap module for the `bundler` package manager.",
+  "category": "package-manager"
+}

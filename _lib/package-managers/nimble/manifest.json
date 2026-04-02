@@ -1,6 +1,14 @@
 {
-  "name": "nimble",
-  "provides": ["package-manager", "nimble"],
-  "os_whitelist": ["all"],
-  "os_blacklist": []
+  "name": "NIMBLE",
+  "provides": [
+    "package-manager",
+    "nimble"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "title": "nimble",
+  "description": "Bootstrap script for [Nimble](https://github.com/nim-lang/nimble), the package manager for the Nim programming language. Typically installed via `choosenim`.",
+  "category": "package-manager"
 }

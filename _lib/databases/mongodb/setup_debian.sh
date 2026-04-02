@@ -33,12 +33,15 @@ done
 
 export DIR="${_DIR}"
 
-if command -v curl >/dev/null 2>&1 && command -v gpg >/dev/null 2>&1; then
-  curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | priv gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg --dearmor --yes
+if command -v gpg >/dev/null 2>&1; then
+  MONGODB_KEY=$(mktemp)
+  libscript_download 'https://www.mongodb.org/static/pgp/server-7.0.asc' "${MONGODB_KEY}"
+  priv gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg --dearmor --yes < "${MONGODB_KEY}"
+  rm -f "${MONGODB_KEY}"
   echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | priv tee /etc/apt/sources.list.d/mongodb-org-7.0.list
   priv apt-get update
   depends 'mongodb-org'
 else
-  >&2 printf 'Warning: curl or gpg missing, cannot install mongodb\n'
+  >&2 printf 'Warning: gpg missing, cannot install mongodb\n'
   exit 1
 fi

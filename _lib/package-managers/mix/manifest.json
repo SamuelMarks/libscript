@@ -1,0 +1,12 @@
+{
+  "name": "MIX",
+  "provides": [
+    "mix"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "mix",
+  "description": "Bootstrap module for `mix` (Elixir package manager and build tool).",
+  "category": "package-manager"
+}

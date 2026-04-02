@@ -1,6 +1,14 @@
 {
-  "name": "composer",
-  "provides": ["package-manager", "composer"],
-  "os_whitelist": ["all"],
-  "os_blacklist": []
+  "name": "COMPOSER",
+  "provides": [
+    "package-manager",
+    "composer"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "title": "composer",
+  "description": "Bootstrap module for the `composer` package manager.",
+  "category": "package-manager"
 }

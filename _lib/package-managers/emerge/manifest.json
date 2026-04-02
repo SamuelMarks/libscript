@@ -1,6 +1,18 @@
 {
-  "name": "emerge",
-  "provides": ["package-manager", "emerge"],
-  "os_whitelist": ["linux"],
-  "os_blacklist": ["darwin", "windows", "freebsd"]
+  "name": "EMERGE",
+  "provides": [
+    "package-manager",
+    "emerge"
+  ],
+  "os_whitelist": [
+    "linux"
+  ],
+  "os_blacklist": [
+    "darwin",
+    "windows",
+    "freebsd"
+  ],
+  "title": "emerge",
+  "description": "Bootstrap module for the Gentoo `emerge` package manager.",
+  "category": "package-manager"
 }

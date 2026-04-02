@@ -18,6 +18,14 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${this_file}"':'
 
+DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
+
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/pkg_mgr.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091,SC2034
+. "${SCRIPT_NAME}"
+
 if [ -s "$HOME/.nvm/nvm.sh" ]; then
   # shellcheck disable=SC1091
 # shellcheck disable=SC1090,SC1091,SC2034
@@ -25,12 +33,9 @@ if [ -s "$HOME/.nvm/nvm.sh" ]; then
 fi
 
 if ! command -v nvm >/dev/null 2>&1; then
-  if command -v curl >/dev/null 2>&1; then
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-  elif command -v wget >/dev/null 2>&1; then
-    wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-  else
-    printf "Error: curl or wget is required to bootstrap nvm.\n" >&2
-    exit 1
-  fi
+  echo "Installing nvm..."
+  _tmp_script="/tmp/nvm-install.sh"
+  libscript_download "https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh" "$_tmp_script"
+  bash "$_tmp_script"
+  rm -f "$_tmp_script"
 fi

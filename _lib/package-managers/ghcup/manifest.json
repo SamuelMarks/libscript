@@ -1,6 +1,14 @@
 {
-  "name": "ghcup",
-  "provides": ["package-manager", "ghcup"],
-  "os_whitelist": ["all"],
-  "os_blacklist": []
+  "name": "GHCUP",
+  "provides": [
+    "package-manager",
+    "ghcup"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "title": "ghcup",
+  "description": "Bootstrap script for [GHCup](https://www.haskell.org/ghcup/), the main installer for the Haskell language toolchain (including `cabal` and `stack`).",
+  "category": "package-manager"
 }

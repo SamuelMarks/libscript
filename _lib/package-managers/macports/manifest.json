@@ -1,0 +1,12 @@
+{
+  "name": "MACPORTS",
+  "provides": [
+    "macports"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "macports",
+  "description": "Bootstrap module for the `macports` package manager/tool.",
+  "category": "package-manager"
+}

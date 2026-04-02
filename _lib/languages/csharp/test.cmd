@@ -1,5 +1,2 @@
 @echo off
-dotnet --version
-dotnet new console -n hw_test
-dotnet run --project hw_test
-rmdir /S /Q hw_test
+call "%~dp0\..\..\_common\test_base.cmd" :assert_version "dotnet" "."

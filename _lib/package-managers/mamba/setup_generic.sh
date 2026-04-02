@@ -18,6 +18,14 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${this_file}"':'
 
+DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
+
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/pkg_mgr.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091,SC2034
+. "${SCRIPT_NAME}"
+
 if ! command -v micromamba >/dev/null 2>&1 && ! command -v mamba >/dev/null 2>&1; then
   echo "Installing micromamba..."
   OS="$(uname -s)"
@@ -46,16 +54,10 @@ if ! command -v micromamba >/dev/null 2>&1 && ! command -v mamba >/dev/null 2>&1
     exit 1
   fi
 
-  tmp_dir="$(mktemp -d)"
+  tmp_dir="/tmp/micromamba-install"
+  mkdir -p "$tmp_dir"
   tmp_tar="$tmp_dir/micromamba.tar.bz2"
-  if command -v curl >/dev/null 2>&1; then
-    curl -fsSL "$URL" -o "$tmp_tar"
-  elif command -v wget >/dev/null 2>&1; then
-    wget -qO "$tmp_tar" "$URL"
-  else
-    echo "Error: curl or wget required." >&2
-    exit 1
-  fi
+  libscript_download "$URL" "$tmp_tar"
 
   mkdir -p "$HOME/.local/bin"
   tar -xjf "$tmp_tar" -C "$tmp_dir"

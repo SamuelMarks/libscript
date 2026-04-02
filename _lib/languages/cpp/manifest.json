@@ -1,5 +1,8 @@
 {
   "name": "CPP",
+  "title": "C++ Toolchain",
+  "description": "Standard C++ compiler and toolchain (G++/Clang++).",
+  "category": "languages",
   "provides": [
     "compiler",
     "c++",

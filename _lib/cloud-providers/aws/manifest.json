@@ -1,0 +1,10 @@
+{
+  "name": "aws",
+  "provides": [
+    "aws"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "category": "cloud"
+}

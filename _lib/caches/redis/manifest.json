@@ -1,5 +1,8 @@
 {
   "name": "REDIS",
+  "title": "Redis",
+  "description": "In-memory data structure store used as a database, cache, message broker, and streaming engine.",
+  "category": "cache",
   "provides": [
     "cache",
     "redis",
@@ -11,6 +14,6 @@
   ],
   "os_blacklist": [],
   "ports": [
-    "6379"
+    6379
   ]
 }

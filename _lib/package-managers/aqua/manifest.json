@@ -1,0 +1,12 @@
+{
+  "name": "AQUA",
+  "provides": [
+    "aqua"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "aqua",
+  "description": "Bootstrap module for the `aqua` package manager.",
+  "category": "package-manager"
+}

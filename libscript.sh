@@ -6,6 +6,9 @@ set -e
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
+# Source logging
+. "$SCRIPT_DIR/_lib/_common/log.sh"
+
 show_help() {
   echo "LibScript Global CLI"
   echo "===================="
@@ -32,6 +35,9 @@ show_help() {
   echo "Options:"
   echo "  --help, -h, /?              Show this extensive help text"
   echo "  --prefix=<dir>              Set local installation prefix"
+  echo "  --log-format=<text|json>    Set log output format"
+  echo "  --log-level=<0-4>           Set minimum log level (0=DEBUG, 1=INFO, etc)"
+  echo "  --log-file=<path>           Set a file to mirror all logs to"
   echo "  --service-name=<name>       Set a custom service/daemon name"
   echo "  --secrets=<dir|url>         Save generated secrets to a directory or OpenBao/Vault URL"
   echo "  --listen=<str>                Global listen (port, addr:port, unix:socket)
@@ -78,6 +84,18 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --cache-dir=*)
       export LIBSCRIPT_CACHE_DIR="${1#*=}"
+      shift
+      ;;
+    --log-format=*)
+      export LIBSCRIPT_LOG_FORMAT="${1#*=}"
+      shift
+      ;;
+    --log-level=*)
+      export LIBSCRIPT_LOG_LEVEL="${1#*=}"
+      shift
+      ;;
+    --log-file=*)
+      export LIBSCRIPT_LOG_FILE="${1#*=}"
       shift
       ;;
     --prefix=*)

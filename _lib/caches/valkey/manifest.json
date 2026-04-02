@@ -1,9 +1,13 @@
 {
   "name": "VALKEY",
+  "title": "Valkey",
+  "description": "A high-performance, open-source, in-memory data store that is fully compatible with Redis.",
+  "category": "cache",
   "provides": [
     "kv-store",
     "redis-compatible",
-    "valkey"
+    "valkey",
+    "cache"
   ],
   "conflicts": [
     "redis"

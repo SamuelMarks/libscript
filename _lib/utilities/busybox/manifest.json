@@ -1,0 +1,12 @@
+{
+  "name": "BUSYBOX",
+  "title": "BusyBox",
+  "description": "The Swiss Army Knife of Embedded Linux, combining tiny versions of many common UNIX utilities into a single small executable.",
+  "category": "utility",
+  "provides": [
+    "busybox"
+  ],
+  "os_whitelist": [
+    "all"
+  ]
+}

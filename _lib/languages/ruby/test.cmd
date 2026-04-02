@@ -1,3 +1,2 @@
 @echo off
-ruby -v
-ruby -e "puts 'Hello World'"
+call "%~dp0\..\..\_common\test_base.cmd" :assert_version "ruby" "."

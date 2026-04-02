@@ -1,4 +1,10 @@
 #!/bin/sh
+. "$(dirname "$0")/../_common/test_base.sh"
+
+#!/bin/sh
+. "$(dirname "$0")/../_common/test_base.sh"
+
+#!/bin/sh
 set -e
 export DRY_RUN=true
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)

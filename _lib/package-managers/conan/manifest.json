@@ -1,0 +1,12 @@
+{
+  "name": "CONAN",
+  "provides": [
+    "conan"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "conan",
+  "description": "Bootstrap module for `conan` (C/C++ package manager).",
+  "category": "package-manager"
+}

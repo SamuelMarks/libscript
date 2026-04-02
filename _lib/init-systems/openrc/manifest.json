@@ -1,0 +1,12 @@
+{
+  "name": "openrc",
+  "provides": [
+    "openrc"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "OpenRC (`_daemon/openrc`)",
+  "description": "This document describes the **OpenRC** component (part of the `_daemon` stack) within the LibScript ecosystem. OpenRC is a dependency-based init system that works with the system-provided init program.",
+  "category": "init-systems"
+}

@@ -1,5 +1,8 @@
 {
   "name": "ETCD",
+  "title": "Etcd",
+  "description": "A distributed, reliable key-value store for the most critical data of a distributed system.",
+  "category": "databases",
   "provides": [
     "kv-store",
     "etcd"

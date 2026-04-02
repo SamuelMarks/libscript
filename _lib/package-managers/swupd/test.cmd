@@ -1,3 +1,2 @@
 @echo off
-echo swupd skipped (not Clear Linux)
-exit /b 0
+call "%~dp0\..\..\_common\test_base.cmd" :assert_version "swupd" "."

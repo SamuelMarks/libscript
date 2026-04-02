@@ -1,0 +1,12 @@
+{
+  "name": "PARU",
+  "provides": [
+    "paru"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "paru",
+  "description": "Bootstrap module for the `paru` package manager.",
+  "category": "package-manager"
+}

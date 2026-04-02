@@ -7,18 +7,17 @@ if [ "${SCRIPT_NAME-}" ]; then this_file="${SCRIPT_NAME}"; else this_file="${0}"
 case "${STACK+x}" in *':'"${this_file}"':'*) if (return 0 2>/dev/null); then return; else exit 0; fi ;; esac
 export STACK="${STACK:-}${this_file}"':'
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-$(cd "$(dirname "$this_file")/../../.." && pwd)}/_lib/_common/pkg_mgr.sh"
+DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
+
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/pkg_mgr.sh'
+export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091,SC2034
 . "${SCRIPT_NAME}"
 
 if ! command -v pkgx >/dev/null 2>&1; then
   echo "Bootstrapping pkgx single-binary package manager..."
-  if command -v curl >/dev/null 2>&1; then
-    curl -SsfL "https://pkgx.sh" -o "/tmp/install-pkgx.sh"
-  elif command -v wget >/dev/null 2>&1; then
-    wget -qO "/tmp/install-pkgx.sh" "https://pkgx.sh"
-  else
-    libscript_download "https://pkgx.sh" "/tmp/install-pkgx.sh" "SKIP"
-  fi
-  sh "/tmp/install-pkgx.sh"
+  _tmp_script="/tmp/install-pkgx.sh"
+  libscript_download "https://pkgx.sh" "$_tmp_script"
+  sh "$_tmp_script"
 fi

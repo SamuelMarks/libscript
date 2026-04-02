@@ -1,12 +1,17 @@
 {
   "name": "KUBERNETES_THW",
+  "title": "Kubernetes The Hard Way",
+  "description": "A custom Kubernetes cluster setup based on 'Kubernetes The Hard Way'.",
+  "category": "orchestration",
   "provides": [
-    "kubernetes_thw",
+    "kubernetes",
+    "thw",
+    "orchestration",
     "server"
   ],
   "conflicts": [],
   "os_whitelist": [
-    "all"
+    "linux", "darwin"
   ],
   "os_blacklist": [
     "windows"

@@ -1,5 +1,8 @@
 {
   "name": "CADDY",
+  "title": "Caddy",
+  "description": "A powerful, enterprise-ready, open source web server with automatic HTTPS written in Go.",
+  "category": "web-servers",
   "provides": [
     "web-server",
     "reverse-proxy",

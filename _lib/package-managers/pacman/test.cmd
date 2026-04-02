@@ -1,8 +1,2 @@
 @echo off
-where pacman >nul 2>nul
-if %ERRORLEVEL% EQU 0 (
-  pacman --version || echo pacman found
-) else (
-  echo pacman skipped (not found)
-)
-exit /b 0
+call "%~dp0\..\..\_common\test_base.cmd" :assert_version "pacman" "."

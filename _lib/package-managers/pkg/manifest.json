@@ -1,6 +1,18 @@
 {
-  "name": "pkg",
-  "provides": ["package-manager", "pkg"],
-  "os_whitelist": ["freebsd"],
-  "os_blacklist": ["linux", "darwin", "windows"]
+  "name": "PKG",
+  "provides": [
+    "package-manager",
+    "pkg"
+  ],
+  "os_whitelist": [
+    "freebsd"
+  ],
+  "os_blacklist": [
+    "linux",
+    "darwin",
+    "windows"
+  ],
+  "title": "pkg",
+  "description": "Bootstrap module for the FreeBSD `pkg` package manager.",
+  "category": "package-manager"
 }

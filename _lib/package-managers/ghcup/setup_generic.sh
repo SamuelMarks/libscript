@@ -15,18 +15,24 @@ case "${STACK+x}" in
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
 esac
-export STACK="${STACK:-}${this_file}"':'
+DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
+
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/pkg_mgr.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091,SC2034
+. "${SCRIPT_NAME}"
 
 if ! command -v ghcup >/dev/null 2>&1; then
   echo "Installing ghcup..."
   export BOOTSTRAP_HASKELL_NONINTERACTIVE=1
   export BOOTSTRAP_HASKELL_MINIMAL=1
-  if command -v curl >/dev/null 2>&1; then
-    curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
-  else
-    echo "Error: curl is required to install ghcup." >&2
-    exit 1
-  fi
+  
+  INSTALL_SH=$(mktemp)
+  libscript_download 'https://get-ghcup.haskell.org' "${INSTALL_SH}"
+  sh "${INSTALL_SH}"
+  rm -f "${INSTALL_SH}"
+
   if [ -d "$HOME/.ghcup/bin" ]; then
     export PATH="$HOME/.ghcup/bin:$PATH"
   fi

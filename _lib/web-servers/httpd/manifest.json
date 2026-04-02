@@ -1,5 +1,8 @@
 {
   "name": "HTTPD",
+  "title": "Apache HTTPD",
+  "description": "The Apache HTTP Server, a secure, efficient and extensible server that provides HTTP services in sync with the current HTTP standards.",
+  "category": "web-servers",
   "provides": [
     "web-server",
     "apache",

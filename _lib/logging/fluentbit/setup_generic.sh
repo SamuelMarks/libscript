@@ -35,8 +35,11 @@ export SCRIPT_NAME
 FLUENTBIT_INSTALL_METHOD="${FLUENTBIT_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 
 if [ "${FLUENTBIT_INSTALL_METHOD}" = 'system' ]; then
-  if [ "$(uname -s)" = "Linux" ] && command -v curl >/dev/null 2>&1; then
-    curl https://raw.githubusercontent.com/fluent/fluent-bit/master/install.sh | sh
+  if [ "$(uname -s)" = "Linux" ]; then
+    INSTALL_SH=$(mktemp)
+    libscript_download 'https://raw.githubusercontent.com/fluent/fluent-bit/master/install.sh' "${INSTALL_SH}"
+    sh "${INSTALL_SH}"
+    rm -f "${INSTALL_SH}"
   else
     depends 'fluent-bit'
   fi

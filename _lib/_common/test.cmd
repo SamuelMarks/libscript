@@ -1,2 +1,2 @@
 @echo off
-echo "Common loaded successfully"
+call "%~dp0\test_base.cmd"

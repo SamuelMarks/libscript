@@ -1,0 +1,12 @@
+{
+  "name": "VCPKG",
+  "provides": [
+    "vcpkg"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "vcpkg",
+  "description": "Bootstrap module for the `vcpkg` package manager/tool.",
+  "category": "package-manager"
+}

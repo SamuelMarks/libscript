@@ -15,14 +15,15 @@ call "%~dp0..\..\..\_lib\_bootstrap\powershell\setup.cmd"
 where powershell >nul 2>&1
 if %ERRORLEVEL% EQU 0 goto :run_powershell
 echo [INFO] PowerShell not found. Installing Fluent Bit natively...
+set "PACKAGE_NAME=fluentbit"
 set "PREFIX=%LIBSCRIPT_ROOT_DIR%\installed\fluent-bit"
 if not exist "%PREFIX%" mkdir "%PREFIX%"
-:: Without powershell, native download can be done via bitsadmin or certutil.
+:: Without powershell, native download can be done via pkg_mgr.cmd.
 :: Fluent Bit Windows zip URL
 set "FLUENTBIT_URL=https://packages.fluentbit.io/windows/fluent-bit-3.0.0-win64.zip"
 if not exist "%PREFIX%\fluent-bit.zip" (
     echo [INFO] Downloading Fluent Bit...
-    bitsadmin /transfer FluentBitDownload /download /priority normal "%FLUENTBIT_URL%" "%PREFIX%\fluent-bit.zip" >nul 2>&1 || certutil -urlcache -split -f "%FLUENTBIT_URL%" "%PREFIX%\fluent-bit.zip" >nul 2>&1
+    call "%~dp0\..\..\..\_lib\_common\pkg_mgr.cmd" :libscript_download "%FLUENTBIT_URL%" "%PREFIX%\fluent-bit.zip"
 )
 if exist "%PREFIX%\fluent-bit.zip" (
     echo [INFO] Extracting Fluent Bit...

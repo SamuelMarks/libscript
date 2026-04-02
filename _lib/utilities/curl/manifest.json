@@ -1,0 +1,12 @@
+{
+  "name": "CURL",
+  "title": "curl",
+  "description": "A command-line tool and library for transferring data with URLs.",
+  "category": "utility",
+  "provides": [
+    "curl"
+  ],
+  "os_whitelist": [
+    "all"
+  ]
+}

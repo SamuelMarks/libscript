@@ -1,0 +1,12 @@
+{
+  "name": "SWUPD",
+  "provides": [
+    "swupd"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "swupd",
+  "description": "Bootstrap module for `swupd` (Clear Linux OS package manager).",
+  "category": "package-manager"
+}

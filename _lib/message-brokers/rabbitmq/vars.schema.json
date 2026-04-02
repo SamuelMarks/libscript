@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/message-brokers/rabbitmq/vars.schema.json",
-  "title": "rabbitmq storage vars",
-  "description": "RabbitMQ message broker.",
+  "title": "rabbitmq vars",
+  "description": "Variables for RabbitMQ",
   "type": "object",
   "properties": {
     "RABBITMQ_LISTEN_ADDRESS": {
@@ -16,6 +16,11 @@
     "RABBITMQ_LISTEN_SOCKET": {
       "type": "string",
       "description": "UNIX socket path for RabbitMQ to listen on."
+    },
+    "RABBITMQ_VERSION": {
+      "description": "Version of RabbitMQ to install",
+      "type": "string",
+      "default": "latest"
     }
   }
 }

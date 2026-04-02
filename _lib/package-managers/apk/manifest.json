@@ -1,0 +1,12 @@
+{
+  "name": "APK",
+  "provides": [
+    "apk"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "apk (`_bootstrap/apk`)",
+  "description": "This document describes the **apk** (Alpine Package Keeper) bootstrap component for the LibScript ecosystem. It handles the integration and management of the Alpine Linux package manager.",
+  "category": "package-manager"
+}

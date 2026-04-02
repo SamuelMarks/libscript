@@ -1,0 +1,12 @@
+{
+  "name": "JULIA",
+  "provides": [
+    "julia"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "julia",
+  "description": "Bootstrap module for the `julia` package manager.",
+  "category": "package-manager"
+}

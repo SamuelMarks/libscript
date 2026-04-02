@@ -1,3 +1,2 @@
 @echo off
-cmake --version
-if %errorlevel% neq 0 exit /b %errorlevel%
+call "%~dp0\..\..\_common\test_base.cmd" :assert_version "cmake" "."

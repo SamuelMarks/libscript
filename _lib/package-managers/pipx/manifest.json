@@ -1,0 +1,12 @@
+{
+  "name": "PIPX",
+  "provides": [
+    "pipx"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "pipx",
+  "description": "Bootstrap module for the `pipx` package manager.",
+  "category": "package-manager"
+}

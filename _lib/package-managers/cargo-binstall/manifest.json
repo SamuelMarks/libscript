@@ -1,0 +1,12 @@
+{
+  "name": "CARGO_BINSTALL",
+  "provides": [
+    "cargo-binstall"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "cargo-binstall",
+  "description": "Bootstrap module for the `cargo-binstall` package manager.",
+  "category": "package-manager"
+}

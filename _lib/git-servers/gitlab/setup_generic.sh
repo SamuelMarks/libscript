@@ -32,10 +32,16 @@ GITLAB_INSTALL_METHOD="${GITLAB_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHO
 
 if [ "${GITLAB_INSTALL_METHOD}" = 'system' ]; then
   if command -v apt-get >/dev/null 2>&1; then
-    curl -sS https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh | sudo bash
+    INSTALL_SH=$(mktemp)
+    libscript_download 'https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh' "${INSTALL_SH}"
+    sudo bash "${INSTALL_SH}"
+    rm -f "${INSTALL_SH}"
     sudo apt-get install -y gitlab-ce
   elif command -v yum >/dev/null 2>&1; then
-    curl -sS https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.rpm.sh | sudo bash
+    INSTALL_SH=$(mktemp)
+    libscript_download 'https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.rpm.sh' "${INSTALL_SH}"
+    sudo bash "${INSTALL_SH}"
+    rm -f "${INSTALL_SH}"
     sudo yum install -y gitlab-ce
   else
     depends 'gitlab-ce'

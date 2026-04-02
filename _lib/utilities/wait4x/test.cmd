@@ -1,2 +1,2 @@
 @echo off
-wait4x --version
+call "%~dp0\..\..\_common\test_base.cmd" :assert_version "wait4x" "."

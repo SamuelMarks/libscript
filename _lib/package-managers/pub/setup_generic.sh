@@ -18,7 +18,10 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${this_file}"':'
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-..}"'/_lib/_common/pkg_mgr.sh'
+DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
+
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/pkg_mgr.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091,SC2034
 . "${SCRIPT_NAME}"
@@ -30,7 +33,10 @@ if ! command -v dart >/dev/null 2>&1 && ! command -v pub >/dev/null 2>&1; then
   elif command -v apt-get >/dev/null 2>&1; then
     sudo apt-get update -y
     sudo apt-get install -y apt-transport-https
-    wget -qO- https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/dart.gpg
+    _tmp_key="/tmp/dart-signing-key.pub"
+    libscript_download "https://dl-ssl.google.com/linux/linux_signing_key.pub" "$_tmp_key"
+    cat "$_tmp_key" | sudo gpg --dearmor -o /usr/share/keyrings/dart.gpg
+    rm -f "$_tmp_key"
     echo 'deb [signed-by=/usr/share/keyrings/dart.gpg arch=amd64] https://storage.googleapis.com/download.dartlang.org/linux/debian stable main' | sudo tee /etc/apt/sources.list.d/dart_stable.list
     sudo apt-get update -y
     sudo apt-get install -y dart

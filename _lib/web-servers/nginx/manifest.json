@@ -1,5 +1,8 @@
 {
   "name": "NGINX",
+  "title": "Nginx",
+  "description": "A high-performance HTTP and reverse proxy server, as well as a mail proxy server.",
+  "category": "web-servers",
   "provides": [
     "web-server",
     "reverse-proxy",

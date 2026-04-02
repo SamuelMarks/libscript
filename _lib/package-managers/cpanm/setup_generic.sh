@@ -18,7 +18,10 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${this_file}"':'
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-..}"'/_lib/_common/pkg_mgr.sh'
+DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
+
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/pkg_mgr.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091,SC2034
 . "${SCRIPT_NAME}"
@@ -39,13 +42,9 @@ if ! command -v cpanm >/dev/null 2>&1; then
   elif command -v pacman >/dev/null 2>&1; then
     priv pacman -S --noconfirm cpanminus
   else
-    if command -v curl >/dev/null 2>&1; then
-      curl -L https://cpanmin.us | priv perl - App::cpanminus
-    elif command -v wget >/dev/null 2>&1; then
-      wget -O- https://cpanmin.us | priv perl - App::cpanminus
-    else
-      printf "Error: curl or wget is required to bootstrap cpanm.\n" >&2
-      exit 1
-    fi
+    _tmp_script="/tmp/cpanm-bootstrap"
+    libscript_download "https://cpanmin.us" "$_tmp_script"
+    priv perl "$_tmp_script" -- App::cpanminus
+    rm -f "$_tmp_script"
   fi
 fi

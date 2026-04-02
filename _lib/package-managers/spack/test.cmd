@@ -1,8 +1,2 @@
 @echo off
-where spack >nul 2>nul
-if %ERRORLEVEL% EQU 0 (
-  spack --version || echo spack found
-) else (
-  echo spack skipped (not found)
-)
-exit /b 0
+call "%~dp0\..\..\_common\test_base.cmd" :assert_version "spack" "."

@@ -18,22 +18,27 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${this_file}"':'
 
-if [ -x "$HOME/.pyenv/bin/pyenv" ]; then
-  export PATH="$HOME/.pyenv/bin:$PATH"
-fi
+DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/pkg_mgr.sh'
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091,SC2034
+. "${SCRIPT_NAME}"
+
+if [ -x "$HOME/.pyenv/bin/pyenv" ]; then
+...
 if ! command -v pyenv >/dev/null 2>&1; then
   if command -v brew >/dev/null 2>&1; then
     brew install pyenv
   else
-    if command -v curl >/dev/null 2>&1; then
-      curl https://pyenv.run | bash
-    elif command -v wget >/dev/null 2>&1; then
-      wget -qO- https://pyenv.run | bash
-    else
-      printf "Error: curl or wget is required to bootstrap pyenv.\n" >&2
-      exit 1
-    fi
+    echo "Installing pyenv..."
+    _tmp_script="/tmp/pyenv-install.sh"
+    libscript_download "https://pyenv.run" "$_tmp_script"
+    bash "$_tmp_script"
+    rm -f "$_tmp_script"
+  fi
+fi
   fi
 fi
 

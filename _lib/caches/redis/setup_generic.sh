@@ -44,16 +44,11 @@ else
   bin_dir="${PREFIX}/bin"
   mkdir -p "${bin_dir}"
 
-  echo "Downloading and compiling Redis from ${dl_url}..."
-  if command -v curl >/dev/null 2>&1; then
-    curl -L -f -o "/tmp/redis.tar.gz" "${dl_url}"
-  else
-    echo "[ERROR] curl is required but not found."
-    exit 1
-  fi
+  log_info "Downloading and compiling Redis from ${dl_url}..."
+  libscript_download "${dl_url}" "/tmp/redis.tar.gz"
 
   if ! command -v make >/dev/null 2>&1 || ! command -v cc >/dev/null 2>&1; then
-    echo "[ERROR] 'make' and a C compiler ('cc'/'gcc'/'clang') are required for source installation."
+    log_error "'make' and a C compiler ('cc'/'gcc'/'clang') are required for source installation."
     exit 1
   fi
 
@@ -64,7 +59,7 @@ else
   cd -
   rm -rf "/tmp/redis.tar.gz" "/tmp/redis-${REDIS_VERSION}"
 
-  echo "Redis installed to ${bin_dir}/redis-server"
+  log_success "Redis installed to ${bin_dir}/redis-server"
 fi
 
 CONF_DIR="${LIBSCRIPT_DATA_DIR}/redis"

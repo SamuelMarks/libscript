@@ -1,7 +1,12 @@
 {
   "name": "KUBERNETES_K0S",
+  "title": "Kubernetes k0s",
+  "description": "A zero-friction, all-in-one Kubernetes distribution.",
+  "category": "orchestration",
   "provides": [
-    "kubernetes_k0s",
+    "kubernetes",
+    "k0s",
+    "orchestration",
     "server"
   ],
   "conflicts": [],

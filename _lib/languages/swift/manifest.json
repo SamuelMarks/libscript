@@ -1,5 +1,8 @@
 {
   "name": "SWIFT",
+  "title": "Swift Toolchain",
+  "description": "A powerful and intuitive programming language for iOS, macOS, tvOS, and watchOS.",
+  "category": "languages",
   "provides": [
     "swift",
     "toolchain"

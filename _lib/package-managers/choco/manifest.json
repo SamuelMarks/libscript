@@ -1,0 +1,12 @@
+{
+  "name": "CHOCO",
+  "provides": [
+    "choco"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "title": "choco",
+  "description": "This document describes **Chocolatey (choco)**, a machine-level, command-line package manager and installer for Windows software.",
+  "category": "package-manager"
+}

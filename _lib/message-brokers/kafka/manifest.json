@@ -1,5 +1,8 @@
 {
   "name": "KAFKA",
+  "title": "Kafka",
+  "description": "A distributed event store and stream-processing platform.",
+  "category": "message-brokers",
   "provides": [
     "message-broker",
     "kafka"

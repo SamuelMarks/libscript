@@ -1,0 +1,12 @@
+{
+  "name": "COMPOSER",
+  "title": "Composer",
+  "description": "A Dependency Manager for PHP.",
+  "category": "languages",
+  "provides": [
+    "composer"
+  ],
+  "os_whitelist": [
+    "all"
+  ]
+}

@@ -1,15 +1,16 @@
 {
   "name": "MINIO",
+  "title": "MinIO",
+  "description": "High Performance Object Storage, API compatible with Amazon S3 cloud storage service.",
+  "category": "storage-layer",
   "provides": [
+    "minio",
     "object-storage",
-    "s3",
-    "minio"
+    "s3"
   ],
-  "conflicts": [],
   "os_whitelist": [
     "all"
   ],
-  "os_blacklist": [],
   "ports": [
     "9000",
     "9001"
