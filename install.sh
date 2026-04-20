@@ -4,6 +4,13 @@
 
 
 set -feu
+
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+  echo "Usage: $0"
+  echo "Configure installation via environment variables."
+  exit 0
+fi
+
 if [ "${SCRIPT_NAME-}" ]; then
   this_file="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

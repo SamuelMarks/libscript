@@ -3,6 +3,7 @@
 
 set -e
 
+
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
 
@@ -36,6 +37,23 @@ parse_tags() {
   printf '%s' "$FINAL_TAGS"
 }
 
+# Parse extra args to pass through to az CLI
+parse_az_args() {
+  FILTERED=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --tags) shift 2 ;;
+      --no-default-tags) shift ;;
+      --bootstrap) shift 2 ;;
+      *)
+        if [ -n "$FILTERED" ]; then FILTERED="$FILTERED $1"; else FILTERED="$1"; fi
+        shift
+        ;;
+    esac
+  done
+  printf '%s' "$FILTERED"
+}
+
 # Dry run helper
 az() {
   if [ "${DRY_RUN:-}" = "true" ]; then
@@ -65,15 +83,16 @@ azure_network() {
   case "$ACTION" in
     create)
       NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}
-      if [ -z "$NAME" ] || [ -z "$RG" ]; then echo "Usage: network create <name> <rg> [--tags T] [--no-default-tags]"; exit 1; fi
-      
+      if [ -z "$NAME" ] || [ -z "$RG" ]; then echo "Usage: network create <name> <rg> [--tags T] [--no-default-tags] [az_args...]"; exit 1; fi
+      shift 2
       TAGS=$(parse_tags "$@")
+      EXTRA_ARGS=$(parse_az_args "$@")
       
       if ! az network vnet show --name "$NAME" --resource-group "$RG" >/dev/null 2>&1; then
         if [ -n "$TAGS" ]; then
-          az network vnet create --name "$NAME" --resource-group "$RG" --address-prefix 10.0.0.0/16 --tags $TAGS
+          az network vnet create --name "$NAME" --resource-group "$RG" --address-prefix 10.0.0.0/16 --tags $TAGS $EXTRA_ARGS
         else
-          az network vnet create --name "$NAME" --resource-group "$RG" --address-prefix 10.0.0.0/16
+          az network vnet create --name "$NAME" --resource-group "$RG" --address-prefix 10.0.0.0/16 $EXTRA_ARGS
         fi
         echo "Created VNET '$NAME'"
       fi
@@ -93,23 +112,33 @@ azure_firewall() {
   ACTION=$1; shift
   case "$ACTION" in
     create)
-      NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}; PORT=${3:-22}
-      if [ -z "$NAME" ] || [ -z "$RG" ]; then echo "Usage: firewall create <name> <rg> [port] [--tags T] [--no-default-tags]"; exit 1; fi
-      
+      NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}; PORTS=${3:-22}
+      if [ -z "$NAME" ] || [ -z "$RG" ]; then echo "Usage: firewall create <name> <rg> [ports] [--tags T] [--no-default-tags] [az_args...]"; exit 1; fi
+      shift 3
       TAGS=$(parse_tags "$@")
+      EXTRA_ARGS=$(parse_az_args "$@")
       
       if ! az network nsg show --name "$NAME" --resource-group "$RG" >/dev/null 2>&1; then
         if [ -n "$TAGS" ]; then
-          az network nsg create --name "$NAME" --resource-group "$RG" --tags $TAGS
+          az network nsg create --name "$NAME" --resource-group "$RG" --tags $TAGS $EXTRA_ARGS
         else
-          az network nsg create --name "$NAME" --resource-group "$RG"
+          az network nsg create --name "$NAME" --resource-group "$RG" $EXTRA_ARGS
         fi
-        az network nsg rule create --name AllowSSH --nsg-name "$NAME" --resource-group "$RG" --priority 100 --destination-port-ranges "$PORT" --access Allow --protocol Tcp
-        echo "Created NSG '$NAME' (Port $PORT open)"
+        echo "Created NSG '$NAME'"
+      fi
+      
+      # Guard rule creation
+      if ! az network nsg rule show --name AllowPorts --nsg-name "$NAME" --resource-group "$RG" >/dev/null 2>&1; then
+        az network nsg rule create --name AllowPorts --nsg-name "$NAME" --resource-group "$RG" --priority 100 --destination-port-ranges $PORTS --access Allow --protocol Tcp
+        echo "Created NSG Rule AllowPorts for ports: $PORTS"
       fi
       ;;
     list)
       az network nsg list --query "[*].{Name:name, RG:resourceGroup, Tags:tags}" --output table
+      ;;
+    delete)
+      NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}
+      az network nsg delete --name "$NAME" --resource-group "$RG"
       ;;
     *) echo "Unknown firewall action: $ACTION"; exit 1 ;;
   esac
@@ -121,30 +150,22 @@ azure_node() {
     create)
       NAME=$1; IMAGE=$2; RG=${3:-$AZURE_RESOURCE_GROUP}
       if [ -z "$NAME" ] || [ -z "$IMAGE" ] || [ -z "$RG" ]; then 
-        echo "Usage: node create <name> <image> <rg> [--bootstrap <script>] [--tags T] [--no-default-tags]"
+        echo "Usage: node create <name> <image> <rg> [--bootstrap <script>] [--tags T] [--no-default-tags] [az_args...]"
         exit 1 
       fi
+      shift 3
       
+      # Extract bootstrap if provided
       BOOTSTRAP=""
-      # Complex arg parser
-      filtered_args=""
-      while [ $# -gt 0 ]; do
-        case "$1" in
-          --bootstrap) BOOTSTRAP="$2"; shift 2 ;;
-          --tags|--no-default-tags) 
-             if [ "$1" = "--tags" ]; then 
-               filtered_args="$filtered_args $1 $2"
-               shift 2
-             else
-               filtered_args="$filtered_args $1"
-               shift
-             fi
-             ;;
-          *) shift ;;
-        esac
+      _args=""
+      # We need to peek to get bootstrap value
+      for _a in "$@"; do
+        if [ "$_prev" = "--bootstrap" ]; then BOOTSTRAP="$_a"; fi
+        _prev="$_a"
       done
       
-      TAGS=$(parse_tags $filtered_args)
+      TAGS=$(parse_tags "$@")
+      EXTRA_AZ_ARGS=$(parse_az_args "$@")
 
       if ! az vm show --name "$NAME" --resource-group "$RG" >/dev/null 2>&1; then
         EXTRA_ARGS=""
@@ -155,9 +176,9 @@ azure_node() {
         fi
         
         if [ -n "$TAGS" ]; then
-          az vm create --name "$NAME" --resource-group "$RG" --image "$IMAGE" --admin-username libscript --generate-ssh-keys --tags $TAGS $EXTRA_ARGS
+          az vm create --name "$NAME" --resource-group "$RG" --image "$IMAGE" --admin-username libscript --generate-ssh-keys --tags $TAGS $EXTRA_ARGS $EXTRA_AZ_ARGS
         else
-          az vm create --name "$NAME" --resource-group "$RG" --image "$IMAGE" --admin-username libscript --generate-ssh-keys $EXTRA_ARGS
+          az vm create --name "$NAME" --resource-group "$RG" --image "$IMAGE" --admin-username libscript --generate-ssh-keys $EXTRA_ARGS $EXTRA_AZ_ARGS
         fi
         echo "Created VM '$NAME'"
         if [ -n "${USER_DATA_FILE:-}" ]; then rm -f "$USER_DATA_FILE"; fi
@@ -169,6 +190,32 @@ azure_node() {
       IP=$(az vm show -d -g "$RG" -n "$NAME" --query publicIps -o tsv)
       echo "Executing on $NAME ($IP)..."
       ssh -o StrictHostKeyChecking=no "libscript@$IP" "$CMD"
+      ;;
+    sync)
+      NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}
+      if [ -z "$NAME" ] || [ -z "$RG" ]; then echo "Usage: node sync <name> <rg> [dest]"; exit 1; fi
+      IP=$(az vm show -d -g "$RG" -n "$NAME" --query publicIps -o tsv)
+      OS_TYPE=$(az vm show -g "$RG" -n "$NAME" --query "storageProfile.osDisk.osType" -o tsv)
+      echo "Syncing LibScript root to $NAME ($IP, OS: $OS_TYPE)..."
+      
+      STAGING=$(mktemp -d)
+      cp -R "$LIBSCRIPT_ROOT_DIR" "$STAGING/libscript"
+      rm -rf "$STAGING/libscript/.git" "$STAGING/libscript/.idea" "$STAGING/libscript/vagrant" 2>/dev/null || true
+      
+      if [ "$OS_TYPE" = "Windows" ]; then
+        DEST=${3:-"C:\\libscript"}
+        azure_node winrm-exec "$NAME" "$RG" "New-Item -ItemType Directory -Force -Path '$DEST'" >/dev/null 2>&1 || true
+        azure_node winrm-cp "$NAME" "$RG" "$STAGING/libscript" "$DEST"
+      else
+        DEST=${3:-"~/libscript"}
+        azure_node exec "$NAME" "$RG" "mkdir -p $DEST"
+        if command -v rsync >/dev/null 2>&1; then
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" "$STAGING/libscript/" "libscript@$IP:$DEST/" >/dev/null 2>&1
+        else
+          scp -o StrictHostKeyChecking=no -r "$STAGING/libscript/"* "libscript@$IP:$DEST/" >/dev/null 2>&1
+        fi
+      fi
+      rm -rf "$STAGING"
       ;;
     scp)
       NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}; SRC=$3; DEST=$4
@@ -369,6 +416,25 @@ case "$CMD" in
   list-managed) azure_list_managed "$@" ;;
   cleanup) azure_cleanup "$@" ;;
   install) check_deps ;;
+  --help|-h)
+    echo "LibScript Azure Cloud Wrapper"
+    echo "Usage: $0 {network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
+    echo ""
+    echo "Commands:"
+    echo "  network        Manage VPCs and subnets"
+    echo "  firewall       Manage Security Groups / Firewalls"
+    echo "  node           Manage Compute Instances"
+    echo "  node-group     Manage Node Groups"
+    echo "  cron           Manage Cronjobs on nodes"
+    echo "  jumpbox        Provision a Jump-box"
+    echo "  storage        Manage Storage Buckets"
+    echo "  list-managed   List resources managed by LibScript"
+    echo "  cleanup        Delete resources managed by LibScript"
+    echo "  install        Install required CLI dependencies"
+    echo ""
+    echo "Use '$0 <command> --help' for command-specific options (if applicable)."
+    exit 0
+    ;;
   *)
     echo "LibScript Azure Cloud Wrapper"
     echo "Usage: $0 {network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"

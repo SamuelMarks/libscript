@@ -3,6 +3,7 @@
 
 set -e
 
+
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
 
@@ -447,6 +448,25 @@ case "$CMD" in
   list-managed) aws_list_managed "$@" ;;
   cleanup) aws_cleanup "$@" ;;
   install) check_deps ;;
+  --help|-h)
+    echo "LibScript AWS Cloud Wrapper"
+    echo "Usage: $0 {network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
+    echo ""
+    echo "Commands:"
+    echo "  network        Manage VPCs and subnets"
+    echo "  firewall       Manage Security Groups / Firewalls"
+    echo "  node           Manage Compute Instances"
+    echo "  node-group     Manage Node Groups"
+    echo "  cron           Manage Cronjobs on nodes"
+    echo "  jumpbox        Provision a Jump-box"
+    echo "  storage        Manage Storage Buckets"
+    echo "  list-managed   List resources managed by LibScript"
+    echo "  cleanup        Delete resources managed by LibScript"
+    echo "  install        Install required CLI dependencies"
+    echo ""
+    echo "Use '$0 <command> --help' for command-specific options (if applicable)."
+    exit 0
+    ;;
   *)
     echo "LibScript AWS Cloud Wrapper"
     echo "Usage: $0 {network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"

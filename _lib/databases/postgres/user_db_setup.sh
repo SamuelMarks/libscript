@@ -113,8 +113,8 @@ fi
 if ! priv_as "${POSTGRES_SERVICE_USER}" psql -tc 'SELECT 1' 2>/dev/null >/dev/null; then
   createuser -s postgres
 fi
-user_present="$(priv_as "${POSTGRES_SERVICE_USER}" psql"${host_flag}" -tc "SELECT 1 FROM pg_roles WHERE rolname = '""${POSTGRES_USER?}""';")"
-if [ "$user_present" -eq 1 ]; then
+user_present="$(priv_as "${POSTGRES_SERVICE_USER}" psql"${host_flag}" -tc "SELECT 1 FROM pg_roles WHERE rolname = '""${POSTGRES_USER?}""';" | tr -d ' \r\n\t')"
+if [ "$user_present" = "1" ]; then
   true
 else
   (
@@ -125,13 +125,13 @@ else
   fi
   )
   priv_as "${POSTGRES_SERVICE_USER}" createuser"${host_flag}" "${POSTGRES_USER?}"
-  if [ "${POSTGRES_PASSWORD#}" -gt 0 ]; then
+  if [ -n "${POSTGRES_PASSWORD}" ]; then
     priv_as "${POSTGRES_SERVICE_USER}" psql"${host_flag}" -c 'ALTER USER '"${POSTGRES_USER?}"' PASSWORD '"'${POSTGRES_PASSWORD?}'"';';
   fi
 fi
 
-db_present="$(priv_as "${POSTGRES_SERVICE_USER}" psql"${host_flag}" -tc "SELECT 1 FROM pg_database WHERE datname = '""${POSTGRES_DB?}""';")"
-if [ "$db_present" -eq 1 ]; then
+db_present="$(priv_as "${POSTGRES_SERVICE_USER}" psql"${host_flag}" -tc "SELECT 1 FROM pg_database WHERE datname = '""${POSTGRES_DB?}""';" | tr -d ' \r\n\t')"
+if [ "$db_present" = "1" ]; then
   true
 else
   priv_as "${POSTGRES_SERVICE_USER}" createdb"${host_flag}" "${POSTGRES_DB?}" --owner "${POSTGRES_USER?}"

@@ -41,6 +41,11 @@ parse_args() {
 
   while [ $# -gt 0 ]; do
     case "$1" in
+      --help|-h)
+        echo "Usage: [OPTIONS]"
+        exit 0
+        ;;
+
       --no-default-tags)
         USE_DEFAULT_TAGS=false
         shift

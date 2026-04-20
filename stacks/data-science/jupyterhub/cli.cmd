@@ -1,2 +1,3 @@
 @echo off
-call "%~dp0\..\..\..\_lib\_common\cli.cmd" %*
+set "PACKAGE_NAME=jupyterhub"
+call "%~dp0\..\..\_lib\_common\component_core.cmd" %*

@@ -3,6 +3,12 @@
 
 
 set -feu
+
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+  echo "Usage: $0 [OPTIONS]"
+  echo "See script source or documentation for more details."
+  exit 0
+fi
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   this_file="${SCRIPT_NAME}"

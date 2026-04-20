@@ -38,6 +38,15 @@ if "%~2"=="" (
 )
 set "current_arg=%~2"
 
+if /i "%current_arg%"=="--help" (
+    echo Usage: [OPTIONS]
+    exit /b 0
+)
+if /i "%current_arg%"=="-h" (
+    echo Usage: [OPTIONS]
+    exit /b 0
+)
+
 if /i "%current_arg%"=="--no-default-tags" (
     set "USE_DEFAULT_TAGS=false"
     shift & goto :parse_loop

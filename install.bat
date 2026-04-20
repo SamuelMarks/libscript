@@ -1,6 +1,17 @@
 @echo on
 
 SET "LIBSCRIPT_ROOT_DIR=%~dp0"
+if "%~1"=="--help" (
+    echo Usage: %0
+    echo Configure installation via environment variables.
+    exit /b 0
+)
+if "%~1"=="-h" (
+    echo Usage: %0
+    echo Configure installation via environment variables.
+    exit /b 0
+)
+
 SET "LIBSCRIPT_ROOT_DIR=%LIBSCRIPT_ROOT_DIR:~0,-1%"
 
 :: Initialize STACK variable

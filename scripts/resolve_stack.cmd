@@ -1,6 +1,18 @@
 @echo off
 setlocal enabledelayedexpansion
 
+if "%~1"=="--help" (
+    echo Usage: %0 [OPTIONS]
+    echo See script source or documentation for more details.
+    exit /b 0
+)
+if "%~1"=="-h" (
+    echo Usage: %0 [OPTIONS]
+    echo See script source or documentation for more details.
+    exit /b 0
+)
+
+
 REM resolve_stack.cmd
 REM A portable wrapper for the SAT/Constraint solver using jq on Windows.
 REM Usage: scripts\resolve_stack.cmd <path_to_install.json>

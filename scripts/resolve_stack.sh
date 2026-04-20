@@ -1,4 +1,10 @@
 #!/bin/sh
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+  echo "Usage: $0 [OPTIONS]"
+  echo "See script source or documentation for more details."
+  exit 0
+fi
+
 
 # resolve_stack.sh
 # A portable wrapper for the SAT/Constraint solver using jq.

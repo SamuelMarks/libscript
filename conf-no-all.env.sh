@@ -4,6 +4,12 @@
 
 
 set -feu
+
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+  echo "Usage: $0 [OPTIONS]"
+  echo "See script source or documentation for more details."
+  exit 0
+fi
 if [ "${SCRIPT_NAME-}" ]; then
   this_file="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
