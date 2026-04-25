@@ -19,6 +19,8 @@ show_help() {
   echo "  env <component> <version>   Print environment variables for a component"
   echo "  install-deps [file]         Install all dependencies defined in a JSON file (default: libscript.json)"
   echo "  package_as <format> [args]  Package libscript usage (e.g., docker, docker_compose)"
+  echo "  provision <provider> ...    Provision a cloud environment"
+  echo "  deprovision <provider> ...  Deprovision a cloud environment"
   echo "  <component> [OPTIONS...]    Invoke the CLI for a specific component"
   echo ""
   echo "Options:"
@@ -145,6 +147,17 @@ if [ "$cmd" = "process-downloads" ]; then
   libscript_process_aria2_file "$list_file"
   exit 0
 fi
+
+if [ "$cmd" = "provision" ]; then
+  shift
+  exec "$SCRIPT_DIR/scripts/deploy_cloud.sh" "$@"
+fi
+
+if [ "$cmd" = "deprovision" ]; then
+  shift
+  exec "$SCRIPT_DIR/scripts/teardown_cloud.sh" "$@"
+fi
+
 
 if [ "$cmd" = "search" ]; then
   query="$1"

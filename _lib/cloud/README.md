@@ -14,12 +14,17 @@ The `cloud` component provides a unified multicloud interface for managing resou
 - `gcp`
 
 ### Resources
-- `network`, `firewall`, `node`, `node-group`, `jumpbox`, `storage`, `cron`
+- `dns`, `network`, `firewall`, `node`, `node-group`, `jumpbox`, `storage`, `cron`
 
 ### Node Actions
 - `create`, `list`, `delete`, `exec`, `winrm-exec`
+- `deploy` (intelligent codebase sync honoring `.gitignore`, prefers `rsync`, falls back to `scp`, supports `winrm` for Windows nodes)
 - `scp`, `scp-from`, `winrm-cp`, `winrm-cp-from` (File transfer)
 - `snapshot`, `restore` (State management)
+
+
+### DNS Actions
+- `map-node` (Map a running node's public IP to a DNS A record via Cloud DNS / Route53 / Azure DNS)
 
 ### Tagging Options
 

@@ -30,6 +30,8 @@ show_help() {
   echo "  logs [-f] [package_name...]  Show service logs (real-time stream)"
   echo "  up [package_name...]        Alias for start"
   echo "  down [package_name...]      Alias for stop"
+  echo "  provision <provider> ...    Provision a cloud environment"
+  echo "  deprovision <provider> ...  Deprovision a cloud environment"
   echo "  <component> [OPTIONS...]    Invoke the CLI for a specific component"
   echo ""
   echo "Options:"
@@ -172,6 +174,17 @@ if [ "$cmd" = "process-downloads" ]; then
   exit 0
 fi
 
+if [ "$cmd" = "provision" ]; then
+  shift
+  exec "$SCRIPT_DIR/scripts/deploy_cloud.sh" "$@"
+fi
+
+if [ "$cmd" = "deprovision" ]; then
+  shift
+  exec "$SCRIPT_DIR/scripts/teardown_cloud.sh" "$@"
+fi
+
+
 if [ "$cmd" = "search" ]; then
   query="$1"
   if [ -z "$query" ]; then
@@ -197,10 +210,13 @@ if [ "$cmd" = "start" ] || [ "$cmd" = "stop" ] || [ "$cmd" = "status" ] || [ "$c
   if [ "$action" = "up" ]; then action="start"; fi
   if [ "$action" = "down" ]; then action="stop"; fi
   follow_logs=0
+  skip_hooks=0
   new_args=""
   for arg in "$@"; do
     if [ "$arg" = "-f" ] || [ "$arg" = "--follow" ]; then
       follow_logs=1
+    elif [ "$arg" = "--no-hooks" ]; then
+      skip_hooks=1
     else
       new_args="$new_args \"$arg\""
     fi
@@ -222,26 +238,42 @@ if [ "$cmd" = "start" ] || [ "$cmd" = "stop" ] || [ "$cmd" = "status" ] || [ "$c
       echo "Error: jq is required to parse $json_file." >&2
       exit 1
     fi
-    deps=$("${LIBSCRIPT_ROOT_DIR:-.}/scripts/resolve_stack.sh" "$json_file" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null || true)
-    if [ -z "$deps" ]; then
-      echo "No dependencies found in $json_file."
-      exit 0
-    fi
-    echo "$deps" > "$json_file.tmpdeps"
-    while read -r pkg ver; do
-      if [ -n "$pkg" ]; then
-        if [ "$ver" = "null" ]; then ver="latest"; fi
-        if [ "$action" = "logs" ] && [ "$follow_logs" = "1" ]; then
-          "$0" "$pkg" "$action" "$pkg" "$ver" -f 2>&1 | awk -v prefix="$pkg" '{print "\033[36m" prefix " |\033[0m " $0; fflush()}' &
-        elif [ "$action" = "status" ] || [ "$action" = "health" ] || [ "$action" = "logs" ]; then
-          echo "=== $pkg ==="
-          "$0" "$pkg" "$action" "$pkg" "$ver"
-        else
-          "$0" "$pkg" "$action" "$pkg" "$ver" &
-        fi
+    if [ "$skip_hooks" -eq 0 ]; then
+      if [ "$action" = "start" ] || [ "$action" = "up" ]; then
+        "${LIBSCRIPT_ROOT_DIR:-.}/scripts/run_hooks.sh" "$json_file" "build"
+        "${LIBSCRIPT_ROOT_DIR:-.}/scripts/run_hooks.sh" "$json_file" "pre_start"
       fi
-    done < "$json_file.tmpdeps"
-    rm -f "$json_file.tmpdeps"
+    fi
+
+    deps=$("${LIBSCRIPT_ROOT_DIR:-.}/scripts/resolve_stack.sh" "$json_file" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null || true)
+    if [ -n "$deps" ]; then
+      echo "$deps" > "$json_file.tmpdeps"
+      while read -r pkg ver; do
+        if [ -n "$pkg" ]; then
+          if [ "$ver" = "null" ]; then ver="latest"; fi
+          if [ "$action" = "logs" ] && [ "$follow_logs" = "1" ]; then
+            "$0" "$pkg" "$action" "$pkg" "$ver" -f 2>&1 | awk -v prefix="$pkg" '{print "\033[36m" prefix " |\033[0m " $0; fflush()}' &
+          elif [ "$action" = "status" ] || [ "$action" = "health" ] || [ "$action" = "logs" ]; then
+            echo "=== $pkg ==="
+            "$0" "$pkg" "$action" "$pkg" "$ver"
+          else
+            "$0" "$pkg" "$action" "$pkg" "$ver" &
+          fi
+        fi
+      done < "$json_file.tmpdeps"
+      rm -f "$json_file.tmpdeps"
+    fi
+
+    if [ "$action" = "start" ] || [ "$action" = "up" ]; then
+      "${LIBSCRIPT_ROOT_DIR:-.}/scripts/daemonize.sh" "$action" "$json_file"
+      "${LIBSCRIPT_ROOT_DIR:-.}/scripts/setup_ingress.sh" "$action" "$json_file"
+    elif [ "$action" = "stop" ] || [ "$action" = "down" ]; then
+      "${LIBSCRIPT_ROOT_DIR:-.}/scripts/setup_ingress.sh" "$action" "$json_file"
+      "${LIBSCRIPT_ROOT_DIR:-.}/scripts/daemonize.sh" "$action" "$json_file"
+    elif [ "$action" = "status" ]; then
+      "${LIBSCRIPT_ROOT_DIR:-.}/scripts/daemonize.sh" "$action" "$json_file"
+    fi
+
     wait
     exit 0
   else

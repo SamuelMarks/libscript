@@ -21,6 +21,7 @@ LibScript's architecture is uniquely decentralized. Every component (Postgres, N
 ### ⚡ Pure Power, Zero Bloat
 *   **Zero Dependencies:** No agents. No runtimes. Just `/bin/sh`, `.cmd`, and `.ps1`.
 *   **Native Execution:** Stop paying the "container tax." Deploy high-availability clusters directly on your host OS—whether it's a FreeBSD jail, a Windows server, or a Linux box.
+*   **Built-in PaaS capabilities:** LibScript automatically generates `systemd`/`launchd` service files for your apps, handles Nginx reverse proxying, and automatically fetches Let's Encrypt TLS certs—all driven by a single `libscript.json`.
 *   **Truly Universal:** One codebase for 🐧 Linux, 🪟 Windows (Native CMD), 🍎 macOS, 😈 BSD, and ☀️ Solaris.
 *   **Artifact Factory:** Turn your local stack into a production-ready `.msi`, `.deb`, `.rpm`, `.apk`, or `Dockerfile` with one command: `package_as`.
 

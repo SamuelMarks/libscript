@@ -147,6 +147,43 @@
         "type": "integer"
       },
       "description": "List of default TCP/UDP ports this component binds to (e.g., [80, 443]). Used by the SAT solver for conflict detection."
+    },
+    "infrastructure": {
+      "type": "object",
+      "description": "Cloud infrastructure configuration for PaaS deployments",
+      "properties": {
+        "node": {
+          "type": "object",
+          "properties": {
+            "os": {
+              "type": "string",
+              "description": "Operating system image (e.g., Ubuntu2204, ami-12345)"
+            },
+            "size": {
+              "type": "string",
+              "description": "Instance size or type (e.g., Standard_D4s_v3, t3.medium)"
+            },
+            "disk_gb": {
+              "type": "integer",
+              "description": "OS disk size in GB"
+            }
+          }
+        },
+        "network": {
+          "type": "object",
+          "properties": {
+            "ports": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            "cidr": {
+              "type": "string"
+            }
+          }
+        }
+      }
     }
   },
   "required": [

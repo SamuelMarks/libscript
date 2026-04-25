@@ -88,7 +88,11 @@ gcp_firewall() {
       NAME=$1; NETWORK=$2; PORT=${3:-22}
       if [ -z "$NAME" ] || [ -z "$NETWORK" ]; then echo "Usage: firewall create <name> <network> [port]"; exit 1; fi
       if ! gcloud compute firewall-rules describe "$NAME" >/dev/null 2>&1; then
-        gcloud compute firewall-rules create "$NAME" --network="$NETWORK" --allow="tcp:$PORT" --description="LibScript firewall"
+        ALLOW_RULES=""
+        for P in $PORT; do
+          if [ -z "$ALLOW_RULES" ]; then ALLOW_RULES="tcp:$P"; else ALLOW_RULES="$ALLOW_RULES,tcp:$P"; fi
+        done
+        gcloud compute firewall-rules create "$NAME" --network="$NETWORK" --allow="$ALLOW_RULES" --description="LibScript firewall"
         echo "Created Firewall '$NAME' (Port $PORT open)"
       fi
       ;;
@@ -110,8 +114,8 @@ gcp_node() {
       fi
       
       BOOTSTRAP=""
-      # Complex arg parser
       filtered_args=""
+      EXTRA_ARGS=""
       while [ $# -gt 0 ]; do
         case "$1" in
           --bootstrap) BOOTSTRAP="$2"; shift 2 ;;
@@ -124,7 +128,10 @@ gcp_node() {
                shift
              fi
              ;;
-          *) shift ;;
+          *) 
+             if [ -n "$EXTRA_ARGS" ]; then EXTRA_ARGS="$EXTRA_ARGS $1"; else EXTRA_ARGS="$1"; fi
+             shift
+             ;;
         esac
       done
       
@@ -148,26 +155,102 @@ gcp_node() {
       fi
       ;;
     exec)
-      NAME=$1; CMD=$2
-      if [ -z "$NAME" ] || [ -z "$CMD" ]; then echo "Usage: node exec <name> <command>"; exit 1; fi
+      NAME=$1; ZONE=$2; CMD=$3
+      if [ -z "$NAME" ] || [ -z "$CMD" ]; then echo "Usage: node exec <name> <zone> <command>"; exit 1; fi
       echo "Executing on $NAME via gcloud ssh..."
       gcloud compute ssh "$NAME" --command "$CMD"
       ;;
+
+    sync)
+      NAME=$1; PROJECT=${2:-}; DEST_OVERRIDE=$3
+      ZONE=${GCP_ZONE}
+      if [ -z "$NAME" ]; then echo "Usage: node sync <name> <project> [dest]"; exit 1; fi
+      IP=$(gcloud compute instances describe "$NAME" --zone="$ZONE" --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
+      if [ -z "$IP" ]; then echo "Node '$NAME' not found."; exit 1; fi
+      OS_TYPE=$(gcloud compute instances describe "$NAME" --zone="$ZONE" --format='value(disks[0].licenses[0])' 2>/dev/null | grep -i windows || true)
+      echo "Syncing LibScript root to $NAME ($IP)..."
+      
+      STAGING=$(mktemp -d)
+      cp -R "$LIBSCRIPT_ROOT_DIR" "$STAGING/libscript"
+      rm -rf "$STAGING/libscript/.git" "$STAGING/libscript/.idea" "$STAGING/libscript/vagrant" 2>/dev/null || true
+      
+      if [ -n "$OS_TYPE" ]; then
+        DEST=${DEST_OVERRIDE:-"C:\\libscript"}
+        gcp_node winrm-exec "$NAME" "$PROJECT" "New-Item -ItemType Directory -Force -Path '$DEST'" >/dev/null 2>&1 || true
+        gcp_node winrm-cp "$NAME" "$PROJECT" "$STAGING/libscript" "$DEST"
+      else
+        DEST=${DEST_OVERRIDE:-"~/libscript"}
+        gcp_node exec "$NAME" "$PROJECT" "mkdir -p $DEST"
+        if command -v rsync >/dev/null 2>&1; then
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" "$STAGING/libscript/" "libscript@$IP:$DEST/" >/dev/null 2>&1
+        else
+          gcloud compute scp --recurse --zone="$ZONE" "$STAGING/libscript/"* "libscript@$NAME:$DEST/" >/dev/null 2>&1
+        fi
+      fi
+      rm -rf "$STAGING"
+      ;;
+
+    deploy)
+      NAME=$1; ZONE=${2:-$GCP_ZONE}; SRC=$3; DEST=$4
+      if [ -z "$NAME" ] || [ -z "$SRC" ] || [ -z "$DEST" ]; then echo "Usage: node deploy <name> <zone> <src> <dest>"; exit 1; fi
+      IP=$(gcloud compute instances describe "$NAME" --zone="$ZONE" --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
+      echo "Deploying to $NAME ($IP)..."
+      if [ -n "${WINRM_PASS:-}" ]; then
+        echo "WINRM_PASS is set, deploying via WinRM..."
+        USER=${WINRM_USER:-Administrator}
+        if command -v pwsh >/dev/null 2>&1; then
+          pwsh -c "\$p = ConvertTo-SecureString '$WINRM_PASS' -AsPlainText -Force; \$c = New-Object System.Management.Automation.PSCredential ('$USER', \$p); \$s = New-PSSession -ComputerName '$IP' -Credential \$c; Copy-Item -Path '$SRC' -Destination '$DEST' -ToSession \$s -Recurse -Force; Remove-PSSession \$s"
+        else
+          echo "Error: pwsh required for WinRM deployment"; exit 1
+        fi
+      elif command -v rsync >/dev/null 2>&1; then
+        EXCLUDES="--exclude=.git"
+        if [ -f "$SRC/.gitignore" ]; then
+          EXCLUDES="$EXCLUDES --exclude-from=$SRC/.gitignore"
+        fi
+        rsync -avz $EXCLUDES -e "ssh -o StrictHostKeyChecking=no" "$SRC/" "libscript@$IP:$DEST/"
+      else
+        echo "Warning: rsync not found, falling back to scp (which ignores .gitignore)"
+        gcloud compute scp --recurse --zone="$ZONE" "$SRC" "libscript@$NAME:$DEST/"
+      fi
+      ;;
     scp)
-      NAME=$1; SRC=$2; DEST=$3
-      if [ -z "$NAME" ] || [ -z "$SRC" ] || [ -z "$DEST" ]; then echo "Usage: node scp <name> <src> <dest>"; exit 1; fi
-      echo "Copying to $NAME..."
-      gcloud compute scp --recurse "$SRC" "$NAME:$DEST"
+      NAME=$1; ZONE=$2; SRC=$3; DEST=$4
+      if [ -z "$NAME" ] || [ -z "$SRC" ] || [ -z "$DEST" ]; then echo "Usage: node scp <name> <zone> <src> <dest>"; exit 1; fi
+      IP=$(gcloud compute instances describe "$NAME" --zone "$ZONE" --format="get(networkInterfaces[0].accessConfigs[0].natIP)" 2>/dev/null)
+      OS_TYPE=$(gcloud compute instances describe "$NAME" --zone "$ZONE" --format="value(disks[0].licenses)" 2>/dev/null | grep -i "windows" || true)
+      if [ -n "$OS_TYPE" ] || [ -n "${WINRM_PASS:-}" ]; then
+        echo "Copying to $NAME ($IP) via WinRM..."
+        gcp_node winrm-cp "$NAME" "$ZONE" "$SRC" "$DEST"
+      else
+        echo "Copying to $NAME ($IP)..."
+        if command -v rsync >/dev/null 2>&1; then
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" "$SRC" "libscript@$IP:$DEST"
+        else
+          gcloud compute scp --recurse "$SRC" "$NAME:$DEST" --zone "$ZONE"
+        fi
+      fi
       ;;
     scp-from)
-      NAME=$1; SRC=$2; DEST=$3
-      if [ -z "$NAME" ] || [ -z "$SRC" ] || [ -z "$DEST" ]; then echo "Usage: node scp-from <name> <remote_src> <local_dest>"; exit 1; fi
-      echo "Copying from $NAME..."
-      gcloud compute scp --recurse "$NAME:$SRC" "$DEST"
+      NAME=$1; ZONE=$2; SRC=$3; DEST=$4
+      if [ -z "$NAME" ] || [ -z "$SRC" ] || [ -z "$DEST" ]; then echo "Usage: node scp-from <name> <zone> <remote_src> <local_dest>"; exit 1; fi
+      IP=$(gcloud compute instances describe "$NAME" --zone "$ZONE" --format="get(networkInterfaces[0].accessConfigs[0].natIP)" 2>/dev/null)
+      OS_TYPE=$(gcloud compute instances describe "$NAME" --zone "$ZONE" --format="value(disks[0].licenses)" 2>/dev/null | grep -i "windows" || true)
+      if [ -n "$OS_TYPE" ] || [ -n "${WINRM_PASS:-}" ]; then
+        echo "Copying from $NAME ($IP) via WinRM..."
+        gcp_node winrm-cp-from "$NAME" "$ZONE" "$SRC" "$DEST"
+      else
+        echo "Copying from $NAME ($IP)..."
+        if command -v rsync >/dev/null 2>&1; then
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" "libscript@$IP:$SRC" "$DEST"
+        else
+          gcloud compute scp --recurse "$NAME:$SRC" "$DEST" --zone "$ZONE"
+        fi
+      fi
       ;;
     winrm-exec)
-      NAME=$1; CMD=$2
-      if [ -z "$NAME" ] || [ -z "$CMD" ]; then echo "Usage: node winrm-exec <name> <command>"; exit 1; fi
+      NAME=$1; ZONE=$2; CMD=$3
+      if [ -z "$NAME" ] || [ -z "$CMD" ]; then echo "Usage: node winrm-exec <name> <zone> <command>"; exit 1; fi
       IP=$(gcloud compute instances describe "$NAME" --format="value(networkInterfaces[0].accessConfigs[0].natIP)")
       if [ -z "$IP" ]; then echo "Node '$NAME' public IP not found."; exit 1; fi
       USER=${WINRM_USER:-Administrator}
@@ -182,8 +265,8 @@ gcp_node() {
       fi
       ;;
     winrm-cp)
-      NAME=$1; SRC=$2; DEST=$3
-      if [ -z "$NAME" ] || [ -z "$SRC" ] || [ -z "$DEST" ]; then echo "Usage: node winrm-cp <name> <src> <dest>"; exit 1; fi
+      NAME=$1; ZONE=$2; SRC=$3; DEST=$4
+      if [ -z "$NAME" ] || [ -z "$SRC" ] || [ -z "$DEST" ]; then echo "Usage: node winrm-cp <name> <zone> <src> <dest>"; exit 1; fi
       IP=$(gcloud compute instances describe "$NAME" --format="value(networkInterfaces[0].accessConfigs[0].natIP)")
       if [ -z "$IP" ]; then echo "Node '$NAME' public IP not found."; exit 1; fi
       USER=${WINRM_USER:-Administrator}
@@ -196,8 +279,8 @@ gcp_node() {
       fi
       ;;
     winrm-cp-from)
-      NAME=$1; SRC=$2; DEST=$3
-      if [ -z "$NAME" ] || [ -z "$SRC" ] || [ -z "$DEST" ]; then echo "Usage: node winrm-cp-from <name> <remote_src> <local_dest>"; exit 1; fi
+      NAME=$1; ZONE=$2; SRC=$3; DEST=$4
+      if [ -z "$NAME" ] || [ -z "$SRC" ] || [ -z "$DEST" ]; then echo "Usage: node winrm-cp-from <name> <zone> <remote_src> <local_dest>"; exit 1; fi
       IP=$(gcloud compute instances describe "$NAME" --format="value(networkInterfaces[0].accessConfigs[0].natIP)")
       if [ -z "$IP" ]; then echo "Node '$NAME' public IP not found."; exit 1; fi
       USER=${WINRM_USER:-Administrator}
@@ -231,6 +314,13 @@ gcp_node() {
       gcloud compute instances create "$NAME" --disk name="${NAME}-disk",boot=yes,auto-delete=yes --zone "$ZONE" >/dev/null
       echo "Restored instance $NAME"
       ;;
+
+    delete)
+      NAME=$1; ZONE=${2:-$GCP_ZONE}
+      if [ -z "$NAME" ]; then echo "Usage: node delete <name> [zone]"; exit 1; fi
+      echo "Deleting node $NAME in zone $ZONE..."
+      gcloud compute instances delete "$NAME" --zone="$ZONE" --quiet
+      ;;
     list)
       gcloud compute instances list
       ;;
@@ -260,10 +350,10 @@ gcp_cron() {
   ACTION=$1; shift
   case "$ACTION" in
     create)
-      NAME=$1; SCHEDULE=$2; CMD=$3
-      if [ -z "$NAME" ] || [ -z "$SCHEDULE" ]; then echo "Usage: cron create <target_node> <schedule> <command>"; exit 1; fi
+      NAME=$1; CTX=$2; SCHEDULE=$3; CMD=$4
+      if [ -z "$NAME" ] || [ -z "$SCHEDULE" ]; then echo "Usage: cron create <target_node> <ctx> <schedule> <command>"; exit 1; fi
       echo "Setting up cronjob on GCP instance $NAME: $SCHEDULE $CMD"
-      gcp_node exec "$NAME" "(crontab -l 2>/dev/null; printf '%s %s\n' \"$SCHEDULE\" \"$CMD\") | crontab -"
+      gcp_node exec "$NAME" "$CTX" "(crontab -l 2>/dev/null; printf '%s %s\n' \"$SCHEDULE\" \"$CMD\") | crontab -"
       ;;
     *) echo "Unknown cron action: $ACTION"; exit 1 ;;
   esac
@@ -277,7 +367,7 @@ gcp_jumpbox() {
       echo "Setting up GCP Jump-box '$NAME'..."
       gcp_network create "$NET" "$@"
       gcp_firewall create "${NAME}-ssh" "$NET" 22 "$@"
-      gcp_node create "$NAME" "$FAMILY" "$PROJECT" "$@"
+      gcp_node create "$NAME" "$FAMILY" "$PROJECT" --network "$NET" "$@"
       echo "GCP Jump-box '$NAME' ready."
       ;;
     *) echo "Unknown jumpbox action: $ACTION"; exit 1 ;;
@@ -317,6 +407,30 @@ gcp_list_managed() {
   gcloud storage buckets list --format="table(name, labels)" | grep "$GCP_FILTER" || true
 }
 
+gcp_dns() {
+  ACTION=$1; shift
+  case "$ACTION" in
+
+    unmap-node)
+      NAME=$1; ZONE=$2; DOMAIN=$3; MANAGED_ZONE=$4
+      if [ -z "$NAME" ] || [ -z "$DOMAIN" ] || [ -z "$MANAGED_ZONE" ]; then echo "Usage: dns unmap-node <node_name> <zone> <domain> <managed_zone>"; exit 1; fi
+      IP=$(gcloud compute instances describe "$NAME" --zone="$ZONE" --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
+      if [ -n "$IP" ]; then
+        gcloud dns record-sets transaction start --zone="$MANAGED_ZONE"
+        gcloud dns record-sets transaction remove "$IP" --name="$DOMAIN." --ttl=300 --type=A --zone="$MANAGED_ZONE"
+        gcloud dns record-sets transaction execute --zone="$MANAGED_ZONE"
+      fi
+      ;;
+    map-node)
+      NAME=$1; ZONE=$2; DOMAIN=$3; MANAGED_ZONE=$4
+      if [ -z "$NAME" ] || [ -z "$DOMAIN" ] || [ -z "$MANAGED_ZONE" ]; then echo "Usage: dns map-node <node_name> <zone> <domain> <managed_zone>"; exit 1; fi
+      IP=$(gcloud compute instances describe "$NAME" --zone="$ZONE" --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
+      gcloud dns record-sets create "$DOMAIN." --rrdatas="$IP" --type=A --ttl=300 --zone="$MANAGED_ZONE"
+      ;;
+    *) echo "Unknown dns action: $ACTION"; exit 1 ;;
+  esac
+}
+
 gcp_cleanup() {
   PURGE_BUCKETS=$1
   FILTER_LABEL=${2:-"$TAG_KEY=$TAG_VAL"}
@@ -350,6 +464,7 @@ gcp_cleanup() {
 # CLI Router
 CMD=$1; shift
 case "$CMD" in
+  dns) gcp_dns "$@" ;;
   network) gcp_network "$@" ;;
   firewall) gcp_firewall "$@" ;;
   node) gcp_node "$@" ;;
@@ -362,9 +477,10 @@ case "$CMD" in
   install) check_deps ;;
   --help|-h)
     echo "LibScript GCP Cloud Wrapper"
-    echo "Usage: $0 {network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
+    echo "Usage: $0 {dns|network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
     echo ""
     echo "Commands:"
+    echo "  dns            Map node IPs to DNS records"
     echo "  network        Manage VPCs and subnets"
     echo "  firewall       Manage Security Groups / Firewalls"
     echo "  node           Manage Compute Instances"
@@ -381,7 +497,7 @@ case "$CMD" in
     ;;
   *)
     echo "LibScript GCP Cloud Wrapper"
-    echo "Usage: $0 {network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
+    echo "Usage: $0 {dns|network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
     exit 1
     ;;
 esac

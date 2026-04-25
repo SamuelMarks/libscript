@@ -83,12 +83,20 @@ aws_network() {
         echo "VPC '$NAME' already exists: $VPC_ID" >&2
       else
         VPC_ID=$(aws ec2 create-vpc --cidr-block "$CIDR" --query "Vpc.VpcId" --output text)
+        aws ec2 modify-vpc-attribute --vpc-id "$VPC_ID" --enable-dns-hostnames "{\"Value\":true}"
+        SUBNET_ID=$(aws ec2 create-subnet --vpc-id "$VPC_ID" --cidr-block "$CIDR" --query "Subnet.SubnetId" --output text)
+        aws ec2 modify-subnet-attribute --subnet-id "$SUBNET_ID" --map-public-ip-on-launch
+        IGW_ID=$(aws ec2 create-internet-gateway --query "InternetGateway.InternetGatewayId" --output text)
+        aws ec2 attach-internet-gateway --vpc-id "$VPC_ID" --internet-gateway-id "$IGW_ID"
+        RT_ID=$(aws ec2 describe-route-tables --filters "Name=vpc-id,Values=$VPC_ID" --query "RouteTables[0].RouteTableId" --output text)
+        aws ec2 create-route --route-table-id "$RT_ID" --destination-cidr-block 0.0.0.0/0 --gateway-id "$IGW_ID" >/dev/null
+        
         if [ -n "$TAGS" ]; then
-          aws ec2 create-tags --resources "$VPC_ID" --tags "Key=Name,Value=$NAME" $TAGS
+          aws ec2 create-tags --resources "$VPC_ID" "$SUBNET_ID" "$IGW_ID" --tags "Key=Name,Value=$NAME" $TAGS
         else
-          aws ec2 create-tags --resources "$VPC_ID" --tags "Key=Name,Value=$NAME"
+          aws ec2 create-tags --resources "$VPC_ID" "$SUBNET_ID" "$IGW_ID" --tags "Key=Name,Value=$NAME"
         fi
-        echo "Created VPC '$NAME': $VPC_ID" >&2
+        echo "Created VPC '$NAME' with Subnet & IGW: $VPC_ID" >&2
       fi
       printf '%s\n' "$VPC_ID"
       ;;
@@ -99,8 +107,20 @@ aws_network() {
       NAME=$1; if [ -z "$NAME" ]; then echo "Usage: network delete <name>"; exit 1; fi
       VPC_ID=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=$NAME" --query "Vpcs[0].VpcId" --output text 2>/dev/null || true)
       if [ "$VPC_ID" != "None" ] && [ -n "$VPC_ID" ]; then
+        SGS=$(aws ec2 describe-security-groups --filters "Name=vpc-id,Values=$VPC_ID" --query "SecurityGroups[?GroupName!='default'].GroupId" --output text 2>/dev/null)
+        for SG in $SGS; do aws ec2 delete-security-group --group-id "$SG" || true; done
+        
+        IGWS=$(aws ec2 describe-internet-gateways --filters "Name=attachment.vpc-id,Values=$VPC_ID" --query "InternetGateways[*].InternetGatewayId" --output text 2>/dev/null)
+        for IGW in $IGWS; do
+          aws ec2 detach-internet-gateway --internet-gateway-id "$IGW" --vpc-id "$VPC_ID" || true
+          aws ec2 delete-internet-gateway --internet-gateway-id "$IGW" || true
+        done
+        
+        SUBNETS=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$VPC_ID" --query "Subnets[*].SubnetId" --output text 2>/dev/null)
+        for SUBNET in $SUBNETS; do aws ec2 delete-subnet --subnet-id "$SUBNET" || true; done
+        
         aws ec2 delete-vpc --vpc-id "$VPC_ID"
-        echo "Deleted VPC '$NAME' ($VPC_ID)"
+        echo "Deleted VPC '$NAME' ($VPC_ID) and cascading resources."
       else
         echo "VPC '$NAME' not found."
       fi
@@ -129,8 +149,10 @@ aws_firewall() {
         else
           aws ec2 create-tags --resources "$SG_ID" --tags "Key=Name,Value=$NAME"
         fi
-        aws ec2 authorize-security-group-ingress --group-id "$SG_ID" --protocol tcp --port "$PORT" --cidr 0.0.0.0/0
-        echo "Created Security Group '$NAME': $SG_ID (Port $PORT open)" >&2
+        for P in $PORT; do
+          aws ec2 authorize-security-group-ingress --group-id "$SG_ID" --protocol tcp --port "$P" --cidr 0.0.0.0/0 >/dev/null || true
+        done
+        echo "Created Security Group '$NAME': $SG_ID (Ports $PORT open)" >&2
       fi
       printf '%s\n' "$SG_ID"
       ;;
@@ -154,6 +176,7 @@ aws_node() {
       BOOTSTRAP=""
       # Complex arg parser
       filtered_args=""
+      PARSED_EXTRA=""
       while [ $# -gt 0 ]; do
         case "$1" in
           --bootstrap) BOOTSTRAP="$2"; shift 2 ;;
@@ -166,7 +189,10 @@ aws_node() {
                shift
              fi
              ;;
-          *) shift ;;
+          *) 
+             if [ -n "$PARSED_EXTRA" ]; then PARSED_EXTRA="$PARSED_EXTRA $1"; else PARSED_EXTRA="$1"; fi
+             shift
+             ;;
         esac
       done
       
@@ -180,10 +206,11 @@ aws_node() {
         SUBNET_ID=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$VPC_ID" --query "Subnets[0].SubnetId" --output text 2>/dev/null || true)
         
         EXTRA_ARGS=""
+        EXTRA_ARGS="$EXTRA_ARGS $PARSED_EXTRA"
         if [ -n "$BOOTSTRAP" ]; then
           USER_DATA_FILE=$(mktemp)
           printf '#!/bin/bash\n%s\n' "$BOOTSTRAP" > "$USER_DATA_FILE"
-          EXTRA_ARGS="--user-data file://$USER_DATA_FILE"
+          EXTRA_ARGS="$EXTRA_ARGS --user-data file://$USER_DATA_FILE"
         fi
 
         FINAL_TAG_SPECS="ResourceType=instance,Tags=[{Key=Name,Value=$NAME}]"
@@ -200,32 +227,106 @@ aws_node() {
       printf '%s\n' "$INSTANCE_ID"
       ;;
     exec)
-      NAME=$1; CMD=$2
-      if [ -z "$NAME" ] || [ -z "$CMD" ]; then echo "Usage: node exec <name> <command>"; exit 1; fi
+      NAME=$1; CTX=$2; CMD=$3
+      if [ -z "$NAME" ] || [ -z "$CMD" ]; then echo "Usage: node exec <name> <ctx> <command>"; exit 1; fi
       IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" "Name=instance-state-name,Values=running" --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
       if [ "$IP" = "None" ] || [ -z "$IP" ]; then echo "Node '$NAME' not found or not running."; exit 1; fi
       echo "Executing on $NAME ($IP)..."
       ssh -o StrictHostKeyChecking=no "ubuntu@$IP" "$CMD"
       ;;
-    scp)
-      NAME=$1; SRC=$2; DEST=$3
-      if [ -z "$NAME" ] || [ -z "$SRC" ] || [ -z "$DEST" ]; then echo "Usage: node scp <name> <src> <dest>"; exit 1; fi
+
+    sync)
+      NAME=$1; VPC=${2:-}; DEST_OVERRIDE=$3
+      if [ -z "$NAME" ]; then echo "Usage: node sync <name> <vpc> [dest]"; exit 1; fi
       IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" "Name=instance-state-name,Values=running" --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
       if [ "$IP" = "None" ] || [ -z "$IP" ]; then echo "Node '$NAME' not found or not running."; exit 1; fi
-      echo "Copying to $NAME ($IP)..."
-      scp -o StrictHostKeyChecking=no -r "$SRC" "ubuntu@$IP:$DEST"
+      PLATFORM=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" --query "Reservations[0].Instances[0].Platform" --output text)
+      echo "Syncing LibScript root to $NAME ($IP, OS: ${PLATFORM:-Linux})..."
+      
+      STAGING=$(mktemp -d)
+      cp -R "$LIBSCRIPT_ROOT_DIR" "$STAGING/libscript"
+      rm -rf "$STAGING/libscript/.git" "$STAGING/libscript/.idea" "$STAGING/libscript/vagrant" 2>/dev/null || true
+      
+      if [ "$PLATFORM" = "windows" ]; then
+        DEST=${DEST_OVERRIDE:-"C:\\libscript"}
+        aws_node winrm-exec "$NAME" "$VPC" "New-Item -ItemType Directory -Force -Path '$DEST'" >/dev/null 2>&1 || true
+        aws_node winrm-cp "$NAME" "$VPC" "$STAGING/libscript" "$DEST"
+      else
+        DEST=${DEST_OVERRIDE:-"~/libscript"}
+        aws_node exec "$NAME" "$VPC" "mkdir -p $DEST"
+        if command -v rsync >/dev/null 2>&1; then
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" "$STAGING/libscript/" "ubuntu@$IP:$DEST/" >/dev/null 2>&1
+        else
+          scp -o StrictHostKeyChecking=no -r "$STAGING/libscript/"* "ubuntu@$IP:$DEST/" >/dev/null 2>&1
+        fi
+      fi
+      rm -rf "$STAGING"
+      ;;
+
+    deploy)
+      NAME=$1; CTX=$2; SRC=$3; DEST=$4
+      if [ -z "$NAME" ] || [ -z "$SRC" ] || [ -z "$DEST" ]; then echo "Usage: node deploy <name> <ctx> <src> <dest>"; exit 1; fi
+      IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" "Name=instance-state-name,Values=running" --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
+      if [ "$IP" = "None" ] || [ -z "$IP" ]; then echo "Node '$NAME' not found or not running."; exit 1; fi
+      echo "Deploying to $NAME ($IP)..."
+      if [ -n "${WINRM_PASS:-}" ]; then
+        echo "WINRM_PASS is set, deploying via WinRM..."
+        USER=${WINRM_USER:-Administrator}
+        if command -v pwsh >/dev/null 2>&1; then
+          pwsh -c "\$p = ConvertTo-SecureString '$WINRM_PASS' -AsPlainText -Force; \$c = New-Object System.Management.Automation.PSCredential ('$USER', \$p); \$s = New-PSSession -ComputerName '$IP' -Credential \$c; Copy-Item -Path '$SRC' -Destination '$DEST' -ToSession \$s -Recurse -Force; Remove-PSSession \$s"
+        else
+          echo "Error: pwsh required for WinRM deployment"; exit 1
+        fi
+      elif command -v rsync >/dev/null 2>&1; then
+        EXCLUDES="--exclude=.git"
+        if [ -f "$SRC/.gitignore" ]; then
+          EXCLUDES="$EXCLUDES --exclude-from=$SRC/.gitignore"
+        fi
+        rsync -avz $EXCLUDES -e "ssh -o StrictHostKeyChecking=no" "$SRC/" "ubuntu@$IP:$DEST/"
+      else
+        echo "Warning: rsync not found, falling back to scp (which ignores .gitignore)"
+        scp -o StrictHostKeyChecking=no -r "$SRC" "ubuntu@$IP:$DEST/"
+      fi
+      ;;
+    scp)
+      NAME=$1; CTX=$2; SRC=$3; DEST=$4
+      if [ -z "$NAME" ] || [ -z "$SRC" ] || [ -z "$DEST" ]; then echo "Usage: node scp <name> <ctx> <src> <dest>"; exit 1; fi
+      IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" "Name=instance-state-name,Values=running" --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
+      if [ "$IP" = "None" ] || [ -z "$IP" ]; then echo "Node '$NAME' not found or not running."; exit 1; fi
+      OS_TYPE=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" --query "Reservations[0].Instances[0].Platform" --output text 2>/dev/null || true)
+      if [ "$OS_TYPE" = "windows" ] || [ -n "${WINRM_PASS:-}" ]; then
+        echo "Copying to $NAME ($IP) via WinRM..."
+        aws_node winrm-cp "$NAME" "$CTX" "$SRC" "$DEST"
+      else
+        echo "Copying to $NAME ($IP)..."
+        if command -v rsync >/dev/null 2>&1; then
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" "$SRC" "ubuntu@$IP:$DEST"
+        else
+          scp -o StrictHostKeyChecking=no -r "$SRC" "ubuntu@$IP:$DEST"
+        fi
+      fi
       ;;
     scp-from)
-      NAME=$1; SRC=$2; DEST=$3
-      if [ -z "$NAME" ] || [ -z "$SRC" ] || [ -z "$DEST" ]; then echo "Usage: node scp-from <name> <remote_src> <local_dest>"; exit 1; fi
+      NAME=$1; CTX=$2; SRC=$3; DEST=$4
+      if [ -z "$NAME" ] || [ -z "$SRC" ] || [ -z "$DEST" ]; then echo "Usage: node scp-from <name> <ctx> <remote_src> <local_dest>"; exit 1; fi
       IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" "Name=instance-state-name,Values=running" --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
       if [ "$IP" = "None" ] || [ -z "$IP" ]; then echo "Node '$NAME' not found or not running."; exit 1; fi
-      echo "Copying from $NAME ($IP)..."
-      scp -o StrictHostKeyChecking=no -r "ubuntu@$IP:$SRC" "$DEST"
+      OS_TYPE=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" --query "Reservations[0].Instances[0].Platform" --output text 2>/dev/null || true)
+      if [ "$OS_TYPE" = "windows" ] || [ -n "${WINRM_PASS:-}" ]; then
+        echo "Copying from $NAME ($IP) via WinRM..."
+        aws_node winrm-cp-from "$NAME" "$CTX" "$SRC" "$DEST"
+      else
+        echo "Copying from $NAME ($IP)..."
+        if command -v rsync >/dev/null 2>&1; then
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" "ubuntu@$IP:$SRC" "$DEST"
+        else
+          scp -o StrictHostKeyChecking=no -r "ubuntu@$IP:$SRC" "$DEST"
+        fi
+      fi
       ;;
     winrm-exec)
-      NAME=$1; CMD=$2
-      if [ -z "$NAME" ] || [ -z "$CMD" ]; then echo "Usage: node winrm-exec <name> <command>"; exit 1; fi
+      NAME=$1; CTX=$2; CMD=$3
+      if [ -z "$NAME" ] || [ -z "$CMD" ]; then echo "Usage: node winrm-exec <name> <ctx> <command>"; exit 1; fi
       IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" "Name=instance-state-name,Values=running" --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
       if [ "$IP" = "None" ] || [ -z "$IP" ]; then echo "Node '$NAME' not found or not running."; exit 1; fi
       USER=${WINRM_USER:-Administrator}
@@ -240,8 +341,8 @@ aws_node() {
       fi
       ;;
     winrm-cp)
-      NAME=$1; SRC=$2; DEST=$3
-      if [ -z "$NAME" ] || [ -z "$SRC" ] || [ -z "$DEST" ]; then echo "Usage: node winrm-cp <name> <src> <dest>"; exit 1; fi
+      NAME=$1; CTX=$2; SRC=$3; DEST=$4
+      if [ -z "$NAME" ] || [ -z "$SRC" ] || [ -z "$DEST" ]; then echo "Usage: node winrm-cp <name> <ctx> <src> <dest>"; exit 1; fi
       IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" "Name=instance-state-name,Values=running" --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
       if [ "$IP" = "None" ] || [ -z "$IP" ]; then echo "Node '$NAME' not found or not running."; exit 1; fi
       USER=${WINRM_USER:-Administrator}
@@ -254,8 +355,8 @@ aws_node() {
       fi
       ;;
     winrm-cp-from)
-      NAME=$1; SRC=$2; DEST=$3
-      if [ -z "$NAME" ] || [ -z "$SRC" ] || [ -z "$DEST" ]; then echo "Usage: node winrm-cp-from <name> <remote_src> <local_dest>"; exit 1; fi
+      NAME=$1; CTX=$2; SRC=$3; DEST=$4
+      if [ -z "$NAME" ] || [ -z "$SRC" ] || [ -z "$DEST" ]; then echo "Usage: node winrm-cp-from <name> <ctx> <remote_src> <local_dest>"; exit 1; fi
       IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" "Name=instance-state-name,Values=running" --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
       if [ "$IP" = "None" ] || [ -z "$IP" ]; then echo "Node '$NAME' not found or not running."; exit 1; fi
       USER=${WINRM_USER:-Administrator}
@@ -295,8 +396,8 @@ aws_node() {
       aws_node create "$NAME" "$AMI_ID" "$VPC_NAME" "$TYPE"
       ;;
     delete)
-      NAME=$1
-      if [ -z "$NAME" ]; then echo "Usage: node delete <name>"; exit 1; fi
+      NAME=$1; CTX=$2
+      if [ -z "$NAME" ]; then echo "Usage: node delete <name> [ctx]"; exit 1; fi
       INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" "Name=instance-state-name,Values=running,stopped" --query "Reservations[0].Instances[0].InstanceId" --output text)
       if [ "$INSTANCE_ID" != "None" ] && [ -n "$INSTANCE_ID" ]; then
         echo "Deleting node '$NAME' ($INSTANCE_ID)..."
@@ -334,10 +435,10 @@ aws_cron() {
   ACTION=$1; shift
   case "$ACTION" in
     create)
-      NAME=$1; SCHEDULE=$2; CMD=$3
-      if [ -z "$NAME" ] || [ -z "$SCHEDULE" ]; then echo "Usage: cron create <target_node> <schedule> <command>"; exit 1; fi
+      NAME=$1; CTX=$2; SCHEDULE=$3; CMD=$4
+      if [ -z "$NAME" ] || [ -z "$SCHEDULE" ]; then echo "Usage: cron create <target_node> <ctx> <schedule> <command>"; exit 1; fi
       echo "Setting up cronjob on $NAME: $SCHEDULE $CMD"
-      aws_node exec "$NAME" "(crontab -l 2>/dev/null; printf '%s %s\n' \"$SCHEDULE\" \"$CMD\") | crontab -"
+      aws_node exec "$NAME" "$CTX" "(crontab -l 2>/dev/null; printf '%s %s\n' \"$SCHEDULE\" \"$CMD\") | crontab -"
       ;;
     *) echo "Unknown cron action: $ACTION"; exit 1 ;;
   esac
@@ -397,6 +498,31 @@ aws_list_managed() {
     --query "ResourceTagMappingList[*].{ARN:ResourceARN, Tags:Tags}" --output table
 }
 
+aws_dns() {
+  ACTION=$1; shift
+  case "$ACTION" in
+
+    unmap-node)
+      NAME=$1; DOMAIN=$2; ZONE_ID=$3
+      if [ -z "$NAME" ] || [ -z "$DOMAIN" ] || [ -z "$ZONE_ID" ]; then echo "Usage: dns unmap-node <node_name> <domain> <zone_id>"; exit 1; fi
+      IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" "Name=instance-state-name,Values=running" --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
+      if [ "$IP" != "None" ] && [ -n "$IP" ]; then
+        CHANGE_BATCH="{\"Changes\":[{\"Action\":\"DELETE\",\"ResourceRecordSet\":{\"Name\":\"$DOMAIN\",\"Type\":\"A\",\"TTL\":300,\"ResourceRecords\":[{\"Value\":\"$IP\"}]}}]}"
+        aws route53 change-resource-record-sets --hosted-zone-id "$ZONE_ID" --change-batch "$CHANGE_BATCH" || true
+      fi
+      ;;
+    map-node)
+      NAME=$1; DOMAIN=$2; ZONE_ID=$3
+      if [ -z "$NAME" ] || [ -z "$DOMAIN" ] || [ -z "$ZONE_ID" ]; then echo "Usage: dns map-node <node_name> <domain> <zone_id>"; exit 1; fi
+      IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" "Name=instance-state-name,Values=running" --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
+      if [ "$IP" = "None" ] || [ -z "$IP" ]; then echo "Node not found."; exit 1; fi
+      CHANGE_BATCH="{\"Changes\":[{\"Action\":\"UPSERT\",\"ResourceRecordSet\":{\"Name\":\"$DOMAIN\",\"Type\":\"A\",\"TTL\":300,\"ResourceRecords\":[{\"Value\":\"$IP\"}]}}]}"
+      aws route53 change-resource-record-sets --hosted-zone-id "$ZONE_ID" --change-batch "$CHANGE_BATCH"
+      ;;
+    *) echo "Unknown dns action: $ACTION"; exit 1 ;;
+  esac
+}
+
 aws_cleanup() {
   PURGE_BUCKETS=$1
   FILTER_KEY=${2:-$TAG_KEY}
@@ -438,6 +564,7 @@ aws_cleanup() {
 # CLI Router
 CMD=$1; shift
 case "$CMD" in
+  dns) aws_dns "$@" ;;
   network) aws_network "$@" ;;
   firewall) aws_firewall "$@" ;;
   node) aws_node "$@" ;;
@@ -450,9 +577,10 @@ case "$CMD" in
   install) check_deps ;;
   --help|-h)
     echo "LibScript AWS Cloud Wrapper"
-    echo "Usage: $0 {network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
+    echo "Usage: $0 {dns|network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
     echo ""
     echo "Commands:"
+    echo "  dns            Map node IPs to DNS records"
     echo "  network        Manage VPCs and subnets"
     echo "  firewall       Manage Security Groups / Firewalls"
     echo "  node           Manage Compute Instances"
@@ -469,7 +597,7 @@ case "$CMD" in
     ;;
   *)
     echo "LibScript AWS Cloud Wrapper"
-    echo "Usage: $0 {network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
+    echo "Usage: $0 {dns|network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
     exit 1
     ;;
 esac

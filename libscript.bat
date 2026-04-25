@@ -8,6 +8,9 @@ if "%1"=="-h" goto show_help
 if "%1"=="/?" goto show_help
 
 if "%1"=="list" goto list_components
+if "%1"=="provision" goto provision_cloud
+if "%1"=="deprovision" goto deprovision_cloud
+
 if "%1"=="search" goto search_components
 
 :run_target
@@ -241,6 +244,17 @@ goto end
 echo Component listing not fully supported in pure DOS mode.
 echo Please refer to the directory structure.
 goto end
+
+:provision_cloud
+shift
+call "%~dp0scripts\deploy_cloud.bat" %*
+goto :eof
+
+:deprovision_cloud
+shift
+call "%~dp0scripts\teardown_cloud.bat" %*
+goto :eof
+
 
 :search_components
 echo Search not fully supported in pure DOS mode.

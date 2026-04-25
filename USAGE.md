@@ -40,24 +40,59 @@ Create a `libscript.json` to define your dependencies, including version constra
 
 ```json
 {
-  "deps": {
-    "postgres": ">14",
-    "valkey": "latest",
-    "python": "3.11"
+  "name": "my-app",
+  "domain": "myapp.example.com",
+  "dependencies": {
+    "toolchains": [
+      { "name": "python", "version": "3.12" }
+    ],
+    "servers": [
+      { "name": "nginx", "ports": [80, 443] }
+    ]
+  },
+  "hooks": {
+    "build": [
+      { "name": "compile", "command": "npm run build" }
+    ],
+    "pre_start": [
+      { 
+        "name": "migrate", 
+        "command": "python manage.py migrate",
+        "condition": "unless_exists /data/db.sqlite3"
+      }
+    ]
+  },
+  "services": [
+    {
+      "name": "backend",
+      "command": "uvicorn main:app --port 8000",
+      "env": { "ENV": "prod" }
+    }
+  ],
+  "ingress": {
+    "tls": "letsencrypt",
+    "routes": [
+      { "path": "/api/", "proxy_pass": "http://127.0.0.1:8000/" },
+      { "path": "/", "root": "./web/dist", "try_files": "$uri $uri/ /index.html" }
+    ]
   }
 }
 ```
 
-### Provisioning Locally
+### Provisioning & Lifecycle
 
-Use the `install-deps` command to automatically resolve and install the entire stack.
+Use `install-deps` to automatically resolve and install the stack requirements natively on your machine, followed by `start` to orchestrate your app.
 
 ```sh
-# This resolves constraints, downloads binaries, and runs setup for all components
+# 1. Resolves constraints, downloads binaries, and runs setups
 ./libscript.sh install-deps
+
+# 2. Runs hooks (build, pre_start), daemonizes services (systemd/launchd), configures Nginx, and starts background jobs.
+./libscript.sh start
 ```
 
-*Note: The resolution engine ensures that provided capabilities (e.g., "database") and port conflicts are addressed before installation begins.*
+*Note: LibScript acts as a native PaaS. The `start` command automatically translates your `services` into system daemons and configures your `ingress` routes via Nginx.*
+
 
 ## 🏗️ Artifact Generation (`package_as`)
 
@@ -85,6 +120,20 @@ LibScript wraps official cloud vendor CLIs into a unified, idempotent interface.
 # Provision a 5-node group on GCP pre-installed with your stack
 ./libscript.sh cloud gcp node-group create web-tier 5 \
   --bootstrap "./libscript.sh install-deps"
+```
+
+### Application Deployment & DNS
+LibScript provides built-in primitives to push applications and map domains to node IPs.
+
+```sh
+# Deploy your codebase to a remote Azure node (uses rsync and respects .gitignore)
+./libscript.sh cloud azure node deploy my-vm t1d-rg ./src ~/app
+
+# Securely copy a specific secrets file to an AWS node
+./libscript.sh cloud aws node scp my-vm ./secrets/backend.env ~/app/secrets/backend.env
+
+# Map a cloud node's IP to a domain name via Cloud DNS
+./libscript.sh cloud gcp dns map-node my-vm us-central1-a my-domain.com my-managed-zone
 ```
 
 ### Resource Cleanup

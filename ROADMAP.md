@@ -10,6 +10,7 @@
 - [x] Unified `cloud` wrapper for AWS, Azure, and GCP.
 - [x] Resource tagging and filtered cleanup for managed stacks.
 - [x] Node-group provisioning with automated stack bootstrapping.
+- [x] Intelligent application deployment (codebase sync, DNS mapping, secrets management).
 - [x] Declarative PaaS lifecycle management via `libscript.json`.
 - [x] Sidecar service injection (Logging, Monitoring).
 

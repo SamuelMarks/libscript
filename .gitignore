@@ -26,6 +26,8 @@ Thumbs.db
 ehthumbs.db
 %temp%/
 "%temp%\schema_help.txt"
+.Spotlight-V100
+.Trashes
 
 ### IDE-Specific ###
 .idea/
@@ -40,6 +42,7 @@ ehthumbs.db
 .project
 .classpath
 .settings/
+*.iml
 
 ### Build Artifacts & Package Managers ###
 node_modules/
@@ -56,11 +59,21 @@ __pycache__/
 env/
 venv/
 .venv/
+.venv*/
+venv*/
+env*/
 env.bak/
 venv.bak/
 coverage/
 .nyc_output/
 .sass-cache/
+lib/
+lib64/
+*.egg-info/
+.eggs/
+sdist/
+wheels/
+*.egg
 
 ### Virtualization & Containers ###
 .vagrant/
@@ -101,6 +114,14 @@ run_log.txt
 tmp/
 .tmp/
 .cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
 
 ### Local/Ad-hoc Scripts ###
 # Consolidate ad-hoc scripts (fix_*, patch_*, test_*, update_*, rewrite_*)
@@ -110,6 +131,12 @@ test_*
 update_*
 rewrite_*
 validate_*
+analyze_*
+create_*
+generate_*
+parse_*
+setup_*
+standardize_*
 # Exception for core test helpers
 !_lib/_common/test_base.*
 # Other ad-hoc dev files and generated outputs
@@ -120,7 +147,6 @@ gen_table.*
 *_test.*
 wait4x-*
 add_pkg.sh
-analyze_vars.py
 /cli.cmd
 /cli.sh
 /conf.d/
@@ -132,8 +158,6 @@ analyze_vars.py
 /install.toml
 /setup.cmd
 /setup.sh
-/setup_*.sh
-/setup_*.cmd
 /install*.json
 /jq_test.json
 /styles.css
@@ -144,6 +168,7 @@ analyze_vars.py
 table.md
 jobs.json
 jobs_status.json
+refactor.py
 
 ### Project-Specific Rules ###
 /docs

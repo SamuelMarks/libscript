@@ -217,19 +217,66 @@ azure_node() {
       fi
       rm -rf "$STAGING"
       ;;
+
+    deploy)
+      NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}; SRC=$3; DEST=$4
+      if [ -z "$NAME" ] || [ -z "$SRC" ] || [ -z "$DEST" ]; then echo "Usage: node deploy <name> <rg> <src> <dest>"; exit 1; fi
+      IP=$(az vm show -d -g "$RG" -n "$NAME" --query publicIps -o tsv)
+      OS_TYPE=$(az vm show -g "$RG" -n "$NAME" --query "storageProfile.osDisk.osType" -o tsv 2>/dev/null || true)
+      echo "Deploying to $NAME ($IP)..."
+      if [ "$OS_TYPE" = "Windows" ] || [ -n "${WINRM_PASS:-}" ]; then
+        echo "Deploying via WinRM..."
+        USER=${WINRM_USER:-libscript}
+        if [ -z "${WINRM_PASS:-}" ]; then echo "WINRM_PASS required for Windows deployment"; exit 1; fi
+        if command -v pwsh >/dev/null 2>&1; then
+          pwsh -c "\$p = ConvertTo-SecureString '$WINRM_PASS' -AsPlainText -Force; \$c = New-Object System.Management.Automation.PSCredential ('$USER', \$p); \$s = New-PSSession -ComputerName '$IP' -Credential \$c; Copy-Item -Path '$SRC' -Destination '$DEST' -ToSession \$s -Recurse -Force; Remove-PSSession \$s"
+        else
+          echo "Error: pwsh required for WinRM deployment"; exit 1
+        fi
+      elif command -v rsync >/dev/null 2>&1; then
+        EXCLUDES="--exclude=.git"
+        if [ -f "$SRC/.gitignore" ]; then
+          EXCLUDES="$EXCLUDES --exclude-from=$SRC/.gitignore"
+        fi
+        rsync -avz $EXCLUDES -e "ssh -o StrictHostKeyChecking=no" "$SRC/" "libscript@$IP:$DEST/"
+      else
+        echo "Warning: rsync not found, falling back to scp (which ignores .gitignore)"
+        scp -o StrictHostKeyChecking=no -r "$SRC" "libscript@$IP:$DEST/"
+      fi
+      ;;
     scp)
       NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}; SRC=$3; DEST=$4
       if [ -z "$NAME" ] || [ -z "$SRC" ] || [ -z "$DEST" ]; then echo "Usage: node scp <name> <rg> <src> <dest>"; exit 1; fi
       IP=$(az vm show -d -g "$RG" -n "$NAME" --query publicIps -o tsv)
-      echo "Copying to $NAME ($IP)..."
-      scp -o StrictHostKeyChecking=no -r "$SRC" "libscript@$IP:$DEST"
+      OS_TYPE=$(az vm show -g "$RG" -n "$NAME" --query "storageProfile.osDisk.osType" -o tsv 2>/dev/null || true)
+      if [ "$OS_TYPE" = "Windows" ] || [ -n "${WINRM_PASS:-}" ]; then
+        echo "Copying to $NAME ($IP) via WinRM..."
+        azure_node winrm-cp "$NAME" "$RG" "$SRC" "$DEST"
+      else
+        echo "Copying to $NAME ($IP)..."
+        if command -v rsync >/dev/null 2>&1; then
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" "$SRC" "libscript@$IP:$DEST"
+        else
+          scp -o StrictHostKeyChecking=no -r "$SRC" "libscript@$IP:$DEST"
+        fi
+      fi
       ;;
     scp-from)
       NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}; SRC=$3; DEST=$4
       if [ -z "$NAME" ] || [ -z "$SRC" ] || [ -z "$DEST" ]; then echo "Usage: node scp-from <name> <rg> <remote_src> <local_dest>"; exit 1; fi
       IP=$(az vm show -d -g "$RG" -n "$NAME" --query publicIps -o tsv)
-      echo "Copying from $NAME ($IP)..."
-      scp -o StrictHostKeyChecking=no -r "libscript@$IP:$SRC" "$DEST"
+      OS_TYPE=$(az vm show -g "$RG" -n "$NAME" --query "storageProfile.osDisk.osType" -o tsv 2>/dev/null || true)
+      if [ "$OS_TYPE" = "Windows" ] || [ -n "${WINRM_PASS:-}" ]; then
+        echo "Copying from $NAME ($IP) via WinRM..."
+        azure_node winrm-cp-from "$NAME" "$RG" "$SRC" "$DEST"
+      else
+        echo "Copying from $NAME ($IP)..."
+        if command -v rsync >/dev/null 2>&1; then
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" "libscript@$IP:$SRC" "$DEST"
+        else
+          scp -o StrictHostKeyChecking=no -r "libscript@$IP:$SRC" "$DEST"
+        fi
+      fi
       ;;
     winrm-exec)
       NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}; CMD=$3
@@ -302,7 +349,16 @@ azure_node() {
       ;;
     delete)
       NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}
+      NIC_ID=$(az vm show -g "$RG" -n "$NAME" --query "networkProfile.networkInterfaces[0].id" -o tsv 2>/dev/null || true)
+      DISK_ID=$(az vm show -g "$RG" -n "$NAME" --query "storageProfile.osDisk.managedDisk.id" -o tsv 2>/dev/null || true)
+      PIP_ID=""
+      if [ -n "$NIC_ID" ]; then PIP_ID=$(az network nic show --ids "$NIC_ID" --query "ipConfigurations[0].publicIpAddress.id" -o tsv 2>/dev/null || true); fi
+      
       az vm delete --name "$NAME" --resource-group "$RG" --yes
+      
+      if [ -n "$NIC_ID" ]; then az network nic delete --ids "$NIC_ID" || true; fi
+      if [ -n "$PIP_ID" ]; then az network public-ip delete --ids "$PIP_ID" || true; fi
+      if [ -n "$DISK_ID" ]; then az disk delete --ids "$DISK_ID" --yes || true; fi
       ;;
     *) echo "Unknown node action: $ACTION"; exit 1 ;;
   esac
@@ -347,7 +403,7 @@ azure_jumpbox() {
       echo "Setting up Azure Jump-box '$NAME'..."
       azure_network create "${NAME}-vnet" "$RG" "$@"
       azure_firewall create "${NAME}-nsg" "$RG" 22 "$@"
-      azure_node create "$NAME" "$IMAGE" "$RG" "$@"
+      azure_node create "$NAME" "$IMAGE" "$RG" --vnet-name "${NAME}-vnet" --nsg "${NAME}-nsg" "$@"
       echo "Azure Jump-box '$NAME' ready."
       ;;
     *) echo "Unknown jumpbox action: $ACTION"; exit 1 ;;
@@ -386,6 +442,27 @@ azure_list_managed() {
   az resource list --tag "$FILTER_TAG" --output table
 }
 
+azure_dns() {
+  ACTION=$1; shift
+  case "$ACTION" in
+
+    unmap-node)
+      NAME=$1; RG=$2; DOMAIN=$3; ZONE_NAME=$4; ZONE_RG=$5
+      if [ -z "$NAME" ] || [ -z "$DOMAIN" ]; then echo "Usage: dns unmap-node <node_name> <rg> <domain> <zone_name> <zone_rg>"; exit 1; fi
+      RECORD_NAME=$(echo "$DOMAIN" | sed "s/\\.$ZONE_NAME//")
+      az network dns record-set a delete -g "$ZONE_RG" -z "$ZONE_NAME" -n "$RECORD_NAME" --yes
+      ;;
+    map-node)
+      NAME=$1; RG=$2; DOMAIN=$3; ZONE_NAME=$4; ZONE_RG=$5
+      if [ -z "$NAME" ] || [ -z "$DOMAIN" ]; then echo "Usage: dns map-node <node_name> <rg> <domain> <zone_name> <zone_rg>"; exit 1; fi
+      IP=$(az vm show -d -g "$RG" -n "$NAME" --query publicIps -o tsv)
+      RECORD_NAME=$(echo "$DOMAIN" | sed "s/\.$ZONE_NAME//")
+      az network dns record-set a add-record -g "$ZONE_RG" -z "$ZONE_NAME" -n "$RECORD_NAME" -a "$IP"
+      ;;
+    *) echo "Unknown dns action: $ACTION"; exit 1 ;;
+  esac
+}
+
 azure_cleanup() {
   PURGE_BUCKETS=$1
   FILTER_TAG=${2:-"$TAG_KEY=$TAG_VAL"}
@@ -406,6 +483,7 @@ azure_cleanup() {
 # CLI Router
 CMD=$1; shift
 case "$CMD" in
+  dns) azure_dns "$@" ;;
   network) azure_network "$@" ;;
   firewall) azure_firewall "$@" ;;
   node) azure_node "$@" ;;
@@ -418,9 +496,10 @@ case "$CMD" in
   install) check_deps ;;
   --help|-h)
     echo "LibScript Azure Cloud Wrapper"
-    echo "Usage: $0 {network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
+    echo "Usage: $0 {dns|network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
     echo ""
     echo "Commands:"
+    echo "  dns            Map node IPs to DNS records"
     echo "  network        Manage VPCs and subnets"
     echo "  firewall       Manage Security Groups / Firewalls"
     echo "  node           Manage Compute Instances"
@@ -437,7 +516,7 @@ case "$CMD" in
     ;;
   *)
     echo "LibScript Azure Cloud Wrapper"
-    echo "Usage: $0 {network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
+    echo "Usage: $0 {dns|network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
     exit 1
     ;;
 esac

@@ -64,6 +64,9 @@ if /i "%cmd%"=="-v" (
 )
 
 if /i "%cmd%"=="list" goto list_components
+if /i "%cmd%"=="provision" goto provision_cloud
+if /i "%cmd%"=="deprovision" goto deprovision_cloud
+
 if /i "%cmd%"=="search" goto search_components
 
 if /i "%cmd%"=="start" if not "%LIBSCRIPT_INTERNAL_START%"=="1" set "is_docker_cmd=1"
@@ -79,7 +82,19 @@ if "!is_docker_cmd!"=="1" (
     set "action=%cmd%"
     if /i "!action!"=="up" set "action=start"
     if /i "!action!"=="down" set "action=stop"
+    set "skip_hooks=0"
     set "arg1=%~2"
+    set "arg2=%~3"
+    set "arg3=%~4"
+    if /i "!arg1!"=="--no-hooks" (
+        set "skip_hooks=1"
+        set "arg1=!arg2!"
+        set "arg2=!arg3!"
+    ) else if /i "!arg2!"=="--no-hooks" (
+        set "skip_hooks=1"
+        set "arg2=!arg3!"
+    )
+    
     set "is_json=0"
     if "!arg1!"=="" set "is_json=1"
     if /i "!arg1!"=="libscript.json" set "is_json=1"
@@ -97,6 +112,16 @@ if "!is_docker_cmd!"=="1" (
             echo Error: jq is required to parse !json_file!. 1>&2
             exit /b 1
         )
+                if "!skip_hooks!"=="0" (
+            if /i "!action!"=="start" (
+                call "%~dp0scripts\run_hooks.bat" "!json_file!" "build"
+                call "%~dp0scripts\run_hooks.bat" "!json_file!" "pre_start"
+            )
+            if /i "!action!"=="up" (
+                call "%~dp0scripts\run_hooks.bat" "!json_file!" "build"
+                call "%~dp0scripts\run_hooks.bat" "!json_file!" "pre_start"
+            )
+        )
         call "%~dp0scripts\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
         for /f "tokens=1,2 delims= " %%A in (\'jq -r ".selected[] | \"\(.name) \(.version // \\\"latest\\\")\"" "!json_file!.resolved.json" 2^>nul\') do (
             set "pkg=%%A"
@@ -106,6 +131,23 @@ if "!is_docker_cmd!"=="1" (
             start "" /b cmd /c call "%~f0" !action! !pkg! !ver!
         )
         if exist "!json_file!.resolved.json" del "!json_file!.resolved.json"
+        
+        if /i "!action!"=="start" (
+            call "%~dp0scripts\daemonize.bat" "!action!" "!json_file!"
+            call "%~dp0scripts\setup_ingress.bat" "!action!" "!json_file!"
+        ) else if /i "!action!"=="up" (
+            call "%~dp0scripts\daemonize.bat" "!action!" "!json_file!"
+            call "%~dp0scripts\setup_ingress.bat" "!action!" "!json_file!"
+        ) else if /i "!action!"=="stop" (
+            call "%~dp0scripts\setup_ingress.bat" "!action!" "!json_file!"
+            call "%~dp0scripts\daemonize.bat" "!action!" "!json_file!"
+        ) else if /i "!action!"=="down" (
+            call "%~dp0scripts\setup_ingress.bat" "!action!" "!json_file!"
+            call "%~dp0scripts\daemonize.bat" "!action!" "!json_file!"
+        ) else if /i "!action!"=="status" (
+            call "%~dp0scripts\daemonize.bat" "!action!" "!json_file!"
+        )
+
         exit /b 0
     ) else (
         rem Support multiple specific services: libscript.cmd start caddy postgres
@@ -147,7 +189,17 @@ if /i "%cmd%"=="install-deps" (
         )
     )
 
-    call "%~dp0scripts\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
+            if "!skip_hooks!"=="0" (
+            if /i "!action!"=="start" (
+                call "%~dp0scripts\run_hooks.bat" "!json_file!" "build"
+                call "%~dp0scripts\run_hooks.bat" "!json_file!" "pre_start"
+            )
+            if /i "!action!"=="up" (
+                call "%~dp0scripts\run_hooks.bat" "!json_file!" "build"
+                call "%~dp0scripts\run_hooks.bat" "!json_file!" "pre_start"
+            )
+        )
+        call "%~dp0scripts\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
     REM Parallel Download Phase
     echo Downloading dependencies in parallel...
     for /f "tokens=1,2,3" %%a in (\'jq -r ".selected[] | \"\(.name) \(.version // \\\"latest\\\") \(.override // \\\"\\\")\"" "!json_file!.resolved.json" 2^>nul\') do (
@@ -414,6 +466,17 @@ for /f "delims=" %%f in ('dir /s /b /a:-d "%SCRIPT_DIR%\cli.cmd" 2^>nul') do (
 )
 if exist "%temp%\desc.txt" del "%temp%\desc.txt"
 exit /b 0
+
+:provision_cloud
+shift
+call "%~dp0scripts\deploy_cloud.cmd" %*
+goto :eof
+
+:deprovision_cloud
+shift
+call "%~dp0scripts\teardown_cloud.cmd" %*
+goto :eof
+
 
 :search_components
 set "query=%~2"
