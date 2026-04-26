@@ -72,9 +72,10 @@ if ($DbType -eq "mariadb" -or $DbType -eq "mysql") {
     }
 } elseif ($DbType -eq "postgres" -or $DbType -eq "postgresql") {
     try {
-        # Assuming postgres user exists and can connect
-        psql -U postgres -c "CREATE USER $DbUser WITH PASSWORD '$DbPass';"
-        psql -U postgres -c "CREATE DATABASE $DbName OWNER $DbUser;"
+        $userExists = (psql -U postgres -tc "SELECT 1 FROM pg_roles WHERE rolname = '$DbUser'" | Out-String).Trim()
+        if ($userExists -ne "1") { psql -U postgres -c "CREATE USER $DbUser WITH PASSWORD '$DbPass';" }
+        $dbExists = (psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = '$DbName'" | Out-String).Trim()
+        if ($dbExists -ne "1") { psql -U postgres -c "CREATE DATABASE $DbName OWNER $DbUser;" }
         psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE $DbName TO $DbUser;"
     } catch {
         Write-Warning "Failed to automatically configure PostgreSQL. You may need to create the database manually."

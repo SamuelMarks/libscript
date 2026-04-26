@@ -6,10 +6,6 @@ This document tracks experimental features and potential use-cases for LibScript
 
 Investigating the viability of generically provisioning complex, hardware-dependent stacks (such as CUDA drivers, vLLM, and Jupyter) locally on host machines to avoid the overhead associated with containerized GPU passthrough.
 
-## Interactive TUI Generation
-
-Expanding the generator capabilities to include a full Terminal User Interface (`package_as TUI`). This would allow end-users to interactively configure environment variables and ports before finalizing an installation or generating an artifact.
-
 ## Immutable OS Deployment
 
 Exploring integrations with tools like `ostree` to compile declarative `libscript.json` definitions into customized, bootable operating system images.

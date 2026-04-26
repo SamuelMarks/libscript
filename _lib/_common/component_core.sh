@@ -1,4 +1,26 @@
 #!/bin/sh
+
+set -feu
+# shellcheck disable=SC2296,SC3028,SC3040,SC3054
+if [ "${SCRIPT_NAME-}" ]; then
+  this_file="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  this_file="${BASH_SOURCE[0]}"
+  set -o pipefail
+elif [ "${ZSH_VERSION-}" ]; then
+  this_file="${(%):-%x}"
+  set -o pipefail
+else
+  this_file="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${this_file}"':'*)
+    printf '[STOP]     processing "%s"\n' "${this_file}"
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+esac
+export STACK="${STACK:-}${this_file}"':'
 # # LibScript Component Core Module
 #
 # ## Overview
@@ -12,7 +34,12 @@
 # ```sh
 # #!/bin/sh
 # PACKAGE_NAME="my-component"
-# . "$(dirname "$0")/../../_common/component_core.sh"
+# for lib in '_lib/_common/component_core.sh' ; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+done
 # ```
 #
 # ## Requirements
@@ -125,7 +152,7 @@ ACTION=""
 VERSION=""
 
 # Input validation and basic routing
-case "$1" in
+case "${1:-}" in
   --help|-h|/\?|"-?")
     show_help
     exit 0
@@ -135,10 +162,10 @@ case "$1" in
     exit 0
     ;;
   install|install_daemon|install_service|uninstall_daemon|uninstall_service|remove_daemon|remove_service|run|which|exec|env|serve|route)
-    ACTION="$1"
+    ACTION="${1:-}"
     # $2 is PACKAGE_NAME (usually matches our component name)
-    VERSION="$3"
-    if [ -z "$2" ]; then
+    VERSION="${3:-}"
+    if [ -z "${2:-}" ]; then
       echo "Error: package_name is required for $ACTION" >&2
       exit 1
     fi
@@ -149,9 +176,9 @@ case "$1" in
     shift 3
     ;;
   ls|ls-remote|download|remove|uninstall|status|health|test|start|stop|restart|logs|up|down)
-    ACTION="$1"
-    VERSION="$3"
-    if [ -z "$2" ]; then
+    ACTION="${1:-}"
+    VERSION="${3:-}"
+    if [ -z "${2:-}" ]; then
       echo "Error: package_name is required for $ACTION" >&2
       exit 1
     fi
@@ -168,7 +195,7 @@ case "$1" in
     esac
     ;;
   *)
-    if [ -n "$1" ]; then
+    if [ -n "${1:-}" ]; then
       echo "Unknown command: $1"
       echo "Use --help to see available options."
       exit 1

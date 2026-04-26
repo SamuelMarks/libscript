@@ -1,4 +1,26 @@
 #!/bin/sh
+
+set -feu
+# shellcheck disable=SC2296,SC3028,SC3040,SC3054
+if [ "${SCRIPT_NAME-}" ]; then
+  this_file="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  this_file="${BASH_SOURCE[0]}"
+  set -o pipefail
+elif [ "${ZSH_VERSION-}" ]; then
+  this_file="${(%):-%x}"
+  set -o pipefail
+else
+  this_file="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${this_file}"':'*)
+    printf '[STOP]     processing "%s"\n' "${this_file}"
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+esac
+export STACK="${STACK:-}${this_file}"':'
 # LibScript Unified Logging Utility (POSIX)
 
 # Levels: 0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR
@@ -7,11 +29,11 @@ LIBSCRIPT_LOG_FORMAT="${LIBSCRIPT_LOG_FORMAT:-text}"
 LIBSCRIPT_LOG_FILE="${LIBSCRIPT_LOG_FILE:-}"
 
 _libscript_log_msg() {
-  level_name="$1"
-  level_num="$2"
-  msg="$3"
+  level_name="${1:-}"
+  level_num="${2:-}"
+  msg="${3:-}"
   
-  if [ "$level_num" -lt "$LIBSCRIPT_LOG_LEVEL" ]; then
+  if [ "${level_num:-0}" -lt "$LIBSCRIPT_LOG_LEVEL" ]; then
     return
   fi
 
@@ -42,8 +64,8 @@ _libscript_log_msg() {
   fi
 }
 
-log_debug()   { _libscript_log_msg "DEBUG"   0 "$1"; }
-log_info()    { _libscript_log_msg "INFO"    1 "$1"; }
-log_success() { _libscript_log_msg "SUCCESS" 2 "$1"; }
-log_warn()    { _libscript_log_msg "WARN"    3 "$1"; }
-log_error()   { _libscript_log_msg "ERROR"   4 "$1"; }
+log_debug()   { _libscript_log_msg "DEBUG"   0 "${1:-}"; }
+log_info()    { _libscript_log_msg "INFO"    1 "${1:-}"; }
+log_success() { _libscript_log_msg "SUCCESS" 2 "${1:-}"; }
+log_warn()    { _libscript_log_msg "WARN"    3 "${1:-}"; }
+log_error()   { _libscript_log_msg "ERROR"   4 "${1:-}"; }

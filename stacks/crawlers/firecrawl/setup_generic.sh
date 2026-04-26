@@ -1,17 +1,15 @@
 #!/bin/sh
-# shellcheck disable=SC3054,SC3040,SC2296,SC2128,SC2039,SC2016,SC1090,SC1091,SC2034,SC2018,SC2019,SC2221,SC2222,SC2129,SC2209,SC2089,SC2090,SC2086,SC2154,SC2044,SC2181,SC2038,SC2155,SC2046,SC2002,SC1003,SC2295,SC2145
-
-
 
 set -feu
+# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   this_file="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE}"
-
+  this_file="${BASH_SOURCE[0]}"
+  set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${0}"
-
+  this_file="${(%):-%x}"
+  set -o pipefail
 else
   this_file="${0}"
 fi
@@ -23,7 +21,6 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
 esac
 export STACK="${STACK:-}${this_file}"':'
-
 _DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${_DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 
@@ -90,8 +87,12 @@ if [ -d '/etc/systemd/system' ]; then
          EXEC_START="$(which pnpm)"' run workers' \
         "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/init-systems/systemd/simple.service' > "${name_file}"
   priv  install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
-  priv systemctl daemon-reload || true
-  priv systemctl reload-or-restart -- "${service_name}" || true
+  if ! priv systemctl daemon-reload ; then
+    true
+  fi
+  if ! priv systemctl reload-or-restart -- "${service_name}" ; then
+    true
+  fi
 
   name_file="$(mktemp)"
   trap 'rm -f -- "${name_file}"' EXIT HUP INT QUIT TERM
@@ -102,8 +103,12 @@ if [ -d '/etc/systemd/system' ]; then
          EXEC_START="$(which pnpm)"' run start' \
         "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/init-systems/systemd/simple.service' > "${name_file}"
   priv  install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
-  priv systemctl daemon-reload || true
-  priv systemctl reload-or-restart -- "${service_name}" || true
+  if ! priv systemctl daemon-reload ; then
+    true
+  fi
+  if ! priv systemctl reload-or-restart -- "${service_name}" ; then
+    true
+  fi
 fi
 
 cd -- "${previous_wd}"

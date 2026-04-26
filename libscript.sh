@@ -1,13 +1,37 @@
 #!/bin/sh
-# shellcheck disable=SC2016,SC1090,SC1091,SC2034,SC2018,SC2019,SC2221,SC2222,SC2129,SC2209,SC2089,SC2090,SC2086,SC2154,SC2044,SC2181,SC2038,SC2155,SC2046,SC2002,SC1003,SC2295,SC2145
 
+set -feu
+# shellcheck disable=SC2296,SC3028,SC3040,SC3054
+if [ "${SCRIPT_NAME-}" ]; then
+  this_file="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  this_file="${BASH_SOURCE[0]}"
+  set -o pipefail
+elif [ "${ZSH_VERSION-}" ]; then
+  this_file="${(%):-%x}"
+  set -o pipefail
+else
+  this_file="${0}"
+fi
 
-set -e
-
+case "${STACK+x}" in
+  *':'"${this_file}"':'*)
+    printf '[STOP]     processing "%s"\n' "${this_file}"
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+esac
+export STACK="${STACK:-}${this_file}"':'
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+export LIBSCRIPT_ROOT_DIR
 
 # Source logging
-. "$SCRIPT_DIR/_lib/_common/log.sh"
+for lib in '_lib/_common/log.sh' ; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+done
 
 show_help() {
   echo "LibScript Global CLI"
@@ -169,7 +193,12 @@ fi
 
 if [ "$cmd" = "process-downloads" ]; then
   list_file="$1"
-  . "$SCRIPT_DIR/_lib/_common/pkg_mgr.sh"
+for lib in '_lib/_common/pkg_mgr.sh' ; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+done
   libscript_process_aria2_file "$list_file"
   exit 0
 fi
@@ -245,7 +274,9 @@ if [ "$cmd" = "start" ] || [ "$cmd" = "stop" ] || [ "$cmd" = "status" ] || [ "$c
       fi
     fi
 
-    deps=$("${LIBSCRIPT_ROOT_DIR:-.}/scripts/resolve_stack.sh" "$json_file" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null || true)
+    if ! deps=$("${LIBSCRIPT_ROOT_DIR:-.}/scripts/resolve_stack.sh" "$json_file" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null); then
+      deps=""
+    fi
     if [ -n "$deps" ]; then
       echo "$deps" > "$json_file.tmpdeps"
       while read -r pkg ver; do
@@ -308,7 +339,7 @@ if [ "$cmd" = "install-deps" ]; then
     exit 1
   fi
   
-  if [ -z "$LIBSCRIPT_SECRETS" ]; then
+  if [ -z "${LIBSCRIPT_SECRETS:-}" ]; then
     json_secrets=$(jq -r 'if .secrets then .secrets else empty end' "$json_file" 2>/dev/null)
     if [ "$json_secrets" != "null" ] && [ -n "$json_secrets" ]; then
       export LIBSCRIPT_SECRETS="$json_secrets"
@@ -317,7 +348,9 @@ if [ "$cmd" = "install-deps" ]; then
     fi
   fi
 
-  deps=$("${LIBSCRIPT_ROOT_DIR:-.}/scripts/resolve_stack.sh" "$json_file" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest") \(.override // "")"' 2>/dev/null || true)
+  if ! deps=$("${LIBSCRIPT_ROOT_DIR:-.}/scripts/resolve_stack.sh" "$json_file" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest") \(.override // "")"' 2>/dev/null); then
+    deps=""
+  fi
   if [ -z "$deps" ]; then
     echo "No dependencies found in $json_file."
     exit 0
@@ -489,7 +522,9 @@ if [ "$cmd" = "package_as" ]; then
         deps_list="${deps_list}cli ${pkg} ${ver} ${override}\n"
       done
     elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
-      deps_list=$("${LIBSCRIPT_ROOT_DIR:-.}/scripts/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.layer // "deps") \(.name) \(.version // "latest") \(.override // "")"' 2>/dev/null || true)
+      if ! deps_list=$("${LIBSCRIPT_ROOT_DIR:-.}/scripts/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.layer // "deps") \(.name) \(.version // "latest") \(.override // "")"' 2>/dev/null); then
+        deps_list=""
+      fi
       else
         deps_list=$(find_components | sort | awk '{printf "%s latest ", $1}')
     fi
@@ -646,7 +681,9 @@ if [ "$cmd" = "package_as" ]; then
         deps_list="${deps_list}cli ${pkg} ${ver} ${override}\n"
       done
     elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
-      deps_list=$("${LIBSCRIPT_ROOT_DIR:-.}/scripts/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.layer // "deps") \(.name) \(.version // "latest") \(.override // "")"' 2>/dev/null || true)
+      if ! deps_list=$("${LIBSCRIPT_ROOT_DIR:-.}/scripts/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.layer // "deps") \(.name) \(.version // "latest") \(.override // "")"' 2>/dev/null); then
+        deps_list=""
+      fi
       else
         deps_list=$(find_components | sort | awk '{printf "%s latest ", $1}')
     fi
@@ -722,7 +759,9 @@ if [ "$cmd" = "package_as" ]; then
           if [ "$pkg" = "fluentbit" ]; then healthcheck="[\"CMD-SHELL\", \"wget -qO- http://127.0.0.1:2020/api/v1/health || exit 1\"]"; fi
 
           if [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
-              custom_hc=$(jq -r ".deps[\"$pkg\"].healthcheck // .servers[\"$pkg\"].healthcheck // .databases[\"$pkg\"].healthcheck // .third_party[\"$pkg\"].healthcheck // .storage[\"$pkg\"].healthcheck // .toolchains[\"$pkg\"].healthcheck // empty | if type == \"object\" then .test | tojson elif type == \"string\" then \"[\\\"CMD-SHELL\\\", \\\"\" + . + \"\\\"]\" else empty end" libscript.json 2>/dev/null || true)
+              if ! custom_hc=$(jq -r ".deps[\"$pkg\"].healthcheck // .servers[\"$pkg\"].healthcheck // .databases[\"$pkg\"].healthcheck // .third_party[\"$pkg\"].healthcheck // .storage[\"$pkg\"].healthcheck // .toolchains[\"$pkg\"].healthcheck // empty | if type == \"object\" then .test | tojson elif type == \"string\" then \"[\\\"CMD-SHELL\\\", \\\"\" + . + \"\\\"]\" else empty end" libscript.json 2>/dev/null); then
+                custom_hc=""
+              fi
               if [ -n "$custom_hc" ] && [ "$custom_hc" != "null" ]; then
                   healthcheck="$custom_hc"
               fi
@@ -771,7 +810,9 @@ EOF
         if [ "$2" != "" ]; then shift 2; else shift; fi
       done
     elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
-      deps=$("${LIBSCRIPT_ROOT_DIR:-.}/scripts/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null || true)
+      if ! deps=$("${LIBSCRIPT_ROOT_DIR:-.}/scripts/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null); then
+        deps=""
+      fi
       echo "$deps" | while read -r pkg ver; do
         if [ -n "$pkg" ]; then
           if [ "$ver" = "null" ]; then ver="latest"; fi
@@ -2329,16 +2370,24 @@ target=""
 if [ -f "$SCRIPT_DIR/$action_pkg/cli.sh" ]; then
   target="$SCRIPT_DIR/$action_pkg"
 else
-  matches=$(find_components | grep -i "$action_pkg" || true)
-  count=$(echo "$matches" | grep -c . || true)
+  if ! matches=$(find_components | grep -i "$action_pkg"); then
+    matches=""
+  fi
+  if ! count=$(echo "$matches" | grep -c .); then
+    count=0
+  fi
   if [ "$count" -eq 0 ]; then
     echo "Error: Unknown component '$action_pkg'."
     exit 1
   elif [ "$count" -eq 1 ]; then
     target="$SCRIPT_DIR/$matches"
   else
-    exact_match=$(echo "$matches" | grep "/$action_pkg$" || true)
-    exact_count=$(echo "$exact_match" | grep -c . || true)
+    if ! exact_match=$(echo "$matches" | grep "/$action_pkg$"); then
+      exact_match=""
+    fi
+    if ! exact_count=$(echo "$exact_match" | grep -c .); then
+      exact_count=0
+    fi
     if [ "$exact_count" -eq 1 ]; then
       target="$SCRIPT_DIR/$exact_match"
     else

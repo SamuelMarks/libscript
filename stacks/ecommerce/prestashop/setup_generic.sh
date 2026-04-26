@@ -1,11 +1,15 @@
 #!/bin/sh
+
 set -feu
+# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   this_file="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE}"
+  this_file="${BASH_SOURCE[0]}"
+  set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${0}"
+  this_file="${(%):-%x}"
+  set -o pipefail
 else
   this_file="${0}"
 fi
@@ -17,7 +21,6 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
 esac
 export STACK="${STACK:-}${this_file}"':'
-
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 
@@ -37,7 +40,9 @@ export PRESTASHOP_DB_TYPE
 
 depends 'php'
 if [ "${PRESTASHOP_WEBSERVER}" = "nginx" ] || [ "${PRESTASHOP_WEBSERVER}" = "caddy" ]; then
-  depends 'php-fpm' || true
+  if ! depends 'php-fpm' ; then
+    true
+  fi
 fi
 
 case "${PRESTASHOP_DB_TYPE}" in
@@ -109,7 +114,9 @@ elif [ "${PRESTASHOP_DB_TYPE}" = "sqlite" ]; then
   priv mkdir -p "${WWWROOT}/var/sqlite"
 fi
 
-priv chown -R www-data:www-data "${WWWROOT}" || true
+if ! priv chown -R www-data:www-data "${WWWROOT}" ; then
+  true
+fi
 
 if [ -z "${PHP_FPM_LISTEN:-}" ]; then
   if [ -e /run/php/php-fpm.sock ]; then
@@ -160,7 +167,9 @@ if [ "${PRESTASHOP_WEBSERVER}" = "nginx" ]; then
   
   priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${SERVER_NAME}.conf"
   priv ln -sf "${NGINX_CONF_DIR}/sites-available/${SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${SERVER_NAME}.conf"
-  priv systemctl reload nginx || true
+  if ! priv systemctl reload nginx ; then
+    true
+  fi
   rm -f "${LOC_BLOCK_TMP}" "${SERVER_BLOCK_TMP}"
 elif [ "${PRESTASHOP_WEBSERVER}" = "caddy" ]; then
   CADDY_BLOCK_TMP=$(mktemp)
@@ -172,18 +181,24 @@ elif [ "${PRESTASHOP_WEBSERVER}" = "caddy" ]; then
   else
     priv tee -a /etc/caddy/Caddyfile < "${CADDY_BLOCK_TMP}" >/dev/null
   fi
-  priv systemctl reload caddy || true
+  if ! priv systemctl reload caddy ; then
+    true
+  fi
   rm -f "${CADDY_BLOCK_TMP}"
 elif [ "${PRESTASHOP_WEBSERVER}" = "httpd" ]; then
   HTTPD_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/httpd/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/httpd/create_server_block.sh" > "${HTTPD_BLOCK_TMP}"
   if [ -d /etc/httpd/conf.d ]; then
     priv cp "${HTTPD_BLOCK_TMP}" "/etc/httpd/conf.d/${SERVER_NAME}.conf"
-    priv systemctl reload httpd || true
+    if ! priv systemctl reload httpd ; then
+      true
+    fi
   elif [ -d /etc/apache2/sites-available ]; then
     priv cp "${HTTPD_BLOCK_TMP}" "/etc/apache2/sites-available/${SERVER_NAME}.conf"
     priv ln -sf "/etc/apache2/sites-available/${SERVER_NAME}.conf" "/etc/apache2/sites-enabled/${SERVER_NAME}.conf"
-    priv systemctl reload apache2 || true
+    if ! priv systemctl reload apache2 ; then
+      true
+    fi
   else
     priv tee -a /etc/httpd/conf/httpd.conf < "${HTTPD_BLOCK_TMP}" >/dev/null
   fi

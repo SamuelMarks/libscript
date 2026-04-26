@@ -42,4 +42,5 @@ The `cloud` component (`_lib/cloud`) provides a unified, multicloud PaaS interfa
 
 LibScript uses component metadata to translate native definitions into various production artifacts:
 - **Containers:** Optimized `Dockerfile` and `docker-compose.yml` manifests.
-- **Native Installers:** MSI (Windows), DEB (Linux), PKG (macOS), and RPM (RHEL/Alma).
+- **Native Installers:** MSI and EXE via InnoSetup/NSIS (Windows), DEB/RPM/APK (Linux), TXZ (FreeBSD), and PKG/DMG (macOS).
+- **Interactive Shell:** A `TUI` installer using `dialog`/`whiptail` to select components and generate targets.

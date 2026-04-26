@@ -109,9 +109,31 @@ Generate production-ready artifacts from your current stack definition.
 ./libscript.sh package_as msi
 ```
 
+### Generate other native artifacts
+```sh
+# Generate a macOS Installer
+./libscript.sh package_as pkg
+
+# Generate a Debian/Ubuntu Package
+./libscript.sh package_as deb
+
+# Generate an Interactive TUI Installer
+./libscript.sh package_as TUI
+```
+
 ## 🌍 Cloud Orchestration
 
-LibScript wraps official cloud vendor CLIs into a unified, idempotent interface.
+LibScript wraps official cloud vendor CLIs into a unified, idempotent interface. The easiest way to deploy a stack is via the high-level `provision` command, which orchestrates networking, firewall rules, node creation, codebase syncing, and daemonizing your stack.
+
+```sh
+# Provision your stack on AWS
+./libscript.sh provision aws my-node my-vpc us-east-1 ./ ~/app
+
+# Provision your stack on Azure
+./libscript.sh provision azure my-node my-rg eastus ./ ~/app
+```
+
+You can also drop down to lower-level resource management:
 
 ```sh
 # Create a Jump-box on AWS
@@ -137,12 +159,16 @@ LibScript provides built-in primitives to push applications and map domains to n
 ```
 
 ### Resource Cleanup
-LibScript automatically tags all cloud resources (`ManagedBy=LibScript`) for safe deprovisioning.
+LibScript can safely deprovision individual nodes (and their dedicated resources) or clean up an entire region.
+
 ```sh
+# Cleanly teardown a specific provisioned stack (and dangling DNS records)
+./libscript.sh deprovision azure my-vm t1d-rg eastus
+
 # List all managed resources across all providers
 ./libscript.sh cloud list-managed
 
-# Safe cleanup (leaves data buckets untouched)
+# Safe bulk cleanup (leaves data buckets untouched)
 ./libscript.sh cloud cleanup
 ```
 

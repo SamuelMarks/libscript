@@ -1,33 +1,19 @@
 #!/bin/sh
-# # LibScript Common Uninstall Entrypoint
-#
-# ## Overview
-# This script provides a standardized entrypoint for component uninstallation.
-# It resolves the target operating system and delegates to the appropriate 
-# `uninstall_<os>.sh` or `uninstall_generic.sh` within the component directory.
-#
-# ## Usage
-# Sourced by a component's `uninstall.sh`:
-#
-# ```sh
-# #!/bin/sh
-# . "$(dirname "$0")/../../_common/uninstall_base.sh"
-# ```
 
 set -feu
-
-# Boilerplate for finding this file and root
+# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   this_file="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE}"
+  this_file="${BASH_SOURCE[0]}"
+  set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${0}"
+  this_file="${(%):-%x}"
+  set -o pipefail
 else
   this_file="${0}"
 fi
 
-# Prevent circular or double execution
 case "${STACK+x}" in
   *':'"${this_file}"':'*)
     printf '[STOP]     processing "%s"\n' "${this_file}"
@@ -35,7 +21,6 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
 esac
 export STACK="${STACK:-}${this_file}"':'
-
 # Resolve component directory and LibScript root
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
@@ -72,9 +57,15 @@ fi
 
 # Automated netctl unregistration
 if [ -n "${CADDY_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
-  "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --unlisten "unix:${CADDY_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 || true
+  if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --unlisten "unix:${CADDY_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then
+    true
+  fi
 elif [ -n "${CADDY_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ] && [ -n "${CADDY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
-  "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --unlisten "${CADDY_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${CADDY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 || true
+  if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --unlisten "${CADDY_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${CADDY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
+    true
+  fi
 elif [ -n "${CADDY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
-  "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --unlisten "${CADDY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 || true
+  if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --unlisten "${CADDY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
+    true
+  fi
 fi

@@ -17,4 +17,4 @@ To create a new component:
 By adhering to this decentralized model, your component automatically inherits:
 - **Global Dependency Resolution:** It can be included in `libscript.json` stacks and resolved by the versioning engine.
 - **Artifact Generation:** It can be automatically compiled into Dockerfiles, MSI installers, DEB/RPM packages, and more.
-- **Multicloud Deployment:** It can be bootstrapped onto AWS, Azure, or GCP nodes via the unified `cloud` interface.
+- **Multicloud Deployment:** It can be bootstrapped onto AWS, Azure, or GCP nodes via the unified `provision` command.

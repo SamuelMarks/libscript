@@ -1,17 +1,15 @@
 #!/bin/sh
-# shellcheck disable=SC3054,SC3040,SC2296,SC2128,SC2039,SC2016,SC1090,SC1091,SC2034,SC2018,SC2019,SC2221,SC2222,SC2129,SC2209,SC2089,SC2090,SC2086,SC2154,SC2044,SC2181,SC2038,SC2155,SC2046,SC2002,SC1003,SC2295,SC2145
-
-
 
 set -feu
+# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   this_file="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE}"
-
+  this_file="${BASH_SOURCE[0]}"
+  set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${0}"
-
+  this_file="${(%):-%x}"
+  set -o pipefail
 else
   this_file="${0}"
 fi
@@ -23,47 +21,6 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
 esac
 export STACK="${STACK:-}${this_file}"':'
-
-LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
-export LIBSCRIPT_DATA_DIR
-
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/pkg_mgr.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090,SC1091,SC2034
-. "${SCRIPT_NAME}"
-
-db_file="${LIBSCRIPT_DATA_DIR}"'/libscript.db'
-
-if [ -z "${sql3+x}" ]; then
-  if command -v -- 'sqlite3' >/dev/null 2>&1; then
-    sql3=1
-  else
-    sql3=0
-  fi
-fi
-
-try_create_table() {
-  if [ "${sql3}" -eq 1 ] ; then
-    sqlite3 "${db_file}" '
-      CREATE TABLE IF NOT EXISTS T(
-        location text,
-        key text PRIMARY_KEY,
-        val text,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-      );'
-  fi
-}
-
-# `try_create_table` only needs to be called once; though it's guarded by `IF NOT EXISTS`
-STACK="${STACK:-:}"
-case "${STACK}" in
-  *':'"${this_file}"':'*) ;;
-  *)
-    mkdir -p -- "${LIBSCRIPT_DATA_DIR}"
-    try_create_table ;;
-esac
-export STACK="${STACK:-}${this_file}"':'
-
 lang_export() {
   language="${1}"
   var_name="${2}"

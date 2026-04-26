@@ -23,8 +23,8 @@ The core shift is from a system that merely executes scripts to an orchestration
 ### Phase 1: Declarative Stack Manifests (Implemented)
 Utilize `libscript.json` and component schemas to define and enforce the entire application state.
 
-### Phase 2: High-Level `deploy` Engine (Implemented)
-Implementing a unified `deploy` command that chains infrastructure provisioning, dependency resolution, and service bootstrapping into a single atomic operation.
+### Phase 2: High-Level `provision` Engine (Implemented)
+Implementing a unified `provision` command that chains infrastructure provisioning, dependency resolution, and service bootstrapping into a single atomic operation.
 
 ### Phase 3: Global State Management (Ongoing)
 Development of a lightweight, distributed state store to track managed resources across multiple cloud providers and local nodes.
@@ -41,24 +41,22 @@ LibScript includes high-level wrapper scripts that automate the entire lifecycle
 
 ```bash
 # Linux/macOS
-# syntax: deploy_cloud.sh <provider> <node_name> <rg/vpc/project> <region/zone> [repo_path] [remote_dest]
+# syntax: libscript.sh provision <provider> <node_name> <rg/vpc/project> <region/zone> [repo_path] [remote_dest]
 
 # Windows
-# syntax: deploy_cloud.bat <provider> <node_name> <rg/vpc/project> <region/zone> [repo_path] [remote_dest]
-
-# Azure <provider> <node_name> <rg/vpc/project> <region/zone> [repo_path] [remote_dest]
+# syntax: libscript.cmd provision <provider> <node_name> <rg/vpc/project> <region/zone> [repo_path] [remote_dest]
 
 # Azure
-./scripts/deploy_cloud.sh azure t1d-web-node t1d-rg eastus ./ t1d-analytics
-# Windows: .\scripts\deploy_cloud.bat azure t1d-web-node t1d-rg eastus . t1d-analytics
+./libscript.sh provision azure t1d-web-node t1d-rg eastus ./ t1d-analytics
+# Windows: libscript.cmd provision azure t1d-web-node t1d-rg eastus . t1d-analytics
 
 # AWS
-./scripts/deploy_cloud.sh aws t1d-web-node t1d-vpc us-east-1 ./ t1d-analytics
-# Windows: .\scripts\deploy_cloud.bat aws t1d-web-node t1d-vpc us-east-1 . t1d-analytics
+./libscript.sh provision aws t1d-web-node t1d-vpc us-east-1 ./ t1d-analytics
+# Windows: libscript.cmd provision aws t1d-web-node t1d-vpc us-east-1 . t1d-analytics
 
 # GCP
-./scripts/deploy_cloud.sh gcp t1d-web-node t1d-project us-central1-a ./ t1d-analytics
-# Windows: .\scripts\deploy_cloud.bat gcp t1d-web-node t1d-project us-central1-a . t1d-analytics
+./libscript.sh provision gcp t1d-web-node t1d-project us-central1-a ./ t1d-analytics
+# Windows: libscript.cmd provision gcp t1d-web-node t1d-project us-central1-a . t1d-analytics
 ```
 
 ### Deprovisioning
@@ -67,24 +65,22 @@ To completely tear down the application and its infrastructure (including DNS A-
 
 ```bash
 # Linux/macOS
-# syntax: teardown_cloud.sh <provider> <node_name> <rg/vpc/project> <region/zone> [repo_path] [remote_dest]
+# syntax: libscript.sh deprovision <provider> <node_name> <rg/vpc/project> <region/zone> [repo_path] [remote_dest]
 
 # Windows
-# syntax: teardown_cloud.bat <provider> <node_name> <rg/vpc/project> <region/zone> [repo_path] [remote_dest]
-
-# Azure <provider> <node_name> <rg/vpc/project> <region/zone> [repo_path] [remote_dest]
+# syntax: libscript.cmd deprovision <provider> <node_name> <rg/vpc/project> <region/zone> [repo_path] [remote_dest]
 
 # Azure
-./scripts/teardown_cloud.sh azure t1d-web-node t1d-rg eastus ./ t1d-analytics
-# Windows: .\scripts\teardown_cloud.bat azure t1d-web-node t1d-rg eastus . t1d-analytics
+./libscript.sh deprovision azure t1d-web-node t1d-rg eastus ./ t1d-analytics
+# Windows: libscript.cmd deprovision azure t1d-web-node t1d-rg eastus . t1d-analytics
 
 # AWS
-./scripts/teardown_cloud.sh aws t1d-web-node t1d-vpc us-east-1 ./ t1d-analytics
-# Windows: .\scripts\teardown_cloud.bat aws t1d-web-node t1d-vpc us-east-1 . t1d-analytics
+./libscript.sh deprovision aws t1d-web-node t1d-vpc us-east-1 ./ t1d-analytics
+# Windows: libscript.cmd deprovision aws t1d-web-node t1d-vpc us-east-1 . t1d-analytics
 
 # GCP
-./scripts/teardown_cloud.sh gcp t1d-web-node t1d-project us-central1-a ./ t1d-analytics
-# Windows: .\scripts\teardown_cloud.bat gcp t1d-web-node t1d-project us-central1-a . t1d-analytics
+./libscript.sh deprovision gcp t1d-web-node t1d-project us-central1-a ./ t1d-analytics
+# Windows: libscript.cmd deprovision gcp t1d-web-node t1d-project us-central1-a . t1d-analytics
 ```
 
 ### Infrastructure-as-Code Declarations
@@ -153,12 +149,12 @@ LibScript's sync engine is fully generic and extends far beyond standard AWS/GCP
 
 During `deploy`, the framework will pull the state from the remote storage and securely transfer it to the node. During `teardown`, the framework automatically pulls the mutated state back from the node and uploads it securely to the bucket, seamlessly ensuring zero ephemeral data loss.
 ### Automated Secrets Provisioning
-`libscript.json` defines secrets (e.g., `"secrets_dir": "./secrets"`). While the primary `.gitignore`-aware deployment engine correctly skips ignored files to prevent committing secrets to instances via insecure paths, the `deploy_cloud.sh` and `deploy_cloud.cmd` wrappers automatically detect this block and invoke a secure `node scp` operation natively over SSH or WinRM *before* the daemonized stack bootstraps. You do not need to sync secrets out-of-band.
+`libscript.json` defines secrets (e.g., `"secrets_dir": "./secrets"`). While the primary `.gitignore`-aware deployment engine correctly skips ignored files to prevent committing secrets to instances via insecure paths, the `provision` command automatically detects this block and invokes a secure `node scp` operation natively over SSH or WinRM *before* the daemonized stack bootstraps. You do not need to sync secrets out-of-band.
 
 ### Automated DNS & Dangling Records Cleanup
 The `dns map-node` command dynamically maps instances, supporting Azure DNS, AWS Route53, and Google Cloud DNS out of the box. For AWS, the framework automatically resolves the `AWS_ZONE_ID` via the `aws route53` CLI based on your defined domain.
 
-You **must** invoke `dns unmap-node` (handled automatically by `teardown_cloud.sh`) before tearing down the infrastructure. Failing to do so will result in Subdomain Takeover vulnerabilities once the ephemeral IP is reclaimed by the provider pool.
+You **must** invoke `dns unmap-node` (handled automatically by `deprovision`) before tearing down the infrastructure. Failing to do so will result in Subdomain Takeover vulnerabilities once the ephemeral IP is reclaimed by the provider pool.
 
 ### Phase 4: Continuous Deployment (CD)
 You can seamlessly integrate LibScript's \`provision\` and \`deprovision\` primitives into CI/CD pipelines.
@@ -190,10 +186,10 @@ jobs:
 
 ### Robust Deployment Features
 
-The `deploy_cloud` and `teardown_cloud` wrappers include production-grade reliability features:
+The `provision` and `deprovision` workflows include production-grade reliability features:
 
 1. **Automated Provisioning & Retries**: Wraps cloud API calls (which frequently experience transient failures or rate limits) in exponential backoff retry loops.
 2. **Status & Health Polling**: Actively polls the remote node for SSH/WinRM readiness before attempting to synchronize files, and polls the application's `/api/` HTTP health endpoint after start to ensure the stack stabilized.
 3. **Structured Logging**: All deployment and teardown steps write timestamped audit logs locally to the `logs/` directory (e.g., `logs/provision-<timestamp>.log`).
-4. **Idempotent Deprovisioning & State Tracking**: Provisioning operations automatically track created cloud resources (VNETs, Firewalls, Nodes) into a local `.deploy_state` file. The `teardown_cloud` wrapper consumes this state file to safely and idempotently delete exactly what was created, preventing orphaned resources even if initial provisioning partially failed.
+4. **Idempotent Deprovisioning & State Tracking**: Provisioning operations automatically track created cloud resources (VNETs, Firewalls, Nodes) into a local `.deploy_state` file. The `deprovision` command consumes this state file to safely and idempotently delete exactly what was created, preventing orphaned resources even if initial provisioning partially failed.
 5. **Smart Transfer Fallbacks**: File syncing transparently prefers `rsync` for high-performance delta transfers, automatically falling back to `scp` on simpler hosts, and native `WinRM` on Windows instances.

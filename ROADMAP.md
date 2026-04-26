@@ -22,7 +22,7 @@
 - [ ] Cross-cloud persistent volume and state management.
 
 ## Phase 4: UI & Observability
-- [ ] Terminal User Interface (TUI) for stack and PaaS management.
+- [x] Terminal User Interface (TUI) for stack and PaaS management via `package_as TUI`.
 - [ ] Lightweight, decentralized Web Dashboard.
 - [ ] Integrated log aggregation and health monitoring.
 - [ ] Real-time multicloud resource cost and usage reporting.

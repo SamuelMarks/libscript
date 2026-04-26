@@ -81,8 +81,11 @@ if ($DbEngine -eq "sqlite") {
         log_success "PostgreSQL drop-in installed."
     }
     try {
-        $pgCmd = "CREATE DATABASE `"$DbName`"; CREATE USER `"$DbUser`" WITH ENCRYPTED PASSWORD '$DbPass'; GRANT ALL PRIVILEGES ON DATABASE `"$DbName`" TO `"$DbUser`";"
-        psql -U postgres -c $pgCmd
+        $dbExists = (psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = '$DbName'" | Out-String).Trim()
+        if ($dbExists -ne "1") { psql -U postgres -c "CREATE DATABASE `"$DbName`";" }
+        $userExists = (psql -U postgres -tc "SELECT 1 FROM pg_roles WHERE rolname = '$DbUser'" | Out-String).Trim()
+        if ($userExists -ne "1") { psql -U postgres -c "CREATE USER `"$DbUser`" WITH ENCRYPTED PASSWORD '$DbPass';" }
+        psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE `"$DbName`" TO `"$DbUser`";"
     } catch {
         Write-Warning "Failed to automatically configure PostgreSQL. You may need to create the database manually."
     }

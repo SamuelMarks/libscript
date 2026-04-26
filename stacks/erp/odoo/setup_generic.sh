@@ -1,13 +1,15 @@
 #!/bin/sh
-# shellcheck disable=SC3054,SC3040,SC2296,SC2128,SC2039,SC2016,SC1090,SC1091,SC2034,SC2018,SC2019,SC2221,SC2222,SC2129,SC2209,SC2089,SC2090,SC2086,SC2154,SC2044,SC2181,SC2038,SC2155,SC2046,SC2002,SC1003,SC2295,SC2145
 
 set -feu
+# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   this_file="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE}"
+  this_file="${BASH_SOURCE[0]}"
+  set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${0}"
+  this_file="${(%):-%x}"
+  set -o pipefail
 else
   this_file="${0}"
 fi
@@ -19,7 +21,6 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
 esac
 export STACK="${STACK:-}${this_file}"':'
-
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
 
@@ -86,10 +87,11 @@ fi
 log_info "Configuring Database (${ODOO_DB_TYPE})..."
 if [ "${ODOO_DB_TYPE}" = "postgres" ] && command -v psql >/dev/null 2>&1; then
   if priv -u postgres psql -c "SELECT 1;" >/dev/null 2>&1 || priv psql -U postgres -c "SELECT 1;" >/dev/null 2>&1; then
-    # Create user and db
-    priv -u postgres psql -c "CREATE USER ${ODOO_DB_USER} WITH PASSWORD '${ODOO_DB_PASS}';" || priv psql -U postgres -c "CREATE USER ${ODOO_DB_USER} WITH PASSWORD '${ODOO_DB_PASS}';" || true
-    priv -u postgres psql -c "ALTER USER ${ODOO_DB_USER} CREATEDB;" || priv psql -U postgres -c "ALTER USER ${ODOO_DB_USER} CREATEDB;" || true
-    priv -u postgres psql -c "CREATE DATABASE ${ODOO_DB_NAME} OWNER ${ODOO_DB_USER};" || priv psql -U postgres -c "CREATE DATABASE ${ODOO_DB_NAME} OWNER ${ODOO_DB_USER};" || true
+    # Check and create user
+    priv -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname = '${ODOO_DB_USER}'" 2>/dev/null | grep -q 1 || priv psql -U postgres -tc "SELECT 1 FROM pg_roles WHERE rolname = '${ODOO_DB_USER}'" 2>/dev/null | grep -q 1 || priv -u postgres psql -c "CREATE USER ${ODOO_DB_USER} WITH PASSWORD '${ODOO_DB_PASS}';" || priv psql -U postgres -c "CREATE USER ${ODOO_DB_USER} WITH PASSWORD '${ODOO_DB_PASS}';"
+    priv -u postgres psql -c "ALTER USER ${ODOO_DB_USER} CREATEDB;" 2>/dev/null || priv psql -U postgres -c "ALTER USER ${ODOO_DB_USER} CREATEDB;" || true
+    # Check and create db
+    priv -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname = '${ODOO_DB_NAME}'" 2>/dev/null | grep -q 1 || priv psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = '${ODOO_DB_NAME}'" 2>/dev/null | grep -q 1 || priv -u postgres psql -c "CREATE DATABASE ${ODOO_DB_NAME} OWNER ${ODOO_DB_USER};" || priv psql -U postgres -c "CREATE DATABASE ${ODOO_DB_NAME} OWNER ${ODOO_DB_USER};"
   else
     log_warn "PostgreSQL is not running or login failed. Skipping automated DB setup."
   fi
@@ -121,7 +123,9 @@ http_port = ${ODOO_PORT}
 proxy_mode = True
 addons_path = ${WWWROOT}/addons
 EOF
-  priv chown -R www-data:www-data "${WWWROOT}" || true
+  if ! priv chown -R www-data:www-data "${WWWROOT}" ; then
+    true
+  fi
 fi
 
 # Start Odoo as a background service or daemon if possible (simplified start script)
@@ -159,7 +163,9 @@ if [ "${ODOO_WEBSERVER}" = "nginx" ]; then
   
   priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${SERVER_NAME}.conf"
   priv ln -sf "${NGINX_CONF_DIR}/sites-available/${SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${SERVER_NAME}.conf"
-  priv systemctl reload nginx || true
+  if ! priv systemctl reload nginx ; then
+    true
+  fi
   rm -f "${LOC_BLOCK_TMP}" "${SERVER_BLOCK_TMP}"
 elif [ "${ODOO_WEBSERVER}" = "caddy" ]; then
   CADDY_BLOCK_TMP=$(mktemp)
@@ -171,18 +177,24 @@ elif [ "${ODOO_WEBSERVER}" = "caddy" ]; then
   else
     priv tee -a /etc/caddy/Caddyfile < "${CADDY_BLOCK_TMP}" >/dev/null
   fi
-  priv systemctl reload caddy || true
+  if ! priv systemctl reload caddy ; then
+    true
+  fi
   rm -f "${CADDY_BLOCK_TMP}"
 elif [ "${ODOO_WEBSERVER}" = "httpd" ]; then
   HTTPD_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/httpd/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/httpd/create_server_block.sh" > "${HTTPD_BLOCK_TMP}"
   if [ -d /etc/httpd/conf.d ]; then
     priv cp "${HTTPD_BLOCK_TMP}" "/etc/httpd/conf.d/${SERVER_NAME}.conf"
-    priv systemctl reload httpd || true
+    if ! priv systemctl reload httpd ; then
+      true
+    fi
   elif [ -d /etc/apache2/sites-available ]; then
     priv cp "${HTTPD_BLOCK_TMP}" "/etc/apache2/sites-available/${SERVER_NAME}.conf"
     priv ln -sf "/etc/apache2/sites-available/${SERVER_NAME}.conf" "/etc/apache2/sites-enabled/${SERVER_NAME}.conf"
-    priv systemctl reload apache2 || true
+    if ! priv systemctl reload apache2 ; then
+      true
+    fi
   else
     priv tee -a /etc/httpd/conf/httpd.conf < "${HTTPD_BLOCK_TMP}" >/dev/null
   fi

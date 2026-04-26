@@ -1,11 +1,15 @@
 #!/bin/sh
+
 set -feu
+# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   this_file="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE}"
+  this_file="${BASH_SOURCE[0]}"
+  set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${0}"
+  this_file="${(%):-%x}"
+  set -o pipefail
 else
   this_file="${0}"
 fi
@@ -17,7 +21,6 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
 esac
 export STACK="${STACK:-}${this_file}"':'
-
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-..}"'/_lib/_common/pkg_mgr.sh'
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091,SC2034
@@ -27,7 +30,9 @@ if ! command -v java >/dev/null 2>&1; then
   if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/java/setup.sh" ]; then
     "${LIBSCRIPT_ROOT_DIR}/_lib/languages/java/setup.sh"
   else
-    depends java || true
+    if ! depends java ; then
+      true
+    fi
   fi
 fi
 

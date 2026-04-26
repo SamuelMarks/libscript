@@ -23,7 +23,7 @@ LibScript's architecture is uniquely decentralized. Every component (Postgres, N
 *   **Native Execution:** Stop paying the "container tax." Deploy high-availability clusters directly on your host OS—whether it's a FreeBSD jail, a Windows server, or a Linux box.
 *   **Built-in PaaS capabilities:** LibScript automatically generates `systemd`/`launchd` service files for your apps, handles Nginx reverse proxying, and automatically fetches Let's Encrypt TLS certs—all driven by a single `libscript.json`.
 *   **Truly Universal:** One codebase for 🐧 Linux, 🪟 Windows (Native CMD), 🍎 macOS, 😈 BSD, and ☀️ Solaris.
-*   **Artifact Factory:** Turn your local stack into a production-ready `.msi`, `.deb`, `.rpm`, `.apk`, or `Dockerfile` with one command: `package_as`.
+*   **Artifact Factory:** Turn your local stack into a production-ready `.msi`, `.exe` (InnoSetup/NSIS), `.deb`, `.rpm`, `.apk`, `.txz`, `.pkg`, `.dmg`, `Dockerfile`, `docker-compose.yml`, or an interactive `TUI` installer with one command: `package_as`.
 
 ---
 
@@ -56,9 +56,9 @@ Define your entire infrastructure in a simple `libscript.json` and let the resol
 ```
 
 ### 🌍 Multicloud Mastery
-Manage AWS, Azure, and GCP through a single, idempotent interface. Provision VPCs, S3 buckets, and node groups without learning three different CLI syntaxes.
+Manage AWS, Azure, and GCP through a single, idempotent interface using the `provision` and `deprovision` commands.
 ```sh
-./libscript.sh cloud aws node-group create web-tier 5
+./libscript.sh provision aws my-stack my-vpc us-east-1 ./ ~/my-app
 ```
 
 ### 📦 The Generator Engine
@@ -96,7 +96,7 @@ cd libscript
 
 LibScript is designed as a routing execution layer. It detects your OS, maps generic dependencies to local package managers (`apt`, `brew`, `choco`, `pkg`), and executes optimized setup scripts.
 
-*   **`_lib/`**: The heart of the system. Modular components where each directory is a standalone manager.
+*   **`_lib/`**: The heart of the system. Modular components (over 140+ available) where each directory is a standalone manager.
 *   **`stacks/`**: Pre-configured, battle-tested blueprints for CMS, ERP, and Data Science.
 *   **`package_as`**: The transformation engine that converts shell logic into native installers.
 

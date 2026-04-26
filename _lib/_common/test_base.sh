@@ -1,32 +1,19 @@
 #!/bin/sh
-# # LibScript Common Test Entrypoint
-#
-# ## Overview
-# This script provides a standardized entrypoint for component testing.
-# It ensures path alignment and consistency in environment variables.
-#
-# ## Usage
-# Sourced by a component's `test.sh`:
-#
-# ```sh
-# #!/bin/sh
-# . "$(dirname "$0")/../../_common/test_base.sh"
-# ```
 
 set -feu
-
-# Boilerplate for finding this file and root
+# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   this_file="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
   this_file="${BASH_SOURCE[0]}"
+  set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
   this_file="${(%):-%x}"
+  set -o pipefail
 else
   this_file="${0}"
 fi
 
-# Prevent circular or double execution
 case "${STACK+x}" in
   *':'"${this_file}"':'*)
     printf '[STOP]     processing "%s"\n' "${this_file}"
@@ -34,7 +21,6 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
 esac
 export STACK="${STACK:-}${this_file}"':'
-
 # Resolve component directory and root
 DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
@@ -66,9 +52,9 @@ fi
 
 # Usage: assert_version <cmd> <expected_pattern>
 assert_version() {
-  cmd="$1"
-  expected="$2"
-  if ! command -v "$cmd" >/dev/null 2>&1; then
+  cmd="${1:-}"
+  expected="${2:-}"
+  if [ -z "$cmd" ] || ! command -v "$cmd" >/dev/null 2>&1; then
     printf "[FAIL] %s command not found\n" "$cmd" >&2
     return 1
   fi
@@ -83,8 +69,8 @@ assert_version() {
 
 # Usage: assert_service_up <host> <port> [timeout]
 assert_service_up() {
-  host="$1"
-  port="$2"
+  host="${1:-}"
+  port="${2:-}"
   timeout="${3:-10}"
   printf "[INFO] Waiting for service at %s:%s (timeout %ss)...\n" "$host" "$port" "$timeout" >&2
   if command -v nc >/dev/null 2>&1; then
@@ -104,10 +90,10 @@ assert_service_up() {
 
 # Usage: assert_exists <path>
 assert_exists() {
-  if [ -e "$1" ]; then
-    printf "[PASS] Exists: %s\n" "$1" >&2
+  if [ -e "${1:-}" ]; then
+    printf "[PASS] Exists: %s\n" "${1:-}" >&2
   else
-    printf "[FAIL] MISSING: %s\n" "$1" >&2
+    printf "[FAIL] MISSING: %s\n" "${1:-}" >&2
     return 1
   fi
 }
