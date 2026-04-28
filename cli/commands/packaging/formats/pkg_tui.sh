@@ -140,11 +140,11 @@ EOF
     fi
 
     if [ "$pkg_type" = "deb" ]; then
-      . "$SCRIPT_DIR/cli/commands/package_as/pkg_deb.sh"
+      . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_deb.sh"
     elif [ "$pkg_type" = "rpm" ]; then
-      . "$SCRIPT_DIR/cli/commands/package_as/pkg_rpm.sh"
+      . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_rpm.sh"
     elif [ "$pkg_type" = "apk" ]; then
-      . "$SCRIPT_DIR/cli/commands/package_as/pkg_apk.sh"
+      . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_apk.sh"
     elif [ "$pkg_type" = "txz" ]; then
-      . "$SCRIPT_DIR/cli/commands/package_as/pkg_txz.sh"
+      . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_txz.sh"
     fi

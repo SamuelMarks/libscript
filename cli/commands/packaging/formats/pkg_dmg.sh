@@ -21,6 +21,7 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
 esac
 export STACK="${STACK:-}${this_file}"':'
+  . "$SCRIPT_DIR/cli/commands/packaging/formats/_common_installer_args.sh"
       PKG_STAGE="${OUT_FILE}_stage"
       rm -rf "$PKG_STAGE"
       mkdir -p "$PKG_STAGE/packages" "$PKG_STAGE/resources" "$PKG_STAGE/scripts"
@@ -54,8 +55,8 @@ export STACK="${STACK:-}${this_file}"':'
         cat << "EOF_SCRIPT" > "$comp_dir/scripts/postinstall"
 #!/bin/sh
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-USER_NAME=$(stat -f "%Su" /dev/console 2>/dev/null || echo "$SUDO_USER")
-if [ -z "$USER_NAME" ] || [ "$USER_NAME" = "root" ]; then
+USER_NAME=$(stat -f "%Su" /dev/console 2>/dev/null || echo "${SUDO_USER:-}")
+if [ -z "${USER_NAME:-}" ] || [ "${USER_NAME:-}" = "root" ]; then
   USER_NAME="$USER"
 fi
 EOF_SCRIPT
@@ -111,20 +112,20 @@ fi
 cat << "EOF_UNINST" > "/opt/libscript/uninstall_${pkg}.command"
 #!/bin/sh
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-USER_NAME=\$(stat -f "%Su" /dev/console 2>/dev/null || echo "\\$SUDO_USER")
-if [ -z "\\$USER_NAME" ] || [ "\\$USER_NAME" = "root" ]; then
-  USER_NAME="\\$USER"
+USER_NAME=\$(stat -f "%Su" /dev/console 2>/dev/null || echo "\$SUDO_USER")
+if [ -z "\$USER_NAME" ] || [ "\$USER_NAME" = "root" ]; then
+  USER_NAME="\$USER"
 fi
 
-ans=\$(sudo -u "\\$USER_NAME" osascript -e 'Tell application "System Events" to display dialog "Do you want to completely remove the Data Directory and all records for '"$pkg"'?" buttons {"Yes", "No"} default button "No"' -e 'button returned of result' 2>/dev/null)
+ans=\$(sudo -u "\$USER_NAME" osascript -e 'Tell application "System Events" to display dialog "Do you want to completely remove the Data Directory and all records for '"$pkg"'?" buttons {"Yes", "No"} default button "No"' -e 'button returned of result' 2>/dev/null)
 
 purge=""
-if [ "\\$ans" = "Yes" ]; then
+if [ "\$ans" = "Yes" ]; then
   purge="--purge-data"
 fi
 
 echo "Uninstalling $pkg..."
-sudo libscript.sh uninstall "$pkg" \\$purge
+sudo libscript.sh uninstall "$pkg" \$purge
 echo "Uninstalled $pkg."
 sleep 2
 EOF_UNINST
@@ -134,7 +135,8 @@ EOF_SCRIPT
         chmod +x "$comp_dir/scripts/postinstall"
         
         if command -v pkgbuild >/dev/null 2>&1; then
-          pkgbuild --root "$comp_dir/root" --scripts "$comp_dir/scripts" --identifier "com.libscript.comp.$pkg" --version "$APP_VERSION" "$PKG_STAGE/packages/$pkg.pkg"
+          mkdir -p "$(dirname "$PKG_STAGE/packages/$pkg.pkg")"
+        pkgbuild --root "$comp_dir/root" --scripts "$comp_dir/scripts" --identifier "com.libscript.comp.$pkg" --version "$APP_VERSION" "$PKG_STAGE/packages/$pkg.pkg"
         fi
       done
 
@@ -166,7 +168,7 @@ EOF_SCRIPT
 
         productbuild --distribution "$PKG_STAGE/Distribution.xml" --package-path "$PKG_STAGE/packages" --resources "$PKG_STAGE/resources" "${OUT_FILE}.pkg"
         
-        if [ "$pkg_type" = "dmg" ]; then
+        if true; then
           hdiutil create -volname "$APP_NAME" -srcfolder "${OUT_FILE}.pkg" -ov -format UDZO "${OUT_FILE}.dmg"
           echo "Created ${OUT_FILE}.dmg"
         else

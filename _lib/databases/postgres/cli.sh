@@ -22,6 +22,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${this_file}"':'
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${SCRIPT_DIR}"; while [ ! -f "${d}/ROOT" ] && [ "${d}" != "/" ]; do d="$(dirname "${d}")"; done; if [ -f "${d}/ROOT" ]; then echo "${d}"; else echo "."; fi)}"
 SCHEMA_FILE="$SCRIPT_DIR/vars.schema.json"
 
 show_help() {
@@ -92,6 +93,21 @@ ACTION=""
 PACKAGE_NAME=""
 VERSION=""
 
+if [ $# -gt 0 ]; then
+  case "$1" in
+    --*) ;;
+    *)
+      if [ $# -eq 1 ] || case "${2:-}" in -*) true;; *) false;; esac; then
+        _a1="$1"; shift
+        set -- "$_a1" "${PACKAGE_NAME:-$(basename "$SCRIPT_DIR")}" "latest" "$@"
+      elif [ $# -eq 2 ] || case "${3:-}" in -*) true;; *) false;; esac; then
+        _a1="$1"; _a2="${2:-}"; shift 2
+        set -- "$_a1" "$_a2" "latest" "$@"
+      fi
+      ;;
+  esac
+fi
+
 case "$1" in
   --help|-h|/\?|"-?")
     show_help
@@ -103,8 +119,8 @@ case "$1" in
     ;;
   install|install_daemon|install_service|uninstall_daemon|uninstall_service|remove_daemon|remove_service)
     ACTION="$1"
-    PACKAGE_NAME="$2"
-    VERSION="$3"
+    PACKAGE_NAME="${2:-}"
+    VERSION="${3:-}"
     if [ -z "$PACKAGE_NAME" ]; then
       echo "Error: package_name is required for $ACTION" >&2
       exit 1
@@ -117,8 +133,8 @@ case "$1" in
     ;;
   run|which|exec|env|serve|route)
     ACTION="$1"
-    PACKAGE_NAME="$2"
-    VERSION="$3"
+    PACKAGE_NAME="${2:-}"
+    VERSION="${3:-}"
     if [ -z "$PACKAGE_NAME" ]; then
       echo "Error: package_name is required for $ACTION" >&2
       exit 1
@@ -131,8 +147,8 @@ case "$1" in
     ;;
   ls|ls-remote|download)
     ACTION="$1"
-    PACKAGE_NAME="$2"
-    VERSION="$3"
+    PACKAGE_NAME="${2:-}"
+    VERSION="${3:-}"
     if [ -z "$PACKAGE_NAME" ]; then
       echo "Error: package_name is required for $ACTION" >&2
       exit 1
@@ -151,8 +167,8 @@ case "$1" in
     ;;
   remove|uninstall|status|health|test|start|stop|restart|logs|up|down)
     ACTION="$1"
-    PACKAGE_NAME="$2"
-    VERSION="$3"
+    PACKAGE_NAME="${2:-}"
+    VERSION="${3:-}"
     if [ -z "$PACKAGE_NAME" ]; then
       echo "Error: package_name is required for $ACTION" >&2
       exit 1
@@ -200,6 +216,21 @@ while [ $# -gt 0 ]; do
   if [ "$ACTION" = "start" ] || [ "$ACTION" = "stop" ] || [ "$ACTION" = "restart" ] || [ "$ACTION" = "status" ] || [ "$ACTION" = "health" ] || [ "$ACTION" = "logs" ] || [ "$ACTION" = "up" ] || [ "$ACTION" = "down" ] || [ "$ACTION" = "run" ] || [ "$ACTION" = "exec" ]; then
     break
   fi
+if [ $# -gt 0 ]; then
+  case "$1" in
+    --*) ;;
+    *)
+      if [ $# -eq 1 ] || case "${2:-}" in -*) true;; *) false;; esac; then
+        _a1="$1"; shift
+        set -- "$_a1" "${PACKAGE_NAME:-$(basename "$SCRIPT_DIR")}" "latest" "$@"
+      elif [ $# -eq 2 ] || case "${3:-}" in -*) true;; *) false;; esac; then
+        _a1="$1"; _a2="${2:-}"; shift 2
+        set -- "$_a1" "$_a2" "latest" "$@"
+      fi
+      ;;
+  esac
+fi
+
   case "$1" in
     --help|-h|/\?|"-?")
       show_help
@@ -331,7 +362,7 @@ if [ "$ACTION" = "start" ] || [ "$ACTION" = "stop" ] || [ "$ACTION" = "restart" 
       fi
       if [ -f "$SCRIPT_DIR/env.sh" ]; then
         # Use env to capture exported variables
-        env -i PATH="$PATH" FORMAT="$FORMAT" SCRIPT_NAME="$SCRIPT_DIR/env.sh" sh -c "
+        env PATH="$PATH" FORMAT="$FORMAT" SCRIPT_NAME="$SCRIPT_DIR/env.sh" sh -c "
 # shellcheck disable=SC1090,SC1091,SC2034
           . '$SCRIPT_DIR/env.sh' >/dev/null 2>&1
           env | grep -vE '^(PWD|SHLVL|_|PATH|FORMAT)=' | while read -r line; do

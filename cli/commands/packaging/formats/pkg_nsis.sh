@@ -21,6 +21,7 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
 esac
 export STACK="${STACK:-}${this_file}"':'
+  . "$SCRIPT_DIR/cli/commands/packaging/formats/_common_installer_args.sh"
       cat << EOF2
 !define APP_NAME "$APP_NAME"
 !define APP_VERSION "$APP_VERSION"

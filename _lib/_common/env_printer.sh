@@ -60,14 +60,18 @@ libscript_print_env() {
   # We use a subshell to avoid polluting the current environment
   if [ -f "$SCRIPT_DIR/env.sh" ]; then
     # We pass FORMAT and SCRIPT_DIR to the subshell
-    env -i PATH="$PATH" \
+    env PATH="$PATH" \
            FORMAT="$_format" \
            SCRIPT_DIR="$SCRIPT_DIR" \
            PREFIX="$_prefix_path" \
+           LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}" \
            sh -c '
       # Source the env.sh
       # shellcheck disable=SC1090
       . "$SCRIPT_DIR/env.sh" >/dev/null 2>&1
+      if [ -f "$LIBSCRIPT_DATA_DIR/dyn_env.sh" ]; then
+        . "$LIBSCRIPT_DATA_DIR/dyn_env.sh" >/dev/null 2>&1
+      fi
       
       # Filter out internal variables
       _filter="^(PWD|SHLVL|_|PATH|FORMAT|SCRIPT_DIR|PREFIX|STACK|SCRIPT_NAME)="

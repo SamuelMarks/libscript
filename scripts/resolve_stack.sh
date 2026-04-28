@@ -38,7 +38,7 @@ if [ -z "$1" ]; then
 fi
 
 INSTALL_JSON="$1"
-SCRIPT_DIR=$(dirname "$0")
+SCRIPT_DIR=$(dirname -- "${this_file}")
 
 # Determine OS
 if [ -z "$LIBSCRIPT_TARGET_OS" ]; then

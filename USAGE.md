@@ -30,6 +30,20 @@ Every component is an autonomous package manager. This approach is ideal for man
 _lib\languages\python\cli.cmd install python 3.11
 ```
 
+### Inspecting Components (`info` & `env`)
+Every component provides utilities to inspect its installation state and dynamically generated configuration (like connection strings, generated passwords, or default ports).
+
+```sh
+# View installation path and dynamic outputs
+./libscript.sh info postgres 18
+
+# Source the component's environment variables (including dynamic ones like DATABASE_URL)
+eval $(./libscript.sh env postgres 18)
+
+# Output environment variables in specific formats (docker, docker_compose, powershell, cmd, json)
+FORMAT=json ./libscript.sh env postgres 18
+```
+
 ## ☸️ Declarative Stack Provisioning
 
 For complex stacks, LibScript uses a declarative `libscript.json` and a built-in resolution engine.

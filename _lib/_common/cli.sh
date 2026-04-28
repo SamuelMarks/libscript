@@ -62,6 +62,21 @@ parse_args() {
   ARGS=""
 
   while [ $# -gt 0 ]; do
+if [ $# -gt 0 ]; then
+  case "$1" in
+    --*) ;;
+    *)
+      if [ $# -eq 1 ] || case "${2:-}" in -*) true;; *) false;; esac; then
+        _a1="$1"; shift
+        set -- "$_a1" "${PACKAGE_NAME:-$(basename "$SCRIPT_DIR")}" "latest" "$@"
+      elif [ $# -eq 2 ] || case "${3:-}" in -*) true;; *) false;; esac; then
+        _a1="$1"; _a2="${2:-}"; shift 2
+        set -- "$_a1" "$_a2" "latest" "$@"
+      fi
+      ;;
+  esac
+fi
+
     case "$1" in
       --help|-h)
         echo "Usage: [OPTIONS]"

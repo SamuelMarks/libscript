@@ -21,7 +21,7 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
 esac
 export STACK="${STACK:-}${this_file}"':'
-SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+SCRIPT_DIR=$(cd "$(dirname -- "${this_file}")" && pwd)
 
 show_help() {
   echo "LibScript Global CLI"

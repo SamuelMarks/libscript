@@ -21,6 +21,7 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
 esac
 export STACK="${STACK:-}${this_file}"':'
+  . "$SCRIPT_DIR/cli/commands/packaging/formats/_common_installer_args.sh"
       wxs_file="${OUT_FILE}.wxs"
       exec 3>&1
       exec 1> "$wxs_file"

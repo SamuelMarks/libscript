@@ -25,13 +25,21 @@ if [ "$cmd" = "package_as" ]; then
   pkg_type="$1"
   shift
   if [ "$pkg_type" = "docker" ] || [ "$pkg_type" = "dockerfile" ]; then
-    . "$SCRIPT_DIR/cli/commands/package_as/pkg_docker.sh"
+    . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_docker.sh"
   elif [ "$pkg_type" = "docker_compose" ]; then
-    . "$SCRIPT_DIR/cli/commands/package_as/pkg_docker_compose.sh"
+    . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_docker_compose.sh"
   elif [ "$pkg_type" = "TUI" ]; then
-    . "$SCRIPT_DIR/cli/commands/package_as/pkg_tui.sh"
-  elif [ "$pkg_type" = "msi" ] || [ "$pkg_type" = "innosetup" ] || [ "$pkg_type" = "nsis" ] || [ "$pkg_type" = "pkg" ] || [ "$pkg_type" = "dmg" ]; then
-    . "$SCRIPT_DIR/cli/commands/package_as/pkg_msi_etc.sh"
+    . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_tui.sh"
+  elif [ "$pkg_type" = "msi" ]; then
+    . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_msi.sh"
+  elif [ "$pkg_type" = "innosetup" ]; then
+    . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_innosetup.sh"
+  elif [ "$pkg_type" = "nsis" ]; then
+    . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_nsis.sh"
+  elif [ "$pkg_type" = "pkg" ]; then
+    . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_pkg.sh"
+  elif [ "$pkg_type" = "dmg" ]; then
+    . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_dmg.sh"
   else
     echo "Error: Unsupported package format '$pkg_type'." >&2
     exit 1

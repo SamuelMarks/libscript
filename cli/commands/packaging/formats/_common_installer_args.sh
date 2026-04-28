@@ -100,12 +100,3 @@ export STACK="${STACK:-}${this_file}"':'
       fi
     fi
 
-    if [ "$pkg_type" = "msi" ]; then
-      . "$SCRIPT_DIR/cli/commands/package_as/pkg_msi.sh"
-    elif [ "$pkg_type" = "innosetup" ]; then
-      . "$SCRIPT_DIR/cli/commands/package_as/pkg_innosetup.sh"
-    elif [ "$pkg_type" = "nsis" ]; then
-      . "$SCRIPT_DIR/cli/commands/package_as/pkg_nsis.sh"
-    elif [ "$pkg_type" = "pkg" ] || [ "$pkg_type" = "dmg" ]; then
-      . "$SCRIPT_DIR/cli/commands/package_as/pkg_macos.sh"
-    fi
