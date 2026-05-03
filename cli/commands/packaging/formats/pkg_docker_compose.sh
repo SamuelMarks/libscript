@@ -3,24 +3,24 @@
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
-  this_file="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE[0]}"
+  THIS_FILE="${BASH_SOURCE[0]}"
   set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"
   set -o pipefail
 else
-  this_file="${0}"
+  THIS_FILE="${0}"
 fi
 
 case "${STACK+x}" in
-  *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s"\n' "${this_file}"
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
-export STACK="${STACK:-}${this_file}"':'
+export STACK="${STACK:-}${THIS_FILE}"':'
     base_image="debian:bookworm-slim"
     while [ $# -gt 0 ]; do
       case "$1" in
@@ -68,7 +68,7 @@ export STACK="${STACK:-}${this_file}"':'
 
       sorted_deps=$(printf '%b\n' "$deps_list" | awk '
       function get_priority(pkg) {
-          if (pkg ~ /^(fluentbit|docker|etcd|openvpn|kubernetes_k0s|kubernetes_thw)$/) return 10;
+          if (pkg ~ /^(fluentbit|docker|etcd|openvpn|kubernetes-k0s|kubernetes-thw)$/) return 10;
           if (pkg ~ /^(postgres|mysql|mariadb|mongodb|redis|valkey|sqlite|rabbitmq|celery)$/) return 20;
           if (pkg ~ /^(php|python|nodejs|ruby|java|go|rust|c|cpp|csharp|bun|deno|elixir|jq|kotlin|swift|wait4x|zig|sh|cc)$/) return 30;
           if (pkg ~ /^(nginx|caddy|httpd|firecrawl|jupyterhub)$/) return 40;
@@ -159,7 +159,7 @@ export STACK="${STACK:-}${this_file}"':'
           if [ -n "$override" ] && [ "$override" != "null" ]; then
             echo "      - ${pkg_up}_URL=\"$override\""
           fi
-          if env_out=$(PREFIX="/opt/libscript/installed/$pkg" "${this_file}" env "$pkg" "$ver" --format=docker_compose 2>/dev/null); then
+          if env_out=$(PREFIX="/opt/libscript/installed/$pkg" "${THIS_FILE}" env "$pkg" "$ver" --format=docker_compose 2>/dev/null); then
             echo "$env_out" | grep -vE '^(STACK=|SCRIPT_NAME=)' | sed 's/^/      - /g'
           fi
           

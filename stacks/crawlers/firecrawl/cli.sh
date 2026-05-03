@@ -3,24 +3,24 @@
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
-  this_file="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE[0]}"
+  THIS_FILE="${BASH_SOURCE[0]}"
   set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"
   set -o pipefail
 else
-  this_file="${0}"
+  THIS_FILE="${0}"
 fi
 
 case "${STACK+x}" in
-  *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s"\n' "${this_file}"
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
-export STACK="${STACK:-}${this_file}"':'
+export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 SCHEMA_FILE="$SCRIPT_DIR/vars.schema.json"
 
@@ -63,7 +63,7 @@ show_help() {
   if command -v jq >/dev/null 2>&1 && [ -f "$SCHEMA_FILE" ]; then
     jq -r '
       .properties | to_entries[] | 
-      def aliases: if .value.versionAliases then " [aliases: " + (.value.versionAliases | join(", ")) + "]" else "" end;
+      def aliases: if .value.version_aliases then " [aliases: " + (.value.version_aliases | join(", ")) + "]" else "" end;
       "--\(.key)=VALUE|\(.value.description)\(aliases) [default: \(.value.default // "none")]"
     ' "$SCHEMA_FILE" | awk -F'|' '{printf "  %-35s %s\n", $1, $2}'
     
@@ -695,12 +695,12 @@ EOF
     
     if echo "$LIBSCRIPT_SECRETS" | grep -q "^http"; then
       if command -v jq >/dev/null; then
-         json_data=$(FORMAT=docker_compose "$0" env "$PACKAGE_NAME" "$VERSION" | grep -vE '^(PATH=)' | jq -R 'split("=") | {(.[0]): (.[1:] | join("="))} ' | jq -s 'add | {data: .}')
-         if ! curl -s -k -X POST -H "X-Vault-Token: ${VAULT_TOKEN:-}" -H "Content-Type: application/json" -d "$json_data" "$LIBSCRIPT_SECRETS/${PACKAGE_NAME}_${VERSION}" ; then
-           true
-         fi
+          json_data=$(FORMAT=docker_compose "$0" env "$PACKAGE_NAME" "$VERSION" | grep -vE '^(PATH=)' | jq -R 'split("=") | {(.[0]): (.[1:] | join("="))} ' | jq -s 'add | {data: .}')
+          if ! curl -s -k -X POST -H "X-Vault-Token: ${VAULT_TOKEN:-}" -H "Content-Type: application/json" -d "$json_data" "$LIBSCRIPT_SECRETS/${PACKAGE_NAME}_${VERSION}" ; then
+            true
+          fi
       else
-         echo "Warning: jq is required for saving secrets to OpenBao/Vault" >&2
+          echo "Warning: jq is required for saving secrets to OpenBao/Vault" >&2
       fi
     else
       mkdir -p "$LIBSCRIPT_SECRETS"

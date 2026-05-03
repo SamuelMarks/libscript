@@ -114,12 +114,12 @@ if "!is_docker_cmd!"=="1" (
         )
                 if "!skip_hooks!"=="0" (
             if /i "!action!"=="start" (
-                call "%~dp0scripts\run_hooks.bat" "!json_file!" "build"
-                call "%~dp0scripts\run_hooks.bat" "!json_file!" "pre_start"
+                call "%~dp0scripts\run_hooks.cmd" "!json_file!" "build"
+                call "%~dp0scripts\run_hooks.cmd" "!json_file!" "pre_start"
             )
             if /i "!action!"=="up" (
-                call "%~dp0scripts\run_hooks.bat" "!json_file!" "build"
-                call "%~dp0scripts\run_hooks.bat" "!json_file!" "pre_start"
+                call "%~dp0scripts\run_hooks.cmd" "!json_file!" "build"
+                call "%~dp0scripts\run_hooks.cmd" "!json_file!" "pre_start"
             )
         )
         call "%~dp0scripts\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
@@ -133,19 +133,19 @@ if "!is_docker_cmd!"=="1" (
         if exist "!json_file!.resolved.json" del "!json_file!.resolved.json"
         
         if /i "!action!"=="start" (
-            call "%~dp0scripts\daemonize.bat" "!action!" "!json_file!"
-            call "%~dp0scripts\setup_ingress.bat" "!action!" "!json_file!"
+            call "%~dp0scripts\daemonize.cmd" "!action!" "!json_file!"
+            call "%~dp0scripts\setup_ingress.cmd" "!action!" "!json_file!"
         ) else if /i "!action!"=="up" (
-            call "%~dp0scripts\daemonize.bat" "!action!" "!json_file!"
-            call "%~dp0scripts\setup_ingress.bat" "!action!" "!json_file!"
+            call "%~dp0scripts\daemonize.cmd" "!action!" "!json_file!"
+            call "%~dp0scripts\setup_ingress.cmd" "!action!" "!json_file!"
         ) else if /i "!action!"=="stop" (
-            call "%~dp0scripts\setup_ingress.bat" "!action!" "!json_file!"
-            call "%~dp0scripts\daemonize.bat" "!action!" "!json_file!"
+            call "%~dp0scripts\setup_ingress.cmd" "!action!" "!json_file!"
+            call "%~dp0scripts\daemonize.cmd" "!action!" "!json_file!"
         ) else if /i "!action!"=="down" (
-            call "%~dp0scripts\setup_ingress.bat" "!action!" "!json_file!"
-            call "%~dp0scripts\daemonize.bat" "!action!" "!json_file!"
+            call "%~dp0scripts\setup_ingress.cmd" "!action!" "!json_file!"
+            call "%~dp0scripts\daemonize.cmd" "!action!" "!json_file!"
         ) else if /i "!action!"=="status" (
-            call "%~dp0scripts\daemonize.bat" "!action!" "!json_file!"
+            call "%~dp0scripts\daemonize.cmd" "!action!" "!json_file!"
         )
 
         exit /b 0
@@ -191,12 +191,12 @@ if /i "%cmd%"=="install-deps" (
 
             if "!skip_hooks!"=="0" (
             if /i "!action!"=="start" (
-                call "%~dp0scripts\run_hooks.bat" "!json_file!" "build"
-                call "%~dp0scripts\run_hooks.bat" "!json_file!" "pre_start"
+                call "%~dp0scripts\run_hooks.cmd" "!json_file!" "build"
+                call "%~dp0scripts\run_hooks.cmd" "!json_file!" "pre_start"
             )
             if /i "!action!"=="up" (
-                call "%~dp0scripts\run_hooks.bat" "!json_file!" "build"
-                call "%~dp0scripts\run_hooks.bat" "!json_file!" "pre_start"
+                call "%~dp0scripts\run_hooks.cmd" "!json_file!" "build"
+                call "%~dp0scripts\run_hooks.cmd" "!json_file!" "pre_start"
             )
         )
         call "%~dp0scripts\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul

@@ -10,7 +10,7 @@ To create a new component:
 1. **Define the Manager Directory**: Place it in the appropriate `_lib` subfolder.
 2. **Implement `vars.schema.json`**: Define the tool's dependencies (with version constraints), required environment variables, and metadata (ports, volumes, etc.).
 3. **Write Platform-Specific CLIs**: Provide `cli.sh` (POSIX) and `cli.cmd` (Windows) as entry points for the global router.
-4. **Implement Setup Logic**: Create `setup.sh` and `setup_win.ps1` to handle the actual installation and configuration.
+4. **Implement Setup Logic**: Create `setup.sh` and `setup.ps1` to handle the actual installation and configuration.
 
 ## Automatic Integration & Benefits
 

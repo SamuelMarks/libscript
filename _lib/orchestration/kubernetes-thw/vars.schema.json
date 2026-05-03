@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/kubernetes-thw/vars.schema.json",
+  "title": "kubernetes-thw vars",
+  "description": "Variables for Kubernetes The Hard Way",
+  "type": "object",
+  "properties": {
+    "KUBERNETES_THW_VERSION": {
+      "description": "Specific version of kubernetes components to install",
+      "type": "string",
+      "default": "latest"
+    },
+    "DEST": {
+      "description": "Destination (working directory)",
+      "type": "string"
+    },
+    "VARS": {
+      "description": "Key/value in JSON format (as an escaped string)",
+      "type": "string"
+    },
+    "LIBSCRIPT_LISTEN_PORT": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Global port to listen on"
+    },
+    "LIBSCRIPT_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Global address to listen on"
+    },
+    "LIBSCRIPT_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Global unix socket to listen on"
+    },
+    "KUBERNETES_THW_LISTEN_PORT": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Port for KUBERNETES_THW to listen on"
+    },
+    "KUBERNETES_THW_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Address for KUBERNETES_THW to listen on"
+    },
+    "KUBERNETES_THW_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Unix socket for KUBERNETES_THW to listen on"
+    }
+  }
+}

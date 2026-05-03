@@ -3,29 +3,29 @@
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
-  this_file="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE[0]}"
+  THIS_FILE="${BASH_SOURCE[0]}"
   set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"
   set -o pipefail
 else
-  this_file="${0}"
+  THIS_FILE="${0}"
 fi
 
 case "${STACK+x}" in
-  *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s"\n' "${this_file}"
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
-export STACK="${STACK:-}${this_file}"':'
+export STACK="${STACK:-}${THIS_FILE}"':'
     cat << 'EOF'
 #!/bin/sh
 if command -v whiptail >/dev/null; then DIALOG=whiptail; elif command -v dialog >/dev/null; then DIALOG=dialog; else echo "Error: dialog or whiptail required." >&2; exit 1; fi
 EOF
-    echo 'selected=$($DIALOG --title "LibScript Installer" --checklist "Select components to install:" 20 60 10 \'
+    echo 'SELECTED=$($DIALOG --title "LibScript Installer" --checklist "Select components to install:" 20 60 10 \'
     if [ $# -gt 0 ]; then
       while [ $# -gt 0 ]; do
         pkg="$1"
@@ -48,7 +48,7 @@ EOF
     fi
     cat << 'EOF'
   3>&1 1>&2 2>&3)
-if [ $? -eq 0 ] && [ -n "$selected" ]; then
+if [ $? -eq 0 ] && [ -n "$SELECTED" ]; then
   action=$($DIALOG --title "Action" --menu "What would you like to produce?" 15 60 8 \
     "install" "Install locally now" \
     "dockerfile" "Dockerfile" \
@@ -79,12 +79,12 @@ if [ $? -eq 0 ] && [ -n "$selected" ]; then
     done
     
     items=""
-    for item in $(echo "$selected" | tr -d '"'); do
+    for item in $(echo "$SELECTED" | tr -d '"'); do
       items="$items $item latest"
     done
     
     if [ "$action" = "install" ]; then
-      for item in $(echo "$selected" | tr -d '"'); do
+      for item in $(echo "$SELECTED" | tr -d '"'); do
         ./libscript.sh install "$item" latest
       done
     else

@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/stacks/cms/wordpress/vars.schema.json",
   "title": "wordpress vars",
+  "description": "Variables for wordpress vars",
   "type": "object",
   "properties": {
     "PHP_FPM_LISTEN": {

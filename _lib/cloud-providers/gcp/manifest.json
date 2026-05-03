@@ -1,10 +1,12 @@
 {
-  "name": "gcp",
+  "name": "GCP",
   "provides": [
     "gcp"
   ],
   "os_whitelist": [
     "all"
   ],
-  "category": "cloud"
+  "category": "cloud",
+  "title": "Gcp",
+  "description": "LibScript component for GCP"
 }

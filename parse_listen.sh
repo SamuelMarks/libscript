@@ -3,24 +3,24 @@
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
-  this_file="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE[0]}"
+  THIS_FILE="${BASH_SOURCE[0]}"
   set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"
   set -o pipefail
 else
-  this_file="${0}"
+  THIS_FILE="${0}"
 fi
 
 case "${STACK+x}" in
-  *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s"\n' "${this_file}"
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
-export STACK="${STACK:-}${this_file}"':'
+export STACK="${STACK:-}${THIS_FILE}"':'
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   echo "Usage: $0 [OPTIONS]"
   echo "See script source or documentation for more details."
@@ -31,19 +31,19 @@ fi
 
 
 parse_listen() {
-listen_str="$1"
-prefix="$2"
-  if [ -z "$listen_str" ] || [ "$listen_str" = "null" ]; then
+LISTEN_STR="$1"
+PREFIX="$2"
+  if [ -z "$LISTEN_STR" ] || [ "$LISTEN_STR" = "null" ]; then
     return
   fi
-  if echo "$listen_str" | grep -q '^unix:'; then
-    printf '{"%s_LISTEN_SOCKET": "%s"}' "$prefix" "${listen_str#unix:}"
-  elif echo "$listen_str" | grep -q ':'; then
-addr="${listen_str%%:*}"
-port="${listen_str##*:}"
-    printf '{"%s_LISTEN_ADDRESS": "%s", "%s_LISTEN_PORT": "%s"}' "$prefix" "$addr" "$prefix" "$port"
+  if echo "$LISTEN_STR" | grep -q '^unix:'; then
+    printf '{"%s_LISTEN_SOCKET": "%s"}' "$PREFIX" "${LISTEN_STR#unix:}"
+  elif echo "$LISTEN_STR" | grep -q ':'; then
+ADDR="${LISTEN_STR%%:*}"
+PORT="${LISTEN_STR##*:}"
+    printf '{"%s_LISTEN_ADDRESS": "%s", "%s_LISTEN_PORT": "%s"}' "$PREFIX" "$ADDR" "$PREFIX" "$PORT"
   else
-    printf '{"%s_LISTEN_PORT": "%s"}' "$prefix" "$listen_str"
+    printf '{"%s_LISTEN_PORT": "%s"}' "$PREFIX" "$LISTEN_STR"
   fi
 }
 parse_listen "80" "NGINX"

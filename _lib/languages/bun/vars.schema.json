@@ -9,7 +9,7 @@
       "description": "Version of Bun demanded. Can be a specific version number like 'bun-v1.1.0' or an alias.",
       "type": "string",
       "default": "latest",
-      "versionAliases": [
+      "version_aliases": [
         "latest",
         "canary"
       ]

@@ -3,53 +3,53 @@
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
-  this_file="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE[0]}"
+  THIS_FILE="${BASH_SOURCE[0]}"
   set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"
   set -o pipefail
 else
-  this_file="${0}"
+  THIS_FILE="${0}"
 fi
 
 case "${STACK+x}" in
-  *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s"\n' "${this_file}"
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
-export STACK="${STACK:-}${this_file}"':'
+export STACK="${STACK:-}${THIS_FILE}"':'
 # run_hooks.sh <json_file> <hook_type>
 set -e
-json_file="$1"
-hook_type="$2"
+JSON_FILE="$1"
+HOOK_TYPE="$2"
 
-if [ ! -f "$json_file" ]; then exit 0; fi
+if [ ! -f "$JSON_FILE" ]; then exit 0; fi
 
-hooks=$(jq -c ".hooks.${hook_type}[]?" "$json_file" 2>/dev/null || true)
+HOOKS=$(jq -c ".hooks.${HOOK_TYPE}[]?" "$JSON_FILE" 2>/dev/null || true)
 
-if [ -z "$hooks" ]; then exit 0; fi
+if [ -z "$HOOKS" ]; then exit 0; fi
 
-echo "Running $hook_type hooks..."
-echo "$hooks" | while read -r hook; do
-    name=$(echo "$hook" | jq -r '.name // "unnamed_hook"')
+echo "Running $HOOK_TYPE hooks..."
+echo "$HOOKS" | while read -r hook; do
+    NAME=$(echo "$hook" | jq -r '.name // "unnamed_hook"')
     cmd=$(echo "$hook" | jq -r '.command // empty')
-    cond=$(echo "$hook" | jq -r '.condition // empty')
+    COND=$(echo "$hook" | jq -r '.condition // empty')
 
-    if [ -n "$cond" ]; then
-        if echo "$cond" | grep -q "^unless_exists "; then
-            file=$(echo "$cond" | sed 's/^unless_exists //')
-            if [ -e "$file" ]; then
-                echo "Skipping hook '$name': $file exists"
+    if [ -n "$COND" ]; then
+        if echo "$COND" | grep -q "^unless_exists "; then
+            FILE=$(echo "$COND" | sed 's/^unless_exists //')
+            if [ -e "$FILE" ]; then
+                echo "Skipping hook '$NAME': $FILE exists"
                 continue
             fi
         fi
     fi
 
     if [ -n "$cmd" ]; then
-        echo "Executing hook '$name': $cmd"
+        echo "Executing hook '$NAME': $cmd"
         eval "$cmd"
     fi
 done

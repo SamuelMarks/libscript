@@ -3,24 +3,24 @@
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
-  this_file="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE[0]}"
+  THIS_FILE="${BASH_SOURCE[0]}"
   set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"
   set -o pipefail
 else
-  this_file="${0}"
+  THIS_FILE="${0}"
 fi
 
 case "${STACK+x}" in
-  *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s"\n' "${this_file}"
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
-export STACK="${STACK:-}${this_file}"':'
+export STACK="${STACK:-}${THIS_FILE}"':'
   . "$SCRIPT_DIR/cli/commands/packaging/formats/_common_installer_args.sh"
       PKG_STAGE="${OUT_FILE}_stage"
       rm -rf "$PKG_STAGE"
@@ -33,26 +33,26 @@ export STACK="${STACK:-}${this_file}"':'
         cp "$LICENSE_PATH" "$PKG_STAGE/resources/license.html"
       fi
       
-      deps_list=""
+      DEPS_LIST=""
       if [ $# -gt 0 ]; then
         while [ $# -gt 0 ]; do
-          deps_list="$deps_list $1 ${2:-latest}"
+          DEPS_LIST="$DEPS_LIST $1 ${2:-latest}"
           if [ "$2" != "" ]; then shift 2; else shift; fi
         done
       elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
-        deps_list=$("${LIBSCRIPT_ROOT_DIR:-.}/scripts/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null | tr '\n' ' ')
+        DEPS_LIST=$("${LIBSCRIPT_ROOT_DIR:-.}/scripts/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null | tr '\n' ' ')
       else
-        deps_list=$(find_components | sort | awk '{printf "%s latest ", $1}')
+        DEPS_LIST=$(find_components | sort | awk '{printf "%s latest ", $1}')
       fi
       
-      set -- $deps_list
+      set -- $DEPS_LIST
       while [ $# -gt 0 ]; do
-        pkg=$1; ver=$2; shift 2
-        comp_dir="$PKG_STAGE/comp_${pkg}"
-        mkdir -p "$comp_dir/root/opt/libscript"
-        mkdir -p "$comp_dir/scripts"
+        PKG=$1; VER=$2; shift 2
+        COMP_DIR="$PKG_STAGE/comp_${PKG}"
+        mkdir -p "$COMP_DIR/root/opt/libscript"
+        mkdir -p "$COMP_DIR/scripts"
         
-        cat << "EOF_SCRIPT" > "$comp_dir/scripts/postinstall"
+        cat << "EOF_SCRIPT" > "$COMP_DIR/scripts/postinstall"
 #!/bin/sh
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 USER_NAME=$(stat -f "%Su" /dev/console 2>/dev/null || echo "${SUDO_USER:-}")
@@ -61,55 +61,55 @@ if [ -z "${USER_NAME:-}" ] || [ "${USER_NAME:-}" = "root" ]; then
 fi
 EOF_SCRIPT
 
-        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
-        params=""
-        if [ -f "$schema_file" ]; then
-          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
-          if [ -n "$vars_json" ]; then
-            echo "$vars_json" | while read -r item; do
-              varname=$(echo "$item" | jq -r '.key')
-              desc=$(echo "$item" | jq -r '.desc' | sed 's/"/\"/g')
-              defval=$(echo "$item" | jq -r '.def' | sed 's/"/\"/g')
+        SCHEMA_FILE=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$PKG/" | head -n 1)
+        PARAMS=""
+        if [ -f "$SCHEMA_FILE" ]; then
+          VARS_JSON=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$SCHEMA_FILE")
+          if [ -n "$VARS_JSON" ]; then
+            echo "$VARS_JSON" | while read -r item; do
+              VARNAME=$(echo "$item" | jq -r '.key')
+              DESC=$(echo "$item" | jq -r '.desc' | sed 's/"/\"/g')
+              DEFVAL=$(echo "$item" | jq -r '.def' | sed 's/"/\"/g')
               
-              if case "$varname" in *"_PASSWORD"*) true;; *) false;; esac; then
-                hidden="with hidden answer"
+              if case "$VARNAME" in *"_PASSWORD"*) true;; *) false;; esac; then
+                HIDDEN="with hidden answer"
               else
-                hidden=""
+                HIDDEN=""
               fi
               
-              cat << EOF_PROMPT >> "$comp_dir/scripts/postinstall"
-VAL_${varname}=\$(sudo -u "\$USER_NAME" osascript -e 'Tell application "System Events" to display dialog "Configuration for ${pkg}
+              cat << EOF_PROMPT >> "$COMP_DIR/scripts/postinstall"
+VAL_${VARNAME}=\$(sudo -u "\$USER_NAME" osascript -e 'Tell application "System Events" to display dialog "Configuration for ${PKG}
 
-${desc}:" default answer "${defval}" ${hidden}' -e 'text returned of result' 2>/dev/null)
-export ${varname}="\$VAL_${varname}"
+${DESC}:" default answer "${DEFVAL}" ${HIDDEN}' -e 'text returned of result' 2>/dev/null)
+export ${VARNAME}="\$VAL_${VARNAME}"
 EOF_PROMPT
 
-              if case "$varname" in *"_PORT"* | *"_PORT_SECURE"*) true;; *) false;; esac; then
-                cat << EOF_PROMPT >> "$comp_dir/scripts/postinstall"
-while netstat -an | grep -q "[.:]\$VAL_${varname} .*LISTEN"; do
-  VAL_${varname}=\$(sudo -u "\$USER_NAME" osascript -e 'Tell application "System Events" to display dialog "Port '"\$VAL_${varname}"' is already in use. Please enter a different port:" default answer ""' -e 'text returned of result' 2>/dev/null)
-  export ${varname}="\$VAL_${varname}"
+              if case "$VARNAME" in *"_PORT"* | *"_PORT_SECURE"*) true;; *) false;; esac; then
+                cat << EOF_PROMPT >> "$COMP_DIR/scripts/postinstall"
+while netstat -an | grep -q "[.:]\$VAL_${VARNAME} .*LISTEN"; do
+  VAL_${VARNAME}=\$(sudo -u "\$USER_NAME" osascript -e 'Tell application "System Events" to display dialog "Port '"\$VAL_${VARNAME}"' is already in use. Please enter a different port:" default answer ""' -e 'text returned of result' 2>/dev/null)
+  export ${VARNAME}="\$VAL_${VARNAME}"
 done
 EOF_PROMPT
               fi
             done
-            params=$(echo "$vars_json" | jq -r '.key' | awk -v pkg="$pkg" '{printf " --%s=\"$VAL_%s\"", $1, $1}')
+            PARAMS=$(echo "$VARS_JSON" | jq -r '.key' | awk -v PKG="$PKG" '{printf " --%s=\"$VAL_%s\"", $1, $1}')
           fi
         fi
 
-        cat << EOF_SCRIPT >> "$comp_dir/scripts/postinstall"
+        cat << EOF_SCRIPT >> "$COMP_DIR/scripts/postinstall"
 if command -v libscript.sh >/dev/null 2>&1; then
-  libscript.sh install_service "$pkg" "$ver" $params
+  libscript.sh install_service "$PKG" "$VER" $PARAMS
 elif [ -f "/opt/libscript/libscript.sh" ]; then
-  /opt/libscript/libscript.sh install_service "$pkg" "$ver" $params
+  /opt/libscript/libscript.sh install_service "$PKG" "$VER" $PARAMS
 elif [ -f "\$0/../../../libscript.sh" ]; then
-  "\$0/../../../libscript.sh" install_service "$pkg" "$ver" $params
+  "\$0/../../../libscript.sh" install_service "$PKG" "$VER" $PARAMS
 else
-  sudo -u "\$USER_NAME" osascript -e 'Tell application "System Events" to display alert "libscript.sh not found. Installation of '"$pkg"' failed."'
+  sudo -u "\$USER_NAME" osascript -e 'Tell application "System Events" to display alert "libscript.sh not found. Installation of '"$PKG"' failed."'
   exit 1
 fi
 
-cat << "EOF_UNINST" > "/opt/libscript/uninstall_${pkg}.command"
+cat << "EOF_UNINST" > "/opt/libscript/uninstall_${PKG}.command"
 #!/bin/sh
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 USER_NAME=\$(stat -f "%Su" /dev/console 2>/dev/null || echo "\$SUDO_USER")
@@ -117,53 +117,53 @@ if [ -z "\$USER_NAME" ] || [ "\$USER_NAME" = "root" ]; then
   USER_NAME="\$USER"
 fi
 
-ans=\$(sudo -u "\$USER_NAME" osascript -e 'Tell application "System Events" to display dialog "Do you want to completely remove the Data Directory and all records for '"$pkg"'?" buttons {"Yes", "No"} default button "No"' -e 'button returned of result' 2>/dev/null)
+ANS=\$(sudo -u "\$USER_NAME" osascript -e 'Tell application "System Events" to display dialog "Do you want to completely remove the Data Directory and all records for '"$PKG"'?" buttons {"Yes", "No"} default button "No"' -e 'button returned of result' 2>/dev/null)
 
-purge=""
-if [ "\$ans" = "Yes" ]; then
-  purge="--purge-data"
+PURGE=""
+if [ "\$ANS" = "Yes" ]; then
+  PURGE="--purge-data"
 fi
 
-echo "Uninstalling $pkg..."
-sudo libscript.sh uninstall "$pkg" \$purge
-echo "Uninstalled $pkg."
+echo "Uninstalling $PKG..."
+sudo libscript.sh uninstall "$PKG" \$PURGE
+echo "Uninstalled $PKG."
 sleep 2
 EOF_UNINST
-chmod +x "/opt/libscript/uninstall_${pkg}.command"
+chmod +x "/opt/libscript/uninstall_${PKG}.command"
 EOF_SCRIPT
 
-        chmod +x "$comp_dir/scripts/postinstall"
+        chmod +x "$COMP_DIR/scripts/postinstall"
         
         if command -v pkgbuild >/dev/null 2>&1; then
-          mkdir -p "$(dirname "$PKG_STAGE/packages/$pkg.pkg")"
-        pkgbuild --root "$comp_dir/root" --scripts "$comp_dir/scripts" --identifier "com.libscript.comp.$pkg" --version "$APP_VERSION" "$PKG_STAGE/packages/$pkg.pkg"
+          mkdir -p "$(dirname "$PKG_STAGE/packages/$PKG.pkg")"
+        pkgbuild --root "$COMP_DIR/root" --scripts "$COMP_DIR/scripts" --identifier "com.libscript.comp.$PKG" --version "$APP_VERSION" "$PKG_STAGE/packages/$PKG.pkg"
         fi
       done
 
       if command -v productbuild >/dev/null 2>&1; then
         productbuild --synthesize --package-path "$PKG_STAGE/packages" "$PKG_STAGE/Distribution.xml"
 
-        sed_cmd="sed -i"
-        if [ "$(uname)" = "Darwin" ]; then sed_cmd="sed -i ''"; fi
+        SED_CMD="sed -i"
+        if [ "$(uname)" = "Darwin" ]; then SED_CMD="sed -i ''"; fi
         
-        $sed_cmd -e '/<installer-gui-script/a\
+        $SED_CMD -e '/<installer-gui-script/a\
     <title>'"$APP_NAME"'</title>\
     <options customize="always" require-scripts="false"/>' "$PKG_STAGE/Distribution.xml"
 
         if [ -n "$WELCOME_TEXT" ]; then
-          $sed_cmd -e '/<installer-gui-script/a\
+          $SED_CMD -e '/<installer-gui-script/a\
     <welcome file="welcome.html"/>' "$PKG_STAGE/Distribution.xml"
         fi
         
         if [ -n "$LICENSE_PATH" ] && [ -f "$LICENSE_PATH" ]; then
-          $sed_cmd -e '/<installer-gui-script/a\
+          $SED_CMD -e '/<installer-gui-script/a\
     <license file="license.html"/>' "$PKG_STAGE/Distribution.xml"
         fi
         
-        set -- $deps_list
+        set -- $DEPS_LIST
         while [ $# -gt 0 ]; do
-          pkg=$1; ver=$2; shift 2
-          $sed_cmd "s/choice id=\"com.libscript.comp.$pkg\" title=\"[^\"]*\"/choice id=\"com.libscript.comp.$pkg\" title=\"$pkg installer\"/g" "$PKG_STAGE/Distribution.xml"
+          PKG=$1; VER=$2; shift 2
+          $SED_CMD "s/choice id=\"com.libscript.comp.$PKG\" title=\"[^\"]*\"/choice id=\"com.libscript.comp.$PKG\" title=\"$PKG installer\"/g" "$PKG_STAGE/Distribution.xml"
         done
 
         productbuild --distribution "$PKG_STAGE/Distribution.xml" --package-path "$PKG_STAGE/packages" --resources "$PKG_STAGE/resources" "${OUT_FILE}.pkg"

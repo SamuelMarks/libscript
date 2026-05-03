@@ -3,25 +3,25 @@
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
-  this_file="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE[0]}"
+  THIS_FILE="${BASH_SOURCE[0]}"
   set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"
   set -o pipefail
 else
-  this_file="${0}"
+  THIS_FILE="${0}"
 fi
 
 case "${STACK+x}" in
-  *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s"\n' "${this_file}"
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
-export STACK="${STACK:-}${this_file}"':'
-SCRIPT_DIR=$(cd "$(dirname -- "${this_file}")" && pwd)
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 
 show_help() {
   echo "LibScript Global CLI"
@@ -77,7 +77,7 @@ get_desc() {
   schema="$SCRIPT_DIR/$1/vars.schema.json"
   if command -v jq >/dev/null 2>&1; then
     jq -r '
-      def aliases: [ .properties[]? | select(.versionAliases) | .versionAliases[] ] | unique | join(", ");
+      def aliases: [ .properties[]? | select(.version_aliases) | .version_aliases[] ] | unique | join(", ");
       if .description then
         if (aliases | length > 0) then .description + " [version aliases: " + aliases + "]" else .description end
       else "" end
@@ -132,7 +132,7 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
-cmd="$1"
+cmD="$1"
 if [ -z "$cmd" ] || [ "$cmd" = "--help" ] || [ "$cmd" = "-h" ] || [ "$cmd" = "/?" ]; then
   show_help
   exit 0
@@ -160,8 +160,8 @@ fi
 
 if [ "$cmd" = "process-downloads" ]; then
   list_file="$1"
-for lib in '_lib/_common/pkg_mgr.sh' ; do
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
+for LIB in '_lib/_common/pkg_mgr.sh' ; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
@@ -383,75 +383,75 @@ if [ "$cmd" = "package_as" ]; then
       gen_script=$(printf '%b\n' "$deps_list" | awk -v l_filter="$layer_filter" '
 
       BEGIN {
-         if (l_filter != "") {
+          if (l_filter != "") {
             split(l_filter, f_arr, ",")
             for (f in f_arr) {
-               allowed_layers[f_arr[f]] = 1
-               allowed_layers[f_arr[f] "s"] = 1
+                allowed_layers[f_arr[f]] = 1
+                allowed_layers[f_arr[f] "s"] = 1
             }
-         }
+          }
       }
       NF > 0 {
-         layer = $1
-         pkg = $2
-         ver = $3
-         url = $4
-         
-         if (l_filter != "" && !(layer in allowed_layers) && layer != "cli") next;
-         
-         if (seen[pkg]) next;
-         seen[pkg] = 1;
+          layer = $1
+          pkg = $2
+          ver = $3
+          url = $4
+          
+          if (l_filter != "" && !(layer in allowed_layers) && layer != "cli") next;
+          
+          if (seen[pkg]) next;
+          seen[pkg] = 1;
 
-         pkg_up = toupper(pkg)
-         sub(/^.*\//, "", pkg_up); gsub(/-/, "_", pkg_up)
+          pkg_up = toupper(pkg)
+          sub(/^.*\//, "", pkg_up); gsub(/-/, "_", pkg_up)
 
-         if (url != "" && url != "null") {
-             extracted_ver = ""
-             if (match(url, /[0-9]+\.[0-9]+(\.[0-9]+)?/)) {
-                 extracted_ver = substr(url, RSTART, RLENGTH)
-             }
+          if (url != "" && url != "null") {
+              extracted_ver = ""
+              if (match(url, /[0-9]+\.[0-9]+(\.[0-9]+)?/)) {
+                  extracted_ver = substr(url, RSTART, RLENGTH)
+              }
 
-             if ((ver == "" || ver == "latest" || ver == "null") && extracted_ver != "") {
-                 ver = extracted_ver
-             }
-             
-             if (ver == "" || ver == "null") ver = "latest"
+              if ((ver == "" || ver == "latest" || ver == "null") && extracted_ver != "") {
+                  ver = extracted_ver
+              }
+              
+              if (ver == "" || ver == "null") ver = "latest"
 
-             if (ver != "latest") {
-                 escaped_ver = ver
-                 temp_url = ""
-                 remaining = url
-                 while (i = index(remaining, ver)) {
-                     temp_url = temp_url substr(remaining, 1, i - 1) "${" pkg_up "_VERSION}"
-                     remaining = substr(remaining, i + length(ver))
-                 }
-                 url = temp_url remaining
-             }
-             
-             if (match(url, /(amd64|arm64|x86_64|aarch64|386|armv7l|x64)/)) {
-                 arch_str = substr(url, RSTART, RLENGTH)
-                 gsub(arch_str, "${TARGETARCH}", url)
-             }
-             if (match(url, /(linux|darwin|windows)/)) {
-                 os_str = substr(url, RSTART, RLENGTH)
-                 gsub(os_str, "${TARGETOS}", url)
-             }
+              if (ver != "latest") {
+                  escaped_ver = ver
+                  temp_url = ""
+                  remaining = url
+                  while (i = index(remaining, ver)) {
+                      temp_url = temp_url substr(remaining, 1, i - 1) "${" pkg_up "_VERSION}"
+                      remaining = substr(remaining, i + length(ver))
+                  }
+                  url = temp_url remaining
+              }
+              
+              if (match(url, /(amd64|arm64|x86_64|aarch64|386|armv7l|x64)/)) {
+                  arch_str = substr(url, RSTART, RLENGTH)
+                  gsub(arch_str, "${TARGETARCH}", url)
+              }
+              if (match(url, /(linux|darwin|windows)/)) {
+                  os_str = substr(url, RSTART, RLENGTH)
+                  gsub(os_str, "${TARGETOS}", url)
+              }
 
-             n = split(url, parts, "/")
-             filename = parts[n]
-             sub(/\?.*$/, "", filename)
+              n = split(url, parts, "/")
+              filename = parts[n]
+              sub(/\?.*$/, "", filename)
 
-             print "echo '\''ENV " pkg_up "_VERSION=\"" ver "\"'\'' >> \"$tmp_env_add\""
-             print "echo '\''ENV " pkg_up "_URL=\"" url "\"'\'' >> \"$tmp_env_add\""
-             print "echo '\''ADD ${" pkg_up "_URL} /opt/libscript_cache/" pkg "/" filename "'\'' >> \"$tmp_add\""
-             print "echo '\''RUN ./libscript.sh install " pkg " ${" pkg_up "_VERSION}'\'' >> \"$tmp_run\""
-             print "PREFIX=\"/opt/libscript/installed/" pkg "\" \"$0\" env \"" pkg "\" \"" ver "\" --format=docker | grep -vE \"^(ENV STACK=|ENV SCRIPT_NAME=)\" >> \"$tmp_run\" || true"
-         } else {
-             if (ver == "" || ver == "null") ver = "latest"
-             print "echo '\''ENV " pkg_up "_VERSION=\"" ver "\"'\'' >> \"$tmp_env_add\""
-             print "echo '\''RUN ./libscript.sh install " pkg " ${" pkg_up "_VERSION}'\'' >> \"$tmp_run\""
-             print "PREFIX=\"/opt/libscript/installed/" pkg "\" \"$0\" env \"" pkg "\" \"" ver "\" --format=docker | grep -vE \"^(ENV STACK=|ENV SCRIPT_NAME=)\" >> \"$tmp_run\" || true"
-         }
+              print "echo '\''ENV " pkg_up "_VERSION=\"" ver "\"'\'' >> \"$tmp_env_add\""
+              print "echo '\''ENV " pkg_up "_URL=\"" url "\"'\'' >> \"$tmp_env_add\""
+              print "echo '\''ADD ${" pkg_up "_URL} /opt/libscript_cache/" pkg "/" filename "'\'' >> \"$tmp_add\""
+              print "echo '\''RUN ./libscript.sh install " pkg " ${" pkg_up "_VERSION}'\'' >> \"$tmp_run\""
+              print "PREFIX=\"/opt/libscript/installed/" pkg "\" \"$0\" env \"" pkg "\" \"" ver "\" --format=docker | grep -vE \"^(ENV STACK=|ENV SCRIPT_NAME=)\" >> \"$tmp_run\" || true"
+          } else {
+              if (ver == "" || ver == "null") ver = "latest"
+              print "echo '\''ENV " pkg_up "_VERSION=\"" ver "\"'\'' >> \"$tmp_env_add\""
+              print "echo '\''RUN ./libscript.sh install " pkg " ${" pkg_up "_VERSION}'\'' >> \"$tmp_run\""
+              print "PREFIX=\"/opt/libscript/installed/" pkg "\" \"$0\" env \"" pkg "\" \"" ver "\" --format=docker | grep -vE \"^(ENV STACK=|ENV SCRIPT_NAME=)\" >> \"$tmp_run\" || true"
+          }
       }')
       eval "$gen_script"
     else
@@ -504,7 +504,7 @@ if [ "$cmd" = "package_as" ]; then
 #!/bin/sh
 if command -v whiptail >/dev/null; then DIALOG=whiptail; elif command -v dialog >/dev/null; then DIALOG=dialog; else echo "Error: dialog or whiptail required." >&2; exit 1; fi
 EOF
-    echo 'selected=$($DIALOG --title "LibScript Installer" --checklist "Select components to install:" 20 60 10 \'
+    echo 'SELECTED=$($DIALOG --title "LibScript Installer" --checklist "Select components to install:" 20 60 10 \'
     if [ $# -gt 0 ]; then
       while [ $# -gt 0 ]; do
         pkg="$1"
@@ -527,8 +527,8 @@ EOF
     fi
     cat << 'EOF'
   3>&1 1>&2 2>&3)
-if [ $? -eq 0 ] && [ -n "$selected" ]; then
-  for item in $(echo "$selected" | tr -d '"'); do
+if [ $? -eq 0 ] && [ -n "$SELECTED" ]; then
+  for item in $(echo "$SELECTED" | tr -d '"'); do
     # Assuming user installs the default version for now, or parses it
     ./libscript.sh install "$item" latest
   done

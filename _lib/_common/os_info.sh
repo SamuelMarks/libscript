@@ -3,24 +3,24 @@
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
-  this_file="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE[0]}"
+  THIS_FILE="${BASH_SOURCE[0]}"
   set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"
   set -o pipefail
 else
-  this_file="${0}"
+  THIS_FILE="${0}"
 fi
 
 case "${STACK+x}" in
-  *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s"\n' "${this_file}"
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
-export STACK="${STACK:-}${this_file}"':'
+export STACK="${STACK:-}${THIS_FILE}"':'
 if [ -z ${ARCH+x} ]; then
   ARCH="$(uname -m)"
   case "${ARCH}" in
@@ -148,12 +148,12 @@ if [ -z "${INIT_SYS+x}" ]; then
               proc_comm="${comm_name}"
             fi
             case "${proc_comm}" in
-               *'/bin/bash'|'dash'|'bash')
+                *'/bin/bash'|'dash'|'bash')
                   >&2 printf 'No init system setup\n'
                   export INIT_SYS='none' ;;
-               *)
-                 >&2 printf 'Unable to determine init system out of "%s"\n' "${proc_comm}"
-                 export INIT_SYS='none' ;;
+                *)
+                  >&2 printf 'Unable to determine init system out of "%s"\n' "${proc_comm}"
+                  export INIT_SYS='none' ;;
             esac
           elif [ -f '/etc/inittab' ]; then
             case "$(grep -F '::sysinit:' '/etc/inittab' | awk -F':/' '{print "/" $2}' | awk '{print $1}')" in

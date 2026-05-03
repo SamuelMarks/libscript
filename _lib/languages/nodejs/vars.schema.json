@@ -9,7 +9,7 @@
       "description": "Version of Node.js demanded. Can be an alias or a specific numeric version number",
       "type": "string",
       "default": "lts",
-      "versionAliases": [
+      "version_aliases": [
         "lts",
         "latest"
       ],

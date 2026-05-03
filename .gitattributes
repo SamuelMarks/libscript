@@ -1,0 +1,30 @@
+# Default behavior
+* text=auto
+
+# Shell scripts and config files must be LF
+*.sh text eol=lf
+*.bash text eol=lf
+*.zsh text eol=lf
+*.conf text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.py text eol=lf
+Dockerfile* text eol=lf
+.gitignore text eol=lf
+.dockerignore text eol=lf
+.editorconfig text eol=lf
+
+# Windows scripts must be CRLF
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# Exclude binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary

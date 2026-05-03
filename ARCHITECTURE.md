@@ -23,7 +23,7 @@ A core mandate of LibScript is native execution without heavy runtimes. We achie
 Each component in `_lib/` is structured to be a standalone manager:
 - `vars.schema.json`: Strictly typed metadata, default ports, and dependency definitions.
 - `cli.sh` / `cli.cmd`: The platform-specific entry points that handle command routing.
-- `setup.sh` / `setup_win.ps1`: The "guts" of the installation logic.
+- `setup.sh` / `setup.ps1`: The "guts" of the installation logic.
 - `manifest.json`: Defines the component's capabilities (e.g., provides `database`, conflicts with `mysql`).
 
 ## ☸️ The Global Resolution Engine

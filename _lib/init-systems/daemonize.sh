@@ -3,99 +3,98 @@
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
-  this_file="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE[0]}"
+  THIS_FILE="${BASH_SOURCE[0]}"
   set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"
   set -o pipefail
 else
-  this_file="${0}"
+  THIS_FILE="${0}"
 fi
 
 case "${STACK+x}" in
-  *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s"\n' "${this_file}"
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
-export STACK="${STACK:-}${this_file}"':'
+export STACK="${STACK:-}${THIS_FILE}"':'
 # @description Automatically handles daemonize for the daemonize.sh (init-systems) component.
 # @file daemonize.sh
 
 
 # daemonize.sh <action> <json_file>
-set -e
-action="$1"
-json_file="$2"
+ACTION="$1"
+JSON_FILE="$2"
 
-if [ ! -f "$json_file" ]; then exit 0; fi
+if [ ! -f "$JSON_FILE" ]; then exit 0; fi
 
-services=$(jq -c '.services[]?' "$json_file" 2>/dev/null || true)
-if [ -z "$services" ]; then exit 0; fi
+SERVICES=$(jq -c '.services[]?' "$JSON_FILE" 2>/dev/null || true)
+if [ -z "$SERVICES" ]; then exit 0; fi
 
 OS_NAME=$(uname -s | tr '[:upper:]' '[:lower:]')
 
-echo "$services" | while read -r svc; do
-    name=$(echo "$svc" | jq -r '.name // empty')
-    cmd=$(echo "$svc" | jq -r '.command // empty')
-    if [ -z "$name" ] || [ -z "$cmd" ]; then continue; fi
+echo "$SERVICES" | while read -r svc; do
+    NAME=$(echo "$svc" | jq -r '.name // empty')
+    CMD=$(echo "$svc" | jq -r '.command // empty')
+    if [ -z "$NAME" ] || [ -z "$CMD" ]; then continue; fi
 
     # Create /data/name persistent directory if needed
-    mkdir -p "/tmp/data/$name" 2>/dev/null || true # Fallback or use real persistent dir
+    mkdir -p "/tmp/data/$NAME" 2>/dev/null || true # Fallback or use real persistent dir
 
-    if [ "$action" = "start" ] || [ "$action" = "up" ]; then
-        echo "Configuring service '$name'..."
+    if [ "$ACTION" = "start" ] || [ "$ACTION" = "up" ]; then
+        echo "Configuring service '$NAME'..."
         if [ "$OS_NAME" = "linux" ] && command -v systemctl >/dev/null 2>&1; then
-            service_file="/etc/systemd/system/${name}.service"
+            SERVICE_FILE="/etc/systemd/system/${NAME}.service"
             # generate systemd
-            sudo sh -c "cat << 'SYSTEMD' > $service_file
+            sudo sh -c "cat << 'SYSTEMD' > $SERVICE_FILE
 [Unit]
-Description=$name service managed by libscript
+Description=$NAME service managed by libscript
 After=network.target
 
 [Service]
-ExecStart=/bin/sh -c \"$cmd\"
+ExecStart=/bin/sh -c \"$CMD\"
 Restart=always
 # Environment variables parsing here (simplified)
 SYSTEMD
 "
             # extract envs
-            envs=$(echo "$svc" | jq -r '.env | to_entries[]? | "\(.key)=\(.value)"' 2>/dev/null || true)
-            if [ -n "$envs" ]; then
-                sudo sh -c "echo '[Service]' >> $service_file"
-                echo "$envs" | while read -r e; do
-                    sudo sh -c "echo 'Environment=\"$e\"' >> $service_file"
+            ENVS=$(echo "$svc" | jq -r '.env | to_entries[]? | "\(.key)=\(.value)"' 2>/dev/null || true)
+            if [ -n "$ENVS" ]; then
+                sudo sh -c "echo '[Service]' >> $SERVICE_FILE"
+                echo "$ENVS" | while read -r e; do
+                    sudo sh -c "echo 'Environment=\"$e\"' >> $SERVICE_FILE"
                 done
             fi
-            env_files=$(echo "$svc" | jq -r '.env_files[]?' 2>/dev/null || true)
-            if [ -n "$env_files" ]; then
-                echo "$env_files" | while read -r ef; do
+            ENV_FILES=$(echo "$svc" | jq -r '.env_files[]?' 2>/dev/null || true)
+            if [ -n "$ENV_FILES" ]; then
+                echo "$ENV_FILES" | while read -r ef; do
                     # resolve path
-                    ef_full=$(realpath "$ef" 2>/dev/null || echo "$ef")
-                    if [ -f "$ef_full" ]; then
-                        sudo sh -c "echo 'EnvironmentFile=$ef_full' >> $service_file"
+                    EF_FULL=$(realpath "$ef" 2>/dev/null || echo "$ef")
+                    if [ -f "$EF_FULL" ]; then
+                        sudo sh -c "echo 'EnvironmentFile=$EF_FULL' >> $SERVICE_FILE"
                     fi
                 done
             fi
             sudo systemctl daemon-reload
-            sudo systemctl enable --now "$name"
+            sudo systemctl enable --now "$NAME"
         elif echo "$OS_NAME" | grep -q "darwin"; then
-            plist_file="$HOME/Library/LaunchAgents/com.libscript.${name}.plist"
+            PLIST_FILE="$HOME/Library/LaunchAgents/com.libscript.${NAME}.plist"
             mkdir -p "$HOME/Library/LaunchAgents"
-            cat << PLIST > "$plist_file"
+            cat << PLIST > "$PLIST_FILE"
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.libscript.${name}</string>
+    <string>com.libscript.${NAME}</string>
     <key>ProgramArguments</key>
     <array>
         <string>/bin/sh</string>
         <string>-c</string>
-        <string>$cmd</string>
+        <string>$CMD</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
@@ -104,33 +103,33 @@ SYSTEMD
 </dict>
 </plist>
 PLIST
-            envs=$(echo "$svc" | jq -r '.env | to_entries[]? | "\(.key)=\(.value)"' 2>/dev/null || true)
-            if [ -n "$envs" ]; then
+            ENVS=$(echo "$svc" | jq -r '.env | to_entries[]? | "\(.key)=\(.value)"' 2>/dev/null || true)
+            if [ -n "$ENVS" ]; then
                 # Needs dict injection for <key>EnvironmentVariables</key>
                 # Simplified: just inline them in the command or add proper XML
                 true
             fi
-            launchctl load -w "$plist_file" 2>/dev/null || true
-            launchctl start "com.libscript.${name}" 2>/dev/null || true
+            launchctl load -w "$PLIST_FILE" 2>/dev/null || true
+            launchctl start "com.libscript.${NAME}" 2>/dev/null || true
         else
-            echo "Fallback: starting $name in background"
-            eval "$cmd" &
+            echo "Fallback: starting $NAME in background"
+            eval "$CMD" &
         fi
-    elif [ "$action" = "stop" ] || [ "$action" = "down" ]; then
+    elif [ "$ACTION" = "stop" ] || [ "$ACTION" = "down" ]; then
         if [ "$OS_NAME" = "linux" ] && command -v systemctl >/dev/null 2>&1; then
-            sudo systemctl stop "$name" || true
-            sudo systemctl disable "$name" || true
+            sudo systemctl stop "$NAME" || true
+            sudo systemctl disable "$NAME" || true
         elif echo "$OS_NAME" | grep -q "darwin"; then
-            launchctl stop "com.libscript.${name}" 2>/dev/null || true
-            launchctl unload -w "$HOME/Library/LaunchAgents/com.libscript.${name}.plist" 2>/dev/null || true
+            launchctl stop "com.libscript.${NAME}" 2>/dev/null || true
+            launchctl unload -w "$HOME/Library/LaunchAgents/com.libscript.${NAME}.plist" 2>/dev/null || true
         else
-            pkill -f "$cmd" || true
+            pkill -f "$CMD" || true
         fi
-    elif [ "$action" = "status" ]; then
+    elif [ "$ACTION" = "status" ]; then
         if [ "$OS_NAME" = "linux" ] && command -v systemctl >/dev/null 2>&1; then
-            systemctl status "$name" --no-pager || true
+            systemctl status "$NAME" --no-pager || true
         elif echo "$OS_NAME" | grep -q "darwin"; then
-            launchctl list | grep "com.libscript.${name}" || true
+            launchctl list | grep "com.libscript.${NAME}" || true
         fi
     fi
 done

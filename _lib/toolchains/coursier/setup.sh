@@ -3,74 +3,28 @@
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
-  this_file="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE[0]}"
+  THIS_FILE="${BASH_SOURCE[0]}"
   set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"
   set -o pipefail
 else
-  this_file="${0}"
+  THIS_FILE="${0}"
 fi
 
 case "${STACK+x}" in
-  *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s"\n' "${this_file}"
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
-export STACK="${STACK:-}${this_file}"':'
-DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
-export LIBSCRIPT_ROOT_DIR
-
-for lib in '_lib/_common/os_info.sh' ; do
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  . "${SCRIPT_NAME}"
-done
-
-env_script="${DIR}"'/env.sh'
-if [ -f "${env_script}" ]; then
-  SCRIPT_NAME="${env_script}"
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-# shellcheck disable=SC1090,SC1091,SC2034
-  . "${SCRIPT_NAME}"
-fi
-
-os_setup_script="${DIR}"'/setup_'"${TARGET_OS}"'.sh'
-if [ -f "${os_setup_script}" ]; then
-  SCRIPT_NAME="${os_setup_script}"
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-# shellcheck disable=SC1090,SC1091,SC2034
-  . "${SCRIPT_NAME}"
-else
-  SCRIPT_NAME="${DIR}"'/setup_generic.sh'
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-# shellcheck disable=SC1090,SC1091,SC2034
-  . "${SCRIPT_NAME}"
-fi
-
-case "1" in
-  "$( [ -n "${COURSIER_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ] && echo 1 )")
-  if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "unix:${COURSIER_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then
-    true
-  fi
-    ;;
-  "$( [ -n "${COURSIER_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ] && [ -n "${COURSIER_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ] && echo 1 )")
-  if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${COURSIER_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${COURSIER_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
-    true
-  fi
-    ;;
-  "$( [ -n "${COURSIER_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ] && echo 1 )")
-  if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${COURSIER_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
-    true
-  fi
-    ;;
-esac
+SCRIPT_NAME="${SCRIPT_DIR}/../../_common/setup_base.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"

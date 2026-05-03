@@ -3,35 +3,35 @@
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
-  this_file="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE[0]}"
+  THIS_FILE="${BASH_SOURCE[0]}"
   set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"
   set -o pipefail
 else
-  this_file="${0}"
+  THIS_FILE="${0}"
 fi
 
 case "${STACK+x}" in
-  *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s"\n' "${this_file}"
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
-export STACK="${STACK:-}${this_file}"':'
-_PKG_MGR_DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+export STACK="${STACK:-}${THIS_FILE}"':'
+_PKG_MGR_DIR=$(CDPATH='' cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(d="${_PKG_MGR_DIR}"; while [ ! -f "${d}"'/ROOT' ]; do d="$(dirname -- "${d}")"; done; printf '%s' "${d}")}"
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${_PKG_MGR_DIR}"; while [ ! -f "${D}"'/ROOT' ]; do D="$(dirname -- "${D}")"; done; printf '%s' "${D}")}"
 
 # Source logging
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
 #DIR="$( dirname -- "$( readlink -nf -- "${0}" )")"
 
-for lib in '_lib/_common/os_info.sh' '_lib/_common/priv.sh' '_lib/_common/pkg_mapper.sh'; do
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
+for LIB in '_lib/_common/os_info.sh' '_lib/_common/priv.sh' '_lib/_common/pkg_mapper.sh'; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
 # shellcheck disable=SC1090,SC1091,SC2034
@@ -197,12 +197,12 @@ libscript_download() {
   cache_dir="${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache/downloads}"
 
   if [ -z "$dl_dir" ]; then
-     dl_dir="$cache_dir"
-     if [ -n "${PACKAGE_NAME:-}" ]; then
-       dl_dir="$dl_dir/$PACKAGE_NAME"
-     else
-       dl_dir="$dl_dir/unknown"
-     fi
+      dl_dir="$cache_dir"
+      if [ -n "${PACKAGE_NAME:-}" ]; then
+        dl_dir="$dl_dir/$PACKAGE_NAME"
+      else
+        dl_dir="$dl_dir/unknown"
+      fi
   fi
 
   mkdir -p -- "$dl_dir"
@@ -221,7 +221,7 @@ libscript_download() {
     
     # Ensure tools are available
     if ! command -v aria2c >/dev/null 2>&1 && ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
-       [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/curl/setup.sh" ] && "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/curl/setup.sh"
+        [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/curl/setup.sh" ] && "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/curl/setup.sh"
     fi
 
     download_success=0
@@ -243,19 +243,19 @@ libscript_download() {
 
     # Strategy D: nc/tcp fallbacks (HTTP only)
     if [ "$download_success" -eq 0 ] && echo "$url" | grep -q "^http://"; then
-       host="${url#*://}"; path="/${host#*/}"; host="${host%%/*}"
-       if command -v nc >/dev/null 2>&1; then
-         printf "GET %s HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n" "$path" "$host" | nc "$host" 80 > "${cache_file}.tmp"
-         { while IFS= read -r line; do line="$(echo "$line" | tr -d '\r\n')"; [ -z "$line" ] && break; done; cat; } < "${cache_file}.tmp" > "$cache_file"
-         rm -f "${cache_file}.tmp"
-         download_success=1
-       elif [ -e /dev/tcp/"$host"/80 ]; then
-         exec 3<>/dev/tcp/"$host"/80
-         printf "GET %s HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n" "$path" "$host" >&3
-         { while IFS= read -r line <&3; do line="$(echo "$line" | tr -d '\r\n')"; [ -z "$line" ] && break; done; cat <&3; } > "$cache_file"
-         exec 3<&-
-         download_success=1
-       fi
+        host="${url#*://}"; path="/${host#*/}"; host="${host%%/*}"
+        if command -v nc >/dev/null 2>&1; then
+          printf "GET %s HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n" "$path" "$host" | nc "$host" 80 > "${cache_file}.tmp"
+          { while IFS= read -r line; do line="$(echo "$line" | tr -d '\r\n')"; [ -z "$line" ] && break; done; cat; } < "${cache_file}.tmp" > "$cache_file"
+          rm -f "${cache_file}.tmp"
+          download_success=1
+        elif [ -e /dev/tcp/"$host"/80 ]; then
+          exec 3<>/dev/tcp/"$host"/80
+          printf "GET %s HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n" "$path" "$host" >&3
+          { while IFS= read -r line <&3; do line="$(echo "$line" | tr -d '\r\n')"; [ -z "$line" ] && break; done; cat <&3; } > "$cache_file"
+          exec 3<&-
+          download_success=1
+        fi
     fi
 
     if [ "$download_success" -eq 0 ]; then
@@ -292,7 +292,7 @@ libscript_download() {
   elif [ -n "$cache_file" ] && [ "${LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB:-0}" != "1" ] && [ -f "$cache_file" ]; then
     # Auto-populate checksum DB if missing
     if command -v sha256sum >/dev/null 2>&1; then
-       echo "$url $(sha256sum "$cache_file" | awk '{print $1}')" >> "$checksum_db"
+        echo "$url $(sha256sum "$cache_file" | awk '{print $1}')" >> "$checksum_db"
     fi
   fi
   

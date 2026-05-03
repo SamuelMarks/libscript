@@ -40,17 +40,17 @@ if errorlevel 1 (
     exit /b %errorlevel%
 )
 
-:: Delegate to PowerShell if setup_win.ps1 exists
-if exist "%~dp0setup_win.ps1" (
+:: Delegate to PowerShell if setup_windows.ps1 exists
+if exist "%~dp0setup_windows.ps1" (
     set "COMMON_DIR=%LIBSCRIPT_ROOT_DIR%\_lib\_common"
-    powershell -ExecutionPolicy Bypass -Command "& { . '!COMMON_DIR!\log.ps1'; . '!COMMON_DIR!\pkg_mgr.ps1'; . '!COMMON_DIR!\validate_schema.ps1'; . '!COMMON_DIR!\service.ps1'; if (Test-Path '%~dp0vars.schema.json') { validate_schema '%~dp0vars.schema.json' }; & '%~dp0setup_win.ps1' }"
+    powershell -ExecutionPolicy Bypass -Command "& { . '!COMMON_DIR!\log.ps1'; . '!COMMON_DIR!\pkg_mgr.ps1'; . '!COMMON_DIR!\validate_schema.ps1'; . '!COMMON_DIR!\service.ps1'; if (Test-Path '%~dp0vars.schema.json') { validate_schema '%~dp0vars.schema.json' }; & '%~dp0setup_windows.ps1' }"
     exit /b !errorlevel!
 ) else if exist "%~dp0setup.ps1" (
     set "COMMON_DIR=%LIBSCRIPT_ROOT_DIR%\_lib\_common"
     powershell -ExecutionPolicy Bypass -Command "& { . '!COMMON_DIR!\log.ps1'; . '!COMMON_DIR!\pkg_mgr.ps1'; . '!COMMON_DIR!\validate_schema.ps1'; if (Test-Path '%~dp0vars.schema.json') { validate_schema '%~dp0vars.schema.json' }; & '%~dp0setup.ps1' }"
     exit /b !errorlevel!
 ) else (
-    call "%LOG_CMD%" :log_error "No PowerShell setup script (setup_win.ps1 or setup.ps1) found in %~dp0"
+    call "%LOG_CMD%" :log_error "No PowerShell setup script (setup_windows.ps1 or setup.ps1) found in %~dp0"
     exit /b 1
 )
 

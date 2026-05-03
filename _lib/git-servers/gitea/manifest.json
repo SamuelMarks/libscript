@@ -12,5 +12,8 @@
   "ports": [
     "3000",
     "2222"
-  ]
+  ],
+  "title": "Gitea",
+  "description": "LibScript component for GITEA",
+  "category": "uncategorized"
 }

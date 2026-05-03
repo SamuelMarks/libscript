@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/stacks/forums/phpbb/vars.schema.json",
   "title": "phpbb vars",
+  "description": "Variables for phpbb vars",
   "type": "object",
   "properties": {
     "PHPBB_LISTEN": {

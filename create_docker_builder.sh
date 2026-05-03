@@ -3,72 +3,72 @@
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
-  this_file="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE[0]}"
+  THIS_FILE="${BASH_SOURCE[0]}"
   set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"
   set -o pipefail
 else
-  this_file="${0}"
+  THIS_FILE="${0}"
 fi
 
 case "${STACK+x}" in
-  *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s"\n' "${this_file}"
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
-export STACK="${STACK:-}${this_file}"':'
+export STACK="${STACK:-}${THIS_FILE}"':'
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   echo "Usage: $0 [OPTIONS]"
   echo "See script source or documentation for more details."
   exit 0
 fi
 if [ "${SCRIPT_NAME-}" ]; then
-  this_file="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE}"
+  THIS_FILE="${BASH_SOURCE}"
 
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${0}"
+  THIS_FILE="${0}"
 
 else
-  this_file="${0}"
+  THIS_FILE="${0}"
 fi
 
 set +f
 
-DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+DIR=$(CDPATH='' cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
-prefix="${DOCKER_IMAGE_PREFIX:-deploysh-}"
-suffix="${DOCKER_IMAGE_SUFFIX:--latest}"
-docker_builder='docker_builder.sh'
-docker_builder_cmd='docker_builder.cmd'
-docker_builder_parallel='docker_builder_parallel.sh'
-header_tpl='###################\n#\t\t%s\t#\n###################\n\n'
-header_cmd_tpl=':: ###################\n:: #\t%s #\n:: ###################\n\n'
+PREFIX="${DOCKER_IMAGE_PREFIX:-deploysh-}"
+SUFFIX="${DOCKER_IMAGE_SUFFIX:--latest}"
+DOCKER_BUILDER='docker_builder.sh'
+DOCKER_BUILDER_CMD='docker_builder.cmd'
+DOCKER_BUILDER_PARALLEL='docker_builder_parallel.sh'
+HEADER_TPL='###################\n#\t\t%s\t#\n###################\n\n'
+HEADER_CMD_TPL=':: ###################\n:: #\t%s #\n:: ###################\n\n'
 
-verbose=0
-input_directory=
-help=0
+VERBOSE=0
+INPUT_DIRECTORY=
+HELP=0
 
 while getopts 'p:s:i:vh' opt; do
     case ${opt} in
-      'p')  prefix="${OPTARG}" ;;
-      's')  suffix="${OPTARG}" ;;
-      'i')  input_directory="${OPTARG}" ;;
+      'p')  PREFIX="${OPTARG}" ;;
+      's')  SUFFIX="${OPTARG}" ;;
+      'i')  INPUT_DIRECTORY="${OPTARG}" ;;
       'v')  # shellcheck disable=SC2003
-            verbose=$(expr "${verbose}" + 1) ;;
-      'h')  help=1 ;;
+            VERBOSE=$(expr "${VERBOSE}" + 1) ;;
+      'h')  HELP=1 ;;
       *) ;;
     esac
 done
 export verbose
 
 shift "$((OPTIND - 1))"
-remaining="$*"
+REMAINING="$*"
 
 help() {
     # shellcheck disable=SC2016
@@ -80,23 +80,23 @@ help() {
 \t-h show help text\n\n'
 }
 
-if [ "${help}" -ge 1 ]; then
+if [ "${HELP}" -ge 1 ]; then
   # shellcheck disable=SC2016
   help
   exit 2
 fi
 
-if [ -n "${remaining}" ]; then
-  >&2 printf '[W] Extra arguments provided: %s\n' "${remaining}"
+if [ -n "${REMAINING}" ]; then
+  >&2 printf '[W] Extra arguments provided: %s\n' "${REMAINING}"
 fi
 
-previous_wd="$(pwd)"
-if [ "${input_directory-}" ]; then
-  cd -- "${input_directory}"
+previous_wD="$(pwd)"
+if [ "${INPUT_DIRECTORY-}" ]; then
+  cd -- "${INPUT_DIRECTORY}"
 fi
 
-awk 'NR==1,/^fi$/' "${DIR}"'/prelude.sh' | tee -a "${docker_builder}" "${docker_builder_parallel}" >/dev/null
-chmod +x "${docker_builder}" "${docker_builder_parallel}"
+awk 'NR==1,/^fi$/' "${DIR}"'/prelude.sh' | tee -a "${DOCKER_BUILDER}" "${DOCKER_BUILDER_PARALLEL}" >/dev/null
+chmod +x "${DOCKER_BUILDER}" "${DOCKER_BUILDER_PARALLEL}"
 
 collect_when_pattern() {
   pattern="$1"
@@ -117,36 +117,36 @@ collect_when_pattern() {
     printf '%s\n' "${result}" | sed 's/^ *//'
 }
 
-server_dfs="$(collect_when_pattern 'dockerfiles/*.server.Dockerfile')"
-storage_dfs="$(collect_when_pattern 'dockerfiles/*.storage.Dockerfile')"
-third_party_dfs="$(collect_when_pattern 'dockerfiles/*.third_party.Dockerfile')"
-toolchain_dfs="$(collect_when_pattern 'dockerfiles/*.toolchain.Dockerfile')"
-wwwroot_dfs="$(collect_when_pattern 'dockerfiles/*.wwwroot.Dockerfile')"
+SERVER_DFS="$(collect_when_pattern 'dockerfiles/*.server.Dockerfile')"
+STORAGE_DFS="$(collect_when_pattern 'dockerfiles/*.storage.Dockerfile')"
+THIRD_PARTY_DFS="$(collect_when_pattern 'dockerfiles/*.third_party.Dockerfile')"
+TOOLCHAIN_DFS="$(collect_when_pattern 'dockerfiles/*.toolchain.Dockerfile')"
+WWWROOT_DFS="$(collect_when_pattern 'dockerfiles/*.wwwroot.Dockerfile')"
 
-processed=' '"${server_dfs}"' '"${storage_dfs}"' '"${third_party_dfs}"' '"${toolchain_dfs}"' '"${wwwroot_dfs}"' '
-remaining=''
+PROCESSED=' '"${SERVER_DFS}"' '"${STORAGE_DFS}"' '"${THIRD_PARTY_DFS}"' '"${TOOLCHAIN_DFS}"' '"${WWWROOT_DFS}"' '
+REMAINING=''
 for dockerfile in dockerfiles/*Dockerfile; do
-  case "${processed}" in
+  case "${PROCESSED}" in
     *[[:space:]]"${dockerfile}"[[:space:]]*|'*Dockerfile') ;;
     *)
-      if [ ! "${dockerfile}" = '*Dockerfile' ]; then remaining="${remaining}${dockerfile}"' ' ; fi
+      if [ ! "${dockerfile}" = '*Dockerfile' ]; then REMAINING="${REMAINING}${dockerfile}"' ' ; fi
       ;;
   esac
 done
 
-if [ "${verbose}" -ge 3 ]; then
-  printf 'server_dfs = %s\n' "${server_dfs}"
-  printf 'storage_dfs = %s\n' "${storage_dfs}"
-  printf 'third_party_dfs = %s\n' "${third_party_dfs}"
-  printf 'toolchain_dfs = %s\n' "${toolchain_dfs}"
-  printf 'wwwroot_dfs = %s\n' "${wwwroot_dfs}"
-  printf 'remaining = %s\n' "${remaining}"
+if [ "${VERBOSE}" -ge 3 ]; then
+  printf 'server_dfs = %s\n' "${SERVER_DFS}"
+  printf 'storage_dfs = %s\n' "${STORAGE_DFS}"
+  printf 'third_party_dfs = %s\n' "${THIRD_PARTY_DFS}"
+  printf 'toolchain_dfs = %s\n' "${TOOLCHAIN_DFS}"
+  printf 'wwwroot_dfs = %s\n' "${WWWROOT_DFS}"
+  printf 'remaining = %s\n' "${REMAINING}"
 fi
 NL='
 '
 process_one_dockerfile() {
   dockerfile="${1}";
-  end="${2:-${NL}}"
+  enD="${2:-${NL}}"
   q="${3:-\'}"
 IFS=. read -r tag name _ <<EOF
   ${dockerfile}
@@ -158,49 +158,49 @@ EOF
       name=''
       tag=''
     fi
-    build_args_="${build_args}"
+    build_args_="${BUILD_ARGS}"
     if [ "${q}" = '"' ]; then
-      build_args_="${build_args_dq}";
+      build_args_="${BUILD_ARGS_DQ}";
       # shellcheck disable=SC1003
       dockerfile="$(printf '%s' "${dockerfile}" | tr '/' '\\')"
     fi
-    printf 'docker build --file '"${q}"'%s'"${q}"' %s --tag '"${q}"'%s%s'"${q}"':'"${q}"'%s%s'"${q}"' .%s' "${dockerfile}" "${build_args_}" "${prefix}" "${name}" "${tag}" "${suffix}" "${end}"
+    printf 'docker build --file '"${q}"'%s'"${q}"' %s --tag '"${q}"'%s%s'"${q}"':'"${q}"'%s%s'"${q}"' .%s' "${dockerfile}" "${build_args_}" "${PREFIX}" "${name}" "${tag}" "${SUFFIX}" "${end}"
 }
 
 section2name() {
   case "${1}" in
-    "${server_dfs}") res='Servers' ;;
-    "${storage_dfs}") res='Storage' ;;
-    "${third_party_dfs}") res='Third party' ;;
-    "${toolchain_dfs}") res='Toolchain(s)' ;;
-    "${wwwroot_dfs}") res='WWWROOT(s)' ;;
-    "${remaining}"|*) res='rest' ;;
+    "${SERVER_DFS}") res='Servers' ;;
+    "${STORAGE_DFS}") res='Storage' ;;
+    "${THIRD_PARTY_DFS}") res='Third party' ;;
+    "${TOOLCHAIN_DFS}") res='Toolchain(s)' ;;
+    "${WWWROOT_DFS}") res='WWWROOT(s)' ;;
+    "${REMAINING}"|*) res='rest' ;;
   esac
   export res;
 }
 
 DOCKER_BUILD_ARGS=${DOCKER_BUILD_ARGS:---progress=\'plain\' --no-cache}
-build_args="$(printf '%s' "${DOCKER_BUILD_ARGS}")"
-build_args_dq="$(printf '%s' "${DOCKER_BUILD_ARGS}" | tr "'" '"')"
+BUILD_ARGS="$(printf '%s' "${DOCKER_BUILD_ARGS}")"
+BUILD_ARGS_DQ="$(printf '%s' "${DOCKER_BUILD_ARGS}" | tr "'" '"')"
 
-for section in "${toolchain_dfs}" "${server_dfs}" "${storage_dfs}" "${third_party_dfs}" "${wwwroot_dfs}" "${remaining}"; do
+for section in "${TOOLCHAIN_DFS}" "${SERVER_DFS}" "${STORAGE_DFS}" "${THIRD_PARTY_DFS}" "${WWWROOT_DFS}" "${REMAINING}"; do
   section2name "${section}"
   # shellcheck disable=SC2059
-  printf "${header_tpl}" "${res}" | tee -a "${docker_builder}" "${docker_builder_parallel}" >/dev/null
+  printf "${HEADER_TPL}" "${res}" | tee -a "${DOCKER_BUILDER}" "${DOCKER_BUILDER_PARALLEL}" >/dev/null
   # shellcheck disable=SC2059
-  printf "${header_cmd_tpl}" "${res}" >> "${docker_builder_cmd}"
+  printf "${HEADER_CMD_TPL}" "${res}" >> "${DOCKER_BUILDER_CMD}"
   for dockerfile in ${section}; do
     process_one_dockerfile "${dockerfile}" ' &
-' "'" >> "${docker_builder_parallel}"
+' "'" >> "${DOCKER_BUILDER_PARALLEL}"
     process_one_dockerfile "${dockerfile}" '
-' "'" >> "${docker_builder}"
+' "'" >> "${DOCKER_BUILDER}"
     process_one_dockerfile "${dockerfile}" '
-' '"' >> "${docker_builder_cmd}"
+' '"' >> "${DOCKER_BUILDER_CMD}"
   done
-  printf 'wait\n\n' >> "${docker_builder_parallel}"
-  printf '\n' | tee -a "${docker_builder}" "${docker_builder_cmd}" >/dev/null
+  printf 'wait\n\n' >> "${DOCKER_BUILDER_PARALLEL}"
+  printf '\n' | tee -a "${DOCKER_BUILDER}" "${DOCKER_BUILDER_CMD}" >/dev/null
 done
 
-if [ "${input_directory-}" ]; then
+if [ "${INPUT_DIRECTORY-}" ]; then
   cd -- "${previous_wd}"
 fi

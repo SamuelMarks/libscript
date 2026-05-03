@@ -9,7 +9,7 @@
       "description": "Version of Python demanded. Can be a specific numeric version number or an alias",
       "type": "string",
       "default": "3.11",
-      "versionAliases": [
+      "version_aliases": [
         "latest",
         "cpython"
       ]

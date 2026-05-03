@@ -3,31 +3,31 @@
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
-  this_file="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE[0]}"
+  THIS_FILE="${BASH_SOURCE[0]}"
   set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"
   set -o pipefail
 else
-  this_file="${0}"
+  THIS_FILE="${0}"
 fi
 
 case "${STACK+x}" in
-  *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s"\n' "${this_file}"
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
-export STACK="${STACK:-}${this_file}"':'
-SCRIPT_DIR=$(cd "$(dirname -- "${this_file}")" && pwd)
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 export LIBSCRIPT_ROOT_DIR
 
 # Source logging
-for lib in '_lib/_common/log.sh' ; do
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
+for LIB in '_lib/_common/log.sh' ; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
@@ -98,7 +98,7 @@ get_desc() {
   schema="$SCRIPT_DIR/$1/vars.schema.json"
   if command -v jq >/dev/null 2>&1; then
     jq -r '
-      def aliases: [ .properties[]? | select(.versionAliases) | .versionAliases[] ] | unique | join(", ");
+      def aliases: [ .properties[]? | select(.version_aliases) | .version_aliases[] ] | unique | join(", ");
       if .description then
         if (aliases | length > 0) then .description + " [version aliases: " + aliases + "]" else .description end
       else "" end
@@ -129,14 +129,14 @@ while [ $# -gt 0 ]; do
       shift
       ;;
     --listen=*)
-      listen_str="${1#*=}"
-      if echo "$listen_str" | grep -q "^unix:"; then
-        export LIBSCRIPT_LISTEN_SOCKET="${listen_str#unix:}"
-      elif echo "$listen_str" | grep -q ":"; then
-        export LIBSCRIPT_LISTEN_ADDRESS="${listen_str%%:*}"
-        export LIBSCRIPT_LISTEN_PORT="${listen_str##*:}"
+      LISTEN_STR="${1#*=}"
+      if echo "$LISTEN_STR" | grep -q "^unix:"; then
+        export LIBSCRIPT_LISTEN_SOCKET="${LISTEN_STR#unix:}"
+      elif echo "$LISTEN_STR" | grep -q ":"; then
+        export LIBSCRIPT_LISTEN_ADDRESS="${LISTEN_STR%%:*}"
+        export LIBSCRIPT_LISTEN_PORT="${LISTEN_STR##*:}"
       else
-        export LIBSCRIPT_LISTEN_PORT="$listen_str"
+        export LIBSCRIPT_LISTEN_PORT="$LISTEN_STR"
       fi
       shift
       ;;
@@ -165,20 +165,20 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
-cmd="$1"
-if [ -z "$cmd" ] || [ "$cmd" = "--help" ] || [ "$cmd" = "-h" ] || [ "$cmd" = "/?" ]; then
+CMD="$1"
+if [ -z "$CMD" ] || [ "$CMD" = "--help" ] || [ "$CMD" = "-h" ] || [ "$CMD" = "/?" ]; then
   show_help
   exit 0
 fi
 
-if [ "$cmd" = "--version" ] || [ "$cmd" = "-v" ]; then
+if [ "$CMD" = "--version" ] || [ "$CMD" = "-v" ]; then
   echo "${LIBSCRIPT_VERSION:-dev}"
   exit 0
 fi
 
 shift || true
 
-case "$cmd" in
+case "$CMD" in
   list) . "$SCRIPT_DIR/cli/commands/core/list.sh" ;;
   process-downloads) . "$SCRIPT_DIR/cli/commands/deps/process_downloads.sh" ;;
   provision) . "$SCRIPT_DIR/cli/commands/cloud/provision.sh" ;;
@@ -192,68 +192,68 @@ case "$cmd" in
   package_as) . "$SCRIPT_DIR/cli/commands/packaging/package_as.sh" ;;
 esac
 
-is_action=0
-req_version=0
-case "$cmd" in
+IS_ACTION=0
+REQ_VERSION=0
+case "$CMD" in
   install|install_daemon|install_service|uninstall_daemon|uninstall_service|remove_daemon|remove_service)
-    is_action=1; req_version=1 ;;
+    IS_ACTION=1; REQ_VERSION=1 ;;
   remove|uninstall|status|health|test|ls|ls-remote|start|stop|restart|logs|up|down)
-    is_action=1 ;;
+    IS_ACTION=1 ;;
   run|which|exec|env|download|serve|route|info)
-    is_action=1; req_version=1 ;;
+    IS_ACTION=1; REQ_VERSION=1 ;;
 esac
 
-action_pkg="$cmd"
-if [ "$is_action" = "1" ]; then
-  action_pkg="$1"
-  if [ -z "$action_pkg" ]; then
-    echo "Error: package_name is required for $cmd" >&2
+ACTION_PKG="$CMD"
+if [ "$IS_ACTION" = "1" ]; then
+  ACTION_PKG="$1"
+  if [ -z "$ACTION_PKG" ]; then
+    echo "Error: package_name is required for $CMD" >&2
     exit 1
   fi
   # We do not shift here because the local cli.sh expects the action as $1
-  # But we need to pass "$cmd" "$action_pkg" "$@" to local cli.sh
-  # Oh wait, we already shifted. So $1 is action_pkg.
-  # Let's restore "$cmd" for the local cli.sh.
-  set -- "$cmd" "$@"
+  # But we need to pass "$CMD" "$ACTION_PKG" "$@" to local cli.sh
+  # Oh wait, we already shifted. So $1 is ACTION_PKG.
+  # Let's restore "$CMD" for the local cli.sh.
+  set -- "$CMD" "$@"
 fi
 
-target=""
-if [ -f "$SCRIPT_DIR/$action_pkg/cli.sh" ]; then
-  target="$SCRIPT_DIR/$action_pkg"
+TARGET=""
+if [ -f "$SCRIPT_DIR/$ACTION_PKG/cli.sh" ]; then
+  TARGET="$SCRIPT_DIR/$ACTION_PKG"
 else
-  if ! matches=$(find_components | grep -i "$action_pkg"); then
+  if ! matches=$(find_components | grep -i "$ACTION_PKG"); then
     matches=""
   fi
   if ! count=$(echo "$matches" | grep -c .); then
     count=0
   fi
   if [ "$count" -eq 0 ]; then
-    echo "Error: Unknown component '$action_pkg'."
+    echo "Error: Unknown component '$ACTION_PKG'."
     exit 1
   elif [ "$count" -eq 1 ]; then
-    target="$SCRIPT_DIR/$matches"
+    TARGET="$SCRIPT_DIR/$matches"
   else
-    if ! exact_match=$(echo "$matches" | grep "/$action_pkg$"); then
+    if ! exact_match=$(echo "$matches" | grep "/$ACTION_PKG$"); then
       exact_match=""
     fi
     if ! exact_count=$(echo "$exact_match" | grep -c .); then
       exact_count=0
     fi
     if [ "$exact_count" -eq 1 ]; then
-      target="$SCRIPT_DIR/$exact_match"
+      TARGET="$SCRIPT_DIR/$exact_match"
     else
-      echo "Error: Component '$action_pkg' is ambiguous. Matches:"
+      echo "Error: Component '$ACTION_PKG' is ambiguous. Matches:"
       echo "$matches" | sed 's/^/  /'
       exit 1
     fi
   fi
 fi
 
-if [ -x "$target/cli.sh" ]; then
-  exec "$target/cli.sh" "$@"
-elif [ -f "$target/cli.sh" ]; then
-  exec sh "$target/cli.sh" "$@"
+if [ -x "$TARGET/cli.sh" ]; then
+  exec "$TARGET/cli.sh" "$@"
+elif [ -f "$TARGET/cli.sh" ]; then
+  exec sh "$TARGET/cli.sh" "$@"
 else
-  echo "Error: Local CLI not found in $target"
+  echo "Error: Local CLI not found in $TARGET"
   exit 1
 fi

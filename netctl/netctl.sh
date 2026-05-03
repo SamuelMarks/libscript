@@ -3,37 +3,37 @@
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
-  this_file="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE[0]}"
+  THIS_FILE="${BASH_SOURCE[0]}"
   set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"
   set -o pipefail
 else
-  this_file="${0}"
+  THIS_FILE="${0}"
 fi
 
 case "${STACK+x}" in
-  *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s"\n' "${this_file}"
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
-export STACK="${STACK:-}${this_file}"':'
-for lib in 'lib/prelude.sh' ; do
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${lib}"
+export STACK="${STACK:-}${THIS_FILE}"':'
+for LIB in 'LIB/prelude.sh' ; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 done
 
-. "$NETCTL_DIR/lib/state.sh"
-. "$NETCTL_DIR/lib/nginx.sh"
-. "$NETCTL_DIR/lib/caddy.sh"
-. "$NETCTL_DIR/lib/apache.sh"
-. "$NETCTL_DIR/lib/dockerfile.sh"
-. "$NETCTL_DIR/lib/vagrantfile.sh"
+. "$NETCTL_DIR/LIB/state.sh"
+. "$NETCTL_DIR/LIB/nginx.sh"
+. "$NETCTL_DIR/LIB/caddy.sh"
+. "$NETCTL_DIR/LIB/apache.sh"
+. "$NETCTL_DIR/LIB/dockerfile.sh"
+. "$NETCTL_DIR/LIB/vagrantfile.sh"
 
 usage() {
   cat <<EOF

@@ -9,7 +9,7 @@
       "description": "Version of Rust demanded. Can be \"nightly\"|\"beta\"|\"stable\" xor a specific version",
       "type": "string",
       "default": "stable",
-      "versionAliases": [
+      "version_aliases": [
         "stable",
         "beta",
         "nightly"

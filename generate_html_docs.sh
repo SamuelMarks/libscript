@@ -3,24 +3,24 @@
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
-  this_file="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE[0]}"
+  THIS_FILE="${BASH_SOURCE[0]}"
   set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"
   set -o pipefail
 else
-  this_file="${0}"
+  THIS_FILE="${0}"
 fi
 
 case "${STACK+x}" in
-  *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s"\n' "${this_file}"
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
-export STACK="${STACK:-}${this_file}"':'
+export STACK="${STACK:-}${THIS_FILE}"':'
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   echo "Usage: $0 [OPTIONS]"
   echo "See script source or documentation for more details."
@@ -32,19 +32,19 @@ fi
 
 
 if [ "${SCRIPT_NAME-}" ]; then
-  this_file="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE}"
+  THIS_FILE="${BASH_SOURCE}"
 
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${0}"
+  THIS_FILE="${0}"
 
 else
-  this_file="${0}"
+  THIS_FILE="${0}"
 fi
 set -eu +f
 
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${this_file}" )")" && pwd)}"
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${THIS_FILE}" )")" && pwd)}"
 export LIBSCRIPT_ROOT_DIR
 
 LIBSCRIPT_DOCS_DIR="${LIBSCRIPT_DOCS_DIR:-./docs/latest}"
@@ -54,8 +54,8 @@ LIBSCRIPT_ASSETS_DIR="${LIBSCRIPT_ASSETS_DIR:-${LIBSCRIPT_DOCS_DIR}}"
 export LIBSCRIPT_ASSETS_DIR
 
 if [ -z "${HTML_ROOT+x}" ]; then
-   HTML_ROOT="${LIBSCRIPT_ROOT_DIR}"'/docs_web_template'
-   export HTML_ROOT
+    HTML_ROOT="${LIBSCRIPT_ROOT_DIR}"'/docs_web_template'
+    export HTML_ROOT
 fi
 
 export GIT_REPO="${GIT_REPO:-https://github.com/SamuelMarks/libscript}"
@@ -67,12 +67,12 @@ export SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/find_replace.sh'
 . "${SCRIPT_NAME}"
 
 [ -d "${LIBSCRIPT_DOCS_DIR}" ] || mkdir -p "${LIBSCRIPT_DOCS_DIR}"
-urls_js='['
-urls=''
+URLS_JS='['
+URLS=''
 export LIBSCRIPT_DOCS_PREFIX="${LIBSCRIPT_DOCS_PREFIX:-}"
-find_res="$(mktemp)"
-trap 'rm -f -- "${find_res}"' EXIT HUP INT QUIT TERM
-find "${LIBSCRIPT_ROOT_DIR}" -type f -name '*.md' ! -path '*/node_modules/*' > "${find_res}"
+FIND_RES="$(mktemp)"
+trap 'rm -f -- "${FIND_RES}"' EXIT HUP INT QUIT TERM
+find "${LIBSCRIPT_ROOT_DIR}" -type f -name '*.md' ! -path '*/node_modules/*' > "${FIND_RES}"
 while IFS= read -r f; do
   out="${LIBSCRIPT_DOCS_DIR}${f#"${LIBSCRIPT_ROOT_DIR}"}"
   parent="$(dirname -- "${out}")"
@@ -105,8 +105,8 @@ while IFS= read -r f; do
   cp -- "${HTML_ROOT}"'/top.html' "${html}"
   iconv -t utf-8 -- "${f}" | sed 's/.md)/.html)/g' | pandoc -f markdown -t html5 | iconv -f utf-8 >> "${html}"
   rm -f "${html%.html}"'.schema.json' "${html}"'.usage'
-  previous_wd="$(pwd)"
-  new_wd="${f%/*}"
+  previous_wD="$(pwd)"
+  new_wD="${f%/*}"
   cd -- "${new_wd}"
   set +f
   for json_schema in *'.schema.json'; do
@@ -118,9 +118,9 @@ while IFS= read -r f; do
           PORT_PATH="${new_wd##*/libscript}"
           # shellcheck disable=SC1003
           env -i PATH="${ENVSUBST_PATH}" \
-                 PORT_PATH="${PORT_PATH}" \
-                 PORT_PATH_WIN="$(printf '%s' "${PORT_PATH}" | tr '/' '\\')" \
-                 "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${HTML_ROOT}"'/usage.html' >> "${html}"'.usage'
+                  PORT_PATH="${PORT_PATH}" \
+                  PORT_PATH_WIN="$(printf '%s' "${PORT_PATH}" | tr '/' '\\')" \
+                  "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${HTML_ROOT}"'/usage.html' >> "${html}"'.usage'
           # shellcheck disable=SC2016
           printf '${USAGE}' >> "${html}"
 #           wetzel -k '**MUST**' -- "${new_wd}"'/'"${json_schema}" | iconv -t utf-8  | pandoc -f markdown -t html5 | sed 's/<table>/<table class="tui-table hovered-purple striped-purple">/g' | iconv -f utf-8 >> "${html}"
@@ -136,15 +136,15 @@ while IFS= read -r f; do
   cat -- "${HTML_ROOT}"'/bottom.html' >> "${html}"
   if [ -n "${LIBSCRIPT_DOCS_PREFIX}" ]; then
     h="${html#.}"
-    urls_js="${urls_js}"'"'"${h#"${LIBSCRIPT_DOCS_PREFIX}"}"'",'
-    urls="${urls}"' '"${html#"${LIBSCRIPT_DOCS_PREFIX}"}"
+    URLS_JS="${URLS_JS}"'"'"${h#"${LIBSCRIPT_DOCS_PREFIX}"}"'",'
+    URLS="${URLS}"' '"${html#"${LIBSCRIPT_DOCS_PREFIX}"}"
   else
-    urls_js="${urls_js}"'"'"${html#.}"'",'
-    urls="${urls}"' '"${html}"
+    URLS_JS="${URLS_JS}"'"'"${html#.}"'",'
+    URLS="${URLS}"' '"${html}"
   fi
-done < "${find_res}"
-urls_js="${urls_js%,}"']'
-#printf '%s\n' "${urls_js}"
+done < "${FIND_RES}"
+URLS_JS="${URLS_JS%,}"']'
+#printf '%s\n' "${URLS_JS}"
 
 to_html_tree() {
   # Read input from argument or stdin
@@ -177,7 +177,7 @@ to_html_tree() {
   # Generate subpaths with levels
   (
     # Include the root directory
-    printf '/	1\n'
+    printf '/  1\n'
 
     # Process each path
     printf '%s\n' "${paths}" | while IFS= read -r path; do
@@ -245,10 +245,10 @@ to_html_tree() {
   rm -f subpaths.txt
 }
 
-#to_html_tree "${urls}"
-#to_html_tree "${urls_js}"
+#to_html_tree "${URLS}"
+#to_html_tree "${URLS_JS}"
 #exit 5
-for url in ${urls}; do
+for url in ${URLS}; do
   title="${url##*/}"
   p="${url%/*}"
   p="${p##*/}"
@@ -262,7 +262,7 @@ for url in ${urls}; do
   fi
   USAGE=''
   SCHEMA=''
-  previous_wd="$(pwd)"
+  previous_wD="$(pwd)"
   cd -- "${url%/*}"
   set +f
   for f in *'.usage'; do
@@ -298,14 +298,14 @@ for url in ${urls}; do
 
   GIT_HTTP_LINK="$(printf '%s' "${GIT_HTTP_LINK}" | sed 's/docs/blob/; s/latest/master/; s/html/md/')"
   env -i PATH="${ENVSUBST_PATH}" \
-         url="${url}" \
-         TITLE="${title%%.html}" \
-         LIBSCRIPT_DOCS_DIR="${LIBSCRIPT_DOCS_DIR#.}" \
-         LIBSCRIPT_ASSETS_DIR="${LIBSCRIPT_ASSETS_DIR}" \
-         USAGE="${USAGE}" \
-         URL_PATHNAME="${URL_PATHNAME}" \
-         GIT_HTTP_LINK="${GIT_HTTP_LINK}" \
-         "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${url}" > "${url}"'.tmp'
+          url="${url}" \
+          TITLE="${title%%.html}" \
+          LIBSCRIPT_DOCS_DIR="${LIBSCRIPT_DOCS_DIR#.}" \
+          LIBSCRIPT_ASSETS_DIR="${LIBSCRIPT_ASSETS_DIR}" \
+          USAGE="${USAGE}" \
+          URL_PATHNAME="${URL_PATHNAME}" \
+          GIT_HTTP_LINK="${GIT_HTTP_LINK}" \
+          "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${url}" > "${url}"'.tmp'
 
   within_first_header='<a class="right" href="'"${GIT_HTTP_LINK}"'" aria-label="Open on GitHub"><img class="deploy-img" src="/assets/github-badge-small.png" alt="Open on GitHub"/></a>'
   awk -v within_first_header="$within_first_header" '/<\/h1>/ && !done { sub(/<\/h1>/, within_first_header "</h1>"); done=1 } 1' "${url}.tmp" > "${url}.tmp1"
@@ -343,17 +343,17 @@ for url in ${urls}; do
 <h2 class="line-beside">or</h2>
 
 <div class="tui-window" style="width: 100%%">
-  <form id="twoClickForm" action="" method="get">
+  <form iD="twoClickForm" action="" methoD="get">
     <fieldset class="tui-fieldset">
       <legend class="center">2-click deploy</legend>
       <div class="flex">
-        <label for="cname" class="flex-item" style="white-space: pre;">CNAME.........................: </label><input class="tui-input flex-item" name="cname" id="cname" placeholder="Domain name" />
+        <label for="cname" class="flex-item" style="white-space: pre;">CNAME.........................: </label><input class="tui-input flex-item" name="cname" iD="cname" placeholder="Domain name" />
       </div>
       <div class="flex">
-        <label for="log_server" class="flex-item" style="white-space: pre;">Metrics/logs (server).........: </label><input class="tui-input flex-item" name="log_server" id="log_server" placeholder="If == ↑domain then deploy"/>
+        <label for="log_server" class="flex-item" style="white-space: pre;">Metrics/logs (server).........: </label><input class="tui-input flex-item" name="log_server" iD="log_server" placeholder="If == ↑domain then deploy"/>
       </div>
       <div class="flex">
-        <label for="backup_url" class="flex-item" style="white-space: pre;">Backup (object storage).......: </label><input class="tui-input flex-item" name="backup_url" id="backup_url" placeholder="Object storage—e.g., s3—URL"/>
+        <label for="backup_url" class="flex-item" style="white-space: pre;">Backup (object storage).......: </label><input class="tui-input flex-item" name="backup_url" iD="backup_url" placeholder="Object storage—e.g., s3—URL"/>
       </div>
 
       <div class="flex-col">
@@ -361,13 +361,13 @@ for url in ${urls}; do
       </div>
 
       <div class="flex">
-        <button class="tui-button" id="submit" type="submit">Set vars</button>
+        <button class="tui-button" iD="submit" type="submit">Set vars</button>
       </div>
 
       <ul class="flex-ul-prefer-hor">
-        <li><button type="submit" id="azure_button" formaction="https://azure/" formenctype="text/plain" onclick=twoClickDeploy(this)><img class="deploy-img" src="https://aka.ms/deploytoazurebutton" alt="Deploy to Azure"/></button></li>
-        <li><button type="submit" id="digitalocean_button" formaction="https://digitalocean/" formenctype="text/plain" onclick=twoClickDeploy(this)><img class="deploy-img" src="https://www.deploytodo.com/do-btn-blue.svg" alt="Deploy to Digital Ocean"/></button></li>
-        <li><button type="submit" id="aws_button" formaction="https://amazonaws/" formenctype="text/plain" onclick=twoClickDeploy(this)><img class="deploy-img" src="https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png" alt="Deploy to AWS"></button></li>
+        <li><button type="submit" iD="azure_button" formaction="https://azure/" formenctype="text/plain" onclick=twoClickDeploy(this)><img class="deploy-img" src="https://aka.ms/deploytoazurebutton" alt="Deploy to Azure"/></button></li>
+        <li><button type="submit" iD="digitalocean_button" formaction="https://digitalocean/" formenctype="text/plain" onclick=twoClickDeploy(this)><img class="deploy-img" src="https://www.deploytodo.com/do-btn-blue.svg" alt="Deploy to Digital Ocean"/></button></li>
+        <li><button type="submit" iD="aws_button" formaction="https://amazonaws/" formenctype="text/plain" onclick=twoClickDeploy(this)><img class="deploy-img" src="https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png" alt="Deploy to AWS"></button></li>
       </ul>
     </fieldset>
   </form>
@@ -400,8 +400,8 @@ if [ -d "${LIBSCRIPT_ROOT_DIR}"'/node_modules/tuicss' ]; then
   rsync -a -- "${LIBSCRIPT_ROOT_DIR}"'/node_modules/tuicss/dist/' "${LIBSCRIPT_ASSETS_DIR}"
 fi
 env -i PATH="${ENVSUBST_PATH}" \
-       URLS="${urls_js}" \
-       "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${HTML_ROOT}"'/assets/first_scripts.js' > "${LIBSCRIPT_ASSETS_DIR}"'/first_scripts.js'
+        URLS="${URLS_JS}" \
+        "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${HTML_ROOT}"'/assets/first_scripts.js' > "${LIBSCRIPT_ASSETS_DIR}"'/first_scripts.js'
 [ -d "${LIBSCRIPT_ROOT_DIR}"'/assets/' ] || mkdir -- "${LIBSCRIPT_ROOT_DIR}"'/assets/'
 
 set +f

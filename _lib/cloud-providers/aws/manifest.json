@@ -1,10 +1,12 @@
 {
-  "name": "aws",
+  "name": "AWS",
   "provides": [
     "aws"
   ],
   "os_whitelist": [
     "all"
   ],
-  "category": "cloud"
+  "category": "cloud",
+  "title": "Aws",
+  "description": "LibScript component for AWS"
 }

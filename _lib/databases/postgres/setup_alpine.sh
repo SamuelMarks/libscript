@@ -3,25 +3,25 @@
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
-  this_file="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE[0]}"
+  THIS_FILE="${BASH_SOURCE[0]}"
   set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"
   set -o pipefail
 else
-  this_file="${0}"
+  THIS_FILE="${0}"
 fi
 
 case "${STACK+x}" in
-  *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s"\n' "${this_file}"
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
-export STACK="${STACK:-}${this_file}"':'
-DIR=$(CDPATH='' cd -- "$(dirname -- "${this_file}")" && pwd)
+export STACK="${STACK:-}${THIS_FILE}"':'
+DIR=$(CDPATH='' cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 SCRIPT_NAME="${DIR}"'/env.sh'
 export SCRIPT_NAME
@@ -29,23 +29,23 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 apk add 'openrc' 'postgresql'"${POSTGRESQL_VERSION}" 'postgresql'"${POSTGRESQL_VERSION}"'-contrib' 'postgresql'"${POSTGRESQL_VERSION}"'-openrc'
-existed=0
+EXISTED=0
 if [ -f "/etc/init.d/${LIBSCRIPT_SERVICE_NAME:-postgresql}" ]; then
-  existed=1
+  EXISTED=1
 fi
-if [ "${existed}" -ne 1 ]; then
+if [ "${EXISTED}" -ne 1 ]; then
   rc-update add "${LIBSCRIPT_SERVICE_NAME:-postgresql}"
 fi
 
-stdout="$(mktemp)"
-stderr="$(mktemp)"
-trap 'rm -f -- "${stdout}" "${stderr}"' EXIT HUP INT QUIT TERM
+STDOUT="$(mktemp)"
+STDERR="$(mktemp)"
+trap 'rm -f -- "${STDOUT}" "${STDERR}"' EXIT HUP INT QUIT TERM
 
-if ! rc-service "${LIBSCRIPT_SERVICE_NAME:-postgresql}" start >"${stdout}" 2>"${stderr}"; then
+if ! rc-service "${LIBSCRIPT_SERVICE_NAME:-postgresql}" start >"${STDOUT}" 2>"${STDERR}"; then
   rc="${?}"
-  if [ ! "${stderr}" = ' * WARNING: postgresql is already starting' ]; then
-    >&2 printf '%s\n' "${stderr}"
-    printf '%s\n' "${stdout}"
+  if [ ! "${STDERR}" = ' * WARNING: postgresql is already starting' ]; then
+    >&2 printf '%s\n' "${STDERR}"
+    printf '%s\n' "${STDOUT}"
     exit "${rc}"
   fi
 fi

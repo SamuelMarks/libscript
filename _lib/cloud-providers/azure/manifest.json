@@ -1,10 +1,12 @@
 {
-  "name": "azure",
+  "name": "AZURE",
   "provides": [
     "azure"
   ],
   "os_whitelist": [
     "all"
   ],
-  "category": "cloud"
+  "category": "cloud",
+  "title": "Azure",
+  "description": "LibScript component for AZURE"
 }

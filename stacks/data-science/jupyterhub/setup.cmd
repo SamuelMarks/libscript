@@ -7,7 +7,7 @@ where powershell >nul 2>&1
 if %ERRORLEVEL% NEQ 0 goto :native_cmd
 
 :run_powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup_win.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup_windows.ps1"
 goto :eof
 
 :native_cmd

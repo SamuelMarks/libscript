@@ -94,13 +94,13 @@ jobs:
           - "_lib/logging/fluentbit"
           - "_lib/web-servers/httpd"
           - "_lib/web-servers/iis"
-          - "_lib/orchestration/kubernetes_k0s"
-          - "_lib/orchestration/kubernetes_thw"
+          - "_lib/orchestration/kubernetes-k0s"
+          - "_lib/orchestration/kubernetes-thw"
           - "_lib/web-servers/nginx"
-          - "_lib/languages/nodejs_server"
+          - "_lib/languages/nodejs-server"
           - "_lib/security/openbao"
-          - "_lib/languages/python_server"
-          - "_lib/languages/rust_server"
+          - "_lib/languages/python-server"
+          - "_lib/languages/rust-server"
           - "_lib/databases/etcd"
           - "_lib/databases/mariadb"
           - "_lib/databases/mongodb"
@@ -210,17 +210,17 @@ jobs:
           - os: windows-latest
             component: "_lib/package-managers/nix"
           - os: ubuntu-latest
-            component: "_lib/orchestration/kubernetes_thw"
+            component: "_lib/orchestration/kubernetes-thw"
           - os: macos-latest
-            component: "_lib/orchestration/kubernetes_k0s"
+            component: "_lib/orchestration/kubernetes-k0s"
           - os: macos-latest
-            component: "_lib/orchestration/kubernetes_thw"
+            component: "_lib/orchestration/kubernetes-thw"
           - os: macos-latest
-            component: "_lib/languages/rust_server"
+            component: "_lib/languages/rust-server"
           - os: windows-latest
-            component: "_lib/orchestration/kubernetes_k0s"
+            component: "_lib/orchestration/kubernetes-k0s"
           - os: windows-latest
-            component: "_lib/orchestration/kubernetes_thw"
+            component: "_lib/orchestration/kubernetes-thw"
           - os: windows-latest
             component: "_lib/web-servers/nginx"
           - os: windows-latest
@@ -292,6 +292,6 @@ jobs:
         run: |
           cd ${{ matrix.component }}
           if exist setup.cmd ( call setup.cmd || exit /b 1 )
-          if exist setup_win.ps1 ( powershell -ExecutionPolicy Bypass -File setup_win.ps1 || exit /b 1 )
+          if exist setup_windows.ps1 ( powershell -ExecutionPolicy Bypass -File setup_windows.ps1 || exit /b 1 )
           FOR /F "tokens=*" %%A IN ('powershell -NoProfile -Command "[Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')"') DO ( SET "PATH=%%A;%PATH%" )
           if exist test.cmd ( call test.cmd || exit /b 1 ) else ( echo "No test.cmd found" )

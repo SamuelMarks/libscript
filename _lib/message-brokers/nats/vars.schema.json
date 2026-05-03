@@ -9,7 +9,7 @@
       "description": "Specific version of nats to install. Can be a numeric version or an alias.",
       "type": "string",
       "default": "latest",
-      "versionAliases": [
+      "version_aliases": [
         "latest",
         "stable"
       ]

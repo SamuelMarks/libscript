@@ -1,2 +1,2 @@
 @echo off
-echo "Uninstalling bun is not supported via this script."
+call "%~dp0\..\..\_common\uninstall_base.cmd" %*

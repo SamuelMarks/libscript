@@ -3,24 +3,24 @@
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
-  this_file="${SCRIPT_NAME}"
+  THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  this_file="${BASH_SOURCE[0]}"
+  THIS_FILE="${BASH_SOURCE[0]}"
   set -o pipefail
 elif [ "${ZSH_VERSION-}" ]; then
-  this_file="${(%):-%x}"
+  THIS_FILE="${(%):-%x}"
   set -o pipefail
 else
-  this_file="${0}"
+  THIS_FILE="${0}"
 fi
 
 case "${STACK+x}" in
-  *':'"${this_file}"':'*)
-    printf '[STOP]     processing "%s"\n' "${this_file}"
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${this_file}" ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
-export STACK="${STACK:-}${this_file}"':'
+export STACK="${STACK:-}${THIS_FILE}"':'
 # A safe version of `envsubst`
 # If a var is not found it leaves it
 # env -i BAR='haz'   "FOO ${BAR} CAN" -> "FOO haz CAN"
@@ -46,49 +46,49 @@ envsubst_safe() {
   # shellcheck disable=SC2016
   awk_script='
   BEGIN {
-     for (name in ENVIRON) {
-         env[name] = ENVIRON[name]
-     }
+      for (name in ENVIRON) {
+          env[name] = ENVIRON[name]
+      }
   }
 
   {
-     line = $0
+      line = $0
 
-     pos = 1
+      pos = 1
 
-     while (pos <= length(line)) {
-         if (substr(line, pos, 2) == "${") {
-             match_var = match(substr(line, pos), /^\$\{[a-zA-Z_][a-zA-Z0-9_]*\}/)
-             if (match_var) {
-                 var = substr(line, pos, RLENGTH)
-                 var_name = substr(var, 3, length(var) - 3)
-                 if (var_name in env) {
-                     replacement = env[var_name]
-                 } else {
-                     replacement = var
-                 }
-                 line = substr(line, 1, pos - 1) replacement substr(line, pos + RLENGTH)
-                 pos += length(replacement)
-                 continue
-             }
-         } else if (substr(line, pos, 1) == "$") {
-             match_var = match(substr(line, pos), /^\$[a-zA-Z_][a-zA-Z0-9_]*/)
-             if (match_var) {
-                 var = substr(line, pos, RLENGTH)
-                 var_name = substr(var, 2)
-                 if (var_name in env) {
-                     replacement = env[var_name]
-                 } else {
-                     replacement = var
-                 }
-                 line = substr(line, 1, pos - 1) replacement substr(line, pos + RLENGTH)
-                 pos += length(replacement)
-                 continue
-             }
-         }
-         pos++
-     }
-     print line
+      while (pos <= length(line)) {
+          if (substr(line, pos, 2) == "${") {
+              match_var = match(substr(line, pos), /^\$\{[a-zA-Z_][a-zA-Z0-9_]*\}/)
+              if (match_var) {
+                  var = substr(line, pos, RLENGTH)
+                  var_name = substr(var, 3, length(var) - 3)
+                  if (var_name in env) {
+                      replacement = env[var_name]
+                  } else {
+                      replacement = var
+                  }
+                  line = substr(line, 1, pos - 1) replacement substr(line, pos + RLENGTH)
+                  pos += length(replacement)
+                  continue
+              }
+          } else if (substr(line, pos, 1) == "$") {
+              match_var = match(substr(line, pos), /^\$[a-zA-Z_][a-zA-Z0-9_]*/)
+              if (match_var) {
+                  var = substr(line, pos, RLENGTH)
+                  var_name = substr(var, 2)
+                  if (var_name in env) {
+                      replacement = env[var_name]
+                  } else {
+                      replacement = var
+                  }
+                  line = substr(line, 1, pos - 1) replacement substr(line, pos + RLENGTH)
+                  pos += length(replacement)
+                  continue
+              }
+          }
+          pos++
+      }
+      print line
   }
   ';
   if [ -n "${input_file:-}" ]; then

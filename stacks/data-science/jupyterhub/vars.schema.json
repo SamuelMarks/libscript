@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/stacks/data-science/jupyterhub/vars.schema.json",
   "title": "jupyterhub third-party vars",
-  "description": "jupyterhub third-party vars that can be set",
+  "description": "Variables for jupyterhub third-party vars",
   "type": "object",
   "properties": {
     "JUPYTERHUB_SERVICE_USER": {

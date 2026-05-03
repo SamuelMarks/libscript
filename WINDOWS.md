@@ -4,7 +4,7 @@ LibScript maintains first-class support for Windows environments, enabling zero-
 
 ## Native Stack Provisioning
 
-The framework utilizes standard `cmd` and `.bat` scripts, alongside PowerShell where necessary, to handle Windows-specific operations. This includes native environment variable configuration, registry modifications, and the registration of Windows Services. Complex stacks (like WAMP) can be provisioned natively from the command prompt.
+The framework utilizes standard `cmd` and `.cmd` scripts, alongside PowerShell where necessary, to handle Windows-specific operations. This includes native environment variable configuration, registry modifications, and the registration of Windows Services. Complex stacks (like WAMP) can be provisioned natively from the command prompt.
 
 ## Installer Generation
 
@@ -16,4 +16,4 @@ The system bundles the required executable binaries and dependencies to produce 
 
 ## Legacy Environments
 
-For specialized retro-computing or minimal deployment scenarios, the core framework retains compatibility with legacy MS-DOS `.bat` scripting constructs where possible.
+For specialized retro-computing or minimal deployment scenarios, the core framework retains compatibility with legacy MS-DOS `.cmd` scripting constructs where possible.

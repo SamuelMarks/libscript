@@ -24,9 +24,9 @@ components = {
     "_lib/web-servers/caddy": {"name": "CADDY", "provides": ["web-server", "reverse-proxy", "caddy"], "conflicts": []},
     "_lib/web-servers/httpd": {"name": "HTTPD", "provides": ["web-server", "apache", "httpd"], "conflicts": []},
     "_lib/web-servers/iis": {"name": "IIS", "provides": ["web-server", "iis"], "conflicts": []},
-    "_lib/languages/nodejs_server": {"name": "NODEJS_SERVER", "provides": ["app-server", "nodejs"], "conflicts": []},
-    "_lib/languages/python_server": {"name": "PYTHON_SERVER", "provides": ["app-server", "python", "wsgi", "asgi"], "conflicts": []},
-    "_lib/languages/rust_server": {"name": "RUST_SERVER", "provides": ["app-server", "rust"], "conflicts": []},
+    "_lib/languages/nodejs-server": {"name": "NODEJS_SERVER", "provides": ["app-server", "nodejs"], "conflicts": []},
+    "_lib/languages/python-server": {"name": "PYTHON_SERVER", "provides": ["app-server", "python", "wsgi", "asgi"], "conflicts": []},
+    "_lib/languages/rust-server": {"name": "RUST_SERVER", "provides": ["app-server", "rust"], "conflicts": []},
 
     # Toolchains
     "_lib/languages/nodejs": {"name": "NODEJS", "provides": ["runtime", "javascript", "nodejs", "npm"], "conflicts": []},

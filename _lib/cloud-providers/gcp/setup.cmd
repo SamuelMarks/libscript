@@ -1,2 +1,2 @@
 @echo off
-call "%~dp0\..\..\..\_lib\_common\setup_base.cmd"
+call "%~dp0\..\..\_common\setup_base.cmd" %*

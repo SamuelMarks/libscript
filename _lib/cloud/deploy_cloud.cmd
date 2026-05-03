@@ -11,7 +11,7 @@ set "REMOTE_DEST=%~6"
 if "!REMOTE_DEST!"=="" set "REMOTE_DEST=~/%NODE%"
 
 if "!LOC!"=="" (
-  echo Usage: deploy_cloud.bat ^<provider^> ^<node_name^> ^<rg_or_vpc_or_project^> ^<region_or_zone^> [local_repo_path] [remote_dest]
+  echo Usage: deploy_cloud.cmd ^<provider^> ^<node_name^> ^<rg_or_vpc_or_project^> ^<region_or_zone^> [local_repo_path] [remote_dest]
   exit /b 1
 )
 
@@ -142,11 +142,11 @@ if "!PROVIDER!"=="gcp" set "CTX=!LOC!"
 call :log "HEALTH" "Waiting for SSH/WinRM readiness on node !NODE!..."
 set "ATTEMPT=1"
 set "MAX_ATTEMPTS=30"
-:SSH_LOOP
+:ssh_loop
 call "!CLI!" node exec "!NODE!" "!CTX!" "echo SSH_READY" >nul 2>&1
 if %errorlevel% equ 0 (
   call :log "HEALTH" "SSH/WinRM is ready."
-  goto :SSH_READY
+  goto :ssh_ready
 )
 if !ATTEMPT! geq !MAX_ATTEMPTS! (
   call :log "ERROR" "Node failed to become ready after !MAX_ATTEMPTS! attempts."
@@ -155,9 +155,9 @@ if !ATTEMPT! geq !MAX_ATTEMPTS! (
 call :log "HEALTH" "Not ready (attempt !ATTEMPT!/!MAX_ATTEMPTS!). Waiting 10s..."
 timeout /t 10 /nobreak >nul
 set /a ATTEMPT+=1
-goto :SSH_LOOP
+goto :ssh_loop
 
-:SSH_READY
+:ssh_ready
 
 :: -----------------------------------------------------------------------------
 :: Sync and Deploy
@@ -234,22 +234,22 @@ call :retry "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libsc
 call :log "HEALTH" "Polling application health (via libscript health)..."
 set "ATTEMPT=1"
 set "MAX_ATTEMPTS=12"
-:HEALTH_LOOP
+:health_loop
 call "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh health" >nul 2>&1
 if %errorlevel% equ 0 (
   call :log "HEALTH" "Application stack is healthy."
-  goto :HEALTH_READY
+  goto :health_ready
 )
 if !ATTEMPT! geq !MAX_ATTEMPTS! (
   call :log "WARNING" "Application health check failed or timed out. Check logs."
-  goto :HEALTH_READY
+  goto :health_ready
 )
 call :log "HEALTH" "Application not ready (attempt !ATTEMPT!/!MAX_ATTEMPTS!). Waiting 10s..."
 timeout /t 10 /nobreak >nul
 set /a ATTEMPT+=1
-goto :HEALTH_LOOP
+goto :health_loop
 
-:HEALTH_READY
+:health_ready
 
 call :log "DONE" "Deployment complete. View logs at !LOG_FILE!"
 exit /b 0
@@ -271,7 +271,7 @@ exit /b 0
 set "RETRY_ATTEMPT=1"
 set "RETRY_MAX=5"
 set "RETRY_WAIT=5"
-:RETRY_LOOP
+:retry_loop
 call :log "RETRY" "Attempt !RETRY_ATTEMPT! of !RETRY_MAX!: %*"
 call %* >> "!LOG_FILE!" 2>&1
 if %errorlevel% equ 0 (
@@ -286,4 +286,4 @@ call :log "RETRY" "Command failed (exit !errorlevel!). Waiting !RETRY_WAIT!s..."
 timeout /t !RETRY_WAIT! /nobreak >nul
 set /a RETRY_ATTEMPT+=1
 set /a RETRY_WAIT*=2
-goto :RETRY_LOOP
+goto :retry_loop

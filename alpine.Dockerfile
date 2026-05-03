@@ -7,7 +7,7 @@ ENV LIBSCRIPT_DATA_DIR='/libscript_data'
 COPY . /scripts
 WORKDIR /scripts
 
-RUN . ./conf-no-all.env.sh && \
+RUN . ./conf_no_all.env.sh && \
     export JUPYTERHUB_INSTALL=1 && \
     export SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/install.sh' && \
     . "${SCRIPT_NAME}"

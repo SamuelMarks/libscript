@@ -9,7 +9,7 @@
       "description": "Specific version of Fluent Bit to install. Can be a numeric version (e.g. '3.0.0') or an alias like 'latest'.",
       "type": "string",
       "default": "latest",
-      "versionAliases": [
+      "version_aliases": [
         "latest",
         "stable"
       ]
