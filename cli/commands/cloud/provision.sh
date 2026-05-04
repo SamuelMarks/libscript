@@ -22,6 +22,6 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 if [ "$CMD" = "provision" ]; then
-  shift
+  
   exec "$SCRIPT_DIR/scripts/deploy_cloud.sh" "$@"
 fi
