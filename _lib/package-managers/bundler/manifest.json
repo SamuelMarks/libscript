@@ -1,5 +1,6 @@
 {
-  "name": "BUNDLER",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "bundler",
   "provides": [
     "bundler"
   ],

@@ -49,7 +49,7 @@ elif [ -z "${DEST+x}" ]; then
   mkdir -p -- "${DEST}"
 fi
 
-if ! cmd_avail pnpm; then
+if ! libscript_cmd_avail pnpm; then
   priv npm install -g pnpm@latest-10
 fi
 
@@ -68,8 +68,8 @@ if [ ! -f "${HASH_LOC}" ]; then
 fi
 
 if [ "${VARS-}" ]; then
-  object2key_val "${VARS}" 'export ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
-  object2key_val "${VARS}" 'setenv ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.csh'
+  libscript_object2key_val "${VARS}" 'export ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
+  libscript_object2key_val "${VARS}" 'setenv ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.csh'
 fi
 ENV=''
 if [ -f "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' ]; then

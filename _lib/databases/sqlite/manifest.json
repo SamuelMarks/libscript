@@ -1,5 +1,6 @@
 {
-  "name": "SQLITE",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "sqlite",
   "title": "SQLite",
   "description": "A C-language library that implements a small, fast, self-contained, high-reliability, full-featured, SQL database engine.",
   "category": "databases",

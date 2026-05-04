@@ -1,12 +1,10 @@
-Stacks
-======
+# Stacks
 
 ## Usage
 This document describes the `stacks` folder within the LibScript ecosystem. This directory serves as the root for deploying higher-level applications and end-to-end services.
 
 It works both as a local version manager (similar to rvm, nvm, pyenv, uv) and can be invoked from the global version manager `libscript`. Furthermore, the components within the `stacks` folder are used by libscript to build complete environments (like WordPress, Magento, Nextcloud, etc.) by composing multiple primitives from `_lib` together.
 
-## Usage
 You can manage components within this directory using the global `libscript` CLI or the local `cli.sh`/`cli.cmd`.
 
 - **Install:** `libscript install wordpress`

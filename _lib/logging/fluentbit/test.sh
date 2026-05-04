@@ -23,6 +23,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${THIS_FILE}" )")" && pwd)}"
 export LIBSCRIPT_ROOT_DIR
+. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 for LIB in '_lib/_common/test_base.sh' ; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
@@ -30,12 +31,5 @@ for LIB in '_lib/_common/test_base.sh' ; do
   . "${SCRIPT_NAME}"
 done
 
-if command -v fluent-bit >/dev/null 2>&1; then
-  fluent-bit --version
-elif [ -x /opt/fluent-bit/bin/fluent-bit ]; then
-  /opt/fluent-bit/bin/fluent-bit --version
-else
-  echo "fluent-bit not found"
-  exit 1
-fi
+assert_version "fluent-bit" "."
 echo hello from fluent-bit

@@ -27,10 +27,10 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 if ! command -v cargo-binstall >/dev/null 2>&1; then
-  if ! depends cargo ; then
+  if ! libscript_depends cargo ; then
     true
   fi
-  
+
   INSTALL_SH=$(mktemp)
   if libscript_download 'https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh' "${INSTALL_SH}"; then
     sh "${INSTALL_SH}"

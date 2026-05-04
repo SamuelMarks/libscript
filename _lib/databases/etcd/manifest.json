@@ -1,5 +1,6 @@
 {
-  "name": "ETCD",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "etcd",
   "title": "Etcd",
   "description": "A distributed, reliable key-value store for the most critical data of a distributed system.",
   "category": "databases",

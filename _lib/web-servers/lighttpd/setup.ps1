@@ -1,6 +1,3 @@
-[CmdletBinding()]
-param()
-
 $ErrorActionPreference = "Stop"
 
 $LighttpdVersion = $env:LIGHTTPD_VERSION

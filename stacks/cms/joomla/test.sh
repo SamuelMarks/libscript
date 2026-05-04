@@ -34,11 +34,11 @@ done
 
 set -feu
 echo "Validating Joomla installation..."
-WWWROOT="${WWWROOT:-/var/www/joomla}"
-if [ -d "${WWWROOT}/administrator" ]; then
-    echo "Joomla directory found at ${WWWROOT}"
+JOOMLA_WWWROOT="${JOOMLA_WWWROOT:-/var/www/joomla}"
+if [ -d "${JOOMLA_WWWROOT}/administrator" ]; then
+    echo "Joomla directory found at ${JOOMLA_WWWROOT}"
     exit 0
 else
-    echo "Joomla directory not found at ${WWWROOT}"
+    echo "Joomla directory not found at ${JOOMLA_WWWROOT}"
     exit 1
 fi

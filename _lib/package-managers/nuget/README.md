@@ -1,5 +1,4 @@
-Nuget
-=====
+# Nuget
 
 Bootstrap module for the `nuget` package manager.
 

@@ -1,5 +1,4 @@
-Minio
-=====
+# Minio
 
 High Performance Object Storage. S3 compatible API.
 
@@ -8,7 +7,7 @@ High Performance Object Storage. S3 compatible API.
 libscript install minio latest
 ```
 
-## Options
+## Configuration Options
 See `vars.schema.json` for all available configuration options.
 
 ## Platform Support

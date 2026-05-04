@@ -32,10 +32,10 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
 done
 
 if ! command -v conda >/dev/null 2>&1; then
-  echo "Installing Miniconda..."
+  log_info "Installing Miniconda..."
   OS="$(uname -s)"
   ARCH="$(uname -m)"
-  
+
   if [ "$OS" = "Linux" ]; then
     if [ "$ARCH" = "x86_64" ]; then
       URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
@@ -64,6 +64,6 @@ if ! command -v conda >/dev/null 2>&1; then
 
   bash "$tmp_sh" -b -u -p "$HOME/miniconda3"
   rm -f "$tmp_sh"
-  
+
   export PATH="$HOME/miniconda3/bin:$PATH"
 fi

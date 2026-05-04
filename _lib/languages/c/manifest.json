@@ -1,5 +1,6 @@
 {
-  "name": "C",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "c",
   "title": "C Toolchain",
   "description": "Standard C compiler and toolchain (GCC/Clang).",
   "category": "languages",

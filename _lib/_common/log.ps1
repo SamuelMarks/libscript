@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 # LibScript Unified Logging Utility (PowerShell)
 
 # Levels: 0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR
@@ -5,7 +7,7 @@ if (-not $env:LIBSCRIPT_LOG_LEVEL) { $env:LIBSCRIPT_LOG_LEVEL = 1 }
 if (-not $env:LIBSCRIPT_LOG_FORMAT) { $env:LIBSCRIPT_LOG_FORMAT = "text" }
 if (-not $env:LIBSCRIPT_LOG_FILE) { $env:LIBSCRIPT_LOG_FILE = "" }
 
-function Write-LibScriptLog {
+function write_libscript_log {
     param (
         [string]$LevelName,
         [int]$LevelNum,
@@ -50,11 +52,11 @@ function Write-LibScriptLog {
     }
 }
 
-function log_debug($msg)   { Write-LibScriptLog "DEBUG"   0 $msg }
-function log_info($msg)    { Write-LibScriptLog "INFO"    1 $msg }
-function log_success($msg) { Write-LibScriptLog "SUCCESS" 2 $msg }
-function log_warn($msg)    { Write-LibScriptLog "WARN"    3 $msg }
-function log_error($msg)   { Write-LibScriptLog "ERROR"   4 $msg }
+function log_debug($msg)   { write_libscript_log "DEBUG"   0 $msg }
+function log_info($msg)    { write_libscript_log "INFO"    1 $msg }
+function log_success($msg) { write_libscript_log "SUCCESS" 2 $msg }
+function log_warn($msg)    { write_libscript_log "WARN"    3 $msg }
+function log_error($msg)   { write_libscript_log "ERROR"   4 $msg }
 
 # Export functions
 Export-ModuleMember -Function log_debug, log_info, log_success, log_warn, log_error

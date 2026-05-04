@@ -1,9 +1,8 @@
-Prestashop
-==========
+# Prestashop
 
 This module automates the setup of PrestaShop.
 
-## Environment Variables
+## Configuration Options
 | Variable | Description | Default |
 | --- | --- | --- |
 | `PRESTASHOP_VERSION` | PrestaShop version to install | `8.2.4` |
@@ -14,8 +13,8 @@ This module automates the setup of PrestaShop.
 | `PRESTASHOP_DB_PASS` | Database password | `prestashop` |
 | `PRESTASHOP_SERVER_NAME` | Server name for webserver config | `localhost` |
 | `PRESTASHOP_LISTEN` | Port to listen on | `80` |
-| `WWWROOT` | Directory to install PrestaShop | `/var/www/prestashop` (Linux), `C:\inetpub\wwwroot\prestashop` (Windows) |
-| `PHP_FPM_LISTEN` | PHP FPM socket or address | OS specific |
+| `PRESTASHOP_WWWROOT` | Directory to install PrestaShop | `/var/www/prestashop` (Linux), `C:\inetpub\wwwroot\prestashop` (Windows) |
+| `PRESTASHOP_PHP_FPM_LISTEN` | PHP FPM socket or address | OS specific |
 
 ## Supported OS
 - Linux

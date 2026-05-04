@@ -1,6 +1,3 @@
-[CmdletBinding()]
-param()
-
 $ErrorActionPreference = "Stop"
 
 $MinioVersion = $env:MINIO_VERSION

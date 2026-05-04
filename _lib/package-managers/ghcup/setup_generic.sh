@@ -41,10 +41,10 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
 done
 
 if ! command -v ghcup >/dev/null 2>&1; then
-  echo "Installing ghcup..."
+  log_info "Installing ghcup..."
   export BOOTSTRAP_HASKELL_NONINTERACTIVE=1
   export BOOTSTRAP_HASKELL_MINIMAL=1
-  
+
   INSTALL_SH=$(mktemp)
   libscript_download 'https://get-ghcup.haskell.org' "${INSTALL_SH}"
   sh "${INSTALL_SH}"

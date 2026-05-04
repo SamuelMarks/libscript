@@ -1,5 +1,4 @@
-Snap
-====
+# Snap
 
 Bootstrap module for the `snap` package manager/tool.
 

@@ -1,5 +1,4 @@
-Fluentbit
-=========
+# Fluentbit
 
 ## Purpose & Current State
 **Purpose**: This document provides context and technical details for the `fluentbit` component within the LibScript ecosystem. This component manages **Fluent Bit**, a super fast, lightweight, and highly scalable logging and metrics processor and forwarder. It allows you to collect data/logs from different sources, unify, and send them to multiple destinations. It's fully compatible with Docker and Kubernetes environments.
@@ -14,7 +13,6 @@ This module provides setup, test, and uninstall capabilities for `fluent-bit`.
 - **Windows Details**: On Windows, it installs via Chocolatey or falls back to natively downloading and extracting the official `.zip` archive from `packages.fluentbit.io`.
 - **POSIX Details**: On Linux and macOS, it delegates to the system package manager (e.g., `apt-get`, `brew`, `apk`) to install `fluent-bit`.
 
-## Usage
 You can install, start, stop, uninstall, and package this component using `libscript`.
 
 **Install:**

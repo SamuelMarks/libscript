@@ -1,5 +1,4 @@
-Yarn
-====
+# Yarn
 
 Bootstrap module for the `yarn` package manager.
 

@@ -34,10 +34,10 @@ done
 SQLITE_INSTALL_METHOD="${SQLITE_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 
 if [ "${SQLITE_INSTALL_METHOD}" = 'system' ]; then
-  depends 'sqlite'
+  libscript_depends 'sqlite'
 else
-  echo "[WARN] From-source or alternative installation requested for sqlite, but currently only system package manager is fully supported."
-  depends 'sqlite'
+  log_info "[WARN] From-source or alternative installation requested for sqlite, but currently only system package manager is fully supported."
+  libscript_depends 'sqlite'
 fi
 
 case "1" in

@@ -31,9 +31,9 @@ done
 PYTHON_INSTALL_METHOD="${PYTHON_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-uv}}"
 
 if [ "${PYTHON_INSTALL_METHOD}" = 'system' ]; then
-  depends 'python'
+  libscript_depends 'python'
 elif [ "${PYTHON_INSTALL_METHOD}" = 'pyenv' ]; then
-  depends 'git'
+  libscript_depends 'git'
   if [ ! -d "${HOME}/.pyenv" ]; then
     INSTALL_SH=$(mktemp)
     libscript_download 'https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer' "${INSTALL_SH}"
@@ -46,7 +46,7 @@ elif [ "${PYTHON_INSTALL_METHOD}" = 'pyenv' ]; then
   pyenv install -s "${PYTHON_VERSION:-3.11}"
   pyenv global "${PYTHON_VERSION:-3.11}"
 elif [ "${PYTHON_INSTALL_METHOD}" = 'from-source' ]; then
-  depends 'build-essential' 'libssl-dev' 'zlib1g-dev' 'libbz2-dev' 'libreadline-dev' 'libsqlite3-dev' 'wget' 'curl' 'llvm' 'libncurses5-dev' 'libncursesw5-dev' 'xz-utils' 'tk-dev' 'libffi-dev' 'liblzma-dev'
+  libscript_depends 'build-essential' 'libssl-dev' 'zlib1g-dev' 'libbz2-dev' 'libreadline-dev' 'libsqlite3-dev' 'wget' 'curl' 'llvm' 'libncurses5-dev' 'libncursesw5-dev' 'xz-utils' 'tk-dev' 'libffi-dev' 'liblzma-dev'
   PY_VER="${PYTHON_VERSION:-3.11.9}"
   PY_TARBALL=$(mktemp)
   libscript_download "https://www.python.org/ftp/python/${PY_VER}/Python-${PY_VER}.tgz" "${PY_TARBALL}"
@@ -66,26 +66,26 @@ else # uv
     rm -f "${INSTALL_SH}"
   fi
   # shellcheck disable=SC1091
-  
+
   # uv python install "${PYTHON_VERSION}"
-  if [ "${VENV-}" ] && [ "${PYTHON_VENV-}" ]; then
+  if [ "${PYTHON_VENV-}" ] && [ "${PYTHON_VENV-}" ]; then
     export VENV="${PYTHON_VENV}"
   fi
-  if [ "${VENV-}" ] && [ ! -f "${VENV}"'/bin/python' ]; then
+  if [ "${PYTHON_VENV-}" ] && [ ! -f "${PYTHON_VENV}"'/bin/python' ]; then
     if [ "${PYTHON_VERSION:-3.11}" = "latest" ]; then
-      uv venv "${VENV}"
+      uv venv "${PYTHON_VENV}"
     else
-      uv venv --python "${PYTHON_VERSION:-3.11}" "${VENV}"
+      uv venv --python "${PYTHON_VERSION:-3.11}" "${PYTHON_VENV}"
     fi
-    "${VENV}"'/bin/python' -m ensurepip
-    "${VENV}"'/bin/python' -m pip install -U pip
-    "${VENV}"'/bin/python' -m pip install -U setuptools wheel
+    "${PYTHON_VENV}"'/bin/python' -m ensurepip
+    "${PYTHON_VENV}"'/bin/python' -m pip install -U pip
+    "${PYTHON_VENV}"'/bin/python' -m pip install -U setuptools wheel
     # For safety only install package and its deps inside a venv
     if [ -f 'requirements.txt' ]; then
-      "${VENV}"'/bin/python' -m pip install -r 'requirements.txt'
+      "${PYTHON_VENV}"'/bin/python' -m pip install -r 'requirements.txt'
     fi
     if [ -f 'setup.py' ] || [ -f 'setup.cfg' ] || [ -f 'pyproject.toml' ]; then
-      "${VENV}"'/bin/python' -m pip install -e .
+      "${PYTHON_VENV}"'/bin/python' -m pip install -e .
     fi
   fi
 fi

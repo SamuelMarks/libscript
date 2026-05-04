@@ -26,5 +26,5 @@ SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-$(cd "$(dirname "$THIS_FILE")/../../.." && pw
 . "${SCRIPT_NAME}"
 
 if ! command -v 7z >/dev/null 2>&1; then
-  depends 'p7zip-full' || depends 'p7zip' || depends '7zip'
+  libscript_depends 'p7zip-full' || libscript_depends 'p7zip' || libscript_depends '7zip'
 fi

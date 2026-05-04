@@ -1,5 +1,6 @@
 {
-  "name": "MINIO",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "minio",
   "title": "MinIO",
   "description": "High Performance Object Storage, API compatible with Amazon S3 cloud storage service.",
   "category": "storage-layer",

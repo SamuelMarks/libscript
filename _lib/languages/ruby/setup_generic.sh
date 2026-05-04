@@ -46,9 +46,9 @@ fi
 RUBY_MAJOR=$(echo "${RUBY_VERSION}" | cut -d. -f1,2)
 
 if [ "${RUBY_INSTALL_METHOD}" = 'system' ]; then
-  depends 'ruby'
+  libscript_depends 'ruby'
 else
-  depends 'curl' 'tar' 'make' 'gcc'
+  libscript_depends 'curl' 'tar' 'make' 'gcc'
   RUBY_TARBALL=$(mktemp)
   libscript_download "https://cache.ruby-lang.org/pub/ruby/${RUBY_MAJOR}/ruby-${RUBY_VERSION}.tar.gz" "${RUBY_TARBALL}"
   tar -xzf "${RUBY_TARBALL}" -C /tmp

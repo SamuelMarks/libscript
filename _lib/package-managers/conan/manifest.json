@@ -1,5 +1,6 @@
 {
-  "name": "CONAN",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "conan",
   "provides": [
     "conan"
   ],

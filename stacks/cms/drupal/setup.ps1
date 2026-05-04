@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $DrupalVersion = if ($env:DRUPAL_VERSION) { $env:DRUPAL_VERSION } else { "10.2.6" }
-$WwwRoot = if ($env:WWWROOT) { $env:WWWROOT } else { "C:\inetpub\wwwroot\drupal" }
+$WwwRoot = if ($env:DRUPAL_WWWROOT) { $env:DRUPAL_WWWROOT } else { "C:\inetpub\wwwroot\drupal" }
 $DbType = if ($env:DRUPAL_DB_TYPE) { $env:DRUPAL_DB_TYPE } else { "sqlite" }
 $DbName = if ($env:DRUPAL_DB_NAME) { $env:DRUPAL_DB_NAME } else { "drupal" }
 $DbUser = if ($env:DRUPAL_DB_USER) { $env:DRUPAL_DB_USER } else { "drupal" }
@@ -89,21 +89,21 @@ if ($DbType -eq "mariadb" -or $DbType -eq "mysql") {
     }
 }
 
-if ($WebServer -eq "iis" -and -not $env:PHP_FPM_LISTEN) {
+if ($WebServer -eq "iis" -and -not $env:DRUPAL_PHP_FPM_LISTEN) {
     $phpExe = (Get-Command php.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source)
     if ($phpExe) {
         $phpDir = Split-Path -Parent $phpExe
         $phpCgi = Join-Path $phpDir "php-cgi.exe"
         if (Test-Path $phpCgi) {
-            $env:PHP_FPM_LISTEN = $phpCgi
+            $env:DRUPAL_PHP_FPM_LISTEN = $phpCgi
         }
     }
 }
 
 if ($WebServer -eq "iis") {
-    $env:SERVER_NAME = $ServerName
+    $env:DRUPAL_SERVER_NAME = $ServerName
     $env:LISTEN = $ListenPort
-    $env:WWWROOT = $WwwRoot
+    $env:DRUPAL_WWWROOT = $WwwRoot
 
     $iisCreateServer = Join-Path $libDir "_server\iis\create_server_block.ps1"
     if (Test-Path $iisCreateServer) {

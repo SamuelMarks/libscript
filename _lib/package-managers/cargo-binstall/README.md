@@ -1,5 +1,4 @@
-Cargo Binstall
-==============
+# Cargo Binstall
 
 Bootstrap module for the `cargo-binstall` package manager.
 

@@ -1,5 +1,4 @@
-Mix
-===
+# Mix
 
 Bootstrap module for `mix` (Elixir package manager and build tool).
 

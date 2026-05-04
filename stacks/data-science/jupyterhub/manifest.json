@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "jupyterhub",
+  "category": "data-science",
+  "title": "jupyterhub",
+  "description": "jupyterhub stack",
+  "provides": [
+    "jupyterhub"
+  ]
+}

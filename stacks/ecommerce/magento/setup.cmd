@@ -1,6 +1,12 @@
 @echo off
-setlocal
-set "SCRIPT_DIR=%~dp0"
-set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
-powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\setup_windows.ps1"
-endlocal
+setlocal EnableDelayedExpansion
+
+:: Fallback to running PowerShell for Windows provisioning
+where powershell >nul 2>&1
+if %ERRORLEVEL% NEQ 0 (
+    echo [ERROR] PowerShell not found. Cannot configure Magento on Windows.
+    exit /b 1
+)
+
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup.ps1"
+if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%

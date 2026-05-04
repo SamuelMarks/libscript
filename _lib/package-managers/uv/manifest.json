@@ -1,5 +1,6 @@
 {
-  "name": "UV",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "uv",
   "provides": [
     "package-manager",
     "uv"

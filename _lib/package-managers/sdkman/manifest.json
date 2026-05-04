@@ -1,5 +1,6 @@
 {
-  "name": "SDKMAN",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "sdkman",
   "provides": [
     "package-manager",
     "sdkman"

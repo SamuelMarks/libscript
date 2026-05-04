@@ -1,5 +1,6 @@
 {
-  "name": "WAIT4X",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "wait4x",
   "title": "Wait4X",
   "description": "A tool to wait for various services or resources to become available.",
   "category": "utility",

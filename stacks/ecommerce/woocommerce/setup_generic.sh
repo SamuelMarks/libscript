@@ -35,30 +35,30 @@ done
 # Install WooCommerce
 WOOCOMMERCE_VERSION="${WOOCOMMERCE_VERSION:-latest}"
 export WOOCOMMERCE_VERSION
-WWWROOT="${WWWROOT:-/var/www/wordpress}"
-export WWWROOT
+WOOCOMMERCE_WWWROOT="${WOOCOMMERCE_WWWROOT:-/var/www/wordpress}"
+export WOOCOMMERCE_WWWROOT
 
-PLUGIN_DIR="${WWWROOT}/wp-content/plugins/woocommerce"
+PLUGIN_DIR="${WOOCOMMERCE_WWWROOT}/wp-content/plugins/woocommerce"
 if [ ! -d "${PLUGIN_DIR}" ]; then
-  depends 'unzip'
-  echo "Downloading WooCommerce (${WOOCOMMERCE_VERSION}) to ${WWWROOT}..."
+  libscript_depends 'unzip'
+  echo "Downloading WooCommerce (${WOOCOMMERCE_VERSION}) to ${WOOCOMMERCE_WWWROOT}..."
   if [ "${WOOCOMMERCE_VERSION}" = "latest" ]; then
     dl_url="https://downloads.wordpress.org/plugin/woocommerce.zip"
   else
     dl_url="https://downloads.wordpress.org/plugin/woocommerce.${WOOCOMMERCE_VERSION}.zip"
   fi
-  
+
   tmp_woo=$(mktemp)
   if command -v libscript_download >/dev/null 2>&1; then
     libscript_download "${dl_url}" "${tmp_woo}"
   else
     wget -qO "${tmp_woo}" "${dl_url}"
   fi
-  priv unzip -q -o "${tmp_woo}" -d "${WWWROOT}/wp-content/plugins"
+  priv unzip -q -o "${tmp_woo}" -d "${WOOCOMMERCE_WWWROOT}/wp-content/plugins"
   rm -f "${tmp_woo}"
-  if ! priv chown -R www-data:www-data "${WWWROOT}/wp-content/plugins/woocommerce" ; then
+  if ! priv chown -R www-data:www-data "${WOOCOMMERCE_WWWROOT}/wp-content/plugins/woocommerce" ; then
     true
   fi
 fi
 
-echo "WooCommerce setup complete on ${SERVER_NAME:-localhost}"
+echo "WooCommerce setup complete on ${WOOCOMMERCE_SERVER_NAME:-localhost}"

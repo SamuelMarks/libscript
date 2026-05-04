@@ -1,1 +1,3 @@
-Write-Host "snap setup on Windows depends on native installers or MSYS2/WSL."
+$ErrorActionPreference = "Stop"
+
+Write-Host "snap setup on Windows libscript_depends on native installers or MSYS2/WSL."

@@ -45,7 +45,7 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091,SC2034
 . "${SCRIPT_NAME}"
 
-depends git build-essential libsystemd-dev
+libscript_depends git build-essential libsystemd-dev
 
 TARGET="${VALKEY_BUILD_DIR}"'/valkey'
 git_get https://github.com/valkey-io/valkey "${TARGET}"

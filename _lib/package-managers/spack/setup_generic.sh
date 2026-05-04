@@ -22,10 +22,10 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 if ! command -v spack >/dev/null 2>&1; then
-  echo "Installing spack..."
+  log_info "Installing spack..."
   if ! command -v git >/dev/null 2>&1; then echo "git is required"; exit 1; fi
   if [ ! -d "$HOME/spack" ]; then
     git clone -c feature.manyFiles=true https://github.com/spack/spack.git "$HOME/spack"
   fi
-  echo "You must run 'source ~/spack/share/spack/setup-env.sh' to use spack"
+  log_info "You must run 'source ~/spack/share/spack/setup-env.sh' to use spack"
 fi

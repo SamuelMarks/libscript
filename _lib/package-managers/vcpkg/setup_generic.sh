@@ -27,7 +27,7 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 if ! command -v vcpkg >/dev/null 2>&1; then
-  if ! depends vcpkg ; then
+  if ! libscript_depends vcpkg ; then
     true
   fi
 fi

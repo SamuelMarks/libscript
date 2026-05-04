@@ -1,5 +1,6 @@
 {
-  "name": "RABBITMQ",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "rabbitmq",
   "title": "RabbitMQ",
   "description": "The most widely deployed open source message broker.",
   "category": "message-brokers",

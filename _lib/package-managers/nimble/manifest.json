@@ -1,5 +1,6 @@
 {
-  "name": "NIMBLE",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "nimble",
   "provides": [
     "package-manager",
     "nimble"

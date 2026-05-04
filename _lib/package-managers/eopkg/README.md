@@ -1,5 +1,4 @@
-Eopkg
-=====
+# Eopkg
 
 Bootstrap script for `eopkg`, the system package manager for Solus OS.
 

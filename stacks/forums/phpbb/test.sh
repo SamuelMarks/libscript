@@ -31,11 +31,11 @@ for LIB in '_lib/_common/test_base.sh' ; do
 done
 
 echo "Validating phpBB installation..."
-WWWROOT="${WWWROOT:-/var/www/phpbb}"
-if [ -d "${WWWROOT}/phpbb" ] || [ -d "${WWWROOT}/install" ]; then
-    echo "phpBB directory found at ${WWWROOT}"
+PHPBB_WWWROOT="${PHPBB_WWWROOT:-/var/www/phpbb}"
+if [ -d "${PHPBB_WWWROOT}/phpbb" ] || [ -d "${PHPBB_WWWROOT}/install" ]; then
+    echo "phpBB directory found at ${PHPBB_WWWROOT}"
     exit 0
 else
-    echo "phpBB directory not found at ${WWWROOT}"
+    echo "phpBB directory not found at ${PHPBB_WWWROOT}"
     exit 1
 fi

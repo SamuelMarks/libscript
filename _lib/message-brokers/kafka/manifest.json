@@ -1,5 +1,6 @@
 {
-  "name": "KAFKA",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "kafka",
   "title": "Kafka",
   "description": "A distributed event store and stream-processing platform.",
   "category": "message-brokers",

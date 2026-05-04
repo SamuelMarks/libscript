@@ -44,7 +44,7 @@ export LISTEN="${LISTEN:-80}"
 export WWWROOT="${WWWROOT:-/var/www/html}"
 
 if [ -n "${PHP_FPM_LISTEN:-}" ]; then
-  httpd_php_listen="${PHP_FPM_LISTEN}"
+  httpd_php_listen="${HTTPD_PHP_FPM_LISTEN}"
   case "${httpd_php_listen}" in
     unix:*)
       export PHP_FPM_DIRECTIVE="    <FilesMatch \.php$>

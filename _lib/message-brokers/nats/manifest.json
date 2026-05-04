@@ -1,5 +1,6 @@
 {
-  "name": "NATS",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "nats",
   "title": "NATS",
   "description": "A simple, secure and performant communications system for digital systems, services and devices.",
   "category": "message-brokers",

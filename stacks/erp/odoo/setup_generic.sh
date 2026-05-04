@@ -37,46 +37,46 @@ done
 ODOO_WEBSERVER="${ODOO_WEBSERVER:-nginx}"
 ODOO_DB_TYPE="${ODOO_DB_TYPE:-postgres}"
 ODOO_VERSION="${ODOO_VERSION:-17.0}"
-WWWROOT="${WWWROOT:-/var/www/odoo}"
+ODOO_WWWROOT="${ODOO_WWWROOT:-/var/www/odoo}"
 ODOO_DB_NAME="${ODOO_DB_NAME:-odoo}"
 ODOO_DB_USER="${ODOO_DB_USER:-odoo}"
 ODOO_DB_PASS="${ODOO_DB_PASS:-odoo}"
 ODOO_DB_HOST="${ODOO_DB_HOST:-127.0.0.1}"
 ODOO_DB_PORT="${ODOO_DB_PORT:-5432}"
-SERVER_NAME="${ODOO_SERVER_NAME:-localhost}"
+ODOO_SERVER_NAME="${ODOO_SERVER_NAME:-localhost}"
 LISTEN_PORT="${ODOO_LISTEN:-80}"
 ODOO_PORT="${ODOO_PORT:-8069}"
 
-export ODOO_WEBSERVER ODOO_DB_TYPE ODOO_VERSION WWWROOT SERVER_NAME LISTEN_PORT ODOO_PORT
+export ODOO_WEBSERVER ODOO_DB_TYPE ODOO_VERSION ODOO_WWWROOT ODOO_SERVER_NAME LISTEN_PORT ODOO_PORT
 
 # Dependencies
-depends 'python'
-depends "${ODOO_DB_TYPE}"
-depends "${ODOO_WEBSERVER}"
+libscript_depends 'python'
+libscript_depends "${ODOO_DB_TYPE}"
+libscript_depends "${ODOO_WEBSERVER}"
 
 # Create directories
-if [ ! -d "${WWWROOT}/odoo-bin" ]; then
-  log_info "Downloading Odoo (${ODOO_VERSION}) to ${WWWROOT}..."
-  priv mkdir -p "${WWWROOT}"
-  
+if [ ! -d "${ODOO_WWWROOT}/odoo-bin" ]; then
+  log_info "Downloading Odoo (${ODOO_VERSION}) to ${ODOO_WWWROOT}..."
+  priv mkdir -p "${ODOO_WWWROOT}"
+
   dl_url="https://github.com/odoo/odoo/archive/refs/heads/${ODOO_VERSION}.tar.gz"
-  
+
   if command -v libscript_download >/dev/null 2>&1; then
     tmp_odoo=$(mktemp)
     libscript_download "${dl_url}" "${tmp_odoo}"
-    priv tar xzf "${tmp_odoo}" --strip-components=1 -C "${WWWROOT}"
+    priv tar xzf "${tmp_odoo}" --strip-components=1 -C "${ODOO_WWWROOT}"
     rm -f "${tmp_odoo}"
   else
-    wget -qO- "${dl_url}" | priv tar xz --strip-components=1 -C "${WWWROOT}"
+    wget -qO- "${dl_url}" | priv tar xz --strip-components=1 -C "${ODOO_WWWROOT}"
   fi
-  
+
   # Install Python dependencies using requirements.txt
-  if [ -f "${WWWROOT}/requirements.txt" ]; then
+  if [ -f "${ODOO_WWWROOT}/requirements.txt" ]; then
     log_info "Installing Odoo Python dependencies..."
     if command -v pip3 >/dev/null 2>&1; then
-      priv pip3 install -r "${WWWROOT}/requirements.txt"
+      priv pip3 install -r "${ODOO_WWWROOT}/requirements.txt"
     elif command -v pip >/dev/null 2>&1; then
-      priv pip install -r "${WWWROOT}/requirements.txt"
+      priv pip install -r "${ODOO_WWWROOT}/requirements.txt"
     else
       log_warn "pip not found. Skipping python dependencies."
     fi
@@ -109,9 +109,9 @@ elif [ "${ODOO_DB_TYPE}" = "sqlite" ]; then
 fi
 
 # Configure Odoo
-if [ ! -f "${WWWROOT}/odoo.conf" ]; then
+if [ ! -f "${ODOO_WWWROOT}/odoo.conf" ]; then
   log_info "Creating Odoo configuration..."
-  cat <<EOF | priv tee "${WWWROOT}/odoo.conf" >/dev/null
+  cat <<EOF | priv tee "${ODOO_WWWROOT}/odoo.conf" >/dev/null
 [options]
 admin_passwd = admin
 db_host = ${ODOO_DB_HOST}
@@ -121,9 +121,9 @@ db_password = ${ODOO_DB_PASS}
 db_name = ${ODOO_DB_NAME}
 http_port = ${ODOO_PORT}
 proxy_mode = True
-addons_path = ${WWWROOT}/addons
+addons_path = ${ODOO_WWWROOT}/addons
 EOF
-  if ! priv chown -R www-data:www-data "${WWWROOT}" ; then
+  if ! priv chown -R www-data:www-data "${ODOO_WWWROOT}" ; then
     true
   fi
 fi
@@ -131,38 +131,51 @@ fi
 # Start Odoo as a background service or daemon if possible (simplified start script)
 log_info "Starting Odoo in the background..."
 if command -v python3 >/dev/null 2>&1; then
-  priv -u www-data sh -c "cd ${WWWROOT} && python3 odoo-bin -c odoo.conf > odoo.log 2>&1 &" || \
-  priv sh -c "cd ${WWWROOT} && python3 odoo-bin -c odoo.conf > odoo.log 2>&1 &" || true
+  priv -u www-data sh -c "cd ${ODOO_WWWROOT} && python3 odoo-bin -c odoo.conf > odoo.log 2>&1 &" || \
+  priv sh -c "cd ${ODOO_WWWROOT} && python3 odoo-bin -c odoo.conf > odoo.log 2>&1 &" || true
 fi
 
 log_info "Configuring webserver: ${ODOO_WEBSERVER}"
 
 ENV_SCRIPT_FILE=$(mktemp)
 cat <<EOF > "${ENV_SCRIPT_FILE}"
-export SERVER_NAME="${SERVER_NAME}"
+export ODOO_SERVER_NAME="${ODOO_SERVER_NAME}"
 export PROXY_PASS="http://127.0.0.1:${ODOO_PORT}"
 export PROXY_WEBSOCKETS=1
 export LISTEN="${LISTEN_PORT}"
+export NGINX_LISTEN="${LISTEN_PORT}"
+export HTTPD_LISTEN="${LISTEN_PORT}"
+export CADDY_LISTEN="${LISTEN_PORT}"
 export LOCATION_EXPR="/"
+export NGINX_LOCATION_EXPR="/"
+export NGINX_SERVER_NAME="${ODOO_SERVER_NAME}"
+export NGINX_WWWROOT="${ODOO_WWWROOT}"
+export NGINX_PHP_FPM_LISTEN="${ODOO_PHP_FPM_LISTEN}"
+export HTTPD_SERVER_NAME="${ODOO_SERVER_NAME}"
+export HTTPD_WWWROOT="${ODOO_WWWROOT}"
+export HTTPD_PHP_FPM_LISTEN="${ODOO_PHP_FPM_LISTEN}"
+export CADDY_SERVER_NAME="${ODOO_SERVER_NAME}"
+export CADDY_WWWROOT="${ODOO_WWWROOT}"
+export CADDY_PHP_FPM_LISTEN="${ODOO_PHP_FPM_LISTEN}"
 EOF
 export ENV_SCRIPT_FILE
 
 if [ "${ODOO_WEBSERVER}" = "nginx" ]; then
   LOC_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_location_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_location_block.sh" > "${LOC_BLOCK_TMP}"
-  
+
   LOCATIONS="$(cat "${LOC_BLOCK_TMP}")"
   export LOCATIONS
   SERVER_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" > "${SERVER_BLOCK_TMP}"
-  
+
   NGINX_CONF_DIR="${LIBSCRIPT_ROOT_DIR}/installed/nginx/conf"
   if [ -d /etc/nginx/sites-available ]; then
     NGINX_CONF_DIR="/etc/nginx"
   fi
-  
-  priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${SERVER_NAME}.conf"
-  priv ln -sf "${NGINX_CONF_DIR}/sites-available/${SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${SERVER_NAME}.conf"
+
+  priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${ODOO_SERVER_NAME}.conf"
+  priv ln -sf "${NGINX_CONF_DIR}/sites-available/${ODOO_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${ODOO_SERVER_NAME}.conf"
   if ! priv systemctl reload nginx ; then
     true
   fi
@@ -173,7 +186,7 @@ elif [ "${ODOO_WEBSERVER}" = "caddy" ]; then
   if [ -d /etc/caddy/conf.d ] || [ -d /etc/caddy/caddy.d ]; then
     conf_dir="/etc/caddy/conf.d"
     [ -d /etc/caddy/caddy.d ] && conf_dir="/etc/caddy/caddy.d"
-    priv cp "${CADDY_BLOCK_TMP}" "${conf_dir}/${SERVER_NAME}.caddy"
+    priv cp "${CADDY_BLOCK_TMP}" "${conf_dir}/${ODOO_SERVER_NAME}.caddy"
   else
     priv tee -a /etc/caddy/Caddyfile < "${CADDY_BLOCK_TMP}" >/dev/null
   fi
@@ -185,13 +198,13 @@ elif [ "${ODOO_WEBSERVER}" = "httpd" ]; then
   HTTPD_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/httpd/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/httpd/create_server_block.sh" > "${HTTPD_BLOCK_TMP}"
   if [ -d /etc/httpd/conf.d ]; then
-    priv cp "${HTTPD_BLOCK_TMP}" "/etc/httpd/conf.d/${SERVER_NAME}.conf"
+    priv cp "${HTTPD_BLOCK_TMP}" "/etc/httpd/conf.d/${ODOO_SERVER_NAME}.conf"
     if ! priv systemctl reload httpd ; then
       true
     fi
   elif [ -d /etc/apache2/sites-available ]; then
-    priv cp "${HTTPD_BLOCK_TMP}" "/etc/apache2/sites-available/${SERVER_NAME}.conf"
-    priv ln -sf "/etc/apache2/sites-available/${SERVER_NAME}.conf" "/etc/apache2/sites-enabled/${SERVER_NAME}.conf"
+    priv cp "${HTTPD_BLOCK_TMP}" "/etc/apache2/sites-available/${ODOO_SERVER_NAME}.conf"
+    priv ln -sf "/etc/apache2/sites-available/${ODOO_SERVER_NAME}.conf" "/etc/apache2/sites-enabled/${ODOO_SERVER_NAME}.conf"
     if ! priv systemctl reload apache2 ; then
       true
     fi
@@ -203,4 +216,4 @@ fi
 
 rm -f "${ENV_SCRIPT_FILE}"
 
-log_success "Odoo setup complete on ${SERVER_NAME}:${LISTEN_PORT}"
+log_success "Odoo setup complete on ${ODOO_SERVER_NAME}:${LISTEN_PORT}"

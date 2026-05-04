@@ -1,5 +1,6 @@
 {
-  "name": "PYTHON",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "python",
   "title": "Python Runtime",
   "description": "A versatile programming language that lets you work quickly and integrate systems more effectively.",
   "category": "languages",

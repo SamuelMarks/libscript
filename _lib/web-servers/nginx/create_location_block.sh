@@ -58,8 +58,8 @@ if [ "${NGINX_FRAGMENT_CONF-}" ]; then
       exit 2
     fi
   fi
-elif [ "${WWWROOT-}" ]; then
-  if [ "${PHP_FPM_LISTEN-}" ]; then
+elif [ "${NGINX_WWWROOT-}" ]; then
+  if [ "${NGINX_PHP_FPM_LISTEN-}" ]; then
     conf_child_tpl="${LIBSCRIPT_ROOT_DIR}"'/_lib/web-servers/nginx/conf/simple_location_php.conf'
   elif [ "${WWWROOT_AUTOINDEX-}" ]; then
     conf_child_tpl="${LIBSCRIPT_ROOT_DIR}"'/_lib/web-servers/nginx/conf/simple_location_wwwroot_autoindex.conf'

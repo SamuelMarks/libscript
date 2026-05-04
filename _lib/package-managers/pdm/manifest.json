@@ -1,5 +1,6 @@
 {
-  "name": "PDM",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "pdm",
   "provides": [
     "pdm"
   ],

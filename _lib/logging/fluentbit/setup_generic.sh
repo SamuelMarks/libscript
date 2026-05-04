@@ -40,11 +40,11 @@ if [ "${FLUENTBIT_INSTALL_METHOD}" = 'system' ]; then
     sh "${INSTALL_SH}"
     rm -f "${INSTALL_SH}"
   else
-    depends 'fluent-bit'
+    libscript_depends 'fluent-bit'
   fi
 else
-  echo "[WARN] From-source or alternative installation requested for fluent-bit, but currently only system package manager is fully supported."
-  depends 'fluent-bit'
+  log_info "[WARN] From-source or alternative installation requested for fluent-bit, but currently only system package manager is fully supported."
+  libscript_depends 'fluent-bit'
 fi
 
 if [ -n "${FLUENTBIT_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then

@@ -1,5 +1,6 @@
 {
-  "name": "ANSIBLE_GALAXY",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "ansible-galaxy",
   "provides": [
     "ansible-galaxy"
   ],

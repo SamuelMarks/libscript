@@ -35,7 +35,7 @@ HOOKS=$(jq -c ".hooks.${HOOK_TYPE}[]?" "$JSON_FILE" 2>/dev/null || true)
 
 if [ -z "$HOOKS" ]; then exit 0; fi
 
-echo "Running $HOOK_TYPE hooks..."
+log_info "Running $HOOK_TYPE hooks..."
 echo "$HOOKS" | while read -r hook; do
     NAME=$(echo "$hook" | jq -r '.name // "unnamed_hook"')
     cmd=$(echo "$hook" | jq -r '.command // empty')
@@ -45,14 +45,14 @@ echo "$HOOKS" | while read -r hook; do
         if echo "$COND" | grep -q "^unless_exists "; then
             FILE=$(echo "$COND" | sed 's/^unless_exists //')
             if [ -e "$FILE" ]; then
-                echo "Skipping hook '$NAME': $FILE exists"
+                log_info "Skipping hook '$NAME': $FILE exists"
                 continue
             fi
         fi
     fi
 
     if [ -n "$cmd" ]; then
-        echo "Executing hook '$NAME': $cmd"
+        log_info "Executing hook '$NAME': $cmd"
         eval "$cmd"
     fi
 done

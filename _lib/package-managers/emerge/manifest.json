@@ -1,5 +1,6 @@
 {
-  "name": "EMERGE",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "emerge",
   "provides": [
     "package-manager",
     "emerge"

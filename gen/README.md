@@ -1,7 +1,6 @@
-Gen
-===
+# Gen
 
-## Purpose & Overview
+## Purpose & Current State
 This document describes the `gen` directory and generation utilities within the LibScript ecosystem. It is primarily used to generate deployment artifacts, Dockerfiles, and installer scripts from configuration files.
 
 LibScript functions as both a comprehensive global version manager (invoked via the `libscript` command) and a local version manager (similar to `rvm`, `nvm`, `pyenv`, or `uv`) for the generation toolchain. You can manage generation scripts directly in an isolated, local context, or orchestrate them globally. 

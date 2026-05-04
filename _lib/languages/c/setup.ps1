@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 #!/usr/bin/env pwsh
 
 $InstallMethod = $env:C_INSTALL_METHOD

@@ -34,24 +34,24 @@ done
 GITLAB_INSTALL_METHOD="${GITLAB_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 
 if [ "${GITLAB_INSTALL_METHOD}" = 'system' ]; then
-  if command -v apt-get >/dev/null 2>&1; then
+  if command -v apt >/dev/null 2>&1; then
     INSTALL_SH=$(mktemp)
     libscript_download 'https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh' "${INSTALL_SH}"
     sudo bash "${INSTALL_SH}"
     rm -f "${INSTALL_SH}"
-    sudo apt-get install -y gitlab-ce
+    pkg_mgr install gitlab-ce
   elif command -v yum >/dev/null 2>&1; then
     INSTALL_SH=$(mktemp)
     libscript_download 'https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.rpm.sh' "${INSTALL_SH}"
     sudo bash "${INSTALL_SH}"
     rm -f "${INSTALL_SH}"
-    sudo yum install -y gitlab-ce
+    pkg_mgr install gitlab-ce
   else
-    depends 'gitlab-ce'
+    libscript_depends 'gitlab-ce'
   fi
 else
-  echo "[WARN] From-source or alternative installation requested for GitLab CE."
-  echo "[ERROR] GitLab CE source installation is extremely complex and not supported directly via pure sh scripts."
-  echo "Please use the 'system' installation method or use Docker."
+  log_info "[WARN] From-source or alternative installation requested for GitLab CE."
+  log_info "[ERROR] GitLab CE source installation is extremely complex and not supported directly via pure sh scripts."
+  log_info "Please use the 'system' installation method or use Docker."
   exit 1
 fi

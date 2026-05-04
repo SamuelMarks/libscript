@@ -1,5 +1,4 @@
-Pacman
-======
+# Pacman
 
 Bootstrap module for the `pacman` package manager.
 

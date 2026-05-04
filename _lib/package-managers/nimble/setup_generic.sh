@@ -32,7 +32,7 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
 done
 
 if ! command -v nimble >/dev/null 2>&1; then
-  echo "Installing nimble via choosenim..."
+  log_info "Installing nimble via choosenim..."
   _tmp_script="/tmp/choosenim-init.sh"
   libscript_download "https://nim-lang.org/choosenim/init.sh" "$_tmp_script"
   sh "$_tmp_script"

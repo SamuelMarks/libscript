@@ -1,5 +1,4 @@
-Asdf
-====
+# Asdf
 
 Bootstrap module for the `asdf` universal version manager.
 

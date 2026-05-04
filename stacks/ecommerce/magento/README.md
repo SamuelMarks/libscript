@@ -1,9 +1,8 @@
-Magento
-=======
+# Magento
 
 This component installs and configures Magento.
 
-## Environment Variables
+## Configuration Options
 - `MAGENTO_VERSION`: The version of Magento to install (default: `2.4.6`).
 - `MAGENTO_WEBSERVER`: The web server to configure (`nginx`, `caddy`, `httpd`, `iis` on Windows) (default: `nginx`).
 - `MAGENTO_DB_DRIVER`: The database driver to use (`mariadb`, `postgres`, `sqlite`) (default: `mariadb`).
@@ -13,7 +12,7 @@ This component installs and configures Magento.
 - `MAGENTO_DB_PASS`: The database password (default: `magento`).
 - `MAGENTO_SERVER_NAME`: The server name for the web server configuration (default: `localhost`).
 - `MAGENTO_LISTEN`: The port to listen on (default: `80`).
-- `WWWROOT`: The directory to install Magento to (default: `/var/www/magento` on Linux, `C:\inetpub\wwwroot\magento` on Windows).
+- `MAGENTO_WWWROOT`: The directory to install Magento to (default: `/var/www/magento` on Linux, `C:\inetpub\wwwroot\magento` on Windows).
 
 ## Dependencies
 - PHP and PHP-FPM

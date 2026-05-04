@@ -35,7 +35,7 @@ CMAKE_INSTALL_METHOD="${CMAKE_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:
 CMAKE_VERSION="${CMAKE_VERSION:-latest}"
 
 if [ "${CMAKE_INSTALL_METHOD}" = 'system' ]; then
-  depends 'cmake'
+  libscript_depends 'cmake'
 else
   # "source" install (direct download of binary)
   if [ "${CMAKE_VERSION}" = "latest" ]; then
@@ -49,12 +49,12 @@ else
   if [ "${TARGET_ARCH}" = "arm64" ] || [ "${TARGET_ARCH}" = "aarch64" ]; then arch="aarch64"; fi
 
   case "${TARGET_OS}" in
-    macos*|darwin*) 
+    macos*|darwin*)
       os_name="macos-universal"
       tar_name="cmake-${CMAKE_VERSION}-${os_name}"
       ;;
-    linux*) 
-      os_name="linux-${arch}" 
+    linux*)
+      os_name="linux-${arch}"
       tar_name="cmake-${CMAKE_VERSION}-${os_name}"
       ;;
     *) echo "[ERROR] Unsupported OS for direct download: ${TARGET_OS}"; exit 1 ;;
@@ -65,7 +65,7 @@ else
   PREFIX="${PREFIX:-${LIBSCRIPT_ROOT_DIR}/installed/cmake}"
   mkdir -p "${PREFIX}"
 
-  echo "Downloading CMake from ${dl_url}..."
+  log_info "Downloading CMake from ${dl_url}..."
   libscript_download "${dl_url}" "/tmp/${tar_name}.tar.gz"
 
   tar -xzf "/tmp/${tar_name}.tar.gz" -C "/tmp"
@@ -78,5 +78,5 @@ else
 
   rm -rf "/tmp/${tar_name}.tar.gz" "/tmp/${tar_name}"
 
-  echo "CMake installed to ${PREFIX}/bin/cmake"
+  log_info "CMake installed to ${PREFIX}/bin/cmake"
 fi

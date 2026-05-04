@@ -1,5 +1,4 @@
-Joomla
-======
+# Joomla
 
 A generic setup script to deploy the [Joomla! CMS](https://www.joomla.org/) using LibScript.
 
@@ -8,7 +7,7 @@ A generic setup script to deploy the [Joomla! CMS](https://www.joomla.org/) usin
 - Web server integration: Nginx, Caddy, HTTPD (Apache), IIS (Windows).
 - Database configuration: MariaDB/MySQL, PostgreSQL.
 
-## Environment Variables
+## Configuration Options
 | Variable | Description | Default |
 | -------- | ----------- | ------- |
 | `JOOMLA_VERSION` | Version of Joomla to install (or `latest`). | `latest` |
@@ -19,7 +18,7 @@ A generic setup script to deploy the [Joomla! CMS](https://www.joomla.org/) usin
 | `JOOMLA_DB_PASS` | Database user password. | `joomla` |
 | `JOOMLA_SERVER_NAME` | Virtual Host server name (domain). | `localhost` |
 | `JOOMLA_LISTEN` | Web server listen port. | `80` |
-| `WWWROOT` | Path to extract and serve Joomla from. | `/var/www/joomla` (Linux/macOS) / `C:\inetpub\wwwroot\joomla` (Windows) |
+| `JOOMLA_WWWROOT` | Path to extract and serve Joomla from. | `/var/www/joomla` (Linux/macOS) / `C:\inetpub\wwwroot\joomla` (Windows) |
 
 ## Example Usage
 ### Linux / macOS (Nginx + MariaDB)

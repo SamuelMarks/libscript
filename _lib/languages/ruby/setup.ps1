@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 #!/usr/bin/env pwsh
 
 $InstallMethod = $env:RUBY_INSTALL_METHOD

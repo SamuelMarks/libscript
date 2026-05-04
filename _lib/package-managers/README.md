@@ -1,5 +1,4 @@
-Package Managers
-================
+# Package Managers
 
 ## Usage
 This folder describes the **Bootstrap** components within the LibScript ecosystem. It contains installers and initializers for various fundamental package managers and shell environments. 
@@ -15,7 +14,6 @@ Currently supported tools in this folder include:
 
 *(Note: Additional components like PowerShell also exist within subdirectories).*
 
-## Usage
 You can install, start, stop, package, and uninstall package-managers using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**

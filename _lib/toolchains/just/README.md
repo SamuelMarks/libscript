@@ -1,5 +1,4 @@
-Just
-====
+# Just
 
 Just a command runner. A handy way to save and run project-specific commands.
 
@@ -8,7 +7,7 @@ Just a command runner. A handy way to save and run project-specific commands.
 libscript install just latest
 ```
 
-## Options
+## Configuration Options
 See `vars.schema.json` for all available configuration options.
 
 ## Platform Support

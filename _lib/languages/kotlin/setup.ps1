@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 #!/usr/bin/env pwsh
 
 $InstallMethod = $env:KOTLIN_INSTALL_METHOD

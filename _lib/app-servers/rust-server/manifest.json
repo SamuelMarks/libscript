@@ -1,0 +1,17 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "rust-server",
+  "title": "Rust App Server",
+  "description": "Generic Rust application server component.",
+  "category": "app-servers",
+  "provides": [
+    "app-server",
+    "rust"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": []
+}

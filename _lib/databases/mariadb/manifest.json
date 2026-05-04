@@ -1,5 +1,6 @@
 {
-  "name": "MARIADB",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "mariadb",
   "title": "MariaDB",
   "description": "A community-developed, commercially supported fork of the MySQL relational database management system.",
   "category": "databases",

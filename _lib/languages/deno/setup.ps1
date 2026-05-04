@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 #!/usr/bin/env pwsh
 
 $InstallMethod = $env:DENO_INSTALL_METHOD

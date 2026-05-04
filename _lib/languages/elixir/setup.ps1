@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 #!/usr/bin/env pwsh
 
 $InstallMethod = $env:ELIXIR_INSTALL_METHOD

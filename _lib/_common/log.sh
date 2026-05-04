@@ -32,7 +32,7 @@ _libscript_log_msg() {
   level_name="${1:-}"
   level_num="${2:-}"
   msg="${3:-}"
-  
+
   if [ "${level_num:-0}" -lt "$LIBSCRIPT_LOG_LEVEL" ]; then
     return
   fi
@@ -50,15 +50,15 @@ _libscript_log_msg() {
       clean_msg=$(printf '%s' "$msg" | sed 's/"/\\"/g')
       json_out="{\"timestamp\":\"$timestamp\",\"level\":\"$level_name\",\"message\":\"$clean_msg\"}"
     fi
-    
+
     [ -n "$LIBSCRIPT_LOG_FILE" ] && printf '%s\n' "$json_out" >> "$LIBSCRIPT_LOG_FILE"
     printf '%s\n' "$json_out"
   else
     # Text format: [LEVEL] Message
     text_out="[$level_name] $msg"
-    
+
     [ -n "$LIBSCRIPT_LOG_FILE" ] && printf '%s %s\n' "$timestamp" "$text_out" >> "$LIBSCRIPT_LOG_FILE"
-    
+
     # Use stderr for logs to keep stdout clean for data/piping
     printf '%s\n' "$text_out" >&2
   fi

@@ -22,14 +22,14 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 if ! command -v luarocks >/dev/null 2>&1; then
-  echo "Installing luarocks..."
+  log_info "Installing luarocks..."
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-..}"'/_lib/_common/pkg_mgr.sh'
   export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091,SC2034
   . "${SCRIPT_NAME}"
-  
-  if ! depends luarocks; then
-    echo "Error: Cannot easily bootstrap luarocks from source without make and C compilers. Please install it using your package manager."
+
+  if ! libscript_depends luarocks; then
+    log_info "Error: Cannot easily bootstrap luarocks from source without make and C compilers. Please install it using your package manager."
     exit 1
   fi
 fi

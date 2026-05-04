@@ -1,5 +1,4 @@
-Gem
-===
+# Gem
 
 Bootstrap module for the `gem` package manager.
 

@@ -1,5 +1,4 @@
-Brew
-====
+# Brew
 
 Homebrew is a free and open-source software package management system that simplifies the installation of software on macOS and Linux. It builds packages from source and provides pre-compiled binaries, making it easy to manage dependencies and development tools.
 

@@ -1,5 +1,6 @@
 {
-  "name": "RUBY",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "ruby",
   "title": "Ruby Runtime",
   "description": "A dynamic, open source programming language with a focus on simplicity and productivity.",
   "category": "languages",

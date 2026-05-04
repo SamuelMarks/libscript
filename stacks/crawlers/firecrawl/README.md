@@ -1,7 +1,6 @@
-Firecrawl
-=========
+# Firecrawl
 
-## Purpose & Overview
+## Purpose & Current State
 This document describes the `firecrawl` web scraping and crawling component within the LibScript ecosystem.
 
 LibScript functions as both a comprehensive global version manager (invoked via the `libscript` command) and a local version manager (similar to `rvm`, `nvm`, `pyenv`, or `uv`) for Firecrawl. You can manage Firecrawl directly in an isolated, local context, or orchestrate it globally. 

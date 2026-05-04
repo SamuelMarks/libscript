@@ -32,9 +32,9 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
 done
 
 if ! command -v kubectl-krew >/dev/null 2>&1; then
-  echo "Installing krew..."
+  log_info "Installing krew..."
   if ! command -v git >/dev/null 2>&1; then echo "git is required"; exit 1; fi
-  
+
   (
     set -x; cd "$(mktemp -d)" &&
     OS="$(uname | tr '[:upper:]' '[:lower:]')" &&

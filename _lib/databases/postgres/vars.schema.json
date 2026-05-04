@@ -5,7 +5,7 @@
   "description": "Variables for PostgreSQL",
   "type": "object",
   "properties": {
-    "POSTGRESQL_VERSION": {
+    "POSTGRES_VERSION": {
       "description": "Version of PostgreSQL demanded",
       "type": "string"
     },
@@ -99,10 +99,6 @@
     "POSTGRES_URL": {
       "type": "string",
       "description": "Connection URL for PostgreSQL."
-    },
-    "POSTGRES_VERSION": {
-      "type": "string",
-      "description": "Specific version of PostgreSQL."
     }
   }
 }

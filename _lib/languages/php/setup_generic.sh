@@ -34,9 +34,9 @@ done
 
 PHP_INSTALL_METHOD="${PHP_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 if [ "${PHP_INSTALL_METHOD}" = 'system' ]; then
-  depends 'php'
+  libscript_depends 'php'
 else
-  depends 'curl' 'tar' 'make' 'gcc'
+  libscript_depends 'curl' 'tar' 'make' 'gcc'
   libscript_download https://www.php.net/distributions/php-8.2.11.tar.gz /tmp/php.tar.gz
   tar -xzf /tmp/php.tar.gz -C /tmp
   cd /tmp/php-8.2.11 && ./configure && make && priv make install

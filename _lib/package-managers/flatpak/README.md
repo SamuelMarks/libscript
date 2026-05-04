@@ -1,5 +1,4 @@
-Flatpak
-=======
+# Flatpak
 
 Bootstrap module for the `flatpak` package manager/tool.
 

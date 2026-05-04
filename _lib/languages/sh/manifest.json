@@ -1,5 +1,6 @@
 {
-  "name": "SH",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "sh",
   "title": "Shell Toolchain",
   "description": "POSIX-compliant shell environment.",
   "category": "languages",

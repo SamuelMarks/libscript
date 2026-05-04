@@ -1,7 +1,6 @@
-Serve Actix Diesel Auth Scaffold
-================================
+# Serve Actix Diesel Auth Scaffold
 
-## Purpose & Overview
+## Purpose & Current State
 This document describes the `serve-actix-diesel-auth-scaffold` component within the LibScript ecosystem. This component acts as a scaffolding tool and template for Rust-based web applications using Actix, Diesel, and authentication middleware.
 
 LibScript functions as both a comprehensive global version manager (invoked via the `libscript` command) and a local version manager (similar to `rvm`, `nvm`, `pyenv`, or `uv`) for this component. You can manage `serve-actix-diesel-auth-scaffold` directly in an isolated, local context, or orchestrate it globally. 

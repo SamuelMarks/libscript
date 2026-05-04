@@ -1,5 +1,6 @@
 {
-  "name": "APK",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "apk",
   "provides": [
     "apk"
   ],

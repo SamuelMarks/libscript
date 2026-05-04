@@ -27,7 +27,7 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 if ! command -v mvn >/dev/null 2>&1; then
-  if ! depends maven ; then
+  if ! libscript_depends maven ; then
     true
   fi
 fi

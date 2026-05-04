@@ -1,5 +1,4 @@
-Rebar3
-======
+# Rebar3
 
 Bootstrap module for the `rebar3` package manager.
 

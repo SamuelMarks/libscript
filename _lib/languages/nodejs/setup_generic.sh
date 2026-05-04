@@ -52,9 +52,9 @@ done
 NODEJS_INSTALL_METHOD="${NODEJS_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-source}}"
 
 if [ "${NODEJS_INSTALL_METHOD}" = 'system' ]; then
-  depends 'nodejs'
+  libscript_depends 'nodejs'
 else
-  if cmd_avail node ; then
+  if libscript_cmd_avail node ; then
     version="$(node --version)"
     if [ "${version}" = "${NODEJS_VERSION}" ]; then
       return
@@ -66,7 +66,7 @@ else
   DOWNLOAD_DIR=${DOWNLOAD_DIR:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache/downloads}/nodejs}
   version='v1.38.1'
   if ! [ -f "${DOWNLOAD_DIR}"'/bin/fnm' ] ; then
-    depends 'curl' 'unzip'
+    libscript_depends 'curl' 'unzip'
     os="$(printf '%s' "${TARGET_OS}" | tr '[:upper:]' '[:lower:]')"
     case "${os}" in
       'macos'*) ;;

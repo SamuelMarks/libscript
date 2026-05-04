@@ -21,7 +21,7 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-url_parser() {
+libscript_url_parser() {
   # Inspired by: https://gist.github.com/joshisa/297b0bc1ec0dcdda0d1625029711fa24
   # Referenced and tweaked from http://stackoverflow.com/questions/6174220/parse-url-in-shell-script#6174447
   url="${1}"
@@ -65,7 +65,7 @@ url_parser() {
 
 # Used to turn an URL into two args: `${repo} ${branch}`
 git_args_from_url() {
-  url_parser "${1}"
+  libscript_url_parser "${1}"
   printf "%s\n" "${protocol}${host}"
   repo="${0}"
   branch="${2:-''}"; export repo branch

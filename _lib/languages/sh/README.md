@@ -1,5 +1,4 @@
-Sh
-==
+# Sh
 
 ## Purpose & Current State
 **Purpose**: This document provides context and technical details for the `sh` component (part of `_toolchain`) within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
@@ -17,7 +16,6 @@ The `sh` component works both as a **local version manager** (similar to tools l
 
 Beyond isolated provisioning, this component can be deeply integrated by `libscript` to build, deploy, and manage larger stacks and complex applications. Whether you are scaffolding a CMS like WordPress, a learning platform like Open edX, or a collaboration suite like Nextcloud, LibScript can orchestrate `sh` alongside databases, web servers, and other services to form a cohesive, reproducible stack.
 
-## Usage
 You can install, start, stop, package, and uninstall sh using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**

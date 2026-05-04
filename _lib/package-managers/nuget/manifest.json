@@ -1,5 +1,6 @@
 {
-  "name": "NUGET",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "nuget",
   "provides": [
     "package-manager",
     "nuget"

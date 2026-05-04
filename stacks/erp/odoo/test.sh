@@ -34,11 +34,11 @@ done
 
 set -feu
 echo "Validating Odoo installation..."
-WWWROOT="${WWWROOT:-/var/www/odoo}"
-if [ -f "${WWWROOT}/odoo-bin" ]; then
-    echo "Odoo directory found at ${WWWROOT}"
+ODOO_WWWROOT="${ODOO_WWWROOT:-/var/www/odoo}"
+if [ -f "${ODOO_WWWROOT}/odoo-bin" ]; then
+    echo "Odoo directory found at ${ODOO_WWWROOT}"
     exit 0
 else
-    echo "Odoo directory not found at ${WWWROOT}"
+    echo "Odoo directory not found at ${ODOO_WWWROOT}"
     exit 1
 fi

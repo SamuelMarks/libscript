@@ -1,7 +1,6 @@
-PostgreSQL
-==========
+# PostgreSQL
 
-## Purpose & Overview
+## Purpose & Current State
 This document provides context and technical details for the **PostgreSQL** component (part of the `_storage` directory) within the LibScript ecosystem. PostgreSQL is a powerful, open-source object-relational database system.
 
 This module works both as a local version manager for PostgreSQL (similar to `rvm`, `nvm`, `pyenv`, or `uv`) and can be directly invoked from the global version manager `libscript`. Because of this flexibility, PostgreSQL can be utilized by LibScript to provision and build bigger, more complex software stacks (such as WordPress, Open edX, Nextcloud, etc.).
@@ -58,7 +57,7 @@ The following environment variables can be passed to the CLI (`--KEY=VALUE`) or 
 
 | Variable | Description | Default | Aliases |
 |----------|-------------|---------|---------|
-| `POSTGRESQL_VERSION` | Version of PostgreSQL demanded | `none` | `` |
+| `POSTGRES_VERSION` | Version of PostgreSQL demanded | `none` | `` |
 | `POSTGRES_USER` | Username to create inside postgres | `none` | `` |
 | `POSTGRES_PASSWORD` | Password for created user inside postgres | `none` | `` |
 | `POSTGRES_PASSWORD_FILE` | Password file, its contents used as password for created user inside postgres | `none` | `` |

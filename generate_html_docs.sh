@@ -42,7 +42,7 @@ elif [ "${ZSH_VERSION-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-set -eu +f
+set -feu
 
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${THIS_FILE}" )")" && pwd)}"
 export LIBSCRIPT_ROOT_DIR
@@ -54,7 +54,7 @@ LIBSCRIPT_ASSETS_DIR="${LIBSCRIPT_ASSETS_DIR:-${LIBSCRIPT_DOCS_DIR}}"
 export LIBSCRIPT_ASSETS_DIR
 
 if [ -z "${HTML_ROOT+x}" ]; then
-    HTML_ROOT="${LIBSCRIPT_ROOT_DIR}"'/docs_web_template'
+    HTML_ROOT="${LIBSCRIPT_ROOT_DIR}"'/docs-web-template'
     export HTML_ROOT
 fi
 
@@ -380,7 +380,7 @@ for url in ${URLS}; do
         next;
       }
       1
-    ' "${url}.tmp" > "${url}.tmp1" 
+    ' "${url}.tmp" > "${url}.tmp1"
     mv -- "${url}.tmp1" "${url}.tmp"
   fi
 
@@ -416,4 +416,4 @@ fi
 if [ -d "${LIBSCRIPT_ROOT_DIR}"'/../verman-tui-www/assets' ]; then
   rsync -a -r -- "${LIBSCRIPT_ROOT_DIR}"'/../verman-tui-www/assets/' "${LIBSCRIPT_ROOT_DIR}"'/assets/'
 fi
-set -f
+set -feu

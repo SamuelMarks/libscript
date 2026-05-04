@@ -1,5 +1,4 @@
-Nginx
-=====
+# Nginx
 
 ## Purpose & Current State
 **Purpose**: This document provides context and technical details for the `nginx` server component within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
@@ -9,7 +8,6 @@ This directory contains the scripts for managing the Nginx component. It works b
 
 Furthermore, this component can be used by libscript to build bigger stacks (like WordPress, Open edX, nextcloud, etc.), serving as a powerful web server layer in multi-tier applications.
 
-## Usage
 You can install, start, stop, package, and uninstall nginx using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**
@@ -62,9 +60,9 @@ The following environment variables can be passed to the CLI (`--KEY=VALUE`) or 
 | Variable | Description | Default | Aliases |
 |----------|-------------|---------|---------|
 | `NGINX_INSTALL_METHOD` | How to install Nginx. | `system` | `` |
-| `WWWROOT_NAME` | The server name/domain (e.g. example.com) | `none` | `` |
-| `WWWROOT_PATH` | The path to the document root | `none` | `` |
-| `WWWROOT_LISTEN` | The port Nginx should listen on | `80` | `` |
+| `NGINX_WWWROOT_NAME` | The server name/domain (e.g. example.com) | `none` | `` |
+| `NGINX_WWWROOT_PATH` | The path to the document root | `none` | `` |
+| `NGINX_WWWROOT_LISTEN` | The port Nginx should listen on | `80` | `` |
 | `LIBSCRIPT_GLOBAL_INSTALL_METHOD` | Global override for how software should be installed across all systems (e.g. system package manager vs downloaded binaries/from-source). | `system` | `` |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows targets (e.g. winget, choco). | `winget` | `` |
 | `LIBSCRIPT_LISTEN_PORT_SECURE` | Global secure port to listen on | `none` | `` |

@@ -1,5 +1,6 @@
 {
-  "name": "REBAR3",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "rebar3",
   "provides": [
     "rebar3"
   ],

@@ -70,7 +70,7 @@ clear_environment() {
 # rm -f -- "${ENV_SAVED_FILE}"
 # unset ENV_SAVED_FILE
 
-object2key_val() {
+libscript_object2key_val() {
   obj="${1:-}"
   prefix="${2:-}"
   sq="'"

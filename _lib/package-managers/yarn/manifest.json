@@ -1,5 +1,6 @@
 {
-  "name": "YARN",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "yarn",
   "provides": [
     "package-manager",
     "yarn"

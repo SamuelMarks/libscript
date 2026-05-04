@@ -1,5 +1,6 @@
 {
-  "name": "CMAKE",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "cmake",
   "title": "CMake",
   "description": "An open-source, cross-platform family of tools designed to build, test and package software.",
   "category": "toolchain",

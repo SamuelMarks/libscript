@@ -1,6 +1,3 @@
-[CmdletBinding()]
-param()
-
 $ErrorActionPreference = "Stop"
 
 $JustVersion = $env:JUST_VERSION

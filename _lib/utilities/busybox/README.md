@@ -1,7 +1,6 @@
-BusyBox
-=======
+# BusyBox
 
-## Purpose & Overview
+## Purpose & Current State
 This directory contains the installation and configuration scripts for **Busybox** within the LibScript ecosystem. Busybox is a software suite that provides several Unix utilities in a single executable file.
 
 This module works both as a local version manager for Busybox (similar to `rvm`, `nvm`, `pyenv`, or `uv`) and can be seamlessly invoked from the global version manager `libscript`. It allows LibScript to use Busybox as a core dependency to build bigger, more complex software stacks (such as WordPress, Open edX, Nextcloud, etc.).

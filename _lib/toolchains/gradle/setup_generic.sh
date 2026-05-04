@@ -30,7 +30,7 @@ if ! command -v java >/dev/null 2>&1; then
   if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/java/setup.sh" ]; then
     "${LIBSCRIPT_ROOT_DIR}/_lib/languages/java/setup.sh"
   else
-    if ! depends java ; then
+    if ! libscript_depends java ; then
       true
     fi
   fi
@@ -55,13 +55,13 @@ if ! command -v gradle >/dev/null 2>&1; then
         . "$HOME/.sdkman/bin/sdkman-init.sh"
       fi
       sdk install gradle
-    elif command -v apt-get >/dev/null 2>&1; then
-      sudo apt-get update -y
-      sudo apt-get install -y gradle
+    elif command -v apt >/dev/null 2>&1; then
+      pkg_mgr update
+      pkg_mgr install gradle
     elif command -v dnf >/dev/null 2>&1; then
-      sudo dnf install -y gradle
+      pkg_mgr install gradle
     elif command -v pacman >/dev/null 2>&1; then
-      sudo pacman -S --noconfirm gradle
+      libscript_depends gradle
     else
       printf "Error: Could not install gradle via standard package managers or SDKMAN!.\n" >&2
       exit 1

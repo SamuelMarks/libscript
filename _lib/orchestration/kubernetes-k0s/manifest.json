@@ -1,5 +1,6 @@
 {
-  "name": "KUBERNETES_K0S",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "kubernetes-k0s",
   "title": "Kubernetes k0s",
   "description": "A zero-friction, all-in-one Kubernetes distribution.",
   "category": "orchestration",

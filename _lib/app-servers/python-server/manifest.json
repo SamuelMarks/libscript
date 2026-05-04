@@ -1,0 +1,19 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "python-server",
+  "title": "Python App Server",
+  "description": "Generic Python application server component (WSGI/ASGI).",
+  "category": "app-servers",
+  "provides": [
+    "app-server",
+    "python",
+    "wsgi",
+    "asgi"
+  ],
+  "conflicts": [],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "ports": []
+}

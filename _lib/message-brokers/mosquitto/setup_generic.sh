@@ -34,10 +34,10 @@ done
 MOSQUITTO_INSTALL_METHOD="${MOSQUITTO_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 
 if [ "${MOSQUITTO_INSTALL_METHOD}" = 'system' ]; then
-  depends 'mosquitto'
+  libscript_depends 'mosquitto'
 else
-  echo "[WARN] From-source or alternative installation requested for mosquitto, but currently only system package manager is fully supported."
-  depends 'mosquitto'
+  log_info "[WARN] From-source or alternative installation requested for mosquitto, but currently only system package manager is fully supported."
+  libscript_depends 'mosquitto'
 fi
 
 CONF_DIR="${LIBSCRIPT_DATA_DIR}/mosquitto"

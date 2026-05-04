@@ -34,8 +34,8 @@ done
 
 CPP_INSTALL_METHOD="${CPP_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 if [ "${CPP_INSTALL_METHOD}" = 'system' ]; then
-  depends 'g++' 'clang' 'make'
+  libscript_depends 'g++' 'clang' 'make'
 else
   >&2 printf 'Building C++ from source is not supported, using g++\n'
-  depends 'g++'
+  libscript_depends 'g++'
 fi

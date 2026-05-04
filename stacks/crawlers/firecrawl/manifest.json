@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "firecrawl",
+  "category": "crawlers",
+  "title": "firecrawl",
+  "description": "firecrawl stack",
+  "provides": [
+    "firecrawl"
+  ]
+}

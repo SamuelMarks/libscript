@@ -1,0 +1,15 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "bun-pm",
+  "provides": [
+    "package-manager",
+    "bun"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "title": "bun",
+  "description": "Bootstrap script for [Bun](https://bun.sh), a fast all-in-one JavaScript runtime, bundler, test runner, and package manager.",
+  "category": "package-manager"
+}

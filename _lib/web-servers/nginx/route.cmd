@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableDelayedExpansion
 set "DOMAIN=%~1"
 set "LOCATION=%~2"
 set "DESTINATION=%~3"

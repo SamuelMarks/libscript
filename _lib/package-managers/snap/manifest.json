@@ -1,5 +1,6 @@
 {
-  "name": "SNAP",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "snap",
   "provides": [
     "snap"
   ],

@@ -1,5 +1,6 @@
 {
-  "name": "POSTGRES",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "postgres",
   "title": "PostgreSQL",
   "description": "A powerful, open source object-relational database system.",
   "category": "databases",

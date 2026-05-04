@@ -1,5 +1,6 @@
 {
-  "name": "BUN",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "bun",
   "title": "Bun Runtime",
   "description": "A fast all-in-one JavaScript runtime, bundler, transpiler, and package manager.",
   "category": "languages",

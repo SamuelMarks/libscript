@@ -39,7 +39,7 @@ VIAddVersionKey "FileVersion" "$APP_VERSION"
 EOF2
       if [ -n "$ICON_PATH" ]; then echo "Icon \"$ICON_PATH\""; fi
       echo ""
-      
+
       deps_list=""
       if [ $# -gt 0 ]; then
         while [ $# -gt 0 ]; do
@@ -60,7 +60,7 @@ EOF2
       fi
       echo "Include nsDialogs.nsh"
       echo "Page components"
-      
+
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
@@ -73,18 +73,18 @@ EOF2
               echo "Var HWND_${pkg}_${varname}"
               echo "Var VAL_${pkg}_${varname}"
             done
-            
+
             echo "Page custom pgCustom_$pkg pgLeave_$pkg"
           fi
         fi
       done
-      
+
       if [ -n "$LICENSE_PATH" ]; then echo "Page license \"\" \"$LICENSE_PATH\""; fi
       echo "Page custom ActionPageCreate ActionPageLeave"
       echo "Page custom OptionsPageCreate OptionsPageLeave"
       echo "Page instfiles"
       echo ""
-      
+
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
@@ -122,18 +122,18 @@ EOF2
             echo "    Abort"
             echo "  nsDialogs::Create 1018"
             echo "  Pop \$Dialog_$pkg"
-            
+
             y=0
             echo "$vars_json" | while read -r item; do
               varname=$(echo "$item" | jq -r '.key')
               desc=$(echo "$item" | jq -r '.desc')
               defval=$(echo "$item" | jq -r '.def')
               if [ $y -gt 130 ]; then break; fi
-              
+
               echo "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
               echo "  Pop \$0"
               y=$((y + 12))
-              
+
               if case "$varname" in *"_PASSWORD"*) true;; *) false;; esac; then
                 echo "  \${NSD_CreatePassword} 0 ${y}u 100% 12u \"$defval\""
               else
@@ -144,11 +144,11 @@ EOF2
             done
             echo "  nsDialogs::Show"
             echo "FunctionEnd"
-            
+
             echo "Function pgLeave_$pkg"
             echo "$vars_json" | jq -r '.key' | while read -r varname; do
               echo "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
-              
+
               if case "$varname" in *"_PORT"* | *"_PORT_SECURE"*) true;; *) false;; esac; then
                 echo "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
                 echo "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"

@@ -40,7 +40,7 @@ done
 export DRY_RUN=true
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
-echo "Testing GCP component in DRY_RUN mode..."
+log_info "Testing GCP component in DRY_RUN mode..."
 
 # Test network
 "$SCRIPT_DIR/cli.sh" network create test-net 2>&1 | grep "gcloud compute networks create"
@@ -51,4 +51,4 @@ echo "Testing GCP component in DRY_RUN mode..."
 # Test cleanup
 "$SCRIPT_DIR/cli.sh" cleanup 2>&1 | grep "gcloud compute instances list"
 
-echo "GCP tests passed (dry-run)."
+log_info "GCP tests passed (dry-run)."

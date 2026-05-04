@@ -34,7 +34,7 @@ for LIB in '_lib/_common/environ.sh' '_lib/_common/pkg_mgr.sh' '_lib/_common/pri
   . "${SCRIPT_NAME}"
 done
 
-depends curl
+libscript_depends curl
 
 if [ "${TARGET_OS}" = "windows" ] || [ "${TARGET_OS}" = "mingw" ] || [ "${TARGET_OS}" = "cygwin" ]; then
     >&2 printf "k0s is not available on Windows natively. Exiting gracefully...\n"

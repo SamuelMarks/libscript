@@ -14,15 +14,15 @@
       ],
       "default": "system"
     },
-    "WWWROOT_NAME": {
+    "NGINX_WWWROOT_NAME": {
       "description": "The server_name or domain (e.g., example.com) to serve.",
       "type": "string"
     },
-    "WWWROOT_PATH": {
+    "NGINX_WWWROOT_PATH": {
       "description": "The absolute path to the static document root to serve.",
       "type": "string"
     },
-    "WWWROOT_LISTEN": {
+    "NGINX_WWWROOT_LISTEN": {
       "description": "The HTTP port Nginx should listen on (defaults to 80).",
       "type": "string",
       "default": "80"
@@ -84,15 +84,15 @@
       "type": "string",
       "default": "libscript_nginx"
     },
-    "HTTPS_ALWAYS": {
+    "NGINX_HTTPS_ALWAYS": {
       "type": "string",
       "description": "Whether to always redirect to HTTPS."
     },
-    "VARS": {
+    "NGINX_VARS": {
       "type": "string",
       "description": "Additional variables."
     },
-    "LOCATION_EXPR": {
+    "NGINX_LOCATION_EXPR": {
       "type": "string",
       "description": "Nginx location expression."
     },

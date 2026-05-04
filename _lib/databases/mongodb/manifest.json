@@ -1,5 +1,6 @@
 {
-  "name": "MONGODB",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "mongodb",
   "title": "MongoDB",
   "description": "A source-available cross-platform document-oriented database program.",
   "category": "databases",

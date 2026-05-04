@@ -1,5 +1,4 @@
-Systemd
-=======
+# Systemd
 
 ## Purpose & Current State
 **Purpose**: This document provides context and technical details for the `systemd` component (part of `_daemon`) within the LibScript ecosystem. This component configures and manages systemd unit files, enabling applications to run as standard background services on compatible Linux distributions.
@@ -9,7 +8,6 @@ This directory contains the installation and configuration scripts for `systemd`
 
 Furthermore, systemd integrations can be used by libscript to build bigger stacks (like WordPress, Open edX, Nextcloud, etc.) by ensuring system processes are monitored, restarted on failure, and initiated at boot.
 
-## Usage
 You can install, start, stop, package, and uninstall systemd using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**
@@ -61,9 +59,9 @@ The following environment variables can be passed to the CLI (`--KEY=VALUE`) or 
 
 | Variable | Description | Default | Aliases |
 |----------|-------------|---------|---------|
-| `EXEC_START` | Executor | `none` | `` |
-| `WORKING_DIR` | Working directory that `EXEC_START` will be run from | `none` | `` |
-| `ENV` | Optional additional properties as key/value pairs | `none` | `` |
+| `SYSTEMD_EXEC_START` | Executor | `none` | `` |
+| `SYSTEMD_WORKING_DIR` | Working directory that `SYSTEMD_EXEC_START` will be run from | `none` | `` |
+| `SYSTEMD_ENV` | Optional additional properties as key/value pairs | `none` | `` |
 
 ## Architecture
 - `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.

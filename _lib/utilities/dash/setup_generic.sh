@@ -29,5 +29,5 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
 done
 
 if ! command -v dash >/dev/null 2>&1; then
-  depends 'dash'
+  libscript_depends 'dash'
 fi

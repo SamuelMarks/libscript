@@ -1,5 +1,4 @@
-Woocommerce
-===========
+# Woocommerce
 
 WooCommerce is a customizable, open-source eCommerce platform built on WordPress.
 

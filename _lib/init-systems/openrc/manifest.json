@@ -1,5 +1,6 @@
 {
-  "name": "OPENRC",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "openrc",
   "provides": [
     "openrc"
   ],

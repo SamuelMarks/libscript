@@ -32,7 +32,7 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
 done
 
 if ! command -v sdk >/dev/null 2>&1 && [ ! -s "$HOME/.sdkman/bin/sdkman-init.sh" ]; then
-  echo "Installing sdkman..."
+  log_info "Installing sdkman..."
   export SDKMAN_DIR="${HOME}/.sdkman"
   _tmp_script="/tmp/sdkman-install.sh"
   libscript_download "https://get.sdkman.io" "$_tmp_script"

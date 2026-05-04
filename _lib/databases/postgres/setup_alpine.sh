@@ -28,7 +28,7 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091,SC2034
 . "${SCRIPT_NAME}"
 
-apk add 'openrc' 'postgresql'"${POSTGRESQL_VERSION}" 'postgresql'"${POSTGRESQL_VERSION}"'-contrib' 'postgresql'"${POSTGRESQL_VERSION}"'-openrc'
+apk add 'openrc' 'postgresql'"${POSTGRES_VERSION}" 'postgresql'"${POSTGRES_VERSION}"'-contrib' 'postgresql'"${POSTGRES_VERSION}"'-openrc'
 EXISTED=0
 if [ -f "/etc/init.d/${LIBSCRIPT_SERVICE_NAME:-postgresql}" ]; then
   EXISTED=1

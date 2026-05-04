@@ -1,7 +1,6 @@
-Java
-====
+# Java
 
-## Purpose & Overview
+## Purpose & Current State
 **Purpose**: This document provides context and technical details for the `java` component (part of `_toolchain`) within the LibScript ecosystem. This component manages the installation of the Java Development Kit (JDK) and runtime environment, providing the necessary tools to compile, run, and manage Java-based applications.
 
 Crucially, this module allows `java` to function both as a **local version manager** (similar to tools like `rvm`, `nvm`, `pyenv`, or `uv`) and as a component invoked seamlessly by the global version manager, `libscript`. Furthermore, `libscript` can utilize this `java` toolchain as a foundational building block to provision and orchestrate much larger, complex software stacks (such as WordPress, Open edX, Nextcloud, and more).
@@ -9,7 +8,6 @@ Crucially, this module allows `java` to function both as a **local version manag
 ## Usage with LibScript
 This directory contains the installation and configuration scripts for `java`. It is designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
 
-## Usage
 You can install, start, stop, package, and uninstall java using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**

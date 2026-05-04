@@ -30,7 +30,7 @@ if ! command -v pip >/dev/null 2>&1; then
   if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/python/setup.sh" ]; then
     "${LIBSCRIPT_ROOT_DIR}/_lib/languages/python/setup.sh"
   else
-    if ! depends python3 || depends python ; then
+    if ! libscript_depends python3 || libscript_depends python ; then
       true
     fi
   fi

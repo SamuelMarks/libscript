@@ -1,5 +1,4 @@
-Spack
-=====
+# Spack
 
 Bootstrap script for [Spack](https://spack.io/), a flexible package manager that supports multiple versions, configurations, platforms, and compilers.
 

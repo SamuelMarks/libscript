@@ -5,11 +5,11 @@
   "description": "Configuration variables for nimble",
   "type": "object",
   "properties": {
-    "CHOOSENIM_DIR": {
+    "NIMBLE_CHOOSENIM_DIR": {
       "type": "string",
       "description": "Installation directory for choosenim. Defaults to ~/.choosenim."
     },
-    "CHOOSENIM_CHOOSE_VERSION": {
+    "NIMBLE_CHOOSENIM_CHOOSE_VERSION": {
       "type": "string",
       "description": "Specific Nim version to install initially."
     },

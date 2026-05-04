@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "prestashop",
+  "category": "ecommerce",
+  "title": "prestashop",
+  "description": "prestashop stack",
+  "provides": [
+    "prestashop"
+  ]
+}

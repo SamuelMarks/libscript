@@ -1,7 +1,6 @@
-SQLite
-======
+# SQLite
 
-## Purpose & Overview
+## Purpose & Current State
 This document provides context and technical details for the **SQLite** component (part of the `_storage` module) within the LibScript ecosystem. SQLite is a C-language library that implements a small, fast, self-contained, high-reliability, full-featured, SQL database engine.
 
 This component works both as a local version manager for SQLite (similar to `rvm`, `nvm`, `pyenv`, or `uv`) and can be natively invoked from the global version manager `libscript`. Because of this flexibility, SQLite can be used by LibScript to provision and build bigger, more complex software stacks (like WordPress, Open edX, Nextcloud, etc.).

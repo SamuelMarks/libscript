@@ -5,15 +5,15 @@
   "description": "Variables to configure systemd services",
   "type": "object",
   "properties": {
-    "EXEC_START": {
+    "SYSTEMD_EXEC_START": {
       "description": "Executor",
       "type": "string"
     },
-    "WORKING_DIR": {
+    "SYSTEMD_WORKING_DIR": {
       "description": "Working directory that `EXEC_START` will be run from",
       "type": "string"
     },
-    "ENV": {
+    "SYSTEMD_ENV": {
       "description": "Optional additional properties as key/value pairs",
       "type": "string"
     }

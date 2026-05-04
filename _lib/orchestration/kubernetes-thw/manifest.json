@@ -1,5 +1,6 @@
 {
-  "name": "KUBERNETES_THW",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "kubernetes-thw",
   "title": "Kubernetes The Hard Way",
   "description": "A custom Kubernetes cluster setup based on 'Kubernetes The Hard Way'.",
   "category": "orchestration",
@@ -11,7 +12,8 @@
   ],
   "conflicts": [],
   "os_whitelist": [
-    "linux", "darwin"
+    "linux",
+    "darwin"
   ],
   "os_blacklist": [
     "windows"

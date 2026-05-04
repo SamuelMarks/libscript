@@ -1,6 +1,6 @@
-# azure-cli Package Manager Config
+# azure-cli
 
 Provides bootstrap definitions and wrappers for installing the Azure CLI.
 
-## Configuration
+## Configuration Options
 See `vars.schema.json` for installation options and version pinning.

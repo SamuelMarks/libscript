@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableDelayedExpansion
 :: # LibScript Component Core Module (Windows Batch)
 ::
 :: ## Overview
@@ -89,6 +90,7 @@ if /i "!ACTION!"=="stop"    goto :routing
 if /i "!ACTION!"=="restart" goto :routing
 if /i "!ACTION!"=="status"  goto :routing
 if /i "!ACTION!"=="run"     goto :routing
+if /i "!ACTION!"=="env"     goto :routing
 if /i "!ACTION!"=="exec"    goto :routing
 
 if "!arg:~0,2!"=="--" (
@@ -196,6 +198,17 @@ if not "!LIBSCRIPT_SKIP_DEPENDENCIES!"=="1" if /i "!ACTION!"=="install" (
 )
 
 :: Lifecycle Routing
+if /i "!ACTION!"=="env" (
+    if not defined FORMAT set "FORMAT=cmd"
+    if defined PREFIX (
+        set "INSTALLED_DIR=!PREFIX!"
+    ) else (
+        set "INSTALLED_DIR=!LIBSCRIPT_ROOT_DIR!\installed\!PACKAGE_NAME!"
+    )
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.sh" "!FORMAT!" "!INSTALLED_DIR!"
+    exit /b !errorlevel!
+)
+
 if /i "!ACTION!"=="test" (
     if exist "test.cmd" (
         call test.cmd

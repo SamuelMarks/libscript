@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $OdooVersion = if ($env:ODOO_VERSION) { $env:ODOO_VERSION } else { "17.0" }
-$WwwRoot = if ($env:WWWROOT) { $env:WWWROOT } else { "C:\inetpub\wwwroot\odoo" }
+$WwwRoot = if ($env:ODOO_WWWROOT) { $env:ODOO_WWWROOT } else { "C:\inetpub\wwwroot\odoo" }
 $DbType = if ($env:ODOO_DB_TYPE) { $env:ODOO_DB_TYPE } else { "postgres" }
 $DbName = if ($env:ODOO_DB_NAME) { $env:ODOO_DB_NAME } else { "odoo" }
 $DbUser = if ($env:ODOO_DB_USER) { $env:ODOO_DB_USER } else { "odoo" }
@@ -115,9 +115,9 @@ addons_path = $WwwRoot\addons
 Write-Host "To run Odoo, execute: cd $WwwRoot ; python odoo-bin -c odoo.conf"
 
 if ($WebServer -eq "iis") {
-    $env:SERVER_NAME = $ServerName
+    $env:ODOO_SERVER_NAME = $ServerName
     $env:LISTEN = $ListenPort
-    $env:WWWROOT = $WwwRoot
+    $env:ODOO_WWWROOT = $WwwRoot
     $env:PROXY_PASS = "http://127.0.0.1:${OdooPort}"
     $env:PROXY_WEBSOCKETS = "1"
 

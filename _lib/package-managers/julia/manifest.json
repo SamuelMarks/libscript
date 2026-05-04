@@ -1,5 +1,6 @@
 {
-  "name": "JULIA",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "julia",
   "provides": [
     "julia"
   ],

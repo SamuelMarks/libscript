@@ -1,5 +1,4 @@
-Cygwin
-======
+# Cygwin
 
 Cygwin POSIX environment for Windows.
 

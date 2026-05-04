@@ -34,10 +34,10 @@ done
 MARIADB_INSTALL_METHOD="${MARIADB_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 
 if [ "${MARIADB_INSTALL_METHOD}" = 'system' ]; then
-  depends 'mariadb'
+  libscript_depends 'mariadb'
 else
-  echo "[WARN] From-source or alternative installation requested for mariadb, but currently only system package manager is fully supported."
-  depends 'mariadb'
+  log_info "[WARN] From-source or alternative installation requested for mariadb, but currently only system package manager is fully supported."
+  libscript_depends 'mariadb'
 fi
 
 MARIADB_CONF="/etc/mysql/mariadb.conf.d/50-server.cnf"

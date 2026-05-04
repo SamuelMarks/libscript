@@ -41,21 +41,21 @@ export SCRIPT_NAME
 
 _DEL='postgres://'"${POSTGRES_USER?}"':'"${POSTGRES_PASSWORD?}"'@'"${POSTGRES_HOST?}"'/'"${POSTGRES_DB?}"
 PID=
-if ! dpkg -s -- 'postgresql-server-dev-'"${POSTGRESQL_VERSION}" >/dev/null 2>&1; then
-  depends 'postgresql-common'
+if ! dpkg -s -- 'postgresql-server-dev-'"${POSTGRES_VERSION}" >/dev/null 2>&1; then
+  libscript_depends 'postgresql-common'
   if [ -x '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh' ]; then
     yes '' | priv '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh'
   else
-    depends 'ca-certificates' 'gnupg'
+    libscript_depends 'ca-certificates' 'gnupg'
     priv install -d '/usr/share/postgresql-common/pgdg'
     POSTGRES_KEY=$(mktemp)
     libscript_download 'https://www.postgresql.org/media/keys/ACCC4CF8.asc' "${POSTGRES_KEY}"
     priv cp "${POSTGRES_KEY}" '/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc'
     rm -f "${POSTGRES_KEY}"
     printf 'deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt %s-pgdg main\n' "$(. /etc/os-release && printf '%s' "${VERSION_CODENAME}")" | priv dd status='none' of='/etc/apt/sources.list.d/pgdg.list'
-    priv apt-get update
+    pkg_mgr update
   fi
-  depends 'postgresql-server-dev-'"${POSTGRESQL_VERSION}" 'postgresql-'"${POSTGRESQL_VERSION}"
+  libscript_depends 'postgresql-server-dev-'"${POSTGRES_VERSION}" 'postgresql-'"${POSTGRES_VERSION}"
   # non systemd for environments like docker
   if [ ! "$(ps -q 1 -o comm=)" = 'systemd' ]; then
     if [ "${RUNLEVEL-}" ]; then
@@ -71,9 +71,9 @@ if ! dpkg -s -- 'postgresql-server-dev-'"${POSTGRESQL_VERSION}" >/dev/null 2>&1;
     fi
     printf '#!/bin/sh\nexit 0' | priv dd status='none' of='/usr/sbin/policy-rc.d'
     priv chmod 755 '/usr/sbin/policy-rc.d'
-    [ -d '/var/LIB/postgresql/'"${POSTGRESQL_VERSION}" ] || mkdir -p -- '/var/LIB/postgresql/'"${POSTGRESQL_VERSION}"
+    [ -d '/var/LIB/postgresql/'"${POSTGRES_VERSION}" ] || mkdir -p -- '/var/LIB/postgresql/'"${POSTGRES_VERSION}"
     [ -d '/var/log/postgresql' ] || mkdir -p -- '/var/log/postgresql'
-    PG_CONF="/etc/postgresql/${POSTGRESQL_VERSION}/main/postgresql.conf"
+    PG_CONF="/etc/postgresql/${POSTGRES_VERSION}/main/postgresql.conf"
     if [ -f "${PG_CONF}" ]; then
       if [ -n "${POSTGRES_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
         priv sed -i "s|^#*unix_socket_directories = .*|unix_socket_directories = '${POSTGRES_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}'|" "${PG_CONF}"
@@ -86,12 +86,12 @@ if ! dpkg -s -- 'postgresql-server-dev-'"${POSTGRESQL_VERSION}" >/dev/null 2>&1;
       fi
     fi
     priv_as "${POSTGRES_SERVICE_USER?}" \
-      '/usr/LIB/postgresql/'"${POSTGRESQL_VERSION}"'/bin/postgres' \
+      '/usr/LIB/postgresql/'"${POSTGRES_VERSION}"'/bin/postgres' \
         --single "${POSTGRES_SERVICE_USER?}" \
-        -D '/var/LIB/postgresql/'"${POSTGRESQL_VERSION}"'/main' \
-        -r '/var/log/postgresql/'"${POSTGRESQL_VERSION}"'-main.log' >'/var/log/postgresql/'"${POSTGRESQL_VERSION}"'-main.log0' 2>&1 &
+        -D '/var/LIB/postgresql/'"${POSTGRES_VERSION}"'/main' \
+        -r '/var/log/postgresql/'"${POSTGRES_VERSION}"'-main.log' >'/var/log/postgresql/'"${POSTGRES_VERSION}"'-main.log0' 2>&1 &
     PID="$!"
-    printf '%d' "${PID}" | priv dd status='none' of='/var/run/postgresql/'"${POSTGRESQL_VERSION}"'-main.pid'
+    printf '%d' "${PID}" | priv dd status='none' of='/var/run/postgresql/'"${POSTGRES_VERSION}"'-main.pid'
   fi
 fi
 
@@ -101,7 +101,7 @@ export SCRIPT_NAME
 
 if [ -n "${PID}" ]; then
   priv kill "${PID}"
-  priv rm -- '/var/run/postgresql/'"${POSTGRESQL_VERSION}"'-main.pid'
+  priv rm -- '/var/run/postgresql/'"${POSTGRES_VERSION}"'-main.pid'
   priv mv -- '/usr/sbin/policy-rc.d.prev' '/usr/sbin/policy-rc.d'
   export RUNLEVEL="${PREVIOUS_RUNLEVEL}"
   export PREVIOUS_RUNLEVEL=

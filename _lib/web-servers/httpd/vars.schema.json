@@ -53,15 +53,15 @@
       "type": "string",
       "description": "Unix socket for HTTPD to listen on"
     },
-    "WWWROOT_NAME": {
+    "HTTPD_WWWROOT_NAME": {
       "description": "The primary domain or server name (ServerName) for Apache to bind to.",
       "type": "string"
     },
-    "WWWROOT_PATH": {
+    "HTTPD_WWWROOT_PATH": {
       "description": "The absolute path to the DocumentRoot directory.",
       "type": "string"
     },
-    "WWWROOT_LISTEN": {
+    "HTTPD_WWWROOT_LISTEN": {
       "description": "The HTTP port Apache should listen on (defaults to 80).",
       "type": "string",
       "default": "80"
@@ -79,19 +79,19 @@
       "type": "string",
       "default": "libscript_httpd"
     },
-    "LISTEN": {
+    "HTTPD_LISTEN": {
       "type": "string",
       "description": "Address/port to listen on."
     },
-    "WWWROOT": {
+    "HTTPD_WWWROOT": {
       "type": "string",
       "description": "Web server root directory."
     },
-    "PHP_FPM_LISTEN": {
+    "HTTPD_PHP_FPM_LISTEN": {
       "type": "string",
       "description": "Listen address/socket for PHP-FPM."
     },
-    "SERVER_NAME": {
+    "HTTPD_SERVER_NAME": {
       "type": "string",
       "description": "Name of the server (e.g., example.com)."
     }

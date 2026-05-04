@@ -41,41 +41,41 @@ MAGENTO_DB_DRIVER="${MAGENTO_DB_DRIVER:-mariadb}"
 export MAGENTO_DB_DRIVER
 
 # Check if required tools are available
-depends 'php'
+libscript_depends 'php'
 if [ "${MAGENTO_WEBSERVER}" = "nginx" ] || [ "${MAGENTO_WEBSERVER}" = "caddy" ]; then
-  if ! depends 'php-fpm' ; then
+  if ! libscript_depends 'php-fpm' ; then
     true
   fi
 fi
-if ! depends 'composer' ; then
+if ! libscript_depends 'composer' ; then
   true
 fi
-if ! depends "${MAGENTO_DB_DRIVER}" ; then
+if ! libscript_depends "${MAGENTO_DB_DRIVER}" ; then
   true
 fi
-depends "${MAGENTO_WEBSERVER}"
+libscript_depends "${MAGENTO_WEBSERVER}"
 
-WWWROOT="${WWWROOT:-/var/www/magento}"
-export WWWROOT
+MAGENTO_WWWROOT="${MAGENTO_WWWROOT:-/var/www/magento}"
+export MAGENTO_WWWROOT
 
-if [ ! -d "${WWWROOT}/app" ]; then
-  echo "Downloading Magento (${MAGENTO_VERSION}) to ${WWWROOT}..."
-  priv mkdir -p "${WWWROOT}"
-  
+if [ ! -d "${MAGENTO_WWWROOT}/app" ]; then
+  echo "Downloading Magento (${MAGENTO_VERSION}) to ${MAGENTO_WWWROOT}..."
+  priv mkdir -p "${MAGENTO_WWWROOT}"
+
   # For a full install without auth.json typically use a pre-packaged tarball, but we use github releases for simplicity
   dl_url="https://github.com/magento/magento2/archive/refs/tags/${MAGENTO_VERSION}.tar.gz"
-  
+
   if command -v libscript_download >/dev/null 2>&1; then
     tmp_magento=$(mktemp)
     libscript_download "${dl_url}" "${tmp_magento}"
-    priv tar xzf "${tmp_magento}" --strip-components=1 -C "${WWWROOT}"
+    priv tar xzf "${tmp_magento}" --strip-components=1 -C "${MAGENTO_WWWROOT}"
     rm -f "${tmp_magento}"
   else
-    wget -qO- "${dl_url}" | priv tar xz --strip-components=1 -C "${WWWROOT}"
+    wget -qO- "${dl_url}" | priv tar xz --strip-components=1 -C "${MAGENTO_WWWROOT}"
   fi
-  
+
   if command -v composer >/dev/null 2>&1; then
-    cd "${WWWROOT}"
+    cd "${MAGENTO_WWWROOT}"
     composer install --no-interaction || true
     cd - >/dev/null
   fi
@@ -103,26 +103,26 @@ elif [ "${MAGENTO_DB_DRIVER}" = "postgres" ] || [ "${MAGENTO_DB_DRIVER}" = "post
   fi
 elif [ "${MAGENTO_DB_DRIVER}" = "sqlite" ]; then
   if command -v sqlite3 >/dev/null 2>&1; then
-    priv sqlite3 "${WWWROOT}/magento.sqlite" "VACUUM;" || true
+    priv sqlite3 "${MAGENTO_WWWROOT}/magento.sqlite" "VACUUM;" || true
   fi
 fi
 
-if ! priv chown -R www-data:www-data "${WWWROOT}" ; then
+if ! priv chown -R www-data:www-data "${MAGENTO_WWWROOT}" ; then
   true
 fi
 
-if [ -z "${PHP_FPM_LISTEN:-}" ]; then
+if [ -z "${MAGENTO_PHP_FPM_LISTEN:-}" ]; then
   if [ -e /run/php/php-fpm.sock ]; then
-    export PHP_FPM_LISTEN="unix:/run/php/php-fpm.sock"
+    export MAGENTO_PHP_FPM_LISTEN="unix:/run/php/php-fpm.sock"
   elif [ -e /var/run/php-fpm/php-fpm.sock ]; then
-    export PHP_FPM_LISTEN="unix:/var/run/php-fpm/php-fpm.sock"
+    export MAGENTO_PHP_FPM_LISTEN="unix:/var/run/php-fpm/php-fpm.sock"
   elif [ -e /var/run/php-fpm.sock ]; then
-    export PHP_FPM_LISTEN="unix:/var/run/php-fpm.sock"
+    export MAGENTO_PHP_FPM_LISTEN="unix:/var/run/php-fpm.sock"
   else
-    export PHP_FPM_LISTEN="127.0.0.1:9000"
+    export MAGENTO_PHP_FPM_LISTEN="127.0.0.1:9000"
     for sock in /run/php/php*.sock; do
       if [ -e "$sock" ]; then
-        export PHP_FPM_LISTEN="unix:$sock"
+        export MAGENTO_PHP_FPM_LISTEN="unix:$sock"
         break
       fi
     done
@@ -130,37 +130,50 @@ if [ -z "${PHP_FPM_LISTEN:-}" ]; then
 fi
 
 # Configure Webserver
-SERVER_NAME="${MAGENTO_SERVER_NAME:-localhost}"
-export SERVER_NAME
+MAGENTO_SERVER_NAME="${MAGENTO_SERVER_NAME:-localhost}"
+export MAGENTO_SERVER_NAME
 
 echo "Configuring webserver: ${MAGENTO_WEBSERVER}"
 
 ENV_SCRIPT_FILE=$(mktemp)
 cat <<EOF > "${ENV_SCRIPT_FILE}"
-export SERVER_NAME="${SERVER_NAME}"
-export WWWROOT="${WWWROOT}/pub"
-export PHP_FPM_LISTEN="${PHP_FPM_LISTEN}"
+export MAGENTO_SERVER_NAME="${MAGENTO_SERVER_NAME}"
+export MAGENTO_WWWROOT="${MAGENTO_WWWROOT}/pub"
+export MAGENTO_PHP_FPM_LISTEN="${MAGENTO_PHP_FPM_LISTEN}"
 export LISTEN="${MAGENTO_LISTEN:-80}"
+export NGINX_LISTEN="${MAGENTO_LISTEN:-80}"
+export HTTPD_LISTEN="${MAGENTO_LISTEN:-80}"
+export CADDY_LISTEN="${MAGENTO_LISTEN:-80}"
 export LOCATION_EXPR="/"
+export NGINX_LOCATION_EXPR="/"
+export NGINX_SERVER_NAME="${MAGENTO_SERVER_NAME}"
+export NGINX_WWWROOT="${MAGENTO_WWWROOT}"
+export NGINX_PHP_FPM_LISTEN="${MAGENTO_PHP_FPM_LISTEN}"
+export HTTPD_SERVER_NAME="${MAGENTO_SERVER_NAME}"
+export HTTPD_WWWROOT="${MAGENTO_WWWROOT}"
+export HTTPD_PHP_FPM_LISTEN="${MAGENTO_PHP_FPM_LISTEN}"
+export CADDY_SERVER_NAME="${MAGENTO_SERVER_NAME}"
+export CADDY_WWWROOT="${MAGENTO_WWWROOT}"
+export CADDY_PHP_FPM_LISTEN="${MAGENTO_PHP_FPM_LISTEN}"
 EOF
 export ENV_SCRIPT_FILE
 
 if [ "${MAGENTO_WEBSERVER}" = "nginx" ]; then
   LOC_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_location_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_location_block.sh" > "${LOC_BLOCK_TMP}"
-  
+
   LOCATIONS="$(cat "${LOC_BLOCK_TMP}")"
   export LOCATIONS
   SERVER_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" > "${SERVER_BLOCK_TMP}"
-  
+
   NGINX_CONF_DIR="${LIBSCRIPT_ROOT_DIR}/installed/nginx/conf"
   if [ -d /etc/nginx/sites-available ]; then
     NGINX_CONF_DIR="/etc/nginx"
   fi
-  
-  priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${SERVER_NAME}.conf"
-  priv ln -sf "${NGINX_CONF_DIR}/sites-available/${SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${SERVER_NAME}.conf"
+
+  priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${MAGENTO_SERVER_NAME}.conf"
+  priv ln -sf "${NGINX_CONF_DIR}/sites-available/${MAGENTO_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${MAGENTO_SERVER_NAME}.conf"
   if ! priv systemctl reload nginx ; then
     true
   fi
@@ -171,7 +184,7 @@ elif [ "${MAGENTO_WEBSERVER}" = "caddy" ]; then
   if [ -d /etc/caddy/conf.d ] || [ -d /etc/caddy/caddy.d ]; then
     conf_dir="/etc/caddy/conf.d"
     [ -d /etc/caddy/caddy.d ] && conf_dir="/etc/caddy/caddy.d"
-    priv cp "${CADDY_BLOCK_TMP}" "${conf_dir}/${SERVER_NAME}.caddy"
+    priv cp "${CADDY_BLOCK_TMP}" "${conf_dir}/${MAGENTO_SERVER_NAME}.caddy"
   else
     priv tee -a /etc/caddy/Caddyfile < "${CADDY_BLOCK_TMP}" >/dev/null
   fi
@@ -183,13 +196,13 @@ elif [ "${MAGENTO_WEBSERVER}" = "httpd" ]; then
   HTTPD_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/httpd/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/httpd/create_server_block.sh" > "${HTTPD_BLOCK_TMP}"
   if [ -d /etc/httpd/conf.d ]; then
-    priv cp "${HTTPD_BLOCK_TMP}" "/etc/httpd/conf.d/${SERVER_NAME}.conf"
+    priv cp "${HTTPD_BLOCK_TMP}" "/etc/httpd/conf.d/${MAGENTO_SERVER_NAME}.conf"
     if ! priv systemctl reload httpd ; then
       true
     fi
   elif [ -d /etc/apache2/sites-available ]; then
-    priv cp "${HTTPD_BLOCK_TMP}" "/etc/apache2/sites-available/${SERVER_NAME}.conf"
-    priv ln -sf "/etc/apache2/sites-available/${SERVER_NAME}.conf" "/etc/apache2/sites-enabled/${SERVER_NAME}.conf"
+    priv cp "${HTTPD_BLOCK_TMP}" "/etc/apache2/sites-available/${MAGENTO_SERVER_NAME}.conf"
+    priv ln -sf "/etc/apache2/sites-available/${MAGENTO_SERVER_NAME}.conf" "/etc/apache2/sites-enabled/${MAGENTO_SERVER_NAME}.conf"
     if ! priv systemctl reload apache2 ; then
       true
     fi
@@ -201,4 +214,4 @@ fi
 
 rm -f "${ENV_SCRIPT_FILE}"
 
-echo "Magento setup complete on ${SERVER_NAME}"
+echo "Magento setup complete on ${MAGENTO_SERVER_NAME}"

@@ -1,1 +1,10 @@
-{}
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "_noop",
+  "category": "_common",
+  "title": "No-Op Fallback",
+  "description": "Safe fallback when specific dependencies are disabled or intentionally omitted from a stack deployment.",
+  "provides": [
+    "noop"
+  ]
+}

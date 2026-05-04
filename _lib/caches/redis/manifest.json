@@ -1,5 +1,6 @@
 {
-  "name": "REDIS",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "redis",
   "title": "Redis",
   "description": "In-memory data structure store used as a database, cache, message broker, and streaming engine.",
   "category": "cache",

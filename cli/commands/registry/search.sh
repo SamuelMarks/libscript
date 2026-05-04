@@ -29,10 +29,10 @@ if [ "$cmd" = "db-search" ]; then
     exit 1
   fi
   sqlite3 -column -header "$DB_FILE" "
-    SELECT c.name, v.version, f.url, f.checksum 
-    FROM components c 
-    LEFT JOIN versions v ON c.id = v.component_id 
-    LEFT JOIN files f ON v.id = f.version_id 
+    SELECT c.name, v.version, f.url, f.checksum
+    FROM components c
+    LEFT JOIN versions v ON c.id = v.component_id
+    LEFT JOIN files f ON v.id = f.version_id
     WHERE c.name LIKE '%$query%' OR v.version LIKE '%$query%'
   "
   exit 0

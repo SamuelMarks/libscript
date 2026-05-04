@@ -43,24 +43,24 @@ done
 
 if [ "${TARGET_OS}" = "windows" ] || [ "${TARGET_OS}" = "mingw" ] || [ "${TARGET_OS}" = "cygwin" ]; then
     >&2 printf "Valkey is not available on Windows natively. Exiting gracefully...\n"
-    echo "skipping valkey source build"
+    log_info "skipping valkey source build"
 fi
 
-if depends 'valkey'; then
+if libscript_depends 'valkey'; then
     >&2 printf "Valkey installed via package manager.\n"
-elif depends 'valkey-server'; then
+elif libscript_depends 'valkey-server'; then
     >&2 printf "Valkey-server installed via package manager.\n"
-elif depends 'redis'; then
+elif libscript_depends 'redis'; then
     >&2 printf "Redis installed via package manager as fallback.\n"
-elif depends 'redis-server'; then
+elif libscript_depends 'redis-server'; then
     >&2 printf "Redis-server installed via package manager as fallback.\n"
 else
-    depends 'git' 'c_compiler' 'make' || {
+    libscript_depends 'git' 'c_compiler' 'make' || {
         >&2 printf "Required build tools for Valkey are missing. Exiting...\n"
-        echo "skipping valkey source build"
+        log_info "skipping valkey source build"
     }
     >&2 printf "Building valkey from source is not implemented. Exiting...\n"
-    echo "skipping valkey source build"
+    log_info "skipping valkey source build"
 fi
 # Simplified for generic systems
 # Could pull from git and build...

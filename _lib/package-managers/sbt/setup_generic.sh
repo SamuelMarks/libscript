@@ -33,7 +33,7 @@ if ! command -v sbt >/dev/null 2>&1; then
       sdk install sbt || true
     fi
   else
-    if ! depends sbt ; then
+    if ! libscript_depends sbt ; then
       true
     fi
   fi

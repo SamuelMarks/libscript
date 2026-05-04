@@ -1,5 +1,4 @@
-Paru
-====
+# Paru
 
 Bootstrap module for the `paru` package manager.
 

@@ -1,7 +1,6 @@
-Databases
-=========
+# Databases
 
-## Purpose & Overview
+## Purpose & Current State
 **Purpose**: This document provides context and technical details for the **Storage folder (`_storage`)** component within the LibScript ecosystem. This directory houses various database and storage solutions (e.g., PostgreSQL, MongoDB, SQLite). 
 
 The components inside this directory work both as local version managers (similar to `rvm`, `nvm`, `pyenv`, or `uv`) for their respective storage technologies, and can be invoked from the global version manager `libscript`. By providing these flexible storage primitives, LibScript can be used to seamlessly build bigger, more complex software stacks (like WordPress, Open edX, Nextcloud, etc.).

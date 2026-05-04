@@ -1,5 +1,6 @@
 {
-  "name": "EOPKG",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "eopkg",
   "provides": [
     "package-manager",
     "eopkg"

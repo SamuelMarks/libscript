@@ -1,5 +1,6 @@
 {
-  "name": "GHCUP",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "ghcup",
   "provides": [
     "package-manager",
     "ghcup"

@@ -1,5 +1,4 @@
-Helm
-====
+# Helm
 
 Bootstrap module for the `helm` Kubernetes package manager.
 

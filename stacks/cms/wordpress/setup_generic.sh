@@ -37,45 +37,45 @@ done
 WORDPRESS_WEBSERVER="${WORDPRESS_WEBSERVER:-nginx}"
 export WORDPRESS_WEBSERVER
 
-depends 'php'
+libscript_depends 'php'
 if [ "${WORDPRESS_WEBSERVER}" = "nginx" ] || [ "${WORDPRESS_WEBSERVER}" = "caddy" ]; then
-  depends 'php-fpm' || true # Some package managers include FPM in 'php'
+  libscript_depends 'php-fpm' || true # Some package managers include FPM in 'php'
 fi
 WORDPRESS_DB_ENGINE="${WORDPRESS_DB_ENGINE:-mariadb}"
 export WORDPRESS_DB_ENGINE
 
 if [ "${WORDPRESS_DB_ENGINE}" = "sqlite" ]; then
-  depends 'sqlite' || depends 'sqlite3'
+  libscript_depends 'sqlite' || libscript_depends 'sqlite3'
 elif [ "${WORDPRESS_DB_ENGINE}" = "postgres" ] || [ "${WORDPRESS_DB_ENGINE}" = "postgresql" ]; then
-  depends 'postgres' || depends 'postgresql'
+  libscript_depends 'postgres' || libscript_depends 'postgresql'
 else
-  depends 'mariadb' || depends 'mysql'
+  libscript_depends 'mariadb' || libscript_depends 'mysql'
 fi
-depends "${WORDPRESS_WEBSERVER}"
+libscript_depends "${WORDPRESS_WEBSERVER}"
 
 # Download and extract WordPress
 WORDPRESS_VERSION="${WORDPRESS_VERSION:-latest}"
 export WORDPRESS_VERSION
 
-WWWROOT="${WWWROOT:-/var/www/wordpress}"
-export WWWROOT
+WORDPRESS_WWWROOT="${WORDPRESS_WWWROOT:-/var/www/wordpress}"
+export WORDPRESS_WWWROOT
 
-if [ ! -d "${WWWROOT}/wp-admin" ]; then
-  echo "Downloading WordPress (${WORDPRESS_VERSION}) to ${WWWROOT}..."
-  priv mkdir -p "${WWWROOT}"
+if [ ! -d "${WORDPRESS_WWWROOT}/wp-admin" ]; then
+  echo "Downloading WordPress (${WORDPRESS_VERSION}) to ${WORDPRESS_WWWROOT}..."
+  priv mkdir -p "${WORDPRESS_WWWROOT}"
   if [ "${WORDPRESS_VERSION}" = "latest" ]; then
     dl_url="https://wordpress.org/latest.tar.gz"
   else
     dl_url="https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz"
   fi
-  
+
   if command -v libscript_download >/dev/null 2>&1; then
     tmp_wp=$(mktemp)
     libscript_download "${dl_url}" "${tmp_wp}"
-    priv tar xzf "${tmp_wp}" --strip-components=1 -C "${WWWROOT}"
+    priv tar xzf "${tmp_wp}" --strip-components=1 -C "${WORDPRESS_WWWROOT}"
     rm -f "${tmp_wp}"
   else
-    wget -qO- "${dl_url}" | priv tar xz --strip-components=1 -C "${WWWROOT}"
+    wget -qO- "${dl_url}" | priv tar xz --strip-components=1 -C "${WORDPRESS_WWWROOT}"
   fi
 fi
 
@@ -86,11 +86,11 @@ DB_PASS="${WORDPRESS_DB_PASS:-wordpress}"
 
 echo "Configuring Database..."
 if [ "${WORDPRESS_DB_ENGINE}" = "sqlite" ]; then
-  depends 'unzip'
+  libscript_depends 'unzip'
   # No DB service needed for SQLite
   # We just need to download the sqlite-database-integration drop-in
-  if [ ! -f "${WWWROOT}/wp-content/db.php" ]; then
-    priv mkdir -p "${WWWROOT}/wp-content/mu-plugins"
+  if [ ! -f "${WORDPRESS_WWWROOT}/wp-content/db.php" ]; then
+    priv mkdir -p "${WORDPRESS_WWWROOT}/wp-content/mu-plugins"
     dl_sqlite_url="https://downloads.wordpress.org/plugin/sqlite-database-integration.zip"
     tmp_sqlite=$(mktemp)
     if command -v libscript_download >/dev/null 2>&1; then
@@ -98,17 +98,17 @@ if [ "${WORDPRESS_DB_ENGINE}" = "sqlite" ]; then
     else
       wget -qO "${tmp_sqlite}" "${dl_sqlite_url}"
     fi
-    priv unzip -q -o "${tmp_sqlite}" -d "${WWWROOT}/wp-content/plugins"
-    priv cp "${WWWROOT}/wp-content/plugins/sqlite-database-integration/db.copy" "${WWWROOT}/wp-content/db.php"
+    priv unzip -q -o "${tmp_sqlite}" -d "${WORDPRESS_WWWROOT}/wp-content/plugins"
+    priv cp "${WORDPRESS_WWWROOT}/wp-content/plugins/sqlite-database-integration/db.copy" "${WORDPRESS_WWWROOT}/wp-content/db.php"
     rm -f "${tmp_sqlite}"
-    priv sed -i "s|{SQLITE_DB_DROPIN_VERSION}|1.0.0|" "${WWWROOT}/wp-content/db.php" || true
-    priv sed -i "s|{SQLITE_PLUGIN}|sqlite-database-integration/load.php|" "${WWWROOT}/wp-content/db.php" || true
+    priv sed -i "s|{SQLITE_DB_DROPIN_VERSION}|1.0.0|" "${WORDPRESS_WWWROOT}/wp-content/db.php" || true
+    priv sed -i "s|{SQLITE_PLUGIN}|sqlite-database-integration/load.php|" "${WORDPRESS_WWWROOT}/wp-content/db.php" || true
     echo "SQLite database integration plugin installed."
   fi
 elif [ "${WORDPRESS_DB_ENGINE}" = "postgres" ] || [ "${WORDPRESS_DB_ENGINE}" = "postgresql" ]; then
-  depends 'unzip'
+  libscript_depends 'unzip'
   # Install PG4WP drop-in
-  if [ ! -f "${WWWROOT}/wp-content/db.php" ]; then
+  if [ ! -f "${WORDPRESS_WWWROOT}/wp-content/db.php" ]; then
     dl_pg_url="https://downloads.wordpress.org/plugin/postgresql-for-wordpress.zip"
     tmp_pg=$(mktemp)
     if command -v libscript_download >/dev/null 2>&1; then
@@ -116,9 +116,9 @@ elif [ "${WORDPRESS_DB_ENGINE}" = "postgres" ] || [ "${WORDPRESS_DB_ENGINE}" = "
     else
       wget -qO "${tmp_pg}" "${dl_pg_url}"
     fi
-    priv unzip -q -o "${tmp_pg}" -d "${WWWROOT}/wp-content"
-    priv mv "${WWWROOT}/wp-content/postgresql-for-wordpress/pg4wp" "${WWWROOT}/wp-content/"
-    priv cp "${WWWROOT}/wp-content/pg4wp/db.php" "${WWWROOT}/wp-content/db.php"
+    priv unzip -q -o "${tmp_pg}" -d "${WORDPRESS_WWWROOT}/wp-content"
+    priv mv "${WORDPRESS_WWWROOT}/wp-content/postgresql-for-wordpress/pg4wp" "${WORDPRESS_WWWROOT}/wp-content/"
+    priv cp "${WORDPRESS_WWWROOT}/wp-content/pg4wp/db.php" "${WORDPRESS_WWWROOT}/wp-content/db.php"
     rm -f "${tmp_pg}"
     echo "PostgreSQL drop-in installed."
   fi
@@ -146,28 +146,28 @@ else
   fi
 fi
 
-if [ ! -f "${WWWROOT}/wp-config.php" ]; then
-  priv cp "${WWWROOT}/wp-config-sample.php" "${WWWROOT}/wp-config.php"
-  priv sed -i "s/database_name_here/${DB_NAME}/" "${WWWROOT}/wp-config.php"
-  priv sed -i "s/username_here/${DB_USER}/" "${WWWROOT}/wp-config.php"
-  priv sed -i "s/password_here/${DB_PASS}/" "${WWWROOT}/wp-config.php"
+if [ ! -f "${WORDPRESS_WWWROOT}/wp-config.php" ]; then
+  priv cp "${WORDPRESS_WWWROOT}/wp-config-sample.php" "${WORDPRESS_WWWROOT}/wp-config.php"
+  priv sed -i "s/database_name_here/${DB_NAME}/" "${WORDPRESS_WWWROOT}/wp-config.php"
+  priv sed -i "s/username_here/${DB_USER}/" "${WORDPRESS_WWWROOT}/wp-config.php"
+  priv sed -i "s/password_here/${DB_PASS}/" "${WORDPRESS_WWWROOT}/wp-config.php"
 fi
-priv chown -R www-data:www-data "${WWWROOT}" || true # fallback for distros without www-data
+priv chown -R www-data:www-data "${WORDPRESS_WWWROOT}" || true # fallback for distros without www-data
 
 # Determine PHP_FPM Socket (OS specific usually)
-if [ -z "${PHP_FPM_LISTEN:-}" ]; then
+if [ -z "${WORDPRESS_PHP_FPM_LISTEN:-}" ]; then
   if [ -e /run/php/php-fpm.sock ]; then
-    export PHP_FPM_LISTEN="unix:/run/php/php-fpm.sock"
+    export WORDPRESS_PHP_FPM_LISTEN="unix:/run/php/php-fpm.sock"
   elif [ -e /var/run/php-fpm/php-fpm.sock ]; then
-    export PHP_FPM_LISTEN="unix:/var/run/php-fpm/php-fpm.sock"
+    export WORDPRESS_PHP_FPM_LISTEN="unix:/var/run/php-fpm/php-fpm.sock"
   elif [ -e /var/run/php-fpm.sock ]; then
-    export PHP_FPM_LISTEN="unix:/var/run/php-fpm.sock"
+    export WORDPRESS_PHP_FPM_LISTEN="unix:/var/run/php-fpm.sock"
   else
     # Let's try to find it dynamically or fallback to localhost port
-    export PHP_FPM_LISTEN="127.0.0.1:9000"
+    export WORDPRESS_PHP_FPM_LISTEN="127.0.0.1:9000"
     for sock in /run/php/php*.sock; do
       if [ -e "$sock" ]; then
-        export PHP_FPM_LISTEN="unix:$sock"
+        export WORDPRESS_PHP_FPM_LISTEN="unix:$sock"
         break
       fi
     done
@@ -175,38 +175,51 @@ if [ -z "${PHP_FPM_LISTEN:-}" ]; then
 fi
 
 # Configure Webserver
-SERVER_NAME="${WORDPRESS_SERVER_NAME:-localhost}"
-export SERVER_NAME
+WORDPRESS_SERVER_NAME="${WORDPRESS_SERVER_NAME:-localhost}"
+export WORDPRESS_SERVER_NAME
 
 echo "Configuring webserver: ${WORDPRESS_WEBSERVER}"
 
 # Create a temporary env file for webserver scripts
 ENV_SCRIPT_FILE=$(mktemp)
 cat <<EOF > "${ENV_SCRIPT_FILE}"
-export SERVER_NAME="${SERVER_NAME}"
-export WWWROOT="${WWWROOT}"
-export PHP_FPM_LISTEN="${PHP_FPM_LISTEN}"
+export WORDPRESS_SERVER_NAME="${WORDPRESS_SERVER_NAME}"
+export WORDPRESS_WWWROOT="${WORDPRESS_WWWROOT}"
+export WORDPRESS_PHP_FPM_LISTEN="${WORDPRESS_PHP_FPM_LISTEN}"
 export LISTEN="${WORDPRESS_LISTEN:-80}"
+export NGINX_LISTEN="${WORDPRESS_LISTEN:-80}"
+export HTTPD_LISTEN="${WORDPRESS_LISTEN:-80}"
+export CADDY_LISTEN="${WORDPRESS_LISTEN:-80}"
 export LOCATION_EXPR="/"
+export NGINX_LOCATION_EXPR="/"
+export NGINX_SERVER_NAME="${WORDPRESS_SERVER_NAME}"
+export NGINX_WWWROOT="${WORDPRESS_WWWROOT}"
+export NGINX_PHP_FPM_LISTEN="${WORDPRESS_PHP_FPM_LISTEN}"
+export HTTPD_SERVER_NAME="${WORDPRESS_SERVER_NAME}"
+export HTTPD_WWWROOT="${WORDPRESS_WWWROOT}"
+export HTTPD_PHP_FPM_LISTEN="${WORDPRESS_PHP_FPM_LISTEN}"
+export CADDY_SERVER_NAME="${WORDPRESS_SERVER_NAME}"
+export CADDY_WWWROOT="${WORDPRESS_WWWROOT}"
+export CADDY_PHP_FPM_LISTEN="${WORDPRESS_PHP_FPM_LISTEN}"
 EOF
 export ENV_SCRIPT_FILE
 
 if [ "${WORDPRESS_WEBSERVER}" = "nginx" ]; then
   LOC_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_location_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_location_block.sh" > "${LOC_BLOCK_TMP}"
-  
+
   LOCATIONS="$(cat "${LOC_BLOCK_TMP}")"
   export LOCATIONS
   SERVER_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" > "${SERVER_BLOCK_TMP}"
-  
+
   NGINX_CONF_DIR="${LIBSCRIPT_ROOT_DIR}/installed/nginx/conf"
   if [ -d /etc/nginx/sites-available ]; then
     NGINX_CONF_DIR="/etc/nginx"
   fi
-  
-  priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${SERVER_NAME}.conf"
-  priv ln -sf "${NGINX_CONF_DIR}/sites-available/${SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${SERVER_NAME}.conf"
+
+  priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${WORDPRESS_SERVER_NAME}.conf"
+  priv ln -sf "${NGINX_CONF_DIR}/sites-available/${WORDPRESS_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${WORDPRESS_SERVER_NAME}.conf"
   if ! priv systemctl reload nginx ; then
     true
   fi
@@ -217,7 +230,7 @@ elif [ "${WORDPRESS_WEBSERVER}" = "caddy" ]; then
   if [ -d /etc/caddy/conf.d ] || [ -d /etc/caddy/caddy.d ]; then
     conf_dir="/etc/caddy/conf.d"
     [ -d /etc/caddy/caddy.d ] && conf_dir="/etc/caddy/caddy.d"
-    priv cp "${CADDY_BLOCK_TMP}" "${conf_dir}/${SERVER_NAME}.caddy"
+    priv cp "${CADDY_BLOCK_TMP}" "${conf_dir}/${WORDPRESS_SERVER_NAME}.caddy"
   else
     priv tee -a /etc/caddy/Caddyfile < "${CADDY_BLOCK_TMP}" >/dev/null
   fi
@@ -229,13 +242,13 @@ elif [ "${WORDPRESS_WEBSERVER}" = "httpd" ]; then
   HTTPD_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/httpd/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/httpd/create_server_block.sh" > "${HTTPD_BLOCK_TMP}"
   if [ -d /etc/httpd/conf.d ]; then
-    priv cp "${HTTPD_BLOCK_TMP}" "/etc/httpd/conf.d/${SERVER_NAME}.conf"
+    priv cp "${HTTPD_BLOCK_TMP}" "/etc/httpd/conf.d/${WORDPRESS_SERVER_NAME}.conf"
     if ! priv systemctl reload httpd ; then
       true
     fi
   elif [ -d /etc/apache2/sites-available ]; then
-    priv cp "${HTTPD_BLOCK_TMP}" "/etc/apache2/sites-available/${SERVER_NAME}.conf"
-    priv ln -sf "/etc/apache2/sites-available/${SERVER_NAME}.conf" "/etc/apache2/sites-enabled/${SERVER_NAME}.conf"
+    priv cp "${HTTPD_BLOCK_TMP}" "/etc/apache2/sites-available/${WORDPRESS_SERVER_NAME}.conf"
+    priv ln -sf "/etc/apache2/sites-available/${WORDPRESS_SERVER_NAME}.conf" "/etc/apache2/sites-enabled/${WORDPRESS_SERVER_NAME}.conf"
     if ! priv systemctl reload apache2 ; then
       true
     fi
@@ -247,4 +260,4 @@ fi
 
 rm -f "${ENV_SCRIPT_FILE}"
 
-echo "WordPress setup complete on ${SERVER_NAME}"
+echo "WordPress setup complete on ${WORDPRESS_SERVER_NAME}"

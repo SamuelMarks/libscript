@@ -1,5 +1,6 @@
 {
-  "name": "ASDF",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "asdf",
   "provides": [
     "version-manager",
     "package-manager",

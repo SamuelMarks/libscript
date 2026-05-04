@@ -27,7 +27,7 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 if ! command -v flatpak >/dev/null 2>&1; then
-  if ! depends flatpak ; then
+  if ! libscript_depends flatpak ; then
     true
   fi
 fi

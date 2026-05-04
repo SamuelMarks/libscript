@@ -1,5 +1,4 @@
-Opam
-====
+# Opam
 
 Bootstrap script for [opam](https://opam.ocaml.org/), the source-based package manager for OCaml.
 

@@ -1,5 +1,6 @@
 {
-  "name": "XBPS",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "xbps",
   "provides": [
     "package-manager",
     "xbps"

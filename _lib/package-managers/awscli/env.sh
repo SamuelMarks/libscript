@@ -22,7 +22,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 if command -v aws >/dev/null 2>&1; then
-    echo "AWS CLI is already installed."
+    log_info "AWS CLI is already installed."
     exit 0
 
 # Load caching downloader
@@ -35,14 +35,14 @@ export PACKAGE_NAME
 
 case "$OS" in
     Linux)
-        echo "Installing AWS CLI on Linux..."
+        log_info "Installing AWS CLI on Linux..."
         libscript_download "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" "awscliv2.zip"
         unzip awscliv2.zip
         sudo ./aws/install
         rm -rf aws awscliv2.zip
         ;;
     Darwin)
-        echo "Installing AWS CLI on macOS..."
+        log_info "Installing AWS CLI on macOS..."
         if command -v brew >/dev/null 2>&1; then
             brew install awscli
         else
@@ -51,11 +51,11 @@ case "$OS" in
             rm AWSCLIV2.pkg
         fi
     CYGWIN*|MINGW*|MSYS*)
-        echo "Installing AWS CLI on Windows..."
+        log_info "Installing AWS CLI on Windows..."
         libscript_download "https://awscli.amazonaws.com/AWSCLIV2.msi" "AWSCLIV2.msi"
         msiexec.exe /i AWSCLIV2.msi /qn /norestart
         rm AWSCLIV2.msi
     *)
-        echo "Unsupported OS: $OS"
+        log_info "Unsupported OS: $OS"
         exit 1
 esac

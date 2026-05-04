@@ -1,6 +1,3 @@
-[CmdletBinding()]
-param()
-
 $ErrorActionPreference = "Stop"
 
 $MosquittoVersion = $env:MOSQUITTO_VERSION

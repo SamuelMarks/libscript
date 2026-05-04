@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $PrestashopVersion = if ($env:PRESTASHOP_VERSION) { $env:PRESTASHOP_VERSION } else { "8.2.4" }
-$WwwRoot = if ($env:WWWROOT) { $env:WWWROOT } else { "C:\inetpub\wwwroot\prestashop" }
+$WwwRoot = if ($env:PRESTASHOP_WWWROOT) { $env:PRESTASHOP_WWWROOT } else { "C:\inetpub\wwwroot\prestashop" }
 $DbType = if ($env:PRESTASHOP_DB_TYPE) { $env:PRESTASHOP_DB_TYPE } else { "mariadb" }
 $DbName = if ($env:PRESTASHOP_DB_NAME) { $env:PRESTASHOP_DB_NAME } else { "prestashop" }
 $DbUser = if ($env:PRESTASHOP_DB_USER) { $env:PRESTASHOP_DB_USER } else { "prestashop" }
@@ -95,21 +95,21 @@ if ($DbType -eq "mariadb" -or $DbType -eq "mysql") {
     }
 }
 
-if ($WebServer -eq "iis" -and -not $env:PHP_FPM_LISTEN) {
+if ($WebServer -eq "iis" -and -not $env:PRESTASHOP_PHP_FPM_LISTEN) {
     $phpExe = (Get-Command php.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source)
     if ($phpExe) {
         $phpDir = Split-Path -Parent $phpExe
         $phpCgi = Join-Path $phpDir "php-cgi.exe"
         if (Test-Path $phpCgi) {
-            $env:PHP_FPM_LISTEN = $phpCgi
+            $env:PRESTASHOP_PHP_FPM_LISTEN = $phpCgi
         }
     }
 }
 
 if ($WebServer -eq "iis") {
-    $env:SERVER_NAME = $ServerName
+    $env:PRESTASHOP_SERVER_NAME = $ServerName
     $env:LISTEN = $ListenPort
-    $env:WWWROOT = $WwwRoot
+    $env:PRESTASHOP_WWWROOT = $WwwRoot
 
     $iisCreateServer = Join-Path $libDir "_server\iis\create_server_block.ps1"
     if (Test-Path $iisCreateServer) {

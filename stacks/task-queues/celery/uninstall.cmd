@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableDelayedExpansion
 :: Default uninstall hook for Windows
 if not "%INSTALLED_DIR%"=="" (
     if exist "%INSTALLED_DIR%" (

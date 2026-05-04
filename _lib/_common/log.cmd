@@ -1,4 +1,15 @@
 @echo off
+setlocal EnableDelayedExpansion
+:: # LibScript Logging Module (Windows Batch)
+::
+:: ## Overview
+:: This module provides standardized logging functions for Windows.
+::
+:: ## Usage
+:: ```batch
+:: call "%LIBSCRIPT_ROOT_DIR%\\_lib\\_common\\log.cmd" :log_info "Message"
+:: ```
+
 :: LibScript Unified Logging Utility (Windows)
 
 :: Levels: 0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR

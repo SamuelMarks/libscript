@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableDelayedExpansion
 :: # LibScript Privilege Escalation Module (Windows Batch)
 :: 
 :: ## Overview

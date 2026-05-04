@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $NextcloudVersion = if ($env:NEXTCLOUD_VERSION) { $env:NEXTCLOUD_VERSION } else { "latest" }
-$WwwRoot = if ($env:WWWROOT) { $env:WWWROOT } else { "C:\inetpub\wwwroot\nextcloud" }
+$WwwRoot = if ($env:NEXTCLOUD_WWWROOT) { $env:NEXTCLOUD_WWWROOT } else { "C:\inetpub\wwwroot\nextcloud" }
 $DbName = if ($env:NEXTCLOUD_DB_NAME) { $env:NEXTCLOUD_DB_NAME } else { "nextcloud" }
 $DbUser = if ($env:NEXTCLOUD_DB_USER) { $env:NEXTCLOUD_DB_USER } else { "nextcloud" }
 $DbPass = if ($env:NEXTCLOUD_DB_PASS) { $env:NEXTCLOUD_DB_PASS } else { "nextcloud" }
@@ -101,19 +101,19 @@ if (-not (Test-Path $autoconfigFile)) {
     Set-Content -Path $autoconfigFile -Value $acContent
 }
 
-if ($WebServer -eq "iis" -and -not $env:PHP_FPM_LISTEN) {
+if ($WebServer -eq "iis" -and -not $env:NEXTCLOUD_PHP_FPM_LISTEN) {
     $phpExe = (Get-Command php.exe).Source
     $phpDir = Split-Path -Parent $phpExe
     $phpCgi = Join-Path $phpDir "php-cgi.exe"
     if (Test-Path $phpCgi) {
-        $env:PHP_FPM_LISTEN = $phpCgi
+        $env:NEXTCLOUD_PHP_FPM_LISTEN = $phpCgi
     }
 }
 
 if ($WebServer -eq "iis") {
-    $env:SERVER_NAME = $ServerName
+    $env:NEXTCLOUD_SERVER_NAME = $ServerName
     $env:LISTEN = $ListenPort
-    $env:WWWROOT = $WwwRoot
+    $env:NEXTCLOUD_WWWROOT = $WwwRoot
 
     $iisCreateServer = Join-Path $libDir "_server\iis\create_server_block.ps1"
     if (Test-Path $iisCreateServer) {

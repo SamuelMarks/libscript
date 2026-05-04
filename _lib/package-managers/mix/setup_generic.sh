@@ -34,7 +34,7 @@ if ! command -v mix >/dev/null 2>&1; then
     if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/elixir/setup.sh" ]; then
       "${LIBSCRIPT_ROOT_DIR}/_lib/languages/elixir/setup.sh"
     else
-      if ! depends elixir ; then
+      if ! libscript_depends elixir ; then
         true
       fi
     fi

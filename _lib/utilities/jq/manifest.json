@@ -1,5 +1,6 @@
 {
-  "name": "JQ",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "jq",
   "title": "jq",
   "description": "A lightweight and flexible command-line JSON processor.",
   "category": "utility",

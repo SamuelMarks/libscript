@@ -1,5 +1,5 @@
 @echo off
-setlocal enabledelayedexpansion
+setlocal EnableDelayedExpansion
 
 if "%~1"=="--help" (
     echo Usage: %0 [OPTIONS]

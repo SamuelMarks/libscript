@@ -1,5 +1,4 @@
-Maven
-=====
+# Maven
 
 Bootstrap module for the `maven` package manager/tool.
 

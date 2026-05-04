@@ -1,5 +1,6 @@
 {
-  "name": "PKG",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "pkg",
   "provides": [
     "package-manager",
     "pkg"

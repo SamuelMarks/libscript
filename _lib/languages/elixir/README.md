@@ -1,5 +1,4 @@
-Elixir
-======
+# Elixir
 
 ## Purpose & Current State
 **Purpose**: This document provides context and technical details for the `elixir` component (part of `_toolchain`) within the LibScript ecosystem. Elixir is a dynamic, functional language designed for building scalable and maintainable applications, running on the Erlang VM (BEAM). LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
@@ -7,7 +6,6 @@ Elixir
 ## Usage
 This directory contains the installation and configuration scripts for `elixir`. It works both as a local version manager (similar to rvm, nvm, pyenv, uv) for Elixir and can be invoked from the global version manager `libscript`. Furthermore, it can be used by libscript as a building block to assemble bigger stacks (like WordPress, Open edX, Nextcloud, etc.).
 
-## Usage
 You can install, start, stop, package, and uninstall elixir using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**

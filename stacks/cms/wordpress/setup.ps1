@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $WordpressVersion = if ($env:WORDPRESS_VERSION) { $env:WORDPRESS_VERSION } else { "latest" }
-$WwwRoot = if ($env:WWWROOT) { $env:WWWROOT } else { "C:\inetpub\wwwroot\wordpress" }
+$WwwRoot = if ($env:WORDPRESS_WWWROOT) { $env:WORDPRESS_WWWROOT } else { "C:\inetpub\wwwroot\wordpress" }
 $DbName = if ($env:WORDPRESS_DB_NAME) { $env:WORDPRESS_DB_NAME } else { "wordpress" }
 $DbUser = if ($env:WORDPRESS_DB_USER) { $env:WORDPRESS_DB_USER } else { "wordpress" }
 $DbPass = if ($env:WORDPRESS_DB_PASS) { $env:WORDPRESS_DB_PASS } else { "wordpress" }
@@ -11,14 +11,14 @@ $DbEngine = if ($env:WORDPRESS_DB_ENGINE) { $env:WORDPRESS_DB_ENGINE } else { "m
 $WebServer = if ($env:WORDPRESS_WEBSERVER) { $env:WORDPRESS_WEBSERVER } else { "iis" }
 
 log_info "Installing dependencies for WordPress ($WebServer)..."
-depends @("PHP.PHP")
+libscript_depends @("PHP.PHP")
 
 if ($DbEngine -eq "sqlite") {
     log_info "Using SQLite..."
 } elseif ($DbEngine -match "postgres") {
-    depends @("PostgreSQL.PostgreSQL")
+    libscript_depends @("PostgreSQL.PostgreSQL")
 } else {
-    depends @("MariaDB.Server")
+    libscript_depends @("MariaDB.Server")
 }
 
 if ($WebServer -eq "iis") {
@@ -110,19 +110,19 @@ if (-not (Test-Path $wpConfig)) {
 }
 
 # Resolve PHP-CGI executable for IIS
-if ($WebServer -eq "iis" -and -not $env:PHP_FPM_LISTEN) {
+if ($WebServer -eq "iis" -and -not $env:WORDPRESS_PHP_FPM_LISTEN) {
     $phpExe = (Get-Command php.exe).Source
     $phpDir = Split-Path -Parent $phpExe
     $phpCgi = Join-Path $phpDir "php-cgi.exe"
     if (Test-Path $phpCgi) {
-        $env:PHP_FPM_LISTEN = $phpCgi
+        $env:WORDPRESS_PHP_FPM_LISTEN = $phpCgi
     }
 }
 
 if ($WebServer -eq "iis") {
-    $env:SERVER_NAME = $ServerName
+    $env:WORDPRESS_SERVER_NAME = $ServerName
     $env:LISTEN = $ListenPort
-    $env:WWWROOT = $WwwRoot
+    $env:WORDPRESS_WWWROOT = $WwwRoot
 
     $iisCreateServer = Join-Path $libDir "_server\iis\create_server_block.ps1"
     if (Test-Path $iisCreateServer) {

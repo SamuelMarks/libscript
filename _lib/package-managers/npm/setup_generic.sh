@@ -30,7 +30,7 @@ if ! command -v npm >/dev/null 2>&1; then
   if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/setup.sh" ]; then
     "${LIBSCRIPT_ROOT_DIR}/_lib/languages/nodejs/setup.sh"
   else
-    if ! depends nodejs ; then
+    if ! libscript_depends nodejs ; then
       true
     fi
   fi

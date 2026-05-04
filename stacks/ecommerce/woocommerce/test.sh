@@ -31,11 +31,11 @@ for LIB in '_lib/_common/test_base.sh' ; do
 done
 
 echo "Validating WooCommerce installation..."
-WWWROOT="${WWWROOT:-/var/www/wordpress}"
-if [ -d "${WWWROOT}/wp-content/plugins/woocommerce" ]; then
-    echo "WooCommerce directory found at ${WWWROOT}/wp-content/plugins/woocommerce"
+WOOCOMMERCE_WWWROOT="${WOOCOMMERCE_WWWROOT:-/var/www/wordpress}"
+if [ -d "${WOOCOMMERCE_WWWROOT}/wp-content/plugins/woocommerce" ]; then
+    echo "WooCommerce directory found at ${WOOCOMMERCE_WWWROOT}/wp-content/plugins/woocommerce"
     exit 0
 else
-    echo "WooCommerce directory not found at ${WWWROOT}/wp-content/plugins/woocommerce"
+    echo "WooCommerce directory not found at ${WOOCOMMERCE_WWWROOT}/wp-content/plugins/woocommerce"
     exit 1
 fi

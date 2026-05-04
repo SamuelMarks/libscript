@@ -1,5 +1,6 @@
 {
-  "name": "LIGHTTPD",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "lighttpd",
   "title": "Lighttpd",
   "description": "A secure, fast, compliant, and very flexible web-server that has been optimized for high-performance environments.",
   "category": "web-servers",

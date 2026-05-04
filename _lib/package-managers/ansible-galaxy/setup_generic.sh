@@ -27,7 +27,7 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 if ! command -v ansible-galaxy >/dev/null 2>&1; then
-  if ! depends ansible ; then
+  if ! libscript_depends ansible ; then
     true
   fi
 fi

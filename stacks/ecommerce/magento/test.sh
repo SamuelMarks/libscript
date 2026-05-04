@@ -34,11 +34,11 @@ done
 
 set -feu
 echo "Validating Magento installation..."
-WWWROOT="${WWWROOT:-/var/www/magento}"
-if [ -d "${WWWROOT}/app" ]; then
-    echo "Magento directory found at ${WWWROOT}"
+MAGENTO_WWWROOT="${MAGENTO_WWWROOT:-/var/www/magento}"
+if [ -d "${MAGENTO_WWWROOT}/app" ]; then
+    echo "Magento directory found at ${MAGENTO_WWWROOT}"
     exit 0
 else
-    echo "Magento directory not found at ${WWWROOT}"
+    echo "Magento directory not found at ${MAGENTO_WWWROOT}"
     exit 1
 fi

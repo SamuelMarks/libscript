@@ -1,5 +1,4 @@
-Julia
-=====
+# Julia
 
 Bootstrap module for the `julia` package manager.
 

@@ -1,5 +1,6 @@
 {
-  "name": "CURL",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "curl",
   "title": "curl",
   "description": "A command-line tool and library for transferring data with URLs.",
   "category": "utility",

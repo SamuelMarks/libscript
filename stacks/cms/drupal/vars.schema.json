@@ -5,7 +5,7 @@
   "description": "Variables for drupal vars",
   "type": "object",
   "properties": {
-    "PHP_FPM_LISTEN": {
+    "DRUPAL_PHP_FPM_LISTEN": {
       "type": "string",
       "description": "Variable PHP_FPM_LISTEN."
     },
@@ -21,7 +21,7 @@
       "type": "string",
       "description": "Variable DRUPAL_DB_USER."
     },
-    "WWWROOT": {
+    "DRUPAL_WWWROOT": {
       "type": "string",
       "description": "Variable WWWROOT."
     },

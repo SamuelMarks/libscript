@@ -1,18 +1,14 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/package-managers/azure-cli/vars.schema.json",
   "title": "Azure Cli variables",
   "description": "Configuration variables for azure-cli",
   "type": "object",
   "properties": {
-    "AZURECLI_VERSION": {
+    "AZURE_CLI_VERSION": {
       "type": "string",
       "default": "latest",
       "description": "Version of Azure CLI to install"
-    },
-    "AZURE_CLI_VERSION": {
-      "description": "Specific version of azure-cli to install.",
-      "type": "string",
-      "default": "latest"
     }
   }
 }

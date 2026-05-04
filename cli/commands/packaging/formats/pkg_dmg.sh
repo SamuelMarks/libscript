@@ -25,14 +25,14 @@ export STACK="${STACK:-}${THIS_FILE}"':'
       PKG_STAGE="${OUT_FILE}_stage"
       rm -rf "$PKG_STAGE"
       mkdir -p "$PKG_STAGE/packages" "$PKG_STAGE/resources" "$PKG_STAGE/scripts"
-      
+
       if [ -n "$WELCOME_TEXT" ]; then
         echo "<html><body><h1>Welcome</h1><p>$WELCOME_TEXT</p></body></html>" > "$PKG_STAGE/resources/welcome.html"
       fi
       if [ -n "$LICENSE_PATH" ] && [ -f "$LICENSE_PATH" ]; then
         cp "$LICENSE_PATH" "$PKG_STAGE/resources/license.html"
       fi
-      
+
       DEPS_LIST=""
       if [ $# -gt 0 ]; then
         while [ $# -gt 0 ]; do
@@ -44,14 +44,14 @@ export STACK="${STACK:-}${THIS_FILE}"':'
       else
         DEPS_LIST=$(find_components | sort | awk '{printf "%s latest ", $1}')
       fi
-      
+
       set -- $DEPS_LIST
       while [ $# -gt 0 ]; do
         PKG=$1; VER=$2; shift 2
         COMP_DIR="$PKG_STAGE/comp_${PKG}"
         mkdir -p "$COMP_DIR/root/opt/libscript"
         mkdir -p "$COMP_DIR/scripts"
-        
+
         cat << "EOF_SCRIPT" > "$COMP_DIR/scripts/postinstall"
 #!/bin/sh
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
@@ -70,13 +70,13 @@ EOF_SCRIPT
               VARNAME=$(echo "$item" | jq -r '.key')
               DESC=$(echo "$item" | jq -r '.desc' | sed 's/"/\"/g')
               DEFVAL=$(echo "$item" | jq -r '.def' | sed 's/"/\"/g')
-              
+
               if case "$VARNAME" in *"_PASSWORD"*) true;; *) false;; esac; then
                 HIDDEN="with hidden answer"
               else
                 HIDDEN=""
               fi
-              
+
               cat << EOF_PROMPT >> "$COMP_DIR/scripts/postinstall"
 VAL_${VARNAME}=\$(sudo -u "\$USER_NAME" osascript -e 'Tell application "System Events" to display dialog "Configuration for ${PKG}
 
@@ -133,7 +133,7 @@ chmod +x "/opt/libscript/uninstall_${PKG}.command"
 EOF_SCRIPT
 
         chmod +x "$COMP_DIR/scripts/postinstall"
-        
+
         if command -v pkgbuild >/dev/null 2>&1; then
           mkdir -p "$(dirname "$PKG_STAGE/packages/$PKG.pkg")"
         pkgbuild --root "$COMP_DIR/root" --scripts "$COMP_DIR/scripts" --identifier "com.libscript.comp.$PKG" --version "$APP_VERSION" "$PKG_STAGE/packages/$PKG.pkg"
@@ -145,7 +145,7 @@ EOF_SCRIPT
 
         SED_CMD="sed -i"
         if [ "$(uname)" = "Darwin" ]; then SED_CMD="sed -i ''"; fi
-        
+
         $SED_CMD -e '/<installer-gui-script/a\
     <title>'"$APP_NAME"'</title>\
     <options customize="always" require-scripts="false"/>' "$PKG_STAGE/Distribution.xml"
@@ -154,12 +154,12 @@ EOF_SCRIPT
           $SED_CMD -e '/<installer-gui-script/a\
     <welcome file="welcome.html"/>' "$PKG_STAGE/Distribution.xml"
         fi
-        
+
         if [ -n "$LICENSE_PATH" ] && [ -f "$LICENSE_PATH" ]; then
           $SED_CMD -e '/<installer-gui-script/a\
     <license file="license.html"/>' "$PKG_STAGE/Distribution.xml"
         fi
-        
+
         set -- $DEPS_LIST
         while [ $# -gt 0 ]; do
           PKG=$1; VER=$2; shift 2
@@ -167,7 +167,7 @@ EOF_SCRIPT
         done
 
         productbuild --distribution "$PKG_STAGE/Distribution.xml" --package-path "$PKG_STAGE/packages" --resources "$PKG_STAGE/resources" "${OUT_FILE}.pkg"
-        
+
         if true; then
           hdiutil create -volname "$APP_NAME" -srcfolder "${OUT_FILE}.pkg" -ov -format UDZO "${OUT_FILE}.dmg"
           echo "Created ${OUT_FILE}.dmg"

@@ -34,10 +34,10 @@ done
 
 DENO_INSTALL_METHOD="${DENO_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-source}}"
 if [ "${DENO_INSTALL_METHOD}" = 'system' ]; then
-  depends 'deno' || { echo "Deno package not widely available, defaulting to from-source"; exit 1; }
+  libscript_depends 'deno' || { echo "Deno package not widely available, defaulting to from-source"; exit 1; }
 else
-  depends 'unzip'
-  if ! cmd_avail deno; then
+  libscript_depends 'unzip'
+  if ! libscript_cmd_avail deno; then
     INSTALL_SH=$(mktemp)
     libscript_download 'https://deno.land/x/install/install.sh' "${INSTALL_SH}"
     sh "${INSTALL_SH}"

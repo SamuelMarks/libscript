@@ -41,9 +41,9 @@ if [ "${GO_VERSION}" = "latest" ] || [ "${GO_VERSION}" = "stable" ]; then
   rm -f "${GO_VER_FILE}"
 fi
 if [ "${GO_INSTALL_METHOD}" = 'system' ]; then
-  depends 'go'
+  libscript_depends 'go'
 else
-  depends 'tar'
+  libscript_depends 'tar'
   os="$(uname -s | tr '[:upper:]' '[:lower:]')"
   case "${os}" in
     'darwin'*) os='darwin' ;;

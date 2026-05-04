@@ -1,5 +1,4 @@
-Conan
-=====
+# Conan
 
 Bootstrap module for `conan` (C/C++ package manager).
 

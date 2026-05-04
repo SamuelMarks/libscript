@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "woocommerce",
+  "category": "ecommerce",
+  "title": "woocommerce",
+  "description": "woocommerce stack",
+  "provides": [
+    "woocommerce"
+  ]
+}

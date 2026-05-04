@@ -1,5 +1,6 @@
 {
-  "name": "PKGX",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "pkgx",
   "provides": [
     "pkgx"
   ],

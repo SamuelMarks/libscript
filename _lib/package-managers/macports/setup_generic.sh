@@ -28,8 +28,8 @@ export SCRIPT_NAME
 
 if [ "$(uname -s)" = "Darwin" ]; then
   if ! command -v port >/dev/null 2>&1; then
-    echo "MacPorts not found. Download the pkg from https://www.macports.org/install.php"
+    log_info "MacPorts not found. Download the pkg from https://www.macports.org/install.php"
   fi
 else
-  echo "MacPorts is intended for macOS."
+  log_info "MacPorts is intended for macOS."
 fi

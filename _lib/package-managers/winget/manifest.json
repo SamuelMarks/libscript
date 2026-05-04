@@ -1,5 +1,6 @@
 {
-  "name": "WINGET",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "winget",
   "provides": [
     "winget"
   ],

@@ -1,5 +1,4 @@
-Dnf
-===
+# Dnf
 
 Bootstrap module for the `dnf` package manager.
 

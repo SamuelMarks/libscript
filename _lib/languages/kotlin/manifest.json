@@ -1,5 +1,6 @@
 {
-  "name": "KOTLIN",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "kotlin",
   "title": "Kotlin Toolchain",
   "description": "A modern programming language that makes developers happier.",
   "category": "languages",

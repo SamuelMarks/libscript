@@ -1,5 +1,6 @@
 {
-  "name": "OPENBAO",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "openbao",
   "title": "OpenBao",
   "description": "An open-source tool for managing secrets and protecting sensitive data.",
   "category": "security",

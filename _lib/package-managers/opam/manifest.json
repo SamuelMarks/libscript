@@ -1,5 +1,6 @@
 {
-  "name": "OPAM",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "opam",
   "provides": [
     "package-manager",
     "opam"

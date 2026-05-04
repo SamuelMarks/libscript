@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 if (-Not (Get-Command kubectl-krew -ErrorAction SilentlyContinue)) {
   Write-Host "Installing krew..."
   [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12

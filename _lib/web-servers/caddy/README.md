@@ -1,5 +1,4 @@
-Caddy
-=====
+# Caddy
 
 ## Purpose & Current State
 **Purpose**: This document provides context and technical details for the `caddy` server component within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
@@ -9,7 +8,6 @@ This directory contains the scripts for managing the Caddy component. It works b
 
 Furthermore, this component can be used by libscript to build bigger stacks (like WordPress, Open edX, nextcloud, etc.), easily providing automatic HTTPS and web server functionality.
 
-## Usage
 You can manage the lifecycle of this component using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**

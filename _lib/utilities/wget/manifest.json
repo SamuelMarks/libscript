@@ -1,5 +1,6 @@
 {
-  "name": "WGET",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "wget",
   "title": "Wget",
   "description": "A free software package for retrieving files using HTTP, HTTPS, FTP and FTPS.",
   "category": "utility",

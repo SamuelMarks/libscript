@@ -24,7 +24,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 if ! command -v yay >/dev/null 2>&1; then
   if [ -f /etc/arch-release ]; then
     if ! command -v git >/dev/null 2>&1; then
-      sudo pacman -S --noconfirm --needed git base-devel || true
+      libscript_depends git base-devel || true
     fi
     tmp_dir="$(mktemp -d)"
     git clone https://aur.archlinux.org/yay.git "$tmp_dir/yay"

@@ -1,5 +1,6 @@
 {
-  "name": "SWUPD",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "swupd",
   "provides": [
     "swupd"
   ],

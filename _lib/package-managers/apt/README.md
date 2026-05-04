@@ -1,5 +1,4 @@
-Apt
-===
+# Apt
 
 Bootstrap module for the `apt` package manager.
 

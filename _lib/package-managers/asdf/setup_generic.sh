@@ -22,14 +22,14 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 if ! command -v asdf >/dev/null 2>&1 && [ ! -d "$HOME/.asdf" ]; then
-  echo "Installing asdf..."
+  log_info "Installing asdf..."
   if command -v git >/dev/null 2>&1; then
     git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.14.0
   else
     echo "Error: git is required to install asdf." >&2
     exit 1
   fi
-  
+
   if [ -f "$HOME/.asdf/asdf.sh" ]; then
 # shellcheck disable=SC1090,SC1091,SC2034
     . "$HOME/.asdf/asdf.sh" || true

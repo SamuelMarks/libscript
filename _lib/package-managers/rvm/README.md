@@ -1,5 +1,4 @@
-Rvm
-===
+# Rvm
 
 Bootstrap module for the `rvm` package manager.
 

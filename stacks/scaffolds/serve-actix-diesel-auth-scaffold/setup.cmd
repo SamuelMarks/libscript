@@ -1,7 +1,12 @@
 @echo off
-setlocal ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
+setlocal EnableDelayedExpansion
 
-:: Pre-PowerShell / DOS portability hook natively supported
-echo Actix Scaffold setup on Windows...
-exit /b 0
-exit /b 0
+:: Fallback to running PowerShell for Windows provisioning
+where powershell >nul 2>&1
+if %ERRORLEVEL% NEQ 0 (
+    echo [ERROR] PowerShell not found. Cannot configure serve-actix-diesel-auth-scaffold on Windows.
+    exit /b 1
+)
+
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup.ps1"
+if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%

@@ -1,5 +1,6 @@
 {
-  "name": "GOOGLE_CLOUD_SDK",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "google-cloud-sdk",
   "provides": [
     "google-cloud-sdk"
   ],

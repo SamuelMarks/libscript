@@ -1,5 +1,4 @@
-Gradle
-======
+# Gradle
 
 Bootstrap module for `gradle` (Java / JVM build automation system).
 

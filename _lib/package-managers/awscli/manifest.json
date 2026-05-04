@@ -1,5 +1,6 @@
 {
-  "name": "AWSCLI",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "awscli",
   "provides": [
     "awscli"
   ],

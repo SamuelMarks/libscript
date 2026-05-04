@@ -1,5 +1,4 @@
-Python
-======
+# Python
 
 ## Purpose & Current State
 **Purpose**: This document provides context and technical details for the `python` component (part of `_toolchain`) within the LibScript ecosystem. Python is a high-level, interpreted programming language known for its readability, dynamic typing, and comprehensive standard library, widely used in web development, data science, and scripting. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
@@ -7,7 +6,6 @@ Python
 ## Usage
 This directory contains the installation and configuration scripts for `python`. It works both as a local version manager (similar to rvm, nvm, pyenv, uv) for Python and can be invoked from the global version manager `libscript`. Furthermore, it can be used by libscript as a building block to assemble bigger stacks (like WordPress, Open edX, Nextcloud, etc.).
 
-## Usage
 You can install, start, stop, package, and uninstall python using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**
@@ -60,7 +58,7 @@ The following environment variables can be passed to the CLI (`--KEY=VALUE`) or 
 | Variable | Description | Default | Aliases |
 |----------|-------------|---------|---------|
 | `PYTHON_VERSION` | Version of Python demanded. Can be a specific numeric version number or an alias | `3.11` | `latest, cpython` |
-| `VENV` | Path to a Python virtualenv (will create if nonexistent) | `none` | `` |
+| `PYTHON_VENV` | Path to a Python virtualenv (will create if nonexistent) | `none` | `` |
 | `LIBSCRIPT_GLOBAL_INSTALL_METHOD` | Global override for how software should be installed across all systems (e.g. system package manager vs downloaded binaries/from-source). | `system` | `` |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows targets (e.g. winget, choco). | `winget` | `` |
 | `PYTHON_INSTALL_METHOD` | How to install PYTHON. 'system' uses the native OS package manager, 'source' compiles/downloads binaries. | `system` | `` |

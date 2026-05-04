@@ -1,5 +1,4 @@
-Uv
-==
+# Uv
 
 Bootstrap module for the `uv` package manager (astral.sh).
 

@@ -1,5 +1,4 @@
-Coursier
-========
+# Coursier
 
 Pure Scala Artifact Fetching.
 
@@ -8,7 +7,7 @@ Pure Scala Artifact Fetching.
 libscript install coursier latest
 ```
 
-## Options
+## Configuration Options
 See `vars.schema.json` for all available configuration options.
 
 ## Platform Support

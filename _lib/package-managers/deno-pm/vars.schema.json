@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/package-managers/deno-pm/vars.schema.json",
+  "title": "Deno variables",
+  "description": "Configuration variables for deno",
+  "type": "object",
+  "properties": {
+    "DENO_PM_INSTALL": {
+      "type": "string",
+      "description": "Path to the directory where Deno should be installed. Defaults to ~/.deno."
+    },
+    "DENO_PM_VERSION": {
+      "description": "Specific version of deno to install.",
+      "type": "string",
+      "default": "latest"
+    }
+  }
+}

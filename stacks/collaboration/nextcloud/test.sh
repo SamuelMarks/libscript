@@ -34,11 +34,11 @@ done
 
 set -feu
 echo "Validating Nextcloud installation..."
-WWWROOT="${WWWROOT:-/var/www/nextcloud}"
-if [ -d "${WWWROOT}/core" ]; then
-    echo "Nextcloud directory found at ${WWWROOT}"
+NEXTCLOUD_WWWROOT="${NEXTCLOUD_WWWROOT:-/var/www/nextcloud}"
+if [ -d "${NEXTCLOUD_WWWROOT}/core" ]; then
+    echo "Nextcloud directory found at ${NEXTCLOUD_WWWROOT}"
     exit 0
 else
-    echo "Nextcloud directory not found at ${WWWROOT}"
+    echo "Nextcloud directory not found at ${NEXTCLOUD_WWWROOT}"
     exit 1
 fi

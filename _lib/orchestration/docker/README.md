@@ -1,5 +1,4 @@
-Docker
-======
+# Docker
 
 ## Purpose & Current State
 **Purpose**: This document provides context and technical details for the `docker` component (part of `_server`) within the LibScript ecosystem. Docker is a platform for developing, shipping, and running containerized applications.
@@ -9,7 +8,6 @@ This directory contains the installation and configuration scripts for `docker`.
 
 Furthermore, Docker can be used by libscript to build bigger stacks (like WordPress, Open edX, Nextcloud, etc.) by providing the underlying containerization runtime.
 
-## Usage
 You can install, start, stop, package, and uninstall docker using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**

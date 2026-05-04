@@ -1,5 +1,6 @@
 {
-  "name": "SCOOP",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "scoop",
   "provides": [
     "scoop"
   ],

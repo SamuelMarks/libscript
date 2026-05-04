@@ -27,7 +27,7 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 if ! command -v snap >/dev/null 2>&1; then
-  if ! depends snapd ; then
+  if ! libscript_depends snapd ; then
     true
   fi
 fi

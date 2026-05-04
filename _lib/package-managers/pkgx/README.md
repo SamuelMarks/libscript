@@ -1,12 +1,10 @@
-Pkgx
-====
+# Pkgx
 
 ## Usage
 This document describes **pkgx**, a blazing-fast, standalone, and cross-platform package manager that runs anything.
 
 pkgx works both as a local version manager (similar to rvm, nvm, pyenv, uv) and can be invoked from the global version manager `libscript`. Additionally, it can be used by libscript to securely and reliably build bigger stacks (like WordPress, Open edX, Nextcloud, etc.).
 
-## Usage
 You can install, start, stop, package, and uninstall pkgx using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**
@@ -53,7 +51,7 @@ libscript.cmd uninstall pkgx
 cli.cmd uninstall pkgx
 ```
 
-## Configuration
+## Configuration Options
 *(There are currently no component-specific configuration tables or variables defined for this module.)*
 
 ## Variables

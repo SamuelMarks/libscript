@@ -36,34 +36,34 @@ JUST_VERSION="${JUST_VERSION:-1.39.0}"
 if [ "${JUST_VERSION}" = "latest" ]; then JUST_VERSION="1.39.0"; fi
 
 if [ "${JUST_INSTALL_METHOD}" = 'system' ]; then
-  depends 'just'
+  libscript_depends 'just'
 else
   TARGET_OS="${TARGET_OS:-linux}"
   TARGET_ARCH="${TARGET_ARCH:-amd64}"
-  
+
   if [ "${TARGET_ARCH}" = "amd64" ]; then arch="x86_64"; else arch="${TARGET_ARCH}"; fi
   if [ "${TARGET_ARCH}" = "arm64" ]; then arch="aarch64"; fi
-  
+
   case "${TARGET_OS}" in
     macos*|darwin*) os_name="apple-darwin" ;;
     linux*) os_name="unknown-linux-musl" ;;
     *) echo "[ERROR] Unsupported OS for direct download: ${TARGET_OS}"; exit 1 ;;
   esac
-  
+
   tar_name="just-${JUST_VERSION}-${arch}-${os_name}"
   dl_url="https://github.com/casey/just/releases/download/${JUST_VERSION}/${tar_name}.tar.gz"
-  
+
   PREFIX="${PREFIX:-${LIBSCRIPT_ROOT_DIR}/installed/just}"
   bin_dir="${PREFIX}/bin"
   mkdir -p "${bin_dir}"
-  
-  echo "Downloading JUST from ${dl_url}..."
+
+  log_info "Downloading JUST from ${dl_url}..."
   libscript_download "${dl_url}" "/tmp/${tar_name}.tar.gz"
-  
+
   tar -xzf "/tmp/${tar_name}.tar.gz" -C "${bin_dir}" just
   rm -rf "/tmp/${tar_name}.tar.gz"
-  
+
   chmod +x "${bin_dir}/just"
-  
-  echo "JUST installed to ${bin_dir}/just"
+
+  log_info "JUST installed to ${bin_dir}/just"
 fi

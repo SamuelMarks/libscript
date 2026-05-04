@@ -1,5 +1,4 @@
-Vagrant
-=======
+# Vagrant
 
 ## Usage
 **Purpose**: This document describes the `vagrant` folder and its contained environments within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning.
@@ -8,7 +7,6 @@ Vagrant
 - It works both as a local version manager (similar to rvm, nvm, pyenv, uv) and can be invoked from the global version manager `libscript`.
 - It can be used by libscript to build bigger stacks (like WordPress, Open edX, nextcloud, etc.).
 
-## Usage
 You can natively manage these Vagrant environments using `libscript`:
 
 - **Install**: `libscript install vagrant`

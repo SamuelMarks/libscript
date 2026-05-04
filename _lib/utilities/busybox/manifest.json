@@ -1,5 +1,6 @@
 {
-  "name": "BUSYBOX",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "busybox",
   "title": "BusyBox",
   "description": "The Swiss Army Knife of Embedded Linux, combining tiny versions of many common UNIX utilities into a single small executable.",
   "category": "utility",

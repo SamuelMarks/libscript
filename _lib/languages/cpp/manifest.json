@@ -1,5 +1,6 @@
 {
-  "name": "CPP",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "cpp",
   "title": "C++ Toolchain",
   "description": "Standard C++ compiler and toolchain (G++/Clang++).",
   "category": "languages",

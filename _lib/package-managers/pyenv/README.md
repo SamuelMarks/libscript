@@ -1,5 +1,4 @@
-Pyenv
-=====
+# Pyenv
 
 Bootstrap module for `pyenv` (Python Version Manager).
 

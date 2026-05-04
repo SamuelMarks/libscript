@@ -1,5 +1,6 @@
 {
-  "name": "HELM",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "helm",
   "provides": [
     "package-manager",
     "helm"

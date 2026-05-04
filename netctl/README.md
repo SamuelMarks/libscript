@@ -1,7 +1,6 @@
-Netctl
-======
+# Netctl
 
-## Purpose & Overview
+## Purpose & Current State
 This document describes the `netctl` routing and reverse proxy configuration component within the LibScript ecosystem. `netctl` is a universal abstraction layer for defining routes, static file maps, and proxies that can emit configurations for Nginx, Caddy, Apache, or IIS.
 
 LibScript functions as both a comprehensive global version manager (invoked via the `libscript` command) and a local version manager (similar to `rvm`, `nvm`, `pyenv`, or `uv`) for `netctl`. You can manage `netctl` directly in an isolated, local context, or orchestrate it globally. 
@@ -48,7 +47,6 @@ libscript package_as docker netctl
 ## Prerequisites
 * `jq` must be installed and available in your system's `PATH`.
 
-## Usage & Syntax
 ### Singular Mode (One-Liner)
 
 Pass configuration options as flags. The final configuration is emitted immediately to standard output.

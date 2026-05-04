@@ -1,5 +1,6 @@
 {
-  "name": "DOCKER",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "docker",
   "title": "Docker",
   "description": "A platform for developing, shipping, and running containerized applications.",
   "category": "orchestration",

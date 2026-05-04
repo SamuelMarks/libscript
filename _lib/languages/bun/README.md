@@ -1,5 +1,4 @@
-Bun
-===
+# Bun
 
 ## Purpose & Current State
 **Purpose**: This document provides context and technical details for the `bun` component (part of `_toolchain`) within the LibScript ecosystem. This component is responsible for installing and managing **Bun**, the fast all-in-one JavaScript runtime, bundler, transpiler, and package manager.
@@ -9,7 +8,6 @@ This directory contains the installation and configuration scripts for `bun`. It
 
 By leveraging this component, LibScript can use Bun as a high-performance building block to provision and orchestrate much bigger stacks, such as WordPress, Open edX, Nextcloud, and modern JavaScript-heavy web applications.
 
-## Usage
 You can install, start, stop, package, and uninstall bun using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**

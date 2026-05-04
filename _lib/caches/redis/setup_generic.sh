@@ -35,7 +35,7 @@ REDIS_INSTALL_METHOD="${REDIS_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:
 REDIS_VERSION="${REDIS_VERSION:-latest}"
 
 if [ "${REDIS_INSTALL_METHOD}" = 'system' ]; then
-  depends 'redis'
+  libscript_depends 'redis'
 else
   # "source" install
   if [ "${REDIS_VERSION}" = "latest" ]; then

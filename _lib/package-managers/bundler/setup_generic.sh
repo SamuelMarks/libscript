@@ -30,11 +30,11 @@ if ! command -v bundler >/dev/null 2>&1; then
   if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/gem/setup.sh" ]; then
     "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/gem/setup.sh"
   else
-    if ! depends gem ; then
+    if ! libscript_depends gem ; then
       true
     fi
   fi
-  
+
   if command -v gem >/dev/null 2>&1; then
     gem install bundler || true
   fi

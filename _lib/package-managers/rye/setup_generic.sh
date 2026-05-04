@@ -32,7 +32,7 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
 done
 
 if ! command -v rye >/dev/null 2>&1; then
-  echo "Installing rye..."
+  log_info "Installing rye..."
   _tmp_script="/tmp/rye-install.sh"
   libscript_download "https://rye.astral.sh/get" "$_tmp_script"
   RYE_INSTALL_OPTION="--yes" bash "$_tmp_script"

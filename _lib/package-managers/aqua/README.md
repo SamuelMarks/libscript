@@ -1,5 +1,4 @@
-Aqua
-====
+# Aqua
 
 Bootstrap module for the `aqua` package manager.
 

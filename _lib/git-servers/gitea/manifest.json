@@ -1,5 +1,6 @@
 {
-  "name": "GITEA",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "gitea",
   "provides": [
     "git-server",
     "gitea"

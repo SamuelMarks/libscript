@@ -1,5 +1,6 @@
 {
-  "name": "RUSTUP",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "rustup",
   "provides": [
     "rustup"
   ],

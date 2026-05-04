@@ -1,5 +1,4 @@
-Etcd
-====
+# Etcd
 
 ## Purpose & Current State
 **Purpose**: This document provides context and technical details for the `etcd` component (part of `_storage`) within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
@@ -11,7 +10,6 @@ Crucially, this component works both as a **local version manager** (similar to 
 
 Furthermore, `libscript` can utilize this etcd component as a foundational building block to provision and build **bigger stacks** (such as WordPress, Open edX, Nextcloud, and more).
 
-## Usage
 You can install, start, stop, package, and uninstall etcd using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**

@@ -1,5 +1,4 @@
-Bundler
-=======
+# Bundler
 
 Bootstrap module for the `bundler` package manager.
 

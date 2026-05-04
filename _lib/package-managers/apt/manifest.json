@@ -1,5 +1,6 @@
 {
-  "name": "APT",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "apt",
   "provides": [
     "apt"
   ],

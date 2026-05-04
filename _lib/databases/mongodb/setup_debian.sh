@@ -40,8 +40,8 @@ if command -v gpg >/dev/null 2>&1; then
   priv gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg --dearmor --yes < "${MONGODB_KEY}"
   rm -f "${MONGODB_KEY}"
   echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | priv tee /etc/apt/sources.list.d/mongodb-org-7.0.list
-  priv apt-get update
-  depends 'mongodb-org'
+  pkg_mgr update
+  libscript_depends 'mongodb-org'
 else
   >&2 printf 'Warning: gpg missing, cannot install mongodb\n'
   exit 1

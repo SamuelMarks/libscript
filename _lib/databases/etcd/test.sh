@@ -30,13 +30,6 @@ for LIB in '_lib/_common/test_base.sh' ; do
   . "${SCRIPT_NAME}"
 done
 
-if command -v -- etcd >/dev/null 2>&1; then 
-    etcd >/dev/null 2>&1 &
-    sleep 2
-  fi
+assert_version "etcd" "."
 
-if command -v -- etcdctl >/dev/null 2>&1; then
-  etcdctl endpoint health
-else
-  /opt/etcd/etcdctl endpoint health
-fi
+assert_version "etcd" "."

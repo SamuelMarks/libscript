@@ -1,5 +1,6 @@
 {
-  "name": "ARIA2",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "aria2",
   "title": "aria2",
   "description": "A lightweight multi-protocol & multi-source command-line download utility.",
   "category": "utility",

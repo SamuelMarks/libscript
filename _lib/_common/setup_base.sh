@@ -34,7 +34,7 @@ SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/os_info.sh'
 export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
-# Source package manager utilities (includes depends and libscript_download)
+# Source package manager utilities (includes libscript_depends and libscript_download)
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/pkg_mgr.sh'
 export SCRIPT_NAME
 . "${SCRIPT_NAME}"
@@ -60,10 +60,10 @@ fi
 libscript_install_binary() {
   src_path="$1"
   bin_name="$2"
-  
+
   dest_dir="${PREFIX:-$HOME/.local/bin}"
   mkdir -p "$dest_dir"
-  
+
   if [ -w "/usr/local/bin" ] && [ "${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-}" = "system" ]; then
     dest_dir="/usr/local/bin"
   fi
@@ -71,7 +71,7 @@ libscript_install_binary() {
   log_info "Installing $bin_name to $dest_dir..."
   cp -f "$src_path" "$dest_dir/$bin_name"
   chmod +x "$dest_dir/$bin_name"
-  
+
   # Update PATH in current session if needed
   case ":$PATH:" in
     *":$dest_dir:"*) ;;

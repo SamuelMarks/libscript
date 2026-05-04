@@ -36,39 +36,39 @@ NATS_VERSION="${NATS_VERSION:-v2.10.25}"
 if [ "${NATS_VERSION}" = "latest" ]; then NATS_VERSION="v2.10.25"; fi
 
 if [ "${NATS_INSTALL_METHOD}" = 'system' ]; then
-  depends 'nats-server'
+  libscript_depends 'nats-server'
 else
   TARGET_OS="${TARGET_OS:-linux}"
   TARGET_ARCH="${TARGET_ARCH:-amd64}"
-  
+
   if [ "${TARGET_ARCH}" = "x86_64" ]; then TARGET_ARCH="amd64"; fi
   if [ "${TARGET_ARCH}" = "aarch64" ]; then TARGET_ARCH="arm64"; fi
   if [ "${TARGET_ARCH}" = "armv7l" ]; then TARGET_ARCH="arm7"; fi
-  
+
   case "${TARGET_OS}" in
     macos*|darwin*) os_name="darwin" ;;
     linux*) os_name="linux" ;;
     *) echo "[ERROR] Unsupported OS for direct download: ${TARGET_OS}"; exit 1 ;;
   esac
-  
+
   tar_name="nats-server-${NATS_VERSION}-${os_name}-${TARGET_ARCH}"
   dl_url="https://github.com/nats-io/nats-server/releases/download/${NATS_VERSION}/${tar_name}.tar.gz"
-  
+
   PREFIX="${PREFIX:-${LIBSCRIPT_ROOT_DIR}/installed/nats}"
   bin_dir="${PREFIX}/bin"
   mkdir -p "${bin_dir}"
-  
-  echo "Downloading NATS from ${dl_url}..."
+
+  log_info "Downloading NATS from ${dl_url}..."
   NATS_TARBALL=$(mktemp)
   libscript_download "${dl_url}" "${NATS_TARBALL}"
-  
+
   tar -xzf "${NATS_TARBALL}" -C "/tmp/"
   mv "/tmp/${tar_name}/nats-server" "${bin_dir}/nats-server"
   rm -rf "${NATS_TARBALL}" "/tmp/${tar_name}"
-  
+
   chmod +x "${bin_dir}/nats-server"
   # Symlink to nats for easier access if preferred, though actual daemon is nats-server
   ln -sf "${bin_dir}/nats-server" "${bin_dir}/nats"
-  
-  echo "NATS installed to ${bin_dir}/nats-server"
+
+  log_info "NATS installed to ${bin_dir}/nats-server"
 fi

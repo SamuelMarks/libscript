@@ -98,7 +98,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
       echo "$sorted_deps" | while read -r layer pkg ver override; do
         if [ -n "$pkg" ]; then
           if [ "$ver" = "null" ]; then ver="latest"; fi
-          
+
           df="Dockerfile.$pkg"
           echo "FROM $base_image" > "$df"
           echo "ARG TARGETOS=linux" >> "$df"
@@ -108,7 +108,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
           echo "ENV LIBSCRIPT_BUILD_DIR=\"/opt/libscript_build\"" >> "$df"
           echo "ENV LIBSCRIPT_DATA_DIR=\"/opt/libscript_data\"" >> "$df"
           echo "ENV LIBSCRIPT_CACHE_DIR=\"/opt/libscript_cache\"" >> "$df"
-          
+
           pkg_up=$(echo "$pkg" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
           echo "ENV ${pkg_up}_VERSION=\"$ver\"" >> "$df"
           if [ -n "$override" ] && [ "$override" != "null" ]; then
@@ -148,13 +148,13 @@ export STACK="${STACK:-}${THIS_FILE}"':'
           echo "      interval: 5s"
           echo "      retries: 5"
           echo "      start_period: 5s"
-          
+
           if [ -n "$prev_pkg" ]; then
               echo "    depends_on:"
               echo "      $prev_pkg:"
               echo "        condition: service_healthy"
           fi
-          
+
           echo "    environment:"
           if [ -n "$override" ] && [ "$override" != "null" ]; then
             echo "      - ${pkg_up}_URL=\"$override\""
@@ -162,7 +162,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
           if env_out=$(PREFIX="/opt/libscript/installed/$pkg" "${THIS_FILE}" env "$pkg" "$ver" --format=docker_compose 2>/dev/null); then
             echo "$env_out" | grep -vE '^(STACK=|SCRIPT_NAME=)' | sed 's/^/      - /g'
           fi
-          
+
           prev_pkg="$pkg"
         fi
       done

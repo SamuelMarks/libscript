@@ -1,5 +1,6 @@
 {
-  "name": "FNM",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "fnm",
   "provides": [
     "package-manager",
     "fnm"

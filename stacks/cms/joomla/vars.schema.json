@@ -13,7 +13,7 @@
       "type": "string",
       "description": "Variable JOOMLA_DB_PASS."
     },
-    "PHP_FPM_LISTEN": {
+    "JOOMLA_PHP_FPM_LISTEN": {
       "type": "string",
       "description": "Variable PHP_FPM_LISTEN."
     },
@@ -29,7 +29,7 @@
       "type": "string",
       "description": "Variable JOOMLA_WEBSERVER."
     },
-    "WWWROOT": {
+    "JOOMLA_WWWROOT": {
       "type": "string",
       "description": "Variable WWWROOT."
     },

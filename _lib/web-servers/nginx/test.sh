@@ -23,6 +23,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${THIS_FILE}" )")" && pwd)}"
 export LIBSCRIPT_ROOT_DIR
+. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 for LIB in '_lib/_common/test_base.sh' ; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
@@ -30,15 +31,4 @@ for LIB in '_lib/_common/test_base.sh' ; do
   . "${SCRIPT_NAME}"
 done
 
-if command -v nginx >/dev/null 2>&1; then
-  nginx -v
-elif [ -x /usr/sbin/nginx ]; then
-  /usr/sbin/nginx -v
-elif [ -x /opt/homebrew/sbin/nginx ]; then
-  /opt/homebrew/sbin/nginx -v
-elif [ -x /usr/local/sbin/nginx ]; then
-  /usr/local/sbin/nginx -v
-else
-  echo "nginx not found"
-  exit 1
-fi
+assert_version "nginx" "."

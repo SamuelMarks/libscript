@@ -1,5 +1,4 @@
-Cmake
-=====
+# Cmake
 
 Cross-platform family of tools designed to build, test and package software.
 
@@ -8,7 +7,7 @@ Cross-platform family of tools designed to build, test and package software.
 libscript install cmake latest
 ```
 
-## Options
+## Configuration Options
 See `vars.schema.json` for all available configuration options.
 
 ## Platform Support

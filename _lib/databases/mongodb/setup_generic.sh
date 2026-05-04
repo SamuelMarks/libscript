@@ -34,10 +34,10 @@ done
 MONGODB_INSTALL_METHOD="${MONGODB_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 
 if [ "${MONGODB_INSTALL_METHOD}" = 'system' ]; then
-  depends 'mongodb'
+  libscript_depends 'mongodb'
 else
-  echo "[WARN] From-source or alternative installation requested for mongodb, but currently only system package manager is fully supported."
-  depends 'mongodb'
+  log_info "[WARN] From-source or alternative installation requested for mongodb, but currently only system package manager is fully supported."
+  libscript_depends 'mongodb'
 fi
 
 MONGO_CONF="/etc/mongod.conf"

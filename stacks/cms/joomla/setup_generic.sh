@@ -40,9 +40,9 @@ export JOOMLA_WEBSERVER
 JOOMLA_DB_TYPE="${JOOMLA_DB_TYPE:-mariadb}"
 export JOOMLA_DB_TYPE
 
-depends 'php'
+libscript_depends 'php'
 if [ "${JOOMLA_WEBSERVER}" = "nginx" ] || [ "${JOOMLA_WEBSERVER}" = "caddy" ]; then
-  depends 'php-fpm' || true # Some package managers include FPM in 'php'
+  libscript_depends 'php-fpm' || true # Some package managers include FPM in 'php'
 fi
 
 # SQLite is not strictly supported in Joomla 4+, so we map "sqlite" to warning
@@ -51,20 +51,20 @@ if [ "${JOOMLA_DB_TYPE}" = "sqlite" ]; then
   JOOMLA_DB_TYPE="mariadb"
 fi
 
-depends "${JOOMLA_DB_TYPE}"
-depends "${JOOMLA_WEBSERVER}"
+libscript_depends "${JOOMLA_DB_TYPE}"
+libscript_depends "${JOOMLA_WEBSERVER}"
 
 # Download and extract Joomla
 JOOMLA_VERSION="${JOOMLA_VERSION:-latest}"
 export JOOMLA_VERSION
 
-WWWROOT="${WWWROOT:-/var/www/joomla}"
-export WWWROOT
+JOOMLA_WWWROOT="${JOOMLA_WWWROOT:-/var/www/joomla}"
+export JOOMLA_WWWROOT
 
-if [ ! -d "${WWWROOT}/administrator" ]; then
-  echo "Downloading Joomla (${JOOMLA_VERSION}) to ${WWWROOT}..."
-  priv mkdir -p "${WWWROOT}"
-  
+if [ ! -d "${JOOMLA_WWWROOT}/administrator" ]; then
+  echo "Downloading Joomla (${JOOMLA_VERSION}) to ${JOOMLA_WWWROOT}..."
+  priv mkdir -p "${JOOMLA_WWWROOT}"
+
   if [ "${JOOMLA_VERSION}" = "latest" ]; then
     if command -v curl >/dev/null 2>&1; then
       JOOMLA_VERSION=$(curl -s "https://api.github.com/repos/joomla/joomla-cms/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
@@ -72,20 +72,20 @@ if [ ! -d "${WWWROOT}/administrator" ]; then
       JOOMLA_VERSION="5.2.0" # Fallback if curl unavailable
     fi
   fi
-  
+
   dl_url="https://github.com/joomla/joomla-cms/releases/download/${JOOMLA_VERSION}/Joomla_${JOOMLA_VERSION}-Stable-Full_Package.tar.gz"
-  
+
   tmp_j=$(mktemp)
   if command -v libscript_download >/dev/null 2>&1; then
     libscript_download "${dl_url}" "${tmp_j}"
-    priv tar xzf "${tmp_j}" -C "${WWWROOT}"
+    priv tar xzf "${tmp_j}" -C "${JOOMLA_WWWROOT}"
   else
     if command -v wget >/dev/null 2>&1; then
         wget -qO "${tmp_j}" "${dl_url}"
     else
         curl -sL -o "${tmp_j}" "${dl_url}"
     fi
-    priv tar xzf "${tmp_j}" -C "${WWWROOT}"
+    priv tar xzf "${tmp_j}" -C "${JOOMLA_WWWROOT}"
   fi
   rm -f "${tmp_j}"
 fi
@@ -119,22 +119,22 @@ elif [ "${JOOMLA_DB_TYPE}" = "postgres" ] || [ "${JOOMLA_DB_TYPE}" = "postgresql
   fi
 fi
 
-priv chown -R www-data:www-data "${WWWROOT}" || true # fallback for distros without www-data
+priv chown -R www-data:www-data "${JOOMLA_WWWROOT}" || true # fallback for distros without www-data
 
 # Determine PHP_FPM Socket (OS specific usually)
-if [ -z "${PHP_FPM_LISTEN:-}" ]; then
+if [ -z "${JOOMLA_PHP_FPM_LISTEN:-}" ]; then
   if [ -e /run/php/php-fpm.sock ]; then
-    export PHP_FPM_LISTEN="unix:/run/php/php-fpm.sock"
+    export JOOMLA_PHP_FPM_LISTEN="unix:/run/php/php-fpm.sock"
   elif [ -e /var/run/php-fpm/php-fpm.sock ]; then
-    export PHP_FPM_LISTEN="unix:/var/run/php-fpm/php-fpm.sock"
+    export JOOMLA_PHP_FPM_LISTEN="unix:/var/run/php-fpm/php-fpm.sock"
   elif [ -e /var/run/php-fpm.sock ]; then
-    export PHP_FPM_LISTEN="unix:/var/run/php-fpm.sock"
+    export JOOMLA_PHP_FPM_LISTEN="unix:/var/run/php-fpm.sock"
   else
     # Let's try to find it dynamically or fallback to localhost port
-    export PHP_FPM_LISTEN="127.0.0.1:9000"
+    export JOOMLA_PHP_FPM_LISTEN="127.0.0.1:9000"
     for sock in /run/php/php*.sock; do
       if [ -e "$sock" ]; then
-        export PHP_FPM_LISTEN="unix:$sock"
+        export JOOMLA_PHP_FPM_LISTEN="unix:$sock"
         break
       fi
     done
@@ -142,38 +142,51 @@ if [ -z "${PHP_FPM_LISTEN:-}" ]; then
 fi
 
 # Configure Webserver
-SERVER_NAME="${JOOMLA_SERVER_NAME:-localhost}"
-export SERVER_NAME
+JOOMLA_SERVER_NAME="${JOOMLA_SERVER_NAME:-localhost}"
+export JOOMLA_SERVER_NAME
 
 echo "Configuring webserver: ${JOOMLA_WEBSERVER}"
 
 # Create a temporary env file for webserver scripts
 ENV_SCRIPT_FILE=$(mktemp)
 cat <<EOF > "${ENV_SCRIPT_FILE}"
-export SERVER_NAME="${SERVER_NAME}"
-export WWWROOT="${WWWROOT}"
-export PHP_FPM_LISTEN="${PHP_FPM_LISTEN}"
+export JOOMLA_SERVER_NAME="${JOOMLA_SERVER_NAME}"
+export JOOMLA_WWWROOT="${JOOMLA_WWWROOT}"
+export JOOMLA_PHP_FPM_LISTEN="${JOOMLA_PHP_FPM_LISTEN}"
 export LISTEN="${JOOMLA_LISTEN:-80}"
+export NGINX_LISTEN="${JOOMLA_LISTEN:-80}"
+export HTTPD_LISTEN="${JOOMLA_LISTEN:-80}"
+export CADDY_LISTEN="${JOOMLA_LISTEN:-80}"
 export LOCATION_EXPR="/"
+export NGINX_LOCATION_EXPR="/"
+export NGINX_SERVER_NAME="${JOOMLA_SERVER_NAME}"
+export NGINX_WWWROOT="${JOOMLA_WWWROOT}"
+export NGINX_PHP_FPM_LISTEN="${JOOMLA_PHP_FPM_LISTEN}"
+export HTTPD_SERVER_NAME="${JOOMLA_SERVER_NAME}"
+export HTTPD_WWWROOT="${JOOMLA_WWWROOT}"
+export HTTPD_PHP_FPM_LISTEN="${JOOMLA_PHP_FPM_LISTEN}"
+export CADDY_SERVER_NAME="${JOOMLA_SERVER_NAME}"
+export CADDY_WWWROOT="${JOOMLA_WWWROOT}"
+export CADDY_PHP_FPM_LISTEN="${JOOMLA_PHP_FPM_LISTEN}"
 EOF
 export ENV_SCRIPT_FILE
 
 if [ "${JOOMLA_WEBSERVER}" = "nginx" ]; then
   LOC_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_location_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_location_block.sh" > "${LOC_BLOCK_TMP}"
-  
+
   LOCATIONS="$(cat "${LOC_BLOCK_TMP}")"
   export LOCATIONS
   SERVER_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" > "${SERVER_BLOCK_TMP}"
-  
+
   NGINX_CONF_DIR="${LIBSCRIPT_ROOT_DIR}/installed/nginx/conf"
   if [ -d /etc/nginx/sites-available ]; then
     NGINX_CONF_DIR="/etc/nginx"
   fi
-  
-  priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${SERVER_NAME}.conf"
-  priv ln -sf "${NGINX_CONF_DIR}/sites-available/${SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${SERVER_NAME}.conf"
+
+  priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${JOOMLA_SERVER_NAME}.conf"
+  priv ln -sf "${NGINX_CONF_DIR}/sites-available/${JOOMLA_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${JOOMLA_SERVER_NAME}.conf"
   if ! priv systemctl reload nginx ; then
     true
   fi
@@ -184,7 +197,7 @@ elif [ "${JOOMLA_WEBSERVER}" = "caddy" ]; then
   if [ -d /etc/caddy/conf.d ] || [ -d /etc/caddy/caddy.d ]; then
     conf_dir="/etc/caddy/conf.d"
     [ -d /etc/caddy/caddy.d ] && conf_dir="/etc/caddy/caddy.d"
-    priv cp "${CADDY_BLOCK_TMP}" "${conf_dir}/${SERVER_NAME}.caddy"
+    priv cp "${CADDY_BLOCK_TMP}" "${conf_dir}/${JOOMLA_SERVER_NAME}.caddy"
   else
     priv tee -a /etc/caddy/Caddyfile < "${CADDY_BLOCK_TMP}" >/dev/null
   fi
@@ -196,13 +209,13 @@ elif [ "${JOOMLA_WEBSERVER}" = "httpd" ]; then
   HTTPD_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/httpd/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/httpd/create_server_block.sh" > "${HTTPD_BLOCK_TMP}"
   if [ -d /etc/httpd/conf.d ]; then
-    priv cp "${HTTPD_BLOCK_TMP}" "/etc/httpd/conf.d/${SERVER_NAME}.conf"
+    priv cp "${HTTPD_BLOCK_TMP}" "/etc/httpd/conf.d/${JOOMLA_SERVER_NAME}.conf"
     if ! priv systemctl reload httpd ; then
       true
     fi
   elif [ -d /etc/apache2/sites-available ]; then
-    priv cp "${HTTPD_BLOCK_TMP}" "/etc/apache2/sites-available/${SERVER_NAME}.conf"
-    priv ln -sf "/etc/apache2/sites-available/${SERVER_NAME}.conf" "/etc/apache2/sites-enabled/${SERVER_NAME}.conf"
+    priv cp "${HTTPD_BLOCK_TMP}" "/etc/apache2/sites-available/${JOOMLA_SERVER_NAME}.conf"
+    priv ln -sf "/etc/apache2/sites-available/${JOOMLA_SERVER_NAME}.conf" "/etc/apache2/sites-enabled/${JOOMLA_SERVER_NAME}.conf"
     if ! priv systemctl reload apache2 ; then
       true
     fi
@@ -214,4 +227,4 @@ fi
 
 rm -f "${ENV_SCRIPT_FILE}"
 
-echo "Joomla setup complete on ${SERVER_NAME}"
+echo "Joomla setup complete on ${JOOMLA_SERVER_NAME}"

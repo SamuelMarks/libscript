@@ -62,7 +62,7 @@ awk -v loc="$LOCATION" -v dest="$DESTINATION" '
 mv "$TEMP_FILE" "$CONF_FILE"
 ln -sf "$CONF_FILE" "$NGINX_CONF_DIR/sites-enabled/${DOMAIN}.conf"
 
-echo "Route added: $DOMAIN$LOCATION -> $DESTINATION"
+log_info "Route added: $DOMAIN$LOCATION -> $DESTINATION"
 # Assuming nginx is running or will be started
 # if [ -x "${PREFIX:-$LIBSCRIPT_ROOT_DIR/installed/nginx}/bin/nginx" ]; then
 #   ${PREFIX:-$LIBSCRIPT_ROOT_DIR/installed/nginx}/bin/nginx -s reload || true

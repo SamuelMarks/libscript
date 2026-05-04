@@ -48,7 +48,7 @@ EOF2
       if [ -n "$APP_URL" ]; then
         echo "    <Property Id=\"ARPURLINFOABOUT\" Value=\"$APP_URL\" />"
       fi
-      
+
       deps_list=""
       if [ $# -gt 0 ]; then
         while [ $# -gt 0 ]; do
@@ -64,7 +64,7 @@ EOF2
       echo "        <Directory Id=\"INSTALLFOLDER\" Name=\"$APP_NAME\" />"
       echo "      </Directory>"
       echo "    </Directory>"
-      
+
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
@@ -72,7 +72,7 @@ EOF2
         echo "  Session.Property(\"VALID_$pkg\") = \"1\"" >> "validate_${pkg}.vbs"
         echo "  Dim shell, exec, port" >> "validate_${pkg}.vbs"
         echo "  Set shell = CreateObject(\"WScript.Shell\")" >> "validate_${pkg}.vbs"
-        
+
         schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
@@ -109,7 +109,7 @@ EOF2
       # UI Generation
       echo "    <UI Id=\"CustomUI\">"
       echo "      <Property Id=\"DefaultUIFont\" Value=\"WixUI_Font_Normal\" />"
-      
+
       echo "      <Dialog Id=\"Dlg_Features\" Width=\"370\" Height=\"270\" Title=\"Select Components\">"
       echo "        <Control Id=\"Lbl_Select\" Type=\"Text\" X=\"20\" Y=\"10\" Width=\"330\" Height=\"15\" Text=\"Select the components you want to install:\" />"
       y=30
@@ -123,13 +123,13 @@ EOF2
       echo "          <Publish Event=\"EndDialog\" Value=\"Return\">1</Publish>"
       echo "        </Control>"
       echo "      </Dialog>"
-      
+
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         echo "      <Property Id=\"INSTALL_$pkg\" Value=\"1\" Secure=\"yes\" />"
       done
-      
+
       set -- $deps_list
       has_custom_ui=0
       dialogs=""
@@ -146,9 +146,9 @@ EOF2
               varname=$(echo "$item" | jq -r '.key')
               desc=$(echo "$item" | jq -r '.desc')
               defval=$(echo "$item" | jq -r '.def')
-              
+
               if [ $y -gt 220 ]; then break; fi
-              
+
               echo "        <Control Id=\"Lbl_${varname}\" Type=\"Text\" X=\"20\" Y=\"${y}\" Width=\"330\" Height=\"15\" Text=\"${desc}:\" />"
               y=$((y + 15))
               if case "$varname" in *"_PASSWORD"*) true;; *) false;; esac; then
@@ -163,13 +163,13 @@ EOF2
             echo "          <Publish Event=\"EndDialog\" Value=\"Return\"><![CDATA[VALID_$pkg=\"1\"]]></Publish>"
             echo "        </Control>"
             echo "      </Dialog>"
-            
+
             echo "$vars_json" | while read -r item; do
               varname=$(echo "$item" | jq -r '.key')
               defval=$(echo "$item" | jq -r '.def')
               echo "    <Property Id=\"PROP_${pkg}_${varname}\" Value=\"${defval}\" Secure=\"yes\" />"
             done
-            
+
             dialogs="$dialogs Dlg_${pkg}"
           fi
         fi
@@ -193,7 +193,7 @@ EOF2
         echo "      <Property Id=\"PURGE_$pkg\" Value=\"\" Secure=\"yes\" />"
         dialogs="$dialogs Dlg_Uninst_${pkg}"
       done
-      
+
       echo "      <InstallUISequence>"
       echo "        <Show Dialog=\"Dlg_Features\" After=\"CostFinalize\">NOT Installed</Show>"
       last_dlg="Dlg_Features"
@@ -209,7 +209,7 @@ EOF2
           last_dlg="Dlg_${pkg}"
         fi
       done
-      
+
       # UI sequence for uninstall
       last_uninst_dlg="CostFinalize"
       set -- $deps_list
@@ -235,7 +235,7 @@ EOF2
           fi
         fi
         echo "    <CustomAction Id=\"Install$pkg\" Directory=\"INSTALLFOLDER\" ExeCommand=\"cmd.exe $run_params\" Execute=\"deferred\" Return=\"check\" Impersonate=\"no\" />"
-        
+
         # Uninstall Actions
         echo "    <CustomAction Id=\"Uninstall$pkg\" Directory=\"INSTALLFOLDER\" ExeCommand=\"cmd.exe /c libscript.cmd uninstall $pkg [PURGE_$pkg] --service-name [PROP_${pkg}_$(echo "$pkg" | tr "a-z" "A-Z")_SERVICE_NAME]\" Execute=\"deferred\" Return=\"check\" Impersonate=\"no\" />"
       done
@@ -248,7 +248,7 @@ EOF2
         echo "      <Custom Action=\"Uninstall$pkg\" Before=\"RemoveFiles\">REMOVE=\"ALL\"</Custom>"
       done
       echo "    </InstallExecuteSequence>"
-      
+
       echo "  </Product>"
       echo "  <Fragment>"
       echo "    <ComponentGroup Id=\"ProductComponents\" Directory=\"INSTALLFOLDER\">"
@@ -257,7 +257,7 @@ EOF2
       echo "</Wix>"
 
       exec 1>&3 3>&-
-      
+
       if [ "$OS" = "Windows_NT" ] || command -v candle.exe >/dev/null 2>&1 || command -v wix.exe >/dev/null 2>&1; then
         if command -v wix.exe >/dev/null 2>&1; then
           wix.exe build -ext WixToolset.UI.wixext -o "${OUT_FILE}.msi" "$wxs_file"

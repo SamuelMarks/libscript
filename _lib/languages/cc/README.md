@@ -1,7 +1,6 @@
-Cc
-==
+# Cc
 
-## Purpose & Overview
+## Purpose & Current State
 **Purpose**: This document provides context and technical details for the `cc` component (part of `_toolchain`) within the LibScript ecosystem. This component manages the installation of standard C/C++ compiler toolchains (such as GCC or Clang), which are essential for compiling and linking C and C++ programs.
 
 Crucially, this module allows `cc` to function both as a **local version manager** (similar to tools like `rvm`, `nvm`, `pyenv`, or `uv`) and as a component invoked seamlessly by the global version manager, `libscript`. Furthermore, `libscript` can utilize this `cc` toolchain as a foundational building block to provision and orchestrate much larger, complex software stacks (such as WordPress, Open edX, Nextcloud, and more).
@@ -9,7 +8,6 @@ Crucially, this module allows `cc` to function both as a **local version manager
 ## Usage with LibScript
 This directory contains the installation and configuration scripts for `cc`. It is designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
 
-## Usage
 You can install, start, stop, package, and uninstall cc using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**

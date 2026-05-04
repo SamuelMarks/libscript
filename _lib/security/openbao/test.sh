@@ -30,4 +30,4 @@ for LIB in '_lib/_common/test_base.sh' ; do
   . "${SCRIPT_NAME}"
 done
 
-if command -v bao >/dev/null 2>&1; then bao version; echo hello from bao; else echo skipped; fi
+assert_version "bao" "."

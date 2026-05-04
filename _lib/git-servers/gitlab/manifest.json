@@ -1,5 +1,6 @@
 {
-  "name": "GITLAB",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "gitlab",
   "provides": [
     "git-server",
     "gitlab",

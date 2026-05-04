@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableDelayedExpansion
 :: # LibScript CLI Utility Module (Windows Batch)
 ::
 :: ## Overview
@@ -80,18 +81,6 @@ if defined ARGS (
 shift
 goto :parse_loop
 
-:info
-echo [INFO]  %~2
-exit /b 0
 
-:warn
-echo [WARN]  %~2
-exit /b 0
 
-:error
-echo [ERROR] %~2 1>&2
-exit /b 1
 
-:debug
-if "%LIBSCRIPT_DEBUG%"=="1" echo [DEBUG] %~2
-exit /b 0

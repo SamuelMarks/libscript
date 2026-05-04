@@ -35,24 +35,24 @@ if ! command -v dart >/dev/null 2>&1 && ! command -v pub >/dev/null 2>&1; then
   if command -v brew >/dev/null 2>&1; then
     brew tap dart-lang/dart
     brew install dart
-  elif command -v apt-get >/dev/null 2>&1; then
-    sudo apt-get update -y
-    sudo apt-get install -y apt-transport-https
+  elif command -v apt >/dev/null 2>&1; then
+    pkg_mgr update
+    pkg_mgr install apt-transport-https
     _tmp_key="/tmp/dart-signing-key.pub"
     libscript_download "https://dl-ssl.google.com/linux/linux_signing_key.pub" "$_tmp_key"
     cat "$_tmp_key" | sudo gpg --dearmor -o /usr/share/keyrings/dart.gpg
     rm -f "$_tmp_key"
     echo 'deb [signed-by=/usr/share/keyrings/dart.gpg arch=amd64] https://storage.googleapis.com/download.dartlang.org/linux/debian stable main' | sudo tee /etc/apt/sources.list.d/dart_stable.list
-    sudo apt-get update -y
-    sudo apt-get install -y dart
+    pkg_mgr update
+    pkg_mgr install dart
     export PATH="$PATH:/usr/LIB/dart/bin"
   elif command -v pacman >/dev/null 2>&1; then
-    sudo pacman -S --noconfirm dart
+    libscript_depends dart
   elif command -v dnf >/dev/null 2>&1; then
     # Unofficial, often people use precompiled binary or brew on linux
     printf "Please install dart manually on this distribution.\n" >&2
   else
-    depends dart || printf "Warning: Could not automatically install Dart.\n" >&2
+    libscript_depends dart || printf "Warning: Could not automatically install Dart.\n" >&2
   fi
 fi
 

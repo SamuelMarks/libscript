@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableDelayedExpansion
 :: # LibScript Common Test Entrypoint (Windows Batch)
 ::
 :: ## Overview

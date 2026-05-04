@@ -1,0 +1,15 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "deno-pm",
+  "provides": [
+    "package-manager",
+    "deno"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "title": "deno",
+  "description": "Bootstrap script for [Deno](https://deno.land), a modern and secure runtime for JavaScript and TypeScript that uses V8 and is built in Rust.",
+  "category": "package-manager"
+}

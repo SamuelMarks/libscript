@@ -26,5 +26,5 @@ SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-$(cd "$(dirname "$THIS_FILE")/../../.." && pw
 . "${SCRIPT_NAME}"
 
 if ! command -v wget >/dev/null 2>&1; then
-  depends 'wget'
+  libscript_depends 'wget'
 fi

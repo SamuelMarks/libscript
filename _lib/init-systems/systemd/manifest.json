@@ -1,5 +1,6 @@
 {
-  "name": "SYSTEMD",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "systemd",
   "provides": [
     "systemd"
   ],

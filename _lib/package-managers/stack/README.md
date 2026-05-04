@@ -1,5 +1,4 @@
-Stack
-=====
+# Stack
 
 Bootstrap module for the `stack` package manager.
 

@@ -1,5 +1,4 @@
-Vcpkg
-=====
+# Vcpkg
 
 Bootstrap module for the `vcpkg` package manager/tool.
 

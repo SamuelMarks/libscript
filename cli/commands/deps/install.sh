@@ -36,7 +36,7 @@ if [ "$cmd" = "install-deps" ]; then
     echo "Error: jq is required to parse $json_file." >&2
     exit 1
   fi
-  
+
   if [ -z "${LIBSCRIPT_SECRETS:-}" ]; then
     json_secrets=$(jq -r 'if .secrets then .secrets else empty end' "$json_file" 2>/dev/null)
     if [ "$json_secrets" != "null" ] && [ -n "$json_secrets" ]; then
@@ -51,7 +51,7 @@ if [ "$cmd" = "install-deps" ]; then
     echo "No dependencies found in $json_file."
     exit 0
   fi
-  
+
   # Parallel Download Phase
   echo "Downloading dependencies in parallel..."
   echo "$deps" | while read -r pkg ver override; do
@@ -63,7 +63,7 @@ if [ "$cmd" = "install-deps" ]; then
     fi
   done
   wait
-  
+
   # Serial Install Phase
   echo "Installing dependencies sequentially..."
   echo "$deps" | while read -r pkg ver override; do

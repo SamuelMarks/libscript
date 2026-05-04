@@ -34,10 +34,10 @@ done
 DOCKER_INSTALL_METHOD="${DOCKER_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 
 if [ "${DOCKER_INSTALL_METHOD}" = 'system' ]; then
-  depends 'docker'
+  libscript_depends 'docker'
 else
-  echo "[WARN] From-source or alternative installation requested for docker, but currently only system package manager is fully supported."
-  depends 'docker'
+  log_info "[WARN] From-source or alternative installation requested for docker, but currently only system package manager is fully supported."
+  libscript_depends 'docker'
 fi
 
 case "1" in

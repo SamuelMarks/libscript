@@ -1,5 +1,4 @@
-cURL
-====
+# cURL
 
 curl is a command-line tool and library for transferring data specified with URL syntax. It supports a large number of protocols, including HTTP, HTTPS, FTP, FTPS, SCP, SFTP, TFTP, DICT, TELNET, LDAP, and FILE. It is widely used for API interactions, data transfer, and automated scripts.
 

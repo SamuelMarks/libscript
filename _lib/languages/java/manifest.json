@@ -1,5 +1,6 @@
 {
-  "name": "JAVA",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "java",
   "title": "Java Toolchain",
   "description": "Java Development Kit (JDK) and runtime environment.",
   "category": "languages",

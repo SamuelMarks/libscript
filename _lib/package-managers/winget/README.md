@@ -1,12 +1,10 @@
-Winget
-======
+# Winget
 
 ## Usage
 This document describes **Winget**, the official Windows Package Manager CLI that allows users to discover, install, upgrade, remove, and configure applications on Windows 10 and Windows 11 computers.
 
 Winget works both as a local version manager (similar to rvm, nvm, pyenv, uv) and can be invoked from the global version manager `libscript`. It can additionally be used by libscript to build and deploy bigger stacks (like WordPress, Open edX, Nextcloud, etc.).
 
-## Usage
 You can install, start, stop, package, and uninstall winget using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**
@@ -53,7 +51,7 @@ libscript.cmd uninstall winget
 cli.cmd uninstall winget
 ```
 
-## Configuration
+## Configuration Options
 *(There are currently no component-specific configuration tables or variables defined for this module.)*
 
 ## Variables

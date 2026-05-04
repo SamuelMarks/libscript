@@ -32,9 +32,9 @@ for LIB in 'env.sh' ; do
   . "${SCRIPT_NAME}"
 done
 
-brew install 'postgresql@'"${POSTGRESQL_VERSION}"
+brew install 'postgresql@'"${POSTGRES_VERSION}"
 if ! pg_isready >/dev/null 2>&1 ; then
-  brew services start 'postgresql@'"${POSTGRESQL_VERSION}"
+  brew services start 'postgresql@'"${POSTGRES_VERSION}"
 fi
 
 export SCRIPT_NAME

@@ -5,7 +5,7 @@
   "description": "Configuration variables for ghcup",
   "type": "object",
   "properties": {
-    "BOOTSTRAP_HASKELL_NONINTERACTIVE": {
+    "GHCUP_BOOTSTRAP_HASKELL_NONINTERACTIVE": {
       "type": "string",
       "enum": [
         "1",
@@ -13,7 +13,7 @@
       ],
       "description": "Set to 1 to install ghcup silently without prompts. Default is 1 in this bootstrap."
     },
-    "BOOTSTRAP_HASKELL_MINIMAL": {
+    "GHCUP_BOOTSTRAP_HASKELL_MINIMAL": {
       "type": "string",
       "enum": [
         "1",
@@ -21,7 +21,7 @@
       ],
       "description": "Set to 1 to install only ghcup (no GHC, cabal, etc. by default). Default is 1."
     },
-    "BOOTSTRAP_HASKELL_INSTALL_HLS": {
+    "GHCUP_BOOTSTRAP_HASKELL_INSTALL_HLS": {
       "type": "string",
       "enum": [
         "1",

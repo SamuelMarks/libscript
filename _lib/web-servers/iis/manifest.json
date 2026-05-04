@@ -1,5 +1,6 @@
 {
-  "name": "IIS",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "iis",
   "title": "IIS",
   "description": "Internet Information Services (IIS) for Windows Server is a secure, highly-available, and manageable Web server.",
   "category": "web-servers",

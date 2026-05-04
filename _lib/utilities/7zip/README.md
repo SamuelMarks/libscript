@@ -1,12 +1,10 @@
-7-Zip
-=====
+# 7-Zip
 
 ## Usage
 This document describes **7zip (7-Zip)**, a highly efficient, open-source file archiver known for its high compression ratio and wide format support.
 
 7zip works both as a local version manager (similar to rvm, nvm, pyenv, uv) and can be invoked from the global version manager `libscript`. It acts as an essential foundational tool and can be used by libscript to build bigger stacks (like WordPress, Open edX, Nextcloud, etc.) that require archive extraction or compression.
 
-## Usage
 You can install, start, stop, package, and uninstall 7zip using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**
@@ -53,7 +51,7 @@ libscript.cmd uninstall 7zip
 cli.cmd uninstall 7zip
 ```
 
-## Configuration
+## Configuration Options
 *(There are currently no component-specific configuration tables or variables defined for this module.)*
 
 ## Variables

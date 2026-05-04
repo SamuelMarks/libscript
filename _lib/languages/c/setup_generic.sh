@@ -34,9 +34,9 @@ done
 
 C_INSTALL_METHOD="${C_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 if [ "${C_INSTALL_METHOD}" = 'system' ]; then
-  depends 'gcc' 'clang' 'make'
+  libscript_depends 'gcc' 'clang' 'make'
 else
   # "from-source" download binary equivalent
   >&2 printf 'Building C from source is not supported, using gcc\n'
-  depends 'gcc'
+  libscript_depends 'gcc'
 fi

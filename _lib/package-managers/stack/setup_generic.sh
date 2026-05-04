@@ -33,7 +33,7 @@ if ! command -v stack >/dev/null 2>&1; then
       ghcup install stack || true
     fi
   else
-    if ! depends haskell-stack || depends stack ; then
+    if ! libscript_depends haskell-stack || libscript_depends stack ; then
       true
     fi
   fi

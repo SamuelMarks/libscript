@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "celery",
+  "category": "task-queues",
+  "title": "celery",
+  "description": "celery stack",
+  "provides": [
+    "celery"
+  ]
+}

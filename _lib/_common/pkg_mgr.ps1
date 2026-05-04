@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 # LibScript Common Package Manager (PowerShell)
 
 # Resolve LIBSCRIPT_ROOT_DIR if not provided
@@ -120,7 +122,7 @@ function libscript_download {
     }
 }
 
-function depends {
+function libscript_depends {
     param (
         [string[]]$Packages
     )
@@ -151,4 +153,4 @@ function libscript_fetch {
 }
 
 # Export functions
-Export-ModuleMember -Function libscript_download, libscript_fetch, depends
+Export-ModuleMember -Function libscript_download, libscript_fetch, libscript_depends

@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 # LibScript Unified Service Management Utility (PowerShell)
 
 # Source dependencies if not already available
@@ -86,7 +88,7 @@ function libscript_check_health {
     )
 
     # 1. Check for component-specific health.ps1 in the caller's directory
-    # (Note: This depends on how the caller is invoked)
+    # (Note: This libscript_depends on how the caller is invoked)
     $callerDir = Split-Path $MyInvocation.ScriptName
     $healthScript = Join-Path $callerDir "health.ps1"
     if (Test-Path $healthScript) {

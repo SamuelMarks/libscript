@@ -34,9 +34,9 @@ done
 
 JAVA_INSTALL_METHOD="${JAVA_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 if [ "${JAVA_INSTALL_METHOD}" = 'system' ]; then
-  depends 'java'
+  libscript_depends 'java'
 else
-  depends 'curl' 'tar'
+  libscript_depends 'curl' 'tar'
   libscript_download https://download.java.net/java/GA/jdk17/0d483333a00540d886896bac774ff48b/35/GPL/openjdk-17_linux-x64_bin.tar.gz /tmp/jdk.tar.gz
   priv mkdir -p /opt/java
   priv tar -xzf /tmp/jdk.tar.gz -C /opt/java --strip-components=1

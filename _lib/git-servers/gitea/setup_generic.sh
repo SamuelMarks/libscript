@@ -35,7 +35,7 @@ GITEA_INSTALL_METHOD="${GITEA_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:
 GITEA_VERSION="${GITEA_VERSION:-latest}"
 
 if [ "${GITEA_INSTALL_METHOD}" = 'system' ]; then
-  depends 'gitea'
+  libscript_depends 'gitea'
 else
   # "source" install (direct download of binary)
   TARGET_OS="${TARGET_OS:-linux}"
@@ -60,9 +60,9 @@ else
   bin_dir="${PREFIX}/bin"
   mkdir -p "${bin_dir}"
 
-  echo "Downloading Gitea from ${dl_url}..."
+  log_info "Downloading Gitea from ${dl_url}..."
   libscript_download "${dl_url}" "${bin_dir}/gitea"
 
   chmod +x "${bin_dir}/gitea"
-  echo "Gitea installed to ${bin_dir}/gitea"
+  log_info "Gitea installed to ${bin_dir}/gitea"
 fi

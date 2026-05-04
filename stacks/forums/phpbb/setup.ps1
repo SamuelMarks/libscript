@@ -2,7 +2,7 @@ $ErrorActionPreference = "Stop"
 
 $PhpbbVersion = if ($env:PHPBB_VERSION) { $env:PHPBB_VERSION } else { "3.3.11" }
 $PhpbbMajorVersion = ($PhpbbVersion -split '\.')[0..1] -join '.'
-$WwwRoot = if ($env:WWWROOT) { $env:WWWROOT } else { "C:\inetpub\wwwroot\phpbb" }
+$WwwRoot = if ($env:PHPBB_WWWROOT) { $env:PHPBB_WWWROOT } else { "C:\inetpub\wwwroot\phpbb" }
 $DbType = if ($env:PHPBB_DB_TYPE) { $env:PHPBB_DB_TYPE } else { "sqlite" }
 $DbName = if ($env:PHPBB_DB_NAME) { $env:PHPBB_DB_NAME } else { "phpbb" }
 $DbUser = if ($env:PHPBB_DB_USER) { $env:PHPBB_DB_USER } else { "phpbb" }
@@ -90,21 +90,21 @@ if ($DbType -eq "mariadb" -or $DbType -eq "mysql") {
     }
 }
 
-if ($WebServer -eq "iis" -and -not $env:PHP_FPM_LISTEN) {
+if ($WebServer -eq "iis" -and -not $env:PHPBB_PHP_FPM_LISTEN) {
     $phpExe = (Get-Command php.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source)
     if ($phpExe) {
         $phpDir = Split-Path -Parent $phpExe
         $phpCgi = Join-Path $phpDir "php-cgi.exe"
         if (Test-Path $phpCgi) {
-            $env:PHP_FPM_LISTEN = $phpCgi
+            $env:PHPBB_PHP_FPM_LISTEN = $phpCgi
         }
     }
 }
 
 if ($WebServer -eq "iis") {
-    $env:SERVER_NAME = $ServerName
+    $env:PHPBB_SERVER_NAME = $ServerName
     $env:LISTEN = $ListenPort
-    $env:WWWROOT = $WwwRoot
+    $env:PHPBB_WWWROOT = $WwwRoot
 
     $iisCreateServer = Join-Path $libDir "_server\iis\create_server_block.ps1"
     if (Test-Path $iisCreateServer) {

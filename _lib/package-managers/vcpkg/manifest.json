@@ -1,5 +1,6 @@
 {
-  "name": "VCPKG",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "vcpkg",
   "provides": [
     "vcpkg"
   ],

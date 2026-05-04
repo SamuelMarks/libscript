@@ -1,5 +1,6 @@
 {
-  "name": "7ZIP",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "7zip",
   "title": "7-Zip",
   "description": "A highly efficient, open-source file archiver known for its high compression ratio.",
   "category": "utility",

@@ -41,12 +41,12 @@ done
 ZIG_INSTALL_METHOD="${ZIG_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 
 if [ "${ZIG_INSTALL_METHOD}" = 'system' ]; then
-  if ! depends 'zig'; then
+  if ! libscript_depends 'zig'; then
     if command -v snap >/dev/null 2>&1; then
       priv snap install zig --classic || priv snap install zig --classic --beta || true
     fi
   fi
 else
-  echo "[WARN] From-source or alternative installation requested for zig, but currently only system package manager is fully supported."
-  depends 'zig'
+  log_info "[WARN] From-source or alternative installation requested for zig, but currently only system package manager is fully supported."
+  libscript_depends 'zig'
 fi

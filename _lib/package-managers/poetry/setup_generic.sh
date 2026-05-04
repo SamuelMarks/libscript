@@ -32,12 +32,12 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
 done
 
 if ! command -v poetry >/dev/null 2>&1; then
-  echo "Installing poetry..."
+  log_info "Installing poetry..."
   _tmp_script="/tmp/poetry-install.py"
   libscript_download "https://install.python-poetry.org" "$_tmp_script"
   python3 "$_tmp_script"
   rm -f "$_tmp_script"
-  
+
   if [ -d "$HOME/.local/bin" ]; then
     export PATH="$HOME/.local/bin:$PATH"
   fi

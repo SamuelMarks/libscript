@@ -1,5 +1,6 @@
 {
-  "name": "NGINX",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "nginx",
   "title": "Nginx",
   "description": "A high-performance HTTP and reverse proxy server, as well as a mail proxy server.",
   "category": "web-servers",

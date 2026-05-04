@@ -24,8 +24,8 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 # # LibScript Component Core Module
 #
 # ## Overview
-# This module provides the unified CLI routing and lifecycle management logic 
-# for LibScript components. It eliminates redundancy by centralizing the 
+# This module provides the unified CLI routing and lifecycle management logic
+# for LibScript components. It eliminates redundancy by centralizing the
 # 600+ lines of boilerplate previously duplicated in every component's `cli.sh`.
 #
 # ## Usage
@@ -75,76 +75,76 @@ get_merged_properties() {
   elif [ -f "$BASE_SCHEMA_FILE" ]; then
     jq -r '.properties' "$BASE_SCHEMA_FILE"
   else
-    echo "{}"
+    log_info "{}"
   fi
 }
 
 show_help() {
-  echo "Usage: $0 [COMMAND] [PACKAGE_NAME] [VERSION] [OPTIONS]"
-  echo ""
-  echo "Commands:"
-  echo "  install <package_name> <version>"
-  echo "  remove <package_name> [version]"
-  echo "  uninstall <package_name> [version]"
-  echo "  install_daemon <package_name> <version>"
-  echo "  install_service <package_name> <version>"
-  echo "  uninstall_daemon <package_name> <version>"
-  echo "  uninstall_service <package_name> <version>"
-  echo "  remove_daemon <package_name> <version>"
-  echo "  remove_service <package_name> <version>"
-  echo "  status <package_name> [version]"
-  echo "  health <package_name> [version]"
-  echo "  start <package_name> [version]"
-  echo "  stop <package_name> [version]"
-  echo "  restart <package_name> [version]"
-  echo "  logs <package_name> [version] [-f|--follow]"
-  echo "  up <package_name> [version]"
-  echo "  down <package_name> [version]"
-  echo "  test <package_name> [version]"
-  echo "  run <package_name> <version> [args...]"
-  echo "  which <package_name> <version>"
-  echo "  exec <package_name> <version> <cmd> [args...]"
-  echo "  ls <package_name>"
-  echo "  download <package_name> <version>"
-  echo "  ls-remote <package_name> [version]"
-  echo ""
-  echo "Description:"
+  log_info "Usage: $0 [COMMAND] [PACKAGE_NAME] [VERSION] [OPTIONS]"
+  log_info ""
+  log_info "Commands:"
+  log_info "  install <package_name> <version>"
+  log_info "  remove <package_name> [version]"
+  log_info "  uninstall <package_name> [version]"
+  log_info "  install_daemon <package_name> <version>"
+  log_info "  install_service <package_name> <version>"
+  log_info "  uninstall_daemon <package_name> <version>"
+  log_info "  uninstall_service <package_name> <version>"
+  log_info "  remove_daemon <package_name> <version>"
+  log_info "  remove_service <package_name> <version>"
+  log_info "  status <package_name> [version]"
+  log_info "  health <package_name> [version]"
+  log_info "  start <package_name> [version]"
+  log_info "  stop <package_name> [version]"
+  log_info "  restart <package_name> [version]"
+  log_info "  logs <package_name> [version] [-f|--follow]"
+  log_info "  up <package_name> [version]"
+  log_info "  down <package_name> [version]"
+  log_info "  test <package_name> [version]"
+  log_info "  run <package_name> <version> [args...]"
+  log_info "  which <package_name> <version>"
+  log_info "  exec <package_name> <version> <cmd> [args...]"
+  log_info "  ls <package_name>"
+  log_info "  download <package_name> <version>"
+  log_info "  ls-remote <package_name> [version]"
+  log_info ""
+  log_info "Description:"
   if command -v jq >/dev/null 2>&1 && [ -f "$MANIFEST_FILE" ]; then
     DESC=$(jq -r 'if .description then .description else "" end' "$MANIFEST_FILE")
     TITLE=$(jq -r 'if .title then .title else "" end' "$MANIFEST_FILE")
     if [ -n "$TITLE" ] && [ -n "$DESC" ]; then
-      echo "  $TITLE: $DESC"
+      log_info "  $TITLE: $DESC"
     elif [ -n "$TITLE" ]; then
-      echo "  $TITLE"
+      log_info "  $TITLE"
     elif [ -n "$DESC" ]; then
-      echo "  $DESC"
+      log_info "  $DESC"
     fi
-    
+
     VERSIONS=$(jq -r 'if .versions then .versions | join(", ") else "" end' "$MANIFEST_FILE")
     [ -n "$VERSIONS" ] && echo "  Supported Versions: $VERSIONS"
   fi
-  echo ""
-  echo "Available Options:"
+  log_info ""
+  log_info "Available Options:"
   if command -v jq >/dev/null 2>&1; then
     _props=$(get_merged_properties)
     echo "$_props" | jq -r '
-      to_entries[] | 
+      to_entries[] |
       def aliases: if .value.version_aliases then " [aliases: " + (.value.version_aliases | join(", ")) + "]" else "" end;
       "--\(.key)=VALUE|\(.value.description // "")\(aliases) [default: \(.value.default // "none")]"
     ' | awk -F'|' '{printf "  %-35s %s\n", $1, $2}'
-    
+
     echo "$_props" | jq -r '
       to_entries[] | select(.value.is_libscript_dependency == true) |
       "--\(.key)_STRATEGY=VALUE|Strategy for \(.key) (reuse, install-alongside, upgrade, downgrade, overwrite) [default: reuse]"
     ' | awk -F'|' '{printf "  %-35s %s\n", $1, $2}'
   else
-    echo "  (jq is required to parse vars.schema.json for dynamic options)"
-    echo "  See $SCHEMA_FILE for available variables."
+    log_info "  (jq is required to parse vars.schema.json for dynamic options)"
+    log_info "  See $SCHEMA_FILE for available variables."
   fi
-  echo ""
-  echo "  --help, -h, /?                      Show this help message"
-  echo "  --version, -v                       Show version"
-  echo ""
+  log_info ""
+  log_info "  --help, -h, /?                      Show this help message"
+  log_info "  --version, -v                       Show version"
+  log_info ""
 }
 
 ACTION=""
@@ -157,7 +157,7 @@ case "${1:-}" in
     exit 0
     ;;
   --version|-v)
-    echo "${LIBSCRIPT_VERSION:-dev}"
+    log_info "${LIBSCRIPT_VERSION:-dev}"
     exit 0
     ;;
   install|install_daemon|install_service|uninstall_daemon|uninstall_service|remove_daemon|remove_service|run|which|exec|env|serve|route)
@@ -195,8 +195,8 @@ case "${1:-}" in
     ;;
   *)
     if [ -n "${1:-}" ]; then
-      echo "Unknown command: $1"
-      echo "Use --help to see available options."
+      log_info "Unknown command: $1"
+      log_info "Use --help to see available options."
       exit 1
     else
       show_help
@@ -265,7 +265,7 @@ while [ $# -gt 0 ]; do
       # Validate key and value against schema
       if command -v jq >/dev/null 2>&1; then
         _props=$(get_merged_properties)
-        
+
         # Check if key exists
         if ! echo "$_props" | jq -e ".\"$key\"" >/dev/null 2>&1; then
           # Check for _STRATEGY suffix which is also allowed for dependencies
@@ -287,7 +287,7 @@ while [ $# -gt 0 ]; do
           export "$key"="$val"
         fi
       else
-        # If jq is not available, we can only warn or just set it. 
+        # If jq is not available, we can only warn or just set it.
         # Project policy seems to prefer strictness if possible, but without jq we can't be strict.
         export "$key"="$val"
       fi
@@ -312,22 +312,22 @@ if [ "${LIBSCRIPT_SKIP_DEPENDENCIES:-}" != "1" ] && { [ "$ACTION" = "install" ] 
           export "$dep_key"="$dep_val"
         fi
         [ -z "$dep_val" ] && continue
-        
+
         eval "strategy_val=\"\${${dep_key}_STRATEGY:-reuse}\""
         log_info "Resolving dependency: $dep_val (strategy: $strategy_val)"
-        
+
         is_installed=0
         if command -v "$dep_val" >/dev/null 2>&1 || "$LIBSCRIPT_ROOT_DIR/libscript.sh" which "$dep_val" "latest" >/dev/null 2>&1; then
           is_installed=1
         fi
-        
+
         do_install=0
         if [ "$is_installed" = "0" ]; then
           do_install=1
         elif [ "$strategy_val" = "overwrite" ] || [ "$strategy_val" = "upgrade" ] || [ "$strategy_val" = "downgrade" ] || [ "$strategy_val" = "install-alongside" ]; then
           do_install=1
         fi
-        
+
         if [ "$do_install" = "1" ]; then
           log_info "Installing dependency $dep_val..."
           LIBSCRIPT_SKIP_DEPENDENCIES=1 "$LIBSCRIPT_ROOT_DIR/libscript.sh" install "$dep_val" "latest" || {
@@ -347,14 +347,14 @@ if [ "$ACTION" = "test" ]; then
   if [ -x "$SCRIPT_DIR/test.sh" ]; then
     exec "$SCRIPT_DIR/test.sh"
   else
-    echo "Error: test.sh not found in $SCRIPT_DIR"
+    log_info "Error: test.sh not found in $SCRIPT_DIR"
     exit 1
   fi
 elif [ "$ACTION" = "uninstall" ] || [ "$ACTION" = "remove" ]; then
   if [ -x "$SCRIPT_DIR/uninstall.sh" ]; then
     exec "$SCRIPT_DIR/uninstall.sh"
   else
-    echo "Error: uninstall.sh not found in $SCRIPT_DIR"
+    log_info "Error: uninstall.sh not found in $SCRIPT_DIR"
     exit 1
   fi
 elif [ "$ACTION" = "start" ] || [ "$ACTION" = "stop" ] || [ "$ACTION" = "restart" ] || [ "$ACTION" = "status" ] || [ "$ACTION" = "health" ] || [ "$ACTION" = "logs" ] || [ "$ACTION" = "up" ] || [ "$ACTION" = "down" ]; then
@@ -377,7 +377,7 @@ elif [ "$ACTION" = "which" ]; then
   INSTALLED_DIR="${PREFIX:-$LIBSCRIPT_ROOT_DIR/installed/$PACKAGE_NAME}"
   BIN_PATH="$INSTALLED_DIR/bin/$PACKAGE_NAME"
   if [ -x "$BIN_PATH" ]; then
-    echo "$BIN_PATH"
+    log_info "$BIN_PATH"
   else
     log_error "Not installed: $BIN_PATH"
     exit 1
@@ -398,6 +398,6 @@ if [ -x "$SCRIPT_DIR/setup.sh" ]; then
 elif [ -f "$SCRIPT_DIR/setup.sh" ]; then
   exec sh "$SCRIPT_DIR/setup.sh"
 else
-  echo "Error: setup.sh not found in $SCRIPT_DIR"
+  log_info "Error: setup.sh not found in $SCRIPT_DIR"
   exit 1
 fi

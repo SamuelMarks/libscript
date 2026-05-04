@@ -1,5 +1,4 @@
-Pdm
-===
+# Pdm
 
 Bootstrap module for `pdm` (Modern Python package and dependency manager).
 

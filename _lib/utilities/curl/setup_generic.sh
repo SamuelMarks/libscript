@@ -26,8 +26,8 @@ SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-$(cd "$(dirname "$THIS_FILE")/../../.." && pw
 . "${SCRIPT_NAME}"
 
 if ! command -v curl >/dev/null 2>&1; then
-  if ! depends 'curl'; then
-    echo "Attempting static binary download for curl..."
+  if ! libscript_depends 'curl'; then
+    log_info "Attempting static binary download for curl..."
     ARCH=$(uname -m)
     case "$ARCH" in
       x86_64) BARCH="amd64" ;;

@@ -31,4 +31,4 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
   . "${SCRIPT_NAME}"
 done
 
-depends 'openvpn'
+libscript_depends 'openvpn'

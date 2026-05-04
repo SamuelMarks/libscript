@@ -42,12 +42,12 @@ export SCRIPT_NAME
 REDHAT_SUPPORT_PRODUCT_VERSION="$(. /etc/os-release; printf '%s' "${REDHAT_SUPPORT_PRODUCT_VERSION}")"
 export REDHAT_SUPPORT_PRODUCT_VERSION
 VER="${REDHAT_SUPPORT_PRODUCT_VERSION%%.*}"
-sudo dnf install -y \
+pkg_mgr install \
   'https://download.postgresql.org/pub/repos/yum/reporpms/EL-'"${VER}"'-'"${ARCH}"'/pgdg-redhat-repo-latest.noarch.rpm'
-sudo dnf -qy module disable 'postgresql'
-sudo dnf install -y 'postgresql'"${POSTGRESQL_VERSION}"'-server'
-sudo '/usr/pgsql-'"${POSTGRESQL_VERSION}"'/bin/postgresql-'"${POSTGRESQL_VERSION}"'-setup' initdb
-SERVICE_NAME="${LIBSCRIPT_SERVICE_NAME:-postgresql-${POSTGRESQL_VERSION}}"
+pkg_mgr -qy module disable 'postgresql'
+pkg_mgr install 'postgresql'"${POSTGRES_VERSION}"'-server'
+sudo '/usr/pgsql-'"${POSTGRES_VERSION}"'/bin/postgresql-'"${POSTGRES_VERSION}"'-setup' initdb
+SERVICE_NAME="${LIBSCRIPT_SERVICE_NAME:-postgresql-${POSTGRES_VERSION}}"
 sudo systemctl enable "${SERVICE_NAME}"
 sudo systemctl start "${SERVICE_NAME}"
 

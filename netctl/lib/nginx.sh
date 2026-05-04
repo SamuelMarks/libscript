@@ -25,7 +25,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 
 netctl_emit_nginx() {
   state_file="${1:-$NETCTL_STATE_FILE}"
-  
+
   if [ ! -f "$state_file" ]; then
     echo "Error: State file '$state_file' not found." >&2
     return 1

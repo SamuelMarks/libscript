@@ -26,13 +26,13 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  echo "Usage: ${THIS_FILE} [OPTIONS]"
-  echo "See script source or documentation for more details."
+  log_info "Usage: ${THIS_FILE} [OPTIONS]"
+  log_info "See script source or documentation for more details."
   exit 0
 fi
 
 if [ -z "$1" ] || [ -z "$2" ]; then
-    echo "Usage: ${THIS_FILE} <version> <constraint>"
+    log_info "Usage: ${THIS_FILE} <version> <constraint>"
     exit 2
 fi
 

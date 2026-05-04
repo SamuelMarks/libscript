@@ -32,10 +32,10 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
 done
 
 if ! command -v micromamba >/dev/null 2>&1 && ! command -v mamba >/dev/null 2>&1; then
-  echo "Installing micromamba..."
+  log_info "Installing micromamba..."
   OS="$(uname -s)"
   ARCH="$(uname -m)"
-  
+
   if [ "$OS" = "Linux" ]; then
     if [ "$ARCH" = "x86_64" ]; then
       URL="https://micro.mamba.pm/api/micromamba/linux-64/latest"
@@ -68,6 +68,6 @@ if ! command -v micromamba >/dev/null 2>&1 && ! command -v mamba >/dev/null 2>&1
   tar -xjf "$tmp_tar" -C "$tmp_dir"
   cp "$tmp_dir/bin/micromamba" "$HOME/.local/bin/"
   rm -rf "$tmp_dir"
-  
+
   export PATH="$HOME/.local/bin:$PATH"
 fi

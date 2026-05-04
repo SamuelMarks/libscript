@@ -1,5 +1,4 @@
-Pnpm
-====
+# Pnpm
 
 Bootstrap module for the `pnpm` package manager.
 

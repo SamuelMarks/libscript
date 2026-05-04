@@ -34,10 +34,10 @@ done
 LIGHTTPD_INSTALL_METHOD="${LIGHTTPD_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 
 if [ "${LIGHTTPD_INSTALL_METHOD}" = 'system' ]; then
-  depends 'lighttpd'
+  libscript_depends 'lighttpd'
 else
-  echo "[WARN] From-source or alternative installation requested for lighttpd, but currently only system package manager is fully supported."
-  depends 'lighttpd'
+  log_info "[WARN] From-source or alternative installation requested for lighttpd, but currently only system package manager is fully supported."
+  libscript_depends 'lighttpd'
 fi
 
 CONF_DIR="${LIBSCRIPT_DATA_DIR}/lighttpd"

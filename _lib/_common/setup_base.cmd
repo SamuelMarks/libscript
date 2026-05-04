@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableDelayedExpansion
 :: # LibScript Common Setup Entrypoint (Windows Batch)
 ::
 :: ## Overview
@@ -40,12 +41,8 @@ if errorlevel 1 (
     exit /b %errorlevel%
 )
 
-:: Delegate to PowerShell if setup_windows.ps1 exists
-if exist "%~dp0setup_windows.ps1" (
-    set "COMMON_DIR=%LIBSCRIPT_ROOT_DIR%\_lib\_common"
-    powershell -ExecutionPolicy Bypass -Command "& { . '!COMMON_DIR!\log.ps1'; . '!COMMON_DIR!\pkg_mgr.ps1'; . '!COMMON_DIR!\validate_schema.ps1'; . '!COMMON_DIR!\service.ps1'; if (Test-Path '%~dp0vars.schema.json') { validate_schema '%~dp0vars.schema.json' }; & '%~dp0setup_windows.ps1' }"
-    exit /b !errorlevel!
-) else if exist "%~dp0setup.ps1" (
+:: Delegate to PowerShell if setup.ps1 exists
+if exist "%~dp0setup.ps1" (
     set "COMMON_DIR=%LIBSCRIPT_ROOT_DIR%\_lib\_common"
     powershell -ExecutionPolicy Bypass -Command "& { . '!COMMON_DIR!\log.ps1'; . '!COMMON_DIR!\pkg_mgr.ps1'; . '!COMMON_DIR!\validate_schema.ps1'; if (Test-Path '%~dp0vars.schema.json') { validate_schema '%~dp0vars.schema.json' }; & '%~dp0setup.ps1' }"
     exit /b !errorlevel!

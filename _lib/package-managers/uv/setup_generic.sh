@@ -32,12 +32,12 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
 done
 
 if ! command -v uv >/dev/null 2>&1; then
-  echo "Installing uv..."
+  log_info "Installing uv..."
   _tmp_script="/tmp/uv-install.sh"
   libscript_download "https://astral.sh/uv/install.sh" "$_tmp_script"
   sh "$_tmp_script"
   rm -f "$_tmp_script"
-  
+
   # Ensure it is available in the current session if possible
   if [ -d "$HOME/.cargo/bin" ]; then
     export PATH="$HOME/.cargo/bin:$PATH"

@@ -30,15 +30,15 @@ if ! command -v pipx >/dev/null 2>&1; then
   if command -v brew >/dev/null 2>&1; then
     brew install pipx
     pipx ensurepath
-  elif command -v apt-get >/dev/null 2>&1; then
-    sudo apt-get update -y
-    sudo apt-get install -y pipx || pip3 install --user pipx
+  elif command -v apt >/dev/null 2>&1; then
+    pkg_mgr update
+    pkg_mgr install pipx || pip3 install --user pipx
     pipx ensurepath || python3 -m pipx ensurepath
   elif command -v dnf >/dev/null 2>&1; then
-    sudo dnf install -y pipx
+    pkg_mgr install pipx
     pipx ensurepath
   elif command -v pacman >/dev/null 2>&1; then
-    sudo pacman -S --noconfirm python-pipx
+    libscript_depends python-pipx
     pipx ensurepath
   else
     if command -v python3 >/dev/null 2>&1; then
@@ -50,7 +50,7 @@ if ! command -v pipx >/dev/null 2>&1; then
         python3 -m pip install --user pipx
         python3 -m pipx ensurepath
       else
-        if ! depends python3 ; then
+        if ! libscript_depends python3 ; then
           true
         fi
         python3 -m pip install --user pipx

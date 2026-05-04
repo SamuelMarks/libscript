@@ -1,5 +1,4 @@
-Hatch
-=====
+# Hatch
 
 Bootstrap module for `hatch` (Modern Python project manager).
 

@@ -1,5 +1,6 @@
 {
-  "name": "CSHARP",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "csharp",
   "title": "C# Toolchain",
   "description": "C# compiler and .NET runtime.",
   "category": "languages",

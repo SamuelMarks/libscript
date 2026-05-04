@@ -1,5 +1,4 @@
-Message Brokers
-===============
+# Message Brokers
 
 ## Purpose & Current State
 **Purpose**: This document provides context and technical details for the `_daemon` component (a directory under `_lib`) within the LibScript ecosystem. It describes the directory responsible for configuring and managing system service daemons and background tasks across different operating systems.
@@ -9,7 +8,6 @@ The components inside this directory work both as local version managers (simila
 
 Additionally, daemon controllers contained here can be used by libscript to build bigger stacks (like WordPress, Open edX, Nextcloud, etc.) by enabling components to run reliably in the background on system startup.
 
-## Usage
 You can install, start, stop, package, and uninstall message-brokers using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**

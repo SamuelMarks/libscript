@@ -1,5 +1,4 @@
-Xbps
-====
+# Xbps
 
 Bootstrap module for the Void Linux `xbps` package manager.
 

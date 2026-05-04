@@ -1,5 +1,6 @@
 {
-  "name": "AWS",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "aws",
   "provides": [
     "aws"
   ],

@@ -1,5 +1,4 @@
-Openbao
-=======
+# Openbao
 
 ## Purpose & Current State
 **Purpose**: This document provides context and technical details for the `openbao` component (part of `_server`) within the LibScript ecosystem. OpenBao is an open-source tool for managing secrets and protecting sensitive data.

@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "nextcloud",
+  "category": "collaboration",
+  "title": "nextcloud",
+  "description": "nextcloud stack",
+  "provides": [
+    "nextcloud"
+  ]
+}

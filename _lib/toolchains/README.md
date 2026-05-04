@@ -1,5 +1,4 @@
-Toolchains
-==========
+# Toolchains
 
 ## Purpose & Current State
 **Purpose**: This document provides context and technical details for the `_toolchain` component (part of `_lib`) within the LibScript ecosystem. The `_toolchain` module acts as a collection of provisioning scripts and configuration logic for various programming languages, compilers, and development environments (such as Python, Rust, Node, Go, etc.). LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
@@ -7,7 +6,6 @@ Toolchains
 ## Usage
 The `_toolchain` module encompasses the lifecycle management of different programming environments. Every individual toolchain within this module works both as a local version manager (similar to rvm, nvm, pyenv, uv) for its respective technology, and can be seamlessly invoked from the global version manager `libscript`. Furthermore, these toolchains can be used by libscript to build and compose bigger, more complex stacks (like WordPress, Open edX, Nextcloud, etc.).
 
-## Usage
 You can install, start, stop, package, and uninstall toolchains using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**

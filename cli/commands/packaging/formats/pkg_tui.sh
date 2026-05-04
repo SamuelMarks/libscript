@@ -61,7 +61,7 @@ if [ $? -eq 0 ] && [ -n "$SELECTED" ]; then
     "deb" ".deb package" \
     "rpm" ".rpm package" \
     3>&1 1>&2 2>&3)
-  
+
   if [ -n "$action" ]; then
     offline_ans=$($DIALOG --title "Options" --yesno "Enable --offline mode?" 10 40; echo $?)
     os_ans=$($DIALOG --title "Target OS" --checklist "Select OS targets:" 15 50 5 \
@@ -71,18 +71,18 @@ if [ $? -eq 0 ] && [ -n "$SELECTED" ]; then
       "macos" "macOS" OFF \
       "bsd" "BSD" OFF \
       3>&1 1>&2 2>&3)
-    
+
     extra_args=""
     if [ "$offline_ans" = "0" ]; then extra_args="$extra_args --offline"; fi
     for os in $(echo "$os_ans" | tr -d '"'); do
       extra_args="$extra_args --os-$os"
     done
-    
+
     items=""
     for item in $(echo "$SELECTED" | tr -d '"'); do
       items="$items $item latest"
     done
-    
+
     if [ "$action" = "install" ]; then
       for item in $(echo "$SELECTED" | tr -d '"'); do
         ./libscript.sh install "$item" latest

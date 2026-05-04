@@ -34,8 +34,8 @@ done
 ELIXIR_INSTALL_METHOD="${ELIXIR_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 
 if [ "${ELIXIR_INSTALL_METHOD}" = 'system' ]; then
-  depends 'elixir'
+  libscript_depends 'elixir'
 else
-  echo "[WARN] From-source or alternative installation requested for elixir, but currently only system package manager is fully supported."
-  depends 'elixir'
+  log_info "[WARN] From-source or alternative installation requested for elixir, but currently only system package manager is fully supported."
+  libscript_depends 'elixir'
 fi

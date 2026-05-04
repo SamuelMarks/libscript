@@ -1,5 +1,4 @@
-wget
-====
+# wget
 
 GNU Wget is a free software package for retrieving files using HTTP, HTTPS, FTP, and FTPS, the most widely used Internet protocols. It is a non-interactive command-line tool, so it may easily be called from scripts, cron jobs, or terminals without X-Windows support.
 

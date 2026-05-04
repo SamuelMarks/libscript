@@ -49,7 +49,7 @@ if [ ! -d "${JUPYTERHUB_VENV}" ]; then
   "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U "jupyverse[auth,jupyterlab]" jupyterhub fps-jupyterlab fps-auth jupyter-collaboration oauthenticator jupyterhub-nativeauthenticator
   # "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U jupyter notebook pyright python-language-server python-lsp-server
 fi
-if ! cmd_avail configurable-http-proxy; then
+if ! libscript_cmd_avail configurable-http-proxy; then
   priv env "PATH=$PATH" npm install -g configurable-http-proxy
 fi
 
@@ -82,8 +82,8 @@ if [ -d '/etc/systemd/system' ]; then
 # shellcheck disable=SC1090,SC1091,SC2034
   . "${SCRIPT_NAME}"
 
-    object2key_val "${VARS}" 'export ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
-    object2key_val "${VARS}" 'setenv ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.csh'
+    libscript_object2key_val "${VARS}" 'export ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
+    libscript_object2key_val "${VARS}" 'setenv ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.csh'
     chmod +x "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
     ENV="$(cut -c8- "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' | awk -- '{arr[i++]=$0} END {while (i>0) print arr[--i] }' | tr -d "'" | awk -F= '!seen[$1]++' | xargs printf 'Environment="%s"\n')"
   fi

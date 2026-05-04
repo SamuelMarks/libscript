@@ -1,5 +1,4 @@
-Mamba
-=====
+# Mamba
 
 Bootstrap module for the `mamba` package manager.
 

@@ -46,7 +46,7 @@ export WWWROOT="${WWWROOT:-/var/www/html}"
 if [ -n "${PHP_FPM_LISTEN:-}" ]; then
   # Caddy php_fastcgi format: php_fastcgi unix//run/php/php-fpm.sock or 127.0.0.1:9000
   # If PHP_FPM_LISTEN starts with "unix:", we need to change it to "unix//" for Caddy
-  CADDY_PHP_LISTEN="${PHP_FPM_LISTEN}"
+  CADDY_PHP_LISTEN="${CADDY_PHP_FPM_LISTEN}"
   case "${CADDY_PHP_LISTEN}" in
     unix:/*)
       CADDY_PHP_LISTEN="unix/$(echo "${CADDY_PHP_LISTEN}" | sed 's|^unix:/|/|')"

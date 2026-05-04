@@ -1,5 +1,4 @@
-Kubernetes Thw
-==============
+# Kubernetes Thw
 
 ## Purpose & Current State
 **Purpose**: This document provides context and technical details for the `kubernetes-thw` component within the LibScript ecosystem. This component manages **kubernetes-thw**, a custom Kubernetes cluster setup based on "Kubernetes The Hard Way".
@@ -7,7 +6,6 @@ Kubernetes Thw
 ## Usage
 This directory contains the scripts to interact with `kubernetes-thw`. It is designed to be executed via the global `libscript` command or directly via local CLI scripts.
 
-## Usage
 You can install, start, stop, uninstall, and package this component using `libscript`.
 
 **Install:**
@@ -41,8 +39,8 @@ The following environment variables can be passed to the CLI (`--KEY=VALUE`) or 
 
 | Variable | Description | Default | Aliases |
 |----------|-------------|---------|---------|
-| `DEST` | Destination (working directory) | `none` | `` |
-| `VARS` | Key/value in JSON format (as an escaped string) | `none` | `` |
+| `KUBERNETES_THW_DEST` | Destination (working directory) | `none` | `` |
+| `KUBERNETES_THW_VARS` | Key/value in JSON format (as an escaped string) | `none` | `` |
 | `LIBSCRIPT_GLOBAL_INSTALL_METHOD` | Global override for how software should be installed across all systems (e.g. system package manager vs downloaded binaries/from-source). | `system` | `` |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows targets (e.g. winget, choco). | `winget` | `` |
 | `LIBSCRIPT_LISTEN_PORT` | Global port to listen on | `none` | `` |

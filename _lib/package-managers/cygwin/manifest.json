@@ -1,5 +1,6 @@
 {
-  "name": "CYGWIN",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "cygwin",
   "provides": [
     "cygwin"
   ],

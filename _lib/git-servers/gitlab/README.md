@@ -1,5 +1,4 @@
-GitLab
-======
+# GitLab
 
 GitLab Community Edition (CE) is a self-hosted Git management software based on Ruby on Rails.
 
@@ -10,7 +9,7 @@ GitLab Community Edition (CE) is a self-hosted Git management software based on 
 libscript install gitlab latest
 ```
 
-## Options
+## Configuration Options
 See `vars.schema.json` for all available configuration options.
 
 ## Platform Support

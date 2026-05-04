@@ -38,7 +38,7 @@ if [ -s "$HOME/.nvm/nvm.sh" ]; then
 fi
 
 if ! command -v nvm >/dev/null 2>&1; then
-  echo "Installing nvm..."
+  log_info "Installing nvm..."
   _tmp_script="/tmp/nvm-install.sh"
   libscript_download "https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh" "$_tmp_script"
   bash "$_tmp_script"

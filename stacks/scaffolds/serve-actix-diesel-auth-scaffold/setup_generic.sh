@@ -35,11 +35,11 @@ for LIB in '_lib/_common/pkg_mgr.sh' '_lib/git-servers/git.sh' '_lib/languages/r
 done
 
 PREVIOUS_WD="$(pwd)"
-depends 'libpq-dev' 'libsqlite3-dev' 'default-libmysqlclient-dev'
+libscript_depends 'libpq-dev' 'libsqlite3-dev' 'default-libmysqlclient-dev'
 git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}"
 cd -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}"
 D="$( dirname -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}" )"'/rust-actix-diesel-auth-scaffold'
-depends 'libpq-dev' 'libsqlite3-dev' 'default-libmysqlclient-dev'
+libscript_depends 'libpq-dev' 'libsqlite3-dev' 'default-libmysqlclient-dev'
 git_get https://github.com/offscale/rust-actix-diesel-auth-scaffold "${D}"
 rustup toolchain install nightly || true
 RUSTC_BOOTSTRAP=1 cargo +nightly check || RUSTC_BOOTSTRAP=1 cargo check

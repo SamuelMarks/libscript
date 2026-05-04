@@ -1,5 +1,6 @@
 {
-  "name": "GRADLE",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "gradle",
   "title": "Gradle",
   "description": "A build automation tool for multi-language software development, primarily Java.",
   "category": "toolchain",

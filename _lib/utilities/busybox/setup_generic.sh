@@ -29,8 +29,8 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
 done
 
 if ! command -v busybox >/dev/null 2>&1; then
-  if ! depends 'busybox'; then
-    echo "Attempting static binary download for busybox..."
+  if ! libscript_depends 'busybox'; then
+    log_info "Attempting static binary download for busybox..."
     ARCH=$(uname -m)
     case "$ARCH" in
       x86_64) BARCH="x86_64" ;;

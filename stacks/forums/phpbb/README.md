@@ -1,9 +1,8 @@
-Phpbb
-=====
+# Phpbb
 
 This module automates the setup of phpBB.
 
-## Environment Variables
+## Configuration Options
 | Variable | Description | Default |
 | --- | --- | --- |
 | `PHPBB_VERSION` | phpBB version to install | `3.3.11` |
@@ -14,8 +13,8 @@ This module automates the setup of phpBB.
 | `PHPBB_DB_PASS` | Database password | `phpbb` |
 | `PHPBB_SERVER_NAME` | Server name for webserver config | `localhost` |
 | `PHPBB_LISTEN` | Port to listen on | `80` |
-| `WWWROOT` | Directory to install phpBB | `/var/www/phpbb` (Linux), `C:\inetpub\wwwroot\phpbb` (Windows) |
-| `PHP_FPM_LISTEN` | PHP FPM socket or address | OS specific |
+| `PHPBB_WWWROOT` | Directory to install phpBB | `/var/www/phpbb` (Linux), `C:\inetpub\wwwroot\phpbb` (Windows) |
+| `PHPBB_PHP_FPM_LISTEN` | PHP FPM socket or address | OS specific |
 
 ## Supported OS
 - Linux

@@ -1,5 +1,6 @@
 {
-  "name": "SPACK",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "spack",
   "provides": [
     "package-manager",
     "spack"

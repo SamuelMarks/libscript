@@ -35,36 +35,36 @@ MINIO_INSTALL_METHOD="${MINIO_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:
 MINIO_VERSION="${MINIO_VERSION:-latest}"
 
 if [ "${MINIO_INSTALL_METHOD}" = 'system' ]; then
-  depends 'minio'
+  libscript_depends 'minio'
 else
   # "source" install (direct download of binary)
   TARGET_OS="${TARGET_OS:-linux}"
   TARGET_ARCH="${TARGET_ARCH:-amd64}"
-  
+
   if [ "${TARGET_ARCH}" = "x86_64" ]; then TARGET_ARCH="amd64"; fi
   if [ "${TARGET_ARCH}" = "aarch64" ]; then TARGET_ARCH="arm64"; fi
   if [ "${TARGET_ARCH}" = "armv7l" ]; then TARGET_ARCH="arm"; fi
-  
+
   # MinIO OS uses standard darwin/linux
   case "${TARGET_OS}" in
     macos*|darwin*) os_name="darwin" ;;
     linux*) os_name="linux" ;;
     *) echo "[ERROR] Unsupported OS for direct download: ${TARGET_OS}"; exit 1 ;;
   esac
-  
+
   if [ "${MINIO_VERSION}" = "latest" ]; then
     dl_url="https://dl.min.io/server/minio/release/${os_name}-${TARGET_ARCH}/minio"
   else
     dl_url="https://dl.min.io/server/minio/release/${os_name}-${TARGET_ARCH}/archive/minio.${MINIO_VERSION}"
   fi
-  
+
   PREFIX="${PREFIX:-${LIBSCRIPT_ROOT_DIR}/installed/minio}"
   bin_dir="${PREFIX}/bin"
   mkdir -p "${bin_dir}"
-  
-  echo "Downloading MinIO from ${dl_url}..."
+
+  log_info "Downloading MinIO from ${dl_url}..."
   libscript_download "${dl_url}" "${bin_dir}/minio"
-  
+
   chmod +x "${bin_dir}/minio"
-  echo "MinIO installed to ${bin_dir}/minio"
+  log_info "MinIO installed to ${bin_dir}/minio"
 fi

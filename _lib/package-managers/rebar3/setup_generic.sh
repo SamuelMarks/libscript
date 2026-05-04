@@ -27,7 +27,7 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 if ! command -v rebar3 >/dev/null 2>&1; then
-  if ! depends rebar3 ; then
+  if ! libscript_depends rebar3 ; then
     true
   fi
 fi

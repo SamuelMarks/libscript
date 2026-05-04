@@ -1,12 +1,10 @@
-Choco
-=====
+# Choco
 
 ## Usage
 This document describes **Chocolatey (choco)**, a machine-level, command-line package manager and installer for Windows software. 
 
 Chocolatey works both as a local version manager (similar to rvm, nvm, pyenv, uv) and can be invoked from the global version manager `libscript`. Furthermore, it can be used by libscript as a foundational tool to build and provision bigger stacks (like WordPress, Open edX, Nextcloud, etc.).
 
-## Usage
 You can install, start, stop, package, and uninstall choco using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**
@@ -53,7 +51,7 @@ libscript.cmd uninstall choco
 cli.cmd uninstall choco
 ```
 
-## Configuration
+## Configuration Options
 *(There are currently no component-specific configuration tables or variables defined for this module.)*
 
 ## Variables

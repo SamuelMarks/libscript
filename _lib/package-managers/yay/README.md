@@ -1,5 +1,4 @@
-Yay
-===
+# Yay
 
 Bootstrap module for the `yay` package manager.
 

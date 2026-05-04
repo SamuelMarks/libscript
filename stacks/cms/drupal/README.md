@@ -1,9 +1,8 @@
-Drupal
-======
+# Drupal
 
 Installs Drupal natively via release tarball with webserver and DB configuration.
 
-## Environment Variables
+## Configuration Options
 - `DRUPAL_VERSION`: Default `10.2.6`
 - `DRUPAL_WEBSERVER`: Webserver to use (e.g., `nginx`, `caddy`, `httpd`, `iis`). Default `nginx`
 - `DRUPAL_DB_TYPE`: Database to use (`sqlite`, `mariadb`, `postgres`). Default `sqlite`
@@ -12,7 +11,7 @@ Installs Drupal natively via release tarball with webserver and DB configuration
 - `DRUPAL_DB_PASS`: Database password
 - `DRUPAL_SERVER_NAME`: Web server domain name
 - `DRUPAL_LISTEN`: Web server port
-- `WWWROOT`: Path to install Drupal
+- `DRUPAL_WWWROOT`: Path to install Drupal
 
 ## Variables
 See `vars.schema.json` for details on available variables.

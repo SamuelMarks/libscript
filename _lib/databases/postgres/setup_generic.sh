@@ -36,7 +36,7 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091,SC2034
 . "${SCRIPT_NAME}"
 
-if ! depends 'postgresql'; then
+if ! libscript_depends 'postgresql'; then
     >&2 printf "PostgreSQL package not available, failing...\n"
     exit 1
 fi

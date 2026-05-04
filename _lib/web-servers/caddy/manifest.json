@@ -1,5 +1,6 @@
 {
-  "name": "CADDY",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "caddy",
   "title": "Caddy",
   "description": "A powerful, enterprise-ready, open source web server with automatic HTTPS written in Go.",
   "category": "web-servers",

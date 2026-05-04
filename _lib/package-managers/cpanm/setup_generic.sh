@@ -32,7 +32,7 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
 done
 
 if ! command -v perl >/dev/null 2>&1; then
-  if ! depends perl ; then
+  if ! libscript_depends perl ; then
     true
   fi
 fi
@@ -40,14 +40,14 @@ fi
 if ! command -v cpanm >/dev/null 2>&1; then
   if command -v brew >/dev/null 2>&1; then
     brew install cpanminus
-  elif command -v apt-get >/dev/null 2>&1; then
+  elif command -v apt >/dev/null 2>&1; then
     export DEBIAN_FRONTEND=noninteractive
-    priv apt-get update -y
-    priv apt-get install -y cpanminus
+    pkg_mgr update -y
+    pkg_mgr install cpanminus
   elif command -v dnf >/dev/null 2>&1; then
-    priv dnf install -y perl-App-cpanminus
+    pkg_mgr install perl-App-cpanminus
   elif command -v pacman >/dev/null 2>&1; then
-    priv pacman -S --noconfirm cpanminus
+    libscript_depends cpanminus
   else
     _tmp_script="/tmp/cpanm-bootstrap"
     libscript_download "https://cpanmin.us" "$_tmp_script"

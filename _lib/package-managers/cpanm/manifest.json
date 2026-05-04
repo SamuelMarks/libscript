@@ -1,5 +1,6 @@
 {
-  "name": "CPANM",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "cpanm",
   "provides": [
     "cpanm"
   ],

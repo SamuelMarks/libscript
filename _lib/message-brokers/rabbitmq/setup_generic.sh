@@ -34,7 +34,7 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
   . "${SCRIPT_NAME}"
 done
 
-if depends 'rabbitmq'; then
+if libscript_depends 'rabbitmq'; then
     conf_file="/etc/rabbitmq/rabbitmq.conf"
     priv mkdir -p /etc/rabbitmq
     if [ -n "${RABBITMQ_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then

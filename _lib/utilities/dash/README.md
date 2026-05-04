@@ -1,12 +1,10 @@
-Dash
-====
+# Dash
 
 ## Usage
 This document describes **Dash**, a POSIX-compliant implementation of `/bin/sh` that aims to be as small and efficient as possible.
 
 Dash works both as a local version manager (similar to rvm, nvm, pyenv, uv) and can be invoked from the global version manager `libscript`. It can also be seamlessly used by libscript as an underlying dependency to build bigger stacks (like WordPress, Open edX, Nextcloud, etc.).
 
-## Usage
 You can install, start, stop, package, and uninstall dash using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**
@@ -53,7 +51,7 @@ libscript.cmd uninstall dash
 cli.cmd uninstall dash
 ```
 
-## Configuration
+## Configuration Options
 *(There are currently no component-specific configuration tables or variables defined for this module.)*
 
 ## Variables

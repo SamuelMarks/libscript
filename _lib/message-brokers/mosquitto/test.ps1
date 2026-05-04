@@ -1,6 +1,3 @@
-[CmdletBinding()]
-param()
-
 $ErrorActionPreference = "Stop"
 
 if (Get-Command mosquitto -ErrorAction SilentlyContinue) {

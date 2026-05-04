@@ -1,5 +1,6 @@
 {
-  "name": "CONDA",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "conda",
   "provides": [
     "version-manager",
     "package-manager",

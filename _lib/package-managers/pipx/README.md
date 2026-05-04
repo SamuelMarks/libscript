@@ -1,5 +1,4 @@
-Pipx
-====
+# Pipx
 
 Bootstrap module for the `pipx` package manager.
 

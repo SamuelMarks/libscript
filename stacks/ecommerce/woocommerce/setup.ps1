@@ -12,7 +12,7 @@ if (Test-Path $wpSetup) {
     exit 1
 }
 
-$WwwRoot = if ($env:WWWROOT) { $env:WWWROOT } else { "C:\inetpub\wwwroot\wordpress" }
+$WwwRoot = if ($env:WOOCOMMERCE_WWWROOT) { $env:WOOCOMMERCE_WWWROOT } else { "C:\inetpub\wwwroot\wordpress" }
 $WooVersion = if ($env:WOOCOMMERCE_VERSION) { $env:WOOCOMMERCE_VERSION } else { "latest" }
 
 $pluginDir = Join-Path $WwwRoot "wp-content\plugins\woocommerce"

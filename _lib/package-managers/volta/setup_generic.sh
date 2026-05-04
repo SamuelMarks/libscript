@@ -32,7 +32,7 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
 done
 
 if ! command -v volta >/dev/null 2>&1; then
-  echo "Installing volta..."
+  log_info "Installing volta..."
   _tmp_script="/tmp/volta-install.sh"
   libscript_download "https://get.volta.sh" "$_tmp_script"
   bash "$_tmp_script"

@@ -1,5 +1,6 @@
 {
-  "name": "RUST",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "rust",
   "title": "Rust Toolchain",
   "description": "A language empowering everyone to build reliable and efficient software.",
   "category": "languages",

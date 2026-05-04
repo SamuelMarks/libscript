@@ -29,7 +29,7 @@
       "type": "string",
       "description": "Variable ODOO_WEBSERVER."
     },
-    "WWWROOT": {
+    "ODOO_WWWROOT": {
       "type": "string",
       "description": "Variable WWWROOT."
     },

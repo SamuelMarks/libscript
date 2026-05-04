@@ -1,0 +1,15 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "go-pm",
+  "provides": [
+    "package-manager",
+    "go"
+  ],
+  "os_whitelist": [
+    "all"
+  ],
+  "os_blacklist": [],
+  "title": "go",
+  "description": "Bootstrap module for the `go` package manager (enables `go install`).",
+  "category": "package-manager"
+}

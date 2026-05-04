@@ -1,5 +1,4 @@
-Kafka
-=====
+# Kafka
 
 Open-source distributed event streaming platform used by thousands of companies for high-performance data pipelines, streaming analytics, data integration, and mission-critical applications.
 
@@ -12,7 +11,7 @@ libscript install java latest
 libscript install kafka latest
 ```
 
-## Options
+## Configuration Options
 See `vars.schema.json` for all available configuration options.
 
 ## Platform Support

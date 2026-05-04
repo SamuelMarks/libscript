@@ -36,7 +36,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 libscript_print_env() {
   _format="${1:-sh}"
   _prefix_path="${2:-}"
-  
+
   # Standardize format names
   case "$_format" in
     dockerfile) _format="docker" ;;
@@ -72,10 +72,10 @@ libscript_print_env() {
       if [ -f "$LIBSCRIPT_DATA_DIR/dyn_env.sh" ]; then
         . "$LIBSCRIPT_DATA_DIR/dyn_env.sh" >/dev/null 2>&1
       fi
-      
+
       # Filter out internal variables
       _filter="^(PWD|SHLVL|_|PATH|FORMAT|SCRIPT_DIR|PREFIX|STACK|SCRIPT_NAME)="
-      
+
       case "$FORMAT" in
         docker)
           env | grep -vE "$_filter" | while read -r line; do
@@ -98,7 +98,7 @@ libscript_print_env() {
         json)
           if command -v jq >/dev/null 2>&1; then
             env | grep -vE "$_filter" | jq -R -s "
-              split(\"\n\") | map(select(length > 0)) | 
+              split(\"\n\") | map(select(length > 0)) |
               map(split(\"=\")) | map({(.[0]): (.[1:] | join(\"=\"))}) | add
             "
           else

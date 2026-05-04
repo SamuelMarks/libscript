@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 #!/usr/bin/env pwsh
 if (Get-Command etcd -ErrorAction SilentlyContinue) {
     Write-Host "etcd is installed."

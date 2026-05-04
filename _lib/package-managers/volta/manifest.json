@@ -1,5 +1,6 @@
 {
-  "name": "VOLTA",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "volta",
   "provides": [
     "package-manager",
     "volta"

@@ -1,5 +1,6 @@
 {
-  "name": "DASH",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "dash",
   "title": "Dash",
   "description": "A POSIX-compliant implementation of /bin/sh that aims to be as small and efficient as possible.",
   "category": "utility",

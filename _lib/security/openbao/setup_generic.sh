@@ -34,10 +34,10 @@ done
 OPENBAO_INSTALL_METHOD="${OPENBAO_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 
 if [ "${OPENBAO_INSTALL_METHOD}" = 'system' ]; then
-  depends 'openbao'
+  libscript_depends 'openbao'
 else
-  echo "[WARN] From-source or alternative installation requested for openbao, but currently only system package manager is fully supported."
-  depends 'openbao'
+  log_info "[WARN] From-source or alternative installation requested for openbao, but currently only system package manager is fully supported."
+  libscript_depends 'openbao'
 fi
 
 case "1" in

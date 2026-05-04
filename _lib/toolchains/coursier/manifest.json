@@ -1,5 +1,6 @@
 {
-  "name": "COURSIER",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "coursier",
   "title": "Coursier",
   "description": "A Scala artifact fetcher and tool launcher.",
   "category": "toolchain",

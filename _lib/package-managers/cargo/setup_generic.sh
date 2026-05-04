@@ -30,7 +30,7 @@ if ! command -v cargo >/dev/null 2>&1; then
   if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/rust/setup.sh" ]; then
     "${LIBSCRIPT_ROOT_DIR}/_lib/languages/rust/setup.sh"
   else
-    if ! depends rust || depends rustc ; then
+    if ! libscript_depends rust || libscript_depends rustc ; then
       true
     fi
   fi

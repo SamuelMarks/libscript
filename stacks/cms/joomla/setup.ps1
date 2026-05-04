@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $JoomlaVersion = if ($env:JOOMLA_VERSION) { $env:JOOMLA_VERSION } else { "latest" }
-$WwwRoot = if ($env:WWWROOT) { $env:WWWROOT } else { "C:\inetpub\wwwroot\joomla" }
+$WwwRoot = if ($env:JOOMLA_WWWROOT) { $env:JOOMLA_WWWROOT } else { "C:\inetpub\wwwroot\joomla" }
 $DbName = if ($env:JOOMLA_DB_NAME) { $env:JOOMLA_DB_NAME } else { "joomla" }
 $DbUser = if ($env:JOOMLA_DB_USER) { $env:JOOMLA_DB_USER } else { "joomla" }
 $DbPass = if ($env:JOOMLA_DB_PASS) { $env:JOOMLA_DB_PASS } else { "joomla" }
@@ -83,19 +83,19 @@ if ($DbType -eq "mariadb" -or $DbType -eq "mysql") {
 }
 
 # Resolve PHP-CGI executable for IIS
-if ($WebServer -eq "iis" -and -not $env:PHP_FPM_LISTEN) {
+if ($WebServer -eq "iis" -and -not $env:JOOMLA_PHP_FPM_LISTEN) {
     $phpExe = (Get-Command php.exe).Source
     $phpDir = Split-Path -Parent $phpExe
     $phpCgi = Join-Path $phpDir "php-cgi.exe"
     if (Test-Path $phpCgi) {
-        $env:PHP_FPM_LISTEN = $phpCgi
+        $env:JOOMLA_PHP_FPM_LISTEN = $phpCgi
     }
 }
 
 if ($WebServer -eq "iis") {
-    $env:SERVER_NAME = $ServerName
+    $env:JOOMLA_SERVER_NAME = $ServerName
     $env:LISTEN = $ListenPort
-    $env:WWWROOT = $WwwRoot
+    $env:JOOMLA_WWWROOT = $WwwRoot
 
     $iisCreateServer = Join-Path $libDir "_server\iis\create_server_block.ps1"
     if (Test-Path $iisCreateServer) {

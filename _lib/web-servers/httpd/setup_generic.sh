@@ -34,10 +34,10 @@ done
 HTTPD_INSTALL_METHOD="${HTTPD_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 
 if [ "${HTTPD_INSTALL_METHOD}" = 'system' ]; then
-  depends 'httpd'
+  libscript_depends 'httpd'
 else
-  echo "[WARN] From-source or alternative installation requested for httpd, but currently only system package manager is fully supported."
-  depends 'httpd'
+  log_info "[WARN] From-source or alternative installation requested for httpd, but currently only system package manager is fully supported."
+  libscript_depends 'httpd'
 fi
 
 case "1" in

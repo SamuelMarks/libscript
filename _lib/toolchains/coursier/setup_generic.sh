@@ -35,7 +35,7 @@ COURSIER_INSTALL_METHOD="${COURSIER_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_M
 COURSIER_VERSION="${COURSIER_VERSION:-latest}"
 
 if [ "${COURSIER_INSTALL_METHOD}" = 'system' ]; then
-  depends 'coursier'
+  libscript_depends 'coursier'
 else
   # "source" install (direct download of binary)
   if [ "${COURSIER_VERSION}" = "latest" ]; then

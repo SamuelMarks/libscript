@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableDelayedExpansion
 
 SET "LIBSCRIPT_ROOT_DIR=%~dp0"
 if "%~1"=="--help" (
@@ -21,7 +22,7 @@ IF NOT DEFINED STACK (
     SET "STACK=%STACK%%~nx0;"
 )
 
-SETLOCAL ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
+setlocal EnableDelayedExpansion
 
 SET "searchVal=;%this_file%;"
 IF NOT x!str1:%searchVal%=!"=="x%str1% (

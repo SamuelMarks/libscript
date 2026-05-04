@@ -167,7 +167,7 @@ if [ -z "${INIT_SYS+x}" ]; then
             _fallback
           fi
           ;;
-  
+
       'CYGWIN_NT'*)
         export PKG_MGR='apt-cyg'
         TARGET_OS='cygwin'

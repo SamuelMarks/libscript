@@ -27,7 +27,7 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 if ! command -v nuget >/dev/null 2>&1; then
-  if ! depends nuget ; then
+  if ! libscript_depends nuget ; then
     true
   fi
 fi

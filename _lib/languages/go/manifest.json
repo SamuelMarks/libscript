@@ -1,5 +1,6 @@
 {
-  "name": "GO",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "go",
   "title": "Go Toolchain",
   "description": "An open-source programming language that makes it easy to build simple, reliable, and efficient software.",
   "category": "languages",

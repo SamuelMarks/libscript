@@ -1,4 +1,3 @@
-#!/usr/bin/env pwsh
 $ErrorActionPreference = "Stop"
 
 if (Get-Command pkgx -ErrorAction SilentlyContinue) {

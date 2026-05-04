@@ -31,11 +31,11 @@ for LIB in '_lib/_common/test_base.sh' ; do
 done
 
 echo "Validating Drupal installation..."
-WWWROOT="${WWWROOT:-/var/www/drupal}"
-if [ -d "${WWWROOT}/core" ]; then
-    echo "Drupal directory found at ${WWWROOT}"
+DRUPAL_WWWROOT="${DRUPAL_WWWROOT:-/var/www/drupal}"
+if [ -d "${DRUPAL_WWWROOT}/core" ]; then
+    echo "Drupal directory found at ${DRUPAL_WWWROOT}"
     exit 0
 else
-    echo "Drupal directory not found at ${WWWROOT}"
+    echo "Drupal directory not found at ${DRUPAL_WWWROOT}"
     exit 1
 fi

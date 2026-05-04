@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/package-managers/go-pm/vars.schema.json",
+  "title": "Go variables",
+  "description": "Configuration variables for go",
+  "type": "object",
+  "properties": {
+    "GO_PM_VERSION": {
+      "description": "Specific version of go to install.",
+      "type": "string",
+      "default": "latest"
+    }
+  }
+}

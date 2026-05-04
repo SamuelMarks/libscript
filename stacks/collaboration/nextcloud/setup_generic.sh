@@ -39,46 +39,46 @@ export NEXTCLOUD_WEBSERVER
 NEXTCLOUD_DB_TYPE="${NEXTCLOUD_DB_TYPE:-sqlite}"
 export NEXTCLOUD_DB_TYPE
 
-depends 'php'
+libscript_depends 'php'
 if [ "${NEXTCLOUD_WEBSERVER}" = "nginx" ] || [ "${NEXTCLOUD_WEBSERVER}" = "caddy" ]; then
-  if ! depends 'php-fpm' ; then
+  if ! libscript_depends 'php-fpm' ; then
     true
   fi
 fi
 
 if [ "${NEXTCLOUD_DB_TYPE}" = "mariadb" ]; then
-  depends 'mariadb'
+  libscript_depends 'mariadb'
 elif [ "${NEXTCLOUD_DB_TYPE}" = "postgres" ] || [ "${NEXTCLOUD_DB_TYPE}" = "postgresql" ]; then
-  depends 'postgres'
+  libscript_depends 'postgres'
 elif [ "${NEXTCLOUD_DB_TYPE}" = "sqlite" ]; then
-  depends 'sqlite'
+  libscript_depends 'sqlite'
 fi
 
-depends "${NEXTCLOUD_WEBSERVER}"
+libscript_depends "${NEXTCLOUD_WEBSERVER}"
 
 NEXTCLOUD_VERSION="${NEXTCLOUD_VERSION:-latest}"
 export NEXTCLOUD_VERSION
 
-WWWROOT="${WWWROOT:-/var/www/nextcloud}"
-export WWWROOT
+NEXTCLOUD_WWWROOT="${NEXTCLOUD_WWWROOT:-/var/www/nextcloud}"
+export NEXTCLOUD_WWWROOT
 
-if [ ! -d "${WWWROOT}/core" ]; then
-  echo "Downloading Nextcloud (${NEXTCLOUD_VERSION}) to ${WWWROOT}..."
-  priv mkdir -p "${WWWROOT}"
+if [ ! -d "${NEXTCLOUD_WWWROOT}/core" ]; then
+  echo "Downloading Nextcloud (${NEXTCLOUD_VERSION}) to ${NEXTCLOUD_WWWROOT}..."
+  priv mkdir -p "${NEXTCLOUD_WWWROOT}"
   if [ "${NEXTCLOUD_VERSION}" = "latest" ]; then
     dl_url="https://download.nextcloud.com/server/releases/latest.tar.bz2"
   else
     dl_url="https://download.nextcloud.com/server/releases/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2"
   fi
-  
+
   if command -v libscript_download >/dev/null 2>&1; then
     tmp_nc=$(mktemp)
     libscript_download "${dl_url}" "${tmp_nc}"
-    priv tar xjf "${tmp_nc}" --strip-components=1 -C "${WWWROOT}"
+    priv tar xjf "${tmp_nc}" --strip-components=1 -C "${NEXTCLOUD_WWWROOT}"
     rm -f "${tmp_nc}"
   else
     # fallback
-    wget -qO- "${dl_url}" | priv tar xjf - --strip-components=1 -C "${WWWROOT}"
+    wget -qO- "${dl_url}" | priv tar xjf - --strip-components=1 -C "${NEXTCLOUD_WWWROOT}"
   fi
 fi
 
@@ -116,8 +116,8 @@ if [ "${NC_DBTYPE}" = "mariadb" ]; then NC_DBTYPE="mysql"; fi
 if [ "${NC_DBTYPE}" = "postgres" ] || [ "${NC_DBTYPE}" = "postgresql" ]; then NC_DBTYPE="pgsql"; fi
 if [ "${NC_DBTYPE}" = "sqlite" ]; then NC_DBTYPE="sqlite3"; fi
 
-if [ ! -f "${WWWROOT}/config/autoconfig.php" ]; then
-  priv mkdir -p "${WWWROOT}/config"
+if [ ! -f "${NEXTCLOUD_WWWROOT}/config/autoconfig.php" ]; then
+  priv mkdir -p "${NEXTCLOUD_WWWROOT}/config"
   tmp_ac=$(mktemp)
   cat <<EOF > "${tmp_ac}"
 <?php
@@ -130,44 +130,57 @@ if [ ! -f "${WWWROOT}/config/autoconfig.php" ]; then
   "dbtableprefix" => "",
 );
 EOF
-  priv cp "${tmp_ac}" "${WWWROOT}/config/autoconfig.php"
+  priv cp "${tmp_ac}" "${NEXTCLOUD_WWWROOT}/config/autoconfig.php"
   rm -f "${tmp_ac}"
 fi
 
-if ! priv chown -R www-data:www-data "${WWWROOT}" ; then
+if ! priv chown -R www-data:www-data "${NEXTCLOUD_WWWROOT}" ; then
   true
 fi
 
-if [ -z "${PHP_FPM_LISTEN:-}" ]; then
+if [ -z "${NEXTCLOUD_PHP_FPM_LISTEN:-}" ]; then
   if [ -e /run/php/php-fpm.sock ]; then
-    export PHP_FPM_LISTEN="unix:/run/php/php-fpm.sock"
+    export NEXTCLOUD_PHP_FPM_LISTEN="unix:/run/php/php-fpm.sock"
   elif [ -e /var/run/php-fpm/php-fpm.sock ]; then
-    export PHP_FPM_LISTEN="unix:/var/run/php-fpm/php-fpm.sock"
+    export NEXTCLOUD_PHP_FPM_LISTEN="unix:/var/run/php-fpm/php-fpm.sock"
   elif [ -e /var/run/php-fpm.sock ]; then
-    export PHP_FPM_LISTEN="unix:/var/run/php-fpm.sock"
+    export NEXTCLOUD_PHP_FPM_LISTEN="unix:/var/run/php-fpm.sock"
   else
-    export PHP_FPM_LISTEN="127.0.0.1:9000"
+    export NEXTCLOUD_PHP_FPM_LISTEN="127.0.0.1:9000"
     for sock in /run/php/php*.sock; do
       if [ -e "$sock" ]; then
-        export PHP_FPM_LISTEN="unix:$sock"
+        export NEXTCLOUD_PHP_FPM_LISTEN="unix:$sock"
         break
       fi
     done
   fi
 fi
 
-SERVER_NAME="${NEXTCLOUD_SERVER_NAME:-localhost}"
-export SERVER_NAME
+NEXTCLOUD_SERVER_NAME="${NEXTCLOUD_SERVER_NAME:-localhost}"
+export NEXTCLOUD_SERVER_NAME
 
 echo "Configuring webserver: ${NEXTCLOUD_WEBSERVER}"
 
 ENV_SCRIPT_FILE=$(mktemp)
 cat <<EOF > "${ENV_SCRIPT_FILE}"
-export SERVER_NAME="${SERVER_NAME}"
-export WWWROOT="${WWWROOT}"
-export PHP_FPM_LISTEN="${PHP_FPM_LISTEN}"
+export NEXTCLOUD_SERVER_NAME="${NEXTCLOUD_SERVER_NAME}"
+export NEXTCLOUD_WWWROOT="${NEXTCLOUD_WWWROOT}"
+export NEXTCLOUD_PHP_FPM_LISTEN="${NEXTCLOUD_PHP_FPM_LISTEN}"
 export LISTEN="${NEXTCLOUD_LISTEN:-80}"
+export NGINX_LISTEN="${NEXTCLOUD_LISTEN:-80}"
+export HTTPD_LISTEN="${NEXTCLOUD_LISTEN:-80}"
+export CADDY_LISTEN="${NEXTCLOUD_LISTEN:-80}"
 export LOCATION_EXPR="/"
+export NGINX_LOCATION_EXPR="/"
+export NGINX_SERVER_NAME="${NEXTCLOUD_SERVER_NAME}"
+export NGINX_WWWROOT="${NEXTCLOUD_WWWROOT}"
+export NGINX_PHP_FPM_LISTEN="${NEXTCLOUD_PHP_FPM_LISTEN}"
+export HTTPD_SERVER_NAME="${NEXTCLOUD_SERVER_NAME}"
+export HTTPD_WWWROOT="${NEXTCLOUD_WWWROOT}"
+export HTTPD_PHP_FPM_LISTEN="${NEXTCLOUD_PHP_FPM_LISTEN}"
+export CADDY_SERVER_NAME="${NEXTCLOUD_SERVER_NAME}"
+export CADDY_WWWROOT="${NEXTCLOUD_WWWROOT}"
+export CADDY_PHP_FPM_LISTEN="${NEXTCLOUD_PHP_FPM_LISTEN}"
 EOF
 export ENV_SCRIPT_FILE
 
@@ -182,8 +195,8 @@ if [ "${NEXTCLOUD_WEBSERVER}" = "nginx" ]; then
   if [ -d /etc/nginx/sites-available ]; then
     NGINX_CONF_DIR="/etc/nginx"
   fi
-  priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${SERVER_NAME}.conf"
-  priv ln -sf "${NGINX_CONF_DIR}/sites-available/${SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${SERVER_NAME}.conf"
+  priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${NEXTCLOUD_SERVER_NAME}.conf"
+  priv ln -sf "${NGINX_CONF_DIR}/sites-available/${NEXTCLOUD_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${NEXTCLOUD_SERVER_NAME}.conf"
   if ! priv systemctl reload nginx ; then
     true
   fi
@@ -194,7 +207,7 @@ elif [ "${NEXTCLOUD_WEBSERVER}" = "caddy" ]; then
   if [ -d /etc/caddy/conf.d ] || [ -d /etc/caddy/caddy.d ]; then
     conf_dir="/etc/caddy/conf.d"
     [ -d /etc/caddy/caddy.d ] && conf_dir="/etc/caddy/caddy.d"
-    priv cp "${CADDY_BLOCK_TMP}" "${conf_dir}/${SERVER_NAME}.caddy"
+    priv cp "${CADDY_BLOCK_TMP}" "${conf_dir}/${NEXTCLOUD_SERVER_NAME}.caddy"
   else
     priv tee -a /etc/caddy/Caddyfile < "${CADDY_BLOCK_TMP}" >/dev/null
   fi
@@ -206,13 +219,13 @@ elif [ "${NEXTCLOUD_WEBSERVER}" = "httpd" ]; then
   HTTPD_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/httpd/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/httpd/create_server_block.sh" > "${HTTPD_BLOCK_TMP}"
   if [ -d /etc/httpd/conf.d ]; then
-    priv cp "${HTTPD_BLOCK_TMP}" "/etc/httpd/conf.d/${SERVER_NAME}.conf"
+    priv cp "${HTTPD_BLOCK_TMP}" "/etc/httpd/conf.d/${NEXTCLOUD_SERVER_NAME}.conf"
     if ! priv systemctl reload httpd ; then
       true
     fi
   elif [ -d /etc/apache2/sites-available ]; then
-    priv cp "${HTTPD_BLOCK_TMP}" "/etc/apache2/sites-available/${SERVER_NAME}.conf"
-    priv ln -sf "/etc/apache2/sites-available/${SERVER_NAME}.conf" "/etc/apache2/sites-enabled/${SERVER_NAME}.conf"
+    priv cp "${HTTPD_BLOCK_TMP}" "/etc/apache2/sites-available/${NEXTCLOUD_SERVER_NAME}.conf"
+    priv ln -sf "/etc/apache2/sites-available/${NEXTCLOUD_SERVER_NAME}.conf" "/etc/apache2/sites-enabled/${NEXTCLOUD_SERVER_NAME}.conf"
     if ! priv systemctl reload apache2 ; then
       true
     fi
@@ -224,4 +237,4 @@ fi
 
 rm -f "${ENV_SCRIPT_FILE}"
 
-echo "Nextcloud setup complete on ${SERVER_NAME}"
+echo "Nextcloud setup complete on ${NEXTCLOUD_SERVER_NAME}"

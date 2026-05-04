@@ -32,7 +32,7 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
 done
 
 if ! command -v fnm >/dev/null 2>&1; then
-  echo "Installing fnm..."
+  log_info "Installing fnm..."
   _tmp_script="/tmp/fnm-install.sh"
   libscript_download "https://fnm.vercel.stacks/install" "$_tmp_script"
   bash "$_tmp_script" --skip-shell

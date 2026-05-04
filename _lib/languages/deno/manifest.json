@@ -1,5 +1,6 @@
 {
-  "name": "DENO",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "deno",
   "title": "Deno Runtime",
   "description": "A secure runtime for JavaScript and TypeScript.",
   "category": "languages",

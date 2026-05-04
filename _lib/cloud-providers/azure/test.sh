@@ -40,7 +40,7 @@ done
 export DRY_RUN=true
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
-echo "Testing Azure component in DRY_RUN mode..."
+log_info "Testing Azure component in DRY_RUN mode..."
 
 # Test network
 "$SCRIPT_DIR/cli.sh" network create test-vnet test-rg 2>&1 | grep "az network vnet create"
@@ -51,4 +51,4 @@ echo "Testing Azure component in DRY_RUN mode..."
 # Test cleanup
 "$SCRIPT_DIR/cli.sh" cleanup 2>&1 | grep "az resource list"
 
-echo "Azure tests passed (dry-run)."
+log_info "Azure tests passed (dry-run)."

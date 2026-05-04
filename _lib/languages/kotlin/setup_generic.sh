@@ -34,11 +34,11 @@ done
 
 KOTLIN_INSTALL_METHOD="${KOTLIN_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 if [ "${KOTLIN_INSTALL_METHOD}" = 'system' ]; then
-  if ! depends 'kotlin' ; then
+  if ! libscript_depends 'kotlin' ; then
     true
   fi
 else
-  depends 'curl' 'unzip'
+  libscript_depends 'curl' 'unzip'
   libscript_download https://github.com/JetBrains/kotlin/releases/download/v1.9.20/kotlin-compiler-1.9.20.zip /tmp/kotlin.zip
   priv unzip -o /tmp/kotlin.zip -d /opt
 fi

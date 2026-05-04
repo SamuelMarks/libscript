@@ -24,8 +24,8 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 # # LibScript Common Generic Setup
 #
 # ## Overview
-# This script provides fallback installation logic using the LibScript 
-# package manager mapper. It is invoked when no OS-specific setup script 
+# This script provides fallback installation logic using the LibScript
+# package manager mapper. It is invoked when no OS-specific setup script
 # is found for a component.
 #
 # ## Usage
@@ -49,4 +49,4 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
 done
 
 # Attempt to install via the detected package manager
-depends "${_PKG_MGR_NAME}"
+libscript_depends "${_PKG_MGR_NAME}"

@@ -1,5 +1,4 @@
-Volta
-=====
+# Volta
 
 Bootstrap script for [Volta](https://volta.sh/), a fast, reliable JavaScript tool manager.
 

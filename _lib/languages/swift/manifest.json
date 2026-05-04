@@ -1,5 +1,6 @@
 {
-  "name": "SWIFT",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "swift",
   "title": "Swift Toolchain",
   "description": "A powerful and intuitive programming language for iOS, macOS, tvOS, and watchOS.",
   "category": "languages",

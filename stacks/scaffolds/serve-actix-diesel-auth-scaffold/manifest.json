@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "serve-actix-diesel-auth-scaffold",
+  "category": "scaffolds",
+  "title": "serve-actix-diesel-auth-scaffold",
+  "description": "serve-actix-diesel-auth-scaffold stack",
+  "provides": [
+    "serve-actix-diesel-auth-scaffold"
+  ]
+}

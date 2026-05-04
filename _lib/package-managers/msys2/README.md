@@ -1,5 +1,4 @@
-Msys2
-=====
+# Msys2
 
 MSYS2 is a collection of tools and libraries providing an easy-to-use environment for building, installing, and running native Windows software. It consists of a command-line terminal called mintty, bash, version control systems like git, and various build systems like autotools and GCC.
 

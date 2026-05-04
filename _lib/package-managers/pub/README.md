@@ -1,5 +1,4 @@
-Pub
-===
+# Pub
 
 Bootstrap module for `pub` (Dart / Flutter package manager).
 

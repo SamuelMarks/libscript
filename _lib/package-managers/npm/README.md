@@ -1,5 +1,4 @@
-Npm
-===
+# Npm
 
 Bootstrap module for the `npm` package manager.
 

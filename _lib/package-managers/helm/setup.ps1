@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 if (-Not (Get-Command helm -ErrorAction SilentlyContinue)) {
   Write-Host "Installing helm via choco (if available)..."
   if (Get-Command choco -ErrorAction SilentlyContinue) {

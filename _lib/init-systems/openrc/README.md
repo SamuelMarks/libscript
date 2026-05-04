@@ -1,12 +1,10 @@
-Openrc
-======
+# Openrc
 
 ## Usage
 This document describes the **OpenRC** component (part of the `_daemon` stack) within the LibScript ecosystem. OpenRC is a dependency-based init system that works with the system-provided init program.
 
 This component functions both as a **local version manager** (similar to rvm, nvm, pyenv, uv) for OpenRC setups and can also be invoked seamlessly from the **global version manager**, `libscript`. Because of this flexibility, OpenRC can be utilized by `libscript` to build and manage services for bigger stacks (like WordPress, Open edX, Nextcloud, etc.).
 
-## Usage
 You can install, start, stop, package, and uninstall openrc using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**

@@ -9,7 +9,7 @@
       "type": "string",
       "description": "Variable NEXTCLOUD_VERSION."
     },
-    "PHP_FPM_LISTEN": {
+    "NEXTCLOUD_PHP_FPM_LISTEN": {
       "type": "string",
       "description": "Variable PHP_FPM_LISTEN."
     },
@@ -25,7 +25,7 @@
       "type": "string",
       "description": "Variable NEXTCLOUD_DB_USER."
     },
-    "WWWROOT": {
+    "NEXTCLOUD_WWWROOT": {
       "type": "string",
       "description": "Variable WWWROOT."
     },

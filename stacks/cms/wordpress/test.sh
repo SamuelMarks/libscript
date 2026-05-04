@@ -34,11 +34,11 @@ done
 
 set -feu
 echo "Validating WordPress installation..."
-WWWROOT="${WWWROOT:-/var/www/wordpress}"
-if [ -d "${WWWROOT}/wp-admin" ]; then
-    echo "WordPress directory found at ${WWWROOT}"
+WORDPRESS_WWWROOT="${WORDPRESS_WWWROOT:-/var/www/wordpress}"
+if [ -d "${WORDPRESS_WWWROOT}/wp-admin" ]; then
+    echo "WordPress directory found at ${WORDPRESS_WWWROOT}"
     exit 0
 else
-    echo "WordPress directory not found at ${WWWROOT}"
+    echo "WordPress directory not found at ${WORDPRESS_WWWROOT}"
     exit 1
 fi

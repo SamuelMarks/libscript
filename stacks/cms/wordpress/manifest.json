@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "wordpress",
+  "category": "cms",
+  "title": "wordpress",
+  "description": "wordpress stack",
+  "provides": [
+    "wordpress"
+  ]
+}

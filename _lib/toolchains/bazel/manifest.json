@@ -1,5 +1,6 @@
 {
-  "name": "BAZEL",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "bazel",
   "title": "Bazel",
   "description": "A fast, scalable, multi-language and extensible build system, installed via Bazelisk.",
   "category": "toolchain",

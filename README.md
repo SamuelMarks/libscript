@@ -1,5 +1,4 @@
-🚀 LibScript: The Universal Provisioning Engine
-===============================================
+# 🚀 LibScript: The Universal Provisioning Engine
 **Native Power. Docker Optional. Zero YAML Bloat. Provision anything, anywhere.**
 
 [![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT%20OR%20CC0-blue.svg)](https://opensource.org/licenses/Apache-2.0)

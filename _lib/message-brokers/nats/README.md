@@ -1,5 +1,4 @@
-NATS
-====
+# NATS
 
 High-Performance open source messaging system for cloud native applications, IoT messaging, and microservices architectures.
 
@@ -8,7 +7,7 @@ High-Performance open source messaging system for cloud native applications, IoT
 libscript install nats latest
 ```
 
-## Options
+## Configuration Options
 See `vars.schema.json` for all available configuration options.
 
 ## Platform Support

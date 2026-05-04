@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "odoo",
+  "category": "erp",
+  "title": "odoo",
+  "description": "odoo stack",
+  "provides": [
+    "odoo"
+  ]
+}

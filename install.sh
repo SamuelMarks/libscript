@@ -92,7 +92,7 @@ fi
 
 # # uses `WWWROOT`
 # if [ "${WWWROOT_INSTALL:-0}" -eq 1 ]; then
-# 
+#
 # fi
 
 if [ "${JUPYTERHUB_INSTALL:-0}" -eq 1 ]; then

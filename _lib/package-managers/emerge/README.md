@@ -1,5 +1,4 @@
-Emerge
-======
+# Emerge
 
 Bootstrap module for the Gentoo `emerge` package manager.
 

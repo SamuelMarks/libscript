@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableDelayedExpansion
 :: # LibScript Package Mapper Module (Windows Batch)
 ::
 :: ## Overview

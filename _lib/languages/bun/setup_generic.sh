@@ -34,10 +34,10 @@ done
 
 BUN_INSTALL_METHOD="${BUN_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-source}}"
 if [ "${BUN_INSTALL_METHOD}" = 'system' ]; then
-  depends 'bun' || { echo "Bun package not widely available, defaulting to from-source"; exit 1; }
+  libscript_depends 'bun' || { echo "Bun package not widely available, defaulting to from-source"; exit 1; }
 else
-  depends 'unzip'
-  if ! cmd_avail bun; then
+  libscript_depends 'unzip'
+  if ! libscript_cmd_avail bun; then
     INSTALL_SH=$(mktemp)
     libscript_download 'https://bun.sh/install' "${INSTALL_SH}"
     if [ "${BUN_VERSION:-latest}" = 'latest' ]; then

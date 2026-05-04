@@ -1,5 +1,6 @@
 {
-  "name": "SBT",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "sbt",
   "provides": [
     "sbt"
   ],

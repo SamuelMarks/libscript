@@ -69,11 +69,11 @@ export STACK="${STACK:-}${THIS_FILE}"':'
     echo "ENV LIBSCRIPT_BUILD_DIR=\"/opt/libscript_build\""
     echo "ENV LIBSCRIPT_DATA_DIR=\"/opt/libscript_data\""
     echo "ENV LIBSCRIPT_CACHE_DIR=\"/opt/libscript_cache\""
-    
+
     tmp_env_add=$(mktemp)
     tmp_add=$(mktemp)
     tmp_run=$(mktemp)
-    
+
     OUT_DIR="$(cd "$OUT_DIR" && pwd)"
     deps_list=""
     if [ $# -gt 0 ]; then
@@ -115,9 +115,9 @@ export STACK="${STACK:-}${THIS_FILE}"':'
           pkg = $2
           ver = $3
           url = $4
-          
+
           if (l_filter != "" && !(layer in allowed_layers) && layer != "cli") next;
-          
+
           if (seen[pkg]) next;
           seen[pkg] = 1;
 
@@ -133,7 +133,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
               if ((ver == "" || ver == "latest" || ver == "null") && extracted_ver != "") {
                   ver = extracted_ver
               }
-              
+
               if (ver == "" || ver == "null") ver = "latest"
 
               if (ver != "latest") {
@@ -146,7 +146,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
                   }
                   url = temp_url remaining
               }
-              
+
               if (match(url, /(amd64|arm64|x86_64|aarch64|386|armv7l|x64)/)) {
                   arch_str = substr(url, RSTART, RLENGTH)
                   gsub(arch_str, "${TARGETARCH}", url)
@@ -204,12 +204,12 @@ export STACK="${STACK:-}${THIS_FILE}"':'
     else
       echo "RUN ./install_gen.sh" >> "$tmp_run"
     fi
-    
+
     cat "$tmp_env_add"
     cat "$tmp_add"
     echo "COPY . /opt/libscript"
     echo "WORKDIR /opt/libscript"
     cat "$tmp_run"
-    
+
     rm -f "$tmp_env_add" "$tmp_add" "$tmp_run"
     exit 0

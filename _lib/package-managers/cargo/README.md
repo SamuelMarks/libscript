@@ -1,5 +1,4 @@
-Cargo
-=====
+# Cargo
 
 Bootstrap module for the `cargo` package manager.
 

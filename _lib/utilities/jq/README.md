@@ -1,5 +1,4 @@
-jq
-==
+# jq
 
 ## Purpose & Current State
 **Purpose**: This document provides context and technical details for the `jq` component (part of `_toolchain`) within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.

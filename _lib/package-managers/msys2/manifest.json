@@ -1,5 +1,6 @@
 {
-  "name": "MSYS2",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "msys2",
   "provides": [
     "msys2"
   ],

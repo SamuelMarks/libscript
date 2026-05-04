@@ -1,5 +1,4 @@
-Lighttpd
-========
+# Lighttpd
 
 Security, speed, compliance, and very low A-V memory footprint.
 
@@ -8,7 +7,7 @@ Security, speed, compliance, and very low A-V memory footprint.
 libscript install lighttpd latest
 ```
 
-## Options
+## Configuration Options
 See `vars.schema.json` for all available configuration options.
 
 ## Platform Support

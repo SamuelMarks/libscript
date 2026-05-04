@@ -35,7 +35,7 @@ done
 RUST_INSTALL_METHOD="${RUST_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-source}}"
 
 if [ "${RUST_INSTALL_METHOD}" = 'system' ]; then
-  depends 'rust'
+  libscript_depends 'rust'
 else
   INSTALL_SH=$(mktemp)
   libscript_download 'https://sh.rustup.rs' "${INSTALL_SH}"

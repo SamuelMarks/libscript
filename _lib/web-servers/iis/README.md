@@ -1,5 +1,4 @@
-IIS
-===
+# IIS
 
 ## Purpose
 This document provides context and technical details for the `iis` component (part of `_server`) within the LibScript ecosystem. This module enables and configures Microsoft Internet Information Services (IIS) on Windows platforms.
@@ -11,7 +10,6 @@ This component works both as a local version manager (similar to rvm, nvm, pyenv
 
 Furthermore, IIS can be used by libscript to build bigger stacks (like WordPress, Open edX, Nextcloud, etc.) natively on Windows servers.
 
-## Usage
 You can install, start, stop, package, and uninstall iis using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**

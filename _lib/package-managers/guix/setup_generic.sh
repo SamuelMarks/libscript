@@ -32,7 +32,7 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
 done
 
 if ! command -v guix >/dev/null 2>&1; then
-  echo "Installing GNU Guix..."
+  log_info "Installing GNU Guix..."
   if [ "$(id -u)" != "0" ] && ! command -v sudo >/dev/null 2>&1; then
     echo "Error: Root access or sudo is required to install Guix." >&2
     exit 1
@@ -40,14 +40,14 @@ if ! command -v guix >/dev/null 2>&1; then
 
   tmp_sh="/tmp/guix-install.sh"
   libscript_download "https://git.savannah.gnu.org/cgit/guix.git/plain/etc/guix-install.sh" "$tmp_sh"
-  
+
   chmod +x "$tmp_sh"
-  
+
   if [ "$(id -u)" = "0" ]; then
     yes '' | "$tmp_sh"
   else
     yes '' | sudo "$tmp_sh"
   fi
-  
+
   rm -f "$tmp_sh"
 fi

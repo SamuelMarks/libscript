@@ -1,5 +1,4 @@
-Mise
-====
+# Mise
 
 Bootstrap module for the `mise` package manager/tool.
 

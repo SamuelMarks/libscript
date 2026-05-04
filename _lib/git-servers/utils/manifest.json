@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "utils",
+  "category": "git-servers",
+  "title": "Git Servers Shared Utilities",
+  "description": "Shared functions and utilities for Git Server components (Gitea, GitLab).",
+  "provides": [
+    "git-servers-utils"
+  ]
+}

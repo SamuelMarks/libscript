@@ -60,10 +60,6 @@
       "description": "Custom name for the Windows Service (allows side-by-side installations)",
       "type": "string",
       "default": "libscript_valkey"
-    },
-    "BUILD_DIR": {
-      "type": "string",
-      "description": "Directory used for building from source."
     }
   }
 }

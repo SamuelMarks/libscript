@@ -1,5 +1,4 @@
-Rbenv
-=====
+# Rbenv
 
 Bootstrap module for the `rbenv` package manager.
 

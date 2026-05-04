@@ -34,10 +34,10 @@ done
 CADDY_INSTALL_METHOD="${CADDY_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 
 if [ "${CADDY_INSTALL_METHOD}" = 'system' ]; then
-  depends 'caddy'
+  libscript_depends 'caddy'
 else
-  echo "[WARN] From-source or alternative installation requested for caddy, but currently only system package manager is fully supported."
-  depends 'caddy'
+  log_info "[WARN] From-source or alternative installation requested for caddy, but currently only system package manager is fully supported."
+  libscript_depends 'caddy'
 fi
 
 case "1" in

@@ -24,7 +24,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 # # LibScript CLI Utility Module (POSIX)
 #
 # ## Overview
-# This module provides reusable CLI utilities for LibScript components, 
+# This module provides reusable CLI utilities for LibScript components,
 # primarily focused on consistent argument parsing and standardized output.
 #
 # ## Usage
@@ -49,10 +49,6 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 # Remaining non-option arguments are stored in the `ARGS` variable.
 
 # Standardized logging
-info()  { printf "[INFO]  %s\n" "$*" >&2; }
-warn()  { printf "[WARN]  %s\n" "$*" >&2; }
-error() { printf "[ERROR] %s\n" "$*" >&2; }
-debug() { [ "${LIBSCRIPT_DEBUG:-0}" = "1" ] && printf "[DEBUG] %s\n" "$*" >&2; }
 
 parse_args() {
   USE_DEFAULT_TAGS=true
@@ -79,7 +75,7 @@ fi
 
     case "$1" in
       --help|-h)
-        echo "Usage: [OPTIONS]"
+        log_info "Usage: [OPTIONS]"
         exit 0
         ;;
 
@@ -113,6 +109,6 @@ fi
         ;;
     esac
   done
-  
+
   export USE_DEFAULT_TAGS CUSTOM_TAGS BOOTSTRAP_SCRIPT DRY_RUN
 }

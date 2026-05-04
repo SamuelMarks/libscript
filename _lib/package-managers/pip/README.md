@@ -1,5 +1,4 @@
-Pip
-===
+# Pip
 
 Bootstrap module for the `pip` package manager.
 

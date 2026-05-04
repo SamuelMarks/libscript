@@ -1,6 +1,3 @@
-[CmdletBinding()]
-param()
-
 $ErrorActionPreference = "Stop"
 
 if (Get-Command nats-server -ErrorAction SilentlyContinue) {

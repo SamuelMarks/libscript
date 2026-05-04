@@ -32,8 +32,8 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
 done
 
 if ! command -v opam >/dev/null 2>&1; then
-  echo "Installing opam..."
-  if ! depends opam; then
+  log_info "Installing opam..."
+  if ! libscript_depends opam; then
     _tmp_script="/tmp/opam-install.sh"
     libscript_download "https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh" "$_tmp_script"
     echo | sh "$_tmp_script" --no-setup

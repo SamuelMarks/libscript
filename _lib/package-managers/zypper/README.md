@@ -1,5 +1,4 @@
-Zypper
-======
+# Zypper
 
 Bootstrap module for the `zypper` package manager.
 

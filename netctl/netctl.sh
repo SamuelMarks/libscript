@@ -95,10 +95,10 @@ if [ "$SINGULAR_MODE" -eq 1 ]; then
   # Create a temporary state file for singular runs to not pollute the working directory
   NETCTL_STATE_FILE=$(mktemp)
   export NETCTL_STATE_FILE
-  
+
   # Ensure cleanup
   trap 'rm -f "$NETCTL_STATE_FILE" "$NETCTL_STATE_FILE.tmp"' EXIT
-  
+
   netctl_init
 
   while [ $# -gt 0 ]; do

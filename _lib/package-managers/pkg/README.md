@@ -1,5 +1,4 @@
-Pkg
-===
+# Pkg
 
 Bootstrap module for the FreeBSD `pkg` package manager.
 

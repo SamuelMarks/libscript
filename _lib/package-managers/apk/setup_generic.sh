@@ -29,7 +29,7 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
 done
 
 if ! command -v apk >/dev/null 2>&1; then
-  if ! depends 'apk-tools' ; then
+  if ! libscript_depends 'apk-tools' ; then
     true
   fi
 fi

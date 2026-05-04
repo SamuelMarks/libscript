@@ -24,7 +24,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 # # LibScript Unified Service Management Utility
 #
 # ## Overview
-# This module provides a cross-platform abstraction for managing services 
+# This module provides a cross-platform abstraction for managing services
 # (daemons) across different init systems (systemd, openrc, sc.exe, etc.).
 #
 # ## Usage
@@ -58,7 +58,7 @@ libscript_service() {
   _action="${1:-}"
   _service="${2:-}"
   shift 2 || true
-  
+
   if [ -z "$_action" ] || [ -z "$_service" ]; then
     log_error "Usage: libscript_service [ACTION] [SERVICE_NAME] [OPTIONS]"
     return 1
@@ -115,7 +115,7 @@ libscript_service() {
       start|stop|restart|status) priv rc-service "$_service" "$_action" ;;
       enable)  priv rc-update add "$_service" default ;;
       disable) priv rc-update del "$_service" default ;;
-      logs)    
+      logs)
         # OpenRC usually logs to /var/log/messages or a service-specific file
         if [ -f "/var/log/$_service.log" ]; then
           tail "$@" "/var/log/$_service.log"
@@ -165,12 +165,12 @@ libscript_service() {
 libscript_check_health() {
   _service="${1:-}"
   shift || true
-  
+
   # 1. Check for component-specific health.sh
   if [ -x "$SCRIPT_DIR/health.sh" ]; then
     "$SCRIPT_DIR/health.sh" "$@" && return 0 || return 1
   fi
-  
+
   # 2. Check for healthcheck command in vars.schema.json
   if command -v jq >/dev/null 2>&1 && [ -f "$SCRIPT_DIR/vars.schema.json" ]; then
     _hc_cmd=$(jq -r '.healthcheck // empty' "$SCRIPT_DIR/vars.schema.json")
@@ -185,7 +185,7 @@ libscript_check_health() {
       fi
     fi
   fi
-  
+
   # 3. Default: Check if service is active/running
   log_info "No custom healthcheck found for $_service, checking service status..."
   if command -v systemctl >/dev/null 2>&1; then
@@ -208,7 +208,7 @@ libscript_check_health() {
       return 0
     fi
   fi
-  
+
   log_error "$_service is NOT healthy"
   return 1
 }

@@ -1,5 +1,4 @@
-Rustup
-======
+# Rustup
 
 Bootstrap module for `rustup` (Rust toolchain installer).
 

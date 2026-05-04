@@ -31,29 +31,29 @@ done
 ARIA2_INSTALL_METHOD="${ARIA2_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 
 if [ "${ARIA2_INSTALL_METHOD}" = 'system' ]; then
-  depends 'aria2'
+  libscript_depends 'aria2'
 else
   ARIA2_VERSION="${ARIA2_VERSION:-1.37.0}"
   if [ "${ARIA2_VERSION}" = "latest" ]; then
     ARIA2_VERSION="1.37.0"
   fi
-  
+
   ARCH_STR="64bit"
   if [ "$(uname -m)" = "aarch64" ]; then
     ARCH_STR="aarch64"
   elif [ "$(uname -m)" = "armv7l" ]; then
     ARCH_STR="arm-rbpi"
   fi
-  
+
   URL="https://github.com/q3aql/aria2-static-builds/releases/download/v${ARIA2_VERSION}/aria2-${ARIA2_VERSION}-linux-gnu-${ARCH_STR}-build1.tar.bz2"
-  
+
   DOWNLOAD_DIR=${DOWNLOAD_DIR:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache/downloads}/aria2}
   mkdir -p "${DOWNLOAD_DIR}"
   archive="aria2.tar.bz2"
   libscript_download "$URL" "${DOWNLOAD_DIR}/${archive}" ""
-  
-  depends 'tar' 'bzip2' || true # optional dependency resolution if available
-  
+
+  libscript_depends 'tar' 'bzip2' || true # optional dependency resolution if available
+
   previous_wd="$(pwd)"
   cd "${DOWNLOAD_DIR}"
   tar -xjf "${archive}"

@@ -9,7 +9,7 @@
       "type": "string",
       "description": "Variable PHPBB_LISTEN."
     },
-    "PHP_FPM_LISTEN": {
+    "PHPBB_PHP_FPM_LISTEN": {
       "type": "string",
       "description": "Variable PHP_FPM_LISTEN."
     },
@@ -33,7 +33,7 @@
       "type": "string",
       "description": "Variable PHPBB_DB_TYPE."
     },
-    "WWWROOT": {
+    "PHPBB_WWWROOT": {
       "type": "string",
       "description": "Variable WWWROOT."
     },

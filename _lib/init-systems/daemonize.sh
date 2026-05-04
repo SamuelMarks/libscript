@@ -45,7 +45,7 @@ echo "$SERVICES" | while read -r svc; do
     mkdir -p "/tmp/data/$NAME" 2>/dev/null || true # Fallback or use real persistent dir
 
     if [ "$ACTION" = "start" ] || [ "$ACTION" = "up" ]; then
-        echo "Configuring service '$NAME'..."
+        log_info "Configuring service '$NAME'..."
         if [ "$OS_NAME" = "linux" ] && command -v systemctl >/dev/null 2>&1; then
             SERVICE_FILE="/etc/systemd/system/${NAME}.service"
             # generate systemd
@@ -112,7 +112,7 @@ PLIST
             launchctl load -w "$PLIST_FILE" 2>/dev/null || true
             launchctl start "com.libscript.${NAME}" 2>/dev/null || true
         else
-            echo "Fallback: starting $NAME in background"
+            log_info "Fallback: starting $NAME in background"
             eval "$CMD" &
         fi
     elif [ "$ACTION" = "stop" ] || [ "$ACTION" = "down" ]; then

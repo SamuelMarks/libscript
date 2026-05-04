@@ -1,5 +1,4 @@
-Noop
-====
+# Noop
 
 ## Purpose & Current State
 **Purpose**: This document provides context and technical details for the `_noop` component (part of `_common`) within the LibScript ecosystem. This module serves as a "no-operation" (noop) placeholder or dummy component. It is primarily used for testing, structural padding, or safely bypassing execution paths where a component is required but no actual operation should be performed.
@@ -9,7 +8,6 @@ This directory contains the configuration scripts for `_noop`. Despite being a d
 
 Additionally, the `_noop` module can be utilized by LibScript when dynamically assembling and building bigger stacks (like WordPress, Open edX, Nextcloud), acting as a safe fallback when specific dependencies are disabled or intentionally omitted from a stack deployment.
 
-## Usage
 You can install, start, stop, package, and uninstall _noop using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**

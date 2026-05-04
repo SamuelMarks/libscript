@@ -53,20 +53,20 @@
       "type": "string",
       "description": "Unix socket for CADDY to listen on"
     },
-    "WWWROOT_NAME": {
+    "CADDY_WWWROOT_NAME": {
       "description": "The primary domain or server name (e.g., example.com) to bind the web server to.",
       "type": "string"
     },
-    "WWWROOT_PATH": {
+    "CADDY_WWWROOT_PATH": {
       "description": "The absolute path to the static site document root (where index.html resides).",
       "type": "string"
     },
-    "WWWROOT_LISTEN": {
+    "CADDY_WWWROOT_LISTEN": {
       "description": "The HTTP port Caddy should listen on (defaults to 80, but 443 is used automatically for HTTPS).",
       "type": "string",
       "default": "80"
     },
-    "WWWROOT_HTTPS_PROVIDER": {
+    "CADDY_WWWROOT_HTTPS_PROVIDER": {
       "description": "The HTTPS provider for automatic certificates. Usually 'letsencrypt' or 'zerossl' (Caddy uses both by default if not set).",
       "type": "string"
     },
@@ -83,19 +83,19 @@
       "type": "string",
       "default": "libscript_caddy"
     },
-    "LISTEN": {
+    "CADDY_LISTEN": {
       "type": "string",
       "description": "Address/port to listen on."
     },
-    "WWWROOT": {
+    "CADDY_WWWROOT": {
       "type": "string",
       "description": "Web server root directory."
     },
-    "PHP_FPM_LISTEN": {
+    "CADDY_PHP_FPM_LISTEN": {
       "type": "string",
       "description": "Listen address/socket for PHP-FPM."
     },
-    "SERVER_NAME": {
+    "CADDY_SERVER_NAME": {
       "type": "string",
       "description": "Name of the server (e.g., example.com)."
     }

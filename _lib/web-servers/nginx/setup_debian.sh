@@ -36,7 +36,7 @@ for LIB in '_lib/_common/priv.sh' '_lib/_common/pkg_mgr.sh' \
 done
 
 if [ "${run_before}" -eq 0 ]; then
-  depends curl gnupg2 ca-certificates lsb-release debian-archive-keyring
+  libscript_depends curl gnupg2 ca-certificates lsb-release debian-archive-keyring
   if [ ! -f '/usr/share/keyrings/nginx-archive-keyring.gpg' ]; then
     NGINX_KEY=$(mktemp)
     libscript_download 'https://nginx.org/keys/nginx_signing.key' "${NGINX_KEY}"
@@ -50,9 +50,9 @@ if [ "${run_before}" -eq 0 ]; then
   [ -f '/etc/apt/preferences.d/99nginx' ] || \
     printf 'Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n' \
       | priv  tee /etc/apt/preferences.d/99nginx && \
-    priv  apt update -qq
+    pkg_mgr update
 
-  depends nginx
+  libscript_depends nginx
 fi
 
 rtrim() {
@@ -118,16 +118,16 @@ merge_location_into_nginx_server() {
   printf '%s\n\n%s}\n\n' "${rtrimmed_one_lbrace_off_conf}" "${location_conf}"
 }
 
-if [ "${VARS-}" ]; then
+if [ "${NGINX_VARS-}" ]; then
   ENV_SCRIPT_FILE=$(mktemp -t 'libscript_XXX_env')
   trap 'rm -f -- "${ENV_SCRIPT_FILE}"' EXIT HUP INT QUIT TERM
   chmod +x "${ENV_SCRIPT_FILE}"
-  object2key_val "${VARS}" 'export ' "'" > "${ENV_SCRIPT_FILE}"
+  libscript_object2key_val "${NGINX_VARS}" 'export ' "'" > "${ENV_SCRIPT_FILE}"
 
   # shellcheck disable=SC1090
-  SERVER_NAME="$(. "${ENV_SCRIPT_FILE}"; printf '%s' "${SERVER_NAME}")"
+  SERVER_NAME="$(. "${ENV_SCRIPT_FILE}"; printf '%s' "${NGINX_SERVER_NAME}")"
 
-  LOCATION_CONF_FILE=$(mktemp -t 'libscript_'"${SERVER_NAME}"'_XXX_location_conf')
+  LOCATION_CONF_FILE=$(mktemp -t 'libscript_'"${NGINX_SERVER_NAME}"'_XXX_location_conf')
   trap 'rm -f -- "${LOCATION_CONF_FILE}"' EXIT HUP INT QUIT TERM
 
   env -i PATH="${PATH}" \
@@ -144,7 +144,7 @@ if [ "${VARS-}" ]; then
 
   # TODO: lock file if not implementing "final thing" lifecycle
 
-  site_conf_install_location='/etc/nginx/conf.d/'"${SERVER_NAME}"'.conf'
+  site_conf_install_location='/etc/nginx/conf.d/'"${NGINX_SERVER_NAME}"'.conf'
   if [ -f "${site_conf_install_location}" ]; then
     conf_existing="$(cat -- "${site_conf_install_location}"; printf 'a')"
     conf_existing="${conf_existing%a}"
@@ -152,7 +152,7 @@ if [ "${VARS-}" ]; then
       >&2 printf 'Existing conf unexpectedly empty at: "%s"\n' "${site_conf_install_location}"
       exit 5
     fi
-    if ! merge_location_into_server "${conf_existing}" "${location_conf}" "${SERVER_NAME}" | priv  dd of="${site_conf_install_location}" status='none'; then
+    if ! merge_location_into_server "${conf_existing}" "${location_conf}" "${NGINX_SERVER_NAME}" | priv  dd of="${site_conf_install_location}" status='none'; then
       >&2 printf 'merge_location_into_nginx_server failed.\n'
       exit 1
     fi

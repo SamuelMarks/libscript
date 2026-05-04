@@ -1,5 +1,4 @@
-Sdkman
-======
+# Sdkman
 
 Bootstrap script for [SDKMAN!](https://sdkman.io/), a tool for managing parallel versions of multiple Software Development Kits on most Unix based systems.
 

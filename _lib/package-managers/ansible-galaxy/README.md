@@ -1,5 +1,4 @@
-Ansible Galaxy
-==============
+# Ansible Galaxy
 
 Bootstrap module for the `ansible-galaxy` package manager.
 

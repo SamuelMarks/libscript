@@ -1,5 +1,4 @@
-Swupd
-=====
+# Swupd
 
 Bootstrap module for `swupd` (Clear Linux OS package manager).
 

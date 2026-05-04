@@ -31,4 +31,4 @@ if ! command -v pacman >/dev/null 2>&1; then
   if (return 0 2>/dev/null); then return; else exit 0; fi
 fi
 
-priv pacman -Sy --noconfirm || true
+pkg_mgr update || true

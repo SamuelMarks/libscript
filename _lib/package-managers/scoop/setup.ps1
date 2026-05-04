@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 #!/usr/bin/env pwsh
 
 if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {

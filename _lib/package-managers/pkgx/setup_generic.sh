@@ -32,7 +32,7 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
 done
 
 if ! command -v pkgx >/dev/null 2>&1; then
-  echo "Bootstrapping pkgx single-binary package manager..."
+  log_info "Bootstrapping pkgx single-binary package manager..."
   _tmp_script="/tmp/install-pkgx.sh"
   libscript_download "https://pkgx.sh" "$_tmp_script"
   sh "$_tmp_script"

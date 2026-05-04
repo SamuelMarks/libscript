@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "joomla",
+  "category": "cms",
+  "title": "joomla",
+  "description": "joomla stack",
+  "provides": [
+    "joomla"
+  ]
+}

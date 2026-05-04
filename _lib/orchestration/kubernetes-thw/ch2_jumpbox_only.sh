@@ -36,7 +36,7 @@ done
 
 # github.com/kelseyhightower/kubernetes-the-hard-way/blob/master/docs/02-jumpbox.md
 
-depends wget curl vim openssl git
+libscript_depends wget curl vim openssl git
 
 git clone --depth 1 \
   https://github.com/kelseyhightower/kubernetes-the-hard-way.git
@@ -82,7 +82,7 @@ rm -rf 'downloads/'*'gz'
 for d in 'client' 'cni-plugins' 'controller' 'worker'; do
   chmod +x 'downloads/'"${D}"'/'*
 done
-set -f
+set -feu
 priv  cp 'downloads/client/kubectl' '/usr/local/bin/'
 kubectl version --client
 

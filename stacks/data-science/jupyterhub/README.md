@@ -1,12 +1,10 @@
-Jupyterhub
-==========
+# Jupyterhub
 
 ## Usage
 This document describes the `JupyterHub` component located in the `third_party` folder within the LibScript ecosystem. It provides the installation and configuration scripts required to provision JupyterHub.
 
 It works both as a local version manager (similar to rvm, nvm, pyenv, uv) and can be invoked from the global version manager `libscript`. Furthermore, JupyterHub can be used by libscript to build bigger stacks (like WordPress, Open edX, nextcloud, etc.) when combined with databases and web servers.
 
-## Usage
 You can manage JupyterHub using the global `libscript` CLI or the local scripts.
 
 - **Install:** `libscript install jupyterhub`

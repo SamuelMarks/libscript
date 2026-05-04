@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 if (-Not (Get-Command volta -ErrorAction SilentlyContinue)) {
   Write-Host "Installing volta..."
   if (Get-Command winget -ErrorAction SilentlyContinue) {

@@ -29,8 +29,8 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
 done
 
 if ! command -v pwsh >/dev/null 2>&1; then
-  if ! depends 'powershell'; then
-      echo "Falling back to GitHub script for PowerShell..."
+  if ! libscript_depends 'powershell'; then
+      log_info "Falling back to GitHub script for PowerShell..."
       libscript_download "https://raw.githubusercontent.com/PowerShell/PowerShell/master/tools/installpsh-debian.sh" "/tmp/installpsh.sh" || { echo "Failed to download pwsh installer"; exit 1; }
       sh /tmp/installpsh.sh
   fi

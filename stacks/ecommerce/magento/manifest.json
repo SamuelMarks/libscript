@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "magento",
+  "category": "ecommerce",
+  "title": "magento",
+  "description": "magento stack",
+  "provides": [
+    "magento"
+  ]
+}

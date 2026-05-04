@@ -1,5 +1,4 @@
-Web Servers
-===========
+# Web Servers
 
 ## Purpose & Current State
 **Purpose**: This document describes the `_server` folder, which houses various server components within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
@@ -9,7 +8,6 @@ This directory serves as the root for various server components (like Nginx, Cad
 
 Furthermore, the server components housed here can be used by libscript to build bigger stacks (like WordPress, Open edX, nextcloud, etc.), allowing for complex, multi-tier architectures.
 
-## Usage
 You can manage the lifecycle of any server component located in this directory using the global `libscript` command or the local CLI. For example, replacing `web-servers` with a component like `nginx` or `caddy`:
 
 **Unix (Linux/macOS):**

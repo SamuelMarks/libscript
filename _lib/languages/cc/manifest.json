@@ -1,5 +1,6 @@
 {
-  "name": "CC",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "cc",
   "title": "C Compiler",
   "description": "Generic C compiler interface.",
   "category": "languages",

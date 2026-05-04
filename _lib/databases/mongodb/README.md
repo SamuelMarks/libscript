@@ -1,7 +1,6 @@
-MongoDB
-=======
+# MongoDB
 
-## Purpose & Overview
+## Purpose & Current State
 This document provides context and technical details for the **MongoDB** component (part of the `_storage` module) within the LibScript ecosystem. MongoDB is a widely used, document-oriented NoSQL database system.
 
 This module works both as a local version manager for MongoDB (similar to `rvm`, `nvm`, `pyenv`, or `uv`) and can be directly invoked from the global version manager `libscript`. By treating MongoDB as a modular component, LibScript can use it to provision and build bigger, more complex software stacks (like WordPress, Open edX, Nextcloud, etc.).

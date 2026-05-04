@@ -1,5 +1,6 @@
 {
-  "name": "PNPM",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "pnpm",
   "provides": [
     "package-manager",
     "pnpm"

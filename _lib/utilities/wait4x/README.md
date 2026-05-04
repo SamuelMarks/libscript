@@ -1,7 +1,6 @@
-Wait4X
-======
+# Wait4X
 
-## Purpose & Overview
+## Purpose & Current State
 **Purpose**: This document provides context and technical details for the `wait4x` component (part of `_toolchain`) within the LibScript ecosystem. `wait4x` is a command-line tool that allows you to wait for various ports and services (like databases, HTTP servers, or generic TCP sockets) to become available, making it invaluable for reliable CI/CD and orchestration flows.
 
 Crucially, this module allows `wait4x` to function both as a **local version manager** (similar to tools like `rvm`, `nvm`, `pyenv`, or `uv`) and as a component invoked seamlessly by the global version manager, `libscript`. Furthermore, `libscript` can utilize this `wait4x` toolchain as a foundational building block to provision and orchestrate much larger, complex software stacks (such as WordPress, Open edX, Nextcloud, and more) where service startup synchronization is required.
@@ -9,7 +8,6 @@ Crucially, this module allows `wait4x` to function both as a **local version man
 ## Usage with LibScript
 This directory contains the installation and configuration scripts for `wait4x`. It is designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
 
-## Usage
 You can install, start, stop, package, and uninstall wait4x using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**

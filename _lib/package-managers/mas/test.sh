@@ -23,6 +23,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${THIS_FILE}" )")" && pwd)}"
 export LIBSCRIPT_ROOT_DIR
+. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 for LIB in '_lib/_common/test_base.sh' ; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
@@ -30,10 +31,5 @@ for LIB in '_lib/_common/test_base.sh' ; do
   . "${SCRIPT_NAME}"
 done
 
-if command -v mas >/dev/null 2>&1; then
-    mas version || echo "mas found"
-  else
-    echo "Error: mas not found on macOS!" >&2
-    exit 1
-  fi
-  echo "mas skipped (not macOS)"
+assert_version "mas" "."
+  log_info "mas skipped (not macOS)"

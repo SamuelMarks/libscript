@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 param (
     [string]$ServerName = $env:SERVER_NAME,
     [string]$ListenPort = $env:LISTEN,

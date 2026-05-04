@@ -1,5 +1,4 @@
-Composer
-========
+# Composer
 
 Bootstrap module for the `composer` package manager.
 

@@ -5,7 +5,7 @@
   "description": "Variables for wordpress vars",
   "type": "object",
   "properties": {
-    "PHP_FPM_LISTEN": {
+    "WORDPRESS_PHP_FPM_LISTEN": {
       "type": "string",
       "description": "Variable PHP_FPM_LISTEN."
     },
@@ -33,7 +33,7 @@
       "type": "string",
       "description": "Variable WORDPRESS_VERSION."
     },
-    "WWWROOT": {
+    "WORDPRESS_WWWROOT": {
       "type": "string",
       "description": "Variable WWWROOT."
     },

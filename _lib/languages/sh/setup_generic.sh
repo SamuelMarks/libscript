@@ -34,9 +34,9 @@ done
 
 SH_INSTALL_METHOD="${SH_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
 if [ "${SH_INSTALL_METHOD}" = 'system' ]; then
-  depends 'sh'
+  libscript_depends 'sh'
 else
-  depends 'curl' 'tar' 'make' 'gcc'
+  libscript_depends 'curl' 'tar' 'make' 'gcc'
   libscript_download https://git.kernel.org/pub/scm/utils/dash/dash.git/snapshot/dash-0.5.12.tar.gz /tmp/dash.tar.gz
   tar -xzf /tmp/dash.tar.gz -C /tmp
   cd /tmp/dash-0.5.12 && ./autogen.sh && ./configure && make && priv make install

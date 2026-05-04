@@ -1,5 +1,6 @@
 {
-  "name": "ZYPPER",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "zypper",
   "provides": [
     "zypper"
   ],

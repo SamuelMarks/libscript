@@ -1,5 +1,4 @@
-Redis
-======
+# Redis
 
 ## Purpose & Current State
 **Purpose**: This document provides context and technical details for the `redis` component (part of `_caches`) within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
@@ -11,7 +10,6 @@ Crucially, this component works both as a **local version manager** (similar to 
 
 Furthermore, `libscript` can utilize this Redis component as a foundational building block to provision and build **bigger stacks** (such as WordPress, Open edX, Nextcloud, and more).
 
-## Usage
 You can install, start, stop, package, and uninstall redis using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**
@@ -59,7 +57,7 @@ cli.cmd uninstall redis
 - `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning correctly.
 - `vars.schema.json`: The schema definition for the CLI arguments.
 
-## Options
+## Configuration Options
 See `vars.schema.json` for all available configuration options.
 
 ## Platform Support

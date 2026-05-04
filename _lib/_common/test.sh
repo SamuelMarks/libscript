@@ -21,4 +21,4 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-echo "Common loaded successfully"
+log_info "Common loaded successfully"

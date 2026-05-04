@@ -5,7 +5,7 @@
   "description": "Variables for woocommerce vars",
   "type": "object",
   "properties": {
-    "SERVER_NAME": {
+    "WOOCOMMERCE_SERVER_NAME": {
       "type": "string",
       "description": "Variable SERVER_NAME."
     },
@@ -17,7 +17,7 @@
       "type": "string",
       "description": "Variable WOOCOMMERCE_VERSION."
     },
-    "WWWROOT": {
+    "WOOCOMMERCE_WWWROOT": {
       "type": "string",
       "description": "Variable WWWROOT."
     }

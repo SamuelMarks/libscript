@@ -1,7 +1,6 @@
-Swift
-=====
+# Swift
 
-## Purpose & Overview
+## Purpose & Current State
 **Purpose**: This document provides context and technical details for the `swift` component (part of `_toolchain`) within the LibScript ecosystem. This component manages the installation of the Swift programming language toolchain, enabling you to build applications for macOS, iOS, Linux, and Windows.
 
 Crucially, this module allows `swift` to function both as a **local version manager** (similar to tools like `rvm`, `nvm`, `pyenv`, or `uv`) and as a component invoked seamlessly by the global version manager, `libscript`. Furthermore, `libscript` can utilize this `swift` toolchain as a foundational building block to provision and orchestrate much larger, complex software stacks (such as WordPress, Open edX, Nextcloud, and more).
@@ -9,7 +8,6 @@ Crucially, this module allows `swift` to function both as a **local version mana
 ## Usage with LibScript
 This directory contains the installation and configuration scripts for `swift`. It is designed to be executed via the global `libscript.sh` router or directly via `cli.sh`.
 
-## Usage
 You can install, start, stop, package, and uninstall swift using the global `libscript` command or the local CLI.
 
 **Unix (Linux/macOS):**

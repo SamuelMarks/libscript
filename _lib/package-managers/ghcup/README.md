@@ -1,5 +1,4 @@
-Ghcup
-=====
+# Ghcup
 
 Bootstrap script for [GHCup](https://www.haskell.org/ghcup/), the main installer for the Haskell language toolchain (including `cabal` and `stack`).
 

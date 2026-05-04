@@ -35,7 +35,7 @@ KAFKA_INSTALL_METHOD="${KAFKA_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:
 KAFKA_VERSION="${KAFKA_VERSION:-latest}"
 
 if [ "${KAFKA_INSTALL_METHOD}" = 'system' ]; then
-  depends 'kafka'
+  libscript_depends 'kafka'
 else
   if [ "${KAFKA_VERSION}" = "latest" ]; then
     KAFKA_VERSION="3.9.0"
@@ -47,14 +47,14 @@ else
   PREFIX="${PREFIX:-${LIBSCRIPT_ROOT_DIR}/installed/kafka}"
   mkdir -p "${PREFIX}"
 
-  echo "Downloading Kafka from ${dl_url}..."
+  log_info "Downloading Kafka from ${dl_url}..."
   KAFKA_TARBALL=$(mktemp)
   libscript_download "${dl_url}" "${KAFKA_TARBALL}"
 
   tar -xzf "${KAFKA_TARBALL}" -C "${PREFIX}" --strip-components=1
   rm -f "${KAFKA_TARBALL}"
 
-  echo "Kafka installed to ${PREFIX}"
+  log_info "Kafka installed to ${PREFIX}"
 
   # Set up a basic KRaft config to avoid Zookeeper
   CONF_DIR="${LIBSCRIPT_DATA_DIR}/kafka"

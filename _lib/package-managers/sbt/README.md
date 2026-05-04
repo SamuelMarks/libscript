@@ -1,5 +1,4 @@
-Sbt
-===
+# Sbt
 
 Bootstrap module for the `sbt` package manager.
 

@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $MagentoVersion = if ($env:MAGENTO_VERSION) { $env:MAGENTO_VERSION } else { "2.4.6" }
-$WwwRoot = if ($env:WWWROOT) { $env:WWWROOT } else { "C:\inetpub\wwwroot\magento" }
+$WwwRoot = if ($env:MAGENTO_WWWROOT) { $env:MAGENTO_WWWROOT } else { "C:\inetpub\wwwroot\magento" }
 $DbDriver = if ($env:MAGENTO_DB_DRIVER) { $env:MAGENTO_DB_DRIVER } else { "mariadb" }
 $DbName = if ($env:MAGENTO_DB_NAME) { $env:MAGENTO_DB_NAME } else { "magento" }
 $DbUser = if ($env:MAGENTO_DB_USER) { $env:MAGENTO_DB_USER } else { "magento" }
@@ -101,19 +101,19 @@ if ($DbDriver -in @("mariadb", "mysql")) {
 }
 
 # Resolve PHP-CGI executable for IIS
-if ($WebServer -eq "iis" -and -not $env:PHP_FPM_LISTEN) {
+if ($WebServer -eq "iis" -and -not $env:MAGENTO_PHP_FPM_LISTEN) {
     $phpExe = (Get-Command php.exe).Source
     $phpDir = Split-Path -Parent $phpExe
     $phpCgi = Join-Path $phpDir "php-cgi.exe"
     if (Test-Path $phpCgi) {
-        $env:PHP_FPM_LISTEN = $phpCgi
+        $env:MAGENTO_PHP_FPM_LISTEN = $phpCgi
     }
 }
 
 if ($WebServer -eq "iis") {
-    $env:SERVER_NAME = $ServerName
+    $env:MAGENTO_SERVER_NAME = $ServerName
     $env:LISTEN = $ListenPort
-    $env:WWWROOT = "$WwwRoot\pub"
+    $env:MAGENTO_WWWROOT = "$WwwRoot\pub"
 
     $iisCreateServer = Join-Path $libDir "_server\iis\create_server_block.ps1"
     if (Test-Path $iisCreateServer) {

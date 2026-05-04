@@ -1,5 +1,4 @@
-Guix
-====
+# Guix
 
 Bootstrap module for the `guix` (GNU Guix) package manager.
 

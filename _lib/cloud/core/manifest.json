@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "core",
+  "category": "cloud",
+  "title": "Cloud Providers Wrapper",
+  "description": "Unified multicloud interface for managing resources across various cloud providers (AWS, Azure, GCP).",
+  "provides": [
+    "cloud"
+  ]
+}

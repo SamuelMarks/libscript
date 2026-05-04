@@ -1,5 +1,4 @@
-Nvm
-===
+# Nvm
 
 Bootstrap module for `nvm` (Node Version Manager).
 

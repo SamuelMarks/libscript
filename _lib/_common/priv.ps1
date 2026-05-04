@@ -1,7 +1,9 @@
+$ErrorActionPreference = "Stop"
+
 # PowerShell implementation of privilege elevation
 # Parallel to priv.sh and priv.cmd
 
-function Require-Admin {
+function require_admin {
     $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
     if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
         Write-Warning "Administrator privileges are required."
@@ -13,4 +15,4 @@ function Require-Admin {
     }
 }
 
-Export-ModuleMember -Function Require-Admin
+Export-ModuleMember -Function require_admin

@@ -32,7 +32,7 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
 done
 
 if ! command -v julia >/dev/null 2>&1; then
-  echo "Installing julia..."
+  log_info "Installing julia..."
   _tmp_script="/tmp/julia-install.sh"
   libscript_download "https://install.julialang.org" "$_tmp_script"
   sh "$_tmp_script" -s -- --yes

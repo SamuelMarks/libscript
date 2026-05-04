@@ -32,7 +32,7 @@ for LIB in '_lib/_common/pkg_mgr.sh' ; do
 done
 
 if ! command -v helm >/dev/null 2>&1; then
-  echo "Installing helm..."
+  log_info "Installing helm..."
   _tmp_script="/tmp/get-helm-3"
   libscript_download "https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3" "$_tmp_script"
   bash "$_tmp_script"

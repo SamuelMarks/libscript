@@ -38,7 +38,7 @@ if [ "$cmd" = "start" ] || [ "$cmd" = "stop" ] || [ "$cmd" = "status" ] || [ "$c
     fi
   done
   eval "set -- $new_args"
-  
+
   if [ $# -eq 0 ] || [ "$1" = "libscript.json" ] || [ "${1##*.}" = "json" ]; then
     json_file="${1:-libscript.json}"
     if [ ! -f "$json_file" ]; then

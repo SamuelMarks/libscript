@@ -1,5 +1,4 @@
-Cpanm
-=====
+# Cpanm
 
 Bootstrap module for `cpanm` (CPAN Minus - Perl).
 

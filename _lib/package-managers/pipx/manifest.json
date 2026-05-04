@@ -1,5 +1,6 @@
 {
-  "name": "PIPX",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "pipx",
   "provides": [
     "pipx"
   ],

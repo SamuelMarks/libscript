@@ -1,5 +1,6 @@
 {
-  "name": "LUAROCKS",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "luarocks",
   "provides": [
     "package-manager",
     "luarocks"

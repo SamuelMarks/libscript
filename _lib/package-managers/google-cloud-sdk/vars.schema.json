@@ -1,18 +1,14 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/package-managers/google-cloud-sdk/vars.schema.json",
   "title": "Google Cloud Sdk variables",
   "description": "Configuration variables for google-cloud-sdk",
   "type": "object",
   "properties": {
-    "GCLOUD_VERSION": {
+    "GOOGLE_CLOUD_SDK_VERSION": {
       "type": "string",
       "default": "latest",
       "description": "Version of Google Cloud SDK to install"
-    },
-    "GOOGLE_CLOUD_SDK_VERSION": {
-      "description": "Specific version of google-cloud-sdk to install.",
-      "type": "string",
-      "default": "latest"
     }
   }
 }

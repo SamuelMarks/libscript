@@ -1,5 +1,4 @@
-Conda
-=====
+# Conda
 
 Bootstrap module for the `conda` package manager via Miniconda.
 

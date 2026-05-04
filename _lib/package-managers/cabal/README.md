@@ -1,5 +1,4 @@
-Cabal
-=====
+# Cabal
 
 Bootstrap module for `cabal` (Haskell package manager).
 

@@ -1,5 +1,6 @@
 {
-  "name": "RVM",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "rvm",
   "provides": [
     "rvm"
   ],

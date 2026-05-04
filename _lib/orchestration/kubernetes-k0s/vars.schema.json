@@ -10,11 +10,11 @@
       "type": "string",
       "default": "latest"
     },
-    "DEST": {
+    "KUBERNETES_K0S_DEST": {
       "description": "Destination (working directory)",
       "type": "string"
     },
-    "VARS": {
+    "KUBERNETES_K0S_VARS": {
       "description": "Key/value in JSON format (as an escaped string)",
       "type": "string"
     },

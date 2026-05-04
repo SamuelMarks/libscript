@@ -1,5 +1,6 @@
 {
-  "name": "FLUENTBIT",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "fluentbit",
   "title": "Fluent Bit",
   "description": "A super fast, lightweight, and highly scalable logging and metrics processor and forwarder.",
   "category": "logging",

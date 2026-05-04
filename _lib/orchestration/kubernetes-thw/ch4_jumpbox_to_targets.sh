@@ -35,7 +35,7 @@ for LIB in '_lib/_common/environ.sh' '_lib/_common/pkg_mgr.sh'; do
 done
 
 # github.com/kelseyhightower/kubernetes-the-hard-way/blob/master/docs/04-certificate-authority.md
-depends openssl
+libscript_depends openssl
 
 if [ ! -f "${LIBSCRIPT_DATA_DIR}"'/ca.key' ]; then
   openssl genrsa -out "${LIBSCRIPT_DATA_DIR}"'/ca.key' 4096

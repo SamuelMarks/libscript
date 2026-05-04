@@ -1,5 +1,6 @@
 {
-  "name": "GCP",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "gcp",
   "provides": [
     "gcp"
   ],

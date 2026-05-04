@@ -37,7 +37,7 @@ if ! command -v pyenv >/dev/null 2>&1; then
   if command -v brew >/dev/null 2>&1; then
     brew install pyenv
   else
-    echo "Installing pyenv..."
+    log_info "Installing pyenv..."
     _tmp_script="/tmp/pyenv-install.sh"
     libscript_download "https://pyenv.run" "$_tmp_script"
     bash "$_tmp_script"

@@ -32,8 +32,8 @@ CC_INSTALL_METHOD="${CC_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-syste
 
 if [ "${CC_INSTALL_METHOD}" = 'system' ]; then
   # could do clang!
-  depends 'gcc' 'g++'
+  libscript_depends 'gcc' 'g++'
 else
   >&2 printf 'Building C/C++ from source is not supported, using gcc/g++\n'
-  depends 'gcc' 'g++'
+  libscript_depends 'gcc' 'g++'
 fi

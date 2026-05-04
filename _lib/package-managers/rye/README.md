@@ -1,5 +1,4 @@
-Rye
-===
+# Rye
 
 Bootstrap module for the `rye` package manager.
 

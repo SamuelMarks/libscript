@@ -1,5 +1,6 @@
 {
-  "name": "ZIG",
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "zig",
   "title": "Zig Toolchain",
   "description": "A general-purpose programming language and toolchain for maintaining robust, optimal, and reusable software.",
   "category": "languages",

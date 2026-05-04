@@ -14,7 +14,7 @@
         "cpython"
       ]
     },
-    "VENV": {
+    "PYTHON_VENV": {
       "description": "Path to a Python virtualenv (will create if nonexistent)",
       "type": "string"
     },

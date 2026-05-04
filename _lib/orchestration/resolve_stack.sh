@@ -26,8 +26,8 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  echo "Usage: ${THIS_FILE} [OPTIONS]"
-  echo "See script source or documentation for more details."
+  log_info "Usage: ${THIS_FILE} [OPTIONS]"
+  log_info "See script source or documentation for more details."
   exit 0
 fi
 
@@ -37,7 +37,7 @@ fi
 # Usage: ./_lib/orchestration/resolve_stack.sh <path_to_install.json>
 
 if [ -z "$1" ]; then
-    echo "Usage: ${THIS_FILE} <path_to_install.json>"
+    log_info "Usage: ${THIS_FILE} <path_to_install.json>"
     exit 1
 fi
 

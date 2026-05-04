@@ -35,7 +35,7 @@ BAZEL_INSTALL_METHOD="${BAZEL_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:
 BAZEL_VERSION="${BAZEL_VERSION:-latest}"
 
 if [ "${BAZEL_INSTALL_METHOD}" = 'system' ]; then
-  depends 'bazel'
+  libscript_depends 'bazel'
 else
   if [ "${BAZEL_VERSION}" = "latest" ]; then
     BAZEL_VERSION="v1.25.0" # Bazelisk version
@@ -59,9 +59,9 @@ else
   bin_dir="${PREFIX}/bin"
   mkdir -p "${bin_dir}"
 
-  echo "Downloading Bazelisk (Bazel) from ${dl_url}..."
+  log_info "Downloading Bazelisk (Bazel) from ${dl_url}..."
   libscript_download "${dl_url}" "${bin_dir}/bazel"
 
   chmod +x "${bin_dir}/bazel"
-  echo "Bazel installed to ${bin_dir}/bazel"
+  log_info "Bazel installed to ${bin_dir}/bazel"
 fi

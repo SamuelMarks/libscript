@@ -41,52 +41,52 @@ done
 PKG_MGR_UPDATE_REGISTRY="${PKG_MGR_UPDATE_REGISTRY:-1}"
 export PKG_MGR_UPDATE_REGISTRY
 
-cmd_avail() {
+libscript_cmd_avail() {
   command -v -- "${1}" >/dev/null 2>&1
 }
 
 detect_pkg_mgr() {
-  if cmd_avail apt-get; then
+  if libscript_cmd_avail apt-get; then
     PKG_MGR='apt-get' # Debian, Ubuntu, and other derivatives
-  elif cmd_avail apk; then
+  elif libscript_cmd_avail apk; then
     PKG_MGR='apk' # Alpine Linux and derivatives
-  elif cmd_avail dnf; then
+  elif libscript_cmd_avail dnf; then
     PKG_MGR='dnf'  # Red Hat and derivatives (preferred over `yum`)
-  elif cmd_avail yum; then
+  elif libscript_cmd_avail yum; then
     PKG_MGR='yum'  # Red Hat and derivatives
-  elif cmd_avail pacman; then
+  elif libscript_cmd_avail pacman; then
     PKG_MGR='pacman'  # MSYS2
-  elif cmd_avail zypper; then
+  elif libscript_cmd_avail zypper; then
     PKG_MGR='zypper' # OpenSUSE
-  elif cmd_avail emerge; then
+  elif libscript_cmd_avail emerge; then
     PKG_MGR='emerge'  # Gentoo
-  elif cmd_avail pkg; then
+  elif libscript_cmd_avail pkg; then
     PKG_MGR='pkg'  # FreeBSD
-  elif cmd_avail port; then
+  elif libscript_cmd_avail port; then
     PKG_MGR='port'  # MacPorts
-  elif cmd_avail brew; then
+  elif libscript_cmd_avail brew; then
     PKG_MGR='brew'  # macOS and (rarely) Linux
-  elif cmd_avail swupd; then
+  elif libscript_cmd_avail swupd; then
     PKG_MGR='swupd'  # Clear Linux
-  elif cmd_avail xbps-install; then
+  elif libscript_cmd_avail xbps-install; then
     PKG_MGR='xbps'  # Void Linux
-  elif cmd_avail eopkg; then
+  elif libscript_cmd_avail eopkg; then
     PKG_MGR='eopkg'  # Solus
   else
     if [ "${TARGET_OS:-$(uname -s | tr '[:upper:]' '[:lower:]')}" = "darwin" ]; then
       if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/brew/setup.sh" ]; then
         "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/brew/setup.sh"
-        if cmd_avail brew; then PKG_MGR='brew'; export PKG_MGR; return; fi
+        if libscript_cmd_avail brew; then PKG_MGR='brew'; export PKG_MGR; return; fi
       fi
     elif [ "${TARGET_OS:-$(uname -s | tr '[:upper:]' '[:lower:]')}" = "windows" ] || [ -n "${COMSPEC:-}" ]; then
       if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/winget/setup.cmd" ]; then
         "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/winget/setup.cmd"
-        if cmd_avail winget; then PKG_MGR='winget'; export PKG_MGR; return; fi
+        if libscript_cmd_avail winget; then PKG_MGR='winget'; export PKG_MGR; return; fi
       fi
     else
       if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/pkgx/setup.sh" ]; then
         "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/pkgx/setup.sh"
-        if cmd_avail pkgx; then PKG_MGR='pkgx'; export PKG_MGR; return; fi
+        if libscript_cmd_avail pkgx; then PKG_MGR='pkgx'; export PKG_MGR; return; fi
       fi
     fi
     log_error 'No supported package manager found'
@@ -115,7 +115,7 @@ is_installed() {
   esac
 }
 
-depends() {
+libscript_depends() {
   pkgs_to_install=''
   for pkg in "$@"; do
     mapped_pkgs="$(map_package "${pkg}")" || {
@@ -151,7 +151,7 @@ depends() {
       'yum')    priv  yum install -y        ${pkgs_to_install} ;;
       'zypper') priv  zypper install -y     ${pkgs_to_install} ;;
       *)
-        log_error "depends function not implemented for ${PKG_MGR}"
+        log_error "libscript_depends function not implemented for ${PKG_MGR}"
         exit 1
         ;;
     esac
@@ -167,21 +167,21 @@ libscript_download() {
   url="${1:-}"
   dest="${2:-}"
   provided_checksum="${3:-}"
-  
+
   if [ -z "$url" ]; then
     printf 'Error: URL required for libscript_download\n' >&2
     return 1
   fi
-  
+
   if [ -z "$dest" ]; then dest="$(basename "$url")"; fi
-  
+
   # 1. Checksum Resolution
   checksum_db="${LIBSCRIPT_ROOT_DIR}/checksums.txt"
   expected_checksum="$provided_checksum"
   if [ -z "$expected_checksum" ] && [ -f "$checksum_db" ]; then
     expected_checksum="$(grep -F "$url" "$checksum_db" | head -n 1 | awk '{print $2}')"
   fi
-  
+
   # 2. Aria2 Export Mode
   if [ -n "${LIBSCRIPT_ARIA2_EXPORT_FILE:-}" ]; then
     printf "%s\n" "$url" >> "$LIBSCRIPT_ARIA2_EXPORT_FILE"
@@ -218,14 +218,14 @@ libscript_download() {
 
   if [ "$download_needed" -eq 1 ]; then
     log_info "[DOWNLOADING] ${url}"
-    
+
     # Ensure tools are available
     if ! command -v aria2c >/dev/null 2>&1 && ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
         [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/curl/setup.sh" ] && "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/curl/setup.sh"
     fi
 
     download_success=0
-    
+
     # Strategy A: aria2c
     if [ "$download_success" -eq 0 ] && command -v aria2c >/dev/null 2>&1; then
       if aria2c -d "$dl_dir" -o "$filename" --allow-overwrite=true "$url"; then download_success=1; fi
@@ -281,7 +281,7 @@ libscript_download() {
     elif command -v shasum >/dev/null 2>&1; then
       actual_checksum=$(shasum -a 256 "$cache_file" | awk '{print $1}')
     fi
-    
+
     if [ -n "$actual_checksum" ]; then
       if [ "$actual_checksum" != "$clean_expected" ]; then
         log_error "Checksum mismatch for ${url}. Expected: ${clean_expected}, Got: ${actual_checksum}"
@@ -295,7 +295,7 @@ libscript_download() {
         echo "$url $(sha256sum "$cache_file" | awk '{print $1}')" >> "$checksum_db"
     fi
   fi
-  
+
   # 6. Final Placement
   if [ -n "$dest" ] && [ "$dest" != "$cache_file" ]; then
     mkdir -p "$(dirname "$dest")"
@@ -321,7 +321,7 @@ libscript_process_aria2_file() {
 
   process_entry() {
     if [ -n "$url" ]; then
-      echo "Processing $url ..."
+      log_info "Processing $url ..."
       libscript_download "$url" "$out" "$checksum"
     fi
     url=""
@@ -332,7 +332,7 @@ libscript_process_aria2_file() {
   while IFS= read -r line || [ -n "$line" ]; do
     # skip empty lines safely
     [ -z "$(echo "$line" | tr -d '[:space:]')" ] && continue
-    
+
     if echo "$line" | grep -q '^[[:space:]]'; then
 opt
       opt="$(echo "$line" | sed 's/^[[:space:]]*//')"

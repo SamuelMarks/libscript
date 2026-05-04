@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/package-managers/bun-pm/vars.schema.json",
+  "title": "Bun variables",
+  "description": "Configuration variables for bun",
+  "type": "object",
+  "properties": {
+    "BUN_PM_INSTALL": {
+      "type": "string",
+      "description": "Path to the directory where Bun should be installed. Defaults to ~/.bun."
+    },
+    "BUN_PM_VERSION": {
+      "description": "Specific version of bun to install.",
+      "type": "string",
+      "default": "latest"
+    }
+  }
+}

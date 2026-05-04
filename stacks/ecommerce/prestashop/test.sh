@@ -31,11 +31,11 @@ for LIB in '_lib/_common/test_base.sh' ; do
 done
 
 echo "Validating PrestaShop installation..."
-WWWROOT="${WWWROOT:-/var/www/prestashop}"
-if [ -d "${WWWROOT}/classes" ] || [ -d "${WWWROOT}/install" ]; then
-    echo "PrestaShop directory found at ${WWWROOT}"
+PRESTASHOP_WWWROOT="${PRESTASHOP_WWWROOT:-/var/www/prestashop}"
+if [ -d "${PRESTASHOP_WWWROOT}/classes" ] || [ -d "${PRESTASHOP_WWWROOT}/install" ]; then
+    echo "PrestaShop directory found at ${PRESTASHOP_WWWROOT}"
     exit 0
 else
-    echo "PrestaShop directory not found at ${WWWROOT}"
+    echo "PrestaShop directory not found at ${PRESTASHOP_WWWROOT}"
     exit 1
 fi
