@@ -90,7 +90,7 @@ if [ -n "${REMAINING}" ]; then
   >&2 printf '[W] Extra arguments provided: %s\n' "${REMAINING}"
 fi
 
-previous_wD="$(pwd)"
+previous_wd="$(pwd)"
 if [ "${INPUT_DIRECTORY-}" ]; then
   cd -- "${INPUT_DIRECTORY}"
 fi
@@ -146,7 +146,7 @@ NL='
 '
 process_one_dockerfile() {
   dockerfile="${1}";
-  enD="${2:-${NL}}"
+  end="${2:-${NL}}"
   q="${3:-\'}"
 IFS=. read -r tag name _ <<EOF
   ${dockerfile}

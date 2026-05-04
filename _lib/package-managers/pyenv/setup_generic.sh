@@ -24,15 +24,13 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 DIR=$(CDPATH='' cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${DIR}"; while [ ! -f "${D}"'/ROOT' ]; do D="$(dirname -- "${D}")"; done; printf '%s' "${D}")}"
 
-for LIB in '_lib/_common/pkg_mgr.sh' ; do
+for LIB in _lib/_common/pkg_mgr.sh ; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 done
 
-if [ -x "$HOME/.pyenv/bin/pyenv" ]; then
-...
 if ! command -v pyenv >/dev/null 2>&1; then
   if command -v brew >/dev/null 2>&1; then
     brew install pyenv
@@ -42,8 +40,6 @@ if ! command -v pyenv >/dev/null 2>&1; then
     libscript_download "https://pyenv.run" "$_tmp_script"
     bash "$_tmp_script"
     rm -f "$_tmp_script"
-  fi
-fi
   fi
 fi
 

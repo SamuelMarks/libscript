@@ -24,6 +24,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 if command -v gcloud >/dev/null 2>&1; then
     log_info "Google Cloud SDK is already installed."
     exit 0
+fi
 
 # Load caching downloader
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
@@ -49,13 +50,16 @@ case "$OS" in
             bash install_gcloud.sh --disable-prompts
             rm install_gcloud.sh
         fi
+        ;;
     CYGWIN*|MINGW*|MSYS*)
         log_info "Installing Google Cloud SDK on Windows..."
         libscript_download "https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk-windows-x86_64-bundled-python.zip" "gcloud.zip"
         unzip gcloud.zip
         ./google-cloud-sdk/install.cmd --quiet
         rm gcloud.zip
+        ;;
     *)
         log_info "Unsupported OS: $OS"
         exit 1
+        ;;
 esac

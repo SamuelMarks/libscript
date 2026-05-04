@@ -89,6 +89,11 @@ Create a `libscript.json` to define your dependencies, including version constra
       { "path": "/api/", "proxy_pass": "http://127.0.0.1:8000/" },
       { "path": "/", "root": "./web/dist", "try_files": "$uri $uri/ /index.html" }
     ]
+  },
+  "state": {
+    "paths": ["data/"],
+    "bucket": "s3://my-bucket/state-backup",
+    "endpoint": "https://my-minio-or-r2-endpoint.com"
   }
 }
 ```
@@ -172,6 +177,9 @@ LibScript provides built-in primitives to push applications and map domains to n
 ./libscript.sh cloud gcp dns map-node my-vm us-central1-a my-domain.com my-managed-zone
 ```
 
+### Persistent State Management
+For workloads relying on local state (like SQLite or file uploads), LibScript supports generic bidirectional state synchronization backed by Object Storage (S3-compatible, GCS, Azure Blob, or rclone providers). Define a `state` block in your `libscript.json`, and the framework will automatically pull state during `provision` and push mutated state during `deprovision`.
+
 ### Resource Cleanup
 LibScript can safely deprovision individual nodes (and their dedicated resources) or clean up an entire region.
 
@@ -193,6 +201,7 @@ All components support standard lifecycle commands:
 ```sh
 ./libscript.sh start postgres
 ./libscript.sh status nodejs
+./libscript.sh test postgres
 ./libscript.sh logs -f valkey
 ./libscript.sh stop all
 ```

@@ -25,7 +25,7 @@ DIR=$(CDPATH='' cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${DIR}"; while [ ! -f "${D}"'/ROOT' ]; do D="$(dirname -- "${D}")"; done; printf '%s' "${D}")}"
 
-for LIB in '_lib/_common/priv.sh' '_lib/_common/pkg_mgr.sh' \
+for LIB in "_lib/_common/priv.sh' '_lib/_common/pkg_mgr.sh' \
             '_lib/web-servers/nginx/merge_location_into_server.sh' \
             '_lib/_common/environ.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"

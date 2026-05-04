@@ -24,6 +24,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 if command -v aws >/dev/null 2>&1; then
     log_info "AWS CLI is already installed."
     exit 0
+fi
 
 # Load caching downloader
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
@@ -50,12 +51,15 @@ case "$OS" in
             sudo installer -pkg AWSCLIV2.pkg -target /
             rm AWSCLIV2.pkg
         fi
+        ;;
     CYGWIN*|MINGW*|MSYS*)
         log_info "Installing AWS CLI on Windows..."
         libscript_download "https://awscli.amazonaws.com/AWSCLIV2.msi" "AWSCLIV2.msi"
         msiexec.exe /i AWSCLIV2.msi /qn /norestart
         rm AWSCLIV2.msi
+        ;;
     *)
         log_info "Unsupported OS: $OS"
         exit 1
+        ;;
 esac

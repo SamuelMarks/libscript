@@ -24,6 +24,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 if command -v az >/dev/null 2>&1; then
     log_info "Azure CLI is already installed."
     exit 0
+fi
 
 # Load caching downloader
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
@@ -48,12 +49,15 @@ case "$OS" in
             log_info "Homebrew is required for Azure CLI installation on macOS."
             exit 1
         fi
+        ;;
     CYGWIN*|MINGW*|MSYS*)
         log_info "Installing Azure CLI on Windows..."
         libscript_download "https://aka.ms/InstallAzureCLIWIn" "AzureCLI.msi"
         msiexec.exe /i AzureCLI.msi /qn /norestart
         rm AzureCLI.msi
+        ;;
     *)
         log_info "Unsupported OS: $OS"
         exit 1
+        ;;
 esac

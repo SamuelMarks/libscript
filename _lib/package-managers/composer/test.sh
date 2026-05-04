@@ -24,7 +24,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${THIS_FILE}" )")" && pwd)}"
 export LIBSCRIPT_ROOT_DIR
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
-for LIB in '_lib/_common/test_base.sh' ; do
+for LIB in _lib/_common/test_base.sh ; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090

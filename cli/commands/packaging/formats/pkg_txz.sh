@@ -82,4 +82,3 @@ export STACK="${STACK:-}${THIS_FILE}"':'
       echo "rm -rf \"\$BUILD_DIR\""
       echo "echo \"Done!\""
       exit 0
-    fi

@@ -21,9 +21,6 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-else
-  THIS_FILE="${0}"
-fi
 
 # Usage: ./find_replace_exec.sh "search_string" "replacement_string" filename
 

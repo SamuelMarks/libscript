@@ -21,7 +21,7 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-for LIB in '_lib/_common/test_base.sh' ; do
+for LIB in _lib/_common/test_base.sh ; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
@@ -29,7 +29,7 @@ for LIB in '_lib/_common/test_base.sh' ; do
 done
 
 #!/bin/sh
-for LIB in '_lib/_common/test_base.sh' ; do
+for LIB in _lib/_common/test_base.sh ; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090

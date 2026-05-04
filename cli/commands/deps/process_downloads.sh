@@ -23,7 +23,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 if [ "$cmd" = "process-downloads" ]; then
   list_file="$1"
-for LIB in '_lib/_common/pkg_mgr.sh' ; do
+for LIB in _lib/_common/pkg_mgr.sh ; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090

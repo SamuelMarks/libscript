@@ -34,12 +34,12 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 # ```sh
 # #!/bin/sh
 # PACKAGE_NAME="my-component"
-# for LIB in '_lib/_common/component_core.sh' ; do
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  . "${SCRIPT_NAME}"
-done
+# for LIB in _lib/_common/component_core.sh ; do
+#   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
+#   export SCRIPT_NAME
+#   # shellcheck disable=SC1090
+#   . "${SCRIPT_NAME}"
+# done
 # ```
 #
 # ## Requirements

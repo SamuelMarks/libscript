@@ -19,7 +19,7 @@
 - [ ] Automated global load balancer and reverse proxy configuration.
 - [ ] Encrypted cross-node mesh networking (WireGuard).
 - [ ] Git-driven deployment workflows (`libscript deploy`).
-- [ ] Cross-cloud persistent volume and state management.
+- [x] Cross-cloud persistent volume and state management.
 
 ## Phase 4: UI & Observability
 - [x] Terminal User Interface (TUI) for stack and PaaS management via `package_as TUI`.

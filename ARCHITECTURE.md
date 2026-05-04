@@ -38,9 +38,14 @@ LibScript includes a built-in automated stack resolution engine implemented in `
 
 The `cloud` component (`_lib/cloud`) provides a unified, multicloud PaaS interface. It delegates to provider-specific modules in `_lib/cloud-providers/`, wrapping official vendor CLIs (`aws`, `az`, `gcloud`) into a consistent, idempotent syntax for managing compute, network, and storage.
 
-## 🛠️ The Generator Engine (`package_as`)
+## 🛠️ The CLI & Generator Engine
 
-LibScript uses component metadata to translate native definitions into various production artifacts:
-- **Containers:** Optimized `Dockerfile` and `docker-compose.yml` manifests.
-- **Native Installers:** MSI and EXE via InnoSetup/NSIS (Windows), DEB/RPM/APK (Linux), TXZ (FreeBSD), and PKG/DMG (macOS).
-- **Interactive Shell:** A `TUI` installer using `dialog`/`whiptail` to select components and generate targets.
+The high-level CLI routing, orchestration, and generation logic reside in `cli/commands/`. This includes:
+- **`package_as` Engine:** Translates native definitions into various production artifacts:
+  - **Containers:** Optimized `Dockerfile` and `docker-compose.yml` manifests.
+  - **Native Installers:** MSI and EXE via InnoSetup/NSIS (Windows), DEB/RPM/APK (Linux), TXZ (FreeBSD), and PKG/DMG (macOS).
+  - **Interactive Shell:** A `TUI` installer using `dialog`/`whiptail` to select components and generate targets.
+
+## 🌐 Network & Routing (`netctl`)
+
+LibScript uses an embedded sub-component called `netctl` to provide a universal abstraction layer for defining routes, static file maps, and proxies. `netctl` securely translates high-level ingress requirements from `libscript.json` into native configurations for Nginx, Caddy, Apache, or IIS without leaving any footprint behind.

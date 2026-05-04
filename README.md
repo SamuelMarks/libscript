@@ -95,9 +95,10 @@ cd libscript
 
 LibScript is designed as a routing execution layer. It detects your OS, maps generic dependencies to local package managers (`apt`, `brew`, `choco`, `pkg`), and executes optimized setup scripts.
 
+*   **`cli/`**: Core CLI commands, orchestration logic, and the `package_as` transformation engine.
 *   **`_lib/`**: The heart of the system. Modular components (over 140+ available) where each directory is a standalone manager.
+*   **`netctl/`**: Universal routing and reverse proxy configuration component.
 *   **`stacks/`**: Pre-configured, battle-tested blueprints for CMS, ERP, and Data Science.
-*   **`package_as`**: The transformation engine that converts shell logic into native installers.
 
 ---
 

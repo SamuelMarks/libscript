@@ -28,7 +28,7 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091,SC2034
 . "${SCRIPT_NAME}"
 
-for LIB in '_lib/_common/pkg_mgr.sh' '_lib/_common/priv.sh' ; do
+for LIB in _lib/_common/pkg_mgr.sh' '_lib/_common/priv.sh ; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090

@@ -24,7 +24,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 DIR=$(CDPATH='' cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${DIR}"; while [ ! -f "${D}"'/ROOT' ]; do D="$(dirname -- "${D}")"; done; printf '%s' "${D}")}"
 
-for LIB in '_lib/_common/priv.sh' '_lib/_common/envsubst_safe.sh' \
+for LIB in "_lib/_common/priv.sh' '_lib/_common/envsubst_safe.sh' \
             '_lib/languages/python/setup.sh' 'stacks/data-science/jupyterhub/env.sh' \
             '_lib/languages/nodejs/setup.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"

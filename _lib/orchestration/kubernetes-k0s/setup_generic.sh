@@ -26,7 +26,7 @@ DIR=$(CDPATH='' cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${DIR}"; while [ ! -f "${D}"'/ROOT' ]; do D="$(dirname -- "${D}")"; done; printf '%s' "${D}")}"
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 
-for LIB in '_lib/_common/environ.sh' '_lib/_common/pkg_mgr.sh' '_lib/_common/priv.sh'; do
+for LIB in "_lib/_common/environ.sh' '_lib/_common/pkg_mgr.sh' '_lib/_common/priv.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090

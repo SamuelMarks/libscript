@@ -27,7 +27,6 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   exit 0
 fi
 
-# shellcheck disable=SC2016,SC1090,SC1091,SC2034,SC2018,SC2019,SC2221,SC2222,SC2129,SC2209,SC2089,SC2090,SC2086,SC2154,SC2044,SC2181,SC2038,SC2155,SC2046,SC2002,SC1003,SC2295,SC2145
 
 
 
@@ -105,8 +104,8 @@ while IFS= read -r f; do
   cp -- "${HTML_ROOT}"'/top.html' "${html}"
   iconv -t utf-8 -- "${f}" | sed 's/.md)/.html)/g' | pandoc -f markdown -t html5 | iconv -f utf-8 >> "${html}"
   rm -f "${html%.html}"'.schema.json' "${html}"'.usage'
-  previous_wD="$(pwd)"
-  new_wD="${f%/*}"
+  previous_wd="$(pwd)"
+  new_wd="${f%/*}"
   cd -- "${new_wd}"
   set +f
   for json_schema in *'.schema.json'; do
@@ -262,7 +261,7 @@ for url in ${URLS}; do
   fi
   USAGE=''
   SCHEMA=''
-  previous_wD="$(pwd)"
+  previous_wd="$(pwd)"
   cd -- "${url%/*}"
   set +f
   for f in *'.usage'; do

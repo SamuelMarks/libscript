@@ -41,7 +41,7 @@ if [ "${NODEJS_VERSION}" = 'lts' ]; then
   NODEJS_VERSION="${NODEJS_VERSION_LTS}"
 fi
 
-for LIB in '_lib/_common/pkg_mgr.sh' '_lib/_common/os_info.sh'; do
+for LIB in "_lib/_common/pkg_mgr.sh' '_lib/_common/os_info.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090

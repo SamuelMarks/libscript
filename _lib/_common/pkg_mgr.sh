@@ -30,7 +30,7 @@ LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${_PKG_MGR_DIR}"; while [ ! -f "$
 
 #DIR="$( dirname -- "$( readlink -nf -- "${0}" )")"
 
-for LIB in '_lib/_common/os_info.sh' '_lib/_common/priv.sh' '_lib/_common/pkg_mapper.sh'; do
+for LIB in "_lib/_common/os_info.sh' '_lib/_common/priv.sh' '_lib/_common/pkg_mapper.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090

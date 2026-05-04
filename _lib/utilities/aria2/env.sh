@@ -21,5 +21,3 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
-# shellcheck disable=SC1090,SC1091,SC2034
