@@ -80,29 +80,109 @@ fi
 CLI="$LIBSCRIPT_ROOT/_lib/cloud-providers/$PROVIDER/cli.sh"
 if [ ! -f "$CLI" ]; then echo "Provider $PROVIDER not supported."; exit 1; fi
 
+# -----------------------------------------------------------------------------
+# Dependency Check
+# -----------------------------------------------------------------------------
+ensure_cli() {
+  local cmd=$1
+  local pkg=$2
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    log "INFO" "Command '$cmd' not found. Installing '$pkg' via LibScript..."
+    "$LIBSCRIPT_ROOT/libscript.sh" install "$pkg" "latest" || {
+      log "ERROR" "Failed to auto-install $pkg. Please install it manually."
+      exit 1
+    }
+    # Update PATH dynamically just in case it wasn't sourced yet
+    export PATH="${PREFIX:-$LIBSCRIPT_ROOT/installed/$pkg}/bin:$PATH"
+  fi
+}
+
+if [ "$PROVIDER" = "azure" ]; then
+  ensure_cli "az" "azure-cli"
+elif [ "$PROVIDER" = "aws" ]; then
+  ensure_cli "aws" "awscli"
+elif [ "$PROVIDER" = "gcp" ]; then
+  ensure_cli "gcloud" "google-cloud-sdk"
+fi
+
+run_with_auth_check() {
+  local cmd="$1"
+  shift
+  local exit_code=0
+  local output_file="$LOG_DIR/auth_check.tmp"
+  
+  "$cmd" "$@" > "$output_file" 2>&1 || exit_code=$?
+  
+  if [ "$exit_code" -eq 0 ]; then
+    cat "$output_file" >> "$LOG_FILE"
+    rm -f "$output_file"
+    return 0
+  fi
+  
+  cat "$output_file" >> "$LOG_FILE"
+  
+  local needs_auth=0
+  local provider_to_auth=""
+  
+  if grep -qEi "(not logged in|az login|Please run 'az login'|AuthenticationError|NoCredentialsError|AuthorizationFailed|InvalidAuthenticationTokenTenant)" "$output_file"; then
+    needs_auth=1
+    provider_to_auth="azure"
+  elif grep -qEi "(Unable to locate credentials|aws configure|ExpiredToken|InvalidClientTokenId|AccessDenied|NotAuthorized)" "$output_file"; then
+    needs_auth=1
+    provider_to_auth="aws"
+  elif grep -qEi "(gcloud auth login|Not authorized|Request had invalid authentication credentials|invalid_grant)" "$output_file"; then
+    needs_auth=1
+    provider_to_auth="gcp"
+  fi
+  
+  if [ "$needs_auth" -eq 1 ]; then
+    log "AUTH" "Authentication error detected for $provider_to_auth."
+    log "INFO" "Please authenticate to continue teardown."
+    
+    if [ "$provider_to_auth" = "azure" ]; then
+      log "INFO" "Running 'az login'..."
+      az login </dev/tty >/dev/tty 2>&1 || { log "ERROR" "Azure login failed."; rm -f "$output_file"; return $exit_code; }
+    elif [ "$provider_to_auth" = "aws" ]; then
+      log "INFO" "Running 'aws configure'..."
+      aws configure </dev/tty >/dev/tty 2>&1 || { log "ERROR" "AWS configure failed."; rm -f "$output_file"; return $exit_code; }
+    elif [ "$provider_to_auth" = "gcp" ]; then
+      log "INFO" "Running 'gcloud auth login'..."
+      gcloud auth login </dev/tty >/dev/tty 2>&1 || { log "ERROR" "GCP login failed."; rm -f "$output_file"; return $exit_code; }
+    fi
+    
+    log "RETRY" "Authentication successful. Retrying command immediately..."
+    rm -f "$output_file"
+    "$cmd" "$@" >> "$LOG_FILE" 2>&1
+    return $?
+  fi
+  
+  rm -f "$output_file"
+  return $exit_code
+}
+
 CTX="$RG"
 if [ "$PROVIDER" = "aws" ] || [ "$PROVIDER" = "gcp" ]; then CTX="$LOC"; fi
 
 log "STOP" "Stopping remote stack..."
-"$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo ~/libscript/libscript.sh stop" >> "$LOG_FILE" 2>&1 || true
+run_with_auth_check "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo ~/libscript/libscript.sh stop" || true
 
 if [ -n "$STATE_PATHS" ]; then
   for PATH_ITEM in $STATE_PATHS; do
     log "SYNC" "Syncing $PATH_ITEM from node to prevent data loss..."
     # Explicitly use node scp-from for reliable state transfer out-of-band
-    "$CLI" node scp-from "$NODE" "$CTX" "$REMOTE_DEST/$PATH_ITEM" "$REPO_PATH/$PATH_ITEM" >> "$LOG_FILE" 2>&1 || true
+    run_with_auth_check "$CLI" node scp-from "$NODE" "$CTX" "$REMOTE_DEST/$PATH_ITEM" "$REPO_PATH/$PATH_ITEM" || true
 
     if [ -n "$STATE_BUCKET" ] && [ -e "$REPO_PATH/$PATH_ITEM" ]; then
       log "STATE" "Backing up $PATH_ITEM to object storage ($STATE_BUCKET)..."
       if echo "$STATE_BUCKET" | grep -q "^s3://"; then
         S3_ARGS=""
         if [ -n "$STATE_ENDPOINT" ]; then S3_ARGS="--endpoint-url $STATE_ENDPOINT"; fi
-        aws s3 cp $S3_ARGS "$REPO_PATH/$PATH_ITEM" "$STATE_BUCKET/$PATH_ITEM" >> "$LOG_FILE" 2>&1
+        run_with_auth_check aws s3 cp $S3_ARGS "$REPO_PATH/$PATH_ITEM" "$STATE_BUCKET/$PATH_ITEM"
       elif echo "$STATE_BUCKET" | grep -q "^gs://"; then
-        gcloud storage cp "$REPO_PATH/$PATH_ITEM" "$STATE_BUCKET/$PATH_ITEM" >> "$LOG_FILE" 2>&1
+        run_with_auth_check gcloud storage cp "$REPO_PATH/$PATH_ITEM" "$STATE_BUCKET/$PATH_ITEM"
       elif echo "$STATE_BUCKET" | grep -q "^azure://"; then
         CONTAINER=$(echo "$STATE_BUCKET" | awk -F/ '{print $3}')
-        az storage blob upload --container-name "$CONTAINER" --name "$PATH_ITEM" --file "$REPO_PATH/$PATH_ITEM" --auth-mode login --overwrite >> "$LOG_FILE" 2>&1
+        run_with_auth_check az storage blob upload --container-name "$CONTAINER" --name "$PATH_ITEM" --file "$REPO_PATH/$PATH_ITEM" --auth-mode login --overwrite
       fi
     fi
   done
@@ -113,49 +193,49 @@ if [ -n "$DOMAIN" ]; then
   if [ "$PROVIDER" = "azure" ]; then
     ZONE_NAME=$(echo "$DOMAIN" | awk -F. '{print $(NF-1)"."$NF}')
     TARGET_DNS_RG="${DNS_RG:-${ZONE_NAME}-rg}"
-    "$CLI" dns unmap-node "$NODE" "$RG" "$DOMAIN" "$ZONE_NAME" "$TARGET_DNS_RG" >> "$LOG_FILE" 2>&1 || true
+    run_with_auth_check "$CLI" dns unmap-node "$NODE" "$RG" "$DOMAIN" "$ZONE_NAME" "$TARGET_DNS_RG" || true
   elif [ "$PROVIDER" = "aws" ]; then
     if [ -z "$AWS_ZONE_ID" ]; then
       AWS_ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name "$DOMAIN" --query "HostedZones[0].Id" --output text 2>/dev/null | awk -F/ '{print $NF}')
       if [ "$AWS_ZONE_ID" = "None" ]; then AWS_ZONE_ID=""; fi
     fi
     if [ -n "$AWS_ZONE_ID" ]; then
-      "$CLI" dns unmap-node "$NODE" "$DOMAIN" "$AWS_ZONE_ID" >> "$LOG_FILE" 2>&1 || true
+      run_with_auth_check "$CLI" dns unmap-node "$NODE" "$DOMAIN" "$AWS_ZONE_ID" || true
     fi
   elif [ "$PROVIDER" = "gcp" ]; then
     ZONE_NAME=$(echo "$DOMAIN" | awk -F. '{print $(NF-1)"-"$NF}')
-    "$CLI" dns unmap-node "$NODE" "$LOC" "$DOMAIN" "$ZONE_NAME" >> "$LOG_FILE" 2>&1 || true
+    run_with_auth_check "$CLI" dns unmap-node "$NODE" "$LOC" "$DOMAIN" "$ZONE_NAME" || true
   fi
 fi
 
 log "INFRA" "Deleting Node..."
-"$CLI" node delete "$NODE" "$CTX" >> "$LOG_FILE" 2>&1 || true
+run_with_auth_check "$CLI" node delete "$NODE" "$CTX" || true
 
 log "INFRA" "Deleting Firewall..."
 if [ "$PROVIDER" = "azure" ]; then
-  "$CLI" firewall delete "${NODE}-nsg" "$RG" >> "$LOG_FILE" 2>&1 || true
+  run_with_auth_check "$CLI" firewall delete "${NODE}-nsg" "$RG" || true
 elif [ "$PROVIDER" = "aws" ]; then
   SG_ID=$(get_state "AWS_SG")
   if [ -z "$SG_ID" ]; then
     SG_ID=$("$CLI" firewall list | grep "${NODE}-sg" | awk '{print $2}' || true)
   fi
-  if [ -n "$SG_ID" ]; then aws ec2 delete-security-group --group-id "$SG_ID" >> "$LOG_FILE" 2>&1 || true; fi
+  if [ -n "$SG_ID" ]; then run_with_auth_check aws ec2 delete-security-group --group-id "$SG_ID" || true; fi
 elif [ "$PROVIDER" = "gcp" ]; then
-  "$CLI" firewall delete "${NODE}-fw" >> "$LOG_FILE" 2>&1 || true
+  run_with_auth_check "$CLI" firewall delete "${NODE}-fw" || true
 fi
 
 log "INFRA" "Deleting Network..."
 if [ "$PROVIDER" = "azure" ]; then
-  "$CLI" network delete "${NODE}-vnet" "$RG" >> "$LOG_FILE" 2>&1 || true
+  run_with_auth_check "$CLI" network delete "${NODE}-vnet" "$RG" || true
 elif [ "$PROVIDER" = "aws" ]; then
   VPC_ID=$(get_state "AWS_VPC")
   if [ -n "$VPC_ID" ]; then
-    aws ec2 delete-vpc --vpc-id "$VPC_ID" >> "$LOG_FILE" 2>&1 || true
+    run_with_auth_check aws ec2 delete-vpc --vpc-id "$VPC_ID" || true
   else
-    "$CLI" network delete "${NODE}-vpc" >> "$LOG_FILE" 2>&1 || true
+    run_with_auth_check "$CLI" network delete "${NODE}-vpc" || true
   fi
 elif [ "$PROVIDER" = "gcp" ]; then
-  "$CLI" network delete "${NODE}-vpc" >> "$LOG_FILE" 2>&1 || true
+  run_with_auth_check "$CLI" network delete "${NODE}-vpc" || true
 fi
 
 if [ -f "$STATE_FILE" ]; then

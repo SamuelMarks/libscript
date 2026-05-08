@@ -47,14 +47,9 @@ export SCRIPT_NAME
 resolve_component_paths
 
 # Source schema validation
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/validate_schema.sh'
 export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
-# Run schema validation if exists
-if [ -f "${DIR}/vars.schema.json" ]; then
-  validate_schema "${DIR}/vars.schema.json"
-fi
 
 # Helper for installing a binary to a local or system bin directory
 libscript_install_binary() {

@@ -97,6 +97,36 @@ if "!SIZE!"=="" (
     )
 )
 
+:: -----------------------------------------------------------------------------
+:: Dependency Check
+:: -----------------------------------------------------------------------------
+set "CMD_TO_CHECK="
+set "PKG_TO_INSTALL="
+if "!PROVIDER!"=="azure" (
+    set "CMD_TO_CHECK=az"
+    set "PKG_TO_INSTALL=azure-cli"
+)
+if "!PROVIDER!"=="aws" (
+    set "CMD_TO_CHECK=aws"
+    set "PKG_TO_INSTALL=awscli"
+)
+if "!PROVIDER!"=="gcp" (
+    set "CMD_TO_CHECK=gcloud"
+    set "PKG_TO_INSTALL=google-cloud-sdk"
+)
+
+if not "!CMD_TO_CHECK!"=="" (
+    where !CMD_TO_CHECK! >nul 2>&1
+    if errorlevel 1 (
+        call :log "INFO" "Command '!CMD_TO_CHECK!' not found. Installing '!PKG_TO_INSTALL!' via LibScript..."
+        call "!LIBSCRIPT_ROOT!\libscript.cmd" install "!PKG_TO_INSTALL!" latest
+        if errorlevel 1 (
+            call :log "ERROR" "Failed to auto-install !PKG_TO_INSTALL!. Please install it manually."
+            exit /b 1
+        )
+    )
+)
+
 call :log "INFRA" "Provisioning Network and Compute..."
 
 if "!PROVIDER!"=="azure" (

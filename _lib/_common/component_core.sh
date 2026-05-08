@@ -394,9 +394,11 @@ fi
 
 # Default to setup.sh for installation and other actions
 if [ -x "$SCRIPT_DIR/setup.sh" ]; then
-  exec "$SCRIPT_DIR/setup.sh"
+  unset SCRIPT_NAME || true
+  exec "$SCRIPT_DIR/setup.sh" "$@"
 elif [ -f "$SCRIPT_DIR/setup.sh" ]; then
-  exec sh "$SCRIPT_DIR/setup.sh"
+  unset SCRIPT_NAME || true
+  exec sh "$SCRIPT_DIR/setup.sh" "$@"
 else
   log_info "Error: setup.sh not found in $SCRIPT_DIR"
   exit 1

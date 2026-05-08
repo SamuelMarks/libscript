@@ -28,7 +28,6 @@ export LIBSCRIPT_ROOT_DIR
 # Source logging
 for LIB in _lib/_common/log.sh ; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
-  export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 done

@@ -65,20 +65,66 @@ with_retry() {
   local timeout=5
   local attempt=1
   local exit_code=0
+  local output_file="$LOG_DIR/retry_output.tmp"
 
   while [ $attempt -le $max_attempts ]; do
     log "RETRY" "Attempt $attempt of $max_attempts: $*"
-    if "$@" >> "$LOG_FILE" 2>&1; then
+    
+    exit_code=0
+    "$@" > "$output_file" 2>&1 || exit_code=$?
+    
+    if [ "$exit_code" -eq 0 ]; then
+      cat "$output_file" >> "$LOG_FILE"
       log "RETRY" "Command succeeded: $*"
+      rm -f "$output_file"
       return 0
     fi
-    exit_code=$?
+    
+    cat "$output_file" >> "$LOG_FILE"
+    
+    # Check for common authentication errors
+    local needs_auth=0
+    local provider_to_auth=""
+    
+    if grep -qEi "(not logged in|az login|Please run 'az login'|AuthenticationError|NoCredentialsError|AuthorizationFailed|InvalidAuthenticationTokenTenant)" "$output_file"; then
+      needs_auth=1
+      provider_to_auth="azure"
+    elif grep -qEi "(Unable to locate credentials|aws configure|ExpiredToken|InvalidClientTokenId|AccessDenied|NotAuthorized)" "$output_file"; then
+      needs_auth=1
+      provider_to_auth="aws"
+    elif grep -qEi "(gcloud auth login|Not authorized|Request had invalid authentication credentials|invalid_grant)" "$output_file"; then
+      needs_auth=1
+      provider_to_auth="gcp"
+    fi
+
+    if [ "$needs_auth" -eq 1 ]; then
+      log "AUTH" "Authentication error detected for $provider_to_auth."
+      log "INFO" "Please authenticate. This will interrupt the retry loop to allow you to log in."
+      
+      # Intercept and force auth depending on provider
+      if [ "$provider_to_auth" = "azure" ]; then
+        log "INFO" "Running 'az login'..."
+        az login </dev/tty >/dev/tty 2>&1 || { log "ERROR" "Azure login failed."; rm -f "$output_file"; return $exit_code; }
+      elif [ "$provider_to_auth" = "aws" ]; then
+        log "INFO" "Running 'aws configure'..."
+        aws configure </dev/tty >/dev/tty 2>&1 || { log "ERROR" "AWS configure failed."; rm -f "$output_file"; return $exit_code; }
+      elif [ "$provider_to_auth" = "gcp" ]; then
+        log "INFO" "Running 'gcloud auth login'..."
+        gcloud auth login </dev/tty >/dev/tty 2>&1 || { log "ERROR" "GCP login failed."; rm -f "$output_file"; return $exit_code; }
+      fi
+      
+      # Since we just authenticated, retry immediately on the next loop iteration without waiting
+      log "RETRY" "Authentication successful. Retrying command immediately..."
+      continue
+    fi
+
     log "RETRY" "Command failed (exit $exit_code). Waiting $timeout seconds..."
     sleep $timeout
     timeout=$((timeout * 2))
     attempt=$((attempt + 1))
   done
   log "ERROR" "Command failed after $max_attempts attempts: $*"
+  rm -f "$output_file"
   return $exit_code
 }
 
@@ -165,6 +211,31 @@ record_state "PROVIDER" "$PROVIDER"
 record_state "NODE" "$NODE"
 record_state "RG" "$RG"
 record_state "REGION" "$LOC"
+
+# -----------------------------------------------------------------------------
+# Dependency Check
+# -----------------------------------------------------------------------------
+ensure_cli() {
+  local cmd=$1
+  local pkg=$2
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    log "INFO" "Command '$cmd' not found. Installing '$pkg' via LibScript..."
+    "$LIBSCRIPT_ROOT/libscript.sh" install "$pkg" "latest" || {
+      log "ERROR" "Failed to auto-install $pkg. Please install it manually."
+      exit 1
+    }
+    # Update PATH dynamically just in case it wasn't sourced yet
+    export PATH="${PREFIX:-$LIBSCRIPT_ROOT/installed/$pkg}/bin:$PATH"
+  fi
+}
+
+if [ "$PROVIDER" = "azure" ]; then
+  ensure_cli "az" "azure-cli"
+elif [ "$PROVIDER" = "aws" ]; then
+  ensure_cli "aws" "awscli"
+elif [ "$PROVIDER" = "gcp" ]; then
+  ensure_cli "gcloud" "google-cloud-sdk"
+fi
 
 # -----------------------------------------------------------------------------
 # Infrastructure Provisioning
@@ -281,6 +352,72 @@ if [ -n "$STATE_PATHS" ]; then
       if echo "$STATE_BUCKET" | grep -q "^s3://"; then
         S3_ARGS=""
         if [ -n "$STATE_ENDPOINT" ]; then S3_ARGS="--endpoint-url $STATE_ENDPOINT"; fi
+        aws s3 cp $S3_ARGS "$STATE_BUCKET/$PATH_ITEM" "$REPO_PATH/$PATH_ITEM" >> "$LOG_FILE" 2>&1 || true
+      elif echo "$STATE_BUCKET" | grep -q "^gs://"; then
+        gcloud storage cp "$STATE_BUCKET/$PATH_ITEM" "$REPO_PATH/$PATH_ITEM" >> "$LOG_FILE" 2>&1 || true
+      elif echo "$STATE_BUCKET" | grep -q "^azure://"; then
+        CONTAINER=$(echo "$STATE_BUCKET" | awk -F/ '{print $3}')
+        az storage blob download --container-name "$CONTAINER" --name "$PATH_ITEM" --file "$REPO_PATH/$PATH_ITEM" --auth-mode login >> "$LOG_FILE" 2>&1 || true
+      fi
+    fi
+
+    if [ -e "$REPO_PATH/$PATH_ITEM" ]; then
+      log "STATE" "Deploying state $PATH_ITEM to node..."
+      with_retry "$CLI" node scp "$NODE" "$CTX" "$REPO_PATH/$PATH_ITEM" "$REMOTE_DEST/$PATH_ITEM"
+    fi
+  done
+fi
+
+# -----------------------------------------------------------------------------
+# DNS Mapping
+# -----------------------------------------------------------------------------
+if [ -n "$DOMAIN" ]; then
+  log "DNS" "Mapping DNS for $DOMAIN..."
+  if [ "$PROVIDER" = "azure" ]; then
+    ZONE_NAME=$(echo "$DOMAIN" | awk -F. '{print $(NF-1)"."$NF}')
+    TARGET_DNS_RG="${DNS_RG:-${ZONE_NAME}-rg}"
+    with_retry "$CLI" dns map-node "$NODE" "$RG" "$DOMAIN" "$ZONE_NAME" "$TARGET_DNS_RG" || true
+  elif [ "$PROVIDER" = "aws" ]; then
+    if [ -z "$AWS_ZONE_ID" ]; then
+      AWS_ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name "$DOMAIN" --query "HostedZones[0].Id" --output text 2>/dev/null | awk -F/ '{print $NF}')
+      if [ "$AWS_ZONE_ID" = "None" ]; then AWS_ZONE_ID=""; fi
+    fi
+    if [ -n "$AWS_ZONE_ID" ]; then
+      with_retry "$CLI" dns map-node "$NODE" "$DOMAIN" "$AWS_ZONE_ID" || true
+    fi
+  elif [ "$PROVIDER" = "gcp" ]; then
+    ZONE_NAME=$(echo "$DOMAIN" | awk -F. '{print $(NF-1)"-"$NF}')
+    with_retry "$CLI" dns map-node "$NODE" "$LOC" "$DOMAIN" "$ZONE_NAME" || true
+  fi
+fi
+
+# -----------------------------------------------------------------------------
+# Stack Start
+# -----------------------------------------------------------------------------
+log "START" "Installing Dependencies and Starting Application Stack..."
+with_retry "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo ~/libscript/libscript.sh install-deps"
+with_retry "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo ~/libscript/libscript.sh start"
+
+wait_for_health() {
+  log "HEALTH" "Polling application health (via libscript health)..."
+  local max_attempts=12
+  local attempt=1
+  while [ $attempt -le $max_attempts ]; do
+    if "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo ~/libscript/libscript.sh health" >/dev/null 2>&1; then
+      log "HEALTH" "Application stack is healthy."
+      return 0
+    fi
+    log "HEALTH" "Application not ready (attempt $attempt/$max_attempts). Waiting 10s..."
+    sleep 10
+    attempt=$((attempt + 1))
+  done
+  log "WARNING" "Application health check failed or timed out. Please check logs manually."
+}
+
+wait_for_health
+
+log "DONE" "Deployment complete. View full logs at $LOG_FILE"
+oint-url $STATE_ENDPOINT"; fi
         aws s3 cp $S3_ARGS "$STATE_BUCKET/$PATH_ITEM" "$REPO_PATH/$PATH_ITEM" >> "$LOG_FILE" 2>&1 || true
       elif echo "$STATE_BUCKET" | grep -q "^gs://"; then
         gcloud storage cp "$STATE_BUCKET/$PATH_ITEM" "$REPO_PATH/$PATH_ITEM" >> "$LOG_FILE" 2>&1 || true
