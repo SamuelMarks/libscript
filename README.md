@@ -49,23 +49,80 @@ LibScript allows you to manage tools either through the global orchestrator or v
 
 ### ☸️ Declarative Stack Provisioning
 Define your entire infrastructure in a simple `libscript.json` and let the resolution engine handle the rest.
+
+```json
+{
+  "name": "my-production-stack",
+  "dependencies": {
+    "nodejs": ">=20.0.0",
+    "postgres": "16",
+    "valkey": "latest"
+  }
+}
+```
+
 ```sh
 # Install all dependencies defined in libscript.json
 ./libscript.sh install-deps
 ```
 
+### 🌐 Built-in PaaS & `netctl`
+Stop writing boilerplate server configurations. LibScript includes `netctl`, a universal routing and proxy configuration component that turns your raw OS into a Platform-as-a-Service (PaaS). 
+- **Service Management:** Automatically daemonizes your applications, generating `systemd` (Linux), `launchd` (macOS), or Windows Services.
+- **Reverse Proxying:** Maps application ports to domain names, dynamically configuring Nginx or HAProxy.
+- **TLS Automation:** Automatically fetches and renews Let's Encrypt certificates via Certbot for secure HTTPS routing out of the box.
+
 ### 🌍 Multicloud Mastery
-Manage AWS, Azure, and GCP through a single, idempotent interface using the `provision` and `deprovision` commands.
+Manage AWS, Azure, GCP, and DigitalOcean through a single, idempotent interface using the `provision` and `deprovision` commands. LibScript leverages native provider CLIs under the hood, securely utilizing your existing environment credentials (`~/.aws/credentials`, `gcloud auth`, etc.) without requiring external state files or agents.
+
 ```sh
+# Provision a stack on AWS: <provider> <stack-name> <network> <region> <local-path> <remote-path>
 ./libscript.sh provision aws my-stack my-vpc us-east-1 ./ ~/my-app
+
+# Tear down the stack and its associated resources
+./libscript.sh deprovision aws my-stack us-east-1
 ```
 
 ### 📦 The Generator Engine
 Convert your shell logic into native installers or container images instantly.
+
+LibScript doesn't just install software—it acts as a powerful artifact factory. Using the `package_as` command, you can export your entire dependency tree, component logic, and stack configuration into a variety of distributable formats, completely automatically.
+
+**Supported Packaging Formats:**
+- **Windows Installers:** `.msi` (WiX), `.exe` (InnoSetup, NSIS)
+- **Linux Packages:** `.deb` (Debian/Ubuntu), `.rpm` (RHEL/Fedora/CentOS), `.apk` (Alpine)
+- **macOS/BSD Packages:** `.pkg` (macOS), `.dmg` (macOS), `.txz` (FreeBSD)
+- **Containers:** `Dockerfile`, `docker-compose.yml`
+- **Interactive:** `tui` (Terminal UI script)
+
+#### How it Works
+
+When you run `package_as`, LibScript analyzes your declarative stack configuration, traces the required `_lib` modules, and compiles them into a self-contained installer or container specification.
+
 ```sh
 # Generate a Windows Installer (.msi) for your current stack
 ./libscript.sh package_as msi
+
+# Generate a Dockerfile and docker-compose.yml
+./libscript.sh package_as docker
+./libscript.sh package_as docker-compose
+
+# Generate a Debian package (.deb)
+./libscript.sh package_as deb
 ```
+
+#### Granular Dependency Control
+
+The generator provides strict control over how your artifacts fetch and bundle dependencies via the `LIBSCRIPT_GLOBAL_INSTALL_METHOD` environment variable:
+
+- `system`: Relies on the target OS's native package manager (e.g., `apt`, `apk`, `pacman`). This keeps artifacts tiny and leverages the OS maintainers' updates.
+- `source`: Compiles tools from source or downloads static binaries. Ensures maximum isolation, reproducibility, and works on minimal base systems.
+
+You can even define local overrides (e.g., `PYTHON_INSTALL_METHOD="uv"`) to mix and match system-provided stable packages with newer, custom-managed toolchains within the same generated artifact.
+
+#### Smart Context Assembly
+
+The generator engine automatically handles the assembly of file structures and configurations. For Docker, it natively resolves filesystem composition before handing off to the container daemon. This bypasses common limitations (like symbolic links failing across `Dockerfile` build contexts) without requiring you to write tedious `COPY` commands or manage context paths manually—LibScript yields a ready-to-build, fully contained directory.
 
 ---
 
@@ -97,8 +154,12 @@ LibScript is designed as a routing execution layer. It detects your OS, maps gen
 
 *   **`cli/`**: Core CLI commands, orchestration logic, and the `package_as` transformation engine.
 *   **`_lib/`**: The heart of the system. Modular components (over 140+ available) where each directory is a standalone manager.
-*   **`netctl/`**: Universal routing and reverse proxy configuration component.
-*   **`stacks/`**: Pre-configured, battle-tested blueprints for CMS, ERP, and Data Science.
+*   **`gen/`**: Artifact generator module, synthesizing logic into installers, Docker images, and packages.
+*   **`netctl/`**: Universal routing, firewall, and reverse proxy configuration component.
+*   **`scripts/`**: Core system utilities for daemonization, cloud deployments, and git hook management.
+*   **`stacks/`**: Pre-configured, battle-tested blueprints for CMS, ERP, Data Science, and more.
+*   **`vagrant/`**: Vagrantfiles and setup scripts for testing across multiple OS targets (Alpine, Debian, FreeBSD, etc.).
+*   **`dockerfiles-ssh/`**: Base container images pre-configured for SSH access and testing.
 
 ---
 
