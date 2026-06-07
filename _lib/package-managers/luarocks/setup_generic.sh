@@ -25,7 +25,7 @@ if ! command -v luarocks >/dev/null 2>&1; then
   log_info "Installing luarocks..."
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-..}"'/_lib/_common/pkg_mgr.sh'
   export SCRIPT_NAME
-# shellcheck disable=SC1090,SC1091,SC2034
+# shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 
   if ! libscript_depends luarocks; then

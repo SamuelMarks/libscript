@@ -115,7 +115,7 @@ _fallback() {
     export INIT_SYS='systemd'
     return
   fi
-  case "$(stat -- "$(which -- "${possible}")" | awk 'NR==1{ print $NF }')" in
+  case "$(stat -- "$(command -v "${possible}")" | awk 'NR==1{ print $NF }')" in
     # case "$(stat -- '/sbin/init' | awk 'NR==1{ print $NF }')" in
     'busybox'|*'/busybox')
       # https://en.wikipedia.org/wiki/BusyBox
@@ -141,7 +141,7 @@ if [ -z "${INIT_SYS+x}" ]; then
         'Linux')
           if [ ! -f '/sbin/init' ]; then
             comm_name="$(cat -- '/proc/1/comm' 2>/dev/null || true)"
-            comm_path="$(which -- "${comm_name}" 2>/dev/null || true)"
+            comm_path="$(command -v "${comm_name}" 2>/dev/null || true)"
             if [ -n "${comm_path}" ]; then
               proc_comm="$(stat -- "${comm_path}" 2>/dev/null | awk 'NR==1{ print $NF }' || true)"
             else

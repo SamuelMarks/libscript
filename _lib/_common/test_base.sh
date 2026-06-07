@@ -22,8 +22,8 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 # Resolve component directory and root
-DIR=$(CDPATH='' cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${DIR}"; while [ ! -f "${D}"'/ROOT' ]; do D="$(dirname -- "${D}")"; done; printf '%s' "${D}")}"
+DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${DIR}"; while [ ! -f "${D}/ROOT" ] && [ "${D}" != "/" ]; do D="$(dirname -- "${D}")"; done; [ "${D}" = "/" ] && D="${DIR}"; printf '%s' "${D}")}"
 export LIBSCRIPT_ROOT_DIR
 
 # Common directories
@@ -74,12 +74,14 @@ assert_service_up() {
   timeout="${3:-10}"
   printf "[INFO] Waiting for service at %s:%s (timeout %ss)...\n" "$host" "$port" "$timeout" >&2
   if command -v nc >/dev/null 2>&1; then
-    for i in $(seq 1 "$timeout"); do
+    i=1
+    while [ "$i" -le "$timeout" ]; do
       if nc -z "$host" "$port" >/dev/null 2>&1; then
         printf "[PASS] Service at %s:%s is UP\n" "$host" "$port" >&2
         return 0
       fi
       sleep 1
+      i=$((i + 1))
     done
   else
     printf "[WARN] nc not found, skipping service check for %s:%s\n" "$host" "$port" >&2

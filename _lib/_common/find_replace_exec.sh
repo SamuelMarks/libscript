@@ -24,10 +24,10 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 
 # Usage: ./find_replace_exec.sh "search_string" "replacement_string" filename
 
-DIR=$(CDPATH='' cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 
 SCRIPT_NAME="${DIR}"'/find_replace.sh'
-# shellcheck disable=SC1090,SC1091,SC2034
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
 find_replace "$@"

@@ -27,9 +27,9 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 #  *':'"${THIS_FILE}"':'*)
 #    if [ "${RERUN_SCRIPT}" -ne 1 ]; then
 
-DIR=$(CDPATH='' cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${DIR}"; while [ ! -f "${D}"'/ROOT' ]; do D="$(dirname -- "${D}")"; done; printf '%s' "${D}")}"
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${DIR}"; while [ ! -f "${D}/ROOT" ] && [ "${D}" != "/" ]; do D="$(dirname -- "${D}")"; done; [ "${D}" = "/" ] && D="${DIR}"; printf '%s' "${D}")}"
 export LIBSCRIPT_ROOT_DIR
 
 for LIB in _lib/_common/os_info.sh ; do
@@ -43,8 +43,7 @@ ENV_SCRIPT="${DIR}"'/env.sh'
 if [ -f "${ENV_SCRIPT}" ]; then
   SCRIPT_NAME="${ENV_SCRIPT}"
   export SCRIPT_NAME
-  # shellcheck disable=SC1090
-# shellcheck disable=SC1090,SC1091,SC2034
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 fi
 
@@ -52,14 +51,12 @@ OS_SETUP_SCRIPT="${DIR}"'/setup_'"${TARGET_OS}"'.sh'
 if [ -f "${OS_SETUP_SCRIPT}" ]; then
   SCRIPT_NAME="${OS_SETUP_SCRIPT}"
   export SCRIPT_NAME
-  # shellcheck disable=SC1090
-# shellcheck disable=SC1090,SC1091,SC2034
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 else
   SCRIPT_NAME="${DIR}"'/setup_generic.sh'
   export SCRIPT_NAME
-  # shellcheck disable=SC1090
-# shellcheck disable=SC1090,SC1091,SC2034
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 fi
 

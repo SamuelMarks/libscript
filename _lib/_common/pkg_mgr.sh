@@ -21,9 +21,9 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-_PKG_MGR_DIR=$(CDPATH='' cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+_PKG_MGR_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${_PKG_MGR_DIR}"; while [ ! -f "${D}"'/ROOT' ]; do D="$(dirname -- "${D}")"; done; printf '%s' "${D}")}"
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${_PKG_MGR_DIR}"; while [ ! -f "${D}/ROOT" ] && [ "${D}" != "/" ]; do D="$(dirname -- "${D}")"; done; [ "${D}" = "/" ] && D="${_PKG_MGR_DIR}"; printf '%s' "${D}")}"
 
 # Source logging
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
@@ -33,8 +33,7 @@ LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${_PKG_MGR_DIR}"; while [ ! -f "$
 for LIB in '_lib/_common/os_info.sh' '_lib/_common/priv.sh' '_lib/_common/pkg_mapper.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
-  # shellcheck disable=SC1090
-# shellcheck disable=SC1090,SC1091,SC2034
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 

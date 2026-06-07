@@ -31,7 +31,7 @@ if ! command -v asdf >/dev/null 2>&1 && [ ! -d "$HOME/.asdf" ]; then
   fi
 
   if [ -f "$HOME/.asdf/asdf.sh" ]; then
-# shellcheck disable=SC1090,SC1091,SC2034
+# shellcheck disable=SC1090,SC1091
     . "$HOME/.asdf/asdf.sh" || true
   fi
 fi

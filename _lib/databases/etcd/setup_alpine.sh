@@ -21,11 +21,11 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-DIR=$(CDPATH='' cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 
 SCRIPT_NAME="${DIR}"'/env.sh'
 export SCRIPT_NAME
-# shellcheck disable=SC1090,SC1091,SC2034
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 if [ "${ETCD_VERSION}" = 'v3.5.16' ]; then
   ETCD_VERSION='3.5.16-r6'

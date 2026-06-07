@@ -21,8 +21,8 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-DIR=$(CDPATH='' cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${DIR}"; while [ ! -f "${D}"'/ROOT' ]; do D="$(dirname -- "${D}")"; done; printf '%s' "${D}")}"
+DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${DIR}"; while [ ! -f "${D}/ROOT" ] && [ "${D}" != "/" ]; do D="$(dirname -- "${D}")"; done; [ "${D}" = "/" ] && D="${DIR}"; printf '%s' "${D}")}"
 
 for LIB in "_lib/_common/priv.sh' '_lib/_common/envsubst_safe.sh' \
             '_lib/languages/python/setup.sh' 'stacks/data-science/jupyterhub/env.sh' \
@@ -31,7 +31,7 @@ for LIB in "_lib/_common/priv.sh' '_lib/_common/envsubst_safe.sh' \
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   # shellcheck source=/dev/null
-# shellcheck disable=SC1090,SC1091,SC2034
+# shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
@@ -79,7 +79,7 @@ if [ -d '/etc/systemd/system' ]; then
     export SCRIPT_NAME
     # shellcheck disable=SC1090
     # shellcheck source=/dev/null
-# shellcheck disable=SC1090,SC1091,SC2034
+# shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 
     libscript_object2key_val "${VARS}" 'export ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
@@ -90,7 +90,7 @@ if [ -d '/etc/systemd/system' ]; then
 
   service_name='jupyterhub_'"${JUPYTERHUB_IP}"'_'"${JUPYTERHUB_PORT}"
   service='/etc/systemd/system/'"${service_name}"'.service'
-  tmp00="$(mktemp -t "${service_name}"'.XXX.systemd.service')"
+  tmp00="$(mktemp "${TMPDIR:-/tmp}/${service_name}.systemd.service_XXXXXX")"
   trap 'rm -f -- "${tmp00}"' EXIT HUP INT QUIT TERM
   envsubst_safe < "${LIBSCRIPT_ROOT_DIR}"'/stacks/data-science/jupyterhub/conf/systemd/jupyverse.service' > "${tmp00}"
   if [ -f "${service}" ]; then priv  rm -f -- "${service}"; fi

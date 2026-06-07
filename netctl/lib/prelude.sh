@@ -21,7 +21,7 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-_RAW_DIR="$( CDPATH='' cd -- "$( dirname -- "$( readlink -nf -- "${THIS_FILE}" )" )" && pwd)"
+_RAW_DIR="$(cd "$(dirname -- "${THIS_FILE}")" && pwd)"
 
 # If THIS_FILE resolves to netctl.sh, its dirname is the root. If it resolves to LIB/prelude.sh, its dirname is LIB.
 case "$_RAW_DIR" in

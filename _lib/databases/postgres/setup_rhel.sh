@@ -21,22 +21,21 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-_DIR=$(CDPATH='' cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${_DIR}"
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${DIR}"; while [ ! -f "${D}"'/ROOT' ]; do D="$(dirname -- "${D}")"; done; printf '%s' "${D}")}"
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${DIR}"; while [ ! -f "${D}/ROOT" ] && [ "${D}" != "/" ]; do D="$(dirname -- "${D}")"; done; [ "${D}" = "/" ] && D="${DIR}"; printf '%s' "${D}")}"
 
 for LIB in _lib/_common/pkg_mgr.sh' '_lib/_common/priv.sh ; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
-  # shellcheck disable=SC1090
-# shellcheck disable=SC1090,SC1091,SC2034
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
 export DIR="${_DIR}"
 SCRIPT_NAME="${DIR}"'/env.sh'
 export SCRIPT_NAME
-# shellcheck disable=SC1090,SC1091,SC2034
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
 REDHAT_SUPPORT_PRODUCT_VERSION="$(. /etc/os-release; printf '%s' "${REDHAT_SUPPORT_PRODUCT_VERSION}")"
@@ -52,7 +51,7 @@ sudo systemctl enable "${SERVICE_NAME}"
 sudo systemctl start "${SERVICE_NAME}"
 
 export SCRIPT_NAME
-# shellcheck disable=SC1090,SC1091,SC2034
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
 if [ -n "${POSTGRES_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then

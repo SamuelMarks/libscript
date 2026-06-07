@@ -21,16 +21,15 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-DIR=$(CDPATH='' cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${DIR}"; while [ ! -f "${D}"'/ROOT' ]; do D="$(dirname -- "${D}")"; done; printf '%s' "${D}")}"
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${DIR}"; while [ ! -f "${D}/ROOT" ] && [ "${D}" != "/" ]; do D="$(dirname -- "${D}")"; done; [ "${D}" = "/" ] && D="${DIR}"; printf '%s' "${D}")}"
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 
 for LIB in "_lib/_common/environ.sh' '_lib/_common/pkg_mgr.sh' '_lib/git-servers/git.sh' '_lib/languages/python/setup.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
-  # shellcheck disable=SC1090
-# shellcheck disable=SC1090,SC1091,SC2034
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
@@ -83,10 +82,10 @@ if [ "${PYTHON_SERVER_VENV-}" ]; then
 else
   PYTHON_OUT="$(mktemp)"
   trap 'rm -f -- "${PYTHON_OUT}"' EXIT HUP INT QUIT TERM
-  if which python3 > "${PYTHON_OUT}" ; then
+  if command -v python3 > "${PYTHON_OUT}" ; then
     PYTHON_EXECUTABLE="$(cat -- "${PYTHON_OUT}"; printf 'a')"
     PYTHON_EXECUTABLE="${PYTHON_EXECUTABLE%a}"
-  elif which python > "${PYTHON_OUT}" ; then
+  elif command -v python > "${PYTHON_OUT}" ; then
     PYTHON_EXECUTABLE="$(cat -- "${PYTHON_OUT}"; printf 'a')"
     PYTHON_EXECUTABLE="${PYTHON_EXECUTABLE%a}"
   else
@@ -104,7 +103,7 @@ env -i DESCRIPTION='Python server'"${NAME}" \
         WORKING_DIR="${PYTHON_SERVER_DEST}" \
         ENV="${ENV}" \
         EXEC_START="${EXEC_START}" \
-        "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/init-systems/systemd/simple.service' > "${NAME_FILE}"
+        "$(command -v envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/init-systems/systemd/simple.service' > "${NAME_FILE}"
 priv  install -m 0644 -o 'root' -- "${NAME_FILE}" '/etc/systemd/system/'"${SERVICE_NAME}"'.service'
 
 cd -- "${PREVIOUS_WD}"

@@ -21,10 +21,10 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-DIR=$(CDPATH='' cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 
 SCRIPT_NAME="${DIR}"'/envsubst_safe.sh'
-# shellcheck disable=SC1090,SC1091,SC2034
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
 envsubst_safe "$@"

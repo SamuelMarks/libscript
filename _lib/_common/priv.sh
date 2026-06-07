@@ -22,7 +22,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-$(dirname "$THIS_FILE")/..}/_lib/_common/os_info.sh"
-# shellcheck disable=SC1090,SC1091,SC2034
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}" 2>/dev/null || true
 
 

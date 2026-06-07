@@ -21,13 +21,13 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-DIR=$(CDPATH='' cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${DIR}"; while [ ! -f "${D}"'/ROOT' ]; do D="$(dirname -- "${D}")"; done; printf '%s' "${D}")}"
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${DIR}"; while [ ! -f "${D}/ROOT" ] && [ "${D}" != "/" ]; do D="$(dirname -- "${D}")"; done; [ "${D}" = "/" ] && D="${DIR}"; printf '%s' "${D}")}"
 
 SCRIPT_NAME="${DIR}"'/env.sh'
 export SCRIPT_NAME
-# shellcheck disable=SC1090,SC1091,SC2034
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
 for LIB in _lib/_common/priv.sh ; do
@@ -41,8 +41,7 @@ if [ ! -d "${PYTHON_VENV}" ]; then
   _DIR="${DIR}"
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/languages/python/setup.sh'
   export SCRIPT_NAME
-  # shellcheck disable=SC1090
-# shellcheck disable=SC1090,SC1091,SC2034
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
   DIR="${_DIR}"
 

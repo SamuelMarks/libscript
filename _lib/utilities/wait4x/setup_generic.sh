@@ -24,8 +24,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 for LIB in "_lib/_common/priv.sh' '_lib/_common/os_info.sh' '_lib/_common/pkg_mgr.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
-  # shellcheck disable=SC1090
-# shellcheck disable=SC1090,SC1091,SC2034
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 

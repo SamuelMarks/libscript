@@ -22,7 +22,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-$(cd "$(dirname "$THIS_FILE")/../../.." && pwd)}/_lib/_common/pkg_mgr.sh"
-# shellcheck disable=SC1090,SC1091,SC2034
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
 if ! command -v nix >/dev/null 2>&1; then
@@ -42,10 +42,10 @@ if ! command -v nix >/dev/null 2>&1; then
 
   # Ensure the environment is sourced for the current shell
   if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
-# shellcheck disable=SC1090,SC1091,SC2034
+# shellcheck disable=SC1090,SC1091
       . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
   elif [ -e "$HOME/.nix-profile/etc/profile.d/nix.sh" ]; then
-# shellcheck disable=SC1090,SC1091,SC2034
+# shellcheck disable=SC1090,SC1091
       . "$HOME/.nix-profile/etc/profile.d/nix.sh"
   fi
 fi

@@ -21,15 +21,15 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-_DIR=$(CDPATH='' cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${_DIR}"; while [ ! -f "${D}"'/ROOT' ]; do D="$(dirname -- "${D}")"; done; printf '%s' "${D}")}"
+_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${_DIR}"; while [ ! -f "${D}/ROOT" ] && [ "${D}" != "/" ]; do D="$(dirname -- "${D}")"; done; [ "${D}" = "/" ] && D="${_DIR}"; printf '%s' "${D}")}"
 
 for LIB in "_lib/_common/pkg_mgr.sh' '_lib/languages/nodejs/setup.sh' '_lib/git-servers/git.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   # shellcheck source=/dev/null
-# shellcheck disable=SC1090,SC1091,SC2034
+# shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
@@ -37,7 +37,7 @@ DIR="${_DIR}"
 SCRIPT_NAME="${DIR}"'/env.sh'
 export SCRIPT_NAME
 # shellcheck source=/dev/null
-# shellcheck disable=SC1090,SC1091,SC2034
+# shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 
 if [ "${FIRECRAWL_DEST-}" ]; then
@@ -84,8 +84,8 @@ if [ -d '/etc/systemd/system' ]; then
   env -i DESCRIPTION='Firecrawl workers' \
           ENV="${ENV}" \
           WORKING_DIR="${DEST}"'/apps/api' \
-          EXEC_START="$(which pnpm)"' run workers' \
-        "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/init-systems/systemd/simple.service' > "${name_file}"
+          EXEC_START="$(command -v pnpm)"' run workers' \
+        "$(command -v envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/init-systems/systemd/simple.service' > "${name_file}"
   priv  install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
   if ! priv systemctl daemon-reload ; then
     true
@@ -100,8 +100,8 @@ if [ -d '/etc/systemd/system' ]; then
   env -i DESCRIPTION='Firecrawl serve' \
           ENV="${ENV}" \
           WORKING_DIR="${DEST}"'/apps/api' \
-          EXEC_START="$(which pnpm)"' run start' \
-        "$(which envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/init-systems/systemd/simple.service' > "${name_file}"
+          EXEC_START="$(command -v pnpm)"' run start' \
+        "$(command -v envsubst)" < "${LIBSCRIPT_ROOT_DIR}"'/_lib/init-systems/systemd/simple.service' > "${name_file}"
   priv  install -m 0644 -o 'root' -- "${name_file}" '/etc/systemd/system/'"${service_name}"'.service'
   if ! priv systemctl daemon-reload ; then
     true

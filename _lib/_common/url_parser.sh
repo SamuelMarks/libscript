@@ -27,8 +27,7 @@ libscript_url_parser() {
   url="${1}"
 
   protocol=$(printf '%s' "${1}" | grep "://" | sed -e's,^\(.*://\).*,\1,g')
-  # shellcheck disable=SC2003
-  protocol_len=$(expr ${#protocol} + 1)
+  protocol_len=$(( ${#protocol} + 1 ))
   # Remove the protocol
   url_no_protocol=$(printf '%s' "${url}" | cut -c"${protocol_len}"-)
   # Use tr: Make the protocol lower-case for easy string compare

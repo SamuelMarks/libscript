@@ -21,17 +21,16 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-DIR=$(CDPATH='' cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${DIR}"; while [ ! -f "${D}"'/ROOT' ]; do D="$(dirname -- "${D}")"; done; printf '%s' "${D}")}"
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${DIR}"; while [ ! -f "${D}/ROOT" ] && [ "${D}" != "/" ]; do D="$(dirname -- "${D}")"; done; [ "${D}" = "/" ] && D="${DIR}"; printf '%s' "${D}")}"
 
 for LIB in "_lib/_common/priv.sh' '_lib/_common/pkg_mgr.sh' \
             '_lib/web-servers/nginx/merge_location_into_server.sh' \
             '_lib/_common/environ.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
-  # shellcheck disable=SC1090
-# shellcheck disable=SC1090,SC1091,SC2034
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
@@ -119,7 +118,7 @@ merge_location_into_nginx_server() {
 }
 
 if [ "${NGINX_VARS-}" ]; then
-  ENV_SCRIPT_FILE=$(mktemp -t 'libscript_XXX_env')
+  ENV_SCRIPT_FILE=$(mktemp "${TMPDIR:-/tmp}/libscript_env_XXXXXX")
   trap 'rm -f -- "${ENV_SCRIPT_FILE}"' EXIT HUP INT QUIT TERM
   chmod +x "${ENV_SCRIPT_FILE}"
   libscript_object2key_val "${NGINX_VARS}" 'export ' "'" > "${ENV_SCRIPT_FILE}"
@@ -127,7 +126,7 @@ if [ "${NGINX_VARS-}" ]; then
   # shellcheck disable=SC1090
   SERVER_NAME="$(. "${ENV_SCRIPT_FILE}"; printf '%s' "${NGINX_SERVER_NAME}")"
 
-  LOCATION_CONF_FILE=$(mktemp -t 'libscript_'"${NGINX_SERVER_NAME}"'_XXX_location_conf')
+  LOCATION_CONF_FILE=$(mktemp "${TMPDIR:-/tmp}/libscript_${NGINX_SERVER_NAME}_location_conf_XXXXXX")
   trap 'rm -f -- "${LOCATION_CONF_FILE}"' EXIT HUP INT QUIT TERM
 
   env -i PATH="${PATH}" \

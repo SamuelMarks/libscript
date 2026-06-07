@@ -49,7 +49,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 
 # Identify directories
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${SCRIPT_DIR}"; while [ ! -f "${D}"'/ROOT' ]; do D="$(dirname -- "${D}")"; done; printf '%s' "${D}")}"
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${SCRIPT_DIR}"; while [ ! -f "${D}/ROOT" ] && [ "${D}" != "/" ]; do D="$(dirname -- "${D}")"; done; [ "${D}" = "/" ] && D="${SCRIPT_DIR}"; printf '%s' "${D}")}"
 
 # Source logging
 . "$LIBSCRIPT_ROOT_DIR/_lib/_common/log.sh"

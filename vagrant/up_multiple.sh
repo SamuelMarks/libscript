@@ -38,7 +38,7 @@ else
   THIS_FILE="${0}"
 fi
 
-DIR=$(CDPATH='' cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 
 PREVIOUS_WD="$(pwd)"
 VAGRANT_IMAGE_DIR="${VAGRANT_IMAGE_DIR:-debian12}"

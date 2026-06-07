@@ -40,7 +40,7 @@ fi
 
 set +f
 
-DIR=$(CDPATH='' cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 
 PREFIX="${DOCKER_IMAGE_PREFIX:-deploysh-}"
 SUFFIX="${DOCKER_IMAGE_SUFFIX:--latest}"
