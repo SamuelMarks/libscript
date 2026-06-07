@@ -29,11 +29,12 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 # 600+ lines of boilerplate previously duplicated in every component's `cli.sh`.
 #
 # ## Usage
-# In your component's `cli.sh`, set the `PACKAGE_NAME` and source this file:
+# In your component's `cli.sh`, source this file:
 #
 # ```sh
 # #!/bin/sh
-# PACKAGE_NAME="my-component"
+# # PACKAGE_NAME is inferred from directory name
+# # (Optional: set PACKAGE_NAME="my-component" to override)
 # for LIB in _lib/_common/component_core.sh ; do
 #   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
 #   export SCRIPT_NAME
@@ -162,36 +163,46 @@ case "${1:-}" in
     ;;
   install|install_daemon|install_service|uninstall_daemon|uninstall_service|remove_daemon|remove_service|run|which|exec|env|serve|route)
     ACTION="${1:-}"
-    # $2 is PACKAGE_NAME (usually matches our component name)
-    VERSION="${3:-}"
-    if [ -z "${2:-}" ]; then
-      echo "Error: package_name is required for $ACTION" >&2
-      exit 1
-    fi
-    if [ -z "$VERSION" ]; then
+    if [ -n "${3:-}" ]; then
+      PACKAGE_NAME="${2:-}"
+      VERSION="${3:-}"
+      shift 3
+    elif [ -n "${2:-}" ]; then
+      if [ -z "${PACKAGE_NAME:-}" ]; then
+        PACKAGE_NAME="$(basename "$SCRIPT_DIR")"
+      fi
+      VERSION="${2:-}"
+      shift 2
+    else
       echo "Error: version is required for $ACTION" >&2
       exit 1
     fi
-    shift 3
     ;;
   ls|ls-remote|download|remove|uninstall|status|health|test|start|stop|restart|logs|up|down)
     ACTION="${1:-}"
-    VERSION="${3:-}"
-    if [ -z "${2:-}" ]; then
-      echo "Error: package_name is required for $ACTION" >&2
-      exit 1
-    fi
-    case "$VERSION" in
-      --*) VERSION="" ; shift 2 ;;
-      *)
-        if [ -n "$VERSION" ]; then
-          shift 3
-        else
-          VERSION=""
-          shift 2
+    if [ -n "${3:-}" ] && ! echo "${3:-}" | grep -q '^-'; then
+      PACKAGE_NAME="${2:-}"
+      VERSION="${3:-}"
+      shift 3
+    elif [ -n "${2:-}" ] && ! echo "${2:-}" | grep -q '^-'; then
+      if [ "${2:-}" = "$(basename "$SCRIPT_DIR")" ] || [ "${2:-}" = "${PACKAGE_NAME:-}" ]; then
+        PACKAGE_NAME="${2:-}"
+        VERSION=""
+        shift 2
+      else
+        if [ -z "${PACKAGE_NAME:-}" ]; then
+          PACKAGE_NAME="$(basename "$SCRIPT_DIR")"
         fi
-        ;;
-    esac
+        VERSION="${2:-}"
+        shift 2
+      fi
+    else
+      if [ -z "${PACKAGE_NAME:-}" ]; then
+        PACKAGE_NAME="$(basename "$SCRIPT_DIR")"
+      fi
+      VERSION=""
+      shift 1
+    fi
     ;;
   *)
     if [ -n "${1:-}" ]; then

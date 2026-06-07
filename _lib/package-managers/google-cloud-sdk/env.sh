@@ -31,7 +31,7 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 . "$LIBSCRIPT_ROOT_DIR/_lib/_common/pkg_mgr.sh"
 
 OS=$(uname -s)
-PACKAGE_NAME="google-cloud-sdk"
+: "${PACKAGE_NAME:=$(basename "$SCRIPT_DIR")}"
 export PACKAGE_NAME
 
 case "$OS" in

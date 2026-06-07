@@ -7,11 +7,12 @@ setlocal EnableDelayedExpansion
 :: Mirroring component_core.sh with full argument parsing and schema integration.
 ::
 :: ## Usage
-:: Your component's `cli.cmd` should set its context and call this.
+:: Your component's `cli.cmd` should call this.
 ::
 :: ```batch
 :: @echo off
-:: set "PACKAGE_NAME=nodejs"
+:: :: PACKAGE_NAME is inferred from directory name
+:: :: (Optional: set "PACKAGE_NAME=nodejs" to override)
 :: call "%~dp0\..\..\..\_lib\_common\component_core.cmd" %*
 :: ```
 

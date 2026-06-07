@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
-$PACKAGE_NAME = "eopkg"
-$env:PACKAGE_NAME = $PACKAGE_NAME
+if (-not $env:PACKAGE_NAME) { $env:PACKAGE_NAME = (Get-Item $PSScriptRoot).Name }
+$PACKAGE_NAME = $env:PACKAGE_NAME
 
 $CliCmd = Join-Path $PSScriptRoot "cli.cmd"
 

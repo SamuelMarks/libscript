@@ -42,8 +42,8 @@ LibScript allows you to manage tools either through the global orchestrator or v
 **Using the Local Component CLI:**
 ```sh
 # Every component is a standalone package manager
-./_lib/languages/nodejs/cli.sh install nodejs 20
-./_lib/databases/postgres/cli.sh install postgres 16
+./_lib/languages/nodejs/cli.sh install 20
+./_lib/databases/postgres/cli.sh install 16
 ./_lib/databases/postgres/cli.sh start postgres
 ```
 
