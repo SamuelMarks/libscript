@@ -29,6 +29,10 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 JSON_FILE="$1"
 HOOK_TYPE="$2"
 
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
+. "$LIBSCRIPT_ROOT_DIR/_lib/_common/log.sh"
+
 if [ ! -f "$JSON_FILE" ]; then exit 0; fi
 
 HOOKS=$(jq -c ".hooks.${HOOK_TYPE}[]?" "$JSON_FILE" 2>/dev/null || true)
