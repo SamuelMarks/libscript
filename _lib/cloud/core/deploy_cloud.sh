@@ -420,22 +420,7 @@ wait_for_health() {
 wait_for_health
 
 log "DONE" "Deployment complete. View full logs at $LOG_FILE"
-oint-url $STATE_ENDPOINT"; fi
-        aws s3 cp $S3_ARGS "$STATE_BUCKET/$PATH_ITEM" "$REPO_PATH/$PATH_ITEM" >> "$LOG_FILE" 2>&1 || true
-      elif echo "$STATE_BUCKET" | grep -q "^gs://"; then
-        gcloud storage cp "$STATE_BUCKET/$PATH_ITEM" "$REPO_PATH/$PATH_ITEM" >> "$LOG_FILE" 2>&1 || true
-      elif echo "$STATE_BUCKET" | grep -q "^azure://"; then
-        CONTAINER=$(echo "$STATE_BUCKET" | awk -F/ '{print $3}')
-        az storage blob download --container-name "$CONTAINER" --name "$PATH_ITEM" --file "$REPO_PATH/$PATH_ITEM" --auth-mode login >> "$LOG_FILE" 2>&1 || true
-      fi
-    fi
 
-    if [ -e "$REPO_PATH/$PATH_ITEM" ]; then
-      log "STATE" "Deploying state $PATH_ITEM to node..."
-      with_retry "$CLI" node scp "$NODE" "$CTX" "$REPO_PATH/$PATH_ITEM" "$REMOTE_DEST/$PATH_ITEM"
-    fi
-  done
-fi
 
 # -----------------------------------------------------------------------------
 # DNS Mapping
