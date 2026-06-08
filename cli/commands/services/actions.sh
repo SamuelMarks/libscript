@@ -21,8 +21,8 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-if [ "$cmd" = "start" ] || [ "$cmd" = "stop" ] || [ "$cmd" = "status" ] || [ "$cmd" = "health" ] || [ "$cmd" = "logs" ] || [ "$cmd" = "restart" ] || [ "$cmd" = "up" ] || [ "$cmd" = "down" ]; then
-  action="$cmd"
+if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$CMD" = "health" ] || [ "$CMD" = "logs" ] || [ "$CMD" = "restart" ] || [ "$CMD" = "up" ] || [ "$CMD" = "down" ]; then
+  action="$CMD"
   if [ "$action" = "up" ]; then action="start"; fi
   if [ "$action" = "down" ]; then action="stop"; fi
   follow_logs=0
