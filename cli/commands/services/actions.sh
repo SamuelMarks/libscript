@@ -82,9 +82,7 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
 
     if [ "$action" = "start" ] || [ "$action" = "up" ]; then
       "${LIBSCRIPT_ROOT_DIR:-.}/scripts/daemonize.sh" "$action" "$json_file"
-      "${LIBSCRIPT_ROOT_DIR:-.}/scripts/setup_ingress.sh" "$action" "$json_file"
     elif [ "$action" = "stop" ] || [ "$action" = "down" ]; then
-      "${LIBSCRIPT_ROOT_DIR:-.}/scripts/setup_ingress.sh" "$action" "$json_file"
       "${LIBSCRIPT_ROOT_DIR:-.}/scripts/daemonize.sh" "$action" "$json_file"
     elif [ "$action" = "status" ]; then
       "${LIBSCRIPT_ROOT_DIR:-.}/scripts/daemonize.sh" "$action" "$json_file"
