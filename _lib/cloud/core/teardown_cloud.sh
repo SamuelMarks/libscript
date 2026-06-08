@@ -26,7 +26,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 
 
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
+LIBSCRIPT_ROOT="${LIBSCRIPT_ROOT_DIR:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
 
 if [ "$#" -lt 4 ]; then
   log_info "Usage: ${THIS_FILE} <provider> <node_name> <rg_or_vpc_or_project> <region_or_zone> [local_repo_path] [remote_dest]"
