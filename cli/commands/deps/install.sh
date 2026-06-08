@@ -21,7 +21,7 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-if [ "$cmd" = "install-deps" ]; then
+if [ "$CMD" = "install-deps" ]; then
   json_file="${1:-libscript.json}"
   if [ ! -f "$json_file" ]; then
     echo "Error: $json_file not found." >&2
