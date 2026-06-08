@@ -22,6 +22,6 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 if [ "$CMD" = "deprovision" ]; then
-  shift
+  
   exec "$SCRIPT_DIR/scripts/teardown_cloud.sh" "$@"
 fi

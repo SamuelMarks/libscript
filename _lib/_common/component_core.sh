@@ -178,6 +178,10 @@ case "${1:-}" in
       exit 1
     fi
     ;;
+  network*|node*|dns*|firewall*|ssh*)
+    ACTION="${1:-}"
+    shift
+    ;;
   ls|ls-remote|download|remove|uninstall|status|health|test|start|stop|restart|logs|up|down)
     ACTION="${1:-}"
     if [ -n "${3:-}" ] && ! echo "${3:-}" | grep -q '^-'; then
@@ -234,7 +238,7 @@ fi
 # Argument parsing loop
 while [ $# -gt 0 ]; do
   # These actions stop parsing and pass remaining args to sub-scripts
-  if [ "$ACTION" = "start" ] || [ "$ACTION" = "stop" ] || [ "$ACTION" = "restart" ] || [ "$ACTION" = "status" ] || [ "$ACTION" = "health" ] || [ "$ACTION" = "logs" ] || [ "$ACTION" = "up" ] || [ "$ACTION" = "down" ] || [ "$ACTION" = "run" ] || [ "$ACTION" = "exec" ]; then
+  if [ "$ACTION" = "start" ] || [ "$ACTION" = "stop" ] || [ "$ACTION" = "restart" ] || [ "$ACTION" = "status" ] || [ "$ACTION" = "health" ] || [ "$ACTION" = "logs" ] || [ "$ACTION" = "up" ] || [ "$ACTION" = "down" ] || [ "$ACTION" = "run" ] || [ "$ACTION" = "exec" ] || [ "$ACTION" = "network" ] || [ "$ACTION" = "firewall" ] || [ "$ACTION" = "node" ] || [ "$ACTION" = "dns" ] || [ "$ACTION" = "ssh" ] || [ "$ACTION" = "cleanup" ]; then
     break
   fi
   case "$1" in
@@ -283,8 +287,8 @@ while [ $# -gt 0 ]; do
           if echo "$key" | grep -q "_STRATEGY$" && echo "$_props" | jq -e ".\"${key%_STRATEGY}\"" >/dev/null 2>&1; then
             export "$key"="$val"
           else
-            echo "Error: Unknown option --$key" >&2
-            exit 1
+            # Pass through unknown flags to setup.sh and subcommands
+            export "$key"="$val"
           fi
         else
           # Validate enum if it exists

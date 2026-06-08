@@ -93,6 +93,12 @@ if /i "!ACTION!"=="status"  goto :routing
 if /i "!ACTION!"=="run"     goto :routing
 if /i "!ACTION!"=="env"     goto :routing
 if /i "!ACTION!"=="exec"    goto :routing
+if /i "!ACTION!"=="network" goto :routing
+if /i "!ACTION!"=="firewall" goto :routing
+if /i "!ACTION!"=="node"    goto :routing
+if /i "!ACTION!"=="dns"     goto :routing
+if /i "!ACTION!"=="ssh"     goto :routing
+if /i "!ACTION!"=="cleanup" goto :routing
 
 if "!arg:~0,2!"=="--" (
     set "key_val=!arg:~2!"
@@ -144,6 +150,30 @@ shift
 goto :parse_loop
 
 :routing
+:: Reconstruct missing positional arguments for special subcommands that bypass parsing
+if /i "!ACTION!"=="network" set "bypass_args=1"
+if /i "!ACTION!"=="firewall" set "bypass_args=1"
+if /i "!ACTION!"=="node" set "bypass_args=1"
+if /i "!ACTION!"=="dns" set "bypass_args=1"
+if /i "!ACTION!"=="ssh" set "bypass_args=1"
+if /i "!ACTION!"=="cleanup" set "bypass_args=1"
+
+if "!bypass_args!"=="1" (
+    set "ARG1=!REQ_PKG!"
+    set "ARG2=!VERSION!"
+    set "ARG3=%~1"
+    set "ARG4=%~2"
+    set "ARG5=%~3"
+    set "ARG6=%~4"
+) else (
+    set "ARG1=%~1"
+    set "ARG2=%~2"
+    set "ARG3=%~3"
+    set "ARG4=%~4"
+    set "ARG5=%~5"
+    set "ARG6=%~6"
+)
+
 :: Automated Dependency Resolution
 if not "!LIBSCRIPT_SKIP_DEPENDENCIES!"=="1" if /i "!ACTION!"=="install" (
     where jq >nul 2>&1

@@ -171,6 +171,9 @@ if [ -f "$JSON_FILE" ] && command -v jq >/dev/null 2>&1; then
   STATE_BUCKET=$(jq -r '.state.bucket // ""' "$JSON_FILE")
   STATE_ENDPOINT=$(jq -r '.state.endpoint // ""' "$JSON_FILE")
   STATE_PATHS=$(jq -r '.state.paths[]? // empty' "$JSON_FILE")
+else
+  log "ERROR" "libscript.json not found in $REPO_PATH. Deployment cannot proceed."
+  exit 1
 fi
 
 if [ -z "$OS_IMAGE" ]; then
