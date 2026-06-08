@@ -41,22 +41,29 @@ if [ -z "$HOOKS" ]; then exit 0; fi
 
 log_info "Running $HOOK_TYPE hooks..."
 echo "$HOOKS" | while read -r hook; do
-    NAME=$(echo "$hook" | jq -r '.name // "unnamed_hook"')
-    cmd=$(echo "$hook" | jq -r '.command // empty')
-    COND=$(echo "$hook" | jq -r '.condition // empty')
+    if echo "$hook" | grep -q '^{'; then
+        NAME=$(echo "$hook" | jq -r '.name // "unnamed_hook"')
+        cmd=$(echo "$hook" | jq -r '.command // empty')
+        COND=$(echo "$hook" | jq -r '.condition // empty')
 
-    if [ -n "$COND" ]; then
-        if echo "$COND" | grep -q "^unless_exists "; then
-            FILE=$(echo "$COND" | sed 's/^unless_exists //')
-            if [ -e "$FILE" ]; then
-                log_info "Skipping hook '$NAME': $FILE exists"
-                continue
+        if [ -n "$COND" ]; then
+            if echo "$COND" | grep -q "^unless_exists "; then
+                FILE=$(echo "$COND" | sed 's/^unless_exists //')
+                if [ -e "$FILE" ]; then
+                    log_info "Skipping hook '$NAME': $FILE exists"
+                    continue
+                fi
             fi
         fi
-    fi
 
-    if [ -n "$cmd" ]; then
-        log_info "Executing hook '$NAME': $cmd"
+        if [ -n "$cmd" ]; then
+            log_info "Executing hook '$NAME': $cmd"
+            eval "$cmd"
+        fi
+    else
+        # Handle simple string array format
+        cmd=$(echo "$hook" | sed 's/^"//; s/"$//')
+        log_info "Executing hook: $cmd"
         eval "$cmd"
     fi
 done
