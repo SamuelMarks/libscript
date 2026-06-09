@@ -66,7 +66,7 @@ case "$ACTION" in
     if [ "$SUBACTION" = "create" ]; then
       IMAGE="${3:-}"
       RG="${4:-}"
-      SZ="${size:-Standard_B2s}"
+      SZ="${size:-Standard_D2s_v7}"
       VN="${vnet_name:-}"
       NSG="${nsg:-}"
       DSK="${os_disk_size_gb:-}"

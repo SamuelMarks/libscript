@@ -41,7 +41,7 @@ switch ($Action) {
         if ($SubAction -eq "create") {
             $Image = $env:ARG3
             $ResourceGroup = $env:ARG4
-            $Size = if ($env:size) { $env:size } else { "Standard_B2s" }
+            $Size = if ($env:size) { $env:size } else { "Standard_D2s_v7" }
             $ArgsList = @()
             if ($env:vnet_name) { $ArgsList += "--vnet-name"; $ArgsList += $env:vnet_name }
             if ($env:nsg) { $ArgsList += "--nsg"; $ArgsList += $env:nsg }

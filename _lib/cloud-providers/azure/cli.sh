@@ -22,7 +22,6 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 
 PACKAGE_NAME="azure"
 SCRIPT_NAME="${SCRIPT_DIR}/../../_common/component_core.sh"
