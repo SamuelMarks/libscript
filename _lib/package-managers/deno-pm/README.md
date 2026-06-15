@@ -1,11 +1,13 @@
 # Deno
 
-Bootstrap script for [Deno](https://deno.land), a modern and secure runtime for JavaScript and TypeScript that uses V8 and is built in Rust.
+Bootstrap script for [Deno](https://deno.land), a modern and secure runtime for JavaScript and
+TypeScript that uses V8 and is built in Rust.
 
 ## Platform Support
-- macOS
-- Linux
-- Windows
 
-## Variables
-See `vars.schema.json` for details on available variables.
+<!-- BEGIN_PLATFORMS -->
+
+- Linux
+- macOS
+- Windows
+<!-- END_PLATFORMS -->

@@ -68,7 +68,7 @@ Define your entire infrastructure in a simple `libscript.json` and let the resol
 
 ### 🌐 Built-in PaaS & `netctl`
 Stop writing boilerplate server configurations. LibScript includes `netctl`, a universal routing and proxy configuration component that turns your raw OS into a Platform-as-a-Service (PaaS). 
-- **Service Management:** Automatically daemonizes your applications, generating `systemd` (Linux), `launchd` (macOS), or Windows Services.
+- **Service Management:** Automatically daemonizes your applications, generating `systemd` (Linux), `launchd` (macOS), or Windows Services using the `netctl` abstraction layer (replacing legacy ingress scripts).
 - **Reverse Proxying:** Maps application ports to domain names, dynamically configuring Nginx or HAProxy.
 - **TLS Automation:** Automatically fetches and renews Let's Encrypt certificates via Certbot for secure HTTPS routing out of the box.
 

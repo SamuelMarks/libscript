@@ -36,7 +36,7 @@ LibScript includes a built-in automated stack resolution engine implemented in `
 
 ## ☁️ PaaS Orchestration Layer
 
-The `cloud` component (`_lib/cloud`) provides a unified, multicloud PaaS interface. It delegates to provider-specific modules in `_lib/cloud-providers/`, wrapping official vendor CLIs (`aws`, `az`, `gcloud`) into a consistent, idempotent syntax for managing compute, network, and storage.
+The `cloud` component (`_lib/cloud`) provides a unified, multicloud PaaS interface. It delegates to provider-specific modules in `_lib/cloud-providers/`, wrapping official vendor CLIs (`aws`, `az`, `gcloud`) into a consistent, idempotent syntax. It leverages native orchestration primitives (e.g., Azure VNets, NSGs, and VMs, or AWS VPCs) rather than generic abstractions, ensuring maximum performance and alignment with each provider's best practices.
 
 ## 🛠️ The CLI & Generator Engine
 
@@ -47,5 +47,7 @@ The high-level CLI routing, orchestration, and generation logic reside in `cli/c
   - **Interactive Shell:** A `TUI` installer using `dialog`/`whiptail` to select components and generate targets.
 
 ## 🌐 Network & Routing (`netctl`)
+
+*Note: `netctl` replaces the legacy `setup_ingress.sh` logic with a robust, universal proxy engine.*
 
 LibScript uses an embedded sub-component called `netctl` to provide a universal abstraction layer for defining routes, static file maps, and proxies. `netctl` securely translates high-level ingress requirements from `libscript.json` into native configurations for Nginx, Caddy, Apache, or IIS without leaving any footprint behind.

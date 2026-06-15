@@ -21,126 +21,294 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+TAG_KEY="ManagedBy"
+TAG_VAL="LibScript"
+DEFAULT_TAGS="$TAG_KEY=$TAG_VAL"
 
-case "$ACTION" in
-  network)
-    SUBACTION="${1:-}"
-    NET_NAME="${2:-}"
-    RG="${3:-}"
-    if [ "$SUBACTION" = "create" ]; then
-      LOC="${location:-eastus}"
-      log_info "Creating Azure VNet: $NET_NAME in $RG ($LOC)"
-      az network vnet create --name "$NET_NAME" --resource-group "$RG" --location "$LOC"
-    elif [ "$SUBACTION" = "delete" ]; then
-      log_info "Deleting Azure VNet: $NET_NAME from $RG"
-      az network vnet delete --name "$NET_NAME" --resource-group "$RG" --yes
-    fi
-    ;;
-  firewall)
-    SUBACTION="${1:-}"
-    FW_NAME="${2:-}"
-    RG="${3:-}"
-    PORTS="${4:-}"
-    if [ "$SUBACTION" = "create" ]; then
-      LOC="${location:-eastus}"
-      log_info "Creating Azure NSG: $FW_NAME in $RG ($LOC)"
-      az network nsg create --name "$FW_NAME" --resource-group "$RG" --location "$LOC"
-      if [ -n "$PORTS" ]; then
-        PRIORITY=1000
-        for PORT in $PORTS; do
-          log_info "Opening port $PORT on $FW_NAME"
-          az network nsg rule create --resource-group "$RG" --nsg-name "$FW_NAME" --name "Allow_$PORT" --priority $PRIORITY --destination-port-ranges "$PORT" --access Allow --protocol Tcp
-          PRIORITY=$((PRIORITY + 10))
-        done
+# Parse tags from arguments
+# Returns a space-separated list of Key=V strings
+parse_tags() {
+  USE_DEFAULT=true
+  CUSTOM_TAGS=""
+  
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --no-default-tags) USE_DEFAULT=false; shift ;;
+      --tags)
+        if [ -n "$CUSTOM_TAGS" ]; then CUSTOM_TAGS="$CUSTOM_TAGS $2"; else CUSTOM_TAGS="$2"; fi
+        shift 2 ;;
+      *) shift ;;
+    esac
+  done
+  
+  FINAL_TAGS=""
+  if [ "$USE_DEFAULT" = "true" ]; then
+    FINAL_TAGS="$DEFAULT_TAGS"
+  fi
+  if [ -n "$CUSTOM_TAGS" ]; then
+    if [ -n "$FINAL_TAGS" ]; then FINAL_TAGS="$FINAL_TAGS $CUSTOM_TAGS"; else FINAL_TAGS="$CUSTOM_TAGS"; fi
+  fi
+  printf '%s' "$FINAL_TAGS"
+}
+
+# Dry run helper
+az() {
+  if [ "${DRY_RUN:-}" = "true" ]; then
+    printf '[DRY_RUN] az %s\n' "$*" >&2
+    case "$*" in
+      *"show"*) return 1 ;; # Simulate resource not found
+      *) return 0 ;;
+    esac
+  fi
+  command az "$@"
+}
+
+# Ensure az and jq are installed
+check_deps() {
+  if ! command -v az >/dev/null 2>&1; then
+    echo "azure-cli not found, installing..."
+    "$LIBSCRIPT_ROOT_DIR/libscript.sh" install azure-cli latest
+  fi
+  if ! command -v jq >/dev/null 2>&1; then
+    echo "jq not found, installing..."
+    "$LIBSCRIPT_ROOT_DIR/libscript.sh" install jq latest
+  fi
+}
+
+azure_network() {
+  ACTION=$1; shift
+  case "$ACTION" in
+    create)
+      NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}
+      if [ -z "$NAME" ] || [ -z "$RG" ]; then echo "Usage: network create <name> <rg> [--tags T] [--no-default-tags]"; exit 1; fi
+      
+      TAGS=$(parse_tags "$@")
+      
+      if ! az network vnet show --name "$NAME" --resource-group "$RG" >/dev/null 2>&1; then
+        if [ -n "$TAGS" ]; then
+          az network vnet create --name "$NAME" --resource-group "$RG" --address-prefix 10.0.0.0/16 --tags $TAGS
+        else
+          az network vnet create --name "$NAME" --resource-group "$RG" --address-prefix 10.0.0.0/16
+        fi
+        echo "Created VNET '$NAME'"
       fi
-    elif [ "$SUBACTION" = "delete" ]; then
-      log_info "Deleting Azure NSG: $FW_NAME from $RG"
-      az network nsg delete --name "$FW_NAME" --resource-group "$RG" --yes
-    elif [ "$SUBACTION" = "list" ]; then
-      az network nsg list -o table
+      ;;
+    list)
+      az network vnet list --query "[*].{Name:name, RG:resourceGroup, Tags:tags}" --output table
+      ;;
+    delete)
+      NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}
+      az network vnet delete --name "$NAME" --resource-group "$RG"
+      ;;
+    *) echo "Unknown network action: $ACTION"; exit 1 ;;
+  esac
+}
+
+azure_firewall() {
+  ACTION=$1; shift
+  case "$ACTION" in
+    create)
+      NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}; PORT=${3:-22}
+      if [ -z "$NAME" ] || [ -z "$RG" ]; then echo "Usage: firewall create <name> <rg> [port] [--tags T] [--no-default-tags]"; exit 1; fi
+      
+      TAGS=$(parse_tags "$@")
+      
+      if ! az network nsg show --name "$NAME" --resource-group "$RG" >/dev/null 2>&1; then
+        if [ -n "$TAGS" ]; then
+          az network nsg create --name "$NAME" --resource-group "$RG" --tags $TAGS
+        else
+          az network nsg create --name "$NAME" --resource-group "$RG"
+        fi
+        az network nsg rule create --name AllowSSH --nsg-name "$NAME" --resource-group "$RG" --priority 100 --destination-port-ranges "$PORT" --access Allow --protocol Tcp
+        echo "Created NSG '$NAME' (Port $PORT open)"
+      fi
+      ;;
+    list)
+      az network nsg list --query "[*].{Name:name, RG:resourceGroup, Tags:tags}" --output table
+      ;;
+    *) echo "Unknown firewall action: $ACTION"; exit 1 ;;
+  esac
+}
+
+azure_node() {
+  ACTION=$1; shift
+  case "$ACTION" in
+    create)
+      NAME=$1; IMAGE=$2; RG=${3:-$AZURE_RESOURCE_GROUP}
+      if [ -z "$NAME" ] || [ -z "$IMAGE" ] || [ -z "$RG" ]; then 
+        echo "Usage: node create <name> <image> <rg> [--bootstrap <script>] [--tags T] [--no-default-tags]"
+        exit 1 
+      fi
+      
+      BOOTSTRAP=""
+      # Complex arg parser
+      filtered_args=""
+      while [ $# -gt 0 ]; do
+        case "$1" in
+          --bootstrap) BOOTSTRAP="$2"; shift 2 ;;
+          --tags|--no-default-tags) 
+             if [ "$1" = "--tags" ]; then 
+               filtered_args="$filtered_args $1 $2"
+               shift 2
+             else
+               filtered_args="$filtered_args $1"
+               shift
+             fi
+             ;;
+          *) shift ;;
+        esac
+      done
+      
+      TAGS=$(parse_tags $filtered_args)
+
+      if ! az vm show --name "$NAME" --resource-group "$RG" >/dev/null 2>&1; then
+        EXTRA_ARGS=""
+        if [ -n "$BOOTSTRAP" ]; then
+          USER_DATA_FILE=$(mktemp)
+          printf '#!/bin/bash\n%s\n' "$BOOTSTRAP" > "$USER_DATA_FILE"
+          EXTRA_ARGS="--custom-data $USER_DATA_FILE"
+        fi
+        
+        if [ -n "$TAGS" ]; then
+          az vm create --name "$NAME" --resource-group "$RG" --image "$IMAGE" --admin-username libscript --generate-ssh-keys --tags $TAGS $EXTRA_ARGS
+        else
+          az vm create --name "$NAME" --resource-group "$RG" --image "$IMAGE" --admin-username libscript --generate-ssh-keys $EXTRA_ARGS
+        fi
+        echo "Created VM '$NAME'"
+        if [ -n "${USER_DATA_FILE:-}" ]; then rm -f "$USER_DATA_FILE"; fi
+      fi
+      ;;
+    exec)
+      NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}; CMD=$3
+      if [ -z "$NAME" ] || [ -z "$CMD" ]; then echo "Usage: node exec <name> <rg> <command>"; exit 1; fi
+      IP=$(az vm show -d -g "$RG" -n "$NAME" --query publicIps -o tsv)
+      echo "Executing on $NAME ($IP)..."
+      ssh -o StrictHostKeyChecking=no "libscript@$IP" "$CMD"
+      ;;
+    list)
+      az vm list --query "[*].{Name:name, RG:resourceGroup, Tags:tags}" --output table
+      ;;
+    delete)
+      NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}
+      az vm delete --name "$NAME" --resource-group "$RG" --yes
+      ;;
+    *) echo "Unknown node action: $ACTION"; exit 1 ;;
+  esac
+}
+
+azure_node_group() {
+  ACTION=$1; shift
+  case "$ACTION" in
+    create)
+      NAME=$1; COUNT=$2; IMAGE=$3; RG=$4
+      if [ -z "$NAME" ] || [ -z "$COUNT" ]; then echo "Usage: node-group create <name> <count> <image> <rg> [args...]"; exit 1; fi
+      shift 4
+      echo "Provisioning Azure node-group '$NAME' ($COUNT independent nodes)..."
+      i=1
+      while [ "$i" -le "$COUNT" ]; do
+        azure_node create "${NAME}-${i}" "$IMAGE" "$RG" "$@"
+        i=$((i + 1))
+      done
+      ;;
+    *) echo "Unknown node-group action: $ACTION"; exit 1 ;;
+  esac
+}
+
+azure_cron() {
+  ACTION=$1; shift
+  case "$ACTION" in
+    create)
+      NAME=$1; RG=$2; SCHEDULE=$3; CMD=$4
+      if [ -z "$NAME" ] || [ -z "$SCHEDULE" ]; then echo "Usage: cron create <target_node> <rg> <schedule> <command>"; exit 1; fi
+      echo "Setting up cronjob on Azure VM $NAME: $SCHEDULE $CMD"
+      azure_node exec "$NAME" "$RG" "(crontab -l 2>/dev/null; printf '%s %s\n' \"$SCHEDULE\" \"$CMD\") | crontab -"
+      ;;
+    *) echo "Unknown cron action: $ACTION"; exit 1 ;;
+  esac
+}
+
+azure_jumpbox() {
+  ACTION=$1; shift
+  case "$ACTION" in
+    create)
+      NAME=$1; IMAGE=$2; RG=${3:-$AZURE_RESOURCE_GROUP}
+      echo "Setting up Azure Jump-box '$NAME'..."
+      azure_network create "${NAME}-vnet" "$RG" "$@"
+      azure_firewall create "${NAME}-nsg" "$RG" 22 "$@"
+      azure_node create "$NAME" "$IMAGE" "$RG" "$@"
+      echo "Azure Jump-box '$NAME' ready."
+      ;;
+    *) echo "Unknown jumpbox action: $ACTION"; exit 1 ;;
+  esac
+}
+
+azure_storage() {
+  ACTION=$1; shift
+  case "$ACTION" in
+    create)
+      NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}
+      if [ -z "$NAME" ] || [ -z "$RG" ]; then echo "Usage: storage create <name> <rg> [--tags T] [--no-default-tags]"; exit 1; fi
+      
+      TAGS=$(parse_tags "$@")
+      
+      if ! az storage account show --name "$NAME" --resource-group "$RG" >/dev/null 2>&1; then
+        if [ -n "$TAGS" ]; then
+          az storage account create --name "$NAME" --resource-group "$RG" --sku Standard_LRS --tags $TAGS
+        else
+          az storage account create --name "$NAME" --resource-group "$RG" --sku Standard_LRS
+        fi
+        echo "Created Storage Account '$NAME'"
+      fi
+      ;;
+    delete)
+      NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}
+      az storage account delete --name "$NAME" --resource-group "$RG" --yes
+      ;;
+    *) echo "Unknown storage action: $ACTION"; exit 1 ;;
+  esac
+}
+
+azure_list_managed() {
+  FILTER_TAG=${1:-"$TAG_KEY=$TAG_VAL"}
+  echo "--- Azure Resources (Filter: $FILTER_TAG) ---"
+  az resource list --tag "$FILTER_TAG" --output table
+}
+
+azure_cleanup() {
+  PURGE_BUCKETS=$1
+  FILTER_TAG=${2:-"$TAG_KEY=$TAG_VAL"}
+  
+  echo "Starting Azure Cleanup (Filter: $FILTER_TAG)..."
+  RESOURCES=$(az resource list --tag "$FILTER_TAG" --query "[].id" -o tsv)
+  for ID in $RESOURCES; do
+    TYPE=$(echo "$ID" | awk -F/ '{print $(NF-1)}')
+    if [ "$TYPE" = "storageAccounts" ] && [ "$PURGE_BUCKETS" != "true" ]; then
+      echo "Skipping storage account $ID (safety enabled)"
+      continue
     fi
-    ;;
-  node)
-    SUBACTION="${1:-}"
-    NODE_NAME="${2:-}"
-    if [ "$SUBACTION" = "create" ]; then
-      IMAGE="${3:-}"
-      RG="${4:-}"
-      SZ="${size:-Standard_D2s_v7}"
-      VN="${vnet_name:-}"
-      NSG="${nsg:-}"
-      DSK="${os_disk_size_gb:-}"
-      ARGS=""
-      if [ -n "$VN" ]; then ARGS="$ARGS --vnet-name $VN"; fi
-      if [ -n "$NSG" ]; then ARGS="$ARGS --nsg $NSG"; fi
-      if [ -n "$DSK" ]; then ARGS="$ARGS --os-disk-size-gb $DSK"; fi
-      log_info "Creating Azure VM: $NODE_NAME in $RG ($SZ, $IMAGE)"
-      az vm create --resource-group "$RG" --name "$NODE_NAME" --image "$IMAGE" --size "$SZ" --admin-username azureuser --generate-ssh-keys --public-ip-sku Standard $ARGS
-    elif [ "$SUBACTION" = "delete" ]; then
-      RG="${3:-}"
-      log_info "Deleting Azure VM: $NODE_NAME from $RG"
-      az vm delete --name "$NODE_NAME" --resource-group "$RG" --yes
-    elif [ "$SUBACTION" = "exec" ]; then
-      RG="${3:-}"
-      shift 3
-      CMD="$*"
-      log_info "Executing command on $NODE_NAME: $CMD"
-      IP=$(az vm show -d -g "$RG" -n "$NODE_NAME" --query publicIps -o tsv)
-      ssh -o StrictHostKeyChecking=no "azureuser@$IP" "$CMD"
-    elif [ "$SUBACTION" = "deploy" ]; then
-      RG="${3:-}"
-      SRC="${4:-}"
-      DST="${5:-}"
-      IP=$(az vm show -d -g "$RG" -n "$NODE_NAME" --query publicIps -o tsv)
-      log_info "Deploying $SRC to azureuser@$IP:$DST"
-      rsync -avz -e "ssh -o StrictHostKeyChecking=no" "$SRC" "azureuser@$IP:$DST"
-    elif [ "$SUBACTION" = "scp" ]; then
-      RG="${3:-}"
-      SRC="${4:-}"
-      DST="${5:-}"
-      IP=$(az vm show -d -g "$RG" -n "$NODE_NAME" --query publicIps -o tsv)
-      log_info "Copying $SRC to azureuser@$IP:$DST"
-      scp -o StrictHostKeyChecking=no "$SRC" "azureuser@$IP:$DST"
-    elif [ "$SUBACTION" = "scp-from" ]; then
-      RG="${3:-}"
-      SRC="${4:-}"
-      DST="${5:-}"
-      IP=$(az vm show -d -g "$RG" -n "$NODE_NAME" --query publicIps -o tsv)
-      log_info "Copying azureuser@$IP:$SRC to $DST"
-      scp -o StrictHostKeyChecking=no "azureuser@$IP:$SRC" "$DST"
-    elif [ "$SUBACTION" = "sync" ]; then
-      RG="${3:-}"
-      log_info "Syncing LibScript to remote node $NODE_NAME"
-      IP=$(az vm show -d -g "$RG" -n "$NODE_NAME" --query publicIps -o tsv)
-      ssh -o StrictHostKeyChecking=no "azureuser@$IP" "mkdir -p ~/libscript"
-      rsync -avz -e "ssh -o StrictHostKeyChecking=no" "$LIBSCRIPT_ROOT_DIR/" "azureuser@$IP:~/libscript/"
-    fi
-    ;;
-  dns)
-    SUBACTION="${1:-}"
-    NODE_NAME="${2:-}"
-    if [ "$SUBACTION" = "map-node" ]; then
-      RG="${3:-}"
-      DOMAIN="${4:-}"
-      ZONE="${5:-}"
-      DNS_RG="${6:-}"
-      if [ -z "$DNS_RG" ]; then DNS_RG="${ZONE}-rg"; fi
-      log_info "Mapping $DOMAIN to $NODE_NAME"
-      IP=$(az vm show -d -g "$RG" -n "$NODE_NAME" --query publicIps -o tsv)
-      RECORD_NAME=$(echo "$DOMAIN" | sed "s/\.$ZONE//")
-      if [ "$RECORD_NAME" = "$DOMAIN" ]; then RECORD_NAME="@"; fi
-      az network dns record-set a add-record -g "$DNS_RG" -z "$ZONE" -n "$RECORD_NAME" -a "$IP"
-    elif [ "$SUBACTION" = "unmap-node" ]; then
-      RG="${3:-}"
-      DOMAIN="${4:-}"
-      ZONE="${5:-}"
-      DNS_RG="${6:-}"
-      if [ -z "$DNS_RG" ]; then DNS_RG="${ZONE}-rg"; fi
-      log_info "Unmapping $DOMAIN from $NODE_NAME"
-      IP=$(az vm show -d -g "$RG" -n "$NODE_NAME" --query publicIps -o tsv)
-      RECORD_NAME=$(echo "$DOMAIN" | sed "s/\.$ZONE//")
-      if [ "$RECORD_NAME" = "$DOMAIN" ]; then RECORD_NAME="@"; fi
-      az network dns record-set a remove-record -g "$DNS_RG" -z "$ZONE" -n "$RECORD_NAME" -a "$IP"
-    fi
+    echo "Deleting $ID..."
+    az resource delete --ids "$ID" || true
+  done
+}
+
+# CLI Router
+CMD=$1; shift
+case "$CMD" in
+  network) azure_network "$@" ;;
+  firewall) azure_firewall "$@" ;;
+  node) azure_node "$@" ;;
+  node-group) azure_node_group "$@" ;;
+  cron) azure_cron "$@" ;;
+  jumpbox) azure_jumpbox "$@" ;;
+  storage) azure_storage "$@" ;;
+  list-managed) azure_list_managed "$@" ;;
+  cleanup) azure_cleanup "$@" ;;
+  install) check_deps ;;
+  *)
+    echo "LibScript Azure Cloud Wrapper"
+    echo "Usage: $0 {network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
+    exit 1
     ;;
 esac

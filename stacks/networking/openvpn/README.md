@@ -50,3 +50,7 @@ libscript package_as msi openvpn
 - Linux
 - macOS
 - Windows
+
+## Orchestrated Components
+This stack orchestrates the following LibScript components:
+- (Please document required components here)

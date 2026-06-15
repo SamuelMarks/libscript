@@ -21,6 +21,8 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 if ! command -v xbps-install >/dev/null 2>&1; then
   if [ -f /etc/os-release ] && grep -qi "void" /etc/os-release; then
     echo "Warning: xbps-install not found on a Void Linux system. This is highly unusual." >&2

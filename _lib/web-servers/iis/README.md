@@ -1,18 +1,27 @@
 # IIS
 
 ## Purpose
-This document provides context and technical details for the `iis` component (part of `_server`) within the LibScript ecosystem. This module enables and configures Microsoft Internet Information Services (IIS) on Windows platforms.
+
+This document provides context and technical details for the `iis` component (part of `_server`)
+within the LibScript ecosystem. This module enables and configures Microsoft Internet Information
+Services (IIS) on Windows platforms.
 
 ## Usage
-Uses `Enable-WindowsOptionalFeature` (or equivalent DISM/ServerManager commands) to install the core IIS Web Server role, including HTTP features and FastCGI module for PHP support.
 
-This component works both as a local version manager (similar to rvm, nvm, pyenv, uv) and can be invoked from the global version manager `libscript`. 
+Uses `Enable-WindowsOptionalFeature` (or equivalent DISM/ServerManager commands) to install the core
+IIS Web Server role, including HTTP features and FastCGI module for PHP support.
 
-Furthermore, IIS can be used by libscript to build bigger stacks (like WordPress, Open edX, Nextcloud, etc.) natively on Windows servers.
+This component works both as a local version manager (similar to rvm, nvm, pyenv, uv) and can be
+invoked from the global version manager `libscript`.
 
-You can install, start, stop, package, and uninstall iis using the global `libscript` command or the local CLI.
+Furthermore, IIS can be used by libscript to build bigger stacks (like WordPress, Open edX,
+Nextcloud, etc.) natively on Windows servers.
+
+You can install, start, stop, package, and uninstall iis using the global `libscript` command or the
+local CLI.
 
 **Unix (Linux/macOS):**
+
 ```sh
 
 ./libscript.sh install iis
@@ -33,6 +42,7 @@ You can install, start, stop, package, and uninstall iis using the global `libsc
 ```
 
 **Windows:**
+
 ```cmd
 :: Global Orchestrator
 libscript.cmd install iis
@@ -57,12 +67,10 @@ cli.cmd uninstall iis
 ```
 
 ## Platform Support
-- Windows
 
-## Variables
-See `vars.schema.json` for details on available variables.
+<!-- BEGIN_PLATFORMS -->
 
-## Platform Support
 - Linux
 - macOS
 - Windows
+<!-- END_PLATFORMS -->

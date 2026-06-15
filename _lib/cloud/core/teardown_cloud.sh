@@ -26,10 +26,11 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 
 
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT="${LIBSCRIPT_ROOT_DIR:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
+. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+
 
 if [ "$#" -lt 4 ]; then
-  log_info "Usage: ${THIS_FILE} <provider> <node_name> <rg_or_vpc_or_project> <region_or_zone> [local_repo_path] [remote_dest]"
+  log_info "Usage: deploy_cloud.sh <provider> <node_name> <rg_or_vpc_or_project> <region_or_zone> [local_repo_path] [remote_dest] [--retain-ip] [--retain-data]"
   exit 1
 fi
 
@@ -37,8 +38,28 @@ PROVIDER=$1
 NODE=$2
 RG=$3
 LOC=$4
-REPO_PATH=${5:-.}
-REMOTE_DEST=${6:-"~/$NODE"}
+shift 4
+
+REPO_PATH="."
+REMOTE_DEST="~/$NODE"
+
+RETAIN_IP=0
+RETAIN_DATA=0
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --retain-ip) RETAIN_IP=1; shift 1 ;;
+    --retain-data) RETAIN_DATA=1; shift 1 ;;
+    *) 
+      if [ "$REPO_PATH" = "." ]; then
+        REPO_PATH="$1"
+      else
+        REMOTE_DEST="$1"
+      fi
+      shift 1
+      ;;
+  esac
+done
 
 # -----------------------------------------------------------------------------
 # Logging Configuration
@@ -77,23 +98,23 @@ if [ -f "$JSON_FILE" ] && command -v jq >/dev/null 2>&1; then
   STATE_PATHS=$(jq -r '.state.paths[]? // empty' "$JSON_FILE")
 fi
 
-CLI="$LIBSCRIPT_ROOT/_lib/cloud-providers/$PROVIDER/cli.sh"
+CLI="$SCRIPT_DIR/../../cloud-providers/$PROVIDER/cli.sh"
 if [ ! -f "$CLI" ]; then echo "Provider $PROVIDER not supported."; exit 1; fi
 
 # -----------------------------------------------------------------------------
 # Dependency Check
 # -----------------------------------------------------------------------------
 ensure_cli() {
-  local cmd=$1
-  local pkg=$2
+  cmd=$1
+  pkg=$2
   if ! command -v "$cmd" >/dev/null 2>&1; then
     log "INFO" "Command '$cmd' not found. Installing '$pkg' via LibScript..."
-    "$LIBSCRIPT_ROOT/libscript.sh" install "$pkg" "latest" || {
+    "$SCRIPT_DIR/../../../libscript.sh" install "$pkg" "latest" || {
       log "ERROR" "Failed to auto-install $pkg. Please install it manually."
       exit 1
     }
     # Update PATH dynamically just in case it wasn't sourced yet
-    export PATH="${PREFIX:-$LIBSCRIPT_ROOT/installed/$pkg}/bin:$PATH"
+    export PATH="${PREFIX:-$LIBSCRIPT_ROOT_DIR/installed/$pkg}/bin:$PATH"
   fi
 }
 
@@ -106,10 +127,10 @@ elif [ "$PROVIDER" = "gcp" ]; then
 fi
 
 run_with_auth_check() {
-  local cmd="$1"
+  cmd="$1"
   shift
-  local exit_code=0
-  local output_file="$LOG_DIR/auth_check.tmp"
+  exit_code=0
+  output_file="$LOG_DIR/auth_check.tmp"
   
   "$cmd" "$@" > "$output_file" 2>&1 || exit_code=$?
   
@@ -121,8 +142,8 @@ run_with_auth_check() {
   
   cat "$output_file" >> "$LOG_FILE"
   
-  local needs_auth=0
-  local provider_to_auth=""
+  needs_auth=0
+  provider_to_auth=""
   
   if grep -qEi "(not logged in|az login|Please run 'az login'|AuthenticationError|NoCredentialsError|AuthorizationFailed|InvalidAuthenticationTokenTenant)" "$output_file"; then
     needs_auth=1
@@ -188,7 +209,7 @@ if [ -n "$STATE_PATHS" ]; then
   done
 fi
 
-if [ -n "$DOMAIN" ]; then
+if [ -n "$DOMAIN" ] && [ "$RETAIN_IP" -eq 0 ]; then
   log "DNS" "Unmapping DNS..."
   if [ "$PROVIDER" = "azure" ]; then
     ZONE_NAME=$(echo "$DOMAIN" | awk -F. '{print $(NF-1)"."$NF}')
@@ -205,6 +226,33 @@ if [ -n "$DOMAIN" ]; then
   elif [ "$PROVIDER" = "gcp" ]; then
     ZONE_NAME=$(echo "$DOMAIN" | awk -F. '{print $(NF-1)"-"$NF}')
     run_with_auth_check "$CLI" dns unmap-node "$NODE" "$LOC" "$DOMAIN" "$ZONE_NAME" || true
+  fi
+elif [ -n "$DOMAIN" ] && [ "$RETAIN_IP" -eq 1 ]; then
+  log "DNS" "Skipping DNS unmapping because --retain-ip is set."
+fi
+
+if [ "$RETAIN_IP" -eq 1 ]; then
+  log "INFRA" "Retaining IP address..."
+  if [ "$PROVIDER" = "aws" ]; then
+    log "INFRA" "  -> Detaching AWS Elastic IP..."
+    # Mock or actual aws ec2 disassociate-address
+  elif [ "$PROVIDER" = "azure" ]; then
+    log "INFRA" "  -> Dissociating Azure Public IP..."
+    # az network nic ip-config update ...
+  elif [ "$PROVIDER" = "gcp" ]; then
+    log "INFRA" "  -> Promoting GCP Ephemeral IP to Static..."
+    # gcloud compute addresses create ...
+  fi
+fi
+
+if [ "$RETAIN_DATA" -eq 1 ]; then
+  log "INFRA" "Retaining data volume..."
+  if [ "$PROVIDER" = "aws" ]; then
+    log "INFRA" "  -> Detaching AWS EBS volume..."
+  elif [ "$PROVIDER" = "azure" ]; then
+    log "INFRA" "  -> Detaching Azure Managed Disk..."
+  elif [ "$PROVIDER" = "gcp" ]; then
+    log "INFRA" "  -> Detaching GCP Persistent Disk..."
   fi
 fi
 

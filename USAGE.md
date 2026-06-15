@@ -56,6 +56,15 @@ Create a `libscript.json` to define your dependencies, including version constra
 {
   "name": "my-app",
   "domain": "myapp.example.com",
+  "infrastructure": {
+    "node": {
+      "size": "Standard_B2s",
+      "disk_gb": 64
+    },
+    "network": {
+      "ports": [22, 80, 443]
+    }
+  },
   "dependencies": {
     "toolchains": [
       { "name": "python", "version": "3.12" }
@@ -110,7 +119,7 @@ Use `install-deps` to automatically resolve and install the stack requirements n
 ./libscript.sh start
 ```
 
-*Note: LibScript acts as a native PaaS. The `start` command automatically translates your `services` into system daemons and configures your `ingress` routes via Nginx.*
+*Note: LibScript acts as a native PaaS. The `start` command automatically translates your `services` into system daemons and configures your `ingress` routes via Nginx (powered by `netctl`).*
 
 
 ## 🏗️ Artifact Generation (`package_as`)
@@ -150,6 +159,41 @@ LibScript wraps official cloud vendor CLIs into a unified, idempotent interface.
 
 # Provision your stack on Azure
 ./libscript.sh provision azure my-node my-rg eastus ./ ~/app
+```
+
+### Disaster Recovery & Migrations
+
+LibScript includes advanced features to track cloud state, back up critical volumes, and seamlessly migrate instances between clouds (AWS, Azure, GCP).
+
+**Tracking Drift & State:**
+To view all cloud resources created by LibScript or to detect divergence between your local `.libscript_state.json` and the cloud:
+```sh
+./libscript.sh cloud list-managed
+./libscript.sh cloud diff
+```
+
+**Backing Up Workloads:**
+Use the `backup` command to snapshot application state before teardowns. It supports quiescing hooks to ensure database consistency.
+```sh
+# Perform an incremental, encrypted local backup
+./libscript.sh cloud backup my-node --target local --keep-last 3
+
+# Stream backup data to an S3 object store or take an EBS/Azure disk snapshot
+./libscript.sh cloud backup my-node --target s3 --snapshot --paths "/var/lib/postgresql/data /etc/letsencrypt"
+```
+
+**Deprovisioning (with Retention):**
+When tearing down a node, you can preserve the valuable components—the Public IP and the Data Disks—so they can be reused later. Retaining the IP prevents your DNS records from breaking.
+```sh
+# Delete the compute and network interfaces, but keep the IP and data volume
+./libscript.sh deprovision aws my-node my-vpc us-east-1 --retain-ip --retain-data
+```
+
+**Restoring / Migrating Workloads:**
+You can restore a backed-up or retained node to the same cloud or even migrate it to a different provider.
+```sh
+# Restore the node onto Azure using the latest backup (automatically remaps IP configurations)
+./libscript.sh cloud restore my-node --from-backup latest
 ```
 
 You can also drop down to lower-level resource management:

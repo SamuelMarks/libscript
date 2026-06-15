@@ -99,6 +99,9 @@ if /i "!ACTION!"=="node"    goto :routing
 if /i "!ACTION!"=="dns"     goto :routing
 if /i "!ACTION!"=="ssh"     goto :routing
 if /i "!ACTION!"=="cleanup" goto :routing
+if /i "!ACTION!"=="backup"  goto :routing
+if /i "!ACTION!"=="restore" goto :routing
+if /i "!ACTION!"=="diff"    goto :routing
 
 if "!arg:~0,2!"=="--" (
     set "key_val=!arg:~2!"

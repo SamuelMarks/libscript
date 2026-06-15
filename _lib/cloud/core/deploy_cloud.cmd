@@ -136,10 +136,17 @@ if "!PROVIDER!"=="azure" (
     call :record_state "AZURE_VNET" "!NODE!-vnet"
     call :retry "!CLI!" firewall create "!NODE!-nsg" "!RG!" "!PORTS!" --location "!LOC!"
     call :record_state "AZURE_NSG" "!NODE!-nsg"
-    set "NODE_ARGS=--size !SIZE! --vnet-name !NODE!-vnet --nsg !NODE!-nsg"
+    set "NODE_ARGS=--size !SIZE! --vnet-name !NODE!-vnet --nsg !NODE!-nsg --tags libscript:managed=true libscript:node=!NODE!"
     if not "!DISK_GB!"=="" set "NODE_ARGS=!NODE_ARGS! --os-disk-size-gb !DISK_GB!"
     call :retry "!CLI!" node create "!NODE!" "!OS_IMAGE!" "!RG!" !NODE_ARGS!
     call :record_state "AZURE_NODE" "!NODE!"
+
+    jq -e ".infrastructure.node.data_disks" "!JSON_FILE!" >nul 2>&1
+    if not errorlevel 1 (
+        for /f "tokens=*" %%d in ('jq -r ".infrastructure.node.data_disks[0].name" "!JSON_FILE!"') do set "DISK_NAME=%%d"
+        call :log "INFRA" "Attaching existing data disk !DISK_NAME!..."
+        call :retry "!CLI!" node attach-disk "!NODE!" "!RG!" "!DISK_NAME!"
+    )
 )
 
 if "!PROVIDER!"=="aws" (
@@ -148,8 +155,15 @@ if "!PROVIDER!"=="aws" (
     call :record_state "AWS_VPC" "!VPC_ID!"
     for /f "tokens=*" %%i in ('call "!CLI!" firewall create "!NODE!-sg" "!NODE!-vpc" "!PORTS!"') do set "SG_ID=%%i"
     call :record_state "AWS_SG" "!SG_ID!"
-    call :retry "!CLI!" node create "!NODE!" "!OS_IMAGE!" "!NODE!-vpc" "!SIZE!"
+    call :retry "!CLI!" node create "!NODE!" "!OS_IMAGE!" "!NODE!-vpc" "!SIZE!" --tags "Key=libscript:managed,Value=true" "Key=libscript:node,Value=!NODE!"
     call :record_state "AWS_NODE" "!NODE!"
+
+    jq -e ".infrastructure.node.data_disks" "!JSON_FILE!" >nul 2>&1
+    if not errorlevel 1 (
+        for /f "tokens=*" %%d in ('jq -r ".infrastructure.node.data_disks[0].name" "!JSON_FILE!"') do set "DISK_NAME=%%d"
+        call :log "INFRA" "Attaching existing data disk !DISK_NAME!..."
+        call :retry "!CLI!" node attach-disk "!NODE!" "!LOC!" "!DISK_NAME!"
+    )
 )
 
 if "!PROVIDER!"=="gcp" (
@@ -158,8 +172,15 @@ if "!PROVIDER!"=="gcp" (
     call :record_state "GCP_VPC" "!NODE!-vpc"
     call :retry "!CLI!" firewall create "!NODE!-fw" "!NODE!-vpc" "!PORTS!"
     call :record_state "GCP_FW" "!NODE!-fw"
-    call :retry "!CLI!" node create "!NODE!" "!OS_IMAGE!" "!RG!" --network "!NODE!-vpc!" --machine-type "!SIZE!"
+    call :retry "!CLI!" node create "!NODE!" "!OS_IMAGE!" "!RG!" --network "!NODE!-vpc!" --machine-type "!SIZE!" --labels "libscript-managed=true,libscript-node=!NODE!"
     call :record_state "GCP_NODE" "!NODE!"
+
+    jq -e ".infrastructure.node.data_disks" "!JSON_FILE!" >nul 2>&1
+    if not errorlevel 1 (
+        for /f "tokens=*" %%d in ('jq -r ".infrastructure.node.data_disks[0].name" "!JSON_FILE!"') do set "DISK_NAME=%%d"
+        call :log "INFRA" "Attaching existing data disk !DISK_NAME!..."
+        call :retry "!CLI!" node attach-disk "!NODE!" "!LOC!" "!DISK_NAME!"
+    )
 )
 
 set "CTX=!RG!"

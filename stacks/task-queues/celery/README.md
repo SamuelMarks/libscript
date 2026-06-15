@@ -62,3 +62,7 @@ See `vars.schema.json` for details on available variables.
 - Linux
 - macOS
 - Windows
+
+## Orchestrated Components
+This stack orchestrates the following LibScript components:
+- (Please document required components here)

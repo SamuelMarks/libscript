@@ -147,12 +147,14 @@ LibScript's sync engine is fully generic and extends far beyond standard AWS/GCP
 - **Rclone Universal Provider (`rclone://`)**: By specifying `rclone://my-remote:bucket/path`, you immediately unlock support for **50+ cloud providers** natively integrated into `rclone`.
 - **Native Providers**: Standard `gs://` (Google Cloud Storage) and `azure://container` (Azure Blob Storage) remain natively supported.
 
+The `cloud` orchestrator provisions resources using highly optimized native primitives (such as explicit Azure Virtual Networks, Network Security Groups, and robust Disk APIs) instead of generic fallbacks, guaranteeing maximum performance and security.
+
 During `deploy`, the framework will pull the state from the remote storage and securely transfer it to the node. During `teardown`, the framework automatically pulls the mutated state back from the node and uploads it securely to the bucket, seamlessly ensuring zero ephemeral data loss.
 ### Automated Secrets Provisioning
 `libscript.json` defines secrets (e.g., `"secrets_dir": "./secrets"`). While the primary `.gitignore`-aware deployment engine correctly skips ignored files to prevent committing secrets to instances via insecure paths, the `provision` command automatically detects this block and invokes a secure `node scp` operation natively over SSH or WinRM *before* the daemonized stack bootstraps. You do not need to sync secrets out-of-band.
 
 ### Automated DNS & Dangling Records Cleanup
-The `dns map-node` command dynamically maps instances, supporting Azure DNS, AWS Route53, and Google Cloud DNS out of the box. For AWS, the framework automatically resolves the `AWS_ZONE_ID` via the `aws route53` CLI based on your defined domain.
+The `dns map-node` command dynamically maps instances, supporting Azure DNS, AWS Route53, and Google Cloud DNS out of the box. For AWS, the framework automatically resolves the `AWS_ZONE_ID` via the `aws route53` CLI based on your defined domain, completely abstracting the underlying provider lookup.
 
 You **must** invoke `dns unmap-node` (handled automatically by `deprovision`) before tearing down the infrastructure. Failing to do so will result in Subdomain Takeover vulnerabilities once the ephemeral IP is reclaimed by the provider pool.
 

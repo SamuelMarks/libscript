@@ -21,6 +21,8 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
     base_image="debian:bookworm-slim"
     while [ $# -gt 0 ]; do
       case "$1" in
@@ -57,7 +59,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
         deps_list="${deps_list}cli ${pkg} ${ver} ${override}\n"
       done
     elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
-      deps_list=$("${LIBSCRIPT_ROOT_DIR:-.}/scripts/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.layer // "deps") \(.name) \(.version // "latest") \(.override // "")"' 2>/dev/null || true)
+      deps_list=$("${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.layer // "deps") \(.name) \(.version // "latest") \(.override // "")"' 2>/dev/null || true)
       else
         deps_list=$(find_components | sort | awk '{printf "%s latest ", $1}')
     fi

@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "duckdb",
+  "title": "DuckDB",
+  "description": "An in-process SQL OLAP database management system.",
+  "category": "databases",
+  "provides": ["duckdb"],
+  "conflicts": [],
+  "os_whitelist": ["all"]
+}

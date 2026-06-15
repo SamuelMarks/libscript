@@ -47,7 +47,8 @@ else
 fi
 
 # Resolve LibScript root if not set
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="$(cd "$(dirname -- "${THIS_FILE}")" && pwd)"; while [ ! -f "${D}"'/ROOT' ]; do D="$(dirname -- "${D}")"; done; printf '%s' "${D}")}"
+SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 
 # Source dependencies
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"

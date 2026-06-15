@@ -1,11 +1,13 @@
 # Spack
 
-Bootstrap script for [Spack](https://spack.io/), a flexible package manager that supports multiple versions, configurations, platforms, and compilers.
+Bootstrap script for [Spack](https://spack.io/), a flexible package manager that supports multiple
+versions, configurations, platforms, and compilers.
 
 ## Platform Support
-- macOS
-- Linux
-- Windows (Supported, but highly complex dependency on VS toolchain)
 
-## Variables
-See `vars.schema.json` for details on available variables.
+<!-- BEGIN_PLATFORMS -->
+
+- Linux
+- macOS
+- Windows
+<!-- END_PLATFORMS -->

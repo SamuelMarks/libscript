@@ -21,5 +21,7 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST="${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST:-${REPOS_DIR:-${TMPDIR:-/tmp}/serve-actix-diesel-auth-scaffold}/serve-actix-diesel-auth-scaffold}"
 export SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR="${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR:-${BUILD_DIR:-${TMPDIR:-/tmp}/serve-actix-diesel-auth-scaffold}/serve-actix-diesel-auth-scaffold}"

@@ -50,7 +50,8 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 
 # Identify directories
 SCRIPT_DIR="${SCRIPT_DIR:-$(cd "$(dirname "${THIS_FILE}")" && pwd)}"
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${SCRIPT_DIR}"; while [ ! -f "${D}/ROOT" ] && [ "${D}" != "/" ]; do D="$(dirname -- "${D}")"; done; [ "${D}" = "/" ] && D="${SCRIPT_DIR}"; printf '%s' "${D}")}"
+SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 
 # Source logging
 . "$LIBSCRIPT_ROOT_DIR/_lib/_common/log.sh"
@@ -178,7 +179,7 @@ case "${1:-}" in
       exit 1
     fi
     ;;
-  network*|node*|dns*|firewall*|ssh*)
+  network*|node*|dns*|firewall*|ssh*|backup*|restore*|diff*|list-managed*|storage*|aws*|azure*|gcp*|cleanup*)
     ACTION="${1:-}"
     shift
     ;;
@@ -238,7 +239,7 @@ fi
 # Argument parsing loop
 while [ $# -gt 0 ]; do
   # These actions stop parsing and pass remaining args to sub-scripts
-  if [ "$ACTION" = "start" ] || [ "$ACTION" = "stop" ] || [ "$ACTION" = "restart" ] || [ "$ACTION" = "status" ] || [ "$ACTION" = "health" ] || [ "$ACTION" = "logs" ] || [ "$ACTION" = "up" ] || [ "$ACTION" = "down" ] || [ "$ACTION" = "run" ] || [ "$ACTION" = "exec" ] || [ "$ACTION" = "network" ] || [ "$ACTION" = "firewall" ] || [ "$ACTION" = "node" ] || [ "$ACTION" = "dns" ] || [ "$ACTION" = "ssh" ] || [ "$ACTION" = "cleanup" ]; then
+  if [ "$ACTION" = "start" ] || [ "$ACTION" = "stop" ] || [ "$ACTION" = "restart" ] || [ "$ACTION" = "status" ] || [ "$ACTION" = "health" ] || [ "$ACTION" = "logs" ] || [ "$ACTION" = "up" ] || [ "$ACTION" = "down" ] || [ "$ACTION" = "run" ] || [ "$ACTION" = "exec" ] || [ "$ACTION" = "network" ] || [ "$ACTION" = "firewall" ] || [ "$ACTION" = "node" ] || [ "$ACTION" = "dns" ] || [ "$ACTION" = "ssh" ] || [ "$ACTION" = "cleanup" ] || [ "$ACTION" = "backup" ] || [ "$ACTION" = "restore" ] || [ "$ACTION" = "diff" ] || [ "$ACTION" = "storage" ] || [ "$ACTION" = "aws" ] || [ "$ACTION" = "azure" ] || [ "$ACTION" = "gcp" ]; then
     break
   fi
   case "$1" in
@@ -288,7 +289,9 @@ while [ $# -gt 0 ]; do
             export "$key"="$val"
           else
             # Pass through unknown flags to setup.sh and subcommands
-            export "$key"="$val"
+            # Convert dash to underscore for export
+            _safe_key=$(echo "$key" | tr '-' '_')
+            export "$_safe_key"="$val"
           fi
         else
           # Validate enum if it exists
@@ -299,12 +302,14 @@ while [ $# -gt 0 ]; do
               exit 1
             fi
           fi
-          export "$key"="$val"
+          _safe_key=$(echo "$key" | tr '-' '_')
+          export "$_safe_key"="$val"
         fi
       else
         # If jq is not available, we can only warn or just set it.
         # Project policy seems to prefer strictness if possible, but without jq we can't be strict.
-        export "$key"="$val"
+        _safe_key=$(echo "$key" | tr '-' '_')
+        export "$_safe_key"="$val"
       fi
       shift
       ;;

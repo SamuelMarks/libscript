@@ -21,7 +21,9 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-if [ "$cmd" = "search" ]; then
+SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+if [ "$CMD" = "search" ]; then
   query="$1"
   if [ -z "$query" ]; then
     echo "Error: please provide a search query."

@@ -10,6 +10,10 @@ Investigating the viability of generically provisioning complex, hardware-depend
 
 Exploring integrations with tools like `ostree` to compile declarative `libscript.json` definitions into customized, bootable operating system images.
 
+## Auto-Scaling Native Clusters
+
+Design a mechanism to automatically spin up additional compute nodes and register them with a dynamic `netctl` load balancer configuration, effectively mimicking Kubernetes Horizontal Pod Autoscaler (HPA) using raw VMs and native orchestration primitives.
+
 ## Edge Computing Constraints
 
 Because LibScript operates without heavy runtimes (like Python or Ruby), it presents an opportunity to provision resource-constrained embedded and edge devices more efficiently than traditional configuration management tools.

@@ -30,6 +30,22 @@
     "CORE_GCP_PROJECT_ID": {
       "type": "string",
       "description": "GCP Project ID"
+    },
+    "CORE_RETAIN_IP": {
+      "type": "boolean",
+      "description": "Flag: --retain-ip. Preserve the Public IP when deprovisioning a node."
+    },
+    "CORE_RETAIN_DATA": {
+      "type": "boolean",
+      "description": "Flag: --retain-data. Preserve the data volumes when deprovisioning a node."
+    },
+    "CORE_KEEP_LAST": {
+      "type": "number",
+      "description": "Flag: --keep-last <N>. Number of backups to retain per node."
+    },
+    "CORE_FROM_BACKUP": {
+      "type": "string",
+      "description": "Flag: --from-backup <ID>. The ID of the backup or snapshot to restore from."
     }
   }
 }

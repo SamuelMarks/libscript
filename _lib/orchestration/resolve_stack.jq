@@ -18,11 +18,11 @@ def resolve(reqs; state; manifests; os):
 
     (
       if $req.type == "name" then
-        ( [ manifests[] | select(.name == ($req.val | ascii_upcase)) ] | if length == 0 then [{"name": $req.val, "provides": [], "conflicts": []}] else .[0] | .name = $req.val | [.] end )
+        ( [ manifests[] | select((.name | ascii_downcase) == ($req.val | ascii_downcase)) ] | if length == 0 then [{"name": $req.val, "provides": [], "conflicts": []}] else .[0] | .name = $req.val | [.] end ) | map(.version = $req.version | .override = $req.override | .layer = $req.layer)
       elif $req.type == "cap" then
-        [ manifests[] | select(.provides != null and (.provides | index($req.val) != null)) ]
+        [ manifests[] | select(.provides != null and (.provides | index($req.val) != null)) ] | map(.version = $req.version | .override = $req.override | .layer = $req.layer)
       elif $req.type == "anyOf" then
-        [ manifests[] | select(.name as $n | $req.val | index($n) != null) ]
+        [ manifests[] | select(.name as $n | $req.val | index($n) != null) ] | map(.version = $req.version | .override = $req.override | .layer = $req.layer)
       else
         []
       end
@@ -46,7 +46,7 @@ def resolve(reqs; state; manifests; os):
         elif intersects(($req.ports // $c.ports // []); state.ports // []) then
           null
         else
-          (($c.versions // ["latest"]) | max_satisfying(.; $req.version)) as $picked_version |
+          (if $c.versions == null then ($req.version // "latest") else ($c.versions | max_satisfying(.; $req.version)) end) as $picked_version |
           (state |
            .selected += [$c + {version: $picked_version, override: $req.override, layer: $req.layer}] |
            .conflicts = ((.conflicts + ($c.conflicts // [])) | unique) |

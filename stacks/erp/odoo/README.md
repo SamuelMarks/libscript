@@ -30,3 +30,7 @@ This module adheres to LibScript's cross-platform conventions:
 
 ## Variables
 See `vars.schema.json` for details on available variables.
+
+## Orchestrated Components
+This stack orchestrates the following LibScript components:
+- (Please document required components here)

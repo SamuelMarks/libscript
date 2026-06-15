@@ -14,6 +14,9 @@ The heart of LibScript's dependency management is a global resolution engine tha
 
 LibScript achieves seamless cross-platform execution by maintaining strict parity between its POSIX shell and Windows CMD implementations.
 
+- **Core Utilities:** The orchestration engine relies on `jq` for robust JSON parsing and constraint solving.
+- **Cloud Providers:** The multicloud PaaS layer requires the respective vendor CLIs (`aws`, `az`, `gcloud`) to be authenticated on the host.
+- **State Sync:** `rclone` is recommended for universal state synchronization (`rclone://` protocols).
 - **Native Package Translation:** The system abstracts the native package managers of supported environments (`apt`, `apk`, `dnf`, `brew`, `pacman`, `pkg`, `choco`, `winget`). Generic dependencies are mapped to the appropriate local format at execution time.
 - **Script Mirroring:** Every core logic path is implemented twice—once in POSIX-compliant `/bin/sh` for Unix-like systems and once in native Windows batch scripts (`.cmd`). This ensures that the dependency engine behaves identically whether it is running on a minimalist Alpine Linux container or a standard Windows 11 workstation.
 

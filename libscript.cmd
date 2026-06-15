@@ -119,6 +119,10 @@ if /i "%cmd%"=="serve" ( set "is_action=1" & set "req_version=1" )
 if /i "%cmd%"=="route" ( set "is_action=1" & set "req_version=1" )
 if /i "%cmd%"=="ls" set "is_action=1"
 if /i "%cmd%"=="ls-remote" set "is_action=1"
+if /i "%cmd%"=="list-managed" ( set "action_pkg=cloud" & goto match_component )
+if /i "%cmd%"=="backup" ( set "action_pkg=cloud" & goto match_component )
+if /i "%cmd%"=="restore" ( set "action_pkg=cloud" & goto match_component )
+if /i "%cmd%"=="diff" ( set "action_pkg=cloud" & goto match_component )
 
 
 if "%is_action%"=="1" (
@@ -145,6 +149,10 @@ if "%is_action%"=="1" (
 
 :match_component
 set "target="
+if /i "%action_pkg%"=="cloud" (
+    set "target=%SCRIPT_DIR%\_lib\cloud\core"
+    goto run_target
+)
 if exist "%SCRIPT_DIR%\_lib\%action_pkg%\cli.cmd" (
     set "target=%SCRIPT_DIR%\_lib\%action_pkg%"
     goto run_target

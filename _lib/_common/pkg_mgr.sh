@@ -21,16 +21,16 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-_PKG_MGR_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${_PKG_MGR_DIR}"; while [ ! -f "${D}/ROOT" ] && [ "${D}" != "/" ]; do D="$(dirname -- "${D}")"; done; [ "${D}" = "/" ] && D="${_PKG_MGR_DIR}"; printf '%s' "${D}")}"
+SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+_PKG_MGR_DIR="${SCRIPT_DIR}"
 
 # Source logging
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
 #DIR="$( dirname -- "$( readlink -nf -- "${0}" )")"
 
-for LIB in '_lib/_common/os_info.sh' '_lib/_common/priv.sh' '_lib/_common/pkg_mapper.sh'; do
+for LIB in "_lib/_common/os_info.sh" "_lib/_common/priv.sh" "_lib/_common/pkg_mapper.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -333,7 +333,7 @@ libscript_process_aria2_file() {
     [ -z "$(echo "$line" | tr -d '[:space:]')" ] && continue
 
     if echo "$line" | grep -q '^[[:space:]]'; then
-opt
+
       opt="$(echo "$line" | sed 's/^[[:space:]]*//')"
       if echo "$opt" | grep -q '^out='; then
         out="${opt#out=}"

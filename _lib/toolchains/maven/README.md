@@ -3,7 +3,10 @@
 Bootstrap module for the `maven` package manager/tool.
 
 ## Platform Support
-- **Linux**: Supported.\n- **macOS**: Supported.\n- **Windows**: Supported.
 
-## Variables
-See `vars.schema.json` for details on available variables.
+<!-- BEGIN_PLATFORMS -->
+
+- Linux
+- macOS
+- Windows
+<!-- END_PLATFORMS -->

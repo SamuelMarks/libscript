@@ -1,14 +1,23 @@
 # BusyBox
 
 ## Purpose & Current State
-This directory contains the installation and configuration scripts for **Busybox** within the LibScript ecosystem. Busybox is a software suite that provides several Unix utilities in a single executable file.
 
-This module works both as a local version manager for Busybox (similar to `rvm`, `nvm`, `pyenv`, or `uv`) and can be seamlessly invoked from the global version manager `libscript`. It allows LibScript to use Busybox as a core dependency to build bigger, more complex software stacks (such as WordPress, Open edX, Nextcloud, etc.).
+This directory contains the installation and configuration scripts for **Busybox** within the
+LibScript ecosystem. Busybox is a software suite that provides several Unix utilities in a single
+executable file.
+
+This module works both as a local version manager for Busybox (similar to `rvm`, `nvm`, `pyenv`, or
+`uv`) and can be seamlessly invoked from the global version manager `libscript`. It allows LibScript
+to use Busybox as a core dependency to build bigger, more complex software stacks (such as
+WordPress, Open edX, Nextcloud, etc.).
 
 ## Usage
-You can install, start, stop, package, and uninstall busybox using the global `libscript` command or the local CLI.
+
+You can install, start, stop, package, and uninstall busybox using the global `libscript` command or
+the local CLI.
 
 **Unix (Linux/macOS):**
+
 ```sh
 
 ./libscript.sh install busybox
@@ -29,6 +38,7 @@ You can install, start, stop, package, and uninstall busybox using the global `l
 ```
 
 **Windows:**
+
 ```cmd
 :: Global Orchestrator
 libscript.cmd install busybox
@@ -53,9 +63,14 @@ cli.cmd uninstall busybox
 ```
 
 ## Variables
+
 See `vars.schema.json` for details on available variables.
 
 ## Platform Support
+
+<!-- BEGIN_PLATFORMS -->
+
 - Linux
 - macOS
 - Windows
+<!-- END_PLATFORMS -->

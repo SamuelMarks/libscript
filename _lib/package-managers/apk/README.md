@@ -1,13 +1,21 @@
 # Apk
 
 ## Usage
-This document describes the **apk** (Alpine Package Keeper) bootstrap component for the LibScript ecosystem. It handles the integration and management of the Alpine Linux package manager.
 
-Designed for flexibility, it works both as a **local version manager** (similar to rvm, nvm, pyenv, uv) for `apk` environments and can be effortlessly invoked from the **global version manager**, `libscript`. As a foundational tool, `apk` is frequently used by `libscript` to provision system dependencies and build bigger stacks (like WordPress, Open edX, Nextcloud, etc.) on Alpine-based systems or containers.
+This document describes the **apk** (Alpine Package Keeper) bootstrap component for the LibScript
+ecosystem. It handles the integration and management of the Alpine Linux package manager.
 
-You can install, start, stop, package, and uninstall apk using the global `libscript` command or the local CLI.
+Designed for flexibility, it works both as a **local version manager** (similar to rvm, nvm, pyenv,
+uv) for `apk` environments and can be effortlessly invoked from the **global version manager**,
+`libscript`. As a foundational tool, `apk` is frequently used by `libscript` to provision system
+dependencies and build bigger stacks (like WordPress, Open edX, Nextcloud, etc.) on Alpine-based
+systems or containers.
+
+You can install, start, stop, package, and uninstall apk using the global `libscript` command or the
+local CLI.
 
 **Unix (Linux/macOS):**
+
 ```sh
 
 ./libscript.sh install apk
@@ -28,6 +36,7 @@ You can install, start, stop, package, and uninstall apk using the global `libsc
 ```
 
 **Windows:**
+
 ```cmd
 :: Global Orchestrator
 libscript.cmd install apk
@@ -52,9 +61,14 @@ cli.cmd uninstall apk
 ```
 
 ## Variables
+
 See `vars.schema.json` for details on available variables.
 
 ## Platform Support
+
+<!-- BEGIN_PLATFORMS -->
+
 - Linux
 - macOS
 - Windows
+<!-- END_PLATFORMS -->

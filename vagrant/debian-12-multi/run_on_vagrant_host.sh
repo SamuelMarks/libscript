@@ -21,6 +21,8 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 [ -d vagrant_ssh ] || mkdir vagrant_ssh
 chmod 700 vagrant_ssh
 [ -f vagrant_ssh/id_rsa ] || ssh-keygen -N "" -t 'rsa' -b '4096' -C 'vagrant ex/internal ssh keys' -f 'vagrant_ssh/id_rsa'

@@ -21,19 +21,20 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+DIR="${SCRIPT_DIR}"
 
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${DIR}"; while [ ! -f "${D}/ROOT" ] && [ "${D}" != "/" ]; do D="$(dirname -- "${D}")"; done; [ "${D}" = "/" ] && D="${DIR}"; printf '%s' "${D}")}"
-
-for LIB in "_lib/_common/priv.sh' '_lib/_common/pkg_mgr.sh' \
-            '_lib/web-servers/nginx/merge_location_into_server.sh' \
-            '_lib/_common/environ.sh'; do
+for LIB in "_lib/_common/priv.sh" "_lib/_common/pkg_mgr.sh" \
+            "_lib/web-servers/nginx/merge_location_into_server.sh" \
+            "_lib/_common/environ.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
+run_before="${run_before:-0}"
 if [ "${run_before}" -eq 0 ]; then
   libscript_depends curl gnupg2 ca-certificates lsb-release debian-archive-keyring
   if [ ! -f '/usr/share/keyrings/nginx-archive-keyring.gpg' ]; then
@@ -46,10 +47,11 @@ if [ "${run_before}" -eq 0 ]; then
     ID="$(. /etc/os-release && printf "%s" "${ID}")"
     printf 'deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] http://nginx.org/packages/%s %s nginx\n' "${ID}" "$(lsb_release -cs)" | priv  tee /etc/apt/sources.list.d/nginx.list
   fi
-  [ -f '/etc/apt/preferences.d/99nginx' ] || \
+  if [ ! -f '/etc/apt/preferences.d/99nginx' ]; then
     printf 'Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n' \
-      | priv  tee /etc/apt/preferences.d/99nginx && \
+      | priv  tee /etc/apt/preferences.d/99nginx
     pkg_mgr update
+  fi
 
   libscript_depends nginx
 fi
@@ -123,14 +125,14 @@ if [ "${NGINX_VARS-}" ]; then
   chmod +x "${ENV_SCRIPT_FILE}"
   libscript_object2key_val "${NGINX_VARS}" 'export ' "'" > "${ENV_SCRIPT_FILE}"
 
-  # shellcheck disable=SC1090
-  SERVER_NAME="$(. "${ENV_SCRIPT_FILE}"; printf '%s' "${NGINX_SERVER_NAME}")"
+  SERVER_NAME="${NGINX_SERVER_NAME}"
 
   LOCATION_CONF_FILE=$(mktemp "${TMPDIR:-/tmp}/libscript_${NGINX_SERVER_NAME}_location_conf_XXXXXX")
-  trap 'rm -f -- "${LOCATION_CONF_FILE}"' EXIT HUP INT QUIT TERM
+  trap 'rm -f -- "${LOCATION_CONF_FILE:-}" "${ENV_SCRIPT_FILE:-}"' EXIT HUP INT QUIT TERM
 
   env -i PATH="${PATH}" \
           ENV_SCRIPT_FILE="${ENV_SCRIPT_FILE}" \
+          SERVER_NAME="${SERVER_NAME}" \
           LIBSCRIPT_BUILD_DIR="${LIBSCRIPT_BUILD_DIR}" \
           LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR}" \
           LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" \
@@ -158,6 +160,8 @@ if [ "${NGINX_VARS-}" ]; then
   else
     env -i PATH="${PATH}" \
             ENV_SCRIPT_FILE="${ENV_SCRIPT_FILE}" \
+            SERVER_NAME="${SERVER_NAME}" \
+            NGINX_SERVER_NAME="${SERVER_NAME}" \
             LIBSCRIPT_BUILD_DIR="${LIBSCRIPT_BUILD_DIR}" \
             LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR}" \
             LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" \

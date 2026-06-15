@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "ollama",
+  "title": "Ollama",
+  "description": "Get up and running with large language models.",
+  "category": "app-servers",
+  "provides": ["ollama"],
+  "conflicts": [],
+  "os_whitelist": ["all"]
+}

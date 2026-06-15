@@ -21,6 +21,8 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 if [ "$CMD" = "install-deps" ]; then
   json_file="${1:-libscript.json}"
   if [ ! -f "$json_file" ]; then
@@ -46,7 +48,7 @@ if [ "$CMD" = "install-deps" ]; then
     fi
   fi
 
-  deps=$("${LIBSCRIPT_ROOT_DIR:-.}/scripts/resolve_stack.sh" "$json_file" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest") \(.override // "")"' 2>/dev/null || true)
+  deps=$("${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/resolve_stack.sh" "$json_file" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest") \(.override // "")"' 2>/dev/null || true)
   if [ -z "$deps" ]; then
     echo "No dependencies found in $json_file."
     exit 0
@@ -58,7 +60,7 @@ if [ "$CMD" = "install-deps" ]; then
     if [ -n "$pkg" ]; then
       if [ "$ver" = "null" ]; then ver="latest"; fi
       if [ -z "$override" ] || [ "$override" = "null" ]; then
-        "${THIS_FILE}" download "$pkg" "$ver" &
+        "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" download "$pkg" "$ver" &
       fi
     fi
   done
@@ -73,7 +75,7 @@ if [ "$CMD" = "install-deps" ]; then
         echo "Skipping installation of $pkg (override provided: $override)"
       else
         echo "Installing $pkg $ver..."
-        "${THIS_FILE}" install "$pkg" "$ver"
+        "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" install "$pkg" "$ver"
       fi
     fi
   done

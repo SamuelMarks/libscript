@@ -1,11 +1,13 @@
 # Ghcup
 
-Bootstrap script for [GHCup](https://www.haskell.org/ghcup/), the main installer for the Haskell language toolchain (including `cabal` and `stack`).
+Bootstrap script for [GHCup](https://www.haskell.org/ghcup/), the main installer for the Haskell
+language toolchain (including `cabal` and `stack`).
 
 ## Platform Support
-- macOS
-- Linux
-- Windows
 
-## Variables
-See `vars.schema.json` for details on available variables.
+<!-- BEGIN_PLATFORMS -->
+
+- Linux
+- macOS
+- Windows
+<!-- END_PLATFORMS -->

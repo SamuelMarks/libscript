@@ -4,7 +4,7 @@ LibScript maintains first-class support for Windows environments, enabling zero-
 
 ## Native Stack Provisioning
 
-The framework utilizes standard `cmd` and `.cmd` scripts, alongside PowerShell where necessary, to handle Windows-specific operations. This includes native environment variable configuration, registry modifications, and the registration of Windows Services. Complex stacks (like WAMP) can be provisioned natively from the command prompt.
+The framework utilizes standard `cmd` and `.cmd` scripts, alongside PowerShell where necessary, to handle Windows-specific operations. This includes native environment variable configuration, registry modifications, and the registration of Windows Services. Complex stacks (like WAMP) can be provisioned natively from the command prompt. The `netctl` routing abstraction directly translates configurations into IIS `web.config` rules and `appcmd` executions, ensuring parity with Linux Nginx/Caddy environments.
 
 ## Installer Generation
 

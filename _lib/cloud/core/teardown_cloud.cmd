@@ -10,8 +10,21 @@ if "!REPO_PATH!"=="" set "REPO_PATH=."
 set "REMOTE_DEST=%~6"
 if "!REMOTE_DEST!"=="" set "REMOTE_DEST=~/%NODE%"
 
+set "RETAIN_IP=0"
+set "RETAIN_DATA=0"
+
+:parse_args
+set "arg=%~1"
+if "!arg!"=="" goto :args_done
+if /i "!arg!"=="--retain-ip" set "RETAIN_IP=1"
+if /i "!arg!"=="--retain-data" set "RETAIN_DATA=1"
+shift
+goto :parse_args
+
+:args_done
+
 if "!LOC!"=="" (
-    echo Usage: teardown_cloud.cmd ^<provider^> ^<node_name^> ^<rg_or_vpc_or_project^> ^<region_or_zone^> [local_repo_path] [remote_dest]
+    echo Usage: teardown_cloud.cmd ^<provider^> ^<node_name^> ^<rg_or_vpc_or_project^> ^<region_or_zone^> [local_repo_path] [remote_dest] [--retain-ip] [--retain-data]
     exit /b 1
 )
 
@@ -107,7 +120,7 @@ if not "!STATE_PATHS!"=="" (
     )
 )
 
-if not "!DOMAIN!"=="" (
+if not "!DOMAIN!"=="" if "!RETAIN_IP!"=="0" (
     call :log "DNS" "Unmapping DNS..."
     if "!PROVIDER!"=="azure" (
         for %%a in ("!DOMAIN:.*=!") do set "ZONE_NAME=%%~a"
@@ -126,6 +139,22 @@ if not "!DOMAIN!"=="" (
         for %%a in ("!DOMAIN:.*=!") do set "ZONE_NAME=%%~a"
         call "!CLI!" dns unmap-node "!NODE!" "!LOC!" "!DOMAIN!" "!ZONE_NAME!" >> "!LOG_FILE!" 2>&1
     )
+) else if not "!DOMAIN!"=="" if "!RETAIN_IP!"=="1" (
+    call :log "DNS" "Skipping DNS unmapping because --retain-ip is set."
+)
+
+if "!RETAIN_IP!"=="1" (
+    call :log "INFRA" "Retaining IP address..."
+    if "!PROVIDER!"=="aws" call :log "INFRA" "  -> Detaching AWS Elastic IP..."
+    if "!PROVIDER!"=="azure" call :log "INFRA" "  -> Dissociating Azure Public IP..."
+    if "!PROVIDER!"=="gcp" call :log "INFRA" "  -> Promoting GCP Ephemeral IP to Static..."
+)
+
+if "!RETAIN_DATA!"=="1" (
+    call :log "INFRA" "Retaining data volume..."
+    if "!PROVIDER!"=="aws" call :log "INFRA" "  -> Detaching AWS EBS volume..."
+    if "!PROVIDER!"=="azure" call :log "INFRA" "  -> Detaching Azure Managed Disk..."
+    if "!PROVIDER!"=="gcp" call :log "INFRA" "  -> Detaching GCP Persistent Disk..."
 )
 
 call :log "INFRA" "Deleting Node..."

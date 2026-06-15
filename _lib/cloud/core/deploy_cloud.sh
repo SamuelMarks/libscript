@@ -27,10 +27,11 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 
 
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT=${LIBSCRIPT_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
 if [ "$#" -lt 4 ]; then
-  log_info "Usage: ${THIS_FILE} <provider> <node_name> <rg_or_vpc_or_project> <region_or_zone> [local_repo_path] [remote_dest]"
+  log_info "Usage: deploy_cloud.sh <provider> <node_name> <rg_or_vpc_or_project> <region_or_zone> [local_repo_path] [remote_dest]"
   log_info "Providers: azure, aws, gcp"
   exit 1
 fi
@@ -61,11 +62,11 @@ log "INIT" "Logging to $LOG_FILE"
 # Retries & Fault Tolerance
 # -----------------------------------------------------------------------------
 with_retry() {
-  local max_attempts=5
-  local timeout=5
-  local attempt=1
-  local exit_code=0
-  local output_file="$LOG_DIR/retry_output.tmp"
+  max_attempts=5
+  timeout=5
+  attempt=1
+  exit_code=0
+  output_file="$LOG_DIR/retry_output.tmp"
 
   while [ $attempt -le $max_attempts ]; do
     log "RETRY" "Attempt $attempt of $max_attempts: $*"
@@ -83,8 +84,8 @@ with_retry() {
     cat "$output_file" >> "$LOG_FILE"
     
     # Check for common authentication errors
-    local needs_auth=0
-    local provider_to_auth=""
+  needs_auth=0
+  provider_to_auth=""
     
     if grep -qEi "(not logged in|az login|Please run 'az login'|AuthenticationError|NoCredentialsError|AuthorizationFailed|InvalidAuthenticationTokenTenant)" "$output_file"; then
       needs_auth=1
@@ -134,8 +135,8 @@ with_retry() {
 STATE_FILE="$REPO_PATH/.deploy_state"
 
 record_state() {
-  local key=$1
-  local val=$2
+  key=$1
+  val=$2
   echo "${key}=${val}" >> "$STATE_FILE"
   log "STATE" "Recorded $key=$val"
 }
@@ -204,7 +205,7 @@ else
   fi
 fi
 
-CLI="$LIBSCRIPT_ROOT/_lib/cloud-providers/$PROVIDER/cli.sh"
+CLI="$SCRIPT_DIR/../../cloud-providers/$PROVIDER/cli.sh"
 if [ ! -f "$CLI" ]; then
   log "ERROR" "Provider $PROVIDER not supported ($CLI missing)."
   exit 1
@@ -219,16 +220,16 @@ record_state "REGION" "$LOC"
 # Dependency Check
 # -----------------------------------------------------------------------------
 ensure_cli() {
-  local cmd=$1
-  local pkg=$2
+  cmd=$1
+  pkg=$2
   if ! command -v "$cmd" >/dev/null 2>&1; then
     log "INFO" "Command '$cmd' not found. Installing '$pkg' via LibScript..."
-    "$LIBSCRIPT_ROOT/libscript.sh" install "$pkg" "latest" || {
+    "$SCRIPT_DIR/../../../libscript.sh" install "$pkg" "latest" || {
       log "ERROR" "Failed to auto-install $pkg. Please install it manually."
       exit 1
     }
     # Update PATH dynamically just in case it wasn't sourced yet
-    export PATH="${PREFIX:-$LIBSCRIPT_ROOT/installed/$pkg}/bin:$PATH"
+    export PATH="${PREFIX:-$LIBSCRIPT_ROOT_DIR/installed/$pkg}/bin:$PATH"
   fi
 }
 
@@ -255,10 +256,16 @@ if [ "$PROVIDER" = "azure" ]; then
   with_retry "$CLI" firewall create "${NODE}-nsg" "$RG" "$PORTS" --location "$LOC"
   record_state "AZURE_NSG" "${NODE}-nsg"
 
-  NODE_ARGS="--size $SIZE --vnet-name ${NODE}-vnet --nsg ${NODE}-nsg"
+  NODE_ARGS="--size $SIZE --vnet-name ${NODE}-vnet --nsg ${NODE}-nsg --tags libscript:managed=true libscript:node=$NODE"
   if [ -n "$DISK_GB" ]; then NODE_ARGS="$NODE_ARGS --os-disk-size-gb $DISK_GB"; fi
   with_retry "$CLI" node create "$NODE" "$OS_IMAGE" "$RG" $NODE_ARGS
   record_state "AZURE_NODE" "$NODE"
+  if jq -e ".infrastructure.node.data_disks" "$JSON_FILE" >/dev/null 2>&1; then
+    DISK_NAME=$(jq -r ".infrastructure.node.data_disks[0].name" "$JSON_FILE")
+    log "INFRA" "Attaching existing data disk ${DISK_NAME}..."
+    with_retry "$CLI" node attach-disk "$NODE" "$RG" "$DISK_NAME"
+  fi
+
 
 elif [ "$PROVIDER" = "aws" ]; then
   export AWS_DEFAULT_REGION="$LOC"
@@ -268,8 +275,14 @@ elif [ "$PROVIDER" = "aws" ]; then
   SG_ID=$("$CLI" firewall create "${NODE}-sg" "${NODE}-vpc" "$PORTS" | tail -n 1)
   record_state "AWS_SG" "$SG_ID"
 
-  with_retry "$CLI" node create "$NODE" "$OS_IMAGE" "${NODE}-vpc" "$SIZE"
+  with_retry "$CLI" node create "$NODE" "$OS_IMAGE" "${NODE}-vpc" "$SIZE" --tags "Key=libscript:managed,Value=true" "Key=libscript:node,Value=$NODE"
   record_state "AWS_NODE" "$NODE"
+  
+  if jq -e ".infrastructure.node.data_disks" "$JSON_FILE" >/dev/null 2>&1; then
+    DISK_NAME=$(jq -r ".infrastructure.node.data_disks[0].name" "$JSON_FILE")
+    log "INFRA" "Attaching existing data disk ${DISK_NAME}..."
+    with_retry "$CLI" node attach-disk "$NODE" "$LOC" "$DISK_NAME"
+  fi
 
 elif [ "$PROVIDER" = "gcp" ]; then
   export GCP_ZONE="$LOC"
@@ -279,8 +292,14 @@ elif [ "$PROVIDER" = "gcp" ]; then
   with_retry "$CLI" firewall create "${NODE}-fw" "${NODE}-vpc" "$PORTS"
   record_state "GCP_FW" "${NODE}-fw"
 
-  with_retry "$CLI" node create "$NODE" "$OS_IMAGE" "$RG" --network "${NODE}-vpc" --machine-type "$SIZE"
+  with_retry "$CLI" node create "$NODE" "$OS_IMAGE" "$RG" --network "${NODE}-vpc" --machine-type "$SIZE" --labels "libscript-managed=true,libscript-node=$NODE"
   record_state "GCP_NODE" "$NODE"
+  
+  if jq -e ".infrastructure.node.data_disks" "$JSON_FILE" >/dev/null 2>&1; then
+    DISK_NAME=$(jq -r ".infrastructure.node.data_disks[0].name" "$JSON_FILE")
+    log "INFRA" "Attaching existing data disk ${DISK_NAME}..."
+    with_retry "$CLI" node attach-disk "$NODE" "$LOC" "$DISK_NAME"
+  fi
 fi
 
 CTX="$RG"
@@ -290,10 +309,10 @@ if [ "$PROVIDER" = "gcp" ] || [ "$PROVIDER" = "aws" ]; then CTX="$LOC"; fi
 # Status Checks & Health Polling
 # -----------------------------------------------------------------------------
 wait_for_ssh() {
-  local target_node=$1
-  local target_ctx=$2
-  local max_attempts=30
-  local attempt=1
+  target_node=$1
+  target_ctx=$2
+  max_attempts=30
+  attempt=1
   log "HEALTH" "Waiting for SSH readiness on node $target_node..."
 
   while [ $attempt -le $max_attempts ]; do
@@ -322,8 +341,8 @@ with_retry "$CLI" node exec "$NODE" "$CTX" "mkdir -p $REMOTE_DEST"
 
 # Explicit rsync fallback to scp/winrm behavior
 transfer_files() {
-  local src=$1
-  local dst=$2
+  src=$1
+  dst=$2
   log "SYNC" "Transferring $src to $dst..."
   if command -v rsync >/dev/null 2>&1; then
     log "SYNC" "Using rsync..."
@@ -378,7 +397,7 @@ if [ -n "$DOMAIN" ]; then
   log "DNS" "Mapping DNS for $DOMAIN..."
   if [ "$PROVIDER" = "azure" ]; then
     ZONE_NAME=$(echo "$DOMAIN" | awk -F. '{print $(NF-1)"."$NF}')
-    TARGET_DNS_RG="${DNS_RG:-${ZONE_NAME}-rg}"
+    TARGET_DNS_RG="${DNS_RG:-$RG}"
     with_retry "$CLI" dns map-node "$NODE" "$RG" "$DOMAIN" "$ZONE_NAME" "$TARGET_DNS_RG" || true
   elif [ "$PROVIDER" = "aws" ]; then
     if [ -z "$AWS_ZONE_ID" ]; then
@@ -398,66 +417,25 @@ fi
 # Stack Start
 # -----------------------------------------------------------------------------
 log "START" "Installing Dependencies and Starting Application Stack..."
-with_retry "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo ~/libscript/libscript.sh install-deps"
-with_retry "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo ~/libscript/libscript.sh start"
+with_retry "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/libscript.sh install-deps"
+. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+
+with_retry "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/scripts/run_hooks.sh libscript.json install"
+. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+
+
+with_retry "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/libscript.sh start"
+. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+
 
 wait_for_health() {
   log "HEALTH" "Polling application health (via libscript health)..."
-  local max_attempts=12
-  local attempt=1
+  max_attempts=12
+  attempt=1
   while [ $attempt -le $max_attempts ]; do
-    if "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo ~/libscript/libscript.sh health" >/dev/null 2>&1; then
-      log "HEALTH" "Application stack is healthy."
-      return 0
-    fi
-    log "HEALTH" "Application not ready (attempt $attempt/$max_attempts). Waiting 10s..."
-    sleep 10
-    attempt=$((attempt + 1))
-  done
-  log "WARNING" "Application health check failed or timed out. Please check logs manually."
-}
+    if "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/libscript.sh health" >/dev/null 2>&1; then
+. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
-wait_for_health
-
-log "DONE" "Deployment complete. View full logs at $LOG_FILE"
-
-
-# -----------------------------------------------------------------------------
-# DNS Mapping
-# -----------------------------------------------------------------------------
-if [ -n "$DOMAIN" ]; then
-  log "DNS" "Mapping DNS for $DOMAIN..."
-  if [ "$PROVIDER" = "azure" ]; then
-    ZONE_NAME=$(echo "$DOMAIN" | awk -F. '{print $(NF-1)"."$NF}')
-    TARGET_DNS_RG="${DNS_RG:-${ZONE_NAME}-rg}"
-    with_retry "$CLI" dns map-node "$NODE" "$RG" "$DOMAIN" "$ZONE_NAME" "$TARGET_DNS_RG" || true
-  elif [ "$PROVIDER" = "aws" ]; then
-    if [ -z "$AWS_ZONE_ID" ]; then
-      AWS_ZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name "$DOMAIN" --query "HostedZones[0].Id" --output text 2>/dev/null | awk -F/ '{print $NF}')
-      if [ "$AWS_ZONE_ID" = "None" ]; then AWS_ZONE_ID=""; fi
-    fi
-    if [ -n "$AWS_ZONE_ID" ]; then
-      with_retry "$CLI" dns map-node "$NODE" "$DOMAIN" "$AWS_ZONE_ID" || true
-    fi
-  elif [ "$PROVIDER" = "gcp" ]; then
-    ZONE_NAME=$(echo "$DOMAIN" | awk -F. '{print $(NF-1)"-"$NF}')
-    with_retry "$CLI" dns map-node "$NODE" "$LOC" "$DOMAIN" "$ZONE_NAME" || true
-  fi
-fi
-
-# -----------------------------------------------------------------------------
-# Stack Start
-# -----------------------------------------------------------------------------
-log "START" "Installing Dependencies and Starting Application Stack..."
-with_retry "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo ~/libscript/libscript.sh install-deps"
-with_retry "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo ~/libscript/libscript.sh start"
-
-wait_for_health() {
-  log "HEALTH" "Polling application health (via libscript health)..."
-  local max_attempts=12
-  local attempt=1
-  while [ $attempt -le $max_attempts ]; do
-    if "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo ~/libscript/libscript.sh health" >/dev/null 2>&1; then
       log "HEALTH" "Application stack is healthy."
       return 0
     fi

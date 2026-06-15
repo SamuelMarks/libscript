@@ -21,6 +21,8 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$CMD" = "health" ] || [ "$CMD" = "logs" ] || [ "$CMD" = "restart" ] || [ "$CMD" = "up" ] || [ "$CMD" = "down" ]; then
   action="$CMD"
   if [ "$action" = "up" ]; then action="start"; fi
@@ -56,24 +58,24 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
     fi
     if [ "$skip_hooks" -eq 0 ]; then
       if [ "$action" = "start" ] || [ "$action" = "up" ]; then
-        "${LIBSCRIPT_ROOT_DIR:-.}/scripts/run_hooks.sh" "$json_file" "build"
-        "${LIBSCRIPT_ROOT_DIR:-.}/scripts/run_hooks.sh" "$json_file" "pre_start"
+        "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "build"
+        "${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/run_hooks.sh" "$json_file" "pre_start"
       fi
     fi
 
-    deps=$("${LIBSCRIPT_ROOT_DIR:-.}/scripts/resolve_stack.sh" "$json_file" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null || true)
+    deps=$("${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/resolve_stack.sh" "$json_file" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null || true)
     if [ -n "$deps" ]; then
       echo "$deps" > "$json_file.tmpdeps"
       while read -r pkg ver; do
         if [ -n "$pkg" ]; then
           if [ "$ver" = "null" ]; then ver="latest"; fi
           if [ "$action" = "logs" ] && [ "$follow_logs" = "1" ]; then
-            "${THIS_FILE}" "$pkg" "$action" "$pkg" "$ver" -f 2>&1 | awk -v prefix="$pkg" '{print "\033[36m" prefix " |\033[0m " $0; fflush()}' &
+            "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$pkg" "$action" "$pkg" "$ver" -f 2>&1 | awk -v prefix="$pkg" '{print "\033[36m" prefix " |\033[0m " $0; fflush()}' &
           elif [ "$action" = "status" ] || [ "$action" = "health" ] || [ "$action" = "logs" ]; then
             echo "=== $pkg ==="
-            "${THIS_FILE}" "$pkg" "$action" "$pkg" "$ver"
+            "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$pkg" "$action" "$pkg" "$ver"
           else
-            "${THIS_FILE}" "$pkg" "$action" "$pkg" "$ver" &
+            "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$pkg" "$action" "$pkg" "$ver" &
           fi
         fi
       done < "$json_file.tmpdeps"
@@ -81,11 +83,11 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
     fi
 
     if [ "$action" = "start" ] || [ "$action" = "up" ]; then
-      "${LIBSCRIPT_ROOT_DIR:-.}/scripts/daemonize.sh" "$action" "$json_file"
+      "${LIBSCRIPT_ROOT_DIR:-.}/_lib/init-systems/daemonize.sh" "$action" "$json_file"
     elif [ "$action" = "stop" ] || [ "$action" = "down" ]; then
-      "${LIBSCRIPT_ROOT_DIR:-.}/scripts/daemonize.sh" "$action" "$json_file"
+      "${LIBSCRIPT_ROOT_DIR:-.}/_lib/init-systems/daemonize.sh" "$action" "$json_file"
     elif [ "$action" = "status" ]; then
-      "${LIBSCRIPT_ROOT_DIR:-.}/scripts/daemonize.sh" "$action" "$json_file"
+      "${LIBSCRIPT_ROOT_DIR:-.}/_lib/init-systems/daemonize.sh" "$action" "$json_file"
     fi
 
     wait
@@ -93,12 +95,12 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
   else
     for pkg in "$@"; do
       if [ "$action" = "logs" ] && [ "$follow_logs" = "1" ]; then
-        "${THIS_FILE}" "$pkg" "$action" "$pkg" "latest" -f 2>&1 | awk -v prefix="$pkg" '{print "\033[36m" prefix " |\033[0m " $0; fflush()}' &
+        "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$pkg" "$action" "$pkg" "latest" -f 2>&1 | awk -v prefix="$pkg" '{print "\033[36m" prefix " |\033[0m " $0; fflush()}' &
       elif [ "$action" = "status" ] || [ "$action" = "health" ] || [ "$action" = "logs" ]; then
         echo "=== $pkg ==="
-        "${THIS_FILE}" "$pkg" "$action" "$pkg" "latest"
+        "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$pkg" "$action" "$pkg" "latest"
       else
-        "${THIS_FILE}" "$pkg" "$action" "$pkg" "latest" &
+        "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$pkg" "$action" "$pkg" "latest" &
       fi
     done
     wait

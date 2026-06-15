@@ -14,7 +14,7 @@ While containers provide reproducibility, they introduce significant virtualizat
 
 Most configuration managers require heavy language runtimes (Python, Ruby) or agents on the target machine. LibScript avoids this requirement by orchestrating all tasks through pure, dependency-free POSIX shell and Windows CMD/PowerShell scripts. This makes it uniquely suited for edge devices, minimalist "golden images," and restricted environments where installing a management runtime is not feasible.
 
-## Unified Multicloud Interface
+## Vendor Neutrality via the Unified Multicloud Interface
 
 Cloud vendors each provide their own CLIs with divergent syntaxes and behaviors. LibScript wraps these official tools into a unified, idempotent interface. Whether you are on AWS, Azure, or GCP, the commands to create a network, a group of nodes, or a storage bucket remain consistent, reducing vendor lock-in and operational cognitive load.
 

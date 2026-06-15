@@ -21,7 +21,8 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+LIBSCRIPT_CLI_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+SCRIPT_DIR="${LIBSCRIPT_CLI_DIR}"
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 export LIBSCRIPT_ROOT_DIR
 
@@ -82,10 +83,10 @@ show_help() {
 }
 
 find_components() {
-  find "$SCRIPT_DIR" -name "cli.sh" | while read -r cli_script; do
+  find "$LIBSCRIPT_CLI_DIR" -name "cli.sh" | while read -r cli_script; do
     dir=$(dirname "$cli_script")
     if [ -f "$dir/vars.schema.json" ]; then
-      rel_dir="${dir#"$SCRIPT_DIR"/}"
+      rel_dir="${dir#"$LIBSCRIPT_CLI_DIR"/}"
       if [ "$rel_dir" != "$dir" ]; then
         echo "$rel_dir"
       fi
@@ -94,7 +95,7 @@ find_components() {
 }
 
 get_desc() {
-  schema="$SCRIPT_DIR/$1/vars.schema.json"
+  schema="$LIBSCRIPT_CLI_DIR/$1/vars.schema.json"
   if command -v jq >/dev/null 2>&1; then
     jq -r '
       def aliases: [ .properties[]? | select(.version_aliases) | .version_aliases[] ] | unique | join(", ");
@@ -164,7 +165,7 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
-CMD="$1"
+CMD="${1:-}"
 if [ -z "$CMD" ] || [ "$CMD" = "--help" ] || [ "$CMD" = "-h" ] || [ "$CMD" = "/?" ]; then
   show_help
   exit 0
@@ -178,17 +179,17 @@ fi
 shift || true
 
 case "$CMD" in
-  list) . "$SCRIPT_DIR/cli/commands/core/list.sh" ;;
-  process-downloads) . "$SCRIPT_DIR/cli/commands/deps/process_downloads.sh" ;;
-  provision) . "$SCRIPT_DIR/cli/commands/cloud/provision.sh" ;;
-  deprovision) . "$SCRIPT_DIR/cli/commands/cloud/deprovision.sh" ;;
-  search) . "$SCRIPT_DIR/cli/commands/core/search.sh" ;;
-  start|stop|status|health|logs|restart|up|down) . "$SCRIPT_DIR/cli/commands/services/actions.sh" ;;
-  install-deps) . "$SCRIPT_DIR/cli/commands/deps/install.sh" ;;
-  db-search) . "$SCRIPT_DIR/cli/commands/registry/search.sh" ;;
-  update-db) . "$SCRIPT_DIR/cli/commands/registry/update.sh" ;;
-  semver) . "$SCRIPT_DIR/cli/commands/core/semver.sh" ;;
-  package_as) . "$SCRIPT_DIR/cli/commands/packaging/package_as.sh" ;;
+  list) . "$LIBSCRIPT_ROOT_DIR/cli/commands/core/list.sh" ;;
+  process-downloads) . "$LIBSCRIPT_ROOT_DIR/cli/commands/deps/process_downloads.sh" ;;
+  provision) . "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/provision.sh" ;;
+  deprovision) . "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deprovision.sh" ;;
+  search) . "$LIBSCRIPT_ROOT_DIR/cli/commands/core/search.sh" ;;
+  start|stop|status|health|logs|restart|up|down) . "$LIBSCRIPT_ROOT_DIR/cli/commands/services/actions.sh" ;;
+  install-deps) . "$LIBSCRIPT_ROOT_DIR/cli/commands/deps/install.sh" ;;
+  db-search) . "$LIBSCRIPT_ROOT_DIR/cli/commands/registry/search.sh" ;;
+  update-db) . "$LIBSCRIPT_ROOT_DIR/cli/commands/registry/update.sh" ;;
+  semver) . "$LIBSCRIPT_ROOT_DIR/cli/commands/core/semver.sh" ;;
+  package_as) . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/package_as.sh" ;;
 esac
 
 IS_ACTION=0
@@ -217,8 +218,10 @@ if [ "$IS_ACTION" = "1" ]; then
 fi
 
 TARGET=""
-if [ -f "$SCRIPT_DIR/$ACTION_PKG/cli.sh" ]; then
-  TARGET="$SCRIPT_DIR/$ACTION_PKG"
+if [ "$ACTION_PKG" = "cloud" ]; then
+  TARGET="$LIBSCRIPT_CLI_DIR/_lib/cloud/core"
+elif [ -f "$SCRIPT_DIR/$ACTION_PKG/cli.sh" ]; then
+  TARGET="$LIBSCRIPT_CLI_DIR/$ACTION_PKG"
 else
   if ! matches=$(find_components | grep -i "$ACTION_PKG"); then
     matches=""
@@ -230,7 +233,7 @@ else
     echo "Error: Unknown component '$ACTION_PKG'."
     exit 1
   elif [ "$count" -eq 1 ]; then
-    TARGET="$SCRIPT_DIR/$matches"
+    TARGET="$LIBSCRIPT_CLI_DIR/$matches"
   else
     if ! exact_match=$(echo "$matches" | grep "/$ACTION_PKG$"); then
       exact_match=""
@@ -239,7 +242,7 @@ else
       exact_count=0
     fi
     if [ "$exact_count" -eq 1 ]; then
-      TARGET="$SCRIPT_DIR/$exact_match"
+      TARGET="$LIBSCRIPT_CLI_DIR/$exact_match"
     else
       echo "Error: Component '$ACTION_PKG' is ambiguous. Matches:"
       echo "$matches" | sed 's/^/  /'

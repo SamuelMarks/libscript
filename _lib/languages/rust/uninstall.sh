@@ -24,6 +24,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 
+
 SCRIPT_NAME="${SCRIPT_DIR}/../../_common/uninstall_base.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090

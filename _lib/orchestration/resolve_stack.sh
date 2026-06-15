@@ -16,11 +16,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 # @description Automatically handles resolve_stack for the resolve_stack.sh (orchestration) component.
 # @file resolve_stack.sh
 
@@ -58,7 +60,7 @@ else
 fi
 
 # Find all manifests. We use basic find for POSIX compliance.
-MANIFESTS=$(find "${SCRIPT_DIR}/../_lib" -name manifest.json)
+MANIFESTS=$(find "${SCRIPT_DIR}/.." -name manifest.json)
 
 if ! command -v jq >/dev/null 2>&1; then
     echo "Error: jq is required but not installed." >&2
@@ -66,5 +68,5 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 # Run the resolution engine
-jq --arg target_os "$TARGET_OS" -n '{install: input, manifests: [inputs]}' "$INSTALL_JSON" $MANIFESTS | jq -L "${SCRIPT_DIR}" --arg target_os "$TARGET_OS" -r -f "${SCRIPT_DIR}/resolve_stack.jq"
+jq --arg target_os "$TARGET_OS" -n '{install: input, manifests: [inputs]}' "$INSTALL_JSON" $MANIFESTS | jq -L "${SCRIPT_DIR}/../utilities" -L "${SCRIPT_DIR}" --arg target_os "$TARGET_OS" -r -f "${SCRIPT_DIR}/resolve_stack.jq"
 

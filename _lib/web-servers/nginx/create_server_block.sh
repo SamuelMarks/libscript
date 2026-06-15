@@ -21,9 +21,9 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${DIR}"; while [ ! -f "${D}/ROOT" ] && [ "${D}" != "/" ]; do D="$(dirname -- "${D}")"; done; [ "${D}" = "/" ] && D="${DIR}"; printf '%s' "${D}")}"
+SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+DIR="${SCRIPT_DIR}"
 
 for LIB in _lib/_common/envsubst_safe.sh ; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
@@ -55,11 +55,11 @@ case "${HTTPS_ALWAYS:-}" in
     conf_tpl="${LIBSCRIPT_ROOT_DIR}"'/_lib/web-servers/nginx/conf/simple_secure.conf' ;;
   *)
     if [ -n "${NGINX_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
-      export LISTEN="unix:${NGINX_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}"
+      export NGINX_LISTEN="unix:${NGINX_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}"
     elif [ -n "${NGINX_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ]; then
-      export LISTEN="${NGINX_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${NGINX_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-${WWWROOT_LISTEN:-80}}}"
+      export NGINX_LISTEN="${NGINX_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${NGINX_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-${WWWROOT_LISTEN:-80}}}"
     else
-      export LISTEN="${NGINX_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-${WWWROOT_LISTEN:-80}}}"
+      export NGINX_LISTEN="${NGINX_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-${WWWROOT_LISTEN:-80}}}"
     fi
     conf_tpl="${LIBSCRIPT_ROOT_DIR}"'/_lib/web-servers/nginx/conf/simple_insecure.conf'
     ;;

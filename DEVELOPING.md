@@ -18,3 +18,7 @@ By adhering to this decentralized model, your component automatically inherits:
 - **Global Dependency Resolution:** It can be included in `libscript.json` stacks and resolved by the versioning engine.
 - **Artifact Generation:** It can be automatically compiled into Dockerfiles, MSI installers, DEB/RPM packages, and more.
 - **Multicloud Deployment:** It can be bootstrapped onto AWS, Azure, or GCP nodes via the unified `provision` command.
+
+### Manifest Extensions (`libscript.json`)
+
+When building stacks, your component definitions can interact with high-level infrastructure concepts. You can define an `infrastructure` block to specify native VM sizing (e.g., `Standard_B2s` or `t3.medium`), and an `ingress` block which the `netctl` engine will automatically map to web servers like Nginx or Caddy.

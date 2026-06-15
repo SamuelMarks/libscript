@@ -21,7 +21,9 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 if [ "$CMD" = "deprovision" ]; then
   
-  exec "$SCRIPT_DIR/scripts/teardown_cloud.sh" "$@"
+  exec "$LIBSCRIPT_ROOT_DIR/_lib/cloud/core/teardown_cloud.sh" "$@"
 fi

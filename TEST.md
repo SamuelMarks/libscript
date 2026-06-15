@@ -18,7 +18,7 @@ To rigorously test component implementations against live environments, the repo
 - `test_combinations.sh` (POSIX)
 - `test_combinations.cmd` (Windows Batch)
 
-These tools leverage the `cloud` module's multicloud abstraction to dynamically provision temporary VPCs, Firewalls, and Compute Nodes across **AWS**, **Azure**, and **GCP**.
+These tools leverage the `cloud` module's multicloud abstraction to dynamically provision temporary VPCs, Firewalls (using native NSGs), and Compute Nodes across **AWS**, **Azure**, and **GCP**.
 
 ### Usage
 ```sh

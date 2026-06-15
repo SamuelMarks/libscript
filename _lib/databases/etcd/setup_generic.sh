@@ -22,7 +22,8 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 DIR=$(CDPATH="" cd -- "$(dirname -- "$0")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(D="${DIR}"; while [ ! -f "${d}/ROOT" ]; do D="$(dirname -- "${D}")"; done; printf "%s" "${D}")}"
+SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 # shellcheck disable=SC1090,SC1091
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh"
 libscript_depends etcd || echo "etcd installation skipped or failed"

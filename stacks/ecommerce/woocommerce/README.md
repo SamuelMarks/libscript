@@ -27,3 +27,7 @@ export WORDPRESS_WEBSERVER="caddy"
 - Linux
 - macOS
 - Windows
+
+## Orchestrated Components
+This stack orchestrates the following LibScript components:
+- (Please document required components here)

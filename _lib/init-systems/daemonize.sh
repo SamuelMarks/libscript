@@ -21,24 +21,29 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 # @description Automatically handles daemonize for the daemonize.sh (init-systems) component.
 # @file daemonize.sh
 
 
 # daemonize.sh <action> <json_file>
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(cd "$(dirname "$0")/../../.." && pwd)}"
+. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+
 ACTION="$1"
 JSON_FILE="$2"
 
 if [ ! -f "$JSON_FILE" ]; then exit 0; fi
 
-SERVICES=$(jq -c '.services[]?' "$JSON_FILE" 2>/dev/null || true)
+SERVICES=$(jq -c '.services | to_entries[]?' "$JSON_FILE" 2>/dev/null || true)
 if [ -z "$SERVICES" ]; then exit 0; fi
 
 OS_NAME=$(uname -s | tr '[:upper:]' '[:lower:]')
 
 echo "$SERVICES" | while read -r svc; do
-    NAME=$(echo "$svc" | jq -r '.name // empty')
-    CMD=$(echo "$svc" | jq -r '.command // empty')
+    NAME=$(echo "$svc" | jq -r '.key // empty')
+    CMD=$(echo "$svc" | jq -r '.value.command // empty')
     if [ -z "$NAME" ] || [ -z "$CMD" ]; then continue; fi
 
     # Create /data/name persistent directory if needed
@@ -49,26 +54,27 @@ echo "$SERVICES" | while read -r svc; do
         if [ "$OS_NAME" = "linux" ] && command -v systemctl >/dev/null 2>&1; then
             SERVICE_FILE="/etc/systemd/system/${NAME}.service"
             # generate systemd
-            sudo sh -c "cat << 'SYSTEMD' > $SERVICE_FILE
+            sudo sh -c "cat << SYSTEMD > $SERVICE_FILE
 [Unit]
 Description=$NAME service managed by libscript
 After=network.target
 
 [Service]
+WorkingDirectory=$(pwd)
 ExecStart=/bin/sh -c \"$CMD\"
 Restart=always
 # Environment variables parsing here (simplified)
 SYSTEMD
 "
             # extract envs
-            ENVS=$(echo "$svc" | jq -r '.env | to_entries[]? | "\(.key)=\(.value)"' 2>/dev/null || true)
+            ENVS=$(echo "$svc" | jq -r '.value.env | to_entries[]? | "\(.key)=\(.value)"' 2>/dev/null || true)
             if [ -n "$ENVS" ]; then
                 sudo sh -c "echo '[Service]' >> $SERVICE_FILE"
                 echo "$ENVS" | while read -r e; do
                     sudo sh -c "echo 'Environment=\"$e\"' >> $SERVICE_FILE"
                 done
             fi
-            ENV_FILES=$(echo "$svc" | jq -r '.env_files[]?' 2>/dev/null || true)
+            ENV_FILES=$(echo "$svc" | jq -r '.value.env_files[]?' 2>/dev/null || true)
             if [ -n "$ENV_FILES" ]; then
                 echo "$ENV_FILES" | while read -r ef; do
                     # resolve path
@@ -78,6 +84,12 @@ SYSTEMD
                     fi
                 done
             fi
+            sudo sh -c "cat << 'SYSTEMD' >> $SERVICE_FILE
+
+[Install]
+WantedBy=multi-user.target
+SYSTEMD
+"
             sudo systemctl daemon-reload
             sudo systemctl enable --now "$NAME"
         elif echo "$OS_NAME" | grep -q "darwin"; then

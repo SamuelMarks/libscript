@@ -1,13 +1,22 @@
 # Scoop
 
 ## Usage
-This document describes the **Scoop** bootstrap component within the LibScript ecosystem. Scoop is a command-line installer for Windows that eliminates permission popup windows and hides GUI wizard dialogs.
 
-The Scoop component functions as a **local version manager** (similar to rvm, nvm, pyenv, uv) for managing Windows tools, while also being capable of being invoked directly from the **global version manager**, `libscript`. Through this capability, Scoop is heavily used by `libscript` on Windows platforms to resolve dependencies and build bigger stacks (like WordPress, Open edX, Nextcloud, etc.).
+This document describes the **Scoop** bootstrap component within the LibScript ecosystem. Scoop is a
+command-line installer for Windows that eliminates permission popup windows and hides GUI wizard
+dialogs.
 
-You can install, start, stop, package, and uninstall scoop using the global `libscript` command or the local CLI.
+The Scoop component functions as a **local version manager** (similar to rvm, nvm, pyenv, uv) for
+managing Windows tools, while also being capable of being invoked directly from the **global version
+manager**, `libscript`. Through this capability, Scoop is heavily used by `libscript` on Windows
+platforms to resolve dependencies and build bigger stacks (like WordPress, Open edX, Nextcloud,
+etc.).
+
+You can install, start, stop, package, and uninstall scoop using the global `libscript` command or
+the local CLI.
 
 **Unix (Linux/macOS):**
+
 ```sh
 
 ./libscript.sh install scoop
@@ -28,6 +37,7 @@ You can install, start, stop, package, and uninstall scoop using the global `lib
 ```
 
 **Windows:**
+
 ```cmd
 :: Global Orchestrator
 libscript.cmd install scoop
@@ -52,9 +62,14 @@ cli.cmd uninstall scoop
 ```
 
 ## Variables
+
 See `vars.schema.json` for details on available variables.
 
 ## Platform Support
+
+<!-- BEGIN_PLATFORMS -->
+
 - Linux
 - macOS
 - Windows
+<!-- END_PLATFORMS -->
