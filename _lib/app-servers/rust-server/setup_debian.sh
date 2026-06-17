@@ -26,8 +26,8 @@ LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 DIR="${SCRIPT_DIR}"
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 
-for LIB in "_lib/_common/environ.sh' '_lib/_common/pkg_mgr.sh' \
-            '_lib/git-servers/git.sh' '_lib/languages/rust/setup.sh' '_lib/_common/envsubst_safe.sh'; do
+for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh" \
+            "_lib/git-servers/git.sh" "_lib/languages/rust/setup.sh" "_lib/_common/envsubst_safe.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091

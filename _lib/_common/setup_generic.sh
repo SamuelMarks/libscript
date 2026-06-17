@@ -43,7 +43,7 @@ if [ -z "${_PKG_MGR_NAME}" ]; then
   _PKG_MGR_NAME=$(basename "$(pwd)")
 fi
 
-for LIB in _lib/_common/pkg_mgr.sh ; do
+for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090

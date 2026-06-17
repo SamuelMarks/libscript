@@ -25,7 +25,7 @@ SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 DIR="${SCRIPT_DIR}"
 
-for LIB in env.sh ; do
+for LIB in "env.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090

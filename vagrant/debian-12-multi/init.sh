@@ -23,9 +23,10 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
-    'LANG='"'"'C.UTF-8'"'"'' \
-    'LC_ALL='"'"'C.UTF-8'"'"'' \
-    'LIBSCRIPT_ROOT_DIR='"'"'/opt/repos/libscript'"'" >> /etc/environment
+printf "%s\n%s\n%s\n" \
+    "LANG='C.UTF-8'" \
+    "LC_ALL='C.UTF-8'" \
+    "LIBSCRIPT_ROOT_DIR='/opt/repos/libscript'" >> /etc/environment
 set +f
 printf '%s\n%s\n' \
     'export LANG='"'"'C.UTF-8'"'"'' \

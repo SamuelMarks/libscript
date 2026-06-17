@@ -25,9 +25,9 @@ SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 DIR="${SCRIPT_DIR}"
 
-for LIB in "_lib/_common/priv.sh' '_lib/_common/envsubst_safe.sh' \
-            '_lib/languages/python/setup.sh' 'stacks/data-science/jupyterhub/env.sh' \
-            '_lib/languages/nodejs/setup.sh'; do
+for LIB in "_lib/_common/priv.sh" "_lib/_common/envsubst_safe.sh" \
+            "_lib/languages/python/setup.sh" "stacks/data-science/jupyterhub/env.sh" \
+            "_lib/languages/nodejs/setup.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090

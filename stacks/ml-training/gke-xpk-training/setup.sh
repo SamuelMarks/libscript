@@ -1,14 +1,45 @@
 #!/bin/sh
+
+set -feu
+# shellcheck disable=SC2296,SC3028,SC3040,SC3054
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+  set -o pipefail
+elif [ "${ZSH_VERSION-}" ]; then
+  THIS_FILE="${(%):-%x}"
+  set -o pipefail
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}:"
+SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+
+# Walk up to find root
+_root="$SCRIPT_DIR"
+while [ ! -f "$_root/ROOT" ] && [ "$_root" != "/" ]; do
+    _root=$(dirname "$_root")
+done
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$_root}"
+
 set -feu
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   echo "Usage: $0"
   exit 0
 fi
 
-"$(dirname "$0")/../../../_lib/cloud-providers/gcp/cli/setup.sh"
-"$(dirname "$0")/../../../_lib/toolchains/python/setup.sh"
-"$(dirname "$0")/../../../_lib/orchestration/kubernetes/kubectl/setup.sh"
-"$(dirname "$0")/../../../_lib/toolchains/xpk/setup.sh"
+"${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp/cli/setup.sh"
+"${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/python/setup.sh"
+"${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/kubernetes/kubectl/setup.sh"
+"${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/xpk/setup.sh"
 
 CLUSTER_NAME="${XPK_CLUSTER_NAME:-ml-xpk-cluster}"
 
@@ -20,7 +51,7 @@ if [ -z "$GCP_PROJECT_ID" ] || [ -z "$GCP_ZONE" ]; then
 fi
 
 echo "Authenticating with GCP..."
-"$(dirname "$0")/../../../_lib/cloud-providers/gcp/cli/cli.sh" auth
+"${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp/cli/cli.sh" auth
 
 echo "Provisioning XPK cluster: $CLUSTER_NAME..."
 xpk cluster create --cluster "$CLUSTER_NAME" --tpu-type "${TPU_ACCELERATOR_TYPE:-v4-8}" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE"

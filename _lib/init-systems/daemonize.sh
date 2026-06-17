@@ -28,7 +28,7 @@ LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 
 
 # daemonize.sh <action> <json_file>
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(cd "$(dirname "$0")/../../.." && pwd)}"
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(cd "${SCRIPT_DIR}/../../.." && pwd)}"
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
 ACTION="$1"

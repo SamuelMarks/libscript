@@ -51,7 +51,7 @@ help() {
 \t-f filename
 \t-o output folder (defaults to ./tmp)
 \t-v verbosity (can be specified multiple times)
-\t-b base images for docker (space seperated, default: "alpine:latest debian:bookworm-slim")
+-b base images for docker (space separated, default: "alpine:latest debian:bookworm-slim")
 \t-h show help text\n\n'
 }
 if [ "${HELP}" -ge 1 ]; then

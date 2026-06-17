@@ -97,6 +97,7 @@ if [ "$TARGET" = "local" ]; then
   
   echo "[BACKUP] Enforcing retention policy: keeping last $KEEP_LAST backups."
   # Pruning logic
+  # shellcheck disable=SC2012
   ls -1t "$BACKUP_DIR"/backup-*.tar.zst 2>/dev/null | tail -n +$((KEEP_LAST + 1)) | xargs rm -f 2>/dev/null || true
 
 elif [ "$TARGET" = "s3" ] || [ "$TARGET" = "gcs" ] || [ "$TARGET" = "azure" ]; then
@@ -109,6 +110,4 @@ echo "[BACKUP] Post-backup hooks: Unquiescing database/filesystem..."
 echo "  -> Database unlocked."
 
 echo "[BACKUP] Backup completed successfully for $NODE."
-exit 0
-cessfully for $NODE."
 exit 0

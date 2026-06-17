@@ -25,7 +25,7 @@ SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 DIR="${SCRIPT_DIR}"
 
-for LIB in _lib/_common/envsubst_safe.sh ; do
+for LIB in "_lib/_common/envsubst_safe.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
@@ -48,14 +48,12 @@ if [ -n "${PHP_FPM_LISTEN:-}" ]; then
   httpd_php_listen="${HTTPD_PHP_FPM_LISTEN}"
   case "${httpd_php_listen}" in
     unix:*)
-      export PHP_FPM_DIRECTIVE="    <FilesMatch \.php$>
-        SetHandler \"proxy:${httpd_php_listen}|fcgi://localhost\"
-    </FilesMatch>"
+      PHP_FPM_DIRECTIVE=$(printf '    <FilesMatch \\.php\$>n        SetHandler "proxy:%s|fcgi://localhost"n    </FilesMatch>' "${httpd_php_listen}")
+      export PHP_FPM_DIRECTIVE
       ;;
     *)
-      export PHP_FPM_DIRECTIVE="    <FilesMatch \.php$>
-        SetHandler \"proxy:fcgi://${httpd_php_listen}\"
-    </FilesMatch>"
+      PHP_FPM_DIRECTIVE=$(printf '    <FilesMatch \\.php\$>n        SetHandler "proxy:fcgi://%s"n    </FilesMatch>' "${httpd_php_listen}")
+      export PHP_FPM_DIRECTIVE
       ;;
   esac
 else

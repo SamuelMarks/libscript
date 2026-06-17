@@ -34,7 +34,7 @@ done
 unset SCRIPT_NAME
 
 export DRY_RUN=true
-SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+SCRIPT_DIR=$(cd ${SCRIPT_DIR} && pwd)
 export LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
 
 export LIBSCRIPT_SKIP_DEPENDENCIES=1

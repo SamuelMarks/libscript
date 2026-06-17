@@ -1,0 +1,9 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "psmux",
+  "title": "psmux",
+  "description": "A native Windows terminal multiplexer, designed as a tmux alternative.",
+  "category": "utilities",
+  "provides": ["psmux"],
+  "os_whitelist": ["windows"]
+}

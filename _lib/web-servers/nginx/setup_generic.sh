@@ -25,9 +25,9 @@ SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 DIR="${SCRIPT_DIR}"
 
-for LIB in "_lib/_common/priv.sh' '_lib/_common/pkg_mgr.sh' \
-            '_lib/web-servers/nginx/merge_location_into_server.sh' \
-            '_lib/_common/environ.sh'; do
+for LIB in "_lib/_common/priv.sh" "_lib/_common/pkg_mgr.sh" \
+            "_lib/web-servers/nginx/merge_location_into_server.sh" \
+            "_lib/_common/environ.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -153,7 +153,7 @@ if [ "${NGINX_VARS-}" ]; then
   unset LOCATION_CONF_FILE
 fi
 
-case "1" in
+case "${_LIBSCRIPT_TRUE:-1}" in
   "$( [ -n "${NGINX_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ] && echo 1 )")
   if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "unix:${NGINX_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then
     true

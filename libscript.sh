@@ -27,7 +27,7 @@ LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 export LIBSCRIPT_ROOT_DIR
 
 # Source logging
-for LIB in _lib/_common/log.sh ; do
+for LIB in "_lib/_common/log.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"

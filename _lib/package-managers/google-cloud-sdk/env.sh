@@ -29,7 +29,7 @@ if command -v gcloud >/dev/null 2>&1; then
 fi
 
 # Load caching downloader
-SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+SCRIPT_DIR=$(cd ${SCRIPT_DIR} && pwd)
 . "$LIBSCRIPT_ROOT_DIR/_lib/_common/pkg_mgr.sh"
 
 OS=$(uname -s)

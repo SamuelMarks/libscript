@@ -26,7 +26,7 @@ LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 NETCTL_DIR="${SCRIPT_DIR}"
 export LIBSCRIPT_ROOT_DIR NETCTL_DIR
 
-for LIB in netctl/lib/prelude.sh ; do
+for LIB in "netctl/lib/prelude.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090

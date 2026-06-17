@@ -145,27 +145,32 @@ EOF_SCRIPT
       if command -v productbuild >/dev/null 2>&1; then
         productbuild --synthesize --package-path "$PKG_STAGE/packages" "$PKG_STAGE/Distribution.xml"
 
-        SED_CMD="sed -i"
-        if [ "$(uname)" = "Darwin" ]; then SED_CMD="sed -i ''"; fi
+        sed_in_place() {
+          if [ "$(uname)" = "Darwin" ]; then
+            sed -i '' "$@"
+          else
+            sed -i "$@"
+          fi
+        }
 
-        $SED_CMD -e '/<installer-gui-script/a\
+        sed_in_place -e '/<installer-gui-script/a\
     <title>'"$APP_NAME"'</title>\
     <options customize="always" require-scripts="false"/>' "$PKG_STAGE/Distribution.xml"
 
         if [ -n "$WELCOME_TEXT" ]; then
-          $SED_CMD -e '/<installer-gui-script/a\
+          sed_in_place -e '/<installer-gui-script/a\
     <welcome file="welcome.html"/>' "$PKG_STAGE/Distribution.xml"
         fi
 
         if [ -n "$LICENSE_PATH" ] && [ -f "$LICENSE_PATH" ]; then
-          $SED_CMD -e '/<installer-gui-script/a\
+          sed_in_place -e '/<installer-gui-script/a\
     <license file="license.html"/>' "$PKG_STAGE/Distribution.xml"
         fi
 
         set -- $DEPS_LIST
         while [ $# -gt 0 ]; do
           PKG=$1; VER=$2; shift 2
-          $SED_CMD "s/choice id=\"com.libscript.comp.$PKG\" title=\"[^\"]*\"/choice id=\"com.libscript.comp.$PKG\" title=\"$PKG installer\"/g" "$PKG_STAGE/Distribution.xml"
+          sed_in_place "s/choice id=\"com.libscript.comp.$PKG\" title=\"[^\"]*\"/choice id=\"com.libscript.comp.$PKG\" title=\"$PKG installer\"/g" "$PKG_STAGE/Distribution.xml"
         done
 
         productbuild --distribution "$PKG_STAGE/Distribution.xml" --package-path "$PKG_STAGE/packages" --resources "$PKG_STAGE/resources" "${OUT_FILE}.pkg"

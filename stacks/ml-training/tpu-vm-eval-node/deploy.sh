@@ -1,4 +1,35 @@
 #!/bin/sh
+
+set -feu
+# shellcheck disable=SC2296,SC3028,SC3040,SC3054
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+  set -o pipefail
+elif [ "${ZSH_VERSION-}" ]; then
+  THIS_FILE="${(%):-%x}"
+  set -o pipefail
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}:"
+SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+
+# Walk up to find root
+_root="$SCRIPT_DIR"
+while [ ! -f "$_root/ROOT" ] && [ "$_root" != "/" ]; do
+    _root=$(dirname "$_root")
+done
+LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$_root}"
+
 set -feu
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   echo "Usage: $0"
@@ -27,7 +58,7 @@ PROJECT_FLAG="--project=$GCP_PROJECT_ID"
 echo "Deploying execution loop to $TPU_NAME..."
 
 echo "Syncing libscript components to TPU VM..."
-gcloud compute tpus tpu-vm scp --recurse "$(dirname "$0")/../../../_lib" "$TPU_NAME:~/" --zone="$TPU_ZONE" $PROJECT_FLAG
+gcloud compute tpus tpu-vm scp --recurse "${LIBSCRIPT_ROOT_DIR}/_lib" "$TPU_NAME:~/" --zone="$TPU_ZONE" $PROJECT_FLAG
 
 echo "Installing components on TPU VM..."
 gcloud compute tpus tpu-vm ssh "$TPU_NAME" --zone="$TPU_ZONE" $PROJECT_FLAG --command "
@@ -37,7 +68,6 @@ gcloud compute tpus tpu-vm ssh "$TPU_NAME" --zone="$TPU_ZONE" $PROJECT_FLAG --co
 "
 
 cat << 'EOF' > /tmp/ml_deploy.sh
-#!/bin/bash
 set -ex
 
 # Mount bucket
@@ -51,10 +81,10 @@ gcsfuse --implicit-dirs "$BUCKET_NAME" /mnt/ml_data
 # The training script will be executed via the detached SSH wrapper
 EOF
 
-"$(dirname "$0")/../../../_lib/cloud-providers/gcp/tpu-vm/cli.sh" ssh "$TPU_NAME" "bash -s" < /tmp/ml_deploy.sh "$BUCKET_NAME"
+"${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp/tpu-vm/cli.sh" ssh "$TPU_NAME" "bash -s" < /tmp/ml_deploy.sh "$BUCKET_NAME"
 
 echo "Triggering detached training session and port-forwarding TensorBoard..."
-"$(dirname "$0")/../../../_lib/cloud-providers/gcp/tpu-vm/cli.sh" ssh "$TPU_NAME" --detached --forward-port 6006:localhost:6006 "cd /mnt/ml_data && $ML_SCRIPT"
+"${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp/tpu-vm/cli.sh" ssh "$TPU_NAME" --detached --forward-port 6006:localhost:6006 "cd /mnt/ml_data && $ML_SCRIPT"
 
 echo "Deploy complete. TensorBoard is available at http://localhost:6006"
 echo "To re-attach to the training session, run: tpu-vm ssh $TPU_NAME 'tmux attach'"

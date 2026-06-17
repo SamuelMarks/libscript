@@ -26,7 +26,7 @@ export DIR="${_DIR}"
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 
-for LIB in _lib/_common/pkg_mgr.sh' '_lib/_common/priv.sh ; do
+for LIB in '_lib/_common/pkg_mgr.sh' '_lib/_common/priv.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091

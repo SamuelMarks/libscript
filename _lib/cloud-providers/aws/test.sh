@@ -23,7 +23,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
-for LIB in _lib/_common/test_base.sh ; do
+for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
@@ -31,7 +31,7 @@ for LIB in _lib/_common/test_base.sh ; do
 done
 
 #!/bin/sh
-for LIB in _lib/_common/test_base.sh ; do
+for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
@@ -40,7 +40,7 @@ done
 
 #!/bin/sh
 export DRY_RUN=true
-SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+SCRIPT_DIR=$(cd ${SCRIPT_DIR} && pwd)
 
 log_info "Testing AWS component in DRY_RUN mode..."
 

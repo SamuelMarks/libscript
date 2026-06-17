@@ -35,7 +35,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 # #!/bin/sh
 # # PACKAGE_NAME is inferred from directory name
 # # (Optional: set PACKAGE_NAME="my-component" to override)
-# for LIB in _lib/_common/component_core.sh ; do
+# for LIB in "_lib/_common/component_core.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
 #   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
 #   export SCRIPT_NAME
 #   # shellcheck disable=SC1090

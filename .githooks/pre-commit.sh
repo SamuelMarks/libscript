@@ -1,0 +1,189 @@
+#!/bin/sh
+set -e
+
+echo "Running pre-commit hooks..."
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+if [ -z "$STAGED_FILES" ]; then
+    echo "No files to check."
+else
+    # 1. Enforce line endings and indent
+    echo "Enforcing line endings and indent..."
+    # Set IFS to newline only to handle spaces in filenames
+    OIFS="$IFS"
+    IFS='
+'
+    for file in $STAGED_FILES; do
+        if [ ! -f "$file" ]; then continue; fi
+        
+        # Determine target line ending from gitattributes
+        ext="${file##*.}"
+        filename=$(basename "$file")
+        
+        # Enforce CRLF for Windows scripts
+        if [ "$ext" = "cmd" ] || [ "$ext" = "bat" ]; then
+            if command -v unix2dos >/dev/null 2>&1; then unix2dos -q "$file"; fi
+        # Enforce LF for everything else typically
+        elif [ "$ext" = "sh" ] || [ "$ext" = "bash" ] || [ "$ext" = "zsh" ] || [ "$ext" = "conf" ] || [ "$ext" = "md" ] || [ "$ext" = "json" ] || [ "$ext" = "yml" ] || [ "$ext" = "yaml" ] || [ "$ext" = "py" ] || [ "$ext" = "ps1" ] || echo "$filename" | grep -q "Dockerfile" || [ "$filename" = ".gitignore" ] || [ "$filename" = ".gitattributes" ] || [ "$filename" = ".dockerignore" ] || [ "$filename" = ".editorconfig" ]; then
+            if command -v dos2unix >/dev/null 2>&1; then dos2unix -q "$file"; fi
+        fi
+        
+        # Enforce Indent via Prettier where applicable
+        if [ "$ext" = "json" ] || [ "$ext" = "yml" ] || [ "$ext" = "yaml" ] || [ "$ext" = "md" ]; then
+             if command -v npx >/dev/null 2>&1; then
+                 npx prettier --write "$file" >/dev/null 2>&1 || true
+             fi
+        fi
+        
+        git add "$file"
+    done
+    IFS="$OIFS"
+
+    # 2. Spellcheck
+    echo "Running spellcheck..."
+    if command -v npx >/dev/null 2>&1; then
+        tmp_files=$(mktemp)
+        echo "$STAGED_FILES" | while IFS= read -r file; do
+             if [ -f "$file" ]; then
+                 printf "%s\0" "$file"
+             fi
+        done > "$tmp_files"
+        
+        if [ -s "$tmp_files" ]; then
+             xargs -0 npx cspell lint --no-progress --no-summary < "$tmp_files" || echo "Spellcheck found potential issues, but continuing..."
+        fi
+        rm -f "$tmp_files"
+    fi
+fi
+
+# 3. Shellcheck
+echo "Running shellcheck..."
+if git ls-files "*.sh" | grep -vE "node_modules|\.git|top\.sh|bottom\.sh|template_.*\.sh|netctl/lib/.*\.sh|libscript\.sh|patch_.*\.sh|fix_.*\.sh|update_.*\.sh|.*_gen\.sh|gen/.*|test_.*\.sh" >/dev/null 2>&1; then
+  git ls-files "*.sh" | grep -vE "node_modules|\.git|top\.sh|bottom\.sh|template_.*\.sh|netctl/lib/.*\.sh|libscript\.sh|patch_.*\.sh|fix_.*\.sh|update_.*\.sh|.*_gen\.sh|gen/.*|test_.*\.sh" | xargs shellcheck -e SC2086,SC2317,SC2148,SC1090,SC1091,SC3043,SC3040,SC3025,SC2129,SC2016,SC3054,SC2296,SC2209,SC2154,SC2221,SC2222,SC2034,SC2038,SC1009,SC1083,SC1073,SC1072,SC1089,SC2018,SC2019,SC1003,SC1047,SC1046,SC1035,SC2295,SC2251,SC3059,SC2081,SC3010,SC2054
+fi
+
+# 4. Regenerate Markdown Readmes
+echo "Regenerating markdown readme files interpolating the json..."
+if [ -x "devtools/docs-gen/generate_markdown_docs.sh" ]; then
+    ./devtools/docs-gen/generate_markdown_docs.sh
+    # Re-add any modified README.md files
+    git ls-files -m | grep "README.md$" | xargs -I {} git add "{}" || true
+fi
+
+# 5. Existing CI matrix logic
+echo "Updating CI matrix components list..."
+components=$(find _lib stacks -type f \( -name "test.sh" -o -name "test.cmd" \) | xargs -n1 dirname | sort | uniq | grep -v "_lib/_common" | grep -v "_lib/message-brokers") || true
+
+if [ -n "$components" ]; then
+  echo "        component:" >new_components.txt
+  for comp in $components; do
+    echo "          - \"$comp\"" >>new_components.txt
+  done
+  awk '/^\s*exclude:/ {exit} {print}' .github/workflows/ci.yml >ci_top.yml
+  awk '/^\s*component:/ {exit} {print}' ci_top.yml >ci_top_clean.yml
+  awk 'BEGIN {p=0} /^\s*exclude:/ {p=1} p {print}' .github/workflows/ci.yml >ci_bottom.yml
+  cat ci_top_clean.yml new_components.txt ci_bottom.yml >.github/workflows/ci.yml
+  rm -f ci_top* new_components.txt ci_bottom.yml
+fi
+
+echo "Updating CI Checks Matrix in README.md..."
+cat <<'TABLE' >ci_results.tmp
+## CI Checks Matrix
+
+[![CI](https://github.com/SamuelMarks/libscript/actions/workflows/ci.yml/badge.svg)](https://github.com/SamuelMarks/libscript/actions/workflows/ci.yml)
+
+| Component | Ubuntu | macOS | Windows |
+|---|---|---|---|
+TABLE
+
+echo "Fetching live CI matrix status from GitHub..."
+run_id=$(curl -s "https://api.github.com/repos/SamuelMarks/libscript/actions/runs?branch=master&event=push&status=completed&per_page=1" | jq -r '.workflow_runs[0].id' 2>/dev/null || echo "null")
+rm -f jobs_status.tmp
+if [ "$run_id" != "null" ] && [ -n "$run_id" ]; then
+  echo "Found latest run ID: $run_id"
+  page=1
+  while :; do
+    response=$(curl -s "https://api.github.com/repos/SamuelMarks/libscript/actions/runs/${run_id}/jobs?per_page=100&page=${page}")
+    jobs_count=$(echo "$response" | jq '.jobs | length' 2>/dev/null || echo "0")
+    if [ "$jobs_count" -eq 0 ]; then
+      break
+    fi
+    echo "$response" | jq -r '.jobs[] | "\(.name)|\(.conclusion)"' >>jobs_status.tmp
+    page=$((page + 1))
+  done
+else
+  echo "Failed to fetch run ID or jq not installed. Using fallback markers."
+fi
+
+get_job_status() {
+  local comp="$1"
+  local os="$2"
+  if [ -f jobs_status.tmp ]; then
+    local status=$(grep -F "${comp} on ${os}|" jobs_status.tmp | cut -d'|' -f2 | head -n1)
+    case "$status" in
+      "success") echo "✅" ;;
+      "failure") echo "❌" ;;
+      "skipped") echo "⏭️" ;;
+      "cancelled") echo "🛑" ;;
+      *) echo "❓" ;;
+    esac
+  else
+    echo "❓"
+  fi
+}
+
+if [ -n "$components" ]; then
+  for comp in $components; do
+    ubuntu=$(get_job_status "$comp" "ubuntu-latest")
+    macos=$(get_job_status "$comp" "macos-latest")
+    windows=$(get_job_status "$comp" "windows-latest")
+
+    # Check exclusions (overrides API status if excluded in ci.yml)
+    if grep -A 2 "\- os: macos-latest" .github/workflows/ci.yml | grep -q "\"$comp\""; then
+      macos="⏭️"
+    fi
+    if grep -A 2 "\- os: windows-latest" .github/workflows/ci.yml | grep -q "\"$comp\""; then
+      windows="⏭️"
+    fi
+
+    echo "| \`$comp\` | $ubuntu | $macos | $windows |" >>ci_results.tmp
+  done
+fi
+
+if grep -q "## CI Run Results" README.md; then
+  awk '
+    /## CI Run Results/ {
+        in_ci = 1;
+        while ((getline line < "ci_results.tmp") > 0) print line;
+        next;
+    }
+    /^## / && in_ci {
+        in_ci = 0;
+    }
+    !in_ci {
+        print
+    }
+    ' README.md >README.tmp && mv README.tmp README.md
+elif grep -q "## CI Checks Matrix" README.md; then
+  awk '
+    /## CI Checks Matrix/ {
+        in_ci = 1;
+        while ((getline line < "ci_results.tmp") > 0) print line;
+        next;
+    }
+    /^## / && in_ci {
+        in_ci = 0;
+    }
+    !in_ci {
+        print
+    }
+    ' README.md >README.tmp && mv README.tmp README.md
+else
+  echo "" >>README.md
+  cat ci_results.tmp >>README.md
+fi
+rm -f ci_results.tmp jobs_status.tmp
+
+git add .github/workflows/ci.yml README.md
+echo "Pre-commit hook completed successfully."

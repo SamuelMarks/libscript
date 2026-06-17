@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "/_lib/utilities/psmux/vars.schema.json",
+  "title": "psmux vars",
+  "description": "Variables to configure psmux",
+  "type": "object",
+  "properties": {
+    "PSMUX_VERSION": {
+      "type": "string",
+      "description": "Version of psmux to install",
+      "default": "v3.3.6"
+    }
+  }
+}
