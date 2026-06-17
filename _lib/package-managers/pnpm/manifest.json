@@ -1,13 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "pnpm",
-  "provides": [
-    "package-manager",
-    "pnpm"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["package-manager", "pnpm"],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "title": "pnpm",
   "description": "Bootstrap module for the `pnpm` package manager.",

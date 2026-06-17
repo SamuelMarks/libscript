@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "pub",
-  "provides": [
-    "pub"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["pub"],
+  "os_whitelist": ["all"],
   "title": "pub",
   "description": "Bootstrap module for `pub` (Dart / Flutter package manager).",
   "category": "package-manager"

@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "kubectl",
+  "title": "Kubectl",
+  "description": "A fast, scalable, multi-language and extensible build system, installed via Kubectlisk.",
+  "category": "toolchain",
+  "provides": ["build-system", "kubectl", "kubectlisk"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": []
+}

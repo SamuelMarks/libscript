@@ -7,11 +7,7 @@
   "properties": {
     "LIBSCRIPT_DEFAULT_CLOUD": {
       "type": "string",
-      "enum": [
-        "aws",
-        "azure",
-        "gcp"
-      ],
+      "enum": ["aws", "azure", "gcp"],
       "default": "aws",
       "description": "Default cloud provider to use"
     },

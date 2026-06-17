@@ -4,17 +4,9 @@
   "title": "Docker",
   "description": "A platform for developing, shipping, and running containerized applications.",
   "category": "orchestration",
-  "provides": [
-    "docker",
-    "orchestration",
-    "containers",
-    "runtime",
-    "server"
-  ],
+  "provides": ["docker", "orchestration", "containers", "runtime", "server"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "ports": []
 }

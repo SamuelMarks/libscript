@@ -9,7 +9,6 @@ Ensures the `pdm` executable is available. Relies on `pipx` or standard Python `
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

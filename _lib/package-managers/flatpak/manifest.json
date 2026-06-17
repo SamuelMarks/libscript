@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "flatpak",
-  "provides": [
-    "flatpak"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["flatpak"],
+  "os_whitelist": ["all"],
   "title": "flatpak",
   "description": "Bootstrap module for the `flatpak` package manager/tool.",
   "category": "package-manager"

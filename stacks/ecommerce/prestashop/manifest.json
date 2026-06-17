@@ -4,7 +4,5 @@
   "category": "ecommerce",
   "title": "prestashop",
   "description": "prestashop stack",
-  "provides": [
-    "prestashop"
-  ]
+  "provides": ["prestashop"]
 }

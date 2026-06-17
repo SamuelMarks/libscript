@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "paru",
-  "provides": [
-    "paru"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["paru"],
+  "os_whitelist": ["all"],
   "title": "paru",
   "description": "Bootstrap module for the `paru` package manager.",
   "category": "package-manager"

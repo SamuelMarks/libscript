@@ -4,14 +4,9 @@
   "title": "Shell Toolchain",
   "description": "POSIX-compliant shell environment.",
   "category": "languages",
-  "provides": [
-    "sh",
-    "toolchain"
-  ],
+  "provides": ["sh", "toolchain"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "ports": []
 }

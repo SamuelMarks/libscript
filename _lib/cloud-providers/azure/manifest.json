@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "azure",
-  "provides": [
-    "azure"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["azure"],
+  "os_whitelist": ["all"],
   "category": "cloud",
   "title": "Azure",
   "description": "LibScript component for AZURE"

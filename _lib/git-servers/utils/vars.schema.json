@@ -18,8 +18,5 @@
       "type": "string"
     }
   },
-  "required": [
-    "1",
-    "2"
-  ]
+  "required": ["1", "2"]
 }

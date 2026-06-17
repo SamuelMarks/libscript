@@ -4,7 +4,5 @@
   "category": "cms",
   "title": "drupal",
   "description": "drupal stack",
-  "provides": [
-    "drupal"
-  ]
+  "provides": ["drupal"]
 }

@@ -9,7 +9,6 @@ Ensures the FreeBSD `pkg` executable is available by running `pkg bootstrap`.
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

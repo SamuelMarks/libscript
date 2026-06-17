@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "cygwin",
-  "provides": [
-    "cygwin"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["cygwin"],
+  "os_whitelist": ["all"],
   "title": "cygwin bootstrap",
   "description": "Cygwin POSIX environment for Windows.",
   "category": "package-manager"

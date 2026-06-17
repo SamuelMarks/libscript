@@ -4,12 +4,6 @@
   "title": "Maven",
   "description": "A software project management and comprehension tool, primarily for Java.",
   "category": "toolchain",
-  "provides": [
-    "maven",
-    "mvn",
-    "build-system"
-  ],
-  "os_whitelist": [
-    "all"
-  ]
+  "provides": ["maven", "mvn", "build-system"],
+  "os_whitelist": ["all"]
 }

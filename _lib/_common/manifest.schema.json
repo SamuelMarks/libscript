@@ -4,10 +4,7 @@
   "title": "LibScript Component Manifest",
   "description": "Static metadata for a LibScript component",
   "type": "object",
-  "required": [
-    "name",
-    "provides"
-  ],
+  "required": ["name", "provides"],
   "properties": {
     "name": {
       "type": "string",
@@ -40,9 +37,7 @@
       "items": {
         "type": "string"
       },
-      "default": [
-        "all"
-      ]
+      "default": ["all"]
     },
     "os_blacklist": {
       "type": "array",

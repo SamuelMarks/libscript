@@ -4,11 +4,6 @@
   "title": "Dash",
   "description": "A POSIX-compliant implementation of /bin/sh that aims to be as small and efficient as possible.",
   "category": "utility",
-  "provides": [
-    "dash",
-    "sh"
-  ],
-  "os_whitelist": [
-    "all"
-  ]
+  "provides": ["dash", "sh"],
+  "os_whitelist": ["all"]
 }

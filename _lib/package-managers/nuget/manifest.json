@@ -1,13 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "nuget",
-  "provides": [
-    "package-manager",
-    "nuget"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["package-manager", "nuget"],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "title": "nuget",
   "description": "Bootstrap module for the `nuget` package manager.",

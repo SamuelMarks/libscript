@@ -1,18 +1,9 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "asdf",
-  "provides": [
-    "version-manager",
-    "package-manager",
-    "asdf"
-  ],
-  "os_whitelist": [
-    "linux",
-    "darwin"
-  ],
-  "os_blacklist": [
-    "windows"
-  ],
+  "provides": ["version-manager", "package-manager", "asdf"],
+  "os_whitelist": ["linux", "darwin"],
+  "os_blacklist": ["windows"],
   "title": "asdf",
   "description": "Bootstrap module for the `asdf` universal version manager.",
   "category": "package-manager"

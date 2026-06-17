@@ -4,14 +4,9 @@
   "title": "SQLite",
   "description": "A C-language library that implements a small, fast, self-contained, high-reliability, full-featured, SQL database engine.",
   "category": "databases",
-  "provides": [
-    "database",
-    "sqlite"
-  ],
+  "provides": ["database", "sqlite"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "ports": []
 }

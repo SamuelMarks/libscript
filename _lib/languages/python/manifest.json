@@ -4,15 +4,9 @@
   "title": "Python Runtime",
   "description": "A versatile programming language that lets you work quickly and integrate systems more effectively.",
   "category": "languages",
-  "provides": [
-    "runtime",
-    "python",
-    "pip"
-  ],
+  "provides": ["runtime", "python", "pip"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "ports": []
 }

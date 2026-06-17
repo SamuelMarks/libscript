@@ -4,7 +4,5 @@
   "category": "crawlers",
   "title": "firecrawl",
   "description": "firecrawl stack",
-  "provides": [
-    "firecrawl"
-  ]
+  "provides": ["firecrawl"]
 }

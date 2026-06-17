@@ -6,7 +6,6 @@ programming language. Typically installed via `choosenim`.
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

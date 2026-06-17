@@ -1,21 +1,11 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "gitlab",
-  "provides": [
-    "git-server",
-    "gitlab",
-    "gitlab-ce"
-  ],
+  "provides": ["git-server", "gitlab", "gitlab-ce"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
-  "ports": [
-    "80",
-    "443",
-    "22"
-  ],
+  "ports": ["80", "443", "22"],
   "title": "Gitlab",
   "description": "LibScript component for GITLAB",
   "category": "uncategorized"

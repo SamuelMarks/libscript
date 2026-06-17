@@ -4,7 +4,5 @@
   "category": "cms",
   "title": "joomla",
   "description": "joomla stack",
-  "provides": [
-    "joomla"
-  ]
+  "provides": ["joomla"]
 }

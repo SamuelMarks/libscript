@@ -6,7 +6,6 @@ runner, and package manager.
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

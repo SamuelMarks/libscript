@@ -10,7 +10,6 @@ Ensures the `gradle` executable is available. Relies on the core Java toolchain 
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

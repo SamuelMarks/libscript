@@ -6,7 +6,6 @@ and packaging. Requires Python 3 to be installed.
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

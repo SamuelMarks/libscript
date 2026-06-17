@@ -4,7 +4,5 @@
   "category": "data-science",
   "title": "jupyterhub",
   "description": "jupyterhub stack",
-  "provides": [
-    "jupyterhub"
-  ]
+  "provides": ["jupyterhub"]
 }

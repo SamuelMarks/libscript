@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "yay",
-  "provides": [
-    "yay"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["yay"],
+  "os_whitelist": ["all"],
   "title": "yay",
   "description": "Bootstrap module for the `yay` package manager.",
   "category": "package-manager"

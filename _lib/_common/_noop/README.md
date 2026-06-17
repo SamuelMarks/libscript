@@ -78,7 +78,7 @@ cli.cmd uninstall _noop
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
+- Windows
 <!-- END_PLATFORMS -->

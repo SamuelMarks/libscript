@@ -4,7 +4,5 @@
   "category": "ecommerce",
   "title": "magento",
   "description": "magento stack",
-  "provides": [
-    "magento"
-  ]
+  "provides": ["magento"]
 }

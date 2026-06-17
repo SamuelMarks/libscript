@@ -1,13 +1,17 @@
 # Usage Guide
 
-LibScript provides a unified interface for provisioning software across Linux, Windows, macOS, and BSD. All commands have strict parity across `./libscript.sh` (POSIX) and `libscript.cmd` (Windows).
+LibScript provides a unified interface for provisioning software across Linux, Windows, macOS, and
+BSD. All commands have strict parity across `./libscript.sh` (POSIX) and `libscript.cmd` (Windows).
 
 ## Native Component Installation
 
-LibScript treats every component as a standalone package manager. You can manage tools either through the **Global Orchestrator** or via the **Local CLI** within each component's directory.
+LibScript treats every component as a standalone package manager. You can manage tools either
+through the **Global Orchestrator** or via the **Local CLI** within each component's directory.
 
 ### Global Orchestrator
-The global CLI (`libscript.sh` / `libscript.cmd`) handles routing, orchestration, and complex version resolution for you.
+
+The global CLI (`libscript.sh` / `libscript.cmd`) handles routing, orchestration, and complex
+version resolution for you.
 
 ```sh
 # POSIX
@@ -19,7 +23,9 @@ libscript.cmd install python 3.11
 ```
 
 ### Local Component CLI
-Every component is an autonomous package manager. This approach is ideal for managing a single tool or when working within a specific component's directory.
+
+Every component is an autonomous package manager. This approach is ideal for managing a single tool
+or when working within a specific component's directory.
 
 ```sh
 # POSIX (navigate to component directory or call directly)
@@ -30,8 +36,23 @@ Every component is an autonomous package manager. This approach is ideal for man
 _lib\languages\python\cli.cmd install python 3.11
 ```
 
+### AI & Machine Learning Workloads
+
+LibScript automates the provisioning of hardware-accelerated nodes (like TPUs and GPUs) and
+orchestrates ML stacks.
+
+```sh
+# Provision a TPU VM running vLLM for inference
+export MODEL_NAME="your-org/your-model"
+export TPU_NAME="vllm-serving-node"
+./stacks/ai-serving/tpu-vm-vllm/setup.sh
+./stacks/ai-serving/tpu-vm-vllm/deploy.sh
+```
+
 ### Inspecting Components (`info` & `env`)
-Every component provides utilities to inspect its installation state and dynamically generated configuration (like connection strings, generated passwords, or default ports).
+
+Every component provides utilities to inspect its installation state and dynamically generated
+configuration (like connection strings, generated passwords, or default ports).
 
 ```sh
 # View installation path and dynamic outputs
@@ -50,7 +71,8 @@ For complex stacks, LibScript uses a declarative `libscript.json` and a built-in
 
 ### Defining Your Stack
 
-Create a `libscript.json` to define your dependencies, including version constraints like `>16`, `~20`, or specific version aliases.
+Create a `libscript.json` to define your dependencies, including version constraints like `>16`,
+`~20`, or specific version aliases.
 
 ```json
 {
@@ -66,20 +88,14 @@ Create a `libscript.json` to define your dependencies, including version constra
     }
   },
   "dependencies": {
-    "toolchains": [
-      { "name": "python", "version": "3.12" }
-    ],
-    "servers": [
-      { "name": "nginx", "ports": [80, 443] }
-    ]
+    "toolchains": [{ "name": "python", "version": "3.12" }],
+    "servers": [{ "name": "nginx", "ports": [80, 443] }]
   },
   "hooks": {
-    "build": [
-      { "name": "compile", "command": "npm run build" }
-    ],
+    "build": [{ "name": "compile", "command": "npm run build" }],
     "pre_start": [
-      { 
-        "name": "migrate", 
+      {
+        "name": "migrate",
         "command": "python manage.py migrate",
         "condition": "unless_exists /data/db.sqlite3"
       }
@@ -109,7 +125,8 @@ Create a `libscript.json` to define your dependencies, including version constra
 
 ### Provisioning & Lifecycle
 
-Use `install-deps` to automatically resolve and install the stack requirements natively on your machine, followed by `start` to orchestrate your app.
+Use `install-deps` to automatically resolve and install the stack requirements natively on your
+machine, followed by `start` to orchestrate your app.
 
 ```sh
 # 1. Resolves constraints, downloads binaries, and runs setups
@@ -119,25 +136,28 @@ Use `install-deps` to automatically resolve and install the stack requirements n
 ./libscript.sh start
 ```
 
-*Note: LibScript acts as a native PaaS. The `start` command automatically translates your `services` into system daemons and configures your `ingress` routes via Nginx (powered by `netctl`).*
-
+_Note: LibScript acts as a native PaaS. The `start` command automatically translates your `services`
+into system daemons and configures your `ingress` routes via Nginx (powered by `netctl`)._
 
 ## 🏗️ Artifact Generation (`package_as`)
 
 Generate production-ready artifacts from your current stack definition.
 
 ### Generate a Dockerfile
+
 ```sh
 ./libscript.sh package_as docker
 ```
 
 ### Generate a Windows Installer (.msi)
+
 ```sh
 # This transforms your shell logic into a WiX-based MSI installer
 ./libscript.sh package_as msi
 ```
 
 ### Generate other native artifacts
+
 ```sh
 # Generate a macOS Installer
 ./libscript.sh package_as pkg
@@ -151,7 +171,9 @@ Generate production-ready artifacts from your current stack definition.
 
 ## 🌍 Cloud Orchestration
 
-LibScript wraps official cloud vendor CLIs into a unified, idempotent interface. The easiest way to deploy a stack is via the high-level `provision` command, which orchestrates networking, firewall rules, node creation, codebase syncing, and daemonizing your stack.
+LibScript wraps official cloud vendor CLIs into a unified, idempotent interface. The easiest way to
+deploy a stack is via the high-level `provision` command, which orchestrates networking, firewall
+rules, node creation, codebase syncing, and daemonizing your stack.
 
 ```sh
 # Provision your stack on AWS
@@ -163,17 +185,20 @@ LibScript wraps official cloud vendor CLIs into a unified, idempotent interface.
 
 ### Disaster Recovery & Migrations
 
-LibScript includes advanced features to track cloud state, back up critical volumes, and seamlessly migrate instances between clouds (AWS, Azure, GCP).
+LibScript includes advanced features to track cloud state, back up critical volumes, and seamlessly
+migrate instances between clouds (AWS, Azure, GCP).
 
-**Tracking Drift & State:**
-To view all cloud resources created by LibScript or to detect divergence between your local `.libscript_state.json` and the cloud:
+**Tracking Drift & State:** To view all cloud resources created by LibScript or to detect divergence
+between your local `.libscript_state.json` and the cloud:
+
 ```sh
 ./libscript.sh cloud list-managed
 ./libscript.sh cloud diff
 ```
 
-**Backing Up Workloads:**
-Use the `backup` command to snapshot application state before teardowns. It supports quiescing hooks to ensure database consistency.
+**Backing Up Workloads:** Use the `backup` command to snapshot application state before teardowns.
+It supports quiescing hooks to ensure database consistency.
+
 ```sh
 # Perform an incremental, encrypted local backup
 ./libscript.sh cloud backup my-node --target local --keep-last 3
@@ -182,15 +207,18 @@ Use the `backup` command to snapshot application state before teardowns. It supp
 ./libscript.sh cloud backup my-node --target s3 --snapshot --paths "/var/lib/postgresql/data /etc/letsencrypt"
 ```
 
-**Deprovisioning (with Retention):**
-When tearing down a node, you can preserve the valuable components—the Public IP and the Data Disks—so they can be reused later. Retaining the IP prevents your DNS records from breaking.
+**Deprovisioning (with Retention):** When tearing down a node, you can preserve the valuable
+components—the Public IP and the Data Disks—so they can be reused later. Retaining the IP prevents
+your DNS records from breaking.
+
 ```sh
 # Delete the compute and network interfaces, but keep the IP and data volume
 ./libscript.sh deprovision aws my-node my-vpc us-east-1 --retain-ip --retain-data
 ```
 
-**Restoring / Migrating Workloads:**
-You can restore a backed-up or retained node to the same cloud or even migrate it to a different provider.
+**Restoring / Migrating Workloads:** You can restore a backed-up or retained node to the same cloud
+or even migrate it to a different provider.
+
 ```sh
 # Restore the node onto Azure using the latest backup (automatically remaps IP configurations)
 ./libscript.sh cloud restore my-node --from-backup latest
@@ -208,6 +236,7 @@ You can also drop down to lower-level resource management:
 ```
 
 ### Application Deployment & DNS
+
 LibScript provides built-in primitives to push applications and map domains to node IPs.
 
 ```sh
@@ -222,10 +251,16 @@ LibScript provides built-in primitives to push applications and map domains to n
 ```
 
 ### Persistent State Management
-For workloads relying on local state (like SQLite or file uploads), LibScript supports generic bidirectional state synchronization backed by Object Storage (S3-compatible, GCS, Azure Blob, or rclone providers). Define a `state` block in your `libscript.json`, and the framework will automatically pull state during `provision` and push mutated state during `deprovision`.
+
+For workloads relying on local state (like SQLite or file uploads), LibScript supports generic
+bidirectional state synchronization backed by Object Storage (S3-compatible, GCS, Azure Blob, or
+rclone providers). Define a `state` block in your `libscript.json`, and the framework will
+automatically pull state during `provision` and push mutated state during `deprovision`.
 
 ### Resource Cleanup
-LibScript can safely deprovision individual nodes (and their dedicated resources) or clean up an entire region.
+
+LibScript can safely deprovision individual nodes (and their dedicated resources) or clean up an
+entire region.
 
 ```sh
 # Cleanly teardown a specific provisioned stack (and dangling DNS records)

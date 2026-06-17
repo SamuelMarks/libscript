@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "gem",
-  "provides": [
-    "gem"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["gem"],
+  "os_whitelist": ["all"],
   "title": "gem",
   "description": "Bootstrap module for the `gem` package manager.",
   "category": "package-manager"

@@ -2,25 +2,24 @@ name: CI Tests
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Run Markdown Generator
-      run: ./devtools/docs-gen/generate_markdown_docs.sh
+      - uses: actions/checkout@v3
 
-    - name: Verify Documentation Freshness
-      run: |
-        if [ -n "$(git status --porcelain)" ]; then
-          echo "Documentation is out of date! Please run devtools/docs-gen/generate_markdown_docs.sh and commit the results."
-          git diff
-          exit 1
-        fi
+      - name: Run Markdown Generator
+        run: ./devtools/docs-gen/generate_markdown_docs.sh
+
+      - name: Verify Documentation Freshness
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Documentation is out of date! Please run devtools/docs-gen/generate_markdown_docs.sh and commit the results."
+            git diff
+            exit 1
+          fi

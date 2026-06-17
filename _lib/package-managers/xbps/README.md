@@ -9,7 +9,6 @@ Ensures the `xbps-install` executable is available (usually built-in on Void Lin
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

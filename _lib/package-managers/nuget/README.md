@@ -10,7 +10,6 @@ package on Debian).
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

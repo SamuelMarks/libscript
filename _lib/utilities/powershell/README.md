@@ -66,7 +66,6 @@ See `vars.schema.json` for details on available variables.
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

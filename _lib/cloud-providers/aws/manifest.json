@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "aws",
-  "provides": [
-    "aws"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["aws"],
+  "os_whitelist": ["all"],
   "category": "cloud",
   "title": "Aws",
   "description": "LibScript component for AWS"

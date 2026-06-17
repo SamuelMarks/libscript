@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "pipx",
-  "provides": [
-    "pipx"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["pipx"],
+  "os_whitelist": ["all"],
   "title": "pipx",
   "description": "Bootstrap module for the `pipx` package manager.",
   "category": "package-manager"

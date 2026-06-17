@@ -10,7 +10,6 @@ This module relies on the core Python toolchain and `pip`.
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

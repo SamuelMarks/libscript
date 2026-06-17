@@ -4,26 +4,9 @@
   "title": "Kubernetes The Hard Way",
   "description": "A custom Kubernetes cluster setup based on 'Kubernetes The Hard Way'.",
   "category": "orchestration",
-  "provides": [
-    "kubernetes",
-    "thw",
-    "orchestration",
-    "server"
-  ],
+  "provides": ["kubernetes", "thw", "orchestration", "server"],
   "conflicts": [],
-  "os_whitelist": [
-    "linux",
-    "darwin"
-  ],
-  "os_blacklist": [
-    "windows"
-  ],
-  "ports": [
-    6443,
-    2379,
-    2380,
-    10250,
-    10259,
-    10257
-  ]
+  "os_whitelist": ["linux", "darwin"],
+  "os_blacklist": ["windows"],
+  "ports": [6443, 2379, 2380, 10250, 10259, 10257]
 }

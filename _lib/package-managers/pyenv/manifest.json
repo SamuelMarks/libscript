@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "pyenv",
-  "provides": [
-    "pyenv"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["pyenv"],
+  "os_whitelist": ["all"],
   "title": "pyenv",
   "description": "Bootstrap module for `pyenv` (Python Version Manager).",
   "category": "package-manager"

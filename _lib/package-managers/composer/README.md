@@ -9,7 +9,6 @@ Ensures the `composer` executable is available by delegating to the `_toolchain/
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

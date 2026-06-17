@@ -4,16 +4,9 @@
   "title": "Node.js Runtime",
   "description": "JavaScript runtime built on Chrome's V8 JavaScript engine.",
   "category": "languages",
-  "provides": [
-    "runtime",
-    "javascript",
-    "nodejs",
-    "npm"
-  ],
+  "provides": ["runtime", "javascript", "nodejs", "npm"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "ports": []
 }

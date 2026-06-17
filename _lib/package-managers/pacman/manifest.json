@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "pacman",
-  "provides": [
-    "pacman"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["pacman"],
+  "os_whitelist": ["all"],
   "title": "pacman",
   "description": "Bootstrap module for the `pacman` package manager.",
   "category": "package-manager"

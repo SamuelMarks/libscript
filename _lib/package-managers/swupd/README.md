@@ -10,7 +10,6 @@ it cannot be reliably bootstrapped on other distributions or operating systems.
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

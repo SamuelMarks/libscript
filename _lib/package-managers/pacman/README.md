@@ -10,7 +10,6 @@ its corresponding Linux distributions, this typically just ensures the package i
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

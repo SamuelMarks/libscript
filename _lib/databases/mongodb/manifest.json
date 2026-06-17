@@ -4,17 +4,9 @@
   "title": "MongoDB",
   "description": "A source-available cross-platform document-oriented database program.",
   "category": "databases",
-  "provides": [
-    "database",
-    "document-db",
-    "mongodb"
-  ],
+  "provides": ["database", "document-db", "mongodb"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
-  "ports": [
-    27017
-  ]
+  "ports": [27017]
 }

@@ -4,7 +4,5 @@
   "category": "ecommerce",
   "title": "woocommerce",
   "description": "woocommerce stack",
-  "provides": [
-    "woocommerce"
-  ]
+  "provides": ["woocommerce"]
 }

@@ -1,18 +1,9 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "pkg",
-  "provides": [
-    "package-manager",
-    "pkg"
-  ],
-  "os_whitelist": [
-    "freebsd"
-  ],
-  "os_blacklist": [
-    "linux",
-    "darwin",
-    "windows"
-  ],
+  "provides": ["package-manager", "pkg"],
+  "os_whitelist": ["freebsd"],
+  "os_blacklist": ["linux", "darwin", "windows"],
   "title": "pkg",
   "description": "Bootstrap module for the FreeBSD `pkg` package manager.",
   "category": "package-manager"

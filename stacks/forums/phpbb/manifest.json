@@ -4,7 +4,5 @@
   "category": "forums",
   "title": "phpbb",
   "description": "phpbb stack",
-  "provides": [
-    "phpbb"
-  ]
+  "provides": ["phpbb"]
 }

@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "macports",
-  "provides": [
-    "macports"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["macports"],
+  "os_whitelist": ["all"],
   "title": "macports",
   "description": "Bootstrap module for the `macports` package manager/tool.",
   "category": "package-manager"

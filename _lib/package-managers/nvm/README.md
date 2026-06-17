@@ -10,7 +10,6 @@ and `nvm-windows` on Windows.
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

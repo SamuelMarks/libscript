@@ -4,15 +4,9 @@
   "title": "Rust Toolchain",
   "description": "A language empowering everyone to build reliable and efficient software.",
   "category": "languages",
-  "provides": [
-    "compiler",
-    "rust",
-    "cargo"
-  ],
+  "provides": ["compiler", "rust", "cargo"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "ports": []
 }

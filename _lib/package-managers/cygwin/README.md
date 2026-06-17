@@ -9,7 +9,6 @@ See `vars.schema.json`.
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

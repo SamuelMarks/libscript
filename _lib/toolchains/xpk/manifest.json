@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "xpk",
+  "title": "xpk",
+  "description": "A fast, scalable, multi-language and extensible build system, installed via xpkisk.",
+  "category": "toolchain",
+  "provides": ["build-system", "xpk", "xpkisk"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": []
+}

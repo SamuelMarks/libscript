@@ -1,0 +1,13 @@
+{
+  "name": "tpu-vm-eval-node",
+  "version": "1.0.0",
+  "description": "Comprehensive ML Training and Evaluation Stack for TPU VMs. Features GCS FUSE mounting, detached tmux sessions, and remote TensorBoard port forwarding.",
+  "dependencies": {
+    "cloud-providers/gcp/cli": "latest",
+    "cloud-providers/gcp/tpu-vm": "latest",
+    "storage-layers/gcsfuse": "latest",
+    "utilities/tmux": "latest",
+    "logging/tensorboard": "latest",
+    "databases/duckdb": "latest"
+  }
+}

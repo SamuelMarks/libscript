@@ -4,16 +4,9 @@
   "title": "C# Toolchain",
   "description": "C# compiler and .NET runtime.",
   "category": "languages",
-  "provides": [
-    "compiler",
-    "c#",
-    "csharp",
-    "dotnet"
-  ],
+  "provides": ["compiler", "c#", "csharp", "dotnet"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "ports": []
 }

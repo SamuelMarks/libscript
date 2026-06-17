@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "pip",
-  "provides": [
-    "pip"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["pip"],
+  "os_whitelist": ["all"],
   "title": "pip",
   "description": "Bootstrap module for the `pip` package manager.",
   "category": "package-manager"

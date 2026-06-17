@@ -1,14 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "krew",
-  "provides": [
-    "package-manager",
-    "krew",
-    "kubectl-krew"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["package-manager", "krew", "kubectl-krew"],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "title": "krew",
   "description": "Bootstrap script for [Krew](https://krew.sigs.k8s.io/), the plugin manager for `kubectl` command-line tool.",

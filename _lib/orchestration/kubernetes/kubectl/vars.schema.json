@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/kubectl/vars.schema.json",
+  "title": "Kubectl variables",
+  "description": "Configuration variables for Kubectl",
+  "type": "object",
+  "properties": {
+    "BAZEL_VERSION": {
+      "description": "Specific version of kubectl to install. Can be a numeric version or an alias.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "BAZEL_INSTALL_METHOD": {
+      "description": "How to install BAZEL. 'system' uses the native OS package manager, 'source' compiles/downloads binaries.",
+      "type": "string",
+      "enum": ["system", "source"],
+      "default": "source"
+    },
+    "LIBSCRIPT_LISTEN_PORT": {
+      "type": ["string", "integer"],
+      "description": "Global port to listen on"
+    },
+    "LIBSCRIPT_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Global address to listen on"
+    },
+    "LIBSCRIPT_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Global unix socket to listen on"
+    },
+    "BAZEL_LISTEN_PORT": {
+      "type": ["string", "integer"],
+      "description": "Port for BAZEL to listen on"
+    },
+    "BAZEL_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Address for BAZEL to listen on"
+    },
+    "BAZEL_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Unix socket for BAZEL to listen on"
+    }
+  }
+}

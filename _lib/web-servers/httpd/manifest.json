@@ -4,18 +4,9 @@
   "title": "Apache HTTPD",
   "description": "The Apache HTTP Server, a secure, efficient and extensible server that provides HTTP services in sync with the current HTTP standards.",
   "category": "web-servers",
-  "provides": [
-    "web-server",
-    "apache",
-    "httpd"
-  ],
+  "provides": ["web-server", "apache", "httpd"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
-  "ports": [
-    80,
-    443
-  ]
+  "ports": [80, 443]
 }

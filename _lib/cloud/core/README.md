@@ -133,7 +133,6 @@ reattached to a new instance later:
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

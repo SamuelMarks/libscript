@@ -9,18 +9,12 @@
       "description": "Specific version of elixir to install. Can be a numeric version or an alias.",
       "type": "string",
       "default": "latest",
-      "version_aliases": [
-        "latest",
-        "stable"
-      ]
+      "version_aliases": ["latest", "stable"]
     },
     "ELIXIR_INSTALL_METHOD": {
       "description": "How to install ELIXIR. 'system' uses the native OS package manager, 'source' compiles/downloads binaries.",
       "type": "string",
-      "enum": [
-        "system",
-        "source"
-      ],
+      "enum": ["system", "source"],
       "default": "system"
     }
   }

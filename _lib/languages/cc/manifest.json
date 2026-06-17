@@ -4,14 +4,9 @@
   "title": "C Compiler",
   "description": "Generic C compiler interface.",
   "category": "languages",
-  "provides": [
-    "cc",
-    "toolchain"
-  ],
+  "provides": ["cc", "toolchain"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "ports": []
 }

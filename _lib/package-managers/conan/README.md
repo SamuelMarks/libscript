@@ -9,7 +9,6 @@ Ensures the `conan` executable is available. This relies on Python (`pip` or `pi
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

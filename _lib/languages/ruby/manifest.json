@@ -4,15 +4,9 @@
   "title": "Ruby Runtime",
   "description": "A dynamic, open source programming language with a focus on simplicity and productivity.",
   "category": "languages",
-  "provides": [
-    "runtime",
-    "ruby",
-    "gem"
-  ],
+  "provides": ["runtime", "ruby", "gem"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "ports": []
 }

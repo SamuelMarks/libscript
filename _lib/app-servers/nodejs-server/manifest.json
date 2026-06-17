@@ -4,14 +4,9 @@
   "title": "Node.js App Server",
   "description": "Generic Node.js application server component.",
   "category": "app-servers",
-  "provides": [
-    "app-server",
-    "nodejs"
-  ],
+  "provides": ["app-server", "nodejs"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "ports": []
 }

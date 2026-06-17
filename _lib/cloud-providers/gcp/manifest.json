@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "gcp",
-  "provides": [
-    "gcp"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["gcp"],
+  "os_whitelist": ["all"],
   "category": "cloud",
   "title": "Gcp",
   "description": "LibScript component for GCP"

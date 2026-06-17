@@ -8,10 +8,7 @@
     "NGINX_INSTALL_METHOD": {
       "description": "How to install Nginx.",
       "type": "string",
-      "enum": [
-        "system",
-        "source"
-      ],
+      "enum": ["system", "source"],
       "default": "system"
     },
     "NGINX_WWWROOT_NAME": {
@@ -28,17 +25,11 @@
       "default": "80"
     },
     "LIBSCRIPT_LISTEN_PORT_SECURE": {
-      "type": [
-        "string",
-        "integer"
-      ],
+      "type": ["string", "integer"],
       "description": "Global secure port to listen on"
     },
     "LIBSCRIPT_LISTEN_PORT": {
-      "type": [
-        "string",
-        "integer"
-      ],
+      "type": ["string", "integer"],
       "description": "Global port to listen on"
     },
     "LIBSCRIPT_LISTEN_ADDRESS": {
@@ -50,17 +41,11 @@
       "description": "Global unix socket to listen on"
     },
     "NGINX_LISTEN_PORT_SECURE": {
-      "type": [
-        "string",
-        "integer"
-      ],
+      "type": ["string", "integer"],
       "description": "Secure port for NGINX to listen on"
     },
     "NGINX_LISTEN_PORT": {
-      "type": [
-        "string",
-        "integer"
-      ],
+      "type": ["string", "integer"],
       "description": "Port for NGINX to listen on"
     },
     "NGINX_LISTEN_ADDRESS": {

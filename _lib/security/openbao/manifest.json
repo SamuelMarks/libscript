@@ -4,19 +4,9 @@
   "title": "OpenBao",
   "description": "An open-source tool for managing secrets and protecting sensitive data.",
   "category": "security",
-  "provides": [
-    "openbao",
-    "security",
-    "secrets",
-    "server"
-  ],
+  "provides": ["openbao", "security", "secrets", "server"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
-  "ports": [
-    8200,
-    8201
-  ]
+  "ports": [8200, 8201]
 }

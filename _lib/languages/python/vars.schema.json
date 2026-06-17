@@ -9,10 +9,7 @@
       "description": "Version of Python demanded. Can be a specific numeric version number or an alias",
       "type": "string",
       "default": "3.11",
-      "version_aliases": [
-        "latest",
-        "cpython"
-      ]
+      "version_aliases": ["latest", "cpython"]
     },
     "PYTHON_VENV": {
       "description": "Path to a Python virtualenv (will create if nonexistent)",
@@ -21,10 +18,7 @@
     "PYTHON_INSTALL_METHOD": {
       "description": "How to install PYTHON. 'system' uses the native OS package manager, 'source' compiles/downloads binaries.",
       "type": "string",
-      "enum": [
-        "system",
-        "source"
-      ],
+      "enum": ["system", "source"],
       "default": "system"
     }
   }

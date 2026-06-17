@@ -4,18 +4,9 @@
   "title": "Nginx",
   "description": "A high-performance HTTP and reverse proxy server, as well as a mail proxy server.",
   "category": "web-servers",
-  "provides": [
-    "web-server",
-    "reverse-proxy",
-    "nginx"
-  ],
+  "provides": ["web-server", "reverse-proxy", "nginx"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
-  "ports": [
-    80,
-    443
-  ]
+  "ports": [80, 443]
 }

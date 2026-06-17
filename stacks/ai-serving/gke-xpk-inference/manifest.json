@@ -1,0 +1,11 @@
+{
+  "name": "gke-xpk-inference",
+  "version": "1.0.0",
+  "description": "Production-grade TPU deployment using XPK on GKE.",
+  "dependencies": {
+    "cloud-providers/gcp/cli": "latest",
+    "toolchains/python": "latest",
+    "orchestration/kubernetes/kubectl": "latest",
+    "toolchains/xpk": "latest"
+  }
+}

@@ -4,15 +4,9 @@
   "title": "Kotlin Toolchain",
   "description": "A modern programming language that makes developers happier.",
   "category": "languages",
-  "provides": [
-    "compiler",
-    "kotlin",
-    "jvm"
-  ],
+  "provides": ["compiler", "kotlin", "jvm"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "ports": []
 }

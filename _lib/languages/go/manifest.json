@@ -4,14 +4,9 @@
   "title": "Go Toolchain",
   "description": "An open-source programming language that makes it easy to build simple, reliable, and efficient software.",
   "category": "languages",
-  "provides": [
-    "compiler",
-    "go"
-  ],
+  "provides": ["compiler", "go"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "ports": []
 }

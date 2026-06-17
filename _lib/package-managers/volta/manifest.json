@@ -1,13 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "volta",
-  "provides": [
-    "package-manager",
-    "volta"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["package-manager", "volta"],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "title": "volta",
   "description": "Bootstrap script for [Volta](https://volta.sh/), a fast, reliable JavaScript tool manager.",

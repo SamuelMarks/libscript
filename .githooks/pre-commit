@@ -1,22 +1,85 @@
 #!/bin/sh
 set -e
 
+echo "Running pre-commit hooks..."
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+if [ -z "$STAGED_FILES" ]; then
+    echo "No files to check."
+else
+    # 1. Enforce line endings and indent
+    echo "Enforcing line endings and indent..."
+    # Set IFS to newline only to handle spaces in filenames
+    OIFS="$IFS"
+    IFS='
+'
+    for file in $STAGED_FILES; do
+        if [ ! -f "$file" ]; then continue; fi
+        
+        # Determine target line ending from gitattributes
+        ext="${file##*.}"
+        filename=$(basename "$file")
+        
+        # Enforce CRLF for Windows scripts
+        if [ "$ext" = "cmd" ] || [ "$ext" = "bat" ]; then
+            if command -v unix2dos >/dev/null 2>&1; then unix2dos -q "$file"; fi
+        # Enforce LF for everything else typically
+        elif [ "$ext" = "sh" ] || [ "$ext" = "bash" ] || [ "$ext" = "zsh" ] || [ "$ext" = "conf" ] || [ "$ext" = "md" ] || [ "$ext" = "json" ] || [ "$ext" = "yml" ] || [ "$ext" = "yaml" ] || [ "$ext" = "py" ] || [ "$ext" = "ps1" ] || echo "$filename" | grep -q "Dockerfile" || [ "$filename" = ".gitignore" ] || [ "$filename" = ".gitattributes" ] || [ "$filename" = ".dockerignore" ] || [ "$filename" = ".editorconfig" ]; then
+            if command -v dos2unix >/dev/null 2>&1; then dos2unix -q "$file"; fi
+        fi
+        
+        # Enforce Indent via Prettier where applicable
+        if [ "$ext" = "json" ] || [ "$ext" = "yml" ] || [ "$ext" = "yaml" ] || [ "$ext" = "md" ]; then
+             if command -v npx >/dev/null 2>&1; then
+                 npx prettier --write "$file" >/dev/null 2>&1 || true
+             fi
+        fi
+        
+        git add "$file"
+    done
+    IFS="$OIFS"
+
+    # 2. Spellcheck
+    echo "Running spellcheck..."
+    if command -v npx >/dev/null 2>&1; then
+        echo "$STAGED_FILES" | while IFS= read -r file; do
+             if [ -f "$file" ]; then
+                 npx cspell lint --no-progress --no-summary "$file" || echo "Spellcheck found potential issues in $file, but continuing..."
+             fi
+        done
+    fi
+fi
+
+# 3. Shellcheck
 echo "Running shellcheck..."
-# Use git ls-files to only check tracked files, excluding known generated/fragment files
-git ls-files "*.sh" | grep -vE "node_modules|\.git|top\.sh|bottom\.sh|template_.*\.sh|netctl/lib/.*\.sh|libscript\.sh|patch_.*\.sh|fix_.*\.sh|update_.*\.sh|.*_gen\.sh|gen/.*|test_.*\.sh" | xargs shellcheck -e SC2086,SC2317,SC2148,SC1090,SC1091,SC3043,SC3040,SC3025,SC2129,SC2016,SC3054,SC2296,SC2209,SC2154,SC2221,SC2222,SC2034,SC2038,SC1009,SC1083,SC1073,SC1072,SC1089,SC2018,SC2019,SC1003,SC1047,SC1046,SC1035,SC2295,SC2251,SC3059,SC2081,SC3010,SC2054
+if git ls-files "*.sh" | grep -vE "node_modules|\.git|top\.sh|bottom\.sh|template_.*\.sh|netctl/lib/.*\.sh|libscript\.sh|patch_.*\.sh|fix_.*\.sh|update_.*\.sh|.*_gen\.sh|gen/.*|test_.*\.sh" >/dev/null 2>&1; then
+  git ls-files "*.sh" | grep -vE "node_modules|\.git|top\.sh|bottom\.sh|template_.*\.sh|netctl/lib/.*\.sh|libscript\.sh|patch_.*\.sh|fix_.*\.sh|update_.*\.sh|.*_gen\.sh|gen/.*|test_.*\.sh" | xargs shellcheck -e SC2086,SC2317,SC2148,SC1090,SC1091,SC3043,SC3040,SC3025,SC2129,SC2016,SC3054,SC2296,SC2209,SC2154,SC2221,SC2222,SC2034,SC2038,SC1009,SC1083,SC1073,SC1072,SC1089,SC2018,SC2019,SC1003,SC1047,SC1046,SC1035,SC2295,SC2251,SC3059,SC2081,SC3010,SC2054
+fi
 
+# 4. Regenerate Markdown Readmes
+echo "Regenerating markdown readme files interpolating the json..."
+if [ -x "devtools/docs-gen/generate_markdown_docs.sh" ]; then
+    ./devtools/docs-gen/generate_markdown_docs.sh
+    # Re-add any modified README.md files
+    git ls-files -m | grep "README.md$" | xargs -I {} git add "{}" || true
+fi
+
+# 5. Existing CI matrix logic
 echo "Updating CI matrix components list..."
-components=$(find _lib app -type f \( -name "test.sh" -o -name "test.cmd" \) | xargs -n1 dirname | sort | uniq | grep -v "_lib/_common" | grep -v "_lib/message-brokers")
+components=$(find _lib app -type f \( -name "test.sh" -o -name "test.cmd" \) | xargs -n1 dirname | sort | uniq | grep -v "_lib/_common" | grep -v "_lib/message-brokers") || true
 
-echo "        component:" >new_components.txt
-for comp in $components; do
-  echo "          - \"$comp\"" >>new_components.txt
-done
-awk '/^\s*exclude:/ {exit} {print}' .github/workflows/ci.yml >ci_top.yml
-awk '/^\s*component:/ {exit} {print}' ci_top.yml >ci_top_clean.yml
-awk 'BEGIN {p=0} /^\s*exclude:/ {p=1} p {print}' .github/workflows/ci.yml >ci_bottom.yml
-cat ci_top_clean.yml new_components.txt ci_bottom.yml >.github/workflows/ci.yml
-rm -f ci_top* new_components.txt ci_bottom.yml
+if [ -n "$components" ]; then
+  echo "        component:" >new_components.txt
+  for comp in $components; do
+    echo "          - \"$comp\"" >>new_components.txt
+  done
+  awk '/^\s*exclude:/ {exit} {print}' .github/workflows/ci.yml >ci_top.yml
+  awk '/^\s*component:/ {exit} {print}' ci_top.yml >ci_top_clean.yml
+  awk 'BEGIN {p=0} /^\s*exclude:/ {p=1} p {print}' .github/workflows/ci.yml >ci_bottom.yml
+  cat ci_top_clean.yml new_components.txt ci_bottom.yml >.github/workflows/ci.yml
+  rm -f ci_top* new_components.txt ci_bottom.yml
+fi
 
 echo "Updating CI Checks Matrix in README.md..."
 cat <<'TABLE' >ci_results.tmp
@@ -64,21 +127,23 @@ get_job_status() {
   fi
 }
 
-for comp in $components; do
-  ubuntu=$(get_job_status "$comp" "ubuntu-latest")
-  macos=$(get_job_status "$comp" "macos-latest")
-  windows=$(get_job_status "$comp" "windows-latest")
+if [ -n "$components" ]; then
+  for comp in $components; do
+    ubuntu=$(get_job_status "$comp" "ubuntu-latest")
+    macos=$(get_job_status "$comp" "macos-latest")
+    windows=$(get_job_status "$comp" "windows-latest")
 
-  # Check exclusions (overrides API status if excluded in ci.yml)
-  if grep -A 2 "\- os: macos-latest" .github/workflows/ci.yml | grep -q "\"$comp\""; then
-    macos="⏭️"
-  fi
-  if grep -A 2 "\- os: windows-latest" .github/workflows/ci.yml | grep -q "\"$comp\""; then
-    windows="⏭️"
-  fi
+    # Check exclusions (overrides API status if excluded in ci.yml)
+    if grep -A 2 "\- os: macos-latest" .github/workflows/ci.yml | grep -q "\"$comp\""; then
+      macos="⏭️"
+    fi
+    if grep -A 2 "\- os: windows-latest" .github/workflows/ci.yml | grep -q "\"$comp\""; then
+      windows="⏭️"
+    fi
 
-  echo "| \`$comp\` | $ubuntu | $macos | $windows |" >>ci_results.tmp
-done
+    echo "| \`$comp\` | $ubuntu | $macos | $windows |" >>ci_results.tmp
+  done
+fi
 
 if grep -q "## CI Run Results" README.md; then
   awk '

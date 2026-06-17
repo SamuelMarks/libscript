@@ -4,11 +4,6 @@
   "title": "aria2",
   "description": "A lightweight multi-protocol & multi-source command-line download utility.",
   "category": "utility",
-  "provides": [
-    "aria2",
-    "aria2c"
-  ],
-  "os_whitelist": [
-    "all"
-  ]
+  "provides": ["aria2", "aria2c"],
+  "os_whitelist": ["all"]
 }

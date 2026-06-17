@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "rustup",
-  "provides": [
-    "rustup"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["rustup"],
+  "os_whitelist": ["all"],
   "title": "rustup",
   "description": "Bootstrap module for `rustup` (Rust toolchain installer).",
   "category": "package-manager"

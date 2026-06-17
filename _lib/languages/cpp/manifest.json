@@ -4,17 +4,9 @@
   "title": "C++ Toolchain",
   "description": "Standard C++ compiler and toolchain (G++/Clang++).",
   "category": "languages",
-  "provides": [
-    "compiler",
-    "c++",
-    "cpp",
-    "g++",
-    "clang++"
-  ],
+  "provides": ["compiler", "c++", "cpp", "g++", "clang++"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "ports": []
 }

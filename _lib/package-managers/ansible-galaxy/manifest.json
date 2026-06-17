@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "ansible-galaxy",
-  "provides": [
-    "ansible-galaxy"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["ansible-galaxy"],
+  "os_whitelist": ["all"],
   "title": "ansible-galaxy",
   "description": "Bootstrap module for the `ansible-galaxy` package manager.",
   "category": "package-manager"

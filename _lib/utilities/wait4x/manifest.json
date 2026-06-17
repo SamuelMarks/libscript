@@ -4,10 +4,6 @@
   "title": "Wait4X",
   "description": "A tool to wait for various services or resources to become available.",
   "category": "utility",
-  "provides": [
-    "wait4x"
-  ],
-  "os_whitelist": [
-    "all"
-  ]
+  "provides": ["wait4x"],
+  "os_whitelist": ["all"]
 }

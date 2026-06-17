@@ -4,17 +4,9 @@
   "title": "PostgreSQL",
   "description": "A powerful, open source object-relational database system.",
   "category": "databases",
-  "provides": [
-    "database",
-    "postgres",
-    "postgresql"
-  ],
+  "provides": ["database", "postgres", "postgresql"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
-  "ports": [
-    5432
-  ]
+  "ports": [5432]
 }

@@ -8,10 +8,7 @@
     "CPP_INSTALL_METHOD": {
       "description": "How to install CPP. 'system' uses the native OS package manager, 'source' compiles/downloads binaries.",
       "type": "string",
-      "enum": [
-        "system",
-        "source"
-      ],
+      "enum": ["system", "source"],
       "default": "system"
     },
     "CPP_VERSION": {

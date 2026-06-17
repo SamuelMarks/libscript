@@ -15,10 +15,7 @@
       "type": "string"
     },
     "LIBSCRIPT_LISTEN_PORT": {
-      "type": [
-        "string",
-        "integer"
-      ],
+      "type": ["string", "integer"],
       "description": "Global port to listen on"
     },
     "LIBSCRIPT_LISTEN_ADDRESS": {
@@ -30,10 +27,7 @@
       "description": "Global unix socket to listen on"
     },
     "VALKEY_LISTEN_PORT": {
-      "type": [
-        "string",
-        "integer"
-      ],
+      "type": ["string", "integer"],
       "description": "Port for VALKEY to listen on"
     },
     "VALKEY_LISTEN_ADDRESS": {

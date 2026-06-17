@@ -1,16 +1,9 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "sdkman",
-  "provides": [
-    "package-manager",
-    "sdkman"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
-  "os_blacklist": [
-    "windows"
-  ],
+  "provides": ["package-manager", "sdkman"],
+  "os_whitelist": ["all"],
+  "os_blacklist": ["windows"],
   "title": "sdkman",
   "description": "Bootstrap script for [SDKMAN!](https://sdkman.io/), a tool for managing parallel versions of multiple Software Development Kits on most Unix based systems.",
   "category": "package-manager"

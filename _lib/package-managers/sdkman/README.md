@@ -6,7 +6,6 @@ multiple Software Development Kits on most Unix based systems.
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

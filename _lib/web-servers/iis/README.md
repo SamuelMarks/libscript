@@ -69,7 +69,6 @@ cli.cmd uninstall iis
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

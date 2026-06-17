@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "rbenv",
-  "provides": [
-    "rbenv"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["rbenv"],
+  "os_whitelist": ["all"],
   "title": "rbenv",
   "description": "Bootstrap module for the `rbenv` package manager.",
   "category": "package-manager"

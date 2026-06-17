@@ -4,16 +4,9 @@
   "title": "C Toolchain",
   "description": "Standard C compiler and toolchain (GCC/Clang).",
   "category": "languages",
-  "provides": [
-    "compiler",
-    "c",
-    "gcc",
-    "clang"
-  ],
+  "provides": ["compiler", "c", "gcc", "clang"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "ports": []
 }

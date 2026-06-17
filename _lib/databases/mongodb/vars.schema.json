@@ -9,25 +9,16 @@
       "description": "Specific version of mongodb to install. Can be a numeric version or an alias.",
       "type": "string",
       "default": "latest",
-      "version_aliases": [
-        "latest",
-        "stable"
-      ]
+      "version_aliases": ["latest", "stable"]
     },
     "MONGODB_INSTALL_METHOD": {
       "description": "How to install MONGODB. 'system' uses the native OS package manager, 'source' compiles/downloads binaries.",
       "type": "string",
-      "enum": [
-        "system",
-        "source"
-      ],
+      "enum": ["system", "source"],
       "default": "system"
     },
     "LIBSCRIPT_LISTEN_PORT": {
-      "type": [
-        "string",
-        "integer"
-      ],
+      "type": ["string", "integer"],
       "description": "Global port to listen on"
     },
     "LIBSCRIPT_LISTEN_ADDRESS": {
@@ -39,10 +30,7 @@
       "description": "Global unix socket to listen on"
     },
     "MONGODB_LISTEN_PORT": {
-      "type": [
-        "string",
-        "integer"
-      ],
+      "type": ["string", "integer"],
       "description": "Port for MONGODB to listen on"
     },
     "MONGODB_LISTEN_ADDRESS": {

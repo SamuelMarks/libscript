@@ -4,16 +4,9 @@
   "title": "Java Toolchain",
   "description": "Java Development Kit (JDK) and runtime environment.",
   "category": "languages",
-  "provides": [
-    "runtime",
-    "java",
-    "jre",
-    "jdk"
-  ],
+  "provides": ["runtime", "java", "jre", "jdk"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "ports": []
 }

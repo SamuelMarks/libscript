@@ -6,7 +6,6 @@ versions, configurations, platforms, and compilers.
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

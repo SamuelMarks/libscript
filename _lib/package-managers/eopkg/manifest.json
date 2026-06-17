@@ -1,17 +1,9 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "eopkg",
-  "provides": [
-    "package-manager",
-    "eopkg"
-  ],
-  "os_whitelist": [
-    "linux"
-  ],
-  "os_blacklist": [
-    "windows",
-    "mac"
-  ],
+  "provides": ["package-manager", "eopkg"],
+  "os_whitelist": ["linux"],
+  "os_blacklist": ["windows", "mac"],
   "title": "eopkg",
   "description": "Bootstrap script for `eopkg`, the system package manager for Solus OS.",
   "category": "package-manager"

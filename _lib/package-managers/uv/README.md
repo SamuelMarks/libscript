@@ -9,7 +9,6 @@ Installs the `uv` executable via its standalone installer.
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

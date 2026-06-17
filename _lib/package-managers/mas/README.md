@@ -9,7 +9,6 @@ Ensures the `mas` executable is available for automating Mac App Store installs.
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

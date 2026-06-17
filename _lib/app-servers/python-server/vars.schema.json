@@ -18,10 +18,7 @@
       "type": "string"
     },
     "LIBSCRIPT_LISTEN_PORT": {
-      "type": [
-        "string",
-        "integer"
-      ],
+      "type": ["string", "integer"],
       "description": "Global port to listen on"
     },
     "LIBSCRIPT_LISTEN_ADDRESS": {
@@ -33,10 +30,7 @@
       "description": "Global unix socket to listen on"
     },
     "PYTHON_SERVER_LISTEN_PORT": {
-      "type": [
-        "string",
-        "integer"
-      ],
+      "type": ["string", "integer"],
       "description": "Port for PYTHON to listen on"
     },
     "PYTHON_SERVER_LISTEN_ADDRESS": {

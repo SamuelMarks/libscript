@@ -9,7 +9,6 @@ Ensures the `gem` executable is available. This relies on the core language tool
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

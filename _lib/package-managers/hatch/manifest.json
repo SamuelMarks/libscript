@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "hatch",
-  "provides": [
-    "hatch"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["hatch"],
+  "os_whitelist": ["all"],
   "title": "hatch",
   "description": "Bootstrap module for `hatch` (Modern Python project manager).",
   "category": "package-manager"

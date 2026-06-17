@@ -1,0 +1,10 @@
+{
+  "name": "tpu-vm-vllm",
+  "version": "1.0.0",
+  "description": "TPU VM Prototyping stack for serving LLMs (like gemma-4-sql) via vLLM on a single TPU VM.",
+  "dependencies": {
+    "cloud-providers/gcp/cli": "latest",
+    "cloud-providers/gcp/tpu-vm": "latest",
+    "toolchains/huggingface-cli": "latest"
+  }
+}

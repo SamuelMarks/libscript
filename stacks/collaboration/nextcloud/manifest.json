@@ -4,7 +4,5 @@
   "category": "collaboration",
   "title": "nextcloud",
   "description": "nextcloud stack",
-  "provides": [
-    "nextcloud"
-  ]
+  "provides": ["nextcloud"]
 }

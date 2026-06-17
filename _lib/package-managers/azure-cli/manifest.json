@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "azure-cli",
-  "provides": [
-    "azure-cli"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["azure-cli"],
+  "os_whitelist": ["all"],
   "category": "package-manager",
   "title": "Azure Cli",
   "description": "Bootstrap module for the `azure-cli` package manager."

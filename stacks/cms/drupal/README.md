@@ -3,6 +3,7 @@
 Installs Drupal natively via release tarball with webserver and DB configuration.
 
 ## Configuration Options
+
 - `DRUPAL_VERSION`: Default `10.2.6`
 - `DRUPAL_WEBSERVER`: Webserver to use (e.g., `nginx`, `caddy`, `httpd`, `iis`). Default `nginx`
 - `DRUPAL_DB_TYPE`: Database to use (`sqlite`, `mariadb`, `postgres`). Default `sqlite`
@@ -14,13 +15,17 @@ Installs Drupal natively via release tarball with webserver and DB configuration
 - `DRUPAL_WWWROOT`: Path to install Drupal
 
 ## Variables
+
 See `vars.schema.json` for details on available variables.
 
 ## Platform Support
+
 - Linux
 - macOS
 - Windows
 
 ## Orchestrated Components
+
 This stack orchestrates the following LibScript components:
+
 - (Please document required components here)

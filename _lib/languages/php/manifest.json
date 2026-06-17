@@ -4,14 +4,9 @@
   "title": "PHP Runtime",
   "description": "A popular general-purpose scripting language that is especially suited to web development.",
   "category": "languages",
-  "provides": [
-    "runtime",
-    "php"
-  ],
+  "provides": ["runtime", "php"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "ports": []
 }

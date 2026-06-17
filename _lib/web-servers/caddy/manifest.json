@@ -4,18 +4,9 @@
   "title": "Caddy",
   "description": "A powerful, enterprise-ready, open source web server with automatic HTTPS written in Go.",
   "category": "web-servers",
-  "provides": [
-    "web-server",
-    "reverse-proxy",
-    "caddy"
-  ],
+  "provides": ["web-server", "reverse-proxy", "caddy"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
-  "ports": [
-    80,
-    443
-  ]
+  "ports": [80, 443]
 }

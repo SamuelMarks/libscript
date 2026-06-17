@@ -6,7 +6,6 @@ language toolchain (including `cabal` and `stack`).
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

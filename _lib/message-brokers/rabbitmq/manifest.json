@@ -4,17 +4,9 @@
   "title": "RabbitMQ",
   "description": "The most widely deployed open source message broker.",
   "category": "message-brokers",
-  "provides": [
-    "message-broker",
-    "rabbitmq"
-  ],
+  "provides": ["message-broker", "rabbitmq"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
-  "ports": [
-    5672,
-    15672
-  ]
+  "ports": [5672, 15672]
 }

@@ -1,13 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "ghcup",
-  "provides": [
-    "package-manager",
-    "ghcup"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["package-manager", "ghcup"],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "title": "ghcup",
   "description": "Bootstrap script for [GHCup](https://www.haskell.org/ghcup/), the main installer for the Haskell language toolchain (including `cabal` and `stack`).",

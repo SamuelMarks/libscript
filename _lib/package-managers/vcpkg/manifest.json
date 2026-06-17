@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "vcpkg",
-  "provides": [
-    "vcpkg"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["vcpkg"],
+  "os_whitelist": ["all"],
   "title": "vcpkg",
   "description": "Bootstrap module for the `vcpkg` package manager/tool.",
   "category": "package-manager"

@@ -39,9 +39,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "builder": {
             "type": "array",
@@ -64,9 +62,7 @@
                   }
                 }
               },
-              "required": [
-                "commands"
-              ]
+              "required": ["commands"]
             }
           },
           "env": {
@@ -88,10 +84,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "name",
-          "env"
-        ]
+        "required": ["name", "env"]
       }
     },
     "dependencies": {
@@ -186,11 +179,7 @@
       }
     }
   },
-  "required": [
-    "name",
-    "scripts_root",
-    "dependencies"
-  ],
+  "required": ["name", "scripts_root", "dependencies"],
   "definitions": {
     "Dependencies": {
       "type": "object",
@@ -232,20 +221,13 @@
                     "description": "List of capabilities where at least one must be provided."
                   }
                 },
-                "required": [
-                  "version",
-                  "env"
-                ],
+                "required": ["version", "env"],
                 "oneOf": [
                   {
-                    "required": [
-                      "name"
-                    ]
+                    "required": ["name"]
                   },
                   {
-                    "required": [
-                      "anyOf"
-                    ]
+                    "required": ["anyOf"]
                   }
                 ]
               }
@@ -275,20 +257,13 @@
                     "description": "List of capabilities where at least one must be provided."
                   }
                 },
-                "required": [
-                  "version",
-                  "env"
-                ],
+                "required": ["version", "env"],
                 "oneOf": [
                   {
-                    "required": [
-                      "name"
-                    ]
+                    "required": ["name"]
                   },
                   {
-                    "required": [
-                      "anyOf"
-                    ]
+                    "required": ["anyOf"]
                   }
                 ]
               }
@@ -325,9 +300,7 @@
                           }
                         }
                       },
-                      "required": [
-                        "commands"
-                      ]
+                      "required": ["commands"]
                     }
                   },
                   "daemon": {
@@ -346,9 +319,7 @@
                         }
                       }
                     },
-                    "required": [
-                      "os_native"
-                    ]
+                    "required": ["os_native"]
                   },
                   "name": {
                     "type": "string"
@@ -361,19 +332,13 @@
                     "description": "List of capabilities where at least one must be provided."
                   }
                 },
-                "required": [
-                  "daemon"
-                ],
+                "required": ["daemon"],
                 "oneOf": [
                   {
-                    "required": [
-                      "name"
-                    ]
+                    "required": ["name"]
                   },
                   {
-                    "required": [
-                      "anyOf"
-                    ]
+                    "required": ["anyOf"]
                   }
                 ]
               }
@@ -419,20 +384,13 @@
                     "description": "List of capabilities where at least one must be provided."
                   }
                 },
-                "required": [
-                  "version",
-                  "env"
-                ],
+                "required": ["version", "env"],
                 "oneOf": [
                   {
-                    "required": [
-                      "name"
-                    ]
+                    "required": ["name"]
                   },
                   {
-                    "required": [
-                      "anyOf"
-                    ]
+                    "required": ["anyOf"]
                   }
                 ]
               }

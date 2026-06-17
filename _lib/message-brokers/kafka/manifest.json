@@ -4,16 +4,9 @@
   "title": "Kafka",
   "description": "A distributed event store and stream-processing platform.",
   "category": "message-brokers",
-  "provides": [
-    "message-broker",
-    "kafka"
-  ],
+  "provides": ["message-broker", "kafka"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
-  "ports": [
-    "9092"
-  ]
+  "ports": ["9092"]
 }

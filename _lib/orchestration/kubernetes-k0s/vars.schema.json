@@ -19,10 +19,7 @@
       "type": "string"
     },
     "LIBSCRIPT_LISTEN_PORT": {
-      "type": [
-        "string",
-        "integer"
-      ],
+      "type": ["string", "integer"],
       "description": "Global port to listen on"
     },
     "LIBSCRIPT_LISTEN_ADDRESS": {
@@ -34,10 +31,7 @@
       "description": "Global unix socket to listen on"
     },
     "KUBERNETES_K0S_LISTEN_PORT": {
-      "type": [
-        "string",
-        "integer"
-      ],
+      "type": ["string", "integer"],
       "description": "Port for KUBERNETES_K0S to listen on"
     },
     "KUBERNETES_K0S_LISTEN_ADDRESS": {

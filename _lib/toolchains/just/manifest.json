@@ -4,11 +4,6 @@
   "title": "Just",
   "description": "A handy way to save and run project-specific commands.",
   "category": "toolchain",
-  "provides": [
-    "just",
-    "task-runner"
-  ],
-  "os_whitelist": [
-    "all"
-  ]
+  "provides": ["just", "task-runner"],
+  "os_whitelist": ["all"]
 }

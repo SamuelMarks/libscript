@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "rye",
-  "provides": [
-    "rye"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["rye"],
+  "os_whitelist": ["all"],
   "title": "rye",
   "description": "Bootstrap module for the `rye` package manager.",
   "category": "package-manager"

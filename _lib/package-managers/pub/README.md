@@ -9,7 +9,6 @@ Ensures the `pub` executable (or `dart pub`) is available. This relies on the co
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

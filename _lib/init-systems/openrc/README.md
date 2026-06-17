@@ -118,7 +118,7 @@ packages with newer or custom-compiled toolchains as needed.
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
+- Windows
 <!-- END_PLATFORMS -->

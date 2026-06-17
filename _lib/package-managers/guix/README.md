@@ -9,7 +9,6 @@ Downloads and installs the official `guix-install.sh` script non-interactively. 
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "sbt",
-  "provides": [
-    "sbt"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["sbt"],
+  "os_whitelist": ["all"],
   "title": "sbt",
   "description": "Bootstrap module for the `sbt` package manager.",
   "category": "package-manager"

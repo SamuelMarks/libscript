@@ -9,7 +9,6 @@ Ensures the `mix` executable is available by leveraging the core Elixir toolchai
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

@@ -6,7 +6,6 @@ TypeScript that uses V8 and is built in Rust.
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

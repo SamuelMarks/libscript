@@ -4,22 +4,9 @@
   "title": "Valkey",
   "description": "A high-performance, open-source, in-memory data store that is fully compatible with Redis.",
   "category": "cache",
-  "provides": [
-    "kv-store",
-    "redis-compatible",
-    "valkey",
-    "cache"
-  ],
-  "conflicts": [
-    "redis"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
-  "os_blacklist": [
-    "windows"
-  ],
-  "ports": [
-    6379
-  ]
+  "provides": ["kv-store", "redis-compatible", "valkey", "cache"],
+  "conflicts": ["redis"],
+  "os_whitelist": ["all"],
+  "os_blacklist": ["windows"],
+  "ports": [6379]
 }

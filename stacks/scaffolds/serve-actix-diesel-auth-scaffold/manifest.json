@@ -4,7 +4,5 @@
   "category": "scaffolds",
   "title": "serve-actix-diesel-auth-scaffold",
   "description": "serve-actix-diesel-auth-scaffold stack",
-  "provides": [
-    "serve-actix-diesel-auth-scaffold"
-  ]
+  "provides": ["serve-actix-diesel-auth-scaffold"]
 }

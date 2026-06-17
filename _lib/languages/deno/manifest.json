@@ -4,16 +4,9 @@
   "title": "Deno Runtime",
   "description": "A secure runtime for JavaScript and TypeScript.",
   "category": "languages",
-  "provides": [
-    "runtime",
-    "javascript",
-    "typescript",
-    "deno"
-  ],
+  "provides": ["runtime", "javascript", "typescript", "deno"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "ports": []
 }

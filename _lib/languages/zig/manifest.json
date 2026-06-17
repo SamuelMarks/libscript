@@ -4,14 +4,9 @@
   "title": "Zig Toolchain",
   "description": "A general-purpose programming language and toolchain for maintaining robust, optimal, and reusable software.",
   "category": "languages",
-  "provides": [
-    "zig",
-    "toolchain"
-  ],
+  "provides": ["zig", "toolchain"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "ports": []
 }

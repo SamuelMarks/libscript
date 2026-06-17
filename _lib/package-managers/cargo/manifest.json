@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "cargo",
-  "provides": [
-    "cargo"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["cargo"],
+  "os_whitelist": ["all"],
   "title": "cargo",
   "description": "Bootstrap module for the `cargo` package manager.",
   "category": "package-manager"

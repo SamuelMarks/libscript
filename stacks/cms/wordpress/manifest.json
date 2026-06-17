@@ -4,7 +4,5 @@
   "category": "cms",
   "title": "wordpress",
   "description": "wordpress stack",
-  "provides": [
-    "wordpress"
-  ]
+  "provides": ["wordpress"]
 }

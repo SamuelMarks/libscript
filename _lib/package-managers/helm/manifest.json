@@ -1,13 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "helm",
-  "provides": [
-    "package-manager",
-    "helm"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["package-manager", "helm"],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "title": "helm",
   "description": "Bootstrap module for the `helm` Kubernetes package manager.",

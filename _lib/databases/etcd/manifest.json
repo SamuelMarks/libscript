@@ -4,17 +4,9 @@
   "title": "Etcd",
   "description": "A distributed, reliable key-value store for the most critical data of a distributed system.",
   "category": "databases",
-  "provides": [
-    "kv-store",
-    "etcd"
-  ],
+  "provides": ["kv-store", "etcd"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
-  "ports": [
-    2379,
-    2380
-  ]
+  "ports": [2379, 2380]
 }

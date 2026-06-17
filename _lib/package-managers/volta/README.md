@@ -5,7 +5,6 @@ Bootstrap script for [Volta](https://volta.sh/), a fast, reliable JavaScript too
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

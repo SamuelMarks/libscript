@@ -9,18 +9,12 @@
       "description": "Specific version of Fluent Bit to install. Can be a numeric version (e.g. '3.0.0') or an alias like 'latest'.",
       "type": "string",
       "default": "latest",
-      "version_aliases": [
-        "latest",
-        "stable"
-      ]
+      "version_aliases": ["latest", "stable"]
     },
     "FLUENTBIT_INSTALL_METHOD": {
       "description": "How to install Fluent Bit. 'system' uses the native OS package manager, 'source' downloads the official binaries.",
       "type": "string",
-      "enum": [
-        "system",
-        "source"
-      ],
+      "enum": ["system", "source"],
       "default": "system"
     },
     "FLUENTBIT_CONFIG_FILE": {
@@ -30,30 +24,18 @@
     "FLUENTBIT_LOG_LEVEL": {
       "description": "The logging verbosity level for the Fluent Bit daemon itself (e.g. info, debug, error).",
       "type": "string",
-      "enum": [
-        "error",
-        "warning",
-        "info",
-        "debug",
-        "trace"
-      ],
+      "enum": ["error", "warning", "info", "debug", "trace"],
       "default": "info"
     },
     "FLUENTBIT_HTTP_SERVER": {
       "description": "Enable the built-in HTTP server for metrics and health checks. Highly recommended for monitoring.",
       "type": "string",
-      "enum": [
-        "On",
-        "Off"
-      ],
+      "enum": ["On", "Off"],
       "default": "On"
     },
     "FLUENTBIT_LISTEN_PORT": {
       "description": "Port for the Fluent Bit HTTP metrics interface to listen on.",
-      "type": [
-        "string",
-        "integer"
-      ],
+      "type": ["string", "integer"],
       "default": 2020
     },
     "FLUENTBIT_LISTEN_ADDRESS": {

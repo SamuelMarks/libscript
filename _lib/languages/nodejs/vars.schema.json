@@ -9,24 +9,13 @@
       "description": "Version of Node.js demanded. Can be an alias or a specific numeric version number",
       "type": "string",
       "default": "lts",
-      "version_aliases": [
-        "lts",
-        "latest"
-      ],
-      "examples": [
-        "lts",
-        "latest",
-        "v22.13.1",
-        "20"
-      ]
+      "version_aliases": ["lts", "latest"],
+      "examples": ["lts", "latest", "v22.13.1", "20"]
     },
     "NODEJS_INSTALL_METHOD": {
       "description": "How to install NODEJS. 'system' uses the native OS package manager, 'source' compiles/downloads binaries.",
       "type": "string",
-      "enum": [
-        "system",
-        "source"
-      ],
+      "enum": ["system", "source"],
       "default": "system"
     }
   }

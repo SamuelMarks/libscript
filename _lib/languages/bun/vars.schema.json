@@ -9,18 +9,12 @@
       "description": "Version of Bun demanded. Can be a specific version number like 'bun-v1.1.0' or an alias.",
       "type": "string",
       "default": "latest",
-      "version_aliases": [
-        "latest",
-        "canary"
-      ]
+      "version_aliases": ["latest", "canary"]
     },
     "BUN_INSTALL_METHOD": {
       "description": "How to install BUN. 'system' uses the native OS package manager, 'source' compiles/downloads binaries.",
       "type": "string",
-      "enum": [
-        "system",
-        "source"
-      ],
+      "enum": ["system", "source"],
       "default": "system"
     }
   }

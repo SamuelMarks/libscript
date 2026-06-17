@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "google-cloud-sdk",
-  "provides": [
-    "google-cloud-sdk"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["google-cloud-sdk"],
+  "os_whitelist": ["all"],
   "category": "package-manager",
   "title": "Google Cloud Sdk",
   "description": "Bootstrap module for the `google-cloud-sdk` package manager."

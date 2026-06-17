@@ -10,7 +10,6 @@ systems, and `pyenv-win` on Windows.
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

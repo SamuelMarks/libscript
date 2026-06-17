@@ -8,19 +8,13 @@
     "LIBSCRIPT_GLOBAL_INSTALL_METHOD": {
       "description": "Global override for how software should be installed (system vs source).",
       "type": "string",
-      "enum": [
-        "system",
-        "source"
-      ],
+      "enum": ["system", "source"],
       "default": "system"
     },
     "LIBSCRIPT_WINDOWS_PKG_MGR": {
       "description": "Global package manager override for Windows (winget, choco).",
       "type": "string",
-      "enum": [
-        "winget",
-        "choco"
-      ],
+      "enum": ["winget", "choco"],
       "default": "winget"
     },
     "LIBSCRIPT_LOG_LEVEL": {
@@ -85,6 +79,47 @@
     "LIBSCRIPT_LOG_PORT": {
       "type": "string",
       "description": "Port for remote logging."
+    },
+    "TPU_ZONE": {
+      "type": "string",
+      "description": "GCP Zone for TPU provisioning",
+      "default": "us-central2-b"
+    },
+    "TPU_ACCELERATOR_TYPE": {
+      "type": "string",
+      "description": "Type of TPU accelerator (e.g. v4-8)",
+      "default": "v4-8"
+    },
+    "TPU_VERSION": {
+      "type": "string",
+      "description": "TPU VM OS version",
+      "default": "tpu-ubuntu2204-base"
+    },
+    "GCP_PROJECT_ID": {
+      "type": "string",
+      "description": "GCP Project ID"
+    },
+    "XPK_CLUSTER_NAME": {
+      "type": "string",
+      "description": "Name for the XPK GKE cluster"
+    },
+    "TPU_TENSOR_PARALLEL_SIZE": {
+      "type": "string",
+      "description": "Tensor parallel size for TPU serving",
+      "default": "1"
+    },
+    "MODEL_NAME": {
+      "type": "string",
+      "description": "HuggingFace model string to serve",
+      "default": "your-org/your-model-name"
+    },
+    "WORKLOAD_NAME": {
+      "type": "string",
+      "description": "Name of the XPK workload"
+    },
+    "JETSTREAM_IMAGE": {
+      "type": "string",
+      "description": "Docker image for JetStream TPU inference"
     }
   }
 }

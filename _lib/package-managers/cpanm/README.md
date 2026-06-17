@@ -9,7 +9,6 @@ Ensures the `cpanm` executable is available for installing Perl modules.
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

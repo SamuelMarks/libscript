@@ -1,12 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "awscli",
-  "provides": [
-    "awscli"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["awscli"],
+  "os_whitelist": ["all"],
   "category": "package-manager",
   "title": "Awscli",
   "description": "Bootstrap module for the `awscli` package manager."

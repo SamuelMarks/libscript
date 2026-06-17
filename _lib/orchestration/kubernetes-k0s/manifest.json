@@ -4,22 +4,9 @@
   "title": "Kubernetes k0s",
   "description": "A zero-friction, all-in-one Kubernetes distribution.",
   "category": "orchestration",
-  "provides": [
-    "kubernetes",
-    "k0s",
-    "orchestration",
-    "server"
-  ],
+  "provides": ["kubernetes", "k0s", "orchestration", "server"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
-  "os_blacklist": [
-    "windows"
-  ],
-  "ports": [
-    6443,
-    8132,
-    10250
-  ]
+  "os_whitelist": ["all"],
+  "os_blacklist": ["windows"],
+  "ports": [6443, 8132, 10250]
 }

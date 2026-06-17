@@ -82,6 +82,37 @@ else # uv
     "${PYTHON_VENV}"'/bin/python' -m ensurepip
     "${PYTHON_VENV}"'/bin/python' -m pip install -U pip
     "${PYTHON_VENV}"'/bin/python' -m pip install -U setuptools wheel
+    
+    # Hardware-Optimized ML Profiles
+    if [ -n "${ML_ACCELERATOR_BACKEND:-}" ]; then
+      log_info "Installing hardware-optimized ML profile: ${ML_ACCELERATOR_BACKEND}"
+      case "${ML_ACCELERATOR_BACKEND}" in
+        tpu-jax)
+          "${PYTHON_VENV}"'/bin/python' -m pip install jax[tpu] -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
+          ;;
+        tpu-maxtext)
+          "${PYTHON_VENV}"'/bin/python' -m pip install jax[tpu] -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
+          "${PYTHON_VENV}"'/bin/python' -m pip install maxtext
+          ;;
+        tpu-keras)
+          "${PYTHON_VENV}"'/bin/python' -m pip install jax[tpu] -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
+          "${PYTHON_VENV}"'/bin/python' -m pip install keras
+          ;;
+        tpu-torch)
+          "${PYTHON_VENV}"'/bin/python' -m pip install torch~=2.2.0 torch_xla[tpu]~=2.2.0 -f https://storage.googleapis.com/libtpu-releases/index.html
+          ;;
+        gpu-cuda12)
+          "${PYTHON_VENV}"'/bin/python' -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+          ;;
+        gpu-jax)
+          "${PYTHON_VENV}"'/bin/python' -m pip install "jax[cuda12]"
+          ;;
+        *)
+          log_warn "Unknown ML_ACCELERATOR_BACKEND: ${ML_ACCELERATOR_BACKEND}. Skipping."
+          ;;
+      esac
+    fi
+    
     # For safety only install package and its deps inside a venv
     if [ -f 'requirements.txt' ]; then
       "${PYTHON_VENV}"'/bin/python' -m pip install -r 'requirements.txt'

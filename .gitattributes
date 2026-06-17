@@ -12,14 +12,18 @@
 *.yaml text eol=lf
 *.py text eol=lf
 Dockerfile* text eol=lf
+*.Dockerfile text eol=lf
 .gitignore text eol=lf
+.gitattributes text eol=lf
 .dockerignore text eol=lf
 .editorconfig text eol=lf
 
 # Windows scripts must be CRLF
 *.cmd text eol=crlf
 *.bat text eol=crlf
-*.ps1 text eol=crlf
+
+# PowerShell scripts should be LF for cross-platform compatibility
+*.ps1 text eol=lf
 
 # Exclude binary files
 *.png binary

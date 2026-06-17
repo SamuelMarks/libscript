@@ -4,17 +4,9 @@
   "title": "Redis",
   "description": "In-memory data structure store used as a database, cache, message broker, and streaming engine.",
   "category": "cache",
-  "provides": [
-    "cache",
-    "redis",
-    "key-value"
-  ],
+  "provides": ["cache", "redis", "key-value"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
-  "ports": [
-    6379
-  ]
+  "ports": [6379]
 }

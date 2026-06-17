@@ -10,7 +10,6 @@ Ensures the `yarn` executable is available by pulling in Node.js/npm and running
 ## Platform Support
 
 <!-- BEGIN_PLATFORMS -->
-
 - Linux
 - macOS
 - Windows

@@ -1,19 +1,11 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "gitea",
-  "provides": [
-    "git-server",
-    "gitea"
-  ],
+  "provides": ["git-server", "gitea"],
   "conflicts": [],
-  "os_whitelist": [
-    "all"
-  ],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
-  "ports": [
-    "3000",
-    "2222"
-  ],
+  "ports": ["3000", "2222"],
   "title": "Gitea",
   "description": "LibScript component for GITEA",
   "category": "uncategorized"

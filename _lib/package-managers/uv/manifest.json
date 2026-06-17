@@ -1,13 +1,8 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "uv",
-  "provides": [
-    "package-manager",
-    "uv"
-  ],
-  "os_whitelist": [
-    "all"
-  ],
+  "provides": ["package-manager", "uv"],
+  "os_whitelist": ["all"],
   "os_blacklist": [],
   "title": "uv",
   "description": "Bootstrap module for the `uv` package manager (astral.sh).",

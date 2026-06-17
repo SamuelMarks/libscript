@@ -11,10 +11,7 @@
     },
     "VOLTA_FEATURE_PNPM": {
       "type": "string",
-      "enum": [
-        "1",
-        "0"
-      ],
+      "enum": ["1", "0"],
       "description": "Set to 1 to enable Volta's experimental pnpm support."
     },
     "VOLTA_VERSION": {
