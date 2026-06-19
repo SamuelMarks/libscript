@@ -49,9 +49,10 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 
 
 # Identify directories
-SCRIPT_DIR="${SCRIPT_DIR:-$(cd "$(dirname "${THIS_FILE}")" && pwd)}"
-SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+COMP_DIR="${SCRIPT_DIR:-$(cd "$(dirname -- "${THIS_FILE}")" && pwd)}"
+SCRIPT_DIR="${SCRIPT_DIR:-$(cd "$(dirname -- "${THIS_FILE}")" && pwd)}"
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+export LIBSCRIPT_ROOT_DIR
 
 # Source logging
 . "$LIBSCRIPT_ROOT_DIR/_lib/_common/log.sh"
@@ -62,8 +63,8 @@ LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
 # Source environment printer
 . "$LIBSCRIPT_ROOT_DIR/_lib/_common/env_printer.sh"
 
-SCHEMA_FILE="$SCRIPT_DIR/vars.schema.json"
-MANIFEST_FILE="$SCRIPT_DIR/manifest.json"
+SCHEMA_FILE="$COMP_DIR/vars.schema.json"
+MANIFEST_FILE="$COMP_DIR/manifest.json"
 BASE_SCHEMA_FILE="$LIBSCRIPT_ROOT_DIR/_lib/_common/base_vars.schema.json"
 
 # Utility function to get the merged schema properties
@@ -170,9 +171,13 @@ case "${1:-}" in
       shift 3
     elif [ -n "${2:-}" ]; then
       if [ -z "${PACKAGE_NAME:-}" ]; then
-        PACKAGE_NAME="$(basename "$SCRIPT_DIR")"
+        PACKAGE_NAME="$(basename "$COMP_DIR")"
       fi
-      VERSION="${2:-}"
+      if [ "${2:-}" = "${PACKAGE_NAME:-}" ] || [ "${2:-}" = "$(basename "$COMP_DIR")" ]; then
+        VERSION="latest"
+      else
+        VERSION="${2:-}"
+      fi
       shift 2
     else
       echo "Error: version is required for $ACTION" >&2
@@ -196,14 +201,14 @@ case "${1:-}" in
         shift 2
       else
         if [ -z "${PACKAGE_NAME:-}" ]; then
-          PACKAGE_NAME="$(basename "$SCRIPT_DIR")"
+          PACKAGE_NAME="$(basename "$COMP_DIR")"
         fi
         VERSION="${2:-}"
         shift 2
       fi
     else
       if [ -z "${PACKAGE_NAME:-}" ]; then
-        PACKAGE_NAME="$(basename "$SCRIPT_DIR")"
+        PACKAGE_NAME="$(basename "$COMP_DIR")"
       fi
       VERSION=""
       shift 1
@@ -364,15 +369,15 @@ fi
 
 # Lifecycle routing
 if [ "$ACTION" = "test" ]; then
-  if [ -x "$SCRIPT_DIR/test.sh" ]; then
-    exec "$SCRIPT_DIR/test.sh"
+  if [ -x "$COMP_DIR/test.sh" ]; then
+    exec "$COMP_DIR/test.sh"
   else
     log_info "Error: test.sh not found in $SCRIPT_DIR"
     exit 1
   fi
 elif [ "$ACTION" = "uninstall" ] || [ "$ACTION" = "remove" ]; then
-  if [ -x "$SCRIPT_DIR/uninstall.sh" ]; then
-    exec "$SCRIPT_DIR/uninstall.sh"
+  if [ -x "$COMP_DIR/uninstall.sh" ]; then
+    exec "$COMP_DIR/uninstall.sh"
   else
     log_info "Error: uninstall.sh not found in $SCRIPT_DIR"
     exit 1
@@ -413,12 +418,12 @@ elif [ "$ACTION" = "exec" ]; then
 fi
 
 # Default to setup.sh for installation and other actions
-if [ -x "$SCRIPT_DIR/setup.sh" ]; then
+if [ -x "$COMP_DIR/setup.sh" ]; then
   unset SCRIPT_NAME || true
-  exec "$SCRIPT_DIR/setup.sh" "$@"
-elif [ -f "$SCRIPT_DIR/setup.sh" ]; then
+  exec "$COMP_DIR/setup.sh" "$@"
+elif [ -f "$COMP_DIR/setup.sh" ]; then
   unset SCRIPT_NAME || true
-  exec sh "$SCRIPT_DIR/setup.sh" "$@"
+  exec sh "$COMP_DIR/setup.sh" "$@"
 else
   log_info "Error: setup.sh not found in $SCRIPT_DIR"
   exit 1

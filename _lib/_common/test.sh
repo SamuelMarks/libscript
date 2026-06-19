@@ -23,4 +23,6 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+export LIBSCRIPT_ROOT_DIR
+. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 log_info "Common loaded successfully"

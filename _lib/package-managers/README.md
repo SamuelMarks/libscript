@@ -154,7 +154,6 @@ cli.cmd uninstall package-managers
 - [swupd](./swupd/README.md)
 - [uv](./uv/README.md)
 - [vcpkg](./vcpkg/README.md)
-- [volta](./volta/README.md)
 - [winget](./winget/README.md)
 - [xbps](./xbps/README.md)
 - [yarn](./yarn/README.md)

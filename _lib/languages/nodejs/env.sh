@@ -23,5 +23,5 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
-export VOLTA_HOME="${HOME}/.volta"
-export PATH="${VOLTA_HOME}/bin:${PATH}"
+export MISE_HOME="${HOME}/.local/share/mise"
+export PATH="${MISE_HOME}/bin:${PATH}"

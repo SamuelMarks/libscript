@@ -394,7 +394,6 @@ additional terms or conditions.
 | `_lib/package-managers/swupd` | ❓ | ❓ | ❓ |
 | `_lib/package-managers/uv` | ❓ | ❓ | ❓ |
 | `_lib/package-managers/vcpkg` | ❓ | ❓ | ❓ |
-| `_lib/package-managers/volta` | ❓ | ❓ | ❓ |
 | `_lib/package-managers/winget` | ❓ | ❓ | ❓ |
 | `_lib/package-managers/xbps` | ❓ | ❓ | ❓ |
 | `_lib/package-managers/yarn` | ❓ | ❓ | ❓ |

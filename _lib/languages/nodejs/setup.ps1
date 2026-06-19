@@ -20,6 +20,6 @@ if ($InstallMethod -eq "system" -and $WinPkgMgr -eq "winget") {
 } elseif ($InstallMethod -eq "system" -and $WinPkgMgr -eq "choco") {
     choco install -y nodejs
 } else {
-    winget install --silent --force --id=Schniz.fnm -e
-    fnm install lts
+    winget install --silent --force --id=jdx.mise -e
+    mise use --global node@lts
 }

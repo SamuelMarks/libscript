@@ -6,3 +6,4 @@ https://github.com/Schniz/fnm/releases/download/v1.38.1/fnm-linux.zip b69e5c9a05
 https://wordpress.org/latest.tar.gz 85c8436998870e42a39ae7558b096d19d294a0cd2adb7c87ee764db973b01953
 https://nixos.org/nix/install 78de59f69d95bdb7ba7d54949ddc402c9e98c1ba55c35c73704b21b432c66f8a
 https://raw.githubusercontent.com/PowerShell/PowerShell/master/tools/installpsh-debian.sh 1e0b2b707990d7039664e30dbbe2f1cf51fb7fef9d7929e18ea2f83b191efc0c
+https://sh.rustup.rs 6c30b75a75b28a96fd913a037c8581b580080b6ee9b8169a3c0feb1af7fe8caf

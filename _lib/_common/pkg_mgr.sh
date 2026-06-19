@@ -178,7 +178,7 @@ libscript_download() {
   checksum_db="${LIBSCRIPT_ROOT_DIR}/checksums.txt"
   expected_checksum="$provided_checksum"
   if [ -z "$expected_checksum" ] && [ -f "$checksum_db" ]; then
-    expected_checksum="$(grep -F "$url" "$checksum_db" | head -n 1 | awk '{print $2}')"
+    expected_checksum="$(grep -F "$url" "$checksum_db" | head -n 1 | awk '{print $2}' || true)"
   fi
 
   # 2. Aria2 Export Mode
@@ -298,7 +298,9 @@ libscript_download() {
   # 6. Final Placement
   if [ -n "$dest" ] && [ "$dest" != "$cache_file" ]; then
     mkdir -p "$(dirname "$dest")"
-    cp "$cache_file" "$dest"
+    if ! [ "$cache_file" -ef "$dest" ]; then
+      cp "$cache_file" "$dest"
+    fi
   fi
 }
 

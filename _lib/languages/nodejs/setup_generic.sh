@@ -52,22 +52,24 @@ NODEJS_INSTALL_METHOD="${NODEJS_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHO
 if [ "${NODEJS_INSTALL_METHOD}" = 'system' ]; then
   libscript_depends 'nodejs'
 else
-  export VOLTA_HOME="${HOME}/.volta"
-  export PATH="${VOLTA_HOME}/bin:${PATH}"
+  export MISE_HOME="${HOME}/.local/share/mise"
+  export PATH="${MISE_HOME}/bin:${PATH}"
   
   if libscript_cmd_avail node ; then
     version="$(node --version)"
-    if [ "${version}" = "v${NODEJS_VERSION}" ] || [ "${version}" = "${NODEJS_VERSION}" ]; then
-      return
-    fi
+    case "${version}" in
+      v${NODEJS_VERSION}*|${NODEJS_VERSION}*)
+        return
+        ;;
+    esac
   fi
 
   libscript_depends 'curl'
-  if ! [ -f "${VOLTA_HOME}/bin/volta" ] ; then
-    curl https://get.volta.sh | bash
+  if ! [ -f "${MISE_HOME}/bin/mise" ] ; then
+    curl https://mise.run | bash
   fi
   
-  # Trim 'v' if present for volta compatibility
+  # Trim 'v' if present for mise compatibility
   clean_version=$(echo "$NODEJS_VERSION" | sed 's/^v//')
-  volta install node@"${clean_version}"
+  mise use --global node@"${clean_version}"
 fi

@@ -32,6 +32,7 @@ for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
+[ "$RUST_VERSION" = "latest" ] && RUST_VERSION="stable"
 RUST_INSTALL_METHOD="${RUST_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-source}}"
 
 if [ "${RUST_INSTALL_METHOD}" = 'system' ]; then
@@ -39,6 +40,6 @@ if [ "${RUST_INSTALL_METHOD}" = 'system' ]; then
 else
   INSTALL_SH=$(mktemp)
   libscript_download 'https://sh.rustup.rs' "${INSTALL_SH}"
-  sh "${INSTALL_SH}" -s -- --default-toolchain "${RUST_VERSION:-stable}" -y
+  sh "${INSTALL_SH}" -y --default-toolchain "${RUST_VERSION:-stable}"
   rm -f "${INSTALL_SH}"
 fi
