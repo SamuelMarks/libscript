@@ -93,6 +93,8 @@
     "cshrc",
     "cuda",
     "CUDA",
+    "daemonise",
+    "daemonised",
     "daemonization",
     "Daemonization",
     "daemonize",
@@ -110,6 +112,7 @@
     "dbtype",
     "DBTYPE",
     "dbuser",
+    "dedaemonise",
     "deeplearning",
     "defval",
     "DEFVAL",
@@ -221,6 +224,7 @@
     "ISAPI",
     "iscustom",
     "isready",
+    "Jansson",
     "jemalloc",
     "Jemalloc",
     "jetstream",
@@ -501,6 +505,7 @@
     "sysinit",
     "sysrc",
     "systemv",
+    "sysvinit",
     "TARGETARCH",
     "TARGETDIR",
     "TARGETOS",
@@ -587,6 +592,7 @@
   "ignorePaths": [
     "node_modules",
     ".git",
+    ".gitignore",
     "**/*.json"
   ]
 }

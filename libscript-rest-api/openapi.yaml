@@ -1,0 +1,1760 @@
+openapi: 3.2.0
+info:
+  title: libscript REST API
+  description: >
+    The exhaustive REST API daemon for executing libscript components, managing multicloud
+    resources, 
+    controlling services, managing configuration, and tracking background jobs. 
+
+    This API bridges HTTP requests to the underlying cross-platform shell 
+    environment (bash/POSIX and cmd/PowerShell on Windows). 
+
+    Security is managed via OAuth2 using the Resource Owner Password Credentials Grant (RFC 6749).
+  version: 1.0.0
+  contact:
+    name: libscript team
+    url: https://github.com/SamuelMarks/libscript
+servers:
+  - url: http://127.0.0.1:8080
+    description: Local daemon server
+
+security:
+  - OAuth2PasswordBearer:
+      - daemon:admin
+
+tags:
+  - name: Auth
+    description: Authentication and OAuth2 token generation.
+  - name: System
+    description: General health, configuration, and state of the daemon.
+  - name: Catalog
+    description: Browsing available libscript components.
+  - name: Registry
+    description: Catalog registry synchronization.
+  - name: Stack
+    description: Declarative multi-component stack orchestration and resolution.
+  - name: Resources
+    description: Multicloud resource provisioning, AI hardware stacks, and lifecycle.
+  - name: Installations
+    description:
+      Managing installed components locally (install, update, uninstall, info, env, test).
+  - name: Artifacts
+    description: Generate and download production-ready artifacts from stacks.
+  - name: Services
+    description: Daemon, background service control, and runtime logs.
+  - name: Cloud Operations
+    description: Remote deployment, SCP, DNS mapping, state drift, backups, and restores.
+  - name: Ingress
+    description: Network proxy routing and Let's Encrypt TLS configuration.
+  - name: Jobs
+    description: Asynchronous execution tracking, log querying, and process termination.
+  - name: Utilities
+    description: Helper utilities like semantic version comparison.
+
+paths:
+  /api/v1/auth/token:
+    post:
+      tags:
+        - Auth
+      summary: OAuth2 Token Endpoint (Password Grant)
+      operationId: getAccessToken
+      security: [] # Unsecured to allow login
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - grant_type
+                - username
+                - password
+              properties:
+                grant_type:
+                  type: string
+                  pattern: ^password$
+                username:
+                  type: string
+                password:
+                  type: string
+                  format: password
+                scope:
+                  type: string
+      responses:
+        "200":
+          description: Successful token generation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/status:
+    get:
+      tags:
+        - System
+      summary: Get daemon health and OS info
+      operationId: getSystemStatus
+      responses:
+        "200":
+          description: System status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemStatus"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/config:
+    get:
+      tags:
+        - System
+      summary: Retrieve daemon configuration
+      operationId: getDaemonConfig
+      responses:
+        "200":
+          description: Current daemon configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DaemonConfig"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    put:
+      tags:
+        - System
+      summary: Update daemon configuration
+      operationId: updateDaemonConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DaemonConfig"
+      responses:
+        "200":
+          description: Configuration updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DaemonConfig"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/logs:
+    get:
+      tags:
+        - System
+      summary: Retrieve daemon server logs
+      operationId: getDaemonLogs
+      parameters:
+        - name: lines
+          in: query
+          description: Number of lines to tail from the server log
+          schema:
+            type: integer
+            default: 100
+            minimum: 1
+            maximum: 1000
+      responses:
+        "200":
+          description: Raw server logs
+          content:
+            text/plain:
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/downloads/process:
+    post:
+      tags:
+        - System
+      summary: Process an aria2-formatted download list via process-downloads
+      operationId: processDownloads
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+              description: Raw aria2 download list content
+      responses:
+        "202":
+          description: Download processing started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/components:
+    get:
+      tags:
+        - Catalog
+      summary: List available components in the local catalog
+      operationId: listComponents
+      parameters:
+        - name: q
+          in: query
+          description: Search query to filter components by name or description
+          schema:
+            type: string
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/OffsetParam"
+      responses:
+        "200":
+          description: A list of components
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComponentList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/v1/components/{component_id}:
+    get:
+      tags:
+        - Catalog
+      summary: Retrieve detailed metadata for a component from the catalog
+      operationId: getComponentInfo
+      parameters:
+        - name: component_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Detailed component metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComponentInfo"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/components/{component_id}/versions/remote:
+    get:
+      tags:
+        - Catalog
+      summary: List all remote installable versions for a component
+      operationId: listRemoteVersions
+      parameters:
+        - name: component_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A list of available remote versions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VersionList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/components/{component_id}/env:
+    get:
+      tags:
+        - Catalog
+      summary:
+        Generate dynamic environment variables for a component version that is not yet installed
+      operationId: getUninstalledComponentEnv
+      parameters:
+        - name: component_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: version
+          in: query
+          description: Specific version to simulate environment for
+          schema:
+            type: string
+            default: latest
+      responses:
+        "200":
+          description: Dynamic environment variables map
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/registry/update:
+    post:
+      tags:
+        - Registry
+      summary: Synchronize the local catalog database
+      operationId: updateRegistry
+      responses:
+        "202":
+          description: Registry update started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/resources:
+    get:
+      tags:
+        - Resources
+      summary: List provisioned multicloud resources
+      operationId: listResources
+      parameters:
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/OffsetParam"
+      responses:
+        "200":
+          description: A list of resources
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResourceList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags:
+        - Resources
+      summary: Trigger background resource provisioning
+      operationId: provisionResource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProvisionRequest"
+      responses:
+        "202":
+          description: Provisioning started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/resources/{resource_id}:
+    delete:
+      tags:
+        - Resources
+      summary: Trigger background resource deprovisioning
+      operationId: deprovisionResource
+      parameters:
+        - name: resource_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: retain_ip
+          in: query
+          description: Preserve the Public IP when deprovisioning a node.
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - name: retain_data
+          in: query
+          description: Preserve the data volumes when deprovisioning a node.
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "202":
+          description: Deprovisioning started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/ai-stacks:
+    post:
+      tags:
+        - Resources
+      summary: Deploy AI/ML hardware-accelerated stacks (TPU VM, vLLM, JetStream)
+      operationId: deployAiStack
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [stack_type, model_name]
+              properties:
+                stack_type:
+                  type: string
+                  enum: [tpu-vm-vllm, tpu-vm-jetstream, gpu-vllm, gpu-ollama]
+                model_name:
+                  type: string
+                provider:
+                  type: string
+                  default: gcp
+                region:
+                  type: string
+                machine_type:
+                  type: string
+                accelerator_type:
+                  type: string
+      responses:
+        "202":
+          description: AI Stack provisioning started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/stack/install:
+    post:
+      tags:
+        - Stack
+      summary: Resolve dependencies and install an entire stack from a libscript.json manifest
+      operationId: installStack
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Declarative libscript.json payload
+      responses:
+        "202":
+          description: Stack dependency resolution and installation started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/stack/start:
+    post:
+      tags:
+        - Stack
+      summary: Orchestrate services and ingress for a stack from a libscript.json manifest
+      operationId: startStack
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Declarative libscript.json payload
+      responses:
+        "202":
+          description: Stack orchestration started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/installations:
+    get:
+      tags:
+        - Installations
+      summary: List installed components
+      operationId: listInstallations
+      parameters:
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/OffsetParam"
+      responses:
+        "200":
+          description: A list of installations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstallationList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags:
+        - Installations
+      summary: Trigger component installation (setup.sh/cmd)
+      operationId: installComponent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InstallRequest"
+      responses:
+        "202":
+          description: Installation started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/installations/{component_id}/versions:
+    get:
+      tags:
+        - Installations
+      summary: List all locally installed versions of a specific component
+      operationId: listLocalVersions
+      parameters:
+        - name: component_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A list of locally installed versions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VersionList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/installations/{component_id}:
+    get:
+      tags:
+        - Installations
+      summary: Retrieve detailed component installation info (metadata, paths)
+      operationId: getInstallationDetails
+      parameters:
+        - name: component_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Detailed component installation information
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstallationInfo"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags:
+        - Installations
+      summary: Upgrade an existing component installation
+      operationId: upgradeComponent
+      parameters:
+        - name: component_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                version:
+                  type: string
+                  description: Target version alias or semver to upgrade to.
+      responses:
+        "202":
+          description: Upgrade started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags:
+        - Installations
+      summary: Trigger component uninstallation (uninstall.sh/cmd)
+      operationId: uninstallComponent
+      parameters:
+        - name: component_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "202":
+          description: Uninstallation started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/installations/{component_id}/env:
+    get:
+      tags:
+        - Installations
+      summary: Retrieve dynamic environment variables and configurations (e.g., credentials)
+      operationId: getComponentEnv
+      parameters:
+        - name: component_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: format
+          in: query
+          description: Optional output format. If not provided, a JSON map is returned.
+          required: false
+          schema:
+            type: string
+            enum: [json, text, docker, docker_compose, powershell, cmd]
+            default: json
+      responses:
+        "200":
+          description: Dynamic environment variables output
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+            text/plain:
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/installations/{component_id}/invoke:
+    post:
+      tags:
+        - Installations
+      summary: Execute arbitrary commands (run, exec, etc.) via the component's CLI wrapper.
+      operationId: invokeComponent
+      parameters:
+        - name: component_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [command]
+              properties:
+                command:
+                  type: string
+                  description: The sub-command to execute (e.g., 'run', 'exec')
+                args:
+                  type: array
+                  items:
+                    type: string
+                  description: Optional arguments to pass to the command
+      responses:
+        "202":
+          description: Command execution started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/installations/{component_id}/test:
+    post:
+      tags:
+        - Installations
+      summary: Trigger component native validation tests (test.sh/cmd)
+      operationId: testComponent
+      parameters:
+        - name: component_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "202":
+          description: Validation tests started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/services/{component_id}:
+    get:
+      tags:
+        - Services
+      summary: Query OS init system for service status
+      operationId: getServiceStatus
+      parameters:
+        - name: component_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Service status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceStatus"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/services/{component_id}/daemonise:
+    post:
+      tags:
+        - Services
+      summary: Synchronous wrapper for service_install.sh/cmd
+      operationId: daemoniseService
+      parameters:
+        - name: component_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceDaemoniseRequest"
+      responses:
+        "200":
+          description: Service successfully daemonised
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceStatus"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/services/{component_id}/dedaemonise:
+    post:
+      tags:
+        - Services
+      summary: Synchronous wrapper for service removal
+      operationId: dedaemoniseService
+      parameters:
+        - name: component_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Service successfully removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/services/{component_id}/action:
+    post:
+      tags:
+        - Services
+      summary: Execute start/stop/restart commands
+      operationId: serviceAction
+      parameters:
+        - name: component_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceActionRequest"
+      responses:
+        "200":
+          description: Action executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceStatus"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/services/action:
+    post:
+      tags:
+        - Services
+      summary: Execute bulk start/stop/restart/health commands on multiple services
+      operationId: bulkServiceAction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkServiceActionRequest"
+      responses:
+        "200":
+          description: Bulk actions executed successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ServiceStatus"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/ingress/routes:
+    get:
+      tags:
+        - Ingress
+      summary: Fetch current reverse proxy routing configurations
+      operationId: getRoutes
+      responses:
+        "200":
+          description: A list of active routes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    domain:
+                      type: string
+                    proxy_pass:
+                      type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags:
+        - Ingress
+      summary: Add application port mappings to domain names natively
+      operationId: addRoute
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [domain, proxy_pass]
+              properties:
+                domain:
+                  type: string
+                proxy_pass:
+                  type: string
+      responses:
+        "200":
+          description: Route added successfully
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/ingress/tls:
+    post:
+      tags:
+        - Ingress
+      summary: Automate Let's Encrypt certificate retrieval
+      operationId: provisionTls
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [domain, email]
+              properties:
+                domain:
+                  type: string
+                email:
+                  type: string
+      responses:
+        "202":
+          description: TLS Provisioning started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/artifacts/generate:
+    post:
+      tags:
+        - Artifacts
+      summary:
+        Generate production-ready artifacts (Dockerfile, .deb, .msi, etc.) from the current stack
+      operationId: generateArtifact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [format]
+              properties:
+                format:
+                  type: string
+                  enum: [docker, docker_compose, deb, rpm, apk, pkg, dmg, txz, msi, inno, nsis, tui]
+                args:
+                  type: array
+                  items:
+                    type: string
+                  description: Optional generator-specific flags to pass via CLI.
+      responses:
+        "202":
+          description: Artifact generation started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/artifacts/{artifact_id}/download:
+    get:
+      tags:
+        - Artifacts
+      summary: Stream the generated binary artifact
+      operationId: downloadArtifact
+      parameters:
+        - name: artifact_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The binary artifact stream
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/jobs/{job_id}:
+    get:
+      tags:
+        - Jobs
+      summary: Check process exit status and read log tails
+      operationId: getJobStatus
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Job status and logs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobDetails"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags:
+        - Jobs
+      summary: Cancel or forcibly terminate a running job
+      operationId: cancelJob
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Job successfully terminated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobDetails"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/services/{component_id}/logs:
+    get:
+      tags:
+        - Services
+      summary: Read service runtime logs natively
+      operationId: getServiceLogs
+      parameters:
+        - name: component_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: lines
+          in: query
+          description: Number of lines to tail from the service log
+          schema:
+            type: integer
+            default: 100
+      responses:
+        "200":
+          description: Service logs text stream
+          content:
+            text/plain:
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/cloud/primitives/{primitive_type}:
+    post:
+      tags:
+        - Cloud Operations
+      summary:
+        Directly provision low-level cloud primitives (jumpbox, node-group, network, firewall, cron)
+      operationId: provisionCloudPrimitive
+      parameters:
+        - name: primitive_type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [jumpbox, node-group, network, firewall, cron]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [provider]
+              properties:
+                provider:
+                  type: string
+                  description: Cloud provider (aws, gcp, azure, etc)
+                args:
+                  type: array
+                  items:
+                    type: string
+                  description: Primitive-specific command line arguments
+      responses:
+        "202":
+          description: Provisioning started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/cloud/resources:
+    delete:
+      tags:
+        - Cloud Operations
+      summary: Bulk cleanup logic across multicloud providers
+      operationId: cleanupCloudResources
+      responses:
+        "202":
+          description: Cleanup job started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/cloud/diff:
+    get:
+      tags:
+        - Cloud Operations
+      summary: Compare local state with remote provider state (drift detection)
+      operationId: getCloudDiff
+      responses:
+        "200":
+          description: Cloud drift report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CloudDiffReport"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/cloud/nodes/{node_id}/deploy:
+    post:
+      tags:
+        - Cloud Operations
+      summary: Rsync/tar-over-ssh deployment wrapper
+      operationId: deployToNode
+      parameters:
+        - name: node_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                source_path:
+                  type: string
+                target_path:
+                  type: string
+      responses:
+        "202":
+          description: Deployment started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/cloud/nodes/{node_id}/scp:
+    post:
+      tags:
+        - Cloud Operations
+      summary: Secure file transfer mechanism
+      operationId: scpToNode
+      parameters:
+        - name: node_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                destination:
+                  type: string
+      responses:
+        "202":
+          description: File transfer started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/cloud/dns/map:
+    post:
+      tags:
+        - Cloud Operations
+      summary: Cloud vendor DNS mapping wrappers
+      operationId: mapDns
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [provider, domain, record_type, value]
+              properties:
+                provider:
+                  type: string
+                domain:
+                  type: string
+                record_type:
+                  type: string
+                value:
+                  type: string
+      responses:
+        "202":
+          description: DNS mapping started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/cloud/workloads/{node_id}/backup:
+    post:
+      tags:
+        - Cloud Operations
+      summary: Orchestrate database quiesce hooks and push snapshot state
+      operationId: backupWorkload
+      parameters:
+        - name: node_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "202":
+          description: Backup job started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/cloud/workloads/restore:
+    post:
+      tags:
+        - Cloud Operations
+      summary: Fetch backups and inject state into target nodes
+      operationId: restoreWorkload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [backup_id, target_node]
+              properties:
+                backup_id:
+                  type: string
+                target_node:
+                  type: string
+      responses:
+        "202":
+          description: Restore job started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/utils/semver:
+    get:
+      tags:
+        - Utilities
+      summary: Compare semantic versions
+      operationId: evaluateSemver
+      parameters:
+        - name: v1
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: op
+          in: query
+          required: true
+          description: "Operator: =, !=, >, <, >=, <="
+          schema:
+            type: string
+            enum: ["=", "!=", ">", "<", ">=", "<="]
+        - name: v2
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Result of the semantic version comparison
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SemverResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+components:
+  securitySchemes:
+    OAuth2PasswordBearer:
+      type: oauth2
+      description: OAuth2 Security utilizing the Password Grant Flow (RFC 6749)
+      flows:
+        password:
+          tokenUrl: /api/v1/auth/token
+          scopes:
+            daemon:admin: Full administrative access to daemon functions.
+
+  parameters:
+    LimitParam:
+      name: limit
+      in: query
+      description: Maximum number of items to return
+      schema:
+        type: integer
+        default: 50
+        minimum: 1
+        maximum: 1000
+    OffsetParam:
+      name: offset
+      in: query
+      description: Number of items to skip
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+
+  responses:
+    BadRequest:
+      description: Invalid request payload or parameters
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Missing, invalid, or expired OAuth2 Bearer token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource, component, or job not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    InternalError:
+      description: Server error or script execution failure
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+    TokenResponse:
+      type: object
+      required: [access_token, token_type]
+      properties:
+        access_token:
+          type: string
+          description: The generated bearer token
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: integer
+          description: Expiry time in seconds
+        refresh_token:
+          type: string
+          description: Optional refresh token
+
+    ErrorResponse:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          description: Error code or title (e.g., "invalid_grant")
+        message:
+          type: string
+          description: Detailed error description
+
+    SystemStatus:
+      type: object
+      required: [status, os, uptime, version]
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded, error]
+        os:
+          type: string
+          description: e.g., "linux", "darwin", "windows"
+        uptime:
+          type: integer
+          description: Daemon uptime in seconds
+        version:
+          type: string
+          description: libscript-rest-api version
+
+    DaemonConfig:
+      type: object
+      required: [log_level, max_parallel_jobs, temp_dir]
+      properties:
+        log_level:
+          type: string
+          enum: [debug, info, warn, error]
+        max_parallel_jobs:
+          type: integer
+          minimum: 1
+        temp_dir:
+          type: string
+        auth_enabled:
+          type: boolean
+
+    JobReference:
+      type: object
+      required: [job_id, status_url]
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        status_url:
+          type: string
+          format: uri
+          description: URL to poll for job status
+
+    JobDetails:
+      type: object
+      required: [job_id, status]
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, running, completed, failed, terminated]
+        exit_code:
+          type: integer
+          nullable: true
+        stdout_tail:
+          type: array
+          items:
+            type: string
+        stderr_tail:
+          type: array
+          items:
+            type: string
+        started_at:
+          type: string
+          format: date-time
+        finished_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    Component:
+      type: object
+      required: [id, name, type]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          description: Category like database, web-server, language
+        description:
+          type: string
+        manifest_path:
+          type: string
+
+    ComponentList:
+      type: object
+      required: [items, total]
+      properties:
+        total:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Component"
+
+    InstallRequest:
+      type: object
+      required: [component_id]
+      properties:
+        component_id:
+          type: string
+        version:
+          type: string
+          description: Target version alias or semver to install.
+        env_vars:
+          type: object
+          additionalProperties:
+            type: string
+          description: Custom environment variables to pass to the setup script.
+        prefix:
+          type: string
+          description: Global CLI override to set local installation prefix (--prefix)
+        secrets_dir:
+          type: string
+          description: Global CLI override to set secrets directory or OpenBao/Vault URL (--secrets)
+
+    Installation:
+      type: object
+      required: [component_id, installed_at]
+      properties:
+        component_id:
+          type: string
+        installed_at:
+          type: string
+          format: date-time
+        version:
+          type: string
+
+    InstallationInfo:
+      type: object
+      required: [component_id, installed_at, version, install_path]
+      properties:
+        component_id:
+          type: string
+        installed_at:
+          type: string
+          format: date-time
+        version:
+          type: string
+        install_path:
+          type: string
+        dependencies:
+          type: array
+          items:
+            type: string
+        metadata:
+          type: object
+          additionalProperties: {}
+
+    InstallationList:
+      type: object
+      required: [items, total]
+      properties:
+        total:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Installation"
+
+    CloudDiffResource:
+      type: object
+      required: [resource_id, status]
+      properties:
+        resource_id:
+          type: string
+        status:
+          type: string
+          enum: [managed, unmanaged, missing, drifted]
+        drift_details:
+          type: string
+
+    CloudDiffReport:
+      type: object
+      required: [timestamp, resources]
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        resources:
+          type: array
+          items:
+            $ref: "#/components/schemas/CloudDiffResource"
+        summary:
+          type: string
+
+    ProvisionRequest:
+      type: object
+      required: [provider, resource_type, config]
+      properties:
+        provider:
+          type: string
+          description: e.g., "aws", "gcp", "azure", "local"
+        resource_type:
+          type: string
+        config:
+          type: object
+          additionalProperties: {}
+          description: Arbitrary JSON config matching the resource provider schema
+
+    Resource:
+      type: object
+      required: [resource_id, provider, resource_type, status]
+      properties:
+        resource_id:
+          type: string
+        provider:
+          type: string
+        resource_type:
+          type: string
+        status:
+          type: string
+          enum: [provisioning, active, deprovisioning, failed]
+        state_data:
+          type: object
+          additionalProperties: {}
+
+    ResourceList:
+      type: object
+      required: [items, total]
+      properties:
+        total:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Resource"
+
+    ServiceStatus:
+      type: object
+      required: [component_id, is_daemonised, service_state]
+      properties:
+        component_id:
+          type: string
+        is_daemonised:
+          type: boolean
+        service_state:
+          type: string
+          enum: [active, inactive, failed, unknown]
+          description: Status according to the OS init system (systemd/Windows Services)
+        pid:
+          type: integer
+          nullable: true
+
+    ServiceActionRequest:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [start, stop, restart, reload, health]
+
+    ComponentInfo:
+      type: object
+      required: [id, name, description, versions]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        manifest_path:
+          type: string
+        versions:
+          type: array
+          items:
+            type: string
+          description: List of available versions from the catalog
+        dependencies:
+          type: array
+          items:
+            type: string
+
+    VersionList:
+      type: array
+      items:
+        type: string
+
+    ServiceDaemoniseRequest:
+      type: object
+      properties:
+        service_name:
+          type: string
+          description: Global CLI override for custom service/daemon name (--service-name)
+        prefix:
+          type: string
+          description: Global CLI override for installation prefix (--prefix)
+        secrets_dir:
+          type: string
+          description: Global CLI override for secrets storage (--secrets)
+
+    BulkServiceActionRequest:
+      type: object
+      required: [components, action]
+      properties:
+        components:
+          type: array
+          items:
+            type: string
+            description: List of component IDs to perform the action on
+        action:
+          type: string
+          enum: [start, stop, restart, reload, health]
+
+    SemverResponse:
+      type: object
+      required: [v1, op, v2, result]
+      properties:
+        v1:
+          type: string
+        op:
+          type: string
+        v2:
+          type: string
+        result:
+          type: boolean
+          description: True if the expression evaluates to true

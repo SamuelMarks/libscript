@@ -19,6 +19,18 @@ manager.
   zero-dependency router. When you run `./libscript.sh install postgres`, the global engine locates
   the `postgres` module and hands off execution to its local `cli.sh`.
 
+```mermaid
+flowchart LR
+    User([User]) -->|./libscript.sh install postgres| GlobalCLI[Global Orchestrator]
+    GlobalCLI -->|Parses & Routes| PostgresCLI[_lib/databases/postgres/cli.sh]
+    GlobalCLI -.->|Alternate Route| NodeCLI[_lib/languages/nodejs/cli.sh]
+    GlobalCLI -.->|Alternate Route| RedisCLI[_lib/databases/redis/cli.sh]
+
+    PostgresCLI --> Setup[setup.sh]
+    PostgresCLI --> Env[env_printer.sh]
+    PostgresCLI --> Service[service_install.sh]
+```
+
 ## 🔀 Cross-Platform Parity
 
 A core mandate of LibScript is native execution without heavy runtimes. We achieve this through
@@ -33,24 +45,101 @@ strict parity between POSIX and Windows scripts:
   `start`, `stop`, `env`) remains identical, providing a consistent operational experience across
   the entire fleet.
 
-## 📦 Component Modules
+## 📦 Component Anatomy & The Local CLI
 
-Each component in `_lib/` is structured to be a standalone manager:
+Each component in `_lib/` (e.g., `_lib/databases/postgres`) is structured as a standalone manager.
+The Global Orchestrator never dictates _how_ a component is installed; it only tells it _what_ to
+do.
 
-- `vars.schema.json`: Strictly typed metadata, default ports, and dependency definitions.
-- `cli.sh` / `cli.cmd`: The platform-specific entry points that handle command routing.
-- `setup.sh` / `setup.ps1`: The "guts" of the installation logic.
-- `manifest.json`: Defines the component's capabilities (e.g., provides `database`, conflicts with
-  `mysql`).
+A standard component contains:
 
-## ☸️ The Global Resolution Engine
+- `base_vars.schema.json` / `manifest.json`: Strictly typed metadata defining available versions,
+  default ports, required system dependencies, and capabilities (e.g., "provides database").
+- `cli.sh` / `cli.cmd`: The platform-specific entry points. This is the local CLI. It parses
+  arguments, sets up the environment, and dispatches to the specific lifecycle scripts.
+- `setup.sh` / `setup.ps1`: The "guts" of the installation logic (fetching binaries, compiling, or
+  using system package managers).
+- `service.sh` / `service.cmd`: Logic for interacting with the OS init system (systemd, Windows
+  Services, launchd) to daemonize the component.
+- `env_printer.sh` / `env_printer.cmd`: Generates dynamic environment variables (like passwords or
+  connection strings) generated during installation.
+- `test.sh` / `test.cmd`: Native validation scripts to prove the component is running and healthy.
+- `uninstall.sh` / `uninstall.cmd`: Idempotent cleanup logic.
 
-LibScript includes a built-in automated stack resolution engine implemented in `jq`. This engine:
+### The Component Lifecycle
 
-1.  Reads a declarative `libscript.json` stack definition.
-2.  Traverses the `_lib/` directory to collect component manifests.
-3.  Resolves version constraints (e.g., `postgres>=16`, `python~=3.10`) and transitive dependencies.
-4.  Generates an optimized execution plan for either native installation or container generation.
+When the global `libscript.sh` is invoked, it delegates to the component's lifecycle hooks:
+
+1. **Resolution:** Global orchestrator resolves dependencies and locates the component directory.
+2. **Setup (`install`):** Executes `setup.sh`. The component downloads payloads to the `caches/`
+   directory, installs binaries to the configured `--prefix`, and templates configuration files.
+3. **Daemonization (`install_service`):** Executes `service_install.sh` to register the component
+   with the OS init system.
+4. **Environment Generation (`env`):** Executes `env_printer.sh` to expose connection strings or
+   credentials to dependent services.
+5. **Execution (`start`/`stop`):** Executes `service.sh action start` to manage the running daemon.
+6. **Validation (`test`/`health`):** Executes `test.sh` to verify service health.
+7. **Teardown (`uninstall`):** Executes `uninstall.sh` and `service_uninstall.sh` to remove
+   artifacts and daemons.
+
+```mermaid
+sequenceDiagram
+    participant Orchestrator as Global Orchestrator
+    participant CLI as Local cli.sh
+    participant Setup as setup.sh
+    participant Init as OS Init (systemd)
+    participant Env as env_printer.sh
+
+    Orchestrator->>CLI: install (with resolved deps)
+    activate CLI
+    CLI->>Setup: Execute installation logic
+    Setup-->>CLI: Return success
+    CLI->>Init: service_install.sh (Daemonize)
+    Init-->>CLI: Registered
+    CLI->>Env: Generate dynamic config
+    Env-->>CLI: DATABASE_URL, Ports, etc.
+    CLI-->>Orchestrator: Installation Complete + Env Vars
+    deactivate CLI
+```
+
+## ☸️ The Global Resolution Engine & Declarative Stacks
+
+LibScript includes a built-in automated stack resolution engine. While individual components are
+autonomous, complex applications are defined via a declarative `libscript.json` file.
+
+The engine operates as follows:
+
+1.  **Parse:** Reads the `libscript.json` stack definition.
+2.  **Scan:** Traverses the `_lib/` directory catalog to collect component manifests.
+3.  **Resolve:** Evaluates version constraints (e.g., `postgres>=16`, `python~=3.10`) and resolves
+    transitive dependencies using a lightweight algorithm implemented via `jq` and shell core.
+4.  **Execute:** Generates an optimized execution plan for either native installation (calling
+    component `cli.sh` in the correct dependency order) or artifact generation.
+
+## 🧠 State Management & Synchronization
+
+LibScript relies on local execution but maintains idempotency and tracking through state files.
+
+- **Local State (`.libscript_state.json`):** Tracks installed components, their active versions,
+  dynamic environment variables, and provisioned cloud resource IDs. This acts as the source of
+  truth for the local environment.
+- **Multicloud State Sync:** When deploying to the cloud, LibScript supports generic bidirectional
+  state synchronization backed by Object Storage (S3-compatible, GCS, Azure Blob). During a
+  `provision` run, the engine can pull previous state from the bucket, and during `deprovision`, it
+  can push mutated state (like SQLite DBs or let's encrypt certs) back to remote storage.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Init: libscript cloud provision
+    Init --> PullState: Fetch from Object Storage
+    PullState --> LocalState: .libscript_state.json updated
+    LocalState --> Provisioning: Deploy resources/components
+    Provisioning --> Active: Workload running (State mutated)
+    Active --> DeprovisionTrigger: libscript cloud deprovision
+    DeprovisionTrigger --> PushState: Sync changes to Object Storage
+    PushState --> Teardown: Destroy Cloud Resources
+    Teardown --> [*]: Clean Exit
+```
 
 ## ☁️ PaaS Orchestration Layer & Hardware Acceleration
 

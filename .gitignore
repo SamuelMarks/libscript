@@ -135,7 +135,6 @@ analyze_*
 create_*
 generate_*
 parse_*
-setup_*
 standardize_*
 # Exception for core test helpers
 !_lib/_common/test_base.*
