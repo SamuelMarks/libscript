@@ -22,11 +22,5 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-if [ -z "${LIBSCRIPT_ROOT_DIR:-}" ]; then
-  _tmp_dir="$SCRIPT_DIR"
-  while [ "$_tmp_dir" != "/" ] && [ ! -f "$_tmp_dir/libscript.sh" ]; do
-    _tmp_dir="$(dirname "$_tmp_dir")"
-  done
-  LIBSCRIPT_ROOT_DIR="$_tmp_dir"
-fi
+[ -z "${LIBSCRIPT_ROOT_DIR:-}" ] && LIBSCRIPT_ROOT_DIR=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")
 export LIBSCRIPT_LISTEN_PORT="${NATS_LISTEN:-$LIBSCRIPT_LISTEN_PORT}"
