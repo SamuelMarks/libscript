@@ -22,7 +22,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 
-SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 LIBSCRIPT_ROOT=${LIBSCRIPT_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}
 
 if [ "$#" -lt 1 ]; then

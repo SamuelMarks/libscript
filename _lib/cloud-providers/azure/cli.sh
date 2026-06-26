@@ -21,7 +21,7 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 PACKAGE_NAME="azure"
 SCRIPT_NAME="${SCRIPT_DIR}/../../_common/component_core.sh"

@@ -1,5 +1,8 @@
 $ErrorActionPreference = "Stop"
 
+$PACKAGE_NAME = "serve-actix-diesel-auth-scaffold"
+$env:PACKAGE_NAME = $PACKAGE_NAME
+
 $CliCmd = Join-Path $PSScriptRoot "cli.cmd"
 
 if (Test-Path $CliCmd) {

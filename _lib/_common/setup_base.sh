@@ -23,7 +23,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 # Resolve component directory and LibScript root
 DIR="${SCRIPT_DIR:-$(cd "$(dirname -- "${THIS_FILE}")" && pwd)}"
-SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 [ -z "${LIBSCRIPT_ROOT_DIR:-}" ] && LIBSCRIPT_ROOT_DIR=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")
 export LIBSCRIPT_ROOT_DIR
 

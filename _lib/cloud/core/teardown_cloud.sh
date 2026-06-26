@@ -25,7 +25,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 # @file teardown_cloud.sh
 
 
-SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
 

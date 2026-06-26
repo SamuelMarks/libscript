@@ -1,5 +1,8 @@
 $ErrorActionPreference = "Stop"
 
+$PACKAGE_NAME = "drupal"
+$env:PACKAGE_NAME = $PACKAGE_NAME
+
 $CliCmd = Join-Path $PSScriptRoot "cli.cmd"
 
 if (Test-Path $CliCmd) {

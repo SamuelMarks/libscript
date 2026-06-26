@@ -14,7 +14,7 @@ else
   THIS_FILE="${0}"
 fi
 
-SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(cd "${SCRIPT_DIR}/../../../.." && pwd)}"
 
 for LIB in _lib/_common/pkg_mgr.sh _lib/_common/log.sh; do
