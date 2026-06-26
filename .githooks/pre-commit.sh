@@ -1,6 +1,9 @@
 #!/bin/sh
 set -e
 
+# Ensure we run from the git repository root
+cd "$(git rev-parse --show-toplevel)"
+
 echo "Running pre-commit hooks..."
 
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
@@ -117,10 +120,10 @@ else
 fi
 
 get_job_status() {
-  local comp="$1"
-  local os="$2"
+  comp="$1"
+  os="$2"
   if [ -f jobs_status.tmp ]; then
-    local status=$(grep -F "${comp} on ${os}|" jobs_status.tmp | cut -d'|' -f2 | head -n1)
+    status=$(grep -F "${comp} on ${os}|" jobs_status.tmp | cut -d'|' -f2 | head -n1)
     case "$status" in
       "success") echo "✅" ;;
       "failure") echo "❌" ;;

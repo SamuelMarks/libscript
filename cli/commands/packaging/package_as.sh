@@ -22,26 +22,32 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
-if [ "$cmd" = "package_as" ]; then
+if [ -z "${LIBSCRIPT_ROOT_DIR:-}" ]; then
+  _tmp_dir="$SCRIPT_DIR"
+  while [ "$_tmp_dir" != "/" ] && [ ! -f "$_tmp_dir/libscript.sh" ]; do
+    _tmp_dir="$(dirname "$_tmp_dir")"
+  done
+  LIBSCRIPT_ROOT_DIR="$_tmp_dir"
+fi
+if [ "$CMD" = "package_as" ]; then
   pkg_type="$1"
   shift
   if [ "$pkg_type" = "docker" ] || [ "$pkg_type" = "dockerfile" ]; then
-    . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_docker.sh"
+    . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_docker.sh"
   elif [ "$pkg_type" = "docker_compose" ]; then
-    . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_docker_compose.sh"
+    . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_docker_compose.sh"
   elif [ "$pkg_type" = "TUI" ]; then
-    . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_tui.sh"
+    . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_tui.sh"
   elif [ "$pkg_type" = "msi" ]; then
-    . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_msi.sh"
+    . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_msi.sh"
   elif [ "$pkg_type" = "innosetup" ]; then
-    . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_innosetup.sh"
+    . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_innosetup.sh"
   elif [ "$pkg_type" = "nsis" ]; then
-    . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_nsis.sh"
+    . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_nsis.sh"
   elif [ "$pkg_type" = "pkg" ]; then
-    . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_pkg.sh"
+    . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_pkg.sh"
   elif [ "$pkg_type" = "dmg" ]; then
-    . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_dmg.sh"
+    . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_dmg.sh"
   else
     echo "Error: Unsupported package format '$pkg_type'." >&2
     exit 1

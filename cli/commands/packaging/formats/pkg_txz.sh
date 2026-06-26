@@ -22,7 +22,13 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+if [ -z "${LIBSCRIPT_ROOT_DIR:-}" ]; then
+  _tmp_dir="$SCRIPT_DIR"
+  while [ "$_tmp_dir" != "/" ] && [ ! -f "$_tmp_dir/libscript.sh" ]; do
+    _tmp_dir="$(dirname "$_tmp_dir")"
+  done
+  LIBSCRIPT_ROOT_DIR="$_tmp_dir"
+fi
       echo "#!/bin/sh"
       echo "set -e"
       echo "OUT_DIR=\"$OUT_DIR\""
@@ -38,7 +44,7 @@ LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
         echo "BUILD_DIR=\"/tmp/${pkg_name}_pkgbuild\""
         echo "mkdir -p \"\$BUILD_DIR/root/opt/libscript\""
         echo "mkdir -p \"\$BUILD_DIR/root/var/LIB/libscript\""
-        if [ "$OFFLINE" = "1" ]; then echo "cp -a \"$SCRIPT_DIR\"/.* \"$SCRIPT_DIR\"/* \"\$BUILD_DIR/root/opt/libscript/\" 2>/dev/null || true"; echo "rm -rf \"\$BUILD_DIR/root/opt/libscript/.git\""; fi
+        if [ "$OFFLINE" = "1" ]; then echo "cp -a \"$LIBSCRIPT_ROOT_DIR\"/.* \"$LIBSCRIPT_ROOT_DIR\"/* \"\$BUILD_DIR/root/opt/libscript/\" 2>/dev/null || true"; echo "rm -rf \"\$BUILD_DIR/root/opt/libscript/.git\""; fi
         echo "touch \"\$BUILD_DIR/root/var/LIB/libscript/.${pkg_name}_installed\""
         echo "mkdir -p \"\$BUILD_DIR/meta\""
         echo "cat << 'EOF' > \"\$BUILD_DIR/meta/+MANIFEST\""

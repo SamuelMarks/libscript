@@ -22,7 +22,13 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+if [ -z "${LIBSCRIPT_ROOT_DIR:-}" ]; then
+  _tmp_dir="$SCRIPT_DIR"
+  while [ "$_tmp_dir" != "/" ] && [ ! -f "$_tmp_dir/libscript.sh" ]; do
+    _tmp_dir="$(dirname "$_tmp_dir")"
+  done
+  LIBSCRIPT_ROOT_DIR="$_tmp_dir"
+fi
 DIR="${SCRIPT_DIR}"
 
 for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
@@ -36,8 +42,13 @@ PHP_INSTALL_METHOD="${PHP_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-sys
 if [ "${PHP_INSTALL_METHOD}" = 'system' ]; then
   libscript_depends 'php'
 else
-  libscript_depends 'curl' 'tar' 'make' 'gcc'
-  libscript_download https://www.php.net/distributions/php-8.2.11.tar.gz /tmp/php.tar.gz
-  tar -xzf /tmp/php.tar.gz -C /tmp
-  cd /tmp/php-8.2.11 && ./configure && make && priv make install
+  if command -v php >/dev/null 2>&1; then
+    log_info "PHP is already installed. Skipping."
+  else
+    libscript_depends 'curl' 'tar' 'make' 'gcc'
+    libscript_download https://www.php.net/distributions/php-8.2.11.tar.gz /tmp/php.tar.gz
+    tar -xzf /tmp/php.tar.gz -C /tmp
+    ( cd /tmp/php-8.2.11 && ./configure && make && priv make install )
+    rm -rf /tmp/php-8.2.11
+  fi
 fi

@@ -22,8 +22,14 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
-  . "$SCRIPT_DIR/cli/commands/packaging/formats/_common_installer_args.sh"
+if [ -z "${LIBSCRIPT_ROOT_DIR:-}" ]; then
+  _tmp_dir="$SCRIPT_DIR"
+  while [ "$_tmp_dir" != "/" ] && [ ! -f "$_tmp_dir/libscript.sh" ]; do
+    _tmp_dir="$(dirname "$_tmp_dir")"
+  done
+  LIBSCRIPT_ROOT_DIR="$_tmp_dir"
+fi
+  . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/_common_installer_args.sh"
       cat << EOF2
 !define APP_NAME "$APP_NAME"
 !define APP_VERSION "$APP_VERSION"
@@ -57,7 +63,7 @@ EOF2
       if [ "$OFFLINE" = "1" ]; then
         echo "Section \"Core\""
         echo "  SetOutPath \"\$INSTDIR\""
-        echo "  File /r \"$SCRIPT_DIR\\*.*\""
+        echo "  File /r \"$LIBSCRIPT_ROOT_DIR\\*.*\""
         echo "SectionEnd"
       fi
       echo "Include nsDialogs.nsh"
@@ -66,7 +72,7 @@ EOF2
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
-        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
           if [ -n "$vars_json" ]; then
@@ -96,7 +102,7 @@ EOF2
         else
           run_params="/c libscript.cmd install_service $pkg $ver"
         fi
-        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
           if [ -n "$vars_json" ]; then
@@ -113,7 +119,7 @@ EOF2
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
-        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
           if [ -n "$vars_json" ]; then

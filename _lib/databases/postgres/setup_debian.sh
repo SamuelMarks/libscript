@@ -24,7 +24,13 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 _DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${_DIR}"
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+if [ -z "${LIBSCRIPT_ROOT_DIR:-}" ]; then
+  _tmp_dir="$SCRIPT_DIR"
+  while [ "$_tmp_dir" != "/" ] && [ ! -f "$_tmp_dir/libscript.sh" ]; do
+    _tmp_dir="$(dirname "$_tmp_dir")"
+  done
+  LIBSCRIPT_ROOT_DIR="$_tmp_dir"
+fi
 
 for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/priv.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"

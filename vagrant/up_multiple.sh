@@ -22,7 +22,13 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+if [ -z "${LIBSCRIPT_ROOT_DIR:-}" ]; then
+  _tmp_dir="$SCRIPT_DIR"
+  while [ "$_tmp_dir" != "/" ] && [ ! -f "$_tmp_dir/libscript.sh" ]; do
+    _tmp_dir="$(dirname "$_tmp_dir")"
+  done
+  LIBSCRIPT_ROOT_DIR="$_tmp_dir"
+fi
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   echo "Usage: $0 [OPTIONS]"
   echo "See script source or documentation for more details."
@@ -42,11 +48,11 @@ fi
 
 DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 
-PREVIOUS_WD="$(pwd)"
 VAGRANT_IMAGE_DIR="${VAGRANT_IMAGE_DIR:-debian12}"
 VAGRANT_N="${VAGRANT_N:-VAGRANT_N}"
-cd "${DIR}"'/'"${VAGRANT_IMAGE_DIR}"
-for i in dc -e '0 1 '"${VAGRANT_N}"'  stsisb[pli+dlt>a]salblax'; do
-  vagrant up "${VAGRANT_IMAGE_DIR}${i}"
-done
-cd "${PREVIOUS_WD}"
+(
+  cd "${DIR}"'/'"${VAGRANT_IMAGE_DIR}" || exit 1
+  for i in $(dc -e '0 1 '"${VAGRANT_N}"'  stsisb[pli+dlt>a]salblax'); do
+    vagrant up "${VAGRANT_IMAGE_DIR}${i}"
+  done
+)

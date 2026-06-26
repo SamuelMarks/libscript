@@ -22,7 +22,13 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+if [ -z "${LIBSCRIPT_ROOT_DIR:-}" ]; then
+  _tmp_dir="$SCRIPT_DIR"
+  while [ "$_tmp_dir" != "/" ] && [ ! -f "$_tmp_dir/libscript.sh" ]; do
+    _tmp_dir="$(dirname "$_tmp_dir")"
+  done
+  LIBSCRIPT_ROOT_DIR="$_tmp_dir"
+fi
 _DIR="${SCRIPT_DIR}"
 
 for LIB in '_lib/_common/pkg_mgr.sh' '_lib/languages/nodejs/setup.sh' '_lib/git-servers/utils/git.sh'; do
@@ -54,18 +60,17 @@ if ! libscript_cmd_avail pnpm; then
   priv npm install -g pnpm@latest-10
 fi
 
-PREVIOUS_WD="$(pwd)"
 git_get https://github.com/mendableai/firecrawl "${DEST}"
-cd -- "${DEST}"
 
-HASH="$(git rev-list HEAD -1)"
+HASH="$(cd -- "${DEST}" && git rev-list HEAD -1)"
 HASH_LOC="${DEST}"'/apps/api/node_modules/'"${HASH}"
 if [ ! -f "${HASH_LOC}" ]; then
   mkdir -p -- "$(dirname -- "${HASH_LOC}")"
   touch -- "${HASH_LOC}"
-  cd -- apps/api
-  pnpm install
-  cd -- "${DEST}"
+  (
+    cd -- "${DEST}/apps/api" || exit 1
+    pnpm install
+  )
 fi
 
 if [ "${VARS-}" ]; then
@@ -111,5 +116,3 @@ if [ -d '/etc/systemd/system' ]; then
     true
   fi
 fi
-
-cd -- "${PREVIOUS_WD}"

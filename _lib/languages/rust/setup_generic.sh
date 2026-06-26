@@ -22,7 +22,13 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+if [ -z "${LIBSCRIPT_ROOT_DIR:-}" ]; then
+  _tmp_dir="$SCRIPT_DIR"
+  while [ "$_tmp_dir" != "/" ] && [ ! -f "$_tmp_dir/libscript.sh" ]; do
+    _tmp_dir="$(dirname "$_tmp_dir")"
+  done
+  LIBSCRIPT_ROOT_DIR="$_tmp_dir"
+fi
 DIR="${SCRIPT_DIR}"
 
 for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
@@ -38,8 +44,12 @@ RUST_INSTALL_METHOD="${RUST_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-s
 if [ "${RUST_INSTALL_METHOD}" = 'system' ]; then
   libscript_depends 'rust'
 else
-  INSTALL_SH=$(mktemp)
-  libscript_download 'https://sh.rustup.rs' "${INSTALL_SH}"
-  sh "${INSTALL_SH}" -y --default-toolchain "${RUST_VERSION:-stable}"
-  rm -f "${INSTALL_SH}"
+  if command -v rustc >/dev/null 2>&1 || [ -x "${HOME}/.cargo/bin/rustc" ]; then
+    log_info "Rust is already installed. Skipping."
+  else
+    INSTALL_SH=$(mktemp)
+    libscript_download 'https://sh.rustup.rs' "${INSTALL_SH}"
+    sh "${INSTALL_SH}" -y --default-toolchain "${RUST_VERSION:-stable}"
+    rm -f "${INSTALL_SH}"
+  fi
 fi

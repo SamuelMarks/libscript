@@ -22,7 +22,13 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+if [ -z "${LIBSCRIPT_ROOT_DIR:-}" ]; then
+  _tmp_dir="$SCRIPT_DIR"
+  while [ "$_tmp_dir" != "/" ] && [ ! -f "$_tmp_dir/libscript.sh" ]; do
+    _tmp_dir="$(dirname "$_tmp_dir")"
+  done
+  LIBSCRIPT_ROOT_DIR="$_tmp_dir"
+fi
 DIR="${SCRIPT_DIR}"
 
 for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh"; do
@@ -76,9 +82,10 @@ if [ ! -d "${MAGENTO_WWWROOT}/app" ]; then
   fi
 
   if command -v composer >/dev/null 2>&1; then
-    cd "${MAGENTO_WWWROOT}"
-    composer install --no-interaction || true
-    cd - >/dev/null
+    (
+      cd "${MAGENTO_WWWROOT}" || exit 1
+      composer install --no-interaction || true
+    )
   fi
 fi
 

@@ -22,7 +22,13 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+if [ -z "${LIBSCRIPT_ROOT_DIR:-}" ]; then
+  _tmp_dir="$SCRIPT_DIR"
+  while [ "$_tmp_dir" != "/" ] && [ ! -f "$_tmp_dir/libscript.sh" ]; do
+    _tmp_dir="$(dirname "$_tmp_dir")"
+  done
+  LIBSCRIPT_ROOT_DIR="$_tmp_dir"
+fi
 DIR="${SCRIPT_DIR}"
 
 for LIB in "_lib/_common/pkg_mgr.sh" "_lib/git-servers/git.sh" "_lib/languages/rust/setup.sh"; do
@@ -34,16 +40,16 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/git-servers/git.sh" "_lib/languages/r
   . "${SCRIPT_NAME}"
 done
 
-PREVIOUS_WD="$(pwd)"
 libscript_depends 'libpq-dev' 'libsqlite3-dev' 'default-libmysqlclient-dev'
 git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}"
-cd -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}"
 D="$( dirname -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}" )"'/rust-actix-diesel-auth-scaffold'
 libscript_depends 'libpq-dev' 'libsqlite3-dev' 'default-libmysqlclient-dev'
 git_get https://github.com/offscale/rust-actix-diesel-auth-scaffold "${D}"
 rustup toolchain install nightly || true
-RUSTC_BOOTSTRAP=1 cargo +nightly check || RUSTC_BOOTSTRAP=1 cargo check
+(
+  cd -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}" || exit 1
+  RUSTC_BOOTSTRAP=1 cargo +nightly check || RUSTC_BOOTSTRAP=1 cargo check
+)
 if [ ! "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}" = "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR}" ]; then
   cp -r -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}"'/target' "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR}"'/' || true
 fi
-cd -- "${PREVIOUS_WD}"

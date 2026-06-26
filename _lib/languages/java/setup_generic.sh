@@ -22,7 +22,13 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+if [ -z "${LIBSCRIPT_ROOT_DIR:-}" ]; then
+  _tmp_dir="$SCRIPT_DIR"
+  while [ "$_tmp_dir" != "/" ] && [ ! -f "$_tmp_dir/libscript.sh" ]; do
+    _tmp_dir="$(dirname "$_tmp_dir")"
+  done
+  LIBSCRIPT_ROOT_DIR="$_tmp_dir"
+fi
 DIR="${SCRIPT_DIR}"
 
 for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
@@ -36,8 +42,12 @@ JAVA_INSTALL_METHOD="${JAVA_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-s
 if [ "${JAVA_INSTALL_METHOD}" = 'system' ]; then
   libscript_depends 'java'
 else
-  libscript_depends 'curl' 'tar'
-  libscript_download https://download.java.net/java/GA/jdk17/0d483333a00540d886896bac774ff48b/35/GPL/openjdk-17_linux-x64_bin.tar.gz /tmp/jdk.tar.gz
-  priv mkdir -p /opt/java
-  priv tar -xzf /tmp/jdk.tar.gz -C /opt/java --strip-components=1
+  if command -v java >/dev/null 2>&1 || [ -x "/opt/java/bin/java" ]; then
+    log_info "Java is already installed. Skipping."
+  else
+    libscript_depends 'curl' 'tar'
+    libscript_download https://download.java.net/java/GA/jdk17/0d483333a00540d886896bac774ff48b/35/GPL/openjdk-17_linux-x64_bin.tar.gz /tmp/jdk.tar.gz
+    priv mkdir -p /opt/java
+    priv tar -xzf /tmp/jdk.tar.gz -C /opt/java --strip-components=1
+  fi
 fi

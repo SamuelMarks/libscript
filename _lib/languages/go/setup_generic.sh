@@ -22,7 +22,13 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+if [ -z "${LIBSCRIPT_ROOT_DIR:-}" ]; then
+  _tmp_dir="$SCRIPT_DIR"
+  while [ "$_tmp_dir" != "/" ] && [ ! -f "$_tmp_dir/libscript.sh" ]; do
+    _tmp_dir="$(dirname "$_tmp_dir")"
+  done
+  LIBSCRIPT_ROOT_DIR="$_tmp_dir"
+fi
 DIR="${SCRIPT_DIR}"
 
 for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
@@ -43,25 +49,31 @@ fi
 if [ "${GO_INSTALL_METHOD}" = 'system' ]; then
   libscript_depends 'go'
 else
-  libscript_depends 'tar'
-  os="$(uname -s | tr '[:upper:]' '[:lower:]')"
-  case "${os}" in
-    'darwin'*) os='darwin' ;;
-    'freebsd'*) os='freebsd' ;;
-    *) os='linux' ;;
-  esac
-  arch="$(uname -m)"
-  case "${arch}" in
-    'x86_64') arch='amd64' ;;
-    'aarch64'|'arm64') arch='arm64' ;;
-    *) ;;
-  esac
-  archive="go${GO_VERSION}.${os}-${arch}.tar.gz"
-  GO_TARBALL=$(mktemp)
-  libscript_download "https://go.dev/dl/${archive}" "${GO_TARBALL}"
-  priv rm -rf /usr/local/go
-  priv tar -C /usr/local -xzf "${GO_TARBALL}"
-  rm -f "${GO_TARBALL}"
-  printf 'export PATH=$PATH:/usr/local/go/bin\n' > /tmp/go_path.sh
-  priv cp /tmp/go_path.sh /etc/profile.d/go.sh || true
+  if command -v go >/dev/null 2>&1 && go version | grep -q "go${GO_VERSION} "; then
+    log_info "Go ${GO_VERSION} is already installed. Skipping."
+  elif [ -x /usr/local/go/bin/go ] && /usr/local/go/bin/go version | grep -q "go${GO_VERSION} "; then
+    log_info "Go ${GO_VERSION} is already installed in /usr/local/go/bin. Skipping."
+  else
+    libscript_depends 'tar'
+    os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+    case "${os}" in
+      'darwin'*) os='darwin' ;;
+      'freebsd'*) os='freebsd' ;;
+      *) os='linux' ;;
+    esac
+    arch="$(uname -m)"
+    case "${arch}" in
+      'x86_64') arch='amd64' ;;
+      'aarch64'|'arm64') arch='arm64' ;;
+      *) ;;
+    esac
+    archive="go${GO_VERSION}.${os}-${arch}.tar.gz"
+    GO_TARBALL=$(mktemp)
+    libscript_download "https://go.dev/dl/${archive}" "${GO_TARBALL}"
+    priv rm -rf /usr/local/go
+    priv tar -C /usr/local -xzf "${GO_TARBALL}"
+    rm -f "${GO_TARBALL}"
+    printf 'export PATH=$PATH:/usr/local/go/bin\n' > /tmp/go_path.sh
+    priv cp /tmp/go_path.sh /etc/profile.d/go.sh || true
+  fi
 fi

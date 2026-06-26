@@ -22,8 +22,14 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
-  . "$SCRIPT_DIR/cli/commands/packaging/formats/_common_installer_args.sh"
+if [ -z "${LIBSCRIPT_ROOT_DIR:-}" ]; then
+  _tmp_dir="$SCRIPT_DIR"
+  while [ "$_tmp_dir" != "/" ] && [ ! -f "$_tmp_dir/libscript.sh" ]; do
+    _tmp_dir="$(dirname "$_tmp_dir")"
+  done
+  LIBSCRIPT_ROOT_DIR="$_tmp_dir"
+fi
+  . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/_common_installer_args.sh"
       PKG_STAGE="${OUT_FILE}_stage"
       rm -rf "$PKG_STAGE"
       mkdir -p "$PKG_STAGE/packages" "$PKG_STAGE/resources" "$PKG_STAGE/scripts"
@@ -63,7 +69,7 @@ if [ -z "${USER_NAME:-}" ] || [ "${USER_NAME:-}" = "root" ]; then
 fi
 EOF_SCRIPT
 
-        SCHEMA_FILE=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$PKG/" | head -n 1)
+        SCHEMA_FILE=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$PKG/" | head -n 1)
         PARAMS=""
         if [ -f "$SCHEMA_FILE" ]; then
           VARS_JSON=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$SCHEMA_FILE")

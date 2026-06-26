@@ -22,7 +22,13 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+if [ -z "${LIBSCRIPT_ROOT_DIR:-}" ]; then
+  _tmp_dir="$SCRIPT_DIR"
+  while [ "$_tmp_dir" != "/" ] && [ ! -f "$_tmp_dir/libscript.sh" ]; do
+    _tmp_dir="$(dirname "$_tmp_dir")"
+  done
+  LIBSCRIPT_ROOT_DIR="$_tmp_dir"
+fi
     cat << 'EOF'
 #!/bin/sh
 if command -v whiptail >/dev/null; then DIALOG=whiptail; elif command -v dialog >/dev/null; then DIALOG=dialog; else echo "Error: dialog or whiptail required." >&2; exit 1; fi
@@ -137,16 +143,16 @@ EOF
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
-        "$SCRIPT_DIR/libscript.sh" download "$pkg" "$ver" || true
+        "$LIBSCRIPT_ROOT_DIR/libscript.sh" download "$pkg" "$ver" || true
       done
     fi
 
     if [ "$pkg_type" = "deb" ]; then
-      . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_deb.sh"
+      . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_deb.sh"
     elif [ "$pkg_type" = "rpm" ]; then
-      . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_rpm.sh"
+      . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_rpm.sh"
     elif [ "$pkg_type" = "apk" ]; then
-      . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_apk.sh"
+      . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_apk.sh"
     elif [ "$pkg_type" = "txz" ]; then
-      . "$SCRIPT_DIR/cli/commands/packaging/formats/pkg_txz.sh"
+      . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_txz.sh"
     fi

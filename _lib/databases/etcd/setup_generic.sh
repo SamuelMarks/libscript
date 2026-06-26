@@ -23,7 +23,13 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 DIR=$(CDPATH="" cd -- "$(dirname -- "$0")" && pwd)
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+if [ -z "${LIBSCRIPT_ROOT_DIR:-}" ]; then
+  _tmp_dir="$SCRIPT_DIR"
+  while [ "$_tmp_dir" != "/" ] && [ ! -f "$_tmp_dir/libscript.sh" ]; do
+    _tmp_dir="$(dirname "$_tmp_dir")"
+  done
+  LIBSCRIPT_ROOT_DIR="$_tmp_dir"
+fi
 # shellcheck disable=SC1090,SC1091
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh"
 libscript_depends etcd || echo "etcd installation skipped or failed"

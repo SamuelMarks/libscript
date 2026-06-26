@@ -22,7 +22,13 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+if [ -z "${LIBSCRIPT_ROOT_DIR:-}" ]; then
+  _tmp_dir="$SCRIPT_DIR"
+  while [ "$_tmp_dir" != "/" ] && [ ! -f "$_tmp_dir/libscript.sh" ]; do
+    _tmp_dir="$(dirname "$_tmp_dir")"
+  done
+  LIBSCRIPT_ROOT_DIR="$_tmp_dir"
+fi
 for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
@@ -48,18 +54,25 @@ elif [ "${PYTHON_INSTALL_METHOD}" = 'pyenv' ]; then
   pyenv install -s "${PYTHON_VERSION:-3.11}"
   pyenv global "${PYTHON_VERSION:-3.11}"
 elif [ "${PYTHON_INSTALL_METHOD}" = 'from-source' ]; then
-  libscript_depends 'build-essential' 'libssl-dev' 'zlib1g-dev' 'libbz2-dev' 'libreadline-dev' 'libsqlite3-dev' 'wget' 'curl' 'llvm' 'libncurses5-dev' 'libncursesw5-dev' 'xz-utils' 'tk-dev' 'libffi-dev' 'liblzma-dev'
   PY_VER="${PYTHON_VERSION:-3.11.9}"
-  PY_TARBALL=$(mktemp)
-  libscript_download "https://www.python.org/ftp/python/${PY_VER}/Python-${PY_VER}.tgz" "${PY_TARBALL}"
-  tar -xf "${PY_TARBALL}"
-  rm -f "${PY_TARBALL}"
-  cd "Python-${PY_VER}"
-  ./configure --enable-optimizations
-  make -j"$(nproc)"
-  sudo make altinstall
-  cd ..
-  rm -rf "Python-${PY_VER}"
+  PY_MINOR_VER=$(echo "$PY_VER" | cut -d. -f1,2)
+  if command -v "python${PY_MINOR_VER}" >/dev/null 2>&1; then
+    log_info "Python ${PY_MINOR_VER} is already installed from source or system. Skipping."
+  else
+    libscript_depends 'build-essential' 'libssl-dev' 'zlib1g-dev' 'libbz2-dev' 'libreadline-dev' 'libsqlite3-dev' 'wget' 'curl' 'llvm' 'libncurses5-dev' 'libncursesw5-dev' 'xz-utils' 'tk-dev' 'libffi-dev' 'liblzma-dev'
+    PY_TARBALL=$(mktemp)
+    libscript_download "https://www.python.org/ftp/python/${PY_VER}/Python-${PY_VER}.tgz" "${PY_TARBALL}"
+    TMP_BUILD_DIR=$(mktemp -d)
+    tar -xf "${PY_TARBALL}" -C "${TMP_BUILD_DIR}"
+    rm -f "${PY_TARBALL}"
+    (
+      cd "${TMP_BUILD_DIR}/Python-${PY_VER}" || exit 1
+      ./configure --enable-optimizations
+      make -j"$(nproc)"
+      sudo make altinstall
+    )
+    rm -rf "${TMP_BUILD_DIR}"
+  fi
 else # uv
   if [ ! -f "${HOME}"'/.local/bin/uv' ]; then
     INSTALL_SH=$(mktemp)

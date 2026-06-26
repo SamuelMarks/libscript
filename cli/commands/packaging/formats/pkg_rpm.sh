@@ -22,7 +22,13 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+if [ -z "${LIBSCRIPT_ROOT_DIR:-}" ]; then
+  _tmp_dir="$SCRIPT_DIR"
+  while [ "$_tmp_dir" != "/" ] && [ ! -f "$_tmp_dir/libscript.sh" ]; do
+    _tmp_dir="$(dirname "$_tmp_dir")"
+  done
+  LIBSCRIPT_ROOT_DIR="$_tmp_dir"
+fi
       echo "#!/bin/sh"
       echo "set -e"
       echo "OUT_DIR=\"$OUT_DIR\""
@@ -47,7 +53,7 @@ LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
         echo "%description"
         echo "$APP_NAME deployment - $pkg"
         echo "%install"
-        echo "mkdir -p %{buildroot}/opt/libscript"; if [ "$OFFLINE" = "1" ]; then echo "cp -a \"$SCRIPT_DIR\"/.* \"$SCRIPT_DIR\"/* %{buildroot}/opt/libscript/ 2>/dev/null || true"; echo "rm -rf %{buildroot}/opt/libscript/.git"; fi
+        echo "mkdir -p %{buildroot}/opt/libscript"; if [ "$OFFLINE" = "1" ]; then echo "cp -a \"$LIBSCRIPT_ROOT_DIR\"/.* \"$LIBSCRIPT_ROOT_DIR\"/* %{buildroot}/opt/libscript/ 2>/dev/null || true"; echo "rm -rf %{buildroot}/opt/libscript/.git"; fi
         echo "touch %{buildroot}/var/LIB/libscript/.${pkg_name}_installed"
         echo "%post"
         echo "if command -v libscript.sh >/dev/null; then libscript.sh install_service $pkg $ver; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh install_service $pkg $ver; fi"
@@ -74,7 +80,7 @@ LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
       echo "%description"
       echo "$APP_NAME deployment metapackage"
       echo "%install"
-      echo "mkdir -p %{buildroot}/opt/libscript"; if [ "$OFFLINE" = "1" ]; then echo "cp -a \"$SCRIPT_DIR\"/.* \"$SCRIPT_DIR\"/* %{buildroot}/opt/libscript/ 2>/dev/null || true"; echo "rm -rf %{buildroot}/opt/libscript/.git"; fi
+      echo "mkdir -p %{buildroot}/opt/libscript"; if [ "$OFFLINE" = "1" ]; then echo "cp -a \"$LIBSCRIPT_ROOT_DIR\"/.* \"$LIBSCRIPT_ROOT_DIR\"/* %{buildroot}/opt/libscript/ 2>/dev/null || true"; echo "rm -rf %{buildroot}/opt/libscript/.git"; fi
       echo "touch %{buildroot}/var/LIB/libscript/.${APP_NAME}-meta_installed"
       echo "%files"
       echo "/var/LIB/libscript/.${APP_NAME}-meta_installed"

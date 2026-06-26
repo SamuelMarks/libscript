@@ -22,7 +22,13 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+if [ -z "${LIBSCRIPT_ROOT_DIR:-}" ]; then
+  _tmp_dir="$SCRIPT_DIR"
+  while [ "$_tmp_dir" != "/" ] && [ ! -f "$_tmp_dir/libscript.sh" ]; do
+    _tmp_dir="$(dirname "$_tmp_dir")"
+  done
+  LIBSCRIPT_ROOT_DIR="$_tmp_dir"
+fi
       echo "#!/bin/sh"
       echo "set -e"
       echo "OUT_DIR=\"$OUT_DIR\""
@@ -56,7 +62,7 @@ LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
         echo "if command -v libscript.sh >/dev/null; then libscript.sh uninstall $pkg --purge-data; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh uninstall $pkg --purge-data; fi"
         echo "EOF"
         echo "chmod 0755 \"\$BUILD_DIR/DEBIAN/prerm\""
-        echo "mkdir -p \"\$BUILD_DIR/opt/libscript\""; if [ "$OFFLINE" = "1" ]; then echo "cp -a \"$SCRIPT_DIR\"/.* \"$SCRIPT_DIR\"/* \"\$BUILD_DIR/opt/libscript/\" 2>/dev/null || true"; echo "rm -rf \"\$BUILD_DIR/opt/libscript/.git\""; fi
+        echo "mkdir -p \"\$BUILD_DIR/opt/libscript\""; if [ "$OFFLINE" = "1" ]; then echo "cp -a \"$LIBSCRIPT_ROOT_DIR\"/.* \"$LIBSCRIPT_ROOT_DIR\"/* \"\$BUILD_DIR/opt/libscript/\" 2>/dev/null || true"; echo "rm -rf \"\$BUILD_DIR/opt/libscript/.git\""; fi
         echo "dpkg-deb --build \"\$BUILD_DIR\" \"\$OUT_DIR/${pkg_name}_${APP_VERSION}_all.deb\""
         echo "rm -rf \"\$BUILD_DIR\""
       done
@@ -71,7 +77,7 @@ LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
       if [ -n "$meta_depends" ]; then echo "Depends: $meta_depends"; fi
       echo "Description: $APP_NAME deployment metapackage"
       echo "EOF"
-      echo "mkdir -p \"\$BUILD_DIR/opt/libscript\""; if [ "$OFFLINE" = "1" ]; then echo "cp -a \"$SCRIPT_DIR\"/.* \"$SCRIPT_DIR\"/* \"\$BUILD_DIR/opt/libscript/\" 2>/dev/null || true"; echo "rm -rf \"\$BUILD_DIR/opt/libscript/.git\""; fi
+      echo "mkdir -p \"\$BUILD_DIR/opt/libscript\""; if [ "$OFFLINE" = "1" ]; then echo "cp -a \"$LIBSCRIPT_ROOT_DIR\"/.* \"$LIBSCRIPT_ROOT_DIR\"/* \"\$BUILD_DIR/opt/libscript/\" 2>/dev/null || true"; echo "rm -rf \"\$BUILD_DIR/opt/libscript/.git\""; fi
       echo "dpkg-deb --build \"\$BUILD_DIR\" \"\$OUT_DIR/${APP_NAME}-meta_${APP_VERSION}_all.deb\""
       echo "rm -rf \"\$BUILD_DIR\""
       echo "echo \"Done!\""

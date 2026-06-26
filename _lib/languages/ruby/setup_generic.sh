@@ -22,7 +22,13 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-${SCRIPT_DIR}}"
+if [ -z "${LIBSCRIPT_ROOT_DIR:-}" ]; then
+  _tmp_dir="$SCRIPT_DIR"
+  while [ "$_tmp_dir" != "/" ] && [ ! -f "$_tmp_dir/libscript.sh" ]; do
+    _tmp_dir="$(dirname "$_tmp_dir")"
+  done
+  LIBSCRIPT_ROOT_DIR="$_tmp_dir"
+fi
 DIR="${SCRIPT_DIR}"
 
 for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
@@ -48,10 +54,15 @@ RUBY_MAJOR=$(echo "${RUBY_VERSION}" | cut -d. -f1,2)
 if [ "${RUBY_INSTALL_METHOD}" = 'system' ]; then
   libscript_depends 'ruby'
 else
-  libscript_depends 'curl' 'tar' 'make' 'gcc'
-  RUBY_TARBALL=$(mktemp)
-  libscript_download "https://cache.ruby-lang.org/pub/ruby/${RUBY_MAJOR}/ruby-${RUBY_VERSION}.tar.gz" "${RUBY_TARBALL}"
-  tar -xzf "${RUBY_TARBALL}" -C /tmp
-  rm -f "${RUBY_TARBALL}"
-  cd "/tmp/ruby-${RUBY_VERSION}" && ./configure && make && priv make install
+  if command -v ruby >/dev/null 2>&1 && ruby --version | grep -q "${RUBY_VERSION}"; then
+    log_info "Ruby ${RUBY_VERSION} is already installed. Skipping."
+  else
+    libscript_depends 'curl' 'tar' 'make' 'gcc'
+    RUBY_TARBALL=$(mktemp)
+    libscript_download "https://cache.ruby-lang.org/pub/ruby/${RUBY_MAJOR}/ruby-${RUBY_VERSION}.tar.gz" "${RUBY_TARBALL}"
+    tar -xzf "${RUBY_TARBALL}" -C /tmp
+    rm -f "${RUBY_TARBALL}"
+    ( cd "/tmp/ruby-${RUBY_VERSION}" && ./configure && make && priv make install )
+    rm -rf "/tmp/ruby-${RUBY_VERSION}"
+  fi
 fi
