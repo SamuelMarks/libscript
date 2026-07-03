@@ -15,10 +15,10 @@ if ([string]::IsNullOrEmpty($GcsfuseVersion)) {
 
 $InstallMethod = $env:GCSFUSE_INSTALL_METHOD
 if ([string]::IsNullOrEmpty($InstallMethod)) {
-    $InstallMethod = $env:LIBSCRIPT_GLOBAL_INSTALL_METHOD
+    $InstallMethod = $env:LIBSCRIPT_DEFAULT_INSTALL_METHOD
 }
 if ([string]::IsNullOrEmpty($InstallMethod)) {
-    $InstallMethod = "source"
+    $InstallMethod = "libscript-native"
 }
 
 if ($InstallMethod -eq "system") {

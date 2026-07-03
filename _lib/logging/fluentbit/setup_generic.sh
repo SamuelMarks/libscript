@@ -38,7 +38,7 @@ for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-FLUENTBIT_INSTALL_METHOD="${FLUENTBIT_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
+FLUENTBIT_INSTALL_METHOD="${FLUENTBIT_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
 
 if [ "${FLUENTBIT_INSTALL_METHOD}" = 'system' ]; then
   if [ "$(uname -s)" = "Linux" ]; then

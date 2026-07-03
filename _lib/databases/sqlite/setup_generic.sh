@@ -38,7 +38,7 @@ for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-SQLITE_INSTALL_METHOD="${SQLITE_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
+SQLITE_INSTALL_METHOD="${SQLITE_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
 
 if [ "${SQLITE_INSTALL_METHOD}" = 'system' ]; then
   libscript_depends 'sqlite'

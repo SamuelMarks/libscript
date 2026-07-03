@@ -38,7 +38,7 @@ for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-GITLAB_INSTALL_METHOD="${GITLAB_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
+GITLAB_INSTALL_METHOD="${GITLAB_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
 
 if [ "${GITLAB_INSTALL_METHOD}" = 'system' ]; then
   if command -v apt >/dev/null 2>&1; then

@@ -5,11 +5,11 @@
   "description": "Common variables shared by all LibScript components",
   "type": "object",
   "properties": {
-    "LIBSCRIPT_GLOBAL_INSTALL_METHOD": {
-      "description": "Global override for how software should be installed (system vs source).",
+    "LIBSCRIPT_DEFAULT_INSTALL_METHOD": {
+      "description": "Global override for how software should be installed (system vs libscript-native).",
       "type": "string",
-      "enum": ["system", "source"],
-      "default": "system"
+      "enum": ["libscript-native", "system", "mise", "asdf"],
+      "default": "libscript-native"
     },
     "LIBSCRIPT_WINDOWS_PKG_MGR": {
       "description": "Global package manager override for Windows (winget, choco).",

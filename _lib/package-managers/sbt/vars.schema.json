@@ -11,7 +11,7 @@
       "default": "latest"
     },
     "SBT_INSTALL_METHOD": {
-      "description": "How to install SBT. 'libscript-native' uses isolated version dirs.",
+      "description": "How to install SBT. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools.",
       "type": "string",
       "enum": ["libscript-native", "system", "mise", "asdf"],
       "default": "libscript-native"

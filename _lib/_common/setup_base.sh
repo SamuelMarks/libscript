@@ -69,7 +69,7 @@ libscript_install_binary() {
   dest_dir="${PREFIX:-$HOME/.local/bin}"
   mkdir -p "$dest_dir"
 
-  if [ -w "/usr/local/bin" ] && [ "${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-}" = "system" ]; then
+  if [ -w "/usr/local/bin" ] && [ "${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-}" = "system" ]; then
     dest_dir="/usr/local/bin"
   fi
 

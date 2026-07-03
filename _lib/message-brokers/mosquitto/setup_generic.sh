@@ -38,7 +38,7 @@ for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-MOSQUITTO_INSTALL_METHOD="${MOSQUITTO_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
+MOSQUITTO_INSTALL_METHOD="${MOSQUITTO_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
 
 if [ "${MOSQUITTO_INSTALL_METHOD}" = 'system' ]; then
   libscript_depends 'mosquitto'

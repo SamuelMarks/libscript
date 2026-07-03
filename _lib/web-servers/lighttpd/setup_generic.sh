@@ -40,7 +40,7 @@ for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-LIGHTTPD_INSTALL_METHOD="${LIGHTTPD_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
+LIGHTTPD_INSTALL_METHOD="${LIGHTTPD_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
 
 if [ "${LIGHTTPD_INSTALL_METHOD}" = 'system' ]; then
   libscript_depends 'lighttpd'

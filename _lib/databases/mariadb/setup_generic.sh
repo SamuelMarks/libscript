@@ -38,7 +38,7 @@ for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-MARIADB_INSTALL_METHOD="${MARIADB_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
+MARIADB_INSTALL_METHOD="${MARIADB_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
 
 if [ "${MARIADB_INSTALL_METHOD}" = 'system' ]; then
   libscript_depends 'mariadb'

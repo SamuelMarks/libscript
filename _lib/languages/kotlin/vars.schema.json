@@ -6,9 +6,9 @@
   "type": "object",
   "properties": {
     "KOTLIN_INSTALL_METHOD": {
-      "description": "How to install KOTLIN. 'system' uses the native OS package manager, 'libscript-native' downloads binaries natively.",
+      "description": "How to install KOTLIN. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools.",
       "type": "string",
-      "enum": ["system", "libscript-native", "mise", "asdf"],
+      "enum": ["libscript-native", "system", "mise", "asdf"],
       "default": "libscript-native"
     },
     "KOTLIN_VERSION": {

@@ -40,7 +40,7 @@ for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-CADDY_INSTALL_METHOD="${CADDY_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
+CADDY_INSTALL_METHOD="${CADDY_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
 
 if [ "${CADDY_INSTALL_METHOD}" = 'system' ]; then
   libscript_depends 'caddy'

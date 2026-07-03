@@ -74,7 +74,7 @@ basis.
 ### Global Configuration
 
 You can set a global preference for how tools should be installed by defining
-`LIBSCRIPT_GLOBAL_INSTALL_METHOD` in your environment or global configuration (`install.json`).
+`LIBSCRIPT_DEFAULT_INSTALL_METHOD` in your environment or global configuration (`install.json`).
 
 Supported global methods typically include:
 
@@ -85,7 +85,7 @@ Supported global methods typically include:
 Example:
 
 ```sh
-export LIBSCRIPT_GLOBAL_INSTALL_METHOD="system"
+export LIBSCRIPT_DEFAULT_INSTALL_METHOD="system"
 ```
 
 ### Local Overrides
@@ -96,7 +96,7 @@ You can override the global setting for specific dependencies by setting their r
 For example, to globally use the system package manager but strictly install Python via `uv`:
 
 ```sh
-export LIBSCRIPT_GLOBAL_INSTALL_METHOD="system"
+export LIBSCRIPT_DEFAULT_INSTALL_METHOD="system"
 export PYTHON_INSTALL_METHOD="uv"
 ```
 

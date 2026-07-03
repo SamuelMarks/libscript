@@ -12,7 +12,7 @@ $ErrorActionPreference = "Stop"
 
 $InstallMethod = $env:C_INSTALL_METHOD
 if ([string]::IsNullOrEmpty($InstallMethod)) {
-    $InstallMethod = $env:LIBSCRIPT_GLOBAL_INSTALL_METHOD
+    $InstallMethod = $env:LIBSCRIPT_DEFAULT_INSTALL_METHOD
 }
 if ([string]::IsNullOrEmpty($InstallMethod)) {
     $InstallMethod = "system"

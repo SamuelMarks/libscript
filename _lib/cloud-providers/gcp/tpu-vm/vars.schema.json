@@ -1,21 +1,21 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/_lib/toolchains/bazel/vars.schema.json",
+  "$id": "/_lib/toolchains/tpu-vm/vars.schema.json",
   "title": "Bazel variables",
   "description": "Configuration variables for Bazel",
   "type": "object",
   "properties": {
-    "BAZEL_VERSION": {
-      "description": "Specific version of bazel to install. Can be a numeric version or an alias.",
+    "TPU_VM_VERSION": {
+      "description": "Specific version of tpu-vm to install. Can be a numeric version or an alias.",
       "type": "string",
       "default": "latest",
       "version_aliases": ["latest", "stable"]
     },
-    "BAZEL_INSTALL_METHOD": {
-      "description": "How to install BAZEL. 'system' uses the native OS package manager, 'source' compiles/downloads binaries.",
+    "TPU_VM_INSTALL_METHOD": {
+      "description": "How to install TPU-VM. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools.",
       "type": "string",
-      "enum": ["system", "source"],
-      "default": "source"
+      "enum": ["libscript-native", "system", "mise", "asdf"],
+      "default": "libscript-native"
     },
     "LIBSCRIPT_LISTEN_PORT": {
       "type": ["string", "integer"],
@@ -29,17 +29,17 @@
       "type": "string",
       "description": "Global unix socket to listen on"
     },
-    "BAZEL_LISTEN_PORT": {
+    "TPU_VM_LISTEN_PORT": {
       "type": ["string", "integer"],
-      "description": "Port for BAZEL to listen on"
+      "description": "Port for TPU_VM to listen on"
     },
-    "BAZEL_LISTEN_ADDRESS": {
+    "TPU_VM_LISTEN_ADDRESS": {
       "type": "string",
-      "description": "Address for BAZEL to listen on"
+      "description": "Address for TPU_VM to listen on"
     },
-    "BAZEL_LISTEN_SOCKET": {
+    "TPU_VM_LISTEN_SOCKET": {
       "type": "string",
-      "description": "Unix socket for BAZEL to listen on"
+      "description": "Unix socket for TPU_VM to listen on"
     }
   }
 }

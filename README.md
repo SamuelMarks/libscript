@@ -52,24 +52,45 @@ is its own self-contained package manager.
 ### 🏛️ Native Component Management
 
 LibScript allows you to manage tools either through the global orchestrator or via each component's
-autonomous CLI.
+autonomous CLI. It fully replaces traditional version managers by supporting a complete workflow
+(`ls-remote`, `install`, `ls`, `use`, `uninstall`).
 
-**Using the Global Orchestrator:**
+**Using the Global Orchestrator (Node.js, Python, Postgres examples):**
 
 ```sh
-# Install and start using the top-level routing layer
+# 1. List available versions remotely
+./libscript.sh ls-remote nodejs
+./libscript.sh ls-remote python
+
+# 2. Install specific versions
 ./libscript.sh install nodejs 20
+./libscript.sh install python 3.12
 ./libscript.sh install postgres 16
+
+# 3. List installed versions locally
+./libscript.sh ls nodejs
+./libscript.sh ls python
+
+# 4. Use a specific version (activates it in the current environment)
+./libscript.sh use python 3.12
+./libscript.sh use nodejs 20
+
+# 5. Start a service (for databases/servers)
 ./libscript.sh start postgres
+
+# 6. Uninstall a version when no longer needed
+./libscript.sh uninstall nodejs 20
 ```
 
 **Using the Local Component CLI:**
 
 ```sh
-# Every component is a standalone package manager
-./_lib/languages/nodejs/cli.sh install 20
+# Every component is a standalone package manager with the exact same workflow
+./_lib/languages/nodejs/cli.sh ls-remote
+./_lib/languages/python/cli.sh install 3.12
+./_lib/languages/python/cli.sh use 3.12
 ./_lib/databases/postgres/cli.sh install 16
-./_lib/databases/postgres/cli.sh start postgres
+./_lib/databases/postgres/cli.sh start
 ```
 
 ### ☸️ Declarative Stack Provisioning

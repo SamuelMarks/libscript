@@ -6,10 +6,10 @@
   "type": "object",
   "properties": {
     "NGINX_INSTALL_METHOD": {
-      "description": "How to install Nginx.",
+      "description": "How to install NGINX. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools.",
       "type": "string",
-      "enum": ["system", "source"],
-      "default": "system"
+      "enum": ["libscript-native", "system", "mise", "asdf"],
+      "default": "libscript-native"
     },
     "NGINX_WWWROOT_NAME": {
       "description": "The server_name or domain (e.g., example.com) to serve.",

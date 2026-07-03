@@ -6,7 +6,7 @@ All notable changes to the LibScript framework are documented here.
 
 ### Completed Initiatives
 
-#### Phase 3: AI & Machine Learning Infrastructure
+#### Phase 5: AI & Machine Learning Infrastructure
 
 - Introduced multi-cloud primitives for Google Cloud TPUs and GPU VMs.
 - Added comprehensive AI serving and ML training stacks (vLLM, JetStream, XPK, GKE).

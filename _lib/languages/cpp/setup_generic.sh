@@ -38,7 +38,7 @@ for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-CPP_INSTALL_METHOD="${CPP_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-system}}"
+CPP_INSTALL_METHOD="${CPP_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-system}}"
 if [ "${CPP_INSTALL_METHOD}" = 'system' ]; then
   libscript_depends 'g++' 'clang' 'make'
 else

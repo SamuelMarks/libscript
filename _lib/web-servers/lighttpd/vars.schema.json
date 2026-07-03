@@ -12,10 +12,10 @@
       "version_aliases": ["latest", "stable"]
     },
     "LIGHTTPD_INSTALL_METHOD": {
-      "description": "How to install LIGHTTPD. 'system' uses the native OS package manager, 'source' compiles/downloads binaries.",
+      "description": "How to install LIGHTTPD. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools.",
       "type": "string",
-      "enum": ["system", "source"],
-      "default": "source"
+      "enum": ["libscript-native", "system", "mise", "asdf"],
+      "default": "libscript-native"
     },
     "LIBSCRIPT_LISTEN_PORT": {
       "type": ["string", "integer"],

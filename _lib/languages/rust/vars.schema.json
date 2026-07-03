@@ -12,9 +12,9 @@
       "version_aliases": ["stable", "beta", "nightly"]
     },
     "RUST_INSTALL_METHOD": {
-      "description": "How to install RUST. 'libscript-native' uses isolated version dirs, 'rustup' uses rustup, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools.",
+      "description": "How to install RUST. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools.",
       "type": "string",
-      "enum": ["libscript-native", "rustup", "system", "mise", "asdf"],
+      "enum": ["libscript-native", "system", "mise", "asdf"],
       "default": "libscript-native"
     }
   }

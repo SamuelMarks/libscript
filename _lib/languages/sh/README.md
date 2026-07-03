@@ -86,7 +86,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_GLOBAL_INSTALL_METHOD` | Global override for how software should be installed (system vs source). | `system` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -112,7 +112,7 @@ running the setup script.
 | `MODEL_NAME` | HuggingFace model string to serve | `your-org/your-model-name` |  |
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
-| `SH_INSTALL_METHOD` | How to install SH. 'system' uses the native OS package manager, 'libscript-native' downloads binaries natively. | `libscript-native` |  |
+| `SH_INSTALL_METHOD` | How to install SH. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools. | `libscript-native` |  |
 | `SH_VERSION` | Version of Shell Toolchain to install | `0.5.12` |  |
 <!-- END_VARS -->
 
