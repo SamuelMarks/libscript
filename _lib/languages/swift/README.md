@@ -101,8 +101,8 @@ running the setup script.
 | `MODEL_NAME` | HuggingFace model string to serve | `your-org/your-model-name` |  |
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
-| `SWIFT_INSTALL_METHOD` | How to install SWIFT. 'system' uses the native OS package manager, 'source' compiles/downloads binaries. | `system` |  |
-| `SWIFT_VERSION` | Version of Swift Toolchain to install | `latest` |  |
+| `SWIFT_INSTALL_METHOD` | How to install SWIFT. 'system' uses the native OS package manager, 'libscript-native' downloads binaries natively. | `libscript-native` |  |
+| `SWIFT_VERSION` | Version of Swift Toolchain to install | `5.10` |  |
 <!-- END_VARS -->
 
 ## Architecture

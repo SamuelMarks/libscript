@@ -1,4 +1,12 @@
 #!/bin/sh
+# ## Overview
+# Provides utility functions to safely save and clear environment variables
+# to/from a file (`save_environment`, `clear_environment`), and to parse JSON
+# objects into shell variable assignments (`libscript_object2key_val`).
+# 
+# ## Usage
+# Source this file to make its environment management utilities available
+# in the current shell context.
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +30,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export NL='
 '
 

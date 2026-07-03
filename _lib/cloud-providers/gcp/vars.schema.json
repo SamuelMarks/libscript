@@ -6,15 +6,18 @@
   "type": "object",
   "properties": {
     "GCP_PROJECT_ID": {
-      "type": "string"
+      "type": "string",
+      "description": "GCP Project ID"
     },
     "GCP_REGION": {
       "type": "string",
-      "default": "us-central1"
+      "default": "us-central1",
+      "description": "GCP Region"
     },
     "GCP_ZONE": {
       "type": "string",
-      "default": "us-central1-a"
+      "default": "us-central1-a",
+      "description": "GCP Zone"
     }
   }
 }

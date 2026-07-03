@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Implements automated tests to verify the correctness of the component 'jetstream' stack.
+
+.DESCRIPTION
+Execute this script to run the test suite for jetstream.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (Get-Command huggingface_hub -ErrorAction SilentlyContinue) {

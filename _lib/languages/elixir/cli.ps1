@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'elixir' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for elixir.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "elixir"

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'nvm' stack.
+
+.DESCRIPTION
+Execute this script to install and configure nvm on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (-Not (Get-Command nvm -ErrorAction SilentlyContinue)) {

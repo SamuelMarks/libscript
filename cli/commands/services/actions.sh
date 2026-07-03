@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Provides a unified interface for managing service states (start, stop, restart).
+# 
+# ## Usage
+# Execute this script to perform lifecycle actions on background services.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$CMD" = "health" ] || [ "$CMD" = "logs" ] || [ "$CMD" = "restart" ] || [ "$CMD" = "up" ] || [ "$CMD" = "down" ]; then
   action="$CMD"
   if [ "$action" = "up" ]; then action="start"; fi
@@ -44,7 +50,7 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
   if [ $# -eq 0 ] || [ "$1" = "libscript.json" ] || [ "${1##*.}" = "json" ]; then
     json_file="${1:-libscript.json}"
     if [ ! -f "$json_file" ]; then
-      echo "Error: $json_file not found." >&2
+      printf '%s\n' "Error: $json_file not found." >&2
       exit 1
     fi
     if ! command -v jq >/dev/null 2>&1; then
@@ -53,7 +59,7 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
     fi
   fi
   if ! command -v jq >/dev/null 2>&1; then
-      echo "Error: jq is required to parse $json_file." >&2
+      printf '%s\n' "Error: jq is required to parse $json_file." >&2
       exit 1
     fi
     if [ "$skip_hooks" -eq 0 ]; then
@@ -65,14 +71,14 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
 
     deps=$("${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/resolve_stack.sh" "$json_file" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null || true)
     if [ -n "$deps" ]; then
-      echo "$deps" > "$json_file.tmpdeps"
+      printf '%s\n' "$deps" > "$json_file.tmpdeps"
       while read -r pkg ver; do
         if [ -n "$pkg" ]; then
           if [ "$ver" = "null" ]; then ver="latest"; fi
           if [ "$action" = "logs" ] && [ "$follow_logs" = "1" ]; then
             "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$pkg" "$action" "$pkg" "$ver" -f 2>&1 | awk -v prefix="$pkg" '{print "\033[36m" prefix " |\033[0m " $0; fflush()}' &
           elif [ "$action" = "status" ] || [ "$action" = "health" ] || [ "$action" = "logs" ]; then
-            echo "=== $pkg ==="
+            printf '%s\n' "=== $pkg ==="
             "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$pkg" "$action" "$pkg" "$ver"
           else
             "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$pkg" "$action" "$pkg" "$ver" &
@@ -97,7 +103,7 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
       if [ "$action" = "logs" ] && [ "$follow_logs" = "1" ]; then
         "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$pkg" "$action" "$pkg" "latest" -f 2>&1 | awk -v prefix="$pkg" '{print "\033[36m" prefix " |\033[0m " $0; fflush()}' &
       elif [ "$action" = "status" ] || [ "$action" = "health" ] || [ "$action" = "logs" ]; then
-        echo "=== $pkg ==="
+        printf '%s\n' "=== $pkg ==="
         "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$pkg" "$action" "$pkg" "latest"
       else
         "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$pkg" "$action" "$pkg" "latest" &

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the PrestaShop e-commerce platform stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for prestashop.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "prestashop"

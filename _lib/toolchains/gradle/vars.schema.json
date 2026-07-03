@@ -9,6 +9,12 @@
       "description": "Specific version of gradle to install. Can be a numeric version or an alias.",
       "type": "string",
       "default": "latest"
+    },
+    "GRADLE_INSTALL_METHOD": {
+      "description": "How to install GRADLE. 'libscript-native' uses isolated version dirs.",
+      "type": "string",
+      "enum": ["libscript-native", "system", "mise", "asdf"],
+      "default": "libscript-native"
     }
   }
 }

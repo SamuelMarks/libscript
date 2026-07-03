@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Test suite for the GKE TPU cluster component.
+#
+# ## Usage
+# Automatically invoked by the test framework. Currently skips tests.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054

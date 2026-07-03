@@ -1,4 +1,12 @@
 @echo off
+:: # setup.cmd
+::
+:: ## Overview
+:: Orchestrates the setup and installation process for the Firecrawl crawler stack.
+:: 
+:: ## Usage
+:: Execute this script to install and configure firecrawl on the local system.
+
 setlocal EnableDelayedExpansion
 if not defined LIBSCRIPT_ROOT_DIR set "LIBSCRIPT_ROOT_DIR=%~dp0..\..\.."
 set "LOG_CMD=%~dp0\..\..\..\_lib\_common\log.cmd"

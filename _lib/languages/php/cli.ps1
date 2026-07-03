@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'php' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for php.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "php"

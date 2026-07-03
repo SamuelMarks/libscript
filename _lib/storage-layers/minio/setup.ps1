@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'minio' stack.
+
+.DESCRIPTION
+Execute this script to install and configure minio on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $MinioVersion = $env:MINIO_VERSION

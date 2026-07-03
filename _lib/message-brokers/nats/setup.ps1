@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'nats' stack.
+
+.DESCRIPTION
+Execute this script to install and configure nats on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $NatsVersion = $env:NATS_VERSION

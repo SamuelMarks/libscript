@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'rust-server' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for rust-server.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "rust-server"

@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Test suite for the GCP CLI component.
+#
+# ## Usage
+# Run by the test framework to validate that gcloud is properly installed.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054

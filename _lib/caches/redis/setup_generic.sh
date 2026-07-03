@@ -1,4 +1,12 @@
 #!/bin/sh
+# ## Overview
+# Provides the generic installation logic for Redis on Unix systems.
+# It resolves the installation method (system package manager or building from source)
+# and installs Redis accordingly. It also provisions default configuration files.
+# 
+# ## Usage
+# Called internally by `setup.sh` when a platform-specific setup script is missing.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +30,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR="${SCRIPT_DIR}"
 
 for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
@@ -69,8 +77,8 @@ fi
 CONF_DIR="${LIBSCRIPT_DATA_DIR}/redis"
 mkdir -p "${CONF_DIR}"
 if [ ! -f "${CONF_DIR}/redis.conf" ]; then
-  echo "port ${REDIS_LISTEN_PORT:-6379}" > "${CONF_DIR}/redis.conf"
-  echo "bind ${REDIS_LISTEN_ADDRESS:-127.0.0.1}" >> "${CONF_DIR}/redis.conf"
-  echo "dir ${CONF_DIR}" >> "${CONF_DIR}/redis.conf"
-  echo "appendonly yes" >> "${CONF_DIR}/redis.conf"
+  printf '%s\n' "port ${REDIS_LISTEN_PORT:-6379}" > "${CONF_DIR}/redis.conf"
+  printf '%s\n' "bind ${REDIS_LISTEN_ADDRESS:-127.0.0.1}" >> "${CONF_DIR}/redis.conf"
+  printf '%s\n' "dir ${CONF_DIR}" >> "${CONF_DIR}/redis.conf"
+  printf '%s\n' "appendonly yes" >> "${CONF_DIR}/redis.conf"
 fi

@@ -1,4 +1,12 @@
 @echo off
+:: # teardown_cloud.cmd
+::
+:: ## Overview
+:: Teardown orchestrator for cloud environments on Windows.
+::
+:: ## Usage
+:: Run `teardown_cloud.cmd <provider> <node> <rg> <loc>` to cleanly destroy resources and backup state.
+
 setlocal EnableDelayedExpansion
 
 set "PROVIDER=%~1"

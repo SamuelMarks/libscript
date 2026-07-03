@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'fluentbit' stack.
+
+.DESCRIPTION
+Execute this script to install and configure fluentbit on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 #!/usr/bin/env pwsh

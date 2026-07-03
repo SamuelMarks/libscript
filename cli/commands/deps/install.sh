@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Resolves and installs dependencies required by libscript components.
+# 
+# ## Usage
+# Execute this script to fetch and setup required dependencies.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,11 +28,11 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 if [ "$CMD" = "install-deps" ]; then
   json_file="${1:-libscript.json}"
   if [ ! -f "$json_file" ]; then
-    echo "Error: $json_file not found." >&2
+    printf '%s\n' "Error: $json_file not found." >&2
     exit 1
   fi
   if ! command -v jq >/dev/null 2>&1; then
@@ -35,7 +41,7 @@ if [ "$CMD" = "install-deps" ]; then
     fi
   fi
   if ! command -v jq >/dev/null 2>&1; then
-    echo "Error: jq is required to parse $json_file." >&2
+    printf '%s\n' "Error: jq is required to parse $json_file." >&2
     exit 1
   fi
 
@@ -50,13 +56,13 @@ if [ "$CMD" = "install-deps" ]; then
 
   deps=$("${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/resolve_stack.sh" "$json_file" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest") \(.override // "")"' 2>/dev/null || true)
   if [ -z "$deps" ]; then
-    echo "No dependencies found in $json_file."
+    printf '%s\n' "No dependencies found in $json_file."
     exit 0
   fi
 
   # Parallel Download Phase
-  echo "Downloading dependencies in parallel..."
-  echo "$deps" | while read -r pkg ver override; do
+  printf '%s\n' "Downloading dependencies in parallel..."
+  printf '%s\n' "$deps" | while read -r pkg ver override; do
     if [ -n "$pkg" ]; then
       if [ "$ver" = "null" ]; then ver="latest"; fi
       if [ -z "$override" ] || [ "$override" = "null" ]; then
@@ -67,14 +73,14 @@ if [ "$CMD" = "install-deps" ]; then
   wait
 
   # Serial Install Phase
-  echo "Installing dependencies sequentially..."
-  echo "$deps" | while read -r pkg ver override; do
+  printf '%s\n' "Installing dependencies sequentially..."
+  printf '%s\n' "$deps" | while read -r pkg ver override; do
     if [ -n "$pkg" ]; then
       if [ "$ver" = "null" ]; then ver="latest"; fi
       if [ -n "$override" ] && [ "$override" != "null" ]; then
-        echo "Skipping installation of $pkg (override provided: $override)"
+        printf '%s\n' "Skipping installation of $pkg (override provided: $override)"
       else
-        echo "Installing $pkg $ver..."
+        printf '%s\n' "Installing $pkg $ver..."
         "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" install "$pkg" "$ver"
       fi
     fi

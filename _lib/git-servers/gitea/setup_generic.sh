@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Generic setup module for Gitea.
+#
+# ## Usage
+# Installs Gitea either via system package manager or by downloading the binary directly.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR="${SCRIPT_DIR}"
 
 for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
@@ -49,7 +55,7 @@ else
   case "${TARGET_OS}" in
     macos*|darwin*) os_name="darwin" ;;
     linux*) os_name="linux" ;;
-    *) echo "[ERROR] Unsupported OS for direct download: ${TARGET_OS}"; exit 1 ;;
+    *) printf '%s\n' "[ERROR] Unsupported OS for direct download: ${TARGET_OS}"; exit 1 ;;
   esac
 
   if [ "${GITEA_VERSION}" = "latest" ]; then

@@ -1,4 +1,12 @@
 #!/bin/sh
+# ## Overview
+# Generic setup script for the busybox component.
+# It provides fallback installation logic and cross-platform installation steps
+# when a more specific OS/distribution setup script is not available.
+#
+# ## Usage
+# This script is typically called internally by the component lifecycle.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +30,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
@@ -41,7 +49,7 @@ if ! command -v busybox >/dev/null 2>&1; then
       i386|i686) BARCH="i686" ;;
       *) BARCH="x86_64" ;;
     esac
-    libscript_download "https://busybox.net/downloads/binaries/1.35.0-${BARCH}-linux-musl/busybox" "/tmp/busybox" || { echo "Failed to download busybox"; exit 1; }
+    libscript_download "https://busybox.net/downloads/binaries/1.35.0-${BARCH}-linux-musl/busybox" "/tmp/busybox" || { printf '%s\n' "Failed to download busybox"; exit 1; }
     chmod +x /tmp/busybox
     if [ -w /usr/local/bin ]; then
       mv /tmp/busybox /usr/local/bin/busybox

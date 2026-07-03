@@ -1,4 +1,12 @@
 #!/bin/sh
+# ## Overview
+# Generic setup script for the maven component.
+# It provides fallback installation logic and cross-platform installation steps
+# when a more specific OS/distribution setup script is not available.
+#
+# ## Usage
+# This script is typically called internally by the component lifecycle.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,14 +30,103 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-..}"'/_lib/_common/pkg_mgr.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090,SC1091
-. "${SCRIPT_NAME}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+DIR="${SCRIPT_DIR}"
 
-if ! command -v mvn >/dev/null 2>&1; then
-  if ! libscript_depends maven ; then
-    true
-  fi
+if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
 fi
+
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/versioning.sh"; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+done
+
+MAVEN_INSTALL_METHOD="${MAVEN_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
+MAVEN_VERSION="${MAVEN_VERSION:-latest}"
+ACTION="${ACTION:-install}"
+
+resolve_exact_version() {
+  if [ "${MAVEN_VERSION}" = "latest" ]; then
+    EXACT_VERSION="3.9.6"
+  else
+    EXACT_VERSION="${MAVEN_VERSION}"
+  fi
+}
+
+case "$ACTION" in
+  ls)
+    if [ "$MAVEN_INSTALL_METHOD" = "mise" ]; then
+      mise ls maven
+    elif [ "$MAVEN_INSTALL_METHOD" = "asdf" ]; then
+      asdf list maven
+    elif [ "$MAVEN_INSTALL_METHOD" = "system" ]; then
+      mvn -version || true
+    else
+      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/maven/" 2>/dev/null || true
+    fi
+    exit 0
+    ;;
+  ls-remote)
+    if [ "$MAVEN_INSTALL_METHOD" = "mise" ]; then
+      mise ls-remote maven
+    elif [ "$MAVEN_INSTALL_METHOD" = "asdf" ]; then
+      asdf list all maven
+    elif [ "$MAVEN_INSTALL_METHOD" = "system" ]; then
+      printf '%s\n' "System package manager does not support ls-remote directly here."
+    else
+      curl -sL "https://archive.apache.org/dist/maven/maven-3/" | grep -o 'href="[0-9]\.[0-9]\.[0-9]*/"' | sed 's/href="//' | sed 's/\/"//' | head -n 100
+    fi
+    exit 0
+    ;;
+  use)
+    if [ "$MAVEN_INSTALL_METHOD" = "mise" ]; then
+      mise use "maven@${MAVEN_VERSION}"
+    elif [ "$MAVEN_INSTALL_METHOD" = "asdf" ]; then
+      asdf global maven "${MAVEN_VERSION}"
+    elif [ "$MAVEN_INSTALL_METHOD" = "system" ]; then
+      printf '%s\n' "Cannot 'use' specific version with system package manager."
+    else
+      resolve_exact_version
+      libscript_symlink_alias "maven" "${MAVEN_VERSION}" "${EXACT_VERSION}"
+    fi
+    exit 0
+    ;;
+  download|install|*)
+    if [ "$MAVEN_INSTALL_METHOD" = "system" ]; then
+      libscript_depends 'maven'
+    elif [ "$MAVEN_INSTALL_METHOD" = "mise" ]; then
+      mise install "maven@${MAVEN_VERSION}"
+    elif [ "$MAVEN_INSTALL_METHOD" = "asdf" ]; then
+      asdf install maven "${MAVEN_VERSION}"
+    else
+      libscript_depends 'curl' 'tar'
+      resolve_exact_version
+      
+      MAVEN_DIR=$(libscript_get_version_dir "maven" "${EXACT_VERSION}")
+      
+      if [ -x "${MAVEN_DIR}/bin/mvn" ]; then
+        libscript_symlink_alias "maven" "${MAVEN_VERSION}" "${EXACT_VERSION}"
+        exit 0
+      fi
+
+      # For Maven 3+
+      MAJOR_VER=$(printf '%s\n' "${EXACT_VERSION}" | cut -d. -f1)
+      MAVEN_URL="https://archive.apache.org/dist/maven/maven-${MAJOR_VER}/${EXACT_VERSION}/binaries/apache-maven-${EXACT_VERSION}-bin.tar.gz"
+      
+      MAVEN_TARBALL=$(mktemp)
+      libscript_download "${MAVEN_URL}" "${MAVEN_TARBALL}"
+      
+      mkdir -p "${MAVEN_DIR}"
+      tar -C "${MAVEN_DIR}" --strip-components=1 -xzf "${MAVEN_TARBALL}"
+      rm -f "${MAVEN_TARBALL}"
+      
+      libscript_symlink_alias "maven" "${MAVEN_VERSION}" "${EXACT_VERSION}"
+    fi
+    ;;
+esac

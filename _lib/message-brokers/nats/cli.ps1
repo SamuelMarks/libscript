@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'nats' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for nats.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "nats"

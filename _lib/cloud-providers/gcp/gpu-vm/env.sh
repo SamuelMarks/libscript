@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Environment initialization for the GCP GPU VM component.
+#
+# ## Usage
+# Sourced by other scripts to set up necessary environment variables and paths.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,5 +28,5 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
-export LIBSCRIPT_LISTEN_PORT="${BAZEL_LISTEN:-$LIBSCRIPT_LISTEN_PORT}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+export GCP_GPU_VM_ENABLED="${GCP_GPU_VM_ENABLED:-1}"

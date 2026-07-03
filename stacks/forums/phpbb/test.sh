@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Implements automated tests to verify the correctness of the phpBB forum software stack.
+# 
+# ## Usage
+# Execute this script to run the test suite for phpbb.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 export LIBSCRIPT_ROOT_DIR
 for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
@@ -32,12 +38,12 @@ for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-echo "Validating phpBB installation..."
+printf '%s\n' "Validating phpBB installation..."
 PHPBB_WWWROOT="${PHPBB_WWWROOT:-/var/www/phpbb}"
 if [ -d "${PHPBB_WWWROOT}/phpbb" ] || [ -d "${PHPBB_WWWROOT}/install" ]; then
-    echo "phpBB directory found at ${PHPBB_WWWROOT}"
+    printf '%s\n' "phpBB directory found at ${PHPBB_WWWROOT}"
     exit 0
 else
-    echo "phpBB directory not found at ${PHPBB_WWWROOT}"
+    printf '%s\n' "phpBB directory not found at ${PHPBB_WWWROOT}"
     exit 1
 fi

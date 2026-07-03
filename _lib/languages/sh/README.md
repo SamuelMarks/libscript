@@ -112,8 +112,8 @@ running the setup script.
 | `MODEL_NAME` | HuggingFace model string to serve | `your-org/your-model-name` |  |
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
-| `SH_INSTALL_METHOD` | How to install SH. 'system' uses the native OS package manager, 'source' compiles/downloads binaries. | `system` |  |
-| `SH_VERSION` | Version of Shell Toolchain to install | `latest` |  |
+| `SH_INSTALL_METHOD` | How to install SH. 'system' uses the native OS package manager, 'libscript-native' downloads binaries natively. | `libscript-native` |  |
+| `SH_VERSION` | Version of Shell Toolchain to install | `0.5.12` |  |
 <!-- END_VARS -->
 
 ## Architecture

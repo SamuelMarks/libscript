@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Orchestrates the setup and installation process for the GKE XPK machine learning training stack stack.
+# 
+# ## Usage
+# Execute this script to install and configure gke-xpk-training on the local system.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -32,7 +38,7 @@ LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$_root}"
 
 set -feu
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  echo "Usage: $0"
+  printf '%s\n' "Usage: $0"
   exit 0
 fi
 
@@ -46,14 +52,14 @@ CLUSTER_NAME="${XPK_CLUSTER_NAME:-ml-xpk-cluster}"
 GCP_PROJECT_ID="${GCP_PROJECT_ID:-}"
 GCP_ZONE="${GCP_ZONE:-}"
 if [ -z "$GCP_PROJECT_ID" ] || [ -z "$GCP_ZONE" ]; then
-  echo "[ERROR] GCP_PROJECT_ID and GCP_ZONE must be explicitly specified for XPK clusters."
+  printf '%s\n' "[ERROR] GCP_PROJECT_ID and GCP_ZONE must be explicitly specified for XPK clusters."
   exit 1
 fi
 
-echo "Authenticating with GCP..."
+printf '%s\n' "Authenticating with GCP..."
 "${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp/cli/cli.sh" auth
 
-echo "Provisioning XPK cluster: $CLUSTER_NAME..."
+printf '%s\n' "Provisioning XPK cluster: $CLUSTER_NAME..."
 xpk cluster create --cluster "$CLUSTER_NAME" --tpu-type "${TPU_ACCELERATOR_TYPE:-v4-8}" --project "$GCP_PROJECT_ID" --zone "$GCP_ZONE"
 
-echo "Setup complete."
+printf '%s\n' "Setup complete."

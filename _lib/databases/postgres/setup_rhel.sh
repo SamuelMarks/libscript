@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# RHEL-specific setup script for PostgreSQL.
+#
+# ## Usage
+# Installs PostgreSQL from the official PGDG repository and sets up systemd services.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -24,7 +30,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 _DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${_DIR}"
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 for LIB in '_lib/_common/pkg_mgr.sh' '_lib/_common/priv.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"

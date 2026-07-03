@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'kotlin' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for kotlin.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "kotlin"

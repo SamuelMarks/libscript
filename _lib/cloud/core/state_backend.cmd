@@ -1,4 +1,12 @@
 @echo off
+:: # state_backend.cmd
+::
+:: ## Overview
+:: Handles remote state locking and pushing/pulling for Windows.
+::
+:: ## Usage
+:: Called with `lock_state`, `unlock_state`, `pull_state`, `push_state` to manage concurrency.
+
 setlocal ENABLEDELAYEDEXPANSION
 
 set "STATE_FILE=%STATE_FILE%"

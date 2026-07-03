@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Implements automated tests to verify the correctness of the component 'pacman' stack.
+
+.DESCRIPTION
+Execute this script to run the test suite for pacman.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (Get-Command pacman -ErrorAction SilentlyContinue) {

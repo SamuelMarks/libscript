@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'aria2' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for aria2.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "aria2"

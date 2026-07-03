@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Implements packaging logic for the 'docker' format.
+# 
+# ## Usage
+# This script is called by the packaging system and should not be executed manually.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
     base_image="debian:bookworm-slim"
     layer_filter=""
     artifact_type=""
@@ -63,14 +69,14 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
       esac
     done
 
-    echo "FROM $base_image"
-    echo "ARG TARGETOS=linux"
-    echo "ARG TARGETARCH=amd64"
-    echo "ENV LC_ALL=C.UTF-8 LANG=C.UTF-8"
-    echo "ENV LIBSCRIPT_ROOT_DIR=\"/opt/libscript\""
-    echo "ENV LIBSCRIPT_BUILD_DIR=\"/opt/libscript_build\""
-    echo "ENV LIBSCRIPT_DATA_DIR=\"/opt/libscript_data\""
-    echo "ENV LIBSCRIPT_CACHE_DIR=\"/opt/libscript_cache\""
+    printf '%s\n' "FROM $base_image"
+    printf '%s\n' "ARG TARGETOS=linux"
+    printf '%s\n' "ARG TARGETARCH=amd64"
+    printf '%s\n' "ENV LC_ALL=C.UTF-8 LANG=C.UTF-8"
+    printf '%s\n' "ENV LIBSCRIPT_ROOT_DIR=\"/opt/libscript\""
+    printf '%s\n' "ENV LIBSCRIPT_BUILD_DIR=\"/opt/libscript_build\""
+    printf '%s\n' "ENV LIBSCRIPT_DATA_DIR=\"/opt/libscript_data\""
+    printf '%s\n' "ENV LIBSCRIPT_CACHE_DIR=\"/opt/libscript_cache\""
 
     tmp_env_add=$(mktemp)
     tmp_add=$(mktemp)
@@ -204,13 +210,13 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
       }')
       eval "$gen_script"
     else
-      echo "RUN ./install_gen.sh" >> "$tmp_run"
+      printf '%s\n' "RUN ./install_gen.sh" >> "$tmp_run"
     fi
 
     cat "$tmp_env_add"
     cat "$tmp_add"
-    echo "COPY . /opt/libscript"
-    echo "WORKDIR /opt/libscript"
+    printf '%s\n' "COPY . /opt/libscript"
+    printf '%s\n' "WORKDIR /opt/libscript"
     cat "$tmp_run"
 
     rm -f "$tmp_env_add" "$tmp_add" "$tmp_run"

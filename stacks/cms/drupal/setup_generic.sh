@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Provides a generic, cross-platform setup mechanism for the Drupal CMS stack.
+# 
+# ## Usage
+# Execute this script to perform generic initialization steps for drupal.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR="${SCRIPT_DIR}"
 
 for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh"; do
@@ -50,7 +56,7 @@ case "${DRUPAL_DB_TYPE}" in
   mysql|mariadb) libscript_depends 'mariadb' ;;
   pgsql|postgres|postgresql) libscript_depends 'postgres' ;;
   sqlite) libscript_depends 'sqlite' ;;
-  *) echo "Unsupported DB type: ${DRUPAL_DB_TYPE}"; exit 1 ;;
+  *) printf '%s\n' "Unsupported DB type: ${DRUPAL_DB_TYPE}"; exit 1 ;;
 esac
 
 libscript_depends "${DRUPAL_WEBSERVER}"
@@ -62,7 +68,7 @@ DRUPAL_WWWROOT="${DRUPAL_WWWROOT:-/var/www/drupal}"
 export DRUPAL_WWWROOT
 
 if [ ! -d "${DRUPAL_WWWROOT}/core" ]; then
-  echo "Downloading Drupal (${DRUPAL_VERSION}) to ${DRUPAL_WWWROOT}..."
+  printf '%s\n' "Downloading Drupal (${DRUPAL_VERSION}) to ${DRUPAL_WWWROOT}..."
   priv mkdir -p "${DRUPAL_WWWROOT}"
   dl_url="https://ftp.drupal.org/files/projects/drupal-${DRUPAL_VERSION}.tar.gz"
 
@@ -80,7 +86,7 @@ DB_NAME="${DRUPAL_DB_NAME:-drupal}"
 DB_USER="${DRUPAL_DB_USER:-drupal}"
 DB_PASS="${DRUPAL_DB_PASS:-drupal}"
 
-echo "Configuring Database..."
+printf '%s\n' "Configuring Database..."
 if [ "${DRUPAL_DB_TYPE}" = "mariadb" ] || [ "${DRUPAL_DB_TYPE}" = "mysql" ]; then
   if command -v mysql >/dev/null 2>&1; then
     if priv mysql -u root -e "SELECT 1" >/dev/null 2>&1; then
@@ -89,7 +95,7 @@ if [ "${DRUPAL_DB_TYPE}" = "mariadb" ] || [ "${DRUPAL_DB_TYPE}" = "mysql" ]; the
       priv mysql -u root -e "GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';"
       priv mysql -u root -e "FLUSH PRIVILEGES;"
     else
-      echo "Warning: MariaDB/MySQL is not running or root login failed. Skipping automated DB setup."
+      printf '%s\n' "Warning: MariaDB/MySQL is not running or root login failed. Skipping automated DB setup."
     fi
   fi
 elif [ "${DRUPAL_DB_TYPE}" = "postgres" ] || [ "${DRUPAL_DB_TYPE}" = "postgresql" ] || [ "${DRUPAL_DB_TYPE}" = "pgsql" ]; then
@@ -99,7 +105,7 @@ elif [ "${DRUPAL_DB_TYPE}" = "postgres" ] || [ "${DRUPAL_DB_TYPE}" = "postgresql
       priv su - postgres -c "psql -tc \"SELECT 1 FROM pg_roles WHERE rolname = '${DB_USER}'\"" | grep -q 1 || priv su - postgres -c "psql -c \"CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASS}'\""
       priv su - postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER}\""
     else
-      echo "Warning: PostgreSQL is not running or root login failed. Skipping automated DB setup."
+      printf '%s\n' "Warning: PostgreSQL is not running or root login failed. Skipping automated DB setup."
     fi
   fi
 elif [ "${DRUPAL_DB_TYPE}" = "sqlite" ]; then
@@ -132,7 +138,7 @@ fi
 DRUPAL_SERVER_NAME="${DRUPAL_SERVER_NAME:-localhost}"
 export DRUPAL_SERVER_NAME
 
-echo "Configuring webserver: ${DRUPAL_WEBSERVER}"
+printf '%s\n' "Configuring webserver: ${DRUPAL_WEBSERVER}"
 
 ENV_SCRIPT_FILE=$(mktemp)
 cat <<ENV_EOF > "${ENV_SCRIPT_FILE}"
@@ -203,4 +209,4 @@ elif [ "${DRUPAL_WEBSERVER}" = "httpd" ]; then
 fi
 
 rm -f "${ENV_SCRIPT_FILE}"
-echo "Drupal setup complete on ${DRUPAL_SERVER_NAME}"
+printf '%s\n' "Drupal setup complete on ${DRUPAL_SERVER_NAME}"

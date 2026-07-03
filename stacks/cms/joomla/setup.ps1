@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the Joomla CMS stack.
+
+.DESCRIPTION
+Execute this script to install and configure joomla on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $JoomlaVersion = if ($env:JOOMLA_VERSION) { $env:JOOMLA_VERSION } else { "latest" }

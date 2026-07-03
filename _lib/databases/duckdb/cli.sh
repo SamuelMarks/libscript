@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Command-line interface for DuckDB.
+#
+# ## Usage
+# Wraps the `duckdb` binary to provide execution (`execute`) and interactive (`repl`) commands.
+
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
@@ -31,8 +37,8 @@ for LIB in _lib/_common/pkg_mgr.sh _lib/_common/log.sh; do
 done
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  echo "Usage: $0 <action> [args...]"
-  echo "See README.md for details."
+  printf '%s\n' "Usage: $0 <action> [args...]"
+  printf '%s\n' "See README.md for details."
   exit 0
 fi
 

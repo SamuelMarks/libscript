@@ -1,4 +1,13 @@
 #!/bin/sh
+# ## Overview
+# Executable wrapper for the `envsubst_safe` utility function.
+# This script exposes the `envsubst_safe` POSIX/awk logic so it can be called
+# directly as a shell command (e.g. within pipes or as a standalone script) 
+# rather than sourced as a library function.
+# 
+# ## Usage
+# `./envsubst_safe_exec.sh [file_path]` or `echo "..." | ./envsubst_safe_exec.sh`
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +31,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 
 SCRIPT_NAME="${DIR}"'/envsubst_safe.sh'

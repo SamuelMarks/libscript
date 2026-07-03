@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'zig' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for zig.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "zig"

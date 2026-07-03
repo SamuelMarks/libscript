@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Network control utility for managing local services and ports.
+# 
+# ## Usage
+# Execute this script to manage networking configurations.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -87,11 +93,11 @@ case "$1" in
       apache) netctl_emit_apache ;;
       dockerfile) netctl_emit_dockerfile ;;
       vagrantfile) netctl_emit_vagrantfile ;;
-      *) echo "Unknown format: $2" >&2; exit 1 ;;
+      *) printf '%s\n' "Unknown format: $2" >&2; exit 1 ;;
     esac
     exit 0
     ;;
-  -h|--help) usage ;;
+  -h|--help|-\?|/\?) usage ;;
   *) SINGULAR_MODE=1 ;;
 esac
 
@@ -129,7 +135,7 @@ if [ "$SINGULAR_MODE" -eq 1 ]; then
         shift 2
         ;;
       *)
-        echo "Unknown option: $1" >&2
+        printf '%s\n' "Unknown option: $1" >&2
         usage
         ;;
     esac
@@ -142,7 +148,7 @@ if [ "$SINGULAR_MODE" -eq 1 ]; then
       apache) netctl_emit_apache ;;
       dockerfile) netctl_emit_dockerfile ;;
       vagrantfile) netctl_emit_vagrantfile ;;
-      *) echo "Unknown format: $EMIT_FORMAT" >&2; exit 1 ;;
+      *) printf '%s\n' "Unknown format: $EMIT_FORMAT" >&2; exit 1 ;;
     esac
   fi
 fi

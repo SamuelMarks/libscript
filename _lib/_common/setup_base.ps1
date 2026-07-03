@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component '_common' stack.
+
+.DESCRIPTION
+Execute this script to install and configure _common on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (-not (Test-Path Variable:global:LIBSCRIPT_ROOT_DIR)) {

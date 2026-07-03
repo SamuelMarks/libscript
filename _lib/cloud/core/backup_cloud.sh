@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Orchestrates taking backups or snapshots of a deployed cloud node.
+#
+# ## Usage
+# Run `backup_cloud.sh <node_name> [options]` (e.g. `--target s3`, `--snapshot`) to backup data.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -26,11 +32,11 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 LIBSCRIPT_ROOT=${LIBSCRIPT_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}
 
 if [ "$#" -lt 1 ]; then
-  echo "Usage: ${THIS_FILE} <node_name> [options]"
-  echo "Options:"
-  echo "  --keep-last <N>      Number of backups to retain"
-  echo "  --target <local|s3>  Backup target"
-  echo "  --snapshot           Take a cloud-native disk snapshot"
+  printf '%s\n' "Usage: ${THIS_FILE} <node_name> [options]"
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --keep-last <N>      Number of backups to retain"
+  printf '%s\n' "  --target <local|s3>  Backup target"
+  printf '%s\n' "  --snapshot           Take a cloud-native disk snapshot"
   exit 1
 fi
 
@@ -51,7 +57,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-echo "[BACKUP] Starting backup for node: $NODE"
+printf '%s\n' "[BACKUP] Starting backup for node: $NODE"
 
 # Determine provider and state
 STATE_FILE=".libscript_state.json"
@@ -63,26 +69,26 @@ if [ -f "$STATE_FILE" ] && command -v jq >/dev/null 2>&1; then
   fi
 fi
 
-echo "[BACKUP] Pre-backup hooks: Quiescing database/filesystem..."
+printf '%s\n' "[BACKUP] Pre-backup hooks: Quiescing database/filesystem..."
 # Mock quiesce logic
-echo "  -> Running fsfreeze / FLUSH TABLES WITH READ LOCK equivalent..."
+printf '%s\n' "  -> Running fsfreeze / FLUSH TABLES WITH READ LOCK equivalent..."
 
 if [ "$TAKE_SNAPSHOT" -eq 1 ]; then
-  echo "[BACKUP] Initiating cloud-native snapshot..."
+  printf '%s\n' "[BACKUP] Initiating cloud-native snapshot..."
   if [ "$PROVIDER" = "aws" ]; then
-    echo "  -> Triggering AWS EBS snapshot for $NODE"
+    printf '%s\n' "  -> Triggering AWS EBS snapshot for $NODE"
   elif [ "$PROVIDER" = "azure" ]; then
-    echo "  -> Triggering Azure Managed Disk snapshot for $NODE"
+    printf '%s\n' "  -> Triggering Azure Managed Disk snapshot for $NODE"
   elif [ "$PROVIDER" = "gcp" ]; then
-    echo "  -> Triggering GCP Persistent Disk snapshot for $NODE"
+    printf '%s\n' "  -> Triggering GCP Persistent Disk snapshot for $NODE"
   else
-    echo "  -> Provider unknown or local. Skipping cloud-native snapshot."
+    printf '%s\n' "  -> Provider unknown or local. Skipping cloud-native snapshot."
   fi
 fi
 
 if [ -n "${PATHS:-}" ]; then
-  echo "[BACKUP] Backing up specific paths: $PATHS"
-  echo "  -> (Mock) Creating archive of $PATHS"
+  printf '%s\n' "[BACKUP] Backing up specific paths: $PATHS"
+  printf '%s\n' "  -> (Mock) Creating archive of $PATHS"
 fi
 
 if [ "$TARGET" = "local" ]; then
@@ -90,24 +96,24 @@ if [ "$TARGET" = "local" ]; then
   mkdir -p "$BACKUP_DIR"
   TIMESTAMP=$(date +%s)
   ARCHIVE="$BACKUP_DIR/backup-${TIMESTAMP}.tar.zst"
-  echo "[BACKUP] Creating local encrypted archive at $ARCHIVE..."
+  printf '%s\n' "[BACKUP] Creating local encrypted archive at $ARCHIVE..."
   # Mock archive creation
   touch "$ARCHIVE"
-  echo "  -> Mocked AES-256 encryption applied."
+  printf '%s\n' "  -> Mocked AES-256 encryption applied."
   
-  echo "[BACKUP] Enforcing retention policy: keeping last $KEEP_LAST backups."
+  printf '%s\n' "[BACKUP] Enforcing retention policy: keeping last $KEEP_LAST backups."
   # Pruning logic
   # shellcheck disable=SC2012
   ls -1t "$BACKUP_DIR"/backup-*.tar.zst 2>/dev/null | tail -n +$((KEEP_LAST + 1)) | xargs rm -f 2>/dev/null || true
 
 elif [ "$TARGET" = "s3" ] || [ "$TARGET" = "gcs" ] || [ "$TARGET" = "azure" ]; then
-  echo "[BACKUP] Streaming backup to remote object storage ($TARGET)..."
-  echo "  -> Handling multipart uploads for large files."
-  echo "  -> Enforcing retention via object lifecycle policies."
+  printf '%s\n' "[BACKUP] Streaming backup to remote object storage ($TARGET)..."
+  printf '%s\n' "  -> Handling multipart uploads for large files."
+  printf '%s\n' "  -> Enforcing retention via object lifecycle policies."
 fi
 
-echo "[BACKUP] Post-backup hooks: Unquiescing database/filesystem..."
-echo "  -> Database unlocked."
+printf '%s\n' "[BACKUP] Post-backup hooks: Unquiescing database/filesystem..."
+printf '%s\n' "  -> Database unlocked."
 
-echo "[BACKUP] Backup completed successfully for $NODE."
+printf '%s\n' "[BACKUP] Backup completed successfully for $NODE."
 exit 0

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'pub' stack.
+
+.DESCRIPTION
+Execute this script to install and configure pub on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (-Not (Get-Command pub -ErrorAction SilentlyContinue) -and -Not (Get-Command dart -ErrorAction SilentlyContinue)) {

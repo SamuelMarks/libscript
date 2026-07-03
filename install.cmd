@@ -1,17 +1,27 @@
 @echo off
+:: # install.cmd
+::
+:: ## Overview
+:: Global installer for the libscript framework.
+:: 
+:: ## Usage
+:: Execute this script to install libscript on the local system.
+
 setlocal EnableDelayedExpansion
 
 SET "LIBSCRIPT_ROOT_DIR=%~dp0"
-if "%~1"=="--help" (
-    echo Usage: %0
-    echo Configure installation via environment variables.
-    exit /b 0
-)
-if "%~1"=="-h" (
-    echo Usage: %0
-    echo Configure installation via environment variables.
-    exit /b 0
-)
+if "%~1"=="--help" goto show_help
+if "%~1"=="-h" goto show_help
+if "%~1"=="/?" goto show_help
+if "%~1"=="-?" goto show_help
+goto start_install
+
+:show_help
+echo Usage: %0
+echo Configure installation via environment variables.
+exit /b 0
+
+:start_install
 
 SET "LIBSCRIPT_ROOT_DIR=%LIBSCRIPT_ROOT_DIR:~0,-1%"
 

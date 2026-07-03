@@ -1,4 +1,11 @@
 #!/bin/sh
+# ## Overview
+# Command-line interface for managing GCP GPU virtual machines.
+#
+# ## Usage
+# Provides commands to create, delete, start, stop, and SSH into GPU VMs.
+# Run `libscript.sh gcp/gpu-vm <action> [args...]`.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -36,9 +43,9 @@ set -feu
 if [ -f "${SCRIPT_DIR}/../../_common/log.sh" ]; then
   . "${SCRIPT_DIR}/../../_common/log.sh"
 else
-  log_info() { echo "[INFO] $1"; }
-  log_warn() { echo "[WARN] $1"; }
-  log_error() { echo "[ERROR] $1" >&2; }
+  log_info() { printf '%s\n' "[INFO] $1"; }
+  log_warn() { printf '%s\n' "[WARN] $1"; }
+  log_error() { printf '%s\n' "[ERROR] $1" >&2; }
 fi
 
 ACTION="${1:-}"

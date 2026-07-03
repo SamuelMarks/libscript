@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Lists available resources or packages within the libscript environment.
+# 
+# ## Usage
+# Execute this script to output a list of installed or available items.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,9 +28,9 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 if [ "$cmd" = "list" ]; then
-  echo "Available components:"
+  printf '%s\n' "Available components:"
   find_components | sort | while read -r comp; do
     desc=$(get_desc "$comp")
     if [ -n "$desc" ]; then

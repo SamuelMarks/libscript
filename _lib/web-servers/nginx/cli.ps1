@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'nginx' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for nginx.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "nginx"

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'gitlab' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for gitlab.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "gitlab"

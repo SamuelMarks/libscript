@@ -6,15 +6,15 @@
   "type": "object",
   "properties": {
     "KOTLIN_INSTALL_METHOD": {
-      "description": "How to install KOTLIN. 'system' uses the native OS package manager, 'source' compiles/downloads binaries.",
+      "description": "How to install KOTLIN. 'system' uses the native OS package manager, 'libscript-native' downloads binaries natively.",
       "type": "string",
-      "enum": ["system", "source"],
-      "default": "system"
+      "enum": ["system", "libscript-native", "mise", "asdf"],
+      "default": "libscript-native"
     },
     "KOTLIN_VERSION": {
       "description": "Version of Kotlin Toolchain to install",
       "type": "string",
-      "default": "latest"
+      "default": "1.9.20"
     }
   }
 }

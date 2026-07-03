@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the Magento e-commerce platform stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for magento.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "magento"

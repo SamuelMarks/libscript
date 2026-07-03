@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Generates HTML documentation from markdown sources.
+# 
+# ## Usage
+# Execute this script to build the static HTML documentation site.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -21,30 +27,18 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  echo "Usage: $0 [OPTIONS]"
-  echo "See script source or documentation for more details."
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
+  printf '%s\n' "Usage: $0 [OPTIONS]"
+  printf '%s\n' "See script source or documentation for more details."
   exit 0
 fi
 
 
 
 
-if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
-
-elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${0}"
-
-else
-  THIS_FILE="${0}"
-fi
-set -feu
 
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 export LIBSCRIPT_ROOT_DIR
 
@@ -417,4 +411,3 @@ fi
 if [ -d "${LIBSCRIPT_ROOT_DIR}"'/../verman-tui-www/assets' ]; then
   rsync -a -r -- "${LIBSCRIPT_ROOT_DIR}"'/../verman-tui-www/assets/' "${LIBSCRIPT_ROOT_DIR}"'/assets/'
 fi
-set -feu

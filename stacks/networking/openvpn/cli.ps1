@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the OpenVPN networking stack stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for openvpn.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "openvpn"

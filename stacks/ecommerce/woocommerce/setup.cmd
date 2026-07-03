@@ -1,4 +1,12 @@
 @echo off
+:: # setup.cmd
+::
+:: ## Overview
+:: Orchestrates the setup and installation process for the WooCommerce e-commerce platform stack.
+:: 
+:: ## Usage
+:: Execute this script to install and configure woocommerce on the local system.
+
 setlocal EnableDelayedExpansion
 
 :: Fallback to running PowerShell for Windows provisioning

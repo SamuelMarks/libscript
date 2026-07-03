@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the Actix+Diesel authentication scaffold stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for serve-actix-diesel-auth-scaffold.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "serve-actix-diesel-auth-scaffold"

@@ -1,4 +1,12 @@
 @echo off
+:: # daemonize.cmd
+::
+:: ## Overview
+:: Minimal daemonization wrapper for Windows using `start /B` and `taskkill`.
+::
+:: ## Usage
+:: Run `daemonize.cmd <action> <json_file>` where action is `start`, `stop`, `up`, or `down`.
+
 setlocal EnableDelayedExpansion
 
 set action=%~1

@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Cross-platform daemonization wrapper.
+#
+# ## Usage
+# Run `daemonize.sh <action> <json_file>` to manage background services via systemd, launchd, or basic backgrounding.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 # @description Automatically handles daemonize for the daemonize.sh (init-systems) component.
 # @file daemonize.sh
 
@@ -41,9 +47,9 @@ if [ -z "$SERVICES" ]; then exit 0; fi
 
 OS_NAME=$(uname -s | tr '[:upper:]' '[:lower:]')
 
-echo "$SERVICES" | while read -r svc; do
-    NAME=$(echo "$svc" | jq -r '.key // empty')
-    CMD=$(echo "$svc" | jq -r '.value.command // empty')
+printf '%s\n' "$SERVICES" | while read -r svc; do
+    NAME=$(printf '%s\n' "$svc" | jq -r '.key // empty')
+    CMD=$(printf '%s\n' "$svc" | jq -r '.value.command // empty')
     if [ -z "$NAME" ] || [ -z "$CMD" ]; then continue; fi
 
     # Create /data/name persistent directory if needed
@@ -67,18 +73,18 @@ Restart=always
 SYSTEMD
 "
             # extract envs
-            ENVS=$(echo "$svc" | jq -r '.value.env | to_entries[]? | "\(.key)=\(.value)"' 2>/dev/null || true)
+            ENVS=$(printf '%s\n' "$svc" | jq -r '.value.env | to_entries[]? | "\(.key)=\(.value)"' 2>/dev/null || true)
             if [ -n "$ENVS" ]; then
                 sudo sh -c "echo '[Service]' >> $SERVICE_FILE"
-                echo "$ENVS" | while read -r e; do
+                printf '%s\n' "$ENVS" | while read -r e; do
                     sudo sh -c "echo 'Environment=\"$e\"' >> $SERVICE_FILE"
                 done
             fi
-            ENV_FILES=$(echo "$svc" | jq -r '.value.env_files[]?' 2>/dev/null || true)
+            ENV_FILES=$(printf '%s\n' "$svc" | jq -r '.value.env_files[]?' 2>/dev/null || true)
             if [ -n "$ENV_FILES" ]; then
-                echo "$ENV_FILES" | while read -r ef; do
+                printf '%s\n' "$ENV_FILES" | while read -r ef; do
                     # resolve path
-                    EF_FULL=$(realpath "$ef" 2>/dev/null || echo "$ef")
+                    EF_FULL=$(realpath "$ef" 2>/dev/null || printf '%s\n' "$ef")
                     if [ -f "$EF_FULL" ]; then
                         sudo sh -c "echo 'EnvironmentFile=$EF_FULL' >> $SERVICE_FILE"
                     fi
@@ -92,7 +98,7 @@ SYSTEMD
 "
             sudo systemctl daemon-reload
             sudo systemctl enable --now "$NAME"
-        elif echo "$OS_NAME" | grep -q "darwin"; then
+        elif printf '%s\n' "$OS_NAME" | grep -q "darwin"; then
             PLIST_FILE="$HOME/Library/LaunchAgents/com.libscript.${NAME}.plist"
             mkdir -p "$HOME/Library/LaunchAgents"
             cat << PLIST > "$PLIST_FILE"
@@ -115,7 +121,7 @@ SYSTEMD
 </dict>
 </plist>
 PLIST
-            ENVS=$(echo "$svc" | jq -r '.env | to_entries[]? | "\(.key)=\(.value)"' 2>/dev/null || true)
+            ENVS=$(printf '%s\n' "$svc" | jq -r '.env | to_entries[]? | "\(.key)=\(.value)"' 2>/dev/null || true)
             if [ -n "$ENVS" ]; then
                 # Needs dict injection for <key>EnvironmentVariables</key>
                 # Simplified: just inline them in the command or add proper XML
@@ -131,7 +137,7 @@ PLIST
         if [ "$OS_NAME" = "linux" ] && command -v systemctl >/dev/null 2>&1; then
             sudo systemctl stop "$NAME" || true
             sudo systemctl disable "$NAME" || true
-        elif echo "$OS_NAME" | grep -q "darwin"; then
+        elif printf '%s\n' "$OS_NAME" | grep -q "darwin"; then
             launchctl stop "com.libscript.${NAME}" 2>/dev/null || true
             launchctl unload -w "$HOME/Library/LaunchAgents/com.libscript.${NAME}.plist" 2>/dev/null || true
         else
@@ -140,7 +146,7 @@ PLIST
     elif [ "$ACTION" = "status" ]; then
         if [ "$OS_NAME" = "linux" ] && command -v systemctl >/dev/null 2>&1; then
             systemctl status "$NAME" --no-pager || true
-        elif echo "$OS_NAME" | grep -q "darwin"; then
+        elif printf '%s\n' "$OS_NAME" | grep -q "darwin"; then
             launchctl list | grep "com.libscript.${NAME}" || true
         fi
     fi

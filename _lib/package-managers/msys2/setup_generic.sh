@@ -1,4 +1,12 @@
 #!/bin/sh
+# ## Overview
+# Generic setup script for the msys2 component.
+# It provides fallback installation logic and cross-platform installation steps
+# when a more specific OS/distribution setup script is not available.
+#
+# ## Usage
+# This script is typically called internally by the component lifecycle.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,5 +30,5 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 >&2 printf 'MSYS2 is a Windows environment and not applicable to native POSIX systems.\n'

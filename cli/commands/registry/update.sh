@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Updates the local package registry with the latest upstream information.
+# 
+# ## Usage
+# Execute this script to refresh registry indices.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,14 +28,14 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 if [ "$cmd" = "update-db" ]; then
   if [ -x "$SCRIPT_DIR/update_db.sh" ]; then
     exec "$SCRIPT_DIR/update_db.sh"
   elif [ -f "$SCRIPT_DIR/update_db.sh" ]; then
     exec sh "$SCRIPT_DIR/update_db.sh"
   else
-    echo "Error: update_db.sh not found." >&2
+    printf '%s\n' "Error: update_db.sh not found." >&2
     exit 1
   fi
 fi

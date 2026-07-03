@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'coursier' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for coursier.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "coursier"

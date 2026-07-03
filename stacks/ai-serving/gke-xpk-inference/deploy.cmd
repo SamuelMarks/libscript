@@ -1,4 +1,12 @@
 @echo off
+:: # deploy.cmd
+::
+:: ## Overview
+:: Manages the deployment workflow for the GKE XPK inference stack stack.
+:: 
+:: ## Usage
+:: Execute this script to deploy gke-xpk-inference to the target environment.
+
 setlocal
 if "%~1"=="--help" (
     echo Usage: %~nx0

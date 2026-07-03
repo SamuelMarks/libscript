@@ -1,4 +1,13 @@
 #!/bin/sh
+# ## Overview
+# Provides the foundational uninstall logic for components.
+# It aggregates essential common libraries (logging, paths, package managers)
+# and delegates the actual teardown process to OS-specific uninstall scripts
+# (or a generic fallback), followed by unregistering associated `netctl` ports.
+# 
+# ## Usage
+# Source or execute this file internally as the core implementation of `uninstall.sh`.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -23,7 +32,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 # Resolve component directory and LibScript root
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR="${SCRIPT_DIR}"
 export LIBSCRIPT_ROOT_DIR
 

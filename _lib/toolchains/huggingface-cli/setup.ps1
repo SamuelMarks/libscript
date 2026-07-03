@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'huggingface-cli' stack.
+
+.DESCRIPTION
+Execute this script to install and configure huggingface-cli on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $HuggingFaceCliVersion = $env:HUGGINGFACE_CLI_VERSION

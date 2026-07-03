@@ -1,4 +1,14 @@
 #!/bin/sh
+# ## Overview
+# Provides a unified logging utility for LibScript (POSIX compliant).
+# It defines standardized logging functions (debug, info, success, warn, error)
+# that output structured messages in text or JSON format to standard error
+# and optionally to a file.
+# 
+# ## Usage
+# Source this file to make `log_info`, `log_error`, etc. available.
+# Configure behavior via `LIBSCRIPT_LOG_LEVEL`, `LIBSCRIPT_LOG_FORMAT`, and `LIBSCRIPT_LOG_FILE`.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +32,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 # LibScript Unified Logging Utility (POSIX)
 
 # Levels: 0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'kafka' stack.
+
+.DESCRIPTION
+Execute this script to install and configure kafka on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $MinioVersion = $env:KAFKA_VERSION

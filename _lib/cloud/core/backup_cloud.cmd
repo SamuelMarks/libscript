@@ -1,4 +1,12 @@
 @echo off
+:: # backup_cloud.cmd
+::
+:: ## Overview
+:: Takes backups or snapshots of a provisioned node's data in the cloud on Windows.
+::
+:: ## Usage
+:: Run `backup_cloud.cmd <node_name> [options]` to take cloud-native snapshots or file-level backups.
+
 setlocal EnableDelayedExpansion
 
 set "NODE=%~1"

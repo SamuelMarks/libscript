@@ -22,7 +22,18 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+
+# LibScript Package Mapper Module (POSIX)
+#
+# ## Overview
+# This module translates generic package names (e.g., 'php', 'postgres') into 
+# specific package IDs used by different OS package managers (apt, yum, pacman, etc.).
+#
+# ## Usage
+# Call the `map_package` function with the generic package name. The package manager
+# will be determined from the `PKG_MGR` environment variable.
+
 map_package() {
   pkg="${1}"
   case "${pkg}" in

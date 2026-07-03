@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'cli' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for cli.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "bazel"

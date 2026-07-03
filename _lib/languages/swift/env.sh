@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Environment initialization for Swift.
+#
+# ## Usage
+# Sets up `SWIFT_VERSION` and prepends Swift to PATH.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -21,6 +27,13 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
-export PATH="/opt/swift/usr/bin:${PATH}"
+
+SWIFT_VERSION="${SWIFT_VERSION:-5.10}"
+if [ "${SWIFT_VERSION}" = "latest" ]; then
+  EXACT_VERSION="5.10"
+else
+  EXACT_VERSION="${SWIFT_VERSION}"
+fi
+
+SWIFT_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/swift/${EXACT_VERSION}"
+export PATH="${SWIFT_DIR}/usr/bin:${PATH}"

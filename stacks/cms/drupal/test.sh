@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Implements automated tests to verify the correctness of the Drupal CMS stack.
+# 
+# ## Usage
+# Execute this script to run the test suite for drupal.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 export LIBSCRIPT_ROOT_DIR
 for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
@@ -32,12 +38,12 @@ for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-echo "Validating Drupal installation..."
+printf '%s\n' "Validating Drupal installation..."
 DRUPAL_WWWROOT="${DRUPAL_WWWROOT:-/var/www/drupal}"
 if [ -d "${DRUPAL_WWWROOT}/core" ]; then
-    echo "Drupal directory found at ${DRUPAL_WWWROOT}"
+    printf '%s\n' "Drupal directory found at ${DRUPAL_WWWROOT}"
     exit 0
 else
-    echo "Drupal directory not found at ${DRUPAL_WWWROOT}"
+    printf '%s\n' "Drupal directory not found at ${DRUPAL_WWWROOT}"
     exit 1
 fi

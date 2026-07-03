@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Provides a generic, cross-platform setup mechanism for the Joomla CMS stack.
+# 
+# ## Usage
+# Execute this script to perform generic initialization steps for joomla.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR="${SCRIPT_DIR}"
 
 for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh"; do
@@ -48,7 +54,7 @@ fi
 
 # SQLite is not strictly supported in Joomla 4+, so we map "sqlite" to warning
 if [ "${JOOMLA_DB_TYPE}" = "sqlite" ]; then
-  echo "Warning: SQLite is not natively supported by Joomla 4+. Defaulting to mariadb installation."
+  printf '%s\n' "Warning: SQLite is not natively supported by Joomla 4+. Defaulting to mariadb installation."
   JOOMLA_DB_TYPE="mariadb"
 fi
 
@@ -63,7 +69,7 @@ JOOMLA_WWWROOT="${JOOMLA_WWWROOT:-/var/www/joomla}"
 export JOOMLA_WWWROOT
 
 if [ ! -d "${JOOMLA_WWWROOT}/administrator" ]; then
-  echo "Downloading Joomla (${JOOMLA_VERSION}) to ${JOOMLA_WWWROOT}..."
+  printf '%s\n' "Downloading Joomla (${JOOMLA_VERSION}) to ${JOOMLA_WWWROOT}..."
   priv mkdir -p "${JOOMLA_WWWROOT}"
 
   if [ "${JOOMLA_VERSION}" = "latest" ]; then
@@ -96,7 +102,7 @@ DB_NAME="${JOOMLA_DB_NAME:-joomla}"
 DB_USER="${JOOMLA_DB_USER:-joomla}"
 DB_PASS="${JOOMLA_DB_PASS:-joomla}"
 
-echo "Configuring Database..."
+printf '%s\n' "Configuring Database..."
 if [ "${JOOMLA_DB_TYPE}" = "mariadb" ] || [ "${JOOMLA_DB_TYPE}" = "mysql" ]; then
   if command -v mysql >/dev/null 2>&1; then
     if priv mysql -u root -e "SELECT 1" >/dev/null 2>&1; then
@@ -105,7 +111,7 @@ if [ "${JOOMLA_DB_TYPE}" = "mariadb" ] || [ "${JOOMLA_DB_TYPE}" = "mysql" ]; the
       priv mysql -u root -e "GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';"
       priv mysql -u root -e "FLUSH PRIVILEGES;"
     else
-      echo "Warning: MariaDB/MySQL is not running or root login failed. Skipping automated DB setup."
+      printf '%s\n' "Warning: MariaDB/MySQL is not running or root login failed. Skipping automated DB setup."
     fi
   fi
 elif [ "${JOOMLA_DB_TYPE}" = "postgres" ] || [ "${JOOMLA_DB_TYPE}" = "postgresql" ]; then
@@ -115,7 +121,7 @@ elif [ "${JOOMLA_DB_TYPE}" = "postgres" ] || [ "${JOOMLA_DB_TYPE}" = "postgresql
       priv -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname = '${DB_NAME}'" | grep -q 1 || priv -u postgres psql -c "CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};"
       priv -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};"
     else
-      echo "Warning: PostgreSQL is not running or login failed. Skipping automated DB setup."
+      printf '%s\n' "Warning: PostgreSQL is not running or login failed. Skipping automated DB setup."
     fi
   fi
 fi
@@ -146,7 +152,7 @@ fi
 JOOMLA_SERVER_NAME="${JOOMLA_SERVER_NAME:-localhost}"
 export JOOMLA_SERVER_NAME
 
-echo "Configuring webserver: ${JOOMLA_WEBSERVER}"
+printf '%s\n' "Configuring webserver: ${JOOMLA_WEBSERVER}"
 
 # Create a temporary env file for webserver scripts
 ENV_SCRIPT_FILE=$(mktemp)
@@ -228,4 +234,4 @@ fi
 
 rm -f "${ENV_SCRIPT_FILE}"
 
-echo "Joomla setup complete on ${JOOMLA_SERVER_NAME}"
+printf '%s\n' "Joomla setup complete on ${JOOMLA_SERVER_NAME}"

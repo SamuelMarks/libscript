@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Implements automated tests to verify the correctness of the component 'krew' stack.
+
+.DESCRIPTION
+Execute this script to run the test suite for krew.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (Get-Command krew -ErrorAction SilentlyContinue) {

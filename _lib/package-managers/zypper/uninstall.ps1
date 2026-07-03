@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Handles the removal and uninstallation process for the component 'zypper' stack.
+
+.DESCRIPTION
+Execute this script to remove zypper and its associated configurations from the system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 Write-Output "Uninstalling zypper is not supported via this script."

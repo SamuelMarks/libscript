@@ -113,7 +113,7 @@ running the setup script.
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
 | `RUST_VERSION` | Version of Rust demanded. Can be "nightly"|"beta"|"stable" xor a specific version | `stable` | stable, beta, nightly |
-| `RUST_INSTALL_METHOD` | How to install RUST. 'system' uses the native OS package manager, 'source' compiles/downloads binaries. | `system` |  |
+| `RUST_INSTALL_METHOD` | How to install RUST. 'libscript-native' uses isolated version dirs, 'rustup' uses rustup, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools. | `libscript-native` |  |
 <!-- END_VARS -->
 
 ## Architecture

@@ -1,4 +1,12 @@
 @echo off
+:: # deploy.cmd
+::
+:: ## Overview
+:: Manages the deployment workflow for the TPU VM vLLM AI serving stack stack.
+:: 
+:: ## Usage
+:: Execute this script to deploy tpu-vm-vllm to the target environment.
+
 setlocal
 if "%~1"=="--help" (
     echo Usage: %~nx0

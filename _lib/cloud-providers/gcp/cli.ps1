@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'gcp' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for gcp.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "gcp"

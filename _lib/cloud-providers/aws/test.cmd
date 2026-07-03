@@ -1,4 +1,14 @@
 @echo off
+:: # test.cmd
+::
+:: ## Overview
+:: Serves as the Windows test entry point for the AWS Cloud Provider component CLI wrapper.
+:: It runs the CLI wrapper in `DRY_RUN=true` mode to assert that the `aws` underlying
+:: commands are constructed correctly for `network`, `firewall`, `storage`, and `cleanup`.
+:: 
+:: ## Usage
+:: Call this script to trigger AWS CLI wrapper testing on Windows.
+
 setlocal EnableDelayedExpansion
 call "%~dp0\..\..\_common\test_base.cmd"
 

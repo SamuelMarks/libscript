@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'hatch' stack.
+
+.DESCRIPTION
+Execute this script to install and configure hatch on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (-Not (Get-Command hatch -ErrorAction SilentlyContinue)) {

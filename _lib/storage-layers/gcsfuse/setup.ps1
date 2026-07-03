@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'gcsfuse' stack.
+
+.DESCRIPTION
+Execute this script to install and configure gcsfuse on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $GcsfuseVersion = $env:GCSFUSE_VERSION

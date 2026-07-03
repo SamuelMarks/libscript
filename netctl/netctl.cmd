@@ -1,4 +1,12 @@
 @echo off
+:: # netctl.cmd
+::
+:: ## Overview
+:: Network control utility for managing local services and ports.
+:: 
+:: ## Usage
+:: Execute this script to manage networking configurations.
+
 setlocal EnableDelayedExpansion
 
 set NETCTL_DIR=%~dp0
@@ -30,6 +38,10 @@ if /I "%~1"=="init" (
 ) else if /I "%~1"=="-h" (
     goto usage
 ) else if /I "%~1"=="--help" (
+    goto usage
+) else if /I "%~1"=="/?" (
+    goto usage
+) else if /I "%~1"=="-?" (
     goto usage
 ) else (
     set SINGULAR_MODE=1

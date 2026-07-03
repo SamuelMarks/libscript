@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Provides a generic, cross-platform setup mechanism for the PrestaShop e-commerce platform stack.
+# 
+# ## Usage
+# Execute this script to perform generic initialization steps for prestashop.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR="${SCRIPT_DIR}"
 
 for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh"; do
@@ -50,7 +56,7 @@ case "${PRESTASHOP_DB_TYPE}" in
   mysql|mariadb) libscript_depends 'mariadb' ;;
   pgsql|postgres|postgresql) libscript_depends 'postgres' ;;
   sqlite) libscript_depends 'sqlite' ;;
-  *) echo "Unsupported DB type: ${PRESTASHOP_DB_TYPE}"; exit 1 ;;
+  *) printf '%s\n' "Unsupported DB type: ${PRESTASHOP_DB_TYPE}"; exit 1 ;;
 esac
 
 libscript_depends "${PRESTASHOP_WEBSERVER}"
@@ -63,7 +69,7 @@ PRESTASHOP_WWWROOT="${PRESTASHOP_WWWROOT:-/var/www/prestashop}"
 export PRESTASHOP_WWWROOT
 
 if [ ! -d "${PRESTASHOP_WWWROOT}/classes" ] && [ ! -d "${PRESTASHOP_WWWROOT}/install" ]; then
-  echo "Downloading PrestaShop (${PRESTASHOP_VERSION}) to ${PRESTASHOP_WWWROOT}..."
+  printf '%s\n' "Downloading PrestaShop (${PRESTASHOP_VERSION}) to ${PRESTASHOP_WWWROOT}..."
   priv mkdir -p "${PRESTASHOP_WWWROOT}"
   dl_url="https://github.com/PrestaShop/PrestaShop/releases/download/${PRESTASHOP_VERSION}/prestashop_${PRESTASHOP_VERSION}.zip"
 
@@ -89,7 +95,7 @@ DB_NAME="${PRESTASHOP_DB_NAME:-prestashop}"
 DB_USER="${PRESTASHOP_DB_USER:-prestashop}"
 DB_PASS="${PRESTASHOP_DB_PASS:-prestashop}"
 
-echo "Configuring Database..."
+printf '%s\n' "Configuring Database..."
 if [ "${PRESTASHOP_DB_TYPE}" = "mariadb" ] || [ "${PRESTASHOP_DB_TYPE}" = "mysql" ]; then
   if command -v mysql >/dev/null 2>&1; then
     if priv mysql -u root -e "SELECT 1" >/dev/null 2>&1; then
@@ -98,7 +104,7 @@ if [ "${PRESTASHOP_DB_TYPE}" = "mariadb" ] || [ "${PRESTASHOP_DB_TYPE}" = "mysql
       priv mysql -u root -e "GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';"
       priv mysql -u root -e "FLUSH PRIVILEGES;"
     else
-      echo "Warning: MariaDB/MySQL is not running or root login failed. Skipping automated DB setup."
+      printf '%s\n' "Warning: MariaDB/MySQL is not running or root login failed. Skipping automated DB setup."
     fi
   fi
 elif [ "${PRESTASHOP_DB_TYPE}" = "postgres" ] || [ "${PRESTASHOP_DB_TYPE}" = "postgresql" ] || [ "${PRESTASHOP_DB_TYPE}" = "pgsql" ]; then
@@ -108,7 +114,7 @@ elif [ "${PRESTASHOP_DB_TYPE}" = "postgres" ] || [ "${PRESTASHOP_DB_TYPE}" = "po
       priv su - postgres -c "psql -tc \"SELECT 1 FROM pg_roles WHERE rolname = '${DB_USER}'\"" | grep -q 1 || priv su - postgres -c "psql -c \"CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASS}'\""
       priv su - postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER}\""
     else
-      echo "Warning: PostgreSQL is not running or root login failed. Skipping automated DB setup."
+      printf '%s\n' "Warning: PostgreSQL is not running or root login failed. Skipping automated DB setup."
     fi
   fi
 elif [ "${PRESTASHOP_DB_TYPE}" = "sqlite" ]; then
@@ -140,7 +146,7 @@ fi
 PRESTASHOP_SERVER_NAME="${PRESTASHOP_SERVER_NAME:-localhost}"
 export PRESTASHOP_SERVER_NAME
 
-echo "Configuring webserver: ${PRESTASHOP_WEBSERVER}"
+printf '%s\n' "Configuring webserver: ${PRESTASHOP_WEBSERVER}"
 
 ENV_SCRIPT_FILE=$(mktemp)
 cat <<ENV_EOF > "${ENV_SCRIPT_FILE}"
@@ -211,4 +217,4 @@ elif [ "${PRESTASHOP_WEBSERVER}" = "httpd" ]; then
 fi
 
 rm -f "${ENV_SCRIPT_FILE}"
-echo "PrestaShop setup complete on ${PRESTASHOP_SERVER_NAME}"
+printf '%s\n' "PrestaShop setup complete on ${PRESTASHOP_SERVER_NAME}"

@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "DuckDB variables",
+  "description": "Variables for DuckDB",
   "type": "object",
   "properties": {}
 }

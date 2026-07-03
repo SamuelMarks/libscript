@@ -1,4 +1,12 @@
 @echo off
+:: # route.cmd
+::
+:: ## Overview
+:: Lifecycle script for route.cmd.
+::
+:: ## Usage
+:: See route.cmd for implementation details.
+
 setlocal EnableDelayedExpansion
 set "DOMAIN=%~1"
 set "LOCATION=%~2"

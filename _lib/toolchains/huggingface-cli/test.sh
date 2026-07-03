@@ -1,4 +1,12 @@
 #!/bin/sh
+# ## Overview
+# Testing script for the huggingface-cli component.
+# It uses the shared test_base.sh logic to verify that the component is installed
+# correctly and responds as expected (e.g., checking its version).
+#
+# ## Usage
+# Execute this script to run tests for the component.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054

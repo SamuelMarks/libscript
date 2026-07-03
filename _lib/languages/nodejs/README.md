@@ -83,7 +83,7 @@ running the setup script.
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
 | `NODEJS_VERSION` | Version of Node.js demanded. Can be an alias or a specific numeric version number | `lts` | lts, latest, lts, latest, v22.13.1, 20 |
-| `NODEJS_INSTALL_METHOD` | How to install NODEJS. 'system' uses the native OS package manager, 'source' compiles/downloads binaries. | `system` |  |
+| `NODEJS_INSTALL_METHOD` | How to install NODEJS. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools. | `libscript-native` |  |
 <!-- END_VARS -->
 
 ## Architecture

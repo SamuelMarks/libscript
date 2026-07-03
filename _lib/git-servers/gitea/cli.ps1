@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'gitea' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for gitea.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "gitea"

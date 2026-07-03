@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Handles the removal and uninstallation process for the component 'psmux' stack.
+
+.DESCRIPTION
+Execute this script to remove psmux and its associated configurations from the system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $InstallDir = "C:\Program Files\psmux"

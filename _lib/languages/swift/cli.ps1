@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'swift' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for swift.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "swift"

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'msys2' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for msys2.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (-not $env:PACKAGE_NAME) { $env:PACKAGE_NAME = (Get-Item $PSScriptRoot).Name }

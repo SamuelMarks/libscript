@@ -1,4 +1,13 @@
 @echo off
+:: # cli.cmd
+::
+:: ## Overview
+:: Command-line interface for managing GKE TPU clusters on Windows.
+::
+:: ## Usage
+:: Wraps the `xpk` tool to create and delete GKE clusters with TPU accelerators.
+:: Run `libscript gke-tpu-cluster <action> [args...]`.
+
 setlocal EnableDelayedExpansion
 
 set "LOG_CMD=%~dp0..\..\..\_common\log.cmd"

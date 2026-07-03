@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'kafka' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for kafka.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "kafka"

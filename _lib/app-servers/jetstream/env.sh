@@ -1,4 +1,12 @@
 #!/bin/sh
+# ## Overview
+# Defines environment variables for the Jetstream component on Unix systems.
+# It specifically aligns the standard `LIBSCRIPT_LISTEN_PORT` with `BAZEL_LISTEN`
+# if provided, ensuring correct port configuration for the serving infrastructure.
+# 
+# ## Usage
+# Source this file to apply Jetstream's environment variables.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,5 +30,5 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_LISTEN_PORT="${BAZEL_LISTEN:-$LIBSCRIPT_LISTEN_PORT}"

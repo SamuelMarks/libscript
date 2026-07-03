@@ -43,7 +43,7 @@ running the setup script.
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
 | `CMAKE_VERSION` | Specific version of cmake to install. Can be a numeric version or an alias. | `latest` | latest, stable |
-| `CMAKE_INSTALL_METHOD` | How to install CMAKE. 'system' uses the native OS package manager, 'source' compiles/downloads binaries. | `source` |  |
+| `CMAKE_INSTALL_METHOD` | How to install CMAKE. 'system' uses the native OS package manager, 'libscript-native' downloads binaries natively. | `libscript-native` |  |
 | `LIBSCRIPT_LISTEN_PORT` | Global port to listen on | `none` |  |
 | `LIBSCRIPT_LISTEN_ADDRESS` | Global address to listen on | `none` |  |
 | `LIBSCRIPT_LISTEN_SOCKET` | Global unix socket to listen on | `none` |  |

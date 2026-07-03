@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'duckdb' stack.
+
+.DESCRIPTION
+Execute this script to install and configure duckdb on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $DuckdbVersion = $env:DUCKDB_VERSION

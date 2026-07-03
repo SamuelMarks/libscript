@@ -1,54 +1,135 @@
-$ErrorActionPreference = "Stop"
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'just' stack.
 
-$JustVersion = $env:JUST_VERSION
-if ([string]::IsNullOrEmpty($JustVersion) -or $JustVersion -eq "latest") {
-    $JustVersion = "1.39.0"
-}
+.DESCRIPTION
+Execute this script to install and configure just on the local system.
+#>
+
+#!/usr/bin/env pwsh
 
 $InstallMethod = $env:JUST_INSTALL_METHOD
 if ([string]::IsNullOrEmpty($InstallMethod)) {
-    $InstallMethod = $env:LIBSCRIPT_GLOBAL_INSTALL_METHOD
+    $InstallMethod = $env:LIBSCRIPT_DEFAULT_INSTALL_METHOD
 }
 if ([string]::IsNullOrEmpty($InstallMethod)) {
-    $InstallMethod = "source"
+    $InstallMethod = "libscript-native"
 }
 
-if ($InstallMethod -eq "system") {
-    $PkgMgr = $env:LIBSCRIPT_WINDOWS_PKG_MGR
-    if ([string]::IsNullOrEmpty($PkgMgr)) {
-        $PkgMgr = "winget"
-    }
-    if ($PkgMgr -eq "winget") {
-        winget install casey.just
-    } elseif ($PkgMgr -eq "choco") {
-        choco install just
-    } else {
-        Write-Error "Unsupported Windows package manager: $PkgMgr"
-    }
-} else {
-    $Prefix = $env:PREFIX
-    if ([string]::IsNullOrEmpty($Prefix)) {
-        $LibscriptRootDir = if ([string]::IsNullOrEmpty($env:LIBSCRIPT_ROOT_DIR)) { "C:\libscript" } else { $env:LIBSCRIPT_ROOT_DIR }
-        $Prefix = "$LibscriptRootDir\installed\just"
-    }
+$Action = $env:ACTION
+if ([string]::IsNullOrEmpty($Action)) {
+    $Action = "install"
+}
 
-    $BinDir = "$Prefix\bin"
-    if (-not (Test-Path -Path $BinDir)) {
-        New-Item -ItemType Directory -Path $BinDir -Force | Out-Null
+$JustVersion = $env:JUST_VERSION
+if ([string]::IsNullOrEmpty($JustVersion)) {
+    $JustVersion = "latest"
+}
+
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$LibscriptRootDir = (Get-Item $ScriptDir).Parent.Parent.Parent.FullName
+. (Join-Path $LibscriptRootDir "_lib\_common\versioning.ps1")
+
+function Resolve-ExactVersion {
+    if ($JustVersion -eq "latest") {
+        return "1.39.0"
     }
+    return $JustVersion
+}
 
-    $ZipName = "just-${JustVersion}-x86_64-pc-windows-msvc"
-    $Url = "https://github.com/casey/just/releases/download/${JustVersion}/${ZipName}.zip"
-    $ZipPath = "$env:TEMP\${ZipName}.zip"
+switch ($Action) {
+    "ls" {
+        if ($InstallMethod -eq "mise") {
+            mise ls just
+        } elseif ($InstallMethod -eq "asdf") {
+            Write-Host "asdf not supported natively on Windows"
+        } elseif ($InstallMethod -eq "system") {
+            just --version
+        } else {
+            $LibscriptHome = Get-LibscriptBaseDir
+            $JustDir = Join-Path $LibscriptHome "just"
+            if (Test-Path $JustDir) {
+                Get-ChildItem -Path $JustDir -Directory | Select-Object -ExpandProperty Name
+            }
+        }
+        break
+    }
+    "ls-remote" {
+        if ($InstallMethod -eq "mise") {
+            mise ls-remote just
+        } elseif ($InstallMethod -eq "asdf") {
+            Write-Host "asdf not supported natively on Windows"
+        } elseif ($InstallMethod -eq "system") {
+            Write-Host "System package manager does not support ls-remote directly here."
+        } else {
+            $Resp = Invoke-RestMethod -Uri "https://api.github.com/repos/casey/just/releases"
+            $Resp | ForEach-Object { $_.tag_name.Replace("v", "") } | Select-Object -First 100
+        }
+        break
+    }
+    "use" {
+        if ($InstallMethod -eq "mise") {
+            mise use "just@${JustVersion}"
+        } elseif ($InstallMethod -eq "asdf") {
+            Write-Host "asdf not supported natively on Windows"
+        } elseif ($InstallMethod -eq "system") {
+            Write-Host "Cannot 'use' specific version with system package manager."
+        } else {
+            $ExactVersion = Resolve-ExactVersion
+            Set-LibscriptAlias -Component "just" -AliasName $JustVersion -ExactVersion $ExactVersion
+        }
+        break
+    }
+    default {
+        # download and install
+        if ($InstallMethod -eq "system") {
+            $WinPkgMgr = $env:LIBSCRIPT_WINDOWS_PKG_MGR
+            if ([string]::IsNullOrEmpty($WinPkgMgr)) {
+                $WinPkgMgr = "winget"
+            }
+            if ($WinPkgMgr -eq "winget") {
+                winget install --silent --force --id=casey.just -e --accept-package-agreements --accept-source-agreements
+            } elseif ($WinPkgMgr -eq "choco") {
+                choco install -y just
+            }
+        } elseif ($InstallMethod -eq "mise") {
+            mise install "just@${JustVersion}"
+        } elseif ($InstallMethod -eq "asdf") {
+            Write-Host "asdf not supported natively on Windows"; exit 1
+        } else {
+            $ExactVersion = Resolve-ExactVersion
+            $JustDir = Get-LibscriptVersionDir -Component "just" -Version $ExactVersion
+            $JustExe = Join-Path $JustDir "bin\just.exe"
 
-    Write-Host "Downloading JUST from $Url ..."
-    Invoke-WebRequest -Uri $Url -OutFile $ZipPath -UseBasicParsing
-    
-    Expand-Archive -Path $ZipPath -DestinationPath "$env:TEMP\${ZipName}" -Force
-    Move-Item -Path "$env:TEMP\${ZipName}\just.exe" -Destination "$BinDir\just.exe" -Force
-    
-    Remove-Item -Path $ZipPath -Force
-    Remove-Item -Path "$env:TEMP\${ZipName}" -Recurse -Force
-    
-    Write-Host "JUST installed to $BinDir\just.exe"
+            if (Test-Path $JustExe) {
+                Set-LibscriptAlias -Component "just" -AliasName $JustVersion -ExactVersion $ExactVersion
+                return
+            }
+
+            $Arch = "x86_64"
+            if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
+                $Arch = "aarch64"
+            }
+            $OsName = "pc-windows-msvc"
+
+            $ZipName = "just-$ExactVersion-$Arch-$OsName.zip"
+            $DownloadUrl = "https://github.com/casey/just/releases/download/$ExactVersion/$ZipName"
+
+            $BinDir = Join-Path $JustDir "bin"
+            if (-not (Test-Path $BinDir)) {
+                New-Item -ItemType Directory -Force -Path $BinDir | Out-Null
+            }
+
+            $TempZip = Join-Path [System.IO.Path]::GetTempPath() "just.zip"
+            Write-Host "Downloading $DownloadUrl"
+            Invoke-WebRequest -Uri $DownloadUrl -OutFile $TempZip
+
+            Write-Host "Extracting $TempZip to $BinDir"
+            Expand-Archive -Path $TempZip -DestinationPath $BinDir -Force
+            Remove-Item -Force $TempZip
+
+            Set-LibscriptAlias -Component "just" -AliasName $JustVersion -ExactVersion $ExactVersion
+        }
+        break
+    }
 }

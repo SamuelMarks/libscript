@@ -82,7 +82,7 @@ running the setup script.
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
 | `RUBY_VERSION` | Specific version of ruby to install. Can be a numeric version or an alias. | `latest` | latest, stable |
-| `RUBY_INSTALL_METHOD` | How to install RUBY. 'system' uses the native OS package manager, 'source' compiles/downloads binaries. | `system` |  |
+| `RUBY_INSTALL_METHOD` | How to install RUBY. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools. | `libscript-native` |  |
 <!-- END_VARS -->
 
 ## Architecture

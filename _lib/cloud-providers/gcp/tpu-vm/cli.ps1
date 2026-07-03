@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'tpu-vm' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for tpu-vm.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "bazel"

@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Environment initialization for SH/Dash.
+#
+# ## Usage
+# Sets up `SH_VERSION` and prepends SH to PATH.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -21,7 +27,12 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
-#!/bin/sh
 
+SH_VERSION="${SH_VERSION:-0.5.12}"
+if [ "${SH_VERSION}" = "latest" ]; then
+  EXACT_VERSION="0.5.12"
+else
+  EXACT_VERSION="${SH_VERSION}"
+fi
+
+export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/sh/${EXACT_VERSION}/bin:${PATH}"

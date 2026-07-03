@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Implements packaging logic for the 'tui' format.
+# 
+# ## Usage
+# This script is called by the packaging system and should not be executed manually.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,30 +28,30 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
     cat << 'EOF'
 #!/bin/sh
-if command -v whiptail >/dev/null; then DIALOG=whiptail; elif command -v dialog >/dev/null; then DIALOG=dialog; else echo "Error: dialog or whiptail required." >&2; exit 1; fi
+if command -v whiptail >/dev/null; then DIALOG=whiptail; elif command -v dialog >/dev/null; then DIALOG=dialog; else printf '%s\n' "Error: dialog or whiptail required." >&2; exit 1; fi
 EOF
-    echo 'SELECTED=$($DIALOG --title "LibScript Installer" --checklist "Select components to install:" 20 60 10 \'
+    printf '%s\n' 'SELECTED=$($DIALOG --title "LibScript Installer" --checklist "Select components to install:" 20 60 10 \'
     if [ $# -gt 0 ]; then
       while [ $# -gt 0 ]; do
         pkg="$1"
         ver="${2:-latest}"
-        echo "  \"$pkg\" \"$ver\" ON \\"
+        printf '%s\n' "  \"$pkg\" \"$ver\" ON \\"
         if [ "$2" != "" ]; then shift 2; else shift; fi
       done
     elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
       deps=$("${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null || true)
-      echo "$deps" | while read -r pkg ver; do
+      printf '%s\n' "$deps" | while read -r pkg ver; do
         if [ -n "$pkg" ]; then
           if [ "$ver" = "null" ]; then ver="latest"; fi
-          echo "  \"$pkg\" \"$ver\" ON \\"
+          printf '%s\n' "  \"$pkg\" \"$ver\" ON \\"
         fi
       done
       # list all available components
       find_components | sort | while read -r comp; do
-        echo "  \"$comp\" \"latest\" OFF \\"
+        printf '%s\n' "  \"$comp\" \"latest\" OFF \\"
       done
     fi
     cat << 'EOF'
@@ -65,7 +71,7 @@ if [ $? -eq 0 ] && [ -n "$SELECTED" ]; then
     3>&1 1>&2 2>&3)
 
   if [ -n "$action" ]; then
-    offline_ans=$($DIALOG --title "Options" --yesno "Enable --offline mode?" 10 40; echo $?)
+    offline_ans=$($DIALOG --title "Options" --yesno "Enable --offline mode?" 10 40; printf '%s\n' $?)
     os_ans=$($DIALOG --title "Target OS" --checklist "Select OS targets:" 15 50 5 \
       "windows" "Windows" ON \
       "dos" "DOS" OFF \
@@ -76,17 +82,17 @@ if [ $? -eq 0 ] && [ -n "$SELECTED" ]; then
 
     extra_args=""
     if [ "$offline_ans" = "0" ]; then extra_args="$extra_args --offline"; fi
-    for os in $(echo "$os_ans" | tr -d '"'); do
+    for os in $(printf '%s\n' "$os_ans" | tr -d '"'); do
       extra_args="$extra_args --os-$os"
     done
 
     items=""
-    for item in $(echo "$SELECTED" | tr -d '"'); do
+    for item in $(printf '%s\n' "$SELECTED" | tr -d '"'); do
       items="$items $item latest"
     done
 
     if [ "$action" = "install" ]; then
-      for item in $(echo "$SELECTED" | tr -d '"'); do
+      for item in $(printf '%s\n' "$SELECTED" | tr -d '"'); do
         ./libscript.sh install "$item" latest
       done
     else
@@ -94,10 +100,10 @@ if [ $? -eq 0 ] && [ -n "$SELECTED" ]; then
       ./libscript.sh package_as "$action" $items $extra_args
     fi
   else
-    echo "Cancelled."
+    printf '%s\n' "Cancelled."
   fi
 else
-  echo "Installation cancelled."
+  printf '%s\n' "Installation cancelled."
 fi
 EOF
     APP_NAME="libscript"
@@ -115,7 +121,7 @@ EOF
         --app-url) APP_URL="$2"; shift 2 ;;
         --out-dir) OUT_DIR="$2"; shift 2 ;;
         --offline) OFFLINE="1"; shift ;;
-        -*) echo "Error: Unknown option $1" >&2; exit 1 ;;
+        -*) printf '%s\n' "Error: Unknown option $1" >&2; exit 1 ;;
         *) break ;;
       esac
     OUT_DIR="$(cd "$OUT_DIR" && pwd)"

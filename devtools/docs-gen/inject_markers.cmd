@@ -1,4 +1,12 @@
 @echo off
+:: # inject_markers.cmd
+::
+:: ## Overview
+:: Injects specific markers or tags into documentation files.
+:: 
+:: ## Usage
+:: Execute this script to apply structural markers to docs.
+
 setlocal EnableDelayedExpansion
 
 :: Injects <!-- BEGIN_VARS --> and <!-- BEGIN_PLATFORMS --> markers into

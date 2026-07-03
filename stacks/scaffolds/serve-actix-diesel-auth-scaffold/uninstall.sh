@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Handles the removal and uninstallation process for the Actix+Diesel authentication scaffold stack.
+# 
+# ## Usage
+# Execute this script to remove serve-actix-diesel-auth-scaffold and its associated configurations from the system.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 export LIBSCRIPT_ROOT_DIR
 
@@ -38,4 +44,4 @@ export PATH
 [ -d "${LIBSCRIPT_BUILD_DIR}" ] || mkdir -p -- "${LIBSCRIPT_BUILD_DIR}"
 [ -d "${LIBSCRIPT_DATA_DIR}" ] || mkdir -p -- "${LIBSCRIPT_DATA_DIR}"
 
-echo "Uninstalling serve-actix-diesel-auth-scaffold is not supported via this script."
+printf '%s\n' "Uninstalling serve-actix-diesel-auth-scaffold is not supported via this script."

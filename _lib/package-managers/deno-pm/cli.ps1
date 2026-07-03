@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'deno-pm' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for deno-pm.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (-not $env:PACKAGE_NAME) { $env:PACKAGE_NAME = (Get-Item $PSScriptRoot).Name }

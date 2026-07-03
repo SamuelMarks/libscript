@@ -1,2 +1,10 @@
+<#
+.SYNOPSIS
+Provides a generic, cross-platform uninstallation mechanism for the component 'redis' stack.
+
+.DESCRIPTION
+Execute this script to perform generic removal steps for redis.
+#>
+
 $ErrorActionPreference = "Stop"
 # Generic uninstall for PowerShell skipped

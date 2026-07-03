@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'pkgx' stack.
+
+.DESCRIPTION
+Execute this script to install and configure pkgx on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (Get-Command pkgx -ErrorAction SilentlyContinue) {

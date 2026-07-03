@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'etcd' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for etcd.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "etcd"

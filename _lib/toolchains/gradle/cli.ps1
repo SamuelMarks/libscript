@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'gradle' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for gradle.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "gradle"

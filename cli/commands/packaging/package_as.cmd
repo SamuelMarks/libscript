@@ -1,4 +1,12 @@
 @echo off
+:: # package_as.cmd
+::
+:: ## Overview
+:: Packages the libscript environment into distributable formats.
+:: 
+:: ## Usage
+:: Execute this script to build installer packages.
+
 setlocal EnableDelayedExpansion
 set "is_docker="
 if /i "%~2"=="docker" set "is_docker=1"

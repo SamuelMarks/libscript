@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Implements automated tests to verify the correctness of the Joomla CMS stack.
+# 
+# ## Usage
+# Execute this script to run the test suite for joomla.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 export LIBSCRIPT_ROOT_DIR
 for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
@@ -34,12 +40,12 @@ done
 
 
 set -feu
-echo "Validating Joomla installation..."
+printf '%s\n' "Validating Joomla installation..."
 JOOMLA_WWWROOT="${JOOMLA_WWWROOT:-/var/www/joomla}"
 if [ -d "${JOOMLA_WWWROOT}/administrator" ]; then
-    echo "Joomla directory found at ${JOOMLA_WWWROOT}"
+    printf '%s\n' "Joomla directory found at ${JOOMLA_WWWROOT}"
     exit 0
 else
-    echo "Joomla directory not found at ${JOOMLA_WWWROOT}"
+    printf '%s\n' "Joomla directory not found at ${JOOMLA_WWWROOT}"
     exit 1
 fi

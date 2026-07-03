@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'busybox' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for busybox.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "busybox"

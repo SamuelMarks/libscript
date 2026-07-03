@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Shared arguments and utility functions for package installers.
+# 
+# ## Usage
+# This script is called by the packaging system and should not be executed manually.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
     install_scope="perMachine"
     inno_priv="admin"
     nsis_admin="admin"
@@ -53,7 +59,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
         --license) LICENSE_PATH="$2"; shift 2 ;;
         --welcome) WELCOME_TEXT="$2"; shift 2 ;;
         --offline) OFFLINE="1"; shift ;;
-        -*) echo "Error: Unknown option $1" >&2; exit 1 ;;
+        -*) printf '%s\n' "Error: Unknown option $1" >&2; exit 1 ;;
         *) break ;;
       esac
     done
@@ -61,7 +67,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 
     PRODUCT_CODE="*"
-    _SVC_NAME=$(echo "$APP_NAME" | tr " " "_")
+    _SVC_NAME=$(printf '%s\n' "$APP_NAME" | tr " " "_")
     _UPGRADE_ID="${APP_NAME}|${_SVC_NAME}|x64"
     _PRODUCT_ID="${APP_NAME}|${_SVC_NAME}|x64|${APP_VERSION}"
 

@@ -1,4 +1,12 @@
 @echo off
+:: # audit_stacks.cmd
+::
+:: ## Overview
+:: Performs an audit and validation of all defined application stacks.
+:: 
+:: ## Usage
+:: Execute this script to check the integrity of stack definitions.
+
 setlocal EnableDelayedExpansion
 
 :: Audits stack documentation. Windows equivalent of audit_stacks.sh

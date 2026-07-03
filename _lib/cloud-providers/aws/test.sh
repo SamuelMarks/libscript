@@ -1,4 +1,12 @@
 #!/bin/sh
+# ## Overview
+# Serves as the Unix test entry point for the AWS Cloud Provider component CLI wrapper.
+# It sets `DRY_RUN=true` to validate the mock execution paths for `network`, `firewall`,
+# `storage`, and `cleanup` operations, ensuring no real cloud side-effects occur.
+# 
+# ## Usage
+# Execute this script to run the tests for the AWS CLI wrapper.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +30,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
@@ -47,7 +55,7 @@ log_info "Testing AWS component in DRY_RUN mode..."
 # Test network
 VPC_ID=$("$SCRIPT_DIR/cli.sh" network create test-vpc 2>/dev/null | tr -d '\r\n')
 log_info "Captured VPC_ID: '$VPC_ID'"
-if [ "$VPC_ID" != "vpc-12345678" ]; then echo "VPC_ID mismatch"; exit 1; fi
+if [ "$VPC_ID" != "vpc-12345678" ]; then printf '%s\n' "VPC_ID mismatch"; exit 1; fi
 
 # Test firewall
 log_info "Running firewall create..."

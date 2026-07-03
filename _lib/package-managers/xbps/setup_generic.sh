@@ -1,4 +1,12 @@
 #!/bin/sh
+# ## Overview
+# Generic setup script for the xbps component.
+# It provides fallback installation logic and cross-platform installation steps
+# when a more specific OS/distribution setup script is not available.
+#
+# ## Usage
+# This script is typically called internally by the component lifecycle.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,11 +30,11 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 if ! command -v xbps-install >/dev/null 2>&1; then
   if [ -f /etc/os-release ] && grep -qi "void" /etc/os-release; then
-    echo "Warning: xbps-install not found on a Void Linux system. This is highly unusual." >&2
+    printf '%s\n' "Warning: xbps-install not found on a Void Linux system. This is highly unusual." >&2
   else
-    echo "Warning: The 'xbps' package manager is only applicable on Void Linux. Skipping." >&2
+    printf '%s\n' "Warning: The 'xbps' package manager is only applicable on Void Linux. Skipping." >&2
   fi
 fi

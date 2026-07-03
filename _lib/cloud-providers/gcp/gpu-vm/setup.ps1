@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'gpu-vm' stack.
+
+.DESCRIPTION
+Execute this script to install and configure gpu-vm on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $GcpCliVersion = $env:GCP_CLI_VERSION

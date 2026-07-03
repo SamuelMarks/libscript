@@ -1,4 +1,13 @@
 #!/bin/sh
+# ## Overview
+# Executable wrapper for the `find_replace` utility function.
+# This script exposes the `awk`-based literal string replacement logic so it can be called
+# directly as a shell command rather than sourced as a library function.
+# 
+# ## Usage
+# `./find_replace_exec.sh "search_string" "replacement_string" "filename"`
+# It prints the replaced file content to stdout.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +31,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 # Usage: ./find_replace_exec.sh "search_string" "replacement_string" filename
 

@@ -1,4 +1,13 @@
 #!/bin/sh
+# ## Overview
+# Provides specialized installation and configuration logic for a Node.js Server on Debian/Ubuntu systems.
+# It ensures Node.js dependencies (via `npm`, `yarn`, or `pnpm`) are resolved, discovers the main
+# application script (`main.js`, `app.js`, etc.), dynamically builds a Systemd service file
+# representing the server, installs it, and registers listening ports via `netctl`.
+# 
+# ## Usage
+# Typically called automatically by `setup.sh` when running on a Debian-like operating system.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +31,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR="${SCRIPT_DIR}"
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 

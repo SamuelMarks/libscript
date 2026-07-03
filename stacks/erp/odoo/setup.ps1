@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the Odoo ERP system stack.
+
+.DESCRIPTION
+Execute this script to install and configure odoo on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $OdooVersion = if ($env:ODOO_VERSION) { $env:ODOO_VERSION } else { "17.0" }

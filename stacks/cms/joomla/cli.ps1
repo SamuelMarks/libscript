@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the Joomla CMS stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for joomla.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "joomla"

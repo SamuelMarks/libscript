@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Provides a generic, cross-platform setup mechanism for the Nextcloud collaboration platform stack.
+# 
+# ## Usage
+# Execute this script to perform generic initialization steps for nextcloud.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR="${SCRIPT_DIR}"
 
 for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh"; do
@@ -64,7 +70,7 @@ NEXTCLOUD_WWWROOT="${NEXTCLOUD_WWWROOT:-/var/www/nextcloud}"
 export NEXTCLOUD_WWWROOT
 
 if [ ! -d "${NEXTCLOUD_WWWROOT}/core" ]; then
-  echo "Downloading Nextcloud (${NEXTCLOUD_VERSION}) to ${NEXTCLOUD_WWWROOT}..."
+  printf '%s\n' "Downloading Nextcloud (${NEXTCLOUD_VERSION}) to ${NEXTCLOUD_WWWROOT}..."
   priv mkdir -p "${NEXTCLOUD_WWWROOT}"
   if [ "${NEXTCLOUD_VERSION}" = "latest" ]; then
     dl_url="https://download.nextcloud.com/server/releases/latest.tar.bz2"
@@ -87,7 +93,7 @@ DB_NAME="${NEXTCLOUD_DB_NAME:-nextcloud}"
 DB_USER="${NEXTCLOUD_DB_USER:-nextcloud}"
 DB_PASS="${NEXTCLOUD_DB_PASS:-nextcloud}"
 
-echo "Configuring Database (${NEXTCLOUD_DB_TYPE})..."
+printf '%s\n' "Configuring Database (${NEXTCLOUD_DB_TYPE})..."
 if [ "${NEXTCLOUD_DB_TYPE}" = "mariadb" ] || [ "${NEXTCLOUD_DB_TYPE}" = "mysql" ]; then
   if command -v mysql >/dev/null 2>&1; then
     if priv mysql -u root -e "SELECT 1" >/dev/null 2>&1; then
@@ -96,7 +102,7 @@ if [ "${NEXTCLOUD_DB_TYPE}" = "mariadb" ] || [ "${NEXTCLOUD_DB_TYPE}" = "mysql" 
       priv mysql -u root -e "GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';"
       priv mysql -u root -e "FLUSH PRIVILEGES;"
     else
-      echo "Warning: MariaDB is not running or root login failed."
+      printf '%s\n' "Warning: MariaDB is not running or root login failed."
     fi
   fi
 elif [ "${NEXTCLOUD_DB_TYPE}" = "postgres" ] || [ "${NEXTCLOUD_DB_TYPE}" = "postgresql" ]; then
@@ -106,7 +112,7 @@ elif [ "${NEXTCLOUD_DB_TYPE}" = "postgres" ] || [ "${NEXTCLOUD_DB_TYPE}" = "post
       priv su - postgres -c "psql -tc \"SELECT 1 FROM pg_roles WHERE rolname = '${DB_USER}'\"" | grep -q 1 || priv -u postgres psql -c "CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASS}';"
       priv -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};"
     else
-      echo "Warning: Postgres is not running or postgres login failed."
+      printf '%s\n' "Warning: Postgres is not running or postgres login failed."
     fi
   fi
 fi
@@ -160,7 +166,7 @@ fi
 NEXTCLOUD_SERVER_NAME="${NEXTCLOUD_SERVER_NAME:-localhost}"
 export NEXTCLOUD_SERVER_NAME
 
-echo "Configuring webserver: ${NEXTCLOUD_WEBSERVER}"
+printf '%s\n' "Configuring webserver: ${NEXTCLOUD_WEBSERVER}"
 
 ENV_SCRIPT_FILE=$(mktemp)
 cat <<EOF > "${ENV_SCRIPT_FILE}"
@@ -238,4 +244,4 @@ fi
 
 rm -f "${ENV_SCRIPT_FILE}"
 
-echo "Nextcloud setup complete on ${NEXTCLOUD_SERVER_NAME}"
+printf '%s\n' "Nextcloud setup complete on ${NEXTCLOUD_SERVER_NAME}"

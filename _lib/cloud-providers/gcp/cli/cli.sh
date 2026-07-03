@@ -1,4 +1,11 @@
 #!/bin/sh
+# ## Overview
+# Main CLI entry point for the GCP CLI component.
+# Loads the generic CLI implementation from component_core.sh.
+#
+# ## Usage
+# Delegates to `component_core.sh`. Invoke via `libscript.sh gcp/cli`.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,10 +29,10 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 
-PACKAGE_NAME="bazel"
+PACKAGE_NAME="gcp-cli"
 SCRIPT_NAME="${SCRIPT_DIR}/../../_common/component_core.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090

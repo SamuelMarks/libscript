@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the JupyterHub data science platform stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for jupyterhub.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "jupyterhub"

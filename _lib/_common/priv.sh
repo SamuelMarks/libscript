@@ -1,4 +1,12 @@
 #!/bin/sh
+# ## Overview
+# Detects and configures privilege escalation tools (sudo, doas, su).
+# It exports the `priv` function to transparently execute commands with
+# root privileges depending on the available system utility and user identity.
+# 
+# ## Usage
+# Source this file and prefix commands requiring elevated rights with `priv`.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +30,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-$(dirname "$THIS_FILE")/..}/_lib/_common/os_info.sh"
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}" 2>/dev/null || true
@@ -79,9 +87,9 @@ fi
 
 
 if [ -n "${PRIV}" ]; then
-  priv() { "${PRIV}" "$@"; }
+  priv() { if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" = "1" ]; then return 0; fi; "${PRIV}" "$@"; }
 elif command -v su >/dev/null 2>&1; then
-  priv() { priv_as root "$@"; }
+  priv() { if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" = "1" ]; then return 0; fi; priv_as root "$@"; }
 else
-  priv() { "$@"; }
+  priv() { if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" = "1" ]; then return 0; fi; "$@"; }
 fi

@@ -1,4 +1,12 @@
 @echo off
+:: # actions.cmd
+::
+:: ## Overview
+:: Provides a unified interface for managing service states (start, stop, restart).
+:: 
+:: ## Usage
+:: Execute this script to perform lifecycle actions on background services.
+
 setlocal EnableDelayedExpansion
 set "action=%cmd%"
 if /i "!action!"=="up" set "action=start"

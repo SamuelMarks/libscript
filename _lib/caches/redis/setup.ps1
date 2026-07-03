@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'redis' stack.
+
+.DESCRIPTION
+Execute this script to install and configure redis on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $RedisVersion = $env:REDIS_VERSION

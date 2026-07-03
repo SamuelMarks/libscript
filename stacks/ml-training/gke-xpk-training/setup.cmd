@@ -1,4 +1,12 @@
 @echo off
+:: # setup.cmd
+::
+:: ## Overview
+:: Orchestrates the setup and installation process for the GKE XPK machine learning training stack stack.
+:: 
+:: ## Usage
+:: Execute this script to install and configure gke-xpk-training on the local system.
+
 setlocal enabledelayedexpansion
 
 if "%~1"=="--help" goto :help

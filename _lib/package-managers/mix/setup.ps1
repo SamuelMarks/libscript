@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'mix' stack.
+
+.DESCRIPTION
+Execute this script to install and configure mix on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (-Not (Get-Command mix -ErrorAction SilentlyContinue)) {

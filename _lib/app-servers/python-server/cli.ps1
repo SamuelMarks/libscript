@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'python-server' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for python-server.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "python-server"

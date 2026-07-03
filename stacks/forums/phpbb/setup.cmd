@@ -1,4 +1,12 @@
 @echo off
+:: # setup.cmd
+::
+:: ## Overview
+:: Orchestrates the setup and installation process for the phpBB forum software stack.
+:: 
+:: ## Usage
+:: Execute this script to install and configure phpbb on the local system.
+
 setlocal EnableDelayedExpansion
 
 :: Fallback to running PowerShell for Windows provisioning

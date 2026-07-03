@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'jetstream' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for jetstream.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "huggingface_hub"

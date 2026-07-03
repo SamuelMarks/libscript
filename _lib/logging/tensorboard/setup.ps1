@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'tensorboard' stack.
+
+.DESCRIPTION
+Execute this script to install and configure tensorboard on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $TensorboardVersion = $env:TENSORBOARD_VERSION

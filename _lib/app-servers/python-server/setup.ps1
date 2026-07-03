@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'python-server' stack.
+
+.DESCRIPTION
+Execute this script to install and configure python-server on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 Get-ChildItem "$PSScriptRoot\..\python\setup.cmd" | ForEach-Object { & $_.FullName }

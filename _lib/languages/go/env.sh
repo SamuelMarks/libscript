@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Environment initialization for Go.
+#
+# ## Usage
+# Sets up `GO_VERSION` and prepends Go to PATH.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,6 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
-#!/bin/sh
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
+GO_VERSION="${GO_VERSION:-latest}"
+export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/go/${GO_VERSION}/bin:${PATH}"

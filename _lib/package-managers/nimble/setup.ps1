@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'nimble' stack.
+
+.DESCRIPTION
+Execute this script to install and configure nimble on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (-Not (Get-Command nimble -ErrorAction SilentlyContinue)) {

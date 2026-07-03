@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'minio' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for minio.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "minio"

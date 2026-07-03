@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Test suite for the GCP GPU VM component.
+#
+# ## Usage
+# Automatically invoked by the test framework. Currently skips tests.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -38,4 +44,4 @@ for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-log_info "tpu-vm cli test skipped"
+log_info "gpu-vm cli test skipped"

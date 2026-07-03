@@ -80,7 +80,7 @@ running the setup script.
 | `MODEL_NAME` | HuggingFace model string to serve | `your-org/your-model-name` |  |
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
-| `DENO_INSTALL_METHOD` | How to install DENO. 'system' uses the native OS package manager, 'source' compiles/downloads binaries. | `system` |  |
+| `DENO_INSTALL_METHOD` | How to install DENO. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools. | `libscript-native` |  |
 | `DENO_VERSION` | Version of Deno Runtime to install | `latest` |  |
 <!-- END_VARS -->
 

@@ -1,4 +1,14 @@
 @echo off
+:: # service_install.cmd
+::
+:: ## Overview
+:: Serves as the Windows entry point for installing background services.
+:: It dynamically locates the LibScript root and delegates execution
+:: to the corresponding PowerShell script (`service_install.ps1`).
+:: 
+:: ## Usage
+:: Call this script to trigger Windows service installation.
+
 setlocal EnableDelayedExpansion
 
 if not defined LIBSCRIPT_ROOT_DIR (

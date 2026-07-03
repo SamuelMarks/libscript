@@ -7,13 +7,16 @@
   "properties": {
     "AWS_DEFAULT_REGION": {
       "type": "string",
-      "default": "us-east-1"
+      "default": "us-east-1",
+      "description": "AWS Default Region"
     },
     "AWS_ACCESS_KEY_ID": {
-      "type": "string"
+      "type": "string",
+      "description": "AWS Access Key ID"
     },
     "AWS_SECRET_ACCESS_KEY": {
-      "type": "string"
+      "type": "string",
+      "description": "AWS Secret Access Key"
     }
   }
 }

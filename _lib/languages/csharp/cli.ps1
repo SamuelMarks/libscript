@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'csharp' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for csharp.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "csharp"

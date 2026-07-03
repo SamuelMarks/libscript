@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Environment initialization for Node.js.
+#
+# ## Usage
+# Sets up `NODE_VERSION` and prepends Node.js to PATH.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,6 +28,6 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
-export MISE_HOME="${HOME}/.local/share/mise"
-export PATH="${MISE_HOME}/bin:${PATH}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+NODE_VERSION="${NODEJS_VERSION:-lts}"
+export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/nodejs/${NODE_VERSION}/bin:${PATH}"

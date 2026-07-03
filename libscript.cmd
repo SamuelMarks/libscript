@@ -1,4 +1,12 @@
 @echo off
+:: # libscript.cmd
+::
+:: ## Overview
+:: Main entry point for the libscript framework.
+:: 
+:: ## Usage
+:: Execute this script to access global libscript functionality.
+
 setlocal EnableDelayedExpansion
 
 set "SCRIPT_DIR=%~dp0"
@@ -254,7 +262,7 @@ echo   status ^<package_name^> [version]
 echo   test ^<package_name^> [version]
 echo.
 echo Options:
-echo   --help, -h, /?              Show this help text
+echo   --help, -h, /?, -?          Show this help text
 echo   --version, -v               Show version
 echo   --prefix=^<dir^>              Set local installation prefix
 echo   --log-format=^<text^|json^>      Set log output format

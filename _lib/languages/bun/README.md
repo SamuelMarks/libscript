@@ -101,7 +101,7 @@ running the setup script.
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
 | `BUN_VERSION` | Version of Bun demanded. Can be a specific version number like 'bun-v1.1.0' or an alias. | `latest` | latest, canary |
-| `BUN_INSTALL_METHOD` | How to install BUN. 'system' uses the native OS package manager, 'source' compiles/downloads binaries. | `system` |  |
+| `BUN_INSTALL_METHOD` | How to install BUN. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools. | `libscript-native` |  |
 <!-- END_VARS -->
 
 ## Architecture

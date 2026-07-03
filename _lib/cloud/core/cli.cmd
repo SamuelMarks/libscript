@@ -1,4 +1,12 @@
 @echo off
+:: # cli.cmd
+::
+:: ## Overview
+:: Windows entry point for cloud orchestration commands (deploy, teardown, backup, restore).
+::
+:: ## Usage
+:: Dispatches sub-commands (e.g., `deploy_cloud`, `teardown_cloud`) and manages remote state lock/unlock.
+
 setlocal EnableDelayedExpansion
 set "PACKAGE_NAME=core"
 

@@ -1,9 +1,15 @@
 #!/bin/sh
+# ## Overview
+# Primary setup script for the GCP GPU VM component.
+#
+# ## Usage
+# Sources `setup_base.sh` to route to generic or OS-specific implementations.
+
 
 set -feu
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  echo "Usage: $0"
-  echo "See README.md for details."
+  printf '%s\n' "Usage: $0"
+  printf '%s\n' "See README.md for details."
   exit 0
 fi
 
@@ -28,7 +34,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 
 SCRIPT_NAME="${SCRIPT_DIR}/../../_common/setup_base.sh"

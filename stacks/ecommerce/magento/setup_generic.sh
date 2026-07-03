@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Provides a generic, cross-platform setup mechanism for the Magento e-commerce platform stack.
+# 
+# ## Usage
+# Execute this script to perform generic initialization steps for magento.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR="${SCRIPT_DIR}"
 
 for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh"; do
@@ -60,7 +66,7 @@ MAGENTO_WWWROOT="${MAGENTO_WWWROOT:-/var/www/magento}"
 export MAGENTO_WWWROOT
 
 if [ ! -d "${MAGENTO_WWWROOT}/app" ]; then
-  echo "Downloading Magento (${MAGENTO_VERSION}) to ${MAGENTO_WWWROOT}..."
+  printf '%s\n' "Downloading Magento (${MAGENTO_VERSION}) to ${MAGENTO_WWWROOT}..."
   priv mkdir -p "${MAGENTO_WWWROOT}"
 
   # For a full install without auth.json typically use a pre-packaged tarball, but we use github releases for simplicity
@@ -89,7 +95,7 @@ DB_USER="${MAGENTO_DB_USER:-magento}"
 DB_PASS="${MAGENTO_DB_PASS:-magento}"
 DB_HOST="${MAGENTO_DB_HOST:-127.0.0.1}"
 
-echo "Configuring Database (${MAGENTO_DB_DRIVER})..."
+printf '%s\n' "Configuring Database (${MAGENTO_DB_DRIVER})..."
 if [ "${MAGENTO_DB_DRIVER}" = "mariadb" ] || [ "${MAGENTO_DB_DRIVER}" = "mysql" ]; then
   if command -v mysql >/dev/null 2>&1 && priv mysql -u root -e "SELECT 1" >/dev/null 2>&1; then
     priv mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;"
@@ -135,7 +141,7 @@ fi
 MAGENTO_SERVER_NAME="${MAGENTO_SERVER_NAME:-localhost}"
 export MAGENTO_SERVER_NAME
 
-echo "Configuring webserver: ${MAGENTO_WEBSERVER}"
+printf '%s\n' "Configuring webserver: ${MAGENTO_WEBSERVER}"
 
 ENV_SCRIPT_FILE=$(mktemp)
 cat <<EOF > "${ENV_SCRIPT_FILE}"
@@ -216,4 +222,4 @@ fi
 
 rm -f "${ENV_SCRIPT_FILE}"
 
-echo "Magento setup complete on ${MAGENTO_SERVER_NAME}"
+printf '%s\n' "Magento setup complete on ${MAGENTO_SERVER_NAME}"

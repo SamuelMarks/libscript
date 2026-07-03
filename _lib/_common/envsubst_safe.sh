@@ -1,4 +1,15 @@
 #!/bin/sh
+# ## Overview
+# A safe, POSIX-compliant alternative to GNU `envsubst` powered by `awk`.
+# Unlike standard `envsubst`, if an environment variable is not found,
+# it safely leaves the original variable reference intact (e.g. `${VAR}`) 
+# rather than replacing it with an empty string.
+# 
+# ## Usage
+# Source this file and call `envsubst_safe` passing either a string, a file path,
+# or piping content via stdin. It is recommended to use within a cleared environment
+# (see `environ.sh`) to prevent accidental substitution of ambient variables.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +33,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 # A safe version of `envsubst`
 # If a var is not found it leaves it
 # env -i BAR='haz'   "FOO ${BAR} CAN" -> "FOO haz CAN"

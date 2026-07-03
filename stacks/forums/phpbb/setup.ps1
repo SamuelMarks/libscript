@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the phpBB forum software stack.
+
+.DESCRIPTION
+Execute this script to install and configure phpbb on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PhpbbVersion = if ($env:PHPBB_VERSION) { $env:PHPBB_VERSION } else { "3.3.11" }

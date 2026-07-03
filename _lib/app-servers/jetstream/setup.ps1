@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'jetstream' stack.
+
+.DESCRIPTION
+Execute this script to install and configure jetstream on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $Prefix = $env:PREFIX

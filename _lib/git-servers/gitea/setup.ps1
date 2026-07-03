@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'gitea' stack.
+
+.DESCRIPTION
+Execute this script to install and configure gitea on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $MinioVersion = $env:GITEA_VERSION

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'systemd' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for systemd.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "systemd"

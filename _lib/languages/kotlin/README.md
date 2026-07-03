@@ -98,8 +98,8 @@ running the setup script.
 | `MODEL_NAME` | HuggingFace model string to serve | `your-org/your-model-name` |  |
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
-| `KOTLIN_INSTALL_METHOD` | How to install KOTLIN. 'system' uses the native OS package manager, 'source' compiles/downloads binaries. | `system` |  |
-| `KOTLIN_VERSION` | Version of Kotlin Toolchain to install | `latest` |  |
+| `KOTLIN_INSTALL_METHOD` | How to install KOTLIN. 'system' uses the native OS package manager, 'libscript-native' downloads binaries natively. | `libscript-native` |  |
+| `KOTLIN_VERSION` | Version of Kotlin Toolchain to install | `1.9.20` |  |
 <!-- END_VARS -->
 
 ## Architecture

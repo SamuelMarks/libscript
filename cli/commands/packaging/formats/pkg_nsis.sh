@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Implements packaging logic for the 'nsis' format.
+# 
+# ## Usage
+# This script is called by the packaging system and should not be executed manually.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
   . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/_common_installer_args.sh"
       cat << EOF2
 !define APP_NAME "$APP_NAME"
@@ -39,8 +45,8 @@ VIAddVersionKey "CompanyName" "$APP_PUBLISHER"
 VIAddVersionKey "FileDescription" "$WELCOME_TEXT"
 VIAddVersionKey "FileVersion" "$APP_VERSION"
 EOF2
-      if [ -n "$ICON_PATH" ]; then echo "Icon \"$ICON_PATH\""; fi
-      echo ""
+      if [ -n "$ICON_PATH" ]; then printf '%s\n' "Icon \"$ICON_PATH\""; fi
+      printf '%s\n' ""
 
       deps_list=""
       if [ $# -gt 0 ]; then
@@ -55,13 +61,13 @@ EOF2
       fi
 
       if [ "$OFFLINE" = "1" ]; then
-        echo "Section \"Core\""
-        echo "  SetOutPath \"\$INSTDIR\""
-        echo "  File /r \"$LIBSCRIPT_ROOT_DIR\\*.*\""
-        echo "SectionEnd"
+        printf '%s\n' "Section \"Core\""
+        printf '%s\n' "  SetOutPath \"\$INSTDIR\""
+        printf '%s\n' "  File /r \"$LIBSCRIPT_ROOT_DIR\\*.*\""
+        printf '%s\n' "SectionEnd"
       fi
-      echo "Include nsDialogs.nsh"
-      echo "Page components"
+      printf '%s\n' "Include nsDialogs.nsh"
+      printf '%s\n' "Page components"
 
       set -- $deps_list
       while [ $# -gt 0 ]; do
@@ -70,27 +76,27 @@ EOF2
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
           if [ -n "$vars_json" ]; then
-            echo "Var Dialog_$pkg"
-            echo "$vars_json" | jq -r '.key' | while read -r varname; do
-              echo "Var HWND_${pkg}_${varname}"
-              echo "Var VAL_${pkg}_${varname}"
+            printf '%s\n' "Var Dialog_$pkg"
+            printf '%s\n' "$vars_json" | jq -r '.key' | while read -r varname; do
+              printf '%s\n' "Var HWND_${pkg}_${varname}"
+              printf '%s\n' "Var VAL_${pkg}_${varname}"
             done
 
-            echo "Page custom pgCustom_$pkg pgLeave_$pkg"
+            printf '%s\n' "Page custom pgCustom_$pkg pgLeave_$pkg"
           fi
         fi
       done
 
-      if [ -n "$LICENSE_PATH" ]; then echo "Page license \"\" \"$LICENSE_PATH\""; fi
-      echo "Page custom ActionPageCreate ActionPageLeave"
-      echo "Page custom OptionsPageCreate OptionsPageLeave"
-      echo "Page instfiles"
-      echo ""
+      if [ -n "$LICENSE_PATH" ]; then printf '%s\n' "Page license \"\" \"$LICENSE_PATH\""; fi
+      printf '%s\n' "Page custom ActionPageCreate ActionPageLeave"
+      printf '%s\n' "Page custom OptionsPageCreate OptionsPageLeave"
+      printf '%s\n' "Page instfiles"
+      printf '%s\n' ""
 
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
-        echo "Section \"$pkg\" SEC_$pkg"
+        printf '%s\n' "Section \"$pkg\" SEC_$pkg"
         if [ "$OFFLINE" = "1" ]; then
           run_params="/c \"\$INSTDIR\\libscript.cmd\" install_service $pkg $ver"
         else
@@ -100,14 +106,14 @@ EOF2
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
           if [ -n "$vars_json" ]; then
-            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"\$VAL_%s_%s\"", $1, pkg, $1}')
+            append_params=$(printf '%s\n' "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"\$VAL_%s_%s\"", $1, pkg, $1}')
             run_params="$run_params$append_params"
           fi
         fi
-        echo "  \${If} \$Action_Choice == \"install\""
-        echo "  ExecWait 'cmd.exe $run_params'"
-        echo "  \${EndIf}"
-        echo "SectionEnd"
+        printf '%s\n' "  \${If} \$Action_Choice == \"install\""
+        printf '%s\n' "  ExecWait 'cmd.exe $run_params'"
+        printf '%s\n' "  \${EndIf}"
+        printf '%s\n' "SectionEnd"
       done
 
       set -- $deps_list
@@ -117,234 +123,234 @@ EOF2
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
           if [ -n "$vars_json" ]; then
-            echo "Function pgCustom_$pkg"
-            echo "  SectionGetFlags \${SEC_$pkg} \$0"
-            echo "  IntOp \$0 \$0 & 1"
-            echo "  IntCmp \$0 1 +2"
-            echo "    Abort"
-            echo "  nsDialogs::Create 1018"
-            echo "  Pop \$Dialog_$pkg"
+            printf '%s\n' "Function pgCustom_$pkg"
+            printf '%s\n' "  SectionGetFlags \${SEC_$pkg} \$0"
+            printf '%s\n' "  IntOp \$0 \$0 & 1"
+            printf '%s\n' "  IntCmp \$0 1 +2"
+            printf '%s\n' "    Abort"
+            printf '%s\n' "  nsDialogs::Create 1018"
+            printf '%s\n' "  Pop \$Dialog_$pkg"
 
             y=0
-            echo "$vars_json" | while read -r item; do
-              varname=$(echo "$item" | jq -r '.key')
-              desc=$(echo "$item" | jq -r '.desc')
-              defval=$(echo "$item" | jq -r '.def')
+            printf '%s\n' "$vars_json" | while read -r item; do
+              varname=$(printf '%s\n' "$item" | jq -r '.key')
+              desc=$(printf '%s\n' "$item" | jq -r '.desc')
+              defval=$(printf '%s\n' "$item" | jq -r '.def')
               if [ $y -gt 130 ]; then break; fi
 
-              echo "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
-              echo "  Pop \$0"
+              printf '%s\n' "  \${NSD_CreateLabel} 0 ${y}u 100% 12u \"$desc:\""
+              printf '%s\n' "  Pop \$0"
               y=$((y + 12))
 
               if case "$varname" in *"_PASSWORD"*) true;; *) false;; esac; then
-                echo "  \${NSD_CreatePassword} 0 ${y}u 100% 12u \"$defval\""
+                printf '%s\n' "  \${NSD_CreatePassword} 0 ${y}u 100% 12u \"$defval\""
               else
-                echo "  \${NSD_CreateText} 0 ${y}u 100% 12u \"$defval\""
+                printf '%s\n' "  \${NSD_CreateText} 0 ${y}u 100% 12u \"$defval\""
               fi
-              echo "  Pop \$HWND_${pkg}_${varname}"
+              printf '%s\n' "  Pop \$HWND_${pkg}_${varname}"
               y=$((y + 14))
             done
-            echo "  nsDialogs::Show"
-            echo "FunctionEnd"
+            printf '%s\n' "  nsDialogs::Show"
+            printf '%s\n' "FunctionEnd"
 
-            echo "Function pgLeave_$pkg"
-            echo "$vars_json" | jq -r '.key' | while read -r varname; do
-              echo "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
+            printf '%s\n' "Function pgLeave_$pkg"
+            printf '%s\n' "$vars_json" | jq -r '.key' | while read -r varname; do
+              printf '%s\n' "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
 
               if case "$varname" in *"_PORT"* | *"_PORT_SECURE"*) true;; *) false;; esac; then
-                echo "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
-                echo "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"
-                echo "  Pop \$0"
-                echo "  IntCmp \$0 0 0 +3"
-                echo "    MessageBox MB_ICONSTOP \"Port \$VAL_${pkg}_${varname} is already in use.\""
-                echo "    Abort"
+                printf '%s\n' "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
+                printf '%s\n' "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"
+                printf '%s\n' "  Pop \$0"
+                printf '%s\n' "  IntCmp \$0 0 0 +3"
+                printf '%s\n' "    MessageBox MB_ICONSTOP \"Port \$VAL_${pkg}_${varname} is already in use.\""
+                printf '%s\n' "    Abort"
               fi
             done
-            echo "FunctionEnd"
+            printf '%s\n' "FunctionEnd"
           fi
         fi
       done
 
-      echo "Var Dialog_Action"
-      echo "Var R_Install"
-      echo "Var R_Docker"
-      echo "Var R_DC"
-      echo "Var R_MSI"
-      echo "Var R_Inno"
-      echo "Var R_NSIS"
-      echo "Var R_PKG"
-      echo "Var R_DMG"
-      echo "Var R_Deb"
-      echo "Var R_RPM"
-      echo "Var Action_Choice"
-      echo "Var Dialog_Options"
-      echo "Var C_Offline"
-      echo "Var C_Win"
-      echo "Var C_DOS"
-      echo "Var C_Linux"
-      echo "Var C_Mac"
-      echo "Var C_BSD"
-      echo "Var Opt_Offline"
-      echo "Var Opt_Win"
-      echo "Var Opt_DOS"
-      echo "Var Opt_Linux"
-      echo "Var Opt_Mac"
-      echo "Var Opt_BSD"
-      echo "Function ActionPageCreate"
-      echo "  nsDialogs::Create 1018"
-      echo "  Pop \$Dialog_Action"
-      echo "  \${NSD_CreateLabel} 0 0 100% 12u \"What would you like to produce?\""
-      echo "  Pop \$0"
-      echo "  \${NSD_CreateRadioButton} 0 15u 100% 12u \"Install locally now\""
-      echo "  Pop \$R_Install"
-      echo "  \${NSD_Check} \$R_Install"
-      echo "  \${NSD_CreateRadioButton} 0 30u 100% 12u \"Dockerfile\""
-      echo "  Pop \$R_Docker"
-      echo "  \${NSD_CreateRadioButton} 0 45u 100% 12u \"Dockerfiles + docker-compose\""
-      echo "  Pop \$R_DC"
-      echo "  \${NSD_CreateRadioButton} 0 60u 100% 12u \".msi installer\""
-      echo "  Pop \$R_MSI"
-      echo "  \${NSD_CreateRadioButton} 0 75u 100% 12u \".exe (InnoSetup)\""
-      echo "  Pop \$R_Inno"
-      echo "  \${NSD_CreateRadioButton} 0 90u 100% 12u \".exe (NSIS)\""
-      echo "  Pop \$R_NSIS"
-      echo "  \${NSD_CreateRadioButton} 0 105u 100% 12u \".pkg installer\""
-      echo "  Pop \$R_PKG"
-      echo "  \${NSD_CreateRadioButton} 0 120u 100% 12u \".dmg installer\""
-      echo "  Pop \$R_DMG"
-      echo "  \${NSD_CreateRadioButton} 0 135u 100% 12u \".deb package\""
-      echo "  Pop \$R_Deb"
-      echo "  \${NSD_CreateRadioButton} 0 150u 100% 12u \".rpm package\""
-      echo "  Pop \$R_RPM"
-      echo "  nsDialogs::Show"
-      echo "FunctionEnd"
-      echo "Function ActionPageLeave"
-      echo "  StrCpy \$Action_Choice \"install\""
-      echo "  \${NSD_GetState} \$R_Docker \$0"
-      echo "  \${If} \$0 == \${BST_CHECKED}"
-      echo "    StrCpy \$Action_Choice \"docker\""
-      echo "  \${EndIf}"
-      echo "  \${NSD_GetState} \$R_DC \$0"
-      echo "  \${If} \$0 == \${BST_CHECKED}"
-      echo "    StrCpy \$Action_Choice \"docker_compose\""
-      echo "  \${EndIf}"
-      echo "  \${NSD_GetState} \$R_MSI \$0"
-      echo "  \${If} \$0 == \${BST_CHECKED}"
-      echo "    StrCpy \$Action_Choice \"msi\""
-      echo "  \${EndIf}"
-      echo "  \${NSD_GetState} \$R_Inno \$0"
-      echo "  \${If} \$0 == \${BST_CHECKED}"
-      echo "    StrCpy \$Action_Choice \"innosetup\""
-      echo "  \${EndIf}"
-      echo "  \${NSD_GetState} \$R_NSIS \$0"
-      echo "  \${If} \$0 == \${BST_CHECKED}"
-      echo "    StrCpy \$Action_Choice \"nsis\""
-      echo "  \${EndIf}"
-      echo "  \${NSD_GetState} \$R_Deb \$0"
-      echo "  \${If} \$0 == \${BST_CHECKED}"
-      echo "    StrCpy \$Action_Choice \"deb\""
-      echo "  \${EndIf}"
-      echo "  \${NSD_GetState} \$R_RPM \$0"
-      echo "  \${If} \$0 == \${BST_CHECKED}"
-      echo "    StrCpy \$Action_Choice \"rpm\""
-      echo "  \${EndIf}"
-      echo "FunctionEnd"
-      echo "Function OptionsPageCreate"
-      echo "  nsDialogs::Create 1018"
-      echo "  Pop \$Dialog_Options"
-      echo "  \${NSD_CreateLabel} 0 0 100% 12u \"Options & OS Targets\""
-      echo "  Pop \$0"
-      echo "  \${NSD_CreateCheckbox} 0 15u 100% 12u \"Enable --offline mode\""
-      echo "  Pop \$C_Offline"
-      echo "  \${NSD_CreateCheckbox} 0 30u 100% 12u \"Target: Windows\""
-      echo "  Pop \$C_Win"
-      echo "  \${NSD_Check} \$C_Win"
-      echo "  \${NSD_CreateCheckbox} 0 45u 100% 12u \"Target: DOS\""
-      echo "  Pop \$C_DOS"
-      echo "  \${NSD_CreateCheckbox} 0 60u 100% 12u \"Target: Linux\""
-      echo "  Pop \$C_Linux"
-      echo "  \${NSD_Check} \$C_Linux"
-      echo "  \${NSD_CreateCheckbox} 0 75u 100% 12u \"Target: macOS\""
-      echo "  Pop \$C_Mac"
-      echo "  \${NSD_CreateCheckbox} 0 90u 100% 12u \"Target: BSD\""
-      echo "  Pop \$C_BSD"
-      echo "  nsDialogs::Show"
-      echo "FunctionEnd"
-      echo "Function OptionsPageLeave"
-      echo "  \${NSD_GetState} \$C_Offline \$0"
-      echo "  StrCpy \$Opt_Offline \$0"
-      echo "  \${NSD_GetState} \$C_Win \$0"
-      echo "  StrCpy \$Opt_Win \$0"
-      echo "  \${NSD_GetState} \$C_DOS \$0"
-      echo "  StrCpy \$Opt_DOS \$0"
-      echo "  \${NSD_GetState} \$C_Linux \$0"
-      echo "  StrCpy \$Opt_Linux \$0"
-      echo "  \${NSD_GetState} \$C_Mac \$0"
-      echo "  StrCpy \$Opt_Mac \$0"
-      echo "  \${NSD_GetState} \$C_BSD \$0"
-      echo "  StrCpy \$Opt_BSD \$0"
-      echo "FunctionEnd"
-      echo "Section \"-Generate\" SEC_GENERATE"
-      echo "  \${If} \$Action_Choice != \"install\""
-      echo "    Var /GLOBAL GenCmd"
-      echo "    StrCpy \$GenCmd \"\""
-      echo "    \${If} \$Opt_Offline == \${BST_CHECKED}"
-      echo "      StrCpy \$GenCmd \"\$GenCmd --offline \""
-      echo "    \${EndIf}"
-      echo "    \${If} \$Opt_Win == \${BST_CHECKED}"
-      echo "      StrCpy \$GenCmd \"\$GenCmd --os-windows \""
-      echo "    \${EndIf}"
-      echo "    \${If} \$Opt_DOS == \${BST_CHECKED}"
-      echo "      StrCpy \$GenCmd \"\$GenCmd --os-dos \""
-      echo "    \${EndIf}"
-      echo "    \${If} \$Opt_Linux == \${BST_CHECKED}"
-      echo "      StrCpy \$GenCmd \"\$GenCmd --os-linux \""
-      echo "    \${EndIf}"
-      echo "    \${If} \$Opt_Mac == \${BST_CHECKED}"
-      echo "      StrCpy \$GenCmd \"\$GenCmd --os-macos \""
-      echo "    \${EndIf}"
-      echo "    \${If} \$Opt_BSD == \${BST_CHECKED}"
-      echo "      StrCpy \$GenCmd \"\$GenCmd --os-bsd \""
-      echo "    \${EndIf}"
-      echo "    Var /GLOBAL PkgArgs"
-      echo "    StrCpy \$PkgArgs \"\""
+      printf '%s\n' "Var Dialog_Action"
+      printf '%s\n' "Var R_Install"
+      printf '%s\n' "Var R_Docker"
+      printf '%s\n' "Var R_DC"
+      printf '%s\n' "Var R_MSI"
+      printf '%s\n' "Var R_Inno"
+      printf '%s\n' "Var R_NSIS"
+      printf '%s\n' "Var R_PKG"
+      printf '%s\n' "Var R_DMG"
+      printf '%s\n' "Var R_Deb"
+      printf '%s\n' "Var R_RPM"
+      printf '%s\n' "Var Action_Choice"
+      printf '%s\n' "Var Dialog_Options"
+      printf '%s\n' "Var C_Offline"
+      printf '%s\n' "Var C_Win"
+      printf '%s\n' "Var C_DOS"
+      printf '%s\n' "Var C_Linux"
+      printf '%s\n' "Var C_Mac"
+      printf '%s\n' "Var C_BSD"
+      printf '%s\n' "Var Opt_Offline"
+      printf '%s\n' "Var Opt_Win"
+      printf '%s\n' "Var Opt_DOS"
+      printf '%s\n' "Var Opt_Linux"
+      printf '%s\n' "Var Opt_Mac"
+      printf '%s\n' "Var Opt_BSD"
+      printf '%s\n' "Function ActionPageCreate"
+      printf '%s\n' "  nsDialogs::Create 1018"
+      printf '%s\n' "  Pop \$Dialog_Action"
+      printf '%s\n' "  \${NSD_CreateLabel} 0 0 100% 12u \"What would you like to produce?\""
+      printf '%s\n' "  Pop \$0"
+      printf '%s\n' "  \${NSD_CreateRadioButton} 0 15u 100% 12u \"Install locally now\""
+      printf '%s\n' "  Pop \$R_Install"
+      printf '%s\n' "  \${NSD_Check} \$R_Install"
+      printf '%s\n' "  \${NSD_CreateRadioButton} 0 30u 100% 12u \"Dockerfile\""
+      printf '%s\n' "  Pop \$R_Docker"
+      printf '%s\n' "  \${NSD_CreateRadioButton} 0 45u 100% 12u \"Dockerfiles + docker-compose\""
+      printf '%s\n' "  Pop \$R_DC"
+      printf '%s\n' "  \${NSD_CreateRadioButton} 0 60u 100% 12u \".msi installer\""
+      printf '%s\n' "  Pop \$R_MSI"
+      printf '%s\n' "  \${NSD_CreateRadioButton} 0 75u 100% 12u \".exe (InnoSetup)\""
+      printf '%s\n' "  Pop \$R_Inno"
+      printf '%s\n' "  \${NSD_CreateRadioButton} 0 90u 100% 12u \".exe (NSIS)\""
+      printf '%s\n' "  Pop \$R_NSIS"
+      printf '%s\n' "  \${NSD_CreateRadioButton} 0 105u 100% 12u \".pkg installer\""
+      printf '%s\n' "  Pop \$R_PKG"
+      printf '%s\n' "  \${NSD_CreateRadioButton} 0 120u 100% 12u \".dmg installer\""
+      printf '%s\n' "  Pop \$R_DMG"
+      printf '%s\n' "  \${NSD_CreateRadioButton} 0 135u 100% 12u \".deb package\""
+      printf '%s\n' "  Pop \$R_Deb"
+      printf '%s\n' "  \${NSD_CreateRadioButton} 0 150u 100% 12u \".rpm package\""
+      printf '%s\n' "  Pop \$R_RPM"
+      printf '%s\n' "  nsDialogs::Show"
+      printf '%s\n' "FunctionEnd"
+      printf '%s\n' "Function ActionPageLeave"
+      printf '%s\n' "  StrCpy \$Action_Choice \"install\""
+      printf '%s\n' "  \${NSD_GetState} \$R_Docker \$0"
+      printf '%s\n' "  \${If} \$0 == \${BST_CHECKED}"
+      printf '%s\n' "    StrCpy \$Action_Choice \"docker\""
+      printf '%s\n' "  \${EndIf}"
+      printf '%s\n' "  \${NSD_GetState} \$R_DC \$0"
+      printf '%s\n' "  \${If} \$0 == \${BST_CHECKED}"
+      printf '%s\n' "    StrCpy \$Action_Choice \"docker_compose\""
+      printf '%s\n' "  \${EndIf}"
+      printf '%s\n' "  \${NSD_GetState} \$R_MSI \$0"
+      printf '%s\n' "  \${If} \$0 == \${BST_CHECKED}"
+      printf '%s\n' "    StrCpy \$Action_Choice \"msi\""
+      printf '%s\n' "  \${EndIf}"
+      printf '%s\n' "  \${NSD_GetState} \$R_Inno \$0"
+      printf '%s\n' "  \${If} \$0 == \${BST_CHECKED}"
+      printf '%s\n' "    StrCpy \$Action_Choice \"innosetup\""
+      printf '%s\n' "  \${EndIf}"
+      printf '%s\n' "  \${NSD_GetState} \$R_NSIS \$0"
+      printf '%s\n' "  \${If} \$0 == \${BST_CHECKED}"
+      printf '%s\n' "    StrCpy \$Action_Choice \"nsis\""
+      printf '%s\n' "  \${EndIf}"
+      printf '%s\n' "  \${NSD_GetState} \$R_Deb \$0"
+      printf '%s\n' "  \${If} \$0 == \${BST_CHECKED}"
+      printf '%s\n' "    StrCpy \$Action_Choice \"deb\""
+      printf '%s\n' "  \${EndIf}"
+      printf '%s\n' "  \${NSD_GetState} \$R_RPM \$0"
+      printf '%s\n' "  \${If} \$0 == \${BST_CHECKED}"
+      printf '%s\n' "    StrCpy \$Action_Choice \"rpm\""
+      printf '%s\n' "  \${EndIf}"
+      printf '%s\n' "FunctionEnd"
+      printf '%s\n' "Function OptionsPageCreate"
+      printf '%s\n' "  nsDialogs::Create 1018"
+      printf '%s\n' "  Pop \$Dialog_Options"
+      printf '%s\n' "  \${NSD_CreateLabel} 0 0 100% 12u \"Options & OS Targets\""
+      printf '%s\n' "  Pop \$0"
+      printf '%s\n' "  \${NSD_CreateCheckbox} 0 15u 100% 12u \"Enable --offline mode\""
+      printf '%s\n' "  Pop \$C_Offline"
+      printf '%s\n' "  \${NSD_CreateCheckbox} 0 30u 100% 12u \"Target: Windows\""
+      printf '%s\n' "  Pop \$C_Win"
+      printf '%s\n' "  \${NSD_Check} \$C_Win"
+      printf '%s\n' "  \${NSD_CreateCheckbox} 0 45u 100% 12u \"Target: DOS\""
+      printf '%s\n' "  Pop \$C_DOS"
+      printf '%s\n' "  \${NSD_CreateCheckbox} 0 60u 100% 12u \"Target: Linux\""
+      printf '%s\n' "  Pop \$C_Linux"
+      printf '%s\n' "  \${NSD_Check} \$C_Linux"
+      printf '%s\n' "  \${NSD_CreateCheckbox} 0 75u 100% 12u \"Target: macOS\""
+      printf '%s\n' "  Pop \$C_Mac"
+      printf '%s\n' "  \${NSD_CreateCheckbox} 0 90u 100% 12u \"Target: BSD\""
+      printf '%s\n' "  Pop \$C_BSD"
+      printf '%s\n' "  nsDialogs::Show"
+      printf '%s\n' "FunctionEnd"
+      printf '%s\n' "Function OptionsPageLeave"
+      printf '%s\n' "  \${NSD_GetState} \$C_Offline \$0"
+      printf '%s\n' "  StrCpy \$Opt_Offline \$0"
+      printf '%s\n' "  \${NSD_GetState} \$C_Win \$0"
+      printf '%s\n' "  StrCpy \$Opt_Win \$0"
+      printf '%s\n' "  \${NSD_GetState} \$C_DOS \$0"
+      printf '%s\n' "  StrCpy \$Opt_DOS \$0"
+      printf '%s\n' "  \${NSD_GetState} \$C_Linux \$0"
+      printf '%s\n' "  StrCpy \$Opt_Linux \$0"
+      printf '%s\n' "  \${NSD_GetState} \$C_Mac \$0"
+      printf '%s\n' "  StrCpy \$Opt_Mac \$0"
+      printf '%s\n' "  \${NSD_GetState} \$C_BSD \$0"
+      printf '%s\n' "  StrCpy \$Opt_BSD \$0"
+      printf '%s\n' "FunctionEnd"
+      printf '%s\n' "Section \"-Generate\" SEC_GENERATE"
+      printf '%s\n' "  \${If} \$Action_Choice != \"install\""
+      printf '%s\n' "    Var /GLOBAL GenCmd"
+      printf '%s\n' "    StrCpy \$GenCmd \"\""
+      printf '%s\n' "    \${If} \$Opt_Offline == \${BST_CHECKED}"
+      printf '%s\n' "      StrCpy \$GenCmd \"\$GenCmd --offline \""
+      printf '%s\n' "    \${EndIf}"
+      printf '%s\n' "    \${If} \$Opt_Win == \${BST_CHECKED}"
+      printf '%s\n' "      StrCpy \$GenCmd \"\$GenCmd --os-windows \""
+      printf '%s\n' "    \${EndIf}"
+      printf '%s\n' "    \${If} \$Opt_DOS == \${BST_CHECKED}"
+      printf '%s\n' "      StrCpy \$GenCmd \"\$GenCmd --os-dos \""
+      printf '%s\n' "    \${EndIf}"
+      printf '%s\n' "    \${If} \$Opt_Linux == \${BST_CHECKED}"
+      printf '%s\n' "      StrCpy \$GenCmd \"\$GenCmd --os-linux \""
+      printf '%s\n' "    \${EndIf}"
+      printf '%s\n' "    \${If} \$Opt_Mac == \${BST_CHECKED}"
+      printf '%s\n' "      StrCpy \$GenCmd \"\$GenCmd --os-macos \""
+      printf '%s\n' "    \${EndIf}"
+      printf '%s\n' "    \${If} \$Opt_BSD == \${BST_CHECKED}"
+      printf '%s\n' "      StrCpy \$GenCmd \"\$GenCmd --os-bsd \""
+      printf '%s\n' "    \${EndIf}"
+      printf '%s\n' "    Var /GLOBAL PkgArgs"
+      printf '%s\n' "    StrCpy \$PkgArgs \"\""
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
-        echo "    SectionGetFlags \${SEC_$pkg} \$0"
-        echo "    IntOp \$0 \$0 & 1"
-        echo "    \${If} \$0 == 1"
-        echo "      StrCpy \$PkgArgs \"\$PkgArgs $pkg $ver \""
-        echo "    \${EndIf}"
+        printf '%s\n' "    SectionGetFlags \${SEC_$pkg} \$0"
+        printf '%s\n' "    IntOp \$0 \$0 & 1"
+        printf '%s\n' "    \${If} \$0 == 1"
+        printf '%s\n' "      StrCpy \$PkgArgs \"\$PkgArgs $pkg $ver \""
+        printf '%s\n' "    \${EndIf}"
       done
       if [ "$OFFLINE" = "1" ]; then
-        echo "    ExecWait 'cmd.exe /c \"\$INSTDIR\\libscript.cmd\" package_as \$Action_Choice \$PkgArgs \$GenCmd'"
+        printf '%s\n' "    ExecWait 'cmd.exe /c \"\$INSTDIR\\libscript.cmd\" package_as \$Action_Choice \$PkgArgs \$GenCmd'"
       else
-        echo "    ExecWait 'cmd.exe /c libscript.cmd package_as \$Action_Choice \$PkgArgs \$GenCmd'"
+        printf '%s\n' "    ExecWait 'cmd.exe /c libscript.cmd package_as \$Action_Choice \$PkgArgs \$GenCmd'"
       fi
-      echo "  \${EndIf}"
-      echo "SectionEnd"
+      printf '%s\n' "  \${EndIf}"
+      printf '%s\n' "SectionEnd"
       # Uninstaller
-      echo "Section \"Uninstall\""
+      printf '%s\n' "Section \"Uninstall\""
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
-        echo "  MessageBox MB_YESNO \"Do you want to completely remove the Data Directory and all records for $pkg?\" IDYES purge_$pkg IDNO keep_$pkg"
-        echo "  purge_$pkg:"
+        printf '%s\n' "  MessageBox MB_YESNO \"Do you want to completely remove the Data Directory and all records for $pkg?\" IDYES purge_$pkg IDNO keep_$pkg"
+        printf '%s\n' "  purge_$pkg:"
         if [ "$OFFLINE" = "1" ]; then
-          echo "    ExecWait 'cmd.exe /c \"\$INSTDIR\\libscript.cmd\" uninstall $pkg --purge-data --service-name \$VAL_${pkg}_$(echo "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME'"
+          printf '%s\n' "    ExecWait 'cmd.exe /c \"\$INSTDIR\\libscript.cmd\" uninstall $pkg --purge-data --service-name \$VAL_${pkg}_$(printf '%s\n' "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME'"
         else
-          echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --purge-data --service-name \$VAL_${pkg}_$(echo "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME'"
+          printf '%s\n' "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --purge-data --service-name \$VAL_${pkg}_$(printf '%s\n' "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME'"
         fi
-        echo "    Goto end_$pkg"
-        echo "  keep_$pkg:"
+        printf '%s\n' "    Goto end_$pkg"
+        printf '%s\n' "  keep_$pkg:"
         if [ "$OFFLINE" = "1" ]; then
-          echo "    ExecWait 'cmd.exe /c \"\$INSTDIR\\libscript.cmd\" uninstall $pkg --service-name \$VAL_${pkg}_$(echo "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME'"
+          printf '%s\n' "    ExecWait 'cmd.exe /c \"\$INSTDIR\\libscript.cmd\" uninstall $pkg --service-name \$VAL_${pkg}_$(printf '%s\n' "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME'"
         else
-          echo "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --service-name \$VAL_${pkg}_$(echo "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME'"
+          printf '%s\n' "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --service-name \$VAL_${pkg}_$(printf '%s\n' "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME'"
         fi
-        echo "  end_$pkg:"
+        printf '%s\n' "  end_$pkg:"
       done
-      echo "SectionEnd"
+      printf '%s\n' "SectionEnd"
 
       exit 0

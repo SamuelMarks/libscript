@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'nodejs' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for nodejs.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "nodejs"

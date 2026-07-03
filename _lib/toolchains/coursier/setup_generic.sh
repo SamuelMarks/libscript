@@ -1,4 +1,12 @@
 #!/bin/sh
+# ## Overview
+# Generic setup script for the coursier component.
+# It provides fallback installation logic and cross-platform installation steps
+# when a more specific OS/distribution setup script is not available.
+#
+# ## Usage
+# This script is typically called internally by the component lifecycle.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,52 +30,117 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR="${SCRIPT_DIR}"
 
-for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+fi
+
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
-  # shellcheck disable=SC1090
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
-COURSIER_INSTALL_METHOD="${COURSIER_INSTALL_METHOD:-${LIBSCRIPT_GLOBAL_INSTALL_METHOD:-source}}"
+COURSIER_INSTALL_METHOD="${COURSIER_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
 COURSIER_VERSION="${COURSIER_VERSION:-latest}"
+ACTION="${ACTION:-install}"
 
-if [ "${COURSIER_INSTALL_METHOD}" = 'system' ]; then
-  libscript_depends 'coursier'
-else
-  # "source" install (direct download of binary)
+resolve_exact_version() {
   if [ "${COURSIER_VERSION}" = "latest" ]; then
-    COURSIER_VERSION="2.1.24"
+    EXACT_VERSION="2.1.24"
+  else
+    EXACT_VERSION="${COURSIER_VERSION}"
   fi
+}
 
-  TARGET_OS="${TARGET_OS:-linux}"
-  TARGET_ARCH="${TARGET_ARCH:-amd64}"
+case "$ACTION" in
+  ls)
+    if [ "$COURSIER_INSTALL_METHOD" = "mise" ]; then
+      mise ls coursier
+    elif [ "$COURSIER_INSTALL_METHOD" = "asdf" ]; then
+      asdf list coursier
+    elif [ "$COURSIER_INSTALL_METHOD" = "system" ]; then
+      coursier --version || true
+    else
+      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/coursier/" 2>/dev/null || true
+    fi
+    exit 0
+    ;;
+  ls-remote)
+    if [ "$COURSIER_INSTALL_METHOD" = "mise" ]; then
+      mise ls-remote coursier
+    elif [ "$COURSIER_INSTALL_METHOD" = "asdf" ]; then
+      asdf list all coursier
+    elif [ "$COURSIER_INSTALL_METHOD" = "system" ]; then
+      printf '%s\n' "System package manager does not support ls-remote directly here."
+    else
+      curl -sL "https://api.github.com/repos/coursier/coursier/releases" | grep -o '"tag_name": "v[^"]*"' | sed 's/"tag_name": "v//' | sed 's/"//' | head -n 100
+    fi
+    exit 0
+    ;;
+  use)
+    if [ "$COURSIER_INSTALL_METHOD" = "mise" ]; then
+      mise use "coursier@${COURSIER_VERSION}"
+    elif [ "$COURSIER_INSTALL_METHOD" = "asdf" ]; then
+      asdf global coursier "${COURSIER_VERSION}"
+    elif [ "$COURSIER_INSTALL_METHOD" = "system" ]; then
+      printf '%s\n' "Cannot 'use' specific version with system package manager."
+    else
+      resolve_exact_version
+      libscript_symlink_alias "coursier" "${COURSIER_VERSION}" "${EXACT_VERSION}"
+    fi
+    exit 0
+    ;;
+  download|install|*)
+    if [ "$COURSIER_INSTALL_METHOD" = "system" ]; then
+      libscript_depends 'coursier'
+    elif [ "$COURSIER_INSTALL_METHOD" = "mise" ]; then
+      mise install "coursier@${COURSIER_VERSION}"
+    elif [ "$COURSIER_INSTALL_METHOD" = "asdf" ]; then
+      asdf install coursier "${COURSIER_VERSION}"
+    else
+      libscript_depends 'curl' 'gzip'
+      resolve_exact_version
+      
+      COURSIER_DIR=$(libscript_get_version_dir "coursier" "${EXACT_VERSION}")
+      bin_dir="${COURSIER_DIR}/bin"
+      
+      if [ -x "${bin_dir}/coursier" ]; then
+        libscript_symlink_alias "coursier" "${COURSIER_VERSION}" "${EXACT_VERSION}"
+        exit 0
+      fi
 
-  if [ "${TARGET_ARCH}" = "amd64" ] || [ "${TARGET_ARCH}" = "x86_64" ]; then arch="x86_64"; else arch="${TARGET_ARCH}"; fi
-  if [ "${TARGET_ARCH}" = "arm64" ] || [ "${TARGET_ARCH}" = "aarch64" ]; then arch="aarch64"; fi
+      TARGET_OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
+      TARGET_ARCH="$(uname -m)"
+      
+      if [ "${TARGET_ARCH}" = "amd64" ] || [ "${TARGET_ARCH}" = "x86_64" ]; then arch="x86_64"; else arch="${TARGET_ARCH}"; fi
+      if [ "${TARGET_ARCH}" = "arm64" ] || [ "${TARGET_ARCH}" = "aarch64" ]; then arch="aarch64"; fi
 
-  case "${TARGET_OS}" in
-    macos*|darwin*) os_name="apple-darwin" ;;
-    linux*) os_name="pc-linux" ;;
-    *) log_error "Unsupported OS for direct download: ${TARGET_OS}"; exit 1 ;;
-  esac
+      case "${TARGET_OS}" in
+        macos*|darwin*) os_name="apple-darwin" ;;
+        linux*) os_name="pc-linux" ;;
+        *) log_error "Unsupported OS for direct download: ${TARGET_OS}"; exit 1 ;;
+      esac
 
-  dl_url="https://github.com/coursier/coursier/releases/download/v${COURSIER_VERSION}/cs-${arch}-${os_name}.gz"
-
-  PREFIX="${PREFIX:-${LIBSCRIPT_ROOT_DIR}/installed/coursier}"
-  bin_dir="${PREFIX}/bin"
-  mkdir -p "${bin_dir}"
-
-  log_info "Downloading Coursier from ${dl_url}..."
-  libscript_download "${dl_url}" "${bin_dir}/cs.gz"
-
-  gzip -d "${bin_dir}/cs.gz" || gunzip "${bin_dir}/cs.gz"
-  mv "${bin_dir}/cs" "${bin_dir}/coursier"
-  chmod +x "${bin_dir}/coursier"
-  ln -sf "${bin_dir}/coursier" "${bin_dir}/cs"
-
-  log_success "Coursier installed to ${bin_dir}/coursier"
-fi
+      dl_url="https://github.com/coursier/coursier/releases/download/v${EXACT_VERSION}/cs-${arch}-${os_name}.gz"
+      
+      mkdir -p "${bin_dir}"
+      libscript_download "${dl_url}" "${bin_dir}/cs.gz"
+      
+      gzip -d "${bin_dir}/cs.gz" || gunzip "${bin_dir}/cs.gz" || true
+      mv "${bin_dir}/cs" "${bin_dir}/coursier" || true
+      chmod +x "${bin_dir}/coursier"
+      
+      # Coursier also provides a `cs` alias typically
+      ln -sf coursier "${bin_dir}/cs"
+      
+      libscript_symlink_alias "coursier" "${COURSIER_VERSION}" "${EXACT_VERSION}"
+    fi
+    ;;
+esac

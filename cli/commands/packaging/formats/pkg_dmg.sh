@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Implements packaging logic for the 'dmg' format.
+# 
+# ## Usage
+# This script is called by the packaging system and should not be executed manually.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,14 +28,14 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
   . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/_common_installer_args.sh"
       PKG_STAGE="${OUT_FILE}_stage"
       rm -rf "$PKG_STAGE"
       mkdir -p "$PKG_STAGE/packages" "$PKG_STAGE/resources" "$PKG_STAGE/scripts"
 
       if [ -n "$WELCOME_TEXT" ]; then
-        echo "<html><body><h1>Welcome</h1><p>$WELCOME_TEXT</p></body></html>" > "$PKG_STAGE/resources/welcome.html"
+        printf '%s\n' "<html><body><h1>Welcome</h1><p>$WELCOME_TEXT</p></body></html>" > "$PKG_STAGE/resources/welcome.html"
       fi
       if [ -n "$LICENSE_PATH" ] && [ -f "$LICENSE_PATH" ]; then
         cp "$LICENSE_PATH" "$PKG_STAGE/resources/license.html"
@@ -57,7 +63,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
         cat << "EOF_SCRIPT" > "$COMP_DIR/scripts/postinstall"
 #!/bin/sh
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-USER_NAME=$(stat -f "%Su" /dev/console 2>/dev/null || echo "${SUDO_USER:-}")
+USER_NAME=$(stat -f "%Su" /dev/console 2>/dev/null || printf '%s\n' "${SUDO_USER:-}")
 if [ -z "${USER_NAME:-}" ] || [ "${USER_NAME:-}" = "root" ]; then
   USER_NAME="$USER"
 fi
@@ -68,10 +74,10 @@ EOF_SCRIPT
         if [ -f "$SCHEMA_FILE" ]; then
           VARS_JSON=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$SCHEMA_FILE")
           if [ -n "$VARS_JSON" ]; then
-            echo "$VARS_JSON" | while read -r item; do
-              VARNAME=$(echo "$item" | jq -r '.key')
-              DESC=$(echo "$item" | jq -r '.desc' | sed 's/"/\"/g')
-              DEFVAL=$(echo "$item" | jq -r '.def' | sed 's/"/\"/g')
+            printf '%s\n' "$VARS_JSON" | while read -r item; do
+              VARNAME=$(printf '%s\n' "$item" | jq -r '.key')
+              DESC=$(printf '%s\n' "$item" | jq -r '.desc' | sed 's/"/\"/g')
+              DEFVAL=$(printf '%s\n' "$item" | jq -r '.def' | sed 's/"/\"/g')
 
               if case "$VARNAME" in *"_PASSWORD"*) true;; *) false;; esac; then
                 HIDDEN="with hidden answer"
@@ -95,7 +101,7 @@ done
 EOF_PROMPT
               fi
             done
-            PARAMS=$(echo "$VARS_JSON" | jq -r '.key' | awk -v PKG="$PKG" '{printf " --%s=\"$VAL_%s\"", $1, $1}')
+            PARAMS=$(printf '%s\n' "$VARS_JSON" | jq -r '.key' | awk -v PKG="$PKG" '{printf " --%s=\"$VAL_%s\"", $1, $1}')
           fi
         fi
 
@@ -114,7 +120,7 @@ fi
 cat << "EOF_UNINST" > "/opt/libscript/uninstall_${PKG}.command"
 #!/bin/sh
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-USER_NAME=\$(stat -f "%Su" /dev/console 2>/dev/null || echo "\$SUDO_USER")
+USER_NAME=\$(stat -f "%Su" /dev/console 2>/dev/null || printf '%s\n' "\$SUDO_USER")
 if [ -z "\$USER_NAME" ] || [ "\$USER_NAME" = "root" ]; then
   USER_NAME="\$USER"
 fi
@@ -126,9 +132,9 @@ if [ "\$ANS" = "Yes" ]; then
   PURGE="--purge-data"
 fi
 
-echo "Uninstalling $PKG..."
+printf '%s\n' "Uninstalling $PKG..."
 sudo libscript.sh uninstall "$PKG" \$PURGE
-echo "Uninstalled $PKG."
+printf '%s\n' "Uninstalled $PKG."
 sleep 2
 EOF_UNINST
 chmod +x "/opt/libscript/uninstall_${PKG}.command"
@@ -177,14 +183,14 @@ EOF_SCRIPT
 
         if true; then
           hdiutil create -volname "$APP_NAME" -srcfolder "${OUT_FILE}.pkg" -ov -format UDZO "${OUT_FILE}.dmg"
-          echo "Created ${OUT_FILE}.dmg"
+          printf '%s\n' "Created ${OUT_FILE}.dmg"
         else
-          echo "Created ${OUT_FILE}.pkg"
+          printf '%s\n' "Created ${OUT_FILE}.pkg"
         fi
         rm -rf "$PKG_STAGE"
       else
-        echo "Created source files in $PKG_STAGE"
-        echo "pkgbuild/productbuild not found. Cannot build .pkg natively." >&2
+        printf '%s\n' "Created source files in $PKG_STAGE"
+        printf '%s\n' "pkgbuild/productbuild not found. Cannot build .pkg natively." >&2
       fi
       exit 0
 

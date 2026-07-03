@@ -1,4 +1,12 @@
 @echo off
+:: # test.cmd
+::
+:: ## Overview
+:: Test suite for the cloud core orchestration commands on Windows.
+::
+:: ## Usage
+:: Automatically invoked by the test framework to validate diff, backup, and restore routines.
+
 setlocal EnableDelayedExpansion
 call "%~dp0\..\_common\test_base.cmd"
 

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the Drupal CMS stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for drupal.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "drupal"

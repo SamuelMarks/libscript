@@ -1,4 +1,13 @@
 #!/bin/sh
+# ## Overview
+# Provides the foundational setup logic for a component.
+# It aggregates essential common libraries (logging, OS detection, package
+# manager utilities, paths), loads the component's environment, delegates
+# to OS-specific installers, and handles network port registrations.
+# 
+# ## Usage
+# Source or execute this file internally as the core implementation of `setup.sh`.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -24,7 +33,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 # Resolve component directory and LibScript root
 DIR="${SCRIPT_DIR:-$(cd "$(dirname -- "${THIS_FILE}")" && pwd)}"
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 # Source logging

@@ -1,4 +1,12 @@
 #!/bin/sh
+# ## Overview
+# Command-line interface entrypoint for the gcsfuse component.
+# It initializes the lifecycle, resolves the package name, and delegates execution
+# to the shared component_core.sh script.
+#
+# ## Usage
+# Execute this script directly to run the CLI functionality for the component.
+
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
@@ -31,8 +39,8 @@ for LIB in _lib/_common/pkg_mgr.sh _lib/_common/log.sh; do
 done
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  echo "Usage: $0 <action> [args...]"
-  echo "See README.md for details."
+  printf '%s\n' "Usage: $0 <action> [args...]"
+  printf '%s\n' "See README.md for details."
   exit 0
 fi
 
@@ -57,7 +65,7 @@ case "$ACTION" in
       exit 1
     fi
     # Strip gs:// prefix if present
-    BUCKET_NAME=$(echo "$BUCKET_NAME" | sed 's/^gs:\/\///')
+    BUCKET_NAME=$(printf '%s\n' "$BUCKET_NAME" | sed 's/^gs:\/\///')
     
     mkdir -p "$MOUNT_POINT"
     log_info "Mounting bucket $BUCKET_NAME to $MOUNT_POINT..."

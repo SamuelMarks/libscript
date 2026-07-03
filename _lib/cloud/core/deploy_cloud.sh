@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Primary deployment orchestrator for Unix, provisioning infrastructure across AWS, Azure, or GCP.
+#
+# ## Usage
+# Run `deploy_cloud.sh <provider> <node> <rg> <loc> [repo] [dest]` to configure VPCs, SG, VMs, sync code, and start services.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -27,7 +33,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
 if [ "$#" -lt 4 ]; then
@@ -52,7 +58,7 @@ TIMESTAMP=$(date +%s)
 LOG_FILE="$LOG_DIR/provision-${TIMESTAMP}.log"
 
 log() {
-  echo "$(date '+%Y-%m-%d %H:%M:%S') [$1] $2" | tee -a "$LOG_FILE"
+  printf '%s\n' "$(date '+%Y-%m-%d %H:%M:%S') [$1] $2" | tee -a "$LOG_FILE"
 }
 
 log "INIT" "Starting $PROVIDER deployment for $NODE..."
@@ -137,7 +143,7 @@ STATE_FILE="$REPO_PATH/.deploy_state"
 record_state() {
   key=$1
   val=$2
-  echo "${key}=${val}" >> "$STATE_FILE"
+  printf '%s\n' "${key}=${val}" >> "$STATE_FILE"
   log "STATE" "Recorded $key=$val"
 }
 
@@ -194,11 +200,11 @@ else
     if [ "$PROVIDER" = "aws" ]; then SIZE="t3.xlarge"
     elif [ "$PROVIDER" = "gcp" ]; then SIZE="e2-standard-4"
     fi
-  elif echo "$SIZE" | grep -q "^Standard_B"; then
+  elif printf '%s\n' "$SIZE" | grep -q "^Standard_B"; then
     if [ "$PROVIDER" = "aws" ]; then SIZE="t3.medium"
     elif [ "$PROVIDER" = "gcp" ]; then SIZE="e2-medium"
     fi
-  elif echo "$SIZE" | grep -q "^t3."; then
+  elif printf '%s\n' "$SIZE" | grep -q "^t3."; then
     if [ "$PROVIDER" = "azure" ]; then SIZE="Standard_D4s_v3"
     elif [ "$PROVIDER" = "gcp" ]; then SIZE="e2-standard-4"
     fi
@@ -375,10 +381,10 @@ if [ -n "$STATE_PATHS" ]; then
         S3_ARGS=""
         if [ -n "$STATE_ENDPOINT" ]; then S3_ARGS="--endpoint-url $STATE_ENDPOINT"; fi
         aws s3 cp $S3_ARGS "$STATE_BUCKET/$PATH_ITEM" "$REPO_PATH/$PATH_ITEM" >> "$LOG_FILE" 2>&1 || true
-      elif echo "$STATE_BUCKET" | grep -q "^gs://"; then
+      elif printf '%s\n' "$STATE_BUCKET" | grep -q "^gs://"; then
         gcloud storage cp "$STATE_BUCKET/$PATH_ITEM" "$REPO_PATH/$PATH_ITEM" >> "$LOG_FILE" 2>&1 || true
-      elif echo "$STATE_BUCKET" | grep -q "^azure://"; then
-        CONTAINER=$(echo "$STATE_BUCKET" | awk -F/ '{print $3}')
+      elif printf '%s\n' "$STATE_BUCKET" | grep -q "^azure://"; then
+        CONTAINER=$(printf '%s\n' "$STATE_BUCKET" | awk -F/ '{print $3}')
         az storage blob download --container-name "$CONTAINER" --name "$PATH_ITEM" --file "$REPO_PATH/$PATH_ITEM" --auth-mode login >> "$LOG_FILE" 2>&1 || true
       fi
     fi
@@ -396,7 +402,7 @@ fi
 if [ -n "$DOMAIN" ]; then
   log "DNS" "Mapping DNS for $DOMAIN..."
   if [ "$PROVIDER" = "azure" ]; then
-    ZONE_NAME=$(echo "$DOMAIN" | awk -F. '{print $(NF-1)"."$NF}')
+    ZONE_NAME=$(printf '%s\n' "$DOMAIN" | awk -F. '{print $(NF-1)"."$NF}')
     TARGET_DNS_RG="${DNS_RG:-$RG}"
     with_retry "$CLI" dns map-node "$NODE" "$RG" "$DOMAIN" "$ZONE_NAME" "$TARGET_DNS_RG" || true
   elif [ "$PROVIDER" = "aws" ]; then
@@ -408,7 +414,7 @@ if [ -n "$DOMAIN" ]; then
       with_retry "$CLI" dns map-node "$NODE" "$DOMAIN" "$AWS_ZONE_ID" || true
     fi
   elif [ "$PROVIDER" = "gcp" ]; then
-    ZONE_NAME=$(echo "$DOMAIN" | awk -F. '{print $(NF-1)"-"$NF}')
+    ZONE_NAME=$(printf '%s\n' "$DOMAIN" | awk -F. '{print $(NF-1)"-"$NF}')
     with_retry "$CLI" dns map-node "$NODE" "$LOC" "$DOMAIN" "$ZONE_NAME" || true
   fi
 fi

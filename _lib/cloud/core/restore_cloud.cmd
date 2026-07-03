@@ -1,4 +1,12 @@
 @echo off
+:: # restore_cloud.cmd
+::
+:: ## Overview
+:: Restores cloud node data from a backup on Windows.
+::
+:: ## Usage
+:: Run `restore_cloud.cmd <node_name> [options]` to reprovision and pull config/data from an archive.
+
 setlocal EnableDelayedExpansion
 
 set "NODE=%~1"

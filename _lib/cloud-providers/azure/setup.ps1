@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'azure' stack.
+
+.DESCRIPTION
+Execute this script to install and configure azure on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $Action = $env:ACTION

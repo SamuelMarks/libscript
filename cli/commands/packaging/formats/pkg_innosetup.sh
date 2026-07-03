@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Orchestrates the setup and installation process for the packaging format 'formats' stack.
+# 
+# ## Usage
+# Execute this script to install and configure formats on the local system.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
   . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/_common_installer_args.sh"
       cat << EOF2
 [Setup]
@@ -31,9 +37,9 @@ AppVersion=$APP_VERSION
 AppPublisher=$APP_PUBLISHER
 EOF2
       if [ -n "$APP_URL" ]; then
-        echo "AppPublisherURL=$APP_URL"
-        echo "AppSupportURL=$APP_URL"
-        echo "AppUpdatesURL=$APP_URL"
+        printf '%s\n' "AppPublisherURL=$APP_URL"
+        printf '%s\n' "AppSupportURL=$APP_URL"
+        printf '%s\n' "AppUpdatesURL=$APP_URL"
       fi
       cat << EOF2
 DefaultDirName={autopf}\\$APP_NAME
@@ -41,10 +47,10 @@ PrivilegesRequired=$inno_priv
 OutputDir=.
 OutputBaseFilename=$OUT_FILE
 EOF2
-      if [ "$UPGRADE_CODE" != "PUT-GUID-HERE" ]; then echo "AppId=$UPGRADE_CODE"; fi
-      if [ -n "$ICON_PATH" ]; then echo "SetupIconFile=$ICON_PATH"; fi
-      if [ -n "$IMAGE_PATH" ]; then echo "WizardImageFile=$IMAGE_PATH"; fi
-      if [ -n "$LICENSE_PATH" ]; then echo "LicenseFile=$LICENSE_PATH"; fi
+      if [ "$UPGRADE_CODE" != "PUT-GUID-HERE" ]; then printf '%s\n' "AppId=$UPGRADE_CODE"; fi
+      if [ -n "$ICON_PATH" ]; then printf '%s\n' "SetupIconFile=$ICON_PATH"; fi
+      if [ -n "$IMAGE_PATH" ]; then printf '%s\n' "WizardImageFile=$IMAGE_PATH"; fi
+      if [ -n "$LICENSE_PATH" ]; then printf '%s\n' "LicenseFile=$LICENSE_PATH"; fi
 
       deps_list=""
       if [ $# -gt 0 ]; then
@@ -59,26 +65,26 @@ EOF2
       fi
 
       if [ "$OFFLINE" = "1" ]; then
-        echo ""
-        echo "[Files]"
-        echo "Source: \"$LIBSCRIPT_ROOT_DIR\\*\"; DestDir: \"{app}\"; Flags: ignoreversion recursesubdirs createallsubdirs"
+        printf '%s\n' ""
+        printf '%s\n' "[Files]"
+        printf '%s\n' "Source: \"$LIBSCRIPT_ROOT_DIR\\*\"; DestDir: \"{app}\"; Flags: ignoreversion recursesubdirs createallsubdirs"
       fi
 
-      echo ""
-      echo "[Types]"
-      echo "Name: \"custom\"; Description: \"Custom installation\"; Flags: iscustom"
-      echo "Name: \"full\"; Description: \"Full installation\""
-      echo ""
-      echo "[Components]"
+      printf '%s\n' ""
+      printf '%s\n' "[Types]"
+      printf '%s\n' "Name: \"custom\"; Description: \"Custom installation\"; Flags: iscustom"
+      printf '%s\n' "Name: \"full\"; Description: \"Full installation\""
+      printf '%s\n' ""
+      printf '%s\n' "[Components]"
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
-        echo "Name: \"$pkg\"; Description: \"$pkg\"; Types: full custom"
+        printf '%s\n' "Name: \"$pkg\"; Description: \"$pkg\"; Types: full custom"
       done
 
-      echo ""
-      echo "[Code]"
-      echo "var"
+      printf '%s\n' ""
+      printf '%s\n' "[Code]"
+      printf '%s\n' "var"
 
       set -- $deps_list
       while [ $# -gt 0 ]; do
@@ -87,37 +93,37 @@ EOF2
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
           if [ -n "$vars_json" ]; then
-            echo "  Page_$pkg: TInputQueryWizardPage;"
-            echo "$vars_json" | jq -r '.key' | while read -r varname; do
-              echo "  Var_${pkg}_${varname}: String;"
+            printf '%s\n' "  Page_$pkg: TInputQueryWizardPage;"
+            printf '%s\n' "$vars_json" | jq -r '.key' | while read -r varname; do
+              printf '%s\n' "  Var_${pkg}_${varname}: String;"
             done
           fi
         fi
       done
 
-      echo "procedure InitializeWizard;"
-      echo "begin"
-      echo "  ActionPage := CreateInputOptionPage(wpSelectComponents, 'Action', 'What would you like to produce?', 'Please select an action to perform with the selected components.', True, False);"
-      echo "  ActionPage.Add('Install locally now');"
-      echo "  ActionPage.Add('Dockerfile');"
-      echo "  ActionPage.Add('Dockerfiles + docker-compose');"
-      echo "  ActionPage.Add('.msi installer');"
-      echo "  ActionPage.Add('.exe (InnoSetup)');"
-      echo "  ActionPage.Add('.exe (NSIS)');"
-      echo "  ActionPage.Add('.pkg installer');"
-      echo "  ActionPage.Add('.dmg installer');"
-      echo "  ActionPage.Add('.deb package');"
-      echo "  ActionPage.Add('.rpm package');"
-      echo "  ActionPage.Values[0] := True;"
-      echo "  OfflinePage := CreateInputOptionPage(ActionPage.ID, 'Options & OS Targets', 'Select offline mode and Target OS', '', False, True);"
-      echo "  OfflinePage.Add('Enable --offline mode');"
-      echo "  OfflinePage.Add('Target: Windows');"
-      echo "  OfflinePage.Add('Target: DOS');"
-      echo "  OfflinePage.Add('Target: Linux');"
-      echo "  OfflinePage.Add('Target: macOS');"
-      echo "  OfflinePage.Add('Target: BSD');"
-      echo "  OfflinePage.Values[1] := True;"
-      echo "  OfflinePage.Values[3] := True;"
+      printf '%s\n' "procedure InitializeWizard;"
+      printf '%s\n' "begin"
+      printf '%s\n' "  ActionPage := CreateInputOptionPage(wpSelectComponents, 'Action', 'What would you like to produce?', 'Please select an action to perform with the selected components.', True, False);"
+      printf '%s\n' "  ActionPage.Add('Install locally now');"
+      printf '%s\n' "  ActionPage.Add('Dockerfile');"
+      printf '%s\n' "  ActionPage.Add('Dockerfiles + docker-compose');"
+      printf '%s\n' "  ActionPage.Add('.msi installer');"
+      printf '%s\n' "  ActionPage.Add('.exe (InnoSetup)');"
+      printf '%s\n' "  ActionPage.Add('.exe (NSIS)');"
+      printf '%s\n' "  ActionPage.Add('.pkg installer');"
+      printf '%s\n' "  ActionPage.Add('.dmg installer');"
+      printf '%s\n' "  ActionPage.Add('.deb package');"
+      printf '%s\n' "  ActionPage.Add('.rpm package');"
+      printf '%s\n' "  ActionPage.Values[0] := True;"
+      printf '%s\n' "  OfflinePage := CreateInputOptionPage(ActionPage.ID, 'Options & OS Targets', 'Select offline mode and Target OS', '', False, True);"
+      printf '%s\n' "  OfflinePage.Add('Enable --offline mode');"
+      printf '%s\n' "  OfflinePage.Add('Target: Windows');"
+      printf '%s\n' "  OfflinePage.Add('Target: DOS');"
+      printf '%s\n' "  OfflinePage.Add('Target: Linux');"
+      printf '%s\n' "  OfflinePage.Add('Target: macOS');"
+      printf '%s\n' "  OfflinePage.Add('Target: BSD');"
+      printf '%s\n' "  OfflinePage.Values[1] := True;"
+      printf '%s\n' "  OfflinePage.Values[3] := True;"
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
@@ -125,46 +131,46 @@ EOF2
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
           if [ -n "$vars_json" ]; then
-            echo "  Page_$pkg := CreateInputQueryPage(wpSelectComponents, 'Configuration for $pkg', 'Please specify settings', '');"
+            printf '%s\n' "  Page_$pkg := CreateInputQueryPage(wpSelectComponents, 'Configuration for $pkg', 'Please specify settings', '');"
             var_idx=0
-            echo "$vars_json" | while read -r item; do
-              desc=$(echo "$item" | jq -r '.desc')
-              defval=$(echo "$item" | jq -r '.def')
-              varname=$(echo "$item" | jq -r '.key')
+            printf '%s\n' "$vars_json" | while read -r item; do
+              desc=$(printf '%s\n' "$item" | jq -r '.desc')
+              defval=$(printf '%s\n' "$item" | jq -r '.def')
+              varname=$(printf '%s\n' "$item" | jq -r '.key')
               if case "$varname" in *"_PASSWORD"*) true;; *) false;; esac; then
-                echo "  Page_$pkg.Add('$desc:', True);"
+                printf '%s\n' "  Page_$pkg.Add('$desc:', True);"
               else
-                echo "  Page_$pkg.Add('$desc:', False);"
+                printf '%s\n' "  Page_$pkg.Add('$desc:', False);"
               fi
-              echo "  Page_$pkg.Values[$var_idx] := '$defval';"
+              printf '%s\n' "  Page_$pkg.Values[$var_idx] := '$defval';"
               var_idx=$((var_idx + 1))
             done
           fi
         fi
       done
-      echo "end;"
+      printf '%s\n' "end;"
 
-      echo "function ShouldSkipPage(PageID: Integer): Boolean;"
-      echo "begin"
-      echo "  Result := False;"
+      printf '%s\n' "function ShouldSkipPage(PageID: Integer): Boolean;"
+      printf '%s\n' "begin"
+      printf '%s\n' "  Result := False;"
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
           if [ -n "$(jq -c '.properties' "$schema_file")" ]; then
-            echo "  if (PageID = Page_$pkg.ID) and not IsComponentSelected('$pkg') then"
-            echo "    Result := True;"
+            printf '%s\n' "  if (PageID = Page_$pkg.ID) and not IsComponentSelected('$pkg') then"
+            printf '%s\n' "    Result := True;"
           fi
         fi
       done
-      echo "end;"
+      printf '%s\n' "end;"
 
-      echo "function NextButtonClick(PageId: Integer): Boolean;"
-      echo "var"
-      echo "  ResultCode: Integer;"
-      echo "begin"
-      echo "  Result := True;"
+      printf '%s\n' "function NextButtonClick(PageId: Integer): Boolean;"
+      printf '%s\n' "var"
+      printf '%s\n' "  ResultCode: Integer;"
+      printf '%s\n' "begin"
+      printf '%s\n' "  Result := True;"
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
@@ -172,55 +178,55 @@ EOF2
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
           if [ -n "$vars_json" ]; then
-            echo "  if PageId = Page_$pkg.ID then begin"
+            printf '%s\n' "  if PageId = Page_$pkg.ID then begin"
             var_idx=0
             for varname in $vars_json; do
               if case "$varname" in *"_PORT"* | *"_PORT_SECURE"*) true;; *) false;; esac; then
-                echo "    if (Page_$pkg.Values[$var_idx] <> '') then begin"
-                echo "      if Exec('cmd.exe', '/c netstat -an | findstr /R /C:"":'' + Page_$pkg.Values[$var_idx] + '' .*LISTENING""', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin"
-                echo "        if ResultCode = 0 then begin"
-                echo "          MsgBox('Port ' + Page_$pkg.Values[$var_idx] + ' is already in use. Please select a different port.', mbError, MB_OK);"
-                echo "          Result := False;"
-                echo "          Exit;"
-                echo "        end;"
-                echo "      end;"
-                echo "    end;"
+                printf '%s\n' "    if (Page_$pkg.Values[$var_idx] <> '') then begin"
+                printf '%s\n' "      if Exec('cmd.exe', '/c netstat -an | findstr /R /C:"":'' + Page_$pkg.Values[$var_idx] + '' .*LISTENING""', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin"
+                printf '%s\n' "        if ResultCode = 0 then begin"
+                printf '%s\n' "          MsgBox('Port ' + Page_$pkg.Values[$var_idx] + ' is already in use. Please select a different port.', mbError, MB_OK);"
+                printf '%s\n' "          Result := False;"
+                printf '%s\n' "          Exit;"
+                printf '%s\n' "        end;"
+                printf '%s\n' "      end;"
+                printf '%s\n' "    end;"
               fi
               var_idx=$((var_idx + 1))
             done
-            echo "  end;"
+            printf '%s\n' "  end;"
           fi
         fi
       done
-      echo "end;"
+      printf '%s\n' "end;"
 
       # Uninstallation Hooks
-      echo "procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);"
-      echo "var"
-      echo "  ResultCode: Integer;"
-      echo "begin"
-      echo "  if CurUninstallStep = usUninstall then begin"
+      printf '%s\n' "procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);"
+      printf '%s\n' "var"
+      printf '%s\n' "  ResultCode: Integer;"
+      printf '%s\n' "begin"
+      printf '%s\n' "  if CurUninstallStep = usUninstall then begin"
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
-        echo "    if MsgBox('Do you want to completely remove the Data Directory and all records for $pkg?', mbConfirmation, MB_YESNO) = idYes then begin"
+        printf '%s\n' "    if MsgBox('Do you want to completely remove the Data Directory and all records for $pkg?', mbConfirmation, MB_YESNO) = idYes then begin"
         if [ "$OFFLINE" = "1" ]; then
-          echo "      Exec('cmd.exe', '/c \"\"{app}\\libscript.cmd\"\" uninstall $pkg --purge-data --service-name ' + Get_${pkg}_$(echo "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME(''), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);"
+          printf '%s\n' "      Exec('cmd.exe', '/c \"\"{app}\\libscript.cmd\"\" uninstall $pkg --purge-data --service-name ' + Get_${pkg}_$(printf '%s\n' "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME(''), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);"
         else
-          echo "      Exec('cmd.exe', '/c libscript.cmd uninstall $pkg --purge-data --service-name ' + Get_${pkg}_$(echo "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME(''), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);"
+          printf '%s\n' "      Exec('cmd.exe', '/c libscript.cmd uninstall $pkg --purge-data --service-name ' + Get_${pkg}_$(printf '%s\n' "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME(''), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);"
         fi
-        echo "    end else begin"
+        printf '%s\n' "    end else begin"
         if [ "$OFFLINE" = "1" ]; then
-          echo "      Exec('cmd.exe', '/c \"\"{app}\\libscript.cmd\"\" uninstall $pkg --service-name ' + Get_${pkg}_$(echo "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME(''), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);"
+          printf '%s\n' "      Exec('cmd.exe', '/c \"\"{app}\\libscript.cmd\"\" uninstall $pkg --service-name ' + Get_${pkg}_$(printf '%s\n' "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME(''), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);"
         else
-          echo "      Exec('cmd.exe', '/c libscript.cmd uninstall $pkg --service-name ' + Get_${pkg}_$(echo "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME(''), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);"
+          printf '%s\n' "      Exec('cmd.exe', '/c libscript.cmd uninstall $pkg --service-name ' + Get_${pkg}_$(printf '%s\n' "$pkg" | tr \"a-z\" \"A-Z\")_SERVICE_NAME(''), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);"
         fi
-        echo "    end;"
+        printf '%s\n' "    end;"
       done
-      echo "  end;"
-      echo "end;"
-      echo "  ActionPage: TInputOptionWizardPage;"
-      echo "  OfflinePage: TInputOptionWizardPage;"
+      printf '%s\n' "  end;"
+      printf '%s\n' "end;"
+      printf '%s\n' "  ActionPage: TInputOptionWizardPage;"
+      printf '%s\n' "  OfflinePage: TInputOptionWizardPage;"
 
       set -- $deps_list
       while [ $# -gt 0 ]; do
@@ -231,62 +237,62 @@ EOF2
           if [ -n "$vars_json" ]; then
             var_idx=0
             for varname in $vars_json; do
-              echo "function Get_${pkg}_${varname}(Param: String): String;"
-              echo "begin"
-              echo "  Result := Page_$pkg.Values[$var_idx];"
-              echo "end;"
+              printf '%s\n' "function Get_${pkg}_${varname}(Param: String): String;"
+              printf '%s\n' "begin"
+              printf '%s\n' "  Result := Page_$pkg.Values[$var_idx];"
+              printf '%s\n' "end;"
               var_idx=$((var_idx + 1))
             done
           fi
         fi
       done
 
-      echo ""
-      echo "function GetAction(Param: String): String;"
-      echo "begin"
-      echo "  if ActionPage.Values[1] then Result := 'docker'"
-      echo "  else if ActionPage.Values[2] then Result := 'docker_compose'"
-      echo "  else if ActionPage.Values[3] then Result := 'msi'"
-      echo "  else if ActionPage.Values[4] then Result := 'innosetup'"
-      echo "  else if ActionPage.Values[5] then Result := 'nsis'"
-      echo "  else if ActionPage.Values[6] then Result := 'pkg'"
-      echo "  else if ActionPage.Values[7] then Result := 'dmg'"
-      echo "  else if ActionPage.Values[8] then Result := 'deb'"
-      echo "  else if ActionPage.Values[9] then Result := 'rpm'"
-      echo "  else Result := 'install';"
-      echo "end;"
-      echo "function GetExtraArgs(Param: String): String;"
-      echo "var S: String;"
-      echo "begin"
-      echo "  S := '';"
-      echo "  if OfflinePage.Values[0] then S := S + ' --offline';"
-      echo "  if OfflinePage.Values[1] then S := S + ' --os-windows';"
-      echo "  if OfflinePage.Values[2] then S := S + ' --os-dos';"
-      echo "  if OfflinePage.Values[3] then S := S + ' --os-linux';"
-      echo "  if OfflinePage.Values[4] then S := S + ' --os-macos';"
-      echo "  if OfflinePage.Values[5] then S := S + ' --os-bsd';"
-      echo "  Result := S;"
-      echo "end;"
-      echo "function IsInstall: Boolean;"
-      echo "begin Result := ActionPage.Values[0]; end;"
-      echo "function IsGenerate: Boolean;"
-      echo "begin Result := not ActionPage.Values[0]; end;"
-      echo "function GetGenerateParams(Param: String): String;"
-      echo "var S: String;"
-      echo "begin"
-      echo "  if '{app}' <> '' then"
-      echo "    S := '/c \"\"\"{app}\\libscript.cmd\"\"\" package_as ' + GetAction('') + ' ';";
-      echo "  else";
-      echo "    S := '/c libscript.cmd package_as ' + GetAction('') + ' ';";
+      printf '%s\n' ""
+      printf '%s\n' "function GetAction(Param: String): String;"
+      printf '%s\n' "begin"
+      printf '%s\n' "  if ActionPage.Values[1] then Result := 'docker'"
+      printf '%s\n' "  else if ActionPage.Values[2] then Result := 'docker_compose'"
+      printf '%s\n' "  else if ActionPage.Values[3] then Result := 'msi'"
+      printf '%s\n' "  else if ActionPage.Values[4] then Result := 'innosetup'"
+      printf '%s\n' "  else if ActionPage.Values[5] then Result := 'nsis'"
+      printf '%s\n' "  else if ActionPage.Values[6] then Result := 'pkg'"
+      printf '%s\n' "  else if ActionPage.Values[7] then Result := 'dmg'"
+      printf '%s\n' "  else if ActionPage.Values[8] then Result := 'deb'"
+      printf '%s\n' "  else if ActionPage.Values[9] then Result := 'rpm'"
+      printf '%s\n' "  else Result := 'install';"
+      printf '%s\n' "end;"
+      printf '%s\n' "function GetExtraArgs(Param: String): String;"
+      printf '%s\n' "var S: String;"
+      printf '%s\n' "begin"
+      printf '%s\n' "  S := '';"
+      printf '%s\n' "  if OfflinePage.Values[0] then S := S + ' --offline';"
+      printf '%s\n' "  if OfflinePage.Values[1] then S := S + ' --os-windows';"
+      printf '%s\n' "  if OfflinePage.Values[2] then S := S + ' --os-dos';"
+      printf '%s\n' "  if OfflinePage.Values[3] then S := S + ' --os-linux';"
+      printf '%s\n' "  if OfflinePage.Values[4] then S := S + ' --os-macos';"
+      printf '%s\n' "  if OfflinePage.Values[5] then S := S + ' --os-bsd';"
+      printf '%s\n' "  Result := S;"
+      printf '%s\n' "end;"
+      printf '%s\n' "function IsInstall: Boolean;"
+      printf '%s\n' "begin Result := ActionPage.Values[0]; end;"
+      printf '%s\n' "function IsGenerate: Boolean;"
+      printf '%s\n' "begin Result := not ActionPage.Values[0]; end;"
+      printf '%s\n' "function GetGenerateParams(Param: String): String;"
+      printf '%s\n' "var S: String;"
+      printf '%s\n' "begin"
+      printf '%s\n' "  if '{app}' <> '' then"
+      printf '%s\n' "    S := '/c \"\"\"{app}\\libscript.cmd\"\"\" package_as ' + GetAction('') + ' ';";
+      printf '%s\n' "  else";
+      printf '%s\n' "    S := '/c libscript.cmd package_as ' + GetAction('') + ' ';";
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
-        echo "  if IsComponentSelected('$pkg') then S := S + '$pkg $ver ';";
+        printf '%s\n' "  if IsComponentSelected('$pkg') then S := S + '$pkg $ver ';";
       done
-      echo "  S := S + GetExtraArgs('');"
-      echo "  Result := S;"
-      echo "end;"
-      echo "[Run]"
+      printf '%s\n' "  S := S + GetExtraArgs('');"
+      printf '%s\n' "  Result := S;"
+      printf '%s\n' "end;"
+      printf '%s\n' "[Run]"
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
@@ -299,15 +305,15 @@ EOF2
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
           if [ -n "$vars_json" ]; then
-            append_params=$(echo "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"{code:Get_%s_%s}\"", $1, pkg, $1}')
+            append_params=$(printf '%s\n' "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"{code:Get_%s_%s}\"", $1, pkg, $1}')
             run_params="$run_params$append_params"
           fi
         fi
-        echo "Filename: \"cmd.exe\"; Parameters: \"$run_params\"; Components: $pkg; Flags: runhidden; Check: IsInstall"
+        printf '%s\n' "Filename: \"cmd.exe\"; Parameters: \"$run_params\"; Components: $pkg; Flags: runhidden; Check: IsInstall"
       done
       if [ "$OFFLINE" = "1" ]; then
-        echo "Filename: \"cmd.exe\"; Parameters: \"{code:GetGenerateParams}\"; WorkingDir: \"{app}\"; Flags: runhidden; Check: IsGenerate"
+        printf '%s\n' "Filename: \"cmd.exe\"; Parameters: \"{code:GetGenerateParams}\"; WorkingDir: \"{app}\"; Flags: runhidden; Check: IsGenerate"
       else
-        echo "Filename: \"cmd.exe\"; Parameters: \"{code:GetGenerateParams}\"; Flags: runhidden; Check: IsGenerate"
+        printf '%s\n' "Filename: \"cmd.exe\"; Parameters: \"{code:GetGenerateParams}\"; Flags: runhidden; Check: IsGenerate"
       fi
       exit 0

@@ -1,4 +1,12 @@
 @echo off
+:: # generate_markdown_docs.cmd
+::
+:: ## Overview
+:: Generates markdown documentation for the libscript codebase.
+:: 
+:: ## Usage
+:: Execute this script to rebuild the markdown documentation.
+
 setlocal EnableDelayedExpansion
 
 set "SCRIPT_DIR=%~dp0"

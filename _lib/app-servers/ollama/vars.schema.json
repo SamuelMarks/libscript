@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Ollama variables",
+  "description": "Variables for Ollama",
   "type": "object",
   "properties": {}
 }

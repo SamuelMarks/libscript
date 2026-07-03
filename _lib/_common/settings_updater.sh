@@ -1,4 +1,13 @@
 #!/bin/sh
+# ## Overview
+# Provides utilities for emitting configuration or environment settings.
+# The `lang_export` function formats key-value assignments for diverse
+# targets including shell scripts, Windows batch (`cmd`), and SQLite databases.
+# 
+# ## Usage
+# Source this file and call `lang_export <lang> <key> <val>` to generate
+# syntax-appropriate variable assignments.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +31,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 lang_export() {
   language="${1}"
   var_name="${2}"

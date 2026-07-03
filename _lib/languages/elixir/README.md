@@ -99,7 +99,7 @@ running the setup script.
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
 | `ELIXIR_VERSION` | Specific version of elixir to install. Can be a numeric version or an alias. | `latest` | latest, stable |
-| `ELIXIR_INSTALL_METHOD` | How to install ELIXIR. 'system' uses the native OS package manager, 'source' compiles/downloads binaries. | `system` |  |
+| `ELIXIR_INSTALL_METHOD` | How to install ELIXIR. 'system' uses the native OS package manager, 'libscript-native' downloads binaries natively. | `libscript-native` |  |
 <!-- END_VARS -->
 
 ## Architecture

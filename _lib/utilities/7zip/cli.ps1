@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component '7zip' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for 7zip.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "7zip"

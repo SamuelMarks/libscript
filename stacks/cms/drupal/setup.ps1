@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the Drupal CMS stack.
+
+.DESCRIPTION
+Execute this script to install and configure drupal on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $DrupalVersion = if ($env:DRUPAL_VERSION) { $env:DRUPAL_VERSION } else { "10.2.6" }

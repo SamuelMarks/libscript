@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'huggingface-cli' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for huggingface-cli.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "huggingface_hub"

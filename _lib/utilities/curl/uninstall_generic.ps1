@@ -1,2 +1,10 @@
+<#
+.SYNOPSIS
+Provides a generic, cross-platform uninstallation mechanism for the component 'curl' stack.
+
+.DESCRIPTION
+Execute this script to perform generic removal steps for curl.
+#>
+
 $ErrorActionPreference = "Stop"
 # Generic uninstall for PowerShell skipped

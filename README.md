@@ -33,6 +33,9 @@ is its own self-contained package manager.
 - **Zero Dependencies:** No agents. No runtimes. Just `/bin/sh`, `.cmd`, and `.ps1`.
 - **Native Execution:** Stop paying the "container tax." Deploy high-availability clusters directly
   on your host OS—whether it's a FreeBSD jail, a Windows server, or a Linux box.
+- **Native Version Management:** Drop `nvm`, `pyenv`, `rustup`, and `sdkman`. LibScript natively
+  downloads, isolates, and switches between multiple versions of your toolchains directly using the
+  exact same syntax everywhere.
 - **Built-in PaaS capabilities:** LibScript automatically generates `systemd`/`launchd` service
   files for your apps, handles Nginx reverse proxying, and automatically fetches Let's Encrypt TLS
   certs—all driven by a single `libscript.json`.

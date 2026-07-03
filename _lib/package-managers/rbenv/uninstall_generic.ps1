@@ -1,2 +1,10 @@
+<#
+.SYNOPSIS
+Provides a generic, cross-platform uninstallation mechanism for the component 'rbenv' stack.
+
+.DESCRIPTION
+Execute this script to perform generic removal steps for rbenv.
+#>
+
 $ErrorActionPreference = "Stop"
 # Generic uninstall for PowerShell skipped

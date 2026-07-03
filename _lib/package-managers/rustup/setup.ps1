@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'rustup' stack.
+
+.DESCRIPTION
+Execute this script to install and configure rustup on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (-Not (Get-Command rustup -ErrorAction SilentlyContinue)) {

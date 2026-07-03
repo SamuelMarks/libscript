@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'iis' stack.
+
+.DESCRIPTION
+Execute this script to install and configure iis on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 Write-Host "Installing IIS and required features..."

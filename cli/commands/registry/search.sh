@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Provides search functionality to query available packages or configurations.
+# 
+# ## Usage
+# Execute this script with search terms to find relevant resources.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,12 +28,12 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 if [ "$cmd" = "db-search" ]; then
   query="$1"
   DB_FILE="${LIBSCRIPT_ROOT_DIR:-$SCRIPT_DIR}/libscript.sqlite"
   if [ ! -f "$DB_FILE" ]; then
-    echo "Error: Database not found. Run update-db first." >&2
+    printf '%s\n' "Error: Database not found. Run update-db first." >&2
     exit 1
   fi
   sqlite3 -column -header "$DB_FILE" "

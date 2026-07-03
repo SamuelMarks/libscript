@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the WordPress CMS stack.
+
+.DESCRIPTION
+Execute this script to install and configure wordpress on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $WordpressVersion = if ($env:WORDPRESS_VERSION) { $env:WORDPRESS_VERSION } else { "latest" }

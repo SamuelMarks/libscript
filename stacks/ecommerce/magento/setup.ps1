@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the Magento e-commerce platform stack.
+
+.DESCRIPTION
+Execute this script to install and configure magento on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $MagentoVersion = if ($env:MAGENTO_VERSION) { $env:MAGENTO_VERSION } else { "2.4.6" }

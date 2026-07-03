@@ -1,4 +1,12 @@
 @echo off
+:: # update.cmd
+::
+:: ## Overview
+:: Updates the local package registry with the latest upstream information.
+:: 
+:: ## Usage
+:: Execute this script to refresh registry indices.
+
 setlocal EnableDelayedExpansion
 if exist "%SCRIPT_DIR%update_db.cmd" (
     call "%SCRIPT_DIR%update_db.cmd"

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'r' stack.
+
+.DESCRIPTION
+Execute this script to install and configure r on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (-Not (Get-Command R -ErrorAction SilentlyContinue)) {

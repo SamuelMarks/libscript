@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Lifecycle script for route.sh.
+#
+# ## Usage
+# Refer to the internal functions of route.sh for implementation details.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,14 +28,14 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 # Usage: ./libscript.sh route nginx <version> <domain> <location> <destination>
 DOMAIN="$1"
 LOCATION="$2"
 DESTINATION="$3"
 
 if [ -z "$DOMAIN" ] || [ -z "$LOCATION" ] || [ -z "$DESTINATION" ]; then
-  echo "Usage: ./libscript.sh route nginx <version> <domain> <location> <destination>" >&2
+  printf '%s\n' "Usage: ./libscript.sh route nginx <version> <domain> <location> <destination>" >&2
   exit 1
 fi
 
@@ -40,10 +46,10 @@ mkdir -p "$NGINX_CONF_DIR/sites-enabled"
 CONF_FILE="$NGINX_CONF_DIR/sites-available/${DOMAIN}.conf"
 
 if [ ! -f "$CONF_FILE" ]; then
-  echo "server {" > "$CONF_FILE"
-  echo "    listen 80;" >> "$CONF_FILE"
-  echo "    server_name $DOMAIN;" >> "$CONF_FILE"
-  echo "}" >> "$CONF_FILE"
+  printf '%s\n' "server {" > "$CONF_FILE"
+  printf '%s\n' "    listen 80;" >> "$CONF_FILE"
+  printf '%s\n' "    server_name $DOMAIN;" >> "$CONF_FILE"
+  printf '%s\n' "}" >> "$CONF_FILE"
 fi
 
 # Very simple proxy_pass injection for demo purposes

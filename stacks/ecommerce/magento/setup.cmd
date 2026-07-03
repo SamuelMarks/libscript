@@ -1,4 +1,12 @@
 @echo off
+:: # setup.cmd
+::
+:: ## Overview
+:: Orchestrates the setup and installation process for the Magento e-commerce platform stack.
+:: 
+:: ## Usage
+:: Execute this script to install and configure magento on the local system.
+
 setlocal EnableDelayedExpansion
 
 :: Fallback to running PowerShell for Windows provisioning

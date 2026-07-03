@@ -1,4 +1,11 @@
 #!/bin/sh
+# ## Overview
+# Implements the `gcp` cloud provider CLI, managing GCP networks, compute instances, and resources.
+#
+# ## Usage
+# Provides commands like `network`, `node`, `jumpbox`, `cleanup`, and ensures `google-cloud-sdk` and `jq` are installed.
+# Sub-commands manage resource lifecycles wrapping the native `gcloud` command.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,13 +29,13 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 TAG_KEY="managed-by"
 TAG_VAL="libscript"
 DEFAULT_LABELS="$TAG_KEY=$TAG_VAL"
 
-# Parse labels from arguments
-# Returns a comma-separated list of Key=V
+# Parses labels from arguments and handles default labeling logic.
+# Returns a comma-separated list of Key=V strings
 parse_labels() {
   USE_DEFAULT=true
   CUSTOM_LABELS=""
@@ -53,7 +60,7 @@ parse_labels() {
   printf '%s' "$FINAL_LABELS"
 }
 
-# Dry run helper
+# Dry run helper wrapper for gcloud command.
 gcloud() {
   if [ "${DRY_RUN:-}" = "true" ]; then
     printf '[DRY_RUN] gcloud %s\n' "$*" >&2
@@ -65,26 +72,27 @@ gcloud() {
   command gcloud "$@"
 }
 
-# Ensure gcloud and jq are installed
+# Ensures required dependencies (gcloud, jq) are installed.
 check_deps() {
   if ! command -v gcloud >/dev/null 2>&1; then
-    echo "google-cloud-sdk not found, installing..."
+    printf '%s\n' "google-cloud-sdk not found, installing..."
     "$LIBSCRIPT_ROOT_DIR/libscript.sh" install google-cloud-sdk latest
   fi
   if ! command -v jq >/dev/null 2>&1; then
-    echo "jq not found, installing..."
+    printf '%s\n' "jq not found, installing..."
     "$LIBSCRIPT_ROOT_DIR/libscript.sh" install jq latest
   fi
 }
 
+# Manages GCP Virtual Networks (VPC).
 gcp_network() {
   ACTION=$1; shift
   case "$ACTION" in
     create)
-      NAME=$1; if [ -z "$NAME" ]; then echo "Usage: network create <name>"; exit 1; fi
+      NAME=$1; if [ -z "$NAME" ]; then printf '%s\n' "Usage: network create <name>"; exit 1; fi
       if ! gcloud compute networks describe "$NAME" >/dev/null 2>&1; then
         gcloud compute networks create "$NAME" --subnet-mode=auto
-        echo "Created Network '$NAME'"
+        printf '%s\n' "Created Network '$NAME'"
       fi
       ;;
     list)
@@ -93,35 +101,37 @@ gcp_network() {
     delete)
       NAME=$1; gcloud compute networks delete "$NAME" --quiet
       ;;
-    *) echo "Unknown network action: $ACTION"; exit 1 ;;
+    *) printf '%s\n' "Unknown network action: $ACTION"; exit 1 ;;
   esac
 }
 
+# Manages GCP Firewall Rules.
 gcp_firewall() {
   ACTION=$1; shift
   case "$ACTION" in
     create)
       NAME=$1; NETWORK=$2; PORT=${3:-22}
-      if [ -z "$NAME" ] || [ -z "$NETWORK" ]; then echo "Usage: firewall create <name> <network> [port]"; exit 1; fi
+      if [ -z "$NAME" ] || [ -z "$NETWORK" ]; then printf '%s\n' "Usage: firewall create <name> <network> [port]"; exit 1; fi
       if ! gcloud compute firewall-rules describe "$NAME" >/dev/null 2>&1; then
         gcloud compute firewall-rules create "$NAME" --network="$NETWORK" --allow="tcp:$PORT" --description="LibScript firewall"
-        echo "Created Firewall '$NAME' (Port $PORT open)"
+        printf '%s\n' "Created Firewall '$NAME' (Port $PORT open)"
       fi
       ;;
     list)
       gcloud compute firewall-rules list
       ;;
-    *) echo "Unknown firewall action: $ACTION"; exit 1 ;;
+    *) printf '%s\n' "Unknown firewall action: $ACTION"; exit 1 ;;
   esac
 }
 
+# Manages individual GCP Compute Instances.
 gcp_node() {
   ACTION=$1; shift
   case "$ACTION" in
     create)
       NAME=$1; FAMILY=$2; PROJECT=$3
       if [ -z "$NAME" ] || [ -z "$FAMILY" ] || [ -z "$PROJECT" ]; then 
-        echo "Usage: node create <name> <family> <project> [--bootstrap <script>] [--tags T] [--no-default-tags]"
+        printf '%s\n' "Usage: node create <name> <family> <project> [--bootstrap <script>] [--tags T] [--no-default-tags]"
         exit 1 
       fi
       
@@ -159,74 +169,78 @@ gcp_node() {
         else
           gcloud compute instances create "$NAME" --image-family="$FAMILY" --image-project="$PROJECT" $EXTRA_ARGS
         fi
-        echo "Created Instance '$NAME'"
+        printf '%s\n' "Created Instance '$NAME'"
         if [ -n "${USER_DATA_FILE:-}" ]; then rm -f "$USER_DATA_FILE"; fi
       fi
       ;;
     exec)
       NAME=$1; CMD=$2
-      if [ -z "$NAME" ] || [ -z "$CMD" ]; then echo "Usage: node exec <name> <command>"; exit 1; fi
-      echo "Executing on $NAME via gcloud ssh..."
+      if [ -z "$NAME" ] || [ -z "$CMD" ]; then printf '%s\n' "Usage: node exec <name> <command>"; exit 1; fi
+      printf '%s\n' "Executing on $NAME via gcloud ssh..."
       gcloud compute ssh "$NAME" --command "$CMD"
       ;;
     list)
       gcloud compute instances list
       ;;
-    *) echo "Unknown node action: $ACTION"; exit 1 ;;
+    *) printf '%s\n' "Unknown node action: $ACTION"; exit 1 ;;
   esac
 }
 
+# Manages groups of independent GCP Compute Instances.
 gcp_node_group() {
   ACTION=$1; shift
   case "$ACTION" in
     create)
       NAME=$1; COUNT=$2; FAMILY=$3; PROJECT=$4
-      if [ -z "$NAME" ] || [ -z "$COUNT" ]; then echo "Usage: node-group create <name> <count> <family> <project> [args...]"; exit 1; fi
+      if [ -z "$NAME" ] || [ -z "$COUNT" ]; then printf '%s\n' "Usage: node-group create <name> <count> <family> <project> [args...]"; exit 1; fi
       shift 4
-      echo "Provisioning GCP node-group '$NAME' ($COUNT independent nodes)..."
+      printf '%s\n' "Provisioning GCP node-group '$NAME' ($COUNT independent nodes)..."
       i=1
       while [ "$i" -le "$COUNT" ]; do
         gcp_node create "${NAME}-${i}" "$FAMILY" "$PROJECT" "$@"
         i=$((i + 1))
       done
       ;;
-    *) echo "Unknown node-group action: $ACTION"; exit 1 ;;
+    *) printf '%s\n' "Unknown node-group action: $ACTION"; exit 1 ;;
   esac
 }
 
+# Manages cron jobs directly on GCP Instances via gcloud ssh.
 gcp_cron() {
   ACTION=$1; shift
   case "$ACTION" in
     create)
       NAME=$1; SCHEDULE=$2; CMD=$3
-      if [ -z "$NAME" ] || [ -z "$SCHEDULE" ]; then echo "Usage: cron create <target_node> <schedule> <command>"; exit 1; fi
-      echo "Setting up cronjob on GCP instance $NAME: $SCHEDULE $CMD"
+      if [ -z "$NAME" ] || [ -z "$SCHEDULE" ]; then printf '%s\n' "Usage: cron create <target_node> <schedule> <command>"; exit 1; fi
+      printf '%s\n' "Setting up cronjob on GCP instance $NAME: $SCHEDULE $CMD"
       gcp_node exec "$NAME" "(crontab -l 2>/dev/null; printf '%s %s\n' \"$SCHEDULE\" \"$CMD\") | crontab -"
       ;;
-    *) echo "Unknown cron action: $ACTION"; exit 1 ;;
+    *) printf '%s\n' "Unknown cron action: $ACTION"; exit 1 ;;
   esac
 }
 
+# Provisions a complete Jumpbox environment (Network, Firewall, Instance) in GCP.
 gcp_jumpbox() {
   ACTION=$1; shift
   case "$ACTION" in
     create)
       NAME=$1; FAMILY=$2; PROJECT=$3; NET=${4:-libscript-net}
-      echo "Setting up GCP Jump-box '$NAME'..."
+      printf '%s\n' "Setting up GCP Jump-box '$NAME'..."
       gcp_network create "$NET" "$@"
       gcp_firewall create "${NAME}-ssh" "$NET" 22 "$@"
       gcp_node create "$NAME" "$FAMILY" "$PROJECT" "$@"
-      echo "GCP Jump-box '$NAME' ready."
+      printf '%s\n' "GCP Jump-box '$NAME' ready."
       ;;
-    *) echo "Unknown jumpbox action: $ACTION"; exit 1 ;;
+    *) printf '%s\n' "Unknown jumpbox action: $ACTION"; exit 1 ;;
   esac
 }
 
+# Manages Google Cloud Storage (GCS) Buckets.
 gcp_storage() {
   ACTION=$1; shift
   case "$ACTION" in
     create)
-      BUCKET=$1; if [ -z "$BUCKET" ]; then echo "Usage: storage create <bucket> [--tags T] [--no-default-tags]"; exit 1; fi
+      BUCKET=$1; if [ -z "$BUCKET" ]; then printf '%s\n' "Usage: storage create <bucket> [--tags T] [--no-default-tags]"; exit 1; fi
       
       LABELS=$(parse_labels "$@")
       
@@ -235,53 +249,55 @@ gcp_storage() {
         if [ -n "$LABELS" ]; then
           gcloud storage buckets update "gs://$BUCKET" --update-labels="$LABELS"
         fi
-        echo "Created Bucket '$BUCKET'"
+        printf '%s\n' "Created Bucket '$BUCKET'"
       fi
       ;;
     delete)
       BUCKET=$1; gcloud storage buckets delete "gs://$BUCKET" --quiet
       ;;
-    *) echo "Unknown storage action: $ACTION"; exit 1 ;;
+    *) printf '%s\n' "Unknown storage action: $ACTION"; exit 1 ;;
   esac
 }
 
+# Lists resources managed by LibScript in GCP based on labels.
 gcp_list_managed() {
   FILTER_LABEL=${1:-"$TAG_KEY=$TAG_VAL"}
-  echo "--- GCP Resources (Filter: $FILTER_LABEL) ---"
-  echo "Instances:"
+  printf '%s\n' "--- GCP Resources (Filter: $FILTER_LABEL) ---"
+  printf '%s\n' "Instances:"
   gcloud compute instances list --filter="labels.$FILTER_LABEL"
-  echo "Buckets:"
-  GCP_FILTER=$(echo "$FILTER_LABEL" | sed 's/=/: /')
+  printf '%s\n' "Buckets:"
+  GCP_FILTER=$(printf '%s\n' "$FILTER_LABEL" | sed 's/=/: /')
   gcloud storage buckets list --format="table(name, labels)" | grep "$GCP_FILTER" || true
 }
 
+# Cleans up GCP resources provisioned by LibScript based on labels.
 gcp_cleanup() {
   PURGE_BUCKETS=$1
   FILTER_LABEL=${2:-"$TAG_KEY=$TAG_VAL"}
   
-  echo "Starting GCP Cleanup (Filter: $FILTER_LABEL)..."
+  printf '%s\n' "Starting GCP Cleanup (Filter: $FILTER_LABEL)..."
   
   # Delete instances
   INSTANCES=$(gcloud compute instances list --filter="labels.$FILTER_LABEL" --format="value(name)")
   for INS in $INSTANCES; do
-    echo "Deleting instance $INS..."
+    printf '%s\n' "Deleting instance $INS..."
     gcloud compute instances delete "$INS" --quiet || true
   done
   
   # Delete buckets
   if [ "$PURGE_BUCKETS" = "true" ]; then
-    GCP_FILTER=$(echo "$FILTER_LABEL" | sed 's/=/: /')
+    GCP_FILTER=$(printf '%s\n' "$FILTER_LABEL" | sed 's/=/: /')
     BUCKETS=$(gcloud storage buckets list --format="value(name)" | while read -r B; do
       if gcloud storage buckets describe "gs://$B" --format="value(labels)" 2>/dev/null | grep -q "$GCP_FILTER"; then
-        echo "$B"
+        printf '%s\n' "$B"
       fi
     done)
     for B in $BUCKETS; do
-      echo "Deleting bucket $B..."
+      printf '%s\n' "Deleting bucket $B..."
       gcloud storage buckets delete "gs://$B" --quiet || true
     done
   else
-    echo "Skipping GCP buckets (safety enabled)"
+    printf '%s\n' "Skipping GCP buckets (safety enabled)"
   fi
 }
 
@@ -299,8 +315,8 @@ case "$CMD" in
   cleanup) gcp_cleanup "$@" ;;
   install) check_deps ;;
   *)
-    echo "LibScript GCP Cloud Wrapper"
-    echo "Usage: $0 {network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
+    printf '%s\n' "LibScript GCP Cloud Wrapper"
+    printf '%s\n' "Usage: $0 {network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
     exit 1
     ;;
 esac

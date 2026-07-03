@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'java' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for java.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "java"

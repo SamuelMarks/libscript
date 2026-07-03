@@ -1,4 +1,12 @@
 #!/bin/sh
+# ## Overview
+# Provides fallback uninstallation logic for the AWS component on Unix.
+# It explicitly delegates to the common `uninstall_generic.sh` to indicate that
+# specific uninstall logic is unavailable via this path.
+# 
+# ## Usage
+# Called internally when an OS-specific uninstaller is missing.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +30,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR="${SCRIPT_DIR}"
 
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/uninstall_generic.sh"

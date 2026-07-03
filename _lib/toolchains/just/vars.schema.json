@@ -9,6 +9,12 @@
       "description": "Specific version of just to install. Can be a numeric version or an alias.",
       "type": "string",
       "default": "latest"
+    },
+    "JUST_INSTALL_METHOD": {
+      "description": "How to install JUST. 'system' uses the native OS package manager, 'libscript-native' downloads binaries natively.",
+      "type": "string",
+      "enum": ["system", "libscript-native", "mise", "asdf"],
+      "default": "libscript-native"
     }
   }
 }

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'python' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for python.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "python"

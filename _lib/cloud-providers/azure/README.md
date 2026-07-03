@@ -55,8 +55,8 @@ target provider. You can also invoke these primitives manually to orchestrate sh
 | `MODEL_NAME` | HuggingFace model string to serve | `your-org/your-model-name` |  |
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
-| `AZURE_RESOURCE_GROUP` |  | `none` |  |
-| `AZURE_LOCATION` |  | `eastus` |  |
+| `AZURE_RESOURCE_GROUP` | Azure Resource Group | `none` |  |
+| `AZURE_LOCATION` | Azure Location | `eastus` |  |
 <!-- END_VARS -->
 
 ## Platform Support

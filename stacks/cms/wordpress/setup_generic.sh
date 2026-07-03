@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Provides a generic, cross-platform setup mechanism for the WordPress CMS stack.
+# 
+# ## Usage
+# Execute this script to perform generic initialization steps for wordpress.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR="${SCRIPT_DIR}"
 
 for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh"; do
@@ -62,7 +68,7 @@ WORDPRESS_WWWROOT="${WORDPRESS_WWWROOT:-/var/www/wordpress}"
 export WORDPRESS_WWWROOT
 
 if [ ! -d "${WORDPRESS_WWWROOT}/wp-admin" ]; then
-  echo "Downloading WordPress (${WORDPRESS_VERSION}) to ${WORDPRESS_WWWROOT}..."
+  printf '%s\n' "Downloading WordPress (${WORDPRESS_VERSION}) to ${WORDPRESS_WWWROOT}..."
   priv mkdir -p "${WORDPRESS_WWWROOT}"
   if [ "${WORDPRESS_VERSION}" = "latest" ]; then
     dl_url="https://wordpress.org/latest.tar.gz"
@@ -85,7 +91,7 @@ DB_NAME="${WORDPRESS_DB_NAME:-wordpress}"
 DB_USER="${WORDPRESS_DB_USER:-wordpress}"
 DB_PASS="${WORDPRESS_DB_PASS:-wordpress}"
 
-echo "Configuring Database..."
+printf '%s\n' "Configuring Database..."
 if [ "${WORDPRESS_DB_ENGINE}" = "sqlite" ]; then
   libscript_depends 'unzip'
   # No DB service needed for SQLite
@@ -104,7 +110,7 @@ if [ "${WORDPRESS_DB_ENGINE}" = "sqlite" ]; then
     rm -f "${tmp_sqlite}"
     priv sed -i "s|{SQLITE_DB_DROPIN_VERSION}|1.0.0|" "${WORDPRESS_WWWROOT}/wp-content/db.php" || true
     priv sed -i "s|{SQLITE_PLUGIN}|sqlite-database-integration/load.php|" "${WORDPRESS_WWWROOT}/wp-content/db.php" || true
-    echo "SQLite database integration plugin installed."
+    printf '%s\n' "SQLite database integration plugin installed."
   fi
 elif [ "${WORDPRESS_DB_ENGINE}" = "postgres" ] || [ "${WORDPRESS_DB_ENGINE}" = "postgresql" ]; then
   libscript_depends 'unzip'
@@ -121,7 +127,7 @@ elif [ "${WORDPRESS_DB_ENGINE}" = "postgres" ] || [ "${WORDPRESS_DB_ENGINE}" = "
     priv mv "${WORDPRESS_WWWROOT}/wp-content/postgresql-for-wordpress/pg4wp" "${WORDPRESS_WWWROOT}/wp-content/"
     priv cp "${WORDPRESS_WWWROOT}/wp-content/pg4wp/db.php" "${WORDPRESS_WWWROOT}/wp-content/db.php"
     rm -f "${tmp_pg}"
-    echo "PostgreSQL drop-in installed."
+    printf '%s\n' "PostgreSQL drop-in installed."
   fi
   # Attempt to create PG database
   if command -v psql >/dev/null 2>&1; then
@@ -130,7 +136,7 @@ elif [ "${WORDPRESS_DB_ENGINE}" = "postgres" ] || [ "${WORDPRESS_DB_ENGINE}" = "
       priv -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname = '${DB_USER}'" | grep -q 1 || priv -u postgres psql -c "CREATE USER \"${DB_USER}\" WITH ENCRYPTED PASSWORD '${DB_PASS}';"
       priv -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE \"${DB_NAME}\" TO \"${DB_USER}\";"
     else
-      echo "Warning: PostgreSQL is not running or root login failed. Skipping automated DB setup."
+      printf '%s\n' "Warning: PostgreSQL is not running or root login failed. Skipping automated DB setup."
     fi
   fi
 else
@@ -142,7 +148,7 @@ else
       priv mysql -u root -e "GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';"
       priv mysql -u root -e "FLUSH PRIVILEGES;"
     else
-      echo "Warning: MariaDB/MySQL is not running or root login failed. Skipping automated DB setup."
+      printf '%s\n' "Warning: MariaDB/MySQL is not running or root login failed. Skipping automated DB setup."
     fi
   fi
 fi
@@ -179,7 +185,7 @@ fi
 WORDPRESS_SERVER_NAME="${WORDPRESS_SERVER_NAME:-localhost}"
 export WORDPRESS_SERVER_NAME
 
-echo "Configuring webserver: ${WORDPRESS_WEBSERVER}"
+printf '%s\n' "Configuring webserver: ${WORDPRESS_WEBSERVER}"
 
 # Create a temporary env file for webserver scripts
 ENV_SCRIPT_FILE=$(mktemp)
@@ -261,4 +267,4 @@ fi
 
 rm -f "${ENV_SCRIPT_FILE}"
 
-echo "WordPress setup complete on ${WORDPRESS_SERVER_NAME}"
+printf '%s\n' "WordPress setup complete on ${WORDPRESS_SERVER_NAME}"

@@ -1,4 +1,12 @@
 @echo off
+:: # cli.cmd
+::
+:: ## Overview
+:: Command-line interface entry point for TensorBoard on Windows.
+::
+:: ## Usage
+:: Run `libscript logging/tensorboard [args...]`. Starts the tensorboard service.
+
 setlocal EnableDelayedExpansion
 
 set "LOG_CMD=%~dp0..\..\..\_common\log.cmd"

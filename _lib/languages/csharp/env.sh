@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Environment initialization for C#.
+#
+# ## Usage
+# Sets `DOTNET_ROOT` and prepends it to PATH.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -21,7 +27,7 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
-#!/bin/sh
 
+CSHARP_VERSION="${CSHARP_VERSION:-latest}"
+export DOTNET_ROOT="${LIBSCRIPT_HOME:-$HOME/.libscript}/csharp/${CSHARP_VERSION}"
+export PATH="${DOTNET_ROOT}:${PATH}"

@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Handles the removal and uninstallation process for the Celery task queue stack.
+# 
+# ## Usage
+# Execute this script to remove celery and its associated configurations from the system.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 export LIBSCRIPT_ROOT_DIR
 
@@ -40,19 +46,11 @@ export PATH
 
 
 
-if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
-else
-  THIS_FILE="${0}"
-fi
-DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
 
 if [ -n "$INSTALLED_DIR" ] && [ -d "$INSTALLED_DIR" ]; then
-  echo "Removing $INSTALLED_DIR..."
+  printf '%s\n' "Removing $INSTALLED_DIR..."
   rm -rf "$INSTALLED_DIR"
 else
-  echo "No local installation directory found for $PACKAGE_NAME at $INSTALLED_DIR."
+  printf '%s\n' "No local installation directory found for $PACKAGE_NAME at $INSTALLED_DIR."
 fi
 # Add background service removal logic here if applicable

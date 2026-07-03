@@ -1,4 +1,12 @@
 @echo off
+:: # search.cmd
+::
+:: ## Overview
+:: Provides search functionality to query available packages or configurations.
+:: 
+:: ## Usage
+:: Execute this script with search terms to find relevant resources.
+
 setlocal EnableDelayedExpansion
 set "query=%~2"
 set "DB_FILE=!LIBSCRIPT_ROOT_DIR!\libscript.sqlite"

@@ -1,4 +1,12 @@
 @echo off
+:: # deploy.cmd
+::
+:: ## Overview
+:: Manages the deployment workflow for the GKE XPK machine learning training stack stack.
+:: 
+:: ## Usage
+:: Execute this script to deploy gke-xpk-training to the target environment.
+
 setlocal enabledelayedexpansion
 
 if "%~1"=="--help" goto :help

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the Celery task queue stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for celery.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "celery"

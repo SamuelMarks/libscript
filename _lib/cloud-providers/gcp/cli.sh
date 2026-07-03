@@ -1,4 +1,11 @@
 #!/bin/sh
+# ## Overview
+# Main CLI entry point for the GCP cloud provider component.
+# Loads the generic CLI implementation from component_core.sh.
+#
+# ## Usage
+# Delegates to `component_core.sh`. Invoke via `libscript.sh gcp`.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054

@@ -1,54 +1,139 @@
-$ErrorActionPreference = "Stop"
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'cmake' stack.
 
-$MinioVersion = $env:CMAKE_VERSION
-if ([string]::IsNullOrEmpty($MinioVersion)) {
-    $MinioVersion = "latest"
-}
+.DESCRIPTION
+Execute this script to install and configure cmake on the local system.
+#>
+
+#!/usr/bin/env pwsh
 
 $InstallMethod = $env:CMAKE_INSTALL_METHOD
 if ([string]::IsNullOrEmpty($InstallMethod)) {
-    $InstallMethod = $env:LIBSCRIPT_GLOBAL_INSTALL_METHOD
+    $InstallMethod = $env:LIBSCRIPT_DEFAULT_INSTALL_METHOD
 }
 if ([string]::IsNullOrEmpty($InstallMethod)) {
-    $InstallMethod = "source"
+    $InstallMethod = "libscript-native"
 }
 
-if ($InstallMethod -eq "system") {
-    $PkgMgr = $env:LIBSCRIPT_WINDOWS_PKG_MGR
-    if ([string]::IsNullOrEmpty($PkgMgr)) {
-        $PkgMgr = "winget"
-    }
-    if ($PkgMgr -eq "winget") {
-        winget install MinIO.MinIO
-    } elseif ($PkgMgr -eq "choco") {
-        choco install cmake
-    } else {
-        Write-Error "Unsupported Windows package manager: $PkgMgr"
-    }
-} else {
-    $Prefix = $env:PREFIX
-    if ([string]::IsNullOrEmpty($Prefix)) {
-        $LibscriptRootDir = if ([string]::IsNullOrEmpty($env:LIBSCRIPT_ROOT_DIR)) { "C:\libscript" } else { $env:LIBSCRIPT_ROOT_DIR }
-        $Prefix = "$LibscriptRootDir\installed\cmake"
-    }
+$Action = $env:ACTION
+if ([string]::IsNullOrEmpty($Action)) {
+    $Action = "install"
+}
 
+$CmakeVersion = $env:CMAKE_VERSION
+if ([string]::IsNullOrEmpty($CmakeVersion)) {
+    $CmakeVersion = "latest"
+}
+
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$LibscriptRootDir = (Get-Item $ScriptDir).Parent.Parent.Parent.FullName
+. (Join-Path $LibscriptRootDir "_lib\_common\versioning.ps1")
+
+function Resolve-ExactVersion {
     if ($CmakeVersion -eq "latest") {
-        $CmakeVersion = "3.31.2"
+        return "3.31.2"
     }
+    return $CmakeVersion
+}
 
-    $ZipName = "cmake-${CmakeVersion}-windows-x86_64"
-    $Url = "https://github.com/Kitware/CMake/releases/download/v${CmakeVersion}/${ZipName}.zip"
-    $ZipPath = "$env:TEMP\${ZipName}.zip"
+switch ($Action) {
+    "ls" {
+        if ($InstallMethod -eq "mise") {
+            mise ls cmake
+        } elseif ($InstallMethod -eq "asdf") {
+            Write-Host "asdf not supported natively on Windows"
+        } elseif ($InstallMethod -eq "system") {
+            cmake --version
+        } else {
+            $LibscriptHome = Get-LibscriptBaseDir
+            $CmakeDir = Join-Path $LibscriptHome "cmake"
+            if (Test-Path $CmakeDir) {
+                Get-ChildItem -Path $CmakeDir -Directory | Select-Object -ExpandProperty Name
+            }
+        }
+        break
+    }
+    "ls-remote" {
+        if ($InstallMethod -eq "mise") {
+            mise ls-remote cmake
+        } elseif ($InstallMethod -eq "asdf") {
+            Write-Host "asdf not supported natively on Windows"
+        } elseif ($InstallMethod -eq "system") {
+            Write-Host "System package manager does not support ls-remote directly here."
+        } else {
+            $Resp = Invoke-RestMethod -Uri "https://api.github.com/repos/Kitware/CMake/releases"
+            $Resp | ForEach-Object { $_.tag_name.Replace("v", "") } | Select-Object -First 100
+        }
+        break
+    }
+    "use" {
+        if ($InstallMethod -eq "mise") {
+            mise use "cmake@${CmakeVersion}"
+        } elseif ($InstallMethod -eq "asdf") {
+            Write-Host "asdf not supported natively on Windows"
+        } elseif ($InstallMethod -eq "system") {
+            Write-Host "Cannot 'use' specific version with system package manager."
+        } else {
+            $ExactVersion = Resolve-ExactVersion
+            Set-LibscriptAlias -Component "cmake" -AliasName $CmakeVersion -ExactVersion $ExactVersion
+        }
+        break
+    }
+    default {
+        # download and install
+        if ($InstallMethod -eq "system") {
+            $WinPkgMgr = $env:LIBSCRIPT_WINDOWS_PKG_MGR
+            if ([string]::IsNullOrEmpty($WinPkgMgr)) {
+                $WinPkgMgr = "winget"
+            }
+            if ($WinPkgMgr -eq "winget") {
+                winget install --silent --force --id=Kitware.CMake -e --accept-package-agreements --accept-source-agreements
+            } elseif ($WinPkgMgr -eq "choco") {
+                choco install -y cmake
+            }
+        } elseif ($InstallMethod -eq "mise") {
+            mise install "cmake@${CmakeVersion}"
+        } elseif ($InstallMethod -eq "asdf") {
+            Write-Host "asdf not supported natively on Windows"; exit 1
+        } else {
+            $ExactVersion = Resolve-ExactVersion
+            $CmakeDir = Get-LibscriptVersionDir -Component "cmake" -Version $ExactVersion
+            $CmakeExe = Join-Path $CmakeDir "bin\cmake.exe"
 
-    Write-Host "Downloading CMake from $Url ..."
-    Invoke-WebRequest -Uri $Url -OutFile $ZipPath -UseBasicParsing
+            if (Test-Path $CmakeExe) {
+                Set-LibscriptAlias -Component "cmake" -AliasName $CmakeVersion -ExactVersion $ExactVersion
+                return
+            }
 
-    Expand-Archive -Path $ZipPath -DestinationPath "$env:TEMP\" -Force
-    # Copy bin and share
-    Copy-Item -Path "$env:TEMP\${ZipName}\*" -Destination "$Prefix" -Recurse -Force
+            $Arch = "x86_64"
+            if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
+                $Arch = "arm64"
+            }
 
-    Remove-Item -Path $ZipPath -Force
-    Remove-Item -Path "$env:TEMP\${ZipName}" -Recurse -Force
+            $ZipName = "cmake-$ExactVersion-windows-$Arch.zip"
+            $DownloadUrl = "https://github.com/Kitware/CMake/releases/download/v$ExactVersion/$ZipName"
 
-    Write-Host "CMake installed to $Prefix"
+            if (-not (Test-Path $CmakeDir)) {
+                New-Item -ItemType Directory -Force -Path $CmakeDir | Out-Null
+            }
+
+            $TempZip = Join-Path [System.IO.Path]::GetTempPath() $ZipName
+            Write-Host "Downloading $DownloadUrl"
+            Invoke-WebRequest -Uri $DownloadUrl -OutFile $TempZip
+
+            Write-Host "Extracting $TempZip to $CmakeDir"
+            Expand-Archive -Path $TempZip -DestinationPath $CmakeDir -Force
+            # CMake zip extracts a folder named like the zip without .zip
+            $NestedDir = Join-Path $CmakeDir "cmake-$ExactVersion-windows-$Arch"
+            if (Test-Path $NestedDir) {
+                Move-Item -Path "$NestedDir\*" -Destination $CmakeDir -Force
+                Remove-Item -Recurse -Force $NestedDir
+            }
+            Remove-Item -Force $TempZip
+
+            Set-LibscriptAlias -Component "cmake" -AliasName $CmakeVersion -ExactVersion $ExactVersion
+        }
+        break
+    }
 }

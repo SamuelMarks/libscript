@@ -1,4 +1,12 @@
 @echo off
+:: # setup.cmd
+::
+:: ## Overview
+:: Orchestrates the setup and installation process for the GKE XPK inference stack stack.
+:: 
+:: ## Usage
+:: Execute this script to install and configure gke-xpk-inference on the local system.
+
 setlocal
 if "%~1"=="--help" (
     echo Usage: %~nx0

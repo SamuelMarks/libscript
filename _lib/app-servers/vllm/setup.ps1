@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'vllm' stack.
+
+.DESCRIPTION
+Execute this script to install and configure vllm on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $VllmVersion = $env:VLLM_VERSION

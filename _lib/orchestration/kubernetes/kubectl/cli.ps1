@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'kubectl' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for kubectl.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "kubectl"

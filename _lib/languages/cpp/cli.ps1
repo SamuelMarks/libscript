@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'cpp' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for cpp.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "cpp"

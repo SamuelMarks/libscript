@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Command-line interface entry point for TensorBoard.
+#
+# ## Usage
+# Provides a thin wrapper around the `tensorboard` executable. Run `libscript.sh logging/tensorboard start [logdir] [port]`.
+
 set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
@@ -31,8 +37,8 @@ for LIB in _lib/_common/pkg_mgr.sh _lib/_common/log.sh; do
 done
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  echo "Usage: $0 <action> [args...]"
-  echo "See README.md for details."
+  printf '%s\n' "Usage: $0 <action> [args...]"
+  printf '%s\n' "See README.md for details."
   exit 0
 fi
 

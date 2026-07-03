@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'kubernetes-k0s' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for kubernetes-k0s.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "kubernetes-k0s"

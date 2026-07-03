@@ -1,4 +1,12 @@
 @echo off
+:: # test.cmd
+::
+:: ## Overview
+:: Test suite for the Azure cloud provider on Windows.
+::
+:: ## Usage
+:: Automatically invoked by the test framework to validate Azure provisioning commands.
+
 setlocal EnableDelayedExpansion
 call "%~dp0\..\..\_common\test_base.cmd"
 

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'redis' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for redis.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "redis"

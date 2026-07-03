@@ -1,4 +1,14 @@
 @echo off
+:: # uninstall.cmd
+::
+:: ## Overview
+:: Serves as the primary Windows generic uninstall script for components.
+:: It processes arguments like `--purge-data`, stops and deletes associated
+:: Windows services, and aggressively removes component installation and data directories.
+:: 
+:: ## Usage
+:: Call this script to trigger the full uninstallation and cleanup process on Windows.
+
 setlocal EnableDelayedExpansion
 echo Running generic uninstaller for %PACKAGE_NAME%
 

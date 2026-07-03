@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the Odoo ERP system stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for odoo.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "odoo"

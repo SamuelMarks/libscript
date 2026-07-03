@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'powershell' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for powershell.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "powershell"

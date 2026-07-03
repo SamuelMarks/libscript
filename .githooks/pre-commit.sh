@@ -1,18 +1,45 @@
 #!/bin/sh
+# ## Overview
+# Handles operations related to the component '.githooks'.
+# 
+# ## Usage
+# Execute this script to perform actions for .githooks.
+
 set -e
+# shellcheck disable=SC2296,SC3028,SC3040,SC3054
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+  set -o pipefail
+elif [ "${ZSH_VERSION-}" ]; then
+  THIS_FILE="${(%):-%x}"
+  set -o pipefail
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # Ensure we run from the git repository root
 cd "$(git rev-parse --show-toplevel)"
 
-echo "Running pre-commit hooks..."
+printf '%s\n' "Running pre-commit hooks..."
 
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
 
 if [ -z "$STAGED_FILES" ]; then
-    echo "No files to check."
+    printf '%s\n' "No files to check."
 else
     # 1. Enforce line endings and indent
-    echo "Enforcing line endings and indent..."
+    printf '%s\n' "Enforcing line endings and indent..."
     # Set IFS to newline only to handle spaces in filenames
     OIFS="$IFS"
     IFS='
@@ -28,7 +55,7 @@ else
         if [ "$ext" = "cmd" ] || [ "$ext" = "bat" ]; then
             if command -v unix2dos >/dev/null 2>&1; then unix2dos -q "$file"; fi
         # Enforce LF for everything else typically
-        elif [ "$ext" = "sh" ] || [ "$ext" = "bash" ] || [ "$ext" = "zsh" ] || [ "$ext" = "conf" ] || [ "$ext" = "md" ] || [ "$ext" = "json" ] || [ "$ext" = "yml" ] || [ "$ext" = "yaml" ] || [ "$ext" = "py" ] || [ "$ext" = "ps1" ] || echo "$filename" | grep -q "Dockerfile" || [ "$filename" = ".gitignore" ] || [ "$filename" = ".gitattributes" ] || [ "$filename" = ".dockerignore" ] || [ "$filename" = ".editorconfig" ]; then
+        elif [ "$ext" = "sh" ] || [ "$ext" = "bash" ] || [ "$ext" = "zsh" ] || [ "$ext" = "conf" ] || [ "$ext" = "md" ] || [ "$ext" = "json" ] || [ "$ext" = "yml" ] || [ "$ext" = "yaml" ] || [ "$ext" = "py" ] || [ "$ext" = "ps1" ] || printf '%s\n' "$filename" | grep -q "Dockerfile" || [ "$filename" = ".gitignore" ] || [ "$filename" = ".gitattributes" ] || [ "$filename" = ".dockerignore" ] || [ "$filename" = ".editorconfig" ]; then
             if command -v dos2unix >/dev/null 2>&1; then dos2unix -q "$file"; fi
         fi
         
@@ -44,30 +71,30 @@ else
     IFS="$OIFS"
 
     # 2. Spellcheck
-    echo "Running spellcheck..."
+    printf '%s\n' "Running spellcheck..."
     if command -v npx >/dev/null 2>&1; then
         tmp_files=$(mktemp)
-        echo "$STAGED_FILES" | while IFS= read -r file; do
+        printf '%s\n' "$STAGED_FILES" | while IFS= read -r file; do
              if [ -f "$file" ]; then
                  printf "%s\0" "$file"
              fi
         done > "$tmp_files"
         
         if [ -s "$tmp_files" ]; then
-             xargs -0 npx cspell lint --no-progress --no-summary < "$tmp_files" || echo "Spellcheck found potential issues, but continuing..."
+             xargs -0 npx cspell lint --no-progress --no-summary < "$tmp_files" || printf '%s\n' "Spellcheck found potential issues, but continuing..."
         fi
         rm -f "$tmp_files"
     fi
 fi
 
 # 3. Shellcheck
-echo "Running shellcheck..."
+printf '%s\n' "Running shellcheck..."
 if git ls-files "*.sh" | grep -vE "node_modules|\.git|top\.sh|bottom\.sh|template_.*\.sh|netctl/lib/.*\.sh|libscript\.sh|patch_.*\.sh|fix_.*\.sh|update_.*\.sh|.*_gen\.sh|gen/.*|test_.*\.sh" >/dev/null 2>&1; then
   git ls-files "*.sh" | grep -vE "node_modules|\.git|top\.sh|bottom\.sh|template_.*\.sh|netctl/lib/.*\.sh|libscript\.sh|patch_.*\.sh|fix_.*\.sh|update_.*\.sh|.*_gen\.sh|gen/.*|test_.*\.sh" | xargs shellcheck -e SC2086,SC2317,SC2148,SC1090,SC1091,SC3043,SC3040,SC3025,SC2129,SC2016,SC3054,SC2296,SC2209,SC2154,SC2221,SC2222,SC2034,SC2038,SC1009,SC1083,SC1073,SC1072,SC1089,SC2018,SC2019,SC1003,SC1047,SC1046,SC1035,SC2295,SC2251,SC3059,SC2081,SC3010,SC2054
 fi
 
 # 4. Regenerate Markdown Readmes
-echo "Regenerating markdown readme files interpolating the json..."
+printf '%s\n' "Regenerating markdown readme files interpolating the json..."
 if [ -x "devtools/docs-gen/generate_markdown_docs.sh" ]; then
     ./devtools/docs-gen/generate_markdown_docs.sh
     # Re-add any modified README.md files
@@ -75,13 +102,13 @@ if [ -x "devtools/docs-gen/generate_markdown_docs.sh" ]; then
 fi
 
 # 5. Existing CI matrix logic
-echo "Updating CI matrix components list..."
+printf '%s\n' "Updating CI matrix components list..."
 components=$(find _lib stacks -type f \( -name "test.sh" -o -name "test.cmd" \) | xargs -n1 dirname | sort | uniq | grep -v "_lib/_common" | grep -v "_lib/message-brokers") || true
 
 if [ -n "$components" ]; then
-  echo "        component:" >new_components.txt
+  printf '%s\n' "        component:" >new_components.txt
   for comp in $components; do
-    echo "          - \"$comp\"" >>new_components.txt
+    printf '%s\n' "          - \"$comp\"" >>new_components.txt
   done
   awk '/^\s*exclude:/ {exit} {print}' .github/workflows/ci.yml >ci_top.yml
   awk '/^\s*component:/ {exit} {print}' ci_top.yml >ci_top_clean.yml
@@ -90,7 +117,7 @@ if [ -n "$components" ]; then
   rm -f ci_top* new_components.txt ci_bottom.yml
 fi
 
-echo "Updating CI Checks Matrix in README.md..."
+printf '%s\n' "Updating CI Checks Matrix in README.md..."
 cat <<'TABLE' >ci_results.tmp
 ## CI Checks Matrix
 
@@ -100,23 +127,23 @@ cat <<'TABLE' >ci_results.tmp
 |---|---|---|---|
 TABLE
 
-echo "Fetching live CI matrix status from GitHub..."
-run_id=$(curl -s "https://api.github.com/repos/SamuelMarks/libscript/actions/runs?branch=master&event=push&status=completed&per_page=1" | jq -r '.workflow_runs[0].id' 2>/dev/null || echo "null")
+printf '%s\n' "Fetching live CI matrix status from GitHub..."
+run_id=$(curl -s "https://api.github.com/repos/SamuelMarks/libscript/actions/runs?branch=master&event=push&status=completed&per_page=1" | jq -r '.workflow_runs[0].id' 2>/dev/null || printf '%s\n' "null")
 rm -f jobs_status.tmp
 if [ "$run_id" != "null" ] && [ -n "$run_id" ]; then
-  echo "Found latest run ID: $run_id"
+  printf '%s\n' "Found latest run ID: $run_id"
   page=1
   while :; do
     response=$(curl -s "https://api.github.com/repos/SamuelMarks/libscript/actions/runs/${run_id}/jobs?per_page=100&page=${page}")
-    jobs_count=$(echo "$response" | jq '.jobs | length' 2>/dev/null || echo "0")
+    jobs_count=$(printf '%s\n' "$response" | jq '.jobs | length' 2>/dev/null || printf '%s\n' "0")
     if [ "$jobs_count" -eq 0 ]; then
       break
     fi
-    echo "$response" | jq -r '.jobs[] | "\(.name)|\(.conclusion)"' >>jobs_status.tmp
+    printf '%s\n' "$response" | jq -r '.jobs[] | "\(.name)|\(.conclusion)"' >>jobs_status.tmp
     page=$((page + 1))
   done
 else
-  echo "Failed to fetch run ID or jq not installed. Using fallback markers."
+  printf '%s\n' "Failed to fetch run ID or jq not installed. Using fallback markers."
 fi
 
 get_job_status() {
@@ -125,14 +152,14 @@ get_job_status() {
   if [ -f jobs_status.tmp ]; then
     status=$(grep -F "${comp} on ${os}|" jobs_status.tmp | cut -d'|' -f2 | head -n1)
     case "$status" in
-      "success") echo "✅" ;;
-      "failure") echo "❌" ;;
-      "skipped") echo "⏭️" ;;
-      "cancelled") echo "🛑" ;;
-      *) echo "❓" ;;
+      "success") printf '%s\n' "✅" ;;
+      "failure") printf '%s\n' "❌" ;;
+      "skipped") printf '%s\n' "⏭️" ;;
+      "cancelled") printf '%s\n' "🛑" ;;
+      *) printf '%s\n' "❓" ;;
     esac
   else
-    echo "❓"
+    printf '%s\n' "❓"
   fi
 }
 
@@ -150,7 +177,7 @@ if [ -n "$components" ]; then
       windows="⏭️"
     fi
 
-    echo "| \`$comp\` | $ubuntu | $macos | $windows |" >>ci_results.tmp
+    printf '%s\n' "| \`$comp\` | $ubuntu | $macos | $windows |" >>ci_results.tmp
   done
 fi
 
@@ -183,10 +210,10 @@ elif grep -q "## CI Checks Matrix" README.md; then
     }
     ' README.md >README.tmp && mv README.tmp README.md
 else
-  echo "" >>README.md
+  printf '%s\n' "" >>README.md
   cat ci_results.tmp >>README.md
 fi
 rm -f ci_results.tmp jobs_status.tmp
 
 git add .github/workflows/ci.yml README.md
-echo "Pre-commit hook completed successfully."
+printf '%s\n' "Pre-commit hook completed successfully."

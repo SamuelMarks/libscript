@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Implements automated tests to verify the correctness of the WooCommerce e-commerce platform stack.
+# 
+# ## Usage
+# Execute this script to run the test suite for woocommerce.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 export LIBSCRIPT_ROOT_DIR
 for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
@@ -32,12 +38,12 @@ for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-echo "Validating WooCommerce installation..."
+printf '%s\n' "Validating WooCommerce installation..."
 WOOCOMMERCE_WWWROOT="${WOOCOMMERCE_WWWROOT:-/var/www/wordpress}"
 if [ -d "${WOOCOMMERCE_WWWROOT}/wp-content/plugins/woocommerce" ]; then
-    echo "WooCommerce directory found at ${WOOCOMMERCE_WWWROOT}/wp-content/plugins/woocommerce"
+    printf '%s\n' "WooCommerce directory found at ${WOOCOMMERCE_WWWROOT}/wp-content/plugins/woocommerce"
     exit 0
 else
-    echo "WooCommerce directory not found at ${WOOCOMMERCE_WWWROOT}/wp-content/plugins/woocommerce"
+    printf '%s\n' "WooCommerce directory not found at ${WOOCOMMERCE_WWWROOT}/wp-content/plugins/woocommerce"
     exit 1
 fi

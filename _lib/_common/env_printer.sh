@@ -22,7 +22,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 # # LibScript Environment Printer Utility
 #
 # ## Overview
@@ -48,13 +48,13 @@ libscript_print_env() {
   # 1. Print PATH modification if prefix provided
   if [ -n "$_prefix_path" ]; then
     case "$_format" in
-      docker)         echo "ENV PATH=\"$_prefix_path/bin:\$PATH\"" ;;
-      docker_compose) echo "PATH=$_prefix_path/bin:\$PATH" ;;
-      powershell)     echo "\$env:PATH=\"$_prefix_path/bin;\" + \$env:PATH" ;;
-      cmd)            echo "SET PATH=\"$_prefix_path/bin;%PATH%\"" ;;
+      docker)         printf '%s\n' "ENV PATH=\"$_prefix_path/bin:\$PATH\"" ;;
+      docker_compose) printf '%s\n' "PATH=$_prefix_path/bin:\$PATH" ;;
+      powershell)     printf '%s\n' "\$env:PATH=\"$_prefix_path/bin;\" + \$env:PATH" ;;
+      cmd)            printf '%s\n' "SET PATH=\"$_prefix_path/bin;%PATH%\"" ;;
       json)           # Handled later in the full env dump
         ;;
-      *)              echo "export PATH=\"$_prefix_path/bin:\$PATH\"" ;;
+      *)              printf '%s\n' "export PATH=\"$_prefix_path/bin:\$PATH\"" ;;
     esac
   fi
 
@@ -81,7 +81,7 @@ libscript_print_env() {
       case "$FORMAT" in
         docker)
           env | grep -vE "$_filter" | while read -r line; do
-            echo "ENV ${line%%=*}=\"${line#*=}\""
+            printf '\''%s\n'\'' "ENV ${line%%=*}=\"${line#*=}\""
           done
           ;;
         docker_compose)
@@ -89,12 +89,12 @@ libscript_print_env() {
           ;;
         powershell)
           env | grep -vE "$_filter" | while read -r line; do
-            echo "\$env:${line%%=*}=\"${line#*=}\""
+            printf '\''%s\n'\'' "\$env:${line%%=*}=\"${line#*=}\""
           done
           ;;
         cmd)
           env | grep -vE "$_filter" | while read -r line; do
-            echo "SET ${line%%=*}=\"${line#*=}\""
+            printf '\''%s\n'\'' "SET ${line%%=*}=\"${line#*=}\""
           done
           ;;
         json)
@@ -117,7 +117,7 @@ libscript_print_env() {
           ;;
         *)
           env | grep -vE "$_filter" | while read -r line; do
-            echo "export ${line%%=*}=\"${line#*=}\""
+            printf '\''%s\n'\'' "export ${line%%=*}=\"${line#*=}\""
           done
           ;;
       esac

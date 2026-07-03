@@ -1,4 +1,12 @@
 #!/bin/sh
+# ## Overview
+# Generic setup script for the curl component.
+# It provides fallback installation logic and cross-platform installation steps
+# when a more specific OS/distribution setup script is not available.
+#
+# ## Usage
+# This script is typically called internally by the component lifecycle.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +30,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-$(cd "$(dirname "$THIS_FILE")/../../.." && pwd)}/_lib/_common/pkg_mgr.sh"
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
@@ -38,7 +46,7 @@ if ! command -v curl >/dev/null 2>&1; then
       i386|i686) BARCH="i386" ;;
       *) BARCH="amd64" ;;
     esac
-    libscript_download "https://github.com/moparisthebest/static-curl/releases/latest/download/curl-${BARCH}" "/tmp/curl" || { echo "Failed to download static curl"; exit 1; }
+    libscript_download "https://github.com/moparisthebest/static-curl/releases/latest/download/curl-${BARCH}" "/tmp/curl" || { printf '%s\n' "Failed to download static curl"; exit 1; }
     chmod +x /tmp/curl
     if [ -w /usr/local/bin ]; then
       mv /tmp/curl /usr/local/bin/curl

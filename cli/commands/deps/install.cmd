@@ -1,4 +1,12 @@
 @echo off
+:: # install.cmd
+::
+:: ## Overview
+:: Resolves and installs dependencies required by libscript components.
+:: 
+:: ## Usage
+:: Execute this script to fetch and setup required dependencies.
+
 setlocal EnableDelayedExpansion
 set "json_file=%~2"
 if "!json_file!"=="" set "json_file=libscript.json"

@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Handles Semantic Versioning (SemVer) parsing and comparison operations.
+# 
+# ## Usage
+# Execute this script to compare or validate version strings.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,14 +28,14 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 if [ "$cmd" = "semver" ]; then
   v1="$1"
   op="$2"
   v2="$3"
   if [ -z "$v1" ] || [ -z "$op" ] || [ -z "$v2" ]; then
-    echo "Usage: $0 semver <v1> <operator> <v2>" >&2
-    echo "Operators: = != > < >= <=" >&2
+    printf '%s\n' "Usage: $0 semver <v1> <operator> <v2>" >&2
+    printf '%s\n' "Operators: = != > < >= <=" >&2
     exit 1
   fi
   res=$(awk -v v1="$v1" -v v2="$v2" '
@@ -53,6 +59,6 @@ if [ "$cmd" = "semver" ]; then
     "<")  [ "$res" -eq -1 ] && exit 0 || exit 1 ;;
     ">=") [ "$res" -ge 0 ] && exit 0 || exit 1 ;;
     "<=") [ "$res" -le 0 ] && exit 0 || exit 1 ;;
-    *) echo "Unknown operator: $op" >&2; exit 1 ;;
+    *) printf '%s\n' "Unknown operator: $op" >&2; exit 1 ;;
   esac
 fi

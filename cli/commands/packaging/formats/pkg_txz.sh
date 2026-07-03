@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Implements packaging logic for the 'txz' format.
+# 
+# ## Usage
+# This script is called by the packaging system and should not be executed manually.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,11 +28,11 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
-      echo "#!/bin/sh"
-      echo "set -e"
-      echo "OUT_DIR=\"$OUT_DIR\""
-      echo "mkdir -p \"\$OUT_DIR\""
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+      printf '%s\n' "#!/bin/sh"
+      printf '%s\n' "set -e"
+      printf '%s\n' "OUT_DIR=\"$OUT_DIR\""
+      printf '%s\n' "mkdir -p \"\$OUT_DIR\""
       meta_depends=""
       set -- $deps_list
       while [ $# -gt 0 ]; do
@@ -34,53 +40,53 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
         pkg_name="${APP_NAME}-${pkg}"
         if [ -n "$meta_depends" ]; then meta_depends="${meta_depends}, "; fi
         meta_depends="${meta_depends}\"${pkg_name}\": {\"version\": \"$APP_VERSION\", \"origin\": \"misc/${pkg_name}\"}"
-        echo "echo \"Building $pkg_name ...\""
-        echo "BUILD_DIR=\"/tmp/${pkg_name}_pkgbuild\""
-        echo "mkdir -p \"\$BUILD_DIR/root/opt/libscript\""
-        echo "mkdir -p \"\$BUILD_DIR/root/var/LIB/libscript\""
-        if [ "$OFFLINE" = "1" ]; then echo "cp -a \"$LIBSCRIPT_ROOT_DIR\"/.* \"$LIBSCRIPT_ROOT_DIR\"/* \"\$BUILD_DIR/root/opt/libscript/\" 2>/dev/null || true"; echo "rm -rf \"\$BUILD_DIR/root/opt/libscript/.git\""; fi
-        echo "touch \"\$BUILD_DIR/root/var/LIB/libscript/.${pkg_name}_installed\""
-        echo "mkdir -p \"\$BUILD_DIR/meta\""
-        echo "cat << 'EOF' > \"\$BUILD_DIR/meta/+MANIFEST\""
-        echo "name: \"$pkg_name\""
-        echo "version: \"$APP_VERSION\""
-        echo "origin: \"misc/$pkg_name\""
-        echo "comment: \"$APP_NAME deployment - $pkg\""
-        echo "desc: \"$APP_NAME deployment - $pkg\""
-        echo "maintainer: \"$APP_PUBLISHER\""
-        echo "www: \"$APP_URL\""
-        echo "prefix: \"/\""
-        echo "scripts: {"
-        echo "  post-install: \"if command -v libscript.sh >/dev/null; then libscript.sh install_service $pkg $ver; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh install_service $pkg $ver; fi\","
-        echo "  pre-deinstall: \"if command -v libscript.sh >/dev/null; then libscript.sh uninstall $pkg --purge-data; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh uninstall $pkg --purge-data; fi\""
-        echo "}"
-        echo "EOF"
-        echo "cd \"\$BUILD_DIR/root\" && find . -type f -o -type l | sed -e 's|^./||' > \"\$BUILD_DIR/meta/pkg-plist\""
-        echo "pkg create -m \"\$BUILD_DIR/meta\" -r \"\$BUILD_DIR/root\" -o \"\$OUT_DIR\""
-        echo "rm -rf \"\$BUILD_DIR\""
+        printf '%s\n' "echo \"Building $pkg_name ...\""
+        printf '%s\n' "BUILD_DIR=\"/tmp/${pkg_name}_pkgbuild\""
+        printf '%s\n' "mkdir -p \"\$BUILD_DIR/root/opt/libscript\""
+        printf '%s\n' "mkdir -p \"\$BUILD_DIR/root/var/LIB/libscript\""
+        if [ "$OFFLINE" = "1" ]; then printf '%s\n' "cp -a \"$LIBSCRIPT_ROOT_DIR\"/.* \"$LIBSCRIPT_ROOT_DIR\"/* \"\$BUILD_DIR/root/opt/libscript/\" 2>/dev/null || true"; printf '%s\n' "rm -rf \"\$BUILD_DIR/root/opt/libscript/.git\""; fi
+        printf '%s\n' "touch \"\$BUILD_DIR/root/var/LIB/libscript/.${pkg_name}_installed\""
+        printf '%s\n' "mkdir -p \"\$BUILD_DIR/meta\""
+        printf '%s\n' "cat << 'EOF' > \"\$BUILD_DIR/meta/+MANIFEST\""
+        printf '%s\n' "name: \"$pkg_name\""
+        printf '%s\n' "version: \"$APP_VERSION\""
+        printf '%s\n' "origin: \"misc/$pkg_name\""
+        printf '%s\n' "comment: \"$APP_NAME deployment - $pkg\""
+        printf '%s\n' "desc: \"$APP_NAME deployment - $pkg\""
+        printf '%s\n' "maintainer: \"$APP_PUBLISHER\""
+        printf '%s\n' "www: \"$APP_URL\""
+        printf '%s\n' "prefix: \"/\""
+        printf '%s\n' "scripts: {"
+        printf '%s\n' "  post-install: \"if command -v libscript.sh >/dev/null; then libscript.sh install_service $pkg $ver; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh install_service $pkg $ver; fi\","
+        printf '%s\n' "  pre-deinstall: \"if command -v libscript.sh >/dev/null; then libscript.sh uninstall $pkg --purge-data; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh uninstall $pkg --purge-data; fi\""
+        printf '%s\n' "}"
+        printf '%s\n' "EOF"
+        printf '%s\n' "cd \"\$BUILD_DIR/root\" && find . -type f -o -type l | sed -e 's|^./||' > \"\$BUILD_DIR/meta/pkg-plist\""
+        printf '%s\n' "pkg create -m \"\$BUILD_DIR/meta\" -r \"\$BUILD_DIR/root\" -o \"\$OUT_DIR\""
+        printf '%s\n' "rm -rf \"\$BUILD_DIR\""
       done
-      echo "echo \"Building ${APP_NAME}-meta ...\""
-      echo "BUILD_DIR=\"/tmp/${APP_NAME}-meta_pkgbuild\""
-      echo "mkdir -p \"\$BUILD_DIR/root/var/LIB/libscript\""
-      echo "touch \"\$BUILD_DIR/root/var/LIB/libscript/.${APP_NAME}-meta_installed\""
-      echo "mkdir -p \"\$BUILD_DIR/meta\""
-      echo "cat << 'EOF' > \"\$BUILD_DIR/meta/+MANIFEST\""
-      echo "name: \"${APP_NAME}-meta\""
-      echo "version: \"$APP_VERSION\""
-      echo "origin: \"misc/${APP_NAME}-meta\""
-      echo "comment: \"$APP_NAME deployment metapackage\""
-      echo "desc: \"$APP_NAME deployment metapackage\""
-      echo "maintainer: \"$APP_PUBLISHER\""
-      echo "www: \"$APP_URL\""
-      echo "prefix: \"/\""
+      printf '%s\n' "echo \"Building ${APP_NAME}-meta ...\""
+      printf '%s\n' "BUILD_DIR=\"/tmp/${APP_NAME}-meta_pkgbuild\""
+      printf '%s\n' "mkdir -p \"\$BUILD_DIR/root/var/LIB/libscript\""
+      printf '%s\n' "touch \"\$BUILD_DIR/root/var/LIB/libscript/.${APP_NAME}-meta_installed\""
+      printf '%s\n' "mkdir -p \"\$BUILD_DIR/meta\""
+      printf '%s\n' "cat << 'EOF' > \"\$BUILD_DIR/meta/+MANIFEST\""
+      printf '%s\n' "name: \"${APP_NAME}-meta\""
+      printf '%s\n' "version: \"$APP_VERSION\""
+      printf '%s\n' "origin: \"misc/${APP_NAME}-meta\""
+      printf '%s\n' "comment: \"$APP_NAME deployment metapackage\""
+      printf '%s\n' "desc: \"$APP_NAME deployment metapackage\""
+      printf '%s\n' "maintainer: \"$APP_PUBLISHER\""
+      printf '%s\n' "www: \"$APP_URL\""
+      printf '%s\n' "prefix: \"/\""
       if [ -n "$meta_depends" ]; then
-        echo "deps: {"
-        echo "  $meta_depends"
-        echo "}"
+        printf '%s\n' "deps: {"
+        printf '%s\n' "  $meta_depends"
+        printf '%s\n' "}"
       fi
-      echo "EOF"
-      echo "cd \"\$BUILD_DIR/root\" && find . -type f -o -type l | sed -e 's|^./||' > \"\$BUILD_DIR/meta/pkg-plist\""
-      echo "pkg create -m \"\$BUILD_DIR/meta\" -r \"\$BUILD_DIR/root\" -o \"\$OUT_DIR\""
-      echo "rm -rf \"\$BUILD_DIR\""
-      echo "echo \"Done!\""
+      printf '%s\n' "EOF"
+      printf '%s\n' "cd \"\$BUILD_DIR/root\" && find . -type f -o -type l | sed -e 's|^./||' > \"\$BUILD_DIR/meta/pkg-plist\""
+      printf '%s\n' "pkg create -m \"\$BUILD_DIR/meta\" -r \"\$BUILD_DIR/root\" -o \"\$OUT_DIR\""
+      printf '%s\n' "rm -rf \"\$BUILD_DIR\""
+      printf '%s\n' "echo \"Done!\""
       exit 0

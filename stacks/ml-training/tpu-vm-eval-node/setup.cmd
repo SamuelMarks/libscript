@@ -1,4 +1,12 @@
 @echo off
+:: # setup.cmd
+::
+:: ## Overview
+:: Orchestrates the setup and installation process for the TPU VM evaluation node for ML stack.
+:: 
+:: ## Usage
+:: Execute this script to install and configure tpu-vm-eval-node on the local system.
+
 setlocal
 if "%~1"=="--help" (
     echo Usage: %~nx0

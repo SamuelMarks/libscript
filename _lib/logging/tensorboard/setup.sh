@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Setup script for TensorBoard.
+#
+# ## Usage
+# Routes to OS-specific or generic setup.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054

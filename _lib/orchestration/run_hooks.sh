@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Executes defined lifecycle hooks from an install manifest on Unix-like systems.
+#
+# ## Usage
+# Run `run_hooks.sh <json_file> <hook_type>` (e.g. pre_install, post_install) to parse and execute commands via eval.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 # @description Automatically handles run_hooks for the run_hooks.sh (orchestration) component.
 # @file run_hooks.sh
 
@@ -42,15 +48,15 @@ HOOKS=$(jq -c ".hooks.${HOOK_TYPE}[]?" "$JSON_FILE" 2>/dev/null || true)
 if [ -z "$HOOKS" ]; then exit 0; fi
 
 log_info "Running $HOOK_TYPE hooks..."
-echo "$HOOKS" | while read -r hook; do
+printf '%s\n' "$HOOKS" | while read -r hook; do
     if echo "$hook" | grep -q '^{'; then
-        NAME=$(echo "$hook" | jq -r '.name // "unnamed_hook"')
-        cmd=$(echo "$hook" | jq -r '.command // empty')
-        COND=$(echo "$hook" | jq -r '.condition // empty')
+        NAME=$(printf '%s\n' "$hook" | jq -r '.name // "unnamed_hook"')
+        cmd=$(printf '%s\n' "$hook" | jq -r '.command // empty')
+        COND=$(printf '%s\n' "$hook" | jq -r '.condition // empty')
 
         if [ -n "$COND" ]; then
             if echo "$COND" | grep -q "^unless_exists "; then
-                FILE=$(echo "$COND" | sed 's/^unless_exists //')
+                FILE=$(printf '%s\n' "$COND" | sed 's/^unless_exists //')
                 if [ -e "$FILE" ]; then
                     log_info "Skipping hook '$NAME': $FILE exists"
                     continue
@@ -64,7 +70,7 @@ echo "$HOOKS" | while read -r hook; do
         fi
     else
         # Handle simple string array format
-        cmd=$(echo "$hook" | sed 's/^"//; s/"$//')
+        cmd=$(printf '%s\n' "$hook" | sed 's/^"//; s/"$//')
         log_info "Executing hook: $cmd"
         eval "$cmd"
     fi

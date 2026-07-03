@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'pnpm' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for pnpm.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (-not $env:PACKAGE_NAME) { $env:PACKAGE_NAME = (Get-Item $PSScriptRoot).Name }

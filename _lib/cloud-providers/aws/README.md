@@ -44,9 +44,9 @@ provider.
 | `MODEL_NAME` | HuggingFace model string to serve | `your-org/your-model-name` |  |
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
-| `AWS_DEFAULT_REGION` |  | `us-east-1` |  |
-| `AWS_ACCESS_KEY_ID` |  | `none` |  |
-| `AWS_SECRET_ACCESS_KEY` |  | `none` |  |
+| `AWS_DEFAULT_REGION` | AWS Default Region | `us-east-1` |  |
+| `AWS_ACCESS_KEY_ID` | AWS Access Key ID | `none` |  |
+| `AWS_SECRET_ACCESS_KEY` | AWS Secret Access Key | `none` |  |
 <!-- END_VARS -->
 
 ## Platform Support

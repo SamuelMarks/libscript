@@ -1,6 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Environment initialization for Deno.
+#
+# ## Usage
+# Sets up `DENO_VERSION` and prepends Deno to PATH.
 
-set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -22,6 +26,5 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
-#!/bin/sh
-
+DENO_VERSION="${DENO_VERSION:-latest}"
+export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/deno/${DENO_VERSION}/bin:${PATH}"

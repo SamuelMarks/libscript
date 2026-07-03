@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Implements automated tests to verify the correctness of the component 'java' stack.
+
+.DESCRIPTION
+Execute this script to run the test suite for java.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (Get-Command java -ErrorAction SilentlyContinue) {

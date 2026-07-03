@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'mongodb' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for mongodb.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "mongodb"

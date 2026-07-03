@@ -1,4 +1,12 @@
 @echo off
+:: # uninstall.cmd
+::
+:: ## Overview
+:: Handles the removal and uninstallation process for the Celery task queue stack.
+:: 
+:: ## Usage
+:: Execute this script to remove celery and its associated configurations from the system.
+
 setlocal EnableDelayedExpansion
 :: Default uninstall hook for Windows
 if not "%INSTALLED_DIR%"=="" (

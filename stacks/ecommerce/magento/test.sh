@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Implements automated tests to verify the correctness of the Magento e-commerce platform stack.
+# 
+# ## Usage
+# Execute this script to run the test suite for magento.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 export LIBSCRIPT_ROOT_DIR
 for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
@@ -34,12 +40,12 @@ done
 
 
 set -feu
-echo "Validating Magento installation..."
+printf '%s\n' "Validating Magento installation..."
 MAGENTO_WWWROOT="${MAGENTO_WWWROOT:-/var/www/magento}"
 if [ -d "${MAGENTO_WWWROOT}/app" ]; then
-    echo "Magento directory found at ${MAGENTO_WWWROOT}"
+    printf '%s\n' "Magento directory found at ${MAGENTO_WWWROOT}"
     exit 0
 else
-    echo "Magento directory not found at ${MAGENTO_WWWROOT}"
+    printf '%s\n' "Magento directory not found at ${MAGENTO_WWWROOT}"
     exit 1
 fi

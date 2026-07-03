@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Implements automated tests to verify the correctness of the Odoo ERP system stack.
+# 
+# ## Usage
+# Execute this script to run the test suite for odoo.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 export LIBSCRIPT_ROOT_DIR
 for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
@@ -34,12 +40,12 @@ done
 
 
 set -feu
-echo "Validating Odoo installation..."
+printf '%s\n' "Validating Odoo installation..."
 ODOO_WWWROOT="${ODOO_WWWROOT:-/var/www/odoo}"
 if [ -f "${ODOO_WWWROOT}/odoo-bin" ]; then
-    echo "Odoo directory found at ${ODOO_WWWROOT}"
+    printf '%s\n' "Odoo directory found at ${ODOO_WWWROOT}"
     exit 0
 else
-    echo "Odoo directory not found at ${ODOO_WWWROOT}"
+    printf '%s\n' "Odoo directory not found at ${ODOO_WWWROOT}"
     exit 1
 fi

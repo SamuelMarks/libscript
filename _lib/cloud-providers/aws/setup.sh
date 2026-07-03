@@ -1,4 +1,11 @@
 #!/bin/sh
+# ## Overview
+# Serves as the primary Unix setup entry point for the AWS Cloud Provider component.
+# It delegates the core initialization logic to the common `setup_base.sh`.
+# 
+# ## Usage
+# Execute this script to orchestrate the complete setup lifecycle for AWS.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054

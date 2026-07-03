@@ -1,4 +1,12 @@
 #!/bin/sh
+# ## Overview
+# Generic setup script for the powershell component.
+# It provides fallback installation logic and cross-platform installation steps
+# when a more specific OS/distribution setup script is not available.
+#
+# ## Usage
+# This script is typically called internally by the component lifecycle.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +30,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
@@ -33,7 +41,7 @@ done
 if ! command -v pwsh >/dev/null 2>&1; then
   if ! libscript_depends 'powershell'; then
       log_info "Falling back to GitHub script for PowerShell..."
-      libscript_download "https://raw.githubusercontent.com/PowerShell/PowerShell/master/tools/installpsh-debian.sh" "/tmp/installpsh.sh" || { echo "Failed to download pwsh installer"; exit 1; }
+      libscript_download "https://raw.githubusercontent.com/PowerShell/PowerShell/master/tools/installpsh-debian.sh" "/tmp/installpsh.sh" || { printf '%s\n' "Failed to download pwsh installer"; exit 1; }
       sh /tmp/installpsh.sh
   fi
 fi

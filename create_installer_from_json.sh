@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Generates an installer package based on a JSON schema definition.
+# 
+# ## Usage
+# Execute this script with a JSON manifest to build an installer.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,12 +28,19 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 VERBOSE=0
 ALL_DEPS=0
 HELP=0
 OUTPUT_FOLDER="${LIBSCRIPT_ROOT_DIR}"'/tmp'
 BASE="${BASE:-alpine:latest debian:bookworm-slim}"
+
+for arg in "$@"; do
+  if [ "$arg" = "--help" ] || [ "$arg" = "-h" ] || [ "$arg" = "/?" ] || [ "$arg" = "-?" ]; then
+    HELP=1
+    break
+  fi
+done
 
 while getopts 'a:f:o:vh' opt; do
     case ${opt} in

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'caddy' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for caddy.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "caddy"

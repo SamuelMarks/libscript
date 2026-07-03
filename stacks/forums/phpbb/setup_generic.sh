@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Provides a generic, cross-platform setup mechanism for the phpBB forum software stack.
+# 
+# ## Usage
+# Execute this script to perform generic initialization steps for phpbb.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR="${SCRIPT_DIR}"
 
 for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh"; do
@@ -50,7 +56,7 @@ case "${PHPBB_DB_TYPE}" in
   mysql|mariadb) libscript_depends 'mariadb' ;;
   pgsql|postgres|postgresql) libscript_depends 'postgres' ;;
   sqlite) libscript_depends 'sqlite' ;;
-  *) echo "Unsupported DB type: ${PHPBB_DB_TYPE}"; exit 1 ;;
+  *) printf '%s\n' "Unsupported DB type: ${PHPBB_DB_TYPE}"; exit 1 ;;
 esac
 
 libscript_depends "${PHPBB_WEBSERVER}"
@@ -58,13 +64,13 @@ libscript_depends "${PHPBB_WEBSERVER}"
 PHPBB_VERSION="${PHPBB_VERSION:-3.3.11}"
 export PHPBB_VERSION
 
-PHPBB_MAJOR_VERSION=$(echo "${PHPBB_VERSION}" | cut -d. -f1,2)
+PHPBB_MAJOR_VERSION=$(printf '%s\n' "${PHPBB_VERSION}" | cut -d. -f1,2)
 
 PHPBB_WWWROOT="${PHPBB_WWWROOT:-/var/www/phpbb}"
 export PHPBB_WWWROOT
 
 if [ ! -d "${PHPBB_WWWROOT}/phpbb" ] && [ ! -d "${PHPBB_WWWROOT}/install" ]; then
-  echo "Downloading phpBB (${PHPBB_VERSION}) to ${PHPBB_WWWROOT}..."
+  printf '%s\n' "Downloading phpBB (${PHPBB_VERSION}) to ${PHPBB_WWWROOT}..."
   priv mkdir -p "${PHPBB_WWWROOT}"
   dl_url="https://download.phpbb.com/pub/release/${PHPBB_MAJOR_VERSION}/${PHPBB_VERSION}/phpBB-${PHPBB_VERSION}.tar.bz2"
 
@@ -85,7 +91,7 @@ DB_NAME="${PHPBB_DB_NAME:-phpbb}"
 DB_USER="${PHPBB_DB_USER:-phpbb}"
 DB_PASS="${PHPBB_DB_PASS:-phpbb}"
 
-echo "Configuring Database..."
+printf '%s\n' "Configuring Database..."
 if [ "${PHPBB_DB_TYPE}" = "mariadb" ] || [ "${PHPBB_DB_TYPE}" = "mysql" ]; then
   if command -v mysql >/dev/null 2>&1; then
     if priv mysql -u root -e "SELECT 1" >/dev/null 2>&1; then
@@ -94,7 +100,7 @@ if [ "${PHPBB_DB_TYPE}" = "mariadb" ] || [ "${PHPBB_DB_TYPE}" = "mysql" ]; then
       priv mysql -u root -e "GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';"
       priv mysql -u root -e "FLUSH PRIVILEGES;"
     else
-      echo "Warning: MariaDB/MySQL is not running or root login failed. Skipping automated DB setup."
+      printf '%s\n' "Warning: MariaDB/MySQL is not running or root login failed. Skipping automated DB setup."
     fi
   fi
 elif [ "${PHPBB_DB_TYPE}" = "postgres" ] || [ "${PHPBB_DB_TYPE}" = "postgresql" ] || [ "${PHPBB_DB_TYPE}" = "pgsql" ]; then
@@ -104,7 +110,7 @@ elif [ "${PHPBB_DB_TYPE}" = "postgres" ] || [ "${PHPBB_DB_TYPE}" = "postgresql" 
       priv su - postgres -c "psql -tc \"SELECT 1 FROM pg_roles WHERE rolname = '${DB_USER}'\"" | grep -q 1 || priv su - postgres -c "psql -c \"CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASS}'\""
       priv su - postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER}\""
     else
-      echo "Warning: PostgreSQL is not running or root login failed. Skipping automated DB setup."
+      printf '%s\n' "Warning: PostgreSQL is not running or root login failed. Skipping automated DB setup."
     fi
   fi
 elif [ "${PHPBB_DB_TYPE}" = "sqlite" ]; then
@@ -142,7 +148,7 @@ fi
 PHPBB_SERVER_NAME="${PHPBB_SERVER_NAME:-localhost}"
 export PHPBB_SERVER_NAME
 
-echo "Configuring webserver: ${PHPBB_WEBSERVER}"
+printf '%s\n' "Configuring webserver: ${PHPBB_WEBSERVER}"
 
 ENV_SCRIPT_FILE=$(mktemp)
 cat <<ENV_EOF > "${ENV_SCRIPT_FILE}"
@@ -213,4 +219,4 @@ elif [ "${PHPBB_WEBSERVER}" = "httpd" ]; then
 fi
 
 rm -f "${ENV_SCRIPT_FILE}"
-echo "phpBB setup complete on ${PHPBB_SERVER_NAME}"
+printf '%s\n' "phpBB setup complete on ${PHPBB_SERVER_NAME}"

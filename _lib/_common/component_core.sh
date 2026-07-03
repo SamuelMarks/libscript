@@ -51,7 +51,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 # Identify directories
 COMP_DIR="${SCRIPT_DIR:-$(cd "$(dirname -- "${THIS_FILE}")" && pwd)}"
 SCRIPT_DIR="${SCRIPT_DIR:-$(cd "$(dirname -- "${THIS_FILE}")" && pwd)}"
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 # Source logging
@@ -124,19 +124,19 @@ show_help() {
     fi
 
     VERSIONS=$(jq -r 'if .versions then .versions | join(", ") else "" end' "$MANIFEST_FILE")
-    [ -n "$VERSIONS" ] && echo "  Supported Versions: $VERSIONS"
+    [ -n "$VERSIONS" ] && printf '%s\n' "  Supported Versions: $VERSIONS"
   fi
   log_info ""
   log_info "Available Options:"
   if command -v jq >/dev/null 2>&1; then
     _props=$(get_merged_properties)
-    echo "$_props" | jq -r '
+    printf '%s\n' "$_props" | jq -r '
       to_entries[] |
       def aliases: if .value.version_aliases then " [aliases: " + (.value.version_aliases | join(", ")) + "]" else "" end;
       "--\(.key)=VALUE|\(.value.description // "")\(aliases) [default: \(.value.default // "none")]"
     ' | awk -F'|' '{printf "  %-35s %s\n", $1, $2}'
 
-    echo "$_props" | jq -r '
+    printf '%s\n' "$_props" | jq -r '
       to_entries[] | select(.value.is_libscript_dependency == true) |
       "--\(.key)_STRATEGY=VALUE|Strategy for \(.key) (reuse, install-alongside, upgrade, downgrade, overwrite) [default: reuse]"
     ' | awk -F'|' '{printf "  %-35s %s\n", $1, $2}'
@@ -180,7 +180,7 @@ case "${1:-}" in
       fi
       shift 2
     else
-      echo "Error: version is required for $ACTION" >&2
+      printf '%s\n' "Error: version is required for $ACTION" >&2
       exit 1
     fi
     ;;
@@ -232,7 +232,7 @@ export VERSION
 
 # Auto-set component version variable (e.g. NODEJS_VERSION)
 if [ -n "$PACKAGE_NAME" ] && [ -n "$VERSION" ]; then
-  pkg_upper=$(echo "${PACKAGE_NAME##*/}" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
+  pkg_upper=$(printf '%s\n' "${PACKAGE_NAME##*/}" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
   var_name="${pkg_upper}_VERSION"
   export "$var_name"="$VERSION"
 fi
@@ -278,8 +278,8 @@ while [ $# -gt 0 ]; do
       ;;
     --*)
       # Dynamic flag parsing from vars.schema.json
-      key=$(echo "${1#--}" | cut -d= -f1)
-      val=$(echo "${1#--}" | cut -d= -f2-)
+      key=$(printf '%s\n' "${1#--}" | cut -d= -f1)
+      val=$(printf '%s\n' "${1#--}" | cut -d= -f2-)
       [ "$key" = "$1" ] && key="${1#--}" # Handle case where there is no =
       if [ "$key" = "$val" ]; then val="true"; fi
 
@@ -290,30 +290,30 @@ while [ $# -gt 0 ]; do
         # Check if key exists
         if ! echo "$_props" | jq -e ".\"$key\"" >/dev/null 2>&1; then
           # Check for _STRATEGY suffix which is also allowed for dependencies
-          if echo "$key" | grep -q "_STRATEGY$" && echo "$_props" | jq -e ".\"${key%_STRATEGY}\"" >/dev/null 2>&1; then
+          if echo "$key" | grep -q "_STRATEGY$" && printf '%s\n' "$_props" | jq -e ".\"${key%_STRATEGY}\"" >/dev/null 2>&1; then
             export "$key"="$val"
           else
             # Pass through unknown flags to setup.sh and subcommands
             # Convert dash to underscore for export
-            _safe_key=$(echo "$key" | tr '-' '_')
+            _safe_key=$(printf '%s\n' "$key" | tr '-' '_')
             export "$_safe_key"="$val"
           fi
         else
           # Validate enum if it exists
-          _enum=$(echo "$_props" | jq -c ".\"$key\".enum // empty")
+          _enum=$(printf '%s\n' "$_props" | jq -c ".\"$key\".enum // empty")
           if [ -n "$_enum" ]; then
             if ! echo "$_enum" | jq -e ". | contains([\"$val\"])" >/dev/null 2>&1; then
-              echo "Error: Invalid value '$val' for --$key. Allowed values are: $(echo "$_enum" | jq -r 'join(", ")')" >&2
+              printf '%s\n' "Error: Invalid value '$val' for --$key. Allowed values are: $(printf '%s\n' "$_enum" | jq -r 'join(", ")')" >&2
               exit 1
             fi
           fi
-          _safe_key=$(echo "$key" | tr '-' '_')
+          _safe_key=$(printf '%s\n' "$key" | tr '-' '_')
           export "$_safe_key"="$val"
         fi
       else
         # If jq is not available, we can only warn or just set it.
         # Project policy seems to prefer strictness if possible, but without jq we can't be strict.
-        _safe_key=$(echo "$key" | tr '-' '_')
+        _safe_key=$(printf '%s\n' "$key" | tr '-' '_')
         export "$_safe_key"="$val"
       fi
       shift
@@ -329,7 +329,7 @@ if [ "${LIBSCRIPT_SKIP_DEPENDENCIES:-}" != "1" ] && { [ "$ACTION" = "install" ] 
   if command -v jq >/dev/null 2>&1 && [ -f "$SCHEMA_FILE" ]; then
     _deps=$(get_merged_properties | jq -r 'to_entries[] | select(.value.is_libscript_dependency == true) | "\(.key)|\(.value.default // "")"' 2>/dev/null)
     if [ -n "$_deps" ]; then
-      echo "$_deps" | while IFS='|' read -r dep_key dep_default; do
+      printf '%s\n' "$_deps" | while IFS='|' read -r dep_key dep_default; do
         [ -z "$dep_key" ] && continue
         eval "dep_val=\"\${$dep_key:-}\""
         if [ -z "$dep_val" ]; then

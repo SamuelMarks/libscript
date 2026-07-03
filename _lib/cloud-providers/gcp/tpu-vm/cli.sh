@@ -1,4 +1,11 @@
 #!/bin/sh
+# ## Overview
+# Command-line interface for managing GCP Cloud TPU VMs.
+#
+# ## Usage
+# Provides commands to create, delete, start, stop, and SSH into Cloud TPU VMs.
+# Run `libscript.sh gcp/tpu-vm <action> [args...]`.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -31,8 +38,8 @@ if ! command -v gcloud >/dev/null 2>&1; then
 fi
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  echo "Usage: $0 <action> [args...]"
-  echo "See README.md for details."
+  printf '%s\n' "Usage: $0 <action> [args...]"
+  printf '%s\n' "See README.md for details."
   exit 0
 fi
 

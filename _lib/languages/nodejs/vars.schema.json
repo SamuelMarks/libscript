@@ -13,10 +13,10 @@
       "examples": ["lts", "latest", "v22.13.1", "20"]
     },
     "NODEJS_INSTALL_METHOD": {
-      "description": "How to install NODEJS. 'system' uses the native OS package manager, 'source' compiles/downloads binaries.",
+      "description": "How to install NODEJS. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools.",
       "type": "string",
-      "enum": ["system", "source"],
-      "default": "system"
+      "enum": ["libscript-native", "system", "mise", "asdf"],
+      "default": "libscript-native"
     }
   }
 }

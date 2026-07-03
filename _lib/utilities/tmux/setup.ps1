@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'tmux' stack.
+
+.DESCRIPTION
+Execute this script to install and configure tmux on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 Write-Host "Installing psmux as the native Windows alternative for tmux..."

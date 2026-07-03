@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'go' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for go.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "go"

@@ -1,4 +1,12 @@
 #!/bin/sh
+# ## Overview
+# Environment variable initialization script for the bazel component.
+# It sets up necessary paths and environment variables required for the component
+# to function correctly within the libscript context.
+#
+# ## Usage
+# Source this script to load the environment variables. Do not execute it directly.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -21,6 +29,12 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
-export LIBSCRIPT_LISTEN_PORT="${BAZEL_LISTEN:-$LIBSCRIPT_LISTEN_PORT}"
+
+BAZEL_VERSION="${BAZEL_VERSION:-latest}"
+if [ "${BAZEL_VERSION}" = "latest" ]; then
+  EXACT_VERSION="v1.25.0"
+else
+  EXACT_VERSION="${BAZEL_VERSION}"
+fi
+
+export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/bazel/${EXACT_VERSION}/bin:${PATH}"

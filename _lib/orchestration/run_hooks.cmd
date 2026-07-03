@@ -1,4 +1,12 @@
 @echo off
+:: # run_hooks.cmd
+::
+:: ## Overview
+:: Executes defined lifecycle hooks from an install manifest on Windows.
+::
+:: ## Usage
+:: Run `run_hooks.cmd <json_file> <hook_type>` (e.g. pre_install, post_install).
+
 setlocal EnableDelayedExpansion
 
 set json_file=%~1

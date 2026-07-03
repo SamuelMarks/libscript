@@ -1,4 +1,12 @@
 @echo off
+:: # cli.cmd
+::
+:: ## Overview
+:: Command-line interface for DuckDB on Windows.
+::
+:: ## Usage
+:: Wraps the duckdb executable. Run `libscript databases/duckdb execute <db> <query>` or `repl <db>`.
+
 setlocal EnableDelayedExpansion
 
 set "LOG_CMD=%~dp0..\..\..\_common\log.cmd"

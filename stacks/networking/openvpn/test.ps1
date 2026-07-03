@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Implements automated tests to verify the correctness of the OpenVPN networking stack stack.
+
+.DESCRIPTION
+Execute this script to run the test suite for openvpn.
+#>
+
 $ErrorActionPreference = "Stop"
 
 # Requires PowerShell

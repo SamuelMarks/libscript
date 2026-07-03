@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Action dispatcher for cloud core operations.
+#
+# ## Usage
+# Evaluates `$ACTION` (e.g. `list-managed`, `diff`, `backup`, `restore`, or provider aliases) and dispatches execution.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -37,32 +43,32 @@ for arg in "$@"; do
 done
 
 handle_list_managed() {
-  echo "--- AWS Resources"
+  printf '%s\n' "--- AWS Resources"
   if command -v aws >/dev/null 2>&1; then
     # We will implement actual listing logic later. For now mock it to pass tests.
-    echo "AWS Managed Resource Listing Placeholder"
+    printf '%s\n' "AWS Managed Resource Listing Placeholder"
   fi
-  echo "--- Azure Resources"
+  printf '%s\n' "--- Azure Resources"
   if command -v az >/dev/null 2>&1; then
-    echo "Azure Managed Resource Listing Placeholder"
+    printf '%s\n' "Azure Managed Resource Listing Placeholder"
   fi
-  echo "--- GCP Resources"
+  printf '%s\n' "--- GCP Resources"
   if command -v gcloud >/dev/null 2>&1; then
-    echo "GCP Managed Resource Listing Placeholder"
+    printf '%s\n' "GCP Managed Resource Listing Placeholder"
   fi
 }
 
 handle_diff() {
-  echo "Comparing local .libscript_state.json with cloud provider reality..."
+  printf '%s\n' "Comparing local .libscript_state.json with cloud provider reality..."
   if [ ! -f ".libscript_state.json" ]; then
-    echo "No local .libscript_state.json found. All discovered resources are untracked."
+    printf '%s\n' "No local .libscript_state.json found. All discovered resources are untracked."
   fi
-  echo "--- AWS Drift"
-  echo "AWS Diff Placeholder"
-  echo "--- Azure Drift"
-  echo "Azure Diff Placeholder"
-  echo "--- GCP Drift"
-  echo "GCP Diff Placeholder"
+  printf '%s\n' "--- AWS Drift"
+  printf '%s\n' "AWS Diff Placeholder"
+  printf '%s\n' "--- Azure Drift"
+  printf '%s\n' "Azure Diff Placeholder"
+  printf '%s\n' "--- GCP Drift"
+  printf '%s\n' "GCP Diff Placeholder"
 }
 
 case "$action" in
@@ -84,16 +90,16 @@ case "$action" in
     PROVIDER="$action"
     CLI_PATH="$LIBSCRIPT_ROOT_DIR/_lib/cloud-providers/$PROVIDER/cli.sh"
     if [ ! -f "$CLI_PATH" ]; then
-      echo "Error: Provider $PROVIDER not supported or installed." >&2
+      printf '%s\n' "Error: Provider $PROVIDER not supported or installed." >&2
       exit 1
     fi
     exec "$CLI_PATH" "$@"
     ;;
   cleanup)
-    echo "Cleaning up all cloud resources..."
-    if command -v aws >/dev/null 2>&1; then echo "Cleaning up aws..."; fi
-    if command -v az >/dev/null 2>&1; then echo "Cleaning up azure..."; fi
-    if command -v gcloud >/dev/null 2>&1; then echo "Cleaning up gcp..."; fi
+    printf '%s\n' "Cleaning up all cloud resources..."
+    if command -v aws >/dev/null 2>&1; then printf '%s\n' "Cleaning up aws..."; fi
+    if command -v az >/dev/null 2>&1; then printf '%s\n' "Cleaning up azure..."; fi
+    if command -v gcloud >/dev/null 2>&1; then printf '%s\n' "Cleaning up gcp..."; fi
     exit 0
     ;;
   *)

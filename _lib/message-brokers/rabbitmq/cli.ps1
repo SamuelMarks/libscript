@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'rabbitmq' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for rabbitmq.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "rabbitmq"

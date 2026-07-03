@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Orchestrates the setup and installation process for the Nextcloud collaboration platform stack.
+# 
+# ## Usage
+# Execute this script to install and configure nextcloud on the local system.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -28,7 +34,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 #    if [ "${RERUN_SCRIPT}" -ne 1 ]; then
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR="${SCRIPT_DIR}"
 export LIBSCRIPT_ROOT_DIR
 

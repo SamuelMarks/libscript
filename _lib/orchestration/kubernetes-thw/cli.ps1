@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'kubernetes-thw' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for kubernetes-thw.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "kubernetes-thw"

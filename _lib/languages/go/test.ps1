@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Implements automated tests to verify the correctness of the component 'go' stack.
+
+.DESCRIPTION
+Execute this script to run the test suite for go.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (Get-Command go -ErrorAction SilentlyContinue) {

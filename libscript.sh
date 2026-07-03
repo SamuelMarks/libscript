@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Main entry point for the libscript framework.
+# 
+# ## Usage
+# Execute this script to access global libscript functionality.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -23,7 +29,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 LIBSCRIPT_CLI_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 SCRIPT_DIR="${LIBSCRIPT_CLI_DIR}"
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 # Source logging
@@ -34,52 +40,52 @@ for LIB in "_lib/_common/log.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
 done
 
 show_help() {
-  echo "LibScript Global CLI"
-  echo "===================="
-  echo ""
-  echo "Usage: $0 [COMMAND] [ARGS...]"
-  echo ""
-  echo "Commands:"
-  echo "  list                        List all available components"
-  echo "  search <query>              Search available components by name or description"
-  echo "  process-downloads [file]    Process an aria2-formatted download list"
-  echo "  env <component> <version>   Print environment variables for a component"
-  echo "  install-deps [file]         Install all dependencies defined in a JSON file (default: libscript.json)"
-  echo "  package_as <format> [args]  Package libscript usage (e.g., docker, docker_compose)"
-  echo "  start [package_name...]     Start services (or all deps in json)"
-  echo "  stop [package_name...]      Stop services"
-  echo "  status [package_name...]    Show service status"
-  echo "  health [package_name...]    Check service health"
-  echo "  restart [package_name...]   Restart services"
-  echo "  logs [-f] [package_name...]  Show service logs (real-time stream)"
-  echo "  up [package_name...]        Alias for start"
-  echo "  down [package_name...]      Alias for stop"
-  echo "  provision <provider> ...    Provision a cloud environment"
-  echo "  deprovision <provider> ...  Deprovision a cloud environment"
-  echo "  <component> [OPTIONS...]    Invoke the CLI for a specific component"
-  echo ""
-  echo "Options:"
-  echo "  --help, -h, /?              Show this extensive help text"
-  echo "  --prefix=<dir>              Set local installation prefix"
-  echo "  --log-format=<text|json>    Set log output format"
-  echo "  --log-level=<0-4>           Set minimum log level (0=DEBUG, 1=INFO, etc)"
-  echo "  --log-file=<path>           Set a file to mirror all logs to"
-  echo "  --service-name=<name>       Set a custom service/daemon name"
-  echo "  --secrets=<dir|url>         Save generated secrets to a directory or OpenBao/Vault URL"
-  echo "  --listen=<str>                Global listen (port, addr:port, unix:socket)
+  printf '%s\n' "LibScript Global CLI"
+  printf '%s\n' "===================="
+  printf '%s\n' ""
+  printf '%s\n' "Usage: $0 [COMMAND] [ARGS...]"
+  printf '%s\n' ""
+  printf '%s\n' "Commands:"
+  printf '%s\n' "  list                        List all available components"
+  printf '%s\n' "  search <query>              Search available components by name or description"
+  printf '%s\n' "  process-downloads [file]    Process an aria2-formatted download list"
+  printf '%s\n' "  env <component> <version>   Print environment variables for a component"
+  printf '%s\n' "  install-deps [file]         Install all dependencies defined in a JSON file (default: libscript.json)"
+  printf '%s\n' "  package_as <format> [args]  Package libscript usage (e.g., docker, docker_compose)"
+  printf '%s\n' "  start [package_name...]     Start services (or all deps in json)"
+  printf '%s\n' "  stop [package_name...]      Stop services"
+  printf '%s\n' "  status [package_name...]    Show service status"
+  printf '%s\n' "  health [package_name...]    Check service health"
+  printf '%s\n' "  restart [package_name...]   Restart services"
+  printf '%s\n' "  logs [-f] [package_name...]  Show service logs (real-time stream)"
+  printf '%s\n' "  up [package_name...]        Alias for start"
+  printf '%s\n' "  down [package_name...]      Alias for stop"
+  printf '%s\n' "  provision <provider> ...    Provision a cloud environment"
+  printf '%s\n' "  deprovision <provider> ...  Deprovision a cloud environment"
+  printf '%s\n' "  <component> [OPTIONS...]    Invoke the CLI for a specific component"
+  printf '%s\n' ""
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --help, -h, /?, -?          Show this extensive help text"
+  printf '%s\n' "  --prefix=<dir>              Set local installation prefix"
+  printf '%s\n' "  --log-format=<text|json>    Set log output format"
+  printf '%s\n' "  --log-level=<0-4>           Set minimum log level (0=DEBUG, 1=INFO, etc)"
+  printf '%s\n' "  --log-file=<path>           Set a file to mirror all logs to"
+  printf '%s\n' "  --service-name=<name>       Set a custom service/daemon name"
+  printf '%s\n' "  --secrets=<dir|url>         Save generated secrets to a directory or OpenBao/Vault URL"
+  printf '%s\n' "  --listen=<str>                Global listen (port, addr:port, unix:socket)
   --listen-port=<port>        Global port to listen on"
-  echo "  --listen-address=<addr>     Global address to listen on"
-  echo "  --listen-socket=<socket>    Global unix socket to listen on"
-  echo ""
-  echo "Examples:"
-  echo "  $0 list"
-  echo "  $0 search ruby"
-  echo "  $0 ruby --help"
-  echo "  $0 postgres --help"
-  echo ""
-  echo "You can specify components by their short name (e.g., 'ruby' instead of '_lib/languages/ruby')."
-  echo "If there are multiple matches, it will ask you to be more specific."
-  echo ""
+  printf '%s\n' "  --listen-address=<addr>     Global address to listen on"
+  printf '%s\n' "  --listen-socket=<socket>    Global unix socket to listen on"
+  printf '%s\n' ""
+  printf '%s\n' "Examples:"
+  printf '%s\n' "  $0 list"
+  printf '%s\n' "  $0 search ruby"
+  printf '%s\n' "  $0 ruby --help"
+  printf '%s\n' "  $0 postgres --help"
+  printf '%s\n' ""
+  printf '%s\n' "You can specify components by their short name (e.g., 'ruby' instead of '_lib/languages/ruby')."
+  printf '%s\n' "If there are multiple matches, it will ask you to be more specific."
+  printf '%s\n' ""
 }
 
 find_components() {
@@ -88,7 +94,7 @@ find_components() {
     if [ -f "$dir/vars.schema.json" ]; then
       rel_dir="${dir#"$LIBSCRIPT_CLI_DIR"/}"
       if [ "$rel_dir" != "$dir" ]; then
-        echo "$rel_dir"
+        printf '%s\n' "$rel_dir"
       fi
     fi
   done
@@ -132,7 +138,7 @@ while [ $# -gt 0 ]; do
       LISTEN_STR="${1#*=}"
       if echo "$LISTEN_STR" | grep -q "^unix:"; then
         export LIBSCRIPT_LISTEN_SOCKET="${LISTEN_STR#unix:}"
-      elif echo "$LISTEN_STR" | grep -q ":"; then
+      elif printf '%s\n' "$LISTEN_STR" | grep -q ":"; then
         export LIBSCRIPT_LISTEN_ADDRESS="${LISTEN_STR%%:*}"
         export LIBSCRIPT_LISTEN_PORT="${LISTEN_STR##*:}"
       else
@@ -166,13 +172,13 @@ while [ $# -gt 0 ]; do
   esac
 done
 CMD="${1:-}"
-if [ -z "$CMD" ] || [ "$CMD" = "--help" ] || [ "$CMD" = "-h" ] || [ "$CMD" = "/?" ]; then
+if [ -z "$CMD" ] || [ "$CMD" = "--help" ] || [ "$CMD" = "-h" ] || [ "$CMD" = "/?" ] || [ "$CMD" = "-?" ]; then
   show_help
   exit 0
 fi
 
 if [ "$CMD" = "--version" ] || [ "$CMD" = "-v" ]; then
-  echo "${LIBSCRIPT_VERSION:-dev}"
+  printf '%s\n' "${LIBSCRIPT_VERSION:-dev}"
   exit 0
 fi
 
@@ -207,7 +213,7 @@ ACTION_PKG="$CMD"
 if [ "$IS_ACTION" = "1" ]; then
   ACTION_PKG="$1"
   if [ -z "$ACTION_PKG" ]; then
-    echo "Error: package_name is required for $CMD" >&2
+    printf '%s\n' "Error: package_name is required for $CMD" >&2
     exit 1
   fi
   # We do not shift here because the local cli.sh expects the action as $1
@@ -226,26 +232,26 @@ else
   if ! matches=$(find_components | grep -i "$ACTION_PKG"); then
     matches=""
   fi
-  if ! count=$(echo "$matches" | grep -c .); then
+  if ! count=$(printf '%s\n' "$matches" | grep -c .); then
     count=0
   fi
   if [ "$count" -eq 0 ]; then
-    echo "Error: Unknown component '$ACTION_PKG'."
+    printf '%s\n' "Error: Unknown component '$ACTION_PKG'."
     exit 1
   elif [ "$count" -eq 1 ]; then
     TARGET="$LIBSCRIPT_CLI_DIR/$matches"
   else
-    if ! exact_match=$(echo "$matches" | grep "/$ACTION_PKG$"); then
+    if ! exact_match=$(printf '%s\n' "$matches" | grep "/$ACTION_PKG$"); then
       exact_match=""
     fi
-    if ! exact_count=$(echo "$exact_match" | grep -c .); then
+    if ! exact_count=$(printf '%s\n' "$exact_match" | grep -c .); then
       exact_count=0
     fi
     if [ "$exact_count" -eq 1 ]; then
       TARGET="$LIBSCRIPT_CLI_DIR/$exact_match"
     else
-      echo "Error: Component '$ACTION_PKG' is ambiguous. Matches:"
-      echo "$matches" | sed 's/^/  /'
+      printf '%s\n' "Error: Component '$ACTION_PKG' is ambiguous. Matches:"
+      printf '%s\n' "$matches" | sed 's/^/  /'
       exit 1
     fi
   fi
@@ -256,6 +262,6 @@ if [ -x "$TARGET/cli.sh" ]; then
 elif [ -f "$TARGET/cli.sh" ]; then
   exec sh "$TARGET/cli.sh" "$@"
 else
-  echo "Error: Local CLI not found in $TARGET"
+  printf '%s\n' "Error: Local CLI not found in $TARGET"
   exit 1
 fi

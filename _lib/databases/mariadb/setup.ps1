@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'mariadb' stack.
+
+.DESCRIPTION
+Execute this script to install and configure mariadb on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 #!/usr/bin/env pwsh

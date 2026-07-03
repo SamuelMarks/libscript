@@ -1,4 +1,13 @@
 #!/bin/sh
+# ## Overview
+# A robust, cross-platform string replacement utility powered by `awk`.
+# Unlike `sed`, this function performs literal string replacements (including multi-line)
+# without requiring regular expressions or complex escaping of special characters.
+# 
+# ## Usage
+# Source this file and call `find_replace "search_string" "replacement_string" "filename"`.
+# It outputs the modified content to stdout without altering the original file in place.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +31,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 find_replace() {
   if [ "$#" -ne 3 ]; then
     >&2 printf 'Usage: find_replace '"'"'find'"'"' '"'"'replace'"'"' filename'

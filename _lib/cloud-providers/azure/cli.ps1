@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'azure' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for azure.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "azure"

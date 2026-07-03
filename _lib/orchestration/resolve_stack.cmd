@@ -1,4 +1,12 @@
 @echo off
+:: # resolve_stack.cmd
+::
+:: ## Overview
+:: A portable wrapper for the SAT/Constraint solver using jq on Windows.
+::
+:: ## Usage
+:: Run `resolve_stack.cmd <path_to_install.json>` to resolve dependencies and yield an install list.
+
 setlocal EnableDelayedExpansion
 
 if "%~1"=="--help" (

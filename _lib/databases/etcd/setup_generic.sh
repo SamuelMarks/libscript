@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Generic setup module for etcd.
+#
+# ## Usage
+# Sourced for any generic setup tasks, utilizing `pkg_mgr.sh` to install etcd.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -23,7 +29,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 DIR=$(CDPATH="" cd -- "$(dirname -- "$0")" && pwd)
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 # shellcheck disable=SC1090,SC1091
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/pkg_mgr.sh"
-libscript_depends etcd || echo "etcd installation skipped or failed"
+libscript_depends etcd || printf '%s\n' "etcd installation skipped or failed"

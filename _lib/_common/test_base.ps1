@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Implements automated tests to verify the correctness of the component '_common' stack.
+
+.DESCRIPTION
+Execute this script to run the test suite for _common.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (-not (Test-Path Variable:global:LIBSCRIPT_ROOT_DIR)) {

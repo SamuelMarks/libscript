@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'curl' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for curl.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "curl"

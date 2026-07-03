@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component '_noop' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for _noop.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "_noop"

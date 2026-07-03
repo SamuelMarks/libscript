@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Primary setup script for the GCP cloud provider component.
+#
+# ## Usage
+# Sources `setup_base.sh` to route to generic or OS-specific implementations.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054

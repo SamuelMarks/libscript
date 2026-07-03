@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'xpk' stack.
+
+.DESCRIPTION
+Execute this script to install and configure xpk on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $XpkVersion = $env:XPK_VERSION

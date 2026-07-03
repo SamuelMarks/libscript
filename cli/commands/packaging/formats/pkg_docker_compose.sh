@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Implements packaging logic for the 'docker_compose' format.
+# 
+# ## Usage
+# This script is called by the packaging system and should not be executed manually.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
     base_image="debian:bookworm-slim"
     while [ $# -gt 0 ]; do
       case "$1" in
@@ -65,8 +71,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
     fi
 
     if [ -n "$deps_list" ]; then
-      echo "version: '3.8'"
-      echo "services:"
+      printf '%s\n' "version: '3.8'"
+      printf '%s\n' "services:"
 
       sorted_deps=$(printf '%b\n' "$deps_list" | awk '
       function get_priority(pkg) {
@@ -97,30 +103,30 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
       }')
 
       prev_pkg=""
-      echo "$sorted_deps" | while read -r layer pkg ver override; do
+      printf '%s\n' "$sorted_deps" | while read -r layer pkg ver override; do
         if [ -n "$pkg" ]; then
           if [ "$ver" = "null" ]; then ver="latest"; fi
 
           df="Dockerfile.$pkg"
-          echo "FROM $base_image" > "$df"
-          echo "ARG TARGETOS=linux" >> "$df"
-          echo "ARG TARGETARCH=amd64" >> "$df"
-          echo "ENV LC_ALL=C.UTF-8 LANG=C.UTF-8" >> "$df"
-          echo "ENV LIBSCRIPT_ROOT_DIR=\"/opt/libscript\"" >> "$df"
-          echo "ENV LIBSCRIPT_BUILD_DIR=\"/opt/libscript_build\"" >> "$df"
-          echo "ENV LIBSCRIPT_DATA_DIR=\"/opt/libscript_data\"" >> "$df"
-          echo "ENV LIBSCRIPT_CACHE_DIR=\"/opt/libscript_cache\"" >> "$df"
+          printf '%s\n' "FROM $base_image" > "$df"
+          printf '%s\n' "ARG TARGETOS=linux" >> "$df"
+          printf '%s\n' "ARG TARGETARCH=amd64" >> "$df"
+          printf '%s\n' "ENV LC_ALL=C.UTF-8 LANG=C.UTF-8" >> "$df"
+          printf '%s\n' "ENV LIBSCRIPT_ROOT_DIR=\"/opt/libscript\"" >> "$df"
+          printf '%s\n' "ENV LIBSCRIPT_BUILD_DIR=\"/opt/libscript_build\"" >> "$df"
+          printf '%s\n' "ENV LIBSCRIPT_DATA_DIR=\"/opt/libscript_data\"" >> "$df"
+          printf '%s\n' "ENV LIBSCRIPT_CACHE_DIR=\"/opt/libscript_cache\"" >> "$df"
 
-          pkg_up=$(echo "$pkg" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
-          echo "ENV ${pkg_up}_VERSION=\"$ver\"" >> "$df"
+          pkg_up=$(printf '%s\n' "$pkg" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
+          printf '%s\n' "ENV ${pkg_up}_VERSION=\"$ver\"" >> "$df"
           if [ -n "$override" ] && [ "$override" != "null" ]; then
-              echo "ENV ${pkg_up}_URL=\"$override\"" >> "$df"
+              printf '%s\n' "ENV ${pkg_up}_URL=\"$override\"" >> "$df"
               filename=$(basename "${override%%\?*}")
-              echo "ADD \${${pkg_up}_URL} /opt/libscript_cache/$pkg/$filename" >> "$df"
+              printf '%s\n' "ADD \${${pkg_up}_URL} /opt/libscript_cache/$pkg/$filename" >> "$df"
           fi
-          echo "COPY . /opt/libscript" >> "$df"
-          echo "WORKDIR /opt/libscript" >> "$df"
-          echo "RUN ./libscript.sh install $pkg \${${pkg_up}_VERSION}" >> "$df"
+          printf '%s\n' "COPY . /opt/libscript" >> "$df"
+          printf '%s\n' "WORKDIR /opt/libscript" >> "$df"
+          printf '%s\n' "RUN ./libscript.sh install $pkg \${${pkg_up}_VERSION}" >> "$df"
 
           healthcheck="[\"CMD-SHELL\", \"echo '$pkg is ok' || exit 1\"]"
           if [ "$pkg" = "postgres" ]; then healthcheck="[\"CMD\", \"pg_isready\", \"-U\", \"postgres\"]"; fi
@@ -141,28 +147,28 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
               fi
           fi
 
-          echo "  $pkg:"
-          echo "    build:"
-          echo "      context: ."
-          echo "      dockerfile: $df"
-          echo "    healthcheck:"
-          echo "      test: $healthcheck"
-          echo "      interval: 5s"
-          echo "      retries: 5"
-          echo "      start_period: 5s"
+          printf '%s\n' "  $pkg:"
+          printf '%s\n' "    build:"
+          printf '%s\n' "      context: ."
+          printf '%s\n' "      dockerfile: $df"
+          printf '%s\n' "    healthcheck:"
+          printf '%s\n' "      test: $healthcheck"
+          printf '%s\n' "      interval: 5s"
+          printf '%s\n' "      retries: 5"
+          printf '%s\n' "      start_period: 5s"
 
           if [ -n "$prev_pkg" ]; then
-              echo "    depends_on:"
-              echo "      $prev_pkg:"
-              echo "        condition: service_healthy"
+              printf '%s\n' "    depends_on:"
+              printf '%s\n' "      $prev_pkg:"
+              printf '%s\n' "        condition: service_healthy"
           fi
 
-          echo "    environment:"
+          printf '%s\n' "    environment:"
           if [ -n "$override" ] && [ "$override" != "null" ]; then
-            echo "      - ${pkg_up}_URL=\"$override\""
+            printf '%s\n' "      - ${pkg_up}_URL=\"$override\""
           fi
           if env_out=$(PREFIX="/opt/libscript/installed/$pkg" "${THIS_FILE}" env "$pkg" "$ver" --format=docker_compose 2>/dev/null); then
-            echo "$env_out" | grep -vE '^(STACK=|SCRIPT_NAME=)' | sed 's/^/      - /g'
+            printf '%s\n' "$env_out" | grep -vE '^(STACK=|SCRIPT_NAME=)' | sed 's/^/      - /g'
           fi
 
           prev_pkg="$pkg"

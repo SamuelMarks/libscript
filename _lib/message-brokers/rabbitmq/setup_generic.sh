@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Generic setup module for RabbitMQ.
+#
+# ## Usage
+# Installs RabbitMQ via the system package manager and generates a basic configuration.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR="${SCRIPT_DIR}"
 
 for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
@@ -36,7 +42,7 @@ if libscript_depends 'rabbitmq'; then
     conf_file="/etc/rabbitmq/rabbitmq.conf"
     priv mkdir -p /etc/rabbitmq
     if [ -n "${RABBITMQ_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
-      echo "listeners.tcp.default = ${RABBITMQ_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" | priv tee -a "${conf_file}" >/dev/null
+      printf '%s\n' "listeners.tcp.default = ${RABBITMQ_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" | priv tee -a "${conf_file}" >/dev/null
     fi
     >&2 printf "RabbitMQ installed via package manager.
 "
@@ -47,17 +53,17 @@ else
 fi
 
 case "${_LIBSCRIPT_TRUE:-1}" in
-  "$( [ -n "${RABBITMQ_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ] && echo 1 )")
+  "$( [ -n "${RABBITMQ_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ] && printf '%s\n' 1 )")
   if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "unix:${RABBITMQ_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then
     true
   fi
     ;;
-  "$( [ -n "${RABBITMQ_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ] && [ -n "${RABBITMQ_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ] && echo 1 )")
+  "$( [ -n "${RABBITMQ_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ] && [ -n "${RABBITMQ_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ] && printf '%s\n' 1 )")
   if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${RABBITMQ_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${RABBITMQ_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
     true
   fi
     ;;
-  "$( [ -n "${RABBITMQ_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ] && echo 1 )")
+  "$( [ -n "${RABBITMQ_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ] && printf '%s\n' 1 )")
   if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${RABBITMQ_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
     true
   fi

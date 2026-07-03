@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Handles operations related to the component 'iis'.
+
+.DESCRIPTION
+Execute this script to perform actions for iis.
+#>
+
 $ErrorActionPreference = "Stop"
 
 param (

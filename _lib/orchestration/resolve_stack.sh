@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# A portable wrapper for the SAT/Constraint solver using jq on Unix-like systems.
+#
+# ## Usage
+# Run `resolve_stack.sh <path_to_install.json>` to aggregate component manifests and compute an installation sequence.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 # @description Automatically handles resolve_stack for the resolve_stack.sh (orchestration) component.
 # @file resolve_stack.sh
 
@@ -63,7 +69,7 @@ fi
 MANIFESTS=$(find "${SCRIPT_DIR}/.." -name manifest.json)
 
 if ! command -v jq >/dev/null 2>&1; then
-    echo "Error: jq is required but not installed." >&2
+    printf '%s\n' "Error: jq is required but not installed." >&2
     exit 1
 fi
 

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'kubectl' stack.
+
+.DESCRIPTION
+Execute this script to install and configure kubectl on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $KubectlVersion = $env:KUBECTL_VERSION

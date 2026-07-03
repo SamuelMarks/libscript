@@ -9,6 +9,12 @@
       "description": "Specific version of maven to install. Can be a numeric version or an alias.",
       "type": "string",
       "default": "latest"
+    },
+    "MAVEN_INSTALL_METHOD": {
+      "description": "How to install MAVEN. 'system' uses the native OS package manager, 'libscript-native' downloads binaries natively.",
+      "type": "string",
+      "enum": ["system", "libscript-native", "mise", "asdf"],
+      "default": "libscript-native"
     }
   }
 }

@@ -1,2 +1,10 @@
+<#
+.SYNOPSIS
+Provides a generic, cross-platform uninstallation mechanism for the component 'pyenv' stack.
+
+.DESCRIPTION
+Execute this script to perform generic removal steps for pyenv.
+#>
+
 $ErrorActionPreference = "Stop"
 # Generic uninstall for PowerShell skipped

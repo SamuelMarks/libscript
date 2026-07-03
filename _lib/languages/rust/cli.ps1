@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'rust' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for rust.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "rust"

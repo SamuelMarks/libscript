@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Debian-specific setup script for MongoDB.
+#
+# ## Usage
+# Configures the official MongoDB APT repository and installs `mongodb-org`.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -24,7 +30,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 _DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${_DIR}"
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 for LIB in '_lib/_common/pkg_mgr.sh' '_lib/_common/priv.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
@@ -40,7 +46,7 @@ if command -v gpg >/dev/null 2>&1; then
   libscript_download 'https://www.mongodb.org/static/pgp/server-7.0.asc' "${MONGODB_KEY}"
   priv gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg --dearmor --yes < "${MONGODB_KEY}"
   rm -f "${MONGODB_KEY}"
-  echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | priv tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+  printf '%s\n' "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | priv tee /etc/apt/sources.list.d/mongodb-org-7.0.list
   pkg_mgr update
   libscript_depends 'mongodb-org'
 else

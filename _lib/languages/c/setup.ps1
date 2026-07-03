@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'c' stack.
+
+.DESCRIPTION
+Execute this script to install and configure c on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 #!/usr/bin/env pwsh

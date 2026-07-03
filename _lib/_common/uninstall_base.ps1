@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Handles the removal and uninstallation process for the component '_common' stack.
+
+.DESCRIPTION
+Execute this script to remove _common and its associated configurations from the system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (-not (Test-Path Variable:global:LIBSCRIPT_ROOT_DIR)) {

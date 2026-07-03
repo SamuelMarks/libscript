@@ -1,4 +1,12 @@
 #!/bin/sh
+# ## Overview
+# Provides fallback installation logic for the Node.js Server component on Unix platforms
+# lacking a dedicated installer (like Debian's). It acts as a placeholder, logging
+# that generic setup is skipped.
+# 
+# ## Usage
+# Typically called internally by `setup.sh` when a platform-specific setup script is missing.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,5 +30,5 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 log_info "Generic setup for nodejs server skipped"

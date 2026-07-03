@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Packages the libscript environment into distributable formats.
+# 
+# ## Usage
+# Execute this script to build installer packages.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 if [ "$CMD" = "package_as" ]; then
   pkg_type="$1"
   shift
@@ -43,7 +49,7 @@ if [ "$CMD" = "package_as" ]; then
   elif [ "$pkg_type" = "dmg" ]; then
     . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_dmg.sh"
   else
-    echo "Error: Unsupported package format '$pkg_type'." >&2
+    printf '%s\n' "Error: Unsupported package format '$pkg_type'." >&2
     exit 1
   fi
 fi

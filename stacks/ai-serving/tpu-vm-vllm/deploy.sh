@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Manages the deployment workflow for the TPU VM vLLM AI serving stack stack.
+# 
+# ## Usage
+# Execute this script to deploy tpu-vm-vllm to the target environment.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -32,8 +38,8 @@ LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$_root}"
 
 set -feu
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  echo "Usage: $0"
-  echo "See README.md for details."
+  printf '%s\n' "Usage: $0"
+  printf '%s\n' "See README.md for details."
   exit 0
 fi
 
@@ -41,11 +47,11 @@ fi
 TPU_NAME="${TPU_NAME:-ml-tpu-vm}"
 MODEL_NAME="${MODEL_NAME:-your-org/your-model-name}"
 if [ "$MODEL_NAME" = "your-org/your-model-name" ] || [ -z "$MODEL_NAME" ]; then
-  echo "[ERROR] MODEL_NAME must be explicitly specified (cannot be empty or the placeholder)."
+  printf '%s\n' "[ERROR] MODEL_NAME must be explicitly specified (cannot be empty or the placeholder)."
   exit 1
 fi
 
-echo "Deploying $MODEL_NAME to TPU VM $TPU_NAME..."
+printf '%s\n' "Deploying $MODEL_NAME to TPU VM $TPU_NAME..."
 
 # The deployment script runs commands via SSH on the TPU VM
 cat << 'EOF' > /tmp/deploy_tpu.sh
@@ -78,4 +84,4 @@ EOF
 
 "${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp/tpu-vm/cli.sh" ssh "$TPU_NAME" "bash -s" < /tmp/deploy_tpu.sh "$MODEL_NAME"
 
-echo "Deploy complete."
+printf '%s\n' "Deploy complete."

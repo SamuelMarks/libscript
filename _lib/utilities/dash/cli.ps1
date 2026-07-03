@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'dash' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for dash.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "dash"

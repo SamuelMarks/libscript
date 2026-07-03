@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'cpanm' stack.
+
+.DESCRIPTION
+Execute this script to install and configure cpanm on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (-Not (Get-Command perl -ErrorAction SilentlyContinue)) {

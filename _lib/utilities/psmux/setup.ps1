@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'psmux' stack.
+
+.DESCRIPTION
+Execute this script to install and configure psmux on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $Version = $env:PSMUX_VERSION

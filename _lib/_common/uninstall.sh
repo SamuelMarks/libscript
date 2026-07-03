@@ -1,4 +1,12 @@
 #!/bin/sh
+# ## Overview
+# Serves as the primary Unix default uninstall script for components.
+# It provides a simple fallback mechanism to remove the `INSTALLED_DIR`
+# if present. Components needing complex teardown replace this script.
+# 
+# ## Usage
+# Execute this script to perform a basic file-level uninstallation on Unix systems.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +30,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 # Default uninstall hook
 if [ -n "$INSTALLED_DIR" ] && [ -d "$INSTALLED_DIR" ]; then
   log_info "Removing $INSTALLED_DIR..."

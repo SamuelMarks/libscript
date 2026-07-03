@@ -1,4 +1,12 @@
 @echo off
+:: # pre-commit.cmd
+::
+:: ## Overview
+:: Handles operations related to the component '.githooks'.
+:: 
+:: ## Usage
+:: Execute this script to perform actions for .githooks.
+
 setlocal EnableDelayedExpansion
 
 echo Running pre-commit hooks...

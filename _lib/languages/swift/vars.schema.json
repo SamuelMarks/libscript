@@ -6,15 +6,15 @@
   "type": "object",
   "properties": {
     "SWIFT_INSTALL_METHOD": {
-      "description": "How to install SWIFT. 'system' uses the native OS package manager, 'source' compiles/downloads binaries.",
+      "description": "How to install SWIFT. 'system' uses the native OS package manager, 'libscript-native' downloads binaries natively.",
       "type": "string",
-      "enum": ["system", "source"],
-      "default": "system"
+      "enum": ["system", "libscript-native", "mise", "asdf"],
+      "default": "libscript-native"
     },
     "SWIFT_VERSION": {
       "description": "Version of Swift Toolchain to install",
       "type": "string",
-      "default": "latest"
+      "default": "5.10"
     }
   }
 }

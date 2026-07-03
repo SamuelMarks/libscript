@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the PrestaShop e-commerce platform stack.
+
+.DESCRIPTION
+Execute this script to install and configure prestashop on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PrestashopVersion = if ($env:PRESTASHOP_VERSION) { $env:PRESTASHOP_VERSION } else { "8.2.4" }

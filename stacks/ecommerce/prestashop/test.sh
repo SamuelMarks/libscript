@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Implements automated tests to verify the correctness of the PrestaShop e-commerce platform stack.
+# 
+# ## Usage
+# Execute this script to run the test suite for prestashop.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +28,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 export LIBSCRIPT_ROOT_DIR
 for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
@@ -32,12 +38,12 @@ for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-echo "Validating PrestaShop installation..."
+printf '%s\n' "Validating PrestaShop installation..."
 PRESTASHOP_WWWROOT="${PRESTASHOP_WWWROOT:-/var/www/prestashop}"
 if [ -d "${PRESTASHOP_WWWROOT}/classes" ] || [ -d "${PRESTASHOP_WWWROOT}/install" ]; then
-    echo "PrestaShop directory found at ${PRESTASHOP_WWWROOT}"
+    printf '%s\n' "PrestaShop directory found at ${PRESTASHOP_WWWROOT}"
     exit 0
 else
-    echo "PrestaShop directory not found at ${PRESTASHOP_WWWROOT}"
+    printf '%s\n' "PrestaShop directory not found at ${PRESTASHOP_WWWROOT}"
     exit 1
 fi

@@ -1,4 +1,12 @@
 @echo off
+:: # iis.cmd
+::
+:: ## Overview
+:: Network control library module for iis.
+:: 
+:: ## Usage
+:: This script provides internal functions and should not be executed directly.
+
 setlocal EnableDelayedExpansion
 if "%NETCTL_STATE_FILE%"=="" set NETCTL_STATE_FILE=.netctl.json
 

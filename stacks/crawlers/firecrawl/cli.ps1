@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the Firecrawl crawler stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for firecrawl.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "firecrawl"

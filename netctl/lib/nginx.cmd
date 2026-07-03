@@ -1,4 +1,12 @@
 @echo off
+:: # nginx.cmd
+::
+:: ## Overview
+:: Network control library module for nginx.
+:: 
+:: ## Usage
+:: This script provides internal functions and should not be executed directly.
+
 setlocal EnableDelayedExpansion
 if "%NETCTL_STATE_FILE%"=="" set NETCTL_STATE_FILE=.netctl.json
 

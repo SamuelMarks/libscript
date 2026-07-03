@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the Nextcloud collaboration platform stack.
+
+.DESCRIPTION
+Execute this script to install and configure nextcloud on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $NextcloudVersion = if ($env:NEXTCLOUD_VERSION) { $env:NEXTCLOUD_VERSION } else { "latest" }

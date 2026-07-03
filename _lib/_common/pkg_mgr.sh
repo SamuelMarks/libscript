@@ -1,4 +1,14 @@
 #!/bin/sh
+# ## Overview
+# Provides an abstraction layer over native system package managers.
+# It defines `libscript_depends` for resolving and installing system dependencies,
+# and `libscript_download` for robust file fetching with caching, checksum validation,
+# and signature verification.
+# 
+# ## Usage
+# Source this file to interact consistently with system-level package management
+# and to safely fetch remote artifacts.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +32,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 _PKG_MGR_DIR="${SCRIPT_DIR}"
 
 # Source logging
@@ -115,6 +125,10 @@ is_installed() {
 }
 
 libscript_depends() {
+  if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" = "1" ]; then
+    log_info "Skipping system dependencies due to LIBSCRIPT_SKIP_SYSTEM_DEPS=1"
+    return 0
+  fi
   pkgs_to_install=''
   for pkg in "$@"; do
     mapped_pkgs="$(map_package "${pkg}")" || {
@@ -177,8 +191,25 @@ libscript_download() {
   # 1. Checksum Resolution
   checksum_db="${LIBSCRIPT_ROOT_DIR}/checksums.txt"
   expected_checksum="$provided_checksum"
+  checksum_from_db=0
+
   if [ -z "$expected_checksum" ] && [ -f "$checksum_db" ]; then
-    expected_checksum="$(grep -F "$url" "$checksum_db" | head -n 1 | awk '{print $2}' || true)"
+    db_match="$(grep -F "$url" "$checksum_db" | head -n 1 | awk '{print $2}' || true)"
+    if [ -n "$db_match" ]; then
+        expected_checksum="$db_match"
+        checksum_from_db=1
+    fi
+  fi
+
+  # Dynamic Checksum Fetching
+  if [ -z "$expected_checksum" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/fetch_checksum.sh" ]; then
+      fetched_checksum="$("${LIBSCRIPT_ROOT_DIR}/_lib/_common/fetch_checksum.sh" "$url" || true)"
+      if [ -n "$fetched_checksum" ]; then
+          expected_checksum="sha-256=$fetched_checksum"
+          log_info "Fetched checksum dynamically: $fetched_checksum"
+      else
+          log_info "Warning: No checksum provided or found in DB/dynamically for $url"
+      fi
   fi
 
   # 2. Aria2 Export Mode
@@ -241,17 +272,17 @@ libscript_download() {
     fi
 
     # Strategy D: nc/tcp fallbacks (HTTP only)
-    if [ "$download_success" -eq 0 ] && echo "$url" | grep -q "^http://"; then
+    if [ "$download_success" -eq 0 ] && printf '%s\n' "$url" | grep -q "^http://"; then
         host="${url#*://}"; path="/${host#*/}"; host="${host%%/*}"
         if command -v nc >/dev/null 2>&1; then
           printf "GET %s HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n" "$path" "$host" | nc "$host" 80 > "${cache_file}.tmp"
-          { while IFS= read -r line; do line="$(echo "$line" | tr -d '\r\n')"; [ -z "$line" ] && break; done; cat; } < "${cache_file}.tmp" > "$cache_file"
+          { while IFS= read -r line; do line="$(printf '%s\n' "$line" | tr -d '\r\n')"; [ -z "$line" ] && break; done; cat; } < "${cache_file}.tmp" > "$cache_file"
           rm -f "${cache_file}.tmp"
           download_success=1
         elif [ -e /dev/tcp/"$host"/80 ]; then
           exec 3<>/dev/tcp/"$host"/80
           printf "GET %s HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n" "$path" "$host" >&3
-          { while IFS= read -r line <&3; do line="$(echo "$line" | tr -d '\r\n')"; [ -z "$line" ] && break; done; cat <&3; } > "$cache_file"
+          { while IFS= read -r line <&3; do line="$(printf '%s\n' "$line" | tr -d '\r\n')"; [ -z "$line" ] && break; done; cat <&3; } > "$cache_file"
           exec 3<&-
           download_success=1
         fi
@@ -263,7 +294,7 @@ libscript_download() {
     fi
 
     # Verify size
-    fsize=$(wc -c < "$cache_file" | tr -d ' ' 2>/dev/null || stat -c%s "$cache_file" 2>/dev/null || stat -f%z "$cache_file" 2>/dev/null || echo "1")
+    fsize=$(wc -c < "$cache_file" | tr -d ' ' 2>/dev/null || stat -c%s "$cache_file" 2>/dev/null || stat -f%z "$cache_file" 2>/dev/null || printf '%s\n' "1")
     if [ "$fsize" = "0" ]; then
       log_error "Downloaded file ${cache_file} is empty."
       rm -f "$cache_file"
@@ -291,8 +322,25 @@ libscript_download() {
   elif [ -n "$cache_file" ] && [ "${LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB:-0}" != "1" ] && [ -f "$cache_file" ]; then
     # Auto-populate checksum DB if missing
     if command -v sha256sum >/dev/null 2>&1; then
-        echo "$url $(sha256sum "$cache_file" | awk '{print $1}')" >> "$checksum_db"
+        printf '%s\n' "$url $(sha256sum "$cache_file" | awk '{print $1}')" >> "$checksum_db"
     fi
+  fi
+
+  # Auto-populate DB with dynamically fetched checksum if we didn't have it in DB
+  if [ "$checksum_from_db" -eq 0 ] && [ -n "$expected_checksum" ] && [ "$expected_checksum" != "SKIP" ]; then
+    if [ "${LIBSCRIPT_DISABLE_CHECKSUM_TXT_UPDATE:-0}" != "1" ]; then
+       log_info "Updating checksums.txt with fetched checksum for $url"
+       printf '%s\n' "$url ${expected_checksum#sha-256=}" >> "$checksum_db"
+    fi
+  fi
+
+  # Signature Verification
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/verify_signature.sh" ]; then
+      if ! "${LIBSCRIPT_ROOT_DIR}/_lib/_common/verify_signature.sh" "$cache_file" "$url"; then
+          log_error "Signature verification failed for ${url}"
+          rm -f "$cache_file"
+          return 1
+      fi
   fi
 
   # 6. Final Placement
@@ -332,14 +380,14 @@ libscript_process_aria2_file() {
 
   while IFS= read -r line || [ -n "$line" ]; do
     # skip empty lines safely
-    [ -z "$(echo "$line" | tr -d '[:space:]')" ] && continue
+    [ -z "$(printf '%s\n' "$line" | tr -d '[:space:]')" ] && continue
 
     if echo "$line" | grep -q '^[[:space:]]'; then
 
-      opt="$(echo "$line" | sed 's/^[[:space:]]*//')"
+      opt="$(printf '%s\n' "$line" | sed 's/^[[:space:]]*//')"
       if echo "$opt" | grep -q '^out='; then
         out="${opt#out=}"
-      elif echo "$opt" | grep -q '^checksum='; then
+      elif printf '%s\n' "$opt" | grep -q '^checksum='; then
         checksum="${opt#checksum=}"
       fi
     else

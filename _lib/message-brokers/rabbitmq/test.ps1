@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Implements automated tests to verify the correctness of the component 'rabbitmq' stack.
+
+.DESCRIPTION
+Execute this script to run the test suite for rabbitmq.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (Get-Command rabbitmq -ErrorAction SilentlyContinue) {

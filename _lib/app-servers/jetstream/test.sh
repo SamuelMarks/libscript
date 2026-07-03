@@ -1,4 +1,12 @@
 #!/bin/sh
+# ## Overview
+# Serves as the Unix test entry point for the Jetstream component.
+# It sources the testing framework and runs `assert_version` on `jetstream-serve`
+# to verify that the executable is correctly installed and functioning.
+# 
+# ## Usage
+# Execute this script to run the tests for the Jetstream component.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054

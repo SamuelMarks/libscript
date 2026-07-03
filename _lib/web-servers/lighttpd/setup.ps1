@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'lighttpd' stack.
+
+.DESCRIPTION
+Execute this script to install and configure lighttpd on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $LighttpdVersion = $env:LIGHTTPD_VERSION

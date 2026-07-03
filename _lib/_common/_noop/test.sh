@@ -1,4 +1,12 @@
 #!/bin/sh
+# ## Overview
+# Provides validation and testing logic for the `_noop` component.
+# It ensures the environment paths are constructed and verifies if the mock
+# executable is found (or reports it skipped).
+# 
+# ## Usage
+# Execute this script to run the tests for the `_noop` component.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,7 +30,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 export LIBSCRIPT_ROOT_DIR
 
@@ -39,7 +47,7 @@ export PATH
 [ -d "${LIBSCRIPT_DATA_DIR}" ] || mkdir -p -- "${LIBSCRIPT_DATA_DIR}"
 
 if command -v _noop >/dev/null 2>&1; then
-  _noop --version || echo "_noop found"
+  _noop --version || printf '%s\n' "_noop found"
 else
-  echo "_noop skipped (not found)"
+  printf '%s\n' "_noop skipped (not found)"
 fi

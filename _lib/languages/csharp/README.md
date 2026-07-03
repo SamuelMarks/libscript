@@ -101,7 +101,7 @@ running the setup script.
 | `MODEL_NAME` | HuggingFace model string to serve | `your-org/your-model-name` |  |
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
-| `CSHARP_INSTALL_METHOD` | How to install CSHARP. 'system' uses the native OS package manager, 'source' compiles/downloads binaries. | `system` |  |
+| `CSHARP_INSTALL_METHOD` | How to install CSHARP. 'system' uses the native OS package manager, 'libscript-native' downloads binaries natively. | `libscript-native` |  |
 | `CSHARP_VERSION` | Version of C# Toolchain to install | `latest` |  |
 <!-- END_VARS -->
 

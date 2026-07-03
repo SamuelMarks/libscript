@@ -46,9 +46,9 @@ provider.
 | `MODEL_NAME` | HuggingFace model string to serve | `your-org/your-model-name` |  |
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
-| `GCP_PROJECT_ID` |  | `none` |  |
-| `GCP_REGION` |  | `us-central1` |  |
-| `GCP_ZONE` |  | `us-central1-a` |  |
+| `GCP_PROJECT_ID` | GCP Project ID | `none` |  |
+| `GCP_REGION` | GCP Region | `us-central1` |  |
+| `GCP_ZONE` | GCP Zone | `us-central1-a` |  |
 <!-- END_VARS -->
 
 ## Platform Support

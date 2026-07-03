@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Generates markdown documentation for the libscript codebase.
+# 
+# ## Usage
+# Execute this script to rebuild the markdown documentation.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -28,7 +34,7 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 export ROOT_DIR
 "${SCRIPT_DIR}/inject_markers.sh"
 
-echo "Generating markdown docs..."
+printf '%s\n' "Generating markdown docs..."
 
 # We need to process each component
 find "$ROOT_DIR" -type f -name "README.md" | grep -E "(_lib|app-servers|stacks)" | while IFS= read -r readme; do
@@ -42,8 +48,8 @@ find "$ROOT_DIR" -type f -name "README.md" | grep -E "(_lib|app-servers|stacks)"
         plat_tmp=$(mktemp)
         
         # Build vars table
-        echo "| Variable | Description | Default | Aliases/Examples |" > "$vars_tmp"
-        echo "|---|---|---|---|" >> "$vars_tmp"
+        printf '%s\n' "| Variable | Description | Default | Aliases/Examples |" > "$vars_tmp"
+        printf '%s\n' "|---|---|---|---|" >> "$vars_tmp"
         
         # Process base_vars if it's a _lib component
         if case "$dir" in *"_lib/"*) true ;; *) false ;; esac && [ -f "$ROOT_DIR/_lib/_common/base_vars.schema.json" ]; then
@@ -58,9 +64,9 @@ find "$ROOT_DIR" -type f -name "README.md" | grep -E "(_lib|app-servers|stacks)"
         
         # Build platforms table
         # We can extract it from scripts
-        echo "- Linux" > "$plat_tmp"
-        echo "- macOS" >> "$plat_tmp"
-        echo "- Windows" >> "$plat_tmp"
+        printf '%s\n' "- Linux" > "$plat_tmp"
+        printf '%s\n' "- macOS" >> "$plat_tmp"
+        printf '%s\n' "- Windows" >> "$plat_tmp"
         
         # Inject using awk
         awk -v vars="$vars_tmp" -v plats="$plat_tmp" '
@@ -95,4 +101,4 @@ find "$ROOT_DIR" -type f -name "README.md" | grep -E "(_lib|app-servers|stacks)"
     fi
 done
 
-echo "Done."
+printf '%s\n' "Done."

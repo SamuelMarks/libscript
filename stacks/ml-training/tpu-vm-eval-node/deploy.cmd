@@ -1,4 +1,12 @@
 @echo off
+:: # deploy.cmd
+::
+:: ## Overview
+:: Manages the deployment workflow for the TPU VM evaluation node for ML stack.
+:: 
+:: ## Usage
+:: Execute this script to deploy tpu-vm-eval-node to the target environment.
+
 setlocal
 if "%~1"=="--help" (
     echo Usage: %~nx0

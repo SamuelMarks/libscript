@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'cc' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for cc.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "cc"

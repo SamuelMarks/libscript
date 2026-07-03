@@ -35,20 +35,10 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 
 set -feu
 
-# Boilerplate for finding this file and root
-if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
-elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${0}"
-else
-  THIS_FILE="${0}"
-fi
 
 # Resolve LibScript root if not set
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 # Source dependencies
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"

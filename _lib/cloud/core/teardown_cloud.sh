@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Teardown orchestrator for cloud infrastructure.
+#
+# ## Usage
+# Run `teardown_cloud.sh <provider> <node> <rg> <loc> [options]` to cleanly remove networks, firewalls, and VMs.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -70,7 +76,7 @@ TIMESTAMP=$(date +%s)
 LOG_FILE="$LOG_DIR/teardown-${TIMESTAMP}.log"
 
 log() {
-  echo "$(date '+%Y-%m-%d %H:%M:%S') [$1] $2" | tee -a "$LOG_FILE"
+  printf '%s\n' "$(date '+%Y-%m-%d %H:%M:%S') [$1] $2" | tee -a "$LOG_FILE"
 }
 
 log "INIT" "Starting $PROVIDER teardown for $NODE..."
@@ -99,7 +105,7 @@ if [ -f "$JSON_FILE" ] && command -v jq >/dev/null 2>&1; then
 fi
 
 CLI="$SCRIPT_DIR/../../cloud-providers/$PROVIDER/cli.sh"
-if [ ! -f "$CLI" ]; then echo "Provider $PROVIDER not supported."; exit 1; fi
+if [ ! -f "$CLI" ]; then printf '%s\n' "Provider $PROVIDER not supported."; exit 1; fi
 
 # -----------------------------------------------------------------------------
 # Dependency Check
@@ -199,10 +205,10 @@ if [ -n "$STATE_PATHS" ]; then
         S3_ARGS=""
         if [ -n "$STATE_ENDPOINT" ]; then S3_ARGS="--endpoint-url $STATE_ENDPOINT"; fi
         run_with_auth_check aws s3 cp $S3_ARGS "$REPO_PATH/$PATH_ITEM" "$STATE_BUCKET/$PATH_ITEM"
-      elif echo "$STATE_BUCKET" | grep -q "^gs://"; then
+      elif printf '%s\n' "$STATE_BUCKET" | grep -q "^gs://"; then
         run_with_auth_check gcloud storage cp "$REPO_PATH/$PATH_ITEM" "$STATE_BUCKET/$PATH_ITEM"
-      elif echo "$STATE_BUCKET" | grep -q "^azure://"; then
-        CONTAINER=$(echo "$STATE_BUCKET" | awk -F/ '{print $3}')
+      elif printf '%s\n' "$STATE_BUCKET" | grep -q "^azure://"; then
+        CONTAINER=$(printf '%s\n' "$STATE_BUCKET" | awk -F/ '{print $3}')
         run_with_auth_check az storage blob upload --container-name "$CONTAINER" --name "$PATH_ITEM" --file "$REPO_PATH/$PATH_ITEM" --auth-mode login --overwrite
       fi
     fi
@@ -212,7 +218,7 @@ fi
 if [ -n "$DOMAIN" ] && [ "$RETAIN_IP" -eq 0 ]; then
   log "DNS" "Unmapping DNS..."
   if [ "$PROVIDER" = "azure" ]; then
-    ZONE_NAME=$(echo "$DOMAIN" | awk -F. '{print $(NF-1)"."$NF}')
+    ZONE_NAME=$(printf '%s\n' "$DOMAIN" | awk -F. '{print $(NF-1)"."$NF}')
     TARGET_DNS_RG="${DNS_RG:-${ZONE_NAME}-rg}"
     run_with_auth_check "$CLI" dns unmap-node "$NODE" "$RG" "$DOMAIN" "$ZONE_NAME" "$TARGET_DNS_RG" || true
   elif [ "$PROVIDER" = "aws" ]; then
@@ -224,7 +230,7 @@ if [ -n "$DOMAIN" ] && [ "$RETAIN_IP" -eq 0 ]; then
       run_with_auth_check "$CLI" dns unmap-node "$NODE" "$DOMAIN" "$AWS_ZONE_ID" || true
     fi
   elif [ "$PROVIDER" = "gcp" ]; then
-    ZONE_NAME=$(echo "$DOMAIN" | awk -F. '{print $(NF-1)"-"$NF}')
+    ZONE_NAME=$(printf '%s\n' "$DOMAIN" | awk -F. '{print $(NF-1)"-"$NF}')
     run_with_auth_check "$CLI" dns unmap-node "$NODE" "$LOC" "$DOMAIN" "$ZONE_NAME" || true
   fi
 elif [ -n "$DOMAIN" ] && [ "$RETAIN_IP" -eq 1 ]; then

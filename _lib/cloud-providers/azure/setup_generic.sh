@@ -1,4 +1,11 @@
 #!/bin/sh
+# ## Overview
+# Implements the `azure` cloud provider CLI, managing Azure VNETs, VMs, and resources.
+#
+# ## Usage
+# Provides commands like `network`, `node`, `jumpbox`, `cleanup`, and ensures `azure-cli` and `jq` are installed.
+# Sub-commands manage resource lifecycles wrapping the native `az` command.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -22,12 +29,12 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 TAG_KEY="ManagedBy"
 TAG_VAL="LibScript"
 DEFAULT_TAGS="$TAG_KEY=$TAG_VAL"
 
-# Parse tags from arguments
+# Parses tags from arguments and handles default tagging logic.
 # Returns a space-separated list of Key=V strings
 parse_tags() {
   USE_DEFAULT=true
@@ -53,7 +60,7 @@ parse_tags() {
   printf '%s' "$FINAL_TAGS"
 }
 
-# Dry run helper
+# Dry run helper wrapper for az command.
 az() {
   if [ "${DRY_RUN:-}" = "true" ]; then
     printf '[DRY_RUN] az %s\n' "$*" >&2
@@ -65,24 +72,25 @@ az() {
   command az "$@"
 }
 
-# Ensure az and jq are installed
+# Ensures required dependencies (az, jq) are installed.
 check_deps() {
   if ! command -v az >/dev/null 2>&1; then
-    echo "azure-cli not found, installing..."
+    printf '%s\n' "azure-cli not found, installing..."
     "$LIBSCRIPT_ROOT_DIR/libscript.sh" install azure-cli latest
   fi
   if ! command -v jq >/dev/null 2>&1; then
-    echo "jq not found, installing..."
+    printf '%s\n' "jq not found, installing..."
     "$LIBSCRIPT_ROOT_DIR/libscript.sh" install jq latest
   fi
 }
 
+# Manages Azure Virtual Networks (VNET).
 azure_network() {
   ACTION=$1; shift
   case "$ACTION" in
     create)
       NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}
-      if [ -z "$NAME" ] || [ -z "$RG" ]; then echo "Usage: network create <name> <rg> [--tags T] [--no-default-tags]"; exit 1; fi
+      if [ -z "$NAME" ] || [ -z "$RG" ]; then printf '%s\n' "Usage: network create <name> <rg> [--tags T] [--no-default-tags]"; exit 1; fi
       
       TAGS=$(parse_tags "$@")
       
@@ -92,7 +100,7 @@ azure_network() {
         else
           az network vnet create --name "$NAME" --resource-group "$RG" --address-prefix 10.0.0.0/16
         fi
-        echo "Created VNET '$NAME'"
+        printf '%s\n' "Created VNET '$NAME'"
       fi
       ;;
     list)
@@ -102,16 +110,17 @@ azure_network() {
       NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}
       az network vnet delete --name "$NAME" --resource-group "$RG"
       ;;
-    *) echo "Unknown network action: $ACTION"; exit 1 ;;
+    *) printf '%s\n' "Unknown network action: $ACTION"; exit 1 ;;
   esac
 }
 
+# Manages Azure Network Security Groups (NSG).
 azure_firewall() {
   ACTION=$1; shift
   case "$ACTION" in
     create)
       NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}; PORT=${3:-22}
-      if [ -z "$NAME" ] || [ -z "$RG" ]; then echo "Usage: firewall create <name> <rg> [port] [--tags T] [--no-default-tags]"; exit 1; fi
+      if [ -z "$NAME" ] || [ -z "$RG" ]; then printf '%s\n' "Usage: firewall create <name> <rg> [port] [--tags T] [--no-default-tags]"; exit 1; fi
       
       TAGS=$(parse_tags "$@")
       
@@ -122,23 +131,24 @@ azure_firewall() {
           az network nsg create --name "$NAME" --resource-group "$RG"
         fi
         az network nsg rule create --name AllowSSH --nsg-name "$NAME" --resource-group "$RG" --priority 100 --destination-port-ranges "$PORT" --access Allow --protocol Tcp
-        echo "Created NSG '$NAME' (Port $PORT open)"
+        printf '%s\n' "Created NSG '$NAME' (Port $PORT open)"
       fi
       ;;
     list)
       az network nsg list --query "[*].{Name:name, RG:resourceGroup, Tags:tags}" --output table
       ;;
-    *) echo "Unknown firewall action: $ACTION"; exit 1 ;;
+    *) printf '%s\n' "Unknown firewall action: $ACTION"; exit 1 ;;
   esac
 }
 
+# Manages individual Azure VMs.
 azure_node() {
   ACTION=$1; shift
   case "$ACTION" in
     create)
       NAME=$1; IMAGE=$2; RG=${3:-$AZURE_RESOURCE_GROUP}
       if [ -z "$NAME" ] || [ -z "$IMAGE" ] || [ -z "$RG" ]; then 
-        echo "Usage: node create <name> <image> <rg> [--bootstrap <script>] [--tags T] [--no-default-tags]"
+        printf '%s\n' "Usage: node create <name> <image> <rg> [--bootstrap <script>] [--tags T] [--no-default-tags]"
         exit 1 
       fi
       
@@ -176,15 +186,15 @@ azure_node() {
         else
           az vm create --name "$NAME" --resource-group "$RG" --image "$IMAGE" --admin-username libscript --generate-ssh-keys $EXTRA_ARGS
         fi
-        echo "Created VM '$NAME'"
+        printf '%s\n' "Created VM '$NAME'"
         if [ -n "${USER_DATA_FILE:-}" ]; then rm -f "$USER_DATA_FILE"; fi
       fi
       ;;
     exec)
       NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}; CMD=$3
-      if [ -z "$NAME" ] || [ -z "$CMD" ]; then echo "Usage: node exec <name> <rg> <command>"; exit 1; fi
+      if [ -z "$NAME" ] || [ -z "$CMD" ]; then printf '%s\n' "Usage: node exec <name> <rg> <command>"; exit 1; fi
       IP=$(az vm show -d -g "$RG" -n "$NAME" --query publicIps -o tsv)
-      echo "Executing on $NAME ($IP)..."
+      printf '%s\n' "Executing on $NAME ($IP)..."
       ssh -o StrictHostKeyChecking=no "libscript@$IP" "$CMD"
       ;;
     list)
@@ -194,62 +204,66 @@ azure_node() {
       NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}
       az vm delete --name "$NAME" --resource-group "$RG" --yes
       ;;
-    *) echo "Unknown node action: $ACTION"; exit 1 ;;
+    *) printf '%s\n' "Unknown node action: $ACTION"; exit 1 ;;
   esac
 }
 
+# Manages groups of independent Azure VMs.
 azure_node_group() {
   ACTION=$1; shift
   case "$ACTION" in
     create)
       NAME=$1; COUNT=$2; IMAGE=$3; RG=$4
-      if [ -z "$NAME" ] || [ -z "$COUNT" ]; then echo "Usage: node-group create <name> <count> <image> <rg> [args...]"; exit 1; fi
+      if [ -z "$NAME" ] || [ -z "$COUNT" ]; then printf '%s\n' "Usage: node-group create <name> <count> <image> <rg> [args...]"; exit 1; fi
       shift 4
-      echo "Provisioning Azure node-group '$NAME' ($COUNT independent nodes)..."
+      printf '%s\n' "Provisioning Azure node-group '$NAME' ($COUNT independent nodes)..."
       i=1
       while [ "$i" -le "$COUNT" ]; do
         azure_node create "${NAME}-${i}" "$IMAGE" "$RG" "$@"
         i=$((i + 1))
       done
       ;;
-    *) echo "Unknown node-group action: $ACTION"; exit 1 ;;
+    *) printf '%s\n' "Unknown node-group action: $ACTION"; exit 1 ;;
   esac
 }
 
+# Manages cron jobs directly on Azure VMs over SSH.
 azure_cron() {
   ACTION=$1; shift
   case "$ACTION" in
     create)
       NAME=$1; RG=$2; SCHEDULE=$3; CMD=$4
-      if [ -z "$NAME" ] || [ -z "$SCHEDULE" ]; then echo "Usage: cron create <target_node> <rg> <schedule> <command>"; exit 1; fi
-      echo "Setting up cronjob on Azure VM $NAME: $SCHEDULE $CMD"
+      if [ -z "$NAME" ] || [ -z "$SCHEDULE" ]; then printf '%s\n' "Usage: cron create <target_node> <rg> <schedule> <command>"; exit 1; fi
+      printf '%s\n' "Setting up cronjob on Azure VM $NAME: $SCHEDULE $CMD"
       azure_node exec "$NAME" "$RG" "(crontab -l 2>/dev/null; printf '%s %s\n' \"$SCHEDULE\" \"$CMD\") | crontab -"
       ;;
-    *) echo "Unknown cron action: $ACTION"; exit 1 ;;
+    *) printf '%s\n' "Unknown cron action: $ACTION"; exit 1 ;;
   esac
 }
 
+# Provisions a complete Jumpbox environment (VNET, NSG, VM) in Azure.
 azure_jumpbox() {
   ACTION=$1; shift
   case "$ACTION" in
     create)
       NAME=$1; IMAGE=$2; RG=${3:-$AZURE_RESOURCE_GROUP}
-      echo "Setting up Azure Jump-box '$NAME'..."
+      printf '%s\n' "Setting up Azure Jump-box '$NAME'..."
       azure_network create "${NAME}-vnet" "$RG" "$@"
       azure_firewall create "${NAME}-nsg" "$RG" 22 "$@"
       azure_node create "$NAME" "$IMAGE" "$RG" "$@"
-      echo "Azure Jump-box '$NAME' ready."
+      printf '%s\n' "Azure Jump-box '$NAME' ready."
       ;;
-    *) echo "Unknown jumpbox action: $ACTION"; exit 1 ;;
+    *) printf '%s\n' "Unknown jumpbox action: $ACTION"; exit 1 ;;
   esac
 }
 
+# Manages Azure Storage Accounts.
 azure_storage() {
   ACTION=$1; shift
   case "$ACTION" in
     create)
       NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}
-      if [ -z "$NAME" ] || [ -z "$RG" ]; then echo "Usage: storage create <name> <rg> [--tags T] [--no-default-tags]"; exit 1; fi
+      if [ -z "$NAME" ] || [ -z "$RG" ]; then printf '%s\n' "Usage: storage create <name> <rg> [--tags T] [--no-default-tags]"; exit 1; fi
       
       TAGS=$(parse_tags "$@")
       
@@ -259,36 +273,38 @@ azure_storage() {
         else
           az storage account create --name "$NAME" --resource-group "$RG" --sku Standard_LRS
         fi
-        echo "Created Storage Account '$NAME'"
+        printf '%s\n' "Created Storage Account '$NAME'"
       fi
       ;;
     delete)
       NAME=$1; RG=${2:-$AZURE_RESOURCE_GROUP}
       az storage account delete --name "$NAME" --resource-group "$RG" --yes
       ;;
-    *) echo "Unknown storage action: $ACTION"; exit 1 ;;
+    *) printf '%s\n' "Unknown storage action: $ACTION"; exit 1 ;;
   esac
 }
 
+# Lists resources managed by LibScript in Azure based on tags.
 azure_list_managed() {
   FILTER_TAG=${1:-"$TAG_KEY=$TAG_VAL"}
-  echo "--- Azure Resources (Filter: $FILTER_TAG) ---"
+  printf '%s\n' "--- Azure Resources (Filter: $FILTER_TAG) ---"
   az resource list --tag "$FILTER_TAG" --output table
 }
 
+# Cleans up Azure resources provisioned by LibScript based on tags.
 azure_cleanup() {
   PURGE_BUCKETS=$1
   FILTER_TAG=${2:-"$TAG_KEY=$TAG_VAL"}
   
-  echo "Starting Azure Cleanup (Filter: $FILTER_TAG)..."
+  printf '%s\n' "Starting Azure Cleanup (Filter: $FILTER_TAG)..."
   RESOURCES=$(az resource list --tag "$FILTER_TAG" --query "[].id" -o tsv)
   for ID in $RESOURCES; do
-    TYPE=$(echo "$ID" | awk -F/ '{print $(NF-1)}')
+    TYPE=$(printf '%s\n' "$ID" | awk -F/ '{print $(NF-1)}')
     if [ "$TYPE" = "storageAccounts" ] && [ "$PURGE_BUCKETS" != "true" ]; then
-      echo "Skipping storage account $ID (safety enabled)"
+      printf '%s\n' "Skipping storage account $ID (safety enabled)"
       continue
     fi
-    echo "Deleting $ID..."
+    printf '%s\n' "Deleting $ID..."
     az resource delete --ids "$ID" || true
   done
 }
@@ -307,8 +323,8 @@ case "$CMD" in
   cleanup) azure_cleanup "$@" ;;
   install) check_deps ;;
   *)
-    echo "LibScript Azure Cloud Wrapper"
-    echo "Usage: $0 {network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
+    printf '%s\n' "LibScript Azure Cloud Wrapper"
+    printf '%s\n' "Usage: $0 {network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
     exit 1
     ;;
 esac

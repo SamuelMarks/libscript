@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'valkey' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for valkey.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "valkey"

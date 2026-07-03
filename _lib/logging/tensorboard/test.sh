@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Test suite for the TensorBoard component.
+#
+# ## Usage
+# Automatically invoked by the test framework to assert tensorboard is installed.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054

@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Orchestrates the setup and installation process for the GKE XPK inference stack stack.
+# 
+# ## Usage
+# Execute this script to install and configure gke-xpk-inference on the local system.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -32,8 +38,8 @@ LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$_root}"
 
 set -feu
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  echo "Usage: $0"
-  echo "See README.md for details."
+  printf '%s\n' "Usage: $0"
+  printf '%s\n' "See README.md for details."
   exit 0
 fi
 
@@ -43,15 +49,15 @@ CLUSTER_NAME="${XPK_CLUSTER_NAME:-ml-xpk-cluster}"
 GCP_PROJECT_ID="${GCP_PROJECT_ID:-}"
 GCP_ZONE="${GCP_ZONE:-}"
 if [ -z "$GCP_PROJECT_ID" ] || [ -z "$GCP_ZONE" ]; then
-  echo "[ERROR] GCP_PROJECT_ID and GCP_ZONE must be explicitly specified."
+  printf '%s\n' "[ERROR] GCP_PROJECT_ID and GCP_ZONE must be explicitly specified."
   exit 1
 fi
 
-echo "Setting up XPK Production Cluster Stack..."
+printf '%s\n' "Setting up XPK Production Cluster Stack..."
 
 gcloud auth print-access-token >/dev/null 2>&1 || gcloud auth login
 
-echo "Creating GKE cluster $CLUSTER_NAME via xpk..."
+printf '%s\n' "Creating GKE cluster $CLUSTER_NAME via xpk..."
 "${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp/gke-tpu-cluster/cli.sh" create "$CLUSTER_NAME"
 
-echo "Setup complete."
+printf '%s\n' "Setup complete."

@@ -43,6 +43,7 @@ running the setup script.
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
 | `JUST_VERSION` | Specific version of just to install. Can be a numeric version or an alias. | `latest` |  |
+| `JUST_INSTALL_METHOD` | How to install JUST. 'system' uses the native OS package manager, 'libscript-native' downloads binaries natively. | `libscript-native` |  |
 <!-- END_VARS -->
 
 ## Platform Support

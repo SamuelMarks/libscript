@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'mariadb' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for mariadb.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "mariadb"

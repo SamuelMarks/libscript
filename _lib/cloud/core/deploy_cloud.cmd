@@ -1,4 +1,12 @@
 @echo off
+:: # deploy_cloud.cmd
+::
+:: ## Overview
+:: Primary deployment orchestrator for Windows, provisioning cloud infrastructure and deploying code.
+::
+:: ## Usage
+:: Run `deploy_cloud.cmd <provider> <node> <rg> <loc> [repo] [dest]` to provision VM, wait for WinRM/SSH, and deploy.
+
 setlocal EnableDelayedExpansion
 
 set "PROVIDER=%~1"

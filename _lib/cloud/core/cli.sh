@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Main CLI entry point for cloud orchestration (deploy, teardown, backup, restore).
+#
+# ## Usage
+# Handles dispatching commands like `deploy_cloud` and handles pushing/pulling/locking infrastructure state.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054

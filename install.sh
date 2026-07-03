@@ -1,4 +1,10 @@
 #!/bin/sh
+# ## Overview
+# Global installer for the libscript framework.
+# 
+# ## Usage
+# Execute this script to install libscript on the local system.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -14,6 +20,14 @@ else
   THIS_FILE="${0}"
 fi
 
+case "${1:-}" in
+  --help|-h|"-?"|"/?")
+    printf '%s\n' "Usage: $0"
+    printf '%s\n' "Configure installation via environment variables."
+    exit 0
+    ;;
+esac
+
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
     printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
@@ -23,7 +37,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 LIBSCRIPT_CLI_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 SCRIPT_DIR="${LIBSCRIPT_CLI_DIR}"
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; echo "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 for LIB in '_lib/_common/os_info.sh' 'env.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'cli' stack.
+
+.DESCRIPTION
+Execute this script to install and configure cli on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $GcpCliVersion = $env:GCP_CLI_VERSION

@@ -1,4 +1,12 @@
 @echo off
+:: # setup.cmd
+::
+:: ## Overview
+:: Primary setup script for kubectl on Windows.
+::
+:: ## Usage
+:: Routes to generic setup via `setup_base.cmd`.
+
 setlocal EnableDelayedExpansion
 if "%~1"=="--help" (
     echo Usage: %~nx0

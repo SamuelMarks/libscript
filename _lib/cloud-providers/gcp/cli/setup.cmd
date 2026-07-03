@@ -1,4 +1,12 @@
 @echo off
+:: # setup.cmd
+::
+:: ## Overview
+:: Primary setup script for the GCP CLI component on Windows.
+::
+:: ## Usage
+:: Invokes `setup_base.cmd` to route to the correct generic or OS-specific script.
+
 setlocal EnableDelayedExpansion
 if "%~1"=="--help" (
     echo Usage: %~nx0

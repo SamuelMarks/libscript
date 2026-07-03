@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'wait4x' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for wait4x.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "wait4x"

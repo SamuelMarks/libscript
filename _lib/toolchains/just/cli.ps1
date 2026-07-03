@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'just' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for just.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "just"

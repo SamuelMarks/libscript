@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'gpu-vm' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for gpu-vm.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "bazel"

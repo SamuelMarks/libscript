@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the cloud infrastructure command 'core' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for core.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "core"

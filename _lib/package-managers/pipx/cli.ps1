@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'pipx' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for pipx.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (-not $env:PACKAGE_NAME) { $env:PACKAGE_NAME = (Get-Item $PSScriptRoot).Name }

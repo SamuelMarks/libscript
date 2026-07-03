@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'krew' stack.
+
+.DESCRIPTION
+Execute this script to install and configure krew on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 if (-Not (Get-Command kubectl-krew -ErrorAction SilentlyContinue)) {

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the WordPress CMS stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for wordpress.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "wordpress"

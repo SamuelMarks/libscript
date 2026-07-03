@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Provides the command-line interface logic for the component 'httpd' stack.
+
+.DESCRIPTION
+Execute this script to trigger the CLI behavior for httpd.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $PACKAGE_NAME = "httpd"

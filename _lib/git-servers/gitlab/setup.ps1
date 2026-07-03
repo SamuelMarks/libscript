@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Orchestrates the setup and installation process for the component 'gitlab' stack.
+
+.DESCRIPTION
+Execute this script to install and configure gitlab on the local system.
+#>
+
 $ErrorActionPreference = "Stop"
 
 $MinioVersion = $env:GITLAB_VERSION

@@ -1,4 +1,12 @@
 @echo off
+:: # semver.cmd
+::
+:: ## Overview
+:: Handles Semantic Versioning (SemVer) parsing and comparison operations.
+:: 
+:: ## Usage
+:: Execute this script to compare or validate version strings.
+
 setlocal EnableDelayedExpansion
 set "v1=%~2"
 set "op=%~3"

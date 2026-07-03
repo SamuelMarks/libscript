@@ -1,4 +1,12 @@
 #!/bin/sh
+# ## Overview
+# Serves as the command-line interface entry point for the Ollama component on Unix.
+# It explicitly sets the target package to `ollama` and delegates execution
+# to the common `component_core.sh`.
+# 
+# ## Usage
+# Execute this script to interact with the component's CLI.
+
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
