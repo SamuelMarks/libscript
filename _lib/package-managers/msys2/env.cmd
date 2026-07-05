@@ -1,12 +1,6 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment variable initialization script for the msys2 component on Windows.
-:: It sets up necessary paths and environment variables required for the component
-:: to function correctly within the libscript context.
-::
-:: ## Usage
-:: Call this script to load the environment variables. Do not execute it directly without context.
+REM ## Overview
+REM Environment variable initialization script for the msys2 component.
 
-:: Environment variables for Windows
+IF "%MSYS2_VERSION%"=="" SET "MSYS2_VERSION=latest"
+SET "PATH=%LIBSCRIPT_HOME%\msys2\%MSYS2_VERSION%\bin;%PATH%"

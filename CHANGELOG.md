@@ -4,6 +4,12 @@ All notable changes to the LibScript framework are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- Added support for `pkgx` and `vfox` as valid universal version manager fallbacks.
+- Re-architected component method resolution with a smart fallback priority chain:
+  `libscript_native` -> `mise` -> `asdf` -> `pkgx` -> `vfox` -> `system`.
+
 ### Completed Initiatives
 
 #### Phase 5: AI & Machine Learning Infrastructure

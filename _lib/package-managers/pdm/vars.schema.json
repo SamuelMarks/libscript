@@ -5,6 +5,11 @@
   "description": "Configuration variables for pdm",
   "type": "object",
   "properties": {
+    "PDM_INSTALL_METHOD": {
+      "description": "How to install PDM. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "PDM_VERSION": {
       "description": "Specific version of pdm to install.",
       "type": "string",

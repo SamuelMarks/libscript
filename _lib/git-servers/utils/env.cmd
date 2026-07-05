@@ -1,10 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment initialization for Git server utils on Windows.
-::
-:: ## Usage
-:: Normally sets up defaults. Currently a no-op placeholder.
+:: Windows env stub for utils
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%UTILS_VERSION%"=="" (
+    set "UTILS_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\utils\%UTILS_VERSION%\bin;%PATH%"

@@ -1,11 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Defines environment variables for the Rust Server component on Windows.
-:: It acts as a structural placeholder, currently setting no specific variables.
-:: 
-:: ## Usage
-:: Call this script to apply the Rust Server environment variables into the current session.
+:: Windows env stub for rust-server
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%RUST_SERVER_VERSION%"=="" (
+    set "RUST_SERVER_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\rust-server\%RUST_SERVER_VERSION%\bin;%PATH%"

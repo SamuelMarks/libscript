@@ -2,7 +2,8 @@
 
 ## Overview
 
-This component manages the installation and execution of `kubectl` within the libscript ecosystem.
+This component manages the installation and execution of `kubectl` within the libscript
+ecolibscript_native.
 
 ## Usage
 

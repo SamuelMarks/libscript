@@ -51,7 +51,7 @@ cli.cmd install firecrawl
 LibScript can package this component into various deployment formats:
 
 ```sh
-libscript package_as docker firecrawl
+libscript package-as docker firecrawl
 ```
 
 ## Configuration Options

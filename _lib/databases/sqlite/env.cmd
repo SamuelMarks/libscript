@@ -1,10 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment initialization for SQLite on Windows.
-::
-:: ## Usage
-:: Normally sets up defaults. Currently a no-op placeholder.
+:: Windows env stub for sqlite
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%SQLITE_VERSION%"=="" (
+    set "SQLITE_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\sqlite\%SQLITE_VERSION%\bin;%PATH%"

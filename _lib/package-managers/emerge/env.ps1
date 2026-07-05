@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-Defines environment variables and configurations for the environment variables stack.
-
-.DESCRIPTION
-Source or call this script to configure the environment for emerge.
+Environment variable initialization script for the emerge component.
 #>
 
-$ErrorActionPreference = "Stop"
-# Environment variables for PowerShell
+$Version = $env:EMERGE_VERSION
+if (-not $Version) { $Version = "latest" }
+
+$BinPath = "$env:LIBSCRIPT_HOME\emerge\$Version\bin"
+$env:PATH = "$BinPath;$env:PATH"

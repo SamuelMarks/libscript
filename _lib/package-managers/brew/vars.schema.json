@@ -5,6 +5,11 @@
   "description": "Configuration variables for brew",
   "type": "object",
   "properties": {
+    "BREW_INSTALL_METHOD": {
+      "description": "How to install BREW. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "BREW_VERSION": {
       "description": "Specific version of brew to install.",
       "type": "string",

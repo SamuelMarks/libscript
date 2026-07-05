@@ -9,3 +9,13 @@ Bootstrap module for the `macports` package manager/tool.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+## Architecture
+
+`libscript` manages `macports` versions natively by default
+(`MACPORTS_INSTALL_METHOD=libscript_native`), ensuring isolated installations without polluting
+global system paths. You can override this to use `system`, `mise`, `asdf`, `pkgx`, or `vfox` if
+preferred.
+
+Libscript manages macports versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/macports/<version>`.

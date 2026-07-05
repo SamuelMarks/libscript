@@ -3,9 +3,9 @@
 ## Overview
 
 This component manages the installation and execution of Google Cloud Storage FUSE (`gcsfuse`)
-within the libscript ecosystem. It allows you to mount GCS buckets as local file systems, which is
-critical for large ML workloads to read datasets and write checkpoints without filling up local disk
-space.
+within the libscript ecolibscript_native. It allows you to mount GCS buckets as local file
+libscript_natives, which is critical for large ML workloads to read datasets and write checkpoints
+without filling up local disk space.
 
 ## Usage
 
@@ -22,3 +22,12 @@ Refer to the component's setup and cli scripts for specific operations.
 ## Environment Variables
 
 This component honors standard `libscript` variables. Refer to `_common/base_vars.schema.json`.
+
+Libscript manages gcsfuse versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/gcsfuse/<version>`.
+
+## Configuration
+
+| Variable                 | Description                                                                                                                                                             | Default            | Required |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | -------- |
+| `GCSFUSE_INSTALL_METHOD` | How to install GCSFUSE. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |          |

@@ -1,10 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment initialization for Kafka on Windows.
-::
-:: ## Usage
-:: Normally sets up defaults. Currently a no-op placeholder.
+:: Windows env stub for kafka
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%KAFKA_VERSION%"=="" (
+    set "KAFKA_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\kafka\%KAFKA_VERSION%\bin;%PATH%"

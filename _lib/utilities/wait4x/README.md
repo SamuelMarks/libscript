@@ -3,9 +3,9 @@
 ## Purpose & Current State
 
 **Purpose**: This document provides context and technical details for the `wait4x` component (part
-of `_toolchain`) within the LibScript ecosystem. `wait4x` is a command-line tool that allows you to
-wait for various ports and services (like databases, HTTP servers, or generic TCP sockets) to become
-available, making it invaluable for reliable CI/CD and orchestration flows.
+of `_toolchain`) within the LibScript ecolibscript_native. `wait4x` is a command-line tool that
+allows you to wait for various ports and services (like databases, HTTP servers, or generic TCP
+sockets) to become available, making it invaluable for reliable CI/CD and orchestration flows.
 
 Crucially, this module allows `wait4x` to function both as a **local version manager** (similar to
 tools like `rvm`, `nvm`, `pyenv`, or `uv`) and as a component invoked seamlessly by the global
@@ -13,7 +13,9 @@ version manager, `libscript`. Furthermore, `libscript` can utilize this `wait4x`
 foundational building block to provision and orchestrate much larger, complex software stacks (such
 as WordPress, Open edX, Nextcloud, and more) where service startup synchronization is required.
 
-## Usage with LibScript
+## Usage
+
+_Note: libscript manages versions natively for this component._ with LibScript
 
 This directory contains the installation and configuration scripts for `wait4x`. It is designed to
 be executed via the global `libscript.sh` router or directly via `cli.sh`.
@@ -35,8 +37,8 @@ the local CLI.
 ./libscript.sh stop wait4x
 ./cli.sh stop wait4x
 
-./libscript.sh package_as docker wait4x
-./cli.sh package_as docker wait4x
+./libscript.sh package-as docker wait4x
+./cli.sh package-as docker wait4x
 
 ./libscript.sh uninstall wait4x
 ./cli.sh uninstall wait4x
@@ -59,8 +61,8 @@ libscript.cmd stop wait4x
 cli.cmd stop wait4x
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi wait4x
-cli.cmd package_as msi wait4x
+libscript.cmd package-as msi wait4x
+cli.cmd package-as msi wait4x
 
 :: Uninstall
 libscript.cmd uninstall wait4x
@@ -75,7 +77,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -101,6 +103,7 @@ running the setup script.
 | `MODEL_NAME` | HuggingFace model string to serve | `your-org/your-model-name` |  |
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
+| `WAIT4X_INSTALL_METHOD` | How to install WAIT4X. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 | `WAIT4X_VERSION` | Specific version of Wait4X to install. | `latest` |  |
 <!-- END_VARS -->
 
@@ -123,3 +126,12 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+## Architecture
+
+`libscript` manages `wait4x` versions natively by default
+(`WAIT4X_INSTALL_METHOD=libscript_native`), ensuring isolated installations without polluting global
+system paths. You can override this to use `system`, `mise`, `asdf`, `pkgx`, or `vfox` if preferred.
+
+Libscript manages wait4x versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/wait4x/<version>`.

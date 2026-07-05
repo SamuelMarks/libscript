@@ -32,8 +32,8 @@ command or the local CLI.
 ./libscript.sh stop python
 ./cli.sh stop python
 
-./libscript.sh package_as docker python
-./cli.sh package_as docker python
+./libscript.sh package-as docker python
+./cli.sh package-as docker python
 
 ./libscript.sh uninstall python
 ./cli.sh uninstall python
@@ -56,8 +56,8 @@ libscript.cmd stop python
 cli.cmd stop python
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi python
-cli.cmd package_as msi python
+libscript.cmd package-as msi python
+cli.cmd package-as msi python
 
 :: Uninstall
 libscript.cmd uninstall python
@@ -72,7 +72,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -107,6 +107,7 @@ running the setup script.
 | `PYTHON_SERVER_LISTEN_PORT` | Port for PYTHON to listen on | `none` |  |
 | `PYTHON_SERVER_LISTEN_ADDRESS` | Address for PYTHON to listen on | `none` |  |
 | `PYTHON_SERVER_LISTEN_SOCKET` | Unix socket for PYTHON to listen on | `none` |  |
+| `PYTHON_SERVER_INSTALL_METHOD` | How to install PYTHON SERVER. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 <!-- END_VARS -->
 
 ## Architecture
@@ -128,3 +129,6 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages python-server versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/python-server/<version>`.

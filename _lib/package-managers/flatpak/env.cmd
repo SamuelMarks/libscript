@@ -1,12 +1,6 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment variable initialization script for the flatpak component on Windows.
-:: It sets up necessary paths and environment variables required for the component
-:: to function correctly within the libscript context.
-::
-:: ## Usage
-:: Call this script to load the environment variables. Do not execute it directly without context.
+REM ## Overview
+REM Environment variable initialization script for the flatpak component.
 
-:: Environment variables for Windows
+IF "%FLATPAK_VERSION%"=="" SET "FLATPAK_VERSION=latest"
+SET "PATH=%LIBSCRIPT_HOME%${COMP}\%FLATPAK_VERSION%\bin;%PATH%"

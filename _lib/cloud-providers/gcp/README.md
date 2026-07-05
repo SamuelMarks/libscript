@@ -20,7 +20,7 @@ provider.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -49,6 +49,7 @@ provider.
 | `GCP_PROJECT_ID` | GCP Project ID | `none` |  |
 | `GCP_REGION` | GCP Region | `us-central1` |  |
 | `GCP_ZONE` | GCP Zone | `us-central1-a` |  |
+| `GCP_INSTALL_METHOD` | How to install GCP. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 <!-- END_VARS -->
 
 ## Platform Support
@@ -58,3 +59,6 @@ provider.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages gcp versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/gcp/<version>`.

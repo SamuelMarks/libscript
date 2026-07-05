@@ -3,5 +3,12 @@
   "title": "Ollama variables",
   "description": "Variables for Ollama",
   "type": "object",
-  "properties": {}
+  "properties": {
+    "OLLAMA_INSTALL_METHOD": {
+      "description": "How to install OLLAMA. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "default": "libscript_native"
+    }
+  }
 }

@@ -51,7 +51,7 @@ if [ "${NODEJS_VERSION}" = 'lts' ]; then
   NODEJS_VERSION="${NODEJS_VERSION_LTS}"
 fi
 
-NODEJS_INSTALL_METHOD="${NODEJS_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
+NODEJS_INSTALL_METHOD="$(libscript_resolve_install_method "NODEJS")"
 ACTION="${ACTION:-install}"
 
 resolve_exact_version() {
@@ -78,6 +78,10 @@ case "$ACTION" in
       mise ls node
     elif [ "$NODEJS_INSTALL_METHOD" = "asdf" ]; then
       asdf list nodejs
+    elif [ "$NODEJS_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$NODEJS_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls nodejs
     elif [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
       node -v
     else
@@ -89,7 +93,11 @@ case "$ACTION" in
     if [ "$NODEJS_INSTALL_METHOD" = "mise" ]; then
       mise ls-remote node
     elif [ "$NODEJS_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all nodejs
+      asdf list all
+    elif [ "$NODEJS_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$NODEJS_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls all nodejs
     elif [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
       printf '%s\n' "System package manager does not support ls-remote directly here."
     else
@@ -102,6 +110,10 @@ case "$ACTION" in
       mise use "node@${NODEJS_VERSION}"
     elif [ "$NODEJS_INSTALL_METHOD" = "asdf" ]; then
       asdf global nodejs "${NODEJS_VERSION}"
+    elif [ "$NODEJS_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not use explicit versions this way"
+    elif [ "$NODEJS_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "nodejs@${NODEJS_VERSION}"
     elif [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
       printf '%s\n' "Cannot 'use' specific version with system package manager."
     else
@@ -110,14 +122,32 @@ case "$ACTION" in
     fi
     exit 0
     ;;
-  download|install|*)
+  download)
+    if [ "$NODEJS_INSTALL_METHOD" = "libscript_native" ]; then
+      log_info "Downloading nodejs ${NODEJS_VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nodejs..."
+      mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nodejs"
+      if [ -n "${NODEJS_DOWNLOAD_URL:-}" ]; then
+        libscript_download "${NODEJS_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nodejs/nodejs-${NODEJS_VERSION}.tar.gz"
+      else
+        log_warn "NODEJS_DOWNLOAD_URL is not defined for nodejs ${NODEJS_VERSION}."
+      fi
+    fi
+    exit 0
+    ;;
+  install|*)
     if [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
       libscript_depends 'nodejs'
     elif [ "$NODEJS_INSTALL_METHOD" = "mise" ]; then
       mise install "node@${NODEJS_VERSION}"
     elif [ "$NODEJS_INSTALL_METHOD" = "asdf" ]; then
       asdf install nodejs "${NODEJS_VERSION}"
+    elif [ "$NODEJS_INSTALL_METHOD" = "pkgx" ]; then
+      pkgx install "nodejs@${NODEJS_VERSION}"
+    elif [ "$NODEJS_INSTALL_METHOD" = "vfox" ]; then
+      vfox add nodejs || true
+      vfox install "nodejs@${NODEJS_VERSION}"
     else
+      resolve_exact_version
       libscript_depends 'curl' 'tar'
       resolve_exact_version
       NODE_DIR=$(libscript_get_version_dir "nodejs" "v${EXACT_VERSION}")
@@ -147,13 +177,66 @@ case "$ACTION" in
 
       if [ ! -d "${NODE_DIR}" ]; then
         mkdir -p "${NODE_DIR}"
-        TARBALL=$(mktemp)
-        libscript_download "${NODEJS_BASE_URL}/node-v${EXACT_VERSION}-${os}-${arch}.tar.gz" "${TARBALL}"
-        tar -xzf "${TARBALL}" -C "${NODE_DIR}" --strip-components=1
-        rm -f "${TARBALL}"
+        if [ -f "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nodejs/node-v${EXACT_VERSION}-${os}-${arch}.tar.gz" ]; then
+          log_info "Extracting from cache..."
+          tar -xzf "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nodejs/node-v${EXACT_VERSION}-${os}-${arch}.tar.gz" -C "${NODE_DIR}" --strip-components=1
+        else
+          TARBALL=$(mktemp)
+          libscript_download "${NODEJS_BASE_URL}/node-v${EXACT_VERSION}-${os}-${arch}.tar.gz" "${TARBALL}"
+          tar -xzf "${TARBALL}" -C "${NODE_DIR}" --strip-components=1
+          rm -f "${TARBALL}"
+        fi
       fi
 
       libscript_symlink_alias "nodejs" "${NODEJS_VERSION}" "v${EXACT_VERSION}"
     fi
     ;;
+  start|stop|restart|status|health|logs|up|down)
+    if [ "$NODEJS_INSTALL_METHOD" = "libscript_native" ] || [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nodejs}}"
+      libscript_service "$ACTION" "$service_name" "$@"
+    else
+      log_info "$ACTION not natively implemented for $NODEJS_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  install-service)
+    if [ "$NODEJS_INSTALL_METHOD" = "libscript_native" ] || [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nodejs}}"
+      libscript_install_service "$service_name" "$@"
+    else
+      log_info "install-service not implemented for $NODEJS_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall-service)
+    if [ "$NODEJS_INSTALL_METHOD" = "libscript_native" ] || [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nodejs}}"
+      libscript_uninstall_service "$service_name" "$@"
+    else
+      log_info "uninstall-service not implemented for $NODEJS_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall)
+    if [ "$NODEJS_INSTALL_METHOD" = "libscript_native" ]; then
+      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
+      log_info "Uninstalling nodejs $VERSION..."
+      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/nodejs/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/nodejs/$VERSION"
+    else
+      log_info "Uninstall not implemented or supported for $NODEJS_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+
 esac

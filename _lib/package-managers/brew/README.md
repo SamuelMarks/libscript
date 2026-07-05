@@ -1,6 +1,6 @@
 # Brew
 
-Homebrew is a free and open-source software package management system that simplifies the
+Homebrew is a free and open-source software package management libscript_native that simplifies the
 installation of software on macOS and Linux. It builds packages from source and provides
 pre-compiled binaries, making it easy to manage dependencies and development tools.
 
@@ -33,3 +33,12 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+## Architecture
+
+`libscript` manages `brew` versions natively by default (`BREW_INSTALL_METHOD=libscript_native`),
+ensuring isolated installations without polluting global system paths. You can override this to use
+`system`, `mise`, `asdf`, `pkgx`, or `vfox` if preferred.
+
+Libscript manages brew versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/brew/<version>`.

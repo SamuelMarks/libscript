@@ -31,3 +31,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 # No environment variables required for cloud wrapper by default
+
+CORE_VERSION="${CORE_VERSION:-latest}"
+export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/core/${CORE_VERSION}/bin:${PATH}"

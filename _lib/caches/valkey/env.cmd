@@ -1,11 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Defines environment variables for the Valkey Cache component on Windows.
-:: It acts as a structural placeholder, currently setting no specific variables.
-:: 
-:: ## Usage
-:: Call this script to apply the Valkey environment variables into the current session.
+:: Windows env stub for valkey
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%VALKEY_VERSION%"=="" (
+    set "VALKEY_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\valkey\%VALKEY_VERSION%\bin;%PATH%"

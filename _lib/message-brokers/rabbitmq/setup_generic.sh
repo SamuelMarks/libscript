@@ -1,10 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Generic setup module for RabbitMQ.
-#
-# ## Usage
-# Installs RabbitMQ via the system package manager and generates a basic configuration.
-
+# Generic setup module for rabbitmq.
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -31,41 +27,204 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR="${SCRIPT_DIR}"
 
-for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+fi
+
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
-  # shellcheck disable=SC1090
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
-if libscript_depends 'rabbitmq'; then
-    conf_file="/etc/rabbitmq/rabbitmq.conf"
-    priv mkdir -p /etc/rabbitmq
-    if [ -n "${RABBITMQ_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
-      printf '%s\n' "listeners.tcp.default = ${RABBITMQ_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" | priv tee -a "${conf_file}" >/dev/null
-    fi
-    >&2 printf "RabbitMQ installed via package manager.
-"
-else
-    >&2 printf "RabbitMQ package not found for this OS.
-"
-    exit 1
-fi
+RABBITMQ_INSTALL_METHOD="$(libscript_resolve_install_method "RABBITMQ")"
+ACTION="${ACTION:-install}"
+VERSION="${RABBITMQ_VERSION:-latest}"
 
-case "${_LIBSCRIPT_TRUE:-1}" in
-  "$( [ -n "${RABBITMQ_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ] && printf '%s\n' 1 )")
-  if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "unix:${RABBITMQ_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then
-    true
+resolve_exact_version() {
+  if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
+    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote rabbitmq 2>/dev/null | tail -n 1)
+    if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
+      EXACT_VERSION="$_latest"
+    else
+      EXACT_VERSION="${VERSION:-latest}"
+    fi
+  else
+    EXACT_VERSION="${VERSION:-latest}"
   fi
+}
+
+case "$ACTION" in
+  ls)
+    if [ "$RABBITMQ_INSTALL_METHOD" = "mise" ]; then
+      mise ls rabbitmq || true
+    elif [ "$RABBITMQ_INSTALL_METHOD" = "asdf" ]; then
+      asdf list rabbitmq || true
+    elif [ "$RABBITMQ_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$RABBITMQ_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls rabbitmq || true
+    elif [ "$RABBITMQ_INSTALL_METHOD" = "system" ]; then
+      echo "System packages do not support ls here."
+    else
+      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/rabbitmq/" 2>/dev/null || true
+    fi
+    exit 0
     ;;
-  "$( [ -n "${RABBITMQ_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ] && [ -n "${RABBITMQ_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ] && printf '%s\n' 1 )")
-  if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${RABBITMQ_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${RABBITMQ_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
-    true
-  fi
+  ls-remote)
+    if [ "$RABBITMQ_INSTALL_METHOD" = "mise" ]; then
+      mise ls-remote rabbitmq || true
+    elif [ "$RABBITMQ_INSTALL_METHOD" = "asdf" ]; then
+      asdf list all rabbitmq || true
+    elif [ "$RABBITMQ_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$RABBITMQ_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls all rabbitmq || true
+    else
+      if [ -n "${RABBITMQ_RELEASES_URL:-}" ]; then
+        curl -sSL "${RABBITMQ_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+      else
+      git ls-remote --tags "https://github.com/libscript/rabbitmq" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+    fi
+    fi
+    exit 0
     ;;
-  "$( [ -n "${RABBITMQ_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ] && printf '%s\n' 1 )")
-  if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${RABBITMQ_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
-    true
-  fi
+  use)
+    if [ "$RABBITMQ_INSTALL_METHOD" = "mise" ]; then
+      mise use "rabbitmq@${VERSION}"
+    elif [ "$RABBITMQ_INSTALL_METHOD" = "asdf" ]; then
+      asdf global rabbitmq "${VERSION}"
+    elif [ "$RABBITMQ_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not use explicit versions this way"
+    elif [ "$RABBITMQ_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "rabbitmq@${VERSION}"
+    elif [ "$RABBITMQ_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "rabbitmq@${VERSION}"
+    elif [ "$RABBITMQ_INSTALL_METHOD" = "system" ]; then
+      echo "System packages do not support use here."
+    else
+      resolve_exact_version
+      libscript_symlink_alias "rabbitmq" "$VERSION" "${EXACT_VERSION}"
+    fi
+    exit 0
     ;;
+  download)
+    if [ "$RABBITMQ_INSTALL_METHOD" = "libscript_native" ]; then
+      log_info "Downloading rabbitmq ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/rabbitmq..."
+      mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/rabbitmq"
+      if [ -n "${RABBITMQ_DOWNLOAD_URL:-}" ]; then
+        libscript_download "${RABBITMQ_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/rabbitmq/rabbitmq-${VERSION}.tar.gz"
+      else
+        log_warn "RABBITMQ_DOWNLOAD_URL is not defined for rabbitmq ${VERSION}."
+      fi
+    fi
+    exit 0
+    ;;
+  install|*)
+    if [ "$RABBITMQ_INSTALL_METHOD" = "system" ]; then
+      libscript_depends "rabbitmq"
+    elif [ "$RABBITMQ_INSTALL_METHOD" = "mise" ]; then
+      mise install "rabbitmq@${VERSION}"
+    elif [ "$RABBITMQ_INSTALL_METHOD" = "asdf" ]; then
+      asdf install rabbitmq "${VERSION}"
+    elif [ "$RABBITMQ_INSTALL_METHOD" = "pkgx" ]; then
+      pkgx install "rabbitmq@${VERSION}"
+    elif [ "$RABBITMQ_INSTALL_METHOD" = "vfox" ]; then
+      vfox add rabbitmq || true
+      vfox install "rabbitmq@${VERSION}"
+    else
+      # libscript_native implementation
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/rabbitmq/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing rabbitmq ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/rabbitmq/"*"${VERSION}"* >/dev/null 2>&1; then
+          log_info "Extracting from cache..."
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/rabbitmq/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+            else
+              cp "$cache_file" "${TARGET_DIR}/bin/rabbitmq" || true
+              chmod +x "${TARGET_DIR}/bin/rabbitmq" || true
+            fi
+          fi
+        else
+          if [ -n "${RABBITMQ_DOWNLOAD_URL:-}" ]; then
+            TEMP_FILE=$(mktemp)
+            libscript_download "${RABBITMQ_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+            if case "${RABBITMQ_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "${RABBITMQ_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+            else
+              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/rabbitmq" || true
+              chmod +x "${TARGET_DIR}/bin/rabbitmq" || true
+            fi
+            rm -f "${TEMP_FILE}"
+          else
+            log_warn "No download URL provided for rabbitmq ${VERSION}."
+          fi
+        fi
+      else
+        log_info "rabbitmq ${VERSION} is already installed."
+      fi
+      libscript_symlink_alias "rabbitmq" "$VERSION" "${EXACT_VERSION}"
+    fi
+    ;;
+  start|stop|restart|status|health|logs|up|down)
+    if [ "$RABBITMQ_INSTALL_METHOD" = "libscript_native" ] || [ "$RABBITMQ_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-rabbitmq}}"
+      libscript_service "$ACTION" "$service_name" "$@"
+    else
+      log_info "$ACTION not natively implemented for $RABBITMQ_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  install-service)
+    if [ "$RABBITMQ_INSTALL_METHOD" = "libscript_native" ] || [ "$RABBITMQ_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-rabbitmq}}"
+      libscript_install_service "$service_name" "$@"
+    else
+      log_info "install-service not implemented for $RABBITMQ_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall-service)
+    if [ "$RABBITMQ_INSTALL_METHOD" = "libscript_native" ] || [ "$RABBITMQ_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-rabbitmq}}"
+      libscript_uninstall_service "$service_name" "$@"
+    else
+      log_info "uninstall-service not implemented for $RABBITMQ_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall)
+    if [ "$RABBITMQ_INSTALL_METHOD" = "libscript_native" ]; then
+      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
+      log_info "Uninstalling rabbitmq $VERSION..."
+      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/rabbitmq/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/rabbitmq/$VERSION"
+    else
+      log_info "Uninstall not implemented or supported for $RABBITMQ_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+
 esac

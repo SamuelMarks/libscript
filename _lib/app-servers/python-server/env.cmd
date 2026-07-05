@@ -1,11 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Defines environment variables for the Python Server component on Windows.
-:: It acts as a structural placeholder, currently setting no specific variables.
-:: 
-:: ## Usage
-:: Call this script to apply the Python Server environment variables into the current session.
+:: Windows env stub for python-server
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%PYTHON_SERVER_VERSION%"=="" (
+    set "PYTHON_SERVER_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\python-server\%PYTHON_SERVER_VERSION%\bin;%PATH%"

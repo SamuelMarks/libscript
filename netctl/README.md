@@ -44,7 +44,7 @@ libscript uninstall netctl
 ### Packaging
 
 ```sh
-libscript package_as docker netctl
+libscript package-as docker netctl
 ```
 
 ## Features

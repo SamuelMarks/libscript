@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-Defines environment variables and configurations for the environment variables stack.
-
-.DESCRIPTION
-Source or call this script to configure the environment for zypper.
+Environment variable initialization script for the zypper component.
 #>
 
-$ErrorActionPreference = "Stop"
-# Environment variables for PowerShell
+$Version = (Get-Item Env:\ZYPPER_VERSION -ErrorAction Ignore).Value
+if (-not $Version) { $Version = "latest" }
+
+$BinPath = "$env:LIBSCRIPT_HOME\zypper\$Version\bin"
+$env:PATH = "$BinPath;$env:PATH"

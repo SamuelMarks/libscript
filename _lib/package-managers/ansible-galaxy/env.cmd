@@ -1,12 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment variable initialization script for the ansible-galaxy component on Windows.
-:: It sets up necessary paths and environment variables required for the component
-:: to function correctly within the libscript context.
-::
-:: ## Usage
-:: Call this script to load the environment variables. Do not execute it directly without context.
+:: Windows env stub for ansible-galaxy
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%ANSIBLE_GALAXY_VERSION%"=="" (
+    set "ANSIBLE_GALAXY_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\ansible-galaxy\%ANSIBLE_GALAXY_VERSION%\bin;%PATH%"

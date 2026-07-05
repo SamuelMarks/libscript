@@ -17,7 +17,7 @@ You can manage components within this directory using the global `libscript` CLI
 - **Uninstall:** `libscript uninstall wordpress`
 - **Start:** `libscript start wordpress`
 - **Stop:** `libscript stop wordpress`
-- **Package:** `libscript package_as docker wordpress` (or `msi`, `docker_compose`, etc.)
+- **Package:** `libscript package-as docker wordpress` (or `msi`, `docker_compose`, etc.)
 
 ## Dependency Installation Methods
 

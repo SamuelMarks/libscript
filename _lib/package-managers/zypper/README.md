@@ -14,3 +14,12 @@ its corresponding Linux distributions, this typically just ensures the package i
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+## Architecture
+
+`libscript` manages `zypper` versions natively by default
+(`ZYPPER_INSTALL_METHOD=libscript_native`), ensuring isolated installations without polluting global
+system paths. You can override this to use `system`, `mise`, `asdf`, `pkgx`, or `vfox` if preferred.
+
+Libscript manages zypper versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/zypper/<version>`.

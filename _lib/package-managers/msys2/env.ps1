@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-Defines environment variables and configurations for the environment variables stack.
-
-.DESCRIPTION
-Source or call this script to configure the environment for msys2.
+Environment variable initialization script for the msys2 component.
 #>
 
-$ErrorActionPreference = "Stop"
-# Environment variables for PowerShell
+$Version = (Get-Item Env:\MSYS2_VERSION -ErrorAction Ignore).Value
+if (-not $Version) { $Version = "latest" }
+
+$BinPath = "$env:LIBSCRIPT_HOME\msys2\$Version\bin"
+$env:PATH = "$BinPath;$env:PATH"

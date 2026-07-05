@@ -5,10 +5,15 @@
   "description": "Configuration variables for 7-Zip",
   "type": "object",
   "properties": {
-    "7ZIP_VERSION": {
+    "SEVENZIP_VERSION": {
       "description": "Specific version of 7zip to install.",
       "type": "string",
       "default": "latest"
+    },
+    "SEVENZIP_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install SEVENZIP. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "default": "libscript_native"
     }
   }
 }

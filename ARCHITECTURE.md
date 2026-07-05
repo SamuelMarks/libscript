@@ -73,7 +73,7 @@ When the global `libscript.sh` is invoked, it delegates to the component's lifec
 1. **Resolution:** Global orchestrator resolves dependencies and locates the component directory.
 2. **Setup (`install`):** Executes `setup.sh`. The component downloads payloads to the `caches/`
    directory, installs binaries to the configured `--prefix`, and templates configuration files.
-3. **Daemonization (`install_service`):** Executes `service_install.sh` to register the component
+3. **Daemonization (`install-service`):** Executes `service_install.sh` to register the component
    with the OS init system.
 4. **Environment Generation (`env`):** Executes `env_printer.sh` to expose connection strings or
    credentials to dependent services.
@@ -159,7 +159,7 @@ infrastructure.
 The high-level CLI routing, orchestration, and generation logic reside in `cli/commands/`. This
 includes:
 
-- **`package_as` Engine:** Translates native definitions into various production artifacts:
+- **`package-as` Engine:** Translates native definitions into various production artifacts:
   - **Containers:** Optimized `Dockerfile` and `docker-compose.yml` manifests.
   - **Native Installers:** MSI and EXE via InnoSetup/NSIS (Windows), DEB/RPM/APK (Linux), TXZ
     (FreeBSD), and PKG/DMG (macOS).

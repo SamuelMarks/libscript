@@ -8,6 +8,35 @@ BSD. All commands have strict parity across `./libscript.sh` (POSIX) and `libscr
 LibScript treats every component as a standalone package manager. You can manage tools either
 through the **Global Orchestrator** or via the **Local CLI** within each component's directory.
 
+### Universal Version Manager Fallback
+
+When requesting a tool, LibScript can install it using one of several strategies. The system
+dynamically evaluates methods via a default priority chain if an explicit method is not declared or
+if the preferred method is missing from your system:
+
+1. `libscript_native` (LibScript's isolated, native binary provisioning logic)
+2. `mise` (Blazing fast, Rust-based toolchain manager)
+3. `asdf` (Classic, plugin-based toolchain manager)
+4. `pkgx` (Fast, isolated package manager / executable runner)
+5. `vfox` (Version-Fox, cross-platform and natively Windows-friendly manager)
+6. `system` (Your OS-level package manager like apt, winget, or brew)
+
+You can forcefully override this behavior globally via the `LIBSCRIPT_DEFAULT_INSTALL_METHOD`
+environment variable:
+
+```sh
+# Prefer pkgx globally for all installations
+export LIBSCRIPT_DEFAULT_INSTALL_METHOD="pkgx"
+```
+
+Or target specific components via their `[COMPONENT]_INSTALL_METHOD` override:
+
+```sh
+# Install Python via system, but Node.js via asdf
+export PYTHON_INSTALL_METHOD="system"
+export NODEJS_INSTALL_METHOD="asdf"
+```
+
 ### Global Orchestrator
 
 The global CLI (`libscript.sh` / `libscript.cmd`) handles routing, orchestration, and complex
@@ -139,34 +168,34 @@ machine, followed by `start` to orchestrate your app.
 _Note: LibScript acts as a native PaaS. The `start` command automatically translates your `services`
 into system daemons and configures your `ingress` routes via Nginx (powered by `netctl`)._
 
-## 🏗️ Artifact Generation (`package_as`)
+## 🏗️ Artifact Generation (`package-as`)
 
 Generate production-ready artifacts from your current stack definition.
 
 ### Generate a Dockerfile
 
 ```sh
-./libscript.sh package_as docker
+./libscript.sh package-as docker
 ```
 
 ### Generate a Windows Installer (.msi)
 
 ```sh
 # This transforms your shell logic into a WiX-based MSI installer
-./libscript.sh package_as msi
+./libscript.sh package-as msi
 ```
 
 ### Generate other native artifacts
 
 ```sh
 # Generate a macOS Installer
-./libscript.sh package_as pkg
+./libscript.sh package-as pkg
 
 # Generate a Debian/Ubuntu Package
-./libscript.sh package_as deb
+./libscript.sh package-as deb
 
 # Generate an Interactive TUI Installer
-./libscript.sh package_as TUI
+./libscript.sh package-as TUI
 ```
 
 ## 🌍 Cloud Orchestration

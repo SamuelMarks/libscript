@@ -5,6 +5,11 @@
   "description": "Configuration variables for rye",
   "type": "object",
   "properties": {
+    "RYE_INSTALL_METHOD": {
+      "description": "How to install RYE. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "RYE_VERSION": {
       "description": "Specific version of rye to install.",
       "type": "string",

@@ -94,7 +94,7 @@ EOF2
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "Section \"$pkg\" SEC_$pkg"
-        run_params="/c libscript.cmd install_service $pkg $ver"
+        run_params="/c libscript.cmd install-service $pkg $ver"
         schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")

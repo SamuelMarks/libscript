@@ -34,8 +34,8 @@ or the local CLI.
 ./libscript.sh stop toolchains
 ./cli.sh stop toolchains
 
-./libscript.sh package_as docker toolchains
-./cli.sh package_as docker toolchains
+./libscript.sh package-as docker toolchains
+./cli.sh package-as docker toolchains
 
 ./libscript.sh uninstall toolchains
 ./cli.sh uninstall toolchains
@@ -58,8 +58,8 @@ libscript.cmd stop toolchains
 cli.cmd stop toolchains
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi toolchains
-cli.cmd package_as msi toolchains
+libscript.cmd package-as msi toolchains
+cli.cmd package-as msi toolchains
 
 :: Uninstall
 libscript.cmd uninstall toolchains

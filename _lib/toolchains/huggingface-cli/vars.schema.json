@@ -12,9 +12,9 @@
       "version_aliases": ["latest", "stable"]
     },
     "HUGGINGFACE_CLI_INSTALL_METHOD": {
-      "description": "How to install HUGGINGFACE-CLI. 'system' delegates to package manager.",
+      "description": "How to install HUGGINGFACE_CLI. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "enum": ["system", "libscript-native", "mise", "asdf"],
+      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
       "default": "system"
     },
     "LIBSCRIPT_LISTEN_PORT": {

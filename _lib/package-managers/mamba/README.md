@@ -14,3 +14,12 @@ for the tool.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+## Architecture
+
+`libscript` manages `mamba` versions natively by default (`MAMBA_INSTALL_METHOD=libscript_native`),
+ensuring isolated installations without polluting global system paths. You can override this to use
+`system`, `mise`, `asdf`, `pkgx`, or `vfox` if preferred.
+
+Libscript manages mamba versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/mamba/<version>`.

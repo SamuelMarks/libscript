@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-Defines environment variables and configurations for the environment variables stack.
-
-.DESCRIPTION
-Source or call this script to configure the environment for nix.
+Environment variable initialization script for the nix component.
 #>
 
-$ErrorActionPreference = "Stop"
-# Environment variables for PowerShell
+$Version = (Get-Item Env:\NIX_VERSION -ErrorAction Ignore).Value
+if (-not $Version) { $Version = "latest" }
+
+$BinPath = "$env:LIBSCRIPT_HOME\nix\$Version\bin"
+$env:PATH = "$BinPath;$env:PATH"

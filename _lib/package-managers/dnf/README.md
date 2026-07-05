@@ -14,3 +14,12 @@ corresponding Linux distributions, this typically just ensures the package index
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+## Architecture
+
+`libscript` manages `dnf` versions natively by default (`DNF_INSTALL_METHOD=libscript_native`),
+ensuring isolated installations without polluting global system paths. You can override this to use
+`system`, `mise`, `asdf`, `pkgx`, or `vfox` if preferred.
+
+Libscript manages dnf versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/dnf/<version>`.

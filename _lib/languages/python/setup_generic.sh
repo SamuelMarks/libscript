@@ -45,7 +45,7 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/ver
   . "${SCRIPT_NAME}"
 done
 
-PYTHON_INSTALL_METHOD="${PYTHON_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
+PYTHON_INSTALL_METHOD="$(libscript_resolve_install_method "PYTHON")"
 PYTHON_VERSION="${PYTHON_VERSION:-3.11.9}"
 ACTION="${ACTION:-install}"
 
@@ -63,6 +63,10 @@ case "$ACTION" in
       mise ls python
     elif [ "$PYTHON_INSTALL_METHOD" = "asdf" ]; then
       asdf list python
+    elif [ "$PYTHON_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$PYTHON_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls python
     elif [ "$PYTHON_INSTALL_METHOD" = "system" ]; then
       python3 --version
     else
@@ -74,7 +78,11 @@ case "$ACTION" in
     if [ "$PYTHON_INSTALL_METHOD" = "mise" ]; then
       mise ls-remote python
     elif [ "$PYTHON_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all python
+      asdf list all
+    elif [ "$PYTHON_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$PYTHON_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls all python
     elif [ "$PYTHON_INSTALL_METHOD" = "system" ]; then
       printf '%s\n' "System package manager does not support ls-remote directly here."
     else
@@ -87,6 +95,10 @@ case "$ACTION" in
       mise use "python@${PYTHON_VERSION}"
     elif [ "$PYTHON_INSTALL_METHOD" = "asdf" ]; then
       asdf global python "${PYTHON_VERSION}"
+    elif [ "$PYTHON_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not use explicit versions this way"
+    elif [ "$PYTHON_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "python@${PYTHON_VERSION}"
     elif [ "$PYTHON_INSTALL_METHOD" = "system" ]; then
       printf '%s\n' "Cannot 'use' specific version with system package manager."
     else
@@ -95,13 +107,31 @@ case "$ACTION" in
     fi
     exit 0
     ;;
-  download|install|*)
+  download)
+    if [ "$PYTHON_INSTALL_METHOD" = "libscript_native" ]; then
+      log_info "Downloading python ${PYTHON_VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/python..."
+      mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/python"
+      if [ -n "${PYTHON_DOWNLOAD_URL:-}" ]; then
+        libscript_download "${PYTHON_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/python/python-${VERSION}.tar.gz"
+      else
+        log_warn "PYTHON_DOWNLOAD_URL is not defined for python ${VERSION}."
+      fi
+    fi
+    exit 0
+    ;;
+  install|*)
+
     if [ "$PYTHON_INSTALL_METHOD" = "system" ]; then
       libscript_depends 'python'
     elif [ "$PYTHON_INSTALL_METHOD" = "mise" ]; then
       mise install "python@${PYTHON_VERSION}"
     elif [ "$PYTHON_INSTALL_METHOD" = "asdf" ]; then
       asdf install python "${PYTHON_VERSION}"
+    elif [ "$PYTHON_INSTALL_METHOD" = "pkgx" ]; then
+      pkgx install "python@${PYTHON_VERSION}"
+    elif [ "$PYTHON_INSTALL_METHOD" = "vfox" ]; then
+      vfox add python || true
+      vfox install "python@${PYTHON_VERSION}"
     else
       resolve_exact_version
       PY_DIR=$(libscript_get_version_dir "python" "${EXACT_VERSION}")
@@ -124,11 +154,20 @@ case "$ACTION" in
         else
           libscript_depends 'wget' 'curl' 'xz' 'openssl' 'readline' 'sqlite3'
         fi
-        PY_TARBALL=$(mktemp)
+        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/python/"*"${EXACT_VERSION}"* >/dev/null 2>&1; then
+          log_info "Extracting from cache..."
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/python/" -maxdepth 1 -type f -name "*${EXACT_VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            TMP_BUILD_DIR=$(mktemp -d)
+            tar -xf "$cache_file" -C "${TMP_BUILD_DIR}" || true
+          fi
+        else
+          PY_TARBALL=$(mktemp)
         libscript_download "https://www.python.org/ftp/python/${EXACT_VERSION}/Python-${EXACT_VERSION}.tgz" "${PY_TARBALL}"
         TMP_BUILD_DIR=$(mktemp -d)
         tar -xf "${PY_TARBALL}" -C "${TMP_BUILD_DIR}"
         rm -f "${PY_TARBALL}"
+        fi
         
         mkdir -p "${PY_DIR}"
         (
@@ -204,4 +243,52 @@ case "$ACTION" in
       fi
     fi
     ;;
+  start|stop|restart|status|health|logs|up|down)
+    if [ "$PYTHON_INSTALL_METHOD" = "libscript_native" ] || [ "$PYTHON_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-python}}"
+      libscript_service "$ACTION" "$service_name" "$@"
+    else
+      log_info "$ACTION not natively implemented for $PYTHON_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  install-service)
+    if [ "$PYTHON_INSTALL_METHOD" = "libscript_native" ] || [ "$PYTHON_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-python}}"
+      libscript_install_service "$service_name" "$@"
+    else
+      log_info "install-service not implemented for $PYTHON_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall-service)
+    if [ "$PYTHON_INSTALL_METHOD" = "libscript_native" ] || [ "$PYTHON_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-python}}"
+      libscript_uninstall_service "$service_name" "$@"
+    else
+      log_info "uninstall-service not implemented for $PYTHON_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall)
+    if [ "$PYTHON_INSTALL_METHOD" = "libscript_native" ]; then
+      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
+      log_info "Uninstalling python $VERSION..."
+      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/python/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/python/$VERSION"
+    else
+      log_info "Uninstall not implemented or supported for $PYTHON_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+
 esac

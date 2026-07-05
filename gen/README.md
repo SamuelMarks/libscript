@@ -42,7 +42,7 @@ libscript uninstall gen
 ### Packaging
 
 ```sh
-libscript package_as docker gen
+libscript package-as docker gen
 ```
 
 ## Gotchas

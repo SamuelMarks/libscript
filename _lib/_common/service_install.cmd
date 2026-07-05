@@ -1,30 +1,29 @@
+:: LibScript Service Installer for Windows
+:: Registers a Windows service
 @echo off
-:: # service_install.cmd
-::
-:: ## Overview
-:: Serves as the Windows entry point for installing background services.
-:: It dynamically locates the LibScript root and delegates execution
-:: to the corresponding PowerShell script (`service_install.ps1`).
-:: 
-:: ## Usage
-:: Call this script to trigger Windows service installation.
-
 setlocal EnableDelayedExpansion
 
-if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%~dp0"
-    :find_root
-    if exist "!d!\ROOT" (set "LIBSCRIPT_ROOT_DIR=!d!") else (
-        for %%P in ("!d!") do set "parent=%%~dpP"
-        set "d=!parent:~0,-1!"
-        if "!d!"=="" (
-            echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
-            exit /b 1
-        )
-        goto :find_root
-    )
+set "_SERVICE_NAME=%~1"
+set "_EXEC_START=%~2"
+set "_WORKING_DIR=%~3"
+set "_DESCRIPTION=%~4"
+
+if "%_SERVICE_NAME%"=="" (
+    echo Usage: %0 [SERVICE_NAME] [EXEC_START] [WORKING_DIR] [DESCRIPTION]
+    exit /b 1
 )
 
-:: Delegate to PowerShell service_install.ps1
-powershell -ExecutionPolicy Bypass -File "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.ps1" %*
-exit /b %errorlevel%
+if "%~5"=="uninstall" (
+    echo Uninstalling Windows service: %_SERVICE_NAME%
+    sc.exe stop "%_SERVICE_NAME%"
+    sc.exe delete "%_SERVICE_NAME%"
+    exit /b 0
+)
+
+if "%_DESCRIPTION%"=="" set "_DESCRIPTION=%_SERVICE_NAME% service"
+
+echo Installing Windows service: %_SERVICE_NAME%
+sc.exe create "%_SERVICE_NAME%" binPath= "%_EXEC_START%" start= auto obj= LocalSystem
+sc.exe description "%_SERVICE_NAME%" "%_DESCRIPTION%"
+
+exit /b 0

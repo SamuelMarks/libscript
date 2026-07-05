@@ -1,12 +1,6 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment variable initialization script for the pipx component on Windows.
-:: It sets up necessary paths and environment variables required for the component
-:: to function correctly within the libscript context.
-::
-:: ## Usage
-:: Call this script to load the environment variables. Do not execute it directly without context.
+REM ## Overview
+REM Environment variable initialization script for the pipx component.
 
-:: Environment variables for Windows
+IF "%PIPX_VERSION%"=="" SET "PIPX_VERSION=latest"
+SET "PATH=%LIBSCRIPT_HOME%\pipx\%PIPX_VERSION%\bin;%PATH%"

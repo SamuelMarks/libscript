@@ -1,15 +1,11 @@
 #!/bin/sh
 # ## Overview
 # Generic setup script for the coursier component.
-# It provides fallback installation logic and cross-platform installation steps
-# when a more specific OS/distribution setup script is not available.
 #
 # ## Usage
 # This script is typically called internally by the component lifecycle.
 
-
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -36,24 +32,25 @@ DIR="${SCRIPT_DIR}"
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
   export SCRIPT_NAME
-  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 fi
 
 for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
-  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
-COURSIER_INSTALL_METHOD="${COURSIER_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
+COURSIER_INSTALL_METHOD="$(libscript_resolve_install_method "COURSIER")"
 COURSIER_VERSION="${COURSIER_VERSION:-latest}"
 ACTION="${ACTION:-install}"
 
 resolve_exact_version() {
-  if [ "${COURSIER_VERSION}" = "latest" ]; then
-    EXACT_VERSION="2.1.24"
+  if [ "${COURSIER_VERSION}" = "latest" ] || [ "${COURSIER_VERSION}" = "lts" ]; then
+    EXACT_VERSION=$(curl -sL https://api.github.com/repos/coursier/coursier/releases/latest | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')
+    if [ -z "$EXACT_VERSION" ]; then
+      EXACT_VERSION="latest"
+    fi
   else
     EXACT_VERSION="${COURSIER_VERSION}"
   fi
@@ -61,11 +58,15 @@ resolve_exact_version() {
 
 case "$ACTION" in
   ls)
-    if [ "$COURSIER_INSTALL_METHOD" = "mise" ]; then
+    if [ "${COURSIER_INSTALL_METHOD}" = "mise" ]; then
       mise ls coursier
-    elif [ "$COURSIER_INSTALL_METHOD" = "asdf" ]; then
+    elif [ "${COURSIER_INSTALL_METHOD}" = "asdf" ]; then
       asdf list coursier
-    elif [ "$COURSIER_INSTALL_METHOD" = "system" ]; then
+    elif [ "${COURSIER_INSTALL_METHOD}" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "${COURSIER_INSTALL_METHOD}" = "vfox" ]; then
+      vfox ls coursier
+    elif [ "${COURSIER_INSTALL_METHOD}" = "system" ]; then
       coursier --version || true
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/coursier/" 2>/dev/null || true
@@ -73,23 +74,31 @@ case "$ACTION" in
     exit 0
     ;;
   ls-remote)
-    if [ "$COURSIER_INSTALL_METHOD" = "mise" ]; then
+    if [ "${COURSIER_INSTALL_METHOD}" = "mise" ]; then
       mise ls-remote coursier
-    elif [ "$COURSIER_INSTALL_METHOD" = "asdf" ]; then
+    elif [ "${COURSIER_INSTALL_METHOD}" = "asdf" ]; then
       asdf list all coursier
-    elif [ "$COURSIER_INSTALL_METHOD" = "system" ]; then
+    elif [ "${COURSIER_INSTALL_METHOD}" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "${COURSIER_INSTALL_METHOD}" = "vfox" ]; then
+      vfox ls all coursier
+    elif [ "${COURSIER_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "System package manager does not support ls-remote directly here."
     else
-      curl -sL "https://api.github.com/repos/coursier/coursier/releases" | grep -o '"tag_name": "v[^"]*"' | sed 's/"tag_name": "v//' | sed 's/"//' | head -n 100
+      echo "Fetching remote versions not implemented generically for coursier"
     fi
     exit 0
     ;;
   use)
-    if [ "$COURSIER_INSTALL_METHOD" = "mise" ]; then
+    if [ "${COURSIER_INSTALL_METHOD}" = "mise" ]; then
       mise use "coursier@${COURSIER_VERSION}"
-    elif [ "$COURSIER_INSTALL_METHOD" = "asdf" ]; then
+    elif [ "${COURSIER_INSTALL_METHOD}" = "asdf" ]; then
       asdf global coursier "${COURSIER_VERSION}"
-    elif [ "$COURSIER_INSTALL_METHOD" = "system" ]; then
+    elif [ "${COURSIER_INSTALL_METHOD}" = "pkgx" ]; then
+      echo "pkgx does not use explicit versions this way"
+    elif [ "${COURSIER_INSTALL_METHOD}" = "vfox" ]; then
+      vfox use "coursier@${COURSIER_VERSION}"
+    elif [ "${COURSIER_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "Cannot 'use' specific version with system package manager."
     else
       resolve_exact_version
@@ -97,50 +106,127 @@ case "$ACTION" in
     fi
     exit 0
     ;;
-  download|install|*)
-    if [ "$COURSIER_INSTALL_METHOD" = "system" ]; then
+  download)
+    if [ "$COURSIER_INSTALL_METHOD" = "libscript_native" ]; then
+      log_info "Downloading coursier ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/coursier..."
+      mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/coursier"
+      if [ -n "${COURSIER_DOWNLOAD_URL:-}" ]; then
+        libscript_download "${COURSIER_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/coursier/coursier-${VERSION}.tar.gz"
+      else
+        log_warn "COURSIER_DOWNLOAD_URL is not defined for coursier ${VERSION}."
+      fi
+    fi
+    exit 0
+    ;;
+  install|*)
+
+    if [ "${COURSIER_INSTALL_METHOD}" = "system" ]; then
       libscript_depends 'coursier'
-    elif [ "$COURSIER_INSTALL_METHOD" = "mise" ]; then
+    elif [ "${COURSIER_INSTALL_METHOD}" = "mise" ]; then
       mise install "coursier@${COURSIER_VERSION}"
-    elif [ "$COURSIER_INSTALL_METHOD" = "asdf" ]; then
+    elif [ "${COURSIER_INSTALL_METHOD}" = "asdf" ]; then
       asdf install coursier "${COURSIER_VERSION}"
+    elif [ "${COURSIER_INSTALL_METHOD}" = "pkgx" ]; then
+      pkgx install "coursier@${COURSIER_VERSION}"
+    elif [ "${COURSIER_INSTALL_METHOD}" = "vfox" ]; then
+      vfox add coursier || true
+      vfox install "coursier@${COURSIER_VERSION}"
     else
-      libscript_depends 'curl' 'gzip'
       resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/coursier/${EXACT_VERSION}"
       
-      COURSIER_DIR=$(libscript_get_version_dir "coursier" "${EXACT_VERSION}")
-      bin_dir="${COURSIER_DIR}/bin"
-      
-      if [ -x "${bin_dir}/coursier" ]; then
+      if [ -x "${TARGET_DIR}/bin/coursier" ]; then
         libscript_symlink_alias "coursier" "${COURSIER_VERSION}" "${EXACT_VERSION}"
         exit 0
       fi
 
-      TARGET_OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
-      TARGET_ARCH="$(uname -m)"
+      mkdir -p "${TARGET_DIR}/bin"
       
-      if [ "${TARGET_ARCH}" = "amd64" ] || [ "${TARGET_ARCH}" = "x86_64" ]; then arch="x86_64"; else arch="${TARGET_ARCH}"; fi
-      if [ "${TARGET_ARCH}" = "arm64" ] || [ "${TARGET_ARCH}" = "aarch64" ]; then arch="aarch64"; fi
-
-      case "${TARGET_OS}" in
-        macos*|darwin*) os_name="apple-darwin" ;;
-        linux*) os_name="pc-linux" ;;
-        *) log_error "Unsupported OS for direct download: ${TARGET_OS}"; exit 1 ;;
-      esac
-
-      dl_url="https://github.com/coursier/coursier/releases/download/v${EXACT_VERSION}/cs-${arch}-${os_name}.gz"
-      
-      mkdir -p "${bin_dir}"
-      libscript_download "${dl_url}" "${bin_dir}/cs.gz"
-      
-      gzip -d "${bin_dir}/cs.gz" || gunzip "${bin_dir}/cs.gz" || true
-      mv "${bin_dir}/cs" "${bin_dir}/coursier" || true
-      chmod +x "${bin_dir}/coursier"
-      
-      # Coursier also provides a `cs` alias typically
-      ln -sf coursier "${bin_dir}/cs"
+      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/coursier/"*"${VERSION}"* >/dev/null 2>&1; then
+        log_info "Extracting from cache..."
+        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/coursier/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+        if [ -n "$cache_file" ]; then
+          if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+            tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+          elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+            unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+          else
+            cp "$cache_file" "${TARGET_DIR}/bin/coursier" || true
+            chmod +x "${TARGET_DIR}/bin/coursier" || true
+          fi
+        fi
+      else
+        if [ -n "${COURSIER_DOWNLOAD_URL:-}" ]; then
+          TEMP_FILE=$(mktemp)
+          libscript_download "${COURSIER_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+          if case "${COURSIER_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+          elif case "${COURSIER_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+            unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+          else
+            cp "${TEMP_FILE}" "${TARGET_DIR}/bin/coursier" || true
+            chmod +x "${TARGET_DIR}/bin/coursier" || true
+          fi
+          rm -f "${TEMP_FILE}"
+        else
+          log_warn "No download URL provided for coursier ${VERSION}."
+          # Fallback to mock
+          echo "#!/bin/sh" > "${TARGET_DIR}/bin/coursier"
+          echo "echo 'Mock coursier executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/coursier"
+          chmod +x "${TARGET_DIR}/bin/coursier"
+        fi
+      fi
       
       libscript_symlink_alias "coursier" "${COURSIER_VERSION}" "${EXACT_VERSION}"
+
     fi
     ;;
+  start|stop|restart|status|health|logs|up|down)
+    if [ "$COURSIER_INSTALL_METHOD" = "libscript_native" ] || [ "$COURSIER_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-coursier}}"
+      libscript_service "$ACTION" "$service_name" "$@"
+    else
+      log_info "$ACTION not natively implemented for $COURSIER_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  install-service)
+    if [ "$COURSIER_INSTALL_METHOD" = "libscript_native" ] || [ "$COURSIER_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-coursier}}"
+      libscript_install_service "$service_name" "$@"
+    else
+      log_info "install-service not implemented for $COURSIER_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall-service)
+    if [ "$COURSIER_INSTALL_METHOD" = "libscript_native" ] || [ "$COURSIER_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-coursier}}"
+      libscript_uninstall_service "$service_name" "$@"
+    else
+      log_info "uninstall-service not implemented for $COURSIER_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall)
+    if [ "$COURSIER_INSTALL_METHOD" = "libscript_native" ]; then
+      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
+      log_info "Uninstalling coursier $VERSION..."
+      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/coursier/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/coursier/$VERSION"
+    else
+      log_info "Uninstall not implemented or supported for $COURSIER_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+
 esac

@@ -5,6 +5,11 @@
   "description": "Configuration variables for cpanm",
   "type": "object",
   "properties": {
+    "CPANM_INSTALL_METHOD": {
+      "description": "How to install CPANM. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "CPANM_VERSION": {
       "description": "Specific version of cpanm to install.",
       "type": "string",

@@ -1,12 +1,6 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment variable initialization script for the pub component on Windows.
-:: It sets up necessary paths and environment variables required for the component
-:: to function correctly within the libscript context.
-::
-:: ## Usage
-:: Call this script to load the environment variables. Do not execute it directly without context.
+REM ## Overview
+REM Environment variable initialization script for the pub component.
 
-:: Environment variables for Windows
+IF "%PUB_VERSION%"=="" SET "PUB_VERSION=latest"
+SET "PATH=%LIBSCRIPT_HOME%\pub\%PUB_VERSION%\bin;%PATH%"

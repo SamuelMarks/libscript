@@ -16,7 +16,7 @@ You can manage WordPress using the global `libscript` CLI or local scripts.
 - **Uninstall:** `libscript uninstall wordpress`
 - **Start:** `libscript start wordpress`
 - **Stop:** `libscript stop wordpress`
-- **Package:** `libscript package_as docker wordpress` (or `msi`, `docker_compose`, etc.)
+- **Package:** `libscript package-as docker wordpress` (or `msi`, `docker_compose`, etc.)
 
 ## Configuration Options
 
@@ -36,7 +36,7 @@ You can manage WordPress using the global `libscript` CLI or local scripts.
 This module adheres to LibScript's cross-platform conventions:
 
 - Safely degrades system-level reloads (e.g. `systemctl`, `mysql`) during image build phases,
-  ensuring `package_as docker` emits a single, functional container.
+  ensuring `package-as docker` emits a single, functional container.
 - Uses `setup_windows.ps1` for clean `.msi` or `.exe` Windows Installer generation, leveraging
   `winget` and native IIS PowerShell configuration blocks (`WebAdministration`).
 

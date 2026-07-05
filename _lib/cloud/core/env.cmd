@@ -1,10 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Windows environment initialization for cloud core.
-::
-:: ## Usage
-:: Extends the environment with variables needed for generic cloud operations.
+:: Windows env stub for core
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%CORE_VERSION%"=="" (
+    set "CORE_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\core\%CORE_VERSION%\bin;%PATH%"

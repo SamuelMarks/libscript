@@ -46,8 +46,8 @@ the local CLI.
 ./libscript.sh stop rust
 ./cli.sh stop rust
 
-./libscript.sh package_as docker rust
-./cli.sh package_as docker rust
+./libscript.sh package-as docker rust
+./cli.sh package-as docker rust
 
 ./libscript.sh uninstall rust
 ./cli.sh uninstall rust
@@ -70,8 +70,8 @@ libscript.cmd stop rust
 cli.cmd stop rust
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi rust
-cli.cmd package_as msi rust
+libscript.cmd package-as msi rust
+cli.cmd package-as msi rust
 
 :: Uninstall
 libscript.cmd uninstall rust
@@ -86,7 +86,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -113,7 +113,7 @@ running the setup script.
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
 | `RUST_VERSION` | Version of Rust demanded. Can be "nightly"|"beta"|"stable" xor a specific version | `stable` | stable, beta, nightly |
-| `RUST_INSTALL_METHOD` | How to install RUST. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools. | `libscript-native` |  |
+| `RUST_INSTALL_METHOD` | How to install RUST. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 <!-- END_VARS -->
 
 ## Architecture
@@ -135,3 +135,6 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages rust versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/rust/<version>`.

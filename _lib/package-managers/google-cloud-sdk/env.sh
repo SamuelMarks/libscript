@@ -31,45 +31,8 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-if command -v gcloud >/dev/null 2>&1; then
-    log_info "Google Cloud SDK is already installed."
-    exit 0
-fi
+#!/bin/sh
 
-# Load caching downloader
-SCRIPT_DIR=$(cd ${SCRIPT_DIR} && pwd)
-. "$LIBSCRIPT_ROOT_DIR/_lib/_common/pkg_mgr.sh"
 
-OS=$(uname -s)
-: "${PACKAGE_NAME:=$(basename "$SCRIPT_DIR")}"
-export PACKAGE_NAME
-
-case "$OS" in
-    Linux)
-        log_info "Installing Google Cloud SDK on Linux..."
-        libscript_download "https://sdk.cloud.google.com" "install_gcloud.sh"
-        bash install_gcloud.sh --disable-prompts
-        rm install_gcloud.sh
-        ;;
-    Darwin)
-        log_info "Installing Google Cloud SDK on macOS..."
-        if command -v brew >/dev/null 2>&1; then
-            brew install --cask google-cloud-sdk
-        else
-            libscript_download "https://sdk.cloud.google.com" "install_gcloud.sh"
-            bash install_gcloud.sh --disable-prompts
-            rm install_gcloud.sh
-        fi
-        ;;
-    CYGWIN*|MINGW*|MSYS*)
-        log_info "Installing Google Cloud SDK on Windows..."
-        libscript_download "https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk-windows-x86_64-bundled-python.zip" "gcloud.zip"
-        unzip gcloud.zip
-        ./google-cloud-sdk/install.cmd --quiet
-        rm gcloud.zip
-        ;;
-    *)
-        log_info "Unsupported OS: $OS"
-        exit 1
-        ;;
-esac
+GOOGLE_CLOUD_SDK_VERSION="${GOOGLE_CLOUD_SDK_VERSION:-latest}"
+export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/google-cloud-sdk/${GOOGLE_CLOUD_SDK_VERSION}/bin:${PATH}"

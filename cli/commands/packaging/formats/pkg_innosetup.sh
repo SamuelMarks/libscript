@@ -281,9 +281,9 @@ EOF2
       printf '%s\n' "var S: String;"
       printf '%s\n' "begin"
       printf '%s\n' "  if '{app}' <> '' then"
-      printf '%s\n' "    S := '/c \"\"\"{app}\\libscript.cmd\"\"\" package_as ' + GetAction('') + ' ';";
+      printf '%s\n' "    S := '/c \"\"\"{app}\\libscript.cmd\"\"\" package-as ' + GetAction('') + ' ';";
       printf '%s\n' "  else";
-      printf '%s\n' "    S := '/c libscript.cmd package_as ' + GetAction('') + ' ';";
+      printf '%s\n' "    S := '/c libscript.cmd package-as ' + GetAction('') + ' ';";
       set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
@@ -297,9 +297,9 @@ EOF2
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         if [ "$OFFLINE" = "1" ]; then
-          run_params="/c \"\"{app}\\libscript.cmd\"\" install_service $pkg $ver"
+          run_params="/c \"\"{app}\\libscript.cmd\"\" install-service $pkg $ver"
         else
-          run_params="/c libscript.cmd install_service $pkg $ver"
+          run_params="/c libscript.cmd install-service $pkg $ver"
         fi
         schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then

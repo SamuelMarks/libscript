@@ -31,3 +31,6 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export VALKEY_BUILD_DIR="${VALKEY_BUILD_DIR:-${BUILD_DIR:-${TMPDIR:-/tmp}}/valkey}"
+
+VALKEY_VERSION="${VALKEY_VERSION:-latest}"
+export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/valkey/${VALKEY_VERSION}/bin:${PATH}"

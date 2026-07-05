@@ -5,6 +5,11 @@
   "description": "Configuration variables for julia",
   "type": "object",
   "properties": {
+    "JULIA_INSTALL_METHOD": {
+      "description": "How to install JULIA. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "JULIA_VERSION": {
       "description": "Specific version of julia to install.",
       "type": "string",

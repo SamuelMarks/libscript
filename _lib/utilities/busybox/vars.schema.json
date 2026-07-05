@@ -5,10 +5,20 @@
   "description": "Configuration variables for BusyBox",
   "type": "object",
   "properties": {
+    "BUSYBOX_INSTALL_METHOD": {
+      "description": "How to install BUSYBOX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "BUSYBOX_VERSION": {
       "description": "Specific version of busybox to install.",
       "type": "string",
       "default": "latest"
+    },
+    "BUSYBOX_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install BUSYBOX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "default": "libscript_native"
     }
   }
 }

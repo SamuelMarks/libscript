@@ -64,7 +64,7 @@ as `tpu-vm-vllm` or `gke-xpk-inference`) use mocked dry-runs during standard CI 
 ## Artifact Verification
 
 Testing extends beyond native script execution. The CI pipeline actively validates the outputs of
-the `package_as` generator engine:
+the `package-as` generator engine:
 
 - **Containers:** Generated `docker-compose.yml` files and Dockerfiles are linted and built to
   verify syntactic and functional correctness.

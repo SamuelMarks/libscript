@@ -13,6 +13,8 @@ wget can be used by libscript to build bigger stacks (like WordPress, Open edX, 
 
 ## Usage
 
+_Note: libscript manages versions natively for this component._
+
 You can manage wget using libscript with the following commands:
 
 - **Install**: `libscript install wget`
@@ -32,3 +34,12 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+## Architecture
+
+`libscript` manages `wget` versions natively by default (`WGET_INSTALL_METHOD=libscript_native`),
+ensuring isolated installations without polluting global system paths. You can override this to use
+`system`, `mise`, `asdf`, `pkgx`, or `vfox` if preferred.
+
+Libscript manages wget versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/wget/<version>`.

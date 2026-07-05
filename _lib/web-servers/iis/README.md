@@ -3,10 +3,12 @@
 ## Purpose
 
 This document provides context and technical details for the `iis` component (part of `_server`)
-within the LibScript ecosystem. This module enables and configures Microsoft Internet Information
-Services (IIS) on Windows platforms.
+within the LibScript ecolibscript_native. This module enables and configures Microsoft Internet
+Information Services (IIS) on Windows platforms.
 
 ## Usage
+
+_Note: libscript manages versions natively for this component._
 
 Uses `Enable-WindowsOptionalFeature` (or equivalent DISM/ServerManager commands) to install the core
 IIS Web Server role, including HTTP features and FastCGI module for PHP support.
@@ -34,8 +36,8 @@ local CLI.
 ./libscript.sh stop iis
 ./cli.sh stop iis
 
-./libscript.sh package_as docker iis
-./cli.sh package_as docker iis
+./libscript.sh package-as docker iis
+./cli.sh package-as docker iis
 
 ./libscript.sh uninstall iis
 ./cli.sh uninstall iis
@@ -58,8 +60,8 @@ libscript.cmd stop iis
 cli.cmd stop iis
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi iis
-cli.cmd package_as msi iis
+libscript.cmd package-as msi iis
+cli.cmd package-as msi iis
 
 :: Uninstall
 libscript.cmd uninstall iis
@@ -73,3 +75,12 @@ cli.cmd uninstall iis
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+## Configuration
+
+| Variable             | Description                                                                                                                                                         | Default            | Required |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | -------- |
+| `IIS_INSTALL_METHOD` | How to install IIS. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |          |
+
+Libscript manages iis versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/iis/<version>`.

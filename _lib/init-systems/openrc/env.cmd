@@ -1,10 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment initialization for OpenRC on Windows.
-::
-:: ## Usage
-:: Normally sets up defaults. Currently a no-op placeholder.
+:: Windows env stub for openrc
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%OPENRC_VERSION%"=="" (
+    set "OPENRC_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\openrc\%OPENRC_VERSION%\bin;%PATH%"

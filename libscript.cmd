@@ -76,7 +76,7 @@ if /i "%cmd%"=="list" ( call "%SCRIPT_DIR%\cli\commands\core\list.cmd" %* & exit
 if /i "%cmd%"=="search" ( call "%SCRIPT_DIR%\cli\commands\core\search.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="provision" ( call "%SCRIPT_DIR%\cli\commands\cloud\provision.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="deprovision" ( call "%SCRIPT_DIR%\cli\commands\cloud\deprovision.cmd" %* & exit /b !errorlevel! )
-if /i "%cmd%"=="package_as" ( call "%SCRIPT_DIR%\cli\commands\packaging\package_as.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="package-as" ( call "%SCRIPT_DIR%\cli\commands\packaging\package-as.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="install-deps" ( call "%SCRIPT_DIR%\cli\commands\deps\install.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="db-search" ( call "%SCRIPT_DIR%\cli\commands\registry\search.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="update-db" ( call "%SCRIPT_DIR%\cli\commands\registry\update.cmd" %* & exit /b !errorlevel! )
@@ -101,12 +101,8 @@ if "!is_docker_cmd!"=="1" (
 set "is_action=0"
 set "req_version=0"
 if /i "%cmd%"=="install" ( set "is_action=1" & set "req_version=1" )
-if /i "%cmd%"=="install_daemon" ( set "is_action=1" & set "req_version=1" )
-if /i "%cmd%"=="install_service" ( set "is_action=1" & set "req_version=1" )
-if /i "%cmd%"=="uninstall_daemon" ( set "is_action=1" & set "req_version=1" )
-if /i "%cmd%"=="uninstall_service" ( set "is_action=1" & set "req_version=1" )
-if /i "%cmd%"=="remove_daemon" ( set "is_action=1" & set "req_version=1" )
-if /i "%cmd%"=="remove_service" ( set "is_action=1" & set "req_version=1" )
+if /i "%cmd%"=="install-service" ( set "is_action=1" & set "req_version=1" )
+if /i "%cmd%"=="uninstall-service" ( set "is_action=1" & set "req_version=1" )
 
 if /i "%cmd%"=="remove" set "is_action=1"
 if /i "%cmd%"=="uninstall" set "is_action=1"
@@ -242,22 +238,18 @@ echo Commands:
 echo   list                                      List all available components
 echo   search ^<query^>                            Search available components by name or description
 echo   install-deps [file]                       Install all dependencies defined in a JSON file (default: libscript.json)
-echo   package_as ^<format^> [args...]             Package libscript usage (e.g., docker, docker_compose)
+echo   package-as ^<format^> [args...]             Package libscript usage (e.g., docker, docker_compose)
 echo   install ^<package_name^> ^<version^>
 echo   remove ^<package_name^> [version]
 echo   uninstall ^<package_name^> [version]
-echo   install_daemon ^<package_name^> ^<version^>
-echo   install_service ^<package_name^> ^<version^>
-echo   uninstall_daemon ^<package_name^> ^<version^>
+echo   install-service ^<package_name^> ^<version^>
 echo   run ^<package_name^> ^<version^> [args...]
 echo   which ^<package_name^> ^<version^>
 echo   exec ^<package_name^> ^<version^> ^<cmd^> [args...]
 echo   env ^<package_name^> ^<version^>
 echo   ls ^<package_name^>
 echo   ls-remote ^<package_name^> [version]
-echo   uninstall_service ^<package_name^> ^<version^>
-echo   remove_daemon ^<package_name^> ^<version^>
-echo   remove_service ^<package_name^> ^<version^>
+echo   uninstall-service ^<package_name^> ^<version^>
 echo   status ^<package_name^> [version]
 echo   test ^<package_name^> [version]
 echo.

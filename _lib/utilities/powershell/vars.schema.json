@@ -5,10 +5,20 @@
   "description": "Configuration variables for PowerShell",
   "type": "object",
   "properties": {
+    "POWERSHELL_INSTALL_METHOD": {
+      "description": "How to install POWERSHELL. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "POWERSHELL_VERSION": {
       "description": "Specific version of PowerShell to install.",
       "type": "string",
       "default": "latest"
+    },
+    "POWERSHELL_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install POWERSHELL. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "default": "libscript_native"
     }
   }
 }

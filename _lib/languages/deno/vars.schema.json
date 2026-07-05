@@ -6,10 +6,10 @@
   "type": "object",
   "properties": {
     "DENO_INSTALL_METHOD": {
-      "description": "How to install DENO. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools.",
+      "description": "How to install DENO. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "enum": ["libscript-native", "system", "mise", "asdf"],
-      "default": "libscript-native"
+      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "default": "libscript_native"
     },
     "DENO_VERSION": {
       "description": "Version of Deno Runtime to install",

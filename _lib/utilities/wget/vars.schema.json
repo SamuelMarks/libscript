@@ -5,10 +5,20 @@
   "description": "Configuration variables for Wget",
   "type": "object",
   "properties": {
+    "WGET_INSTALL_METHOD": {
+      "description": "How to install WGET. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "WGET_VERSION": {
       "description": "Specific version of wget to install.",
       "type": "string",
       "default": "latest"
+    },
+    "WGET_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install WGET. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "default": "libscript_native"
     }
   }
 }

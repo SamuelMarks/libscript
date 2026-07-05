@@ -3,8 +3,8 @@
 ## Purpose & Current State
 
 **Purpose**: This document provides context and technical details for the `openbao` component (part
-of `_server`) within the LibScript ecosystem. OpenBao is an open-source tool for managing secrets
-and protecting sensitive data.
+of `_server`) within the LibScript ecolibscript_native. OpenBao is an open-source tool for managing
+secrets and protecting sensitive data.
 
 ## Usage
 
@@ -34,8 +34,8 @@ CLI.
 ./libscript.sh stop openbao
 ./cli.sh stop openbao
 
-./libscript.sh package_as docker openbao
-./cli.sh package_as docker openbao
+./libscript.sh package-as docker openbao
+./cli.sh package-as docker openbao
 
 ./libscript.sh uninstall openbao
 ./cli.sh uninstall openbao
@@ -58,8 +58,8 @@ libscript.cmd stop openbao
 cli.cmd stop openbao
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi openbao
-cli.cmd package_as msi openbao
+libscript.cmd package-as msi openbao
+cli.cmd package-as msi openbao
 
 :: Uninstall
 libscript.cmd uninstall openbao
@@ -74,7 +74,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -101,7 +101,7 @@ running the setup script.
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
 | `OPENBAO_VERSION` | Specific version of openbao to install. Can be a numeric version or an alias. | `latest` | latest, stable |
-| `OPENBAO_INSTALL_METHOD` | How to install OPENBAO. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools. | `libscript-native` |  |
+| `OPENBAO_INSTALL_METHOD` | How to install OPENBAO. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 | `LIBSCRIPT_LISTEN_PORT` | Global port to listen on | `none` |  |
 | `LIBSCRIPT_LISTEN_ADDRESS` | Global address to listen on | `none` |  |
 | `LIBSCRIPT_LISTEN_SOCKET` | Global unix socket to listen on | `none` |  |
@@ -132,3 +132,6 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages openbao versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/openbao/<version>`.

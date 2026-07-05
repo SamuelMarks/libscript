@@ -42,7 +42,7 @@ libscript stop nodejs
 **Package (e.g., as a Docker container):**
 
 ```sh
-libscript package_as docker nodejs
+libscript package-as docker nodejs
 ```
 
 _Note: On Unix environments, you can also use `./cli.sh install nodejs`. On Windows, use
@@ -56,7 +56,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -83,7 +83,7 @@ running the setup script.
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
 | `NODEJS_VERSION` | Version of Node.js demanded. Can be an alias or a specific numeric version number | `lts` | lts, latest, lts, latest, v22.13.1, 20 |
-| `NODEJS_INSTALL_METHOD` | How to install NODEJS. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools. | `libscript-native` |  |
+| `NODEJS_INSTALL_METHOD` | How to install NODEJS. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 <!-- END_VARS -->
 
 ## Architecture
@@ -105,3 +105,6 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages nodejs versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/nodejs/<version>`.

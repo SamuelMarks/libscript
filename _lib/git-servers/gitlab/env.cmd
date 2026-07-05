@@ -1,10 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment initialization for GitLab on Windows.
-::
-:: ## Usage
-:: Normally sets up defaults. Currently a no-op placeholder.
+:: Windows env stub for gitlab
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%GITLAB_VERSION%"=="" (
+    set "GITLAB_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\gitlab\%GITLAB_VERSION%\bin;%PATH%"

@@ -34,8 +34,8 @@ or the local CLI.
 ./libscript.sh stop _common
 ./cli.sh stop _common
 
-./libscript.sh package_as docker _common
-./cli.sh package_as docker _common
+./libscript.sh package-as docker _common
+./cli.sh package-as docker _common
 
 ./libscript.sh uninstall _common
 ./cli.sh uninstall _common
@@ -58,8 +58,8 @@ libscript.cmd stop _common
 cli.cmd stop _common
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi _common
-cli.cmd package_as msi _common
+libscript.cmd package-as msi _common
+cli.cmd package-as msi _common
 
 :: Uninstall
 libscript.cmd uninstall _common

@@ -32,3 +32,12 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+## Architecture
+
+`libscript` manages `curl` versions natively by default (`CURL_INSTALL_METHOD=libscript_native`),
+ensuring isolated installations without polluting global system paths. You can override this to use
+`system`, `mise`, `asdf`, `pkgx`, or `vfox` if preferred.
+
+Libscript manages curl versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/curl/<version>`.

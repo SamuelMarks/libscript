@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/package-managers/vfox/vars.schema.json",
+  "title": "Mise variables",
+  "description": "Configuration variables for vfox",
+  "type": "object",
+  "properties": {
+    "VFOX_INSTALL_METHOD": {
+      "description": "How to install VFOX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
+    "VFOX_VERSION": {
+      "description": "Specific version of vfox to install.",
+      "type": "string",
+      "default": "latest"
+    }
+  }
+}

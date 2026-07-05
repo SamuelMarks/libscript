@@ -35,8 +35,8 @@ the local CLI.
 ./libscript.sh stop valkey
 ./cli.sh stop valkey
 
-./libscript.sh package_as docker valkey
-./cli.sh package_as docker valkey
+./libscript.sh package-as docker valkey
+./cli.sh package-as docker valkey
 
 ./libscript.sh uninstall valkey
 ./cli.sh uninstall valkey
@@ -59,8 +59,8 @@ libscript.cmd stop valkey
 cli.cmd stop valkey
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi valkey
-cli.cmd package_as msi valkey
+libscript.cmd package-as msi valkey
+cli.cmd package-as msi valkey
 
 :: Uninstall
 libscript.cmd uninstall valkey
@@ -75,7 +75,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -113,6 +113,7 @@ running the setup script.
 | `VALKEY_SERVICE_RUN_AS_USER` | Windows local user account to run the service (leave empty for Network Service) | `none` |  |
 | `VALKEY_SERVICE_RUN_AS_PASSWORD` | Password for the local user account (if applicable) | `none` |  |
 | `VALKEY_SERVICE_NAME` | Custom name for the Windows Service (allows side-by-side installations) | `libscript_valkey` |  |
+| `VALKEY_INSTALL_METHOD` | How to install VALKEY. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 <!-- END_VARS -->
 
 ## Architecture
@@ -134,3 +135,6 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages valkey versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/valkey/<version>`.

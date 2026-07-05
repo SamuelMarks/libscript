@@ -13,3 +13,12 @@ Ensures the `cabal` executable is available. This relies on `ghcup`.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+## Architecture
+
+`libscript` manages `cabal` versions natively by default (`CABAL_INSTALL_METHOD=libscript_native`),
+ensuring isolated installations without polluting global system paths. You can override this to use
+`system`, `mise`, `asdf`, `pkgx`, or `vfox` if preferred.
+
+Libscript manages cabal versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/cabal/<version>`.

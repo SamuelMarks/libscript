@@ -5,10 +5,20 @@
   "description": "Configuration variables for Wait4X",
   "type": "object",
   "properties": {
+    "WAIT4X_INSTALL_METHOD": {
+      "description": "How to install WAIT4X. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "WAIT4X_VERSION": {
       "description": "Specific version of Wait4X to install.",
       "type": "string",
       "default": "latest"
+    },
+    "WAIT4X_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install WAIT4X. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "default": "libscript_native"
     }
   }
 }

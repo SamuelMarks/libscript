@@ -1,10 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment initialization for etcd on Windows.
-::
-:: ## Usage
-:: Defines default environment variables for etcd installations.
+:: Windows env stub for etcd
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%ETCD_VERSION%"=="" (
+    set "ETCD_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\etcd\%ETCD_VERSION%\bin;%PATH%"

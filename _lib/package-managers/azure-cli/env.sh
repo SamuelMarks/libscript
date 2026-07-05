@@ -71,3 +71,6 @@ case "$OS" in
         exit 1
         ;;
 esac
+
+AZURE_CLI_VERSION="${AZURE_CLI_VERSION:-latest}"
+export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/azure-cli/${AZURE_CLI_VERSION}/bin:${PATH}"

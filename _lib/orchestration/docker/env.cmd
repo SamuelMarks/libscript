@@ -1,10 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment initialization for Docker on Windows.
-::
-:: ## Usage
-:: Normally sets up defaults. Currently a no-op placeholder.
+:: Windows env stub for docker
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%DOCKER_VERSION%"=="" (
+    set "DOCKER_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\docker\%DOCKER_VERSION%\bin;%PATH%"

@@ -2,7 +2,8 @@
 
 MSYS2 is a collection of tools and libraries providing an easy-to-use environment for building,
 installing, and running native Windows software. It consists of a command-line terminal called
-mintty, bash, version control systems like git, and various build systems like autotools and GCC.
+mintty, bash, version control libscript_natives like git, and various build libscript_natives like
+autotools and GCC.
 
 ## Integration with Libscript
 
@@ -32,3 +33,12 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+## Architecture
+
+`libscript` manages `msys2` versions natively by default (`MSYS2_INSTALL_METHOD=libscript_native`),
+ensuring isolated installations without polluting global system paths. You can override this to use
+`system`, `mise`, `asdf`, `pkgx`, or `vfox` if preferred.
+
+Libscript manages msys2 versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/msys2/<version>`.

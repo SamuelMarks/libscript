@@ -1,52 +1,28 @@
-<#
-.SYNOPSIS
-Handles operations related to the component '_common'.
-
-.DESCRIPTION
-Execute this script to perform actions for _common.
-#>
-
-$ErrorActionPreference = "Stop"
-
+# LibScript Service Installer for Windows
 param(
-  [string]$PackageName,
-  [string]$DataDir,
-  [string]$RunAsUser,
-  [string]$RunAsPassword,
-  [string]$BinPath,
-  [string]$CustomServiceName
+    [string]$ServiceName,
+    [string]$ExecStart,
+    [string]$WorkingDir,
+    [string]$Description,
+    [switch]$Uninstall
 )
 
-if ($CustomServiceName) {
-    $ServiceName = $CustomServiceName
-} else {
-    $ServiceName = "libscript_$PackageName"
+if (-not $ServiceName) {
+    Write-Error "ServiceName is required"
+    exit 1
 }
 
-# Apply ACLs to Data Directory
-if ($DataDir -and (Test-Path $DataDir)) {
-    Write-Host "Applying ACLs to Data Directory: $DataDir"
-    $user = if ($RunAsUser) { $RunAsUser } else { "NT AUTHORITY\NetworkService" }
-    icacls.exe $DataDir /grant "$($user):(OI)(CI)F" /T
+if ($Uninstall) {
+    Write-Output "Uninstalling Windows service: $ServiceName"
+    sc.exe stop $ServiceName
+    sc.exe delete $ServiceName
+    exit 0
 }
 
-# Stop service if exists
-if (Get-Service $ServiceName -ErrorAction SilentlyContinue) {
-    Stop-Service $ServiceName -ErrorAction SilentlyContinue
-} else {
-    Write-Host "Creating service $ServiceName..."
-    if (-not $BinPath) { $BinPath = "C:\Program Files\$PackageName\bin\$PackageName.exe" }
-    & sc.exe create $ServiceName binPath= $BinPath start= auto
+if (-not $Description) {
+    $Description = "$ServiceName service"
 }
 
-# Configure service via sc.exe
-if ($RunAsUser) {
-    $userObj = if ($RunAsUser.Contains("\") -or $RunAsUser.Contains("@")) { $RunAsUser } else { ".\$RunAsUser" }
-    Write-Host "Configuring service to run as $userObj"
-    & sc.exe config $ServiceName obj= $userObj password= $RunAsPassword
-} else {
-    Write-Host "Configuring service to run as Network Service"
-    & sc.exe config $ServiceName obj= "NT AUTHORITY\NetworkService" password= ""
-}
-
-Write-Host "Service $ServiceName configured successfully."
+Write-Output "Installing Windows service: $ServiceName"
+sc.exe create $ServiceName binPath= $ExecStart start= auto obj= LocalSystem
+sc.exe description $ServiceName $Description

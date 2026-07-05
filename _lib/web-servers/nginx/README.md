@@ -3,10 +3,12 @@
 ## Purpose & Current State
 
 **Purpose**: This document provides context and technical details for the `nginx` server component
-within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework
-designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+within the LibScript ecolibscript_native. LibScript is a modular, zero-dependency shell-script
+framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
 
 ## Usage
+
+_Note: libscript manages versions natively for this component._
 
 This directory contains the scripts for managing the Nginx component. It works both as a local
 version manager (similar to rvm, nvm, pyenv, uv) for precise Nginx version control, and can be
@@ -32,8 +34,8 @@ the local CLI.
 ./libscript.sh stop nginx
 ./cli.sh stop nginx
 
-./libscript.sh package_as docker nginx
-./cli.sh package_as docker nginx
+./libscript.sh package-as docker nginx
+./cli.sh package-as docker nginx
 
 ./libscript.sh uninstall nginx
 ./cli.sh uninstall nginx
@@ -56,8 +58,8 @@ libscript.cmd stop nginx
 cli.cmd stop nginx
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi nginx
-cli.cmd package_as msi nginx
+libscript.cmd package-as msi nginx
+cli.cmd package-as msi nginx
 
 :: Uninstall
 libscript.cmd uninstall nginx
@@ -72,7 +74,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -98,7 +100,7 @@ running the setup script.
 | `MODEL_NAME` | HuggingFace model string to serve | `your-org/your-model-name` |  |
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
-| `NGINX_INSTALL_METHOD` | How to install NGINX. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools. | `libscript-native` |  |
+| `NGINX_INSTALL_METHOD` | How to install NGINX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 | `NGINX_WWWROOT_NAME` | The server_name or domain (e.g., example.com) to serve. | `none` |  |
 | `NGINX_WWWROOT_PATH` | The absolute path to the static document root to serve. | `none` |  |
 | `NGINX_WWWROOT_LISTEN` | The HTTP port Nginx should listen on (defaults to 80). | `80` |  |
@@ -138,3 +140,6 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages nginx versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/nginx/<version>`.

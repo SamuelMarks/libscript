@@ -1,22 +1,10 @@
 <#
 .SYNOPSIS
-Defines environment variables and configurations for the environment variables stack.
-
-.DESCRIPTION
-Source or call this script to configure the environment for sbt.
+Environment variable initialization script for the sbt component.
 #>
 
-$ErrorActionPreference = "Stop"
+$Version = (Get-Item Env:\SBT_VERSION -ErrorAction Ignore).Value
+if (-not $Version) { $Version = "latest" }
 
-$SbtVersion = $env:SBT_VERSION
-if ([string]::IsNullOrEmpty($SbtVersion)) {
-    $SbtVersion = "latest"
-}
-$LibscriptHome = $env:LIBSCRIPT_HOME
-if ([string]::IsNullOrEmpty($LibscriptHome)) {
-    $LibscriptHome = Join-Path $HOME ".libscript"
-}
-$SbtPath = Join-Path $LibscriptHome "sbt\$SbtVersion\bin"
-if (-not ($env:PATH -split ';' -contains $SbtPath)) {
-    $env:PATH = "$SbtPath;" + $env:PATH
-}
+$BinPath = "$env:LIBSCRIPT_HOME\sbt\$Version\bin"
+$env:PATH = "$BinPath;$env:PATH"

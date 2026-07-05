@@ -16,7 +16,7 @@ $LibscriptHome = $env:LIBSCRIPT_HOME
 if ([string]::IsNullOrEmpty($LibscriptHome)) {
     $LibscriptHome = Join-Path $HOME ".libscript"
 }
-$PyPath = Join-Path $LibscriptHome "python\$PythonVersion"
+$PyPath = Join-Path $LibscriptHome "python\$PythonVersion\bin"
 $PyScriptsPath = Join-Path $PyPath "Scripts"
 if (-not ($env:PATH -split ';' -contains $PyScriptsPath)) {
     $env:PATH = "$PyScriptsPath;" + $env:PATH

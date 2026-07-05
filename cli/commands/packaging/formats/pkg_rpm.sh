@@ -56,7 +56,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
         printf '%s\n' "mkdir -p %{buildroot}/opt/libscript"; if [ "$OFFLINE" = "1" ]; then printf '%s\n' "cp -a \"$LIBSCRIPT_ROOT_DIR\"/.* \"$LIBSCRIPT_ROOT_DIR\"/* %{buildroot}/opt/libscript/ 2>/dev/null || true"; printf '%s\n' "rm -rf %{buildroot}/opt/libscript/.git"; fi
         printf '%s\n' "touch %{buildroot}/var/LIB/libscript/.${pkg_name}_installed"
         printf '%s\n' "%post"
-        printf '%s\n' "if command -v libscript.sh >/dev/null; then libscript.sh install_service $pkg $ver; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh install_service $pkg $ver; fi"
+        printf '%s\n' "if command -v libscript.sh >/dev/null; then libscript.sh install-service $pkg $ver; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh install-service $pkg $ver; fi"
         printf '%s\n' "%preun"
         printf '%s\n' "if command -v libscript.sh >/dev/null; then libscript.sh uninstall $pkg --purge-data; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh uninstall $pkg --purge-data; fi"
         printf '%s\n' "%files"

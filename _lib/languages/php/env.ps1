@@ -16,7 +16,7 @@ $LibscriptHome = $env:LIBSCRIPT_HOME
 if ([string]::IsNullOrEmpty($LibscriptHome)) {
     $LibscriptHome = Join-Path $HOME ".libscript"
 }
-$PhpPath = Join-Path $LibscriptHome "php\$PhpVersion"
+$PhpPath = Join-Path $LibscriptHome "php\$PhpVersion\bin"
 if (-not ($env:PATH -split ';' -contains $PhpPath)) {
     $env:PATH = "$PhpPath;" + $env:PATH
 }

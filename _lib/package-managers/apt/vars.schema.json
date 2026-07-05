@@ -5,6 +5,11 @@
   "description": "Configuration variables for apt",
   "type": "object",
   "properties": {
+    "APT_INSTALL_METHOD": {
+      "description": "How to install APT. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "APT_VERSION": {
       "description": "Specific version of apt to install.",
       "type": "string",

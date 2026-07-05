@@ -265,9 +265,9 @@ EOF2
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         if [ "$OFFLINE" = "1" ]; then
-          run_params="/c \"[INSTALLFOLDER]libscript.cmd\" install_service $pkg $ver"
+          run_params="/c \"[INSTALLFOLDER]libscript.cmd\" install-service $pkg $ver"
         else
-          run_params="/c libscript.cmd install_service $pkg $ver"
+          run_params="/c libscript.cmd install-service $pkg $ver"
         fi
         schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
@@ -300,9 +300,9 @@ EOF2
       printf '%s\n' "  If Session.Property(""OPT_MAC"") = ""1"" Then args = args & ""--os-macos """ >> "generate_stack.vbs"
       printf '%s\n' "  If Session.Property(""OPT_BSD"") = ""1"" Then args = args & ""--os-bsd """ >> "generate_stack.vbs"
       if [ "$OFFLINE" = "1" ]; then
-        printf '%s\n' "  cmd = ""cmd.exe /c """""" & Session.Property(""INSTALLFOLDER"") & ""libscript.cmd"""""" package_as "" & action" >> "generate_stack.vbs"
+        printf '%s\n' "  cmd = ""cmd.exe /c """""" & Session.Property(""INSTALLFOLDER"") & ""libscript.cmd"""""" package-as "" & action" >> "generate_stack.vbs"
       else
-        printf '%s\n' "  cmd = ""cmd.exe /c libscript.cmd package_as "" & action" >> "generate_stack.vbs"
+        printf '%s\n' "  cmd = ""cmd.exe /c libscript.cmd package-as "" & action" >> "generate_stack.vbs"
       fi
       printf '%s\n' "  cmd = cmd & "" """ >> "generate_stack.vbs"
       set -- $deps_list

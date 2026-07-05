@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-Defines environment variables and configurations for the environment variables stack.
-
-.DESCRIPTION
-Source or call this script to configure the environment for spack.
+Environment variable initialization script for the spack component.
 #>
 
-$ErrorActionPreference = "Stop"
-# Environment variables for PowerShell
+$Version = (Get-Item Env:\SPACK_VERSION -ErrorAction Ignore).Value
+if (-not $Version) { $Version = "latest" }
+
+$BinPath = "$env:LIBSCRIPT_HOME\spack\$Version\bin"
+$env:PATH = "$BinPath;$env:PATH"

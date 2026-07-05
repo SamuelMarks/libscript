@@ -1,12 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment variable initialization script for the deno-pm component on Windows.
-:: It sets up necessary paths and environment variables required for the component
-:: to function correctly within the libscript context.
-::
-:: ## Usage
-:: Call this script to load the environment variables. Do not execute it directly without context.
+:: Windows env stub for deno-pm
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%DENO_PM_VERSION%"=="" (
+    set "DENO_PM_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\deno-pm\%DENO_PM_VERSION%\bin;%PATH%"

@@ -1,12 +1,6 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment variable initialization script for the openbao component on Windows.
-:: It sets up necessary paths and environment variables required for the component
-:: to function correctly within the libscript context.
-::
-:: ## Usage
-:: Call this script to load the environment variables. Do not execute it directly without context.
+REM ## Overview
+REM Environment variable initialization script for the openbao component.
 
-:: Environment variables for Windows
+IF "%OPENBAO_VERSION%"=="" SET "OPENBAO_VERSION=latest"
+SET "PATH=%LIBSCRIPT_HOME%\openbao\%OPENBAO_VERSION%\bin;%PATH%"

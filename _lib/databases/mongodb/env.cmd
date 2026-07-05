@@ -1,10 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment initialization for MongoDB on Windows.
-::
-:: ## Usage
-:: Normally sets up defaults. Currently a no-op placeholder.
+:: Windows env stub for mongodb
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%MONGODB_VERSION%"=="" (
+    set "MONGODB_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\mongodb\%MONGODB_VERSION%\bin;%PATH%"

@@ -35,8 +35,8 @@ the local CLI.
 ./libscript.sh stop _noop
 ./cli.sh stop _noop
 
-./libscript.sh package_as docker _noop
-./cli.sh package_as docker _noop
+./libscript.sh package-as docker _noop
+./cli.sh package-as docker _noop
 
 ./libscript.sh uninstall _noop
 ./cli.sh uninstall _noop
@@ -59,8 +59,8 @@ libscript.cmd stop _noop
 cli.cmd stop _noop
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi _noop
-cli.cmd package_as msi _noop
+libscript.cmd package-as msi _noop
+cli.cmd package-as msi _noop
 
 :: Uninstall
 libscript.cmd uninstall _noop
@@ -82,3 +82,6 @@ cli.cmd uninstall _noop
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages _noop versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/_noop/<version>`.

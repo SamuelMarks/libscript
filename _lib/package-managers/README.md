@@ -39,8 +39,8 @@ command or the local CLI.
 ./libscript.sh stop package-managers
 ./cli.sh stop package-managers
 
-./libscript.sh package_as docker package-managers
-./cli.sh package_as docker package-managers
+./libscript.sh package-as docker package-managers
+./cli.sh package-as docker package-managers
 
 ./libscript.sh uninstall package-managers
 ./cli.sh uninstall package-managers
@@ -63,8 +63,8 @@ libscript.cmd stop package-managers
 cli.cmd stop package-managers
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi package-managers
-cli.cmd package_as msi package-managers
+libscript.cmd package-as msi package-managers
+cli.cmd package-as msi package-managers
 
 :: Uninstall
 libscript.cmd uninstall package-managers

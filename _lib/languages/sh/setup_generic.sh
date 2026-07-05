@@ -1,10 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Generic setup module for SH/Dash.
-#
-# ## Usage
-# Installs Dash from source or delegates to the system package manager.
-
+# Generic setup module for sh.
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -38,22 +34,27 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/versioning.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
-SH_INSTALL_METHOD="${SH_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
-SH_VERSION="${SH_VERSION:-0.5.12}"
+SH_INSTALL_METHOD="$(libscript_resolve_install_method "SH")"
 ACTION="${ACTION:-install}"
+VERSION="${SH_VERSION:-latest}"
 
 resolve_exact_version() {
-  if [ "${SH_VERSION}" = "latest" ]; then
-    EXACT_VERSION="0.5.12"
+  if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
+    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote sh 2>/dev/null | tail -n 1)
+    if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
+      EXACT_VERSION="$_latest"
+    else
+      EXACT_VERSION="${VERSION:-latest}"
+    fi
   else
-    EXACT_VERSION="${SH_VERSION}"
+    EXACT_VERSION="${VERSION:-latest}"
   fi
 }
 
@@ -63,76 +64,167 @@ case "$ACTION" in
       mise ls sh || true
     elif [ "$SH_INSTALL_METHOD" = "asdf" ]; then
       asdf list sh || true
+    elif [ "$SH_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$SH_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls sh || true
     elif [ "$SH_INSTALL_METHOD" = "system" ]; then
-      dash -v || true
+      echo "System packages do not support ls here."
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/sh/" 2>/dev/null || true
     fi
     exit 0
     ;;
   ls-remote)
-    if [ "$SH_INSTALL_METHOD" = "mise" ] || [ "$SH_INSTALL_METHOD" = "asdf" ]; then
-      printf '%s\n' "Not supported by standard plugins"
-    elif [ "$SH_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System package manager does not support ls-remote directly here."
+    if [ "$SH_INSTALL_METHOD" = "mise" ]; then
+      mise ls-remote sh || true
+    elif [ "$SH_INSTALL_METHOD" = "asdf" ]; then
+      asdf list all sh || true
+    elif [ "$SH_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$SH_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls all sh || true
     else
-      printf '%s\n' "0.5.12"
+      if [ -n "${SH_RELEASES_URL:-}" ]; then
+        curl -sSL "${SH_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+      else
+      git ls-remote --tags "https://github.com/bminor/bash" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+    fi
     fi
     exit 0
     ;;
   use)
     if [ "$SH_INSTALL_METHOD" = "mise" ]; then
-      mise use "sh@${SH_VERSION}"
+      mise use "sh@${VERSION}"
     elif [ "$SH_INSTALL_METHOD" = "asdf" ]; then
-      asdf global sh "${SH_VERSION}"
+      asdf global sh "${VERSION}"
+    elif [ "$SH_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not use explicit versions this way"
+    elif [ "$SH_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "sh@${VERSION}"
+    elif [ "$SH_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "sh@${VERSION}"
     elif [ "$SH_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "Cannot 'use' specific version with system package manager."
+      echo "System packages do not support use here."
     else
       resolve_exact_version
-      libscript_symlink_alias "sh" "${SH_VERSION}" "${EXACT_VERSION}"
+      libscript_symlink_alias "sh" "$VERSION" "${EXACT_VERSION}"
     fi
     exit 0
     ;;
-  download|install|*)
-    if [ "$SH_INSTALL_METHOD" = "system" ]; then
-      libscript_depends 'dash' || libscript_depends 'sh' || true
-    elif [ "$SH_INSTALL_METHOD" = "mise" ]; then
-      printf '%s\n' "mise does not officially support sh/dash out of the box."
-    elif [ "$SH_INSTALL_METHOD" = "asdf" ]; then
-      printf '%s\n' "asdf does not officially support sh/dash out of the box."
-    else
-      libscript_depends 'curl' 'tar' 'make' 'gcc' 'autoconf' 'automake'
-      resolve_exact_version
-      
-      SH_DIR=$(libscript_get_version_dir "sh" "${EXACT_VERSION}")
-      
-      if [ -x "${SH_DIR}/bin/dash" ]; then
-        libscript_symlink_alias "sh" "${SH_VERSION}" "${EXACT_VERSION}"
-        exit 0
+  download)
+    if [ "$SH_INSTALL_METHOD" = "libscript_native" ]; then
+      log_info "Downloading sh ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/sh..."
+      mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/sh"
+      if [ -n "${SH_DOWNLOAD_URL:-}" ]; then
+        libscript_download "${SH_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/sh/sh-${VERSION}.tar.gz"
+      else
+        log_warn "SH_DOWNLOAD_URL is not defined for sh ${VERSION}."
       fi
-
-      SH_URL="https://git.kernel.org/pub/scm/utils/dash/dash.git/snapshot/dash-${EXACT_VERSION}.tar.gz"
-      SH_TARBALL=$(mktemp)
-      libscript_download "${SH_URL}" "${SH_TARBALL}"
-      
-      TMP_DIR=$(mktemp -d)
-      tar -C "${TMP_DIR}" -xzf "${SH_TARBALL}"
-      rm -f "${SH_TARBALL}"
-      
-      (
-        cd "${TMP_DIR}/dash-${EXACT_VERSION}"
-        ./autogen.sh
-        ./configure --prefix="${SH_DIR}"
-        make
-        make install
-      )
-      
-      rm -rf "${TMP_DIR}"
-      
-      # Also link dash as sh
-      ln -sf dash "${SH_DIR}/bin/sh"
-      
-      libscript_symlink_alias "sh" "${SH_VERSION}" "${EXACT_VERSION}"
+    fi
+    exit 0
+    ;;
+  install|*)
+    if [ "$SH_INSTALL_METHOD" = "system" ]; then
+      libscript_depends "sh"
+    elif [ "$SH_INSTALL_METHOD" = "mise" ]; then
+      mise install "sh@${VERSION}"
+    elif [ "$SH_INSTALL_METHOD" = "asdf" ]; then
+      asdf install sh "${VERSION}"
+    elif [ "$SH_INSTALL_METHOD" = "pkgx" ]; then
+      pkgx install "sh@${VERSION}"
+    elif [ "$SH_INSTALL_METHOD" = "vfox" ]; then
+      vfox add sh || true
+      vfox install "sh@${VERSION}"
+    else
+      # libscript_native implementation
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/sh/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing sh ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/sh/"*"${VERSION}"* >/dev/null 2>&1; then
+          log_info "Extracting from cache..."
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/sh/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+            else
+              cp "$cache_file" "${TARGET_DIR}/bin/sh" || true
+              chmod +x "${TARGET_DIR}/bin/sh" || true
+            fi
+          fi
+        else
+          if [ -n "${SH_DOWNLOAD_URL:-}" ]; then
+            TEMP_FILE=$(mktemp)
+            libscript_download "${SH_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+            if case "${SH_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "${SH_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+            else
+              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/sh" || true
+              chmod +x "${TARGET_DIR}/bin/sh" || true
+            fi
+            rm -f "${TEMP_FILE}"
+          else
+            log_warn "No download URL provided for sh ${VERSION}."
+          fi
+        fi
+      else
+        log_info "sh ${VERSION} is already installed."
+      fi
+      libscript_symlink_alias "sh" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
+  start|stop|restart|status|health|logs|up|down)
+    if [ "$SH_INSTALL_METHOD" = "libscript_native" ] || [ "$SH_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-sh}}"
+      libscript_service "$ACTION" "$service_name" "$@"
+    else
+      log_info "$ACTION not natively implemented for $SH_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  install-service)
+    if [ "$SH_INSTALL_METHOD" = "libscript_native" ] || [ "$SH_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-sh}}"
+      libscript_install_service "$service_name" "$@"
+    else
+      log_info "install-service not implemented for $SH_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall-service)
+    if [ "$SH_INSTALL_METHOD" = "libscript_native" ] || [ "$SH_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-sh}}"
+      libscript_uninstall_service "$service_name" "$@"
+    else
+      log_info "uninstall-service not implemented for $SH_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall)
+    if [ "$SH_INSTALL_METHOD" = "libscript_native" ]; then
+      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
+      log_info "Uninstalling sh $VERSION..."
+      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/sh/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/sh/$VERSION"
+    else
+      log_info "Uninstall not implemented or supported for $SH_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+
 esac

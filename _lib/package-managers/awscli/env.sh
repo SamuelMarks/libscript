@@ -73,3 +73,6 @@ case "$OS" in
         exit 1
         ;;
 esac
+
+AWSCLI_VERSION="${AWSCLI_VERSION:-latest}"
+export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/awscli/${AWSCLI_VERSION}/bin:${PATH}"

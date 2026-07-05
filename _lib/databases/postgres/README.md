@@ -3,8 +3,8 @@
 ## Purpose & Current State
 
 This document provides context and technical details for the **PostgreSQL** component (part of the
-`_storage` directory) within the LibScript ecosystem. PostgreSQL is a powerful, open-source
-object-relational database system.
+`_storage` directory) within the LibScript ecolibscript_native. PostgreSQL is a powerful,
+open-source object-relational database libscript_native.
 
 This module works both as a local version manager for PostgreSQL (similar to `rvm`, `nvm`, `pyenv`,
 or `uv`) and can be directly invoked from the global version manager `libscript`. Because of this
@@ -30,8 +30,8 @@ or the local CLI.
 ./libscript.sh stop postgres
 ./cli.sh stop postgres
 
-./libscript.sh package_as docker postgres
-./cli.sh package_as docker postgres
+./libscript.sh package-as docker postgres
+./cli.sh package-as docker postgres
 
 ./libscript.sh uninstall postgres
 ./cli.sh uninstall postgres
@@ -54,8 +54,8 @@ libscript.cmd stop postgres
 cli.cmd stop postgres
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi postgres
-cli.cmd package_as msi postgres
+libscript.cmd package-as msi postgres
+cli.cmd package-as msi postgres
 
 :: Uninstall
 libscript.cmd uninstall postgres
@@ -70,7 +70,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -118,6 +118,7 @@ running the setup script.
 | `POSTGRES_SERVICE_GROUP` | Group for PostgreSQL service. | `none` |  |
 | `POSTGRES_URL_VERSION` | URL format version for PostgreSQL. | `none` |  |
 | `POSTGRES_URL` | Connection URL for PostgreSQL. | `none` |  |
+| `POSTGRES_INSTALL_METHOD` | How to install POSTGRES. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 <!-- END_VARS -->
 
 ## Architecture
@@ -139,3 +140,6 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages postgres versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/postgres/<version>`.

@@ -1,10 +1,14 @@
-<#
-.SYNOPSIS
-Defines environment variables and configurations for the environment variables stack.
+# Windows PowerShell env stub for cargo
 
-.DESCRIPTION
-Source or call this script to configure the environment for cargo.
-#>
+$LibscriptHome = $env:LIBSCRIPT_HOME
+if ([string]::IsNullOrEmpty($LibscriptHome)) {
+    $LibscriptHome = Join-Path $env:USERPROFILE ".libscript"
+}
 
-$ErrorActionPreference = "Stop"
-# Environment variables for PowerShell
+$CompVersion = $env:CARGO_VERSION
+if ([string]::IsNullOrEmpty($CompVersion)) {
+    $CompVersion = "latest"
+}
+
+$TargetBin = Join-Path (Join-Path (Join-Path $LibscriptHome "cargo") $CompVersion) "bin"
+$env:PATH = "$TargetBin;$env:PATH"

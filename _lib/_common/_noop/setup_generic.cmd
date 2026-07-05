@@ -31,3 +31,60 @@ if "%ACTION%"=="use" (
 
 echo Windows native installation not implemented.
 exit /b 1
+
+:action_service
+if "%LIBSCRIPT_SERVICE_NAME%"=="" (
+    if "%PACKAGE_NAME%"=="" (
+        set "SVC_NAME=libscript__noop"
+    ) else (
+        set "SVC_NAME=libscript_%PACKAGE_NAME%"
+    )
+) else (
+    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
+)
+if "%_NOOP_INSTALL_METHOD%"=="libscript_native" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
+) else if "%_NOOP_INSTALL_METHOD%"=="system" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
+) else (
+    echo %ACTION% not natively implemented for %_NOOP_INSTALL_METHOD%.
+)
+exit /b 0
+
+:action_install_service
+if "%LIBSCRIPT_SERVICE_NAME%"=="" (
+    if "%PACKAGE_NAME%"=="" (
+        set "SVC_NAME=libscript__noop"
+    ) else (
+        set "SVC_NAME=libscript_%PACKAGE_NAME%"
+    )
+) else (
+    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
+)
+if "%_NOOP_INSTALL_METHOD%"=="libscript_native" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" install "%SVC_NAME%"
+) else if "%_NOOP_INSTALL_METHOD%"=="system" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" install "%SVC_NAME%"
+) else (
+    echo install-service not implemented for %_NOOP_INSTALL_METHOD%.
+)
+exit /b 0
+
+:action_uninstall_service
+if "%LIBSCRIPT_SERVICE_NAME%"=="" (
+    if "%PACKAGE_NAME%"=="" (
+        set "SVC_NAME=libscript__noop"
+    ) else (
+        set "SVC_NAME=libscript_%PACKAGE_NAME%"
+    )
+) else (
+    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
+)
+if "%_NOOP_INSTALL_METHOD%"=="libscript_native" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
+) else if "%_NOOP_INSTALL_METHOD%"=="system" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
+) else (
+    echo uninstall-service not implemented for %_NOOP_INSTALL_METHOD%.
+)
+exit /b 0

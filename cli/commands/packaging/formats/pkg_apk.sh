@@ -61,7 +61,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
         printf '%s\n' "EOF"
         printf '%s\n' "cat << 'EOF' > \"\$BUILD_DIR/${pkg_name}.post-install\""
         printf '%s\n' "#!/bin/sh"
-        printf '%s\n' "if command -v libscript.sh >/dev/null; then libscript.sh install_service $pkg $ver; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh install_service $pkg $ver; fi"
+        printf '%s\n' "if command -v libscript.sh >/dev/null; then libscript.sh install-service $pkg $ver; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh install-service $pkg $ver; fi"
         printf '%s\n' "EOF"
         printf '%s\n' "chmod +x \"\$BUILD_DIR/${pkg_name}.post-install\""
         printf '%s\n' "cat << 'EOF' > \"\$BUILD_DIR/${pkg_name}.pre-deinstall\""

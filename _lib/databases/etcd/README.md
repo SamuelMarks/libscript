@@ -3,8 +3,9 @@
 ## Purpose & Current State
 
 **Purpose**: This document provides context and technical details for the `etcd` component (part of
-`_storage`) within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script
-framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+`_storage`) within the LibScript ecolibscript_native. LibScript is a modular, zero-dependency
+shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS,
+and Windows.
 
 ## Usage
 
@@ -30,7 +31,7 @@ libscript install etcd
 libscript start etcd
 libscript stop etcd
 
-libscript package_as docker etcd
+libscript package-as docker etcd
 
 libscript uninstall etcd
 ```
@@ -46,7 +47,7 @@ libscript.cmd start etcd
 libscript.cmd stop etcd
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi etcd
+libscript.cmd package-as msi etcd
 
 :: Uninstall
 libscript.cmd uninstall etcd
@@ -63,7 +64,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -103,6 +104,7 @@ running the setup script.
 | `ETCD_SERVICE_USER` | User for etcd service. | `none` |  |
 | `ETCD_URL` | URL for etcd. | `none` |  |
 | `ETCD_SERVICE_GROUP` | Group for etcd service. | `none` |  |
+| `ETCD_INSTALL_METHOD` | How to install ETCD. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 <!-- END_VARS -->
 
 ## Architecture
@@ -124,3 +126,6 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages etcd versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/etcd/<version>`.

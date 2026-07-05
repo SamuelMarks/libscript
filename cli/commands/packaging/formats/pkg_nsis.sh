@@ -98,9 +98,9 @@ EOF2
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "Section \"$pkg\" SEC_$pkg"
         if [ "$OFFLINE" = "1" ]; then
-          run_params="/c \"\$INSTDIR\\libscript.cmd\" install_service $pkg $ver"
+          run_params="/c \"\$INSTDIR\\libscript.cmd\" install-service $pkg $ver"
         else
-          run_params="/c libscript.cmd install_service $pkg $ver"
+          run_params="/c libscript.cmd install-service $pkg $ver"
         fi
         schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
@@ -324,9 +324,9 @@ EOF2
         printf '%s\n' "    \${EndIf}"
       done
       if [ "$OFFLINE" = "1" ]; then
-        printf '%s\n' "    ExecWait 'cmd.exe /c \"\$INSTDIR\\libscript.cmd\" package_as \$Action_Choice \$PkgArgs \$GenCmd'"
+        printf '%s\n' "    ExecWait 'cmd.exe /c \"\$INSTDIR\\libscript.cmd\" package-as \$Action_Choice \$PkgArgs \$GenCmd'"
       else
-        printf '%s\n' "    ExecWait 'cmd.exe /c libscript.cmd package_as \$Action_Choice \$PkgArgs \$GenCmd'"
+        printf '%s\n' "    ExecWait 'cmd.exe /c libscript.cmd package-as \$Action_Choice \$PkgArgs \$GenCmd'"
       fi
       printf '%s\n' "  \${EndIf}"
       printf '%s\n' "SectionEnd"

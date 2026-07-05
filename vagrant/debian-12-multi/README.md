@@ -41,7 +41,7 @@ vagrant ssh -c 'libscript install postgres '
 vagrant ssh -c 'libscript start postgres'
 vagrant ssh -c 'libscript stop postgres'
 
-vagrant ssh -c 'libscript package_as docker postgres'
+vagrant ssh -c 'libscript package-as docker postgres'
 
 vagrant ssh -c 'libscript uninstall postgres'
 ```

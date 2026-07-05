@@ -5,6 +5,11 @@
   "description": "Configuration variables for fnm",
   "type": "object",
   "properties": {
+    "FNM_INSTALL_METHOD": {
+      "description": "How to install FNM. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "FNM_DIR": {
       "type": "string",
       "description": "Installation directory for fnm."

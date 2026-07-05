@@ -5,6 +5,11 @@
   "description": "Configuration variables for R",
   "type": "object",
   "properties": {
+    "R_INSTALL_METHOD": {
+      "description": "How to install R. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "R_VERSION": {
       "description": "Specific version of R to install.",
       "type": "string",

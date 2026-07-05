@@ -1,10 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment initialization for Mosquitto on Windows.
-::
-:: ## Usage
-:: Normally sets up defaults. Currently a no-op placeholder.
+:: Windows env stub for mosquitto
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%MOSQUITTO_VERSION%"=="" (
+    set "MOSQUITTO_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\mosquitto\%MOSQUITTO_VERSION%\bin;%PATH%"

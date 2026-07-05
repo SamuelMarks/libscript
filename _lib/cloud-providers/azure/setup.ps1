@@ -124,6 +124,89 @@ switch ($Action) {
             az network dns record-set a remove-record -g $DnsRg -z $Zone -n $RecordName -a $Ip
         }
     }
+    
+    "start" {
+        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service.ps1"
+        if (Test-Path $ServiceScript) { . $ServiceScript }
+        $ServiceName = if ($env:LIBSCRIPT_SERVICE_NAME) { $env:LIBSCRIPT_SERVICE_NAME } else { "libscript_azure" }
+        if (Get-Command Libscript-Service -ErrorAction SilentlyContinue) {
+            Libscript-Service -Action "start" -ServiceName $ServiceName @args
+        } else { Write-Host "start not natively implemented for `$InstallMethod." }
+        break
+    }
+    "install-service" {
+        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service_install.ps1"
+        if (Test-Path $ServiceScript) { . $ServiceScript }
+        $ServiceName = if ($env:LIBSCRIPT_SERVICE_NAME) { $env:LIBSCRIPT_SERVICE_NAME } else { "libscript_azure" }
+        if (Get-Command Libscript-InstallService -ErrorAction SilentlyContinue) {
+            Libscript-InstallService -ServiceName $ServiceName @args
+        } else { Write-Host "install-service not implemented for `$InstallMethod." }
+        break
+    }
+    "uninstall-service" {
+        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service_install.ps1"
+        if (Test-Path $ServiceScript) { . $ServiceScript }
+        $ServiceName = if ($env:LIBSCRIPT_SERVICE_NAME) { $env:LIBSCRIPT_SERVICE_NAME } else { "libscript_azure" }
+        if (Get-Command Libscript-UninstallService -ErrorAction SilentlyContinue) {
+            Libscript-UninstallService -ServiceName $ServiceName @args
+        } else { Write-Host "uninstall-service not implemented for `$InstallMethod." }
+        break
+    }
+    "uninstall" {
+        if ($InstallMethod -eq "libscript_native") {
+            if (Get-Command Resolve-ExactVersion -ErrorAction SilentlyContinue) {
+                $Info = Resolve-ExactVersion
+                $Exact = $Info.ExactVersion
+            } else {
+                $Exact = if ($Version) { $Version } else { "latest" }
+            }
+            Write-Host "Uninstalling azure `$Exact..."
+            if (Get-Command Get-LibscriptBaseDir -ErrorAction SilentlyContinue) {
+                $LibscriptHome = Get-LibscriptBaseDir
+            } else {
+                $LibscriptHome = Join-Path $HOME ".libscript"
+            }
+            $TargetDir = Join-Path $LibscriptHome "azure\`$Exact"
+            if (Test-Path $TargetDir) { Remove-Item -Recurse -Force $TargetDir }
+        } else {
+            Write-Host "Uninstall not implemented or supported for `$InstallMethod."
+        }
+        break
+    }
+    "ls" {
+        if ($InstallMethod -eq "mise") { mise ls azure }
+        elseif ($InstallMethod -eq "vfox") { vfox ls azure }
+        elseif ($InstallMethod -eq "system") { Write-Host "System packages do not support ls here." }
+        else {
+            if (Get-Command Get-LibscriptBaseDir -ErrorAction SilentlyContinue) {
+                $LibscriptHome = Get-LibscriptBaseDir
+            } else {
+                $LibscriptHome = Join-Path $HOME ".libscript"
+            }
+            $TargetDir = Join-Path $LibscriptHome "azure"
+            if (Test-Path $TargetDir) { Get-ChildItem -Path $TargetDir -Directory | Select-Object -ExpandProperty Name }
+        }
+        break
+    }
+    "ls-remote" {
+        if ($InstallMethod -eq "mise") { mise ls-remote azure }
+        elseif ($InstallMethod -eq "vfox") { vfox ls all azure }
+        else { Write-Host "ls-remote not fully implemented natively yet." }
+        break
+    }
+    "use" {
+        if ($InstallMethod -eq "mise") { mise use "azure@`$Version" }
+        elseif ($InstallMethod -eq "vfox") { vfox use "azure@`$Version" }
+        elseif ($InstallMethod -eq "system") { Write-Host "System packages do not support use here." }
+        else { Write-Host "Native 'use' requires symlink support which is partially implemented." }
+        break
+    }
+    "download" {
+        if ($InstallMethod -eq "libscript_native") {
+            Write-Host "Downloading azure..."
+        }
+        break
+    }
     default {
         Write-Host "Not implemented or nothing to do."
     }

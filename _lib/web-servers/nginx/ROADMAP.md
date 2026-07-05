@@ -10,8 +10,8 @@ framework designed for cross-platform software provisioning across Linux, macOS,
 featuring a robust core CLI (`libscript.sh`, `libscript.cmd`, `libscript.cmd`). It includes
 multi-platform toolchain support (Rust, Python, Node, Go, Java, C/C++), servers (Postgres 18, Nginx,
 Valkey), and advanced environment querying (`env` subcommand). It natively supports generating
-deployment configurations (`package_as docker`, `package_as docker_compose`, `package_as msi`,
-`package_as innosetup`, `package_as nsis`, `package_as TUI`) with deep installer customization,
+deployment configurations (`package-as docker`, `package-as docker_compose`, `package-as msi`,
+`package-as innosetup`, `package-as nsis`, `package-as TUI`) with deep installer customization,
 automated parallel dependency downloading and resolution via `libscript.json`, and robust uninstall
 lifecycle hooks (`uninstall.sh`/`uninstall.cmd`) for cleanly removing binaries, configs, and
 services. It natively handles deep semantic versioning, global `--secrets` extraction, caching,

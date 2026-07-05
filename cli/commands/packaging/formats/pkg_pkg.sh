@@ -107,11 +107,11 @@ EOF_PROMPT
 
         cat << EOF_SCRIPT >> "$COMP_DIR/scripts/postinstall"
 if command -v libscript.sh >/dev/null 2>&1; then
-  libscript.sh install_service "$PKG" "$VER" $PARAMS
+  libscript.sh install-service "$PKG" "$VER" $PARAMS
 elif [ -f "/opt/libscript/libscript.sh" ]; then
-  /opt/libscript/libscript.sh install_service "$PKG" "$VER" $PARAMS
+  /opt/libscript/libscript.sh install-service "$PKG" "$VER" $PARAMS
 elif [ -f "\$0/../../../libscript.sh" ]; then
-  "\$0/../../../libscript.sh" install_service "$PKG" "$VER" $PARAMS
+  "\$0/../../../libscript.sh" install-service "$PKG" "$VER" $PARAMS
 else
   sudo -u "\$USER_NAME" osascript -e 'Tell application "System Events" to display alert "libscript.sh not found. Installation of '"$PKG"' failed."'
   exit 1

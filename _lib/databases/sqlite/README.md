@@ -3,8 +3,8 @@
 ## Purpose & Current State
 
 This document provides context and technical details for the **SQLite** component (part of the
-`_storage` module) within the LibScript ecosystem. SQLite is a C-language library that implements a
-small, fast, self-contained, high-reliability, full-featured, SQL database engine.
+`_storage` module) within the LibScript ecolibscript_native. SQLite is a C-language library that
+implements a small, fast, self-contained, high-reliability, full-featured, SQL database engine.
 
 This component works both as a local version manager for SQLite (similar to `rvm`, `nvm`, `pyenv`,
 or `uv`) and can be natively invoked from the global version manager `libscript`. Because of this
@@ -30,8 +30,8 @@ the local CLI.
 ./libscript.sh stop sqlite
 ./cli.sh stop sqlite
 
-./libscript.sh package_as docker sqlite
-./cli.sh package_as docker sqlite
+./libscript.sh package-as docker sqlite
+./cli.sh package-as docker sqlite
 
 ./libscript.sh uninstall sqlite
 ./cli.sh uninstall sqlite
@@ -54,8 +54,8 @@ libscript.cmd stop sqlite
 cli.cmd stop sqlite
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi sqlite
-cli.cmd package_as msi sqlite
+libscript.cmd package-as msi sqlite
+cli.cmd package-as msi sqlite
 
 :: Uninstall
 libscript.cmd uninstall sqlite
@@ -70,7 +70,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -97,7 +97,7 @@ running the setup script.
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
 | `SQLITE_VERSION` | Specific version of sqlite to install. Can be a numeric version or an alias. | `latest` | latest, stable |
-| `SQLITE_INSTALL_METHOD` | How to install SQLITE. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools. | `libscript-native` |  |
+| `SQLITE_INSTALL_METHOD` | How to install SQLITE. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 | `LIBSCRIPT_LISTEN_PORT` | Global port to listen on | `none` |  |
 | `LIBSCRIPT_LISTEN_ADDRESS` | Global address to listen on | `none` |  |
 | `LIBSCRIPT_LISTEN_SOCKET` | Global unix socket to listen on | `none` |  |
@@ -125,3 +125,6 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages sqlite versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/sqlite/<version>`.

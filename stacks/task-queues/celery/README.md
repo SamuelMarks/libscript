@@ -51,7 +51,7 @@ cli.cmd install celery
 LibScript can package this component into various deployment formats:
 
 ```sh
-libscript package_as docker celery
+libscript package-as docker celery
 ```
 
 ## Configuration Options

@@ -32,8 +32,8 @@ local CLI.
 ./libscript.sh stop zig
 ./cli.sh stop zig
 
-./libscript.sh package_as docker zig
-./cli.sh package_as docker zig
+./libscript.sh package-as docker zig
+./cli.sh package-as docker zig
 
 ./libscript.sh uninstall zig
 ./cli.sh uninstall zig
@@ -56,8 +56,8 @@ libscript.cmd stop zig
 cli.cmd stop zig
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi zig
-cli.cmd package_as msi zig
+libscript.cmd package-as msi zig
+cli.cmd package-as msi zig
 
 :: Uninstall
 libscript.cmd uninstall zig
@@ -72,7 +72,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -99,7 +99,7 @@ running the setup script.
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
 | `ZIG_VERSION` | Specific version of zig to install. Can be a numeric version or an alias. | `latest` | latest, stable |
-| `ZIG_INSTALL_METHOD` | How to install ZIG. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools. | `libscript-native` |  |
+| `ZIG_INSTALL_METHOD` | How to install ZIG. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 <!-- END_VARS -->
 
 ## Architecture
@@ -121,3 +121,6 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages zig versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/zig/<version>`.

@@ -1,10 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Generic setup module for Java.
-#
-# ## Usage
-# Installs Java by downloading Temurin from Adoptium or by delegating to system/mise/asdf.
-
+# Generic setup module for java.
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -38,28 +34,42 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/versioning.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
-JAVA_INSTALL_METHOD="${JAVA_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
-JAVA_VERSION="${JAVA_VERSION:-17}"
-if [ "${JAVA_VERSION}" = "latest" ]; then
-  JAVA_VERSION="21"
-fi
+JAVA_INSTALL_METHOD="$(libscript_resolve_install_method "JAVA")"
 ACTION="${ACTION:-install}"
+VERSION="${JAVA_VERSION:-latest}"
+
+resolve_exact_version() {
+  if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
+    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote java 2>/dev/null | tail -n 1)
+    if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
+      EXACT_VERSION="$_latest"
+    else
+      EXACT_VERSION="${VERSION:-latest}"
+    fi
+  else
+    EXACT_VERSION="${VERSION:-latest}"
+  fi
+}
 
 case "$ACTION" in
   ls)
     if [ "$JAVA_INSTALL_METHOD" = "mise" ]; then
-      mise ls java
+      mise ls java || true
     elif [ "$JAVA_INSTALL_METHOD" = "asdf" ]; then
-      asdf list java
+      asdf list java || true
+    elif [ "$JAVA_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$JAVA_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls java || true
     elif [ "$JAVA_INSTALL_METHOD" = "system" ]; then
-      java -version
+      echo "System packages do not support ls here."
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/java/" 2>/dev/null || true
     fi
@@ -67,78 +77,154 @@ case "$ACTION" in
     ;;
   ls-remote)
     if [ "$JAVA_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote java
+      mise ls-remote java || true
     elif [ "$JAVA_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all java
-    elif [ "$JAVA_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System package manager does not support ls-remote directly here."
+      asdf list all java || true
+    elif [ "$JAVA_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$JAVA_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls all java || true
     else
-      printf '%b\n' '8\n11\n17\n21\n22'
+      if [ -n "${JAVA_RELEASES_URL:-}" ]; then
+        curl -sSL "${JAVA_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+      else
+      git ls-remote --tags "https://github.com/libscript/java" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+    fi
     fi
     exit 0
     ;;
   use)
     if [ "$JAVA_INSTALL_METHOD" = "mise" ]; then
-      mise use "java@${JAVA_VERSION}"
+      mise use "java@${VERSION}"
     elif [ "$JAVA_INSTALL_METHOD" = "asdf" ]; then
-      asdf global java "${JAVA_VERSION}"
+      asdf global java "${VERSION}"
+    elif [ "$JAVA_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not use explicit versions this way"
+    elif [ "$JAVA_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "java@${VERSION}"
+    elif [ "$JAVA_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "java@${VERSION}"
     elif [ "$JAVA_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "Cannot 'use' specific version with system package manager."
+      echo "System packages do not support use here."
     else
-      libscript_symlink_alias "java" "${JAVA_VERSION}" "${JAVA_VERSION}"
+      resolve_exact_version
+      libscript_symlink_alias "java" "$VERSION" "${EXACT_VERSION}"
     fi
     exit 0
     ;;
-  download|install|*)
-    if [ "$JAVA_INSTALL_METHOD" = "system" ]; then
-      libscript_depends 'java'
-    elif [ "$JAVA_INSTALL_METHOD" = "mise" ]; then
-      mise install "java@${JAVA_VERSION}"
-    elif [ "$JAVA_INSTALL_METHOD" = "asdf" ]; then
-      asdf install java "${JAVA_VERSION}"
-    else
-      JAVA_DIR=$(libscript_get_version_dir "java" "${JAVA_VERSION}")
-      export JAVA_HOME="${JAVA_DIR}"
-      export PATH="${JAVA_DIR}/bin:${PATH}"
-      
-      if [ -x "${JAVA_DIR}/bin/java" ] && "${JAVA_DIR}/bin/java" -version 2>&1 | grep -q "\"${JAVA_VERSION}"; then
-        libscript_symlink_alias "java" "${JAVA_VERSION}" "${JAVA_VERSION}"
-        exit 0
-      fi
-
-      libscript_depends 'curl' 'tar'
-      
-      os="$(uname -s | tr '[:upper:]' '[:lower:]')"
-      case "${os}" in
-        'darwin'*) os='mac' ;;
-        *) os='linux' ;;
-      esac
-      arch="$(uname -m)"
-      case "${arch}" in
-        'x86_64') arch='x64' ;;
-        'aarch64'|'arm64') arch='aarch64' ;;
-        *) ;;
-      esac
-      
-      # Using Adoptium API for temurin jdk
-      DOWNLOAD_URL="https://api.adoptium.net/v3/binary/latest/${JAVA_VERSION}/ga/${os}/${arch}/jdk/hotspot/normal/eclipse"
-      
-      JAVA_TARBALL=$(mktemp)
-      libscript_download "${DOWNLOAD_URL}" "${JAVA_TARBALL}"
-      
-      mkdir -p "${JAVA_DIR}"
-      if [ "${os}" = "mac" ]; then
-        # macOS tarballs usually have a Contents/Home directory structure inside
-        TMP_EXTRACT=$(mktemp -d)
-        tar -xzf "${JAVA_TARBALL}" -C "${TMP_EXTRACT}"
-        mv "${TMP_EXTRACT}"/*/Contents/Home/* "${JAVA_DIR}/" || mv "${TMP_EXTRACT}"/*/* "${JAVA_DIR}/"
-        rm -rf "${TMP_EXTRACT}"
+  download)
+    if [ "$JAVA_INSTALL_METHOD" = "libscript_native" ]; then
+      log_info "Downloading java ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/java..."
+      mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/java"
+      if [ -n "${JAVA_DOWNLOAD_URL:-}" ]; then
+        libscript_download "${JAVA_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/java/java-${VERSION}.tar.gz"
       else
-        tar -xzf "${JAVA_TARBALL}" -C "${JAVA_DIR}" --strip-components=1
+        log_warn "JAVA_DOWNLOAD_URL is not defined for java ${VERSION}."
       fi
-      rm -f "${JAVA_TARBALL}"
-      
-      libscript_symlink_alias "java" "${JAVA_VERSION}" "${JAVA_VERSION}"
+    fi
+    exit 0
+    ;;
+  install|*)
+    if [ "$JAVA_INSTALL_METHOD" = "system" ]; then
+      libscript_depends "java"
+    elif [ "$JAVA_INSTALL_METHOD" = "mise" ]; then
+      mise install "java@${VERSION}"
+    elif [ "$JAVA_INSTALL_METHOD" = "asdf" ]; then
+      asdf install java "${VERSION}"
+    elif [ "$JAVA_INSTALL_METHOD" = "pkgx" ]; then
+      pkgx install "java@${VERSION}"
+    elif [ "$JAVA_INSTALL_METHOD" = "vfox" ]; then
+      vfox add java || true
+      vfox install "java@${VERSION}"
+    else
+      # libscript_native implementation
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/java/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing java ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/java/"*"${VERSION}"* >/dev/null 2>&1; then
+          log_info "Extracting from cache..."
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/java/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+            else
+              cp "$cache_file" "${TARGET_DIR}/bin/java" || true
+              chmod +x "${TARGET_DIR}/bin/java" || true
+            fi
+          fi
+        else
+          if [ -n "${JAVA_DOWNLOAD_URL:-}" ]; then
+            TEMP_FILE=$(mktemp)
+            libscript_download "${JAVA_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+            if case "${JAVA_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "${JAVA_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+            else
+              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/java" || true
+              chmod +x "${TARGET_DIR}/bin/java" || true
+            fi
+            rm -f "${TEMP_FILE}"
+          else
+            log_warn "No download URL provided for java ${VERSION}."
+          fi
+        fi
+      else
+        log_info "java ${VERSION} is already installed."
+      fi
+      libscript_symlink_alias "java" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
+  start|stop|restart|status|health|logs|up|down)
+    if [ "$JAVA_INSTALL_METHOD" = "libscript_native" ] || [ "$JAVA_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-java}}"
+      libscript_service "$ACTION" "$service_name" "$@"
+    else
+      log_info "$ACTION not natively implemented for $JAVA_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  install-service)
+    if [ "$JAVA_INSTALL_METHOD" = "libscript_native" ] || [ "$JAVA_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-java}}"
+      libscript_install_service "$service_name" "$@"
+    else
+      log_info "install-service not implemented for $JAVA_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall-service)
+    if [ "$JAVA_INSTALL_METHOD" = "libscript_native" ] || [ "$JAVA_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-java}}"
+      libscript_uninstall_service "$service_name" "$@"
+    else
+      log_info "uninstall-service not implemented for $JAVA_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall)
+    if [ "$JAVA_INSTALL_METHOD" = "libscript_native" ]; then
+      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
+      log_info "Uninstalling java $VERSION..."
+      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/java/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/java/$VERSION"
+    else
+      log_info "Uninstall not implemented or supported for $JAVA_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+
 esac

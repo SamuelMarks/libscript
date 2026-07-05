@@ -3,8 +3,8 @@
 ## Purpose & Current State
 
 This directory contains the installation and configuration scripts for **Busybox** within the
-LibScript ecosystem. Busybox is a software suite that provides several Unix utilities in a single
-executable file.
+LibScript ecolibscript_native. Busybox is a software suite that provides several Unix utilities in a
+single executable file.
 
 This module works both as a local version manager for Busybox (similar to `rvm`, `nvm`, `pyenv`, or
 `uv`) and can be seamlessly invoked from the global version manager `libscript`. It allows LibScript
@@ -12,6 +12,8 @@ to use Busybox as a core dependency to build bigger, more complex software stack
 WordPress, Open edX, Nextcloud, etc.).
 
 ## Usage
+
+_Note: libscript manages versions natively for this component._
 
 You can install, start, stop, package, and uninstall busybox using the global `libscript` command or
 the local CLI.
@@ -30,8 +32,8 @@ the local CLI.
 ./libscript.sh stop busybox
 ./cli.sh stop busybox
 
-./libscript.sh package_as docker busybox
-./cli.sh package_as docker busybox
+./libscript.sh package-as docker busybox
+./cli.sh package-as docker busybox
 
 ./libscript.sh uninstall busybox
 ./cli.sh uninstall busybox
@@ -54,8 +56,8 @@ libscript.cmd stop busybox
 cli.cmd stop busybox
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi busybox
-cli.cmd package_as msi busybox
+libscript.cmd package-as msi busybox
+cli.cmd package-as msi busybox
 
 :: Uninstall
 libscript.cmd uninstall busybox
@@ -73,3 +75,12 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+## Configuration
+
+| Variable                 | Description                                                                                                                                                             | Default            | Required |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | -------- |
+| `BUSYBOX_INSTALL_METHOD` | How to install BUSYBOX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |          |
+
+Libscript manages busybox versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/busybox/<version>`.

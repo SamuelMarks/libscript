@@ -1,10 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Generic setup module for Fluent Bit.
-#
-# ## Usage
-# Installs Fluent Bit using the official install.sh script on Linux, or falls back to system package manager.
-
+# Generic setup module for fluentbit.
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -31,39 +27,204 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR="${SCRIPT_DIR}"
 
-for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+fi
+
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
-  # shellcheck disable=SC1090
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
-FLUENTBIT_INSTALL_METHOD="${FLUENTBIT_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
+FLUENTBIT_INSTALL_METHOD="$(libscript_resolve_install_method "FLUENTBIT")"
+ACTION="${ACTION:-install}"
+VERSION="${FLUENTBIT_VERSION:-latest}"
 
-if [ "${FLUENTBIT_INSTALL_METHOD}" = 'system' ]; then
-  if [ "$(uname -s)" = "Linux" ]; then
-    INSTALL_SH=$(mktemp)
-    libscript_download 'https://raw.githubusercontent.com/fluent/fluent-bit/master/install.sh' "${INSTALL_SH}"
-    sh "${INSTALL_SH}"
-    rm -f "${INSTALL_SH}"
+resolve_exact_version() {
+  if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
+    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote fluentbit 2>/dev/null | tail -n 1)
+    if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
+      EXACT_VERSION="$_latest"
+    else
+      EXACT_VERSION="${VERSION:-latest}"
+    fi
   else
-    libscript_depends 'fluent-bit'
+    EXACT_VERSION="${VERSION:-latest}"
   fi
-else
-  log_info "[WARN] From-source or alternative installation requested for fluent-bit, but currently only system package manager is fully supported."
-  libscript_depends 'fluent-bit'
-fi
+}
 
-if [ -n "${FLUENTBIT_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
-  if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "unix:${FLUENTBIT_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then
-    true
-  fi
-elif [ -n "${FLUENTBIT_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ] && [ -n "${FLUENTBIT_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
-  if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${FLUENTBIT_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${FLUENTBIT_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
-    true
-  fi
-elif [ -n "${FLUENTBIT_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ]; then
-  if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${FLUENTBIT_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
-    true
-  fi
-fi
+case "$ACTION" in
+  ls)
+    if [ "$FLUENTBIT_INSTALL_METHOD" = "mise" ]; then
+      mise ls fluentbit || true
+    elif [ "$FLUENTBIT_INSTALL_METHOD" = "asdf" ]; then
+      asdf list fluentbit || true
+    elif [ "$FLUENTBIT_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$FLUENTBIT_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls fluentbit || true
+    elif [ "$FLUENTBIT_INSTALL_METHOD" = "system" ]; then
+      echo "System packages do not support ls here."
+    else
+      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/fluentbit/" 2>/dev/null || true
+    fi
+    exit 0
+    ;;
+  ls-remote)
+    if [ "$FLUENTBIT_INSTALL_METHOD" = "mise" ]; then
+      mise ls-remote fluentbit || true
+    elif [ "$FLUENTBIT_INSTALL_METHOD" = "asdf" ]; then
+      asdf list all fluentbit || true
+    elif [ "$FLUENTBIT_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$FLUENTBIT_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls all fluentbit || true
+    else
+      if [ -n "${FLUENTBIT_RELEASES_URL:-}" ]; then
+        curl -sSL "${FLUENTBIT_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+      else
+      git ls-remote --tags "https://github.com/fluent/fluent-bit" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+    fi
+    fi
+    exit 0
+    ;;
+  use)
+    if [ "$FLUENTBIT_INSTALL_METHOD" = "mise" ]; then
+      mise use "fluentbit@${VERSION}"
+    elif [ "$FLUENTBIT_INSTALL_METHOD" = "asdf" ]; then
+      asdf global fluentbit "${VERSION}"
+    elif [ "$FLUENTBIT_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not use explicit versions this way"
+    elif [ "$FLUENTBIT_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "fluentbit@${VERSION}"
+    elif [ "$FLUENTBIT_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "fluentbit@${VERSION}"
+    elif [ "$FLUENTBIT_INSTALL_METHOD" = "system" ]; then
+      echo "System packages do not support use here."
+    else
+      resolve_exact_version
+      libscript_symlink_alias "fluentbit" "$VERSION" "${EXACT_VERSION}"
+    fi
+    exit 0
+    ;;
+  download)
+    if [ "$FLUENTBIT_INSTALL_METHOD" = "libscript_native" ]; then
+      log_info "Downloading fluentbit ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/fluentbit..."
+      mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/fluentbit"
+      if [ -n "${FLUENTBIT_DOWNLOAD_URL:-}" ]; then
+        libscript_download "${FLUENTBIT_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/fluentbit/fluentbit-${VERSION}.tar.gz"
+      else
+        log_warn "FLUENTBIT_DOWNLOAD_URL is not defined for fluentbit ${VERSION}."
+      fi
+    fi
+    exit 0
+    ;;
+  install|*)
+    if [ "$FLUENTBIT_INSTALL_METHOD" = "system" ]; then
+      libscript_depends "fluentbit"
+    elif [ "$FLUENTBIT_INSTALL_METHOD" = "mise" ]; then
+      mise install "fluentbit@${VERSION}"
+    elif [ "$FLUENTBIT_INSTALL_METHOD" = "asdf" ]; then
+      asdf install fluentbit "${VERSION}"
+    elif [ "$FLUENTBIT_INSTALL_METHOD" = "pkgx" ]; then
+      pkgx install "fluentbit@${VERSION}"
+    elif [ "$FLUENTBIT_INSTALL_METHOD" = "vfox" ]; then
+      vfox add fluentbit || true
+      vfox install "fluentbit@${VERSION}"
+    else
+      # libscript_native implementation
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/fluentbit/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing fluentbit ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/fluentbit/"*"${VERSION}"* >/dev/null 2>&1; then
+          log_info "Extracting from cache..."
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/fluentbit/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+            else
+              cp "$cache_file" "${TARGET_DIR}/bin/fluentbit" || true
+              chmod +x "${TARGET_DIR}/bin/fluentbit" || true
+            fi
+          fi
+        else
+          if [ -n "${FLUENTBIT_DOWNLOAD_URL:-}" ]; then
+            TEMP_FILE=$(mktemp)
+            libscript_download "${FLUENTBIT_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+            if case "${FLUENTBIT_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "${FLUENTBIT_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+            else
+              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/fluentbit" || true
+              chmod +x "${TARGET_DIR}/bin/fluentbit" || true
+            fi
+            rm -f "${TEMP_FILE}"
+          else
+            log_warn "No download URL provided for fluentbit ${VERSION}."
+          fi
+        fi
+      else
+        log_info "fluentbit ${VERSION} is already installed."
+      fi
+      libscript_symlink_alias "fluentbit" "$VERSION" "${EXACT_VERSION}"
+    fi
+    ;;
+  start|stop|restart|status|health|logs|up|down)
+    if [ "$FLUENTBIT_INSTALL_METHOD" = "libscript_native" ] || [ "$FLUENTBIT_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-fluentbit}}"
+      libscript_service "$ACTION" "$service_name" "$@"
+    else
+      log_info "$ACTION not natively implemented for $FLUENTBIT_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  install-service)
+    if [ "$FLUENTBIT_INSTALL_METHOD" = "libscript_native" ] || [ "$FLUENTBIT_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-fluentbit}}"
+      libscript_install_service "$service_name" "$@"
+    else
+      log_info "install-service not implemented for $FLUENTBIT_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall-service)
+    if [ "$FLUENTBIT_INSTALL_METHOD" = "libscript_native" ] || [ "$FLUENTBIT_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-fluentbit}}"
+      libscript_uninstall_service "$service_name" "$@"
+    else
+      log_info "uninstall-service not implemented for $FLUENTBIT_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall)
+    if [ "$FLUENTBIT_INSTALL_METHOD" = "libscript_native" ]; then
+      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
+      log_info "Uninstalling fluentbit $VERSION..."
+      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/fluentbit/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/fluentbit/$VERSION"
+    else
+      log_info "Uninstall not implemented or supported for $FLUENTBIT_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+
+esac

@@ -4,6 +4,11 @@
   "title": "Msys2 variables",
   "type": "object",
   "properties": {
+    "MSYS2_INSTALL_METHOD": {
+      "description": "How to install MSYS2. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "MSYS2_VERSION": {
       "description": "Specific version of msys2 to install.",
       "type": "string",

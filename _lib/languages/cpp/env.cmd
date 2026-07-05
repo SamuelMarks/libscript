@@ -1,10 +1,2 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment initialization for CPP on Windows.
-::
-:: ## Usage
-:: Normally sets up defaults. Currently a no-op placeholder.
-
-:: Environment variables for Windows
+:: Windows env stub for cpp

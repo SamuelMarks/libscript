@@ -13,3 +13,12 @@ Ensures the `hatch` executable is available. Relies on `pipx` or standard Python
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+## Architecture
+
+`libscript` manages `hatch` versions natively by default (`HATCH_INSTALL_METHOD=libscript_native`),
+ensuring isolated installations without polluting global system paths. You can override this to use
+`system`, `mise`, `asdf`, `pkgx`, or `vfox` if preferred.
+
+Libscript manages hatch versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/hatch/<version>`.

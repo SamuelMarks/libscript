@@ -5,16 +5,21 @@
   "description": "Configuration variables for Just",
   "type": "object",
   "properties": {
+    "JUST_INSTALL_METHOD": {
+      "description": "Installation method for just (libscript_native, system, mise, asdf, pkgx, vfox).",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "JUST_VERSION": {
       "description": "Specific version of just to install. Can be a numeric version or an alias.",
       "type": "string",
       "default": "latest"
     },
     "JUST_INSTALL_METHOD": {
-      "description": "How to install JUST. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools.",
+      "description": "How to install JUST. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "enum": ["libscript-native", "system", "mise", "asdf"],
-      "default": "libscript-native"
+      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "default": "libscript_native"
     }
   }
 }

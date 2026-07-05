@@ -7,6 +7,8 @@ Rust). It serves as the Windows counterpart to `tmux` in the libscript ecosystem
 
 ## Usage
 
+_Note: libscript manages versions natively for this component._
+
 ```bash
 # Start a new session
 psmux new-session -d -s my-session
@@ -15,8 +17,19 @@ psmux new-session -d -s my-session
 psmux attach-session -t my-session
 ```
 
-## Environment Variables
+## Platform Support
 
-| Variable        | Description                 | Default  |
-| --------------- | --------------------------- | -------- |
-| `PSMUX_VERSION` | Version of psmux to install | `v3.3.6` |
+<!-- BEGIN_PLATFORMS -->
+- Linux
+- macOS
+- Windows
+<!-- END_PLATFORMS -->
+
+## Architecture
+
+`libscript` manages `psmux` versions natively by default (`PSMUX_INSTALL_METHOD=libscript_native`),
+ensuring isolated installations without polluting global system paths. You can override this to use
+`system`, `mise`, `asdf`, `pkgx`, or `vfox` if preferred.
+
+Libscript manages psmux versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/psmux/<version>`.

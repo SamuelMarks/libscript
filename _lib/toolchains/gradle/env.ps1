@@ -1,22 +1,14 @@
-<#
-.SYNOPSIS
-Defines environment variables and configurations for the environment variables stack.
+# Windows PowerShell env stub for gradle
 
-.DESCRIPTION
-Source or call this script to configure the environment for gradle.
-#>
-
-$ErrorActionPreference = "Stop"
-
-$GradleVersion = $env:GRADLE_VERSION
-if ([string]::IsNullOrEmpty($GradleVersion)) {
-    $GradleVersion = "latest"
-}
 $LibscriptHome = $env:LIBSCRIPT_HOME
 if ([string]::IsNullOrEmpty($LibscriptHome)) {
-    $LibscriptHome = Join-Path $HOME ".libscript"
+    $LibscriptHome = Join-Path $env:USERPROFILE ".libscript"
 }
-$GradlePath = Join-Path $LibscriptHome "gradle\$GradleVersion\bin"
-if (-not ($env:PATH -split ';' -contains $GradlePath)) {
-    $env:PATH = "$GradlePath;" + $env:PATH
+
+$CompVersion = $env:GRADLE_VERSION
+if ([string]::IsNullOrEmpty($CompVersion)) {
+    $CompVersion = "latest"
 }
+
+$TargetBin = Join-Path (Join-Path (Join-Path $LibscriptHome "gradle") $CompVersion) "bin"
+$env:PATH = "$TargetBin;$env:PATH"

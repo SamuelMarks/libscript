@@ -5,6 +5,11 @@
   "description": "Configuration variables for winget",
   "type": "object",
   "properties": {
+    "WINGET_INSTALL_METHOD": {
+      "description": "How to install WINGET. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "WINGET_VERSION": {
       "description": "Specific version of winget to install.",
       "type": "string",

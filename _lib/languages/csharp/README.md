@@ -35,8 +35,8 @@ the local CLI.
 ./libscript.sh stop csharp
 ./cli.sh stop csharp
 
-./libscript.sh package_as docker csharp
-./cli.sh package_as docker csharp
+./libscript.sh package-as docker csharp
+./cli.sh package-as docker csharp
 
 ./libscript.sh uninstall csharp
 ./cli.sh uninstall csharp
@@ -59,8 +59,8 @@ libscript.cmd stop csharp
 cli.cmd stop csharp
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi csharp
-cli.cmd package_as msi csharp
+libscript.cmd package-as msi csharp
+cli.cmd package-as msi csharp
 
 :: Uninstall
 libscript.cmd uninstall csharp
@@ -75,7 +75,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -101,7 +101,7 @@ running the setup script.
 | `MODEL_NAME` | HuggingFace model string to serve | `your-org/your-model-name` |  |
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
-| `CSHARP_INSTALL_METHOD` | How to install CSHARP. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools. | `libscript-native` |  |
+| `CSHARP_INSTALL_METHOD` | How to install CSHARP. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 | `CSHARP_VERSION` | Version of C# Toolchain to install | `latest` |  |
 <!-- END_VARS -->
 
@@ -124,3 +124,6 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages csharp versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/csharp/<version>`.

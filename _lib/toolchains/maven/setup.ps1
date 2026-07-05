@@ -13,7 +13,7 @@ if ([string]::IsNullOrEmpty($InstallMethod)) {
     $InstallMethod = $env:LIBSCRIPT_DEFAULT_INSTALL_METHOD
 }
 if ([string]::IsNullOrEmpty($InstallMethod)) {
-    $InstallMethod = "libscript-native"
+    $InstallMethod = "libscript_native"
 }
 
 $Action = $env:ACTION
@@ -43,6 +43,10 @@ switch ($Action) {
             mise ls maven
         } elseif ($InstallMethod -eq "asdf") {
             Write-Host "asdf not supported natively on Windows"
+        } elseif ($InstallMethod -eq "pkgx") {
+            Write-Host "pkgx not fully supported natively on Windows"
+        } elseif ($InstallMethod -eq "vfox") {
+            vfox ls maven
         } elseif ($InstallMethod -eq "system") {
             mvn -version
         } else {
@@ -59,6 +63,10 @@ switch ($Action) {
             mise ls-remote maven
         } elseif ($InstallMethod -eq "asdf") {
             Write-Host "asdf not supported natively on Windows"
+        } elseif ($InstallMethod -eq "pkgx") {
+            Write-Host "pkgx not fully supported natively on Windows"
+        } elseif ($InstallMethod -eq "vfox") {
+            vfox ls maven
         } elseif ($InstallMethod -eq "system") {
             Write-Host "System package manager does not support ls-remote directly here."
         } else {
@@ -72,11 +80,79 @@ switch ($Action) {
             mise use "maven@${MavenVersion}"
         } elseif ($InstallMethod -eq "asdf") {
             Write-Host "asdf not supported natively on Windows"
+        } elseif ($InstallMethod -eq "pkgx") {
+            Write-Host "pkgx not fully supported natively on Windows"
+        } elseif ($InstallMethod -eq "vfox") {
+            vfox ls maven
         } elseif ($InstallMethod -eq "system") {
             Write-Host "Cannot 'use' specific version with system package manager."
         } else {
             $ExactVersion = Resolve-ExactVersion
             Set-LibscriptAlias -Component "maven" -AliasName $MavenVersion -ExactVersion $ExactVersion
+        }
+        break
+    }
+    
+    "start" {
+        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service.ps1"
+        if (Test-Path $ServiceScript) { . $ServiceScript }
+        $ServiceName = if ($env:LIBSCRIPT_SERVICE_NAME) { $env:LIBSCRIPT_SERVICE_NAME } else { "libscript_maven" }
+        if (Get-Command Libscript-Service -ErrorAction SilentlyContinue) {
+            Libscript-Service -Action "start" -ServiceName $ServiceName @args
+        } else { Write-Host "start not natively implemented for `$InstallMethod." }
+        break
+    }
+    "stop" {
+        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service.ps1"
+        if (Test-Path $ServiceScript) { . $ServiceScript }
+        $ServiceName = if ($env:LIBSCRIPT_SERVICE_NAME) { $env:LIBSCRIPT_SERVICE_NAME } else { "libscript_maven" }
+        if (Get-Command Libscript-Service -ErrorAction SilentlyContinue) {
+            Libscript-Service -Action "stop" -ServiceName $ServiceName @args
+        } else { Write-Host "stop not natively implemented for `$InstallMethod." }
+        break
+    }
+    "install-service" {
+        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service_install.ps1"
+        if (Test-Path $ServiceScript) { . $ServiceScript }
+        $ServiceName = if ($env:LIBSCRIPT_SERVICE_NAME) { $env:LIBSCRIPT_SERVICE_NAME } else { "libscript_maven" }
+        if (Get-Command Libscript-InstallService -ErrorAction SilentlyContinue) {
+            Libscript-InstallService -ServiceName $ServiceName @args
+        } else { Write-Host "install-service not implemented for `$InstallMethod." }
+        break
+    }
+    "uninstall-service" {
+        $ServiceScript = Join-Path $LibscriptRootDir "_lib\_common\service_install.ps1"
+        if (Test-Path $ServiceScript) { . $ServiceScript }
+        $ServiceName = if ($env:LIBSCRIPT_SERVICE_NAME) { $env:LIBSCRIPT_SERVICE_NAME } else { "libscript_maven" }
+        if (Get-Command Libscript-UninstallService -ErrorAction SilentlyContinue) {
+            Libscript-UninstallService -ServiceName $ServiceName @args
+        } else { Write-Host "uninstall-service not implemented for `$InstallMethod." }
+        break
+    }
+    "uninstall" {
+        if ($InstallMethod -eq "libscript_native") {
+            if (Get-Command Resolve-ExactVersion -ErrorAction SilentlyContinue) {
+                $Info = Resolve-ExactVersion
+                $Exact = $Info.ExactVersion
+            } else {
+                $Exact = if ($Version) { $Version } else { "latest" }
+            }
+            Write-Host "Uninstalling maven `$Exact..."
+            if (Get-Command Get-LibscriptBaseDir -ErrorAction SilentlyContinue) {
+                $LibscriptHome = Get-LibscriptBaseDir
+            } else {
+                $LibscriptHome = Join-Path $HOME ".libscript"
+            }
+            $TargetDir = Join-Path $LibscriptHome "maven\`$Exact"
+            if (Test-Path $TargetDir) { Remove-Item -Recurse -Force $TargetDir }
+        } else {
+            Write-Host "Uninstall not implemented or supported for `$InstallMethod."
+        }
+        break
+    }
+    "download" {
+        if ($InstallMethod -eq "libscript_native") {
+            Write-Host "Downloading maven..."
         }
         break
     }
@@ -95,7 +171,11 @@ switch ($Action) {
         } elseif ($InstallMethod -eq "mise") {
             mise install "maven@${MavenVersion}"
         } elseif ($InstallMethod -eq "asdf") {
-            Write-Host "asdf not supported natively on Windows"; exit 1
+            Write-Host "asdf not supported natively on Windows"
+        } elseif ($InstallMethod -eq "pkgx") {
+            Write-Host "pkgx not fully supported natively on Windows"
+        } elseif ($InstallMethod -eq "vfox") {
+            vfox ls maven; exit 1
         } else {
             $ExactVersion = Resolve-ExactVersion
             $MavenDir = Get-LibscriptVersionDir -Component "maven" -Version $ExactVersion

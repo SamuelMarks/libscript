@@ -4,5 +4,12 @@
   "title": "openrc daemon vars",
   "description": "OpenRC init system.",
   "type": "object",
-  "properties": {}
+  "properties": {
+    "OPENRC_INSTALL_METHOD": {
+      "description": "How to install OPENRC. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "default": "libscript_native"
+    }
+  }
 }

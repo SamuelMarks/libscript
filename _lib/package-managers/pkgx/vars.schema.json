@@ -4,6 +4,11 @@
   "title": "Pkgx variables",
   "type": "object",
   "properties": {
+    "PKGX_INSTALL_METHOD": {
+      "description": "How to install PKGX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "PKGX_VERSION": {
       "description": "Specific version of pkgx to install.",
       "type": "string",

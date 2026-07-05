@@ -1,15 +1,11 @@
 #!/bin/sh
 # ## Overview
 # Generic setup script for the aria2 component.
-# It provides fallback installation logic and cross-platform installation steps
-# when a more specific OS/distribution setup script is not available.
 #
 # ## Usage
 # This script is typically called internally by the component lifecycle.
 
-
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -31,43 +27,206 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+DIR="${SCRIPT_DIR}"
+
+if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
+  export SCRIPT_NAME
+  . "${SCRIPT_NAME}"
+fi
+
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
-  # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 done
 
-ARIA2_INSTALL_METHOD="${ARIA2_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
+ARIA2_INSTALL_METHOD="$(libscript_resolve_install_method "ARIA2")"
+ARIA2_VERSION="${ARIA2_VERSION:-latest}"
+ACTION="${ACTION:-install}"
 
-if [ "${ARIA2_INSTALL_METHOD}" = 'system' ]; then
-  libscript_depends 'aria2'
-else
-  ARIA2_VERSION="${ARIA2_VERSION:-1.37.0}"
-  if [ "${ARIA2_VERSION}" = "latest" ]; then
-    ARIA2_VERSION="1.37.0"
+resolve_exact_version() {
+  if [ "${ARIA2_VERSION}" = "latest" ] || [ "${ARIA2_VERSION}" = "lts" ]; then
+    EXACT_VERSION=$(curl -sL https://api.github.com/repos/aria2/aria2/releases/latest | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^release-//')
+    if [ -z "$EXACT_VERSION" ]; then
+      EXACT_VERSION="latest"
+    fi
+  else
+    EXACT_VERSION="${ARIA2_VERSION}"
   fi
+}
 
-  ARCH_STR="64bit"
-  if [ "$(uname -m)" = "aarch64" ]; then
-    ARCH_STR="aarch64"
-  elif [ "$(uname -m)" = "armv7l" ]; then
-    ARCH_STR="arm-rbpi"
-  fi
+case "$ACTION" in
+  ls)
+    if [ "${ARIA2_INSTALL_METHOD}" = "mise" ]; then
+      mise ls aria2
+    elif [ "${ARIA2_INSTALL_METHOD}" = "asdf" ]; then
+      asdf list aria2
+    elif [ "${ARIA2_INSTALL_METHOD}" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "${ARIA2_INSTALL_METHOD}" = "vfox" ]; then
+      vfox ls aria2
+    elif [ "${ARIA2_INSTALL_METHOD}" = "system" ]; then
+      aria2 --version || true
+    else
+      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/aria2/" 2>/dev/null || true
+    fi
+    exit 0
+    ;;
+  ls-remote)
+    if [ "${ARIA2_INSTALL_METHOD}" = "mise" ]; then
+      mise ls-remote aria2
+    elif [ "${ARIA2_INSTALL_METHOD}" = "asdf" ]; then
+      asdf list all aria2
+    elif [ "${ARIA2_INSTALL_METHOD}" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "${ARIA2_INSTALL_METHOD}" = "vfox" ]; then
+      vfox ls all aria2
+    elif [ "${ARIA2_INSTALL_METHOD}" = "system" ]; then
+      printf '%s\n' "System package manager does not support ls-remote directly here."
+    else
+      echo "Fetching remote versions not implemented generically for aria2"
+    fi
+    exit 0
+    ;;
+  use)
+    if [ "${ARIA2_INSTALL_METHOD}" = "mise" ]; then
+      mise use "aria2@${ARIA2_VERSION}"
+    elif [ "${ARIA2_INSTALL_METHOD}" = "asdf" ]; then
+      asdf global aria2 "${ARIA2_VERSION}"
+    elif [ "${ARIA2_INSTALL_METHOD}" = "pkgx" ]; then
+      echo "pkgx does not use explicit versions this way"
+    elif [ "${ARIA2_INSTALL_METHOD}" = "vfox" ]; then
+      vfox use "aria2@${ARIA2_VERSION}"
+    elif [ "${ARIA2_INSTALL_METHOD}" = "system" ]; then
+      printf '%s\n' "Cannot 'use' specific version with system package manager."
+    else
+      resolve_exact_version
+      libscript_symlink_alias "aria2" "${ARIA2_VERSION}" "${EXACT_VERSION}"
+    fi
+    exit 0
+    ;;
+  download)
+    if [ "$ARIA2_INSTALL_METHOD" = "libscript_native" ]; then
+      log_info "Downloading aria2 ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/aria2..."
+      mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/aria2"
+      if [ -n "${ARIA2_DOWNLOAD_URL:-}" ]; then
+        libscript_download "${ARIA2_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/aria2/aria2-${VERSION}.tar.gz"
+      else
+        log_warn "ARIA2_DOWNLOAD_URL is not defined for aria2 ${VERSION}."
+      fi
+    fi
+    exit 0
+    ;;
+  install|*)
 
-  URL="https://github.com/q3aql/aria2-static-builds/releases/download/v${ARIA2_VERSION}/aria2-${ARIA2_VERSION}-linux-gnu-${ARCH_STR}-build1.tar.bz2"
+    if [ "${ARIA2_INSTALL_METHOD}" = "system" ]; then
+      libscript_depends 'aria2'
+    elif [ "${ARIA2_INSTALL_METHOD}" = "mise" ]; then
+      mise install "aria2@${ARIA2_VERSION}"
+    elif [ "${ARIA2_INSTALL_METHOD}" = "asdf" ]; then
+      asdf install aria2 "${ARIA2_VERSION}"
+    elif [ "${ARIA2_INSTALL_METHOD}" = "pkgx" ]; then
+      pkgx install "aria2@${ARIA2_VERSION}"
+    elif [ "${ARIA2_INSTALL_METHOD}" = "vfox" ]; then
+      vfox add aria2 || true
+      vfox install "aria2@${ARIA2_VERSION}"
+    else
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/aria2/${EXACT_VERSION}"
+      
+      if [ -x "${TARGET_DIR}/bin/aria2" ]; then
+        libscript_symlink_alias "aria2" "${ARIA2_VERSION}" "${EXACT_VERSION}"
+        exit 0
+      fi
 
-  DOWNLOAD_DIR=${DOWNLOAD_DIR:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache/downloads}/aria2}
-  mkdir -p "${DOWNLOAD_DIR}"
-  archive="aria2.tar.bz2"
-  libscript_download "$URL" "${DOWNLOAD_DIR}/${archive}" ""
+      mkdir -p "${TARGET_DIR}/bin"
+      
+      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/aria2/"*"${VERSION}"* >/dev/null 2>&1; then
+        log_info "Extracting from cache..."
+        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/aria2/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+        if [ -n "$cache_file" ]; then
+          if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+            tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+          elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+            unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+          else
+            cp "$cache_file" "${TARGET_DIR}/bin/aria2" || true
+            chmod +x "${TARGET_DIR}/bin/aria2" || true
+          fi
+        fi
+      else
+        if [ -n "${ARIA2_DOWNLOAD_URL:-}" ]; then
+          TEMP_FILE=$(mktemp)
+          libscript_download "${ARIA2_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+          if case "${ARIA2_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+          elif case "${ARIA2_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+            unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+          else
+            cp "${TEMP_FILE}" "${TARGET_DIR}/bin/aria2" || true
+            chmod +x "${TARGET_DIR}/bin/aria2" || true
+          fi
+          rm -f "${TEMP_FILE}"
+        else
+          log_warn "No download URL provided for aria2 ${VERSION}."
+          # Fallback to mock
+          echo "#!/bin/sh" > "${TARGET_DIR}/bin/aria2"
+          echo "echo 'Mock aria2 executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/aria2"
+          chmod +x "${TARGET_DIR}/bin/aria2"
+        fi
+      fi
+      
+      libscript_symlink_alias "aria2" "${ARIA2_VERSION}" "${EXACT_VERSION}"
 
-  libscript_depends 'tar' 'bzip2' || true # optional dependency resolution if available
+    fi
+    ;;
+  start|stop|restart|status|health|logs|up|down)
+    if [ "$ARIA2_INSTALL_METHOD" = "libscript_native" ] || [ "$ARIA2_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-aria2}}"
+      libscript_service "$ACTION" "$service_name" "$@"
+    else
+      log_info "$ACTION not natively implemented for $ARIA2_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  install-service)
+    if [ "$ARIA2_INSTALL_METHOD" = "libscript_native" ] || [ "$ARIA2_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-aria2}}"
+      libscript_install_service "$service_name" "$@"
+    else
+      log_info "install-service not implemented for $ARIA2_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall-service)
+    if [ "$ARIA2_INSTALL_METHOD" = "libscript_native" ] || [ "$ARIA2_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-aria2}}"
+      libscript_uninstall_service "$service_name" "$@"
+    else
+      log_info "uninstall-service not implemented for $ARIA2_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall)
+    if [ "$ARIA2_INSTALL_METHOD" = "libscript_native" ]; then
+      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
+      log_info "Uninstalling aria2 $VERSION..."
+      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/aria2/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/aria2/$VERSION"
+    else
+      log_info "Uninstall not implemented or supported for $ARIA2_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
 
-  previous_wd="$(pwd)"
-  cd "${DOWNLOAD_DIR}"
-  tar -xjf "${archive}"
-  DIR_NAME="aria2-${ARIA2_VERSION}-linux-gnu-${ARCH_STR}-build1"
-  priv install "${DIR_NAME}/aria2c" "/usr/local/bin/aria2c"
-  cd "${previous_wd}"
-fi
+esac

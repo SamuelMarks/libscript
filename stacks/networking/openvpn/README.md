@@ -50,8 +50,8 @@ cli.cmd install openvpn
 LibScript can package this component into various deployment formats:
 
 ```sh
-libscript package_as docker openvpn
-libscript package_as msi openvpn
+libscript package-as docker openvpn
+libscript package-as msi openvpn
 ```
 
 ## Architecture

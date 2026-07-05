@@ -15,7 +15,7 @@ You can manage Odoo using the global `libscript` CLI or local scripts.
 - **Uninstall:** `libscript uninstall odoo`
 - **Start:** `libscript start odoo`
 - **Stop:** `libscript stop odoo`
-- **Package:** `libscript package_as docker odoo` (or `msi`, `docker_compose`, etc.)
+- **Package:** `libscript package-as docker odoo` (or `msi`, `docker_compose`, etc.)
 
 ## Configuration Options
 

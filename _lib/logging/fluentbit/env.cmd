@@ -1,10 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment initialization for Fluent Bit on Windows.
-::
-:: ## Usage
-:: Normally sets up defaults. Currently a no-op placeholder.
+:: Windows env stub for fluentbit
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%FLUENTBIT_VERSION%"=="" (
+    set "FLUENTBIT_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\fluentbit\%FLUENTBIT_VERSION%\bin;%PATH%"

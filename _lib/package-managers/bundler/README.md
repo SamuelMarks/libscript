@@ -14,3 +14,13 @@ appropriate for the tool.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+## Architecture
+
+`libscript` manages `bundler` versions natively by default
+(`BUNDLER_INSTALL_METHOD=libscript_native`), ensuring isolated installations without polluting
+global system paths. You can override this to use `system`, `mise`, `asdf`, `pkgx`, or `vfox` if
+preferred.
+
+Libscript manages bundler versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/bundler/<version>`.

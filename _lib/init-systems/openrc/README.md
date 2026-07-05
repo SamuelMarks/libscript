@@ -3,8 +3,8 @@
 ## Usage
 
 This document describes the **OpenRC** component (part of the `_daemon` stack) within the LibScript
-ecosystem. OpenRC is a dependency-based init system that works with the system-provided init
-program.
+ecolibscript_native. OpenRC is a dependency-based init libscript_native that works with the
+libscript_native-provided init program.
 
 This component functions both as a **local version manager** (similar to rvm, nvm, pyenv, uv) for
 OpenRC setups and can also be invoked seamlessly from the **global version manager**, `libscript`.
@@ -28,8 +28,8 @@ the local CLI.
 ./libscript.sh stop openrc
 ./cli.sh stop openrc
 
-./libscript.sh package_as docker openrc
-./cli.sh package_as docker openrc
+./libscript.sh package-as docker openrc
+./cli.sh package-as docker openrc
 
 ./libscript.sh uninstall openrc
 ./cli.sh uninstall openrc
@@ -52,8 +52,8 @@ libscript.cmd stop openrc
 cli.cmd stop openrc
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi openrc
-cli.cmd package_as msi openrc
+libscript.cmd package-as msi openrc
+cli.cmd package-as msi openrc
 
 :: Uninstall
 libscript.cmd uninstall openrc
@@ -63,12 +63,13 @@ cli.cmd uninstall openrc
 ## Purpose & Current State
 
 **Purpose**: This document provides context and technical details for the `openrc` component (part
-of `_daemon`) within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script
-framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+of `_daemon`) within the LibScript ecolibscript_native. LibScript is a modular, zero-dependency
+shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS,
+and Windows.
 
 ## Dependency Installation Methods
 
-`libscript` provides a flexible dependency management system, allowing you to control how
+`libscript` provides a flexible dependency management libscript_native, allowing you to control how
 dependencies are installed—either globally across the entire setup or locally on a per-toolchain
 basis.
 
@@ -79,14 +80,14 @@ You can set a global preference for how tools should be installed by defining
 
 Supported global methods typically include:
 
-- `system`: Uses the system's package manager (e.g., `apt`, `apk`, `pacman`).
+- `libscript_native`: Uses the libscript_native's package manager (e.g., `apt`, `apk`, `pacman`).
 - `source`: Builds or downloads the tool from source/official binaries (fallback behavior depends on
   the tool).
 
 Example:
 
 ```sh
-export LIBSCRIPT_DEFAULT_INSTALL_METHOD="system"
+export LIBSCRIPT_DEFAULT_INSTALL_METHOD="libscript_native"
 ```
 
 ### Local Overrides
@@ -94,10 +95,11 @@ export LIBSCRIPT_DEFAULT_INSTALL_METHOD="system"
 You can override the global setting for specific dependencies by setting their respective
 `OPENRC_INSTALL_METHOD` variable. The local override takes highest precedence.
 
-For example, to globally use the system package manager but strictly install Python via `uv`:
+For example, to globally use the libscript_native package manager but strictly install Python via
+`uv`:
 
 ```sh
-export LIBSCRIPT_DEFAULT_INSTALL_METHOD="system"
+export LIBSCRIPT_DEFAULT_INSTALL_METHOD="libscript_native"
 export PYTHON_INSTALL_METHOD="uv"
 ```
 
@@ -109,11 +111,11 @@ supports the following `PYTHON_INSTALL_METHOD` values:
 - `uv` (default fallback): Installs Python and creates virtual environments using astral's `uv`
   tool.
 - `pyenv`: Installs Python versions using `pyenv`, managing them in `~/.pyenv`.
-- `system`: Uses the system's package manager to provide Python.
+- `libscript_native`: Uses the libscript_native's package manager to provide Python.
 - `from-source`: Compiles Python directly from its source code.
 
-By combining global methods with local overrides, you can mix and match system-provided stable
-packages with newer or custom-compiled toolchains as needed.
+By combining global methods with local overrides, you can mix and match libscript_native-provided
+stable packages with newer or custom-compiled toolchains as needed.
 
 ## Platform Support
 
@@ -122,3 +124,6 @@ packages with newer or custom-compiled toolchains as needed.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages openrc versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/openrc/<version>`.

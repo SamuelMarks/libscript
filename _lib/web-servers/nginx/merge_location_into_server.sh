@@ -5,7 +5,6 @@
 # ## Usage
 # Refer to the internal functions of merge_location_into_server.sh for implementation details.
 
-
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
@@ -29,168 +28,202 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+
 merge_location_into_server() {
   EXISTING_CONFIG="$1"
   NEW_LOCATION_BLOCK="$2"
   TARGET_SERVER_NAME="$3"
+  TARGET_LISTEN_REGEX="${4:-443.*ssl}"
 
-  # Read existing config content
-  if [ -f "$EXISTING_CONFIG" ]; then
-    CONFIG_FILE="$EXISTING_CONFIG"
+  if [ ! -f "$NEW_LOCATION_BLOCK" ]; then
+    NEW_LOCATION_TMP=$(mktemp)
+    printf '%s\n' "$NEW_LOCATION_BLOCK" > "$NEW_LOCATION_TMP"
+    NEW_LOCATION_BLOCK="$NEW_LOCATION_TMP"
   else
-    CONFIG_FILE=$(mktemp)
-    trap 'rm -f -- "${CONFIG_FILE}"' EXIT HUP INT QUIT TERM
-    printf '%s' "$EXISTING_CONFIG" > "$CONFIG_FILE"
+    NEW_LOCATION_TMP=""
   fi
 
-  # Read new location block content
-  if [ -f "$NEW_LOCATION_BLOCK" ]; then
-    NEW_LOCATION_BLOCK_CONTENT=$(cat "$NEW_LOCATION_BLOCK")
-  else
-    NEW_LOCATION_BLOCK_CONTENT="$NEW_LOCATION_BLOCK"
+  if [ ! -f "$EXISTING_CONFIG" ]; then
+    >&2 printf 'Error: Existing config file "%s" not found.\n' "$EXISTING_CONFIG"
+    [ -n "$NEW_LOCATION_TMP" ] && rm -f -- "$NEW_LOCATION_TMP"
+    return 1
   fi
 
-  OUTPUT_FILE=$(mktemp)
-  trap 'rm -f -- "${OUTPUT_FILE}"' EXIT HUP INT QUIT TERM
+  LOCK_FILE="${EXISTING_CONFIG}.lock.dir"
+  while ! mkdir "$LOCK_FILE" 2>/dev/null; do
+    sleep 0.1
+  done
 
+  AWK_SCRIPT_TMP=$(mktemp)
+  TMP_CONFIG=$(mktemp)
 
-  in_server_block=0
-  brace_level=0
-  server_has_server_name=0
-  server_has_listen_ssl=0
-  insert_done=0
+  cat << 'AWKEOF' > "$AWK_SCRIPT_TMP"
+function parse_tokens(file_lines, file_nr, dirs_out) {
+    state = "NORMAL"; tok = ""; dir_idx = 1; tok_idx = 1; brace_level = 0
+    for (l = 1; l <= file_nr; l++) {
+        line = file_lines[l]; len = length(line); c = 1
+        while (c <= len) {
+            ch = substr(line, c, 1)
+            if (state == "NORMAL") {
+                if (ch == "\\") {
+                    tok = tok ch; c++; if (c <= len) tok = tok substr(line, c, 1)
+                } else if (ch == "\"") {
+                    state = "DQUOTE"; tok = tok ch
+                } else if (ch == "'") {
+                    state = "SQUOTE"; tok = tok ch
+                } else if (ch == "#") {
+                    break
+                } else if (ch == "{" || ch == "}" || ch == ";") {
+                    if (tok != "") { dirs_out[dir_idx, tok_idx++] = tok; tok = "" }
+                    dirs_out[dir_idx, tok_idx++] = ch
+                    dirs_out[dir_idx, "line"] = l; dirs_out[dir_idx, "brace_level"] = brace_level; dirs_out[dir_idx, "len"] = tok_idx - 1
+                    if (ch == "{") brace_level++
+                    if (ch == "}") brace_level--
+                    dir_idx++; tok_idx = 1
+                } else if (ch == " " || ch == "\t" || ch == "\r" || ch == "\n") {
+                    if (tok != "") { dirs_out[dir_idx, tok_idx++] = tok; tok = "" }
+                } else { tok = tok ch }
+            } else if (state == "DQUOTE") {
+                tok = tok ch
+                if (ch == "\\") { c++; if (c <= len) tok = tok substr(line, c, 1) }
+                else if (ch == "\"") { state = "NORMAL" }
+            } else if (state == "SQUOTE") {
+                tok = tok ch
+                if (ch == "\\") { c++; if (c <= len) tok = tok substr(line, c, 1) }
+                else if (ch == "'") { state = "NORMAL" }
+            }
+            c++
+        }
+        if (tok != "" && state == "NORMAL") { dirs_out[dir_idx, tok_idx++] = tok; tok = "" }
+    }
+    return dir_idx - 1
+}
 
-  SERVER_BLOCK_TMP=$(mktemp)
-  SERVER_LOCATIONS_TMP=$(mktemp)
-  trap 'rm -f -- "${SERVER_BLOCK_TMP}" "${SERVER_LOCATIONS_TMP}"' EXIT HUP INT QUIT TERM
+{
+    if (NR == FNR) { new_lines[FNR] = $0; new_nr = FNR }
+    else { target_lines[FNR] = $0; target_nr = FNR }
+}
 
-  while IFS= read -r line || [ -n "$line" ]; do
-    trimmed_line=$(printf '%s' "$line" | sed 's/^[ \t]*//;s/[ \t]*$//')
-
-    # Update brace level before any other processing
-    num_open_braces=$(printf '%s' "$line" | grep -o '{' | wc -l)
-    num_close_braces=$(printf '%s' "$line" | grep -o '}' | wc -l)
-    brace_level=$((brace_level + num_open_braces - num_close_braces))
-
-    if [ "$in_server_block" -eq 0 ]; then
-      # Check for start of server block
-      if printf '%s' "$trimmed_line" | grep -q '^server\b'; then
-        in_server_block=1
-        server_has_server_name=0
-        server_has_listen_ssl=0
-
-        # Initialize server block content and locations
-        printf '%s\n' "$line" > "$SERVER_BLOCK_TMP"
-        : > "$SERVER_LOCATIONS_TMP"  # Empty the locations file
-        continue
-      else
-        # Outside of server block, output line directly
-        printf '%s\n' "$line" >> "$OUTPUT_FILE"
-        continue
-      fi
-    else
-      # Accumulate server block content
-      printf '%s\n' "$line" >> "$SERVER_BLOCK_TMP"
-
-      # Check for server_name
-      if printf '%s' "$trimmed_line" | grep -q '^server_name[ \t]'; then
-        server_names=$(printf '%s' "$trimmed_line" | sed 's/^server_name[ \t]*//;s/;.*$//')
-        for name in $server_names; do
-          if [ "$name" = "$TARGET_SERVER_NAME" ]; then
-            server_has_server_name=1
+END {
+    num_new_dirs = parse_tokens(new_lines, new_nr, new_dirs)
+    num_target_dirs = parse_tokens(target_lines, target_nr, target_dirs)
+    
+    new_sig = ""
+    for (i = 1; i <= num_new_dirs; i++) {
+        if (new_dirs[i, 1] == "location" && new_dirs[i, "brace_level"] == 0) {
+            for (j = 1; j < new_dirs[i, "len"]; j++) new_sig = new_sig new_dirs[i, j] " "
             break
-          fi
-        done
-      fi
+        }
+    }
+    
+    target_server_end_line = 0
+    in_server = 0
+    server_match_name = 0
+    server_match_listen = 0
+    server_start_idx = 0
+    
+    for (i = 1; i <= num_target_dirs; i++) {
+        level = target_dirs[i, "brace_level"]
+        cmd = target_dirs[i, 1]
+        
+        if (level == 0 && cmd == "server" && target_dirs[i, 2] == "{") {
+            in_server = 1
+            server_match_name = 0
+            server_match_listen = 0
+            server_start_idx = i
+        } else if (in_server && level == 1) {
+            if (cmd == "}") {
+                in_server = 0
+                if (server_match_name && server_match_listen) {
+                    target_server_end_line = target_dirs[i, "line"]
+                    break
+                }
+            } else if (cmd == "server_name") {
+                for (j = 2; j < target_dirs[i, "len"]; j++) {
+                    name = target_dirs[i, j]
+                    gsub(/^"|"$/, "", name)
+                    gsub(/^'|'$/, "", name)
+                    if (name == ENVIRON["TARGET_SERVER_NAME"]) server_match_name = 1
+                }
+            } else if (cmd == "listen") {
+                lstr = ""
+                for (j = 2; j < target_dirs[i, "len"]; j++) lstr = lstr target_dirs[i, j] " "
+                if (lstr ~ ENVIRON["TARGET_LISTEN_REGEX"]) server_match_listen = 1
+            }
+        }
+    }
+    
+    if (!target_server_end_line) {
+        print "Error: Target server block not found." > "/dev/stderr"
+        exit 1
+    }
+    
+    replace_start = 0
+    replace_end = 0
+    for (i = server_start_idx + 1; target_dirs[i, "line"] <= target_server_end_line && i <= num_target_dirs; i++) {
+        if (target_dirs[i, "brace_level"] == 1 && target_dirs[i, 1] == "location") {
+            loc_sig = ""
+            for (j = 1; j < target_dirs[i, "len"]; j++) loc_sig = loc_sig target_dirs[i, j] " "
+            if (loc_sig == new_sig) {
+                replace_start = target_dirs[i, "line"]
+                for (k = i + 1; k <= num_target_dirs; k++) {
+                    if (target_dirs[k, 1] == "}" && target_dirs[k, "brace_level"] == 2) {
+                        replace_end = target_dirs[k, "line"]
+                        break
+                    }
+                }
+                break
+            }
+        }
+    }
+    
+    for (l = 1; l <= target_nr; l++) {
+        if (replace_start && l >= replace_start && l <= replace_end) {
+            if (l == replace_start) {
+                for (nl = 1; nl <= new_nr; nl++) print new_lines[nl]
+            }
+            continue
+        }
+        if (!replace_start && l == target_server_end_line) {
+            print ""
+            for (nl = 1; nl <= new_nr; nl++) {
+                if (new_lines[nl] != "") {
+                    print "    " new_lines[nl]
+                } else {
+                    print ""
+                }
+            }
+        }
+        print target_lines[l]
+    }
+}
+AWKEOF
 
-      # Check for listen 443 ssl
-      if printf '%s' "$trimmed_line" | grep -q '^listen[ \t].*443.*ssl'; then
-        server_has_listen_ssl=1
-      fi
-
-      # Collect existing location expressions in the server block
-      if printf '%s' "$trimmed_line" | grep -q '^location[ \t]'; then
-        # Extract the location expression up to '{' or ';'
-        location_expression=$(printf '%s' "$trimmed_line" | sed -E 's/^(location[ \t]+[^ \t{;]+([ \t]+[^ \t{;]+)*)[ \t]*[;{]?.*/\1/')
-        printf '%s\n' "$location_expression" >> "$SERVER_LOCATIONS_TMP"
-      fi
-
-      # Exiting server block
-      if [ "$brace_level" -le 0 ]; then
-        in_server_block=0
-
-        # If this is the matching server block, insert the new location block
-        if [ "$server_has_server_name" -eq 1 ] && \
-            [ "$server_has_listen_ssl" -eq 1 ] && \
-            [ "$insert_done" -eq 0 ]; then
-
-          # Process the server block content
-          # Remove the last closing brace '}' from the server block content
-          sed '$d' "$SERVER_BLOCK_TMP" > "${SERVER_BLOCK_TMP}.processed"
-
-          # Get indentation from the closing brace line
-          closing_brace_line=$(tail -n 1 "$SERVER_BLOCK_TMP")
-          indentation=$(printf '%s' "$closing_brace_line" | sed 's/\(^[ \t]*\).*/\1/')
-
-          # Prepare the new location blocks, excluding duplicates
-          NEW_LOCATION_BLOCK_TMP=$(mktemp)
-          trap 'rm -f -- "${NEW_LOCATION_BLOCK_TMP}"' EXIT HUP INT QUIT TERM
-          printf '%s\n' "$NEW_LOCATION_BLOCK_CONTENT" > "$NEW_LOCATION_BLOCK_TMP"
-
-          # Collect location expressions from new location block
-          NEW_LOCATIONS_TMP=$(mktemp)
-          trap 'rm -f -- "${NEW_LOCATIONS_TMP}"' EXIT HUP INT QUIT TERM
-          sed -n -E 's/^[ \t]*(location[ \t]+[^ \t{;]+([ \t]+[^ \t{;]+)*)[ \t]*[;{]?.*/\1/p' "$NEW_LOCATION_BLOCK_TMP" > "$NEW_LOCATIONS_TMP"
-
-          # Exclude duplicate location blocks
-          INSERT_BLOCK_TMP=$(mktemp)
-          trap 'rm -f -- "${INSERT_BLOCK_TMP}"' EXIT HUP INT QUIT TERM
-          awk -- 'FNR==NR {existing[$0]=1; next} {if ($0 in existing) {print "duplicate:" $0} else {print "new:" $0}}' "$SERVER_LOCATIONS_TMP" "$NEW_LOCATIONS_TMP" | while IFS=: read -r status loc_expr; do
-            if [ "${status}" = "duplicate" ]; then
-              # Location already exists, skip it
-              >&2 printf 'Debug: Skipping duplicate location "%s"\n' "${loc_expr}"
-              continue
-            else
-              # Include this location block
-              # Extract the corresponding block from NEW_LOCATION_BLOCK_TMP
-              awk -v loc_expr="${loc_expr}" -- '
-                BEGIN {found=0}
-                $0 ~ "^[ \t]*"loc_expr"[ \t]*([;{]|$)" {found=1}
-                found {print}
-                found && /\}/ {found=0}' "${NEW_LOCATION_BLOCK_TMP}" >> "${INSERT_BLOCK_TMP}"
-            fi
-          done
-
-          # Append new location blocks with proper indentation
-          if [ -s "${INSERT_BLOCK_TMP}" ]; then
-            printf '\n' >> "${SERVER_BLOCK_TMP}"'.processed'
-            sed 's/^/'"${indentation}"'/' "${INSERT_BLOCK_TMP}" >> "${SERVER_BLOCK_TMP}"'.processed'
-          fi
-
-          # Add the closing brace back
-          printf '%s\n' "$closing_brace_line" >> "${SERVER_BLOCK_TMP}.processed"
-
-          # Output the processed server block
-          cat -- "${SERVER_BLOCK_TMP}.processed" >> "${OUTPUT_FILE}"
-
-          insert_done=1
-
-          # Clean up temporary files
-          rm -f -- "${SERVER_BLOCK_TMP}" "${SERVER_BLOCK_TMP}"'.processed' "${SERVER_LOCATIONS_TMP}" "${NEW_LOCATION_BLOCK_TMP}" "${NEW_LOCATIONS_TMP}" "${INSERT_BLOCK_TMP}"
-        else
-          # Output the server block as is
-          cat -- "${SERVER_BLOCK_TMP}" >> "${OUTPUT_FILE}"
-        fi
-      fi
-    fi
-  done < "${CONFIG_FILE}"
-
-  # Check if insertion was done
-  if [ "${insert_done}" -eq 0 ]; then
-    >&2 printf 'Error: No matching server block found.\n'
-    exit 1
-  else
-    # Output the final configuration
-    cat -- "${OUTPUT_FILE}"
+  if ! TARGET_SERVER_NAME="$TARGET_SERVER_NAME" TARGET_LISTEN_REGEX="$TARGET_LISTEN_REGEX" awk -f "$AWK_SCRIPT_TMP" "$NEW_LOCATION_BLOCK" "$EXISTING_CONFIG" > "$TMP_CONFIG"; then
+    >&2 printf 'Error: Failed to process configuration.\n'
+    rm -rf -- "${LOCK_FILE}"
+    rm -f -- "${AWK_SCRIPT_TMP}" "${TMP_CONFIG}"
+    [ -n "${NEW_LOCATION_TMP:-}" ] && rm -f -- "${NEW_LOCATION_TMP}" || true
+    return 1
   fi
+
+  if command -v nginx >/dev/null 2>&1; then 
+    TMP_NGINX_CONF=$(mktemp) 
+    printf "events {}\nhttp {\n    include %s;\n}\n" "$TMP_CONFIG" > "$TMP_NGINX_CONF" 
+    if ! nginx -t -c "$TMP_NGINX_CONF" -q 2>/dev/null; then 
+      >&2 printf "Error: Nginx syntax check failed for the modified configuration.\n" 
+      rm -rf -- "${LOCK_FILE}"; rm -f -- "${AWK_SCRIPT_TMP}" "${TMP_CONFIG}" "${TMP_NGINX_CONF}" 
+      [ -n "${NEW_LOCATION_TMP:-}" ] && rm -f -- "${NEW_LOCATION_TMP}" || true 
+      return 1 
+    fi 
+    rm -f -- "$TMP_NGINX_CONF" 
+  fi
+
+  # Atomic replace
+  cp "$TMP_CONFIG" "$EXISTING_CONFIG.tmp"
+  mv "$EXISTING_CONFIG.tmp" "$EXISTING_CONFIG"
+
+  rm -rf -- "${LOCK_FILE}"
+  rm -f -- "${AWK_SCRIPT_TMP}" "${TMP_CONFIG}"
+  [ -n "${NEW_LOCATION_TMP:-}" ] && rm -f -- "${NEW_LOCATION_TMP}" || true
 }

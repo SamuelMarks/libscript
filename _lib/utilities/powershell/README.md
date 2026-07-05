@@ -2,8 +2,11 @@
 
 ## Usage
 
-This document describes the **PowerShell** bootstrap component within the LibScript ecosystem. It is
-responsible for provisioning and managing the PowerShell environment on target systems.
+_Note: libscript manages versions natively for this component._
+
+This document describes the **PowerShell** bootstrap component within the LibScript
+ecolibscript_native. It is responsible for provisioning and managing the PowerShell environment on
+target libscript_natives.
 
 This component operates efficiently as a **local version manager** (similar to rvm, nvm, pyenv, uv)
 to manage your PowerShell installation. Furthermore, it can be directly invoked from the **global
@@ -27,8 +30,8 @@ or the local CLI.
 ./libscript.sh stop powershell
 ./cli.sh stop powershell
 
-./libscript.sh package_as docker powershell
-./cli.sh package_as docker powershell
+./libscript.sh package-as docker powershell
+./cli.sh package-as docker powershell
 
 ./libscript.sh uninstall powershell
 ./cli.sh uninstall powershell
@@ -51,8 +54,8 @@ libscript.cmd stop powershell
 cli.cmd stop powershell
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi powershell
-cli.cmd package_as msi powershell
+libscript.cmd package-as msi powershell
+cli.cmd package-as msi powershell
 
 :: Uninstall
 libscript.cmd uninstall powershell
@@ -70,3 +73,13 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+## Architecture
+
+`libscript` manages `powershell` versions natively by default
+(`POWERSHELL_INSTALL_METHOD=libscript_native`), ensuring isolated installations without polluting
+global system paths. You can override this to use `system`, `mise`, `asdf`, `pkgx`, or `vfox` if
+preferred.
+
+Libscript manages powershell versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/powershell/<version>`.

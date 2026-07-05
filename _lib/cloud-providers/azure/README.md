@@ -29,7 +29,7 @@ target provider. You can also invoke these primitives manually to orchestrate sh
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -57,6 +57,7 @@ target provider. You can also invoke these primitives manually to orchestrate sh
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
 | `AZURE_RESOURCE_GROUP` | Azure Resource Group | `none` |  |
 | `AZURE_LOCATION` | Azure Location | `eastus` |  |
+| `AZURE_INSTALL_METHOD` | How to install AZURE. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 <!-- END_VARS -->
 
 ## Platform Support
@@ -66,3 +67,6 @@ target provider. You can also invoke these primitives manually to orchestrate sh
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages azure versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/azure/<version>`.

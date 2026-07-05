@@ -1,4 +1,6 @@
 #!/bin/sh
+# ## Overview
+# Generic setup module for gcsfuse.
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -23,32 +25,206 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-# # LibScript Common Generic Setup
-#
-# ## Overview
-# This script provides fallback installation logic using the LibScript
-# package manager mapper. It is invoked when no OS-specific setup script
-# is found for a component.
-#
-# ## Usage
-# Sourced by `setup_base.sh` if `setup_<os>.sh` is missing.
+DIR="${SCRIPT_DIR}"
 
-set -feu
-
-# Component name should be set by the caller (component_core.sh sets PACKAGE_NAME)
-_PKG_MGR_NAME="${PACKAGE_NAME:-}"
-
-if [ -z "${_PKG_MGR_NAME}" ]; then
-  # Fallback: try to get it from the directory name if not set
-  _PKG_MGR_NAME=$(basename "$(pwd)")
+if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
-  # shellcheck disable=SC1090
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
-# Attempt to install via the detected package manager
-libscript_depends "${_PKG_MGR_NAME}"
+GCSFUSE_INSTALL_METHOD="$(libscript_resolve_install_method "GCSFUSE")"
+ACTION="${ACTION:-install}"
+VERSION="${GCSFUSE_VERSION:-latest}"
+
+resolve_exact_version() {
+  if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
+    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote gcsfuse 2>/dev/null | tail -n 1)
+    if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
+      EXACT_VERSION="$_latest"
+    else
+      EXACT_VERSION="${VERSION:-latest}"
+    fi
+  else
+    EXACT_VERSION="${VERSION:-latest}"
+  fi
+}
+
+case "$ACTION" in
+  ls)
+    if [ "$GCSFUSE_INSTALL_METHOD" = "mise" ]; then
+      mise ls gcsfuse || true
+    elif [ "$GCSFUSE_INSTALL_METHOD" = "asdf" ]; then
+      asdf list gcsfuse || true
+    elif [ "$GCSFUSE_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$GCSFUSE_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls gcsfuse || true
+    elif [ "$GCSFUSE_INSTALL_METHOD" = "system" ]; then
+      echo "System packages do not support ls here."
+    else
+      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/gcsfuse/" 2>/dev/null || true
+    fi
+    exit 0
+    ;;
+  ls-remote)
+    if [ "$GCSFUSE_INSTALL_METHOD" = "mise" ]; then
+      mise ls-remote gcsfuse || true
+    elif [ "$GCSFUSE_INSTALL_METHOD" = "asdf" ]; then
+      asdf list all gcsfuse || true
+    elif [ "$GCSFUSE_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$GCSFUSE_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls all gcsfuse || true
+    else
+      if [ -n "${GCSFUSE_RELEASES_URL:-}" ]; then
+        curl -sSL "${GCSFUSE_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+      else
+      git ls-remote --tags "https://github.com/libscript/gcsfuse" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+    fi
+    fi
+    exit 0
+    ;;
+  use)
+    if [ "$GCSFUSE_INSTALL_METHOD" = "mise" ]; then
+      mise use "gcsfuse@${VERSION}"
+    elif [ "$GCSFUSE_INSTALL_METHOD" = "asdf" ]; then
+      asdf global gcsfuse "${VERSION}"
+    elif [ "$GCSFUSE_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not use explicit versions this way"
+    elif [ "$GCSFUSE_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "gcsfuse@${VERSION}"
+    elif [ "$GCSFUSE_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "gcsfuse@${VERSION}"
+    elif [ "$GCSFUSE_INSTALL_METHOD" = "system" ]; then
+      echo "System packages do not support use here."
+    else
+      resolve_exact_version
+      libscript_symlink_alias "gcsfuse" "$VERSION" "${EXACT_VERSION}"
+    fi
+    exit 0
+    ;;
+  download)
+    if [ "$GCSFUSE_INSTALL_METHOD" = "libscript_native" ]; then
+      log_info "Downloading gcsfuse ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gcsfuse..."
+      mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gcsfuse"
+      if [ -n "${GCSFUSE_DOWNLOAD_URL:-}" ]; then
+        libscript_download "${GCSFUSE_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gcsfuse/gcsfuse-${VERSION}.tar.gz"
+      else
+        log_warn "GCSFUSE_DOWNLOAD_URL is not defined for gcsfuse ${VERSION}."
+      fi
+    fi
+    exit 0
+    ;;
+  install|*)
+    if [ "$GCSFUSE_INSTALL_METHOD" = "system" ]; then
+      libscript_depends "gcsfuse"
+    elif [ "$GCSFUSE_INSTALL_METHOD" = "mise" ]; then
+      mise install "gcsfuse@${VERSION}"
+    elif [ "$GCSFUSE_INSTALL_METHOD" = "asdf" ]; then
+      asdf install gcsfuse "${VERSION}"
+    elif [ "$GCSFUSE_INSTALL_METHOD" = "pkgx" ]; then
+      pkgx install "gcsfuse@${VERSION}"
+    elif [ "$GCSFUSE_INSTALL_METHOD" = "vfox" ]; then
+      vfox add gcsfuse || true
+      vfox install "gcsfuse@${VERSION}"
+    else
+      # libscript_native implementation
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/gcsfuse/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing gcsfuse ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gcsfuse/"*"${VERSION}"* >/dev/null 2>&1; then
+          log_info "Extracting from cache..."
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gcsfuse/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+            else
+              cp "$cache_file" "${TARGET_DIR}/bin/gcsfuse" || true
+              chmod +x "${TARGET_DIR}/bin/gcsfuse" || true
+            fi
+          fi
+        else
+          if [ -n "${GCSFUSE_DOWNLOAD_URL:-}" ]; then
+            TEMP_FILE=$(mktemp)
+            libscript_download "${GCSFUSE_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+            if case "${GCSFUSE_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "${GCSFUSE_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+            else
+              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/gcsfuse" || true
+              chmod +x "${TARGET_DIR}/bin/gcsfuse" || true
+            fi
+            rm -f "${TEMP_FILE}"
+          else
+            log_warn "No download URL provided for gcsfuse ${VERSION}."
+          fi
+        fi
+      else
+        log_info "gcsfuse ${VERSION} is already installed."
+      fi
+      libscript_symlink_alias "gcsfuse" "$VERSION" "${EXACT_VERSION}"
+    fi
+    ;;
+  start|stop|restart|status|health|logs|up|down)
+    if [ "$GCSFUSE_INSTALL_METHOD" = "libscript_native" ] || [ "$GCSFUSE_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-gcsfuse}}"
+      libscript_service "$ACTION" "$service_name" "$@"
+    else
+      log_info "$ACTION not natively implemented for $GCSFUSE_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  install-service)
+    if [ "$GCSFUSE_INSTALL_METHOD" = "libscript_native" ] || [ "$GCSFUSE_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-gcsfuse}}"
+      libscript_install_service "$service_name" "$@"
+    else
+      log_info "install-service not implemented for $GCSFUSE_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall-service)
+    if [ "$GCSFUSE_INSTALL_METHOD" = "libscript_native" ] || [ "$GCSFUSE_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-gcsfuse}}"
+      libscript_uninstall_service "$service_name" "$@"
+    else
+      log_info "uninstall-service not implemented for $GCSFUSE_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall)
+    if [ "$GCSFUSE_INSTALL_METHOD" = "libscript_native" ]; then
+      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
+      log_info "Uninstalling gcsfuse $VERSION..."
+      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/gcsfuse/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/gcsfuse/$VERSION"
+    else
+      log_info "Uninstall not implemented or supported for $GCSFUSE_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+
+esac

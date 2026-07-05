@@ -3,8 +3,8 @@
 ## Purpose & Current State
 
 This document provides context and technical details for the **MongoDB** component (part of the
-`_storage` module) within the LibScript ecosystem. MongoDB is a widely used, document-oriented NoSQL
-database system.
+`_storage` module) within the LibScript ecolibscript_native. MongoDB is a widely used,
+document-oriented NoSQL database libscript_native.
 
 This module works both as a local version manager for MongoDB (similar to `rvm`, `nvm`, `pyenv`, or
 `uv`) and can be directly invoked from the global version manager `libscript`. By treating MongoDB
@@ -30,8 +30,8 @@ the local CLI.
 ./libscript.sh stop mongodb
 ./cli.sh stop mongodb
 
-./libscript.sh package_as docker mongodb
-./cli.sh package_as docker mongodb
+./libscript.sh package-as docker mongodb
+./cli.sh package-as docker mongodb
 
 ./libscript.sh uninstall mongodb
 ./cli.sh uninstall mongodb
@@ -54,8 +54,8 @@ libscript.cmd stop mongodb
 cli.cmd stop mongodb
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi mongodb
-cli.cmd package_as msi mongodb
+libscript.cmd package-as msi mongodb
+cli.cmd package-as msi mongodb
 
 :: Uninstall
 libscript.cmd uninstall mongodb
@@ -70,7 +70,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -97,7 +97,7 @@ running the setup script.
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
 | `MONGODB_VERSION` | Specific version of mongodb to install. Can be a numeric version or an alias. | `latest` | latest, stable |
-| `MONGODB_INSTALL_METHOD` | How to install MONGODB. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools. | `libscript-native` |  |
+| `MONGODB_INSTALL_METHOD` | How to install MONGODB. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 | `LIBSCRIPT_LISTEN_PORT` | Global port to listen on | `none` |  |
 | `LIBSCRIPT_LISTEN_ADDRESS` | Global address to listen on | `none` |  |
 | `LIBSCRIPT_LISTEN_SOCKET` | Global unix socket to listen on | `none` |  |
@@ -129,3 +129,6 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages mongodb versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/mongodb/<version>`.

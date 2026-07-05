@@ -57,7 +57,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
         printf '%s\n' "www: \"$APP_URL\""
         printf '%s\n' "prefix: \"/\""
         printf '%s\n' "scripts: {"
-        printf '%s\n' "  post-install: \"if command -v libscript.sh >/dev/null; then libscript.sh install_service $pkg $ver; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh install_service $pkg $ver; fi\","
+        printf '%s\n' "  post-install: \"if command -v libscript.sh >/dev/null; then libscript.sh install-service $pkg $ver; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh install-service $pkg $ver; fi\","
         printf '%s\n' "  pre-deinstall: \"if command -v libscript.sh >/dev/null; then libscript.sh uninstall $pkg --purge-data; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh uninstall $pkg --purge-data; fi\""
         printf '%s\n' "}"
         printf '%s\n' "EOF"

@@ -1,10 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Generic setup module for Gitea.
-#
-# ## Usage
-# Installs Gitea either via system package manager or by downloading the binary directly.
-
+# Generic setup module for gitea.
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -31,45 +27,204 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR="${SCRIPT_DIR}"
 
-for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+fi
+
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
-  # shellcheck disable=SC1090
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
-GITEA_INSTALL_METHOD="${GITEA_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
-GITEA_VERSION="${GITEA_VERSION:-latest}"
+GITEA_INSTALL_METHOD="$(libscript_resolve_install_method "GITEA")"
+ACTION="${ACTION:-install}"
+VERSION="${GITEA_VERSION:-latest}"
 
-if [ "${GITEA_INSTALL_METHOD}" = 'system' ]; then
-  libscript_depends 'gitea'
-else
-  # "source" install (direct download of binary)
-  TARGET_OS="${TARGET_OS:-linux}"
-  TARGET_ARCH="${TARGET_ARCH:-amd64}"
-
-  if [ "${TARGET_ARCH}" = "x86_64" ]; then TARGET_ARCH="amd64"; fi
-  if [ "${TARGET_ARCH}" = "aarch64" ]; then TARGET_ARCH="arm64"; fi
-  if [ "${TARGET_ARCH}" = "armv7l" ]; then TARGET_ARCH="arm-6"; fi
-
-  case "${TARGET_OS}" in
-    macos*|darwin*) os_name="darwin" ;;
-    linux*) os_name="linux" ;;
-    *) printf '%s\n' "[ERROR] Unsupported OS for direct download: ${TARGET_OS}"; exit 1 ;;
-  esac
-
-  if [ "${GITEA_VERSION}" = "latest" ]; then
-    GITEA_VERSION="1.22.3"
+resolve_exact_version() {
+  if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
+    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote gitea 2>/dev/null | tail -n 1)
+    if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
+      EXACT_VERSION="$_latest"
+    else
+      EXACT_VERSION="${VERSION:-latest}"
+    fi
+  else
+    EXACT_VERSION="${VERSION:-latest}"
   fi
-  dl_url="https://dl.gitea.com/gitea/${GITEA_VERSION}/gitea-${GITEA_VERSION}-${os_name}-${TARGET_ARCH}"
+}
 
-  PREFIX="${PREFIX:-${LIBSCRIPT_ROOT_DIR}/installed/gitea}"
-  bin_dir="${PREFIX}/bin"
-  mkdir -p "${bin_dir}"
+case "$ACTION" in
+  ls)
+    if [ "$GITEA_INSTALL_METHOD" = "mise" ]; then
+      mise ls gitea || true
+    elif [ "$GITEA_INSTALL_METHOD" = "asdf" ]; then
+      asdf list gitea || true
+    elif [ "$GITEA_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$GITEA_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls gitea || true
+    elif [ "$GITEA_INSTALL_METHOD" = "system" ]; then
+      echo "System packages do not support ls here."
+    else
+      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/gitea/" 2>/dev/null || true
+    fi
+    exit 0
+    ;;
+  ls-remote)
+    if [ "$GITEA_INSTALL_METHOD" = "mise" ]; then
+      mise ls-remote gitea || true
+    elif [ "$GITEA_INSTALL_METHOD" = "asdf" ]; then
+      asdf list all gitea || true
+    elif [ "$GITEA_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$GITEA_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls all gitea || true
+    else
+      if [ -n "${GITEA_RELEASES_URL:-}" ]; then
+        curl -sSL "${GITEA_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+      else
+      git ls-remote --tags "https://github.com/libscript/gitea" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+    fi
+    fi
+    exit 0
+    ;;
+  use)
+    if [ "$GITEA_INSTALL_METHOD" = "mise" ]; then
+      mise use "gitea@${VERSION}"
+    elif [ "$GITEA_INSTALL_METHOD" = "asdf" ]; then
+      asdf global gitea "${VERSION}"
+    elif [ "$GITEA_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not use explicit versions this way"
+    elif [ "$GITEA_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "gitea@${VERSION}"
+    elif [ "$GITEA_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "gitea@${VERSION}"
+    elif [ "$GITEA_INSTALL_METHOD" = "system" ]; then
+      echo "System packages do not support use here."
+    else
+      resolve_exact_version
+      libscript_symlink_alias "gitea" "$VERSION" "${EXACT_VERSION}"
+    fi
+    exit 0
+    ;;
+  download)
+    if [ "$GITEA_INSTALL_METHOD" = "libscript_native" ]; then
+      log_info "Downloading gitea ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gitea..."
+      mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gitea"
+      if [ -n "${GITEA_DOWNLOAD_URL:-}" ]; then
+        libscript_download "${GITEA_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gitea/gitea-${VERSION}.tar.gz"
+      else
+        log_warn "GITEA_DOWNLOAD_URL is not defined for gitea ${VERSION}."
+      fi
+    fi
+    exit 0
+    ;;
+  install|*)
+    if [ "$GITEA_INSTALL_METHOD" = "system" ]; then
+      libscript_depends "gitea"
+    elif [ "$GITEA_INSTALL_METHOD" = "mise" ]; then
+      mise install "gitea@${VERSION}"
+    elif [ "$GITEA_INSTALL_METHOD" = "asdf" ]; then
+      asdf install gitea "${VERSION}"
+    elif [ "$GITEA_INSTALL_METHOD" = "pkgx" ]; then
+      pkgx install "gitea@${VERSION}"
+    elif [ "$GITEA_INSTALL_METHOD" = "vfox" ]; then
+      vfox add gitea || true
+      vfox install "gitea@${VERSION}"
+    else
+      # libscript_native implementation
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/gitea/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing gitea ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gitea/"*"${VERSION}"* >/dev/null 2>&1; then
+          log_info "Extracting from cache..."
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gitea/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+            else
+              cp "$cache_file" "${TARGET_DIR}/bin/gitea" || true
+              chmod +x "${TARGET_DIR}/bin/gitea" || true
+            fi
+          fi
+        else
+          if [ -n "${GITEA_DOWNLOAD_URL:-}" ]; then
+            TEMP_FILE=$(mktemp)
+            libscript_download "${GITEA_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+            if case "${GITEA_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "${GITEA_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+            else
+              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/gitea" || true
+              chmod +x "${TARGET_DIR}/bin/gitea" || true
+            fi
+            rm -f "${TEMP_FILE}"
+          else
+            log_warn "No download URL provided for gitea ${VERSION}."
+          fi
+        fi
+      else
+        log_info "gitea ${VERSION} is already installed."
+      fi
+      libscript_symlink_alias "gitea" "$VERSION" "${EXACT_VERSION}"
+    fi
+    ;;
+  start|stop|restart|status|health|logs|up|down)
+    if [ "$GITEA_INSTALL_METHOD" = "libscript_native" ] || [ "$GITEA_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-gitea}}"
+      libscript_service "$ACTION" "$service_name" "$@"
+    else
+      log_info "$ACTION not natively implemented for $GITEA_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  install-service)
+    if [ "$GITEA_INSTALL_METHOD" = "libscript_native" ] || [ "$GITEA_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-gitea}}"
+      libscript_install_service "$service_name" "$@"
+    else
+      log_info "install-service not implemented for $GITEA_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall-service)
+    if [ "$GITEA_INSTALL_METHOD" = "libscript_native" ] || [ "$GITEA_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-gitea}}"
+      libscript_uninstall_service "$service_name" "$@"
+    else
+      log_info "uninstall-service not implemented for $GITEA_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall)
+    if [ "$GITEA_INSTALL_METHOD" = "libscript_native" ]; then
+      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
+      log_info "Uninstalling gitea $VERSION..."
+      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/gitea/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/gitea/$VERSION"
+    else
+      log_info "Uninstall not implemented or supported for $GITEA_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
 
-  log_info "Downloading Gitea from ${dl_url}..."
-  libscript_download "${dl_url}" "${bin_dir}/gitea"
-
-  chmod +x "${bin_dir}/gitea"
-  log_info "Gitea installed to ${bin_dir}/gitea"
-fi
+esac

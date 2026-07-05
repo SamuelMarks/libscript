@@ -1,12 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment variable initialization script for the cabal component on Windows.
-:: It sets up necessary paths and environment variables required for the component
-:: to function correctly within the libscript context.
-::
-:: ## Usage
-:: Call this script to load the environment variables. Do not execute it directly without context.
+:: Windows env stub for cabal
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%CABAL_VERSION%"=="" (
+    set "CABAL_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\cabal\%CABAL_VERSION%\bin;%PATH%"

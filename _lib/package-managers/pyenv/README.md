@@ -5,7 +5,7 @@ Bootstrap module for `pyenv` (Python Version Manager).
 ## Usage
 
 Ensures the `pyenv` executable/shell function is available. It installs `pyenv` on UNIX-like
-systems, and `pyenv-win` on Windows.
+libscript_natives, and `pyenv-win` on Windows.
 
 ## Platform Support
 
@@ -14,3 +14,12 @@ systems, and `pyenv-win` on Windows.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+## Architecture
+
+`libscript` manages `pyenv` versions natively by default (`PYENV_INSTALL_METHOD=libscript_native`),
+ensuring isolated installations without polluting global system paths. You can override this to use
+`system`, `mise`, `asdf`, `pkgx`, or `vfox` if preferred.
+
+Libscript manages pyenv versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/pyenv/<version>`.

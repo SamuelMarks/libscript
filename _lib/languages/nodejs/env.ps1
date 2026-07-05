@@ -17,7 +17,7 @@ $LibscriptHome = $env:LIBSCRIPT_HOME
 if ([string]::IsNullOrEmpty($LibscriptHome)) {
     $LibscriptHome = Join-Path $HOME ".libscript"
 }
-$NodePath = Join-Path $LibscriptHome "nodejs\$NodeVersion"
+$NodePath = Join-Path $LibscriptHome "nodejs\$NodeVersion\bin"
 if (-not ($env:PATH -split ';' -contains $NodePath)) {
     $env:PATH = "$NodePath;" + $env:PATH
 }

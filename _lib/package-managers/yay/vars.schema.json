@@ -5,6 +5,11 @@
   "description": "Configuration variables for yay",
   "type": "object",
   "properties": {
+    "YAY_INSTALL_METHOD": {
+      "description": "How to install YAY. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "YAY_VERSION": {
       "description": "Specific version of yay to install.",
       "type": "string",

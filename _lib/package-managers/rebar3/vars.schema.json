@@ -5,6 +5,11 @@
   "description": "Configuration variables for rebar3",
   "type": "object",
   "properties": {
+    "REBAR3_INSTALL_METHOD": {
+      "description": "How to install REBAR3. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "REBAR3_VERSION": {
       "description": "Specific version of rebar3 to install.",
       "type": "string",

@@ -5,16 +5,21 @@
   "description": "Configuration variables for Gradle",
   "type": "object",
   "properties": {
+    "GRADLE_INSTALL_METHOD": {
+      "description": "Installation method for gradle (libscript_native, system, mise, asdf, pkgx, vfox).",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "GRADLE_VERSION": {
       "description": "Specific version of gradle to install. Can be a numeric version or an alias.",
       "type": "string",
       "default": "latest"
     },
     "GRADLE_INSTALL_METHOD": {
-      "description": "How to install GRADLE. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools.",
+      "description": "How to install GRADLE. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "enum": ["libscript-native", "system", "mise", "asdf"],
-      "default": "libscript-native"
+      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "default": "libscript_native"
     }
   }
 }

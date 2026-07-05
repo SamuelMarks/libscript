@@ -1,10 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment initialization for systemd on Windows.
-::
-:: ## Usage
-:: Normally sets up defaults. Currently a no-op placeholder.
+:: Windows env stub for systemd
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%SYSTEMD_VERSION%"=="" (
+    set "SYSTEMD_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\systemd\%SYSTEMD_VERSION%\bin;%PATH%"

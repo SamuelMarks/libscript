@@ -1,10 +1,14 @@
-<#
-.SYNOPSIS
-Defines environment variables and configurations for the environment variables stack.
+# Windows PowerShell env stub for cpanm
 
-.DESCRIPTION
-Source or call this script to configure the environment for cpanm.
-#>
+$LibscriptHome = $env:LIBSCRIPT_HOME
+if ([string]::IsNullOrEmpty($LibscriptHome)) {
+    $LibscriptHome = Join-Path $env:USERPROFILE ".libscript"
+}
 
-$ErrorActionPreference = "Stop"
-# Environment variables for PowerShell
+$CompVersion = $env:CPANM_VERSION
+if ([string]::IsNullOrEmpty($CompVersion)) {
+    $CompVersion = "latest"
+}
+
+$TargetBin = Join-Path (Join-Path (Join-Path $LibscriptHome "cpanm") $CompVersion) "bin"
+$env:PATH = "$TargetBin;$env:PATH"

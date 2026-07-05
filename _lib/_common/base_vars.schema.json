@@ -6,10 +6,10 @@
   "type": "object",
   "properties": {
     "LIBSCRIPT_DEFAULT_INSTALL_METHOD": {
-      "description": "Global override for how software should be installed (system vs libscript-native).",
+      "description": "Global override for how software should be installed (system vs libscript_native).",
       "type": "string",
-      "enum": ["libscript-native", "system", "mise", "asdf"],
-      "default": "libscript-native"
+      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "default": "libscript_native"
     },
     "LIBSCRIPT_WINDOWS_PKG_MGR": {
       "description": "Global package manager override for Windows (winget, choco).",

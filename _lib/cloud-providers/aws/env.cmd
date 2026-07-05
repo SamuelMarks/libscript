@@ -1,11 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Defines environment variables for the AWS Cloud Provider component on Windows.
-:: It acts as a structural placeholder, currently setting no specific variables.
-:: 
-:: ## Usage
-:: Call this script to apply the AWS environment variables into the current session.
+:: Windows env stub for aws
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%AWS_VERSION%"=="" (
+    set "AWS_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\aws\%AWS_VERSION%\bin;%PATH%"

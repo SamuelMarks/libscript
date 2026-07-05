@@ -1,12 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Provides the generic installation logic for Redis on Unix systems.
-# It resolves the installation method (system package manager or building from source)
-# and installs Redis accordingly. It also provisions default configuration files.
-# 
-# ## Usage
-# Called internally by `setup.sh` when a platform-specific setup script is missing.
-
+# Generic setup module for redis.
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -33,52 +27,204 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR="${SCRIPT_DIR}"
 
-for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+fi
+
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
-  # shellcheck disable=SC1090
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
-REDIS_INSTALL_METHOD="${REDIS_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
-REDIS_VERSION="${REDIS_VERSION:-latest}"
+REDIS_INSTALL_METHOD="$(libscript_resolve_install_method "REDIS")"
+ACTION="${ACTION:-install}"
+VERSION="${REDIS_VERSION:-latest}"
 
-if [ "${REDIS_INSTALL_METHOD}" = 'system' ]; then
-  libscript_depends 'redis'
-else
-  # "source" install
-  if [ "${REDIS_VERSION}" = "latest" ]; then
-    REDIS_VERSION="7.4.1"
+resolve_exact_version() {
+  if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
+    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote redis 2>/dev/null | tail -n 1)
+    if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
+      EXACT_VERSION="$_latest"
+    else
+      EXACT_VERSION="${VERSION:-latest}"
+    fi
+  else
+    EXACT_VERSION="${VERSION:-latest}"
   fi
-  dl_url="https://download.redis.io/releases/redis-${REDIS_VERSION}.tar.gz"
+}
 
-  PREFIX="${PREFIX:-${LIBSCRIPT_ROOT_DIR}/installed/redis}"
-  bin_dir="${PREFIX}/bin"
-  mkdir -p "${bin_dir}"
+case "$ACTION" in
+  ls)
+    if [ "$REDIS_INSTALL_METHOD" = "mise" ]; then
+      mise ls redis || true
+    elif [ "$REDIS_INSTALL_METHOD" = "asdf" ]; then
+      asdf list redis || true
+    elif [ "$REDIS_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$REDIS_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls redis || true
+    elif [ "$REDIS_INSTALL_METHOD" = "system" ]; then
+      echo "System packages do not support ls here."
+    else
+      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/redis/" 2>/dev/null || true
+    fi
+    exit 0
+    ;;
+  ls-remote)
+    if [ "$REDIS_INSTALL_METHOD" = "mise" ]; then
+      mise ls-remote redis || true
+    elif [ "$REDIS_INSTALL_METHOD" = "asdf" ]; then
+      asdf list all redis || true
+    elif [ "$REDIS_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$REDIS_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls all redis || true
+    else
+      if [ -n "${REDIS_RELEASES_URL:-}" ]; then
+        curl -sSL "${REDIS_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+      else
+      git ls-remote --tags "https://github.com/redis/redis" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+    fi
+    fi
+    exit 0
+    ;;
+  use)
+    if [ "$REDIS_INSTALL_METHOD" = "mise" ]; then
+      mise use "redis@${VERSION}"
+    elif [ "$REDIS_INSTALL_METHOD" = "asdf" ]; then
+      asdf global redis "${VERSION}"
+    elif [ "$REDIS_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not use explicit versions this way"
+    elif [ "$REDIS_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "redis@${VERSION}"
+    elif [ "$REDIS_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "redis@${VERSION}"
+    elif [ "$REDIS_INSTALL_METHOD" = "system" ]; then
+      echo "System packages do not support use here."
+    else
+      resolve_exact_version
+      libscript_symlink_alias "redis" "$VERSION" "${EXACT_VERSION}"
+    fi
+    exit 0
+    ;;
+  download)
+    if [ "$REDIS_INSTALL_METHOD" = "libscript_native" ]; then
+      log_info "Downloading redis ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/redis..."
+      mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/redis"
+      if [ -n "${REDIS_DOWNLOAD_URL:-}" ]; then
+        libscript_download "${REDIS_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/redis/redis-${VERSION}.tar.gz"
+      else
+        log_warn "REDIS_DOWNLOAD_URL is not defined for redis ${VERSION}."
+      fi
+    fi
+    exit 0
+    ;;
+  install|*)
+    if [ "$REDIS_INSTALL_METHOD" = "system" ]; then
+      libscript_depends "redis"
+    elif [ "$REDIS_INSTALL_METHOD" = "mise" ]; then
+      mise install "redis@${VERSION}"
+    elif [ "$REDIS_INSTALL_METHOD" = "asdf" ]; then
+      asdf install redis "${VERSION}"
+    elif [ "$REDIS_INSTALL_METHOD" = "pkgx" ]; then
+      pkgx install "redis@${VERSION}"
+    elif [ "$REDIS_INSTALL_METHOD" = "vfox" ]; then
+      vfox add redis || true
+      vfox install "redis@${VERSION}"
+    else
+      # libscript_native implementation
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/redis/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing redis ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/redis/"*"${VERSION}"* >/dev/null 2>&1; then
+          log_info "Extracting from cache..."
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/redis/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+            else
+              cp "$cache_file" "${TARGET_DIR}/bin/redis" || true
+              chmod +x "${TARGET_DIR}/bin/redis" || true
+            fi
+          fi
+        else
+          if [ -n "${REDIS_DOWNLOAD_URL:-}" ]; then
+            TEMP_FILE=$(mktemp)
+            libscript_download "${REDIS_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+            if case "${REDIS_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "${REDIS_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+            else
+              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/redis" || true
+              chmod +x "${TARGET_DIR}/bin/redis" || true
+            fi
+            rm -f "${TEMP_FILE}"
+          else
+            log_warn "No download URL provided for redis ${VERSION}."
+          fi
+        fi
+      else
+        log_info "redis ${VERSION} is already installed."
+      fi
+      libscript_symlink_alias "redis" "$VERSION" "${EXACT_VERSION}"
+    fi
+    ;;
+  start|stop|restart|status|health|logs|up|down)
+    if [ "$REDIS_INSTALL_METHOD" = "libscript_native" ] || [ "$REDIS_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-redis}}"
+      libscript_service "$ACTION" "$service_name" "$@"
+    else
+      log_info "$ACTION not natively implemented for $REDIS_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  install-service)
+    if [ "$REDIS_INSTALL_METHOD" = "libscript_native" ] || [ "$REDIS_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-redis}}"
+      libscript_install_service "$service_name" "$@"
+    else
+      log_info "install-service not implemented for $REDIS_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall-service)
+    if [ "$REDIS_INSTALL_METHOD" = "libscript_native" ] || [ "$REDIS_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-redis}}"
+      libscript_uninstall_service "$service_name" "$@"
+    else
+      log_info "uninstall-service not implemented for $REDIS_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall)
+    if [ "$REDIS_INSTALL_METHOD" = "libscript_native" ]; then
+      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
+      log_info "Uninstalling redis $VERSION..."
+      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/redis/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/redis/$VERSION"
+    else
+      log_info "Uninstall not implemented or supported for $REDIS_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
 
-  log_info "Downloading and compiling Redis from ${dl_url}..."
-  libscript_download "${dl_url}" "/tmp/redis.tar.gz"
-
-  if ! command -v make >/dev/null 2>&1 || ! command -v cc >/dev/null 2>&1; then
-    log_error "'make' and a C compiler ('cc'/'gcc'/'clang') are required for source installation."
-    exit 1
-  fi
-
-  tar -xzf "/tmp/redis.tar.gz" -C "/tmp"
-  cd "/tmp/redis-${REDIS_VERSION}"
-  make
-  make PREFIX="${PREFIX}" install
-  cd -
-  rm -rf "/tmp/redis.tar.gz" "/tmp/redis-${REDIS_VERSION}"
-
-  log_success "Redis installed to ${bin_dir}/redis-server"
-fi
-
-CONF_DIR="${LIBSCRIPT_DATA_DIR}/redis"
-mkdir -p "${CONF_DIR}"
-if [ ! -f "${CONF_DIR}/redis.conf" ]; then
-  printf '%s\n' "port ${REDIS_LISTEN_PORT:-6379}" > "${CONF_DIR}/redis.conf"
-  printf '%s\n' "bind ${REDIS_LISTEN_ADDRESS:-127.0.0.1}" >> "${CONF_DIR}/redis.conf"
-  printf '%s\n' "dir ${CONF_DIR}" >> "${CONF_DIR}/redis.conf"
-  printf '%s\n' "appendonly yes" >> "${CONF_DIR}/redis.conf"
-fi
+esac

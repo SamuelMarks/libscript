@@ -1,10 +1,14 @@
-<#
-.SYNOPSIS
-Defines environment variables and configurations for the cloud infrastructure command 'core' stack.
+# Windows PowerShell env stub for core
 
-.DESCRIPTION
-Source or call this script to configure the environment for core.
-#>
+$LibscriptHome = $env:LIBSCRIPT_HOME
+if ([string]::IsNullOrEmpty($LibscriptHome)) {
+    $LibscriptHome = Join-Path $env:USERPROFILE ".libscript"
+}
 
-$ErrorActionPreference = "Stop"
-# Environment variables for PowerShell
+$CompVersion = $env:CORE_VERSION
+if ([string]::IsNullOrEmpty($CompVersion)) {
+    $CompVersion = "latest"
+}
+
+$TargetBin = Join-Path (Join-Path (Join-Path $LibscriptHome "core") $CompVersion) "bin"
+$env:PATH = "$TargetBin;$env:PATH"

@@ -1,10 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment initialization for the GCP cloud provider on Windows.
-::
-:: ## Usage
-:: Automatically called during setup or by environment printers to establish GCP context.
+:: Windows env stub for gcp
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%GCP_VERSION%"=="" (
+    set "GCP_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\gcp\%GCP_VERSION%\bin;%PATH%"

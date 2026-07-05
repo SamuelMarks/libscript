@@ -87,14 +87,11 @@ show_help() {
   log_info ""
   log_info "Commands:"
   log_info "  install <package_name> <version>"
+  log_info "  use <package_name> <version>"
   log_info "  remove <package_name> [version]"
   log_info "  uninstall <package_name> [version]"
-  log_info "  install_daemon <package_name> <version>"
-  log_info "  install_service <package_name> <version>"
-  log_info "  uninstall_daemon <package_name> <version>"
-  log_info "  uninstall_service <package_name> <version>"
-  log_info "  remove_daemon <package_name> <version>"
-  log_info "  remove_service <package_name> <version>"
+  log_info "  install-service <package_name> <version>"
+  log_info "  uninstall-service <package_name> <version>"
   log_info "  status <package_name> [version]"
   log_info "  health <package_name> [version]"
   log_info "  start <package_name> [version]"
@@ -163,7 +160,7 @@ case "${1:-}" in
     log_info "${LIBSCRIPT_VERSION:-dev}"
     exit 0
     ;;
-  install|install_daemon|install_service|uninstall_daemon|uninstall_service|remove_daemon|remove_service|run|which|exec|env|serve|route)
+  install|use|install-service|uninstall-service|run|which|exec|env|serve|route)
     ACTION="${1:-}"
     if [ -n "${3:-}" ]; then
       PACKAGE_NAME="${2:-}"
@@ -244,7 +241,7 @@ fi
 # Argument parsing loop
 while [ $# -gt 0 ]; do
   # These actions stop parsing and pass remaining args to sub-scripts
-  if [ "$ACTION" = "start" ] || [ "$ACTION" = "stop" ] || [ "$ACTION" = "restart" ] || [ "$ACTION" = "status" ] || [ "$ACTION" = "health" ] || [ "$ACTION" = "logs" ] || [ "$ACTION" = "up" ] || [ "$ACTION" = "down" ] || [ "$ACTION" = "run" ] || [ "$ACTION" = "exec" ] || [ "$ACTION" = "network" ] || [ "$ACTION" = "firewall" ] || [ "$ACTION" = "node" ] || [ "$ACTION" = "dns" ] || [ "$ACTION" = "ssh" ] || [ "$ACTION" = "cleanup" ] || [ "$ACTION" = "backup" ] || [ "$ACTION" = "restore" ] || [ "$ACTION" = "diff" ] || [ "$ACTION" = "storage" ] || [ "$ACTION" = "aws" ] || [ "$ACTION" = "azure" ] || [ "$ACTION" = "gcp" ]; then
+  if [ "$ACTION" = "start" ] || [ "$ACTION" = "stop" ] || [ "$ACTION" = "restart" ] || [ "$ACTION" = "status" ] || [ "$ACTION" = "health" ] || [ "$ACTION" = "logs" ] || [ "$ACTION" = "up" ] || [ "$ACTION" = "down" ] || [ "$ACTION" = "install-service" ] || [ "$ACTION" = "uninstall-service" ] || [ "$ACTION" = "run" ] || [ "$ACTION" = "exec" ] || [ "$ACTION" = "network" ] || [ "$ACTION" = "firewall" ] || [ "$ACTION" = "node" ] || [ "$ACTION" = "dns" ] || [ "$ACTION" = "ssh" ] || [ "$ACTION" = "cleanup" ] || [ "$ACTION" = "backup" ] || [ "$ACTION" = "restore" ] || [ "$ACTION" = "diff" ] || [ "$ACTION" = "storage" ] || [ "$ACTION" = "aws" ] || [ "$ACTION" = "azure" ] || [ "$ACTION" = "gcp" ]; then
     break
   fi
   case "$1" in
@@ -382,16 +379,12 @@ elif [ "$ACTION" = "uninstall" ] || [ "$ACTION" = "remove" ]; then
     log_info "Error: uninstall.sh not found in $SCRIPT_DIR"
     exit 1
   fi
-elif [ "$ACTION" = "start" ] || [ "$ACTION" = "stop" ] || [ "$ACTION" = "restart" ] || [ "$ACTION" = "status" ] || [ "$ACTION" = "health" ] || [ "$ACTION" = "logs" ] || [ "$ACTION" = "up" ] || [ "$ACTION" = "down" ]; then
-  service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME}}"
-  libscript_service "$ACTION" "$service_name" "$@"
-  exit 0
 elif [ "$ACTION" = "env" ]; then
-  INSTALLED_DIR="${PREFIX:-$LIBSCRIPT_ROOT_DIR/installed/$PACKAGE_NAME}"
+  INSTALLED_DIR="${PREFIX:-${LIBSCRIPT_HOME:-$HOME/.libscript}/$PACKAGE_NAME/$VERSION}"
   libscript_print_env "${FORMAT:-${format:-sh}}" "$INSTALLED_DIR"
   exit 0
 elif [ "$ACTION" = "run" ]; then
-  INSTALLED_DIR="${PREFIX:-$LIBSCRIPT_ROOT_DIR/installed/$PACKAGE_NAME}"
+  INSTALLED_DIR="${PREFIX:-${LIBSCRIPT_HOME:-$HOME/.libscript}/$PACKAGE_NAME/$VERSION}"
   BIN_PATH="$INSTALLED_DIR/bin/$PACKAGE_NAME"
   if [ ! -x "$BIN_PATH" ]; then
     log_error "$PACKAGE_NAME version $VERSION not installed at $BIN_PATH"
@@ -399,7 +392,7 @@ elif [ "$ACTION" = "run" ]; then
   fi
   exec "$BIN_PATH" "$@"
 elif [ "$ACTION" = "which" ]; then
-  INSTALLED_DIR="${PREFIX:-$LIBSCRIPT_ROOT_DIR/installed/$PACKAGE_NAME}"
+  INSTALLED_DIR="${PREFIX:-${LIBSCRIPT_HOME:-$HOME/.libscript}/$PACKAGE_NAME/$VERSION}"
   BIN_PATH="$INSTALLED_DIR/bin/$PACKAGE_NAME"
   if [ -x "$BIN_PATH" ]; then
     log_info "$BIN_PATH"
@@ -408,7 +401,7 @@ elif [ "$ACTION" = "which" ]; then
     exit 1
   fi
 elif [ "$ACTION" = "exec" ]; then
-  INSTALLED_DIR="${PREFIX:-$LIBSCRIPT_ROOT_DIR/installed/$PACKAGE_NAME}"
+  INSTALLED_DIR="${PREFIX:-${LIBSCRIPT_HOME:-$HOME/.libscript}/$PACKAGE_NAME/$VERSION}"
   if [ ! -d "$INSTALLED_DIR/bin" ]; then
     log_error "$PACKAGE_NAME version $VERSION bin directory not found at $INSTALLED_DIR/bin"
     exit 1

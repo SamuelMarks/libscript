@@ -1,10 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Generic setup module for Elixir.
-#
-# ## Usage
-# Installs Elixir via from-source compilation or delegates to asdf/mise/system.
-
+# Generic setup module for elixir.
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -38,33 +34,42 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/versioning.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
-ELIXIR_INSTALL_METHOD="${ELIXIR_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
-ELIXIR_VERSION="${ELIXIR_VERSION:-1.16.2}"
+ELIXIR_INSTALL_METHOD="$(libscript_resolve_install_method "ELIXIR")"
 ACTION="${ACTION:-install}"
+VERSION="${ELIXIR_VERSION:-latest}"
 
 resolve_exact_version() {
-  if [ "${ELIXIR_VERSION}" = "latest" ]; then
-    EXACT_VERSION="1.16.2"
+  if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
+    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote elixir 2>/dev/null | tail -n 1)
+    if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
+      EXACT_VERSION="$_latest"
+    else
+      EXACT_VERSION="${VERSION:-latest}"
+    fi
   else
-    EXACT_VERSION="${ELIXIR_VERSION}"
+    EXACT_VERSION="${VERSION:-latest}"
   fi
 }
 
 case "$ACTION" in
   ls)
     if [ "$ELIXIR_INSTALL_METHOD" = "mise" ]; then
-      mise ls elixir
+      mise ls elixir || true
     elif [ "$ELIXIR_INSTALL_METHOD" = "asdf" ]; then
-      asdf list elixir
+      asdf list elixir || true
+    elif [ "$ELIXIR_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$ELIXIR_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls elixir || true
     elif [ "$ELIXIR_INSTALL_METHOD" = "system" ]; then
-      elixir -v || true
+      echo "System packages do not support ls here."
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/elixir/" 2>/dev/null || true
     fi
@@ -72,63 +77,154 @@ case "$ACTION" in
     ;;
   ls-remote)
     if [ "$ELIXIR_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote elixir
+      mise ls-remote elixir || true
     elif [ "$ELIXIR_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all elixir
-    elif [ "$ELIXIR_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System package manager does not support ls-remote directly here."
+      asdf list all elixir || true
+    elif [ "$ELIXIR_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$ELIXIR_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls all elixir || true
     else
-      curl -sL "https://api.github.com/repos/elixir-lang/elixir/releases" | grep -o '"tag_name": "v[^"]*"' | sed 's/"tag_name": "v//' | sed 's/"//' | head -n 100
+      if [ -n "${ELIXIR_RELEASES_URL:-}" ]; then
+        curl -sSL "${ELIXIR_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+      else
+      git ls-remote --tags "https://github.com/libscript/elixir" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+    fi
     fi
     exit 0
     ;;
   use)
     if [ "$ELIXIR_INSTALL_METHOD" = "mise" ]; then
-      mise use "elixir@${ELIXIR_VERSION}"
+      mise use "elixir@${VERSION}"
     elif [ "$ELIXIR_INSTALL_METHOD" = "asdf" ]; then
-      asdf global elixir "${ELIXIR_VERSION}"
+      asdf global elixir "${VERSION}"
+    elif [ "$ELIXIR_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not use explicit versions this way"
+    elif [ "$ELIXIR_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "elixir@${VERSION}"
+    elif [ "$ELIXIR_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "elixir@${VERSION}"
     elif [ "$ELIXIR_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "Cannot 'use' specific version with system package manager."
+      echo "System packages do not support use here."
     else
       resolve_exact_version
-      libscript_symlink_alias "elixir" "${ELIXIR_VERSION}" "${EXACT_VERSION}"
+      libscript_symlink_alias "elixir" "$VERSION" "${EXACT_VERSION}"
     fi
     exit 0
     ;;
-  download|install|*)
-    if [ "$ELIXIR_INSTALL_METHOD" = "system" ]; then
-      libscript_depends 'elixir'
-    elif [ "$ELIXIR_INSTALL_METHOD" = "mise" ]; then
-      mise install "elixir@${ELIXIR_VERSION}"
-    elif [ "$ELIXIR_INSTALL_METHOD" = "asdf" ]; then
-      asdf install elixir "${ELIXIR_VERSION}"
-    else
-      libscript_depends 'curl' 'tar' 'make' 'erlang'
-      resolve_exact_version
-      
-      ELIXIR_DIR=$(libscript_get_version_dir "elixir" "${EXACT_VERSION}")
-      
-      if [ -x "${ELIXIR_DIR}/bin/elixir" ]; then
-        libscript_symlink_alias "elixir" "${ELIXIR_VERSION}" "${EXACT_VERSION}"
-        exit 0
+  download)
+    if [ "$ELIXIR_INSTALL_METHOD" = "libscript_native" ]; then
+      log_info "Downloading elixir ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/elixir..."
+      mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/elixir"
+      if [ -n "${ELIXIR_DOWNLOAD_URL:-}" ]; then
+        libscript_download "${ELIXIR_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/elixir/elixir-${VERSION}.tar.gz"
+      else
+        log_warn "ELIXIR_DOWNLOAD_URL is not defined for elixir ${VERSION}."
       fi
-
-      ELIXIR_URL="https://github.com/elixir-lang/elixir/archive/refs/tags/v${EXACT_VERSION}.tar.gz"
-      ELIXIR_TARBALL=$(mktemp)
-      libscript_download "${ELIXIR_URL}" "${ELIXIR_TARBALL}"
-      
-      TMP_DIR=$(mktemp -d)
-      tar -C "${TMP_DIR}" -xzf "${ELIXIR_TARBALL}"
-      rm -f "${ELIXIR_TARBALL}"
-      
-      (
-        cd "${TMP_DIR}/elixir-${EXACT_VERSION}"
-        make install PREFIX="${ELIXIR_DIR}"
-      )
-      
-      rm -rf "${TMP_DIR}"
-      
-      libscript_symlink_alias "elixir" "${ELIXIR_VERSION}" "${EXACT_VERSION}"
+    fi
+    exit 0
+    ;;
+  install|*)
+    if [ "$ELIXIR_INSTALL_METHOD" = "system" ]; then
+      libscript_depends "elixir"
+    elif [ "$ELIXIR_INSTALL_METHOD" = "mise" ]; then
+      mise install "elixir@${VERSION}"
+    elif [ "$ELIXIR_INSTALL_METHOD" = "asdf" ]; then
+      asdf install elixir "${VERSION}"
+    elif [ "$ELIXIR_INSTALL_METHOD" = "pkgx" ]; then
+      pkgx install "elixir@${VERSION}"
+    elif [ "$ELIXIR_INSTALL_METHOD" = "vfox" ]; then
+      vfox add elixir || true
+      vfox install "elixir@${VERSION}"
+    else
+      # libscript_native implementation
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/elixir/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing elixir ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/elixir/"*"${VERSION}"* >/dev/null 2>&1; then
+          log_info "Extracting from cache..."
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/elixir/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+            else
+              cp "$cache_file" "${TARGET_DIR}/bin/elixir" || true
+              chmod +x "${TARGET_DIR}/bin/elixir" || true
+            fi
+          fi
+        else
+          if [ -n "${ELIXIR_DOWNLOAD_URL:-}" ]; then
+            TEMP_FILE=$(mktemp)
+            libscript_download "${ELIXIR_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+            if case "${ELIXIR_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "${ELIXIR_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+            else
+              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/elixir" || true
+              chmod +x "${TARGET_DIR}/bin/elixir" || true
+            fi
+            rm -f "${TEMP_FILE}"
+          else
+            log_warn "No download URL provided for elixir ${VERSION}."
+          fi
+        fi
+      else
+        log_info "elixir ${VERSION} is already installed."
+      fi
+      libscript_symlink_alias "elixir" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
+  start|stop|restart|status|health|logs|up|down)
+    if [ "$ELIXIR_INSTALL_METHOD" = "libscript_native" ] || [ "$ELIXIR_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-elixir}}"
+      libscript_service "$ACTION" "$service_name" "$@"
+    else
+      log_info "$ACTION not natively implemented for $ELIXIR_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  install-service)
+    if [ "$ELIXIR_INSTALL_METHOD" = "libscript_native" ] || [ "$ELIXIR_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-elixir}}"
+      libscript_install_service "$service_name" "$@"
+    else
+      log_info "install-service not implemented for $ELIXIR_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall-service)
+    if [ "$ELIXIR_INSTALL_METHOD" = "libscript_native" ] || [ "$ELIXIR_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-elixir}}"
+      libscript_uninstall_service "$service_name" "$@"
+    else
+      log_info "uninstall-service not implemented for $ELIXIR_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall)
+    if [ "$ELIXIR_INSTALL_METHOD" = "libscript_native" ]; then
+      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
+      log_info "Uninstalling elixir $VERSION..."
+      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/elixir/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/elixir/$VERSION"
+    else
+      log_info "Uninstall not implemented or supported for $ELIXIR_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+
 esac

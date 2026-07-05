@@ -1,12 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Generic setup script for the pipx component.
-# It provides fallback installation logic and cross-platform installation steps
-# when a more specific OS/distribution setup script is not available.
-#
-# ## Usage
-# This script is typically called internally by the component lifecycle.
-
+# Generic setup module for pipx.
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -31,41 +25,206 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-..}"'/_lib/_common/pkg_mgr.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090,SC1091
-. "${SCRIPT_NAME}"
+DIR="${SCRIPT_DIR}"
 
-if ! command -v pipx >/dev/null 2>&1; then
-  if command -v brew >/dev/null 2>&1; then
-    brew install pipx
-    pipx ensurepath
-  elif command -v apt >/dev/null 2>&1; then
-    pkg_mgr update
-    pkg_mgr install pipx || pip3 install --user pipx
-    pipx ensurepath || python3 -m pipx ensurepath
-  elif command -v dnf >/dev/null 2>&1; then
-    pkg_mgr install pipx
-    pipx ensurepath
-  elif command -v pacman >/dev/null 2>&1; then
-    libscript_depends python-pipx
-    pipx ensurepath
-  else
-    if command -v python3 >/dev/null 2>&1; then
-      python3 -m pip install --user pipx
-      python3 -m pipx ensurepath
+if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+fi
+
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+done
+
+PIPX_INSTALL_METHOD="$(libscript_resolve_install_method "PIPX")"
+ACTION="${ACTION:-install}"
+VERSION="${PIPX_VERSION:-latest}"
+
+resolve_exact_version() {
+  if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
+    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote pipx 2>/dev/null | tail -n 1)
+    if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
+      EXACT_VERSION="$_latest"
     else
-      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/python/setup.sh" ]; then
-        "${LIBSCRIPT_ROOT_DIR}/_lib/languages/python/setup.sh"
-        python3 -m pip install --user pipx
-        python3 -m pipx ensurepath
+      EXACT_VERSION="${VERSION:-latest}"
+    fi
+  else
+    EXACT_VERSION="${VERSION:-latest}"
+  fi
+}
+
+case "$ACTION" in
+  ls)
+    if [ "$PIPX_INSTALL_METHOD" = "mise" ]; then
+      mise ls pipx || true
+    elif [ "$PIPX_INSTALL_METHOD" = "asdf" ]; then
+      asdf list pipx || true
+    elif [ "$PIPX_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$PIPX_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls pipx || true
+    elif [ "$PIPX_INSTALL_METHOD" = "system" ]; then
+      echo "System packages do not support ls here."
+    else
+      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/pipx/" 2>/dev/null || true
+    fi
+    exit 0
+    ;;
+  ls-remote)
+    if [ "$PIPX_INSTALL_METHOD" = "mise" ]; then
+      mise ls-remote pipx || true
+    elif [ "$PIPX_INSTALL_METHOD" = "asdf" ]; then
+      asdf list all pipx || true
+    elif [ "$PIPX_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$PIPX_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls all pipx || true
+    else
+      if [ -n "${PIPX_RELEASES_URL:-}" ]; then
+        curl -sSL "${PIPX_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
       else
-        if ! libscript_depends python3 ; then
-          true
-        fi
-        python3 -m pip install --user pipx
-        python3 -m pipx ensurepath
+      git ls-remote --tags "https://github.com/libscript/pipx" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+    fi
+    fi
+    exit 0
+    ;;
+  use)
+    if [ "$PIPX_INSTALL_METHOD" = "mise" ]; then
+      mise use "pipx@${VERSION}"
+    elif [ "$PIPX_INSTALL_METHOD" = "asdf" ]; then
+      asdf global pipx "${VERSION}"
+    elif [ "$PIPX_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not use explicit versions this way"
+    elif [ "$PIPX_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "pipx@${VERSION}"
+    elif [ "$PIPX_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "pipx@${VERSION}"
+    elif [ "$PIPX_INSTALL_METHOD" = "system" ]; then
+      echo "System packages do not support use here."
+    else
+      resolve_exact_version
+      libscript_symlink_alias "pipx" "$VERSION" "${EXACT_VERSION}"
+    fi
+    exit 0
+    ;;
+  download)
+    if [ "$PIPX_INSTALL_METHOD" = "libscript_native" ]; then
+      log_info "Downloading pipx ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/pipx..."
+      mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/pipx"
+      if [ -n "${PIPX_DOWNLOAD_URL:-}" ]; then
+        libscript_download "${PIPX_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/pipx/pipx-${VERSION}.tar.gz"
+      else
+        log_warn "PIPX_DOWNLOAD_URL is not defined for pipx ${VERSION}."
       fi
     fi
-  fi
-fi
+    exit 0
+    ;;
+  install|*)
+    if [ "$PIPX_INSTALL_METHOD" = "system" ]; then
+      libscript_depends "pipx"
+    elif [ "$PIPX_INSTALL_METHOD" = "mise" ]; then
+      mise install "pipx@${VERSION}"
+    elif [ "$PIPX_INSTALL_METHOD" = "asdf" ]; then
+      asdf install pipx "${VERSION}"
+    elif [ "$PIPX_INSTALL_METHOD" = "pkgx" ]; then
+      pkgx install "pipx@${VERSION}"
+    elif [ "$PIPX_INSTALL_METHOD" = "vfox" ]; then
+      vfox add pipx || true
+      vfox install "pipx@${VERSION}"
+    else
+      # libscript_native implementation
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/pipx/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing pipx ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/pipx/"*"${VERSION}"* >/dev/null 2>&1; then
+          log_info "Extracting from cache..."
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/pipx/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+            else
+              cp "$cache_file" "${TARGET_DIR}/bin/pipx" || true
+              chmod +x "${TARGET_DIR}/bin/pipx" || true
+            fi
+          fi
+        else
+          if [ -n "${PIPX_DOWNLOAD_URL:-}" ]; then
+            TEMP_FILE=$(mktemp)
+            libscript_download "${PIPX_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+            if case "${PIPX_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "${PIPX_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+            else
+              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/pipx" || true
+              chmod +x "${TARGET_DIR}/bin/pipx" || true
+            fi
+            rm -f "${TEMP_FILE}"
+          else
+            log_warn "No download URL provided for pipx ${VERSION}."
+          fi
+        fi
+      else
+        log_info "pipx ${VERSION} is already installed."
+      fi
+      libscript_symlink_alias "pipx" "$VERSION" "${EXACT_VERSION}"
+    fi
+    ;;
+  start|stop|restart|status|health|logs|up|down)
+    if [ "$PIPX_INSTALL_METHOD" = "libscript_native" ] || [ "$PIPX_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-pipx}}"
+      libscript_service "$ACTION" "$service_name" "$@"
+    else
+      log_info "$ACTION not natively implemented for $PIPX_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  install-service)
+    if [ "$PIPX_INSTALL_METHOD" = "libscript_native" ] || [ "$PIPX_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-pipx}}"
+      libscript_install_service "$service_name" "$@"
+    else
+      log_info "install-service not implemented for $PIPX_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall-service)
+    if [ "$PIPX_INSTALL_METHOD" = "libscript_native" ] || [ "$PIPX_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-pipx}}"
+      libscript_uninstall_service "$service_name" "$@"
+    else
+      log_info "uninstall-service not implemented for $PIPX_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall)
+    if [ "$PIPX_INSTALL_METHOD" = "libscript_native" ]; then
+      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
+      log_info "Uninstalling pipx $VERSION..."
+      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/pipx/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/pipx/$VERSION"
+    else
+      log_info "Uninstall not implemented or supported for $PIPX_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+
+esac

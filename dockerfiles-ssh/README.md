@@ -16,7 +16,7 @@ You can manage this component using the global `libscript` CLI or the local `cli
 - **Uninstall:** `libscript uninstall dockerfiles-ssh`
 - **Start:** `libscript start dockerfiles-ssh`
 - **Stop:** `libscript stop dockerfiles-ssh`
-- **Package:** `libscript package_as docker dockerfiles-ssh` (or `msi`, `docker_compose`, etc.)
+- **Package:** `libscript package-as docker dockerfiles-ssh` (or `msi`, `docker_compose`, etc.)
 
 ## Usage
 

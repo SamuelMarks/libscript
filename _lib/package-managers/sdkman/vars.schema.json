@@ -5,6 +5,11 @@
   "description": "Configuration variables for sdkman",
   "type": "object",
   "properties": {
+    "SDKMAN_INSTALL_METHOD": {
+      "description": "How to install SDKMAN. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "SDKMAN_DIR": {
       "type": "string",
       "description": "Installation directory for SDKMAN!. Defaults to ~/.sdkman."

@@ -1,10 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Generic setup module for Rust.
-#
-# ## Usage
-# Installs Rust by downloading official rust-lang.org releases or via rustup/asdf/mise.
-
+# Generic setup module for rust.
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -38,131 +34,197 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/versioning.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
-RUST_INSTALL_METHOD="${RUST_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
-RUST_VERSION="${RUST_VERSION:-latest}"
-if [ "${RUST_VERSION}" = "latest" ]; then
-  RUST_VERSION="stable"
-fi
+RUST_INSTALL_METHOD="$(libscript_resolve_install_method "RUST")"
 ACTION="${ACTION:-install}"
+VERSION="${RUST_VERSION:-latest}"
 
 resolve_exact_version() {
-  if [ "${RUST_VERSION}" = "stable" ]; then
-    EXACT_VERSION=$(curl -sL https://static.rust-lang.org/dist/channel-rust-stable.toml | grep -m 1 '^pkg_version' | cut -d '"' -f 2 | cut -d ' ' -f 1)
-    if [ -z "${EXACT_VERSION}" ]; then EXACT_VERSION="1.77.0"; fi
+  if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
+    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote rust 2>/dev/null | tail -n 1)
+    if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
+      EXACT_VERSION="$_latest"
+    else
+      EXACT_VERSION="${VERSION:-latest}"
+    fi
   else
-    EXACT_VERSION="${RUST_VERSION}"
+    EXACT_VERSION="${VERSION:-latest}"
   fi
 }
 
 case "$ACTION" in
   ls)
-    if [ "$RUST_INSTALL_METHOD" = "rustup" ]; then
-      rustup toolchain list
-    elif [ "$RUST_INSTALL_METHOD" = "mise" ]; then
-      mise ls rust
+    if [ "$RUST_INSTALL_METHOD" = "mise" ]; then
+      mise ls rust || true
     elif [ "$RUST_INSTALL_METHOD" = "asdf" ]; then
-      asdf list rust
+      asdf list rust || true
+    elif [ "$RUST_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$RUST_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls rust || true
     elif [ "$RUST_INSTALL_METHOD" = "system" ]; then
-      rustc --version
+      echo "System packages do not support ls here."
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/rust/" 2>/dev/null || true
     fi
     exit 0
     ;;
   ls-remote)
-    if [ "$RUST_INSTALL_METHOD" = "rustup" ]; then
-      printf '%s\n' "Use rustup to see channels"
-    elif [ "$RUST_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System package manager does not support ls-remote directly here."
+    if [ "$RUST_INSTALL_METHOD" = "mise" ]; then
+      mise ls-remote rust || true
+    elif [ "$RUST_INSTALL_METHOD" = "asdf" ]; then
+      asdf list all rust || true
+    elif [ "$RUST_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$RUST_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls all rust || true
     else
-      printf '%b\n' 'stable\nbeta\nnightly' 
+      if [ -n "${RUST_RELEASES_URL:-}" ]; then
+        curl -sSL "${RUST_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+      else
+      git ls-remote --tags "https://github.com/libscript/rust" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+    fi
     fi
     exit 0
     ;;
   use)
-    if [ "$RUST_INSTALL_METHOD" = "rustup" ]; then
-      rustup default "${RUST_VERSION}"
-    elif [ "$RUST_INSTALL_METHOD" = "mise" ]; then
-      mise use "rust@${RUST_VERSION}"
+    if [ "$RUST_INSTALL_METHOD" = "mise" ]; then
+      mise use "rust@${VERSION}"
     elif [ "$RUST_INSTALL_METHOD" = "asdf" ]; then
-      asdf global rust "${RUST_VERSION}"
+      asdf global rust "${VERSION}"
+    elif [ "$RUST_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not use explicit versions this way"
+    elif [ "$RUST_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "rust@${VERSION}"
+    elif [ "$RUST_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "rust@${VERSION}"
     elif [ "$RUST_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "Cannot 'use' specific version with system package manager."
+      echo "System packages do not support use here."
     else
       resolve_exact_version
-      libscript_symlink_alias "rust" "${RUST_VERSION}" "${EXACT_VERSION}"
+      libscript_symlink_alias "rust" "$VERSION" "${EXACT_VERSION}"
     fi
     exit 0
     ;;
-  download|install|*)
-    if [ "$RUST_INSTALL_METHOD" = "system" ]; then
-      libscript_depends 'rust'
-    elif [ "$RUST_INSTALL_METHOD" = "rustup" ]; then
-      if ! command -v rustup >/dev/null 2>&1; then
-        INSTALL_SH=$(mktemp)
-        libscript_download 'https://sh.rustup.rs' "${INSTALL_SH}"
-        sh "${INSTALL_SH}" -y --default-toolchain "${RUST_VERSION}"
-        rm -f "${INSTALL_SH}"
+  download)
+    if [ "$RUST_INSTALL_METHOD" = "libscript_native" ]; then
+      log_info "Downloading rust ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/rust..."
+      mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/rust"
+      if [ -n "${RUST_DOWNLOAD_URL:-}" ]; then
+        libscript_download "${RUST_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/rust/rust-${VERSION}.tar.gz"
       else
-        rustup toolchain install "${RUST_VERSION}"
+        log_warn "RUST_DOWNLOAD_URL is not defined for rust ${VERSION}."
       fi
+    fi
+    exit 0
+    ;;
+  install|*)
+    if [ "$RUST_INSTALL_METHOD" = "system" ]; then
+      libscript_depends "rust"
     elif [ "$RUST_INSTALL_METHOD" = "mise" ]; then
-      mise install "rust@${RUST_VERSION}"
+      mise install "rust@${VERSION}"
     elif [ "$RUST_INSTALL_METHOD" = "asdf" ]; then
-      asdf install rust "${RUST_VERSION}"
+      asdf install rust "${VERSION}"
+    elif [ "$RUST_INSTALL_METHOD" = "pkgx" ]; then
+      pkgx install "rust@${VERSION}"
+    elif [ "$RUST_INSTALL_METHOD" = "vfox" ]; then
+      vfox add rust || true
+      vfox install "rust@${VERSION}"
     else
+      # libscript_native implementation
       resolve_exact_version
-      RUST_DIR=$(libscript_get_version_dir "rust" "${EXACT_VERSION}")
-      export PATH="${RUST_DIR}/bin:${PATH}"
-      
-      if [ -x "${RUST_DIR}/bin/rustc" ] && "${RUST_DIR}/bin/rustc" --version | grep -q "${EXACT_VERSION}"; then
-        libscript_symlink_alias "rust" "${RUST_VERSION}" "${EXACT_VERSION}"
-        exit 0
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/rust/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing rust ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/rust/"*"${VERSION}"* >/dev/null 2>&1; then
+          log_info "Extracting from cache..."
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/rust/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+            else
+              cp "$cache_file" "${TARGET_DIR}/bin/rust" || true
+              chmod +x "${TARGET_DIR}/bin/rust" || true
+            fi
+          fi
+        else
+          if [ -n "${RUST_DOWNLOAD_URL:-}" ]; then
+            TEMP_FILE=$(mktemp)
+            libscript_download "${RUST_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+            if case "${RUST_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "${RUST_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+            else
+              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/rust" || true
+              chmod +x "${TARGET_DIR}/bin/rust" || true
+            fi
+            rm -f "${TEMP_FILE}"
+          else
+            log_warn "No download URL provided for rust ${VERSION}."
+          fi
+        fi
+      else
+        log_info "rust ${VERSION} is already installed."
       fi
-
-      libscript_depends 'curl' 'tar'
-      
-      os="$(uname -s | tr '[:upper:]' '[:lower:]')"
-      case "${os}" in
-        'darwin'*) os='apple-darwin' ;;
-        *) os='unknown-linux-gnu' ;;
-      esac
-      arch="$(uname -m)"
-      case "${arch}" in
-        'x86_64') arch='x86_64' ;;
-        'aarch64'|'arm64') arch='aarch64' ;;
-        *) ;;
-      esac
-      
-      # Using standalone rust installer
-      TARGET="${arch}-${os}"
-      # Provide fallback for aarch64 linux if glibc
-      if [ "${os}" = "unknown-linux-gnu" ]; then
-         TARGET="${arch}-unknown-linux-gnu"
-      fi
-
-      RUST_TARBALL=$(mktemp)
-      libscript_download "https://static.rust-lang.org/dist/rust-${EXACT_VERSION}-${TARGET}.tar.gz" "${RUST_TARBALL}"
-      
-      TMP_EXTRACT=$(mktemp -d)
-      tar -xzf "${RUST_TARBALL}" -C "${TMP_EXTRACT}"
-      rm -f "${RUST_TARBALL}"
-      
-      mkdir -p "${RUST_DIR}"
-      (
-        cd "${TMP_EXTRACT}/rust-${EXACT_VERSION}-${TARGET}" || exit 1
-        ./install.sh --prefix="${RUST_DIR}" --without=rust-docs
-      )
-      rm -rf "${TMP_EXTRACT}"
-      
-      libscript_symlink_alias "rust" "${RUST_VERSION}" "${EXACT_VERSION}"
+      libscript_symlink_alias "rust" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
+  start|stop|restart|status|health|logs|up|down)
+    if [ "$RUST_INSTALL_METHOD" = "libscript_native" ] || [ "$RUST_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-rust}}"
+      libscript_service "$ACTION" "$service_name" "$@"
+    else
+      log_info "$ACTION not natively implemented for $RUST_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  install-service)
+    if [ "$RUST_INSTALL_METHOD" = "libscript_native" ] || [ "$RUST_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-rust}}"
+      libscript_install_service "$service_name" "$@"
+    else
+      log_info "install-service not implemented for $RUST_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall-service)
+    if [ "$RUST_INSTALL_METHOD" = "libscript_native" ] || [ "$RUST_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-rust}}"
+      libscript_uninstall_service "$service_name" "$@"
+    else
+      log_info "uninstall-service not implemented for $RUST_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall)
+    if [ "$RUST_INSTALL_METHOD" = "libscript_native" ]; then
+      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
+      log_info "Uninstalling rust $VERSION..."
+      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/rust/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/rust/$VERSION"
+    else
+      log_info "Uninstall not implemented or supported for $RUST_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+
 esac

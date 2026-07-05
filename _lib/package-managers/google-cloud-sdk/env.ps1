@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-Defines environment variables and configurations for the environment variables stack.
-
-.DESCRIPTION
-Source or call this script to configure the environment for google-cloud-sdk.
+Environment variable initialization script for the google-cloud-sdk component.
 #>
 
-$ErrorActionPreference = "Stop"
-# Environment variables for PowerShell
+$Version = (Get-Item Env:\GOOGLE_CLOUD_SDK_VERSION -ErrorAction Ignore).Value
+if (-not $Version) { $Version = "latest" }
+
+$BinPath = "$env:LIBSCRIPT_HOME\google-cloud-sdk\$Version\bin"
+$env:PATH = "$BinPath;$env:PATH"

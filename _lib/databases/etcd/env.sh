@@ -39,3 +39,6 @@ if [ "${ETCD_PASSWORD_FILE-}" ] && [ -f "${ETCD_PASSWORD_FILE}" ]; then
 fi
 export ETCD_SERVICE_USER="${ETCD_SERVICE_USER:-etcd}"
 export ETCD_SERVICE_GROUP="${ETCD_SERVICE_GROUP:-${ETCD_SERVICE_USER}}"
+
+ETCD_VERSION="${ETCD_VERSION:-latest}"
+export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/etcd/${ETCD_VERSION}/bin:${PATH}"

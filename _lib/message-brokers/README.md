@@ -33,8 +33,8 @@ command or the local CLI.
 ./libscript.sh stop message-brokers
 ./cli.sh stop message-brokers
 
-./libscript.sh package_as docker message-brokers
-./cli.sh package_as docker message-brokers
+./libscript.sh package-as docker message-brokers
+./cli.sh package-as docker message-brokers
 
 ./libscript.sh uninstall message-brokers
 ./cli.sh uninstall message-brokers
@@ -57,8 +57,8 @@ libscript.cmd stop message-brokers
 cli.cmd stop message-brokers
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi message-brokers
-cli.cmd package_as msi message-brokers
+libscript.cmd package-as msi message-brokers
+cli.cmd package-as msi message-brokers
 
 :: Uninstall
 libscript.cmd uninstall message-brokers

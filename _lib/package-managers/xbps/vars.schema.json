@@ -5,6 +5,11 @@
   "description": "Configuration variables for xbps",
   "type": "object",
   "properties": {
+    "XBPS_INSTALL_METHOD": {
+      "description": "How to install XBPS. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "XBPS_VERSION": {
       "description": "Specific version of xbps to install.",
       "type": "string",

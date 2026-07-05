@@ -35,8 +35,8 @@ the local CLI.
 ./libscript.sh stop swift
 ./cli.sh stop swift
 
-./libscript.sh package_as docker swift
-./cli.sh package_as docker swift
+./libscript.sh package-as docker swift
+./cli.sh package-as docker swift
 
 ./libscript.sh uninstall swift
 ./cli.sh uninstall swift
@@ -59,8 +59,8 @@ libscript.cmd stop swift
 cli.cmd stop swift
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi swift
-cli.cmd package_as msi swift
+libscript.cmd package-as msi swift
+cli.cmd package-as msi swift
 
 :: Uninstall
 libscript.cmd uninstall swift
@@ -75,7 +75,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -101,7 +101,7 @@ running the setup script.
 | `MODEL_NAME` | HuggingFace model string to serve | `your-org/your-model-name` |  |
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
-| `SWIFT_INSTALL_METHOD` | How to install SWIFT. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools. | `libscript-native` |  |
+| `SWIFT_INSTALL_METHOD` | How to install SWIFT. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 | `SWIFT_VERSION` | Version of Swift Toolchain to install | `5.10` |  |
 <!-- END_VARS -->
 
@@ -124,3 +124,6 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages swift versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/swift/<version>`.

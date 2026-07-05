@@ -55,8 +55,8 @@ libscript.cmd install serve-actix-diesel-auth-scaffold
 LibScript can package this component into various deployment formats:
 
 ```sh
-libscript package_as docker serve-actix-diesel-auth-scaffold
-libscript package_as msi serve-actix-diesel-auth-scaffold
+libscript package-as docker serve-actix-diesel-auth-scaffold
+libscript package-as msi serve-actix-diesel-auth-scaffold
 ```
 
 ## Architecture

@@ -1,31 +1,221 @@
 @echo off
-:: # setup_generic.cmd
-::
 :: ## Overview
-:: Generic Windows setup instructions for TensorBoard.
+:: Windows setup for tensorboard
 ::
 :: ## Usage
-:: Currently un-implemented and returns 1.
-
-setlocal
-
-:: This is a placeholder for the native Windows component setup.
-:: By default, many tools rely on winget, choco, or scoop for installation on Windows.
+:: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
 
 if "%ACTION%"=="" set ACTION=install
+if "%TENSORBOARD_VERSION%"=="" set TENSORBOARD_VERSION=latest
 
-if "%ACTION%"=="ls" (
-    echo [ls] Windows list support not implemented natively for this component.
-    exit /b 0
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 )
-if "%ACTION%"=="ls-remote" (
-    echo [ls-remote] Windows ls-remote support not implemented natively for this component.
-    exit /b 0
-)
-if "%ACTION%"=="use" (
-    echo [use] Windows use support not implemented natively for this component.
-    exit /b 0
+if "%DOWNLOAD_DIR%"=="" (
+    set "DOWNLOAD_DIR=%TEMP%\libscript_downloads"
 )
 
-echo Windows native installation not implemented.
-exit /b 1
+:: Resolve install method
+if "%TENSORBOARD_INSTALL_METHOD%"=="" (
+    if not "%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"=="" (
+        set "TENSORBOARD_INSTALL_METHOD=%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"
+    ) else (
+        set "TENSORBOARD_INSTALL_METHOD=libscript_native"
+    )
+)
+
+if "%ACTION%"=="ls" goto :action_ls
+if "%ACTION%"=="ls-remote" goto :action_ls_remote
+if "%ACTION%"=="use" goto :action_use
+if "%ACTION%"=="download" goto :action_download
+if "%ACTION%"=="install" if "%ACTION%"=="start" goto :action_service
+if "%ACTION%"=="stop" goto :action_service
+if "%ACTION%"=="restart" goto :action_service
+if "%ACTION%"=="status" goto :action_service
+if "%ACTION%"=="health" goto :action_service
+if "%ACTION%"=="logs" goto :action_service
+if "%ACTION%"=="up" goto :action_service
+if "%ACTION%"=="down" goto :action_service
+if "%ACTION%"=="install-service" goto :action_install_service
+if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
+goto :action_install
+goto :action_install
+
+:action_ls
+if "%TENSORBOARD_INSTALL_METHOD%"=="mise" ( mise ls tensorboard & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="asdf" ( asdf list tensorboard & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="vfox" ( vfox ls tensorboard & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
+if exist "%LIBSCRIPT_HOME%\tensorboard" ( dir /b "%LIBSCRIPT_HOME%\tensorboard" )
+exit /b 0
+
+:action_ls_remote
+if "%ACTION%"=="use" goto :action_use
+if "%ACTION%"=="download" goto :action_download
+if "%ACTION%"=="install" goto :action_install
+goto :action_install
+
+:action_ls
+if "%TENSORBOARD_INSTALL_METHOD%"=="mise" ( mise ls tensorboard & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="asdf" ( asdf list tensorboard & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="vfox" ( vfox ls tensorboard & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
+if exist "%LIBSCRIPT_HOME%\tensorboard" ( dir /b "%LIBSCRIPT_HOME%\tensorboard" )
+exit /b 0
+
+:action_ls_remote
+if "%TENSORBOARD_INSTALL_METHOD%"=="mise" ( mise ls-remote tensorboard & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="asdf" ( asdf list all tensorboard & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="vfox" ( vfox ls all tensorboard & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
+if not "%TENSORBOARD_RELEASES_URL%"=="" (
+    curl -sSL "%TENSORBOARD_RELEASES_URL%"
+) else (
+    git ls-remote --tags "https://github.com/libscript/tensorboard" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
+)
+exit /b 0
+
+:action_ls_remote
+if "%TENSORBOARD_INSTALL_METHOD%"=="mise" ( mise ls-remote tensorboard & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="asdf" ( asdf list all tensorboard & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="vfox" ( vfox ls all tensorboard & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
+if not "%TENSORBOARD_RELEASES_URL%"=="" (
+    curl -sSL "%TENSORBOARD_RELEASES_URL%"
+) else (
+    git ls-remote --tags "https://github.com/libscript/tensorboard" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
+)
+exit /b 0
+
+:action_use
+if "%TENSORBOARD_INSTALL_METHOD%"=="mise" ( mise use "tensorboard@%TENSORBOARD_VERSION%" & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="asdf" ( asdf global tensorboard "%TENSORBOARD_VERSION%" & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not use explicit versions this way & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="vfox" ( vfox use "tensorboard@%TENSORBOARD_VERSION%" & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version with system package manager. & exit /b 0 )
+
+if "%TENSORBOARD_VERSION%"=="latest" (set "EXACT_VERSION=%TENSORBOARD_VERSION%"
+) else if "%TENSORBOARD_VERSION%"=="lts" (set "EXACT_VERSION=%TENSORBOARD_VERSION%"
+) else (
+    set "EXACT_VERSION=%TENSORBOARD_VERSION%"
+)
+if "%EXACT_VERSION%"=="" set "EXACT_VERSION=%TENSORBOARD_VERSION%"
+
+set "TARGET_DIR=%LIBSCRIPT_HOME%\tensorboard\%EXACT_VERSION%"
+set "ALIAS_DIR=%LIBSCRIPT_HOME%\tensorboard\%TENSORBOARD_VERSION%"
+
+if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
+    if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"
+    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+)
+exit /b 0
+
+:action_download
+if "%TENSORBOARD_INSTALL_METHOD%"=="libscript_native" (
+    echo Downloading tensorboard %TENSORBOARD_VERSION% to %DOWNLOAD_DIR%\tensorboard...
+    if not exist "%DOWNLOAD_DIR%\tensorboard" mkdir "%DOWNLOAD_DIR%\tensorboard"
+    if not "%TENSORBOARD_DOWNLOAD_URL%"=="" (
+        curl -sSL "%TENSORBOARD_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\tensorboard\tensorboard-%TENSORBOARD_VERSION%.zip"
+    ) else (
+        echo TENSORBOARD_DOWNLOAD_URL is not defined. Skipping.
+    )
+)
+exit /b 0
+
+:action_install
+if "%TENSORBOARD_INSTALL_METHOD%"=="system" (
+    winget install tensorboard --accept-package-agreements --accept-source-agreements
+    exit /b !errorlevel!
+)
+if "%TENSORBOARD_INSTALL_METHOD%"=="mise" ( mise install "tensorboard@%TENSORBOARD_VERSION%" & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="asdf" ( asdf install tensorboard "%TENSORBOARD_VERSION%" & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="pkgx" ( pkgx install "tensorboard@%TENSORBOARD_VERSION%" & exit /b 0 )
+if "%TENSORBOARD_INSTALL_METHOD%"=="vfox" ( vfox add tensorboard & vfox install "tensorboard@%TENSORBOARD_VERSION%" & exit /b 0 )
+
+set "TARGET_DIR=%LIBSCRIPT_HOME%\tensorboard\%TENSORBOARD_VERSION%"
+if not exist "%TARGET_DIR%\bin" (
+    echo Installing tensorboard %TENSORBOARD_VERSION% natively to %TARGET_DIR%...
+    mkdir "%TARGET_DIR%\bin"
+    if exist "%DOWNLOAD_DIR%\tensorboard\tensorboard-%TENSORBOARD_VERSION%.zip" (
+        echo Extracting from cache...
+        tar -xf "%DOWNLOAD_DIR%\tensorboard\tensorboard-%TENSORBOARD_VERSION%.zip" -C "%TARGET_DIR%"
+    ) else if exist "%DOWNLOAD_DIR%\tensorboard\tensorboard-%TENSORBOARD_VERSION%.tar.gz" (
+        echo Extracting from cache...
+        tar -xf "%DOWNLOAD_DIR%\tensorboard\tensorboard-%TENSORBOARD_VERSION%.tar.gz" -C "%TARGET_DIR%"
+    ) else if not "%TENSORBOARD_DOWNLOAD_URL%"=="" (
+        echo Downloading and extracting...
+        curl -sSL "%TENSORBOARD_DOWNLOAD_URL%" -o "%TEMP%\tensorboard.zip"
+        tar -xf "%TEMP%\tensorboard.zip" -C "%TARGET_DIR%"
+    ) else (
+        echo No download URL or cache available for tensorboard.
+    )
+) else (
+    echo tensorboard %TENSORBOARD_VERSION% is already installed.
+)
+set "ALIAS_DIR=%LIBSCRIPT_HOME%\tensorboard\%TENSORBOARD_VERSION%"
+if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
+    if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"
+    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+)
+exit /b 0
+
+:action_service
+if "%LIBSCRIPT_SERVICE_NAME%"=="" (
+    if "%PACKAGE_NAME%"=="" (
+        set "SVC_NAME=libscript_tensorboard"
+    ) else (
+        set "SVC_NAME=libscript_%PACKAGE_NAME%"
+    )
+) else (
+    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
+)
+if "%TENSORBOARD_INSTALL_METHOD%"=="libscript_native" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
+) else if "%TENSORBOARD_INSTALL_METHOD%"=="system" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
+) else (
+    echo %ACTION% not natively implemented for %TENSORBOARD_INSTALL_METHOD%.
+)
+exit /b 0
+
+:action_install_service
+if "%LIBSCRIPT_SERVICE_NAME%"=="" (
+    if "%PACKAGE_NAME%"=="" (
+        set "SVC_NAME=libscript_tensorboard"
+    ) else (
+        set "SVC_NAME=libscript_%PACKAGE_NAME%"
+    )
+) else (
+    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
+)
+if "%TENSORBOARD_INSTALL_METHOD%"=="libscript_native" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" install "%SVC_NAME%"
+) else if "%TENSORBOARD_INSTALL_METHOD%"=="system" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" install "%SVC_NAME%"
+) else (
+    echo install-service not implemented for %TENSORBOARD_INSTALL_METHOD%.
+)
+exit /b 0
+
+:action_uninstall_service
+if "%LIBSCRIPT_SERVICE_NAME%"=="" (
+    if "%PACKAGE_NAME%"=="" (
+        set "SVC_NAME=libscript_tensorboard"
+    ) else (
+        set "SVC_NAME=libscript_%PACKAGE_NAME%"
+    )
+) else (
+    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
+)
+if "%TENSORBOARD_INSTALL_METHOD%"=="libscript_native" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
+) else if "%TENSORBOARD_INSTALL_METHOD%"=="system" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
+) else (
+    echo uninstall-service not implemented for %TENSORBOARD_INSTALL_METHOD%.
+)
+exit /b 0

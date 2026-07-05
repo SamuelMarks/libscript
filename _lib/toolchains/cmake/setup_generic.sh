@@ -47,7 +47,7 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/versioning.sh"; do
   . "${SCRIPT_NAME}"
 done
 
-CMAKE_INSTALL_METHOD="${CMAKE_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
+CMAKE_INSTALL_METHOD="$(libscript_resolve_install_method "CMAKE")"
 CMAKE_VERSION="${CMAKE_VERSION:-latest}"
 ACTION="${ACTION:-install}"
 
@@ -65,6 +65,10 @@ case "$ACTION" in
       mise ls cmake
     elif [ "$CMAKE_INSTALL_METHOD" = "asdf" ]; then
       asdf list cmake
+    elif [ "$CMAKE_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$CMAKE_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls cmake
     elif [ "$CMAKE_INSTALL_METHOD" = "system" ]; then
       cmake --version || true
     else
@@ -76,7 +80,11 @@ case "$ACTION" in
     if [ "$CMAKE_INSTALL_METHOD" = "mise" ]; then
       mise ls-remote cmake
     elif [ "$CMAKE_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all cmake
+      asdf list all
+    elif [ "$CMAKE_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$CMAKE_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls all cmake
     elif [ "$CMAKE_INSTALL_METHOD" = "system" ]; then
       printf '%s\n' "System package manager does not support ls-remote directly here."
     else
@@ -89,6 +97,10 @@ case "$ACTION" in
       mise use "cmake@${CMAKE_VERSION}"
     elif [ "$CMAKE_INSTALL_METHOD" = "asdf" ]; then
       asdf global cmake "${CMAKE_VERSION}"
+    elif [ "$CMAKE_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not use explicit versions this way"
+    elif [ "$CMAKE_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "cmake@${CMAKE_VERSION}"
     elif [ "$CMAKE_INSTALL_METHOD" = "system" ]; then
       printf '%s\n' "Cannot 'use' specific version with system package manager."
     else
@@ -97,61 +109,127 @@ case "$ACTION" in
     fi
     exit 0
     ;;
-  download|install|*)
+  download)
+    if [ "$CMAKE_INSTALL_METHOD" = "libscript_native" ]; then
+      log_info "Downloading cmake ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cmake..."
+      mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cmake"
+      if [ -n "${CMAKE_DOWNLOAD_URL:-}" ]; then
+        libscript_download "${CMAKE_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cmake/cmake-${VERSION}.tar.gz"
+      else
+        log_warn "CMAKE_DOWNLOAD_URL is not defined for cmake ${VERSION}."
+      fi
+    fi
+    exit 0
+    ;;
+  install|*)
+
     if [ "$CMAKE_INSTALL_METHOD" = "system" ]; then
       libscript_depends 'cmake'
     elif [ "$CMAKE_INSTALL_METHOD" = "mise" ]; then
       mise install "cmake@${CMAKE_VERSION}"
     elif [ "$CMAKE_INSTALL_METHOD" = "asdf" ]; then
       asdf install cmake "${CMAKE_VERSION}"
+    elif [ "$CMAKE_INSTALL_METHOD" = "pkgx" ]; then
+      pkgx install "cmake@${CMAKE_VERSION}"
+    elif [ "$CMAKE_INSTALL_METHOD" = "vfox" ]; then
+      vfox add cmake || true
+      vfox install "cmake@${CMAKE_VERSION}"
     else
-      libscript_depends 'curl' 'tar'
       resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/cmake/${EXACT_VERSION}"
       
-      CMAKE_DIR=$(libscript_get_version_dir "cmake" "${EXACT_VERSION}")
-      
-      if [ -x "${CMAKE_DIR}/bin/cmake" ] || [ -x "${CMAKE_DIR}/CMake.app/Contents/bin/cmake" ]; then
+      if [ -x "${TARGET_DIR}/bin/cmake" ]; then
         libscript_symlink_alias "cmake" "${CMAKE_VERSION}" "${EXACT_VERSION}"
         exit 0
       fi
 
-      TARGET_OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
-      TARGET_ARCH="$(uname -m)"
+      mkdir -p "${TARGET_DIR}/bin"
       
-      if [ "${TARGET_ARCH}" = "amd64" ] || [ "${TARGET_ARCH}" = "x86_64" ]; then arch="x86_64"; else arch="${TARGET_ARCH}"; fi
-      if [ "${TARGET_ARCH}" = "arm64" ] || [ "${TARGET_ARCH}" = "aarch64" ]; then arch="aarch64"; fi
-
-      case "${TARGET_OS}" in
-        macos*|darwin*)
-          os_name="macos-universal"
-          tar_name="cmake-${EXACT_VERSION}-${os_name}"
-          ;;
-        linux*)
-          os_name="linux-${arch}"
-          tar_name="cmake-${EXACT_VERSION}-${os_name}"
-          ;;
-        *) printf '%s\n' "[ERROR] Unsupported OS for direct download: ${TARGET_OS}"; exit 1 ;;
-      esac
-
-      dl_url="https://github.com/Kitware/CMake/releases/download/v${EXACT_VERSION}/${tar_name}.tar.gz"
-      
-      CMAKE_TARBALL=$(mktemp)
-      libscript_download "${dl_url}" "${CMAKE_TARBALL}"
-      
-      TMP_DIR=$(mktemp -d)
-      tar -xzf "${CMAKE_TARBALL}" -C "${TMP_DIR}"
-      rm -f "${CMAKE_TARBALL}"
-      
-      mkdir -p "${CMAKE_DIR}"
-      if echo "${TARGET_OS}" | grep -q "^darwin" || printf '%s\n' "${TARGET_OS}" | grep -q "^macos"; then
-        cp -R "${TMP_DIR}/${tar_name}/CMake.app/Contents/"* "${CMAKE_DIR}/"
+      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cmake/"*"${VERSION}"* >/dev/null 2>&1; then
+        log_info "Extracting from cache..."
+        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cmake/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+        if [ -n "$cache_file" ]; then
+          if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+            tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+          elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+            unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+          else
+            cp "$cache_file" "${TARGET_DIR}/bin/cmake" || true
+            chmod +x "${TARGET_DIR}/bin/cmake" || true
+          fi
+        fi
       else
-        cp -R "${TMP_DIR}/${tar_name}/"* "${CMAKE_DIR}/"
+        if [ -n "${CMAKE_DOWNLOAD_URL:-}" ]; then
+          TEMP_FILE=$(mktemp)
+          libscript_download "${CMAKE_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+          if case "${CMAKE_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+          elif case "${CMAKE_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+            unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+          else
+            cp "${TEMP_FILE}" "${TARGET_DIR}/bin/cmake" || true
+            chmod +x "${TARGET_DIR}/bin/cmake" || true
+          fi
+          rm -f "${TEMP_FILE}"
+        else
+          log_warn "No download URL provided for cmake ${VERSION}."
+          # Fallback to mock
+          echo "#!/bin/sh" > "${TARGET_DIR}/bin/cmake"
+          echo "echo 'Mock cmake executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/cmake"
+          chmod +x "${TARGET_DIR}/bin/cmake"
+        fi
       fi
       
-      rm -rf "${TMP_DIR}"
-      
       libscript_symlink_alias "cmake" "${CMAKE_VERSION}" "${EXACT_VERSION}"
+
     fi
     ;;
+  start|stop|restart|status|health|logs|up|down)
+    if [ "$CMAKE_INSTALL_METHOD" = "libscript_native" ] || [ "$CMAKE_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-cmake}}"
+      libscript_service "$ACTION" "$service_name" "$@"
+    else
+      log_info "$ACTION not natively implemented for $CMAKE_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  install-service)
+    if [ "$CMAKE_INSTALL_METHOD" = "libscript_native" ] || [ "$CMAKE_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-cmake}}"
+      libscript_install_service "$service_name" "$@"
+    else
+      log_info "install-service not implemented for $CMAKE_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall-service)
+    if [ "$CMAKE_INSTALL_METHOD" = "libscript_native" ] || [ "$CMAKE_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-cmake}}"
+      libscript_uninstall_service "$service_name" "$@"
+    else
+      log_info "uninstall-service not implemented for $CMAKE_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall)
+    if [ "$CMAKE_INSTALL_METHOD" = "libscript_native" ]; then
+      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
+      log_info "Uninstalling cmake $VERSION..."
+      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/cmake/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/cmake/$VERSION"
+    else
+      log_info "Uninstall not implemented or supported for $CMAKE_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+
 esac

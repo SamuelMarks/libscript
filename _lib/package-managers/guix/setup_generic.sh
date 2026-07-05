@@ -1,12 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Generic setup script for the guix component.
-# It provides fallback installation logic and cross-platform installation steps
-# when a more specific OS/distribution setup script is not available.
-#
-# ## Usage
-# This script is typically called internally by the component lifecycle.
-
+# Generic setup module for guix.
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -33,32 +27,204 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR="${SCRIPT_DIR}"
 
-for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+fi
+
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
-  # shellcheck disable=SC1090
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
-if ! command -v guix >/dev/null 2>&1; then
-  log_info "Installing GNU Guix..."
-  if [ "$(id -u)" != "0" ] && ! command -v sudo >/dev/null 2>&1 && [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
-    printf '%s\n' "Error: Root access or sudo is required to install Guix." >&2
-    exit 1
-  fi
+GUIX_INSTALL_METHOD="$(libscript_resolve_install_method "GUIX")"
+ACTION="${ACTION:-install}"
+VERSION="${GUIX_VERSION:-latest}"
 
-  tmp_sh="/tmp/guix-install.sh"
-  libscript_download "https://git.savannah.gnu.org/cgit/guix.git/plain/etc/guix-install.sh" "$tmp_sh"
-
-  chmod +x "$tmp_sh"
-
-  if [ "$(id -u)" = "0" ]; then
-    yes '' | "$tmp_sh"
-  else
-    if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" != "1" ]; then
-      yes '' | sudo "$tmp_sh"
+resolve_exact_version() {
+  if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
+    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote guix 2>/dev/null | tail -n 1)
+    if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
+      EXACT_VERSION="$_latest"
+    else
+      EXACT_VERSION="${VERSION:-latest}"
     fi
+  else
+    EXACT_VERSION="${VERSION:-latest}"
   fi
+}
 
-  rm -f "$tmp_sh"
-fi
+case "$ACTION" in
+  ls)
+    if [ "$GUIX_INSTALL_METHOD" = "mise" ]; then
+      mise ls guix || true
+    elif [ "$GUIX_INSTALL_METHOD" = "asdf" ]; then
+      asdf list guix || true
+    elif [ "$GUIX_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$GUIX_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls guix || true
+    elif [ "$GUIX_INSTALL_METHOD" = "system" ]; then
+      echo "System packages do not support ls here."
+    else
+      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/guix/" 2>/dev/null || true
+    fi
+    exit 0
+    ;;
+  ls-remote)
+    if [ "$GUIX_INSTALL_METHOD" = "mise" ]; then
+      mise ls-remote guix || true
+    elif [ "$GUIX_INSTALL_METHOD" = "asdf" ]; then
+      asdf list all guix || true
+    elif [ "$GUIX_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$GUIX_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls all guix || true
+    else
+      if [ -n "${GUIX_RELEASES_URL:-}" ]; then
+        curl -sSL "${GUIX_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+      else
+      git ls-remote --tags "https://github.com/libscript/guix" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+    fi
+    fi
+    exit 0
+    ;;
+  use)
+    if [ "$GUIX_INSTALL_METHOD" = "mise" ]; then
+      mise use "guix@${VERSION}"
+    elif [ "$GUIX_INSTALL_METHOD" = "asdf" ]; then
+      asdf global guix "${VERSION}"
+    elif [ "$GUIX_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not use explicit versions this way"
+    elif [ "$GUIX_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "guix@${VERSION}"
+    elif [ "$GUIX_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "guix@${VERSION}"
+    elif [ "$GUIX_INSTALL_METHOD" = "system" ]; then
+      echo "System packages do not support use here."
+    else
+      resolve_exact_version
+      libscript_symlink_alias "guix" "$VERSION" "${EXACT_VERSION}"
+    fi
+    exit 0
+    ;;
+  download)
+    if [ "$GUIX_INSTALL_METHOD" = "libscript_native" ]; then
+      log_info "Downloading guix ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/guix..."
+      mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/guix"
+      if [ -n "${GUIX_DOWNLOAD_URL:-}" ]; then
+        libscript_download "${GUIX_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/guix/guix-${VERSION}.tar.gz"
+      else
+        log_warn "GUIX_DOWNLOAD_URL is not defined for guix ${VERSION}."
+      fi
+    fi
+    exit 0
+    ;;
+  install|*)
+    if [ "$GUIX_INSTALL_METHOD" = "system" ]; then
+      libscript_depends "guix"
+    elif [ "$GUIX_INSTALL_METHOD" = "mise" ]; then
+      mise install "guix@${VERSION}"
+    elif [ "$GUIX_INSTALL_METHOD" = "asdf" ]; then
+      asdf install guix "${VERSION}"
+    elif [ "$GUIX_INSTALL_METHOD" = "pkgx" ]; then
+      pkgx install "guix@${VERSION}"
+    elif [ "$GUIX_INSTALL_METHOD" = "vfox" ]; then
+      vfox add guix || true
+      vfox install "guix@${VERSION}"
+    else
+      # libscript_native implementation
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/guix/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing guix ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/guix/"*"${VERSION}"* >/dev/null 2>&1; then
+          log_info "Extracting from cache..."
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/guix/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+            else
+              cp "$cache_file" "${TARGET_DIR}/bin/guix" || true
+              chmod +x "${TARGET_DIR}/bin/guix" || true
+            fi
+          fi
+        else
+          if [ -n "${GUIX_DOWNLOAD_URL:-}" ]; then
+            TEMP_FILE=$(mktemp)
+            libscript_download "${GUIX_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+            if case "${GUIX_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "${GUIX_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+            else
+              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/guix" || true
+              chmod +x "${TARGET_DIR}/bin/guix" || true
+            fi
+            rm -f "${TEMP_FILE}"
+          else
+            log_warn "No download URL provided for guix ${VERSION}."
+          fi
+        fi
+      else
+        log_info "guix ${VERSION} is already installed."
+      fi
+      libscript_symlink_alias "guix" "$VERSION" "${EXACT_VERSION}"
+    fi
+    ;;
+  start|stop|restart|status|health|logs|up|down)
+    if [ "$GUIX_INSTALL_METHOD" = "libscript_native" ] || [ "$GUIX_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-guix}}"
+      libscript_service "$ACTION" "$service_name" "$@"
+    else
+      log_info "$ACTION not natively implemented for $GUIX_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  install-service)
+    if [ "$GUIX_INSTALL_METHOD" = "libscript_native" ] || [ "$GUIX_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-guix}}"
+      libscript_install_service "$service_name" "$@"
+    else
+      log_info "install-service not implemented for $GUIX_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall-service)
+    if [ "$GUIX_INSTALL_METHOD" = "libscript_native" ] || [ "$GUIX_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-guix}}"
+      libscript_uninstall_service "$service_name" "$@"
+    else
+      log_info "uninstall-service not implemented for $GUIX_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall)
+    if [ "$GUIX_INSTALL_METHOD" = "libscript_native" ]; then
+      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
+      log_info "Uninstalling guix $VERSION..."
+      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/guix/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/guix/$VERSION"
+    else
+      log_info "Uninstall not implemented or supported for $GUIX_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+
+esac

@@ -1,11 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Defines environment variables for the vLLM Server component on Windows.
-:: It acts as a structural placeholder, currently setting no specific variables.
-:: 
-:: ## Usage
-:: Call this script to apply the vLLM environment variables into the current session.
+:: Windows env stub for vllm
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%VLLM_VERSION%"=="" (
+    set "VLLM_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\vllm\%VLLM_VERSION%\bin;%PATH%"

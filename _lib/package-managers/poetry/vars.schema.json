@@ -5,6 +5,11 @@
   "description": "Configuration variables for poetry",
   "type": "object",
   "properties": {
+    "POETRY_INSTALL_METHOD": {
+      "description": "How to install POETRY. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "POETRY_HOME": {
       "type": "string",
       "description": "Directory where Poetry will be installed. Defaults to ~/.local or %APPDATA%\\pypoetry."

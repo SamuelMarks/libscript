@@ -2,6 +2,8 @@
 
 ## Usage
 
+_Note: libscript manages versions natively for this component._
+
 This document describes **Dash**, a POSIX-compliant implementation of `/bin/sh` that aims to be as
 small and efficient as possible.
 
@@ -26,8 +28,8 @@ the local CLI.
 ./libscript.sh stop dash
 ./cli.sh stop dash
 
-./libscript.sh package_as docker dash
-./cli.sh package_as docker dash
+./libscript.sh package-as docker dash
+./cli.sh package-as docker dash
 
 ./libscript.sh uninstall dash
 ./cli.sh uninstall dash
@@ -50,8 +52,8 @@ libscript.cmd stop dash
 cli.cmd stop dash
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi dash
-cli.cmd package_as msi dash
+libscript.cmd package-as msi dash
+cli.cmd package-as msi dash
 
 :: Uninstall
 libscript.cmd uninstall dash
@@ -66,7 +68,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -92,6 +94,7 @@ running the setup script.
 | `MODEL_NAME` | HuggingFace model string to serve | `your-org/your-model-name` |  |
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
+| `DASH_INSTALL_METHOD` | How to install DASH. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 | `DASH_VERSION` | Specific version of dash to install. | `latest` |  |
 <!-- END_VARS -->
 
@@ -106,3 +109,6 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages dash versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/dash/<version>`.

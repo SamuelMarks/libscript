@@ -5,6 +5,11 @@
   "description": "Configuration variables for stack",
   "type": "object",
   "properties": {
+    "STACK_INSTALL_METHOD": {
+      "description": "How to install STACK. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "STACK_VERSION": {
       "description": "Specific version of stack to install.",
       "type": "string",

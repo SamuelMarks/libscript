@@ -2,12 +2,14 @@
 
 ## Overview
 
-This component manages the installation and execution of `tmux` within the libscript ecosystem. It
-provides CLI wrappers to launch detached sessions, which is crucial for execution resilience. If
-your SSH connection drops during a long-running ML training job, the `tmux` session keeps the
-process alive.
+This component manages the installation and execution of `tmux` within the libscript
+ecolibscript_native. It provides CLI wrappers to launch detached sessions, which is crucial for
+execution resilience. If your SSH connection drops during a long-running ML training job, the `tmux`
+session keeps the process alive.
 
 ## Usage
+
+_Note: libscript manages versions natively for this component._
 
 Refer to the component's setup and cli scripts for specific operations.
 
@@ -22,3 +24,12 @@ Refer to the component's setup and cli scripts for specific operations.
 ## Environment Variables
 
 This component honors standard `libscript` variables. Refer to `_common/base_vars.schema.json`.
+
+## Configuration
+
+| Variable              | Description                                                                                                                                                          | Default            | Required |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | -------- |
+| `TMUX_INSTALL_METHOD` | How to install TMUX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |          |
+
+Libscript manages tmux versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/tmux/<version>`.

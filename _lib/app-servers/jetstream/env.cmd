@@ -1,11 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Defines environment variables for the Jetstream component on Windows.
-:: It acts as a structural placeholder, currently setting no specific variables.
-:: 
-:: ## Usage
-:: Call this script to apply the Jetstream environment variables into the current session.
+:: Windows env stub for jetstream
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%JETSTREAM_VERSION%"=="" (
+    set "JETSTREAM_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\jetstream\%JETSTREAM_VERSION%\bin;%PATH%"

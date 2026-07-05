@@ -19,15 +19,3 @@ if "%ACTION%"=="" set ACTION=install
 if "%ACTION%"=="ls" (
     echo [ls] Windows list support not implemented natively for this component.
     exit /b 0
-)
-if "%ACTION%"=="ls-remote" (
-    echo [ls-remote] Windows ls-remote support not implemented natively for this component.
-    exit /b 0
-)
-if "%ACTION%"=="use" (
-    echo [use] Windows use support not implemented natively for this component.
-    exit /b 0
-)
-
-echo Windows native installation not implemented.
-exit /b 1

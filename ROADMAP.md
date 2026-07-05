@@ -19,7 +19,7 @@ or operating system.
 
 - [ ] Hardware-Aware Optimization: Automatically tuning component installations based on detected
       hardware (CPU instructions, NVMe presence).
-- [x] Terminal User Interface (TUI) for stack and PaaS management via `package_as TUI`.
+- [x] Terminal User Interface (TUI) for stack and PaaS management via `package-as TUI`.
 - [ ] Lightweight, decentralized Web Dashboard / Control Plane for real-time monitoring and resource
       management.
 - [ ] Integrated log aggregation and health monitoring.

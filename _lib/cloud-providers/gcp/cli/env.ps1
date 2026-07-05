@@ -1,10 +1,1 @@
-<#
-.SYNOPSIS
-Defines environment variables and configurations for the environment variables stack.
-
-.DESCRIPTION
-Source or call this script to configure the environment for cli.
-#>
-
-$ErrorActionPreference = "Stop"
-# Environment variables for PowerShell
+# Windows env stub for cli

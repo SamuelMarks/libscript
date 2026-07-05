@@ -3,10 +3,10 @@
 ## Purpose & Current State
 
 **Purpose**: This document provides context and technical details for the `fluentbit` component
-within the LibScript ecosystem. This component manages **Fluent Bit**, a super fast, lightweight,
-and highly scalable logging and metrics processor and forwarder. It allows you to collect data/logs
-from different sources, unify, and send them to multiple destinations. It's fully compatible with
-Docker and Kubernetes environments.
+within the LibScript ecolibscript_native. This component manages **Fluent Bit**, a super fast,
+lightweight, and highly scalable logging and metrics processor and forwarder. It allows you to
+collect data/logs from different sources, unify, and send them to multiple destinations. It's fully
+compatible with Docker and Kubernetes environments.
 
 ## Usage
 
@@ -19,7 +19,7 @@ This module provides setup, test, and uninstall capabilities for `fluent-bit`.
 
 - **Windows Details**: On Windows, it installs via Chocolatey or falls back to natively downloading
   and extracting the official `.zip` archive from `packages.fluentbit.io`.
-- **POSIX Details**: On Linux and macOS, it delegates to the system package manager (e.g.,
+- **POSIX Details**: On Linux and macOS, it delegates to the libscript_native package manager (e.g.,
   `apt-get`, `brew`, `apk`) to install `fluent-bit`.
 
 You can install, start, stop, uninstall, and package this component using `libscript`.
@@ -51,7 +51,7 @@ libscript uninstall fluentbit
 **Package:**
 
 ```sh
-libscript package_as docker fluentbit
+libscript package-as docker fluentbit
 
 ```
 
@@ -63,7 +63,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -90,7 +90,7 @@ running the setup script.
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
 | `FLUENTBIT_VERSION` | Specific version of Fluent Bit to install. Can be a numeric version (e.g. '3.0.0') or an alias like 'latest'. | `latest` | latest, stable |
-| `FLUENTBIT_INSTALL_METHOD` | How to install FLUENTBIT. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools. | `libscript-native` |  |
+| `FLUENTBIT_INSTALL_METHOD` | How to install FLUENTBIT. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 | `FLUENTBIT_CONFIG_FILE` | Absolute path to a pre-existing custom fluent-bit.conf file to use instead of the default configuration. | `none` |  |
 | `FLUENTBIT_LOG_LEVEL` | The logging verbosity level for the Fluent Bit daemon itself (e.g. info, debug, error). | `info` |  |
 | `FLUENTBIT_HTTP_SERVER` | Enable the built-in HTTP server for metrics and health checks. Highly recommended for monitoring. | `On` |  |
@@ -123,3 +123,6 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages fluentbit versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/fluentbit/<version>`.

@@ -5,6 +5,11 @@
   "description": "Configuration variables for awscli",
   "type": "object",
   "properties": {
+    "AWSCLI_INSTALL_METHOD": {
+      "description": "How to install AWSCLI. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "AWSCLI_VERSION": {
       "type": "string",
       "default": "latest",

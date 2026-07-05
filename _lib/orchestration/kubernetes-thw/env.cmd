@@ -1,10 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment initialization for kubernetes-thw on Windows.
-::
-:: ## Usage
-:: Normally sets up defaults. Currently a no-op placeholder.
+:: Windows env stub for kubernetes-thw
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%KUBERNETES_THW_VERSION%"=="" (
+    set "KUBERNETES_THW_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\kubernetes-thw\%KUBERNETES_THW_VERSION%\bin;%PATH%"

@@ -3,8 +3,8 @@
 ## Purpose & Current State
 
 **Purpose**: This document provides context and technical details for the `kubernetes-thw` component
-within the LibScript ecosystem. This component manages **kubernetes-thw**, a custom Kubernetes
-cluster setup based on "Kubernetes The Hard Way".
+within the LibScript ecolibscript_native. This component manages **kubernetes-thw**, a custom
+Kubernetes cluster setup based on "Kubernetes The Hard Way".
 
 ## Usage
 
@@ -40,7 +40,7 @@ libscript uninstall kubernetes-thw
 **Package:**
 
 ```sh
-libscript package_as docker kubernetes-thw
+libscript package-as docker kubernetes-thw
 
 ```
 
@@ -52,7 +52,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -87,6 +87,7 @@ running the setup script.
 | `KUBERNETES_THW_LISTEN_PORT` | Port for KUBERNETES_THW to listen on | `none` |  |
 | `KUBERNETES_THW_LISTEN_ADDRESS` | Address for KUBERNETES_THW to listen on | `none` |  |
 | `KUBERNETES_THW_LISTEN_SOCKET` | Unix socket for KUBERNETES_THW to listen on | `none` |  |
+| `KUBERNETES_THW_INSTALL_METHOD` | How to install KUBERNETES THW. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 <!-- END_VARS -->
 
 ## Architecture
@@ -108,3 +109,6 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages kubernetes-thw versions natively by installing them into isolated directories
+under `LIBSCRIPT_HOME/kubernetes-thw/<version>`.

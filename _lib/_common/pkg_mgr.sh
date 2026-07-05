@@ -50,6 +50,45 @@ done
 PKG_MGR_UPDATE_REGISTRY="${PKG_MGR_UPDATE_REGISTRY:-1}"
 export PKG_MGR_UPDATE_REGISTRY
 
+libscript_resolve_install_method() {
+  local comp_method_var="${1}_INSTALL_METHOD"
+  eval "local requested=\${${comp_method_var}:-\${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-}}"
+
+  local chain="libscript_native mise asdf pkgx vfox system"
+  local check_chain=""
+  
+  if [ -n "$requested" ]; then
+    # Start chain from the requested method
+    local found=0
+    for m in $chain; do
+      if [ "$m" = "$requested" ]; then found=1; fi
+      if [ "$found" = "1" ]; then
+        check_chain="${check_chain:+$check_chain }$m"
+      fi
+    done
+    # If requested method is not in our known chain, just check it directly then fallback to full chain
+    if [ "$found" = "0" ]; then
+      check_chain="$requested $chain"
+    fi
+  else
+    check_chain="$chain"
+  fi
+
+  for m in $check_chain; do
+    if [ "$m" = "libscript_native" ] || [ "$m" = "system" ]; then
+      echo "$m"
+      return 0
+    fi
+    if libscript_cmd_avail "$m"; then
+      echo "$m"
+      return 0
+    fi
+  done
+  
+  echo "system"
+  return 0
+}
+
 libscript_cmd_avail() {
   command -v -- "${1}" >/dev/null 2>&1
 }

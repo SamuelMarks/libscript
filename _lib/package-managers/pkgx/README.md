@@ -26,8 +26,8 @@ the local CLI.
 ./libscript.sh stop pkgx
 ./cli.sh stop pkgx
 
-./libscript.sh package_as docker pkgx
-./cli.sh package_as docker pkgx
+./libscript.sh package-as docker pkgx
+./cli.sh package-as docker pkgx
 
 ./libscript.sh uninstall pkgx
 ./cli.sh uninstall pkgx
@@ -50,8 +50,8 @@ libscript.cmd stop pkgx
 cli.cmd stop pkgx
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi pkgx
-cli.cmd package_as msi pkgx
+libscript.cmd package-as msi pkgx
+cli.cmd package-as msi pkgx
 
 :: Uninstall
 libscript.cmd uninstall pkgx
@@ -66,7 +66,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -92,6 +92,7 @@ running the setup script.
 | `MODEL_NAME` | HuggingFace model string to serve | `your-org/your-model-name` |  |
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
+| `PKGX_INSTALL_METHOD` | How to install PKGX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 | `PKGX_VERSION` | Specific version of pkgx to install. | `latest` |  |
 <!-- END_VARS -->
 
@@ -106,3 +107,12 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+## Architecture
+
+`libscript` manages `pkgx` versions natively by default (`PKGX_INSTALL_METHOD=libscript_native`),
+ensuring isolated installations without polluting global system paths. You can override this to use
+`system`, `mise`, `asdf`, `pkgx`, or `vfox` if preferred.
+
+Libscript manages pkgx versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/pkgx/<version>`.

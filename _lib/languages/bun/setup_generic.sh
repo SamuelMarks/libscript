@@ -1,12 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Generic setup module for Bun.
-#
-# ## Usage
-# Installs Bun by downloading release binaries from GitHub and supporting multiple installation methods (system, native, mise, asdf).
-
+# Generic setup module for bun.
 
 set -feu
+# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -33,38 +30,46 @@ DIR="${SCRIPT_DIR}"
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
   export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/versioning.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
-BUN_INSTALL_METHOD="${BUN_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
-BUN_VERSION="${BUN_VERSION:-latest}"
+BUN_INSTALL_METHOD="$(libscript_resolve_install_method "BUN")"
 ACTION="${ACTION:-install}"
+VERSION="${BUN_VERSION:-latest}"
 
 resolve_exact_version() {
-  if [ "${BUN_VERSION}" = "latest" ]; then
-    # Use api to get latest version
-    EXACT_VERSION=$(curl -s https://api.github.com/repos/oven-sh/bun/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-  elif [ "${BUN_VERSION}" = "canary" ]; then
-    EXACT_VERSION="canary"
+  if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
+    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote bun 2>/dev/null | tail -n 1)
+    if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
+      EXACT_VERSION="$_latest"
+    else
+      EXACT_VERSION="${VERSION:-latest}"
+    fi
   else
-    EXACT_VERSION=$(printf '%s\n' "$BUN_VERSION" | sed 's/^v//')
+    EXACT_VERSION="${VERSION:-latest}"
   fi
 }
 
 case "$ACTION" in
   ls)
     if [ "$BUN_INSTALL_METHOD" = "mise" ]; then
-      mise ls bun
+      mise ls bun || true
     elif [ "$BUN_INSTALL_METHOD" = "asdf" ]; then
-      asdf list bun
+      asdf list bun || true
+    elif [ "$BUN_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$BUN_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls bun || true
     elif [ "$BUN_INSTALL_METHOD" = "system" ]; then
-      bun --version
+      echo "System packages do not support ls here."
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/bun/" 2>/dev/null || true
     fi
@@ -72,79 +77,154 @@ case "$ACTION" in
     ;;
   ls-remote)
     if [ "$BUN_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote bun
+      mise ls-remote bun || true
     elif [ "$BUN_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all bun
-    elif [ "$BUN_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System package manager does not support ls-remote directly here."
+      asdf list all bun || true
+    elif [ "$BUN_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$BUN_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls all bun || true
     else
-      curl -sL https://api.github.com/repos/oven-sh/bun/releases | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/' | head -n 30
+      if [ -n "${BUN_RELEASES_URL:-}" ]; then
+        curl -sSL "${BUN_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+      else
+      git ls-remote --tags "https://github.com/libscript/bun" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+    fi
     fi
     exit 0
     ;;
   use)
     if [ "$BUN_INSTALL_METHOD" = "mise" ]; then
-      mise use "bun@${BUN_VERSION}"
+      mise use "bun@${VERSION}"
     elif [ "$BUN_INSTALL_METHOD" = "asdf" ]; then
-      asdf global bun "${BUN_VERSION}"
+      asdf global bun "${VERSION}"
+    elif [ "$BUN_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not use explicit versions this way"
+    elif [ "$BUN_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "bun@${VERSION}"
+    elif [ "$BUN_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "bun@${VERSION}"
     elif [ "$BUN_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "Cannot 'use' specific version with system package manager."
+      echo "System packages do not support use here."
     else
       resolve_exact_version
-      libscript_symlink_alias "bun" "${BUN_VERSION}" "${EXACT_VERSION}"
+      libscript_symlink_alias "bun" "$VERSION" "${EXACT_VERSION}"
     fi
     exit 0
     ;;
-  download|install|*)
-    if [ "$BUN_INSTALL_METHOD" = "system" ]; then
-      libscript_depends 'bun' || { printf '%s\n' "Bun package not widely available, defaulting to from-source"; exit 1; }
-    elif [ "$BUN_INSTALL_METHOD" = "mise" ]; then
-      mise install "bun@${BUN_VERSION}"
-    elif [ "$BUN_INSTALL_METHOD" = "asdf" ]; then
-      asdf install bun "${BUN_VERSION}"
-    else
-      libscript_depends 'curl' 'unzip'
-      resolve_exact_version
-      
-      BUN_DIR=$(libscript_get_version_dir "bun" "${EXACT_VERSION}")
-      export PATH="${BUN_DIR}/bin:${PATH}"
-      
-      if [ -x "${BUN_DIR}/bin/bun" ] && "${BUN_DIR}/bin/bun" --version | grep -q "${EXACT_VERSION}"; then
-        libscript_symlink_alias "bun" "${BUN_VERSION}" "${EXACT_VERSION}"
-        exit 0
-      fi
-
-      os="$(uname -s | tr '[:upper:]' '[:lower:]')"
-      case "${os}" in
-        'darwin'*) os='darwin' ;;
-        *) os='linux' ;;
-      esac
-      arch="$(uname -m)"
-      case "${arch}" in
-        'x86_64') arch='x64' ;;
-        'aarch64'|'arm64') arch='aarch64' ;;
-        *) ;;
-      esac
-      
-      # For Linux x64, Bun uses bun-linux-x64-baseline.zip by default unless specified
-      TARGET="bun-${os}-${arch}"
-      if [ "${EXACT_VERSION}" = "canary" ]; then
-        DOWNLOAD_URL="https://github.com/oven-sh/bun/releases/download/canary/${TARGET}.zip?v=canary"
+  download)
+    if [ "$BUN_INSTALL_METHOD" = "libscript_native" ]; then
+      log_info "Downloading bun ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/bun..."
+      mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/bun"
+      if [ -n "${BUN_DOWNLOAD_URL:-}" ]; then
+        libscript_download "${BUN_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/bun/bun-${VERSION}.tar.gz"
       else
-        DOWNLOAD_URL="https://github.com/oven-sh/bun/releases/download/bun-v${EXACT_VERSION}/${TARGET}.zip?v=${EXACT_VERSION}"
+        log_warn "BUN_DOWNLOAD_URL is not defined for bun ${VERSION}."
       fi
-
-      BUN_ZIP=$(mktemp)
-      libscript_download "${DOWNLOAD_URL}" "${BUN_ZIP}"
-      
-      mkdir -p "${BUN_DIR}/bin"
-      TMP_EXTRACT=$(mktemp -d)
-      unzip -q "${BUN_ZIP}" -d "${TMP_EXTRACT}"
-      mv "${TMP_EXTRACT}/${TARGET}/bun" "${BUN_DIR}/bin/"
-      rm -f "${BUN_ZIP}"
-      rm -rf "${TMP_EXTRACT}"
-      
-      libscript_symlink_alias "bun" "${BUN_VERSION}" "${EXACT_VERSION}"
+    fi
+    exit 0
+    ;;
+  install|*)
+    if [ "$BUN_INSTALL_METHOD" = "system" ]; then
+      libscript_depends "bun"
+    elif [ "$BUN_INSTALL_METHOD" = "mise" ]; then
+      mise install "bun@${VERSION}"
+    elif [ "$BUN_INSTALL_METHOD" = "asdf" ]; then
+      asdf install bun "${VERSION}"
+    elif [ "$BUN_INSTALL_METHOD" = "pkgx" ]; then
+      pkgx install "bun@${VERSION}"
+    elif [ "$BUN_INSTALL_METHOD" = "vfox" ]; then
+      vfox add bun || true
+      vfox install "bun@${VERSION}"
+    else
+      # libscript_native implementation
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/bun/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing bun ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/bun/"*"${VERSION}"* >/dev/null 2>&1; then
+          log_info "Extracting from cache..."
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/bun/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+            else
+              cp "$cache_file" "${TARGET_DIR}/bin/bun" || true
+              chmod +x "${TARGET_DIR}/bin/bun" || true
+            fi
+          fi
+        else
+          if [ -n "${BUN_DOWNLOAD_URL:-}" ]; then
+            TEMP_FILE=$(mktemp)
+            libscript_download "${BUN_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+            if case "${BUN_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "${BUN_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+            else
+              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/bun" || true
+              chmod +x "${TARGET_DIR}/bin/bun" || true
+            fi
+            rm -f "${TEMP_FILE}"
+          else
+            log_warn "No download URL provided for bun ${VERSION}."
+          fi
+        fi
+      else
+        log_info "bun ${VERSION} is already installed."
+      fi
+      libscript_symlink_alias "bun" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
+  start|stop|restart|status|health|logs|up|down)
+    if [ "$BUN_INSTALL_METHOD" = "libscript_native" ] || [ "$BUN_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-bun}}"
+      libscript_service "$ACTION" "$service_name" "$@"
+    else
+      log_info "$ACTION not natively implemented for $BUN_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  install-service)
+    if [ "$BUN_INSTALL_METHOD" = "libscript_native" ] || [ "$BUN_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-bun}}"
+      libscript_install_service "$service_name" "$@"
+    else
+      log_info "install-service not implemented for $BUN_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall-service)
+    if [ "$BUN_INSTALL_METHOD" = "libscript_native" ] || [ "$BUN_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-bun}}"
+      libscript_uninstall_service "$service_name" "$@"
+    else
+      log_info "uninstall-service not implemented for $BUN_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall)
+    if [ "$BUN_INSTALL_METHOD" = "libscript_native" ]; then
+      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
+      log_info "Uninstalling bun $VERSION..."
+      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/bun/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/bun/$VERSION"
+    else
+      log_info "Uninstall not implemented or supported for $BUN_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+
 esac

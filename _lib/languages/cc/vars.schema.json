@@ -6,9 +6,9 @@
   "type": "object",
   "properties": {
     "CC_INSTALL_METHOD": {
-      "description": "How to install CC. 'system' uses the native OS package manager, 'source' compiles/downloads binaries.",
+      "description": "How to install CC. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "enum": ["system", "source"],
+      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
       "default": "system"
     },
     "CC_VERSION": {

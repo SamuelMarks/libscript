@@ -1,10 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Generic setup module for Ruby.
-#
-# ## Usage
-# Installs Ruby by compiling from source tarballs or by delegating to system/mise/asdf.
-
+# Generic setup module for ruby.
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -38,39 +34,42 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/versioning.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
-RUBY_INSTALL_METHOD="${RUBY_INSTALL_METHOD:-${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript-native}}"
-RUBY_VERSION="${RUBY_VERSION:-latest}"
+RUBY_INSTALL_METHOD="$(libscript_resolve_install_method "RUBY")"
 ACTION="${ACTION:-install}"
+VERSION="${RUBY_VERSION:-latest}"
 
 resolve_exact_version() {
-  if [ "${RUBY_VERSION}" = "latest" ] || [ "${RUBY_VERSION}" = "stable" ]; then
-    RUBY_INDEX=$(mktemp)
-    libscript_download 'https://cache.ruby-lang.org/pub/ruby/index.txt' "${RUBY_INDEX}"
-    EXACT_VERSION=$(awk '{print $1}' < "${RUBY_INDEX}" | grep -E '^ruby-[0-9]+\.[0-9]+\.[0-9]+$' | tail -n 1 | sed 's/^ruby-//')
-    rm -f "${RUBY_INDEX}"
-    if [ -z "${EXACT_VERSION}" ]; then
-      EXACT_VERSION="3.3.0"
+  if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
+    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote ruby 2>/dev/null | tail -n 1)
+    if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
+      EXACT_VERSION="$_latest"
+    else
+      EXACT_VERSION="${VERSION:-latest}"
     fi
   else
-    EXACT_VERSION="${RUBY_VERSION}"
+    EXACT_VERSION="${VERSION:-latest}"
   fi
 }
 
 case "$ACTION" in
   ls)
     if [ "$RUBY_INSTALL_METHOD" = "mise" ]; then
-      mise ls ruby
+      mise ls ruby || true
     elif [ "$RUBY_INSTALL_METHOD" = "asdf" ]; then
-      asdf list ruby
+      asdf list ruby || true
+    elif [ "$RUBY_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$RUBY_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls ruby || true
     elif [ "$RUBY_INSTALL_METHOD" = "system" ]; then
-      ruby --version
+      echo "System packages do not support ls here."
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/ruby/" 2>/dev/null || true
     fi
@@ -78,73 +77,154 @@ case "$ACTION" in
     ;;
   ls-remote)
     if [ "$RUBY_INSTALL_METHOD" = "mise" ]; then
-      mise ls-remote ruby
+      mise ls-remote ruby || true
     elif [ "$RUBY_INSTALL_METHOD" = "asdf" ]; then
-      asdf list all ruby
-    elif [ "$RUBY_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "System package manager does not support ls-remote directly here."
+      asdf list all ruby || true
+    elif [ "$RUBY_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$RUBY_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls all ruby || true
     else
-      curl -sL https://cache.ruby-lang.org/pub/ruby/index.txt | awk '{print $1}' | grep -E '^ruby-[0-9]+\.[0-9]+\.[0-9]+$' | sed 's/^ruby-//' | sort -V
+      if [ -n "${RUBY_RELEASES_URL:-}" ]; then
+        curl -sSL "${RUBY_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+      else
+      git ls-remote --tags "https://github.com/libscript/ruby" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+    fi
     fi
     exit 0
     ;;
   use)
     if [ "$RUBY_INSTALL_METHOD" = "mise" ]; then
-      mise use "ruby@${RUBY_VERSION}"
+      mise use "ruby@${VERSION}"
     elif [ "$RUBY_INSTALL_METHOD" = "asdf" ]; then
-      asdf global ruby "${RUBY_VERSION}"
+      asdf global ruby "${VERSION}"
+    elif [ "$RUBY_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not use explicit versions this way"
+    elif [ "$RUBY_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "ruby@${VERSION}"
+    elif [ "$RUBY_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "ruby@${VERSION}"
     elif [ "$RUBY_INSTALL_METHOD" = "system" ]; then
-      printf '%s\n' "Cannot 'use' specific version with system package manager."
+      echo "System packages do not support use here."
     else
       resolve_exact_version
-      libscript_symlink_alias "ruby" "${RUBY_VERSION}" "${EXACT_VERSION}"
+      libscript_symlink_alias "ruby" "$VERSION" "${EXACT_VERSION}"
     fi
     exit 0
     ;;
-  download|install|*)
+  download)
+    if [ "$RUBY_INSTALL_METHOD" = "libscript_native" ]; then
+      log_info "Downloading ruby ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/ruby..."
+      mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/ruby"
+      if [ -n "${RUBY_DOWNLOAD_URL:-}" ]; then
+        libscript_download "${RUBY_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/ruby/ruby-${VERSION}.tar.gz"
+      else
+        log_warn "RUBY_DOWNLOAD_URL is not defined for ruby ${VERSION}."
+      fi
+    fi
+    exit 0
+    ;;
+  install|*)
     if [ "$RUBY_INSTALL_METHOD" = "system" ]; then
-      libscript_depends 'ruby'
+      libscript_depends "ruby"
     elif [ "$RUBY_INSTALL_METHOD" = "mise" ]; then
-      mise install "ruby@${RUBY_VERSION}"
+      mise install "ruby@${VERSION}"
     elif [ "$RUBY_INSTALL_METHOD" = "asdf" ]; then
-      asdf install ruby "${RUBY_VERSION}"
+      asdf install ruby "${VERSION}"
+    elif [ "$RUBY_INSTALL_METHOD" = "pkgx" ]; then
+      pkgx install "ruby@${VERSION}"
+    elif [ "$RUBY_INSTALL_METHOD" = "vfox" ]; then
+      vfox add ruby || true
+      vfox install "ruby@${VERSION}"
     else
+      # libscript_native implementation
       resolve_exact_version
-      RUBY_DIR=$(libscript_get_version_dir "ruby" "${EXACT_VERSION}")
-      export PATH="${RUBY_DIR}/bin:${PATH}"
-      
-      if [ -x "${RUBY_DIR}/bin/ruby" ] && "${RUBY_DIR}/bin/ruby" --version | grep -q "${EXACT_VERSION}"; then
-        libscript_symlink_alias "ruby" "${RUBY_VERSION}" "${EXACT_VERSION}"
-        exit 0
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/ruby/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing ruby ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/ruby/"*"${VERSION}"* >/dev/null 2>&1; then
+          log_info "Extracting from cache..."
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/ruby/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+            else
+              cp "$cache_file" "${TARGET_DIR}/bin/ruby" || true
+              chmod +x "${TARGET_DIR}/bin/ruby" || true
+            fi
+          fi
+        else
+          if [ -n "${RUBY_DOWNLOAD_URL:-}" ]; then
+            TEMP_FILE=$(mktemp)
+            libscript_download "${RUBY_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+            if case "${RUBY_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "${RUBY_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+            else
+              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/ruby" || true
+              chmod +x "${TARGET_DIR}/bin/ruby" || true
+            fi
+            rm -f "${TEMP_FILE}"
+          else
+            log_warn "No download URL provided for ruby ${VERSION}."
+          fi
+        fi
+      else
+        log_info "ruby ${VERSION} is already installed."
       fi
-
-      libscript_depends 'curl' 'tar' 'make' 'gcc'
-      
-      # Additional dependencies for full ruby functionality (zlib, openssl, libffi, libyaml)
-      if command -v apt-get >/dev/null 2>&1; then
-        libscript_depends 'libssl-dev' 'zlib1g-dev' 'libffi-dev' 'libyaml-dev'
-      elif command -v yum >/dev/null 2>&1 || command -v dnf >/dev/null 2>&1; then
-        libscript_depends 'openssl-devel' 'zlib-devel' 'libffi-devel' 'libyaml-devel'
-      fi
-
-      RUBY_MAJOR=$(printf '%s\n' "${EXACT_VERSION}" | cut -d. -f1,2)
-      RUBY_TARBALL=$(mktemp)
-      libscript_download "https://cache.ruby-lang.org/pub/ruby/${RUBY_MAJOR}/ruby-${EXACT_VERSION}.tar.gz" "${RUBY_TARBALL}"
-      
-      TMP_BUILD_DIR=$(mktemp -d)
-      tar -xzf "${RUBY_TARBALL}" -C "${TMP_BUILD_DIR}"
-      rm -f "${RUBY_TARBALL}"
-      
-      mkdir -p "${RUBY_DIR}"
-      (
-        cd "${TMP_BUILD_DIR}/ruby-${EXACT_VERSION}" || exit 1
-        ./configure --prefix="${RUBY_DIR}" --disable-install-doc
-        make -j"$(nproc 2>/dev/null || printf '%s\n' 2)"
-        make install
-      )
-      rm -rf "${TMP_BUILD_DIR}"
-      
-      libscript_symlink_alias "ruby" "${RUBY_VERSION}" "${EXACT_VERSION}"
+      libscript_symlink_alias "ruby" "$VERSION" "${EXACT_VERSION}"
     fi
     ;;
+  start|stop|restart|status|health|logs|up|down)
+    if [ "$RUBY_INSTALL_METHOD" = "libscript_native" ] || [ "$RUBY_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-ruby}}"
+      libscript_service "$ACTION" "$service_name" "$@"
+    else
+      log_info "$ACTION not natively implemented for $RUBY_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  install-service)
+    if [ "$RUBY_INSTALL_METHOD" = "libscript_native" ] || [ "$RUBY_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-ruby}}"
+      libscript_install_service "$service_name" "$@"
+    else
+      log_info "install-service not implemented for $RUBY_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall-service)
+    if [ "$RUBY_INSTALL_METHOD" = "libscript_native" ] || [ "$RUBY_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-ruby}}"
+      libscript_uninstall_service "$service_name" "$@"
+    else
+      log_info "uninstall-service not implemented for $RUBY_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall)
+    if [ "$RUBY_INSTALL_METHOD" = "libscript_native" ]; then
+      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
+      log_info "Uninstalling ruby $VERSION..."
+      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/ruby/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/ruby/$VERSION"
+    else
+      log_info "Uninstall not implemented or supported for $RUBY_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+
 esac

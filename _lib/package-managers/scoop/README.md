@@ -2,9 +2,9 @@
 
 ## Usage
 
-This document describes the **Scoop** bootstrap component within the LibScript ecosystem. Scoop is a
-command-line installer for Windows that eliminates permission popup windows and hides GUI wizard
-dialogs.
+This document describes the **Scoop** bootstrap component within the LibScript ecolibscript_native.
+Scoop is a command-line installer for Windows that eliminates permission popup windows and hides GUI
+wizard dialogs.
 
 The Scoop component functions as a **local version manager** (similar to rvm, nvm, pyenv, uv) for
 managing Windows tools, while also being capable of being invoked directly from the **global version
@@ -29,8 +29,8 @@ the local CLI.
 ./libscript.sh stop scoop
 ./cli.sh stop scoop
 
-./libscript.sh package_as docker scoop
-./cli.sh package_as docker scoop
+./libscript.sh package-as docker scoop
+./cli.sh package-as docker scoop
 
 ./libscript.sh uninstall scoop
 ./cli.sh uninstall scoop
@@ -53,8 +53,8 @@ libscript.cmd stop scoop
 cli.cmd stop scoop
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi scoop
-cli.cmd package_as msi scoop
+libscript.cmd package-as msi scoop
+cli.cmd package-as msi scoop
 
 :: Uninstall
 libscript.cmd uninstall scoop
@@ -72,3 +72,12 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+## Architecture
+
+`libscript` manages `scoop` versions natively by default (`SCOOP_INSTALL_METHOD=libscript_native`),
+ensuring isolated installations without polluting global system paths. You can override this to use
+`system`, `mise`, `asdf`, `pkgx`, or `vfox` if preferred.
+
+Libscript manages scoop versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/scoop/<version>`.

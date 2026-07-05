@@ -5,6 +5,11 @@
   "description": "Configuration variables for deno",
   "type": "object",
   "properties": {
+    "DENO_PM_INSTALL_METHOD": {
+      "description": "How to install DENO_PM. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "DENO_PM_INSTALL": {
       "type": "string",
       "description": "Path to the directory where Deno should be installed. Defaults to ~/.deno."

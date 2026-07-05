@@ -31,8 +31,8 @@ or the local CLI.
 ./libscript.sh stop databases
 ./cli.sh stop databases
 
-./libscript.sh package_as docker databases
-./cli.sh package_as docker databases
+./libscript.sh package-as docker databases
+./cli.sh package-as docker databases
 
 ./libscript.sh uninstall databases
 ./cli.sh uninstall databases
@@ -55,8 +55,8 @@ libscript.cmd stop databases
 cli.cmd stop databases
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi databases
-cli.cmd package_as msi databases
+libscript.cmd package-as msi databases
+cli.cmd package-as msi databases
 
 :: Uninstall
 libscript.cmd uninstall databases

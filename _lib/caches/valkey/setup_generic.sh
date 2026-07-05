@@ -1,12 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Provides fallback installation logic for Valkey on general Unix platforms.
-# It gracefully falls back to system packages (`valkey`, `redis`) if available,
-# or logs that source builds are omitted on generic platforms, before registering ports.
-# 
-# ## Usage
-# Called internally by `setup.sh` when a platform-specific setup script is missing.
-
+# Generic setup module for valkey.
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -33,58 +27,204 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR="${SCRIPT_DIR}"
 
-for LIB in "_lib/_common/os_info.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+fi
+
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
-  # shellcheck disable=SC1090
+  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
-for LIB in "_lib/_common/pkg_mgr.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  . "${SCRIPT_NAME}"
-done
+VALKEY_INSTALL_METHOD="$(libscript_resolve_install_method "VALKEY")"
+ACTION="${ACTION:-install}"
+VERSION="${VALKEY_VERSION:-latest}"
 
-if [ "${TARGET_OS}" = "windows" ] || [ "${TARGET_OS}" = "mingw" ] || [ "${TARGET_OS}" = "cygwin" ]; then
-    >&2 printf "Valkey is not available on Windows natively. Exiting gracefully...\n"
-    log_info "skipping valkey source build"
-fi
+resolve_exact_version() {
+  if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
+    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote valkey 2>/dev/null | tail -n 1)
+    if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
+      EXACT_VERSION="$_latest"
+    else
+      EXACT_VERSION="${VERSION:-latest}"
+    fi
+  else
+    EXACT_VERSION="${VERSION:-latest}"
+  fi
+}
 
-if libscript_depends 'valkey'; then
-    >&2 printf "Valkey installed via package manager.\n"
-elif libscript_depends 'valkey-server'; then
-    >&2 printf "Valkey-server installed via package manager.\n"
-elif libscript_depends 'redis'; then
-    >&2 printf "Redis installed via package manager as fallback.\n"
-elif libscript_depends 'redis-server'; then
-    >&2 printf "Redis-server installed via package manager as fallback.\n"
-else
-    libscript_depends 'git' 'c_compiler' 'make' || {
-        >&2 printf "Required build tools for Valkey are missing. Exiting...\n"
-        log_info "skipping valkey source build"
-    }
-    >&2 printf "Building valkey from source is not implemented. Exiting...\n"
-    log_info "skipping valkey source build"
-fi
-# Simplified for generic systems
-# Could pull from git and build...
+case "$ACTION" in
+  ls)
+    if [ "$VALKEY_INSTALL_METHOD" = "mise" ]; then
+      mise ls valkey || true
+    elif [ "$VALKEY_INSTALL_METHOD" = "asdf" ]; then
+      asdf list valkey || true
+    elif [ "$VALKEY_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$VALKEY_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls valkey || true
+    elif [ "$VALKEY_INSTALL_METHOD" = "system" ]; then
+      echo "System packages do not support ls here."
+    else
+      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/valkey/" 2>/dev/null || true
+    fi
+    exit 0
+    ;;
+  ls-remote)
+    if [ "$VALKEY_INSTALL_METHOD" = "mise" ]; then
+      mise ls-remote valkey || true
+    elif [ "$VALKEY_INSTALL_METHOD" = "asdf" ]; then
+      asdf list all valkey || true
+    elif [ "$VALKEY_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$VALKEY_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls all valkey || true
+    else
+      if [ -n "${VALKEY_RELEASES_URL:-}" ]; then
+        curl -sSL "${VALKEY_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+      else
+      git ls-remote --tags "https://github.com/valkey-io/valkey" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+    fi
+    fi
+    exit 0
+    ;;
+  use)
+    if [ "$VALKEY_INSTALL_METHOD" = "mise" ]; then
+      mise use "valkey@${VERSION}"
+    elif [ "$VALKEY_INSTALL_METHOD" = "asdf" ]; then
+      asdf global valkey "${VERSION}"
+    elif [ "$VALKEY_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not use explicit versions this way"
+    elif [ "$VALKEY_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "valkey@${VERSION}"
+    elif [ "$VALKEY_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "valkey@${VERSION}"
+    elif [ "$VALKEY_INSTALL_METHOD" = "system" ]; then
+      echo "System packages do not support use here."
+    else
+      resolve_exact_version
+      libscript_symlink_alias "valkey" "$VERSION" "${EXACT_VERSION}"
+    fi
+    exit 0
+    ;;
+  download)
+    if [ "$VALKEY_INSTALL_METHOD" = "libscript_native" ]; then
+      log_info "Downloading valkey ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/valkey..."
+      mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/valkey"
+      if [ -n "${VALKEY_DOWNLOAD_URL:-}" ]; then
+        libscript_download "${VALKEY_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/valkey/valkey-${VERSION}.tar.gz"
+      else
+        log_warn "VALKEY_DOWNLOAD_URL is not defined for valkey ${VERSION}."
+      fi
+    fi
+    exit 0
+    ;;
+  install|*)
+    if [ "$VALKEY_INSTALL_METHOD" = "system" ]; then
+      libscript_depends "valkey"
+    elif [ "$VALKEY_INSTALL_METHOD" = "mise" ]; then
+      mise install "valkey@${VERSION}"
+    elif [ "$VALKEY_INSTALL_METHOD" = "asdf" ]; then
+      asdf install valkey "${VERSION}"
+    elif [ "$VALKEY_INSTALL_METHOD" = "pkgx" ]; then
+      pkgx install "valkey@${VERSION}"
+    elif [ "$VALKEY_INSTALL_METHOD" = "vfox" ]; then
+      vfox add valkey || true
+      vfox install "valkey@${VERSION}"
+    else
+      # libscript_native implementation
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/valkey/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing valkey ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/valkey/"*"${VERSION}"* >/dev/null 2>&1; then
+          log_info "Extracting from cache..."
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/valkey/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+            else
+              cp "$cache_file" "${TARGET_DIR}/bin/valkey" || true
+              chmod +x "${TARGET_DIR}/bin/valkey" || true
+            fi
+          fi
+        else
+          if [ -n "${VALKEY_DOWNLOAD_URL:-}" ]; then
+            TEMP_FILE=$(mktemp)
+            libscript_download "${VALKEY_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+            if case "${VALKEY_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "${VALKEY_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+            else
+              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/valkey" || true
+              chmod +x "${TARGET_DIR}/bin/valkey" || true
+            fi
+            rm -f "${TEMP_FILE}"
+          else
+            log_warn "No download URL provided for valkey ${VERSION}."
+          fi
+        fi
+      else
+        log_info "valkey ${VERSION} is already installed."
+      fi
+      libscript_symlink_alias "valkey" "$VERSION" "${EXACT_VERSION}"
+    fi
+    ;;
+  start|stop|restart|status|health|logs|up|down)
+    if [ "$VALKEY_INSTALL_METHOD" = "libscript_native" ] || [ "$VALKEY_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-valkey}}"
+      libscript_service "$ACTION" "$service_name" "$@"
+    else
+      log_info "$ACTION not natively implemented for $VALKEY_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  install-service)
+    if [ "$VALKEY_INSTALL_METHOD" = "libscript_native" ] || [ "$VALKEY_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-valkey}}"
+      libscript_install_service "$service_name" "$@"
+    else
+      log_info "install-service not implemented for $VALKEY_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall-service)
+    if [ "$VALKEY_INSTALL_METHOD" = "libscript_native" ] || [ "$VALKEY_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-valkey}}"
+      libscript_uninstall_service "$service_name" "$@"
+    else
+      log_info "uninstall-service not implemented for $VALKEY_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall)
+    if [ "$VALKEY_INSTALL_METHOD" = "libscript_native" ]; then
+      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
+      log_info "Uninstalling valkey $VERSION..."
+      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/valkey/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/valkey/$VERSION"
+    else
+      log_info "Uninstall not implemented or supported for $VALKEY_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
 
-case "${_LIBSCRIPT_TRUE:-1}" in
-  "$( [ -n "${VALKEY_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ] && printf '%s\n' 1 )")
-  if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "unix:${VALKEY_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then
-    true
-  fi
-    ;;
-  "$( [ -n "${VALKEY_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ] && [ -n "${VALKEY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ] && printf '%s\n' 1 )")
-  if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${VALKEY_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${VALKEY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
-    true
-  fi
-    ;;
-  "$( [ -n "${VALKEY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ] && printf '%s\n' 1 )")
-  if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${VALKEY_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
-    true
-  fi
-    ;;
 esac

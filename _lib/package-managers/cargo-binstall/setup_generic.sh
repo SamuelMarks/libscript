@@ -1,12 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Generic setup script for the cargo-binstall component.
-# It provides fallback installation logic and cross-platform installation steps
-# when a more specific OS/distribution setup script is not available.
-#
-# ## Usage
-# This script is typically called internally by the component lifecycle.
-
+# Generic setup module for cargo-binstall.
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -31,21 +25,206 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-..}"'/_lib/_common/pkg_mgr.sh'
-export SCRIPT_NAME
-# shellcheck disable=SC1090,SC1091
-. "${SCRIPT_NAME}"
+DIR="${SCRIPT_DIR}"
 
-if ! command -v cargo-binstall >/dev/null 2>&1; then
-  if ! libscript_depends cargo ; then
-    true
-  fi
-
-  INSTALL_SH=$(mktemp)
-  if libscript_download 'https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh' "${INSTALL_SH}"; then
-    sh "${INSTALL_SH}"
-    rm -f "${INSTALL_SH}"
-  else
-    cargo install cargo-binstall || true
-  fi
+if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
 fi
+
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+done
+
+CARGO_BINSTALL_INSTALL_METHOD="$(libscript_resolve_install_method "CARGO_BINSTALL")"
+ACTION="${ACTION:-install}"
+VERSION="${CARGO_BINSTALL_VERSION:-latest}"
+
+resolve_exact_version() {
+  if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
+    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote cargo-binstall 2>/dev/null | tail -n 1)
+    if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
+      EXACT_VERSION="$_latest"
+    else
+      EXACT_VERSION="${VERSION:-latest}"
+    fi
+  else
+    EXACT_VERSION="${VERSION:-latest}"
+  fi
+}
+
+case "$ACTION" in
+  ls)
+    if [ "$CARGO_BINSTALL_INSTALL_METHOD" = "mise" ]; then
+      mise ls cargo-binstall || true
+    elif [ "$CARGO_BINSTALL_INSTALL_METHOD" = "asdf" ]; then
+      asdf list cargo-binstall || true
+    elif [ "$CARGO_BINSTALL_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$CARGO_BINSTALL_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls cargo_binstall || true
+    elif [ "$CARGO_BINSTALL_INSTALL_METHOD" = "system" ]; then
+      echo "System packages do not support ls here."
+    else
+      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/cargo-binstall/" 2>/dev/null || true
+    fi
+    exit 0
+    ;;
+  ls-remote)
+    if [ "$CARGO_BINSTALL_INSTALL_METHOD" = "mise" ]; then
+      mise ls-remote cargo-binstall || true
+    elif [ "$CARGO_BINSTALL_INSTALL_METHOD" = "asdf" ]; then
+      asdf list all cargo-binstall || true
+    elif [ "$CARGO_BINSTALL_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "$CARGO_BINSTALL_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls all cargo_binstall || true
+    else
+      if [ -n "${CARGO_BINSTALL_RELEASES_URL:-}" ]; then
+        curl -sSL "${CARGO_BINSTALL_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+      else
+      git ls-remote --tags "https://github.com/libscript/cargo-binstall" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+    fi
+    fi
+    exit 0
+    ;;
+  use)
+    if [ "$CARGO_BINSTALL_INSTALL_METHOD" = "mise" ]; then
+      mise use "cargo-binstall@${VERSION}"
+    elif [ "$CARGO_BINSTALL_INSTALL_METHOD" = "asdf" ]; then
+      asdf global cargo-binstall "${VERSION}"
+    elif [ "$CARGO_BINSTALL_INSTALL_METHOD" = "pkgx" ]; then
+      echo "pkgx does not use explicit versions this way"
+    elif [ "$CARGO_BINSTALL_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "cargo_binstall@${VERSION}"
+    elif [ "$CARGO_BINSTALL_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "cargo-binstall@${VERSION}"
+    elif [ "$CARGO_BINSTALL_INSTALL_METHOD" = "system" ]; then
+      echo "System packages do not support use here."
+    else
+      resolve_exact_version
+      libscript_symlink_alias "cargo-binstall" "$VERSION" "${EXACT_VERSION}"
+    fi
+    exit 0
+    ;;
+  download)
+    if [ "$CARGO_BINSTALL_INSTALL_METHOD" = "libscript_native" ]; then
+      log_info "Downloading cargo-binstall ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cargo-binstall..."
+      mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cargo-binstall"
+      if [ -n "${CARGO_BINSTALL_DOWNLOAD_URL:-}" ]; then
+        libscript_download "${CARGO_BINSTALL_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cargo-binstall/cargo-binstall-${VERSION}.tar.gz"
+      else
+        log_warn "CARGO_BINSTALL_DOWNLOAD_URL is not defined for cargo-binstall ${VERSION}."
+      fi
+    fi
+    exit 0
+    ;;
+  install|*)
+    if [ "$CARGO_BINSTALL_INSTALL_METHOD" = "system" ]; then
+      libscript_depends "cargo-binstall"
+    elif [ "$CARGO_BINSTALL_INSTALL_METHOD" = "mise" ]; then
+      mise install "cargo-binstall@${VERSION}"
+    elif [ "$CARGO_BINSTALL_INSTALL_METHOD" = "asdf" ]; then
+      asdf install cargo-binstall "${VERSION}"
+    elif [ "$CARGO_BINSTALL_INSTALL_METHOD" = "pkgx" ]; then
+      pkgx install "cargo-binstall@${VERSION}"
+    elif [ "$CARGO_BINSTALL_INSTALL_METHOD" = "vfox" ]; then
+      vfox add cargo-binstall || true
+      vfox install "cargo-binstall@${VERSION}"
+    else
+      # libscript_native implementation
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/cargo-binstall/${EXACT_VERSION}"
+      if [ ! -d "${TARGET_DIR}" ]; then
+        log_info "Installing cargo-binstall ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cargo-binstall/"*"${VERSION}"* >/dev/null 2>&1; then
+          log_info "Extracting from cache..."
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cargo-binstall/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+            else
+              cp "$cache_file" "${TARGET_DIR}/bin/cargo-binstall" || true
+              chmod +x "${TARGET_DIR}/bin/cargo-binstall" || true
+            fi
+          fi
+        else
+          if [ -n "${CARGO_BINSTALL_DOWNLOAD_URL:-}" ]; then
+            TEMP_FILE=$(mktemp)
+            libscript_download "${CARGO_BINSTALL_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+            if case "${CARGO_BINSTALL_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+            elif case "${CARGO_BINSTALL_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+            else
+              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/cargo-binstall" || true
+              chmod +x "${TARGET_DIR}/bin/cargo-binstall" || true
+            fi
+            rm -f "${TEMP_FILE}"
+          else
+            log_warn "No download URL provided for cargo-binstall ${VERSION}."
+          fi
+        fi
+      else
+        log_info "cargo-binstall ${VERSION} is already installed."
+      fi
+      libscript_symlink_alias "cargo-binstall" "$VERSION" "${EXACT_VERSION}"
+    fi
+    ;;
+  start|stop|restart|status|health|logs|up|down)
+    if [ "$CARGO_BINSTALL_INSTALL_METHOD" = "libscript_native" ] || [ "$CARGO_BINSTALL_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-cargo-binstall}}"
+      libscript_service "$ACTION" "$service_name" "$@"
+    else
+      log_info "$ACTION not natively implemented for $CARGO_BINSTALL_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  install-service)
+    if [ "$CARGO_BINSTALL_INSTALL_METHOD" = "libscript_native" ] || [ "$CARGO_BINSTALL_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-cargo-binstall}}"
+      libscript_install_service "$service_name" "$@"
+    else
+      log_info "install-service not implemented for $CARGO_BINSTALL_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall-service)
+    if [ "$CARGO_BINSTALL_INSTALL_METHOD" = "libscript_native" ] || [ "$CARGO_BINSTALL_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-cargo-binstall}}"
+      libscript_uninstall_service "$service_name" "$@"
+    else
+      log_info "uninstall-service not implemented for $CARGO_BINSTALL_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall)
+    if [ "$CARGO_BINSTALL_INSTALL_METHOD" = "libscript_native" ]; then
+      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
+      log_info "Uninstalling cargo-binstall $VERSION..."
+      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/cargo-binstall/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/cargo-binstall/$VERSION"
+    else
+      log_info "Uninstall not implemented or supported for $CARGO_BINSTALL_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+
+esac

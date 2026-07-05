@@ -17,7 +17,7 @@ You can manage JupyterHub using the global `libscript` CLI or the local scripts.
 - **Uninstall:** `libscript uninstall jupyterhub`
 - **Start:** `libscript start jupyterhub`
 - **Stop:** `libscript stop jupyterhub`
-- **Package:** `libscript package_as docker jupyterhub` (or `msi`, `docker_compose`, etc.)
+- **Package:** `libscript package-as docker jupyterhub` (or `msi`, `docker_compose`, etc.)
 
 **Unix (Linux/macOS) Local Invocation:**
 

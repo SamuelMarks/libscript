@@ -2,9 +2,9 @@
 
 ## Overview
 
-This component manages the installation and execution of `duckdb` within the libscript ecosystem. It
-provides CLI wrappers to execute SQL queries or start an interactive REPL, essential for evaluating
-Execution Accuracy (EX) in Text-to-SQL tasks.
+This component manages the installation and execution of `duckdb` within the libscript
+ecolibscript_native. It provides CLI wrappers to execute SQL queries or start an interactive REPL,
+essential for evaluating Execution Accuracy (EX) in Text-to-SQL tasks.
 
 ## Usage
 
@@ -21,3 +21,11 @@ Refer to the component's setup and cli scripts for specific operations.
 ## Environment Variables
 
 This component honors standard `libscript` variables. Refer to `_common/base_vars.schema.json`.
+Libscript manages duckdb versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/duckdb/<version>`.
+
+## Configuration
+
+| Variable                | Description                                                                                                                                                            | Default            | Required |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | -------- |
+| `DUCKDB_INSTALL_METHOD` | How to install DUCKDB. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |          |

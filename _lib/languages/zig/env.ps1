@@ -19,4 +19,4 @@ if ([string]::IsNullOrEmpty($LibscriptHome)) {
     $LibscriptHome = Join-Path $env:USERPROFILE ".libscript"
 }
 
-$env:PATH = (Join-Path $LibscriptHome "zig\$ZigVersion") + [IO.Path]::PathSeparator + $env:PATH
+$env:PATH = (Join-Path $LibscriptHome "zig\$ZigVersion\bin") + [IO.Path]::PathSeparator + $env:PATH

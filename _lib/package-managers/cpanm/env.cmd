@@ -1,12 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment variable initialization script for the cpanm component on Windows.
-:: It sets up necessary paths and environment variables required for the component
-:: to function correctly within the libscript context.
-::
-:: ## Usage
-:: Call this script to load the environment variables. Do not execute it directly without context.
+:: Windows env stub for cpanm
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%CPANM_VERSION%"=="" (
+    set "CPANM_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\cpanm\%CPANM_VERSION%\bin;%PATH%"

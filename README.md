@@ -43,7 +43,7 @@ is its own self-contained package manager.
   Solaris.
 - **Artifact Factory:** Turn your local stack into a production-ready `.msi`, `.exe`
   (InnoSetup/NSIS), `.deb`, `.rpm`, `.apk`, `.txz`, `.pkg`, `.dmg`, `Dockerfile`,
-  `docker-compose.yml`, or an interactive `TUI` installer with one command: `package_as`.
+  `docker-compose.yml`, or an interactive `TUI` installer with one command: `package-as`.
 
 ---
 
@@ -160,7 +160,7 @@ without requiring external state files or agents.
 Convert your shell logic into native installers or container images instantly.
 
 LibScript doesn't just install software—it acts as a powerful artifact factory. Using the
-`package_as` command, you can export your entire dependency tree, component logic, and stack
+`package-as` command, you can export your entire dependency tree, component logic, and stack
 configuration into a variety of distributable formats, completely automatically.
 
 **Supported Packaging Formats:**
@@ -173,20 +173,20 @@ configuration into a variety of distributable formats, completely automatically.
 
 #### How it Works
 
-When you run `package_as`, LibScript analyzes your declarative stack configuration, traces the
+When you run `package-as`, LibScript analyzes your declarative stack configuration, traces the
 required `_lib` modules, and compiles them into a self-contained installer or container
 specification.
 
 ```sh
 # Generate a Windows Installer (.msi) for your current stack
-./libscript.sh package_as msi
+./libscript.sh package-as msi
 
 # Generate a Dockerfile and docker-compose.yml
-./libscript.sh package_as docker
-./libscript.sh package_as docker-compose
+./libscript.sh package-as docker
+./libscript.sh package-as docker-compose
 
 # Generate a Debian package (.deb)
-./libscript.sh package_as deb
+./libscript.sh package-as deb
 ```
 
 #### Granular Dependency Control
@@ -243,7 +243,7 @@ cd libscript
 LibScript is designed as a routing execution layer. It detects your OS, maps generic dependencies to
 local package managers (`apt`, `brew`, `choco`, `pkg`), and executes optimized setup scripts.
 
-- **`cli/`**: Core CLI commands, orchestration logic, and the `package_as` transformation engine.
+- **`cli/`**: Core CLI commands, orchestration logic, and the `package-as` transformation engine.
 - **`_lib/`**: The heart of the system. Modular components (over 140+ available) where each
   directory is a standalone manager.
 - **`gen/`**: Artifact generator module, synthesizing logic into installers, Docker images, and
@@ -297,6 +297,7 @@ additional terms or conditions.
 |---|---|---|---|
 | `_lib/app-servers/jetstream` | ❓ | ❓ | ❓ |
 | `_lib/app-servers/nodejs-server` | ❓ | ❓ | ❓ |
+| `_lib/app-servers/ollama` | ❓ | ❓ | ❓ |
 | `_lib/app-servers/python-server` | ❓ | ❓ | ❓ |
 | `_lib/app-servers/rust-server` | ❓ | ❓ | ❓ |
 | `_lib/app-servers/vllm` | ❓ | ❓ | ❓ |
@@ -342,6 +343,7 @@ additional terms or conditions.
 | `_lib/logging/fluentbit` | ❓ | ❓ | ❓ |
 | `_lib/logging/tensorboard` | ❓ | ❓ | ❓ |
 | `_lib/orchestration/docker` | ❓ | ❓ | ❓ |
+| `_lib/orchestration/kubernetes` | ❓ | ❓ | ❓ |
 | `_lib/orchestration/kubernetes-k0s` | ❓ | ❓ | ❓ |
 | `_lib/orchestration/kubernetes-thw` | ❓ | ❓ | ❓ |
 | `_lib/orchestration/kubernetes/kubectl` | ❓ | ❓ | ❓ |
@@ -418,6 +420,7 @@ additional terms or conditions.
 | `_lib/package-managers/swupd` | ❓ | ❓ | ❓ |
 | `_lib/package-managers/uv` | ❓ | ❓ | ❓ |
 | `_lib/package-managers/vcpkg` | ❓ | ❓ | ❓ |
+| `_lib/package-managers/vfox` | ❓ | ❓ | ❓ |
 | `_lib/package-managers/winget` | ❓ | ❓ | ❓ |
 | `_lib/package-managers/xbps` | ❓ | ❓ | ❓ |
 | `_lib/package-managers/yarn` | ❓ | ❓ | ❓ |

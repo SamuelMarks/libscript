@@ -1,12 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment variable initialization script for the bun-pm component on Windows.
-:: It sets up necessary paths and environment variables required for the component
-:: to function correctly within the libscript context.
-::
-:: ## Usage
-:: Call this script to load the environment variables. Do not execute it directly without context.
+:: Windows env stub for bun-pm
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%BUN_PM_VERSION%"=="" (
+    set "BUN_PM_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\bun-pm\%BUN_PM_VERSION%\bin;%PATH%"

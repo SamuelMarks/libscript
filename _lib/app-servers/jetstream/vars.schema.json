@@ -1,21 +1,21 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/toolchains/huggingface_hub/vars.schema.json",
-  "title": "huggingface_hub variables",
-  "description": "Configuration variables for huggingface_hub",
+  "title": "jetstream variables",
+  "description": "Configuration variables for jetstream",
   "type": "object",
   "properties": {
     "JETSTREAM_VERSION": {
-      "description": "Specific version of huggingface_hub to install. Can be a numeric version or an alias.",
+      "description": "Specific version of jetstream to install. Can be a numeric version or an alias.",
       "type": "string",
       "default": "latest",
       "version_aliases": ["latest", "stable"]
     },
     "JETSTREAM_INSTALL_METHOD": {
-      "description": "How to install JETSTREAM. 'system' delegates to package manager.",
+      "description": "How to install JETSTREAM. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "enum": ["system", "libscript-native", "mise", "asdf"],
-      "default": "system"
+      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "default": "libscript_native"
     },
     "LIBSCRIPT_LISTEN_PORT": {
       "type": ["string", "integer"],

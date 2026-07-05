@@ -13,3 +13,12 @@ Downloads and installs the official `guix-install.sh` script non-interactively. 
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+## Architecture
+
+`libscript` manages `guix` versions natively by default (`GUIX_INSTALL_METHOD=libscript_native`),
+ensuring isolated installations without polluting global system paths. You can override this to use
+`system`, `mise`, `asdf`, `pkgx`, or `vfox` if preferred.
+
+Libscript manages guix versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/guix/<version>`.

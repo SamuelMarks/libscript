@@ -97,7 +97,7 @@ if [ $? -eq 0 ] && [ -n "$SELECTED" ]; then
       done
     else
       if [ "$action" = "dockerfile" ]; then action="docker"; fi
-      ./libscript.sh package_as "$action" $items $extra_args
+      ./libscript.sh package-as "$action" $items $extra_args
     fi
   else
     printf '%s\n' "Cancelled."

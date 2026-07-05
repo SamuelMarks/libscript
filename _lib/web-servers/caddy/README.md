@@ -3,10 +3,12 @@
 ## Purpose & Current State
 
 **Purpose**: This document provides context and technical details for the `caddy` server component
-within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script framework
-designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+within the LibScript ecolibscript_native. LibScript is a modular, zero-dependency shell-script
+framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
 
 ## Usage
+
+_Note: libscript manages versions natively for this component._
 
 This directory contains the scripts for managing the Caddy component. It works both as a local
 version manager (similar to rvm, nvm, pyenv, uv) for precise Caddy version control, and can be
@@ -32,8 +34,8 @@ CLI.
 ./libscript.sh stop caddy
 ./cli.sh stop caddy
 
-./libscript.sh package_as docker caddy
-./cli.sh package_as docker caddy
+./libscript.sh package-as docker caddy
+./cli.sh package-as docker caddy
 
 ./libscript.sh uninstall caddy
 ./cli.sh uninstall caddy
@@ -56,8 +58,8 @@ libscript.cmd stop caddy
 cli.cmd stop caddy
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi caddy
-cli.cmd package_as msi caddy
+libscript.cmd package-as msi caddy
+cli.cmd package-as msi caddy
 
 :: Uninstall
 libscript.cmd uninstall caddy
@@ -72,7 +74,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -98,8 +100,8 @@ running the setup script.
 | `MODEL_NAME` | HuggingFace model string to serve | `your-org/your-model-name` |  |
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
+| `CADDY_INSTALL_METHOD` | How to install CADDY. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 | `CADDY_VERSION` | Specific version of caddy to install. Can be a numeric version or an alias. | `latest` | latest, stable |
-| `CADDY_INSTALL_METHOD` | How to install CADDY. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools. | `libscript-native` |  |
 | `LIBSCRIPT_LISTEN_PORT` | Global port to listen on | `none` |  |
 | `LIBSCRIPT_LISTEN_ADDRESS` | Global address to listen on | `none` |  |
 | `LIBSCRIPT_LISTEN_SOCKET` | Global unix socket to listen on | `none` |  |
@@ -138,3 +140,6 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages caddy versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/caddy/<version>`.

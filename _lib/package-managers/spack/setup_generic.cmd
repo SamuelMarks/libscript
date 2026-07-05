@@ -1,32 +1,221 @@
 @echo off
-:: # setup_generic.cmd
-::
 :: ## Overview
-:: Generic setup script for the spack component on Windows.
-:: It provides fallback installation logic and cross-platform installation steps.
+:: Windows setup for spack
 ::
 :: ## Usage
-:: This script is typically called internally by the component lifecycle.
-
-setlocal
-
-:: This is a placeholder for the native Windows component setup.
-:: By default, many tools rely on winget, choco, or scoop for installation on Windows.
+:: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
 
 if "%ACTION%"=="" set ACTION=install
+if "%SPACK_VERSION%"=="" set SPACK_VERSION=latest
 
-if "%ACTION%"=="ls" (
-    echo [ls] Windows list support not implemented natively for this component.
-    exit /b 0
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 )
-if "%ACTION%"=="ls-remote" (
-    echo [ls-remote] Windows ls-remote support not implemented natively for this component.
-    exit /b 0
-)
-if "%ACTION%"=="use" (
-    echo [use] Windows use support not implemented natively for this component.
-    exit /b 0
+if "%DOWNLOAD_DIR%"=="" (
+    set "DOWNLOAD_DIR=%TEMP%\libscript_downloads"
 )
 
-echo Windows native installation not implemented.
-exit /b 1
+:: Resolve install method
+if "%SPACK_INSTALL_METHOD%"=="" (
+    if not "%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"=="" (
+        set "SPACK_INSTALL_METHOD=%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"
+    ) else (
+        set "SPACK_INSTALL_METHOD=libscript_native"
+    )
+)
+
+if "%ACTION%"=="ls" goto :action_ls
+if "%ACTION%"=="ls-remote" goto :action_ls_remote
+if "%ACTION%"=="use" goto :action_use
+if "%ACTION%"=="download" goto :action_download
+if "%ACTION%"=="install" if "%ACTION%"=="start" goto :action_service
+if "%ACTION%"=="stop" goto :action_service
+if "%ACTION%"=="restart" goto :action_service
+if "%ACTION%"=="status" goto :action_service
+if "%ACTION%"=="health" goto :action_service
+if "%ACTION%"=="logs" goto :action_service
+if "%ACTION%"=="up" goto :action_service
+if "%ACTION%"=="down" goto :action_service
+if "%ACTION%"=="install-service" goto :action_install_service
+if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
+goto :action_install
+goto :action_install
+
+:action_ls
+if "%SPACK_INSTALL_METHOD%"=="mise" ( mise ls spack & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="asdf" ( asdf list spack & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="vfox" ( vfox ls spack & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
+if exist "%LIBSCRIPT_HOME%\spack" ( dir /b "%LIBSCRIPT_HOME%\spack" )
+exit /b 0
+
+:action_ls_remote
+if "%ACTION%"=="use" goto :action_use
+if "%ACTION%"=="download" goto :action_download
+if "%ACTION%"=="install" goto :action_install
+goto :action_install
+
+:action_ls
+if "%SPACK_INSTALL_METHOD%"=="mise" ( mise ls spack & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="asdf" ( asdf list spack & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="vfox" ( vfox ls spack & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
+if exist "%LIBSCRIPT_HOME%\spack" ( dir /b "%LIBSCRIPT_HOME%\spack" )
+exit /b 0
+
+:action_ls_remote
+if "%SPACK_INSTALL_METHOD%"=="mise" ( mise ls-remote spack & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="asdf" ( asdf list all spack & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="vfox" ( vfox ls all spack & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
+if not "%SPACK_RELEASES_URL%"=="" (
+    curl -sSL "%SPACK_RELEASES_URL%"
+) else (
+    git ls-remote --tags "https://github.com/spack/spack" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
+)
+exit /b 0
+
+:action_ls_remote
+if "%SPACK_INSTALL_METHOD%"=="mise" ( mise ls-remote spack & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="asdf" ( asdf list all spack & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="vfox" ( vfox ls all spack & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
+if not "%SPACK_RELEASES_URL%"=="" (
+    curl -sSL "%SPACK_RELEASES_URL%"
+) else (
+    git ls-remote --tags "https://github.com/spack/spack" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
+)
+exit /b 0
+
+:action_use
+if "%SPACK_INSTALL_METHOD%"=="mise" ( mise use "spack@%SPACK_VERSION%" & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="asdf" ( asdf global spack "%SPACK_VERSION%" & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not use explicit versions this way & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="vfox" ( vfox use "spack@%SPACK_VERSION%" & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version with system package manager. & exit /b 0 )
+
+if "%SPACK_VERSION%"=="latest" (set "EXACT_VERSION=%SPACK_VERSION%"
+) else if "%SPACK_VERSION%"=="lts" (set "EXACT_VERSION=%SPACK_VERSION%"
+) else (
+    set "EXACT_VERSION=%SPACK_VERSION%"
+)
+if "%EXACT_VERSION%"=="" set "EXACT_VERSION=%SPACK_VERSION%"
+
+set "TARGET_DIR=%LIBSCRIPT_HOME%\spack\%EXACT_VERSION%"
+set "ALIAS_DIR=%LIBSCRIPT_HOME%\spack\%SPACK_VERSION%"
+
+if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
+    if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"
+    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+)
+exit /b 0
+
+:action_download
+if "%SPACK_INSTALL_METHOD%"=="libscript_native" (
+    echo Downloading spack %SPACK_VERSION% to %DOWNLOAD_DIR%\spack...
+    if not exist "%DOWNLOAD_DIR%\spack" mkdir "%DOWNLOAD_DIR%\spack"
+    if not "%SPACK_DOWNLOAD_URL%"=="" (
+        curl -sSL "%SPACK_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\spack\spack-%SPACK_VERSION%.zip"
+    ) else (
+        echo SPACK_DOWNLOAD_URL is not defined. Skipping.
+    )
+)
+exit /b 0
+
+:action_install
+if "%SPACK_INSTALL_METHOD%"=="system" (
+    winget install spack --accept-package-agreements --accept-source-agreements
+    exit /b !errorlevel!
+)
+if "%SPACK_INSTALL_METHOD%"=="mise" ( mise install "spack@%SPACK_VERSION%" & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="asdf" ( asdf install spack "%SPACK_VERSION%" & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="pkgx" ( pkgx install "spack@%SPACK_VERSION%" & exit /b 0 )
+if "%SPACK_INSTALL_METHOD%"=="vfox" ( vfox add spack & vfox install "spack@%SPACK_VERSION%" & exit /b 0 )
+
+set "TARGET_DIR=%LIBSCRIPT_HOME%\spack\%SPACK_VERSION%"
+if not exist "%TARGET_DIR%\bin" (
+    echo Installing spack %SPACK_VERSION% natively to %TARGET_DIR%...
+    mkdir "%TARGET_DIR%\bin"
+    if exist "%DOWNLOAD_DIR%\spack\spack-%SPACK_VERSION%.zip" (
+        echo Extracting from cache...
+        tar -xf "%DOWNLOAD_DIR%\spack\spack-%SPACK_VERSION%.zip" -C "%TARGET_DIR%"
+    ) else if exist "%DOWNLOAD_DIR%\spack\spack-%SPACK_VERSION%.tar.gz" (
+        echo Extracting from cache...
+        tar -xf "%DOWNLOAD_DIR%\spack\spack-%SPACK_VERSION%.tar.gz" -C "%TARGET_DIR%"
+    ) else if not "%SPACK_DOWNLOAD_URL%"=="" (
+        echo Downloading and extracting...
+        curl -sSL "%SPACK_DOWNLOAD_URL%" -o "%TEMP%\spack.zip"
+        tar -xf "%TEMP%\spack.zip" -C "%TARGET_DIR%"
+    ) else (
+        echo No download URL or cache available for spack.
+    )
+) else (
+    echo spack %SPACK_VERSION% is already installed.
+)
+set "ALIAS_DIR=%LIBSCRIPT_HOME%\spack\%SPACK_VERSION%"
+if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
+    if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"
+    mklink /J "%ALIAS_DIR%" "%TARGET_DIR%" >nul 2>&1
+)
+exit /b 0
+
+:action_service
+if "%LIBSCRIPT_SERVICE_NAME%"=="" (
+    if "%PACKAGE_NAME%"=="" (
+        set "SVC_NAME=libscript_spack"
+    ) else (
+        set "SVC_NAME=libscript_%PACKAGE_NAME%"
+    )
+) else (
+    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
+)
+if "%SPACK_INSTALL_METHOD%"=="libscript_native" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
+) else if "%SPACK_INSTALL_METHOD%"=="system" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
+) else (
+    echo %ACTION% not natively implemented for %SPACK_INSTALL_METHOD%.
+)
+exit /b 0
+
+:action_install_service
+if "%LIBSCRIPT_SERVICE_NAME%"=="" (
+    if "%PACKAGE_NAME%"=="" (
+        set "SVC_NAME=libscript_spack"
+    ) else (
+        set "SVC_NAME=libscript_%PACKAGE_NAME%"
+    )
+) else (
+    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
+)
+if "%SPACK_INSTALL_METHOD%"=="libscript_native" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" install "%SVC_NAME%"
+) else if "%SPACK_INSTALL_METHOD%"=="system" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" install "%SVC_NAME%"
+) else (
+    echo install-service not implemented for %SPACK_INSTALL_METHOD%.
+)
+exit /b 0
+
+:action_uninstall_service
+if "%LIBSCRIPT_SERVICE_NAME%"=="" (
+    if "%PACKAGE_NAME%"=="" (
+        set "SVC_NAME=libscript_spack"
+    ) else (
+        set "SVC_NAME=libscript_%PACKAGE_NAME%"
+    )
+) else (
+    set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
+)
+if "%SPACK_INSTALL_METHOD%"=="libscript_native" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
+) else if "%SPACK_INSTALL_METHOD%"=="system" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
+) else (
+    echo uninstall-service not implemented for %SPACK_INSTALL_METHOD%.
+)
+exit /b 0

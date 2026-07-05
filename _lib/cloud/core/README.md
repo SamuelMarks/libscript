@@ -137,3 +137,12 @@ reattached to a new instance later:
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages core versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/core/<version>`.
+
+## Install Method
+
+By default, `libscript` will install this component natively using the `libscript_native` method.
+You can override this behavior by setting `<COMPONENT>_INSTALL_METHOD` to `system`, `mise`, `asdf`,
+etc.

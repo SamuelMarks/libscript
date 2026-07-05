@@ -32,8 +32,8 @@ the local CLI.
 ./libscript.sh stop kotlin
 ./cli.sh stop kotlin
 
-./libscript.sh package_as docker kotlin
-./cli.sh package_as docker kotlin
+./libscript.sh package-as docker kotlin
+./cli.sh package-as docker kotlin
 
 ./libscript.sh uninstall kotlin
 ./cli.sh uninstall kotlin
@@ -56,8 +56,8 @@ libscript.cmd stop kotlin
 cli.cmd stop kotlin
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi kotlin
-cli.cmd package_as msi kotlin
+libscript.cmd package-as msi kotlin
+cli.cmd package-as msi kotlin
 
 :: Uninstall
 libscript.cmd uninstall kotlin
@@ -72,7 +72,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -98,7 +98,7 @@ running the setup script.
 | `MODEL_NAME` | HuggingFace model string to serve | `your-org/your-model-name` |  |
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
-| `KOTLIN_INSTALL_METHOD` | How to install KOTLIN. 'libscript-native' uses isolated version dirs, 'system' uses OS package manager, 'mise' or 'asdf' defers to third-party tools. | `libscript-native` |  |
+| `KOTLIN_INSTALL_METHOD` | How to install KOTLIN. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 | `KOTLIN_VERSION` | Version of Kotlin Toolchain to install | `1.9.20` |  |
 <!-- END_VARS -->
 
@@ -121,3 +121,6 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages kotlin versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/kotlin/<version>`.

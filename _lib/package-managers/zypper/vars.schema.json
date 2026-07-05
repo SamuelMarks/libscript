@@ -5,6 +5,11 @@
   "description": "Configuration variables for zypper",
   "type": "object",
   "properties": {
+    "ZYPPER_INSTALL_METHOD": {
+      "description": "How to install ZYPPER. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "ZYPPER_VERSION": {
       "description": "Specific version of zypper to install.",
       "type": "string",

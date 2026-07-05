@@ -1,5 +1,5 @@
 @echo off
-:: # package_as.cmd
+:: # package-as.cmd
 ::
 :: ## Overview
 :: Packages the libscript environment into distributable formats.
@@ -361,7 +361,7 @@ if defined is_docker (
     echo if "^!act^!"=="install" ^(
     echo     for /f "usebackq tokens=1,2" %%%%a in ("^!tmp_sel^!") do call "%%~dp0libscript.cmd" install "%%%%a" "%%%%b"
     echo ^) else ^(
-    echo     call "%%~dp0libscript.cmd" package_as "^!act^!" ^!items^! ^!extra_args^!
+    echo     call "%%~dp0libscript.cmd" package-as "^!act^!" ^!items^! ^!extra_args^!
     echo ^)
     echo if exist "^!tmp_sel^!" del "^!tmp_sel^!"
     exit /b 0

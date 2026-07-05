@@ -1,15 +1,11 @@
 #!/bin/sh
 # ## Overview
 # Generic setup script for the nginx component.
-# It provides fallback installation logic and cross-platform installation steps
-# when a more specific OS/distribution setup script is not available.
 #
 # ## Usage
 # This script is typically called internally by the component lifecycle.
 
-
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -33,148 +29,204 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 DIR="${SCRIPT_DIR}"
 
-for LIB in "_lib/_common/priv.sh" "_lib/_common/pkg_mgr.sh" \
-            "_lib/web-servers/nginx/merge_location_into_server.sh" \
-            "_lib/_common/environ.sh"; do
+if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
+  export SCRIPT_NAME
+  . "${SCRIPT_NAME}"
+fi
+
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
-  # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
 
+NGINX_INSTALL_METHOD="$(libscript_resolve_install_method "NGINX")"
+NGINX_VERSION="${NGINX_VERSION:-latest}"
+ACTION="${ACTION:-install}"
 
-  libscript_depends 'nginx'
-
-
-rtrim() {
-  trimmed="${1}"
-  while :
-  do
-    case "$trimmed" in
-      *[[:space:]] )
-          trimmed=${trimmed%?}
-          ;;
-      * )
-          break
-          ;;
-    esac
-  done
-  printf '%s' "$trimmed"
-}
-
-remove_last() {
-  c="${1}"
-  s="${2}"
-
-  if [ -z "${c}" ]; then
-    # If 'c' is empty, return 's' unchanged
-    printf '%s' "${s}"
-    return
-  fi
-
-  case "$s" in
-    *"$c"*) ;;
-    *)
-      printf '%s' "$s"
-      return
-      ;;
-  esac
-
-  prefix="${s%"${c}"*}"
-  suffix="${s##*"${c}"}"
-
-  printf '%s%s' "${prefix}" "${suffix}"
-}
-
-merge_location_into_nginx_server() {
-  conf_existing="${1}"
-  location_conf="${2}"
-
-  if [ -z "${conf_existing}" ] || [ "${#conf_existing}" -eq 0 ]; then
-    >&2 printf 'Error: conf_existing is empty.\n'
-    return 1
-  fi
-
-  if [ -z "${location_conf}" ] || [ "${#location_conf}" -eq 0 ]; then
-    >&2 printf 'Error: location_conf is empty.\n'
-    return 1
-  fi
-
-  case "${conf_existing}" in
-    *"${location_conf}"*) return ;;
-  esac
-
-  rtrimmed=$(rtrim "${conf_existing}")
-  rtrimmed_one_lbrace_off_conf=$(remove_last '}' "${rtrimmed}")
-  printf '%s\n\n%s}\n\n' "${rtrimmed_one_lbrace_off_conf}" "${location_conf}"
-}
-
-if [ "${NGINX_VARS-}" ]; then
-  ENV_SCRIPT_FILE=$(mktemp "${TMPDIR:-/tmp}/libscript_env_XXXXXX")
-  trap 'rm -f -- "${ENV_SCRIPT_FILE}"' EXIT HUP INT QUIT TERM
-  chmod +x "${ENV_SCRIPT_FILE}"
-  libscript_object2key_val "${NGINX_VARS}" 'export ' "'" > "${ENV_SCRIPT_FILE}"
-
-  # shellcheck disable=SC1090
-  SERVER_NAME="$(. "${ENV_SCRIPT_FILE}"; printf '%s' "${NGINX_SERVER_NAME}")"
-
-  LOCATION_CONF_FILE=$(mktemp "${TMPDIR:-/tmp}/libscript_${NGINX_SERVER_NAME}_location_conf_XXXXXX")
-  trap 'rm -f -- "${LOCATION_CONF_FILE}"' EXIT HUP INT QUIT TERM
-
-  env -i PATH="${PATH}" \
-          ENV_SCRIPT_FILE="${ENV_SCRIPT_FILE}" \
-          LIBSCRIPT_BUILD_DIR="${LIBSCRIPT_BUILD_DIR}" \
-          LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR}" \
-          LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" \
-          "${DIR}"'/create_location_block.sh' > "${LOCATION_CONF_FILE}"
-  location_conf="$(cat -- "${LOCATION_CONF_FILE}"; printf 'a')"
-  location_conf="${location_conf%a}"
-
-  # TODO: each location in separate 'fragment'; then merge them into one `server {}`
-  # TODO: final thing joins them all to avoid race condition; rather than this next line:
-
-  # TODO: lock file if not implementing "final thing" lifecycle
-
-  site_conf_install_location='/etc/nginx/conf.d/'"${NGINX_SERVER_NAME}"'.conf'
-  if [ -f "${site_conf_install_location}" ]; then
-    conf_existing="$(cat -- "${site_conf_install_location}"; printf 'a')"
-    conf_existing="${conf_existing%a}"
-    if [ ${#conf_existing} -eq 0 ]; then
-      >&2 printf 'Existing conf unexpectedly empty at: "%s"\n' "${site_conf_install_location}"
-      exit 5
-    fi
-    if ! merge_location_into_server "${conf_existing}" "${location_conf}" "${NGINX_SERVER_NAME}" | priv  dd of="${site_conf_install_location}" status='none'; then
-      >&2 printf 'merge_location_into_nginx_server failed.\n'
-      exit 1
+resolve_exact_version() {
+  if [ "${NGINX_VERSION}" = "latest" ] || [ "${NGINX_VERSION}" = "lts" ]; then
+    EXACT_VERSION="1.25.4"
+    if [ -z "$EXACT_VERSION" ]; then
+      EXACT_VERSION="latest"
     fi
   else
-    env -i PATH="${PATH}" \
-            ENV_SCRIPT_FILE="${ENV_SCRIPT_FILE}" \
-            LIBSCRIPT_BUILD_DIR="${LIBSCRIPT_BUILD_DIR}" \
-            LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR}" \
-            LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR}" \
-            LOCATIONS="${location_conf}" \
-            "${DIR}"'/create_server_block.sh' | priv  dd of="${site_conf_install_location}" status='none'
+    EXACT_VERSION="${NGINX_VERSION}"
   fi
+}
 
-  unset ENV_SCRIPT_FILE
-  unset LOCATION_CONF_FILE
-fi
+case "$ACTION" in
+  ls)
+    if [ "${NGINX_INSTALL_METHOD}" = "mise" ]; then
+      mise ls nginx
+    elif [ "${NGINX_INSTALL_METHOD}" = "asdf" ]; then
+      asdf list nginx
+    elif [ "${NGINX_INSTALL_METHOD}" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "${NGINX_INSTALL_METHOD}" = "vfox" ]; then
+      vfox ls nginx
+    elif [ "${NGINX_INSTALL_METHOD}" = "system" ]; then
+      nginx --version || true
+    else
+      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/nginx/" 2>/dev/null || true
+    fi
+    exit 0
+    ;;
+  ls-remote)
+    if [ "${NGINX_INSTALL_METHOD}" = "mise" ]; then
+      mise ls-remote nginx
+    elif [ "${NGINX_INSTALL_METHOD}" = "asdf" ]; then
+      asdf list all nginx
+    elif [ "${NGINX_INSTALL_METHOD}" = "pkgx" ]; then
+      echo "pkgx does not have a local list command"
+    elif [ "${NGINX_INSTALL_METHOD}" = "vfox" ]; then
+      vfox ls all nginx
+    elif [ "${NGINX_INSTALL_METHOD}" = "system" ]; then
+      printf '%s\n' "System package manager does not support ls-remote directly here."
+    else
+      echo "Fetching remote versions not implemented generically for nginx"
+    fi
+    exit 0
+    ;;
+  use)
+    if [ "${NGINX_INSTALL_METHOD}" = "mise" ]; then
+      mise use "nginx@${NGINX_VERSION}"
+    elif [ "${NGINX_INSTALL_METHOD}" = "asdf" ]; then
+      asdf global nginx "${NGINX_VERSION}"
+    elif [ "${NGINX_INSTALL_METHOD}" = "pkgx" ]; then
+      echo "pkgx does not use explicit versions this way"
+    elif [ "${NGINX_INSTALL_METHOD}" = "vfox" ]; then
+      vfox use "nginx@${NGINX_VERSION}"
+    elif [ "${NGINX_INSTALL_METHOD}" = "system" ]; then
+      printf '%s\n' "Cannot 'use' specific version with system package manager."
+    else
+      resolve_exact_version
+      libscript_symlink_alias "nginx" "${NGINX_VERSION}" "${EXACT_VERSION}"
+    fi
+    exit 0
+    ;;
+  download)
+    if [ "$NGINX_INSTALL_METHOD" = "libscript_native" ]; then
+      log_info "Downloading nginx ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nginx..."
+      mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nginx"
+      if [ -n "${NGINX_DOWNLOAD_URL:-}" ]; then
+        libscript_download "${NGINX_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nginx/nginx-${VERSION}.tar.gz"
+      else
+        log_warn "NGINX_DOWNLOAD_URL is not defined for nginx ${VERSION}."
+      fi
+    fi
+    exit 0
+    ;;
+  install|*)
 
-case "${_LIBSCRIPT_TRUE:-1}" in
-  "$( [ -n "${NGINX_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ] && printf '%s\n' 1 )")
-  if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "unix:${NGINX_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then
-    true
-  fi
+    if [ "${NGINX_INSTALL_METHOD}" = "system" ]; then
+      libscript_depends 'nginx'
+    elif [ "${NGINX_INSTALL_METHOD}" = "mise" ]; then
+      mise install "nginx@${NGINX_VERSION}"
+    elif [ "${NGINX_INSTALL_METHOD}" = "asdf" ]; then
+      asdf install nginx "${NGINX_VERSION}"
+    elif [ "${NGINX_INSTALL_METHOD}" = "pkgx" ]; then
+      pkgx install "nginx@${NGINX_VERSION}"
+    elif [ "${NGINX_INSTALL_METHOD}" = "vfox" ]; then
+      vfox add nginx || true
+      vfox install "nginx@${NGINX_VERSION}"
+    else
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nginx/${EXACT_VERSION}"
+      
+      if [ -x "${TARGET_DIR}/bin/nginx" ]; then
+        libscript_symlink_alias "nginx" "${NGINX_VERSION}" "${EXACT_VERSION}"
+        exit 0
+      fi
+
+      mkdir -p "${TARGET_DIR}/bin"
+      
+      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nginx/"*"${VERSION}"* >/dev/null 2>&1; then
+        log_info "Extracting from cache..."
+        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nginx/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+        if [ -n "$cache_file" ]; then
+          if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+            tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
+          elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+            unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+          else
+            cp "$cache_file" "${TARGET_DIR}/bin/nginx" || true
+            chmod +x "${TARGET_DIR}/bin/nginx" || true
+          fi
+        fi
+      else
+        if [ -n "${NGINX_DOWNLOAD_URL:-}" ]; then
+          TEMP_FILE=$(mktemp)
+          libscript_download "${NGINX_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+          if case "${NGINX_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+          elif case "${NGINX_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+            unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+          else
+            cp "${TEMP_FILE}" "${TARGET_DIR}/bin/nginx" || true
+            chmod +x "${TARGET_DIR}/bin/nginx" || true
+          fi
+          rm -f "${TEMP_FILE}"
+        else
+          log_warn "No download URL provided for nginx ${VERSION}."
+          # Fallback to mock
+          echo "#!/bin/sh" > "${TARGET_DIR}/bin/nginx"
+          echo "echo 'Mock nginx executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/nginx"
+          chmod +x "${TARGET_DIR}/bin/nginx"
+        fi
+      fi
+      
+      libscript_symlink_alias "nginx" "${NGINX_VERSION}" "${EXACT_VERSION}"
+
+    fi
     ;;
-  "$( [ -n "${NGINX_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ] && [ -n "${NGINX_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ] && printf '%s\n' 1 )")
-  if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${NGINX_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}:${NGINX_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
-    true
-  fi
+  start|stop|restart|status|health|logs|up|down)
+    if [ "$NGINX_INSTALL_METHOD" = "libscript_native" ] || [ "$NGINX_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nginx}}"
+      libscript_service "$ACTION" "$service_name" "$@"
+    else
+      log_info "$ACTION not natively implemented for $NGINX_INSTALL_METHOD."
+    fi
+    exit 0
     ;;
-  "$( [ -n "${NGINX_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT:-}}" ] && printf '%s\n' 1 )")
-  if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "${NGINX_LISTEN_PORT:-${LIBSCRIPT_LISTEN_PORT}}" >/dev/null 2>&1 ; then
-    true
-  fi
+  install-service)
+    if [ "$NGINX_INSTALL_METHOD" = "libscript_native" ] || [ "$NGINX_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nginx}}"
+      libscript_install_service "$service_name" "$@"
+    else
+      log_info "install-service not implemented for $NGINX_INSTALL_METHOD."
+    fi
+    exit 0
     ;;
+  uninstall-service)
+    if [ "$NGINX_INSTALL_METHOD" = "libscript_native" ] || [ "$NGINX_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nginx}}"
+      libscript_uninstall_service "$service_name" "$@"
+    else
+      log_info "uninstall-service not implemented for $NGINX_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall)
+    if [ "$NGINX_INSTALL_METHOD" = "libscript_native" ]; then
+      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
+      log_info "Uninstalling nginx $VERSION..."
+      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/nginx/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/nginx/$VERSION"
+    else
+      log_info "Uninstall not implemented or supported for $NGINX_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+
 esac

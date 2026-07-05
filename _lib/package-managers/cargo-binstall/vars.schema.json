@@ -5,6 +5,11 @@
   "description": "Configuration variables for cargo-binstall",
   "type": "object",
   "properties": {
+    "CARGO_BINSTALL_INSTALL_METHOD": {
+      "description": "How to install CARGO_BINSTALL. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "CARGO_BINSTALL_VERSION": {
       "description": "Specific version of cargo-binstall to install.",
       "type": "string",

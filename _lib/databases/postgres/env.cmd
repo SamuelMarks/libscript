@@ -1,10 +1,12 @@
 @echo off
-:: # env.cmd
-::
-:: ## Overview
-:: Environment initialization for PostgreSQL on Windows.
-::
-:: ## Usage
-:: Defines default environment variables for PostgreSQL.
+:: Windows env stub for postgres
 
-:: Environment variables for Windows
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%POSTGRES_VERSION%"=="" (
+    set "POSTGRES_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\postgres\%POSTGRES_VERSION%\bin;%PATH%"

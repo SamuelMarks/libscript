@@ -3,8 +3,9 @@
 ## Purpose & Current State
 
 **Purpose**: This document provides context and technical details for the `rabbitmq` component (part
-of `_storage`) within the LibScript ecosystem. LibScript is a modular, zero-dependency shell-script
-framework designed for cross-platform software provisioning across Linux, macOS, DOS, and Windows.
+of `_storage`) within the LibScript ecolibscript_native. LibScript is a modular, zero-dependency
+shell-script framework designed for cross-platform software provisioning across Linux, macOS, DOS,
+and Windows.
 
 ## Usage
 
@@ -30,7 +31,7 @@ libscript install rabbitmq
 libscript start rabbitmq
 libscript stop rabbitmq
 
-libscript package_as docker rabbitmq
+libscript package-as docker rabbitmq
 
 libscript uninstall rabbitmq
 ```
@@ -46,7 +47,7 @@ libscript.cmd start rabbitmq
 libscript.cmd stop rabbitmq
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi rabbitmq
+libscript.cmd package-as msi rabbitmq
 
 :: Uninstall
 libscript.cmd uninstall rabbitmq
@@ -74,3 +75,12 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+## Configuration
+
+| Variable                  | Description                                                                                                                                                              | Default            | Required |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ | -------- |
+| `RABBITMQ_INSTALL_METHOD` | How to install RABBITMQ. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |          |
+
+Libscript manages rabbitmq versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/rabbitmq/<version>`.

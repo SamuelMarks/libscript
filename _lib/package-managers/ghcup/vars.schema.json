@@ -20,6 +20,11 @@
       "enum": ["1", "0"],
       "description": "Set to 1 to also install Haskell Language Server."
     },
+    "GHCUP_INSTALL_METHOD": {
+      "description": "How to install GHCUP. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "default": "libscript_native"
+    },
     "GHCUP_VERSION": {
       "description": "Specific version of ghcup to install.",
       "type": "string",

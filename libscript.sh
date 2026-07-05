@@ -51,7 +51,7 @@ show_help() {
   printf '%s\n' "  process-downloads [file]    Process an aria2-formatted download list"
   printf '%s\n' "  env <component> <version>   Print environment variables for a component"
   printf '%s\n' "  install-deps [file]         Install all dependencies defined in a JSON file (default: libscript.json)"
-  printf '%s\n' "  package_as <format> [args]  Package libscript usage (e.g., docker, docker_compose)"
+  printf '%s\n' "  package-as <format> [args]  Package libscript usage (e.g., docker, docker_compose)"
   printf '%s\n' "  start [package_name...]     Start services (or all deps in json)"
   printf '%s\n' "  stop [package_name...]      Stop services"
   printf '%s\n' "  status [package_name...]    Show service status"
@@ -195,13 +195,13 @@ case "$CMD" in
   db-search) . "$LIBSCRIPT_ROOT_DIR/cli/commands/registry/search.sh" ;;
   update-db) . "$LIBSCRIPT_ROOT_DIR/cli/commands/registry/update.sh" ;;
   semver) . "$LIBSCRIPT_ROOT_DIR/cli/commands/core/semver.sh" ;;
-  package_as) . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/package_as.sh" ;;
+  package-as) . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/package-as.sh" ;;
 esac
 
 IS_ACTION=0
 REQ_VERSION=0
 case "$CMD" in
-  install|install_daemon|install_service|uninstall_daemon|uninstall_service|remove_daemon|remove_service)
+  install|install-service|uninstall-service)
     IS_ACTION=1; REQ_VERSION=1 ;;
   remove|uninstall|status|health|test|ls|ls-remote|start|stop|restart|logs|up|down)
     IS_ACTION=1 ;;

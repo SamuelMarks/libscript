@@ -35,8 +35,8 @@ local CLI.
 ./libscript.sh stop cc
 ./cli.sh stop cc
 
-./libscript.sh package_as docker cc
-./cli.sh package_as docker cc
+./libscript.sh package-as docker cc
+./cli.sh package-as docker cc
 
 ./libscript.sh uninstall cc
 ./cli.sh uninstall cc
@@ -59,8 +59,8 @@ libscript.cmd stop cc
 cli.cmd stop cc
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi cc
-cli.cmd package_as msi cc
+libscript.cmd package-as msi cc
+cli.cmd package-as msi cc
 
 :: Uninstall
 libscript.cmd uninstall cc
@@ -75,7 +75,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -101,7 +101,7 @@ running the setup script.
 | `MODEL_NAME` | HuggingFace model string to serve | `your-org/your-model-name` |  |
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
-| `CC_INSTALL_METHOD` | How to install CC. 'system' uses the native OS package manager, 'source' compiles/downloads binaries. | `system` |  |
+| `CC_INSTALL_METHOD` | How to install CC. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `system` |  |
 | `CC_VERSION` | Version of C Compiler to install | `latest` |  |
 <!-- END_VARS -->
 
@@ -124,3 +124,6 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages cc versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/cc/<version>`.

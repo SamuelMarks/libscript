@@ -2,68 +2,68 @@
 
 ## Purpose & Current State
 
-**Purpose**: This document provides context and technical details for the `systemd` component (part
-of `_daemon`) within the LibScript ecosystem. This component configures and manages systemd unit
-files, enabling applications to run as standard background services on compatible Linux
-distributions.
+**Purpose**: This document provides context and technical details for the `libscript_natived`
+component (part of `_daemon`) within the LibScript ecolibscript_native. This component configures
+and manages libscript_natived unit files, enabling applications to run as standard background
+services on compatible Linux distributions.
 
 ## Usage
 
-This directory contains the installation and configuration scripts for `systemd`. This component
-works both as a local version manager (similar to rvm, nvm, pyenv, uv) and can be invoked from the
-global version manager `libscript`.
+This directory contains the installation and configuration scripts for `libscript_natived`. This
+component works both as a local version manager (similar to rvm, nvm, pyenv, uv) and can be invoked
+from the global version manager `libscript`.
 
-Furthermore, systemd integrations can be used by libscript to build bigger stacks (like WordPress,
-Open edX, Nextcloud, etc.) by ensuring system processes are monitored, restarted on failure, and
-initiated at boot.
+Furthermore, libscript_natived integrations can be used by libscript to build bigger stacks (like
+WordPress, Open edX, Nextcloud, etc.) by ensuring libscript_native processes are monitored,
+restarted on failure, and initiated at boot.
 
-You can install, start, stop, package, and uninstall systemd using the global `libscript` command or
-the local CLI.
+You can install, start, stop, package, and uninstall libscript_natived using the global `libscript`
+command or the local CLI.
 
 **Unix (Linux/macOS):**
 
 ```sh
 
-./libscript.sh install systemd
+./libscript.sh install libscript_natived
 
-./cli.sh install systemd
+./cli.sh install libscript_natived
 
-./libscript.sh start systemd
-./cli.sh start systemd
+./libscript.sh start libscript_natived
+./cli.sh start libscript_natived
 
-./libscript.sh stop systemd
-./cli.sh stop systemd
+./libscript.sh stop libscript_natived
+./cli.sh stop libscript_natived
 
-./libscript.sh package_as docker systemd
-./cli.sh package_as docker systemd
+./libscript.sh package-as docker libscript_natived
+./cli.sh package-as docker libscript_natived
 
-./libscript.sh uninstall systemd
-./cli.sh uninstall systemd
+./libscript.sh uninstall libscript_natived
+./cli.sh uninstall libscript_natived
 ```
 
 **Windows:**
 
 ```cmd
 :: Global Orchestrator
-libscript.cmd install systemd
+libscript.cmd install libscript_natived
 
 :: Local CLI
-cli.cmd install systemd
+cli.cmd install libscript_natived
 
 :: Start and Stop
-libscript.cmd start systemd
-cli.cmd start systemd
+libscript.cmd start libscript_natived
+cli.cmd start libscript_natived
 
-libscript.cmd stop systemd
-cli.cmd stop systemd
+libscript.cmd stop libscript_natived
+cli.cmd stop libscript_natived
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi systemd
-cli.cmd package_as msi systemd
+libscript.cmd package-as msi libscript_natived
+cli.cmd package-as msi libscript_natived
 
 :: Uninstall
-libscript.cmd uninstall systemd
-cli.cmd uninstall systemd
+libscript.cmd uninstall libscript_natived
+cli.cmd uninstall libscript_natived
 ```
 
 ## Configuration Options
@@ -74,7 +74,7 @@ running the setup script.
 <!-- BEGIN_VARS -->
 | Variable | Description | Default | Aliases/Examples |
 |---|---|---|---|
-| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript-native). | `libscript-native` |  |
+| `LIBSCRIPT_DEFAULT_INSTALL_METHOD` | Global override for how software should be installed (system vs libscript_native). | `libscript_native` |  |
 | `LIBSCRIPT_WINDOWS_PKG_MGR` | Global package manager override for Windows (winget, choco). | `winget` |  |
 | `LIBSCRIPT_LOG_LEVEL` | Minimum logging level (0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR). | `1` |  |
 | `LIBSCRIPT_LOG_FORMAT` | Output format for logs (text, json). | `text` |  |
@@ -103,6 +103,7 @@ running the setup script.
 | `SYSTEMD_EXEC_START` | Executor | `none` |  |
 | `SYSTEMD_WORKING_DIR` | Working directory that `EXEC_START` will be run from | `none` |  |
 | `SYSTEMD_ENV` | Optional additional properties as key/value pairs | `none` |  |
+| `SYSTEMD_INSTALL_METHOD` | How to install SYSTEMD. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 <!-- END_VARS -->
 
 ## Architecture
@@ -124,3 +125,6 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
+
+Libscript manages systemd versions natively by installing them into isolated directories under
+`LIBSCRIPT_HOME/systemd/<version>`.

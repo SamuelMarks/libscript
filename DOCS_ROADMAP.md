@@ -11,7 +11,7 @@ framework's native execution and generation capabilities.
   `devtools/docs-gen`)_
 - **Dynamic Compatibility Matrices:** Automatically detect and maintain "Platform Support" tables in
   component READMEs by inspecting execution scripts. _(Implemented via `devtools/docs-gen`)_
-- **Generator Documentation:** Provide detailed examples of utilizing the `package_as` command to
+- **Generator Documentation:** Provide detailed examples of utilizing the `package-as` command to
   generate Dockerfiles, Docker Compose setups, and native OS installers (Windows, Linux, FreeBSD,
   macOS).
 

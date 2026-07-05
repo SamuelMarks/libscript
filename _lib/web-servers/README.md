@@ -34,8 +34,8 @@ You can manage the lifecycle of any server component located in this directory u
 ./libscript.sh stop web-servers
 ./cli.sh stop web-servers
 
-./libscript.sh package_as docker web-servers
-./cli.sh package_as docker web-servers
+./libscript.sh package-as docker web-servers
+./cli.sh package-as docker web-servers
 
 ./libscript.sh uninstall web-servers
 ./cli.sh uninstall web-servers
@@ -58,8 +58,8 @@ libscript.cmd stop web-servers
 cli.cmd stop web-servers
 
 :: Package (e.g., as MSI installer)
-libscript.cmd package_as msi web-servers
-cli.cmd package_as msi web-servers
+libscript.cmd package-as msi web-servers
+cli.cmd package-as msi web-servers
 
 :: Uninstall
 libscript.cmd uninstall web-servers

@@ -169,7 +169,7 @@ This document outlines the step-by-step plan for building the `libscript` REST A
 
 ### Artifact Generation
 
-- [ ] `POST /api/v1/artifacts/generate`: Implement artifact factory endpoint utilizing `package_as`
+- [ ] `POST /api/v1/artifacts/generate`: Implement artifact factory endpoint utilizing `package-as`
       engine (e.g., Dockerfile, .deb, .msi); return `202` + `job_id`.
   - [ ] Support passing optional generator-specific flags via an `args` array in the request body.
 - [ ] `GET /api/v1/artifacts/{artifact_id}/download`: Implement endpoint to stream the generated
