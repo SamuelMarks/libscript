@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for just on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for just.
+
 :: Windows env stub for just
 
 if "%LIBSCRIPT_HOME%"=="" (

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for postgres on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for postgres.
+#>
+
 # Windows PowerShell env stub for postgres
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

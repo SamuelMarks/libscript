@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for aws on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for aws.
+#>
+
 # Windows PowerShell env stub for aws
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

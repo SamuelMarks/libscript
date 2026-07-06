@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for core on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for core.
+
 :: Windows env stub for core
 
 if "%LIBSCRIPT_HOME%"=="" (

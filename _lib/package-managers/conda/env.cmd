@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for conda on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for conda.
+
 :: Windows env stub for conda
 
 if "%LIBSCRIPT_HOME%"=="" (

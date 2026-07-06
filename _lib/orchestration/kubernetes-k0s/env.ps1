@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for kubernetes-k0s on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for kubernetes-k0s.
+#>
+
 # Windows PowerShell env stub for kubernetes-k0s
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

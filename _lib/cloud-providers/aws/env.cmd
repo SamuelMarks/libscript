@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for aws on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for aws.
+
 :: Windows env stub for aws
 
 if "%LIBSCRIPT_HOME%"=="" (

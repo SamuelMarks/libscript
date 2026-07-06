@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for caddy on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for caddy.
+
 :: Windows env stub for caddy
 
 if "%LIBSCRIPT_HOME%"=="" (

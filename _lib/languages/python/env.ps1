@@ -16,8 +16,18 @@ $LibscriptHome = $env:LIBSCRIPT_HOME
 if ([string]::IsNullOrEmpty($LibscriptHome)) {
     $LibscriptHome = Join-Path $HOME ".libscript"
 }
-$PyPath = Join-Path $LibscriptHome "python\$PythonVersion\bin"
-$PyScriptsPath = Join-Path $PyPath "Scripts"
+$env:PYTHONHOME = Join-Path $LibscriptHome "python\$PythonVersion"
+$PyPath = Join-Path $env:PYTHONHOME "bin"
+$PyScriptsPath = Join-Path $env:PYTHONHOME "Scripts"
+
+# In Windows, site-packages are under Lib\site-packages
+$SitePackages = Join-Path $env:PYTHONHOME "Lib\site-packages"
+if ([string]::IsNullOrEmpty($env:PYTHONPATH)) {
+    $env:PYTHONPATH = $SitePackages
+} else {
+    $env:PYTHONPATH = "$SitePackages;" + $env:PYTHONPATH
+}
+
 if (-not ($env:PATH -split ';' -contains $PyScriptsPath)) {
     $env:PATH = "$PyScriptsPath;" + $env:PATH
 }
@@ -31,4 +41,5 @@ if (-not [string]::IsNullOrEmpty($env:PYTHON_VENV)) {
         $env:PATH = "$VenvPath;" + $env:PATH
     }
     $env:VIRTUAL_ENV = $env:PYTHON_VENV
+    Remove-Item Env:\PYTHONHOME -ErrorAction SilentlyContinue
 }

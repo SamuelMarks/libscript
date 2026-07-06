@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for tensorboard on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for tensorboard.
+#>
+
 # Windows PowerShell env stub for tensorboard
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

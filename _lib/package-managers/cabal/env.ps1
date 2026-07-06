@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for cabal on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for cabal.
+#>
+
 # Windows PowerShell env stub for cabal
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

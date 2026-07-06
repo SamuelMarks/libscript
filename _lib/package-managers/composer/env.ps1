@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for composer on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for composer.
+#>
+
 # Windows PowerShell env stub for composer
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

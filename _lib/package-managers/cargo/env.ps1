@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for cargo on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for cargo.
+#>
+
 # Windows PowerShell env stub for cargo
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for rust-server on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for rust-server.
+#>
+
 # Windows PowerShell env stub for rust-server
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

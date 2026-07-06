@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for kubernetes-thw on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for kubernetes-thw.
+
 :: Windows env stub for kubernetes-thw
 
 if "%LIBSCRIPT_HOME%"=="" (

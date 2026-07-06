@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for service_install on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for service_install.
+#>
+
 # LibScript Service Installer for Windows
 param(
     [string]$ServiceName,

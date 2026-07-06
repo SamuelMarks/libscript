@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for valkey on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for valkey.
+
 :: Windows env stub for valkey
 
 if "%LIBSCRIPT_HOME%"=="" (

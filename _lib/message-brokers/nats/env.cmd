@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for nats on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for nats.
+
 :: Windows env stub for nats
 
 if "%LIBSCRIPT_HOME%"=="" (

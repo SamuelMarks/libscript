@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for gradle on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for gradle.
+
 :: Windows env stub for gradle
 
 if "%LIBSCRIPT_HOME%"=="" (

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for sqlite on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for sqlite.
+#>
+
 # Windows PowerShell env stub for sqlite
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

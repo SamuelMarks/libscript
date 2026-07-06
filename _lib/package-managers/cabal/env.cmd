@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for cabal on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for cabal.
+
 :: Windows env stub for cabal
 
 if "%LIBSCRIPT_HOME%"=="" (

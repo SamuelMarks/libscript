@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for ansible-galaxy on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for ansible-galaxy.
+
 :: Windows env stub for ansible-galaxy
 
 if "%LIBSCRIPT_HOME%"=="" (

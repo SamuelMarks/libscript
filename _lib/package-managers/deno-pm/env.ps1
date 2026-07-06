@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for deno-pm on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for deno-pm.
+#>
+
 # Windows PowerShell env stub for deno-pm
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

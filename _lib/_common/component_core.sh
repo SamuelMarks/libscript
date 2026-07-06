@@ -16,9 +16,9 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 # # LibScript Component Core Module
@@ -160,7 +160,7 @@ case "${1:-}" in
     log_info "${LIBSCRIPT_VERSION:-dev}"
     exit 0
     ;;
-  install|use|install-service|uninstall-service|run|which|exec|env|serve|route)
+  info|install|use|install-service|uninstall-service|run|which|exec|env|serve|route)
     ACTION="${1:-}"
     if [ -n "${3:-}" ]; then
       PACKAGE_NAME="${2:-}"
@@ -185,7 +185,7 @@ case "${1:-}" in
     ACTION="${1:-}"
     shift
     ;;
-  ls|ls-remote|download|remove|uninstall|status|health|test|start|stop|restart|logs|up|down)
+  info|ls|ls-remote|download|remove|uninstall|status|health|test|start|stop|restart|logs|up|down)
     ACTION="${1:-}"
     if [ -n "${3:-}" ] && ! echo "${3:-}" | grep -q '^-'; then
       PACKAGE_NAME="${2:-}"
@@ -400,6 +400,21 @@ elif [ "$ACTION" = "which" ]; then
     log_error "Not installed: $BIN_PATH"
     exit 1
   fi
+elif [ "$ACTION" = "info" ]; then
+  INSTALLED_DIR="${PREFIX:-${LIBSCRIPT_HOME:-$HOME/.libscript}/$PACKAGE_NAME/$VERSION}"
+  printf '%s\n' "Component: $PACKAGE_NAME"
+  printf '%s\n' "Version: $VERSION"
+  printf '%s\n' "Install Path: $INSTALLED_DIR"
+  if [ -d "$INSTALLED_DIR" ]; then
+    printf '%s\n' "Status: Installed"
+  else
+    printf '%s\n' "Status: Not Installed"
+  fi
+  if [ -f "$SCHEMA_FILE" ] && command -v jq >/dev/null 2>&1; then
+    printf '%s\n' "Dynamic Variables:"
+    jq -r '.properties | to_entries[] | "  \(.key): \(.value.description // "") [default: \(.value.default // "")]"' "$SCHEMA_FILE" 2>/dev/null || true
+  fi
+  exit 0
 elif [ "$ACTION" = "exec" ]; then
   INSTALLED_DIR="${PREFIX:-${LIBSCRIPT_HOME:-$HOME/.libscript}/$PACKAGE_NAME/$VERSION}"
   if [ ! -d "$INSTALLED_DIR/bin" ]; then

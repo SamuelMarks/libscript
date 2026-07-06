@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for systemd on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for systemd.
+
 :: Windows env stub for systemd
 
 if "%LIBSCRIPT_HOME%"=="" (

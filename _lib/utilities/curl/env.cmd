@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for curl on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for curl.
+
 :: Windows env stub for curl
 
 if "%LIBSCRIPT_HOME%"=="" (

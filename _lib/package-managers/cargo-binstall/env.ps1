@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for cargo-binstall on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for cargo-binstall.
+#>
+
 # Windows PowerShell env stub for cargo-binstall
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

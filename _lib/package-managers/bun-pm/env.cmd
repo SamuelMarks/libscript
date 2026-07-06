@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for bun-pm on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for bun-pm.
+
 :: Windows env stub for bun-pm
 
 if "%LIBSCRIPT_HOME%"=="" (

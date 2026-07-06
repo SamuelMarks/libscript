@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for gitlab on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for gitlab.
+
 :: Windows env stub for gitlab
 
 if "%LIBSCRIPT_HOME%"=="" (

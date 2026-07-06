@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for ansible-galaxy on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for ansible-galaxy.
+#>
+
 # Windows PowerShell env stub for ansible-galaxy
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

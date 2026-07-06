@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for docker on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for docker.
+
 :: Windows env stub for docker
 
 if "%LIBSCRIPT_HOME%"=="" (

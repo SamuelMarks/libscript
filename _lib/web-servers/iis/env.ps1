@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for iis on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for iis.
+#>
+
 # Windows PowerShell env stub for iis
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

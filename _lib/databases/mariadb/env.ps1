@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for mariadb on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for mariadb.
+#>
+
 # Windows PowerShell env stub for mariadb
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for etcd on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for etcd.
+
 :: Windows env stub for etcd
 
 if "%LIBSCRIPT_HOME%"=="" (

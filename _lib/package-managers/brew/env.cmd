@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for brew on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for brew.
+
 :: Windows env stub for brew
 
 if "%LIBSCRIPT_HOME%"=="" (

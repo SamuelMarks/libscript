@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for aria2 on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for aria2.
+
 :: Windows env stub for aria2
 
 if "%LIBSCRIPT_HOME%"=="" (

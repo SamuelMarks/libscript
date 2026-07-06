@@ -16,7 +16,8 @@ $LibscriptHome = $env:LIBSCRIPT_HOME
 if ([string]::IsNullOrEmpty($LibscriptHome)) {
     $LibscriptHome = Join-Path $HOME ".libscript"
 }
-$GoPath = Join-Path $LibscriptHome "go\$GoVersion\bin"
+$env:GOROOT = Join-Path $LibscriptHome "go\$GoVersion"
+$GoPath = Join-Path $env:GOROOT "bin"
 if (-not ($env:PATH -split ';' -contains $GoPath)) {
     $env:PATH = "$GoPath;" + $env:PATH
 }

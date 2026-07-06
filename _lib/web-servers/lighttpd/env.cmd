@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for lighttpd on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for lighttpd.
+
 :: Windows env stub for lighttpd
 
 if "%LIBSCRIPT_HOME%"=="" (

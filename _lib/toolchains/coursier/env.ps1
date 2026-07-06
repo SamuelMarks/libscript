@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for coursier on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for coursier.
+#>
+
 # Windows PowerShell env stub for coursier
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

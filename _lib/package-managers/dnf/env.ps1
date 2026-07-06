@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for dnf on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for dnf.
+#>
+
 # Windows PowerShell env stub for dnf
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

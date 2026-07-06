@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for maven on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for maven.
+#>
+
 # Windows PowerShell env stub for maven
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

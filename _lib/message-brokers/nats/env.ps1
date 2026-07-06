@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for nats on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for nats.
+#>
+
 # Windows PowerShell env stub for nats
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

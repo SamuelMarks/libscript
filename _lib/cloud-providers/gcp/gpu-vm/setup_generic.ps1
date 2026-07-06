@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for gpu-vm on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for gpu-vm.
+#>
+
 # Windows setup stub for gpu-vm
 $Action = if ($env:ACTION) { $env:ACTION } else { 'install' }
 

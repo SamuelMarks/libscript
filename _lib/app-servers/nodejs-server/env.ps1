@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for nodejs-server on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for nodejs-server.
+#>
+
 # Windows PowerShell env stub for nodejs-server
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

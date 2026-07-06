@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for docker on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for docker.
+#>
+
 # Windows PowerShell env stub for docker
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

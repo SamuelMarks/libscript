@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for aqua on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for aqua.
+
 :: Windows env stub for aqua
 
 if "%LIBSCRIPT_HOME%"=="" (

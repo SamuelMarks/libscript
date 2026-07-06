@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for jq on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for jq.
+#>
+
 # Windows PowerShell env stub for jq
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

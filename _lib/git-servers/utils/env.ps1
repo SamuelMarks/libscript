@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for utils on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for utils.
+#>
+
 # Windows PowerShell env stub for utils
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

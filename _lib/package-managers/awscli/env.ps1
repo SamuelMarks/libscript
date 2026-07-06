@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for awscli on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for awscli.
+#>
+
 # Windows PowerShell env stub for awscli
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

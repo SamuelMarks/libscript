@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for just on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for just.
+#>
+
 # Windows PowerShell env stub for just
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for cygwin on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for cygwin.
+#>
+
 # Windows PowerShell env stub for cygwin
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

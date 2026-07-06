@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for gitea on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for gitea.
+#>
+
 # Windows PowerShell env stub for gitea
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

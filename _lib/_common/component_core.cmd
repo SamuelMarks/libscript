@@ -232,6 +232,32 @@ if not "!LIBSCRIPT_SKIP_DEPENDENCIES!"=="1" if /i "!ACTION!"=="install" (
 )
 
 :: Lifecycle Routing
+if /i "!ACTION!"=="info" (
+    if defined PREFIX (
+        set "INSTALLED_DIR=!PREFIX!"
+    ) else if defined LIBSCRIPT_HOME (
+        set "INSTALLED_DIR=!LIBSCRIPT_HOME!\!PACKAGE_NAME!\!VERSION!"
+    ) else (
+        set "INSTALLED_DIR=%USERPROFILE%\.libscript\!PACKAGE_NAME!\!VERSION!"
+    )
+    echo Component: !PACKAGE_NAME!
+    echo Version: !VERSION!
+    echo Install Path: !INSTALLED_DIR!
+    if exist "!INSTALLED_DIR!" (
+        echo Status: Installed
+    ) else (
+        echo Status: Not Installed
+    )
+    if exist "%SCHEMA_FILE%" (
+        where jq >nul 2>&1
+        if !errorlevel! equ 0 (
+            echo Dynamic Variables:
+            jq -r ".properties | to_entries[] | \"  \\(.key): \\(.value.description // \"\") [default: \\(.value.default // \"\")]\"" "%SCHEMA_FILE%" 2>nul
+        )
+    )
+    exit /b 0
+)
+
 if /i "!ACTION!"=="env" (
     if not defined FORMAT set "FORMAT=cmd"
     if defined PREFIX (

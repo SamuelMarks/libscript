@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for vllm on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for vllm.
+#>
+
 # Windows PowerShell env stub for vllm
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

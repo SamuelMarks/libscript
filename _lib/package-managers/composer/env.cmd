@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for composer on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for composer.
+
 :: Windows env stub for composer
 
 if "%LIBSCRIPT_HOME%"=="" (

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for mosquitto on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for mosquitto.
+#>
+
 # Windows PowerShell env stub for mosquitto
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

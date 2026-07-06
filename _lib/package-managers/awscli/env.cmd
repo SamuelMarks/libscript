@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for awscli on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for awscli.
+
 :: Windows env stub for awscli
 
 if "%LIBSCRIPT_HOME%"=="" (

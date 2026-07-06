@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for fluentbit on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for fluentbit.
+#>
+
 # Windows PowerShell env stub for fluentbit
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for asdf on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for asdf.
+#>
+
 # Windows PowerShell env stub for asdf
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

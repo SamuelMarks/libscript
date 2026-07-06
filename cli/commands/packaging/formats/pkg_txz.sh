@@ -22,16 +22,28 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+  . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/_common_installer_args.sh"
+  deps_list=""
+  if [ $# -gt 0 ]; then
+    while [ $# -gt 0 ]; do
+      deps_list="$deps_list $1 ${2:-latest}"
+      if [ "$2" != "" ]; then shift 2; else shift; fi
+    done
+  elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
+    deps_list=$("${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null | tr '\n' ' ')
+  else
+    deps_list=$(find_components | sort | awk '{printf "%s latest ", $1}')
+  fi
       printf '%s\n' "#!/bin/sh"
       printf '%s\n' "set -e"
-      printf '%s\n' "OUT_DIR=\"$OUT_DIR\""
+      printf '%s\n' "OUT_DIR=\"${OUT_DIR:-.}\""
       printf '%s\n' "mkdir -p \"\$OUT_DIR\""
       meta_depends=""
       set -- $deps_list

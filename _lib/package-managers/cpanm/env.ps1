@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for cpanm on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for cpanm.
+#>
+
 # Windows PowerShell env stub for cpanm
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

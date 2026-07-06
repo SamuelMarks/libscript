@@ -1,4 +1,9 @@
 #!/bin/sh
+# ## Overview
+# Internal script for huggingface-cli.
+#
+# ## Usage
+# Executes initialization, logic, or testing for huggingface-cli.
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -25,4 +30,6 @@ else
   EXACT_VERSION="${HUGGINGFACE_CLI_VERSION}"
 fi
 
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/huggingface-cli/${EXACT_VERSION}/bin:${PATH}"
+export HUGGINGFACE_CLI_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/huggingface-cli/${EXACT_VERSION}"
+export PATH="${HUGGINGFACE_CLI_DIR}/bin:${PATH}"
+export PYTHONPATH="${HUGGINGFACE_CLI_DIR}:${PYTHONPATH:-}"

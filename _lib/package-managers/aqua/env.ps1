@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for aqua on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for aqua.
+#>
+
 # Windows PowerShell env stub for aqua
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

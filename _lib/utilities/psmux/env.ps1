@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for psmux on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for psmux.
+#>
+
 # Windows PowerShell env stub for psmux
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

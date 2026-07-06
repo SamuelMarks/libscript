@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for rust-server on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for rust-server.
+
 :: Windows env stub for rust-server
 
 if "%LIBSCRIPT_HOME%"=="" (

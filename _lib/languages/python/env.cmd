@@ -13,9 +13,14 @@ if "%LIBSCRIPT_HOME%"=="" (
 ) else (
     set "LIBSCRIPT_BASE_DIR=%LIBSCRIPT_HOME%"
 )
-set "PATH=%LIBSCRIPT_BASE_DIR%\python\%PYTHON_VERSION%\bin;%LIBSCRIPT_BASE_DIR%\python\%PYTHON_VERSION%\bin;%PATH%"
+set "PYTHONHOME=%LIBSCRIPT_BASE_DIR%\python\%PYTHON_VERSION%"
+set "PATH=%PYTHONHOME%\bin;%PYTHONHOME%\Scripts;%PATH%"
+
+:: In cmd we can't easily extract major.minor, but Python natively searches lib\site-packages in Windows.
+set "PYTHONPATH=%PYTHONHOME%\Lib\site-packages;%PYTHONPATH%"
 
 if not "%PYTHON_VENV%"=="" (
     set "PATH=%PYTHON_VENV%\Scripts;%PATH%"
     set "VIRTUAL_ENV=%PYTHON_VENV%"
+    set "PYTHONHOME="
 )

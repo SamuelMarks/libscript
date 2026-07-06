@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for choco on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for choco.
+#>
+
 # Windows PowerShell env stub for choco
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

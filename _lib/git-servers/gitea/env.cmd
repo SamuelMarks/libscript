@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for gitea on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for gitea.
+
 :: Windows env stub for gitea
 
 if "%LIBSCRIPT_HOME%"=="" (

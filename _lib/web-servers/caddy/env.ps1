@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for caddy on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for caddy.
+#>
+
 # Windows PowerShell env stub for caddy
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

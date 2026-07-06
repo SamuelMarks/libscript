@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for tmux on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for tmux.
+
 :: Windows env stub for tmux
 
 if "%LIBSCRIPT_HOME%"=="" (

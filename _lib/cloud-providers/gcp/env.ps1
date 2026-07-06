@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for gcp on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for gcp.
+#>
+
 # Windows PowerShell env stub for gcp
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

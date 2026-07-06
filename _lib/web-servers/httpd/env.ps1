@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for httpd on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for httpd.
+#>
+
 # Windows PowerShell env stub for httpd
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

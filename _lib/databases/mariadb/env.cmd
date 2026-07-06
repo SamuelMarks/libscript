@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for mariadb on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for mariadb.
+
 :: Windows env stub for mariadb
 
 if "%LIBSCRIPT_HOME%"=="" (

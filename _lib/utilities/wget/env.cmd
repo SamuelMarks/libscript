@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for wget on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for wget.
+
 :: Windows env stub for wget
 
 if "%LIBSCRIPT_HOME%"=="" (

@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for kafka on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for kafka.
+
 :: Windows env stub for kafka
 
 if "%LIBSCRIPT_HOME%"=="" (

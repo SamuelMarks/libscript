@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for kubectl on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for kubectl.
+#>
+
 # Windows setup stub for kubectl
 $Action = if ($env:ACTION) { $env:ACTION } else { 'install' }
 

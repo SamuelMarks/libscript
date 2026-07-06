@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for powershell on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for powershell.
+
 :: Windows env stub for powershell
 
 if "%LIBSCRIPT_HOME%"=="" (

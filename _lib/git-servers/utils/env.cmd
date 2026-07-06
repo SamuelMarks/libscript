@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for utils on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for utils.
+
 :: Windows env stub for utils
 
 if "%LIBSCRIPT_HOME%"=="" (

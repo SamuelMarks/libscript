@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for wait4x on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for wait4x.
+#>
+
 # Windows PowerShell env stub for wait4x
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

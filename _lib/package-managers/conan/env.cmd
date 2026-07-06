@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for conan on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for conan.
+
 :: Windows env stub for conan
 
 if "%LIBSCRIPT_HOME%"=="" (

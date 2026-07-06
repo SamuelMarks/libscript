@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for rabbitmq on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for rabbitmq.
+#>
+
 # Windows PowerShell env stub for rabbitmq
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

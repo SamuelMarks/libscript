@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for valkey on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for valkey.
+#>
+
 # Windows PowerShell env stub for valkey
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

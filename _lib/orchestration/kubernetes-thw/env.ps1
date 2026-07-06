@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for kubernetes-thw on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for kubernetes-thw.
+#>
+
 # Windows PowerShell env stub for kubernetes-thw
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

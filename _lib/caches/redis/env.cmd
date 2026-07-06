@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for redis on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for redis.
+
 :: Windows env stub for redis
 
 if "%LIBSCRIPT_HOME%"=="" (

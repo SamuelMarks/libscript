@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for coursier on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for coursier.
+
 :: Windows env stub for coursier
 
 if "%LIBSCRIPT_HOME%"=="" (

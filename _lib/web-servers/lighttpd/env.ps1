@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for lighttpd on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for lighttpd.
+#>
+
 # Windows PowerShell env stub for lighttpd
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

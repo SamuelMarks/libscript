@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for tmux on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for tmux.
+#>
+
 # Windows PowerShell env stub for tmux
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

@@ -1,4 +1,9 @@
 #!/bin/sh
+# ## Overview
+# Internal script for xpk.
+#
+# ## Usage
+# Executes initialization, logic, or testing for xpk.
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -25,4 +30,6 @@ else
   EXACT_VERSION="${XPK_VERSION}"
 fi
 
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/xpk/${EXACT_VERSION}/bin:${PATH}"
+export XPK_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/xpk/${EXACT_VERSION}"
+export PATH="${XPK_DIR}/bin:${PATH}"
+export PYTHONPATH="${XPK_DIR}:${PYTHONPATH:-}"

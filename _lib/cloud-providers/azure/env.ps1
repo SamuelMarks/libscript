@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for azure on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for azure.
+#>
+
 # Windows PowerShell env stub for azure
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

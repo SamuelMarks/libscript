@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for jetstream on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for jetstream.
+
 :: Windows env stub for jetstream
 
 if "%LIBSCRIPT_HOME%"=="" (

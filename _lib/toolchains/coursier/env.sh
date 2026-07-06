@@ -1,4 +1,9 @@
 #!/bin/sh
+# ## Overview
+# Internal script for coursier.
+#
+# ## Usage
+# Executes initialization, logic, or testing for coursier.
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"

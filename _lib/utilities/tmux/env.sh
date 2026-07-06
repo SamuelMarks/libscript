@@ -1,4 +1,9 @@
 #!/bin/sh
+# ## Overview
+# Internal script for tmux.
+#
+# ## Usage
+# Executes initialization, logic, or testing for tmux.
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"

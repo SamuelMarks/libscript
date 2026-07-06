@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for nginx on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for nginx.
+
 :: Windows env stub for nginx
 
 if "%LIBSCRIPT_HOME%"=="" (

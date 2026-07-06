@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for apk on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for apk.
+
 :: Windows env stub for apk
 
 if "%LIBSCRIPT_HOME%"=="" (

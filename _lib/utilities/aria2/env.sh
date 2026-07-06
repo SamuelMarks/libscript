@@ -1,4 +1,9 @@
 #!/bin/sh
+# ## Overview
+# Internal script for aria2.
+#
+# ## Usage
+# Executes initialization, logic, or testing for aria2.
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"

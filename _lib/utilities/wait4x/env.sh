@@ -1,4 +1,9 @@
 #!/bin/sh
+# ## Overview
+# Internal script for wait4x.
+#
+# ## Usage
+# Executes initialization, logic, or testing for wait4x.
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for bazel on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for bazel.
+#>
+
 # Windows PowerShell env stub for bazel
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

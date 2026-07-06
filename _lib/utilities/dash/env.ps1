@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for dash on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for dash.
+#>
+
 # Windows PowerShell env stub for dash
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

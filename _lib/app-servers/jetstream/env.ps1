@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for jetstream on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for jetstream.
+#>
+
 # Windows PowerShell env stub for jetstream
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

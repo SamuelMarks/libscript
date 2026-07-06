@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for cygwin on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for cygwin.
+
 :: Windows env stub for cygwin
 
 if "%LIBSCRIPT_HOME%"=="" (

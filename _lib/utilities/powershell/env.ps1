@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for powershell on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for powershell.
+#>
+
 # Windows PowerShell env stub for powershell
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

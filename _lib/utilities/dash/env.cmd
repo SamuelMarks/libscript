@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for dash on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for dash.
+
 :: Windows env stub for dash
 
 if "%LIBSCRIPT_HOME%"=="" (

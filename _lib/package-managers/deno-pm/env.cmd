@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for deno-pm on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for deno-pm.
+
 :: Windows env stub for deno-pm
 
 if "%LIBSCRIPT_HOME%"=="" (

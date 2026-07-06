@@ -1,4 +1,9 @@
 #!/bin/sh
+# ## Overview
+# Internal script for maven.
+#
+# ## Usage
+# Executes initialization, logic, or testing for maven.
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"

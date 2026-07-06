@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for nodejs-server on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for nodejs-server.
+
 :: Windows env stub for nodejs-server
 
 if "%LIBSCRIPT_HOME%"=="" (

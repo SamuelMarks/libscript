@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for curl on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for curl.
+#>
+
 # Windows PowerShell env stub for curl
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for apt on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for apt.
+
 :: Windows env stub for apt
 
 if "%LIBSCRIPT_HOME%"=="" (

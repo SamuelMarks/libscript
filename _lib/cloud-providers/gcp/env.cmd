@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for gcp on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for gcp.
+
 :: Windows env stub for gcp
 
 if "%LIBSCRIPT_HOME%"=="" (

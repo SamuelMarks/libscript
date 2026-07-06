@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for maven on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for maven.
+
 :: Windows env stub for maven
 
 if "%LIBSCRIPT_HOME%"=="" (

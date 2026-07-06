@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for kafka on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for kafka.
+#>
+
 # Windows PowerShell env stub for kafka
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

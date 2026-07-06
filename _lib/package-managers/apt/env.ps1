@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for apt on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for apt.
+#>
+
 # Windows PowerShell env stub for apt
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

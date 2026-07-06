@@ -373,7 +373,15 @@ if defined is_docker (
     goto install_gen_common
 ) else if /i "%~2"=="pkg" (
     goto install_gen_common
-) else if /i "%~2"=="dmg" (
+) else if /i "%~2"=="dmg" ( 
+    goto install_gen_common
+) else if /i "%~2"=="deb" (
+    goto install_gen_common
+) else if /i "%~2"=="rpm" (
+    goto install_gen_common
+) else if /i "%~2"=="apk" (
+    goto install_gen_common
+) else if /i "%~2"=="txz" (
     goto install_gen_common
 ) else (
     echo Error: Unsupported package format '%~2'. 1^>&2

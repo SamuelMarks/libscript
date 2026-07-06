@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for tpu-vm on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for tpu-vm.
+#>
+
 # Windows setup stub for tpu-vm
 $Action = if ($env:ACTION) { $env:ACTION } else { 'install' }
 

@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for kubernetes-k0s on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for kubernetes-k0s.
+
 :: Windows env stub for kubernetes-k0s
 
 if "%LIBSCRIPT_HOME%"=="" (

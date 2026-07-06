@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for bundler on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for bundler.
+#>
+
 # Windows PowerShell env stub for bundler
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for core on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for core.
+#>
+
 # Windows PowerShell env stub for core
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

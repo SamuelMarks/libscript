@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for gitlab on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for gitlab.
+#>
+
 # Windows PowerShell env stub for gitlab
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

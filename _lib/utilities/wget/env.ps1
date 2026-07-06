@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for wget on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for wget.
+#>
+
 # Windows PowerShell env stub for wget
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

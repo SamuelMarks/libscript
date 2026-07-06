@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for conan on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for conan.
+#>
+
 # Windows PowerShell env stub for conan
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for dnf on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for dnf.
+
 :: Windows env stub for dnf
 
 if "%LIBSCRIPT_HOME%"=="" (

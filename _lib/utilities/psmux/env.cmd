@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for psmux on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for psmux.
+
 :: Windows env stub for psmux
 
 if "%LIBSCRIPT_HOME%"=="" (

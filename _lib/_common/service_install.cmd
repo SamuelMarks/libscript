@@ -1,6 +1,14 @@
 :: LibScript Service Installer for Windows
 :: Registers a Windows service
 @echo off
+:: # service_install.cmd
+::
+:: ## Overview
+:: Internal script for service_install on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for service_install.
+
 setlocal EnableDelayedExpansion
 
 set "_SERVICE_NAME=%~1"

@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for jq on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for jq.
+
 :: Windows env stub for jq
 
 if "%LIBSCRIPT_HOME%"=="" (

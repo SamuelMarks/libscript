@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for mosquitto on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for mosquitto.
+
 :: Windows env stub for mosquitto
 
 if "%LIBSCRIPT_HOME%"=="" (

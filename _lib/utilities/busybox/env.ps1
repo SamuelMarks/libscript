@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for busybox on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for busybox.
+#>
+
 # Windows PowerShell env stub for busybox
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for duckdb on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for duckdb.
+
 :: Windows env stub for duckdb
 
 if "%LIBSCRIPT_HOME%"=="" (

@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for httpd on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for httpd.
+
 :: Windows env stub for httpd
 
 if "%LIBSCRIPT_HOME%"=="" (

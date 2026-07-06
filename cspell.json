@@ -436,6 +436,7 @@
     "pyenv",
     "pyproject",
     "PYTHONPATH",
+    "PYTHONHOME",
     "quicklist",
     "quiesce",
     "quiescing",

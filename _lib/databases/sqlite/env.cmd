@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for sqlite on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for sqlite.
+
 :: Windows env stub for sqlite
 
 if "%LIBSCRIPT_HOME%"=="" (

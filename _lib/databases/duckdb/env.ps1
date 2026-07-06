@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for duckdb on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for duckdb.
+#>
+
 # Windows PowerShell env stub for duckdb
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

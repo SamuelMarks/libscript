@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for 7zip on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for 7zip.
+
 :: Windows env stub for 7zip
 
 if "%LIBSCRIPT_HOME%"=="" (

@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for bazel on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for bazel.
+
 :: Windows env stub for bazel
 
 if "%LIBSCRIPT_HOME%"=="" (

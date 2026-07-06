@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for etcd on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for etcd.
+#>
+
 # Windows PowerShell env stub for etcd
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

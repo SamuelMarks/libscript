@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for python-server on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for python-server.
+#>
+
 # Windows PowerShell env stub for python-server
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for azure on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for azure.
+
 :: Windows env stub for azure
 
 if "%LIBSCRIPT_HOME%"=="" (

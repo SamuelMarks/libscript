@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for nginx on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for nginx.
+#>
+
 $ErrorActionPreference = "Stop"
 
 Write-Host "Running merge unit tests..."

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for conda on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for conda.
+#>
+
 # Windows PowerShell env stub for conda
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

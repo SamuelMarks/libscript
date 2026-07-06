@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for redis on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for redis.
+#>
+
 # Windows PowerShell env stub for redis
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

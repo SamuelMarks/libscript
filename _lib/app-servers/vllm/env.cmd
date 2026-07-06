@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for vllm on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for vllm.
+
 :: Windows env stub for vllm
 
 if "%LIBSCRIPT_HOME%"=="" (

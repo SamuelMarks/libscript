@@ -1,4 +1,9 @@
 #!/bin/sh
+# ## Overview
+# Internal script for gradle.
+#
+# ## Usage
+# Executes initialization, logic, or testing for gradle.
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"

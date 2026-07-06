@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for mongodb on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for mongodb.
+
 :: Windows env stub for mongodb
 
 if "%LIBSCRIPT_HOME%"=="" (

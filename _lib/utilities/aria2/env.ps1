@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for aria2 on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for aria2.
+#>
+
 # Windows PowerShell env stub for aria2
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

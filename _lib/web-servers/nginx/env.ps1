@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for nginx on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for nginx.
+#>
+
 # Windows PowerShell env stub for nginx
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

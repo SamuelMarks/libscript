@@ -1,4 +1,9 @@
 #!/bin/sh
+# ## Overview
+# Internal script for iis.
+#
+# ## Usage
+# Executes initialization, logic, or testing for iis.
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"

@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for asdf on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for asdf.
+
 :: Windows env stub for asdf
 
 if "%LIBSCRIPT_HOME%"=="" (

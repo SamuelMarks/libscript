@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for busybox on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for busybox.
+
 :: Windows env stub for busybox
 
 if "%LIBSCRIPT_HOME%"=="" (

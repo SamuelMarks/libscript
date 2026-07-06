@@ -146,3 +146,8 @@ Libscript manages core versions natively by installing them into isolated direct
 By default, `libscript` will install this component natively using the `libscript_native` method.
 You can override this behavior by setting `<COMPONENT>_INSTALL_METHOD` to `system`, `mise`, `asdf`,
 etc.
+
+## Version Management
+
+As outlined in the core philosophy, `libscript` manages the versions natively. Installations are
+isolated by default in `~/.libscript/<component>/<version>` and do not pollute global system paths.

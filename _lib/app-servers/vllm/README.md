@@ -21,3 +21,8 @@ _Note: The default install method is `libscript_native`._
 | Variable              | Description                                                                                                                                                          | Default            | Required |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | -------- |
 | `VLLM_INSTALL_METHOD` | How to install VLLM. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |          |
+
+## Version Management
+
+As outlined in the core philosophy, `libscript` manages the versions natively. Installations are
+isolated by default in `~/.libscript/<component>/<version>` and do not pollute global system paths.

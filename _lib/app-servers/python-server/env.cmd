@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for python-server on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for python-server.
+
 :: Windows env stub for python-server
 
 if "%LIBSCRIPT_HOME%"=="" (

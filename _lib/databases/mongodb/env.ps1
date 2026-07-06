@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for mongodb on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for mongodb.
+#>
+
 # Windows PowerShell env stub for mongodb
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

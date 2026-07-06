@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for cargo on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for cargo.
+
 :: Windows env stub for cargo
 
 if "%LIBSCRIPT_HOME%"=="" (

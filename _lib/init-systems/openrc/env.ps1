@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for openrc on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for openrc.
+#>
+
 # Windows PowerShell env stub for openrc
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

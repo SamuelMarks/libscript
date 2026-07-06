@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for 7zip on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for 7zip.
+#>
+
 # Windows PowerShell env stub for 7zip
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for wait4x on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for wait4x.
+
 :: Windows env stub for wait4x
 
 if "%LIBSCRIPT_HOME%"=="" (

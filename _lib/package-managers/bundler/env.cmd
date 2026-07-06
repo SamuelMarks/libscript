@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for bundler on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for bundler.
+
 :: Windows env stub for bundler
 
 if "%LIBSCRIPT_HOME%"=="" (

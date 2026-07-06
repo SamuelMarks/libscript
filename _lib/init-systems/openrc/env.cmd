@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for openrc on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for openrc.
+
 :: Windows env stub for openrc
 
 if "%LIBSCRIPT_HOME%"=="" (

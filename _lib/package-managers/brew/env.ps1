@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for brew on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for brew.
+#>
+
 # Windows PowerShell env stub for brew
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

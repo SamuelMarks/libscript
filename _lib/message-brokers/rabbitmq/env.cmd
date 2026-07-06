@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for rabbitmq on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for rabbitmq.
+
 :: Windows env stub for rabbitmq
 
 if "%LIBSCRIPT_HOME%"=="" (

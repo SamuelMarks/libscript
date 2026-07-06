@@ -25,9 +25,9 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
@@ -207,7 +207,7 @@ aws_node() {
         EXTRA_ARGS=""
         if [ -n "$BOOTSTRAP" ]; then
           USER_DATA_FILE=$(mktemp)
-          printf '#!/bin/bash\n%s\n' "$BOOTSTRAP" > "$USER_DATA_FILE"
+          printf '#!/bin/sh\n%s\n' "$BOOTSTRAP" > "$USER_DATA_FILE"
           EXTRA_ARGS="--user-data file://$USER_DATA_FILE"
         fi
 

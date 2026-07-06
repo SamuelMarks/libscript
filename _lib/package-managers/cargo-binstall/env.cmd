@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for cargo-binstall on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for cargo-binstall.
+
 :: Windows env stub for cargo-binstall
 
 if "%LIBSCRIPT_HOME%"=="" (

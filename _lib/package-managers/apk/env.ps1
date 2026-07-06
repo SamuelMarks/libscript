@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for apk on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for apk.
+#>
+
 # Windows PowerShell env stub for apk
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

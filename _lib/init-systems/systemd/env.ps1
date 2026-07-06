@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for systemd on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for systemd.
+#>
+
 # Windows PowerShell env stub for systemd
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+Internal script for gradle on Windows.
+
+.DESCRIPTION
+Executes initialization, logic, or testing for gradle.
+#>
+
 # Windows PowerShell env stub for gradle
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

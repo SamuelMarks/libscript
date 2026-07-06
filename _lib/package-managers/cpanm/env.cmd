@@ -1,4 +1,12 @@
 @echo off
+:: # env.cmd
+::
+:: ## Overview
+:: Internal script for cpanm on Windows.
+::
+:: ## Usage
+:: Executes initialization, logic, or testing for cpanm.
+
 :: Windows env stub for cpanm
 
 if "%LIBSCRIPT_HOME%"=="" (

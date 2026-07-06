@@ -22,9 +22,9 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}"
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
@@ -82,13 +82,13 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
     tmp_add=$(mktemp)
     tmp_run=$(mktemp)
 
-    OUT_DIR="$(cd "$OUT_DIR" && pwd)"
+    OUT_DIR="${OUT_DIR:-.}"; OUT_DIR="$(cd "$OUT_DIR" && pwd)"
     deps_list=""
     if [ $# -gt 0 ]; then
       while [ $# -gt 0 ]; do
         pkg="$1"
         ver="${2:-latest}"
-        if echo "$3" | grep -q "^http"; then
+        if [ $# -ge 3 ] && echo "$3" | grep -q "^http"; then
           override="$3"
           shift 3
         elif [ "$2" != "" ]; then
@@ -186,7 +186,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
                   print "echo '\''ADD ${" pkg_up "_URL} /opt/libscript_cache/" pkg "/" filename "'\'' >> \"$tmp_add\""
                   print "echo '\''RUN ./libscript.sh install " pkg " ${" pkg_up "_VERSION}'\'' >> \"$tmp_run\""
               }
-              print "PREFIX=\"/opt/libscript/installed/" pkg "\" \"'${THIS_FILE}'\" env \"" pkg "\" \"" ver "\" --format=docker | grep -vE \"^(ENV STACK=|ENV SCRIPT_NAME=)\" >> \"$tmp_run\" || true"
+              print "PREFIX=\"/opt/libscript/installed/" pkg "\" sh \"'${THIS_FILE}'\" env \"" pkg "\" \"" ver "\" --format=docker | grep -vE \"^(ENV STACK=|ENV SCRIPT_NAME=)\" >> \"$tmp_run\" || true"
           } else {
               if (ver == "" || ver == "null") ver = "latest"
               print "echo '\''ENV " pkg_up "_VERSION=\"" ver "\"'\'' >> \"$tmp_env_add\""
@@ -205,7 +205,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
               } else {
                   print "echo '\''RUN ./libscript.sh install " pkg " ${" pkg_up "_VERSION}'\'' >> \"$tmp_run\""
               }
-              print "PREFIX=\"/opt/libscript/installed/" pkg "\" \"'${THIS_FILE}'\" env \"" pkg "\" \"" ver "\" --format=docker | grep -vE \"^(ENV STACK=|ENV SCRIPT_NAME=)\" >> \"$tmp_run\" || true"
+              print "PREFIX=\"/opt/libscript/installed/" pkg "\" sh \"'${THIS_FILE}'\" env \"" pkg "\" \"" ver "\" --format=docker | grep -vE \"^(ENV STACK=|ENV SCRIPT_NAME=)\" >> \"$tmp_run\" || true"
           }
       }')
       eval "$gen_script"
