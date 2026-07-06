@@ -100,7 +100,9 @@ if "!is_docker_cmd!"=="1" (
 
 set "is_action=0"
 set "req_version=0"
+if /i "%cmd%"=="use" ( set "is_action=1" & set "req_version=1" )
 if /i "%cmd%"=="install" ( set "is_action=1" & set "req_version=1" )
+if /i "%cmd%"=="download" ( set "is_action=1" & set "req_version=1" )
 if /i "%cmd%"=="install-service" ( set "is_action=1" & set "req_version=1" )
 if /i "%cmd%"=="uninstall-service" ( set "is_action=1" & set "req_version=1" )
 
@@ -240,6 +242,8 @@ echo   search ^<query^>                            Search available components b
 echo   install-deps [file]                       Install all dependencies defined in a JSON file (default: libscript.json)
 echo   package-as ^<format^> [args...]             Package libscript usage (e.g., docker, docker_compose)
 echo   install ^<package_name^> ^<version^>
+echo   use ^<package_name^> ^<version^>
+echo   download ^<package_name^> ^<version^>
 echo   remove ^<package_name^> [version]
 echo   uninstall ^<package_name^> [version]
 echo   install-service ^<package_name^> ^<version^>

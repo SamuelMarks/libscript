@@ -37,66 +37,6 @@ if "%KUBECTL_INSTALL_METHOD%"=="asdf" ( asdf list kubectl & exit /b 0 )
 if "%KUBECTL_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
 if "%KUBECTL_INSTALL_METHOD%"=="vfox" ( vfox ls kubectl & exit /b 0 )
 if "%KUBECTL_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
-if exist "%LIBSCRIPT_HOME%\kubectl" ( dir /b "%LIBSCRIPT_HOME%\kubectl" )
-exit /b 0
-
-:action_ls_remote
-if "%ACTION%"=="use" goto :action_use
-if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" goto :action_install
-goto :action_install
-
-:action_ls
-if "%KUBECTL_INSTALL_METHOD%"=="mise" ( mise ls kubectl & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="asdf" ( asdf list kubectl & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="vfox" ( vfox ls kubectl & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
-if exist "%LIBSCRIPT_HOME%\kubectl" ( dir /b "%LIBSCRIPT_HOME%\kubectl" )
-exit /b 0
-
-:action_ls_remote
-if "%ACTION%"=="use" goto :action_use
-if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" goto :action_install
-goto :action_install
-
-:action_ls
-if "%KUBECTL_INSTALL_METHOD%"=="mise" ( mise ls kubectl & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="asdf" ( asdf list kubectl & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="vfox" ( vfox ls kubectl & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
-if exist "%LIBSCRIPT_HOME%\kubectl" ( dir /b "%LIBSCRIPT_HOME%\kubectl" )
-exit /b 0
-
-:action_ls_remote
-if "%ACTION%"=="use" goto :action_use
-if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" goto :action_install
-goto :action_install
-
-:action_ls
-if "%KUBECTL_INSTALL_METHOD%"=="mise" ( mise ls kubectl & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="asdf" ( asdf list kubectl & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="vfox" ( vfox ls kubectl & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
-if exist "%LIBSCRIPT_HOME%\kubectl" ( dir /b "%LIBSCRIPT_HOME%\kubectl" )
-exit /b 0
-
-:action_ls_remote
-if "%ACTION%"=="use" goto :action_use
-if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" goto :action_install
-goto :EOF
-
-:action_ls
-if "%KUBECTL_INSTALL_METHOD%"=="mise" ( mise ls kubectl & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="asdf" ( asdf list kubectl & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="vfox" ( vfox ls kubectl & exit /b 0 )
-if "%KUBECTL_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
 dir /b "%LIBSCRIPT_HOME%\kubectl\" 2>nul
 exit /b 0
 

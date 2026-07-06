@@ -28,7 +28,8 @@ if "%ACTION%"=="ls" goto :action_ls
 if "%ACTION%"=="ls-remote" goto :action_ls_remote
 if "%ACTION%"=="use" goto :action_use
 if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" if "%ACTION%"=="start" goto :action_service
+if "%ACTION%"=="install" goto :action_install
+if "%ACTION%"=="start" goto :action_service
 if "%ACTION%"=="stop" goto :action_service
 if "%ACTION%"=="restart" goto :action_service
 if "%ACTION%"=="status" goto :action_service
@@ -48,34 +49,6 @@ if "%DNF_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command
 if "%DNF_INSTALL_METHOD%"=="vfox" ( vfox ls dnf & exit /b 0 )
 if "%DNF_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
 if exist "%LIBSCRIPT_HOME%\dnf" ( dir /b "%LIBSCRIPT_HOME%\dnf" )
-exit /b 0
-
-:action_ls_remote
-if "%ACTION%"=="use" goto :action_use
-if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" goto :action_install
-goto :action_install
-
-:action_ls
-if "%DNF_INSTALL_METHOD%"=="mise" ( mise ls dnf & exit /b 0 )
-if "%DNF_INSTALL_METHOD%"=="asdf" ( asdf list dnf & exit /b 0 )
-if "%DNF_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%DNF_INSTALL_METHOD%"=="vfox" ( vfox ls dnf & exit /b 0 )
-if "%DNF_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
-if exist "%LIBSCRIPT_HOME%\dnf" ( dir /b "%LIBSCRIPT_HOME%\dnf" )
-exit /b 0
-
-:action_ls_remote
-if "%DNF_INSTALL_METHOD%"=="mise" ( mise ls-remote dnf & exit /b 0 )
-if "%DNF_INSTALL_METHOD%"=="asdf" ( asdf list all dnf & exit /b 0 )
-if "%DNF_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%DNF_INSTALL_METHOD%"=="vfox" ( vfox ls all dnf & exit /b 0 )
-if "%DNF_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
-if not "%DNF_RELEASES_URL%"=="" (
-    curl -sSL "%DNF_RELEASES_URL%"
-) else (
-    git ls-remote --tags "https://github.com/1995chen/dnf" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
-)
 exit /b 0
 
 :action_ls_remote

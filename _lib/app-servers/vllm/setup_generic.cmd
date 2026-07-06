@@ -28,7 +28,8 @@ if "%ACTION%"=="ls" goto :action_ls
 if "%ACTION%"=="ls-remote" goto :action_ls_remote
 if "%ACTION%"=="use" goto :action_use
 if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" if "%ACTION%"=="start" goto :action_service
+if "%ACTION%"=="install" goto :action_install
+if "%ACTION%"=="start" goto :action_service
 if "%ACTION%"=="stop" goto :action_service
 if "%ACTION%"=="restart" goto :action_service
 if "%ACTION%"=="status" goto :action_service
@@ -48,34 +49,6 @@ if "%VLLM_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list comman
 if "%VLLM_INSTALL_METHOD%"=="vfox" ( vfox ls vllm & exit /b 0 )
 if "%VLLM_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
 if exist "%LIBSCRIPT_HOME%\vllm" ( dir /b "%LIBSCRIPT_HOME%\vllm" )
-exit /b 0
-
-:action_ls_remote
-if "%ACTION%"=="use" goto :action_use
-if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" goto :action_install
-goto :action_install
-
-:action_ls
-if "%VLLM_INSTALL_METHOD%"=="mise" ( mise ls vllm & exit /b 0 )
-if "%VLLM_INSTALL_METHOD%"=="asdf" ( asdf list vllm & exit /b 0 )
-if "%VLLM_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%VLLM_INSTALL_METHOD%"=="vfox" ( vfox ls vllm & exit /b 0 )
-if "%VLLM_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
-if exist "%LIBSCRIPT_HOME%\vllm" ( dir /b "%LIBSCRIPT_HOME%\vllm" )
-exit /b 0
-
-:action_ls_remote
-if "%VLLM_INSTALL_METHOD%"=="mise" ( mise ls-remote vllm & exit /b 0 )
-if "%VLLM_INSTALL_METHOD%"=="asdf" ( asdf list all vllm & exit /b 0 )
-if "%VLLM_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%VLLM_INSTALL_METHOD%"=="vfox" ( vfox ls all vllm & exit /b 0 )
-if "%VLLM_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
-if not "%VLLM_RELEASES_URL%"=="" (
-    curl -sSL "%VLLM_RELEASES_URL%"
-) else (
-    git ls-remote --tags "https://github.com/vllm-project/vllm" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
-)
 exit /b 0
 
 :action_ls_remote

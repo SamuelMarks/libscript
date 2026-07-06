@@ -28,7 +28,8 @@ if "%ACTION%"=="ls" goto :action_ls
 if "%ACTION%"=="ls-remote" goto :action_ls_remote
 if "%ACTION%"=="use" goto :action_use
 if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" if "%ACTION%"=="start" goto :action_service
+if "%ACTION%"=="install" goto :action_install
+if "%ACTION%"=="start" goto :action_service
 if "%ACTION%"=="stop" goto :action_service
 if "%ACTION%"=="restart" goto :action_service
 if "%ACTION%"=="status" goto :action_service
@@ -48,34 +49,6 @@ if "%STACK_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list comma
 if "%STACK_INSTALL_METHOD%"=="vfox" ( vfox ls stack & exit /b 0 )
 if "%STACK_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
 if exist "%LIBSCRIPT_HOME%\stack" ( dir /b "%LIBSCRIPT_HOME%\stack" )
-exit /b 0
-
-:action_ls_remote
-if "%ACTION%"=="use" goto :action_use
-if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" goto :action_install
-goto :action_install
-
-:action_ls
-if "%STACK_INSTALL_METHOD%"=="mise" ( mise ls stack & exit /b 0 )
-if "%STACK_INSTALL_METHOD%"=="asdf" ( asdf list stack & exit /b 0 )
-if "%STACK_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%STACK_INSTALL_METHOD%"=="vfox" ( vfox ls stack & exit /b 0 )
-if "%STACK_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
-if exist "%LIBSCRIPT_HOME%\stack" ( dir /b "%LIBSCRIPT_HOME%\stack" )
-exit /b 0
-
-:action_ls_remote
-if "%STACK_INSTALL_METHOD%"=="mise" ( mise ls-remote stack & exit /b 0 )
-if "%STACK_INSTALL_METHOD%"=="asdf" ( asdf list all stack & exit /b 0 )
-if "%STACK_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%STACK_INSTALL_METHOD%"=="vfox" ( vfox ls all stack & exit /b 0 )
-if "%STACK_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
-if not "%STACK_RELEASES_URL%"=="" (
-    curl -sSL "%STACK_RELEASES_URL%"
-) else (
-    git ls-remote --tags "https://github.com/commercialhaskell/stack" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
-)
 exit /b 0
 
 :action_ls_remote

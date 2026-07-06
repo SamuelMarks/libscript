@@ -37,66 +37,6 @@ if "%CLI_INSTALL_METHOD%"=="asdf" ( asdf list cli & exit /b 0 )
 if "%CLI_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
 if "%CLI_INSTALL_METHOD%"=="vfox" ( vfox ls cli & exit /b 0 )
 if "%CLI_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
-if exist "%LIBSCRIPT_HOME%\cli" ( dir /b "%LIBSCRIPT_HOME%\cli" )
-exit /b 0
-
-:action_ls_remote
-if "%ACTION%"=="use" goto :action_use
-if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" goto :action_install
-goto :action_install
-
-:action_ls
-if "%CLI_INSTALL_METHOD%"=="mise" ( mise ls cli & exit /b 0 )
-if "%CLI_INSTALL_METHOD%"=="asdf" ( asdf list cli & exit /b 0 )
-if "%CLI_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%CLI_INSTALL_METHOD%"=="vfox" ( vfox ls cli & exit /b 0 )
-if "%CLI_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
-if exist "%LIBSCRIPT_HOME%\cli" ( dir /b "%LIBSCRIPT_HOME%\cli" )
-exit /b 0
-
-:action_ls_remote
-if "%ACTION%"=="use" goto :action_use
-if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" goto :action_install
-goto :action_install
-
-:action_ls
-if "%CLI_INSTALL_METHOD%"=="mise" ( mise ls cli & exit /b 0 )
-if "%CLI_INSTALL_METHOD%"=="asdf" ( asdf list cli & exit /b 0 )
-if "%CLI_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%CLI_INSTALL_METHOD%"=="vfox" ( vfox ls cli & exit /b 0 )
-if "%CLI_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
-if exist "%LIBSCRIPT_HOME%\cli" ( dir /b "%LIBSCRIPT_HOME%\cli" )
-exit /b 0
-
-:action_ls_remote
-if "%ACTION%"=="use" goto :action_use
-if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" goto :action_install
-goto :action_install
-
-:action_ls
-if "%CLI_INSTALL_METHOD%"=="mise" ( mise ls cli & exit /b 0 )
-if "%CLI_INSTALL_METHOD%"=="asdf" ( asdf list cli & exit /b 0 )
-if "%CLI_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%CLI_INSTALL_METHOD%"=="vfox" ( vfox ls cli & exit /b 0 )
-if "%CLI_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
-if exist "%LIBSCRIPT_HOME%\cli" ( dir /b "%LIBSCRIPT_HOME%\cli" )
-exit /b 0
-
-:action_ls_remote
-if "%ACTION%"=="use" goto :action_use
-if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" goto :action_install
-goto :EOF
-
-:action_ls
-if "%CLI_INSTALL_METHOD%"=="mise" ( mise ls cli & exit /b 0 )
-if "%CLI_INSTALL_METHOD%"=="asdf" ( asdf list cli & exit /b 0 )
-if "%CLI_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%CLI_INSTALL_METHOD%"=="vfox" ( vfox ls cli & exit /b 0 )
-if "%CLI_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
 dir /b "%LIBSCRIPT_HOME%\cli\" 2>nul
 exit /b 0
 

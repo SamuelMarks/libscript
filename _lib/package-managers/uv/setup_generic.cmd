@@ -28,7 +28,8 @@ if "%ACTION%"=="ls" goto :action_ls
 if "%ACTION%"=="ls-remote" goto :action_ls_remote
 if "%ACTION%"=="use" goto :action_use
 if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" if "%ACTION%"=="start" goto :action_service
+if "%ACTION%"=="install" goto :action_install
+if "%ACTION%"=="start" goto :action_service
 if "%ACTION%"=="stop" goto :action_service
 if "%ACTION%"=="restart" goto :action_service
 if "%ACTION%"=="status" goto :action_service
@@ -48,34 +49,6 @@ if "%UV_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command 
 if "%UV_INSTALL_METHOD%"=="vfox" ( vfox ls uv & exit /b 0 )
 if "%UV_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
 if exist "%LIBSCRIPT_HOME%\uv" ( dir /b "%LIBSCRIPT_HOME%\uv" )
-exit /b 0
-
-:action_ls_remote
-if "%ACTION%"=="use" goto :action_use
-if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" goto :action_install
-goto :action_install
-
-:action_ls
-if "%UV_INSTALL_METHOD%"=="mise" ( mise ls uv & exit /b 0 )
-if "%UV_INSTALL_METHOD%"=="asdf" ( asdf list uv & exit /b 0 )
-if "%UV_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%UV_INSTALL_METHOD%"=="vfox" ( vfox ls uv & exit /b 0 )
-if "%UV_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
-if exist "%LIBSCRIPT_HOME%\uv" ( dir /b "%LIBSCRIPT_HOME%\uv" )
-exit /b 0
-
-:action_ls_remote
-if "%UV_INSTALL_METHOD%"=="mise" ( mise ls-remote uv & exit /b 0 )
-if "%UV_INSTALL_METHOD%"=="asdf" ( asdf list all uv & exit /b 0 )
-if "%UV_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%UV_INSTALL_METHOD%"=="vfox" ( vfox ls all uv & exit /b 0 )
-if "%UV_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
-if not "%UV_RELEASES_URL%"=="" (
-    curl -sSL "%UV_RELEASES_URL%"
-) else (
-    git ls-remote --tags "https://github.com/astral-sh/uv" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
-)
 exit /b 0
 
 :action_ls_remote

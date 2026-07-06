@@ -28,7 +28,8 @@ if "%ACTION%"=="ls" goto :action_ls
 if "%ACTION%"=="ls-remote" goto :action_ls_remote
 if "%ACTION%"=="use" goto :action_use
 if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" if "%ACTION%"=="start" goto :action_service
+if "%ACTION%"=="install" goto :action_install
+if "%ACTION%"=="start" goto :action_service
 if "%ACTION%"=="stop" goto :action_service
 if "%ACTION%"=="restart" goto :action_service
 if "%ACTION%"=="status" goto :action_service
@@ -48,34 +49,6 @@ if "%BUN_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command
 if "%BUN_INSTALL_METHOD%"=="vfox" ( vfox ls bun & exit /b 0 )
 if "%BUN_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
 if exist "%LIBSCRIPT_HOME%\bun" ( dir /b "%LIBSCRIPT_HOME%\bun" )
-exit /b 0
-
-:action_ls_remote
-if "%ACTION%"=="use" goto :action_use
-if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" goto :action_install
-goto :action_install
-
-:action_ls
-if "%BUN_INSTALL_METHOD%"=="mise" ( mise ls bun & exit /b 0 )
-if "%BUN_INSTALL_METHOD%"=="asdf" ( asdf list bun & exit /b 0 )
-if "%BUN_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%BUN_INSTALL_METHOD%"=="vfox" ( vfox ls bun & exit /b 0 )
-if "%BUN_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
-if exist "%LIBSCRIPT_HOME%\bun" ( dir /b "%LIBSCRIPT_HOME%\bun" )
-exit /b 0
-
-:action_ls_remote
-if "%BUN_INSTALL_METHOD%"=="mise" ( mise ls-remote bun & exit /b 0 )
-if "%BUN_INSTALL_METHOD%"=="asdf" ( asdf list all bun & exit /b 0 )
-if "%BUN_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%BUN_INSTALL_METHOD%"=="vfox" ( vfox ls all bun & exit /b 0 )
-if "%BUN_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
-if not "%BUN_RELEASES_URL%"=="" (
-    curl -sSL "%BUN_RELEASES_URL%"
-) else (
-    git ls-remote --tags "https://github.com/libscript/bun" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
-)
 exit /b 0
 
 :action_ls_remote

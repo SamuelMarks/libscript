@@ -37,66 +37,6 @@ if "%TPU_VM_INSTALL_METHOD%"=="asdf" ( asdf list tpu-vm & exit /b 0 )
 if "%TPU_VM_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
 if "%TPU_VM_INSTALL_METHOD%"=="vfox" ( vfox ls tpu-vm & exit /b 0 )
 if "%TPU_VM_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
-if exist "%LIBSCRIPT_HOME%\tpu-vm" ( dir /b "%LIBSCRIPT_HOME%\tpu-vm" )
-exit /b 0
-
-:action_ls_remote
-if "%ACTION%"=="use" goto :action_use
-if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" goto :action_install
-goto :action_install
-
-:action_ls
-if "%TPU_VM_INSTALL_METHOD%"=="mise" ( mise ls tpu-vm & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="asdf" ( asdf list tpu-vm & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="vfox" ( vfox ls tpu-vm & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
-if exist "%LIBSCRIPT_HOME%\tpu-vm" ( dir /b "%LIBSCRIPT_HOME%\tpu-vm" )
-exit /b 0
-
-:action_ls_remote
-if "%ACTION%"=="use" goto :action_use
-if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" goto :action_install
-goto :action_install
-
-:action_ls
-if "%TPU_VM_INSTALL_METHOD%"=="mise" ( mise ls tpu-vm & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="asdf" ( asdf list tpu-vm & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="vfox" ( vfox ls tpu-vm & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
-if exist "%LIBSCRIPT_HOME%\tpu-vm" ( dir /b "%LIBSCRIPT_HOME%\tpu-vm" )
-exit /b 0
-
-:action_ls_remote
-if "%ACTION%"=="use" goto :action_use
-if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" goto :action_install
-goto :action_install
-
-:action_ls
-if "%TPU_VM_INSTALL_METHOD%"=="mise" ( mise ls tpu-vm & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="asdf" ( asdf list tpu-vm & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="vfox" ( vfox ls tpu-vm & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
-if exist "%LIBSCRIPT_HOME%\tpu-vm" ( dir /b "%LIBSCRIPT_HOME%\tpu-vm" )
-exit /b 0
-
-:action_ls_remote
-if "%ACTION%"=="use" goto :action_use
-if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" goto :action_install
-goto :EOF
-
-:action_ls
-if "%TPU_VM_INSTALL_METHOD%"=="mise" ( mise ls tpu-vm & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="asdf" ( asdf list tpu-vm & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="vfox" ( vfox ls tpu-vm & exit /b 0 )
-if "%TPU_VM_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
 dir /b "%LIBSCRIPT_HOME%\tpu-vm\" 2>nul
 exit /b 0
 

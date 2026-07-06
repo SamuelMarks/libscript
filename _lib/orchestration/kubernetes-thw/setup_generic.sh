@@ -112,6 +112,19 @@ case "$ACTION" in
     else
       resolve_exact_version
       libscript_symlink_alias "kubernetes-thw" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "kubernetes-thw" "default" "${EXACT_VERSION}"
+      
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/kubernetes-thw/${EXACT_VERSION}"
+      if [ ! -d "$TARGET_DIR" ]; then
+        log_info "kubernetes-thw ${EXACT_VERSION} is not installed. Installing it now..."
+        unset SCRIPT_NAME || true
+        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
+      fi
+
+      libscript_symlink_alias "kubernetes-thw" "default" "${EXACT_VERSION}"
+      log_info "Set default kubernetes-thw version to ${EXACT_VERSION}."
+      log_info "To apply to the current shell, run:"
+      log_info "  eval \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env kubernetes-thw \"$VERSION\")"
     fi
     exit 0
     ;;

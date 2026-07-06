@@ -105,13 +105,24 @@ case "$ACTION" in
       echo "pkgx does not use explicit versions this way"
     elif [ "$RUBY_INSTALL_METHOD" = "vfox" ]; then
       vfox use "ruby@${VERSION}"
-    elif [ "$RUBY_INSTALL_METHOD" = "vfox" ]; then
-      vfox use "ruby@${VERSION}"
     elif [ "$RUBY_INSTALL_METHOD" = "system" ]; then
       echo "System packages do not support use here."
     else
       resolve_exact_version
       libscript_symlink_alias "ruby" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "ruby" "default" "${EXACT_VERSION}"
+      
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/ruby/${EXACT_VERSION}"
+      if [ ! -d "$TARGET_DIR" ]; then
+        log_info "ruby ${EXACT_VERSION} is not installed. Installing it now..."
+        unset SCRIPT_NAME || true
+        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
+      fi
+
+      libscript_symlink_alias "ruby" "default" "${EXACT_VERSION}"
+      log_info "Set default ruby version to ${EXACT_VERSION}."
+      log_info "To apply to the current shell, run:"
+      log_info "  eval \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env ruby \"${VERSION}\")"
     fi
     exit 0
     ;;

@@ -28,7 +28,8 @@ if "%ACTION%"=="ls" goto :action_ls
 if "%ACTION%"=="ls-remote" goto :action_ls_remote
 if "%ACTION%"=="use" goto :action_use
 if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" if "%ACTION%"=="start" goto :action_service
+if "%ACTION%"=="install" goto :action_install
+if "%ACTION%"=="start" goto :action_service
 if "%ACTION%"=="stop" goto :action_service
 if "%ACTION%"=="restart" goto :action_service
 if "%ACTION%"=="status" goto :action_service
@@ -48,34 +49,6 @@ if "%WGET_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list comman
 if "%WGET_INSTALL_METHOD%"=="vfox" ( vfox ls wget & exit /b 0 )
 if "%WGET_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
 if exist "%LIBSCRIPT_HOME%\wget" ( dir /b "%LIBSCRIPT_HOME%\wget" )
-exit /b 0
-
-:action_ls_remote
-if "%ACTION%"=="use" goto :action_use
-if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" goto :action_install
-goto :action_install
-
-:action_ls
-if "%WGET_INSTALL_METHOD%"=="mise" ( mise ls wget & exit /b 0 )
-if "%WGET_INSTALL_METHOD%"=="asdf" ( asdf list wget & exit /b 0 )
-if "%WGET_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%WGET_INSTALL_METHOD%"=="vfox" ( vfox ls wget & exit /b 0 )
-if "%WGET_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
-if exist "%LIBSCRIPT_HOME%\wget" ( dir /b "%LIBSCRIPT_HOME%\wget" )
-exit /b 0
-
-:action_ls_remote
-if "%WGET_INSTALL_METHOD%"=="mise" ( mise ls-remote wget & exit /b 0 )
-if "%WGET_INSTALL_METHOD%"=="asdf" ( asdf list all wget & exit /b 0 )
-if "%WGET_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%WGET_INSTALL_METHOD%"=="vfox" ( vfox ls all wget & exit /b 0 )
-if "%WGET_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
-if not "%WGET_RELEASES_URL%"=="" (
-    curl -sSL "%WGET_RELEASES_URL%"
-) else (
-    echo ls-remote not fully implemented natively yet.
-)
 exit /b 0
 
 :action_ls_remote

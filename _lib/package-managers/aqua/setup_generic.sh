@@ -111,6 +111,19 @@ case "$ACTION" in
     else
       resolve_exact_version
       libscript_symlink_alias "aqua" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "aqua" "default" "${EXACT_VERSION}"
+      
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/aqua/${EXACT_VERSION}"
+      if [ ! -d "$TARGET_DIR" ]; then
+        log_info "aqua ${EXACT_VERSION} is not installed. Installing it now..."
+        unset SCRIPT_NAME || true
+        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
+      fi
+
+      libscript_symlink_alias "aqua" "default" "${EXACT_VERSION}"
+      log_info "Set default aqua version to ${EXACT_VERSION}."
+      log_info "To apply to the current shell, run:"
+      log_info "  eval \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env aqua \"$VERSION\")"
     fi
     exit 0
     ;;

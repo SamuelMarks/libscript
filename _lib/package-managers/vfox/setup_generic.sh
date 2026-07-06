@@ -112,6 +112,19 @@ case "$ACTION" in
     else
       resolve_exact_version
       libscript_symlink_alias "vfox" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "vfox" "default" "${EXACT_VERSION}"
+      
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/vfox/${EXACT_VERSION}"
+      if [ ! -d "$TARGET_DIR" ]; then
+        log_info "vfox ${EXACT_VERSION} is not installed. Installing it now..."
+        unset SCRIPT_NAME || true
+        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
+      fi
+
+      libscript_symlink_alias "vfox" "default" "${EXACT_VERSION}"
+      log_info "Set default vfox version to ${EXACT_VERSION}."
+      log_info "To apply to the current shell, run:"
+      log_info "  eval \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env vfox \"$VERSION\")"
     fi
     exit 0
     ;;

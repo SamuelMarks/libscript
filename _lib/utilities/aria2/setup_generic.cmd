@@ -28,7 +28,8 @@ if "%ACTION%"=="ls" goto :action_ls
 if "%ACTION%"=="ls-remote" goto :action_ls_remote
 if "%ACTION%"=="use" goto :action_use
 if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" if "%ACTION%"=="start" goto :action_service
+if "%ACTION%"=="install" goto :action_install
+if "%ACTION%"=="start" goto :action_service
 if "%ACTION%"=="stop" goto :action_service
 if "%ACTION%"=="restart" goto :action_service
 if "%ACTION%"=="status" goto :action_service
@@ -48,34 +49,6 @@ if "%ARIA2_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list comma
 if "%ARIA2_INSTALL_METHOD%"=="vfox" ( vfox ls aria2 & exit /b 0 )
 if "%ARIA2_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
 if exist "%LIBSCRIPT_HOME%\aria2" ( dir /b "%LIBSCRIPT_HOME%\aria2" )
-exit /b 0
-
-:action_ls_remote
-if "%ACTION%"=="use" goto :action_use
-if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" goto :action_install
-goto :action_install
-
-:action_ls
-if "%ARIA2_INSTALL_METHOD%"=="mise" ( mise ls aria2 & exit /b 0 )
-if "%ARIA2_INSTALL_METHOD%"=="asdf" ( asdf list aria2 & exit /b 0 )
-if "%ARIA2_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%ARIA2_INSTALL_METHOD%"=="vfox" ( vfox ls aria2 & exit /b 0 )
-if "%ARIA2_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
-if exist "%LIBSCRIPT_HOME%\aria2" ( dir /b "%LIBSCRIPT_HOME%\aria2" )
-exit /b 0
-
-:action_ls_remote
-if "%ARIA2_INSTALL_METHOD%"=="mise" ( mise ls-remote aria2 & exit /b 0 )
-if "%ARIA2_INSTALL_METHOD%"=="asdf" ( asdf list all aria2 & exit /b 0 )
-if "%ARIA2_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%ARIA2_INSTALL_METHOD%"=="vfox" ( vfox ls all aria2 & exit /b 0 )
-if "%ARIA2_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
-if not "%ARIA2_RELEASES_URL%"=="" (
-    curl -sSL "%ARIA2_RELEASES_URL%"
-) else (
-    echo ls-remote not fully implemented natively yet.
-)
 exit /b 0
 
 :action_ls_remote

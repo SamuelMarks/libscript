@@ -86,6 +86,19 @@ case "$ACTION" in
     else
       resolve_exact_version
       libscript_symlink_alias "tpu-vm" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "tpu-vm" "default" "${EXACT_VERSION}"
+      
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/tpu-vm/${EXACT_VERSION}"
+      if [ ! -d "$TARGET_DIR" ]; then
+        log_info "tpu-vm ${EXACT_VERSION} is not installed. Installing it now..."
+        unset SCRIPT_NAME || true
+        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
+      fi
+
+      libscript_symlink_alias "tpu-vm" "default" "${EXACT_VERSION}"
+      log_info "Set default tpu-vm version to ${EXACT_VERSION}."
+      log_info "To apply to the current shell, run:"
+      log_info "  eval \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env tpu-vm \"$VERSION\")"
     fi
     exit 0
     ;;

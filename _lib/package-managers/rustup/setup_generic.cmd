@@ -28,7 +28,8 @@ if "%ACTION%"=="ls" goto :action_ls
 if "%ACTION%"=="ls-remote" goto :action_ls_remote
 if "%ACTION%"=="use" goto :action_use
 if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" if "%ACTION%"=="start" goto :action_service
+if "%ACTION%"=="install" goto :action_install
+if "%ACTION%"=="start" goto :action_service
 if "%ACTION%"=="stop" goto :action_service
 if "%ACTION%"=="restart" goto :action_service
 if "%ACTION%"=="status" goto :action_service
@@ -48,34 +49,6 @@ if "%RUSTUP_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list comm
 if "%RUSTUP_INSTALL_METHOD%"=="vfox" ( vfox ls rustup & exit /b 0 )
 if "%RUSTUP_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
 if exist "%LIBSCRIPT_HOME%\rustup" ( dir /b "%LIBSCRIPT_HOME%\rustup" )
-exit /b 0
-
-:action_ls_remote
-if "%ACTION%"=="use" goto :action_use
-if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" goto :action_install
-goto :action_install
-
-:action_ls
-if "%RUSTUP_INSTALL_METHOD%"=="mise" ( mise ls rustup & exit /b 0 )
-if "%RUSTUP_INSTALL_METHOD%"=="asdf" ( asdf list rustup & exit /b 0 )
-if "%RUSTUP_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%RUSTUP_INSTALL_METHOD%"=="vfox" ( vfox ls rustup & exit /b 0 )
-if "%RUSTUP_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
-if exist "%LIBSCRIPT_HOME%\rustup" ( dir /b "%LIBSCRIPT_HOME%\rustup" )
-exit /b 0
-
-:action_ls_remote
-if "%RUSTUP_INSTALL_METHOD%"=="mise" ( mise ls-remote rustup & exit /b 0 )
-if "%RUSTUP_INSTALL_METHOD%"=="asdf" ( asdf list all rustup & exit /b 0 )
-if "%RUSTUP_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%RUSTUP_INSTALL_METHOD%"=="vfox" ( vfox ls all rustup & exit /b 0 )
-if "%RUSTUP_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
-if not "%RUSTUP_RELEASES_URL%"=="" (
-    curl -sSL "%RUSTUP_RELEASES_URL%"
-) else (
-    git ls-remote --tags "https://github.com/libscript/rustup" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
-)
 exit /b 0
 
 :action_ls_remote

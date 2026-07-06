@@ -28,7 +28,8 @@ if "%ACTION%"=="ls" goto :action_ls
 if "%ACTION%"=="ls-remote" goto :action_ls_remote
 if "%ACTION%"=="use" goto :action_use
 if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" if "%ACTION%"=="start" goto :action_service
+if "%ACTION%"=="install" goto :action_install
+if "%ACTION%"=="start" goto :action_service
 if "%ACTION%"=="stop" goto :action_service
 if "%ACTION%"=="restart" goto :action_service
 if "%ACTION%"=="status" goto :action_service
@@ -48,34 +49,6 @@ if "%SEVENZIP_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list co
 if "%SEVENZIP_INSTALL_METHOD%"=="vfox" ( vfox ls 7zip & exit /b 0 )
 if "%SEVENZIP_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
 if exist "%LIBSCRIPT_HOME%\7zip" ( dir /b "%LIBSCRIPT_HOME%\7zip" )
-exit /b 0
-
-:action_ls_remote
-if "%ACTION%"=="use" goto :action_use
-if "%ACTION%"=="download" goto :action_download
-if "%ACTION%"=="install" goto :action_install
-goto :action_install
-
-:action_ls
-if "%SEVENZIP_INSTALL_METHOD%"=="mise" ( mise ls 7zip & exit /b 0 )
-if "%SEVENZIP_INSTALL_METHOD%"=="asdf" ( asdf list 7zip & exit /b 0 )
-if "%SEVENZIP_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%SEVENZIP_INSTALL_METHOD%"=="vfox" ( vfox ls 7zip & exit /b 0 )
-if "%SEVENZIP_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls directly here. & exit /b 0 )
-if exist "%LIBSCRIPT_HOME%\7zip" ( dir /b "%LIBSCRIPT_HOME%\7zip" )
-exit /b 0
-
-:action_ls_remote
-if "%SEVENZIP_INSTALL_METHOD%"=="mise" ( mise ls-remote 7zip & exit /b 0 )
-if "%SEVENZIP_INSTALL_METHOD%"=="asdf" ( asdf list all 7zip & exit /b 0 )
-if "%SEVENZIP_INSTALL_METHOD%"=="pkgx" ( echo pkgx does not have a local list command & exit /b 0 )
-if "%SEVENZIP_INSTALL_METHOD%"=="vfox" ( vfox ls all 7zip & exit /b 0 )
-if "%SEVENZIP_INSTALL_METHOD%"=="system" ( echo System package manager does not support ls-remote directly here. & exit /b 0 )
-if not "%SEVENZIP_RELEASES_URL%"=="" (
-    curl -sSL "%SEVENZIP_RELEASES_URL%"
-) else (
-    echo ls-remote not fully implemented natively yet.
-)
 exit /b 0
 
 :action_ls_remote

@@ -52,6 +52,9 @@ show_help() {
   printf '%s\n' "  env <component> <version>   Print environment variables for a component"
   printf '%s\n' "  install-deps [file]         Install all dependencies defined in a JSON file (default: libscript.json)"
   printf '%s\n' "  package-as <format> [args]  Package libscript usage (e.g., docker, docker_compose)"
+  printf '%s\n' "  install <package_name> <version> Install a specific version of a component"
+  printf '%s\n' "  use <package_name> <version> Set the default version of a component"
+  printf '%s\n' "  download <package_name> <version> Download artifacts for a component to the local cache without installing"
   printf '%s\n' "  start [package_name...]     Start services (or all deps in json)"
   printf '%s\n' "  stop [package_name...]      Stop services"
   printf '%s\n' "  status [package_name...]    Show service status"
@@ -201,11 +204,11 @@ esac
 IS_ACTION=0
 REQ_VERSION=0
 case "$CMD" in
-  install|install-service|uninstall-service)
+  install|install-service|uninstall-service|use|download)
     IS_ACTION=1; REQ_VERSION=1 ;;
   remove|uninstall|status|health|test|ls|ls-remote|start|stop|restart|logs|up|down)
     IS_ACTION=1 ;;
-  run|which|exec|env|download|serve|route|info)
+  run|which|exec|env|serve|route|info)
     IS_ACTION=1; REQ_VERSION=1 ;;
 esac
 
