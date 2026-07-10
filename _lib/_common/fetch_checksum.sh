@@ -41,7 +41,7 @@ libscript_fetch_checksum() {
   fi
 
   # 1. NodeJS
-  if echo "$url" | grep -q "nodejs.org/dist/"; then
+  if printf '%s\n' "$url" | grep -q "nodejs.org/dist/"; then
     base_url="${url%/*}"
     filename="${url##*/}"
     curl -sL "$base_url/SHASUMS256.txt" | grep "$filename" | awk '{print $1}'
@@ -49,23 +49,23 @@ libscript_fetch_checksum() {
   fi
 
   # 2. Go
-  if echo "$url" | grep -q "go.dev/dl/"; then
+  if printf '%s\n' "$url" | grep -q "go.dev/dl/"; then
     filename="${url##*/}"
     curl -sL "https://go.dev/dl/?mode=json&include=all" | grep -A 5 "$filename" | grep '"sha256":' | awk -F'"' '{print $4}'
     return 0
   fi
 
   # 3. GitHub Releases (general)
-  if echo "$url" | grep -q "github.com/.*/releases/download/"; then
+  if printf '%s\n' "$url" | grep -q "github.com/.*/releases/download/"; then
      base_url="${url%/*}"
      filename="${url##*/}"
      sums="$(curl -sL "$base_url/SHASUMS256.txt")"
-     if [ -n "$sums" ] && ! echo "$sums" | grep -q "Not Found"; then
+     if [ -n "$sums" ] && ! printf '%s\n' "$sums" | grep -q "Not Found"; then
          printf '%s\n' "$sums" | grep "$filename" | awk '{print $1}'
          return 0
      fi
      sums="$(curl -sL "$base_url/checksums.txt")"
-     if [ -n "$sums" ] && ! echo "$sums" | grep -q "Not Found"; then
+     if [ -n "$sums" ] && ! printf '%s\n' "$sums" | grep -q "Not Found"; then
          printf '%s\n' "$sums" | grep "$filename" | awk '{print $1}'
          return 0
      fi
@@ -74,7 +74,7 @@ libscript_fetch_checksum() {
   # 4. Fallback checking if .sha256 file exists
   sha_url="${url}.sha256"
   sha_content="$(curl -sL "$sha_url" || true)"
-  if [ -n "$sha_content" ] && ! echo "$sha_content" | grep -i "Not Found" >/dev/null; then
+  if [ -n "$sha_content" ] && ! printf '%s\n' "$sha_content" | grep -i "Not Found" >/dev/null; then
       printf '%s\n' "$sha_content" | awk '{print $1}'
       return 0
   fi

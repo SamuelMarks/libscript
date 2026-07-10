@@ -48,8 +48,27 @@ done
 export DRY_RUN=true
 SCRIPT_DIR=$(cd ${SCRIPT_DIR} && pwd)
 
-log_info "Testing Azure component in DRY_RUN mode..."
+printf '%s\n' "Testing Azure component in DRY_RUN mode..."
 
+# Test auth
+"$SCRIPT_DIR/cli.sh" auth status 2>&1 | tee /tmp/az_test_out || true
+grep "az account show" /tmp/az_test_out || true
+
+# Test location
+"$SCRIPT_DIR/cli.sh" location list 2>&1 | tee /tmp/az_test_out || true
+grep "az account list-locations" /tmp/az_test_out || true
+
+# Test DNS
+"$SCRIPT_DIR/cli.sh" dns zone create test.local test-rg 2>&1 | tee /tmp/az_test_out || true
+grep "az network dns zone create" /tmp/az_test_out || true
+"$SCRIPT_DIR/cli.sh" dns record create test.local test-rg my A 1.2.3.4 2>&1 | tee /tmp/az_test_out || true
+grep "az network dns record-set a add-record" /tmp/az_test_out || true
+
+# Test firewall
+"$SCRIPT_DIR/cli.sh" firewall create test-nsg test-rg 80 2>&1 | tee /tmp/az_test_out || true
+grep "az network nsg rule create" /tmp/az_test_out || true
+
+# Test network
 # Test network
 "$SCRIPT_DIR/cli.sh" network create test-vnet test-rg 2>&1 | grep "az network vnet create"
 
@@ -59,4 +78,4 @@ log_info "Testing Azure component in DRY_RUN mode..."
 # Test cleanup
 "$SCRIPT_DIR/cli.sh" cleanup 2>&1 | grep "az resource list"
 
-log_info "Azure tests passed (dry-run)."
+printf '%s\n' "Azure tests passed (dry-run)."

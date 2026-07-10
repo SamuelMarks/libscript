@@ -64,7 +64,7 @@ case "$ACTION" in
     elif [ "$PYTHON_INSTALL_METHOD" = "asdf" ]; then
       asdf list python
     elif [ "$PYTHON_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$PYTHON_INSTALL_METHOD" = "vfox" ]; then
       vfox ls python
     elif [ "$PYTHON_INSTALL_METHOD" = "system" ]; then
@@ -80,7 +80,7 @@ case "$ACTION" in
     elif [ "$PYTHON_INSTALL_METHOD" = "asdf" ]; then
       asdf list all
     elif [ "$PYTHON_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$PYTHON_INSTALL_METHOD" = "vfox" ]; then
       vfox ls all python
     elif [ "$PYTHON_INSTALL_METHOD" = "system" ]; then
@@ -96,7 +96,7 @@ case "$ACTION" in
     elif [ "$PYTHON_INSTALL_METHOD" = "asdf" ]; then
       asdf global python "${PYTHON_VERSION}"
     elif [ "$PYTHON_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "$PYTHON_INSTALL_METHOD" = "vfox" ]; then
       vfox use "python@${PYTHON_VERSION}"
     elif [ "$PYTHON_INSTALL_METHOD" = "system" ]; then

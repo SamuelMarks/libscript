@@ -41,6 +41,34 @@ _PKG_MGR_NAME="${PACKAGE_NAME:-}"
 if [ -z "${_PKG_MGR_NAME}" ]; then
   # Fallback: try to get it from the directory name if not set
   _PKG_MGR_NAME=$(basename "$(pwd)")
+
+validate_tpu_config() {
+  if [ -n "${TPU_ACCELERATOR_TYPE:-}" ] && [ -n "${TPU_VERSION:-}" ]; then
+    case "${TPU_ACCELERATOR_TYPE}" in
+      v2-*|v3-*)
+        case "${TPU_VERSION}" in
+          tpu-ubuntu2204-base|tpu-vm-base|tpu-vm-tf-*|tpu-vm-pt-*|tpu-vm-jax-*)
+            ;;
+          *)
+            log_warn "TPU_VERSION ${TPU_VERSION} may be incompatible with ${TPU_ACCELERATOR_TYPE}."
+            ;;
+        esac
+        ;;
+      v4-*)
+        case "${TPU_VERSION}" in
+          tpu-ubuntu2204-base|tpu-vm-v4-base|tpu-ubuntu2204-base-v4|tpu-vm-v4-*)
+            ;;
+          *)
+            log_warn "TPU_VERSION ${TPU_VERSION} may be incompatible with ${TPU_ACCELERATOR_TYPE}."
+            ;;
+        esac
+        ;;
+    esac
+  fi
+}
+
+validate_tpu_config
+
 fi
 
 for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/versioning.sh"; do
@@ -70,19 +98,19 @@ resolve_exact_version() {
 case "$ACTION" in
   ls)
     if [ "${TPU_VM_INSTALL_METHOD:-}" = "system" ]; then
-      echo "System packages do not support ls here."
+      printf '%s\n' "System packages do not support ls here."
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/tpu-vm/" 2>/dev/null || true
     fi
     exit 0
     ;;
   ls-remote)
-    git ls-remote --tags "https://github.com/google/jax" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+    git ls-remote --tags "https://github.com/google/jax" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
     exit 0
     ;;
   use)
     if [ "${TPU_VM_INSTALL_METHOD:-}" = "system" ]; then
-      echo "System packages do not support use here."
+      printf '%s\n' "System packages do not support use here."
     else
       resolve_exact_version
       libscript_symlink_alias "tpu-vm" "$VERSION" "${EXACT_VERSION}"

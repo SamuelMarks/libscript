@@ -63,7 +63,7 @@ case "$ACTION" in
     elif [ "${COURSIER_INSTALL_METHOD}" = "asdf" ]; then
       asdf list coursier
     elif [ "${COURSIER_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${COURSIER_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls coursier
     elif [ "${COURSIER_INSTALL_METHOD}" = "system" ]; then
@@ -79,13 +79,13 @@ case "$ACTION" in
     elif [ "${COURSIER_INSTALL_METHOD}" = "asdf" ]; then
       asdf list all coursier
     elif [ "${COURSIER_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${COURSIER_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls all coursier
     elif [ "${COURSIER_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "System package manager does not support ls-remote directly here."
     else
-      echo "Fetching remote versions not implemented generically for coursier"
+      printf '%s\n' "Fetching remote versions not implemented generically for coursier"
     fi
     exit 0
     ;;
@@ -95,7 +95,7 @@ case "$ACTION" in
     elif [ "${COURSIER_INSTALL_METHOD}" = "asdf" ]; then
       asdf global coursier "${COURSIER_VERSION}"
     elif [ "${COURSIER_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "${COURSIER_INSTALL_METHOD}" = "vfox" ]; then
       vfox use "coursier@${COURSIER_VERSION}"
     elif [ "${COURSIER_INSTALL_METHOD}" = "system" ]; then
@@ -184,8 +184,8 @@ case "$ACTION" in
         else
           log_warn "No download URL provided for coursier ${VERSION}."
           # Fallback to mock
-          echo "#!/bin/sh" > "${TARGET_DIR}/bin/coursier"
-          echo "echo 'Mock coursier executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/coursier"
+          printf '%s\n' "#!/bin/sh" > "${TARGET_DIR}/bin/coursier"
+          printf '%s\n' "printf '%s\n' 'Mock coursier executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/coursier"
           chmod +x "${TARGET_DIR}/bin/coursier"
         fi
       fi

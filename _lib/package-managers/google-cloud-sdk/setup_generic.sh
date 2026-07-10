@@ -68,11 +68,11 @@ case "$ACTION" in
     elif [ "$GOOGLE_CLOUD_SDK_INSTALL_METHOD" = "asdf" ]; then
       asdf list google-cloud-sdk || true
     elif [ "$GOOGLE_CLOUD_SDK_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$GOOGLE_CLOUD_SDK_INSTALL_METHOD" = "vfox" ]; then
       vfox ls google_cloud_sdk || true
     elif [ "$GOOGLE_CLOUD_SDK_INSTALL_METHOD" = "system" ]; then
-      echo "System packages do not support ls here."
+      printf '%s\n' "System packages do not support ls here."
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/google-cloud-sdk/" 2>/dev/null || true
     fi
@@ -84,14 +84,14 @@ case "$ACTION" in
     elif [ "$GOOGLE_CLOUD_SDK_INSTALL_METHOD" = "asdf" ]; then
       asdf list all google-cloud-sdk || true
     elif [ "$GOOGLE_CLOUD_SDK_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$GOOGLE_CLOUD_SDK_INSTALL_METHOD" = "vfox" ]; then
       vfox ls all google_cloud_sdk || true
     else
       if [ -n "${GOOGLE_CLOUD_SDK_RELEASES_URL:-}" ]; then
-        curl -sSL "${GOOGLE_CLOUD_SDK_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+        curl -sSL "${GOOGLE_CLOUD_SDK_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
       else
-      git ls-remote --tags "https://github.com/libscript/google-cloud-sdk" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+      git ls-remote --tags "https://github.com/libscript/google-cloud-sdk" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
     fi
     fi
     exit 0
@@ -102,13 +102,13 @@ case "$ACTION" in
     elif [ "$GOOGLE_CLOUD_SDK_INSTALL_METHOD" = "asdf" ]; then
       asdf global google-cloud-sdk "${VERSION}"
     elif [ "$GOOGLE_CLOUD_SDK_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "$GOOGLE_CLOUD_SDK_INSTALL_METHOD" = "vfox" ]; then
       vfox use "google_cloud_sdk@${VERSION}"
     elif [ "$GOOGLE_CLOUD_SDK_INSTALL_METHOD" = "vfox" ]; then
       vfox use "google-cloud-sdk@${VERSION}"
     elif [ "$GOOGLE_CLOUD_SDK_INSTALL_METHOD" = "system" ]; then
-      echo "System packages do not support use here."
+      printf '%s\n' "System packages do not support use here."
     else
       resolve_exact_version
       libscript_symlink_alias "google-cloud-sdk" "$VERSION" "${EXACT_VERSION}"

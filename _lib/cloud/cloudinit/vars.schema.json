@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "LIBSCRIPT_DEVICE": {
+      "type": "string",
+      "description": "The device path (e.g. /dev/sdf)."
+    },
+    "LIBSCRIPT_MOUNT_POINT": {
+      "type": "string",
+      "description": "The directory where the device should be mounted (e.g. /data)."
+    },
+    "LIBSCRIPT_FS_TYPE": {
+      "type": "string",
+      "description": "The filesystem type (default: ext4)."
+    }
+  }
+}

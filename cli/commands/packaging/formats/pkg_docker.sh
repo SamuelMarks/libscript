@@ -88,7 +88,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
       while [ $# -gt 0 ]; do
         pkg="$1"
         ver="${2:-latest}"
-        if [ $# -ge 3 ] && echo "$3" | grep -q "^http"; then
+        if [ $# -ge 3 ] && printf '%s\n' "$3" | grep -q "^http"; then
           override="$3"
           shift 3
         elif [ "$2" != "" ]; then
@@ -168,42 +168,42 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
               filename = parts[n]
               sub(/\?.*$/, "", filename)
 
-              print "echo '\''ENV " pkg_up "_VERSION=\"" ver "\"'\'' >> \"$tmp_env_add\""
-              print "echo '\''ENV " pkg_up "_URL=\"" url "\"'\'' >> \"$tmp_env_add\""
+              print "printf \"%s\\n\" '\''ENV " pkg_up "_VERSION=\"" ver "\"'\'' >> \"$tmp_env_add\""
+              print "printf \"%s\\n\" '\''ENV " pkg_up "_URL=\"" url "\"'\'' >> \"$tmp_env_add\""
               if (artifact_type == "deb") {
-                  print "echo '\''RUN apt-get update && apt-get install -y /opt/libscript/*-" pkg "_*.deb'\'' >> \"$tmp_run\""
+                  print "printf \"%s\\n\" '\''RUN apt-get update && apt-get install -y /opt/libscript/*-" pkg "_*.deb'\'' >> \"$tmp_run\""
               } else if (artifact_type == "rpm") {
-                  print "echo '\''RUN dnf install -y /opt/libscript/*-" pkg "-*.rpm'\'' >> \"$tmp_run\""
+                  print "printf \"%s\\n\" '\''RUN dnf install -y /opt/libscript/*-" pkg "-*.rpm'\'' >> \"$tmp_run\""
               } else if (artifact_type == "apk") {
-                  print "echo '\''RUN apk add --allow-untrusted /opt/libscript/*-" pkg "-*.apk'\'' >> \"$tmp_run\""
+                  print "printf \"%s\\n\" '\''RUN apk add --allow-untrusted /opt/libscript/*-" pkg "-*.apk'\'' >> \"$tmp_run\""
               } else if (artifact_type == "txz") {
-                  print "echo '\''RUN pkg install -y /opt/libscript/*-" pkg "*.txz /opt/libscript/*-" pkg "*.pkg || true'\'' >> \"$tmp_run\""
+                  print "printf \"%s\\n\" '\''RUN pkg install -y /opt/libscript/*-" pkg "*.txz /opt/libscript/*-" pkg "*.pkg || true'\'' >> \"$tmp_run\""
               } else if (artifact_type == "msi") {
-                  print "echo '\''RUN for %I in (C:\\opt\\libscript\\*-" pkg "-*.msi) do msiexec /i \"%I\" /qn /norestart'\'' >> \"$tmp_run\""
+                  print "printf \"%s\\n\" '\''RUN for %I in (C:\\opt\\libscript\\*-" pkg "-*.msi) do msiexec /i \"%I\" /qn /norestart'\'' >> \"$tmp_run\""
               } else if (artifact_type == "exe") {
-                  print "echo '\''RUN for %I in (C:\\opt\\libscript\\*-" pkg "-*.exe) do \"%I\" /SILENT /VERYSILENT'\'' >> \"$tmp_run\""
+                  print "printf \"%s\\n\" '\''RUN for %I in (C:\\opt\\libscript\\*-" pkg "-*.exe) do \"%I\" /SILENT /VERYSILENT'\'' >> \"$tmp_run\""
               } else {
-                  print "echo '\''ADD ${" pkg_up "_URL} /opt/libscript_cache/" pkg "/" filename "'\'' >> \"$tmp_add\""
-                  print "echo '\''RUN ./libscript.sh install " pkg " ${" pkg_up "_VERSION}'\'' >> \"$tmp_run\""
+                  print "printf \"%s\\n\" '\''ADD ${" pkg_up "_URL} /opt/libscript_cache/" pkg "/" filename "'\'' >> \"$tmp_add\""
+                  print "printf \"%s\\n\" '\''RUN ./libscript.sh install " pkg " ${" pkg_up "_VERSION}'\'' >> \"$tmp_run\""
               }
               print "PREFIX=\"/opt/libscript/installed/" pkg "\" sh \"'${THIS_FILE}'\" env \"" pkg "\" \"" ver "\" --format=docker | grep -vE \"^(ENV STACK=|ENV SCRIPT_NAME=)\" >> \"$tmp_run\" || true"
           } else {
               if (ver == "" || ver == "null") ver = "latest"
-              print "echo '\''ENV " pkg_up "_VERSION=\"" ver "\"'\'' >> \"$tmp_env_add\""
+              print "printf \"%s\\n\" '\''ENV " pkg_up "_VERSION=\"" ver "\"'\'' >> \"$tmp_env_add\""
               if (artifact_type == "deb") {
-                  print "echo '\''RUN apt-get update && apt-get install -y /opt/libscript/*-" pkg "_*.deb'\'' >> \"$tmp_run\""
+                  print "printf \"%s\\n\" '\''RUN apt-get update && apt-get install -y /opt/libscript/*-" pkg "_*.deb'\'' >> \"$tmp_run\""
               } else if (artifact_type == "rpm") {
-                  print "echo '\''RUN dnf install -y /opt/libscript/*-" pkg "-*.rpm'\'' >> \"$tmp_run\""
+                  print "printf \"%s\\n\" '\''RUN dnf install -y /opt/libscript/*-" pkg "-*.rpm'\'' >> \"$tmp_run\""
               } else if (artifact_type == "apk") {
-                  print "echo '\''RUN apk add --allow-untrusted /opt/libscript/*-" pkg "-*.apk'\'' >> \"$tmp_run\""
+                  print "printf \"%s\\n\" '\''RUN apk add --allow-untrusted /opt/libscript/*-" pkg "-*.apk'\'' >> \"$tmp_run\""
               } else if (artifact_type == "txz") {
-                  print "echo '\''RUN pkg install -y /opt/libscript/*-" pkg "*.txz /opt/libscript/*-" pkg "*.pkg || true'\'' >> \"$tmp_run\""
+                  print "printf \"%s\\n\" '\''RUN pkg install -y /opt/libscript/*-" pkg "*.txz /opt/libscript/*-" pkg "*.pkg || true'\'' >> \"$tmp_run\""
               } else if (artifact_type == "msi") {
-                  print "echo '\''RUN for %I in (C:\\opt\\libscript\\*-" pkg "-*.msi) do msiexec /i \"%I\" /qn /norestart'\'' >> \"$tmp_run\""
+                  print "printf \"%s\\n\" '\''RUN for %I in (C:\\opt\\libscript\\*-" pkg "-*.msi) do msiexec /i \"%I\" /qn /norestart'\'' >> \"$tmp_run\""
               } else if (artifact_type == "exe") {
-                  print "echo '\''RUN for %I in (C:\\opt\\libscript\\*-" pkg "-*.exe) do \"%I\" /SILENT /VERYSILENT'\'' >> \"$tmp_run\""
+                  print "printf \"%s\\n\" '\''RUN for %I in (C:\\opt\\libscript\\*-" pkg "-*.exe) do \"%I\" /SILENT /VERYSILENT'\'' >> \"$tmp_run\""
               } else {
-                  print "echo '\''RUN ./libscript.sh install " pkg " ${" pkg_up "_VERSION}'\'' >> \"$tmp_run\""
+                  print "printf \"%s\\n\" '\''RUN ./libscript.sh install " pkg " ${" pkg_up "_VERSION}'\'' >> \"$tmp_run\""
               }
               print "PREFIX=\"/opt/libscript/installed/" pkg "\" sh \"'${THIS_FILE}'\" env \"" pkg "\" \"" ver "\" --format=docker | grep -vE \"^(ENV STACK=|ENV SCRIPT_NAME=)\" >> \"$tmp_run\" || true"
           }

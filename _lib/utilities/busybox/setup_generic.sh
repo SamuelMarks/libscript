@@ -63,7 +63,7 @@ case "$ACTION" in
     elif [ "${BUSYBOX_INSTALL_METHOD}" = "asdf" ]; then
       asdf list busybox
     elif [ "${BUSYBOX_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${BUSYBOX_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls busybox
     elif [ "${BUSYBOX_INSTALL_METHOD}" = "system" ]; then
@@ -79,13 +79,13 @@ case "$ACTION" in
     elif [ "${BUSYBOX_INSTALL_METHOD}" = "asdf" ]; then
       asdf list all busybox
     elif [ "${BUSYBOX_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${BUSYBOX_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls all busybox
     elif [ "${BUSYBOX_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "System package manager does not support ls-remote directly here."
     else
-      echo "Fetching remote versions not implemented generically for busybox"
+      printf '%s\n' "Fetching remote versions not implemented generically for busybox"
     fi
     exit 0
     ;;
@@ -95,7 +95,7 @@ case "$ACTION" in
     elif [ "${BUSYBOX_INSTALL_METHOD}" = "asdf" ]; then
       asdf global busybox "${BUSYBOX_VERSION}"
     elif [ "${BUSYBOX_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "${BUSYBOX_INSTALL_METHOD}" = "vfox" ]; then
       vfox use "busybox@${BUSYBOX_VERSION}"
     elif [ "${BUSYBOX_INSTALL_METHOD}" = "system" ]; then
@@ -184,8 +184,8 @@ case "$ACTION" in
         else
           log_warn "No download URL provided for busybox ${VERSION}."
           # Fallback to mock
-          echo "#!/bin/sh" > "${TARGET_DIR}/bin/busybox"
-          echo "echo 'Mock busybox executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/busybox"
+          printf '%s\n' "#!/bin/sh" > "${TARGET_DIR}/bin/busybox"
+          printf '%s\n' "printf '%s\n' 'Mock busybox executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/busybox"
           chmod +x "${TARGET_DIR}/bin/busybox"
         fi
       fi

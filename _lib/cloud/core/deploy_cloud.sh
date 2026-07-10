@@ -196,7 +196,7 @@ if [ -z "$SIZE" ]; then
   elif [ "$PROVIDER" = "gcp" ]; then SIZE="e2-medium"
   fi
 else
-  if echo "$SIZE" | grep -q "^Standard_D"; then
+  if printf '%s\n' "$SIZE" | grep -q "^Standard_D"; then
     if [ "$PROVIDER" = "aws" ]; then SIZE="t3.xlarge"
     elif [ "$PROVIDER" = "gcp" ]; then SIZE="e2-standard-4"
     fi
@@ -322,7 +322,7 @@ wait_for_ssh() {
   log "HEALTH" "Waiting for SSH readiness on node $target_node..."
 
   while [ $attempt -le $max_attempts ]; do
-    if "$CLI" node exec "$target_node" "$target_ctx" "echo SSH_READY" >/dev/null 2>&1; then
+    if "$CLI" node exec "$target_node" "$target_ctx" "printf '%s\n' SSH_READY" >/dev/null 2>&1; then
       log "HEALTH" "SSH is ready."
       return 0
     fi
@@ -377,7 +377,7 @@ if [ -n "$STATE_PATHS" ]; then
   for PATH_ITEM in $STATE_PATHS; do
     if [ -n "$STATE_BUCKET" ]; then
       log "STATE" "Restoring $PATH_ITEM from object storage ($STATE_BUCKET)..."
-      if echo "$STATE_BUCKET" | grep -q "^s3://"; then
+      if printf '%s\n' "$STATE_BUCKET" | grep -q "^s3://"; then
         S3_ARGS=""
         if [ -n "$STATE_ENDPOINT" ]; then S3_ARGS="--endpoint-url $STATE_ENDPOINT"; fi
         aws s3 cp $S3_ARGS "$STATE_BUCKET/$PATH_ITEM" "$REPO_PATH/$PATH_ITEM" >> "$LOG_FILE" 2>&1 || true

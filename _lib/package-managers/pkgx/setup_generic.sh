@@ -68,7 +68,7 @@ case "$ACTION" in
     elif [ "$PKGX_INSTALL_METHOD" = "asdf" ]; then
       asdf list pkgx || true
     elif [ "$PKGX_INSTALL_METHOD" = "system" ]; then
-      echo "System packages do not support ls here."
+      printf '%s\n' "System packages do not support ls here."
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/pkgx/" 2>/dev/null || true
     fi
@@ -81,9 +81,9 @@ case "$ACTION" in
       asdf list all pkgx || true
     else
       if [ -n "${PKGX_RELEASES_URL:-}" ]; then
-        curl -sSL "${PKGX_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+        curl -sSL "${PKGX_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
       else
-      git ls-remote --tags "https://github.com/libscript/pkgx" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+      git ls-remote --tags "https://github.com/libscript/pkgx" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
     fi
     fi
     exit 0
@@ -96,7 +96,7 @@ case "$ACTION" in
     elif [ "$PKGX_INSTALL_METHOD" = "vfox" ]; then
       vfox use "pkgx@${VERSION}"
     elif [ "$PKGX_INSTALL_METHOD" = "system" ]; then
-      echo "System packages do not support use here."
+      printf '%s\n' "System packages do not support use here."
     else
       resolve_exact_version
       libscript_symlink_alias "pkgx" "$VERSION" "${EXACT_VERSION}"

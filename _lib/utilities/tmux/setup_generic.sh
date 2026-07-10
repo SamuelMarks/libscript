@@ -63,7 +63,7 @@ case "$ACTION" in
     elif [ "${TMUX_INSTALL_METHOD}" = "asdf" ]; then
       asdf list tmux
     elif [ "${TMUX_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${TMUX_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls tmux
     elif [ "${TMUX_INSTALL_METHOD}" = "system" ]; then
@@ -79,13 +79,13 @@ case "$ACTION" in
     elif [ "${TMUX_INSTALL_METHOD}" = "asdf" ]; then
       asdf list all tmux
     elif [ "${TMUX_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${TMUX_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls all tmux
     elif [ "${TMUX_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "System package manager does not support ls-remote directly here."
     else
-      echo "Fetching remote versions not implemented generically for tmux"
+      printf '%s\n' "Fetching remote versions not implemented generically for tmux"
     fi
     exit 0
     ;;
@@ -95,7 +95,7 @@ case "$ACTION" in
     elif [ "${TMUX_INSTALL_METHOD}" = "asdf" ]; then
       asdf global tmux "${TMUX_VERSION}"
     elif [ "${TMUX_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "${TMUX_INSTALL_METHOD}" = "vfox" ]; then
       vfox use "tmux@${TMUX_VERSION}"
     elif [ "${TMUX_INSTALL_METHOD}" = "system" ]; then
@@ -184,8 +184,8 @@ case "$ACTION" in
         else
           log_warn "No download URL provided for tmux ${VERSION}."
           # Fallback to mock
-          echo "#!/bin/sh" > "${TARGET_DIR}/bin/tmux"
-          echo "echo 'Mock tmux executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/tmux"
+          printf '%s\n' "#!/bin/sh" > "${TARGET_DIR}/bin/tmux"
+          printf '%s\n' "printf '%s\n' 'Mock tmux executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/tmux"
           chmod +x "${TARGET_DIR}/bin/tmux"
         fi
       fi

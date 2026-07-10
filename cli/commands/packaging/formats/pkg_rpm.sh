@@ -52,7 +52,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
         pkg_name="${APP_NAME}-${pkg}"
         if [ -n "$meta_depends" ]; then meta_depends="${meta_depends}, "; fi
         meta_depends="${meta_depends}${pkg_name} = ${APP_VERSION}"
-        printf '%s\n' "echo \"Building $pkg_name ...\""
+        printf '%s\n' "printf '%s\n' \"Building $pkg_name ...\""
         printf '%s\n' "BUILD_DIR=\"/tmp/${pkg_name}_rpmbuild\""
         printf '%s\n' "mkdir -p \"\$BUILD_DIR/BUILD\" \"\$BUILD_DIR/RPMS\" \"\$BUILD_DIR/SOURCES\" \"\$BUILD_DIR/SPECS\" \"\$BUILD_DIR/SRPMS\""
         printf '%s\n' "cat << 'EOF' > \"\$BUILD_DIR/SPECS/${pkg_name}.spec\""
@@ -78,7 +78,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
         printf '%s\n' "find \"\$BUILD_DIR/RPMS\" -name \"*.rpm\" -exec cp {} \"\$OUT_DIR/\" \\;"
         printf '%s\n' "rm -rf \"\$BUILD_DIR\""
       done
-      printf '%s\n' "echo \"Building ${APP_NAME}-meta ...\""
+      printf '%s\n' "printf '%s\n' \"Building ${APP_NAME}-meta ...\""
       printf '%s\n' "BUILD_DIR=\"/tmp/${APP_NAME}-meta_rpmbuild\""
       printf '%s\n' "mkdir -p \"\$BUILD_DIR/BUILD\" \"\$BUILD_DIR/RPMS\" \"\$BUILD_DIR/SOURCES\" \"\$BUILD_DIR/SPECS\" \"\$BUILD_DIR/SRPMS\""
       printf '%s\n' "cat << 'EOF' > \"\$BUILD_DIR/SPECS/${APP_NAME}-meta.spec\""
@@ -100,5 +100,5 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
       printf '%s\n' "rpmbuild --define \"_topdir \$BUILD_DIR\" -bb \"\$BUILD_DIR/SPECS/${APP_NAME}-meta.spec\""
       printf '%s\n' "find \"\$BUILD_DIR/RPMS\" -name \"*.rpm\" -exec cp {} \"\$OUT_DIR/\" \\;"
       printf '%s\n' "rm -rf \"\$BUILD_DIR\""
-      printf '%s\n' "echo \"Done!\""
+      printf '%s\n' "printf '%s\n' \"Done!\""
       exit 0

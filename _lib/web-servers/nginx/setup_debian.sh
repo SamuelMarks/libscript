@@ -125,15 +125,23 @@ merge_location_into_nginx_server() {
   printf '%s\n\n%s}\n\n' "${rtrimmed_one_lbrace_off_conf}" "${location_conf}"
 }
 
-if [ "${NGINX_VARS-}" ]; then
+if [ "${NGINX_VARS-}" ] || [ "${NGINX_WWWROOT_NAME-}" ] || [ "${NGINX_SERVER_NAME-}" ]; then
   ENV_SCRIPT_FILE=$(mktemp "${TMPDIR:-/tmp}/libscript_env_XXXXXX")
   trap 'rm -f -- "${ENV_SCRIPT_FILE}"' EXIT HUP INT QUIT TERM
   chmod +x "${ENV_SCRIPT_FILE}"
-  libscript_object2key_val "${NGINX_VARS}" 'export ' "'" > "${ENV_SCRIPT_FILE}"
+  
+  if [ "${NGINX_VARS-}" ]; then
+    libscript_object2key_val "${NGINX_VARS}" 'export ' "'" > "${ENV_SCRIPT_FILE}"
+  fi
+  
+  [ "${NGINX_WWWROOT_NAME-}" ] && printf '%s\n' "export NGINX_SERVER_NAME='${NGINX_WWWROOT_NAME}'" >> "${ENV_SCRIPT_FILE}"
+  [ "${NGINX_WWWROOT_PATH-}" ] && printf '%s\n' "export NGINX_WWWROOT='${NGINX_WWWROOT_PATH}'" >> "${ENV_SCRIPT_FILE}"
+  
+  . "${ENV_SCRIPT_FILE}"
 
-  SERVER_NAME="${NGINX_SERVER_NAME}"
+  SERVER_NAME="${NGINX_SERVER_NAME:-${NGINX_WWWROOT_NAME:-}}"
 
-  LOCATION_CONF_FILE=$(mktemp "${TMPDIR:-/tmp}/libscript_${NGINX_SERVER_NAME}_location_conf_XXXXXX")
+  LOCATION_CONF_FILE=$(mktemp "${TMPDIR:-/tmp}/libscript_${SERVER_NAME}_location_conf_XXXXXX")
   trap 'rm -f -- "${LOCATION_CONF_FILE:-}" "${ENV_SCRIPT_FILE:-}"' EXIT HUP INT QUIT TERM
 
   env -i PATH="${PATH}" \

@@ -68,11 +68,11 @@ case "$ACTION" in
     elif [ "$GO_PM_INSTALL_METHOD" = "asdf" ]; then
       asdf list go-pm || true
     elif [ "$GO_PM_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$GO_PM_INSTALL_METHOD" = "vfox" ]; then
       vfox ls go_pm || true
     elif [ "$GO_PM_INSTALL_METHOD" = "system" ]; then
-      echo "System packages do not support ls here."
+      printf '%s\n' "System packages do not support ls here."
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/go-pm/" 2>/dev/null || true
     fi
@@ -84,14 +84,14 @@ case "$ACTION" in
     elif [ "$GO_PM_INSTALL_METHOD" = "asdf" ]; then
       asdf list all go-pm || true
     elif [ "$GO_PM_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$GO_PM_INSTALL_METHOD" = "vfox" ]; then
       vfox ls all go_pm || true
     else
       if [ -n "${GO_PM_RELEASES_URL:-}" ]; then
-        curl -sSL "${GO_PM_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+        curl -sSL "${GO_PM_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
       else
-      git ls-remote --tags "https://github.com/libscript/go-pm" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+      git ls-remote --tags "https://github.com/libscript/go-pm" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
     fi
     fi
     exit 0
@@ -102,13 +102,13 @@ case "$ACTION" in
     elif [ "$GO_PM_INSTALL_METHOD" = "asdf" ]; then
       asdf global go-pm "${VERSION}"
     elif [ "$GO_PM_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "$GO_PM_INSTALL_METHOD" = "vfox" ]; then
       vfox use "go_pm@${VERSION}"
     elif [ "$GO_PM_INSTALL_METHOD" = "vfox" ]; then
       vfox use "go-pm@${VERSION}"
     elif [ "$GO_PM_INSTALL_METHOD" = "system" ]; then
-      echo "System packages do not support use here."
+      printf '%s\n' "System packages do not support use here."
     else
       resolve_exact_version
       libscript_symlink_alias "go-pm" "$VERSION" "${EXACT_VERSION}"

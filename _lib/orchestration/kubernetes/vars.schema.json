@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/kubernetes/vars.schema.json",
+  "title": "Kubernetes variables",
+  "description": "Configuration variables for Kubernetes tools",
+  "type": "object",
+  "properties": {
+    "KUBERNETES_VERSION": {
+      "description": "Specific version of Kubernetes/kubectl to install.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "KUBERNETES_INSTALL_METHOD": {
+      "description": "How to install Kubernetes tools.",
+      "type": "string",
+      "enum": ["libscript_native", "system", "mise", "asdf"],
+      "default": "libscript_native"
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "gcsfuse",
+  "title": "Cloud Storage FUSE (gcsfuse)",
+  "description": "Cloud Storage FUSE allows you to mount Cloud Storage buckets as file systems on Linux or macOS systems.",
+  "category": "storage-layers",
+  "provides": ["gcsfuse"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": []
+}

@@ -79,3 +79,12 @@ if "%TPU_VM_INSTALL_METHOD%"=="system" (
     winget install tpu-vm --accept-package-agreements --accept-source-agreements
     exit /b !errorlevel!
 )
+@echo off
+setlocal EnableDelayedExpansion
+if not "%TPU_ACCELERATOR_TYPE%"=="" (
+  if not "%TPU_VERSION%"=="" (
+    echo Checking compatibility for %TPU_ACCELERATOR_TYPE% and %TPU_VERSION%
+    rem Simple warning mechanism for Windows
+    echo WARNING: Ensure %TPU_VERSION% is compatible with %TPU_ACCELERATOR_TYPE%
+  )
+)

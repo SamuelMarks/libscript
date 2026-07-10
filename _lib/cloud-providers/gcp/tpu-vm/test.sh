@@ -3,7 +3,7 @@
 # Test suite for the GCP Cloud TPU VM component.
 #
 # ## Usage
-# Automatically invoked by the test framework. Currently skips tests.
+# Automatically invoked by the test framework. 
 
 
 set -feu
@@ -44,4 +44,37 @@ for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-log_info "tpu-vm cli test skipped"
+log_info "Testing tpu-vm cli parameter injection..."
+
+# Mock gcloud to just echo args
+gcloud() {
+  printf '%s\n' "MOCK_GCLOUD: $*"
+}
+# export -f gcloud 2>/dev/null || true
+
+export TPU_SCHEDULING_TYPE="preemptible"
+export TPU_ZONE="us-central2-b"
+export TPU_ACCELERATOR_TYPE="v2-8"
+export TPU_VERSION="tpu-ubuntu2204-base"
+export GCP_PROJECT_ID="test-project"
+
+OUTPUT=$(sh "${SCRIPT_DIR}/cli.sh" create test-instance 2>&1 | grep MOCK_GCLOUD || true)
+
+if printf '%s\n' "$OUTPUT" | grep -q -- "--preemptible"; then
+  log_success "TPU_SCHEDULING_TYPE=preemptible correctly injected --preemptible flag."
+else
+  log_error "TPU_SCHEDULING_TYPE=preemptible failed to inject flag."
+  exit 1
+fi
+
+export TPU_USE_QUEUED_RESOURCE="true"
+OUTPUT_QR=$(sh "${SCRIPT_DIR}/cli.sh" create test-instance 2>&1 | grep MOCK_GCLOUD || true)
+
+if printf '%s\n' "$OUTPUT_QR" | grep -q "queued-resources create test-instance-qr"; then
+  log_success "TPU_USE_QUEUED_RESOURCE=true correctly invoked queued-resources API."
+else
+  log_error "TPU_USE_QUEUED_RESOURCE=true failed."
+  exit 1
+fi
+
+log_success "tpu-vm cli test passed."

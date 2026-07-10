@@ -63,7 +63,7 @@ case "$ACTION" in
     elif [ "${ARIA2_INSTALL_METHOD}" = "asdf" ]; then
       asdf list aria2
     elif [ "${ARIA2_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${ARIA2_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls aria2
     elif [ "${ARIA2_INSTALL_METHOD}" = "system" ]; then
@@ -79,13 +79,13 @@ case "$ACTION" in
     elif [ "${ARIA2_INSTALL_METHOD}" = "asdf" ]; then
       asdf list all aria2
     elif [ "${ARIA2_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${ARIA2_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls all aria2
     elif [ "${ARIA2_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "System package manager does not support ls-remote directly here."
     else
-      echo "Fetching remote versions not implemented generically for aria2"
+      printf '%s\n' "Fetching remote versions not implemented generically for aria2"
     fi
     exit 0
     ;;
@@ -95,7 +95,7 @@ case "$ACTION" in
     elif [ "${ARIA2_INSTALL_METHOD}" = "asdf" ]; then
       asdf global aria2 "${ARIA2_VERSION}"
     elif [ "${ARIA2_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "${ARIA2_INSTALL_METHOD}" = "vfox" ]; then
       vfox use "aria2@${ARIA2_VERSION}"
     elif [ "${ARIA2_INSTALL_METHOD}" = "system" ]; then
@@ -184,8 +184,8 @@ case "$ACTION" in
         else
           log_warn "No download URL provided for aria2 ${VERSION}."
           # Fallback to mock
-          echo "#!/bin/sh" > "${TARGET_DIR}/bin/aria2"
-          echo "echo 'Mock aria2 executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/aria2"
+          printf '%s\n' "#!/bin/sh" > "${TARGET_DIR}/bin/aria2"
+          printf '%s\n' "printf '%s\n' 'Mock aria2 executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/aria2"
           chmod +x "${TARGET_DIR}/bin/aria2"
         fi
       fi

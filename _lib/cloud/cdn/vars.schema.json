@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "LIBSCRIPT_CLOUD": {
+      "type": "string",
+      "description": "Cloud provider (aws, gcp, azure)."
+    },
+    "LIBSCRIPT_BUCKET": {
+      "type": "string",
+      "description": "The name of the object storage bucket acting as origin."
+    },
+    "LIBSCRIPT_DOMAIN": {
+      "type": "string",
+      "description": "Custom domain for the CDN."
+    },
+    "LIBSCRIPT_CERT_ID": {
+      "type": "string",
+      "description": "SSL certificate identifier for custom domains."
+    },
+    "LIBSCRIPT_DIST_ID": {
+      "type": "string",
+      "description": "CDN distribution ID (e.g. for delete or invalidate)."
+    },
+    "LIBSCRIPT_PATHS": {
+      "type": "string",
+      "description": "Paths to invalidate on the CDN."
+    }
+  }
+}

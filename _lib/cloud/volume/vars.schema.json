@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "LIBSCRIPT_CLOUD": {
+      "type": "string",
+      "description": "Cloud provider (aws, gcp, azure)."
+    },
+    "LIBSCRIPT_VOLUME_SIZE": {
+      "type": "integer",
+      "description": "Size of the volume in GB."
+    },
+    "LIBSCRIPT_VOLUME_ZONE": {
+      "type": "string",
+      "description": "Zone/region for the volume."
+    },
+    "LIBSCRIPT_VOLUME_TYPE": {
+      "type": "string",
+      "description": "Type of the volume (e.g., ssd, hdd)."
+    },
+    "LIBSCRIPT_NODE_ID": {
+      "type": "string",
+      "description": "Node ID to attach/detach the volume."
+    },
+    "LIBSCRIPT_DEVICE": {
+      "type": "string",
+      "description": "Device path for attachment (e.g., /dev/sdf)."
+    },
+    "LIBSCRIPT_VOLUME_ID": {
+      "type": "string",
+      "description": "Volume ID for operations like delete, attach, detach."
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "cdn",
+  "category": "cloud",
+  "title": "Cloud CDN & Distribution",
+  "description": "Multicloud interface for managing content delivery networks and edge caching.",
+  "provides": ["cloud-cdn"]
+}

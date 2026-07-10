@@ -68,11 +68,11 @@ case "$ACTION" in
     elif [ "$AWS_INSTALL_METHOD" = "asdf" ]; then
       asdf list aws || true
     elif [ "$AWS_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$AWS_INSTALL_METHOD" = "vfox" ]; then
       vfox ls aws || true
     elif [ "$AWS_INSTALL_METHOD" = "system" ]; then
-      echo "System packages do not support ls here."
+      printf '%s\n' "System packages do not support ls here."
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/aws/" 2>/dev/null || true
     fi
@@ -84,14 +84,14 @@ case "$ACTION" in
     elif [ "$AWS_INSTALL_METHOD" = "asdf" ]; then
       asdf list all aws || true
     elif [ "$AWS_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$AWS_INSTALL_METHOD" = "vfox" ]; then
       vfox ls all aws || true
     else
       if [ -n "${AWS_RELEASES_URL:-}" ]; then
-        curl -sSL "${AWS_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+        curl -sSL "${AWS_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
       else
-      git ls-remote --tags "https://github.com/swoodford/aws" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+      git ls-remote --tags "https://github.com/swoodford/aws" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
     fi
     fi
     exit 0
@@ -102,13 +102,13 @@ case "$ACTION" in
     elif [ "$AWS_INSTALL_METHOD" = "asdf" ]; then
       asdf global aws "${VERSION}"
     elif [ "$AWS_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "$AWS_INSTALL_METHOD" = "vfox" ]; then
       vfox use "aws@${VERSION}"
     elif [ "$AWS_INSTALL_METHOD" = "vfox" ]; then
       vfox use "aws@${VERSION}"
     elif [ "$AWS_INSTALL_METHOD" = "system" ]; then
-      echo "System packages do not support use here."
+      printf '%s\n' "System packages do not support use here."
     else
       resolve_exact_version
       libscript_symlink_alias "aws" "$VERSION" "${EXACT_VERSION}"

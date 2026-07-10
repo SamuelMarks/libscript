@@ -62,17 +62,337 @@ resolve_exact_version() {
 }
 
 case "$ACTION" in
+  node)
+    SUBACTION=${1:-}
+    RESOURCE_NAME=${2:-}
+    case "$SUBACTION" in
+      create)
+        IMAGE=${3:-}; RG=${4:-}
+        if [ -z "$IMAGE" ] || [ -z "$RG" ]; then printf '%s\n' "Usage: node create <name> <image> <rg> [args...]"; exit 1; fi
+        SIZE="${size:-Standard_D2s_v7}"
+        printf '%s\n' "Creating Azure VM: $RESOURCE_NAME in $RG ($SIZE, $IMAGE)"
+        shift 4
+        ARGS=""
+        if [ -n "${vnet_name:-}" ]; then ARGS="$ARGS --vnet-name ${vnet_name}"; fi
+        if [ -n "${nsg:-}" ]; then ARGS="$ARGS --nsg ${nsg}"; fi
+        if [ -n "${os_disk_size_gb:-}" ]; then ARGS="$ARGS --os-disk-size-gb ${os_disk_size_gb}"; fi
+        az vm create --resource-group "$RG" --name "$RESOURCE_NAME" --image "$IMAGE" --size "$SIZE" --admin-username azureuser --generate-ssh-keys --public-ip-sku Standard $ARGS
+        ;;
+      delete)
+        RG=${3:-}
+        if [ -z "$RG" ]; then printf '%s\n' "Usage: node delete <name> <rg>"; exit 1; fi
+        printf '%s\n' "Deleting Azure VM: $RESOURCE_NAME from $RG"
+        az vm delete --name "$RESOURCE_NAME" --resource-group "$RG" --yes
+        ;;
+      list)
+        RG=${3:-}
+        if [ -n "$RG" ]; then az vm list -g "$RG" -o table; else az vm list -o table; fi
+        ;;
+      update)
+        RG=${3:-}
+        if [ -z "$RG" ]; then printf '%s\n' "Usage: node update <name> <rg> [--size SIZE] [--tags T]"; exit 1; fi
+        shift 3
+        while [ $# -gt 0 ]; do
+          case "$1" in
+            --size)
+              az vm resize -g "$RG" -n "$RESOURCE_NAME" --size "$2"
+              shift 2 ;;
+            --tags)
+              az vm update -g "$RG" -n "$RESOURCE_NAME" --set tags="$2"
+              shift 2 ;;
+            *)
+              printf '%s\n' "Unknown option: $1"; exit 1 ;;
+          esac
+        done
+        ;;
+      exec)
+        RG=${3:-}; shift 3
+        if [ -z "$RG" ]; then printf '%s\n' "Usage: node exec <name> <rg> <cmd...>"; exit 1; fi
+        IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
+        ssh -o StrictHostKeyChecking=no "azureuser@$IP" "$@"
+        ;;
+      deploy)
+        RG=${3:-}; SRC=${4:-}; DST=${5:-}
+        if [ -z "$DST" ]; then printf '%s\n' "Usage: node deploy <name> <rg> <src> <dst>"; exit 1; fi
+        IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
+        if command -v rsync >/dev/null 2>&1; then
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" "$SRC" "azureuser@$IP:$DST"
+        else
+          scp -o StrictHostKeyChecking=no -r "$SRC" "azureuser@$IP:$DST"
+        fi
+        ;;
+      scp)
+        RG=${3:-}; SRC=${4:-}; DST=${5:-}
+        if [ -z "$DST" ]; then printf '%s\n' "Usage: node scp <name> <rg> <src> <dst>"; exit 1; fi
+        IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
+        scp -o StrictHostKeyChecking=no "$SRC" "azureuser@$IP:$DST"
+        ;;
+      scp-from)
+        RG=${3:-}; SRC=${4:-}; DST=${5:-}
+        if [ -z "$DST" ]; then printf '%s\n' "Usage: node scp-from <name> <rg> <src> <dst>"; exit 1; fi
+        IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
+        scp -o StrictHostKeyChecking=no "azureuser@$IP:$SRC" "$DST"
+        ;;
+      sync)
+        RG=${3:-}
+        if [ -z "$RG" ]; then printf '%s\n' "Usage: node sync <name> <rg>"; exit 1; fi
+        IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
+        ssh -o StrictHostKeyChecking=no "azureuser@$IP" "mkdir -p ~/libscript"
+        if command -v rsync >/dev/null 2>&1; then
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" "${LIBSCRIPT_ROOT_DIR}/" "azureuser@$IP:~/libscript/"
+        else
+          scp -o StrictHostKeyChecking=no -r "${LIBSCRIPT_ROOT_DIR}/"* "azureuser@$IP:~/libscript/"
+        fi
+        ;;
+      *)
+        printf '%s\n' "Unknown node action: $SUBACTION"; exit 1
+        ;;
+    esac
+    exit 0
+    ;;
+  dns)
+    SUBACTION=${1:-}
+    SUBTYPE=${2:-}
+    case "$SUBACTION" in
+      zone)
+        case "$SUBTYPE" in
+          create)
+            ZONE=${3:-}; RG=${4:-}
+            if [ -z "$ZONE" ] || [ -z "$RG" ]; then printf '%s\n' "Usage: dns zone create <zone> <rg>"; exit 1; fi
+            az network dns zone create -g "$RG" -n "$ZONE"
+            ;;
+          delete)
+            ZONE=${3:-}; RG=${4:-}
+            if [ -z "$ZONE" ] || [ -z "$RG" ]; then printf '%s\n' "Usage: dns zone delete <zone> <rg>"; exit 1; fi
+            az network dns zone delete -g "$RG" -n "$ZONE" --yes
+            ;;
+          list)
+            RG=${3:-}
+            if [ -n "$RG" ]; then az network dns zone list -g "$RG" -o table; else az network dns zone list -o table; fi
+            ;;
+          *)
+            printf '%s\n' "Unknown dns zone action: $SUBTYPE"; exit 1 ;;
+        esac
+        ;;
+      record)
+        case "$SUBTYPE" in
+          create|update)
+            ZONE=${3:-}; RG=${4:-}; NAME=${5:-}; TYPE=${6:-}; VALUE=${7:-}
+            if [ -z "$VALUE" ]; then printf '%s\n' "Usage: dns record $SUBTYPE <zone> <rg> <name> <type> <value>"; exit 1; fi
+            if [ "$TYPE" = "A" ]; then
+              az network dns record-set a add-record -g "$RG" -z "$ZONE" -n "$NAME" -a "$VALUE"
+            elif [ "$TYPE" = "CNAME" ]; then
+              az network dns record-set cname set-record -g "$RG" -z "$ZONE" -n "$NAME" -c "$VALUE"
+            elif [ "$TYPE" = "TXT" ]; then
+              az network dns record-set txt add-record -g "$RG" -z "$ZONE" -n "$NAME" -v "$VALUE"
+            else
+              printf '%s\n' "Type $TYPE not supported yet."; exit 1
+            fi
+            ;;
+          delete)
+            ZONE=${3:-}; RG=${4:-}; NAME=${5:-}; TYPE=${6:-}
+            if [ -z "$TYPE" ]; then printf '%s\n' "Usage: dns record delete <zone> <rg> <name> <type>"; exit 1; fi
+            az network dns record-set "$(printf '%s\n' "$TYPE" | tr '[:upper:]' '[:lower:]')" delete -g "$RG" -z "$ZONE" -n "$NAME" --yes
+            ;;
+          list)
+            ZONE=${3:-}; RG=${4:-}
+            if [ -z "$RG" ]; then printf '%s\n' "Usage: dns record list <zone> <rg>"; exit 1; fi
+            az network dns record-set list -g "$RG" -z "$ZONE" -o table
+            ;;
+          *)
+            printf '%s\n' "Unknown dns record action: $SUBTYPE"; exit 1 ;;
+        esac
+        ;;
+      map-node)
+        DOMAIN=${2:-}; ZONE=${3:-}; RG=${4:-}; VM_NAME=${5:-}
+        if [ -z "$VM_NAME" ]; then printf '%s\n' "Usage: dns map-node <domain> <zone> <rg> <vm-name>"; exit 1; fi
+        IP=$(az vm show -d -g "$RG" -n "$VM_NAME" --query publicIps -o tsv | xargs)
+        RECORD_NAME=${DOMAIN%.$ZONE}
+        if [ "$RECORD_NAME" = "$DOMAIN" ]; then RECORD_NAME="@"; fi
+        az network dns record-set a add-record -g "$RG" -z "$ZONE" -n "$RECORD_NAME" -a "$IP"
+        ;;
+      unmap-node)
+        DOMAIN=${2:-}; ZONE=${3:-}; RG=${4:-}; VM_NAME=${5:-}
+        if [ -z "$VM_NAME" ]; then printf '%s\n' "Usage: dns unmap-node <domain> <zone> <rg> <vm-name>"; exit 1; fi
+        IP=$(az vm show -d -g "$RG" -n "$VM_NAME" --query publicIps -o tsv | xargs)
+        RECORD_NAME=${DOMAIN%.$ZONE}
+        if [ "$RECORD_NAME" = "$DOMAIN" ]; then RECORD_NAME="@"; fi
+        az network dns record-set a remove-record -g "$RG" -z "$ZONE" -n "$RECORD_NAME" -a "$IP"
+        ;;
+      *)
+        printf '%s\n' "Unknown dns action: $SUBACTION"; exit 1
+        ;;
+    esac
+    exit 0
+    ;;
+  firewall)
+    SUBACTION=${1:-}
+    RESOURCE_NAME=${2:-}
+    RESOURCE_GROUP=${3:-}
+    case "$SUBACTION" in
+      create)
+        if [ -z "$RESOURCE_NAME" ] || [ -z "$RESOURCE_GROUP" ]; then
+          printf '%s\n' "Usage: firewall create <name> <resource-group> [ports...]"
+          exit 1
+        fi
+        LOC="${AZURE_LOCATION:-eastus}"
+        printf '%s\n' "Creating Azure NSG: $RESOURCE_NAME in $RESOURCE_GROUP ($LOC)"
+        az network nsg create --name "$RESOURCE_NAME" --resource-group "$RESOURCE_GROUP" --location "$LOC"
+        shift 3
+        PRIORITY=1000
+        while [ $# -gt 0 ]; do
+          PORT=$1
+          printf '%s\n' "Opening port $PORT on $RESOURCE_NAME"
+          az network nsg rule create --resource-group "$RESOURCE_GROUP" --nsg-name "$RESOURCE_NAME" --name "Allow_$PORT" --priority "$PRIORITY" --destination-port-ranges "$PORT" --access Allow --protocol Tcp
+          PRIORITY=$((PRIORITY + 10))
+          shift
+        done
+        ;;
+      delete)
+        if [ -z "$RESOURCE_NAME" ] || [ -z "$RESOURCE_GROUP" ]; then
+          printf '%s\n' "Usage: firewall delete <name> <resource-group>"
+          exit 1
+        fi
+        printf '%s\n' "Deleting Azure NSG: $RESOURCE_NAME from $RESOURCE_GROUP"
+        az network nsg delete --name "$RESOURCE_NAME" --resource-group "$RESOURCE_GROUP" --yes
+        ;;
+      list)
+        if [ -n "$RESOURCE_GROUP" ]; then
+          az network nsg list --resource-group "$RESOURCE_GROUP" -o table
+        else
+          az network nsg list -o table
+        fi
+        ;;
+      update)
+        if [ -z "$RESOURCE_NAME" ] || [ -z "$RESOURCE_GROUP" ]; then
+          printf '%s\n' "Usage: firewall update <name> <resource-group> [--add-port PORT] [--remove-port PORT]"
+          exit 1
+        fi
+        shift 3
+        PRIORITY=2000
+        while [ $# -gt 0 ]; do
+          case "$1" in
+            --add-port)
+              PORT=$2
+              az network nsg rule create --resource-group "$RESOURCE_GROUP" --nsg-name "$RESOURCE_NAME" --name "Allow_$PORT" --priority "$PRIORITY" --destination-port-ranges "$PORT" --access Allow --protocol Tcp
+              PRIORITY=$((PRIORITY + 10))
+              shift 2 ;;
+            --remove-port)
+              PORT=$2
+              az network nsg rule delete --resource-group "$RESOURCE_GROUP" --nsg-name "$RESOURCE_NAME" --name "Allow_$PORT"
+              shift 2 ;;
+            *)
+              printf '%s\n' "Unknown option: $1"; exit 1 ;;
+          esac
+        done
+        ;;
+      *)
+        printf '%s\n' "Unknown firewall sub-action: $SUBACTION"; exit 1
+        ;;
+    esac
+    exit 0
+    ;;
+  network)
+    SUBACTION=${1:-}
+    RESOURCE_NAME=${2:-}
+    RESOURCE_GROUP=${3:-}
+    case "$SUBACTION" in
+      create)
+        if [ -z "$RESOURCE_NAME" ] || [ -z "$RESOURCE_GROUP" ]; then
+          printf '%s\n' "Usage: network create <name> <resource-group>"
+          exit 1
+        fi
+        LOC="${AZURE_LOCATION:-eastus}"
+        printf '%s\n' "Creating Azure VNet: $RESOURCE_NAME in $RESOURCE_GROUP ($LOC)"
+        az network vnet create --name "$RESOURCE_NAME" --resource-group "$RESOURCE_GROUP" --location "$LOC"
+        ;;
+      delete)
+        if [ -z "$RESOURCE_NAME" ] || [ -z "$RESOURCE_GROUP" ]; then
+          printf '%s\n' "Usage: network delete <name> <resource-group>"
+          exit 1
+        fi
+        printf '%s\n' "Deleting Azure VNet: $RESOURCE_NAME from $RESOURCE_GROUP"
+        az network vnet delete --name "$RESOURCE_NAME" --resource-group "$RESOURCE_GROUP" --yes
+        ;;
+      list)
+        if [ -n "$RESOURCE_GROUP" ]; then
+          az network vnet list --resource-group "$RESOURCE_GROUP" -o table
+        else
+          az network vnet list -o table
+        fi
+        ;;
+      update)
+        if [ -z "$RESOURCE_NAME" ] || [ -z "$RESOURCE_GROUP" ]; then
+          printf '%s\n' "Usage: network update <name> <resource-group> [--tags T]"
+          exit 1
+        fi
+        shift 3
+        while [ $# -gt 0 ]; do
+          case "$1" in
+            --tags)
+              az network vnet update --name "$RESOURCE_NAME" --resource-group "$RESOURCE_GROUP" --set tags="$2"
+              shift 2 ;;
+            *)
+              printf '%s\n' "Unknown option: $1"; exit 1 ;;
+          esac
+        done
+        ;;
+      *)
+        printf '%s\n' "Unknown network sub-action: $SUBACTION"; exit 1
+        ;;
+    esac
+    exit 0
+    ;;
+  auth)
+    SUBACTION=${1:-}
+    case "$SUBACTION" in
+      login)
+        az login
+        ;;
+      logout)
+        az logout
+        ;;
+      status)
+        az account show
+        ;;
+      *)
+        printf '%s\n' "Unknown auth sub-action: $SUBACTION"; exit 1
+        ;;
+    esac
+    exit 0
+    ;;
+  location)
+    SUBACTION=${1:-}
+    case "$SUBACTION" in
+      list)
+        az account list-locations --query "[].name" -o tsv
+        ;;
+      select)
+        if [ -n "${2:-}" ]; then
+          az configure --defaults location="$2"
+          printf '%s\n' "Default location set to $2."
+        else
+          printf '%s\n' "Usage: location select <location>"
+          exit 1
+        fi
+        ;;
+      *)
+        printf '%s\n' "Unknown location sub-action: $SUBACTION"; exit 1
+        ;;
+    esac
+    exit 0
+    ;;
   ls)
     if [ "$AZURE_INSTALL_METHOD" = "mise" ]; then
       mise ls azure || true
     elif [ "$AZURE_INSTALL_METHOD" = "asdf" ]; then
       asdf list azure || true
     elif [ "$AZURE_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$AZURE_INSTALL_METHOD" = "vfox" ]; then
       vfox ls azure || true
     elif [ "$AZURE_INSTALL_METHOD" = "system" ]; then
-      echo "System packages do not support ls here."
+      printf '%s\n' "System packages do not support ls here."
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/azure/" 2>/dev/null || true
     fi
@@ -84,14 +404,14 @@ case "$ACTION" in
     elif [ "$AZURE_INSTALL_METHOD" = "asdf" ]; then
       asdf list all azure || true
     elif [ "$AZURE_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$AZURE_INSTALL_METHOD" = "vfox" ]; then
       vfox ls all azure || true
     else
       if [ -n "${AZURE_RELEASES_URL:-}" ]; then
-        curl -sSL "${AZURE_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+        curl -sSL "${AZURE_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
       else
-      git ls-remote --tags "https://github.com/MicrosoftDocs/azure-docs" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+      git ls-remote --tags "https://github.com/MicrosoftDocs/azure-docs" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
     fi
     fi
     exit 0
@@ -102,13 +422,13 @@ case "$ACTION" in
     elif [ "$AZURE_INSTALL_METHOD" = "asdf" ]; then
       asdf global azure "${VERSION}"
     elif [ "$AZURE_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "$AZURE_INSTALL_METHOD" = "vfox" ]; then
       vfox use "azure@${VERSION}"
     elif [ "$AZURE_INSTALL_METHOD" = "vfox" ]; then
       vfox use "azure@${VERSION}"
     elif [ "$AZURE_INSTALL_METHOD" = "system" ]; then
-      echo "System packages do not support use here."
+      printf '%s\n' "System packages do not support use here."
     else
       resolve_exact_version
       libscript_symlink_alias "azure" "$VERSION" "${EXACT_VERSION}"

@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "LIBSCRIPT_CLOUD": {
+      "type": "string",
+      "description": "Cloud provider (aws, gcp, azure)."
+    },
+    "LIBSCRIPT_BUCKET": {
+      "type": "string",
+      "description": "The name of the object storage bucket."
+    },
+    "LIBSCRIPT_SYNC_DIR": {
+      "type": "string",
+      "description": "Local directory path for bucket sync operations."
+    },
+    "LIBSCRIPT_STORAGE_PUBLIC_WEB": {
+      "type": "boolean",
+      "description": "Configure the bucket for public website hosting."
+    },
+    "LIBSCRIPT_AZURE_ACCOUNT_NAME": {
+      "type": "string",
+      "description": "Azure Storage Account Name (required for Azure operations)."
+    }
+  }
+}

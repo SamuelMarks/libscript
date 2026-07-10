@@ -63,7 +63,7 @@ case "$ACTION" in
     elif [ "${GRADLE_INSTALL_METHOD}" = "asdf" ]; then
       asdf list gradle
     elif [ "${GRADLE_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${GRADLE_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls gradle
     elif [ "${GRADLE_INSTALL_METHOD}" = "system" ]; then
@@ -79,13 +79,13 @@ case "$ACTION" in
     elif [ "${GRADLE_INSTALL_METHOD}" = "asdf" ]; then
       asdf list all gradle
     elif [ "${GRADLE_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${GRADLE_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls all gradle
     elif [ "${GRADLE_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "System package manager does not support ls-remote directly here."
     else
-      echo "Fetching remote versions not implemented generically for gradle"
+      printf '%s\n' "Fetching remote versions not implemented generically for gradle"
     fi
     exit 0
     ;;
@@ -95,7 +95,7 @@ case "$ACTION" in
     elif [ "${GRADLE_INSTALL_METHOD}" = "asdf" ]; then
       asdf global gradle "${GRADLE_VERSION}"
     elif [ "${GRADLE_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "${GRADLE_INSTALL_METHOD}" = "vfox" ]; then
       vfox use "gradle@${GRADLE_VERSION}"
     elif [ "${GRADLE_INSTALL_METHOD}" = "system" ]; then
@@ -184,8 +184,8 @@ case "$ACTION" in
         else
           log_warn "No download URL provided for gradle ${VERSION}."
           # Fallback to mock
-          echo "#!/bin/sh" > "${TARGET_DIR}/bin/gradle"
-          echo "echo 'Mock gradle executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/gradle"
+          printf '%s\n' "#!/bin/sh" > "${TARGET_DIR}/bin/gradle"
+          printf '%s\n' "printf '%s\n' 'Mock gradle executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/gradle"
           chmod +x "${TARGET_DIR}/bin/gradle"
         fi
       fi

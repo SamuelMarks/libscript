@@ -1,0 +1,8 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "storage",
+  "category": "cloud",
+  "title": "Cloud Object Storage",
+  "description": "Multicloud interface for managing object storage buckets (S3, GCS, Azure Blob).",
+  "provides": ["cloud-storage"]
+}

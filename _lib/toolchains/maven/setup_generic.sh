@@ -63,7 +63,7 @@ case "$ACTION" in
     elif [ "${MAVEN_INSTALL_METHOD}" = "asdf" ]; then
       asdf list maven
     elif [ "${MAVEN_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${MAVEN_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls maven
     elif [ "${MAVEN_INSTALL_METHOD}" = "system" ]; then
@@ -79,13 +79,13 @@ case "$ACTION" in
     elif [ "${MAVEN_INSTALL_METHOD}" = "asdf" ]; then
       asdf list all maven
     elif [ "${MAVEN_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${MAVEN_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls all maven
     elif [ "${MAVEN_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "System package manager does not support ls-remote directly here."
     else
-      echo "Fetching remote versions not implemented generically for maven"
+      printf '%s\n' "Fetching remote versions not implemented generically for maven"
     fi
     exit 0
     ;;
@@ -95,7 +95,7 @@ case "$ACTION" in
     elif [ "${MAVEN_INSTALL_METHOD}" = "asdf" ]; then
       asdf global maven "${MAVEN_VERSION}"
     elif [ "${MAVEN_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "${MAVEN_INSTALL_METHOD}" = "vfox" ]; then
       vfox use "maven@${MAVEN_VERSION}"
     elif [ "${MAVEN_INSTALL_METHOD}" = "system" ]; then
@@ -184,8 +184,8 @@ case "$ACTION" in
         else
           log_warn "No download URL provided for maven ${VERSION}."
           # Fallback to mock
-          echo "#!/bin/sh" > "${TARGET_DIR}/bin/maven"
-          echo "echo 'Mock maven executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/maven"
+          printf '%s\n' "#!/bin/sh" > "${TARGET_DIR}/bin/maven"
+          printf '%s\n' "printf '%s\n' 'Mock maven executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/maven"
           chmod +x "${TARGET_DIR}/bin/maven"
         fi
       fi

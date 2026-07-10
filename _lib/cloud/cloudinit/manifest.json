@@ -1,0 +1,8 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "cloudinit",
+  "category": "cloud",
+  "title": "Cloud-Init Generator",
+  "description": "Helper component for generating cloud-init configurations for nodes.",
+  "provides": ["cloud-cloudinit"]
+}

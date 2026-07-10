@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "gke-tpu-cluster",
+  "title": "GKE TPU Cluster",
+  "description": "Component for provisioning and managing Google Kubernetes Engine (GKE) clusters with TPU node pools.",
+  "category": "cloud-providers",
+  "provides": ["gke-tpu-cluster"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": []
+}

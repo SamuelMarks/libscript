@@ -67,11 +67,11 @@ case "$ACTION" in
     elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "asdf" ]; then
       asdf list ansible-galaxy || true
     elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "vfox" ]; then
       vfox ls ansible_galaxy || true
     elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "system" ]; then
-      echo "System packages do not support ls here."
+      printf '%s\n' "System packages do not support ls here."
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/ansible-galaxy/" 2>/dev/null || true
     fi
@@ -83,14 +83,14 @@ case "$ACTION" in
     elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "asdf" ]; then
       asdf list all ansible-galaxy || true
     elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "vfox" ]; then
       vfox ls all ansible_galaxy || true
     else
       if [ -n "${ANSIBLE_GALAXY_RELEASES_URL:-}" ]; then
-        curl -sSL "${ANSIBLE_GALAXY_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+        curl -sSL "${ANSIBLE_GALAXY_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
       else
-      git ls-remote --tags "https://github.com/libscript/ansible-galaxy" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+      git ls-remote --tags "https://github.com/libscript/ansible-galaxy" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
     fi
     fi
     exit 0
@@ -101,13 +101,13 @@ case "$ACTION" in
     elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "asdf" ]; then
       asdf global ansible-galaxy "${VERSION}"
     elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "vfox" ]; then
       vfox use "ansible_galaxy@${VERSION}"
     elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "vfox" ]; then
       vfox use "ansible-galaxy@${VERSION}"
     elif [ "$ANSIBLE_GALAXY_INSTALL_METHOD" = "system" ]; then
-      echo "System packages do not support use here."
+      printf '%s\n' "System packages do not support use here."
     else
       resolve_exact_version
       libscript_symlink_alias "ansible-galaxy" "$VERSION" "${EXACT_VERSION}"

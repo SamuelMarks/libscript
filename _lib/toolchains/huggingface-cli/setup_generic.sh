@@ -63,7 +63,7 @@ case "$ACTION" in
     elif [ "${HUGGINGFACE_CLI_INSTALL_METHOD}" = "asdf" ]; then
       asdf list huggingface-cli
     elif [ "${HUGGINGFACE_CLI_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${HUGGINGFACE_CLI_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls huggingface-cli
     elif [ "${HUGGINGFACE_CLI_INSTALL_METHOD}" = "system" ]; then
@@ -79,13 +79,13 @@ case "$ACTION" in
     elif [ "${HUGGINGFACE_CLI_INSTALL_METHOD}" = "asdf" ]; then
       asdf list all huggingface-cli
     elif [ "${HUGGINGFACE_CLI_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${HUGGINGFACE_CLI_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls all huggingface-cli
     elif [ "${HUGGINGFACE_CLI_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "System package manager does not support ls-remote directly here."
     else
-      echo "Fetching remote versions not implemented generically for huggingface-cli"
+      printf '%s\n' "Fetching remote versions not implemented generically for huggingface-cli"
     fi
     exit 0
     ;;
@@ -95,7 +95,7 @@ case "$ACTION" in
     elif [ "${HUGGINGFACE_CLI_INSTALL_METHOD}" = "asdf" ]; then
       asdf global huggingface-cli "${HUGGINGFACE_CLI_VERSION}"
     elif [ "${HUGGINGFACE_CLI_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "${HUGGINGFACE_CLI_INSTALL_METHOD}" = "vfox" ]; then
       vfox use "huggingface-cli@${HUGGINGFACE_CLI_VERSION}"
     elif [ "${HUGGINGFACE_CLI_INSTALL_METHOD}" = "system" ]; then
@@ -126,7 +126,7 @@ case "$ACTION" in
       if [ -n "${HUGGINGFACE_CLI_DOWNLOAD_URL:-}" ]; then
         curl -sSL "${HUGGINGFACE_CLI_DOWNLOAD_URL}" -o "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/huggingface-cli/huggingface-cli-${VERSION}.tar.gz"
       else
-        echo "HUGGINGFACE_CLI_DOWNLOAD_URL is not defined. Skipping."
+        printf '%s\n' "HUGGINGFACE_CLI_DOWNLOAD_URL is not defined. Skipping."
       fi
     fi
     exit 0
@@ -184,8 +184,8 @@ case "$ACTION" in
         else
           log_warn "No download URL provided for huggingface-cli ${VERSION}."
           # Fallback to mock
-          echo "#!/bin/sh" > "${TARGET_DIR}/bin/huggingface-cli"
-          echo "echo 'Mock huggingface-cli executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/huggingface-cli"
+          printf '%s\n' "#!/bin/sh" > "${TARGET_DIR}/bin/huggingface-cli"
+          printf '%s\n' "printf '%s\n' 'Mock huggingface-cli executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/huggingface-cli"
           chmod +x "${TARGET_DIR}/bin/huggingface-cli"
         fi
       fi

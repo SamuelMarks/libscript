@@ -76,16 +76,16 @@ libscript_resolve_install_method() {
 
   for m in $check_chain; do
     if [ "$m" = "libscript_native" ] || [ "$m" = "system" ]; then
-      echo "$m"
+      printf '%s\n' "$m"
       return 0
     fi
     if libscript_cmd_avail "$m"; then
-      echo "$m"
+      printf '%s\n' "$m"
       return 0
     fi
   done
   
-  echo "system"
+  printf '%s\n' "system"
   return 0
 }
 
@@ -421,10 +421,10 @@ libscript_process_aria2_file() {
     # skip empty lines safely
     [ -z "$(printf '%s\n' "$line" | tr -d '[:space:]')" ] && continue
 
-    if echo "$line" | grep -q '^[[:space:]]'; then
+    if printf '%s\n' "$line" | grep -q '^[[:space:]]'; then
 
       opt="$(printf '%s\n' "$line" | sed 's/^[[:space:]]*//')"
-      if echo "$opt" | grep -q '^out='; then
+      if printf '%s\n' "$opt" | grep -q '^out='; then
         out="${opt#out=}"
       elif printf '%s\n' "$opt" | grep -q '^checksum='; then
         checksum="${opt#checksum=}"

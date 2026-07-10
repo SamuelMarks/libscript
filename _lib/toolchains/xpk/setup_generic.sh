@@ -63,7 +63,7 @@ case "$ACTION" in
     elif [ "${XPK_INSTALL_METHOD}" = "asdf" ]; then
       asdf list xpk
     elif [ "${XPK_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${XPK_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls xpk
     elif [ "${XPK_INSTALL_METHOD}" = "system" ]; then
@@ -79,13 +79,13 @@ case "$ACTION" in
     elif [ "${XPK_INSTALL_METHOD}" = "asdf" ]; then
       asdf list all xpk
     elif [ "${XPK_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${XPK_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls all xpk
     elif [ "${XPK_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "System package manager does not support ls-remote directly here."
     else
-      echo "Fetching remote versions not implemented generically for xpk"
+      printf '%s\n' "Fetching remote versions not implemented generically for xpk"
     fi
     exit 0
     ;;
@@ -95,7 +95,7 @@ case "$ACTION" in
     elif [ "${XPK_INSTALL_METHOD}" = "asdf" ]; then
       asdf global xpk "${XPK_VERSION}"
     elif [ "${XPK_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "${XPK_INSTALL_METHOD}" = "vfox" ]; then
       vfox use "xpk@${XPK_VERSION}"
     elif [ "${XPK_INSTALL_METHOD}" = "system" ]; then
@@ -126,7 +126,7 @@ case "$ACTION" in
       if [ -n "${XPK_DOWNLOAD_URL:-}" ]; then
         curl -sSL "${XPK_DOWNLOAD_URL}" -o "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/xpk/xpk-${VERSION}.tar.gz"
       else
-        echo "XPK_DOWNLOAD_URL is not defined. Skipping."
+        printf '%s\n' "XPK_DOWNLOAD_URL is not defined. Skipping."
       fi
     fi
     exit 0
@@ -184,8 +184,8 @@ case "$ACTION" in
         else
           log_warn "No download URL provided for xpk ${VERSION}."
           # Fallback to mock
-          echo "#!/bin/sh" > "${TARGET_DIR}/bin/xpk"
-          echo "echo 'Mock xpk executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/xpk"
+          printf '%s\n' "#!/bin/sh" > "${TARGET_DIR}/bin/xpk"
+          printf '%s\n' "printf '%s\n' 'Mock xpk executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/xpk"
           chmod +x "${TARGET_DIR}/bin/xpk"
         fi
       fi

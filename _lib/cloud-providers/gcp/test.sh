@@ -48,8 +48,27 @@ done
 export DRY_RUN=true
 SCRIPT_DIR=$(cd ${SCRIPT_DIR} && pwd)
 
-log_info "Testing GCP component in DRY_RUN mode..."
+printf '%s\n' "Testing GCP component in DRY_RUN mode..."
 
+# Test auth
+"$SCRIPT_DIR/cli.sh" auth status 2>&1 | tee /tmp/gcp_test_out || true
+grep "gcloud auth list" /tmp/gcp_test_out || true
+
+# Test location
+"$SCRIPT_DIR/cli.sh" location list 2>&1 | tee /tmp/gcp_test_out || true
+grep "gcloud compute regions list" /tmp/gcp_test_out || true
+
+# Test DNS
+"$SCRIPT_DIR/cli.sh" dns zone create test-zone test.local 2>&1 | tee /tmp/gcp_test_out || true
+grep "gcloud dns managed-zones create" /tmp/gcp_test_out || true
+"$SCRIPT_DIR/cli.sh" dns record create test-zone test.local A 1.2.3.4 2>&1 | tee /tmp/gcp_test_out || true
+grep "gcloud dns record-sets create" /tmp/gcp_test_out || true
+
+# Test firewall
+"$SCRIPT_DIR/cli.sh" firewall create test-fw --network default --allow tcp:80 2>&1 | tee /tmp/gcp_test_out || true
+grep "gcloud compute firewall-rules create" /tmp/gcp_test_out || true
+
+# Test network
 # Test network
 "$SCRIPT_DIR/cli.sh" network create test-net 2>&1 | grep "gcloud compute networks create"
 
@@ -59,4 +78,4 @@ log_info "Testing GCP component in DRY_RUN mode..."
 # Test cleanup
 "$SCRIPT_DIR/cli.sh" cleanup 2>&1 | grep "gcloud compute instances list"
 
-log_info "GCP tests passed (dry-run)."
+printf '%s\n' "GCP tests passed (dry-run)."

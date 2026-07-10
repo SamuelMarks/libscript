@@ -52,7 +52,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
       while [ $# -gt 0 ]; do
         pkg="$1"
         ver="${2:-latest}"
-        if echo "$3" | grep -q "^http"; then
+        if printf '%s\n' "$3" | grep -q "^http"; then
           override="$3"
           shift 3
         elif [ "$2" != "" ]; then
@@ -128,7 +128,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
           printf '%s\n' "WORKDIR /opt/libscript" >> "$df"
           printf '%s\n' "RUN ./libscript.sh install $pkg \${${pkg_up}_VERSION}" >> "$df"
 
-          healthcheck="[\"CMD-SHELL\", \"echo '$pkg is ok' || exit 1\"]"
+          healthcheck="[\"CMD-SHELL\", \"printf '%s\n' '$pkg is ok' || exit 1\"]"
           if [ "$pkg" = "postgres" ]; then healthcheck="[\"CMD\", \"pg_isready\", \"-U\", \"postgres\"]"; fi
           if [ "$pkg" = "mysql" ] || [ "$pkg" = "mariadb" ]; then healthcheck="[\"CMD\", \"mysqladmin\", \"ping\", \"-h\", \"localhost\"]"; fi
           if [ "$pkg" = "redis" ] || [ "$pkg" = "valkey" ]; then healthcheck="[\"CMD\", \"redis-cli\", \"ping\"]"; fi

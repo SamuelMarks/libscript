@@ -49,13 +49,13 @@ if [ -z "$HOOKS" ]; then exit 0; fi
 
 log_info "Running $HOOK_TYPE hooks..."
 printf '%s\n' "$HOOKS" | while read -r hook; do
-    if echo "$hook" | grep -q '^{'; then
+    if printf '%s\n' "$hook" | grep -q '^{'; then
         NAME=$(printf '%s\n' "$hook" | jq -r '.name // "unnamed_hook"')
         cmd=$(printf '%s\n' "$hook" | jq -r '.command // empty')
         COND=$(printf '%s\n' "$hook" | jq -r '.condition // empty')
 
         if [ -n "$COND" ]; then
-            if echo "$COND" | grep -q "^unless_exists "; then
+            if printf '%s\n' "$COND" | grep -q "^unless_exists "; then
                 FILE=$(printf '%s\n' "$COND" | sed 's/^unless_exists //')
                 if [ -e "$FILE" ]; then
                     log_info "Skipping hook '$NAME': $FILE exists"

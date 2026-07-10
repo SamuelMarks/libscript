@@ -69,7 +69,7 @@ assert_version() {
     return 1
   fi
   version=$("$cmd" --version 2>&1 | head -n 1)
-  if echo "$version" | grep -qi "$expected"; then
+  if printf '%s\n' "$version" | grep -qi "$expected"; then
     printf "[PASS] %s version check: %s\n" "$cmd" "$version" >&2
   else
     printf "[FAIL] %s version check failed. Expected pattern: %s, Got: %s\n" "$cmd" "$expected" "$version" >&2

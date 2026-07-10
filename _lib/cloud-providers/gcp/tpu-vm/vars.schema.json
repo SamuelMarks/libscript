@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "/_lib/toolchains/tpu-vm/vars.schema.json",
-  "title": "Bazel variables",
-  "description": "Configuration variables for Bazel",
+  "$id": "/_lib/cloud-providers/gcp/tpu-vm/vars.schema.json",
+  "title": "GCP Cloud TPU VM variables",
+  "description": "Configuration variables for GCP Cloud TPU VMs",
   "type": "object",
   "properties": {
     "TPU_VM_VERSION": {
@@ -17,29 +17,43 @@
       "enum": ["libscript_native", "system", "mise", "asdf"],
       "default": "libscript_native"
     },
-    "LIBSCRIPT_LISTEN_PORT": {
-      "type": ["string", "integer"],
-      "description": "Global port to listen on"
-    },
-    "LIBSCRIPT_LISTEN_ADDRESS": {
+    "TPU_SCHEDULING_TYPE": {
+      "description": "Scheduling type for the TPU VM (on-demand, spot, or preemptible).",
       "type": "string",
-      "description": "Global address to listen on"
+      "enum": ["on-demand", "spot", "preemptible"],
+      "default": "on-demand"
     },
-    "LIBSCRIPT_LISTEN_SOCKET": {
+    "TPU_ACCELERATOR_TYPE": {
+      "description": "Type of TPU accelerator (e.g., v2-8, v3-8, v4-8, v3-32). Defines the hardware topology.",
+      "type": "string"
+    },
+    "TPU_ZONE": {
+      "description": "GCP Zone for TPU provisioning. Must match the specific TFRC granted zone if using TFRC.",
+      "type": "string"
+    },
+    "TPU_VERSION": {
+      "description": "TPU VM OS version (e.g., tpu-ubuntu2204-base). Ensure compatibility with TPU_ACCELERATOR_TYPE.",
       "type": "string",
-      "description": "Global unix socket to listen on"
+      "default": "tpu-ubuntu2204-base"
     },
-    "TPU_VM_LISTEN_PORT": {
-      "type": ["string", "integer"],
-      "description": "Port for TPU_VM to listen on"
+    "TPU_COUNT": {
+      "description": "Number of independent TPU VMs to provision. Useful for multi-node provisioning.",
+      "type": "integer",
+      "default": 1
     },
-    "TPU_VM_LISTEN_ADDRESS": {
+    "TPU_USE_QUEUED_RESOURCE": {
+      "description": "Whether to use the Queued Resources API for provisioning to better handle capacity errors.",
+      "type": "boolean",
+      "default": false
+    },
+    "TPU_DATA_DISK_SIZE": {
+      "description": "Size of the persistent data disk in GB (optional).",
+      "type": "integer"
+    },
+    "TPU_DATA_DISK_TYPE": {
+      "description": "Type of the persistent data disk (e.g., pd-balanced).",
       "type": "string",
-      "description": "Address for TPU_VM to listen on"
-    },
-    "TPU_VM_LISTEN_SOCKET": {
-      "type": "string",
-      "description": "Unix socket for TPU_VM to listen on"
+      "default": "pd-balanced"
     }
   }
 }

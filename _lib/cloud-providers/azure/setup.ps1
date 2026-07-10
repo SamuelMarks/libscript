@@ -14,6 +14,29 @@ $ResourceName = $env:ARG2
 $ResourceGroup = $env:ARG3
 
 switch ($Action) {
+    "auth" {
+        if ($SubAction -eq "login") {
+            az login
+        } elseif ($SubAction -eq "logout") {
+            az logout
+        } elseif ($SubAction -eq "status") {
+            az account show
+        }
+        break
+    }
+    "location" {
+        if ($SubAction -eq "list") {
+            az account list-locations --query "[].name" -o tsv
+        } elseif ($SubAction -eq "select") {
+            if ($ResourceName) {
+                az configure --defaults location=$ResourceName
+                Write-Host "Default location set to $ResourceName."
+            } else {
+                Write-Host "Usage: location select <location>"
+            }
+        }
+        break
+    }
     "network" {
         if ($SubAction -eq "create") {
             $Loc = if ($env:location) { $env:location } else { "eastus" }
@@ -22,6 +45,19 @@ switch ($Action) {
         } elseif ($SubAction -eq "delete") {
             Write-Host "Deleting Azure VNet: $ResourceName from $ResourceGroup"
             az network vnet delete --name $ResourceName --resource-group $ResourceGroup --yes
+        } elseif ($SubAction -eq "list") {
+            if ($ResourceGroup) {
+                az network vnet list --resource-group $ResourceGroup -o table
+            } else {
+                az network vnet list -o table
+            }
+        } elseif ($SubAction -eq "update") {
+            $Tags = $env:ARG4
+            if ($Tags) {
+                az network vnet update --name $ResourceName --resource-group $ResourceGroup --set tags=`"$Tags`"
+            } else {
+                Write-Host "Usage: network update <name> <resource-group> <tags>"
+            }
         }
     }
     "firewall" {
@@ -43,6 +79,21 @@ switch ($Action) {
         } elseif ($SubAction -eq "delete") {
             Write-Host "Deleting Azure NSG: $ResourceName from $ResourceGroup"
             az network nsg delete --name $ResourceName --resource-group $ResourceGroup --yes
+        } elseif ($SubAction -eq "list") {
+            if ($ResourceGroup) {
+                az network nsg list --resource-group $ResourceGroup -o table
+            } else {
+                az network nsg list -o table
+            }
+        } elseif ($SubAction -eq "update") {
+            $AddPort = $env:ARG4
+            $RemovePort = $env:ARG5
+            if ($AddPort) {
+                az network nsg rule create --resource-group $ResourceGroup --nsg-name $ResourceName --name "Allow_$AddPort" --priority 2000 --destination-port-ranges $AddPort --access Allow --protocol Tcp
+            }
+            if ($RemovePort) {
+                az network nsg rule delete --resource-group $ResourceGroup --nsg-name $ResourceName --name "Allow_$RemovePort"
+            }
         }
     }
     "node" {
@@ -61,6 +112,15 @@ switch ($Action) {
             $ResourceGroup = $env:ARG3
             Write-Host "Deleting Azure VM: $ResourceName from $ResourceGroup"
             az vm delete --name $ResourceName --resource-group $ResourceGroup --yes
+        } elseif ($SubAction -eq "list") {
+            $ResourceGroup = $env:ARG3
+            if ($ResourceGroup) { az vm list -g $ResourceGroup -o table } else { az vm list -o table }
+        } elseif ($SubAction -eq "update") {
+            $ResourceGroup = $env:ARG3
+            $Size = $env:ARG4
+            $Tags = $env:ARG5
+            if ($Size) { az vm resize -g $ResourceGroup -n $ResourceName --size $Size }
+            if ($Tags) { az vm update -g $ResourceGroup -n $ResourceName --set tags=`"$Tags`" }
         } elseif ($SubAction -eq "exec") {
             $ResourceGroup = $env:ARG3
             $CmdToRun = $env:ARG4
@@ -110,7 +170,40 @@ switch ($Action) {
         $Domain = $env:ARG3
         $Zone = $env:ARG4
         $DnsRg = if ($env:ARG5) { $env:ARG5 } else { "$Zone-rg" }
-        if ($SubAction -eq "map-node") {
+        if ($SubAction -eq "zone") {
+            $SubType = $env:ARG2
+            $ZName = $env:ARG3
+            $ZRg = $env:ARG4
+            if ($SubType -eq "create") {
+                az network dns zone create -g $ZRg -n $ZName
+            } elseif ($SubType -eq "delete") {
+                az network dns zone delete -g $ZRg -n $ZName --yes
+            } elseif ($SubType -eq "list") {
+                if ($ZRg) { az network dns zone list -g $ZRg -o table } else { az network dns zone list -o table }
+            }
+        } elseif ($SubAction -eq "record") {
+            $SubType = $env:ARG2
+            $ZName = $env:ARG3
+            $ZRg = $env:ARG4
+            $RecName = $env:ARG5
+            $RecType = $env:ARG6
+            $RecValue = $env:ARG7
+            if ($SubType -eq "create" -or $SubType -eq "update") {
+                if ($RecType -eq "A") {
+                    az network dns record-set a add-record -g $ZRg -z $ZName -n $RecName -a $RecValue
+                } elseif ($RecType -eq "CNAME") {
+                    az network dns record-set cname set-record -g $ZRg -z $ZName -n $RecName -c $RecValue
+                } elseif ($RecType -eq "TXT") {
+                    az network dns record-set txt add-record -g $ZRg -z $ZName -n $RecName -v $RecValue
+                }
+            } elseif ($SubType -eq "delete") {
+                if ($RecType -eq "A") { az network dns record-set a delete -g $ZRg -z $ZName -n $RecName --yes }
+                elseif ($RecType -eq "CNAME") { az network dns record-set cname delete -g $ZRg -z $ZName -n $RecName --yes }
+                elseif ($RecType -eq "TXT") { az network dns record-set txt delete -g $ZRg -z $ZName -n $RecName --yes }
+            } elseif ($SubType -eq "list") {
+                az network dns record-set list -g $ZRg -z $ZName -o table
+            }
+        } elseif ($SubAction -eq "map-node") {
             Write-Host "Mapping $Domain to $ResourceName"
             $Ip = (az vm show -d -g $ResourceGroup -n $ResourceName --query publicIps -o tsv).Trim()
             $RecordName = $Domain.Replace(".$Zone", "")

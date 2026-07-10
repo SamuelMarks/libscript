@@ -40,7 +40,7 @@ libscript_verify_signature() {
   fi
   
   # NodeJS Signature Verification
-  if echo "$url" | grep -q "nodejs.org/dist/"; then
+  if printf '%s\n' "$url" | grep -q "nodejs.org/dist/"; then
     base_url="${url%/*}"
     sig_url="$base_url/SHASUMS256.txt.sig"
     sums_url="$base_url/SHASUMS256.txt"

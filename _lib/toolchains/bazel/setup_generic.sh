@@ -63,7 +63,7 @@ case "$ACTION" in
     elif [ "${BAZEL_INSTALL_METHOD}" = "asdf" ]; then
       asdf list bazel
     elif [ "${BAZEL_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${BAZEL_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls bazel
     elif [ "${BAZEL_INSTALL_METHOD}" = "system" ]; then
@@ -79,13 +79,13 @@ case "$ACTION" in
     elif [ "${BAZEL_INSTALL_METHOD}" = "asdf" ]; then
       asdf list all bazel
     elif [ "${BAZEL_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${BAZEL_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls all bazel
     elif [ "${BAZEL_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "System package manager does not support ls-remote directly here."
     else
-      echo "Fetching remote versions not implemented generically for bazel"
+      printf '%s\n' "Fetching remote versions not implemented generically for bazel"
     fi
     exit 0
     ;;
@@ -95,7 +95,7 @@ case "$ACTION" in
     elif [ "${BAZEL_INSTALL_METHOD}" = "asdf" ]; then
       asdf global bazel "${BAZEL_VERSION}"
     elif [ "${BAZEL_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "${BAZEL_INSTALL_METHOD}" = "vfox" ]; then
       vfox use "bazel@${BAZEL_VERSION}"
     elif [ "${BAZEL_INSTALL_METHOD}" = "system" ]; then
@@ -184,8 +184,8 @@ case "$ACTION" in
         else
           log_warn "No download URL provided for bazel ${VERSION}."
           # Fallback to mock
-          echo "#!/bin/sh" > "${TARGET_DIR}/bin/bazel"
-          echo "echo 'Mock bazel executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/bazel"
+          printf '%s\n' "#!/bin/sh" > "${TARGET_DIR}/bin/bazel"
+          printf '%s\n' "printf '%s\n' 'Mock bazel executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/bazel"
           chmod +x "${TARGET_DIR}/bin/bazel"
         fi
       fi

@@ -52,6 +52,20 @@ SCRIPT_DIR=$(cd ${SCRIPT_DIR} && pwd)
 
 log_info "Testing AWS component in DRY_RUN mode..."
 
+# Test auth
+"$SCRIPT_DIR/cli.sh" auth status 2>&1 | tee /tmp/aws_test_out
+grep "aws sts get-caller-identity" /tmp/aws_test_out
+
+# Test location
+"$SCRIPT_DIR/cli.sh" location list 2>&1 | tee /tmp/aws_test_out
+grep "aws ec2 describe-regions" /tmp/aws_test_out
+
+# Test DNS
+"$SCRIPT_DIR/cli.sh" dns zone create test.local 2>&1 | tee /tmp/aws_test_out
+grep "aws route53 create-hosted-zone" /tmp/aws_test_out
+"$SCRIPT_DIR/cli.sh" dns record create Z12345678 my.local A 1.2.3.4 2>&1 | tee /tmp/aws_test_out
+grep "aws route53 change-resource-record-sets" /tmp/aws_test_out
+
 # Test network
 VPC_ID=$("$SCRIPT_DIR/cli.sh" network create test-vpc 2>/dev/null | tr -d '\r\n')
 log_info "Captured VPC_ID: '$VPC_ID'"

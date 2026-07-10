@@ -38,7 +38,7 @@ if [ "$CMD" = "search" ]; then
   printf '%s\n' "Searching for '$query'..."
   find_components | sort | while read -r comp; do
     desc=$(get_desc "$comp")
-    if echo "$comp $desc" | grep -i "$query" >/dev/null 2>&1; then
+    if printf '%s\n' "$comp $desc" | grep -i "$query" >/dev/null 2>&1; then
       if [ -n "$desc" ]; then
         printf "  %-40s - %s\n" "$comp" "$desc"
       else

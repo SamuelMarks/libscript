@@ -139,7 +139,7 @@ while [ $# -gt 0 ]; do
       ;;
     --listen=*)
       LISTEN_STR="${1#*=}"
-      if echo "$LISTEN_STR" | grep -q "^unix:"; then
+      if printf '%s\n' "$LISTEN_STR" | grep -q "^unix:"; then
         export LIBSCRIPT_LISTEN_SOCKET="${LISTEN_STR#unix:}"
       elif printf '%s\n' "$LISTEN_STR" | grep -q ":"; then
         export LIBSCRIPT_LISTEN_ADDRESS="${LISTEN_STR%%:*}"

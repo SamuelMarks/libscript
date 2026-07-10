@@ -1,0 +1,8 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "cert",
+  "category": "cloud",
+  "title": "Cloud SSL Certificates",
+  "description": "Multicloud interface for managing managed SSL certificates.",
+  "provides": ["cloud-cert"]
+}

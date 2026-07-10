@@ -181,17 +181,17 @@ case "${1:-}" in
       exit 1
     fi
     ;;
-  network*|node*|dns*|firewall*|ssh*|backup*|restore*|diff*|list-managed*|storage*|aws*|azure*|gcp*|cleanup*)
+  auth*|location*|network*|node*|dns*|firewall*|ssh*|backup*|restore*|diff*|list-managed*|storage*|aws*|azure*|gcp*|cleanup*)
     ACTION="${1:-}"
     shift
     ;;
   info|ls|ls-remote|download|remove|uninstall|status|health|test|start|stop|restart|logs|up|down)
     ACTION="${1:-}"
-    if [ -n "${3:-}" ] && ! echo "${3:-}" | grep -q '^-'; then
+    if [ -n "${3:-}" ] && ! printf '%s\n' "${3:-}" | grep -q '^-'; then
       PACKAGE_NAME="${2:-}"
       VERSION="${3:-}"
       shift 3
-    elif [ -n "${2:-}" ] && ! echo "${2:-}" | grep -q '^-'; then
+    elif [ -n "${2:-}" ] && ! printf '%s\n' "${2:-}" | grep -q '^-'; then
       if [ "${2:-}" = "$(basename "$SCRIPT_DIR")" ] || [ "${2:-}" = "${PACKAGE_NAME:-}" ]; then
         PACKAGE_NAME="${2:-}"
         VERSION=""
@@ -241,7 +241,7 @@ fi
 # Argument parsing loop
 while [ $# -gt 0 ]; do
   # These actions stop parsing and pass remaining args to sub-scripts
-  if [ "$ACTION" = "start" ] || [ "$ACTION" = "stop" ] || [ "$ACTION" = "restart" ] || [ "$ACTION" = "status" ] || [ "$ACTION" = "health" ] || [ "$ACTION" = "logs" ] || [ "$ACTION" = "up" ] || [ "$ACTION" = "down" ] || [ "$ACTION" = "install-service" ] || [ "$ACTION" = "uninstall-service" ] || [ "$ACTION" = "run" ] || [ "$ACTION" = "exec" ] || [ "$ACTION" = "network" ] || [ "$ACTION" = "firewall" ] || [ "$ACTION" = "node" ] || [ "$ACTION" = "dns" ] || [ "$ACTION" = "ssh" ] || [ "$ACTION" = "cleanup" ] || [ "$ACTION" = "backup" ] || [ "$ACTION" = "restore" ] || [ "$ACTION" = "diff" ] || [ "$ACTION" = "storage" ] || [ "$ACTION" = "aws" ] || [ "$ACTION" = "azure" ] || [ "$ACTION" = "gcp" ]; then
+  if [ "$ACTION" = "start" ] || [ "$ACTION" = "stop" ] || [ "$ACTION" = "restart" ] || [ "$ACTION" = "status" ] || [ "$ACTION" = "health" ] || [ "$ACTION" = "logs" ] || [ "$ACTION" = "up" ] || [ "$ACTION" = "down" ] || [ "$ACTION" = "install-service" ] || [ "$ACTION" = "uninstall-service" ] || [ "$ACTION" = "run" ] || [ "$ACTION" = "exec" ] || [ "$ACTION" = "auth" ] || [ "$ACTION" = "location" ] || [ "$ACTION" = "network" ] || [ "$ACTION" = "firewall" ] || [ "$ACTION" = "node" ] || [ "$ACTION" = "dns" ] || [ "$ACTION" = "ssh" ] || [ "$ACTION" = "cleanup" ] || [ "$ACTION" = "backup" ] || [ "$ACTION" = "restore" ] || [ "$ACTION" = "diff" ] || [ "$ACTION" = "storage" ] || [ "$ACTION" = "aws" ] || [ "$ACTION" = "azure" ] || [ "$ACTION" = "gcp" ]; then
     break
   fi
   case "$1" in
@@ -285,9 +285,9 @@ while [ $# -gt 0 ]; do
         _props=$(get_merged_properties)
 
         # Check if key exists
-        if ! echo "$_props" | jq -e ".\"$key\"" >/dev/null 2>&1; then
+        if ! printf '%s\n' "$_props" | jq -e ".\"$key\"" >/dev/null 2>&1; then
           # Check for _STRATEGY suffix which is also allowed for dependencies
-          if echo "$key" | grep -q "_STRATEGY$" && printf '%s\n' "$_props" | jq -e ".\"${key%_STRATEGY}\"" >/dev/null 2>&1; then
+          if printf '%s\n' "$key" | grep -q "_STRATEGY$" && printf '%s\n' "$_props" | jq -e ".\"${key%_STRATEGY}\"" >/dev/null 2>&1; then
             export "$key"="$val"
           else
             # Pass through unknown flags to setup.sh and subcommands
@@ -299,7 +299,7 @@ while [ $# -gt 0 ]; do
           # Validate enum if it exists
           _enum=$(printf '%s\n' "$_props" | jq -c ".\"$key\".enum // empty")
           if [ -n "$_enum" ]; then
-            if ! echo "$_enum" | jq -e ". | contains([\"$val\"])" >/dev/null 2>&1; then
+            if ! printf '%s\n' "$_enum" | jq -e ". | contains([\"$val\"])" >/dev/null 2>&1; then
               printf '%s\n' "Error: Invalid value '$val' for --$key. Allowed values are: $(printf '%s\n' "$_enum" | jq -r 'join(", ")')" >&2
               exit 1
             fi

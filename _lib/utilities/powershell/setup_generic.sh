@@ -63,7 +63,7 @@ case "$ACTION" in
     elif [ "${POWERSHELL_INSTALL_METHOD}" = "asdf" ]; then
       asdf list powershell
     elif [ "${POWERSHELL_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${POWERSHELL_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls powershell
     elif [ "${POWERSHELL_INSTALL_METHOD}" = "system" ]; then
@@ -79,13 +79,13 @@ case "$ACTION" in
     elif [ "${POWERSHELL_INSTALL_METHOD}" = "asdf" ]; then
       asdf list all powershell
     elif [ "${POWERSHELL_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${POWERSHELL_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls all powershell
     elif [ "${POWERSHELL_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "System package manager does not support ls-remote directly here."
     else
-      echo "Fetching remote versions not implemented generically for powershell"
+      printf '%s\n' "Fetching remote versions not implemented generically for powershell"
     fi
     exit 0
     ;;
@@ -95,7 +95,7 @@ case "$ACTION" in
     elif [ "${POWERSHELL_INSTALL_METHOD}" = "asdf" ]; then
       asdf global powershell "${POWERSHELL_VERSION}"
     elif [ "${POWERSHELL_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "${POWERSHELL_INSTALL_METHOD}" = "vfox" ]; then
       vfox use "powershell@${POWERSHELL_VERSION}"
     elif [ "${POWERSHELL_INSTALL_METHOD}" = "system" ]; then
@@ -184,8 +184,8 @@ case "$ACTION" in
         else
           log_warn "No download URL provided for powershell ${VERSION}."
           # Fallback to mock
-          echo "#!/bin/sh" > "${TARGET_DIR}/bin/powershell"
-          echo "echo 'Mock powershell executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/powershell"
+          printf '%s\n' "#!/bin/sh" > "${TARGET_DIR}/bin/powershell"
+          printf '%s\n' "printf '%s\n' 'Mock powershell executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/powershell"
           chmod +x "${TARGET_DIR}/bin/powershell"
         fi
       fi

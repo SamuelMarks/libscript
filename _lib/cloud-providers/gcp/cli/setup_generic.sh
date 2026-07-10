@@ -70,19 +70,19 @@ resolve_exact_version() {
 case "$ACTION" in
   ls)
     if [ "${CLI_INSTALL_METHOD:-}" = "system" ]; then
-      echo "System packages do not support ls here."
+      printf '%s\n' "System packages do not support ls here."
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/cli/" 2>/dev/null || true
     fi
     exit 0
     ;;
   ls-remote)
-    git ls-remote --tags "https://github.com/googleapis/google-cloud-cpp" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+    git ls-remote --tags "https://github.com/googleapis/google-cloud-cpp" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
     exit 0
     ;;
   use)
     if [ "${CLI_INSTALL_METHOD:-}" = "system" ]; then
-      echo "System packages do not support use here."
+      printf '%s\n' "System packages do not support use here."
     else
       resolve_exact_version
       libscript_symlink_alias "cli" "$VERSION" "${EXACT_VERSION}"

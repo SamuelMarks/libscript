@@ -40,7 +40,7 @@ netctl_emit_vagrantfile() {
   fi
 
   jq -r '.listen[]' "$state_file" | while read -r listen_str; do
-    if echo "$listen_str" | grep -q '^unix:'; then
+    if printf '%s\n' "$listen_str" | grep -q '^unix:'; then
       continue
     elif printf '%s\n' "$listen_str" | grep -q ':'; then
       port="${listen_str##*:}"

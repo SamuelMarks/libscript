@@ -52,7 +52,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
         pkg_name="${APP_NAME}-${pkg}"
         if [ -n "$meta_depends" ]; then meta_depends="${meta_depends}, "; fi
         meta_depends="${meta_depends}\"${pkg_name}\": {\"version\": \"$APP_VERSION\", \"origin\": \"misc/${pkg_name}\"}"
-        printf '%s\n' "echo \"Building $pkg_name ...\""
+        printf '%s\n' "printf '%s\n' \"Building $pkg_name ...\""
         printf '%s\n' "BUILD_DIR=\"/tmp/${pkg_name}_pkgbuild\""
         printf '%s\n' "mkdir -p \"\$BUILD_DIR/root/opt/libscript\""
         printf '%s\n' "mkdir -p \"\$BUILD_DIR/root/var/LIB/libscript\""
@@ -77,7 +77,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
         printf '%s\n' "pkg create -m \"\$BUILD_DIR/meta\" -r \"\$BUILD_DIR/root\" -o \"\$OUT_DIR\""
         printf '%s\n' "rm -rf \"\$BUILD_DIR\""
       done
-      printf '%s\n' "echo \"Building ${APP_NAME}-meta ...\""
+      printf '%s\n' "printf '%s\n' \"Building ${APP_NAME}-meta ...\""
       printf '%s\n' "BUILD_DIR=\"/tmp/${APP_NAME}-meta_pkgbuild\""
       printf '%s\n' "mkdir -p \"\$BUILD_DIR/root/var/LIB/libscript\""
       printf '%s\n' "touch \"\$BUILD_DIR/root/var/LIB/libscript/.${APP_NAME}-meta_installed\""
@@ -100,5 +100,5 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
       printf '%s\n' "cd \"\$BUILD_DIR/root\" && find . -type f -o -type l | sed -e 's|^./||' > \"\$BUILD_DIR/meta/pkg-plist\""
       printf '%s\n' "pkg create -m \"\$BUILD_DIR/meta\" -r \"\$BUILD_DIR/root\" -o \"\$OUT_DIR\""
       printf '%s\n' "rm -rf \"\$BUILD_DIR\""
-      printf '%s\n' "echo \"Done!\""
+      printf '%s\n' "printf '%s\n' \"Done!\""
       exit 0

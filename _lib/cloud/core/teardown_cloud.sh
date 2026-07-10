@@ -201,7 +201,7 @@ if [ -n "$STATE_PATHS" ]; then
 
     if [ -n "$STATE_BUCKET" ] && [ -e "$REPO_PATH/$PATH_ITEM" ]; then
       log "STATE" "Backing up $PATH_ITEM to object storage ($STATE_BUCKET)..."
-      if echo "$STATE_BUCKET" | grep -q "^s3://"; then
+      if printf '%s\n' "$STATE_BUCKET" | grep -q "^s3://"; then
         S3_ARGS=""
         if [ -n "$STATE_ENDPOINT" ]; then S3_ARGS="--endpoint-url $STATE_ENDPOINT"; fi
         run_with_auth_check aws s3 cp $S3_ARGS "$REPO_PATH/$PATH_ITEM" "$STATE_BUCKET/$PATH_ITEM"

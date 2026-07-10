@@ -68,11 +68,11 @@ case "$ACTION" in
     elif [ "$CPP_INSTALL_METHOD" = "asdf" ]; then
       asdf list cpp || true
     elif [ "$CPP_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$CPP_INSTALL_METHOD" = "vfox" ]; then
       vfox ls cpp || true
     elif [ "$CPP_INSTALL_METHOD" = "system" ]; then
-      echo "System packages do not support ls here."
+      printf '%s\n' "System packages do not support ls here."
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/cpp/" 2>/dev/null || true
     fi
@@ -84,14 +84,14 @@ case "$ACTION" in
     elif [ "$CPP_INSTALL_METHOD" = "asdf" ]; then
       asdf list all cpp || true
     elif [ "$CPP_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$CPP_INSTALL_METHOD" = "vfox" ]; then
       vfox ls all cpp || true
     else
       if [ -n "${CPP_RELEASES_URL:-}" ]; then
-        curl -sSL "${CPP_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+        curl -sSL "${CPP_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
       else
-      git ls-remote --tags "https://github.com/gcc-mirror/gcc" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+      git ls-remote --tags "https://github.com/gcc-mirror/gcc" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
     fi
     fi
     exit 0
@@ -102,13 +102,13 @@ case "$ACTION" in
     elif [ "$CPP_INSTALL_METHOD" = "asdf" ]; then
       asdf global cpp "${VERSION}"
     elif [ "$CPP_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "$CPP_INSTALL_METHOD" = "vfox" ]; then
       vfox use "cpp@${VERSION}"
     elif [ "$CPP_INSTALL_METHOD" = "vfox" ]; then
       vfox use "cpp@${VERSION}"
     elif [ "$CPP_INSTALL_METHOD" = "system" ]; then
-      echo "System packages do not support use here."
+      printf '%s\n' "System packages do not support use here."
     else
       resolve_exact_version
       libscript_symlink_alias "cpp" "$VERSION" "${EXACT_VERSION}"
@@ -135,7 +135,7 @@ case "$ACTION" in
       if [ -n "${CPP_DOWNLOAD_URL:-}" ]; then
         curl -sSL "${CPP_DOWNLOAD_URL}" -o "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cpp/cpp-${VERSION}.tar.gz"
       else
-        echo "CPP_DOWNLOAD_URL is not defined. Skipping."
+        printf '%s\n' "CPP_DOWNLOAD_URL is not defined. Skipping."
       fi
     fi
     exit 0

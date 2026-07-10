@@ -63,7 +63,7 @@ case "$ACTION" in
     elif [ "${DASH_INSTALL_METHOD}" = "asdf" ]; then
       asdf list dash
     elif [ "${DASH_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${DASH_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls dash
     elif [ "${DASH_INSTALL_METHOD}" = "system" ]; then
@@ -79,13 +79,13 @@ case "$ACTION" in
     elif [ "${DASH_INSTALL_METHOD}" = "asdf" ]; then
       asdf list all dash
     elif [ "${DASH_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${DASH_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls all dash
     elif [ "${DASH_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "System package manager does not support ls-remote directly here."
     else
-      echo "Fetching remote versions not implemented generically for dash"
+      printf '%s\n' "Fetching remote versions not implemented generically for dash"
     fi
     exit 0
     ;;
@@ -95,7 +95,7 @@ case "$ACTION" in
     elif [ "${DASH_INSTALL_METHOD}" = "asdf" ]; then
       asdf global dash "${DASH_VERSION}"
     elif [ "${DASH_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "${DASH_INSTALL_METHOD}" = "vfox" ]; then
       vfox use "dash@${DASH_VERSION}"
     elif [ "${DASH_INSTALL_METHOD}" = "system" ]; then
@@ -184,8 +184,8 @@ case "$ACTION" in
         else
           log_warn "No download URL provided for dash ${VERSION}."
           # Fallback to mock
-          echo "#!/bin/sh" > "${TARGET_DIR}/bin/dash"
-          echo "echo 'Mock dash executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/dash"
+          printf '%s\n' "#!/bin/sh" > "${TARGET_DIR}/bin/dash"
+          printf '%s\n' "printf '%s\n' 'Mock dash executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/dash"
           chmod +x "${TARGET_DIR}/bin/dash"
         fi
       fi

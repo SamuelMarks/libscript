@@ -75,9 +75,9 @@ SYSTEMD
             # extract envs
             ENVS=$(printf '%s\n' "$svc" | jq -r '.value.env | to_entries[]? | "\(.key)=\(.value)"' 2>/dev/null || true)
             if [ -n "$ENVS" ]; then
-                sudo sh -c "echo '[Service]' >> $SERVICE_FILE"
+                sudo sh -c "printf '%s\n' '[Service]' >> $SERVICE_FILE"
                 printf '%s\n' "$ENVS" | while read -r e; do
-                    sudo sh -c "echo 'Environment=\"$e\"' >> $SERVICE_FILE"
+                    sudo sh -c "printf '%s\n' 'Environment=\"$e\"' >> $SERVICE_FILE"
                 done
             fi
             ENV_FILES=$(printf '%s\n' "$svc" | jq -r '.value.env_files[]?' 2>/dev/null || true)
@@ -86,7 +86,7 @@ SYSTEMD
                     # resolve path
                     EF_FULL=$(realpath "$ef" 2>/dev/null || printf '%s\n' "$ef")
                     if [ -f "$EF_FULL" ]; then
-                        sudo sh -c "echo 'EnvironmentFile=$EF_FULL' >> $SERVICE_FILE"
+                        sudo sh -c "printf '%s\n' 'EnvironmentFile=$EF_FULL' >> $SERVICE_FILE"
                     fi
                 done
             fi

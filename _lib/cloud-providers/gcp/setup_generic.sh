@@ -62,17 +62,277 @@ resolve_exact_version() {
 }
 
 case "$ACTION" in
+  node)
+    SUBACTION=${1:-}
+    RESOURCE_NAME=${2:-}
+    case "$SUBACTION" in
+      create)
+        if [ -z "$RESOURCE_NAME" ]; then
+          printf '%s\n' "Usage: node create <name> [--machine-type TYPE] [--image IMAGE]"
+          exit 1
+        fi
+        TYPE="n1-standard-1"
+        IMAGE="debian-11"
+        shift 2
+        while [ $# -gt 0 ]; do
+          case "$1" in
+            --machine-type)
+              TYPE="$2"; shift 2 ;;
+            --image)
+              IMAGE="$2"; shift 2 ;;
+            *)
+              printf '%s\n' "Unknown option: $1"; exit 1 ;;
+          esac
+        done
+        printf '%s\n' "Creating GCP VM: $RESOURCE_NAME ($TYPE, $IMAGE)"
+        gcloud compute instances create "$RESOURCE_NAME" --machine-type="$TYPE" --image-family="$IMAGE" --image-project="debian-cloud"
+        ;;
+      delete)
+        if [ -z "$RESOURCE_NAME" ]; then
+          printf '%s\n' "Usage: node delete <name>"
+          exit 1
+        fi
+        printf '%s\n' "Deleting GCP VM: $RESOURCE_NAME"
+        gcloud compute instances delete "$RESOURCE_NAME" --quiet
+        ;;
+      list)
+        gcloud compute instances list
+        ;;
+      update)
+        if [ -z "$RESOURCE_NAME" ]; then
+          printf '%s\n' "Usage: node update <name> [--machine-type TYPE]"
+          exit 1
+        fi
+        shift 2
+        while [ $# -gt 0 ]; do
+          case "$1" in
+            --machine-type)
+              gcloud compute instances set-machine-type "$RESOURCE_NAME" --machine-type="$2"
+              shift 2 ;;
+            *)
+              printf '%s\n' "Unknown option: $1"; exit 1 ;;
+          esac
+        done
+        ;;
+      exec)
+        shift 2
+        if [ -z "$RESOURCE_NAME" ]; then printf '%s\n' "Usage: node exec <name> <cmd...>"; exit 1; fi
+        gcloud compute ssh "$RESOURCE_NAME" --command="$*"
+        ;;
+      *)
+        printf '%s\n' "Unknown node sub-action: $SUBACTION"; exit 1
+        ;;
+    esac
+    exit 0
+    ;;
+  dns)
+    SUBACTION=${1:-}
+    SUBTYPE=${2:-}
+    case "$SUBACTION" in
+      zone)
+        case "$SUBTYPE" in
+          create)
+            ZONE=${3:-}; DNS_NAME=${4:-}
+            if [ -z "$ZONE" ] || [ -z "$DNS_NAME" ]; then printf '%s\n' "Usage: dns zone create <zone> <dns-name>"; exit 1; fi
+            gcloud dns managed-zones create "$ZONE" --dns-name="$DNS_NAME" --description="Libscript managed"
+            ;;
+          delete)
+            ZONE=${3:-}
+            if [ -z "$ZONE" ]; then printf '%s\n' "Usage: dns zone delete <zone>"; exit 1; fi
+            gcloud dns managed-zones delete "$ZONE" --quiet
+            ;;
+          list)
+            gcloud dns managed-zones list
+            ;;
+          *)
+            printf '%s\n' "Unknown dns zone action: $SUBTYPE"; exit 1 ;;
+        esac
+        ;;
+      record)
+        case "$SUBTYPE" in
+          create|update)
+            ZONE=${3:-}; NAME=${4:-}; TYPE=${5:-}; DATA=${6:-}; TTL=${7:-300}
+            if [ -z "$DATA" ]; then printf '%s\n' "Usage: dns record $SUBTYPE <zone> <name> <type> <data> [ttl]"; exit 1; fi
+            if [ "$SUBTYPE" = "create" ]; then
+              gcloud dns record-sets create "$NAME" --zone="$ZONE" --type="$TYPE" --rrdatas="$DATA" --ttl="$TTL"
+            else
+              gcloud dns record-sets update "$NAME" --zone="$ZONE" --type="$TYPE" --rrdatas="$DATA" --ttl="$TTL"
+            fi
+            ;;
+          delete)
+            ZONE=${3:-}; NAME=${4:-}; TYPE=${5:-}
+            if [ -z "$TYPE" ]; then printf '%s\n' "Usage: dns record delete <zone> <name> <type>"; exit 1; fi
+            gcloud dns record-sets delete "$NAME" --zone="$ZONE" --type="$TYPE" --quiet
+            ;;
+          list)
+            ZONE=${3:-}
+            if [ -z "$ZONE" ]; then printf '%s\n' "Usage: dns record list <zone>"; exit 1; fi
+            gcloud dns record-sets list --zone="$ZONE"
+            ;;
+          *)
+            printf '%s\n' "Unknown dns record action: $SUBTYPE"; exit 1 ;;
+        esac
+        ;;
+      *)
+        printf '%s\n' "Unknown dns action: $SUBACTION"; exit 1
+        ;;
+    esac
+    exit 0
+    ;;
+  firewall)
+    SUBACTION=${1:-}
+    RESOURCE_NAME=${2:-}
+    case "$SUBACTION" in
+      create)
+        if [ -z "$RESOURCE_NAME" ]; then
+          printf '%s\n' "Usage: firewall create <name> [--network NETWORK] [--allow PORTS]"
+          exit 1
+        fi
+        NETWORK="default"
+        ALLOW=""
+        shift 2
+        while [ $# -gt 0 ]; do
+          case "$1" in
+            --network)
+              NETWORK="$2"; shift 2 ;;
+            --allow)
+              ALLOW="--allow=$2"; shift 2 ;;
+            *)
+              printf '%s\n' "Unknown option: $1"; exit 1 ;;
+          esac
+        done
+        printf '%s\n' "Creating GCP Firewall Rule: $RESOURCE_NAME"
+        gcloud compute firewall-rules create "$RESOURCE_NAME" --network="$NETWORK" $ALLOW
+        ;;
+      delete)
+        if [ -z "$RESOURCE_NAME" ]; then
+          printf '%s\n' "Usage: firewall delete <name>"
+          exit 1
+        fi
+        printf '%s\n' "Deleting GCP Firewall Rule: $RESOURCE_NAME"
+        gcloud compute firewall-rules delete "$RESOURCE_NAME" --quiet
+        ;;
+      list)
+        gcloud compute firewall-rules list
+        ;;
+      update)
+        if [ -z "$RESOURCE_NAME" ]; then
+          printf '%s\n' "Usage: firewall update <name> [--allow PORTS]"
+          exit 1
+        fi
+        shift 2
+        while [ $# -gt 0 ]; do
+          case "$1" in
+            --allow)
+              gcloud compute firewall-rules update "$RESOURCE_NAME" --allow="$2"
+              shift 2 ;;
+            *)
+              printf '%s\n' "Unknown option: $1"; exit 1 ;;
+          esac
+        done
+        ;;
+      *)
+        printf '%s\n' "Unknown firewall sub-action: $SUBACTION"; exit 1
+        ;;
+    esac
+    exit 0
+    ;;
+  network)
+    SUBACTION=${1:-}
+    RESOURCE_NAME=${2:-}
+    case "$SUBACTION" in
+      create)
+        if [ -z "$RESOURCE_NAME" ]; then
+          printf '%s\n' "Usage: network create <name>"
+          exit 1
+        fi
+        printf '%s\n' "Creating GCP Network: $RESOURCE_NAME"
+        gcloud compute networks create "$RESOURCE_NAME"
+        ;;
+      delete)
+        if [ -z "$RESOURCE_NAME" ]; then
+          printf '%s\n' "Usage: network delete <name>"
+          exit 1
+        fi
+        printf '%s\n' "Deleting GCP Network: $RESOURCE_NAME"
+        gcloud compute networks delete "$RESOURCE_NAME" --quiet
+        ;;
+      list)
+        gcloud compute networks list
+        ;;
+      update)
+        if [ -z "$RESOURCE_NAME" ]; then
+          printf '%s\n' "Usage: network update <name> [--bgp-routing-mode MODE]"
+          exit 1
+        fi
+        shift 2
+        while [ $# -gt 0 ]; do
+          case "$1" in
+            --bgp-routing-mode)
+              gcloud compute networks update "$RESOURCE_NAME" --bgp-routing-mode="$2"
+              shift 2 ;;
+            *)
+              printf '%s\n' "Unknown option: $1"; exit 1 ;;
+          esac
+        done
+        ;;
+      *)
+        printf '%s\n' "Unknown network sub-action: $SUBACTION"; exit 1
+        ;;
+    esac
+    exit 0
+    ;;
+  auth)
+    SUBACTION=${1:-}
+    case "$SUBACTION" in
+      login)
+        gcloud auth login
+        gcloud auth application-default login
+        ;;
+      logout)
+        gcloud auth revoke
+        ;;
+      status)
+        gcloud auth list
+        ;;
+      *)
+        printf '%s\n' "Unknown auth sub-action: $SUBACTION"; exit 1
+        ;;
+    esac
+    exit 0
+    ;;
+  location)
+    SUBACTION=${1:-}
+    case "$SUBACTION" in
+      list)
+        gcloud compute regions list
+        ;;
+      select)
+        if [ -n "${2:-}" ]; then
+          gcloud config set compute/region "$2"
+          printf '%s\n' "Default region set to $2."
+        else
+          printf '%s\n' "Usage: location select <region>"
+          exit 1
+        fi
+        ;;
+      *)
+        printf '%s\n' "Unknown location sub-action: $SUBACTION"; exit 1
+        ;;
+    esac
+    exit 0
+    ;;
   ls)
     if [ "$GCP_INSTALL_METHOD" = "mise" ]; then
       mise ls gcp || true
     elif [ "$GCP_INSTALL_METHOD" = "asdf" ]; then
       asdf list gcp || true
     elif [ "$GCP_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$GCP_INSTALL_METHOD" = "vfox" ]; then
       vfox ls gcp || true
     elif [ "$GCP_INSTALL_METHOD" = "system" ]; then
-      echo "System packages do not support ls here."
+      printf '%s\n' "System packages do not support ls here."
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/gcp/" 2>/dev/null || true
     fi
@@ -84,14 +344,14 @@ case "$ACTION" in
     elif [ "$GCP_INSTALL_METHOD" = "asdf" ]; then
       asdf list all gcp || true
     elif [ "$GCP_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$GCP_INSTALL_METHOD" = "vfox" ]; then
       vfox ls all gcp || true
     else
       if [ -n "${GCP_RELEASES_URL:-}" ]; then
-        curl -sSL "${GCP_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+        curl -sSL "${GCP_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
       else
-      git ls-remote --tags "https://github.com/priyankavergadia/GCPSketchnote" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || echo "No versions found"
+      git ls-remote --tags "https://github.com/priyankavergadia/GCPSketchnote" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
     fi
     fi
     exit 0
@@ -102,13 +362,13 @@ case "$ACTION" in
     elif [ "$GCP_INSTALL_METHOD" = "asdf" ]; then
       asdf global gcp "${VERSION}"
     elif [ "$GCP_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "$GCP_INSTALL_METHOD" = "vfox" ]; then
       vfox use "gcp@${VERSION}"
     elif [ "$GCP_INSTALL_METHOD" = "vfox" ]; then
       vfox use "gcp@${VERSION}"
     elif [ "$GCP_INSTALL_METHOD" = "system" ]; then
-      echo "System packages do not support use here."
+      printf '%s\n' "System packages do not support use here."
     else
       resolve_exact_version
       libscript_symlink_alias "gcp" "$VERSION" "${EXACT_VERSION}"

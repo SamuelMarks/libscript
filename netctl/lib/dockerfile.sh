@@ -41,7 +41,7 @@ netctl_emit_dockerfile() {
 
   # Extract listen ports, filter out unix: and address:port formats, keep only ports
   jq -r '.listen[]' "$state_file" | while read -r listen_str; do
-    if echo "$listen_str" | grep -q '^unix:'; then
+    if printf '%s\n' "$listen_str" | grep -q '^unix:'; then
       continue
     elif printf '%s\n' "$listen_str" | grep -q ':'; then
       port="${listen_str##*:}"

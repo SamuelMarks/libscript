@@ -66,7 +66,7 @@ case "$ACTION" in
     elif [ "$CMAKE_INSTALL_METHOD" = "asdf" ]; then
       asdf list cmake
     elif [ "$CMAKE_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$CMAKE_INSTALL_METHOD" = "vfox" ]; then
       vfox ls cmake
     elif [ "$CMAKE_INSTALL_METHOD" = "system" ]; then
@@ -82,7 +82,7 @@ case "$ACTION" in
     elif [ "$CMAKE_INSTALL_METHOD" = "asdf" ]; then
       asdf list all
     elif [ "$CMAKE_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$CMAKE_INSTALL_METHOD" = "vfox" ]; then
       vfox ls all cmake
     elif [ "$CMAKE_INSTALL_METHOD" = "system" ]; then
@@ -98,7 +98,7 @@ case "$ACTION" in
     elif [ "$CMAKE_INSTALL_METHOD" = "asdf" ]; then
       asdf global cmake "${CMAKE_VERSION}"
     elif [ "$CMAKE_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "$CMAKE_INSTALL_METHOD" = "vfox" ]; then
       vfox use "cmake@${CMAKE_VERSION}"
     elif [ "$CMAKE_INSTALL_METHOD" = "system" ]; then
@@ -187,8 +187,8 @@ case "$ACTION" in
         else
           log_warn "No download URL provided for cmake ${VERSION}."
           # Fallback to mock
-          echo "#!/bin/sh" > "${TARGET_DIR}/bin/cmake"
-          echo "echo 'Mock cmake executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/cmake"
+          printf '%s\n' "#!/bin/sh" > "${TARGET_DIR}/bin/cmake"
+          printf '%s\n' "printf '%s\n' 'Mock cmake executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/cmake"
           chmod +x "${TARGET_DIR}/bin/cmake"
         fi
       fi

@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "tmux",
+  "title": "tmux",
+  "description": "tmux is a terminal multiplexer.",
+  "category": "utilities",
+  "provides": ["tmux"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": []
+}

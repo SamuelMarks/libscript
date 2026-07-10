@@ -6,7 +6,12 @@ This category contains core components and utilities for cloud deployments.
 
 <!-- BEGIN_COMPONENTS -->
 
+- [cdn](./cdn/README.md)
+- [cert](./cert/README.md)
+- [cloudinit](./cloudinit/README.md)
 - [core](./core/README.md)
+- [storage](./storage/README.md)
+- [volume](./volume/README.md)
 
 <!-- END_COMPONENTS -->
 

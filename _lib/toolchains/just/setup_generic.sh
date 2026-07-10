@@ -63,7 +63,7 @@ case "$ACTION" in
     elif [ "${JUST_INSTALL_METHOD}" = "asdf" ]; then
       asdf list just
     elif [ "${JUST_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${JUST_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls just
     elif [ "${JUST_INSTALL_METHOD}" = "system" ]; then
@@ -79,13 +79,13 @@ case "$ACTION" in
     elif [ "${JUST_INSTALL_METHOD}" = "asdf" ]; then
       asdf list all just
     elif [ "${JUST_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "${JUST_INSTALL_METHOD}" = "vfox" ]; then
       vfox ls all just
     elif [ "${JUST_INSTALL_METHOD}" = "system" ]; then
       printf '%s\n' "System package manager does not support ls-remote directly here."
     else
-      echo "Fetching remote versions not implemented generically for just"
+      printf '%s\n' "Fetching remote versions not implemented generically for just"
     fi
     exit 0
     ;;
@@ -95,7 +95,7 @@ case "$ACTION" in
     elif [ "${JUST_INSTALL_METHOD}" = "asdf" ]; then
       asdf global just "${JUST_VERSION}"
     elif [ "${JUST_INSTALL_METHOD}" = "pkgx" ]; then
-      echo "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "${JUST_INSTALL_METHOD}" = "vfox" ]; then
       vfox use "just@${JUST_VERSION}"
     elif [ "${JUST_INSTALL_METHOD}" = "system" ]; then
@@ -184,8 +184,8 @@ case "$ACTION" in
         else
           log_warn "No download URL provided for just ${VERSION}."
           # Fallback to mock
-          echo "#!/bin/sh" > "${TARGET_DIR}/bin/just"
-          echo "echo 'Mock just executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/just"
+          printf '%s\n' "#!/bin/sh" > "${TARGET_DIR}/bin/just"
+          printf '%s\n' "printf '%s\n' 'Mock just executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/just"
           chmod +x "${TARGET_DIR}/bin/just"
         fi
       fi

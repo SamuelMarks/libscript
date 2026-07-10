@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "kubernetes",
+  "title": "Kubernetes CLI (kubectl)",
+  "description": "Component for installing and managing Kubernetes command-line tool (kubectl).",
+  "category": "orchestration",
+  "provides": ["kubernetes", "kubectl"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": []
+}

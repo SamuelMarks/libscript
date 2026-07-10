@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "tensorboard",
+  "title": "TensorBoard",
+  "description": "TensorBoard provides the visualization and tooling needed for machine learning experimentation.",
+  "category": "logging",
+  "provides": ["tensorboard"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": []
+}

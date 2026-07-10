@@ -8,8 +8,195 @@ Execute this script to install and configure gcp on the local system.
 
 $ErrorActionPreference = "Stop"
 
-Write-Error "Windows setup is not yet implemented for this component."
-exit 1
+$Action = $env:ACTION
+$SubAction = $env:ARG1
+$ResourceName = $env:ARG2
+
+switch ($Action) {
+    "node" {
+        if ($SubAction -eq "create") {
+            $Type = if ($env:ARG3) { $env:ARG3 } else { "n1-standard-1" }
+            $Image = if ($env:ARG4) { $env:ARG4 } else { "debian-11" }
+            if ($ResourceName) {
+                Write-Host "Creating GCP VM: $ResourceName ($Type, $Image)"
+                gcloud compute instances create $ResourceName --machine-type=$Type --image-family=$Image --image-project="debian-cloud"
+            } else {
+                Write-Host "Usage: node create <name> <type> <image>"
+                exit 1
+            }
+        } elseif ($SubAction -eq "delete") {
+            if ($ResourceName) {
+                Write-Host "Deleting GCP VM: $ResourceName"
+                gcloud compute instances delete $ResourceName --quiet
+            } else {
+                Write-Host "Usage: node delete <name>"
+                exit 1
+            }
+        } elseif ($SubAction -eq "list") {
+            gcloud compute instances list
+        } elseif ($SubAction -eq "update") {
+            $Type = $env:ARG3
+            if ($ResourceName -and $Type) {
+                gcloud compute instances set-machine-type $ResourceName --machine-type=$Type
+            } else {
+                Write-Host "Usage: node update <name> <type>"
+                exit 1
+            }
+        } elseif ($SubAction -eq "exec") {
+            $Cmd = $env:ARG3
+            if ($ResourceName -and $Cmd) {
+                gcloud compute ssh $ResourceName --command=$Cmd
+            } else {
+                Write-Host "Usage: node exec <name> <cmd>"
+                exit 1
+            }
+        }
+        exit 0
+    }
+    "dns" {
+        $SubType = $env:ARG2
+        if ($SubAction -eq "zone") {
+            $Zone = $env:ARG3
+            $DnsName = $env:ARG4
+            if ($SubType -eq "create") {
+                if ($Zone -and $DnsName) {
+                    gcloud dns managed-zones create $Zone --dns-name=$DnsName --description="Libscript managed"
+                } else {
+                    Write-Host "Usage: dns zone create <zone> <dns-name>"
+                }
+            } elseif ($SubType -eq "delete") {
+                if ($Zone) {
+                    gcloud dns managed-zones delete $Zone --quiet
+                } else {
+                    Write-Host "Usage: dns zone delete <zone>"
+                }
+            } elseif ($SubType -eq "list") {
+                gcloud dns managed-zones list
+            }
+        } elseif ($SubAction -eq "record") {
+            $Zone = $env:ARG3
+            $RecName = $env:ARG4
+            $RecType = $env:ARG5
+            $RecData = $env:ARG6
+            $RecTtl = if ($env:ARG7) { $env:ARG7 } else { 300 }
+            if ($SubType -eq "create") {
+                if ($RecData) {
+                    gcloud dns record-sets create $RecName --zone=$Zone --type=$RecType --rrdatas=$RecData --ttl=$RecTtl
+                } else {
+                    Write-Host "Usage: dns record create <zone> <name> <type> <data> [ttl]"
+                }
+            } elseif ($SubType -eq "update") {
+                if ($RecData) {
+                    gcloud dns record-sets update $RecName --zone=$Zone --type=$RecType --rrdatas=$RecData --ttl=$RecTtl
+                } else {
+                    Write-Host "Usage: dns record update <zone> <name> <type> <data> [ttl]"
+                }
+            } elseif ($SubType -eq "delete") {
+                if ($RecType) {
+                    gcloud dns record-sets delete $RecName --zone=$Zone --type=$RecType --quiet
+                } else {
+                    Write-Host "Usage: dns record delete <zone> <name> <type>"
+                }
+            } elseif ($SubType -eq "list") {
+                if ($Zone) {
+                    gcloud dns record-sets list --zone=$Zone
+                } else {
+                    Write-Host "Usage: dns record list <zone>"
+                }
+            }
+        }
+        exit 0
+    }
+    "firewall" {
+        if ($SubAction -eq "create") {
+            $Network = if ($env:ARG3) { $env:ARG3 } else { "default" }
+            $Allow = $env:ARG4
+            if ($ResourceName) {
+                Write-Host "Creating GCP Firewall Rule: $ResourceName"
+                $ArgsList = @("compute", "firewall-rules", "create", $ResourceName, "--network=$Network")
+                if ($Allow) { $ArgsList += "--allow=$Allow" }
+                & gcloud @ArgsList
+            } else {
+                Write-Host "Usage: firewall create <name> <network> <allow>"
+                exit 1
+            }
+        } elseif ($SubAction -eq "delete") {
+            if ($ResourceName) {
+                Write-Host "Deleting GCP Firewall Rule: $ResourceName"
+                gcloud compute firewall-rules delete $ResourceName --quiet
+            } else {
+                Write-Host "Usage: firewall delete <name>"
+                exit 1
+            }
+        } elseif ($SubAction -eq "list") {
+            gcloud compute firewall-rules list
+        } elseif ($SubAction -eq "update") {
+            $Allow = $env:ARG3
+            if ($ResourceName -and $Allow) {
+                gcloud compute firewall-rules update $ResourceName --allow=$Allow
+            } else {
+                Write-Host "Usage: firewall update <name> <allow>"
+                exit 1
+            }
+        }
+        exit 0
+    }
+    "network" {
+        if ($SubAction -eq "create") {
+            if ($ResourceName) {
+                Write-Host "Creating GCP Network: $ResourceName"
+                gcloud compute networks create $ResourceName
+            } else {
+                Write-Host "Usage: network create <name>"
+                exit 1
+            }
+        } elseif ($SubAction -eq "delete") {
+            if ($ResourceName) {
+                Write-Host "Deleting GCP Network: $ResourceName"
+                gcloud compute networks delete $ResourceName --quiet
+            } else {
+                Write-Host "Usage: network delete <name>"
+                exit 1
+            }
+        } elseif ($SubAction -eq "list") {
+            gcloud compute networks list
+        } elseif ($SubAction -eq "update") {
+            $Mode = $env:ARG4
+            if ($ResourceName -and $Mode) {
+                gcloud compute networks update $ResourceName --bgp-routing-mode=$Mode
+            } else {
+                Write-Host "Usage: network update <name> <resource-group> <bgp-routing-mode>"
+                exit 1
+            }
+        }
+        exit 0
+    }
+    "auth" {
+        if ($SubAction -eq "login") {
+            gcloud auth login
+            gcloud auth application-default login
+        } elseif ($SubAction -eq "logout") {
+            gcloud auth revoke
+        } elseif ($SubAction -eq "status") {
+            gcloud auth list
+        }
+        exit 0
+    }
+    "location" {
+        if ($SubAction -eq "list") {
+            gcloud compute regions list
+        } elseif ($SubAction -eq "select") {
+            if ($ResourceName) {
+                gcloud config set compute/region $ResourceName
+                Write-Host "Default location set to $ResourceName."
+            } else {
+                Write-Host "Usage: location select <location>"
+                exit 1
+            }
+        }
+        exit 0
+    }
+}
 
 if ($Action -eq "ls") {
     if ($InstallMethod -eq "mise") { mise ls gcp; exit 0 }

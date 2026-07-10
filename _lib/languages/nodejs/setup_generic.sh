@@ -63,7 +63,7 @@ resolve_exact_version() {
       NODEJS_BASE_URL="https://nodejs.org/dist/latest-v22.x"
     fi
     EXACT_VERSION=$(curl -s "${NODEJS_BASE_URL}/SHASUMS256.txt" | head -n 1 | grep -o 'node-v[0-9\.]*-' | sed 's/node-v//' | sed 's/-//')
-  elif ! echo "${clean_version}" | grep -q '\.'; then
+  elif ! printf '%s\n' "${clean_version}" | grep -q '\.'; then
     NODEJS_BASE_URL="https://nodejs.org/dist/latest-v${clean_version}.x"
     EXACT_VERSION=$(curl -s "${NODEJS_BASE_URL}/SHASUMS256.txt" | head -n 1 | grep -o 'node-v[0-9\.]*-' | sed 's/node-v//' | sed 's/-//')
   else
@@ -79,7 +79,7 @@ case "$ACTION" in
     elif [ "$NODEJS_INSTALL_METHOD" = "asdf" ]; then
       asdf list nodejs
     elif [ "$NODEJS_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$NODEJS_INSTALL_METHOD" = "vfox" ]; then
       vfox ls nodejs
     elif [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
@@ -95,7 +95,7 @@ case "$ACTION" in
     elif [ "$NODEJS_INSTALL_METHOD" = "asdf" ]; then
       asdf list all
     elif [ "$NODEJS_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$NODEJS_INSTALL_METHOD" = "vfox" ]; then
       vfox ls all nodejs
     elif [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
@@ -111,7 +111,7 @@ case "$ACTION" in
     elif [ "$NODEJS_INSTALL_METHOD" = "asdf" ]; then
       asdf global nodejs "${NODEJS_VERSION}"
     elif [ "$NODEJS_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "$NODEJS_INSTALL_METHOD" = "vfox" ]; then
       vfox use "nodejs@${NODEJS_VERSION}"
     elif [ "$NODEJS_INSTALL_METHOD" = "system" ]; then

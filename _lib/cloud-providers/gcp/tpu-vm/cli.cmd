@@ -46,6 +46,13 @@ set "PROJECT_FLAG=--project=%GCP_PROJECT_ID%"
 
 if "%TPU_ACCELERATOR_TYPE%"=="" set "TPU_ACCELERATOR_TYPE=v4-8"
 if "%TPU_VERSION%"=="" set "TPU_VERSION=tpu-ubuntu2204-base"
+if "%TPU_COUNT%"=="" set "TPU_COUNT=1"
+
+if "%TPU_SCHEDULING_TYPE%"=="" set "TPU_SCHEDULING_TYPE=on-demand"
+set "SCHEDULING_FLAG="
+if "%TPU_SCHEDULING_TYPE%"=="spot" set "SCHEDULING_FLAG=--spot"
+if "%TPU_SCHEDULING_TYPE%"=="preemptible" set "SCHEDULING_FLAG=--preemptible"
+
 
 if "%TPU_DATA_DISK_TYPE%"=="" set "TPU_DATA_DISK_TYPE=pd-balanced"
 
@@ -53,86 +60,17 @@ if "%ACTION%"=="create" goto :create
 if "%ACTION%"=="delete" goto :delete
 if "%ACTION%"=="start" goto :start
 if "%ACTION%"=="stop" goto :stop
-if "%ACTION%"=="ssh" goto :ssh
-
-call "%LOG_CMD%" :log_error "Unknown or missing action: %ACTION%. Supported: create, delete, start, stop, ssh."
-exit /b 1
-
-:create
-if "%TPU_NAME%"=="" (
-    call "%LOG_CMD%" :log_error "Usage: tpu-vm create <name>"
-    exit /b 1
-)
-
-set "DISK_FLAG="
-if not "%TPU_DATA_DISK_SIZE%"=="" (
-    set "DISK_FLAG=--data-disk=source=projects/%GCP_PROJECT_ID%/zones/%TPU_ZONE%/disks/%TPU_NAME%-data,mode=read-write"
-    gcloud compute disks describe "%TPU_NAME%-data" --zone="%TPU_ZONE%" %PROJECT_FLAG% >nul 2>&1
-    if errorlevel 1 (
-        call "%LOG_CMD%" :log_info "Creating persistent data disk %TPU_NAME%-data (%TPU_DATA_DISK_SIZE%GB, %TPU_DATA_DISK_TYPE%)..."
-        gcloud compute disks create "%TPU_NAME%-data" --size="%TPU_DATA_DISK_SIZE%GB" --type="%TPU_DATA_DISK_TYPE%" --zone="%TPU_ZONE%" %PROJECT_FLAG%
-    ) else (
-        call "%LOG_CMD%" :log_info "Data disk %TPU_NAME%-data already exists."
-    )
-)
-
-call "%LOG_CMD%" :log_info "Checking if TPU VM %TPU_NAME% exists in zone %TPU_ZONE%..."
-gcloud compute tpus tpu-vm describe "%TPU_NAME%" --zone="%TPU_ZONE%" %PROJECT_FLAG% >nul 2>&1
-if %errorlevel% equ 0 (
-    call "%LOG_CMD%" :log_info "TPU VM %TPU_NAME% already exists. Skipping creation."
-) else (
-    call "%LOG_CMD%" :log_info "Creating TPU VM %TPU_NAME% (%TPU_ACCELERATOR_TYPE%) in %TPU_ZONE%..."
-    if not "%DISK_FLAG%"=="" (
-        gcloud compute tpus tpu-vm create "%TPU_NAME%" --zone="%TPU_ZONE%" --accelerator-type="%TPU_ACCELERATOR_TYPE%" --version="%TPU_VERSION%" %DISK_FLAG% %PROJECT_FLAG%
-    ) else (
-        gcloud compute tpus tpu-vm create "%TPU_NAME%" --zone="%TPU_ZONE%" --accelerator-type="%TPU_ACCELERATOR_TYPE%" --version="%TPU_VERSION%" %PROJECT_FLAG%
-    )
-    call "%LOG_CMD%" :log_info "TPU VM %TPU_NAME% created successfully."
-)
-exit /b 0
-
-:delete
-if "%TPU_NAME%"=="" (
-    call "%LOG_CMD%" :log_error "Usage: tpu-vm delete <name>"
-    exit /b 1
-)
-call "%LOG_CMD%" :log_info "Deleting TPU VM %TPU_NAME% in zone %TPU_ZONE%..."
-gcloud compute tpus tpu-vm delete "%TPU_NAME%" --zone="%TPU_ZONE%" %PROJECT_FLAG% --quiet
-call "%LOG_CMD%" :log_info "TPU VM %TPU_NAME% deleted."
-gcloud compute disks describe "%TPU_NAME%-data" --zone="%TPU_ZONE%" %PROJECT_FLAG% >nul 2>&1
-if %errorlevel% equ 0 (
-    call "%LOG_CMD%" :log_info "Deleting attached data disk %TPU_NAME%-data..."
-    gcloud compute disks delete "%TPU_NAME%-data" --zone="%TPU_ZONE%" %PROJECT_FLAG% --quiet
-)
-exit /b 0
-
-:start
-if "%TPU_NAME%"=="" (
-    call "%LOG_CMD%" :log_error "Usage: tpu-vm start <name>"
-    exit /b 1
-)
-call "%LOG_CMD%" :log_info "Starting TPU VM %TPU_NAME% in zone %TPU_ZONE%..."
-gcloud compute tpus tpu-vm start "%TPU_NAME%" --zone="%TPU_ZONE%" %PROJECT_FLAG%
-exit /b 0
-
-:stop
-if "%TPU_NAME%"=="" (
-    call "%LOG_CMD%" :log_error "Usage: tpu-vm stop <name>"
-    exit /b 1
-)
-call "%LOG_CMD%" :log_info "Stopping TPU VM %TPU_NAME% in zone %TPU_ZONE%..."
-gcloud compute tpus tpu-vm stop "%TPU_NAME%" --zone="%TPU_ZONE%" %PROJECT_FLAG%
-exit /b 0
-
+if "%ACTION%"=="ssh" goto 
 :ssh
 if "%TPU_NAME%"=="" (
-    call "%LOG_CMD%" :log_error "Usage: tpu-vm ssh <name> [--detached] [--forward-port <local>:<remote>] [command]"
+    call "%LOG_CMD%" :log_error "Usage: tpu-vm ssh <name> [--detached] [--forward-port <local>:<remote>] [--all-workers] [command]"
     exit /b 1
 )
 shift
 shift
 set "DETACHED="
 set "FORWARD_PORT="
+set "ALL_WORKERS="
 :arg_loop
 if "%~1"=="--detached" (
     set "DETACHED=true"
@@ -145,11 +83,20 @@ if "%~1"=="--forward-port" (
     shift
     goto :arg_loop
 )
+if "%~1"=="--all-workers" (
+    set "ALL_WORKERS=true"
+    shift
+    goto :arg_loop
+)
 set "SSH_FLAGS="
 if not "%FORWARD_PORT%"=="" (
     set "SSH_FLAGS=--ssh-flag=-L%FORWARD_PORT%"
     call "%LOG_CMD%" :log_info "Forwarding port %FORWARD_PORT%..."
 )
+if "%ALL_WORKERS%"=="true" (
+    set "SSH_FLAGS=%SSH_FLAGS% --worker=all"
+)
+
 set "REST_ARGS="
 :ssh_loop
 if "%~1"=="" goto :ssh_run
@@ -169,3 +116,96 @@ if "%REST_ARGS%"=="" (
     )
 )
 exit /b 0
+
+
+:scp
+if "%TPU_NAME%"=="" (
+    call "%LOG_CMD%" :log_error "Usage: tpu-vm scp <name> <src> <dest> [--all-workers]"
+    exit /b 1
+)
+shift
+shift
+set "ALL_WORKERS="
+set "SRC="
+set "DEST="
+:scp_loop
+if "%~1"=="" goto :scp_run
+if "%~1"=="--all-workers" (
+    set "ALL_WORKERS=true"
+    shift
+    goto :scp_loop
+)
+if "%SRC%"=="" (
+    set "SRC=%~1"
+) else if "%DEST%"=="" (
+    set "DEST=%~1"
+) else (
+    call "%LOG_CMD%" :log_error "Too many arguments for scp"
+    exit /b 1
+)
+shift
+goto :scp_loop
+
+:scp_run
+if "%SRC%"=="" (
+    call "%LOG_CMD%" :log_error "Usage: tpu-vm scp <name> <src> <dest> [--all-workers]"
+    exit /b 1
+)
+if "%DEST%"=="" (
+    call "%LOG_CMD%" :log_error "Usage: tpu-vm scp <name> <src> <dest> [--all-workers]"
+    exit /b 1
+)
+set "SCP_FLAGS="
+if "%ALL_WORKERS%"=="true" (
+    set "SCP_FLAGS=--worker=all"
+)
+
+call "%LOG_CMD%" :log_info "Copying files for TPU VM %TPU_NAME%..."
+echo "%DEST%" | findstr ":" >nul
+if not errorlevel 1 (
+    gcloud compute tpus tpu-vm scp %SCP_FLAGS% "%SRC%" "%DEST%" --zone="%TPU_ZONE%" %PROJECT_FLAG%
+    exit /b 0
+)
+echo "%SRC%" | findstr ":" >nul
+if not errorlevel 1 (
+    gcloud compute tpus tpu-vm scp %SCP_FLAGS% "%SRC%" "%DEST%" --zone="%TPU_ZONE%" %PROJECT_FLAG%
+    exit /b 0
+)
+gcloud compute tpus tpu-vm scp %SCP_FLAGS% "%SRC%" "%TPU_NAME%:%DEST%" --zone="%TPU_ZONE%" %PROJECT_FLAG%
+exit /b 0
+
+
+:status
+if "%TPU_NAME%"=="" (
+    call "%LOG_CMD%" :log_error "Usage: tpu-vm status <name> [--all]"
+    exit /b 1
+)
+shift
+shift
+set "ALL_FLAG="
+:status_arg_loop
+if "%~1"=="--all" (
+    set "ALL_FLAG=true"
+    shift
+    goto :status_arg_loop
+)
+set "i=1"
+set "LIMIT=%TPU_COUNT%"
+if not "%ALL_FLAG%"=="true" set "LIMIT=1"
+
+:status_loop
+if !i! gtr !LIMIT! exit /b 0
+set "INSTANCE_NAME=%TPU_NAME%"
+if !LIMIT! gtr 1 (
+    if %TPU_COUNT% gtr 1 (
+        set "INSTANCE_NAME=%TPU_NAME%-!i!"
+    )
+)
+call "%LOG_CMD%" :log_info "Status for TPU VM !INSTANCE_NAME! in zone %TPU_ZONE%..."
+if "%TPU_USE_QUEUED_RESOURCE%"=="true" (
+    gcloud alpha compute tpus queued-resources describe "!INSTANCE_NAME!-qr" --zone="%TPU_ZONE%" %PROJECT_FLAG% || rem
+) else (
+    gcloud compute tpus tpu-vm describe "!INSTANCE_NAME!" --zone="%TPU_ZONE%" %PROJECT_FLAG% || rem
+)
+set /a i+=1
+goto :status_loop

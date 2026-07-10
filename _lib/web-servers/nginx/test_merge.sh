@@ -26,7 +26,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 
-echo "Running merge unit tests..."
+printf '%s\n' "Running merge unit tests..."
 
 TMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TMP_DIR"' EXIT HUP INT QUIT TERM
@@ -68,18 +68,18 @@ CONF
 merge_location_into_server "$TMP_DIR/existing.conf" "$TMP_DIR/new.conf" "example.com"
 
 if grep -q '"new regex"' "$TMP_DIR/existing.conf"; then
-    echo "Test 1 Passed: Overwrote existing location block."
+    printf '%s\n' "Test 1 Passed: Overwrote existing location block."
 else
-    echo "Test 1 Failed: Did not overwrite existing location block."
+    printf '%s\n' "Test 1 Failed: Did not overwrite existing location block."
     cat "$TMP_DIR/existing.conf"
     exit 1
 fi
 
 if grep -q '"regex"' "$TMP_DIR/existing.conf"; then
-    echo "Test 2 Failed: Old regex still present."
+    printf '%s\n' "Test 2 Failed: Old regex still present."
     exit 1
 else
-    echo "Test 2 Passed: Old regex block completely removed."
+    printf '%s\n' "Test 2 Passed: Old regex block completely removed."
 fi
 
 cat << 'CONF' > "$TMP_DIR/new2.conf"
@@ -91,10 +91,10 @@ CONF
 merge_location_into_server "$TMP_DIR/existing.conf" "$TMP_DIR/new2.conf" "example.com"
 
 if grep -q 'return 201' "$TMP_DIR/existing.conf"; then
-    echo "Test 3 Passed: Injected new location block."
+    printf '%s\n' "Test 3 Passed: Injected new location block."
 else
-    echo "Test 3 Failed: Did not inject new location block."
+    printf '%s\n' "Test 3 Failed: Did not inject new location block."
     exit 1
 fi
 
-echo "All tests passed."
+printf '%s\n' "All tests passed."

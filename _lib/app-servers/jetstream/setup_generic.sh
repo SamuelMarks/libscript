@@ -68,23 +68,23 @@ case "$ACTION" in
     elif [ "$JETSTREAM_INSTALL_METHOD" = "asdf" ]; then
       asdf list jetstream-pytorch
     elif [ "$JETSTREAM_INSTALL_METHOD" = "pkgx" ]; then
-      echo "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$JETSTREAM_INSTALL_METHOD" = "vfox" ]; then
       vfox ls jetstream || true
     elif [ "$JETSTREAM_INSTALL_METHOD" = "system" ]; then
-      echo "System packages do not support ls here."
+      printf '%s\n' "System packages do not support ls here."
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/jetstream/" 2>/dev/null || true
     fi
     exit 0
     ;;
   ls-remote)
-    echo "Use pip index versions jetstream-pytorch"
+    printf '%s\n' "Use pip index versions jetstream-pytorch"
     exit 0
     ;;
   use)
     if [ "$JETSTREAM_INSTALL_METHOD" = "system" ]; then
-      echo "System packages do not support use here."
+      printf '%s\n' "System packages do not support use here."
     else
       resolve_exact_version
       libscript_symlink_alias "jetstream" "$VERSION" "${EXACT_VERSION}"

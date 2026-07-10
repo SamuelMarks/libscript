@@ -94,12 +94,152 @@ check_deps() {
   fi
 }
 
+aws_auth() {
+  ACTION=$1; shift
+  case "$ACTION" in
+    login)
+      if [ "${1:-}" = "sso" ]; then
+        aws sso login
+      else
+        aws configure
+      fi
+      ;;
+    logout)
+      if aws sso logout 2>/dev/null; then
+        printf '%s\n' "SSO logout successful."
+      else
+        printf '%s\n' "SSO logout not applicable or failed."
+      fi
+      ;;
+    status)
+      aws sts get-caller-identity
+      ;;
+    *) printf '%s\n' "Unknown auth action: $ACTION. Supported: login, logout, status."; exit 1 ;;
+  esac
+}
+
+aws_location() {
+  ACTION=$1; shift
+  case "$ACTION" in
+    update)
+      NAME=$1; shift
+      if [ -z "$NAME" ]; then printf '%s\n' "Usage: network update <name> [--enable-dns true|false] [--tags T]"; exit 1; fi
+      VPC_ID=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=$NAME" --query "Vpcs[0].VpcId" --output text 2>/dev/null || true)
+      if [ "$VPC_ID" = "None" ] || [ -z "$VPC_ID" ]; then
+        printf '%s\n' "VPC '$NAME' not found." >&2; exit 1
+      fi
+      while [ $# -gt 0 ]; do
+        case "$1" in
+          --enable-dns)
+            aws ec2 modify-vpc-attribute --vpc-id "$VPC_ID" --enable-dns-support "{\"Value\":$2}"
+            aws ec2 modify-vpc-attribute --vpc-id "$VPC_ID" --enable-dns-hostnames "{\"Value\":$2}"
+            shift 2 ;;
+          --tags)
+            aws ec2 create-tags --resources "$VPC_ID" --tags "$2"
+            shift 2 ;;
+          *)
+            printf '%s\n' "Unknown option: $1"; exit 1 ;;
+        esac
+      done
+      printf '%s\n' "Updated VPC '$NAME'."
+      ;;
+    update)
+      NAME=$1; shift
+      if [ -z "$NAME" ]; then printf '%s\n' "Usage: firewall update <name> [--add-port PORT] [--remove-port PORT]"; exit 1; fi
+      SG_ID=$(aws ec2 describe-security-groups --filters "Name=group-name,Values=$NAME" --query "SecurityGroups[0].GroupId" --output text 2>/dev/null || true)
+      if [ "$SG_ID" = "None" ] || [ -z "$SG_ID" ]; then
+        printf '%s\n' "Security Group '$NAME' not found." >&2; exit 1
+      fi
+      while [ $# -gt 0 ]; do
+        case "$1" in
+          --add-port)
+            aws ec2 authorize-security-group-ingress --group-id "$SG_ID" --protocol tcp --port "$2" --cidr 0.0.0.0/0
+            shift 2 ;;
+          --remove-port)
+            aws ec2 revoke-security-group-ingress --group-id "$SG_ID" --protocol tcp --port "$2" --cidr 0.0.0.0/0
+            shift 2 ;;
+          *)
+            printf '%s\n' "Unknown option: $1"; exit 1 ;;
+        esac
+      done
+      printf '%s\n' "Updated Security Group '$NAME'."
+      ;;
+    delete)
+      NAME=$1
+      if [ -z "$NAME" ]; then printf '%s\n' "Usage: firewall delete <name>"; exit 1; fi
+      SG_ID=$(aws ec2 describe-security-groups --filters "Name=group-name,Values=$NAME" --query "SecurityGroups[0].GroupId" --output text 2>/dev/null || true)
+      if [ "$SG_ID" = "None" ] || [ -z "$SG_ID" ]; then
+        printf '%s\n' "Security Group '$NAME' not found." >&2; exit 1
+      fi
+      aws ec2 delete-security-group --group-id "$SG_ID"
+      printf '%s\n' "Deleted Security Group '$NAME' ($SG_ID)."
+      ;;
+    list)
+      aws ec2 describe-regions --query "Regions[*].RegionName" --output table
+      ;;
+    select)
+      REGION=$1
+      if [ -z "$REGION" ]; then printf '%s\n' "Usage: location select <region>"; exit 1; fi
+      aws configure set default.region "$REGION"
+      printf '%s\n' "Default region set to $REGION."
+      ;;
+    *) printf '%s\n' "Unknown location action: $ACTION. Supported: list, select."; exit 1 ;;
+  esac
+}
+
+aws_dns() {
+  ACTION=$1; shift
+  case "$ACTION" in
+    zone)
+      SUBACTION=$1; shift
+      case "$SUBACTION" in
+        create)
+          NAME=$1; if [ -z "$NAME" ]; then printf '%s\n' "Usage: dns zone create <name>"; exit 1; fi
+          CALLER_REF="$(date +%s)"
+          aws route53 create-hosted-zone --name "$NAME" --caller-reference "$CALLER_REF"
+          ;;
+        list)
+          aws route53 list-hosted-zones --query "HostedZones[*].{Id:Id, Name:Name}" --output table
+          ;;
+        delete)
+          ID=$1; if [ -z "$ID" ]; then printf '%s\n' "Usage: dns zone delete <id>"; exit 1; fi
+          aws route53 delete-hosted-zone --id "$ID"
+          ;;
+        *)
+          printf '%s\n' "Unknown dns zone action: $SUBACTION"; exit 1 ;;
+      esac
+      ;;
+    record)
+      SUBACTION=$1; shift
+      case "$SUBACTION" in
+        create|update|delete)
+          ZONE_ID=$1; NAME=$2; TYPE=$3; VALUE=$4; TTL=${5:-300}
+          if [ -z "$VALUE" ]; then printf '%s\n' "Usage: dns record $SUBACTION <zone_id> <name> <type> <value> [ttl]"; exit 1; fi
+          ACTION_MAPPED="UPSERT"
+          if [ "$SUBACTION" = "create" ]; then ACTION_MAPPED="CREATE"; fi
+          if [ "$SUBACTION" = "delete" ]; then ACTION_MAPPED="DELETE"; fi
+          BATCH="{\"Changes\":[{\"Action\":\"$ACTION_MAPPED\",\"ResourceRecordSet\":{\"Name\":\"$NAME\",\"Type\":\"$TYPE\",\"TTL\":$TTL,\"ResourceRecords\":[{\"Value\":\"$VALUE\"}]}}]}"
+          aws route53 change-resource-record-sets --hosted-zone-id "$ZONE_ID" --change-batch "$BATCH"
+          ;;
+        list)
+          ZONE_ID=$1; if [ -z "$ZONE_ID" ]; then printf '%s\n' "Usage: dns record list <zone_id>"; exit 1; fi
+          aws route53 list-resource-record-sets --hosted-zone-id "$ZONE_ID" --query "ResourceRecordSets[*].{Name:Name, Type:Type, TTL:TTL, Value:ResourceRecords[0].Value}" --output table
+          ;;
+        *)
+          printf '%s\n' "Unknown dns record action: $SUBACTION"; exit 1 ;;
+      esac
+      ;;
+    *)
+      printf '%s\n' "Unknown dns action: $ACTION. Supported: zone, record."; exit 1 ;;
+  esac
+}
+
 aws_network() {
   ACTION=$1; shift
   case "$ACTION" in
     create)
       NAME=$1; CIDR=${2:-10.0.0.0/16}
-      if [ -z "$NAME" ]; then printf '%s\n' "Usage: network create <name> [cidr] [--tags T] [--no-default-tags]"; exit 1; fi
+      if [ -z "$NAME" ]; then printf '%s\n' "Usage: auth|location|dns|network create <name> [cidr] [--tags T] [--no-default-tags]"; exit 1; fi
       
       TAGS=$(parse_tags "$@")
       
@@ -117,14 +257,71 @@ aws_network() {
       fi
       printf '%s\n' "$VPC_ID"
       ;;
+    update)
+      NAME=$1; shift
+      if [ -z "$NAME" ]; then printf '%s\n' "Usage: network update <name> [--enable-dns true|false] [--tags T]"; exit 1; fi
+      VPC_ID=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=$NAME" --query "Vpcs[0].VpcId" --output text 2>/dev/null || true)
+      if [ "$VPC_ID" = "None" ] || [ -z "$VPC_ID" ]; then
+        printf '%s\n' "VPC '$NAME' not found." >&2; exit 1
+      fi
+      while [ $# -gt 0 ]; do
+        case "$1" in
+          --enable-dns)
+            aws ec2 modify-vpc-attribute --vpc-id "$VPC_ID" --enable-dns-support "{\"Value\":$2}"
+            aws ec2 modify-vpc-attribute --vpc-id "$VPC_ID" --enable-dns-hostnames "{\"Value\":$2}"
+            shift 2 ;;
+          --tags)
+            aws ec2 create-tags --resources "$VPC_ID" --tags "$2"
+            shift 2 ;;
+          *)
+            printf '%s\n' "Unknown option: $1"; exit 1 ;;
+        esac
+      done
+      printf '%s\n' "Updated VPC '$NAME'."
+      ;;
+    update)
+      NAME=$1; shift
+      if [ -z "$NAME" ]; then printf '%s\n' "Usage: firewall update <name> [--add-port PORT] [--remove-port PORT]"; exit 1; fi
+      SG_ID=$(aws ec2 describe-security-groups --filters "Name=group-name,Values=$NAME" --query "SecurityGroups[0].GroupId" --output text 2>/dev/null || true)
+      if [ "$SG_ID" = "None" ] || [ -z "$SG_ID" ]; then
+        printf '%s\n' "Security Group '$NAME' not found." >&2; exit 1
+      fi
+      while [ $# -gt 0 ]; do
+        case "$1" in
+          --add-port)
+            aws ec2 authorize-security-group-ingress --group-id "$SG_ID" --protocol tcp --port "$2" --cidr 0.0.0.0/0
+            shift 2 ;;
+          --remove-port)
+            aws ec2 revoke-security-group-ingress --group-id "$SG_ID" --protocol tcp --port "$2" --cidr 0.0.0.0/0
+            shift 2 ;;
+          *)
+            printf '%s\n' "Unknown option: $1"; exit 1 ;;
+        esac
+      done
+      printf '%s\n' "Updated Security Group '$NAME'."
+      ;;
+    delete)
+      NAME=$1
+      if [ -z "$NAME" ]; then printf '%s\n' "Usage: firewall delete <name>"; exit 1; fi
+      SG_ID=$(aws ec2 describe-security-groups --filters "Name=group-name,Values=$NAME" --query "SecurityGroups[0].GroupId" --output text 2>/dev/null || true)
+      if [ "$SG_ID" = "None" ] || [ -z "$SG_ID" ]; then
+        printf '%s\n' "Security Group '$NAME' not found." >&2; exit 1
+      fi
+      aws ec2 delete-security-group --group-id "$SG_ID"
+      printf '%s\n' "Deleted Security Group '$NAME' ($SG_ID)."
+      ;;
     list)
       aws ec2 describe-vpcs --query "Vpcs[*].{ID:VpcId, Name:Tags[?Key=='Name']|[0].Value, CIDR:CidrBlock, Tags:Tags}" --output table
       ;;
     delete)
-      NAME=$1; if [ -z "$NAME" ]; then printf '%s\n' "Usage: network delete <name>"; exit 1; fi
+      NAME=$1; if [ -z "$NAME" ]; then printf '%s\n' "Usage: auth|location|dns|network delete <name>"; exit 1; fi
       VPC_ID=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=$NAME" --query "Vpcs[0].VpcId" --output text 2>/dev/null || true)
       if [ "$VPC_ID" != "None" ] && [ -n "$VPC_ID" ]; then
-        aws ec2 delete-vpc --vpc-id "$VPC_ID"
+        # Graceful cleanup of dependencies is complex, so we will warn if it fails
+        if ! aws ec2 delete-vpc --vpc-id "$VPC_ID" 2>/dev/null; then
+          printf '%s\n' "Failed to delete VPC '$NAME' ($VPC_ID). It may have dependencies (subnets, IGWs, instances) that need to be deleted first."
+          exit 1
+        fi
         printf '%s\n' "Deleted VPC '$NAME' ($VPC_ID)"
       else
         printf '%s\n' "VPC '$NAME' not found."
@@ -158,6 +355,59 @@ aws_firewall() {
         printf '%s\n' "Created Security Group '$NAME': $SG_ID (Port $PORT open)" >&2
       fi
       printf '%s\n' "$SG_ID"
+      ;;
+    update)
+      NAME=$1; shift
+      if [ -z "$NAME" ]; then printf '%s\n' "Usage: network update <name> [--enable-dns true|false] [--tags T]"; exit 1; fi
+      VPC_ID=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=$NAME" --query "Vpcs[0].VpcId" --output text 2>/dev/null || true)
+      if [ "$VPC_ID" = "None" ] || [ -z "$VPC_ID" ]; then
+        printf '%s\n' "VPC '$NAME' not found." >&2; exit 1
+      fi
+      while [ $# -gt 0 ]; do
+        case "$1" in
+          --enable-dns)
+            aws ec2 modify-vpc-attribute --vpc-id "$VPC_ID" --enable-dns-support "{\"Value\":$2}"
+            aws ec2 modify-vpc-attribute --vpc-id "$VPC_ID" --enable-dns-hostnames "{\"Value\":$2}"
+            shift 2 ;;
+          --tags)
+            aws ec2 create-tags --resources "$VPC_ID" --tags "$2"
+            shift 2 ;;
+          *)
+            printf '%s\n' "Unknown option: $1"; exit 1 ;;
+        esac
+      done
+      printf '%s\n' "Updated VPC '$NAME'."
+      ;;
+    update)
+      NAME=$1; shift
+      if [ -z "$NAME" ]; then printf '%s\n' "Usage: firewall update <name> [--add-port PORT] [--remove-port PORT]"; exit 1; fi
+      SG_ID=$(aws ec2 describe-security-groups --filters "Name=group-name,Values=$NAME" --query "SecurityGroups[0].GroupId" --output text 2>/dev/null || true)
+      if [ "$SG_ID" = "None" ] || [ -z "$SG_ID" ]; then
+        printf '%s\n' "Security Group '$NAME' not found." >&2; exit 1
+      fi
+      while [ $# -gt 0 ]; do
+        case "$1" in
+          --add-port)
+            aws ec2 authorize-security-group-ingress --group-id "$SG_ID" --protocol tcp --port "$2" --cidr 0.0.0.0/0
+            shift 2 ;;
+          --remove-port)
+            aws ec2 revoke-security-group-ingress --group-id "$SG_ID" --protocol tcp --port "$2" --cidr 0.0.0.0/0
+            shift 2 ;;
+          *)
+            printf '%s\n' "Unknown option: $1"; exit 1 ;;
+        esac
+      done
+      printf '%s\n' "Updated Security Group '$NAME'."
+      ;;
+    delete)
+      NAME=$1
+      if [ -z "$NAME" ]; then printf '%s\n' "Usage: firewall delete <name>"; exit 1; fi
+      SG_ID=$(aws ec2 describe-security-groups --filters "Name=group-name,Values=$NAME" --query "SecurityGroups[0].GroupId" --output text 2>/dev/null || true)
+      if [ "$SG_ID" = "None" ] || [ -z "$SG_ID" ]; then
+        printf '%s\n' "Security Group '$NAME' not found." >&2; exit 1
+      fi
+      aws ec2 delete-security-group --group-id "$SG_ID"
+      printf '%s\n' "Deleted Security Group '$NAME' ($SG_ID)."
       ;;
     list)
       aws ec2 describe-security-groups --query "SecurityGroups[*].{ID:GroupId, Name:GroupName, VPC:VpcId, Tags:Tags}" --output table
@@ -224,12 +474,93 @@ aws_node() {
       fi
       printf '%s\n' "$INSTANCE_ID"
       ;;
+    update)
+      NAME=$1; shift
+      if [ -z "$NAME" ]; then printf '%s\n' "Usage: node update <name> [--type TYPE]"; exit 1; fi
+      INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" "Name=instance-state-name,Values=running,pending,stopped" --query "Reservations[0].Instances[0].InstanceId" --output text 2>/dev/null || true)
+      if [ "$INSTANCE_ID" = "None" ] || [ -z "$INSTANCE_ID" ]; then
+        printf '%s\n' "Node '$NAME' not found." >&2; exit 1
+      fi
+      while [ $# -gt 0 ]; do
+        case "$1" in
+          --type)
+            aws ec2 modify-instance-attribute --instance-id "$INSTANCE_ID" --instance-type "{\"Value\": \"$2\"}"
+            shift 2 ;;
+          *)
+            printf '%s\n' "Unknown option: $1"; exit 1 ;;
+        esac
+      done
+      printf '%s\n' "Updated Node '$NAME'."
+      ;;
+    delete)
+      NAME=$1
+      if [ -z "$NAME" ]; then printf '%s\n' "Usage: node delete <name>"; exit 1; fi
+      INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" "Name=instance-state-name,Values=running,pending,stopped" --query "Reservations[0].Instances[0].InstanceId" --output text 2>/dev/null || true)
+      if [ "$INSTANCE_ID" = "None" ] || [ -z "$INSTANCE_ID" ]; then
+        printf '%s\n' "Node '$NAME' not found." >&2; exit 1
+      fi
+      aws ec2 terminate-instances --instance-ids "$INSTANCE_ID"
+      printf '%s\n' "Terminating Node '$NAME' ($INSTANCE_ID)."
+      ;;
     exec)
       NAME=$1; CMD=$2
       if [ -z "$NAME" ] || [ -z "$CMD" ]; then printf '%s\n' "Usage: node exec <name> <command>"; exit 1; fi
       IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" --query "Reservations[0].Instances[0].PublicIpAddress" --output text)
       printf '%s\n' "Executing on $NAME ($IP)..."
       ssh -o StrictHostKeyChecking=no "ubuntu@$IP" "$CMD"
+      ;;
+    update)
+      NAME=$1; shift
+      if [ -z "$NAME" ]; then printf '%s\n' "Usage: network update <name> [--enable-dns true|false] [--tags T]"; exit 1; fi
+      VPC_ID=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=$NAME" --query "Vpcs[0].VpcId" --output text 2>/dev/null || true)
+      if [ "$VPC_ID" = "None" ] || [ -z "$VPC_ID" ]; then
+        printf '%s\n' "VPC '$NAME' not found." >&2; exit 1
+      fi
+      while [ $# -gt 0 ]; do
+        case "$1" in
+          --enable-dns)
+            aws ec2 modify-vpc-attribute --vpc-id "$VPC_ID" --enable-dns-support "{\"Value\":$2}"
+            aws ec2 modify-vpc-attribute --vpc-id "$VPC_ID" --enable-dns-hostnames "{\"Value\":$2}"
+            shift 2 ;;
+          --tags)
+            aws ec2 create-tags --resources "$VPC_ID" --tags "$2"
+            shift 2 ;;
+          *)
+            printf '%s\n' "Unknown option: $1"; exit 1 ;;
+        esac
+      done
+      printf '%s\n' "Updated VPC '$NAME'."
+      ;;
+    update)
+      NAME=$1; shift
+      if [ -z "$NAME" ]; then printf '%s\n' "Usage: firewall update <name> [--add-port PORT] [--remove-port PORT]"; exit 1; fi
+      SG_ID=$(aws ec2 describe-security-groups --filters "Name=group-name,Values=$NAME" --query "SecurityGroups[0].GroupId" --output text 2>/dev/null || true)
+      if [ "$SG_ID" = "None" ] || [ -z "$SG_ID" ]; then
+        printf '%s\n' "Security Group '$NAME' not found." >&2; exit 1
+      fi
+      while [ $# -gt 0 ]; do
+        case "$1" in
+          --add-port)
+            aws ec2 authorize-security-group-ingress --group-id "$SG_ID" --protocol tcp --port "$2" --cidr 0.0.0.0/0
+            shift 2 ;;
+          --remove-port)
+            aws ec2 revoke-security-group-ingress --group-id "$SG_ID" --protocol tcp --port "$2" --cidr 0.0.0.0/0
+            shift 2 ;;
+          *)
+            printf '%s\n' "Unknown option: $1"; exit 1 ;;
+        esac
+      done
+      printf '%s\n' "Updated Security Group '$NAME'."
+      ;;
+    delete)
+      NAME=$1
+      if [ -z "$NAME" ]; then printf '%s\n' "Usage: firewall delete <name>"; exit 1; fi
+      SG_ID=$(aws ec2 describe-security-groups --filters "Name=group-name,Values=$NAME" --query "SecurityGroups[0].GroupId" --output text 2>/dev/null || true)
+      if [ "$SG_ID" = "None" ] || [ -z "$SG_ID" ]; then
+        printf '%s\n' "Security Group '$NAME' not found." >&2; exit 1
+      fi
+      aws ec2 delete-security-group --group-id "$SG_ID"
+      printf '%s\n' "Deleted Security Group '$NAME' ($SG_ID)."
       ;;
     list)
       aws ec2 describe-instances --query "Reservations[*].Instances[*].{ID:InstanceId, Name:Tags[?Key=='Name']|[0].Value, State:State.Name, Tags:Tags}" --output table
@@ -304,6 +635,59 @@ aws_storage() {
         printf '%s\n' "Created Bucket '$BUCKET'." >&2
       fi
       ;;
+    update)
+      NAME=$1; shift
+      if [ -z "$NAME" ]; then printf '%s\n' "Usage: network update <name> [--enable-dns true|false] [--tags T]"; exit 1; fi
+      VPC_ID=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=$NAME" --query "Vpcs[0].VpcId" --output text 2>/dev/null || true)
+      if [ "$VPC_ID" = "None" ] || [ -z "$VPC_ID" ]; then
+        printf '%s\n' "VPC '$NAME' not found." >&2; exit 1
+      fi
+      while [ $# -gt 0 ]; do
+        case "$1" in
+          --enable-dns)
+            aws ec2 modify-vpc-attribute --vpc-id "$VPC_ID" --enable-dns-support "{\"Value\":$2}"
+            aws ec2 modify-vpc-attribute --vpc-id "$VPC_ID" --enable-dns-hostnames "{\"Value\":$2}"
+            shift 2 ;;
+          --tags)
+            aws ec2 create-tags --resources "$VPC_ID" --tags "$2"
+            shift 2 ;;
+          *)
+            printf '%s\n' "Unknown option: $1"; exit 1 ;;
+        esac
+      done
+      printf '%s\n' "Updated VPC '$NAME'."
+      ;;
+    update)
+      NAME=$1; shift
+      if [ -z "$NAME" ]; then printf '%s\n' "Usage: firewall update <name> [--add-port PORT] [--remove-port PORT]"; exit 1; fi
+      SG_ID=$(aws ec2 describe-security-groups --filters "Name=group-name,Values=$NAME" --query "SecurityGroups[0].GroupId" --output text 2>/dev/null || true)
+      if [ "$SG_ID" = "None" ] || [ -z "$SG_ID" ]; then
+        printf '%s\n' "Security Group '$NAME' not found." >&2; exit 1
+      fi
+      while [ $# -gt 0 ]; do
+        case "$1" in
+          --add-port)
+            aws ec2 authorize-security-group-ingress --group-id "$SG_ID" --protocol tcp --port "$2" --cidr 0.0.0.0/0
+            shift 2 ;;
+          --remove-port)
+            aws ec2 revoke-security-group-ingress --group-id "$SG_ID" --protocol tcp --port "$2" --cidr 0.0.0.0/0
+            shift 2 ;;
+          *)
+            printf '%s\n' "Unknown option: $1"; exit 1 ;;
+        esac
+      done
+      printf '%s\n' "Updated Security Group '$NAME'."
+      ;;
+    delete)
+      NAME=$1
+      if [ -z "$NAME" ]; then printf '%s\n' "Usage: firewall delete <name>"; exit 1; fi
+      SG_ID=$(aws ec2 describe-security-groups --filters "Name=group-name,Values=$NAME" --query "SecurityGroups[0].GroupId" --output text 2>/dev/null || true)
+      if [ "$SG_ID" = "None" ] || [ -z "$SG_ID" ]; then
+        printf '%s\n' "Security Group '$NAME' not found." >&2; exit 1
+      fi
+      aws ec2 delete-security-group --group-id "$SG_ID"
+      printf '%s\n' "Deleted Security Group '$NAME' ($SG_ID)."
+      ;;
     list)
       aws s3 ls
       ;;
@@ -365,6 +749,9 @@ aws_cleanup() {
 CMD="${1:-}"
 if [ -n "$CMD" ]; then shift; fi
 case "$CMD" in
+  auth) aws_auth "$@" ;;
+  dns) aws_dns "$@" ;;
+  location) aws_location "$@" ;;
   network) aws_network "$@" ;;
   firewall) aws_firewall "$@" ;;
   node) aws_node "$@" ;;
@@ -377,12 +764,12 @@ case "$CMD" in
   install) check_deps ;;
   --help|-h|/\?|"-?")
     printf '%s\n' "LibScript AWS Cloud Wrapper"
-    printf '%s\n' "Usage: $0 {network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
+    printf '%s\n' "Usage: $0 {auth|location|dns|network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
     exit 0
     ;;
   *)
     printf '%s\n' "LibScript AWS Cloud Wrapper"
-    printf '%s\n' "Usage: $0 {network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
+    printf '%s\n' "Usage: $0 {auth|location|dns|network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"
     exit 1
     ;;
 esac
