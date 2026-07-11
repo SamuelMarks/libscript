@@ -100,6 +100,11 @@ exit /b 0
 set "provider=%~2"
 set "dist_id=%~3"
 
+if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :libscript_verify_managed "%provider%" cdn "%dist_id%"
+    if errorlevel 1 exit /b 1
+)
+
 if "%provider%"=="aws" (
     for /f "tokens=*" %%i in ('aws cloudfront get-distribution --id "%dist_id%" --query "ETag" --output text') do set "etag=%%i"
     aws cloudfront delete-distribution --id "%dist_id%" --if-match "!etag!"

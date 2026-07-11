@@ -35,37 +35,45 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
 
-if [ "$#" -lt 4 ]; then
-  log_info "Usage: deploy_cloud.sh <provider> <node_name> <rg_or_vpc_or_project> <region_or_zone> [local_repo_path] [remote_dest] [--retain-ip] [--retain-data]"
-  exit 1
-fi
+IS_TPU=0
+SHARED_STORAGE=0
+POSITIONALS=""
 
-PROVIDER=$1
-NODE=$2
-RG=$3
-LOC=$4
-shift 4
-
-REPO_PATH="."
-REMOTE_DEST=\~/"$NODE"
-
+# Parse flags
+_p1="" _p2="" _p3="" _p4="" _p5="" _p6=""
 RETAIN_IP=0
 RETAIN_DATA=0
 
-while [ $# -gt 0 ]; do
-  case "$1" in
-    --retain-ip) RETAIN_IP=1; shift 1 ;;
-    --retain-data) RETAIN_DATA=1; shift 1 ;;
-    *) 
-      if [ "$REPO_PATH" = "." ]; then
-        REPO_PATH="$1"
-      else
-        REMOTE_DEST="$1"
+for arg do
+  case "$arg" in
+    --tpu|--accelerator) IS_TPU=1 ;;
+    --shared-storage) SHARED_STORAGE=1 ;;
+    --retain-ip) RETAIN_IP=1 ;;
+    --retain-data) RETAIN_DATA=1 ;;
+    *)
+      if [ -z "$_p1" ]; then _p1="$arg"
+      elif [ -z "$_p2" ]; then _p2="$arg"
+      elif [ -z "$_p3" ]; then _p3="$arg"
+      elif [ -z "$_p4" ]; then _p4="$arg"
+      elif [ -z "$_p5" ]; then _p5="$arg"
+      elif [ -z "$_p6" ]; then _p6="$arg"
       fi
-      shift 1
       ;;
   esac
 done
+
+if [ -z "$_p4" ]; then
+  log_info "Usage: teardown_cloud.sh [--tpu] [--shared-storage] <provider> <node_name> <rg_or_vpc_or_project> <region_or_zone> [local_repo_path] [remote_dest] [--retain-ip] [--retain-data]"
+  exit 1
+fi
+
+PROVIDER="$_p1"
+NODE="$_p2"
+RG="$_p3"
+LOC="$_p4"
+REPO_PATH="${_p5:-.}"
+REMOTE_DEST="${_p6:-~/$NODE}"
+
 
 # -----------------------------------------------------------------------------
 # Logging Configuration
@@ -263,7 +271,12 @@ if [ "$RETAIN_DATA" -eq 1 ]; then
 fi
 
 log "INFRA" "Deleting Node..."
-run_with_auth_check "$CLI" node delete "$NODE" "$CTX" || true
+if [ "$IS_TPU" -eq 1 ] && [ "$PROVIDER" = "gcp" ]; then
+  TPU_CLI="$SCRIPT_DIR/../../cloud-providers/gcp/tpu-vm/cli.sh"
+  run_with_auth_check "$TPU_CLI" delete "$NODE" || true
+else
+  run_with_auth_check "$CLI" node delete "$NODE" "$CTX" || true
+fi
 
 log "INFRA" "Deleting Firewall..."
 if [ "$PROVIDER" = "azure" ]; then

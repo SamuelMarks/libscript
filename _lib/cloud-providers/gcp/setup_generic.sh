@@ -37,7 +37,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh" "_lib/cloud/core/tags.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -85,15 +85,26 @@ case "$ACTION" in
           esac
         done
         printf '%s\n' "Creating GCP VM: $RESOURCE_NAME ($TYPE, $IMAGE)"
-        gcloud compute instances create "$RESOURCE_NAME" --machine-type="$TYPE" --image-family="$IMAGE" --image-project="debian-cloud"
+        TAGS_ARG="$(libscript_format_tags gcp)"
+        if gcloud compute instances describe "$RESOURCE_NAME" >/dev/null 2>&1; then
+          printf '%s\n' "Instance '$RESOURCE_NAME' already exists."
+        else
+          # shellcheck disable=SC2086
+          gcloud compute instances create "$RESOURCE_NAME" --machine-type="$TYPE" --image-family="$IMAGE" --image-project="debian-cloud" $TAGS_ARG
+        fi
         ;;
       delete)
         if [ -z "$RESOURCE_NAME" ]; then
           printf '%s\n' "Usage: node delete <name>"
           exit 1
         fi
+        libscript_verify_managed gcp node "$RESOURCE_NAME" || exit 1
         printf '%s\n' "Deleting GCP VM: $RESOURCE_NAME"
-        gcloud compute instances delete "$RESOURCE_NAME" --quiet
+        if gcloud compute instances describe "$RESOURCE_NAME" >/dev/null 2>&1; then
+          gcloud compute instances delete "$RESOURCE_NAME" --quiet
+        else
+          printf '%s\n' "Instance '$RESOURCE_NAME' already deleted or not found."
+        fi
         ;;
       list)
         gcloud compute instances list
@@ -103,6 +114,7 @@ case "$ACTION" in
           printf '%s\n' "Usage: node update <name> [--machine-type TYPE]"
           exit 1
         fi
+        libscript_verify_managed gcp node "$RESOURCE_NAME" || exit 1
         shift 2
         while [ $# -gt 0 ]; do
           case "$1" in
@@ -134,12 +146,23 @@ case "$ACTION" in
           create)
             ZONE=${3:-}; DNS_NAME=${4:-}
             if [ -z "$ZONE" ] || [ -z "$DNS_NAME" ]; then printf '%s\n' "Usage: dns zone create <zone> <dns-name>"; exit 1; fi
-            gcloud dns managed-zones create "$ZONE" --dns-name="$DNS_NAME" --description="Libscript managed"
+            TAGS_ARG="$(libscript_format_tags gcp)"
+            if gcloud dns managed-zones describe "$ZONE" >/dev/null 2>&1; then
+              printf '%s\n' "DNS zone '$ZONE' already exists."
+            else
+              # shellcheck disable=SC2086
+              gcloud dns managed-zones create "$ZONE" --dns-name="$DNS_NAME" --description="Libscript managed" $TAGS_ARG
+            fi
             ;;
           delete)
             ZONE=${3:-}
             if [ -z "$ZONE" ]; then printf '%s\n' "Usage: dns zone delete <zone>"; exit 1; fi
-            gcloud dns managed-zones delete "$ZONE" --quiet
+            libscript_verify_managed gcp dns "$ZONE" || exit 1
+            if gcloud dns managed-zones describe "$ZONE" >/dev/null 2>&1; then
+              gcloud dns managed-zones delete "$ZONE" --quiet
+            else
+              printf '%s\n' "DNS zone '$ZONE' already deleted or not found."
+            fi
             ;;
           list)
             gcloud dns managed-zones list
@@ -153,6 +176,9 @@ case "$ACTION" in
           create|update)
             ZONE=${3:-}; NAME=${4:-}; TYPE=${5:-}; DATA=${6:-}; TTL=${7:-300}
             if [ -z "$DATA" ]; then printf '%s\n' "Usage: dns record $SUBTYPE <zone> <name> <type> <data> [ttl]"; exit 1; fi
+            if [ "$SUBTYPE" = "update" ]; then
+              libscript_verify_managed gcp dns "$ZONE" || exit 1
+            fi
             if [ "$SUBTYPE" = "create" ]; then
               gcloud dns record-sets create "$NAME" --zone="$ZONE" --type="$TYPE" --rrdatas="$DATA" --ttl="$TTL"
             else
@@ -162,6 +188,7 @@ case "$ACTION" in
           delete)
             ZONE=${3:-}; NAME=${4:-}; TYPE=${5:-}
             if [ -z "$TYPE" ]; then printf '%s\n' "Usage: dns record delete <zone> <name> <type>"; exit 1; fi
+            libscript_verify_managed gcp dns "$ZONE" || exit 1
             gcloud dns record-sets delete "$NAME" --zone="$ZONE" --type="$TYPE" --quiet
             ;;
           list)
@@ -202,15 +229,24 @@ case "$ACTION" in
           esac
         done
         printf '%s\n' "Creating GCP Firewall Rule: $RESOURCE_NAME"
-        gcloud compute firewall-rules create "$RESOURCE_NAME" --network="$NETWORK" $ALLOW
+        if gcloud compute firewall-rules describe "$RESOURCE_NAME" >/dev/null 2>&1; then
+          printf '%s\n' "Firewall rule '$RESOURCE_NAME' already exists."
+        else
+          gcloud compute firewall-rules create "$RESOURCE_NAME" --network="$NETWORK" $ALLOW
+        fi
         ;;
       delete)
         if [ -z "$RESOURCE_NAME" ]; then
           printf '%s\n' "Usage: firewall delete <name>"
           exit 1
         fi
+        libscript_verify_managed gcp firewall "$RESOURCE_NAME" || exit 1
         printf '%s\n' "Deleting GCP Firewall Rule: $RESOURCE_NAME"
-        gcloud compute firewall-rules delete "$RESOURCE_NAME" --quiet
+        if gcloud compute firewall-rules describe "$RESOURCE_NAME" >/dev/null 2>&1; then
+          gcloud compute firewall-rules delete "$RESOURCE_NAME" --quiet
+        else
+          printf '%s\n' "Firewall rule '$RESOURCE_NAME' already deleted or not found."
+        fi
         ;;
       list)
         gcloud compute firewall-rules list
@@ -220,6 +256,7 @@ case "$ACTION" in
           printf '%s\n' "Usage: firewall update <name> [--allow PORTS]"
           exit 1
         fi
+        libscript_verify_managed gcp firewall "$RESOURCE_NAME" || exit 1
         shift 2
         while [ $# -gt 0 ]; do
           case "$1" in
@@ -247,15 +284,26 @@ case "$ACTION" in
           exit 1
         fi
         printf '%s\n' "Creating GCP Network: $RESOURCE_NAME"
-        gcloud compute networks create "$RESOURCE_NAME"
+        TAGS_ARG="$(libscript_format_tags gcp)"
+        if gcloud compute networks describe "$RESOURCE_NAME" >/dev/null 2>&1; then
+          printf '%s\n' "Network '$RESOURCE_NAME' already exists."
+        else
+          # shellcheck disable=SC2086
+          gcloud compute networks create "$RESOURCE_NAME" $TAGS_ARG
+        fi
         ;;
       delete)
         if [ -z "$RESOURCE_NAME" ]; then
           printf '%s\n' "Usage: network delete <name>"
           exit 1
         fi
+        libscript_verify_managed gcp network "$RESOURCE_NAME" || exit 1
         printf '%s\n' "Deleting GCP Network: $RESOURCE_NAME"
-        gcloud compute networks delete "$RESOURCE_NAME" --quiet
+        if gcloud compute networks describe "$RESOURCE_NAME" >/dev/null 2>&1; then
+          gcloud compute networks delete "$RESOURCE_NAME" --quiet
+        else
+          printf '%s\n' "Network '$RESOURCE_NAME' already deleted or not found."
+        fi
         ;;
       list)
         gcloud compute networks list
@@ -265,6 +313,7 @@ case "$ACTION" in
           printf '%s\n' "Usage: network update <name> [--bgp-routing-mode MODE]"
           exit 1
         fi
+        libscript_verify_managed gcp network "$RESOURCE_NAME" || exit 1
         shift 2
         while [ $# -gt 0 ]; do
           case "$1" in

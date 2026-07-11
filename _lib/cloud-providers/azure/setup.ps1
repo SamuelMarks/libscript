@@ -41,10 +41,35 @@ switch ($Action) {
         if ($SubAction -eq "create") {
             $Loc = if ($env:location) { $env:location } else { "eastus" }
             Write-Host "Creating Azure VNet: $ResourceName in $ResourceGroup ($Loc)"
-            az network vnet create --name $ResourceName --resource-group $ResourceGroup --location $Loc
+            
+            $TagsArgs = @()
+            $TagsCmd = Join-Path $LibscriptRootDir "_lib\cloud\core\tags.cmd"
+            if (Test-Path $TagsCmd) {
+                & $TagsCmd :init | Out-Null
+                if ($env:LIBSCRIPT_TAG_ENABLE -eq "true") {
+                    $TagsArgs += "--tags"
+                    $TagsArgs += "$env:LIBSCRIPT_TAG_KEY=$env:LIBSCRIPT_TAG_VALUE"
+                }
+            }
+            $vnetExists = az network vnet show -g $ResourceGroup -n $ResourceName 2>&1
+            if ($LASTEXITCODE -eq 0 -and $vnetExists -notmatch "ResourceNotFound") {
+                Write-Host "VNet '$ResourceName' already exists in resource group '$ResourceGroup'."
+            } else {
+                az network vnet create --name $ResourceName --resource-group $ResourceGroup --location $Loc @TagsArgs
+            }
         } elseif ($SubAction -eq "delete") {
+            $TagsCmd = Join-Path $LibscriptRootDir "_lib\cloud\core\tags.cmd"
+            if (Test-Path $TagsCmd) {
+                & $TagsCmd :libscript_verify_managed azure network $ResourceName $ResourceGroup
+                if ($LASTEXITCODE -ne 0) { exit 1 }
+            }
             Write-Host "Deleting Azure VNet: $ResourceName from $ResourceGroup"
-            az network vnet delete --name $ResourceName --resource-group $ResourceGroup --yes
+            $vnetExists = az network vnet show -g $ResourceGroup -n $ResourceName 2>&1
+            if ($LASTEXITCODE -eq 0 -and $vnetExists -notmatch "ResourceNotFound") {
+                az network vnet delete --name $ResourceName --resource-group $ResourceGroup --yes
+            } else {
+                Write-Host "VNet '$ResourceName' already deleted or not found in resource group '$ResourceGroup'."
+            }
         } elseif ($SubAction -eq "list") {
             if ($ResourceGroup) {
                 az network vnet list --resource-group $ResourceGroup -o table
@@ -52,6 +77,11 @@ switch ($Action) {
                 az network vnet list -o table
             }
         } elseif ($SubAction -eq "update") {
+            $TagsCmd = Join-Path $LibscriptRootDir "_lib\cloud\core\tags.cmd"
+            if (Test-Path $TagsCmd) {
+                & $TagsCmd :libscript_verify_managed azure network $ResourceName $ResourceGroup
+                if ($LASTEXITCODE -ne 0) { exit 1 }
+            }
             $Tags = $env:ARG4
             if ($Tags) {
                 az network vnet update --name $ResourceName --resource-group $ResourceGroup --set tags=`"$Tags`"
@@ -65,7 +95,22 @@ switch ($Action) {
         if ($SubAction -eq "create") {
             $Loc = if ($env:location) { $env:location } else { "eastus" }
             Write-Host "Creating Azure NSG: $ResourceName in $ResourceGroup ($Loc)"
-            az network nsg create --name $ResourceName --resource-group $ResourceGroup --location $Loc
+            
+            $TagsArgs = @()
+            $TagsCmd = Join-Path $LibscriptRootDir "_lib\cloud\core\tags.cmd"
+            if (Test-Path $TagsCmd) {
+                & $TagsCmd :init | Out-Null
+                if ($env:LIBSCRIPT_TAG_ENABLE -eq "true") {
+                    $TagsArgs += "--tags"
+                    $TagsArgs += "$env:LIBSCRIPT_TAG_KEY=$env:LIBSCRIPT_TAG_VALUE"
+                }
+            }
+            $nsgExists = az network nsg show -g $ResourceGroup -n $ResourceName 2>&1
+            if ($LASTEXITCODE -eq 0 -and $nsgExists -notmatch "ResourceNotFound") {
+                Write-Host "NSG '$ResourceName' already exists in resource group '$ResourceGroup'."
+            } else {
+                az network nsg create --name $ResourceName --resource-group $ResourceGroup --location $Loc @TagsArgs
+            }
             if ($Ports) {
                 $Priority = 1000
                 foreach ($Port in $Ports.Split(' ')) {
@@ -77,8 +122,18 @@ switch ($Action) {
                 }
             }
         } elseif ($SubAction -eq "delete") {
+            $TagsCmd = Join-Path $LibscriptRootDir "_lib\cloud\core\tags.cmd"
+            if (Test-Path $TagsCmd) {
+                & $TagsCmd :libscript_verify_managed azure firewall $ResourceName $ResourceGroup
+                if ($LASTEXITCODE -ne 0) { exit 1 }
+            }
             Write-Host "Deleting Azure NSG: $ResourceName from $ResourceGroup"
-            az network nsg delete --name $ResourceName --resource-group $ResourceGroup --yes
+            $nsgExists = az network nsg show -g $ResourceGroup -n $ResourceName 2>&1
+            if ($LASTEXITCODE -eq 0 -and $nsgExists -notmatch "ResourceNotFound") {
+                az network nsg delete --name $ResourceName --resource-group $ResourceGroup --yes
+            } else {
+                Write-Host "NSG '$ResourceName' already deleted or not found in resource group '$ResourceGroup'."
+            }
         } elseif ($SubAction -eq "list") {
             if ($ResourceGroup) {
                 az network nsg list --resource-group $ResourceGroup -o table
@@ -86,6 +141,11 @@ switch ($Action) {
                 az network nsg list -o table
             }
         } elseif ($SubAction -eq "update") {
+            $TagsCmd = Join-Path $LibscriptRootDir "_lib\cloud\core\tags.cmd"
+            if (Test-Path $TagsCmd) {
+                & $TagsCmd :libscript_verify_managed azure firewall $ResourceName $ResourceGroup
+                if ($LASTEXITCODE -ne 0) { exit 1 }
+            }
             $AddPort = $env:ARG4
             $RemovePort = $env:ARG5
             if ($AddPort) {
@@ -105,21 +165,50 @@ switch ($Action) {
             if ($env:vnet_name) { $ArgsList += "--vnet-name"; $ArgsList += $env:vnet_name }
             if ($env:nsg) { $ArgsList += "--nsg"; $ArgsList += $env:nsg }
             if ($env:os_disk_size_gb) { $ArgsList += "--os-disk-size-gb"; $ArgsList += $env:os_disk_size_gb }
+
+            $TagsCmd = Join-Path $LibscriptRootDir "_lib\cloud\core\tags.cmd"
+            if (Test-Path $TagsCmd) {
+                & $TagsCmd :init | Out-Null
+                if ($env:LIBSCRIPT_TAG_ENABLE -eq "true") {
+                    $ArgsList += "--tags"
+                    $ArgsList += "$env:LIBSCRIPT_TAG_KEY=$env:LIBSCRIPT_TAG_VALUE"
+                }
+            }
             
             Write-Host "Creating Azure VM: $ResourceName in $ResourceGroup ($Size, $Image)"
-            & az vm create --resource-group $ResourceGroup --name $ResourceName --image $Image --size $Size --admin-username azureuser --generate-ssh-keys --public-ip-sku Standard @ArgsList
+            $vmExists = az vm show -g $ResourceGroup -n $ResourceName 2>&1
+            if ($LASTEXITCODE -eq 0 -and $vmExists -notmatch "ResourceNotFound") {
+                Write-Host "VM '$ResourceName' already exists in resource group '$ResourceGroup'."
+            } else {
+                & az vm create --resource-group $ResourceGroup --name $ResourceName --image $Image --size $Size --admin-username azureuser --generate-ssh-keys --public-ip-sku Standard @ArgsList
+            }
         } elseif ($SubAction -eq "delete") {
             $ResourceGroup = $env:ARG3
+            $TagsCmd = Join-Path $LibscriptRootDir "_lib\cloud\core\tags.cmd"
+            if (Test-Path $TagsCmd) {
+                & $TagsCmd :libscript_verify_managed azure node $ResourceName $ResourceGroup
+                if ($LASTEXITCODE -ne 0) { exit 1 }
+            }
             Write-Host "Deleting Azure VM: $ResourceName from $ResourceGroup"
-            az vm delete --name $ResourceName --resource-group $ResourceGroup --yes
+            $vmExists = az vm show -g $ResourceGroup -n $ResourceName 2>&1
+            if ($LASTEXITCODE -eq 0 -and $vmExists -notmatch "ResourceNotFound") {
+                az vm delete --name $ResourceName --resource-group $ResourceGroup --yes
+            } else {
+                Write-Host "VM '$ResourceName' already deleted or not found in resource group '$ResourceGroup'."
+            }
         } elseif ($SubAction -eq "list") {
             $ResourceGroup = $env:ARG3
             if ($ResourceGroup) { az vm list -g $ResourceGroup -o table } else { az vm list -o table }
         } elseif ($SubAction -eq "update") {
             $ResourceGroup = $env:ARG3
             $Size = $env:ARG4
-            $Tags = $env:ARG5
-            if ($Size) { az vm resize -g $ResourceGroup -n $ResourceName --size $Size }
+            if ($ResourceGroup -and $Size) {
+                $TagsCmd = Join-Path $LibscriptRootDir "_lib\cloud\core\tags.cmd"
+                if (Test-Path $TagsCmd) {
+                    & $TagsCmd :libscript_verify_managed azure node $ResourceName $ResourceGroup
+                    if ($LASTEXITCODE -ne 0) { exit 1 }
+                }
+                az vm resize -g $ResourceGroup -n $ResourceName --size $Size
             if ($Tags) { az vm update -g $ResourceGroup -n $ResourceName --set tags=`"$Tags`" }
         } elseif ($SubAction -eq "exec") {
             $ResourceGroup = $env:ARG3
@@ -175,9 +264,24 @@ switch ($Action) {
             $ZName = $env:ARG3
             $ZRg = $env:ARG4
             if ($SubType -eq "create") {
-                az network dns zone create -g $ZRg -n $ZName
+                $zoneExists = az network dns zone show -g $ZRg -n $ZName 2>&1
+                if ($LASTEXITCODE -eq 0 -and $zoneExists -notmatch "ResourceNotFound") {
+                    Write-Host "DNS zone '$ZName' already exists in resource group '$ZRg'."
+                } else {
+                    az network dns zone create -g $ZRg -n $ZName
+                }
             } elseif ($SubType -eq "delete") {
-                az network dns zone delete -g $ZRg -n $ZName --yes
+                $TagsCmd = Join-Path $LibscriptRootDir "_lib\cloud\core\tags.cmd"
+                if (Test-Path $TagsCmd) {
+                    & $TagsCmd :libscript_verify_managed azure dns $ZName $ZRg
+                    if ($LASTEXITCODE -ne 0) { exit 1 }
+                }
+                $zoneExists = az network dns zone show -g $ZRg -n $ZName 2>&1
+                if ($LASTEXITCODE -eq 0 -and $zoneExists -notmatch "ResourceNotFound") {
+                    az network dns zone delete -g $ZRg -n $ZName --yes
+                } else {
+                    Write-Host "DNS zone '$ZName' already deleted or not found in resource group '$ZRg'."
+                }
             } elseif ($SubType -eq "list") {
                 if ($ZRg) { az network dns zone list -g $ZRg -o table } else { az network dns zone list -o table }
             }
@@ -189,6 +293,13 @@ switch ($Action) {
             $RecType = $env:ARG6
             $RecValue = $env:ARG7
             if ($SubType -eq "create" -or $SubType -eq "update") {
+                if ($SubType -eq "update") {
+                    $TagsCmd = Join-Path $LibscriptRootDir "_lib\cloud\core\tags.cmd"
+                    if (Test-Path $TagsCmd) {
+                        & $TagsCmd :libscript_verify_managed azure dns $ZName $ZRg
+                        if ($LASTEXITCODE -ne 0) { exit 1 }
+                    }
+                }
                 if ($RecType -eq "A") {
                     az network dns record-set a add-record -g $ZRg -z $ZName -n $RecName -a $RecValue
                 } elseif ($RecType -eq "CNAME") {
@@ -197,6 +308,11 @@ switch ($Action) {
                     az network dns record-set txt add-record -g $ZRg -z $ZName -n $RecName -v $RecValue
                 }
             } elseif ($SubType -eq "delete") {
+                $TagsCmd = Join-Path $LibscriptRootDir "_lib\cloud\core\tags.cmd"
+                if (Test-Path $TagsCmd) {
+                    & $TagsCmd :libscript_verify_managed azure dns $ZName $ZRg
+                    if ($LASTEXITCODE -ne 0) { exit 1 }
+                }
                 if ($RecType -eq "A") { az network dns record-set a delete -g $ZRg -z $ZName -n $RecName --yes }
                 elseif ($RecType -eq "CNAME") { az network dns record-set cname delete -g $ZRg -z $ZName -n $RecName --yes }
                 elseif ($RecType -eq "TXT") { az network dns record-set txt delete -g $ZRg -z $ZName -n $RecName --yes }

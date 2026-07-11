@@ -59,17 +59,29 @@ set "provider=%~2"
 set "vid=%~3"
 
 if "%provider%"=="aws" (
+    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :libscript_verify_managed aws volume "%vid%"
+        if errorlevel 1 exit /b 1
+    )
     aws ec2 delete-volume --volume-id "%vid%"
 ) else if "%provider%"=="gcp" (
     if "%LIBSCRIPT_VOLUME_ZONE%"=="" (
-        echo Error: --zone (or LIBSCRIPT_VOLUME_ZONE) is required for GCP delete. >&2
+        echo Error: --zone ^(or LIBSCRIPT_VOLUME_ZONE^) is required for GCP delete. >&2
         exit /b 1
+    )
+    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :libscript_verify_managed gcp volume "%vid%" "%LIBSCRIPT_VOLUME_ZONE%"
+        if errorlevel 1 exit /b 1
     )
     gcloud compute disks delete "%vid%" --zone="%LIBSCRIPT_VOLUME_ZONE%" --quiet
 ) else if "%provider%"=="azure" (
     if "%LIBSCRIPT_AZURE_RESOURCE_GROUP%"=="" (
         echo Error: LIBSCRIPT_AZURE_RESOURCE_GROUP must be set for Azure operations. >&2
         exit /b 1
+    )
+    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :libscript_verify_managed azure volume "%vid%" "%LIBSCRIPT_AZURE_RESOURCE_GROUP%"
+        if errorlevel 1 exit /b 1
     )
     az disk delete --name "%vid%" --resource-group "%LIBSCRIPT_AZURE_RESOURCE_GROUP%" --yes
 )

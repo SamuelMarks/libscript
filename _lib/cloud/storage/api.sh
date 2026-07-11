@@ -49,10 +49,9 @@ libscript_storage_create() {
       fi
       ;;
     gcp)
+      gcloud storage buckets create "gs://$bucket"
       if [ "$LIBSCRIPT_TAG_ENABLE" = "true" ]; then
-        gcloud storage buckets create "gs://$bucket" --labels="$LIBSCRIPT_TAG_KEY=$LIBSCRIPT_TAG_VALUE"
-      else
-        gcloud storage buckets create "gs://$bucket"
+        gcloud storage buckets update "gs://$bucket" --update-labels="$LIBSCRIPT_TAG_KEY=$LIBSCRIPT_TAG_VALUE"
       fi
       if [ "$public_web" = "true" ]; then
         gcloud storage buckets update "gs://$bucket" --web-main-page-suffix=index.html
@@ -81,13 +80,20 @@ libscript_storage_create() {
 libscript_storage_delete() {
   provider="$1"
   bucket="$2"
-  
+
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh" ]; then
+    # shellcheck disable=SC1091
+    . "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh"
+  fi
+
   case "$provider" in
     aws)
+      libscript_verify_managed aws storage "$bucket" || return 1
       aws s3 rb "s3://$bucket" --force
       ;;
     gcp)
-      gcloud storage rm -r "gs://$bucket"
+      libscript_verify_managed gcp storage "$bucket" || return 1
+      gcloud storage buckets delete "gs://$bucket"
       ;;
     azure)
       acct="${LIBSCRIPT_AZURE_ACCOUNT_NAME:-}"
@@ -95,6 +101,7 @@ libscript_storage_delete() {
         printf "Error: LIBSCRIPT_AZURE_ACCOUNT_NAME must be set for Azure storage operations.\n" >&2
         return 1
       fi
+      libscript_verify_managed azure storage "$bucket" "$acct" || return 1
       az storage container delete --name "$bucket" --account-name "$acct"
       ;;
   esac

@@ -27,10 +27,9 @@ if "%provider%"=="aws" (
         aws s3api put-public-access-block --bucket "%bucket%" --public-access-block-configuration "BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false"
     )
 ) else if "%provider%"=="gcp" (
+    gcloud storage buckets create "gs://%bucket%"
     if "%LIBSCRIPT_TAG_ENABLE%"=="true" (
-        gcloud storage buckets create "gs://%bucket%" --labels="%LIBSCRIPT_TAG_KEY%=%LIBSCRIPT_TAG_VALUE%"
-    ) else (
-        gcloud storage buckets create "gs://%bucket%"
+        gcloud storage buckets update "gs://%bucket%" --update-labels="%LIBSCRIPT_TAG_KEY%=%LIBSCRIPT_TAG_VALUE%"
     )
     if "%public_web%"=="true" (
         gcloud storage buckets update "gs://%bucket%" --web-main-page-suffix=index.html
@@ -54,10 +53,15 @@ exit /b 0
 set "provider=%~2"
 set "bucket=%~3"
 
+if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :libscript_verify_managed "%provider%" storage "%bucket%" "%LIBSCRIPT_AZURE_ACCOUNT_NAME%"
+    if errorlevel 1 exit /b 1
+)
+
 if "%provider%"=="aws" (
     aws s3 rb "s3://%bucket%" --force
 ) else if "%provider%"=="gcp" (
-    gcloud storage rm -r "gs://%bucket%"
+    gcloud storage buckets delete "gs://%bucket%"
 ) else if "%provider%"=="azure" (
     if "%LIBSCRIPT_AZURE_ACCOUNT_NAME%"=="" (
         echo Error: LIBSCRIPT_AZURE_ACCOUNT_NAME must be set for Azure storage operations. >&2

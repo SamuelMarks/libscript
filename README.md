@@ -307,6 +307,7 @@ additional terms or conditions.
 | `_lib/cloud-providers/azure` | ❓ | ❓ | ❓ |
 | `_lib/cloud-providers/gcp` | ❓ | ❓ | ❓ |
 | `_lib/cloud-providers/gcp/cli` | ❓ | ❓ | ❓ |
+| `_lib/cloud-providers/gcp/filestore` | ❓ | ❓ | ❓ |
 | `_lib/cloud-providers/gcp/gke-tpu-cluster` | ❓ | ❓ | ❓ |
 | `_lib/cloud-providers/gcp/gpu-vm` | ❓ | ❓ | ❓ |
 | `_lib/cloud-providers/gcp/tpu-vm` | ❓ | ❓ | ❓ |

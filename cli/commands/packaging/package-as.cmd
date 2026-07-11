@@ -123,11 +123,11 @@ if defined is_docker (
         )
         
         if "!artifact_type!"=="deb" (
-            echo RUN apt-get update ^&^& apt-get install -y /opt/libscript/*-!pkg!_*.deb>> "!tmp_run!"
+            echo RUN dpkg -s !pkg! ^>nul 2^>^&1 ^|^| ^(apt-get update ^&^& apt-get install -y /opt/libscript/*-!pkg!_*.deb^)>> "!tmp_run!"
         ) else if "!artifact_type!"=="rpm" (
-            echo RUN dnf install -y /opt/libscript/*-!pkg!-*.rpm>> "!tmp_run!"
+            echo RUN rpm -q !pkg! ^>nul 2^>^&1 ^|^| dnf install -y /opt/libscript/*-!pkg!-*.rpm>> "!tmp_run!"
         ) else if "!artifact_type!"=="apk" (
-            echo RUN apk add --allow-untrusted /opt/libscript/*-!pkg!-*.apk>> "!tmp_run!"
+            echo RUN apk info -e !pkg! ^>nul 2^>^&1 ^|^| apk add --allow-untrusted /opt/libscript/*-!pkg!-*.apk>> "!tmp_run!"
         ) else if "!artifact_type!"=="txz" (
             echo RUN pkg install -y /opt/libscript/*-!pkg!*.txz /opt/libscript/*-!pkg!*.pkg 2^>nul^|^|true>> "!tmp_run!"
         ) else if "!artifact_type!"=="msi" (

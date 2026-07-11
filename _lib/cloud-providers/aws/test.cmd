@@ -42,6 +42,21 @@ echo Running cleanup...
 findstr /i "aws resourcegroupstaggingapi" "%temp%\aws_test_out.txt" >nul
 if errorlevel 1 ( echo FAIL: cleanup & exit /b 1 )
 
+rem Test tag guards
+echo Testing tag guards...
+call "%~dp0cli.cmd" network delete test-vpc > "%temp%\aws_guard_out.txt" 2>&1
+if not errorlevel 1 (
+    echo FAIL: Network delete should have failed due to missing tag
+    exit /b 1
+)
+findstr /i "Refusing to modify" "%temp%\aws_guard_out.txt" >nul
+if errorlevel 1 ( echo FAIL: Guard output missing & exit /b 1 )
+
+set "LIBSCRIPT_ALLOW_ANY_TAG_MANIPULATION=1"
+call "%~dp0cli.cmd" network delete test-vpc > "%temp%\aws_guard_out.txt" 2>&1
+findstr /i "Proceeding due to override flag" "%temp%\aws_guard_out.txt" >nul
+if errorlevel 1 ( echo FAIL: Guard override missing & exit /b 1 )
+
 echo AWS tests passed (dry-run).
 if exist "%temp%\aws_test_out.txt" del "%temp%\aws_test_out.txt"
 exit /b 0

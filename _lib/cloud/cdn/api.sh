@@ -165,13 +165,20 @@ libscript_cdn_delete() {
   provider="$1"
   dist_id="$2"
   
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh" ]; then
+    # shellcheck disable=SC1091
+    . "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh"
+  fi
+  
   case "$provider" in
     aws)
+      libscript_verify_managed aws cdn "$dist_id" || return 1
       etag=$(aws cloudfront get-distribution --id "$dist_id" --query 'ETag' --output text)
       aws cloudfront delete-distribution --id "$dist_id" --if-match "$etag"
       ;;
     gcp)
       # Assuming dist_id is the bucket prefix used in creation
+      libscript_verify_managed gcp cdn "$dist_id" || return 1
       gcloud compute forwarding-rules delete "${dist_id}-https-rule" "${dist_id}-http-rule" --global --quiet 2>/dev/null || true
       gcloud compute target-https-proxies delete "${dist_id}-https-proxy" --quiet 2>/dev/null || true
       gcloud compute target-http-proxies delete "${dist_id}-http-proxy" --quiet 2>/dev/null || true

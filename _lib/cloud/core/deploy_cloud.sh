@@ -36,18 +36,41 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
-if [ "$#" -lt 4 ]; then
-  log_info "Usage: deploy_cloud.sh <provider> <node_name> <rg_or_vpc_or_project> <region_or_zone> [local_repo_path] [remote_dest]"
+
+IS_TPU=0
+SHARED_STORAGE=0
+POSITIONALS=""
+
+# Parse flags
+_p1="" _p2="" _p3="" _p4="" _p5="" _p6=""
+for arg do
+  case "$arg" in
+    --tpu|--accelerator) IS_TPU=1 ;;
+    --shared-storage) SHARED_STORAGE=1 ;;
+    *)
+      if [ -z "$_p1" ]; then _p1="$arg"
+      elif [ -z "$_p2" ]; then _p2="$arg"
+      elif [ -z "$_p3" ]; then _p3="$arg"
+      elif [ -z "$_p4" ]; then _p4="$arg"
+      elif [ -z "$_p5" ]; then _p5="$arg"
+      elif [ -z "$_p6" ]; then _p6="$arg"
+      fi
+      ;;
+  esac
+done
+
+if [ -z "$_p4" ]; then
+  log_info "Usage: deploy_cloud.sh [--tpu] [--shared-storage] <provider> <node_name> <rg_or_vpc_or_project> <region_or_zone> [local_repo_path] [remote_dest]"
   log_info "Providers: azure, aws, gcp"
   exit 1
 fi
 
-PROVIDER=$1
-NODE=$2
-RG=$3
-LOC=$4
-REPO_PATH=${5:-.}
-REMOTE_DEST=${6:-"~/$NODE"}
+PROVIDER="$_p1"
+NODE="$_p2"
+RG="$_p3"
+LOC="$_p4"
+REPO_PATH="${_p5:-.}"
+REMOTE_DEST="${_p6:-~/$NODE}"
 
 # -----------------------------------------------------------------------------
 # Logging Configuration
@@ -139,6 +162,28 @@ with_retry() {
 # Idempotent State Management
 # -----------------------------------------------------------------------------
 STATE_FILE="$REPO_PATH/.deploy_state"
+
+wait_for_tpu_active() {
+  target_node=$1
+  target_loc=$2
+  max_attempts=120 # 20 minutes
+  attempt=1
+  while [ $attempt -le $max_attempts ]; do
+    status=$(gcloud alpha compute tpus queued-resources describe "${target_node}-qr" --zone="$target_loc" --format="value(state)" 2>/dev/null || true)
+    if [ "$status" = "ACTIVE" ]; then
+      log "HEALTH" "TPU Queued Resource is ACTIVE."
+      return 0
+    elif [ "$status" = "FAILED" ] || [ "$status" = "SUSPENDED" ]; then
+      log "ERROR" "TPU Queued Resource reached $status state."
+      return 1
+    fi
+    log "HEALTH" "TPU Queued Resource status: ${status:-UNKNOWN} (attempt $attempt/$max_attempts). Waiting 10s..."
+    sleep 10
+    attempt=$((attempt + 1))
+  done
+  log "ERROR" "TPU Queued Resource failed to become ACTIVE within 20 minutes."
+  return 1
+}
 
 record_state() {
   key=$1
@@ -298,13 +343,36 @@ elif [ "$PROVIDER" = "gcp" ]; then
   with_retry "$CLI" firewall create "${NODE}-fw" "${NODE}-vpc" "$PORTS"
   record_state "GCP_FW" "${NODE}-fw"
 
-  with_retry "$CLI" node create "$NODE" "$OS_IMAGE" "$RG" --network "${NODE}-vpc" --machine-type "$SIZE" --labels "libscript-managed=true,libscript-node=$NODE"
-  record_state "GCP_NODE" "$NODE"
-  
-  if jq -e ".infrastructure.node.data_disks" "$JSON_FILE" >/dev/null 2>&1; then
-    DISK_NAME=$(jq -r ".infrastructure.node.data_disks[0].name" "$JSON_FILE")
-    log "INFRA" "Attaching existing data disk ${DISK_NAME}..."
-    with_retry "$CLI" node attach-disk "$NODE" "$LOC" "$DISK_NAME"
+  if [ "$IS_TPU" -eq 1 ]; then
+    log "INFRA" "Provisioning GCP TPU VM..."
+    TPU_CLI="$SCRIPT_DIR/../../cloud-providers/gcp/tpu-vm/cli.sh"
+    export TPU_NETWORK="${NODE}-vpc"
+    
+    if [ "$SHARED_STORAGE" -eq 1 ]; then
+      log "INFRA" "Provisioning Filestore..."
+      export FILESTORE_ZONE="$LOC"
+      export FILESTORE_NETWORK="${NODE}-vpc"
+      with_retry "$SCRIPT_DIR/../../cloud-providers/gcp/filestore/cli.sh" create "${NODE}-nfs"
+      record_state "GCP_FILESTORE" "${NODE}-nfs"
+    fi
+    
+    with_retry "$TPU_CLI" create "$NODE"
+    record_state "GCP_TPU_VM" "$NODE"
+    
+    if [ "${TPU_USE_QUEUED_RESOURCE:-false}" = "true" ]; then
+      record_state "GCP_TPU_QUEUED_RESOURCE" "${NODE}-qr"
+      log "HEALTH" "Waiting for TPU Queued Resource to become ACTIVE..."
+      wait_for_tpu_active "$NODE" "$LOC"
+    fi
+  else
+    with_retry "$CLI" node create "$NODE" "$OS_IMAGE" "$RG" --network "${NODE}-vpc" --machine-type "$SIZE" --labels "libscript-managed=true,libscript-node=$NODE"
+    record_state "GCP_NODE" "$NODE"
+    
+    if jq -e ".infrastructure.node.data_disks" "$JSON_FILE" >/dev/null 2>&1; then
+      DISK_NAME=$(jq -r ".infrastructure.node.data_disks[0].name" "$JSON_FILE")
+      log "INFRA" "Attaching existing data disk ${DISK_NAME}..."
+      with_retry "$CLI" node attach-disk "$NODE" "$LOC" "$DISK_NAME"
+    fi
   fi
 fi
 
@@ -314,6 +382,7 @@ if [ "$PROVIDER" = "gcp" ] || [ "$PROVIDER" = "aws" ]; then CTX="$LOC"; fi
 # -----------------------------------------------------------------------------
 # Status Checks & Health Polling
 # -----------------------------------------------------------------------------
+
 wait_for_ssh() {
   target_node=$1
   target_ctx=$2
@@ -423,14 +492,31 @@ fi
 # Stack Start
 # -----------------------------------------------------------------------------
 log "START" "Installing Dependencies and Starting Application Stack..."
-with_retry "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/libscript.sh install-deps"
+if [ "$IS_TPU" -eq 1 ]; then
+  if [ "$SHARED_STORAGE" -eq 1 ]; then
+    log "INFRA" "Mounting Filestore across all TPU workers..."
+    NFS_IP=$(gcloud filestore instances describe "${NODE}-nfs" --zone="$LOC" --format="value(networks.ipAddresses[0])")
+    with_retry "$TPU_CLI" ssh "$NODE" --all-workers "if ! dpkg -s nfs-common >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y nfs-common; fi && sudo mkdir -p /mnt/shared && if ! grep -qs '/mnt/shared ' /proc/mounts; then sudo mount $NFS_IP:/vol1 /mnt/shared; fi && sudo chmod a+w /mnt/shared"
+  fi
+  with_retry "$TPU_CLI" ssh "$NODE" --all-workers "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/libscript.sh install-deps"
+else
+  with_retry "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/libscript.sh install-deps"
+fi
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
-with_retry "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/scripts/run_hooks.sh libscript.json install"
+if [ "$IS_TPU" -eq 1 ]; then
+  with_retry "$TPU_CLI" ssh "$NODE" --all-workers "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/scripts/run_hooks.sh libscript.json install"
+else
+  with_retry "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/scripts/run_hooks.sh libscript.json install"
+fi
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
 
-with_retry "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/libscript.sh start"
+if [ "$IS_TPU" -eq 1 ]; then
+  with_retry "$TPU_CLI" ssh "$NODE" --all-workers "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/libscript.sh start"
+else
+  with_retry "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/libscript.sh start"
+fi
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
 
@@ -439,7 +525,12 @@ wait_for_health() {
   max_attempts=12
   attempt=1
   while [ $attempt -le $max_attempts ]; do
-    if "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/libscript.sh health" >/dev/null 2>&1; then
+    if [ "$IS_TPU" -eq 1 ]; then
+      if "$TPU_CLI" ssh "$NODE" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/libscript.sh health" >/dev/null 2>&1; then
+        log "HEALTH" "Application stack is healthy."
+        return 0
+      fi
+    elif "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/libscript.sh health" >/dev/null 2>&1; then
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
       log "HEALTH" "Application stack is healthy."

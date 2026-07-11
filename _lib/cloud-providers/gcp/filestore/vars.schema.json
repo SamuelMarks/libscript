@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://libscript.org/schema/cloud-providers/gcp/filestore/vars.schema.json",
+  "title": "GCP Filestore Configuration",
+  "description": "Environment variables to configure GCP Filestore instances",
+  "type": "object",
+  "properties": {
+    "GCP_PROJECT_ID": {
+      "type": "string"
+    },
+    "FILESTORE_ZONE": {
+      "type": "string"
+    },
+    "FILESTORE_TIER": {
+      "type": "string",
+      "default": "BASIC_HDD"
+    },
+    "FILESTORE_CAPACITY_GB": {
+      "type": "string",
+      "default": "1024"
+    },
+    "FILESTORE_NETWORK": {
+      "type": "string",
+      "default": "default"
+    }
+  },
+  "additionalProperties": false
+}

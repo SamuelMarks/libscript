@@ -171,11 +171,11 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
               print "printf \"%s\\n\" '\''ENV " pkg_up "_VERSION=\"" ver "\"'\'' >> \"$tmp_env_add\""
               print "printf \"%s\\n\" '\''ENV " pkg_up "_URL=\"" url "\"'\'' >> \"$tmp_env_add\""
               if (artifact_type == "deb") {
-                  print "printf \"%s\\n\" '\''RUN apt-get update && apt-get install -y /opt/libscript/*-" pkg "_*.deb'\'' >> \"$tmp_run\""
+                  print "printf \"%s\\n\" '\''RUN dpkg -s " pkg " >/dev/null 2>&1 || (apt-get update && apt-get install -y /opt/libscript/*-" pkg "_*.deb)'\'' >> \"$tmp_run\""
               } else if (artifact_type == "rpm") {
-                  print "printf \"%s\\n\" '\''RUN dnf install -y /opt/libscript/*-" pkg "-*.rpm'\'' >> \"$tmp_run\""
+                  print "printf \"%s\\n\" '\''RUN rpm -q " pkg " >/dev/null 2>&1 || dnf install -y /opt/libscript/*-" pkg "-*.rpm'\'' >> \"$tmp_run\""
               } else if (artifact_type == "apk") {
-                  print "printf \"%s\\n\" '\''RUN apk add --allow-untrusted /opt/libscript/*-" pkg "-*.apk'\'' >> \"$tmp_run\""
+                  print "printf \"%s\\n\" '\''RUN apk info -e " pkg " >/dev/null 2>&1 || apk add --allow-untrusted /opt/libscript/*-" pkg "-*.apk'\'' >> \"$tmp_run\""
               } else if (artifact_type == "txz") {
                   print "printf \"%s\\n\" '\''RUN pkg install -y /opt/libscript/*-" pkg "*.txz /opt/libscript/*-" pkg "*.pkg || true'\'' >> \"$tmp_run\""
               } else if (artifact_type == "msi") {
@@ -191,11 +191,11 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
               if (ver == "" || ver == "null") ver = "latest"
               print "printf \"%s\\n\" '\''ENV " pkg_up "_VERSION=\"" ver "\"'\'' >> \"$tmp_env_add\""
               if (artifact_type == "deb") {
-                  print "printf \"%s\\n\" '\''RUN apt-get update && apt-get install -y /opt/libscript/*-" pkg "_*.deb'\'' >> \"$tmp_run\""
+                  print "printf \"%s\\n\" '\''RUN dpkg -s " pkg " >/dev/null 2>&1 || (apt-get update && apt-get install -y /opt/libscript/*-" pkg "_*.deb)'\'' >> \"$tmp_run\""
               } else if (artifact_type == "rpm") {
-                  print "printf \"%s\\n\" '\''RUN dnf install -y /opt/libscript/*-" pkg "-*.rpm'\'' >> \"$tmp_run\""
+                  print "printf \"%s\\n\" '\''RUN rpm -q " pkg " >/dev/null 2>&1 || dnf install -y /opt/libscript/*-" pkg "-*.rpm'\'' >> \"$tmp_run\""
               } else if (artifact_type == "apk") {
-                  print "printf \"%s\\n\" '\''RUN apk add --allow-untrusted /opt/libscript/*-" pkg "-*.apk'\'' >> \"$tmp_run\""
+                  print "printf \"%s\\n\" '\''RUN apk info -e " pkg " >/dev/null 2>&1 || apk add --allow-untrusted /opt/libscript/*-" pkg "-*.apk'\'' >> \"$tmp_run\""
               } else if (artifact_type == "txz") {
                   print "printf \"%s\\n\" '\''RUN pkg install -y /opt/libscript/*-" pkg "*.txz /opt/libscript/*-" pkg "*.pkg || true'\'' >> \"$tmp_run\""
               } else if (artifact_type == "msi") {

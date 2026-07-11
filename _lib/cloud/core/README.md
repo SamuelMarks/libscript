@@ -9,6 +9,24 @@ cloud providers (AWS, Azure, GCP).
 ./libscript.sh cloud <provider> <resource> <action> [args...]
 ```
 
+For high-level provisioning and deprovisioning:
+
+```sh
+./libscript.sh provision [--tpu] [--shared-storage] <provider> <node_name> <rg_or_vpc> <region_or_zone> [local_repo_path] [remote_dest]
+./libscript.sh deprovision [--tpu] [--shared-storage] [--retain-ip] [--retain-data] <provider> <node_name> <rg_or_vpc> <region_or_zone> [local_repo_path] [remote_dest]
+```
+
+### High-Level Orchestrator Flags
+
+- `--tpu` / `--accelerator`: Routes the deployment to utilize specialized TPU VM components (e.g.
+  `gcp/tpu-vm`), attaching the necessary network topology, queue pooling, and concurrent pod syncing
+  operations natively.
+- `--shared-storage`: When passed alongside `--tpu`, provisions and automatically mounts
+  high-throughput NFS/Shared Disk arrays (e.g., GCP Filestore) across all cluster workers.
+- `--retain-ip`: Prevents the release of static IPs during a `deprovision` action.
+- `--retain-data`: Prevents the deletion of persistent stateful data disks during a `deprovision`
+  action.
+
 ### Providers
 
 - `aws`

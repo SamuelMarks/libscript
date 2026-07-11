@@ -9,27 +9,73 @@
 
 setlocal EnableDelayedExpansion
 
-set "PROVIDER=%~1"
-set "NODE=%~2"
-set "RG=%~3"
-set "LOC=%~4"
-set "REPO_PATH=%~5"
-if "!REPO_PATH!"=="" set "REPO_PATH=."
-set "REMOTE_DEST=%~6"
-if "!REMOTE_DEST!"=="" set "REMOTE_DEST=~/%NODE%"
-
+set "IS_TPU=0"
+set "SHARED_STORAGE=0"
 set "RETAIN_IP=0"
 set "RETAIN_DATA=0"
+
+set "P1="
+set "P2="
+set "P3="
+set "P4="
+set "P5="
+set "P6="
 
 :parse_args
 set "arg=%~1"
 if "!arg!"=="" goto :args_done
-if /i "!arg!"=="--retain-ip" set "RETAIN_IP=1"
-if /i "!arg!"=="--retain-data" set "RETAIN_DATA=1"
+if /i "!arg!"=="--tpu" (
+    set "IS_TPU=1"
+    shift
+    goto :parse_args
+)
+if /i "!arg!"=="--accelerator" (
+    set "IS_TPU=1"
+    shift
+    goto :parse_args
+)
+if /i "!arg!"=="--shared-storage" (
+    set "SHARED_STORAGE=1"
+    shift
+    goto :parse_args
+)
+if /i "!arg!"=="--retain-ip" (
+    set "RETAIN_IP=1"
+    shift
+    goto :parse_args
+)
+if /i "!arg!"=="--retain-data" (
+    set "RETAIN_DATA=1"
+    shift
+    goto :parse_args
+)
+
+if "!P1!"=="" (
+    set "P1=%~1"
+) else if "!P2!"=="" (
+    set "P2=%~1"
+) else if "!P3!"=="" (
+    set "P3=%~1"
+) else if "!P4!"=="" (
+    set "P4=%~1"
+) else if "!P5!"=="" (
+    set "P5=%~1"
+) else if "!P6!"=="" (
+    set "P6=%~1"
+)
 shift
 goto :parse_args
 
 :args_done
+
+set "PROVIDER=!P1!"
+set "NODE=!P2!"
+set "RG=!P3!"
+set "LOC=!P4!"
+set "REPO_PATH=!P5!"
+if "!REPO_PATH!"=="" set "REPO_PATH=."
+set "REMOTE_DEST=!P6!"
+if "!REMOTE_DEST!"=="" set "REMOTE_DEST=~/%NODE%"
 
 if "!LOC!"=="" (
     echo Usage: teardown_cloud.cmd ^<provider^> ^<node_name^> ^<rg_or_vpc_or_project^> ^<region_or_zone^> [local_repo_path] [remote_dest] [--retain-ip] [--retain-data]

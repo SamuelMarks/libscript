@@ -65,7 +65,16 @@ if not "%GPU_DATA_DISK_SIZE%"=="" (
     gcloud compute disks describe "%GPU_NAME%-data" --zone="%GPU_ZONE%" %PROJECT_FLAG% >nul 2>&1
     if errorlevel 1 (
         call "%LOG_CMD%" :log_info "Creating persistent data disk %GPU_NAME%-data (%GPU_DATA_DISK_SIZE%GB, %GPU_DATA_DISK_TYPE%)..."
-        gcloud compute disks create "%GPU_NAME%-data" --size="%GPU_DATA_DISK_SIZE%GB" --type="%GPU_DATA_DISK_TYPE%" --zone="%GPU_ZONE%" %PROJECT_FLAG%
+        
+        set "TAGS_ARG="
+        if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
+            call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :init
+            if "!LIBSCRIPT_TAG_ENABLE!"=="true" (
+                set "TAGS_ARG=--labels=!LIBSCRIPT_TAG_KEY!=!LIBSCRIPT_TAG_VALUE!"
+            )
+        )
+        
+        gcloud compute disks create "%GPU_NAME%-data" --size="%GPU_DATA_DISK_SIZE%GB" --type="%GPU_DATA_DISK_TYPE%" --zone="%GPU_ZONE%" %PROJECT_FLAG% !TAGS_ARG!
     ) else (
         call "%LOG_CMD%" :log_info "Data disk %GPU_NAME%-data already exists."
     )
@@ -77,7 +86,16 @@ if %errorlevel% equ 0 (
     call "%LOG_CMD%" :log_info "GPU VM %GPU_NAME% already exists. Skipping creation."
 ) else (
     call "%LOG_CMD%" :log_info "Creating GPU VM %GPU_NAME% (%GPU_MACHINE_TYPE%, %GPU_ACCELERATOR%) in %GPU_ZONE%..."
-    gcloud compute instances create "%GPU_NAME%" --zone="%GPU_ZONE%" --machine-type="%GPU_MACHINE_TYPE%" --accelerator="%GPU_ACCELERATOR%" --image-project="%GPU_IMAGE_PROJECT%" --image-family="%GPU_IMAGE_FAMILY%" --maintenance-policy=TERMINATE %DISK_FLAG% %PROJECT_FLAG%
+    
+    set "TAGS_ARG="
+    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :init
+        if "!LIBSCRIPT_TAG_ENABLE!"=="true" (
+            set "TAGS_ARG=--labels=!LIBSCRIPT_TAG_KEY!=!LIBSCRIPT_TAG_VALUE!"
+        )
+    )
+    
+    gcloud compute instances create "%GPU_NAME%" --zone="%GPU_ZONE%" --machine-type="%GPU_MACHINE_TYPE%" --accelerator="%GPU_ACCELERATOR%" --image-project="%GPU_IMAGE_PROJECT%" --image-family="%GPU_IMAGE_FAMILY%" --maintenance-policy=TERMINATE %DISK_FLAG% %PROJECT_FLAG% !TAGS_ARG!
     call "%LOG_CMD%" :log_info "GPU VM %GPU_NAME% created successfully."
 )
 exit /b 0
@@ -87,11 +105,24 @@ if "%GPU_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: gpu-vm delete <name>"
     exit /b 1
 )
+if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :libscript_verify_managed gcp gpu-vm "%GPU_NAME%" "%GPU_ZONE%"
+    if errorlevel 1 exit /b 1
+)
 call "%LOG_CMD%" :log_info "Deleting GPU VM %GPU_NAME% in zone %GPU_ZONE%..."
-gcloud compute instances delete "%GPU_NAME%" --zone="%GPU_ZONE%" %PROJECT_FLAG% --quiet
+gcloud compute instances describe "%GPU_NAME%" --zone="%GPU_ZONE%" %PROJECT_FLAG% >nul 2>&1
+if %errorlevel% equ 0 (
+    gcloud compute instances delete "%GPU_NAME%" --zone="%GPU_ZONE%" %PROJECT_FLAG% --quiet
+) else (
+    call "%LOG_CMD%" :log_info "GPU VM %GPU_NAME% already deleted or not found."
+)
 call "%LOG_CMD%" :log_info "GPU VM %GPU_NAME% deleted."
 gcloud compute disks describe "%GPU_NAME%-data" --zone="%GPU_ZONE%" %PROJECT_FLAG% >nul 2>&1
 if %errorlevel% equ 0 (
+    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :libscript_verify_managed gcp volume "%GPU_NAME%-data" "%GPU_ZONE%"
+        if errorlevel 1 exit /b 1
+    )
     call "%LOG_CMD%" :log_info "Deleting attached data disk %GPU_NAME%-data..."
     gcloud compute disks delete "%GPU_NAME%-data" --zone="%GPU_ZONE%" %PROJECT_FLAG% --quiet
 )

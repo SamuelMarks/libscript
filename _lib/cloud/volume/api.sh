@@ -82,8 +82,14 @@ libscript_volume_delete() {
   provider="$1"
   vid="$2"
   
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh" ]; then
+    # shellcheck disable=SC1091
+    . "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh"
+  fi
+  
   case "$provider" in
     aws)
+      libscript_verify_managed aws volume "$vid" || return 1
       aws ec2 delete-volume --volume-id "$vid"
       ;;
     gcp)
@@ -92,6 +98,7 @@ libscript_volume_delete() {
         printf "Error: --zone (or LIBSCRIPT_VOLUME_ZONE) is required for GCP delete.\n" >&2
         return 1
       fi
+      libscript_verify_managed gcp volume "$vid" "$zone" || return 1
       gcloud compute disks delete "$vid" --zone="$zone" --quiet
       ;;
     azure)
@@ -100,6 +107,7 @@ libscript_volume_delete() {
         printf "Error: LIBSCRIPT_AZURE_RESOURCE_GROUP must be set for Azure operations.\n" >&2
         return 1
       fi
+      libscript_verify_managed azure volume "$vid" "$rg" || return 1
       az disk delete --name "$vid" --resource-group "$rg" --yes
       ;;
   esac

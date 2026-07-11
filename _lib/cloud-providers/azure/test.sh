@@ -78,4 +78,16 @@ grep "az network nsg rule create" /tmp/az_test_out || true
 # Test cleanup
 "$SCRIPT_DIR/cli.sh" cleanup 2>&1 | grep "az resource list"
 
+# Test tag guards
+printf '%s\n' "Testing tag guards..."
+if "$SCRIPT_DIR/cli.sh" network delete test-vnet test-rg 2>/tmp/azure_guard_out; then
+  printf '%s\n' "Network delete should have failed due to missing tag in dry-run" >&2
+  exit 1
+fi
+grep "Refusing to modify" /tmp/azure_guard_out
+
+export LIBSCRIPT_ALLOW_ANY_TAG_MANIPULATION=1
+"$SCRIPT_DIR/cli.sh" network delete test-vnet test-rg 2>&1 | tee /tmp/azure_guard_out
+grep "Proceeding due to override flag" /tmp/azure_guard_out
+
 printf '%s\n' "Azure tests passed (dry-run)."

@@ -9,17 +9,64 @@
 
 setlocal EnableDelayedExpansion
 
-set "PROVIDER=%~1"
-set "NODE=%~2"
-set "RG=%~3"
-set "LOC=%~4"
-set "REPO_PATH=%~5"
+set "IS_TPU=0"
+set "SHARED_STORAGE=0"
+
+set "P1="
+set "P2="
+set "P3="
+set "P4="
+set "P5="
+set "P6="
+
+:arg_loop
+set "arg=%~1"
+if "!arg!"=="" goto :args_done
+if /i "!arg!"=="--tpu" (
+    set "IS_TPU=1"
+    shift
+    goto :arg_loop
+)
+if /i "!arg!"=="--accelerator" (
+    set "IS_TPU=1"
+    shift
+    goto :arg_loop
+)
+if /i "!arg!"=="--shared-storage" (
+    set "SHARED_STORAGE=1"
+    shift
+    goto :arg_loop
+)
+
+if "!P1!"=="" (
+    set "P1=%~1"
+) else if "!P2!"=="" (
+    set "P2=%~1"
+) else if "!P3!"=="" (
+    set "P3=%~1"
+) else if "!P4!"=="" (
+    set "P4=%~1"
+) else if "!P5!"=="" (
+    set "P5=%~1"
+) else if "!P6!"=="" (
+    set "P6=%~1"
+)
+shift
+goto :arg_loop
+
+:args_done
+
+set "PROVIDER=!P1!"
+set "NODE=!P2!"
+set "RG=!P3!"
+set "LOC=!P4!"
+set "REPO_PATH=!P5!"
 if "!REPO_PATH!"=="" set "REPO_PATH=."
-set "REMOTE_DEST=%~6"
+set "REMOTE_DEST=!P6!"
 if "!REMOTE_DEST!"=="" set "REMOTE_DEST=~/%NODE%"
 
 if "!LOC!"=="" (
-    echo Usage: deploy_cloud.cmd ^<provider^> ^<node_name^> ^<rg_or_vpc_or_project^> ^<region_or_zone^> [local_repo_path] [remote_dest]
+    echo Usage: deploy_cloud.cmd [--tpu] [--shared-storage] ^<provider^> ^<node_name^> ^<rg_or_vpc_or_project^> ^<region_or_zone^> [local_repo_path] [remote_dest]
     exit /b 1
 )
 
@@ -180,14 +227,38 @@ if "!PROVIDER!"=="gcp" (
     call :record_state "GCP_VPC" "!NODE!-vpc"
     call :retry "!CLI!" firewall create "!NODE!-fw" "!NODE!-vpc" "!PORTS!"
     call :record_state "GCP_FW" "!NODE!-fw"
-    call :retry "!CLI!" node create "!NODE!" "!OS_IMAGE!" "!RG!" --network "!NODE!-vpc!" --machine-type "!SIZE!" --labels "libscript-managed=true,libscript-node=!NODE!"
-    call :record_state "GCP_NODE" "!NODE!"
 
-    jq -e ".infrastructure.node.data_disks" "!JSON_FILE!" >nul 2>&1
-    if not errorlevel 1 (
-        for /f "tokens=*" %%d in ('jq -r ".infrastructure.node.data_disks[0].name" "!JSON_FILE!"') do set "DISK_NAME=%%d"
-        call :log "INFRA" "Attaching existing data disk !DISK_NAME!..."
-        call :retry "!CLI!" node attach-disk "!NODE!" "!LOC!" "!DISK_NAME!"
+    if "!IS_TPU!"=="1" (
+        call :log "INFRA" "Provisioning GCP TPU VM..."
+        set "TPU_CLI=!SCRIPT_DIR!\..\..\cloud-providers\gcp	pu-vm\cli.cmd"
+        set "TPU_NETWORK=!NODE!-vpc"
+
+        if "!SHARED_STORAGE!"=="1" (
+            call :log "INFRA" "Provisioning Filestore..."
+            set "FILESTORE_ZONE=!LOC!"
+            set "FILESTORE_NETWORK=!NODE!-vpc"
+            call :retry "!SCRIPT_DIR!\..\..\cloud-providers\gcp\filestore\cli.cmd" create "!NODE!-nfs"
+            call :record_state "GCP_FILESTORE" "!NODE!-nfs"
+        )
+
+        call :retry "!TPU_CLI!" create "!NODE!"
+        call :record_state "GCP_TPU_VM" "!NODE!"
+
+        if "!TPU_USE_QUEUED_RESOURCE!"=="true" (
+            call :record_state "GCP_TPU_QUEUED_RESOURCE" "!NODE!-qr"
+            call :log "HEALTH" "Waiting for TPU Queued Resource to become ACTIVE..."
+            call :wait_for_tpu_active "!NODE!" "!LOC!"
+        )
+    ) else (
+        call :retry "!CLI!" node create "!NODE!" "!OS_IMAGE!" "!RG!" --network "!NODE!-vpc!" --machine-type "!SIZE!" --labels "libscript-managed=true,libscript-node=!NODE!"
+        call :record_state "GCP_NODE" "!NODE!"
+
+        jq -e ".infrastructure.node.data_disks" "!JSON_FILE!" >nul 2>&1
+        if not errorlevel 1 (
+            for /f "tokens=*" %%d in ('jq -r ".infrastructure.node.data_disks[0].name" "!JSON_FILE!"') do set "DISK_NAME=%%d"
+            call :log "INFRA" "Attaching existing data disk !DISK_NAME!..."
+            call :retry "!CLI!" node attach-disk "!NODE!" "!LOC!" "!DISK_NAME!"
+        )
     )
 )
 
@@ -226,13 +297,18 @@ call :retry "!CLI!" node sync "!NODE!" "!CTX!"
 
 call :log "SYNC" "Deploying Repository..."
 call :retry "!CLI!" node exec "!NODE!" "!CTX!" "mkdir -p !REMOTE_DEST!"
-where rsync >nul 2>&1
-if %errorlevel% equ 0 (
-    call :log "SYNC" "Using rsync..."
-    call :retry "!CLI!" node deploy "!NODE!" "!CTX!" "!REPO_PATH!" "!REMOTE_DEST!"
+if "!IS_TPU!"=="1" (
+    call :log "SYNC" "Using tpu-vm scp --all-workers..."
+    call :retry "!TPU_CLI!" scp "!NODE!" "!REPO_PATH!" "!REMOTE_DEST!" --all-workers
 ) else (
-    call :log "SYNC" "Using scp/winrm fallback..."
-    call :retry "!CLI!" node scp "!NODE!" "!CTX!" "!REPO_PATH!" "!REMOTE_DEST!"
+    where rsync >nul 2>&1
+    if %errorlevel% equ 0 (
+        call :log "SYNC" "Using rsync..."
+        call :retry "!CLI!" node deploy "!NODE!" "!CTX!" "!REPO_PATH!" "!REMOTE_DEST!"
+    ) else (
+        call :log "SYNC" "Using scp/winrm fallback..."
+        call :retry "!CLI!" node scp "!NODE!" "!CTX!" "!REPO_PATH!" "!REMOTE_DEST!"
+    )
 )
 
 if not "!SECRETS_DIR!"=="" if exist "!REPO_PATH!\!SECRETS_DIR!" (
@@ -284,8 +360,18 @@ if not "!DOMAIN!"=="" (
 )
 
 call :log "START" "Installing Dependencies and Starting..."
-call :retry "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh install-deps"
-call :retry "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh start"
+if "!IS_TPU!"=="1" (
+    if "!SHARED_STORAGE!"=="1" (
+        call :log "INFRA" "Mounting Filestore across all TPU workers..."
+        for /f "tokens=*" %%i in ('gcloud filestore instances describe "!NODE!-nfs" --zone="!LOC!" --format="value(networks.ipAddresses[0])"') do set "NFS_IP=%%i"
+        call :retry "!TPU_CLI!" ssh "!NODE!" --all-workers "if ! dpkg -s nfs-common >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y nfs-common; fi && sudo mkdir -p /mnt/shared && if ! grep -qs '/mnt/shared ' /proc/mounts; then sudo mount !NFS_IP!:/vol1 /mnt/shared; fi && sudo chmod a+w /mnt/shared"
+    )
+    call :retry "!TPU_CLI!" ssh "!NODE!" --all-workers "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh install-deps"
+    call :retry "!TPU_CLI!" ssh "!NODE!" --all-workers "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh start"
+) else (
+    call :retry "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh install-deps"
+    call :retry "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh start"
+)
 
 :: -----------------------------------------------------------------------------
 :: Wait for Health
@@ -294,7 +380,11 @@ call :log "HEALTH" "Polling application health (via libscript health)..."
 set "ATTEMPT=1"
 set "MAX_ATTEMPTS=12"
 :health_loop
-call "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh health" >nul 2>&1
+if "!IS_TPU!"=="1" (
+    call "!TPU_CLI!" ssh "!NODE!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh health" >nul 2>&1
+) else (
+    call "!CLI!" node exec "!NODE!" "!CTX!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh health" >nul 2>&1
+)
 if %errorlevel% equ 0 (
     call :log "HEALTH" "Application stack is healthy."
     goto :health_ready

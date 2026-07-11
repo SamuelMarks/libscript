@@ -7,7 +7,7 @@
 # Source this file to expose tagging variables and functions.
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
+# shellcheck disable=SC2296,SC3028,SC3040,SC3054,SC3045
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -35,7 +35,87 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_TAG_KEY:=libscript}"
 : "${LIBSCRIPT_TAG_VALUE:=managed}"
 
-export LIBSCRIPT_TAG_ENABLE LIBSCRIPT_TAG_KEY LIBSCRIPT_TAG_VALUE
+# Verifies if a cloud resource is managed by libscript (i.e. has the correct tag).
+# If the resource is not managed, it exits with an error unless 
+# LIBSCRIPT_ALLOW_ANY_TAG_MANIPULATION=1 is set, in which case it warns.
+#
+# Arguments:
+#   $1 - Provider (aws, gcp, azure)
+#   $2 - Resource Type (node, network, firewall, storage, dns, volume, cdn, cert, gpu-vm, tpu-vm, filestore)
+#   $3 - Resource Name or ID
+#   $4 - (Optional) Resource Group (for Azure) or Zone/Region (for GCP depending on resource)
+#
+# Returns:
+#   0 if managed (or overridden), 1 if not managed.
+libscript_verify_managed() {
+  local provider="${1:-}"
+  local type="${2:-}"
+  local name="${3:-}"
+  local rg="${4:-}"
+  local actual_val=""
+
+  if [ "${LIBSCRIPT_TAG_ENABLE:-true}" != "true" ]; then
+    return 0
+  fi
+
+  case "$provider" in
+    aws)
+      case "$type" in
+        node) actual_val=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$name" --query "Reservations[0].Instances[0].Tags[?Key=='$LIBSCRIPT_TAG_KEY'].Value" --output text 2>/dev/null || true) ;;
+        network) actual_val=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=$name" --query "Vpcs[0].Tags[?Key=='$LIBSCRIPT_TAG_KEY'].Value" --output text 2>/dev/null || true) ;;
+        firewall) actual_val=$(aws ec2 describe-security-groups --filters "Name=group-name,Values=$name" --query "SecurityGroups[0].Tags[?Key=='$LIBSCRIPT_TAG_KEY'].Value" --output text 2>/dev/null || true) ;;
+        storage) actual_val=$(aws s3api get-bucket-tagging --bucket "$name" --query "TagSet[?Key=='$LIBSCRIPT_TAG_KEY'].Value" --output text 2>/dev/null || true) ;;
+        dns) actual_val=$(aws route53 list-tags-for-resource --resource-type hostedzone --resource-id "$name" --query "ResourceTagSet.Tags[?Key=='$LIBSCRIPT_TAG_KEY'].Value" --output text 2>/dev/null || true) ;;
+        volume) actual_val=$(aws ec2 describe-volumes --volume-ids "$name" --query "Volumes[0].Tags[?Key=='$LIBSCRIPT_TAG_KEY'].Value" --output text 2>/dev/null || true) ;;
+        cdn) actual_val=$(aws cloudfront list-tags-for-resource --resource "$name" --query "Tags.Items[?Key=='$LIBSCRIPT_TAG_KEY'].Value" --output text 2>/dev/null || true) ;;
+        cert) actual_val=$(aws acm list-tags-for-certificate --certificate-arn "$name" --query "Tags[?Key=='$LIBSCRIPT_TAG_KEY'].Value" --output text 2>/dev/null || true) ;;
+        *) return 0 ;;
+      esac
+      ;;
+    gcp)
+      case "$type" in
+        node) actual_val=$(gcloud compute instances describe "$name" --zone="${rg:-}" --format="value(labels.$LIBSCRIPT_TAG_KEY)" 2>/dev/null || true) ;;
+        network) actual_val=$(gcloud compute networks describe "$name" --format="value(labels.$LIBSCRIPT_TAG_KEY)" 2>/dev/null || true) ;;
+        firewall) actual_val=$(gcloud compute firewall-rules describe "$name" --format="value(labels.$LIBSCRIPT_TAG_KEY)" 2>/dev/null || true) ;;
+        storage) actual_val=$(gcloud storage buckets describe "gs://$name" --format="value(labels.$LIBSCRIPT_TAG_KEY)" 2>/dev/null || true) ;;
+        dns) actual_val=$(gcloud dns managed-zones describe "$name" --format="value(labels.$LIBSCRIPT_TAG_KEY)" 2>/dev/null || true) ;;
+        volume) actual_val=$(gcloud compute disks describe "$name" --zone="${rg:-}" --format="value(labels.$LIBSCRIPT_TAG_KEY)" 2>/dev/null || true) ;;
+        cdn) actual_val=$(gcloud compute backend-buckets describe "${name}-backend" --format="value(labels.$LIBSCRIPT_TAG_KEY)" 2>/dev/null || true) ;;
+        cert) actual_val=$(gcloud compute ssl-certificates describe "$name" --global --format="value(labels.$LIBSCRIPT_TAG_KEY)" 2>/dev/null || true) ;;
+        gpu-vm) actual_val=$(gcloud compute instances describe "$name" --zone="${rg:-}" --format="value(labels.$LIBSCRIPT_TAG_KEY)" 2>/dev/null || true) ;;
+        tpu-vm) actual_val=$(gcloud compute tpus tpu-vm describe "$name" --zone="${rg:-}" --format="value(labels.$LIBSCRIPT_TAG_KEY)" 2>/dev/null || true) ;;
+        filestore) actual_val=$(gcloud filestore instances describe "$name" --zone="${rg:-}" --format="value(labels.$LIBSCRIPT_TAG_KEY)" 2>/dev/null || true) ;;
+        qr) actual_val=$(gcloud alpha compute tpus queued-resources describe "$name" --zone="${rg:-}" --format="value(labels.$LIBSCRIPT_TAG_KEY)" 2>/dev/null || true) ;;
+        *) return 0 ;;
+      esac
+      ;;
+    azure)
+      case "$type" in
+        node) actual_val=$(az vm show -g "$rg" -n "$name" --query "tags.$LIBSCRIPT_TAG_KEY" -o tsv 2>/dev/null || true) ;;
+        network) actual_val=$(az network vnet show -g "$rg" -n "$name" --query "tags.$LIBSCRIPT_TAG_KEY" -o tsv 2>/dev/null || true) ;;
+        firewall) actual_val=$(az network nsg show -g "$rg" -n "$name" --query "tags.$LIBSCRIPT_TAG_KEY" -o tsv 2>/dev/null || true) ;;
+        storage) actual_val=$(az storage account show -g "$rg" -n "$name" --query "tags.$LIBSCRIPT_TAG_KEY" -o tsv 2>/dev/null || true) ;;
+        dns) actual_val=$(az network dns zone show -g "$rg" -n "$name" --query "tags.$LIBSCRIPT_TAG_KEY" -o tsv 2>/dev/null || true) ;;
+        volume) actual_val=$(az disk show -g "$rg" -n "$name" --query "tags.$LIBSCRIPT_TAG_KEY" -o tsv 2>/dev/null || true) ;;
+        cdn) actual_val=$(az cdn profile show -g "$rg" -n "$name" --query "tags.$LIBSCRIPT_TAG_KEY" -o tsv 2>/dev/null || true) ;;
+        cert) return 0 ;; # Cert tags implementation might vary
+        *) return 0 ;;
+      esac
+      ;;
+  esac
+
+  if [ "$actual_val" = "$LIBSCRIPT_TAG_VALUE" ]; then
+    return 0
+  fi
+
+  if [ "${LIBSCRIPT_ALLOW_ANY_TAG_MANIPULATION:-0}" = "1" ] || [ "${LIBSCRIPT_ALLOW_ANY_TAG_MANIPULATION:-}" = "true" ]; then
+    printf '[WARNING] Resource "%s" is not managed by libscript. Proceeding due to override flag.\n' "$name" >&2
+    return 0
+  else
+    printf '[ERROR] Refusing to modify "%s": Resource is not managed by libscript (missing tag). Set LIBSCRIPT_ALLOW_ANY_TAG_MANIPULATION=1 to override.\n' "$name" >&2
+    return 1
+  fi
+}
 
 # Formats tags depending on the cloud provider.
 # Example: 
@@ -59,13 +139,13 @@ libscript_format_tags() {
 
   case "${provider}" in
     aws)
-      printf "%s" '--tags Key=%s,Value=%s' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
+      printf -- '--tags Key=%s,Value=%s' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
       ;;
     gcp)
-      printf "%s" '--labels=%s=%s' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
+      printf -- '--labels=%s=%s' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
       ;;
     azure)
-      printf "%s" '--tags %s=%s' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
+      printf -- '--tags %s=%s' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
       ;;
     *)
       printf 'Error: Unknown cloud provider "%s" for tagging.\n' "${provider}" >&2
@@ -92,14 +172,14 @@ libscript_format_tag_filter() {
 
   case "${provider}" in
     aws)
-      printf "%s" '--filters Name=tag:%s,Values=%s' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
+      printf -- '--filters Name=tag:%s,Values=%s' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
       ;;
     gcp)
-      printf "%s" '--filter=labels.%s=%s' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
+      printf -- '--filter=labels.%s=%s' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
       ;;
     azure)
       # Azure CLI usually uses JMESPath queries to filter by tags
-      printf "%s" '--query "[?tags.%s == ''%s'']"' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
+      printf -- '--query "[?tags.%s == ''%s'']"' "${LIBSCRIPT_TAG_KEY}" "${LIBSCRIPT_TAG_VALUE}"
       ;;
     *)
       printf 'Error: Unknown cloud provider "%s" for tag filtering.\n' "${provider}" >&2

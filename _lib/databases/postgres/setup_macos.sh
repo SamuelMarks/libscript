@@ -38,7 +38,9 @@ for LIB in "env.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-brew install 'postgresql@'"${POSTGRES_VERSION}"
+if ! brew ls --versions 'postgresql@'"${POSTGRES_VERSION}" >/dev/null 2>&1; then
+  brew install 'postgresql@'"${POSTGRES_VERSION}"
+fi
 if ! pg_isready >/dev/null 2>&1 ; then
   brew services start 'postgresql@'"${POSTGRES_VERSION}"
 fi

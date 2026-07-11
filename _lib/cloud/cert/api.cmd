@@ -38,10 +38,18 @@ set "domain=%~3"
 if "%provider%"=="aws" (
     echo %domain% | findstr /b /c:"arn:aws:acm" >nul
     if not errorlevel 1 (
+        if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
+            call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :libscript_verify_managed aws cert "%domain%"
+            if errorlevel 1 exit /b 1
+        )
         aws acm delete-certificate --certificate-arn "%domain%"
     ) else (
         for /f "tokens=*" %%i in ('aws acm list-certificates --query "CertificateSummaryList[?DomainName=='%domain%'].CertificateArn" --output text') do set "arn=%%i"
         if not "!arn!"=="" (
+            if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
+                call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :libscript_verify_managed aws cert "!arn!"
+                if errorlevel 1 exit /b 1
+            )
             aws acm delete-certificate --certificate-arn "!arn!"
         ) else (
             echo Error: Certificate for domain %domain% not found. >&2
@@ -50,6 +58,10 @@ if "%provider%"=="aws" (
     )
 ) else if "%provider%"=="gcp" (
     set "cert_name=%domain:.=-%"
+    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :libscript_verify_managed gcp cert "!cert_name!"
+        if errorlevel 1 exit /b 1
+    )
     gcloud compute ssl-certificates delete "!cert_name!" --global --quiet
 ) else if "%provider%"=="azure" (
     echo Azure managed CDN certificates are deleted when the custom domain mapping is removed.

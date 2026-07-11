@@ -86,4 +86,16 @@ log_info "Running cleanup..."
 "$SCRIPT_DIR/cli.sh" cleanup 2>&1 | tee /tmp/aws_test_out
 grep "aws resourcegroupstaggingapi" /tmp/aws_test_out
 
+# Test tag guards
+log_info "Testing tag guards..."
+if "$SCRIPT_DIR/cli.sh" network delete test-vpc 2>/tmp/aws_guard_out; then
+  log_error "Network delete should have failed due to missing tag in dry-run"
+  exit 1
+fi
+grep "Refusing to modify" /tmp/aws_guard_out
+
+export LIBSCRIPT_ALLOW_ANY_TAG_MANIPULATION=1
+"$SCRIPT_DIR/cli.sh" network delete test-vpc 2>&1 | tee /tmp/aws_guard_out
+grep "Proceeding due to override flag" /tmp/aws_guard_out
+
 log_info "AWS tests passed (dry-run)."

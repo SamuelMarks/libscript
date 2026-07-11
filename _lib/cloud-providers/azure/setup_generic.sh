@@ -37,7 +37,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh" "_lib/cloud/core/tags.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -76,13 +76,25 @@ case "$ACTION" in
         if [ -n "${vnet_name:-}" ]; then ARGS="$ARGS --vnet-name ${vnet_name}"; fi
         if [ -n "${nsg:-}" ]; then ARGS="$ARGS --nsg ${nsg}"; fi
         if [ -n "${os_disk_size_gb:-}" ]; then ARGS="$ARGS --os-disk-size-gb ${os_disk_size_gb}"; fi
-        az vm create --resource-group "$RG" --name "$RESOURCE_NAME" --image "$IMAGE" --size "$SIZE" --admin-username azureuser --generate-ssh-keys --public-ip-sku Standard $ARGS
+        
+        TAGS_ARG="$(libscript_format_tags azure)"
+        if az vm show -g "$RG" -n "$RESOURCE_NAME" >/dev/null 2>&1; then
+          printf '%s\n' "VM '$RESOURCE_NAME' already exists in resource group '$RG'."
+        else
+          # shellcheck disable=SC2086
+          az vm create --resource-group "$RG" --name "$RESOURCE_NAME" --image "$IMAGE" --size "$SIZE" --admin-username azureuser --generate-ssh-keys --public-ip-sku Standard $ARGS $TAGS_ARG
+        fi
         ;;
       delete)
         RG=${3:-}
         if [ -z "$RG" ]; then printf '%s\n' "Usage: node delete <name> <rg>"; exit 1; fi
+        libscript_verify_managed azure node "$RESOURCE_NAME" "$RG" || exit 1
         printf '%s\n' "Deleting Azure VM: $RESOURCE_NAME from $RG"
-        az vm delete --name "$RESOURCE_NAME" --resource-group "$RG" --yes
+        if az vm show -g "$RG" -n "$RESOURCE_NAME" >/dev/null 2>&1; then
+          az vm delete --name "$RESOURCE_NAME" --resource-group "$RG" --yes
+        else
+          printf '%s\n' "VM '$RESOURCE_NAME' already deleted or not found in resource group '$RG'."
+        fi
         ;;
       list)
         RG=${3:-}
@@ -91,6 +103,7 @@ case "$ACTION" in
       update)
         RG=${3:-}
         if [ -z "$RG" ]; then printf '%s\n' "Usage: node update <name> <rg> [--size SIZE] [--tags T]"; exit 1; fi
+        libscript_verify_managed azure node "$RESOURCE_NAME" "$RG" || exit 1
         shift 3
         while [ $# -gt 0 ]; do
           case "$1" in
@@ -159,12 +172,23 @@ case "$ACTION" in
           create)
             ZONE=${3:-}; RG=${4:-}
             if [ -z "$ZONE" ] || [ -z "$RG" ]; then printf '%s\n' "Usage: dns zone create <zone> <rg>"; exit 1; fi
-            az network dns zone create -g "$RG" -n "$ZONE"
+            TAGS_ARG="$(libscript_format_tags azure)"
+            if az network dns zone show -g "$RG" -n "$ZONE" >/dev/null 2>&1; then
+              printf '%s\n' "DNS zone '$ZONE' already exists in resource group '$RG'."
+            else
+              # shellcheck disable=SC2086
+              az network dns zone create -g "$RG" -n "$ZONE" $TAGS_ARG
+            fi
             ;;
           delete)
             ZONE=${3:-}; RG=${4:-}
             if [ -z "$ZONE" ] || [ -z "$RG" ]; then printf '%s\n' "Usage: dns zone delete <zone> <rg>"; exit 1; fi
-            az network dns zone delete -g "$RG" -n "$ZONE" --yes
+            libscript_verify_managed azure dns "$ZONE" "$RG" || exit 1
+            if az network dns zone show -g "$RG" -n "$ZONE" >/dev/null 2>&1; then
+              az network dns zone delete -g "$RG" -n "$ZONE" --yes
+            else
+              printf '%s\n' "DNS zone '$ZONE' already deleted or not found in resource group '$RG'."
+            fi
             ;;
           list)
             RG=${3:-}
@@ -179,6 +203,9 @@ case "$ACTION" in
           create|update)
             ZONE=${3:-}; RG=${4:-}; NAME=${5:-}; TYPE=${6:-}; VALUE=${7:-}
             if [ -z "$VALUE" ]; then printf '%s\n' "Usage: dns record $SUBTYPE <zone> <rg> <name> <type> <value>"; exit 1; fi
+            if [ "$SUBTYPE" = "update" ]; then
+              libscript_verify_managed azure dns "$ZONE" "$RG" || exit 1
+            fi
             if [ "$TYPE" = "A" ]; then
               az network dns record-set a add-record -g "$RG" -z "$ZONE" -n "$NAME" -a "$VALUE"
             elif [ "$TYPE" = "CNAME" ]; then
@@ -192,6 +219,7 @@ case "$ACTION" in
           delete)
             ZONE=${3:-}; RG=${4:-}; NAME=${5:-}; TYPE=${6:-}
             if [ -z "$TYPE" ]; then printf '%s\n' "Usage: dns record delete <zone> <rg> <name> <type>"; exit 1; fi
+            libscript_verify_managed azure dns "$ZONE" "$RG" || exit 1
             az network dns record-set "$(printf '%s\n' "$TYPE" | tr '[:upper:]' '[:lower:]')" delete -g "$RG" -z "$ZONE" -n "$NAME" --yes
             ;;
           list)
@@ -237,7 +265,13 @@ case "$ACTION" in
         fi
         LOC="${AZURE_LOCATION:-eastus}"
         printf '%s\n' "Creating Azure NSG: $RESOURCE_NAME in $RESOURCE_GROUP ($LOC)"
-        az network nsg create --name "$RESOURCE_NAME" --resource-group "$RESOURCE_GROUP" --location "$LOC"
+        TAGS_ARG="$(libscript_format_tags azure)"
+        if az network nsg show -g "$RESOURCE_GROUP" -n "$RESOURCE_NAME" >/dev/null 2>&1; then
+          printf '%s\n' "NSG '$RESOURCE_NAME' already exists in resource group '$RESOURCE_GROUP'."
+        else
+          # shellcheck disable=SC2086
+          az network nsg create --name "$RESOURCE_NAME" --resource-group "$RESOURCE_GROUP" --location "$LOC" $TAGS_ARG
+        fi
         shift 3
         PRIORITY=1000
         while [ $# -gt 0 ]; do
@@ -253,8 +287,13 @@ case "$ACTION" in
           printf '%s\n' "Usage: firewall delete <name> <resource-group>"
           exit 1
         fi
+        libscript_verify_managed azure firewall "$RESOURCE_NAME" "$RESOURCE_GROUP" || exit 1
         printf '%s\n' "Deleting Azure NSG: $RESOURCE_NAME from $RESOURCE_GROUP"
-        az network nsg delete --name "$RESOURCE_NAME" --resource-group "$RESOURCE_GROUP" --yes
+        if az network nsg show -g "$RESOURCE_GROUP" -n "$RESOURCE_NAME" >/dev/null 2>&1; then
+          az network nsg delete --name "$RESOURCE_NAME" --resource-group "$RESOURCE_GROUP" --yes
+        else
+          printf '%s\n' "NSG '$RESOURCE_NAME' already deleted or not found in resource group '$RESOURCE_GROUP'."
+        fi
         ;;
       list)
         if [ -n "$RESOURCE_GROUP" ]; then
@@ -268,7 +307,7 @@ case "$ACTION" in
           printf '%s\n' "Usage: firewall update <name> <resource-group> [--add-port PORT] [--remove-port PORT]"
           exit 1
         fi
-        shift 3
+        libscript_verify_managed azure firewall "$RESOURCE_NAME" "$RESOURCE_GROUP" || exit 1
         PRIORITY=2000
         while [ $# -gt 0 ]; do
           case "$1" in
@@ -304,15 +343,26 @@ case "$ACTION" in
         fi
         LOC="${AZURE_LOCATION:-eastus}"
         printf '%s\n' "Creating Azure VNet: $RESOURCE_NAME in $RESOURCE_GROUP ($LOC)"
-        az network vnet create --name "$RESOURCE_NAME" --resource-group "$RESOURCE_GROUP" --location "$LOC"
+        TAGS_ARG="$(libscript_format_tags azure)"
+        if az network vnet show -g "$RESOURCE_GROUP" -n "$RESOURCE_NAME" >/dev/null 2>&1; then
+          printf '%s\n' "VNet '$RESOURCE_NAME' already exists in resource group '$RESOURCE_GROUP'."
+        else
+          # shellcheck disable=SC2086
+          az network vnet create --name "$RESOURCE_NAME" --resource-group "$RESOURCE_GROUP" --location "$LOC" $TAGS_ARG
+        fi
         ;;
       delete)
         if [ -z "$RESOURCE_NAME" ] || [ -z "$RESOURCE_GROUP" ]; then
           printf '%s\n' "Usage: network delete <name> <resource-group>"
           exit 1
         fi
+        libscript_verify_managed azure network "$RESOURCE_NAME" "$RESOURCE_GROUP" || exit 1
         printf '%s\n' "Deleting Azure VNet: $RESOURCE_NAME from $RESOURCE_GROUP"
-        az network vnet delete --name "$RESOURCE_NAME" --resource-group "$RESOURCE_GROUP" --yes
+        if az network vnet show -g "$RESOURCE_GROUP" -n "$RESOURCE_NAME" >/dev/null 2>&1; then
+          az network vnet delete --name "$RESOURCE_NAME" --resource-group "$RESOURCE_GROUP" --yes
+        else
+          printf '%s\n' "VNet '$RESOURCE_NAME' already deleted or not found in resource group '$RESOURCE_GROUP'."
+        fi
         ;;
       list)
         if [ -n "$RESOURCE_GROUP" ]; then
@@ -326,7 +376,7 @@ case "$ACTION" in
           printf '%s\n' "Usage: network update <name> <resource-group> [--tags T]"
           exit 1
         fi
-        shift 3
+        libscript_verify_managed azure network "$RESOURCE_NAME" "$RESOURCE_GROUP" || exit 1
         while [ $# -gt 0 ]; do
           case "$1" in
             --tags)

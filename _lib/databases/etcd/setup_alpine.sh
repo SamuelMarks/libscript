@@ -38,7 +38,9 @@ export SCRIPT_NAME
 if [ "${ETCD_VERSION}" = 'v3.5.16' ]; then
   ETCD_VERSION='3.5.16-r6'
 fi
-apk add 'etcd=='"${ETCD_VERSION}"
+if ! apk info -e 'etcd' >/dev/null 2>&1; then
+  apk add 'etcd=='"${ETCD_VERSION}"
+fi
 
 if [ -n "${ETCD_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
   if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "unix:${ETCD_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}" >/dev/null 2>&1 ; then

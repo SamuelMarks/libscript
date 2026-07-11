@@ -78,4 +78,16 @@ grep "gcloud compute firewall-rules create" /tmp/gcp_test_out || true
 # Test cleanup
 "$SCRIPT_DIR/cli.sh" cleanup 2>&1 | grep "gcloud compute instances list"
 
+# Test tag guards
+printf '%s\n' "Testing tag guards..."
+if "$SCRIPT_DIR/cli.sh" network delete test-network 2>/tmp/gcp_guard_out; then
+  printf '%s\n' "Network delete should have failed due to missing tag in dry-run" >&2
+  exit 1
+fi
+grep "Refusing to modify" /tmp/gcp_guard_out
+
+export LIBSCRIPT_ALLOW_ANY_TAG_MANIPULATION=1
+"$SCRIPT_DIR/cli.sh" network delete test-network 2>&1 | tee /tmp/gcp_guard_out
+grep "Proceeding due to override flag" /tmp/gcp_guard_out
+
 printf '%s\n' "GCP tests passed (dry-run)."

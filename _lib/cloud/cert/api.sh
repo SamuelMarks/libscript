@@ -60,14 +60,21 @@ libscript_cert_delete() {
   provider="$1"
   domain="$2"
   
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh" ]; then
+    # shellcheck disable=SC1091
+    . "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh"
+  fi
+  
   case "$provider" in
     aws)
       # Requires ARN. We'll search for it if domain is provided but isn't an ARN
       if printf "%s" "$domain" | grep -q "^arn:aws:acm"; then
+        libscript_verify_managed aws cert "$domain" || return 1
         aws acm delete-certificate --certificate-arn "$domain"
       else
         arn=$(aws acm list-certificates --query "CertificateSummaryList[?DomainName=='$domain'].CertificateArn" --output text)
         if [ -n "$arn" ]; then
+          libscript_verify_managed aws cert "$arn" || return 1
           aws acm delete-certificate --certificate-arn "$arn"
         else
           printf "Error: Certificate for domain %s not found.\n" "$domain" >&2
@@ -77,6 +84,7 @@ libscript_cert_delete() {
       ;;
     gcp)
       cert_name=$(printf '%s' "$domain" | tr '.' '-')
+      libscript_verify_managed gcp cert "$cert_name" || return 1
       gcloud compute ssl-certificates delete "$cert_name" --global --quiet
       ;;
     azure)
