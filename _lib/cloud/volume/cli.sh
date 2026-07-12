@@ -3,7 +3,7 @@
 # Volume component CLI for Block Storage operations.
 #
 # ## Usage
-# libscript volume [create|delete|list|attach|detach] [--cloud aws|gcp|azure] [--volume-id id] [--size gb] [--zone zone] [--type type] [--node-id id] [--device path]
+# libscript volume [create|delete|list|attach|detach] [--cloud aws|gcp|azure] [--volume-id id] [--name name] [--size gb] [--zone zone] [--type type] [--node-id id] [--device path]
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
@@ -68,6 +68,14 @@ while [ $# -gt 0 ]; do
       LIBSCRIPT_VOLUME_SIZE="${1#*=}"
       shift
       ;;
+    --name)
+      LIBSCRIPT_VOLUME_NAME="$2"
+      shift 2
+      ;;
+    --name=*)
+      LIBSCRIPT_VOLUME_NAME="${1#*=}"
+      shift
+      ;;
     --zone)
       LIBSCRIPT_VOLUME_ZONE="$2"
       shift 2
@@ -118,7 +126,7 @@ case "$CMD" in
     . "$SCRIPT_DIR/api.sh"
     case "$CMD" in
       create)
-        libscript_volume_create "$LIBSCRIPT_CLOUD" "$LIBSCRIPT_VOLUME_SIZE" "$LIBSCRIPT_VOLUME_ZONE" "$LIBSCRIPT_VOLUME_TYPE"
+        libscript_volume_create "$LIBSCRIPT_CLOUD" "$LIBSCRIPT_VOLUME_SIZE" "$LIBSCRIPT_VOLUME_ZONE" "$LIBSCRIPT_VOLUME_TYPE" "${LIBSCRIPT_VOLUME_NAME:-vol-libscript}"
         ;;
       delete)
         libscript_volume_delete "$LIBSCRIPT_CLOUD" "$LIBSCRIPT_VOLUME_ID"

@@ -28,16 +28,33 @@ if not exist "%CONF_FILE%" (
     echo     server_name %DOMAIN%;>> "%CONF_FILE%"
     echo }>> "%CONF_FILE%"
 )
-findstr /v /c:"}" "%CONF_FILE%" > "%CONF_FILE%.tmp"
-echo     location %LOCATION% {>> "%CONF_FILE%.tmp"
-echo         proxy_pass %DESTINATION%;>> "%CONF_FILE%.tmp"
-echo         proxy_set_header Host $host;>> "%CONF_FILE%.tmp"
-echo         proxy_set_header X-Real-IP $remote_addr;>> "%CONF_FILE%.tmp"
-echo     }>> "%CONF_FILE%.tmp"
-echo }>> "%CONF_FILE%.tmp"
+set "VBS_FILE=%TEMP%\nginx_route_update_%RANDOM%.vbs"
+echo Set objFS = CreateObject("Scripting.FileSystemObject") > "%VBS_FILE%"
+echo Set objFile = objFS.OpenTextFile("%CONF_FILE%", 1) >> "%VBS_FILE%"
+echo strContent = objFile.ReadAll >> "%VBS_FILE%"
+echo objFile.Close >> "%VBS_FILE%"
+echo Set objRegEx = CreateObject("VBScript.RegExp") >> "%VBS_FILE%"
+echo objRegEx.Global = True >> "%VBS_FILE%"
+echo objRegEx.IgnoreCase = True >> "%VBS_FILE%"
+echo objRegEx.MultiLine = True >> "%VBS_FILE%"
+echo objRegEx.Pattern = "^[ \t]*location %LOCATION% \{[^}]*\}" >> "%VBS_FILE%"
+echo newBlock = "    location %LOCATION% {" ^& vbCrLf ^& "        proxy_pass %DESTINATION%;" ^& vbCrLf ^& "        proxy_set_header Host $host;" ^& vbCrLf ^& "        proxy_set_header X-Real-IP $remote_addr;" ^& vbCrLf ^& "    }" >> "%VBS_FILE%"
+echo If objRegEx.Test(strContent) Then >> "%VBS_FILE%"
+echo     strContent = objRegEx.Replace(strContent, newBlock) >> "%VBS_FILE%"
+echo Else >> "%VBS_FILE%"
+echo     objRegEx.Pattern = "^}$" >> "%VBS_FILE%"
+echo     strContent = objRegEx.Replace(strContent, newBlock ^& vbCrLf ^& "}") >> "%VBS_FILE%"
+echo End If >> "%VBS_FILE%"
+echo Set objFile = objFS.OpenTextFile("%CONF_FILE%.tmp", 2, True) >> "%VBS_FILE%"
+echo objFile.Write strContent >> "%VBS_FILE%"
+echo objFile.Close >> "%VBS_FILE%"
+
+cscript //nologo "%VBS_FILE%"
 move /y "%CONF_FILE%.tmp" "%CONF_FILE%" >nul
+del "%VBS_FILE%"
+
 copy /y "%CONF_FILE%" "%NGINX_CONF_DIR%\sites-enabled\%DOMAIN%.conf" >nul
-echo Route added: %DOMAIN%%LOCATION% -^> %DESTINATION%
+echo Route updated: %DOMAIN%%LOCATION% -^> %DESTINATION%
 exit /b 0
 :usage
 echo Usage: libscript.cmd route nginx ^<version^> ^<domain^> ^<location^> ^<destination^> 1^>^&2

@@ -112,7 +112,7 @@ if "%RUST_INSTALL_METHOD%"=="vfox" ( vfox add rust & vfox install "rust@%RUST_VE
 set "TARGET_DIR=%LIBSCRIPT_HOME%\rust\%RUST_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing rust %RUST_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\rust\rust-%RUST_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\rust\rust-%RUST_VERSION%.zip" -C "%TARGET_DIR%"

@@ -112,7 +112,7 @@ if "%GCSFUSE_INSTALL_METHOD%"=="vfox" ( vfox add gcsfuse & vfox install "gcsfuse
 set "TARGET_DIR=%LIBSCRIPT_HOME%\gcsfuse\%GCSFUSE_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing gcsfuse %GCSFUSE_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\gcsfuse\gcsfuse-%GCSFUSE_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\gcsfuse\gcsfuse-%GCSFUSE_VERSION%.zip" -C "%TARGET_DIR%"

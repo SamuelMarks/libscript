@@ -112,7 +112,7 @@ if "%AZURE_CLI_INSTALL_METHOD%"=="vfox" ( vfox add azure-cli & vfox install "azu
 set "TARGET_DIR=%LIBSCRIPT_HOME%\azure-cli\%AZURE_CLI_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing azure-cli %AZURE_CLI_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\azure-cli\azure-cli-%AZURE_CLI_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\azure-cli\azure-cli-%AZURE_CLI_VERSION%.zip" -C "%TARGET_DIR%"

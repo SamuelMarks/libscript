@@ -112,7 +112,7 @@ if "%MONGODB_INSTALL_METHOD%"=="vfox" ( vfox add mongodb & vfox install "mongodb
 set "TARGET_DIR=%LIBSCRIPT_HOME%\mongodb\%MONGODB_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing mongodb %MONGODB_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\mongodb\mongodb-%MONGODB_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\mongodb\mongodb-%MONGODB_VERSION%.zip" -C "%TARGET_DIR%"

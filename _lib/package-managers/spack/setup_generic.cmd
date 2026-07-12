@@ -112,7 +112,7 @@ if "%SPACK_INSTALL_METHOD%"=="vfox" ( vfox add spack & vfox install "spack@%SPAC
 set "TARGET_DIR=%LIBSCRIPT_HOME%\spack\%SPACK_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing spack %SPACK_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\spack\spack-%SPACK_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\spack\spack-%SPACK_VERSION%.zip" -C "%TARGET_DIR%"

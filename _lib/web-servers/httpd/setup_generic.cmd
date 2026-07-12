@@ -112,7 +112,7 @@ if "%HTTPD_INSTALL_METHOD%"=="vfox" ( vfox add httpd & vfox install "httpd@%HTTP
 set "TARGET_DIR=%LIBSCRIPT_HOME%\httpd\%HTTPD_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing httpd %HTTPD_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\httpd\httpd-%HTTPD_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\httpd\httpd-%HTTPD_VERSION%.zip" -C "%TARGET_DIR%"

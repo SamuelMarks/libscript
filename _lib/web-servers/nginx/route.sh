@@ -52,27 +52,37 @@ if [ ! -f "$CONF_FILE" ]; then
   printf '%s\n' "}" >> "$CONF_FILE"
 fi
 
-# Very simple proxy_pass injection for demo purposes
-# In reality, this would use a more robust parser or template
-if grep -q "location $LOCATION {" "$CONF_FILE"; then
-  log_info "Route $DOMAIN$LOCATION already exists in $CONF_FILE"
-else
-  TEMP_FILE="${CONF_FILE}.tmp"
-  awk -v loc="$LOCATION" -v dest="$DESTINATION" '
-    /^}/ && !inserted {
-      print "    location " loc " {"
-      print "        proxy_pass " dest ";"
-      print "        proxy_set_header Host $host;"
-      print "        proxy_set_header X-Real-IP $remote_addr;"
-      print "    }"
-      inserted = 1
-    }
-    { print }
-  ' "$CONF_FILE" > "$TEMP_FILE"
+# Very simple proxy_pass injection
+TEMP_FILE="${CONF_FILE}.tmp"
+awk -v loc="$LOCATION" -v dest="$DESTINATION" '
+  $0 ~ ("^[ \t]*location " loc " \\{") {
+    in_loc = 1
+    print "    location " loc " {"
+    print "        proxy_pass " dest ";"
+    print "        proxy_set_header Host $host;"
+    print "        proxy_set_header X-Real-IP $remote_addr;"
+    print "    }"
+    inserted = 1
+    next
+  }
+  in_loc && /^[ \t]*}/ {
+    in_loc = 0
+    next
+  }
+  in_loc { next }
+  /^[ \t]*}/ && !inserted {
+    print "    location " loc " {"
+    print "        proxy_pass " dest ";"
+    print "        proxy_set_header Host $host;"
+    print "        proxy_set_header X-Real-IP $remote_addr;"
+    print "    }"
+    inserted = 1
+  }
+  { print }
+' "$CONF_FILE" > "$TEMP_FILE"
 
-  mv "$TEMP_FILE" "$CONF_FILE"
-  log_info "Route added: $DOMAIN$LOCATION -> $DESTINATION"
-fi
+mv "$TEMP_FILE" "$CONF_FILE"
+log_info "Route updated: $DOMAIN$LOCATION -> $DESTINATION"
 
 ln -sf "$CONF_FILE" "$NGINX_CONF_DIR/sites-enabled/${DOMAIN}.conf"
 

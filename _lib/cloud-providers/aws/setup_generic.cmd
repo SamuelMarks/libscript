@@ -112,7 +112,7 @@ if "%AWS_INSTALL_METHOD%"=="vfox" ( vfox add aws & vfox install "aws@%AWS_VERSIO
 set "TARGET_DIR=%LIBSCRIPT_HOME%\aws\%AWS_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing aws %AWS_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\aws\aws-%AWS_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\aws\aws-%AWS_VERSION%.zip" -C "%TARGET_DIR%"

@@ -112,7 +112,7 @@ if "%OPENRC_INSTALL_METHOD%"=="vfox" ( vfox add openrc & vfox install "openrc@%O
 set "TARGET_DIR=%LIBSCRIPT_HOME%\openrc\%OPENRC_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing openrc %OPENRC_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\openrc\openrc-%OPENRC_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\openrc\openrc-%OPENRC_VERSION%.zip" -C "%TARGET_DIR%"

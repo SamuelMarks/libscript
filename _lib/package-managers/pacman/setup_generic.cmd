@@ -112,7 +112,7 @@ if "%PACMAN_INSTALL_METHOD%"=="vfox" ( vfox add pacman & vfox install "pacman@%P
 set "TARGET_DIR=%LIBSCRIPT_HOME%\pacman\%PACMAN_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing pacman %PACMAN_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\pacman\pacman-%PACMAN_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\pacman\pacman-%PACMAN_VERSION%.zip" -C "%TARGET_DIR%"

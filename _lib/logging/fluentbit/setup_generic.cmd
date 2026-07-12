@@ -112,7 +112,7 @@ if "%FLUENTBIT_INSTALL_METHOD%"=="vfox" ( vfox add fluentbit & vfox install "flu
 set "TARGET_DIR=%LIBSCRIPT_HOME%\fluentbit\%FLUENTBIT_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing fluentbit %FLUENTBIT_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\fluentbit\fluentbit-%FLUENTBIT_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\fluentbit\fluentbit-%FLUENTBIT_VERSION%.zip" -C "%TARGET_DIR%"

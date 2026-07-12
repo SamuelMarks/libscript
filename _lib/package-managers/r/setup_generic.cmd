@@ -112,7 +112,7 @@ if "%R_INSTALL_METHOD%"=="vfox" ( vfox add r & vfox install "r@%R_VERSION%" & ex
 set "TARGET_DIR=%LIBSCRIPT_HOME%\r\%R_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing r %R_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\r\r-%R_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\r\r-%R_VERSION%.zip" -C "%TARGET_DIR%"

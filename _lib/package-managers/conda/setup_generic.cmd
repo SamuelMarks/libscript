@@ -112,7 +112,7 @@ if "%CONDA_INSTALL_METHOD%"=="vfox" ( vfox add conda & vfox install "conda@%COND
 set "TARGET_DIR=%LIBSCRIPT_HOME%\conda\%CONDA_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing conda %CONDA_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\conda\conda-%CONDA_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\conda\conda-%CONDA_VERSION%.zip" -C "%TARGET_DIR%"

@@ -34,7 +34,7 @@ function libscript_download {
     }
 
     # 1. Checksum Resolution
-    $checksumDb = Join-Path $env:LIBSCRIPT_ROOT_DIR "checksums.txt"
+    $checksumDb = Join-Path $env:LIBSCRIPT_ROOT_DIR "_lib/checksums.txt"
     $expectedChecksum = $ProvidedChecksum
     if ([string]::IsNullOrEmpty($expectedChecksum) -and (Test-Path $checksumDb)) {
         $match = Get-Content $checksumDb | Select-String -SimpleMatch $Url | Select-Object -First 1
@@ -45,10 +45,19 @@ function libscript_download {
 
     # 2. Aria2 Export Mode
     if ($env:LIBSCRIPT_ARIA2_EXPORT_FILE) {
-        $Url | Out-File -FilePath $env:LIBSCRIPT_ARIA2_EXPORT_FILE -Append -Encoding utf8
-        "  out=$(Split-Path $Dest -Leaf)" | Out-File -FilePath $env:LIBSCRIPT_ARIA2_EXPORT_FILE -Append -Encoding utf8
-        if ($expectedChecksum) {
-            "  checksum=sha-256=$($expectedChecksum.Replace('sha-256=', ''))" | Out-File -FilePath $env:LIBSCRIPT_ARIA2_EXPORT_FILE -Append -Encoding utf8
+        $skipExport = $false
+        if (Test-Path $env:LIBSCRIPT_ARIA2_EXPORT_FILE) {
+            $existing = Get-Content $env:LIBSCRIPT_ARIA2_EXPORT_FILE
+            if ($existing -contains $Url) {
+                $skipExport = $true
+            }
+        }
+        if (-not $skipExport) {
+            $Url | Out-File -FilePath $env:LIBSCRIPT_ARIA2_EXPORT_FILE -Append -Encoding utf8
+            "  out=$(Split-Path $Dest -Leaf)" | Out-File -FilePath $env:LIBSCRIPT_ARIA2_EXPORT_FILE -Append -Encoding utf8
+            if ($expectedChecksum) {
+                "  checksum=sha-256=$($expectedChecksum.Replace('sha-256=', ''))" | Out-File -FilePath $env:LIBSCRIPT_ARIA2_EXPORT_FILE -Append -Encoding utf8
+            }
         }
         return
     }

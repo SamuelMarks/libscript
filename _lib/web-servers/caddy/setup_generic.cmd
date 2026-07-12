@@ -112,7 +112,7 @@ if "%CADDY_INSTALL_METHOD%"=="vfox" ( vfox add caddy & vfox install "caddy@%CADD
 set "TARGET_DIR=%LIBSCRIPT_HOME%\caddy\%CADDY_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing caddy %CADDY_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\caddy\caddy-%CADDY_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\caddy\caddy-%CADDY_VERSION%.zip" -C "%TARGET_DIR%"

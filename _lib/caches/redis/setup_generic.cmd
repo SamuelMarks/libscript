@@ -112,7 +112,7 @@ if "%REDIS_INSTALL_METHOD%"=="vfox" ( vfox add redis & vfox install "redis@%REDI
 set "TARGET_DIR=%LIBSCRIPT_HOME%\redis\%REDIS_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing redis %REDIS_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\redis\redis-%REDIS_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\redis\redis-%REDIS_VERSION%.zip" -C "%TARGET_DIR%"

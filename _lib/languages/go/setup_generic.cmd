@@ -112,7 +112,7 @@ if "%GO_INSTALL_METHOD%"=="vfox" ( vfox add go & vfox install "go@%GO_VERSION%" 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\go\%GO_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing go %GO_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\go\go-%GO_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\go\go-%GO_VERSION%.zip" -C "%TARGET_DIR%"

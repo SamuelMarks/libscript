@@ -112,7 +112,7 @@ if "%UV_INSTALL_METHOD%"=="vfox" ( vfox add uv & vfox install "uv@%UV_VERSION%" 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\uv\%UV_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing uv %UV_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\uv\uv-%UV_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\uv\uv-%UV_VERSION%.zip" -C "%TARGET_DIR%"

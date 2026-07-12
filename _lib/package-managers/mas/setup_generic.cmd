@@ -112,7 +112,7 @@ if "%MAS_INSTALL_METHOD%"=="vfox" ( vfox add mas & vfox install "mas@%MAS_VERSIO
 set "TARGET_DIR=%LIBSCRIPT_HOME%\mas\%MAS_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing mas %MAS_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\mas\mas-%MAS_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\mas\mas-%MAS_VERSION%.zip" -C "%TARGET_DIR%"

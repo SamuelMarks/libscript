@@ -188,6 +188,11 @@ wait_for_tpu_active() {
 record_state() {
   key=$1
   val=$2
+  if [ -f "$STATE_FILE" ]; then
+    tmp_state=$(mktemp)
+    grep -v "^${key}=" "$STATE_FILE" > "$tmp_state" || true
+    mv "$tmp_state" "$STATE_FILE"
+  fi
   printf '%s\n' "${key}=${val}" >> "$STATE_FILE"
   log "STATE" "Recorded $key=$val"
 }

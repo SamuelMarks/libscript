@@ -112,7 +112,7 @@ if "%MAVEN_INSTALL_METHOD%"=="vfox" ( vfox add maven & vfox install "maven@%MAVE
 set "TARGET_DIR=%LIBSCRIPT_HOME%\maven\%MAVEN_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing maven %MAVEN_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\maven\maven-%MAVEN_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\maven\maven-%MAVEN_VERSION%.zip" -C "%TARGET_DIR%"

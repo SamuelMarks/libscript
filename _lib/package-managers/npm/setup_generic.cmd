@@ -112,7 +112,7 @@ if "%NPM_INSTALL_METHOD%"=="vfox" ( vfox add npm & vfox install "npm@%NPM_VERSIO
 set "TARGET_DIR=%LIBSCRIPT_HOME%\npm\%NPM_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing npm %NPM_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\npm\npm-%NPM_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\npm\npm-%NPM_VERSION%.zip" -C "%TARGET_DIR%"

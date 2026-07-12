@@ -112,7 +112,7 @@ if "%RBENV_INSTALL_METHOD%"=="vfox" ( vfox add rbenv & vfox install "rbenv@%RBEN
 set "TARGET_DIR=%LIBSCRIPT_HOME%\rbenv\%RBENV_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing rbenv %RBENV_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\rbenv\rbenv-%RBENV_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\rbenv\rbenv-%RBENV_VERSION%.zip" -C "%TARGET_DIR%"

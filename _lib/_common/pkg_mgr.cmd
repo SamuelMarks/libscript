@@ -29,7 +29,7 @@ set "provided_checksum=%~3"
 if "!dest!"=="" for %%F in ("!url!") do set "dest=%%~nxF"
 
 :: 1. Checksum Resolution
-set "checksum_db=%LIBSCRIPT_ROOT_DIR%\checksums.txt"
+set "checksum_db=%LIBSCRIPT_ROOT_DIR%\_lib/checksums.txt"
 set "expected_checksum=!provided_checksum!"
 if "!expected_checksum!"=="" (
         if exist "!checksum_db!" (
@@ -43,9 +43,16 @@ if "!expected_checksum!"=="" (
 
 :: 2. Aria2 Export Mode
 if defined LIBSCRIPT_ARIA2_EXPORT_FILE (
-        echo !url!>> "!LIBSCRIPT_ARIA2_EXPORT_FILE!"
-        for %%F in ("!dest!") do echo   out=%%~nxF>> "!LIBSCRIPT_ARIA2_EXPORT_FILE!"
-        if not "!expected_checksum!"=="" echo   checksum=sha-256=!expected_checksum!>> "!LIBSCRIPT_ARIA2_EXPORT_FILE!"
+        set "skip_export="
+        if exist "!LIBSCRIPT_ARIA2_EXPORT_FILE!" (
+                findstr /L /X /C:"!url!" "!LIBSCRIPT_ARIA2_EXPORT_FILE!" >nul 2>&1
+                if not errorlevel 1 set "skip_export=1"
+        )
+        if not defined skip_export (
+                echo !url!>> "!LIBSCRIPT_ARIA2_EXPORT_FILE!"
+                for %%F in ("!dest!") do echo   out=%%~nxF>> "!LIBSCRIPT_ARIA2_EXPORT_FILE!"
+                if not "!expected_checksum!"=="" echo   checksum=sha-256=!expected_checksum!>> "!LIBSCRIPT_ARIA2_EXPORT_FILE!"
+        )
         exit /b 0
 )
 
@@ -125,7 +132,7 @@ if not "!expected_checksum!"=="" (
 ) else (
         if not "%LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB%"=="1" (
                 for /f "tokens=*" %%a in ('powershell -Command "(Get-FileHash -Path '!cache_file!' -Algorithm SHA256).Hash.ToLower()"') do set "actual_checksum=%%a"
-                echo !url! !actual_checksum!>> "!checksum_db!"
+                findstr /c:"!url! !actual_checksum!" "!checksum_db!" >nul 2>&1 || echo !url! !actual_checksum!>> "!checksum_db!"
         )
 )
 

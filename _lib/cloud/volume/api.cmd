@@ -14,8 +14,10 @@ set "provider=%~2"
 set "size=%~3"
 set "zone=%~4"
 set "vtype=%~5"
+set "vname=%~6"
 
 if "%size%"=="" set "size=10"
+if "%vname%"=="" set "vname=vol-libscript"
 
 if "%zone%"=="" (
     echo Error: --zone (or LIBSCRIPT_VOLUME_ZONE) is required for volume creation. >&2
@@ -26,27 +28,48 @@ call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :init
 
 if "%provider%"=="aws" (
     if "%vtype%"=="" set "vtype=gp3"
+
+    for /f "tokens=*" %%i in ('aws ec2 describe-volumes --filters "Name=tag:Name,Values=%vname%" "Name=availability-zone,Values=%zone%" --query "Volumes[0].VolumeId" --output text 2^>nul') do set "existing_vol=%%i"
+    if not "!existing_vol!"=="" if not "!existing_vol!"=="None" (
+        echo Volume '%vname%' already exists: !existing_vol!
+        exit /b 0
+    )
+
     set "cmd=aws ec2 create-volume --availability-zone "%zone%" --size "%size%" --volume-type "%vtype%""
     if "%LIBSCRIPT_TAG_ENABLE%"=="true" (
-        set "cmd=!cmd! --tag-specifications "ResourceType=volume,Tags=[{Key=%LIBSCRIPT_TAG_KEY%,Value=%LIBSCRIPT_TAG_VALUE%}]""
+        set "cmd=!cmd! --tag-specifications "ResourceType=volume,Tags=[{Key=Name,Value=%vname%},{Key=%LIBSCRIPT_TAG_KEY%,Value=%LIBSCRIPT_TAG_VALUE%}]""
+    ) else (
+        set "cmd=!cmd! --tag-specifications "ResourceType=volume,Tags=[{Key=Name,Value=%vname%}]""
     )
     %cmd%
 ) else if "%provider%"=="gcp" (
     if "%vtype%"=="" set "vtype=pd-standard"
-    set "vname=vol-%RANDOM%"
-    set "cmd=gcloud compute disks create "!vname!" --size="%size%GB" --zone="%zone%" --type="%vtype%""
+    
+    gcloud compute disks describe "%vname%" --zone="%zone%" >nul 2>&1
+    if not errorlevel 1 (
+        echo Volume '%vname%' already exists in zone %zone%
+        exit /b 0
+    )
+
+    set "cmd=gcloud compute disks create "%vname%" --size="%size%GB" --zone="%zone%" --type="%vtype%""
     if "%LIBSCRIPT_TAG_ENABLE%"=="true" (
         set "cmd=!cmd! --labels="%LIBSCRIPT_TAG_KEY%=%LIBSCRIPT_TAG_VALUE%""
     )
     %cmd%
 ) else if "%provider%"=="azure" (
     if "%vtype%"=="" set "vtype=Standard_LRS"
-    set "vname=vol-%RANDOM%"
     if "%LIBSCRIPT_AZURE_RESOURCE_GROUP%"=="" (
         echo Error: LIBSCRIPT_AZURE_RESOURCE_GROUP must be set for Azure operations. >&2
         exit /b 1
     )
-    set "cmd=az disk create --name "!vname!" --resource-group "%LIBSCRIPT_AZURE_RESOURCE_GROUP%" --location "%zone%" --size-gb "%size%" --sku "%vtype%""
+    
+    az disk show --name "%vname%" --resource-group "%LIBSCRIPT_AZURE_RESOURCE_GROUP%" >nul 2>&1
+    if not errorlevel 1 (
+        echo Volume '%vname%' already exists in resource group %LIBSCRIPT_AZURE_RESOURCE_GROUP%
+        exit /b 0
+    )
+
+    set "cmd=az disk create --name "%vname%" --resource-group "%LIBSCRIPT_AZURE_RESOURCE_GROUP%" --location "%zone%" --size-gb "%size%" --sku "%vtype%""
     if "%LIBSCRIPT_TAG_ENABLE%"=="true" (
         set "cmd=!cmd! --tags "%LIBSCRIPT_TAG_KEY%=%LIBSCRIPT_TAG_VALUE%""
     )

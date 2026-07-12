@@ -112,7 +112,7 @@ if "%JUST_INSTALL_METHOD%"=="vfox" ( vfox add just & vfox install "just@%JUST_VE
 set "TARGET_DIR=%LIBSCRIPT_HOME%\just\%JUST_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing just %JUST_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\just\just-%JUST_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\just\just-%JUST_VERSION%.zip" -C "%TARGET_DIR%"

@@ -112,7 +112,7 @@ if "%BUN_INSTALL_METHOD%"=="vfox" ( vfox add bun & vfox install "bun@%BUN_VERSIO
 set "TARGET_DIR=%LIBSCRIPT_HOME%\bun\%BUN_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing bun %BUN_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\bun\bun-%BUN_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\bun\bun-%BUN_VERSION%.zip" -C "%TARGET_DIR%"

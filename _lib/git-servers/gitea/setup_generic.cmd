@@ -112,7 +112,7 @@ if "%GITEA_INSTALL_METHOD%"=="vfox" ( vfox add gitea & vfox install "gitea@%GITE
 set "TARGET_DIR=%LIBSCRIPT_HOME%\gitea\%GITEA_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing gitea %GITEA_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\gitea\gitea-%GITEA_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\gitea\gitea-%GITEA_VERSION%.zip" -C "%TARGET_DIR%"

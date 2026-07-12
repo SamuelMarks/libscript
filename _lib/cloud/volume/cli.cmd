@@ -5,7 +5,7 @@
 :: Volume component CLI for Block Storage operations on Windows.
 ::
 :: ## Usage
-:: libscript volume [create|delete|list|attach|detach] [--cloud aws|gcp|azure] [--volume-id id] [--size gb] [--zone zone] [--type type] [--node-id id] [--device path]
+:: libscript volume [create|delete|list|attach|detach] [--cloud aws|gcp|azure] [--volume-id id] [--name name] [--size gb] [--zone zone] [--type type] [--node-id id] [--device path]
 
 set "CMD=%~1"
 if not "%CMD%"=="" shift
@@ -15,6 +15,7 @@ if "%~1"=="" goto validate_args
 if "%~1"=="--cloud" ( set "LIBSCRIPT_CLOUD=%~2" & shift & shift & goto parse_args )
 if "%~1"=="--volume-id" ( set "LIBSCRIPT_VOLUME_ID=%~2" & shift & shift & goto parse_args )
 if "%~1"=="--size" ( set "LIBSCRIPT_VOLUME_SIZE=%~2" & shift & shift & goto parse_args )
+if "%~1"=="--name" ( set "LIBSCRIPT_VOLUME_NAME=%~2" & shift & shift & goto parse_args )
 if "%~1"=="--zone" ( set "LIBSCRIPT_VOLUME_ZONE=%~2" & shift & shift & goto parse_args )
 if "%~1"=="--type" ( set "LIBSCRIPT_VOLUME_TYPE=%~2" & shift & shift & goto parse_args )
 if "%~1"=="--node-id" ( set "LIBSCRIPT_NODE_ID=%~2" & shift & shift & goto parse_args )
@@ -26,6 +27,8 @@ echo %~1 | findstr /b /c:"--volume-id=" >nul
 if not errorlevel 1 ( for /f "tokens=2 delims==" %%A in ("%~1") do set "LIBSCRIPT_VOLUME_ID=%%A" & shift & goto parse_args )
 echo %~1 | findstr /b /c:"--size=" >nul
 if not errorlevel 1 ( for /f "tokens=2 delims==" %%A in ("%~1") do set "LIBSCRIPT_VOLUME_SIZE=%%A" & shift & goto parse_args )
+echo %~1 | findstr /b /c:"--name=" >nul
+if not errorlevel 1 ( for /f "tokens=2 delims==" %%A in ("%~1") do set "LIBSCRIPT_VOLUME_NAME=%%A" & shift & goto parse_args )
 echo %~1 | findstr /b /c:"--zone=" >nul
 if not errorlevel 1 ( for /f "tokens=2 delims==" %%A in ("%~1") do set "LIBSCRIPT_VOLUME_ZONE=%%A" & shift & goto parse_args )
 echo %~1 | findstr /b /c:"--type=" >nul
@@ -65,7 +68,7 @@ if "%CMD%"=="list" (
 )
 
 if "%CMD%"=="create" (
-    call "%~dp0api.cmd" :libscript_volume_create "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_VOLUME_SIZE%" "%LIBSCRIPT_VOLUME_ZONE%" "%LIBSCRIPT_VOLUME_TYPE%"
+    call "%~dp0api.cmd" :libscript_volume_create "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_VOLUME_SIZE%" "%LIBSCRIPT_VOLUME_ZONE%" "%LIBSCRIPT_VOLUME_TYPE%" "%LIBSCRIPT_VOLUME_NAME%"
     exit /b %errorlevel%
 )
 

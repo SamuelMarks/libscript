@@ -112,7 +112,7 @@ if "%SEVENZIP_INSTALL_METHOD%"=="vfox" ( vfox add 7zip & vfox install "7zip@%SEV
 set "TARGET_DIR=%LIBSCRIPT_HOME%\7zip\%SEVENZIP_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing 7zip %SEVENZIP_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\7zip\7zip-%SEVENZIP_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\7zip\7zip-%SEVENZIP_VERSION%.zip" -C "%TARGET_DIR%"

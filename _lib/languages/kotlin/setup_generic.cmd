@@ -112,7 +112,7 @@ if "%KOTLIN_INSTALL_METHOD%"=="vfox" ( vfox add kotlin & vfox install "kotlin@%K
 set "TARGET_DIR=%LIBSCRIPT_HOME%\kotlin\%KOTLIN_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing kotlin %KOTLIN_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\kotlin\kotlin-%KOTLIN_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\kotlin\kotlin-%KOTLIN_VERSION%.zip" -C "%TARGET_DIR%"

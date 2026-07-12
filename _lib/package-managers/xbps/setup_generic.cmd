@@ -112,7 +112,7 @@ if "%XBPS_INSTALL_METHOD%"=="vfox" ( vfox add xbps & vfox install "xbps@%XBPS_VE
 set "TARGET_DIR=%LIBSCRIPT_HOME%\xbps\%XBPS_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing xbps %XBPS_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\xbps\xbps-%XBPS_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\xbps\xbps-%XBPS_VERSION%.zip" -C "%TARGET_DIR%"

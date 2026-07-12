@@ -43,8 +43,10 @@ done
 
 libscript_depends wget curl vim openssl git
 
-git clone --depth 1 \
-  https://github.com/kelseyhightower/kubernetes-the-hard-way.git
+if [ ! -d "kubernetes-the-hard-way" ]; then
+  git clone --depth 1 \
+    https://github.com/kelseyhightower/kubernetes-the-hard-way.git
+fi
 
 PREVIOUS_WD="$(pwd)"
 

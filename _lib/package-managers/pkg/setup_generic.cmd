@@ -112,7 +112,7 @@ if "%PKG_INSTALL_METHOD%"=="vfox" ( vfox add pkg & vfox install "pkg@%PKG_VERSIO
 set "TARGET_DIR=%LIBSCRIPT_HOME%\pkg\%PKG_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing pkg %PKG_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\pkg\pkg-%PKG_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\pkg\pkg-%PKG_VERSION%.zip" -C "%TARGET_DIR%"

@@ -88,7 +88,8 @@ if [ "${NOOP}" -eq 0 ]; then
   VALKEY_CONF="/tmp/valkey_$$.conf"
   cp -- "${LIBSCRIPT_ROOT_DIR}"'/_lib/caches/valkey/conf/valkey.conf' "${VALKEY_CONF}"
   if [ -n "${VALKEY_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then
-    sed -i -e "s|^bind |# bind |g" -e "s|^port |port 0\n# port |g" -e "s|^# unixsocket .*|unixsocket ${VALKEY_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}\nunixsocketperm 777|" "${VALKEY_CONF}"
+    grep -q "^port 0" "${VALKEY_CONF}" || sed -i "s|^port |port 0\n# port |g" "${VALKEY_CONF}"
+    sed -i -e "s|^bind |# bind |g" -e "s|^# unixsocket .*|unixsocket ${VALKEY_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET}}\nunixsocketperm 777|" "${VALKEY_CONF}"
   else
     if [ -n "${VALKEY_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS:-}}" ]; then
       sed -i "s|^bind .*|bind ${VALKEY_LISTEN_ADDRESS:-${LIBSCRIPT_LISTEN_ADDRESS}}|" "${VALKEY_CONF}"
@@ -107,6 +108,16 @@ fi
 [ -d "${LIBSCRIPT_DATA_DIR}" ] || mkdir -p -- "${LIBSCRIPT_DATA_DIR}"
 VAL='redis://localhost'
 for key in 'REDIS_URL' 'VALKEY_URL'; do
+  if [ -f "${LIBSCRIPT_DATA_DIR}/dyn_env.cmd" ]; then
+    tmp_env=$(mktemp)
+    grep -v "^SET \"${key}=" "${LIBSCRIPT_DATA_DIR}/dyn_env.cmd" > "$tmp_env" || true
+    mv "$tmp_env" "${LIBSCRIPT_DATA_DIR}/dyn_env.cmd"
+  fi
+  if [ -f "${LIBSCRIPT_DATA_DIR}/dyn_env.sh" ]; then
+    tmp_env=$(mktemp)
+    grep -v "^export ${key}=" "${LIBSCRIPT_DATA_DIR}/dyn_env.sh" > "$tmp_env" || true
+    mv "$tmp_env" "${LIBSCRIPT_DATA_DIR}/dyn_env.sh"
+  fi
   lang_export 'cmd' "${key}" "${VAL}" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.cmd'
   lang_export 'sh' "${key}" "${VAL}" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
   lang_export 'sqlite' "${key}" "${VAL}"

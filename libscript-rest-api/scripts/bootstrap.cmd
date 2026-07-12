@@ -57,7 +57,6 @@ if errorlevel 1 (
 )
 
 echo [INFO] Dependency resolution complete. C compiler, git, and cmake are ready.
-exit /b 0
 
 :: Fetch c-rest-framework
 set "VENDOR_DIR=%SCRIPT_DIR%\..\vendor"

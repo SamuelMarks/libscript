@@ -112,7 +112,7 @@ if "%NIX_INSTALL_METHOD%"=="vfox" ( vfox add nix & vfox install "nix@%NIX_VERSIO
 set "TARGET_DIR=%LIBSCRIPT_HOME%\nix\%NIX_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing nix %NIX_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\nix\nix-%NIX_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\nix\nix-%NIX_VERSION%.zip" -C "%TARGET_DIR%"

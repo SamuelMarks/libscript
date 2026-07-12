@@ -112,7 +112,7 @@ if "%GOOGLE_CLOUD_SDK_INSTALL_METHOD%"=="vfox" ( vfox add google-cloud-sdk & vfo
 set "TARGET_DIR=%LIBSCRIPT_HOME%\google-cloud-sdk\%GOOGLE_CLOUD_SDK_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing google-cloud-sdk %GOOGLE_CLOUD_SDK_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\google-cloud-sdk\google-cloud-sdk-%GOOGLE_CLOUD_SDK_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\google-cloud-sdk\google-cloud-sdk-%GOOGLE_CLOUD_SDK_VERSION%.zip" -C "%TARGET_DIR%"

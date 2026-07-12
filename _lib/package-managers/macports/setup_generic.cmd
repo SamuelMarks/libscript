@@ -112,7 +112,7 @@ if "%MACPORTS_INSTALL_METHOD%"=="vfox" ( vfox add macports & vfox install "macpo
 set "TARGET_DIR=%LIBSCRIPT_HOME%\macports\%MACPORTS_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing macports %MACPORTS_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\macports\macports-%MACPORTS_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\macports\macports-%MACPORTS_VERSION%.zip" -C "%TARGET_DIR%"

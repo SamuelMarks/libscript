@@ -112,7 +112,7 @@ if "%CONAN_INSTALL_METHOD%"=="vfox" ( vfox add conan & vfox install "conan@%CONA
 set "TARGET_DIR=%LIBSCRIPT_HOME%\conan\%CONAN_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing conan %CONAN_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\conan\conan-%CONAN_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\conan\conan-%CONAN_VERSION%.zip" -C "%TARGET_DIR%"

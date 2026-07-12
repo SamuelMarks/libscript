@@ -112,7 +112,7 @@ if "%BAZEL_INSTALL_METHOD%"=="vfox" ( vfox add bazel & vfox install "bazel@%BAZE
 set "TARGET_DIR=%LIBSCRIPT_HOME%\bazel\%BAZEL_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing bazel %BAZEL_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\bazel\bazel-%BAZEL_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\bazel\bazel-%BAZEL_VERSION%.zip" -C "%TARGET_DIR%"

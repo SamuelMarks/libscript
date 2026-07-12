@@ -112,7 +112,7 @@ if "%TENSORBOARD_INSTALL_METHOD%"=="vfox" ( vfox add tensorboard & vfox install 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\tensorboard\%TENSORBOARD_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing tensorboard %TENSORBOARD_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\tensorboard\tensorboard-%TENSORBOARD_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\tensorboard\tensorboard-%TENSORBOARD_VERSION%.zip" -C "%TARGET_DIR%"

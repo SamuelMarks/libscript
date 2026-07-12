@@ -112,7 +112,7 @@ if "%OLLAMA_INSTALL_METHOD%"=="vfox" ( vfox add ollama & vfox install "ollama@%O
 set "TARGET_DIR=%LIBSCRIPT_HOME%\ollama\%OLLAMA_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing ollama %OLLAMA_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\ollama\ollama-%OLLAMA_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\ollama\ollama-%OLLAMA_VERSION%.zip" -C "%TARGET_DIR%"

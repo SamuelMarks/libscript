@@ -112,7 +112,7 @@ if "%JAVA_INSTALL_METHOD%"=="vfox" ( vfox add java & vfox install "java@%JAVA_VE
 set "TARGET_DIR=%LIBSCRIPT_HOME%\java\%JAVA_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing java %JAVA_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\java\java-%JAVA_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\java\java-%JAVA_VERSION%.zip" -C "%TARGET_DIR%"

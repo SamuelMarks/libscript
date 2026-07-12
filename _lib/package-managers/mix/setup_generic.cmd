@@ -112,7 +112,7 @@ if "%MIX_INSTALL_METHOD%"=="vfox" ( vfox add mix & vfox install "mix@%MIX_VERSIO
 set "TARGET_DIR=%LIBSCRIPT_HOME%\mix\%MIX_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing mix %MIX_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\mix\mix-%MIX_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\mix\mix-%MIX_VERSION%.zip" -C "%TARGET_DIR%"

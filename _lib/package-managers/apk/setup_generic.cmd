@@ -112,7 +112,7 @@ if "%APK_INSTALL_METHOD%"=="vfox" ( vfox add apk & vfox install "apk@%APK_VERSIO
 set "TARGET_DIR=%LIBSCRIPT_HOME%\apk\%APK_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing apk %APK_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\apk\apk-%APK_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\apk\apk-%APK_VERSION%.zip" -C "%TARGET_DIR%"

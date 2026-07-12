@@ -112,7 +112,7 @@ if "%PYTHON_SERVER_INSTALL_METHOD%"=="vfox" ( vfox add python-server & vfox inst
 set "TARGET_DIR=%LIBSCRIPT_HOME%\python-server\%PYTHON_SERVER_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing python-server %PYTHON_SERVER_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\python-server\python-server-%PYTHON_SERVER_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\python-server\python-server-%PYTHON_SERVER_VERSION%.zip" -C "%TARGET_DIR%"

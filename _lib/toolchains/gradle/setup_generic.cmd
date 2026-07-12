@@ -112,7 +112,7 @@ if "%GRADLE_INSTALL_METHOD%"=="vfox" ( vfox add gradle & vfox install "gradle@%G
 set "TARGET_DIR=%LIBSCRIPT_HOME%\gradle\%GRADLE_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing gradle %GRADLE_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\gradle\gradle-%GRADLE_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\gradle\gradle-%GRADLE_VERSION%.zip" -C "%TARGET_DIR%"

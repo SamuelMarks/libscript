@@ -112,7 +112,7 @@ if "%PUB_INSTALL_METHOD%"=="vfox" ( vfox add pub & vfox install "pub@%PUB_VERSIO
 set "TARGET_DIR=%LIBSCRIPT_HOME%\pub\%PUB_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing pub %PUB_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\pub\pub-%PUB_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\pub\pub-%PUB_VERSION%.zip" -C "%TARGET_DIR%"

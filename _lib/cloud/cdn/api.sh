@@ -40,18 +40,23 @@ libscript_cdn_create() {
 
   case "$provider" in
     aws)
-      # Create Origin Access Control
-      oac_id=$(aws cloudfront create-origin-access-control \
-        --origin-access-control-config "Name=${bucket}-oac,Description=libscript OAC for ${bucket},OriginAccessControlOriginType=s3,SigningBehavior=always,SigningProtocol=sigv4" \
-        --query 'OriginAccessControl.Id' --output text 2>/dev/null || true)
-      
-      if [ -z "$oac_id" ]; then
-        # If it already exists, fetch it
-        oac_id=$(aws cloudfront list-origin-access-controls --query "OriginAccessControlList.Items[?Name=='${bucket}-oac'].Id" --output text)
-      fi
-
-      tmp_json=$(mktemp)
-      cat <<JSON_EOF > "$tmp_json"
+      existing_dist=$(aws cloudfront list-distributions --query "DistributionList.Items[?Origins.Items[?Id=='S3-${bucket}']].DomainName | [0]" --output text 2>/dev/null || true)
+      if [ -n "$existing_dist" ] && [ "$existing_dist" != "None" ]; then
+        printf "CDN Distribution already exists for '%s': %s\n" "$bucket" "$existing_dist"
+        dist_domain="$existing_dist"
+      else
+        # Create Origin Access Control
+        oac_id=$(aws cloudfront create-origin-access-control \
+          --origin-access-control-config "Name=${bucket}-oac,Description=libscript OAC for ${bucket},OriginAccessControlOriginType=s3,SigningBehavior=always,SigningProtocol=sigv4" \
+          --query 'OriginAccessControl.Id' --output text 2>/dev/null || true)
+        
+        if [ -z "$oac_id" ] || [ "$oac_id" = "None" ]; then
+          # If it already exists, fetch it
+          oac_id=$(aws cloudfront list-origin-access-controls --query "OriginAccessControlList.Items[?Name=='${bucket}-oac'].Id" --output text)
+        fi
+  
+        tmp_json=$(mktemp)
+        cat <<JSON_EOF > "$tmp_json"
 {
   "CallerReference": "libscript-$(date +%s)",
   "Comment": "libscript managed CDN for $bucket",
@@ -80,9 +85,9 @@ libscript_cdn_create() {
     }
   }
 JSON_EOF
-
-      if [ -n "$domain" ] && [ -n "$cert_id" ]; then
-        cat <<JSON_EOF_EXT >> "$tmp_json"
+  
+        if [ -n "$domain" ] && [ -n "$cert_id" ]; then
+          cat <<JSON_EOF_EXT >> "$tmp_json"
   ,
   "Aliases": {
     "Quantity": 1,
@@ -95,28 +100,29 @@ JSON_EOF
   }
 }
 JSON_EOF_EXT
-      else
-        cat <<JSON_EOF_EXT >> "$tmp_json"
+        else
+          cat <<JSON_EOF_EXT >> "$tmp_json"
   ,
   "ViewerCertificate": {
     "CloudFrontDefaultCertificate": true
   }
 }
 JSON_EOF_EXT
-      fi
-
-      dist_domain=$(aws cloudfront create-distribution --distribution-config "file://$tmp_json" --query 'Distribution.DomainName' --output text)
-      rm -f "$tmp_json"
-      
-      if [ "$LIBSCRIPT_TAG_ENABLE" = "true" ]; then
-        dist_arn=$(aws cloudfront list-distributions --query "DistributionList.Items[?DomainName=='$dist_domain'].ARN" --output text)
-        if [ -n "$dist_arn" ]; then
-          aws cloudfront tag-resource --resource "$dist_arn" --tags "Items=[{Key=$LIBSCRIPT_TAG_KEY,Value=$LIBSCRIPT_TAG_VALUE}]"
         fi
+  
+        dist_domain=$(aws cloudfront create-distribution --distribution-config "file://$tmp_json" --query 'Distribution.DomainName' --output text)
+        rm -f "$tmp_json"
+        
+        if [ "$LIBSCRIPT_TAG_ENABLE" = "true" ]; then
+          dist_arn=$(aws cloudfront list-distributions --query "DistributionList.Items[?DomainName=='$dist_domain'].ARN" --output text)
+          if [ -n "$dist_arn" ] && [ "$dist_arn" != "None" ]; then
+            aws cloudfront tag-resource --resource "$dist_arn" --tags "Items=[{Key=$LIBSCRIPT_TAG_KEY,Value=$LIBSCRIPT_TAG_VALUE}]"
+          fi
+        fi
+        printf "CDN Distribution created: %s\n" "$dist_domain"
       fi
 
       # Output bucket policy that needs to be applied
-      printf "CDN Distribution created: %s\n" "$dist_domain"
       printf "IMPORTANT: You must apply the following bucket policy to '%s' to allow OAC access:\n" "$bucket"
       cat <<POLICY_EOF
 {
@@ -134,25 +140,29 @@ JSON_EOF_EXT
 POLICY_EOF
       ;;
     gcp)
-      # Create Backend Bucket
-      gcloud compute backend-buckets create "${bucket}-backend" --gcs-bucket-name="${bucket}" --enable-cdn
-      # Create URL Map
-      gcloud compute url-maps create "${bucket}-urlmap" --default-backend-bucket="${bucket}-backend"
-      
-      if [ -n "$domain" ] && [ -n "$cert_id" ]; then
-        # Create Target HTTPS Proxy
-        gcloud compute target-https-proxies create "${bucket}-https-proxy" --url-map="${bucket}-urlmap" --ssl-certificates="${cert_id}"
-        # Create Global Forwarding Rule for HTTPS
-        gcloud compute forwarding-rules create "${bucket}-https-rule" --target-https-proxy="${bucket}-https-proxy" --ports=443 --global
-        ip=$(gcloud compute forwarding-rules describe "${bucket}-https-rule" --global --format="value(IPAddress)")
-        printf "HTTPS CDN created on IP: %s\n" "$ip"
+      if gcloud compute backend-buckets describe "${bucket}-backend" >/dev/null 2>&1; then
+        printf "CDN backend-bucket already exists for %s\n" "$bucket"
       else
-        # Create Target HTTP Proxy
-        gcloud compute target-http-proxies create "${bucket}-http-proxy" --url-map="${bucket}-urlmap"
-        # Create Global Forwarding Rule for HTTP
-        gcloud compute forwarding-rules create "${bucket}-http-rule" --target-http-proxy="${bucket}-http-proxy" --ports=80 --global
-        ip=$(gcloud compute forwarding-rules describe "${bucket}-http-rule" --global --format="value(IPAddress)")
-        printf "HTTP CDN created on IP: %s\n" "$ip"
+        # Create Backend Bucket
+        gcloud compute backend-buckets create "${bucket}-backend" --gcs-bucket-name="${bucket}" --enable-cdn
+        # Create URL Map
+        gcloud compute url-maps create "${bucket}-urlmap" --default-backend-bucket="${bucket}-backend"
+        
+        if [ -n "$domain" ] && [ -n "$cert_id" ]; then
+          # Create Target HTTPS Proxy
+          gcloud compute target-https-proxies create "${bucket}-https-proxy" --url-map="${bucket}-urlmap" --ssl-certificates="${cert_id}"
+          # Create Global Forwarding Rule for HTTPS
+          gcloud compute forwarding-rules create "${bucket}-https-rule" --target-https-proxy="${bucket}-https-proxy" --ports=443 --global
+          ip=$(gcloud compute forwarding-rules describe "${bucket}-https-rule" --global --format="value(IPAddress)")
+          printf "HTTPS CDN created on IP: %s\n" "$ip"
+        else
+          # Create Target HTTP Proxy
+          gcloud compute target-http-proxies create "${bucket}-http-proxy" --url-map="${bucket}-urlmap"
+          # Create Global Forwarding Rule for HTTP
+          gcloud compute forwarding-rules create "${bucket}-http-rule" --target-http-proxy="${bucket}-http-proxy" --ports=80 --global
+          ip=$(gcloud compute forwarding-rules describe "${bucket}-http-rule" --global --format="value(IPAddress)")
+          printf "HTTP CDN created on IP: %s\n" "$ip"
+        fi
       fi
       ;;
     azure)

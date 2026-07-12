@@ -112,7 +112,7 @@ if "%EOPKG_INSTALL_METHOD%"=="vfox" ( vfox add eopkg & vfox install "eopkg@%EOPK
 set "TARGET_DIR=%LIBSCRIPT_HOME%\eopkg\%EOPKG_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing eopkg %EOPKG_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\eopkg\eopkg-%EOPKG_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\eopkg\eopkg-%EOPKG_VERSION%.zip" -C "%TARGET_DIR%"

@@ -69,11 +69,12 @@ lang_export() {
       printf '%s %s=%s%s%s\n' "${prefix}" "${var_name}" "${quote}" "${var_value}" "${quote}"
       ;;
     'sqlite')
-      if [ "${sql3}" -eq 1 ] ; then
-        try_create_table
-        sqlite3 "${db_file}" '
-          INSERT INTO T (key, val) VALUES
-            ( '"'${var_name}'"', '"'${var_value}'"' );'
+      if [ "${sql3:-0}" -eq 1 ] ; then
+        if [ -n "${db_file:-}" ]; then
+          sqlite3 "${db_file}" "
+            CREATE TABLE IF NOT EXISTS T (key TEXT UNIQUE, val TEXT);
+            INSERT OR REPLACE INTO T (key, val) VALUES ('${var_name}', '${var_value}');"
+        fi
       fi
       ;;
   esac

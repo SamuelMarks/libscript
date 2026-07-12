@@ -112,7 +112,7 @@ if "%CPANM_INSTALL_METHOD%"=="vfox" ( vfox add cpanm & vfox install "cpanm@%CPAN
 set "TARGET_DIR=%LIBSCRIPT_HOME%\cpanm\%CPANM_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing cpanm %CPANM_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\cpanm\cpanm-%CPANM_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\cpanm\cpanm-%CPANM_VERSION%.zip" -C "%TARGET_DIR%"

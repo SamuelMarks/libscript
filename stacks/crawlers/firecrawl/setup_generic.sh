@@ -50,8 +50,14 @@ export SCRIPT_NAME
 if [ "${FIRECRAWL_DEST-}" ]; then
   DEST="${FIRECRAWL_DEST}"
 elif [ -z "${DEST+x}" ]; then
-  rand="$(env LC_CTYPE='C' tr -cd '[:lower:]' < '/dev/urandom' | head -c 8)"
-  DEST="${LIBSCRIPT_DATA_DIR}"'/'"${rand}"
+  if [ -f "${LIBSCRIPT_DATA_DIR}/.firecrawl_dest" ]; then
+    DEST="$(cat "${LIBSCRIPT_DATA_DIR}/.firecrawl_dest")"
+  else
+    rand="$(env LC_CTYPE='C' tr -cd '[:lower:]' < '/dev/urandom' | head -c 8)"
+    DEST="${LIBSCRIPT_DATA_DIR}"'/'"${rand}"
+    mkdir -p -- "${LIBSCRIPT_DATA_DIR}"
+    printf '%s\n' "${DEST}" > "${LIBSCRIPT_DATA_DIR}/.firecrawl_dest"
+  fi
   export DEST
   mkdir -p -- "${DEST}"
 fi
@@ -74,8 +80,8 @@ if [ ! -f "${HASH_LOC}" ]; then
 fi
 
 if [ "${VARS-}" ]; then
-  libscript_object2key_val "${VARS}" 'export ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
-  libscript_object2key_val "${VARS}" 'setenv ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.csh'
+  libscript_object2key_val "${VARS}" 'export ' "'" > "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
+  libscript_object2key_val "${VARS}" 'setenv ' "'" > "${LIBSCRIPT_DATA_DIR}"'/dyn_env.csh'
 fi
 ENV=''
 if [ -f "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' ]; then

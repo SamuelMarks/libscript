@@ -112,7 +112,7 @@ if "%CSHARP_INSTALL_METHOD%"=="vfox" ( vfox add csharp & vfox install "csharp@%C
 set "TARGET_DIR=%LIBSCRIPT_HOME%\csharp\%CSHARP_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing csharp %CSHARP_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\csharp\csharp-%CSHARP_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\csharp\csharp-%CSHARP_VERSION%.zip" -C "%TARGET_DIR%"

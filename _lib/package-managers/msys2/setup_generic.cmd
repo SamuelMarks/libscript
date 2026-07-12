@@ -112,7 +112,7 @@ if "%MSYS2_INSTALL_METHOD%"=="vfox" ( vfox add msys2 & vfox install "msys2@%MSYS
 set "TARGET_DIR=%LIBSCRIPT_HOME%\msys2\%MSYS2_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing msys2 %MSYS2_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\msys2\msys2-%MSYS2_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\msys2\msys2-%MSYS2_VERSION%.zip" -C "%TARGET_DIR%"

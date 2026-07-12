@@ -112,7 +112,7 @@ if "%SQLITE_INSTALL_METHOD%"=="vfox" ( vfox add sqlite & vfox install "sqlite@%S
 set "TARGET_DIR=%LIBSCRIPT_HOME%\sqlite\%SQLITE_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing sqlite %SQLITE_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\sqlite\sqlite-%SQLITE_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\sqlite\sqlite-%SQLITE_VERSION%.zip" -C "%TARGET_DIR%"

@@ -112,7 +112,7 @@ if "%MARIADB_INSTALL_METHOD%"=="vfox" ( vfox add mariadb & vfox install "mariadb
 set "TARGET_DIR=%LIBSCRIPT_HOME%\mariadb\%MARIADB_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing mariadb %MARIADB_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\mariadb\mariadb-%MARIADB_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\mariadb\mariadb-%MARIADB_VERSION%.zip" -C "%TARGET_DIR%"

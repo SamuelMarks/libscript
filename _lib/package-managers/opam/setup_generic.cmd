@@ -112,7 +112,7 @@ if "%OPAM_INSTALL_METHOD%"=="vfox" ( vfox add opam & vfox install "opam@%OPAM_VE
 set "TARGET_DIR=%LIBSCRIPT_HOME%\opam\%OPAM_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing opam %OPAM_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\opam\opam-%OPAM_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\opam\opam-%OPAM_VERSION%.zip" -C "%TARGET_DIR%"

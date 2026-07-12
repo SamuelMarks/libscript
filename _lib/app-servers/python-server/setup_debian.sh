@@ -45,11 +45,18 @@ done
 PREVIOUS_WD="$(pwd)"
 SERVICE_NAME=''
 if [ -z "${DEST+x}" ]; then
-  RAND="$(env LC_CTYPE='C' tr -cd '[:lower:]' < '/dev/urandom' | head -c 8)"
-  DEST="${LIBSCRIPT_DATA_DIR}"'/'"${RAND}"
+  if [ -f "${LIBSCRIPT_DATA_DIR}/.python_server_dest" ]; then
+    DEST="$(cat "${LIBSCRIPT_DATA_DIR}/.python_server_dest")"
+    RAND="$(basename -- "${DEST}")"
+  else
+    RAND="$(env LC_CTYPE='C' tr -cd '[:lower:]' < '/dev/urandom' | head -c 8)"
+    DEST="${LIBSCRIPT_DATA_DIR}"'/'"${RAND}"
+    mkdir -p -- "${LIBSCRIPT_DATA_DIR}"
+    printf '%s\n' "${DEST}" > "${LIBSCRIPT_DATA_DIR}/.python_server_dest"
+  fi
   export DEST
   mkdir -p -- "${PYTHON_SERVER_DEST}"
-  SERVICE_NAME='rust-'"${RAND}"
+  SERVICE_NAME='python-'"${RAND}"
   touch "${PYTHON_SERVER_DEST}/main.py"
 else
   SERVICE_NAME="$(basename -- "${PYTHON_SERVER_DEST}")"
@@ -58,6 +65,22 @@ NAME=' '"${SERVICE_NAME}"
 cd -- "${PYTHON_SERVER_DEST}"
 
 if [ "${PYTHON_SERVER_VARS-}" ]; then
+  if [ -f "${LIBSCRIPT_DATA_DIR}/dyn_env.sh" ]; then
+    tmp_env=$(mktemp)
+    libscript_object2key_val "${PYTHON_SERVER_VARS}" 'export ' "'" | awk -F= '{print $1}' | while read -r key_prefix; do
+      key=$(printf '%s\n' "${key_prefix}" | awk '{print $2}')
+      grep -v "^export ${key}=" "${LIBSCRIPT_DATA_DIR}/dyn_env.sh" > "${tmp_env}" || true
+      cat "${tmp_env}" > "${LIBSCRIPT_DATA_DIR}/dyn_env.sh"
+    done
+  fi
+  if [ -f "${LIBSCRIPT_DATA_DIR}/dyn_env.csh" ]; then
+    tmp_env=$(mktemp)
+    libscript_object2key_val "${PYTHON_SERVER_VARS}" 'setenv ' "'" | awk '{print $2}' | while read -r key; do
+      grep -v "^setenv ${key} " "${LIBSCRIPT_DATA_DIR}/dyn_env.csh" > "${tmp_env}" || true
+      cat "${tmp_env}" > "${LIBSCRIPT_DATA_DIR}/dyn_env.csh"
+    done
+    rm -f "${tmp_env}"
+  fi
   libscript_object2key_val "${PYTHON_SERVER_VARS}" 'export ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh'
   libscript_object2key_val "${PYTHON_SERVER_VARS}" 'setenv ' "'" >> "${LIBSCRIPT_DATA_DIR}"'/dyn_env.csh'
 fi

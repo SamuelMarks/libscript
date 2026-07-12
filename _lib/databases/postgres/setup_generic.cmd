@@ -112,7 +112,7 @@ if "%POSTGRES_INSTALL_METHOD%"=="vfox" ( vfox add postgres & vfox install "postg
 set "TARGET_DIR=%LIBSCRIPT_HOME%\postgres\%POSTGRES_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing postgres %POSTGRES_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\postgres\postgres-%POSTGRES_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\postgres\postgres-%POSTGRES_VERSION%.zip" -C "%TARGET_DIR%"

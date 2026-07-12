@@ -112,7 +112,7 @@ if "%SNAP_INSTALL_METHOD%"=="vfox" ( vfox add snap & vfox install "snap@%SNAP_VE
 set "TARGET_DIR=%LIBSCRIPT_HOME%\snap\%SNAP_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing snap %SNAP_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\snap\snap-%SNAP_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\snap\snap-%SNAP_VERSION%.zip" -C "%TARGET_DIR%"

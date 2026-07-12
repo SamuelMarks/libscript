@@ -37,6 +37,7 @@ libscript_volume_create() {
   size="${2:-10}"
   zone="${3:-}"
   vtype="${4:-}"
+  vname="${5:-vol-libscript}"
 
   if [ -z "$zone" ]; then
     printf "Error: --zone (or LIBSCRIPT_VOLUME_ZONE) is required for volume creation.\n" >&2
@@ -46,15 +47,29 @@ libscript_volume_create() {
   case "$provider" in
     aws)
       vtype="${vtype:-gp3}"
+      
+      existing_vol=$(aws ec2 describe-volumes --filters "Name=tag:Name,Values=$vname" "Name=availability-zone,Values=$zone" --query "Volumes[0].VolumeId" --output text 2>/dev/null || true)
+      if [ -n "$existing_vol" ] && [ "$existing_vol" != "None" ]; then
+        printf "Volume '%s' already exists: %s\n" "$vname" "$existing_vol"
+        return 0
+      fi
+      
       cmd="aws ec2 create-volume --availability-zone \"$zone\" --size \"$size\" --volume-type \"$vtype\""
       if [ "$LIBSCRIPT_TAG_ENABLE" = "true" ]; then
-        cmd="$cmd --tag-specifications \"ResourceType=volume,Tags=[{Key=$LIBSCRIPT_TAG_KEY,Value=$LIBSCRIPT_TAG_VALUE}]\""
+        cmd="$cmd --tag-specifications \"ResourceType=volume,Tags=[{Key=Name,Value=$vname},{Key=$LIBSCRIPT_TAG_KEY,Value=$LIBSCRIPT_TAG_VALUE}]\""
+      else
+        cmd="$cmd --tag-specifications \"ResourceType=volume,Tags=[{Key=Name,Value=$vname}]\""
       fi
       eval "$cmd"
       ;;
     gcp)
       vtype="${vtype:-pd-standard}"
-      vname="vol-$(date +%s)"
+      
+      if gcloud compute disks describe "$vname" --zone="$zone" >/dev/null 2>&1; then
+        printf "Volume '%s' already exists in zone %s\n" "$vname" "$zone"
+        return 0
+      fi
+      
       cmd="gcloud compute disks create \"$vname\" --size=\"${size}GB\" --zone=\"$zone\" --type=\"$vtype\""
       if [ "$LIBSCRIPT_TAG_ENABLE" = "true" ]; then
         cmd="$cmd --labels=\"$LIBSCRIPT_TAG_KEY=$LIBSCRIPT_TAG_VALUE\""
@@ -63,12 +78,17 @@ libscript_volume_create() {
       ;;
     azure)
       vtype="${vtype:-Standard_LRS}"
-      vname="vol-$(date +%s)"
       rg="${LIBSCRIPT_AZURE_RESOURCE_GROUP:-}"
       if [ -z "$rg" ]; then
         printf "Error: LIBSCRIPT_AZURE_RESOURCE_GROUP must be set for Azure operations.\n" >&2
         return 1
       fi
+      
+      if az disk show --name "$vname" --resource-group "$rg" >/dev/null 2>&1; then
+        printf "Volume '%s' already exists in resource group %s\n" "$vname" "$rg"
+        return 0
+      fi
+      
       cmd="az disk create --name \"$vname\" --resource-group \"$rg\" --location \"$zone\" --size-gb \"$size\" --sku \"$vtype\""
       if [ "$LIBSCRIPT_TAG_ENABLE" = "true" ]; then
         cmd="$cmd --tags \"$LIBSCRIPT_TAG_KEY=$LIBSCRIPT_TAG_VALUE\""

@@ -112,7 +112,7 @@ if "%TMUX_INSTALL_METHOD%"=="vfox" ( vfox add tmux & vfox install "tmux@%TMUX_VE
 set "TARGET_DIR=%LIBSCRIPT_HOME%\tmux\%TMUX_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing tmux %TMUX_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\tmux\tmux-%TMUX_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\tmux\tmux-%TMUX_VERSION%.zip" -C "%TARGET_DIR%"

@@ -112,7 +112,7 @@ if "%FNM_INSTALL_METHOD%"=="vfox" ( vfox add fnm & vfox install "fnm@%FNM_VERSIO
 set "TARGET_DIR=%LIBSCRIPT_HOME%\fnm\%FNM_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing fnm %FNM_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\fnm\fnm-%FNM_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\fnm\fnm-%FNM_VERSION%.zip" -C "%TARGET_DIR%"

@@ -228,7 +228,7 @@ libscript_download() {
   if [ -z "$dest" ]; then dest="$(basename "$url")"; fi
 
   # 1. Checksum Resolution
-  checksum_db="${LIBSCRIPT_ROOT_DIR}/checksums.txt"
+  checksum_db="${LIBSCRIPT_ROOT_DIR}/_lib/checksums.txt"
   expected_checksum="$provided_checksum"
   checksum_from_db=0
 
@@ -253,10 +253,12 @@ libscript_download() {
 
   # 2. Aria2 Export Mode
   if [ -n "${LIBSCRIPT_ARIA2_EXPORT_FILE:-}" ]; then
-    printf "%s\n" "$url" >> "$LIBSCRIPT_ARIA2_EXPORT_FILE"
-    printf "  out=%s\n" "$(basename "$dest")" >> "$LIBSCRIPT_ARIA2_EXPORT_FILE"
-    if [ -n "$expected_checksum" ]; then
-      printf "  checksum=sha-256=%s\n" "${expected_checksum#sha-256=}" >> "$LIBSCRIPT_ARIA2_EXPORT_FILE"
+    if [ ! -f "$LIBSCRIPT_ARIA2_EXPORT_FILE" ] || ! grep -F -x -q "$url" "$LIBSCRIPT_ARIA2_EXPORT_FILE"; then
+      printf "%s\n" "$url" >> "$LIBSCRIPT_ARIA2_EXPORT_FILE"
+      printf "  out=%s\n" "$(basename "$dest")" >> "$LIBSCRIPT_ARIA2_EXPORT_FILE"
+      if [ -n "$expected_checksum" ]; then
+        printf "  checksum=sha-256=%s\n" "${expected_checksum#sha-256=}" >> "$LIBSCRIPT_ARIA2_EXPORT_FILE"
+      fi
     fi
     return 0
   fi
@@ -368,7 +370,7 @@ libscript_download() {
   # Auto-populate DB with dynamically fetched checksum if we didn't have it in DB
   if [ "$checksum_from_db" -eq 0 ] && [ -n "$expected_checksum" ] && [ "$expected_checksum" != "SKIP" ]; then
     if [ "${LIBSCRIPT_DISABLE_CHECKSUM_TXT_UPDATE:-0}" != "1" ]; then
-       log_info "Updating checksums.txt with fetched checksum for $url"
+       log_info "Updating _lib/checksums.txt with fetched checksum for $url"
        printf '%s\n' "$url ${expected_checksum#sha-256=}" >> "$checksum_db"
     fi
   fi

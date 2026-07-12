@@ -112,7 +112,7 @@ if "%VALKEY_INSTALL_METHOD%"=="vfox" ( vfox add valkey & vfox install "valkey@%V
 set "TARGET_DIR=%LIBSCRIPT_HOME%\valkey\%VALKEY_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing valkey %VALKEY_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\valkey\valkey-%VALKEY_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\valkey\valkey-%VALKEY_VERSION%.zip" -C "%TARGET_DIR%"

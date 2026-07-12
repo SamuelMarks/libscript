@@ -112,7 +112,7 @@ if "%DASH_INSTALL_METHOD%"=="vfox" ( vfox add dash & vfox install "dash@%DASH_VE
 set "TARGET_DIR=%LIBSCRIPT_HOME%\dash\%DASH_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing dash %DASH_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\dash\dash-%DASH_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\dash\dash-%DASH_VERSION%.zip" -C "%TARGET_DIR%"

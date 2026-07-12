@@ -112,7 +112,7 @@ if "%AZURE_INSTALL_METHOD%"=="vfox" ( vfox add azure & vfox install "azure@%AZUR
 set "TARGET_DIR=%LIBSCRIPT_HOME%\azure\%AZURE_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing azure %AZURE_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\azure\azure-%AZURE_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\azure\azure-%AZURE_VERSION%.zip" -C "%TARGET_DIR%"

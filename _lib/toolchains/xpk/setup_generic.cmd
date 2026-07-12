@@ -112,7 +112,7 @@ if "%XPK_INSTALL_METHOD%"=="vfox" ( vfox add xpk & vfox install "xpk@%XPK_VERSIO
 set "TARGET_DIR=%LIBSCRIPT_HOME%\xpk\%XPK_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing xpk %XPK_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\xpk\xpk-%XPK_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\xpk\xpk-%XPK_VERSION%.zip" -C "%TARGET_DIR%"

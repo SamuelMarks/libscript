@@ -40,7 +40,13 @@ for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh"; do
 done
 
 # github.com/kelseyhightower/kubernetes-the-hard-way/blob/master/docs/06-data-encryption-keys.md
-ENCRYPTION_KEY="$(head -c 32 /dev/urandom | base64)"
+if [ -f "${LIBSCRIPT_DATA_DIR}/.k8s_encryption_key" ]; then
+  ENCRYPTION_KEY="$(cat "${LIBSCRIPT_DATA_DIR}/.k8s_encryption_key")"
+else
+  ENCRYPTION_KEY="$(head -c 32 /dev/urandom | base64)"
+  mkdir -p -- "${LIBSCRIPT_DATA_DIR}"
+  printf '%s\n' "${ENCRYPTION_KEY}" > "${LIBSCRIPT_DATA_DIR}/.k8s_encryption_key"
+fi
 export ENCRYPTION_KEY
 envsubst < 'kubernetes-the-hard-way/configs/encryption-config.yaml' \
   > "${LIBSCRIPT_DATA_DIR}"'/encryption-config.yaml'

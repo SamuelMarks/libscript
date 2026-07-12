@@ -112,7 +112,7 @@ if "%ZIG_INSTALL_METHOD%"=="vfox" ( vfox add zig & vfox install "zig@%ZIG_VERSIO
 set "TARGET_DIR=%LIBSCRIPT_HOME%\zig\%ZIG_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing zig %ZIG_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\zig\zig-%ZIG_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\zig\zig-%ZIG_VERSION%.zip" -C "%TARGET_DIR%"

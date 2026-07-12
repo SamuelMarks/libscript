@@ -112,7 +112,7 @@ if "%POWERSHELL_INSTALL_METHOD%"=="vfox" ( vfox add powershell & vfox install "p
 set "TARGET_DIR=%LIBSCRIPT_HOME%\powershell\%POWERSHELL_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing powershell %POWERSHELL_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\powershell\powershell-%POWERSHELL_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\powershell\powershell-%POWERSHELL_VERSION%.zip" -C "%TARGET_DIR%"

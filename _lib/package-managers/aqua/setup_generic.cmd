@@ -112,7 +112,7 @@ if "%AQUA_INSTALL_METHOD%"=="vfox" ( vfox add aqua & vfox install "aqua@%AQUA_VE
 set "TARGET_DIR=%LIBSCRIPT_HOME%\aqua\%AQUA_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing aqua %AQUA_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\aqua\aqua-%AQUA_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\aqua\aqua-%AQUA_VERSION%.zip" -C "%TARGET_DIR%"

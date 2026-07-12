@@ -112,7 +112,7 @@ if "%CPP_INSTALL_METHOD%"=="vfox" ( vfox add cpp & vfox install "cpp@%CPP_VERSIO
 set "TARGET_DIR=%LIBSCRIPT_HOME%\cpp\%CPP_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing cpp %CPP_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\cpp\cpp-%CPP_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\cpp\cpp-%CPP_VERSION%.zip" -C "%TARGET_DIR%"

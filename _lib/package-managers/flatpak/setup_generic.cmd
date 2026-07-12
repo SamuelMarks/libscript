@@ -112,7 +112,7 @@ if "%FLATPAK_INSTALL_METHOD%"=="vfox" ( vfox add flatpak & vfox install "flatpak
 set "TARGET_DIR=%LIBSCRIPT_HOME%\flatpak\%FLATPAK_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing flatpak %FLATPAK_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\flatpak\flatpak-%FLATPAK_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\flatpak\flatpak-%FLATPAK_VERSION%.zip" -C "%TARGET_DIR%"

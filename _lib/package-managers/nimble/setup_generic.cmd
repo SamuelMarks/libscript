@@ -112,7 +112,7 @@ if "%NIMBLE_INSTALL_METHOD%"=="vfox" ( vfox add nimble & vfox install "nimble@%N
 set "TARGET_DIR=%LIBSCRIPT_HOME%\nimble\%NIMBLE_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing nimble %NIMBLE_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\nimble\nimble-%NIMBLE_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\nimble\nimble-%NIMBLE_VERSION%.zip" -C "%TARGET_DIR%"

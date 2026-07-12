@@ -112,7 +112,7 @@ if "%NATS_INSTALL_METHOD%"=="vfox" ( vfox add nats & vfox install "nats@%NATS_VE
 set "TARGET_DIR=%LIBSCRIPT_HOME%\nats\%NATS_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing nats %NATS_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\nats\nats-%NATS_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\nats\nats-%NATS_VERSION%.zip" -C "%TARGET_DIR%"

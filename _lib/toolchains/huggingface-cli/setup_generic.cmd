@@ -112,7 +112,7 @@ if "%HUGGINGFACE_CLI_INSTALL_METHOD%"=="vfox" ( vfox add huggingface-cli & vfox 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\huggingface-cli\%HUGGINGFACE_CLI_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing huggingface-cli %HUGGINGFACE_CLI_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\huggingface-cli\huggingface-cli-%HUGGINGFACE_CLI_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\huggingface-cli\huggingface-cli-%HUGGINGFACE_CLI_VERSION%.zip" -C "%TARGET_DIR%"

@@ -112,7 +112,7 @@ if "%PSMUX_INSTALL_METHOD%"=="vfox" ( vfox add psmux & vfox install "psmux@%PSMU
 set "TARGET_DIR=%LIBSCRIPT_HOME%\psmux\%PSMUX_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing psmux %PSMUX_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\psmux\psmux-%PSMUX_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\psmux\psmux-%PSMUX_VERSION%.zip" -C "%TARGET_DIR%"

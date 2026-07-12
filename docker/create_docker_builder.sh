@@ -92,7 +92,7 @@ if [ "${INPUT_DIRECTORY-}" ]; then
   cd -- "${INPUT_DIRECTORY}"
 fi
 
-awk 'NR==1,/^fi$/' "${DIR}"'/prelude.sh' | tee -a "${DOCKER_BUILDER}" "${DOCKER_BUILDER_PARALLEL}" >/dev/null
+awk 'NR==1,/^fi$/' "${DIR}"'/../_lib/_common/prelude.sh' | tee -a "${DOCKER_BUILDER}" "${DOCKER_BUILDER_PARALLEL}" >/dev/null
 chmod +x "${DOCKER_BUILDER}" "${DOCKER_BUILDER_PARALLEL}"
 
 collect_when_pattern() {
@@ -114,15 +114,15 @@ collect_when_pattern() {
     printf '%s\n' "${result}" | sed 's/^ *//'
 }
 
-SERVER_DFS="$(collect_when_pattern 'dockerfiles/*.server.Dockerfile')"
-STORAGE_DFS="$(collect_when_pattern 'dockerfiles/*.storage.Dockerfile')"
-THIRD_PARTY_DFS="$(collect_when_pattern 'dockerfiles/*.third_party.Dockerfile')"
-TOOLCHAIN_DFS="$(collect_when_pattern 'dockerfiles/*.toolchain.Dockerfile')"
-WWWROOT_DFS="$(collect_when_pattern 'dockerfiles/*.wwwroot.Dockerfile')"
+SERVER_DFS="$(collect_when_pattern 'docker/*.server.Dockerfile')"
+STORAGE_DFS="$(collect_when_pattern 'docker/*.storage.Dockerfile')"
+THIRD_PARTY_DFS="$(collect_when_pattern 'docker/*.third_party.Dockerfile')"
+TOOLCHAIN_DFS="$(collect_when_pattern 'docker/*.toolchain.Dockerfile')"
+WWWROOT_DFS="$(collect_when_pattern 'docker/*.wwwroot.Dockerfile')"
 
 PROCESSED=' '"${SERVER_DFS}"' '"${STORAGE_DFS}"' '"${THIRD_PARTY_DFS}"' '"${TOOLCHAIN_DFS}"' '"${WWWROOT_DFS}"' '
 REMAINING=''
-for dockerfile in dockerfiles/*Dockerfile; do
+for dockerfile in docker/*Dockerfile; do
   case "${PROCESSED}" in
     *[[:space:]]"${dockerfile}"[[:space:]]*|'*Dockerfile') ;;
     *)

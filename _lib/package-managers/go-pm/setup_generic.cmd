@@ -112,7 +112,7 @@ if "%GO_PM_INSTALL_METHOD%"=="vfox" ( vfox add go-pm & vfox install "go-pm@%GO_P
 set "TARGET_DIR=%LIBSCRIPT_HOME%\go-pm\%GO_PM_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing go-pm %GO_PM_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\go-pm\go-pm-%GO_PM_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\go-pm\go-pm-%GO_PM_VERSION%.zip" -C "%TARGET_DIR%"

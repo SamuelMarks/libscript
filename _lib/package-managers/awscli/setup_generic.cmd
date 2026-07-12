@@ -112,7 +112,7 @@ if "%AWSCLI_INSTALL_METHOD%"=="vfox" ( vfox add awscli & vfox install "awscli@%A
 set "TARGET_DIR=%LIBSCRIPT_HOME%\awscli\%AWSCLI_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing awscli %AWSCLI_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\awscli\awscli-%AWSCLI_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\awscli\awscli-%AWSCLI_VERSION%.zip" -C "%TARGET_DIR%"

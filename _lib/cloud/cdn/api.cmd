@@ -18,79 +18,90 @@ set "cert_id=%~5"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :init
 
 if "%provider%"=="aws" (
-    :: Basic OAC creation wrapper
-    for /f "tokens=*" %%i in ('aws cloudfront create-origin-access-control --origin-access-control-config "Name=%bucket%-oac,Description=libscript OAC,OriginAccessControlOriginType=s3,SigningBehavior=always,SigningProtocol=sigv4" --query "OriginAccessControl.Id" --output text 2^>nul') do set "oac_id=%%i"
-    if "!oac_id!"=="" (
-        for /f "tokens=*" %%i in ('aws cloudfront list-origin-access-controls --query "OriginAccessControlList.Items[?Name=='%bucket%-oac'].Id" --output text') do set "oac_id=%%i"
-    )
-
-    echo { > "%TEMP%\dist.json"
-    echo   "CallerReference": "libscript-!RANDOM!", >> "%TEMP%\dist.json"
-    echo   "Comment": "libscript managed CDN for %bucket%", >> "%TEMP%\dist.json"
-    echo   "Enabled": true, >> "%TEMP%\dist.json"
-    echo   "DefaultRootObject": "index.html", >> "%TEMP%\dist.json"
-    echo   "Origins": { >> "%TEMP%\dist.json"
-    echo     "Quantity": 1, >> "%TEMP%\dist.json"
-    echo     "Items": [ >> "%TEMP%\dist.json"
-    echo       { >> "%TEMP%\dist.json"
-    echo         "Id": "S3-%bucket%", >> "%TEMP%\dist.json"
-    echo         "DomainName": "%bucket%.s3.amazonaws.com", >> "%TEMP%\dist.json"
-    echo         "OriginAccessControlId": "!oac_id!", >> "%TEMP%\dist.json"
-    echo         "S3OriginConfig": { "OriginAccessIdentity": "" } >> "%TEMP%\dist.json"
-    echo       } >> "%TEMP%\dist.json"
-    echo     ] >> "%TEMP%\dist.json"
-    echo   }, >> "%TEMP%\dist.json"
-    echo   "DefaultCacheBehavior": { >> "%TEMP%\dist.json"
-    echo     "TargetOriginId": "S3-%bucket%", >> "%TEMP%\dist.json"
-    echo     "ViewerProtocolPolicy": "redirect-to-https", >> "%TEMP%\dist.json"
-    echo     "MinTTL": 0, >> "%TEMP%\dist.json"
-    echo     "ForwardedValues": { "QueryString": false, "Cookies": { "Forward": "none" } } >> "%TEMP%\dist.json"
-    echo   } >> "%TEMP%\dist.json"
-
-    if not "%domain%"=="" (
-        if not "%cert_id%"=="" (
-            echo   , >> "%TEMP%\dist.json"
-            echo   "Aliases": { "Quantity": 1, "Items": [ "%domain%" ] }, >> "%TEMP%\dist.json"
-            echo   "ViewerCertificate": { "ACMCertificateArn": "%cert_id%", "SSLSupportMethod": "sni-only", "MinimumProtocolVersion": "TLSv1.2_2021" } >> "%TEMP%\dist.json"
+    for /f "tokens=*" %%i in ('aws cloudfront list-distributions --query "DistributionList.Items[?Origins.Items[?Id=='S3-%bucket%']].DomainName | [0]" --output text 2^>nul') do set "existing_dist=%%i"
+    if not "!existing_dist!"=="" if not "!existing_dist!"=="None" (
+        echo CDN Distribution already exists for '%bucket%': !existing_dist!
+        set "dist_domain=!existing_dist!"
+    ) else (
+        :: Basic OAC creation wrapper
+        for /f "tokens=*" %%i in ('aws cloudfront create-origin-access-control --origin-access-control-config "Name=%bucket%-oac,Description=libscript OAC,OriginAccessControlOriginType=s3,SigningBehavior=always,SigningProtocol=sigv4" --query "OriginAccessControl.Id" --output text 2^>nul') do set "oac_id=%%i"
+        if "!oac_id!"=="" (
+            for /f "tokens=*" %%i in ('aws cloudfront list-origin-access-controls --query "OriginAccessControlList.Items[?Name=='%bucket%-oac'].Id" --output text') do set "oac_id=%%i"
+        )
+    
+        echo { > "%TEMP%\dist.json"
+        echo   "CallerReference": "libscript-!RANDOM!", >> "%TEMP%\dist.json"
+        echo   "Comment": "libscript managed CDN for %bucket%", >> "%TEMP%\dist.json"
+        echo   "Enabled": true, >> "%TEMP%\dist.json"
+        echo   "DefaultRootObject": "index.html", >> "%TEMP%\dist.json"
+        echo   "Origins": { >> "%TEMP%\dist.json"
+        echo     "Quantity": 1, >> "%TEMP%\dist.json"
+        echo     "Items": [ >> "%TEMP%\dist.json"
+        echo       { >> "%TEMP%\dist.json"
+        echo         "Id": "S3-%bucket%", >> "%TEMP%\dist.json"
+        echo         "DomainName": "%bucket%.s3.amazonaws.com", >> "%TEMP%\dist.json"
+        echo         "OriginAccessControlId": "!oac_id!", >> "%TEMP%\dist.json"
+        echo         "S3OriginConfig": { "OriginAccessIdentity": "" } >> "%TEMP%\dist.json"
+        echo       } >> "%TEMP%\dist.json"
+        echo     ] >> "%TEMP%\dist.json"
+        echo   }, >> "%TEMP%\dist.json"
+        echo   "DefaultCacheBehavior": { >> "%TEMP%\dist.json"
+        echo     "TargetOriginId": "S3-%bucket%", >> "%TEMP%\dist.json"
+        echo     "ViewerProtocolPolicy": "redirect-to-https", >> "%TEMP%\dist.json"
+        echo     "MinTTL": 0, >> "%TEMP%\dist.json"
+        echo     "ForwardedValues": { "QueryString": false, "Cookies": { "Forward": "none" } } >> "%TEMP%\dist.json"
+        echo   } >> "%TEMP%\dist.json"
+    
+        if not "%domain%"=="" (
+            if not "%cert_id%"=="" (
+                echo   , >> "%TEMP%\dist.json"
+                echo   "Aliases": { "Quantity": 1, "Items": [ "%domain%" ] }, >> "%TEMP%\dist.json"
+                echo   "ViewerCertificate": { "ACMCertificateArn": "%cert_id%", "SSLSupportMethod": "sni-only", "MinimumProtocolVersion": "TLSv1.2_2021" } >> "%TEMP%\dist.json"
+            ) else (
+                echo   , >> "%TEMP%\dist.json"
+                echo   "ViewerCertificate": { "CloudFrontDefaultCertificate": true } >> "%TEMP%\dist.json"
+            )
         ) else (
             echo   , >> "%TEMP%\dist.json"
             echo   "ViewerCertificate": { "CloudFrontDefaultCertificate": true } >> "%TEMP%\dist.json"
         )
-    ) else (
-        echo   , >> "%TEMP%\dist.json"
-        echo   "ViewerCertificate": { "CloudFrontDefaultCertificate": true } >> "%TEMP%\dist.json"
-    )
-    echo } >> "%TEMP%\dist.json"
-
-    for /f "tokens=*" %%i in ('aws cloudfront create-distribution --distribution-config "file://%TEMP%\dist.json" --query "Distribution.DomainName" --output text') do set "dist_domain=%%i"
-    del "%TEMP%\dist.json"
-
-    if "%LIBSCRIPT_TAG_ENABLE%"=="true" (
-        for /f "tokens=*" %%i in ('aws cloudfront list-distributions --query "DistributionList.Items[?DomainName=='!dist_domain!'].ARN" --output text') do set "dist_arn=%%i"
-        if not "!dist_arn!"=="" (
-            aws cloudfront tag-resource --resource "!dist_arn!" --tags "Items=[{Key=%LIBSCRIPT_TAG_KEY%,Value=%LIBSCRIPT_TAG_VALUE%}]"
+        echo } >> "%TEMP%\dist.json"
+    
+        for /f "tokens=*" %%i in ('aws cloudfront create-distribution --distribution-config "file://%TEMP%\dist.json" --query "Distribution.DomainName" --output text') do set "dist_domain=%%i"
+        del "%TEMP%\dist.json"
+    
+        if "%LIBSCRIPT_TAG_ENABLE%"=="true" (
+            for /f "tokens=*" %%i in ('aws cloudfront list-distributions --query "DistributionList.Items[?DomainName=='!dist_domain!'].ARN" --output text') do set "dist_arn=%%i"
+            if not "!dist_arn!"=="" (
+                aws cloudfront tag-resource --resource "!dist_arn!" --tags "Items=[{Key=%LIBSCRIPT_TAG_KEY%,Value=%LIBSCRIPT_TAG_VALUE%}]"
+            )
         )
+        echo CDN Distribution created: !dist_domain!
     )
 
-    echo CDN Distribution created: !dist_domain!
     echo IMPORTANT: You must apply the following bucket policy to '%bucket%' to allow OAC access:
     echo { "Version": "2012-10-17", "Statement": { "Effect": "Allow", "Principal": { "Service": "cloudfront.amazonaws.com" }, "Action": "s3:GetObject", "Resource": "arn:aws:s3:::%bucket%/*", "Condition": { "StringEquals": { "AWS:SourceArn": "arn:aws:cloudfront::YOUR_ACCOUNT_ID:distribution/YOUR_DIST_ID" } } } }
 
 ) else if "%provider%"=="gcp" (
-    gcloud compute backend-buckets create "%bucket%-backend" --gcs-bucket-name="%bucket%" --enable-cdn
-    gcloud compute url-maps create "%bucket%-urlmap" --default-backend-bucket="%bucket%-backend"
-    
-    if not "%domain%"=="" (
-        if not "%cert_id%"=="" (
-            gcloud compute target-https-proxies create "%bucket%-https-proxy" --url-map="%bucket%-urlmap" --ssl-certificates="%cert_id%"
-            gcloud compute forwarding-rules create "%bucket%-https-rule" --target-https-proxy="%bucket%-https-proxy%" --ports=443 --global
-            echo HTTPS CDN created.
-            exit /b 0
+    gcloud compute backend-buckets describe "%bucket%-backend" >nul 2>&1
+    if not errorlevel 1 (
+        echo CDN backend-bucket already exists for %bucket%
+    ) else (
+        gcloud compute backend-buckets create "%bucket%-backend" --gcs-bucket-name="%bucket%" --enable-cdn
+        gcloud compute url-maps create "%bucket%-urlmap" --default-backend-bucket="%bucket%-backend"
+        
+        if not "%domain%"=="" (
+            if not "%cert_id%"=="" (
+                gcloud compute target-https-proxies create "%bucket%-https-proxy" --url-map="%bucket%-urlmap" --ssl-certificates="%cert_id%"
+                gcloud compute forwarding-rules create "%bucket%-https-rule" --target-https-proxy="%bucket%-https-proxy%" --ports=443 --global
+                echo HTTPS CDN created.
+                exit /b 0
+            )
         )
+        gcloud compute target-http-proxies create "%bucket%-http-proxy" --url-map="%bucket%-urlmap"
+        gcloud compute forwarding-rules create "%bucket%-http-rule" --target-http-proxy="%bucket%-http-proxy%" --ports=80 --global
+        echo HTTP CDN created.
     )
-    gcloud compute target-http-proxies create "%bucket%-http-proxy" --url-map="%bucket%-urlmap"
-    gcloud compute forwarding-rules create "%bucket%-http-rule" --target-http-proxy="%bucket%-http-proxy%" --ports=80 --global
-    echo HTTP CDN created.
 ) else if "%provider%"=="azure" (
     echo Azure CDN creation requires an existing CDN Profile. Skipping complex scaffolding for now.
 )

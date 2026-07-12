@@ -112,7 +112,7 @@ if "%RUSTUP_INSTALL_METHOD%"=="vfox" ( vfox add rustup & vfox install "rustup@%R
 set "TARGET_DIR=%LIBSCRIPT_HOME%\rustup\%RUSTUP_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing rustup %RUSTUP_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\rustup\rustup-%RUSTUP_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\rustup\rustup-%RUSTUP_VERSION%.zip" -C "%TARGET_DIR%"

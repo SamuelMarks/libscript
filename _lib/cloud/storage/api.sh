@@ -39,7 +39,11 @@ libscript_storage_create() {
   
   case "$provider" in
     aws)
-      aws s3 mb "s3://$bucket"
+      if aws s3api head-bucket --bucket "$bucket" >/dev/null 2>&1; then
+        printf "Storage bucket '%s' already exists.\n" "$bucket"
+      else
+        aws s3 mb "s3://$bucket"
+      fi
       if [ "$LIBSCRIPT_TAG_ENABLE" = "true" ]; then
         aws s3api put-bucket-tagging --bucket "$bucket" --tagging "TagSet=[{Key=$LIBSCRIPT_TAG_KEY,Value=$LIBSCRIPT_TAG_VALUE}]"
       fi
@@ -49,7 +53,11 @@ libscript_storage_create() {
       fi
       ;;
     gcp)
-      gcloud storage buckets create "gs://$bucket"
+      if gcloud storage buckets describe "gs://$bucket" >/dev/null 2>&1; then
+        printf "Storage bucket '%s' already exists.\n" "$bucket"
+      else
+        gcloud storage buckets create "gs://$bucket"
+      fi
       if [ "$LIBSCRIPT_TAG_ENABLE" = "true" ]; then
         gcloud storage buckets update "gs://$bucket" --update-labels="$LIBSCRIPT_TAG_KEY=$LIBSCRIPT_TAG_VALUE"
       fi
@@ -65,11 +73,15 @@ libscript_storage_create() {
         return 1
       fi
       
-      cmd="az storage container create --name \"$bucket\" --account-name \"$acct\""
-      if [ "$public_web" = "true" ]; then
-        cmd="$cmd --public-access container"
+      if az storage container show --name "$bucket" --account-name "$acct" >/dev/null 2>&1; then
+        printf "Storage container '%s' already exists.\n" "$bucket"
+      else
+        cmd="az storage container create --name \"$bucket\" --account-name \"$acct\""
+        if [ "$public_web" = "true" ]; then
+          cmd="$cmd --public-access container"
+        fi
+        eval "$cmd"
       fi
-      eval "$cmd"
       if [ "$LIBSCRIPT_TAG_ENABLE" = "true" ]; then
         az storage container metadata update --name "$bucket" --account-name "$acct" --metadata "$LIBSCRIPT_TAG_KEY=$LIBSCRIPT_TAG_VALUE"
       fi

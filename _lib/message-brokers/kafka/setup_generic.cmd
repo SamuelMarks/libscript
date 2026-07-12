@@ -112,7 +112,7 @@ if "%KAFKA_INSTALL_METHOD%"=="vfox" ( vfox add kafka & vfox install "kafka@%KAFK
 set "TARGET_DIR=%LIBSCRIPT_HOME%\kafka\%KAFKA_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing kafka %KAFKA_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\kafka\kafka-%KAFKA_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\kafka\kafka-%KAFKA_VERSION%.zip" -C "%TARGET_DIR%"

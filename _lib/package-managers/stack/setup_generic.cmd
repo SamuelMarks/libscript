@@ -112,7 +112,7 @@ if "%STACK_INSTALL_METHOD%"=="vfox" ( vfox add stack & vfox install "stack@%STAC
 set "TARGET_DIR=%LIBSCRIPT_HOME%\stack\%STACK_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing stack %STACK_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\stack\stack-%STACK_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\stack\stack-%STACK_VERSION%.zip" -C "%TARGET_DIR%"

@@ -112,7 +112,7 @@ if "%ETCD_INSTALL_METHOD%"=="vfox" ( vfox add etcd & vfox install "etcd@%ETCD_VE
 set "TARGET_DIR=%LIBSCRIPT_HOME%\etcd\%ETCD_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing etcd %ETCD_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\etcd\etcd-%ETCD_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\etcd\etcd-%ETCD_VERSION%.zip" -C "%TARGET_DIR%"

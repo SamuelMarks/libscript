@@ -112,7 +112,7 @@ if "%UTILS_INSTALL_METHOD%"=="vfox" ( vfox add utils & vfox install "utils@%UTIL
 set "TARGET_DIR=%LIBSCRIPT_HOME%\utils\%UTILS_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing utils %UTILS_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\utils\utils-%UTILS_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\utils\utils-%UTILS_VERSION%.zip" -C "%TARGET_DIR%"

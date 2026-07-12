@@ -112,7 +112,7 @@ if "%BUN_PM_INSTALL_METHOD%"=="vfox" ( vfox add bun-pm & vfox install "bun-pm@%B
 set "TARGET_DIR=%LIBSCRIPT_HOME%\bun-pm\%BUN_PM_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing bun-pm %BUN_PM_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\bun-pm\bun-pm-%BUN_PM_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\bun-pm\bun-pm-%BUN_PM_VERSION%.zip" -C "%TARGET_DIR%"

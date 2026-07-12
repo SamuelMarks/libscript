@@ -112,7 +112,7 @@ if "%LIGHTTPD_INSTALL_METHOD%"=="vfox" ( vfox add lighttpd & vfox install "light
 set "TARGET_DIR=%LIBSCRIPT_HOME%\lighttpd\%LIGHTTPD_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing lighttpd %LIGHTTPD_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\lighttpd\lighttpd-%LIGHTTPD_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\lighttpd\lighttpd-%LIGHTTPD_VERSION%.zip" -C "%TARGET_DIR%"

@@ -112,7 +112,7 @@ if "%WINGET_INSTALL_METHOD%"=="vfox" ( vfox add winget & vfox install "winget@%W
 set "TARGET_DIR=%LIBSCRIPT_HOME%\winget\%WINGET_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing winget %WINGET_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\winget\winget-%WINGET_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\winget\winget-%WINGET_VERSION%.zip" -C "%TARGET_DIR%"

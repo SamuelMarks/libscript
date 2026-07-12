@@ -112,7 +112,7 @@ if "%DOCKER_INSTALL_METHOD%"=="vfox" ( vfox add docker & vfox install "docker@%D
 set "TARGET_DIR=%LIBSCRIPT_HOME%\docker\%DOCKER_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing docker %DOCKER_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\docker\docker-%DOCKER_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\docker\docker-%DOCKER_VERSION%.zip" -C "%TARGET_DIR%"

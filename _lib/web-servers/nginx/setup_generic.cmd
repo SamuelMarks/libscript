@@ -112,7 +112,7 @@ if "%NGINX_INSTALL_METHOD%"=="vfox" ( vfox add nginx & vfox install "nginx@%NGIN
 set "TARGET_DIR=%LIBSCRIPT_HOME%\nginx\%NGINX_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing nginx %NGINX_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\nginx\nginx-%NGINX_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\nginx\nginx-%NGINX_VERSION%.zip" -C "%TARGET_DIR%"

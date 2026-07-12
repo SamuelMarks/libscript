@@ -112,7 +112,7 @@ if "%GUIX_INSTALL_METHOD%"=="vfox" ( vfox add guix & vfox install "guix@%GUIX_VE
 set "TARGET_DIR=%LIBSCRIPT_HOME%\guix\%GUIX_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing guix %GUIX_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\guix\guix-%GUIX_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\guix\guix-%GUIX_VERSION%.zip" -C "%TARGET_DIR%"

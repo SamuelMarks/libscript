@@ -29,17 +29,24 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-printf "%s\n%s\n%s\n" \
-    "LANG='C.UTF-8'" \
-    "LC_ALL='C.UTF-8'" \
-    "LIBSCRIPT_ROOT_DIR='/opt/repos/libscript'" >> /etc/environment
+if ! grep -q "^LANG='C.UTF-8'" /etc/environment 2>/dev/null; then
+  printf "%s\n" "LANG='C.UTF-8'" >> /etc/environment
+fi
+if ! grep -q "^LC_ALL='C.UTF-8'" /etc/environment 2>/dev/null; then
+  printf "%s\n" "LC_ALL='C.UTF-8'" >> /etc/environment
+fi
+if ! grep -q "^LIBSCRIPT_ROOT_DIR=" /etc/environment 2>/dev/null; then
+  printf "%s\n" "LIBSCRIPT_ROOT_DIR='/opt/repos/libscript'" >> /etc/environment
+fi
 set +f
-printf '%s\n%s\n' \
-    'export LANG='"'"'C.UTF-8'"'"'' \
-    'export LC_ALL='"'"'C.UTF-8'"'"'' >> ~/.bashrc
+if ! grep -q "export LC_ALL='C.UTF-8'" ~/.bashrc 2>/dev/null; then
+  printf '%s\n%s\n' \
+      'export LANG='"'"'C.UTF-8'"'"'' \
+      'export LC_ALL='"'"'C.UTF-8'"'"'' >> ~/.bashrc
+fi
 set -feu
-printf '%s\n' 'C.UTF-8 UTF-8' >> /etc/locale.gen
-printf '%s\n' 'LANG='"'"'C.UTF-8'"'" >> /etc/locale.conf
+grep -q '^C.UTF-8 UTF-8' /etc/locale.gen 2>/dev/null || printf '%s\n' 'C.UTF-8 UTF-8' >> /etc/locale.gen
+grep -q '^LANG=' /etc/locale.conf 2>/dev/null || printf '%s\n' 'LANG='"'"'C.UTF-8'"'" >> /etc/locale.conf
 apt-get -qq update
 export DEBIAN_FRONTEND='noninteractive'
 apt-get -qq install -y apt-utils curl dc gettext-base jq rsync libarchive-zip-perl pandoc
@@ -49,17 +56,15 @@ if test "$(hostname)" = 'master'; then
   [ -f vagrant_ssh/id_rsa ] || ssh-keygen -N "" -t 'rsa' -b '4096' -C 'vagrant internal ssh keys' -f 'vagrant_ssh/id_rsa'
   [ -d /home/vagrant/.ssh ] || mkdir /home/vagrant/.ssh
   chmod 700 /home/vagrant/.ssh
+  rm -f /tmp/hosts.txt
   for i in $(dc -e '0 1 '"${NODE_COUNT}"'  stsisb[pli+dlt>a]salblax'); do
     # shellcheck disable=SC2003
     last_oct="$(expr "${i}" + 10)"
-    #printf '%s\t%s\n' 'node'"${i}" '10.0.0.'"${last_oct}" >> /etc/hosts
     printf 'node%s\n' "${i}" >> /tmp/hosts.txt
 
-    printf '\nHost node%d
-      HostName 10.0.0.%d
-      StrictHostKeyChecking no
-      UserKnownHostsFile /dev/null
-      IdentityFile /home/vagrant/.ssh/id_rsa\n' "${i}" "${last_oct}" >> ~/.ssh/config
+    if ! grep -q "Host node${i}" ~/.ssh/config 2>/dev/null; then
+      printf '\nHost node%d\n      HostName 10.0.0.%d\n      StrictHostKeyChecking no\n      UserKnownHostsFile /dev/null\n      IdentityFile /home/vagrant/.ssh/id_rsa\n' "${i}" "${last_oct}" >> ~/.ssh/config
+    fi
   done
   cp /tmp/hosts.txt vagrant_ssh/
 else
@@ -70,27 +75,15 @@ else
     -e 's/^#PubkeyAuthentication yes/PubkeyAuthentication yes/' \
     -e 's/^#PasswordAuthentication yes/PasswordAuthentication no/' \
     /etc/ssh/sshd_config
-  printf '\nHost jump
-  HostName 10.0.0.10
-  User vagrant
-  IdentityFile /home/vagrant/.ssh/id_rsa
-  StrictHostKeyChecking no
-  UserKnownHostsFile /dev/null
-
-Host server
-  HostName 10.0.0.11
-  User vagrant
-  IdentityFile /home/vagrant/.ssh/id_rsa
-  StrictHostKeyChecking no
-  UserKnownHostsFile /dev/null\n' >> /home/vagrant/.ssh/config
+  if ! grep -q "Host jump" /home/vagrant/.ssh/config 2>/dev/null; then
+    printf '\nHost jump\n  HostName 10.0.0.10\n  User vagrant\n  IdentityFile /home/vagrant/.ssh/id_rsa\n  StrictHostKeyChecking no\n  UserKnownHostsFile /dev/null\n\nHost server\n  HostName 10.0.0.11\n  User vagrant\n  IdentityFile /home/vagrant/.ssh/id_rsa\n  StrictHostKeyChecking no\n  UserKnownHostsFile /dev/null\n' >> /home/vagrant/.ssh/config
+  fi
   for i in $(dc -e '1 1 '"${NODE_COUNT}"'  stsisb[pli+dlt>a]salblax'); do
       # shellcheck disable=SC2003
       last_oct="$(expr "${i}" + 11)"
 
-      printf '\nHost node%d
-  HostName 10.0.0.%d
-  StrictHostKeyChecking no
-  UserKnownHostsFile /dev/null
-  IdentityFile /home/vagrant/.ssh/id_rsa\n' "${i}" "${last_oct}" >> /home/vagrant/.ssh/config
+      if ! grep -q "Host node${i}" /home/vagrant/.ssh/config 2>/dev/null; then
+        printf '\nHost node%d\n  HostName 10.0.0.%d\n  StrictHostKeyChecking no\n  UserKnownHostsFile /dev/null\n  IdentityFile /home/vagrant/.ssh/id_rsa\n' "${i}" "${last_oct}" >> /home/vagrant/.ssh/config
+      fi
   done
 fi

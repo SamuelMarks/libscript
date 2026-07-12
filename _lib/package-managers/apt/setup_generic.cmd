@@ -112,7 +112,7 @@ if "%APT_INSTALL_METHOD%"=="vfox" ( vfox add apt & vfox install "apt@%APT_VERSIO
 set "TARGET_DIR=%LIBSCRIPT_HOME%\apt\%APT_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing apt %APT_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\apt\apt-%APT_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\apt\apt-%APT_VERSION%.zip" -C "%TARGET_DIR%"

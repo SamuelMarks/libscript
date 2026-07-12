@@ -18,7 +18,12 @@ if "%public_web%"=="" set "public_web=false"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :init
 
 if "%provider%"=="aws" (
-    aws s3 mb "s3://%bucket%"
+    aws s3api head-bucket --bucket "%bucket%" >nul 2>&1
+    if not errorlevel 1 (
+        echo Storage bucket '%bucket%' already exists.
+    ) else (
+        aws s3 mb "s3://%bucket%"
+    )
     if "%LIBSCRIPT_TAG_ENABLE%"=="true" (
         aws s3api put-bucket-tagging --bucket "%bucket%" --tagging "TagSet=[{Key=%LIBSCRIPT_TAG_KEY%,Value=%LIBSCRIPT_TAG_VALUE%}]"
     )
@@ -27,7 +32,12 @@ if "%provider%"=="aws" (
         aws s3api put-public-access-block --bucket "%bucket%" --public-access-block-configuration "BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false"
     )
 ) else if "%provider%"=="gcp" (
-    gcloud storage buckets create "gs://%bucket%"
+    gcloud storage buckets describe "gs://%bucket%" >nul 2>&1
+    if not errorlevel 1 (
+        echo Storage bucket '%bucket%' already exists.
+    ) else (
+        gcloud storage buckets create "gs://%bucket%"
+    )
     if "%LIBSCRIPT_TAG_ENABLE%"=="true" (
         gcloud storage buckets update "gs://%bucket%" --update-labels="%LIBSCRIPT_TAG_KEY%=%LIBSCRIPT_TAG_VALUE%"
     )
@@ -40,9 +50,14 @@ if "%provider%"=="aws" (
         echo Error: LIBSCRIPT_AZURE_ACCOUNT_NAME must be set for Azure storage operations. >&2
         exit /b 1
     )
-    set "cmd=az storage container create --name "%bucket%" --account-name "%LIBSCRIPT_AZURE_ACCOUNT_NAME%""
-    if "%public_web%"=="true" set "cmd=!cmd! --public-access container"
-    %cmd%
+    az storage container show --name "%bucket%" --account-name "%LIBSCRIPT_AZURE_ACCOUNT_NAME%" >nul 2>&1
+    if not errorlevel 1 (
+        echo Storage container '%bucket%' already exists.
+    ) else (
+        set "cmd=az storage container create --name "%bucket%" --account-name "%LIBSCRIPT_AZURE_ACCOUNT_NAME%""
+        if "%public_web%"=="true" set "cmd=!cmd! --public-access container"
+        !cmd!
+    )
     if "%LIBSCRIPT_TAG_ENABLE%"=="true" (
         az storage container metadata update --name "%bucket%" --account-name "%LIBSCRIPT_AZURE_ACCOUNT_NAME%" --metadata "%LIBSCRIPT_TAG_KEY%=%LIBSCRIPT_TAG_VALUE%"
     )

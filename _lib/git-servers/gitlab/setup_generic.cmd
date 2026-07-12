@@ -112,7 +112,7 @@ if "%GITLAB_INSTALL_METHOD%"=="vfox" ( vfox add gitlab & vfox install "gitlab@%G
 set "TARGET_DIR=%LIBSCRIPT_HOME%\gitlab\%GITLAB_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing gitlab %GITLAB_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\gitlab\gitlab-%GITLAB_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\gitlab\gitlab-%GITLAB_VERSION%.zip" -C "%TARGET_DIR%"

@@ -112,7 +112,7 @@ if "%REBAR3_INSTALL_METHOD%"=="vfox" ( vfox add rebar3 & vfox install "rebar3@%R
 set "TARGET_DIR=%LIBSCRIPT_HOME%\rebar3\%REBAR3_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing rebar3 %REBAR3_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\rebar3\rebar3-%REBAR3_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\rebar3\rebar3-%REBAR3_VERSION%.zip" -C "%TARGET_DIR%"

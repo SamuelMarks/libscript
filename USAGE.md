@@ -257,10 +257,10 @@ You can also drop down to lower-level resource management:
 
 ```sh
 # Create a Jump-box on AWS
-./libscript.sh cloud aws jumpbox create my-jumpbox
+./libscript.sh cloud aws jumpbox create my-jumpbox ami-0c55b159cbfafe1f0
 
-# Provision a 5-node group on GCP pre-installed with your stack
-./libscript.sh cloud gcp node-group create web-tier 5 \
+# Provision a 5-node group on AWS pre-installed with your stack
+./libscript.sh cloud aws node-group create web-tier 5 ami-0c55b159cbfafe1f0 my-vpc \
   --bootstrap "./libscript.sh install-deps"
 ```
 
@@ -272,11 +272,11 @@ LibScript provides built-in primitives to push applications and map domains to n
 # Deploy your codebase to a remote Azure node (uses rsync and respects .gitignore)
 ./libscript.sh cloud azure node deploy my-vm t1d-rg ./src ~/app
 
-# Securely copy a specific secrets file to an AWS node
-./libscript.sh cloud aws node scp my-vm ./secrets/backend.env ~/app/secrets/backend.env
+# Securely copy a specific secrets file to an Azure node
+./libscript.sh cloud azure node scp my-vm t1d-rg ./secrets/backend.env ~/app/secrets/backend.env
 
-# Map a cloud node's IP to a domain name via Cloud DNS
-./libscript.sh cloud gcp dns map-node my-vm us-central1-a my-domain.com my-managed-zone
+# Map a cloud node's IP to a domain name via Azure DNS
+./libscript.sh cloud azure dns map-node my-domain.com my-managed-zone t1d-rg my-vm
 ```
 
 ### Persistent State Management

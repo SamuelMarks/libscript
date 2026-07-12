@@ -112,7 +112,7 @@ if "%JQ_INSTALL_METHOD%"=="vfox" ( vfox add jq & vfox install "jq@%JQ_VERSION%" 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\jq\%JQ_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing jq %JQ_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\jq\jq-%JQ_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\jq\jq-%JQ_VERSION%.zip" -C "%TARGET_DIR%"

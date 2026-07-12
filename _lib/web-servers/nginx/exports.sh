@@ -50,7 +50,7 @@ infer_locations() {
       fi
 
       export ENV_SAVED_FILE
-      save_environment >> "${ENV_SAVED_FILE}"
+      save_environment > "${ENV_SAVED_FILE}"
 
       clear_environment
 

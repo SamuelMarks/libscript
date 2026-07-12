@@ -112,7 +112,7 @@ if "%CMAKE_INSTALL_METHOD%"=="vfox" ( vfox add cmake & vfox install "cmake@%CMAK
 set "TARGET_DIR=%LIBSCRIPT_HOME%\cmake\%CMAKE_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing cmake %CMAKE_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\cmake\cmake-%CMAKE_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\cmake\cmake-%CMAKE_VERSION%.zip" -C "%TARGET_DIR%"

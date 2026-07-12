@@ -112,7 +112,7 @@ if "%ARIA2_INSTALL_METHOD%"=="vfox" ( vfox add aria2 & vfox install "aria2@%ARIA
 set "TARGET_DIR=%LIBSCRIPT_HOME%\aria2\%ARIA2_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing aria2 %ARIA2_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\aria2\aria2-%ARIA2_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\aria2\aria2-%ARIA2_VERSION%.zip" -C "%TARGET_DIR%"

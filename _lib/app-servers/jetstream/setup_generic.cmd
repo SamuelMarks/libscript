@@ -112,7 +112,7 @@ if "%JETSTREAM_INSTALL_METHOD%"=="vfox" ( vfox add jetstream & vfox install "jet
 set "TARGET_DIR=%LIBSCRIPT_HOME%\jetstream\%JETSTREAM_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing jetstream %JETSTREAM_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\jetstream\jetstream-%JETSTREAM_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\jetstream\jetstream-%JETSTREAM_VERSION%.zip" -C "%TARGET_DIR%"

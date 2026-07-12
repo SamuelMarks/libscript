@@ -112,7 +112,7 @@ if "%GCP_INSTALL_METHOD%"=="vfox" ( vfox add gcp & vfox install "gcp@%GCP_VERSIO
 set "TARGET_DIR=%LIBSCRIPT_HOME%\gcp\%GCP_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing gcp %GCP_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\gcp\gcp-%GCP_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\gcp\gcp-%GCP_VERSION%.zip" -C "%TARGET_DIR%"

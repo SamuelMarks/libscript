@@ -112,7 +112,7 @@ if "%PYENV_INSTALL_METHOD%"=="vfox" ( vfox add pyenv & vfox install "pyenv@%PYEN
 set "TARGET_DIR=%LIBSCRIPT_HOME%\pyenv\%PYENV_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing pyenv %PYENV_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\pyenv\pyenv-%PYENV_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\pyenv\pyenv-%PYENV_VERSION%.zip" -C "%TARGET_DIR%"

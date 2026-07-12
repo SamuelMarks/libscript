@@ -112,7 +112,7 @@ if "%ASDF_INSTALL_METHOD%"=="vfox" ( vfox add asdf & vfox install "asdf@%ASDF_VE
 set "TARGET_DIR=%LIBSCRIPT_HOME%\asdf\%ASDF_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing asdf %ASDF_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\asdf\asdf-%ASDF_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\asdf\asdf-%ASDF_VERSION%.zip" -C "%TARGET_DIR%"

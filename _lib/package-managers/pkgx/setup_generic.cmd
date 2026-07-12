@@ -112,7 +112,7 @@ if "%PKGX_INSTALL_METHOD%"=="vfox" ( vfox add pkgx & vfox install "pkgx@%PKGX_VE
 set "TARGET_DIR=%LIBSCRIPT_HOME%\pkgx\%PKGX_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing pkgx %PKGX_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\pkgx\pkgx-%PKGX_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\pkgx\pkgx-%PKGX_VERSION%.zip" -C "%TARGET_DIR%"

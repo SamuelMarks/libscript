@@ -112,7 +112,7 @@ if "%WGET_INSTALL_METHOD%"=="vfox" ( vfox add wget & vfox install "wget@%WGET_VE
 set "TARGET_DIR=%LIBSCRIPT_HOME%\wget\%WGET_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing wget %WGET_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\wget\wget-%WGET_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\wget\wget-%WGET_VERSION%.zip" -C "%TARGET_DIR%"

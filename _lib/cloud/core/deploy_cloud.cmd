@@ -412,7 +412,11 @@ echo [%DATE% %TIME%] [%~1] %~2 >> "!LOG_FILE!"
 exit /b 0
 
 :record_state
-echo %~1=%~2 >> "!STATE_FILE!"
+if exist "!STATE_FILE!" (
+    findstr /v /b /c:"%~1=" "!STATE_FILE!" > "!STATE_FILE!.tmp"
+    move /y "!STATE_FILE!.tmp" "!STATE_FILE!" >nul
+)
+echo %~1=%~2>> "!STATE_FILE!"
 call :log "STATE" "Recorded %~1=%~2"
 exit /b 0
 

@@ -112,7 +112,7 @@ if "%SDKMAN_INSTALL_METHOD%"=="vfox" ( vfox add sdkman & vfox install "sdkman@%S
 set "TARGET_DIR=%LIBSCRIPT_HOME%\sdkman\%SDKMAN_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing sdkman %SDKMAN_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\sdkman\sdkman-%SDKMAN_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\sdkman\sdkman-%SDKMAN_VERSION%.zip" -C "%TARGET_DIR%"

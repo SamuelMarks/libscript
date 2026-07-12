@@ -216,7 +216,7 @@ elif [ "${NEXTCLOUD_WEBSERVER}" = "caddy" ]; then
     [ -d /etc/caddy/caddy.d ] && conf_dir="/etc/caddy/caddy.d"
     priv cp "${CADDY_BLOCK_TMP}" "${conf_dir}/${NEXTCLOUD_SERVER_NAME}.caddy"
   else
-    priv tee -a /etc/caddy/Caddyfile < "${CADDY_BLOCK_TMP}" >/dev/null
+    grep -q "${NEXTCLOUD_SERVER_NAME}" /etc/caddy/Caddyfile 2>/dev/null || priv tee -a /etc/caddy/Caddyfile < "${CADDY_BLOCK_TMP}" >/dev/null
   fi
   if ! priv systemctl reload caddy ; then
     true
@@ -237,7 +237,7 @@ elif [ "${NEXTCLOUD_WEBSERVER}" = "httpd" ]; then
       true
     fi
   else
-    priv tee -a /etc/httpd/conf/httpd.conf < "${HTTPD_BLOCK_TMP}" >/dev/null
+    grep -q "${NEXTCLOUD_SERVER_NAME}" /etc/httpd/conf/httpd.conf 2>/dev/null || priv tee -a /etc/httpd/conf/httpd.conf < "${HTTPD_BLOCK_TMP}" >/dev/null
   fi
   rm -f "${HTTPD_BLOCK_TMP}"
 fi

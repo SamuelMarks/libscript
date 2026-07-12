@@ -112,7 +112,7 @@ if "%SWIFT_INSTALL_METHOD%"=="vfox" ( vfox add swift & vfox install "swift@%SWIF
 set "TARGET_DIR=%LIBSCRIPT_HOME%\swift\%SWIFT_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing swift %SWIFT_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\swift\swift-%SWIFT_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\swift\swift-%SWIFT_VERSION%.zip" -C "%TARGET_DIR%"

@@ -112,7 +112,7 @@ if "%PHP_INSTALL_METHOD%"=="vfox" ( vfox add php & vfox install "php@%PHP_VERSIO
 set "TARGET_DIR=%LIBSCRIPT_HOME%\php\%PHP_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing php %PHP_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\php\php-%PHP_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\php\php-%PHP_VERSION%.zip" -C "%TARGET_DIR%"

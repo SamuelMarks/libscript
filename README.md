@@ -152,7 +152,17 @@ without requiring external state files or agents.
 ./libscript.sh provision aws my-stack my-vpc us-east-1 ./ ~/my-app
 
 # Tear down the stack and its associated resources
-./libscript.sh deprovision aws my-stack us-east-1
+./libscript.sh deprovision aws my-stack my-vpc us-east-1
+
+# Manage cloud networking (e.g., VPCs, Firewalls)
+./libscript.sh cloud aws network create my-vpc
+./libscript.sh cloud gcp firewall create my-fw --network my-vpc --allow tcp:22
+
+# Manage compute nodes directly
+./libscript.sh cloud azure node deploy my-vm my-rg ./src ~/app
+
+# Manage storage resources
+./libscript.sh cloud aws storage list
 ```
 
 ### 📦 The Generator Engine

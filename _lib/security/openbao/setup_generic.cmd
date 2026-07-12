@@ -112,7 +112,7 @@ if "%OPENBAO_INSTALL_METHOD%"=="vfox" ( vfox add openbao & vfox install "openbao
 set "TARGET_DIR=%LIBSCRIPT_HOME%\openbao\%OPENBAO_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing openbao %OPENBAO_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\openbao\openbao-%OPENBAO_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\openbao\openbao-%OPENBAO_VERSION%.zip" -C "%TARGET_DIR%"

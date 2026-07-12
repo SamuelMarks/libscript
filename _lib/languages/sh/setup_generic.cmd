@@ -112,7 +112,7 @@ if "%SH_INSTALL_METHOD%"=="vfox" ( vfox add sh & vfox install "sh@%SH_VERSION%" 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\sh\%SH_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing sh %SH_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\sh\sh-%SH_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\sh\sh-%SH_VERSION%.zip" -C "%TARGET_DIR%"

@@ -6,8 +6,8 @@
 !install.sh
 !install.bat
 !libscript.json
-!installer.schema.json
-!prelude.sh
+!packaging/installer.schema.json
+!_lib/_common/prelude.sh
 !top.sh
 !bottom.sh
 
@@ -211,7 +211,7 @@ all_scripts.txt
 !/base_vars.schema.json
 !/installer.schema.json
 /*.txt
-!/checksums.txt
+!_lib/checksums.txt
 /*.out
 /*.err
 /*.pid
@@ -220,7 +220,7 @@ all_scripts.txt
 /*.sh
 !/libscript.sh
 !/install.sh
-!/prelude.sh
+!_lib/_common/prelude.sh
 !/top.sh
 !/bottom.sh
 /*.cmd

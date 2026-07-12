@@ -112,7 +112,7 @@ if "%PIP_INSTALL_METHOD%"=="vfox" ( vfox add pip & vfox install "pip@%PIP_VERSIO
 set "TARGET_DIR=%LIBSCRIPT_HOME%\pip\%PIP_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing pip %PIP_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\pip\pip-%PIP_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\pip\pip-%PIP_VERSION%.zip" -C "%TARGET_DIR%"

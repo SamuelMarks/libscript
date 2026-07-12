@@ -154,10 +154,10 @@ case "$ACTION" in
       if [ -x "${PY_DIR}/bin/python${PY_MINOR_VER}" ]; then
         libscript_symlink_alias "python" "${PYTHON_VERSION}" "${EXACT_VERSION}"
         if [ ! -f "${PY_DIR}/bin/python" ]; then
-          ln -s "python${PY_MINOR_VER}" "${PY_DIR}/bin/python"
+          ln -sf "python${PY_MINOR_VER}" "${PY_DIR}/bin/python"
         fi
         if [ ! -f "${PY_DIR}/bin/python3" ]; then
-          ln -s "python${PY_MINOR_VER}" "${PY_DIR}/bin/python3"
+          ln -sf "python${PY_MINOR_VER}" "${PY_DIR}/bin/python3"
         fi
       else
         if command -v apt-get >/dev/null 2>&1; then
@@ -197,10 +197,10 @@ case "$ACTION" in
         
         # Setup symlinks
         if [ ! -f "${PY_DIR}/bin/python" ] && [ -f "${PY_DIR}/bin/python${PY_MINOR_VER}" ]; then
-          ln -s "python${PY_MINOR_VER}" "${PY_DIR}/bin/python"
+          ln -sf "python${PY_MINOR_VER}" "${PY_DIR}/bin/python"
         fi
         if [ ! -f "${PY_DIR}/bin/python3" ] && [ -f "${PY_DIR}/bin/python${PY_MINOR_VER}" ]; then
-          ln -s "python${PY_MINOR_VER}" "${PY_DIR}/bin/python3"
+          ln -sf "python${PY_MINOR_VER}" "${PY_DIR}/bin/python3"
         fi
         
         # Install ensurepip if pip isn't installed

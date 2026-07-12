@@ -112,7 +112,7 @@ if "%PARU_INSTALL_METHOD%"=="vfox" ( vfox add paru & vfox install "paru@%PARU_VE
 set "TARGET_DIR=%LIBSCRIPT_HOME%\paru\%PARU_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing paru %PARU_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\paru\paru-%PARU_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\paru\paru-%PARU_VERSION%.zip" -C "%TARGET_DIR%"

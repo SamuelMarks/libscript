@@ -112,7 +112,7 @@ if "%WAIT4X_INSTALL_METHOD%"=="vfox" ( vfox add wait4x & vfox install "wait4x@%W
 set "TARGET_DIR=%LIBSCRIPT_HOME%\wait4x\%WAIT4X_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing wait4x %WAIT4X_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\wait4x\wait4x-%WAIT4X_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\wait4x\wait4x-%WAIT4X_VERSION%.zip" -C "%TARGET_DIR%"

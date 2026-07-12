@@ -51,5 +51,7 @@ rustup toolchain install nightly || true
   RUSTC_BOOTSTRAP=1 cargo +nightly check || RUSTC_BOOTSTRAP=1 cargo check
 )
 if [ ! "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}" = "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR}" ]; then
-  cp -r -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}"'/target' "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR}"'/' || true
+  rm -rf -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR}/target" || true
+  mkdir -p -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR}"
+  cp -R -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}/target" "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR}/" || true
 fi

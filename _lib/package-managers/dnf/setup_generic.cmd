@@ -112,7 +112,7 @@ if "%DNF_INSTALL_METHOD%"=="vfox" ( vfox add dnf & vfox install "dnf@%DNF_VERSIO
 set "TARGET_DIR=%LIBSCRIPT_HOME%\dnf\%DNF_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing dnf %DNF_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\dnf\dnf-%DNF_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\dnf\dnf-%DNF_VERSION%.zip" -C "%TARGET_DIR%"

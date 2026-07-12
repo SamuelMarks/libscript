@@ -112,7 +112,7 @@ if "%C_INSTALL_METHOD%"=="vfox" ( vfox add c & vfox install "c@%C_VERSION%" & ex
 set "TARGET_DIR=%LIBSCRIPT_HOME%\c\%C_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing c %C_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\c\c-%C_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\c\c-%C_VERSION%.zip" -C "%TARGET_DIR%"

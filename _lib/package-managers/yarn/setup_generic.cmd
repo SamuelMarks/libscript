@@ -112,7 +112,7 @@ if "%YARN_INSTALL_METHOD%"=="vfox" ( vfox add yarn & vfox install "yarn@%YARN_VE
 set "TARGET_DIR=%LIBSCRIPT_HOME%\yarn\%YARN_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing yarn %YARN_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\yarn\yarn-%YARN_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\yarn\yarn-%YARN_VERSION%.zip" -C "%TARGET_DIR%"

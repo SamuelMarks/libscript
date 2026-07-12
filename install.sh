@@ -39,7 +39,7 @@ LIBSCRIPT_CLI_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 SCRIPT_DIR="${LIBSCRIPT_CLI_DIR}"
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-for LIB in '_lib/_common/os_info.sh' 'env.sh'; do
+for LIB in '_lib/_common/os_info.sh' '_lib/_common/env.sh'; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090

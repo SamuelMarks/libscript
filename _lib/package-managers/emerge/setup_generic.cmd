@@ -112,7 +112,7 @@ if "%EMERGE_INSTALL_METHOD%"=="vfox" ( vfox add emerge & vfox install "emerge@%E
 set "TARGET_DIR=%LIBSCRIPT_HOME%\emerge\%EMERGE_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing emerge %EMERGE_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\emerge\emerge-%EMERGE_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\emerge\emerge-%EMERGE_VERSION%.zip" -C "%TARGET_DIR%"

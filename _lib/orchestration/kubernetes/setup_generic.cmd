@@ -112,7 +112,7 @@ if "%KUBERNETES_INSTALL_METHOD%"=="vfox" ( vfox add kubernetes & vfox install "k
 set "TARGET_DIR=%LIBSCRIPT_HOME%\kubernetes\%KUBERNETES_VERSION%"
 if not exist "%TARGET_DIR%\bin" (
     echo Installing kubernetes %KUBERNETES_VERSION% natively to %TARGET_DIR%...
-    mkdir "%TARGET_DIR%\bin"
+    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\kubernetes\kubernetes-%KUBERNETES_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\kubernetes\kubernetes-%KUBERNETES_VERSION%.zip" -C "%TARGET_DIR%"
