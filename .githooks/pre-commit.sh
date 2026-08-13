@@ -110,9 +110,9 @@ if [ -n "$components" ]; then
   for comp in $components; do
     printf '%s\n' "          - \"$comp\"" >>new_components.txt
   done
-  awk '/^\s*exclude:/ {exit} {print}' .github/workflows/ci.yml >ci_top.yml
-  awk '/^\s*component:/ {exit} {print}' ci_top.yml >ci_top_clean.yml
-  awk 'BEGIN {p=0} /^\s*exclude:/ {p=1} p {print}' .github/workflows/ci.yml >ci_bottom.yml
+  awk '/^[[:space:]]*exclude:/ {exit} {print}' .github/workflows/ci.yml >ci_top.yml
+  awk '/^[[:space:]]*component:/ {exit} {print}' ci_top.yml >ci_top_clean.yml
+  awk 'BEGIN {p=0} /^[[:space:]]*exclude:/ {p=1} p {print}' .github/workflows/ci.yml >ci_bottom.yml
   cat ci_top_clean.yml new_components.txt ci_bottom.yml >.github/workflows/ci.yml
   rm -f ci_top* new_components.txt ci_bottom.yml
 fi
