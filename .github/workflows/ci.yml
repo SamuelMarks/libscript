@@ -53,65 +53,6 @@ jobs:
 
           rm -f "$GITHUB_WORKSPACE/failed_components.txt"
 
-          cat << 'EOF' > run_test_component.sh
-          #!/bin/sh
-          COMPONENT="$1"
-          OS_NAME="$2"
-          echo "========================================"
-          echo "Testing $COMPONENT"
-          echo "========================================"
-          EXCLUDED=0
-          if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/package-managers/swupd" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "ubuntu-latest" ] && [ "$COMPONENT" = "_lib/package-managers/mas" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/package-managers/guix" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/package-managers/pkg" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "ubuntu-latest" ] && [ "$COMPONENT" = "_lib/package-managers/pkg" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/package-managers/xbps" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "ubuntu-latest" ] && [ "$COMPONENT" = "_lib/package-managers/xbps" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/package-managers/emerge" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "ubuntu-latest" ] && [ "$COMPONENT" = "_lib/package-managers/emerge" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "ubuntu-latest" ] && [ "$COMPONENT" = "_lib/caches/valkey" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/package-managers/apk" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/package-managers/apt" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/package-managers/dnf" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/package-managers/pacman" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/package-managers/zypper" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/package-managers/flatpak" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/package-managers/snap" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "ubuntu-latest" ] && [ "$COMPONENT" = "_lib/package-managers/macports" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/utilities/busybox" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "ubuntu-latest" ] && [ "$COMPONENT" = "_lib/web-servers/iis" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/web-servers/iis" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "ubuntu-latest" ] && [ "$COMPONENT" = "_lib/orchestration/kubernetes-thw" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/orchestration/kubernetes-k0s" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/orchestration/kubernetes-thw" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/languages/rust" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "ubuntu-latest" ] && [ "$COMPONENT" = "_lib/security/openbao" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "ubuntu-latest" ] && [ "$COMPONENT" = "stacks/cms/wordpress" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "stacks/cms/wordpress" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "stacks/scaffolds/serve-actix-diesel-auth-scaffold" ]; then EXCLUDED=1; fi
-          if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/orchestration/docker" ]; then EXCLUDED=1; fi
-          if [ "$EXCLUDED" = "1" ]; then
-              echo "Skipping $COMPONENT on $OS_NAME (excluded)"
-              exit 0
-          fi
-          cd "$GITHUB_WORKSPACE/$COMPONENT" || exit 1
-          if [ -f "env.sh" ]; then
-              . ./env.sh
-          fi
-          if [ -f ./setup.sh ]; then
-              sh ./setup.sh || exit 1
-          elif [ -f ./setup_generic.sh ]; then
-              sh ./setup_generic.sh || exit 1
-          fi
-          if [ -x ./test.sh ]; then
-              ./test.sh || exit 1
-          else
-              echo "No test.sh found"
-          fi
-          exit 0
-          EOF
-          chmod +x run_test_component.sh
 
 
           FAILED_COMPONENTS=""
@@ -120,19 +61,19 @@ jobs:
 
           echo ">>> STARTING LAYER 0 <<<"
           # We use xargs with 4 parallel jobs
-          if ! echo "_lib/app-servers/nodejs-server" "_lib/app-servers/ollama" "_lib/app-servers/python-server" "_lib/app-servers/rust-server" "_lib/app-servers/vllm" "_lib/caches/redis" "_lib/caches/valkey" "_lib/cloud-providers/aws" "_lib/cloud-providers/azure" "_lib/cloud-providers/gcp" "_lib/cloud-providers/gcp/cli" "_lib/cloud-providers/gcp/filestore" "_lib/cloud-providers/gcp/gke-tpu-cluster" "_lib/cloud-providers/gcp/gpu-vm" "_lib/cloud-providers/gcp/tpu-vm" "_lib/cloud/core" "_lib/databases/duckdb" "_lib/databases/etcd" "_lib/databases/mariadb" "_lib/databases/mongodb" "_lib/databases/postgres" "_lib/databases/sqlite" "_lib/git-servers/gitea" "_lib/git-servers/gitlab" "_lib/git-servers/utils" "_lib/init-systems/openrc" "_lib/init-systems/systemd" "_lib/languages/bun" "_lib/languages/c" "_lib/languages/cc" "_lib/languages/cpp" "_lib/languages/csharp" "_lib/languages/deno" "_lib/languages/elixir" "_lib/languages/go" "_lib/languages/java" "_lib/languages/kotlin" "_lib/languages/php" "_lib/languages/ruby" "_lib/languages/rust" "_lib/languages/sh" "_lib/languages/swift" "_lib/languages/zig" "_lib/logging/fluentbit" "_lib/logging/tensorboard" "_lib/orchestration/docker" "_lib/orchestration/kubernetes" "_lib/orchestration/kubernetes-k0s" "_lib/orchestration/kubernetes-thw" "_lib/orchestration/kubernetes/kubectl" "_lib/package-managers/ansible-galaxy" "_lib/package-managers/apk" "_lib/package-managers/apt" "_lib/package-managers/aqua" "_lib/package-managers/asdf" "_lib/package-managers/awscli" "_lib/package-managers/azure-cli" "_lib/package-managers/brew" "_lib/package-managers/bun-pm" "_lib/package-managers/bundler" "_lib/package-managers/cabal" "_lib/package-managers/cargo" "_lib/package-managers/cargo-binstall" "_lib/package-managers/choco" "_lib/package-managers/composer" "_lib/package-managers/conan" "_lib/package-managers/conda" "_lib/package-managers/cpanm" "_lib/package-managers/cygwin" "_lib/package-managers/deno-pm" "_lib/package-managers/dnf" "_lib/package-managers/emerge" "_lib/package-managers/eopkg" "_lib/package-managers/flatpak" "_lib/package-managers/fnm" "_lib/package-managers/gem" "_lib/package-managers/ghcup" "_lib/package-managers/go-pm" "_lib/package-managers/google-cloud-sdk" "_lib/package-managers/guix" "_lib/package-managers/hatch" "_lib/package-managers/helm" "_lib/package-managers/julia" "_lib/package-managers/krew" "_lib/package-managers/luarocks" "_lib/package-managers/macports" "_lib/package-managers/mamba" "_lib/package-managers/mas" "_lib/package-managers/mise" "_lib/package-managers/mix" "_lib/package-managers/msys2" "_lib/package-managers/nimble" "_lib/package-managers/nix" "_lib/package-managers/npm" "_lib/package-managers/nuget" "_lib/package-managers/nvm" "_lib/package-managers/opam" "_lib/package-managers/pacman" "_lib/package-managers/paru" "_lib/package-managers/pdm" "_lib/package-managers/pip" "_lib/package-managers/pipx" "_lib/package-managers/pkg" "_lib/package-managers/pkgx" "_lib/package-managers/pnpm" "_lib/package-managers/poetry" "_lib/package-managers/pub" "_lib/package-managers/pyenv" "_lib/package-managers/r" "_lib/package-managers/rbenv" "_lib/package-managers/rebar3" "_lib/package-managers/rustup" "_lib/package-managers/rvm" "_lib/package-managers/rye" "_lib/package-managers/sbt" "_lib/package-managers/scoop" "_lib/package-managers/sdkman" "_lib/package-managers/snap" "_lib/package-managers/spack" "_lib/package-managers/stack" "_lib/package-managers/swupd" "_lib/package-managers/uv" "_lib/package-managers/vcpkg" "_lib/package-managers/vfox" "_lib/package-managers/winget" "_lib/package-managers/xbps" "_lib/package-managers/yarn" "_lib/package-managers/yay" "_lib/package-managers/zypper" "_lib/security/openbao" "_lib/storage-layers/gcsfuse" "_lib/storage-layers/minio" "_lib/toolchains/bazel" "_lib/toolchains/cmake" "_lib/toolchains/coursier" "_lib/toolchains/gradle" "_lib/toolchains/huggingface-cli" "_lib/toolchains/just" "_lib/toolchains/maven" "_lib/toolchains/xpk" "_lib/utilities/7zip" "_lib/utilities/aria2" "_lib/utilities/busybox" "_lib/utilities/curl" "_lib/utilities/dash" "_lib/utilities/jq" "_lib/utilities/powershell" "_lib/utilities/psmux" "_lib/utilities/tmux" "_lib/utilities/wait4x" "_lib/utilities/wget" "_lib/web-servers/caddy" "_lib/web-servers/httpd" "_lib/web-servers/iis" "_lib/web-servers/lighttpd" "_lib/web-servers/nginx" "stacks/crawlers/firecrawl" "stacks/data-science/jupyterhub" "stacks/ecommerce/woocommerce" "stacks/networking/openvpn" "stacks/scaffolds/serve-actix-diesel-auth-scaffold" "stacks/task-queues/celery" | xargs -n 1 -P 4 sh -c './run_test_component.sh "$0" "${{ matrix.os }}" || echo "$0" >> "$GITHUB_WORKSPACE/failed_components.txt"'; then
+          if ! echo "_lib/app-servers/nodejs-server" "_lib/app-servers/ollama" "_lib/app-servers/python-server" "_lib/app-servers/rust-server" "_lib/app-servers/vllm" "_lib/caches/redis" "_lib/caches/valkey" "_lib/cloud-providers/aws" "_lib/cloud-providers/azure" "_lib/cloud-providers/gcp" "_lib/cloud-providers/gcp/cli" "_lib/cloud-providers/gcp/filestore" "_lib/cloud-providers/gcp/gke-tpu-cluster" "_lib/cloud-providers/gcp/gpu-vm" "_lib/cloud-providers/gcp/tpu-vm" "_lib/cloud/core" "_lib/databases/duckdb" "_lib/databases/etcd" "_lib/databases/mariadb" "_lib/databases/mongodb" "_lib/databases/postgres" "_lib/databases/sqlite" "_lib/git-servers/gitea" "_lib/git-servers/gitlab" "_lib/git-servers/utils" "_lib/init-systems/openrc" "_lib/init-systems/systemd" "_lib/languages/bun" "_lib/languages/c" "_lib/languages/cc" "_lib/languages/cpp" "_lib/languages/csharp" "_lib/languages/deno" "_lib/languages/elixir" "_lib/languages/go" "_lib/languages/java" "_lib/languages/kotlin" "_lib/languages/php" "_lib/languages/ruby" "_lib/languages/rust" "_lib/languages/sh" "_lib/languages/swift" "_lib/languages/zig" "_lib/logging/fluentbit" "_lib/logging/tensorboard" "_lib/orchestration/docker" "_lib/orchestration/kubernetes" "_lib/orchestration/kubernetes-k0s" "_lib/orchestration/kubernetes-thw" "_lib/orchestration/kubernetes/kubectl" "_lib/package-managers/ansible-galaxy" "_lib/package-managers/apk" "_lib/package-managers/apt" "_lib/package-managers/aqua" "_lib/package-managers/asdf" "_lib/package-managers/awscli" "_lib/package-managers/azure-cli" "_lib/package-managers/brew" "_lib/package-managers/bun-pm" "_lib/package-managers/bundler" "_lib/package-managers/cabal" "_lib/package-managers/cargo" "_lib/package-managers/cargo-binstall" "_lib/package-managers/choco" "_lib/package-managers/composer" "_lib/package-managers/conan" "_lib/package-managers/conda" "_lib/package-managers/cpanm" "_lib/package-managers/cygwin" "_lib/package-managers/deno-pm" "_lib/package-managers/dnf" "_lib/package-managers/emerge" "_lib/package-managers/eopkg" "_lib/package-managers/flatpak" "_lib/package-managers/fnm" "_lib/package-managers/gem" "_lib/package-managers/ghcup" "_lib/package-managers/go-pm" "_lib/package-managers/google-cloud-sdk" "_lib/package-managers/guix" "_lib/package-managers/hatch" "_lib/package-managers/helm" "_lib/package-managers/julia" "_lib/package-managers/krew" "_lib/package-managers/luarocks" "_lib/package-managers/macports" "_lib/package-managers/mamba" "_lib/package-managers/mas" "_lib/package-managers/mise" "_lib/package-managers/mix" "_lib/package-managers/msys2" "_lib/package-managers/nimble" "_lib/package-managers/nix" "_lib/package-managers/npm" "_lib/package-managers/nuget" "_lib/package-managers/nvm" "_lib/package-managers/opam" "_lib/package-managers/pacman" "_lib/package-managers/paru" "_lib/package-managers/pdm" "_lib/package-managers/pip" "_lib/package-managers/pipx" "_lib/package-managers/pkg" "_lib/package-managers/pkgx" "_lib/package-managers/pnpm" "_lib/package-managers/poetry" "_lib/package-managers/pub" "_lib/package-managers/pyenv" "_lib/package-managers/r" "_lib/package-managers/rbenv" "_lib/package-managers/rebar3" "_lib/package-managers/rustup" "_lib/package-managers/rvm" "_lib/package-managers/rye" "_lib/package-managers/sbt" "_lib/package-managers/scoop" "_lib/package-managers/sdkman" "_lib/package-managers/snap" "_lib/package-managers/spack" "_lib/package-managers/stack" "_lib/package-managers/swupd" "_lib/package-managers/uv" "_lib/package-managers/vcpkg" "_lib/package-managers/vfox" "_lib/package-managers/winget" "_lib/package-managers/xbps" "_lib/package-managers/yarn" "_lib/package-managers/yay" "_lib/package-managers/zypper" "_lib/security/openbao" "_lib/storage-layers/gcsfuse" "_lib/storage-layers/minio" "_lib/toolchains/bazel" "_lib/toolchains/cmake" "_lib/toolchains/coursier" "_lib/toolchains/gradle" "_lib/toolchains/huggingface-cli" "_lib/toolchains/just" "_lib/toolchains/maven" "_lib/toolchains/xpk" "_lib/utilities/7zip" "_lib/utilities/aria2" "_lib/utilities/busybox" "_lib/utilities/curl" "_lib/utilities/dash" "_lib/utilities/jq" "_lib/utilities/powershell" "_lib/utilities/psmux" "_lib/utilities/tmux" "_lib/utilities/wait4x" "_lib/utilities/wget" "_lib/web-servers/caddy" "_lib/web-servers/httpd" "_lib/web-servers/iis" "_lib/web-servers/lighttpd" "_lib/web-servers/nginx" "stacks/crawlers/firecrawl" "stacks/data-science/jupyterhub" "stacks/ecommerce/woocommerce" "stacks/networking/openvpn" "stacks/scaffolds/serve-actix-diesel-auth-scaffold" "stacks/task-queues/celery" | xargs -n 1 -P 4 sh -c 'devtools/ci/run_test_component.sh "$0" "${{ matrix.os }}" || echo "$0" >> "$GITHUB_WORKSPACE/failed_components.txt"'; then
               echo "Error running xargs for layer 0"
           fi
 
           echo ">>> STARTING LAYER 1 <<<"
           # We use xargs with 4 parallel jobs
-          if ! echo "_lib/languages/nodejs" "_lib/languages/python" "stacks/cms/drupal" "stacks/cms/joomla" "stacks/cms/wordpress" "stacks/collaboration/nextcloud" "stacks/ecommerce/magento" "stacks/ecommerce/prestashop" "stacks/forums/phpbb" | xargs -n 1 -P 4 sh -c './run_test_component.sh "$0" "${{ matrix.os }}" || echo "$0" >> "$GITHUB_WORKSPACE/failed_components.txt"'; then
+          if ! echo "_lib/languages/nodejs" "_lib/languages/python" "stacks/cms/drupal" "stacks/cms/joomla" "stacks/cms/wordpress" "stacks/collaboration/nextcloud" "stacks/ecommerce/magento" "stacks/ecommerce/prestashop" "stacks/forums/phpbb" | xargs -n 1 -P 4 sh -c 'devtools/ci/run_test_component.sh "$0" "${{ matrix.os }}" || echo "$0" >> "$GITHUB_WORKSPACE/failed_components.txt"'; then
               echo "Error running xargs for layer 1"
           fi
 
           echo ">>> STARTING LAYER 2 <<<"
           # We use xargs with 4 parallel jobs
-          if ! echo "_lib/app-servers/jetstream" "stacks/erp/odoo" | xargs -n 1 -P 4 sh -c './run_test_component.sh "$0" "${{ matrix.os }}" || echo "$0" >> "$GITHUB_WORKSPACE/failed_components.txt"'; then
+          if ! echo "_lib/app-servers/jetstream" "stacks/erp/odoo" | xargs -n 1 -P 4 sh -c 'devtools/ci/run_test_component.sh "$0" "${{ matrix.os }}" || echo "$0" >> "$GITHUB_WORKSPACE/failed_components.txt"'; then
               echo "Error running xargs for layer 2"
           fi
 
@@ -151,208 +92,19 @@ jobs:
           echo ^>^>^> STARTING LAYER 0 ^<^<^<
           REM Due to cmd.exe limitations, Windows runs sequentially for now
           for %%C in ("_lib/app-servers/nodejs-server" "_lib/app-servers/ollama" "_lib/app-servers/python-server" "_lib/app-servers/rust-server" "_lib/app-servers/vllm" "_lib/caches/redis" "_lib/caches/valkey" "_lib/cloud-providers/aws" "_lib/cloud-providers/azure" "_lib/cloud-providers/gcp" "_lib/cloud-providers/gcp/cli" "_lib/cloud-providers/gcp/filestore" "_lib/cloud-providers/gcp/gke-tpu-cluster" "_lib/cloud-providers/gcp/gpu-vm" "_lib/cloud-providers/gcp/tpu-vm" "_lib/cloud/core" "_lib/databases/duckdb" "_lib/databases/etcd" "_lib/databases/mariadb" "_lib/databases/mongodb" "_lib/databases/postgres" "_lib/databases/sqlite" "_lib/git-servers/gitea" "_lib/git-servers/gitlab" "_lib/git-servers/utils" "_lib/init-systems/openrc" "_lib/init-systems/systemd" "_lib/languages/bun" "_lib/languages/c" "_lib/languages/cc" "_lib/languages/cpp" "_lib/languages/csharp" "_lib/languages/deno" "_lib/languages/elixir" "_lib/languages/go" "_lib/languages/java" "_lib/languages/kotlin" "_lib/languages/php" "_lib/languages/ruby" "_lib/languages/rust" "_lib/languages/sh" "_lib/languages/swift" "_lib/languages/zig" "_lib/logging/fluentbit" "_lib/logging/tensorboard" "_lib/orchestration/docker" "_lib/orchestration/kubernetes" "_lib/orchestration/kubernetes-k0s" "_lib/orchestration/kubernetes-thw" "_lib/orchestration/kubernetes/kubectl" "_lib/package-managers/ansible-galaxy" "_lib/package-managers/apk" "_lib/package-managers/apt" "_lib/package-managers/aqua" "_lib/package-managers/asdf" "_lib/package-managers/awscli" "_lib/package-managers/azure-cli" "_lib/package-managers/brew" "_lib/package-managers/bun-pm" "_lib/package-managers/bundler" "_lib/package-managers/cabal" "_lib/package-managers/cargo" "_lib/package-managers/cargo-binstall" "_lib/package-managers/choco" "_lib/package-managers/composer" "_lib/package-managers/conan" "_lib/package-managers/conda" "_lib/package-managers/cpanm" "_lib/package-managers/cygwin" "_lib/package-managers/deno-pm" "_lib/package-managers/dnf" "_lib/package-managers/emerge" "_lib/package-managers/eopkg" "_lib/package-managers/flatpak" "_lib/package-managers/fnm" "_lib/package-managers/gem" "_lib/package-managers/ghcup" "_lib/package-managers/go-pm" "_lib/package-managers/google-cloud-sdk" "_lib/package-managers/guix" "_lib/package-managers/hatch" "_lib/package-managers/helm" "_lib/package-managers/julia" "_lib/package-managers/krew" "_lib/package-managers/luarocks" "_lib/package-managers/macports" "_lib/package-managers/mamba" "_lib/package-managers/mas" "_lib/package-managers/mise" "_lib/package-managers/mix" "_lib/package-managers/msys2" "_lib/package-managers/nimble" "_lib/package-managers/nix" "_lib/package-managers/npm" "_lib/package-managers/nuget" "_lib/package-managers/nvm" "_lib/package-managers/opam" "_lib/package-managers/pacman" "_lib/package-managers/paru" "_lib/package-managers/pdm" "_lib/package-managers/pip" "_lib/package-managers/pipx" "_lib/package-managers/pkg" "_lib/package-managers/pkgx" "_lib/package-managers/pnpm" "_lib/package-managers/poetry" "_lib/package-managers/pub" "_lib/package-managers/pyenv" "_lib/package-managers/r" "_lib/package-managers/rbenv" "_lib/package-managers/rebar3" "_lib/package-managers/rustup" "_lib/package-managers/rvm" "_lib/package-managers/rye" "_lib/package-managers/sbt" "_lib/package-managers/scoop" "_lib/package-managers/sdkman" "_lib/package-managers/snap" "_lib/package-managers/spack" "_lib/package-managers/stack" "_lib/package-managers/swupd" "_lib/package-managers/uv" "_lib/package-managers/vcpkg" "_lib/package-managers/vfox" "_lib/package-managers/winget" "_lib/package-managers/xbps" "_lib/package-managers/yarn" "_lib/package-managers/yay" "_lib/package-managers/zypper" "_lib/security/openbao" "_lib/storage-layers/gcsfuse" "_lib/storage-layers/minio" "_lib/toolchains/bazel" "_lib/toolchains/cmake" "_lib/toolchains/coursier" "_lib/toolchains/gradle" "_lib/toolchains/huggingface-cli" "_lib/toolchains/just" "_lib/toolchains/maven" "_lib/toolchains/xpk" "_lib/utilities/7zip" "_lib/utilities/aria2" "_lib/utilities/busybox" "_lib/utilities/curl" "_lib/utilities/dash" "_lib/utilities/jq" "_lib/utilities/powershell" "_lib/utilities/psmux" "_lib/utilities/tmux" "_lib/utilities/wait4x" "_lib/utilities/wget" "_lib/web-servers/caddy" "_lib/web-servers/httpd" "_lib/web-servers/iis" "_lib/web-servers/lighttpd" "_lib/web-servers/nginx" "stacks/crawlers/firecrawl" "stacks/data-science/jupyterhub" "stacks/ecommerce/woocommerce" "stacks/networking/openvpn" "stacks/scaffolds/serve-actix-diesel-auth-scaffold" "stacks/task-queues/celery") do (
-              echo ========================================
-              echo Testing %%~C
-              echo ========================================
-              
-              set EXCLUDED=0
-              if "%%~C"=="_lib/package-managers/swupd" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/mas" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/conda" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/guix" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/asdf" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/pkg" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/xbps" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/emerge" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/apt" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/dnf" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/pacman" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/zypper" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/flatpak" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/snap" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/macports" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/web-servers/caddy" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/nix" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/orchestration/kubernetes-k0s" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/orchestration/kubernetes-thw" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/web-servers/nginx" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/databases/postgres" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/message-brokers/rabbitmq" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/databases/etcd" ( set EXCLUDED=1 )
-              if "%%~C"=="stacks/data-science/jupyterhub" ( set EXCLUDED=1 )
-              if "%%~C"=="stacks/scaffolds/serve-actix-diesel-auth-scaffold" ( set EXCLUDED=1 )
-              if "%%~C"=="stacks/crawlers/firecrawl" ( set EXCLUDED=1 )
-              if "%%~C"=="stacks/networking/openvpn" ( set EXCLUDED=1 )
-              if "%%~C"=="stacks/task-queues/celery" ( set EXCLUDED=1 )
-              if "%%~C"=="stacks/cms/wordpress" ( set EXCLUDED=1 )
-              
-              if "!EXCLUDED!"=="1" (
-                  echo Skipping %%~C on ${ matrix.os } ^(excluded^)
-              ) else (
-                  cd "%%~C"
-                  
-                  set SETUP_FAILED=0
-                  if exist setup.cmd (
-                      call setup.cmd || set SETUP_FAILED=1
-                  ) else if exist setup_win.ps1 (
-                      powershell -ExecutionPolicy Bypass -File setup_win.ps1 || set SETUP_FAILED=1
-                  )
-                  
-                  if "!SETUP_FAILED!"=="1" (
-                      echo Setup failed for %%~C
-                      set FAILED_COMPONENTS=!FAILED_COMPONENTS! %%~C
-                  ) else (
-                      FOR /F "tokens=*" %%A IN ('powershell -NoProfile -Command "[Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')"') DO ( SET "PATH=%%A;%PATH%" )
-                      if exist test.cmd (
-                          call test.cmd || (
-                              echo Test failed for %%~C
-                              set FAILED_COMPONENTS=!FAILED_COMPONENTS! %%~C
-                          )
-                      ) else (
-                          echo No test.cmd found
-                      )
-                  )
-                  
-                  cd "%GITHUB_WORKSPACE%"
-              )
+              call devtools\ci\run_test_component.cmd "%%~C" "${{ matrix.os }}" || set FAILED_COMPONENTS=!FAILED_COMPONENTS! %%~C
           )
 
           echo ^>^>^> STARTING LAYER 1 ^<^<^<
           REM Due to cmd.exe limitations, Windows runs sequentially for now
           for %%C in ("_lib/languages/nodejs" "_lib/languages/python" "stacks/cms/drupal" "stacks/cms/joomla" "stacks/cms/wordpress" "stacks/collaboration/nextcloud" "stacks/ecommerce/magento" "stacks/ecommerce/prestashop" "stacks/forums/phpbb") do (
-              echo ========================================
-              echo Testing %%~C
-              echo ========================================
-              
-              set EXCLUDED=0
-              if "%%~C"=="_lib/package-managers/swupd" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/mas" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/conda" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/guix" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/asdf" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/pkg" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/xbps" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/emerge" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/apt" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/dnf" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/pacman" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/zypper" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/flatpak" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/snap" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/macports" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/web-servers/caddy" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/nix" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/orchestration/kubernetes-k0s" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/orchestration/kubernetes-thw" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/web-servers/nginx" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/databases/postgres" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/message-brokers/rabbitmq" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/databases/etcd" ( set EXCLUDED=1 )
-              if "%%~C"=="stacks/data-science/jupyterhub" ( set EXCLUDED=1 )
-              if "%%~C"=="stacks/scaffolds/serve-actix-diesel-auth-scaffold" ( set EXCLUDED=1 )
-              if "%%~C"=="stacks/crawlers/firecrawl" ( set EXCLUDED=1 )
-              if "%%~C"=="stacks/networking/openvpn" ( set EXCLUDED=1 )
-              if "%%~C"=="stacks/task-queues/celery" ( set EXCLUDED=1 )
-              if "%%~C"=="stacks/cms/wordpress" ( set EXCLUDED=1 )
-              
-              if "!EXCLUDED!"=="1" (
-                  echo Skipping %%~C on ${ matrix.os } ^(excluded^)
-              ) else (
-                  cd "%%~C"
-                  
-                  set SETUP_FAILED=0
-                  if exist setup.cmd (
-                      call setup.cmd || set SETUP_FAILED=1
-                  ) else if exist setup_win.ps1 (
-                      powershell -ExecutionPolicy Bypass -File setup_win.ps1 || set SETUP_FAILED=1
-                  )
-                  
-                  if "!SETUP_FAILED!"=="1" (
-                      echo Setup failed for %%~C
-                      set FAILED_COMPONENTS=!FAILED_COMPONENTS! %%~C
-                  ) else (
-                      FOR /F "tokens=*" %%A IN ('powershell -NoProfile -Command "[Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')"') DO ( SET "PATH=%%A;%PATH%" )
-                      if exist test.cmd (
-                          call test.cmd || (
-                              echo Test failed for %%~C
-                              set FAILED_COMPONENTS=!FAILED_COMPONENTS! %%~C
-                          )
-                      ) else (
-                          echo No test.cmd found
-                      )
-                  )
-                  
-                  cd "%GITHUB_WORKSPACE%"
-              )
+              call devtools\ci\run_test_component.cmd "%%~C" "${{ matrix.os }}" || set FAILED_COMPONENTS=!FAILED_COMPONENTS! %%~C
           )
 
           echo ^>^>^> STARTING LAYER 2 ^<^<^<
           REM Due to cmd.exe limitations, Windows runs sequentially for now
           for %%C in ("_lib/app-servers/jetstream" "stacks/erp/odoo") do (
-              echo ========================================
-              echo Testing %%~C
-              echo ========================================
-              
-              set EXCLUDED=0
-              if "%%~C"=="_lib/package-managers/swupd" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/mas" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/conda" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/guix" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/asdf" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/pkg" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/xbps" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/emerge" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/apt" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/dnf" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/pacman" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/zypper" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/flatpak" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/snap" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/macports" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/web-servers/caddy" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/package-managers/nix" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/orchestration/kubernetes-k0s" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/orchestration/kubernetes-thw" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/web-servers/nginx" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/databases/postgres" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/message-brokers/rabbitmq" ( set EXCLUDED=1 )
-              if "%%~C"=="_lib/databases/etcd" ( set EXCLUDED=1 )
-              if "%%~C"=="stacks/data-science/jupyterhub" ( set EXCLUDED=1 )
-              if "%%~C"=="stacks/scaffolds/serve-actix-diesel-auth-scaffold" ( set EXCLUDED=1 )
-              if "%%~C"=="stacks/crawlers/firecrawl" ( set EXCLUDED=1 )
-              if "%%~C"=="stacks/networking/openvpn" ( set EXCLUDED=1 )
-              if "%%~C"=="stacks/task-queues/celery" ( set EXCLUDED=1 )
-              if "%%~C"=="stacks/cms/wordpress" ( set EXCLUDED=1 )
-              
-              if "!EXCLUDED!"=="1" (
-                  echo Skipping %%~C on ${ matrix.os } ^(excluded^)
-              ) else (
-                  cd "%%~C"
-                  
-                  set SETUP_FAILED=0
-                  if exist setup.cmd (
-                      call setup.cmd || set SETUP_FAILED=1
-                  ) else if exist setup_win.ps1 (
-                      powershell -ExecutionPolicy Bypass -File setup_win.ps1 || set SETUP_FAILED=1
-                  )
-                  
-                  if "!SETUP_FAILED!"=="1" (
-                      echo Setup failed for %%~C
-                      set FAILED_COMPONENTS=!FAILED_COMPONENTS! %%~C
-                  ) else (
-                      FOR /F "tokens=*" %%A IN ('powershell -NoProfile -Command "[Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')"') DO ( SET "PATH=%%A;%PATH%" )
-                      if exist test.cmd (
-                          call test.cmd || (
-                              echo Test failed for %%~C
-                              set FAILED_COMPONENTS=!FAILED_COMPONENTS! %%~C
-                          )
-                      ) else (
-                          echo No test.cmd found
-                      )
-                  )
-                  
-                  cd "%GITHUB_WORKSPACE%"
-              )
+              call devtools\ci\run_test_component.cmd "%%~C" "${{ matrix.os }}" || set FAILED_COMPONENTS=!FAILED_COMPONENTS! %%~C
           )
 
           if not "!FAILED_COMPONENTS!"=="" (
