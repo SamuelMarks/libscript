@@ -62,6 +62,8 @@ git_get https://github.com/valkey-io/valkey "${TARGET}"
 cd -- "${TARGET}"
 HASH="$(git rev-list HEAD -1)"
 
+# ## build_install
+# Executes build_install functionality.
 build_install() {
   [ -d 'build' ] || mkdir -p -- 'build'
   touch 'build/'"${HASH}"

@@ -42,6 +42,8 @@ if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
 goto :action_install
 goto :action_install
 
+:: ## action_ls
+:: Executes action_ls functionality.
 :action_ls
 if "%JQ_INSTALL_METHOD%"=="mise" ( mise ls jq & exit /b 0 )
 if "%JQ_INSTALL_METHOD%"=="asdf" ( asdf list jq & exit /b 0 )
@@ -51,6 +53,8 @@ if "%JQ_INSTALL_METHOD%"=="system" ( echo System package manager does not suppor
 if exist "%LIBSCRIPT_HOME%\jq" ( dir /b "%LIBSCRIPT_HOME%\jq" )
 exit /b 0
 
+:: ## action_ls_remote
+:: Executes action_ls_remote functionality.
 :action_ls_remote
 if "%JQ_INSTALL_METHOD%"=="mise" ( mise ls-remote jq & exit /b 0 )
 if "%JQ_INSTALL_METHOD%"=="asdf" ( asdf list all jq & exit /b 0 )
@@ -64,6 +68,8 @@ if not "%JQ_RELEASES_URL%"=="" (
 )
 exit /b 0
 
+:: ## action_use
+:: Executes action_use functionality.
 :action_use
 if "%JQ_INSTALL_METHOD%"=="mise" ( mise use "jq@%JQ_VERSION%" & exit /b 0 )
 if "%JQ_INSTALL_METHOD%"=="asdf" ( asdf global jq "%JQ_VERSION%" & exit /b 0 )
@@ -87,6 +93,8 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 )
 exit /b 0
 
+:: ## action_download
+:: Executes action_download functionality.
 :action_download
 if "%JQ_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading jq %JQ_VERSION% to %DOWNLOAD_DIR%\jq...
@@ -99,6 +107,8 @@ if "%JQ_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_install
+:: Executes action_install functionality.
 :action_install
 if "%JQ_INSTALL_METHOD%"=="system" (
     winget install jq --accept-package-agreements --accept-source-agreements
@@ -136,6 +146,8 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 )
 exit /b 0
 
+:: ## action_service
+:: Executes action_service functionality.
 :action_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -155,6 +167,8 @@ if "%JQ_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_install_service
+:: Executes action_install_service functionality.
 :action_install_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -174,6 +188,8 @@ if "%JQ_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_uninstall_service
+:: Executes action_uninstall_service functionality.
 :action_uninstall_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (

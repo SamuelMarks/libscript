@@ -9,6 +9,8 @@
 
 goto :%1
 
+:: ## libscript_cert_create
+:: Executes libscript_cert_create functionality.
 :libscript_cert_create
 set "provider=%~2"
 set "domain=%~3"
@@ -31,6 +33,8 @@ if "%provider%"=="aws" (
 )
 exit /b 0
 
+:: ## libscript_cert_delete
+:: Executes libscript_cert_delete functionality.
 :libscript_cert_delete
 set "provider=%~2"
 set "domain=%~3"
@@ -68,6 +72,8 @@ if "%provider%"=="aws" (
 )
 exit /b 0
 
+:: ## libscript_cert_list
+:: Executes libscript_cert_list functionality.
 :libscript_cert_list
 set "provider=%~2"
 

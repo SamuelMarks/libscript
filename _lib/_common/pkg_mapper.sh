@@ -34,6 +34,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # Call the `map_package` function with the generic package name. The package manager
 # will be determined from the `PKG_MGR` environment variable.
 
+# ## map_package
+# Executes map_package functionality.
 map_package() {
   pkg="${1}"
   case "${pkg}" in

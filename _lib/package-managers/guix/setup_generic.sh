@@ -48,6 +48,8 @@ GUIX_INSTALL_METHOD="$(libscript_resolve_install_method "GUIX")"
 ACTION="${ACTION:-install}"
 VERSION="${GUIX_VERSION:-latest}"
 
+# ## resolve_exact_version
+# Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
     _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote guix 2>/dev/null | tail -n 1)

@@ -141,6 +141,8 @@ done < "${FIND_RES}"
 URLS_JS="${URLS_JS%,}"']'
 #printf '%s\n' "${URLS_JS}"
 
+# ## to_html_tree
+# Executes to_html_tree functionality.
 to_html_tree() {
   # Read input from argument or stdin
   if [ "$#" -gt 0 ] && [ -n "$1" ]; then

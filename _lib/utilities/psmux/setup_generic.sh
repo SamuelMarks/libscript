@@ -45,6 +45,8 @@ PSMUX_INSTALL_METHOD="$(libscript_resolve_install_method "PSMUX")"
 PSMUX_VERSION="${PSMUX_VERSION:-latest}"
 ACTION="${ACTION:-install}"
 
+# ## resolve_exact_version
+# Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${PSMUX_VERSION}" = "latest" ] || [ "${PSMUX_VERSION}" = "lts" ]; then
     EXACT_VERSION="0.1.0"

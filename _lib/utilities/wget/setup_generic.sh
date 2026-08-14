@@ -45,6 +45,8 @@ WGET_INSTALL_METHOD="$(libscript_resolve_install_method "WGET")"
 WGET_VERSION="${WGET_VERSION:-latest}"
 ACTION="${ACTION:-install}"
 
+# ## resolve_exact_version
+# Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${WGET_VERSION}" = "latest" ] || [ "${WGET_VERSION}" = "lts" ]; then
     EXACT_VERSION=$(curl -sL 'https://ftp.gnu.org/gnu/wget/' | grep -o 'wget-[0-9.]*\.tar\.gz' | tail -n1 | sed 's/wget-//' | sed 's/\.tar\.gz//')

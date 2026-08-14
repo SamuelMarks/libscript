@@ -46,6 +46,8 @@ done
 . "$NETCTL_DIR/lib/dockerfile.sh"
 . "$NETCTL_DIR/lib/vagrantfile.sh"
 
+# ## usage
+# Executes usage functionality.
 usage() {
   cat <<EOF
 netctl - Singular and Additive network config generator

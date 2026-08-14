@@ -41,6 +41,8 @@ if "%ACTION%"=="repl" goto :repl
 call "%LOG_CMD%" :log_error "Unknown action: %ACTION%. Supported: execute, repl."
 exit /b 1
 
+:: ## execute
+:: Executes execute functionality.
 :execute
 set "DB_PATH=%~2"
 if "%DB_PATH%"=="" set "DB_PATH=:memory:"
@@ -54,6 +56,8 @@ call "%LOG_CMD%" :log_info "Executing query on DuckDB %DB_PATH%..."
 duckdb "%DB_PATH%" -c "%QUERY%"
 exit /b 0
 
+:: ## repl
+:: Executes repl functionality.
 :repl
 set "DB_PATH=%~2"
 if "%DB_PATH%"=="" set "DB_PATH=:memory:"

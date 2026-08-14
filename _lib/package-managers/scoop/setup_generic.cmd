@@ -42,6 +42,8 @@ if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
 goto :action_install
 goto :action_install
 
+:: ## action_ls
+:: Executes action_ls functionality.
 :action_ls
 if "%SCOOP_INSTALL_METHOD%"=="mise" ( mise ls scoop & exit /b 0 )
 if "%SCOOP_INSTALL_METHOD%"=="asdf" ( asdf list scoop & exit /b 0 )
@@ -51,6 +53,8 @@ if "%SCOOP_INSTALL_METHOD%"=="system" ( echo System package manager does not sup
 if exist "%LIBSCRIPT_HOME%\scoop" ( dir /b "%LIBSCRIPT_HOME%\scoop" )
 exit /b 0
 
+:: ## action_ls_remote
+:: Executes action_ls_remote functionality.
 :action_ls_remote
 if "%SCOOP_INSTALL_METHOD%"=="mise" ( mise ls-remote scoop & exit /b 0 )
 if "%SCOOP_INSTALL_METHOD%"=="asdf" ( asdf list all scoop & exit /b 0 )
@@ -64,6 +68,8 @@ if not "%SCOOP_RELEASES_URL%"=="" (
 )
 exit /b 0
 
+:: ## action_use
+:: Executes action_use functionality.
 :action_use
 if "%SCOOP_INSTALL_METHOD%"=="mise" ( mise use "scoop@%SCOOP_VERSION%" & exit /b 0 )
 if "%SCOOP_INSTALL_METHOD%"=="asdf" ( asdf global scoop "%SCOOP_VERSION%" & exit /b 0 )
@@ -87,6 +93,8 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 )
 exit /b 0
 
+:: ## action_download
+:: Executes action_download functionality.
 :action_download
 if "%SCOOP_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading scoop %SCOOP_VERSION% to %DOWNLOAD_DIR%\scoop...
@@ -99,6 +107,8 @@ if "%SCOOP_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_install
+:: Executes action_install functionality.
 :action_install
 if "%SCOOP_INSTALL_METHOD%"=="system" (
     winget install scoop --accept-package-agreements --accept-source-agreements
@@ -136,6 +146,8 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 )
 exit /b 0
 
+:: ## action_service
+:: Executes action_service functionality.
 :action_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -155,6 +167,8 @@ if "%SCOOP_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_install_service
+:: Executes action_install_service functionality.
 :action_install_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -174,6 +188,8 @@ if "%SCOOP_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_uninstall_service
+:: Executes action_uninstall_service functionality.
 :action_uninstall_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (

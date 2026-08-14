@@ -126,17 +126,3 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
-
-## Architecture
-
-`libscript` manages `wait4x` versions natively by default
-(`WAIT4X_INSTALL_METHOD=libscript_native`), ensuring isolated installations without polluting global
-system paths. You can override this to use `system`, `mise`, `asdf`, `pkgx`, or `vfox` if preferred.
-
-Libscript manages wait4x versions natively by installing them into isolated directories under
-`LIBSCRIPT_HOME/wait4x/<version>`.
-
-## Version Management
-
-As outlined in the core philosophy, `libscript` manages the versions natively. Installations are
-isolated by default in `~/.libscript/<component>/<version>` and do not pollute global system paths.

@@ -9,6 +9,8 @@
 
 goto :%1
 
+:: ## libscript_cloudinit_generate_mount
+:: Executes libscript_cloudinit_generate_mount functionality.
 :libscript_cloudinit_generate_mount
 set "device=%~2"
 set "mount_point=%~3"

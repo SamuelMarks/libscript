@@ -39,6 +39,8 @@ if "!expected_checksum!"=="" (
                 )
         )
 )
+:: ## found_checksum
+:: Executes found_checksum functionality.
 :found_checksum
 
 :: 2. Aria2 Export Mode
@@ -145,6 +147,8 @@ if not "!dest!"=="" (
 )
 exit /b 0
 
+:: ## libscript_fetch
+:: Executes libscript_fetch functionality.
 :libscript_fetch
 call :libscript_download %*
 exit /b %errorlevel%

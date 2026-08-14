@@ -45,6 +45,8 @@ IIS_INSTALL_METHOD="$(libscript_resolve_install_method "IIS")"
 IIS_VERSION="${IIS_VERSION:-latest}"
 ACTION="${ACTION:-install}"
 
+# ## resolve_exact_version
+# Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${IIS_VERSION}" = "latest" ] || [ "${IIS_VERSION}" = "lts" ]; then
     EXACT_VERSION="10.0"

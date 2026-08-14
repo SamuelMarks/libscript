@@ -67,12 +67,16 @@ if "%ACTION%"=="status" goto :status
 call "%LOG_CMD%" :log_error "Unknown action: %ACTION%"
 exit /b 1
 
+:: ## create
+:: Executes create functionality.
 :create
 if "%TPU_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: tpu-vm create <name>"
     exit /b 1
 )
 set "i=1"
+:: ## create_loop
+:: Executes create_loop functionality.
 :create_loop
 if !i! gtr %TPU_COUNT% exit /b 0
 set "INSTANCE_NAME=%TPU_NAME%"
@@ -156,6 +160,8 @@ if "%TPU_USE_QUEUED_RESOURCE%"=="true" (
 set /a i+=1
 goto :create_loop
 
+:: ## delete
+:: Executes delete functionality.
 :delete
 if "%TPU_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: tpu-vm delete <name> [--all]"
@@ -164,6 +170,8 @@ if "%TPU_NAME%"=="" (
 shift
 shift
 set "ALL_FLAG="
+:: ## del_arg_loop
+:: Executes del_arg_loop functionality.
 :del_arg_loop
 if "%~1"=="--all" (
     set "ALL_FLAG=true"
@@ -173,6 +181,8 @@ if "%~1"=="--all" (
 set "i=1"
 set "LIMIT=%TPU_COUNT%"
 if not "%ALL_FLAG%"=="true" set "LIMIT=1"
+:: ## del_loop
+:: Executes del_loop functionality.
 :del_loop
 if !i! gtr !LIMIT! exit /b 0
 set "INSTANCE_NAME=%TPU_NAME%"
@@ -217,6 +227,8 @@ if not errorlevel 1 (
 set /a i+=1
 goto :del_loop
 
+:: ## start
+:: Executes start functionality.
 :start
 if "%TPU_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: tpu-vm start <name> [--all]"
@@ -225,6 +237,8 @@ if "%TPU_NAME%"=="" (
 shift
 shift
 set "ALL_FLAG="
+:: ## start_arg_loop
+:: Executes start_arg_loop functionality.
 :start_arg_loop
 if "%~1"=="--all" (
     set "ALL_FLAG=true"
@@ -234,6 +248,8 @@ if "%~1"=="--all" (
 set "i=1"
 set "LIMIT=%TPU_COUNT%"
 if not "%ALL_FLAG%"=="true" set "LIMIT=1"
+:: ## start_loop
+:: Executes start_loop functionality.
 :start_loop
 if !i! gtr !LIMIT! exit /b 0
 set "INSTANCE_NAME=%TPU_NAME%"
@@ -247,6 +263,8 @@ gcloud compute tpus tpu-vm start "!INSTANCE_NAME!" --zone="%TPU_ZONE%" %PROJECT_
 set /a i+=1
 goto :start_loop
 
+:: ## stop
+:: Executes stop functionality.
 :stop
 if "%TPU_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: tpu-vm stop <name> [--all]"
@@ -255,6 +273,8 @@ if "%TPU_NAME%"=="" (
 shift
 shift
 set "ALL_FLAG="
+:: ## stop_arg_loop
+:: Executes stop_arg_loop functionality.
 :stop_arg_loop
 if "%~1"=="--all" (
     set "ALL_FLAG=true"
@@ -264,6 +284,8 @@ if "%~1"=="--all" (
 set "i=1"
 set "LIMIT=%TPU_COUNT%"
 if not "%ALL_FLAG%"=="true" set "LIMIT=1"
+:: ## stop_loop
+:: Executes stop_loop functionality.
 :stop_loop
 if !i! gtr !LIMIT! exit /b 0
 set "INSTANCE_NAME=%TPU_NAME%"
@@ -277,6 +299,8 @@ gcloud compute tpus tpu-vm stop "!INSTANCE_NAME!" --zone="%TPU_ZONE%" %PROJECT_F
 set /a i+=1
 goto :stop_loop
 
+:: ## ssh
+:: Executes ssh functionality.
 :ssh
 if "%TPU_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: tpu-vm ssh <name> [--detached] [--forward-port <local>:<remote>] [--all-workers] [command]"
@@ -287,6 +311,8 @@ shift
 set "DETACHED="
 set "FORWARD_PORT="
 set "ALL_WORKERS="
+:: ## ssh_arg_loop
+:: Executes ssh_arg_loop functionality.
 :ssh_arg_loop
 if "%~1"=="--detached" (
     set "DETACHED=true"
@@ -314,11 +340,15 @@ if "%ALL_WORKERS%"=="true" (
 )
 
 set "REST_ARGS="
+:: ## ssh_loop
+:: Executes ssh_loop functionality.
 :ssh_loop
 if "%~1"=="" goto :ssh_run
 set "REST_ARGS=%REST_ARGS% %~1"
 shift
 goto :ssh_loop
+:: ## ssh_run
+:: Executes ssh_run functionality.
 :ssh_run
 call "%LOG_CMD%" :log_info "Connecting to TPU VM %TPU_NAME%..."
 if "%REST_ARGS%"=="" (
@@ -333,6 +363,8 @@ if "%REST_ARGS%"=="" (
 )
 exit /b 0
 
+:: ## profile
+:: Executes profile functionality.
 :profile
 if "%TPU_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: tpu-vm profile <name> [--port 9012] [--duration 1000]"
@@ -342,6 +374,8 @@ shift
 shift
 set "PORT=9012"
 set "DURATION=1000"
+:: ## profile_arg_loop
+:: Executes profile_arg_loop functionality.
 :profile_arg_loop
 if "%~1"=="--port" (
     set "PORT=%~2"
@@ -360,6 +394,8 @@ call "%LOG_CMD%" :log_info "Initiating capture_tpu_profile session on %TPU_NAME%
 gcloud compute tpus tpu-vm ssh "%TPU_NAME%" --zone="%TPU_ZONE%" %PROJECT_FLAG% --worker=all --command="capture_tpu_profile --tpu=%%HOSTNAME%% --profiler_port=%PORT% --duration_ms=%DURATION% --logdir=/tmp/tpu_profile"
 exit /b 0
 
+:: ## scp
+:: Executes scp functionality.
 :scp
 if "%TPU_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: tpu-vm scp <name> <src> <dest> [--all-workers]"
@@ -370,6 +406,8 @@ shift
 set "ALL_WORKERS="
 set "SRC="
 set "DEST="
+:: ## scp_arg_loop
+:: Executes scp_arg_loop functionality.
 :scp_arg_loop
 if "%~1"=="" goto :scp_run
 if "%~1"=="--all-workers" (
@@ -388,6 +426,8 @@ if "%SRC%"=="" (
 shift
 goto :scp_arg_loop
 
+:: ## scp_run
+:: Executes scp_run functionality.
 :scp_run
 if "%SRC%"=="" (
     call "%LOG_CMD%" :log_error "Usage: tpu-vm scp <name> <src> <dest> [--all-workers]"
@@ -416,6 +456,8 @@ if not errorlevel 1 (
 gcloud compute tpus tpu-vm scp %SCP_FLAGS% "%SRC%" "%TPU_NAME%:%DEST%" --zone="%TPU_ZONE%" %PROJECT_FLAG%
 exit /b 0
 
+:: ## status
+:: Executes status functionality.
 :status
 if "%TPU_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: tpu-vm status <name> [--all]"
@@ -424,6 +466,8 @@ if "%TPU_NAME%"=="" (
 shift
 shift
 set "ALL_FLAG="
+:: ## status_arg_loop
+:: Executes status_arg_loop functionality.
 :status_arg_loop
 if "%~1"=="--all" (
     set "ALL_FLAG=true"
@@ -434,6 +478,8 @@ set "i=1"
 set "LIMIT=%TPU_COUNT%"
 if not "%ALL_FLAG%"=="true" set "LIMIT=1"
 
+:: ## status_loop
+:: Executes status_loop functionality.
 :status_loop
 if !i! gtr !LIMIT! exit /b 0
 set "INSTANCE_NAME=%TPU_NAME%"

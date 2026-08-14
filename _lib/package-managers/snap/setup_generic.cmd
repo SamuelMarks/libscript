@@ -42,6 +42,8 @@ if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
 goto :action_install
 goto :action_install
 
+:: ## action_ls
+:: Executes action_ls functionality.
 :action_ls
 if "%SNAP_INSTALL_METHOD%"=="mise" ( mise ls snap & exit /b 0 )
 if "%SNAP_INSTALL_METHOD%"=="asdf" ( asdf list snap & exit /b 0 )
@@ -51,6 +53,8 @@ if "%SNAP_INSTALL_METHOD%"=="system" ( echo System package manager does not supp
 if exist "%LIBSCRIPT_HOME%\snap" ( dir /b "%LIBSCRIPT_HOME%\snap" )
 exit /b 0
 
+:: ## action_ls_remote
+:: Executes action_ls_remote functionality.
 :action_ls_remote
 if "%SNAP_INSTALL_METHOD%"=="mise" ( mise ls-remote snap & exit /b 0 )
 if "%SNAP_INSTALL_METHOD%"=="asdf" ( asdf list all snap & exit /b 0 )
@@ -64,6 +68,8 @@ if not "%SNAP_RELEASES_URL%"=="" (
 )
 exit /b 0
 
+:: ## action_use
+:: Executes action_use functionality.
 :action_use
 if "%SNAP_INSTALL_METHOD%"=="mise" ( mise use "snap@%SNAP_VERSION%" & exit /b 0 )
 if "%SNAP_INSTALL_METHOD%"=="asdf" ( asdf global snap "%SNAP_VERSION%" & exit /b 0 )
@@ -87,6 +93,8 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 )
 exit /b 0
 
+:: ## action_download
+:: Executes action_download functionality.
 :action_download
 if "%SNAP_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading snap %SNAP_VERSION% to %DOWNLOAD_DIR%\snap...
@@ -99,6 +107,8 @@ if "%SNAP_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_install
+:: Executes action_install functionality.
 :action_install
 if "%SNAP_INSTALL_METHOD%"=="system" (
     winget install snap --accept-package-agreements --accept-source-agreements
@@ -136,6 +146,8 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 )
 exit /b 0
 
+:: ## action_service
+:: Executes action_service functionality.
 :action_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -155,6 +167,8 @@ if "%SNAP_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_install_service
+:: Executes action_install_service functionality.
 :action_install_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -174,6 +188,8 @@ if "%SNAP_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_uninstall_service
+:: Executes action_uninstall_service functionality.
 :action_uninstall_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (

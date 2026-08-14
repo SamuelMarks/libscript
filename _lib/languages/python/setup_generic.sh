@@ -49,6 +49,8 @@ PYTHON_INSTALL_METHOD="$(libscript_resolve_install_method "PYTHON")"
 PYTHON_VERSION="${PYTHON_VERSION:-3.11.9}"
 ACTION="${ACTION:-install}"
 
+# ## resolve_exact_version
+# Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${PYTHON_VERSION}" = "latest" ]; then
     EXACT_VERSION=$(curl -sL https://www.python.org/ftp/python/ | grep -o 'href="3\.[0-9]*\.[0-9]*/"' | sed 's/href="//' | sed 's/\/"//' | sort -V | tail -n 1)

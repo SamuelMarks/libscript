@@ -16,11 +16,15 @@ if "%~1"=="/?" goto show_help
 if "%~1"=="-?" goto show_help
 goto start_install
 
+:: ## show_help
+:: Executes show_help functionality.
 :show_help
 echo Usage: %0
 echo Configure installation via environment variables.
 exit /b 0
 
+:: ## start_install
+:: Executes start_install functionality.
 :start_install
 
 SET "LIBSCRIPT_ROOT_DIR=%LIBSCRIPT_ROOT_DIR:~0,-1%"

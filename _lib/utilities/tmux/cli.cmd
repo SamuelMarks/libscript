@@ -49,18 +49,24 @@ if "%ACTION%"=="list" goto :list
 call "%LOG_CMD%" :log_error "Unknown action: %ACTION%. Supported: new-session, attach, kill, list."
 exit /b 1
 
+:: ## new_session
+:: Executes new_session functionality.
 :new_session
 set "SESSION_NAME=%~2"
 if "%SESSION_NAME%"=="" set "SESSION_NAME=ml-session"
 shift
 shift
 set "REST_ARGS="
+:: ## loop
+:: Executes loop functionality.
 :loop
 if "%~1"=="" goto run
 set "REST_ARGS=%REST_ARGS% %~1"
 shift
 goto loop
 
+:: ## run
+:: Executes run functionality.
 :run
 !TMUX_CMD! has-session -t "%SESSION_NAME%" >nul 2>&1
 if %errorlevel% equ 0 (
@@ -77,6 +83,8 @@ if %errorlevel% equ 0 (
 )
 exit /b 0
 
+:: ## attach
+:: Executes attach functionality.
 :attach
 set "SESSION_NAME=%~2"
 if "%SESSION_NAME%"=="" set "SESSION_NAME=ml-session"
@@ -84,6 +92,8 @@ call "%LOG_CMD%" :log_info "Attaching to session: %SESSION_NAME%"
 !TMUX_CMD! attach-session -t "%SESSION_NAME%"
 exit /b 0
 
+:: ## kill
+:: Executes kill functionality.
 :kill
 set "SESSION_NAME=%~2"
 if "%SESSION_NAME%"=="" set "SESSION_NAME=ml-session"
@@ -91,6 +101,8 @@ call "%LOG_CMD%" :log_info "Killing session: %SESSION_NAME%"
 !TMUX_CMD! kill-session -t "%SESSION_NAME%" >nul 2>&1
 exit /b 0
 
+:: ## list
+:: Executes list functionality.
 :list
 !TMUX_CMD! list-sessions
 exit /b 0

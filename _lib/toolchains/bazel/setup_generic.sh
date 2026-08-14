@@ -45,6 +45,8 @@ BAZEL_INSTALL_METHOD="$(libscript_resolve_install_method "BAZEL")"
 BAZEL_VERSION="${BAZEL_VERSION:-latest}"
 ACTION="${ACTION:-install}"
 
+# ## resolve_exact_version
+# Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${BAZEL_VERSION}" = "latest" ] || [ "${BAZEL_VERSION}" = "lts" ]; then
     EXACT_VERSION=$(curl -sL https://api.github.com/repos/bazelbuild/bazel/releases/latest | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')

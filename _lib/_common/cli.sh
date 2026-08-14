@@ -52,6 +52,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # Standardized logging
 
+# ## parse_args
+# Executes parse_args functionality.
 parse_args() {
   USE_DEFAULT_TAGS=true
   CUSTOM_TAGS=""

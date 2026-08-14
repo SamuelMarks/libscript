@@ -35,6 +35,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 #
 # If PREFIX_PATH is provided, it will be added to the PATH variable.
 
+# ## libscript_print_env
+# Executes libscript_print_env functionality.
 libscript_print_env() {
   _format="${1:-sh}"
   _prefix_path="${2:-}"

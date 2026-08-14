@@ -32,6 +32,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # shellcheck disable=SC1090
 . "$LIBSCRIPT_ROOT_DIR/_lib/cloud/core/tags.sh"
 
+# ## libscript_cert_create
+# Executes libscript_cert_create functionality.
 libscript_cert_create() {
   provider="$1"
   domain="$2"
@@ -56,6 +58,8 @@ libscript_cert_create() {
   esac
 }
 
+# ## libscript_cert_delete
+# Executes libscript_cert_delete functionality.
 libscript_cert_delete() {
   provider="$1"
   domain="$2"
@@ -93,6 +97,8 @@ libscript_cert_delete() {
   esac
 }
 
+# ## libscript_cert_list
+# Executes libscript_cert_list functionality.
 libscript_cert_list() {
   provider="$1"
   

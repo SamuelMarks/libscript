@@ -51,6 +51,8 @@ if "!SINGULAR_MODE!"=="1" (
     set NETCTL_STATE_FILE=%TEMP%\netctl_state_%RANDOM%.json
     call "%NETCTL_DIR%lib\state.cmd" init
     
+:: ## loop
+:: Executes loop functionality.
     :loop
     if "%~1"=="" goto done_loop
     if /I "%~1"=="--listen" (
@@ -89,6 +91,8 @@ if "!SINGULAR_MODE!"=="1" (
     echo Unknown option: %1
     goto usage
 
+:: ## done_loop
+:: Executes done_loop functionality.
     :done_loop
     if not "!EMIT_FORMAT!"=="" (
         call "%NETCTL_DIR%lib\!EMIT_FORMAT!.cmd"
@@ -97,6 +101,8 @@ if "!SINGULAR_MODE!"=="1" (
 )
 exit /b 0
 
+:: ## usage
+:: Executes usage functionality.
 :usage
 echo netctl - Singular and Additive network config generator
 echo.

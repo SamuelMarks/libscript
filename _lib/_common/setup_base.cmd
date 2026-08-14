@@ -18,6 +18,8 @@ setlocal EnableDelayedExpansion
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%~dp0"
+:: ## find_root
+:: Executes find_root functionality.
     :find_root
     if exist "!d!\ROOT" (set "LIBSCRIPT_ROOT_DIR=!d!") else (
         for %%P in ("!d!") do set "parent=%%~dpP"
@@ -54,6 +56,8 @@ if exist "%~dp0setup.ps1" (
 :: Helper functions (reachable via call :label)
 goto :eof
 
+:: ## libscript_install_binary
+:: Executes libscript_install_binary functionality.
 :libscript_install_binary
 set "src_path=%~1"
 set "bin_name=%~2"

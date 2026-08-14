@@ -38,6 +38,8 @@ xpk cluster create --cluster "%XPK_CLUSTER_NAME%" --tpu-type "%TPU_ACCELERATOR_T
 echo Setup complete.
 exit /b 0
 
+:: ## help
+:: Executes help functionality.
 :help
 echo Usage: setup.cmd
 exit /b 0

@@ -45,6 +45,8 @@ HTTPD_INSTALL_METHOD="$(libscript_resolve_install_method "HTTPD")"
 HTTPD_VERSION="${HTTPD_VERSION:-latest}"
 ACTION="${ACTION:-install}"
 
+# ## resolve_exact_version
+# Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${HTTPD_VERSION}" = "latest" ] || [ "${HTTPD_VERSION}" = "lts" ]; then
     EXACT_VERSION="2.4.58"

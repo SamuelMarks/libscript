@@ -31,6 +31,8 @@ if "%ACTION%"=="download" goto :action_download
 if "%ACTION%"=="install" goto :action_install
 goto :action_install
 
+:: ## action_ls
+:: Executes action_ls functionality.
 :action_ls
 if "%GPU_VM_INSTALL_METHOD%"=="mise" ( mise ls gpu-vm & exit /b 0 )
 if "%GPU_VM_INSTALL_METHOD%"=="asdf" ( asdf list gpu-vm & exit /b 0 )
@@ -40,6 +42,8 @@ if "%GPU_VM_INSTALL_METHOD%"=="system" ( echo System package manager does not su
 dir /b "%LIBSCRIPT_HOME%\gpu-vm\" 2>nul
 exit /b 0
 
+:: ## action_ls_remote
+:: Executes action_ls_remote functionality.
 :action_ls_remote
 if "%GPU_VM_INSTALL_METHOD%"=="mise" ( mise ls-remote gpu-vm & exit /b 0 )
 if "%GPU_VM_INSTALL_METHOD%"=="asdf" ( asdf list all gpu-vm & exit /b 0 )
@@ -53,6 +57,8 @@ if not "%GPU_VM_RELEASES_URL%"=="" (
 )
 exit /b 0
 
+:: ## action_use
+:: Executes action_use functionality.
 :action_use
 if "%GPU_VM_INSTALL_METHOD%"=="mise" ( mise use "gpu-vm@%GPU_VM_VERSION%" & exit /b 0 )
 if "%GPU_VM_INSTALL_METHOD%"=="asdf" ( asdf global gpu-vm "%GPU_VM_VERSION%" & exit /b 0 )
@@ -62,6 +68,8 @@ if "%GPU_VM_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version with
 echo libscript_symlink_alias not implemented natively in cmd yet.
 exit /b 0
 
+:: ## action_download
+:: Executes action_download functionality.
 :action_download
 if "%GPU_VM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading gpu-vm %GPU_VM_VERSION% to %DOWNLOAD_DIR%\gpu-vm...
@@ -74,6 +82,8 @@ if "%GPU_VM_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_install
+:: Executes action_install functionality.
 :action_install
 if "%GPU_VM_INSTALL_METHOD%"=="system" (
     winget install gpu-vm --accept-package-agreements --accept-source-agreements

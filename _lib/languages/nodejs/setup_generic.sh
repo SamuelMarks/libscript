@@ -54,6 +54,8 @@ fi
 NODEJS_INSTALL_METHOD="$(libscript_resolve_install_method "NODEJS")"
 ACTION="${ACTION:-install}"
 
+# ## resolve_exact_version
+# Executes resolve_exact_version functionality.
 resolve_exact_version() {
   clean_version=$(printf '%s\n' "$NODEJS_VERSION" | sed 's/^v//')
   if [ "${clean_version}" = "latest" ] || [ "${clean_version}" = "lts" ]; then

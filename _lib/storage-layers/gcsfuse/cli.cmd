@@ -45,6 +45,8 @@ if "%ACTION%"=="unmount" goto :unmount
 call "%LOG_CMD%" :log_error "Unknown action: %ACTION%. Supported: mount, unmount."
 exit /b 1
 
+:: ## mount
+:: Executes mount functionality.
 :mount
 if "%BUCKET_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: gcsfuse mount <bucket_name> <mount_point>"
@@ -63,6 +65,8 @@ call "%LOG_CMD%" :log_info "Mounting bucket %B_NAME% to %MOUNT_POINT%... (WARNIN
 gcsfuse --implicit-dirs "%B_NAME%" "%MOUNT_POINT%"
 exit /b 0
 
+:: ## unmount
+:: Executes unmount functionality.
 :unmount
 if "%BUCKET_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: gcsfuse unmount <mount_point>"

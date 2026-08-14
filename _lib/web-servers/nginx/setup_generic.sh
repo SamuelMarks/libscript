@@ -45,6 +45,8 @@ NGINX_INSTALL_METHOD="$(libscript_resolve_install_method "NGINX")"
 NGINX_VERSION="${NGINX_VERSION:-latest}"
 ACTION="${ACTION:-install}"
 
+# ## resolve_exact_version
+# Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${NGINX_VERSION}" = "latest" ] || [ "${NGINX_VERSION}" = "lts" ]; then
     EXACT_VERSION="1.25.4"

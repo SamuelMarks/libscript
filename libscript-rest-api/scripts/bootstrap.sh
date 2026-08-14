@@ -34,6 +34,8 @@ else
   log_error() { printf '[ERROR] %s\n' "$1" >&2; }
 fi
 
+# ## detect_os
+# Executes detect_os functionality.
 detect_os() {
   OS="$(uname -s)"
   case "$OS" in
@@ -44,6 +46,8 @@ detect_os() {
   esac
 }
 
+# ## check_deps
+# Executes check_deps functionality.
 check_deps() {
   for cmd in gcc clang git cmake make jq pkg-config; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
@@ -56,6 +60,8 @@ check_deps() {
   return 0
 }
 
+# ## install_deps_linux
+# Executes install_deps_linux functionality.
 install_deps_linux() {
   log_info "Detected Linux. Checking dependencies..."
   if check_deps; then
@@ -77,6 +83,8 @@ install_deps_linux() {
   fi
 }
 
+# ## install_deps_macos
+# Executes install_deps_macos functionality.
 install_deps_macos() {
   log_info "Detected macOS. Checking dependencies..."
   if check_deps; then
@@ -91,6 +99,8 @@ install_deps_macos() {
   brew install gcc llvm git cmake make jq pkg-config
 }
 
+# ## install_deps_windows
+# Executes install_deps_windows functionality.
 install_deps_windows() {
   log_info "Detected Windows environment in shell. Suggesting use of bootstrap.cmd."
   log_error "Please run scripts\bootstrap.cmd from a Command Prompt or PowerShell."

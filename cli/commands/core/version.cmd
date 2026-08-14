@@ -11,6 +11,8 @@ if "%cmd%" == "--version" goto :show_version
 if "%cmd%" == "-v" goto :show_version
 goto :eof
 
+:: ## show_version
+:: Executes show_version functionality.
 :show_version
 if defined LIBSCRIPT_VERSION (
     echo %LIBSCRIPT_VERSION%

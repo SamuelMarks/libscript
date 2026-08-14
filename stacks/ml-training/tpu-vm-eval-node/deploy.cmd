@@ -49,14 +49,14 @@ gcloud compute tpus tpu-vm ssh "%TPU_NAME%" --zone="%TPU_ZONE%" %PROJECT_FLAG% -
 set "SCRIPT_FILE=%TEMP%\ml_deploy.sh"
 
 (
-echo #!/bin/bash
+echo #!/bin/sh
 echo set -ex
 echo mkdir -p /mnt/ml_data
 echo gcsfuse --implicit-dirs "%BUCKET_NAME%" /mnt/ml_data
 echo ~/_lib/logging/tensorboard/cli.sh start /mnt/ml_data/logs 6006 ^|^| tensorboard --logdir=/mnt/ml_data/logs --port=6006 --host=0.0.0.0 ^&
 ) > "%SCRIPT_FILE%"
 
-call "%~dp0\..\..\..\_lib\cloud-providers\gcp\tpu-vm\cli.cmd" ssh "%TPU_NAME%" "bash -s" < "%SCRIPT_FILE%"
+call "%~dp0\..\..\..\_lib\cloud-providers\gcp\tpu-vm\cli.cmd" ssh "%TPU_NAME%" "sh -s" < "%SCRIPT_FILE%"
 
 echo Triggering detached training session and port-forwarding TensorBoard...
 call "%~dp0\..\..\..\_lib\cloud-providers\gcp\tpu-vm\cli.cmd" ssh "%TPU_NAME%" --detached --forward-port 6006:localhost:6006 "cd /mnt/ml_data && %ML_SCRIPT%"

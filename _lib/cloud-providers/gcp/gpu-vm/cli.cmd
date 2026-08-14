@@ -20,11 +20,15 @@ set "ACTION=%~1"
 set "GPU_NAME=%~2"
 set "REST_ARGS="
 
+:: ## parse_args
+:: Executes parse_args functionality.
 :parse_args
 if "%~3"=="" goto :done_parse
 set "REST_ARGS=%REST_ARGS% %3"
 shift
 goto :parse_args
+:: ## done_parse
+:: Executes done_parse functionality.
 :done_parse
 
 if "%GPU_ZONE%"=="" (
@@ -54,6 +58,8 @@ if "%ACTION%"=="ssh" goto :ssh
 call "%LOG_CMD%" :log_error "Unknown or missing action: %ACTION%. Supported: create, delete, start, stop, ssh."
 exit /b 1
 
+:: ## create
+:: Executes create functionality.
 :create
 if "%GPU_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: gpu-vm create <name>"
@@ -100,6 +106,8 @@ if %errorlevel% equ 0 (
 )
 exit /b 0
 
+:: ## delete
+:: Executes delete functionality.
 :delete
 if "%GPU_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: gpu-vm delete <name>"
@@ -128,6 +136,8 @@ if %errorlevel% equ 0 (
 )
 exit /b 0
 
+:: ## start
+:: Executes start functionality.
 :start
 if "%GPU_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: gpu-vm start <name>"
@@ -137,6 +147,8 @@ call "%LOG_CMD%" :log_info "Starting GPU VM %GPU_NAME% in zone %GPU_ZONE%..."
 gcloud compute instances start "%GPU_NAME%" --zone="%GPU_ZONE%" %PROJECT_FLAG%
 exit /b 0
 
+:: ## stop
+:: Executes stop functionality.
 :stop
 if "%GPU_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: gpu-vm stop <name>"
@@ -146,6 +158,8 @@ call "%LOG_CMD%" :log_info "Stopping GPU VM %GPU_NAME% in zone %GPU_ZONE%..."
 gcloud compute instances stop "%GPU_NAME%" --zone="%GPU_ZONE%" %PROJECT_FLAG%
 exit /b 0
 
+:: ## ssh
+:: Executes ssh functionality.
 :ssh
 if "%GPU_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: gpu-vm ssh <name> [--detached] [--forward-port <local>:<remote>] [command]"
@@ -155,6 +169,8 @@ shift
 shift
 set "DETACHED="
 set "FORWARD_PORT="
+:: ## arg_loop
+:: Executes arg_loop functionality.
 :arg_loop
 if "%~1"=="--detached" (
     set "DETACHED=true"
@@ -175,11 +191,15 @@ if not "%FORWARD_PORT%"=="" (
 )
 
 set "REST_ARGS="
+:: ## gather_ssh_args
+:: Executes gather_ssh_args functionality.
 :gather_ssh_args
 if "%~1"=="" goto :done_ssh_args
 set "REST_ARGS=%REST_ARGS% %1"
 shift
 goto :gather_ssh_args
+:: ## done_ssh_args
+:: Executes done_ssh_args functionality.
 :done_ssh_args
 
 if "%REST_ARGS%"=="" (

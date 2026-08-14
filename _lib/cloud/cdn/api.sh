@@ -32,6 +32,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # shellcheck disable=SC1090
 . "$LIBSCRIPT_ROOT_DIR/_lib/cloud/core/tags.sh"
 
+# ## libscript_cdn_create
+# Executes libscript_cdn_create functionality.
 libscript_cdn_create() {
   provider="$1"
   bucket="$2"
@@ -171,6 +173,8 @@ POLICY_EOF
   esac
 }
 
+# ## libscript_cdn_delete
+# Executes libscript_cdn_delete functionality.
 libscript_cdn_delete() {
   provider="$1"
   dist_id="$2"
@@ -201,6 +205,8 @@ libscript_cdn_delete() {
   esac
 }
 
+# ## libscript_cdn_list
+# Executes libscript_cdn_list functionality.
 libscript_cdn_list() {
   provider="$1"
   
@@ -218,6 +224,8 @@ libscript_cdn_list() {
   esac
 }
 
+# ## libscript_cdn_invalidate
+# Executes libscript_cdn_invalidate functionality.
 libscript_cdn_invalidate() {
   provider="$1"
   dist_id="$2"

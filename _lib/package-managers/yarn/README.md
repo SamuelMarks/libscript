@@ -14,17 +14,3 @@ Ensures the `yarn` executable is available by pulling in Node.js/npm and running
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
-
-## Architecture
-
-`libscript` manages `yarn` versions natively by default (`YARN_INSTALL_METHOD=libscript_native`),
-ensuring isolated installations without polluting global system paths. You can override this to use
-`system`, `mise`, `asdf`, `pkgx`, or `vfox` if preferred.
-
-Libscript manages yarn versions natively by installing them into isolated directories under
-`LIBSCRIPT_HOME/yarn/<version>`.
-
-## Version Management
-
-As outlined in the core philosophy, `libscript` manages the versions natively. Installations are
-isolated by default in `~/.libscript/<component>/<version>` and do not pollute global system paths.

@@ -6,7 +6,7 @@
 # Execute this script to apply structural markers to docs.
 
 
-set -feu
+set -eu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"

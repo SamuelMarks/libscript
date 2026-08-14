@@ -39,6 +39,8 @@ xpk workload create --cluster "%XPK_CLUSTER_NAME%" --workload "%WORKLOAD_NAME%" 
 echo Deploy complete.
 exit /b 0
 
+:: ## help
+:: Executes help functionality.
 :help
 echo Usage: deploy.cmd
 exit /b 0

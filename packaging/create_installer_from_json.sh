@@ -58,6 +58,8 @@ export verbose
 shift "$((OPTIND - 1))"
 REMAINING="$*"
 
+# ## help
+# Executes help functionality.
 help() {
     >&2 printf 'Create install scripts from JSON.\n
 \t-a whether to install all dependencies (required AND optional)

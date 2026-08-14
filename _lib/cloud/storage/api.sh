@@ -32,6 +32,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # shellcheck disable=SC1090
 . "$LIBSCRIPT_ROOT_DIR/_lib/cloud/core/tags.sh"
 
+# ## libscript_storage_create
+# Executes libscript_storage_create functionality.
 libscript_storage_create() {
   provider="$1"
   bucket="$2"
@@ -89,6 +91,8 @@ libscript_storage_create() {
   esac
 }
 
+# ## libscript_storage_delete
+# Executes libscript_storage_delete functionality.
 libscript_storage_delete() {
   provider="$1"
   bucket="$2"
@@ -119,6 +123,8 @@ libscript_storage_delete() {
   esac
 }
 
+# ## libscript_storage_list
+# Executes libscript_storage_list functionality.
 libscript_storage_list() {
   provider="$1"
   
@@ -152,6 +158,8 @@ libscript_storage_list() {
   esac
 }
 
+# ## libscript_storage_sync
+# Executes libscript_storage_sync functionality.
 libscript_storage_sync() {
   provider="$1"
   bucket="$2"

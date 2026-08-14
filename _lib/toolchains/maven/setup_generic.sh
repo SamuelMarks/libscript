@@ -45,6 +45,8 @@ MAVEN_INSTALL_METHOD="$(libscript_resolve_install_method "MAVEN")"
 MAVEN_VERSION="${MAVEN_VERSION:-latest}"
 ACTION="${ACTION:-install}"
 
+# ## resolve_exact_version
+# Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${MAVEN_VERSION}" = "latest" ] || [ "${MAVEN_VERSION}" = "lts" ]; then
     EXACT_VERSION=$(curl -sL https://api.github.com/repos/apache/maven/tags | grep '"name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^maven-//')

@@ -42,6 +42,8 @@ if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
 goto :action_install
 goto :action_install
 
+:: ## action_ls
+:: Executes action_ls functionality.
 :action_ls
 if "%MINIO_INSTALL_METHOD%"=="mise" ( mise ls minio & exit /b 0 )
 if "%MINIO_INSTALL_METHOD%"=="asdf" ( asdf list minio & exit /b 0 )
@@ -51,6 +53,8 @@ if "%MINIO_INSTALL_METHOD%"=="system" ( echo System package manager does not sup
 if exist "%LIBSCRIPT_HOME%\minio" ( dir /b "%LIBSCRIPT_HOME%\minio" )
 exit /b 0
 
+:: ## action_ls_remote
+:: Executes action_ls_remote functionality.
 :action_ls_remote
 if "%MINIO_INSTALL_METHOD%"=="mise" ( mise ls-remote minio & exit /b 0 )
 if "%MINIO_INSTALL_METHOD%"=="asdf" ( asdf list all minio & exit /b 0 )
@@ -64,6 +68,8 @@ if not "%MINIO_RELEASES_URL%"=="" (
 )
 exit /b 0
 
+:: ## action_use
+:: Executes action_use functionality.
 :action_use
 if "%MINIO_INSTALL_METHOD%"=="mise" ( mise use "minio@%MINIO_VERSION%" & exit /b 0 )
 if "%MINIO_INSTALL_METHOD%"=="asdf" ( asdf global minio "%MINIO_VERSION%" & exit /b 0 )
@@ -87,6 +93,8 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 )
 exit /b 0
 
+:: ## action_download
+:: Executes action_download functionality.
 :action_download
 if "%MINIO_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading minio %MINIO_VERSION% to %DOWNLOAD_DIR%\minio...
@@ -99,6 +107,8 @@ if "%MINIO_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_install
+:: Executes action_install functionality.
 :action_install
 if "%MINIO_INSTALL_METHOD%"=="system" (
     winget install minio --accept-package-agreements --accept-source-agreements
@@ -136,6 +146,8 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 )
 exit /b 0
 
+:: ## action_service
+:: Executes action_service functionality.
 :action_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -155,6 +167,8 @@ if "%MINIO_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_install_service
+:: Executes action_install_service functionality.
 :action_install_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -174,6 +188,8 @@ if "%MINIO_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_uninstall_service
+:: Executes action_uninstall_service functionality.
 :action_uninstall_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (

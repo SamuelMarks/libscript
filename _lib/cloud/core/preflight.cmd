@@ -9,6 +9,8 @@
 
 goto :%1
 
+:: ## libscript_check_preflight
+:: Executes libscript_check_preflight functionality.
 :libscript_check_preflight
 set "provider=%~2"
 if "%provider%"=="" (

@@ -9,6 +9,8 @@
 
 goto :%1
 
+:: ## libscript_cdn_create
+:: Executes libscript_cdn_create functionality.
 :libscript_cdn_create
 set "provider=%~2"
 set "bucket=%~3"
@@ -107,6 +109,8 @@ if "%provider%"=="aws" (
 )
 exit /b 0
 
+:: ## libscript_cdn_delete
+:: Executes libscript_cdn_delete functionality.
 :libscript_cdn_delete
 set "provider=%~2"
 set "dist_id=%~3"
@@ -130,6 +134,8 @@ if "%provider%"=="aws" (
 )
 exit /b 0
 
+:: ## libscript_cdn_list
+:: Executes libscript_cdn_list functionality.
 :libscript_cdn_list
 set "provider=%~2"
 
@@ -143,6 +149,8 @@ if "%provider%"=="aws" (
 )
 exit /b 0
 
+:: ## libscript_cdn_invalidate
+:: Executes libscript_cdn_invalidate functionality.
 :libscript_cdn_invalidate
 set "provider=%~2"
 set "dist_id=%~3"

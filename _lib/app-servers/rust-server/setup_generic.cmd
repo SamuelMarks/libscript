@@ -42,6 +42,8 @@ if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
 goto :action_install
 goto :action_install
 
+:: ## action_ls
+:: Executes action_ls functionality.
 :action_ls
 if "%RUST_SERVER_INSTALL_METHOD%"=="mise" ( mise ls rust-server & exit /b 0 )
 if "%RUST_SERVER_INSTALL_METHOD%"=="asdf" ( asdf list rust-server & exit /b 0 )
@@ -51,6 +53,8 @@ if "%RUST_SERVER_INSTALL_METHOD%"=="system" ( echo System package manager does n
 if exist "%LIBSCRIPT_HOME%\rust-server" ( dir /b "%LIBSCRIPT_HOME%\rust-server" )
 exit /b 0
 
+:: ## action_ls_remote
+:: Executes action_ls_remote functionality.
 :action_ls_remote
 if "%RUST_SERVER_INSTALL_METHOD%"=="mise" ( mise ls-remote rust-server & exit /b 0 )
 if "%RUST_SERVER_INSTALL_METHOD%"=="asdf" ( asdf list all rust-server & exit /b 0 )
@@ -64,6 +68,8 @@ if not "%RUST_SERVER_RELEASES_URL%"=="" (
 )
 exit /b 0
 
+:: ## action_use
+:: Executes action_use functionality.
 :action_use
 if "%RUST_SERVER_INSTALL_METHOD%"=="mise" ( mise use "rust-server@%RUST_SERVER_VERSION%" & exit /b 0 )
 if "%RUST_SERVER_INSTALL_METHOD%"=="asdf" ( asdf global rust-server "%RUST_SERVER_VERSION%" & exit /b 0 )
@@ -87,6 +93,8 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 )
 exit /b 0
 
+:: ## action_download
+:: Executes action_download functionality.
 :action_download
 if "%RUST_SERVER_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading rust-server %RUST_SERVER_VERSION% to %DOWNLOAD_DIR%\rust-server...
@@ -99,6 +107,8 @@ if "%RUST_SERVER_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_install
+:: Executes action_install functionality.
 :action_install
 if "%RUST_SERVER_INSTALL_METHOD%"=="system" (
     winget install rust-server --accept-package-agreements --accept-source-agreements
@@ -136,6 +146,8 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 )
 exit /b 0
 
+:: ## action_service
+:: Executes action_service functionality.
 :action_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -155,6 +167,8 @@ if "%RUST_SERVER_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_install_service
+:: Executes action_install_service functionality.
 :action_install_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -174,6 +188,8 @@ if "%RUST_SERVER_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_uninstall_service
+:: Executes action_uninstall_service functionality.
 :action_uninstall_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (

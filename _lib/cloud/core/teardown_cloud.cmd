@@ -21,6 +21,8 @@ set "P4="
 set "P5="
 set "P6="
 
+:: ## parse_args
+:: Executes parse_args functionality.
 :parse_args
 set "arg=%~1"
 if "!arg!"=="" goto :args_done
@@ -66,6 +68,8 @@ if "!P1!"=="" (
 shift
 goto :parse_args
 
+:: ## args_done
+:: Executes args_done functionality.
 :args_done
 
 set "PROVIDER=!P1!"

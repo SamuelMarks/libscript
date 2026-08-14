@@ -51,6 +51,8 @@ CMAKE_INSTALL_METHOD="$(libscript_resolve_install_method "CMAKE")"
 CMAKE_VERSION="${CMAKE_VERSION:-latest}"
 ACTION="${ACTION:-install}"
 
+# ## resolve_exact_version
+# Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${CMAKE_VERSION}" = "latest" ]; then
     EXACT_VERSION="3.31.2"

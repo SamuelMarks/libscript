@@ -83,6 +83,8 @@ mkdir -p "$LOG_DIR"
 TIMESTAMP=$(date +%s)
 LOG_FILE="$LOG_DIR/teardown-${TIMESTAMP}.log"
 
+# ## log
+# Executes log functionality.
 log() {
   printf '%s\n' "$(date '+%Y-%m-%d %H:%M:%S') [$1] $2" | tee -a "$LOG_FILE"
 }
@@ -90,6 +92,8 @@ log() {
 log "INIT" "Starting $PROVIDER teardown for $NODE..."
 
 STATE_FILE="$REPO_PATH/.deploy_state"
+# ## get_state
+# Executes get_state functionality.
 get_state() {
 key=$1
   if [ -f "$STATE_FILE" ]; then
@@ -140,6 +144,8 @@ elif [ "$PROVIDER" = "gcp" ]; then
   ensure_cli "gcloud" "google-cloud-sdk"
 fi
 
+# ## run_with_auth_check
+# Executes run_with_auth_check functionality.
 run_with_auth_check() {
   cmd="$1"
   shift

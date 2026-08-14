@@ -45,6 +45,8 @@ LIGHTTPD_INSTALL_METHOD="$(libscript_resolve_install_method "LIGHTTPD")"
 LIGHTTPD_VERSION="${LIGHTTPD_VERSION:-latest}"
 ACTION="${ACTION:-install}"
 
+# ## resolve_exact_version
+# Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${LIGHTTPD_VERSION}" = "latest" ] || [ "${LIGHTTPD_VERSION}" = "lts" ]; then
     EXACT_VERSION="1.4.74"

@@ -45,6 +45,8 @@ SEVENZIP_INSTALL_METHOD="$(libscript_resolve_install_method "SEVENZIP")"
 SEVENZIP_VERSION="${SEVENZIP_VERSION:-latest}"
 ACTION="${ACTION:-install}"
 
+# ## resolve_exact_version
+# Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${SEVENZIP_VERSION}" = "latest" ] || [ "${SEVENZIP_VERSION}" = "lts" ]; then
     EXACT_VERSION=$(curl -sL 'https://www.7-zip.org/download.html' | grep -o 'Download 7-Zip [0-9.]*' | head -n1 | sed 's/Download 7-Zip //')

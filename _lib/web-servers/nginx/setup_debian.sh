@@ -62,6 +62,8 @@ if [ "${run_before}" -eq 0 ]; then
   libscript_depends nginx
 fi
 
+# ## rtrim
+# Executes rtrim functionality.
 rtrim() {
   trimmed="${1}"
   while :
@@ -78,6 +80,8 @@ rtrim() {
   printf '%s' "$trimmed"
 }
 
+# ## remove_last
+# Executes remove_last functionality.
 remove_last() {
   c="${1}"
   s="${2}"
@@ -102,6 +106,8 @@ remove_last() {
   printf '%s%s' "${prefix}" "${suffix}"
 }
 
+# ## merge_location_into_nginx_server
+# Executes merge_location_into_nginx_server functionality.
 merge_location_into_nginx_server() {
   conf_existing="${1}"
   location_conf="${2}"

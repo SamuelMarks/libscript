@@ -48,6 +48,8 @@ CC_INSTALL_METHOD="$(libscript_resolve_install_method "CC")"
 ACTION="${ACTION:-install}"
 VERSION="${CC_VERSION:-latest}"
 
+# ## resolve_exact_version
+# Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
     _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote cc 2>/dev/null | tail -n 1)

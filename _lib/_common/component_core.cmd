@@ -25,6 +25,8 @@ if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 :: Resolve LIBSCRIPT_ROOT_DIR
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
+:: ## find_root
+:: Executes find_root functionality.
     :find_root
     if exist "!d!\ROOT" (set "LIBSCRIPT_ROOT_DIR=!d!") else (
         for %%P in ("!d!") do set "parent=%%~dpP"
@@ -152,6 +154,8 @@ if "!arg:~0,2!"=="--" (
 shift
 goto :parse_loop
 
+:: ## routing
+:: Executes routing functionality.
 :routing
 :: Reconstruct missing positional arguments for special subcommands that bypass parsing
 if /i "!ACTION!"=="network" set "bypass_args=1"
@@ -304,6 +308,8 @@ if exist "setup.cmd" (
 )
 exit /b %errorlevel%
 
+:: ## show_help
+:: Executes show_help functionality.
 :show_help
 echo Usage: cli.cmd [COMMAND] [PACKAGE_NAME] [VERSION] [OPTIONS]
 echo.

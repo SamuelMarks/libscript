@@ -31,6 +31,8 @@ if "%ACTION%"=="download" goto :action_download
 if "%ACTION%"=="install" goto :action_install
 goto :action_install
 
+:: ## action_ls
+:: Executes action_ls functionality.
 :action_ls
 if "%TPU_VM_INSTALL_METHOD%"=="mise" ( mise ls tpu-vm & exit /b 0 )
 if "%TPU_VM_INSTALL_METHOD%"=="asdf" ( asdf list tpu-vm & exit /b 0 )
@@ -40,6 +42,8 @@ if "%TPU_VM_INSTALL_METHOD%"=="system" ( echo System package manager does not su
 dir /b "%LIBSCRIPT_HOME%\tpu-vm\" 2>nul
 exit /b 0
 
+:: ## action_ls_remote
+:: Executes action_ls_remote functionality.
 :action_ls_remote
 if "%TPU_VM_INSTALL_METHOD%"=="mise" ( mise ls-remote tpu-vm & exit /b 0 )
 if "%TPU_VM_INSTALL_METHOD%"=="asdf" ( asdf list all tpu-vm & exit /b 0 )
@@ -53,6 +57,8 @@ if not "%TPU_VM_RELEASES_URL%"=="" (
 )
 exit /b 0
 
+:: ## action_use
+:: Executes action_use functionality.
 :action_use
 if "%TPU_VM_INSTALL_METHOD%"=="mise" ( mise use "tpu-vm@%TPU_VM_VERSION%" & exit /b 0 )
 if "%TPU_VM_INSTALL_METHOD%"=="asdf" ( asdf global tpu-vm "%TPU_VM_VERSION%" & exit /b 0 )
@@ -62,6 +68,8 @@ if "%TPU_VM_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version with
 echo libscript_symlink_alias not implemented natively in cmd yet.
 exit /b 0
 
+:: ## action_download
+:: Executes action_download functionality.
 :action_download
 if "%TPU_VM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading tpu-vm %TPU_VM_VERSION% to %DOWNLOAD_DIR%\tpu-vm...
@@ -74,6 +82,8 @@ if "%TPU_VM_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_install
+:: Executes action_install functionality.
 :action_install
 if "%TPU_VM_INSTALL_METHOD%"=="system" (
     winget install tpu-vm --accept-package-agreements --accept-source-agreements

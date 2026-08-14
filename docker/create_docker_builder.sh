@@ -67,6 +67,8 @@ export verbose
 shift "$((OPTIND - 1))"
 REMAINING="$*"
 
+# ## help
+# Executes help functionality.
 help() {
     # shellcheck disable=SC2016
     >&2 printf 'Create Docker image builder scripts.\n
@@ -95,6 +97,8 @@ fi
 awk 'NR==1,/^fi$/' "${DIR}"'/../_lib/_common/prelude.sh' | tee -a "${DOCKER_BUILDER}" "${DOCKER_BUILDER_PARALLEL}" >/dev/null
 chmod +x "${DOCKER_BUILDER}" "${DOCKER_BUILDER_PARALLEL}"
 
+# ## collect_when_pattern
+# Executes collect_when_pattern functionality.
 collect_when_pattern() {
   pattern="$1"
     result=''
@@ -141,6 +145,8 @@ if [ "${VERBOSE}" -ge 3 ]; then
 fi
 NL='
 '
+# ## process_one_dockerfile
+# Executes process_one_dockerfile functionality.
 process_one_dockerfile() {
   dockerfile="${1}";
   end="${2:-${NL}}"
@@ -164,6 +170,8 @@ EOF
     printf 'docker build --file '"${q}"'%s'"${q}"' %s --tag '"${q}"'%s%s'"${q}"':'"${q}"'%s%s'"${q}"' .%s' "${dockerfile}" "${build_args_}" "${PREFIX}" "${name}" "${tag}" "${SUFFIX}" "${end}"
 }
 
+# ## section2name
+# Executes section2name functionality.
 section2name() {
   case "${1}" in
     "${SERVER_DFS}") res='Servers' ;;

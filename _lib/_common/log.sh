@@ -40,6 +40,8 @@ LIBSCRIPT_LOG_LEVEL="${LIBSCRIPT_LOG_LEVEL:-1}"
 LIBSCRIPT_LOG_FORMAT="${LIBSCRIPT_LOG_FORMAT:-text}"
 LIBSCRIPT_LOG_FILE="${LIBSCRIPT_LOG_FILE:-}"
 
+# ## _libscript_log_msg
+# Executes _libscript_log_msg functionality.
 _libscript_log_msg() {
   level_name="${1:-}"
   level_num="${2:-}"
@@ -78,6 +80,8 @@ _libscript_log_msg() {
 
 log_debug()   { _libscript_log_msg "DEBUG"   0 "${1:-}"; }
 log_info()    { _libscript_log_msg "INFO"    1 "${1:-}"; }
+# ## log_success
+# Executes log_success functionality.
 log_success() { _libscript_log_msg "SUCCESS" 2 "${1:-}"; }
 log_warn()    { _libscript_log_msg "WARN"    3 "${1:-}"; }
 log_error()   { _libscript_log_msg "ERROR"   4 "${1:-}"; }

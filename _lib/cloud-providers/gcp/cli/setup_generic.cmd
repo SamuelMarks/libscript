@@ -31,6 +31,8 @@ if "%ACTION%"=="download" goto :action_download
 if "%ACTION%"=="install" goto :action_install
 goto :action_install
 
+:: ## action_ls
+:: Executes action_ls functionality.
 :action_ls
 if "%CLI_INSTALL_METHOD%"=="mise" ( mise ls cli & exit /b 0 )
 if "%CLI_INSTALL_METHOD%"=="asdf" ( asdf list cli & exit /b 0 )
@@ -40,6 +42,8 @@ if "%CLI_INSTALL_METHOD%"=="system" ( echo System package manager does not suppo
 dir /b "%LIBSCRIPT_HOME%\cli\" 2>nul
 exit /b 0
 
+:: ## action_ls_remote
+:: Executes action_ls_remote functionality.
 :action_ls_remote
 if "%CLI_INSTALL_METHOD%"=="mise" ( mise ls-remote cli & exit /b 0 )
 if "%CLI_INSTALL_METHOD%"=="asdf" ( asdf list all cli & exit /b 0 )
@@ -53,6 +57,8 @@ if not "%CLI_RELEASES_URL%"=="" (
 )
 exit /b 0
 
+:: ## action_use
+:: Executes action_use functionality.
 :action_use
 if "%CLI_INSTALL_METHOD%"=="mise" ( mise use "cli@%CLI_VERSION%" & exit /b 0 )
 if "%CLI_INSTALL_METHOD%"=="asdf" ( asdf global cli "%CLI_VERSION%" & exit /b 0 )
@@ -62,6 +68,8 @@ if "%CLI_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version with sy
 echo libscript_symlink_alias not implemented natively in cmd yet.
 exit /b 0
 
+:: ## action_download
+:: Executes action_download functionality.
 :action_download
 if "%CLI_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading cli %CLI_VERSION% to %DOWNLOAD_DIR%\cli...
@@ -74,6 +82,8 @@ if "%CLI_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_install
+:: Executes action_install functionality.
 :action_install
 if "%CLI_INSTALL_METHOD%"=="system" (
     winget install cli --accept-package-agreements --accept-source-agreements

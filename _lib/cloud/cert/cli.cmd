@@ -10,6 +10,8 @@
 set "CMD=%~1"
 if not "%CMD%"=="" shift
 
+:: ## parse_args
+:: Executes parse_args functionality.
 :parse_args
 if "%~1"=="" goto validate_args
 if "%~1"=="--cloud" (
@@ -39,6 +41,8 @@ if not errorlevel 1 (
 echo Error: Unknown argument '%~1' >&2
 exit /b 1
 
+:: ## validate_args
+:: Executes validate_args functionality.
 :validate_args
 if "%CMD%"=="" (
     echo Error: Missing command for cert (create^|delete^|list^). >&2
@@ -52,6 +56,8 @@ if "%CMD%"=="list" goto execute
 echo Error: Unknown cert command '%CMD%' >&2
 exit /b 1
 
+:: ## execute
+:: Executes execute functionality.
 :execute
 if "%LIBSCRIPT_CLOUD%"=="" (
     echo Error: --cloud (or LIBSCRIPT_CLOUD) is required. >&2

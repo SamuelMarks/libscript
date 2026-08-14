@@ -45,6 +45,8 @@ HUGGINGFACE_CLI_INSTALL_METHOD="$(libscript_resolve_install_method "HUGGINGFACE_
 HUGGINGFACE_CLI_VERSION="${HUGGINGFACE_CLI_VERSION:-latest}"
 ACTION="${ACTION:-install}"
 
+# ## resolve_exact_version
+# Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${HUGGINGFACE_CLI_VERSION}" = "latest" ] || [ "${HUGGINGFACE_CLI_VERSION}" = "lts" ]; then
     EXACT_VERSION=$(curl -sL https://api.github.com/repos/huggingface/huggingface_hub/releases/latest | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')

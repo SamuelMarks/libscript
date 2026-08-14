@@ -42,6 +42,8 @@ if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
 goto :action_install
 goto :action_install
 
+:: ## action_ls
+:: Executes action_ls functionality.
 :action_ls
 if "%VALKEY_INSTALL_METHOD%"=="mise" ( mise ls valkey & exit /b 0 )
 if "%VALKEY_INSTALL_METHOD%"=="asdf" ( asdf list valkey & exit /b 0 )
@@ -51,6 +53,8 @@ if "%VALKEY_INSTALL_METHOD%"=="system" ( echo System package manager does not su
 if exist "%LIBSCRIPT_HOME%\valkey" ( dir /b "%LIBSCRIPT_HOME%\valkey" )
 exit /b 0
 
+:: ## action_ls_remote
+:: Executes action_ls_remote functionality.
 :action_ls_remote
 if "%VALKEY_INSTALL_METHOD%"=="mise" ( mise ls-remote valkey & exit /b 0 )
 if "%VALKEY_INSTALL_METHOD%"=="asdf" ( asdf list all valkey & exit /b 0 )
@@ -64,6 +68,8 @@ if not "%VALKEY_RELEASES_URL%"=="" (
 )
 exit /b 0
 
+:: ## action_use
+:: Executes action_use functionality.
 :action_use
 if "%VALKEY_INSTALL_METHOD%"=="mise" ( mise use "valkey@%VALKEY_VERSION%" & exit /b 0 )
 if "%VALKEY_INSTALL_METHOD%"=="asdf" ( asdf global valkey "%VALKEY_VERSION%" & exit /b 0 )
@@ -87,6 +93,8 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 )
 exit /b 0
 
+:: ## action_download
+:: Executes action_download functionality.
 :action_download
 if "%VALKEY_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading valkey %VALKEY_VERSION% to %DOWNLOAD_DIR%\valkey...
@@ -99,6 +107,8 @@ if "%VALKEY_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_install
+:: Executes action_install functionality.
 :action_install
 if "%VALKEY_INSTALL_METHOD%"=="system" (
     winget install valkey --accept-package-agreements --accept-source-agreements
@@ -136,6 +146,8 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 )
 exit /b 0
 
+:: ## action_service
+:: Executes action_service functionality.
 :action_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -155,6 +167,8 @@ if "%VALKEY_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_install_service
+:: Executes action_install_service functionality.
 :action_install_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -174,6 +188,8 @@ if "%VALKEY_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_uninstall_service
+:: Executes action_uninstall_service functionality.
 :action_uninstall_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (

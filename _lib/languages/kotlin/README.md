@@ -121,11 +121,3 @@ See `vars.schema.json` for details on available variables.
 - macOS
 - Windows
 <!-- END_PLATFORMS -->
-
-Libscript manages kotlin versions natively by installing them into isolated directories under
-`LIBSCRIPT_HOME/kotlin/<version>`.
-
-## Version Management
-
-As outlined in the core philosophy, `libscript` manages the versions natively. Installations are
-isolated by default in `~/.libscript/<component>/<version>` and do not pollute global system paths.

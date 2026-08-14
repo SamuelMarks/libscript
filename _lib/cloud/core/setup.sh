@@ -42,6 +42,8 @@ for arg in "$@"; do
   esac
 done
 
+# ## handle_list_managed
+# Executes handle_list_managed functionality.
 handle_list_managed() {
   printf '%s\n' "--- AWS Resources"
   if command -v aws >/dev/null 2>&1; then
@@ -58,6 +60,8 @@ handle_list_managed() {
   fi
 }
 
+# ## handle_diff
+# Executes handle_diff functionality.
 handle_diff() {
   printf '%s\n' "Comparing local .libscript_state.json with cloud provider reality..."
   if [ ! -f ".libscript_state.json" ]; then

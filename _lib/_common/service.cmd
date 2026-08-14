@@ -13,6 +13,8 @@ setlocal EnableDelayedExpansion
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%~dp0"
+:: ## find_root
+:: Executes find_root functionality.
     :find_root
     if exist "!d!\ROOT" (set "LIBSCRIPT_ROOT_DIR=!d!") else (
         for %%P in ("!d!") do set "parent=%%~dpP"

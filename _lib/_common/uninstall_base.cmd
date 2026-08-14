@@ -22,6 +22,8 @@ if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 :: Resolve LIBSCRIPT_ROOT_DIR
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
+:: ## find_root
+:: Executes find_root functionality.
     :find_root
     if exist "!d!\ROOT" (set "LIBSCRIPT_ROOT_DIR=!d!") else (
         for %%P in ("!d!") do set "parent=%%~dpP"

@@ -45,6 +45,8 @@ DASH_INSTALL_METHOD="$(libscript_resolve_install_method "DASH")"
 DASH_VERSION="${DASH_VERSION:-latest}"
 ACTION="${ACTION:-install}"
 
+# ## resolve_exact_version
+# Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${DASH_VERSION}" = "latest" ] || [ "${DASH_VERSION}" = "lts" ]; then
     EXACT_VERSION="0.5.12"

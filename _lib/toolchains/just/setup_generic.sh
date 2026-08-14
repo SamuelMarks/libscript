@@ -45,6 +45,8 @@ JUST_INSTALL_METHOD="$(libscript_resolve_install_method "JUST")"
 JUST_VERSION="${JUST_VERSION:-latest}"
 ACTION="${ACTION:-install}"
 
+# ## resolve_exact_version
+# Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${JUST_VERSION}" = "latest" ] || [ "${JUST_VERSION}" = "lts" ]; then
     EXACT_VERSION=$(curl -sL https://api.github.com/repos/casey/just/releases/latest | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')

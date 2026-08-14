@@ -30,6 +30,8 @@ if "%ACTION%"=="delete" goto :delete
 call "%LOG_CMD%" :log_error "Unknown action: %ACTION%"
 exit /b 1
 
+:: ## create
+:: Executes create functionality.
 :create
 if "%INSTANCE_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: filestore create <name>"
@@ -53,6 +55,8 @@ if %errorlevel% equ 0 (
 )
 exit /b 0
 
+:: ## delete
+:: Executes delete functionality.
 :delete
 if "%INSTANCE_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: filestore delete <name>"

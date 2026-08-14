@@ -10,6 +10,8 @@
 set "CMD=%~1"
 if not "%CMD%"=="" shift
 
+:: ## parse_args
+:: Executes parse_args functionality.
 :parse_args
 if "%~1"=="" goto validate_args
 if "%~1"=="--device" ( set "LIBSCRIPT_DEVICE=%~2" & shift & shift & goto parse_args )
@@ -26,6 +28,8 @@ if not errorlevel 1 ( for /f "tokens=2 delims==" %%A in ("%~1") do set "LIBSCRIP
 echo Error: Unknown argument '%~1' >&2
 exit /b 1
 
+:: ## validate_args
+:: Executes validate_args functionality.
 :validate_args
 if "%CMD%"=="" (
     echo Error: Missing command for cloudinit (generate-mount^). >&2
@@ -37,6 +41,8 @@ if "%CMD%"=="generate-mount" goto execute
 echo Error: Unknown cloudinit command '%CMD%' >&2
 exit /b 1
 
+:: ## execute
+:: Executes execute functionality.
 :execute
 call "%~dp0api.cmd" :libscript_cloudinit_generate_mount "%LIBSCRIPT_DEVICE%" "%LIBSCRIPT_MOUNT_POINT%" "%LIBSCRIPT_FS_TYPE%"
 exit /b %errorlevel%

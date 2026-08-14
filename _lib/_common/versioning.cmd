@@ -14,6 +14,8 @@ REM Common utilities for managing native libscript installations and version ali
 
 goto :eof
 
+:: ## libscript_get_version_dir
+:: Executes libscript_get_version_dir functionality.
 :libscript_get_version_dir
 set "component=%~1"
 set "version=%~2"
@@ -25,6 +27,8 @@ if "%LIBSCRIPT_HOME%"=="" (
 set "LIBSCRIPT_VERSION_DIR=%LIBSCRIPT_BASE_DIR%\%component%\%version%"
 goto :eof
 
+:: ## libscript_symlink_alias
+:: Executes libscript_symlink_alias functionality.
 :libscript_symlink_alias
 set "component=%~1"
 set "alias_name=%~2"

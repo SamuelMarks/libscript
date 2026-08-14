@@ -35,6 +35,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 STATE_FILE="${STATE_FILE:-.libscript_state.json}"
 REMOTE_STATE_URI="${REMOTE_STATE_URI:-}"
 
+# ## lock_state
+# Executes lock_state functionality.
 lock_state() {
   if [ -z "$REMOTE_STATE_URI" ]; then
     if [ -f "${STATE_FILE}.lock" ]; then
@@ -64,6 +66,8 @@ lock_state() {
   esac
 }
 
+# ## unlock_state
+# Executes unlock_state functionality.
 unlock_state() {
   if [ -z "$REMOTE_STATE_URI" ]; then
     rm -f "${STATE_FILE}.lock"
@@ -84,6 +88,8 @@ unlock_state() {
   esac
 }
 
+# ## pull_state
+# Executes pull_state functionality.
 pull_state() {
   if [ -n "$REMOTE_STATE_URI" ]; then
     printf '%s\n' "[STATE] Pulling state from $REMOTE_STATE_URI..."
@@ -91,6 +97,8 @@ pull_state() {
   fi
 }
 
+# ## push_state
+# Executes push_state functionality.
 push_state() {
   if [ -n "$REMOTE_STATE_URI" ]; then
     printf '%s\n' "[STATE] Pushing state to $REMOTE_STATE_URI..."

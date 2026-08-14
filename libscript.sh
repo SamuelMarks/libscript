@@ -39,6 +39,8 @@ for LIB in "_lib/_common/log.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
+# ## show_help
+# Executes show_help functionality.
 show_help() {
   printf '%s\n' "LibScript Global CLI"
   printf '%s\n' "===================="
@@ -91,6 +93,8 @@ show_help() {
   printf '%s\n' ""
 }
 
+# ## find_components
+# Executes find_components functionality.
 find_components() {
   find "$LIBSCRIPT_CLI_DIR" -name "cli.sh" | while read -r cli_script; do
     dir=$(dirname "$cli_script")
@@ -103,6 +107,8 @@ find_components() {
   done
 }
 
+# ## get_desc
+# Executes get_desc functionality.
 get_desc() {
   schema="$LIBSCRIPT_CLI_DIR/$1/vars.schema.json"
   if command -v jq >/dev/null 2>&1; then

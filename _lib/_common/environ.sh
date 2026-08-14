@@ -34,6 +34,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export NL='
 '
 
+# ## save_environment
+# Executes save_environment functionality.
 save_environment() {
   env | while IFS='' read -r line || [ -n "${line}" ]; do
     case "${line}" in
@@ -50,6 +52,8 @@ save_environment() {
   done
 }
 
+# ## clear_environment
+# Executes clear_environment functionality.
 clear_environment() {
   PATH="${PATH}"':/usr/bin:/bin'
   export PATH
@@ -80,6 +84,8 @@ clear_environment() {
 # rm -f -- "${ENV_SAVED_FILE}"
 # unset ENV_SAVED_FILE
 
+# ## libscript_object2key_val
+# Executes libscript_object2key_val functionality.
 libscript_object2key_val() {
   obj="${1:-}"
   prefix="${2:-}"

@@ -10,6 +10,8 @@
 set "CMD=%~1"
 if not "%CMD%"=="" shift
 
+:: ## parse_args
+:: Executes parse_args functionality.
 :parse_args
 if "%~1"=="" goto validate_args
 if "%~1"=="--cloud" ( set "LIBSCRIPT_CLOUD=%~2" & shift & shift & goto parse_args )
@@ -41,6 +43,8 @@ if not errorlevel 1 ( for /f "tokens=2 delims==" %%A in ("%~1") do set "LIBSCRIP
 echo Error: Unknown argument '%~1' >&2
 exit /b 1
 
+:: ## validate_args
+:: Executes validate_args functionality.
 :validate_args
 if "%CMD%"=="" (
     echo Error: Missing command for volume (create^|delete^|list^|attach^|detach^). >&2
@@ -56,6 +60,8 @@ if "%CMD%"=="detach" goto execute
 echo Error: Unknown volume command '%CMD%' >&2
 exit /b 1
 
+:: ## execute
+:: Executes execute functionality.
 :execute
 if "%LIBSCRIPT_CLOUD%"=="" (
     echo Error: --cloud (or LIBSCRIPT_CLOUD) is required. >&2

@@ -104,6 +104,8 @@ check_deps() {
   fi
 }
 
+# ## aws_auth
+# Executes aws_auth functionality.
 aws_auth() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -128,6 +130,8 @@ aws_auth() {
   esac
 }
 
+# ## aws_location
+# Executes aws_location functionality.
 aws_location() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -144,6 +148,8 @@ aws_location() {
   esac
 }
 
+# ## aws_dns
+# Executes aws_dns functionality.
 aws_dns() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -200,6 +206,8 @@ aws_dns() {
   esac
 }
 
+# ## aws_network
+# Executes aws_network functionality.
 aws_network() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -268,6 +276,8 @@ aws_network() {
   esac
 }
 
+# ## aws_firewall
+# Executes aws_firewall functionality.
 aws_firewall() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -333,6 +343,8 @@ aws_firewall() {
   esac
 }
 
+# ## aws_node
+# Executes aws_node functionality.
 aws_node() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -435,6 +447,8 @@ aws_node() {
   esac
 }
 
+# ## aws_node_group
+# Executes aws_node_group functionality.
 aws_node_group() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -453,6 +467,8 @@ aws_node_group() {
   esac
 }
 
+# ## aws_cron
+# Executes aws_cron functionality.
 aws_cron() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -466,6 +482,8 @@ aws_cron() {
   esac
 }
 
+# ## aws_jumpbox
+# Executes aws_jumpbox functionality.
 aws_jumpbox() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -482,6 +500,8 @@ aws_jumpbox() {
   esac
 }
 
+# ## aws_storage
+# Executes aws_storage functionality.
 aws_storage() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -519,6 +539,8 @@ aws_storage() {
   esac
 }
 
+# ## aws_list_managed
+# Executes aws_list_managed functionality.
 aws_list_managed() {
   FILTER_KEY=${1:-$TAG_KEY}
   FILTER_VAL=${2:-$TAG_VAL}
@@ -527,6 +549,8 @@ aws_list_managed() {
     --query "ResourceTagMappingList[*].{ARN:ResourceARN, Tags:Tags}" --output table
 }
 
+# ## aws_cleanup
+# Executes aws_cleanup functionality.
 aws_cleanup() {
   PURGE_BUCKETS=$1
   FILTER_KEY=${2:-$TAG_KEY}

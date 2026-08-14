@@ -19,6 +19,8 @@ if defined is_docker (
     shift
     shift
     
+:: ## docker_parse_flags
+:: Executes docker_parse_flags functionality.
     :docker_parse_flags
     if /i "%~1"=="--artifact" (
         set "artifact_type=%~2"
@@ -88,6 +90,8 @@ if defined is_docker (
     if exist "!tmp_env_add!" del "!tmp_env_add!"
     if exist "!tmp_run!" del "!tmp_run!"
     
+:: ## docker_loop
+:: Executes docker_loop functionality.
     :docker_loop
     if not "%~1"=="" (
         set "pkg=%~1"
@@ -208,6 +212,8 @@ if defined is_docker (
     set "base_image=debian:bookworm-slim"
     shift
     shift
+:: ## docker_compose_parse_flags
+:: Executes docker_compose_parse_flags functionality.
     :docker_compose_parse_flags
     if /i "%~1"=="--base" (
         set "base_image=%~2"
@@ -232,6 +238,8 @@ if defined is_docker (
     set "prev_pkg="
     
     if not "%~1"=="" (
+:: ## docker_compose_loop
+:: Executes docker_compose_loop functionality.
         :docker_compose_loop
         if not "%~1"=="" (
             set "pkg=%~1"
@@ -278,6 +286,8 @@ if defined is_docker (
     if not "%~3"=="" (
         shift
         shift
+:: ## tui_loop
+:: Executes tui_loop functionality.
         :tui_loop
         if not "%~1"=="" (
             set "pkg=%~1"

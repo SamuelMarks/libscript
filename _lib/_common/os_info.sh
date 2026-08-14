@@ -52,7 +52,7 @@ if [ -z ${UNAME+x} ]; then
         export HOMEBREW_INSTALL="${HOMEBREW_INSTALL:-1}"
         export NGINX_SERVERS_ROOT='/opt/homebrew/etc/nginx/servers'
         if [ ! -f '/opt/homebrew/bin/brew' ] && [ ! -f '/usr/local/bin/brew' ]; then
-          NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          NONINTERACTIVE=1 /bin/sh -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         fi
         TARGET_OS="$(sw_vers --productName)"
         ;;
@@ -120,6 +120,8 @@ if [ -z "${UNAME+x}" ]; then
   UNAME="$(uname)"
 fi
 
+# ## _fallback
+# Executes _fallback functionality.
 _fallback() {
   possible="$(cat -- '/proc/1/comm')"
   if [ "${possible}" = 'systemd' ]; then
@@ -159,7 +161,7 @@ if [ -z "${INIT_SYS+x}" ]; then
               proc_comm="${comm_name}"
             fi
             case "${proc_comm}" in
-                *'/bin/bash'|'dash'|'bash')
+                *'/bin/sh'|'dash'|'bash')
                   >&2 printf 'No init system setup\n'
                   export INIT_SYS='none' ;;
                 *)

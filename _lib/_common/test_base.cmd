@@ -22,6 +22,8 @@ if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 :: Resolve LIBSCRIPT_ROOT_DIR
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
+:: ## find_root
+:: Executes find_root functionality.
     :find_root
     if exist "!d!\ROOT" (set "LIBSCRIPT_ROOT_DIR=!d!") else (
         for %%P in ("!d!") do set "parent=%%~dpP"
@@ -66,6 +68,8 @@ exit /b 0
 :: Testing Assertions
 :: -----------------------------------------------------------------------------
 
+:: ## assert_version
+:: Executes assert_version functionality.
 :assert_version
 set "cmd_name=%~2"
 set "expected=%~3"
@@ -79,6 +83,8 @@ for /f "tokens=*" %%a in ('%cmd_name% --version 2^>^&1') do (
     set "version=%%a"
     goto :check_version
 )
+:: ## check_version
+:: Executes check_version functionality.
 :check_version
 echo !version! | findstr /i /c:"%expected%" >nul
 if errorlevel 1 (
@@ -88,6 +94,8 @@ if errorlevel 1 (
 echo [PASS] %cmd_name% version check: !version! 1>&2
 exit /b 0
 
+:: ## assert_exists
+:: Executes assert_exists functionality.
 :assert_exists
 if exist "%~2" (
     echo [PASS] Exists: %~2 1>&2

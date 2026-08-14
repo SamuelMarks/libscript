@@ -54,6 +54,8 @@ if "%ACTION%"=="delete" goto :delete
 call "%LOG_CMD%" :log_error "Unknown action: %ACTION%. Supported: create, delete."
 exit /b 1
 
+:: ## create
+:: Executes create functionality.
 :create
 if "%CLUSTER_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: gke-tpu-cluster create <name>"
@@ -64,6 +66,8 @@ call xpk cluster create --cluster "%CLUSTER_NAME%" --zone "%GCP_ZONE%" --tpu-typ
 call "%LOG_CMD%" :log_info "Cluster %CLUSTER_NAME% created."
 exit /b 0
 
+:: ## delete
+:: Executes delete functionality.
 :delete
 if "%CLUSTER_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: gke-tpu-cluster delete <name>"

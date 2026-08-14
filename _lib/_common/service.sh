@@ -45,6 +45,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
+# ## libscript_service
+# Executes libscript_service functionality.
 libscript_service() {
   _action="${1:-}"
   _service="${2:-}"
@@ -153,6 +155,8 @@ libscript_service() {
   esac
 }
 
+# ## libscript_check_health
+# Executes libscript_check_health functionality.
 libscript_check_health() {
   _service="${1:-}"
   shift || true

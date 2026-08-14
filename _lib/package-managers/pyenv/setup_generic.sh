@@ -48,6 +48,8 @@ PYENV_INSTALL_METHOD="$(libscript_resolve_install_method "PYENV")"
 ACTION="${ACTION:-install}"
 VERSION="${PYENV_VERSION:-latest}"
 
+# ## resolve_exact_version
+# Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
     _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote pyenv 2>/dev/null | tail -n 1)

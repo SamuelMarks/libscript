@@ -26,6 +26,8 @@ set "TARGET=local"
 set "TAKE_SNAPSHOT=0"
 set "PATHS="
 
+:: ## parse_args
+:: Executes parse_args functionality.
 :parse_args
 if "%~1"=="" goto :args_done
 if /i "%~1"=="--keep-last" (
@@ -51,6 +53,8 @@ if /i "%~1"=="--snapshot" (
 shift
 goto :parse_args
 
+:: ## args_done
+:: Executes args_done functionality.
 :args_done
 
 echo [BACKUP] Starting backup for node: !NODE!

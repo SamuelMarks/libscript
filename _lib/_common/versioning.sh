@@ -33,12 +33,16 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # versioning.sh
 # Common utilities for managing native libscript installations and version aliases.
 
+# ## libscript_get_version_dir
+# Executes libscript_get_version_dir functionality.
 libscript_get_version_dir() {
   component="$1"
   version="$2"
   printf '%s\n' "${LIBSCRIPT_HOME:-$HOME/.libscript}/${component}/${version}"
 }
 
+# ## libscript_symlink_alias
+# Executes libscript_symlink_alias functionality.
 libscript_symlink_alias() {
   component="$1"
   alias_name="$2"

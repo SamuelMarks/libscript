@@ -45,6 +45,8 @@ TMUX_INSTALL_METHOD="$(libscript_resolve_install_method "TMUX")"
 TMUX_VERSION="${TMUX_VERSION:-latest}"
 ACTION="${ACTION:-install}"
 
+# ## resolve_exact_version
+# Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${TMUX_VERSION}" = "latest" ] || [ "${TMUX_VERSION}" = "lts" ]; then
     EXACT_VERSION=$(curl -sL https://api.github.com/repos/tmux/tmux/releases/latest | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')

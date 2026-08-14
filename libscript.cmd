@@ -46,6 +46,8 @@ if "!is_opt!"=="1" (
     goto :opt_loop
 )
 
+:: ## run_cmd
+:: Executes run_cmd functionality.
 :run_cmd
 set "cmd=%~1"
 if "%cmd%"=="" goto show_help
@@ -153,6 +155,8 @@ if "%is_action%"=="1" (
     goto show_help
 )
 
+:: ## match_component
+:: Executes match_component functionality.
 :match_component
 set "target="
 if /i "%action_pkg%"=="cloud" (
@@ -221,6 +225,8 @@ for /f "delims=" %%f in ('dir /s /b /a:-d "%SCRIPT_DIR%\cli.cmd" 2^>nul') do (
 )
 exit /b 1
 
+:: ## run_target
+:: Executes run_target functionality.
 :run_target
 if exist "%target%\cli.cmd" (
     call "%target%\cli.cmd" %*
@@ -230,6 +236,8 @@ if exist "%target%\cli.cmd" (
     exit /b 1
 )
 
+:: ## show_help
+:: Executes show_help functionality.
 :show_help
 echo LibScript Global CLI
 echo ====================

@@ -48,6 +48,8 @@ PYTHON_SERVER_INSTALL_METHOD="$(libscript_resolve_install_method "PYTHON_SERVER"
 ACTION="${ACTION:-install}"
 VERSION="${PYTHON_SERVER_VERSION:-latest}"
 
+# ## resolve_exact_version
+# Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
     _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote python-server 2>/dev/null | tail -n 1)

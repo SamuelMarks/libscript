@@ -35,6 +35,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "$THIS_FILE")" && pwd)
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
+# ## libscript_install_service
+# Executes libscript_install_service functionality.
 libscript_install_service() {
   _service_name="$1"
   _exec_start="$2"
@@ -77,6 +79,8 @@ libscript_install_service() {
   fi
 }
 
+# ## libscript_uninstall_service
+# Executes libscript_uninstall_service functionality.
 libscript_uninstall_service() {
   _service_name="$1"
   

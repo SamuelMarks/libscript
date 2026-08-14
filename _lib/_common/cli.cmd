@@ -18,6 +18,8 @@ setlocal EnableDelayedExpansion
 if not "%~1"=="" goto %~1
 exit /b 0
 
+:: ## parse_args
+:: Executes parse_args functionality.
 :parse_args
 set "USE_DEFAULT_TAGS=true"
 set "CUSTOM_TAGS="
@@ -25,6 +27,8 @@ set "BOOTSTRAP_SCRIPT="
 set "DRY_RUN=false"
 set "ARGS="
 
+:: ## parse_loop
+:: Executes parse_loop functionality.
 :parse_loop
 if "%~2"=="" (
     :: Export variables to parent context before exiting

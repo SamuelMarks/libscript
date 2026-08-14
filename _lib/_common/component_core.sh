@@ -82,6 +82,8 @@ get_merged_properties() {
   fi
 }
 
+# ## show_help
+# Executes show_help functionality.
 show_help() {
   log_info "Usage: $0 [COMMAND] [PACKAGE_NAME] [VERSION] [OPTIONS]"
   log_info ""

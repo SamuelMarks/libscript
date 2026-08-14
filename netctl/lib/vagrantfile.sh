@@ -31,6 +31,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 . "$NETCTL_DIR/LIB/prelude.sh"
 
+# ## netctl_emit_vagrantfile
+# Executes netctl_emit_vagrantfile functionality.
 netctl_emit_vagrantfile() {
   state_file="${1:-$NETCTL_STATE_FILE}"
 

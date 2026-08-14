@@ -50,6 +50,8 @@ done
 PKG_MGR_UPDATE_REGISTRY="${PKG_MGR_UPDATE_REGISTRY:-1}"
 export PKG_MGR_UPDATE_REGISTRY
 
+# ## libscript_resolve_install_method
+# Executes libscript_resolve_install_method functionality.
 libscript_resolve_install_method() {
   local comp_method_var="${1}_INSTALL_METHOD"
   eval "local requested=\${${comp_method_var}:-\${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-}}"
@@ -89,10 +91,14 @@ libscript_resolve_install_method() {
   return 0
 }
 
+# ## libscript_cmd_avail
+# Executes libscript_cmd_avail functionality.
 libscript_cmd_avail() {
   command -v -- "${1}" >/dev/null 2>&1
 }
 
+# ## detect_pkg_mgr
+# Executes detect_pkg_mgr functionality.
 detect_pkg_mgr() {
   if libscript_cmd_avail apt-get; then
     PKG_MGR='apt-get' # Debian, Ubuntu, and other derivatives
@@ -143,6 +149,8 @@ detect_pkg_mgr() {
   export PKG_MGR
 }
 
+# ## is_installed
+# Executes is_installed functionality.
 is_installed() {
   pkg="${1}"
   case "${PKG_MGR}" in
@@ -163,6 +171,8 @@ is_installed() {
   esac
 }
 
+# ## libscript_depends
+# Executes libscript_depends functionality.
 libscript_depends() {
   if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" = "1" ]; then
     log_info "Skipping system dependencies due to LIBSCRIPT_SKIP_SYSTEM_DEPS=1"
@@ -393,11 +403,15 @@ libscript_download() {
   fi
 }
 
+# ## libscript_fetch
+# Executes libscript_fetch functionality.
 libscript_fetch() {
   libscript_download "$@"
 }
 
 
+# ## libscript_process_aria2_file
+# Executes libscript_process_aria2_file functionality.
 libscript_process_aria2_file() {
   list_file="${1:-}"
   if [ -z "$list_file" ] || [ ! -f "$list_file" ]; then

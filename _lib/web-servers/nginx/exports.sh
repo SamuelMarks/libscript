@@ -39,6 +39,8 @@ for LIB in "_lib/_common/environ.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
+# ## infer_locations
+# Executes infer_locations functionality.
 infer_locations() {
   cwd="$(pwd)"
   locations_conf="${cwd}"'/.config/nginx/locations.conf'

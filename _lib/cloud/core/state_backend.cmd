@@ -20,6 +20,8 @@ if "%~1"=="pull_state" goto pull_state
 if "%~1"=="push_state" goto push_state
 goto :eof
 
+:: ## lock_state
+:: Executes lock_state functionality.
 :lock_state
 if "%REMOTE_STATE_URI%"=="" (
     if exist "%STATE_FILE%.lock" (
@@ -33,6 +35,8 @@ echo [STATE] Locking remote state at %REMOTE_STATE_URI%...
 echo   -^> Mock: Lock acquired for %REMOTE_STATE_URI%
 exit /b 0
 
+:: ## unlock_state
+:: Executes unlock_state functionality.
 :unlock_state
 if "%REMOTE_STATE_URI%"=="" (
     if exist "%STATE_FILE%.lock" del "%STATE_FILE%.lock"
@@ -42,12 +46,16 @@ echo [STATE] Unlocking remote state at %REMOTE_STATE_URI%...
 echo   -^> Mock: Lock released for %REMOTE_STATE_URI%
 exit /b 0
 
+:: ## pull_state
+:: Executes pull_state functionality.
 :pull_state
 if not "%REMOTE_STATE_URI%"=="" (
     echo [STATE] Pulling state from %REMOTE_STATE_URI%...
 )
 exit /b 0
 
+:: ## push_state
+:: Executes push_state functionality.
 :push_state
 if not "%REMOTE_STATE_URI%"=="" (
     echo [STATE] Pushing state to %REMOTE_STATE_URI%...

@@ -42,6 +42,8 @@ if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
 goto :action_install
 goto :action_install
 
+:: ## action_ls
+:: Executes action_ls functionality.
 :action_ls
 if "%WAIT4X_INSTALL_METHOD%"=="mise" ( mise ls wait4x & exit /b 0 )
 if "%WAIT4X_INSTALL_METHOD%"=="asdf" ( asdf list wait4x & exit /b 0 )
@@ -51,6 +53,8 @@ if "%WAIT4X_INSTALL_METHOD%"=="system" ( echo System package manager does not su
 if exist "%LIBSCRIPT_HOME%\wait4x" ( dir /b "%LIBSCRIPT_HOME%\wait4x" )
 exit /b 0
 
+:: ## action_ls_remote
+:: Executes action_ls_remote functionality.
 :action_ls_remote
 if "%WAIT4X_INSTALL_METHOD%"=="mise" ( mise ls-remote wait4x & exit /b 0 )
 if "%WAIT4X_INSTALL_METHOD%"=="asdf" ( asdf list all wait4x & exit /b 0 )
@@ -64,6 +68,8 @@ if not "%WAIT4X_RELEASES_URL%"=="" (
 )
 exit /b 0
 
+:: ## action_use
+:: Executes action_use functionality.
 :action_use
 if "%WAIT4X_INSTALL_METHOD%"=="mise" ( mise use "wait4x@%WAIT4X_VERSION%" & exit /b 0 )
 if "%WAIT4X_INSTALL_METHOD%"=="asdf" ( asdf global wait4x "%WAIT4X_VERSION%" & exit /b 0 )
@@ -87,6 +93,8 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 )
 exit /b 0
 
+:: ## action_download
+:: Executes action_download functionality.
 :action_download
 if "%WAIT4X_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading wait4x %WAIT4X_VERSION% to %DOWNLOAD_DIR%\wait4x...
@@ -99,6 +107,8 @@ if "%WAIT4X_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_install
+:: Executes action_install functionality.
 :action_install
 if "%WAIT4X_INSTALL_METHOD%"=="system" (
     winget install wait4x --accept-package-agreements --accept-source-agreements
@@ -136,6 +146,8 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 )
 exit /b 0
 
+:: ## action_service
+:: Executes action_service functionality.
 :action_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -155,6 +167,8 @@ if "%WAIT4X_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_install_service
+:: Executes action_install_service functionality.
 :action_install_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -174,6 +188,8 @@ if "%WAIT4X_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_uninstall_service
+:: Executes action_uninstall_service functionality.
 :action_uninstall_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (

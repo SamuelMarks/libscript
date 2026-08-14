@@ -101,22 +101,6 @@ if [ -x "devtools/docs-gen/generate_markdown_docs.sh" ]; then
     git ls-files -m | grep "README.md$" | xargs -I {} git add "{}" || true
 fi
 
-# 5. Existing CI matrix logic
-printf '%s\n' "Updating CI matrix components list..."
-components=$(find _lib stacks -type f \( -name "test.sh" -o -name "test.cmd" \) | xargs -n1 dirname | sort | uniq | grep -v "_lib/_common" | grep -v "_lib/message-brokers") || true
-
-if [ -n "$components" ]; then
-  printf '%s\n' "        component:" >new_components.txt
-  for comp in $components; do
-    printf '%s\n' "          - \"$comp\"" >>new_components.txt
-  done
-  awk '/^[[:space:]]*exclude:/ {exit} {print}' .github/workflows/ci.yml >ci_top.yml
-  awk '/^[[:space:]]*component:/ {exit} {print}' ci_top.yml >ci_top_clean.yml
-  awk 'BEGIN {p=0} /^[[:space:]]*exclude:/ {p=1} p {print}' .github/workflows/ci.yml >ci_bottom.yml
-  cat ci_top_clean.yml new_components.txt ci_bottom.yml >.github/workflows/ci.yml
-  rm -f ci_top* new_components.txt ci_bottom.yml
-fi
-
 printf '%s\n' "Updating CI Checks Matrix in README.md..."
 cat <<'TABLE' >ci_results.tmp
 ## CI Checks Matrix

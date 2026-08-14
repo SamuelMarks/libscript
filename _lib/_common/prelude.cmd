@@ -47,6 +47,8 @@ IF NOT EXIST "%LIBSCRIPT_DATA_DIR%" mkdir "%LIBSCRIPT_DATA_DIR%"
 
 exit /b 0
 
+:: ## show_help
+:: Executes show_help functionality.
 :show_help
 echo Usage: %0
 exit /b 0

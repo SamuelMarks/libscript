@@ -80,6 +80,8 @@ mkdir -p "$LOG_DIR"
 TIMESTAMP=$(date +%s)
 LOG_FILE="$LOG_DIR/provision-${TIMESTAMP}.log"
 
+# ## log
+# Executes log functionality.
 log() {
   printf '%s\n' "$(date '+%Y-%m-%d %H:%M:%S') [$1] $2" | tee -a "$LOG_FILE"
 }
@@ -163,6 +165,8 @@ with_retry() {
 # -----------------------------------------------------------------------------
 STATE_FILE="$REPO_PATH/.deploy_state"
 
+# ## wait_for_tpu_active
+# Executes wait_for_tpu_active functionality.
 wait_for_tpu_active() {
   target_node=$1
   target_loc=$2
@@ -185,6 +189,8 @@ wait_for_tpu_active() {
   return 1
 }
 
+# ## record_state
+# Executes record_state functionality.
 record_state() {
   key=$1
   val=$2
@@ -388,6 +394,8 @@ if [ "$PROVIDER" = "gcp" ] || [ "$PROVIDER" = "aws" ]; then CTX="$LOC"; fi
 # Status Checks & Health Polling
 # -----------------------------------------------------------------------------
 
+# ## wait_for_ssh
+# Executes wait_for_ssh functionality.
 wait_for_ssh() {
   target_node=$1
   target_ctx=$2
@@ -525,6 +533,8 @@ fi
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
 
+# ## wait_for_health
+# Executes wait_for_health functionality.
 wait_for_health() {
   log "HEALTH" "Polling application health (via libscript health)..."
   max_attempts=12

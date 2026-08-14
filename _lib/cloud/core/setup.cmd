@@ -26,6 +26,8 @@ if /i "%action%"=="restore" (
 :: Default behavior (no-op)
 goto :eof
 
+:: ## handle_diff
+:: Executes handle_diff functionality.
 :handle_diff
 echo Comparing local .libscript_state.json with cloud provider reality...
 if not exist ".libscript_state.json" (
@@ -39,6 +41,8 @@ echo --- GCP Drift
 echo GCP Diff Placeholder
 exit /b 0
 
+:: ## handle_list_managed
+:: Executes handle_list_managed functionality.
 :handle_list_managed
 echo --- AWS Resources
 where aws >nul 2>&1

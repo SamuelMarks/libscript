@@ -31,6 +31,8 @@ if "%ACTION%"=="download" goto :action_download
 if "%ACTION%"=="install" goto :action_install
 goto :action_install
 
+:: ## action_ls
+:: Executes action_ls functionality.
 :action_ls
 if "%KUBECTL_INSTALL_METHOD%"=="mise" ( mise ls kubectl & exit /b 0 )
 if "%KUBECTL_INSTALL_METHOD%"=="asdf" ( asdf list kubectl & exit /b 0 )
@@ -40,6 +42,8 @@ if "%KUBECTL_INSTALL_METHOD%"=="system" ( echo System package manager does not s
 dir /b "%LIBSCRIPT_HOME%\kubectl\" 2>nul
 exit /b 0
 
+:: ## action_ls_remote
+:: Executes action_ls_remote functionality.
 :action_ls_remote
 if "%KUBECTL_INSTALL_METHOD%"=="mise" ( mise ls-remote kubectl & exit /b 0 )
 if "%KUBECTL_INSTALL_METHOD%"=="asdf" ( asdf list all kubectl & exit /b 0 )
@@ -53,6 +57,8 @@ if not "%KUBECTL_RELEASES_URL%"=="" (
 )
 exit /b 0
 
+:: ## action_use
+:: Executes action_use functionality.
 :action_use
 if "%KUBECTL_INSTALL_METHOD%"=="mise" ( mise use "kubectl@%KUBECTL_VERSION%" & exit /b 0 )
 if "%KUBECTL_INSTALL_METHOD%"=="asdf" ( asdf global kubectl "%KUBECTL_VERSION%" & exit /b 0 )
@@ -62,6 +68,8 @@ if "%KUBECTL_INSTALL_METHOD%"=="system" ( echo Cannot 'use' specific version wit
 echo libscript_symlink_alias not implemented natively in cmd yet.
 exit /b 0
 
+:: ## action_download
+:: Executes action_download functionality.
 :action_download
 if "%KUBECTL_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading kubectl %KUBECTL_VERSION% to %DOWNLOAD_DIR%\kubectl...
@@ -74,6 +82,8 @@ if "%KUBECTL_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_install
+:: Executes action_install functionality.
 :action_install
 if "%KUBECTL_INSTALL_METHOD%"=="system" (
     winget install kubectl --accept-package-agreements --accept-source-agreements

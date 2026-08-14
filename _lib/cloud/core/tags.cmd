@@ -11,6 +11,8 @@
 
 goto :%1
 
+:: ## init
+:: Executes init functionality.
 :init
 if "%LIBSCRIPT_TAG_ENABLE%"=="" set "LIBSCRIPT_TAG_ENABLE=true"
 if "%LIBSCRIPT_TAG_KEY%"=="" set "LIBSCRIPT_TAG_KEY=libscript"
@@ -125,6 +127,8 @@ echo [ERROR] Refusing to modify "!name!": Resource is not managed by libscript ^
 endlocal
 exit /b 1
 
+:: ## libscript_format_tags
+:: Executes libscript_format_tags functionality.
 :libscript_format_tags
 set "provider=%~2"
 if not "%LIBSCRIPT_TAG_ENABLE%"=="true" exit /b 0
@@ -141,6 +145,8 @@ if "%provider%"=="aws" (
 )
 exit /b 0
 
+:: ## libscript_format_tag_filter
+:: Executes libscript_format_tag_filter functionality.
 :libscript_format_tag_filter
 set "provider=%~2"
 if not "%LIBSCRIPT_TAG_ENABLE%"=="true" exit /b 0

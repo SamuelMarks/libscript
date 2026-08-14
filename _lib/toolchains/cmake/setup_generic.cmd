@@ -42,6 +42,8 @@ if "%ACTION%"=="uninstall-service" goto :action_uninstall_service
 goto :action_install
 goto :action_install
 
+:: ## action_ls
+:: Executes action_ls functionality.
 :action_ls
 if "%CMAKE_INSTALL_METHOD%"=="mise" ( mise ls cmake & exit /b 0 )
 if "%CMAKE_INSTALL_METHOD%"=="asdf" ( asdf list cmake & exit /b 0 )
@@ -51,6 +53,8 @@ if "%CMAKE_INSTALL_METHOD%"=="system" ( echo System package manager does not sup
 if exist "%LIBSCRIPT_HOME%\cmake" ( dir /b "%LIBSCRIPT_HOME%\cmake" )
 exit /b 0
 
+:: ## action_ls_remote
+:: Executes action_ls_remote functionality.
 :action_ls_remote
 if "%CMAKE_INSTALL_METHOD%"=="mise" ( mise ls-remote cmake & exit /b 0 )
 if "%CMAKE_INSTALL_METHOD%"=="asdf" ( asdf list all cmake & exit /b 0 )
@@ -64,6 +68,8 @@ if not "%CMAKE_RELEASES_URL%"=="" (
 )
 exit /b 0
 
+:: ## action_use
+:: Executes action_use functionality.
 :action_use
 if "%CMAKE_INSTALL_METHOD%"=="mise" ( mise use "cmake@%CMAKE_VERSION%" & exit /b 0 )
 if "%CMAKE_INSTALL_METHOD%"=="asdf" ( asdf global cmake "%CMAKE_VERSION%" & exit /b 0 )
@@ -87,6 +93,8 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 )
 exit /b 0
 
+:: ## action_download
+:: Executes action_download functionality.
 :action_download
 if "%CMAKE_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading cmake %CMAKE_VERSION% to %DOWNLOAD_DIR%\cmake...
@@ -99,6 +107,8 @@ if "%CMAKE_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_install
+:: Executes action_install functionality.
 :action_install
 if "%CMAKE_INSTALL_METHOD%"=="system" (
     winget install cmake --accept-package-agreements --accept-source-agreements
@@ -136,6 +146,8 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 )
 exit /b 0
 
+:: ## action_service
+:: Executes action_service functionality.
 :action_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -155,6 +167,8 @@ if "%CMAKE_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_install_service
+:: Executes action_install_service functionality.
 :action_install_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -174,6 +188,8 @@ if "%CMAKE_INSTALL_METHOD%"=="libscript_native" (
 )
 exit /b 0
 
+:: ## action_uninstall_service
+:: Executes action_uninstall_service functionality.
 :action_uninstall_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (

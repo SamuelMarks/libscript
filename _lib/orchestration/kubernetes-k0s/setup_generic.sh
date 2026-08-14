@@ -48,6 +48,8 @@ KUBERNETES_K0S_INSTALL_METHOD="$(libscript_resolve_install_method "KUBERNETES_K0
 ACTION="${ACTION:-install}"
 VERSION="${KUBERNETES_K0S_VERSION:-latest}"
 
+# ## resolve_exact_version
+# Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
     _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote kubernetes-k0s 2>/dev/null | tail -n 1)

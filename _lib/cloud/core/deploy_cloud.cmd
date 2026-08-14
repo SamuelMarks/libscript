@@ -19,6 +19,8 @@ set "P4="
 set "P5="
 set "P6="
 
+:: ## arg_loop
+:: Executes arg_loop functionality.
 :arg_loop
 set "arg=%~1"
 if "!arg!"=="" goto :args_done
@@ -54,6 +56,8 @@ if "!P1!"=="" (
 shift
 goto :arg_loop
 
+:: ## args_done
+:: Executes args_done functionality.
 :args_done
 
 set "PROVIDER=!P1!"
@@ -272,6 +276,8 @@ if "!PROVIDER!"=="gcp" set "CTX=!LOC!"
 call :log "HEALTH" "Waiting for SSH/WinRM readiness on node !NODE!..."
 set "ATTEMPT=1"
 set "MAX_ATTEMPTS=30"
+:: ## ssh_loop
+:: Executes ssh_loop functionality.
 :ssh_loop
 call "!CLI!" node exec "!NODE!" "!CTX!" "echo SSH_READY" >nul 2>&1
 if %errorlevel% equ 0 (
@@ -287,6 +293,8 @@ timeout /t 10 /nobreak >nul
 set /a ATTEMPT+=1
 goto :ssh_loop
 
+:: ## ssh_ready
+:: Executes ssh_ready functionality.
 :ssh_ready
 
 :: -----------------------------------------------------------------------------
@@ -379,6 +387,8 @@ if "!IS_TPU!"=="1" (
 call :log "HEALTH" "Polling application health (via libscript health)..."
 set "ATTEMPT=1"
 set "MAX_ATTEMPTS=12"
+:: ## health_loop
+:: Executes health_loop functionality.
 :health_loop
 if "!IS_TPU!"=="1" (
     call "!TPU_CLI!" ssh "!NODE!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh health" >nul 2>&1
@@ -398,6 +408,8 @@ timeout /t 10 /nobreak >nul
 set /a ATTEMPT+=1
 goto :health_loop
 
+:: ## health_ready
+:: Executes health_ready functionality.
 :health_ready
 
 call :log "DONE" "Deployment complete. View logs at !LOG_FILE!"
@@ -411,6 +423,8 @@ echo [%~1] %~2
 echo [%DATE% %TIME%] [%~1] %~2 >> "!LOG_FILE!"
 exit /b 0
 
+:: ## record_state
+:: Executes record_state functionality.
 :record_state
 if exist "!STATE_FILE!" (
     findstr /v /b /c:"%~1=" "!STATE_FILE!" > "!STATE_FILE!.tmp"
@@ -420,10 +434,14 @@ echo %~1=%~2>> "!STATE_FILE!"
 call :log "STATE" "Recorded %~1=%~2"
 exit /b 0
 
+:: ## retry
+:: Executes retry functionality.
 :retry
 set "RETRY_ATTEMPT=1"
 set "RETRY_MAX=5"
 set "RETRY_WAIT=5"
+:: ## retry_loop
+:: Executes retry_loop functionality.
 :retry_loop
 call :log "RETRY" "Attempt !RETRY_ATTEMPT! of !RETRY_MAX!: %*"
 call %* >> "!LOG_FILE!" 2>&1

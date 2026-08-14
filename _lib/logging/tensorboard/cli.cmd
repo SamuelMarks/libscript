@@ -40,6 +40,8 @@ if "%ACTION%"=="start" goto :start
 call "%LOG_CMD%" :log_error "Unknown action: %ACTION%. Supported: start."
 exit /b 1
 
+:: ## start
+:: Executes start functionality.
 :start
 set "LOGDIR=%~2"
 if "%LOGDIR%"=="" set "LOGDIR=%TEMP%\logs"

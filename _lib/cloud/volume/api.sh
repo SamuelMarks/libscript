@@ -32,6 +32,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # shellcheck disable=SC1090
 . "$LIBSCRIPT_ROOT_DIR/_lib/cloud/core/tags.sh"
 
+# ## libscript_volume_create
+# Executes libscript_volume_create functionality.
 libscript_volume_create() {
   provider="$1"
   size="${2:-10}"
@@ -98,6 +100,8 @@ libscript_volume_create() {
   esac
 }
 
+# ## libscript_volume_delete
+# Executes libscript_volume_delete functionality.
 libscript_volume_delete() {
   provider="$1"
   vid="$2"
@@ -133,6 +137,8 @@ libscript_volume_delete() {
   esac
 }
 
+# ## libscript_volume_list
+# Executes libscript_volume_list functionality.
 libscript_volume_list() {
   provider="$1"
   
@@ -166,6 +172,8 @@ libscript_volume_list() {
   esac
 }
 
+# ## libscript_volume_attach
+# Executes libscript_volume_attach functionality.
 libscript_volume_attach() {
   provider="$1"
   vid="$2"
@@ -200,6 +208,8 @@ libscript_volume_attach() {
   esac
 }
 
+# ## libscript_volume_detach
+# Executes libscript_volume_detach functionality.
 libscript_volume_detach() {
   provider="$1"
   vid="$2"
