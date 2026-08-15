@@ -49,7 +49,7 @@ export PATH
 [ -d "${LIBSCRIPT_DATA_DIR}" ] || mkdir -p -- "${LIBSCRIPT_DATA_DIR}"
 
 # Source component-specific environment if exists
-ENV_SCRIPT="${DIR}"'/env.sh'
+ENV_SCRIPT="${PWD}/env.sh"
 if [ -f "${ENV_SCRIPT}" ]; then
   SCRIPT_NAME="${ENV_SCRIPT}"
   export SCRIPT_NAME

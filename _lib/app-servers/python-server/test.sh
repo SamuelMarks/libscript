@@ -41,4 +41,8 @@ for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   . "${SCRIPT_NAME}"
 done
 
-assert_version "python" "."
+if command -v python >/dev/null 2>&1; then
+  assert_version "python" "."
+else
+  assert_version "python3" "."
+fi

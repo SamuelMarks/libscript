@@ -304,7 +304,7 @@ map_package() {
     'python')
       case "${PKG_MGR}" in
         'apk') printf 'python3 py3-pip\n' ;;
-        'apt-get') printf 'python3 python3-pip python3-venv\n' ;;
+        'apt-get') printf 'python3 python3-pip python3-venv python-is-python3\n' ;;
         'dnf') printf 'python3 python3-pip\n' ;;
         'yum') printf 'python3 python3-pip\n' ;;
         'zypper') printf 'python3 python3-pip\n' ;;

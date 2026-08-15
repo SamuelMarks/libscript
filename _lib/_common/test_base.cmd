@@ -47,7 +47,7 @@ if not exist "%LIBSCRIPT_BUILD_DIR%" mkdir "%LIBSCRIPT_BUILD_DIR%"
 if not exist "%LIBSCRIPT_DATA_DIR%" mkdir "%LIBSCRIPT_DATA_DIR%"
 
 :: Source component environment if exists
-if exist "%SCRIPT_DIR%\env.cmd" call "%SCRIPT_DIR%\env.cmd"
+if exist "%CD%\env.cmd" call "%CD%\env.cmd"
 
 :: Delegate to PowerShell if test_win.ps1 or test.ps1 exists
 if exist "%~dp0test_win.ps1" (

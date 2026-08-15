@@ -193,13 +193,25 @@ libscript_depends() {
   done
   if [ -n "${pkgs_to_install}" ]; then
     # log_info "Installing packages (${PKG_MGR}): ${pkgs_to_install}"
+    _lockdir="${TMPDIR:-/tmp}/libscript_pkg_mgr_lock"
+    _lock_timeout=600
+    _lock_count=0
+    while ! mkdir "$_lockdir" 2>/dev/null; do
+      _lock_count=$((_lock_count + 1))
+      if [ "$_lock_count" -gt "$_lock_timeout" ]; then
+        log_error "Could not acquire package manager lock after ${_lock_timeout}s"
+        return 1
+      fi
+      sleep 1
+    done
+
     case "${PKG_MGR}" in
       'apt-get')
         export DEBIAN_FRONTEND='noninteractive'
         if [ "${PKG_MGR_UPDATE_REGISTRY}" -eq 1 ]; then
-          priv  apt-get update -qq
+          priv  apt-get -o Dpkg::Lock::Timeout=120 update -qq || true
         fi
-                priv  apt-get install -y    ${pkgs_to_install} ;;
+                priv  apt-get -o Dpkg::Lock::Timeout=120 install -y    ${pkgs_to_install} ;;
       'apk')    priv  apk add --no-cache    ${pkgs_to_install} ;;
       'brew')         brew install          ${pkgs_to_install} ;;
       'dnf')    priv  dnf install -y        ${pkgs_to_install} ;;
@@ -213,10 +225,13 @@ libscript_depends() {
       'yum')    priv  yum install -y        ${pkgs_to_install} ;;
       'zypper') priv  zypper install -y     ${pkgs_to_install} ;;
       *)
+        rmdir "$_lockdir" 2>/dev/null || true
         log_error "libscript_depends function not implemented for ${PKG_MGR}"
         exit 1
         ;;
     esac
+
+    rmdir "$_lockdir" 2>/dev/null || true
   fi
 }
 
