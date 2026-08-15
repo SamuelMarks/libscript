@@ -10,7 +10,7 @@ $ErrorActionPreference = "Stop"
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $libDir = Resolve-Path (Join-Path $scriptDir "..\..\..")
-$wpSetup = Join-Path $libDir "app\third_party\wordpress\setup_windows.ps1"
+$wpSetup = Join-Path $libDir "stacks\cms\wordpress\setup.ps1"
 
 Write-Host "Running WordPress Setup for WooCommerce..."
 if (Test-Path $wpSetup) {

@@ -123,12 +123,12 @@ case "$ACTION" in
     ;;
   download)
     if [ "$ARIA2_INSTALL_METHOD" = "libscript_native" ]; then
-      log_info "Downloading aria2 ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/aria2..."
+      log_info "Downloading aria2 ${VERSION:-} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/aria2..."
       mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/aria2"
       if [ -n "${ARIA2_DOWNLOAD_URL:-}" ]; then
-        libscript_download "${ARIA2_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/aria2/aria2-${VERSION}.tar.gz"
+        libscript_download "${ARIA2_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/aria2/aria2-${VERSION:-}.tar.gz"
       else
-        log_warn "ARIA2_DOWNLOAD_URL is not defined for aria2 ${VERSION}."
+        log_warn "ARIA2_DOWNLOAD_URL is not defined for aria2 ${VERSION:-}."
       fi
     fi
     exit 0
@@ -157,9 +157,9 @@ case "$ACTION" in
 
       mkdir -p "${TARGET_DIR}/bin"
       
-      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/aria2/"*"${VERSION}"* >/dev/null 2>&1; then
+      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/aria2/"*"${VERSION:-}"* >/dev/null 2>&1; then
         log_info "Extracting from cache..."
-        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/aria2/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/aria2/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
         if [ -n "$cache_file" ]; then
           if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
             tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
@@ -184,7 +184,7 @@ case "$ACTION" in
           fi
           rm -f "${TEMP_FILE}"
         else
-          log_warn "No download URL provided for aria2 ${VERSION}."
+          log_warn "No download URL provided for aria2 ${VERSION:-}."
           # Fallback to mock
           printf '%s\n' "#!/bin/sh" > "${TARGET_DIR}/bin/aria2"
           printf '%s\n' "printf '%s\n' 'Mock aria2 executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/aria2"

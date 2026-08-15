@@ -135,4 +135,3 @@ function libscript_check_health {
 }
 
 # Export functions
-Export-ModuleMember -Function libscript_service, libscript_check_health

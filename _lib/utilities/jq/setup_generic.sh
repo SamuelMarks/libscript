@@ -123,12 +123,12 @@ case "$ACTION" in
     ;;
   download)
     if [ "$JQ_INSTALL_METHOD" = "libscript_native" ]; then
-      log_info "Downloading jq ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/jq..."
+      log_info "Downloading jq ${VERSION:-} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/jq..."
       mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/jq"
       if [ -n "${JQ_DOWNLOAD_URL:-}" ]; then
-        libscript_download "${JQ_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/jq/jq-${VERSION}.tar.gz"
+        libscript_download "${JQ_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/jq/jq-${VERSION:-}.tar.gz"
       else
-        log_warn "JQ_DOWNLOAD_URL is not defined for jq ${VERSION}."
+        log_warn "JQ_DOWNLOAD_URL is not defined for jq ${VERSION:-}."
       fi
     fi
     exit 0
@@ -157,9 +157,9 @@ case "$ACTION" in
 
       mkdir -p "${TARGET_DIR}/bin"
       
-      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/jq/"*"${VERSION}"* >/dev/null 2>&1; then
+      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/jq/"*"${VERSION:-}"* >/dev/null 2>&1; then
         log_info "Extracting from cache..."
-        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/jq/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/jq/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
         if [ -n "$cache_file" ]; then
           if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
             tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
@@ -184,7 +184,7 @@ case "$ACTION" in
           fi
           rm -f "${TEMP_FILE}"
         else
-          log_warn "No download URL provided for jq ${VERSION}."
+          log_warn "No download URL provided for jq ${VERSION:-}."
           # Fallback to mock
           printf '%s\n' "#!/bin/sh" > "${TARGET_DIR}/bin/jq"
           printf '%s\n' "printf '%s\n' 'Mock jq executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/jq"

@@ -46,7 +46,7 @@ $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $libDir = Resolve-Path (Join-Path $scriptDir "..\..\..\_lib\")
 
 if ($WebServer -eq "iis") {
-    $iisSetup = Join-Path $libDir "_server\iis\setup_windows.ps1"
+    $iisSetup = Join-Path $libDir "web-servers\iis\setup.ps1"
     if (Test-Path $iisSetup) {
         Write-Host "Running IIS Setup..."
         & $iisSetup
@@ -123,7 +123,7 @@ if ($WebServer -eq "iis") {
     $env:LISTEN = $ListenPort
     $env:MAGENTO_WWWROOT = "$WwwRoot\pub"
 
-    $iisCreateServer = Join-Path $libDir "_server\iis\create_server_block.ps1"
+    $iisCreateServer = Join-Path $libDir "web-servers\iis\create_server_block.ps1"
     if (Test-Path $iisCreateServer) {
         Write-Host "Configuring IIS Block..."
         & $iisCreateServer

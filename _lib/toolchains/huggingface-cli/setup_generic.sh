@@ -123,10 +123,10 @@ case "$ACTION" in
     ;;
   download)
     if [ "$HUGGINGFACE_CLI_INSTALL_METHOD" = "libscript_native" ]; then
-      log_info "Downloading huggingface-cli ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/huggingface-cli..."
+      log_info "Downloading huggingface-cli ${VERSION:-} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/huggingface-cli..."
       mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/huggingface-cli"
       if [ -n "${HUGGINGFACE_CLI_DOWNLOAD_URL:-}" ]; then
-        curl -sSL "${HUGGINGFACE_CLI_DOWNLOAD_URL}" -o "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/huggingface-cli/huggingface-cli-${VERSION}.tar.gz"
+        curl -sSL "${HUGGINGFACE_CLI_DOWNLOAD_URL}" -o "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/huggingface-cli/huggingface-cli-${VERSION:-}.tar.gz"
       else
         printf '%s\n' "HUGGINGFACE_CLI_DOWNLOAD_URL is not defined. Skipping."
       fi
@@ -157,9 +157,9 @@ case "$ACTION" in
 
       mkdir -p "${TARGET_DIR}/bin"
       
-      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/huggingface-cli/"*"${VERSION}"* >/dev/null 2>&1; then
+      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/huggingface-cli/"*"${VERSION:-}"* >/dev/null 2>&1; then
         log_info "Extracting from cache..."
-        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/huggingface-cli/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/huggingface-cli/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
         if [ -n "$cache_file" ]; then
           if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
             tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
@@ -184,7 +184,7 @@ case "$ACTION" in
           fi
           rm -f "${TEMP_FILE}"
         else
-          log_warn "No download URL provided for huggingface-cli ${VERSION}."
+          log_warn "No download URL provided for huggingface-cli ${VERSION:-}."
           # Fallback to mock
           printf '%s\n' "#!/bin/sh" > "${TARGET_DIR}/bin/huggingface-cli"
           printf '%s\n' "printf '%s\n' 'Mock huggingface-cli executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/huggingface-cli"

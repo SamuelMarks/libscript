@@ -67,4 +67,3 @@ function log_warn($msg)    { write_libscript_log "WARN"    3 $msg }
 function log_error($msg)   { write_libscript_log "ERROR"   4 $msg }
 
 # Export functions
-Export-ModuleMember -Function log_debug, log_info, log_success, log_warn, log_error

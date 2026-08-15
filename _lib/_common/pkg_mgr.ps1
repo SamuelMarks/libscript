@@ -170,4 +170,3 @@ function libscript_fetch {
 }
 
 # Export functions
-Export-ModuleMember -Function libscript_download, libscript_fetch, libscript_depends

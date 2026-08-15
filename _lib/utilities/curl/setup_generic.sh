@@ -91,12 +91,12 @@ case "$ACTION" in
     ;;
   download)
     if [ "$CURL_INSTALL_METHOD" = "libscript_native" ]; then
-      log_info "Downloading curl ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/curl..."
+      log_info "Downloading curl ${VERSION:-} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/curl..."
       mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/curl"
       if [ -n "${CURL_DOWNLOAD_URL:-}" ]; then
-        libscript_download "${CURL_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/curl/curl-${VERSION}.tar.gz"
+        libscript_download "${CURL_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/curl/curl-${VERSION:-}.tar.gz"
       else
-        log_warn "CURL_DOWNLOAD_URL is not defined for curl ${VERSION}."
+        log_warn "CURL_DOWNLOAD_URL is not defined for curl ${VERSION:-}."
       fi
     fi
     exit 0
@@ -115,8 +115,8 @@ case "$ACTION" in
             i386|i686) BARCH="i386" ;;
             *) BARCH="amd64" ;;
           esac
-          if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/curl/"*"${VERSION}"* >/dev/null 2>&1; then
-            cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/curl/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/curl/"*"${VERSION:-}"* >/dev/null 2>&1; then
+            cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/curl/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
             cp "$cache_file" "/tmp/curl"
           else
             libscript_download "https://github.com/moparisthebest/static-curl/releases/latest/download/curl-${BARCH}" "/tmp/curl" || { printf '%s\n' "Failed to download static curl"; exit 1; }
@@ -144,8 +144,8 @@ case "$ACTION" in
             i386|i686) BARCH="i386" ;;
             *) BARCH="amd64" ;;
           esac
-          if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/curl/"*"${VERSION}"* >/dev/null 2>&1; then
-            cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/curl/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/curl/"*"${VERSION:-}"* >/dev/null 2>&1; then
+            cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/curl/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
             cp "$cache_file" "/tmp/curl"
           else
             libscript_download "https://github.com/moparisthebest/static-curl/releases/latest/download/curl-${BARCH}" "/tmp/curl" || { printf '%s\n' "Failed to download static curl"; exit 1; }

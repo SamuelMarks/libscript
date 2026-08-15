@@ -45,14 +45,14 @@ if errorlevel 1 (
 )
 
 :: Delegate to PowerShell if uninstall_win.ps1 or uninstall.ps1 exists
-if exist "%SCRIPT_DIR%\uninstall_win.ps1" (
+if exist "%CD%\uninstall_win.ps1" (
     set "COMMON_DIR=%LIBSCRIPT_ROOT_DIR%\_lib\_common"
-    powershell -ExecutionPolicy Bypass -Command "& { . '!COMMON_DIR!\log.ps1'; . '!COMMON_DIR!\pkg_mgr.ps1'; . '!COMMON_DIR!\service.ps1'; & '%SCRIPT_DIR%\uninstall_win.ps1' }"
+    powershell -ExecutionPolicy Bypass -Command "& { . '!COMMON_DIR!\log.ps1'; . '!COMMON_DIR!\pkg_mgr.ps1'; . '!COMMON_DIR!\service.ps1'; & '%CD%\uninstall_win.ps1' }"
     exit /b !errorlevel!
-) else if exist "%SCRIPT_DIR%\uninstall.ps1" (
+) else if exist "%CD%\uninstall.ps1" (
     set "COMMON_DIR=%LIBSCRIPT_ROOT_DIR%\_lib\_common"
-    powershell -ExecutionPolicy Bypass -Command "& { . '!COMMON_DIR!\log.ps1'; . '!COMMON_DIR!\pkg_mgr.ps1'; . '!COMMON_DIR!\service.ps1'; & '%SCRIPT_DIR%\uninstall.ps1' }"
+    powershell -ExecutionPolicy Bypass -Command "& { . '!COMMON_DIR!\log.ps1'; . '!COMMON_DIR!\pkg_mgr.ps1'; . '!COMMON_DIR!\service.ps1'; & '%CD%\uninstall.ps1' }"
     exit /b !errorlevel!
 ) else (
-    echo [INFO] No uninstall PowerShell script found in %SCRIPT_DIR%.
+    echo [INFO] No uninstall PowerShell script found in %CD%.
 )

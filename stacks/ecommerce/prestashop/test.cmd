@@ -8,4 +8,4 @@
 :: Execute this script to run the test suite for prestashop.
 
 setlocal EnableDelayedExpansion
-call "%~dp0\..\..\..\_lib\_common\test_base.cmd"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0test.ps1"

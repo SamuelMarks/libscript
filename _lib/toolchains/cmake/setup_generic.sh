@@ -126,12 +126,12 @@ case "$ACTION" in
     ;;
   download)
     if [ "$CMAKE_INSTALL_METHOD" = "libscript_native" ]; then
-      log_info "Downloading cmake ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cmake..."
+      log_info "Downloading cmake ${VERSION:-} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cmake..."
       mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cmake"
       if [ -n "${CMAKE_DOWNLOAD_URL:-}" ]; then
-        libscript_download "${CMAKE_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cmake/cmake-${VERSION}.tar.gz"
+        libscript_download "${CMAKE_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cmake/cmake-${VERSION:-}.tar.gz"
       else
-        log_warn "CMAKE_DOWNLOAD_URL is not defined for cmake ${VERSION}."
+        log_warn "CMAKE_DOWNLOAD_URL is not defined for cmake ${VERSION:-}."
       fi
     fi
     exit 0
@@ -160,9 +160,9 @@ case "$ACTION" in
 
       mkdir -p "${TARGET_DIR}/bin"
       
-      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cmake/"*"${VERSION}"* >/dev/null 2>&1; then
+      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cmake/"*"${VERSION:-}"* >/dev/null 2>&1; then
         log_info "Extracting from cache..."
-        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cmake/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cmake/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
         if [ -n "$cache_file" ]; then
           if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
             tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
@@ -187,7 +187,7 @@ case "$ACTION" in
           fi
           rm -f "${TEMP_FILE}"
         else
-          log_warn "No download URL provided for cmake ${VERSION}."
+          log_warn "No download URL provided for cmake ${VERSION:-}."
           # Fallback to mock
           printf '%s\n' "#!/bin/sh" > "${TARGET_DIR}/bin/cmake"
           printf '%s\n' "printf '%s\n' 'Mock cmake executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/cmake"

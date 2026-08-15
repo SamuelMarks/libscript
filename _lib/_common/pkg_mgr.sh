@@ -205,25 +205,26 @@ libscript_depends() {
       sleep 1
     done
 
+    _install_failed=0
     case "${PKG_MGR}" in
       'apt-get')
         export DEBIAN_FRONTEND='noninteractive'
         if [ "${PKG_MGR_UPDATE_REGISTRY}" -eq 1 ]; then
           priv  apt-get -o Dpkg::Lock::Timeout=120 update -qq || true
         fi
-                priv  apt-get -o Dpkg::Lock::Timeout=120 install -y    ${pkgs_to_install} ;;
-      'apk')    priv  apk add --no-cache    ${pkgs_to_install} ;;
-      'brew')         brew install          ${pkgs_to_install} ;;
-      'dnf')    priv  dnf install -y        ${pkgs_to_install} ;;
-      'emerge') priv  emerge --quiet        ${pkgs_to_install} ;;
-      'eopkg')  priv  eopkg install -y      ${pkgs_to_install} ;;
-      'pacman') priv  pacman -S --noconfirm ${pkgs_to_install} ;;
-      'pkg')    priv  pkg install -y        ${pkgs_to_install} ;;
-      'port')   priv  port install          ${pkgs_to_install} ;;
-      'swupd')  priv  swupd bundle-add      ${pkgs_to_install} ;;
-      'xbps')   priv  xbps-install -Sy      ${pkgs_to_install} ;;
-      'yum')    priv  yum install -y        ${pkgs_to_install} ;;
-      'zypper') priv  zypper install -y     ${pkgs_to_install} ;;
+                priv  apt-get -o Dpkg::Lock::Timeout=120 install -y    ${pkgs_to_install} || _install_failed=1 ;;
+      'apk')    priv  apk add --no-cache    ${pkgs_to_install} || _install_failed=1 ;;
+      'brew')         brew install          ${pkgs_to_install} || _install_failed=1 ;;
+      'dnf')    priv  dnf install -y        ${pkgs_to_install} || _install_failed=1 ;;
+      'emerge') priv  emerge --quiet        ${pkgs_to_install} || _install_failed=1 ;;
+      'eopkg')  priv  eopkg install -y      ${pkgs_to_install} || _install_failed=1 ;;
+      'pacman') priv  pacman -S --noconfirm ${pkgs_to_install} || _install_failed=1 ;;
+      'pkg')    priv  pkg install -y        ${pkgs_to_install} || _install_failed=1 ;;
+      'port')   priv  port install          ${pkgs_to_install} || _install_failed=1 ;;
+      'swupd')  priv  swupd bundle-add      ${pkgs_to_install} || _install_failed=1 ;;
+      'xbps')   priv  xbps-install -Sy      ${pkgs_to_install} || _install_failed=1 ;;
+      'yum')    priv  yum install -y        ${pkgs_to_install} || _install_failed=1 ;;
+      'zypper') priv  zypper install -y     ${pkgs_to_install} || _install_failed=1 ;;
       *)
         rmdir "$_lockdir" 2>/dev/null || true
         log_error "libscript_depends function not implemented for ${PKG_MGR}"
@@ -232,6 +233,9 @@ libscript_depends() {
     esac
 
     rmdir "$_lockdir" 2>/dev/null || true
+    if [ "$_install_failed" -ne 0 ]; then
+      return 1
+    fi
   fi
 }
 

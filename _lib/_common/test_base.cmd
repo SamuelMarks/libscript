@@ -50,13 +50,13 @@ if not exist "%LIBSCRIPT_DATA_DIR%" mkdir "%LIBSCRIPT_DATA_DIR%"
 if exist "%CD%\env.cmd" call "%CD%\env.cmd"
 
 :: Delegate to PowerShell if test_win.ps1 or test.ps1 exists
-if exist "%~dp0test_win.ps1" (
+if exist "%CD%\test_win.ps1" (
     set "COMMON_DIR=%LIBSCRIPT_ROOT_DIR%\_lib\_common"
-    powershell -ExecutionPolicy Bypass -Command "& { . '!COMMON_DIR!\log.ps1'; . '!COMMON_DIR!\pkg_mgr.ps1'; . '!COMMON_DIR!\service.ps1'; & '%~dp0test_win.ps1' }"
+    powershell -ExecutionPolicy Bypass -Command "& { . '!COMMON_DIR!\log.ps1'; . '!COMMON_DIR!\pkg_mgr.ps1'; . '!COMMON_DIR!\service.ps1'; & '%CD%\test_win.ps1' }"
     exit /b !errorlevel!
-) else if exist "%~dp0test.ps1" (
+) else if exist "%CD%\test.ps1" (
     set "COMMON_DIR=%LIBSCRIPT_ROOT_DIR%\_lib\_common"
-    powershell -ExecutionPolicy Bypass -Command "& { . '!COMMON_DIR!\log.ps1'; . '!COMMON_DIR!\pkg_mgr.ps1'; . '!COMMON_DIR!\service.ps1'; & '%~dp0test.ps1' }"
+    powershell -ExecutionPolicy Bypass -Command "& { . '!COMMON_DIR!\log.ps1'; . '!COMMON_DIR!\pkg_mgr.ps1'; . '!COMMON_DIR!\service.ps1'; & '%CD%\test.ps1' }"
     exit /b !errorlevel!
 )
 

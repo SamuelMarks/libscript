@@ -123,12 +123,12 @@ case "$ACTION" in
     ;;
   download)
     if [ "$MAVEN_INSTALL_METHOD" = "libscript_native" ]; then
-      log_info "Downloading maven ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/maven..."
+      log_info "Downloading maven ${VERSION:-} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/maven..."
       mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/maven"
       if [ -n "${MAVEN_DOWNLOAD_URL:-}" ]; then
-        libscript_download "${MAVEN_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/maven/maven-${VERSION}.tar.gz"
+        libscript_download "${MAVEN_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/maven/maven-${VERSION:-}.tar.gz"
       else
-        log_warn "MAVEN_DOWNLOAD_URL is not defined for maven ${VERSION}."
+        log_warn "MAVEN_DOWNLOAD_URL is not defined for maven ${VERSION:-}."
       fi
     fi
     exit 0
@@ -157,9 +157,9 @@ case "$ACTION" in
 
       mkdir -p "${TARGET_DIR}/bin"
       
-      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/maven/"*"${VERSION}"* >/dev/null 2>&1; then
+      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/maven/"*"${VERSION:-}"* >/dev/null 2>&1; then
         log_info "Extracting from cache..."
-        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/maven/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/maven/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
         if [ -n "$cache_file" ]; then
           if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
             tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
@@ -184,7 +184,7 @@ case "$ACTION" in
           fi
           rm -f "${TEMP_FILE}"
         else
-          log_warn "No download URL provided for maven ${VERSION}."
+          log_warn "No download URL provided for maven ${VERSION:-}."
           # Fallback to mock
           printf '%s\n' "#!/bin/sh" > "${TARGET_DIR}/bin/maven"
           printf '%s\n' "printf '%s\n' 'Mock maven executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/maven"

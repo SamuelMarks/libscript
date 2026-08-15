@@ -23,4 +23,3 @@ function require_admin {
     }
 }
 
-Export-ModuleMember -Function require_admin

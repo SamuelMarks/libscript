@@ -43,7 +43,7 @@ if ($DbType -eq "postgres") {
 if ($WebServer -eq "iis") {
     $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
     $libDir = Resolve-Path (Join-Path $scriptDir "..\..\..\_lib\")
-    $iisSetup = Join-Path $libDir "_server\iis\setup_windows.ps1"
+    $iisSetup = Join-Path $libDir "web-servers\iis\setup.ps1"
     if (Test-Path $iisSetup) {
         Write-Host "Running IIS Setup..."
         & $iisSetup
@@ -129,7 +129,7 @@ if ($WebServer -eq "iis") {
     $env:PROXY_PASS = "http://127.0.0.1:${OdooPort}"
     $env:PROXY_WEBSOCKETS = "1"
 
-    $iisCreateServer = Join-Path $libDir "_server\iis\create_server_block.ps1"
+    $iisCreateServer = Join-Path $libDir "web-servers\iis\create_server_block.ps1"
     if (Test-Path $iisCreateServer) {
         Write-Host "Configuring IIS Block..."
         & $iisCreateServer
