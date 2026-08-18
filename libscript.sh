@@ -68,6 +68,7 @@ show_help() {
   printf '%s\n' "  down [package_name...]      Alias for stop"
   printf '%s\n' "  provision <provider> ...    Provision a cloud environment"
   printf '%s\n' "  deprovision <provider> ...  Deprovision a cloud environment"
+  printf '%s\n' "  deploy-remote <user@host>   Idempotently deploy multiple apps to a remote host"
   printf '%s\n' "  <component> [OPTIONS...]    Invoke the CLI for a specific component"
   printf '%s\n' ""
   printf '%s\n' "Options:"
@@ -199,6 +200,7 @@ case "$CMD" in
   process-downloads) . "$LIBSCRIPT_ROOT_DIR/cli/commands/deps/process_downloads.sh" ;;
   provision) . "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/provision.sh" ;;
   deprovision) . "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deprovision.sh" ;;
+  deploy-remote) . "$LIBSCRIPT_ROOT_DIR/cli/commands/cloud/deploy-remote.sh" ;;
   search) . "$LIBSCRIPT_ROOT_DIR/cli/commands/core/search.sh" ;;
   start|stop|status|health|logs|restart|up|down) . "$LIBSCRIPT_ROOT_DIR/cli/commands/services/actions.sh" ;;
   install-deps) . "$LIBSCRIPT_ROOT_DIR/cli/commands/deps/install.sh" ;;

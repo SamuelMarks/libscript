@@ -75,6 +75,9 @@ if "!is_json!"=="1" (
         call "%~dp0scripts\daemonize.cmd" "!action!" "!json_file!"
     ) else if /i "!action!"=="status" (
         call "%~dp0scripts\daemonize.cmd" "!action!" "!json_file!"
+    ) else if /i "!action!"=="restart" (
+        call "%~dp0scripts\daemonize.cmd" "stop" "!json_file!"
+        call "%~dp0scripts\daemonize.cmd" "start" "!json_file!"
     )
 
     exit /b 0

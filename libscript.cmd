@@ -78,6 +78,7 @@ if /i "%cmd%"=="list" ( call "%SCRIPT_DIR%\cli\commands\core\list.cmd" %* & exit
 if /i "%cmd%"=="search" ( call "%SCRIPT_DIR%\cli\commands\core\search.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="provision" ( call "%SCRIPT_DIR%\cli\commands\cloud\provision.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="deprovision" ( call "%SCRIPT_DIR%\cli\commands\cloud\deprovision.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="deploy-remote" ( call "%SCRIPT_DIR%\cli\commands\cloud\deploy-remote.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="package-as" ( call "%SCRIPT_DIR%\cli\commands\packaging\package-as.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="install-deps" ( call "%SCRIPT_DIR%\cli\commands\deps\install.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="db-search" ( call "%SCRIPT_DIR%\cli\commands\registry\search.cmd" %* & exit /b !errorlevel! )
@@ -252,6 +253,9 @@ echo   package-as ^<format^> [args...]             Package libscript usage (e.g.
 echo   install ^<package_name^> ^<version^>
 echo   use ^<package_name^> ^<version^>
 echo   download ^<package_name^> ^<version^>
+echo   provision ^<provider^> ...                  Provision a cloud environment
+echo   deprovision ^<provider^> ...                Deprovision a cloud environment
+echo   deploy-remote ^<user@host^>                 Idempotently deploy multiple apps to a remote host
 echo   remove ^<package_name^> [version]
 echo   uninstall ^<package_name^> [version]
 echo   install-service ^<package_name^> ^<version^>

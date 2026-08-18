@@ -94,6 +94,9 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
       "${LIBSCRIPT_ROOT_DIR:-.}/_lib/init-systems/daemonize.sh" "$action" "$json_file"
     elif [ "$action" = "status" ]; then
       "${LIBSCRIPT_ROOT_DIR:-.}/_lib/init-systems/daemonize.sh" "$action" "$json_file"
+    elif [ "$action" = "restart" ]; then
+      "${LIBSCRIPT_ROOT_DIR:-.}/_lib/init-systems/daemonize.sh" "stop" "$json_file"
+      "${LIBSCRIPT_ROOT_DIR:-.}/_lib/init-systems/daemonize.sh" "start" "$json_file"
     fi
 
     wait

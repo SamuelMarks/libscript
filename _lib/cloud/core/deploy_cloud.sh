@@ -518,9 +518,9 @@ fi
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
 if [ "$IS_TPU" -eq 1 ]; then
-  with_retry "$TPU_CLI" ssh "$NODE" --all-workers "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/scripts/run_hooks.sh libscript.json install"
+  with_retry "$TPU_CLI" ssh "$NODE" --all-workers "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/_lib/orchestration/run_hooks.sh libscript.json install"
 else
-  with_retry "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/scripts/run_hooks.sh libscript.json install"
+  with_retry "$CLI" node exec "$NODE" "$CTX" "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/_lib/orchestration/run_hooks.sh libscript.json install"
 fi
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
