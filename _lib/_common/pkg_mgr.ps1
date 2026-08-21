@@ -99,7 +99,7 @@ function libscript_download {
                 $client.DownloadFile($Url, $cacheFile)
                 $downloadSuccess = $true
             } catch {
-                log_error "Download failed for $Url: $($_.Exception.Message)"
+                log_error "Download failed for ${Url}: $($_.Exception.Message)"
                 return
             }
         }

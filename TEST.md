@@ -61,6 +61,92 @@ Because TPU and GPU provisioning require specific quotas, ML and hardware-accele
 as `tpu-vm-vllm` or `gke-xpk-inference`) use mocked dry-runs during standard CI validation. Set
 `E2E_CLOUD=1` to trigger actual cloud quota usage on supported GCP projects.
 
+## Local Testing (Vagrant)
+
+For isolated local testing across different operating systems, LibScript provides predefined Vagrant
+environments (located in the `vagrant/` directory). This is highly useful for validating
+cross-platform compatibility and verifying component behavior without relying on cloud
+infrastructure.
+
+### Vagrant Environments
+
+The repository contains several Vagrant configurations representing our target platforms (e.g.,
+Debian, Alpine, AlmaLinux, FreeBSD). You can orchestrate these environments using the main
+`libscript` tool:
+
+```sh
+# Provision the Vagrant environment
+libscript install vagrant
+
+# Start the Vagrant environment
+libscript start vagrant
+```
+
+Alternatively, you can manually navigate to specific platform folders (e.g., `vagrant/debian-12/`)
+and run `vagrant up`.
+
+### Component Execution over SSH
+
+Once a Vagrant box is running, you can execute component scripts natively within the isolated VM
+over SSH. For example, to install and test PostgreSQL:
+
+```sh
+# Run the component setup script
+vagrant ssh -c '"${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/setup.sh'
+
+# Source the generated environment block and run tests
+vagrant ssh -c '. "${LIBSCRIPT_ROOT_DIR}"/env.sh && "${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/test.sh'
+```
+
+### Batch Matrix Testing
+
+To validate your changes across multiple distributions simultaneously, you can iterate over the
+Vagrant environments locally. Wrapping the `vagrant ssh` executions in parallel subshells allows you
+to mimic a fast CI loop on your local machine.
+
+### Testing Installation Heuristics
+
+Vagrant VMs are ideal for testing dependency management behaviors. You can inject environment
+variables (e.g., `LIBSCRIPT_GLOBAL_INSTALL_METHOD="system"` or local overrides like
+`PYTHON_INSTALL_METHOD="uv"`) over SSH to verify that fallback resolution paths, system package
+managers, and source compilation scripts act exactly as expected on varied Linux and BSD
+distributions.
+
+### End-to-End Integration Testing
+
+In addition to interactive component execution over SSH, LibScript uses dedicated Vagrantfiles for
+fully automated end-to-end (E2E) integration tests. These files are located in the `tests/vagrant/`
+directory and perform comprehensive validation (e.g., installation, service configuration, and
+client connection tests).
+
+For example, to run the PostgreSQL E2E test on an Alpine Linux VM:
+
+```sh
+# Navigate to the test directory
+cd tests/vagrant/linux
+
+# Tell Vagrant to use the specific test file and provision the environment
+VAGRANT_VAGRANTFILE=postgres.alpine.linux.Vagrantfile vagrant up
+```
+
+**What the test does under the hood:**
+
+1. **Provisioning:** Vagrant boots an Alpine virtual machine.
+2. **Synchronization:** The local LibScript repository is mapped into the guest OS
+   (`/opt/repos/libscript`) via `rsync`.
+3. **Execution:** An inline shell provisioner triggers the native
+   `./libscript.sh install postgres 17` and `./libscript.sh restart postgres` commands directly
+   within the VM.
+4. **Validation:** The provisioner executes a Python script (using `psycopg2`) to connect to the
+   newly provisioned database, confirming that LibScript's setup was fully successful, initialized,
+   and accepting connections.
+
+After validation completes, you can clean up the temporary environment:
+
+```sh
+VAGRANT_VAGRANTFILE=postgres.alpine.linux.Vagrantfile vagrant destroy -f
+```
+
 ## Artifact Verification
 
 Testing extends beyond native script execution. The CI pipeline actively validates the outputs of

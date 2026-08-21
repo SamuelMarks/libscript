@@ -71,6 +71,12 @@ if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "stacks/scaffolds/serve-a
 if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/orchestration/docker" ]; then EXCLUDED=1; fi
 if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/databases/mongodb" ]; then EXCLUDED=1; fi
 if [ "$OS_NAME" = "ubuntu-latest" ] && [ "$COMPONENT" = "_lib/databases/mongodb" ]; then EXCLUDED=1; fi
+if [ "$OS_NAME" = "ubuntu-latest" ] && [ "$COMPONENT" = "_lib/databases/duckdb" ]; then EXCLUDED=1; fi
+if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/databases/duckdb" ]; then EXCLUDED=1; fi
+if [ "$OS_NAME" = "ubuntu-latest" ] && [ "$COMPONENT" = "_lib/databases/etcd" ]; then EXCLUDED=1; fi
+if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/databases/etcd" ]; then EXCLUDED=1; fi
+if [ "$OS_NAME" = "ubuntu-latest" ] && [ "$COMPONENT" = "_lib/databases/mariadb" ]; then EXCLUDED=1; fi
+if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/databases/mariadb" ]; then EXCLUDED=1; fi
 
 if [ "$EXCLUDED" = "1" ]; then
     echo "Skipping $COMPONENT on $OS_NAME (excluded)"

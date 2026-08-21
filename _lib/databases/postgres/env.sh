@@ -56,4 +56,4 @@ else
 fi
 
 POSTGRES_VERSION="${POSTGRES_VERSION:-latest}"
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/postgres/${POSTGRES_VERSION}/bin:${PATH}"
+export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/postgres/${POSTGRES_VERSION}/bin:/usr/lib/postgresql/${POSTGRES_VERSION}/bin:${PATH}"
