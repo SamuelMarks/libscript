@@ -204,33 +204,37 @@ libscript_depends() {
       fi
       sleep 1
     done
-
-    _install_failed=0
-    case "${PKG_MGR}" in
-      'apt-get')
-        export DEBIAN_FRONTEND='noninteractive'
-        if [ "${PKG_MGR_UPDATE_REGISTRY}" -eq 1 ]; then
-          priv  apt-get -o Dpkg::Lock::Timeout=120 update -qq || true
-        fi
-                priv  apt-get -o Dpkg::Lock::Timeout=120 install -y    ${pkgs_to_install} || _install_failed=1 ;;
-      'apk')    priv  apk add --no-cache    ${pkgs_to_install} || _install_failed=1 ;;
-      'brew')         brew install          ${pkgs_to_install} || _install_failed=1 ;;
-      'dnf')    priv  dnf install -y        ${pkgs_to_install} || _install_failed=1 ;;
-      'emerge') priv  emerge --quiet        ${pkgs_to_install} || _install_failed=1 ;;
-      'eopkg')  priv  eopkg install -y      ${pkgs_to_install} || _install_failed=1 ;;
-      'pacman') priv  pacman -S --noconfirm ${pkgs_to_install} || _install_failed=1 ;;
-      'pkg')    priv  pkg install -y        ${pkgs_to_install} || _install_failed=1 ;;
-      'port')   priv  port install          ${pkgs_to_install} || _install_failed=1 ;;
-      'swupd')  priv  swupd bundle-add      ${pkgs_to_install} || _install_failed=1 ;;
-      'xbps')   priv  xbps-install -Sy      ${pkgs_to_install} || _install_failed=1 ;;
-      'yum')    priv  yum install -y        ${pkgs_to_install} || _install_failed=1 ;;
-      'zypper') priv  zypper install -y     ${pkgs_to_install} || _install_failed=1 ;;
-      *)
-        rmdir "$_lockdir" 2>/dev/null || true
-        log_error "libscript_depends function not implemented for ${PKG_MGR}"
-        exit 1
-        ;;
-    esac
+    
+    # Run in a subshell so if it exits early due to set -e, we can still remove the lock
+    (
+      _install_failed=0
+      case "${PKG_MGR}" in
+        'apt-get')
+          export DEBIAN_FRONTEND='noninteractive'
+          if [ "${PKG_MGR_UPDATE_REGISTRY}" -eq 1 ]; then
+            priv  apt-get -o Dpkg::Lock::Timeout=120 update -qq || true
+          fi
+                  priv  apt-get -o Dpkg::Lock::Timeout=120 install -y    ${pkgs_to_install} || _install_failed=1 ;;
+        'apk')    priv  apk add --no-cache    ${pkgs_to_install} || _install_failed=1 ;;
+        'brew')         brew install          ${pkgs_to_install} || _install_failed=1 ;;
+        'dnf')    priv  dnf install -y        ${pkgs_to_install} || _install_failed=1 ;;
+        'emerge') priv  emerge --quiet        ${pkgs_to_install} || _install_failed=1 ;;
+        'eopkg')  priv  eopkg install -y      ${pkgs_to_install} || _install_failed=1 ;;
+        'pacman') priv  pacman -S --noconfirm ${pkgs_to_install} || _install_failed=1 ;;
+        'pkg')    priv  pkg install -y        ${pkgs_to_install} || _install_failed=1 ;;
+        'port')   priv  port install          ${pkgs_to_install} || _install_failed=1 ;;
+        'swupd')  priv  swupd bundle-add      ${pkgs_to_install} || _install_failed=1 ;;
+        'xbps')   priv  xbps-install -Sy      ${pkgs_to_install} || _install_failed=1 ;;
+        'yum')    priv  yum install -y        ${pkgs_to_install} || _install_failed=1 ;;
+        'zypper') priv  zypper install -y     ${pkgs_to_install} || _install_failed=1 ;;
+        *)
+          log_error "libscript_depends function not implemented for ${PKG_MGR}"
+          exit 1
+          ;;
+      esac
+      exit "$_install_failed"
+    )
+    _install_failed=$?
 
     rmdir "$_lockdir" 2>/dev/null || true
     if [ "$_install_failed" -ne 0 ]; then

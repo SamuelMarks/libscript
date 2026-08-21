@@ -77,7 +77,7 @@ if ! dpkg -s -- 'postgresql-server-dev-'"${POSTGRES_VERSION}" >/dev/null 2>&1; t
     fi
     printf '#!/bin/sh\nexit 0' | priv dd status='none' of='/usr/sbin/policy-rc.d'
     priv chmod 755 '/usr/sbin/policy-rc.d'
-    [ -d '/var/LIB/postgresql/'"${POSTGRES_VERSION}" ] || mkdir -p -- '/var/LIB/postgresql/'"${POSTGRES_VERSION}"
+    [ -d '/var/lib/postgresql/'"${POSTGRES_VERSION}" ] || mkdir -p -- '/var/lib/postgresql/'"${POSTGRES_VERSION}"
     [ -d '/var/log/postgresql' ] || mkdir -p -- '/var/log/postgresql'
     PG_CONF="/etc/postgresql/${POSTGRES_VERSION}/main/postgresql.conf"
     if [ -f "${PG_CONF}" ]; then
@@ -92,9 +92,9 @@ if ! dpkg -s -- 'postgresql-server-dev-'"${POSTGRES_VERSION}" >/dev/null 2>&1; t
       fi
     fi
     priv_as "${POSTGRES_SERVICE_USER?}" \
-      '/usr/LIB/postgresql/'"${POSTGRES_VERSION}"'/bin/postgres' \
+      '/usr/lib/postgresql/'"${POSTGRES_VERSION}"'/bin/postgres' \
         --single "${POSTGRES_SERVICE_USER?}" \
-        -D '/var/LIB/postgresql/'"${POSTGRES_VERSION}"'/main' \
+        -D '/var/lib/postgresql/'"${POSTGRES_VERSION}"'/main' \
         -r '/var/log/postgresql/'"${POSTGRES_VERSION}"'-main.log' >'/var/log/postgresql/'"${POSTGRES_VERSION}"'-main.log0' 2>&1 &
     PID="$!"
     printf '%d' "${PID}" | priv dd status='none' of='/var/run/postgresql/'"${POSTGRES_VERSION}"'-main.pid'

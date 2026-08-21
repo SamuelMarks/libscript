@@ -41,15 +41,15 @@ done
 
 # github.com/kelseyhightower/kubernetes-the-hard-way/blob/master/docs/05-kubernetes-configuration-files.md
 for host in node0 node1 node2; do
-  ssh root@"${host}" "mkdir -p -- /var/LIB/kubelet/"
+  ssh root@"${host}" "mkdir -p -- /var/lib/kubelet/"
 
-  scp "${LIBSCRIPT_DATA_DIR}"'/ca.crt' root@"${host}":/var/LIB/kubelet/
+  scp "${LIBSCRIPT_DATA_DIR}"'/ca.crt' root@"${host}":/var/lib/kubelet/
 
   scp "${LIBSCRIPT_DATA_DIR}"'/'"${host}"'.crt' \
-    root@"${host}":/var/LIB/kubelet/kubelet.crt
+    root@"${host}":/var/lib/kubelet/kubelet.crt
 
   scp "${LIBSCRIPT_DATA_DIR}"'/'"${host}"'.key' \
-    root@"${host}":/var/LIB/kubelet/kubelet.key
+    root@"${host}":/var/lib/kubelet/kubelet.key
 done
 
 for host in node0 node1 node2; do
@@ -163,13 +163,13 @@ kubectl config use-context 'default' \
 # github.com/kelseyhightower/kubernetes-the-hard-way/blob/master/docs/05-kubernetes-configuration-files.md#distribute-the-kubernetes-configuration-files
 
 for host in node0 node1 node2; do
-  ssh root@"${host}" "mkdir -p -- /var/LIB/{kube-proxy,kubelet}"
+  ssh root@"${host}" "mkdir -p -- /var/lib/{kube-proxy,kubelet}"
 
   scp "${LIBSCRIPT_DATA_DIR}"'/kube-proxy.kubeconfig' \
-    root@"${host}":'/var/LIB/kube-proxy/kubeconfig'
+    root@"${host}":'/var/lib/kube-proxy/kubeconfig'
 
   scp "${LIBSCRIPT_DATA_DIR}"'/'"${host}"'.kubeconfig' \
-    root@"${host}":'/var/LIB/kubelet/kubeconfig'
+    root@"${host}":'/var/lib/kubelet/kubeconfig'
 done
 
 scp "${LIBSCRIPT_DATA_DIR}"'/admin.kubeconfig' \

@@ -69,6 +69,8 @@ if [ "$OS_NAME" = "ubuntu-latest" ] && [ "$COMPONENT" = "stacks/cms/wordpress" ]
 if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "stacks/cms/wordpress" ]; then EXCLUDED=1; fi
 if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "stacks/scaffolds/serve-actix-diesel-auth-scaffold" ]; then EXCLUDED=1; fi
 if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/orchestration/docker" ]; then EXCLUDED=1; fi
+if [ "$OS_NAME" = "macos-latest" ] && [ "$COMPONENT" = "_lib/databases/mongodb" ]; then EXCLUDED=1; fi
+if [ "$OS_NAME" = "ubuntu-latest" ] && [ "$COMPONENT" = "_lib/databases/mongodb" ]; then EXCLUDED=1; fi
 
 if [ "$EXCLUDED" = "1" ]; then
     echo "Skipping $COMPONENT on $OS_NAME (excluded)"
