@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\guix.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for guix.
+        exit /b 1
     )
 ) else (
     echo guix %GUIX_VERSION% is already installed.

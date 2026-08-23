@@ -10,11 +10,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -28,7 +28,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-DIR="${SCRIPT_DIR}"
+export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
@@ -142,7 +142,7 @@ case "$ACTION" in
     fi
     exit 0
     ;;
-  install|*)
+  install)
     if [ "$GO_INSTALL_METHOD" = "system" ]; then
       libscript_depends "go"
     elif [ "$GO_INSTALL_METHOD" = "mise" ]; then
@@ -188,7 +188,26 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_warn "No download URL provided for go ${VERSION}."
+            log_info "No download URL provided for go ${VERSION}. Attempting fallback to golang.org..."
+            libscript_depends "curl"
+            TEMP_FILE=$(mktemp)
+            OS_ARCH=$(uname -m)
+            _actual_version="${EXACT_VERSION}"
+            if [ "${_actual_version}" = "latest" ] || [ "${_actual_version}" = "" ]; then
+              _actual_version=$(curl -sL "https://go.dev/VERSION?m=text" | head -n 1 | tr -d '\r\n')
+            fi
+            # strip "go" prefix if it exists to normalize
+            _actual_version=$(echo "$_actual_version" | sed 's/^go//')
+            
+            if [ "$OS_ARCH" = "aarch64" ]; then
+              DL_URL="https://go.dev/dl/go${_actual_version}.linux-arm64.tar.gz"
+            else
+              DL_URL="https://go.dev/dl/go${_actual_version}.linux-amd64.tar.gz"
+            fi
+            
+            curl -fsSL "$DL_URL" -o "${TEMP_FILE}"
+            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+            rm -f "${TEMP_FILE}"
           fi
         fi
       else

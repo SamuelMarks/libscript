@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -45,7 +45,7 @@ fi
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <Product ID="$PRODUCT_CODE" Name="$APP_NAME" Language="1033" Version="$APP_VERSION" Manufacturer="$APP_PUBLISHER" UpgradeCode="$UPGRADE_CODE">
-    <Package InstallerVersion="200" CompresseD="yes" InstallScope="$install_scope" Description="$WELCOME_TEXT" />
+    <Package InstallerVersion="200" CompresseD="yes" InstallScope="${install_scope:-perMachine}" Description="$WELCOME_TEXT" />
     <Media ID="1" Cabinet="media1.cab" EmbedCab="yes" />
 EOF2
       if [ -n "$ICON_PATH" ]; then
@@ -72,29 +72,33 @@ EOF2
       printf '%s\n' "      </Directory>"
       printf '%s\n' "    </Directory>"
 
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
-        printf '%s\n' "Function CheckPorts_$pkg()" > "validate_${pkg}.vbs"
-        printf '%s\n' "  Session.Property(\"VALID_$pkg\") = \"1\"" >> "validate_${pkg}.vbs"
-        printf '%s\n' "  Dim shell, exec, port" >> "validate_${pkg}.vbs"
-        printf '%s\n' "  Set shell = CreateObject(\"WScript.Shell\")" >> "validate_${pkg}.vbs"
+        {
+          printf '%s\n' "Function CheckPorts_$pkg()"
+          printf '%s\n' "  Session.Property(\"VALID_$pkg\") = \"1\""
+          printf '%s\n' "  Dim shell, exec, port"
+          printf '%s\n' "  Set shell = CreateObject(\"WScript.Shell\")"
+        } > "validate_${pkg}.vbs"
 
         schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
           if [ -n "$vars_json" ]; then
             for varname in $vars_json; do
-              if case "$varname" in *"_PORT"* | *"_PORT_SECURE"*) true;; *) false;; esac; then
-                printf '%s\n' "  port = Session.Property(\"PROP_${pkg}_${varname}\")" >> "validate_${pkg}.vbs"
-                printf '%s\n' "  If port <> \"\" Then" >> "validate_${pkg}.vbs"
-                printf '%s\n' "    Set exec = shell.Exec(\"cmd.exe /c netstat -an | findstr /R /C:"":\" & port & \" .*LISTENING\"\"\")" >> "validate_${pkg}.vbs"
-                printf '%s\n' "    exec.StdOut.ReadAll()" >> "validate_${pkg}.vbs"
-                printf '%s\n' "    If exec.ExitCode = 0 Then" >> "validate_${pkg}.vbs"
-                printf '%s\n' "      MsgBox \"Port \" & port & \" is already in use.\", 16, \"Validation Error\"" >> "validate_${pkg}.vbs"
-                printf '%s\n' "      Session.Property(\"VALID_$pkg\") = \"0\"" >> "validate_${pkg}.vbs"
-                printf '%s\n' "    End If" >> "validate_${pkg}.vbs"
-                printf '%s\n' "  End If" >> "validate_${pkg}.vbs"
+              if case "$varname" in *"_PORT"*) true;; *) false;; esac; then
+                {
+                  printf '%s\n' "  port = Session.Property(\"PROP_${pkg}_${varname}\")"
+                  printf '%s\n' "  If port <> \"\" Then"
+                  printf '%s\n' "    Set exec = shell.Exec(\"cmd.exe /c netstat -an | findstr /R /C:"":\" & port & \" .*LISTENING\"\"\")"
+                  printf '%s\n' "    exec.StdOut.ReadAll()"
+                  printf '%s\n' "    If exec.ExitCode = 0 Then"
+                  printf '%s\n' "      MsgBox \"Port \" & port & \" is already in use.\", 16, \"Validation Error\""
+                  printf '%s\n' "      Session.Property(\"VALID_$pkg\") = \"0\""
+                  printf '%s\n' "    End If"
+                  printf '%s\n' "  End If"
+                } >> "validate_${pkg}.vbs"
               fi
             done
           fi
@@ -105,7 +109,7 @@ EOF2
       done
 
       # Features
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "    <Feature Id=\"Feature_$pkg\" Title=\"Install $pkg\" Level=\"1\">"
@@ -120,7 +124,7 @@ EOF2
       printf '%s\n' "      <Dialog Id=\"Dlg_Features\" Width=\"370\" Height=\"270\" Title=\"Select Components\">"
       printf '%s\n' "        <Control Id=\"Lbl_Select\" Type=\"Text\" X=\"20\" Y=\"10\" Width=\"330\" Height=\"15\" Text=\"Select the components you want to install:\" />"
       y=30
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "        <Control Id=\"Chk_$pkg\" Type=\"CheckBox\" X=\"20\" Y=\"${y}\" Width=\"330\" Height=\"15\" Property=\"INSTALL_$pkg\" CheckBoxValue=\"1\" Text=\"Install $pkg\" />"
@@ -131,14 +135,14 @@ EOF2
       printf '%s\n' "        </Control>"
       printf '%s\n' "      </Dialog>"
 
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "      <Property Id=\"INSTALL_$pkg\" Value=\"1\" Secure=\"yes\" />"
       done
 
-      set -- $deps_list
-      has_custom_ui=0
+      set -- "$deps_list"
+      export has_custom_ui=0
       dialogs=""
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
@@ -146,7 +150,7 @@ EOF2
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
           if [ -n "$vars_json" ]; then
-            has_custom_ui=1
+            export has_custom_ui=1
             printf '%s\n' "      <Dialog Id=\"Dlg_${pkg}\" Width=\"370\" Height=\"270\" Title=\"Configuration for ${pkg}\">"
             y=20
             printf '%s\n' "$vars_json" | while read -r item; do
@@ -183,7 +187,7 @@ EOF2
       done
 
       # MSI Uninstaller Confirmations
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "      <Dialog Id=\"Dlg_Uninst_${pkg}\" Width=\"370\" Height=\"270\" Title=\"Uninstall $pkg\">"
@@ -204,7 +208,7 @@ EOF2
       printf '%s\n' "      <InstallUISequence>"
       printf '%s\n' "        <Show Dialog=\"Dlg_Features\" After=\"CostFinalize\">NOT Installed</Show>"
       last_dlg="Dlg_Features"
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         has_dlg=0
@@ -219,7 +223,7 @@ EOF2
 
       # UI sequence for uninstall
       last_uninst_dlg="CostFinalize"
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "        <Show Dialog=\"Dlg_Uninst_${pkg}\" After=\"$last_uninst_dlg\">REMOVE=\"ALL\"</Show>"
@@ -229,7 +233,7 @@ EOF2
       printf '%s\n' "    </UI>"
 
       # Install Actions
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         run_params="/c libscript.cmd install-service $pkg $ver"
@@ -244,11 +248,11 @@ EOF2
         printf '%s\n' "    <CustomAction Id=\"Install$pkg\" Directory=\"INSTALLFOLDER\" ExeCommand=\"cmd.exe $run_params\" Execute=\"deferred\" Return=\"check\" Impersonate=\"no\" />"
 
         # Uninstall Actions
-        printf '%s\n' "    <CustomAction Id=\"Uninstall$pkg\" Directory=\"INSTALLFOLDER\" ExeCommand=\"cmd.exe /c libscript.cmd uninstall $pkg [PURGE_$pkg] --service-name [PROP_${pkg}_$(printf '%s\n' "$pkg" | tr "a-z" "A-Z")_SERVICE_NAME]\" Execute=\"deferred\" Return=\"check\" Impersonate=\"no\" />"
+        printf '%s\n' "    <CustomAction Id=\"Uninstall$pkg\" Directory=\"INSTALLFOLDER\" ExeCommand=\"cmd.exe /c libscript.cmd uninstall $pkg [PURGE_$pkg] --service-name [PROP_${pkg}_$(printf '%s\n' "$pkg" | tr "[:lower:]" "[:upper:]")_SERVICE_NAME]\" Execute=\"deferred\" Return=\"check\" Impersonate=\"no\" />"
       done
 
       printf '%s\n' "    <InstallExecuteSequence>"
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "      <Custom Action=\"Install$pkg\" Before=\"InstallFinalize\"><![CDATA[NOT Installed AND INSTALL_$pkg=\"1\"]]></Custom>"

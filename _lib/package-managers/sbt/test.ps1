@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'sbt' stack.
+Test suite for the sbt component.
 
 .DESCRIPTION
-Execute this script to run the test suite for sbt.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command sbt -ErrorAction SilentlyContinue) {
-    sbt --version
-    Write-Output "sbt found"
-} else {
-    Write-Output "sbt skipped (not found)"
-}
+& sbt --version

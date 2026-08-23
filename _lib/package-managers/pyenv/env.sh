@@ -13,11 +13,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -35,4 +35,9 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 
 PYENV_VERSION="${PYENV_VERSION:-latest}"
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/pyenv/${PYENV_VERSION}/bin:${PATH}"
+export PYENV_ROOT="${LIBSCRIPT_HOME:-$HOME/.libscript}/pyenv/${PYENV_VERSION}"
+export PATH="$PYENV_ROOT/bin:${PATH}"
+if command -v pyenv >/dev/null; then
+  eval "$(pyenv init -)"
+fi
+

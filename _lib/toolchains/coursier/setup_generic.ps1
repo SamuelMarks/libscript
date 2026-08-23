@@ -130,7 +130,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:COURSIER_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for coursier."
+            Write-Error "No download URL or cache available for coursier."
+            exit 1
         }
     } else {
         Write-Output "coursier $CompVersion is already installed."

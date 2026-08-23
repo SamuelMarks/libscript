@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\google-cloud-sdk.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for google-cloud-sdk.
+        exit /b 1
     )
 ) else (
     echo google-cloud-sdk %GOOGLE_CLOUD_SDK_VERSION% is already installed.

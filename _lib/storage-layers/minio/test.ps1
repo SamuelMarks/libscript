@@ -1,15 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'minio' stack.
+Test suite for the minio component.
 
 .DESCRIPTION
-Execute this script to run the test suite for minio.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command minio -ErrorAction SilentlyContinue) {
-    minio --version
-} else {
-    Write-Host "minio skipped (not found)"
-}
+& minio --version

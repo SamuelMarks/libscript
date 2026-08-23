@@ -9,11 +9,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -27,7 +27,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-DIR="${SCRIPT_DIR}"
+export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
@@ -133,7 +133,7 @@ case "$ACTION" in
     fi
     exit 0
     ;;
-  install|*)
+  install)
 
     if [ "${BAZEL_INSTALL_METHOD}" = "system" ]; then
       libscript_depends 'bazel'
@@ -147,54 +147,37 @@ case "$ACTION" in
       vfox add bazel || true
       vfox install "bazel@${BAZEL_VERSION}"
     else
-      resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/bazel/${EXACT_VERSION}"
-      
-      if [ -x "${TARGET_DIR}/bin/bazel" ]; then
-        libscript_symlink_alias "bazel" "${BAZEL_VERSION}" "${EXACT_VERSION}"
-        exit 0
-      fi
-
-      mkdir -p "${TARGET_DIR}/bin"
-      
-      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/bazel/"*"${VERSION:-}"* >/dev/null 2>&1; then
-        log_info "Extracting from cache..."
-        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/bazel/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
-        if [ -n "$cache_file" ]; then
-          if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-            tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
-          elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-            unzip -q "$cache_file" -d "${TARGET_DIR}" || true
-          else
-            cp "$cache_file" "${TARGET_DIR}/bin/bazel" || true
-            chmod +x "${TARGET_DIR}/bin/bazel" || true
-          fi
+        # libscript_native implementation
+        if [ -f /etc/alpine-release ]; then
+          log_info "bazel official binaries require glibc and cannot run on Alpine Linux. Skipping."
+          exit 0
         fi
-      else
-        if [ -n "${BAZEL_DOWNLOAD_URL:-}" ]; then
+
+        resolve_exact_version
+        if [ "${EXACT_VERSION}" = "latest" ]; then
+           libscript_depends "curl"
+           EXACT_VERSION=$(curl -sL https://api.github.com/repos/bazelbuild/bazelisk/releases/latest | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
+        fi
+        TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/bazel/${EXACT_VERSION}"
+        if [ ! -d "${TARGET_DIR}" ]; then
+          log_info "Installing bazel ${VERSION} natively to ${TARGET_DIR}..."
+          mkdir -p "${TARGET_DIR}/bin"
+          ARCH=$(uname -m)
+          OS=$(uname -s | tr "[:upper:]" "[:lower:]")
+          if [ "$ARCH" = "x86_64" ]; then ARCH="amd64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
+          URL="https://github.com/bazelbuild/bazelisk/releases/download/v${EXACT_VERSION}/bazelisk-${OS}-${ARCH}"
           TEMP_FILE=$(mktemp)
-          libscript_download "${BAZEL_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-          if case "${BAZEL_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-          elif case "${BAZEL_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-            unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-          else
-            cp "${TEMP_FILE}" "${TARGET_DIR}/bin/bazel" || true
-            chmod +x "${TARGET_DIR}/bin/bazel" || true
-          fi
-          rm -f "${TEMP_FILE}"
-        else
-          log_warn "No download URL provided for bazel ${VERSION:-}."
-          # Fallback to mock
-          printf '%s\n' "#!/bin/sh" > "${TARGET_DIR}/bin/bazel"
-          printf '%s\n' "printf '%s\n' 'Mock bazel executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/bazel"
+          libscript_depends "curl"
+          curl -sSL "$URL" -o "$TEMP_FILE"
+          cp "$TEMP_FILE" "${TARGET_DIR}/bin/bazel"
           chmod +x "${TARGET_DIR}/bin/bazel"
+          rm -f "$TEMP_FILE"
+        else
+          log_info "bazel ${VERSION} is already installed."
         fi
+        libscript_symlink_alias "bazel" "$VERSION" "${EXACT_VERSION}"
       fi
-      
-      libscript_symlink_alias "bazel" "${BAZEL_VERSION}" "${EXACT_VERSION}"
 
-    fi
     ;;
   start|stop|restart|status|health|logs|up|down)
     if [ "$BAZEL_INSTALL_METHOD" = "libscript_native" ] || [ "$BAZEL_INSTALL_METHOD" = "system" ]; then

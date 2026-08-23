@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:DOCKER_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for docker."
+            Write-Error "No download URL or cache available for docker."
+            exit 1
         }
     } else {
         Write-Output "docker $CompVersion is already installed."

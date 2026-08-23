@@ -25,9 +25,7 @@ case "${STACK+x}" in
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;; esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-DIR="${SCRIPT_DIR}"
+export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
@@ -115,6 +113,10 @@ case "$ACTION" in
       libscript_symlink_alias "aqua" "$VERSION" "${EXACT_VERSION}"
       libscript_symlink_alias "aqua" "default" "${EXACT_VERSION}"
       
+      if [ "${EXACT_VERSION}" = "latest" ]; then
+        libscript_depends "curl"
+        EXACT_VERSION=$(curl -sL https://api.github.com/repos/aquaproj/aqua/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/' | head -n 1)
+      fi
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/aqua/${EXACT_VERSION}"
       if [ ! -d "$TARGET_DIR" ]; then
         log_info "aqua ${EXACT_VERSION} is not installed. Installing it now..."
@@ -141,7 +143,7 @@ case "$ACTION" in
     fi
     exit 0
     ;;
-  install|*)
+  install)
     if [ "$AQUA_INSTALL_METHOD" = "system" ]; then
       libscript_depends "aqua"
     elif [ "$AQUA_INSTALL_METHOD" = "mise" ]; then
@@ -156,40 +158,23 @@ case "$ACTION" in
     else
       # libscript_native implementation
       resolve_exact_version
+      if [ "${EXACT_VERSION}" = "latest" ]; then
+        libscript_depends "curl"
+        EXACT_VERSION=$(curl -sL https://api.github.com/repos/aquaproj/aqua/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/' | head -n 1)
+      fi
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/aqua/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
+        libscript_depends "curl" "tar"
         log_info "Installing aqua ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
-        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/aqua/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
-          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/aqua/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
-          if [ -n "$cache_file" ]; then
-            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
-            else
-              cp "$cache_file" "${TARGET_DIR}/bin/aqua" || true
-              chmod +x "${TARGET_DIR}/bin/aqua" || true
-            fi
-          fi
-        else
-          if [ -n "${AQUA_DOWNLOAD_URL:-}" ]; then
-            TEMP_FILE=$(mktemp)
-            libscript_download "${AQUA_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-            if case "${AQUA_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "${AQUA_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-            else
-              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/aqua" || true
-              chmod +x "${TARGET_DIR}/bin/aqua" || true
-            fi
-            rm -f "${TEMP_FILE}"
-          else
-            log_warn "No download URL provided for aqua ${VERSION}."
-          fi
-        fi
+        os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+        arch="$(uname -m)"
+        case "${arch}" in
+          'x86_64') arch='amd64' ;;
+          'aarch64'|'arm64') arch='arm64' ;;
+        esac
+        curl -sSL "https://github.com/aquaproj/aqua/releases/download/v${EXACT_VERSION}/aqua_${os}_${arch}.tar.gz" | tar -xzf - -C "${TARGET_DIR}/bin" || true
+        chmod +x "${TARGET_DIR}/bin/aqua" || true
       else
         log_info "aqua ${VERSION} is already installed."
       fi

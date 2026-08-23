@@ -5,11 +5,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -149,7 +149,8 @@ case "$ACTION" in
           fi
           rm -f "${TEMP_FILE}"
         else
-          log_warn "No download URL provided for kubectl ${VERSION}."
+          log_error "No download URL provided for kubectl ${VERSION}."
+            exit 1
         fi
       fi
     else

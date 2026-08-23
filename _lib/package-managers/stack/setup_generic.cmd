@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\stack.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for stack.
+        exit /b 1
     )
 ) else (
     echo stack %STACK_VERSION% is already installed.

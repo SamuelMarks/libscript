@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\curl.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for curl.
+        exit /b 1
     )
 ) else (
     echo curl %CURL_VERSION% is already installed.

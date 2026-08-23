@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\pkg.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for pkg.
+        exit /b 1
     )
 ) else (
     echo pkg %PKG_VERSION% is already installed.

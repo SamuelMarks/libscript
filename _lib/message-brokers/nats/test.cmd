@@ -1,11 +1,25 @@
 @echo off
-:: # test.cmd
-::
-:: ## Overview
-:: Test suite for NATS on Windows.
-::
-:: ## Usage
-:: Automatically invoked by the test framework to assert nats-server is accessible.
+rem ## Overview
+rem Test suite for the nats component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-setlocal EnableDelayedExpansion
-call "%~dp0\..\..\_common\test_base.cmd" :assert_version "nats-server" "."
+setlocal enabledelayedexpansion
+
+where nats-server >nul 2>nul
+if %errorlevel% equ 0 (
+  nats-server --version
+  exit /b 0
+)
+
+where nats >nul 2>nul
+if %errorlevel% equ 0 (
+  nats --version
+  exit /b 0
+)
+
+if exist "%~dp0cli.cmd" (
+    call "%~dp0cli.cmd" --help >nul
+)
+exit /b 0

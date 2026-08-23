@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\php.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for php.
+        exit /b 1
     )
 ) else (
     echo php %PHP_VERSION% is already installed.

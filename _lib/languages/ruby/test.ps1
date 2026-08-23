@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'ruby' stack.
+Test suite for the ruby component.
 
 .DESCRIPTION
-Execute this script to run the test suite for ruby.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command ruby -ErrorAction SilentlyContinue) {
-    ruby --version
-    Write-Output "ruby found"
-} else {
-    Write-Output "ruby skipped (not found)"
-}
+ruby -e "puts 'hello world!'"

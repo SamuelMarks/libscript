@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\cargo-binstall.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for cargo-binstall.
+        exit /b 1
     )
 ) else (
     echo cargo-binstall %CARGO_BINSTALL_VERSION% is already installed.

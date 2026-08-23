@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:GOOGLE_CLOUD_SDK_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for google-cloud-sdk."
+            Write-Error "No download URL or cache available for google-cloud-sdk."
+            exit 1
         }
     } else {
         Write-Output "google-cloud-sdk $CompVersion is already installed."

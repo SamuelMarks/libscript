@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:HTTPD_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for httpd."
+            Write-Error "No download URL or cache available for httpd."
+            exit 1
         }
     } else {
         Write-Output "httpd $CompVersion is already installed."

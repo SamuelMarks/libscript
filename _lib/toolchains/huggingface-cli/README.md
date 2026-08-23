@@ -58,7 +58,7 @@ isolated by default in `~/.libscript/<component>/<version>` and do not pollute g
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
 | `HUGGINGFACE_CLI_VERSION` | Specific version of huggingface_hub to install. Can be a numeric version or an alias. | `latest` | latest, stable |
-| `HUGGINGFACE_CLI_INSTALL_METHOD` | How to install HUGGINGFACE_CLI. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `system` |  |
+| `HUGGINGFACE_CLI_INSTALL_METHOD` | How to install HUGGINGFACE_CLI. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
 | `LIBSCRIPT_LISTEN_PORT` | Global port to listen on | `none` |  |
 | `LIBSCRIPT_LISTEN_ADDRESS` | Global address to listen on | `none` |  |
 | `LIBSCRIPT_LISTEN_SOCKET` | Global unix socket to listen on | `none` |  |

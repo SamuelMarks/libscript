@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:NODEJS_SERVER_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for nodejs-server."
+            Write-Error "No download URL or cache available for nodejs-server."
+            exit 1
         }
     } else {
         Write-Output "nodejs-server $CompVersion is already installed."

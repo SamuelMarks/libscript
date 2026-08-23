@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\zypper.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for zypper.
+        exit /b 1
     )
 ) else (
     echo zypper %ZYPPER_VERSION% is already installed.

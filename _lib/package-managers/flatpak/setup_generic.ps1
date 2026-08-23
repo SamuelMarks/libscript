@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:FLATPAK_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for flatpak."
+            Write-Error "No download URL or cache available for flatpak."
+            exit 1
         }
     } else {
         Write-Output "flatpak $CompVersion is already installed."

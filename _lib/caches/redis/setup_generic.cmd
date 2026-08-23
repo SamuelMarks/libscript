@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\redis.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for redis.
+        exit /b 1
     )
 ) else (
     echo redis %REDIS_VERSION% is already installed.

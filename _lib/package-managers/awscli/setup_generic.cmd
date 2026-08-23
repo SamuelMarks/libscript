@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\awscli.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for awscli.
+        exit /b 1
     )
 ) else (
     echo awscli %AWSCLI_VERSION% is already installed.

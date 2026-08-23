@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\opam.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for opam.
+        exit /b 1
     )
 ) else (
     echo opam %OPAM_VERSION% is already installed.

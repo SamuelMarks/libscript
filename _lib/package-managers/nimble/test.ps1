@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'nimble' stack.
+Test suite for the nimble component.
 
 .DESCRIPTION
-Execute this script to run the test suite for nimble.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command nimble -ErrorAction SilentlyContinue) {
-    nimble --version
-    Write-Output "nimble found"
-} else {
-    Write-Output "nimble skipped (not found)"
-}
+& nimble --version

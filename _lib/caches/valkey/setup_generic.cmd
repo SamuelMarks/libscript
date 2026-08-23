@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\valkey.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for valkey.
+        exit /b 1
     )
 ) else (
     echo valkey %VALKEY_VERSION% is already installed.

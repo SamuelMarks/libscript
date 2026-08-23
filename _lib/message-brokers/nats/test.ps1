@@ -1,15 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'nats' stack.
+Test suite for the nats component.
 
 .DESCRIPTION
-Execute this script to run the test suite for nats.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command nats-server -ErrorAction SilentlyContinue) {
-    nats-server --version
-} else {
-    Write-Host "nats skipped (not found)"
-}
+& nats --version

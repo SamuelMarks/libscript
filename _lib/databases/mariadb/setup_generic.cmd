@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\mariadb.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for mariadb.
+        exit /b 1
     )
 ) else (
     echo mariadb %MARIADB_VERSION% is already installed.

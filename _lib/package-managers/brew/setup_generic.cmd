@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\brew.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for brew.
+        exit /b 1
     )
 ) else (
     echo brew %BREW_VERSION% is already installed.

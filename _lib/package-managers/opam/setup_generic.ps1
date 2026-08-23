@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:OPAM_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for opam."
+            Write-Error "No download URL or cache available for opam."
+            exit 1
         }
     } else {
         Write-Output "opam $CompVersion is already installed."

@@ -12,11 +12,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -44,22 +44,23 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   exit 0
 fi
 
-# Ensure gcsfuse is available
-if ! command -v gcsfuse >/dev/null 2>&1; then
-  if [ -x "${LIBSCRIPT_ROOT_DIR}/installed/gcsfuse/bin/gcsfuse" ]; then
-    export PATH="${LIBSCRIPT_ROOT_DIR}/installed/gcsfuse/bin:${PATH}"
-  else
-    log_error "gcsfuse not found. Please install the storage-layers/gcsfuse component first."
-    exit 1
+check_gcsfuse() {
+  if ! command -v gcsfuse >/dev/null 2>&1; then
+    if [ -x "${LIBSCRIPT_ROOT_DIR}/installed/gcsfuse/bin/gcsfuse" ]; then
+      export PATH="${LIBSCRIPT_ROOT_DIR}/installed/gcsfuse/bin:${PATH}"
+    else
+      log_error "gcsfuse not found. Please install the storage-layers/gcsfuse component first."
+      exit 1
+    fi
   fi
-fi
-
+}
 ACTION="${1:-}"
 BUCKET_NAME="${2:-}"
 MOUNT_POINT="${3:-}"
 
 case "$ACTION" in
   mount)
+      check_gcsfuse
     if [ -z "$BUCKET_NAME" ] || [ -z "$MOUNT_POINT" ]; then
       log_error "Usage: gcsfuse mount <bucket_name> <mount_point>"
       exit 1
@@ -74,6 +75,7 @@ case "$ACTION" in
     log_info "Mounted successfully."
     ;;
   unmount)
+      check_gcsfuse
     if [ -z "$BUCKET_NAME" ]; then
       # Here bucket name acts as the mount point
       log_error "Usage: gcsfuse unmount <mount_point>"
@@ -83,8 +85,12 @@ case "$ACTION" in
     fusermount -u "$BUCKET_NAME"
     log_info "Unmounted."
     ;;
-  *)
-    log_error "Unknown action: $ACTION. Supported: mount, unmount."
-    exit 1
-    ;;
-esac
+    *)
+      export PACKAGE_NAME="gcsfuse"
+      SCRIPT_DIR="${LIBSCRIPT_ROOT_DIR}/_lib/storage-layers/gcsfuse"
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/component_core.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+      ;;
+  esac

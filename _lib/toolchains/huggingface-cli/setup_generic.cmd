@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\huggingface-cli.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for huggingface-cli.
+        exit /b 1
     )
 ) else (
     echo huggingface-cli %HUGGINGFACE_CLI_VERSION% is already installed.

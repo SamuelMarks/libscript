@@ -1,15 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'redis' stack.
+Test suite for the redis component.
 
 .DESCRIPTION
-Execute this script to run the test suite for redis.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command redis -ErrorAction SilentlyContinue) {
-    redis-server --version
-} else {
-    Write-Host "redis skipped (not found)"
-}
+& redis --version

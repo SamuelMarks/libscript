@@ -1,12 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'gcsfuse' stack.
+Test suite for the gcsfuse component.
 
 .DESCRIPTION
-Execute this script to run the test suite for gcsfuse.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
-# PowerShell placeholder script
-Write-Host "Script not implemented for PowerShell natively."
-exit 1
+
+& gcsfuse --version

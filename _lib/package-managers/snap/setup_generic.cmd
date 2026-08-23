@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\snap.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for snap.
+        exit /b 1
     )
 ) else (
     echo snap %SNAP_VERSION% is already installed.

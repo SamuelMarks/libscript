@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\go.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for go.
+        exit /b 1
     )
 ) else (
     echo go %GO_VERSION% is already installed.

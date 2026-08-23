@@ -119,26 +119,47 @@ if "%VLLM_INSTALL_METHOD%"=="asdf" ( asdf install vllm "%VLLM_VERSION%" & exit /
 if "%VLLM_INSTALL_METHOD%"=="pkgx" ( pkgx install "vllm@%VLLM_VERSION%" & exit /b 0 )
 if "%VLLM_INSTALL_METHOD%"=="vfox" ( vfox add vllm & vfox install "vllm@%VLLM_VERSION%" & exit /b 0 )
 
-set "TARGET_DIR=%LIBSCRIPT_HOME%\vllm\%VLLM_VERSION%"
-if not exist "%TARGET_DIR%\bin" (
-    echo Installing vllm %VLLM_VERSION% natively to %TARGET_DIR%...
-    if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
-    if exist "%DOWNLOAD_DIR%\vllm\vllm-%VLLM_VERSION%.zip" (
-        echo Extracting from cache...
-        tar -xf "%DOWNLOAD_DIR%\vllm\vllm-%VLLM_VERSION%.zip" -C "%TARGET_DIR%"
-    ) else if exist "%DOWNLOAD_DIR%\vllm\vllm-%VLLM_VERSION%.tar.gz" (
-        echo Extracting from cache...
-        tar -xf "%DOWNLOAD_DIR%\vllm\vllm-%VLLM_VERSION%.tar.gz" -C "%TARGET_DIR%"
-    ) else if not "%VLLM_DOWNLOAD_URL%"=="" (
-        echo Downloading and extracting...
-        curl -sSL "%VLLM_DOWNLOAD_URL%" -o "%TEMP%\vllm.zip"
-        tar -xf "%TEMP%\vllm.zip" -C "%TARGET_DIR%"
-    ) else (
-        echo No download URL or cache available for vllm.
-    )
+if "%VLLM_VERSION%"=="latest" (set "EXACT_VERSION=%VLLM_VERSION%"
+) else if "%VLLM_VERSION%"=="lts" (set "EXACT_VERSION=%VLLM_VERSION%"
 ) else (
-    echo vllm %VLLM_VERSION% is already installed.
+    set "EXACT_VERSION=%VLLM_VERSION%"
 )
+if "%EXACT_VERSION%"=="" set "EXACT_VERSION=%VLLM_VERSION%"
+
+set "TARGET_DIR=%LIBSCRIPT_HOME%\vllm\%EXACT_VERSION%"
+if exist "%TARGET_DIR%\Scripts" (
+    echo vllm %VLLM_VERSION% is already installed.
+    goto :create_alias
+)
+
+echo Installing vllm %VLLM_VERSION% natively to %TARGET_DIR%...
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\python_env.cmd" libscript_python_venv "%TARGET_DIR%"
+
+if "%EXACT_VERSION%"=="latest" (
+    "%TARGET_DIR%\Scripts\pip.exe" install --upgrade vllm
+) else (
+    "%TARGET_DIR%\Scripts\pip.exe" install "vllm==%EXACT_VERSION%"
+)
+
+if not errorlevel 1 goto :create_alias
+
+echo Failed to install vllm via pip. Falling back to build from source.
+set "VLLM_SRC_DIR=%DOWNLOAD_DIR%\vllm-src"
+if exist "%VLLM_SRC_DIR%" rmdir /s /q "%VLLM_SRC_DIR%"
+git clone "https://github.com/vllm-project/vllm.git" "%VLLM_SRC_DIR%"
+pushd "%VLLM_SRC_DIR%"
+if not "%EXACT_VERSION%"=="latest" (
+    git checkout "v%EXACT_VERSION%" || git checkout "%EXACT_VERSION%"
+)
+"%TARGET_DIR%\Scripts\pip.exe" install -e .
+if errorlevel 1 (
+    echo Failed to build vllm from source.
+    popd
+    exit /b 1
+)
+popd
+
+:create_alias
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\vllm\%VLLM_VERSION%"
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
     if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"

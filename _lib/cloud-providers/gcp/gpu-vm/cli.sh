@@ -12,11 +12,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -86,7 +86,7 @@ case "$ACTION" in
     if [ -n "$GPU_DATA_DISK_SIZE" ]; then
       DISK_FLAG="--disk=name=${GPU_NAME}-data,mode=rw,boot=no,device-name=${GPU_NAME}-data"
       # Check and create disk if it doesn't exist
-      if ! gcloud compute disks describe "${GPU_NAME}-data" --zone="$GPU_ZONE" $PROJECT_FLAG >/dev/null 2>&1; then
+      if ! gcloud compute disks describe "${GPU_NAME}-data" --zone="$GPU_ZONE" "$PROJECT_FLAG" >/dev/null 2>&1; then
         log_info "Creating persistent data disk ${GPU_NAME}-data (${GPU_DATA_DISK_SIZE}GB, ${GPU_DATA_DISK_TYPE})..."
         
         if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh" ]; then
@@ -100,7 +100,7 @@ case "$ACTION" in
           --size="${GPU_DATA_DISK_SIZE}GB" \
           --type="${GPU_DATA_DISK_TYPE}" \
           --zone="$GPU_ZONE" \
-          $PROJECT_FLAG $TAGS_ARG
+          "$PROJECT_FLAG" $TAGS_ARG
       else
         log_info "Data disk ${GPU_NAME}-data already exists."
       fi
@@ -113,7 +113,7 @@ case "$ACTION" in
     fi
     TAGS_ARG="$(libscript_format_tags gcp)"
 
-    if gcloud compute instances describe "$GPU_NAME" --zone="$GPU_ZONE" $PROJECT_FLAG >/dev/null 2>&1; then
+    if gcloud compute instances describe "$GPU_NAME" --zone="$GPU_ZONE" "$PROJECT_FLAG" >/dev/null 2>&1; then
       log_info "GPU VM $GPU_NAME already exists. Skipping creation."
     else
       log_info "Creating GPU VM $GPU_NAME ($GPU_MACHINE_TYPE, $GPU_ACCELERATOR) in $GPU_ZONE..."
@@ -126,7 +126,7 @@ case "$ACTION" in
         --image-family="$GPU_IMAGE_FAMILY" \
         --maintenance-policy=TERMINATE \
         $DISK_FLAG \
-        $PROJECT_FLAG $TAGS_ARG
+        "$PROJECT_FLAG" $TAGS_ARG
       log_info "GPU VM $GPU_NAME created successfully."
     fi
     ;;
@@ -138,27 +138,27 @@ case "$ACTION" in
     fi
     libscript_verify_managed gcp gpu-vm "$GPU_NAME" "$GPU_ZONE" || exit 1
     log_info "Deleting GPU VM $GPU_NAME in zone $GPU_ZONE..."
-    if gcloud compute instances describe "$GPU_NAME" --zone="$GPU_ZONE" $PROJECT_FLAG >/dev/null 2>&1; then
-      gcloud compute instances delete "$GPU_NAME" --zone="$GPU_ZONE" $PROJECT_FLAG --quiet
+    if gcloud compute instances describe "$GPU_NAME" --zone="$GPU_ZONE" "$PROJECT_FLAG" >/dev/null 2>&1; then
+      gcloud compute instances delete "$GPU_NAME" --zone="$GPU_ZONE" "$PROJECT_FLAG" --quiet
     else
       log_info "GPU VM $GPU_NAME already deleted or not found."
     fi
     log_info "GPU VM $GPU_NAME deleted."
-    if gcloud compute disks describe "${GPU_NAME}-data" --zone="$GPU_ZONE" $PROJECT_FLAG >/dev/null 2>&1; then
+    if gcloud compute disks describe "${GPU_NAME}-data" --zone="$GPU_ZONE" "$PROJECT_FLAG" >/dev/null 2>&1; then
       log_info "Deleting attached data disk ${GPU_NAME}-data..."
       libscript_verify_managed gcp volume "${GPU_NAME}-data" "$GPU_ZONE" || exit 1
-      gcloud compute disks delete "${GPU_NAME}-data" --zone="$GPU_ZONE" $PROJECT_FLAG --quiet
+      gcloud compute disks delete "${GPU_NAME}-data" --zone="$GPU_ZONE" "$PROJECT_FLAG" --quiet
     fi
     ;;
   start)
     if [ -z "$GPU_NAME" ]; then log_error "Usage: gpu-vm start <name>"; exit 1; fi
     log_info "Starting GPU VM $GPU_NAME in zone $GPU_ZONE..."
-    gcloud compute instances start "$GPU_NAME" --zone="$GPU_ZONE" $PROJECT_FLAG
+    gcloud compute instances start "$GPU_NAME" --zone="$GPU_ZONE" "$PROJECT_FLAG"
     ;;
   stop)
     if [ -z "$GPU_NAME" ]; then log_error "Usage: gpu-vm stop <name>"; exit 1; fi
     log_info "Stopping GPU VM $GPU_NAME in zone $GPU_ZONE..."
-    gcloud compute instances stop "$GPU_NAME" --zone="$GPU_ZONE" $PROJECT_FLAG
+    gcloud compute instances stop "$GPU_NAME" --zone="$GPU_ZONE" "$PROJECT_FLAG"
     ;;
   ssh)
     if [ -z "$GPU_NAME" ]; then log_error "Usage: gpu-vm ssh <name> [--detached] [--forward-port <local>:<remote>] [command]"; exit 1; fi
@@ -184,12 +184,12 @@ case "$ACTION" in
       if [ "$DETACHED" = "true" ]; then
         log_info "Running command in detached tmux session 'ml-session'"
         CMD_STR="tmux new-session -d -s ml-session \"$*\""
-        gcloud compute ssh "$GPU_NAME" --zone="$GPU_ZONE" $PROJECT_FLAG $SSH_FLAGS --command "$CMD_STR"
+        gcloud compute ssh "$GPU_NAME" --zone="$GPU_ZONE" "$PROJECT_FLAG" "$SSH_FLAGS" --command "$CMD_STR"
       else
-        gcloud compute ssh "$GPU_NAME" --zone="$GPU_ZONE" $PROJECT_FLAG $SSH_FLAGS --command "$*"
+        gcloud compute ssh "$GPU_NAME" --zone="$GPU_ZONE" "$PROJECT_FLAG" "$SSH_FLAGS" --command "$*"
       fi
     else
-      gcloud compute ssh "$GPU_NAME" --zone="$GPU_ZONE" $PROJECT_FLAG $SSH_FLAGS
+      gcloud compute ssh "$GPU_NAME" --zone="$GPU_ZONE" "$PROJECT_FLAG" "$SSH_FLAGS"
     fi
     ;;
   *)

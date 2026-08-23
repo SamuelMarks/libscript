@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'msys2' stack.
+Test suite for the msys2 component.
 
 .DESCRIPTION
-Execute this script to run the test suite for msys2.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/package-managers/msys2 test skipped"
+& msys2 --version

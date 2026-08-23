@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\core.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for core.
+        exit /b 1
     )
 ) else (
     echo core %CORE_VERSION% is already installed.

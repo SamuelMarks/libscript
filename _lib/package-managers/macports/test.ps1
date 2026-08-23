@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'macports' stack.
+Test suite for the macports component.
 
 .DESCRIPTION
-Execute this script to run the test suite for macports.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command macports -ErrorAction SilentlyContinue) {
-    macports --version
-    Write-Output "macports found"
-} else {
-    Write-Output "macports skipped (not found)"
-}
+& macports --version

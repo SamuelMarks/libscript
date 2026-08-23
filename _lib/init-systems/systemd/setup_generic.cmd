@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\systemd.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for systemd.
+        exit /b 1
     )
 ) else (
     echo systemd %SYSTEMD_VERSION% is already installed.

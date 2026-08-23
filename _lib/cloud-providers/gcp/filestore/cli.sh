@@ -14,11 +14,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -57,7 +57,7 @@ case "$ACTION" in
     fi
     TAGS_ARG="$(libscript_format_tags gcp)"
     
-    if gcloud filestore instances describe "$INSTANCE_NAME" --zone="$FILESTORE_ZONE" $PROJECT_FLAG >/dev/null 2>&1; then
+    if gcloud filestore instances describe "$INSTANCE_NAME" --zone="$FILESTORE_ZONE" "$PROJECT_FLAG" >/dev/null 2>&1; then
       log_info "Filestore '$INSTANCE_NAME' already exists in $FILESTORE_ZONE."
     else
       # shellcheck disable=SC2086
@@ -66,7 +66,7 @@ case "$ACTION" in
         --tier="$FILESTORE_TIER" \
         --file-share="name=vol1,capacity=${FILESTORE_CAPACITY_GB}GB" \
         --network="name=$FILESTORE_NETWORK" \
-        $PROJECT_FLAG $TAGS_ARG
+        "$PROJECT_FLAG" $TAGS_ARG
     fi
     ;;
   delete)
@@ -78,8 +78,8 @@ case "$ACTION" in
     fi
     libscript_verify_managed gcp filestore "$INSTANCE_NAME" "$FILESTORE_ZONE" || exit 1
     log_info "Deleting GCP Filestore $INSTANCE_NAME in $FILESTORE_ZONE..."
-    if gcloud filestore instances describe "$INSTANCE_NAME" --zone="$FILESTORE_ZONE" $PROJECT_FLAG >/dev/null 2>&1; then
-      gcloud filestore instances delete "$INSTANCE_NAME" --zone="$FILESTORE_ZONE" --quiet $PROJECT_FLAG
+    if gcloud filestore instances describe "$INSTANCE_NAME" --zone="$FILESTORE_ZONE" "$PROJECT_FLAG" >/dev/null 2>&1; then
+      gcloud filestore instances delete "$INSTANCE_NAME" --zone="$FILESTORE_ZONE" --quiet "$PROJECT_FLAG"
     else
       log_info "Filestore '$INSTANCE_NAME' already deleted or not found."
     fi

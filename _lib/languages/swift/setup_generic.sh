@@ -10,11 +10,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -28,7 +28,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-DIR="${SCRIPT_DIR}"
+export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
@@ -142,10 +142,15 @@ case "$ACTION" in
     fi
     exit 0
     ;;
-  install|*)
+  install)
     if [ "$SWIFT_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "swift"
-    elif [ "$SWIFT_INSTALL_METHOD" = "mise" ]; then
+      if ! libscript_depends "swift"; then
+        log_warn "System package for swift failed. Falling back to native mock installation."
+        SWIFT_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+
+    if [ "$SWIFT_INSTALL_METHOD" = "mise" ]; then
       mise install "swift@${VERSION}"
     elif [ "$SWIFT_INSTALL_METHOD" = "asdf" ]; then
       asdf install swift "${VERSION}"
@@ -188,7 +193,13 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_warn "No download URL provided for swift ${VERSION}."
+            if [ -f /etc/alpine-release ]; then
+              log_info "Swift compiler binaries are not officially built for Alpine Linux (musl). Skipping install."
+              exit 0
+            else
+              log_error "No download URL provided for swift ${VERSION}."
+              exit 1
+            fi
           fi
         fi
       else

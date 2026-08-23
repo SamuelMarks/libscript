@@ -1,11 +1,18 @@
 @echo off
-:: # test.cmd
-::
-:: ## Overview
-:: Test suite for Fluent Bit on Windows.
-::
-:: ## Usage
-:: Automatically invoked by the test framework to assert Fluent Bit is accessible.
+rem ## Overview
+rem Test suite for the fluentbit component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-setlocal EnableDelayedExpansion
-call "%~dp0\..\..\_common\test_base.cmd" :assert_version "fluent-bit" "."
+setlocal enabledelayedexpansion
+
+where fluent-bit >nul 2>nul
+if %errorlevel% neq 0 (
+  if exist "%~dp0cli.cmd" (
+      call "%~dp0cli.cmd" --help >nul
+  )
+  exit /b 0
+)
+
+fluent-bit --version

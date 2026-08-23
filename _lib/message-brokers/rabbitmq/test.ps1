@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'rabbitmq' stack.
+Test suite for the rabbitmq component.
 
 .DESCRIPTION
-Execute this script to run the test suite for rabbitmq.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command rabbitmq -ErrorAction SilentlyContinue) {
-    rabbitmq --version
-    Write-Output "rabbitmq found"
-} else {
-    Write-Output "rabbitmq skipped (not found)"
-}
+& rabbitmq --version

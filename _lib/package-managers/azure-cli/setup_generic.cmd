@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\azure-cli.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for azure-cli.
+        exit /b 1
     )
 ) else (
     echo azure-cli %AZURE_CLI_VERSION% is already installed.

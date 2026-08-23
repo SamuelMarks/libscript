@@ -10,11 +10,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -26,9 +26,7 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-DIR="${SCRIPT_DIR}"
+export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
@@ -43,6 +41,11 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/ver
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
+
+if [ "${TARGET_OS:-}" = "alpine" ]; then
+  log_info "nix is not supported on Alpine natively."
+  exit 0
+fi
 
 NIX_INSTALL_METHOD="$(libscript_resolve_install_method "NIX")"
 ACTION="${ACTION:-install}"
@@ -142,7 +145,7 @@ case "$ACTION" in
     fi
     exit 0
     ;;
-  install|*)
+  install)
     if [ "$NIX_INSTALL_METHOD" = "system" ]; then
       libscript_depends "nix"
     elif [ "$NIX_INSTALL_METHOD" = "mise" ]; then
@@ -188,7 +191,27 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_warn "No download URL provided for nix ${VERSION}."
+            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "darwin" ]; then
+              log_info "Downloading and installing Nix via official script..."
+              libscript_depends curl xz bash
+              
+              if command -v bash >/dev/null 2>&1; then
+                bash -c "sh <(curl -L https://nixos.org/nix/install) --daemon --yes" || log_warn "Nix install script failed or requires attention."
+              else
+                _nix_temp=$(mktemp)
+                curl -L https://nixos.org/nix/install > "$_nix_temp"
+                sh "$_nix_temp" --daemon --yes || log_warn "Nix install script failed or requires attention."
+                rm -f "$_nix_temp"
+              fi
+              
+              if [ -e "/nix/var/nix/profiles/default/bin/nix" ]; then
+                ln -s "/nix/var/nix/profiles/default/bin/nix" "${TARGET_DIR}/bin/nix"
+              elif command -v nix >/dev/null 2>&1; then
+                ln -s "$(command -v nix)" "${TARGET_DIR}/bin/nix"
+              fi
+            else
+              log_warn "No download URL provided for nix ${VERSION}."
+            fi
           fi
         fi
       else

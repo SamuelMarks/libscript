@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\minio.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for minio.
+        exit /b 1
     )
 ) else (
     echo minio %MINIO_VERSION% is already installed.

@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'cargo' stack.
+Test suite for the cargo component.
 
 .DESCRIPTION
-Execute this script to run the test suite for cargo.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command cargo -ErrorAction SilentlyContinue) {
-    cargo --version
-    Write-Output "cargo found"
-} else {
-    Write-Output "cargo skipped (not found)"
-}
+& cargo --version

@@ -5,11 +5,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -38,6 +38,15 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # Executes map_package functionality.
 map_package() {
   pkg="${1}"
+  
+  if [ "${PKG_MGR}" = "apk" ]; then
+    case "$pkg" in
+      npm) printf "npm\n"; return 0 ;;
+      nuget) printf "dotnet9-sdk\n"; return 0 ;;
+      nimble) printf "nimble\n"; return 0 ;;
+    esac
+  fi
+  
   case "${pkg}" in
     'sh')
       case "${PKG_MGR}" in
@@ -66,13 +75,23 @@ map_package() {
       ;;
     'postgres'|'postgresql')
       case "${PKG_MGR}" in
+        'apk') printf 'postgresql14 postgresql14-contrib postgresql14-openrc\n' ;;
+        'apt-get') printf 'postgresql-common postgresql-server-dev-14 postgresql-14\n' ;;
+        'dnf') printf 'postgresql-server postgresql-contrib\n' ;;
+        'yum') printf 'postgresql-server postgresql-contrib\n' ;;
+        'zypper') printf 'postgresql-server\n' ;;
+        'pacman') printf 'postgresql\n' ;;
+        'pkg') printf 'postgresql14-server postgresql14-client\n' ;;
+        'brew') printf 'postgresql@14\n' ;;
         'winget') printf 'PostgreSQL.PostgreSQL\n' ;;
         'choco') printf 'postgresql\n' ;;
+        'emerge') printf 'dev-db/postgresql\n' ;;
         *) printf 'postgresql\n' ;;
       esac
       ;;
     'mariadb')
       case "${PKG_MGR}" in
+        'apk') printf 'mariadb mariadb-client\n' ;;
         'apt-get'|'dnf'|'yum'|'zypper'|'pacman') printf 'mariadb-server\n' ;;
         'winget') printf 'MariaDB.MariaDB\n' ;;
         *) printf 'mariadb\n' ;;
@@ -115,7 +134,7 @@ map_package() {
         *) printf 'default-libmysqlclient-dev\n' ;;
       esac
       ;;
-    'c_compiler')
+    'c'|'cc'|'c_compiler')
       case "${PKG_MGR}" in
         'apk') printf 'gcc musl-dev\n' ;;
         'apt-get') printf 'build-essential\n' ;;
@@ -136,7 +155,7 @@ map_package() {
         *) printf 'gcc\n' ;;
       esac
       ;;
-    'cpp_compiler')
+    'cpp'|'cpp_compiler')
       case "${PKG_MGR}" in
         'apk') printf 'g++ musl-dev\n' ;;
         'apt-get') printf 'build-essential\n' ;;
@@ -192,9 +211,10 @@ map_package() {
         *) printf 'curl\n' ;;
       esac
       ;;
-    'sqlite')
+    'sqlite'|'sqlite3')
       case "${PKG_MGR}" in
-        'apt-get'|'apk'|'dnf'|'yum'|'zypper'|'pacman') printf 'sqlite3\n' ;;
+        'apk') printf 'sqlite\n' ;;
+        'apt-get'|'dnf'|'yum'|'zypper'|'pacman') printf 'sqlite3\n' ;;
         'brew') printf 'sqlite\n' ;;
         *) printf 'sqlite3\n' ;;
       esac
@@ -301,6 +321,33 @@ map_package() {
         *) printf 'php\n' ;;
       esac
       ;;
+    'pip')
+      case "${PKG_MGR}" in
+        "apk") printf "py3-pip\n" ;;
+        "apt-get") printf "python3-pip\n" ;;
+        "dnf"|"yum"|"zypper") printf "python3-pip\n" ;;
+        "pacman") printf "python-pip\n" ;;
+        *) printf "pip\n" ;;
+      esac ;;
+
+    'r')
+      case "${PKG_MGR}" in
+        "apk") printf "R R-dev\n" ;;
+        "apt-get") printf "r-base r-base-dev\n" ;;
+        "dnf"|"yum"|"zypper") printf "R\n" ;;
+        "pacman") printf "r\n" ;;
+        *) printf "r\n" ;;
+      esac ;;
+
+    '7zip')
+      case "${PKG_MGR}" in
+        "apk") printf "7zip\n" ;;
+        "apt-get") printf "p7zip-full\n" ;;
+        "dnf"|"yum"|"zypper") printf "p7zip\n" ;;
+        "pacman") printf "p7zip\n" ;;
+        *) printf "7zip\n" ;;
+      esac ;;
+
     'python')
       case "${PKG_MGR}" in
         'apk') printf 'python3 py3-pip\n' ;;
@@ -368,12 +415,99 @@ map_package() {
         *) printf 'apache2\n' ;;
       esac
       ;;
+    'ansible-galaxy')
+      case "${PKG_MGR}" in
+        'apk'|'apt-get'|'dnf'|'yum'|'pacman') printf 'ansible\n' ;;
+        *) printf 'ansible-galaxy\n' ;;
+      esac
+      ;;
+    'apt')
+      case "${PKG_MGR}" in
+        *) printf 'apt\n' ;;
+      esac
+      ;;
+    'awscli')
+      case "${PKG_MGR}" in
+        'apk') printf 'aws-cli\n' ;;
+        *) printf 'awscli\n' ;;
+      esac
+      ;;
+    'bun-pm')
+      case "${PKG_MGR}" in
+        'apk') printf 'bun\n' ;;
+        *) printf 'bun\n' ;;
+      esac
+      ;;
+    'bundler')
+      case "${PKG_MGR}" in
+        'apk') printf 'ruby-bundler\n' ;;
+        *) printf 'bundler\n' ;;
+      esac
+      ;;
+    'cabal')
+      case "${PKG_MGR}" in
+        'apk') printf 'cabal\n' ;;
+        *) printf 'cabal\n' ;;
+      esac
+      ;;
+    'cargo')
+      case "${PKG_MGR}" in
+        'apk') printf 'cargo\n' ;;
+        *) printf 'cargo\n' ;;
+      esac
+      ;;
+    'composer')
+      case "${PKG_MGR}" in
+        'apk') printf 'composer\n' ;;
+        *) printf 'composer\n' ;;
+      esac
+      ;;
+    'cpanm')
+      case "${PKG_MGR}" in
+        'apk') printf 'perl-app-cpanminus\n' ;;
+        *) printf 'cpanminus\n' ;;
+      esac
+      ;;
+    'docker')
+      case "${PKG_MGR}" in
+        'apk') printf 'docker docker-cli\n' ;;
+        'apt-get') printf 'docker.io docker-buildx-plugin docker-compose-plugin\n' ;;
+        'winget') printf 'Docker.DockerCli\n' ;;
+        'brew') printf 'docker\n' ;;
+        *) printf 'docker\n' ;;
+      esac
+      ;;
+    'fluentbit')
+      case "${PKG_MGR}" in
+        'apk') printf 'fluent-bit\n' ;;
+        *) printf 'fluent-bit\n' ;;
+      esac
+      ;;
+    'tensorboard')
+      case "${PKG_MGR}" in
+        *) return 1 ;;
+      esac
+      ;;
+    'deno-pm')
+      case "${PKG_MGR}" in
+        'apk') printf 'deno\n' ;;
+        *) printf 'deno\n' ;;
+      esac
+      ;;
     'caddy')
       case "${PKG_MGR}" in
         'winget') printf 'caddy.caddy\n' ;;
         'brew') printf 'caddy\n' ;;
         'apt-get') printf 'debian-keyring debian-archive-keyring apt-transport-https caddy\n' ;;
         *) printf 'caddy\n' ;;
+      esac
+      ;;
+    'nats')
+      case "${PKG_MGR}" in
+        'apk') printf 'nats-server\n' ;;
+        'brew') printf 'nats-server\n' ;;
+        'winget') printf 'NATS.nats-server\n' ;;
+        *) printf 'nats-server\n' ;;
       esac
       ;;
     'nginx')
@@ -397,6 +531,17 @@ map_package() {
         *) printf 'etcd\n' ;;
       esac
       ;;
+    'duckdb')
+      case "${PKG_MGR}" in
+        'apk') printf 'libstdc++\n' ;;
+        *) printf 'duckdb\n' ;;
+      esac
+      ;;
+    'elixir')
+      case "${PKG_MGR}" in
+        *) printf 'elixir\n' ;;
+      esac
+      ;;
     'rabbitmq')
       case "${PKG_MGR}" in
         'apk') printf 'rabbitmq-server\n' ;;
@@ -410,6 +555,46 @@ map_package() {
         *) printf 'rabbitmq-server\n' ;;
       esac
       ;;
+    'gem')
+      case "${PKG_MGR}" in
+        'apk') printf 'ruby\n' ;;
+        'apt-get') printf 'ruby\n' ;;
+        'dnf'|'yum'|'zypper'|'pacman') printf 'rubygems\n' ;;
+        'brew') printf 'ruby\n' ;;
+        *) return 1 ;;
+      esac
+      ;;
+    'ghcup'|'go-pm'|'google-cloud-sdk')
+      case "${PKG_MGR}" in
+        'brew') printf '%s\n' "${pkg}" ;;
+        *) return 1 ;;
+      esac
+      ;;
+    'guix')
+      case "${PKG_MGR}" in
+        'apk') printf 'guix\n' ;;
+        *) return 1 ;;
+      esac
+      ;;
+    'hatch'|'krew')
+      case "${PKG_MGR}" in
+        'brew') printf '%s\n' "${pkg}" ;;
+        *) return 1 ;;
+      esac
+      ;;
+    'helm'|'julia'|'luarocks')
+      case "${PKG_MGR}" in
+        'brew') printf '%s\n' "${pkg}" ;;
+        'apk') 
+           if [ "${pkg}" = "helm" ] || [ "${pkg}" = "luarocks" ]; then
+             printf '%s\n' "${pkg}"
+           else
+             return 1
+           fi
+           ;;
+        *) return 1 ;;
+      esac
+      ;;
     'valkey')
       case "${PKG_MGR}" in
         'winget') return 1 ;;
@@ -418,21 +603,35 @@ map_package() {
         *) printf 'valkey\n' ;;
       esac
       ;;
-    'postgresql')
+    'flatpak')
       case "${PKG_MGR}" in
-        'apk') printf 'postgresql14 postgresql14-contrib postgresql14-openrc\n' ;;
-        'apt-get') printf 'postgresql-common postgresql-server-dev-14 postgresql-14\n' ;;
-        'dnf') printf 'postgresql-server postgresql-contrib\n' ;;
-        'yum') printf 'postgresql-server postgresql-contrib\n' ;;
-        'zypper') printf 'postgresql-server\n' ;;
-        'pacman') printf 'postgresql\n' ;;
-        'pkg') printf 'postgresql14-server postgresql14-client\n' ;;
-        'brew') printf 'postgresql@14\n' ;;
-        'winget') printf 'PostgreSQL.PostgreSQL\n' ;;
-        'emerge') printf 'dev-db/postgresql\n' ;;
-        *) printf 'postgresql\n' ;;
+        *) printf 'flatpak\n' ;;
       esac
       ;;
+    'dnf')
+      case "${PKG_MGR}" in
+        'apk'|'apt-get'|'pacman') return 1 ;;
+        *) printf 'dnf\n' ;;
+      esac
+      ;;
+    'emerge')
+      case "${PKG_MGR}" in
+        'apk'|'apt-get'|'dnf'|'yum'|'pacman'|'zypper') return 1 ;;
+        *) printf 'emerge\n' ;;
+      esac
+      ;;
+    'eopkg')
+      case "${PKG_MGR}" in
+        'apk'|'apt-get'|'dnf'|'yum'|'pacman'|'zypper') return 1 ;;
+        *) printf 'eopkg\n' ;;
+      esac
+      ;;
+    'fnm')
+      case "${PKG_MGR}" in
+        *) return 1 ;;
+      esac
+      ;;
+
     *)
       printf '%s\n' "${pkg}"
       ;;

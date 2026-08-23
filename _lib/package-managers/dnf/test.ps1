@@ -1,16 +1,17 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'dnf' stack.
+Test suite for the dnf component.
 
 .DESCRIPTION
-Execute this script to run the test suite for dnf.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
 if (Get-Command dnf -ErrorAction SilentlyContinue) {
-    dnf --version
-    Write-Output "dnf found"
+    & dnf --version
 } else {
-    Write-Output "dnf skipped (not found)"
+    Write-Host "dnf is not installed, skipping test."
 }

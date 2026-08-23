@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:AWS_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for aws."
+            Write-Error "No download URL or cache available for aws."
+            exit 1
         }
     } else {
         Write-Output "aws $CompVersion is already installed."

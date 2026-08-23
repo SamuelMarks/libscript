@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'spack' stack.
+Test suite for the spack component.
 
 .DESCRIPTION
-Execute this script to run the test suite for spack.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command spack -ErrorAction SilentlyContinue) {
-    spack --version
-    Write-Output "spack found"
-} else {
-    Write-Output "spack skipped (not found)"
-}
+& spack --version

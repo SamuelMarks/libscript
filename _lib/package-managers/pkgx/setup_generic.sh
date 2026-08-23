@@ -10,11 +10,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -26,9 +26,7 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-DIR="${SCRIPT_DIR}"
+export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
@@ -101,7 +99,6 @@ case "$ACTION" in
       printf '%s\n' "System packages do not support use here."
     else
       resolve_exact_version
-      libscript_symlink_alias "pkgx" "$VERSION" "${EXACT_VERSION}"
       libscript_symlink_alias "pkgx" "default" "${EXACT_VERSION}"
       
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/pkgx/${EXACT_VERSION}"
@@ -130,7 +127,7 @@ case "$ACTION" in
     fi
     exit 0
     ;;
-  install|*)
+  install)
     if [ "$PKGX_INSTALL_METHOD" = "system" ]; then
       libscript_depends "pkgx"
     elif [ "$PKGX_INSTALL_METHOD" = "mise" ]; then
@@ -145,40 +142,27 @@ case "$ACTION" in
     else
       # libscript_native implementation
       resolve_exact_version
+      if [ "${EXACT_VERSION}" = "latest" ]; then
+         libscript_depends "curl"
+         EXACT_VERSION=$(curl -sL https://api.github.com/repos/pkgxdev/pkgx/releases/latest | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
+      fi
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/pkgx/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing pkgx ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
-        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/pkgx/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
-          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/pkgx/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
-          if [ -n "$cache_file" ]; then
-            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
-            else
-              cp "$cache_file" "${TARGET_DIR}/bin/pkgx" || true
-              chmod +x "${TARGET_DIR}/bin/pkgx" || true
-            fi
-          fi
-        else
-          if [ -n "${PKGX_DOWNLOAD_URL:-}" ]; then
-            TEMP_FILE=$(mktemp)
-            libscript_download "${PKGX_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-            if case "${PKGX_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "${PKGX_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-            else
-              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/pkgx" || true
-              chmod +x "${TARGET_DIR}/bin/pkgx" || true
-            fi
-            rm -f "${TEMP_FILE}"
-          else
-            log_warn "No download URL provided for pkgx ${VERSION}."
-          fi
-        fi
+        ARCH=$(uname -m)
+        OS=$(uname -s | tr "[:upper:]" "[:lower:]")
+        if [ "$ARCH" = "x86_64" ]; then ARCH="x86-64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="aarch64"; fi
+        if [ "$OS" = "darwin" ]; then OS="darwin"; elif [ "$OS" = "linux" ]; then OS="linux"; fi
+        URL="https://github.com/pkgxdev/pkgx/releases/download/v${EXACT_VERSION}/pkgx-${EXACT_VERSION}+${OS}+${ARCH}.tar.xz"
+        TEMP_FILE=$(mktemp)
+        libscript_depends "curl"
+        libscript_depends "tar"
+        libscript_depends "xz"
+        curl -sSL "$URL" -o "$TEMP_FILE"
+        tar -xf "$TEMP_FILE" -C "${TARGET_DIR}/bin" "pkgx" || cp "$TEMP_FILE" "${TARGET_DIR}/bin/pkgx"
+        chmod +x "${TARGET_DIR}/bin/pkgx"
+        rm -f "$TEMP_FILE"
       else
         log_info "pkgx ${VERSION} is already installed."
       fi

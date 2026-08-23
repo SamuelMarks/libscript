@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:DENO_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for deno."
+            Write-Error "No download URL or cache available for deno."
+            exit 1
         }
     } else {
         Write-Output "deno $CompVersion is already installed."

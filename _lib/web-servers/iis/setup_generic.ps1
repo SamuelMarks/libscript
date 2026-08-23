@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:IIS_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for iis."
+            Write-Error "No download URL or cache available for iis."
+            exit 1
         }
     } else {
         Write-Output "iis $CompVersion is already installed."

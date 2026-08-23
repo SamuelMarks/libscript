@@ -1,10 +1,10 @@
-:: # test.cmd
-::
-:: ## Overview
-:: Serves as the Windows test entry point for the vLLM Server component.
-:: It automatically delegates execution to the common `test_base.cmd`.
-:: 
-:: ## Usage
-:: Call this script to trigger vLLM component testing on Windows.
+@echo off
+rem ## Overview
+rem Test suite for the vllm component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-call "%~dp0\..\..\..\_lib\_common\test_base.cmd"
+setlocal enabledelayedexpansion
+
+vllm --version

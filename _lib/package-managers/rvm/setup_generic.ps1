@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:RVM_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for rvm."
+            Write-Error "No download URL or cache available for rvm."
+            exit 1
         }
     } else {
         Write-Output "rvm $CompVersion is already installed."

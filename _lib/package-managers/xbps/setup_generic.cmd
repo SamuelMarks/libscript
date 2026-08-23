@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\xbps.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for xbps.
+        exit /b 1
     )
 ) else (
     echo xbps %XBPS_VERSION% is already installed.

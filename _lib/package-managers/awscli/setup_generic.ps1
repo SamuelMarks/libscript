@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:AWSCLI_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for awscli."
+            Write-Error "No download URL or cache available for awscli."
+            exit 1
         }
     } else {
         Write-Output "awscli $CompVersion is already installed."

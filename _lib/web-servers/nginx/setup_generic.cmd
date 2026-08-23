@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\nginx.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for nginx.
+        exit /b 1
     )
 ) else (
     echo nginx %NGINX_VERSION% is already installed.

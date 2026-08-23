@@ -9,6 +9,25 @@
 
 setlocal EnableDelayedExpansion
 
+if /I "%~1"=="--help" goto :show_help
+if /I "%~1"=="-h" goto :show_help
+if /I "%~1"=="/?" goto :show_help
+if /I "%~1"=="-?" goto :show_help
+goto :main
+
+:show_help
+:: ## show_help
+:: Executes show_help functionality.
+echo Usage: %~nx0
+echo Performs an audit and validation of all defined application stacks.
+echo.
+echo Options:
+echo   --help, -h, /?, -?  Show this help message.
+exit /b 0
+
+:main
+:: ## main
+:: Executes main functionality.
 :: Audits stack documentation. Windows equivalent of audit_stacks.sh
 
 set "ROOT_DIR=%~dp0..\.."

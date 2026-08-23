@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\cpp.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for cpp.
+        exit /b 1
     )
 ) else (
     echo cpp %CPP_VERSION% is already installed.

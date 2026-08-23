@@ -8,7 +8,7 @@
     "PIP_INSTALL_METHOD": {
       "description": "How to install PIP. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "default": "libscript_native"
+      "default": "system"
     },
     "PIP_VERSION": {
       "description": "Specific version of pip to install.",

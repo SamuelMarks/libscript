@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\mix.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for mix.
+        exit /b 1
     )
 ) else (
     echo mix %MIX_VERSION% is already installed.

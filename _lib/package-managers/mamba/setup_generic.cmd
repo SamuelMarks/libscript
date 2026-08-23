@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\mamba.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for mamba.
+        exit /b 1
     )
 ) else (
     echo mamba %MAMBA_VERSION% is already installed.

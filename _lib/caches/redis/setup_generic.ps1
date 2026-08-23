@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:REDIS_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for redis."
+            Write-Error "No download URL or cache available for redis."
+            exit 1
         }
     } else {
         Write-Output "redis $CompVersion is already installed."

@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -76,7 +76,7 @@ EOF2
       printf '%s\n' "Name: \"full\"; Description: \"Full installation\""
       printf '%s\n' ""
       printf '%s\n' "[Components]"
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "Name: \"$pkg\"; Description: \"$pkg\"; Types: full custom"
@@ -86,7 +86,7 @@ EOF2
       printf '%s\n' "[Code]"
       printf '%s\n' "var"
 
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
@@ -124,7 +124,7 @@ EOF2
       printf '%s\n' "  OfflinePage.Add('Target: BSD');"
       printf '%s\n' "  OfflinePage.Values[1] := True;"
       printf '%s\n' "  OfflinePage.Values[3] := True;"
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
@@ -153,7 +153,7 @@ EOF2
       printf '%s\n' "function ShouldSkipPage(PageID: Integer): Boolean;"
       printf '%s\n' "begin"
       printf '%s\n' "  Result := False;"
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
@@ -171,7 +171,7 @@ EOF2
       printf '%s\n' "  ResultCode: Integer;"
       printf '%s\n' "begin"
       printf '%s\n' "  Result := True;"
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
@@ -181,7 +181,7 @@ EOF2
             printf '%s\n' "  if PageId = Page_$pkg.ID then begin"
             var_idx=0
             for varname in $vars_json; do
-              if case "$varname" in *"_PORT"* | *"_PORT_SECURE"*) true;; *) false;; esac; then
+              if case "$varname" in *"_PORT"*) true;; *) false;; esac; then
                 printf '%s\n' "    if (Page_$pkg.Values[$var_idx] <> '') then begin"
                 printf '%s\n' "      if Exec('cmd.exe', '/c netstat -an | findstr /R /C:"":'' + Page_$pkg.Values[$var_idx] + '' .*LISTENING""', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin"
                 printf '%s\n' "        if ResultCode = 0 then begin"
@@ -206,7 +206,7 @@ EOF2
       printf '%s\n' "  ResultCode: Integer;"
       printf '%s\n' "begin"
       printf '%s\n' "  if CurUninstallStep = usUninstall then begin"
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "    if MsgBox('Do you want to completely remove the Data Directory and all records for $pkg?', mbConfirmation, MB_YESNO) = idYes then begin"
@@ -228,7 +228,7 @@ EOF2
       printf '%s\n' "  ActionPage: TInputOptionWizardPage;"
       printf '%s\n' "  OfflinePage: TInputOptionWizardPage;"
 
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
@@ -284,7 +284,7 @@ EOF2
       printf '%s\n' "    S := '/c \"\"\"{app}\\libscript.cmd\"\"\" package-as ' + GetAction('') + ' ';";
       printf '%s\n' "  else";
       printf '%s\n' "    S := '/c libscript.cmd package-as ' + GetAction('') + ' ';";
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "  if IsComponentSelected('$pkg') then S := S + '$pkg $ver ';";
@@ -293,7 +293,7 @@ EOF2
       printf '%s\n' "  Result := S;"
       printf '%s\n' "end;"
       printf '%s\n' "[Run]"
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         if [ "$OFFLINE" = "1" ]; then

@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:GITLAB_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for gitlab."
+            Write-Error "No download URL or cache available for gitlab."
+            exit 1
         }
     } else {
         Write-Output "gitlab $CompVersion is already installed."

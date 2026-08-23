@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -46,10 +46,12 @@ mkdir -p "$NGINX_CONF_DIR/sites-enabled"
 CONF_FILE="$NGINX_CONF_DIR/sites-available/${DOMAIN}.conf"
 
 if [ ! -f "$CONF_FILE" ]; then
-  printf '%s\n' "server {" > "$CONF_FILE"
-  printf '%s\n' "    listen 80;" >> "$CONF_FILE"
-  printf '%s\n' "    server_name $DOMAIN;" >> "$CONF_FILE"
-  printf '%s\n' "}" >> "$CONF_FILE"
+  {
+    printf '%s\n' "server {"
+    printf '%s\n' "    listen 80;"
+    printf '%s\n' "    server_name $DOMAIN;"
+    printf '%s\n' "}"
+  } > "$CONF_FILE"
 fi
 
 # Very simple proxy_pass injection

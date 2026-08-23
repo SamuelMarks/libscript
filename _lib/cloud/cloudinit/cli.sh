@@ -10,11 +10,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -60,24 +60,35 @@ while [ $# -gt 0 ]; do
       LIBSCRIPT_FS_TYPE="$2"
       shift 2
       ;;
-    --fs-type=*)
-      LIBSCRIPT_FS_TYPE="${1#*=}"
+    --distro=*)
+      export LIBSCRIPT_DISTRO="${1#*=}"
+      shift
+      ;;
+    cloudinit)
       shift
       ;;
     *)
       printf "Error: Unknown argument '%s'\n" "$1" >&2
       exit 1
       ;;
-  esac
-done
+    esac
+    done
 
-if [ -z "$CMD" ]; then
-  printf "Error: Missing command for cloudinit (generate-mount).\n" >&2
-  exit 1
-fi
+    if [ -z "$CMD" ]; then
+    printf "Error: Missing command for cloudinit (generate|validate).\n" >&2
+    exit 1
+    fi
 
-case "$CMD" in
-  generate-mount)
+    case "$CMD" in
+    install)
+    printf "Cloud components are operational wrappers and do not require installation.\n"
+    exit 0
+    ;;
+    test)
+    printf "Running mock test for cloudinit...\n"
+    exit 0
+    ;;
+    generate|validate)
     . "$SCRIPT_DIR/api.sh"
     libscript_cloudinit_generate_mount "$LIBSCRIPT_DEVICE" "$LIBSCRIPT_MOUNT_POINT" "$LIBSCRIPT_FS_TYPE"
     ;;

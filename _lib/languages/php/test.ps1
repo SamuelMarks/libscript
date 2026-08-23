@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'php' stack.
+Test suite for the php component.
 
 .DESCRIPTION
-Execute this script to run the test suite for php.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command php -ErrorAction SilentlyContinue) {
-    php --version
-    Write-Output "php found"
-} else {
-    Write-Output "php skipped (not found)"
-}
+php -r "echo 'hello world!';"

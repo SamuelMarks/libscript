@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'zig' stack.
+Test suite for the zig component.
 
 .DESCRIPTION
-Execute this script to run the test suite for zig.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command zig -ErrorAction SilentlyContinue) {
-    zig --version
-    Write-Output "zig found"
-} else {
-    Write-Output "zig skipped (not found)"
-}
+zig version

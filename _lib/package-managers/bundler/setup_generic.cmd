@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\bundler.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for bundler.
+        exit /b 1
     )
 ) else (
     echo bundler %BUNDLER_VERSION% is already installed.

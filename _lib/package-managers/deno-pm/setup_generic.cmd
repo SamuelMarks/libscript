@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\deno-pm.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for deno-pm.
+        exit /b 1
     )
 ) else (
     echo deno-pm %DENO_PM_VERSION% is already installed.

@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'zypper' stack.
+Test suite for the zypper component.
 
 .DESCRIPTION
-Execute this script to run the test suite for zypper.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command zypper -ErrorAction SilentlyContinue) {
-    zypper --version
-    Write-Output "zypper found"
-} else {
-    Write-Output "zypper skipped (not found)"
-}
+& zypper --version

@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'sh' stack.
+Test suite for the sh component.
 
 .DESCRIPTION
-Execute this script to run the test suite for sh.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command sh -ErrorAction SilentlyContinue) {
-    sh --version
-    Write-Output "sh found"
-} else {
-    Write-Output "sh skipped (not found)"
-}
+sh --version

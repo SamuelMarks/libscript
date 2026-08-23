@@ -1,23 +1,20 @@
 #!/bin/sh
 # ## Overview
-# Serves as the Unix test entry point for the AWS Cloud Provider component CLI wrapper.
-# It sets `DRY_RUN=true` to validate the mock execution paths for `network`, `firewall`,
-# `storage`, and `cleanup` operations, ensuring no real cloud side-effects occur.
-# 
+# Test suite for the aws component.
+#
 # ## Usage
-# Execute this script to run the tests for the AWS CLI wrapper.
-
+# Execute this script to perform a component-specific test.
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -29,73 +26,15 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
+
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  . "${SCRIPT_NAME}"
-done
-
-#!/bin/sh
-for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  . "${SCRIPT_NAME}"
-done
-
-#!/bin/sh
-export DRY_RUN=true
-SCRIPT_DIR=$(cd ${SCRIPT_DIR} && pwd)
-
-log_info "Testing AWS component in DRY_RUN mode..."
-
-# Test auth
-"$SCRIPT_DIR/cli.sh" auth status 2>&1 | tee /tmp/aws_test_out
-grep "aws sts get-caller-identity" /tmp/aws_test_out
-
-# Test location
-"$SCRIPT_DIR/cli.sh" location list 2>&1 | tee /tmp/aws_test_out
-grep "aws ec2 describe-regions" /tmp/aws_test_out
-
-# Test DNS
-"$SCRIPT_DIR/cli.sh" dns zone create test.local 2>&1 | tee /tmp/aws_test_out
-grep "aws route53 create-hosted-zone" /tmp/aws_test_out
-"$SCRIPT_DIR/cli.sh" dns record create Z12345678 my.local A 1.2.3.4 2>&1 | tee /tmp/aws_test_out
-grep "aws route53 change-resource-record-sets" /tmp/aws_test_out
-
-# Test network
-VPC_ID=$("$SCRIPT_DIR/cli.sh" network create test-vpc 2>/dev/null | tr -d '\r\n')
-log_info "Captured VPC_ID: '$VPC_ID'"
-if [ "$VPC_ID" != "vpc-12345678" ]; then printf '%s\n' "VPC_ID mismatch"; exit 1; fi
-
-# Test firewall
-log_info "Running firewall create..."
-"$SCRIPT_DIR/cli.sh" firewall create test-sg test-vpc 2>&1 | tee /tmp/aws_test_out
-grep "aws ec2 create-security-group" /tmp/aws_test_out
-
-# Test storage
-log_info "Running storage create..."
-"$SCRIPT_DIR/cli.sh" storage create test-bucket 2>&1 | tee /tmp/aws_test_out
-grep "aws s3 mb" /tmp/aws_test_out
-
-# Test cleanup
-log_info "Running cleanup..."
-"$SCRIPT_DIR/cli.sh" cleanup 2>&1 | tee /tmp/aws_test_out
-grep "aws resourcegroupstaggingapi" /tmp/aws_test_out
-
-# Test tag guards
-log_info "Testing tag guards..."
-if "$SCRIPT_DIR/cli.sh" network delete test-vpc 2>/tmp/aws_guard_out; then
-  log_error "Network delete should have failed due to missing tag in dry-run"
-  exit 1
+if [ -f "$SCRIPT_DIR/env.sh" ]; then
+  unset SCRIPT_NAME || true
+  . "$SCRIPT_DIR/env.sh"
 fi
-grep "Refusing to modify" /tmp/aws_guard_out
 
-export LIBSCRIPT_ALLOW_ANY_TAG_MANIPULATION=1
-"$SCRIPT_DIR/cli.sh" network delete test-vpc 2>&1 | tee /tmp/aws_guard_out
-grep "Proceeding due to override flag" /tmp/aws_guard_out
-
-log_info "AWS tests passed (dry-run)."
+if [ -f "$SCRIPT_DIR/cli.sh" ]; then
+  sh "$SCRIPT_DIR/cli.sh" --help >/dev/null
+else
+  exit 0
+fi

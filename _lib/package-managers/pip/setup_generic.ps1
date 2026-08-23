@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:PIP_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for pip."
+            Write-Error "No download URL or cache available for pip."
+            exit 1
         }
     } else {
         Write-Output "pip $CompVersion is already installed."

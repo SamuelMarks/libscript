@@ -1,16 +1,17 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'fnm' stack.
+Test suite for the fnm component.
 
 .DESCRIPTION
-Execute this script to run the test suite for fnm.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
 if (Get-Command fnm -ErrorAction SilentlyContinue) {
-    fnm --version
-    Write-Output "fnm found"
+    & fnm --version
 } else {
-    Write-Output "fnm skipped (not found)"
+    Write-Host "fnm is not installed, skipping test."
 }

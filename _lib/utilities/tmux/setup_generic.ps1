@@ -130,7 +130,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:TMUX_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for tmux."
+            Write-Error "No download URL or cache available for tmux."
+            exit 1
         }
     } else {
         Write-Output "tmux $CompVersion is already installed."

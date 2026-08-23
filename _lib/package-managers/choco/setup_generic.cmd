@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\choco.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for choco.
+        exit /b 1
     )
 ) else (
     echo choco %CHOCO_VERSION% is already installed.

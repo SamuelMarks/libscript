@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component '7zip' stack.
+Test suite for the 7zip component.
 
 .DESCRIPTION
-Execute this script to run the test suite for 7zip.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/utilities/7zip test skipped"
+& 7zip --version

@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'gcp' stack.
+Test suite for the gcp component.
 
 .DESCRIPTION
-Execute this script to run the test suite for gcp.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/cloud-providers/gcp test skipped"
+& gcp --version

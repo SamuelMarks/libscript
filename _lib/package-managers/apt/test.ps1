@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'apt' stack.
+Test suite for the apt component.
 
 .DESCRIPTION
-Execute this script to run the test suite for apt.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command apt -ErrorAction SilentlyContinue) {
-    apt --version
-    Write-Output "apt found"
-} else {
-    Write-Output "apt skipped (not found)"
-}
+& apt --version

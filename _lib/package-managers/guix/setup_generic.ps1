@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:GUIX_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for guix."
+            Write-Error "No download URL or cache available for guix."
+            exit 1
         }
     } else {
         Write-Output "guix $CompVersion is already installed."

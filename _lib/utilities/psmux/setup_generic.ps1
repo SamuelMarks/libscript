@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:PSMUX_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for psmux."
+            Write-Error "No download URL or cache available for psmux."
+            exit 1
         }
     } else {
         Write-Output "psmux $CompVersion is already installed."

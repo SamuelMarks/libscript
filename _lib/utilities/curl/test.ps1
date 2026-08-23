@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'curl' stack.
+Test suite for the curl component.
 
 .DESCRIPTION
-Execute this script to run the test suite for curl.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/utilities/curl test skipped"
+& curl --version

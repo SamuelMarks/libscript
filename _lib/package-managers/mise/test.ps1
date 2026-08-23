@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'mise' stack.
+Test suite for the mise component.
 
 .DESCRIPTION
-Execute this script to run the test suite for mise.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command mise -ErrorAction SilentlyContinue) {
-    mise --version
-    Write-Output "mise found"
-} else {
-    Write-Output "mise skipped (not found)"
-}
+& mise --version

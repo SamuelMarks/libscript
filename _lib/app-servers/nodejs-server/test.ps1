@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'nodejs-server' stack.
+Test suite for the nodejs-server component.
 
 .DESCRIPTION
-Execute this script to run the test suite for nodejs-server.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/languages/nodejs-server test skipped"
+& nodejs-server --version

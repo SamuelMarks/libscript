@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\bun.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for bun.
+        exit /b 1
     )
 ) else (
     echo bun %BUN_VERSION% is already installed.

@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'pub' stack.
+Test suite for the pub component.
 
 .DESCRIPTION
-Execute this script to run the test suite for pub.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command pub -ErrorAction SilentlyContinue) {
-    pub --version
-    Write-Output "pub found"
-} else {
-    Write-Output "pub skipped (not found)"
-}
+& pub --version

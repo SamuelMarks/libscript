@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\just.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for just.
+        exit /b 1
     )
 ) else (
     echo just %JUST_VERSION% is already installed.

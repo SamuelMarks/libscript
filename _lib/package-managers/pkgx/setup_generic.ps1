@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:PKGX_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for pkgx."
+            Write-Error "No download URL or cache available for pkgx."
+            exit 1
         }
     } else {
         Write-Output "pkgx $CompVersion is already installed."

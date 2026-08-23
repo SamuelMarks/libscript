@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'sqlite' stack.
+Test suite for the sqlite component.
 
 .DESCRIPTION
-Execute this script to run the test suite for sqlite.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command sqlite -ErrorAction SilentlyContinue) {
-    sqlite --version
-    Write-Output "sqlite found"
-} else {
-    Write-Output "sqlite skipped (not found)"
-}
+sqlite3 :memory: "SELECT 1;"

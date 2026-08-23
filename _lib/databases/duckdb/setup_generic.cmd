@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\duckdb.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for duckdb.
+        exit /b 1
     )
 ) else (
     echo duckdb %DUCKDB_VERSION% is already installed.

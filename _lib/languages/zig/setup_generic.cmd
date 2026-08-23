@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\zig.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for zig.
+        exit /b 1
     )
 ) else (
     echo zig %ZIG_VERSION% is already installed.

@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:XBPS_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for xbps."
+            Write-Error "No download URL or cache available for xbps."
+            exit 1
         }
     } else {
         Write-Output "xbps $CompVersion is already installed."

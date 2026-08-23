@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'mariadb' stack.
+Test suite for the mariadb component.
 
 .DESCRIPTION
-Execute this script to run the test suite for mariadb.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command mariadb -ErrorAction SilentlyContinue) {
-    mariadb --version
-    Write-Output "mariadb found"
-} else {
-    Write-Output "mariadb skipped (not found)"
-}
+mysql -u root -e "SELECT 1;"

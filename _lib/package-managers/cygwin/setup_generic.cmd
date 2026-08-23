@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\cygwin.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for cygwin.
+        exit /b 1
     )
 ) else (
     echo cygwin %CYGWIN_VERSION% is already installed.

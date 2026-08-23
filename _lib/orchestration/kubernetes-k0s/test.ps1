@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'kubernetes-k0s' stack.
+Test suite for the kubernetes-k0s component.
 
 .DESCRIPTION
-Execute this script to run the test suite for kubernetes-k0s.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/orchestration/kubernetes-k0s test skipped"
+& kubernetes-k0s --version

@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\rabbitmq.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for rabbitmq.
+        exit /b 1
     )
 ) else (
     echo rabbitmq %RABBITMQ_VERSION% is already installed.

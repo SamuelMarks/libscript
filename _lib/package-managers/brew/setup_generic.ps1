@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:BREW_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for brew."
+            Write-Error "No download URL or cache available for brew."
+            exit 1
         }
     } else {
         Write-Output "brew $CompVersion is already installed."

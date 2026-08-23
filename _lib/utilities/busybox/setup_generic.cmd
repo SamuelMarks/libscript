@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\busybox.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for busybox.
+        exit /b 1
     )
 ) else (
     echo busybox %BUSYBOX_VERSION% is already installed.

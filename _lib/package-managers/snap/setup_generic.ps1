@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:SNAP_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for snap."
+            Write-Error "No download URL or cache available for snap."
+            exit 1
         }
     } else {
         Write-Output "snap $CompVersion is already installed."

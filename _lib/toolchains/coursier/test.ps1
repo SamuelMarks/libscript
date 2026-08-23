@@ -1,15 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'coursier' stack.
+Test suite for the coursier component.
 
 .DESCRIPTION
-Execute this script to run the test suite for coursier.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command coursier -ErrorAction SilentlyContinue) {
-    coursier --version
-} else {
-    Write-Host "coursier skipped (not found)"
-}
+cs --version

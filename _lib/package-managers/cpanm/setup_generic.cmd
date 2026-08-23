@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\cpanm.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for cpanm.
+        exit /b 1
     )
 ) else (
     echo cpanm %CPANM_VERSION% is already installed.

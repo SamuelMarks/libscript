@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\asdf.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for asdf.
+        exit /b 1
     )
 ) else (
     echo asdf %ASDF_VERSION% is already installed.

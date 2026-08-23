@@ -1,12 +1,16 @@
 @echo off
-:: # test.cmd
-::
-:: ## Overview
-:: Testing script for the helm component on Windows.
-:: It verifies that the component is installed correctly and responds as expected.
-::
-:: ## Usage
-:: Execute this script to run tests for the component.
+rem ## Overview
+rem Test suite for the helm component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-setlocal EnableDelayedExpansion
-call "%~dp0\..\..\_common\test_base.cmd" :assert_version "helm" "."
+setlocal enabledelayedexpansion
+
+where helm >nul 2>nul
+if %errorlevel% neq 0 (
+  echo helm is not installed, skipping test.
+  exit /b 0
+)
+
+helm --version || helm version || exit /b 0

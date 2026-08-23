@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'powershell' stack.
+Test suite for the powershell component.
 
 .DESCRIPTION
-Execute this script to run the test suite for powershell.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/utilities/powershell test skipped"
+& powershell --version

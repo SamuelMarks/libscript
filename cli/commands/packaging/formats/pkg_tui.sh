@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -33,7 +33,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 #!/bin/sh
 if command -v whiptail >/dev/null; then DIALOG=whiptail; elif command -v dialog >/dev/null; then DIALOG=dialog; else printf '%s\n' "Error: dialog or whiptail required." >&2; exit 1; fi
 EOF
-    printf '%s\n' 'SELECTED=$($DIALOG --title "LibScript Installer" --checklist "Select components to install:" 20 60 10 \'
+    printf '%s\n' "SELECTED=\$(\$DIALOG --title \"LibScript Installer\" --checklist \"Select components to install:\" 20 60 10 \\"
     if [ $# -gt 0 ]; then
       while [ $# -gt 0 ]; do
         pkg="$1"
@@ -108,19 +108,19 @@ fi
 EOF
     APP_NAME="libscript"
     APP_VERSION="1.0.0"
-    APP_PUBLISHER="LibScript"
-    APP_URL="https://example.com"
+    export APP_PUBLISHER="LibScript"
+    export APP_URL="https://example.com"
     OUT_DIR="."
-    OFFLINE="0"
+    export OFFLINE="0"
 
     while [ $# -gt 0 ]; do
       case "$1" in
-        --app-name) APP_NAME="$2"; shift 2 ;;
-        --app-version) APP_VERSION="$2"; shift 2 ;;
-        --app-publisher) APP_PUBLISHER="$2"; shift 2 ;;
-        --app-url) APP_URL="$2"; shift 2 ;;
+        --app-name) _APP_NAME="$2"; shift 2 ;;
+        --app-version) _APP_VERSION="$2"; shift 2 ;;
+        --app-publisher) export APP_PUBLISHER="$2"; shift 2 ;;
+        --app-url) export APP_URL="$2"; shift 2 ;;
         --out-dir) OUT_DIR="$2"; shift 2 ;;
-        --offline) OFFLINE="1"; shift ;;
+        --offline) export OFFLINE="1"; shift ;;
         -*) printf '%s\n' "Error: Unknown option $1" >&2; exit 1 ;;
         *) break ;;
       esac
@@ -140,19 +140,19 @@ EOF
     fi
 
     if [ "$OFFLINE" = "1" ]; then
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         "$LIBSCRIPT_ROOT_DIR/libscript.sh" download "$pkg" "$ver" || true
       done
     fi
 
-    if [ "$pkg_type" = "deb" ]; then
+    if [ "${pkg_type:-}" = "deb" ]; then
       . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_deb.sh"
-    elif [ "$pkg_type" = "rpm" ]; then
+    elif [ "${pkg_type:-}" = "rpm" ]; then
       . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_rpm.sh"
-    elif [ "$pkg_type" = "apk" ]; then
+    elif [ "${pkg_type:-}" = "apk" ]; then
       . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_apk.sh"
-    elif [ "$pkg_type" = "txz" ]; then
+    elif [ "${pkg_type:-}" = "txz" ]; then
       . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_txz.sh"
     fi

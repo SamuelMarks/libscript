@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'kotlin' stack.
+Test suite for the kotlin component.
 
 .DESCRIPTION
-Execute this script to run the test suite for kotlin.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command kotlin -ErrorAction SilentlyContinue) {
-    kotlin --version
-    Write-Output "kotlin found"
-} else {
-    Write-Output "kotlin skipped (not found)"
-}
+& kotlin --version

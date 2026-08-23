@@ -14,11 +14,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -223,7 +223,7 @@ aws_network() {
       else
         VPC_ID=$(aws ec2 create-vpc --cidr-block "$CIDR" --query "Vpc.VpcId" --output text)
         if [ -n "$TAGS" ]; then
-          aws ec2 create-tags --resources "$VPC_ID" --tags "Key=Name,Value=$NAME" $TAGS
+          aws ec2 create-tags --resources "$VPC_ID" --tags "Key=Name,Value=$NAME" "$TAGS"
         else
           aws ec2 create-tags --resources "$VPC_ID" --tags "Key=Name,Value=$NAME"
         fi
@@ -294,7 +294,7 @@ aws_firewall() {
       else
         SG_ID=$(aws ec2 create-security-group --group-name "$NAME" --description "LibScript SG" --vpc-id "$VPC_ID" --query "GroupId" --output text)
         if [ -n "$TAGS" ]; then
-          aws ec2 create-tags --resources "$SG_ID" --tags "Key=Name,Value=$NAME" $TAGS
+          aws ec2 create-tags --resources "$SG_ID" --tags "Key=Name,Value=$NAME" "$TAGS"
         else
           aws ec2 create-tags --resources "$SG_ID" --tags "Key=Name,Value=$NAME"
         fi
@@ -374,7 +374,7 @@ aws_node() {
         esac
       done
       
-      TAGS=$(parse_tags $filtered_args)
+      TAGS=$(parse_tags "$filtered_args")
       
       INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=$NAME" "Name=instance-state-name,Values=running,pending" --query "Reservations[0].Instances[0].InstanceId" --output text 2>/dev/null || true)
       if [ "$INSTANCE_ID" != "None" ] && [ -n "$INSTANCE_ID" ]; then
@@ -606,6 +606,17 @@ case "$CMD" in
   list-managed) aws_list_managed "$@" ;;
   cleanup) aws_cleanup "$@" ;;
   install) check_deps ;;
+  test)
+    if [ -f "$SCRIPT_DIR/test.sh" ]; then
+      SCRIPT_NAME="$SCRIPT_DIR/test.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "$SCRIPT_NAME"
+    else
+      printf "No test.sh found for aws.\n"
+      exit 1
+    fi
+    ;;
   --help|-h|/\?|"-?")
     printf '%s\n' "LibScript AWS Cloud Wrapper"
     printf '%s\n' "Usage: $0 {auth|location|dns|network|firewall|node|node-group|cron|jumpbox|storage|list-managed|cleanup|install} [args...]"

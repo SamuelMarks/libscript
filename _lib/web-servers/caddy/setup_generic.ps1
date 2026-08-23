@@ -130,7 +130,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:CADDY_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for caddy."
+            Write-Error "No download URL or cache available for caddy."
+            exit 1
         }
     } else {
         Write-Output "caddy $CompVersion is already installed."

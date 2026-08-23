@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:SCOOP_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for scoop."
+            Write-Error "No download URL or cache available for scoop."
+            exit 1
         }
     } else {
         Write-Output "scoop $CompVersion is already installed."

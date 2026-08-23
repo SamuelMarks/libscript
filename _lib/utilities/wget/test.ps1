@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'wget' stack.
+Test suite for the wget component.
 
 .DESCRIPTION
-Execute this script to run the test suite for wget.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/utilities/wget test skipped"
+& wget --version

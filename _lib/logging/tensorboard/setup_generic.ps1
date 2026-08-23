@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:TENSORBOARD_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for tensorboard."
+            Write-Error "No download URL or cache available for tensorboard."
+            exit 1
         }
     } else {
         Write-Output "tensorboard $CompVersion is already installed."

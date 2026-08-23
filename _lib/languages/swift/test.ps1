@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'swift' stack.
+Test suite for the swift component.
 
 .DESCRIPTION
-Execute this script to run the test suite for swift.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command swift -ErrorAction SilentlyContinue) {
-    swift --version
-    Write-Output "swift found"
-} else {
-    Write-Output "swift skipped (not found)"
-}
+swift --version

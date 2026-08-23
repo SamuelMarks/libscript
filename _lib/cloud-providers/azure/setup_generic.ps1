@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:AZURE_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for azure."
+            Write-Error "No download URL or cache available for azure."
+            exit 1
         }
     } else {
         Write-Output "azure $CompVersion is already installed."

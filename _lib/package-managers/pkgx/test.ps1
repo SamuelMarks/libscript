@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'pkgx' stack.
+Test suite for the pkgx component.
 
 .DESCRIPTION
-Execute this script to run the test suite for pkgx.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command pkgx -ErrorAction SilentlyContinue) {
-    pkgx --version
-    Write-Output "pkgx found"
-} else {
-    Write-Output "pkgx skipped (not found)"
-}
+& pkgx --version

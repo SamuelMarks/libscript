@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\gradle.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for gradle.
+        exit /b 1
     )
 ) else (
     echo gradle %GRADLE_VERSION% is already installed.

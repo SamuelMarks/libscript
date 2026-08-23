@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\azure.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for azure.
+        exit /b 1
     )
 ) else (
     echo azure %AZURE_VERSION% is already installed.

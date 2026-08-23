@@ -1,9 +1,18 @@
-:: # test.cmd
-::
-:: ## Overview
-:: Test suite for DuckDB on Windows.
-::
-:: ## Usage
-:: Automatically invoked by the test framework. Currently a no-op placeholder.
+@echo off
+rem ## Overview
+rem Test suite for the duckdb component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-call "%~dp0\..\..\..\_lib\_common\test_base.cmd"
+setlocal enabledelayedexpansion
+
+where duckdb >nul 2>nul
+if %errorlevel% neq 0 (
+  if exist "%~dp0cli.cmd" (
+      call "%~dp0cli.cmd" --help >nul
+  )
+  exit /b 0
+)
+
+duckdb -c "SELECT 1;"

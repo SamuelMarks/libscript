@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:OPENBAO_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for openbao."
+            Write-Error "No download URL or cache available for openbao."
+            exit 1
         }
     } else {
         Write-Output "openbao $CompVersion is already installed."

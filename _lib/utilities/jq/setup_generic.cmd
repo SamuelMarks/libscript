@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\jq.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for jq.
+        exit /b 1
     )
 ) else (
     echo jq %JQ_VERSION% is already installed.

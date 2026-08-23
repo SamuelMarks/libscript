@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\rbenv.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for rbenv.
+        exit /b 1
     )
 ) else (
     echo rbenv %RBENV_VERSION% is already installed.

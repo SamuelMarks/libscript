@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:PNPM_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for pnpm."
+            Write-Error "No download URL or cache available for pnpm."
+            exit 1
         }
     } else {
         Write-Output "pnpm $CompVersion is already installed."

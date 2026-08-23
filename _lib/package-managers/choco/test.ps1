@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'choco' stack.
+Test suite for the choco component.
 
 .DESCRIPTION
-Execute this script to run the test suite for choco.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/package-managers/choco test skipped"
+& choco --version

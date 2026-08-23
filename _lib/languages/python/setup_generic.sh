@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -29,7 +29,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-DIR="${SCRIPT_DIR}"
+export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
@@ -45,7 +45,7 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/ver
   . "${SCRIPT_NAME}"
 done
 
-PYTHON_INSTALL_METHOD="$(libscript_resolve_install_method "PYTHON")"
+PYTHON_INSTALL_METHOD="system"
 PYTHON_VERSION="${PYTHON_VERSION:-3.11.9}"
 ACTION="${ACTION:-install}"
 
@@ -53,7 +53,10 @@ ACTION="${ACTION:-install}"
 # Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${PYTHON_VERSION}" = "latest" ]; then
-    EXACT_VERSION=$(curl -sL https://www.python.org/ftp/python/ | grep -o 'href="3\.[0-9]*\.[0-9]*/"' | sed 's/href="//' | sed 's/\/"//' | sort -V | tail -n 1)
+    if ! command -v curl >/dev/null 2>&1; then
+      libscript_depends 'curl'
+    fi
+    EXACT_VERSION=$(curl -sL --compressed https://www.python.org/downloads/ | grep -o 'Python 3\.[0-9]*\.[0-9]*' | sort -V | tail -n 1 | awk '{print $2}')
   else
     EXACT_VERSION="${PYTHON_VERSION}"
   fi
@@ -134,7 +137,7 @@ case "$ACTION" in
     fi
     exit 0
     ;;
-  install|*)
+  install)
 
     if [ "$PYTHON_INSTALL_METHOD" = "system" ]; then
       libscript_depends 'python'
@@ -166,8 +169,10 @@ case "$ACTION" in
           libscript_depends 'build-essential' 'libssl-dev' 'zlib1g-dev' 'libbz2-dev' 'libreadline-dev' 'libsqlite3-dev' 'wget' 'curl' 'llvm' 'libncurses5-dev' 'libncursesw5-dev' 'xz-utils' 'tk-dev' 'libffi-dev' 'liblzma-dev'
         elif command -v yum >/dev/null 2>&1 || command -v dnf >/dev/null 2>&1; then
           libscript_depends 'gcc' 'make' 'openssl-devel' 'bzip2-devel' 'libffi-devel' 'zlib-devel' 'readline-devel' 'sqlite-devel' 'wget' 'curl' 'xz-devel'
+        elif command -v apk >/dev/null 2>&1; then
+          libscript_depends 'build-base' 'openssl-dev' 'bzip2-dev' 'libffi-dev' 'zlib-dev' 'readline-dev' 'sqlite-dev' 'wget' 'curl' 'xz-dev' 'linux-headers'
         else
-          libscript_depends 'wget' 'curl' 'xz' 'openssl' 'readline' 'sqlite3'
+          libscript_depends 'wget' 'curl' 'xz' 'openssl' 'readline' 'sqlite3' 'gcc' 'make'
         fi
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/python/"*"${EXACT_VERSION}"* >/dev/null 2>&1; then
           log_info "Extracting from cache..."
@@ -217,7 +222,12 @@ case "$ACTION" in
       if [ "${PYTHON_VENV-}" ]; then
         export VENV="${PYTHON_VENV}"
         if [ ! -f "${PYTHON_VENV}/bin/python" ]; then
-          "${PY_DIR}/bin/python" -m venv "${PYTHON_VENV}"
+          if ! type libscript_python_venv >/dev/null 2>&1; then
+            . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
+          fi
+          # Note: We provide EXACT_VERSION to ensure the newly installed binary is selected by our abstraction router
+          libscript_python_venv "${PYTHON_VENV}" "${EXACT_VERSION}"
+          
           "${PYTHON_VENV}/bin/python" -m pip install -U pip setuptools wheel
           
           # Hardware-Optimized ML Profiles

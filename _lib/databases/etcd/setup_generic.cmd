@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\etcd.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for etcd.
+        exit /b 1
     )
 ) else (
     echo etcd %ETCD_VERSION% is already installed.

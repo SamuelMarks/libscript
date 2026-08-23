@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\python-server.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for python-server.
+        exit /b 1
     )
 ) else (
     echo python-server %PYTHON_SERVER_VERSION% is already installed.

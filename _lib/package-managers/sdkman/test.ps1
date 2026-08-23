@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'sdkman' stack.
+Test suite for the sdkman component.
 
 .DESCRIPTION
-Execute this script to run the test suite for sdkman.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command sdkman -ErrorAction SilentlyContinue) {
-    sdkman --version
-    Write-Output "sdkman found"
-} else {
-    Write-Output "sdkman skipped (not found)"
-}
+& sdkman --version

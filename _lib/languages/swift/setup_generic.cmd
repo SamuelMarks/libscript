@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\swift.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for swift.
+        exit /b 1
     )
 ) else (
     echo swift %SWIFT_VERSION% is already installed.

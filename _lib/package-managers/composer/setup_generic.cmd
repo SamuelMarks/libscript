@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\composer.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for composer.
+        exit /b 1
     )
 ) else (
     echo composer %COMPOSER_VERSION% is already installed.

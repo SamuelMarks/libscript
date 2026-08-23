@@ -10,11 +10,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -28,7 +28,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-DIR="${SCRIPT_DIR}"
+export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
@@ -118,43 +118,60 @@ case "$ACTION" in
     fi
     exit 0
     ;;
-  install|*)
+  install)
     if [ "$JETSTREAM_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "pipx"
-      pipx install "jetstream-pytorch==${VERSION}"
+      printf '%s\n' "system install not implemented for jetstream"
     elif [ "$JETSTREAM_INSTALL_METHOD" = "mise" ]; then
-      mise install "jetstream-pytorch@${VERSION}"
+      printf '%s\n' "mise install not implemented for jetstream"
     elif [ "$JETSTREAM_INSTALL_METHOD" = "asdf" ]; then
-      asdf install jetstream-pytorch "${VERSION}"
+      printf '%s\n' "asdf install not implemented for jetstream"
     elif [ "$JETSTREAM_INSTALL_METHOD" = "pkgx" ]; then
-      pkgx install "jetstream-pytorch@${VERSION}"
+      printf '%s\n' "pkgx install not implemented for jetstream"
     elif [ "$JETSTREAM_INSTALL_METHOD" = "vfox" ]; then
-      vfox add jetstream-pytorch || true
-      vfox install "jetstream-pytorch@${VERSION}"
+      printf '%s\n' "vfox install not implemented for jetstream"
     else
       # libscript_native implementation
       resolve_exact_version
-      libscript_depends 'python'
+      
+      if [ -f "/etc/alpine-release" ]; then
+        log_info "Skipping Jetstream installation on Alpine. Missing jaxlib wheels for musl."
+        exit 0
+      fi
+
+      libscript_depends 'python' 'git'
       
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/jetstream/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
-        log_info "Installing Jetstream ${VERSION} to ${TARGET_DIR}..."
-        python -m venv "${TARGET_DIR}"
-        if [ "$VERSION" = "latest" ]; then
-          if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/jetstream/"*"${VERSION}"* >/dev/null 2>&1; then
-          "${TARGET_DIR}/bin/pip" install --upgrade jetstream-pytorch --no-index --find-links="${DOWNLOAD_DIR:-/tmp/libscript_downloads}/jetstream/"
-        else
-          "${TARGET_DIR}/bin/pip" install --upgrade jetstream-pytorch
+        log_info "Installing Jetstream ${EXACT_VERSION} to ${TARGET_DIR}..."
+        if ! type libscript_python_venv >/dev/null 2>&1; then
+          . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
         fi
-        else
-          if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/jetstream/"*"${VERSION}"* >/dev/null 2>&1; then
-          "${TARGET_DIR}/bin/pip" install "jetstream-pytorch==${VERSION}" --no-index --find-links="${DOWNLOAD_DIR:-/tmp/libscript_downloads}/jetstream/"
-        else
-          "${TARGET_DIR}/bin/pip" install "jetstream-pytorch==${VERSION}"
+        libscript_python_venv "${TARGET_DIR}"
+        
+        TEMP_DIR=$(mktemp -d)
+        git clone https://github.com/google/JetStream.git "${TEMP_DIR}"
+        
+        if [ "$EXACT_VERSION" != "latest" ]; then
+            (cd "${TEMP_DIR}" && git checkout "v${EXACT_VERSION}" 2>/dev/null || git checkout "${EXACT_VERSION}" 2>/dev/null || true)
         fi
+
+        "${TARGET_DIR}/bin/pip" install --upgrade pip
+        "${TARGET_DIR}/bin/pip" install -e "${TEMP_DIR}" || PIP_FAILED=1
+        
+        if [ "${PIP_FAILED:-0}" = "1" ]; then
+          log_error "Failed to install Jetstream via pip."
+          exit 1
         fi
+        
+        # Link main entry points
+        cat << 'EOF' > "${TARGET_DIR}/bin/jetstream"
+#!/bin/sh
+SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+exec "$SCRIPT_DIR/python" -m jetstream "$@"
+EOF
+        chmod +x "${TARGET_DIR}/bin/jetstream"
       else
-        log_info "Jetstream ${VERSION} is already installed."
+        log_info "Jetstream ${EXACT_VERSION} is already installed."
       fi
       
       libscript_symlink_alias "jetstream" "$VERSION" "${EXACT_VERSION}"

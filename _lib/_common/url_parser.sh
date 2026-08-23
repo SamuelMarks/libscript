@@ -13,11 +13,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -36,7 +36,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 libscript_url_parser() {
   # Inspired by: https://gist.github.com/joshisa/297b0bc1ec0dcdda0d1625029711fa24
   # Referenced and tweaked from http://stackoverflow.com/questions/6174220/parse-url-in-shell-script#6174447
-  url="${1}"
+  export url="${1}"
 
   protocol=$(printf '%s' "${1}" | grep "://" | sed -e's,^\(.*://\).*,\1,g')
   protocol_len=$(( ${#protocol} + 1 ))

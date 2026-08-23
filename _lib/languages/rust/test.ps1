@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'rust' stack.
+Test suite for the rust component.
 
 .DESCRIPTION
-Execute this script to run the test suite for rust.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command rust -ErrorAction SilentlyContinue) {
-    rust --version
-    Write-Output "rust found"
-} else {
-    Write-Output "rust skipped (not found)"
-}
+rustc --version

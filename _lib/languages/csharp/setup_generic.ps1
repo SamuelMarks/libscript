@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:CSHARP_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for csharp."
+            Write-Error "No download URL or cache available for csharp."
+            exit 1
         }
     } else {
         Write-Output "csharp $CompVersion is already installed."

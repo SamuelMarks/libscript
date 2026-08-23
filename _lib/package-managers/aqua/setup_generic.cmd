@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\aqua.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for aqua.
+        exit /b 1
     )
 ) else (
     echo aqua %AQUA_VERSION% is already installed.

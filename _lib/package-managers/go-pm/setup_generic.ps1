@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:GO_PM_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for go-pm."
+            Write-Error "No download URL or cache available for go-pm."
+            exit 1
         }
     } else {
         Write-Output "go-pm $CompVersion is already installed."

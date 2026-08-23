@@ -1,16 +1,17 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'eopkg' stack.
+Test suite for the eopkg component.
 
 .DESCRIPTION
-Execute this script to run the test suite for eopkg.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
 if (Get-Command eopkg -ErrorAction SilentlyContinue) {
-    eopkg --version
-    Write-Output "eopkg found"
+    & eopkg --version
 } else {
-    Write-Output "eopkg skipped (not found)"
+    Write-Host "eopkg is not installed, skipping test."
 }

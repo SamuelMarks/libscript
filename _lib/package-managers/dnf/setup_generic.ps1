@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:DNF_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for dnf."
+            Write-Error "No download URL or cache available for dnf."
+            exit 1
         }
     } else {
         Write-Output "dnf $CompVersion is already installed."

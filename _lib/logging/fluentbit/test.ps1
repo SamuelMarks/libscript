@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'fluentbit' stack.
+Test suite for the fluentbit component.
 
 .DESCRIPTION
-Execute this script to run the test suite for fluentbit.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command fluentbit -ErrorAction SilentlyContinue) {
-    fluentbit --version
-    Write-Output "fluentbit found"
-} else {
-    Write-Output "fluentbit skipped (not found)"
-}
+& fluentbit --version

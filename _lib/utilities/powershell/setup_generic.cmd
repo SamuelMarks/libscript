@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\powershell.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for powershell.
+        exit /b 1
     )
 ) else (
     echo powershell %POWERSHELL_VERSION% is already installed.

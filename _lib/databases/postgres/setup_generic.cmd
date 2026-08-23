@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\postgres.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for postgres.
+        exit /b 1
     )
 ) else (
     echo postgres %POSTGRES_VERSION% is already installed.

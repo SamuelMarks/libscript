@@ -8,11 +8,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -30,4 +30,6 @@ else
   EXACT_VERSION="${WAIT4X_VERSION}"
 fi
 
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/wait4x/${EXACT_VERSION}/bin:${PATH}"
+export WAIT4X_ROOT="${LIBSCRIPT_HOME:-$HOME/.libscript}/wait4x/${WAIT4X_VERSION:-latest}"
+export PATH="$WAIT4X_ROOT/bin:${PATH}"
+

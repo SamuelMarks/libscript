@@ -96,7 +96,7 @@ running the setup script.
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
 | `SEVENZIP_VERSION` | Specific version of 7zip to install. | `latest` |  |
-| `SEVENZIP_INSTALL_METHOD` | How to install SEVENZIP. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
+| `SEVENZIP_INSTALL_METHOD` | How to install SEVENZIP. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `system` |  |
 <!-- END_VARS -->
 
 ## Variables

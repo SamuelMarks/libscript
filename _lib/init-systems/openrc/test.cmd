@@ -1,11 +1,11 @@
 @echo off
-:: # test.cmd
-::
-:: ## Overview
-:: Test suite for OpenRC on Windows.
-::
-:: ## Usage
-:: Automatically invoked by the test framework to assert OpenRC is accessible.
+rem ## Overview
+rem Test suite for the openrc component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-setlocal EnableDelayedExpansion
-call "%~dp0\..\..\_common\test_base.cmd" :assert_version "openrc" "."
+setlocal enabledelayedexpansion
+
+echo openrc is unix only
+exit /b 0

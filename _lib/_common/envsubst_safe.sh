@@ -16,11 +16,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -56,7 +56,7 @@ envsubst_safe() {
     fi
   fi
 
-  awk_script='
+  awk_script=$(cat << 'EOF_AWK'
   BEGIN {
       for (name in ENVIRON) {
           env[name] = ENVIRON[name]
@@ -102,7 +102,8 @@ envsubst_safe() {
       }
       print line
   }
-  ';
+EOF_AWK
+  )
   if [ -n "${input_file:-}" ]; then
     awk -- "${awk_script}" "${input_file}"
   else

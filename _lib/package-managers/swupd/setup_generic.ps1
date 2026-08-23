@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:SWUPD_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for swupd."
+            Write-Error "No download URL or cache available for swupd."
+            exit 1
         }
     } else {
         Write-Output "swupd $CompVersion is already installed."

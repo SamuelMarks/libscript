@@ -1,7 +1,7 @@
 #!/bin/sh
 # ## Overview
 # Serves as the command-line interface entry point for the vLLM Server component on Unix.
-# It explicitly sets the target package to `huggingface_hub` and delegates execution
+# It explicitly sets the target package to `vllm` and delegates execution
 # to the common `component_core.sh`.
 # 
 # ## Usage
@@ -13,11 +13,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -33,7 +33,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 
-PACKAGE_NAME="huggingface_hub"
+export PACKAGE_NAME="vllm"
 SCRIPT_NAME="${SCRIPT_DIR}/../../_common/component_core.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090

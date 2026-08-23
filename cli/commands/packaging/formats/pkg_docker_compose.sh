@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -103,30 +103,36 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
       }')
 
       prev_pkg=""
-      printf '%s\n' "$sorted_deps" | while read -r layer pkg ver override; do
+      printf '%s\n' "$sorted_deps" | while read -r _layer pkg ver override; do
         if [ -n "$pkg" ]; then
           if [ "$ver" = "null" ]; then ver="latest"; fi
 
           df="Dockerfile.$pkg"
-          printf '%s\n' "FROM $base_image" > "$df"
-          printf '%s\n' "ARG TARGETOS=linux" >> "$df"
-          printf '%s\n' "ARG TARGETARCH=amd64" >> "$df"
-          printf '%s\n' "ENV LC_ALL=C.UTF-8 LANG=C.UTF-8" >> "$df"
-          printf '%s\n' "ENV LIBSCRIPT_ROOT_DIR=\"/opt/libscript\"" >> "$df"
-          printf '%s\n' "ENV LIBSCRIPT_BUILD_DIR=\"/opt/libscript_build\"" >> "$df"
-          printf '%s\n' "ENV LIBSCRIPT_DATA_DIR=\"/opt/libscript_data\"" >> "$df"
-          printf '%s\n' "ENV LIBSCRIPT_CACHE_DIR=\"/opt/libscript_cache\"" >> "$df"
+          {
+            printf '%s\n' "FROM $base_image"
+            printf '%s\n' "ARG TARGETOS=linux"
+            printf '%s\n' "ARG TARGETARCH=amd64"
+            printf '%s\n' "ENV LC_ALL=C.UTF-8 LANG=C.UTF-8"
+            printf '%s\n' "ENV LIBSCRIPT_ROOT_DIR=\"/opt/libscript\""
+            printf '%s\n' "ENV LIBSCRIPT_BUILD_DIR=\"/opt/libscript_build\""
+            printf '%s\n' "ENV LIBSCRIPT_DATA_DIR=\"/opt/libscript_data\""
+            printf '%s\n' "ENV LIBSCRIPT_CACHE_DIR=\"/opt/libscript_cache\""
+          } > "$df"
 
           pkg_up=$(printf '%s\n' "$pkg" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
           printf '%s\n' "ENV ${pkg_up}_VERSION=\"$ver\"" >> "$df"
           if [ -n "$override" ] && [ "$override" != "null" ]; then
-              printf '%s\n' "ENV ${pkg_up}_URL=\"$override\"" >> "$df"
-              filename=$(basename "${override%%\?*}")
-              printf '%s\n' "ADD \${${pkg_up}_URL} /opt/libscript_cache/$pkg/$filename" >> "$df"
+              {
+                printf '%s\n' "ENV ${pkg_up}_URL=\"$override\""
+                filename=$(basename "${override%%\?*}")
+                printf '%s\n' "ADD \${${pkg_up}_URL} /opt/libscript_cache/$pkg/$filename"
+              } >> "$df"
           fi
-          printf '%s\n' "COPY . /opt/libscript" >> "$df"
-          printf '%s\n' "WORKDIR /opt/libscript" >> "$df"
-          printf '%s\n' "RUN ./libscript.sh install $pkg \${${pkg_up}_VERSION}" >> "$df"
+          {
+            printf '%s\n' "COPY . /opt/libscript"
+            printf '%s\n' "WORKDIR /opt/libscript"
+            printf '%s\n' "RUN ./libscript.sh install $pkg \${${pkg_up}_VERSION}"
+          } >> "$df"
 
           healthcheck="[\"CMD-SHELL\", \"printf '%s\n' '$pkg is ok' || exit 1\"]"
           if [ "$pkg" = "postgres" ]; then healthcheck="[\"CMD\", \"pg_isready\", \"-U\", \"postgres\"]"; fi

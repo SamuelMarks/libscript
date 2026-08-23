@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\msys2.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for msys2.
+        exit /b 1
     )
 ) else (
     echo msys2 %MSYS2_VERSION% is already installed.

@@ -5,11 +5,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -187,7 +187,7 @@ case "${1:-}" in
     ACTION="${1:-}"
     shift
     ;;
-  info|ls|ls-remote|download|remove|uninstall|status|health|test|start|stop|restart|logs|up|down)
+  ls|ls-remote|download|remove|uninstall|status|health|test|start|stop|restart|logs|up|down)
     ACTION="${1:-}"
     if [ -n "${3:-}" ] && ! printf '%s\n' "${3:-}" | grep -q '^-'; then
       PACKAGE_NAME="${2:-}"
@@ -232,6 +232,12 @@ export VERSION
 # Auto-set component version variable (e.g. NODEJS_VERSION)
 if [ -n "$PACKAGE_NAME" ] && [ -n "$VERSION" ]; then
   pkg_upper=$(printf '%s\n' "${PACKAGE_NAME##*/}" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
+  # Prefix with SEVEN if it starts with 7
+  if [ "$pkg_upper" = "7ZIP" ]; then pkg_upper="SEVENZIP"; fi
+  case "$pkg_upper" in
+    [0-9]*) pkg_upper="_${pkg_upper}" ;;
+  esac
+
   var_name="${pkg_upper}_VERSION"
   export "$var_name"="$VERSION"
 fi
@@ -337,8 +343,8 @@ if [ "${LIBSCRIPT_SKIP_DEPENDENCIES:-}" != "1" ] && { [ "$ACTION" = "install" ] 
         fi
         [ -z "$dep_val" ] && continue
 
-        eval "strategy_val=\"\${${dep_key}_STRATEGY:-reuse}\""
-        log_info "Resolving dependency: $dep_val (strategy: $strategy_val)"
+        eval "export strategy_val=\"\${${dep_key}_STRATEGY:-reuse}\""
+        log_info "Resolving dependency: $dep_val (strategy: ${strategy_val:-})"
 
         is_installed=0
         if command -v "$dep_val" >/dev/null 2>&1 || "$LIBSCRIPT_ROOT_DIR/libscript.sh" which "$dep_val" "latest" >/dev/null 2>&1; then
@@ -369,6 +375,7 @@ fi
 # Lifecycle routing
 if [ "$ACTION" = "test" ]; then
   if [ -x "$COMP_DIR/test.sh" ]; then
+    unset SCRIPT_NAME || true
     exec "$COMP_DIR/test.sh"
   else
     log_info "Error: test.sh not found in $SCRIPT_DIR"

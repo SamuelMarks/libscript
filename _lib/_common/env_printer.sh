@@ -5,11 +5,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -69,43 +69,43 @@ libscript_print_env() {
             SCRIPT_DIR="$SCRIPT_DIR" \
             PREFIX="$_prefix_path" \
             LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}" \
-            sh -c '
-      # Source the env.sh
-      # shellcheck disable=SC1090
-      . "$SCRIPT_DIR/env.sh" >/dev/null 2>&1
-      if [ -f "$LIBSCRIPT_DATA_DIR/dyn_env.sh" ]; then
-        . "$LIBSCRIPT_DATA_DIR/dyn_env.sh" >/dev/null 2>&1
-      fi
+            sh -c "$(cat << 'EOF_SH'
+            # Source the env.sh
+            # shellcheck disable=SC1090
+            . "$SCRIPT_DIR/env.sh" >/dev/null 2>&1
+            if [ -f "$LIBSCRIPT_DATA_DIR/dyn_env.sh" ]; then
+            . "$LIBSCRIPT_DATA_DIR/dyn_env.sh" >/dev/null 2>&1
+            fi
 
-      # Filter out internal variables
-      _filter="^(PWD|SHLVL|_|PATH|FORMAT|SCRIPT_DIR|PREFIX|STACK|SCRIPT_NAME)="
+            # Filter out internal variables
+            _filter="^(PWD|SHLVL|_|PATH|FORMAT|SCRIPT_DIR|PREFIX|STACK|SCRIPT_NAME)="
 
-      case "$FORMAT" in
-        docker)
-          env | grep -vE "$_filter" | while read -r line; do
-            printf '\''%s\n'\'' "ENV ${line%%=*}=\"${line#*=}\""
-          done
-          ;;
-        docker_compose)
-          env | grep -vE "$_filter"
-          ;;
-        powershell)
-          env | grep -vE "$_filter" | while read -r line; do
-            printf '\''%s\n'\'' "\$env:${line%%=*}=\"${line#*=}\""
-          done
-          ;;
-        cmd)
-          env | grep -vE "$_filter" | while read -r line; do
-            printf '\''%s\n'\'' "SET ${line%%=*}=\"${line#*=}\""
-          done
-          ;;
-        json)
-          if command -v jq >/dev/null 2>&1; then
-            env | grep -vE "$_filter" | jq -R -s "
-              split(\"\n\") | map(select(length > 0)) |
-              map(split(\"=\")) | map({(.[0]): (.[1:] | join(\"=\"))}) | add
-            "
-          else
+            case "$FORMAT" in
+            docker)
+            env | grep -vE "$_filter" | while read -r line; do
+            printf '%s\n' "ENV ${line%%=*}=\"${line#*=}\""
+            done
+            ;;
+            docker_compose)
+            env | grep -vE "$_filter"
+            ;;
+            powershell)
+            env | grep -vE "$_filter" | while read -r line; do
+            printf '%s\n' "\$env:${line%%=*}=\"${line#*=}\""
+            done
+            ;;
+            cmd)
+            env | grep -vE "$_filter" | while read -r line; do
+            printf '%s\n' "SET ${line%%=*}=\"${line#*=}\""
+            done
+            ;;
+            json)
+            if command -v jq >/dev/null 2>&1; then
+            env | grep -vE "$_filter" | jq -R -s '
+              split("\n") | map(select(length > 0)) |
+              map(split("=")) | map({(.[0]): (.[1:] | join("="))}) | add
+            '
+            else
             # Minimal JSON fallback
             printf "{"
             first=1
@@ -115,14 +115,15 @@ libscript_print_env() {
               first=0
             done
             printf "}\n"
-          fi
-          ;;
-        *)
-          env | grep -vE "$_filter" | while read -r line; do
-            printf '\''%s\n'\'' "export ${line%%=*}=\"${line#*=}\""
-          done
-          ;;
-      esac
-    '
+            fi
+            ;;
+            *)
+            env | grep -vE "$_filter" | while read -r line; do
+            printf '%s\n' "export ${line%%=*}=\"${line#*=}\""
+            done
+            ;;
+            esac
+EOF_SH
+)"
   fi
 }

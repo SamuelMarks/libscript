@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -29,7 +29,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-DIR="${SCRIPT_DIR}"
+export DIR="${SCRIPT_DIR}"
 
 for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
@@ -70,11 +70,11 @@ if [ ! -d "${MAGENTO_WWWROOT}/app" ]; then
   priv mkdir -p "${MAGENTO_WWWROOT}"
 
   # For a full install without auth.json typically use a pre-packaged tarball, but we use github releases for simplicity
-  dl_url="https://github.com/magento/magento2/archive/refs/tags/${MAGENTO_VERSION}.tar.gz"
+  dl_export url="https://github.com/magento/magento2/archive/refs/tags/${MAGENTO_VERSION}.tar.gz"
 
   if command -v libscript_download >/dev/null 2>&1; then
     tmp_magento=$(mktemp)
-    libscript_download "${dl_url}" "${tmp_magento}"
+    libscript_download "${dl_url:-}" "${tmp_magento}"
     priv tar xzf "${tmp_magento}" --strip-components=1 -C "${MAGENTO_WWWROOT}"
     rm -f "${tmp_magento}"
   else

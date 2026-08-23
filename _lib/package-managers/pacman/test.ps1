@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'pacman' stack.
+Test suite for the pacman component.
 
 .DESCRIPTION
-Execute this script to run the test suite for pacman.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command pacman -ErrorAction SilentlyContinue) {
-    pacman --version
-    Write-Output "pacman found"
-} else {
-    Write-Output "pacman skipped (not found)"
-}
+& pacman --version

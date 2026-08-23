@@ -130,7 +130,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:JQ_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for jq."
+            Write-Error "No download URL or cache available for jq."
+            exit 1
         }
     } else {
         Write-Output "jq $CompVersion is already installed."

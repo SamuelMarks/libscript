@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\tensorboard.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for tensorboard.
+        exit /b 1
     )
 ) else (
     echo tensorboard %TENSORBOARD_VERSION% is already installed.

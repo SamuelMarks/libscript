@@ -26,7 +26,7 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+_SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # Ensure we run from the git repository root
 cd "$(git rev-parse --show-toplevel)"
@@ -101,89 +101,62 @@ if [ -x "devtools/docs-gen/generate_markdown_docs.sh" ]; then
     git ls-files -m | grep "README.md$" | xargs -I {} git add "{}" || true
 fi
 
-printf '%s\n' "Updating CI Checks Matrix in README.md..."
-cat <<'TABLE' >ci_results.tmp
-## CI Checks Matrix
 
-[![CI](https://github.com/SamuelMarks/libscript/actions/workflows/ci.yml/badge.svg)](https://github.com/SamuelMarks/libscript/actions/workflows/ci.yml)
 
-| Component | Ubuntu | macOS | Windows |
-|---|---|---|---|
+printf '%s\n' "Updating Supported Components in README.md..."
+cat <<'TABLE' >components_table.tmp
+## Supported Components
+
+| Component | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD |
+|---|---|---|---|---|---|---|
 TABLE
 
-printf '%s\n' "Fetching live CI matrix status from GitHub..."
-run_id=$(curl -s "https://api.github.com/repos/SamuelMarks/libscript/actions/runs?branch=master&event=push&status=completed&per_page=1" | jq -r '.workflow_runs[0].id' 2>/dev/null || printf '%s\n' "null")
-rm -f jobs_status.tmp
-if [ "$run_id" != "null" ] && [ -n "$run_id" ]; then
-  printf '%s\n' "Found latest run ID: $run_id"
-  page=1
-  while :; do
-    response=$(curl -s "https://api.github.com/repos/SamuelMarks/libscript/actions/runs/${run_id}/jobs?per_page=100&page=${page}")
-    jobs_count=$(printf '%s\n' "$response" | jq '.jobs | length' 2>/dev/null || printf '%s\n' "0")
-    if [ "$jobs_count" -eq 0 ]; then
-      break
-    fi
-    printf '%s\n' "$response" | jq -r '.jobs[] | "\(.name)|\(.conclusion)"' >>jobs_status.tmp
-    page=$((page + 1))
-  done
-else
-  printf '%s\n' "Failed to fetch run ID or jq not installed. Using fallback markers."
-fi
-
-get_job_status() {
-  comp="$1"
-  os="$2"
-  if [ -f jobs_status.tmp ]; then
-    status=$(grep -F "${comp} on ${os}|" jobs_status.tmp | cut -d'|' -f2 | head -n1)
-    case "$status" in
-      "success") printf '%s\n' "✅" ;;
-      "failure") printf '%s\n' "❌" ;;
-      "skipped") printf '%s\n' "⏭️" ;;
-      "cancelled") printf '%s\n' "🛑" ;;
-      *) printf '%s\n' "❓" ;;
-    esac
-  else
-    printf '%s\n' "❓"
-  fi
-}
-
-if [ -n "$components" ]; then
-  for comp in $components; do
-    ubuntu=$(get_job_status "$comp" "ubuntu-latest")
-    macos=$(get_job_status "$comp" "macos-latest")
-    windows=$(get_job_status "$comp" "windows-latest")
-
-    # Check exclusions (overrides API status if excluded in ci.yml)
-    if grep -A 2 "\- os: macos-latest" .github/workflows/ci.yml | grep -q "\"$comp\""; then
-      macos="⏭️"
-    fi
-    if grep -A 2 "\- os: windows-latest" .github/workflows/ci.yml | grep -q "\"$comp\""; then
-      windows="⏭️"
+# Find all components excluding _common
+find _lib -mindepth 2 -maxdepth 2 -type d ! -path "_lib/_common*" | sed 's|.*/||' | sort -u | while read -r comp; do
+    # Extract existing statuses from README.md if present
+    existing_line=$(grep "^| \`$comp\` |" README.md || true)
+    existing_apk="❓"
+    existing_deb="❓"
+    existing_rpm="❓"
+    if [ -n "$existing_line" ]; then
+        existing_apk=$(echo "$existing_line" | awk -F'|' '{print $3}' | xargs)
+        existing_deb=$(echo "$existing_line" | awk -F'|' '{print $4}' | xargs)
+        existing_rpm=$(echo "$existing_line" | awk -F'|' '{print $5}' | xargs)
     fi
 
-    printf '%s\n' "| \`$comp\` | $ubuntu | $macos | $windows |" >>ci_results.tmp
-  done
-fi
+    # Alpine (.apk)
+    apk_status="$existing_apk"
+    if [ -f "tests_tmp/$comp.linux.alpine.success" ]; then
+        apk_status="✅"
+    elif [ -f "tests_tmp/$comp.linux.alpine.failure" ]; then
+        apk_status="❌"
+    fi
+    
+    # Debian (.deb)
+    deb_status="$existing_deb"
+    if ls tests_tmp/"$comp".linux.debian.success >/dev/null 2>&1 || ls tests_tmp/"$comp".linux.ubuntu.success >/dev/null 2>&1; then
+        deb_status="✅"
+    elif ls tests_tmp/"$comp".linux.debian.failure >/dev/null 2>&1 || ls tests_tmp/"$comp".linux.ubuntu.failure >/dev/null 2>&1; then
+        deb_status="❌"
+    fi
+    
+    # RHEL/Fedora (.rpm)
+    rpm_status="$existing_rpm"
+    if ls tests_tmp/"$comp".linux.rhel.success >/dev/null 2>&1 || ls tests_tmp/"$comp".linux.fedora.success >/dev/null 2>&1 || ls tests_tmp/"$comp".linux.almalinux.success >/dev/null 2>&1 || ls tests_tmp/"$comp".linux.centos.success >/dev/null 2>&1; then
+        rpm_status="✅"
+    elif ls tests_tmp/"$comp".linux.rhel.failure >/dev/null 2>&1 || ls tests_tmp/"$comp".linux.fedora.failure >/dev/null 2>&1 || ls tests_tmp/"$comp".linux.almalinux.failure >/dev/null 2>&1 || ls tests_tmp/"$comp".linux.centos.failure >/dev/null 2>&1; then
+        rpm_status="❌"
+    fi
+    
+    printf "| \`%s\` | %s | %s | %s | - | - | - |\n" "$comp" "$apk_status" "$deb_status" "$rpm_status" >>components_table.tmp
+done
 
-if grep -q "## CI Run Results" README.md; then
+if grep -q "## Supported Components" README.md; then
   awk '
-    /## CI Run Results/ {
+    /## Supported Components/ {
         in_ci = 1;
-        while ((getline line < "ci_results.tmp") > 0) print line;
-        next;
-    }
-    /^## / && in_ci {
-        in_ci = 0;
-    }
-    !in_ci {
-        print
-    }
-    ' README.md >README.tmp && mv README.tmp README.md
-elif grep -q "## CI Checks Matrix" README.md; then
-  awk '
-    /## CI Checks Matrix/ {
-        in_ci = 1;
-        while ((getline line < "ci_results.tmp") > 0) print line;
+        while ((getline line < "components_table.tmp") > 0) print line;
+        print "";
         next;
     }
     /^## / && in_ci {
@@ -194,10 +167,15 @@ elif grep -q "## CI Checks Matrix" README.md; then
     }
     ' README.md >README.tmp && mv README.tmp README.md
 else
-  printf '%s\n' "" >>README.md
-  cat ci_results.tmp >>README.md
+  awk '
+    /^## License/ {
+        while ((getline line < "components_table.tmp") > 0) print line;
+        print "";
+    }
+    { print }
+  ' README.md >README.tmp && mv README.tmp README.md
 fi
-rm -f ci_results.tmp jobs_status.tmp
+rm -f components_table.tmp
 
-git add .github/workflows/ci.yml README.md
+git add README.md
 printf '%s\n' "Pre-commit hook completed successfully."

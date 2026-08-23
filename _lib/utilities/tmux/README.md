@@ -70,7 +70,7 @@ isolated by default in `~/.libscript/<component>/<version>` and do not pollute g
 | `MODEL_NAME` | HuggingFace model string to serve | `your-org/your-model-name` |  |
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
-| `TMUX_INSTALL_METHOD` | How to install TMUX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
+| `TMUX_INSTALL_METHOD` | How to install TMUX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `system` |  |
 | `TMUX_VERSION` | Specific version of tmux to install. | `latest` |  |
 <!-- END_VARS -->
 

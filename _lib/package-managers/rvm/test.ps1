@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'rvm' stack.
+Test suite for the rvm component.
 
 .DESCRIPTION
-Execute this script to run the test suite for rvm.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command rvm -ErrorAction SilentlyContinue) {
-    rvm --version
-    Write-Output "rvm found"
-} else {
-    Write-Output "rvm skipped (not found)"
-}
+& rvm --version

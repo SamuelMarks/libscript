@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'paru' stack.
+Test suite for the paru component.
 
 .DESCRIPTION
-Execute this script to run the test suite for paru.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command paru -ErrorAction SilentlyContinue) {
-    paru --version
-    Write-Output "paru found"
-} else {
-    Write-Output "paru skipped (not found)"
-}
+& paru --version

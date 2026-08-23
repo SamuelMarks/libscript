@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:REBAR3_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for rebar3."
+            Write-Error "No download URL or cache available for rebar3."
+            exit 1
         }
     } else {
         Write-Output "rebar3 $CompVersion is already installed."

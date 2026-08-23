@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:SH_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for sh."
+            Write-Error "No download URL or cache available for sh."
+            exit 1
         }
     } else {
         Write-Output "sh $CompVersion is already installed."

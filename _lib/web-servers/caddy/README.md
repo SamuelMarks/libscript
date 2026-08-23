@@ -100,7 +100,7 @@ running the setup script.
 | `MODEL_NAME` | HuggingFace model string to serve | `your-org/your-model-name` |  |
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
-| `CADDY_INSTALL_METHOD` | How to install CADDY. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
+| `CADDY_INSTALL_METHOD` | How to install CADDY. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `system` |  |
 | `CADDY_VERSION` | Specific version of caddy to install. Can be a numeric version or an alias. | `latest` | latest, stable |
 | `LIBSCRIPT_LISTEN_PORT` | Global port to listen on | `none` |  |
 | `LIBSCRIPT_LISTEN_ADDRESS` | Global address to listen on | `none` |  |

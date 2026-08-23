@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'mamba' stack.
+Test suite for the mamba component.
 
 .DESCRIPTION
-Execute this script to run the test suite for mamba.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command micromamba -ErrorAction SilentlyContinue) {
-    micromamba --version
-    Write-Output "mamba found"
-} else {
-    Write-Output "mamba skipped (not found)"
-}
+& mamba --version

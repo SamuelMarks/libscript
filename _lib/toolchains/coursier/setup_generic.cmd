@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\coursier.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for coursier.
+        exit /b 1
     )
 ) else (
     echo coursier %COURSIER_VERSION% is already installed.

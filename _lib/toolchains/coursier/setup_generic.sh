@@ -9,11 +9,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -27,7 +27,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-DIR="${SCRIPT_DIR}"
+export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
@@ -49,6 +49,8 @@ ACTION="${ACTION:-install}"
 # Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${COURSIER_VERSION}" = "latest" ] || [ "${COURSIER_VERSION}" = "lts" ]; then
+    libscript_depends "curl"
+
     EXACT_VERSION=$(curl -sL https://api.github.com/repos/coursier/coursier/releases/latest | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')
     if [ -z "$EXACT_VERSION" ]; then
       EXACT_VERSION="latest"
@@ -133,7 +135,7 @@ case "$ACTION" in
     fi
     exit 0
     ;;
-  install|*)
+  install)
 
     if [ "${COURSIER_INSTALL_METHOD}" = "system" ]; then
       libscript_depends 'coursier'
@@ -147,54 +149,39 @@ case "$ACTION" in
       vfox add coursier || true
       vfox install "coursier@${COURSIER_VERSION}"
     else
-      resolve_exact_version
-      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/coursier/${EXACT_VERSION}"
-      
-      if [ -x "${TARGET_DIR}/bin/coursier" ]; then
-        libscript_symlink_alias "coursier" "${COURSIER_VERSION}" "${EXACT_VERSION}"
-        exit 0
-      fi
-
-      mkdir -p "${TARGET_DIR}/bin"
-      
-      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/coursier/"*"${VERSION:-}"* >/dev/null 2>&1; then
-        log_info "Extracting from cache..."
-        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/coursier/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
-        if [ -n "$cache_file" ]; then
-          if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-            tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
-          elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-            unzip -q "$cache_file" -d "${TARGET_DIR}" || true
-          else
-            cp "$cache_file" "${TARGET_DIR}/bin/coursier" || true
-            chmod +x "${TARGET_DIR}/bin/coursier" || true
-          fi
+        # libscript_native implementation
+        if [ -f /etc/alpine-release ]; then
+          log_info "coursier binaries are built for glibc. Skipping native install on Alpine."
+          exit 0
         fi
-      else
-        if [ -n "${COURSIER_DOWNLOAD_URL:-}" ]; then
+
+        resolve_exact_version
+        if [ "${EXACT_VERSION}" = "latest" ]; then
+           libscript_depends "curl"
+    libscript_depends "curl"
+
+           EXACT_VERSION=$(curl -sL https://api.github.com/repos/coursier/coursier/releases/latest | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
+        fi
+        TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/coursier/${EXACT_VERSION}"
+        if [ ! -d "${TARGET_DIR}" ]; then
+          log_info "Installing coursier ${VERSION} natively to ${TARGET_DIR}..."
+          mkdir -p "${TARGET_DIR}/bin"
+          URL="https://github.com/coursier/coursier/releases/download/v${EXACT_VERSION}/cs-x86_64-pc-linux.gz"
           TEMP_FILE=$(mktemp)
-          libscript_download "${COURSIER_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-          if case "${COURSIER_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-          elif case "${COURSIER_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-            unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-          else
-            cp "${TEMP_FILE}" "${TARGET_DIR}/bin/coursier" || true
-            chmod +x "${TARGET_DIR}/bin/coursier" || true
-          fi
-          rm -f "${TEMP_FILE}"
-        else
-          log_warn "No download URL provided for coursier ${VERSION:-}."
-          # Fallback to mock
-          printf '%s\n' "#!/bin/sh" > "${TARGET_DIR}/bin/coursier"
-          printf '%s\n' "printf '%s\n' 'Mock coursier executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/coursier"
+          libscript_depends "curl"
+          libscript_depends "gzip"
+          libscript_depends "java"
+          curl -sSL "$URL" -o "$TEMP_FILE.gz"
+          gzip -d "$TEMP_FILE.gz" || true
+          cp "$TEMP_FILE" "${TARGET_DIR}/bin/coursier"
           chmod +x "${TARGET_DIR}/bin/coursier"
+          rm -f "$TEMP_FILE"
+        else
+          log_info "coursier ${VERSION} is already installed."
         fi
-      fi
-      
-      libscript_symlink_alias "coursier" "${COURSIER_VERSION}" "${EXACT_VERSION}"
+        libscript_symlink_alias "coursier" "$VERSION" "${EXACT_VERSION}"
+        fi
 
-    fi
     ;;
   start|stop|restart|status|health|logs|up|down)
     if [ "$COURSIER_INSTALL_METHOD" = "libscript_native" ] || [ "$COURSIER_INSTALL_METHOD" = "system" ]; then

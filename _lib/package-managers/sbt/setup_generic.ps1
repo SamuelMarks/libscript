@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:SBT_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for sbt."
+            Write-Error "No download URL or cache available for sbt."
+            exit 1
         }
     } else {
         Write-Output "sbt $CompVersion is already installed."

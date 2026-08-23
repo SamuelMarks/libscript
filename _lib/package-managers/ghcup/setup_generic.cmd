@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\ghcup.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for ghcup.
+        exit /b 1
     )
 ) else (
     echo ghcup %GHCUP_VERSION% is already installed.

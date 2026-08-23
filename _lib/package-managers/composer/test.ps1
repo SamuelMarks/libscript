@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'composer' stack.
+Test suite for the composer component.
 
 .DESCRIPTION
-Execute this script to run the test suite for composer.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command composer -ErrorAction SilentlyContinue) {
-    composer --version
-    Write-Output "composer found"
-} else {
-    Write-Output "composer skipped (not found)"
-}
+& composer --version

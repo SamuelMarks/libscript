@@ -1,15 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'cmake' stack.
+Test suite for the cmake component.
 
 .DESCRIPTION
-Execute this script to run the test suite for cmake.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command cmake -ErrorAction SilentlyContinue) {
-    cmake --version
-} else {
-    Write-Host "cmake skipped (not found)"
-}
+cmake --version

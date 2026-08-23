@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'pip' stack.
+Test suite for the pip component.
 
 .DESCRIPTION
-Execute this script to run the test suite for pip.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command pip -ErrorAction SilentlyContinue) {
-    pip --version
-    Write-Output "pip found"
-} else {
-    Write-Output "pip skipped (not found)"
-}
+& pip --version

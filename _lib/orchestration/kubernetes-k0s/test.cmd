@@ -1,11 +1,14 @@
 @echo off
-:: # test.cmd
-::
-:: ## Overview
-:: Test suite for k0s on Windows.
-::
-:: ## Usage
-:: Automatically invoked by the test framework to assert k0s is accessible.
+rem ## Overview
+rem Test suite for the kubernetes-k0s component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-setlocal EnableDelayedExpansion
-call "%~dp0\..\..\_common\test_base.cmd" :assert_version "kubernetes-k0s" "."
+setlocal enabledelayedexpansion
+
+if exist "%~dp0cli.cmd" (
+    call "%~dp0cli.cmd" --help >nul
+) else (
+    exit /b 0
+)

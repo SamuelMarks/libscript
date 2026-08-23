@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'csharp' stack.
+Test suite for the csharp component.
 
 .DESCRIPTION
-Execute this script to run the test suite for csharp.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command csharp -ErrorAction SilentlyContinue) {
-    csharp --version
-    Write-Output "csharp found"
-} else {
-    Write-Output "csharp skipped (not found)"
-}
+dotnet --version

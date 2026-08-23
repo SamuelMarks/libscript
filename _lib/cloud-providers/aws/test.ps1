@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'aws' stack.
+Test suite for the aws component.
 
 .DESCRIPTION
-Execute this script to run the test suite for aws.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/cloud-providers/aws test skipped"
+& aws --version

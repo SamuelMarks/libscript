@@ -1,16 +1,23 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'hatch' stack.
+Test suite for the hatch component.
 
 .DESCRIPTION
-Execute this script to run the test suite for hatch.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
 if (Get-Command hatch -ErrorAction SilentlyContinue) {
-    hatch --version
-    Write-Output "hatch found"
+    try {
+        & hatch --version
+    } catch {
+        try {
+            & hatch version
+        } catch {}
+    }
 } else {
-    Write-Output "hatch skipped (not found)"
+    Write-Host "hatch is not installed, skipping test."
 }

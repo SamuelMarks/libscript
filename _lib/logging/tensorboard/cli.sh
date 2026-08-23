@@ -10,11 +10,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -27,6 +27,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+COMP_DIR="$SCRIPT_DIR"
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(cd "${SCRIPT_DIR}/../../.." && pwd)}"
 
 for LIB in _lib/_common/pkg_mgr.sh _lib/_common/log.sh; do
@@ -35,20 +36,12 @@ for LIB in _lib/_common/pkg_mgr.sh _lib/_common/log.sh; do
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 done
+SCRIPT_DIR="$COMP_DIR"
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   printf '%s\n' "Usage: $0 <action> [args...]"
   printf '%s\n' "See README.md for details."
   exit 0
-fi
-
-if ! command -v tensorboard >/dev/null 2>&1; then
-  if [ -x "${LIBSCRIPT_ROOT_DIR}/installed/tensorboard/bin/tensorboard" ]; then
-    export PATH="${LIBSCRIPT_ROOT_DIR}/installed/tensorboard/bin:${PATH}"
-  else
-    log_error "tensorboard not found. Please install the logging/tensorboard component first."
-    exit 1
-  fi
 fi
 
 ACTION="${1:-}"
@@ -57,11 +50,18 @@ case "$ACTION" in
   start)
     LOGDIR="${2:-/tmp/logs}"
     PORT="${3:-6006}"
+    # Ensure tensorboard is available
+    if ! command -v tensorboard >/dev/null 2>&1; then
+      log_error "tensorboard not found. Please install the logging/tensorboard component first."
+      exit 1
+    fi
     log_info "Starting TensorBoard on port $PORT tracking $LOGDIR..."
     tensorboard --logdir="$LOGDIR" --port="$PORT" --host=0.0.0.0
     ;;
   *)
-    log_error "Unknown action: $ACTION. Supported: start."
-    exit 1
+    export PACKAGE_NAME="tensorboard"
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/component_core.sh"
+    export SCRIPT_NAME
+    . "${SCRIPT_NAME}"
     ;;
 esac

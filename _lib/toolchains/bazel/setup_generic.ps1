@@ -130,7 +130,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:BAZEL_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for bazel."
+            Write-Error "No download URL or cache available for bazel."
+            exit 1
         }
     } else {
         Write-Output "bazel $CompVersion is already installed."

@@ -130,7 +130,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:ARIA2_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for aria2."
+            Write-Error "No download URL or cache available for aria2."
+            exit 1
         }
     } else {
         Write-Output "aria2 $CompVersion is already installed."

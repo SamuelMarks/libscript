@@ -8,7 +8,7 @@
     "UV_INSTALL_METHOD": {
       "description": "How to install UV. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
-      "default": "libscript_native"
+      "default": "system"
     },
     "UV_VERSION": {
       "description": "Specific version of uv to install.",

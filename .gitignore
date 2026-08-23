@@ -1,3 +1,4 @@
+*.bak
 ### Core Files (Protected) ###
 # These files are essential for the project and should never be ignored.
 !libscript.sh
@@ -245,3 +246,4 @@ all_scripts.txt
 # Python scripts generated during investigation/refactoring
 /*.py
 !/scripts/*.py
+tests_tmp/

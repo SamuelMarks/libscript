@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:ELIXIR_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for elixir."
+            Write-Error "No download URL or cache available for elixir."
+            exit 1
         }
     } else {
         Write-Output "elixir $CompVersion is already installed."

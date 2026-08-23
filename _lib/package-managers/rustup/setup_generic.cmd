@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\rustup.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for rustup.
+        exit /b 1
     )
 ) else (
     echo rustup %RUSTUP_VERSION% is already installed.

@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:POETRY_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for poetry."
+            Write-Error "No download URL or cache available for poetry."
+            exit 1
         }
     } else {
         Write-Output "poetry $CompVersion is already installed."

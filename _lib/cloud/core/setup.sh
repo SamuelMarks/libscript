@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -34,11 +34,11 @@ LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
 action="${ACTION:-}"
 
 # Load JSON variables for tags/filtering if present
-FILTER_TAG=""
+export FILTER_TAG=""
 for arg in "$@"; do
   case "$arg" in
-    --tags=*) FILTER_TAG="${arg#*=}" ;;
-    *=*) FILTER_TAG="$arg" ;;
+    --tags=*) export FILTER_TAG="${arg#*=}" ;;
+    *=*) export FILTER_TAG="$arg" ;;
   esac
 done
 

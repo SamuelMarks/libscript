@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\hatch.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for hatch.
+        exit /b 1
     )
 ) else (
     echo hatch %HATCH_VERSION% is already installed.

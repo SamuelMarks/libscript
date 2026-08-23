@@ -1,6 +1,14 @@
 @echo off
-:: ## Overview
-:: Windows stub for test of kubernetes
-:: 
-:: ## Usage
-:: Execute this script to perform operations for kubernetes.
+rem ## Overview
+rem Test suite for the kubernetes component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
+
+setlocal enabledelayedexpansion
+
+if exist "%~dp0cli.cmd" (
+    call "%~dp0cli.cmd" --help >nul
+) else (
+    exit /b 0
+)

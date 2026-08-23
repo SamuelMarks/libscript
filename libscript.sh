@@ -12,11 +12,11 @@ unset SCRIPT_NAME
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -211,14 +211,14 @@ case "$CMD" in
 esac
 
 IS_ACTION=0
-REQ_VERSION=0
+export REQ_VERSION=0
 case "$CMD" in
   install|install-service|uninstall-service|use|download)
-    IS_ACTION=1; REQ_VERSION=1 ;;
+    IS_ACTION=1; export REQ_VERSION=1 ;;
   remove|uninstall|status|health|test|ls|ls-remote|start|stop|restart|logs|up|down)
     IS_ACTION=1 ;;
   run|which|exec|env|serve|route|info)
-    IS_ACTION=1; REQ_VERSION=1 ;;
+    IS_ACTION=1; export REQ_VERSION=1 ;;
 esac
 
 ACTION_PKG="$CMD"

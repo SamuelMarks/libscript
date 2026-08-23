@@ -1,15 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'lighttpd' stack.
+Test suite for the lighttpd component.
 
 .DESCRIPTION
-Execute this script to run the test suite for lighttpd.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command lighttpd -ErrorAction SilentlyContinue) {
-    lighttpd -v
-} else {
-    Write-Host "lighttpd skipped (not found)"
-}
+& lighttpd --version

@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\go-pm.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for go-pm.
+        exit /b 1
     )
 ) else (
     echo go-pm %GO_PM_VERSION% is already installed.

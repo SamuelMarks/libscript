@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\cabal.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for cabal.
+        exit /b 1
     )
 ) else (
     echo cabal %CABAL_VERSION% is already installed.

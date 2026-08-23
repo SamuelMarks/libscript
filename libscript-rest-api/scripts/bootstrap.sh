@@ -8,14 +8,23 @@
 
 set -feu
 
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
+  printf '%s\n' "Usage: $(basename "$0")"
+  printf '%s\n' "Dependency resolution script for bootstrapping the libscript REST API development environment."
+  printf '\n'
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
+  exit 0
+fi
+
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi

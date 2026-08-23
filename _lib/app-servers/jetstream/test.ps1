@@ -1,15 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'jetstream' stack.
+Test suite for the jetstream component.
 
 .DESCRIPTION
-Execute this script to run the test suite for jetstream.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command huggingface_hub -ErrorAction SilentlyContinue) {
-    huggingface_hub --version
-} else {
-    Write-Host "huggingface_hub skipped (not found)"
-}
+& jetstream --version

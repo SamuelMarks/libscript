@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\vfox.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for vfox.
+        exit /b 1
     )
 ) else (
     echo vfox %VFOX_VERSION% is already installed.

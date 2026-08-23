@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -29,7 +29,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-DIR="${SCRIPT_DIR}"
+export DIR="${SCRIPT_DIR}"
 
 # Delegate core WP setup
 for LIB in "stacks/cms/wordpress/setup_generic.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
@@ -50,14 +50,14 @@ if [ ! -d "${PLUGIN_DIR}" ]; then
   libscript_depends 'unzip'
   printf '%s\n' "Downloading WooCommerce (${WOOCOMMERCE_VERSION}) to ${WOOCOMMERCE_WWWROOT}..."
   if [ "${WOOCOMMERCE_VERSION}" = "latest" ]; then
-    dl_url="https://downloads.wordpress.org/plugin/woocommerce.zip"
+    dl_export url="https://downloads.wordpress.org/plugin/woocommerce.zip"
   else
-    dl_url="https://downloads.wordpress.org/plugin/woocommerce.${WOOCOMMERCE_VERSION}.zip"
+    dl_export url="https://downloads.wordpress.org/plugin/woocommerce.${WOOCOMMERCE_VERSION}.zip"
   fi
 
   tmp_woo=$(mktemp)
   if command -v libscript_download >/dev/null 2>&1; then
-    libscript_download "${dl_url}" "${tmp_woo}"
+    libscript_download "${dl_url:-}" "${tmp_woo}"
   else
     wget -qO "${tmp_woo}" "${dl_url}"
   fi

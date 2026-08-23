@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:AQUA_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for aqua."
+            Write-Error "No download URL or cache available for aqua."
+            exit 1
         }
     } else {
         Write-Output "aqua $CompVersion is already installed."

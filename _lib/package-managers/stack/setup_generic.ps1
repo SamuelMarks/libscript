@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:STACK_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for stack."
+            Write-Error "No download URL or cache available for stack."
+            exit 1
         }
     } else {
         Write-Output "stack $CompVersion is already installed."

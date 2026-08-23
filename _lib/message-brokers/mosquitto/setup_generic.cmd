@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\mosquitto.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for mosquitto.
+        exit /b 1
     )
 ) else (
     echo mosquitto %MOSQUITTO_VERSION% is already installed.

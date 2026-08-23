@@ -13,11 +13,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -35,4 +35,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 
 RUSTUP_VERSION="${RUSTUP_VERSION:-latest}"
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/rustup/${RUSTUP_VERSION}/bin:${PATH}"
+export RUSTUP_HOME="${LIBSCRIPT_HOME:-$HOME/.libscript}/rustup/${RUSTUP_VERSION}/.rustup"
+export CARGO_HOME="${LIBSCRIPT_HOME:-$HOME/.libscript}/rustup/${RUSTUP_VERSION}/.cargo"
+export PATH="$CARGO_HOME/bin:${PATH}"
+

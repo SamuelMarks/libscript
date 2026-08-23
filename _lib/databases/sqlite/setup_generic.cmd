@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\sqlite.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for sqlite.
+        exit /b 1
     )
 ) else (
     echo sqlite %SQLITE_VERSION% is already installed.

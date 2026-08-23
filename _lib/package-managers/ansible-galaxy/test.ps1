@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'ansible-galaxy' stack.
+Test suite for the ansible-galaxy component.
 
 .DESCRIPTION
-Execute this script to run the test suite for ansible-galaxy.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command ansible-galaxy -ErrorAction SilentlyContinue) {
-    ansible-galaxy --version
-    Write-Output "ansible-galaxy found"
-} else {
-    Write-Output "ansible-galaxy skipped (not found)"
-}
+& ansible-galaxy --version

@@ -18,9 +18,11 @@ if "%DOWNLOAD_DIR%"=="" (
 :: Resolve install method
 if "%APT_INSTALL_METHOD%"=="" (
     if not "%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"=="" (
-        set "APT_INSTALL_METHOD=%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"
+        if not defined APT_INSTALL_METHOD set "APT_INSTALL_METHOD=system"
+set "APT_INSTALL_METHOD=%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"
     ) else (
-        set "APT_INSTALL_METHOD=libscript_native"
+        if not defined APT_INSTALL_METHOD set "APT_INSTALL_METHOD=system"
+set "APT_INSTALL_METHOD=libscript_native"
     )
 )
 
@@ -135,6 +137,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\apt.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for apt.
+        exit /b 1
     )
 ) else (
     echo apt %APT_VERSION% is already installed.

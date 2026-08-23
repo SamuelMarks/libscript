@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:NVM_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for nvm."
+            Write-Error "No download URL or cache available for nvm."
+            exit 1
         }
     } else {
         Write-Output "nvm $CompVersion is already installed."

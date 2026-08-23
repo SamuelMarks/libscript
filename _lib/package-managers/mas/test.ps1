@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'mas' stack.
+Test suite for the mas component.
 
 .DESCRIPTION
-Execute this script to run the test suite for mas.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command mas -ErrorAction SilentlyContinue) {
-    mas --version
-    Write-Output "mas found"
-} else {
-    Write-Output "mas skipped (not found)"
-}
+& mas --version

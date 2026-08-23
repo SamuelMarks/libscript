@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\caddy.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for caddy.
+        exit /b 1
     )
 ) else (
     echo caddy %CADDY_VERSION% is already installed.

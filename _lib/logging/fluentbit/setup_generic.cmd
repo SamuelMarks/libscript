@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\fluentbit.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for fluentbit.
+        exit /b 1
     )
 ) else (
     echo fluentbit %FLUENTBIT_VERSION% is already installed.

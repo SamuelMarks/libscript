@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'pyenv' stack.
+Test suite for the pyenv component.
 
 .DESCRIPTION
-Execute this script to run the test suite for pyenv.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command pyenv -ErrorAction SilentlyContinue) {
-    pyenv --version
-    Write-Output "pyenv found"
-} else {
-    Write-Output "pyenv skipped (not found)"
-}
+& pyenv --version

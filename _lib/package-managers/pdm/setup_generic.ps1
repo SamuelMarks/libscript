@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:PDM_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for pdm."
+            Write-Error "No download URL or cache available for pdm."
+            exit 1
         }
     } else {
         Write-Output "pdm $CompVersion is already installed."

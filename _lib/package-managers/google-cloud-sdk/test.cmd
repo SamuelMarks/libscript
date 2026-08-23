@@ -1,12 +1,16 @@
 @echo off
-:: # test.cmd
-::
-:: ## Overview
-:: Testing script for the google-cloud-sdk component on Windows.
-:: It verifies that the component is installed correctly and responds as expected.
-::
-:: ## Usage
-:: Execute this script to run tests for the component.
+rem ## Overview
+rem Test suite for the google-cloud-sdk component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-setlocal EnableDelayedExpansion
-call "%~dp0\..\..\_lib\_common\test_base.cmd"
+setlocal enabledelayedexpansion
+
+where gcloud >nul 2>nul
+if %errorlevel% neq 0 (
+  echo gcloud is not installed, skipping test.
+  exit /b 0
+)
+
+gcloud --version

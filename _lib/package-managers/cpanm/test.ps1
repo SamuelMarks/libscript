@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'cpanm' stack.
+Test suite for the cpanm component.
 
 .DESCRIPTION
-Execute this script to run the test suite for cpanm.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command cpanm -ErrorAction SilentlyContinue) {
-    cpanm --version
-    Write-Output "cpanm found"
-} else {
-    Write-Output "cpanm skipped (not found)"
-}
+& cpanm --version

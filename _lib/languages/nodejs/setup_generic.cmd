@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\nodejs.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for nodejs.
+        exit /b 1
     )
 ) else (
     echo nodejs %NODEJS_VERSION% is already installed.

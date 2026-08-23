@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:YARN_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for yarn."
+            Write-Error "No download URL or cache available for yarn."
+            exit 1
         }
     } else {
         Write-Output "yarn $CompVersion is already installed."

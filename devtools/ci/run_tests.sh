@@ -8,15 +8,25 @@
 # Optionally pass the target OS as the first argument (e.g., ubuntu-latest).
 
 set -e
+
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
+  printf '%s\n' "Usage: $(basename "$0") [os_name]"
+  printf '%s\n' "Runs CI tests strictly for toolchains and databases components."
+  printf '\n'
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
+  exit 0
+fi
+
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -56,7 +66,7 @@ done
 export TARGET_OS
 export FAILED_COMPONENTS_FILE
 # xargs with parallel jobs
-if ! printf '%s\n' "$COMPONENTS" | tr ' ' '\n' | xargs -n 1 -P 4 -I {} sh -c 'devtools/ci/run_test_component.sh "{}" "$TARGET_OS" || echo "{}" >> "$FAILED_COMPONENTS_FILE"'; then
+if ! printf '%s\n' "$COMPONENTS" | tr ' ' '\n' | xargs -n 1 -P 4 -I {} sh -c "devtools/ci/run_test_component.sh \"{}\" \"\$TARGET_OS\" || echo \"{}\" >> \"\$FAILED_COMPONENTS_FILE\""; then
   printf '%s\n' "Error running xargs"
 fi
 

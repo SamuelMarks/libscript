@@ -1,12 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'duckdb' stack.
+Test suite for the duckdb component.
 
 .DESCRIPTION
-Execute this script to run the test suite for duckdb.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
-# PowerShell placeholder script
-Write-Host "Script not implemented for PowerShell natively."
-exit 1
+
+duckdb -c "SELECT 1;"

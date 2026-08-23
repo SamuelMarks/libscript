@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'systemd' stack.
+Test suite for the systemd component.
 
 .DESCRIPTION
-Execute this script to run the test suite for systemd.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/init-systems/systemd test skipped"
+& systemd --version

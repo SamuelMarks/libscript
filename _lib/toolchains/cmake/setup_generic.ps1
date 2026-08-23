@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:CMAKE_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for cmake."
+            Write-Error "No download URL or cache available for cmake."
+            exit 1
         }
     } else {
         Write-Output "cmake $CompVersion is already installed."

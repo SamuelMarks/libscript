@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'maven' stack.
+Test suite for the maven component.
 
 .DESCRIPTION
-Execute this script to run the test suite for maven.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command maven -ErrorAction SilentlyContinue) {
-    maven --version
-    Write-Output "maven found"
-} else {
-    Write-Output "maven skipped (not found)"
-}
+mvn --version

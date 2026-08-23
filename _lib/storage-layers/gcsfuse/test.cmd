@@ -1,10 +1,10 @@
-:: # test.cmd
-::
-:: ## Overview
-:: Testing script for the gcsfuse component on Windows.
-:: It verifies that the component is installed correctly and responds as expected.
-::
-:: ## Usage
-:: Execute this script to run tests for the component.
+@echo off
+rem ## Overview
+rem Test suite for the gcsfuse component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-call "%~dp0\..\..\..\_lib\_common\test_base.cmd"
+setlocal enabledelayedexpansion
+
+gcsfuse --version

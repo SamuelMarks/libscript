@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'elixir' stack.
+Test suite for the elixir component.
 
 .DESCRIPTION
-Execute this script to run the test suite for elixir.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command elixir -ErrorAction SilentlyContinue) {
-    elixir --version
-    Write-Output "elixir found"
-} else {
-    Write-Output "elixir skipped (not found)"
-}
+elixir -e "IO.puts('hello world!')"

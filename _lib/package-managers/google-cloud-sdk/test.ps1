@@ -1,11 +1,17 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'google-cloud-sdk' stack.
+Test suite for the google-cloud-sdk component.
 
 .DESCRIPTION
-Execute this script to run the test suite for google-cloud-sdk.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/package-managers/google-cloud-sdk test skipped"
+if (Get-Command gcloud -ErrorAction SilentlyContinue) {
+    & gcloud --version
+} else {
+    Write-Host "gcloud is not installed, skipping test."
+}

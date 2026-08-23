@@ -9,11 +9,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -27,7 +27,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-DIR="${SCRIPT_DIR}"
+export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
@@ -41,7 +41,8 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/versioning.sh"; do
   . "${SCRIPT_NAME}"
 done
 
-SEVENZIP_INSTALL_METHOD="$(libscript_resolve_install_method "SEVENZIP")"
+SEVENZIP_INSTALL_METHOD="${SEVENZIP_INSTALL_METHOD:-system}"
+SEVENZIP_INSTALL_METHOD="$(LIBSCRIPT_DEFAULT_INSTALL_METHOD="$SEVENZIP_INSTALL_METHOD" libscript_resolve_install_method "SEVENZIP")"
 SEVENZIP_VERSION="${SEVENZIP_VERSION:-latest}"
 ACTION="${ACTION:-install}"
 
@@ -133,7 +134,7 @@ case "$ACTION" in
     fi
     exit 0
     ;;
-  install|*)
+  install)
 
     if [ "${SEVENZIP_INSTALL_METHOD}" = "system" ]; then
       libscript_depends '7zip'
@@ -184,11 +185,8 @@ case "$ACTION" in
           fi
           rm -f "${TEMP_FILE}"
         else
-          log_warn "No download URL provided for 7zip ${VERSION:-}."
-          # Fallback to mock
-          printf '%s\n' "#!/bin/sh" > "${TARGET_DIR}/bin/7zip"
-          printf '%s\n' "printf '%s\n' 'Mock 7zip executable for version ${EXACT_VERSION}'" >> "${TARGET_DIR}/bin/7zip"
-          chmod +x "${TARGET_DIR}/bin/7zip"
+          log_error "No download URL provided for 7zip ${VERSION:-}."
+          exit 1
         fi
       fi
       

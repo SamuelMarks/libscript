@@ -130,7 +130,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:HUGGINGFACE_CLI_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for huggingface-cli."
+            Write-Error "No download URL or cache available for huggingface-cli."
+            exit 1
         }
     } else {
         Write-Output "huggingface-cli $CompVersion is already installed."

@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:NIMBLE_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for nimble."
+            Write-Error "No download URL or cache available for nimble."
+            exit 1
         }
     } else {
         Write-Output "nimble $CompVersion is already installed."

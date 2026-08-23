@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'rustup' stack.
+Test suite for the rustup component.
 
 .DESCRIPTION
-Execute this script to run the test suite for rustup.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command rustup -ErrorAction SilentlyContinue) {
-    rustup --version
-    Write-Output "rustup found"
-} else {
-    Write-Output "rustup skipped (not found)"
-}
+& rustup --version

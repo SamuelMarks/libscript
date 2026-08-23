@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:ANSIBLE_GALAXY_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for ansible-galaxy."
+            Write-Error "No download URL or cache available for ansible-galaxy."
+            exit 1
         }
     } else {
         Write-Output "ansible-galaxy $CompVersion is already installed."

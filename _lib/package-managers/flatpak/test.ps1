@@ -1,16 +1,17 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'flatpak' stack.
+Test suite for the flatpak component.
 
 .DESCRIPTION
-Execute this script to run the test suite for flatpak.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
 if (Get-Command flatpak -ErrorAction SilentlyContinue) {
-    flatpak --version
-    Write-Output "flatpak found"
+    & flatpak --version
 } else {
-    Write-Output "flatpak skipped (not found)"
+    Write-Host "flatpak is not installed, skipping test."
 }

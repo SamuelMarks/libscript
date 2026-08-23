@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'python-server' stack.
+Test suite for the python-server component.
 
 .DESCRIPTION
-Execute this script to run the test suite for python-server.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/languages/python-server test skipped"
+& python-server --version

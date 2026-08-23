@@ -130,7 +130,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:XPK_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for xpk."
+            Write-Error "No download URL or cache available for xpk."
+            exit 1
         }
     } else {
         Write-Output "xpk $CompVersion is already installed."

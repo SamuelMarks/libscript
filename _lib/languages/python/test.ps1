@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'python' stack.
+Test suite for the python component.
 
 .DESCRIPTION
-Execute this script to run the test suite for python.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command python -ErrorAction SilentlyContinue) {
-    python --version
-    Write-Output "python found"
-} else {
-    Write-Output "python skipped (not found)"
-}
+python -c "print('hello world!')"

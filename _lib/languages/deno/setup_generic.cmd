@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\deno.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for deno.
+        exit /b 1
     )
 ) else (
     echo deno %DENO_VERSION% is already installed.

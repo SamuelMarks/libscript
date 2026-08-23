@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\nats.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for nats.
+        exit /b 1
     )
 ) else (
     echo nats %NATS_VERSION% is already installed.

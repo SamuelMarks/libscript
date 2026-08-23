@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\sh.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for sh.
+        exit /b 1
     )
 ) else (
     echo sh %SH_VERSION% is already installed.

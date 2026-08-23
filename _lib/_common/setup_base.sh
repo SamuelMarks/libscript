@@ -14,11 +14,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -50,7 +50,7 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 # Source path resolution
-SCRIPT_DIR_NAME="$(dirname -- "${THIS_FILE}")"
+_SCRIPT_DIR_NAME="$(dirname -- "${THIS_FILE}")"
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/paths.sh'
 export SCRIPT_NAME
 . "${SCRIPT_NAME}"
@@ -107,6 +107,9 @@ fi
 
 # Automated netctl registration for services
 _PKG_UPPER=$(basename "${DIR}" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
+if [ "$_PKG_UPPER" = "7ZIP" ]; then _PKG_UPPER="SEVENZIP"; fi
+case "$_PKG_UPPER" in [0-9]*) _PKG_UPPER="_${_PKG_UPPER}" ;; esac
+
 eval "_LISTEN_SOCKET=\${${_PKG_UPPER}_LISTEN_SOCKET:-\${LIBSCRIPT_LISTEN_SOCKET:-}}"
 eval "_LISTEN_ADDRESS=\${${_PKG_UPPER}_LISTEN_ADDRESS:-\${LIBSCRIPT_LISTEN_ADDRESS:-}}"
 eval "_LISTEN_PORT=\${${_PKG_UPPER}_LISTEN_PORT:-\${LIBSCRIPT_LISTEN_PORT:-}}"

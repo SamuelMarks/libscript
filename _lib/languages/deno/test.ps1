@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'deno' stack.
+Test suite for the deno component.
 
 .DESCRIPTION
-Execute this script to run the test suite for deno.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command deno -ErrorAction SilentlyContinue) {
-    deno --version
-    Write-Output "deno found"
-} else {
-    Write-Output "deno skipped (not found)"
-}
+deno --version

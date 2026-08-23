@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\pipx.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for pipx.
+        exit /b 1
     )
 ) else (
     echo pipx %PIPX_VERSION% is already installed.

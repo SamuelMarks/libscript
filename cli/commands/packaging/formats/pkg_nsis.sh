@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -69,7 +69,7 @@ EOF2
       printf '%s\n' "Include nsDialogs.nsh"
       printf '%s\n' "Page components"
 
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
@@ -93,7 +93,7 @@ EOF2
       printf '%s\n' "Page instfiles"
       printf '%s\n' ""
 
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "Section \"$pkg\" SEC_$pkg"
@@ -116,7 +116,7 @@ EOF2
         printf '%s\n' "SectionEnd"
       done
 
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
@@ -157,7 +157,7 @@ EOF2
             printf '%s\n' "$vars_json" | jq -r '.key' | while read -r varname; do
               printf '%s\n' "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
 
-              if case "$varname" in *"_PORT"* | *"_PORT_SECURE"*) true;; *) false;; esac; then
+              if case "$varname" in *"_PORT"*) true;; *) false;; esac; then
                 printf '%s\n' "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
                 printf '%s\n' "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"
                 printf '%s\n' "  Pop \$0"
@@ -314,7 +314,7 @@ EOF2
       printf '%s\n' "    \${EndIf}"
       printf '%s\n' "    Var /GLOBAL PkgArgs"
       printf '%s\n' "    StrCpy \$PkgArgs \"\""
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "    SectionGetFlags \${SEC_$pkg} \$0"
@@ -332,7 +332,7 @@ EOF2
       printf '%s\n' "SectionEnd"
       # Uninstaller
       printf '%s\n' "Section \"Uninstall\""
-      set -- $deps_list
+      set -- "$deps_list"
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "  MessageBox MB_YESNO \"Do you want to completely remove the Data Directory and all records for $pkg?\" IDYES purge_$pkg IDNO keep_$pkg"

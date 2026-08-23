@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'scoop' stack.
+Test suite for the scoop component.
 
 .DESCRIPTION
-Execute this script to run the test suite for scoop.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command scoop -ErrorAction SilentlyContinue) {
-    scoop --version
-    Write-Output "scoop found"
-} else {
-    Write-Output "scoop skipped (not found)"
-}
+& scoop --version

@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\rye.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for rye.
+        exit /b 1
     )
 ) else (
     echo rye %RYE_VERSION% is already installed.

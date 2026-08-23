@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'awscli' stack.
+Test suite for the awscli component.
 
 .DESCRIPTION
-Execute this script to run the test suite for awscli.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/package-managers/awscli test skipped"
+& aws --version

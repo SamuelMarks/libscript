@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\yay.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for yay.
+        exit /b 1
     )
 ) else (
     echo yay %YAY_VERSION% is already installed.

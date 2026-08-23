@@ -218,7 +218,10 @@ switch ($Action) {
             if (-not [string]::IsNullOrEmpty($env:PYTHON_VENV)) {
                 $VenvDir = $env:PYTHON_VENV
                 if (-not (Test-Path "$VenvDir\Scripts\python.exe")) {
-                    & $PyExe -m venv $VenvDir
+                    $PythonEnvCmd = Join-Path $LibscriptRootDir "_lib\_common\python_env.cmd"
+                    & cmd.exe /c "call `"$PythonEnvCmd`" libscript_python_venv `"$VenvDir`" `"$ExactVersion`""
+                    if ($LASTEXITCODE -ne 0) { throw "Virtual environment creation failed." }
+                    
                     & "$VenvDir\Scripts\python.exe" -m pip install -U pip setuptools wheel
                     
                     $ML_ACCELERATOR = $env:ML_ACCELERATOR_BACKEND

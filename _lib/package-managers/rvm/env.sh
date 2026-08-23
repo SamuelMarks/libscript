@@ -13,11 +13,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -35,4 +35,13 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 
 RVM_VERSION="${RVM_VERSION:-latest}"
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/rvm/${RVM_VERSION}/bin:${PATH}"
+export rvm_path="${LIBSCRIPT_HOME:-$HOME/.libscript}/rvm/${RVM_VERSION}"
+export PATH="$rvm_path/bin:${PATH}"
+if [ -s "$rvm_path/scripts/rvm" ]; then
+  # shellcheck disable=SC1091
+  if [ -n "${BASH_VERSION:-}" ] || [ -n "${ZSH_VERSION:-}" ]; then
+    . "$rvm_path/scripts/rvm"
+  fi
+
+fi
+

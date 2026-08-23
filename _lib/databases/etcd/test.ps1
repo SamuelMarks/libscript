@@ -1,18 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'etcd' stack.
+Test suite for the etcd component.
 
 .DESCRIPTION
-Execute this script to run the test suite for etcd.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-#!/usr/bin/env pwsh
-if (Get-Command etcd -ErrorAction SilentlyContinue) {
-    Write-Host "etcd is installed."
-    exit 0
-} else {
-    Write-Host "etcd is NOT installed."
-    exit 1
-}
+etcdctl version

@@ -1,11 +1,14 @@
 @echo off
-:: # test.cmd
-::
-:: ## Overview
-:: Test suite for Kafka on Windows.
-::
-:: ## Usage
-:: Automatically invoked by the test framework to assert kafka is accessible.
+rem ## Overview
+rem Test suite for the kafka component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-setlocal EnableDelayedExpansion
-call "%~dp0\..\..\_common\test_base.cmd" :assert_version "kafka-server-start.sh" "."
+setlocal enabledelayedexpansion
+
+if exist "%~dp0cli.cmd" (
+    call "%~dp0cli.cmd" --help >nul
+) else (
+    exit /b 0
+)

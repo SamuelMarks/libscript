@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'conan' stack.
+Test suite for the conan component.
 
 .DESCRIPTION
-Execute this script to run the test suite for conan.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command conan -ErrorAction SilentlyContinue) {
-    conan --version
-    Write-Output "conan found"
-} else {
-    Write-Output "conan skipped (not found)"
-}
+& conan --version

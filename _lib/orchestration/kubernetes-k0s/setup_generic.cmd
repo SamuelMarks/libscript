@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\kubernetes-k0s.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for kubernetes-k0s.
+        exit /b 1
     )
 ) else (
     echo kubernetes-k0s %KUBERNETES_K0S_VERSION% is already installed.

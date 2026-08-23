@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:CORE_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for core."
+            Write-Error "No download URL or cache available for core."
+            exit 1
         }
     } else {
         Write-Output "core $CompVersion is already installed."

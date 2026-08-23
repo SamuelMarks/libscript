@@ -1,12 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'gke-tpu-cluster' stack.
+Test suite for the gke-tpu-cluster component.
 
 .DESCRIPTION
-Execute this script to run the test suite for gke-tpu-cluster.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
-# PowerShell placeholder script
-Write-Host "Script not implemented for PowerShell natively."
-exit 1
+
+& gke-tpu-cluster --version

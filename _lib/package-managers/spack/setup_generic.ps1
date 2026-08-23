@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:SPACK_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for spack."
+            Write-Error "No download URL or cache available for spack."
+            exit 1
         }
     } else {
         Write-Output "spack $CompVersion is already installed."

@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:SWIFT_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for swift."
+            Write-Error "No download URL or cache available for swift."
+            exit 1
         }
     } else {
         Write-Output "swift $CompVersion is already installed."

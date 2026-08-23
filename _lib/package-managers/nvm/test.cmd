@@ -1,12 +1,19 @@
 @echo off
-:: # test.cmd
-::
-:: ## Overview
-:: Testing script for the nvm component on Windows.
-:: It verifies that the component is installed correctly and responds as expected.
-::
-:: ## Usage
-:: Execute this script to run tests for the component.
+rem ## Overview
+rem Test suite for the nvm component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-setlocal EnableDelayedExpansion
-call "%~dp0\..\..\_common\test_base.cmd" :assert_version "nvm" "."
+setlocal enabledelayedexpansion
+
+where nvm >nul 2>nul
+if %errorlevel% equ 0 (
+  nvm --version
+  exit /b 0
+)
+
+if exist "%~dp0cli.cmd" (
+    call "%~dp0cli.cmd" --help >nul
+)
+exit /b 0

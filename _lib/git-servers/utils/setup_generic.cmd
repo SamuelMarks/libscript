@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\utils.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for utils.
+        exit /b 1
     )
 ) else (
     echo utils %UTILS_VERSION% is already installed.

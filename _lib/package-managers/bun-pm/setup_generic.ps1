@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:BUN_PM_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for bun-pm."
+            Write-Error "No download URL or cache available for bun-pm."
+            exit 1
         }
     } else {
         Write-Output "bun-pm $CompVersion is already installed."

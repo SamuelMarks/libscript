@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\fnm.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for fnm.
+        exit /b 1
     )
 ) else (
     echo fnm %FNM_VERSION% is already installed.

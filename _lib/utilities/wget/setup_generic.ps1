@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:WGET_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for wget."
+            Write-Error "No download URL or cache available for wget."
+            exit 1
         }
     } else {
         Write-Output "wget $CompVersion is already installed."

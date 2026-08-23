@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\kafka.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for kafka.
+        exit /b 1
     )
 ) else (
     echo kafka %KAFKA_VERSION% is already installed.

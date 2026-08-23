@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\r.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for r.
+        exit /b 1
     )
 ) else (
     echo r %R_VERSION% is already installed.

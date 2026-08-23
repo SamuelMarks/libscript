@@ -1,9 +1,14 @@
-:: # test.cmd
-::
-:: ## Overview
-:: Test suite for TensorBoard on Windows.
-::
-:: ## Usage
-:: Automatically invoked by the test framework.
+@echo off
+rem ## Overview
+rem Test suite for the tensorboard component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-call "%~dp0\..\..\..\_lib\_common\test_base.cmd"
+setlocal enabledelayedexpansion
+
+if exist "%~dp0cli.cmd" (
+    call "%~dp0cli.cmd" --help >nul
+) else (
+    exit /b 0
+)

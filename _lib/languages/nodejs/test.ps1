@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'nodejs' stack.
+Test suite for the nodejs component.
 
 .DESCRIPTION
-Execute this script to run the test suite for nodejs.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command nodejs -ErrorAction SilentlyContinue) {
-    nodejs --version
-    Write-Output "nodejs found"
-} else {
-    Write-Output "nodejs skipped (not found)"
-}
+node -e "console.log('hello world!')"

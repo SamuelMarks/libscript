@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'jq' stack.
+Test suite for the jq component.
 
 .DESCRIPTION
-Execute this script to run the test suite for jq.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command jq -ErrorAction SilentlyContinue) {
-    jq --version
-    Write-Output "jq found"
-} else {
-    Write-Output "jq skipped (not found)"
-}
+& jq --version

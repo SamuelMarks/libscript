@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\gcp.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for gcp.
+        exit /b 1
     )
 ) else (
     echo gcp %GCP_VERSION% is already installed.

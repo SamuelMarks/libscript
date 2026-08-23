@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:CARGO_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for cargo."
+            Write-Error "No download URL or cache available for cargo."
+            exit 1
         }
     } else {
         Write-Output "cargo $CompVersion is already installed."

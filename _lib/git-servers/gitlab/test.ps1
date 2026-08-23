@@ -1,15 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'gitlab' stack.
+Test suite for the gitlab component.
 
 .DESCRIPTION
-Execute this script to run the test suite for gitlab.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command gitlab -ErrorAction SilentlyContinue) {
-    gitlab-ctl status
-} else {
-    Write-Host "gitlab skipped (not found)"
-}
+& gitlab --version

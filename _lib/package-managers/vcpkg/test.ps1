@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'vcpkg' stack.
+Test suite for the vcpkg component.
 
 .DESCRIPTION
-Execute this script to run the test suite for vcpkg.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command vcpkg -ErrorAction SilentlyContinue) {
-    vcpkg --version
-    Write-Output "vcpkg found"
-} else {
-    Write-Output "vcpkg skipped (not found)"
-}
+& vcpkg --version

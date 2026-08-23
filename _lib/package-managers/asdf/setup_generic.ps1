@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:ASDF_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for asdf."
+            Write-Error "No download URL or cache available for asdf."
+            exit 1
         }
     } else {
         Write-Output "asdf $CompVersion is already installed."

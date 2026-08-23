@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'asdf' stack.
+Test suite for the asdf component.
 
 .DESCRIPTION
-Execute this script to run the test suite for asdf.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/package-managers/asdf test skipped"
+& asdf --version

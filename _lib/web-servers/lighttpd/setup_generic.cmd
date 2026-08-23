@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\lighttpd.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for lighttpd.
+        exit /b 1
     )
 ) else (
     echo lighttpd %LIGHTTPD_VERSION% is already installed.

@@ -34,7 +34,9 @@ if (-not (Test-Path -Path $ExePath)) {
         exit 1
     }
 
-    & python -m venv "$Prefix\venv"
+    $PythonEnvCmd = Join-Path $LibscriptRootDir "_lib\_common\python_env.cmd"
+    & cmd.exe /c "call `"$PythonEnvCmd`" libscript_python_venv `"$Prefix\venv`""
+    if ($LASTEXITCODE -ne 0) { throw "Virtual environment creation failed." }
     
     if ($XpkVersion -eq "latest") {
         & "$Prefix\venv\Scripts\pip.exe" install xpk

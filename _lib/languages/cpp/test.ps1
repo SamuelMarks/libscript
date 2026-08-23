@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'cpp' stack.
+Test suite for the cpp component.
 
 .DESCRIPTION
-Execute this script to run the test suite for cpp.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command cpp -ErrorAction SilentlyContinue) {
-    cpp --version
-    Write-Output "cpp found"
-} else {
-    Write-Output "cpp skipped (not found)"
-}
+gcc --version

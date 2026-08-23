@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\uv.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for uv.
+        exit /b 1
     )
 ) else (
     echo uv %UV_VERSION% is already installed.

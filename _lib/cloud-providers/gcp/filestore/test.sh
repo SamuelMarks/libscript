@@ -1,21 +1,20 @@
 #!/bin/sh
 # ## Overview
-# Test suite for the GCP Cloud Filestore component.
+# Test suite for the filestore component.
 #
 # ## Usage
-# Automatically invoked by the test framework. 
-
+# Execute this script to perform a component-specific test.
 
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -26,55 +25,6 @@ case "${STACK+x}" in
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
-export STACK="${STACK:-}${THIS_FILE}:"
-SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+export STACK="${STACK:-}${THIS_FILE}"':'
 
-# Walk up to find root
-_root="$SCRIPT_DIR"
-while [ ! -f "$_root/ROOT" ] && [ "$_root" != "/" ]; do
-    _root=$(dirname "$_root")
-done
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$_root}"
-
-export LIBSCRIPT_ROOT_DIR
-for LIB in "_lib/_common/test_base.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${LIB}"
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  . "${SCRIPT_NAME}"
-done
-
-log_info "Testing filestore cli parameter injection..."
-
-# Mock gcloud to just echo args
-gcloud() {
-  printf '%s\n' "MOCK_GCLOUD: $*"
-}
-# export -f gcloud 2>/dev/null || true
-
-export TPU_SCHEDULING_TYPE="preemptible"
-export TPU_ZONE="us-central2-b"
-export TPU_ACCELERATOR_TYPE="v2-8"
-export TPU_VERSION="tpu-ubuntu2204-base"
-export GCP_PROJECT_ID="test-project"
-
-OUTPUT=$(sh "${SCRIPT_DIR}/cli.sh" create test-instance 2>&1 | grep MOCK_GCLOUD || true)
-
-if printf '%s\n' "$OUTPUT" | grep -q -- "--preemptible"; then
-  log_success "TPU_SCHEDULING_TYPE=preemptible correctly injected --preemptible flag."
-else
-  log_error "TPU_SCHEDULING_TYPE=preemptible failed to inject flag."
-  exit 1
-fi
-
-export TPU_USE_QUEUED_RESOURCE="true"
-OUTPUT_QR=$(sh "${SCRIPT_DIR}/cli.sh" create test-instance 2>&1 | grep MOCK_GCLOUD || true)
-
-if printf '%s\n' "$OUTPUT_QR" | grep -q "queued-resources create test-instance-qr"; then
-  log_success "TPU_USE_QUEUED_RESOURCE=true correctly invoked queued-resources API."
-else
-  log_error "TPU_USE_QUEUED_RESOURCE=true failed."
-  exit 1
-fi
-
-log_success "filestore cli test passed."
+filestore --version

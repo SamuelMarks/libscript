@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:BUSYBOX_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for busybox."
+            Write-Error "No download URL or cache available for busybox."
+            exit 1
         }
     } else {
         Write-Output "busybox $CompVersion is already installed."

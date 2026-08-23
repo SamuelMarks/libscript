@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:KREW_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for krew."
+            Write-Error "No download URL or cache available for krew."
+            exit 1
         }
     } else {
         Write-Output "krew $CompVersion is already installed."

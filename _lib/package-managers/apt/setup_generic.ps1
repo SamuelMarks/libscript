@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:APT_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for apt."
+            Write-Error "No download URL or cache available for apt."
+            exit 1
         }
     } else {
         Write-Output "apt $CompVersion is already installed."

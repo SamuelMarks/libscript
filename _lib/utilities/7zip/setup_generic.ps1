@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:SEVENZIP_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for 7zip."
+            Write-Error "No download URL or cache available for 7zip."
+            exit 1
         }
     } else {
         Write-Output "7zip $CompVersion is already installed."

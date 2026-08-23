@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\xpk.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for xpk.
+        exit /b 1
     )
 ) else (
     echo xpk %XPK_VERSION% is already installed.

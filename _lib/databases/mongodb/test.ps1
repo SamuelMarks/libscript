@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'mongodb' stack.
+Test suite for the mongodb component.
 
 .DESCRIPTION
-Execute this script to run the test suite for mongodb.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command mongodb -ErrorAction SilentlyContinue) {
-    mongodb --version
-    Write-Output "mongodb found"
-} else {
-    Write-Output "mongodb skipped (not found)"
-}
+mongosh --eval "db.runCommand({ ping: 1 })"

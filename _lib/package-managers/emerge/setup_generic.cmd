@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\emerge.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for emerge.
+        exit /b 1
     )
 ) else (
     echo emerge %EMERGE_VERSION% is already installed.

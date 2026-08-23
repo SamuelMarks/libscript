@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\httpd.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for httpd.
+        exit /b 1
     )
 ) else (
     echo httpd %HTTPD_VERSION% is already installed.

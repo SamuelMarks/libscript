@@ -13,11 +13,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -30,6 +30,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 
+CABAL_INSTALL_METHOD="${CABAL_INSTALL_METHOD:-system}"
 CABAL_INSTALL_METHOD="$(libscript_resolve_install_method "CABAL")"
 ACTION="${ACTION:-install}"
 VERSION="${CABAL_VERSION:-latest}"
@@ -96,35 +97,15 @@ case "$ACTION" in
     fi
     exit 0
     ;;
-  install|*)
+  install)
     if [ "$CABAL_INSTALL_METHOD" = "system" ]; then
-      SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-      : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cabal/"*"${VERSION}"* >/dev/null 2>&1; then
-        log_info "Using cached cabal"
-      elif ! command -v cabal >/dev/null 2>&1; then
-        if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/ghcup/setup.sh" ]; then
-          "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/ghcup/setup.sh"
-          if [ -x "$HOME/.ghcup/bin/cabal" ]; then
-            export PATH="$HOME/.ghcup/bin:$PATH"
-          fi
-        else
-          printf "Error: Cannot find ghcup setup script to bootstrap cabal.\n" >&2
-          exit 1
-        fi
-      fi
-
-      if ! command -v cabal >/dev/null 2>&1 && [ -x "$HOME/.ghcup/bin/cabal" ]; then
-        export PATH="$HOME/.ghcup/bin:$PATH"
-      fi
-
+      libscript_depends "cabal"
     elif [ "$CABAL_INSTALL_METHOD" = "libscript_native" ]; then
-      SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-      : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
       if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cabal/"*"${VERSION}"* >/dev/null 2>&1; then
         log_info "Using cached cabal"
       elif ! command -v cabal >/dev/null 2>&1; then
         if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/ghcup/setup.sh" ]; then
+          unset SCRIPT_NAME || true
           "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/ghcup/setup.sh"
           if [ -x "$HOME/.ghcup/bin/cabal" ]; then
             export PATH="$HOME/.ghcup/bin:$PATH"

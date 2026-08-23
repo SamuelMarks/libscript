@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\flatpak.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for flatpak.
+        exit /b 1
     )
 ) else (
     echo flatpak %FLATPAK_VERSION% is already installed.

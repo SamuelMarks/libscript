@@ -13,11 +13,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -35,4 +35,10 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 
 SDKMAN_VERSION="${SDKMAN_VERSION:-latest}"
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/sdkman/${SDKMAN_VERSION}/bin:${PATH}"
+export SDKMAN_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/sdkman/${SDKMAN_VERSION:-latest}"
+if [ -n "${BASH_VERSION:-}" ] || [ -n "${ZSH_VERSION:-}" ]; then
+  if [ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]; then
+    . "$SDKMAN_DIR/bin/sdkman-init.sh" || true
+  fi
+fi
+

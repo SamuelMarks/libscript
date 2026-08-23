@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:VLLM_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for vllm."
+            Write-Error "No download URL or cache available for vllm."
+            exit 1
         }
     } else {
         Write-Output "vllm $CompVersion is already installed."

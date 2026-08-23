@@ -9,11 +9,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -27,6 +27,9 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
+export JAVA_INSTALL_METHOD="${JAVA_INSTALL_METHOD:-system}"
 JAVA_VERSION="${JAVA_VERSION:-latest}"
-export JAVA_HOME="${LIBSCRIPT_HOME:-$HOME/.libscript}/java/${JAVA_VERSION}"
-export PATH="${JAVA_HOME}/bin:${PATH}"
+if [ "$JAVA_INSTALL_METHOD" = "libscript_native" ]; then
+  export JAVA_HOME="${LIBSCRIPT_HOME:-$HOME/.libscript}/java/${JAVA_VERSION}"
+  export PATH="${JAVA_HOME}/bin:${PATH}"
+fi

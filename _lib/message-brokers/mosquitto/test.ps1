@@ -1,15 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'mosquitto' stack.
+Test suite for the mosquitto component.
 
 .DESCRIPTION
-Execute this script to run the test suite for mosquitto.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command mosquitto -ErrorAction SilentlyContinue) {
-    mosquitto -h
-} else {
-    Write-Host "mosquitto skipped (not found)"
-}
+& mosquitto --version

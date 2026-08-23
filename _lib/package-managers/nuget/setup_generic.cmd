@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\nuget.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for nuget.
+        exit /b 1
     )
 ) else (
     echo nuget %NUGET_VERSION% is already installed.

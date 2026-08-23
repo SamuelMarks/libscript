@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'stack' stack.
+Test suite for the stack component.
 
 .DESCRIPTION
-Execute this script to run the test suite for stack.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command stack -ErrorAction SilentlyContinue) {
-    stack --version
-    Write-Output "stack found"
-} else {
-    Write-Output "stack skipped (not found)"
-}
+& stack --version

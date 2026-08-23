@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:OPENRC_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for openrc."
+            Write-Error "No download URL or cache available for openrc."
+            exit 1
         }
     } else {
         Write-Output "openrc $CompVersion is already installed."

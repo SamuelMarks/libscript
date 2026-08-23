@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -36,8 +36,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 
 IS_TPU=0
-SHARED_STORAGE=0
-POSITIONALS=""
+export SHARED_STORAGE=0
+export POSITIONALS=""
 
 # Parse flags
 _p1="" _p2="" _p3="" _p4="" _p5="" _p6=""
@@ -47,7 +47,7 @@ RETAIN_DATA=0
 for arg do
   case "$arg" in
     --tpu|--accelerator) IS_TPU=1 ;;
-    --shared-storage) SHARED_STORAGE=1 ;;
+    --shared-storage) export SHARED_STORAGE=1 ;;
     --retain-ip) RETAIN_IP=1 ;;
     --retain-data) RETAIN_DATA=1 ;;
     *)
@@ -218,7 +218,7 @@ if [ -n "$STATE_PATHS" ]; then
       if printf '%s\n' "$STATE_BUCKET" | grep -q "^s3://"; then
         S3_ARGS=""
         if [ -n "$STATE_ENDPOINT" ]; then S3_ARGS="--endpoint-url $STATE_ENDPOINT"; fi
-        run_with_auth_check aws s3 cp $S3_ARGS "$REPO_PATH/$PATH_ITEM" "$STATE_BUCKET/$PATH_ITEM"
+        run_with_auth_check aws s3 cp "$S3_ARGS" "$REPO_PATH/$PATH_ITEM" "$STATE_BUCKET/$PATH_ITEM"
       elif printf '%s\n' "$STATE_BUCKET" | grep -q "^gs://"; then
         run_with_auth_check gcloud storage cp "$REPO_PATH/$PATH_ITEM" "$STATE_BUCKET/$PATH_ITEM"
       elif printf '%s\n' "$STATE_BUCKET" | grep -q "^azure://"; then

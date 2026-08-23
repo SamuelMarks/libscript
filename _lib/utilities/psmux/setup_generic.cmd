@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\psmux.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for psmux.
+        exit /b 1
     )
 ) else (
     echo psmux %PSMUX_VERSION% is already installed.

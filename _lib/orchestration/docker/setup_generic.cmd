@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\docker.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for docker.
+        exit /b 1
     )
 ) else (
     echo docker %DOCKER_VERSION% is already installed.

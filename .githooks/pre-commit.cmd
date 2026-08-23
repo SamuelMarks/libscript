@@ -23,9 +23,8 @@ if exist "devtools\docs-gen\generate_markdown_docs.cmd" (
     )
 )
 
-:: Skipping the CI Matrix generation in the batch equivalent for brevity, 
-:: as it relies heavily on grep, awk, and curl/jq which may not be present 
-:: in a standard Windows cmd environment.
+:: Skipping the Local Tests Matrix generation in the batch equivalent for brevity, 
+:: as updating README.md in pure batch is complex.
 
 echo Pre-commit hook completed successfully.
 exit /b 0

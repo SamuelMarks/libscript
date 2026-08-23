@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\swupd.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for swupd.
+        exit /b 1
     )
 ) else (
     echo swupd %SWUPD_VERSION% is already installed.

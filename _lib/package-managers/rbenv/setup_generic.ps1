@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:RBENV_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for rbenv."
+            Write-Error "No download URL or cache available for rbenv."
+            exit 1
         }
     } else {
         Write-Output "rbenv $CompVersion is already installed."

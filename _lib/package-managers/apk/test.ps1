@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'apk' stack.
+Test suite for the apk component.
 
 .DESCRIPTION
-Execute this script to run the test suite for apk.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command apk -ErrorAction SilentlyContinue) {
-    apk --version
-    Write-Output "apk found"
-} else {
-    Write-Output "apk skipped (not found)"
-}
+& apk --version

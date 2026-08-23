@@ -112,40 +112,81 @@ variables (e.g., `LIBSCRIPT_GLOBAL_INSTALL_METHOD="system"` or local overrides l
 managers, and source compilation scripts act exactly as expected on varied Linux and BSD
 distributions.
 
-### End-to-End Integration Testing
+### Automated Local Integration Testing
 
-In addition to interactive component execution over SSH, LibScript uses dedicated Vagrantfiles for
-fully automated end-to-end (E2E) integration tests. These files are located in the `tests/vagrant/`
-directory and perform comprehensive validation (e.g., installation, service configuration, and
-client connection tests).
+LibScript includes a dedicated harness for running fully automated local end-to-end integration
+tests using Vagrant. Currently, we have validated almost every package to build and test
+successfully against Alpine Linux. The test scripts (`tests/run_local_tests.sh` and
+`tests/run_local_tests.cmd`) iterate over package categories (or specific targets) and execute a
+provisioned VM test loop on Alpine Linux (via `vagrant/alpine-3.24/Vagrantfile`).
 
-For example, to run the PostgreSQL E2E test on an Alpine Linux VM:
+**Running the Test Suite**
+
+You can run the tests for specific categories, individual packages, or the entire repository.
+
+For POSIX (Linux/macOS):
 
 ```sh
-# Navigate to the test directory
-cd tests/vagrant/linux
+# Run tests for default categories (databases, languages, toolchains)
+./tests/run_local_tests.sh
 
-# Tell Vagrant to use the specific test file and provision the environment
-VAGRANT_VAGRANTFILE=postgres.alpine.linux.Vagrantfile vagrant up
+# Run tests for specific packages
+./tests/run_local_tests.sh postgres redis
+
+# Run tests for all packages
+./tests/run_local_tests.sh all
+```
+
+For Windows:
+
+```cmd
+:: Run tests for default categories (databases, languages, toolchains)
+.\tests\run_local_tests.cmd
+
+:: Run tests for specific packages
+.\tests\run_local_tests.cmd postgres redis
+
+:: Run tests for all packages
+.\tests\run_local_tests.cmd all
 ```
 
 **What the test does under the hood:**
 
-1. **Provisioning:** Vagrant boots an Alpine virtual machine.
-2. **Synchronization:** The local LibScript repository is mapped into the guest OS
-   (`/opt/repos/libscript`) via `rsync`.
-3. **Execution:** An inline shell provisioner triggers the native
-   `./libscript.sh install postgres 17` and `./libscript.sh restart postgres` commands directly
-   within the VM.
-4. **Validation:** The provisioner executes a Python script (using `psycopg2`) to connect to the
-   newly provisioned database, confirming that LibScript's setup was fully successful, initialized,
-   and accepting connections.
+For each target package:
 
-After validation completes, you can clean up the temporary environment:
+1. **Isolation:** A unique temporary directory (`tests_tmp/runs/<target>`) is created, and the
+   Vagrantfile is copied there. The Vagrantfile dynamically names the VM (e.g.,
+   `alpine-test-<target>`) to ensure complete, container-like isolation at the hypervisor level—much
+   like building a fresh Docker image.
+2. **Provisioning:** Vagrant boots this isolated Alpine 3.24 virtual machine.
+3. **Synchronization:** The local LibScript repository is mapped into the guest OS
+   (`/opt/repos/libscript`) via `rsync`.
+4. **Execution & Validation:** An inline shell provisioner automatically executes
+   `./libscript.sh install <target>` followed by `./libscript.sh test <target>` directly within the
+   VM.
+5. **Cleanup:** The VM is automatically destroyed after the test concludes (whether successful or
+   not) to prepare for the next package.
+
+**Debugging Failures**
+
+During execution, test logs and results are not printed directly to the console to prevent noise.
+Instead, they are routed to the `tests_tmp/` directory at the repository root.
+
+If a test fails (e.g., outputs `[FAILED] postgres`), you can inspect the corresponding log files to
+diagnose the problem:
 
 ```sh
-VAGRANT_VAGRANTFILE=postgres.alpine.linux.Vagrantfile vagrant destroy -f
+# View standard output of the failed installation/test
+cat tests_tmp/postgres.linux.alpine.stdout
+
+# View error output (standard error)
+cat tests_tmp/postgres.linux.alpine.stderr
 ```
+
+When iterating on a fix for a test failure, it is often faster to temporarily comment out the
+`vagrant destroy -f` lines in `tests/run_local_tests.sh` (or `.cmd`). This leaves the isolated VM
+running after a failure, allowing you to `cd tests_tmp/runs/<target> && vagrant ssh` into the box
+and run the failing install or test commands manually.
 
 ## Artifact Verification
 

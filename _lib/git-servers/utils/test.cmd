@@ -1,11 +1,14 @@
 @echo off
-:: # test.cmd
-::
-:: ## Overview
-:: Test suite for Git server utils on Windows.
-::
-:: ## Usage
-:: Automatically invoked by the test framework. Asserts git is accessible.
+rem ## Overview
+rem Test suite for the utils component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-setlocal EnableDelayedExpansion
-call "%~dp0\..\_common\test_base.cmd" :assert_version "git" "."
+setlocal enabledelayedexpansion
+
+if exist "%~dp0cli.cmd" (
+    call "%~dp0cli.cmd" --help >nul
+) else (
+    exit /b 0
+)

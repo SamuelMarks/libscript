@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'brew' stack.
+Test suite for the brew component.
 
 .DESCRIPTION
-Execute this script to run the test suite for brew.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command brew -ErrorAction SilentlyContinue) {
-    brew --version
-    Write-Output "brew found"
-} else {
-    Write-Output "brew skipped (not found)"
-}
+& brew --version

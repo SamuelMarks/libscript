@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'nuget' stack.
+Test suite for the nuget component.
 
 .DESCRIPTION
-Execute this script to run the test suite for nuget.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command nuget -ErrorAction SilentlyContinue) {
-    nuget --version
-    Write-Output "nuget found"
-} else {
-    Write-Output "nuget skipped (not found)"
-}
+& nuget --version

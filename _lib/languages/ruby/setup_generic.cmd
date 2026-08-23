@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\ruby.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for ruby.
+        exit /b 1
     )
 ) else (
     echo ruby %RUBY_VERSION% is already installed.

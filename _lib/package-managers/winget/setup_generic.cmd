@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\winget.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for winget.
+        exit /b 1
     )
 ) else (
     echo winget %WINGET_VERSION% is already installed.

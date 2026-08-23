@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'postgres' stack.
+Test suite for the postgres component.
 
 .DESCRIPTION
-Execute this script to run the test suite for postgres.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command postgres -ErrorAction SilentlyContinue) {
-    postgres --version
-    Write-Output "postgres found"
-} else {
-    Write-Output "postgres skipped (not found)"
-}
+psql -c "SELECT 1;"

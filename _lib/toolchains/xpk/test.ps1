@@ -1,15 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'xpk' stack.
+Test suite for the xpk component.
 
 .DESCRIPTION
-Execute this script to run the test suite for xpk.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command xpk -ErrorAction SilentlyContinue) {
-    xpk --version
-} else {
-    Write-Host "xpk skipped (not found)"
-}
+xpk --version

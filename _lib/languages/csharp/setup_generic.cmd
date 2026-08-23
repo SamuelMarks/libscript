@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\csharp.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for csharp.
+        exit /b 1
     )
 ) else (
     echo csharp %CSHARP_VERSION% is already installed.

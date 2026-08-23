@@ -1,16 +1,17 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'gem' stack.
+Test suite for the gem component.
 
 .DESCRIPTION
-Execute this script to run the test suite for gem.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
 if (Get-Command gem -ErrorAction SilentlyContinue) {
-    gem --version
-    Write-Output "gem found"
+    & gem --version
 } else {
-    Write-Output "gem skipped (not found)"
+    Write-Host "gem is not installed, skipping test."
 }

@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:CABAL_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for cabal."
+            Write-Error "No download URL or cache available for cabal."
+            exit 1
         }
     } else {
         Write-Output "cabal $CompVersion is already installed."

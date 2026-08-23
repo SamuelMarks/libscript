@@ -9,6 +9,25 @@ REM Optionally pass the target OS as the first argument.
 
 setlocal enabledelayedexpansion
 
+if /I "%~1"=="--help" goto :show_help
+if /I "%~1"=="-h" goto :show_help
+if /I "%~1"=="/?" goto :show_help
+if /I "%~1"=="-?" goto :show_help
+goto :main
+
+:show_help
+:: ## show_help
+:: Executes show_help functionality.
+echo Usage: %~nx0 [os_name]
+echo Runs CI tests strictly for toolchains and databases components on Windows.
+echo.
+echo Options:
+echo   --help, -h, /?, -?  Show this help message.
+exit /b 0
+
+:main
+:: ## main
+:: Executes main functionality.
 set "TARGET_OS=%~1"
 if "!TARGET_OS!"=="" set "TARGET_OS=windows-latest"
 

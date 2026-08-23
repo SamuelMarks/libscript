@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:CPANM_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for cpanm."
+            Write-Error "No download URL or cache available for cpanm."
+            exit 1
         }
     } else {
         Write-Output "cpanm $CompVersion is already installed."

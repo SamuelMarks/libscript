@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\tmux.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for tmux.
+        exit /b 1
     )
 ) else (
     echo tmux %TMUX_VERSION% is already installed.

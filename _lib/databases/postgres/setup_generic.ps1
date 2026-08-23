@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:POSTGRES_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for postgres."
+            Write-Error "No download URL or cache available for postgres."
+            exit 1
         }
     } else {
         Write-Output "postgres $CompVersion is already installed."

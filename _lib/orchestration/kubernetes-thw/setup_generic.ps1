@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:KUBERNETES_THW_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for kubernetes-thw."
+            Write-Error "No download URL or cache available for kubernetes-thw."
+            exit 1
         }
     } else {
         Write-Output "kubernetes-thw $CompVersion is already installed."

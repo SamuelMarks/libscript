@@ -14,11 +14,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -49,7 +49,8 @@ find_replace() {
     exit 1
   fi
 
-  awk_script='{ rec = rec $0 RS }
+  awk_script=$(cat << 'EOF_AWK'
+      { rec = rec $0 RS }
       END {
           old = ENVIRON["old"]
           new = ENVIRON["new"]
@@ -62,7 +63,8 @@ find_replace() {
 
           print rec
       }
-    '
+EOF_AWK
+  )
 
   new_content="$(mktemp)"
   trap 'rm -f -- "${new_content}"' EXIT HUP INT QUIT TERM

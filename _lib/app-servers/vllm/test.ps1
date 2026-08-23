@@ -1,15 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'vllm' stack.
+Test suite for the vllm component.
 
 .DESCRIPTION
-Execute this script to run the test suite for vllm.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command huggingface_hub -ErrorAction SilentlyContinue) {
-    huggingface_hub --version
-} else {
-    Write-Host "huggingface_hub skipped (not found)"
-}
+& vllm --version

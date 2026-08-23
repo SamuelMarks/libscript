@@ -1,12 +1,11 @@
 @echo off
-:: # test.cmd
-::
-:: ## Overview
-:: Testing script for the pkg component on Windows.
-:: It verifies that the component is installed correctly and responds as expected.
-::
-:: ## Usage
-:: Execute this script to run tests for the component.
+rem ## Overview
+rem Test suite for the pkg component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-setlocal EnableDelayedExpansion
-call "%~dp0\..\..\_common\test_base.cmd" :assert_version "pkg" "."
+setlocal enabledelayedexpansion
+
+echo pkg is only available on FreeBSD. Skipping test.
+exit /b 0

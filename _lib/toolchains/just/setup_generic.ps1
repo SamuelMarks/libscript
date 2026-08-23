@@ -130,7 +130,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:JUST_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for just."
+            Write-Error "No download URL or cache available for just."
+            exit 1
         }
     } else {
         Write-Output "just $CompVersion is already installed."

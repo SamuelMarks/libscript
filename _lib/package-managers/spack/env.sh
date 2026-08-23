@@ -13,11 +13,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -35,4 +35,11 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 
 SPACK_VERSION="${SPACK_VERSION:-latest}"
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/spack/${SPACK_VERSION}/bin:${PATH}"
+export SPACK_ROOT="${LIBSCRIPT_HOME:-$HOME/.libscript}/spack/${SPACK_VERSION}"
+export PATH="$SPACK_ROOT/bin:${PATH}"
+if [ -s "$SPACK_ROOT/share/spack/setup-env.sh" ]; then
+  if [ -n "${BASH_VERSION:-}" ] || [ -n "${ZSH_VERSION:-}" ]; then
+     . "$SPACK_ROOT/share/spack/setup-env.sh"
+  fi
+fi
+

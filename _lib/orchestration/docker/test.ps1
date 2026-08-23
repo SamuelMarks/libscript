@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'docker' stack.
+Test suite for the docker component.
 
 .DESCRIPTION
-Execute this script to run the test suite for docker.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command docker -ErrorAction SilentlyContinue) {
-    docker --version
-    Write-Output "docker found"
-} else {
-    Write-Output "docker skipped (not found)"
-}
+& docker --version

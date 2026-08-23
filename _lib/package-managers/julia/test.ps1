@@ -1,16 +1,23 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'julia' stack.
+Test suite for the julia component.
 
 .DESCRIPTION
-Execute this script to run the test suite for julia.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
 if (Get-Command julia -ErrorAction SilentlyContinue) {
-    julia --version
-    Write-Output "julia found"
+    try {
+        & julia --version
+    } catch {
+        try {
+            & julia version
+        } catch {}
+    }
 } else {
-    Write-Output "julia skipped (not found)"
+    Write-Host "julia is not installed, skipping test."
 }

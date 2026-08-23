@@ -1,12 +1,10 @@
 @echo off
-:: # test.cmd
-::
-:: ## Overview
-:: Testing script for the cpanm component on Windows.
-:: It verifies that the component is installed correctly and responds as expected.
-::
-:: ## Usage
-:: Execute this script to run tests for the component.
+rem ## Overview
+rem Test suite for the cpanm component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-setlocal EnableDelayedExpansion
-call "%~dp0\..\..\_common\test_base.cmd" :assert_version "cpanm" "."
+setlocal enabledelayedexpansion
+
+cpanm --version

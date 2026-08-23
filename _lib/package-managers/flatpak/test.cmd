@@ -1,12 +1,16 @@
 @echo off
-:: # test.cmd
-::
-:: ## Overview
-:: Testing script for the flatpak component on Windows.
-:: It verifies that the component is installed correctly and responds as expected.
-::
-:: ## Usage
-:: Execute this script to run tests for the component.
+rem ## Overview
+rem Test suite for the flatpak component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-setlocal EnableDelayedExpansion
-call "%~dp0\..\..\_common\test_base.cmd" :assert_version "flatpak" "."
+setlocal enabledelayedexpansion
+
+where flatpak >nul 2>nul
+if %errorlevel% neq 0 (
+  echo flatpak is not installed, skipping test.
+  exit /b 0
+)
+
+flatpak --version

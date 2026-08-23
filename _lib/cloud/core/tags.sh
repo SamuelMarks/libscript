@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -48,11 +48,11 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # Returns:
 #   0 if managed (or overridden), 1 if not managed.
 libscript_verify_managed() {
-  local provider="${1:-}"
-  local type="${2:-}"
-  local name="${3:-}"
-  local rg="${4:-}"
-  local actual_val=""
+  provider="${1:-}"
+  type="${2:-}"
+  name="${3:-}"
+  rg="${4:-}"
+  actual_val=""
 
   if [ "${LIBSCRIPT_TAG_ENABLE:-true}" != "true" ]; then
     return 0

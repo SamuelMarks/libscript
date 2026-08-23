@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -29,36 +29,36 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-    install_scope="perMachine"
-    inno_priv="admin"
-    nsis_admin="admin"
+    export install_scope="perMachine"
+    export inno_priv="admin"
+    export nsis_admin="admin"
     APP_NAME="LibScript Deployment"
     APP_VERSION="1.0.0.0"
-    APP_PUBLISHER="LibScript"
-    APP_URL=""
+    export APP_PUBLISHER="LibScript"
+    export APP_URL=""
     UPGRADE_CODE="PUT-GUID-HERE"
-    OUT_FILE="LibScriptInstaller"
-    ICON_PATH=""
-    IMAGE_PATH=""
-    LICENSE_PATH=""
-    WELCOME_TEXT="Welcome to the LibScript Deployment Installer"
-    OFFLINE="0"
+    export OUT_FILE="LibScriptInstaller"
+    export ICON_PATH=""
+    export IMAGE_PATH=""
+    export LICENSE_PATH=""
+    export WELCOME_TEXT="Welcome to the LibScript Deployment Installer"
+    export OFFLINE="0"
 
     while [ $# -gt 0 ]; do
       case "$1" in
-        --user-mode) install_scope="perUser"; inno_priv="lowest"; nsis_admin="user"; shift ;;
-        --elevated-mode) install_scope="perMachine"; inno_priv="admin"; nsis_admin="admin"; shift ;;
+        --user-mode) export install_scope="perUser"; export inno_priv="lowest"; export nsis_admin="user"; shift ;;
+        --elevated-mode) export install_scope="perMachine"; export inno_priv="admin"; export nsis_admin="admin"; shift ;;
         --app-name) APP_NAME="$2"; shift 2 ;;
         --app-version) APP_VERSION="$2"; shift 2 ;;
-        --app-publisher) APP_PUBLISHER="$2"; shift 2 ;;
-        --app-url) APP_URL="$2"; shift 2 ;;
+        --app-publisher) export APP_PUBLISHER="$2"; shift 2 ;;
+        --app-url) export APP_URL="$2"; shift 2 ;;
         --upgrade-code) UPGRADE_CODE="$2"; shift 2 ;;
-        --out-file) OUT_FILE="$2"; shift 2 ;;
-        --icon) ICON_PATH="$2"; shift 2 ;;
-        --image) IMAGE_PATH="$2"; shift 2 ;;
-        --license) LICENSE_PATH="$2"; shift 2 ;;
-        --welcome) WELCOME_TEXT="$2"; shift 2 ;;
-        --offline) OFFLINE="1"; shift ;;
+        --out-file) export OUT_FILE="$2"; shift 2 ;;
+        --icon) export ICON_PATH="$2"; shift 2 ;;
+        --image) export IMAGE_PATH="$2"; shift 2 ;;
+        --license) export LICENSE_PATH="$2"; shift 2 ;;
+        --welcome) export WELCOME_TEXT="$2"; shift 2 ;;
+        --offline) export OFFLINE="1"; shift ;;
         -*) printf '%s\n' "Error: Unknown option $1" >&2; exit 1 ;;
         *) break ;;
       esac
@@ -66,7 +66,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 
 
-    PRODUCT_CODE="*"
+    export PRODUCT_CODE="*"
     _SVC_NAME=$(printf '%s\n' "$APP_NAME" | tr " " "_")
     _UPGRADE_ID="${APP_NAME}|${_SVC_NAME}|x64"
     _PRODUCT_ID="${APP_NAME}|${_SVC_NAME}|x64|${APP_VERSION}"
@@ -81,7 +81,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
           $ARGS.positional[0] | guid_from_string
         ' --args "$_UPGRADE_HASH")
       fi
-      if [ "$pkg_type" = "msi" ]; then
+      if [ "${pkg_type:-}" = "msi" ]; then
         _PRODUCT_HASH=$(printf "%s" "$_PRODUCT_ID" | sha256sum | awk '{print $1}')
         PRODUCT_CODE=$(jq -n -r '
           def hex_to_guid: .[0:8] + "-" + .[8:12] + "-" + .[12:16] + "-" + .[16:20] + "-" + .[20:32];
@@ -103,7 +103,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
       if [ "$UPGRADE_CODE" = "PUT-GUID-HERE" ]; then
         UPGRADE_CODE=$($_PS -NoProfile -Command "$_PS_SCRIPT" -id "$_UPGRADE_ID")
       fi
-      if [ "$pkg_type" = "msi" ]; then
+      if [ "${pkg_type:-}" = "msi" ]; then
         PRODUCT_CODE=$($_PS -NoProfile -Command "$_PS_SCRIPT" -id "$_PRODUCT_ID")
       fi
     fi

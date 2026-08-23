@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'psmux' stack.
+Test suite for the psmux component.
 
 .DESCRIPTION
-Execute this script to run the test suite for psmux.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command psmux -ErrorAction SilentlyContinue) {
-    psmux -V
-    Write-Output "psmux found"
-} else {
-    Write-Output "psmux skipped (not found)"
-}
+& psmux --version

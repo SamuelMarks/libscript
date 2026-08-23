@@ -10,11 +10,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -28,7 +28,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-DIR="${SCRIPT_DIR}"
+export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
@@ -237,7 +237,7 @@ case "$ACTION" in
         DOMAIN=${2:-}; ZONE=${3:-}; RG=${4:-}; VM_NAME=${5:-}
         if [ -z "$VM_NAME" ]; then printf '%s\n' "Usage: dns map-node <domain> <zone> <rg> <vm-name>"; exit 1; fi
         IP=$(az vm show -d -g "$RG" -n "$VM_NAME" --query publicIps -o tsv | xargs)
-        RECORD_NAME=${DOMAIN%.$ZONE}
+        RECORD_NAME=${DOMAIN%."$ZONE"}
         if [ "$RECORD_NAME" = "$DOMAIN" ]; then RECORD_NAME="@"; fi
         az network dns record-set a add-record -g "$RG" -z "$ZONE" -n "$RECORD_NAME" -a "$IP"
         ;;
@@ -245,7 +245,7 @@ case "$ACTION" in
         DOMAIN=${2:-}; ZONE=${3:-}; RG=${4:-}; VM_NAME=${5:-}
         if [ -z "$VM_NAME" ]; then printf '%s\n' "Usage: dns unmap-node <domain> <zone> <rg> <vm-name>"; exit 1; fi
         IP=$(az vm show -d -g "$RG" -n "$VM_NAME" --query publicIps -o tsv | xargs)
-        RECORD_NAME=${DOMAIN%.$ZONE}
+        RECORD_NAME=${DOMAIN%."$ZONE"}
         if [ "$RECORD_NAME" = "$DOMAIN" ]; then RECORD_NAME="@"; fi
         az network dns record-set a remove-record -g "$RG" -z "$ZONE" -n "$RECORD_NAME" -a "$IP"
         ;;
@@ -512,7 +512,7 @@ case "$ACTION" in
     fi
     exit 0
     ;;
-  install|*)
+  install)
     if [ "$AZURE_INSTALL_METHOD" = "system" ]; then
       libscript_depends "azure"
     elif [ "$AZURE_INSTALL_METHOD" = "mise" ]; then

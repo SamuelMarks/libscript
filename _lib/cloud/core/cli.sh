@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -30,7 +30,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
 
-PACKAGE_NAME="core"
+export PACKAGE_NAME="core"
 
 SKIP_STATE=0
 for arg in "$@"; do
@@ -43,18 +43,24 @@ done
 
 if [ "$SKIP_STATE" -eq 0 ]; then
     if [ -f "$SCRIPT_DIR/state_backend.sh" ]; then
+        # shellcheck disable=SC2329
+        cleanup_state() {
+            if [ -f "$SCRIPT_DIR/state_backend.sh" ]; then
+                "$SCRIPT_DIR/state_backend.sh" push_state || true
+                "$SCRIPT_DIR/state_backend.sh" unlock_state || true
+            fi
+        }
         "$SCRIPT_DIR/state_backend.sh" pull_state
         "$SCRIPT_DIR/state_backend.sh" lock_state
         # Using a subshell function to ensure the trap runs even if exec is called later
-        cleanup_state() {
-            "$SCRIPT_DIR/state_backend.sh" push_state || true
-            "$SCRIPT_DIR/state_backend.sh" unlock_state || true
-        }
         trap cleanup_state EXIT INT TERM
     fi
 fi
 
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/component_core.sh"
 export SCRIPT_NAME
-# shellcheck disable=SC1090
-. "${SCRIPT_NAME}"
+(
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+)
+exit $?

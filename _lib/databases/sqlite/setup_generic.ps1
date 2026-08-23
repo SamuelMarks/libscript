@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:SQLITE_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for sqlite."
+            Write-Error "No download URL or cache available for sqlite."
+            exit 1
         }
     } else {
         Write-Output "sqlite $CompVersion is already installed."

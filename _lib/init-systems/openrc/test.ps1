@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'openrc' stack.
+Test suite for the openrc component.
 
 .DESCRIPTION
-Execute this script to run the test suite for openrc.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/init-systems/openrc test skipped"
+& openrc --version

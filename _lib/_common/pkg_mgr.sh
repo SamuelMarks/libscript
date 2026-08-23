@@ -15,11 +15,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -33,7 +33,6 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-_PKG_MGR_DIR="${SCRIPT_DIR}"
 
 # Source logging
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
@@ -53,15 +52,15 @@ export PKG_MGR_UPDATE_REGISTRY
 # ## libscript_resolve_install_method
 # Executes libscript_resolve_install_method functionality.
 libscript_resolve_install_method() {
-  local comp_method_var="${1}_INSTALL_METHOD"
-  eval "local requested=\${${comp_method_var}:-\${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-}}"
+  comp_method_var="${1}_INSTALL_METHOD"
+  eval "requested=\${${comp_method_var}:-\${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-}}"
 
-  local chain="libscript_native mise asdf pkgx vfox system"
-  local check_chain=""
+  chain="libscript_native mise asdf pkgx vfox system"
+  check_chain=""
   
   if [ -n "$requested" ]; then
     # Start chain from the requested method
-    local found=0
+    found=0
     for m in $chain; do
       if [ "$m" = "$requested" ]; then found=1; fi
       if [ "$found" = "1" ]; then
@@ -192,7 +191,7 @@ libscript_depends() {
     done
   done
   if [ -n "${pkgs_to_install}" ]; then
-    # log_info "Installing packages (${PKG_MGR}): ${pkgs_to_install}"
+    # log_info "Installing packages (${PKG_MGR}): "${pkgs_to_install}""
     _lockdir="${TMPDIR:-/tmp}/libscript_pkg_mgr_lock"
     _lock_timeout=600
     _lock_count=0
@@ -249,7 +248,7 @@ fi
 
 # Unified Caching Downloader
 libscript_download() {
-  url="${1:-}"
+  export url="${1:-}"
   dest="${2:-}"
   provided_checksum="${3:-}"
 
@@ -353,12 +352,15 @@ libscript_download() {
           { while IFS= read -r line; do line="$(printf '%s\n' "$line" | tr -d '\r\n')"; [ -z "$line" ] && break; done; cat; } < "${cache_file}.tmp" > "$cache_file"
           rm -f "${cache_file}.tmp"
           download_success=1
-        elif [ -e /dev/tcp/"$host"/80 ]; then
-          exec 3<>/dev/tcp/"$host"/80
-          printf "GET %s HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n" "$path" "$host" >&3
-          { while IFS= read -r line <&3; do line="$(printf '%s\n' "$line" | tr -d '\r\n')"; [ -z "$line" ] && break; done; cat <&3; } > "$cache_file"
-          exec 3<&-
-          download_success=1
+        elif [ -e "/dev/tcp/$host/80" ]; then
+          tcp_path="/dev/tcp/$host/80"
+          if [ -e "$tcp_path" ]; then
+            exec 3<>"$tcp_path"
+            printf "GET %s HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n" "$path" "$host" >&3
+            { while IFS= read -r line <&3; do line="$(printf '%s\n' "$line" | tr -d '\r\n')"; [ -z "$line" ] && break; done; cat <&3; } > "$cache_file"
+            exec 3<&-
+            download_success=1
+          fi
         fi
     fi
 
@@ -442,7 +444,7 @@ libscript_process_aria2_file() {
     return 1
   fi
 
-  url=""
+  export url=""
   out=""
   checksum=""
 
@@ -451,7 +453,7 @@ libscript_process_aria2_file() {
       log_info "Processing $url ..."
       libscript_download "$url" "$out" "$checksum"
     fi
-    url=""
+    export url=""
     out=""
     checksum=""
   }
@@ -470,7 +472,7 @@ libscript_process_aria2_file() {
       fi
     else
       process_entry
-      url="$line"
+      export url="$line"
     fi
   done < "$list_file"
   process_entry

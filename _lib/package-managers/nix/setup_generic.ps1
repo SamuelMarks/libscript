@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:NIX_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for nix."
+            Write-Error "No download URL or cache available for nix."
+            exit 1
         }
     } else {
         Write-Output "nix $CompVersion is already installed."

@@ -130,7 +130,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:MAVEN_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for maven."
+            Write-Error "No download URL or cache available for maven."
+            exit 1
         }
     } else {
         Write-Output "maven $CompVersion is already installed."

@@ -1,12 +1,16 @@
 @echo off
-:: # test.cmd
-::
-:: ## Overview
-:: Testing script for the dnf component on Windows.
-:: It verifies that the component is installed correctly and responds as expected.
-::
-:: ## Usage
-:: Execute this script to run tests for the component.
+rem ## Overview
+rem Test suite for the dnf component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-setlocal EnableDelayedExpansion
-call "%~dp0\..\..\_common\test_base.cmd" :assert_version "dnf" "."
+setlocal enabledelayedexpansion
+
+where dnf >nul 2>nul
+if %errorlevel% neq 0 (
+  echo dnf is not installed, skipping test.
+  exit /b 0
+)
+
+dnf --version

@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\mise.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for mise.
+        exit /b 1
     )
 ) else (
     echo mise %MISE_VERSION% is already installed.

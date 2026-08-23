@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\dnf.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for dnf.
+        exit /b 1
     )
 ) else (
     echo dnf %DNF_VERSION% is already installed.

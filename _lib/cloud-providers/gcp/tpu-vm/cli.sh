@@ -12,11 +12,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -90,7 +90,7 @@ case "$ACTION" in
       DISK_FLAG=""
       if [ -n "$TPU_DATA_DISK_SIZE" ]; then
         DISK_FLAG="--data-disk=source=projects/${GCP_PROJECT_ID}/zones/${TPU_ZONE}/disks/${INSTANCE_NAME}-data,mode=read-write"
-        if ! gcloud compute disks describe "${INSTANCE_NAME}-data" --zone="$TPU_ZONE" $PROJECT_FLAG >/dev/null 2>&1; then
+        if ! gcloud compute disks describe "${INSTANCE_NAME}-data" --zone="$TPU_ZONE" "$PROJECT_FLAG" >/dev/null 2>&1; then
           log_info "Creating persistent data disk ${INSTANCE_NAME}-data (${TPU_DATA_DISK_SIZE}GB, ${TPU_DATA_DISK_TYPE})..."
           
           if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/cloud/core/tags.sh" ]; then
@@ -104,7 +104,7 @@ case "$ACTION" in
             --size="${TPU_DATA_DISK_SIZE}GB" \
             --type="${TPU_DATA_DISK_TYPE}" \
             --zone="$TPU_ZONE" \
-            $PROJECT_FLAG $TAGS_ARG
+            "$PROJECT_FLAG" $TAGS_ARG
         else
           log_info "Data disk ${INSTANCE_NAME}-data already exists."
         fi
@@ -116,7 +116,7 @@ case "$ACTION" in
       
       if [ "${TPU_USE_QUEUED_RESOURCE:-false}" = "true" ]; then
         log_info "Checking if TPU Queued Resource ${INSTANCE_NAME}-qr exists in zone $TPU_ZONE..."
-        if gcloud alpha compute tpus queued-resources describe "${INSTANCE_NAME}-qr" --zone="$TPU_ZONE" $PROJECT_FLAG >/dev/null 2>&1; then
+        if gcloud alpha compute tpus queued-resources describe "${INSTANCE_NAME}-qr" --zone="$TPU_ZONE" "$PROJECT_FLAG" >/dev/null 2>&1; then
           log_info "TPU Queued Resource ${INSTANCE_NAME}-qr already exists. Skipping creation."
         else
           log_info "Creating TPU Queued Resource ${INSTANCE_NAME}-qr ($TPU_ACCELERATOR_TYPE) in $TPU_ZONE..."
@@ -136,7 +136,7 @@ case "$ACTION" in
             $SCHEDULING_FLAG \
             $DISK_FLAG \
             $NETWORK_FLAG \
-            $PROJECT_FLAG $TAGS_ARG; then
+            "$PROJECT_FLAG" $TAGS_ARG; then
             log_error "Queued Resource Provisioning failed. Check TFRC quota availability."
             exit 1
           fi
@@ -144,7 +144,7 @@ case "$ACTION" in
         fi
       else
         log_info "Checking if TPU VM $INSTANCE_NAME exists in zone $TPU_ZONE..."
-        if gcloud compute tpus tpu-vm describe "$INSTANCE_NAME" --zone="$TPU_ZONE" $PROJECT_FLAG >/dev/null 2>&1; then
+        if gcloud compute tpus tpu-vm describe "$INSTANCE_NAME" --zone="$TPU_ZONE" "$PROJECT_FLAG" >/dev/null 2>&1; then
           log_info "TPU VM $INSTANCE_NAME already exists. Skipping creation."
         else
           log_info "Creating TPU VM $INSTANCE_NAME ($TPU_ACCELERATOR_TYPE) in $TPU_ZONE..."
@@ -163,7 +163,7 @@ case "$ACTION" in
             $SCHEDULING_FLAG \
             $DISK_FLAG \
             $NETWORK_FLAG \
-            $PROJECT_FLAG $TAGS_ARG; then
+            "$PROJECT_FLAG" $TAGS_ARG; then
             log_error "Provisioning failed. If using spot/preemptible, check TFRC quota availability."
             exit 1
           fi
@@ -199,20 +199,20 @@ case "$ACTION" in
 
       log_info "Deleting TPU VM $INSTANCE_NAME in zone $TPU_ZONE..."
       if libscript_verify_managed gcp tpu-vm "$INSTANCE_NAME" "$TPU_ZONE"; then
-        gcloud compute tpus tpu-vm delete "$INSTANCE_NAME" --zone="$TPU_ZONE" $PROJECT_FLAG --quiet || true
+        gcloud compute tpus tpu-vm delete "$INSTANCE_NAME" --zone="$TPU_ZONE" "$PROJECT_FLAG" --quiet || true
       fi
 
       if [ "${TPU_USE_QUEUED_RESOURCE:-false}" = "true" ]; then
         log_info "Deleting queued resource ${INSTANCE_NAME}-qr..."
         if libscript_verify_managed gcp qr "${INSTANCE_NAME}-qr" "$TPU_ZONE"; then
-          gcloud alpha compute tpus queued-resources delete "${INSTANCE_NAME}-qr" --zone="$TPU_ZONE" $PROJECT_FLAG --quiet --force || true
+          gcloud alpha compute tpus queued-resources delete "${INSTANCE_NAME}-qr" --zone="$TPU_ZONE" "$PROJECT_FLAG" --quiet --force || true
         fi
       fi
 
-      if gcloud compute disks describe "${INSTANCE_NAME}-data" --zone="$TPU_ZONE" $PROJECT_FLAG >/dev/null 2>&1; then
+      if gcloud compute disks describe "${INSTANCE_NAME}-data" --zone="$TPU_ZONE" "$PROJECT_FLAG" >/dev/null 2>&1; then
         log_info "Deleting attached data disk ${INSTANCE_NAME}-data..."
         if libscript_verify_managed gcp volume "${INSTANCE_NAME}-data" "$TPU_ZONE"; then
-          gcloud compute disks delete "${INSTANCE_NAME}-data" --zone="$TPU_ZONE" $PROJECT_FLAG --quiet || true
+          gcloud compute disks delete "${INSTANCE_NAME}-data" --zone="$TPU_ZONE" "$PROJECT_FLAG" --quiet || true
         fi
       fi
       i=$((i + 1))
@@ -237,7 +237,7 @@ case "$ACTION" in
         INSTANCE_NAME="${TPU_NAME}-${i}"
       fi
       log_info "Starting TPU VM $INSTANCE_NAME in zone $TPU_ZONE..."
-      gcloud compute tpus tpu-vm start "$INSTANCE_NAME" --zone="$TPU_ZONE" $PROJECT_FLAG || true
+      gcloud compute tpus tpu-vm start "$INSTANCE_NAME" --zone="$TPU_ZONE" "$PROJECT_FLAG" || true
       i=$((i + 1))
     done
     ;;
@@ -260,7 +260,7 @@ case "$ACTION" in
         INSTANCE_NAME="${TPU_NAME}-${i}"
       fi
       log_info "Stopping TPU VM $INSTANCE_NAME in zone $TPU_ZONE..."
-      gcloud compute tpus tpu-vm stop "$INSTANCE_NAME" --zone="$TPU_ZONE" $PROJECT_FLAG || true
+      gcloud compute tpus tpu-vm stop "$INSTANCE_NAME" --zone="$TPU_ZONE" "$PROJECT_FLAG" || true
       i=$((i + 1))
     done
     ;;
@@ -284,9 +284,9 @@ case "$ACTION" in
       fi
       log_info "Status for TPU VM $INSTANCE_NAME in zone $TPU_ZONE..."
       if [ "${TPU_USE_QUEUED_RESOURCE:-false}" = "true" ]; then
-        gcloud alpha compute tpus queued-resources describe "${INSTANCE_NAME}-qr" --zone="$TPU_ZONE" $PROJECT_FLAG || true
+        gcloud alpha compute tpus queued-resources describe "${INSTANCE_NAME}-qr" --zone="$TPU_ZONE" "$PROJECT_FLAG" || true
       else
-        gcloud compute tpus tpu-vm describe "$INSTANCE_NAME" --zone="$TPU_ZONE" $PROJECT_FLAG || true
+        gcloud compute tpus tpu-vm describe "$INSTANCE_NAME" --zone="$TPU_ZONE" "$PROJECT_FLAG" || true
       fi
       i=$((i + 1))
     done
@@ -308,7 +308,7 @@ case "$ACTION" in
     log_info "Initiating capture_tpu_profile session on $TPU_NAME in $TPU_ZONE..."
     
     # We must tunnel into the TPU VM because the profiler port is usually not exposed externally
-    gcloud compute tpus tpu-vm ssh "$TPU_NAME" --zone="$TPU_ZONE" $PROJECT_FLAG --worker=all --command="capture_tpu_profile --tpu=\$HOSTNAME --profiler_port=$PORT --duration_ms=$DURATION --logdir=/tmp/tpu_profile"
+    gcloud compute tpus tpu-vm ssh "$TPU_NAME" --zone="$TPU_ZONE" "$PROJECT_FLAG" --worker=all --command="capture_tpu_profile --tpu=\$HOSTNAME --profiler_port=$PORT --duration_ms=$DURATION --logdir=/tmp/tpu_profile"
     ;;
   scp)
     # Usage: tpu-vm scp <name> <src> <dest> [--all-workers]
@@ -339,12 +339,12 @@ case "$ACTION" in
     log_info "Copying files for TPU VM $TPU_NAME..."
     # if DEST does not contain colon, assume it is remote
     if printf '%s\n' "$DEST" | grep -q ":"; then
-      gcloud compute tpus tpu-vm scp $SCP_FLAGS "$SRC" "$DEST" --zone="$TPU_ZONE" $PROJECT_FLAG
+      gcloud compute tpus tpu-vm scp "$SCP_FLAGS" "$SRC" "$DEST" --zone="$TPU_ZONE" "$PROJECT_FLAG"
     elif printf '%s\n' "$SRC" | grep -q ":"; then
-      gcloud compute tpus tpu-vm scp $SCP_FLAGS "$SRC" "$DEST" --zone="$TPU_ZONE" $PROJECT_FLAG
+      gcloud compute tpus tpu-vm scp "$SCP_FLAGS" "$SRC" "$DEST" --zone="$TPU_ZONE" "$PROJECT_FLAG"
     else
       # Neither has colon, assume local to remote
-      gcloud compute tpus tpu-vm scp $SCP_FLAGS "$SRC" "${TPU_NAME}:${DEST}" --zone="$TPU_ZONE" $PROJECT_FLAG
+      gcloud compute tpus tpu-vm scp "$SCP_FLAGS" "$SRC" "${TPU_NAME}:${DEST}" --zone="$TPU_ZONE" "$PROJECT_FLAG"
     fi
     ;;
 
@@ -381,12 +381,12 @@ case "$ACTION" in
       if [ "$DETACHED" = "true" ]; then
         log_info "Running command in detached tmux session 'ml-session'"
         CMD_STR="tmux new-session -d -s ml-session \"$*\""
-        gcloud compute tpus tpu-vm ssh "$TPU_NAME" --zone="$TPU_ZONE" $PROJECT_FLAG $SSH_FLAGS --command "$CMD_STR"
+        gcloud compute tpus tpu-vm ssh "$TPU_NAME" --zone="$TPU_ZONE" "$PROJECT_FLAG" "$SSH_FLAGS" --command "$CMD_STR"
       else
-        gcloud compute tpus tpu-vm ssh "$TPU_NAME" --zone="$TPU_ZONE" $PROJECT_FLAG $SSH_FLAGS --command "$*"
+        gcloud compute tpus tpu-vm ssh "$TPU_NAME" --zone="$TPU_ZONE" "$PROJECT_FLAG" "$SSH_FLAGS" --command "$*"
       fi
     else
-      gcloud compute tpus tpu-vm ssh "$TPU_NAME" --zone="$TPU_ZONE" $PROJECT_FLAG $SSH_FLAGS
+      gcloud compute tpus tpu-vm ssh "$TPU_NAME" --zone="$TPU_ZONE" "$PROJECT_FLAG" "$SSH_FLAGS"
     fi
     ;;
   *)

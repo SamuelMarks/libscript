@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'busybox' stack.
+Test suite for the busybox component.
 
 .DESCRIPTION
-Execute this script to run the test suite for busybox.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/utilities/busybox test skipped"
+& busybox --version

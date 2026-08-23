@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'rye' stack.
+Test suite for the rye component.
 
 .DESCRIPTION
-Execute this script to run the test suite for rye.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command rye -ErrorAction SilentlyContinue) {
-    rye --version
-    Write-Output "rye found"
-} else {
-    Write-Output "rye skipped (not found)"
-}
+& rye --version

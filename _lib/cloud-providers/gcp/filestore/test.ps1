@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'filestore' stack.
+Test suite for the filestore component.
 
 .DESCRIPTION
-Execute this script to run the test suite for filestore.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "Filestore PS1 wrapper test passed."
+& filestore --version

@@ -10,11 +10,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -42,16 +42,6 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   exit 0
 fi
 
-# Ensure duckdb is available
-if ! command -v duckdb >/dev/null 2>&1; then
-  if [ -x "${LIBSCRIPT_ROOT_DIR}/installed/duckdb/bin/duckdb" ]; then
-    export PATH="${LIBSCRIPT_ROOT_DIR}/installed/duckdb/bin:${PATH}"
-  else
-    log_error "duckdb not found. Please install the databases/duckdb component first."
-    exit 1
-  fi
-fi
-
 ACTION="${1:-}"
 
 case "$ACTION" in
@@ -62,16 +52,29 @@ case "$ACTION" in
       log_error "Usage: duckdb execute <db_path> <query>"
       exit 1
     fi
+    # Ensure duckdb is available
+    if ! command -v duckdb >/dev/null 2>&1; then
+      log_error "duckdb not found. Please install the databases/duckdb component first."
+      exit 1
+    fi
     log_info "Executing query on DuckDB $DB_PATH..."
     duckdb "$DB_PATH" -c "$QUERY"
     ;;
   repl)
     DB_PATH="${2:-:memory:}"
+    # Ensure duckdb is available
+    if ! command -v duckdb >/dev/null 2>&1; then
+      log_error "duckdb not found. Please install the databases/duckdb component first."
+      exit 1
+    fi
     log_info "Starting DuckDB REPL on $DB_PATH..."
     duckdb "$DB_PATH"
     ;;
   *)
-    log_error "Unknown action: $ACTION. Supported: execute, repl."
-    exit 1
+    export PACKAGE_NAME="duckdb"
+    SCRIPT_DIR="${LIBSCRIPT_ROOT_DIR}/_lib/databases/duckdb"
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/component_core.sh"
+    export SCRIPT_NAME
+    . "${SCRIPT_NAME}"
     ;;
 esac

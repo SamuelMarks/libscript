@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'snap' stack.
+Test suite for the snap component.
 
 .DESCRIPTION
-Execute this script to run the test suite for snap.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command snap -ErrorAction SilentlyContinue) {
-    snap --version
-    Write-Output "snap found"
-} else {
-    Write-Output "snap skipped (not found)"
-}
+& snap --version

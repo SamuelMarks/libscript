@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'nix' stack.
+Test suite for the nix component.
 
 .DESCRIPTION
-Execute this script to run the test suite for nix.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/package-managers/nix test skipped"
+& nix --version

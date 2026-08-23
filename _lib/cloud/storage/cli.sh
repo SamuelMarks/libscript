@@ -10,11 +10,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -65,23 +65,41 @@ while [ $# -gt 0 ]; do
       LIBSCRIPT_SYNC_DIR="${1#*=}"
       shift
       ;;
-    --public-web)
-      LIBSCRIPT_STORAGE_PUBLIC_WEB="true"
+    --public)
+      export LIBSCRIPT_PUBLIC=1
+      shift
+      ;;
+    storage)
       shift
       ;;
     *)
       printf "Error: Unknown argument '%s'\n" "$1" >&2
       exit 1
       ;;
-  esac
-done
+    esac
+    done
 
-if [ -z "$CMD" ]; then
-  printf "Error: Missing command for storage (create|delete|list|sync).\n" >&2
-  exit 1
-fi
+    if [ -z "$CMD" ]; then
+    printf "Error: Missing command for storage (create|delete|list|sync).\n" >&2
+    exit 1
+    fi
 
-case "$CMD" in
+    case "$CMD" in
+    install)
+    printf "Cloud components are operational wrappers and do not require installation.\n"
+    exit 0
+    ;;
+  test)
+    if [ -f "$SCRIPT_DIR/test.sh" ]; then
+      SCRIPT_NAME="$SCRIPT_DIR/test.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "$SCRIPT_NAME"
+    else
+      printf "No test.sh found for storage.\n"
+      exit 1
+    fi
+    ;;
   create|delete|list|sync)
     # Execution
     . "$SCRIPT_DIR/api.sh"
@@ -105,6 +123,11 @@ case "$CMD" in
     esac
     ;;
   *)
+    if [ "$CMD" = "--help" ] || [ "$CMD" = "-h" ] || [ "$CMD" = "help" ]; then
+      printf "Storage component CLI for Object Storage (buckets) operations.\n"
+      printf "Usage: libscript storage [create|delete|list|sync] [--cloud aws|gcp|azure] [--bucket name]\n"
+      exit 0
+    fi
     printf "Error: Unknown storage command '%s'\n" "$CMD" >&2
     exit 1
     ;;

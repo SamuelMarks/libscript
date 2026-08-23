@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:KUBERNETES_K0S_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for kubernetes-k0s."
+            Write-Error "No download URL or cache available for kubernetes-k0s."
+            exit 1
         }
     } else {
         Write-Output "kubernetes-k0s $CompVersion is already installed."

@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'npm' stack.
+Test suite for the npm component.
 
 .DESCRIPTION
-Execute this script to run the test suite for npm.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command npm -ErrorAction SilentlyContinue) {
-    npm --version
-    Write-Output "npm found"
-} else {
-    Write-Output "npm skipped (not found)"
-}
+& npm --version

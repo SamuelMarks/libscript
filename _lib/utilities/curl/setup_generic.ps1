@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:CURL_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for curl."
+            Write-Error "No download URL or cache available for curl."
+            exit 1
         }
     } else {
         Write-Output "curl $CompVersion is already installed."

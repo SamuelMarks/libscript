@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -44,7 +44,7 @@ fi
 Name "$APP_NAME \$APP_VERSION"
 OutFile "${OUT_FILE}.exe"
 InstallDir "\$PROGRAMFILES\\$APP_NAME"
-RequestExecutionLevel $nsis_admin
+RequestExecutionLevel ${nsis_admin:-admin}
 
 VIProductVersion "$APP_VERSION"
 VIAddVersionKey "ProductName" "$APP_NAME"
@@ -148,7 +148,7 @@ EOF2
             printf '%s\n' "$vars_json" | jq -r '.key' | while read -r varname; do
               printf '%s\n' "  \${NSD_GetText} \$HWND_${pkg}_${varname} \$VAL_${pkg}_${varname}"
 
-              if case "$varname" in *"_PORT"* | *"_PORT_SECURE"*) true;; *) false;; esac; then
+              if case "$varname" in *"_PORT"*) true;; *) false;; esac; then
                 printf '%s\n' "  StrCmp \$VAL_${pkg}_${varname} \"\" +4 0"
                 printf '%s\n' "  nsExec::ExecToStack 'cmd.exe /c netstat -an | findstr /R /C:\":\$VAL_${pkg}_${varname} .*LISTENING\"'"
                 printf '%s\n' "  Pop \$0"
@@ -169,10 +169,10 @@ EOF2
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "  MessageBox MB_YESNO \"Do you want to completely remove the Data Directory and all records for $pkg?\" IDYES purge_$pkg IDNO keep_$pkg"
         printf '%s\n' "  purge_$pkg:"
-        printf '%s\n' "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --purge-data --service-name \$VAL_${pkg}_$(printf '%s\n' "$pkg" | tr "a-z" "A-Z")_SERVICE_NAME'"
+        printf '%s\n' "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --purge-data --service-name \$VAL_${pkg}_$(printf '%s\n' "$pkg" | tr "[:lower:]" "[:upper:]")_SERVICE_NAME'"
         printf '%s\n' "    Goto end_$pkg"
         printf '%s\n' "  keep_$pkg:"
-        printf '%s\n' "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --service-name \$VAL_${pkg}_$(printf '%s\n' "$pkg" | tr "a-z" "A-Z")_SERVICE_NAME'"
+        printf '%s\n' "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --service-name \$VAL_${pkg}_$(printf '%s\n' "$pkg" | tr "[:lower:]" "[:upper:]")_SERVICE_NAME'"
         printf '%s\n' "  end_$pkg:"
       done
       printf '%s\n' "SectionEnd"

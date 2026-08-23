@@ -1,15 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'bazel' stack.
+Test suite for the bazel component.
 
 .DESCRIPTION
-Execute this script to run the test suite for bazel.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command bazel -ErrorAction SilentlyContinue) {
-    bazel --version
-} else {
-    Write-Host "bazel skipped (not found)"
-}
+bazel --version

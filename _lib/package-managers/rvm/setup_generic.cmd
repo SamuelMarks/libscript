@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\rvm.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for rvm.
+        exit /b 1
     )
 ) else (
     echo rvm %RVM_VERSION% is already installed.

@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'go' stack.
+Test suite for the go component.
 
 .DESCRIPTION
-Execute this script to run the test suite for go.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command go -ErrorAction SilentlyContinue) {
-    go --version
-    Write-Output "go found"
-} else {
-    Write-Output "go skipped (not found)"
-}
+go version

@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:PHP_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for php."
+            Write-Error "No download URL or cache available for php."
+            exit 1
         }
     } else {
         Write-Output "php $CompVersion is already installed."

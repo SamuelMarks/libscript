@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\eopkg.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for eopkg.
+        exit /b 1
     )
 ) else (
     echo eopkg %EOPKG_VERSION% is already installed.

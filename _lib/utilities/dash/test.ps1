@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'dash' stack.
+Test suite for the dash component.
 
 .DESCRIPTION
-Execute this script to run the test suite for dash.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/utilities/dash test skipped"
+& dash --version

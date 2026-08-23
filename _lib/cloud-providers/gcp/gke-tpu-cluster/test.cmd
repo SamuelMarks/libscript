@@ -1,9 +1,10 @@
-:: # test.cmd
-::
-:: ## Overview
-:: Test suite for the GKE TPU cluster component on Windows.
-::
-:: ## Usage
-:: Automatically invoked by the test framework. Currently a no-op placeholder.
+@echo off
+rem ## Overview
+rem Test suite for the gke-tpu-cluster component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-call "%~dp0\..\..\..\_lib\_common\test_base.cmd"
+setlocal enabledelayedexpansion
+
+gke-tpu-cluster --version

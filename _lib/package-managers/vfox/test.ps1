@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'vfox' stack.
+Test suite for the vfox component.
 
 .DESCRIPTION
-Execute this script to run the test suite for vfox.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command vfox -ErrorAction SilentlyContinue) {
-    vfox --version
-    Write-Output "vfox found"
-} else {
-    Write-Output "vfox skipped (not found)"
-}
+& vfox --version

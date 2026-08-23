@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'winget' stack.
+Test suite for the winget component.
 
 .DESCRIPTION
-Execute this script to run the test suite for winget.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command winget -ErrorAction SilentlyContinue) {
-    winget --version
-    Write-Output "winget found"
-} else {
-    Write-Output "winget skipped (not found)"
-}
+& winget --version

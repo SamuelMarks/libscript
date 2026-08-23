@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'yarn' stack.
+Test suite for the yarn component.
 
 .DESCRIPTION
-Execute this script to run the test suite for yarn.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command yarn -ErrorAction SilentlyContinue) {
-    yarn --version
-    Write-Output "yarn found"
-} else {
-    Write-Output "yarn skipped (not found)"
-}
+& yarn --version

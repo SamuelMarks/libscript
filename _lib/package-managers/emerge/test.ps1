@@ -1,11 +1,17 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'emerge' stack.
+Test suite for the emerge component.
 
 .DESCRIPTION
-Execute this script to run the test suite for emerge.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/package-managers/emerge test skipped"
+if (Get-Command emerge -ErrorAction SilentlyContinue) {
+    & emerge --version
+} else {
+    Write-Host "emerge is not installed, skipping test."
+}

@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\sbt.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for sbt.
+        exit /b 1
     )
 ) else (
     echo sbt %SBT_VERSION% is already installed.

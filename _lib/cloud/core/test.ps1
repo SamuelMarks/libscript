@@ -1,12 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the cloud infrastructure command 'core' stack.
+Test suite for the core component.
 
 .DESCRIPTION
-Execute this script to run the test suite for core.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-# Wrapper test
-Write-Host "Cloud wrapper test passed."
+& core --version

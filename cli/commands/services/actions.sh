@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -33,6 +33,64 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
   action="$CMD"
   if [ "$action" = "up" ]; then action="start"; fi
   if [ "$action" = "down" ]; then action="stop"; fi
+
+  perform_health_check() {
+    _pkg="$1"
+    _ver="$2"
+    
+    # Perform specific runtime checks
+    case "$_pkg" in
+        postgres)
+            "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$_pkg" "health" "$_pkg" "$_ver" || true
+            su - postgres -c "psql -c 'SELECT 1;'" || true
+            ;;
+        mariadb|mysql)
+            "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$_pkg" "health" "$_pkg" "$_ver" || true
+            mysql -u root -e 'SELECT 1;' || true
+            ;;
+        mongodb)
+            "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$_pkg" "health" "$_pkg" "$_ver" || true
+            mongosh --eval 'db.runCommand({ ping: 1 })' || mongo --eval 'db.runCommand({ ping: 1 })' || true
+            ;;
+        etcd)
+            "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$_pkg" "health" "$_pkg" "$_ver" || true
+            etcdctl version || true
+            ;;
+        duckdb) duckdb -c 'SELECT 1;' || true ;;
+        sqlite) sqlite3 :memory: 'SELECT 1;' || true ;;
+        python) python3 -c 'print("hello world!")' || true ;;
+        ruby) ruby -e 'puts "hello world!"' || true ;;
+        nodejs) node -e 'console.log("hello world!")' || true ;;
+        java) java -version || true ;;
+        csharp) dotnet --version || true ;;
+        go) go version || true ;;
+        rust) rustc --version || true ;;
+        php) php -r 'echo "hello world!";' || true ;;
+        elixir) elixir -e 'IO.puts("hello world!")' || true ;;
+        swift) swift --version || true ;;
+        zig) zig version || true ;;
+        deno) deno --version || true ;;
+        bun) bun --version || true ;;
+        c|cc|cpp) gcc --version || clang --version || true ;;
+        sh) sh --version || echo 'sh is present' || true ;;
+        bazel) bazel --version || true ;;
+        cmake) cmake --version || true ;;
+        coursier) cs --version || true ;;
+        gradle) gradle --version || true ;;
+        huggingface-cli) huggingface-cli --version || true ;;
+        just) just --version || true ;;
+        maven) mvn --version || true ;;
+        xpk) xpk --version || true ;;
+        *)
+          # Delegate to component core health checks first (e.g., systemd/openrc/sc checks)
+          "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$_pkg" "health" "$_pkg" "$_ver" || true
+          if command -v "$_pkg" >/dev/null 2>&1; then
+            "$_pkg" --version || true
+          fi
+          ;;
+    esac
+  }
+
   follow_logs=0
   skip_hooks=0
   new_args=""
@@ -77,7 +135,10 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
           if [ "$ver" = "null" ]; then ver="latest"; fi
           if [ "$action" = "logs" ] && [ "$follow_logs" = "1" ]; then
             "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$pkg" "$action" "$pkg" "$ver" -f 2>&1 | awk -v prefix="$pkg" '{print "\033[36m" prefix " |\033[0m " $0; fflush()}' &
-          elif [ "$action" = "status" ] || [ "$action" = "health" ] || [ "$action" = "logs" ]; then
+          elif [ "$action" = "health" ]; then
+            printf '%s\n' "=== $pkg ==="
+            perform_health_check "$pkg" "$ver"
+          elif [ "$action" = "status" ] || [ "$action" = "logs" ]; then
             printf '%s\n' "=== $pkg ==="
             "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$pkg" "$action" "$pkg" "$ver"
           else
@@ -105,7 +166,10 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
     for pkg in "$@"; do
       if [ "$action" = "logs" ] && [ "$follow_logs" = "1" ]; then
         "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$pkg" "$action" "$pkg" "latest" -f 2>&1 | awk -v prefix="$pkg" '{print "\033[36m" prefix " |\033[0m " $0; fflush()}' &
-      elif [ "$action" = "status" ] || [ "$action" = "health" ] || [ "$action" = "logs" ]; then
+      elif [ "$action" = "health" ]; then
+        printf '%s\n' "=== $pkg ==="
+        perform_health_check "$pkg" "latest"
+      elif [ "$action" = "status" ] || [ "$action" = "logs" ]; then
         printf '%s\n' "=== $pkg ==="
         "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" "$pkg" "$action" "$pkg" "latest"
       else

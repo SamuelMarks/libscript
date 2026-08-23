@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\yarn.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for yarn.
+        exit /b 1
     )
 ) else (
     echo yarn %YARN_VERSION% is already installed.

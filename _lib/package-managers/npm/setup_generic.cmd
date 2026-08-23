@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\npm.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for npm.
+        exit /b 1
     )
 ) else (
     echo npm %NPM_VERSION% is already installed.

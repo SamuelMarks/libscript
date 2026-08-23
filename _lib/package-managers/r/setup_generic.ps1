@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:R_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for r."
+            Write-Error "No download URL or cache available for r."
+            exit 1
         }
     } else {
         Write-Output "r $CompVersion is already installed."

@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\helm.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for helm.
+        exit /b 1
     )
 ) else (
     echo helm %HELM_VERSION% is already installed.

@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:SYSTEMD_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for systemd."
+            Write-Error "No download URL or cache available for systemd."
+            exit 1
         }
     } else {
         Write-Output "systemd $CompVersion is already installed."

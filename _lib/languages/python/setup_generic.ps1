@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:PYTHON_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for python."
+            Write-Error "No download URL or cache available for python."
+            exit 1
         }
     } else {
         Write-Output "python $CompVersion is already installed."

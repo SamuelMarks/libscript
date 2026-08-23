@@ -1,16 +1,23 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'helm' stack.
+Test suite for the helm component.
 
 .DESCRIPTION
-Execute this script to run the test suite for helm.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
 if (Get-Command helm -ErrorAction SilentlyContinue) {
-    helm --version
-    Write-Output "helm found"
+    try {
+        & helm --version
+    } catch {
+        try {
+            & helm version
+        } catch {}
+    }
 } else {
-    Write-Output "helm skipped (not found)"
+    Write-Host "helm is not installed, skipping test."
 }

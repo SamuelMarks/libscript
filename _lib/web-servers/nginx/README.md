@@ -100,7 +100,7 @@ running the setup script.
 | `MODEL_NAME` | HuggingFace model string to serve | `your-org/your-model-name` |  |
 | `WORKLOAD_NAME` | Name of the XPK workload | `none` |  |
 | `JETSTREAM_IMAGE` | Docker image for JetStream TPU inference | `none` |  |
-| `NGINX_INSTALL_METHOD` | How to install NGINX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native` |  |
+| `NGINX_INSTALL_METHOD` | How to install NGINX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `system` |  |
 | `NGINX_WWWROOT_NAME` | The server_name or domain (e.g., example.com) to serve. | `none` |  |
 | `NGINX_WWWROOT_PATH` | The absolute path to the static document root to serve. | `none` |  |
 | `NGINX_WWWROOT_LISTEN` | The HTTP port Nginx should listen on (defaults to 80). | `80` |  |

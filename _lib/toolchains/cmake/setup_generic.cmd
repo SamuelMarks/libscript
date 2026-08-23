@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\cmake.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for cmake.
+        exit /b 1
     )
 ) else (
     echo cmake %CMAKE_VERSION% is already installed.

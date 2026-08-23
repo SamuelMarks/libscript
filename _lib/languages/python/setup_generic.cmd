@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\python.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for python.
+        exit /b 1
     )
 ) else (
     echo python %PYTHON_VERSION% is already installed.

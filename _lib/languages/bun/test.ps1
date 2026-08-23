@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'bun' stack.
+Test suite for the bun component.
 
 .DESCRIPTION
-Execute this script to run the test suite for bun.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command bun -ErrorAction SilentlyContinue) {
-    bun --version
-    Write-Output "bun found"
-} else {
-    Write-Output "bun skipped (not found)"
-}
+bun --version

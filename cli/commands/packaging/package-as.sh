@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -30,31 +30,31 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 if [ "$CMD" = "package-as" ]; then
-  pkg_type="$1"
+  export pkg_type="$1"
   shift
-  if [ "$pkg_type" = "docker" ] || [ "$pkg_type" = "dockerfile" ]; then
+  if [ "${pkg_type:-}" = "docker" ] || [ "$pkg_type" = "dockerfile" ]; then
     . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_docker.sh"
-  elif [ "$pkg_type" = "docker_compose" ]; then
+  elif [ "${pkg_type:-}" = "docker_compose" ]; then
     . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_docker_compose.sh"
-  elif [ "$pkg_type" = "TUI" ]; then
+  elif [ "${pkg_type:-}" = "TUI" ]; then
     . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_tui.sh"
-  elif [ "$pkg_type" = "msi" ]; then
+  elif [ "${pkg_type:-}" = "msi" ]; then
     . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_msi.sh"
-  elif [ "$pkg_type" = "innosetup" ]; then
+  elif [ "${pkg_type:-}" = "innosetup" ]; then
     . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_innosetup.sh"
-  elif [ "$pkg_type" = "nsis" ]; then
+  elif [ "${pkg_type:-}" = "nsis" ]; then
     . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_nsis.sh"
-  elif [ "$pkg_type" = "pkg" ]; then
+  elif [ "${pkg_type:-}" = "pkg" ]; then
     . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_pkg.sh"
-  elif [ "$pkg_type" = "dmg" ]; then
+  elif [ "${pkg_type:-}" = "dmg" ]; then
     . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_dmg.sh"
-  elif [ "$pkg_type" = "deb" ]; then
+  elif [ "${pkg_type:-}" = "deb" ]; then
     . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_deb.sh"
-  elif [ "$pkg_type" = "rpm" ]; then
+  elif [ "${pkg_type:-}" = "rpm" ]; then
     . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_rpm.sh"
-  elif [ "$pkg_type" = "apk" ]; then
+  elif [ "${pkg_type:-}" = "apk" ]; then
     . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_apk.sh"
-  elif [ "$pkg_type" = "txz" ]; then
+  elif [ "${pkg_type:-}" = "txz" ]; then
     . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_txz.sh"
   else
     printf '%s\n' "Error: Unsupported package format '$pkg_type'." >&2

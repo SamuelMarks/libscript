@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\apk.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for apk.
+        exit /b 1
     )
 ) else (
     echo apk %APK_VERSION% is already installed.

@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'swupd' stack.
+Test suite for the swupd component.
 
 .DESCRIPTION
-Execute this script to run the test suite for swupd.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command swupd -ErrorAction SilentlyContinue) {
-    swupd --version
-    Write-Output "swupd found"
-} else {
-    Write-Output "swupd skipped (not found)"
-}
+& swupd --version

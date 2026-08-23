@@ -12,11 +12,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -44,15 +44,17 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   exit 0
 fi
 
-if ! command -v tmux >/dev/null 2>&1; then
-  log_error "tmux not found. Please install the utilities/tmux component first."
-  exit 1
-fi
-
+check_tmux() {
+  if ! command -v tmux >/dev/null 2>&1; then
+    log_error "tmux not found. Please install the utilities/tmux component first."
+    exit 1
+  fi
+}
 ACTION="${1:-}"
 
 case "$ACTION" in
   new-session)
+      check_tmux
     SESSION_NAME="${2:-ml-session}"
     shift 2
     if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
@@ -69,20 +71,27 @@ case "$ACTION" in
     fi
     ;;
   attach)
+      check_tmux
     SESSION_NAME="${2:-ml-session}"
     log_info "Attaching to session: $SESSION_NAME"
     tmux attach-session -t "$SESSION_NAME"
     ;;
   kill)
+      check_tmux
     SESSION_NAME="${2:-ml-session}"
     log_info "Killing session: $SESSION_NAME"
     tmux kill-session -t "$SESSION_NAME" || true
     ;;
   list)
+      check_tmux
     tmux list-sessions || true
     ;;
-  *)
-    log_error "Unknown action: $ACTION. Supported: new-session, attach, kill, list."
-    exit 1
-    ;;
-esac
+    *)
+      export PACKAGE_NAME="tmux"
+      SCRIPT_DIR="${LIBSCRIPT_ROOT_DIR}/_lib/utilities/tmux"
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/component_core.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+      ;;
+  esac

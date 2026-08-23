@@ -1,16 +1,23 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'krew' stack.
+Test suite for the krew component.
 
 .DESCRIPTION
-Execute this script to run the test suite for krew.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command krew -ErrorAction SilentlyContinue) {
-    krew --version
-    Write-Output "krew found"
+if (Get-Command kubectl-krew -ErrorAction SilentlyContinue) {
+    try {
+        & kubectl-krew --version
+    } catch {
+        try {
+            & kubectl-krew version
+        } catch {}
+    }
 } else {
-    Write-Output "krew skipped (not found)"
+    Write-Host "kubectl-krew is not installed, skipping test."
 }

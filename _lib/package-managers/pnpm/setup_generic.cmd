@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\pnpm.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for pnpm.
+        exit /b 1
     )
 ) else (
     echo pnpm %PNPM_VERSION% is already installed.

@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -255,7 +255,7 @@ for url in ${URLS}; do
     title="${p}"'/'"${title}"
   fi
   if [ -n "${LIBSCRIPT_DOCS_PREFIX}" ]; then
-    url="${LIBSCRIPT_DOCS_PREFIX}"'/'"${url}"
+    export url="${LIBSCRIPT_DOCS_PREFIX}"'/'"${url}"
   fi
   USAGE=''
   SCHEMA=''
@@ -295,7 +295,7 @@ for url in ${URLS}; do
 
   GIT_HTTP_LINK="$(printf '%s' "${GIT_HTTP_LINK}" | sed 's/docs/blob/; s/latest/master/; s/html/md/')"
   env -i PATH="${ENVSUBST_PATH}" \
-          url="${url}" \
+          export url="${url}" \
           TITLE="${title%%.html}" \
           LIBSCRIPT_DOCS_DIR="${LIBSCRIPT_DOCS_DIR#.}" \
           LIBSCRIPT_ASSETS_DIR="${LIBSCRIPT_ASSETS_DIR}" \

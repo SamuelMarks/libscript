@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\openrc.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for openrc.
+        exit /b 1
     )
 ) else (
     echo openrc %OPENRC_VERSION% is already installed.

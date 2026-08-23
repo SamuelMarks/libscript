@@ -8,11 +8,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -30,4 +30,6 @@ else
   EXACT_VERSION="${JUST_VERSION}"
 fi
 
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/just/${EXACT_VERSION}/bin:${PATH}"
+export JUST_ROOT="${LIBSCRIPT_HOME:-$HOME/.libscript}/just/${JUST_VERSION:-latest}"
+export PATH="$JUST_ROOT/bin:${PATH}"
+

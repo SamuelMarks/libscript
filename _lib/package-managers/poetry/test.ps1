@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'poetry' stack.
+Test suite for the poetry component.
 
 .DESCRIPTION
-Execute this script to run the test suite for poetry.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command poetry -ErrorAction SilentlyContinue) {
-    poetry --version
-    Write-Output "poetry found"
-} else {
-    Write-Output "poetry skipped (not found)"
-}
+& poetry --version

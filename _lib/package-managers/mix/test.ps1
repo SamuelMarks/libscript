@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'mix' stack.
+Test suite for the mix component.
 
 .DESCRIPTION
-Execute this script to run the test suite for mix.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command mix -ErrorAction SilentlyContinue) {
-    mix --version
-    Write-Output "mix found"
-} else {
-    Write-Output "mix skipped (not found)"
-}
+& mix --version

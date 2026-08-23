@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'c' stack.
+Test suite for the c component.
 
 .DESCRIPTION
-Execute this script to run the test suite for c.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command c -ErrorAction SilentlyContinue) {
-    c --version
-    Write-Output "c found"
-} else {
-    Write-Output "c skipped (not found)"
-}
+gcc --version

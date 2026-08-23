@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -74,5 +74,5 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 # Run the resolution engine
-jq --arg target_os "$TARGET_OS" -n '{install: input, manifests: [inputs]}' "$INSTALL_JSON" $MANIFESTS | jq -L "${SCRIPT_DIR}/../utilities" -L "${SCRIPT_DIR}" --arg target_os "$TARGET_OS" -r -f "${SCRIPT_DIR}/resolve_stack.jq"
+jq --arg target_os "$TARGET_OS" -n '{install: input, manifests: [inputs]}' "$INSTALL_JSON" "$MANIFESTS" | jq -L "${SCRIPT_DIR}/../utilities" -L "${SCRIPT_DIR}" --arg target_os "$TARGET_OS" -r -f "${SCRIPT_DIR}/resolve_stack.jq"
 

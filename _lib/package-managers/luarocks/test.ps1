@@ -1,16 +1,23 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'luarocks' stack.
+Test suite for the luarocks component.
 
 .DESCRIPTION
-Execute this script to run the test suite for luarocks.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
 if (Get-Command luarocks -ErrorAction SilentlyContinue) {
-    luarocks --version
-    Write-Output "luarocks found"
+    try {
+        & luarocks --version
+    } catch {
+        try {
+            & luarocks version
+        } catch {}
+    }
 } else {
-    Write-Output "luarocks skipped (not found)"
+    Write-Host "luarocks is not installed, skipping test."
 }

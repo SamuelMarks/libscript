@@ -1,13 +1,14 @@
 @echo off
-:: # test.cmd
-::
-:: ## Overview
-:: Serves as the Windows test entry point for the Node.js Server component.
-:: It automatically delegates execution to the common `test_base.cmd`
-:: to run standardized testing assertions for `node`.
-:: 
-:: ## Usage
-:: Call this script to trigger Node.js Server component testing on Windows.
+rem ## Overview
+rem Test suite for the nodejs-server component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-setlocal EnableDelayedExpansion
-call "%~dp0\..\..\_common\test_base.cmd" :assert_version "node" "."
+setlocal enabledelayedexpansion
+
+if exist "%~dp0cli.cmd" (
+    call "%~dp0cli.cmd" --help >nul
+) else (
+    exit /b 0
+)

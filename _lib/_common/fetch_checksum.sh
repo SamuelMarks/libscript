@@ -14,11 +14,11 @@ set -eu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -30,11 +30,11 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+_SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # Dynamic checksum fetcher
 libscript_fetch_checksum() {
-  url="${1:-}"
+  export url="${1:-}"
   
   if [ -z "$url" ]; then
     return 1
@@ -42,9 +42,9 @@ libscript_fetch_checksum() {
 
   # 1. NodeJS
   if printf '%s\n' "$url" | grep -q "nodejs.org/dist/"; then
-    base_url="${url%/*}"
+    base_export url="${url%/*}"
     filename="${url##*/}"
-    curl -sL "$base_url/SHASUMS256.txt" | grep "$filename" | awk '{print $1}'
+    curl -sL "${base_url:-}/SHASUMS256.txt" | grep "$filename" | awk '{print $1}'
     return 0
   fi
 
@@ -57,14 +57,14 @@ libscript_fetch_checksum() {
 
   # 3. GitHub Releases (general)
   if printf '%s\n' "$url" | grep -q "github.com/.*/releases/download/"; then
-     base_url="${url%/*}"
+     base_export url="${url%/*}"
      filename="${url##*/}"
-     sums="$(curl -sL "$base_url/SHASUMS256.txt")"
+     sums="$(curl -sL "${base_url:-}/SHASUMS256.txt")"
      if [ -n "$sums" ] && ! printf '%s\n' "$sums" | grep -q "Not Found"; then
          printf '%s\n' "$sums" | grep "$filename" | awk '{print $1}'
          return 0
      fi
-     sums="$(curl -sL "$base_url/checksums.txt")"
+     sums="$(curl -sL "${base_url:-}/checksums.txt")"
      if [ -n "$sums" ] && ! printf '%s\n' "$sums" | grep -q "Not Found"; then
          printf '%s\n' "$sums" | grep "$filename" | awk '{print $1}'
          return 0
@@ -72,8 +72,8 @@ libscript_fetch_checksum() {
   fi
   
   # 4. Fallback checking if .sha256 file exists
-  sha_url="${url}.sha256"
-  sha_content="$(curl -sL "$sha_url" || true)"
+  sha_export url="${url}.sha256"
+  sha_content="$(curl -sL "${sha_url:-}" || true)"
   if [ -n "$sha_content" ] && ! printf '%s\n' "$sha_content" | grep -i "Not Found" >/dev/null; then
       printf '%s\n' "$sha_content" | awk '{print $1}'
       return 0

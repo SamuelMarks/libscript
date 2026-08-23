@@ -1,15 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'just' stack.
+Test suite for the just component.
 
 .DESCRIPTION
-Execute this script to run the test suite for just.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command just -ErrorAction SilentlyContinue) {
-    just --version
-} else {
-    Write-Host "just skipped (not found)"
-}
+just --version

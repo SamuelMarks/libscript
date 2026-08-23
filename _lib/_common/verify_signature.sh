@@ -12,11 +12,11 @@ set -eu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -28,12 +28,12 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+_SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # Signature verification wrapper
 libscript_verify_signature() {
   file="${1:-}"
-  url="${2:-}"
+  export url="${2:-}"
   
   if [ -z "$file" ] || [ -z "$url" ]; then
     return 1
@@ -41,15 +41,15 @@ libscript_verify_signature() {
   
   # NodeJS Signature Verification
   if printf '%s\n' "$url" | grep -q "nodejs.org/dist/"; then
-    base_url="${url%/*}"
-    sig_url="$base_url/SHASUMS256.txt.sig"
-    sums_url="$base_url/SHASUMS256.txt"
+    base_export url="${url%/*}"
+    sig_export url="${base_url:-}/SHASUMS256.txt.sig"
+    sums_export url="$base_url/SHASUMS256.txt"
     
     # Download the signature and sums file
     tmp_sig="$(mktemp)"
     tmp_sums="$(mktemp)"
-    curl -sL "$sig_url" -o "$tmp_sig"
-    curl -sL "$sums_url" -o "$tmp_sums"
+    curl -sL "${sig_url:-}" -o "$tmp_sig"
+    curl -sL "${sums_url:-}" -o "$tmp_sums"
     
     # Basic check if gpg is available. If not, we might log a warning and continue,
     # or fail. Assuming we want strict validation if possible.

@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\pub.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for pub.
+        exit /b 1
     )
 ) else (
     echo pub %PUB_VERSION% is already installed.

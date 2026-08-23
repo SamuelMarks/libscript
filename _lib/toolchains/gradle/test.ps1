@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'gradle' stack.
+Test suite for the gradle component.
 
 .DESCRIPTION
-Execute this script to run the test suite for gradle.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command gradle -ErrorAction SilentlyContinue) {
-    gradle --version
-    Write-Output "gradle found"
-} else {
-    Write-Output "gradle skipped (not found)"
-}
+gradle --version

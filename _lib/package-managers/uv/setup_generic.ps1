@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:UV_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for uv."
+            Write-Error "No download URL or cache available for uv."
+            exit 1
         }
     } else {
         Write-Output "uv $CompVersion is already installed."

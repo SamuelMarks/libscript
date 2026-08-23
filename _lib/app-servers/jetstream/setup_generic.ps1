@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:JETSTREAM_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for jetstream."
+            Write-Error "No download URL or cache available for jetstream."
+            exit 1
         }
     } else {
         Write-Output "jetstream $CompVersion is already installed."

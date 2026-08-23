@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\maven.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for maven.
+        exit /b 1
     )
 ) else (
     echo maven %MAVEN_VERSION% is already installed.

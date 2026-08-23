@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\paru.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for paru.
+        exit /b 1
     )
 ) else (
     echo paru %PARU_VERSION% is already installed.

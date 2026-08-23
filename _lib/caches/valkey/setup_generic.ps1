@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:VALKEY_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for valkey."
+            Write-Error "No download URL or cache available for valkey."
+            exit 1
         }
     } else {
         Write-Output "valkey $CompVersion is already installed."

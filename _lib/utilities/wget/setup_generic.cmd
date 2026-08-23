@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\wget.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for wget.
+        exit /b 1
     )
 ) else (
     echo wget %WGET_VERSION% is already installed.

@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'cargo-binstall' stack.
+Test suite for the cargo-binstall component.
 
 .DESCRIPTION
-Execute this script to run the test suite for cargo-binstall.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command cargo-binstall -ErrorAction SilentlyContinue) {
-    cargo-binstall --version
-    Write-Output "cargo-binstall found"
-} else {
-    Write-Output "cargo-binstall skipped (not found)"
-}
+& cargo-binstall -V

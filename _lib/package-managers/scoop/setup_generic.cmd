@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\scoop.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for scoop.
+        exit /b 1
     )
 ) else (
     echo scoop %SCOOP_VERSION% is already installed.

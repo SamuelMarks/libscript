@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -53,7 +53,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
         DEPS_LIST=$(find_components | sort | awk '{printf "%s latest ", $1}')
       fi
 
-      set -- $DEPS_LIST
+      eval "set -- $DEPS_LIST"
       while [ $# -gt 0 ]; do
         PKG=$1; VER=$2; shift 2
         COMP_DIR="$PKG_STAGE/comp_${PKG}"
@@ -92,7 +92,7 @@ ${DESC}:" default answer "${DEFVAL}" ${HIDDEN}' -e 'text returned of result' 2>/
 export ${VARNAME}="\$VAL_${VARNAME}"
 EOF_PROMPT
 
-              if case "$VARNAME" in *"_PORT"* | *"_PORT_SECURE"*) true;; *) false;; esac; then
+              if case "$VARNAME" in *"_PORT"*) true;; *) false;; esac; then
                 cat << EOF_PROMPT >> "$COMP_DIR/scripts/postinstall"
 while netstat -an | grep -q "[.:]\$VAL_${VARNAME} .*LISTEN"; do
   VAL_${VARNAME}=\$(sudo -u "\$USER_NAME" osascript -e 'Tell application "System Events" to display dialog "Port '"\$VAL_${VARNAME}"' is already in use. Please enter a different port:" default answer ""' -e 'text returned of result' 2>/dev/null)
@@ -173,7 +173,7 @@ EOF_SCRIPT
     <license file="license.html"/>' "$PKG_STAGE/Distribution.xml"
         fi
 
-        set -- $DEPS_LIST
+        eval "set -- $DEPS_LIST"
         while [ $# -gt 0 ]; do
           PKG=$1; VER=$2; shift 2
           sed_in_place "s/choice id=\"com.libscript.comp.$PKG\" title=\"[^\"]*\"/choice id=\"com.libscript.comp.$PKG\" title=\"$PKG installer\"/g" "$PKG_STAGE/Distribution.xml"

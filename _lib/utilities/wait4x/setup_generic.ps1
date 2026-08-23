@@ -130,7 +130,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:WAIT4X_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for wait4x."
+            Write-Error "No download URL or cache available for wait4x."
+            exit 1
         }
     } else {
         Write-Output "wait4x $CompVersion is already installed."

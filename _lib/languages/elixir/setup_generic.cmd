@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\elixir.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for elixir.
+        exit /b 1
     )
 ) else (
     echo elixir %ELIXIR_VERSION% is already installed.

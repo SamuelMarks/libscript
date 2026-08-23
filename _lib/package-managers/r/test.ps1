@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'r' stack.
+Test suite for the r component.
 
 .DESCRIPTION
-Execute this script to run the test suite for r.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command R -ErrorAction SilentlyContinue) {
-    R --version
-    Write-Output "R found"
-} else {
-    Write-Output "R skipped (not found)"
-}
+& r --version

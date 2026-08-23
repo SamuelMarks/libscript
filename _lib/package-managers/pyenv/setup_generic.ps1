@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:PYENV_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for pyenv."
+            Write-Error "No download URL or cache available for pyenv."
+            exit 1
         }
     } else {
         Write-Output "pyenv $CompVersion is already installed."

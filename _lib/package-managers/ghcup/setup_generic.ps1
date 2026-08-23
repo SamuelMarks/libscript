@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:GHCUP_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for ghcup."
+            Write-Error "No download URL or cache available for ghcup."
+            exit 1
         }
     } else {
         Write-Output "ghcup $CompVersion is already installed."

@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:GITEA_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for gitea."
+            Write-Error "No download URL or cache available for gitea."
+            exit 1
         }
     } else {
         Write-Output "gitea $CompVersion is already installed."

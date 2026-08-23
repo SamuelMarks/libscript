@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\vcpkg.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for vcpkg.
+        exit /b 1
     )
 ) else (
     echo vcpkg %VCPKG_VERSION% is already installed.

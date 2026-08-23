@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:DENO_PM_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for deno-pm."
+            Write-Error "No download URL or cache available for deno-pm."
+            exit 1
         }
     } else {
         Write-Output "deno-pm $CompVersion is already installed."

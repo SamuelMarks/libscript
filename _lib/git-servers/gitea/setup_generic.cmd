@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\gitea.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for gitea.
+        exit /b 1
     )
 ) else (
     echo gitea %GITEA_VERSION% is already installed.

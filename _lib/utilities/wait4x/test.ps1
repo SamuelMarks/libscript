@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'wait4x' stack.
+Test suite for the wait4x component.
 
 .DESCRIPTION
-Execute this script to run the test suite for wait4x.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command wait4x -ErrorAction SilentlyContinue) {
-    wait4x --version
-    Write-Output "wait4x found"
-} else {
-    Write-Output "wait4x skipped (not found)"
-}
+& wait4x --version

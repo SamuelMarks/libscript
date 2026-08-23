@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\dash.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for dash.
+        exit /b 1
     )
 ) else (
     echo dash %DASH_VERSION% is already installed.

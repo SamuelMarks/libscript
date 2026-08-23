@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -29,7 +29,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-DIR="${SCRIPT_DIR}"
+export DIR="${SCRIPT_DIR}"
 
 for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
@@ -71,14 +71,14 @@ if [ ! -d "${WORDPRESS_WWWROOT}/wp-admin" ]; then
   printf '%s\n' "Downloading WordPress (${WORDPRESS_VERSION}) to ${WORDPRESS_WWWROOT}..."
   priv mkdir -p "${WORDPRESS_WWWROOT}"
   if [ "${WORDPRESS_VERSION}" = "latest" ]; then
-    dl_url="https://wordpress.org/latest.tar.gz"
+    dl_export url="https://wordpress.org/latest.tar.gz"
   else
-    dl_url="https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz"
+    dl_export url="https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz"
   fi
 
   if command -v libscript_download >/dev/null 2>&1; then
     tmp_wp=$(mktemp)
-    libscript_download "${dl_url}" "${tmp_wp}"
+    libscript_download "${dl_url:-}" "${tmp_wp}"
     priv tar xzf "${tmp_wp}" --strip-components=1 -C "${WORDPRESS_WWWROOT}"
     rm -f "${tmp_wp}"
   else
@@ -98,10 +98,10 @@ if [ "${WORDPRESS_DB_ENGINE}" = "sqlite" ]; then
   # We just need to download the sqlite-database-integration drop-in
   if [ ! -f "${WORDPRESS_WWWROOT}/wp-content/db.php" ]; then
     priv mkdir -p "${WORDPRESS_WWWROOT}/wp-content/mu-plugins"
-    dl_sqlite_url="https://downloads.wordpress.org/plugin/sqlite-database-integration.zip"
+    dl_sqlite_export url="https://downloads.wordpress.org/plugin/sqlite-database-integration.zip"
     tmp_sqlite=$(mktemp)
     if command -v libscript_download >/dev/null 2>&1; then
-      libscript_download "${dl_sqlite_url}" "${tmp_sqlite}"
+      libscript_download "${dl_sqlite_url:-}" "${tmp_sqlite}"
     else
       wget -qO "${tmp_sqlite}" "${dl_sqlite_url}"
     fi
@@ -116,10 +116,10 @@ elif [ "${WORDPRESS_DB_ENGINE}" = "postgres" ] || [ "${WORDPRESS_DB_ENGINE}" = "
   libscript_depends 'unzip'
   # Install PG4WP drop-in
   if [ ! -f "${WORDPRESS_WWWROOT}/wp-content/db.php" ]; then
-    dl_pg_url="https://downloads.wordpress.org/plugin/postgresql-for-wordpress.zip"
+    dl_pg_export url="https://downloads.wordpress.org/plugin/postgresql-for-wordpress.zip"
     tmp_pg=$(mktemp)
     if command -v libscript_download >/dev/null 2>&1; then
-      libscript_download "${dl_pg_url}" "${tmp_pg}"
+      libscript_download "${dl_pg_url:-}" "${tmp_pg}"
     else
       wget -qO "${tmp_pg}" "${dl_pg_url}"
     fi

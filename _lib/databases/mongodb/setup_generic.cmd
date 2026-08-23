@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\mongodb.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for mongodb.
+        exit /b 1
     )
 ) else (
     echo mongodb %MONGODB_VERSION% is already installed.

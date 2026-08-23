@@ -1,12 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'utils' stack.
+Test suite for the utils component.
 
 .DESCRIPTION
-Execute this script to run the test suite for utils.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-# Utilities test
-Write-Host "Git servers utilities test passed."
+& utils --version

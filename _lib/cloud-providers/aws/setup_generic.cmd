@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\aws.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for aws.
+        exit /b 1
     )
 ) else (
     echo aws %AWS_VERSION% is already installed.

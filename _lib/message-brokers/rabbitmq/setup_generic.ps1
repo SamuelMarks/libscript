@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:RABBITMQ_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for rabbitmq."
+            Write-Error "No download URL or cache available for rabbitmq."
+            exit 1
         }
     } else {
         Write-Output "rabbitmq $CompVersion is already installed."

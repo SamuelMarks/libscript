@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -30,9 +30,9 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 VERBOSE=0
-ALL_DEPS=0
+export ALL_DEPS=0
 HELP=0
-OUTPUT_FOLDER="${LIBSCRIPT_ROOT_DIR}"'/tmp'
+export OUTPUT_FOLDER="${LIBSCRIPT_ROOT_DIR}"'/tmp'
 BASE="${BASE:-alpine:latest debian:bookworm-slim}"
 
 for arg in "$@"; do
@@ -44,9 +44,9 @@ done
 
 while getopts 'a:f:o:vh' opt; do
     case ${opt} in
-      (a)   ALL_DEPS="${OPTARG}" ;;
+      (a)   export ALL_DEPS="${OPTARG}" ;;
       (f)   filename="${OPTARG}" ;;
-      (o)   OUTPUT_FOLDER="${OPTARG}" ;;
+      (o)   export OUTPUT_FOLDER="${OPTARG}" ;;
       (v)   # shellcheck disable=SC2003
             VERBOSE=$(expr "${VERBOSE}" + 1) ;;
       (h)   HELP=1 ;;

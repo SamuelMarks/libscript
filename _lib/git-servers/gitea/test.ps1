@@ -1,15 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'gitea' stack.
+Test suite for the gitea component.
 
 .DESCRIPTION
-Execute this script to run the test suite for gitea.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command gitea -ErrorAction SilentlyContinue) {
-    gitea --version
-} else {
-    Write-Host "gitea skipped (not found)"
-}
+& gitea --version

@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\poetry.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for poetry.
+        exit /b 1
     )
 ) else (
     echo poetry %POETRY_VERSION% is already installed.

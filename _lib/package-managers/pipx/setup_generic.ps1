@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:PIPX_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for pipx."
+            Write-Error "No download URL or cache available for pipx."
+            exit 1
         }
     } else {
         Write-Output "pipx $CompVersion is already installed."

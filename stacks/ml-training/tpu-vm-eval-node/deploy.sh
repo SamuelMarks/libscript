@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -64,10 +64,10 @@ PROJECT_FLAG="--project=$GCP_PROJECT_ID"
 printf '%s\n' "Deploying execution loop to $TPU_NAME..."
 
 printf '%s\n' "Syncing libscript components to TPU VM..."
-gcloud compute tpus tpu-vm scp --recurse "${LIBSCRIPT_ROOT_DIR}/_lib" "$TPU_NAME:~/" --zone="$TPU_ZONE" $PROJECT_FLAG
+gcloud compute tpus tpu-vm scp --recurse "${LIBSCRIPT_ROOT_DIR}/_lib" "$TPU_NAME:~/" --zone="$TPU_ZONE" "$PROJECT_FLAG"
 
 printf '%s\n' "Installing components on TPU VM..."
-gcloud compute tpus tpu-vm ssh "$TPU_NAME" --zone="$TPU_ZONE" $PROJECT_FLAG --command "
+gcloud compute tpus tpu-vm ssh "$TPU_NAME" --zone="$TPU_ZONE" "$PROJECT_FLAG" --command "
   ~/_lib/storage-layers/gcsfuse/setup.sh &&
   ~/_lib/utilities/tmux/setup.sh &&
   ~/_lib/logging/tensorboard/setup.sh

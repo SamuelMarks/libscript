@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'kubernetes-thw' stack.
+Test suite for the kubernetes-thw component.
 
 .DESCRIPTION
-Execute this script to run the test suite for kubernetes-thw.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/orchestration/kubernetes-thw test skipped"
+& kubernetes-thw --version

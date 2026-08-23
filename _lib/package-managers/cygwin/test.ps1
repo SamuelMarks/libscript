@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'cygwin' stack.
+Test suite for the cygwin component.
 
 .DESCRIPTION
-Execute this script to run the test suite for cygwin.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/package-managers/cygwin test skipped"
+& cygwin --version

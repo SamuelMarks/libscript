@@ -1,11 +1,19 @@
 @echo off
-:: # test.cmd
-::
-:: ## Overview
-:: Test suite for MongoDB on Windows.
-::
-:: ## Usage
-:: Automatically invoked by the test framework to assert MongoDB is accessible.
+rem ## Overview
+rem Test suite for the mongodb component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-setlocal EnableDelayedExpansion
-call "%~dp0\..\..\_common\test_base.cmd" :assert_version "mongod" "."
+setlocal enabledelayedexpansion
+
+where mongod >nul 2>nul
+if %errorlevel% equ 0 (
+  mongod --version
+  exit /b 0
+)
+
+if exist "%~dp0cli.cmd" (
+    call "%~dp0cli.cmd" --help >nul
+)
+exit /b 0

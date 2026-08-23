@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\kotlin.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for kotlin.
+        exit /b 1
     )
 ) else (
     echo kotlin %KOTLIN_VERSION% is already installed.

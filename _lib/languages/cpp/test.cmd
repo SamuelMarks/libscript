@@ -1,11 +1,10 @@
 @echo off
-:: # test.cmd
-::
-:: ## Overview
-:: Test suite for CPP on Windows.
-::
-:: ## Usage
-:: Automatically invoked by the test framework to assert cpp is accessible.
+rem ## Overview
+rem Test suite for the cpp component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-setlocal EnableDelayedExpansion
-call "%~dp0\..\..\_common\test_base.cmd" :assert_version "cpp" "."
+setlocal enabledelayedexpansion
+
+gcc --version

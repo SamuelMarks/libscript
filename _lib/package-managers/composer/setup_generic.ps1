@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:COMPOSER_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for composer."
+            Write-Error "No download URL or cache available for composer."
+            exit 1
         }
     } else {
         Write-Output "composer $CompVersion is already installed."

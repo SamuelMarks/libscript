@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:HELM_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for helm."
+            Write-Error "No download URL or cache available for helm."
+            exit 1
         }
     } else {
         Write-Output "helm $CompVersion is already installed."

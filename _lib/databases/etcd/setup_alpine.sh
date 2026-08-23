@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -39,7 +39,11 @@ if [ "${ETCD_VERSION}" = 'v3.5.16' ]; then
   ETCD_VERSION='3.5.16-r6'
 fi
 if ! apk info -e 'etcd' >/dev/null 2>&1; then
-  apk add 'etcd=='"${ETCD_VERSION}"
+  if [ "${ETCD_VERSION}" = "latest" ]; then
+    apk add etcd etcd-ctl || apk add etcd
+  else
+    apk add "etcd=${ETCD_VERSION}" "etcd-ctl=${ETCD_VERSION}" || apk add "etcd=${ETCD_VERSION}"
+  fi
 fi
 
 if [ -n "${ETCD_LISTEN_SOCKET:-${LIBSCRIPT_LISTEN_SOCKET:-}}" ]; then

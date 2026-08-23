@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -38,15 +38,15 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 
 IS_TPU=0
-SHARED_STORAGE=0
-POSITIONALS=""
+export SHARED_STORAGE=0
+export POSITIONALS=""
 
 # Parse flags
 _p1="" _p2="" _p3="" _p4="" _p5="" _p6=""
 for arg do
   case "$arg" in
     --tpu|--accelerator) IS_TPU=1 ;;
-    --shared-storage) SHARED_STORAGE=1 ;;
+    --shared-storage) export SHARED_STORAGE=1 ;;
     *)
       if [ -z "$_p1" ]; then _p1="$arg"
       elif [ -z "$_p2" ]; then _p2="$arg"
@@ -320,7 +320,7 @@ if [ "$PROVIDER" = "azure" ]; then
 
   NODE_ARGS="--size $SIZE --vnet-name ${NODE}-vnet --nsg ${NODE}-nsg --tags libscript:managed=true libscript:node=$NODE"
   if [ -n "$DISK_GB" ]; then NODE_ARGS="$NODE_ARGS --os-disk-size-gb $DISK_GB"; fi
-  with_retry "$CLI" node create "$NODE" "$OS_IMAGE" "$RG" $NODE_ARGS
+  with_retry "$CLI" node create "$NODE" "$OS_IMAGE" "$RG" "$NODE_ARGS"
   record_state "AZURE_NODE" "$NODE"
   if jq -e ".infrastructure.node.data_disks" "$JSON_FILE" >/dev/null 2>&1; then
     DISK_NAME=$(jq -r ".infrastructure.node.data_disks[0].name" "$JSON_FILE")
@@ -462,7 +462,7 @@ if [ -n "$STATE_PATHS" ]; then
       if printf '%s\n' "$STATE_BUCKET" | grep -q "^s3://"; then
         S3_ARGS=""
         if [ -n "$STATE_ENDPOINT" ]; then S3_ARGS="--endpoint-url $STATE_ENDPOINT"; fi
-        aws s3 cp $S3_ARGS "$STATE_BUCKET/$PATH_ITEM" "$REPO_PATH/$PATH_ITEM" >> "$LOG_FILE" 2>&1 || true
+        aws s3 cp "$S3_ARGS" "$STATE_BUCKET/$PATH_ITEM" "$REPO_PATH/$PATH_ITEM" >> "$LOG_FILE" 2>&1 || true
       elif printf '%s\n' "$STATE_BUCKET" | grep -q "^gs://"; then
         gcloud storage cp "$STATE_BUCKET/$PATH_ITEM" "$REPO_PATH/$PATH_ITEM" >> "$LOG_FILE" 2>&1 || true
       elif printf '%s\n' "$STATE_BUCKET" | grep -q "^azure://"; then

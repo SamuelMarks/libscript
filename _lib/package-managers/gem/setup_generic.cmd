@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\gem.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for gem.
+        exit /b 1
     )
 ) else (
     echo gem %GEM_VERSION% is already installed.

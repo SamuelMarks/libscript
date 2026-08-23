@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'azure-cli' stack.
+Test suite for the azure-cli component.
 
 .DESCRIPTION
-Execute this script to run the test suite for azure-cli.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/package-managers/azure-cli test skipped"
+& az --version

@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'aria2' stack.
+Test suite for the aria2 component.
 
 .DESCRIPTION
-Execute this script to run the test suite for aria2.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/utilities/aria2 test skipped"
+& aria2 --version

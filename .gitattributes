@@ -1,3 +1,5 @@
+*Vagrantfile linguist-language=Ruby
+
 # Default behavior
 * text=auto
 

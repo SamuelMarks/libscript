@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'valkey' stack.
+Test suite for the valkey component.
 
 .DESCRIPTION
-Execute this script to run the test suite for valkey.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/caches/valkey test skipped"
+& valkey --version

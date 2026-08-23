@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:UTILS_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for utils."
+            Write-Error "No download URL or cache available for utils."
+            exit 1
         }
     } else {
         Write-Output "utils $CompVersion is already installed."

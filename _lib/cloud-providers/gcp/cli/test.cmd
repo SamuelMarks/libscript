@@ -1,9 +1,10 @@
-:: # test.cmd
-::
-:: ## Overview
-:: Test suite for the GCP CLI component on Windows.
-::
-:: ## Usage
-:: Automatically invoked by the test framework to validate GCP CLI installations.
+@echo off
+rem ## Overview
+rem Test suite for the cli component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-call "%~dp0\..\..\..\_lib\_common\test_base.cmd"
+setlocal enabledelayedexpansion
+
+cli --version

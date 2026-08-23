@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:MOSQUITTO_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for mosquitto."
+            Write-Error "No download URL or cache available for mosquitto."
+            exit 1
         }
     } else {
         Write-Output "mosquitto $CompVersion is already installed."

@@ -1,16 +1,17 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'ghcup' stack.
+Test suite for the ghcup component.
 
 .DESCRIPTION
-Execute this script to run the test suite for ghcup.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
 if (Get-Command ghcup -ErrorAction SilentlyContinue) {
-    ghcup --version
-    Write-Output "ghcup found"
+    & ghcup --version
 } else {
-    Write-Output "ghcup skipped (not found)"
+    Write-Host "ghcup is not installed, skipping test."
 }

@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:VFOX_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for vfox."
+            Write-Error "No download URL or cache available for vfox."
+            exit 1
         }
     } else {
         Write-Output "vfox $CompVersion is already installed."

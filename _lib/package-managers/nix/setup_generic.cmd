@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\nix.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for nix.
+        exit /b 1
     )
 ) else (
     echo nix %NIX_VERSION% is already installed.

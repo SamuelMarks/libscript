@@ -1,11 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'azure' stack.
+Test suite for the azure component.
 
 .DESCRIPTION
-Execute this script to run the test suite for azure.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/cloud-providers/azure test skipped"
+& azure --version

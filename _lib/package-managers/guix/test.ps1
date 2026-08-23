@@ -1,11 +1,17 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'guix' stack.
+Test suite for the guix component.
 
 .DESCRIPTION
-Execute this script to run the test suite for guix.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-Write-Output "./_lib/package-managers/guix test skipped"
+if (Get-Command guix -ErrorAction SilentlyContinue) {
+    & guix --version
+} else {
+    Write-Host "guix is not installed, skipping test."
+}

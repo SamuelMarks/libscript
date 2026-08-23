@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'nvm' stack.
+Test suite for the nvm component.
 
 .DESCRIPTION
-Execute this script to run the test suite for nvm.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command nvm -ErrorAction SilentlyContinue) {
-    nvm --version
-    Write-Output "nvm found"
-} else {
-    Write-Output "nvm skipped (not found)"
-}
+& nvm --version

@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\rust-server.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for rust-server.
+        exit /b 1
     )
 ) else (
     echo rust-server %RUST_SERVER_VERSION% is already installed.

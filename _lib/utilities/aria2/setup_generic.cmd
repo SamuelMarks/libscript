@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\aria2.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for aria2.
+        exit /b 1
     )
 ) else (
     echo aria2 %ARIA2_VERSION% is already installed.

@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\7zip.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for 7zip.
+        exit /b 1
     )
 ) else (
     echo 7zip %SEVENZIP_VERSION% is already installed.

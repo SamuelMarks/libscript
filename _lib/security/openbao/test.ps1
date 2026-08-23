@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'openbao' stack.
+Test suite for the openbao component.
 
 .DESCRIPTION
-Execute this script to run the test suite for openbao.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command openbao -ErrorAction SilentlyContinue) {
-    openbao --version
-    Write-Output "openbao found"
-} else {
-    Write-Output "openbao skipped (not found)"
-}
+& openbao --version

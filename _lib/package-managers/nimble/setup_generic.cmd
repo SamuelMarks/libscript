@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\nimble.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for nimble.
+        exit /b 1
     )
 ) else (
     echo nimble %NIMBLE_VERSION% is already installed.

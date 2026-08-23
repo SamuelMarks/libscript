@@ -124,7 +124,8 @@ if ($Action -eq "install") {
             Invoke-WebRequest -Uri $env:RUBY_DOWNLOAD_URL -OutFile $TempFile
             Expand-Archive -Path $TempFile -DestinationPath $TargetDir -Force
         } else {
-            Write-Output "No download URL or cache available for ruby."
+            Write-Error "No download URL or cache available for ruby."
+            exit 1
         }
     } else {
         Write-Output "ruby $CompVersion is already installed."

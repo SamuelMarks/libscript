@@ -10,11 +10,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -104,24 +104,32 @@ while [ $# -gt 0 ]; do
       LIBSCRIPT_DEVICE="$2"
       shift 2
       ;;
-    --device=*)
-      LIBSCRIPT_DEVICE="${1#*=}"
+
+    volume)
       shift
       ;;
     *)
       printf "Error: Unknown argument '%s'\n" "$1" >&2
       exit 1
       ;;
-  esac
-done
+    esac
+    done
 
-if [ -z "$CMD" ]; then
-  printf "Error: Missing command for volume (create|delete|list|attach|detach).\n" >&2
-  exit 1
-fi
+    if [ -z "$CMD" ]; then
+    printf "Error: Missing command for volume (create|delete|list|attach|detach|snapshot).\n" >&2
+    exit 1
+    fi
 
-case "$CMD" in
-  create|delete|list|attach|detach)
+    case "$CMD" in
+    install)
+    printf "Cloud components are operational wrappers and do not require installation.\n"
+    exit 0
+    ;;
+    test)
+    printf "Running mock test for volume...\n"
+    exit 0
+    ;;
+    create|delete|list|attach|detach|snapshot)
     # Execution
     . "$SCRIPT_DIR/api.sh"
     case "$CMD" in

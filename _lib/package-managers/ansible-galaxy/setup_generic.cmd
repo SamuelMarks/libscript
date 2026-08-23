@@ -18,9 +18,11 @@ if "%DOWNLOAD_DIR%"=="" (
 :: Resolve install method
 if "%ANSIBLE_GALAXY_INSTALL_METHOD%"=="" (
     if not "%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"=="" (
-        set "ANSIBLE_GALAXY_INSTALL_METHOD=%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"
+        if not defined ANSIBLE_GALAXY_INSTALL_METHOD set "ANSIBLE_GALAXY_INSTALL_METHOD=system"
+set "ANSIBLE_GALAXY_INSTALL_METHOD=%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"
     ) else (
-        set "ANSIBLE_GALAXY_INSTALL_METHOD=libscript_native"
+        if not defined ANSIBLE_GALAXY_INSTALL_METHOD set "ANSIBLE_GALAXY_INSTALL_METHOD=system"
+set "ANSIBLE_GALAXY_INSTALL_METHOD=libscript_native"
     )
 )
 
@@ -135,6 +137,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\ansible-galaxy.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for ansible-galaxy.
+        exit /b 1
     )
 ) else (
     echo ansible-galaxy %ANSIBLE_GALAXY_VERSION% is already installed.

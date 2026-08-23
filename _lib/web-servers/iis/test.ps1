@@ -1,16 +1,13 @@
 <#
 .SYNOPSIS
-Implements automated tests to verify the correctness of the component 'iis' stack.
+Test suite for the iis component.
 
 .DESCRIPTION
-Execute this script to run the test suite for iis.
+Execute this script to perform a component-specific test.
 #>
+[CmdletBinding()]
+param()
 
 $ErrorActionPreference = "Stop"
 
-if (Get-Command iis -ErrorAction SilentlyContinue) {
-    iis --version
-    Write-Output "iis found"
-} else {
-    Write-Output "iis skipped (not found)"
-}
+& iis --version

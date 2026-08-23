@@ -11,11 +11,11 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
+  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
+  eval 'set -o pipefail'
 elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  eval 'THIS_FILE="${(%):-%x}"'
+  eval 'set -o pipefail'
 else
   THIS_FILE="${0}"
 fi
@@ -29,7 +29,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-DIR="${SCRIPT_DIR}"
+export DIR="${SCRIPT_DIR}"
 
 for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
@@ -72,14 +72,14 @@ export PHPBB_WWWROOT
 if [ ! -d "${PHPBB_WWWROOT}/phpbb" ] && [ ! -d "${PHPBB_WWWROOT}/install" ]; then
   printf '%s\n' "Downloading phpBB (${PHPBB_VERSION}) to ${PHPBB_WWWROOT}..."
   priv mkdir -p "${PHPBB_WWWROOT}"
-  dl_url="https://download.phpbb.com/pub/release/${PHPBB_MAJOR_VERSION}/${PHPBB_VERSION}/phpBB-${PHPBB_VERSION}.tar.bz2"
+  dl_export url="https://download.phpbb.com/pub/release/${PHPBB_MAJOR_VERSION}/${PHPBB_VERSION}/phpBB-${PHPBB_VERSION}.tar.bz2"
 
   if ! libscript_depends 'bzip2' ; then
     true
   fi
   if command -v libscript_download >/dev/null 2>&1; then
     tmp_dp=$(mktemp)
-    libscript_download "${dl_url}" "${tmp_dp}"
+    libscript_download "${dl_url:-}" "${tmp_dp}"
     priv tar xjf "${tmp_dp}" --strip-components=1 -C "${PHPBB_WWWROOT}"
     rm -f "${tmp_dp}"
   else

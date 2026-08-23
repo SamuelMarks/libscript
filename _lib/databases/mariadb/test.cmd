@@ -1,11 +1,23 @@
 @echo off
-:: # test.cmd
-::
-:: ## Overview
-:: Test suite for MariaDB on Windows.
-::
-:: ## Usage
-:: Automatically invoked by the test framework to assert MariaDB is accessible.
+rem ## Overview
+rem Test suite for the mariadb component.
+rem
+rem ## Usage
+rem Execute this script to perform a component-specific test.
 
-setlocal EnableDelayedExpansion
-call "%~dp0\..\..\_common\test_base.cmd" :assert_version "mariadb" "."
+setlocal enabledelayedexpansion
+
+where mariadb >nul 2>nul
+if %errorlevel% equ 0 (
+  mariadb --version
+  exit /b 0
+)
+
+where mysql >nul 2>nul
+if %errorlevel% equ 0 (
+  mysql --version
+  exit /b 0
+)
+
+echo Neither mariadb nor mysql is available.
+exit /b 1

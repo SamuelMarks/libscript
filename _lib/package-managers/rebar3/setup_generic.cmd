@@ -135,6 +135,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%TEMP%\rebar3.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for rebar3.
+        exit /b 1
     )
 ) else (
     echo rebar3 %REBAR3_VERSION% is already installed.
