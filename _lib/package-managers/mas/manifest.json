@@ -2,7 +2,7 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "mas",
   "provides": ["mas"],
-  "os_whitelist": ["all"],
+  "os_whitelist": ["darwin"],
   "title": "mas",
   "description": "Bootstrap module for the `mas` package manager (Mac App Store command line interface).",
   "category": "package-manager"

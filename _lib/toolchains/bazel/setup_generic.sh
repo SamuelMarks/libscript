@@ -165,17 +165,25 @@ case "$ACTION" in
           ARCH=$(uname -m)
           OS=$(uname -s | tr "[:upper:]" "[:lower:]")
           if [ "$ARCH" = "x86_64" ]; then ARCH="x86_64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
-          URL="https://github.com/bazelbuild/bazel/releases/download/${EXACT_VERSION}/bazel-${EXACT_VERSION}-${OS}-${ARCH}"
-          TEMP_FILE=$(mktemp)
-          libscript_depends "curl"
-          if ! curl -sSLf "$URL" -o "$TEMP_FILE"; then
-            log_error "Failed to download bazel from $URL"
+          if [ "$UNAME_LOWER" = "freebsd" ]; then
+            log_info "No native binary for FreeBSD. Falling back to system package manager for bazel..."
+            libscript_depends "bazel"
+            if command -v "bazel" >/dev/null 2>&1; then
+              ln -s "$(command -v "bazel")" "${TARGET_DIR}/bin/bazel"
+            fi
+          else
+            URL="https://github.com/bazelbuild/bazel/releases/download/${EXACT_VERSION}/bazel-${EXACT_VERSION}-${OS}-${ARCH}"
+            TEMP_FILE=$(mktemp)
+            libscript_depends "curl"
+            if ! curl -sSLf "$URL" -o "$TEMP_FILE"; then
+              log_error "Failed to download bazel from $URL"
+              rm -f "$TEMP_FILE"
+              exit 1
+            fi
+            cp "$TEMP_FILE" "${TARGET_DIR}/bin/bazel"
+            chmod +x "${TARGET_DIR}/bin/bazel"
             rm -f "$TEMP_FILE"
-            exit 1
           fi
-          cp "$TEMP_FILE" "${TARGET_DIR}/bin/bazel"
-          chmod +x "${TARGET_DIR}/bin/bazel"
-          rm -f "$TEMP_FILE"
         else
           log_info "bazel ${VERSION} is already installed."
         fi

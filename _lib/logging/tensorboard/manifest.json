@@ -2,11 +2,11 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "tensorboard",
   "title": "TensorBoard",
-  "description": "TensorBoard provides the visualization and tooling needed for machine learning experimentation.",
+  "description": "TensorBoard is a suite of web applications for inspecting and understanding your TensorFlow runs and graphs.",
   "category": "logging",
-  "provides": ["tensorboard"],
+  "provides": ["logging", "tensorboard"],
   "conflicts": [],
-  "os_whitelist": ["all"],
-  "os_blacklist": [],
-  "ports": []
+  "os_whitelist": ["linux", "darwin"],
+  "os_blacklist": ["windows", "freebsd", "sunos"],
+  "ports": ["6006"]
 }

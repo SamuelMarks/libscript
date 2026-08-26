@@ -6,19 +6,14 @@
   "type": "object",
   "properties": {
     "PSMUX_INSTALL_METHOD": {
-      "description": "How to install PSMUX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
+      "description": "How to install PSMUX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "default": "libscript_native"
     },
     "PSMUX_VERSION": {
       "type": "string",
       "description": "Version of psmux to install",
       "default": "v3.3.6"
-    },
-    "PSMUX_INSTALL_METHOD": {
-      "type": "string",
-      "description": "How to install PSMUX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
-      "default": "libscript_native"
     }
   }
 }

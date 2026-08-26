@@ -6,7 +6,6 @@
   "category": "languages",
   "provides": ["runtime", "javascript", "typescript", "bun"],
   "conflicts": [],
-  "os_whitelist": ["all"],
-  "os_blacklist": [],
-  "ports": []
+  "os_whitelist": ["linux", "darwin", "windows"],
+  "os_blacklist": ["freebsd"]
 }

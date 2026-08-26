@@ -160,9 +160,12 @@ case "$ACTION" in
         log_info "Installing nimble ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
 
-        if [ "$UNAME_LOWER" = "linux" ] && [ -n "${PKG_MGR:-}" ]; then
+        if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
           log_info "Falling back to system package manager for nimble..."
           libscript_depends "nimble"
+          if command -v nimble >/dev/null 2>&1; then
+            ln -sf "$(command -v nimble)" "${TARGET_DIR}/bin/nimble"
+          fi
         elif ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nimble/"*"${VERSION}"* >/dev/null 2>&1; then
           log_info "Extracting from cache..."
           cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nimble/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
@@ -190,14 +193,19 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            if [ "$UNAME_LOWER" = "linux" ] && [ -n "${PKG_MGR:-}" ]; then
+            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
               log_info "Falling back to system package manager for nimble..."
               libscript_depends "nimble"
               if command -v nimble >/dev/null 2>&1; then
                 ln -s "$(command -v nimble)" "${TARGET_DIR}/bin/nimble"
               fi
             else
+              if [ "$UNAME_LOWER" = "freebsd" ]; then
+              log_info "No native binary for FreeBSD. Falling back to system package manager for nimble..."
+              libscript_depends "nimble"
+            else
               log_warn "No download URL provided for nimble ${VERSION}."
+            fi
             fi
           fi
         fi

@@ -2,9 +2,8 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "pnpm",
   "provides": ["package-manager", "pnpm"],
-  "os_whitelist": ["all"],
-  "os_blacklist": [],
+  "os_whitelist": ["linux", "darwin", "windows"],
   "title": "pnpm",
-  "description": "Bootstrap module for the `pnpm` package manager.",
+  "description": "Fast, disk space efficient package manager",
   "category": "package-manager"
 }

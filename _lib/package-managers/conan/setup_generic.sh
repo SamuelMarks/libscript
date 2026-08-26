@@ -163,7 +163,9 @@ case "$ACTION" in
           . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
         fi
         libscript_python_venv "${TARGET_DIR}/venv"
-        if [ -f /etc/alpine-release ]; then
+        if [ "$UNAME_LOWER" = "freebsd" ]; then
+          libscript_depends "gcc" "make" "python3"
+        elif [ -f /etc/alpine-release ]; then
           libscript_depends "gcc" "musl-dev" "python3-dev" "libffi-dev" "openssl-dev" "make"
         fi
         "${TARGET_DIR}/venv/bin/pip" install conan

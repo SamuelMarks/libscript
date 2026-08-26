@@ -1,53 +1,44 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-# Read environment variables for target package and repository root
 test_target = ENV['LIBSCRIPT_TEST_TARGET'] || 'sqlite'
 repo_root = ENV['LIBSCRIPT_REPO_ROOT'] || "../.."
 
-vm_name = "freebsd14-test-#{test_target}"
+vm_name = "freebsd-test-#{test_target}"
 
 Vagrant.configure("2") do |config|
   config.vm.define vm_name do |t|
-    t.vm.box = "bento/freebsd-14"
-    t.vm.box_version = "202502.21.0"
-
-    t.vm.provider :vmware_desktop do |vmware|
-        vmware.vmx["ethernet0.pcislotnumber"] = "160"
-        vmware.gui = false
-    end
-    t.vm.provider "virtualbox" do |vb|
-        vb.gui = false
-        vb.memory = "2048"
-    end
+    t.vm.box = "bento/freebsd-15.1"
+    
     t.vm.provider "qemu" do |qe|
       qe.net_mode = :user
       qe.ssh_port = 50022 + rand(1000)
       qe.qemu_args = %w(-m 4G -smp 4)
     end
 
+    t.ssh.insert_key = true
+    t.ssh.shell = "/bin/sh"
     t.vm.allowed_synced_folder_types = [:rsync]
 
-    # Sync the repository root directory
     t.vm.synced_folder repo_root, "/opt/repos/libscript", type: "rsync",
       rsync_exclude: [".git/", "tests_tmp/", "vagrant/"]
 
-    # Provision the VM and run the test
     t.vm.provision "shell", inline: <<-SHELL
       set -e
+      export PATH="/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin"
 
       echo "Updating pkg and installing prerequisites..."
-      env ASSUME_ALWAYS_YES=YES pkg bootstrap -f
-      pkg update
-      pkg install -y curl jq rsync sudo bash wget
-      
+      env ASSUME_ALWAYS_YES=YES pkg update
+      env ASSUME_ALWAYS_YES=YES pkg install -y curl rsync jq bash
+
+      echo "Configuring libscript..."
       export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript
 
       echo "Installing #{test_target} using libscript..."
-      bash /opt/repos/libscript/libscript.sh install #{test_target}
+      /opt/repos/libscript/libscript.sh install #{test_target}
 
       echo "Running test for #{test_target}..."
-      bash /opt/repos/libscript/libscript.sh test #{test_target}
+      /opt/repos/libscript/libscript.sh test #{test_target}
     SHELL
   end
 end

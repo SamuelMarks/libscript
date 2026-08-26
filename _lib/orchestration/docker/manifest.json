@@ -6,7 +6,7 @@
   "category": "orchestration",
   "provides": ["docker", "orchestration", "containers", "runtime", "server"],
   "conflicts": [],
-  "os_whitelist": ["all"],
-  "os_blacklist": [],
+  "os_whitelist": ["linux", "darwin"],
+  "os_blacklist": ["freebsd"],
   "ports": []
 }

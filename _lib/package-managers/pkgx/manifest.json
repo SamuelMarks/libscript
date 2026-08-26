@@ -1,9 +1,10 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "pkgx",
-  "provides": ["pkgx"],
-  "os_whitelist": ["all"],
+  "provides": ["version-manager", "pkgx"],
+  "os_whitelist": ["linux", "darwin"],
   "title": "pkgx",
-  "description": "This document describes **pkgx**, a blazing-fast, standalone, and cross-platform package manager that runs anything.",
-  "category": "package-manager"
+  "description": "pkgx",
+  "category": "package-manager",
+  "os_blacklist": ["freebsd"]
 }

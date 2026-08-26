@@ -2,7 +2,7 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "cargo-binstall",
   "provides": ["cargo-binstall"],
-  "os_whitelist": ["all"],
+  "os_whitelist": ["linux", "darwin", "windows"],
   "title": "cargo-binstall",
   "description": "Bootstrap module for the `cargo-binstall` package manager.",
   "category": "package-manager"

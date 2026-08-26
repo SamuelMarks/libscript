@@ -6,20 +6,15 @@
   "type": "object",
   "properties": {
     "MAVEN_INSTALL_METHOD": {
-      "description": "Installation method for maven (libscript_native, system, mise, asdf, pkgx, vfox).",
+      "description": "How to install MAVEN. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
+      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
       "default": "system"
     },
     "MAVEN_VERSION": {
       "description": "Specific version of maven to install. Can be a numeric version or an alias.",
       "type": "string",
       "default": "latest"
-    },
-    "MAVEN_INSTALL_METHOD": {
-      "description": "How to install MAVEN. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
-      "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
-      "default": "system"
     }
   }
 }

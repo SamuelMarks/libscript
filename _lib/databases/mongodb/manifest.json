@@ -2,11 +2,10 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "mongodb",
   "title": "MongoDB",
-  "description": "A source-available cross-platform document-oriented database program.",
+  "description": "MongoDB is a source-available cross-platform document-oriented database program.",
   "category": "databases",
-  "provides": ["database", "document-db", "mongodb"],
+  "provides": ["database", "mongodb"],
   "conflicts": [],
-  "os_whitelist": ["all"],
-  "os_blacklist": [],
-  "ports": [27017]
+  "os_whitelist": ["linux", "darwin"],
+  "os_blacklist": ["freebsd"]
 }

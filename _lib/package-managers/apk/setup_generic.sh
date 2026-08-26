@@ -59,7 +59,7 @@ resolve_exact_version() {
     EXACT_VERSION="${VERSION:-latest}"
   fi
 
-  if [ -z "${APK_DOWNLOAD_URL:-}" ] && [ "$UNAME_LOWER" = "linux" ]; then
+  if [ -z "${APK_DOWNLOAD_URL:-}" ] && [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ]; then
     case "$ARCH" in
       x86_64|amd64) apk_arch="x86_64" ;;
       aarch64|arm64) apk_arch="aarch64" ;;

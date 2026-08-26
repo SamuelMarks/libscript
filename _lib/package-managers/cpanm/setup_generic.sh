@@ -187,7 +187,17 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_warn "No download URL provided for cpanm ${VERSION}."
+            if [ "$UNAME_LOWER" = "freebsd" ]; then
+              log_info "No native binary for FreeBSD. Falling back to system package manager for cpanm..."
+              libscript_depends "cpanm"
+            else
+              if [ "$UNAME_LOWER" = "freebsd" ]; then
+              log_info "No native binary for FreeBSD. Falling back to system package manager for cpanm..."
+              libscript_depends "cpanm"
+            else
+              log_warn "No download URL provided for cpanm ${VERSION}."
+            fi
+            fi
           fi
         fi
       else

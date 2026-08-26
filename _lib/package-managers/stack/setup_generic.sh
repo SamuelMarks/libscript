@@ -163,9 +163,18 @@ case "$ACTION" in
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/stack/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing stack ${VERSION} natively to ${TARGET_DIR}..."
-        libscript_depends "curl"
-        mkdir -p "${TARGET_DIR}/bin"
-        curl -sSL https://get.haskellstack.org/ | sh -s - -d "${TARGET_DIR}/bin"
+        if [ "$UNAME_LOWER" = "freebsd" ]; then
+          log_info "No native binary for FreeBSD. Falling back to system package manager for stack..."
+          libscript_depends "stack"
+          if command -v "stack" >/dev/null 2>&1; then
+            mkdir -p "${TARGET_DIR}/bin"
+            ln -sf "$(command -v "stack")" "${TARGET_DIR}/bin/stack"
+          fi
+        else
+          libscript_depends "curl"
+          mkdir -p "${TARGET_DIR}/bin"
+          curl -sSL https://get.haskellstack.org/ | sh -s - -d "${TARGET_DIR}/bin"
+        fi
       else
         log_info "stack ${VERSION} is already installed."
       fi

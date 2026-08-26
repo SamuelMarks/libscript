@@ -2,7 +2,7 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "vcpkg",
   "provides": ["vcpkg"],
-  "os_whitelist": ["all"],
+  "os_whitelist": ["linux", "darwin", "windows"],
   "title": "vcpkg",
   "description": "Bootstrap module for the `vcpkg` package manager/tool.",
   "category": "package-manager"

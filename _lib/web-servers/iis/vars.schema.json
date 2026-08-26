@@ -6,19 +6,14 @@
   "type": "object",
   "properties": {
     "IIS_INSTALL_METHOD": {
-      "description": "How to install IIS. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",
+      "description": "How to install IIS. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "default": "libscript_native"
     },
     "IIS_VERSION": {
       "description": "Version of IIS to install",
       "type": "string",
       "default": "latest"
-    },
-    "IIS_INSTALL_METHOD": {
-      "type": "string",
-      "description": "How to install IIS. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
-      "default": "libscript_native"
     }
   }
 }

@@ -188,7 +188,14 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_info "No download URL provided for duckdb ${VERSION}. Attempting fallback to Github..."
+            if [ "$UNAME_LOWER" = "freebsd" ]; then
+              log_info "No native binary for FreeBSD. Falling back to system package manager for $PACKAGE_NAME..."
+              libscript_depends "$PACKAGE_NAME"
+              if command -v "$PACKAGE_NAME" >/dev/null 2>&1; then
+                ln -s "$(command -v "$PACKAGE_NAME")" "${TARGET_DIR}/bin/$PACKAGE_NAME"
+              fi
+            else
+              log_info "No download URL provided for duckdb ${VERSION}. Attempting fallback to Github..."
             libscript_depends "curl" "unzip"
             TEMP_FILE=$(mktemp)
             OS_ARCH=$(uname -m)
@@ -209,6 +216,7 @@ case "$ACTION" in
             rm -f "${TEMP_FILE}"
           fi
         fi
+fi
       else
         log_info "duckdb ${VERSION} is already installed."
       fi

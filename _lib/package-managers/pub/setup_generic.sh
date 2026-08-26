@@ -162,6 +162,10 @@ case "$ACTION" in
         OS=$(uname -s | tr "[:upper:]" "[:lower:]")
         if [ "$ARCH" = "x86_64" ]; then ARCH="x64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
         if [ "$OS" = "darwin" ]; then OS="macos"; fi
+        if [ "$UNAME_LOWER" = "freebsd" ]; then
+          log_error "pub is not officially available for FreeBSD. Consider installing via system packages if available."
+          exit 1
+        fi
         URL="https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-${OS}-${ARCH}-release.zip"
         TEMP_FILE=$(mktemp)
         libscript_depends "curl"

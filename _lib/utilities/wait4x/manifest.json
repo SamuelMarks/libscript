@@ -1,9 +1,9 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "wait4x",
-  "title": "Wait4X",
-  "description": "A tool to wait for various services or resources to become available.",
-  "category": "utility",
+  "title": "wait4x",
+  "description": "Wait4X is a command-line tool that allows you to wait for various services or conditions to become available before executing a command.",
+  "category": "utilities",
   "provides": ["wait4x"],
-  "os_whitelist": ["all"]
+  "os_whitelist": ["linux", "darwin", "windows"]
 }

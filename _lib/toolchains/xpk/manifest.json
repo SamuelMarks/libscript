@@ -6,7 +6,7 @@
   "category": "toolchain",
   "provides": ["build-system", "xpk", "xpkisk"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "os_whitelist": ["linux", "darwin"],
   "os_blacklist": [],
   "ports": []
 }

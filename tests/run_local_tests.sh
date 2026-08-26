@@ -110,6 +110,24 @@ UNIQUE_TARGETS=$(echo "$EXPANDED_TARGETS" | tr ' ' '\n' | grep -v '^$' | sort -u
 OS_ID=$(echo "$OS_TARGET" | cut -d'-' -f1)
 
 for target in $UNIQUE_TARGETS; do
+    MANIFEST_PATH=$(find "$REPO_ROOT/_lib" -maxdepth 2 -type d -name "$target" -exec echo "{}/manifest.json" \;)
+    if [ -f "$MANIFEST_PATH" ] && command -v python3 >/dev/null 2>&1; then
+        SUPPORTED=$(python3 -c "
+import json, sys
+try:
+    with open('$MANIFEST_PATH', 'r') as f: m = json.load(f)
+    os_id = '$OS_ID'
+    if os_id in m.get('os_blacklist', []): print('no'); sys.exit(0)
+    wl = m.get('os_whitelist', ['all'])
+    if 'all' not in wl and os_id not in wl: print('no'); sys.exit(0)
+    print('yes')
+except Exception as e: print('yes')
+")
+        if [ "$SUPPORTED" = "no" ]; then
+            echo "Skipping $target (not supported on $OS_ID)"
+            continue
+        fi
+    fi
     echo "============================================================"
     echo "Running test for $target on $OS_TARGET..."
     echo "============================================================"

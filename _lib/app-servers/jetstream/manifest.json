@@ -1,12 +1,12 @@
 {
   "$schema": "../../_common/manifest.schema.json",
-  "name": "huggingface_hub",
-  "title": "huggingface_hub",
-  "description": "A fast, scalable, multi-language and extensible build system, installed via huggingface_hubisk.",
-  "category": "toolchain",
-  "provides": ["build-system", "huggingface_hub", "huggingface_hubisk"],
+  "name": "jetstream",
+  "title": "Jetstream",
+  "description": "High-performance generative AI inference server",
+  "category": "app-servers",
+  "provides": ["app-server", "jetstream"],
   "conflicts": [],
-  "os_whitelist": ["all"],
-  "os_blacklist": [],
+  "os_whitelist": ["linux", "darwin"],
+  "os_blacklist": ["windows", "freebsd", "sunos"],
   "ports": []
 }

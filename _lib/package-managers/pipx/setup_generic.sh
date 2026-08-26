@@ -187,7 +187,12 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_warn "No download URL provided for pipx ${VERSION}."
+            if [ "$UNAME_LOWER" = "freebsd" ]; then
+              log_info "No native binary for FreeBSD. Falling back to system package manager for pipx..."
+              libscript_depends "pipx"
+            else
+              log_warn "No download URL provided for pipx ${VERSION}."
+            fi
           fi
         fi
       else

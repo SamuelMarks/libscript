@@ -6,5 +6,6 @@
   "category": "app-servers",
   "provides": ["ollama"],
   "conflicts": [],
-  "os_whitelist": ["all"]
+  "os_whitelist": ["linux", "darwin", "windows"],
+  "os_blacklist": ["freebsd"]
 }

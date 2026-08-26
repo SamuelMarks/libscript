@@ -188,7 +188,11 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_info "No download URL provided for csharp ${VERSION}. Attempting fallback to dotnet-install.sh..."
+            if [ "$UNAME_LOWER" = "freebsd" ]; then
+              log_info "No native binary for FreeBSD. Falling back to system package manager for csharp..."
+              libscript_depends "csharp"
+            else
+              log_info "No download URL provided for csharp ${VERSION}. Attempting fallback to dotnet-install.sh..."
             libscript_depends "curl" "bash" "tar" "wget" "libicu-dev"
             TEMP_FILE=$(mktemp)
             curl -fsSL https://dot.net/v1/dotnet-install.sh -o "${TEMP_FILE}"
@@ -208,6 +212,7 @@ case "$ACTION" in
             # actually dotnet is the CLI
           fi
         fi
+fi
       else
         log_info "csharp ${VERSION} is already installed."
       fi

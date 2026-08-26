@@ -1,9 +1,9 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "vfox",
-  "provides": ["vfox"],
-  "os_whitelist": ["all"],
+  "provides": ["version-manager", "vfox"],
+  "os_whitelist": ["linux", "darwin", "windows"],
   "title": "vfox",
-  "description": "Bootstrap module for the `vfox` package manager/tool.",
+  "description": "Version Fox",
   "category": "package-manager"
 }

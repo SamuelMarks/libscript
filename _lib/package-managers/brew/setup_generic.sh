@@ -164,7 +164,7 @@ case "$ACTION" in
           echo 'echo "Homebrew is not supported on Alpine Linux (musl)."' >> "${TARGET_DIR}/bin/brew"
           chmod +x "${TARGET_DIR}/bin/brew"
         else
-          if [ "$UNAME_LOWER" = "linux" ] && [ -n "${PKG_MGR:-}" ]; then
+          if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
             libscript_depends "build-essential" "procps" "curl" "file" "git" || true
           fi
           mkdir -p "${TARGET_DIR}/brew"

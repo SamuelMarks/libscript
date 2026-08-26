@@ -1,12 +1,12 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "iis",
-  "title": "IIS",
-  "description": "Internet Information Services (IIS) for Windows Server is a secure, highly-available, and manageable Web server.",
+  "title": "Internet Information Services",
+  "description": "Flexible, secure and manageable Web server for hosting anything on the Web.",
   "category": "web-servers",
   "provides": ["web-server", "iis"],
   "conflicts": [],
   "os_whitelist": ["windows"],
   "os_blacklist": [],
-  "ports": [80, 443]
+  "ports": ["80", "443"]
 }

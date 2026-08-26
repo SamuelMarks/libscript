@@ -6,7 +6,7 @@
   "category": "toolchain",
   "provides": ["build-system", "huggingface_hub", "huggingface_hubisk"],
   "conflicts": [],
-  "os_whitelist": ["all"],
+  "os_whitelist": ["linux", "darwin", "windows"],
   "os_blacklist": [],
   "ports": []
 }

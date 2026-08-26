@@ -2,8 +2,9 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "pub",
   "provides": ["pub"],
-  "os_whitelist": ["all"],
+  "os_whitelist": ["linux", "darwin", "windows"],
   "title": "pub",
   "description": "Bootstrap module for `pub` (Dart / Flutter package manager).",
-  "category": "package-manager"
+  "category": "package-manager",
+  "os_blacklist": ["freebsd"]
 }

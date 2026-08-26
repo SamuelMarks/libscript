@@ -174,8 +174,12 @@ case "$ACTION" in
             fi
           fi
         else
-          libscript_depends "python" || true
-          libscript_depends "curl" || true
+          if [ "$UNAME_LOWER" = "freebsd" ]; then
+            log_info "No native binary for FreeBSD. Falling back to system package manager for poetry..."
+            libscript_depends "poetry"
+          else
+            libscript_depends "python" || true
+            libscript_depends "curl" || true
           if [ "${EXACT_VERSION}" = "latest" ]; then
              if ! curl -sSLf https://install.python-poetry.org | POETRY_HOME="${TARGET_DIR}" python3 -; then
                 log_error "Failed to install poetry."
@@ -187,6 +191,7 @@ case "$ACTION" in
                 exit 1
              fi
           fi
+        fi
         fi
       else
         log_info "poetry ${VERSION} is already installed."

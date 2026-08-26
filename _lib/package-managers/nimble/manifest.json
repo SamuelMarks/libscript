@@ -2,7 +2,7 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "nimble",
   "provides": ["package-manager", "nimble"],
-  "os_whitelist": ["all"],
+  "os_whitelist": ["linux", "darwin", "windows"],
   "os_blacklist": [],
   "title": "nimble",
   "description": "Bootstrap script for [Nimble](https://github.com/nim-lang/nimble), the package manager for the Nim programming language. Typically installed via `choosenim`.",

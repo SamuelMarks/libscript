@@ -1,9 +1,9 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "mise",
-  "provides": ["mise"],
-  "os_whitelist": ["all"],
+  "provides": ["version-manager", "mise", "rtx"],
+  "os_whitelist": ["linux", "darwin"],
   "title": "mise",
-  "description": "Bootstrap module for the `mise` package manager/tool.",
+  "description": "mise-en-place",
   "category": "package-manager"
 }

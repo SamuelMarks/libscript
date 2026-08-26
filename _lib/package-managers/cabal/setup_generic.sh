@@ -101,7 +101,7 @@ case "$ACTION" in
     if [ "$CABAL_INSTALL_METHOD" = "system" ]; then
       libscript_depends "cabal"
     elif [ "$CABAL_INSTALL_METHOD" = "libscript_native" ]; then
-      if [ "$UNAME_LOWER" = "linux" ] && [ -n "${PKG_MGR:-}" ]; then
+      if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
         log_info "Falling back to system package manager for cabal..."
         libscript_depends "cabal"
       else

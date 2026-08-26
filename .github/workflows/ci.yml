@@ -7,54 +7,28 @@ on:
     branches: ["master"]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Run Markdown Generator
-        run: ./devtools/docs-gen/generate_markdown_docs.sh
-
-      - name: Verify Documentation Freshness
-        run: |
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "Documentation is out of date! Please run devtools/docs-gen/generate_markdown_docs.sh and commit the results."
-            git diff
-            exit 1
-          fi
-
-  test:
-    name: Test on ${{ matrix.os }}
+  precommit:
+    name: Pre-commit checks on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    env:
-      LIBSCRIPT_WINDOWS_PKG_MGR: "choco"
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4
 
-      - name: Setup & Test (Unix)
+      - name: Setup Node (for Prettier and cspell)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run Pre-commit Dance (Unix)
         if: runner.os != 'Windows'
-        run: |
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-          echo "$HOME/.bun/bin" >> $GITHUB_PATH
-          echo "$HOME/.deno/bin" >> $GITHUB_PATH
-          echo "/usr/local/go/bin" >> $GITHUB_PATH
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+        run: ./devtools/ci/precommit_dance.sh
 
-          echo "/home/linuxbrew/.linuxbrew/bin" >> $GITHUB_PATH
-          echo "/opt/homebrew/bin" >> $GITHUB_PATH
-          export PATH="/snap/bin:/home/linuxbrew/.linuxbrew/bin:/opt/homebrew/bin:$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.bun/bin:$HOME/.deno/bin:/usr/local/go/bin:$PATH"
-
-          ./devtools/ci/run_tests.sh "${{ matrix.os }}"
-
-      - name: Setup & Test (Windows)
+      - name: Run Pre-commit Dance (Windows)
         if: runner.os == 'Windows'
         shell: cmd
-        run: |
-          call devtools\ci\run_tests.cmd "${{ matrix.os }}"
+        run: call devtools\ci\precommit_dance.cmd

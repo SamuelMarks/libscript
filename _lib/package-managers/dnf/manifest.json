@@ -2,7 +2,7 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "dnf",
   "provides": ["dnf"],
-  "os_whitelist": ["all"],
+  "os_whitelist": ["linux"],
   "title": "dnf",
   "description": "Bootstrap module for the `dnf` package manager.",
   "category": "package-manager"

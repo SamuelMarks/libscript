@@ -93,6 +93,7 @@ map_package() {
       case "${PKG_MGR}" in
         'apk') printf 'mariadb mariadb-client\n' ;;
         'apt-get'|'dnf'|'yum'|'zypper'|'pacman') printf 'mariadb-server\n' ;;
+        'pkg') printf 'mariadb114-server mariadb114-client\n' ;;
         'winget') printf 'MariaDB.MariaDB\n' ;;
         *) printf 'mariadb\n' ;;
       esac
@@ -190,12 +191,14 @@ map_package() {
         'apt-get') printf 'build-essential\n' ;;
         'winget') printf 'MSYS2.MSYS2\n' ;;
         'brew') printf 'gcc\n' ;;
+        'pkg') printf 'gcc\n' ;;
         *) printf 'g++\n' ;;
       esac
       ;;
     'make')
       case "${PKG_MGR}" in
         'winget') printf 'GnuWin32.Make\n' ;;
+        'pkg') printf 'gmake\n' ;;
         *) printf 'make\n' ;;
       esac
       ;;
@@ -203,6 +206,7 @@ map_package() {
       case "${PKG_MGR}" in
         'apt-get') printf 'apache2\n' ;;
         'apk') printf 'apache2\n' ;;
+        'pkg') printf 'apache24\n' ;;
         *) printf 'httpd\n' ;;
       esac
       ;;
@@ -239,6 +243,8 @@ map_package() {
       case "${PKG_MGR}" in
         'brew') printf 'gnu-tar\n' ;;
         'winget') printf 'GnuWin32.Tar\n' ;;
+        'pkg') printf '' ;;
+        'apk') printf '' ;;
         *) printf 'tar\n' ;;
       esac
       ;;
@@ -256,7 +262,7 @@ map_package() {
         'yum') printf 'dotnet-sdk-8.0\n' ;;
         'zypper') printf 'dotnet-sdk\n' ;;
         'pacman') printf 'dotnet-sdk\n' ;;
-        'pkg') printf 'dotnet-sdk\n' ;;
+        'pkg') printf 'dotnet\n' ;;
         'brew') printf 'dotnet\n' ;;
         'winget') printf 'Microsoft.DotNet.SDK.8\n' ;;
         'choco') printf 'dotnet-8.0-sdk\n' ;;
@@ -268,6 +274,7 @@ map_package() {
         'apk') printf 'deno\n' ;;
         'pacman') printf 'deno\n' ;;
         'brew') printf 'deno\n' ;;
+        'pkg') printf 'deno\n' ;;
         'winget') printf 'DenoLand.Deno\n' ;;
         'choco') printf 'deno\n' ;;
         *) return 1 ;;
@@ -331,6 +338,7 @@ map_package() {
         'apk') printf 'nodejs npm\n' ;;
         'apt-get') printf 'nodejs npm\n' ;;
         'pacman') printf 'nodejs npm\n' ;;
+        'pkg') printf 'node npm\n' ;;
         'winget') printf 'OpenJS.NodeJS\n' ;;
         'emerge') printf 'net-libs/nodejs\n' ;;
         *) printf 'nodejs\n' ;;
@@ -350,11 +358,32 @@ map_package() {
       ;;
     'pip')
       case "${PKG_MGR}" in
-        "apk") printf "py3-pip\n" ;;
-        "apt-get") printf "python3-pip\n" ;;
-        "dnf"|"yum"|"zypper") printf "python3-pip\n" ;;
-        "pacman") printf "python-pip\n" ;;
-        *) printf "pip\n" ;;
+        "apk") printf "py3-pip
+" ;;
+        "apt-get") printf "python3-pip
+" ;;
+        "dnf"|"yum"|"zypper") printf "python3-pip
+" ;;
+        "pacman") printf "python-pip
+" ;;
+        "pkg") printf "py312-pip
+" ;;
+        *) printf "pip
+" ;;
+      esac ;;
+    'bundler')
+      case "${PKG_MGR}" in
+        "pkg") printf "rubygem-bundler
+" ;;
+        *) printf "bundler
+" ;;
+      esac ;;
+    'cabal')
+      case "${PKG_MGR}" in
+        "pkg") printf "hs-cabal-install
+" ;;
+        *) printf "cabal
+" ;;
       esac ;;
 
     'python3-venv')
@@ -364,6 +393,7 @@ map_package() {
         'apk') printf 'python3\n' ;;
         'pacman') printf 'python\n' ;;
         'zypper') printf 'python3\n' ;;
+        'pkg') printf '' ;;
         *) printf 'python3-venv\n' ;;
       esac
       ;;
@@ -383,6 +413,7 @@ map_package() {
         "apt-get") printf "p7zip-full\n" ;;
         "dnf"|"yum"|"zypper") printf "p7zip\n" ;;
         "pacman") printf "p7zip\n" ;;
+        "pkg") printf "7-zip\n" ;;
         *) printf "7zip\n" ;;
       esac ;;
 
@@ -394,7 +425,7 @@ map_package() {
         'yum') printf 'python3 python3-pip\n' ;;
         'zypper') printf 'python3 python3-pip\n' ;;
         'pacman') printf 'python python-pip\n' ;;
-        'pkg') printf 'python3\n' ;;
+        'pkg') printf 'python3 py312-sqlite3\n' ;;
         'brew') printf 'python3\n' ;;
         'port') printf 'python39\n' ;;
         'winget') printf 'Python.Python.3.11\n' ;;
@@ -434,7 +465,26 @@ map_package() {
         'yum') printf 'swift-lang\n' ;;
         'pacman') printf 'swift-language\n' ;;
         'brew') printf 'swift\n' ;;
+        'pkg') printf 'swift510\n' ;;
         *) return 1 ;;
+      esac
+      ;;
+    'poetry')
+      case "${PKG_MGR}" in
+        'pkg') printf 'py312-poetry\n' ;;
+        *) printf 'poetry\n' ;;
+      esac
+      ;;
+    'pipx')
+      case "${PKG_MGR}" in
+        'pkg') printf 'py312-pipx\n' ;;
+        *) printf 'pipx\n' ;;
+      esac
+      ;;
+    'stack')
+      case "${PKG_MGR}" in
+        'pkg') printf 'hs-stack\n' ;;
+        *) printf 'stack\n' ;;
       esac
       ;;
     'wait4x')
@@ -450,12 +500,14 @@ map_package() {
         'apk') printf 'apache2\n' ;;
         'dnf'|'yum'|'pacman') printf 'httpd\n' ;;
         'brew') printf 'httpd\n' ;;
+        'pkg') printf 'apache24\n' ;;
         *) printf 'apache2\n' ;;
       esac
       ;;
     'ansible-galaxy')
       case "${PKG_MGR}" in
         'apk'|'apt-get'|'dnf'|'yum'|'pacman') printf 'ansible\n' ;;
+        'pkg') printf 'py312-ansible\n' ;;
         *) printf 'ansible-galaxy\n' ;;
       esac
       ;;
@@ -464,9 +516,10 @@ map_package() {
         *) printf 'apt\n' ;;
       esac
       ;;
-    'awscli')
+    'awscli'|'aws')
       case "${PKG_MGR}" in
         'apk') printf 'aws-cli\n' ;;
+        'pkg') printf 'py312-awscli\n' ;;
         *) printf 'awscli\n' ;;
       esac
       ;;
@@ -474,6 +527,7 @@ map_package() {
       case "${PKG_MGR}" in
         'apt-get'|'dnf'|'yum'|'zypper') printf 'azure-cli\n' ;;
         'apk'|'pacman') return 1 ;;
+        'pkg') printf 'py312-azure-cli\n' ;;
         *) printf 'azure-cli\n' ;;
       esac
       ;;
@@ -508,18 +562,21 @@ map_package() {
     'cargo')
       case "${PKG_MGR}" in
         'apk') printf 'cargo\n' ;;
+        'pkg') printf 'rust\n' ;;
         *) printf 'cargo\n' ;;
       esac
       ;;
     'composer')
       case "${PKG_MGR}" in
         'apk') printf 'composer\n' ;;
+        'pkg') printf 'php84-composer\n' ;;
         *) printf 'composer\n' ;;
       esac
       ;;
     'cpanm')
       case "${PKG_MGR}" in
         'apk') printf 'perl-app-cpanminus\n' ;;
+        'pkg') printf 'p5-App-cpanminus\n' ;;
         *) printf 'cpanminus\n' ;;
       esac
       ;;
@@ -581,6 +638,7 @@ map_package() {
     'etcd')
       case "${PKG_MGR}" in
         'apt-get') printf 'etcd-server etcd-client\n' ;;
+        'pkg') printf 'coreos-etcd35\n' ;;
         'winget') printf 'etcd.etcd\n' ;;
         'emerge') printf 'dev-db/etcd\n' ;;
         *) printf 'etcd\n' ;;
@@ -594,6 +652,7 @@ map_package() {
       ;;
     'elixir')
       case "${PKG_MGR}" in
+        'pkg') printf 'elixir erlang\n' ;;
         *) printf 'elixir\n' ;;
       esac
       ;;

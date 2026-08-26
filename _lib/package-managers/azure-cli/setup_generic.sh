@@ -159,7 +159,7 @@ case "$ACTION" in
       log_info "DEBUG: ls -la $TARGET_DIR : $(ls -la "$TARGET_DIR" 2>&1 || true)"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing azure-cli ${VERSION} natively to ${TARGET_DIR}..."
-        if [ "$UNAME_LOWER" = "linux" ] && [ -n "${PKG_MGR:-}" ]; then
+        if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
           log_info "Falling back to system package manager for azure-cli..."
           libscript_depends "azure-cli"
         elif [ -f /etc/alpine-release ]; then

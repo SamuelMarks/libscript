@@ -188,7 +188,11 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_info "No download URL provided for deno ${VERSION}. Using official installer..."
+            if [ "$UNAME_LOWER" = "freebsd" ]; then
+              log_info "No native binary for FreeBSD. Falling back to system package manager for deno..."
+              libscript_depends "deno"
+            else
+              log_info "No download URL provided for deno ${VERSION}. Using official installer..."
             libscript_depends "curl" "unzip"
             if [ "${EXACT_VERSION}" = "latest" ]; then
               curl -fsSL https://deno.land/install.sh | DENO_INSTALL="${TARGET_DIR}" sh
@@ -197,6 +201,7 @@ case "$ACTION" in
             fi
           fi
         fi
+fi
       else
         log_info "deno ${VERSION} is already installed."
       fi

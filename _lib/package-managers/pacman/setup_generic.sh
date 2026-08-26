@@ -161,7 +161,7 @@ case "$ACTION" in
         log_info "Installing pacman ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
 
-        if [ "$UNAME_LOWER" = "linux" ] && [ -n "${PKG_MGR:-}" ]; then
+        if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
           log_info "Falling back to system package manager for pacman..."
           libscript_depends "pacman"
         elif ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/pacman/"*"${VERSION}"* >/dev/null 2>&1; then

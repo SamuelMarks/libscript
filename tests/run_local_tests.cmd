@@ -1,9 +1,9 @@
 @echo off
-:: run_local_tests.cmd
-::
+:: ## Overview
 :: Runs local tests using Vagrant across all toolchains, languages, and databases
-:: to verify libscript installation and testing on isolated Vagrant VMs.
 ::
+:: ## Usage
+:: Run this script to verify libscript installation and testing on isolated Vagrant VMs.
 :: Results are written to the tests_tmp directory.
 
 setlocal EnableDelayedExpansion

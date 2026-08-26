@@ -156,7 +156,7 @@ case "$ACTION" in
         exit 0
       fi
 
-      if [ "$UNAME_LOWER" = "linux" ] && [ -n "${PKG_MGR:-}" ]; then
+      if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
         log_info "Falling back to system package manager for httpd..."
         libscript_depends "httpd"
       else

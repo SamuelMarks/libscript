@@ -160,7 +160,7 @@ case "$ACTION" in
         log_info "Installing nuget ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
 
-        if [ "$UNAME_LOWER" = "linux" ] && [ -n "${PKG_MGR:-}" ]; then
+        if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
           log_info "Falling back to system package manager for nuget..."
           libscript_depends "nuget"
         elif ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nuget/"*"${VERSION}"* >/dev/null 2>&1; then
@@ -190,7 +190,7 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            if [ "$UNAME_LOWER" = "linux" ] && [ -n "${PKG_MGR:-}" ]; then
+            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
               log_info "Falling back to system package manager for nuget (via mono/dotnet)..."
               libscript_depends "nuget"
               if command -v nuget >/dev/null 2>&1; then
@@ -201,7 +201,12 @@ case "$ACTION" in
                 chmod +x "${TARGET_DIR}/bin/nuget"
               fi
             else
+              if [ "$UNAME_LOWER" = "freebsd" ]; then
+              log_info "No native binary for FreeBSD. Falling back to system package manager for nuget..."
+              libscript_depends "nuget"
+            else
               log_warn "No download URL provided for nuget ${VERSION}."
+            fi
             fi
           fi
         fi

@@ -170,7 +170,10 @@ case "$ACTION" in
         mkdir -p "${TARGET_DIR}/bin"
         _os="$(uname -s | tr '[:upper:]' '[:lower:]')"
         arch="$(uname -m)"
-        if [ -f /etc/alpine-release ]; then
+        if [ "$UNAME_LOWER" = "freebsd" ]; then
+          log_info "No native binary for FreeBSD. Falling back to system package manager for cargo-binstall..."
+          libscript_depends "cargo-binstall"
+        elif [ -f /etc/alpine-release ]; then
           arch_musl="${arch}-unknown-linux-musl"
         else
           arch_musl="${arch}-unknown-linux-gnu"

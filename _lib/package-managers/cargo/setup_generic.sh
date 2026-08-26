@@ -187,7 +187,17 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_warn "No download URL provided for cargo ${VERSION}."
+            if [ "$UNAME_LOWER" = "freebsd" ]; then
+              log_info "No native binary for FreeBSD. Falling back to system package manager for cargo..."
+              libscript_depends "rust"
+            else
+              if [ "$UNAME_LOWER" = "freebsd" ]; then
+              log_info "No native binary for FreeBSD. Falling back to system package manager for cargo..."
+              libscript_depends "cargo"
+            else
+              log_warn "No download URL provided for cargo ${VERSION}."
+            fi
+            fi
           fi
         fi
       else

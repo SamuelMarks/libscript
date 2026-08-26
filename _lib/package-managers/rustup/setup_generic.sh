@@ -157,13 +157,21 @@ case "$ACTION" in
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/rustup/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing rustup ${VERSION} natively to ${TARGET_DIR}..."
-        libscript_depends "curl"
-        mkdir -p "${TARGET_DIR}"
-        export RUSTUP_HOME="${TARGET_DIR}/.rustup"
-        export CARGO_HOME="${TARGET_DIR}/.cargo"
-        unset RUSTUP_VERSION
+        if [ "$UNAME_LOWER" = "freebsd" ]; then
+          log_info "No native binary for FreeBSD. Falling back to system package manager for rustup..."
+          libscript_depends "rust"
+          mkdir -p "${TARGET_DIR}/.cargo/bin"
+          ln -sf "$(command -v "rustc")" "${TARGET_DIR}/.cargo/bin/rustc" || true
+          ln -sf "$(command -v "cargo")" "${TARGET_DIR}/.cargo/bin/cargo" || true
+        else
+          libscript_depends "curl"
+          mkdir -p "${TARGET_DIR}"
+          export RUSTUP_HOME="${TARGET_DIR}/.rustup"
+          export CARGO_HOME="${TARGET_DIR}/.cargo"
+          unset RUSTUP_VERSION
 
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
+          curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
+        fi
       else
         log_info "rustup ${VERSION} is already installed."
       fi

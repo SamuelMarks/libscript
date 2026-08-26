@@ -2,7 +2,7 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "zypper",
   "provides": ["zypper"],
-  "os_whitelist": ["all"],
+  "os_whitelist": ["linux"],
   "title": "zypper",
   "description": "Bootstrap module for the `zypper` package manager.",
   "category": "package-manager"

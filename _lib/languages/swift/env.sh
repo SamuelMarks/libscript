@@ -30,3 +30,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export SWIFT_INSTALL_METHOD="${SWIFT_INSTALL_METHOD:-system}"
 SWIFT_VERSION="${SWIFT_VERSION:-latest}"
 export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/swift/${SWIFT_VERSION}/bin:${PATH}"
+if [ -d "/usr/local/swift510/bin" ]; then
+  export PATH="/usr/local/swift510/bin:${PATH}"
+fi
