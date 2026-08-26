@@ -53,10 +53,23 @@ resolve_exact_version() {
     if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
       EXACT_VERSION="$_latest"
     else
-      EXACT_VERSION="${VERSION:-latest}"
+      EXACT_VERSION="3.0.7"
     fi
   else
     EXACT_VERSION="${VERSION:-latest}"
+  fi
+
+  if [ -z "${APK_DOWNLOAD_URL:-}" ] && [ "$UNAME_LOWER" = "linux" ]; then
+    case "$ARCH" in
+      x86_64|amd64) apk_arch="x86_64" ;;
+      aarch64|arm64) apk_arch="aarch64" ;;
+      armv7l|armhf) apk_arch="armv7" ;;
+      x86|i686) apk_arch="x86" ;;
+      *) apk_arch="" ;;
+    esac
+    if [ -n "$apk_arch" ]; then
+      APK_DOWNLOAD_URL="https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v${EXACT_VERSION}/${apk_arch}/apk.static"
+    fi
   fi
 }
 
@@ -185,7 +198,8 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_warn "No download URL provided for apk ${VERSION}."
+            log_error "No download URL provided for apk ${VERSION}."
+            exit 1
           fi
         fi
       else

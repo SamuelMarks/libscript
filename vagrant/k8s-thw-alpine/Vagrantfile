@@ -1,0 +1,51 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  node_count = ENV.fetch('VAGRANT_N', 3).to_i
+  box_name = "bento/alpine-3.24"
+
+  (0...node_count).each do |i|
+    config.vm.define "k8s-thw-alpine#{i}" do |node|
+      node.vm.box = box_name
+      node.ssh.shell = "/bin/sh"
+
+      if i == 0
+        node.vm.hostname = "server"
+      else
+        node.vm.hostname = "node-#{i - 1}"
+      end
+      node.vm.synced_folder ".", "/vagrant", disabled: true
+      node.ssh.insert_key = true
+      
+      node.vm.provider "qemu" do |qe|
+        qe.net_mode = :user
+        qe.memory = "2048"
+        qe.cpus = 2
+        qe.ssh_port = 50122 + i + rand(1000)
+        mac_addr = sprintf("52:54:00:22:34:%02X", i)
+        qe.extra_qemu_args = %W(-m 2048 -smp 2 -device qemu-xhci -netdev socket,id=net1,mcast=230.0.0.1:1234 -device usb-net,netdev=net1,mac=#{mac_addr})
+      end
+      
+      ip_addr = "192.168.56.#{10 + i}"
+      node.vm.provision "shell", inline: <<~SHELL
+        set -x
+        IFACE=$(ip -o link show | awk -F':' '{print $2}' | grep -v 'lo' | sed -n '2p')
+        if [ -n "$IFACE" ]; then
+          mkdir -p /etc/network/interfaces.d/
+          cat <<IFCONF > /etc/network/interfaces.d/$IFACE || true
+auto $IFACE
+iface $IFACE inet static
+    address #{ip_addr}
+    netmask 255.255.255.0
+IFCONF
+          ip addr flush dev $IFACE || true
+          ip link set dev $IFACE up || true
+          ip addr add #{ip_addr}/24 dev $IFACE || true
+        fi
+      SHELL
+
+      
+    end
+  end
+end

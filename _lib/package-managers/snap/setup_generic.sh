@@ -164,35 +164,12 @@ case "$ACTION" in
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing snap ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
-        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/snap/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
-          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/snap/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
-          if [ -n "$cache_file" ]; then
-            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
-            else
-              cp "$cache_file" "${TARGET_DIR}/bin/snap" || true
-              chmod +x "${TARGET_DIR}/bin/snap" || true
-            fi
-          fi
+        if [ "$UNAME_LOWER" = "linux" ] && [ -n "${PKG_MGR:-}" ]; then
+          log_info "Falling back to system package manager for snap..."
+          libscript_depends "snapd"
         else
-          if [ -n "${SNAP_DOWNLOAD_URL:-}" ]; then
-            TEMP_FILE=$(mktemp)
-            libscript_download "${SNAP_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-            if case "${SNAP_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "${SNAP_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-            else
-              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/snap" || true
-              chmod +x "${TARGET_DIR}/bin/snap" || true
-            fi
-            rm -f "${TEMP_FILE}"
-          else
-            log_warn "No download URL provided for snap ${VERSION}."
-          fi
+          log_error "Native installation for snap from source is not supported."
+          exit 1
         fi
       else
         log_info "snap ${VERSION} is already installed."

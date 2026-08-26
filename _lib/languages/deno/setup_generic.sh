@@ -188,8 +188,13 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_error "No download URL provided for deno ${VERSION}."
-            exit 1
+            log_info "No download URL provided for deno ${VERSION}. Using official installer..."
+            libscript_depends "curl" "unzip"
+            if [ "${EXACT_VERSION}" = "latest" ]; then
+              curl -fsSL https://deno.land/install.sh | DENO_INSTALL="${TARGET_DIR}" sh
+            else
+              curl -fsSL https://deno.land/install.sh | DENO_INSTALL="${TARGET_DIR}" sh -s "v${EXACT_VERSION}"
+            fi
           fi
         fi
       else

@@ -55,7 +55,7 @@ resolve_exact_version() {
     if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
       EXACT_VERSION="$_latest"
     else
-      EXACT_VERSION="${VERSION:-latest}"
+      EXACT_VERSION=$(curl -sL https://api.github.com/repos/yarnpkg/yarn/releases/latest | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
     fi
   else
     EXACT_VERSION="${VERSION:-latest}"
@@ -174,21 +174,17 @@ case "$ACTION" in
             fi
           fi
         else
-          if [ -n "${YARN_DOWNLOAD_URL:-}" ]; then
-            TEMP_FILE=$(mktemp)
-            libscript_download "${YARN_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-            if case "${YARN_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "${YARN_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-            else
-              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/yarn" || true
-              chmod +x "${TARGET_DIR}/bin/yarn" || true
-            fi
-            rm -f "${TEMP_FILE}"
-          else
-            log_warn "No download URL provided for yarn ${VERSION}."
+          URL="https://github.com/yarnpkg/yarn/releases/download/v${EXACT_VERSION}/yarn-v${EXACT_VERSION}.tar.gz"
+          TEMP_FILE=$(mktemp)
+          libscript_depends "curl" "tar" || true
+          if ! curl -sSLf "$URL" -o "$TEMP_FILE.tar.gz"; then
+            log_error "Failed to download yarn from $URL"
+            rm -f "$TEMP_FILE.tar.gz"
+            exit 1
           fi
+          tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}" --strip-components=1 || true
+          ln -sf "${TARGET_DIR}/bin/yarn" "${TARGET_DIR}/bin/yarnpkg" || true
+          rm -f "$TEMP_FILE.tar.gz"
         fi
       else
         log_info "yarn ${VERSION} is already installed."

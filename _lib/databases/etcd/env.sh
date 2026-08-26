@@ -30,7 +30,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export ETCD_URL="${ETCD_URL:-1}"
-export ETCD_VERSION="${ETCD_VERSION:-v3.5.21}"
+export ETCD_VERSION="${ETCD_VERSION:-latest}"
 if [ "${ETCD_PASSWORD_FILE-}" ] && [ -f "${ETCD_PASSWORD_FILE}" ]; then
   pass_contents="$(cat -- "${ETCD_PASSWORD_FILE}"; printf 'a')"
   pass_contents="${pass_contents%a}"

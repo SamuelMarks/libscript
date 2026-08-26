@@ -5,7 +5,6 @@
 # ## Usage
 # Installs and configures etcd on the controller node.
 
-
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
@@ -39,6 +38,17 @@ for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh"; do
   . "${SCRIPT_NAME}"
 done
 
-# github.com/kelseyhightower/kubernetes-the-hard-way/blob/master/docs/07-bootstrapping-etcd.md
 
-mv etcd etcdctl /usr/local/bin/
+scp "${DIR}/kubernetes-the-hard-way/downloads/controller/etcd" "${DIR}/kubernetes-the-hard-way/downloads/client/etcdctl" "${DIR}/kubernetes-the-hard-way/units/etcd.service" root@server:~/
+ssh root@server << 'EOF'
+  set -eu
+  mv -f etcd etcdctl /usr/local/bin/ || true
+  mkdir -p /etc/etcd /var/lib/etcd
+  chmod 700 /var/lib/etcd
+  cp -f ca.crt kube-api-server.key kube-api-server.crt /etc/etcd/
+  mkdir -p /etc/systemd/system/; mv -f etcd.service /etc/systemd/system/
+  systemctl daemon-reload
+  systemctl enable etcd
+  systemctl start etcd
+  etcdctl member list || true
+EOF

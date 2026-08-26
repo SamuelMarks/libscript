@@ -54,7 +54,7 @@ resolve_exact_version() {
     if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
       EXACT_VERSION="$_latest"
     else
-      EXACT_VERSION="${VERSION:-latest}"
+      EXACT_VERSION=$(curl -sL https://api.github.com/repos/Morganamilo/paru/releases/latest | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
     fi
   else
     EXACT_VERSION="${VERSION:-latest}"
@@ -172,7 +172,11 @@ case "$ACTION" in
         libscript_depends "curl"
         libscript_depends "zstd"
         libscript_depends "tar"
-        curl -sSL "$URL" -o "$TEMP_FILE"
+        if ! curl -sSLf "$URL" -o "$TEMP_FILE"; then
+          log_error "Failed to download paru from $URL"
+          rm -f "$TEMP_FILE"
+          exit 1
+        fi
         tar --zstd -xf "$TEMP_FILE" -C "${TARGET_DIR}/bin" "paru" || cp "$TEMP_FILE" "${TARGET_DIR}/bin/paru"
         chmod +x "${TARGET_DIR}/bin/paru"
         rm -f "$TEMP_FILE"

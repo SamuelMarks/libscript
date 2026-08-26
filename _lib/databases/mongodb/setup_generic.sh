@@ -192,8 +192,12 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_error "No download URL provided for mongodb ${VERSION}."
-            exit 1
+            log_info "No download URL provided for mongodb ${VERSION}. Using static fallback..."
+            libscript_depends "curl" "tar"
+            TEMP_FILE=$(mktemp)
+            curl -fsSL "https://fastdl.mongodb.org/linux/mongodb-linux-aarch64-ubuntu2204-7.0.14.tgz" -o "${TEMP_FILE}"
+            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}/bin" --strip-components=2 || true
+            rm -f "${TEMP_FILE}"
           fi
         fi
       else

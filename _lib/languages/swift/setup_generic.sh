@@ -166,41 +166,12 @@ case "$ACTION" in
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing swift ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
-        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/swift/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
-          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/swift/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
-          if [ -n "$cache_file" ]; then
-            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
-            else
-              cp "$cache_file" "${TARGET_DIR}/bin/swift" || true
-              chmod +x "${TARGET_DIR}/bin/swift" || true
-            fi
-          fi
+        if [ "$UNAME_LOWER" = "linux" ] && [ -n "${PKG_MGR:-}" ]; then
+          log_info "Falling back to system package manager for swift..."
+          libscript_depends "swift"
         else
-          if [ -n "${SWIFT_DOWNLOAD_URL:-}" ]; then
-            TEMP_FILE=$(mktemp)
-            libscript_download "${SWIFT_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-            if case "${SWIFT_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "${SWIFT_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-            else
-              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/swift" || true
-              chmod +x "${TARGET_DIR}/bin/swift" || true
-            fi
-            rm -f "${TEMP_FILE}"
-          else
-            if [ -f /etc/alpine-release ]; then
-              log_info "Swift compiler binaries are not officially built for Alpine Linux (musl). Skipping install."
-              exit 0
-            else
-              log_error "No download URL provided for swift ${VERSION}."
-              exit 1
-            fi
-          fi
+          log_error "Native installation for swift from source is not supported yet."
+          exit 1
         fi
       else
         log_info "swift ${VERSION} is already installed."

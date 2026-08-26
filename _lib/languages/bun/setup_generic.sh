@@ -190,9 +190,9 @@ case "$ACTION" in
           else
             log_info "No download URL provided for bun ${VERSION}. Using official installer..."
             if [ "${TARGET_OS:-}" = "alpine" ]; then
-              libscript_depends "curl" "bash" "libstdc++"
+              libscript_depends "curl" "bash" "unzip" "libstdc++"
             else
-              libscript_depends "curl" "bash"
+              libscript_depends "curl" "bash" "unzip"
             fi
             if [ "${VERSION}" = "latest" ]; then
               curl -fsSL https://bun.sh/install | bash || true

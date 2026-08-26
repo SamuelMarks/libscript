@@ -542,6 +542,7 @@
     "PYTHONHOME",
     "PYTHONPATH",
     "pyyaml",
+    "qcow",
     "quicklist",
     "quiesce",
     "quiescing",

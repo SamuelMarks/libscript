@@ -27,6 +27,6 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-export DUCKDB_INSTALL_METHOD="${DUCKDB_INSTALL_METHOD:-system}"
+export DUCKDB_INSTALL_METHOD="${DUCKDB_INSTALL_METHOD:-libscript_native}"
 DUCKDB_VERSION="${DUCKDB_VERSION:-latest}"
 export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/duckdb/${DUCKDB_VERSION}/bin:${PATH}"

@@ -27,4 +27,11 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 
-httpd --version
+if command -v httpd >/dev/null 2>&1; then
+  httpd -v
+elif command -v apache2 >/dev/null 2>&1; then
+  apache2 -v
+else
+  echo "httpd or apache2 command not found"
+  exit 1
+fi

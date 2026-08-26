@@ -159,15 +159,21 @@ case "$ACTION" in
         log_info "Installing pub ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         ARCH=$(uname -m)
+        OS=$(uname -s | tr "[:upper:]" "[:lower:]")
         if [ "$ARCH" = "x86_64" ]; then ARCH="x64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
-        URL="https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-linux-${ARCH}-release.zip"
+        if [ "$OS" = "darwin" ]; then OS="macos"; fi
+        URL="https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-${OS}-${ARCH}-release.zip"
         TEMP_FILE=$(mktemp)
         libscript_depends "curl"
         libscript_depends "unzip"
-        curl -sSL "$URL" -o "$TEMP_FILE.zip"
+        if ! curl -sSLf "$URL" -o "$TEMP_FILE.zip"; then
+          log_error "Failed to download dart SDK from $URL"
+          rm -f "$TEMP_FILE.zip"
+          exit 1
+        fi
         unzip -q "$TEMP_FILE.zip" -d "${TARGET_DIR}" || true
         # Create a wrapper for pub
-        cat << 'WRAPPER' > "${TARGET_DIR}/bin/pub"
+        cat << WRAPPER > "${TARGET_DIR}/bin/pub"
 #!/bin/sh
 exec "${TARGET_DIR}/dart-sdk/bin/dart" pub "\$@"
 WRAPPER

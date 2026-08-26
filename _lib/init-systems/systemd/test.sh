@@ -38,4 +38,4 @@ if [ -f /etc/alpine-release ]; then
   exit 0
 fi
 
-systemd --version
+systemctl --version

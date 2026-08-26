@@ -157,7 +157,7 @@ case "$ACTION" in
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/pdm/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing pdm ${VERSION} natively to ${TARGET_DIR}..."
-        libscript_depends "python3"
+        libscript_depends "python" || true
         libscript_depends "curl"
         if [ "${EXACT_VERSION}" = "latest" ]; then
            EXACT_VERSION=$(curl -sL https://api.github.com/repos/pdm-project/pdm/releases/latest | grep -oE "\"tag_name\": *\"[0-9.]+\"" | sed -E "s/.*\"([0-9.]+)\".*/\1/" | head -n 1)

@@ -6,11 +6,11 @@ test_target = ENV['LIBSCRIPT_TEST_TARGET'] || 'sqlite'
 repo_root = ENV['LIBSCRIPT_REPO_ROOT'] || "../.."
 
 # Ensure unique VM name for complete isolation (like a new docker image)
-vm_name = "alpine-test-#{test_target}"
+vm_name = "alpine-3.24-test-#{test_target}"
 
 Vagrant.configure("2") do |config|
   config.vm.define vm_name do |t|
-    t.vm.box = "alpine-test"
+    t.vm.box = "bento/alpine-3.24"
     t.vm.box_version = "0"
 
     t.vm.provider "qemu" do |qe|

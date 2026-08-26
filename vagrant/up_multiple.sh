@@ -38,7 +38,7 @@ fi
 DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 
 VAGRANT_IMAGE_DIR="${VAGRANT_IMAGE_DIR:-debian12}"
-VAGRANT_N="${VAGRANT_N:-VAGRANT_N}"
+VAGRANT_N="${VAGRANT_N:-3}"
 (
   cd "${DIR}"'/'"${VAGRANT_IMAGE_DIR}" || exit 1
   for i in $(dc -e '0 1 '"${VAGRANT_N}"'  stsisb[pli+dlt>a]salblax'); do

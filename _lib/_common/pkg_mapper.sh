@@ -199,6 +199,13 @@ map_package() {
         *) printf 'make\n' ;;
       esac
       ;;
+    'httpd')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'apache2\n' ;;
+        'apk') printf 'apache2\n' ;;
+        *) printf 'httpd\n' ;;
+      esac
+      ;;
     'git')
       case "${PKG_MGR}" in
         'winget') printf 'Git.Git\n' ;;
@@ -217,6 +224,15 @@ map_package() {
         'apt-get'|'dnf'|'yum'|'zypper'|'pacman') printf 'sqlite3\n' ;;
         'brew') printf 'sqlite\n' ;;
         *) printf 'sqlite3\n' ;;
+      esac
+      ;;
+    'libicu')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'libicu-dev\n' ;;
+        'apk') printf 'icu-dev\n' ;;
+        'dnf'|'yum'|'zypper') printf 'libicu-devel\n' ;;
+        'pacman') printf 'icu\n' ;;
+        *) printf 'libicu\n' ;;
       esac
       ;;
     'tar')
@@ -299,6 +315,17 @@ map_package() {
         *) printf 'kotlin\n' ;;
       esac
       ;;
+    'nimble')
+      case "${PKG_MGR}" in
+        *) printf 'nim\n' ;;
+      esac
+      ;;
+    'nuget')
+      case "${PKG_MGR}" in
+        'apk') return 1 ;;
+        *) printf 'nuget\n' ;;
+      esac
+      ;;
     'nodejs')
       case "${PKG_MGR}" in
         'apk') printf 'nodejs npm\n' ;;
@@ -329,6 +356,17 @@ map_package() {
         "pacman") printf "python-pip\n" ;;
         *) printf "pip\n" ;;
       esac ;;
+
+    'python3-venv')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'python3-venv\n' ;;
+        'dnf'|'yum') printf 'python3\n' ;;
+        'apk') printf 'python3\n' ;;
+        'pacman') printf 'python\n' ;;
+        'zypper') printf 'python3\n' ;;
+        *) printf 'python3-venv\n' ;;
+      esac
+      ;;
 
     'r')
       case "${PKG_MGR}" in
@@ -432,6 +470,23 @@ map_package() {
         *) printf 'awscli\n' ;;
       esac
       ;;
+    'azure-cli')
+      case "${PKG_MGR}" in
+        'apt-get'|'dnf'|'yum'|'zypper') printf 'azure-cli\n' ;;
+        'apk'|'pacman') return 1 ;;
+        *) printf 'azure-cli\n' ;;
+      esac
+      ;;
+    'build-essential')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'build-essential\n' ;;
+        'dnf'|'yum') printf '@development-tools\n' ;;
+        'zypper') printf '-t pattern devel_basis\n' ;;
+        'pacman') printf 'base-devel\n' ;;
+        'apk') printf 'build-base\n' ;;
+        *) printf 'build-essential\n' ;;
+      esac
+      ;;
     'bun-pm')
       case "${PKG_MGR}" in
         'apk') printf 'bun\n' ;;
@@ -446,7 +501,7 @@ map_package() {
       ;;
     'cabal')
       case "${PKG_MGR}" in
-        'apk') printf 'cabal\n' ;;
+        'apt-get') printf 'cabal-install\n' ;;
         *) printf 'cabal\n' ;;
       esac
       ;;
@@ -471,7 +526,7 @@ map_package() {
     'docker')
       case "${PKG_MGR}" in
         'apk') printf 'docker docker-cli\n' ;;
-        'apt-get') printf 'docker.io docker-buildx-plugin docker-compose-plugin\n' ;;
+        'apt-get') printf 'docker.io docker-compose-v2\n' ;;
         'winget') printf 'Docker.DockerCli\n' ;;
         'brew') printf 'docker\n' ;;
         *) printf 'docker\n' ;;
@@ -614,6 +669,13 @@ map_package() {
         *) printf 'dnf\n' ;;
       esac
       ;;
+    'pacman')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'pacman-package-manager\n' ;;
+        'apk') return 1 ;;
+        *) printf 'pacman\n' ;;
+      esac
+      ;;
     'emerge')
       case "${PKG_MGR}" in
         'apk'|'apt-get'|'dnf'|'yum'|'pacman'|'zypper') return 1 ;;
@@ -624,6 +686,12 @@ map_package() {
       case "${PKG_MGR}" in
         'apk'|'apt-get'|'dnf'|'yum'|'pacman'|'zypper') return 1 ;;
         *) printf 'eopkg\n' ;;
+      esac
+      ;;
+    'xz')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'xz-utils\n' ;;
+        *) printf 'xz\n' ;;
       esac
       ;;
     'fnm')

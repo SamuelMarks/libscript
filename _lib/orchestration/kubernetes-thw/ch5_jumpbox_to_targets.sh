@@ -5,7 +5,6 @@
 # ## Usage
 # Generates kubeconfig files for workers, proxy, scheduler, and admin, then scp's them to targets.
 
-
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
@@ -38,141 +37,53 @@ for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh"; do
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
 done
+libscript_depends kubectl
 
-# github.com/kelseyhightower/kubernetes-the-hard-way/blob/master/docs/05-kubernetes-configuration-files.md
-for host in node0 node1 node2; do
+
+MACHINES_TXT="${MACHINES_TXT:-${DIR}/kubernetes-the-hard-way/machines.txt}"
+NODES=$(awk '$3 ~ /^node-/ {print $3}' "${MACHINES_TXT}" || echo "node-0 node-1")
+SERVER_IP=$(awk '$3 == "server" {print $1}' "${MACHINES_TXT}" || echo "192.168.56.10")
+for host in $NODES; do
   ssh root@"${host}" "mkdir -p -- /var/lib/kubelet/"
-
-  scp "${LIBSCRIPT_DATA_DIR}"'/ca.crt' root@"${host}":/var/lib/kubelet/
-
-  scp "${LIBSCRIPT_DATA_DIR}"'/'"${host}"'.crt' \
-    root@"${host}":/var/lib/kubelet/kubelet.crt
-
-  scp "${LIBSCRIPT_DATA_DIR}"'/'"${host}"'.key' \
-    root@"${host}":/var/lib/kubelet/kubelet.key
+  scp "${LIBSCRIPT_DATA_DIR}/ca.crt" root@"${host}":/var/lib/kubelet/
+  scp "${LIBSCRIPT_DATA_DIR}/${host}.crt" root@"${host}":/var/lib/kubelet/kubelet.crt
+  scp "${LIBSCRIPT_DATA_DIR}/${host}.key" root@"${host}":/var/lib/kubelet/kubelet.key
 done
+libscript_depends kubectl
 
-for host in node0 node1 node2; do
-  kubectl config set-cluster 'kubernetes-the-hard-way' \
-    --certificate-authority="${LIBSCRIPT_DATA_DIR}"'/ca.crt' \
-    --embed-certs='true' \
-    --server='https://server.kubernetes.local:6443' \
-    --kubeconfig="${LIBSCRIPT_DATA_DIR}"'/'"${host}"'.kubeconfig'
-
-  kubectl config set-credentials 'system:node:'"${host}" \
-    --client-certificate="${LIBSCRIPT_DATA_DIR}"'/'"${host}"'.crt' \
-    --client-key="${LIBSCRIPT_DATA_DIR}"'/'"${host}"'.key' \
-    --embed-certs='true' \
-    --kubeconfig="${LIBSCRIPT_DATA_DIR}"'/'"${host}"'.kubeconfig'
-
-  kubectl config set-context 'default' \
-    --cluster='kubernetes-the-hard-way' \
-    --user='system:node:'"${host}" \
-    --kubeconfig="${host}"'.kubeconfig'
-
-  kubectl config use-context 'default' \
-    --kubeconfig="${host}"'.kubeconfig'
+for host in $NODES; do
+  kubectl config set-cluster 'kubernetes-the-hard-way' --certificate-authority="${LIBSCRIPT_DATA_DIR}/ca.crt" --embed-certs='true' --server="https://${SERVER_IP}:6443" --kubeconfig="${LIBSCRIPT_DATA_DIR}/${host}.kubeconfig"
+  kubectl config set-credentials "system:node:${host}" --client-certificate="${LIBSCRIPT_DATA_DIR}/${host}.crt" --client-key="${LIBSCRIPT_DATA_DIR}/${host}.key" --embed-certs='true' --kubeconfig="${LIBSCRIPT_DATA_DIR}/${host}.kubeconfig"
+  kubectl config set-context 'default' --cluster='kubernetes-the-hard-way' --user="system:node:${host}" --kubeconfig="${LIBSCRIPT_DATA_DIR}/${host}.kubeconfig"
+  kubectl config use-context 'default' --kubeconfig="${LIBSCRIPT_DATA_DIR}/${host}.kubeconfig"
 done
+libscript_depends kubectl
 
-kubectl config set-cluster 'kubernetes-the-hard-way' \
-    --certificate-authority="${LIBSCRIPT_DATA_DIR}"'/ca.crt' \
-    --embed-certs='true' \
-    --server='https://server.kubernetes.local:6443' \
-    --kubeconfig="${LIBSCRIPT_DATA_DIR}"'/kube-proxy.kubeconfig'
+kubectl config set-cluster 'kubernetes-the-hard-way' --certificate-authority="${LIBSCRIPT_DATA_DIR}/ca.crt" --embed-certs='true' --server="https://${SERVER_IP}:6443" --kubeconfig="${LIBSCRIPT_DATA_DIR}/kube-proxy.kubeconfig"
+kubectl config set-credentials 'system:kube-proxy' --client-certificate="${LIBSCRIPT_DATA_DIR}/kube-proxy.crt" --client-key="${LIBSCRIPT_DATA_DIR}/kube-proxy.key" --embed-certs='true' --kubeconfig="${LIBSCRIPT_DATA_DIR}/kube-proxy.kubeconfig"
+kubectl config set-context 'default' --cluster='kubernetes-the-hard-way' --user='system:kube-proxy' --kubeconfig="${LIBSCRIPT_DATA_DIR}/kube-proxy.kubeconfig"
+kubectl config use-context 'default' --kubeconfig="${LIBSCRIPT_DATA_DIR}/kube-proxy.kubeconfig"
 
-kubectl config set-credentials 'system:kube-proxy' \
-    --client-certificate="${LIBSCRIPT_DATA_DIR}"'/kube-proxy.crt' \
-    --client-key="${LIBSCRIPT_DATA_DIR}"'/kube-proxy.key' \
-    --embed-certs='true' \
-    --kubeconfig="${LIBSCRIPT_DATA_DIR}"'/kube-proxy.kubeconfig'
+kubectl config set-cluster 'kubernetes-the-hard-way' --certificate-authority="${LIBSCRIPT_DATA_DIR}/ca.crt" --embed-certs='true' --server="https://${SERVER_IP}:6443" --kubeconfig="${LIBSCRIPT_DATA_DIR}/kube-controller-manager.kubeconfig"
+kubectl config set-credentials 'system:kube-controller-manager' --client-certificate="${LIBSCRIPT_DATA_DIR}/kube-controller-manager.crt" --client-key="${LIBSCRIPT_DATA_DIR}/kube-controller-manager.key" --embed-certs='true' --kubeconfig="${LIBSCRIPT_DATA_DIR}/kube-controller-manager.kubeconfig"
+kubectl config set-context 'default' --cluster='kubernetes-the-hard-way' --user='system:kube-controller-manager' --kubeconfig="${LIBSCRIPT_DATA_DIR}/kube-controller-manager.kubeconfig"
+kubectl config use-context 'default' --kubeconfig="${LIBSCRIPT_DATA_DIR}/kube-controller-manager.kubeconfig"
 
-kubectl config set-context 'default' \
-    --cluster='kubernetes-the-hard-way' \
-    --user='system:kube-proxy' \
-    --kubeconfig="${LIBSCRIPT_DATA_DIR}"'/kube-proxy.kubeconfig'
+kubectl config set-cluster 'kubernetes-the-hard-way' --certificate-authority="${LIBSCRIPT_DATA_DIR}/ca.crt" --embed-certs='true' --server="https://${SERVER_IP}:6443" --kubeconfig="${LIBSCRIPT_DATA_DIR}/kube-scheduler.kubeconfig"
+kubectl config set-credentials 'system:kube-scheduler' --client-certificate="${LIBSCRIPT_DATA_DIR}/kube-scheduler.crt" --client-key="${LIBSCRIPT_DATA_DIR}/kube-scheduler.key" --embed-certs='true' --kubeconfig="${LIBSCRIPT_DATA_DIR}/kube-scheduler.kubeconfig"
+kubectl config set-context 'default' --cluster='kubernetes-the-hard-way' --user='system:kube-scheduler' --kubeconfig="${LIBSCRIPT_DATA_DIR}/kube-scheduler.kubeconfig"
+kubectl config use-context 'default' --kubeconfig="${LIBSCRIPT_DATA_DIR}/kube-scheduler.kubeconfig"
 
-kubectl config use-context 'default' \
-    --kubeconfig="${LIBSCRIPT_DATA_DIR}"'/kube-proxy.kubeconfig'
+kubectl config set-cluster 'kubernetes-the-hard-way' --certificate-authority="${LIBSCRIPT_DATA_DIR}/ca.crt" --embed-certs='true' --server='https://127.0.0.1:6443' --kubeconfig="${LIBSCRIPT_DATA_DIR}/admin.kubeconfig"
+kubectl config set-credentials 'admin' --client-certificate="${LIBSCRIPT_DATA_DIR}/admin.crt" --client-key="${LIBSCRIPT_DATA_DIR}/admin.key" --embed-certs='true' --kubeconfig="${LIBSCRIPT_DATA_DIR}/admin.kubeconfig"
+kubectl config set-context 'default' --cluster='kubernetes-the-hard-way' --user='admin' --kubeconfig="${LIBSCRIPT_DATA_DIR}/admin.kubeconfig"
+kubectl config use-context 'default' --kubeconfig="${LIBSCRIPT_DATA_DIR}/admin.kubeconfig"
 
-# github.com/kelseyhightower/kubernetes-the-hard-way/blob/master/docs/05-kubernetes-configuration-files.md#the-kube-controller-manager-kubernetes-configuration-file
-
-kubectl config set-cluster 'kubernetes-the-hard-way' \
-    --certificate-authority="${LIBSCRIPT_DATA_DIR}"'/ca.crt' \
-    --embed-certs='true' \
-    --server='https://server.kubernetes.local:6443' \
-    --kubeconfig="${LIBSCRIPT_DATA_DIR}"'/kube-controller-manager.kubeconfig'
-
-kubectl config set-credentials 'system:kube-controller-manager' \
-    --client-certificate="${LIBSCRIPT_DATA_DIR}"'/kube-controller-manager.crt' \
-    --client-key="${LIBSCRIPT_DATA_DIR}"'/kube-controller-manager.key' \
-    --embed-certs='true' \
-    --kubeconfig="${LIBSCRIPT_DATA_DIR}"'/kube-controller-manager.kubeconfig'
-
-kubectl config set-context 'default' \
-    --cluster='kubernetes-the-hard-way' \
-    --user='system:kube-controller-manager' \
-    --kubeconfig="${LIBSCRIPT_DATA_DIR}"'/kube-controller-manager.kubeconfig'
-
-kubectl config use-context 'default' \
-    --kubeconfig="${LIBSCRIPT_DATA_DIR}"'/kube-controller-manager.kubeconfig'
-
-# github.com/kelseyhightower/kubernetes-the-hard-way/blob/master/docs/05-kubernetes-configuration-files.md#the-kube-scheduler-kubernetes-configuration-file
-
-kubectl config set-cluster 'kubernetes-the-hard-way' \
-    --certificate-authority="${LIBSCRIPT_DATA_DIR}"'/ca.crt' \
-    --embed-certs='true' \
-    --server='https://server.kubernetes.local:6443' \
-    --kubeconfig="${LIBSCRIPT_DATA_DIR}"'/kube-scheduler.kubeconfig'
-
-kubectl config set-credentials 'system:kube-scheduler' \
-    --client-certificate="${LIBSCRIPT_DATA_DIR}"'/kube-scheduler.crt' \
-    --client-key="${LIBSCRIPT_DATA_DIR}"'/kube-scheduler.key' \
-    --embed-certs='true' \
-    --kubeconfig="${LIBSCRIPT_DATA_DIR}"'/kube-scheduler.kubeconfig'
-
-kubectl config set-context 'default' \
-    --cluster='kubernetes-the-hard-way' \
-    --user='system:kube-scheduler' \
-    --kubeconfig="${LIBSCRIPT_DATA_DIR}"'/kube-scheduler.kubeconfig'
-
-kubectl config use-context 'default' \
-    --kubeconfig="${LIBSCRIPT_DATA_DIR}"'/kube-scheduler.kubeconfig'
-
-# github.com/kelseyhightower/kubernetes-the-hard-way/blob/master/docs/05-kubernetes-configuration-files.md#the-admin-kubernetes-configuration-file
-
-kubectl config set-cluster 'kubernetes-the-hard-way' \
-    --certificate-authority="${LIBSCRIPT_DATA_DIR}"'/ca.crt' \
-    --embed-certs='true' \
-    --server='https://127.0.0.1:6443' \
-    --kubeconfig="${LIBSCRIPT_DATA_DIR}"'/admin.kubeconfig'
-
-kubectl config set-credentials 'admin' \
-    --client-certificate="${LIBSCRIPT_DATA_DIR}"'/admin.crt' \
-    --client-key="${LIBSCRIPT_DATA_DIR}"'/admin.key' \
-    --embed-certs='true' \
-    --kubeconfig="${LIBSCRIPT_DATA_DIR}"'/admin.kubeconfig'
-
-kubectl config set-context 'default' \
-    --cluster='kubernetes-the-hard-way' \
-    --user='admin' \
-    --kubeconfig="${LIBSCRIPT_DATA_DIR}"'/admin.kubeconfig'
-
-kubectl config use-context 'default' \
-    --kubeconfig="${LIBSCRIPT_DATA_DIR}"'/admin.kubeconfig'
-
-# github.com/kelseyhightower/kubernetes-the-hard-way/blob/master/docs/05-kubernetes-configuration-files.md#distribute-the-kubernetes-configuration-files
-
-for host in node0 node1 node2; do
-  ssh root@"${host}" "mkdir -p -- /var/lib/{kube-proxy,kubelet}"
-
-  scp "${LIBSCRIPT_DATA_DIR}"'/kube-proxy.kubeconfig' \
-    root@"${host}":'/var/lib/kube-proxy/kubeconfig'
-
-  scp "${LIBSCRIPT_DATA_DIR}"'/'"${host}"'.kubeconfig' \
-    root@"${host}":'/var/lib/kubelet/kubeconfig'
+for host in $NODES; do
+  ssh root@"${host}" "mkdir -p -- /var/lib/kube-proxy /var/lib/kubelet"
+  scp "${LIBSCRIPT_DATA_DIR}/kube-proxy.kubeconfig" root@"${host}":'/var/lib/kube-proxy/kubeconfig'
+  scp "${LIBSCRIPT_DATA_DIR}/${host}.kubeconfig" root@"${host}":'/var/lib/kubelet/kubeconfig'
 done
+libscript_depends kubectl
 
-scp "${LIBSCRIPT_DATA_DIR}"'/admin.kubeconfig' \
-  "${LIBSCRIPT_DATA_DIR}"'/kube-controller-manager.kubeconfig' \
-  "${LIBSCRIPT_DATA_DIR}"'/kube-scheduler.kubeconfig' \
-  root@server:~/
+scp "${LIBSCRIPT_DATA_DIR}/admin.kubeconfig" "${LIBSCRIPT_DATA_DIR}/kube-controller-manager.kubeconfig" "${LIBSCRIPT_DATA_DIR}/kube-scheduler.kubeconfig" root@server:~/

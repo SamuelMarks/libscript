@@ -174,14 +174,26 @@ case "$ACTION" in
            ARCH=$(uname -m)
            OS=$(uname -s | tr "[:upper:]" "[:lower:]")
            if [ "$ARCH" = "x86_64" ]; then ARCH="amd64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
-           URL="https://github.com/GoogleCloudPlatform/gcsfuse/releases/download/v${EXACT_VERSION}/gcsfuse_v${EXACT_VERSION}_${OS}_${ARCH}.tar.gz"
            TEMP_FILE=$(mktemp)
            libscript_depends "curl"
-           libscript_depends "tar"
-           curl -sSL "$URL" -o "$TEMP_FILE.tar.gz"
-           tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" --strip-components=1 "gcsfuse_v${EXACT_VERSION}_${OS}_${ARCH}/bin/gcsfuse" || tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" || cp "$TEMP_FILE.tar.gz" "${TARGET_DIR}/bin/gcsfuse"
+           if [ "$OS" = "linux" ]; then
+             URL="https://github.com/GoogleCloudPlatform/gcsfuse/releases/download/v${EXACT_VERSION}/gcsfuse_${EXACT_VERSION}_${ARCH}.deb"
+             if ! curl -sSLf "$URL" -o "$TEMP_FILE.deb"; then
+                log_error "Failed to download gcsfuse from $URL"
+                rm -f "$TEMP_FILE.deb"
+                exit 1
+             fi
+             libscript_depends "binutils" "tar" "xz-utils" || true
+             TEMP_EXTRACT=$(mktemp -d)
+             (cd "$TEMP_EXTRACT" && ar x "$TEMP_FILE.deb" && tar -xf data.tar.*)
+             cp "$TEMP_EXTRACT/usr/bin/gcsfuse" "${TARGET_DIR}/bin/gcsfuse" || true
+             rm -rf "$TEMP_EXTRACT"
+             rm -f "$TEMP_FILE.deb"
+           else
+             log_error "gcsfuse native installation only supports Linux currently."
+             exit 1
+           fi
            chmod +x "${TARGET_DIR}/bin/gcsfuse" || true
-           rm -f "$TEMP_FILE.tar.gz"
         fi
       else
         log_info "gcsfuse ${VERSION} is already installed."

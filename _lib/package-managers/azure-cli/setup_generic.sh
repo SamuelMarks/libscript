@@ -155,9 +155,14 @@ case "$ACTION" in
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/azure-cli/${EXACT_VERSION}"
+      log_info "DEBUG: TARGET_DIR='${TARGET_DIR}', EXACT_VERSION='${EXACT_VERSION}', VERSION='${VERSION}'"
+      log_info "DEBUG: ls -la $TARGET_DIR : $(ls -la "$TARGET_DIR" 2>&1 || true)"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing azure-cli ${VERSION} natively to ${TARGET_DIR}..."
-        if [ -f /etc/alpine-release ]; then
+        if [ "$UNAME_LOWER" = "linux" ] && [ -n "${PKG_MGR:-}" ]; then
+          log_info "Falling back to system package manager for azure-cli..."
+          libscript_depends "azure-cli"
+        elif [ -f /etc/alpine-release ]; then
           libscript_depends "python3" "py3-pip" "gcc" "musl-dev" "python3-dev" "libffi-dev" "openssl-dev" "make"
           pip install --break-system-packages azure-cli || true
         else

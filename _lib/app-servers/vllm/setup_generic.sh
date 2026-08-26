@@ -173,9 +173,9 @@ case "$ACTION" in
         libscript_python_venv "${TARGET_DIR}"
 
         if [ "$EXACT_VERSION" = "latest" ]; then
-          "${TARGET_DIR}/bin/pip" install --upgrade vllm || PIP_FAILED=1
+          TMPDIR=/var/tmp "${TARGET_DIR}/bin/pip" install --no-cache-dir --upgrade vllm || PIP_FAILED=1
         else
-          "${TARGET_DIR}/bin/pip" install "vllm==${EXACT_VERSION}" || PIP_FAILED=1
+          TMPDIR=/var/tmp "${TARGET_DIR}/bin/pip" install --no-cache-dir "vllm==${EXACT_VERSION}" || PIP_FAILED=1
         fi
         
         if [ "${PIP_FAILED:-0}" = "1" ]; then

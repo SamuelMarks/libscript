@@ -5,7 +5,6 @@
 # ## Usage
 # Generates the encryption-config.yaml with a random key and copies it to the master server.
 
-
 set -feu
 # shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
@@ -39,7 +38,7 @@ for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh"; do
   . "${SCRIPT_NAME}"
 done
 
-# github.com/kelseyhightower/kubernetes-the-hard-way/blob/master/docs/06-data-encryption-keys.md
+
 if [ -f "${LIBSCRIPT_DATA_DIR}/.k8s_encryption_key" ]; then
   ENCRYPTION_KEY="$(cat "${LIBSCRIPT_DATA_DIR}/.k8s_encryption_key")"
 else
@@ -48,6 +47,5 @@ else
   printf '%s\n' "${ENCRYPTION_KEY}" > "${LIBSCRIPT_DATA_DIR}/.k8s_encryption_key"
 fi
 export ENCRYPTION_KEY
-envsubst < 'kubernetes-the-hard-way/configs/encryption-config.yaml' \
-  > "${LIBSCRIPT_DATA_DIR}"'/encryption-config.yaml'
-scp "${LIBSCRIPT_DATA_DIR}"'/encryption-config.yaml' root@server:~/
+envsubst < "${DIR}/kubernetes-the-hard-way/configs/encryption-config.yaml" > "${LIBSCRIPT_DATA_DIR}/encryption-config.yaml"
+scp "${LIBSCRIPT_DATA_DIR}/encryption-config.yaml" root@server:~/

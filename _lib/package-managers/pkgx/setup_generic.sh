@@ -54,7 +54,7 @@ resolve_exact_version() {
     if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
       EXACT_VERSION="$_latest"
     else
-      EXACT_VERSION="${VERSION:-latest}"
+      EXACT_VERSION=$(curl -sL https://api.github.com/repos/pkgxdev/pkgx/releases/latest | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
     fi
   else
     EXACT_VERSION="${VERSION:-latest}"
@@ -159,7 +159,11 @@ case "$ACTION" in
         libscript_depends "curl"
         libscript_depends "tar"
         libscript_depends "xz"
-        curl -sSL "$URL" -o "$TEMP_FILE"
+        if ! curl -sSLf "$URL" -o "$TEMP_FILE"; then
+          log_error "Failed to download pkgx from $URL"
+          rm -f "$TEMP_FILE"
+          exit 1
+        fi
         tar -xf "$TEMP_FILE" -C "${TARGET_DIR}/bin" "pkgx" || cp "$TEMP_FILE" "${TARGET_DIR}/bin/pkgx"
         chmod +x "${TARGET_DIR}/bin/pkgx"
         rm -f "$TEMP_FILE"

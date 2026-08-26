@@ -156,38 +156,12 @@ case "$ACTION" in
         exit 0
       fi
 
-      mkdir -p "${TARGET_DIR}/bin"
-      
-      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nginx/"*"${VERSION}"* >/dev/null 2>&1; then
-        log_info "Extracting from cache..."
-        cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nginx/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
-        if [ -n "$cache_file" ]; then
-          if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-            tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
-          elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-            unzip -q "$cache_file" -d "${TARGET_DIR}" || true
-          else
-            cp "$cache_file" "${TARGET_DIR}/bin/nginx" || true
-            chmod +x "${TARGET_DIR}/bin/nginx" || true
-          fi
-        fi
+      if [ "$UNAME_LOWER" = "linux" ] && [ -n "${PKG_MGR:-}" ]; then
+        log_info "Falling back to system package manager for nginx..."
+        libscript_depends "nginx"
       else
-        if [ -n "${NGINX_DOWNLOAD_URL:-}" ]; then
-          TEMP_FILE=$(mktemp)
-          libscript_download "${NGINX_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-          if case "${NGINX_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-            tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-          elif case "${NGINX_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-            unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-          else
-            cp "${TEMP_FILE}" "${TARGET_DIR}/bin/nginx" || true
-            chmod +x "${TARGET_DIR}/bin/nginx" || true
-          fi
-          rm -f "${TEMP_FILE}"
-        else
-          log_error "No download URL provided for nginx ${VERSION}."
-          exit 1
-        fi
+        log_error "Native installation for nginx from source is not supported yet."
+        exit 1
       fi
       
       libscript_symlink_alias "nginx" "${NGINX_VERSION}" "${EXACT_VERSION}"

@@ -164,11 +164,15 @@ case "$ACTION" in
           mkdir -p "${TARGET_DIR}/bin"
           ARCH=$(uname -m)
           OS=$(uname -s | tr "[:upper:]" "[:lower:]")
-          if [ "$ARCH" = "x86_64" ]; then ARCH="amd64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
-          URL="https://github.com/bazelbuild/bazelisk/releases/download/v${EXACT_VERSION}/bazelisk-${OS}-${ARCH}"
+          if [ "$ARCH" = "x86_64" ]; then ARCH="x86_64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
+          URL="https://github.com/bazelbuild/bazel/releases/download/${EXACT_VERSION}/bazel-${EXACT_VERSION}-${OS}-${ARCH}"
           TEMP_FILE=$(mktemp)
           libscript_depends "curl"
-          curl -sSL "$URL" -o "$TEMP_FILE"
+          if ! curl -sSLf "$URL" -o "$TEMP_FILE"; then
+            log_error "Failed to download bazel from $URL"
+            rm -f "$TEMP_FILE"
+            exit 1
+          fi
           cp "$TEMP_FILE" "${TARGET_DIR}/bin/bazel"
           chmod +x "${TARGET_DIR}/bin/bazel"
           rm -f "$TEMP_FILE"

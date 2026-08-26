@@ -168,12 +168,16 @@ case "$ACTION" in
           if [ "$OS" = "darwin" ]; then OS="osx"; fi
           URL="https://github.com/PowerShell/PowerShell/releases/download/v${EXACT_VERSION}/powershell-${EXACT_VERSION}-${OS}-${ARCH}.tar.gz"
           TEMP_FILE=$(mktemp)
-          libscript_depends "curl"
-          libscript_depends "tar"
-          curl -sSL "$URL" -o "$TEMP_FILE.tar.gz"
+          libscript_depends "curl" "tar"
+          if [ "$OS" = "linux" ]; then libscript_depends "libicu" || true; fi
+          if ! curl -sSLf "$URL" -o "$TEMP_FILE.tar.gz"; then
+            log_error "Failed to download powershell from $URL"
+            rm -f "$TEMP_FILE.tar.gz"
+            exit 1
+          fi
           tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}" || true
           ln -sf "${TARGET_DIR}/pwsh" "${TARGET_DIR}/bin/pwsh"
-          chmod +x "${TARGET_DIR}/pwsh"
+          chmod +x "${TARGET_DIR}/pwsh" || true
           rm -f "$TEMP_FILE.tar.gz"
         else
           log_info "powershell ${VERSION} is already installed."

@@ -53,10 +53,14 @@ VERSION="${ZIG_VERSION:-latest}"
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
     _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote zig 2>/dev/null | tail -n 1)
-    if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
+    if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ] && [ "$_latest" != "Fetching remote versions not implemented generically for zig" ]; then
       EXACT_VERSION="$_latest"
     else
-      EXACT_VERSION="${VERSION:-latest}"
+      libscript_depends "curl" "jq" || true
+      EXACT_VERSION=$(curl -sL https://ziglang.org/download/index.json | jq -r 'keys | map(select(. != "master")) | sort | last')
+      if [ -z "$EXACT_VERSION" ] || [ "$EXACT_VERSION" = "null" ]; then
+         EXACT_VERSION="0.13.0"
+      fi
     fi
   else
     EXACT_VERSION="${VERSION:-latest}"
@@ -175,22 +179,20 @@ case "$ACTION" in
             fi
           fi
         else
-          if [ -n "${ZIG_DOWNLOAD_URL:-}" ]; then
-            TEMP_FILE=$(mktemp)
-            libscript_download "${ZIG_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-            if case "${ZIG_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "${ZIG_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-            else
-              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/zig" || true
-              chmod +x "${TARGET_DIR}/bin/zig" || true
-            fi
-            rm -f "${TEMP_FILE}"
-          else
-            log_error "No download URL provided for zig ${VERSION}."
+          ARCH=$(uname -m)
+          if [ "$ARCH" = "x86_64" ]; then ARCH="x86_64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="aarch64"; fi
+          OS=$(uname -s | tr "[:upper:]" "[:lower:]")
+          if [ "$OS" = "darwin" ]; then OS="macos"; elif [ "$OS" = "linux" ]; then OS="linux"; fi
+          URL="https://ziglang.org/download/${EXACT_VERSION}/zig-${OS}-${ARCH}-${EXACT_VERSION}.tar.xz"
+          TEMP_FILE=$(mktemp)
+          libscript_depends "curl" "tar" "xz" || true
+          if ! curl -sSLf "$URL" -o "$TEMP_FILE.tar.xz"; then
+            log_error "Failed to download zig from $URL"
+            rm -f "$TEMP_FILE.tar.xz"
             exit 1
           fi
+          tar -xf "$TEMP_FILE.tar.xz" -C "${TARGET_DIR}" --strip-components=1 || true
+          rm -f "$TEMP_FILE.tar.xz"
         fi
       else
         log_info "zig ${VERSION} is already installed."

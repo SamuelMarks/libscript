@@ -159,37 +159,8 @@ case "$ACTION" in
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/deno-pm/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing deno-pm ${VERSION} natively to ${TARGET_DIR}..."
-        mkdir -p "${TARGET_DIR}/bin"
-        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/deno-pm/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
-          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/deno-pm/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
-          if [ -n "$cache_file" ]; then
-            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
-            else
-              cp "$cache_file" "${TARGET_DIR}/bin/deno-pm" || true
-              chmod +x "${TARGET_DIR}/bin/deno-pm" || true
-            fi
-          fi
-        else
-          if [ -n "${DENO_PM_DOWNLOAD_URL:-}" ]; then
-            TEMP_FILE=$(mktemp)
-            libscript_download "${DENO_PM_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-            if case "${DENO_PM_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "${DENO_PM_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-            else
-              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/deno-pm" || true
-              chmod +x "${TARGET_DIR}/bin/deno-pm" || true
-            fi
-            rm -f "${TEMP_FILE}"
-          else
-            log_warn "No download URL provided for deno-pm ${VERSION}."
-          fi
-        fi
+        libscript_depends "curl" "unzip" || true
+        curl -fsSL https://deno.land/install.sh | DENO_INSTALL="${TARGET_DIR}" sh
       else
         log_info "deno-pm ${VERSION} is already installed."
       fi

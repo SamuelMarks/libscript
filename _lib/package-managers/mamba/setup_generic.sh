@@ -165,7 +165,10 @@ case "$ACTION" in
         log_info "Installing mamba ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         
-        libscript_depends curl tar bzip2 gcompat
+        libscript_depends curl tar bzip2
+        if [ -f /etc/alpine-release ]; then
+          libscript_depends gcompat || true
+        fi
         
         # Download micromamba
         ARCH="$(uname -m)"
@@ -179,7 +182,14 @@ case "$ACTION" in
         
         log_info "Downloading micromamba for ${OS}-${MAMBA_ARCH}..."
         TEMP_DIR=$(mktemp -d)
-        curl -Ls "https://micro.mamba.pm/api/micromamba/${OS}-${MAMBA_ARCH}/latest" | tar -xvj -C "$TEMP_DIR" bin/micromamba || true
+        TEMP_FILE=$(mktemp)
+        if ! curl -sSLf "https://micro.mamba.pm/api/micromamba/${OS}-${MAMBA_ARCH}/latest" -o "$TEMP_FILE"; then
+          log_error "Failed to download micromamba"
+          rm -rf "$TEMP_DIR" "$TEMP_FILE"
+          exit 1
+        fi
+        tar -xvj -f "$TEMP_FILE" -C "$TEMP_DIR" bin/micromamba || true
+        rm -f "$TEMP_FILE"
         if [ -f "$TEMP_DIR/bin/micromamba" ]; then
           cp "$TEMP_DIR/bin/micromamba" "${TARGET_DIR}/bin/mamba"
           cp "$TEMP_DIR/bin/micromamba" "${TARGET_DIR}/bin/micromamba"

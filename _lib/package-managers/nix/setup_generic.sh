@@ -192,16 +192,11 @@ case "$ACTION" in
             rm -f "${TEMP_FILE}"
           else
             if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "darwin" ]; then
-              log_info "Downloading and installing Nix via official script..."
-              libscript_depends curl xz bash
+              log_info "Downloading and installing Nix via Determinate Systems script..."
+              libscript_depends curl
               
-              if command -v bash >/dev/null 2>&1; then
-                bash -c "sh <(curl -L https://nixos.org/nix/install) --daemon --yes" || log_warn "Nix install script failed or requires attention."
-              else
-                _nix_temp=$(mktemp)
-                curl -L https://nixos.org/nix/install > "$_nix_temp"
-                sh "$_nix_temp" --daemon --yes || log_warn "Nix install script failed or requires attention."
-                rm -f "$_nix_temp"
+              if ! curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install --no-confirm; then
+                 log_warn "Nix install script failed or requires attention."
               fi
               
               if [ -e "/nix/var/nix/profiles/default/bin/nix" ]; then

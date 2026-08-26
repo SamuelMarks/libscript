@@ -166,15 +166,22 @@ case "$ACTION" in
         if [ ! -d "${TARGET_DIR}" ]; then
           log_info "Installing coursier ${VERSION} natively to ${TARGET_DIR}..."
           mkdir -p "${TARGET_DIR}/bin"
-          URL="https://github.com/coursier/coursier/releases/download/v${EXACT_VERSION}/cs-x86_64-pc-linux.gz"
+          ARCH=$(uname -m)
+          OS=$(uname -s | tr "[:upper:]" "[:lower:]")
+          if [ "$ARCH" = "x86_64" ] || [ "$ARCH" = "amd64" ]; then ARCH="x86_64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="aarch64"; fi
+          if [ "$OS" = "darwin" ]; then OS="apple-darwin"; elif [ "$OS" = "linux" ]; then OS="pc-linux"; fi
+          URL="https://github.com/coursier/coursier/releases/download/v${EXACT_VERSION}/cs-${ARCH}-${OS}.gz"
           TEMP_FILE=$(mktemp)
-          libscript_depends "curl"
-          libscript_depends "gzip"
-          libscript_depends "java"
-          curl -sSL "$URL" -o "$TEMP_FILE.gz"
-          gzip -d "$TEMP_FILE.gz" || true
+          libscript_depends "curl" "gzip" "java"
+          if ! curl -sSLf "$URL" -o "$TEMP_FILE.gz"; then
+            log_error "Failed to download coursier from $URL"
+            rm -f "$TEMP_FILE.gz"
+            exit 1
+          fi
+          gzip -df "$TEMP_FILE.gz" || true
           cp "$TEMP_FILE" "${TARGET_DIR}/bin/coursier"
           chmod +x "${TARGET_DIR}/bin/coursier"
+          ln -sf coursier "${TARGET_DIR}/bin/cs"
           rm -f "$TEMP_FILE"
         else
           log_info "coursier ${VERSION} is already installed."

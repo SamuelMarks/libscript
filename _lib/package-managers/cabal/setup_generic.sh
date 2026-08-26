@@ -101,23 +101,26 @@ case "$ACTION" in
     if [ "$CABAL_INSTALL_METHOD" = "system" ]; then
       libscript_depends "cabal"
     elif [ "$CABAL_INSTALL_METHOD" = "libscript_native" ]; then
-      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/cabal/"*"${VERSION}"* >/dev/null 2>&1; then
-        log_info "Using cached cabal"
-      elif ! command -v cabal >/dev/null 2>&1; then
-        if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/ghcup/setup.sh" ]; then
-          unset SCRIPT_NAME || true
-          "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/ghcup/setup.sh"
-          if [ -x "$HOME/.ghcup/bin/cabal" ]; then
-            export PATH="$HOME/.ghcup/bin:$PATH"
+      if [ "$UNAME_LOWER" = "linux" ] && [ -n "${PKG_MGR:-}" ]; then
+        log_info "Falling back to system package manager for cabal..."
+        libscript_depends "cabal"
+      else
+        if ! command -v cabal >/dev/null 2>&1; then
+          if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/ghcup/setup.sh" ]; then
+            unset SCRIPT_NAME || true
+            "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/ghcup/setup.sh"
+            if [ -x "$HOME/.ghcup/bin/cabal" ]; then
+              export PATH="$HOME/.ghcup/bin:$PATH"
+            fi
+          else
+            printf "Error: Cannot find ghcup setup script to bootstrap cabal.\n" >&2
+            exit 1
           fi
-        else
-          printf "Error: Cannot find ghcup setup script to bootstrap cabal.\n" >&2
-          exit 1
         fi
-      fi
 
-      if ! command -v cabal >/dev/null 2>&1 && [ -x "$HOME/.ghcup/bin/cabal" ]; then
-        export PATH="$HOME/.ghcup/bin:$PATH"
+        if ! command -v cabal >/dev/null 2>&1 && [ -x "$HOME/.ghcup/bin/cabal" ]; then
+          export PATH="$HOME/.ghcup/bin:$PATH"
+        fi
       fi
 
     else

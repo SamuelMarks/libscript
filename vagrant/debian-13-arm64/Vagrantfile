@@ -1,0 +1,50 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Read environment variables for target package and repository root
+test_target = ENV['LIBSCRIPT_TEST_TARGET'] || 'sqlite'
+repo_root = ENV['LIBSCRIPT_REPO_ROOT'] || "../.."
+
+# Ensure unique VM name for complete isolation (like a new docker image)
+vm_name = "debian-test-#{test_target}"
+
+Vagrant.configure("2") do |config|
+  config.vm.define vm_name do |t|
+    t.vm.box = "generic/debian12"
+
+    t.vm.provider "qemu" do |qe|
+      qe.net_mode = :user
+      # Randomize SSH port to prevent collisions during parallel isolated runs
+      qe.ssh_port = 50022 + rand(1000)
+      qe.qemu_args = %w(-m 16G -smp 4)
+    end
+
+    t.ssh.insert_key = true
+    t.ssh.shell = "/bin/bash"
+    t.vm.allowed_synced_folder_types = [:rsync]
+
+    # Sync the repository root directory
+    t.vm.synced_folder repo_root, "/opt/repos/libscript", type: "rsync",
+      rsync_exclude: [".git/", "tests_tmp/", "vagrant/"]
+
+    # Provision the VM and run the test
+    t.vm.provision "shell", inline: <<-SHELL
+      set -e
+
+      export DEBIAN_FRONTEND=noninteractive
+
+      echo "Updating apt repositories and installing prerequisites..."
+      apt-get -qq update
+      apt-get -qq install -y apt-utils curl jq rsync
+
+      echo "Configuring libscript..."
+      export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript
+
+      echo "Installing #{test_target} using libscript..."
+      /opt/repos/libscript/libscript.sh install #{test_target}
+
+      echo "Running test for #{test_target}..."
+      /opt/repos/libscript/libscript.sh test #{test_target}
+    SHELL
+  end
+end

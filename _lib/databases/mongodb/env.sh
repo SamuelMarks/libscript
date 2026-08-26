@@ -30,6 +30,6 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-export MONGODB_INSTALL_METHOD="${MONGODB_INSTALL_METHOD:-system}"
+export MONGODB_INSTALL_METHOD="${MONGODB_INSTALL_METHOD:-libscript_native}"
 MONGODB_VERSION="${MONGODB_VERSION:-latest}"
 export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/mongodb/${MONGODB_VERSION}/bin:${PATH}"

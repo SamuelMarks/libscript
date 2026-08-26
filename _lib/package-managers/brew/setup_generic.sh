@@ -164,13 +164,13 @@ case "$ACTION" in
           echo 'echo "Homebrew is not supported on Alpine Linux (musl)."' >> "${TARGET_DIR}/bin/brew"
           chmod +x "${TARGET_DIR}/bin/brew"
         else
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || true
-          mkdir -p "${TARGET_DIR}/bin"
-          if [ -d /opt/homebrew/bin ]; then
-            ln -sf /opt/homebrew/bin/brew "${TARGET_DIR}/bin/brew" || true
-          elif [ -d /home/linuxbrew/.linuxbrew/bin ]; then
-            ln -sf /home/linuxbrew/.linuxbrew/bin/brew "${TARGET_DIR}/bin/brew" || true
+          if [ "$UNAME_LOWER" = "linux" ] && [ -n "${PKG_MGR:-}" ]; then
+            libscript_depends "build-essential" "procps" "curl" "file" "git" || true
           fi
+          mkdir -p "${TARGET_DIR}/brew"
+          curl -sL https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C "${TARGET_DIR}/brew"
+          mkdir -p "${TARGET_DIR}/bin"
+          ln -sf "${TARGET_DIR}/brew/bin/brew" "${TARGET_DIR}/bin/brew"
         fi
       else
         log_info "brew ${VERSION} is already installed."

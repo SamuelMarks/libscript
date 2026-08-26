@@ -153,9 +153,7 @@ case "$ACTION" in
         TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/huggingface-cli/${EXACT_VERSION}"
         if [ ! -d "${TARGET_DIR}" ]; then
           log_info "Installing huggingface-cli ${VERSION} natively to ${TARGET_DIR}..."
-          libscript_depends "python3"
-          libscript_depends "pip"
-          mkdir -p "${TARGET_DIR}"
+          libscript_depends "python3" "pip" "python3-venv" || true
           if ! type libscript_python_venv >/dev/null 2>&1; then
             . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
           fi

@@ -175,21 +175,67 @@ case "$ACTION" in
             fi
           fi
         else
-          if [ -n "${KUBERNETES_THW_DOWNLOAD_URL:-}" ]; then
-            TEMP_FILE=$(mktemp)
-            libscript_download "${KUBERNETES_THW_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-            if case "${KUBERNETES_THW_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "${KUBERNETES_THW_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-            else
-              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/kubernetes-thw" || true
-              chmod +x "${TARGET_DIR}/bin/kubernetes-thw" || true
-            fi
-            rm -f "${TEMP_FILE}"
-          else
-            log_warn "No download URL provided for kubernetes-thw ${VERSION}."
+          libscript_depends "curl" "tar"
+          ARCH=$(uname -m)
+          if [ "$ARCH" = "x86_64" ]; then ARCH="amd64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
+          OS=$(uname -s | tr "[:upper:]" "[:lower:]")
+          if [ "$OS" != "linux" ]; then
+             log_error "kubernetes-thw components are currently only compiled for linux in this script."
+             exit 1
           fi
+
+          if [ "${EXACT_VERSION}" = "latest" ]; then
+             EXACT_VERSION="v1.32.3"
+          elif ! echo "${EXACT_VERSION}" | grep -q "^v"; then
+             EXACT_VERSION="v${EXACT_VERSION}"
+          fi
+          
+          # Following KTHW component versions roughly matching K8s 1.32.3
+          CRICTL_VERSION="v1.32.0"
+          RUNC_VERSION="v1.3.0-rc.1"
+          CNI_VERSION="v1.6.2"
+          CONTAINERD_VERSION="v2.1.0-beta.0"
+          ETCD_VERSION="v3.6.0-rc.3"
+
+          log_info "Downloading Kubernetes The Hard Way binaries..."
+          
+          # Download standalone binaries
+          for bin in kubectl kube-apiserver kube-controller-manager kube-scheduler kube-proxy kubelet; do
+             URL="https://dl.k8s.io/${EXACT_VERSION}/bin/linux/${ARCH}/${bin}"
+             curl -sSLf "$URL" -o "${TARGET_DIR}/bin/${bin}" || log_error "Failed to download ${bin}"
+             chmod +x "${TARGET_DIR}/bin/${bin}" || true
+          done
+
+          # Download and rename runc
+          URL="https://github.com/opencontainers/runc/releases/download/${RUNC_VERSION}/runc.${ARCH}"
+          curl -sSLf "$URL" -o "${TARGET_DIR}/bin/runc" || log_error "Failed to download runc"
+          chmod +x "${TARGET_DIR}/bin/runc" || true
+
+          # Download and extract tarballs
+          TEMP_DIR=$(mktemp -d)
+          
+          # crictl
+          URL="https://github.com/kubernetes-sigs/cri-tools/releases/download/${CRICTL_VERSION}/crictl-${CRICTL_VERSION}-linux-${ARCH}.tar.gz"
+          curl -sSLf "$URL" -o "${TEMP_DIR}/crictl.tar.gz" || log_error "Failed to download crictl"
+          tar -xzf "${TEMP_DIR}/crictl.tar.gz" -C "${TARGET_DIR}/bin" || true
+          
+          # cni-plugins
+          mkdir -p "${TARGET_DIR}/bin/cni"
+          URL="https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-linux-${ARCH}-${CNI_VERSION}.tgz"
+          curl -sSLf "$URL" -o "${TEMP_DIR}/cni.tgz" || log_error "Failed to download CNI"
+          tar -xzf "${TEMP_DIR}/cni.tgz" -C "${TARGET_DIR}/bin/cni" || true
+          
+          # containerd
+          URL="https://github.com/containerd/containerd/releases/download/${CONTAINERD_VERSION}/containerd-${CONTAINERD_VERSION}-linux-${ARCH}.tar.gz"
+          curl -sSLf "$URL" -o "${TEMP_DIR}/containerd.tar.gz" || log_error "Failed to download containerd"
+          tar -xzf "${TEMP_DIR}/containerd.tar.gz" -C "${TARGET_DIR}" bin/ || true
+          
+          # etcd
+          URL="https://github.com/etcd-io/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-${ARCH}.tar.gz"
+          curl -sSLf "$URL" -o "${TEMP_DIR}/etcd.tar.gz" || log_error "Failed to download etcd"
+          tar -xzf "${TEMP_DIR}/etcd.tar.gz" -C "${TARGET_DIR}/bin" --strip-components=1 "etcd-${ETCD_VERSION}-linux-${ARCH}/etcd" "etcd-${ETCD_VERSION}-linux-${ARCH}/etcdctl" || true
+          
+          rm -rf "${TEMP_DIR}"
         fi
       else
         log_info "kubernetes-thw ${VERSION} is already installed."

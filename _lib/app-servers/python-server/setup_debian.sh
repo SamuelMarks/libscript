@@ -35,7 +35,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${SCRIPT_DIR}"
 LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 
-for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh" "_lib/git-servers/git.sh" "_lib/languages/python/setup.sh"; do
+for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh" "_lib/git-servers/utils/git.sh" "_lib/languages/python/setup.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -55,6 +55,7 @@ if [ -z "${DEST+x}" ]; then
     printf '%s\n' "${DEST}" > "${LIBSCRIPT_DATA_DIR}/.python_server_dest"
   fi
   export DEST
+  PYTHON_SERVER_DEST="${DEST}"
   mkdir -p -- "${PYTHON_SERVER_DEST}"
   SERVICE_NAME='python-'"${RAND}"
   touch "${PYTHON_SERVER_DEST}/main.py"

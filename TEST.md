@@ -118,7 +118,8 @@ LibScript includes a dedicated harness for running fully automated local end-to-
 tests using Vagrant. Currently, we have validated almost every package to build and test
 successfully against Alpine Linux. The test scripts (`tests/run_local_tests.sh` and
 `tests/run_local_tests.cmd`) iterate over package categories (or specific targets) and execute a
-provisioned VM test loop on Alpine Linux (via `vagrant/alpine-3.24/Vagrantfile`).
+provisioned VM test loop (defaulting to Alpine Linux via `vagrant/alpine-3.24/Vagrantfile`, with
+support for other targets like `debian-13-arm64` via the `--os` flag).
 
 **Running the Test Suite**
 
@@ -156,8 +157,8 @@ For each target package:
 
 1. **Isolation:** A unique temporary directory (`tests_tmp/runs/<target>`) is created, and the
    Vagrantfile is copied there. The Vagrantfile dynamically names the VM (e.g.,
-   `alpine-test-<target>`) to ensure complete, container-like isolation at the hypervisor level—much
-   like building a fresh Docker image.
+   `bento/alpine-<target>`) to ensure complete, container-like isolation at the hypervisor
+   level—much like building a fresh Docker image.
 2. **Provisioning:** Vagrant boots this isolated Alpine 3.24 virtual machine.
 3. **Synchronization:** The local LibScript repository is mapped into the guest OS
    (`/opt/repos/libscript`) via `rsync`.

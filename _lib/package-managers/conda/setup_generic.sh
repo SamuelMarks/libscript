@@ -165,7 +165,23 @@ case "$ACTION" in
           echo 'echo "Conda is not supported on Alpine Linux (musl)."' >> "${TARGET_DIR}/bin/conda"
           chmod +x "${TARGET_DIR}/bin/conda"
         else
-          log_info "Installation script not yet fully implemented."
+          ARCH=$(uname -m)
+          if [ "$ARCH" = "x86_64" ]; then MINICONDA_ARCH="x86_64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then MINICONDA_ARCH="aarch64"; else MINICONDA_ARCH="x86_64"; fi
+          if [ "$UNAME_LOWER" = "darwin" ]; then
+            if [ "$ARCH" = "arm64" ] || [ "$ARCH" = "aarch64" ]; then MINICONDA_ARCH="arm64"; else MINICONDA_ARCH="x86_64"; fi
+            URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-${MINICONDA_ARCH}.sh"
+          else
+            URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-${MINICONDA_ARCH}.sh"
+          fi
+          TEMP_FILE=$(mktemp)
+          libscript_depends "curl"
+          if ! curl -sSLf "$URL" -o "$TEMP_FILE"; then
+            log_error "Failed to download conda from $URL"
+            rm -f "$TEMP_FILE"
+            exit 1
+          fi
+          bash "$TEMP_FILE" -b -p "${TARGET_DIR}" || true
+          rm -f "$TEMP_FILE"
         fi
       else
         log_info "conda ${VERSION} is already installed."

@@ -26,6 +26,6 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 _SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-export DENO_INSTALL_METHOD="${DENO_INSTALL_METHOD:-system}"
+export DENO_INSTALL_METHOD="${DENO_INSTALL_METHOD:-libscript_native}"
 DENO_VERSION="${DENO_VERSION:-latest}"
 export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/deno/${DENO_VERSION}/bin:${PATH}"

@@ -54,7 +54,7 @@ resolve_exact_version() {
     if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
       EXACT_VERSION="$_latest"
     else
-      EXACT_VERSION="${VERSION:-latest}"
+      EXACT_VERSION=$(curl -sL https://api.github.com/repos/Jguer/yay/releases/latest | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
     fi
   else
     EXACT_VERSION="${VERSION:-latest}"
@@ -178,21 +178,19 @@ case "$ACTION" in
             fi
           fi
         else
-          if [ -n "${YAY_DOWNLOAD_URL:-}" ]; then
-            TEMP_FILE=$(mktemp)
-            libscript_download "${YAY_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-            if case "${YAY_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "${YAY_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-            else
-              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/yay" || true
-              chmod +x "${TARGET_DIR}/bin/yay" || true
-            fi
-            rm -f "${TEMP_FILE}"
-          else
-            log_warn "No download URL provided for yay ${VERSION}."
+          ARCH=$(uname -m)
+          if [ "$ARCH" = "x86_64" ]; then ARCH="x86_64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="aarch64"; fi
+          URL="https://github.com/Jguer/yay/releases/download/v${EXACT_VERSION}/yay_${EXACT_VERSION}_${ARCH}.tar.gz"
+          TEMP_FILE=$(mktemp)
+          libscript_depends "curl" "tar" || true
+          if ! curl -sSLf "$URL" -o "$TEMP_FILE.tar.gz"; then
+            log_error "Failed to download yay from $URL"
+            rm -f "$TEMP_FILE.tar.gz"
+            exit 1
           fi
+          tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" --strip-components=1 "yay_${EXACT_VERSION}_${ARCH}/yay" || true
+          chmod +x "${TARGET_DIR}/bin/yay" || true
+          rm -f "$TEMP_FILE.tar.gz"
         fi
       else
         log_info "yay ${VERSION} is already installed."

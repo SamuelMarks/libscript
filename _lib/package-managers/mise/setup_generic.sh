@@ -160,23 +160,13 @@ case "$ACTION" in
         log_info "Installing mise ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         
-        if [ "$UNAME_LOWER" = "linux" ] && [ -n "${PKG_MGR:-}" ]; then
-           log_info "Falling back to system package manager for mise..."
-           libscript_depends "mise"
+        libscript_depends curl || true
            
-           # mise is installed globally by system, link it to TARGET_DIR so libscript knows it's there
-           if command -v mise >/dev/null 2>&1; then
-             ln -s "$(command -v mise)" "${TARGET_DIR}/bin/mise"
-           fi
-        else
-           libscript_depends curl
-           
-           log_info "Downloading mise..."
-           export MISE_INSTALL_PATH="${TARGET_DIR}/bin/mise"
-           if ! curl https://mise.run | sh; then
-              log_error "Failed to install mise"
-              exit 1
-           fi
+        log_info "Downloading mise..."
+        export MISE_INSTALL_PATH="${TARGET_DIR}/bin/mise"
+        if ! curl -sSLf https://mise.run | sh; then
+           log_error "Failed to install mise"
+           exit 1
         fi
       else
         log_info "mise ${VERSION} is already installed."

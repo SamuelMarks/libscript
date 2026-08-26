@@ -188,7 +188,29 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_warn "No download URL provided for etcd ${VERSION}."
+            log_info "No download URL provided for etcd ${VERSION}. Attempting fallback to Github..."
+            libscript_depends "curl" "tar"
+            TEMP_FILE=$(mktemp)
+            OS_ARCH=$(uname -m)
+            _actual_version="${EXACT_VERSION}"
+            if [ "${_actual_version}" = "latest" ] || [ "${_actual_version}" = "" ]; then
+              _actual_version=$(curl -sI https://github.com/etcd-io/etcd/releases/latest | grep -i "^location:" | sed 's|^.*/tag/\(v.*\)|\1|' | tr -d '\r\n')
+            fi
+            # etcd naming: etcd-v3.5.17-linux-arm64.tar.gz
+            if [ "$OS_ARCH" = "aarch64" ]; then
+              DL_URL="https://github.com/etcd-io/etcd/releases/download/${_actual_version}/etcd-${_actual_version}-linux-arm64.tar.gz"
+            elif [ "$OS_ARCH" = "x86_64" ]; then
+              DL_URL="https://github.com/etcd-io/etcd/releases/download/${_actual_version}/etcd-${_actual_version}-linux-amd64.tar.gz"
+            else
+              DL_URL=""
+            fi
+            if [ -n "$DL_URL" ]; then
+                curl -fsSL "$DL_URL" -o "${TEMP_FILE}"
+                tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}/bin" --strip-components=1 || true
+            else
+                log_warn "Unsupported architecture $OS_ARCH for etcd."
+            fi
+            rm -f "${TEMP_FILE}"
           fi
         fi
       else

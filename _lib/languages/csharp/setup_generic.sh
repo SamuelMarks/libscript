@@ -188,8 +188,24 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_error "No download URL provided for csharp ${VERSION}."
-            exit 1
+            log_info "No download URL provided for csharp ${VERSION}. Attempting fallback to dotnet-install.sh..."
+            libscript_depends "curl" "bash" "tar" "wget" "libicu-dev"
+            TEMP_FILE=$(mktemp)
+            curl -fsSL https://dot.net/v1/dotnet-install.sh -o "${TEMP_FILE}"
+            chmod +x "${TEMP_FILE}"
+            if [ "${EXACT_VERSION}" = "latest" ]; then
+              "${TEMP_FILE}" --install-dir "${TARGET_DIR}/bin"
+            else
+              "${TEMP_FILE}" --install-dir "${TARGET_DIR}/bin" --version "${EXACT_VERSION}"
+            fi
+            rm -f "${TEMP_FILE}"
+            # dotnet-install.sh installs everything into the dir, but dotnet is the binary
+            if [ ! -f "${TARGET_DIR}/bin/dotnet" ]; then
+                log_error "Installation via dotnet-install.sh failed."
+                exit 1
+            fi
+            # Add alias so `csharp` executes `dotnet` maybe?
+            # actually dotnet is the CLI
           fi
         fi
       else

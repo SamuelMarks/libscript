@@ -42,7 +42,7 @@ export DIR="${_DIR}"
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/priv.sh" "_lib/git-servers/git.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/priv.sh" "_lib/_common/environ.sh" "_lib/_common/settings_updater.sh" "_lib/git-servers/utils/git.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -55,7 +55,7 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
-libscript_depends git build-essential libsystemd-dev
+libscript_depends git build-essential libsystemd-dev libssl-dev pkg-config
 
 TARGET="${VALKEY_BUILD_DIR}"'/valkey'
 git_get https://github.com/valkey-io/valkey "${TARGET}"

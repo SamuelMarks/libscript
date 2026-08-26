@@ -158,15 +158,17 @@ case "$ACTION" in
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/conan/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing conan ${VERSION} natively to ${TARGET_DIR}..."
-        if [ -f /etc/alpine-release ]; then
-          libscript_depends "python3" "py3-pip" "gcc" "musl-dev" "python3-dev" "libffi-dev" "openssl-dev" "make"
-          pip install --break-system-packages conan || true
-        else
-          libscript_depends "python3" "python3-pip"
-          pip install conan || true
+        libscript_depends "python" "python3-venv" || true
+        if ! type libscript_python_venv >/dev/null 2>&1; then
+          . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
         fi
+        libscript_python_venv "${TARGET_DIR}/venv"
+        if [ -f /etc/alpine-release ]; then
+          libscript_depends "gcc" "musl-dev" "python3-dev" "libffi-dev" "openssl-dev" "make"
+        fi
+        "${TARGET_DIR}/venv/bin/pip" install conan
         mkdir -p "${TARGET_DIR}/bin"
-        ln -sf "$(command -v conan)" "${TARGET_DIR}/bin/conan" || true
+        ln -sf "${TARGET_DIR}/venv/bin/conan" "${TARGET_DIR}/bin/conan"
       else
         log_info "conan ${VERSION} is already installed."
       fi

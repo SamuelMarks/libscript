@@ -27,4 +27,10 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+if [ -f "$SCRIPT_DIR/env.sh" ]; then
+  unset SCRIPT_NAME || true
+  . "$SCRIPT_DIR/env.sh"
+fi
+
 etcdctl version

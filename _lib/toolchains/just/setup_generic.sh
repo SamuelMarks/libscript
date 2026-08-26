@@ -48,12 +48,12 @@ ACTION="${ACTION:-install}"
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
 resolve_exact_version() {
-  if [ "${JUST_VERSION}" = "latest" ] || [ "${JUST_VERSION}" = "lts" ]; then
+  if [ "${JUST_VERSION}" = "latest" ] || [ "${JUST_VERSION}" = "lts" ] || [ -z "${JUST_VERSION}" ]; then
     libscript_depends "curl"
 
     EXACT_VERSION=$(curl -sL https://api.github.com/repos/casey/just/releases/latest | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')
     if [ -z "$EXACT_VERSION" ]; then
-      EXACT_VERSION="latest"
+      EXACT_VERSION="1.34.0"
     fi
   else
     EXACT_VERSION="${JUST_VERSION}"
@@ -163,13 +163,22 @@ case "$ACTION" in
           mkdir -p "${TARGET_DIR}/bin"
           ARCH=$(uname -m)
           if [ "$ARCH" = "x86_64" ]; then ARCH="x86_64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="aarch64"; fi
-          IS_MUSL=""
-          if [ -f /etc/alpine-release ]; then IS_MUSL="-musl"; fi
-          URL="https://github.com/casey/just/releases/download/${EXACT_VERSION}/just-${EXACT_VERSION}-${ARCH}-unknown-linux${IS_MUSL}.tar.gz"
+          OS_SUFFIX=""
+          OS_NAME=$(uname -s | tr "[:upper:]" "[:lower:]")
+          if [ "$OS_NAME" = "linux" ]; then
+            OS_SUFFIX="-unknown-linux-musl"
+          elif [ "$OS_NAME" = "darwin" ]; then
+            OS_SUFFIX="-apple-darwin"
+          fi
+          URL="https://github.com/casey/just/releases/download/${EXACT_VERSION}/just-${EXACT_VERSION}-${ARCH}${OS_SUFFIX}.tar.gz"
           TEMP_FILE=$(mktemp)
           libscript_depends "curl"
           libscript_depends "tar"
-          curl -sSL "$URL" -o "$TEMP_FILE.tar.gz"
+          if ! curl -sSLf "$URL" -o "$TEMP_FILE.tar.gz"; then
+            log_error "Failed to download just from $URL"
+            rm -f "$TEMP_FILE.tar.gz"
+            exit 1
+          fi
           tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" "just" || cp "$TEMP_FILE.tar.gz" "${TARGET_DIR}/bin/just"
           chmod +x "${TARGET_DIR}/bin/just"
           rm -f "$TEMP_FILE.tar.gz"

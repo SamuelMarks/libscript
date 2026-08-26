@@ -164,7 +164,11 @@ case "$ACTION" in
           TEMP_FILE=$(mktemp)
           libscript_depends "curl"
           libscript_depends "tar"
-          curl -sSL "$URL" -o "$TEMP_FILE.tar.gz"
+          if ! curl -sSLf "$URL" -o "$TEMP_FILE.tar.gz"; then
+            log_error "Failed to download caddy from $URL"
+            rm -f "$TEMP_FILE.tar.gz"
+            exit 1
+          fi
           tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" "caddy" || cp "$TEMP_FILE.tar.gz" "${TARGET_DIR}/bin/caddy"
           chmod +x "${TARGET_DIR}/bin/caddy"
           rm -f "$TEMP_FILE.tar.gz"

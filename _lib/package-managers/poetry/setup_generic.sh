@@ -174,20 +174,18 @@ case "$ACTION" in
             fi
           fi
         else
-          if [ -n "${POETRY_DOWNLOAD_URL:-}" ]; then
-            TEMP_FILE=$(mktemp)
-            libscript_download "${POETRY_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-            if case "${POETRY_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "${POETRY_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-            else
-              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/poetry" || true
-              chmod +x "${TARGET_DIR}/bin/poetry" || true
-            fi
-            rm -f "${TEMP_FILE}"
+          libscript_depends "python" || true
+          libscript_depends "curl" || true
+          if [ "${EXACT_VERSION}" = "latest" ]; then
+             if ! curl -sSLf https://install.python-poetry.org | POETRY_HOME="${TARGET_DIR}" python3 -; then
+                log_error "Failed to install poetry."
+                exit 1
+             fi
           else
-            log_warn "No download URL provided for poetry ${VERSION}."
+             if ! curl -sSLf https://install.python-poetry.org | POETRY_HOME="${TARGET_DIR}" python3 - --version "$EXACT_VERSION"; then
+                log_error "Failed to install poetry version $EXACT_VERSION."
+                exit 1
+             fi
           fi
         fi
       else

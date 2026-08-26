@@ -130,9 +130,9 @@ case "$ACTION" in
       log_info "Downloading python ${PYTHON_VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/python..."
       mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/python"
       if [ -n "${PYTHON_DOWNLOAD_URL:-}" ]; then
-        libscript_download "${PYTHON_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/python/python-${VERSION}.tar.gz"
+        libscript_download "${PYTHON_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/python/python-${PYTHON_VERSION}.tar.gz"
       else
-        log_warn "PYTHON_DOWNLOAD_URL is not defined for python ${VERSION}."
+        log_warn "PYTHON_DOWNLOAD_URL is not defined for python ${PYTHON_VERSION}."
       fi
     fi
     exit 0
@@ -307,9 +307,9 @@ case "$ACTION" in
   uninstall)
     if [ "$PYTHON_INSTALL_METHOD" = "libscript_native" ]; then
       if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
-      log_info "Uninstalling python $VERSION..."
+      log_info "Uninstalling python $PYTHON_VERSION..."
       rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/python/${EXACT_VERSION}"
-      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/python/$VERSION"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/python/$PYTHON_VERSION"
     else
       log_info "Uninstall not implemented or supported for $PYTHON_INSTALL_METHOD."
     fi

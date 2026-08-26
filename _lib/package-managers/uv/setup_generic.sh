@@ -55,7 +55,7 @@ resolve_exact_version() {
     if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
       EXACT_VERSION="$_latest"
     else
-      EXACT_VERSION="${VERSION:-latest}"
+      EXACT_VERSION=$(curl -sL https://api.github.com/repos/astral-sh/uv/releases/latest | grep -oE "\"tag_name\": *\"[0-9.]+\"" | sed -E "s/.*\"([0-9.]+)\".*/\1/" | head -n 1)
     fi
   else
     EXACT_VERSION="${VERSION:-latest}"
@@ -174,21 +174,22 @@ case "$ACTION" in
             fi
           fi
         else
-          if [ -n "${UV_DOWNLOAD_URL:-}" ]; then
-            TEMP_FILE=$(mktemp)
-            libscript_download "${UV_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-            if case "${UV_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "${UV_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-            else
-              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/uv" || true
-              chmod +x "${TARGET_DIR}/bin/uv" || true
-            fi
-            rm -f "${TEMP_FILE}"
-          else
-            log_warn "No download URL provided for uv ${VERSION}."
+          ARCH=$(uname -m)
+          if [ "$ARCH" = "x86_64" ]; then ARCH="x86_64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="aarch64"; fi
+          OS=$(uname -s | tr "[:upper:]" "[:lower:]")
+          if [ "$OS" = "darwin" ]; then OS="apple-darwin"; elif [ "$OS" = "linux" ]; then OS="unknown-linux-musl"; fi
+          URL="https://github.com/astral-sh/uv/releases/download/${EXACT_VERSION}/uv-${ARCH}-${OS}.tar.gz"
+          TEMP_FILE=$(mktemp)
+          libscript_depends "curl" "tar" || true
+          if ! curl -sSLf "$URL" -o "$TEMP_FILE.tar.gz"; then
+            log_error "Failed to download uv from $URL"
+            rm -f "$TEMP_FILE.tar.gz"
+            exit 1
           fi
+          tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" --strip-components=1 "uv-${ARCH}-${OS}/uv" "uv-${ARCH}-${OS}/uvx" || cp "$TEMP_FILE.tar.gz" "${TARGET_DIR}/bin/uv"
+          chmod +x "${TARGET_DIR}/bin/uv" || true
+          chmod +x "${TARGET_DIR}/bin/uvx" >/dev/null 2>&1 || true
+          rm -f "$TEMP_FILE.tar.gz"
         fi
       else
         log_info "uv ${VERSION} is already installed."

@@ -159,7 +159,11 @@ case "$ACTION" in
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing nuget ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
-        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nuget/"*"${VERSION}"* >/dev/null 2>&1; then
+
+        if [ "$UNAME_LOWER" = "linux" ] && [ -n "${PKG_MGR:-}" ]; then
+          log_info "Falling back to system package manager for nuget..."
+          libscript_depends "nuget"
+        elif ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nuget/"*"${VERSION}"* >/dev/null 2>&1; then
           log_info "Extracting from cache..."
           cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nuget/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
           if [ -n "$cache_file" ]; then
