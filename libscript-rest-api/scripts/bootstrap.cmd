@@ -8,6 +8,7 @@
 :: Run via: `.\scripts\bootstrap.cmd`
 
 setlocal enabledelayedexpansion
+set "THIS_FILE=%~f0"
 
 if /I "%~1"=="--help" goto :show_help
 if /I "%~1"=="-h" goto :show_help
@@ -86,7 +87,8 @@ if not exist "%VENDOR_DIR%\c-rest-framework\.git" (
 ) else (
     echo [INFO] c-rest-framework already cloned. Pulling latest...
     cd /d "%VENDOR_DIR%\c-rest-framework"
-    git pull
+    git fetch --all
+    git reset --hard @{upstream}
     cd /d "%SCRIPT_DIR%"
 )
 

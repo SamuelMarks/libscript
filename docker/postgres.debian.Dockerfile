@@ -1,3 +1,9 @@
+# ## Overview
+# Configuration and definition file for postgres.debian.Dockerfile.
+#
+# ## Usage
+# Processed automatically during build or runtime.
+
 ARG IMAGE_BASE='debian'
 ARG IMAGE_TAG='stable-slim'
 FROM ${IMAGE_BASE}:${IMAGE_TAG}

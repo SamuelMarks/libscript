@@ -11,4 +11,5 @@
 
 :: Shim for environ
 :: Native Windows implementation pending or handled internally by core modules.
+set "THIS_FILE=%~f0"
 exit /b 0

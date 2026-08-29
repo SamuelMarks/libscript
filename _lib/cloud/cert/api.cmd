@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: call "%~dp0api.cmd" :libscript_cert_create aws example.com
+set "THIS_FILE=%~f0"
 
 goto :%1
 

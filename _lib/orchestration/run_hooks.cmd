@@ -8,6 +8,7 @@
 :: Run `run_hooks.cmd <json_file> <hook_type>` (e.g. pre_install, post_install).
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 set json_file=%~1
 set hook_type=%~2

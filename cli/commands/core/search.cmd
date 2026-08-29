@@ -8,6 +8,7 @@
 :: Execute this script with search terms to find relevant resources.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 set "query=%~2"
 if "%query%"=="" (
     echo Error: please provide a search query.

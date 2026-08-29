@@ -8,6 +8,7 @@
 :: Execute this script to rebuild the markdown documentation.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 if /I "%~1"=="--help" goto :show_help
 if /I "%~1"=="-h" goto :show_help

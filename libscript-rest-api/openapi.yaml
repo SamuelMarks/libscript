@@ -1,3 +1,9 @@
+# ## Overview
+# Configuration and definition file for openapi.yaml.
+#
+# ## Usage
+# Processed automatically during build or runtime.
+
 openapi: 3.2.0
 info:
   title: libscript REST API

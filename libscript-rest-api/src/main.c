@@ -1,3 +1,9 @@
+// ## Overview
+// Configuration and definition file for main.c.
+//
+// ## Usage
+// Processed automatically during build or runtime.
+
 #include <stdio.h>
 #include <stdlib.h>
 

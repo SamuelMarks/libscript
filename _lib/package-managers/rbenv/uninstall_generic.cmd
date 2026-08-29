@@ -9,3 +9,4 @@
 :: This script is typically called internally by the component lifecycle.
 
 :: Generic uninstall for Windows skipped
+set "THIS_FILE=%~f0"

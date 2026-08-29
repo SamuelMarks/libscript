@@ -8,6 +8,7 @@
 :: Execute this script to output a list of installed or available items.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 echo Available components:
 for /f "delims=" %%f in ('dir /s /b /a:-d "%SCRIPT_DIR%\cli.cmd" 2^>nul') do (
     set "dir_path=%%~dpf"

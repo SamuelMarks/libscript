@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for cli.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Provides the command-line interface logic for the component 'rvm' stack.

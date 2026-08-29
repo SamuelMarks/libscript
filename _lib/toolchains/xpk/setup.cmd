@@ -9,6 +9,7 @@
 :: Execute this script to install or configure the component.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 if "%~1"=="--help" (
     echo Usage: %~nx0
     echo See README.md for details.

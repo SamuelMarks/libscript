@@ -148,15 +148,20 @@ case "$ACTION" in
         fi
         libscript_python_venv "${TARGET_DIR}"
         
-        TEMP_DIR=$(mktemp -d)
-        git clone https://github.com/google/JetStream.git "${TEMP_DIR}"
+        JETSTREAM_SRC_DIR="${DOWNLOAD_DIR:-/tmp/libscript_downloads}/jetstream-src"
+        if [ ! -d "${JETSTREAM_SRC_DIR}/.git" ]; then
+            git clone https://github.com/google/JetStream.git "${JETSTREAM_SRC_DIR}"
+        else
+            log_info "Jetstream source already present, pulling latest..."
+            (cd "${JETSTREAM_SRC_DIR}" && git fetch --all && git reset --hard @{upstream})
+        fi
         
         if [ "$EXACT_VERSION" != "latest" ]; then
-            (cd "${TEMP_DIR}" && git checkout "v${EXACT_VERSION}" 2>/dev/null || git checkout "${EXACT_VERSION}" 2>/dev/null || true)
+            (cd "${JETSTREAM_SRC_DIR}" && git checkout "v${EXACT_VERSION}" 2>/dev/null || git checkout "${EXACT_VERSION}" 2>/dev/null || true)
         fi
 
         "${TARGET_DIR}/bin/pip" install --upgrade pip
-        "${TARGET_DIR}/bin/pip" install -e "${TEMP_DIR}" || PIP_FAILED=1
+        "${TARGET_DIR}/bin/pip" install -e "${JETSTREAM_SRC_DIR}" || PIP_FAILED=1
         
         if [ "${PIP_FAILED:-0}" = "1" ]; then
           log_error "Failed to install Jetstream via pip."

@@ -8,6 +8,7 @@
 :: This script provides internal functions and should not be executed directly.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 if "%NETCTL_STATE_FILE%"=="" set NETCTL_STATE_FILE=.netctl.json
 
 if not exist "%NETCTL_STATE_FILE%" (

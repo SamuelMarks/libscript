@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for install.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Global PowerShell installer for the libscript framework.

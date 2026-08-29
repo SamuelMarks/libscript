@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: call "%~dp0api.cmd" :libscript_cdn_create aws my-bucket
+set "THIS_FILE=%~f0"
 
 goto :%1
 

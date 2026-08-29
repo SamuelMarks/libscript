@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for setup_generic.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Provides a generic, cross-platform setup mechanism for the component '_noop' stack.

@@ -6,6 +6,7 @@
 :: 
 :: ## Usage
 :: Execute this script to download and validate remote files.
+set "THIS_FILE=%~f0"
 
 echo This script (%~nx0) is not implemented natively for Windows.
 exit /b 1

@@ -1,4 +1,5 @@
 @echo off
+set "THIS_FILE=%~f0"
 :: ## Overview
 :: Entry point for common make tasks in Windows batch environment.
 ::

@@ -10,5 +10,6 @@
 :: Call this script to run the component's CLI logic.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 set "PACKAGE_NAME=aws"
 call "%~dp0\..\..\_common\component_core.cmd" %*

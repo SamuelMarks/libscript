@@ -8,6 +8,7 @@
 :: Execute this script to install libscript on the local system.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 SET "LIBSCRIPT_ROOT_DIR=%~dp0"
 if "%~1"=="--help" goto show_help

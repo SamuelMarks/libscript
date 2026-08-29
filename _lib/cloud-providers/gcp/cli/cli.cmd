@@ -8,5 +8,6 @@
 :: See `cli.sh` for primary usage instructions. Delegates to component core.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 set "PACKAGE_NAME=gcp-cli"
 call "%~dp0\..\..\_common\component_core.cmd" %*

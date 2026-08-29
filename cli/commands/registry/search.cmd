@@ -8,6 +8,7 @@
 :: Execute this script with search terms to find relevant resources.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 set "query=%~2"
 set "DB_FILE=!LIBSCRIPT_ROOT_DIR!\libscript.sqlite"
 if "!LIBSCRIPT_ROOT_DIR!"=="" set "DB_FILE=%SCRIPT_DIR%libscript.sqlite"

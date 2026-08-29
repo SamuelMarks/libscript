@@ -8,6 +8,7 @@
 :: Routes to generic setup via `setup_base.cmd`.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 if "%~1"=="--help" (
     echo Usage: %~nx0
     echo See README.md for details.

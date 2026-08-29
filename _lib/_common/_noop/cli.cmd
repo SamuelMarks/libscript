@@ -11,4 +11,5 @@
 
 setlocal EnableDelayedExpansion
 REM No-op cli
+set "THIS_FILE=%~f0"
 exit /b 0

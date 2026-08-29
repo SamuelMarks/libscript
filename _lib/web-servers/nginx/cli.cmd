@@ -9,5 +9,6 @@
 :: Execute this script directly to run the CLI functionality for the component.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 set "PACKAGE_NAME=nginx"
 call "%~dp0\..\..\_common\component_core.cmd" %*

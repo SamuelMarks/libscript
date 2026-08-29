@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for cli.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 CLI interface for GCP Filestore instances on PowerShell.

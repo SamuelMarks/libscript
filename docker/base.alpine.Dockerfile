@@ -1,3 +1,9 @@
+# ## Overview
+# Configuration and definition file for base.alpine.Dockerfile.
+#
+# ## Usage
+# Processed automatically during build or runtime.
+
 FROM alpine:latest
 
 ENV LIBSCRIPT_ROOT_DIR='/scripts'

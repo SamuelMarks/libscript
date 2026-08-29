@@ -8,6 +8,7 @@
 :: Execute this script to build installer packages.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 set "is_docker="
 if /i "%~2"=="docker" set "is_docker=1"
 if /i "%~2"=="dockerfile" set "is_docker=1"

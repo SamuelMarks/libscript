@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for ansible-galaxy.
 
 :: Windows env stub for ansible-galaxy
+set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"

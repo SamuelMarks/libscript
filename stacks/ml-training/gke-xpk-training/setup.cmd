@@ -8,6 +8,7 @@
 :: Execute this script to install and configure gke-xpk-training on the local system.
 
 setlocal enabledelayedexpansion
+set "THIS_FILE=%~f0"
 
 if "%~1"=="--help" goto :help
 if "%~1"=="-h" goto :help

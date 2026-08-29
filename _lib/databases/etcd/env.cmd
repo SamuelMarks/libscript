@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for etcd.
 
 :: Windows env stub for etcd
+set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"

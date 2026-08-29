@@ -8,6 +8,7 @@
 :: Execute this script to build the static HTML documentation site.
 
 :: Windows batch equivalent
+set "THIS_FILE=%~f0"
 
 if /I "%~1"=="--help" goto :show_help
 if /I "%~1"=="-h" goto :show_help

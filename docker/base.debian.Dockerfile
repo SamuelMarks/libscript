@@ -1,3 +1,9 @@
+# ## Overview
+# Configuration and definition file for base.debian.Dockerfile.
+#
+# ## Usage
+# Processed automatically during build or runtime.
+
 FROM debian:bookworm-slim
 
 ENV LIBSCRIPT_ROOT_DIR='/scripts'

@@ -4,6 +4,7 @@
 ::
 :: ## Usage
 :: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
+set "THIS_FILE=%~f0"
 
 if "%ACTION%"=="" set ACTION=install
 if "%VALKEY_VERSION%"=="" set VALKEY_VERSION=latest
@@ -21,6 +22,23 @@ if "%VALKEY_INSTALL_METHOD%"=="" (
         set "VALKEY_INSTALL_METHOD=%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"
     ) else (
         set "VALKEY_INSTALL_METHOD=libscript_native"
+    )
+)
+
+:: Resolve download URL for Windows
+if "%VALKEY_DOWNLOAD_URL%"=="" (
+    set "_tmp_ver=%VALKEY_VERSION%"
+)
+if "%VALKEY_DOWNLOAD_URL%"=="" (
+    if "%_tmp_ver%"=="latest" (
+        for /f "usebackq tokens=*" %%I in (`powershell -NoProfile -Command "git ls-remote --tags 'https://github.com/SamuelMarks/valkey-windows' ^| Select-String -Pattern '\d+\.\d+\.\d+' -AllMatches ^| ForEach-Object { $_.Matches.Value } ^| Sort-Object {[version]$_} ^| Select-Object -Last 1"`) do set "_tmp_ver=%%I"
+    )
+)
+if "%VALKEY_DOWNLOAD_URL%"=="" (
+    if not "%_tmp_ver%"=="latest" (
+        if not "%_tmp_ver%"=="" (
+            set "VALKEY_DOWNLOAD_URL=https://github.com/SamuelMarks/valkey-windows/releases/download/%_tmp_ver%/Valkey-%_tmp_ver%-win64.zip"
+        )
     )
 )
 
@@ -64,7 +82,7 @@ if "%VALKEY_INSTALL_METHOD%"=="system" ( echo System package manager does not su
 if not "%VALKEY_RELEASES_URL%"=="" (
     curl -sSL "%VALKEY_RELEASES_URL%"
 ) else (
-    git ls-remote --tags "https://github.com/valkey-io/valkey" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
+    git ls-remote --tags "https://github.com/SamuelMarks/valkey-windows" 2^>nul ^| findstr /R "[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*"
 )
 exit /b 0
 

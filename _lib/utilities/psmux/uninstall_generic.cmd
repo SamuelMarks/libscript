@@ -4,4 +4,5 @@
 :: 
 :: ## Usage
 :: Execute this script to perform removal steps for psmux.
+set "THIS_FILE=%~f0"
 if "%ACTION%"=="" set ACTION=uninstall

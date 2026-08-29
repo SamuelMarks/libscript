@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for uninstall.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Handles the removal and uninstallation process for the component 'valkey' stack.

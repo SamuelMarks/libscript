@@ -15,6 +15,7 @@ setlocal EnableDelayedExpansion
 :: ```
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%~dp0"
@@ -43,13 +44,19 @@ if errorlevel 1 (
     exit /b %errorlevel%
 )
 
-:: Delegate to PowerShell if setup.ps1 exists
-if exist "%CD%\setup.ps1" (
+:: Delegate to specific setup script
+if exist "%CD%\setup_windows.cmd" (
+    call "%CD%\setup_windows.cmd" %*
+    exit /b !errorlevel!
+) else if exist "%CD%\setup_generic.cmd" (
+    call "%CD%\setup_generic.cmd" %*
+    exit /b !errorlevel!
+) else if exist "%CD%\setup.ps1" (
     set "COMMON_DIR=%LIBSCRIPT_ROOT_DIR%\_lib\_common"
     powershell -ExecutionPolicy Bypass -Command "& { . '!COMMON_DIR!\log.ps1'; . '!COMMON_DIR!\pkg_mgr.ps1'; & '%CD%\setup.ps1' }"
     exit /b !errorlevel!
 ) else (
-    call "%LOG_CMD%" :log_error "No PowerShell setup script (setup_windows.ps1 or setup.ps1) found in %CD%"
+    call "%LOG_CMD%" :log_error "No setup script (setup_windows.cmd, setup_generic.cmd, or setup.ps1) found in %CD%"
     exit /b 1
 )
 

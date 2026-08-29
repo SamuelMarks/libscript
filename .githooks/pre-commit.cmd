@@ -1,4 +1,5 @@
 @echo off
+set "THIS_FILE=%~f0"
 :: # pre-commit.cmd
 ::
 :: ## Overview

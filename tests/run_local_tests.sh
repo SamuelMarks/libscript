@@ -111,18 +111,16 @@ OS_ID=$(echo "$OS_TARGET" | cut -d'-' -f1)
 
 for target in $UNIQUE_TARGETS; do
     MANIFEST_PATH=$(find "$REPO_ROOT/_lib" -maxdepth 2 -type d -name "$target" -exec echo "{}/manifest.json" \;)
-    if [ -f "$MANIFEST_PATH" ] && command -v python3 >/dev/null 2>&1; then
-        SUPPORTED=$(python3 -c "
-import json, sys
-try:
-    with open('$MANIFEST_PATH', 'r') as f: m = json.load(f)
-    os_id = '$OS_ID'
-    if os_id in m.get('os_blacklist', []): print('no'); sys.exit(0)
-    wl = m.get('os_whitelist', ['all'])
-    if 'all' not in wl and os_id not in wl: print('no'); sys.exit(0)
-    print('yes')
-except Exception as e: print('yes')
-")
+    if [ -f "$MANIFEST_PATH" ]; then
+        SUPPORTED=$(awk -v os="$OS_ID" '
+        BEGIN { in_bl=0; in_wl=0; has_wl=0; wl_match=0; result="yes" }
+        /"os_blacklist"\s*:/ { in_bl=1; in_wl=0; next }
+        /"os_whitelist"\s*:/ { in_wl=1; in_bl=0; has_wl=1; next }
+        /\]/ { in_bl=0; in_wl=0 }
+        in_bl && $0 ~ "\"" os "\"" { result="no"; exit }
+        in_wl && ($0 ~ "\"" os "\"" || $0 ~ "\"all\"") { wl_match=1 }
+        END { if (result == "yes" && has_wl && !wl_match) { result="no" }; print result }
+        ' "$MANIFEST_PATH")
         if [ "$SUPPORTED" = "no" ]; then
             echo "Skipping $target (not supported on $OS_ID)"
             continue
@@ -160,8 +158,8 @@ except Exception as e: print('yes')
         echo "[FAILED] $target"
     fi
     
-    if command -v python3 >/dev/null 2>&1 && [ -f "$REPO_ROOT/update_results.py" ]; then
-        (cd "$REPO_ROOT" && python3 update_results.py) || true
+    if [ -x "$THIS_DIR/update_results.sh" ]; then
+        "$THIS_DIR/update_results.sh" || true
     fi
     
     vagrant destroy -f >/dev/null 2>&1 || true

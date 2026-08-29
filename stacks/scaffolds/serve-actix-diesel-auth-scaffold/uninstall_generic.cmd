@@ -8,3 +8,4 @@
 :: Execute this script to perform generic removal steps for serve-actix-diesel-auth-scaffold.
 
 :: Generic uninstall for Windows skipped
+set "THIS_FILE=%~f0"

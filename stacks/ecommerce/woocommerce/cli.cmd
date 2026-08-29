@@ -8,5 +8,6 @@
 :: Execute this script to trigger the CLI behavior for woocommerce.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 set "PACKAGE_NAME=woocommerce"
 call "%~dp0..\..\..\_lib\_common\component_core.cmd" %*

@@ -8,6 +8,7 @@
 :: Execute this script to deploy tpu-vm-eval-node to the target environment.
 
 setlocal
+set "THIS_FILE=%~f0"
 if "%~1"=="--help" (
     echo Usage: %~nx0
     echo See README.md for details.

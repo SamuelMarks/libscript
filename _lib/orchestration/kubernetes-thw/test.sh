@@ -89,6 +89,8 @@ while read -r IP FQDN HOST SUBNET; do
   V_PORT=$(awk '/Port/ {print $2}' /tmp/vssh_${MACH_IDX})
   KEY_PATH=$(awk '/IdentityFile/ {print $2}' /tmp/vssh_${MACH_IDX} | head -n 1)
   
+  ssh-keygen -R "[$V_HOST]:$V_PORT" 2>/dev/null || true
+  ssh-keygen -R "$V_HOST" 2>/dev/null || true
   ssh-keyscan -p "$V_PORT" -H "$V_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
   
   sed -i.bak "/^Host $HOST$/,/^$/d" ~/.ssh/config 2>/dev/null || true
@@ -101,7 +103,7 @@ while read -r IP FQDN HOST SUBNET; do
     vagrant ssh "${VAGRANT_IMAGE_DIR}${MACH_IDX}" -c "sudo mkdir -p /root/.ssh && sudo cp /home/vagrant/.ssh/authorized_keys /root/.ssh/authorized_keys && sudo chown -R root:root /root/.ssh" < /dev/null
     
     # Inject hosts from machines.txt
-    vagrant ssh "${VAGRANT_IMAGE_DIR}${MACH_IDX}" -c "sudo sh -c 'cat << \EOF >> /etc/hosts
+    vagrant ssh "${VAGRANT_IMAGE_DIR}${MACH_IDX}" -c "sudo sh -c 'grep -v \"\.kubernetes\.local\" /etc/hosts > /tmp/hosts.tmp && mv /tmp/hosts.tmp /etc/hosts && cat << \EOF >> /etc/hosts
 192.168.56.10 server.kubernetes.local server
 192.168.56.11 node-0.kubernetes.local node-0
 192.168.56.12 node-1.kubernetes.local node-1

@@ -8,6 +8,7 @@
 :: Execute this script to fetch and setup required dependencies.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 set "json_file=%~2"
 if "!json_file!"=="" set "json_file=libscript.json"
 if not exist "!json_file!" (

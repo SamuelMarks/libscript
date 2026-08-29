@@ -42,7 +42,7 @@ LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}"
 export LIBSCRIPT_BUILD_DIR LIBSCRIPT_DATA_DIR
 
 # Common path setup
-PATH="${HOME}/.cargo/bin:${HOME}/.local/share/fnm/aliases/default/bin:${LIBSCRIPT_DATA_DIR}/bin:${PATH}"
+PATH="${HOME}/.cargo/bin:${LIBSCRIPT_DATA_DIR}/bin:${PATH}"
 export PATH
 
 [ -d "${LIBSCRIPT_BUILD_DIR}" ] || mkdir -p -- "${LIBSCRIPT_BUILD_DIR}"

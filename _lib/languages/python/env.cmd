@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: Sets `PYTHON_VERSION` and `PYTHON_VENV`, adding them to PATH.
+set "THIS_FILE=%~f0"
 
 if "%PYTHON_VERSION%"=="" set PYTHON_VERSION=3.11.9
 if "%LIBSCRIPT_HOME%"=="" (

@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: Sets `DOTNET_ROOT` and prepends it to PATH.
+set "THIS_FILE=%~f0"
 
 if "%CSHARP_VERSION%"=="" set CSHARP_VERSION=latest
 if "%LIBSCRIPT_HOME%"=="" set LIBSCRIPT_HOME=%USERPROFILE%\.libscript

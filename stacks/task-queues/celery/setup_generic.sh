@@ -69,6 +69,12 @@ if [ -d '/etc/systemd/system' ]; then
     else
       priv adduser --disabled-password --gecos '' --home '/home/'"${CELERY_SERVICE_USER}"'/' "${CELERY_SERVICE_USER}"
     fi
+  else
+    if command -v usermod >/dev/null 2>&1; then
+      priv usermod -d '/home/'"${CELERY_SERVICE_USER}"'/' "${CELERY_SERVICE_USER}" 2>/dev/null || true
+    fi
+    priv mkdir -p '/home/'"${CELERY_SERVICE_USER}"'/'
+    priv chown "${CELERY_SERVICE_USER}" '/home/'"${CELERY_SERVICE_USER}"'/' 2>/dev/null || true
   fi
   priv mkdir -p -- '/var/run/celery' '/var/log/celery'
   if [ "$(uname -s)" = "Darwin" ]; then

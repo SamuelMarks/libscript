@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: call "%~dp0api.cmd" :libscript_cloudinit_generate_mount /dev/sdf /data ext4
+set "THIS_FILE=%~f0"
 
 goto :%1
 

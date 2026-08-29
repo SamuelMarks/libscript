@@ -4,6 +4,7 @@
 ::
 :: ## Usage
 :: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
+set "THIS_FILE=%~f0"
 
 if "%ACTION%"=="" set ACTION=install
 if "%DENO_PM_VERSION%"=="" set DENO_PM_VERSION=latest

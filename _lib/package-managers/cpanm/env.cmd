@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for cpanm.
 
 :: Windows env stub for cpanm
+set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"

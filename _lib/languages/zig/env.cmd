@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: Sets `ZIG_VERSION` and prepends Zig to PATH.
+set "THIS_FILE=%~f0"
 
 if "%ZIG_VERSION%"=="" set ZIG_VERSION=0.12.0
 if "%ZIG_VERSION%"=="latest" set ZIG_VERSION=0.12.0

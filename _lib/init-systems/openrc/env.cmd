@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for openrc.
 
 :: Windows env stub for openrc
+set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"

@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for wait4x.
 
 :: Windows env stub for wait4x
+set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"

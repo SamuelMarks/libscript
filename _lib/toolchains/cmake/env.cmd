@@ -8,6 +8,7 @@
 ::
 :: ## Usage
 :: Call this script to load the environment variables. Do not execute it directly without context.
+set "THIS_FILE=%~f0"
 
 if "%CMAKE_VERSION%"=="" set CMAKE_VERSION=latest
 if "%CMAKE_VERSION%"=="latest" set CMAKE_VERSION=3.31.2

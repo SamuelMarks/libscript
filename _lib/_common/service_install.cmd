@@ -10,6 +10,7 @@
 :: Executes initialization, logic, or testing for service_install.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 set "_SERVICE_NAME=%~1"
 set "_EXEC_START=%~2"

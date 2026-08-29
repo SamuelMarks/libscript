@@ -7,6 +7,7 @@ setlocal EnableDelayedExpansion
 ::
 :: ## Usage
 :: call tests\test_python_pyenv_integration.cmd
+set "THIS_FILE=%~f0"
 
 set "LIBSCRIPT_ROOT_DIR=%~dp0.."
 for %%i in ("%LIBSCRIPT_ROOT_DIR%") do set "LIBSCRIPT_ROOT_DIR=%%~fi"

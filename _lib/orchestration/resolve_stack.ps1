@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for resolve_stack.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Handles operations related to the component 'orchestration'.

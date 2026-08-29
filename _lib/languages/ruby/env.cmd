@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: Sets `RUBY_VERSION` and prepends Ruby to PATH.
+set "THIS_FILE=%~f0"
 
 if "%RUBY_VERSION%"=="" set RUBY_VERSION=latest
 if "%LIBSCRIPT_HOME%"=="" (

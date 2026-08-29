@@ -8,6 +8,7 @@
 :: Sets `GO_VERSION` and prepends Go to PATH.
 
 :: Environment variables for Windows
+set "THIS_FILE=%~f0"
 
 if "%GO_VERSION%"=="" set GO_VERSION=latest
 if "%LIBSCRIPT_HOME%"=="" (

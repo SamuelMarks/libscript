@@ -8,3 +8,4 @@
 :: See create_location_block.cmd for implementation details.
 
 :: Windows batch equivalent
+set "THIS_FILE=%~f0"

@@ -8,3 +8,4 @@
 :: Execute this script to spin up the Docker builder image.
 
 :: Windows batch equivalent
+set "THIS_FILE=%~f0"

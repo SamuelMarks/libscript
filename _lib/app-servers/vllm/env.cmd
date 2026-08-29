@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for vllm.
 
 :: Windows env stub for vllm
+set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"

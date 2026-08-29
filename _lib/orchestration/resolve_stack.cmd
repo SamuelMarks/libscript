@@ -8,6 +8,7 @@
 :: Run `resolve_stack.cmd <path_to_install.json>` to resolve dependencies and yield an install list.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 if "%~1"=="--help" (
     echo Usage: %0 [OPTIONS]

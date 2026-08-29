@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: call "%~dp0api.cmd" :libscript_volume_create aws 10 us-east-1a gp3
+set "THIS_FILE=%~f0"
 
 goto :%1
 

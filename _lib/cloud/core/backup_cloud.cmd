@@ -8,6 +8,7 @@
 :: Run `backup_cloud.cmd <node_name> [options]` to take cloud-native snapshots or file-level backups.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 set "NODE=%~1"
 if "!NODE!"=="" (

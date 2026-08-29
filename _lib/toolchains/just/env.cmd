@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for just.
 
 :: Windows env stub for just
+set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"

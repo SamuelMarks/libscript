@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for setup.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Orchestrates the setup and installation process for the Actix+Diesel authentication scaffold stack.

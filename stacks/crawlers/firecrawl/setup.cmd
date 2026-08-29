@@ -8,6 +8,7 @@
 :: Execute this script to install and configure firecrawl on the local system.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 if not defined LIBSCRIPT_ROOT_DIR set "LIBSCRIPT_ROOT_DIR=%~dp0..\..\.."
 set "LOG_CMD=%~dp0\..\..\..\_lib\_common\log.cmd"
 if not exist "!LOG_CMD!" set "LOG_CMD=%LIBSCRIPT_ROOT_DIR%\_lib\_common\log.cmd"

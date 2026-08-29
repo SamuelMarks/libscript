@@ -8,3 +8,4 @@
 :: Execute this script with a JSON manifest to build an installer.
 
 :: Windows batch equivalent
+set "THIS_FILE=%~f0"

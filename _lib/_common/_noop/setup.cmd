@@ -10,4 +10,5 @@
 :: Call this script to trigger the no-op setup process for `_noop`.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 exit /b 0

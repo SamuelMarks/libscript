@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: libscript storage [create|delete|list|sync] [--cloud aws|gcp|azure] [--bucket name]
+set "THIS_FILE=%~f0"
 
 set "CMD=%~1"
 if not "%CMD%"=="" shift

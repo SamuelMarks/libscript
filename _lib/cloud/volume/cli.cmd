@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: libscript volume [create|delete|list|attach|detach] [--cloud aws|gcp|azure] [--volume-id id] [--name name] [--size gb] [--zone zone] [--type type] [--node-id id] [--device path]
+set "THIS_FILE=%~f0"
 
 set "CMD=%~1"
 if not "%CMD%"=="" shift

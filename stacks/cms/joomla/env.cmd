@@ -8,3 +8,4 @@
 :: Source or call this script to configure the environment for joomla.
 
 :: Environment variables for Windows
+set "THIS_FILE=%~f0"

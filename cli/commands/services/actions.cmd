@@ -8,6 +8,7 @@
 :: Execute this script to perform lifecycle actions on background services.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 set "action=%cmd%"
 if /i "!action!"=="up" set "action=start"
 if /i "!action!"=="down" set "action=stop"

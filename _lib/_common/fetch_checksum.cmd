@@ -11,5 +11,6 @@
 
 setlocal
 :: Windows placeholder script
+set "THIS_FILE=%~f0"
 echo Script not implemented for Windows natively.
 exit /b 1

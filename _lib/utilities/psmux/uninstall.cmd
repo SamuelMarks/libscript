@@ -7,5 +7,6 @@
 ::
 :: ## Usage
 :: Execute this script to remove the component.
+set "THIS_FILE=%~f0"
 
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0uninstall.ps1" %*

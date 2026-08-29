@@ -9,4 +9,5 @@
 :: Call this script to run the tests for the `_noop` component.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 call "%~dp0\..\..\_common\test_base.cmd" :assert_version "_noop" "."

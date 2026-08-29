@@ -13,6 +13,7 @@ setlocal EnableDelayedExpansion
 :: LibScript Unified Logging Utility (Windows)
 
 :: Levels: 0=DEBUG, 1=INFO, 2=SUCCESS, 3=WARN, 4=ERROR
+set "THIS_FILE=%~f0"
 if "%LIBSCRIPT_LOG_LEVEL%"=="" set "LIBSCRIPT_LOG_LEVEL=1"
 if "%LIBSCRIPT_LOG_FORMAT%"=="" set "LIBSCRIPT_LOG_FORMAT=text"
 

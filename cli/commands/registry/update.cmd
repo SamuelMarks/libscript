@@ -8,6 +8,7 @@
 :: Execute this script to refresh registry indices.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 if exist "%SCRIPT_DIR%update_db.cmd" (
     call "%SCRIPT_DIR%update_db.cmd"
 ) else if exist "%SCRIPT_DIR%update_db.sh" (

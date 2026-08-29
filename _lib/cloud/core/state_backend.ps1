@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for state_backend.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Handles operations related to the cloud infrastructure command 'core'.

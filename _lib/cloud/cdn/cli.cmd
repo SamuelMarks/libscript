@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: libscript cdn [create|delete|list|invalidate] [--cloud aws|gcp|azure] [--bucket name] [--domain custom.tld] [--cert-id id]
+set "THIS_FILE=%~f0"
 
 set "CMD=%~1"
 if not "%CMD%"=="" shift

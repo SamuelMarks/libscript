@@ -134,7 +134,7 @@ if [ ! -d "$VENDOR_DIR/c-rest-framework/.git" ]; then
   git clone https://github.com/SamuelMarks/c-rest-framework "$VENDOR_DIR/c-rest-framework"
 else
   log_info "c-rest-framework already cloned. Pulling latest..."
-  (cd "$VENDOR_DIR/c-rest-framework" && git pull)
+  (cd "$VENDOR_DIR/c-rest-framework" && git fetch --all && git reset --hard @{upstream})
 fi
 
 log_info "Framework acquisition complete."

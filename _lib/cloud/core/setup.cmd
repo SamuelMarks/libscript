@@ -8,6 +8,7 @@
 :: Handles sub-actions (`list-managed`, `status`, `diff`, `backup`, `restore`) by delegating to dedicated scripts.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 set "action=%ACTION%"
 

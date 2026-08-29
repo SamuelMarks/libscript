@@ -4,3 +4,4 @@
 :: 
 :: ## Usage
 :: Call this script to load the environment variables.
+set "THIS_FILE=%~f0"

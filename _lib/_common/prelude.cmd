@@ -10,6 +10,7 @@
 setlocal EnableDelayedExpansion
 
 :: Initialize STACK variable
+set "THIS_FILE=%~f0"
 IF NOT DEFINED STACK (
     SET "STACK=;%~nx0;"
 ) ELSE (
@@ -40,7 +41,7 @@ IF NOT DEFINED LIBSCRIPT_DATA_DIR (
     SET "LIBSCRIPT_DATA_DIR=%TEMP%\libscript_data"
 )
 
-SET "PATH=%USERPROFILE%\.cargo\bin;%USERPROFILE%\.local\share\fnm\aliases\default\bin;%LIBSCRIPT_DATA_DIR%\bin;%PATH%"
+SET "PATH=%USERPROFILE%\.cargo\bin;%LIBSCRIPT_DATA_DIR%\bin;%PATH%"
 
 IF NOT EXIST "%LIBSCRIPT_BUILD_DIR%" mkdir "%LIBSCRIPT_BUILD_DIR%"
 IF NOT EXIST "%LIBSCRIPT_DATA_DIR%" mkdir "%LIBSCRIPT_DATA_DIR%"

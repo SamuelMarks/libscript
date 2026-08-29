@@ -8,6 +8,7 @@
 :: Execute this script to manage networking configurations.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 set NETCTL_DIR=%~dp0
 set NETCTL_STATE_FILE=.netctl.json

@@ -14,6 +14,7 @@ setlocal EnableDelayedExpansion
 :: ```
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 if not "%~1"=="" goto %~1
 exit /b 0

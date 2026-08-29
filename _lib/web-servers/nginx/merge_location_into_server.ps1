@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for merge_location_into_server.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Handles operations related to the component 'nginx'.

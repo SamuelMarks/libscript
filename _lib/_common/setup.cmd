@@ -10,4 +10,5 @@
 :: Call this script to trigger the standard setup process on Windows.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 call "%~dp0setup_base.cmd" %*

@@ -105,7 +105,6 @@ cli.cmd uninstall package-managers
 - [emerge](./emerge/README.md)
 - [eopkg](./eopkg/README.md)
 - [flatpak](./flatpak/README.md)
-- [fnm](./fnm/README.md)
 - [gem](./gem/README.md)
 - [ghcup](./ghcup/README.md)
 - [go-pm](./go-pm/README.md)

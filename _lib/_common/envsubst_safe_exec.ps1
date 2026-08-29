@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for envsubst_safe_exec.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Defines environment variables and configurations for the component '_common' stack.

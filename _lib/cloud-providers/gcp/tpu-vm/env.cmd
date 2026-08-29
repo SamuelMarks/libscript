@@ -8,3 +8,4 @@
 :: Executes initialization, logic, or testing for tpu-vm.
 
 :: Windows env stub for tpu-vm
+set "THIS_FILE=%~f0"

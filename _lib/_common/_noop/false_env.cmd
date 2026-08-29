@@ -8,3 +8,4 @@
 :: Source or call this script to configure the environment for ..
 
 :: Windows batch equivalent
+set "THIS_FILE=%~f0"

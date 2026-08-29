@@ -8,6 +8,7 @@
 :: Called with `lock_state`, `unlock_state`, `pull_state`, `push_state` to manage concurrency.
 
 setlocal ENABLEDELAYEDEXPANSION
+set "THIS_FILE=%~f0"
 
 set "STATE_FILE=%STATE_FILE%"
 if "%STATE_FILE%"=="" set "STATE_FILE=.libscript_state.json"

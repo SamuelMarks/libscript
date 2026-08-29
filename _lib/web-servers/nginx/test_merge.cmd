@@ -9,6 +9,7 @@
 :: Execute this script to run tests for the component.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0test_merge.ps1"
 exit /b %ERRORLEVEL%

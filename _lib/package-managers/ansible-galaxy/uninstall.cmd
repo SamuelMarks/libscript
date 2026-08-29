@@ -9,4 +9,5 @@
 :: Execute this script to remove the component.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 call "%~dp0\..\..\_common\uninstall_base.cmd" %*

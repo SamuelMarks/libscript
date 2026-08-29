@@ -1,3 +1,9 @@
+# ## Overview
+# Configuration and definition file for ssh.alpine.Dockerfile.
+#
+# ## Usage
+# Processed automatically during build or runtime.
+
 FROM alpine:latest
 
 ARG SSH_PUBKEY

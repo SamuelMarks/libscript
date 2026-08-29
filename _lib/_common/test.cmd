@@ -10,4 +10,5 @@
 :: Call this script to trigger component testing on Windows.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 call "%~dp0\test_base.cmd"

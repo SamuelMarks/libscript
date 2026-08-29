@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: Sets `KOTLIN_VERSION` and prepends Kotlin to PATH.
+set "THIS_FILE=%~f0"
 
 if "%KOTLIN_VERSION%"=="" set KOTLIN_VERSION=1.9.20
 if "%KOTLIN_VERSION%"=="latest" set KOTLIN_VERSION=1.9.20

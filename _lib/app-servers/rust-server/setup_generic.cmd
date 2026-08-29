@@ -4,6 +4,7 @@
 ::
 :: ## Usage
 :: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
+set "THIS_FILE=%~f0"
 
 if "%ACTION%"=="" set ACTION=install
 if "%RUST_SERVER_VERSION%"=="" set RUST_SERVER_VERSION=latest

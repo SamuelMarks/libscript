@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: libscript cloudinit generate-mount [--device path] [--mount-point path] [--fs-type type]
+set "THIS_FILE=%~f0"
 
 set "CMD=%~1"
 if not "%CMD%"=="" shift

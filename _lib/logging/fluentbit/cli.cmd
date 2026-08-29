@@ -8,5 +8,6 @@
 :: Run `libscript logging/fluentbit [args...]`. Delegates to component core.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 set "PACKAGE_NAME=fluentbit"
 call "%~dp0\..\..\_common\component_core.cmd" %*

@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for env0.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Defines environment variables and configurations for the component 'nginx' stack.

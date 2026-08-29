@@ -18,6 +18,7 @@ setlocal EnableDelayedExpansion
 :: ```
 
 :: Subroutine dispatcher
+set "THIS_FILE=%~f0"
 if "%~1"=="libscript_python_venv" goto libscript_python_venv
 if "%~1"=="libscript_python_resolve" goto libscript_python_resolve
 goto :EOF

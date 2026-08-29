@@ -10,6 +10,7 @@
 :: Typically called internally by uninstall.cmd.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 for %%I in ("%~dp0..\..") do set "COMP_DIR=%%~fI"
 for %%I in ("%COMP_DIR%") do set "COMPONENT_NAME=%%~nxI"

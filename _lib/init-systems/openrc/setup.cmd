@@ -8,4 +8,5 @@
 :: Automatically skipped on Windows (returns 0).
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 exit /b 0

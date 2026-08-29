@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for redis.
 
 :: Windows env stub for redis
+set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"

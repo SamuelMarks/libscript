@@ -190,8 +190,12 @@ case "$ACTION" in
             
             # Create a temporary directory for the source
             VLLM_SRC_DIR="${DOWNLOAD_DIR:-/tmp/libscript_downloads}/vllm-src"
-            rm -rf "${VLLM_SRC_DIR}"
-            git clone "https://github.com/vllm-project/vllm.git" "${VLLM_SRC_DIR}"
+            if [ ! -d "${VLLM_SRC_DIR}/.git" ]; then
+                git clone "https://github.com/vllm-project/vllm.git" "${VLLM_SRC_DIR}"
+            else
+                log_info "vLLM source already present, pulling latest..."
+                (cd "${VLLM_SRC_DIR}" && git fetch --all && git reset --hard @{upstream})
+            fi
             
             # Build and install
             (

@@ -8,6 +8,7 @@
 :: Sets `NODEJS_VERSION` and prepends Node.js to PATH.
 
 :: Environment variables for Windows
+set "THIS_FILE=%~f0"
 
 if "%NODEJS_VERSION%"=="" set NODEJS_VERSION=lts
 if "%LIBSCRIPT_HOME%"=="" (

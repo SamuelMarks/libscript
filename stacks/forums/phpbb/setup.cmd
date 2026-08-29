@@ -10,6 +10,7 @@
 setlocal EnableDelayedExpansion
 
 :: Fallback to running PowerShell for Windows provisioning
+set "THIS_FILE=%~f0"
 where powershell >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
     echo [ERROR] PowerShell not found. Cannot configure phpBB on Windows.

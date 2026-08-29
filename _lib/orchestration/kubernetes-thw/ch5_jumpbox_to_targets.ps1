@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for ch5_jumpbox_to_targets.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Handles operations related to the component 'kubernetes-thw'.

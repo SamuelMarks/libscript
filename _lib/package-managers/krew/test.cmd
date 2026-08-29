@@ -6,6 +6,7 @@ rem ## Usage
 rem Execute this script to perform a component-specific test.
 
 setlocal enabledelayedexpansion
+set "THIS_FILE=%~f0"
 
 where kubectl-krew >nul 2>nul
 if %errorlevel% neq 0 (

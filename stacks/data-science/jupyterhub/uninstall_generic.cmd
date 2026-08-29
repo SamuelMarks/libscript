@@ -8,3 +8,4 @@
 :: Execute this script to perform generic removal steps for jupyterhub.
 
 :: Generic uninstall for Windows skipped
+set "THIS_FILE=%~f0"

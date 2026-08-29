@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for kubernetes-k0s.
 
 :: Windows env stub for kubernetes-k0s
+set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"

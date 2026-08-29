@@ -6,5 +6,6 @@ rem ## Usage
 rem Execute this script to perform a component-specific test.
 
 setlocal enabledelayedexpansion
+set "THIS_FILE=%~f0"
 
 node -e "console.log('hello world!')"

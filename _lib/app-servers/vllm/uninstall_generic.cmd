@@ -9,3 +9,4 @@
 :: Called internally as a fallback during the uninstall process.
 
 :: Generic uninstall for Windows skipped
+set "THIS_FILE=%~f0"

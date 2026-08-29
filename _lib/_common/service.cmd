@@ -9,6 +9,7 @@ setlocal EnableDelayedExpansion
 :: ```batch
 :: call "%LIBSCRIPT_ROOT_DIR%\\_lib\\_common\\service.cmd" :libscript_service start <service_name>
 :: ```
+set "THIS_FILE=%~f0"
 
 
 if not defined LIBSCRIPT_ROOT_DIR (

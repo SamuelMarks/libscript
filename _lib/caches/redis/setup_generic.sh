@@ -63,6 +63,23 @@ resolve_exact_version() {
   fi
 }
 
+if [ -z "${REDIS_DOWNLOAD_URL:-}" ]; then
+  case "$TARGET_OS" in
+    windows|mingw|cygwin)
+      _tmp_ver="${VERSION:-latest}"
+      if [ "$_tmp_ver" = "latest" ] || [ "$_tmp_ver" = "lts" ] || [ "$_tmp_ver" = "stable" ]; then
+        _tmp_ver=$(git ls-remote --tags "https://github.com/SamuelMarks/redis-windows" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -n 1 || true)
+        if [ -z "$_tmp_ver" ]; then
+          _tmp_ver="latest"
+        fi
+      fi
+      if [ "$_tmp_ver" != "latest" ]; then
+        REDIS_DOWNLOAD_URL="https://github.com/SamuelMarks/redis-windows/releases/download/${_tmp_ver}/redis-${_tmp_ver}-win64.zip"
+      fi
+      ;;
+  esac
+fi
+
 case "$ACTION" in
   ls)
     if [ "$REDIS_INSTALL_METHOD" = "mise" ]; then
@@ -93,8 +110,15 @@ case "$ACTION" in
       if [ -n "${REDIS_RELEASES_URL:-}" ]; then
         curl -sSL "${REDIS_RELEASES_URL}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
       else
-      git ls-remote --tags "https://github.com/redis/redis" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
-    fi
+        case "$TARGET_OS" in
+          windows|mingw|cygwin)
+            git ls-remote --tags "https://github.com/SamuelMarks/redis-windows" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
+            ;;
+          *)
+            git ls-remote --tags "https://github.com/redis/redis" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
+            ;;
+        esac
+      fi
     fi
     exit 0
     ;;

@@ -1,6 +1,13 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+# ## Overview
+# Configuration and definition file for Vagrantfile.
+#
+# ## Usage
+# Processed automatically during build or runtime.
+
+
 Vagrant.configure("2") do |config|
   config.vm.box = "almalinux/9"
   config.vm.box_version = "9.5.20241203"

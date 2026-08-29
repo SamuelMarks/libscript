@@ -8,3 +8,4 @@
 :: Executes initialization, logic, or testing for cpp.
 
 :: Windows env stub for cpp
+set "THIS_FILE=%~f0"

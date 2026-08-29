@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: Sets `DENO_VERSION` and prepends Deno to PATH.
+set "THIS_FILE=%~f0"
 
 if "%DENO_VERSION%"=="" set DENO_VERSION=latest
 

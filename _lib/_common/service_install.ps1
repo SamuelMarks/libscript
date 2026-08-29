@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for service_install.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Internal script for service_install on Windows.

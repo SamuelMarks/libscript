@@ -75,7 +75,6 @@ SYSTEMD
             # extract envs
             ENVS=$(printf '%s\n' "$svc" | jq -r '.value.env | to_entries[]? | "\(.key)=\(.value)"' 2>/dev/null || true)
             if [ -n "$ENVS" ]; then
-                sudo sh -c "printf '%s\n' '[Service]' >> $SERVICE_FILE"
                 printf '%s\n' "$ENVS" | while read -r e; do
                     sudo sh -c "printf '%s\n' 'Environment=\"$e\"' >> $SERVICE_FILE"
                 done

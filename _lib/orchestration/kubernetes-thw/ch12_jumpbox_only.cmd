@@ -4,7 +4,7 @@
 :: ## Overview
 :: Automates Ch12 of Kubernetes the Hard Way.
 ::
-:: :::: Usage
+:: ## Usage
 :: Executes the steps for Ch12.
 
 setlocal EnableDelayedExpansion

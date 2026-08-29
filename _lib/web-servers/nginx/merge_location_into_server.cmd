@@ -8,6 +8,7 @@
 :: See merge_location_into_server.cmd for implementation details.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 if "%~1"=="" (
     echo Usage: %0 ^<EXISTING_CONFIG^> ^<NEW_LOCATION_BLOCK^> ^<TARGET_SERVER_NAME^> [TARGET_LISTEN_REGEX]

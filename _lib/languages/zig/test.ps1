@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for test.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Test suite for the zig component.

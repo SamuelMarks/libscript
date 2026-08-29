@@ -8,6 +8,7 @@
 :: Execute this script to compare or validate version strings.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 set "v1=%~2"
 set "op=%~3"
 set "v2=%~4"

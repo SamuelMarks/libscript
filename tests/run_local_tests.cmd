@@ -7,6 +7,7 @@
 :: Results are written to the tests_tmp directory.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 set "OS_TARGET=alpine-3.24"
 set "ARGS="
@@ -110,6 +111,10 @@ for %%T in (!TARGETS!) do (
         ) else (
             echo Failure > "!FAILURE_FILE!"
             echo [FAILED] !TARGET_NAME!
+        )
+        
+        if exist "%THIS_DIR%\update_results.cmd" (
+            call "%THIS_DIR%\update_results.cmd"
         )
         
         vagrant destroy -f >nul 2>&1

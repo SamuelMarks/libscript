@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: Sets `PHP_VERSION` and prepends PHP to PATH.
+set "THIS_FILE=%~f0"
 
 if "%PHP_VERSION%"=="" set PHP_VERSION=latest
 

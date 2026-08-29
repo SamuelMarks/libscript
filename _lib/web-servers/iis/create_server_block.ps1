@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for create_server_block.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Handles operations related to the component 'iis'.

@@ -9,6 +9,7 @@ setlocal EnableDelayedExpansion
 :: ```batch
 :: call "%LIBSCRIPT_ROOT_DIR%\\_lib\\_common\\pkg_mgr.cmd" :libscript_download <url> <dest>
 :: ```
+set "THIS_FILE=%~f0"
 
 
 if not defined LIBSCRIPT_ROOT_DIR (

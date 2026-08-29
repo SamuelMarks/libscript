@@ -8,5 +8,6 @@
 :: Execute this script to remove joomla and its associated configurations from the system.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 echo "Uninstalling joomla is not supported via this script."
 exit /b 0

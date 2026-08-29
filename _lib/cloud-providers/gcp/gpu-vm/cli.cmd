@@ -9,6 +9,7 @@
 :: Run `libscript gcp/gpu-vm <action> [args...]`.
 
 setlocal enabledelayedexpansion
+set "THIS_FILE=%~f0"
 
 set "LOG_CMD=%~dp0..\..\_common\log.cmd"
 if not exist "%LOG_CMD%" (

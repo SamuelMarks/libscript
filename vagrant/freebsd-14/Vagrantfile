@@ -1,6 +1,13 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+# ## Overview
+# Configuration and definition file for Vagrantfile.
+#
+# ## Usage
+# Processed automatically during build or runtime.
+
+
 # Read environment variables for target package and repository root
 test_target = ENV['LIBSCRIPT_TEST_TARGET'] || 'sqlite'
 repo_root = ENV['LIBSCRIPT_REPO_ROOT'] || "../.."

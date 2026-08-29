@@ -9,3 +9,4 @@
 :: Typically called internally by `uninstall.cmd` when attempting generic teardown on Windows.
 
 :: Generic uninstall for Windows skipped
+set "THIS_FILE=%~f0"

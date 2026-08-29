@@ -8,6 +8,7 @@
 :: Run `restore_cloud.cmd <node_name> [options]` to reprovision and pull config/data from an archive.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 set "NODE=%~1"
 if "!NODE!"=="" (

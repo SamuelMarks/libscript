@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for setup_generic.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Windows PowerShell setup stub for utils

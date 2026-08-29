@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for setup_generic.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Windows PowerShell setup stub for redis
@@ -33,6 +39,19 @@ if ([string]::IsNullOrEmpty($InstallMethod)) {
     }
 }
 
+if ([string]::IsNullOrEmpty($env:REDIS_DOWNLOAD_URL)) {
+    $tmpVer = $CompVersion
+    if ($tmpVer -eq "latest") {
+        $tags = git ls-remote --tags "https://github.com/SamuelMarks/redis-windows" 2>$null | Select-String -Pattern '\d+\.\d+\.\d+' -AllMatches | ForEach-Object { $_.Matches.Value }
+        if ($tags) {
+            $tmpVer = $tags | Sort-Object {[version]$_} | Select-Object -Last 1
+        }
+    }
+    if ($tmpVer -ne "latest" -and -not [string]::IsNullOrEmpty($tmpVer)) {
+        $env:REDIS_DOWNLOAD_URL = "https://github.com/SamuelMarks/redis-windows/releases/download/$tmpVer/redis-$tmpVer-win64.zip"
+    }
+}
+
 if ($Action -eq "ls") {
     if ($InstallMethod -eq "mise") { mise ls redis; exit 0 }
     if ($InstallMethod -eq "asdf") { asdf list redis; exit 0 }
@@ -53,7 +72,10 @@ if ($Action -eq "ls-remote") {
     if ($env:REDIS_RELEASES_URL) {
         Invoke-WebRequest -Uri $env:REDIS_RELEASES_URL | Select-Object -ExpandProperty Content
     } else {
-        Write-Output "ls-remote not fully implemented natively yet."
+        $tags = git ls-remote --tags "https://github.com/SamuelMarks/redis-windows" 2>$null | Select-String -Pattern '\d+\.\d+\.\d+' -AllMatches | ForEach-Object { $_.Matches.Value }
+        if ($tags) {
+            $tags | Sort-Object {[version]$_}
+        }
     }
     exit 0
 }

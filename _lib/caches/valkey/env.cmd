@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for valkey.
 
 :: Windows env stub for valkey
+set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"

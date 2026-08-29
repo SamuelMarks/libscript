@@ -8,5 +8,6 @@
 :: Execute this script to remove magento and its associated configurations from the system.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 echo "Uninstalling magento is not supported via this script."
 exit /b 0

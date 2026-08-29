@@ -155,10 +155,10 @@ fi
 
 if [ ! -f "${WORDPRESS_WWWROOT}/wp-config.php" ]; then
   priv cp "${WORDPRESS_WWWROOT}/wp-config-sample.php" "${WORDPRESS_WWWROOT}/wp-config.php"
-  priv sed -i "s/database_name_here/${DB_NAME}/" "${WORDPRESS_WWWROOT}/wp-config.php"
-  priv sed -i "s/username_here/${DB_USER}/" "${WORDPRESS_WWWROOT}/wp-config.php"
-  priv sed -i "s/password_here/${DB_PASS}/" "${WORDPRESS_WWWROOT}/wp-config.php"
 fi
+priv sed -i "s/define( *'DB_NAME', *'[^']*' *);/define( 'DB_NAME', '${DB_NAME}' );/" "${WORDPRESS_WWWROOT}/wp-config.php"
+priv sed -i "s/define( *'DB_USER', *'[^']*' *);/define( 'DB_USER', '${DB_USER}' );/" "${WORDPRESS_WWWROOT}/wp-config.php"
+priv sed -i "s/define( *'DB_PASSWORD', *'[^']*' *);/define( 'DB_PASSWORD', '${DB_PASS}' );/" "${WORDPRESS_WWWROOT}/wp-config.php"
 priv chown -R www-data:www-data "${WORDPRESS_WWWROOT}" || true # fallback for distros without www-data
 
 # Determine PHP_FPM Socket (OS specific usually)

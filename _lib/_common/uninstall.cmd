@@ -10,6 +10,7 @@
 :: Call this script to trigger the full uninstallation and cleanup process on Windows.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 echo Running generic uninstaller for %PACKAGE_NAME%
 
 set "PURGE_DATA=0"

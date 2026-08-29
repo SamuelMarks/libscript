@@ -8,6 +8,7 @@
 :: Run `teardown_cloud.cmd <provider> <node> <rg> <loc>` to cleanly destroy resources and backup state.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 set "IS_TPU=0"
 set "SHARED_STORAGE=0"

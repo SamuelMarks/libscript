@@ -8,5 +8,6 @@
 :: Run `libscript git-servers/utils [args...]`. Delegates to component core.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 set "PACKAGE_NAME=utils"
 call "%~dp0\..\_common\component_core.cmd" %*

@@ -1,3 +1,9 @@
+# ## Overview
+# Configuration and definition file for ci.yml.
+#
+# ## Usage
+# Processed automatically during build or runtime.
+
 name: CI Tests
 
 on:

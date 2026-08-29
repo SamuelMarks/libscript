@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for pkg_mapper.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Handles operations related to the component '_common'.

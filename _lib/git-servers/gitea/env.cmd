@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for gitea.
 
 :: Windows env stub for gitea
+set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"

@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for env.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Environment variable initialization script for the nix component.

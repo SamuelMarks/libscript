@@ -1,3 +1,9 @@
+# ## Overview
+# Configuration and definition file for CMakeLists.txt.
+#
+# ## Usage
+# Processed automatically during build or runtime.
+
 set(SOURCES
     main.c
 )

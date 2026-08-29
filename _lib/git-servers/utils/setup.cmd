@@ -9,3 +9,4 @@
 
 setlocal EnableDelayedExpansion
 REM Utilities setup: no-op
+set "THIS_FILE=%~f0"

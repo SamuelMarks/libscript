@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for setup_alpine.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Orchestrates the setup and installation process for the component 'etcd' stack.

@@ -4,6 +4,7 @@ REM Environment variable initialization script for the gem component.
 REM 
 REM ## Usage
 REM Call this script to load the environment variables.
+set "THIS_FILE=%~f0"
 
 IF "%GEM_VERSION%"=="" SET "GEM_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%${COMP}\%GEM_VERSION%\bin;%PATH%"

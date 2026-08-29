@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: Sets `JAVA_HOME` and prepends it to PATH.
+set "THIS_FILE=%~f0"
 
 if "%JAVA_VERSION%"=="" set JAVA_VERSION=17
 if "%JAVA_VERSION%"=="latest" set JAVA_VERSION=21

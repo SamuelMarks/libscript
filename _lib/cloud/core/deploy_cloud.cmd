@@ -8,6 +8,7 @@
 :: Run `deploy_cloud.cmd <provider> <node> <rg> <loc> [repo] [dest]` to provision VM, wait for WinRM/SSH, and deploy.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 set "IS_TPU=0"
 set "SHARED_STORAGE=0"

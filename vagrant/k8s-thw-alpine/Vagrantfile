@@ -1,6 +1,13 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+# ## Overview
+# Configuration and definition file for Vagrantfile.
+#
+# ## Usage
+# Processed automatically during build or runtime.
+
+
 Vagrant.configure("2") do |config|
   node_count = ENV.fetch('VAGRANT_N', 3).to_i
   box_name = "bento/alpine-3.24"

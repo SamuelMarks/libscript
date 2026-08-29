@@ -10,3 +10,4 @@
 :: Call this script to apply (no-op) environment variables for `_noop` into the current CMD session.
 
 :: Environment variables for Windows
+set "THIS_FILE=%~f0"

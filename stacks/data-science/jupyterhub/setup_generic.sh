@@ -68,6 +68,12 @@ elif ! id "${JUPYTERHUB_SERVICE_USER}" >/dev/null 2>&1; then
   else
     priv adduser --disabled-password --gecos '' --home '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' "${JUPYTERHUB_SERVICE_USER}"
   fi
+else
+  if command -v usermod >/dev/null 2>&1; then
+    priv usermod -d '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' "${JUPYTERHUB_SERVICE_USER}" 2>/dev/null || true
+  fi
+  priv mkdir -p '/home/'"${JUPYTERHUB_SERVICE_USER}"'/'
+  priv chown "${JUPYTERHUB_SERVICE_USER}" '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' 2>/dev/null || true
 fi
 
 if [ ! -d "${JUPYTERHUB_NOTEBOOK_DIR}" ]; then

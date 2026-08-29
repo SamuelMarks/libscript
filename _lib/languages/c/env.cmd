@@ -8,3 +8,4 @@
 :: Executes initialization, logic, or testing for c.
 
 :: Windows env stub for c
+set "THIS_FILE=%~f0"

@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for deploy_cloud.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Manages the deployment workflow for the cloud infrastructure command 'core' stack.

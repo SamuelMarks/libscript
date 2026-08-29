@@ -51,7 +51,7 @@ if not exist "TODO_PLAN.md" (
 )
 
 :loop
-for /f "delims=" %%I in ('python run_next_batch.py') do set "BATCH=%%I"
+for /f "delims=" %%I in ('call "%SCRIPT_DIR%\run_next_batch.cmd"') do set "BATCH=%%I"
 if "!BATCH!"=="" (
     echo No more components to test!
     goto :end_loop
@@ -64,7 +64,7 @@ for %%P in (!BATCH!) do (
     if "%%P"=="vllm" (
         echo Skipping vllm due to ENOSPC and marking success.
         type nul > "tests_tmp\vllm.linux.debian.success"
-        python update_results.py
+        call "%SCRIPT_DIR%\update_results.cmd"
     ) else (
         set "NEW_BATCH=!NEW_BATCH! %%P"
     )
@@ -72,7 +72,7 @@ for %%P in (!BATCH!) do (
 
 if not "!NEW_BATCH!"=="" (
     call "%SCRIPT_DIR%\run_local_tests.cmd" !NEW_BATCH! --os "!OS_TARGET!"
-    python update_results.py
+    call "%SCRIPT_DIR%\update_results.cmd"
 )
 
 goto loop

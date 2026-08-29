@@ -9,6 +9,7 @@
 :: Run `libscript gke-tpu-cluster <action> [args...]`.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 set "LOG_CMD=%~dp0..\..\..\_common\log.cmd"
 

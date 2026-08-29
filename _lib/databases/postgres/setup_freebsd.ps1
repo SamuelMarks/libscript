@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for setup_freebsd.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Orchestrates the setup and installation process for the component 'postgres' stack.

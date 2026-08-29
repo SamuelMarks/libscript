@@ -8,3 +8,4 @@
 :: Executes initialization, logic, or testing for filestore.
 
 :: Windows env stub for filestore
+set "THIS_FILE=%~f0"

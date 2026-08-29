@@ -8,6 +8,7 @@
 :: Internally invoked via cli\commands\cloud\deploy-remote.cmd.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 if "%~1"=="" (
     echo [ERROR] Usage: deploy_remote.cmd ^<user@host^> [--app ^<path^>@^<domain^>]... [--shared-db ^<engine^>]

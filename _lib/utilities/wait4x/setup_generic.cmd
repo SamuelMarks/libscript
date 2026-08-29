@@ -4,6 +4,7 @@
 ::
 :: ## Usage
 :: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
+set "THIS_FILE=%~f0"
 
 if "%ACTION%"=="" set ACTION=install
 if "%WAIT4X_VERSION%"=="" set WAIT4X_VERSION=latest

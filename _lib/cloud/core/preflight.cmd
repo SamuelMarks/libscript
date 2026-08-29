@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: call "%~dp0preflight.cmd" :libscript_check_preflight aws
+set "THIS_FILE=%~f0"
 
 goto :%1
 

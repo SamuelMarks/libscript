@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: Sets `RUST_VERSION` and prepends Rust to PATH.
+set "THIS_FILE=%~f0"
 
 if "%RUST_VERSION%"=="" set RUST_VERSION=stable
 if "%RUST_VERSION%"=="latest" set RUST_VERSION=stable

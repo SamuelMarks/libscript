@@ -4,6 +4,7 @@ REM Environment variable initialization script for the guix component.
 REM 
 REM ## Usage
 REM Call this script to load the environment variables.
+set "THIS_FILE=%~f0"
 
 IF "%GUIX_VERSION%"=="" SET "GUIX_VERSION=latest"
 SET "PATH=%LIBSCRIPT_HOME%${COMP}\%GUIX_VERSION%\bin;%PATH%"

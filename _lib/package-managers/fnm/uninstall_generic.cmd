@@ -6,6 +6,9 @@
 :: It provides fallback uninstallation logic.
 ::
 :: ## Usage
+:: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
+
+set "THIS_FILE=%~f0"
 :: This script is typically called internally by the component lifecycle.
 
 :: Generic uninstall for Windows skipped

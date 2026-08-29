@@ -8,6 +8,7 @@
 :: Run `daemonize.cmd <action> <json_file>` where action is `start`, `stop`, `up`, or `down`.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 set action=%~1
 set json_file=%~2

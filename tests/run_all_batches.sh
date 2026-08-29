@@ -64,7 +64,7 @@ if [ ! -f "TODO_PLAN.md" ]; then
 fi
 
 while true; do
-    BATCH=$(python3 run_next_batch.py)
+    BATCH=$("$THIS_DIR/run_next_batch.sh")
     if [ -z "$BATCH" ]; then
         echo "No more components to test!"
         break
@@ -76,7 +76,7 @@ while true; do
         if [ "$pkg" = "vllm" ]; then
             echo "Skipping vllm due to ENOSPC and marking success."
             touch "tests_tmp/vllm.linux.debian.success"
-            python3 update_results.py
+            "$THIS_DIR/update_results.sh"
         else
             NEW_BATCH="$NEW_BATCH $pkg"
         fi
@@ -85,6 +85,6 @@ while true; do
     if [ -n "$NEW_BATCH" ]; then
         # shellcheck disable=SC2086
         "$THIS_DIR/run_local_tests.sh" $NEW_BATCH --os "$OS_TARGET"
-        python3 update_results.py
+        "$THIS_DIR/update_results.sh"
     fi
 done

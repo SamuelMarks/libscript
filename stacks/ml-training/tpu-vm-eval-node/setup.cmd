@@ -8,6 +8,7 @@
 :: Execute this script to install and configure tpu-vm-eval-node on the local system.
 
 setlocal
+set "THIS_FILE=%~f0"
 if "%~1"=="--help" (
     echo Usage: %~nx0
     echo See README.md for details.

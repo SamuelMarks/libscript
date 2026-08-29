@@ -8,6 +8,7 @@
 :: Wraps the duckdb executable. Run `libscript databases/duckdb execute <db> <query>` or `repl <db>`.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 set "LOG_CMD=%~dp0..\..\..\_common\log.cmd"
 

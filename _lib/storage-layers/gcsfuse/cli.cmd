@@ -9,6 +9,7 @@
 :: Execute this script directly to run the CLI functionality for the component.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 set "LOG_CMD=%~dp0..\..\..\_common\log.cmd"
 

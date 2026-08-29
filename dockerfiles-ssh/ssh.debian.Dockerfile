@@ -1,3 +1,9 @@
+# ## Overview
+# Configuration and definition file for ssh.debian.Dockerfile.
+#
+# ## Usage
+# Processed automatically during build or runtime.
+
 FROM debian:bookworm-slim
 
 ARG SSH_PUBKEY

@@ -10,6 +10,7 @@
 :: Call this script to trigger the standard setup process for Jetstream on Windows.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 if "%~1"=="--help" (
     echo Usage: %~nx0
     echo See README.md for details.

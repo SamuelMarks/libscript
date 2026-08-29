@@ -13,6 +13,7 @@ setlocal
 
 :: This is a placeholder for the native Windows component setup.
 :: By default, many tools rely on winget, choco, or scoop for installation on Windows.
+set "THIS_FILE=%~f0"
 
 if "%ACTION%"=="" set ACTION=install
 

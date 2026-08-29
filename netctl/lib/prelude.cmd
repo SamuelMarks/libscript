@@ -6,6 +6,7 @@
 :: 
 :: ## Usage
 :: This script is intended to be sourced by other scripts, not executed directly.
+set "THIS_FILE=%~f0"
 
 echo This script (%~nx0) is not implemented natively for Windows.
 exit /b 1

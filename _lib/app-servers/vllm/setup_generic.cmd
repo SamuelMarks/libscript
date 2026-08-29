@@ -4,6 +4,7 @@
 ::
 :: ## Usage
 :: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
+set "THIS_FILE=%~f0"
 
 if "%ACTION%"=="" set ACTION=install
 if "%VLLM_VERSION%"=="" set VLLM_VERSION=latest
@@ -145,8 +146,15 @@ if not errorlevel 1 goto :create_alias
 
 echo Failed to install vllm via pip. Falling back to build from source.
 set "VLLM_SRC_DIR=%DOWNLOAD_DIR%\vllm-src"
-if exist "%VLLM_SRC_DIR%" rmdir /s /q "%VLLM_SRC_DIR%"
-git clone "https://github.com/vllm-project/vllm.git" "%VLLM_SRC_DIR%"
+if not exist "%VLLM_SRC_DIR%\.git" (
+    git clone "https://github.com/vllm-project/vllm.git" "%VLLM_SRC_DIR%"
+) else (
+    echo vLLM source already present, pulling latest...
+    pushd "%VLLM_SRC_DIR%"
+    git fetch --all
+    git reset --hard @{upstream}
+    popd
+)
 pushd "%VLLM_SRC_DIR%"
 if not "%EXACT_VERSION%"=="latest" (
     git checkout "v%EXACT_VERSION%" || git checkout "%EXACT_VERSION%"

@@ -9,6 +9,7 @@ setlocal EnableDelayedExpansion
 :: ## Usage
 :: Execute this script within the context of Vagrant provisioning.
 :: Define VAGRANT_IMAGE_DIR and VAGRANT_N environment variables.
+set "THIS_FILE=%~f0"
 
 if /I "%~1"=="--help" goto :show_help
 if /I "%~1"=="-h" goto :show_help

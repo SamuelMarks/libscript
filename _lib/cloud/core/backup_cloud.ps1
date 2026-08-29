@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for backup_cloud.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Handles operations related to the cloud infrastructure command 'core'.

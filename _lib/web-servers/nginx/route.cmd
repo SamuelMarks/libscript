@@ -8,6 +8,7 @@
 :: See route.cmd for implementation details.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 set "DOMAIN=%~1"
 set "LOCATION=%~2"
 set "DESTINATION=%~3"
@@ -29,6 +30,7 @@ if not exist "%CONF_FILE%" (
     echo }>> "%CONF_FILE%"
 )
 set "VBS_FILE=%TEMP%\nginx_route_update_%RANDOM%.vbs"
+if exist "%VBS_FILE%" del /q "%VBS_FILE%"
 echo Set objFS = CreateObject("Scripting.FileSystemObject") > "%VBS_FILE%"
 echo Set objFile = objFS.OpenTextFile("%CONF_FILE%", 1) >> "%VBS_FILE%"
 echo strContent = objFile.ReadAll >> "%VBS_FILE%"

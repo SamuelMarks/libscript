@@ -6,6 +6,7 @@
 :: 
 :: ## Usage
 :: Execute this script to display version details.
+set "THIS_FILE=%~f0"
 
 if "%cmd%" == "--version" goto :show_version
 if "%cmd%" == "-v" goto :show_version

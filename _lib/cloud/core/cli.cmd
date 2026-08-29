@@ -8,6 +8,7 @@
 :: Dispatches sub-commands (e.g., `deploy_cloud`, `teardown_cloud`) and manages remote state lock/unlock.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 set "PACKAGE_NAME=core"
 
 set "SKIP_STATE=0"

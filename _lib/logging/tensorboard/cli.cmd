@@ -8,6 +8,7 @@
 :: Run `libscript logging/tensorboard [args...]`. Starts the tensorboard service.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 set "LOG_CMD=%~dp0..\..\..\_common\log.cmd"
 

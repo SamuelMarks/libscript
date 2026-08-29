@@ -52,11 +52,27 @@ libscript_print_env() {
     case "$_format" in
       docker)         printf '%s\n' "ENV PATH=\"$_prefix_path/bin:\$PATH\"" ;;
       docker_compose) printf '%s\n' "PATH=$_prefix_path/bin:\$PATH" ;;
-      powershell)     printf '%s\n' "\$env:PATH=\"$_prefix_path/bin;\" + \$env:PATH" ;;
-      cmd)            printf '%s\n' "SET PATH=\"$_prefix_path/bin;%PATH%\"" ;;
+      powershell)
+        cat <<EOF
+if (\$env:PATH -notlike '*$_prefix_path/bin*') {
+  \$env:PATH = "$_prefix_path/bin;" + \$env:PATH
+}
+EOF
+        ;;
+      cmd)
+        cat <<EOF
+echo %PATH% | findstr /i /c:"$_prefix_path/bin" >nul || SET "PATH=$_prefix_path/bin;%PATH%"
+EOF
+        ;;
       json)           # Handled later in the full env dump
         ;;
-      *)              printf '%s\n' "export PATH=\"$_prefix_path/bin:\$PATH\"" ;;
+      *)
+        cat <<EOF
+if case ":\${PATH:-}:" in *":$_prefix_path/bin:"*) false;; *) true;; esac; then
+  export PATH="$_prefix_path/bin:\$PATH"
+fi
+EOF
+        ;;
     esac
   fi
 

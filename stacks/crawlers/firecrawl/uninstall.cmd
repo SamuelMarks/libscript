@@ -9,6 +9,7 @@
 
 setlocal EnableDelayedExpansion
 :: Default uninstall hook for Windows
+set "THIS_FILE=%~f0"
 if not "%INSTALLED_DIR%"=="" (
     if exist "%INSTALLED_DIR%" (
         echo Removing %INSTALLED_DIR%...

@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for bundler.
 
 :: Windows env stub for bundler
+set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (
     set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"

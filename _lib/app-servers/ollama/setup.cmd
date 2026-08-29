@@ -10,5 +10,6 @@
 :: Call this script to trigger the setup process for Ollama on Windows.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 set "PACKAGE_NAME=ollama"
 call "%~dp0\..\..\_common\setup_base.cmd" %*

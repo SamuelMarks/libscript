@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: Normally sets up defaults and prepends Bun to PATH.
+set "THIS_FILE=%~f0"
 
 if "%BUN_VERSION%"=="" set BUN_VERSION=latest
 

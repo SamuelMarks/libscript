@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: libscript cert [create|delete|list] [--cloud aws|gcp|azure] [--domain name]
+set "THIS_FILE=%~f0"
 
 set "CMD=%~1"
 if not "%CMD%"=="" shift

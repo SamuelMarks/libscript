@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for libscript.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Main PowerShell entry point for the libscript framework.

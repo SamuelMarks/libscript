@@ -8,5 +8,6 @@
 :: Run `libscript languages/swift [args...]`. Delegates to component core.
 
 setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 set "PACKAGE_NAME=swift"
 call "%~dp0\..\..\_common\component_core.cmd" %*

@@ -11,6 +11,7 @@
 
 REM versioning.cmd
 REM Common utilities for managing native libscript installations and version aliases on Windows.
+set "THIS_FILE=%~f0"
 
 goto :eof
 

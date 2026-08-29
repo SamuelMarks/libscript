@@ -1,3 +1,9 @@
+# ## Overview
+# PowerShell script for pkg_mgr.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
 <#
 .SYNOPSIS
 Handles operations related to the component '_common'.
@@ -126,7 +132,17 @@ function libscript_download {
         }
     } elseif (Test-Path $cacheFile -and $env:LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB -ne "1") {
         $actualChecksum = (Get-FileHash -Path $cacheFile -Algorithm SHA256).Hash.ToLower()
-        "$Url $actualChecksum" | Out-File -FilePath $checksumDb -Append -Encoding utf8
+        $checksumEntry = "$Url $actualChecksum"
+        $shouldAppend = $true
+        if (Test-Path $checksumDb) {
+            $existing = Get-Content $checksumDb
+            if ($existing -contains $checksumEntry) {
+                $shouldAppend = $false
+            }
+        }
+        if ($shouldAppend) {
+            $checksumEntry | Out-File -FilePath $checksumDb -Append -Encoding utf8
+        }
     }
 
     # 6. Final Placement

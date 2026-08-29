@@ -8,6 +8,7 @@
 :: Execute this script to deploy gke-xpk-training to the target environment.
 
 setlocal enabledelayedexpansion
+set "THIS_FILE=%~f0"
 
 if "%~1"=="--help" goto :help
 if "%~1"=="-h" goto :help

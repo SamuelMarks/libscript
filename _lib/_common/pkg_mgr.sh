@@ -398,15 +398,19 @@ libscript_download() {
   elif [ -n "$cache_file" ] && [ "${LIBSCRIPT_NEVER_REFRESH_CHECKSUM_DB:-0}" != "1" ] && [ -f "$cache_file" ]; then
     # Auto-populate checksum DB if missing
     if command -v sha256sum >/dev/null 2>&1; then
-        printf '%s\n' "$url $(sha256sum "$cache_file" | awk '{print $1}')" >> "$checksum_db"
+        if ! grep -qF "$url" "$checksum_db" 2>/dev/null; then
+            printf '%s\n' "$url $(sha256sum "$cache_file" | awk '{print $1}')" >> "$checksum_db"
+        fi
     fi
   fi
 
   # Auto-populate DB with dynamically fetched checksum if we didn't have it in DB
   if [ "$checksum_from_db" -eq 0 ] && [ -n "$expected_checksum" ] && [ "$expected_checksum" != "SKIP" ]; then
     if [ "${LIBSCRIPT_DISABLE_CHECKSUM_TXT_UPDATE:-0}" != "1" ]; then
-       log_info "Updating _lib/checksums.txt with fetched checksum for $url"
-       printf '%s\n' "$url ${expected_checksum#sha-256=}" >> "$checksum_db"
+       if ! grep -qF "$url ${expected_checksum#sha-256=}" "$checksum_db" 2>/dev/null; then
+         log_info "Updating _lib/checksums.txt with fetched checksum for $url"
+         printf '%s\n' "$url ${expected_checksum#sha-256=}" >> "$checksum_db"
+       fi
     fi
   fi
 
