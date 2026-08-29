@@ -104,78 +104,10 @@ fi
 
 
 printf '%s\n' "Updating Supported Components in README.md..."
-cat <<'TABLE' >components_table.tmp
-## Supported Components
-
-| Component | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD |
-|---|---|---|---|---|---|---|
-TABLE
-
-# Find all components excluding _common
-find _lib -mindepth 2 -maxdepth 2 -type d ! -path "_lib/_common*" | sed 's|.*/||' | sort -u | while read -r comp; do
-    # Extract existing statuses from README.md if present
-    existing_line=$(grep "^| \`$comp\` |" README.md || true)
-    existing_apk="❓"
-    existing_deb="❓"
-    existing_rpm="❓"
-    if [ -n "$existing_line" ]; then
-        existing_apk=$(echo "$existing_line" | awk -F'|' '{print $3}' | xargs)
-        existing_deb=$(echo "$existing_line" | awk -F'|' '{print $4}' | xargs)
-        existing_rpm=$(echo "$existing_line" | awk -F'|' '{print $5}' | xargs)
-    fi
-
-    # Alpine (.apk)
-    apk_status="$existing_apk"
-    if [ -f "tests_tmp/$comp.linux.alpine.success" ]; then
-        apk_status="✅"
-    elif [ -f "tests_tmp/$comp.linux.alpine.failure" ]; then
-        apk_status="❌"
-    fi
-    
-    # Debian (.deb)
-    deb_status="$existing_deb"
-    if ls tests_tmp/"$comp".linux.debian.success >/dev/null 2>&1 || ls tests_tmp/"$comp".linux.ubuntu.success >/dev/null 2>&1; then
-        deb_status="✅"
-    elif ls tests_tmp/"$comp".linux.debian.failure >/dev/null 2>&1 || ls tests_tmp/"$comp".linux.ubuntu.failure >/dev/null 2>&1; then
-        deb_status="❌"
-    fi
-    
-    # RHEL/Fedora (.rpm)
-    rpm_status="$existing_rpm"
-    if ls tests_tmp/"$comp".linux.rhel.success >/dev/null 2>&1 || ls tests_tmp/"$comp".linux.fedora.success >/dev/null 2>&1 || ls tests_tmp/"$comp".linux.almalinux.success >/dev/null 2>&1 || ls tests_tmp/"$comp".linux.centos.success >/dev/null 2>&1; then
-        rpm_status="✅"
-    elif ls tests_tmp/"$comp".linux.rhel.failure >/dev/null 2>&1 || ls tests_tmp/"$comp".linux.fedora.failure >/dev/null 2>&1 || ls tests_tmp/"$comp".linux.almalinux.failure >/dev/null 2>&1 || ls tests_tmp/"$comp".linux.centos.failure >/dev/null 2>&1; then
-        rpm_status="❌"
-    fi
-    
-    printf "| \`%s\` | %s | %s | %s | - | - | - |\n" "$comp" "$apk_status" "$deb_status" "$rpm_status" >>components_table.tmp
-done
-
-if grep -q "## Supported Components" README.md; then
-  awk '
-    /## Supported Components/ {
-        in_ci = 1;
-        while ((getline line < "components_table.tmp") > 0) print line;
-        print "";
-        next;
-    }
-    /^## / && in_ci {
-        in_ci = 0;
-    }
-    !in_ci {
-        print
-    }
-    ' README.md >README.tmp && mv README.tmp README.md
-else
-  awk '
-    /^## License/ {
-        while ((getline line < "components_table.tmp") > 0) print line;
-        print "";
-    }
-    { print }
-  ' README.md >README.tmp && mv README.tmp README.md
+if [ -x "tests/update_results.sh" ]; then
+    ./tests/update_results.sh
 fi
-rm -f components_table.tmp
+
 
 git add README.md
 printf '%s\n' "Pre-commit hook completed successfully."
