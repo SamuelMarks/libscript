@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "qemu",
+  "title": "QEMU",
+  "description": "A generic and open source machine emulator and virtualizer with KVM hardware acceleration support.",
+  "category": "orchestration",
+  "provides": ["qemu", "kvm", "virtualization"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": []
+}

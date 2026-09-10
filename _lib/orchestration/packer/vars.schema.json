@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/packer/vars.schema.json",
+  "title": "packer vars",
+  "description": "Variables for HashiCorp Packer image builder",
+  "type": "object",
+  "properties": {
+    "PACKER_VERSION": {
+      "type": "string",
+      "description": "Version of Packer (default: latest)",
+      "default": "latest"
+    },
+    "PACKER_INSTALL_METHOD": {
+      "type": "string",
+      "description": "Install method for Packer (system, brew, libscript_native)",
+      "default": "system"
+    }
+  }
+}

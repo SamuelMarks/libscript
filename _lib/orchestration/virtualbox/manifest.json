@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "virtualbox",
+  "title": "VirtualBox",
+  "description": "Oracle VM VirtualBox hypervisor with Extension Pack support for x86/amd64 virtualization.",
+  "category": "orchestration",
+  "provides": ["virtualbox", "vbox", "virtualization"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": []
+}

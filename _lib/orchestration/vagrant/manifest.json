@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "vagrant",
+  "title": "Vagrant",
+  "description": "HashiCorp Vagrant development environment and virtual machine manager.",
+  "category": "orchestration",
+  "provides": ["vagrant", "hashicorp-vagrant", "vm-manager"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": []
+}

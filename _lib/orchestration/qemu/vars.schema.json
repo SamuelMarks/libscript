@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/qemu/vars.schema.json",
+  "title": "qemu vars",
+  "description": "Variables for QEMU and KVM virtualization component",
+  "type": "object",
+  "properties": {
+    "QEMU_VERSION": {
+      "type": "string",
+      "description": "Version of QEMU to install (default: latest)",
+      "default": "latest"
+    },
+    "QEMU_INSTALL_METHOD": {
+      "type": "string",
+      "description": "Install method for QEMU (system, brew)",
+      "default": "system"
+    },
+    "QEMU_SETUP_KVM_GROUPS": {
+      "type": "string",
+      "description": "Add current user to kvm and libvirt groups on Linux (1 or 0)",
+      "default": "1"
+    },
+    "QEMU_SETUP_UEFI_FIRMWARE": {
+      "type": "string",
+      "description": "Create standard edk2/OVMF UEFI firmware symlinks in /usr/local/share/qemu (1 or 0)",
+      "default": "1"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/vagrant/vars.schema.json",
+  "title": "vagrant vars",
+  "description": "Variables for HashiCorp Vagrant VM manager",
+  "type": "object",
+  "properties": {
+    "VAGRANT_VERSION": {
+      "type": "string",
+      "description": "Version of Vagrant (default: latest)",
+      "default": "latest"
+    },
+    "VAGRANT_INSTALL_METHOD": {
+      "type": "string",
+      "description": "Install method for Vagrant (system, brew, libscript_native)",
+      "default": "system"
+    },
+    "VAGRANT_INSTALL_LIBVIRT_PLUGIN": {
+      "type": "string",
+      "description": "Install vagrant-libvirt plugin (1 or 0)",
+      "default": "1"
+    }
+  }
+}

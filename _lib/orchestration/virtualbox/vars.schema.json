@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/virtualbox/vars.schema.json",
+  "title": "virtualbox vars",
+  "description": "Variables for Oracle VirtualBox hypervisor component",
+  "type": "object",
+  "properties": {
+    "VIRTUALBOX_VERSION": {
+      "type": "string",
+      "description": "Version of VirtualBox (e.g. 7.0, latest)",
+      "default": "7.0"
+    },
+    "VIRTUALBOX_INSTALL_METHOD": {
+      "type": "string",
+      "description": "Install method for VirtualBox (system, brew)",
+      "default": "system"
+    },
+    "VIRTUALBOX_INSTALL_EXTPACK": {
+      "type": "string",
+      "description": "Install Oracle VM VirtualBox Extension Pack (1 or 0)",
+      "default": "1"
+    }
+  }
+}

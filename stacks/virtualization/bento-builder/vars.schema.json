@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/stacks/virtualization/bento-builder/vars.schema.json",
+  "title": "bento-builder vars",
+  "description": "Variables for Bento builder virtualization environment",
+  "type": "object",
+  "properties": {
+    "BENTO_DIR": {
+      "type": "string",
+      "description": "Path to the local bento repository (default: auto-detected)",
+      "default": ""
+    },
+    "INSTALL_QEMU": {
+      "type": "string",
+      "description": "Install QEMU/KVM virtualization (1 or 0)",
+      "default": "1"
+    },
+    "INSTALL_VIRTUALBOX": {
+      "type": "string",
+      "description": "Install VirtualBox 7.0 and Extension Pack (1 or 0)",
+      "default": "1"
+    },
+    "INSTALL_PACKER": {
+      "type": "string",
+      "description": "Install HashiCorp Packer (1 or 0)",
+      "default": "1"
+    },
+    "INSTALL_VAGRANT": {
+      "type": "string",
+      "description": "Install HashiCorp Vagrant and plugins (1 or 0)",
+      "default": "1"
+    },
+    "INSTALL_IMAGE_TOOLS": {
+      "type": "string",
+      "description": "Install ISO/WIM tools like wimtools, xorriso, 7zip (1 or 0)",
+      "default": "1"
+    }
+  }
+}

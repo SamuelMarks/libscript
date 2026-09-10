@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "bento-builder",
+  "category": "virtualization",
+  "title": "Bento Builder",
+  "description": "Complete virtualization and machine image build stack for Bento (QEMU/KVM, VirtualBox 7.0, Packer, Vagrant, ISO/WIM tools, Ruby).",
+  "provides": ["bento-builder", "bento-environment", "virtualization-builder"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": []
+}

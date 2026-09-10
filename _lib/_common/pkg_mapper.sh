@@ -248,6 +248,66 @@ map_package() {
         *) printf 'tar\n' ;;
       esac
       ;;
+    'packer')
+      case "${PKG_MGR}" in
+        'brew') printf 'packer\n' ;;
+        'winget') printf 'Hashicorp.Packer\n' ;;
+        'choco') printf 'packer\n' ;;
+        'pacman') printf 'packer\n' ;;
+        *) printf 'packer\n' ;;
+      esac
+      ;;
+    'vagrant')
+      case "${PKG_MGR}" in
+        'brew') printf 'vagrant\n' ;;
+        'winget') printf 'Hashicorp.Vagrant\n' ;;
+        'choco') printf 'vagrant\n' ;;
+        'pacman') printf 'vagrant\n' ;;
+        *) printf 'vagrant\n' ;;
+      esac
+      ;;
+    'qemu')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'qemu-system-x86 qemu-system-arm qemu-utils ovmf qemu-efi-aarch64 libvirt-daemon-system libvirt-clients bridge-utils virtinst swtpm swtpm-tools\n' ;;
+        'dnf'|'yum') printf 'qemu-kvm qemu-img edk2-ovmf edk2-aarch64 libvirt virt-install swtpm\n' ;;
+        'pacman') printf 'qemu-desktop edk2-ovmf edk2-arm virt-install libvirt swtpm\n' ;;
+        'brew') printf 'qemu\n' ;;
+        *) printf 'qemu\n' ;;
+      esac
+      ;;
+    'virtualbox')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'virtualbox-7.0\n' ;;
+        'dnf'|'yum') printf 'VirtualBox-7.0\n' ;;
+        'pacman') printf 'virtualbox\n' ;;
+        'brew') printf 'virtualbox\n' ;;
+        'winget') printf 'Oracle.VirtualBox\n' ;;
+        'choco') printf 'virtualbox\n' ;;
+        *) printf 'virtualbox\n' ;;
+      esac
+      ;;
+    'wimtools')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'wimtools\n' ;;
+        'dnf'|'yum') printf 'wimlib-utils\n' ;;
+        'pacman') printf 'wimlib\n' ;;
+        'brew') printf 'wimlib\n' ;;
+        *) printf 'wimtools\n' ;;
+      esac
+      ;;
+    'xorriso')
+      case "${PKG_MGR}" in
+        'apt-get'|'dnf'|'yum'|'pacman'|'brew') printf 'xorriso\n' ;;
+        *) printf 'xorriso\n' ;;
+      esac
+      ;;
+    'swtpm')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'swtpm swtpm-tools\n' ;;
+        'dnf'|'yum'|'pacman') printf 'swtpm\n' ;;
+        *) printf 'swtpm\n' ;;
+      esac
+      ;;
     'unzip')
       case "${PKG_MGR}" in
         'winget') printf 'Info-ZIP.UnZip\n' ;;

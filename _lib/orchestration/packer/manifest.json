@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "packer",
+  "title": "Packer",
+  "description": "HashiCorp Packer multi-platform automated machine image builder.",
+  "category": "orchestration",
+  "provides": ["packer", "hashicorp-packer", "image-builder"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": []
+}
