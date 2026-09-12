@@ -32,7 +32,7 @@ fi
 
 DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 
-VAGRANT_IMAGE_DIR="${VAGRANT_IMAGE_DIR:-debian12}"
+VAGRANT_IMAGE_DIR="${VAGRANT_IMAGE_DIR:-k8s-thw-debian}"
 VAGRANT_N="${VAGRANT_N:-3}"
 (
   cd "${DIR}"'/'"${VAGRANT_IMAGE_DIR}" || exit 1

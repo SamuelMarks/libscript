@@ -1,10 +1,11 @@
 #!/bin/sh
 # ## Overview
-# Updates the Supported Components table in README.md with test results from tests_tmp/,
-# and updates task completion in TODO_PLAN.md if present.
+# Updates the Supported Components table in README.md (or custom output file)
+# with test results from tests_tmp/, updates task completion in TODO_PLAN.md if present,
+# and optionally exports an aggregated JSON test results matrix.
 #
 # ## Usage
-# ./tests/update_results.sh [REPO_ROOT]
+# ./tests/update_results.sh [REPO_ROOT] [--output <markdown_file>] [--json [json_file]] [--help]
 
 set -eu
 
@@ -28,14 +29,41 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 THIS_DIR="${SCRIPT_DIR}"
 : "${THIS_DIR}"
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-REPO_ROOT="${1:-${LIBSCRIPT_ROOT_DIR}}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
+' "$d")}"
+REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
+
+# ## show_help
+# Displays usage instructions and supported CLI parameters.
+show_help() {
+  printf '%s
+' "Usage: $(basename "$THIS_FILE") [REPO_ROOT] [--output <markdown_file>] [--json [json_file]] [--help]"
+  printf '%s
+' ""
+  printf '%s
+' "Aggregates test result marker files (*.success, *.failure) from tests_tmp/"
+  printf '%s
+' "and updates the Supported Components table in README.md."
+  printf '%s
+' ""
+  printf '%s
+' "Options:"
+  printf '%s
+' "  REPO_ROOT              Target repository root path (default: auto-detected)."
+  printf '%s
+' "  --output <file>        Custom markdown file to update (default: README.md)."
+  printf '%s
+' "  --json [json_file]     Export matrix results as JSON (default: tests_tmp/matrix_results.json)."
+  printf '%s
+' "  --help, -h, /?         Show this help message."
+}
 
 # ## update_supported_components
-# Discovers components, aggregates test results from tests_tmp/, and updates README.md.
+# Discovers components, aggregates test results from tests_tmp/, updates Markdown file and JSON export.
 update_supported_components() {
   _repo_root="$1"
-  _readme_file="${_repo_root}/README.md"
+  _readme_file="$2"
+  _json_file="$3"
   _tests_tmp_dir="${_repo_root}/tests_tmp"
 
   if [ ! -d "${_repo_root}/_lib" ]; then
@@ -43,6 +71,12 @@ update_supported_components() {
   fi
 
   _tmp_table=$(mktemp "${TMPDIR:-/tmp}/components_table.XXXXXX")
+  _tmp_json=""
+  if [ -n "${_json_file}" ]; then
+    _tmp_json=$(mktemp "${TMPDIR:-/tmp}/components_json.XXXXXX")
+    printf '[
+' >"${_tmp_json}"
+  fi
 
   cat <<'TABLE_HDR' >"${_tmp_table}"
 ## Supported Components
@@ -53,6 +87,7 @@ TABLE_HDR
 
   # Discover components under _lib/<cat>/<comp> excluding dirs starting with '_'
   _components=$(cd "${_repo_root}" && find _lib -mindepth 2 -maxdepth 2 -type d ! -path "_lib/_*" ! -name "_*" 2>/dev/null | sed 's|.*/||' | sort -u)
+  _first_json_entry=1
 
   for _comp in ${_components}; do
     [ -z "${_comp}" ] && continue
@@ -70,12 +105,18 @@ TABLE_HDR
     _freebsd_status="-"
 
     if [ -n "${_existing_line}" ]; then
-      _e_apk=$(printf '%s\n' "${_existing_line}" | awk -F'|' '{print $3}' | tr -d ' ')
-      _e_deb=$(printf '%s\n' "${_existing_line}" | awk -F'|' '{print $4}' | tr -d ' ')
-      _e_rpm=$(printf '%s\n' "${_existing_line}" | awk -F'|' '{print $5}' | tr -d ' ')
-      _e_win=$(printf '%s\n' "${_existing_line}" | awk -F'|' '{print $6}' | tr -d ' ')
-      _e_sunos=$(printf '%s\n' "${_existing_line}" | awk -F'|' '{print $7}' | tr -d ' ')
-      _e_freebsd=$(printf '%s\n' "${_existing_line}" | awk -F'|' '{print $8}' | tr -d ' ')
+      _e_apk=$(printf '%s
+' "${_existing_line}" | awk -F'|' '{print $3}' | tr -d ' ')
+      _e_deb=$(printf '%s
+' "${_existing_line}" | awk -F'|' '{print $4}' | tr -d ' ')
+      _e_rpm=$(printf '%s
+' "${_existing_line}" | awk -F'|' '{print $5}' | tr -d ' ')
+      _e_win=$(printf '%s
+' "${_existing_line}" | awk -F'|' '{print $6}' | tr -d ' ')
+      _e_sunos=$(printf '%s
+' "${_existing_line}" | awk -F'|' '{print $7}' | tr -d ' ')
+      _e_freebsd=$(printf '%s
+' "${_existing_line}" | awk -F'|' '{print $8}' | tr -d ' ')
 
       [ -n "${_e_apk}" ] && _apk_status="${_e_apk}"
       [ -n "${_e_deb}" ] && _deb_status="${_e_deb}"
@@ -130,9 +171,36 @@ TABLE_HDR
     fi
 
     # shellcheck disable=SC2016
-    printf '| `%s` | %s | %s | %s | %s | %s | %s |\n' \
-      "${_comp}" "${_apk_status}" "${_deb_status}" "${_rpm_status}" "${_win_status}" "${_sunos_status}" "${_freebsd_status}" >>"${_tmp_table}"
+    printf '| `%s` | %s | %s | %s | %s | %s | %s |\n' "${_comp}" "${_apk_status}" "${_deb_status}" "${_rpm_status}" "${_win_status}" "${_sunos_status}" "${_freebsd_status}" >>"${_tmp_table}"
+
+    if [ -n "${_tmp_json}" ]; then
+      if [ "${_first_json_entry}" -eq 1 ]; then
+        _first_json_entry=0
+      else
+        printf ',
+' >>"${_tmp_json}"
+      fi
+      cat <<JSON_ROW >>"${_tmp_json}"
+  {
+    "component": "${_comp}",
+    "apk": "${_apk_status}",
+    "deb": "${_deb_status}",
+    "rpm": "${_rpm_status}",
+    "windows": "${_win_status}",
+    "sunos": "${_sunos_status}",
+    "freebsd": "${_freebsd_status}"
+  }
+JSON_ROW
+    fi
   done
+
+  if [ -n "${_tmp_json}" ]; then
+    printf '
+]
+' >>"${_tmp_json}"
+    mkdir -p "$(dirname "${_json_file}")"
+    mv "${_tmp_json}" "${_json_file}"
+  fi
 
   if [ -f "${_readme_file}" ]; then
     _tmp_readme=$(mktemp "${TMPDIR:-/tmp}/readme_update.XXXXXX")
@@ -162,9 +230,11 @@ TABLE_HDR
     else
       {
         cat "${_readme_file}"
-        printf '\n'
+        printf '
+'
         cat "${_tmp_table}"
-        printf '\n'
+        printf '
+'
       } >"${_tmp_readme}"
       mv "${_tmp_readme}" "${_readme_file}"
     fi
@@ -198,7 +268,8 @@ update_todo_plan() {
         fi
         ;;
       *)
-        printf '%s\n' "${_line}" >>"${_tmp_todo}"
+        printf '%s
+' "${_line}" >>"${_tmp_todo}"
         ;;
     esac
   done <"${_todo_file}"
@@ -206,5 +277,47 @@ update_todo_plan() {
   mv "${_tmp_todo}" "${_todo_file}"
 }
 
-update_supported_components "${REPO_ROOT}"
-update_todo_plan "${REPO_ROOT}"
+# ## main
+# Parses command-line flags and invokes update functions.
+main() {
+  _repo="${REPO_ROOT}"
+  _output=""
+  _json=""
+
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --help|-h|/\?|-\?)
+        show_help
+        exit 0
+        ;;
+      --output)
+        _output="$2"
+        shift 2
+        ;;
+      --json)
+        if [ $# -gt 1 ] && [ "$(printf '%s' "$2" | cut -c1-2)" != "--" ]; then
+          _json="$2"
+          shift 2
+        else
+          _json="${_repo}/tests_tmp/matrix_results.json"
+          shift
+        fi
+        ;;
+      *)
+        if [ -d "$1" ]; then
+          _repo="$1"
+        fi
+        shift
+        ;;
+    esac
+  done
+
+  if [ -z "${_output}" ]; then
+    _output="${_repo}/README.md"
+  fi
+
+  update_supported_components "${_repo}" "${_output}" "${_json}"
+  update_todo_plan "${_repo}"
+}
+
+main "$@"

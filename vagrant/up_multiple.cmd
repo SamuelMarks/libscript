@@ -38,7 +38,7 @@ set "DIR=%~dp0"
 :: Remove trailing backslash if present
 if "%DIR:~-1%"=="\" set "DIR=%DIR:~0,-1%"
 
-if not defined VAGRANT_IMAGE_DIR set "VAGRANT_IMAGE_DIR=debian12"
+if not defined VAGRANT_IMAGE_DIR set "VAGRANT_IMAGE_DIR=k8s-thw-debian"
 if not defined VAGRANT_N set "VAGRANT_N=3"
 
 pushd "%DIR%\%VAGRANT_IMAGE_DIR%" || (

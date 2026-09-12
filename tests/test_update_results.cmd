@@ -100,6 +100,37 @@ if errorlevel 1 (
     exit /b 1
 )
 
+:: Verification 5: FreeBSD success and custom output + JSON export
+type nul > "%TEST_TMP%\tests_tmp\compA.freebsd.success"
+copy /Y "%TEST_TMP%\README.md" "%TEST_TMP%\CUSTOM_REPORT.md" >nul
+
+call "%REPO_ROOT%\tests\update_results.cmd" "%TEST_TMP%" --output "%TEST_TMP%\CUSTOM_REPORT.md" --json "%TEST_TMP%\tests_tmp\matrix_results.json"
+if errorlevel 1 (
+    echo [ERROR] update_results.cmd failed with custom output/json flags
+    rmdir /s /q "%TEST_TMP%" >nul 2>&1
+    exit /b 1
+)
+
+findstr /c:"compA" "%TEST_TMP%\CUSTOM_REPORT.md" >nul 2>&1
+if errorlevel 1 (
+    echo [ERROR] compA not found in CUSTOM_REPORT.md
+    rmdir /s /q "%TEST_TMP%" >nul 2>&1
+    exit /b 1
+)
+
+if not exist "%TEST_TMP%\tests_tmp\matrix_results.json" (
+    echo [ERROR] matrix_results.json was not generated
+    rmdir /s /q "%TEST_TMP%" >nul 2>&1
+    exit /b 1
+)
+
+findstr /c:"\"component\": \"compA\"" "%TEST_TMP%\tests_tmp\matrix_results.json" >nul 2>&1
+if errorlevel 1 (
+    echo [ERROR] compA not found in matrix_results.json
+    rmdir /s /q "%TEST_TMP%" >nul 2>&1
+    exit /b 1
+)
+
 rmdir /s /q "%TEST_TMP%" >nul 2>&1
 echo All tests in test_update_results.cmd passed successfully.
 exit /b 0

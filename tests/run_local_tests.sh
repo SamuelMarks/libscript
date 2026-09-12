@@ -45,7 +45,7 @@ while [ $# -gt 0 ]; do
             echo "                 If no targets are provided, defaults to: databases languages toolchains"
             echo "  all            Run tests across all categories in the _lib directory."
             echo "  --os OS_NAME   The OS environment to use from the vagrant/ folder (default: alpine-3.24)."
-            echo "                 Example: --os debian-13-arm64"
+            echo "                 Example: --os debian-13"
             echo "  --help, -h, /? Show this help message."
             echo ""
             echo "Results are written to the tests_tmp directory."
@@ -105,17 +105,40 @@ done
 
 UNIQUE_TARGETS=$(echo "$EXPANDED_TARGETS" | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ')
 OS_ID=$(echo "$OS_TARGET" | cut -d'-' -f1)
+case "$OS_ID" in
+    alpine) OS_TAG="linux.alpine" ;;
+    debian) OS_TAG="linux.debian" ;;
+    rhel|almalinux|centos|fedora) OS_TAG="linux.rhel" ;;
+    freebsd|bsd) OS_TAG="freebsd" ;;
+    windows) OS_TAG="windows" ;;
+    *) OS_TAG="$OS_ID" ;;
+esac
 
 for target in $UNIQUE_TARGETS; do
     MANIFEST_PATH=$(find "$REPO_ROOT/_lib" -maxdepth 2 -type d -name "$target" -exec echo "{}/manifest.json" \;)
     if [ -f "$MANIFEST_PATH" ]; then
         SUPPORTED=$(awk -v os="$OS_ID" '
         BEGIN { in_bl=0; in_wl=0; has_wl=0; wl_match=0; result="yes" }
-        /"os_blacklist"\s*:/ { in_bl=1; in_wl=0; next }
-        /"os_whitelist"\s*:/ { in_wl=1; in_bl=0; has_wl=1; next }
-        /\]/ { in_bl=0; in_wl=0 }
-        in_bl && $0 ~ "\"" os "\"" { result="no"; exit }
-        in_wl && ($0 ~ "\"" os "\"" || $0 ~ "\"all\"") { wl_match=1 }
+        /"os_blacklist"\s*:/ {
+            in_bl=1; in_wl=0
+            if ($0 ~ "\"" os "\"") { result="no"; exit }
+            if ($0 ~ /\]/) { in_bl=0 }
+            next
+        }
+        /"os_whitelist"\s*:/ {
+            in_wl=1; in_bl=0; has_wl=1
+            if ($0 ~ "\"" os "\"" || $0 ~ "\"all\"") { wl_match=1 }
+            if ($0 ~ /\]/) { in_wl=0 }
+            next
+        }
+        in_bl {
+            if ($0 ~ "\"" os "\"") { result="no"; exit }
+            if ($0 ~ /\]/) { in_bl=0 }
+        }
+        in_wl {
+            if ($0 ~ "\"" os "\"" || $0 ~ "\"all\"") { wl_match=1 }
+            if ($0 ~ /\]/) { in_wl=0 }
+        }
         END { if (result == "yes" && has_wl && !wl_match) { result="no" }; print result }
         ' "$MANIFEST_PATH")
         if [ "$SUPPORTED" = "no" ]; then
@@ -140,10 +163,10 @@ for target in $UNIQUE_TARGETS; do
     vagrant destroy -f >/dev/null 2>&1 || true
     sleep 2
     
-    stdout_file="$TESTS_TMP_DIR/$target.linux.$OS_ID.stdout"
-    stderr_file="$TESTS_TMP_DIR/$target.linux.$OS_ID.stderr"
-    success_file="$TESTS_TMP_DIR/$target.linux.$OS_ID.success"
-    failure_file="$TESTS_TMP_DIR/$target.linux.$OS_ID.failure"
+    stdout_file="$TESTS_TMP_DIR/$target.$OS_TAG.stdout"
+    stderr_file="$TESTS_TMP_DIR/$target.$OS_TAG.stderr"
+    success_file="$TESTS_TMP_DIR/$target.$OS_TAG.success"
+    failure_file="$TESTS_TMP_DIR/$target.$OS_TAG.failure"
     
     rm -f "$success_file" "$failure_file"
     

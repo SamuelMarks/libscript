@@ -4,23 +4,75 @@ set "THIS_FILE=%~f0"
 :: # update_results.cmd
 ::
 :: ## Overview
-:: Updates the Supported Components table in README.md with test results from tests_tmp,
-:: and updates task completion in TODO_PLAN.md if present on Windows.
+:: Updates the Supported Components table in README.md (or custom output file)
+:: with test results from tests_tmp, updates component tasks in TODO_PLAN.md if present,
+:: and optionally exports an aggregated JSON test results matrix on Windows.
 ::
 :: ## Usage
-:: tests\update_results.cmd [REPO_ROOT]
+:: tests\update_results.cmd [REPO_ROOT] [--output <markdown_file>] [--json [json_file]] [--help]
 
 set "THIS_DIR=%~dp0"
 if "%THIS_DIR:~-1%"=="" set "THIS_DIR=%THIS_DIR:~0,-1%"
 
-set "REPO_ROOT=%~1"
+set "REPO_ROOT="
+set "OUTPUT_FILE="
+set "JSON_FILE="
+
+:: ## parse_args
+:: Parses command line arguments and switches.
+:parse_args
+if "%~1"=="" goto :done_args
+if /I "%~1"=="--help" goto :show_help
+if /I "%~1"=="-h" goto :show_help
+if /I "%~1"=="/?" goto :show_help
+if /I "%~1"=="-?" goto :show_help
+if /I "%~1"=="--output" (
+    set "OUTPUT_FILE=%~2"
+    shift
+    shift
+    goto :parse_args
+)
+if /I "%~1"=="--json" (
+    if not "%~2"=="" (
+        set "peek=%~2"
+        if not "!peek:~0,2!"=="--" (
+            set "JSON_FILE=%~2"
+            shift
+            shift
+            goto :parse_args
+        )
+    )
+    set "JSON_FILE=default"
+    shift
+    goto :parse_args
+)
+if "%REPO_ROOT%"=="" (
+    set "REPO_ROOT=%~1"
+    shift
+    goto :parse_args
+)
+shift
+goto :parse_args
+
+:: ## done_args
+:: Sets default values for any omitted configuration options.
+:done_args
 if "%REPO_ROOT%"=="" set "REPO_ROOT=%THIS_DIR%\.."
 for %%I in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fI"
 
-set "README_FILE=%REPO_ROOT%\README.md"
+if "%OUTPUT_FILE%"=="" set "OUTPUT_FILE=%REPO_ROOT%\README.md"
+for %%I in ("%OUTPUT_FILE%") do set "OUTPUT_FILE=%%~fI"
+
 set "TESTS_TMP_DIR=%REPO_ROOT%\tests_tmp"
+if "%JSON_FILE%"=="default" set "JSON_FILE=%TESTS_TMP_DIR%\matrix_results.json"
+if defined JSON_FILE (
+    for %%I in ("%JSON_FILE%") do set "JSON_FILE=%%~fI"
+)
+
+set "README_FILE=%OUTPUT_FILE%"
 set "TODO_FILE=%REPO_ROOT%\TODO_PLAN.md"
 set "TMP_TABLE=%TEMP%\components_table_%RANDOM%.tmp"
+set "TMP_JSON=%TEMP%\components_json_%RANDOM%.tmp"
 set "TMP_README=%TEMP%\readme_update_%RANDOM%.tmp"
 set "TMP_TODO=%TEMP%\todo_update_%RANDOM%.tmp"
 
@@ -33,6 +85,11 @@ if not exist "%REPO_ROOT%\_lib" goto :done
     echo.
     echo ^| Component ^| Linux ^(apk^) ^| Linux ^(deb^) ^| Linux ^(rpm^) ^| Windows ^| SunOS ^| FreeBSD ^|
     echo ^|---^|---^|---^|---^|---^|---^|
+)
+
+if defined JSON_FILE (
+    > "%TMP_JSON%" echo [
+    set "FIRST_JSON_ROW=1"
 )
 
 for /d %%C in ("%REPO_ROOT%\_lib\*") do (
@@ -74,25 +131,25 @@ for /d %%C in ("%REPO_ROOT%\_lib\*") do (
                     if exist "%TESTS_TMP_DIR%\!comp_name!.apk.failure" set "apk_status=❌"
 
                     if exist "%TESTS_TMP_DIR%\!comp_name!.linux.debian.success" set "deb_status=✅"
-                    if exist "%TESTS_TMP_DIR%\!comp_name!.linux.ubuntu.success" set "deb_status=✅"
                     if exist "%TESTS_TMP_DIR%\!comp_name!.debian.success" set "deb_status=✅"
                     if exist "%TESTS_TMP_DIR%\!comp_name!.ubuntu.success" set "deb_status=✅"
                     if exist "%TESTS_TMP_DIR%\!comp_name!.deb.success" set "deb_status=✅"
                     if exist "%TESTS_TMP_DIR%\!comp_name!.linux.debian.failure" set "deb_status=❌"
-                    if exist "%TESTS_TMP_DIR%\!comp_name!.linux.ubuntu.failure" set "deb_status=❌"
                     if exist "%TESTS_TMP_DIR%\!comp_name!.debian.failure" set "deb_status=❌"
                     if exist "%TESTS_TMP_DIR%\!comp_name!.ubuntu.failure" set "deb_status=❌"
                     if exist "%TESTS_TMP_DIR%\!comp_name!.deb.failure" set "deb_status=❌"
 
                     if exist "%TESTS_TMP_DIR%\!comp_name!.linux.rhel.success" set "rpm_status=✅"
-                    if exist "%TESTS_TMP_DIR%\!comp_name!.linux.fedora.success" set "rpm_status=✅"
-                    if exist "%TESTS_TMP_DIR%\!comp_name!.linux.almalinux.success" set "rpm_status=✅"
-                    if exist "%TESTS_TMP_DIR%\!comp_name!.linux.centos.success" set "rpm_status=✅"
+                    if exist "%TESTS_TMP_DIR%\!comp_name!.rhel.success" set "rpm_status=✅"
+                    if exist "%TESTS_TMP_DIR%\!comp_name!.fedora.success" set "rpm_status=✅"
+                    if exist "%TESTS_TMP_DIR%\!comp_name!.almalinux.success" set "rpm_status=✅"
+                    if exist "%TESTS_TMP_DIR%\!comp_name!.centos.success" set "rpm_status=✅"
                     if exist "%TESTS_TMP_DIR%\!comp_name!.rpm.success" set "rpm_status=✅"
                     if exist "%TESTS_TMP_DIR%\!comp_name!.linux.rhel.failure" set "rpm_status=❌"
-                    if exist "%TESTS_TMP_DIR%\!comp_name!.linux.fedora.failure" set "rpm_status=❌"
-                    if exist "%TESTS_TMP_DIR%\!comp_name!.linux.almalinux.failure" set "rpm_status=❌"
-                    if exist "%TESTS_TMP_DIR%\!comp_name!.linux.centos.failure" set "rpm_status=❌"
+                    if exist "%TESTS_TMP_DIR%\!comp_name!.rhel.failure" set "rpm_status=❌"
+                    if exist "%TESTS_TMP_DIR%\!comp_name!.fedora.failure" set "rpm_status=❌"
+                    if exist "%TESTS_TMP_DIR%\!comp_name!.almalinux.failure" set "rpm_status=❌"
+                    if exist "%TESTS_TMP_DIR%\!comp_name!.centos.failure" set "rpm_status=❌"
                     if exist "%TESTS_TMP_DIR%\!comp_name!.rpm.failure" set "rpm_status=❌"
 
                     if exist "%TESTS_TMP_DIR%\!comp_name!.windows.success" set "win_status=✅"
@@ -116,9 +173,28 @@ for /d %%C in ("%REPO_ROOT%\_lib\*") do (
                 )
 
                 >> "%TMP_TABLE%" echo ^| `!comp_name!` ^| !apk_status! ^| !deb_status! ^| !rpm_status! ^| !win_status! ^| !sunos_status! ^| !freebsd_status! ^|
+
+                if defined JSON_FILE (
+                    if not "!FIRST_JSON_ROW!"=="1" >> "%TMP_JSON%" echo   ,
+                    set "FIRST_JSON_ROW=0"
+                    >> "%TMP_JSON%" echo   {
+                    >> "%TMP_JSON%" echo     "component": "!comp_name!",
+                    >> "%TMP_JSON%" echo     "apk": "!apk_status!",
+                    >> "%TMP_JSON%" echo     "deb": "!deb_status!",
+                    >> "%TMP_JSON%" echo     "rpm": "!rpm_status!",
+                    >> "%TMP_JSON%" echo     "windows": "!win_status!",
+                    >> "%TMP_JSON%" echo     "sunos": "!sunos_status!",
+                    >> "%TMP_JSON%" echo     "freebsd": "!freebsd_status!"
+                    >> "%TMP_JSON%" echo   }
+                )
             )
         )
     )
+)
+
+if defined JSON_FILE (
+    >> "%TMP_JSON%" echo ]
+    move /y "%TMP_JSON%" "%JSON_FILE%" >nul
 )
 
 if exist "%README_FILE%" (
@@ -156,7 +232,7 @@ if exist "%TODO_FILE%" if exist "%TESTS_TMP_DIR%" (
     (for /f "delims=" %%L in ('findstr /n "^" "%TODO_FILE%"') do (
         set "line=%%L"
         set "line=!line:*:=!"
-        if "!line:~0,6!"=="- [ ] " (
+        if "!line:~0,11!"=="- [ ] _lib/" (
             set "item=!line:~6!"
             for %%P in ("!item!") do set "comp=%%~nxP"
             set "has_result=0"
@@ -179,3 +255,18 @@ if exist "%TMP_TODO%" del "%TMP_TODO%" >nul 2>&1
 :: Executes done functionality.
 :done
 exit /b 0
+
+:: ## show_help
+:: Displays command-line help and parameters.
+:show_help
+echo Usage: %~nx0 [REPO_ROOT] [--output ^<markdown_file^>] [--json [json_file]] [--help]
+echo.
+echo Aggregates test result marker files from tests_tmp and updates
+echo the Supported Components table in README.md.
+echo.
+echo Options:
+echo   REPO_ROOT              Target repository root path (default: auto-detected).
+echo   --output ^<file^>        Custom markdown file to update (default: README.md).
+echo   --json [json_file]     Export matrix results as JSON (default: tests_tmp\matrix_results.json).
+echo   --help, -h, /?         Show this help message.
+endlocal

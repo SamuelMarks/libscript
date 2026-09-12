@@ -4,7 +4,7 @@
 #
 # ## Usage
 # ./run_all_batches.sh [--os <target_os>]
-# Example: ./run_all_batches.sh --os debian-13-arm64
+# Example: ./run_all_batches.sh --os debian-13
 
 set -e
 

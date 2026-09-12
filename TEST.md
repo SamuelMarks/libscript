@@ -71,7 +71,7 @@ infrastructure.
 ### Vagrant Environments
 
 The repository contains several Vagrant configurations representing our target platforms (e.g.,
-Debian, Alpine, AlmaLinux, FreeBSD). You can orchestrate these environments using the main
+Debian 13, Alpine 3.24, FreeBSD 15.1). You can orchestrate these environments using the main
 `libscript` tool:
 
 ```sh
@@ -119,7 +119,7 @@ tests using Vagrant. Currently, we have validated almost every package to build 
 successfully against Alpine Linux. The test scripts (`tests/run_local_tests.sh` and
 `tests/run_local_tests.cmd`) iterate over package categories (or specific targets) and execute a
 provisioned VM test loop (defaulting to Alpine Linux via `vagrant/alpine-3.24/Vagrantfile`, with
-support for other targets like `debian-13-arm64` via the `--os` flag).
+support for other targets like `debian-13` via the `--os` flag).
 
 **Running the Test Suite**
 
@@ -188,6 +188,85 @@ When iterating on a fix for a test failure, it is often faster to temporarily co
 `vagrant destroy -f` lines in `tests/run_local_tests.sh` (or `.cmd`). This leaves the isolated VM
 running after a failure, allowing you to `cd tests_tmp/runs/<target> && vagrant ssh` into the box
 and run the failing install or test commands manually.
+
+## Native Host Testing
+
+For direct, high-performance testing without virtual machine overhead, LibScript provides native
+test runners for both POSIX systems and Windows:
+
+- `tests/run_native_tests.sh` (POSIX `/bin/sh`)
+- `tests/run_native_tests.cmd` (Windows Command Prompt)
+- `tests/run_native_tests.ps1` (PowerShell wrapper)
+
+These runners execute directly on host systems, CI runners, or containerized environments. They
+inspect component manifests for OS compatibility (`os_whitelist` and `os_blacklist`), execute the
+native `./libscript.sh install` / `libscript.cmd install` and `./libscript.sh test` /
+`libscript.cmd test` lifecycle, and capture execution artifacts into `tests_tmp/`.
+
+### Native Testing Usage
+
+POSIX (`/bin/sh`):
+
+```sh
+# Test specific components
+./tests/run_native_tests.sh sqlite curl
+
+# Test by category
+./tests/run_native_tests.sh --category databases
+
+# Run dry-run simulation
+./tests/run_native_tests.sh --dry-run sqlite
+```
+
+Windows (`cmd.exe`):
+
+```cmd
+:: Test specific components
+call tests\run_native_tests.cmd sqlite curl
+
+:: Test by category
+call tests\run_native_tests.cmd --category databases
+
+:: Run dry-run simulation
+call tests\run_native_tests.cmd --dry-run sqlite
+```
+
+## Central Results Reporting
+
+All test runners output marker files into `tests_tmp/`:
+
+- `<component>.<os_tag>.success`: Component passed install and test lifecycle
+- `<component>.<os_tag>.failure`: Component failed either install or test
+
+The `tests/update_results.sh` (POSIX) and `tests/update_results.cmd` (Windows) scripts scan these
+markers and update the root `README.md` compatibility matrix:
+
+| Status Badge | Meaning                                                     |
+| ------------ | ----------------------------------------------------------- |
+| `✅`         | Passed integration and verification tests                   |
+| `❌`         | Failed installation or verification test                    |
+| `❓`         | Untested on this platform                                   |
+| `-`          | Explicitly blacklisted or unsupported in component manifest |
+
+You can also export matrix results as structured JSON:
+
+```sh
+./tests/update_results.sh --json tests_tmp/matrix_results.json
+```
+
+## Multi-Platform Continuous Integration Matrix
+
+The `.github/workflows/multiplatform_tests.yml` workflow orchestrates parallel CI validation across
+our primary operating system targets:
+
+1. **Alpine Linux (`test-alpine`):** Executes in an Alpine 3.21 container.
+2. **Debian Linux (`test-debian`):** Executes on native Ubuntu/Debian runner.
+3. **FreeBSD (`test-freebsd`):** Executes inside a FreeBSD 14 virtual machine via
+   `vmactions/freebsd-vm`.
+4. **Windows (`test-windows`):** Executes on `windows-latest` via Windows Command Prompt.
+5. **Aggregate & Report (`aggregate-and-report`):** Downloads test artifacts from all platform jobs,
+   runs `./tests/update_results.sh` to update `README.md`, verifies the diff, and outputs the
+   aggregate matrix to the GitHub Actions Job Summary.
 
 ## Artifact Verification
 

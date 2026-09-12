@@ -77,6 +77,13 @@ for %%A in (!ARGS!) do (
 
 :: Extract OS_ID for log naming (e.g. alpine from alpine-3.24)
 for /f "tokens=1 delims=-" %%I in ("!OS_TARGET!") do set "OS_ID=%%I"
+set "OS_TAG=!OS_ID!"
+if /I "!OS_ID!"=="alpine" set "OS_TAG=linux.alpine"
+if /I "!OS_ID!"=="debian" set "OS_TAG=linux.debian"
+if /I "!OS_ID!"=="rhel" set "OS_TAG=linux.rhel"
+if /I "!OS_ID!"=="almalinux" set "OS_TAG=linux.rhel"
+if /I "!OS_ID!"=="freebsd" set "OS_TAG=freebsd"
+if /I "!OS_ID!"=="windows" set "OS_TAG=windows"
 
 :: Enumerate targets and test them
 for %%T in (!TARGETS!) do (
@@ -100,10 +107,10 @@ for %%T in (!TARGETS!) do (
         vagrant destroy -f >nul 2>&1
         timeout /t 2 /nobreak >nul
         
-        set "STDOUT_FILE=%TESTS_TMP_DIR%\!TARGET_NAME!.linux.!OS_ID!.stdout"
-        set "STDERR_FILE=%TESTS_TMP_DIR%\!TARGET_NAME!.linux.!OS_ID!.stderr"
-        set "SUCCESS_FILE=%TESTS_TMP_DIR%\!TARGET_NAME!.linux.!OS_ID!.success"
-        set "FAILURE_FILE=%TESTS_TMP_DIR%\!TARGET_NAME!.linux.!OS_ID!.failure"
+        set "STDOUT_FILE=%TESTS_TMP_DIR%\!TARGET_NAME!.!OS_TAG!.stdout"
+        set "STDERR_FILE=%TESTS_TMP_DIR%\!TARGET_NAME!.!OS_TAG!.stderr"
+        set "SUCCESS_FILE=%TESTS_TMP_DIR%\!TARGET_NAME!.!OS_TAG!.success"
+        set "FAILURE_FILE=%TESTS_TMP_DIR%\!TARGET_NAME!.!OS_TAG!.failure"
         
         if exist "!SUCCESS_FILE!" del /f "!SUCCESS_FILE!"
         if exist "!FAILURE_FILE!" del /f "!FAILURE_FILE!"
@@ -143,7 +150,7 @@ echo   TARGETS...     A list of categories (e.g., databases, languages) or speci
 echo                  If no arguments are provided, defaults to: databases languages toolchains
 echo   all            Run tests across all categories in the _lib directory.
 echo   --os OS_NAME   The OS environment to use from the vagrant/ folder (default: alpine-3.24).
-echo                  Example: --os debian-13-arm64
+echo                  Example: --os debian-13
 echo   --help, -h, /? Show this help message.
 echo.
 echo Results are written to the tests_tmp directory.

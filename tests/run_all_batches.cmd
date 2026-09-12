@@ -4,7 +4,7 @@
 ::
 :: ## Usage
 :: run_all_batches.cmd [--os <target_os>]
-:: Example: run_all_batches.cmd --os debian-13-arm64
+:: Example: run_all_batches.cmd --os debian-13
 
 setlocal EnableExtensions EnableDelayedExpansion
 set "THIS_FILE=%~f0"

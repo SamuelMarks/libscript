@@ -137,6 +137,7 @@ standardize_*
 !_lib/_common/test_base.*
 !tests/update_results.*
 !tests/test_update_results.*
+!tests/test_run_native_tests.*
 !tests/test_python_*
 !devtools/docs-gen/generate_markdown_docs.*
 !devtools/generate_html_docs.*
