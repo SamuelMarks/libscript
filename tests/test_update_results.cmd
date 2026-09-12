@@ -16,11 +16,11 @@ set "REPO_ROOT=%THIS_DIR%\.."
 for %%I in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fI"
 
 set "TEST_TMP=%TEMP%\test_update_results_%RANDOM%"
-mkdir "%TEST_TMP%" >nul 2>&1
-mkdir "%TEST_TMP%\_lib\catA\compA" >nul 2>&1
-mkdir "%TEST_TMP%\_lib\catB\compB" >nul 2>&1
-mkdir "%TEST_TMP%\_lib\_common\helper" >nul 2>&1
-mkdir "%TEST_TMP%\tests_tmp" >nul 2>&1
+if not exist "%TEST_TMP%" mkdir "%TEST_TMP%" >nul 2>&1
+if not exist "%TEST_TMP%\_lib\catA\compA" mkdir "%TEST_TMP%\_lib\catA\compA" >nul 2>&1
+if not exist "%TEST_TMP%\_lib\catB\compB" mkdir "%TEST_TMP%\_lib\catB\compB" >nul 2>&1
+if not exist "%TEST_TMP%\_lib\_common\helper" mkdir "%TEST_TMP%\_lib\_common\helper" >nul 2>&1
+if not exist "%TEST_TMP%\tests_tmp" mkdir "%TEST_TMP%\tests_tmp" >nul 2>&1
 
 type nul > "%TEST_TMP%\libscript.sh"
 

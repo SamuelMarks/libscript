@@ -6,5 +6,10 @@ REM ## Usage
 REM Call this script to load the environment variables.
 set "THIS_FILE=%~f0"
 
-IF "%GOOGLE_CLOUD_SDK_VERSION%"=="" SET "GOOGLE_CLOUD_SDK_VERSION=latest"
-SET "PATH=%LIBSCRIPT_HOME%${COMP}\%GOOGLE_CLOUD_SDK_VERSION%\bin;%PATH%"
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+if "%GOOGLE_CLOUD_SDK_VERSION%"=="" (
+    set "GOOGLE_CLOUD_SDK_VERSION=latest"
+)
+set "PATH=%LIBSCRIPT_HOME%\google-cloud-sdk\%GOOGLE_CLOUD_SDK_VERSION%\bin;%PATH%"

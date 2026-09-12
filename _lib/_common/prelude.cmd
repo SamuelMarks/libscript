@@ -11,18 +11,18 @@ setlocal EnableDelayedExpansion
 
 :: Initialize STACK variable
 set "THIS_FILE=%~f0"
-IF NOT DEFINED STACK (
-    SET "STACK=;%~nx0;"
-) ELSE (
-    SET "STACK=%STACK%%~nx0;"
-)
-
-SET "searchVal=;%~nx0;"
-IF NOT "!STACK:%searchVal%=!"=="!STACK!" (
-  echo [STOP]     processing "%~nx0"
-  exit /b 0
+set "searchVal=;%THIS_FILE%;"
+if not defined STACK (
+    set "STACK=;%THIS_FILE%;"
+    echo [CONTINUE] processing "%THIS_FILE%"
 ) else (
-  echo [CONTINUE] processing "%~nx0"
+    if not "!STACK:%searchVal%=!"=="!STACK!" (
+        echo [STOP]     processing "%THIS_FILE%" 1>&2
+        exit /b 0
+    ) else (
+        set "STACK=!STACK!%THIS_FILE%;"
+        echo [CONTINUE] processing "%THIS_FILE%"
+    )
 )
 
 IF NOT DEFINED LIBSCRIPT_ROOT_DIR (

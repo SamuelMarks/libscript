@@ -84,6 +84,8 @@ if "!is_json!"=="1" (
     exit /b 0
 ) else (
     rem Support multiple specific services: libscript.cmd start caddy postgres
+    :: ## loop_services
+    :: Iterates through specified services and triggers background execution.
     :loop_services
     set "pkg=%~2"
     if not "!pkg!"=="" (

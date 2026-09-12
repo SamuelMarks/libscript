@@ -28,11 +28,8 @@ int main(int argc, char **argv) {
         }
     }
     
-    printf("Starting libscript REST API Server on port %d...
-", port);
-    printf("Server running. Press Ctrl+C to stop.
-");
-    printf("Server stopped.
-");
+    printf("Starting libscript REST API Server on port %d...\n", port);
+    printf("Server running. Press Ctrl+C to stop.\n");
+    printf("Server stopped.\n");
     return 0;
 }

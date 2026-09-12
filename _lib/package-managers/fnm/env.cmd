@@ -4,8 +4,12 @@ REM Environment variable initialization script for the fnm component.
 REM 
 REM ## Usage
 REM Call this script to load the environment variables.
-
 set "THIS_FILE=%~f0"
 
-IF "%FNM_VERSION%"=="" SET "FNM_VERSION=latest"
-SET "PATH=%LIBSCRIPT_HOME%${COMP}\%FNM_VERSION%\bin;%PATH%"
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+if "%FNM_VERSION%"=="" (
+    set "FNM_VERSION=latest"
+)
+set "PATH=%LIBSCRIPT_HOME%\fnm\%FNM_VERSION%\bin;%PATH%"

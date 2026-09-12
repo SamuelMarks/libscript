@@ -1,8 +1,12 @@
 @echo off
+:: # uninstall.cmd
+::
 :: ## Overview
-:: Windows uninstall stub for tensorboard
-:: 
+:: Uninstallation entry point for TensorBoard on Windows.
+::
 :: ## Usage
-:: Execute this script to perform removal steps for tensorboard.
+:: Invokes `uninstall_base.cmd` to clean up TensorBoard.
+
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
-if "%ACTION%"=="" set ACTION=uninstall
+call "%~dp0\..\..\_common\uninstall_base.cmd" %*

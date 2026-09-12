@@ -6,5 +6,10 @@ REM ## Usage
 REM Call this script to load the environment variables.
 set "THIS_FILE=%~f0"
 
-IF "%HELM_VERSION%"=="" SET "HELM_VERSION=latest"
-SET "PATH=%LIBSCRIPT_HOME%${COMP}\%HELM_VERSION%\bin;%PATH%"
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+if "%HELM_VERSION%"=="" (
+    set "HELM_VERSION=latest"
+)
+set "PATH=%LIBSCRIPT_HOME%\helm\%HELM_VERSION%\bin;%PATH%"

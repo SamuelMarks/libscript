@@ -6,5 +6,10 @@ REM ## Usage
 REM Call this script to load the environment variables.
 set "THIS_FILE=%~f0"
 
-IF "%GEM_VERSION%"=="" SET "GEM_VERSION=latest"
-SET "PATH=%LIBSCRIPT_HOME%${COMP}\%GEM_VERSION%\bin;%PATH%"
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+if "%GEM_VERSION%"=="" (
+    set "GEM_VERSION=latest"
+)
+set "PATH=%LIBSCRIPT_HOME%\gem\%GEM_VERSION%\bin;%PATH%"

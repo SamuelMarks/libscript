@@ -6,5 +6,10 @@ REM ## Usage
 REM Call this script to load the environment variables.
 set "THIS_FILE=%~f0"
 
-IF "%GUIX_VERSION%"=="" SET "GUIX_VERSION=latest"
-SET "PATH=%LIBSCRIPT_HOME%${COMP}\%GUIX_VERSION%\bin;%PATH%"
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+if "%GUIX_VERSION%"=="" (
+    set "GUIX_VERSION=latest"
+)
+set "PATH=%LIBSCRIPT_HOME%\guix\%GUIX_VERSION%\bin;%PATH%"

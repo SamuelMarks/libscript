@@ -1,8 +1,12 @@
 @echo off
+:: # uninstall.cmd
+::
 :: ## Overview
-:: Windows uninstall stub for duckdb
-:: 
+:: Uninstallation entry point for DuckDB on Windows.
+::
 :: ## Usage
-:: Execute this script to perform removal steps for duckdb.
+:: Invokes `uninstall_base.cmd` to clean up DuckDB.
+
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
-if "%ACTION%"=="" set ACTION=uninstall
+call "%~dp0\..\..\_common\uninstall_base.cmd" %*

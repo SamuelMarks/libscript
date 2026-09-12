@@ -6,5 +6,10 @@ REM ## Usage
 REM Call this script to load the environment variables.
 set "THIS_FILE=%~f0"
 
-IF "%HATCH_VERSION%"=="" SET "HATCH_VERSION=latest"
-SET "PATH=%LIBSCRIPT_HOME%${COMP}\%HATCH_VERSION%\bin;%PATH%"
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+if "%HATCH_VERSION%"=="" (
+    set "HATCH_VERSION=latest"
+)
+set "PATH=%LIBSCRIPT_HOME%\hatch\%HATCH_VERSION%\bin;%PATH%"

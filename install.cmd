@@ -197,5 +197,7 @@ IF "%WWWROOT_example_com_INSTALL%"=="1" (
 
 ENDLOCAL
 
+:: ## end
+:: Exits the script with the current ERRORLEVEL.
 :end
 @%COMSPEC% /C exit %ERRORLEVEL% >nul
