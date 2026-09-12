@@ -6,15 +6,10 @@
 # Refer to the internal functions of merge_location_into_server.sh for implementation details.
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -52,7 +47,15 @@ merge_location_into_server() {
   fi
 
   LOCK_FILE="${EXISTING_CONFIG}.lock.dir"
+  _lock_retries=0
   while ! mkdir "$LOCK_FILE" 2>/dev/null; do
+    _lock_retries=$((_lock_retries + 1))
+    if [ "$_lock_retries" -gt 50 ]; then
+      rmdir "$LOCK_FILE" 2>/dev/null || rm -rf "$LOCK_FILE" 2>/dev/null || true
+      mkdir "$LOCK_FILE" 2>/dev/null && break
+      printf 'Error: Lock acquisition timeout for %s\n' "$LOCK_FILE" >&2
+      return 1
+    fi
     sleep 0.1
   done
 

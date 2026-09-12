@@ -1,15 +1,15 @@
 #!/bin/sh
+# ## Overview
+# Shared command-line dispatch and routing logic for LibScript components.
+#
+# ## Usage
+# Sourced by component cli.sh scripts to handle standard verbs.
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -25,12 +25,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 # # LibScript CLI Utility Module (POSIX)
 #
-# ## Overview
-# This module provides reusable CLI utilities for LibScript components,
-# primarily focused on consistent argument parsing and standardized output.
-#
-# ## Usage
-# Source this script in your component's `cli.sh`.
 #
 # ```sh
 # . "$LIBSCRIPT_ROOT_DIR/_lib/_common/cli.sh"

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/stacks/ml-training/tpu-vm-eval-node/vars.schema.json",
+  "title": "tpu-vm-eval-node vars",
+  "description": "Variables for Cloud TPU VM Evaluation and Training Node",
+  "type": "object",
+  "properties": {
+    "TPU_NAME": {
+      "type": "string",
+      "description": "Name of the TPU VM instance",
+      "default": "ml-eval-node"
+    },
+    "GCP_PROJECT_ID": {
+      "type": "string",
+      "description": "Google Cloud Project ID where the TPU VM is provisioned",
+      "default": ""
+    },
+    "TPU_ZONE": {
+      "type": "string",
+      "description": "Google Cloud Zone for the TPU VM (e.g. us-central2-b)",
+      "default": ""
+    },
+    "TPU_ACCELERATOR_TYPE": {
+      "type": "string",
+      "description": "TPU accelerator version and topology (e.g. v4-8)",
+      "default": "v4-8"
+    },
+    "TPU_DATA_DISK_SIZE": {
+      "type": "string",
+      "description": "Persistent data disk size in GB attached to the TPU VM",
+      "default": "200"
+    },
+    "BUCKET_NAME": {
+      "type": "string",
+      "description": "GCS bucket mounted via Cloud Storage FUSE for datasets and checkpoints",
+      "default": ""
+    },
+    "ML_SCRIPT": {
+      "type": "string",
+      "description": "Evaluation or training command to execute on the TPU VM",
+      "default": "python train.py"
+    }
+  }
+}

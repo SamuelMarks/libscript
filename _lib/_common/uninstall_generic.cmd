@@ -10,10 +10,17 @@
 :: Typically called internally by uninstall.cmd.
 
 setlocal EnableDelayedExpansion
+set "CALLER_FILE=%THIS_FILE%"
 set "THIS_FILE=%~f0"
 
-for %%I in ("%~dp0..\..") do set "COMP_DIR=%%~fI"
-for %%I in ("%COMP_DIR%") do set "COMPONENT_NAME=%%~nxI"
+set "COMPONENT_NAME=%PACKAGE_NAME%"
+if "%COMPONENT_NAME%"=="" if not "%CALLER_FILE%"=="" (
+    for %%I in ("%CALLER_FILE%\..") do set "COMP_DIR=%%~fI"
+    for %%I in ("!COMP_DIR!") do set "COMPONENT_NAME=%%~nxI"
+)
+if "%COMPONENT_NAME%"=="" (
+    for %%I in ("%CD%") do set "COMPONENT_NAME=%%~nxI"
+)
 
 :: Very basic placeholder logic for Windows native uninstall
 if not "%VERSION%"=="" (

@@ -12,11 +12,7 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -44,6 +40,8 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
   exit 0
 fi
 
+# ## check_gcsfuse
+# Verifies that gcsfuse binary is installed and available in PATH.
 check_gcsfuse() {
   if ! command -v gcsfuse >/dev/null 2>&1; then
     if [ -x "${LIBSCRIPT_ROOT_DIR}/installed/gcsfuse/bin/gcsfuse" ]; then

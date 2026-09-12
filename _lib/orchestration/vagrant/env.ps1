@@ -1,4 +1,7 @@
 # ## Overview
+#
+# ## Usage
+# Execute via PowerShell.
 # PowerShell env script for Vagrant.
 
 $LibscriptHome = $env:LIBSCRIPT_HOME

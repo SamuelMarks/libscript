@@ -27,7 +27,7 @@ Vagrant.configure("2") do |config|
     end
 
     t.ssh.insert_key = true
-    t.ssh.shell = "/bin/bash"
+    t.ssh.shell = "/bin/sh"
     t.vm.allowed_synced_folder_types = [:rsync]
 
     # Sync the repository root directory

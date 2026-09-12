@@ -6,15 +6,10 @@
 # Sets up version and PATH.
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi

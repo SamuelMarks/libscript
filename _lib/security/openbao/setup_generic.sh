@@ -6,15 +6,10 @@
 # Execute this script to perform generic initialization steps for openbao.
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -125,7 +120,7 @@ case "$ACTION" in
       libscript_symlink_alias "openbao" "default" "${EXACT_VERSION}"
       log_info "Set default openbao version to ${EXACT_VERSION}."
       log_info "To apply to the current shell, run:"
-      log_info "  eval \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env openbao \"$VERSION\")"
+      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env openbao \"$VERSION\")"
     fi
     exit 0
     ;;

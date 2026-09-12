@@ -6,15 +6,10 @@
 # Source this file and call libscript_volume_create, libscript_volume_delete, etc.
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -62,7 +57,7 @@ libscript_volume_create() {
       else
         cmd="$cmd --tag-specifications \"ResourceType=volume,Tags=[{Key=Name,Value=$vname}]\""
       fi
-      eval "$cmd"
+      sh -c "$cmd"
       ;;
     gcp)
       vtype="${vtype:-pd-standard}"
@@ -76,7 +71,7 @@ libscript_volume_create() {
       if [ "$LIBSCRIPT_TAG_ENABLE" = "true" ]; then
         cmd="$cmd --labels=\"$LIBSCRIPT_TAG_KEY=$LIBSCRIPT_TAG_VALUE\""
       fi
-      eval "$cmd"
+      sh -c "$cmd"
       ;;
     azure)
       vtype="${vtype:-Standard_LRS}"
@@ -95,7 +90,7 @@ libscript_volume_create() {
       if [ "$LIBSCRIPT_TAG_ENABLE" = "true" ]; then
         cmd="$cmd --tags \"$LIBSCRIPT_TAG_KEY=$LIBSCRIPT_TAG_VALUE\""
       fi
-      eval "$cmd"
+      sh -c "$cmd"
       ;;
   esac
 }

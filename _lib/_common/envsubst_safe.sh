@@ -12,15 +12,10 @@
 
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -39,6 +34,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # env -i BAR='haz'   "FOO ${BAR} CAN" -> "FOO haz CAN"
 # env -i             "FOO ${BAR} CAN" -> "FOO ${BAR} CAN"
 # recommend using within a `clear_environment` (`env -i`); see my `environ.sh`
+# ## envsubst_safe
+# Executes safe environment substitution without eval or subshell vulnerabilities.
 envsubst_safe() {
   # Read input from file, argument, or stdin
   if [ "$#" -gt 0 ] && [ -n "${1}" ]; then
@@ -56,7 +53,7 @@ envsubst_safe() {
     fi
   fi
 
-  awk_script=$(cat << 'EOF_AWK'
+  awk_script='
   BEGIN {
       for (name in ENVIRON) {
           env[name] = ENVIRON[name]
@@ -101,9 +98,7 @@ envsubst_safe() {
           pos++
       }
       print line
-  }
-EOF_AWK
-  )
+  }'
   if [ -n "${input_file:-}" ]; then
     awk -- "${awk_script}" "${input_file}"
   else

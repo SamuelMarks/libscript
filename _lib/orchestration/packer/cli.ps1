@@ -1,5 +1,8 @@
 # ## Overview
 # PowerShell script for cli.ps1 for Packer.
+#
+# ## Usage
+# Execute via PowerShell.
 
 $ErrorActionPreference = "Stop"
 

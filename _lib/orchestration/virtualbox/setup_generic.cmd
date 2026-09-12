@@ -1,6 +1,12 @@
 @echo off
+:: # setup_generic.cmd
+::
 :: ## Overview
-:: Windows setup for Oracle VirtualBox
+:: Generic setup and installation script for VirtualBox on Windows.
+::
+:: ## Usage
+:: Call this script to install VirtualBox on Windows.
+
 set "THIS_FILE=%~f0"
 
 if "%ACTION%"=="" set ACTION=install

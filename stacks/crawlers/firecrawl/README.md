@@ -59,11 +59,26 @@ libscript package-as docker firecrawl
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
 running the setup script.
 
-| Variable              | Description                                                      | Default | Aliases |
-| --------------------- | ---------------------------------------------------------------- | ------- | ------- |
-| `FIRECRAWL_BUILD_DIR` | Build dir                                                        | `none`  | ``      |
-| `FIRECRAWL_DEST`      | Dest to clone/pull firecrawl into                                | `none`  | ``      |
-| `PYTHON_VENV`         | Python virtualenv to install & then start the celery daemon from | `none`  | ``      |
+<!-- BEGIN_VARS -->
+
+| Variable                 | Description                                                             | Default             | Aliases/Examples |
+| ------------------------ | ----------------------------------------------------------------------- | ------------------- | ---------------- |
+| `FIRECRAWL_BUILD_DIR`    | Build dir                                                               | `none`              |                  |
+| `FIRECRAWL_DEST`         | Dest to clone                                                           | pull firecrawl into | `none`           |     |
+| `PYTHON_VENV`            | Python virtualenv to install & then start the celery daemon from        | `none`              |                  |
+| `PREFIX`                 | Installation prefix.                                                    | `none`              |                  |
+| `LIBSCRIPT_LOG_DRIVER`   | Logging driver to use (e.g., fluentd).                                  | `none`              |                  |
+| `LIBSCRIPT_LOG_HOST`     | Host for remote logging.                                                | `none`              |                  |
+| `BUILD_DIR`              | Variable BUILD_DIR.                                                     | `none`              |                  |
+| `LIBSCRIPT_LOG_PORT`     | Port for remote logging.                                                | `none`              |                  |
+| `FORMAT`                 | Output format (e.g., json, text).                                       | `none`              |                  |
+| `LOGS_DIR`               | Directory where logs should be stored.                                  | `none`              |                  |
+| `SERVE_FROM`             | Base directory or context path from which the service should be served. | `none`              |                  |
+| `LIBSCRIPT_VERSION`      | Specifies the version of the package to use.                            | `none`              |                  |
+| `VAULT_TOKEN`            | Token for HashiCorp Vault authentication.                               | `none`              |                  |
+| `LIBSCRIPT_SERVICE_NAME` | Overrides the default service name.                                     | `none`              |                  |
+
+<!-- END_VARS -->
 
 ## Architecture
 
@@ -73,18 +88,28 @@ running the setup script.
   correctly.
 - `vars.schema.json`: The schema definition for the CLI arguments.
 
-## Variables
+## Configuration Options
 
-See `vars.schema.json` for details on available variables.
+The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
+running the setup script.
+
+<!-- BEGIN_VARS -->
+<!-- END_VARS -->
 
 ## Platform Support
+
+<!-- BEGIN_PLATFORMS -->
 
 - Linux
 - macOS
 - Windows
 
+<!-- END_PLATFORMS -->
+
 ## Orchestrated Components
 
 This stack orchestrates the following LibScript components:
 
-- (Please document required components here)
+- `_lib/languages/nodejs`: Node.js execution runtime for API and crawler services
+- `_lib/languages/python`: Python runtime for extraction pipelines
+- `_lib/caches/redis`: Redis queue and task state backend

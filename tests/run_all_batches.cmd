@@ -13,6 +13,8 @@ set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 set "OS_TARGET=alpine-3.24"
 
+:: ## parse_args
+:: Executes parse_args functionality.
 :parse_args
 if "%~1"=="" goto end_parse_args
 if /i "%~1"=="--help" (
@@ -35,6 +37,8 @@ if /i "%~1"=="--os" (
 )
 echo Unknown option: %~1
 exit /b 1
+:: ## end_parse_args
+:: Executes end_parse_args functionality.
 :end_parse_args
 
 cd /d "%SCRIPT_DIR%\.." || exit /b 1
@@ -50,6 +54,8 @@ if not exist "TODO_PLAN.md" (
     )
 )
 
+:: ## loop
+:: Executes loop functionality.
 :loop
 for /f "delims=" %%I in ('call "%SCRIPT_DIR%\run_next_batch.cmd"') do set "BATCH=%%I"
 if "!BATCH!"=="" (
@@ -76,4 +82,6 @@ if not "!NEW_BATCH!"=="" (
 )
 
 goto loop
+:: ## end_loop
+:: Executes end_loop functionality.
 :end_loop

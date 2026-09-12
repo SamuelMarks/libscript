@@ -12,6 +12,8 @@ set "THIS_FILE=%~f0"
 set "OS_TARGET=alpine-3.24"
 set "ARGS="
 
+:: ## parse_args
+:: Executes parse_args functionality.
 :parse_args
 if "%~1"=="" goto :done_args
 if /I "%~1"=="--help" goto :show_help
@@ -27,6 +29,8 @@ set "ARGS=!ARGS! %1"
 shift
 goto :parse_args
 
+:: ## done_args
+:: Executes done_args functionality.
 :done_args
 
 set "THIS_DIR=%~dp0"
@@ -124,6 +128,8 @@ for %%T in (!TARGETS!) do (
 echo All tests complete. Results are in %TESTS_TMP_DIR%.
 goto :eof
 
+:: ## show_help
+:: Executes show_help functionality.
 :show_help
 :: ## show_help
 :: Executes show_help functionality.

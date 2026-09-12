@@ -6,15 +6,10 @@
 # Handles libscript_native installation (using python's venv) as well as delegation.
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -102,7 +97,7 @@ case "$ACTION" in
       libscript_symlink_alias "jetstream" "default" "${EXACT_VERSION}"
       log_info "Set default jetstream version to ${EXACT_VERSION}."
       log_info "To apply to the current shell, run:"
-      log_info "  eval \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env jetstream \"$VERSION\")"
+      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env jetstream \"$VERSION\")"
     fi
     exit 0
     ;;
@@ -153,7 +148,7 @@ case "$ACTION" in
             git clone https://github.com/google/JetStream.git "${JETSTREAM_SRC_DIR}"
         else
             log_info "Jetstream source already present, pulling latest..."
-            (cd "${JETSTREAM_SRC_DIR}" && git fetch --all && git reset --hard @{upstream})
+            (cd "${JETSTREAM_SRC_DIR}" && git fetch --all && git reset --hard '@{upstream}')
         fi
         
         if [ "$EXACT_VERSION" != "latest" ]; then

@@ -88,7 +88,7 @@ configuration (like connection strings, generated passwords, or default ports).
 ./libscript.sh info postgres 18
 
 # Source the component's environment variables (including dynamic ones like DATABASE_URL)
-eval $(./libscript.sh env postgres 18)
+. ./_lib/databases/postgres/env.sh
 
 # Output environment variables in specific formats (docker, docker_compose, powershell, cmd, json)
 FORMAT=json ./libscript.sh env postgres 18

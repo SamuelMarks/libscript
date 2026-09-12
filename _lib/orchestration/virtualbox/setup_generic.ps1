@@ -1,4 +1,7 @@
 # ## Overview
+#
+# ## Usage
+# Execute via PowerShell.
 # PowerShell setup_generic script for VirtualBox on Windows.
 
 $ErrorActionPreference = "Stop"

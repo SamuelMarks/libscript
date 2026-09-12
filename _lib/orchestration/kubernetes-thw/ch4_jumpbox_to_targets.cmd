@@ -15,6 +15,8 @@ if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 :: Traverse up to find libscript.cmd
 set "d=%SCRIPT_DIR%"
+:: ## find_root
+:: Executes find_root functionality.
 :find_root
 if exist "%d%\libscript.cmd" (
     set "LIBSCRIPT_ROOT_DIR=%d%"
@@ -28,6 +30,8 @@ if "%d%"=="%parent%" (
 )
 set "d=%parent%"
 goto find_root
+:: ## root_found
+:: Executes root_found functionality.
 :root_found
 set "DIR=%SCRIPT_DIR%"
 

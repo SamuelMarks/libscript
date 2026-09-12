@@ -2,10 +2,15 @@
 :: # env.cmd
 ::
 :: ## Overview
-:: Internal script for cpp on Windows.
+:: Environment initialization for CPP on Windows.
 ::
 :: ## Usage
-:: Executes initialization, logic, or testing for cpp.
+:: Sets up default environment variables for CPP.
 
-:: Windows env stub for cpp
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+
+if "%CPP_INSTALL_METHOD%"=="" set "CPP_INSTALL_METHOD=system"
+if "%CPP_VERSION%"=="" set "CPP_VERSION=latest"
+if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+set "PATH=%LIBSCRIPT_HOME%\cpp\%CPP_VERSION%\bin;%PATH%"

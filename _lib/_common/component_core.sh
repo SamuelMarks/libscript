@@ -1,26 +1,4 @@
 #!/bin/sh
-
-set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
-if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
-else
-  THIS_FILE="${0}"
-fi
-
-case "${STACK+x}" in
-  *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
-esac
-export STACK="${STACK:-}${THIS_FILE}"':'
 # # LibScript Component Core Module
 #
 # ## Overview
@@ -47,6 +25,23 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 # - A `vars.schema.json` in the component directory for dynamic argument parsing.
 # - A `setup.sh` in the component directory for installation logic.
 
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+
 
 # Identify directories
 COMP_DIR="${SCRIPT_DIR:-$(cd "$(dirname -- "${THIS_FILE}")" && pwd)}"
@@ -54,19 +49,19 @@ SCRIPT_DIR="${SCRIPT_DIR:-$(cd "$(dirname -- "${THIS_FILE}")" && pwd)}"
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-# Source logging
-. "$LIBSCRIPT_ROOT_DIR/_lib/_common/log.sh"
-
-# Source service management
-. "$LIBSCRIPT_ROOT_DIR/_lib/_common/service.sh"
-
-# Source environment printer
-. "$LIBSCRIPT_ROOT_DIR/_lib/_common/env_printer.sh"
+# Source common libraries
+for LIB in "_lib/_common/log.sh" "_lib/_common/service.sh" "_lib/_common/env_printer.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${LIB}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+done
 
 SCHEMA_FILE="$COMP_DIR/vars.schema.json"
 MANIFEST_FILE="$COMP_DIR/manifest.json"
 BASE_SCHEMA_FILE="$LIBSCRIPT_ROOT_DIR/_lib/_common/base_vars.schema.json"
 
+# ## get_merged_properties
 # Utility function to get the merged schema properties
 get_merged_properties() {
   if [ -f "$SCHEMA_FILE" ] && [ -f "$BASE_SCHEMA_FILE" ]; then
@@ -336,14 +331,15 @@ if [ "${LIBSCRIPT_SKIP_DEPENDENCIES:-}" != "1" ] && { [ "$ACTION" = "install" ] 
     if [ -n "$_deps" ]; then
       printf '%s\n' "$_deps" | while IFS='|' read -r dep_key dep_default; do
         [ -z "$dep_key" ] && continue
-        eval "dep_val=\"\${$dep_key:-}\""
+        dep_val="$(printenv "$dep_key" 2>/dev/null || true)"
         if [ -z "$dep_val" ]; then
           dep_val="$dep_default"
           export "$dep_key"="$dep_val"
         fi
         [ -z "$dep_val" ] && continue
 
-        eval "export strategy_val=\"\${${dep_key}_STRATEGY:-reuse}\""
+        strategy_val="$(printenv "${dep_key}_STRATEGY" 2>/dev/null || echo "reuse")"
+        export strategy_val
         log_info "Resolving dependency: $dep_val (strategy: ${strategy_val:-})"
 
         is_installed=0

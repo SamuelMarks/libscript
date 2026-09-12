@@ -1,4 +1,7 @@
 # ## Overview
+#
+# ## Usage
+# Execute via PowerShell.
 # PowerShell setup_generic script for Vagrant on Windows.
 
 $ErrorActionPreference = "Stop"

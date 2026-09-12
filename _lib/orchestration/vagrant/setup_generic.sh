@@ -6,15 +6,10 @@
 # Sourced by setup.sh to configure repository, install Vagrant, and install plugins.
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -53,6 +48,8 @@ VAGRANT_VERSION="${VAGRANT_VERSION:-latest}"
 VAGRANT_INSTALL_LIBVIRT_PLUGIN="${VAGRANT_INSTALL_LIBVIRT_PLUGIN:-1}"
 VAGRANT_INSTALL_QEMU_PLUGIN="${VAGRANT_INSTALL_QEMU_PLUGIN:-1}"
 
+# ## configure_hashicorp_repo_debian
+# Configures the official HashiCorp apt repository on Debian/Ubuntu systems.
 configure_hashicorp_repo_debian() {
   if [ -f /etc/apt/sources.list.d/hashicorp.list ]; then
     return 0
@@ -76,6 +73,8 @@ configure_hashicorp_repo_debian() {
   priv apt-get update -y
 }
 
+# ## install_libvirt_plugin
+# Installs vagrant-libvirt provider plugin and required build headers.
 install_libvirt_plugin() {
   if ! command -v vagrant >/dev/null 2>&1; then
     return 0
@@ -102,6 +101,8 @@ install_libvirt_plugin() {
   fi
 }
 
+# ## install_qemu_plugin
+# Installs vagrant-qemu provider plugin.
 install_qemu_plugin() {
   if ! command -v vagrant >/dev/null 2>&1; then
     return 0

@@ -10,15 +10,10 @@
 
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -68,9 +63,14 @@ fi
 
 # Automated netctl unregistration
 _PKG_UPPER=$(basename "${DIR}" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
-eval "_LISTEN_SOCKET=\${${_PKG_UPPER}_LISTEN_SOCKET:-\${LIBSCRIPT_LISTEN_SOCKET:-}}"
-eval "_LISTEN_ADDRESS=\${${_PKG_UPPER}_LISTEN_ADDRESS:-\${LIBSCRIPT_LISTEN_ADDRESS:-}}"
-eval "_LISTEN_PORT=\${${_PKG_UPPER}_LISTEN_PORT:-\${LIBSCRIPT_LISTEN_PORT:-}}"
+_LISTEN_SOCKET=$(printenv "${_PKG_UPPER}_LISTEN_SOCKET" 2>/dev/null || true)
+: "${_LISTEN_SOCKET:=${LIBSCRIPT_LISTEN_SOCKET:-}}"
+
+_LISTEN_ADDRESS=$(printenv "${_PKG_UPPER}_LISTEN_ADDRESS" 2>/dev/null || true)
+: "${_LISTEN_ADDRESS:=${LIBSCRIPT_LISTEN_ADDRESS:-}}"
+
+_LISTEN_PORT=$(printenv "${_PKG_UPPER}_LISTEN_PORT" 2>/dev/null || true)
+: "${_LISTEN_PORT:=${LIBSCRIPT_LISTEN_PORT:-}}"
 
 if [ -n "${_LISTEN_SOCKET}" ]; then
   if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --unlisten "unix:${_LISTEN_SOCKET}" >/dev/null 2>&1 ; then

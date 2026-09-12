@@ -4,18 +4,25 @@ This module automates the setup of phpBB.
 
 ## Configuration Options
 
-| Variable               | Description                                         | Default                                                        |
-| ---------------------- | --------------------------------------------------- | -------------------------------------------------------------- |
-| `PHPBB_VERSION`        | phpBB version to install                            | `3.3.11`                                                       |
-| `PHPBB_WEBSERVER`      | Webserver to use (`nginx`, `caddy`, `httpd`, `iis`) | `nginx`                                                        |
-| `PHPBB_DB_TYPE`        | Database to use (`sqlite`, `mariadb`, `postgres`)   | `sqlite`                                                       |
-| `PHPBB_DB_NAME`        | Database name                                       | `phpbb`                                                        |
-| `PHPBB_DB_USER`        | Database user                                       | `phpbb`                                                        |
-| `PHPBB_DB_PASS`        | Database password                                   | `phpbb`                                                        |
-| `PHPBB_SERVER_NAME`    | Server name for webserver config                    | `localhost`                                                    |
-| `PHPBB_LISTEN`         | Port to listen on                                   | `80`                                                           |
-| `PHPBB_WWWROOT`        | Directory to install phpBB                          | `/var/www/phpbb` (Linux), `C:\inetpub\wwwroot\phpbb` (Windows) |
-| `PHPBB_PHP_FPM_LISTEN` | PHP FPM socket or address                           | OS specific                                                    |
+The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
+running the setup script.
+
+<!-- BEGIN_VARS -->
+
+| Variable               | Description                 | Default | Aliases/Examples |
+| ---------------------- | --------------------------- | ------- | ---------------- |
+| `PHPBB_LISTEN`         | Variable PHPBB_LISTEN.      | `none`  |                  |
+| `PHPBB_PHP_FPM_LISTEN` | Variable PHP_FPM_LISTEN.    | `none`  |                  |
+| `PHPBB_SERVER_NAME`    | Variable PHPBB_SERVER_NAME. | `none`  |                  |
+| `PHPBB_WEBSERVER`      | Variable PHPBB_WEBSERVER.   | `none`  |                  |
+| `PHPBB_VERSION`        | Variable PHPBB_VERSION.     | `none`  |                  |
+| `PHPBB_DB_PASS`        | Variable PHPBB_DB_PASS.     | `none`  |                  |
+| `PHPBB_DB_TYPE`        | Variable PHPBB_DB_TYPE.     | `none`  |                  |
+| `PHPBB_WWWROOT`        | Variable WWWROOT.           | `none`  |                  |
+| `PHPBB_DB_NAME`        | Variable PHPBB_DB_NAME.     | `none`  |                  |
+| `PHPBB_DB_USER`        | Variable PHPBB_DB_USER.     | `none`  |                  |
+
+<!-- END_VARS -->
 
 ## Supported OS
 
@@ -37,18 +44,29 @@ This module automates the setup of phpBB.
 - Apache HTTPD
 - IIS
 
-## Variables
+## Configuration Options
 
-See `vars.schema.json` for details on available variables.
+The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
+running the setup script.
+
+<!-- BEGIN_VARS -->
+<!-- END_VARS -->
 
 ## Platform Support
+
+<!-- BEGIN_PLATFORMS -->
 
 - Linux
 - macOS
 - Windows
 
+<!-- END_PLATFORMS -->
+
 ## Orchestrated Components
 
 This stack orchestrates the following LibScript components:
 
-- (Please document required components here)
+- `_lib/languages/php`: PHP runtime and required extensions (curl, gd, mbstring, xml, zip)
+- `_lib/databases/sqlite` (or `mariadb`, `postgres`): Backend database
+- `_lib/web-servers/nginx` (or `caddy`, `httpd`, `iis`): Web server for HTTP reverse proxy and
+  static asset delivery

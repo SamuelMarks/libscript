@@ -1,15 +1,15 @@
 #!/bin/sh
+# ## Overview
+# Filesystem path resolution and canonicalization utilities for LibScript.
+#
+# ## Usage
+# Sourced to locate libscript root, cache, and prefix directories.
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -25,13 +25,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 # # LibScript Path Resolution Module
 #
-# ## Overview
-# This module provides standardized path resolution for LibScript components.
-# It ensures that downloads, logs, binaries, and data are stored in consistent
-# locations across the entire ecosystem.
-#
-# ## Usage
-# Sourced by `setup_base.sh` or component scripts.
 #
 # ```sh
 # . "$LIBSCRIPT_ROOT_DIR/_lib/_common/paths.sh"

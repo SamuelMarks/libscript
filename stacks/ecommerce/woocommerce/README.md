@@ -7,15 +7,21 @@ WooCommerce alongside a WordPress installation. It supports all underlying web s
 `caddy`, `httpd`, `iis`), databases (`mariadb`, `postgres`, `sqlite`), and operating systems
 (Windows, macOS, Linux, FreeBSD) that the LibScript `wordpress` component supports.
 
-## Variables
+## Configuration Options
 
-- `WOOCOMMERCE_VERSION`: The version of WooCommerce to install (default: `latest`).
-- `WORDPRESS_VERSION`: The version of WordPress to install (default: `latest`).
-- `WORDPRESS_DB_ENGINE`: The database backend to use (`mariadb` [default], `postgres`, or `sqlite`).
-- `WORDPRESS_WEBSERVER`: The web server to configure (`nginx` [default], `caddy`, `httpd`, `iis`).
-- `WORDPRESS_DB_NAME`, `WORDPRESS_DB_USER`, `WORDPRESS_DB_PASS`: Database credentials.
-- `WORDPRESS_SERVER_NAME`: The domain or server name (default: `localhost`).
-- `WORDPRESS_LISTEN`: The port or address to listen on (default: `80`).
+The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
+running the setup script.
+
+<!-- BEGIN_VARS -->
+
+| Variable                  | Description                   | Default | Aliases/Examples |
+| ------------------------- | ----------------------------- | ------- | ---------------- |
+| `WOOCOMMERCE_SERVER_NAME` | Variable SERVER_NAME.         | `none`  |                  |
+| `WOOCOMMERCE_LISTEN`      | Variable WOOCOMMERCE_LISTEN.  | `none`  |                  |
+| `WOOCOMMERCE_VERSION`     | Variable WOOCOMMERCE_VERSION. | `none`  |                  |
+| `WOOCOMMERCE_WWWROOT`     | Variable WWWROOT.             | `none`  |                  |
+
+<!-- END_VARS -->
 
 ## Usage
 
@@ -30,12 +36,19 @@ export WORDPRESS_WEBSERVER="caddy"
 
 ## Platform Support
 
+<!-- BEGIN_PLATFORMS -->
+
 - Linux
 - macOS
 - Windows
+
+<!-- END_PLATFORMS -->
 
 ## Orchestrated Components
 
 This stack orchestrates the following LibScript components:
 
-- (Please document required components here)
+- `stacks/cms/wordpress`: Foundational WordPress CMS runtime
+- `_lib/languages/php`: PHP runtime and WooCommerce extensions
+- `_lib/databases/mariadb`: MySQL/MariaDB database storage
+- `_lib/web-servers/nginx` (or `caddy`, `httpd`, `iis`): Web server and ingress

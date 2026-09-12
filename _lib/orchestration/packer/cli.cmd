@@ -1,6 +1,12 @@
 @echo off
 :: # cli.cmd
-:: Command-line interface entry point for Packer on Windows.
+::
+:: ## Overview
+:: Command-line interface entry point for HashiCorp Packer on Windows.
+::
+:: ## Usage
+:: Execute this script to dispatch Packer commands.
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 set "PACKAGE_NAME=packer"

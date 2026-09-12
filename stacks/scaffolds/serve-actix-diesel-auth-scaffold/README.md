@@ -67,18 +67,35 @@ libscript package-as msi serve-actix-diesel-auth-scaffold
   correctly.
 - `vars.schema.json`: The schema definition for the CLI arguments.
 
-## Variables
+## Configuration Options
 
-See `vars.schema.json` for details on available variables.
+The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
+running the setup script.
+
+<!-- BEGIN_VARS -->
+
+| Variable                                     | Description                                          | Default | Aliases/Examples |
+| -------------------------------------------- | ---------------------------------------------------- | ------- | ---------------- |
+| `SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR` | Variable SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR. | `none`  |                  |
+| `BUILD_DIR`                                  | Variable BUILD_DIR.                                  | `none`  |                  |
+| `REPOS_DIR`                                  | Variable REPOS_DIR.                                  | `none`  |                  |
+| `SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST`      | Variable SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST.      | `none`  |                  |
+
+<!-- END_VARS -->
 
 ## Platform Support
+
+<!-- BEGIN_PLATFORMS -->
 
 - Linux
 - macOS
 - Windows
 
+<!-- END_PLATFORMS -->
+
 ## Orchestrated Components
 
 This stack orchestrates the following LibScript components:
 
-- (Please document required components here)
+- `_lib/languages/rust`: Rust toolchain, `cargo`, and build utilities
+- `_lib/databases/postgres` (or `sqlite`): Relational persistence layer for user auth and data

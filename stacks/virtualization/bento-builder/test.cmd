@@ -1,6 +1,10 @@
 @echo off
 rem ## Overview
 rem Test suite for Bento Builder stack on Windows.
+rem
+rem ## Usage
+rem Call this script to run tests for Bento Builder on Windows.
+
 setlocal enabledelayedexpansion
 set "THIS_FILE=%~f0"
 

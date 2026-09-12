@@ -15,26 +15,45 @@ setlocal EnableDelayedExpansion
 :: ```
 
 setlocal EnableDelayedExpansion
+set "CALLER_FILE=%THIS_FILE%"
 set "THIS_FILE=%~f0"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%~dp0"
+    call :find_root
+)
+goto :root_found
+
 :: ## find_root
 :: Executes find_root functionality.
-    :find_root
-    if exist "!d!\ROOT" (set "LIBSCRIPT_ROOT_DIR=!d!") else (
-        for %%P in ("!d!") do set "parent=%%~dpP"
-        set "d=!parent:~0,-1!"
-        if "!d!"=="" (
-            echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
-            exit /b 1
-        )
-        goto :find_root
-    )
+:find_root
+if exist "!d!\ROOT" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
 )
+for %%P in ("!d!") do set "parent=%%~dpP"
+set "d=!parent:~0,-1!"
+if "!d!"=="" (
+    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
+    exit /b 1
+)
+goto :find_root
+
+:: ## root_found
+:: Executes root_found functionality.
+:root_found
 
 :: Source logging
 set "LOG_CMD=%LIBSCRIPT_ROOT_DIR%\_lib\_common\log.cmd"
+
+:: Resolve target component directory
+set "TARGET_DIR="
+if not "%CALLER_FILE%"=="" (
+    for %%I in ("%CALLER_FILE%") do set "TARGET_DIR=%%~dpI"
+)
+if "%TARGET_DIR:~-1%"=="\" set "TARGET_DIR=%TARGET_DIR:~0,-1%"
+if "%TARGET_DIR%"=="" set "TARGET_DIR=%CD%"
+if /i "%TARGET_DIR%"=="%LIBSCRIPT_ROOT_DIR%\_lib\_common" set "TARGET_DIR=%CD%"
 
 :: Privilege Check
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\priv.cmd" :check_admin
@@ -45,18 +64,18 @@ if errorlevel 1 (
 )
 
 :: Delegate to specific setup script
-if exist "%CD%\setup_windows.cmd" (
-    call "%CD%\setup_windows.cmd" %*
+if exist "%TARGET_DIR%\setup_windows.cmd" (
+    call "%TARGET_DIR%\setup_windows.cmd" %*
     exit /b !errorlevel!
-) else if exist "%CD%\setup_generic.cmd" (
-    call "%CD%\setup_generic.cmd" %*
+) else if exist "%TARGET_DIR%\setup_generic.cmd" (
+    call "%TARGET_DIR%\setup_generic.cmd" %*
     exit /b !errorlevel!
-) else if exist "%CD%\setup.ps1" (
+) else if exist "%TARGET_DIR%\setup.ps1" (
     set "COMMON_DIR=%LIBSCRIPT_ROOT_DIR%\_lib\_common"
-    powershell -ExecutionPolicy Bypass -Command "& { . '!COMMON_DIR!\log.ps1'; . '!COMMON_DIR!\pkg_mgr.ps1'; & '%CD%\setup.ps1' }"
+    powershell -ExecutionPolicy Bypass -Command "& { . '!COMMON_DIR!\log.ps1'; . '!COMMON_DIR!\pkg_mgr.ps1'; & '%TARGET_DIR%\setup.ps1' }"
     exit /b !errorlevel!
 ) else (
-    call "%LOG_CMD%" :log_error "No setup script (setup_windows.cmd, setup_generic.cmd, or setup.ps1) found in %CD%"
+    call "%LOG_CMD%" :log_error "No setup script (setup_windows.cmd, setup_generic.cmd, or setup.ps1) found in %TARGET_DIR%"
     exit /b 1
 )
 

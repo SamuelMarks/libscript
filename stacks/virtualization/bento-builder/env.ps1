@@ -1,4 +1,7 @@
 # ## Overview
+#
+# ## Usage
+# Execute via PowerShell.
 # PowerShell env script for Bento Builder stack.
 
 $LibscriptRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..\..")

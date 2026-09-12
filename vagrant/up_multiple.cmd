@@ -17,6 +17,8 @@ if /I "%~1"=="/?" goto :show_help
 if /I "%~1"=="-?" goto :show_help
 goto :main
 
+:: ## show_help
+:: Executes show_help functionality.
 :show_help
 :: ## show_help
 :: Executes show_help functionality.
@@ -27,6 +29,8 @@ echo Options:
 echo   --help, -h, /?, -?  Show this help message.
 exit /b 0
 
+:: ## main
+:: Executes main functionality.
 :main
 :: ## main
 :: Executes main functionality.

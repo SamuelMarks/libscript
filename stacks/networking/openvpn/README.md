@@ -62,14 +62,31 @@ libscript package-as msi openvpn
   correctly.
 - `vars.schema.json`: The schema definition for the CLI arguments.
 
+## Configuration Options
+
+The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
+running the setup script.
+
+<!-- BEGIN_VARS -->
+
+| Variable | Description | Default | Aliases/Examples |
+| -------- | ----------- | ------- | ---------------- |
+
+<!-- END_VARS -->
+
 ## Platform Support
+
+<!-- BEGIN_PLATFORMS -->
 
 - Linux
 - macOS
 - Windows
 
+<!-- END_PLATFORMS -->
+
 ## Orchestrated Components
 
 This stack orchestrates the following LibScript components:
 
-- (Please document required components here)
+- `_lib/utilities/curl`: Remote artifact and script retriever
+- `_lib/security/openbao`: Secrets management and PKI certificate authority

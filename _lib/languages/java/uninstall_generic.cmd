@@ -2,10 +2,13 @@
 :: # uninstall_generic.cmd
 ::
 :: ## Overview
-:: Generic uninstall script for Java on Windows.
+:: Generic uninstall script for java on Windows.
 ::
 :: ## Usage
-:: Typically uninstalls tools or cleans up state. Currently a no-op.
+:: Routes to generic uninstallation via `_common\uninstall_generic.cmd`.
 
-:: Generic uninstall for Windows skipped
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+if exist "%~dp0\..\..\_common\uninstall_generic.cmd" (
+    call "%~dp0\..\..\_common\uninstall_generic.cmd" %*
+)

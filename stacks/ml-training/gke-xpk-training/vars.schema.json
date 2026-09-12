@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/stacks/ml-training/gke-xpk-training/vars.schema.json",
+  "title": "gke-xpk-training vars",
+  "description": "Variables for GKE XPK distributed ML training stack",
+  "type": "object",
+  "properties": {
+    "XPK_CLUSTER_NAME": {
+      "type": "string",
+      "description": "Name of the Google Kubernetes Engine XPK cluster",
+      "default": "ml-xpk-cluster"
+    },
+    "GCP_PROJECT_ID": {
+      "type": "string",
+      "description": "Google Cloud Project ID where the cluster is created",
+      "default": ""
+    },
+    "GCP_ZONE": {
+      "type": "string",
+      "description": "Google Cloud Zone for the XPK cluster (e.g. us-central2-b)",
+      "default": ""
+    },
+    "TPU_ACCELERATOR_TYPE": {
+      "type": "string",
+      "description": "TPU accelerator type for the training nodes (e.g. v4-8, v5e-16)",
+      "default": "v4-8"
+    },
+    "WORKLOAD_NAME": {
+      "type": "string",
+      "description": "Identifier for the training workload job",
+      "default": "ml-training-job"
+    },
+    "TRAIN_SCRIPT": {
+      "type": "string",
+      "description": "Command or script executed inside the training container",
+      "default": "python train.py"
+    },
+    "DOCKER_IMAGE": {
+      "type": "string",
+      "description": "Docker container image containing training code and dependencies",
+      "default": ""
+    }
+  }
+}

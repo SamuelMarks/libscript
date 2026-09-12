@@ -22,6 +22,8 @@ set "APPS_PATHS="
 set "APPS_DOMAINS="
 set "SHARED_DB="
 
+:: ## parse_args
+:: Executes parse_args functionality.
 :parse_args
 if "%~1"=="" goto parse_done
 if "%~1"=="--app" (
@@ -50,6 +52,8 @@ if "%~1"=="--shared-db" (
 echo [ERROR] Unknown argument: %~1
 exit /b 1
 
+:: ## parse_done
+:: Executes parse_done functionality.
 :parse_done
 
 call :provision_shared_db
@@ -59,6 +63,8 @@ set "REMAINING_PATHS=!APPS_PATHS!"
 set "REMAINING_DOMAINS=!APPS_DOMAINS!"
 set "HEALTH_APPS="
 
+:: ## loop_apps
+:: Executes loop_apps functionality.
 :loop_apps
 if "!REMAINING_PATHS!"=="" goto done
 
@@ -116,6 +122,8 @@ if exist "!APP_PATH!\libscript.json" (
 )
 goto loop_apps
 
+:: ## done
+:: Executes done functionality.
 :done
 if not "!HEALTH_APPS!"=="" (
     echo [INFO] Running health checks for backend services:!HEALTH_APPS!...

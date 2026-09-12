@@ -7,15 +7,10 @@
 
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -53,7 +48,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
         DEPS_LIST=$(find_components | sort | awk '{printf "%s latest ", $1}')
       fi
 
-      eval "set -- $DEPS_LIST"
+      # shellcheck disable=SC2086
+      set -- $DEPS_LIST
       while [ $# -gt 0 ]; do
         PKG=$1; VER=$2; shift 2
         COMP_DIR="$PKG_STAGE/comp_${PKG}"
@@ -151,6 +147,8 @@ EOF_SCRIPT
       if command -v productbuild >/dev/null 2>&1; then
         productbuild --synthesize --package-path "$PKG_STAGE/packages" "$PKG_STAGE/Distribution.xml"
 
+        # ## sed_in_place
+        # Cross-platform in-place sed editing helper.
         sed_in_place() {
           if [ "$(uname)" = "Darwin" ]; then
             sed -i '' "$@"
@@ -173,7 +171,8 @@ EOF_SCRIPT
     <license file="license.html"/>' "$PKG_STAGE/Distribution.xml"
         fi
 
-        eval "set -- $DEPS_LIST"
+        # shellcheck disable=SC2086
+        set -- $DEPS_LIST
         while [ $# -gt 0 ]; do
           PKG=$1; VER=$2; shift 2
           sed_in_place "s/choice id=\"com.libscript.comp.$PKG\" title=\"[^\"]*\"/choice id=\"com.libscript.comp.$PKG\" title=\"$PKG installer\"/g" "$PKG_STAGE/Distribution.xml"

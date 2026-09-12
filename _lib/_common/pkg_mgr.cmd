@@ -22,6 +22,8 @@ set "LOG_CMD=%LIBSCRIPT_ROOT_DIR%\_lib\_common\log.cmd"
 goto :eof
 
 :: Unified Caching Downloader (Windows)
+:: ## libscript_download
+:: Executes libscript_download functionality.
 :libscript_download
 set "url=%~1"
 set "dest=%~2"

@@ -3,19 +3,14 @@
 # Executes defined lifecycle hooks from an install manifest on Unix-like systems.
 #
 # ## Usage
-# Run `run_hooks.sh <json_file> <hook_type>` (e.g. pre_install, post_install) to parse and execute commands via eval.
+# Run `run_hooks.sh <json_file> <hook_type>` (e.g. pre_install, post_install) to parse and execute commands.
 
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -66,12 +61,12 @@ printf '%s\n' "$HOOKS" | while read -r hook; do
 
         if [ -n "$cmd" ]; then
             log_info "Executing hook '$NAME': $cmd"
-            eval "$cmd"
+            sh -c "$cmd"
         fi
     else
         # Handle simple string array format
         cmd=$(printf '%s\n' "$hook" | sed 's/^"//; s/"$//')
         log_info "Executing hook: $cmd"
-        eval "$cmd"
+        sh -c "$cmd"
     fi
 done

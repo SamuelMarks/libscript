@@ -1,5 +1,8 @@
 # ## Overview
 # PowerShell script for cli.ps1 for Bento Builder stack.
+#
+# ## Usage
+# Execute via PowerShell.
 
 $ErrorActionPreference = "Stop"
 

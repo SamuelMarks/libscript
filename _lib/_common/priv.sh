@@ -9,15 +9,10 @@
 
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -54,18 +49,24 @@ fi
 export PRIV;
 
 if command -v sudo >/dev/null 2>&1; then
+  # ## priv_as
+  # Executes command as specified user via sudo.
   priv_as() {
     user="${1}"
     shift
     sudo -u "${user}" "$@"
   }
 elif command -v doas >/dev/null 2>&1; then
+  # ## priv_as
+  # Executes command as specified user via doas.
   priv_as() {
     user="${1}"
     shift
     doas -u "${user}" "$@"
   }
 elif command -v su >/dev/null 2>&1; then
+  # ## priv_as
+  # Executes command as specified user via su.
   priv_as() {
     user="${1}"
     shift
@@ -78,6 +79,8 @@ elif command -v su >/dev/null 2>&1; then
     su - "${user}" -c "sh -c ${cmd}"
   }
 else
+  # ## priv_as
+  # Executes command as specified user via su fallback.
   priv_as() {
     user="${1}"
     shift
@@ -87,9 +90,15 @@ fi
 
 
 if [ -n "${PRIV}" ]; then
+  # ## priv
+  # Executes command with root/superuser privileges.
   priv() { if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" = "1" ]; then return 0; fi; "${PRIV}" "$@"; }
 elif command -v su >/dev/null 2>&1; then
+  # ## priv
+  # Executes command with root privileges via priv_as root.
   priv() { if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" = "1" ]; then return 0; fi; priv_as root "$@"; }
 else
+  # ## priv
+  # Executes command without elevated privileges fallback.
   priv() { if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" = "1" ]; then return 0; fi; "$@"; }
 fi

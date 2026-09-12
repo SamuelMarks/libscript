@@ -1,4 +1,7 @@
 # ## Overview
+#
+# ## Usage
+# Execute via PowerShell.
 # PowerShell uninstallation script for Bento Builder stack.
 
 $ErrorActionPreference = "Stop"

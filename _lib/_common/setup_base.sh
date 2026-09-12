@@ -10,15 +10,10 @@
 
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -56,11 +51,8 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 resolve_component_paths
 
-# Source schema validation
-export SCRIPT_NAME
-. "${SCRIPT_NAME}"
 
-
+# ## libscript_install_binary
 # Helper for installing a binary to a local or system bin directory
 libscript_install_binary() {
   src_path="$1"
@@ -110,9 +102,14 @@ _PKG_UPPER=$(basename "${DIR}" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
 if [ "$_PKG_UPPER" = "7ZIP" ]; then _PKG_UPPER="SEVENZIP"; fi
 case "$_PKG_UPPER" in [0-9]*) _PKG_UPPER="_${_PKG_UPPER}" ;; esac
 
-eval "_LISTEN_SOCKET=\${${_PKG_UPPER}_LISTEN_SOCKET:-\${LIBSCRIPT_LISTEN_SOCKET:-}}"
-eval "_LISTEN_ADDRESS=\${${_PKG_UPPER}_LISTEN_ADDRESS:-\${LIBSCRIPT_LISTEN_ADDRESS:-}}"
-eval "_LISTEN_PORT=\${${_PKG_UPPER}_LISTEN_PORT:-\${LIBSCRIPT_LISTEN_PORT:-}}"
+_LISTEN_SOCKET=$(printenv "${_PKG_UPPER}_LISTEN_SOCKET" 2>/dev/null || true)
+: "${_LISTEN_SOCKET:=${LIBSCRIPT_LISTEN_SOCKET:-}}"
+
+_LISTEN_ADDRESS=$(printenv "${_PKG_UPPER}_LISTEN_ADDRESS" 2>/dev/null || true)
+: "${_LISTEN_ADDRESS:=${LIBSCRIPT_LISTEN_ADDRESS:-}}"
+
+_LISTEN_PORT=$(printenv "${_PKG_UPPER}_LISTEN_PORT" 2>/dev/null || true)
+: "${_LISTEN_PORT:=${LIBSCRIPT_LISTEN_PORT:-}}"
 
 if [ -n "${_LISTEN_SOCKET}" ]; then
   if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --listen "unix:${_LISTEN_SOCKET}" >/dev/null 2>&1 ; then

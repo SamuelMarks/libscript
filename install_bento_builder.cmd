@@ -1,6 +1,12 @@
 @echo off
 :: # install_bento_builder.cmd
-:: Standalone Windows batch script to provision the Bento Builder environment.
+::
+:: ## Overview
+:: Standalone Windows batch installer to provision the Bento Builder environment.
+::
+:: ## Usage
+:: Execute this script from Command Prompt to install Bento Builder dependencies.
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 

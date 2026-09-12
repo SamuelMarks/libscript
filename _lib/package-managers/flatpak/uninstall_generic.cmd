@@ -2,11 +2,13 @@
 :: # uninstall_generic.cmd
 ::
 :: ## Overview
-:: Generic uninstallation script for the flatpak component on Windows.
-:: It provides fallback uninstallation logic.
+:: Generic uninstall script for flatpak on Windows.
 ::
 :: ## Usage
-:: This script is typically called internally by the component lifecycle.
+:: Routes to generic uninstallation via `_common\uninstall_generic.cmd`.
 
-:: Generic uninstall for Windows skipped
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+if exist "%~dp0\..\..\_common\uninstall_generic.cmd" (
+    call "%~dp0\..\..\_common\uninstall_generic.cmd" %*
+)

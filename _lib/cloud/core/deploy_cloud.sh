@@ -7,15 +7,10 @@
 
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -92,6 +87,8 @@ log "INIT" "Logging to $LOG_FILE"
 # -----------------------------------------------------------------------------
 # Retries & Fault Tolerance
 # -----------------------------------------------------------------------------
+# ## with_retry
+# Executes a command with exponential backoff and retry logic.
 with_retry() {
   max_attempts=5
   timeout=5
@@ -281,6 +278,8 @@ record_state "REGION" "$LOC"
 # -----------------------------------------------------------------------------
 # Dependency Check
 # -----------------------------------------------------------------------------
+# ## ensure_cli
+# Ensures required CLI commands and packages are installed.
 ensure_cli() {
   cmd=$1
   pkg=$2
@@ -427,6 +426,7 @@ with_retry "$CLI" node sync "$NODE" "$CTX"
 log "SYNC" "Deploying Repository to remote node..."
 with_retry "$CLI" node exec "$NODE" "$CTX" "mkdir -p $REMOTE_DEST"
 
+# ## transfer_files
 # Explicit rsync fallback to scp/winrm behavior
 transfer_files() {
   src=$1

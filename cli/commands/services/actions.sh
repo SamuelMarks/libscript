@@ -7,15 +7,10 @@
 
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -34,6 +29,8 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
   if [ "$action" = "up" ]; then action="start"; fi
   if [ "$action" = "down" ]; then action="stop"; fi
 
+  # ## perform_health_check
+  # Executes runtime health checks for the given package and version.
   perform_health_check() {
     _pkg="$1"
     _ver="$2"
@@ -93,17 +90,20 @@ if [ "$CMD" = "start" ] || [ "$CMD" = "stop" ] || [ "$CMD" = "status" ] || [ "$C
 
   follow_logs=0
   skip_hooks=0
-  new_args=""
-  for arg in "$@"; do
-    if [ "$arg" = "-f" ] || [ "$arg" = "--follow" ]; then
+  _orig_argc=$#
+  _arg_idx=0
+  while [ "$_arg_idx" -lt "$_orig_argc" ]; do
+    _cur_arg="$1"
+    shift
+    if [ "$_cur_arg" = "-f" ] || [ "$_cur_arg" = "--follow" ]; then
       follow_logs=1
-    elif [ "$arg" = "--no-hooks" ]; then
+    elif [ "$_cur_arg" = "--no-hooks" ]; then
       skip_hooks=1
     else
-      new_args="$new_args \"$arg\""
+      set -- "$@" "$_cur_arg"
     fi
+    _arg_idx=$((_arg_idx + 1))
   done
-  eval "set -- $new_args"
 
   if [ $# -eq 0 ] || [ "$1" = "libscript.json" ] || [ "${1##*.}" = "json" ]; then
     json_file="${1:-libscript.json}"

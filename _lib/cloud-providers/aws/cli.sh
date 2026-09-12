@@ -10,15 +10,10 @@
 
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -47,6 +42,7 @@ else
 fi
 
 # Parse tags from arguments
+# ## parse_tags
 # Returns a space-separated list of Key=V,Value=V strings
 parse_tags() {
   USE_DEFAULT=true
@@ -72,7 +68,8 @@ parse_tags() {
   printf '%s' "$FINAL_TAGS"
 }
 
-# Dry run helper
+# ## aws
+# Dry run helper wrapper around the AWS CLI executable.
 aws() {
   if [ "${DRY_RUN:-}" = "true" ]; then
     printf '[DRY_RUN] aws %s\n' "$*" >&2
@@ -92,6 +89,7 @@ aws() {
   command aws "$@"
 }
 
+# ## check_deps
 # Ensure aws-cli and jq are installed
 check_deps() {
   if ! command -v aws >/dev/null 2>&1; then

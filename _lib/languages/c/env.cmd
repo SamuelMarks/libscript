@@ -2,10 +2,15 @@
 :: # env.cmd
 ::
 :: ## Overview
-:: Internal script for c on Windows.
+:: Environment initialization for C on Windows.
 ::
 :: ## Usage
-:: Executes initialization, logic, or testing for c.
+:: Sets up default environment variables for C.
 
-:: Windows env stub for c
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+
+if "%C_INSTALL_METHOD%"=="" set "C_INSTALL_METHOD=system"
+if "%C_VERSION%"=="" set "C_VERSION=latest"
+if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+set "PATH=%LIBSCRIPT_HOME%\c\%C_VERSION%\bin;%PATH%"

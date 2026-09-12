@@ -5,15 +5,10 @@
 # ## Usage
 # Executes initialization, logic, or testing for nginx.
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -25,6 +20,9 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 printf '%s\n' "Running merge unit tests..."
 
@@ -64,7 +62,8 @@ location ~ "^/regex/[0-9]{1,3}$" {
 CONF
 
 # test script logic
-. ./_lib/web-servers/nginx/merge_location_into_server.sh
+# shellcheck disable=SC1090,SC1091
+. "$SCRIPT_DIR/merge_location_into_server.sh"
 merge_location_into_server "$TMP_DIR/existing.conf" "$TMP_DIR/new.conf" "example.com"
 
 if grep -q '"new regex"' "$TMP_DIR/existing.conf"; then

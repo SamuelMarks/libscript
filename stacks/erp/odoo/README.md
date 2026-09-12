@@ -19,31 +19,50 @@ You can manage Odoo using the global `libscript` CLI or local scripts.
 
 ## Configuration Options
 
-- `ODOO_VERSION`: Specific Odoo version branch/tag to install (default `17.0`).
-- `ODOO_WEBSERVER`: One of `nginx` (default), `caddy`, `httpd`, or `iis`.
-- `ODOO_SERVER_NAME`: The FQDN for the application (default `localhost`).
-- `ODOO_LISTEN`: The port the webserver listens on (default `80`).
-- `ODOO_PORT`: The internal port Odoo listens on (default `8069`).
-- `ODOO_WWWROOT`: The directory to install to (default `/var/www/odoo` or
-  `C:\inetpub\wwwroot\odoo`).
-- `ODOO_DB_TYPE`: The database to use (default `postgres`).
-- `ODOO_DB_NAME`, `ODOO_DB_USER`, `ODOO_DB_PASS`, `ODOO_DB_HOST`, `ODOO_DB_PORT`: Database
-  credentials and connection info.
+The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
+running the setup script.
+
+<!-- BEGIN_VARS -->
+
+| Variable           | Description                | Default | Aliases/Examples |
+| ------------------ | -------------------------- | ------- | ---------------- |
+| `ODOO_DB_TYPE`     | Variable ODOO_DB_TYPE.     | `none`  |                  |
+| `ODOO_LISTEN`      | Variable ODOO_LISTEN.      | `none`  |                  |
+| `ODOO_VERSION`     | Variable ODOO_VERSION.     | `none`  |                  |
+| `ODOO_DB_USER`     | Variable ODOO_DB_USER.     | `none`  |                  |
+| `ODOO_DB_HOST`     | Variable ODOO_DB_HOST.     | `none`  |                  |
+| `ODOO_WEBSERVER`   | Variable ODOO_WEBSERVER.   | `none`  |                  |
+| `ODOO_WWWROOT`     | Variable WWWROOT.          | `none`  |                  |
+| `ODOO_SERVER_NAME` | Variable ODOO_SERVER_NAME. | `none`  |                  |
+| `ODOO_DB_NAME`     | Variable ODOO_DB_NAME.     | `none`  |                  |
+| `ODOO_DB_PASS`     | Variable ODOO_DB_PASS.     | `none`  |                  |
+| `ODOO_DB_PORT`     | Variable ODOO_DB_PORT.     | `none`  |                  |
+| `ODOO_PORT`        | Variable ODOO_PORT.        | `none`  |                  |
+
+<!-- END_VARS -->
 
 ## Platform Support
 
-This module adheres to LibScript's cross-platform conventions:
+<!-- BEGIN_PLATFORMS -->
 
-- Supports Linux, macOS, FreeBSD, and Windows.
-- Uses `setup_windows.ps1` for clean `.msi` or `.exe` Windows Installer generation, leveraging
-  `winget` and native IIS PowerShell configuration blocks (`WebAdministration`).
+- Linux
+- macOS
+- Windows
 
-## Variables
+<!-- END_PLATFORMS -->
 
-See `vars.schema.json` for details on available variables.
+## Configuration Options
+
+The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
+running the setup script.
+
+<!-- BEGIN_VARS -->
+<!-- END_VARS -->
 
 ## Orchestrated Components
 
 This stack orchestrates the following LibScript components:
 
-- (Please document required components here)
+- `_lib/languages/python`: Python runtime and Odoo application framework
+- `_lib/databases/postgres`: PostgreSQL database server
+- `_lib/web-servers/nginx` (or `caddy`, `httpd`): Reverse proxy and static file server

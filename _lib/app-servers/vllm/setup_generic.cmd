@@ -167,6 +167,8 @@ if errorlevel 1 (
 )
 popd
 
+:: ## create_alias
+:: Executes create_alias functionality.
 :create_alias
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\vllm\%VLLM_VERSION%"
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (

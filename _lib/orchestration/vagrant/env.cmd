@@ -1,6 +1,12 @@
 @echo off
 :: # env.cmd
-:: Windows environment configuration for Vagrant.
+::
+:: ## Overview
+:: Environment export script for Vagrant on Windows.
+::
+:: ## Usage
+:: Call this script to set Vagrant environment variables.
+
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

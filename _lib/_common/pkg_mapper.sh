@@ -1,15 +1,15 @@
 #!/bin/sh
+# ## Overview
+# Cross-platform package name translation dictionary across native OS package managers.
+#
+# ## Usage
+# Maps generic dependency names to platform-specific package identifiers.
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -26,13 +26,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # LibScript Package Mapper Module (POSIX)
 #
-# ## Overview
-# This module translates generic package names (e.g., 'php', 'postgres') into 
-# specific package IDs used by different OS package managers (apt, yum, pacman, etc.).
-#
-# ## Usage
-# Call the `map_package` function with the generic package name. The package manager
-# will be determined from the `PKG_MGR` environment variable.
 
 # ## map_package
 # Executes map_package functionality.
@@ -200,14 +193,6 @@ map_package() {
         'winget') printf 'GnuWin32.Make\n' ;;
         'pkg') printf 'gmake\n' ;;
         *) printf 'make\n' ;;
-      esac
-      ;;
-    'httpd')
-      case "${PKG_MGR}" in
-        'apt-get') printf 'apache2\n' ;;
-        'apk') printf 'apache2\n' ;;
-        'pkg') printf 'apache24\n' ;;
-        *) printf 'httpd\n' ;;
       esac
       ;;
     'git')
@@ -431,20 +416,6 @@ map_package() {
         *) printf "pip
 " ;;
       esac ;;
-    'bundler')
-      case "${PKG_MGR}" in
-        "pkg") printf "rubygem-bundler
-" ;;
-        *) printf "bundler
-" ;;
-      esac ;;
-    'cabal')
-      case "${PKG_MGR}" in
-        "pkg") printf "hs-cabal-install
-" ;;
-        *) printf "cabal
-" ;;
-      esac ;;
 
     'python3-venv')
       case "${PKG_MGR}" in
@@ -595,7 +566,7 @@ map_package() {
       case "${PKG_MGR}" in
         'apt-get') printf 'build-essential\n' ;;
         'dnf'|'yum') printf '@development-tools\n' ;;
-        'zypper') printf '-t pattern devel_basis\n' ;;
+        'zypper') printf '%s\n' '-t pattern devel_basis' ;;
         'pacman') printf 'base-devel\n' ;;
         'apk') printf 'build-base\n' ;;
         *) printf 'build-essential\n' ;;
@@ -609,12 +580,14 @@ map_package() {
       ;;
     'bundler')
       case "${PKG_MGR}" in
+        'pkg') printf 'rubygem-bundler\n' ;;
         'apk') printf 'ruby-bundler\n' ;;
         *) printf 'bundler\n' ;;
       esac
       ;;
     'cabal')
       case "${PKG_MGR}" in
+        'pkg') printf 'hs-cabal-install\n' ;;
         'apt-get') printf 'cabal-install\n' ;;
         *) printf 'cabal\n' ;;
       esac

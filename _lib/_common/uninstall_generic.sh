@@ -11,11 +11,7 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -33,11 +29,14 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${SCRIPT_DIR}"
 export LIBSCRIPT_ROOT_DIR
 
-. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+export SCRIPT_NAME
+. "${SCRIPT_NAME}"
 
 COMPONENT_NAME="${PACKAGE_NAME:-$(basename "${DIR}")}"
 COMPONENT_UPPER="$(printf '%s\n' "$COMPONENT_NAME" | tr '[:lower:]' '[:upper:]' | tr '-' '_')"
-eval "INSTALL_METHOD=\${${COMPONENT_UPPER}_INSTALL_METHOD:-\${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript_native}}"
+INSTALL_METHOD="$(printenv "${COMPONENT_UPPER}_INSTALL_METHOD" 2>/dev/null || true)"
+: "${INSTALL_METHOD:=${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-libscript_native}}"
 
 if [ "$INSTALL_METHOD" = "system" ]; then
     log_info "Uninstalling ${COMPONENT_NAME} via system package manager is not implemented."

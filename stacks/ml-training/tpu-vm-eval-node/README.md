@@ -29,6 +29,31 @@ export ML_SCRIPT="python -m my_train_script"
 ./stacks/ml-training/tpu-vm-eval-node/deploy.sh
 ```
 
-## Environment Variables
+## Configuration Options
 
-This component honors standard `libscript` variables. Refer to `_common/base_vars.schema.json`.
+The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
+running the setup script.
+
+<!-- BEGIN_VARS -->
+
+| Variable               | Description                                                            | Default           | Aliases/Examples |
+| ---------------------- | ---------------------------------------------------------------------- | ----------------- | ---------------- |
+| `TPU_NAME`             | Name of the TPU VM instance                                            | `ml-eval-node`    |                  |
+| `GCP_PROJECT_ID`       | Google Cloud Project ID where the TPU VM is provisioned                | ``                |                  |
+| `TPU_ZONE`             | Google Cloud Zone for the TPU VM (e.g. us-central2-b)                  | ``                |                  |
+| `TPU_ACCELERATOR_TYPE` | TPU accelerator version and topology (e.g. v4-8)                       | `v4-8`            |                  |
+| `TPU_DATA_DISK_SIZE`   | Persistent data disk size in GB attached to the TPU VM                 | `200`             |                  |
+| `BUCKET_NAME`          | GCS bucket mounted via Cloud Storage FUSE for datasets and checkpoints | ``                |                  |
+| `ML_SCRIPT`            | Evaluation or training command to execute on the TPU VM                | `python train.py` |                  |
+
+<!-- END_VARS -->
+
+## Platform Support
+
+<!-- BEGIN_PLATFORMS -->
+
+- Linux
+- macOS
+- Windows
+
+<!-- END_PLATFORMS -->

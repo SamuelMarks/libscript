@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/stacks/ai-serving/tpu-vm-vllm/vars.schema.json",
+  "title": "tpu-vm-vllm vars",
+  "description": "Variables for Cloud TPU VM vLLM AI model serving stack",
+  "type": "object",
+  "properties": {
+    "TPU_NAME": {
+      "type": "string",
+      "description": "Name of the TPU VM instance serving the model",
+      "default": "ml-tpu-vm"
+    },
+    "GCP_PROJECT_ID": {
+      "type": "string",
+      "description": "Google Cloud Project ID where the TPU VM is provisioned",
+      "default": ""
+    },
+    "TPU_ZONE": {
+      "type": "string",
+      "description": "Google Cloud Zone for the TPU VM (e.g. us-central2-b)",
+      "default": ""
+    },
+    "TPU_ACCELERATOR_TYPE": {
+      "type": "string",
+      "description": "TPU accelerator version and topology (e.g. v4-8)",
+      "default": "v4-8"
+    },
+    "MODEL_NAME": {
+      "type": "string",
+      "description": "Hugging Face or GCS model identifier served by vLLM",
+      "default": ""
+    },
+    "PORT": {
+      "type": "string",
+      "description": "HTTP port on which vLLM exposes its OpenAI-compatible API",
+      "default": "8000"
+    }
+  }
+}

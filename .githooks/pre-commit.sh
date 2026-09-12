@@ -6,15 +6,11 @@
 # Execute this script to perform actions for .githooks.
 
 set -e
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
+
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
-elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -26,14 +22,15 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-_SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 # Ensure we run from the git repository root
 cd "$(git rev-parse --show-toplevel)"
 
 printf '%s\n' "Running pre-commit hooks..."
 
-STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+STAGED_FILES=$(git diff --no-ext-diff --cached --name-only --diff-filter=ACM)
 
 if [ -z "$STAGED_FILES" ]; then
     printf '%s\n' "No files to check."
@@ -98,16 +95,24 @@ printf '%s\n' "Regenerating markdown readme files interpolating the json..."
 if [ -x "devtools/docs-gen/generate_markdown_docs.sh" ]; then
     ./devtools/docs-gen/generate_markdown_docs.sh
     # Re-add any modified README.md files
-    git ls-files -m | grep "README.md$" | xargs -I {} git add "{}" || true
+    for rfile in $(git ls-files -m | grep "README.md$" || true); do
+        if command -v dos2unix >/dev/null 2>&1; then dos2unix -q "$rfile" 2>/dev/null || true; fi
+        if command -v npx >/dev/null 2>&1; then npx prettier --write "$rfile" >/dev/null 2>&1 || true; fi
+        git add "$rfile"
+    done
 fi
-
-
 
 printf '%s\n' "Updating Supported Components in README.md..."
 if [ -x "tests/update_results.sh" ]; then
     ./tests/update_results.sh
 fi
 
+if command -v dos2unix >/dev/null 2>&1; then
+    dos2unix -q README.md 2>/dev/null || true
+fi
+if command -v npx >/dev/null 2>&1; then
+    npx prettier --write README.md >/dev/null 2>&1 || true
+fi
 
 git add README.md
 printf '%s\n' "Pre-commit hook completed successfully."

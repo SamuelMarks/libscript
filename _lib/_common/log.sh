@@ -11,15 +11,10 @@
 
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -78,10 +73,18 @@ _libscript_log_msg() {
   fi
 }
 
+# ## log_debug
+# Logs a debug message.
 log_debug()   { _libscript_log_msg "DEBUG"   0 "${1:-}"; }
+# ## log_info
+# Logs an informational message.
 log_info()    { _libscript_log_msg "INFO"    1 "${1:-}"; }
 # ## log_success
 # Executes log_success functionality.
 log_success() { _libscript_log_msg "SUCCESS" 2 "${1:-}"; }
+# ## log_warn
+# Logs a warning message.
 log_warn()    { _libscript_log_msg "WARN"    3 "${1:-}"; }
+# ## log_error
+# Logs an error message.
 log_error()   { _libscript_log_msg "ERROR"   4 "${1:-}"; }

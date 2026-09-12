@@ -1,6 +1,12 @@
 @echo off
 :: # env.cmd
-:: Windows environment configuration for Packer.
+::
+:: ## Overview
+:: Environment export script for HashiCorp Packer on Windows.
+::
+:: ## Usage
+:: Call this script to set Packer environment variables.
+
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

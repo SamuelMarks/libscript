@@ -1,4 +1,7 @@
 # ## Overview
+#
+# ## Usage
+# Execute via PowerShell.
 # PowerShell test script for Bento Builder stack on Windows.
 [CmdletBinding()]
 param()

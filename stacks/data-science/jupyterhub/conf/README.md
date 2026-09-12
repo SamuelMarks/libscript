@@ -1,3 +1,6 @@
-# conf
+# JupyterHub Configuration Module
 
-This directory contains the conf module.
+## Overview
+
+Contains configuration templates, security policies, and environment overrides for the JupyterHub
+data science stack.

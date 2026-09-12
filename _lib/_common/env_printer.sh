@@ -1,15 +1,15 @@
 #!/bin/sh
+# ## Overview
+# Environment variable exporter and formatting utility for LibScript.
+#
+# ## Usage
+# Outputs environment configurations for evaluated components.
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -25,13 +25,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 # # LibScript Environment Printer Utility
 #
-# ## Overview
-# This module provides a standardized way to print environment variables
-# in various formats (sh, docker, docker_compose, powershell, cmd, json).
-#
-# ## Usage
-# . "$LIBSCRIPT_ROOT_DIR/_lib/_common/env_printer.sh"
-# libscript_print_env [FORMAT] [PREFIX_PATH]
 #
 # If PREFIX_PATH is provided, it will be added to the PATH variable.
 
@@ -79,13 +72,14 @@ EOF
   # 2. Source component's env.sh and print other variables
   # We use a subshell to avoid polluting the current environment
   if [ -f "$SCRIPT_DIR/env.sh" ]; then
+    _filter="^(PWD|SHLVL|_|PATH|FORMAT|SCRIPT_DIR|PREFIX|STACK|SCRIPT_NAME)="
     # We pass FORMAT and SCRIPT_DIR to the subshell
     env PATH="$PATH" \
             FORMAT="$_format" \
             SCRIPT_DIR="$SCRIPT_DIR" \
             PREFIX="$_prefix_path" \
             LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}" \
-            sh -c "$(cat << 'EOF_SH'
+            sh << 'EOF_SH'
             # Source the env.sh
             # shellcheck disable=SC1090
             . "$SCRIPT_DIR/env.sh" >/dev/null 2>&1
@@ -140,6 +134,5 @@ EOF
             ;;
             esac
 EOF_SH
-)"
   fi
 }

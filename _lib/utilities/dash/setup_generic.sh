@@ -9,11 +9,7 @@ set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -118,7 +114,7 @@ case "$ACTION" in
       libscript_symlink_alias "dash" "default" "${EXACT_VERSION}"
       log_info "Set default dash version to ${EXACT_VERSION}."
       log_info "To apply to the current shell, run:"
-      log_info "  eval \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env dash \"${DASH_VERSION}\")"
+      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env dash \"${DASH_VERSION}\")"
     fi
     exit 0
     ;;

@@ -1,15 +1,15 @@
 #!/bin/sh
+# ## Overview
+# Generic setup and configuration script for GCP Cloud TPU VM instances.
+#
+# ## Usage
+# Execute this script to configure Cloud TPU VMs on Google Cloud.
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -25,13 +25,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 # # LibScript Common Generic Setup
 #
-# ## Overview
-# This script provides fallback installation logic using the LibScript
-# package manager mapper. It is invoked when no OS-specific setup script
-# is found for a component.
-#
-# ## Usage
-# Sourced by `setup_base.sh` if `setup_<os>.sh` is missing.
 
 set -feu
 
@@ -130,7 +123,7 @@ case "$ACTION" in
       libscript_symlink_alias "tpu-vm" "default" "${EXACT_VERSION}"
       log_info "Set default tpu-vm version to ${EXACT_VERSION}."
       log_info "To apply to the current shell, run:"
-      log_info "  eval \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env tpu-vm \"$VERSION\")"
+      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env tpu-vm \"$VERSION\")"
     fi
     exit 0
     ;;

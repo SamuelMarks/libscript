@@ -7,15 +7,10 @@
 
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -31,9 +26,9 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 _RAW_DIR="$(cd "$(dirname -- "${THIS_FILE}")" && pwd)"
 
-# If THIS_FILE resolves to netctl.sh, its dirname is the root. If it resolves to LIB/prelude.sh, its dirname is LIB.
+# If THIS_FILE resolves to netctl.sh, its dirname is the root. If it resolves to lib/prelude.sh, its dirname is lib.
 case "$_RAW_DIR" in
-  */LIB) NETCTL_DIR="${NETCTL_DIR:-${_RAW_DIR%/*}}" ;;
+  */LIB|*/lib) NETCTL_DIR="${NETCTL_DIR:-${_RAW_DIR%/*}}" ;;
   *) NETCTL_DIR="${NETCTL_DIR:-$_RAW_DIR}" ;;
 esac
 

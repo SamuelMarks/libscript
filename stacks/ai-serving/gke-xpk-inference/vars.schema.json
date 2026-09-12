@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/stacks/ai-serving/gke-xpk-inference/vars.schema.json",
+  "title": "gke-xpk-inference vars",
+  "description": "Variables for GKE XPK large-scale AI model inference stack",
+  "type": "object",
+  "properties": {
+    "XPK_CLUSTER_NAME": {
+      "type": "string",
+      "description": "Name of the Google Kubernetes Engine XPK cluster",
+      "default": "ml-xpk-cluster"
+    },
+    "GCP_PROJECT_ID": {
+      "type": "string",
+      "description": "Google Cloud Project ID where the cluster is created",
+      "default": ""
+    },
+    "GCP_ZONE": {
+      "type": "string",
+      "description": "Google Cloud Zone for the XPK cluster (e.g. us-central2-b)",
+      "default": ""
+    },
+    "TPU_ACCELERATOR_TYPE": {
+      "type": "string",
+      "description": "TPU accelerator version and topology (e.g. v4-8, v5e-16)",
+      "default": "v4-8"
+    },
+    "MODEL_NAME": {
+      "type": "string",
+      "description": "Hugging Face or GCS model identifier served by the inference engine",
+      "default": ""
+    },
+    "WORKLOAD_NAME": {
+      "type": "string",
+      "description": "Kubernetes workload identifier for the inference service",
+      "default": "ml-serve"
+    },
+    "PORT": {
+      "type": "string",
+      "description": "Inference server port exposed by the service",
+      "default": "8000"
+    }
+  }
+}

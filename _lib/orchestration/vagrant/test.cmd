@@ -1,6 +1,12 @@
 @echo off
-rem ## Overview
-rem Test suite for Vagrant component on Windows.
+:: # test.cmd
+::
+:: ## Overview
+:: Test suite script for Vagrant on Windows.
+::
+:: ## Usage
+:: Call this script to verify Vagrant functionality on Windows.
+
 setlocal enabledelayedexpansion
 set "THIS_FILE=%~f0"
 

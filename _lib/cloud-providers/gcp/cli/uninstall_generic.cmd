@@ -2,10 +2,13 @@
 :: # uninstall_generic.cmd
 ::
 :: ## Overview
-:: Generic uninstall script for the GCP CLI on Windows.
+:: Generic uninstall script for cli on Windows.
 ::
 :: ## Usage
-:: Typically uninstalls tools or cleans up state. Currently a no-op.
+:: Routes to generic uninstallation via `_common\uninstall_generic.cmd`.
 
-:: Generic uninstall for Windows skipped
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+if exist "%~dp0\..\..\..\_common\uninstall_generic.cmd" (
+    call "%~dp0\..\..\..\_common\uninstall_generic.cmd" %*
+)

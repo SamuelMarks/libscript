@@ -2,12 +2,18 @@
 :: # env0.cmd
 ::
 :: ## Overview
-:: Lifecycle script for env0.cmd.
+:: Initializes path environment for nginx on Windows.
 ::
 :: ## Usage
-:: See env0.cmd for implementation details.
+:: call env0.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
-echo Not implemented or not applicable on Windows.
-exit /b 1
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "LIBSCRIPT_ROOT_DIR=%SCRIPT_DIR%\..\..\.."
+)
+
+exit /b 0

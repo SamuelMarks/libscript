@@ -1,4 +1,7 @@
 # ## Overview
+#
+# ## Usage
+# Execute via PowerShell.
 # PowerShell test script for VirtualBox.
 [CmdletBinding()]
 param()

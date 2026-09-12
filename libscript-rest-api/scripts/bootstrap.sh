@@ -8,24 +8,11 @@
 
 set -feu
 
-if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
-  printf '%s\n' "Usage: $(basename "$0")"
-  printf '%s\n' "Dependency resolution script for bootstrapping the libscript REST API development environment."
-  printf '\n'
-  printf '%s\n' "Options:"
-  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
-  exit 0
-fi
 
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -40,6 +27,15 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
+  printf '%s\n' "Usage: $(basename "$0")"
+  printf '%s\n' "Dependency resolution script for bootstrapping the libscript REST API development environment."
+  printf '\n'
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
+  exit 0
+fi
+
 # Import common logging if available
 if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
@@ -47,7 +43,11 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh" ]; then
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 else
+  # ## log_info
+  # Outputs informational log messages.
   log_info() { printf '[INFO] %s\n' "$1"; }
+  # ## log_error
+  # Outputs error log messages.
   log_error() { printf '[ERROR] %s\n' "$1" >&2; }
 fi
 
@@ -142,7 +142,7 @@ if [ ! -d "$VENDOR_DIR/c-rest-framework/.git" ]; then
   git clone https://github.com/SamuelMarks/c-rest-framework "$VENDOR_DIR/c-rest-framework"
 else
   log_info "c-rest-framework already cloned. Pulling latest..."
-  (cd "$VENDOR_DIR/c-rest-framework" && git fetch --all && git reset --hard @{upstream})
+  (cd "$VENDOR_DIR/c-rest-framework" && git fetch --all && git reset --hard '@{upstream}')
 fi
 
 log_info "Framework acquisition complete."

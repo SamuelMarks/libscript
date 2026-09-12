@@ -1,8 +1,14 @@
 @echo off
+:: # uninstall_generic.cmd
+::
 :: ## Overview
-:: Windows uninstall stub for tensorboard
-:: 
+:: Generic uninstall script for tensorboard on Windows.
+::
 :: ## Usage
-:: Execute this script to perform removal steps for tensorboard.
+:: Routes to generic uninstallation via `_common\uninstall_generic.cmd`.
+
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
-if "%ACTION%"=="" set ACTION=uninstall
+if exist "%~dp0\..\..\_common\uninstall_generic.cmd" (
+    call "%~dp0\..\..\_common\uninstall_generic.cmd" %*
+)

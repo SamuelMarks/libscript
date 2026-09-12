@@ -7,21 +7,11 @@
 
 set -e
 
-if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
-  printf '%s\n' "Usage: $(basename "$0")"
-  printf '%s\n' "Runs the pre-commit hook dance in CI to ensure code quality."
-  exit 0
-fi
 
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
-  set -o pipefail
-elif [ "${ZSH_VERSION-}" ]; then
-  THIS_FILE="${(%):-%x}"
-  set -o pipefail
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -34,6 +24,13 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
+  printf '%s\n' "Usage: $(basename "$0")"
+  printf '%s\n' "Runs the pre-commit hook dance in CI to ensure code quality."
+  exit 0
+fi
 
 cd "${SCRIPT_DIR}/../.." || exit 1
 
@@ -46,7 +43,7 @@ git add -A
 .githooks/pre-commit.sh
 
 # Check if anything changed
-if ! git diff --cached --exit-code; then
+if ! git diff --no-ext-diff --cached --exit-code; then
   printf '%s\n' "Error: The pre-commit hook modified files. Please run the pre-commit hook locally and commit the changes."
   exit 1
 fi

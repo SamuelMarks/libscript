@@ -20,33 +20,49 @@ You can manage Nextcloud using the global `libscript` CLI or local scripts.
 
 ## Configuration Options
 
-- `NEXTCLOUD_VERSION`: Specific Nextcloud version to install (default `latest`).
-- `NEXTCLOUD_WEBSERVER`: One of `nginx` (default on Linux/macOS), `caddy`, `httpd`, or `iis`
-  (default on Windows).
-- `NEXTCLOUD_SERVER_NAME`: The FQDN for the application (default `localhost`).
-- `NEXTCLOUD_LISTEN`: The port to listen on (default `80`).
-- `NEXTCLOUD_WWWROOT`: The directory to install to (default `/var/www/nextcloud` or
-  `C:\inetpub\wwwroot\nextcloud`).
-- `NEXTCLOUD_DB_TYPE`: One of `sqlite`, `mariadb`, `postgres` (default `sqlite`).
-- `NEXTCLOUD_DB_NAME`, `NEXTCLOUD_DB_USER`, `NEXTCLOUD_DB_PASS`: Database credentials.
-- `NEXTCLOUD_PHP_FPM_LISTEN`: Unix socket or host:port for PHP-FPM connection (auto-detected if
-  unset).
+The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
+running the setup script.
+
+<!-- BEGIN_VARS -->
+
+| Variable                   | Description                     | Default | Aliases/Examples |
+| -------------------------- | ------------------------------- | ------- | ---------------- |
+| `NEXTCLOUD_VERSION`        | Variable NEXTCLOUD_VERSION.     | `none`  |                  |
+| `NEXTCLOUD_PHP_FPM_LISTEN` | Variable PHP_FPM_LISTEN.        | `none`  |                  |
+| `NEXTCLOUD_SERVER_NAME`    | Variable NEXTCLOUD_SERVER_NAME. | `none`  |                  |
+| `NEXTCLOUD_DB_PASS`        | Variable NEXTCLOUD_DB_PASS.     | `none`  |                  |
+| `NEXTCLOUD_DB_USER`        | Variable NEXTCLOUD_DB_USER.     | `none`  |                  |
+| `NEXTCLOUD_WWWROOT`        | Variable WWWROOT.               | `none`  |                  |
+| `NEXTCLOUD_DB_NAME`        | Variable NEXTCLOUD_DB_NAME.     | `none`  |                  |
+| `NEXTCLOUD_DB_TYPE`        | Variable NEXTCLOUD_DB_TYPE.     | `none`  |                  |
+| `NEXTCLOUD_WEBSERVER`      | Variable NEXTCLOUD_WEBSERVER.   | `none`  |                  |
+| `NEXTCLOUD_LISTEN`         | Variable NEXTCLOUD_LISTEN.      | `none`  |                  |
+
+<!-- END_VARS -->
 
 ## Platform Support
 
-This module adheres to LibScript's cross-platform conventions:
+<!-- BEGIN_PLATFORMS -->
 
-- Safely degrades system-level reloads (e.g. `systemctl`, `mysql`) during image build phases,
-  ensuring `package-as docker` emits a single, functional container.
-- Uses `setup_windows.ps1` for clean `.msi` or `.exe` Windows Installer generation, leveraging
-  `winget` and native IIS PowerShell configuration blocks (`WebAdministration`).
+- Linux
+- macOS
+- Windows
 
-## Variables
+<!-- END_PLATFORMS -->
 
-See `vars.schema.json` for details on available variables.
+## Configuration Options
+
+The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
+running the setup script.
+
+<!-- BEGIN_VARS -->
+<!-- END_VARS -->
 
 ## Orchestrated Components
 
 This stack orchestrates the following LibScript components:
 
-- (Please document required components here)
+- `_lib/languages/php`: PHP runtime and PHP-FPM processor
+- `_lib/databases/mariadb` (or `postgres`, `sqlite`): Database storage layer
+- `_lib/web-servers/nginx` (or `caddy`, `httpd`, `iis`): HTTP web server and TLS terminator
+- `_lib/caches/redis`: In-memory transactional file locking and caching layer

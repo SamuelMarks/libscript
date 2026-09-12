@@ -6,15 +6,10 @@
 # Execute this script to perform generic initialization steps for nimble.
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -26,6 +21,8 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf "%s\n" "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
@@ -124,7 +121,7 @@ case "$ACTION" in
       libscript_symlink_alias "nimble" "default" "${EXACT_VERSION}"
       log_info "Set default nimble version to ${EXACT_VERSION}."
       log_info "To apply to the current shell, run:"
-      log_info "  eval \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env nimble \"$VERSION\")"
+      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env nimble \"$VERSION\")"
     fi
     exit 0
     ;;
@@ -197,7 +194,7 @@ case "$ACTION" in
               log_info "Falling back to system package manager for nimble..."
               libscript_depends "nimble"
               if command -v nimble >/dev/null 2>&1; then
-                ln -s "$(command -v nimble)" "${TARGET_DIR}/bin/nimble"
+                ln -sf "$(command -v nimble)" "${TARGET_DIR}/bin/nimble"
               fi
             else
               if [ "$UNAME_LOWER" = "freebsd" ]; then

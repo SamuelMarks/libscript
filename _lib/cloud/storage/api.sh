@@ -6,15 +6,10 @@
 # Source this file and call libscript_storage_create, libscript_storage_delete, etc.
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -82,7 +77,7 @@ libscript_storage_create() {
         if [ "$public_web" = "true" ]; then
           cmd="$cmd --public-access container"
         fi
-        eval "$cmd"
+        sh -c "$cmd"
       fi
       if [ "$LIBSCRIPT_TAG_ENABLE" = "true" ]; then
         az storage container metadata update --name "$bucket" --account-name "$acct" --metadata "$LIBSCRIPT_TAG_KEY=$LIBSCRIPT_TAG_VALUE"

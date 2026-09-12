@@ -1,6 +1,12 @@
 @echo off
-rem ## Overview
-rem Test suite for QEMU component on Windows.
+:: # test.cmd
+::
+:: ## Overview
+:: Test suite script for QEMU on Windows.
+::
+:: ## Usage
+:: Call this script to verify QEMU functionality on Windows.
+
 setlocal enabledelayedexpansion
 set "THIS_FILE=%~f0"
 

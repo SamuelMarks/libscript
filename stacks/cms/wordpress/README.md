@@ -20,32 +20,48 @@ You can manage WordPress using the global `libscript` CLI or local scripts.
 
 ## Configuration Options
 
-- `WORDPRESS_VERSION`: Specific WordPress version to install (default `latest`).
-- `WORDPRESS_WEBSERVER`: One of `nginx` (default on Linux/macOS), `caddy`, `httpd`, or `iis`
-  (default on Windows).
-- `WORDPRESS_SERVER_NAME`: The FQDN for the application (default `localhost`).
-- `WORDPRESS_LISTEN`: The port to listen on (default `80`).
-- `WORDPRESS_WWWROOT`: The directory to install to (default `/var/www/wordpress` or
-  `C:\inetpub\wwwroot\wordpress`).
-- `WORDPRESS_DB_NAME`, `WORDPRESS_DB_USER`, `WORDPRESS_DB_PASS`: Database credentials.
-- `WORDPRESS_PHP_FPM_LISTEN`: Unix socket or host:port for PHP-FPM connection (auto-detected if
-  unset).
+The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
+running the setup script.
+
+<!-- BEGIN_VARS -->
+
+| Variable                   | Description                     | Default | Aliases/Examples |
+| -------------------------- | ------------------------------- | ------- | ---------------- |
+| `WORDPRESS_PHP_FPM_LISTEN` | Variable PHP_FPM_LISTEN.        | `none`  |                  |
+| `WORDPRESS_DB_USER`        | Variable WORDPRESS_DB_USER.     | `none`  |                  |
+| `WORDPRESS_DB_NAME`        | Variable WORDPRESS_DB_NAME.     | `none`  |                  |
+| `WORDPRESS_WEBSERVER`      | Variable WORDPRESS_WEBSERVER.   | `none`  |                  |
+| `WORDPRESS_LISTEN`         | Variable WORDPRESS_LISTEN.      | `none`  |                  |
+| `WORDPRESS_DB_ENGINE`      | Variable WORDPRESS_DB_ENGINE.   | `none`  |                  |
+| `WORDPRESS_VERSION`        | Variable WORDPRESS_VERSION.     | `none`  |                  |
+| `WORDPRESS_WWWROOT`        | Variable WWWROOT.               | `none`  |                  |
+| `WORDPRESS_DB_PASS`        | Variable WORDPRESS_DB_PASS.     | `none`  |                  |
+| `WORDPRESS_SERVER_NAME`    | Variable WORDPRESS_SERVER_NAME. | `none`  |                  |
+
+<!-- END_VARS -->
 
 ## Platform Support
 
-This module adheres to LibScript's cross-platform conventions:
+<!-- BEGIN_PLATFORMS -->
 
-- Safely degrades system-level reloads (e.g. `systemctl`, `mysql`) during image build phases,
-  ensuring `package-as docker` emits a single, functional container.
-- Uses `setup_windows.ps1` for clean `.msi` or `.exe` Windows Installer generation, leveraging
-  `winget` and native IIS PowerShell configuration blocks (`WebAdministration`).
+- Linux
+- macOS
+- Windows
 
-## Variables
+<!-- END_PLATFORMS -->
 
-See `vars.schema.json` for details on available variables.
+## Configuration Options
+
+The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
+running the setup script.
+
+<!-- BEGIN_VARS -->
+<!-- END_VARS -->
 
 ## Orchestrated Components
 
 This stack orchestrates the following LibScript components:
 
-- (Please document required components here)
+- `_lib/languages/php`: PHP runtime and PHP-FPM processor
+- `_lib/databases/mariadb`: MariaDB database server
+- `_lib/web-servers/nginx` (or `caddy`, `httpd`, `iis`): HTTP web server and SSL termination

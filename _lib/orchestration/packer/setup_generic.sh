@@ -6,15 +6,10 @@
 # Sourced by setup.sh to configure repository and install Packer.
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -51,6 +46,8 @@ PACKER_INSTALL_METHOD="$(libscript_resolve_install_method "PACKER")"
 ACTION="${ACTION:-install}"
 PACKER_VERSION="${PACKER_VERSION:-latest}"
 
+# ## configure_hashicorp_repo_debian
+# Configures the official HashiCorp apt repository on Debian/Ubuntu systems.
 configure_hashicorp_repo_debian() {
   if [ -f /etc/apt/sources.list.d/hashicorp.list ]; then
     return 0
@@ -121,6 +118,10 @@ case "$ACTION" in
       fi
 
       target_dir="${LIBSCRIPT_HOME:-$HOME/.libscript}/packer/${ver}/bin"
+      if [ -x "$target_dir/packer" ]; then
+        log_info "Packer ${ver} is already installed at $target_dir/packer"
+        exit 0
+      fi
       mkdir -p "$target_dir"
       zip_url="https://releases.hashicorp.com/packer/${ver}/packer_${ver}_${os}_${arch}.zip"
       zip_tmp=$(mktemp)

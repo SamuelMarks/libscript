@@ -10,17 +10,25 @@ A generic setup script to deploy the [Joomla! CMS](https://www.joomla.org/) usin
 
 ## Configuration Options
 
-| Variable             | Description                                           | Default                                                                 |
-| -------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------- |
-| `JOOMLA_VERSION`     | Version of Joomla to install (or `latest`).           | `latest`                                                                |
-| `JOOMLA_WEBSERVER`   | Target web server (`nginx`, `caddy`, `httpd`, `iis`). | `nginx`                                                                 |
-| `JOOMLA_DB_TYPE`     | Database driver to use (`mariadb`, `postgres`).       | `mariadb`                                                               |
-| `JOOMLA_DB_NAME`     | Name of the database.                                 | `joomla`                                                                |
-| `JOOMLA_DB_USER`     | Database user name.                                   | `joomla`                                                                |
-| `JOOMLA_DB_PASS`     | Database user password.                               | `joomla`                                                                |
-| `JOOMLA_SERVER_NAME` | Virtual Host server name (domain).                    | `localhost`                                                             |
-| `JOOMLA_LISTEN`      | Web server listen port.                               | `80`                                                                    |
-| `JOOMLA_WWWROOT`     | Path to extract and serve Joomla from.                | `/var/www/joomla` (Linux/macOS) / `C:\inetpub\wwwroot\joomla` (Windows) |
+The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
+running the setup script.
+
+<!-- BEGIN_VARS -->
+
+| Variable                | Description                  | Default | Aliases/Examples |
+| ----------------------- | ---------------------------- | ------- | ---------------- |
+| `JOOMLA_VERSION`        | Variable JOOMLA_VERSION.     | `none`  |                  |
+| `JOOMLA_DB_PASS`        | Variable JOOMLA_DB_PASS.     | `none`  |                  |
+| `JOOMLA_PHP_FPM_LISTEN` | Variable PHP_FPM_LISTEN.     | `none`  |                  |
+| `JOOMLA_LISTEN`         | Variable JOOMLA_LISTEN.      | `none`  |                  |
+| `JOOMLA_DB_TYPE`        | Variable JOOMLA_DB_TYPE.     | `none`  |                  |
+| `JOOMLA_WEBSERVER`      | Variable JOOMLA_WEBSERVER.   | `none`  |                  |
+| `JOOMLA_WWWROOT`        | Variable WWWROOT.            | `none`  |                  |
+| `JOOMLA_DB_USER`        | Variable JOOMLA_DB_USER.     | `none`  |                  |
+| `JOOMLA_SERVER_NAME`    | Variable JOOMLA_SERVER_NAME. | `none`  |                  |
+| `JOOMLA_DB_NAME`        | Variable JOOMLA_DB_NAME.     | `none`  |                  |
+
+<!-- END_VARS -->
 
 ## Example Usage
 
@@ -42,18 +50,28 @@ set JOOMLA_VERSION=5.2.0
 setup.cmd
 ```
 
-## Variables
+## Configuration Options
 
-See `vars.schema.json` for details on available variables.
+The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
+running the setup script.
+
+<!-- BEGIN_VARS -->
+<!-- END_VARS -->
 
 ## Platform Support
+
+<!-- BEGIN_PLATFORMS -->
 
 - Linux
 - macOS
 - Windows
 
+<!-- END_PLATFORMS -->
+
 ## Orchestrated Components
 
 This stack orchestrates the following LibScript components:
 
-- (Please document required components here)
+- `_lib/languages/php`: PHP runtime and database drivers
+- `_lib/databases/mariadb` (or `postgres`): Relational database storage
+- `_lib/web-servers/nginx` (or `caddy`, `httpd`, `iis`): Web server

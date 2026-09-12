@@ -17,6 +17,8 @@ if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 set "LOG_CMD=%SCRIPT_DIR%\_lib\_common\log.cmd"
 
 :: Global Option Parsing
+:: ## opt_loop
+:: Executes opt_loop functionality.
 :opt_loop
 set "arg=%~1"
 if "!arg!"=="" goto :run_cmd

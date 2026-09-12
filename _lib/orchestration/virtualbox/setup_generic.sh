@@ -6,15 +6,10 @@
 # Sourced by setup.sh to configure repository, install VirtualBox, and install Extension Pack.
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -51,6 +46,8 @@ VIRTUALBOX_INSTALL_METHOD="$(libscript_resolve_install_method "VIRTUALBOX")"
 ACTION="${ACTION:-install}"
 VIRTUALBOX_INSTALL_EXTPACK="${VIRTUALBOX_INSTALL_EXTPACK:-1}"
 
+# ## configure_virtualbox_repo_debian
+# Configures the Oracle VirtualBox apt repository on Debian/Ubuntu systems.
 configure_virtualbox_repo_debian() {
   if [ -f /etc/apt/sources.list.d/virtualbox.list ]; then
     return 0
@@ -75,6 +72,8 @@ configure_virtualbox_repo_debian() {
   priv apt-get update -y
 }
 
+# ## install_extension_pack
+# Downloads and installs the Oracle VM VirtualBox Extension Pack.
 install_extension_pack() {
   if ! command -v VBoxManage >/dev/null 2>&1; then
     return 0
@@ -105,6 +104,8 @@ install_extension_pack() {
   fi
 }
 
+# ## setup_user_groups
+# Adds the current user to the vboxusers group.
 setup_user_groups() {
   target_user="${SUDO_USER:-$(id -un)}"
   if [ "$target_user" = "root" ]; then

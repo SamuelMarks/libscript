@@ -1,6 +1,12 @@
 @echo off
-rem ## Overview
-rem Test suite for Packer component on Windows.
+:: # test.cmd
+::
+:: ## Overview
+:: Test suite script for HashiCorp Packer on Windows.
+::
+:: ## Usage
+:: Call this script to verify Packer functionality on Windows.
+
 setlocal enabledelayedexpansion
 set "THIS_FILE=%~f0"
 

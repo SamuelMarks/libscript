@@ -19,10 +19,14 @@ if "%~1"=="local_tests_databases" goto local_tests_databases
 echo Unknown target %1
 exit /b 1
 
+:: ## local_tests_all
+:: Executes local_tests_all functionality.
 :local_tests_all
 call tests\run_local_tests.cmd all
 exit /b
 
+:: ## test_component
+:: Executes test_component functionality.
 :test_component
 if "%~2"=="" (
     echo Usage: make.bat test_component ^<component_name^>
@@ -31,14 +35,20 @@ if "%~2"=="" (
 call tests\run_local_tests.cmd %2
 exit /b
 
+:: ## local_tests_toolchain
+:: Executes local_tests_toolchain functionality.
 :local_tests_toolchain
 call tests\run_local_tests.cmd toolchains
 exit /b
 
+:: ## local_tests_languages
+:: Executes local_tests_languages functionality.
 :local_tests_languages
 call tests\run_local_tests.cmd languages
 exit /b
 
+:: ## local_tests_databases
+:: Executes local_tests_databases functionality.
 :local_tests_databases
 call tests\run_local_tests.cmd databases
 exit /b

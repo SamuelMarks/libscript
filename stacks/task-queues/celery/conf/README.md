@@ -1,3 +1,6 @@
-# conf
+# Celery Configuration Module
 
-This directory contains the conf module.
+## Overview
+
+Contains worker configurations, broker connection templates, and daemon settings for the Celery task
+queue stack.

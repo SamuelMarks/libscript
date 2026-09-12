@@ -18,15 +18,10 @@
 # ```
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -54,6 +49,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 #
 # **Returns:**
 # Prints the path to the executable and returns 0 on success, or non-zero on failure.
+# ## libscript_python_resolve
+# Resolves the path to the python interpreter.
 libscript_python_resolve() {
   _version="${1:-}"
   _backend="${LIBSCRIPT_PYTHON_BACKEND:-native}"
@@ -138,6 +135,8 @@ libscript_python_resolve() {
 #
 # **Returns:**
 # 0 on success, non-zero on failure.
+# ## libscript_python_venv
+# Creates a Python virtual environment.
 libscript_python_venv() {
   if [ "$#" -lt 1 ]; then
     log_error "Usage: libscript_python_venv <target_dir> [python_version]"

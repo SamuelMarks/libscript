@@ -1,6 +1,10 @@
 @echo off
 :: ## Overview
 :: Windows setup for Bento Builder stack.
+::
+:: ## Usage
+:: Internal generic setup script for Bento Builder on Windows.
+
 set "THIS_FILE=%~f0"
 
 if "%ACTION%"=="" set ACTION=install

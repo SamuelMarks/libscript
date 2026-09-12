@@ -1,6 +1,12 @@
 @echo off
+:: # setup_generic.cmd
+::
 :: ## Overview
-:: Windows setup for HashiCorp Vagrant
+:: Generic setup and installation script for Vagrant on Windows.
+::
+:: ## Usage
+:: Call this script to install Vagrant on Windows.
+
 set "THIS_FILE=%~f0"
 
 if "%ACTION%"=="" set ACTION=install

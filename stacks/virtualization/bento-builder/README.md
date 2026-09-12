@@ -1,6 +1,7 @@
 # Bento Builder Stack
 
-Provisioning stack for Chef Bento box building on Linux, macOS, and cloud VMs (such as Azure nested virtualization VMs).
+Provisioning stack for Chef Bento box building on Linux, macOS, and cloud VMs (such as Azure nested
+virtualization VMs).
 
 ## Stack Components
 
@@ -29,3 +30,31 @@ Provisioning stack for Chef Bento box building on Linux, macOS, and cloud VMs (s
 # Test and validate the environment
 ./libscript.sh test bento-builder
 ```
+
+## Configuration Options
+
+The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
+running the setup script.
+
+<!-- BEGIN_VARS -->
+
+| Variable              | Description                                                 | Default | Aliases/Examples |
+| --------------------- | ----------------------------------------------------------- | ------- | ---------------- |
+| `BENTO_DIR`           | Path to the local bento repository (default: auto-detected) | ``      |                  |
+| `INSTALL_QEMU`        | Install QEMU/KVM virtualization (1 or 0)                    | `1`     |                  |
+| `INSTALL_VIRTUALBOX`  | Install VirtualBox 7.0 and Extension Pack (1 or 0)          | `1`     |                  |
+| `INSTALL_PACKER`      | Install HashiCorp Packer (1 or 0)                           | `1`     |                  |
+| `INSTALL_VAGRANT`     | Install HashiCorp Vagrant and plugins (1 or 0)              | `1`     |                  |
+| `INSTALL_IMAGE_TOOLS` | Install ISO/WIM tools like wimtools, xorriso, 7zip (1 or 0) | `1`     |                  |
+
+<!-- END_VARS -->
+
+## Platform Support
+
+<!-- BEGIN_PLATFORMS -->
+
+- Linux
+- macOS
+- Windows
+
+<!-- END_PLATFORMS -->

@@ -6,15 +6,10 @@
 # Orchestrates installation of QEMU, VirtualBox, Packer, Vagrant, ISO tools, and Ruby.
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -55,6 +50,8 @@ INSTALL_VAGRANT="${INSTALL_VAGRANT:-1}"
 INSTALL_IMAGE_TOOLS="${INSTALL_IMAGE_TOOLS:-1}"
 BENTO_DIR="${BENTO_DIR:-}"
 
+# ## find_bento_dir
+# Locates the bento project directory on the filesystem.
 find_bento_dir() {
   if [ -n "$BENTO_DIR" ] && [ -d "$BENTO_DIR" ]; then
     printf '%s\n' "$BENTO_DIR"
@@ -69,6 +66,8 @@ find_bento_dir() {
   return 1
 }
 
+# ## ensure_ruby
+# Ensures a compatible Ruby runtime is installed and configured.
 ensure_ruby() {
   ruby_ok=0
   if command -v ruby >/dev/null 2>&1; then
@@ -113,6 +112,8 @@ ensure_ruby() {
   fi
 }
 
+# ## install_image_utilities
+# Installs utilities for working with ISO and WIM images.
 install_image_utilities() {
   log_info "Installing ISO and WIM image manipulation utilities..."
   case "${PKG_MGR}" in
@@ -131,6 +132,8 @@ install_image_utilities() {
   esac
 }
 
+# ## configure_bento_repo
+# Configures the local Bento repository dependencies and plugins.
 configure_bento_repo() {
   if b_dir=$(find_bento_dir); then
     log_info "Found Bento repository at $b_dir"

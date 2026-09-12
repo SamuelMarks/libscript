@@ -1,7 +1,16 @@
 @echo off
+:: # env.cmd
+::
 :: ## Overview
-:: Windows stub for env of ollama
-:: 
+:: Environment initialization for Ollama on Windows.
+::
 :: ## Usage
-:: Call this script to load the environment variables.
+:: Sets up default environment variables for Ollama.
+
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+
+if "%OLLAMA_INSTALL_METHOD%"=="" set "OLLAMA_INSTALL_METHOD=libscript_native"
+if "%OLLAMA_VERSION%"=="" set "OLLAMA_VERSION=latest"
+if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+set "PATH=%LIBSCRIPT_HOME%\ollama\%OLLAMA_VERSION%\bin;%PATH%"

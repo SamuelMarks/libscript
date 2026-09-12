@@ -11,15 +11,10 @@
 
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -34,12 +29,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-# Source logging
-. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
-
-#DIR="$( dirname -- "$( readlink -nf -- "${0}" )")"
-
-for LIB in "_lib/_common/os_info.sh" "_lib/_common/priv.sh" "_lib/_common/pkg_mapper.sh"; do
+for LIB in "_lib/_common/log.sh" "_lib/_common/os_info.sh" "_lib/_common/priv.sh" "_lib/_common/pkg_mapper.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -53,7 +43,8 @@ export PKG_MGR_UPDATE_REGISTRY
 # Executes libscript_resolve_install_method functionality.
 libscript_resolve_install_method() {
   comp_method_var="${1}_INSTALL_METHOD"
-  eval "requested=\${${comp_method_var}:-\${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-}}"
+  requested="$(printenv "$comp_method_var" 2>/dev/null || true)"
+  : "${requested:=${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-}}"
 
   chain="libscript_native mise asdf pkgx vfox system"
   check_chain=""
@@ -198,6 +189,9 @@ libscript_depends() {
     while ! mkdir "$_lockdir" 2>/dev/null; do
       _lock_count=$((_lock_count + 1))
       if [ "$_lock_count" -gt "$_lock_timeout" ]; then
+        log_warn "Lock $_lockdir expired or stale; removing and acquiring lock."
+        rmdir "$_lockdir" 2>/dev/null || rm -rf "$_lockdir" 2>/dev/null || true
+        mkdir "$_lockdir" 2>/dev/null && break
         log_error "Could not acquire package manager lock after ${_lock_timeout}s"
         return 1
       fi
@@ -246,7 +240,8 @@ if [ "${PKG_MGR-}" ]; then
   detect_pkg_mgr
 fi
 
-# Unified Caching Downloader
+# ## libscript_download
+# Unified Caching Downloader for remote artifacts.
 libscript_download() {
   export url="${1:-}"
   dest="${2:-}"
@@ -452,6 +447,8 @@ libscript_process_aria2_file() {
   out=""
   checksum=""
 
+  # ## process_entry
+  # Downloads and verifies the accumulated URL and checksum entry.
   process_entry() {
     if [ -n "$url" ]; then
       log_info "Processing $url ..."

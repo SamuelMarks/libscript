@@ -23,6 +23,8 @@ if "%~1"=="libscript_python_venv" goto libscript_python_venv
 if "%~1"=="libscript_python_resolve" goto libscript_python_resolve
 goto :EOF
 
+:: ## libscript_python_resolve
+:: Executes libscript_python_resolve functionality.
 :libscript_python_resolve
 :: ## libscript_python_resolve
 :: Resolves the path to the Python executable for a given version.
@@ -105,6 +107,8 @@ if "%_backend%"=="uv" (
 exit /b 0
 
 
+:: ## libscript_python_venv
+:: Executes libscript_python_venv functionality.
 :libscript_python_venv
 :: ## libscript_python_venv
 :: Creates a Python virtual environment at the specified directory.

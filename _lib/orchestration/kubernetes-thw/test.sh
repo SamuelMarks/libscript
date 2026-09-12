@@ -6,15 +6,10 @@
 # Execute this script to perform a component-specific test.
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -97,11 +92,17 @@ while read -r IP FQDN HOST SUBNET; do
   V_PORT=$(awk '/Port/ {print $2}' /tmp/vssh_${MACH_IDX})
   KEY_PATH=$(awk '/IdentityFile/ {print $2}' /tmp/vssh_${MACH_IDX} | head -n 1)
   
+  mkdir -p ~/.ssh
+  touch ~/.ssh/known_hosts
   ssh-keygen -R "[$V_HOST]:$V_PORT" 2>/dev/null || true
   ssh-keygen -R "$V_HOST" 2>/dev/null || true
-  ssh-keyscan -p "$V_PORT" -H "$V_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+  if ! ssh-keygen -F "[$V_HOST]:$V_PORT" -f ~/.ssh/known_hosts >/dev/null 2>&1; then
+    ssh-keyscan -p "$V_PORT" -H "$V_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+  fi
   
+  touch ~/.ssh/config
   sed -i.bak "/^Host $HOST$/,/^$/d" ~/.ssh/config 2>/dev/null || true
+  rm -f ~/.ssh/config.bak
   printf 'Host %s\n  HostName %s\n  Port %s\n  User root\n  IdentityFile %s\n  StrictHostKeyChecking no\n\n' "$HOST" "$V_HOST" "$V_PORT" "$KEY_PATH" >> ~/.ssh/config
   
   # Ensure root access is allowed by injecting the newly created public key (if Vagrant hasn't setup root ssh key auth)

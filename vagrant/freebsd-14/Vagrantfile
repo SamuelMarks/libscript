@@ -51,10 +51,10 @@ Vagrant.configure("2") do |config|
       export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript
 
       echo "Installing #{test_target} using libscript..."
-      bash /opt/repos/libscript/libscript.sh install #{test_target}
+      sh /opt/repos/libscript/libscript.sh install #{test_target}
 
       echo "Running test for #{test_target}..."
-      bash /opt/repos/libscript/libscript.sh test #{test_target}
+      sh /opt/repos/libscript/libscript.sh test #{test_target}
     SHELL
   end
 end

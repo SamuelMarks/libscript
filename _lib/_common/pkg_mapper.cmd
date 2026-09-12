@@ -43,6 +43,8 @@ goto %1
 :: -----------------------------------------------------------------------------
 :: :map_package <generic_name>
 :: -----------------------------------------------------------------------------
+:: ## map_package
+:: Executes map_package functionality.
 :map_package
 set "PKG=%~2"
 set "MAPPED_PKG="

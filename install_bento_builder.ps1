@@ -1,4 +1,7 @@
 # ## Overview
+#
+# ## Usage
+# Execute via PowerShell.
 # Standalone PowerShell script to provision the Bento Builder environment on Windows.
 
 <#

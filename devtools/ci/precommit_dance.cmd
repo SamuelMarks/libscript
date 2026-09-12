@@ -16,11 +16,15 @@ if "%~1"=="/?" goto :help
 if "%~1"=="-?" goto :help
 goto :main
 
+:: ## help
+:: Displays usage instructions.
 :help
 echo Usage: %~nx0
 echo Runs the pre-commit hook dance in CI to ensure code quality on Windows.
 exit /b 0
 
+:: ## main
+:: Executes pre-commit hooks dance in CI environment.
 :main
 echo ^>^>^> RUNNING PRE-COMMIT DANCE ^<^<^<
 
@@ -34,7 +38,7 @@ git add -A
 call .githooks\pre-commit.cmd
 
 :: Check if anything changed
-git diff --cached --exit-code
+git diff --no-ext-diff --cached --exit-code
 if %ERRORLEVEL% neq 0 (
     echo Error: The pre-commit hook modified files. Please run the pre-commit hook locally and commit the changes.
     exit /b 1

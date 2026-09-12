@@ -59,12 +59,29 @@ libscript package-as docker celery
 The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
 running the setup script.
 
-| Variable                          | Description                                                                                                                               | Default  | Aliases |
-| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------- |
-| `JUPYTERHUB_SERVICE_USER`         | User (try-create); use for the daemon                                                                                                     | `none`   | ``      |
-| `PYTHON_VENV`                     | Python virtualenv to install & then start the celery daemon from                                                                          | `none`   | ``      |
-| `LIBSCRIPT_GLOBAL_INSTALL_METHOD` | Global override for how software should be installed across all systems (e.g. system package manager vs downloaded binaries/from-source). | `system` | ``      |
-| `LIBSCRIPT_WINDOWS_PKG_MGR`       | Global package manager override for Windows targets (e.g. winget, choco).                                                                 | `winget` | ``      |
+<!-- BEGIN_VARS -->
+
+| Variable                          | Description                                                                                                                               | Default  | Aliases/Examples |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------- |
+| `JUPYTERHUB_SERVICE_USER`         | User (try-create); use for the daemon                                                                                                     | `none`   |                  |
+| `PYTHON_VENV`                     | Python virtualenv to install & then start the celery daemon from                                                                          | `none`   |                  |
+| `LIBSCRIPT_GLOBAL_INSTALL_METHOD` | Global override for how software should be installed across all systems (e.g. system package manager vs downloaded binaries/from-source). | `system` |                  |
+| `LIBSCRIPT_WINDOWS_PKG_MGR`       | Global package manager override for Windows targets (e.g. winget, choco).                                                                 | `winget` |                  |
+| `CELERY_SERVICE_USER`             | Variable CELERY_SERVICE_USER.                                                                                                             | `none`   |                  |
+| `PREFIX`                          | Installation prefix.                                                                                                                      | `none`   |                  |
+| `LIBSCRIPT_LOG_DRIVER`            | Logging driver to use (e.g., fluentd).                                                                                                    | `none`   |                  |
+| `LIBSCRIPT_LOG_HOST`              | Host for remote logging.                                                                                                                  | `none`   |                  |
+| `GROUP`                           | Variable GROUP.                                                                                                                           | `none`   |                  |
+| `LIBSCRIPT_LOG_PORT`              | Port for remote logging.                                                                                                                  | `none`   |                  |
+| `PYTHON_VERSION`                  | Variable PYTHON_VERSION.                                                                                                                  | `none`   |                  |
+| `FORMAT`                          | Output format (e.g., json, text).                                                                                                         | `none`   |                  |
+| `LOGS_DIR`                        | Directory where logs should be stored.                                                                                                    | `none`   |                  |
+| `SERVE_FROM`                      | Base directory or context path from which the service should be served.                                                                   | `none`   |                  |
+| `LIBSCRIPT_VERSION`               | Specifies the version of the package to use.                                                                                              | `none`   |                  |
+| `VAULT_TOKEN`                     | Token for HashiCorp Vault authentication.                                                                                                 | `none`   |                  |
+| `LIBSCRIPT_SERVICE_NAME`          | Overrides the default service name.                                                                                                       | `none`   |                  |
+
+<!-- END_VARS -->
 
 ## Architecture
 
@@ -74,18 +91,28 @@ running the setup script.
   correctly.
 - `vars.schema.json`: The schema definition for the CLI arguments.
 
-## Variables
+## Configuration Options
 
-See `vars.schema.json` for details on available variables.
+The following environment variables can be passed to the CLI (`--KEY=VALUE`) or exported before
+running the setup script.
+
+<!-- BEGIN_VARS -->
+<!-- END_VARS -->
 
 ## Platform Support
+
+<!-- BEGIN_PLATFORMS -->
 
 - Linux
 - macOS
 - Windows
 
+<!-- END_PLATFORMS -->
+
 ## Orchestrated Components
 
 This stack orchestrates the following LibScript components:
 
-- (Please document required components here)
+- `_lib/languages/python`: Python runtime and Celery worker engine
+- `_lib/message-brokers/rabbitmq` (or `_lib/caches/redis`): Distributed message broker and results
+  backend

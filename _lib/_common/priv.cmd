@@ -43,6 +43,8 @@ goto %1
 :: :check_admin
 :: -----------------------------------------------------------------------------
 :: Returns: errorlevel 0 (Admin) or 1 (Non-Admin)
+:: ## check_admin
+:: Executes check_admin functionality.
 :check_admin
 net session >nul 2>&1
 if %errorlevel% == 0 (
@@ -56,6 +58,8 @@ if %errorlevel% == 0 (
 :: -----------------------------------------------------------------------------
 :: Param: %~2 - The command to run
 :: Param: %~3-9 - Arguments for the command
+:: ## priv
+:: Executes priv functionality.
 :priv
 set "CMD_TO_RUN=%~2"
 if "!CMD_TO_RUN!"=="" (
@@ -91,6 +95,8 @@ if %errorlevel% == 0 (
 :: -----------------------------------------------------------------------------
 :: Param: %~2 - The user to run as (currently ignored, defaults to Admin)
 :: Param: %~3 - The command to run
+:: ## priv_as
+:: Executes priv_as functionality.
 :priv_as
 :: On Windows, 'priv_as' usually implies 'run as admin' for most LibScript tasks.
 :: Proper 'runas /user:...' requires a password, which is interactive.

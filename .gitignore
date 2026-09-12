@@ -6,6 +6,8 @@
 !libscript.bat
 !install.sh
 !install.bat
+!make.sh
+!make.bat
 !libscript.json
 !packaging/installer.schema.json
 !_lib/_common/prelude.sh
@@ -133,6 +135,15 @@ parse_*
 standardize_*
 # Exception for core test helpers
 !_lib/_common/test_base.*
+!tests/update_results.*
+!tests/test_update_results.*
+!tests/test_python_*
+!devtools/docs-gen/generate_markdown_docs.*
+!devtools/generate_html_docs.*
+!docker/create_docker_builder.*
+!packaging/create_installer_from_json.*
+!_lib/web-servers/*/create_*
+!_lib/web-servers/nginx/test_merge.*
 # Other ad-hoc dev files and generated outputs
 run_cmd.sh
 README_patch.sh
@@ -221,14 +232,17 @@ all_scripts.txt
 /*.sh
 !/libscript.sh
 !/install.sh
+!/make.sh
 !_lib/_common/prelude.sh
 !/top.sh
 !/bottom.sh
 /*.cmd
 !/libscript.cmd
 !/install.cmd
+!/make.cmd
 /*.bat
 !/libscript.bat
+!/make.bat
 !/install.bat
 /*.ps1
 /downloads/

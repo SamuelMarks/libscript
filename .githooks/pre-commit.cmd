@@ -20,6 +20,10 @@ if exist "devtools\docs-gen\generate_markdown_docs.cmd" (
     echo Regenerating markdown readme files interpolating the json...
     call "devtools\docs-gen\generate_markdown_docs.cmd"
     for /f "delims=" %%F in ('git ls-files -m ^| findstr /E "README.md"') do (
+        where npx >nul 2>&1
+        if not errorlevel 1 (
+            call npx prettier --write "%%F" >nul 2>&1
+        )
         git add "%%F"
     )
 )
@@ -27,6 +31,10 @@ if exist "devtools\docs-gen\generate_markdown_docs.cmd" (
 if exist "tests\update_results.cmd" (
     echo Updating Supported Components in README.md...
     call "tests\update_results.cmd"
+    where npx >nul 2>&1
+    if not errorlevel 1 (
+        call npx prettier --write README.md >nul 2>&1
+    )
     git add README.md
 )
 

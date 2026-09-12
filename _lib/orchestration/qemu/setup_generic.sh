@@ -6,15 +6,10 @@
 # Sourced by setup.sh to install QEMU, libvirt, firmware, and configure permissions.
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -52,6 +47,8 @@ ACTION="${ACTION:-install}"
 QEMU_SETUP_KVM_GROUPS="${QEMU_SETUP_KVM_GROUPS:-1}"
 QEMU_SETUP_UEFI_FIRMWARE="${QEMU_SETUP_UEFI_FIRMWARE:-1}"
 
+# ## setup_uefi_symlinks
+# Configures standard UEFI firmware symlinks for QEMU/KVM.
 setup_uefi_symlinks() {
   log_info "Configuring QEMU/OVMF UEFI firmware symlinks in /usr/local/share/qemu..."
   priv mkdir -p /usr/local/share/qemu
@@ -89,6 +86,8 @@ setup_uefi_symlinks() {
   done
 }
 
+# ## setup_kvm_permissions
+# Configures /dev/kvm permissions and group access.
 setup_kvm_permissions() {
   if [ -e "/dev/kvm" ]; then
     priv chmod 666 /dev/kvm 2>/dev/null || true
@@ -98,6 +97,8 @@ setup_kvm_permissions() {
   fi
 }
 
+# ## setup_libvirt_network
+# Ensures default libvirt NAT network is configured and started.
 setup_libvirt_network() {
   if command -v virsh >/dev/null 2>&1; then
     for net_file in /etc/libvirt/qemu/networks/default.xml /usr/share/libvirt/networks/default.xml; do
@@ -111,6 +112,8 @@ setup_libvirt_network() {
   fi
 }
 
+# ## setup_user_groups
+# Adds the current user to libvirt and kvm groups.
 setup_user_groups() {
   target_user="${SUDO_USER:-$(id -un)}"
   if [ "$target_user" = "root" ]; then

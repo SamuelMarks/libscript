@@ -28,6 +28,8 @@ for /f "usebackq tokens=*" %%A in ("%TODO_FILE%") do (
     )
 )
 
+:: ## done
+:: Executes done functionality.
 :done
 if not "!BATCH!"=="" (
     :: Trim leading space

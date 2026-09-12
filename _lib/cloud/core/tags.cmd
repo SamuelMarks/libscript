@@ -33,6 +33,8 @@ exit /b 0
 ::
 :: Returns:
 ::   errorlevel 0 if managed (or overridden), 1 if not managed.
+:: ## libscript_verify_managed
+:: Executes libscript_verify_managed functionality.
 :libscript_verify_managed
 setlocal EnableDelayedExpansion
 set "provider=%~2"

@@ -8,15 +8,10 @@
 # Registers a service using the OS-native init system.
 
 set -feu
-# shellcheck disable=SC2296,SC3028,SC3040,SC3054
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
-  eval 'THIS_FILE="${BASH_SOURCE[0]}"'
-  eval 'set -o pipefail'
-elif [ "${ZSH_VERSION-}" ]; then
-  eval 'THIS_FILE="${(%):-%x}"'
-  eval 'set -o pipefail'
+  THIS_FILE="${BASH_SOURCE}"
 else
   THIS_FILE="${0}"
 fi
@@ -31,9 +26,12 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/os_info.sh"
-. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
-. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+for LIB in "_lib/_common/os_info.sh" "_lib/_common/priv.sh" "_lib/_common/log.sh"; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/${LIB}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+done
 
 # ## libscript_install_service
 # Executes libscript_install_service functionality.
@@ -72,7 +70,11 @@ libscript_install_service() {
     log_warn "OpenRC service installation not yet implemented in service_install.sh"
   elif command -v sc.exe >/dev/null 2>&1; then
     log_info "Installing Windows service: $_service_name"
-    sc.exe create "$_service_name" binPath= "$_exec_start" start= auto obj= LocalSystem
+    if sc.exe query "$_service_name" >/dev/null 2>&1; then
+      sc.exe config "$_service_name" binPath= "$_exec_start" start= auto obj= LocalSystem
+    else
+      sc.exe create "$_service_name" binPath= "$_exec_start" start= auto obj= LocalSystem
+    fi
     sc.exe description "$_service_name" "$_description"
   else
     log_warn "No supported init system found to install service: $_service_name"

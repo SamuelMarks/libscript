@@ -1,5 +1,8 @@
 # ## Overview
 # PowerShell script for setup_generic.ps1 for QEMU.
+#
+# ## Usage
+# Execute via PowerShell.
 
 $ErrorActionPreference = "Stop"
 

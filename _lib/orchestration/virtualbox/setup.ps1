@@ -1,5 +1,8 @@
 # ## Overview
 # PowerShell script for setup.ps1 for VirtualBox.
+#
+# ## Usage
+# Execute via PowerShell.
 
 $ErrorActionPreference = "Stop"
 

@@ -84,6 +84,8 @@ if not "!VERSION!"=="" (
 shift & shift & shift
 
 :: Argument Parsing Loop
+:: ## parse_loop
+:: Executes parse_loop functionality.
 :parse_loop
 set "arg=%~1"
 if "!arg!"=="" goto :routing
