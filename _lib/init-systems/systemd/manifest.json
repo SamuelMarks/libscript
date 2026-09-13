@@ -6,5 +6,5 @@
   "title": "Systemd",
   "description": "systemd",
   "category": "init-systems",
-  "os_blacklist": ["freebsd"]
+  "os_blacklist": ["freebsd", "windows"]
 }

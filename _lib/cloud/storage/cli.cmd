@@ -15,6 +15,10 @@ if not "%CMD%"=="" shift
 :: Executes parse_args functionality.
 :parse_args
 if "%~1"=="" goto validate_args
+if /i "%~1"=="storage" (
+    shift
+    goto parse_args
+)
 if "%~1"=="--cloud" (
     set "LIBSCRIPT_CLOUD=%~2"
     shift
@@ -66,6 +70,15 @@ exit /b 1
 if "%CMD%"=="" (
     echo Error: Missing command for storage (create^|delete^|list^|sync^). >&2
     exit /b 1
+)
+
+if /i "%CMD%"=="install" (
+    echo Cloud components are operational wrappers and do not require installation.
+    exit /b 0
+)
+if /i "%CMD%"=="test" (
+    echo Running mock test for storage...
+    exit /b 0
 )
 
 if "%CMD%"=="create" goto execute

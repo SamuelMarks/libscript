@@ -19,29 +19,25 @@ setlocal EnableDelayedExpansion
 setlocal EnableDelayedExpansion
 
 :: Identify directories
+set "CALLER_FILE=%THIS_FILE%"
 set "THIS_FILE=%~f0"
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
+set "COMP_DIR="
+if not "%CALLER_FILE%"=="" (
+    for %%I in ("%CALLER_FILE%") do set "COMP_DIR=%%~dpI"
+)
+if "%COMP_DIR:~-1%"=="\" set "COMP_DIR=%COMP_DIR:~0,-1%"
+if "%COMP_DIR%"=="" set "COMP_DIR=%CD%"
+
 :: Resolve LIBSCRIPT_ROOT_DIR
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
-:: ## find_root
-:: Executes find_root functionality.
-    :find_root
-    if exist "!d!\ROOT" (set "LIBSCRIPT_ROOT_DIR=!d!") else (
-        for %%P in ("!d!") do set "parent=%%~dpP"
-        set "d=!parent:~0,-1!"
-        if "!d!"=="" (
-            echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
-            exit /b 1
-        )
-        goto :find_root
-    )
+    for %%I in ("%SCRIPT_DIR%\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 )
 
-set "SCHEMA_FILE=%SCRIPT_DIR%\vars.schema.json"
-set "MANIFEST_FILE=%SCRIPT_DIR%\manifest.json"
+set "SCHEMA_FILE=%COMP_DIR%\vars.schema.json"
+set "MANIFEST_FILE=%COMP_DIR%\manifest.json"
 set "BASE_SCHEMA_FILE=%LIBSCRIPT_ROOT_DIR%\_lib\_common\base_vars.schema.json"
 
 :: Source logging
@@ -114,42 +110,7 @@ if "!arg:~0,2!"=="--" (
         set "key=%%A"
         set "val=%%B"
         if "!val!"=="" set "val=true"
-        
-        :: Basic validation against schema if jq exists
-        where jq >nul 2>&1
-        if !errorlevel! equ 0 (
-            :: Check if key exists in merged schema
-            for /f "tokens=*" %%V in ('jq -n --argjson base "$(cat "%BASE_SCHEMA_FILE%")" --argjson comp "$(cat "%SCHEMA_FILE%")" --arg key "!key!" "$base.properties * $comp.properties | has($key)"') do set "exists=%%V"
-            
-            if "!exists!"=="true" (
-                :: Validate enum if it exists
-                for /f "tokens=*" %%E in ('jq -n --argjson base "$(cat "%BASE_SCHEMA_FILE%")" --argjson comp "$(cat "%SCHEMA_FILE%")" --arg key "!key!" "($base.properties * $comp.properties).[$key].enum // empty"') do set "enum_values=%%E"
-                
-                if defined enum_values (
-                    for /f "tokens=*" %%I in ('jq -n --argjson enum "!enum_values!" --arg val "!val!" "$enum | contains([$val])"') do set "val_valid=%%I"
-                    if "!val_valid!"=="false" (
-                        call "%LOG_CMD%" :log_error "Invalid value '!val!' for --!key!."
-                        exit /b 1
-                    )
-                )
-            ) else (
-                :: Check for _STRATEGY suffix
-                set "is_strategy=false"
-                if "!key:~-9!"=="_STRATEGY" (
-                    set "base_key=!key:~0,-9!"
-                    for /f "tokens=*" %%V in ('jq -n --argjson base "$(cat "%BASE_SCHEMA_FILE%")" --argjson comp "$(cat "%SCHEMA_FILE%")" --arg key "!base_key!" "$base.properties * $comp.properties | has($key)"') do set "exists=%%V"
-                    if "!exists!"=="true" set "is_strategy=true"
-                )
-                
-                if "!is_strategy!"=="false" (
-                    call "%LOG_CMD%" :log_error "Unknown option --!key!"
-                    exit /b 1
-                )
-            )
-        )
-        
         set "!key!=!val!"
-        :: Export to env for sub-processes
         setx !key! "!val!" >nul 2>&1
     )
 )
@@ -184,60 +145,6 @@ if "!bypass_args!"=="1" (
     set "ARG6=%~6"
 )
 
-:: Automated Dependency Resolution
-if not "!LIBSCRIPT_SKIP_DEPENDENCIES!"=="1" if /i "!ACTION!"=="install" (
-    where jq >nul 2>&1
-    if !errorlevel! equ 0 (
-        if exist "%SCHEMA_FILE%" (
-            for /f "tokens=1,2 delims=|" %%A in ('jq -r "($base.properties * $comp.properties) | to_entries[] | select(.value.is_libscript_dependency == true) | \"%%A|%%B\"" --argjson base "$(cat "%BASE_SCHEMA_FILE%")" --argjson comp "$(cat "%SCHEMA_FILE%")"') do (
-                set "dep_key=%%A"
-                set "dep_default=%%B"
-                set "dep_val=!%%A!"
-                if "!dep_val!"=="" set "dep_val=!dep_default!"
-                
-                if not "!dep_val!"=="" (
-                    set "strategy_val=!%%A_STRATEGY!"
-                    if "!strategy_val!"=="" set "strategy_val=reuse"
-                    
-                    call "%LOG_CMD%" :log_info "Resolving dependency: !dep_val! (strategy: !strategy_val!)"
-                    
-                    set "is_installed=0"
-                    where !dep_val! >nul 2>&1
-                    if !errorlevel! equ 0 (
-                        set "is_installed=1"
-                    ) else (
-                        call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" which "!dep_val!" "latest" >nul 2>&1
-                        if !errorlevel! equ 0 set "is_installed=1"
-                    )
-                    
-                    set "do_install=0"
-                    if "!is_installed!"=="0" (
-                        set "do_install=1"
-                    ) else (
-                        if /i "!strategy_val!"=="overwrite" set "do_install=1"
-                        if /i "!strategy_val!"=="upgrade"   set "do_install=1"
-                        if /i "!strategy_val!"=="downgrade" set "do_install=1"
-                        if /i "!strategy_val!"=="install-alongside" set "do_install=1"
-                    )
-                    
-                    if "!do_install!"=="1" (
-                        call "%LOG_CMD%" :log_info "Installing dependency !dep_val!..."
-                        set "LIBSCRIPT_SKIP_DEPENDENCIES=1"
-                        call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install "!dep_val!" "latest"
-                        if errorlevel 1 (
-                            call "%LOG_CMD%" :log_error "Failed to install dependency !dep_val!"
-                            exit /b 1
-                        )
-                        set "LIBSCRIPT_SKIP_DEPENDENCIES="
-                    ) else (
-                        call "%LOG_CMD%" :log_info "Dependency !dep_val! already satisfied."
-                    )
-                )
-            )
-        )
-    )
-)
-
 :: Lifecycle Routing
 if /i "!ACTION!"=="info" (
     if defined PREFIX (
@@ -255,13 +162,6 @@ if /i "!ACTION!"=="info" (
     ) else (
         echo Status: Not Installed
     )
-    if exist "%SCHEMA_FILE%" (
-        where jq >nul 2>&1
-        if !errorlevel! equ 0 (
-            echo Dynamic Variables:
-            jq -r ".properties | to_entries[] | \"  \\(.key): \\(.value.description // \"\") [default: \\(.value.default // \"\")]\"" "%SCHEMA_FILE%" 2>nul
-        )
-    )
     exit /b 0
 )
 
@@ -277,39 +177,108 @@ if /i "!ACTION!"=="env" (
 )
 
 if /i "!ACTION!"=="test" (
-    if exist "test.cmd" (
-        call test.cmd
-    ) else if exist "test.ps1" (
-        powershell -ExecutionPolicy Bypass -File "test.ps1"
+    set "PATH=%LOCALAPPDATA%\Microsoft\WinGet\Links;%USERPROFILE%\.local\bin;!PATH!"
+    for /d %%P in ("%LOCALAPPDATA%\Programs\Python\Python*") do set "PATH=%%P;%%P\Scripts;!PATH!"
+    for /d %%P in ("%ProgramFiles%\Python*") do set "PATH=%%P;%%P\Scripts;!PATH!"
+    if exist "%LOCALAPPDATA%\Programs\Ollama" set "PATH=%LOCALAPPDATA%\Programs\Ollama;!PATH!"
+    for /d %%L in ("%LOCALAPPDATA%\Programs\Lua*") do set "PATH=%%L\bin;!PATH!"
+    if exist "%ProgramFiles%\7-Zip" set "PATH=%ProgramFiles%\7-Zip;!PATH!"
+    if exist "%ProgramFiles%\CMake\bin" set "PATH=%ProgramFiles%\CMake\bin;!PATH!"
+    if exist "%ProgramFiles%\Git\bin" set "PATH=%ProgramFiles%\Git\bin;!PATH!"
+    if exist "%ProgramFiles%\Go\bin" set "PATH=%ProgramFiles%\Go\bin;!PATH!"
+    if exist "%ProgramFiles%\nodejs" set "PATH=%ProgramFiles%\nodejs;!PATH!"
+    if exist "%ProgramFiles%\dotnet" set "PATH=%ProgramFiles%\dotnet;!PATH!"
+    for /d %%R in ("C:\Ruby*") do set "PATH=%%R\bin;!PATH!"
+    for /d %%R in ("%ProgramFiles(x86)%\R\R-*") do set "PATH=%%R\bin;!PATH!"
+    for /d %%R in ("%ProgramFiles%\R\R-*") do set "PATH=%%R\bin;!PATH!"
+    if exist "C:\Strawberry\perl\bin" set "PATH=C:\Strawberry\perl\bin;C:\Strawberry\c\bin;!PATH!"
+    for /d %%J in ("%ProgramFiles%\Eclipse Adoptium\jdk*") do set "PATH=%%J\bin;!PATH!"
+    for /d %%E in ("%ProgramFiles%\Erlang*") do set "PATH=%%E\bin;!PATH!"
+    if exist "%USERPROFILE%\.local\sbt\sbt\bin" set "PATH=%USERPROFILE%\.local\sbt\sbt\bin;!PATH!"
+    if exist "%ProgramFiles%\sbt\bin" set "PATH=%ProgramFiles%\sbt\bin;!PATH!"
+    if exist "%ProgramFiles(x86)%\sbt\bin" set "PATH=%ProgramFiles(x86)%\sbt\bin;!PATH!"
+    for /d %%M in ("%ProgramFiles%\MariaDB*") do set "PATH=%%M\bin;!PATH!"
+    for /d %%P in ("%ProgramFiles%\PostgreSQL\*") do set "PATH=%%P\bin;!PATH!"
+    if exist "%ProgramFiles%\Redis" set "PATH=%ProgramFiles%\Redis;!PATH!"
+    if exist "%JAVA_HOME%\bin" set "PATH=%JAVA_HOME%\bin;!PATH!"
+    if exist "%ProgramFiles%\vfox" set "PATH=%ProgramFiles%\vfox;!PATH!"
+    for /d %%S in ("%ProgramFiles%\Swift\Toolchains\*") do set "PATH=%%S\usr\bin;!PATH!"
+    for /d %%S in ("%LOCALAPPDATA%\Programs\Swift\Toolchains\*") do set "PATH=%%S\usr\bin;!PATH!"
+    if exist "%ProgramFiles%\mosquitto" set "PATH=%ProgramFiles%\mosquitto;!PATH!"
+    if exist "%ProgramFiles%\qemu" set "PATH=%ProgramFiles%\qemu;!PATH!"
+    if exist "%ProgramFiles%\Oracle\VirtualBox" set "PATH=%ProgramFiles%\Oracle\VirtualBox;!PATH!"
+    if exist "%ProgramFiles%\fluent-bit\bin" set "PATH=%ProgramFiles%\fluent-bit\bin;!PATH!"
+    if exist "%ProgramFiles%\Amazon\AWSCLIV2" set "PATH=%ProgramFiles%\Amazon\AWSCLIV2;!PATH!"
+    if exist "%LOCALAPPDATA%\Google\Cloud SDK\google-cloud-sdk\bin" set "PATH=%LOCALAPPDATA%\Google\Cloud SDK\google-cloud-sdk\bin;!PATH!"
+    if exist "%ProgramFiles(x86)%\Google\Cloud SDK\google-cloud-sdk\bin" set "PATH=%ProgramFiles(x86)%\Google\Cloud SDK\google-cloud-sdk\bin;!PATH!"
+    if exist "%ProgramFiles%\Google\Cloud SDK\google-cloud-sdk\bin" set "PATH=%ProgramFiles%\Google\Cloud SDK\google-cloud-sdk\bin;!PATH!"
+    if exist "%ProgramFiles%\Microsoft SDKs\Azure\CLI2\wbin" set "PATH=%ProgramFiles%\Microsoft SDKs\Azure\CLI2\wbin;!PATH!"
+    if exist "%ProgramFiles(x86)%\Microsoft SDKs\Azure\CLI2\wbin" set "PATH=%ProgramFiles(x86)%\Microsoft SDKs\Azure\CLI2\wbin;!PATH!"
+    if exist "%ProgramFiles(x86)%\Yarn\bin" set "PATH=%ProgramFiles(x86)%\Yarn\bin;!PATH!"
+    if exist "%ProgramFiles%\Yarn\bin" set "PATH=%ProgramFiles%\Yarn\bin;!PATH!"
+    if exist "%LOCALAPPDATA%\Yarn\bin" set "PATH=%LOCALAPPDATA%\Yarn\bin;!PATH!"
+    if exist "%USERPROFILE%\.cargo\bin" set "PATH=%USERPROFILE%\.cargo\bin;!PATH!"
+    if exist "%USERPROFILE%\.bun\bin" set "PATH=%USERPROFILE%\.bun\bin;!PATH!"
+    if exist "%USERPROFILE%\.rye\shims" set "PATH=%USERPROFILE%\.rye\shims;!PATH!"
+    if exist "%USERPROFILE%\scoop\shims" set "PATH=%USERPROFILE%\scoop\shims;!PATH!"
+    if exist "%USERPROFILE%\vcpkg" set "PATH=%USERPROFILE%\vcpkg;!PATH!"
+    if exist "%USERPROFILE%\.pyenv\pyenv-win\bin" set "PATH=%USERPROFILE%\.pyenv\pyenv-win\bin;%USERPROFILE%\.pyenv\pyenv-win\shims;!PATH!"
+    if exist "%APPDATA%\nvm" set "PATH=%APPDATA%\nvm;!PATH!"
+    if exist "%ProgramData%\chocolatey\bin" set "PATH=%ProgramData%\chocolatey\bin;!PATH!"
+    for /d %%E in ("%ProgramData%\chocolatey\lib\Elixir*") do (
+        if exist "%%E\tools\bin" set "PATH=%%E\tools\bin;!PATH!"
+        if exist "%%E\bin" set "PATH=%%E\bin;!PATH!"
+    )
+    for /d %%W in ("%LOCALAPPDATA%\Microsoft\WinGet\Packages\*") do (
+        set "PATH=%%W;!PATH!"
+        for /d %%S in ("%%W\*") do (
+            if exist "%%S\bin" set "PATH=%%S\bin;!PATH!"
+        )
+    )
+    set "PATH=!PATH!;%LOCALAPPDATA%\Microsoft\WindowsApps"
+    if defined LIBSCRIPT_HOME (
+        set "PKG_HOME=!LIBSCRIPT_HOME!\!PACKAGE_NAME!"
     ) else (
-        echo Error: test.cmd/ps1 not found 1>&2
+        set "PKG_HOME=%USERPROFILE%\.libscript\!PACKAGE_NAME!"
+    )
+    if exist "!PKG_HOME!\!VERSION!\bin" set "PATH=!PKG_HOME!\!VERSION!\bin;!PATH!"
+    if exist "!PKG_HOME!\latest\bin" set "PATH=!PKG_HOME!\latest\bin;!PATH!"
+    if exist "!PKG_HOME!\!VERSION!" set "PATH=!PKG_HOME!\!VERSION!;!PATH!"
+    if exist "!PKG_HOME!\latest" set "PATH=!PKG_HOME!\latest;!PATH!"
+
+    if exist "%COMP_DIR%\test.cmd" (
+        call "%COMP_DIR%\test.cmd"
+    ) else if exist "%COMP_DIR%\test.ps1" (
+        powershell -ExecutionPolicy Bypass -File "%COMP_DIR%\test.ps1"
+    ) else (
+        echo Error: test.cmd/ps1 not found in %COMP_DIR% 1>&2
         exit /b 1
     )
-    exit /b %errorlevel%
+    exit /b !errorlevel!
 )
 
 if /i "!ACTION!"=="uninstall" set "ACTION=remove"
 if /i "!ACTION!"=="remove" (
-    if exist "uninstall.cmd" (
-        call uninstall.cmd
-    ) else if exist "uninstall.ps1" (
-        powershell -ExecutionPolicy Bypass -File "uninstall.ps1"
+    if exist "%COMP_DIR%\uninstall.cmd" (
+        call "%COMP_DIR%\uninstall.cmd"
+    ) else if exist "%COMP_DIR%\uninstall.ps1" (
+        powershell -ExecutionPolicy Bypass -File "%COMP_DIR%\uninstall.ps1"
     ) else (
-        echo Error: uninstall.cmd/ps1 not found 1>&2
+        echo Error: uninstall.cmd/ps1 not found in %COMP_DIR% 1>&2
         exit /b 1
     )
-    exit /b %errorlevel%
+    exit /b !errorlevel!
 )
 
 :: Default to setup.cmd
-if exist "setup.cmd" (
-    call setup.cmd
-) else if exist "setup.sh" (
-    :: Fallback to WSL/GitBash if setup.sh exists? No, keep it native for now.
-    echo Error: setup.cmd not found 1>&2
+if exist "%COMP_DIR%\setup.cmd" (
+    call "%COMP_DIR%\setup.cmd"
+) else if exist "%COMP_DIR%\setup.sh" (
+    REM Fallback to WSL/GitBash if setup.sh exists? No, keep it native for now.
+    echo Error: setup.cmd not found in %COMP_DIR% 1>&2
     exit /b 1
 )
-exit /b %errorlevel%
+exit /b !errorlevel!
 
 :: ## show_help
 :: Executes show_help functionality.
@@ -334,8 +303,9 @@ echo.
 echo Available Options:
 where jq >nul 2>&1
 if !errorlevel! equ 0 (
-    :: Print merged schema properties
-    jq -n --argjson base "$(cat "%BASE_SCHEMA_FILE%")" --argjson comp "$(cat "%SCHEMA_FILE%")" "$base.properties * $comp.properties | to_entries[] | \"  --\" + .key + \"=\" + (.value.default // \"none\") + \"\t\" + .value.description"
+    if exist "%SCHEMA_FILE%" (
+        jq -n --slurpfile base "%BASE_SCHEMA_FILE%" --slurpfile comp "%SCHEMA_FILE%" "($base[0].properties // {}) * ($comp[0].properties // {}) | to_entries[] | \"  --\" + .key + \"=\" + (.value.default // \"none\") + \"\t\" + .value.description" 2>nul
+    )
 ) else (
     echo   (jq is required for dynamic options list)
 )

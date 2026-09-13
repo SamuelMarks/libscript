@@ -8,4 +8,22 @@ rem Execute this script to perform a component-specific test.
 setlocal enabledelayedexpansion
 set "THIS_FILE=%~f0"
 
-sh --version
+if exist "%ProgramFiles%\Git\bin\sh.exe" (
+    "%ProgramFiles%\Git\bin\sh.exe" --version
+    exit /b 0
+)
+
+where sh >nul 2>&1
+if %errorlevel% equ 0 (
+    sh --version
+    exit /b 0
+)
+
+where busybox >nul 2>&1
+if %errorlevel% equ 0 (
+    busybox sh -c "echo sh operational"
+    exit /b 0
+)
+
+echo sh not available
+exit /b 1

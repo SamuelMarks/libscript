@@ -30,12 +30,13 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 OS_TARGET="alpine-3.24"
 TARGETS=""
+REUSE_VM=""
 
 # First pass to capture OS_TARGET and handle help
 while [ $# -gt 0 ]; do
     case "$1" in
         --help|-h|/?)
-            echo "Usage: $(basename "$THIS_FILE") [TARGETS...|all] [--os OS_NAME]"
+            echo "Usage: $(basename "$THIS_FILE") [TARGETS...|all] [--os OS_NAME] [--reuse-vm]"
             echo ""
             echo "Runs local tests using Vagrant across specified categories or individual targets"
             echo "to verify libscript installation and testing."
@@ -46,6 +47,8 @@ while [ $# -gt 0 ]; do
             echo "  all            Run tests across all categories in the _lib directory."
             echo "  --os OS_NAME   The OS environment to use from the vagrant/ folder (default: alpine-3.24)."
             echo "                 Example: --os debian-13"
+            echo "  --reuse-vm     Reuse a running VM instead of creating/destroying a new VM per target."
+            echo "  --fast         Alias for --reuse-vm."
             echo "  --help, -h, /? Show this help message."
             echo ""
             echo "Results are written to the tests_tmp directory."
@@ -54,6 +57,10 @@ while [ $# -gt 0 ]; do
         --os)
             OS_TARGET="$2"
             shift 2
+            ;;
+        --reuse-vm|--fast)
+            REUSE_VM=1
+            shift
             ;;
         *)
             TARGETS="$TARGETS $1"
@@ -114,6 +121,17 @@ case "$OS_ID" in
     *) OS_TAG="$OS_ID" ;;
 esac
 
+if [ "$REUSE_VM" = "1" ]; then
+    echo "=== Ensuring $OS_TARGET Vagrant VM is running ==="
+    cd "$REPO_ROOT/vagrant/$OS_TARGET"
+    if ! vagrant status 2>&1 | grep -q "running"; then
+        echo "Starting $OS_TARGET Vagrant VM..."
+        vagrant up --no-provision
+    fi
+    echo "=== Syncing LibScript repository to $OS_TARGET ==="
+    vagrant rsync
+fi
+
 for target in $UNIQUE_TARGETS; do
     MANIFEST_PATH=$(find "$REPO_ROOT/_lib" -maxdepth 2 -type d -name "$target" -exec echo "{}/manifest.json" \;)
     if [ -f "$MANIFEST_PATH" ]; then
@@ -150,40 +168,65 @@ for target in $UNIQUE_TARGETS; do
     echo "Running test for $target on $OS_TARGET..."
     echo "============================================================"
     
-    export LIBSCRIPT_TEST_TARGET="$target"
-    export LIBSCRIPT_REPO_ROOT="$REPO_ROOT"
-    
-    # Create an isolated environment for this run
-    RUN_DIR="$TESTS_TMP_DIR/runs/$target-$OS_TARGET"
-    mkdir -p "$RUN_DIR"
-    cp "$REPO_ROOT/vagrant/$OS_TARGET/Vagrantfile" "$RUN_DIR/Vagrantfile"
-    cd "$RUN_DIR"
-    
-    # Ensure clean state (in case of previous aborted runs in this dir)
-    vagrant destroy -f >/dev/null 2>&1 || true
-    sleep 2
-    
     stdout_file="$TESTS_TMP_DIR/$target.$OS_TAG.stdout"
     stderr_file="$TESTS_TMP_DIR/$target.$OS_TAG.stderr"
     success_file="$TESTS_TMP_DIR/$target.$OS_TAG.success"
     failure_file="$TESTS_TMP_DIR/$target.$OS_TAG.failure"
     
     rm -f "$success_file" "$failure_file"
-    
-    if vagrant up > "$stdout_file" 2> "$stderr_file"; then
-        echo "Success" > "$success_file"
-        echo "[OK] $target"
+
+    if [ "$REUSE_VM" = "1" ]; then
+        cd "$REPO_ROOT/vagrant/$OS_TARGET"
+        if [ "$OS_ID" = "windows" ]; then
+            test_cmd='Set-Location C:\libscript; cmd.exe /c "C:\libscript\libscript.cmd install '$target'" ; $iExit = $LASTEXITCODE; cmd.exe /c "C:\libscript\libscript.cmd test '$target'" ; $tExit = $LASTEXITCODE; if ($tExit -ne 0) { exit $tExit } elseif ($iExit -ne 0) { exit $iExit }'
+            if vagrant ssh -c "$test_cmd" > "$stdout_file" 2> "$stderr_file"; then
+                echo "Success" > "$success_file"
+                echo "[OK] $target"
+            else
+                echo "Failure" > "$failure_file"
+                echo "[FAILED] $target"
+            fi
+            cleanup_cmd="cd C:\libscript; & C:\libscript\libscript.cmd uninstall $target *>&1 | Out-Null; Remove-Item -Recurse -Force \"\$env:USERPROFILE\.libscript\\$target\" -ErrorAction SilentlyContinue"
+            vagrant ssh -c "powershell -Command \"$cleanup_cmd\"" >/dev/null 2>&1 || true
+        else
+            test_cmd="export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; /opt/repos/libscript/libscript.sh install $target && /opt/repos/libscript/libscript.sh test $target"
+            if vagrant ssh -c "$test_cmd" > "$stdout_file" 2> "$stderr_file"; then
+                echo "Success" > "$success_file"
+                echo "[OK] $target"
+            else
+                echo "Failure" > "$failure_file"
+                echo "[FAILED] $target"
+            fi
+        fi
     else
-        echo "Failure" > "$failure_file"
-        echo "[FAILED] $target"
+        export LIBSCRIPT_TEST_TARGET="$target"
+        export LIBSCRIPT_REPO_ROOT="$REPO_ROOT"
+        
+        # Create an isolated environment for this run
+        RUN_DIR="$TESTS_TMP_DIR/runs/$target-$OS_TARGET"
+        mkdir -p "$RUN_DIR"
+        cp "$REPO_ROOT/vagrant/$OS_TARGET/Vagrantfile" "$RUN_DIR/Vagrantfile"
+        cd "$RUN_DIR"
+        
+        # Ensure clean state (in case of previous aborted runs in this dir)
+        vagrant destroy -f >/dev/null 2>&1 || true
+        sleep 2
+        
+        if vagrant up > "$stdout_file" 2> "$stderr_file"; then
+            echo "Success" > "$success_file"
+            echo "[OK] $target"
+        else
+            echo "Failure" > "$failure_file"
+            echo "[FAILED] $target"
+        fi
+
+        vagrant destroy -f >/dev/null 2>&1 || true
+        sleep 2
     fi
     
     if [ -x "$THIS_DIR/update_results.sh" ]; then
         "$THIS_DIR/update_results.sh" || true
     fi
-    
-    vagrant destroy -f >/dev/null 2>&1 || true
-    sleep 2
 done
 
 echo "All tests complete. Results are in $TESTS_TMP_DIR."

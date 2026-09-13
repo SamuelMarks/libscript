@@ -10,8 +10,17 @@
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+set "PACKAGE_NAME=tmux"
 
-set "LOG_CMD=%~dp0..\..\..\_common\log.cmd"
+set "ACTION=%~1"
+if "%ACTION%"=="install" goto :delegate
+if "%ACTION%"=="test" goto :delegate
+if "%ACTION%"=="uninstall" goto :delegate
+if "%ACTION%"=="remove" goto :delegate
+if "%ACTION%"=="info" goto :delegate
+if "%ACTION%"=="env" goto :delegate
+
+set "LOG_CMD=%~dp0..\..\_common\log.cmd"
 
 if "%~1"=="--help" (
     echo Usage: %~nx0 ^<action^> [args...]
@@ -107,3 +116,7 @@ exit /b 0
 :list
 !TMUX_CMD! list-sessions
 exit /b 0
+
+:delegate
+call "%~dp0\..\..\_common\component_core.cmd" %*
+exit /b %errorlevel%

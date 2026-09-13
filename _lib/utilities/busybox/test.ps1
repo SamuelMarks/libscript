@@ -16,4 +16,4 @@ param()
 
 $ErrorActionPreference = "Stop"
 
-& busybox --version
+& busybox

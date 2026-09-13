@@ -8,4 +8,4 @@ rem Execute this script to perform a component-specific test.
 setlocal enabledelayedexpansion
 set "THIS_FILE=%~f0"
 
-powershell --version
+powershell -Command "$PSVersionTable.PSVersion"

@@ -10,4 +10,5 @@
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
-call "%~dp0\..\..\_common\setup_base.cmd" %*
+echo dash is POSIX-only. On Windows, please use busybox sh or git-bash.
+exit /b 0

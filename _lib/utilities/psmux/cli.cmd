@@ -10,8 +10,17 @@
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+set "PACKAGE_NAME=psmux"
 
-set "LOG_CMD=%~dp0..\..\..\_common\log.cmd"
+set "ACTION=%~1"
+if "%ACTION%"=="install" goto :delegate
+if "%ACTION%"=="test" goto :delegate
+if "%ACTION%"=="uninstall" goto :delegate
+if "%ACTION%"=="remove" goto :delegate
+if "%ACTION%"=="info" goto :delegate
+if "%ACTION%"=="env" goto :delegate
+
+set "LOG_CMD=%~dp0..\..\_common\log.cmd"
 
 if "%~1"=="--help" (
     echo Usage: %~nx0 ^<action^> [args...]
@@ -26,9 +35,19 @@ if "%~1"=="-h" (
 
 where psmux >nul 2>nul
 if %errorlevel% neq 0 (
+    if exist "%ProgramFiles%\psmux\psmux.cmd" set "PATH=%ProgramFiles%\psmux;!PATH!"
+    if exist "%USERPROFILE%\.local\bin\psmux.cmd" set "PATH=%USERPROFILE%\.local\bin;!PATH!"
+)
+
+where psmux >nul 2>nul
+if %errorlevel% neq 0 (
     call "%LOG_CMD%" :log_error "psmux not found. Please ensure it is installed and in your PATH."
     exit /b 1
 )
 
 psmux %*
+exit /b %errorlevel%
+
+:delegate
+call "%~dp0\..\..\_common\component_core.cmd" %*
 exit /b %errorlevel%

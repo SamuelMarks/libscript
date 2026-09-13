@@ -16,4 +16,4 @@ param()
 
 $ErrorActionPreference = "Stop"
 
-& nuget --version
+& nuget help

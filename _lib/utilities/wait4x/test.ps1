@@ -16,4 +16,4 @@ param()
 
 $ErrorActionPreference = "Stop"
 
-& wait4x --version
+& wait4x version

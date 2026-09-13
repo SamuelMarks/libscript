@@ -16,4 +16,4 @@ param()
 
 $ErrorActionPreference = "Stop"
 
-& httpd --version
+& httpd -v

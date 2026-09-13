@@ -1,0 +1,66 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# ## Overview
+# Configuration and definition file for Windows 11 Vagrant environment.
+#
+# ## Usage
+# Processed automatically during build or runtime.
+
+# Read environment variables for target package and repository root
+test_target = ENV['LIBSCRIPT_TEST_TARGET'] || 'sqlite'
+repo_root = ENV['LIBSCRIPT_REPO_ROOT'] || "../.."
+
+# Ensure unique VM name for complete isolation
+vm_name = "windows-11-test-#{test_target}"
+
+Vagrant.configure("2") do |config|
+  config.vm.define vm_name do |t|
+    t.vm.box = "bento/windows-11"
+    t.vm.box_version = "0"
+
+    t.vm.guest = :windows
+    t.vm.communicator = "ssh"
+
+    t.ssh.username = "vagrant"
+    t.ssh.insert_key = false
+    t.ssh.private_key_path = File.expand_path("~/.vagrant.d/insecure_private_key")
+    t.ssh.shell = "powershell"
+
+    t.vm.provider "qemu" do |qe|
+      qe.net_mode = :user
+      qe.ssh_port = 50022 + rand(1000)
+    end
+
+    t.vm.synced_folder ".", "/vagrant", disabled: true
+    t.vm.allowed_synced_folder_types = [:rsync]
+
+    # Sync the repository root directory
+    t.vm.synced_folder repo_root, "/cygdrive/c/libscript", type: "rsync",
+      rsync_exclude: [".git/", "tests_tmp/", "vagrant/"]
+
+    t.vm.provision "shell", inline: <<-POWERSHELL
+      Write-Host "Configuring libscript on Windows 11..."
+      $env:LIBSCRIPT_ROOT_DIR = "C:\\libscript"
+      Set-Location "C:\\libscript"
+
+      Write-Host "Installing #{test_target} using libscript..."
+      & "C:\\libscript\\libscript.cmd" install #{test_target}
+      $installExit = $LASTEXITCODE
+
+      Write-Host "Running test for #{test_target}..."
+      & "C:\\libscript\\libscript.cmd" test #{test_target}
+      $testExit = $LASTEXITCODE
+
+      if ($testExit -ne 0) {
+        Write-Error "Test for #{test_target} failed with exit code $testExit"
+        exit $testExit
+      }
+      if ($installExit -ne 0) {
+        Write-Error "Install for #{test_target} failed with exit code $installExit"
+        exit $installExit
+      }
+      Write-Host "Completed #{test_target} test successfully."
+    POWERSHELL
+  end
+end

@@ -14,4 +14,4 @@ if %errorlevel% neq 0 (
   exit /b 0
 )
 
-go --version
+go version

@@ -107,10 +107,10 @@ if "!is_docker_cmd!"=="1" (
 set "is_action=0"
 set "req_version=0"
 if /i "%cmd%"=="use" ( set "is_action=1" & set "req_version=1" )
-if /i "%cmd%"=="install" ( set "is_action=1" & set "req_version=1" )
-if /i "%cmd%"=="download" ( set "is_action=1" & set "req_version=1" )
-if /i "%cmd%"=="install-service" ( set "is_action=1" & set "req_version=1" )
-if /i "%cmd%"=="uninstall-service" ( set "is_action=1" & set "req_version=1" )
+if /i "%cmd%"=="install" ( set "is_action=1" )
+if /i "%cmd%"=="download" ( set "is_action=1" )
+if /i "%cmd%"=="install-service" ( set "is_action=1" )
+if /i "%cmd%"=="uninstall-service" ( set "is_action=1" )
 
 if /i "%cmd%"=="remove" set "is_action=1"
 if /i "%cmd%"=="uninstall" set "is_action=1"
@@ -147,10 +147,6 @@ if "%is_action%"=="1" (
             echo Error: version is required for %cmd% 1>&2
             exit /b 1
         )
-        if "%~3"=="" (
-            echo Error: version is required for %cmd% 1>&2
-            exit /b 1
-        )
     )
     set "action_pkg=%~2"
     goto match_component
@@ -171,59 +167,58 @@ if exist "%SCRIPT_DIR%\_lib\%action_pkg%\cli.cmd" (
     set "target=%SCRIPT_DIR%\_lib\%action_pkg%"
     goto run_target
 )
+if exist "%SCRIPT_DIR%\_lib\_common\%action_pkg%\cli.cmd" (
+    set "target=%SCRIPT_DIR%\_lib\_common\%action_pkg%"
+    goto run_target
+)
+
+:: Direct category search: _lib\<cat>\<pkg>\cli.cmd
+for /d %%C in ("%SCRIPT_DIR%\_lib\*") do (
+    if exist "%%C\%action_pkg%\cli.cmd" (
+        set "target=%%C\%action_pkg%"
+        goto run_target
+    )
+)
 
 set "match_count=0"
-set "exact_match_count=0"
 set "last_match="
-set "last_exact_match="
 
-for /f "delims=" %%f in ('dir /s /b /a:-d "%SCRIPT_DIR%\cli.cmd" 2^>nul') do (
-    set "dir_path=%%~dpf"
-    set "dir_path=!dir_path:~0,-1!"
-    if exist "!dir_path!\vars.schema.json" (
-        set "rel_dir=!dir_path:%SCRIPT_DIR%\=!"
-        
-        echo !rel_dir! | findstr /i "%action_pkg%" >nul
-        if not errorlevel 1 (
-            set /a match_count+=1
-            set "last_match=!dir_path!"
-            
-            echo !rel_dir! | findstr /i /e "\%action_pkg%" >nul
-            if not errorlevel 1 (
-                set /a exact_match_count+=1
-                set "last_exact_match=!dir_path!"
+for /d %%C in ("%SCRIPT_DIR%\_lib\*") do (
+    for /d %%D in ("%%C\*") do (
+        if exist "%%D\cli.cmd" (
+            set "cname=%%~nxD"
+            if "!cname!"=="%action_pkg%" (
+                set "target=%%D"
+                goto run_target
             )
-            if /i "!rel_dir!"=="%action_pkg%" (
-                set /a exact_match_count+=1
-                set "last_exact_match=!dir_path!"
+            echo !cname! | findstr /i "%action_pkg%" >nul 2>&1
+            if not errorlevel 1 (
+                set /a match_count+=1
+                set "last_match=%%D"
             )
         )
     )
+)
+
+if !match_count! equ 1 (
+    set "target=!last_match!"
+    goto run_target
 )
 
 if !match_count! equ 0 (
     echo Error: Unknown component '%action_pkg%'.
     exit /b 1
 )
-if !match_count! equ 1 (
-    set "target=!last_match!"
-    goto run_target
-)
-
-if !exact_match_count! equ 1 (
-    set "target=!last_exact_match!"
-    goto run_target
-)
 
 echo Error: Component '%action_pkg%' is ambiguous. Matches:
-for /f "delims=" %%f in ('dir /s /b /a:-d "%SCRIPT_DIR%\cli.cmd" 2^>nul') do (
-    set "dir_path=%%~dpf"
-    set "dir_path=!dir_path:~0,-1!"
-    if exist "!dir_path!\vars.schema.json" (
-        set "rel_dir=!dir_path:%SCRIPT_DIR%\=!"
-        echo !rel_dir! | findstr /i "%action_pkg%" >nul
-        if not errorlevel 1 (
-            echo   !rel_dir!
+for /d %%C in ("%SCRIPT_DIR%\_lib\*") do (
+    for /d %%D in ("%%C\*") do (
+        if exist "%%D\cli.cmd" (
+            set "cname=%%~nxD"
+            echo !cname! | findstr /i "%action_pkg%" >nul 2>&1
+            if not errorlevel 1 (
+                echo   %%~nxC\!cname!
+            )
         )
     )
 )

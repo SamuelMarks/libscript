@@ -29,17 +29,22 @@ THIS_DIR="${SCRIPT_DIR}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 OS_TARGET="alpine-3.24"
+EXTRA_ARGS=""
 
 # Parse arguments
 while [ $# -gt 0 ]; do
     case "$1" in
         --help|-h|/?)
-            echo "Usage: $0 [--os <target_os>]"
+            echo "Usage: $0 [--os <target_os>] [--reuse-vm]"
             exit 0
             ;;
         --os)
             OS_TARGET="$2"
             shift 2
+            ;;
+        --reuse-vm|--fast)
+            EXTRA_ARGS="$EXTRA_ARGS --reuse-vm"
+            shift
             ;;
         *)
             echo "Unknown option: $1"
@@ -81,7 +86,7 @@ while true; do
     
     if [ -n "$NEW_BATCH" ]; then
         # shellcheck disable=SC2086
-        "$THIS_DIR/run_local_tests.sh" $NEW_BATCH --os "$OS_TARGET"
+        "$THIS_DIR/run_local_tests.sh" $NEW_BATCH --os "$OS_TARGET" $EXTRA_ARGS
         "$THIS_DIR/update_results.sh"
     fi
 done

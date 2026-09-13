@@ -16,4 +16,4 @@ param()
 
 $ErrorActionPreference = "Stop"
 
-& nginx --version
+& nginx -v

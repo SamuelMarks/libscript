@@ -16,4 +16,9 @@ param()
 
 $ErrorActionPreference = "Stop"
 
-huggingface-cli --version
+if (Get-Command hf -ErrorAction SilentlyContinue) {
+    & hf --version
+    exit 0
+}
+
+& huggingface-cli --version

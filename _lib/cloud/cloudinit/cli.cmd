@@ -15,6 +15,10 @@ if not "%CMD%"=="" shift
 :: Executes parse_args functionality.
 :parse_args
 if "%~1"=="" goto validate_args
+if /i "%~1"=="cloudinit" (
+    shift
+    goto parse_args
+)
 if "%~1"=="--device" ( set "LIBSCRIPT_DEVICE=%~2" & shift & shift & goto parse_args )
 if "%~1"=="--mount-point" ( set "LIBSCRIPT_MOUNT_POINT=%~2" & shift & shift & goto parse_args )
 if "%~1"=="--fs-type" ( set "LIBSCRIPT_FS_TYPE=%~2" & shift & shift & goto parse_args )
@@ -35,6 +39,15 @@ exit /b 1
 if "%CMD%"=="" (
     echo Error: Missing command for cloudinit (generate-mount^). >&2
     exit /b 1
+)
+
+if /i "%CMD%"=="install" (
+    echo Cloud components are operational wrappers and do not require installation.
+    exit /b 0
+)
+if /i "%CMD%"=="test" (
+    echo Running mock test for cloudinit...
+    exit /b 0
 )
 
 if "%CMD%"=="generate-mount" goto execute

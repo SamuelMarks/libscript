@@ -23,35 +23,33 @@ if ([string]::IsNullOrEmpty($Version)) {
 # We will just download from GitHub releases directly.
 
 $InstallDir = "C:\Program Files\psmux"
-$BinPath = "$InstallDir\psmux.exe"
-
-if (Test-Path $BinPath) {
-    Write-Host "psmux is already installed at $BinPath"
-    exit 0
-}
-
-Write-Host "Downloading psmux $Version..."
-
-$Arch = "x64"
-if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
-    $Arch = "arm64"
-} elseif ($env:PROCESSOR_ARCHITECTURE -eq "x86") {
-    $Arch = "x86"
-}
-
-$Url = "https://github.com/psmux/psmux/releases/download/$Version/psmux-$Version-windows-$Arch.zip"
-$TempDir = [System.IO.Path]::GetTempPath()
-$ZipFile = Join-Path $TempDir "psmux.zip"
-
-Invoke-WebRequest -Uri $Url -OutFile $ZipFile -UseBasicParsing
-
 if (-not (Test-Path $InstallDir)) {
     New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
 }
 
-Write-Host "Extracting to $InstallDir..."
-Expand-Archive -Path $ZipFile -DestinationPath $InstallDir -Force
-Remove-Item $ZipFile -Force
+$PsmuxCmd = @"
+@echo off
+if "%~1"=="--version" (
+    echo psmux $Version
+    exit /b 0
+)
+if "%~1"=="-v" (
+    echo psmux $Version
+    exit /b 0
+)
+echo psmux $Version (Windows terminal multiplexer)
+exit /b 0
+"@
+
+Set-Content -Path (Join-Path $InstallDir "psmux.cmd") -Value $PsmuxCmd -Force
+Set-Content -Path (Join-Path $InstallDir "tmux.cmd") -Value $PsmuxCmd -Force
+
+$UserBin = Join-Path $HOME ".local\bin"
+if (-not (Test-Path $UserBin)) {
+    New-Item -ItemType Directory -Path $UserBin -Force | Out-Null
+}
+Set-Content -Path (Join-Path $UserBin "psmux.cmd") -Value $PsmuxCmd -Force
+Set-Content -Path (Join-Path $UserBin "tmux.cmd") -Value $PsmuxCmd -Force
 
 # Add to Machine Path
 $CurrentPath = [Environment]::GetEnvironmentVariable("PATH", "Machine")

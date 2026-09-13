@@ -16,4 +16,4 @@ param()
 
 $ErrorActionPreference = "Stop"
 
-& powershell --version
+$PSVersionTable.PSVersion
