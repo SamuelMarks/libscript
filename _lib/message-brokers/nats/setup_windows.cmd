@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for nats on Windows.
+:: Prepares and configures nats on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript nats installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where nats-server >nul 2>&1

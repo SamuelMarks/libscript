@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for krew on Windows.
+:: Prepares and configures krew on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript krew installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where kubectl-krew >nul 2>&1

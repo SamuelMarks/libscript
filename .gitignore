@@ -1,3 +1,4 @@
+.vagrant
 *.bak
 ### Core Files (Protected) ###
 # These files are essential for the project and should never be ignored.

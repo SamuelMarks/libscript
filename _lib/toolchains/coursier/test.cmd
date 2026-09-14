@@ -8,4 +8,6 @@ rem Execute this script to perform a component-specific test.
 setlocal enabledelayedexpansion
 set "THIS_FILE=%~f0"
 
-cs --version
+if exist "%~dp0env.cmd" call "%~dp0env.cmd"
+
+cs --version || coursier --version

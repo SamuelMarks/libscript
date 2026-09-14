@@ -26,5 +26,21 @@ if errorlevel 1 (
     exit /b 1
 )
 
+for /d %%S in ("%LOCALAPPDATA%\Programs\Swift\Toolchains\*") do (
+    if exist "%%S\usr\bin\swift.exe" set "SWIFT_BIN=%%S\usr\bin"
+)
+for /d %%S in ("%ProgramFiles%\Swift\Toolchains\*") do (
+    if exist "%%S\usr\bin\swift.exe" set "SWIFT_BIN=%%S\usr\bin"
+)
+
+if defined SWIFT_BIN (
+    set "DEST_DIR=%USERPROFILE%\.local\bin"
+    if not exist "!DEST_DIR!" mkdir "!DEST_DIR!"
+    (
+        echo @echo off
+        echo "!SWIFT_BIN!\swift.exe" %%*
+    ) > "!DEST_DIR!\swift.cmd"
+)
+
 echo Swift installed successfully.
 exit /b 0

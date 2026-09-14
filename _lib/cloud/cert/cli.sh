@@ -50,7 +50,7 @@ while [ $# -gt 0 ]; do
       LIBSCRIPT_DOMAIN="${1#*=}"
       shift
       ;;
-    cert)
+    cert|install|test|setup|uninstall)
       shift
       ;;
     *)
@@ -66,6 +66,10 @@ while [ $# -gt 0 ]; do
     fi
 
     case "$CMD" in
+    --help|-h)
+    printf "Usage: libscript cert [issue|revoke|list|renew] [options]\n"
+    exit 0
+    ;;
     install)
     printf "Cloud components are operational wrappers and do not require installation.\n"
     exit 0

@@ -8,6 +8,10 @@ rem Execute this script to perform a component-specific test.
 setlocal enabledelayedexpansion
 set "THIS_FILE=%~f0"
 
+if exist "%USERPROFILE%\.local\bin" (
+    set "PATH=%USERPROFILE%\.local\bin;!PATH!"
+)
+
 if exist "%ProgramFiles%\Git\bin\sh.exe" (
     "%ProgramFiles%\Git\bin\sh.exe" --version
     exit /b 0
@@ -15,7 +19,7 @@ if exist "%ProgramFiles%\Git\bin\sh.exe" (
 
 where sh >nul 2>&1
 if %errorlevel% equ 0 (
-    sh --version
+    sh -c "echo sh operational"
     exit /b 0
 )
 

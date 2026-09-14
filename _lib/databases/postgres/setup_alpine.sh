@@ -31,27 +31,43 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+
+# Detect available postgresql version if default 15 is not available
 if ! apk info -e 'postgresql'"${POSTGRES_VERSION}" >/dev/null 2>&1; then
-  apk add 'openrc' 'postgresql'"${POSTGRES_VERSION}" 'postgresql'"${POSTGRES_VERSION}"'-contrib' 'postgresql'"${POSTGRES_VERSION}"'-openrc'
+  for v in 18 17 16 15; do
+    if apk search -e "postgresql$v" 2>/dev/null | grep -q "postgresql$v"; then
+      POSTGRES_VERSION="$v"
+      export POSTGRES_VERSION
+      break
+    fi
+  done
+fi
+
+if ! apk info -e 'postgresql'"${POSTGRES_VERSION}" >/dev/null 2>&1; then
+  priv apk add 'openrc' 'postgresql'"${POSTGRES_VERSION}" 'postgresql'"${POSTGRES_VERSION}"'-client' 'postgresql'"${POSTGRES_VERSION}"'-contrib' 'postgresql'"${POSTGRES_VERSION}"'-openrc'
 fi
 EXISTED=0
 if [ -f "/etc/init.d/${LIBSCRIPT_SERVICE_NAME:-postgresql}" ]; then
   EXISTED=1
 fi
 if [ "${EXISTED}" -ne 1 ]; then
-  rc-update add "${LIBSCRIPT_SERVICE_NAME:-postgresql}"
+  priv rc-update add "${LIBSCRIPT_SERVICE_NAME:-postgresql}" || true
 fi
 
 STDOUT="$(mktemp)"
 STDERR="$(mktemp)"
 trap 'rm -f -- "${STDOUT}" "${STDERR}"' EXIT HUP INT QUIT TERM
 
-if ! rc-service "${LIBSCRIPT_SERVICE_NAME:-postgresql}" start >"${STDOUT}" 2>"${STDERR}"; then
-  rc="${?}"
+priv /etc/init.d/postgresql setup 2>/dev/null || true
+
+if ! priv rc-service "${LIBSCRIPT_SERVICE_NAME:-postgresql}" start >"${STDOUT}" 2>"${STDERR}"; then
   if [ ! "${STDERR}" = ' * WARNING: postgresql is already starting' ]; then
     >&2 printf '%s\n' "${STDERR}"
     printf '%s\n' "${STDOUT}"
-    exit "${rc}"
   fi
 fi
 

@@ -253,6 +253,7 @@ map_package() {
       ;;
     'qemu')
       case "${PKG_MGR}" in
+        'apk') printf 'qemu-system-aarch64 qemu-system-x86_64 qemu-img\n' ;;
         'apt-get') printf 'qemu-system-x86 qemu-system-arm qemu-utils ovmf qemu-efi-aarch64 libvirt-daemon-system libvirt-clients bridge-utils virtinst swtpm swtpm-tools\n' ;;
         'dnf'|'yum') printf 'qemu-kvm qemu-img edk2-ovmf edk2-aarch64 libvirt virt-install swtpm\n' ;;
         'pacman') printf 'qemu-desktop edk2-ovmf edk2-arm virt-install libvirt swtpm\n' ;;
@@ -391,7 +392,7 @@ map_package() {
       ;;
     'php')
       case "${PKG_MGR}" in
-        'apk') printf 'php82 php82-cli\n' ;;
+        'apk') printf 'php84 php84-cli\n' ;;
         'apt-get') printf 'php-cli\n' ;;
         'dnf') printf 'php-cli\n' ;;
         'yum') printf 'php-cli\n' ;;
@@ -616,7 +617,7 @@ map_package() {
     'docker')
       case "${PKG_MGR}" in
         'apk') printf 'docker docker-cli\n' ;;
-        'apt-get') printf 'docker.io docker-compose-v2\n' ;;
+        'apt-get') printf 'docker.io docker-compose\n' ;;
         'winget') printf 'Docker.DockerCli\n' ;;
         'brew') printf 'docker\n' ;;
         *) printf 'docker\n' ;;

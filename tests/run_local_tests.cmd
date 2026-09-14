@@ -10,6 +10,7 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 set "OS_TARGET=alpine-3.24"
+set "REUSE_VM=0"
 set "ARGS="
 
 :: ## parse_args
@@ -22,6 +23,16 @@ if /I "%~1"=="/?" goto :show_help
 if /I "%~1"=="--os" (
     set "OS_TARGET=%~2"
     shift
+    shift
+    goto :parse_args
+)
+if /I "%~1"=="--reuse-vm" (
+    set "REUSE_VM=1"
+    shift
+    goto :parse_args
+)
+if /I "%~1"=="--fast" (
+    set "REUSE_VM=1"
     shift
     goto :parse_args
 )
@@ -85,6 +96,21 @@ if /I "!OS_ID!"=="almalinux" set "OS_TAG=linux.rhel"
 if /I "!OS_ID!"=="freebsd" set "OS_TAG=freebsd"
 if /I "!OS_ID!"=="windows" set "OS_TAG=windows"
 
+if "!REUSE_VM!"=="1" (
+    echo === Ensuring !OS_TARGET! Vagrant VM is running ===
+    cd /d "%REPO_ROOT%\vagrant\!OS_TARGET!"
+    vagrant status 2>&1 | findstr /i "running" >nul
+    if errorlevel 1 (
+        echo Starting !OS_TARGET! Vagrant VM...
+        vagrant up --no-provision
+        if /I "!OS_ID!"=="debian" (
+            vagrant ssh --no-tty -c "sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get install -qq -y apt-utils curl jq rsync" >nul 2>&1
+        )
+    )
+    echo === Syncing LibScript repository to !OS_TARGET! ===
+    vagrant rsync
+)
+
 :: Enumerate targets and test them
 for %%T in (!TARGETS!) do (
     set "TARGET_NAME=%%T"
@@ -93,6 +119,38 @@ for %%T in (!TARGETS!) do (
     echo Running test for !TARGET_NAME! on !OS_TARGET!...
     echo ============================================================
         
+    set "STDOUT_FILE=%TESTS_TMP_DIR%\!TARGET_NAME!.!OS_TAG!.stdout"
+    set "STDERR_FILE=%TESTS_TMP_DIR%\!TARGET_NAME!.!OS_TAG!.stderr"
+    set "SUCCESS_FILE=%TESTS_TMP_DIR%\!TARGET_NAME!.!OS_TAG!.success"
+    set "FAILURE_FILE=%TESTS_TMP_DIR%\!TARGET_NAME!.!OS_TAG!.failure"
+    
+    if exist "!SUCCESS_FILE!" del /f "!SUCCESS_FILE!"
+    if exist "!FAILURE_FILE!" del /f "!FAILURE_FILE!"
+
+    if "!REUSE_VM!"=="1" (
+        cd /d "%REPO_ROOT%\vagrant\!OS_TARGET!"
+        if /I "!OS_ID!"=="windows" (
+            vagrant ssh --no-tty -c "Set-Location C:\libscript; cmd.exe /c \"C:\libscript\libscript.cmd install !TARGET_NAME!\" ; $iExit = $LASTEXITCODE; cmd.exe /c \"C:\libscript\libscript.cmd test !TARGET_NAME!\" ; $tExit = $LASTEXITCODE; if ($tExit -ne 0) { exit $tExit } elseif ($iExit -ne 0) { exit $iExit }" > "!STDOUT_FILE!" 2> "!STDERR_FILE!"
+            if !errorlevel! equ 0 (
+                echo Success > "!SUCCESS_FILE!"
+                echo [OK] !TARGET_NAME!
+            ) else (
+                echo Failure > "!FAILURE_FILE!"
+                echo [FAILED] !TARGET_NAME!
+            )
+            vagrant ssh --no-tty -c "powershell -Command \"cd C:\libscript; & C:\libscript\libscript.cmd uninstall !TARGET_NAME! *>&1 | Out-Null; Remove-Item -Recurse -Force \"\"\"$env:USERPROFILE\.libscript\!TARGET_NAME!\"\"\" -ErrorAction SilentlyContinue\"" >nul 2>&1
+        ) else (
+            vagrant ssh --no-tty -c "export DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; timeout 300 /opt/repos/libscript/libscript.sh install !TARGET_NAME! && timeout 120 /opt/repos/libscript/libscript.sh test !TARGET_NAME!" > "!STDOUT_FILE!" 2> "!STDERR_FILE!"
+            if !errorlevel! equ 0 (
+                echo Success > "!SUCCESS_FILE!"
+                echo [OK] !TARGET_NAME!
+            ) else (
+                echo Failure > "!FAILURE_FILE!"
+                echo [FAILED] !TARGET_NAME!
+            )
+            vagrant ssh --no-tty -c "export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; /opt/repos/libscript/libscript.sh uninstall !TARGET_NAME! >/dev/null 2>&1 || true; rm -rf \"$HOME/.libscript/!TARGET_NAME!\" /tmp/libscript_pkg_mgr_lock 2>/dev/null || true" >nul 2>&1
+        )
+    ) else (
         set "LIBSCRIPT_TEST_TARGET=!TARGET_NAME!"
         set "LIBSCRIPT_REPO_ROOT=%REPO_ROOT%"
         
@@ -107,14 +165,6 @@ for %%T in (!TARGETS!) do (
         vagrant destroy -f >nul 2>&1
         timeout /t 2 /nobreak >nul
         
-        set "STDOUT_FILE=%TESTS_TMP_DIR%\!TARGET_NAME!.!OS_TAG!.stdout"
-        set "STDERR_FILE=%TESTS_TMP_DIR%\!TARGET_NAME!.!OS_TAG!.stderr"
-        set "SUCCESS_FILE=%TESTS_TMP_DIR%\!TARGET_NAME!.!OS_TAG!.success"
-        set "FAILURE_FILE=%TESTS_TMP_DIR%\!TARGET_NAME!.!OS_TAG!.failure"
-        
-        if exist "!SUCCESS_FILE!" del /f "!SUCCESS_FILE!"
-        if exist "!FAILURE_FILE!" del /f "!FAILURE_FILE!"
-        
         vagrant up > "!STDOUT_FILE!" 2> "!STDERR_FILE!"
         if !errorlevel! equ 0 (
             echo Success > "!SUCCESS_FILE!"
@@ -124,23 +174,22 @@ for %%T in (!TARGETS!) do (
             echo [FAILED] !TARGET_NAME!
         )
         
-        if exist "%THIS_DIR%\update_results.cmd" (
-            call "%THIS_DIR%\update_results.cmd"
-        )
-        
         vagrant destroy -f >nul 2>&1
         timeout /t 2 /nobreak >nul
+    )
+
+    if exist "%THIS_DIR%\update_results.cmd" (
+        call "%THIS_DIR%\update_results.cmd"
+    )
 )
 
 echo All tests complete. Results are in %TESTS_TMP_DIR%.
 goto :eof
 
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line help and options.
 :show_help
-:: ## show_help
-:: Executes show_help functionality.
-echo Usage: %~nx0 [TARGETS...^|all] [--os OS_NAME]
+echo Usage: %~nx0 [TARGETS...^|all] [--os OS_NAME] [--reuse-vm] [--fast]
 echo.
 echo Runs local tests using Vagrant across specified categories or individual targets
 echo to verify libscript installation and testing.
@@ -151,6 +200,8 @@ echo                  If no arguments are provided, defaults to: databases langu
 echo   all            Run tests across all categories in the _lib directory.
 echo   --os OS_NAME   The OS environment to use from the vagrant/ folder (default: alpine-3.24).
 echo                  Example: --os debian-13
+echo   --reuse-vm     Reuse a running VM instead of creating/destroying a new VM per target.
+echo   --fast         Alias for --reuse-vm.
 echo   --help, -h, /? Show this help message.
 echo.
 echo Results are written to the tests_tmp directory.

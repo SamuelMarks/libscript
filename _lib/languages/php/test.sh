@@ -30,7 +30,11 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
   . "$SCRIPT_DIR/env.sh"
 fi
 
-if command -v php82 >/dev/null 2>&1; then
+if command -v php84 >/dev/null 2>&1; then
+  php84 -v
+elif command -v php83 >/dev/null 2>&1; then
+  php83 -v
+elif command -v php82 >/dev/null 2>&1; then
   php82 -v
 else
   php -v

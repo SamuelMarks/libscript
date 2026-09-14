@@ -21,6 +21,24 @@ virtualization VMs).
   - Ruby >= 3.1 runtime & Bundler
   - Automated `packer init` and `bundle install` inside local Bento repo
 
+## Bento Repository
+
+Building box images for **Windows** (Windows 11, Windows Server 2025), **Alpine**, latest
+**FreeBSD**, and latest **Debian** across macOS Apple Silicon and x86_64 hosts requires the custom
+Bento fork:
+
+- **Repository**:
+  [https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64](https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64)
+  (`https://github.com/SamuelMarks/bento` @ branch `multi-os-qemu-aarch64`)
+- **Host Architectures**: macOS Apple Silicon (`aarch64`) and other `x86_64` hosts (Linux, Windows,
+  Intel macOS).
+
+To clone this repository for the builder:
+
+```sh
+git clone -b multi-os-qemu-aarch64 https://github.com/SamuelMarks/bento.git
+```
+
 ## Usage
 
 ```sh

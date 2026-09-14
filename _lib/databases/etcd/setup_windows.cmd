@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for etcd on Windows.
+:: Prepares and configures etcd on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript etcd installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where etcdctl >nul 2>&1

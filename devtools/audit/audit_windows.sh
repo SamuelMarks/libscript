@@ -9,7 +9,36 @@
 
 set -e
 
-REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
+
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
+  printf '%s\n' "Usage: $(basename "$0")"
+  printf '%s\n' "Audits all LibScript components on the Windows 11 Vagrant VM to determine"
+  printf '%s\n' "exact failures, missing download URLs, broken test commands, and unsupported tools."
+  printf '%s\n' "Outputs JSON and Markdown summaries."
+  printf '\n'
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
+  exit 0
+fi
+
 VAGRANT_DIR="$REPO_ROOT/vagrant/windows-11"
 REPORT_JSON="$REPO_ROOT/tests_tmp/windows_audit_report.json"
 REPORT_MD="$REPO_ROOT/tests_tmp/windows_audit_report.md"
@@ -27,8 +56,9 @@ vagrant rsync
 
 echo "Auditing components on Windows 11 VM..."
 
-printf '[
-' > "$REPORT_JSON"
+printf '# Windows Component Audit Report\n\n| Category | Component | OS Support | Setup CMD | Setup Windows | Test CMD | Test PS1 |\n|---|---|---|---|---|---|---|\n' > "$REPORT_MD"
+
+printf '[\n' > "$REPORT_JSON"
 first=1
 
 for cat_dir in "$REPO_ROOT"/_lib/*; do
@@ -85,7 +115,7 @@ for cat_dir in "$REPO_ROOT"/_lib/*; do
             printf "Testing %s/%s... " "$cat_name" "$comp_name"
 
             # Clean cache/install dir before test
-            vagrant ssh -c 'Remove-Item -Recurse -Force "$env:USERPROFILE\.libscript\'"$comp_name"'" -ErrorAction SilentlyContinue' -- -T >/dev/null 2>&1 || true
+            vagrant ssh -c "Remove-Item -Recurse -Force \"\$env:USERPROFILE\\.libscript\\$comp_name\" -ErrorAction SilentlyContinue" -- -T >/dev/null 2>&1 || true
 
             # Run install
             inst_out=$(vagrant ssh -c 'Set-Location C:\libscript; cmd.exe /c "C:\libscript\libscript.cmd install '"$comp_name"'"' -- -T 2>&1) || install_exit=$?
@@ -96,7 +126,7 @@ for cat_dir in "$REPO_ROOT"/_lib/*; do
             test_err=$(printf '%s\n' "$tst_out" | grep -iE "error|cannot|fail|not found|not recognized" | head -n 1 | tr '"' "'" | tr '\r\n' ' ' | head -c 120)
 
             # Clean up
-            vagrant ssh -c 'Remove-Item -Recurse -Force "$env:USERPROFILE\.libscript\'"$comp_name"'" -ErrorAction SilentlyContinue' -- -T >/dev/null 2>&1 || true
+            vagrant ssh -c "Remove-Item -Recurse -Force \"\$env:USERPROFILE\\.libscript\\$comp_name\" -ErrorAction SilentlyContinue" -- -T >/dev/null 2>&1 || true
 
             if [ "$install_exit" -eq 0 ] && [ "$test_exit" -eq 0 ]; then
                 printf "PASS
@@ -110,8 +140,7 @@ for cat_dir in "$REPO_ROOT"/_lib/*; do
 " "$cat_name" "$comp_name" "$os_support"
         fi
 
-        [ "$first" -eq 0 ] && printf ',
-' >> "$REPORT_JSON"
+        [ "$first" -eq 0 ] && printf ',\n' >> "$REPORT_JSON"
         first=0
 
         cat <<EOF >> "$REPORT_JSON"
@@ -130,11 +159,16 @@ for cat_dir in "$REPO_ROOT"/_lib/*; do
     "test_err": "$test_err"
   }
 EOF
+
+        _s_cmd="-"; [ "$has_setup_cmd" -eq 1 ] && _s_cmd="Yes"
+        _s_win="-"; [ "$has_setup_windows" -eq 1 ] && _s_win="Yes"
+        _t_cmd="-"; [ "$has_test_cmd" -eq 1 ] && _t_cmd="Yes"
+        _t_ps1="-"; [ "$has_test_ps1" -eq 1 ] && _t_ps1="Yes"
+        # shellcheck disable=SC2016
+        printf '| %s | `%s` | %s | %s | %s | %s | %s |\n' "$cat_name" "$comp_name" "$os_support" "$_s_cmd" "$_s_win" "$_t_cmd" "$_t_ps1" >> "$REPORT_MD"
     done
 done
 
-printf '
-]
-' >> "$REPORT_JSON"
+printf '\n]\n' >> "$REPORT_JSON"
 
-echo "Audit complete. JSON saved to $REPORT_JSON."
+echo "Audit complete. JSON saved to $REPORT_JSON and Markdown to $REPORT_MD."

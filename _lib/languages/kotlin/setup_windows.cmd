@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for kotlin on Windows.
+:: Prepares and configures kotlin on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript kotlin installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where kotlinc >nul 2>&1

@@ -254,22 +254,39 @@ update_todo_plan() {
   fi
 
   _tmp_todo=$(mktemp "${TMPDIR:-/tmp}/todo_update.XXXXXX")
+  _current_comp=""
   while IFS= read -r _line || [ -n "${_line}" ]; do
     case "${_line}" in
       "- [ ] "*)
         _item="${_line#- \[ \] }"
-        _item_name="${_item##*/}"
-        _item_name=$(printf '%s' "${_item_name}" | tr -d ' ')
-        if ls "${_tests_tmp_dir}/${_item_name}".*.success >/dev/null 2>&1 || 
-           ls "${_tests_tmp_dir}/${_item_name}".*.failure >/dev/null 2>&1; then
+        _comp_target="${_item%%:*}"
+        _comp_name="${_comp_target##*/}"
+        _comp_name=$(printf '%s' "${_comp_name}" | tr -d '` ')
+        _current_comp="${_comp_name}"
+        if [ -n "${_comp_name}" ] && (ls "${_tests_tmp_dir}/${_comp_name}"*.success >/dev/null 2>&1 || 
+           ls "${_tests_tmp_dir}/${_comp_name}"*.failure >/dev/null 2>&1); then
           printf -- '- [x] %s\n' "${_item}" >>"${_tmp_todo}"
         else
           printf '%s\n' "${_line}" >>"${_tmp_todo}"
         fi
         ;;
+      "- [x] "*)
+        _item="${_line#- \[x\] }"
+        _comp_target="${_item%%:*}"
+        _comp_name="${_comp_target##*/}"
+        _comp_name=$(printf '%s' "${_comp_name}" | tr -d '` ')
+        _current_comp="${_comp_name}"
+        printf '%s\n' "${_line}" >>"${_tmp_todo}"
+        ;;
+      *"[ ] **Double-check & Idempotency Verified (2x run)**"*)
+        if [ -n "${_current_comp}" ] && (ls "${_tests_tmp_dir}/${_current_comp}".idempotent.success >/dev/null 2>&1); then
+          printf '  - [x] **Double-check & Idempotency Verified (2x run)**\n' >>"${_tmp_todo}"
+        else
+          printf '%s\n' "${_line}" >>"${_tmp_todo}"
+        fi
+        ;;
       *)
-        printf '%s
-' "${_line}" >>"${_tmp_todo}"
+        printf '%s\n' "${_line}" >>"${_tmp_todo}"
         ;;
     esac
   done <"${_todo_file}"

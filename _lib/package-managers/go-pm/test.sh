@@ -31,7 +31,7 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
 fi
 
 if command -v go >/dev/null 2>&1; then
-  go --version
+  go version
 else
   printf '%s\n' "go is not installed (likely unsupported on this OS), skipping test."
 fi

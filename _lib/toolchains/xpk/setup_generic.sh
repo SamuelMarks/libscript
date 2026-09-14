@@ -164,7 +164,11 @@ case "$ACTION" in
       else
         log_info "xpk ${VERSION} is already installed."
       fi
-      libscript_symlink_alias "xpk" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "xpk" "latest" "${EXACT_VERSION}"
+      libscript_symlink_alias "xpk" "default" "${EXACT_VERSION}"
+      if [ -n "${VERSION:-}" ] && [ "${VERSION}" != "xpk" ]; then
+        libscript_symlink_alias "xpk" "$VERSION" "${EXACT_VERSION}"
+      fi
         fi
 
     ;;

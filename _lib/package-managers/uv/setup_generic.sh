@@ -140,8 +140,13 @@ case "$ACTION" in
     ;;
   install)
     if [ "$UV_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "uv"
-    elif [ "$UV_INSTALL_METHOD" = "mise" ]; then
+      if ! libscript_depends "uv" 2>/dev/null; then
+        log_info "System package manager does not have uv, falling back to standalone install..."
+        UV_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+
+    if [ "$UV_INSTALL_METHOD" = "mise" ]; then
       mise install "uv@${VERSION}"
     elif [ "$UV_INSTALL_METHOD" = "asdf" ]; then
       asdf install uv "${VERSION}"
@@ -150,7 +155,7 @@ case "$ACTION" in
     elif [ "$UV_INSTALL_METHOD" = "vfox" ]; then
       vfox add uv || true
       vfox install "uv@${VERSION}"
-    else
+    elif [ "$UV_INSTALL_METHOD" = "libscript_native" ]; then
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/uv/${EXACT_VERSION}"
@@ -175,7 +180,11 @@ case "$ACTION" in
           if [ "$ARCH" = "x86_64" ]; then ARCH="x86_64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="aarch64"; fi
           OS=$(uname -s | tr "[:upper:]" "[:lower:]")
           if [ "$OS" = "darwin" ]; then OS="apple-darwin"; elif [ "$OS" = "linux" ]; then OS="unknown-linux-musl"; fi
-          URL="https://github.com/astral-sh/uv/releases/download/${EXACT_VERSION}/uv-${ARCH}-${OS}.tar.gz"
+          if [ "${EXACT_VERSION}" = "latest" ]; then
+            URL="https://github.com/astral-sh/uv/releases/latest/download/uv-${ARCH}-${OS}.tar.gz"
+          else
+            URL="https://github.com/astral-sh/uv/releases/download/${EXACT_VERSION}/uv-${ARCH}-${OS}.tar.gz"
+          fi
           TEMP_FILE=$(mktemp)
           libscript_depends "curl" "tar" || true
           if ! curl -sSLf "$URL" -o "$TEMP_FILE.tar.gz"; then
@@ -183,7 +192,7 @@ case "$ACTION" in
             rm -f "$TEMP_FILE.tar.gz"
             exit 1
           fi
-          tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" --strip-components=1 "uv-${ARCH}-${OS}/uv" "uv-${ARCH}-${OS}/uvx" || cp "$TEMP_FILE.tar.gz" "${TARGET_DIR}/bin/uv"
+          tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" --strip-components=1 || cp "$TEMP_FILE.tar.gz" "${TARGET_DIR}/bin/uv"
           chmod +x "${TARGET_DIR}/bin/uv" || true
           chmod +x "${TARGET_DIR}/bin/uvx" >/dev/null 2>&1 || true
           rm -f "$TEMP_FILE.tar.gz"
@@ -191,7 +200,11 @@ case "$ACTION" in
       else
         log_info "uv ${VERSION} is already installed."
       fi
-      libscript_symlink_alias "uv" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "uv" "latest" "${EXACT_VERSION}"
+      libscript_symlink_alias "uv" "default" "${EXACT_VERSION}"
+      if [ -n "${VERSION:-}" ] && [ "${VERSION}" != "uv" ]; then
+        libscript_symlink_alias "uv" "$VERSION" "${EXACT_VERSION}"
+      fi
     fi
     ;;
   start|stop|restart|status|health|logs|up|down)

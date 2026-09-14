@@ -206,18 +206,18 @@ if !match_count! equ 1 (
 )
 
 if !match_count! equ 0 (
-    echo Error: Unknown component '%action_pkg%'.
+    echo Error: Unknown component '%action_pkg%'. >&2
     exit /b 1
 )
 
-echo Error: Component '%action_pkg%' is ambiguous. Matches:
+echo Error: Component '%action_pkg%' is ambiguous. Matches: >&2
 for /d %%C in ("%SCRIPT_DIR%\_lib\*") do (
     for /d %%D in ("%%C\*") do (
         if exist "%%D\cli.cmd" (
             set "cname=%%~nxD"
             echo !cname! | findstr /i "%action_pkg%" >nul 2>&1
             if not errorlevel 1 (
-                echo   %%~nxC\!cname!
+                echo   %%~nxC\!cname! >&2
             )
         )
     )
@@ -231,7 +231,7 @@ if exist "%target%\cli.cmd" (
     call "%target%\cli.cmd" %*
     exit /b !errorlevel!
 ) else (
-    echo Error: Local CLI not found in %target%
+    echo Error: Local CLI not found in %target% >&2
     exit /b 1
 )
 

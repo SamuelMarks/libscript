@@ -133,10 +133,14 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-
     if [ "${WAIT4X_INSTALL_METHOD}" = "system" ]; then
-      libscript_depends 'wait4x'
-    elif [ "${WAIT4X_INSTALL_METHOD}" = "mise" ]; then
+      if ! libscript_depends 'wait4x' 2>/dev/null; then
+        log_info "System package manager does not have wait4x, falling back to standalone install..."
+        WAIT4X_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+
+    if [ "${WAIT4X_INSTALL_METHOD}" = "mise" ]; then
       mise install "wait4x@${WAIT4X_VERSION}"
     elif [ "${WAIT4X_INSTALL_METHOD}" = "asdf" ]; then
       asdf install wait4x "${WAIT4X_VERSION}"
@@ -145,7 +149,7 @@ case "$ACTION" in
     elif [ "${WAIT4X_INSTALL_METHOD}" = "vfox" ]; then
       vfox add wait4x || true
       vfox install "wait4x@${WAIT4X_VERSION}"
-    else
+    elif [ "${WAIT4X_INSTALL_METHOD}" = "libscript_native" ]; then
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/wait4x/${EXACT_VERSION}"
@@ -155,19 +159,30 @@ case "$ACTION" in
         ARCH=$(uname -m)
         OS=$(uname -s | tr "[:upper:]" "[:lower:]")
         if [ "$ARCH" = "x86_64" ]; then ARCH="amd64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
-        URL="https://github.com/wait4x/wait4x/releases/download/v${EXACT_VERSION}/wait4x-${OS}-${ARCH}.tar.gz"
+        if [ "${EXACT_VERSION}" = "latest" ]; then
+          URL="https://github.com/wait4x/wait4x/releases/latest/download/wait4x-${OS}-${ARCH}.tar.gz"
+        else
+          URL="https://github.com/wait4x/wait4x/releases/download/v${EXACT_VERSION}/wait4x-${OS}-${ARCH}.tar.gz"
+        fi
         TEMP_FILE=$(mktemp)
-        libscript_depends "curl"
-        libscript_depends "tar"
-        curl -sSL "$URL" -o "$TEMP_FILE.tar.gz"
-        tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" "wait4x" || cp "$TEMP_FILE.tar.gz" "${TARGET_DIR}/bin/wait4x"
+        libscript_depends "curl" "tar" || true
+        if ! curl -sSLf "$URL" -o "$TEMP_FILE.tar.gz"; then
+          log_error "Failed to download wait4x from $URL"
+          rm -f "$TEMP_FILE.tar.gz"
+          exit 1
+        fi
+        tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" "wait4x" 2>/dev/null || tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" || cp "$TEMP_FILE.tar.gz" "${TARGET_DIR}/bin/wait4x"
         chmod +x "${TARGET_DIR}/bin/wait4x"
         rm -f "$TEMP_FILE.tar.gz"
       else
         log_info "wait4x ${VERSION} is already installed."
       fi
-      libscript_symlink_alias "wait4x" "$VERSION" "${EXACT_VERSION}"
-        fi
+      libscript_symlink_alias "wait4x" "latest" "${EXACT_VERSION}"
+      libscript_symlink_alias "wait4x" "default" "${EXACT_VERSION}"
+      if [ -n "${VERSION:-}" ] && [ "${VERSION}" != "wait4x" ]; then
+        libscript_symlink_alias "wait4x" "$VERSION" "${EXACT_VERSION}"
+      fi
+    fi
 
     ;;
   start|stop|restart|status|health|logs|up|down)

@@ -1,25 +1,31 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for vcpkg on Windows.
+:: Prepares and configures vcpkg on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript vcpkg installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where vcpkg >nul 2>&1
-if %errorlevel% equ 0 (
-    echo vcpkg is already installed.
-    exit /b 0
+if %errorlevel% equ 0 exit /b 0
+
+set "DEST_DIR=%USERPROFILE%\.local\bin"
+if not "%PREFIX%"=="" set "DEST_DIR=%PREFIX%"
+if not exist "%DEST_DIR%" mkdir "%DEST_DIR%"
+
+if exist "%DEST_DIR%\vcpkg.exe" exit /b 0
+
+echo Downloading official vcpkg.exe from GitHub releases...
+curl.exe -sSL "https://github.com/microsoft/vcpkg-tool/releases/latest/download/vcpkg.exe" -o "%DEST_DIR%\vcpkg.exe"
+if errorlevel 1 (
+    echo Failed to download vcpkg.exe.
+    exit /b 1
 )
 
-set "VCPKG_DIR=%USERPROFILE%\vcpkg"
-if not exist "%VCPKG_DIR%" (
-    echo Cloning vcpkg repository...
-    git clone --depth=1 https://github.com/microsoft/vcpkg.git "%VCPKG_DIR%"
-)
-
-if not exist "%VCPKG_DIR%\vcpkg.exe" (
-    echo Bootstrapping vcpkg...
-    call "%VCPKG_DIR%\bootstrap-vcpkg.bat" -disableMetrics
-)
-
-if exist "%VCPKG_DIR%\vcpkg.exe" (
+if exist "%DEST_DIR%\vcpkg.exe" (
     echo vcpkg installed successfully.
     exit /b 0
 )

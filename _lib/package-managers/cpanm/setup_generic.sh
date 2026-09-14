@@ -184,23 +184,31 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            if [ "$UNAME_LOWER" = "freebsd" ]; then
-              log_info "No native binary for FreeBSD. Falling back to system package manager for cpanm..."
-              libscript_depends "cpanm"
+            if [ -n "${PKG_MGR:-}" ] && libscript_depends "cpanm" 2>/dev/null; then
+              cpanm_bin=""
+              if command -v cpanm >/dev/null 2>&1; then
+                cpanm_bin=$(command -v cpanm)
+              elif [ -x /usr/bin/cpanm ]; then
+                cpanm_bin="/usr/bin/cpanm"
+              fi
+              if [ -n "$cpanm_bin" ]; then
+                ln -sf "$cpanm_bin" "${TARGET_DIR}/bin/cpanm"
+              fi
             else
-              if [ "$UNAME_LOWER" = "freebsd" ]; then
-              log_info "No native binary for FreeBSD. Falling back to system package manager for cpanm..."
-              libscript_depends "cpanm"
-            else
-              log_warn "No download URL provided for cpanm ${VERSION}."
-            fi
+              libscript_depends "perl" "curl" || true
+              curl -sSLf https://cpanmin.us -o "${TARGET_DIR}/bin/cpanm" || true
+              chmod +x "${TARGET_DIR}/bin/cpanm" || true
             fi
           fi
         fi
       else
         log_info "cpanm ${VERSION} is already installed."
       fi
-      libscript_symlink_alias "cpanm" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "cpanm" "latest" "${EXACT_VERSION}"
+      libscript_symlink_alias "cpanm" "default" "${EXACT_VERSION}"
+      if [ -n "${VERSION:-}" ] && [ "${VERSION}" != "cpanm" ]; then
+        libscript_symlink_alias "cpanm" "$VERSION" "${EXACT_VERSION}"
+      fi
     fi
     ;;
   start|stop|restart|status|health|logs|up|down)

@@ -64,7 +64,7 @@ while [ $# -gt 0 ]; do
       export LIBSCRIPT_PUBLIC=1
       shift
       ;;
-    storage)
+    storage|install|test|setup|uninstall)
       shift
       ;;
     *)

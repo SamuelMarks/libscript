@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for huggingface-cli on Windows.
+:: Prepares and configures huggingface-cli on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript huggingface-cli installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where huggingface-cli >nul 2>&1

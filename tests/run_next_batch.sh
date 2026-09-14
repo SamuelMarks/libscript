@@ -34,5 +34,9 @@ if [ ! -f "$TODO_FILE" ]; then
 fi
 
 # Find up to 5 uncompleted items
-grep "^- \[ \] " "$TODO_FILE" | head -n 5 | sed 's/^- \[ \] //' | tr '\n' ' '
+if grep -q '^- \[ \] \*\*`_lib/' "$TODO_FILE"; then
+  grep '^- \[ \] \*\*`_lib/' "$TODO_FILE" | head -n 5 | sed -n 's/.*`_lib\/[^\/]*\/\([^`]*\)`.*$/\1/p' | tr '\n' ' '
+else
+  grep '^- \[ \] ' "$TODO_FILE" | head -n 5 | sed 's/^- \[ \] //' | tr '\n' ' '
+fi
 echo ""

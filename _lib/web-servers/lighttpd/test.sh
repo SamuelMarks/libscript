@@ -24,4 +24,13 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-lighttpd -v
+export PATH="$PATH:/usr/sbin:/usr/local/sbin"
+
+if command -v lighttpd >/dev/null 2>&1; then
+  lighttpd -v
+elif [ -x /usr/sbin/lighttpd ]; then
+  /usr/sbin/lighttpd -v
+else
+  echo "lighttpd command not found"
+  exit 1
+fi

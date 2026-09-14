@@ -20,6 +20,22 @@ You can natively manage these Vagrant environments using `libscript`:
 - **Uninstall**: `libscript uninstall vagrant`
 - **Package**: `libscript package vagrant`
 
+## Building Vagrant Boxes with Bento
+
+To build the required Vagrant boxes for **Windows** (`bento/windows-11`), **Alpine**
+(`bento/alpine-3.24`), latest **FreeBSD** (`bento/freebsd-15.1`), and latest **Debian**
+(`bento/debian-13`), use the custom Bento fork:
+
+- **Repository**:
+  [https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64](https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64)
+  (`https://github.com/SamuelMarks/bento` @ branch `multi-os-qemu-aarch64`)
+- **Supported Host Platforms**:
+  - **macOS Apple Silicon** (`aarch64` / ARM64)
+  - **x86_64 other hosts** (Linux, Windows, Intel macOS)
+
+Refer to [VAGRANT.md](../VAGRANT.md) for full instructions on building boxes with Packer and adding
+them to Vagrant.
+
 ## Vagrant Usage
 
 You can start specific environments directly via Vagrant:

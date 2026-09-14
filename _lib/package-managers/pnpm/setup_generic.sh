@@ -140,8 +140,13 @@ case "$ACTION" in
     ;;
   install)
     if [ "$PNPM_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "pnpm"
-    elif [ "$PNPM_INSTALL_METHOD" = "mise" ]; then
+      if ! libscript_depends "pnpm" 2>/dev/null; then
+        log_info "System package manager does not have pnpm, falling back to standalone install..."
+        PNPM_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+
+    if [ "$PNPM_INSTALL_METHOD" = "mise" ]; then
       mise install "pnpm@${VERSION}"
     elif [ "$PNPM_INSTALL_METHOD" = "asdf" ]; then
       asdf install pnpm "${VERSION}"
@@ -150,7 +155,7 @@ case "$ACTION" in
     elif [ "$PNPM_INSTALL_METHOD" = "vfox" ]; then
       vfox add pnpm || true
       vfox install "pnpm@${VERSION}"
-    else
+    elif [ "$PNPM_INSTALL_METHOD" = "libscript_native" ]; then
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/pnpm/${EXACT_VERSION}"
@@ -175,22 +180,35 @@ case "$ACTION" in
           if [ "$ARCH" = "x86_64" ]; then ARCH="x64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
           OS=$(uname -s | tr "[:upper:]" "[:lower:]")
           if [ "$OS" = "darwin" ]; then OS="macos"; fi
-          URL="https://github.com/pnpm/pnpm/releases/download/v${EXACT_VERSION}/pnpm-${OS}-${ARCH}"
-          TEMP_FILE=$(mktemp)
-          libscript_depends "curl" || true
-          if ! curl -sSLf "$URL" -o "$TEMP_FILE"; then
-            log_error "Failed to download pnpm from $URL"
-            rm -f "$TEMP_FILE"
-            exit 1
+          if [ "${EXACT_VERSION}" = "latest" ]; then
+            URL="https://github.com/pnpm/pnpm/releases/latest/download/pnpm-${OS}-${ARCH}.tar.gz"
+          else
+            URL="https://github.com/pnpm/pnpm/releases/download/v${EXACT_VERSION}/pnpm-${OS}-${ARCH}.tar.gz"
           fi
-          cp "$TEMP_FILE" "${TARGET_DIR}/bin/pnpm"
+          TEMP_FILE=$(mktemp)
+          libscript_depends "curl" "tar" || true
+          if curl -sSLf "$URL" -o "$TEMP_FILE.tar.gz"; then
+            tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" "pnpm" 2>/dev/null || tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" || true
+            rm -f "$TEMP_FILE.tar.gz"
+          else
+            URL_RAW="https://github.com/pnpm/pnpm/releases/download/v${EXACT_VERSION}/pnpm-${OS}-${ARCH}"
+            if ! curl -sSLf "$URL_RAW" -o "${TARGET_DIR}/bin/pnpm"; then
+              log_error "Failed to download pnpm from $URL and $URL_RAW"
+              rm -f "$TEMP_FILE.tar.gz" "$TEMP_FILE"
+              exit 1
+            fi
+          fi
           chmod +x "${TARGET_DIR}/bin/pnpm"
           rm -f "$TEMP_FILE"
         fi
       else
         log_info "pnpm ${VERSION} is already installed."
       fi
-      libscript_symlink_alias "pnpm" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "pnpm" "latest" "${EXACT_VERSION}"
+      libscript_symlink_alias "pnpm" "default" "${EXACT_VERSION}"
+      if [ -n "${VERSION:-}" ] && [ "${VERSION}" != "pnpm" ]; then
+        libscript_symlink_alias "pnpm" "$VERSION" "${EXACT_VERSION}"
+      fi
     fi
     ;;
   start|stop|restart|status|health|logs|up|down)

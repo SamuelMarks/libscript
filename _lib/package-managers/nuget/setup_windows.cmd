@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for nuget on Windows.
+:: Prepares and configures nuget on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript nuget installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where nuget >nul 2>&1

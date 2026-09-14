@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for postgres on Windows.
+:: Prepares and configures postgres on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript postgres installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where psql >nul 2>&1

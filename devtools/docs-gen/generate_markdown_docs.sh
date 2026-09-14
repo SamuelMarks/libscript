@@ -106,6 +106,12 @@ find "$ROOT_DIR" -type f -name "README.md" | grep -E "(_lib|app-servers|stacks)"
         
         mv "${readme}.tmp" "$readme"
         rm -f "$vars_tmp" "$plat_tmp"
+        if command -v dos2unix >/dev/null 2>&1; then
+            dos2unix -q "$readme" 2>/dev/null || true
+        fi
+        if command -v npx >/dev/null 2>&1; then
+            npx prettier --write "$readme" >/dev/null 2>&1 || true
+        fi
     fi
 done
 

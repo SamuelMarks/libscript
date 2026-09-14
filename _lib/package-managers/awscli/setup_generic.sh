@@ -183,7 +183,16 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_warn "No download URL provided for awscli ${VERSION}."
+            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
+              log_info "Falling back to system package manager for awscli..."
+              libscript_depends "awscli"
+              if command -v aws >/dev/null 2>&1; then
+                ln -sf "$(command -v aws)" "${TARGET_DIR}/bin/aws"
+                ln -sf "$(command -v aws)" "${TARGET_DIR}/bin/awscli"
+              fi
+            else
+              log_warn "No download URL provided for awscli ${VERSION}."
+            fi
           fi
         fi
       else

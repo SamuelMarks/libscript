@@ -29,4 +29,8 @@ if [ -f /etc/alpine-release ]; then
   exit 0
 fi
 
+if [ -f "$SCRIPT_DIR/env.sh" ]; then
+  . "$SCRIPT_DIR/env.sh"
+fi
+
 gcsfuse --version

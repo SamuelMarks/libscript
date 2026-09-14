@@ -170,7 +170,7 @@ case "$ACTION" in
           else
             URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-${MINICONDA_ARCH}.sh"
           fi
-          TEMP_FILE=$(mktemp)
+          TEMP_FILE=$(mktemp --suffix=.sh 2>/dev/null || mktemp /tmp/miniconda_XXXXXX.sh)
           libscript_depends "curl"
           if ! curl -sSLf "$URL" -o "$TEMP_FILE"; then
             log_error "Failed to download conda from $URL"
@@ -183,7 +183,11 @@ case "$ACTION" in
       else
         log_info "conda ${VERSION} is already installed."
       fi
-      libscript_symlink_alias "conda" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "conda" "latest" "${EXACT_VERSION}"
+      libscript_symlink_alias "conda" "default" "${EXACT_VERSION}"
+      if [ "$VERSION" != "latest" ] && [ "$VERSION" != "default" ]; then
+        libscript_symlink_alias "conda" "$VERSION" "${EXACT_VERSION}"
+      fi
     fi
     ;;
   start|stop|restart|status|health|logs|up|down)

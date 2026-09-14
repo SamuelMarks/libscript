@@ -18,16 +18,32 @@ vm_name = "debian-test-#{test_target}"
 Vagrant.configure("2") do |config|
   config.vm.define vm_name do |t|
     t.vm.box = "bento/debian-13"
+    t.vm.box_version = "0"
+
+    t.ssh.username = "vagrant"
+    t.ssh.insert_key = false
+    t.ssh.private_key_path = [
+      File.expand_path("~/.vagrant.d/insecure_private_keys/vagrant.key.ed25519"),
+      File.expand_path("~/.vagrant.d/insecure_private_key")
+    ]
+    t.ssh.shell = "/bin/sh"
 
     t.vm.provider "qemu" do |qe|
       qe.net_mode = :user
-      # Randomize SSH port to prevent collisions during parallel isolated runs
+      qe.firmware_format = nil
+      bios_candidates = [
+        ENV["QEMU_EDK2_CODE"],
+        "/opt/homebrew/share/qemu/edk2-aarch64-code.fd",
+        "/usr/share/qemu/edk2-aarch64-code.fd",
+        "/usr/share/edk2/aarch64/QEMU_EFI.fd"
+      ].compact
+      bios_path = bios_candidates.find { |path| File.exist?(path) }
+      qe.extra_qemu_args = ["-bios", bios_path] if bios_path
+      qe.ssh_auto_correct = true
       qe.ssh_port = 50022 + rand(1000)
-      qe.qemu_args = %w(-m 16G -smp 4)
+      qe.memory = "4G"
+      qe.smp = "4"
     end
-
-    t.ssh.insert_key = true
-    t.ssh.shell = "/bin/sh"
     t.vm.allowed_synced_folder_types = [:rsync]
 
     # Sync the repository root directory

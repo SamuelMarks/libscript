@@ -184,7 +184,15 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_warn "No download URL provided for composer ${VERSION}."
+            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
+              log_info "Falling back to system package manager for composer..."
+              libscript_depends "composer"
+              if command -v composer >/dev/null 2>&1; then
+                ln -sf "$(command -v composer)" "${TARGET_DIR}/bin/composer"
+              fi
+            else
+              log_warn "No download URL provided for composer ${VERSION}."
+            fi
           fi
         fi
       else

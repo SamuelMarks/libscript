@@ -29,4 +29,9 @@ if [ -f /etc/alpine-release ]; then
   exit 0
 fi
 
-cs --version
+if [ -f "$SCRIPT_DIR/env.sh" ]; then
+  unset SCRIPT_NAME || true
+  . "$SCRIPT_DIR/env.sh"
+fi
+
+cs --version || coursier --version

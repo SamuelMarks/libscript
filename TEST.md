@@ -71,8 +71,16 @@ infrastructure.
 ### Vagrant Environments
 
 The repository contains several Vagrant configurations representing our target platforms (e.g.,
-Debian 13, Alpine 3.24, FreeBSD 15.1). You can orchestrate these environments using the main
-`libscript` tool:
+Debian 13, Alpine 3.24, FreeBSD 15.1, Windows 11).
+
+Building the underlying boxes (`bento/windows-11`, `bento/alpine-3.24`, `bento/debian-13`,
+`bento/freebsd-15.1`) requires the custom Bento fork at
+[https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64](https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64)
+(`https://github.com/SamuelMarks/bento` @ branch `multi-os-qemu-aarch64`), supporting builds on
+macOS Apple Silicon (`aarch64`) and other `x86_64` hosts. See [VAGRANT.md](VAGRANT.md) for full box
+building instructions.
+
+You can orchestrate these environments using the main `libscript` tool:
 
 ```sh
 # Provision the Vagrant environment

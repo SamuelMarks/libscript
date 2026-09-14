@@ -34,3 +34,16 @@ Even when driving complex Linux-based cloud infrastructure (such as Google Cloud
 inference nodes), LibScript manages the entire lifecycle natively from the Windows command prompt.
 Using the native `gcloud` CLI for Windows, you can deploy and orchestrate distributed AI workloads
 without needing a local Unix environment.
+
+## Windows Vagrant Testing & Box Generation
+
+To test LibScript on isolated Windows environments, automated test runners execute against the
+`bento/windows-11` Vagrant box:
+
+- **Box Repository**: The Windows 11 box is built using the custom Bento fork at
+  [https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64](https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64)
+  (`https://github.com/SamuelMarks/bento` @ branch `multi-os-qemu-aarch64`).
+- **Host Support**: Supports building and executing on macOS Apple Silicon (`aarch64`) and `x86_64`
+  other hosts (Linux, Windows).
+- **Instructions**: Refer to [VAGRANT.md](VAGRANT.md) for full instructions on building the box with
+  Packer and adding it to Vagrant.

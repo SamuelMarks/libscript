@@ -229,17 +229,34 @@ if exist "%TMP_TABLE%" del "%TMP_TABLE%" >nul 2>&1
 :: ## update_todo_plan
 :: Checks off completed tasks in TODO_PLAN.md if result files exist in tests_tmp.
 if exist "%TODO_FILE%" if exist "%TESTS_TMP_DIR%" (
+    set "curr_comp="
     (for /f "delims=" %%L in ('findstr /n "^" "%TODO_FILE%"') do (
         set "line=%%L"
         set "line=!line:*:=!"
-        if "!line:~0,11!"=="- [ ] _lib/" (
+        set "is_todo=0"
+        if "!line:~0,6!"=="- [ ] " set "is_todo=1"
+        if "!line:~0,6!"=="- [x] " (
             set "item=!line:~6!"
-            for %%P in ("!item!") do set "comp=%%~nxP"
+            for /f "tokens=1 delims=:" %%A in ("!item!") do set "comp_path=%%A"
+            set "comp_path=!comp_path:`=!"
+            for %%P in ("!comp_path!") do set "curr_comp=%%~nxP"
+            echo(!line!
+        ) else if "!is_todo!"=="1" (
+            set "item=!line:~6!"
+            for /f "tokens=1 delims=:" %%A in ("!item!") do set "comp_path=%%A"
+            set "comp_path=!comp_path:`=!"
+            for %%P in ("!comp_path!") do set "curr_comp=%%~nxP"
             set "has_result=0"
-            if exist "%TESTS_TMP_DIR%\!comp!.*.success" set "has_result=1"
-            if exist "%TESTS_TMP_DIR%\!comp!.*.failure" set "has_result=1"
+            if exist "%TESTS_TMP_DIR%\!curr_comp!*.success" set "has_result=1"
+            if exist "%TESTS_TMP_DIR%\!curr_comp!*.failure" set "has_result=1"
             if "!has_result!"=="1" (
                 echo - [x] !item!
+            ) else (
+                echo(!line!
+            )
+        ) else if not "!line:Double-check & Idempotency=!"=="!line!" (
+            if exist "%TESTS_TMP_DIR%\!curr_comp!.idempotent.success" (
+                echo   - [x] **Double-check & Idempotency Verified (2x run)**
             ) else (
                 echo(!line!
             )

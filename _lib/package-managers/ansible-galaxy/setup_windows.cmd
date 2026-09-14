@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for ansible-galaxy on Windows.
+:: Prepares and configures ansible-galaxy on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript ansible-galaxy installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where ansible-galaxy >nul 2>&1

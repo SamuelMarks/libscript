@@ -143,8 +143,13 @@ case "$ACTION" in
     ;;
   install)
     if [ "$ZIG_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "zig"
-    elif [ "$ZIG_INSTALL_METHOD" = "mise" ]; then
+      if ! libscript_depends "zig" 2>/dev/null; then
+        log_info "System package manager does not have zig, falling back to standalone install..."
+        ZIG_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+
+    if [ "$ZIG_INSTALL_METHOD" = "mise" ]; then
       mise install "zig@${VERSION}"
     elif [ "$ZIG_INSTALL_METHOD" = "asdf" ]; then
       asdf install zig "${VERSION}"
@@ -153,7 +158,7 @@ case "$ACTION" in
     elif [ "$ZIG_INSTALL_METHOD" = "vfox" ]; then
       vfox add zig || true
       vfox install "zig@${VERSION}"
-    else
+    elif [ "$ZIG_INSTALL_METHOD" = "libscript_native" ]; then
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/zig/${EXACT_VERSION}"
@@ -187,12 +192,19 @@ case "$ACTION" in
             exit 1
           fi
           tar -xf "$TEMP_FILE.tar.xz" -C "${TARGET_DIR}" --strip-components=1 || true
+          if [ -x "${TARGET_DIR}/zig" ]; then
+            ln -sf "${TARGET_DIR}/zig" "${TARGET_DIR}/bin/zig"
+          fi
           rm -f "$TEMP_FILE.tar.xz"
         fi
       else
         log_info "zig ${VERSION} is already installed."
       fi
-      libscript_symlink_alias "zig" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "zig" "latest" "${EXACT_VERSION}"
+      libscript_symlink_alias "zig" "default" "${EXACT_VERSION}"
+      if [ -n "${VERSION:-}" ] && [ "${VERSION}" != "zig" ]; then
+        libscript_symlink_alias "zig" "$VERSION" "${EXACT_VERSION}"
+      fi
     fi
     ;;
   start|stop|restart|status|health|logs|up|down)

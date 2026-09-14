@@ -19,6 +19,22 @@ if /i "%~1"=="volume" (
     shift
     goto parse_args
 )
+if /i "%~1"=="install" (
+    shift
+    goto parse_args
+)
+if /i "%~1"=="test" (
+    shift
+    goto parse_args
+)
+if /i "%~1"=="setup" (
+    shift
+    goto parse_args
+)
+if /i "%~1"=="uninstall" (
+    shift
+    goto parse_args
+)
 if "%~1"=="--cloud" ( set "LIBSCRIPT_CLOUD=%~2" & shift & shift & goto parse_args )
 if "%~1"=="--volume-id" ( set "LIBSCRIPT_VOLUME_ID=%~2" & shift & shift & goto parse_args )
 if "%~1"=="--size" ( set "LIBSCRIPT_VOLUME_SIZE=%~2" & shift & shift & goto parse_args )

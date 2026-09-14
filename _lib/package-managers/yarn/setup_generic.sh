@@ -140,8 +140,13 @@ case "$ACTION" in
     ;;
   install)
     if [ "$YARN_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "yarn"
-    elif [ "$YARN_INSTALL_METHOD" = "mise" ]; then
+      if ! libscript_depends "yarn" 2>/dev/null; then
+        log_info "System package manager does not have yarn, falling back to standalone install..."
+        YARN_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+
+    if [ "$YARN_INSTALL_METHOD" = "mise" ]; then
       mise install "yarn@${VERSION}"
     elif [ "$YARN_INSTALL_METHOD" = "asdf" ]; then
       asdf install yarn "${VERSION}"
@@ -150,9 +155,12 @@ case "$ACTION" in
     elif [ "$YARN_INSTALL_METHOD" = "vfox" ]; then
       vfox add yarn || true
       vfox install "yarn@${VERSION}"
-    else
+    elif [ "$YARN_INSTALL_METHOD" = "libscript_native" ]; then
       # libscript_native implementation
       resolve_exact_version
+      if [ "${EXACT_VERSION}" = "latest" ] || [ -z "${EXACT_VERSION}" ]; then
+        EXACT_VERSION="1.22.22"
+      fi
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/yarn/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing yarn ${VERSION} natively to ${TARGET_DIR}..."
@@ -173,20 +181,26 @@ case "$ACTION" in
         else
           URL="https://github.com/yarnpkg/yarn/releases/download/v${EXACT_VERSION}/yarn-v${EXACT_VERSION}.tar.gz"
           TEMP_FILE=$(mktemp)
-          libscript_depends "curl" "tar" || true
+          libscript_depends "curl" "tar" "nodejs" || true
           if ! curl -sSLf "$URL" -o "$TEMP_FILE.tar.gz"; then
             log_error "Failed to download yarn from $URL"
             rm -f "$TEMP_FILE.tar.gz"
             exit 1
           fi
           tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}" --strip-components=1 || true
-          ln -sf "${TARGET_DIR}/bin/yarn" "${TARGET_DIR}/bin/yarnpkg" || true
+          chmod +x "${TARGET_DIR}/bin/yarn" 2>/dev/null || true
+          chmod +x "${TARGET_DIR}/bin/yarnpkg" 2>/dev/null || true
+          ln -sf "${TARGET_DIR}/bin/yarn" "${TARGET_DIR}/bin/yarnpkg" 2>/dev/null || true
           rm -f "$TEMP_FILE.tar.gz"
         fi
       else
         log_info "yarn ${VERSION} is already installed."
       fi
-      libscript_symlink_alias "yarn" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "yarn" "latest" "${EXACT_VERSION}"
+      libscript_symlink_alias "yarn" "default" "${EXACT_VERSION}"
+      if [ -n "${VERSION:-}" ] && [ "${VERSION}" != "yarn" ]; then
+        libscript_symlink_alias "yarn" "$VERSION" "${EXACT_VERSION}"
+      fi
     fi
     ;;
   start|stop|restart|status|health|logs|up|down)

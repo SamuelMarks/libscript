@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for openbao on Windows.
+:: Prepares and configures openbao on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript openbao installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where bao >nul 2>&1

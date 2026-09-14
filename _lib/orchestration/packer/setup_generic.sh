@@ -35,7 +35,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/priv.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/priv.sh" "_lib/_common/versioning.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -88,6 +88,9 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ "$PACKER_INSTALL_METHOD" = "system" ] && [ "${PKG_MGR}" = "apk" ]; then
+      PACKER_INSTALL_METHOD="libscript_native"
+    fi
     log_info "Installing Packer via ${PACKER_INSTALL_METHOD}..."
     if [ "$PACKER_INSTALL_METHOD" = "system" ]; then
       case "${PKG_MGR}" in
@@ -102,7 +105,8 @@ case "$ACTION" in
           libscript_depends "packer"
           ;;
       esac
-    elif [ "$PACKER_INSTALL_METHOD" = "libscript_native" ]; then
+    fi
+    if [ "$PACKER_INSTALL_METHOD" = "libscript_native" ]; then
       ver="1.11.2"
       if [ "$PACKER_VERSION" != "latest" ]; then
         ver="$PACKER_VERSION"
@@ -120,9 +124,11 @@ case "$ACTION" in
       target_dir="${LIBSCRIPT_HOME:-$HOME/.libscript}/packer/${ver}/bin"
       if [ -x "$target_dir/packer" ]; then
         log_info "Packer ${ver} is already installed at $target_dir/packer"
+        libscript_symlink_alias "packer" "$PACKER_VERSION" "$ver"
         exit 0
       fi
       mkdir -p "$target_dir"
+      libscript_depends "curl" "unzip"
       zip_url="https://releases.hashicorp.com/packer/${ver}/packer_${ver}_${os}_${arch}.zip"
       zip_tmp=$(mktemp)
       log_info "Downloading Packer binary from $zip_url..."
@@ -130,6 +136,10 @@ case "$ACTION" in
       unzip -q -o "$zip_tmp" -d "$target_dir"
       chmod +x "$target_dir/packer"
       rm -f "$zip_tmp"
+      libscript_symlink_alias "packer" "$PACKER_VERSION" "$ver"
+      if command -v priv >/dev/null 2>&1; then
+        priv ln -sf "$target_dir/packer" /usr/local/bin/packer 2>/dev/null || true
+      fi
       log_info "Packer installed to $target_dir/packer"
     fi
     ;;

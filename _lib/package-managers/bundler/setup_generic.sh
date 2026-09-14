@@ -183,7 +183,16 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_warn "No download URL provided for bundler ${VERSION}."
+            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
+              log_info "Falling back to system package manager for bundler..."
+              libscript_depends "bundler"
+              if command -v bundle >/dev/null 2>&1; then
+                ln -sf "$(command -v bundle)" "${TARGET_DIR}/bin/bundle"
+                ln -sf "$(command -v bundle)" "${TARGET_DIR}/bin/bundler"
+              fi
+            else
+              log_warn "No download URL provided for bundler ${VERSION}."
+            fi
           fi
         fi
       else

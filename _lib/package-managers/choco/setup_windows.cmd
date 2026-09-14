@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for choco on Windows.
+:: Prepares and configures choco on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript choco installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where choco >nul 2>&1

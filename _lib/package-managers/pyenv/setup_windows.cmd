@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for pyenv on Windows.
+:: Prepares and configures pyenv on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript pyenv installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where pyenv >nul 2>&1

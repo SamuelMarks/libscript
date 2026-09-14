@@ -134,8 +134,31 @@ case "$ACTION" in
   install)
 
     if [ "${JUST_INSTALL_METHOD}" = "system" ]; then
-      libscript_depends 'just'
-    elif [ "${JUST_INSTALL_METHOD}" = "mise" ]; then
+      if libscript_depends 'just' 2>/dev/null; then
+        resolve_exact_version
+        TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/just/${EXACT_VERSION}"
+        mkdir -p "${TARGET_DIR}/bin"
+        sys_just=""
+        if command -v just >/dev/null 2>&1; then
+          sys_just=$(command -v just)
+        elif [ -x /usr/bin/just ]; then
+          sys_just="/usr/bin/just"
+        fi
+        if [ -n "$sys_just" ]; then
+          ln -sf "$sys_just" "${TARGET_DIR}/bin/just"
+        fi
+        libscript_symlink_alias "just" "latest" "${EXACT_VERSION}"
+        libscript_symlink_alias "just" "default" "${EXACT_VERSION}"
+        if [ -n "${VERSION:-}" ] && [ "${VERSION}" != "just" ]; then
+          libscript_symlink_alias "just" "$VERSION" "${EXACT_VERSION}"
+        fi
+      else
+        log_info "System package manager does not have just, falling back to standalone install..."
+        JUST_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+
+    if [ "${JUST_INSTALL_METHOD}" = "mise" ]; then
       mise install "just@${JUST_VERSION}"
     elif [ "${JUST_INSTALL_METHOD}" = "asdf" ]; then
       asdf install just "${JUST_VERSION}"
@@ -144,14 +167,13 @@ case "$ACTION" in
     elif [ "${JUST_INSTALL_METHOD}" = "vfox" ]; then
       vfox add just || true
       vfox install "just@${JUST_VERSION}"
-    else
+    elif [ "${JUST_INSTALL_METHOD}" = "libscript_native" ]; then
         # libscript_native implementation
         resolve_exact_version
-        if [ "${EXACT_VERSION}" = "latest" ]; then
+        if [ "${EXACT_VERSION}" = "latest" ] || [ -z "${EXACT_VERSION}" ]; then
            libscript_depends "curl"
-    libscript_depends "curl"
-
            EXACT_VERSION=$(curl -sL https://api.github.com/repos/casey/just/releases/latest | grep -oE "\"tag_name\": *\"[0-9.]+\"" | sed -E "s/.*\"([0-9.]+)\".*/\1/" | head -n 1)
+           EXACT_VERSION="${EXACT_VERSION:-1.40.0}"
         fi
         TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/just/${EXACT_VERSION}"
         if [ ! -d "${TARGET_DIR}" ]; then
@@ -175,13 +197,17 @@ case "$ACTION" in
             rm -f "$TEMP_FILE.tar.gz"
             exit 1
           fi
-          tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" "just" || cp "$TEMP_FILE.tar.gz" "${TARGET_DIR}/bin/just"
+          tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" "just" 2>/dev/null || tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" || cp "$TEMP_FILE.tar.gz" "${TARGET_DIR}/bin/just"
           chmod +x "${TARGET_DIR}/bin/just"
           rm -f "$TEMP_FILE.tar.gz"
         else
           log_info "just ${VERSION} is already installed."
         fi
-        libscript_symlink_alias "just" "$VERSION" "${EXACT_VERSION}"
+        libscript_symlink_alias "just" "latest" "${EXACT_VERSION}"
+        libscript_symlink_alias "just" "default" "${EXACT_VERSION}"
+        if [ -n "${VERSION:-}" ] && [ "${VERSION}" != "just" ]; then
+          libscript_symlink_alias "just" "$VERSION" "${EXACT_VERSION}"
+        fi
         fi
 
     ;;

@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for scoop on Windows.
+:: Prepares and configures scoop on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript scoop installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where scoop >nul 2>&1

@@ -188,8 +188,8 @@ case "$ACTION" in
               libscript_depends "csharp"
             else
               log_info "No download URL provided for csharp ${VERSION}. Attempting fallback to dotnet-install.sh..."
-            libscript_depends "curl" "bash" "tar" "wget" "libicu-dev"
-            TEMP_FILE=$(mktemp)
+              libscript_depends "curl" "bash" "tar" "wget" "libicu"
+              TEMP_FILE=$(mktemp)
             curl -fsSL https://dot.net/v1/dotnet-install.sh -o "${TEMP_FILE}"
             chmod +x "${TEMP_FILE}"
             if [ "${EXACT_VERSION}" = "latest" ]; then

@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for mamba on Windows.
+:: Prepares and configures mamba on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript mamba installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where mamba >nul 2>&1

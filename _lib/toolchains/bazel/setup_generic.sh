@@ -183,7 +183,11 @@ case "$ACTION" in
         else
           log_info "bazel ${VERSION} is already installed."
         fi
-        libscript_symlink_alias "bazel" "$VERSION" "${EXACT_VERSION}"
+        libscript_symlink_alias "bazel" "latest" "${EXACT_VERSION}"
+        libscript_symlink_alias "bazel" "default" "${EXACT_VERSION}"
+        if [ "$VERSION" != "latest" ] && [ "$VERSION" != "default" ]; then
+          libscript_symlink_alias "bazel" "$VERSION" "${EXACT_VERSION}"
+        fi
       fi
 
     ;;

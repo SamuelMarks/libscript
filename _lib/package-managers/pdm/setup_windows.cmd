@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for pdm on Windows.
+:: Prepares and configures pdm on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript pdm installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where pdm >nul 2>&1

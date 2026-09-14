@@ -46,6 +46,20 @@
       },
       "default": []
     },
+    "arch_whitelist": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": ["all"]
+    },
+    "arch_blacklist": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
     "versions": {
       "type": "array",
       "items": {

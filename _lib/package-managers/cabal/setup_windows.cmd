@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for cabal on Windows.
+:: Prepares and configures cabal on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript cabal installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where cabal >nul 2>&1

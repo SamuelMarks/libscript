@@ -158,17 +158,25 @@ case "$ACTION" in
         ARCH=$(uname -m)
         OS=$(uname -s | tr "[:upper:]" "[:lower:]")
         if [ "$ARCH" = "x86_64" ]; then ARCH="amd64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
-        URL="https://dl.min.io/server/minio/release/${OS}-${ARCH}/minio"
+        URL="https://dl.min.io/aistor/minio/release/${OS}-${ARCH}/minio"
         TEMP_FILE=$(mktemp)
         libscript_depends "curl"
-        curl -sSL "$URL" -o "$TEMP_FILE"
+        if ! curl -sSLf "$URL" -o "$TEMP_FILE"; then
+          log_error "Failed to download minio from $URL"
+          rm -f "$TEMP_FILE"
+          exit 1
+        fi
         cp "$TEMP_FILE" "${TARGET_DIR}/bin/minio"
         chmod +x "${TARGET_DIR}/bin/minio"
         rm -f "$TEMP_FILE"
       else
         log_info "minio ${VERSION} is already installed."
       fi
-      libscript_symlink_alias "minio" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "minio" "latest" "${EXACT_VERSION}"
+      libscript_symlink_alias "minio" "default" "${EXACT_VERSION}"
+      if [ -n "${VERSION:-}" ] && [ "${VERSION}" != "minio" ]; then
+        libscript_symlink_alias "minio" "$VERSION" "${EXACT_VERSION}"
+      fi
     fi
     ;;
   start|stop|restart|status|health|logs|up|down)

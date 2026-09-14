@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for aqua on Windows.
+:: Prepares and configures aqua on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript aqua installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where aqua >nul 2>&1

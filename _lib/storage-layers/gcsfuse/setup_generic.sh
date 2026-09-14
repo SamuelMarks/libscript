@@ -178,12 +178,16 @@ case "$ACTION" in
                 rm -f "$TEMP_FILE.deb"
                 exit 1
              fi
-             libscript_depends "binutils" "tar" "xz-utils" || true
              TEMP_EXTRACT=$(mktemp -d)
-             (cd "$TEMP_EXTRACT" && ar x "$TEMP_FILE.deb" && tar -xf data.tar.*)
-             cp "$TEMP_EXTRACT/usr/bin/gcsfuse" "${TARGET_DIR}/bin/gcsfuse" || true
+             if command -v dpkg-deb >/dev/null 2>&1; then
+               dpkg-deb -x "$TEMP_FILE.deb" "$TEMP_EXTRACT"
+             else
+               libscript_depends "binutils" "tar" "xz-utils" || true
+               (cd "$TEMP_EXTRACT" && ar x "$TEMP_FILE.deb" && for dt in data.tar.*; do [ -f "$dt" ] && tar -xf "$dt"; done)
+             fi
+             cp "$TEMP_EXTRACT/usr/bin/gcsfuse" "${TARGET_DIR}/bin/gcsfuse" 2>/dev/null || cp "$TEMP_EXTRACT/usr/local/bin/gcsfuse" "${TARGET_DIR}/bin/gcsfuse" 2>/dev/null || true
              rm -rf "$TEMP_EXTRACT"
-             rm -f "$TEMP_FILE.deb"
+             rm -f "$TEMP_FILE.deb" "$TEMP_FILE"
            else
              log_error "gcsfuse native installation only supports Linux currently."
              exit 1

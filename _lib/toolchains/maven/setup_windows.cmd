@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for maven on Windows.
+:: Prepares and configures maven on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript maven installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where mvn >nul 2>&1

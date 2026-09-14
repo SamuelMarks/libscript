@@ -112,13 +112,14 @@ done
 
 UNIQUE_TARGETS=$(echo "$EXPANDED_TARGETS" | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ')
 OS_ID=$(echo "$OS_TARGET" | cut -d'-' -f1)
+OS_FAMILY=""
 case "$OS_ID" in
-    alpine) OS_TAG="linux.alpine" ;;
-    debian) OS_TAG="linux.debian" ;;
-    rhel|almalinux|centos|fedora) OS_TAG="linux.rhel" ;;
-    freebsd|bsd) OS_TAG="freebsd" ;;
-    windows) OS_TAG="windows" ;;
-    *) OS_TAG="$OS_ID" ;;
+    alpine) OS_TAG="linux.alpine"; OS_FAMILY="linux" ;;
+    debian) OS_TAG="linux.debian"; OS_FAMILY="linux" ;;
+    rhel|almalinux|centos|fedora) OS_TAG="linux.rhel"; OS_FAMILY="linux" ;;
+    freebsd|bsd) OS_TAG="freebsd"; OS_FAMILY="bsd" ;;
+    windows) OS_TAG="windows"; OS_FAMILY="windows" ;;
+    *) OS_TAG="$OS_ID"; OS_FAMILY="" ;;
 esac
 
 if [ "$REUSE_VM" = "1" ]; then
@@ -127,40 +128,74 @@ if [ "$REUSE_VM" = "1" ]; then
     if ! vagrant status 2>&1 | grep -q "running"; then
         echo "Starting $OS_TARGET Vagrant VM..."
         vagrant up --no-provision
+        if [ "$OS_ID" = "debian" ] || [ "$OS_ID" = "ubuntu" ]; then
+            vagrant ssh --no-tty -c "sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get install -qq -y apt-utils curl jq rsync" >/dev/null 2>&1 || true
+        fi
     fi
     echo "=== Syncing LibScript repository to $OS_TARGET ==="
     vagrant rsync
 fi
 
+TARGET_ARCH=""
+if [ "$OS_ID" = "windows" ]; then
+    TARGET_ARCH=$(cd "$REPO_ROOT/vagrant/$OS_TARGET" && vagrant ssh --no-tty -c "powershell -Command \"\$env:PROCESSOR_ARCHITECTURE\"" 2>/dev/null | tr -d '\r\n' | tr '[:upper:]' '[:lower:]' || echo "amd64")
+else
+    TARGET_ARCH=$(cd "$REPO_ROOT/vagrant/$OS_TARGET" && vagrant ssh --no-tty -c "uname -m" 2>/dev/null | tr -d '\r\n' || echo "x86_64")
+fi
+
 for target in $UNIQUE_TARGETS; do
     MANIFEST_PATH=$(find "$REPO_ROOT/_lib" -maxdepth 2 -type d -name "$target" -exec echo "{}/manifest.json" \;)
     if [ -f "$MANIFEST_PATH" ]; then
-        SUPPORTED=$(awk -v os="$OS_ID" '
-        BEGIN { in_bl=0; in_wl=0; has_wl=0; wl_match=0; result="yes" }
+        SUPPORTED=$(awk -v os="$OS_ID" -v family="$OS_FAMILY" -v arch="$TARGET_ARCH" '
+        BEGIN { in_bl=0; in_wl=0; has_wl=0; wl_match=0; in_abl=0; in_awl=0; has_awl=0; awl_match=0; result="yes" }
         /"os_blacklist"\s*:/ {
-            in_bl=1; in_wl=0
-            if ($0 ~ "\"" os "\"") { result="no"; exit }
+            in_bl=1; in_wl=0; in_abl=0; in_awl=0
+            if ($0 ~ "\"" os "\"" || (family != "" && $0 ~ "\"" family "\"")) { result="no"; exit }
             if ($0 ~ /\]/) { in_bl=0 }
             next
         }
         /"os_whitelist"\s*:/ {
-            in_wl=1; in_bl=0; has_wl=1
-            if ($0 ~ "\"" os "\"" || $0 ~ "\"all\"") { wl_match=1 }
+            in_wl=1; in_bl=0; in_abl=0; in_awl=0; has_wl=1
+            if ($0 ~ "\"" os "\"" || $0 ~ "\"all\"" || (family != "" && $0 ~ "\"" family "\"")) { wl_match=1 }
             if ($0 ~ /\]/) { in_wl=0 }
             next
         }
+        /"arch_blacklist"\s*:/ {
+            in_abl=1; in_bl=0; in_wl=0; in_awl=0
+            if (arch != "" && ($0 ~ "\"" arch "\"" || (arch == "aarch64" && $0 ~ "\"arm64\"") || (arch == "arm64" && $0 ~ "\"aarch64\"") || (arch == "x86_64" && $0 ~ "\"amd64\"") || (arch == "amd64" && $0 ~ "\"x86_64\""))) { result="no"; exit }
+            if ($0 ~ /\]/) { in_abl=0 }
+            next
+        }
+        /"arch_whitelist"\s*:/ {
+            in_awl=1; in_bl=0; in_wl=0; in_abl=0; has_awl=1
+            if ($0 ~ "\"all\"" || (arch != "" && ($0 ~ "\"" arch "\"" || (arch == "aarch64" && $0 ~ "\"arm64\"") || (arch == "arm64" && $0 ~ "\"aarch64\"") || (arch == "x86_64" && $0 ~ "\"amd64\"") || (arch == "amd64" && $0 ~ "\"x86_64\"")))) { awl_match=1 }
+            if ($0 ~ /\]/) { in_awl=0 }
+            next
+        }
         in_bl {
-            if ($0 ~ "\"" os "\"") { result="no"; exit }
+            if ($0 ~ "\"" os "\"" || (family != "" && $0 ~ "\"" family "\"")) { result="no"; exit }
             if ($0 ~ /\]/) { in_bl=0 }
         }
         in_wl {
-            if ($0 ~ "\"" os "\"" || $0 ~ "\"all\"") { wl_match=1 }
+            if ($0 ~ "\"" os "\"" || $0 ~ "\"all\"" || (family != "" && $0 ~ "\"" family "\"")) { wl_match=1 }
             if ($0 ~ /\]/) { in_wl=0 }
         }
-        END { if (result == "yes" && has_wl && !wl_match) { result="no" }; print result }
+        in_abl {
+            if (arch != "" && ($0 ~ "\"" arch "\"" || (arch == "aarch64" && $0 ~ "\"arm64\"") || (arch == "arm64" && $0 ~ "\"aarch64\"") || (arch == "x86_64" && $0 ~ "\"amd64\"") || (arch == "amd64" && $0 ~ "\"x86_64\""))) { result="no"; exit }
+            if ($0 ~ /\]/) { in_abl=0 }
+        }
+        in_awl {
+            if ($0 ~ "\"all\"" || (arch != "" && ($0 ~ "\"" arch "\"" || (arch == "aarch64" && $0 ~ "\"arm64\"") || (arch == "arm64" && $0 ~ "\"aarch64\"") || (arch == "x86_64" && $0 ~ "\"amd64\"") || (arch == "amd64" && $0 ~ "\"x86_64\"")))) { awl_match=1 }
+            if ($0 ~ /\]/) { in_awl=0 }
+        }
+        END {
+            if (result == "yes" && has_wl && !wl_match) { result="no" }
+            if (result == "yes" && has_awl && !awl_match) { result="no" }
+            print result
+        }
         ' "$MANIFEST_PATH")
         if [ "$SUPPORTED" = "no" ]; then
-            echo "Skipping $target (not supported on $OS_ID)"
+            echo "Skipping $target (not supported on $OS_ID / $TARGET_ARCH)"
             continue
         fi
     fi
@@ -179,7 +214,7 @@ for target in $UNIQUE_TARGETS; do
         cd "$REPO_ROOT/vagrant/$OS_TARGET"
         if [ "$OS_ID" = "windows" ]; then
             test_cmd='Set-Location C:\libscript; cmd.exe /c "C:\libscript\libscript.cmd install '$target'" ; $iExit = $LASTEXITCODE; cmd.exe /c "C:\libscript\libscript.cmd test '$target'" ; $tExit = $LASTEXITCODE; if ($tExit -ne 0) { exit $tExit } elseif ($iExit -ne 0) { exit $iExit }'
-            if vagrant ssh -c "$test_cmd" > "$stdout_file" 2> "$stderr_file"; then
+            if vagrant ssh --no-tty -c "$test_cmd" > "$stdout_file" 2> "$stderr_file"; then
                 echo "Success" > "$success_file"
                 echo "[OK] $target"
             else
@@ -187,16 +222,18 @@ for target in $UNIQUE_TARGETS; do
                 echo "[FAILED] $target"
             fi
             cleanup_cmd="cd C:\libscript; & C:\libscript\libscript.cmd uninstall $target *>&1 | Out-Null; Remove-Item -Recurse -Force \"\$env:USERPROFILE\.libscript\\$target\" -ErrorAction SilentlyContinue"
-            vagrant ssh -c "powershell -Command \"$cleanup_cmd\"" >/dev/null 2>&1 || true
+            vagrant ssh --no-tty -c "powershell -Command \"$cleanup_cmd\"" >/dev/null 2>&1 || true
         else
-            test_cmd="export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; /opt/repos/libscript/libscript.sh install $target && /opt/repos/libscript/libscript.sh test $target"
-            if vagrant ssh -c "$test_cmd" > "$stdout_file" 2> "$stderr_file"; then
+            test_cmd="export DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; timeout 300 /opt/repos/libscript/libscript.sh install $target && timeout 120 /opt/repos/libscript/libscript.sh test $target"
+            if vagrant ssh --no-tty -c "$test_cmd" > "$stdout_file" 2> "$stderr_file"; then
                 echo "Success" > "$success_file"
                 echo "[OK] $target"
             else
                 echo "Failure" > "$failure_file"
                 echo "[FAILED] $target"
             fi
+            cleanup_cmd="export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; /opt/repos/libscript/libscript.sh uninstall $target >/dev/null 2>&1 || true; rm -rf \"\$HOME/.libscript/$target\" /tmp/libscript_pkg_mgr_lock 2>/dev/null || true"
+            vagrant ssh --no-tty -c "$cleanup_cmd" >/dev/null 2>&1 || true
         fi
     else
         export LIBSCRIPT_TEST_TARGET="$target"

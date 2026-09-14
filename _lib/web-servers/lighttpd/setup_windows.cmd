@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for lighttpd on Windows.
+:: Prepares and configures lighttpd on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript lighttpd installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where lighttpd >nul 2>&1

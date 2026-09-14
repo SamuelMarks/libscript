@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for python-server on Windows.
+:: Prepares and configures python-server on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript python-server installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where python >nul 2>&1

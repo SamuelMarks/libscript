@@ -41,11 +41,63 @@ TARGETS=""
 STOP_AFTER=""
 SKIP_UNINSTALL=""
 LOOP_MODE=""
+USE_SNAPSHOT="1"
+
+# ## find_disk_image
+# Finds the active qcow2 disk image for the Windows 11 Vagrant machine.
+find_disk_image() {
+    for _id_file in "$VAGRANT_DIR"/.vagrant/machines/*/qemu/id; do
+        if [ -f "$_id_file" ]; then
+            _id=$(cat "$_id_file")
+            _m_dir=$(dirname "$_id_file")
+            _img="$_m_dir/$_id/linked-box.img"
+            if [ -f "$_img" ]; then
+                printf '%s\n' "$_img"
+                return 0
+            fi
+        fi
+    done
+    return 1
+}
+
+# ## restore_vanilla_snapshot
+# Stops the VM and restores the vanilla snapshot on the disk image.
+restore_vanilla_snapshot() {
+    _img="$1"
+    if [ -n "$_img" ] && command -v qemu-img >/dev/null 2>&1; then
+        if qemu-img snapshot -U -l "$_img" 2>/dev/null | grep -q "vanilla"; then
+            echo "Halting VM to restore vanilla snapshot..."
+            (cd "$VAGRANT_DIR" && vagrant halt) || true
+            echo "Restoring vanilla snapshot..."
+            qemu-img snapshot -a vanilla "$_img"
+            echo "Starting Windows 11 Vagrant VM from vanilla snapshot..."
+            (cd "$VAGRANT_DIR" && vagrant up --no-provision)
+            return 0
+        fi
+    fi
+    return 1
+}
+
+# ## sync_repo_to_guest
+# Synchronizes the libscript codebase to the guest VM using rsync over ssh.
+sync_repo_to_guest() {
+    echo "=== Syncing LibScript repository to Windows 11 ==="
+    _ssh_info=$(cd "$VAGRANT_DIR" && vagrant ssh-config 2>/dev/null || true)
+    _port=$(echo "$_ssh_info" | awk '/Port / {print $2; exit}')
+    _key=$(echo "$_ssh_info" | awk '/IdentityFile / {print $2; exit}')
+    : "${_port:=50022}"
+    : "${_key:=$HOME/.vagrant.d/insecure_private_key}"
+
+    rsync -av --copy-links --no-owner --no-group \
+        -e "ssh -p $_port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $_key" \
+        --exclude ".vagrant" --exclude ".git" --exclude "tests_tmp" \
+        "$REPO_ROOT/" "vagrant@127.0.0.1:/cygdrive/c/libscript/"
+}
 
 while [ $# -gt 0 ]; do
     case "$1" in
         --help|-h|/?)
-            echo "Usage: $(basename "$THIS_FILE") [TARGETS...|all] [--stop-after N] [--skip-uninstall] [--loop]"
+            echo "Usage: $(basename "$THIS_FILE") [TARGETS...|all] [--stop-after N] [--skip-uninstall] [--loop] [--no-snapshot]"
             echo ""
             echo "Runs local tests sequentially on Windows 11 (bento/windows-11) Vagrant VM."
             echo ""
@@ -56,6 +108,7 @@ while [ $# -gt 0 ]; do
             echo "  --loop, -l          Continuously repeat testing in an automated loop."
             echo "  --stop-after N      Stop after running N component tests."
             echo "  --skip-uninstall    Skip uninstallation step after testing each component."
+            echo "  --no-snapshot       Do not restore the vanilla snapshot before each test."
             echo "  --help, -h, /?      Show this help message."
             echo ""
             echo "Results are written to tests_tmp/ (*.windows.stdout, *.windows.stderr, *.windows.success/failure)."
@@ -71,6 +124,10 @@ while [ $# -gt 0 ]; do
             ;;
         --skip-uninstall)
             SKIP_UNINSTALL="1"
+            shift
+            ;;
+        --no-snapshot)
+            USE_SNAPSHOT="0"
             shift
             ;;
         *)
@@ -131,16 +188,24 @@ while true; do
         echo "============================================================"
     fi
 
+    DISK_IMG=""
+    if [ "$USE_SNAPSHOT" = "1" ]; then
+        DISK_IMG=$(find_disk_image || true)
+    fi
+
     echo "=== Ensuring Windows 11 Vagrant VM is running ==="
     cd "$VAGRANT_DIR"
     vm_status=$(vagrant status 2>&1 || true)
     if ! echo "$vm_status" | grep -q "running"; then
-        echo "Starting Windows 11 Vagrant VM..."
-        vagrant up --no-provision
+        if [ -n "$DISK_IMG" ]; then
+            restore_vanilla_snapshot "$DISK_IMG" || vagrant up --no-provision
+        else
+            echo "Starting Windows 11 Vagrant VM..."
+            vagrant up --no-provision
+        fi
     fi
 
-    echo "=== Syncing LibScript repository to Windows 11 ==="
-    vagrant rsync
+    sync_repo_to_guest
 
     test_count=0
     success_count=0
@@ -192,19 +257,27 @@ while true; do
         echo "============================================================"
         test_count=$((test_count + 1))
 
+        # Restore vanilla snapshot before running if enabled and not the very first run
+        if [ "$USE_SNAPSHOT" = "1" ] && [ -n "$DISK_IMG" ] && [ "$test_count" -gt 1 ]; then
+            restore_vanilla_snapshot "$DISK_IMG" || true
+            sync_repo_to_guest
+        fi
+
         stdout_file="$TESTS_TMP_DIR/$target.windows.stdout"
         stderr_file="$TESTS_TMP_DIR/$target.windows.stderr"
         success_file="$TESTS_TMP_DIR/$target.windows.success"
         failure_file="$TESTS_TMP_DIR/$target.windows.failure"
+        idempotent_file="$TESTS_TMP_DIR/$target.idempotent.success"
 
-        rm -f "$success_file" "$failure_file"
+        rm -f "$success_file" "$failure_file" "$idempotent_file"
 
-        # Execute test via vagrant ssh
-        test_cmd='Set-Location C:\libscript; cmd.exe /c "C:\libscript\libscript.cmd install '$target'" ; $iExit = $LASTEXITCODE; cmd.exe /c "C:\libscript\libscript.cmd test '$target'" ; $tExit = $LASTEXITCODE; if ($tExit -ne 0) { exit $tExit } elseif ($iExit -ne 0) { exit $iExit }'
+        # Execute test via vagrant ssh: install -> test -> install (idempotency) -> test (verification)
+        test_cmd='Set-Location C:\libscript; cmd.exe /c "C:\libscript\libscript.cmd install '$target'" ; $iExit1 = $LASTEXITCODE; cmd.exe /c "C:\libscript\libscript.cmd test '$target'" ; $tExit1 = $LASTEXITCODE; cmd.exe /c "C:\libscript\libscript.cmd install '$target'" ; $iExit2 = $LASTEXITCODE; cmd.exe /c "C:\libscript\libscript.cmd test '$target'" ; $tExit2 = $LASTEXITCODE; if ($iExit1 -ne 0) { exit $iExit1 } elseif ($tExit1 -ne 0) { exit $tExit1 } elseif ($iExit2 -ne 0) { exit $iExit2 } elseif ($tExit2 -ne 0) { exit $tExit2 }'
 
         if vagrant ssh -c "$test_cmd" > "$stdout_file" 2> "$stderr_file"; then
             echo "Success" > "$success_file"
-            echo "[OK] $target"
+            echo "Idempotent" > "$idempotent_file"
+            echo "[OK] $target (2x install + test verified)"
             success_count=$((success_count + 1))
         else
             echo "Failure" > "$failure_file"
@@ -216,8 +289,8 @@ while true; do
             "$REPO_ROOT/tests/update_results.sh" || true
         fi
 
-        # Clean up installed files to keep the VM clean
-        if [ -z "$SKIP_UNINSTALL" ]; then
+        # Clean up installed files if snapshot restoration is disabled
+        if [ "$USE_SNAPSHOT" != "1" ] && [ -z "$SKIP_UNINSTALL" ]; then
             cleanup_cmd="cd C:\libscript; & C:\libscript\libscript.cmd uninstall $target *>&1 | Out-Null; Remove-Item -Recurse -Force \"\$env:USERPROFILE\.libscript\\$target\" -ErrorAction SilentlyContinue"
             vagrant ssh -c "powershell -Command \"$cleanup_cmd\"" >/dev/null 2>&1 || true
         fi

@@ -189,8 +189,13 @@ case "$ACTION" in
           else
             log_info "No download URL provided for mongodb ${VERSION}. Using static fallback..."
             libscript_depends "curl" "tar"
+            ARCH=$(uname -m)
+            MONGO_ARCH="x86_64"
+            if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+              MONGO_ARCH="aarch64"
+            fi
             TEMP_FILE=$(mktemp)
-            curl -fsSL "https://fastdl.mongodb.org/linux/mongodb-linux-aarch64-ubuntu2204-7.0.14.tgz" -o "${TEMP_FILE}"
+            curl -fsSL "https://fastdl.mongodb.org/linux/mongodb-linux-${MONGO_ARCH}-ubuntu2404-8.0.32.tgz" -o "${TEMP_FILE}"
             tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}/bin" --strip-components=2 || true
             rm -f "${TEMP_FILE}"
           fi
@@ -198,7 +203,11 @@ case "$ACTION" in
       else
         log_info "mongodb ${VERSION} is already installed."
       fi
-      libscript_symlink_alias "mongodb" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "mongodb" "latest" "${EXACT_VERSION}"
+      libscript_symlink_alias "mongodb" "default" "${EXACT_VERSION}"
+      if [ "$VERSION" != "latest" ] && [ "$VERSION" != "default" ]; then
+        libscript_symlink_alias "mongodb" "$VERSION" "${EXACT_VERSION}"
+      fi
     fi
     ;;
   start|stop|restart|status|health|logs|up|down)

@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for rust-server on Windows.
+:: Prepares and configures rust-server on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript rust-server installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where cargo >nul 2>&1

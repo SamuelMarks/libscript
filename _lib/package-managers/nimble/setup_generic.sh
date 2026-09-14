@@ -157,13 +157,49 @@ case "$ACTION" in
         log_info "Installing nimble ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
 
+        installed=0
         if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
-          log_info "Falling back to system package manager for nimble..."
-          libscript_depends "nimble"
-          if command -v nimble >/dev/null 2>&1; then
-            ln -sf "$(command -v nimble)" "${TARGET_DIR}/bin/nimble"
+          log_info "Attempting system package manager for nimble..."
+          if libscript_depends "nimble" 2>/dev/null; then
+            if command -v nimble >/dev/null 2>&1; then
+              ln -sf "$(command -v nimble)" "${TARGET_DIR}/bin/nimble"
+              installed=1
+            fi
           fi
-        elif ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nimble/"*"${VERSION}"* >/dev/null 2>&1; then
+        fi
+
+        if [ "$installed" = "0" ]; then
+          ARCH=$(uname -m)
+          NIM_ARCH=""
+          case "$ARCH" in
+            x86_64|amd64) NIM_ARCH="linux_x64" ;;
+            aarch64|arm64) NIM_ARCH="linux_arm64" ;;
+            armv7l) NIM_ARCH="linux_armv7l" ;;
+            i*86) NIM_ARCH="linux_x32" ;;
+            *) NIM_ARCH="" ;;
+          esac
+
+          if [ -n "$NIM_ARCH" ] && [ "$UNAME_LOWER" = "linux" ]; then
+            log_info "Downloading standalone Nim bundle containing nimble..."
+            NIM_VER=$(curl -sSL "https://nim-lang.org/install_unix.html" 2>/dev/null | grep -oE 'nim-[0-9]+\.[0-9]+\.[0-9]+' | head -n 1 | sed 's/^nim-//')
+            : "${NIM_VER:=2.2.12}"
+            NIM_URL="https://nim-lang.org/download/nim-${NIM_VER}-${NIM_ARCH}.tar.xz"
+            TEMP_XZ=$(mktemp)
+            TEMP_DIR=$(mktemp -d)
+            libscript_depends "curl" "tar" "xz-utils" || true
+            if curl -sSLf "$NIM_URL" -o "$TEMP_XZ"; then
+              tar -xJf "$TEMP_XZ" -C "$TEMP_DIR" --strip-components=1 || true
+              if [ -f "$TEMP_DIR/bin/nimble" ]; then
+                cp -a "$TEMP_DIR/bin/"* "${TARGET_DIR}/bin/" 2>/dev/null || cp "$TEMP_DIR/bin/nimble" "${TARGET_DIR}/bin/nimble"
+                chmod +x "${TARGET_DIR}/bin/nimble" || true
+                installed=1
+              fi
+            fi
+            rm -rf "$TEMP_XZ" "$TEMP_DIR"
+          fi
+        fi
+
+        if [ "$installed" = "0" ] && ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nimble/"*"${VERSION}"* >/dev/null 2>&1; then
           log_info "Extracting from cache..."
           cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nimble/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
           if [ -n "$cache_file" ]; then
@@ -176,7 +212,7 @@ case "$ACTION" in
               chmod +x "${TARGET_DIR}/bin/nimble" || true
             fi
           fi
-        else
+        elif [ "$installed" = "0" ]; then
           if [ -n "${NIMBLE_DOWNLOAD_URL:-}" ]; then
             TEMP_FILE=$(mktemp)
             libscript_download "${NIMBLE_DOWNLOAD_URL:-}" "${TEMP_FILE}"
@@ -209,7 +245,11 @@ case "$ACTION" in
       else
         log_info "nimble ${VERSION} is already installed."
       fi
-      libscript_symlink_alias "nimble" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "nimble" "latest" "${EXACT_VERSION}"
+      libscript_symlink_alias "nimble" "default" "${EXACT_VERSION}"
+      if [ "$VERSION" != "latest" ] && [ "$VERSION" != "default" ]; then
+        libscript_symlink_alias "nimble" "$VERSION" "${EXACT_VERSION}"
+      fi
     fi
     ;;
   start|stop|restart|status|health|logs|up|down)

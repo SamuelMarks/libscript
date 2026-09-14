@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for composer on Windows.
+:: Prepares and configures composer on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript composer installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where composer >nul 2>&1

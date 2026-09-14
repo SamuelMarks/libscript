@@ -30,4 +30,4 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
   . "$SCRIPT_DIR/env.sh"
 fi
 
-nuget --version
+nuget help >/dev/null

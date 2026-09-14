@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for cargo-binstall on Windows.
+:: Prepares and configures cargo-binstall on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript cargo-binstall installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where cargo-binstall >nul 2>&1

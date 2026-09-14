@@ -242,7 +242,7 @@ else
     count=0
   fi
   if [ "$count" -eq 0 ]; then
-    printf '%s\n' "Error: Unknown component '$ACTION_PKG'."
+    printf '%s\n' "Error: Unknown component '$ACTION_PKG'." >&2
     exit 1
   elif [ "$count" -eq 1 ]; then
     TARGET="$LIBSCRIPT_CLI_DIR/$matches"
@@ -256,18 +256,29 @@ else
     if [ "$exact_count" -eq 1 ]; then
       TARGET="$LIBSCRIPT_CLI_DIR/$exact_match"
     else
-      printf '%s\n' "Error: Component '$ACTION_PKG' is ambiguous. Matches:"
-      printf '%s\n' "$matches" | sed 's/^/  /'
+      printf '%s\n' "Error: Component '$ACTION_PKG' is ambiguous. Matches:" >&2
+      printf '%s\n' "$matches" | sed 's/^/  /' >&2
       exit 1
     fi
   fi
 fi
 
-if [ -x "$TARGET/cli.sh" ]; then
-  exec "$TARGET/cli.sh" "$@"
-elif [ -f "$TARGET/cli.sh" ]; then
-  exec sh "$TARGET/cli.sh" "$@"
+if [ "$IS_ACTION" = "1" ]; then
+  if [ -x "$TARGET/cli.sh" ]; then
+    exec "$TARGET/cli.sh" "$CMD" "$@"
+  elif [ -f "$TARGET/cli.sh" ]; then
+    exec sh "$TARGET/cli.sh" "$CMD" "$@"
+  else
+    printf '%s\n' "Error: Local CLI not found in $TARGET" >&2
+    exit 1
+  fi
 else
-  printf '%s\n' "Error: Local CLI not found in $TARGET"
-  exit 1
+  if [ -x "$TARGET/cli.sh" ]; then
+    exec "$TARGET/cli.sh" "$@"
+  elif [ -f "$TARGET/cli.sh" ]; then
+    exec sh "$TARGET/cli.sh" "$@"
+  else
+    printf '%s\n' "Error: Local CLI not found in $TARGET" >&2
+    exit 1
+  fi
 fi

@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for ghcup on Windows.
+:: Prepares and configures ghcup on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript ghcup installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where ghcup >nul 2>&1

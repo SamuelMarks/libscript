@@ -155,6 +155,20 @@ case "$ACTION" in
       if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
         log_info "Falling back to system package manager for httpd..."
         libscript_depends "httpd"
+        mkdir -p "${TARGET_DIR}/bin"
+        for bin_name in httpd apache2; do
+          sys_bin=""
+          if command -v "$bin_name" >/dev/null 2>&1; then
+            sys_bin=$(command -v "$bin_name")
+          elif [ -x "/usr/sbin/$bin_name" ]; then
+            sys_bin="/usr/sbin/$bin_name"
+          fi
+          if [ -n "$sys_bin" ]; then
+            ln -sf "$sys_bin" "${TARGET_DIR}/bin/httpd"
+            ln -sf "$sys_bin" "${TARGET_DIR}/bin/apache2"
+            break
+          fi
+        done
       else
         log_error "Native installation for httpd from source is not supported yet."
         exit 1

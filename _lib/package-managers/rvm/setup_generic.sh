@@ -158,6 +158,9 @@ case "$ACTION" in
         libscript_depends "curl"
         libscript_depends "bash"
         libscript_depends "gnupg"
+        if [ -f /etc/alpine-release ]; then
+          libscript_depends "coreutils"
+        fi
         mkdir -p "${TARGET_DIR}"
         curl -sSL https://rvm.io/mpapis.asc | gpg --import - || true
         curl -sSL https://rvm.io/pkuczynski.asc | gpg --import - || true

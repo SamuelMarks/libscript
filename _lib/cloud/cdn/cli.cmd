@@ -19,6 +19,22 @@ if /i "%~1"=="cdn" (
     shift
     goto parse_args
 )
+if /i "%~1"=="install" (
+    shift
+    goto parse_args
+)
+if /i "%~1"=="test" (
+    shift
+    goto parse_args
+)
+if /i "%~1"=="setup" (
+    shift
+    goto parse_args
+)
+if /i "%~1"=="uninstall" (
+    shift
+    goto parse_args
+)
 if "%~1"=="--cloud" (
     set "LIBSCRIPT_CLOUD=%~2"
     shift

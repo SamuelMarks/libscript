@@ -157,26 +157,35 @@ check_manifest_support() {
     return 0
   fi
 
-  awk -v os="${_os_name}" '
+  _os_family=""
+  case "${_os_name}" in
+    'alpine'|'debian'|'ubuntu'|'rhel'|'almalinux'|'centos'|'fedora'|'arch'|'gentoo'|'void'|'solus') _os_family="linux" ;;
+    'freebsd'|'openbsd'|'netbsd') _os_family="bsd" ;;
+    'windows') _os_family="windows" ;;
+    'darwin') _os_family="darwin" ;;
+    'sunos'|'solaris'|'illumos') _os_family="sunos" ;;
+  esac
+
+  awk -v os="${_os_name}" -v family="${_os_family}" '
     BEGIN { in_bl=0; in_wl=0; has_wl=0; wl_match=0; result="yes" }
     /"os_blacklist"\s*:/ {
       in_bl=1; in_wl=0
-      if ($0 ~ "\"" os "\"") { result="no"; exit }
+      if ($0 ~ "\"" os "\"" || (family != "" && $0 ~ "\"" family "\"")) { result="no"; exit }
       if ($0 ~ /\]/) { in_bl=0 }
       next
     }
     /"os_whitelist"\s*:/ {
       in_wl=1; in_bl=0; has_wl=1
-      if ($0 ~ "\"" os "\"" || $0 ~ "\"all\"") { wl_match=1 }
+      if ($0 ~ "\"" os "\"" || $0 ~ "\"all\"" || (family != "" && $0 ~ "\"" family "\"")) { wl_match=1 }
       if ($0 ~ /\]/) { in_wl=0 }
       next
     }
     in_bl {
-      if ($0 ~ "\"" os "\"") { result="no"; exit }
+      if ($0 ~ "\"" os "\"" || (family != "" && $0 ~ "\"" family "\"")) { result="no"; exit }
       if ($0 ~ /\]/) { in_bl=0 }
     }
     in_wl {
-      if ($0 ~ "\"" os "\"" || $0 ~ "\"all\"") { wl_match=1 }
+      if ($0 ~ "\"" os "\"" || $0 ~ "\"all\"" || (family != "" && $0 ~ "\"" family "\"")) { wl_match=1 }
       if ($0 ~ /\]/) { in_wl=0 }
     }
     END {

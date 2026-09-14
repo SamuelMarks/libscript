@@ -167,10 +167,28 @@ case "$ACTION" in
         fi
         libscript_python_venv "${TARGET_DIR}"
 
+        PIP_EXTRA_ARGS=""
+        if [ "$UNAME_LOWER" = "linux" ]; then
+          PIP_EXTRA_ARGS="--extra-index-url https://download.pytorch.org/whl/cpu"
+        fi
+
         if [ "$EXACT_VERSION" = "latest" ]; then
-          TMPDIR=/var/tmp "${TARGET_DIR}/bin/pip" install --no-cache-dir --upgrade vllm || PIP_FAILED=1
+          # shellcheck disable=SC2086
+          TMPDIR=/var/tmp "${TARGET_DIR}/bin/pip" install $PIP_EXTRA_ARGS --no-cache-dir --upgrade vllm || PIP_FAILED=1
         else
-          TMPDIR=/var/tmp "${TARGET_DIR}/bin/pip" install --no-cache-dir "vllm==${EXACT_VERSION}" || PIP_FAILED=1
+          # shellcheck disable=SC2086
+          TMPDIR=/var/tmp "${TARGET_DIR}/bin/pip" install $PIP_EXTRA_ARGS --no-cache-dir "vllm==${EXACT_VERSION}" || PIP_FAILED=1
+        fi
+
+        # Ensure vllm executable wrapper exists if pip failed to generate console script
+        if [ ! -s "${TARGET_DIR}/bin/vllm" ]; then
+          cat <<'EOF' > "${TARGET_DIR}/bin/vllm"
+#!/bin/sh
+VENV_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+export VLLM_TARGET_DEVICE="${VLLM_TARGET_DEVICE:-cpu}"
+exec "$VENV_DIR/bin/python3" -m vllm.entrypoints.cli.main "$@"
+EOF
+          chmod +x "${TARGET_DIR}/bin/vllm"
         fi
         
         if [ "${PIP_FAILED:-0}" = "1" ]; then

@@ -174,16 +174,24 @@ case "$ACTION" in
         fi
         unzip -q "$TEMP_FILE.zip" -d "${TARGET_DIR}" || true
         # Create a wrapper for pub
-        cat << WRAPPER > "${TARGET_DIR}/bin/pub"
+        cat << 'WRAPPER' > "${TARGET_DIR}/bin/pub"
 #!/bin/sh
-exec "${TARGET_DIR}/dart-sdk/bin/dart" pub "\$@"
+target_dir=$(cd -- "$(dirname -- "$0")/.." && pwd)
+if [ "${1:-}" = "--version" ] || [ "${1:-}" = "-v" ] || [ "${1:-}" = "version" ]; then
+  exec "${target_dir}/dart-sdk/bin/dart" --version
+fi
+exec "${target_dir}/dart-sdk/bin/dart" pub "$@"
 WRAPPER
         chmod +x "${TARGET_DIR}/bin/pub"
         rm -f "$TEMP_FILE.zip"
       else
         log_info "pub ${VERSION} is already installed."
       fi
-      libscript_symlink_alias "pub" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "pub" "latest" "${EXACT_VERSION}"
+      libscript_symlink_alias "pub" "default" "${EXACT_VERSION}"
+      if [ -n "${VERSION:-}" ] && [ "${VERSION}" != "pub" ]; then
+        libscript_symlink_alias "pub" "$VERSION" "${EXACT_VERSION}"
+      fi
     fi
     ;;
   start|stop|restart|status|health|logs|up|down)

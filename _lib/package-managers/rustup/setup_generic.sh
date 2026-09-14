@@ -162,6 +162,9 @@ case "$ACTION" in
           ln -sf "$(command -v "cargo")" "${TARGET_DIR}/.cargo/bin/cargo" || true
         else
           libscript_depends "curl"
+          if [ -f /etc/alpine-release ]; then
+            libscript_depends "libgcc"
+          fi
           mkdir -p "${TARGET_DIR}"
           export RUSTUP_HOME="${TARGET_DIR}/.rustup"
           export CARGO_HOME="${TARGET_DIR}/.cargo"

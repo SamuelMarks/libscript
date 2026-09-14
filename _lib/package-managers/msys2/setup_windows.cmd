@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for msys2 on Windows.
+:: Prepares and configures msys2 on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript msys2 installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where msys2 >nul 2>&1

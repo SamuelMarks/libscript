@@ -95,12 +95,11 @@ while [ $# -gt 0 ]; do
       LIBSCRIPT_NODE_ID="${1#*=}"
       shift
       ;;
-    --device)
-      LIBSCRIPT_DEVICE="$2"
-      shift 2
+    --device=*)
+      LIBSCRIPT_DEVICE="${1#*=}"
+      shift
       ;;
-
-    volume)
+    volume|install|test|setup|uninstall)
       shift
       ;;
     *)

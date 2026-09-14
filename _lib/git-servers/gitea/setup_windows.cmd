@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for gitea on Windows.
+:: Prepares and configures gitea on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript gitea installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where gitea >nul 2>&1

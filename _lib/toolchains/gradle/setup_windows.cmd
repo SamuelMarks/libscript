@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for gradle on Windows.
+:: Prepares and configures gradle on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript gradle installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where gradle >nul 2>&1

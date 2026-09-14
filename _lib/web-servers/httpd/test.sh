@@ -24,6 +24,8 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
+export PATH="$PATH:/usr/sbin:/usr/local/sbin"
+
 if command -v httpd >/dev/null 2>&1; then
   httpd -v
 elif command -v apache2 >/dev/null 2>&1; then

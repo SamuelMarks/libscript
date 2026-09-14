@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for cygwin on Windows.
+:: Prepares and configures cygwin on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript cygwin installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where cygwin >nul 2>&1

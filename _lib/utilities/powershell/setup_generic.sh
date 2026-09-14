@@ -37,8 +37,7 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/versioning.sh"; do
   . "${SCRIPT_NAME}"
 done
 
-POWERSHELL_INSTALL_METHOD="${POWERSHELL_INSTALL_METHOD:-system}"
-POWERSHELL_INSTALL_METHOD="$(LIBSCRIPT_DEFAULT_INSTALL_METHOD="$POWERSHELL_INSTALL_METHOD" libscript_resolve_install_method "POWERSHELL")"
+POWERSHELL_INSTALL_METHOD="$(libscript_resolve_install_method "POWERSHELL")"
 POWERSHELL_VERSION="${POWERSHELL_VERSION:-latest}"
 ACTION="${ACTION:-install}"
 
@@ -178,7 +177,11 @@ case "$ACTION" in
         else
           log_info "powershell ${VERSION} is already installed."
         fi
-        libscript_symlink_alias "powershell" "$VERSION" "${EXACT_VERSION}"
+        libscript_symlink_alias "powershell" "latest" "${EXACT_VERSION}"
+        libscript_symlink_alias "powershell" "default" "${EXACT_VERSION}"
+        if [ "$VERSION" != "latest" ] && [ "$VERSION" != "default" ]; then
+          libscript_symlink_alias "powershell" "$VERSION" "${EXACT_VERSION}"
+        fi
         fi
 
     ;;

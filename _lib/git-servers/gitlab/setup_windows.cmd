@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for gitlab on Windows.
+:: Prepares and configures gitlab on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript gitlab installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where glab >nul 2>&1

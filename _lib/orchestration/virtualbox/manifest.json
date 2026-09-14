@@ -8,5 +8,6 @@
   "conflicts": [],
   "os_whitelist": ["all"],
   "os_blacklist": [],
+  "arch_blacklist": ["arm64", "aarch64"],
   "ports": []
 }

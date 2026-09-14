@@ -379,7 +379,11 @@ if [ "$ACTION" = "test" ]; then
   fi
 elif [ "$ACTION" = "uninstall" ] || [ "$ACTION" = "remove" ]; then
   if [ -x "$COMP_DIR/uninstall.sh" ]; then
+    unset SCRIPT_NAME || true
     exec "$COMP_DIR/uninstall.sh"
+  elif [ -f "$COMP_DIR/uninstall.sh" ]; then
+    unset SCRIPT_NAME || true
+    exec sh "$COMP_DIR/uninstall.sh"
   else
     log_info "Error: uninstall.sh not found in $SCRIPT_DIR"
     exit 1

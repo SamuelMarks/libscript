@@ -51,7 +51,7 @@ if [ "${run_before}" -eq 0 ]; then
   if [ ! -f '/etc/apt/preferences.d/99nginx' ]; then
     printf 'Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n' \
       | priv  tee /etc/apt/preferences.d/99nginx
-    pkg_mgr update
+    priv apt-get update -qq
   fi
 
   libscript_depends nginx

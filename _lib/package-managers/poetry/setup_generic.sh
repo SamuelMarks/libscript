@@ -140,8 +140,13 @@ case "$ACTION" in
     ;;
   install)
     if [ "$POETRY_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "poetry"
-    elif [ "$POETRY_INSTALL_METHOD" = "mise" ]; then
+      if ! libscript_depends "poetry" 2>/dev/null; then
+        log_info "System package manager does not have poetry, falling back to standalone install..."
+        POETRY_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+
+    if [ "$POETRY_INSTALL_METHOD" = "mise" ]; then
       mise install "poetry@${VERSION}"
     elif [ "$POETRY_INSTALL_METHOD" = "asdf" ]; then
       asdf install poetry "${VERSION}"
@@ -150,7 +155,7 @@ case "$ACTION" in
     elif [ "$POETRY_INSTALL_METHOD" = "vfox" ]; then
       vfox add poetry || true
       vfox install "poetry@${VERSION}"
-    else
+    elif [ "$POETRY_INSTALL_METHOD" = "libscript_native" ]; then
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/poetry/${EXACT_VERSION}"
@@ -193,7 +198,11 @@ case "$ACTION" in
       else
         log_info "poetry ${VERSION} is already installed."
       fi
-      libscript_symlink_alias "poetry" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "poetry" "latest" "${EXACT_VERSION}"
+      libscript_symlink_alias "poetry" "default" "${EXACT_VERSION}"
+      if [ -n "${VERSION:-}" ] && [ "${VERSION}" != "poetry" ]; then
+        libscript_symlink_alias "poetry" "$VERSION" "${EXACT_VERSION}"
+      fi
     fi
     ;;
   start|stop|restart|status|health|logs|up|down)

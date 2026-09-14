@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for iis on Windows.
+:: Prepares and configures iis on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript iis installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 echo Enabling IIS Web Server on Windows...

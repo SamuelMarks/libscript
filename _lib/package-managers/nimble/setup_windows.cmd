@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for nimble on Windows.
+:: Prepares and configures nimble on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript nimble installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where nimble >nul 2>&1
@@ -24,7 +31,12 @@ if not exist "%TEMP_EXTRACT%" mkdir "%TEMP_EXTRACT%"
 tar -xf "%TEMP_ZIP%" -C "%TEMP_EXTRACT%"
 del "%TEMP_ZIP%" >nul 2>&1
 
-for /r "%TEMP_EXTRACT%" %%F in (nimble.exe nim.exe) do (
+for /d %%D in ("%TEMP_EXTRACT%\nim-*") do (
+    if exist "%%D\bin" (
+        xcopy /y /e /q "%%D\bin\*" "%DEST_DIR%\" >nul
+    )
+)
+for /r "%TEMP_EXTRACT%" %%F in (nimble.exe nim.exe *.dll) do (
     if exist "%%F" copy /y "%%F" "%DEST_DIR%" >nul
 )
 

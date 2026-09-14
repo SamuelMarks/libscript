@@ -162,7 +162,11 @@ case "$ACTION" in
         else
           log_info "huggingface-cli ${VERSION} is already installed."
         fi
-        libscript_symlink_alias "huggingface-cli" "$VERSION" "${EXACT_VERSION}"
+        libscript_symlink_alias "huggingface-cli" "latest" "${EXACT_VERSION}"
+        libscript_symlink_alias "huggingface-cli" "default" "${EXACT_VERSION}"
+        if [ -n "${VERSION:-}" ] && [ "${VERSION}" != "huggingface-cli" ]; then
+          libscript_symlink_alias "huggingface-cli" "$VERSION" "${EXACT_VERSION}"
+        fi
         fi
 
     ;;

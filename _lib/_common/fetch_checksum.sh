@@ -70,7 +70,7 @@ libscript_fetch_checksum() {
   fi
   
   # 4. Fallback checking if .sha256 file exists
-  sha_export url="${url}.sha256"
+  sha_url="${url}.sha256"
   sha_content="$(curl -sL "${sha_url:-}" || true)"
   if [ -n "$sha_content" ] && ! printf '%s\n' "$sha_content" | grep -i "Not Found" >/dev/null; then
       printf '%s\n' "$sha_content" | awk '{print $1}'

@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for nodejs-server on Windows.
+:: Prepares and configures nodejs-server on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript nodejs-server installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where node >nul 2>&1

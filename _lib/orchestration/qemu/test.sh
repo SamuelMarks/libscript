@@ -28,6 +28,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 if command -v qemu-system-x86_64 >/dev/null 2>&1; then
   qemu-system-x86_64 --version
+elif command -v qemu-system-aarch64 >/dev/null 2>&1; then
+  qemu-system-aarch64 --version
 elif command -v qemu-img >/dev/null 2>&1; then
   qemu-img --version
 else

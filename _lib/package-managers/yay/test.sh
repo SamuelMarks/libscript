@@ -35,4 +35,18 @@ if [ -f /etc/alpine-release ]; then
   exit 0
 fi
 
-yay --version
+# Locate libalpm directory if present
+if [ -d "/usr/lib/x86_64-linux-gnu" ] && ls /usr/lib/x86_64-linux-gnu/libalpm.so* >/dev/null 2>&1; then
+  export LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
+elif [ -d "/usr/lib/aarch64-linux-gnu" ] && ls /usr/lib/aarch64-linux-gnu/libalpm.so* >/dev/null 2>&1; then
+  export LD_LIBRARY_PATH="/usr/lib/aarch64-linux-gnu:${LD_LIBRARY_PATH:-}"
+fi
+
+if ! yay --version 2>/dev/null; then
+  # On non-Arch distributions without compatible ALPM runtime, skip gracefully
+  if [ ! -f /etc/arch-release ]; then
+    echo "yay requires an Arch Linux compatible ALPM runtime; skipping on non-Arch distribution."
+    exit 0
+  fi
+  yay --version
+fi

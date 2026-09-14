@@ -59,7 +59,7 @@ while [ $# -gt 0 ]; do
       export LIBSCRIPT_DISTRO="${1#*=}"
       shift
       ;;
-    cloudinit)
+    cloudinit|install|test|setup|uninstall)
       shift
       ;;
     *)
@@ -75,6 +75,10 @@ while [ $# -gt 0 ]; do
     fi
 
     case "$CMD" in
+    --help|-h)
+    printf "Usage: libscript cloudinit [generate|validate] [options]\n"
+    exit 0
+    ;;
     install)
     printf "Cloud components are operational wrappers and do not require installation.\n"
     exit 0

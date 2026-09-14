@@ -169,20 +169,29 @@ case "$ACTION" in
           URL="https://github.com/coursier/coursier/releases/download/v${EXACT_VERSION}/cs-${ARCH}-${OS}.gz"
           TEMP_FILE=$(mktemp)
           libscript_depends "curl" "gzip" "java"
-          if ! curl -sSLf "$URL" -o "$TEMP_FILE.gz"; then
-            log_error "Failed to download coursier from $URL"
-            rm -f "$TEMP_FILE.gz"
-            exit 1
+          if curl -sSLf "$URL" -o "$TEMP_FILE.gz"; then
+            gzip -df "$TEMP_FILE.gz" || true
+            cp "$TEMP_FILE" "${TARGET_DIR}/bin/coursier"
+            rm -f "$TEMP_FILE"
+          else
+            URL_STANDALONE="https://github.com/coursier/coursier/releases/download/v${EXACT_VERSION}/coursier"
+            if ! curl -sSLf "$URL_STANDALONE" -o "${TARGET_DIR}/bin/coursier"; then
+              log_error "Failed to download coursier from $URL and $URL_STANDALONE"
+              rm -f "$TEMP_FILE.gz" "$TEMP_FILE"
+              exit 1
+            fi
+            rm -f "$TEMP_FILE.gz" "$TEMP_FILE"
           fi
-          gzip -df "$TEMP_FILE.gz" || true
-          cp "$TEMP_FILE" "${TARGET_DIR}/bin/coursier"
           chmod +x "${TARGET_DIR}/bin/coursier"
           ln -sf coursier "${TARGET_DIR}/bin/cs"
-          rm -f "$TEMP_FILE"
         else
           log_info "coursier ${VERSION} is already installed."
         fi
-        libscript_symlink_alias "coursier" "$VERSION" "${EXACT_VERSION}"
+        libscript_symlink_alias "coursier" "latest" "${EXACT_VERSION}"
+        libscript_symlink_alias "coursier" "default" "${EXACT_VERSION}"
+        if [ -n "${VERSION:-}" ] && [ "${VERSION}" != "coursier" ]; then
+          libscript_symlink_alias "coursier" "$VERSION" "${EXACT_VERSION}"
+        fi
         fi
 
     ;;

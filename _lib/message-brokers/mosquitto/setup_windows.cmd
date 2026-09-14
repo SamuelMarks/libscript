@@ -1,5 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: ## Overview
+:: Setup script for mosquitto on Windows.
+:: Prepares and configures mosquitto on native Windows environments.
+::
+:: ## Usage
+:: Automatically invoked during libscript mosquitto installation on Windows.
+
 set "THIS_FILE=%~f0"
 
 where mosquitto >nul 2>&1

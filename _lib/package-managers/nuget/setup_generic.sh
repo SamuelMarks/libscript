@@ -157,10 +157,7 @@ case "$ACTION" in
         log_info "Installing nuget ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
 
-        if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
-          log_info "Falling back to system package manager for nuget..."
-          libscript_depends "nuget"
-        elif ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nuget/"*"${VERSION}"* >/dev/null 2>&1; then
+        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nuget/"*"${VERSION}"* >/dev/null 2>&1; then
           log_info "Extracting from cache..."
           cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/nuget/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
           if [ -n "$cache_file" ]; then
@@ -189,10 +186,29 @@ case "$ACTION" in
           else
             if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
               log_info "Falling back to system package manager for nuget (via mono/dotnet)..."
-              libscript_depends "nuget"
-              if command -v nuget >/dev/null 2>&1; then
+              if ! libscript_depends "nuget" 2>/dev/null; then
+                if [ "$UNAME_LOWER" = "linux" ]; then
+                  log_info "Installing mono runtime and downloading nuget.exe..."
+                  libscript_depends "mono-complete" || libscript_depends "mono-devel" || true
+                  NUGET_URL="https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
+                  libscript_depends "curl"
+                  if curl -sSLf "$NUGET_URL" -o "${TARGET_DIR}/bin/nuget.exe"; then
+                    cat <<'EOF' > "${TARGET_DIR}/bin/nuget"
+#!/bin/sh
+NUGET_EXE="$(dirname "$0")/nuget.exe"
+if command -v mono >/dev/null 2>&1; then
+  exec mono "$NUGET_EXE" "$@"
+else
+  exec "$NUGET_EXE" "$@"
+fi
+EOF
+                    chmod +x "${TARGET_DIR}/bin/nuget" "${TARGET_DIR}/bin/nuget.exe"
+                  fi
+                fi
+              fi
+              if command -v nuget >/dev/null 2>&1 && [ ! -f "${TARGET_DIR}/bin/nuget" ]; then
                 ln -sf "$(command -v nuget)" "${TARGET_DIR}/bin/nuget"
-              elif command -v dotnet >/dev/null 2>&1; then
+              elif command -v dotnet >/dev/null 2>&1 && [ ! -f "${TARGET_DIR}/bin/nuget" ]; then
                 # dotnet provides nuget functionality usually, but as a test hack we'll create a wrapper
                 printf '#!/bin/sh\ndotnet nuget "$@"\n' > "${TARGET_DIR}/bin/nuget"
                 chmod +x "${TARGET_DIR}/bin/nuget"
@@ -210,7 +226,11 @@ case "$ACTION" in
       else
         log_info "nuget ${VERSION} is already installed."
       fi
-      libscript_symlink_alias "nuget" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "nuget" "latest" "${EXACT_VERSION}"
+      libscript_symlink_alias "nuget" "default" "${EXACT_VERSION}"
+      if [ "$VERSION" != "latest" ] && [ "$VERSION" != "default" ]; then
+        libscript_symlink_alias "nuget" "$VERSION" "${EXACT_VERSION}"
+      fi
     fi
     ;;
   start|stop|restart|status|health|logs|up|down)

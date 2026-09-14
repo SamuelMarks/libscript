@@ -183,7 +183,15 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_warn "No download URL provided for ansible-galaxy ${VERSION}."
+            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
+              log_info "Falling back to system package manager for ansible-galaxy..."
+              libscript_depends "ansible-galaxy"
+              if command -v ansible-galaxy >/dev/null 2>&1; then
+                ln -sf "$(command -v ansible-galaxy)" "${TARGET_DIR}/bin/ansible-galaxy"
+              fi
+            else
+              log_warn "No download URL provided for ansible-galaxy ${VERSION}."
+            fi
           fi
         fi
       else

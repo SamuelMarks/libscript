@@ -86,8 +86,8 @@ while [ $# -gt 0 ]; do
       LIBSCRIPT_PATHS="${1#*=}"
       shift
       ;;
-    cdn)
-      # Ignore the package name passed by the global router
+    cdn|install|test|setup|uninstall)
+      # Ignore the package name and action passed by the global router
       shift
       ;;
     *)
@@ -103,6 +103,10 @@ if [ -z "$CMD" ]; then
 fi
 
 case "$CMD" in
+  --help|-h)
+    printf "Usage: libscript cdn [create|delete|list|invalidate] [options]\n"
+    exit 0
+    ;;
   install)
     printf "Cloud components are operational wrappers and do not require installation.\n"
     exit 0
