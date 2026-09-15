@@ -126,17 +126,26 @@ if not exist "%TARGET_DIR%\bin" (
     if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
     if exist "%DOWNLOAD_DIR%\sqlite\sqlite-%SQLITE_VERSION%.zip" (
         echo Extracting from cache...
-        tar -xf "%DOWNLOAD_DIR%\sqlite\sqlite-%SQLITE_VERSION%.zip" -C "%TARGET_DIR%"
+        tar -xf "%DOWNLOAD_DIR%\sqlite\sqlite-%SQLITE_VERSION%.zip" -C "%TARGET_DIR%\bin"
     ) else if exist "%DOWNLOAD_DIR%\sqlite\sqlite-%SQLITE_VERSION%.tar.gz" (
         echo Extracting from cache...
-        tar -xf "%DOWNLOAD_DIR%\sqlite\sqlite-%SQLITE_VERSION%.tar.gz" -C "%TARGET_DIR%"
+        tar -xf "%DOWNLOAD_DIR%\sqlite\sqlite-%SQLITE_VERSION%.tar.gz" -C "%TARGET_DIR%\bin"
     ) else if not "%SQLITE_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
         curl -sSL "%SQLITE_DOWNLOAD_URL%" -o "%TEMP%\sqlite.zip"
-        tar -xf "%TEMP%\sqlite.zip" -C "%TARGET_DIR%"
+        tar -xf "%TEMP%\sqlite.zip" -C "%TARGET_DIR%\bin"
     ) else (
-        echo No download URL or cache available for sqlite.
-        exit /b 1
+        echo Downloading sqlite tools for Windows...
+        curl -sSL "https://www.sqlite.org/2024/sqlite-tools-win-x64-3460100.zip" -o "%TEMP%\sqlite.zip"
+        tar -xf "%TEMP%\sqlite.zip" -C "%TARGET_DIR%\bin"
+    )
+    if exist "%TARGET_DIR%\sqlite3.exe" move /y "%TARGET_DIR%\*.exe" "%TARGET_DIR%\bin\" >nul 2>&1
+    if exist "%TARGET_DIR%\sqlite3.dll" move /y "%TARGET_DIR%\*.dll" "%TARGET_DIR%\bin\" >nul 2>&1
+    for /d %%D in ("%TARGET_DIR%\bin\sqlite-tools-*") do (
+        if exist "%%~fD\sqlite3.exe" (
+            move /y "%%~fD\*" "%TARGET_DIR%\bin\" >nul 2>&1
+            rmdir "%%~fD" >nul 2>&1
+        )
     )
 ) else (
     echo sqlite %SQLITE_VERSION% is already installed.

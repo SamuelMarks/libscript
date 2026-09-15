@@ -171,6 +171,19 @@ case "$ACTION" in
             fi
           fi
         else
+          if [ -z "${GOOGLE_CLOUD_SDK_DOWNLOAD_URL:-}" ] && [ "$UNAME_LOWER" = "linux" ]; then
+            case "${ARCH:-}" in
+              aarch64|arm64) _gcloud_arch="arm" ;;
+              *) _gcloud_arch="x86_64" ;;
+            esac
+            GOOGLE_CLOUD_SDK_DOWNLOAD_URL="https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-linux-${_gcloud_arch}.tar.gz"
+          fi
+          if command -v python3 >/dev/null 2>&1; then
+            _py_minor=$(python3 -c 'import sys; print(sys.version_info.minor)' 2>/dev/null || echo "0")
+            if [ "$_py_minor" -lt 10 ] && [ -n "${PKG_MGR:-}" ]; then
+              libscript_depends "python3.11" || libscript_depends "python3.12" || true
+            fi
+          fi
           if [ -n "${GOOGLE_CLOUD_SDK_DOWNLOAD_URL:-}" ]; then
             TEMP_FILE=$(mktemp)
             libscript_download "${GOOGLE_CLOUD_SDK_DOWNLOAD_URL:-}" "${TEMP_FILE}"

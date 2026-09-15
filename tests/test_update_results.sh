@@ -113,6 +113,7 @@ EOF_TODO
 
   # Verification 5: FreeBSD success and custom output + JSON export
   touch "${_test_tmp}/tests_tmp/compA.freebsd.success"
+  touch "${_test_tmp}/tests_tmp/compA.linux.rocky.success"
   cp "${_test_tmp}/README.md" "${_test_tmp}/CUSTOM_REPORT.md"
 
   "${REPO_ROOT}/tests/update_results.sh" "${_test_tmp}" \
@@ -122,6 +123,14 @@ EOF_TODO
   # shellcheck disable=SC2016
   if ! grep -q '| `compA` |.*| ✅ |' "${_test_tmp}/CUSTOM_REPORT.md"; then
     printf 'Error: compA FreeBSD status not updated in CUSTOM_REPORT.md\n' >&2
+    rm -rf "${_test_tmp}"
+    exit 1
+  fi
+
+  # Verification 6: compA has RPM success in CUSTOM_REPORT.md
+  # shellcheck disable=SC2016
+  if ! grep -q '| `compA` | ✅ | ❓ | ✅ |' "${_test_tmp}/CUSTOM_REPORT.md"; then
+    printf 'Error: compA Rocky Linux (rpm) status not updated in CUSTOM_REPORT.md\n' >&2
     rm -rf "${_test_tmp}"
     exit 1
   fi

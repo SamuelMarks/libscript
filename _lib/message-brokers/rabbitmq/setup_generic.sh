@@ -183,7 +183,24 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_warn "No download URL provided for rabbitmq ${VERSION}."
+            if [ "$UNAME_LOWER" = "linux" ]; then
+              log_info "Configuring RabbitMQ repository for Linux..."
+              if [ -x "/usr/bin/dnf" ] || [ -x "/usr/bin/yum" ]; then
+                curl -s https://packagecloud.io/install/repositories/rabbitmq/erlang/script.rpm.sh | priv bash 2>/dev/null || true
+                curl -s https://packagecloud.io/install/repositories/rabbitmq/rabbitmq-server/script.rpm.sh | priv bash 2>/dev/null || true
+                libscript_depends "rabbitmq-server"
+              else
+                libscript_depends "rabbitmq-server"
+              fi
+              if command -v rabbitmqctl >/dev/null 2>&1; then
+                ln -sf "$(command -v rabbitmqctl)" "${TARGET_DIR}/bin/rabbitmqctl" 2>/dev/null || true
+              fi
+            elif [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
+              log_info "Falling back to system package manager for rabbitmq..."
+              libscript_depends "rabbitmq"
+            else
+              log_warn "No download URL provided for rabbitmq ${VERSION}."
+            fi
           fi
         fi
       else

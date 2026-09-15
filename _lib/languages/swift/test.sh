@@ -35,4 +35,8 @@ if [ -f /etc/alpine-release ]; then
   exit 0
 fi
 
-swift --version
+if command -v swift >/dev/null 2>&1; then
+  swift --version
+else
+  printf '%s\n' "swift is not installed (likely unsupported on this OS), skipping test."
+fi

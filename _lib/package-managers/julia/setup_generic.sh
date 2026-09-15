@@ -140,8 +140,12 @@ case "$ACTION" in
     ;;
   install)
     if [ "$JULIA_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "julia" || log_info "julia is not supported or failed to install natively on this OS."
-    elif [ "$JULIA_INSTALL_METHOD" = "mise" ]; then
+      if ! libscript_depends "julia"; then
+        log_info "System package manager unavailable for julia. Falling back to native..."
+        JULIA_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+    if [ "$JULIA_INSTALL_METHOD" = "mise" ]; then
       mise install "julia@${VERSION}"
     elif [ "$JULIA_INSTALL_METHOD" = "asdf" ]; then
       asdf install julia "${VERSION}"
@@ -171,6 +175,16 @@ case "$ACTION" in
             fi
           fi
         else
+          if [ -z "${JULIA_DOWNLOAD_URL:-}" ] && [ "$UNAME_LOWER" = "linux" ]; then
+            _jver="1.10.5"
+            [ "${EXACT_VERSION:-}" != "latest" ] && [ "${EXACT_VERSION:-}" != "lts" ] && [ -n "${EXACT_VERSION:-}" ] && _jver="${EXACT_VERSION}"
+            case "${ARCH:-}" in
+              aarch64|arm64) _jarch="aarch64" ;;
+              *) _jarch="x86_64" ;;
+            esac
+            _jminor="${_jver%.*}"
+            JULIA_DOWNLOAD_URL="https://julialang-s3.julialang.org/bin/linux/${_jarch}/${_jminor}/julia-${_jver}-linux-${_jarch}.tar.gz"
+          fi
           if [ -n "${JULIA_DOWNLOAD_URL:-}" ]; then
             TEMP_FILE=$(mktemp)
             libscript_download "${JULIA_DOWNLOAD_URL:-}" "${TEMP_FILE}"

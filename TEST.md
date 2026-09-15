@@ -9,7 +9,7 @@ and Windows implementations.
 The Continuous Integration (CI) pipeline provisions, installs, and verifies components natively
 across the following environments:
 
-- **Linux:** Ubuntu, Debian, Alpine, RHEL/AlmaLinux.
+- **Linux:** Ubuntu, Debian, Alpine, RHEL/AlmaLinux/Rocky Linux.
 - **BSD:** FreeBSD 13/14, OpenBSD.
 - **macOS:** Intel and Apple Silicon.
 - **Windows:** Native Command Prompt (CMD) and PowerShell environments (Windows 10/11 and Server).
@@ -71,10 +71,10 @@ infrastructure.
 ### Vagrant Environments
 
 The repository contains several Vagrant configurations representing our target platforms (e.g.,
-Debian 13, Alpine 3.24, FreeBSD 15.1, Windows 11).
+Debian 13, Alpine 3.24, FreeBSD 15.1, Rocky Linux 10.2, Windows 11).
 
 Building the underlying boxes (`bento/windows-11`, `bento/alpine-3.24`, `bento/debian-13`,
-`bento/freebsd-15.1`) requires the custom Bento fork at
+`bento/freebsd-15.1`, `bento/rockylinux-10.2`) requires the custom Bento fork at
 [https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64](https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64)
 (`https://github.com/SamuelMarks/bento` @ branch `multi-os-qemu-aarch64`), supporting builds on
 macOS Apple Silicon (`aarch64`) and other `x86_64` hosts. See [VAGRANT.md](VAGRANT.md) for full box

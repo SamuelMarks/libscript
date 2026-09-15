@@ -3,7 +3,7 @@
   "name": "conda",
   "provides": ["version-manager", "package-manager", "conda"],
   "os_whitelist": ["linux", "darwin"],
-  "os_blacklist": ["windows"],
+  "os_blacklist": ["windows", "alpine"],
   "title": "conda",
   "description": "Bootstrap module for the `conda` package manager via Miniconda.",
   "category": "package-manager"

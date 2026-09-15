@@ -102,6 +102,7 @@ if errorlevel 1 (
 
 :: Verification 5: FreeBSD success and custom output + JSON export
 type nul > "%TEST_TMP%\tests_tmp\compA.freebsd.success"
+type nul > "%TEST_TMP%\tests_tmp\compA.linux.rocky.success"
 copy /Y "%TEST_TMP%\README.md" "%TEST_TMP%\CUSTOM_REPORT.md" >nul
 
 call "%REPO_ROOT%\tests\update_results.cmd" "%TEST_TMP%" --output "%TEST_TMP%\CUSTOM_REPORT.md" --json "%TEST_TMP%\tests_tmp\matrix_results.json"

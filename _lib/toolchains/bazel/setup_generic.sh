@@ -151,8 +151,7 @@ case "$ACTION" in
 
         resolve_exact_version
         if [ "${EXACT_VERSION}" = "latest" ]; then
-           libscript_depends "curl"
-           EXACT_VERSION=$(curl -sL https://api.github.com/repos/bazelbuild/bazelisk/releases/latest | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
+           EXACT_VERSION="7.4.1"
         fi
         TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/bazel/${EXACT_VERSION}"
         if [ ! -d "${TARGET_DIR}" ]; then

@@ -138,8 +138,12 @@ case "$ACTION" in
     ;;
   install)
     if [ "$RUSTUP_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "rustup"
-    elif [ "$RUSTUP_INSTALL_METHOD" = "mise" ]; then
+      if ! libscript_depends "rustup"; then
+        log_info "System package manager does not have rustup. Falling back to native..."
+        RUSTUP_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+    if [ "$RUSTUP_INSTALL_METHOD" = "mise" ]; then
       mise install "rustup@${VERSION}"
     elif [ "$RUSTUP_INSTALL_METHOD" = "asdf" ]; then
       asdf install rustup "${VERSION}"

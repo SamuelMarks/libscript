@@ -139,8 +139,12 @@ case "$ACTION" in
     ;;
   install)
     if [ "$GITEA_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "gitea"
-    elif [ "$GITEA_INSTALL_METHOD" = "mise" ]; then
+      if ! libscript_depends "gitea"; then
+        log_info "System package manager does not have gitea. Falling back to native..."
+        GITEA_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+    if [ "$GITEA_INSTALL_METHOD" = "mise" ]; then
       mise install "gitea@${VERSION}"
     elif [ "$GITEA_INSTALL_METHOD" = "asdf" ]; then
       asdf install gitea "${VERSION}"

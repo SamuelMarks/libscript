@@ -26,8 +26,18 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-#!/bin/sh
-
 
 GOOGLE_CLOUD_SDK_VERSION="${GOOGLE_CLOUD_SDK_VERSION:-latest}"
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/google-cloud-sdk/${GOOGLE_CLOUD_SDK_VERSION}/bin:${PATH}"
+_GCLOUD_BIN="${LIBSCRIPT_HOME:-$HOME/.libscript}/google-cloud-sdk/${GOOGLE_CLOUD_SDK_VERSION}/bin"
+case ":${PATH}:" in
+  *":${_GCLOUD_BIN}:"*) ;;
+  *) PATH="${_GCLOUD_BIN}:${PATH}"; export PATH ;;
+esac
+
+if command -v python3.12 >/dev/null 2>&1; then
+  CLOUDSDK_PYTHON="$(command -v python3.12)"
+  export CLOUDSDK_PYTHON
+elif command -v python3.11 >/dev/null 2>&1; then
+  CLOUDSDK_PYTHON="$(command -v python3.11)"
+  export CLOUDSDK_PYTHON
+fi

@@ -1,0 +1,71 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# ## Overview
+# Configuration and definition file for Rocky Linux 10.2 Vagrant environment.
+#
+# ## Usage
+# Processed automatically during build or runtime via Vagrant.
+
+# Read environment variables for target package and repository root
+test_target = ENV['LIBSCRIPT_TEST_TARGET'] || 'sqlite'
+repo_root = ENV['LIBSCRIPT_REPO_ROOT'] || "../.."
+
+# Ensure unique VM name for complete isolation (like a new docker image)
+vm_name = "rockylinux-test-#{test_target}"
+
+Vagrant.configure("2") do |config|
+  config.vm.define vm_name do |t|
+    t.vm.box = "bento/rockylinux-10.2"
+    t.vm.box_version = "0"
+
+    t.ssh.username = "vagrant"
+    t.ssh.insert_key = false
+    t.ssh.private_key_path = [
+      File.expand_path("~/.vagrant.d/insecure_private_keys/vagrant.key.ed25519"),
+      File.expand_path("~/.vagrant.d/insecure_private_key")
+    ]
+    t.ssh.shell = "/bin/bash"
+
+    t.vm.provider "qemu" do |qe|
+      qe.net_mode = :user
+      qe.net_device = "virtio-net-pci"
+      qe.firmware_format = nil
+      bios_candidates = [
+        ENV["QEMU_EDK2_CODE"],
+        "/opt/homebrew/share/qemu/edk2-aarch64-code.fd",
+        "/usr/share/qemu/edk2-aarch64-code.fd",
+        "/usr/share/edk2/aarch64/QEMU_EFI.fd"
+      ].compact
+      bios_path = bios_candidates.find { |path| File.exist?(path) }
+      qe.extra_qemu_args = bios_path ? ["-bios", bios_path, "-device", "virtio-gpu-pci"] : ["-device", "virtio-gpu-pci"]
+      qe.ssh_auto_correct = true
+      qe.ssh_port = 50022 + rand(1000)
+      qe.memory = "4G"
+      qe.smp = "2"
+    end
+    t.vm.allowed_synced_folder_types = [:rsync]
+
+    # Sync the repository root directory
+    t.vm.synced_folder repo_root, "/opt/repos/libscript", type: "rsync",
+      rsync_exclude: [".git/", "tests_tmp/", "vagrant/"]
+
+    # Provision the VM and run the test
+    t.vm.provision "shell", inline: <<-SHELL
+      set -e
+
+      echo "Updating dnf repositories and installing prerequisites..."
+      dnf -y -q update || true
+      dnf -y -q install curl jq rsync tar gzip findutils which
+
+      echo "Configuring libscript..."
+      export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript
+
+      echo "Installing #{test_target} using libscript..."
+      /opt/repos/libscript/libscript.sh install #{test_target}
+
+      echo "Running test for #{test_target}..."
+      /opt/repos/libscript/libscript.sh test #{test_target}
+    SHELL
+  end
+end

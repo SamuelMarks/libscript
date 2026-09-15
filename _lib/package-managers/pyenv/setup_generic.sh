@@ -139,8 +139,12 @@ case "$ACTION" in
     ;;
   install)
     if [ "$PYENV_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "pyenv"
-    elif [ "$PYENV_INSTALL_METHOD" = "mise" ]; then
+      if ! libscript_depends "pyenv"; then
+        log_info "System package manager does not have pyenv. Falling back to native..."
+        PYENV_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+    if [ "$PYENV_INSTALL_METHOD" = "mise" ]; then
       mise install "pyenv@${VERSION}"
     elif [ "$PYENV_INSTALL_METHOD" = "asdf" ]; then
       asdf install pyenv "${VERSION}"

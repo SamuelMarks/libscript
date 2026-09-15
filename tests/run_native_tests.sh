@@ -80,8 +80,7 @@ detect_host_os() {
 ' "alpine" "linux.alpine" ;;
       'debian'*|'ubuntu'*|'deb') printf '%s %s
 ' "debian" "linux.debian" ;;
-      'rhel'*|'centos'*|'fedora'*|'almalinux'*|'rpm') printf '%s %s
-' "rhel" "linux.rhel" ;;
+      'rhel'*|'centos'*|'fedora'*|'almalinux'*|'rpm'|'rocky'*) printf '%s %s\n' "rhel" "linux.rhel" ;;
       'freebsd'*|'bsd') printf '%s %s
 ' "freebsd" "freebsd" ;;
       'windows'*|'win') printf '%s %s
@@ -129,8 +128,7 @@ detect_host_os() {
 ' "alpine" "linux.alpine" ;;
               'debian'|'ubuntu') printf '%s %s
 ' "debian" "linux.debian" ;;
-              'rhel'|'centos'|'fedora'|'almalinux'|'rocky') printf '%s %s
-' "rhel" "linux.rhel" ;;
+              'rhel'|'centos'|'fedora'|'almalinux'|'rocky'|'rockylinux') printf '%s %s\n' "rhel" "linux.rhel" ;;
               *) printf '%s %s
 ' "${_dist_id}" "linux.${_dist_id}" ;;
             esac
@@ -159,7 +157,7 @@ check_manifest_support() {
 
   _os_family=""
   case "${_os_name}" in
-    'alpine'|'debian'|'ubuntu'|'rhel'|'almalinux'|'centos'|'fedora'|'arch'|'gentoo'|'void'|'solus') _os_family="linux" ;;
+    'alpine'|'debian'|'ubuntu'|'rhel'|'almalinux'|'centos'|'fedora'|'rocky'|'rockylinux'|'arch'|'gentoo'|'void'|'solus') _os_family="linux" ;;
     'freebsd'|'openbsd'|'netbsd') _os_family="bsd" ;;
     'windows') _os_family="windows" ;;
     'darwin') _os_family="darwin" ;;

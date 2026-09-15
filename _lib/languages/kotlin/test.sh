@@ -30,7 +30,9 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
   . "$SCRIPT_DIR/env.sh"
 fi
 
-if [ -f "$SCRIPT_DIR/cli.sh" ]; then
+if command -v kotlinc >/dev/null 2>&1; then
+  kotlinc -version || true
+elif [ -f "$SCRIPT_DIR/cli.sh" ]; then
   sh "$SCRIPT_DIR/cli.sh" --help >/dev/null
 else
   exit 0

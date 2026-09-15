@@ -117,7 +117,28 @@ libscript_service() {
     return 0
   fi
 
-  # 4. Fallback: POSIX-compatible background process management (PID files)
+  # 4. FreeBSD rc.d
+  if [ "${UNAME_LOWER:-}" = "freebsd" ] || command -v sysrc >/dev/null 2>&1; then
+    case "$_action" in
+      start|stop|restart|status) priv service "$_service" "$_action" ;;
+      enable)  priv sysrc "${_service}_enable=YES" ;;
+      disable) priv sysrc "${_service}_enable=NO" ;;
+      logs)
+        if [ -f "/var/log/$_service.log" ]; then
+          tail "$@" "/var/log/$_service.log"
+        elif [ -f "/var/log/messages" ]; then
+          grep -i "$_service" /var/log/messages | tail "$@"
+        else
+          log_warn "Log file for $_service not found."
+        fi
+        ;;
+      health)  libscript_check_health "$_service" "$@" ;;
+      *) log_error "Unknown action: $_action"; return 1 ;;
+    esac
+    return 0
+  fi
+
+  # 5. Fallback: POSIX-compatible background process management (PID files)
   # This is a very basic fallback for systems without a real init system
   _pid_file="/var/run/${_service}.pid"
   [ -w "/var/run" ] || _pid_file="/tmp/${_service}.pid"

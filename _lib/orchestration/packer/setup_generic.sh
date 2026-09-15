@@ -102,7 +102,10 @@ case "$ACTION" in
           brew install hashicorp/tap/packer 2>/dev/null || brew install packer
           ;;
         *)
-          libscript_depends "packer"
+          if ! libscript_depends "packer"; then
+            log_info "System package manager does not have packer. Falling back to native..."
+            PACKER_INSTALL_METHOD="libscript_native"
+          fi
           ;;
       esac
     fi

@@ -58,6 +58,55 @@ show_help() {
 ' "  --help, -h, /?         Show this help message."
 }
 
+# ## check_manifest_support
+# Checks if a component supports the given OS based on its manifest.json
+check_manifest_support() {
+  _m_file="$1"
+  _m_os="$2"
+  if [ ! -f "${_m_file}" ]; then
+    printf 'yes\n'
+    return 0
+  fi
+  _m_family=""
+  case "${_m_os}" in
+    'alpine'|'debian'|'rhel'|'rocky'|'linux') _m_family="linux" ;;
+    'freebsd'|'bsd') _m_family="bsd" ;;
+    'windows') _m_family="windows" ;;
+    'darwin') _m_family="darwin" ;;
+    'sunos') _m_family="sunos" ;;
+  esac
+
+  awk -v os="${_m_os}" -v family="${_m_family}" '
+    BEGIN { in_bl=0; in_wl=0; has_wl=0; wl_match=0; result="yes" }
+    /"os_blacklist"\s*:/ {
+      in_bl=1; in_wl=0
+      if ($0 ~ "\"" os "\"" || (family != "" && $0 ~ "\"" family "\"")) { result="no"; exit }
+      if ($0 ~ /\]/) { in_bl=0 }
+      next
+    }
+    /"os_whitelist"\s*:/ {
+      in_wl=1; in_bl=0; has_wl=1
+      if ($0 ~ "\"" os "\"" || $0 ~ "\"all\"" || (family != "" && $0 ~ "\"" family "\"")) { wl_match=1 }
+      if ($0 ~ /\]/) { in_wl=0 }
+      next
+    }
+    in_bl {
+      if ($0 ~ "\"" os "\"" || (family != "" && $0 ~ "\"" family "\"")) { result="no"; exit }
+      if ($0 ~ /\]/) { in_bl=0 }
+    }
+    in_wl {
+      if ($0 ~ "\"" os "\"" || $0 ~ "\"all\"" || (family != "" && $0 ~ "\"" family "\"")) { wl_match=1 }
+      if ($0 ~ /\]/) { in_wl=0 }
+    }
+    END {
+      if (result == "yes" && has_wl && !wl_match) {
+        result="no"
+      }
+      print result
+    }
+  ' "${_m_file}"
+}
+
 # ## update_supported_components
 # Discovers components, aggregates test results from tests_tmp/, updates Markdown file and JSON export.
 update_supported_components() {
@@ -97,33 +146,40 @@ TABLE_HDR
       _existing_line=$(awk -v comp="${_comp}" '$2 == "`"comp"`" { print; exit }' "${_readme_file}" 2>/dev/null || true)
     fi
 
-    _apk_status="❓"
-    _deb_status="❓"
-    _rpm_status="❓"
+    _apk_status="-"
+    _deb_status="-"
+    _rpm_status="-"
     _win_status="-"
     _sunos_status="-"
     _freebsd_status="-"
 
-    if [ -n "${_existing_line}" ]; then
-      _e_apk=$(printf '%s
-' "${_existing_line}" | awk -F'|' '{print $3}' | tr -d ' ')
-      _e_deb=$(printf '%s
-' "${_existing_line}" | awk -F'|' '{print $4}' | tr -d ' ')
-      _e_rpm=$(printf '%s
-' "${_existing_line}" | awk -F'|' '{print $5}' | tr -d ' ')
-      _e_win=$(printf '%s
-' "${_existing_line}" | awk -F'|' '{print $6}' | tr -d ' ')
-      _e_sunos=$(printf '%s
-' "${_existing_line}" | awk -F'|' '{print $7}' | tr -d ' ')
-      _e_freebsd=$(printf '%s
-' "${_existing_line}" | awk -F'|' '{print $8}' | tr -d ' ')
+    _mfile=$(find "${_repo_root}/_lib" -maxdepth 2 -type d -name "${_comp}" -exec echo "{}/manifest.json" \; 2>/dev/null | head -n 1)
+    if [ -f "${_mfile}" ]; then
+      [ "$(check_manifest_support "${_mfile}" "alpine")" = "yes" ] && _apk_status="❓"
+      [ "$(check_manifest_support "${_mfile}" "debian")" = "yes" ] && _deb_status="❓"
+      [ "$(check_manifest_support "${_mfile}" "rhel")" = "yes" ] && _rpm_status="❓"
+      [ "$(check_manifest_support "${_mfile}" "windows")" = "yes" ] && _win_status="❓"
+      [ "$(check_manifest_support "${_mfile}" "freebsd")" = "yes" ] && _freebsd_status="❓"
+    else
+      _apk_status="❓"
+      _deb_status="❓"
+      _rpm_status="❓"
+    fi
 
-      [ -n "${_e_apk}" ] && _apk_status="${_e_apk}"
-      [ -n "${_e_deb}" ] && _deb_status="${_e_deb}"
-      [ -n "${_e_rpm}" ] && _rpm_status="${_e_rpm}"
-      [ -n "${_e_win}" ] && _win_status="${_e_win}"
-      [ -n "${_e_sunos}" ] && _sunos_status="${_e_sunos}"
-      [ -n "${_e_freebsd}" ] && _freebsd_status="${_e_freebsd}"
+    if [ -n "${_existing_line}" ]; then
+      _e_apk=$(printf '%s\n' "${_existing_line}" | awk -F'|' '{print $3}' | tr -d ' ')
+      _e_deb=$(printf '%s\n' "${_existing_line}" | awk -F'|' '{print $4}' | tr -d ' ')
+      _e_rpm=$(printf '%s\n' "${_existing_line}" | awk -F'|' '{print $5}' | tr -d ' ')
+      _e_win=$(printf '%s\n' "${_existing_line}" | awk -F'|' '{print $6}' | tr -d ' ')
+      _e_sunos=$(printf '%s\n' "${_existing_line}" | awk -F'|' '{print $7}' | tr -d ' ')
+      _e_freebsd=$(printf '%s\n' "${_existing_line}" | awk -F'|' '{print $8}' | tr -d ' ')
+
+      [ -n "${_e_apk}" ] && [ "${_apk_status}" != "-" ] && _apk_status="${_e_apk}"
+      [ -n "${_e_deb}" ] && [ "${_deb_status}" != "-" ] && _deb_status="${_e_deb}"
+      [ -n "${_e_rpm}" ] && [ "${_rpm_status}" != "-" ] && _rpm_status="${_e_rpm}"
+      [ -n "${_e_win}" ] && [ "${_win_status}" != "-" ] && _win_status="${_e_win}"
+      [ -n "${_e_sunos}" ] && [ "${_sunos_status}" != "-" ] && _sunos_status="${_e_sunos}"
+      [ -n "${_e_freebsd}" ] && [ "${_freebsd_status}" != "-" ] && _freebsd_status="${_e_freebsd}"
     fi
 
     if [ -d "${_tests_tmp_dir}" ]; then
@@ -141,10 +197,10 @@ TABLE_HDR
         _deb_status="❌"
       fi
 
-      # RHEL / Fedora / AlmaLinux / CentOS / rpm
-      if ls "${_tests_tmp_dir}/${_comp}".linux.rhel.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp}".linux.fedora.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp}".linux.almalinux.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp}".linux.centos.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp}.rhel.success" ] || [ -f "${_tests_tmp_dir}/${_comp}.fedora.success" ] || [ -f "${_tests_tmp_dir}/${_comp}.almalinux.success" ] || [ -f "${_tests_tmp_dir}/${_comp}.centos.success" ] || [ -f "${_tests_tmp_dir}/${_comp}.rpm.success" ]; then
+      # RHEL / Fedora / AlmaLinux / CentOS / Rocky Linux / rpm
+      if ls "${_tests_tmp_dir}/${_comp}".linux.rhel.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp}".linux.fedora.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp}".linux.almalinux.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp}".linux.centos.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp}".linux.rocky*.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp}.rhel.success" ] || [ -f "${_tests_tmp_dir}/${_comp}.fedora.success" ] || [ -f "${_tests_tmp_dir}/${_comp}.almalinux.success" ] || [ -f "${_tests_tmp_dir}/${_comp}.centos.success" ] || [ -f "${_tests_tmp_dir}/${_comp}.rocky.success" ] || [ -f "${_tests_tmp_dir}/${_comp}.rockylinux.success" ] || [ -f "${_tests_tmp_dir}/${_comp}.rpm.success" ]; then
         _rpm_status="✅"
-      elif ls "${_tests_tmp_dir}/${_comp}".linux.rhel.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp}".linux.fedora.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp}".linux.almalinux.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp}".linux.centos.failure >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp}.rhel.failure" ] || [ -f "${_tests_tmp_dir}/${_comp}.fedora.failure" ] || [ -f "${_tests_tmp_dir}/${_comp}.almalinux.failure" ] || [ -f "${_tests_tmp_dir}/${_comp}.centos.failure" ] || [ -f "${_tests_tmp_dir}/${_comp}.rpm.failure" ]; then
+      elif ls "${_tests_tmp_dir}/${_comp}".linux.rhel.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp}".linux.fedora.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp}".linux.almalinux.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp}".linux.centos.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp}".linux.rocky*.failure >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp}.rhel.failure" ] || [ -f "${_tests_tmp_dir}/${_comp}.fedora.failure" ] || [ -f "${_tests_tmp_dir}/${_comp}.almalinux.failure" ] || [ -f "${_tests_tmp_dir}/${_comp}.centos.failure" ] || [ -f "${_tests_tmp_dir}/${_comp}.rocky.failure" ] || [ -f "${_tests_tmp_dir}/${_comp}.rockylinux.failure" ] || [ -f "${_tests_tmp_dir}/${_comp}.rpm.failure" ]; then
         _rpm_status="❌"
       fi
 

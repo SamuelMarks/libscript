@@ -139,8 +139,12 @@ case "$ACTION" in
     ;;
   install)
     if [ "$KOTLIN_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "kotlin"
-    elif [ "$KOTLIN_INSTALL_METHOD" = "mise" ]; then
+      if ! libscript_depends "kotlin"; then
+        log_info "System package manager does not have kotlin. Falling back to native..."
+        KOTLIN_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+    if [ "$KOTLIN_INSTALL_METHOD" = "mise" ]; then
       mise install "kotlin@${VERSION}"
     elif [ "$KOTLIN_INSTALL_METHOD" = "asdf" ]; then
       asdf install kotlin "${VERSION}"
@@ -170,13 +174,25 @@ case "$ACTION" in
             fi
           fi
         else
+          libscript_depends "java" "unzip" || true
+          if [ -z "${KOTLIN_DOWNLOAD_URL:-}" ]; then
+            _kver="2.1.0"
+            [ "${EXACT_VERSION:-}" != "latest" ] && [ "${EXACT_VERSION:-}" != "lts" ] && [ -n "${EXACT_VERSION:-}" ] && _kver="${EXACT_VERSION}"
+            KOTLIN_DOWNLOAD_URL="https://github.com/JetBrains/kotlin/releases/download/v${_kver}/kotlin-compiler-${_kver}.zip"
+          fi
           if [ -n "${KOTLIN_DOWNLOAD_URL:-}" ]; then
             TEMP_FILE=$(mktemp)
             libscript_download "${KOTLIN_DOWNLOAD_URL:-}" "${TEMP_FILE}"
             if case "${KOTLIN_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
               tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
             elif case "${KOTLIN_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+              EXTRACT_DIR=$(mktemp -d)
+              unzip -q "${TEMP_FILE}" -d "${EXTRACT_DIR}" || true
+              top_dir=$(find "${EXTRACT_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+              if [ -n "$top_dir" ]; then
+                cp -R "${top_dir}/." "${TARGET_DIR}/"
+              fi
+              rm -rf "${EXTRACT_DIR}"
             else
               cp "${TEMP_FILE}" "${TARGET_DIR}/bin/kotlin" || true
               chmod +x "${TARGET_DIR}/bin/kotlin" || true

@@ -11,7 +11,7 @@ validation suites for LibScript components and stacks.
   - Windows Command Prompt: `tests\run_native_tests.cmd`
   - PowerShell: `tests\run_native_tests.ps1`
 - **`run_local_tests.*`**: Executes test suites locally inside isolated Vagrant virtual machines
-  across supported guest operating systems (Alpine 3.24, Debian 13, FreeBSD 15.1).
+  across supported guest operating systems (Alpine 3.24, Debian 13, FreeBSD 15.1, Rocky Linux 10.2).
 - **`run_all_batches.*`**: Executes all test batches sequentially across components.
 - **`run_next_batch.*`**: Incremental batch test executor for CI environments.
 - **`update_results.*`**: Aggregates test results (`*.success`, `*.failure`) from `tests_tmp/`,
@@ -61,6 +61,7 @@ Run local Vagrant test suites across guest distributions:
 # Specific target OS
 ./tests/run_local_tests.sh sqlite --os debian-13
 ./tests/run_local_tests.sh sqlite --os freebsd-15.1
+./tests/run_local_tests.sh sqlite --os rockylinux-10.2
 ````
 
 ## Central Results Reporting

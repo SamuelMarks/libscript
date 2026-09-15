@@ -19,3 +19,9 @@ if "%DENO_PM_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\deno-pm\%DENO_PM_VERSION%\bin;%PATH%"
+
+if exist "%~dp0..\..\languages\deno\env.cmd" (
+    call "%~dp0..\..\languages\deno\env.cmd"
+) else (
+    set "PATH=%LIBSCRIPT_HOME%\deno\latest\bin;%PATH%"
+)

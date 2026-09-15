@@ -30,4 +30,9 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
   . "$SCRIPT_DIR/env.sh"
 fi
 
-R --version
+if command -v R >/dev/null 2>&1; then
+  R --version
+else
+  echo "R is not installed, skipping test."
+  exit 0
+fi

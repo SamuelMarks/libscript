@@ -93,6 +93,8 @@ if /I "!OS_ID!"=="alpine" set "OS_TAG=linux.alpine"
 if /I "!OS_ID!"=="debian" set "OS_TAG=linux.debian"
 if /I "!OS_ID!"=="rhel" set "OS_TAG=linux.rhel"
 if /I "!OS_ID!"=="almalinux" set "OS_TAG=linux.rhel"
+if /I "!OS_ID!"=="rocky" set "OS_TAG=linux.rhel"
+if /I "!OS_ID!"=="rockylinux" set "OS_TAG=linux.rhel"
 if /I "!OS_ID!"=="freebsd" set "OS_TAG=freebsd"
 if /I "!OS_ID!"=="windows" set "OS_TAG=windows"
 
@@ -105,6 +107,14 @@ if "!REUSE_VM!"=="1" (
         vagrant up --no-provision
         if /I "!OS_ID!"=="debian" (
             vagrant ssh --no-tty -c "sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get install -qq -y apt-utils curl jq rsync" >nul 2>&1
+        ) else if /I "!OS_ID!"=="rocky" (
+            vagrant ssh --no-tty -c "sudo dnf install -y -q curl jq rsync findutils which" >nul 2>&1
+        ) else if /I "!OS_ID!"=="rockylinux" (
+            vagrant ssh --no-tty -c "sudo dnf install -y -q curl jq rsync findutils which" >nul 2>&1
+        ) else if /I "!OS_ID!"=="rhel" (
+            vagrant ssh --no-tty -c "sudo dnf install -y -q curl jq rsync findutils which" >nul 2>&1
+        ) else if /I "!OS_ID!"=="almalinux" (
+            vagrant ssh --no-tty -c "sudo dnf install -y -q curl jq rsync findutils which" >nul 2>&1
         )
     )
     echo === Syncing LibScript repository to !OS_TARGET! ===

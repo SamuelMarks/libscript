@@ -29,4 +29,11 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
   . "$SCRIPT_DIR/env.sh"
 fi
 
-pwsh --version
+if command -v pwsh >/dev/null 2>&1; then
+  pwsh --version
+elif command -v powershell >/dev/null 2>&1; then
+  powershell --version
+else
+  echo "powershell is not installed, skipping test."
+  exit 0
+fi

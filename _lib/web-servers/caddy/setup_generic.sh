@@ -135,8 +135,12 @@ case "$ACTION" in
   install)
 
     if [ "${CADDY_INSTALL_METHOD}" = "system" ]; then
-      libscript_depends 'caddy'
-    elif [ "${CADDY_INSTALL_METHOD}" = "mise" ]; then
+      if ! libscript_depends 'caddy'; then
+        log_info "System package manager unavailable for caddy. Falling back to native..."
+        CADDY_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+    if [ "${CADDY_INSTALL_METHOD}" = "mise" ]; then
       mise install "caddy@${CADDY_VERSION}"
     elif [ "${CADDY_INSTALL_METHOD}" = "asdf" ]; then
       asdf install caddy "${CADDY_VERSION}"

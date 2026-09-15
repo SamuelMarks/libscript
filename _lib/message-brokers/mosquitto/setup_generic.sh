@@ -183,7 +183,15 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_warn "No download URL provided for mosquitto ${VERSION}."
+            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
+              log_info "Falling back to system package manager for mosquitto..."
+              libscript_depends "mosquitto"
+              if command -v mosquitto >/dev/null 2>&1; then
+                ln -sf "$(command -v mosquitto)" "${TARGET_DIR}/bin/mosquitto" 2>/dev/null || true
+              fi
+            else
+              log_warn "No download URL provided for mosquitto ${VERSION}."
+            fi
           fi
         fi
       else

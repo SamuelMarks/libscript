@@ -26,7 +26,6 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-#!/bin/sh
 
 
 SPACK_VERSION="${SPACK_VERSION:-latest}"
@@ -34,7 +33,8 @@ export SPACK_ROOT="${LIBSCRIPT_HOME:-$HOME/.libscript}/spack/${SPACK_VERSION}"
 export PATH="$SPACK_ROOT/bin:${PATH}"
 if [ -s "$SPACK_ROOT/share/spack/setup-env.sh" ]; then
   if [ -n "${BASH_VERSION:-}" ] || [ -n "${ZSH_VERSION:-}" ]; then
-     . "$SPACK_ROOT/share/spack/setup-env.sh"
+    # shellcheck disable=SC1091
+    . "$SPACK_ROOT/share/spack/setup-env.sh"
   fi
 fi
 

@@ -62,12 +62,12 @@ if [ -z ${UNAME+x} ]; then
           'arch') export PKG_MGR='pacman' ;;
           'debian') export PKG_MGR='apt-get' ;;
           'opensuse') export PKG_MGR='zypper' ;;
-          'rhel') export PKG_MGR='dnf' ;;
+          'rhel'|'rocky'|'rockylinux'|'almalinux'|'centos'|'fedora') export PKG_MGR='dnf' ;;
           *)
             case "${ID_LIKE}" in
               'arch') export PKG_MGR='pacman' ;;
               *'debian'*) export PKG_MGR='apt-get' ;;
-              *'rhel'*) export PKG_MGR='dnf' ;;
+              *'rhel'*|*'fedora'*|*'centos'*) export PKG_MGR='dnf' ;;
               *'suse'*) export PKG_MGR='zypper' ;;
               *) ;;
             esac

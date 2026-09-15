@@ -31,7 +31,7 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
 fi
 
 if command -v kubectl >/dev/null 2>&1; then
-  kubectl --version
+  kubectl version --client
 else
   echo "kubectl not found"
   exit 1

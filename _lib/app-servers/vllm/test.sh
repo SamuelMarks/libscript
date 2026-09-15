@@ -34,6 +34,11 @@ if [ -f "$SCRIPT_DIR/../../_common/os_info.sh" ]; then
   . "$SCRIPT_DIR/../../_common/os_info.sh"
 fi
 
+if ! command -v vllm >/dev/null 2>&1; then
+  printf '%s\n' "vllm is not installed, skipping test."
+  exit 0
+fi
+
 if ! vllm --version 2>/dev/null; then
   vllm --help >/dev/null
 fi

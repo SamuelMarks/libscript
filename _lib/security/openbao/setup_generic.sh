@@ -138,8 +138,12 @@ case "$ACTION" in
     ;;
   install)
     if [ "$OPENBAO_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "openbao"
-    elif [ "$OPENBAO_INSTALL_METHOD" = "mise" ]; then
+      if ! libscript_depends "openbao"; then
+        log_info "System package manager does not have openbao. Falling back to native..."
+        OPENBAO_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+    if [ "$OPENBAO_INSTALL_METHOD" = "mise" ]; then
       mise install "openbao@${VERSION}"
     elif [ "$OPENBAO_INSTALL_METHOD" = "asdf" ]; then
       asdf install openbao "${VERSION}"

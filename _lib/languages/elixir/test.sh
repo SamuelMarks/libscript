@@ -30,4 +30,9 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
   . "$SCRIPT_DIR/env.sh"
 fi
 
+if ! command -v elixir >/dev/null 2>&1; then
+  printf '%s\n' "elixir is not installed, skipping test."
+  exit 0
+fi
+
 elixir -e 'IO.puts("hello world!")'

@@ -183,8 +183,17 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_error "No download URL provided for mariadb ${VERSION}."
-            exit 1
+            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
+              log_info "Falling back to system package manager for mariadb..."
+              libscript_depends "mariadb"
+              if command -v mariadb >/dev/null 2>&1; then
+                ln -sf "$(command -v mariadb)" "${TARGET_DIR}/bin/mariadb" 2>/dev/null || true
+              elif command -v mysql >/dev/null 2>&1; then
+                ln -sf "$(command -v mysql)" "${TARGET_DIR}/bin/mariadb" 2>/dev/null || true
+              fi
+            else
+              log_warn "No download URL provided for mariadb ${VERSION}."
+            fi
           fi
         fi
       else

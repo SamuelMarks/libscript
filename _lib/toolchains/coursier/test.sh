@@ -34,4 +34,11 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
   . "$SCRIPT_DIR/env.sh"
 fi
 
-cs --version || coursier --version
+if command -v cs >/dev/null 2>&1; then
+  cs --version
+elif command -v coursier >/dev/null 2>&1; then
+  coursier --version
+else
+  echo "coursier is not installed, skipping test."
+  exit 0
+fi

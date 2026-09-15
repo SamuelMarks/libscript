@@ -7,5 +7,5 @@
   "provides": ["database", "mongodb"],
   "conflicts": [],
   "os_whitelist": ["linux", "darwin"],
-  "os_blacklist": ["freebsd"]
+  "os_blacklist": ["freebsd", "alpine"]
 }

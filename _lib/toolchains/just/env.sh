@@ -30,6 +30,6 @@ else
   EXACT_VERSION="${JUST_VERSION}"
 fi
 
-export JUST_ROOT="${LIBSCRIPT_HOME:-$HOME/.libscript}/just/${JUST_VERSION:-latest}"
+export JUST_ROOT="${LIBSCRIPT_HOME:-$HOME/.libscript}/just/${EXACT_VERSION}"
 export PATH="$JUST_ROOT/bin:${PATH}"
 

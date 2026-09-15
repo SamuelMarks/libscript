@@ -55,7 +55,7 @@ libscript_fetch_checksum() {
 
   # 3. GitHub Releases (general)
   if printf '%s\n' "$url" | grep -q "github.com/.*/releases/download/"; then
-     base_export url="${url%/*}"
+     base_url="${url%/*}"
      filename="${url##*/}"
      sums="$(curl -sL "${base_url:-}/SHASUMS256.txt")"
      if [ -n "$sums" ] && ! printf '%s\n' "$sums" | grep -q "Not Found"; then
@@ -72,9 +72,12 @@ libscript_fetch_checksum() {
   # 4. Fallback checking if .sha256 file exists
   sha_url="${url}.sha256"
   sha_content="$(curl -sL "${sha_url:-}" || true)"
-  if [ -n "$sha_content" ] && ! printf '%s\n' "$sha_content" | grep -i "Not Found" >/dev/null; then
-      printf '%s\n' "$sha_content" | awk '{print $1}'
-      return 0
+  if [ -n "$sha_content" ] && ! printf '%s\n' "$sha_content" | grep -iqE "Not Found|NoSuchKey|<html|<xml"; then
+      candidate_hash="$(printf '%s\n' "$sha_content" | grep -oE '[0-9a-fA-F]{64}' | head -n 1 || true)"
+      if [ -n "$candidate_hash" ]; then
+          printf '%s\n' "$candidate_hash"
+          return 0
+      fi
   fi
 
   return 1

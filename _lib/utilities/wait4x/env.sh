@@ -30,6 +30,6 @@ else
   EXACT_VERSION="${WAIT4X_VERSION}"
 fi
 
-export WAIT4X_ROOT="${LIBSCRIPT_HOME:-$HOME/.libscript}/wait4x/${WAIT4X_VERSION:-latest}"
+export WAIT4X_ROOT="${LIBSCRIPT_HOME:-$HOME/.libscript}/wait4x/${EXACT_VERSION}"
 export PATH="$WAIT4X_ROOT/bin:${PATH}"
 

@@ -184,9 +184,16 @@ libscript_depends() {
   if [ -n "${pkgs_to_install}" ]; then
     # log_info "Installing packages (${PKG_MGR}): "${pkgs_to_install}""
     _lockdir="${TMPDIR:-/tmp}/libscript_pkg_mgr_lock"
-    _lock_timeout=600
+    _lock_timeout=30
     _lock_count=0
     while ! mkdir "$_lockdir" 2>/dev/null; do
+      if [ -f "$_lockdir/pid" ]; then
+        _lpid=$(cat "$_lockdir/pid" 2>/dev/null || true)
+        if [ -n "$_lpid" ] && ! kill -0 "$_lpid" 2>/dev/null; then
+          rm -rf "$_lockdir" 2>/dev/null || true
+          continue
+        fi
+      fi
       _lock_count=$((_lock_count + 1))
       if [ "$_lock_count" -gt "$_lock_timeout" ]; then
         log_warn "Lock $_lockdir expired or stale; removing and acquiring lock."
@@ -197,6 +204,7 @@ libscript_depends() {
       fi
       sleep 1
     done
+    printf '%s\n' "$$" > "$_lockdir/pid" 2>/dev/null || true
     
     # Run in a subshell so if it exits early due to set -e, we can still remove the lock
     (

@@ -209,8 +209,8 @@ map_package() {
       ;;
     'sqlite'|'sqlite3')
       case "${PKG_MGR}" in
-        'apk') printf 'sqlite\n' ;;
-        'apt-get'|'dnf'|'yum'|'zypper'|'pacman') printf 'sqlite3\n' ;;
+        'apk'|'dnf'|'yum') printf 'sqlite\n' ;;
+        'apt-get'|'zypper'|'pacman') printf 'sqlite3\n' ;;
         'brew') printf 'sqlite\n' ;;
         *) printf 'sqlite3\n' ;;
       esac
@@ -618,6 +618,13 @@ map_package() {
       case "${PKG_MGR}" in
         'apk') printf 'docker docker-cli\n' ;;
         'apt-get') printf 'docker.io docker-compose\n' ;;
+        'dnf'|'yum')
+          if command -v dnf >/dev/null 2>&1 && dnf info docker-ce >/dev/null 2>&1; then
+            printf 'docker-ce docker-ce-cli containerd.io\n'
+          else
+            printf 'podman-docker\n'
+          fi
+          ;;
         'winget') printf 'Docker.DockerCli\n' ;;
         'brew') printf 'docker\n' ;;
         *) printf 'docker\n' ;;

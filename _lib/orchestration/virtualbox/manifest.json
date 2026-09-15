@@ -7,7 +7,7 @@
   "provides": ["virtualbox", "vbox", "virtualization"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": [],
+  "os_blacklist": ["alpine"],
   "arch_blacklist": ["arm64", "aarch64"],
   "ports": []
 }

@@ -27,7 +27,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 
 export PACKAGE_NAME="kubectl"
-SCRIPT_NAME="${SCRIPT_DIR}/../../_common/component_core.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/component_core.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"

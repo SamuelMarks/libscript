@@ -7,6 +7,6 @@
   "provides": ["scala", "java", "coursier", "cs"],
   "conflicts": [],
   "os_whitelist": ["linux", "darwin"],
-  "os_blacklist": [],
+  "os_blacklist": ["alpine"],
   "ports": []
 }

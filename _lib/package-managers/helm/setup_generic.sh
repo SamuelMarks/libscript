@@ -140,8 +140,12 @@ case "$ACTION" in
     ;;
   install)
     if [ "$HELM_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "helm" || log_info "helm is not supported or failed to install natively on this OS."
-    elif [ "$HELM_INSTALL_METHOD" = "mise" ]; then
+      if ! libscript_depends "helm"; then
+        log_info "System package manager does not have helm. Falling back to native..."
+        HELM_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+    if [ "$HELM_INSTALL_METHOD" = "mise" ]; then
       mise install "helm@${VERSION}"
     elif [ "$HELM_INSTALL_METHOD" = "asdf" ]; then
       asdf install helm "${VERSION}"
@@ -171,13 +175,24 @@ case "$ACTION" in
             fi
           fi
         else
+          if [ -z "${HELM_DOWNLOAD_URL:-}" ]; then
+            _hver="3.16.4"
+            [ "${EXACT_VERSION:-}" != "latest" ] && [ "${EXACT_VERSION:-}" != "lts" ] && [ -n "${EXACT_VERSION:-}" ] && _hver="${EXACT_VERSION}"
+            _harch="amd64"
+            case "$(uname -m)" in
+              aarch64|arm64) _harch="arm64" ;;
+              *) _harch="amd64" ;;
+            esac
+            _hos="$(uname -s | tr '[:upper:]' '[:lower:]')"
+            HELM_DOWNLOAD_URL="https://get.helm.sh/helm-v${_hver}-${_hos}-${_harch}.tar.gz"
+          fi
           if [ -n "${HELM_DOWNLOAD_URL:-}" ]; then
             TEMP_FILE=$(mktemp)
             libscript_download "${HELM_DOWNLOAD_URL:-}" "${TEMP_FILE}"
             if case "${HELM_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}/bin" --strip-components=1 || true
             elif case "${HELM_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}/bin" || true
             else
               cp "${TEMP_FILE}" "${TARGET_DIR}/bin/helm" || true
               chmod +x "${TARGET_DIR}/bin/helm" || true

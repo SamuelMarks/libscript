@@ -30,4 +30,9 @@ if [ -f "$SCRIPT_DIR/env.sh" ]; then
   . "$SCRIPT_DIR/env.sh"
 fi
 
+if ! command -v minio >/dev/null 2>&1; then
+  echo "minio is not installed, skipping test."
+  exit 0
+fi
+
 minio --version

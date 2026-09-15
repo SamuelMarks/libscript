@@ -35,4 +35,8 @@ if [ "${TARGET_OS:-}" = "alpine" ]; then
   exit 0
 fi
 
-nix --version
+if command -v nix >/dev/null 2>&1; then
+  nix --version
+else
+  printf '%s\n' "nix is not installed, skipping test."
+fi

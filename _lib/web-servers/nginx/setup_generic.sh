@@ -169,7 +169,14 @@ case "$ACTION" in
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
       export SCRIPT_NAME
       . "${SCRIPT_NAME}"
-      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-nginx}}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-}"
+      if [ -z "$service_name" ]; then
+        if [ "$NGINX_INSTALL_METHOD" = "system" ]; then
+          service_name="nginx"
+        else
+          service_name="libscript_${PACKAGE_NAME:-nginx}"
+        fi
+      fi
       libscript_service "$ACTION" "$service_name" "$@"
     else
       log_info "$ACTION not natively implemented for $NGINX_INSTALL_METHOD."

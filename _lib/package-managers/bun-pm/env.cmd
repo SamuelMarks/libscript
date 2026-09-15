@@ -19,3 +19,9 @@ if "%BUN_PM_VERSION%"=="" (
 )
 
 set "PATH=%LIBSCRIPT_HOME%\bun-pm\%BUN_PM_VERSION%\bin;%PATH%"
+
+if exist "%~dp0..\..\languages\bun\env.cmd" (
+    call "%~dp0..\..\languages\bun\env.cmd"
+) else (
+    set "PATH=%LIBSCRIPT_HOME%\bun\latest\bin;%USERPROFILE%\.bun\bin;%PATH%"
+)

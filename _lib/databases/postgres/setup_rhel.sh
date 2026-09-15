@@ -40,17 +40,30 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
-REDHAT_SUPPORT_PRODUCT_VERSION="$(. /etc/os-release; printf '%s' "${REDHAT_SUPPORT_PRODUCT_VERSION}")"
-export REDHAT_SUPPORT_PRODUCT_VERSION
-VER="${REDHAT_SUPPORT_PRODUCT_VERSION%%.*}"
-pkg_mgr install \
-  'https://download.postgresql.org/pub/repos/yum/reporpms/EL-'"${VER}"'-'"${ARCH}"'/pgdg-redhat-repo-latest.noarch.rpm'
-pkg_mgr -qy module disable 'postgresql'
-pkg_mgr install 'postgresql'"${POSTGRES_VERSION}"'-server'
-sudo '/usr/pgsql-'"${POSTGRES_VERSION}"'/bin/postgresql-'"${POSTGRES_VERSION}"'-setup' initdb
-SERVICE_NAME="${LIBSCRIPT_SERVICE_NAME:-postgresql-${POSTGRES_VERSION}}"
-sudo systemctl enable "${SERVICE_NAME}"
-sudo systemctl start "${SERVICE_NAME}"
+if [ -n "${POSTGRES_VERSION:-}" ] && [ "${POSTGRES_VERSION}" != "latest" ]; then
+  REDHAT_SUPPORT_PRODUCT_VERSION="$(. /etc/os-release; printf '%s' "${REDHAT_SUPPORT_PRODUCT_VERSION:-9}")"
+  VER="${REDHAT_SUPPORT_PRODUCT_VERSION%%.*}"
+  priv dnf install -y \
+    'https://download.postgresql.org/pub/repos/yum/reporpms/EL-'"${VER}"'-'"${ARCH}"'/pgdg-redhat-repo-latest.noarch.rpm' 2>/dev/null || true
+  priv dnf -qy module disable 'postgresql' 2>/dev/null || true
+  if priv dnf install -y 'postgresql'"${POSTGRES_VERSION}"'-server' 2>/dev/null; then
+    SERVICE_NAME="${LIBSCRIPT_SERVICE_NAME:-postgresql-${POSTGRES_VERSION}}"
+    if [ -x '/usr/pgsql-'"${POSTGRES_VERSION}"'/bin/postgresql-'"${POSTGRES_VERSION}"'-setup' ]; then
+      priv '/usr/pgsql-'"${POSTGRES_VERSION}"'/bin/postgresql-'"${POSTGRES_VERSION}"'-setup' initdb || true
+    fi
+  else
+    priv dnf install -y postgresql-server postgresql-contrib
+    SERVICE_NAME="${LIBSCRIPT_SERVICE_NAME:-postgresql}"
+    priv /usr/bin/postgresql-setup --initdb 2>/dev/null || true
+  fi
+else
+  priv dnf install -y postgresql-server postgresql-contrib
+  SERVICE_NAME="${LIBSCRIPT_SERVICE_NAME:-postgresql}"
+  priv /usr/bin/postgresql-setup --initdb 2>/dev/null || true
+fi
+
+priv systemctl enable "${SERVICE_NAME}" 2>/dev/null || true
+priv systemctl start "${SERVICE_NAME}" 2>/dev/null || true
 
 export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091

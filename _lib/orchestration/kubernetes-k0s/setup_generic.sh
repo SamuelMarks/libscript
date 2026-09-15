@@ -183,7 +183,23 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_warn "No download URL provided for kubernetes-k0s ${VERSION}."
+            if [ "$UNAME_LOWER" = "linux" ]; then
+              _actual_version="${EXACT_VERSION}"
+              if [ "${_actual_version}" = "latest" ] || [ "${_actual_version}" = "" ]; then
+                _actual_version=$(curl -sI https://github.com/k0sproject/k0s/releases/latest | grep -i "^location:" | sed 's|^.*/tag/\(v.*\)|\1|' | tr -d '\r\n')
+              fi
+              case "${ARCH:-}" in
+                aarch64|arm64) _k0s_arch="arm64" ;;
+                *) _k0s_arch="amd64" ;;
+              esac
+              DL_URL="https://github.com/k0sproject/k0s/releases/download/${_actual_version}/k0s-${_actual_version}-${_k0s_arch}"
+              mkdir -p "${TARGET_DIR}/bin"
+              TEMP_FILE="${TARGET_DIR}/bin/k0s"
+              libscript_download "$DL_URL" "$TEMP_FILE" || true
+              chmod +x "$TEMP_FILE" || true
+            else
+              log_warn "No download URL provided for kubernetes-k0s ${VERSION}."
+            fi
           fi
         fi
       else

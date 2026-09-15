@@ -135,6 +135,10 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ "$UNAME_LOWER" = "linux" ] && { [ "${ARCH:-$(uname -m)}" = "aarch64" ] || [ "${ARCH:-$(uname -m)}" = "arm64" ]; }; then
+      log_warn "HashiCorp does not provide Vagrant binaries for Linux aarch64."
+      exit 0
+    fi
     log_info "Installing Vagrant via ${VAGRANT_INSTALL_METHOD}..."
     if [ "$VAGRANT_INSTALL_METHOD" = "system" ]; then
       case "${PKG_MGR}" in
@@ -145,11 +149,18 @@ case "$ACTION" in
         'brew')
           brew install hashicorp/tap/vagrant 2>/dev/null || brew install --cask vagrant
           ;;
+        'dnf'|'yum')
+          if ! libscript_depends "vagrant"; then
+            log_info "Falling back to native HashiCorp binary for Vagrant..."
+            VAGRANT_INSTALL_METHOD="libscript_native"
+          fi
+          ;;
         *)
           libscript_depends "vagrant"
           ;;
       esac
-    elif [ "$VAGRANT_INSTALL_METHOD" = "libscript_native" ]; then
+    fi
+    if [ "$VAGRANT_INSTALL_METHOD" = "libscript_native" ]; then
       ver="2.4.3"
       if [ "$VAGRANT_VERSION" != "latest" ]; then
         ver="$VAGRANT_VERSION"

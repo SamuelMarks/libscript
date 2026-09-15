@@ -207,7 +207,16 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_warn "No download URL provided for valkey ${VERSION}."
+            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
+              log_info "Falling back to system package manager for valkey..."
+              libscript_depends "valkey"
+              if command -v valkey-server >/dev/null 2>&1; then
+                ln -sf "$(command -v valkey-server)" "${TARGET_DIR}/bin/valkey-server"
+                ln -sf "$(command -v valkey-cli)" "${TARGET_DIR}/bin/valkey-cli" 2>/dev/null || true
+              fi
+            else
+              log_warn "No download URL provided for valkey ${VERSION}."
+            fi
           fi
         fi
       else

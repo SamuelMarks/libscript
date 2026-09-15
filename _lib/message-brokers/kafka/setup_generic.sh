@@ -139,8 +139,12 @@ case "$ACTION" in
     ;;
   install)
     if [ "$KAFKA_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "kafka"
-    elif [ "$KAFKA_INSTALL_METHOD" = "mise" ]; then
+      if ! libscript_depends "kafka"; then
+        log_info "System package manager does not have kafka. Falling back to native..."
+        KAFKA_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+    if [ "$KAFKA_INSTALL_METHOD" = "mise" ]; then
       mise install "kafka@${VERSION}"
     elif [ "$KAFKA_INSTALL_METHOD" = "asdf" ]; then
       asdf install kafka "${VERSION}"

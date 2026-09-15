@@ -139,8 +139,12 @@ case "$ACTION" in
     ;;
   install)
     if [ "$GITLAB_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "gitlab"
-    elif [ "$GITLAB_INSTALL_METHOD" = "mise" ]; then
+      if ! libscript_depends "gitlab"; then
+        log_info "System package manager does not have gitlab. Falling back to native..."
+        GITLAB_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+    if [ "$GITLAB_INSTALL_METHOD" = "mise" ]; then
       mise install "gitlab@${VERSION}"
     elif [ "$GITLAB_INSTALL_METHOD" = "asdf" ]; then
       asdf install gitlab "${VERSION}"

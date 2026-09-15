@@ -139,8 +139,12 @@ case "$ACTION" in
     ;;
   install)
     if [ "$OLLAMA_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "ollama"
-    elif [ "$OLLAMA_INSTALL_METHOD" = "mise" ]; then
+      if ! libscript_depends "ollama"; then
+        log_info "System package manager does not have ollama. Falling back to native..."
+        OLLAMA_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+    if [ "$OLLAMA_INSTALL_METHOD" = "mise" ]; then
       mise install "ollama@${VERSION}"
     elif [ "$OLLAMA_INSTALL_METHOD" = "asdf" ]; then
       asdf install ollama "${VERSION}"
@@ -192,12 +196,14 @@ case "$ACTION" in
               _actual_version=$(curl -sI https://github.com/ollama/ollama/releases/latest | grep -i "^location:" | sed 's|^.*/tag/\(v.*\)|\1|' | tr -d '\r\n')
             fi
             if [ "$OS_ARCH" = "aarch64" ]; then
-              DL_URL="https://github.com/ollama/ollama/releases/download/${_actual_version}/ollama-linux-arm64"
+              DL_URL="https://github.com/ollama/ollama/releases/download/${_actual_version}/ollama-linux-arm64.tgz"
             else
-              DL_URL="https://github.com/ollama/ollama/releases/download/${_actual_version}/ollama-linux-amd64"
+              DL_URL="https://github.com/ollama/ollama/releases/download/${_actual_version}/ollama-linux-amd64.tgz"
             fi
-            curl -fsSL "$DL_URL" -o "${TARGET_DIR}/bin/ollama" || true
-            chmod +x "${TARGET_DIR}/bin/ollama" || true
+            if curl -fsSL "$DL_URL" -o "$TEMP_FILE"; then
+              tar -xzf "$TEMP_FILE" -C "${TARGET_DIR}" || true
+              chmod +x "${TARGET_DIR}/bin/ollama" 2>/dev/null || true
+            fi
             rm -f "${TEMP_FILE}"
           fi
         fi

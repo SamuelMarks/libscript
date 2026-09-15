@@ -123,15 +123,25 @@ EOF_README
   )
 
   if [ ! -f "${_test_tmp}/tests_tmp/compA.linux.debian.success" ]; then
-    printf 'Error: compA.linux.debian.success not created from category run
-' >&2
+    printf 'Error: compA.linux.debian.success not created from category run\n' >&2
+    rm -rf "${_test_tmp}"
+    exit 1
+  fi
+
+  # Test 4: Dry run with Rocky Linux
+  (
+    cd "${_test_tmp}"
+    "./tests/run_native_tests.sh" --dry-run --os rockylinux compA
+  )
+
+  if [ ! -f "${_test_tmp}/tests_tmp/compA.linux.rhel.success" ]; then
+    printf 'Error: compA.linux.rhel.success not created for rockylinux\n' >&2
     rm -rf "${_test_tmp}"
     exit 1
   fi
 
   rm -rf "${_test_tmp}"
-  printf 'run_native_tests.sh tests passed successfully.
-'
+  printf 'run_native_tests.sh tests passed successfully.\n'
 }
 
 run_tests

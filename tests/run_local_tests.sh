@@ -46,7 +46,7 @@ while [ $# -gt 0 ]; do
             echo "                 If no targets are provided, defaults to: databases languages toolchains"
             echo "  all            Run tests across all categories in the _lib directory."
             echo "  --os OS_NAME   The OS environment to use from the vagrant/ folder (default: alpine-3.24)."
-            echo "                 Example: --os debian-13"
+            echo "                 Example: --os debian-13, --os rockylinux-10.2"
             echo "  --reuse-vm     Reuse a running VM instead of creating/destroying a new VM per target."
             echo "  --fast         Alias for --reuse-vm."
             echo "  --help, -h, /? Show this help message."
@@ -116,7 +116,7 @@ OS_FAMILY=""
 case "$OS_ID" in
     alpine) OS_TAG="linux.alpine"; OS_FAMILY="linux" ;;
     debian) OS_TAG="linux.debian"; OS_FAMILY="linux" ;;
-    rhel|almalinux|centos|fedora) OS_TAG="linux.rhel"; OS_FAMILY="linux" ;;
+    rhel|almalinux|centos|fedora|rocky|rockylinux) OS_TAG="linux.rhel"; OS_FAMILY="linux" ;;
     freebsd|bsd) OS_TAG="freebsd"; OS_FAMILY="bsd" ;;
     windows) OS_TAG="windows"; OS_FAMILY="windows" ;;
     *) OS_TAG="$OS_ID"; OS_FAMILY="" ;;
@@ -130,6 +130,8 @@ if [ "$REUSE_VM" = "1" ]; then
         vagrant up --no-provision
         if [ "$OS_ID" = "debian" ] || [ "$OS_ID" = "ubuntu" ]; then
             vagrant ssh --no-tty -c "sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get install -qq -y apt-utils curl jq rsync" >/dev/null 2>&1 || true
+        elif [ "$OS_ID" = "rhel" ] || [ "$OS_ID" = "almalinux" ] || [ "$OS_ID" = "centos" ] || [ "$OS_ID" = "fedora" ] || [ "$OS_ID" = "rocky" ] || [ "$OS_ID" = "rockylinux" ]; then
+            vagrant ssh --no-tty -c "sudo dnf install -y -q curl jq rsync findutils which" >/dev/null 2>&1 || true
         fi
     fi
     echo "=== Syncing LibScript repository to $OS_TARGET ==="

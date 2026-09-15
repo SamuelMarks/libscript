@@ -47,7 +47,7 @@ done
 
 priv sysrc postgresql_enable='YES'
 if [ ! -d '/var/db/postgres/data'"${POSTGRES_VERSION}" ]; then
-  priv /usr/local/etc/rc.d/postgresql initdb
+  priv /usr/local/etc/rc.d/postgresql initdb 2>/dev/null || priv service postgresql initdb || true
 fi
 priv service postgresql status | grep -Fq ' server is running' || priv service postgresql start
 

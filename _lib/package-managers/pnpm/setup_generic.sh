@@ -187,16 +187,17 @@ case "$ACTION" in
           fi
           TEMP_FILE=$(mktemp)
           libscript_depends "curl" "tar" || true
-          if curl -sSLf "$URL" -o "$TEMP_FILE.tar.gz"; then
+          URL_RAW="https://github.com/pnpm/pnpm/releases/latest/download/pnpm-${OS}-${ARCH}"
+          [ "${EXACT_VERSION}" != "latest" ] && URL_RAW="https://github.com/pnpm/pnpm/releases/download/v${EXACT_VERSION}/pnpm-${OS}-${ARCH}"
+          if curl -sSLf "$URL_RAW" -o "${TARGET_DIR}/bin/pnpm"; then
+            chmod +x "${TARGET_DIR}/bin/pnpm"
+          elif curl -sSLf "$URL" -o "$TEMP_FILE.tar.gz"; then
             tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" "pnpm" 2>/dev/null || tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" || true
             rm -f "$TEMP_FILE.tar.gz"
+            chmod +x "${TARGET_DIR}/bin/pnpm" || true
           else
-            URL_RAW="https://github.com/pnpm/pnpm/releases/download/v${EXACT_VERSION}/pnpm-${OS}-${ARCH}"
-            if ! curl -sSLf "$URL_RAW" -o "${TARGET_DIR}/bin/pnpm"; then
-              log_error "Failed to download pnpm from $URL and $URL_RAW"
-              rm -f "$TEMP_FILE.tar.gz" "$TEMP_FILE"
-              exit 1
-            fi
+            log_error "Failed to download pnpm from $URL_RAW or $URL"
+            exit 1
           fi
           chmod +x "${TARGET_DIR}/bin/pnpm"
           rm -f "$TEMP_FILE"

@@ -110,7 +110,7 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    
+    resolve_exact_version
     TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/kubectl/${EXACT_VERSION}"
     if [ ! -d "${TARGET_DIR}" ]; then
       log_info "Installing kubectl ${VERSION} natively to ${TARGET_DIR}..."
@@ -129,6 +129,17 @@ case "$ACTION" in
           fi
         fi
       else
+        if [ -z "${KUBECTL_DOWNLOAD_URL:-}" ]; then
+          _kver="1.31.0"
+          [ "${EXACT_VERSION:-}" != "latest" ] && [ "${EXACT_VERSION:-}" != "lts" ] && [ -n "${EXACT_VERSION:-}" ] && _kver="${EXACT_VERSION}"
+          _karch="amd64"
+          case "$(uname -m)" in
+            aarch64|arm64) _karch="arm64" ;;
+            *) _karch="amd64" ;;
+          esac
+          _kos="$(uname -s | tr '[:upper:]' '[:lower:]')"
+          KUBECTL_DOWNLOAD_URL="https://dl.k8s.io/release/v${_kver}/bin/${_kos}/${_karch}/kubectl"
+        fi
         if [ -n "${KUBECTL_DOWNLOAD_URL:-}" ]; then
           TEMP_FILE=$(mktemp)
           libscript_download "${KUBECTL_DOWNLOAD_URL:-}" "${TEMP_FILE}"

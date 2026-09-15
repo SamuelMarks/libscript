@@ -27,6 +27,10 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 if ! command -v vagrant >/dev/null 2>&1; then
+  if [ "$(uname -m)" = "aarch64" ] && [ "$(uname -s)" = "Linux" ]; then
+    printf '%s\n' "Vagrant is unsupported upstream on Linux aarch64, skipping."
+    exit 0
+  fi
   printf '%s
 ' "vagrant binary not found in PATH" >&2
   exit 1

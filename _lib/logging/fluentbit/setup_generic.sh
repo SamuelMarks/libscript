@@ -139,8 +139,12 @@ case "$ACTION" in
     ;;
   install)
     if [ "$FLUENTBIT_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "fluentbit"
-    elif [ "$FLUENTBIT_INSTALL_METHOD" = "mise" ]; then
+      if ! libscript_depends "fluentbit"; then
+        log_info "System package manager does not have fluentbit. Falling back to native..."
+        FLUENTBIT_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+    if [ "$FLUENTBIT_INSTALL_METHOD" = "mise" ]; then
       mise install "fluentbit@${VERSION}"
     elif [ "$FLUENTBIT_INSTALL_METHOD" = "asdf" ]; then
       asdf install fluentbit "${VERSION}"

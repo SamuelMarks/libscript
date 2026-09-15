@@ -30,6 +30,6 @@ else
   EXACT_VERSION="${COURSIER_VERSION}"
 fi
 
-export COURSIER_ROOT="${LIBSCRIPT_HOME:-$HOME/.libscript}/coursier/${COURSIER_VERSION:-latest}"
+export COURSIER_ROOT="${LIBSCRIPT_HOME:-$HOME/.libscript}/coursier/${EXACT_VERSION}"
 export PATH="$COURSIER_ROOT/bin:${PATH}"
 

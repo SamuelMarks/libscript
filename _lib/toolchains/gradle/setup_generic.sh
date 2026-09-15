@@ -133,8 +133,12 @@ case "$ACTION" in
   install)
 
     if [ "${GRADLE_INSTALL_METHOD}" = "system" ]; then
-      libscript_depends 'gradle'
-    elif [ "${GRADLE_INSTALL_METHOD}" = "mise" ]; then
+      if ! libscript_depends 'gradle'; then
+        log_info "System package manager does not have gradle. Falling back to native..."
+        GRADLE_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+    if [ "${GRADLE_INSTALL_METHOD}" = "mise" ]; then
       mise install "gradle@${GRADLE_VERSION}"
     elif [ "${GRADLE_INSTALL_METHOD}" = "asdf" ]; then
       asdf install gradle "${GRADLE_VERSION}"
@@ -168,13 +172,25 @@ case "$ACTION" in
           fi
         fi
       else
+        libscript_depends "java" "unzip" || true
+        if [ -z "${GRADLE_DOWNLOAD_URL:-}" ]; then
+          _gver="8.10.2"
+          [ "${EXACT_VERSION:-}" != "latest" ] && [ "${EXACT_VERSION:-}" != "lts" ] && [ -n "${EXACT_VERSION:-}" ] && _gver="${EXACT_VERSION}"
+          GRADLE_DOWNLOAD_URL="https://services.gradle.org/distributions/gradle-${_gver}-bin.zip"
+        fi
         if [ -n "${GRADLE_DOWNLOAD_URL:-}" ]; then
           TEMP_FILE=$(mktemp)
           libscript_download "${GRADLE_DOWNLOAD_URL:-}" "${TEMP_FILE}"
           if case "${GRADLE_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
             tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
           elif case "${GRADLE_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-            unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+            EXTRACT_DIR=$(mktemp -d)
+            unzip -q "${TEMP_FILE}" -d "${EXTRACT_DIR}" || true
+            top_dir=$(find "${EXTRACT_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+            if [ -n "$top_dir" ]; then
+              cp -R "${top_dir}/." "${TARGET_DIR}/"
+            fi
+            rm -rf "${EXTRACT_DIR}"
           else
             cp "${TEMP_FILE}" "${TARGET_DIR}/bin/gradle" || true
             chmod +x "${TARGET_DIR}/bin/gradle" || true

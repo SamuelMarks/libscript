@@ -207,7 +207,16 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_warn "No download URL provided for redis ${VERSION}."
+            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
+              log_info "Falling back to system package manager for redis..."
+              libscript_depends "redis"
+              if command -v redis-server >/dev/null 2>&1; then
+                ln -sf "$(command -v redis-server)" "${TARGET_DIR}/bin/redis-server"
+                ln -sf "$(command -v redis-cli)" "${TARGET_DIR}/bin/redis-cli" 2>/dev/null || true
+              fi
+            else
+              log_warn "No download URL provided for redis ${VERSION}."
+            fi
           fi
         fi
       else

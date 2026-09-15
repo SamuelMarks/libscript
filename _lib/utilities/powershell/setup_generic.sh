@@ -134,8 +134,12 @@ case "$ACTION" in
   install)
 
     if [ "${POWERSHELL_INSTALL_METHOD}" = "system" ]; then
-      libscript_depends 'powershell'
-    elif [ "${POWERSHELL_INSTALL_METHOD}" = "mise" ]; then
+      if ! libscript_depends 'powershell'; then
+        log_info "System package manager does not have powershell. Falling back to native..."
+        POWERSHELL_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+    if [ "${POWERSHELL_INSTALL_METHOD}" = "mise" ]; then
       mise install "powershell@${POWERSHELL_VERSION}"
     elif [ "${POWERSHELL_INSTALL_METHOD}" = "asdf" ]; then
       asdf install powershell "${POWERSHELL_VERSION}"

@@ -6,8 +6,8 @@ those boxes within your `Vagrantfile`, and execute LibScript tests across all co
 ## 1. Using the Custom Bento Fork
 
 Building the required Vagrant boxes for **Windows** (Windows 11, Windows Server 2025), **Alpine**
-(Alpine 3.24), latest **FreeBSD** (FreeBSD 15 / 15.1), and latest **Debian** (Debian 13 Trixie)
-requires the custom Bento fork:
+(Alpine 3.24), latest **FreeBSD** (FreeBSD 15 / 15.1), latest **Debian** (Debian 13 Trixie), and
+**Rocky Linux** (Rocky Linux 10.2) requires the custom Bento fork:
 
 - **Repository**:
   [https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64](https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64)
@@ -57,6 +57,9 @@ bundle exec bin/bento build -o qemu.vm os_pkrvars/debian/debian-13-aarch64
 
 # FreeBSD 15.1 (aarch64)
 bundle exec bin/bento build -o qemu.vm os_pkrvars/freebsd/freebsd-15-aarch64
+
+# Rocky Linux 10.2 (aarch64)
+bundle exec bin/bento build -o qemu.vm os_pkrvars/rockylinux/rockylinux-10.2-aarch64
 ```
 
 #### On x86_64 Hosts (Linux, Windows, Intel macOS)
@@ -75,6 +78,9 @@ bundle exec bin/bento build -o qemu.vm os_pkrvars/debian/debian-13-x86_64
 
 # FreeBSD 15.1 (x86_64)
 bundle exec bin/bento build -o qemu.vm os_pkrvars/freebsd/freebsd-15-x86_64
+
+# Rocky Linux 10.2 (x86_64)
+bundle exec bin/bento build -o qemu.vm os_pkrvars/rockylinux/rockylinux-10.2-x86_64
 ```
 
 After the build completes, Vagrant `.box` files will be generated in the `builds/build_complete/`
@@ -104,13 +110,17 @@ vagrant box add --name bento/debian-13 --provider libvirt builds/build_complete/
 # Add FreeBSD 15.1
 vagrant box add --name bento/freebsd-15.1 --provider qemu builds/build_complete/freebsd-15.*.qemu.box
 vagrant box add --name bento/freebsd-15.1 --provider libvirt builds/build_complete/freebsd-15.*.libvirt.box
+
+# Add Rocky Linux 10.2
+vagrant box add --name bento/rockylinux-10.2 --provider qemu builds/build_complete/rockylinux-10.2-*.qemu.box
+vagrant box add --name bento/rockylinux-10.2 --provider libvirt builds/build_complete/rockylinux-10.2-*.libvirt.box
 ```
 
 ## 3. Using the Boxes in a Vagrantfile
 
 Once the boxes are added, you can instantiate VMs using them.
 
-### POSIX Guests (Alpine, Debian, FreeBSD)
+### POSIX Guests (Alpine, Debian, FreeBSD, Rocky Linux)
 
 Sample `Vagrantfile` mounting the LibScript repository (via `rsync`):
 
@@ -124,7 +134,7 @@ repo_root = ENV['LIBSCRIPT_REPO_ROOT'] || "."
 Vagrant.configure("2") do |config|
   config.vm.define "libscript-test-node" do |t|
     # Reference the box you just added
-    t.vm.box = "bento/alpine-3.24" # Or "bento/debian-13", or "bento/freebsd-15.1"
+    t.vm.box = "bento/alpine-3.24" # Or "bento/debian-13", "bento/freebsd-15.1", or "bento/rockylinux-10.2"
 
     t.vm.provider "qemu" do |qe|
       qe.net_mode = :user

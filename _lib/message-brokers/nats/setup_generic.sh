@@ -139,8 +139,12 @@ case "$ACTION" in
     ;;
   install)
     if [ "$NATS_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "nats"
-    elif [ "$NATS_INSTALL_METHOD" = "mise" ]; then
+      if ! libscript_depends "nats"; then
+        log_info "System package manager unavailable for nats. Falling back to native..."
+        NATS_INSTALL_METHOD="libscript_native"
+      fi
+    fi
+    if [ "$NATS_INSTALL_METHOD" = "mise" ]; then
       mise install "nats@${VERSION}"
     elif [ "$NATS_INSTALL_METHOD" = "asdf" ]; then
       asdf install nats "${VERSION}"
@@ -183,7 +187,30 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_warn "No download URL provided for nats ${VERSION}."
+            if [ "$UNAME_LOWER" = "linux" ]; then
+              _actual_version="${EXACT_VERSION}"
+              if [ "${_actual_version}" = "latest" ] || [ "${_actual_version}" = "" ]; then
+                _actual_version=$(curl -sI https://github.com/nats-io/nats-server/releases/latest | grep -i "^location:" | sed 's|^.*/tag/\(v.*\)|\1|' | tr -d '\r\n')
+              fi
+              case "${ARCH:-}" in
+                aarch64|arm64) _nats_arch="arm64" ;;
+                *) _nats_arch="amd64" ;;
+              esac
+              DL_URL="https://github.com/nats-io/nats-server/releases/download/${_actual_version}/nats-server-${_actual_version}-linux-${_nats_arch}.tar.gz"
+              TEMP_FILE=$(mktemp)
+              libscript_download "$DL_URL" "$TEMP_FILE"
+              tar -xzf "$TEMP_FILE" -C "$TARGET_DIR" --strip-components=1 || true
+              mkdir -p "${TARGET_DIR}/bin"
+              if [ -f "${TARGET_DIR}/nats-server" ]; then
+                mv "${TARGET_DIR}/nats-server" "${TARGET_DIR}/bin/nats-server"
+              fi
+              rm -f "$TEMP_FILE"
+            elif [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
+              log_info "Falling back to system package manager for nats..."
+              libscript_depends "nats-server"
+            else
+              log_warn "No download URL provided for nats ${VERSION}."
+            fi
           fi
         fi
       else
