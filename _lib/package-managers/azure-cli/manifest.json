@@ -3,6 +3,7 @@
   "name": "azure-cli",
   "provides": ["azure-cli"],
   "os_whitelist": ["all"],
+  "os_blacklist": ["sunos"],
   "category": "package-manager",
   "title": "Azure Cli",
   "description": "Bootstrap module for the `azure-cli` package manager."

@@ -8,6 +8,7 @@ This category contains components for self-hosted Git services, including GitLab
 
 - [gitea](./gitea/README.md)
 - [gitlab](./gitlab/README.md)
+- [utils](./utils/README.md)
 
 <!-- END_COMPONENTS -->
 

@@ -102,6 +102,9 @@ if [ -z ${UNAME+x} ]; then
       'FreeBSD')
         export PKG_MGR='pkg'
         TARGET_OS='freebsd' ;;
+      'SunOS'|'illumos'|'Solaris')
+        export PKG_MGR='pkg'
+        TARGET_OS='sunos' ;;
       *)
         >&2 printf 'Unimplemented for %s\n' "${UNAME}"
         exit 3
@@ -193,6 +196,13 @@ if [ -z "${INIT_SYS+x}" ]; then
             export INIT_SYS='systemv_init'
           elif [ -f '/sbib/init' ]; then
             export INIT_SYS='bsd_init'
+          fi
+          ;;
+      'SunOS'|'illumos'|'Solaris')
+          if command -v svcadm >/dev/null 2>&1; then
+            export INIT_SYS='smf'
+          else
+            export INIT_SYS='none'
           fi
           ;;
         *)

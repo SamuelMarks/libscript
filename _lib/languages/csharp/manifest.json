@@ -7,6 +7,6 @@
   "provides": ["compiler", "c#", "csharp", "dotnet"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": [],
+  "os_blacklist": ["sunos"],
   "ports": []
 }

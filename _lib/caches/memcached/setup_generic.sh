@@ -1,0 +1,296 @@
+#!/bin/sh
+# ## Overview
+# Generic setup module for memcached.
+# 
+# ## Usage
+# Execute this script to perform generic initialization steps for memcached.
+
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"
+' "${THIS_FILE}" >&2
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"
+' "${THIS_FILE}" >&2 ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
+' "$d")}"
+export DIR="${SCRIPT_DIR}"
+
+if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+fi
+
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+done
+
+MEMCACHED_INSTALL_METHOD="$(libscript_resolve_install_method "MEMCACHED")"
+ACTION="${ACTION:-install}"
+VERSION="${MEMCACHED_VERSION:-latest}"
+
+# ## resolve_exact_version
+# Resolves the exact numeric version from version aliases such as latest or stable.
+resolve_exact_version() {
+  if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
+    _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote memcached 2>/dev/null | tail -n 1)
+    if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
+      EXACT_VERSION="$_latest"
+    else
+      EXACT_VERSION="1.6.45"
+    fi
+  else
+    EXACT_VERSION="${VERSION:-latest}"
+  fi
+}
+
+if [ -z "${MEMCACHED_DOWNLOAD_URL:-}" ]; then
+  case "$TARGET_OS" in
+    windows|mingw|cygwin)
+      _tmp_ver="${VERSION:-latest}"
+      if [ "$_tmp_ver" = "latest" ] || [ "$_tmp_ver" = "lts" ] || [ "$_tmp_ver" = "stable" ]; then
+        _tmp_ver=$(git ls-remote --tags "https://github.com/SamuelMarks/memcached-windows" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -n 1 || true)
+        if [ -z "$_tmp_ver" ]; then
+          _tmp_ver="1.6.45"
+        fi
+      fi
+      _raw_ver="${_tmp_ver#v}"
+      MEMCACHED_DOWNLOAD_URL="https://github.com/SamuelMarks/memcached-windows/releases/download/v${_raw_ver}/Memcached-${_raw_ver}-win64.zip"
+      ;;
+  esac
+fi
+
+case "$ACTION" in
+  ls)
+    if [ "$MEMCACHED_INSTALL_METHOD" = "mise" ]; then
+      mise ls memcached || true
+    elif [ "$MEMCACHED_INSTALL_METHOD" = "asdf" ]; then
+      asdf list memcached || true
+    elif [ "$MEMCACHED_INSTALL_METHOD" = "pkgx" ]; then
+      printf '%s
+' "pkgx does not have a local list command"
+    elif [ "$MEMCACHED_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls memcached || true
+    elif [ "$MEMCACHED_INSTALL_METHOD" = "system" ]; then
+      printf '%s
+' "System packages do not support ls here."
+    else
+      ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/memcached/" 2>/dev/null || true
+    fi
+    exit 0
+    ;;
+  ls-remote)
+    if [ "$MEMCACHED_INSTALL_METHOD" = "mise" ]; then
+      mise ls-remote memcached || true
+    elif [ "$MEMCACHED_INSTALL_METHOD" = "asdf" ]; then
+      asdf list all memcached || true
+    elif [ "$MEMCACHED_INSTALL_METHOD" = "pkgx" ]; then
+      printf '%s
+' "pkgx does not have a local list command"
+    elif [ "$MEMCACHED_INSTALL_METHOD" = "vfox" ]; then
+      vfox ls all memcached || true
+    else
+      if [ -n "${MEMCACHED_RELEASES_URL:-}" ]; then
+        curl -sSL "${MEMCACHED_RELEASES_URL}" | grep -oE 'v?[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s
+' "No versions found"
+      else
+        case "$TARGET_OS" in
+          windows|mingw|cygwin)
+            git ls-remote --tags "https://github.com/SamuelMarks/memcached-windows" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s
+' "No versions found"
+            ;;
+          *)
+            git ls-remote --tags "https://github.com/memcached/memcached" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s
+' "No versions found"
+            ;;
+        esac
+      fi
+    fi
+    exit 0
+    ;;
+  use)
+    if [ "$MEMCACHED_INSTALL_METHOD" = "mise" ]; then
+      mise use "memcached@${VERSION}"
+    elif [ "$MEMCACHED_INSTALL_METHOD" = "asdf" ]; then
+      asdf global memcached "${VERSION}"
+    elif [ "$MEMCACHED_INSTALL_METHOD" = "pkgx" ]; then
+      printf '%s
+' "pkgx does not use explicit versions this way"
+    elif [ "$MEMCACHED_INSTALL_METHOD" = "vfox" ]; then
+      vfox use "memcached@${VERSION}"
+    elif [ "$MEMCACHED_INSTALL_METHOD" = "system" ]; then
+      printf '%s
+' "System packages do not support use here."
+    else
+      resolve_exact_version
+      libscript_symlink_alias "memcached" "$VERSION" "${EXACT_VERSION}"
+      libscript_symlink_alias "memcached" "default" "${EXACT_VERSION}"
+      
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/memcached/${EXACT_VERSION}"
+      if [ ! -d "$TARGET_DIR" ]; then
+        log_info "memcached ${EXACT_VERSION} is not installed. Installing it now..."
+        unset SCRIPT_NAME || true
+        ACTION="install" sh "$DIR/setup.sh" install "$PACKAGE_NAME" "" || exit 1
+      fi
+
+      libscript_symlink_alias "memcached" "default" "${EXACT_VERSION}"
+      log_info "Set default memcached version to ${EXACT_VERSION}."
+      log_info "To apply to the current shell, run:"
+      log_info "  . \"${DIR}/env.sh\" # or: . \$(\"${LIBSCRIPT_ROOT_DIR}/libscript.sh\" env memcached \"$VERSION\")"
+    fi
+    exit 0
+    ;;
+  download)
+    if [ "$MEMCACHED_INSTALL_METHOD" = "libscript_native" ]; then
+      log_info "Downloading memcached ${VERSION} to ${DOWNLOAD_DIR:-/tmp/libscript_downloads}/memcached..."
+      mkdir -p "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/memcached"
+      if [ -n "${MEMCACHED_DOWNLOAD_URL:-}" ]; then
+        libscript_download "${MEMCACHED_DOWNLOAD_URL:-}" "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/memcached/memcached-${VERSION}.zip"
+      else
+        log_warn "MEMCACHED_DOWNLOAD_URL is not defined for memcached ${VERSION}."
+      fi
+    fi
+    exit 0
+    ;;
+  install)
+    if [ "$MEMCACHED_INSTALL_METHOD" = "system" ]; then
+      libscript_depends "memcached"
+    elif [ "$MEMCACHED_INSTALL_METHOD" = "mise" ]; then
+      mise install "memcached@${VERSION}"
+    elif [ "$MEMCACHED_INSTALL_METHOD" = "asdf" ]; then
+      asdf install memcached "${VERSION}"
+    elif [ "$MEMCACHED_INSTALL_METHOD" = "pkgx" ]; then
+      pkgx install "memcached@${VERSION}"
+    elif [ "$MEMCACHED_INSTALL_METHOD" = "vfox" ]; then
+      vfox add memcached || true
+      vfox install "memcached@${VERSION}"
+    else
+      # libscript_native implementation
+      resolve_exact_version
+      TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/memcached/${EXACT_VERSION}"
+      if [ ! -f "${TARGET_DIR}/bin/memcached" ] && [ ! -f "${TARGET_DIR}/bin/memcached.exe" ]; then
+        log_info "Installing memcached ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
+        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/memcached/"*"${VERSION}"* >/dev/null 2>&1; then
+          log_info "Extracting from cache..."
+          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/memcached/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
+          if [ -n "$cache_file" ]; then
+            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 2>/dev/null || tar -xzf "$cache_file" -C "${TARGET_DIR}" || true
+            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
+              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
+              if [ -d "${TARGET_DIR}/Memcached-${EXACT_VERSION}-win64/bin" ]; then
+                cp -r "${TARGET_DIR}/Memcached-${EXACT_VERSION}-win64/bin/"* "${TARGET_DIR}/bin/" 2>/dev/null || true
+              elif ls -d "${TARGET_DIR}"/Memcached-*-win64/bin >/dev/null 2>&1; then
+                cp -r "${TARGET_DIR}"/Memcached-*-win64/bin/* "${TARGET_DIR}/bin/" 2>/dev/null || true
+              fi
+            else
+              cp "$cache_file" "${TARGET_DIR}/bin/memcached" || true
+              chmod +x "${TARGET_DIR}/bin/memcached" || true
+            fi
+          fi
+        else
+          if [ -n "${MEMCACHED_DOWNLOAD_URL:-}" ]; then
+            TEMP_FILE=$(mktemp)
+            libscript_download "${MEMCACHED_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+            if case "${MEMCACHED_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 2>/dev/null || tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" || true
+            elif case "${MEMCACHED_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+              if [ -d "${TARGET_DIR}/Memcached-${EXACT_VERSION}-win64/bin" ]; then
+                cp -r "${TARGET_DIR}/Memcached-${EXACT_VERSION}-win64/bin/"* "${TARGET_DIR}/bin/" 2>/dev/null || true
+              elif ls -d "${TARGET_DIR}"/Memcached-*-win64/bin >/dev/null 2>&1; then
+                cp -r "${TARGET_DIR}"/Memcached-*-win64/bin/* "${TARGET_DIR}/bin/" 2>/dev/null || true
+              fi
+            else
+              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/memcached" || true
+              chmod +x "${TARGET_DIR}/bin/memcached" || true
+            fi
+            rm -f "${TEMP_FILE}"
+          else
+            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] || [ "$UNAME_LOWER" = "darwin" ] && [ -n "${PKG_MGR:-}" ]; then
+              log_info "Falling back to system package manager for memcached..."
+              libscript_depends "memcached"
+              if command -v memcached >/dev/null 2>&1; then
+                ln -sf "$(command -v memcached)" "${TARGET_DIR}/bin/memcached"
+                if command -v memcached-tool >/dev/null 2>&1; then
+                  ln -sf "$(command -v memcached-tool)" "${TARGET_DIR}/bin/memcached-tool" 2>/dev/null || true
+                fi
+              fi
+            else
+              log_warn "No download URL provided for memcached ${VERSION}."
+            fi
+          fi
+        fi
+      else
+        log_info "memcached ${VERSION} is already installed."
+      fi
+      libscript_symlink_alias "memcached" "$VERSION" "${EXACT_VERSION}"
+    fi
+    ;;
+  start|stop|restart|status|health|logs|up|down)
+    if [ "$MEMCACHED_INSTALL_METHOD" = "libscript_native" ] || [ "$MEMCACHED_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-memcached}}"
+      libscript_service "$ACTION" "$service_name" "$@"
+    else
+      log_info "$ACTION not natively implemented for $MEMCACHED_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  install-service)
+    if [ "$MEMCACHED_INSTALL_METHOD" = "libscript_native" ] || [ "$MEMCACHED_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-memcached}}"
+      libscript_install_service "$service_name" "$@"
+    else
+      log_info "install-service not implemented for $MEMCACHED_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall-service)
+    if [ "$MEMCACHED_INSTALL_METHOD" = "libscript_native" ] || [ "$MEMCACHED_INSTALL_METHOD" = "system" ]; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
+      export SCRIPT_NAME
+      . "${SCRIPT_NAME}"
+      service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-memcached}}"
+      libscript_uninstall_service "$service_name" "$@"
+    else
+      log_info "uninstall-service not implemented for $MEMCACHED_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+  uninstall)
+    if [ "$MEMCACHED_INSTALL_METHOD" = "libscript_native" ]; then
+      if type resolve_exact_version >/dev/null 2>&1; then resolve_exact_version; else EXACT_VERSION="${VERSION:-latest}"; fi
+      log_info "Uninstalling memcached $VERSION..."
+      rm -rf "${LIBSCRIPT_HOME:-$HOME/.libscript}/memcached/${EXACT_VERSION}"
+      rm -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/memcached/$VERSION"
+    else
+      log_info "Uninstall not implemented or supported for $MEMCACHED_INSTALL_METHOD."
+    fi
+    exit 0
+    ;;
+
+esac

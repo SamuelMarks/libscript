@@ -64,6 +64,7 @@ EOF_TODO
 
   # Create mock test result files
   touch "${_test_tmp}/tests_tmp/compA.linux.alpine.success"
+  touch "${_test_tmp}/tests_tmp/compA.sunos.success"
   touch "${_test_tmp}/tests_tmp/compB.windows.failure"
 
   # Execute update_results.sh
@@ -71,7 +72,7 @@ EOF_TODO
 
   # Verification 1: compA has success checkmark in README
   # shellcheck disable=SC2016
-  if ! grep -q '| `compA` | ✅ |' "${_test_tmp}/README.md"; then
+  if ! grep -q '| `compA` | ✅ | ❓ | ❓ | - | ✅ | - |' "${_test_tmp}/README.md"; then
     printf 'Error: compA success status not found in README.md\n' >&2
     rm -rf "${_test_tmp}"
     exit 1

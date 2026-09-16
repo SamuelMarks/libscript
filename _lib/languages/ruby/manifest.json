@@ -7,6 +7,6 @@
   "provides": ["runtime", "ruby", "gem"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": [],
+  "os_blacklist": ["sunos"],
   "ports": []
 }

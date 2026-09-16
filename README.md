@@ -254,7 +254,7 @@ LibScript is designed as a routing execution layer. It detects your OS, maps gen
 local package managers (`apt`, `brew`, `choco`, `pkg`), and executes optimized setup scripts.
 
 - **`cli/`**: Core CLI commands, orchestration logic, and the `package-as` transformation engine.
-- **`_lib/`**: The heart of the system. Modular components (over 140+ available) where each
+- **`_lib/`**: The heart of the system. Modular components (over 160+ available) where each
   directory is a standalone manager.
 - **`gen/`**: Artifact generator module, synthesizing logic into installers, Docker images, and
   packages.
@@ -287,16 +287,16 @@ multicloud fleet, we want to hear from you.
 
 | Component          | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD |
 | ------------------ | ----------- | ----------- | ----------- | ------- | ----- | ------- |
-| `7zip`             | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
-| `ansible-galaxy`   | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `7zip`             | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
+| `ansible-galaxy`   | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `apk`              | ✅          | ✅          | ✅          | -       | -     | -       |
 | `apt`              | ✅          | ✅          | ✅          | -       | -     | -       |
 | `aqua`             | ✅          | ✅          | ✅          | ✅      | -     | -       |
 | `aria2`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `asdf`             | ✅          | ✅          | ✅          | -       | -     | -       |
-| `aws`              | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
-| `awscli`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
-| `azure`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `aws`              | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
+| `awscli`           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
+| `azure`            | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `azure-cli`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `bazel`            | -           | ✅          | ✅          | ✅      | -     | ✅      |
 | `brew`             | -           | -           | -           | -       | -     | -       |
@@ -304,26 +304,26 @@ multicloud fleet, we want to hear from you.
 | `bun-pm`           | ✅          | ✅          | ✅          | ✅      | -     | -       |
 | `bundler`          | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `busybox`          | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
-| `c`                | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `c`                | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `cabal`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `caddy`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
-| `cargo`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `cargo`            | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `cargo-binstall`   | ✅          | ✅          | ✅          | ✅      | -     | -       |
-| `cc`               | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
-| `cdn`              | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
-| `cert`             | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `cc`               | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
+| `cdn`              | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
+| `cert`             | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `choco`            | -           | -           | -           | ✅      | -     | -       |
-| `cloudinit`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
-| `cmake`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `cloudinit`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
+| `cmake`            | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `composer`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `conan`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `conda`            | -           | ✅          | ✅          | -       | -     | -       |
 | `core`             | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `coursier`         | -           | ✅          | ✅          | -       | -     | -       |
 | `cpanm`            | ✅          | ✅          | ✅          | ✅      | -     | -       |
-| `cpp`              | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `cpp`              | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `csharp`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
-| `curl`             | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `curl`             | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `cygwin`           | -           | -           | -           | ✅      | -     | -       |
 | `dash`             | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `deno`             | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
@@ -356,11 +356,11 @@ multicloud fleet, we want to hear from you.
 | `iis`              | -           | -           | -           | ✅      | -     | -       |
 | `java`             | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `jetstream`        | ✅          | ✅          | ✅          | -       | -     | -       |
-| `jq`               | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `jq`               | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `julia`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `just`             | ✅          | ✅          | ✅          | ✅      | -     | -       |
 | `kafka`            | ✅          | ✅          | ✅          | -       | -     | -       |
-| `kotlin`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `kotlin`           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `krew`             | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `kubernetes`       | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `kubernetes-k0s`   | ✅          | ✅          | ✅          | -       | -     | ✅      |
@@ -369,9 +369,10 @@ multicloud fleet, we want to hear from you.
 | `luarocks`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `macports`         | -           | -           | -           | -       | -     | -       |
 | `mamba`            | -           | ✅          | ✅          | ✅      | -     | -       |
-| `mariadb`          | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `mariadb`          | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `mas`              | -           | -           | -           | -       | -     | -       |
 | `maven`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `memcached`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `minio`            | ✅          | ✅          | ✅          | -       | -     | -       |
 | `mise`             | ✅          | ✅          | ✅          | -       | -     | -       |
 | `mix`              | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
@@ -402,21 +403,21 @@ multicloud fleet, we want to hear from you.
 | `pkgx`             | ✅          | ✅          | ✅          | -       | -     | -       |
 | `pnpm`             | ✅          | ✅          | ✅          | ✅      | -     | -       |
 | `poetry`           | ✅          | ✅          | ✅          | ✅      | -     | -       |
-| `postgres`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `postgres`         | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `powershell`       | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `psmux`            | -           | -           | -           | ✅      | -     | -       |
 | `pub`              | ✅          | ✅          | ✅          | ✅      | -     | -       |
 | `pyenv`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
-| `python`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `python`           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `python-server`    | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
-| `qemu`             | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `qemu`             | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `r`                | ✅          | ✅          | ✅          | ✅      | -     | -       |
 | `rabbitmq`         | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `rbenv`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `rebar3`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `redis`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `ruby`             | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
-| `rust`             | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `rust`             | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `rust-server`      | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `rustup`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `rvm`              | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
@@ -424,17 +425,17 @@ multicloud fleet, we want to hear from you.
 | `sbt`              | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `scoop`            | -           | -           | -           | ✅      | -     | -       |
 | `sdkman`           | ✅          | ✅          | ✅          | -       | -     | ✅      |
-| `sh`               | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `sh`               | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `snap`             | ✅          | ✅          | ✅          | -       | -     | -       |
 | `spack`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
-| `sqlite`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `sqlite`           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `stack`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `storage`          | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `swift`            | -           | ✅          | ✅          | ✅      | -     | ✅      |
 | `swupd`            | ✅          | ✅          | ✅          | -       | -     | -       |
 | `systemd`          | -           | ✅          | ✅          | -       | -     | -       |
 | `tensorboard`      | ✅          | ✅          | ✅          | -       | -     | -       |
-| `tmux`             | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `tmux`             | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `utils`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `uv`               | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `vagrant`          | -           | ✅          | ✅          | ✅      | -     | ✅      |
@@ -445,7 +446,7 @@ multicloud fleet, we want to hear from you.
 | `vllm`             | -           | ✅          | ✅          | -       | -     | -       |
 | `volume`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `wait4x`           | ✅          | ✅          | ✅          | ✅      | -     | -       |
-| `wget`             | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `wget`             | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `winget`           | -           | -           | -           | ✅      | -     | -       |
 | `xbps`             | ✅          | ✅          | ✅          | -       | -     | -       |
 | `xpk`              | ✅          | ✅          | ✅          | -       | -     | -       |

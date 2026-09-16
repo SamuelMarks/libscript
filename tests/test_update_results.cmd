@@ -45,6 +45,7 @@ type nul > "%TEST_TMP%\libscript.sh"
 )
 
 type nul > "%TEST_TMP%\tests_tmp\compA.linux.alpine.success"
+type nul > "%TEST_TMP%\tests_tmp\compA.sunos.success"
 type nul > "%TEST_TMP%\tests_tmp\compB.windows.failure"
 
 call "%REPO_ROOT%\tests\update_results.cmd" "%TEST_TMP%"
@@ -55,7 +56,7 @@ if errorlevel 1 (
 )
 
 :: Verification 1: compA has success mark
-findstr /c:"| `compA` | ✅ |" "%TEST_TMP%\README.md" >nul 2>&1
+findstr /c:"| `compA` | ✅ | ❓ | ❓ | - | ✅ | - |" "%TEST_TMP%\README.md" >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] compA success status not found in README.md
     rmdir /s /q "%TEST_TMP%" >nul 2>&1

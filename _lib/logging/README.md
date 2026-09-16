@@ -8,6 +8,7 @@ Bit).
 <!-- BEGIN_COMPONENTS -->
 
 - [fluentbit](./fluentbit/README.md)
+- [tensorboard](./tensorboard/README.md)
 
 <!-- END_COMPONENTS -->
 

@@ -14,6 +14,8 @@ curl, jq, 7zip).
 - [dash](./dash/README.md)
 - [jq](./jq/README.md)
 - [powershell](./powershell/README.md)
+- [psmux](./psmux/README.md)
+- [tmux](./tmux/README.md)
 - [wait4x](./wait4x/README.md)
 - [wget](./wget/README.md)
 

@@ -151,7 +151,13 @@ is_installed() {
     'emerge')             eix -I "${pkg}" >/dev/null 2>&1 ;;
     'eopkg')              eopkg list-installed | grep -q '^'"${pkg}"'[[:space:]]' ;;
     'pacman')             pacman -Q "${pkg}" >/dev/null 2>&1 ;;
-    'pkg')                pkg info -e "${pkg}" ;;
+    'pkg')
+      if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+        pkg list -q "${pkg}" >/dev/null 2>&1
+      else
+        pkg info -e "${pkg}"
+      fi
+      ;;
     'port')               port installed "${pkg}" | grep -q 'active' ;;
     'swupd')              swupd bundle-list | grep -qx "${pkg}" ;;
     'xbps')               xbps-query -Rs '^'"${pkg}"'$' | grep -q '\[installed\]' ;;
@@ -222,7 +228,13 @@ libscript_depends() {
         'emerge') priv  emerge --quiet        ${pkgs_to_install} || _install_failed=1 ;;
         'eopkg')  priv  eopkg install -y      ${pkgs_to_install} || _install_failed=1 ;;
         'pacman') priv  pacman -S --noconfirm ${pkgs_to_install} || _install_failed=1 ;;
-        'pkg')    priv  pkg install -y        ${pkgs_to_install} || _install_failed=1 ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            priv pkg install --accept ${pkgs_to_install} || _install_failed=1
+          else
+            priv pkg install -y ${pkgs_to_install} || _install_failed=1
+          fi
+          ;;
         'port')   priv  port install          ${pkgs_to_install} || _install_failed=1 ;;
         'swupd')  priv  swupd bundle-add      ${pkgs_to_install} || _install_failed=1 ;;
         'xbps')   priv  xbps-install -Sy      ${pkgs_to_install} || _install_failed=1 ;;

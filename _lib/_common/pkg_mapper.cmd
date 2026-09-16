@@ -125,6 +125,8 @@ if "!PKG!"=="bun" (
     if "!PKG_MGR!"=="winget" set "MAPPED_PKG=etcd.etcd"
 ) else if "!PKG!"=="rabbitmq" (
     if "!PKG_MGR!"=="winget" set "MAPPED_PKG=RabbitMQ.RabbitMQ"
+) else if "!PKG!"=="memcached" (
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=memcached"
 )
 
 :: If no mapping found, return the original name

@@ -6,6 +6,7 @@ This category contains components for block, file, and object storage solutions 
 
 <!-- BEGIN_COMPONENTS -->
 
+- [gcsfuse](./gcsfuse/README.md)
 - [minio](./minio/README.md)
 
 <!-- END_COMPONENTS -->

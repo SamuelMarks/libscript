@@ -7,6 +7,6 @@
   "provides": ["kv-store", "redis-compatible", "valkey", "cache"],
   "conflicts": ["redis"],
   "os_whitelist": ["all"],
-  "os_blacklist": ["windows"],
+  "os_blacklist": ["windows", "sunos"],
   "ports": [6379]
 }

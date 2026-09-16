@@ -159,11 +159,15 @@ TABLE_HDR
       [ "$(check_manifest_support "${_mfile}" "debian")" = "yes" ] && _deb_status="❓"
       [ "$(check_manifest_support "${_mfile}" "rhel")" = "yes" ] && _rpm_status="❓"
       [ "$(check_manifest_support "${_mfile}" "windows")" = "yes" ] && _win_status="❓"
+      [ "$(check_manifest_support "${_mfile}" "sunos")" = "yes" ] && _sunos_status="❓"
       [ "$(check_manifest_support "${_mfile}" "freebsd")" = "yes" ] && _freebsd_status="❓"
     else
       _apk_status="❓"
       _deb_status="❓"
       _rpm_status="❓"
+      _win_status="❓"
+      _sunos_status="❓"
+      _freebsd_status="❓"
     fi
 
     if [ -n "${_existing_line}" ]; then
@@ -293,6 +297,9 @@ JSON_ROW
 '
       } >"${_tmp_readme}"
       mv "${_tmp_readme}" "${_readme_file}"
+    fi
+    if command -v npx >/dev/null 2>&1; then
+      npx prettier --write "${_readme_file}" >/dev/null 2>&1 || true
     fi
   fi
   rm -f "${_tmp_table}"

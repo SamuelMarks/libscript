@@ -7,6 +7,6 @@
   "provides": ["swift", "toolchain"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": ["alpine"],
+  "os_blacklist": ["alpine", "sunos"],
   "ports": []
 }

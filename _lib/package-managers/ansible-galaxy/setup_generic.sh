@@ -183,11 +183,18 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
-              log_info "Falling back to system package manager for ansible-galaxy..."
-              libscript_depends "ansible-galaxy"
+            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] || [ "$UNAME_LOWER" = "sunos" ] && [ -n "${PKG_MGR:-}" ]; then
+              log_info "Falling back to system package manager or pip for ansible-galaxy..."
+              libscript_depends "ansible-galaxy" || true
+              if ! command -v ansible-galaxy >/dev/null 2>&1; then
+                if command -v python3 >/dev/null 2>&1 && python3 -m pip --version >/dev/null 2>&1; then
+                  python3 -m pip install --quiet ansible-core || true
+                fi
+              fi
               if command -v ansible-galaxy >/dev/null 2>&1; then
                 ln -sf "$(command -v ansible-galaxy)" "${TARGET_DIR}/bin/ansible-galaxy"
+              elif [ -x "${HOME}/.local/bin/ansible-galaxy" ]; then
+                ln -sf "${HOME}/.local/bin/ansible-galaxy" "${TARGET_DIR}/bin/ansible-galaxy"
               fi
             else
               log_warn "No download URL provided for ansible-galaxy ${VERSION}."

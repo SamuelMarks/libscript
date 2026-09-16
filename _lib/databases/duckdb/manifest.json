@@ -6,5 +6,6 @@
   "category": "databases",
   "provides": ["duckdb"],
   "conflicts": [],
-  "os_whitelist": ["all"]
+  "os_whitelist": ["all"],
+  "os_blacklist": ["sunos"]
 }

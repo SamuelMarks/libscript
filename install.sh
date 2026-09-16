@@ -58,6 +58,12 @@ if [ "${VALKEY_INSTALL:-0}" -eq 1 ]; then
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 fi
+if [ "${MEMCACHED_INSTALL:-0}" -eq 1 ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/caches/memcached/setup.sh'
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+fi
 if [ "${REDIS_URL-}" ]; then
   >&2 printf 'REDIS_URL must be set\n';
   exit 3

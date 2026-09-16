@@ -87,6 +87,8 @@ detect_host_os() {
 ' "windows" "windows" ;;
       'darwin'*|'macos'*) printf '%s %s
 ' "darwin" "darwin" ;;
+      'sunos'*|'solaris'*|'illumos'*|'omnios'*) printf '%s %s
+' "sunos" "sunos" ;;
       *) printf '%s %s
 ' "${_user_os}" "${_user_os}" ;;
     esac
@@ -112,6 +114,8 @@ detect_host_os() {
 ' "windows" "windows" ;;
     'darwin'|'macOS'|'Mac OS X') printf '%s %s
 ' "darwin" "darwin" ;;
+    'sunos'|'solaris'|'illumos'|'omnios') printf '%s %s
+' "sunos" "sunos" ;;
     *)
       _raw_uname=$(uname -s 2>/dev/null || printf 'unknown')
       case "${_raw_uname}" in
@@ -119,6 +123,8 @@ detect_host_os() {
 ' "freebsd" "freebsd" ;;
         'Darwin') printf '%s %s
 ' "darwin" "darwin" ;;
+        'SunOS') printf '%s %s
+' "sunos" "sunos" ;;
         'Linux')
           if [ -f /etc/os-release ]; then
             # shellcheck disable=SC1091

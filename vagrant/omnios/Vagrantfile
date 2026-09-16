@@ -1,0 +1,63 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# ## Overview
+# Configuration and definition file for SunOS OmniOS Vagrant environment.
+#
+# ## Usage
+# Processed automatically during build or runtime via Vagrant.
+
+# Read environment variables for target package and repository root
+test_target = ENV['LIBSCRIPT_TEST_TARGET'] || 'sqlite'
+repo_root = ENV['LIBSCRIPT_REPO_ROOT'] || "../.."
+
+# Ensure unique VM name for complete isolation (like a new docker image)
+vm_name = "omnios-test-#{test_target}"
+
+Vagrant.configure("2") do |config|
+  config.vm.define vm_name do |t|
+    t.vm.box = "bento/omnios"
+    t.vm.box_version = "0"
+
+    t.ssh.username = "vagrant"
+    t.ssh.insert_key = false
+    t.ssh.shell = "/bin/sh"
+    t.ssh.private_key_path = [
+      File.expand_path("~/.vagrant.d/insecure_private_keys/vagrant.key.rsa"),
+      File.expand_path("~/.vagrant.d/insecure_private_key")
+    ]
+
+    t.vm.provider "qemu" do |qe|
+      qe.net_mode = :user
+      qe.firmware_format = nil
+      qe.ssh_auto_correct = true
+      qe.ssh_port = 50022
+      qe.qemu_args = %w(-m 4G -smp 2)
+    end
+
+    t.vm.allowed_synced_folder_types = [:rsync]
+
+    # Disable default /vagrant folder so it does not collide or fail chown
+    t.vm.synced_folder ".", "/vagrant", disabled: true
+
+    # Sync the repository root directory
+    t.vm.synced_folder repo_root, "/opt/repos/libscript", type: "rsync",
+      rsync_exclude: [".git/", "tests_tmp/", "vagrant/"],
+      owner: "vagrant", group: "staff"
+
+    # Provision the VM and run the test
+    t.vm.provision "shell", inline: <<-SHELL
+      set -e
+      export PATH="/usr/bin:/usr/sbin:/sbin:/opt/local/bin:/opt/local/sbin"
+
+      echo "Configuring libscript..."
+      export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript
+
+      echo "Installing #{test_target} using libscript..."
+      /opt/repos/libscript/libscript.sh install #{test_target}
+
+      echo "Running test for #{test_target}..."
+      /opt/repos/libscript/libscript.sh test #{test_target}
+    SHELL
+  end
+end

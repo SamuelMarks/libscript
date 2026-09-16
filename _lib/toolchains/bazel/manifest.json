@@ -7,6 +7,6 @@
   "provides": ["build-system", "bazel", "bazelisk"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": ["alpine"],
+  "os_blacklist": ["alpine", "sunos"],
   "ports": []
 }

@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "memcached",
+  "title": "Memcached",
+  "description": "High-performance, distributed memory object caching system.",
+  "category": "caches",
+  "provides": ["cache", "memcached", "key-value"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": [11211]
+}

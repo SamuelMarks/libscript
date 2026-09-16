@@ -7,8 +7,13 @@ This category contains container orchestration and management platforms (e.g., K
 <!-- BEGIN_COMPONENTS -->
 
 - [docker](./docker/README.md)
+- [kubernetes](./kubernetes/README.md)
 - [kubernetes-k0s](./kubernetes-k0s/README.md)
 - [kubernetes-thw](./kubernetes-thw/README.md)
+- [packer](./packer/README.md)
+- [qemu](./qemu/README.md)
+- [vagrant](./vagrant/README.md)
+- [virtualbox](./virtualbox/README.md)
 
 <!-- END_COMPONENTS -->
 

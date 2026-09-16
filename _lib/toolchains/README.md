@@ -129,8 +129,10 @@ packages with newer or custom-compiled toolchains as needed.
 - [cmake](./cmake/README.md)
 - [coursier](./coursier/README.md)
 - [gradle](./gradle/README.md)
+- [huggingface-cli](./huggingface-cli/README.md)
 - [just](./just/README.md)
 - [maven](./maven/README.md)
+- [xpk](./xpk/README.md)
 
 <!-- END_COMPONENTS -->
 

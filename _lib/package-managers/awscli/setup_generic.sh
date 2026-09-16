@@ -183,12 +183,20 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
-              log_info "Falling back to system package manager for awscli..."
-              libscript_depends "awscli"
+            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] || [ "$UNAME_LOWER" = "sunos" ] && [ -n "${PKG_MGR:-}" ]; then
+              log_info "Falling back to system package manager or pip for awscli..."
+              libscript_depends "awscli" || true
+              if ! command -v aws >/dev/null 2>&1; then
+                if command -v python3 >/dev/null 2>&1 && python3 -m pip --version >/dev/null 2>&1; then
+                  python3 -m pip install --quiet awscli || true
+                fi
+              fi
               if command -v aws >/dev/null 2>&1; then
                 ln -sf "$(command -v aws)" "${TARGET_DIR}/bin/aws"
                 ln -sf "$(command -v aws)" "${TARGET_DIR}/bin/awscli"
+              elif [ -x "${HOME}/.local/bin/aws" ]; then
+                ln -sf "${HOME}/.local/bin/aws" "${TARGET_DIR}/bin/aws"
+                ln -sf "${HOME}/.local/bin/aws" "${TARGET_DIR}/bin/awscli"
               fi
             else
               log_warn "No download URL provided for awscli ${VERSION}."

@@ -112,6 +112,16 @@ IF "%VALKEY_INSTALL%"=="1" (
     CALL "%SCRIPT_NAME%"
 )
 
+IF "%MEMCACHED_INSTALL%"=="1" (
+    SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\caches\memcached\setup.cmd"
+    IF NOT EXIST "%SCRIPT_NAME%" (
+        >&2 ECHO Unable to setup Memcached, as file not found "%SCRIPT_NAME%"
+        SET ERRORLEVEL=2
+        goto end
+    )
+    CALL "%SCRIPT_NAME%"
+)
+
 :: ------------------------------------------------------------------------------
 ::                             Servers [Required]
 :: ------------------------------------------------------------------------------

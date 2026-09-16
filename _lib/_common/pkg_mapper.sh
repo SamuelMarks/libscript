@@ -74,7 +74,13 @@ map_package() {
         'yum') printf 'postgresql-server postgresql-contrib\n' ;;
         'zypper') printf 'postgresql-server\n' ;;
         'pacman') printf 'postgresql\n' ;;
-        'pkg') printf 'postgresql14-server postgresql14-client\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'ooce/database/postgresql-17 ooce/library/postgresql-17\n'
+          else
+            printf 'postgresql14-server postgresql14-client\n'
+          fi
+          ;;
         'brew') printf 'postgresql@14\n' ;;
         'winget') printf 'PostgreSQL.PostgreSQL\n' ;;
         'choco') printf 'postgresql\n' ;;
@@ -86,7 +92,13 @@ map_package() {
       case "${PKG_MGR}" in
         'apk') printf 'mariadb mariadb-client\n' ;;
         'apt-get'|'dnf'|'yum'|'zypper'|'pacman') printf 'mariadb-server\n' ;;
-        'pkg') printf 'mariadb114-server mariadb114-client\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'ooce/database/mariadb-114 ooce/library/mariadb-114\n'
+          else
+            printf 'mariadb114-server mariadb114-client\n'
+          fi
+          ;;
         'winget') printf 'MariaDB.MariaDB\n' ;;
         *) printf 'mariadb\n' ;;
       esac
@@ -136,7 +148,13 @@ map_package() {
         'yum') printf 'gcc\n' ;;
         'zypper') printf 'gcc\n' ;;
         'pacman') printf 'gcc\n' ;;
-        'pkg') printf 'gcc\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'developer/gcc14\n'
+          else
+            printf 'gcc\n'
+          fi
+          ;;
         'brew') printf 'gcc\n' ;;
         'port') printf 'gcc\n' ;;
         'winget') printf 'MSYS2.MSYS2\n' ;;
@@ -157,7 +175,13 @@ map_package() {
         'yum') printf 'gcc-c++\n' ;;
         'zypper') printf 'gcc-c++\n' ;;
         'pacman') printf 'gcc\n' ;;
-        'pkg') printf 'gcc\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'developer/gcc14\n'
+          else
+            printf 'gcc\n'
+          fi
+          ;;
         'brew') printf 'gcc\n' ;;
         'port') printf 'gcc\n' ;;
         'winget') printf 'MSYS2.MSYS2\n' ;;
@@ -175,6 +199,13 @@ map_package() {
         'apk') printf 'gcc musl-dev\n' ;;
         'apt-get') printf 'build-essential\n' ;;
         'winget') printf 'MSYS2.MSYS2\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'developer/gcc14\n'
+          else
+            printf 'gcc\n'
+          fi
+          ;;
         *) printf 'gcc\n' ;;
       esac
       ;;
@@ -184,14 +215,26 @@ map_package() {
         'apt-get') printf 'build-essential\n' ;;
         'winget') printf 'MSYS2.MSYS2\n' ;;
         'brew') printf 'gcc\n' ;;
-        'pkg') printf 'gcc\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'developer/gcc14\n'
+          else
+            printf 'gcc\n'
+          fi
+          ;;
         *) printf 'g++\n' ;;
       esac
       ;;
     'make')
       case "${PKG_MGR}" in
         'winget') printf 'GnuWin32.Make\n' ;;
-        'pkg') printf 'gmake\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'developer/build/gnu-make\n'
+          else
+            printf 'gmake\n'
+          fi
+          ;;
         *) printf 'make\n' ;;
       esac
       ;;
@@ -212,6 +255,13 @@ map_package() {
         'apk'|'dnf'|'yum') printf 'sqlite\n' ;;
         'apt-get'|'zypper'|'pacman') printf 'sqlite3\n' ;;
         'brew') printf 'sqlite\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'database/sqlite-3\n'
+          else
+            printf 'sqlite3\n'
+          fi
+          ;;
         *) printf 'sqlite3\n' ;;
       esac
       ;;
@@ -257,6 +307,13 @@ map_package() {
         'apt-get') printf 'qemu-system-x86 qemu-system-arm qemu-utils ovmf qemu-efi-aarch64 libvirt-daemon-system libvirt-clients bridge-utils virtinst swtpm swtpm-tools\n' ;;
         'dnf'|'yum') printf 'qemu-kvm qemu-img edk2-ovmf edk2-aarch64 libvirt virt-install swtpm\n' ;;
         'pacman') printf 'qemu-desktop edk2-ovmf edk2-arm virt-install libvirt swtpm\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'ooce/emulator/qemu ooce/util/qemu-img\n'
+          else
+            printf 'qemu\n'
+          fi
+          ;;
         'brew') printf 'qemu\n' ;;
         *) printf 'qemu\n' ;;
       esac
@@ -342,12 +399,18 @@ map_package() {
     'java')
       case "${PKG_MGR}" in
         'apk') printf 'openjdk17\n' ;;
-        'apt-get') printf 'default-jdk\n' ;;
+        'apt-get') printf 'openjdk-17-jdk\n' ;;
         'dnf') printf 'java-17-openjdk-devel\n' ;;
         'yum') printf 'java-17-openjdk-devel\n' ;;
         'zypper') printf 'java-17-openjdk\n' ;;
         'pacman') printf 'jre-openjdk\n' ;;
-        'pkg') printf 'openjdk17\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'ooce/runtime/java-17\n'
+          else
+            printf 'openjdk17\n'
+          fi
+          ;;
         'brew') printf 'openjdk\n' ;;
         'winget') printf 'Microsoft.OpenJDK.17\n' ;;
         'choco') printf 'openjdk\n' ;;
@@ -359,6 +422,13 @@ map_package() {
     'jq')
       case "${PKG_MGR}" in
         'winget') printf 'jqlang.jq\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'ooce/util/jq\n'
+          else
+            printf 'jq\n'
+          fi
+          ;;
         *) printf 'jq\n' ;;
       esac
       ;;
@@ -396,7 +466,13 @@ map_package() {
         'apt-get') printf 'php-cli\n' ;;
         'dnf') printf 'php-cli\n' ;;
         'yum') printf 'php-cli\n' ;;
-        'pkg') printf 'php82\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'ooce/runtime/php-82\n'
+          else
+            printf 'php82\n'
+          fi
+          ;;
         'winget') printf 'PHP.PHP\n' ;;
         'emerge') printf 'dev-lang/php\n' ;;
         *) printf 'php\n' ;;
@@ -445,7 +521,13 @@ map_package() {
         "apt-get") printf "p7zip-full\n" ;;
         "dnf"|"yum"|"zypper") printf "p7zip\n" ;;
         "pacman") printf "p7zip\n" ;;
-        "pkg") printf "7-zip\n" ;;
+        "pkg")
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf "compress/7zip\n"
+          else
+            printf "7-zip\n"
+          fi
+          ;;
         *) printf "7zip\n" ;;
       esac ;;
 
@@ -457,7 +539,13 @@ map_package() {
         'yum') printf 'python3 python3-pip\n' ;;
         'zypper') printf 'python3 python3-pip\n' ;;
         'pacman') printf 'python python-pip\n' ;;
-        'pkg') printf 'python3 py312-sqlite3\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'runtime/python-313\n'
+          else
+            printf 'python3 py312-sqlite3\n'
+          fi
+          ;;
         'brew') printf 'python3\n' ;;
         'port') printf 'python39\n' ;;
         'winget') printf 'Python.Python.3.11\n' ;;
@@ -485,6 +573,13 @@ map_package() {
         'yum') printf 'rust cargo\n' ;;
         'zypper') printf 'rust cargo\n' ;;
         'winget') printf 'Rustlang.Rustup\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'ooce/developer/rust\n'
+          else
+            printf 'rust\n'
+          fi
+          ;;
         'emerge') printf 'dev-lang/rust\n' ;;
         'apt-cyg') printf 'rust\n' ;;
         *) printf 'rust\n' ;;
@@ -596,7 +691,13 @@ map_package() {
     'cargo')
       case "${PKG_MGR}" in
         'apk') printf 'cargo\n' ;;
-        'pkg') printf 'rust\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'ooce/developer/rust\n'
+          else
+            printf 'rust\n'
+          fi
+          ;;
         *) printf 'cargo\n' ;;
       esac
       ;;
@@ -693,7 +794,13 @@ map_package() {
       ;;
     'elixir')
       case "${PKG_MGR}" in
-        'pkg') printf 'elixir erlang\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'ooce/runtime/elixir\n'
+          else
+            printf 'elixir erlang\n'
+          fi
+          ;;
         *) printf 'elixir\n' ;;
       esac
       ;;
@@ -756,6 +863,15 @@ map_package() {
         'choco') return 1 ;;
         'apt-cyg') return 1 ;;
         *) printf 'valkey\n' ;;
+      esac
+      ;;
+    'memcached')
+      case "${PKG_MGR}" in
+        'emerge') printf 'net-misc/memcached\n' ;;
+        'winget') return 1 ;;
+        'apt-cyg') return 1 ;;
+        'choco') printf 'memcached\n' ;;
+        *) printf 'memcached\n' ;;
       esac
       ;;
     'flatpak')

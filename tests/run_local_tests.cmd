@@ -53,7 +53,7 @@ set "TESTS_TMP_DIR=%REPO_ROOT%\tests_tmp"
 
 if not exist "%TESTS_TMP_DIR%" mkdir "%TESTS_TMP_DIR%"
 
-if "!ARGS!"=="" set "ARGS=databases languages toolchains"
+if "!ARGS!"=="" set "ARGS=databases caches languages toolchains"
 
 if not exist "%REPO_ROOT%\vagrant\!OS_TARGET!\Vagrantfile" (
     echo Error: Vagrant environment '!OS_TARGET!' not found in %REPO_ROOT%\vagrant\
@@ -97,6 +97,10 @@ if /I "!OS_ID!"=="rocky" set "OS_TAG=linux.rhel"
 if /I "!OS_ID!"=="rockylinux" set "OS_TAG=linux.rhel"
 if /I "!OS_ID!"=="freebsd" set "OS_TAG=freebsd"
 if /I "!OS_ID!"=="windows" set "OS_TAG=windows"
+if /I "!OS_ID!"=="omnios" set "OS_TAG=sunos"
+if /I "!OS_ID!"=="sunos" set "OS_TAG=sunos"
+if /I "!OS_ID!"=="solaris" set "OS_TAG=sunos"
+if /I "!OS_ID!"=="illumos" set "OS_TAG=sunos"
 
 if "!REUSE_VM!"=="1" (
     echo === Ensuring !OS_TARGET! Vagrant VM is running ===
@@ -115,6 +119,8 @@ if "!REUSE_VM!"=="1" (
             vagrant ssh --no-tty -c "sudo dnf install -y -q curl jq rsync findutils which" >nul 2>&1
         ) else if /I "!OS_ID!"=="almalinux" (
             vagrant ssh --no-tty -c "sudo dnf install -y -q curl jq rsync findutils which" >nul 2>&1
+        ) else if /I "!OS_ID!"=="omnios" (
+            vagrant ssh --no-tty -c "sudo pkg install --accept network/rsync developer/versioning/git" >nul 2>&1
         )
     )
     echo === Syncing LibScript repository to !OS_TARGET! ===
@@ -209,7 +215,7 @@ echo   TARGETS...     A list of categories (e.g., databases, languages) or speci
 echo                  If no arguments are provided, defaults to: databases languages toolchains
 echo   all            Run tests across all categories in the _lib directory.
 echo   --os OS_NAME   The OS environment to use from the vagrant/ folder (default: alpine-3.24).
-echo                  Example: --os debian-13
+echo                  Example: --os debian-13, --os rockylinux-10.2, --os omnios
 echo   --reuse-vm     Reuse a running VM instead of creating/destroying a new VM per target.
 echo   --fast         Alias for --reuse-vm.
 echo   --help, -h, /? Show this help message.

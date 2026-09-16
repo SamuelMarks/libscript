@@ -3,6 +3,7 @@
   "name": "bundler",
   "provides": ["bundler"],
   "os_whitelist": ["all"],
+  "os_blacklist": ["sunos"],
   "title": "bundler",
   "description": "Bootstrap module for the `bundler` package manager.",
   "category": "package-manager"

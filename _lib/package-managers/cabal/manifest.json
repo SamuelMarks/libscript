@@ -3,6 +3,7 @@
   "name": "cabal",
   "provides": ["cabal"],
   "os_whitelist": ["all"],
+  "os_blacklist": ["sunos"],
   "title": "cabal",
   "description": "Bootstrap module for `cabal` (Haskell package manager).",
   "category": "package-manager"

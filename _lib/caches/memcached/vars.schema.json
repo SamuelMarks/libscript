@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/caches/memcached/vars.schema.json",
+  "title": "Memcached variables",
+  "description": "Configuration variables for Memcached",
+  "type": "object",
+  "properties": {
+    "MEMCACHED_VERSION": {
+      "description": "Specific version of memcached to install. Can be a numeric version or an alias.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "MEMCACHED_INSTALL_METHOD": {
+      "description": "How to install MEMCACHED. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "type": "string",
+      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "default": "libscript_native"
+    },
+    "LIBSCRIPT_LISTEN_PORT": {
+      "type": ["string", "integer"],
+      "description": "Global port to listen on"
+    },
+    "LIBSCRIPT_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Global address to listen on"
+    },
+    "LIBSCRIPT_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Global unix socket to listen on"
+    },
+    "MEMCACHED_LISTEN_PORT": {
+      "type": ["string", "integer"],
+      "description": "Port for MEMCACHED to listen on"
+    },
+    "MEMCACHED_LISTEN_ADDRESS": {
+      "type": "string",
+      "description": "Address for MEMCACHED to listen on"
+    },
+    "MEMCACHED_LISTEN_SOCKET": {
+      "type": "string",
+      "description": "Unix socket for MEMCACHED to listen on"
+    },
+    "MEMCACHED_DOWNLOAD_URL": {
+      "type": "string",
+      "description": "Custom download URL for memcached binary or source archive"
+    }
+  }
+}

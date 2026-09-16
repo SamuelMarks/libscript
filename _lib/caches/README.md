@@ -6,6 +6,7 @@ This category contains in-memory data structures and caching systems (e.g., Redi
 
 <!-- BEGIN_COMPONENTS -->
 
+- [memcached](./memcached/README.md)
 - [redis](./redis/README.md)
 - [valkey](./valkey/README.md)
 

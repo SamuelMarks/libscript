@@ -72,7 +72,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
       sorted_deps=$(printf '%b\n' "$deps_list" | awk '
       function get_priority(pkg) {
           if (pkg ~ /^(fluentbit|docker|etcd|openvpn|kubernetes-k0s|kubernetes-thw)$/) return 10;
-          if (pkg ~ /^(postgres|mysql|mariadb|mongodb|redis|valkey|sqlite|rabbitmq|celery)$/) return 20;
+          if (pkg ~ /^(postgres|mysql|mariadb|mongodb|redis|valkey|memcached|sqlite|rabbitmq|celery)$/) return 20;
           if (pkg ~ /^(php|python|nodejs|ruby|java|go|rust|c|cpp|csharp|bun|deno|elixir|jq|kotlin|swift|wait4x|zig|sh|cc)$/) return 30;
           if (pkg ~ /^(nginx|caddy|httpd|firecrawl|jupyterhub)$/) return 40;
           return 50;
@@ -133,6 +133,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
           if [ "$pkg" = "postgres" ]; then healthcheck="[\"CMD\", \"pg_isready\", \"-U\", \"postgres\"]"; fi
           if [ "$pkg" = "mysql" ] || [ "$pkg" = "mariadb" ]; then healthcheck="[\"CMD\", \"mysqladmin\", \"ping\", \"-h\", \"localhost\"]"; fi
           if [ "$pkg" = "redis" ] || [ "$pkg" = "valkey" ]; then healthcheck="[\"CMD\", \"redis-cli\", \"ping\"]"; fi
+          if [ "$pkg" = "memcached" ]; then healthcheck="[\"CMD-SHELL\", \"nc -z 127.0.0.1 11211 || exit 1\"]"; fi
           if [ "$pkg" = "mongodb" ]; then healthcheck="[\"CMD\", \"mongosh\", \"--eval\", \"db.adminCommand('ping')\"]"; fi
           if [ "$pkg" = "rabbitmq" ]; then healthcheck="[\"CMD\", \"rabbitmq-diagnostics\", \"ping\"]"; fi
           if [ "$pkg" = "nginx" ] || [ "$pkg" = "caddy" ] || [ "$pkg" = "httpd" ]; then healthcheck="[\"CMD-SHELL\", \"curl -f http://localhost/ || exit 1\"]"; fi

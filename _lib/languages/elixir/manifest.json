@@ -7,6 +7,6 @@
   "provides": ["compiler", "elixir", "erlang", "beam"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": [],
+  "os_blacklist": ["sunos"],
   "ports": []
 }

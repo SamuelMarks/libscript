@@ -7,10 +7,12 @@ or rust applications).
 
 <!-- BEGIN_COMPONENTS -->
 
+- [jetstream](./jetstream/README.md)
 - [nodejs-server](./nodejs-server/README.md)
 - [ollama](./ollama/README.md)
 - [python-server](./python-server/README.md)
 - [rust-server](./rust-server/README.md)
+- [vllm](./vllm/README.md)
 
 <!-- END_COMPONENTS -->
 

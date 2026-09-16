@@ -72,6 +72,7 @@ if defined JSON_FILE (
 set "README_FILE=%OUTPUT_FILE%"
 set "TODO_FILE=%REPO_ROOT%\TODO_PLAN.md"
 set "TMP_TABLE=%TEMP%\components_table_%RANDOM%.tmp"
+set "TMP_ROWS=%TEMP%\components_rows_%RANDOM%.tmp"
 set "TMP_JSON=%TEMP%\components_json_%RANDOM%.tmp"
 set "TMP_README=%TEMP%\readme_update_%RANDOM%.tmp"
 set "TMP_TODO=%TEMP%\todo_update_%RANDOM%.tmp"
@@ -104,6 +105,23 @@ for /d %%C in ("%REPO_ROOT%\_lib\*") do (
                 set "win_status=-"
                 set "sunos_status=-"
                 set "freebsd_status=-"
+
+                if exist "%%D\manifest.json" (
+                    findstr /i /c:"\"all\"" "%%D\manifest.json" >nul 2>&1
+                    if not errorlevel 1 (
+                        set "win_status=❓"
+                        set "sunos_status=❓"
+                        set "freebsd_status=❓"
+                    )
+                    findstr /i /c:"\"windows\"" "%%D\manifest.json" >nul 2>&1
+                    if not errorlevel 1 set "win_status=❓"
+                    findstr /i /c:"\"sunos\"" "%%D\manifest.json" >nul 2>&1
+                    if not errorlevel 1 set "sunos_status=❓"
+                    findstr /i /c:"\"freebsd\"" "%%D\manifest.json" >nul 2>&1
+                    if not errorlevel 1 set "freebsd_status=❓"
+                    findstr /i /c:"\"bsd\"" "%%D\manifest.json" >nul 2>&1
+                    if not errorlevel 1 set "freebsd_status=❓"
+                )
 
                 if exist "%README_FILE%" (
                     for /f "tokens=3-8 delims=|" %%a in ('findstr /r /c:"^| `!comp_name!` |" "%README_FILE%" 2^>nul') do (
@@ -180,7 +198,7 @@ for /d %%C in ("%REPO_ROOT%\_lib\*") do (
                     if exist "%TESTS_TMP_DIR%\!comp_name!.linux.freebsd.failure" set "freebsd_status=❌"
                 )
 
-                >> "%TMP_TABLE%" echo ^| `!comp_name!` ^| !apk_status! ^| !deb_status! ^| !rpm_status! ^| !win_status! ^| !sunos_status! ^| !freebsd_status! ^|
+                >> "%TMP_ROWS%" echo ^| `!comp_name!` ^| !apk_status! ^| !deb_status! ^| !rpm_status! ^| !win_status! ^| !sunos_status! ^| !freebsd_status! ^|
 
                 if defined JSON_FILE (
                     if not "!FIRST_JSON_ROW!"=="1" >> "%TMP_JSON%" echo   ,
@@ -198,6 +216,11 @@ for /d %%C in ("%REPO_ROOT%\_lib\*") do (
             )
         )
     )
+)
+
+if exist "%TMP_ROWS%" (
+    sort "%TMP_ROWS%" >> "%TMP_TABLE%"
+    del "%TMP_ROWS%" >nul 2>&1
 )
 
 if defined JSON_FILE (
@@ -230,6 +253,10 @@ if exist "%README_FILE%" (
         move /y "%TMP_README%" "%README_FILE%" >nul
     ) else (
         type "%TMP_TABLE%" >> "%README_FILE%"
+    )
+    where npx >nul 2>&1
+    if not errorlevel 1 (
+        call npx prettier --write "%README_FILE%" >nul 2>&1
     )
 )
 if exist "%TMP_TABLE%" del "%TMP_TABLE%" >nul 2>&1
