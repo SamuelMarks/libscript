@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "mysql",
+  "title": "MySQL",
+  "description": "MySQL 8.x relational database management system.",
+  "category": "databases",
+  "provides": ["database", "mysql", "rdbms", "sql"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": [3306]
+}

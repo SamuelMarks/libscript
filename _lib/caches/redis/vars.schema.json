@@ -31,7 +31,13 @@
     },
     "REDIS_LISTEN_PORT": {
       "type": ["string", "integer"],
-      "description": "Port for REDIS to listen on"
+      "description": "Port for REDIS to listen on",
+      "default": 6379
+    },
+    "REDIS_REMOTE_URL": {
+      "type": "string",
+      "description": "Remote Redis or Valkey connection string (e.g. 'redis://redis.internal:6379/0'). If set, skips local server installation.",
+      "format": "uri"
     },
     "REDIS_LISTEN_ADDRESS": {
       "type": "string",

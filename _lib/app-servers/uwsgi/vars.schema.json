@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/app-servers/uwsgi/vars.schema.json",
+  "title": "uWSGI variables",
+  "description": "Configuration variables for uWSGI application server.",
+  "type": "object",
+  "properties": {
+    "UWSGI_VERSION": {
+      "description": "Specific version of uwsgi to install (e.g. '2.0.24', 'latest').",
+      "type": "string",
+      "default": "2.0.24"
+    },
+    "UWSGI_INSTALL_METHOD": {
+      "description": "How to install uwsgi ('system', 'libscript_native').",
+      "type": "string",
+      "default": "system"
+    },
+    "UWSGI_WORKERS": {
+      "description": "Default amount of uWSGI processes.",
+      "type": ["integer", "string"],
+      "default": 2
+    },
+    "UWSGI_INI": {
+      "description": "Path to uwsgi.ini configuration file.",
+      "type": "string"
+    }
+  }
+}

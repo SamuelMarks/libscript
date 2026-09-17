@@ -73,12 +73,12 @@ else
         tmp_files=$(mktemp)
         printf '%s\n' "$STAGED_FILES" | while IFS= read -r file; do
              if [ -f "$file" ]; then
-                 printf "%s\0" "$file"
+                 printf '%s\n' "$file"
              fi
         done > "$tmp_files"
         
         if [ -s "$tmp_files" ]; then
-             xargs -0 npx cspell lint --no-progress --no-summary < "$tmp_files" || printf '%s\n' "Spellcheck found potential issues, but continuing..."
+             npx --yes --quiet cspell lint --no-progress --no-summary --no-must-find-files --file-list stdin < "$tmp_files" || printf '%s\n' "Spellcheck found potential issues, but continuing..."
         fi
         rm -f "$tmp_files"
     fi

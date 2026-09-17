@@ -48,6 +48,8 @@ if %errorlevel% neq 0 (
 psmux %*
 exit /b %errorlevel%
 
+:: ## delegate
+:: Delegates execution to the shared component_core router.
 :delegate
 call "%~dp0\..\..\_common\component_core.cmd" %*
 exit /b %errorlevel%

@@ -20,8 +20,17 @@ set "UPGRADE_CODE=PUT-GUID-HERE"
 set "OUT_FILE=LibScriptInstaller"
 set "ICON_PATH="
 set "IMAGE_PATH="
+set "LOGO_PATH="
+set "BANNER_TOP_PATH="
+set "BANNER_SIDE_PATH="
 set "LICENSE_PATH="
+set "LICENSE_TYPE=text"
+set "REQUIRE_AGREE=1"
+set "AGREEMENT_TEXT="
+set "WELCOME_TITLE="
 set "WELCOME_TEXT=Welcome to the LibScript Deployment Installer"
+set "FINISH_TITLE="
+set "FINISH_TEXT="
 set "OFFLINE=0"
 
 :: ## args_loop
@@ -82,13 +91,73 @@ if /i "%~1"=="--image" (
     shift & shift
     goto args_loop
 )
+if /i "%~1"=="--logo" (
+    set "LOGO_PATH=%~2"
+    shift & shift
+    goto args_loop
+)
+if /i "%~1"=="--banner-top" (
+    set "BANNER_TOP_PATH=%~2"
+    shift & shift
+    goto args_loop
+)
+if /i "%~1"=="--banner-side" (
+    set "BANNER_SIDE_PATH=%~2"
+    shift & shift
+    goto args_loop
+)
 if /i "%~1"=="--license" (
     set "LICENSE_PATH=%~2"
     shift & shift
     goto args_loop
 )
+if /i "%~1"=="--license-file" (
+    set "LICENSE_PATH=%~2"
+    shift & shift
+    goto args_loop
+)
+if /i "%~1"=="--license-type" (
+    set "LICENSE_TYPE=%~2"
+    shift & shift
+    goto args_loop
+)
+if /i "%~1"=="--require-agree" (
+    set "REQUIRE_AGREE=1"
+    shift
+    goto args_loop
+)
+if /i "%~1"=="--no-require-agree" (
+    set "REQUIRE_AGREE=0"
+    shift
+    goto args_loop
+)
+if /i "%~1"=="--agreement-text" (
+    set "AGREEMENT_TEXT=%~2"
+    shift & shift
+    goto args_loop
+)
+if /i "%~1"=="--welcome-title" (
+    set "WELCOME_TITLE=%~2"
+    shift & shift
+    goto args_loop
+)
 if /i "%~1"=="--welcome" (
     set "WELCOME_TEXT=%~2"
+    shift & shift
+    goto args_loop
+)
+if /i "%~1"=="--welcome-body" (
+    set "WELCOME_TEXT=%~2"
+    shift & shift
+    goto args_loop
+)
+if /i "%~1"=="--finish-title" (
+    set "FINISH_TITLE=%~2"
+    shift & shift
+    goto args_loop
+)
+if /i "%~1"=="--finish-body" (
+    set "FINISH_TEXT=%~2"
     shift & shift
     goto args_loop
 )

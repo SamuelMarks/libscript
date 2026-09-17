@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "uvicorn",
+  "title": "Uvicorn",
+  "description": "An ASGI web server implementation for Python with native Windows support.",
+  "category": "app-servers",
+  "provides": ["app-server", "asgi", "wsgi", "uvicorn"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": [8000]
+}

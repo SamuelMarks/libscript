@@ -39,16 +39,38 @@ fi
       cat << EOF2
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product ID="$PRODUCT_CODE" Name="$APP_NAME" Language="1033" Version="$APP_VERSION" Manufacturer="$APP_PUBLISHER" UpgradeCode="$UPGRADE_CODE">
-    <Package InstallerVersion="200" CompresseD="yes" InstallScope="${install_scope:-perMachine}" Description="$WELCOME_TEXT" />
-    <Media ID="1" Cabinet="media1.cab" EmbedCab="yes" />
+  <Product Id="$PRODUCT_CODE" Name="$APP_NAME" Language="1033" Version="$APP_VERSION" Manufacturer="$APP_PUBLISHER" UpgradeCode="$UPGRADE_CODE">
+    <Package InstallerVersion="200" Compressed="yes" InstallScope="${install_scope:-perMachine}" Description="${WELCOME_TEXT:-$APP_NAME Installer}" />
+    <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
 EOF2
-      if [ -n "$ICON_PATH" ]; then
+      if [ -n "${ICON_PATH:-}" ]; then
         printf '%s\n' "    <Icon Id=\"AppIcon.ico\" SourceFile=\"$ICON_PATH\"/>"
         printf '%s\n' "    <Property Id=\"ARPPRODUCTICON\" Value=\"AppIcon.ico\" />"
       fi
-      if [ -n "$APP_URL" ]; then
+      if [ -n "${APP_URL:-}" ]; then
         printf '%s\n' "    <Property Id=\"ARPURLINFOABOUT\" Value=\"$APP_URL\" />"
+      fi
+      if [ -n "${BANNER_TOP_PATH:-}" ] && [ -f "$BANNER_TOP_PATH" ]; then
+        printf '%s\n' "    <WixVariable Id=\"WixUIBannerBmp\" Value=\"$BANNER_TOP_PATH\" />"
+      fi
+      if [ -n "${BANNER_SIDE_PATH:-}" ] && [ -f "$BANNER_SIDE_PATH" ]; then
+        printf '%s\n' "    <WixVariable Id=\"WixUIDialogBmp\" Value=\"$BANNER_SIDE_PATH\" />"
+      fi
+
+      rtf_license_file=""
+      if [ -n "${LICENSE_PATH:-}" ] && [ -f "$LICENSE_PATH" ]; then
+        case "$LICENSE_PATH" in
+          *.rtf)
+            rtf_license_file="$LICENSE_PATH"
+            ;;
+          *)
+            rtf_license_file="${OUT_FILE}_license.rtf"
+            printf '{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}\\fs20\n' > "$rtf_license_file"
+            sed 's/\\/\\\\/g; s/{/\\{/g; s/}/\\}/g; s/$/\\par/' "$LICENSE_PATH" >> "$rtf_license_file"
+            printf '}\n' >> "$rtf_license_file"
+            ;;
+        esac
+        printf '%s\n' "    <WixVariable Id=\"WixUILicenseRtf\" Value=\"$rtf_license_file\" />"
       fi
 
       deps_list=""
@@ -67,8 +89,9 @@ EOF2
       printf '%s\n' "      </Directory>"
       printf '%s\n' "    </Directory>"
 
-      set -- "$deps_list"
-      while [ $# -gt 0 ]; do
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         {
           printf '%s\n' "Function CheckPorts_$pkg()"
@@ -77,7 +100,7 @@ EOF2
           printf '%s\n' "  Set shell = CreateObject(\"WScript.Shell\")"
         } > "validate_${pkg}.vbs"
 
-        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
           if [ -n "$vars_json" ]; then
@@ -104,23 +127,63 @@ EOF2
       done
 
       # Features
-      set -- "$deps_list"
-      while [ $# -gt 0 ]; do
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "    <Feature Id=\"Feature_$pkg\" Title=\"Install $pkg\" Level=\"1\">"
         printf '%s\n' "      <ComponentGroupRef Id=\"ProductComponents\" />"
         printf '%s\n' "    </Feature>"
       done
 
+      # Hide sensitive password and key properties from verbose logs
+      hidden_props=""
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
+        pkg=$1; ver=$2; shift 2
+        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        if [ -f "$schema_file" ]; then
+          vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
+          for varname in $vars_json; do
+            if case "$varname" in *"_PASSWORD"*|*"_KEY"*|*"_SECRET"*|*"_TOKEN"*) true;; *) false;; esac; then
+              hidden_props="${hidden_props};PROP_${pkg}_${varname}"
+            fi
+          done
+        fi
+      done
+      if [ -n "$hidden_props" ]; then
+        hidden_props=$(printf '%s\n' "$hidden_props" | sed 's/^;//')
+        printf '%s\n' "    <Property Id=\"MsiHiddenProperties\" Value=\"$hidden_props\" />"
+      fi
+
       # UI Generation
       printf '%s\n' "    <UI Id=\"CustomUI\">"
       printf '%s\n' "      <Property Id=\"DefaultUIFont\" Value=\"WixUI_Font_Normal\" />"
 
+      # License Agreement Dialog if requested
+      if [ -n "$rtf_license_file" ]; then
+        printf '%s\n' "      <Dialog Id=\"Dlg_License\" Width=\"370\" Height=\"270\" Title=\"License Agreement\">"
+        printf '%s\n' "        <Control Id=\"Title\" Type=\"Text\" X=\"15\" Y=\"6\" Width=\"340\" Height=\"15\" Transparent=\"yes\" NoPrefix=\"yes\" Text=\"Please read and accept the license terms:\" />"
+        printf '%s\n' "        <Control Id=\"AgreementText\" Type=\"ScrollableText\" X=\"20\" Y=\"25\" Width=\"330\" Height=\"180\" Sunken=\"yes\" TabSkip=\"no\">"
+        printf '%s\n' "          <Text SourceFile=\"$rtf_license_file\" />"
+        printf '%s\n' "        </Control>"
+        printf '%s\n' "        <Control Id=\"LicenseAcceptedCheckBox\" Type=\"CheckBox\" X=\"20\" Y=\"212\" Width=\"330\" Height=\"18\" Property=\"LICENSE_ACCEPTED\" CheckBoxValue=\"1\" Text=\"${AGREEMENT_TEXT:-I accept the terms in the License Agreement}\" />"
+        printf '%s\n' "        <Control Id=\"Next\" Type=\"PushButton\" X=\"236\" Y=\"243\" Width=\"56\" Height=\"17\" Default=\"yes\" Text=\"Next\">"
+        printf '%s\n' "          <Publish Event=\"EndDialog\" Value=\"Return\"><![CDATA[LICENSE_ACCEPTED=\"1\"]]></Publish>"
+        printf '%s\n' "          <Condition Action=\"disable\"><![CDATA[LICENSE_ACCEPTED<>\"1\"]]></Condition>"
+        printf '%s\n' "          <Condition Action=\"enable\"><![CDATA[LICENSE_ACCEPTED=\"1\"]]></Condition>"
+        printf '%s\n' "        </Control>"
+        printf '%s\n' "      </Dialog>"
+        printf '%s\n' "      <Property Id=\"LICENSE_ACCEPTED\" Value=\"0\" Secure=\"yes\" />"
+      fi
+
       printf '%s\n' "      <Dialog Id=\"Dlg_Features\" Width=\"370\" Height=\"270\" Title=\"Select Components\">"
       printf '%s\n' "        <Control Id=\"Lbl_Select\" Type=\"Text\" X=\"20\" Y=\"10\" Width=\"330\" Height=\"15\" Text=\"Select the components you want to install:\" />"
       y=30
-      set -- "$deps_list"
-      while [ $# -gt 0 ]; do
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "        <Control Id=\"Chk_$pkg\" Type=\"CheckBox\" X=\"20\" Y=\"${y}\" Width=\"330\" Height=\"15\" Property=\"INSTALL_$pkg\" CheckBoxValue=\"1\" Text=\"Install $pkg\" />"
         y=$((y + 20))
@@ -130,20 +193,22 @@ EOF2
       printf '%s\n' "        </Control>"
       printf '%s\n' "      </Dialog>"
 
-      set -- "$deps_list"
-      while [ $# -gt 0 ]; do
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "      <Property Id=\"INSTALL_$pkg\" Value=\"1\" Secure=\"yes\" />"
       done
 
-      set -- "$deps_list"
+      # shellcheck disable=SC2086
+      set -- $deps_list
       export has_custom_ui=0
       dialogs=""
-      while [ $# -gt 0 ]; do
+      while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
-        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
-          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
+          vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // ""), fmt: (.value.format // "")}' "$schema_file")
           if [ -n "$vars_json" ]; then
             export has_custom_ui=1
             printf '%s\n' "      <Dialog Id=\"Dlg_${pkg}\" Width=\"370\" Height=\"270\" Title=\"Configuration for ${pkg}\">"
@@ -152,13 +217,17 @@ EOF2
               varname=$(printf '%s\n' "$item" | jq -r '.key')
               desc=$(printf '%s\n' "$item" | jq -r '.desc')
               defval=$(printf '%s\n' "$item" | jq -r '.def')
+              fmt=$(printf '%s\n' "$item" | jq -r '.fmt')
 
               if [ $y -gt 220 ]; then break; fi
 
               printf '%s\n' "        <Control Id=\"Lbl_${varname}\" Type=\"Text\" X=\"20\" Y=\"${y}\" Width=\"330\" Height=\"15\" Text=\"${desc}:\" />"
               y=$((y + 15))
-              if case "$varname" in *"_PASSWORD"*) true;; *) false;; esac; then
+              if case "$varname" in *"_PASSWORD"*|*"_KEY"*|*"_SECRET"*) true;; *) false;; esac; then
                 printf '%s\n' "        <Control Id=\"Txt_${varname}\" Type=\"Edit\" X=\"20\" Y=\"${y}\" Width=\"330\" Height=\"18\" Property=\"PROP_${pkg}_${varname}\" Password=\"yes\" />"
+              elif [ "$fmt" = "file-path" ] || [ "$fmt" = "path" ]; then
+                printf '%s\n' "        <Control Id=\"Txt_${varname}\" Type=\"PathEdit\" X=\"20\" Y=\"${y}\" Width=\"250\" Height=\"18\" Property=\"PROP_${pkg}_${varname}\" />"
+                printf '%s\n' "        <Control Id=\"Btn_${varname}\" Type=\"PushButton\" X=\"275\" Y=\"${y}\" Width=\"75\" Height=\"18\" Text=\"Browse...\" />"
               else
                 printf '%s\n' "        <Control Id=\"Txt_${varname}\" Type=\"Edit\" X=\"20\" Y=\"${y}\" Width=\"330\" Height=\"18\" Property=\"PROP_${pkg}_${varname}\" />"
               fi
@@ -182,8 +251,9 @@ EOF2
       done
 
       # MSI Uninstaller Confirmations
-      set -- "$deps_list"
-      while [ $# -gt 0 ]; do
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "      <Dialog Id=\"Dlg_Uninst_${pkg}\" Width=\"370\" Height=\"270\" Title=\"Uninstall $pkg\">"
         printf '%s\n' "        <Control Id=\"Msg\" Type=\"Text\" X=\"20\" Y=\"20\" Width=\"330\" Height=\"30\" Text=\"Do you want to completely remove the Data Directory and all records for $pkg?\" />"
@@ -201,10 +271,16 @@ EOF2
       done
 
       printf '%s\n' "      <InstallUISequence>"
-      printf '%s\n' "        <Show Dialog=\"Dlg_Features\" After=\"CostFinalize\">NOT Installed</Show>"
+      last_dlg="CostFinalize"
+      if [ -n "$rtf_license_file" ]; then
+        printf '%s\n' "        <Show Dialog=\"Dlg_License\" After=\"$last_dlg\">NOT Installed</Show>"
+        last_dlg="Dlg_License"
+      fi
+      printf '%s\n' "        <Show Dialog=\"Dlg_Features\" After=\"$last_dlg\">NOT Installed</Show>"
       last_dlg="Dlg_Features"
-      set -- "$deps_list"
-      while [ $# -gt 0 ]; do
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         has_dlg=0
         for d in $dialogs; do
@@ -218,8 +294,9 @@ EOF2
 
       # UI sequence for uninstall
       last_uninst_dlg="CostFinalize"
-      set -- "$deps_list"
-      while [ $# -gt 0 ]; do
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "        <Show Dialog=\"Dlg_Uninst_${pkg}\" After=\"$last_uninst_dlg\">REMOVE=\"ALL\"</Show>"
         last_uninst_dlg="Dlg_Uninst_${pkg}"
@@ -228,27 +305,29 @@ EOF2
       printf '%s\n' "    </UI>"
 
       # Install Actions
-      set -- "$deps_list"
-      while [ $# -gt 0 ]; do
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         run_params="/c libscript.cmd install-service $pkg $ver"
-        schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
           if [ -n "$vars_json" ]; then
-            append_params=$(printf '%s\n' "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=\"[PROP_%s_%s]\"", $1, pkg, $1}')
+            append_params=$(printf '%s\n' "$vars_json" | awk -v pkg="$pkg" '{printf " --%s=&quot;[PROP_%s_%s]&quot;", $1, pkg, $1}')
             run_params="$run_params$append_params"
           fi
         fi
         printf '%s\n' "    <CustomAction Id=\"Install$pkg\" Directory=\"INSTALLFOLDER\" ExeCommand=\"cmd.exe $run_params\" Execute=\"deferred\" Return=\"check\" Impersonate=\"no\" />"
 
         # Uninstall Actions
-        printf '%s\n' "    <CustomAction Id=\"Uninstall$pkg\" Directory=\"INSTALLFOLDER\" ExeCommand=\"cmd.exe /c libscript.cmd uninstall $pkg [PURGE_$pkg] --service-name [PROP_${pkg}_$(printf '%s\n' "$pkg" | tr "[:lower:]" "[:upper:]")_SERVICE_NAME]\" Execute=\"deferred\" Return=\"check\" Impersonate=\"no\" />"
+        printf '%s\n' "    <CustomAction Id=\"Uninstall$pkg\" Directory=\"INSTALLFOLDER\" ExeCommand=\"cmd.exe /c libscript.cmd uninstall $pkg [PURGE_$pkg] --service-name &quot;[PROP_${pkg}_$(printf '%s\n' "$pkg" | tr "[:lower:]" "[:upper:]")_SERVICE_NAME]&quot;\" Execute=\"deferred\" Return=\"check\" Impersonate=\"no\" />"
       done
 
       printf '%s\n' "    <InstallExecuteSequence>"
-      set -- "$deps_list"
-      while [ $# -gt 0 ]; do
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "      <Custom Action=\"Install$pkg\" Before=\"InstallFinalize\"><![CDATA[NOT Installed AND INSTALL_$pkg=\"1\"]]></Custom>"
         printf '%s\n' "      <Custom Action=\"Uninstall$pkg\" Before=\"RemoveFiles\">REMOVE=\"ALL\"</Custom>"
@@ -264,14 +343,19 @@ EOF2
 
       exec 1>&3 3>&-
 
-      if [ "$OS" = "Windows_NT" ] || command -v candle.exe >/dev/null 2>&1 || command -v wix.exe >/dev/null 2>&1; then
+      if [ "${OS:-}" = "Windows_NT" ] || command -v candle.exe >/dev/null 2>&1 || command -v wix.exe >/dev/null 2>&1; then
         if command -v wix.exe >/dev/null 2>&1; then
           wix.exe build -ext WixToolset.UI.wixext -o "${OUT_FILE}.msi" "$wxs_file"
         else
           candle.exe "$wxs_file"
           light.exe -ext WixUIExtension -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj"
         fi
-      else
-        wixl -o "${OUT_FILE}.msi" "$wxs_file"
+      elif command -v wixl >/dev/null 2>&1; then
+        # wixl is a lightweight cross-compiler supporting core Product/Feature/Component tags but not full Win32 UI/WixVariable extensions.
+        # Synthesize a wixl-compatible core manifest to build the valid cross-platform binary MSI:
+        wixl_wxs="${OUT_FILE}_wixl.wxs"
+        sed '/<Binary Id="Bin_Val_/d; /<CustomAction/d; /<Custom Action=/d; /<InstallExecuteSequence>/,/<\/InstallExecuteSequence>/d; /<WixVariable/d; /<UI Id="CustomUI">/,/<\/UI>/d' "$wxs_file" > "$wixl_wxs"
+        wixl -o "${OUT_FILE}.msi" "$wixl_wxs"
+        rm -f "$wixl_wxs"
       fi
       exit 0

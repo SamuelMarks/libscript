@@ -22,5 +22,7 @@
       "type": "string",
       "description": "Azure Storage Account Name (required for Azure operations)."
     }
-  }
+  },
+  "title": "Cloud Storage variables",
+  "description": "Configuration variables for Cloud Storage"
 }

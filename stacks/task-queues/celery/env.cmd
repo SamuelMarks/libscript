@@ -9,3 +9,5 @@
 
 :: Environment variables for Windows
 set "THIS_FILE=%~f0"
+if "%PYTHON_VERSION%"=="" set "PYTHON_VERSION=3.11"
+if "%PYTHON_VENV%"=="" set "PYTHON_VENV=C:\venvs\celery-%PYTHON_VERSION%"

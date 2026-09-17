@@ -20,7 +20,10 @@ if (Get-Command pkgx -ErrorAction SilentlyContinue) {
 }
 
 Write-Host "[INFO] Bootstrapping pkgx for Windows..."
-irm https://pkgx.sh | iex
+$installer = Join-Path $env:TEMP "install-pkgx.ps1"
+Invoke-RestMethod -Uri "https://pkgx.sh" -OutFile $installer
+& $installer
+Remove-Item -Force $installer -ErrorAction SilentlyContinue
 Write-Host "[INFO] pkgx successfully installed."
 
 if ($Action -eq "ls") {

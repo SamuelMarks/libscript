@@ -141,6 +141,64 @@
       },
       "description": "List of default TCP/UDP ports this component binds to (e.g., [80, 443]). Used by the SAT solver for conflict detection."
     },
+    "branding": {
+      "type": "object",
+      "description": "Visual branding, assets, custom licenses, and text customization for native installers (MSI, Inno, NSIS, DMG, DEB, RPM, TUI).",
+      "properties": {
+        "license": {
+          "type": "object",
+          "properties": {
+            "file": { "type": "string", "description": "Path to license text or RTF file" },
+            "type": {
+              "type": "string",
+              "enum": ["text", "markdown", "rtf", "html"],
+              "default": "text"
+            },
+            "require_agreement": { "type": "boolean", "default": true },
+            "agreement_checkbox_text": { "type": "string" },
+            "agreement_prompt_text": { "type": "string" }
+          }
+        },
+        "images": {
+          "type": "object",
+          "properties": {
+            "icon": {
+              "type": "string",
+              "description": "Path to application icon (.ico / .icns / .png)"
+            },
+            "logo": { "type": "string", "description": "Primary high-res logo (.png / .bmp)" },
+            "banner_top": { "type": "string", "description": "Top header banner image" },
+            "banner_side": { "type": "string", "description": "Left/side welcome wizard image" },
+            "dmg_background": { "type": "string", "description": "macOS Finder background image" }
+          }
+        },
+        "text": {
+          "type": "object",
+          "properties": {
+            "welcome_title": { "type": "string" },
+            "welcome_body": { "type": "string" },
+            "finish_title": { "type": "string" },
+            "finish_body": { "type": "string" }
+          }
+        }
+      }
+    },
+    "features": {
+      "type": "array",
+      "description": "Hierarchical feature tree definition for installer customization",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "default": { "type": "boolean", "default": true },
+          "dependencies": { "type": "array", "items": { "type": "string" } },
+          "conflicts": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["id", "title"]
+      }
+    },
     "infrastructure": {
       "type": "object",
       "description": "Cloud infrastructure configuration for PaaS deployments",

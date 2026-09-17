@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/toolchains/gpu-vm/vars.schema.json",
-  "title": "Bazel variables",
-  "description": "Configuration variables for Bazel",
+  "title": "GCP GPU VM variables",
+  "description": "Configuration variables for GCP GPU VMs",
   "type": "object",
   "properties": {
     "GPU_VM_VERSION": {

@@ -35,7 +35,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "$
   printf '%s\n' "  --help, -h, /?, -?  Show this help message."
   exit 0
 fi
-for component_dir in "$LIBSCRIPT_ROOT_DIR"/_lib/*/* "$LIBSCRIPT_ROOT_DIR"/stacks/*/*; do
+for component_dir in "$LIBSCRIPT_ROOT_DIR"/_lib/*/* "$LIBSCRIPT_ROOT_DIR"/_lib/*/*/* "$LIBSCRIPT_ROOT_DIR"/stacks/*/* "$LIBSCRIPT_ROOT_DIR"/stacks/*/*/*; do
     if [ ! -d "$component_dir" ]; then
         continue
     fi

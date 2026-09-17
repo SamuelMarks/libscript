@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/exim/vars.schema.json",
+  "title": "Exim variables",
+  "description": "Configuration variables for Exim SMTP relay daemon.",
+  "type": "object",
+  "properties": {
+    "EXIM_VERSION": {
+      "description": "Specific version of Exim to install (e.g. '4.96', 'latest').",
+      "type": "string",
+      "default": "latest"
+    },
+    "EXIM_INSTALL_METHOD": {
+      "description": "How to install Exim ('system', 'libscript_native').",
+      "type": "string",
+      "default": "system"
+    },
+    "EXIM_SMTP_PORT": {
+      "description": "Port for SMTP relay listener.",
+      "type": ["integer", "string"],
+      "default": 25
+    },
+    "EXIM_RELAY_FROM_HOSTS": {
+      "description": "Colon-separated list of hosts/networks permitted to relay mail.",
+      "type": "string",
+      "default": "127.0.0.1 : ::::1"
+    }
+  }
+}

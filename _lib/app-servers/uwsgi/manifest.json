@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "uwsgi",
+  "title": "uWSGI",
+  "description": "Fast, self-healing, developer-friendly WSGI server and application container.",
+  "category": "app-servers",
+  "provides": ["app-server", "wsgi", "uwsgi"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": [8000]
+}

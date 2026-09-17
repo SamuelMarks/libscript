@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/search/meilisearch/vars.schema.json",
+  "title": "Meilisearch variables",
+  "description": "Configuration variables for Meilisearch search engine.",
+  "type": "object",
+  "properties": {
+    "MEILISEARCH_VERSION": {
+      "description": "Specific version of Meilisearch to install (e.g. 'v1.36.0', 'latest').",
+      "type": "string",
+      "default": "v1.36.0"
+    },
+    "MEILISEARCH_INSTALL_METHOD": {
+      "description": "How to install Meilisearch ('libscript_native', 'system').",
+      "type": "string",
+      "default": "libscript_native"
+    },
+    "MEILISEARCH_PORT": {
+      "description": "HTTP port Meilisearch listens on.",
+      "type": ["integer", "string"],
+      "default": 7700
+    },
+    "MEILISEARCH_MASTER_KEY": {
+      "description": "Master key to secure Meilisearch API endpoints.",
+      "type": "string",
+      "format": "password",
+      "default": ""
+    },
+    "MEILISEARCH_CUSTOM_URL": {
+      "description": "Remote Meilisearch cluster URL (e.g. 'http://remote-meili:7700'). If specified, local binary installation can be bypassed.",
+      "type": "string",
+      "format": "uri"
+    },
+    "MEILISEARCH_DATA_DIR": {
+      "description": "Directory where Meilisearch index database is stored.",
+      "type": "string"
+    }
+  }
+}

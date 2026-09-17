@@ -31,7 +31,12 @@ echo OutputDir=.
 echo OutputBaseFilename=%OUT_FILE%
 if not "%UPGRADE_CODE%"=="" if not "%UPGRADE_CODE%"=="PUT-GUID-HERE" echo AppId=%UPGRADE_CODE%
 if not "%ICON_PATH%"=="" echo SetupIconFile=%ICON_PATH%
-if not "%IMAGE_PATH%"=="" echo WizardImageFile=%IMAGE_PATH%
+if not "%BANNER_SIDE_PATH%"=="" (
+    echo WizardImageFile=%BANNER_SIDE_PATH%
+) else (
+    if not "%IMAGE_PATH%"=="" echo WizardImageFile=%IMAGE_PATH%
+)
+if not "%BANNER_TOP_PATH%"=="" echo WizardSmallImageFile=%BANNER_TOP_PATH%
 if not "%LICENSE_PATH%"=="" echo LicenseFile=%LICENSE_PATH%
 
 echo.

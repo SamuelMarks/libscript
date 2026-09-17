@@ -35,8 +35,17 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
     export OUT_FILE="LibScriptInstaller"
     export ICON_PATH=""
     export IMAGE_PATH=""
+    export LOGO_PATH=""
+    export BANNER_TOP_PATH=""
+    export BANNER_SIDE_PATH=""
     export LICENSE_PATH=""
+    export LICENSE_TYPE="text"
+    export REQUIRE_AGREE="1"
+    export AGREEMENT_TEXT=""
+    export WELCOME_TITLE=""
     export WELCOME_TEXT="Welcome to the LibScript Deployment Installer"
+    export FINISH_TITLE=""
+    export FINISH_TEXT=""
     export OFFLINE="0"
 
     while [ $# -gt 0 ]; do
@@ -51,8 +60,20 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
         --out-file) export OUT_FILE="$2"; shift 2 ;;
         --icon) export ICON_PATH="$2"; shift 2 ;;
         --image) export IMAGE_PATH="$2"; shift 2 ;;
+        --logo) export LOGO_PATH="$2"; shift 2 ;;
+        --banner-top) export BANNER_TOP_PATH="$2"; shift 2 ;;
+        --banner-side) export BANNER_SIDE_PATH="$2"; shift 2 ;;
         --license) export LICENSE_PATH="$2"; shift 2 ;;
+        --license-file) export LICENSE_PATH="$2"; shift 2 ;;
+        --license-type) export LICENSE_TYPE="$2"; shift 2 ;;
+        --require-agree) export REQUIRE_AGREE="1"; shift ;;
+        --no-require-agree) export REQUIRE_AGREE="0"; shift ;;
+        --agreement-text) export AGREEMENT_TEXT="$2"; shift 2 ;;
+        --welcome-title) export WELCOME_TITLE="$2"; shift 2 ;;
         --welcome) export WELCOME_TEXT="$2"; shift 2 ;;
+        --welcome-body) export WELCOME_TEXT="$2"; shift 2 ;;
+        --finish-title) export FINISH_TITLE="$2"; shift 2 ;;
+        --finish-body) export FINISH_TEXT="$2"; shift 2 ;;
         --offline) export OFFLINE="1"; shift ;;
         -*) printf '%s\n' "Error: Unknown option $1" >&2; exit 1 ;;
         *) break ;;

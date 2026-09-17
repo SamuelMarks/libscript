@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "meilisearch",
+  "title": "Meilisearch",
+  "description": "A lightning-fast, ultra-relevant search engine built in Rust.",
+  "category": "search",
+  "provides": ["search", "meilisearch"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": [7700]
+}

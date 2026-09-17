@@ -156,11 +156,11 @@ case "$ACTION" in
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing bun-pm ${VERSION} natively to ${TARGET_DIR}..."
         if [ -f /etc/alpine-release ]; then
-          libscript_depends "curl" "bash" "unzip" "libstdc++" "gcompat" || true
+          libscript_depends "curl" "unzip" "libstdc++" "gcompat" || true
         else
-          libscript_depends "curl" "bash" "unzip" || true
+          libscript_depends "curl" "unzip" || true
         fi
-        curl -fsSL https://bun.sh/install | bash || true
+        curl -fsSL https://bun.sh/install | sh || true
         mkdir -p "${TARGET_DIR}/bin"
         if [ -f ~/.bun/bin/bun ]; then
           cp ~/.bun/bin/bun "${TARGET_DIR}/bin/bun" || true

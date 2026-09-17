@@ -12,6 +12,16 @@
       "version_aliases": ["lts", "latest"],
       "examples": ["lts", "latest", "v22.13.1", "20"]
     },
+    "NODEJS_CUSTOM_EXECUTABLE_PATH": {
+      "description": "Path to existing host node.exe executable. If provided, bypasses installing a new Node.js runtime.",
+      "type": "string",
+      "format": "file-path"
+    },
+    "NODEJS_USE_SYSTEM": {
+      "description": "Reuse existing host Node.js runtime located at NODEJS_CUSTOM_EXECUTABLE_PATH rather than installing bundled Node.js.",
+      "type": ["boolean", "string"],
+      "default": false
+    },
     "NODEJS_INSTALL_METHOD": {
       "description": "How to install NODEJS. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",

@@ -31,7 +31,12 @@ if not "%WELCOME_TEXT%"=="" echo VIAddVersionKey "FileDescription" "%WELCOME_TEX
 echo VIAddVersionKey "FileVersion" "%APP_VERSION%"
 
 if not "%ICON_PATH%"=="" echo Icon "%ICON_PATH%"
-
+if not "%BANNER_TOP_PATH%"=="" (
+    echo ^^!define MUI_HEADERIMAGE
+    echo ^^!define MUI_HEADERIMAGE_BITMAP "%BANNER_TOP_PATH%"
+)
+if not "%BANNER_SIDE_PATH%"=="" echo ^^!define MUI_WELCOMEFINISHPAGE_BITMAP "%BANNER_SIDE_PATH%"
+echo.
 echo Section "MainSection" SEC01
 echo   SetOutPath "$INSTDIR"
 if defined LIBSCRIPT_ROOT_DIR (

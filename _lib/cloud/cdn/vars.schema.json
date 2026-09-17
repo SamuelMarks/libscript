@@ -26,5 +26,7 @@
       "type": "string",
       "description": "Paths to invalidate on the CDN."
     }
-  }
+  },
+  "title": "Cloud CDN variables",
+  "description": "Configuration variables for Cloud CDN"
 }

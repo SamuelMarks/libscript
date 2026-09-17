@@ -2,10 +2,19 @@
 :: # env.cmd
 ::
 :: ## Overview
-:: Internal script for kubectl on Windows.
+:: Environment configuration script for kubectl on Windows.
 ::
 :: ## Usage
-:: Executes initialization, logic, or testing for kubectl.
+:: Configures LIBSCRIPT_HOME and PATH for kubectl.
 
-:: Windows env stub for kubectl
 set "THIS_FILE=%~f0"
+
+if "%LIBSCRIPT_HOME%"=="" (
+    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+)
+
+if "%KUBECTL_VERSION%"=="" (
+    set "KUBECTL_VERSION=latest"
+)
+
+set "PATH=%LIBSCRIPT_HOME%\kubectl\%KUBECTL_VERSION%\bin;%PATH%"

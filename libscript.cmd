@@ -172,8 +172,8 @@ if exist "%SCRIPT_DIR%\_lib\_common\%action_pkg%\cli.cmd" (
     goto run_target
 )
 
-:: Direct category search: _lib\<cat>\<pkg>\cli.cmd
-for /d %%C in ("%SCRIPT_DIR%\_lib\*") do (
+:: Direct category search: _lib\<cat>\<pkg>\cli.cmd or stacks\<cat>\<pkg>\cli.cmd
+for /d %%C in ("%SCRIPT_DIR%\_lib\*" "%SCRIPT_DIR%\stacks\*") do (
     if exist "%%C\%action_pkg%\cli.cmd" (
         set "target=%%C\%action_pkg%"
         goto run_target
@@ -183,7 +183,7 @@ for /d %%C in ("%SCRIPT_DIR%\_lib\*") do (
 set "match_count=0"
 set "last_match="
 
-for /d %%C in ("%SCRIPT_DIR%\_lib\*") do (
+for /d %%C in ("%SCRIPT_DIR%\_lib\*" "%SCRIPT_DIR%\stacks\*") do (
     for /d %%D in ("%%C\*") do (
         if exist "%%D\cli.cmd" (
             set "cname=%%~nxD"

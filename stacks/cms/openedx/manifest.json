@@ -1,0 +1,19 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "openedx",
+  "category": "cms",
+  "title": "Open edX",
+  "description": "Open edX LMS and Studio/CMS enterprise learning management platform.",
+  "provides": ["openedx", "lms", "cms"],
+  "requires": [
+    "languages/python",
+    "languages/nodejs",
+    "databases/mysql",
+    "databases/mongodb",
+    "caches/redis",
+    "search/meilisearch",
+    "app-servers/gunicorn",
+    "utilities/exim",
+    "package-managers/nodeenv"
+  ]
+}

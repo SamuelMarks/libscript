@@ -134,10 +134,155 @@ map_package() {
         *) printf 'libsqlite3-dev\n' ;;
       esac
       ;;
-    'default-libmysqlclient-dev')
+    'mysql'|'mysql-server')
       case "${PKG_MGR}" in
+        'apk') printf 'mysql mysql-client\n' ;;
+        'apt-get') printf 'default-mysql-server\n' ;;
+        'dnf'|'yum') printf 'mysql-server\n' ;;
+        'zypper') printf 'mysql-community-server\n' ;;
+        'pacman') printf 'mariadb\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'database/mysql-80\n'
+          else
+            printf 'databases/mysql84-server\n'
+          fi
+          ;;
+        'brew') printf 'mysql\n' ;;
+        'winget') printf 'Oracle.MySQL\n' ;;
+        'choco') printf 'mysql\n' ;;
+        *) printf 'mysql-server\n' ;;
+      esac
+      ;;
+    'mysql-client'|'mysqlclient'|'libmysqlclient-dev'|'default-libmysqlclient-dev')
+      case "${PKG_MGR}" in
+        'apk') printf 'mariadb-connector-c-dev mariadb-client\n' ;;
+        'apt-get') printf 'default-libmysqlclient-dev default-mysql-client\n' ;;
+        'dnf'|'yum') printf 'mysql-devel mysql\n' ;;
+        'zypper') printf 'libmysqlclient-devel mysql-client\n' ;;
+        'pacman') printf 'mariadb-libs mariadb-clients\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'database/mysql-80/client\n'
+          else
+            printf 'databases/mysql84-client\n'
+          fi
+          ;;
         'brew') printf 'mysql-client\n' ;;
-        *) printf 'default-libmysqlclient-dev\n' ;;
+        'winget') printf 'Oracle.MySQL\n' ;;
+        *) printf 'mysql-client\n' ;;
+      esac
+      ;;
+    'xmlsec1'|'libxmlsec1'|'libxmlsec1-dev'|'xmlsec')
+      case "${PKG_MGR}" in
+        'apk') printf 'xmlsec-dev libxml2-dev\n' ;;
+        'apt-get') printf 'libxmlsec1-dev libxmlsec1-openssl libxml2-dev\n' ;;
+        'dnf'|'yum') printf 'xmlsec1-devel xmlsec1-openssl-devel libxml2-devel\n' ;;
+        'zypper') printf 'xmlsec1-devel xmlsec1-openssl-devel libxml2-devel\n' ;;
+        'pacman') printf 'xmlsec libxml2\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'library/security/xmlsec\n'
+          else
+            printf 'security/xmlsec1 textproc/libxml2\n'
+          fi
+          ;;
+        'brew') printf 'libxmlsec1 libxml2\n' ;;
+        *) return 1 ;;
+      esac
+      ;;
+    'geos'|'libgeos'|'libgeos-dev')
+      case "${PKG_MGR}" in
+        'apk') printf 'geos-dev\n' ;;
+        'apt-get') printf 'libgeos-dev\n' ;;
+        'dnf'|'yum') printf 'geos-devel\n' ;;
+        'zypper') printf 'geos-devel\n' ;;
+        'pacman') printf 'geos\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'library/geos\n'
+          else
+            printf 'graphics/geos\n'
+          fi
+          ;;
+        'brew') printf 'geos\n' ;;
+        'winget') printf 'OSGeo.GEOS\n' ;;
+        *) printf 'geos\n' ;;
+      esac
+      ;;
+    'gettext')
+      case "${PKG_MGR}" in
+        'apk') printf 'gettext gettext-dev\n' ;;
+        'apt-get') printf 'gettext\n' ;;
+        'dnf'|'yum') printf 'gettext gettext-devel\n' ;;
+        'zypper') printf 'gettext-tools gettext-runtime\n' ;;
+        'pacman') printf 'gettext\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'text/gnu-gettext\n'
+          else
+            printf 'devel/gettext\n'
+          fi
+          ;;
+        'brew') printf 'gettext\n' ;;
+        'winget') printf 'GNU.Gettext\n' ;;
+        'choco') printf 'gettext\n' ;;
+        *) printf 'gettext\n' ;;
+      esac
+      ;;
+    'graphviz'|'graphviz-dev')
+      case "${PKG_MGR}" in
+        'apk') printf 'graphviz graphviz-dev\n' ;;
+        'apt-get') printf 'graphviz graphviz-dev\n' ;;
+        'dnf'|'yum') printf 'graphviz graphviz-devel\n' ;;
+        'zypper') printf 'graphviz graphviz-devel\n' ;;
+        'pacman') printf 'graphviz\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'image/graphviz\n'
+          else
+            printf 'graphics/graphviz\n'
+          fi
+          ;;
+        'brew') printf 'graphviz\n' ;;
+        'winget') printf 'Graphviz.Graphviz\n' ;;
+        'choco') printf 'graphviz\n' ;;
+        *) printf 'graphviz\n' ;;
+      esac
+      ;;
+    'rdfind')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'rdfind\n' ;;
+        'dnf'|'yum') printf 'rdfind\n' ;;
+        'zypper') printf 'rdfind\n' ;;
+        'pacman') printf 'rdfind\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            return 1
+          else
+            printf 'sysutils/rdfind\n'
+          fi
+          ;;
+        'brew') printf 'rdfind\n' ;;
+        *) return 1 ;;
+      esac
+      ;;
+    'exim'|'exim4')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'exim4-daemon-light\n' ;;
+        'apk') printf 'exim\n' ;;
+        'dnf'|'yum') printf 'exim\n' ;;
+        'zypper') printf 'exim\n' ;;
+        'pacman') printf 'exim\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'service/network/smtp/sendmail\n'
+          else
+            printf 'mail/exim\n'
+          fi
+          ;;
+        'brew') printf 'exim\n' ;;
+        *) return 1 ;;
       esac
       ;;
     'c'|'cc'|'c_compiler')

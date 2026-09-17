@@ -49,6 +49,7 @@ set "VERSION=%~3"
 
 :: Help / Version / Basic Routing
 if "%ACTION%"=="" goto :show_help
+if /i "%ACTION%"=="help" goto :show_help
 if /i "%ACTION%"=="--help" goto :show_help
 if /i "%ACTION%"=="-h" goto :show_help
 if /i "%ACTION%"=="/?" goto :show_help

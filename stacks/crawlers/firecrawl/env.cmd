@@ -9,3 +9,4 @@
 
 :: Environment variables for Windows
 set "THIS_FILE=%~f0"
+if "%FIRECRAWL_BUILD_DIR%"=="" set "FIRECRAWL_BUILD_DIR=%TEMP%\firecrawl"

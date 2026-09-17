@@ -19,7 +19,10 @@ $ErrorActionPreference = "Stop"
 if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
     Write-Host "Installing scoop..."
     Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
-    Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+    $installer = Join-Path $env:TEMP "install-scoop.ps1"
+    Invoke-RestMethod -Uri "https://get.scoop.sh" -OutFile $installer
+    & $installer
+    Remove-Item -Force $installer -ErrorAction SilentlyContinue
 } else {
     Write-Host "scoop is already installed."
 }

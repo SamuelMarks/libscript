@@ -140,6 +140,9 @@ standardize_*
 !tests/test_update_results.*
 !tests/test_run_native_tests.*
 !tests/test_python_*
+!tests/test_openedx_*
+!tests/test_packaging_branding.*
+!tests/test_msi_generation.*
 !devtools/docs-gen/generate_markdown_docs.*
 !devtools/generate_html_docs.*
 !docker/create_docker_builder.*

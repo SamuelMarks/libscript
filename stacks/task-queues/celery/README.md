@@ -61,25 +61,27 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable                          | Description                                                                                                                               | Default  | Aliases/Examples |
-| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------- |
-| `JUPYTERHUB_SERVICE_USER`         | User (try-create); use for the daemon                                                                                                     | `none`   |                  |
-| `PYTHON_VENV`                     | Python virtualenv to install & then start the celery daemon from                                                                          | `none`   |                  |
-| `LIBSCRIPT_GLOBAL_INSTALL_METHOD` | Global override for how software should be installed across all systems (e.g. system package manager vs downloaded binaries/from-source). | `system` |                  |
-| `LIBSCRIPT_WINDOWS_PKG_MGR`       | Global package manager override for Windows targets (e.g. winget, choco).                                                                 | `winget` |                  |
-| `CELERY_SERVICE_USER`             | Variable CELERY_SERVICE_USER.                                                                                                             | `none`   |                  |
-| `PREFIX`                          | Installation prefix.                                                                                                                      | `none`   |                  |
-| `LIBSCRIPT_LOG_DRIVER`            | Logging driver to use (e.g., fluentd).                                                                                                    | `none`   |                  |
-| `LIBSCRIPT_LOG_HOST`              | Host for remote logging.                                                                                                                  | `none`   |                  |
-| `GROUP`                           | Variable GROUP.                                                                                                                           | `none`   |                  |
-| `LIBSCRIPT_LOG_PORT`              | Port for remote logging.                                                                                                                  | `none`   |                  |
-| `PYTHON_VERSION`                  | Variable PYTHON_VERSION.                                                                                                                  | `none`   |                  |
-| `FORMAT`                          | Output format (e.g., json, text).                                                                                                         | `none`   |                  |
-| `LOGS_DIR`                        | Directory where logs should be stored.                                                                                                    | `none`   |                  |
-| `SERVE_FROM`                      | Base directory or context path from which the service should be served.                                                                   | `none`   |                  |
-| `LIBSCRIPT_VERSION`               | Specifies the version of the package to use.                                                                                              | `none`   |                  |
-| `VAULT_TOKEN`                     | Token for HashiCorp Vault authentication.                                                                                                 | `none`   |                  |
-| `LIBSCRIPT_SERVICE_NAME`          | Overrides the default service name.                                                                                                       | `none`   |                  |
+| Variable                 | Description                                                             | Default            | Aliases/Examples |
+| ------------------------ | ----------------------------------------------------------------------- | ------------------ | ---------------- |
+| `CELERY_SERVICE_USER`    | User account used to run the Celery worker daemon.                      | `celery`           |                  |
+| `CELERY_APP`             | Celery application module (e.g., 'lms.envs.tutor.production').          | `none`             |                  |
+| `CELERY_QUEUES`          | Comma-separated list of queues to consume from.                         | `high,default,low` |                  |
+| `CELERY_CONCURRENCY`     | Number of concurrent worker child processes.                            | `2`                |                  |
+| `CELERY_BEAT_ENABLED`    | Whether to run Celery Beat periodic scheduler.                          | `none`             |                  |
+| `CELERY_BROKER_URL`      | Broker URL for Celery (e.g. redis://127.0.0.1:6379/0).                  | `none`             |                  |
+| `PYTHON_VENV`            | Python virtualenv to install & then start the celery daemon from        | `none`             |                  |
+| `PREFIX`                 | Installation prefix.                                                    | `none`             |                  |
+| `LIBSCRIPT_LOG_DRIVER`   | Logging driver to use (e.g., fluentd).                                  | `none`             |                  |
+| `LIBSCRIPT_LOG_HOST`     | Host for remote logging.                                                | `none`             |                  |
+| `GROUP`                  | Variable GROUP.                                                         | `none`             |                  |
+| `LIBSCRIPT_LOG_PORT`     | Port for remote logging.                                                | `none`             |                  |
+| `PYTHON_VERSION`         | Variable PYTHON_VERSION.                                                | `none`             |                  |
+| `FORMAT`                 | Output format (e.g., json, text).                                       | `none`             |                  |
+| `LOGS_DIR`               | Directory where logs should be stored.                                  | `none`             |                  |
+| `SERVE_FROM`             | Base directory or context path from which the service should be served. | `none`             |                  |
+| `LIBSCRIPT_VERSION`      | Specifies the version of the package to use.                            | `none`             |                  |
+| `VAULT_TOKEN`            | Token for HashiCorp Vault authentication.                               | `none`             |                  |
+| `LIBSCRIPT_SERVICE_NAME` | Overrides the default service name.                                     | `none`             |                  |
 
 <!-- END_VARS -->
 

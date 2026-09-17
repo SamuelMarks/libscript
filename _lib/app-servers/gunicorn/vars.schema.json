@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/app-servers/gunicorn/vars.schema.json",
+  "title": "Gunicorn variables",
+  "description": "Configuration variables for Gunicorn WSGI application server.",
+  "type": "object",
+  "properties": {
+    "GUNICORN_VERSION": {
+      "description": "Specific version of gunicorn to install (e.g. '26.2.0', 'latest').",
+      "type": "string",
+      "default": "latest"
+    },
+    "GUNICORN_INSTALL_METHOD": {
+      "description": "How to install gunicorn ('system', 'libscript_native').",
+      "type": "string",
+      "default": "system"
+    },
+    "GUNICORN_WORKERS": {
+      "description": "Number of worker processes for handling requests.",
+      "type": ["integer", "string"],
+      "default": 2
+    },
+    "GUNICORN_BIND": {
+      "description": "Socket to bind (e.g. '0.0.0.0:8000', '127.0.0.1:8000').",
+      "type": "string",
+      "default": "0.0.0.0:8000"
+    }
+  }
+}

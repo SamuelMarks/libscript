@@ -1,7 +1,12 @@
 @echo off
+:: # setup.cmd
+::
 :: ## Overview
-:: Windows setup stub for kubernetes
-:: 
+:: Primary setup script for Kubernetes on Windows.
+::
 :: ## Usage
-:: Execute this script to perform operations for kubernetes.
+:: Routes to generic setup via `setup_base.cmd`.
+
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+call "%~dp0\..\..\_common\setup_base.cmd" %*

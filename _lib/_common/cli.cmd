@@ -16,7 +16,20 @@ setlocal EnableDelayedExpansion
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
-if not "%~1"=="" goto %~1
+if not "%~1"=="" (
+    if /i "%~1"=="help" goto :help
+    if /i "%~1"=="--help" goto :help
+    if /i "%~1"=="-h" goto :help
+    goto %~1
+)
+exit /b 0
+
+:: ## help
+:: Displays usage assistance.
+:help
+:--help
+:-h
+echo Usage: %~n0 [command] [options]
 exit /b 0
 
 :: ## parse_args

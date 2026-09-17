@@ -1,0 +1,13 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "elasticsearch",
+  "title": "Elasticsearch",
+  "description": "Distributed, RESTful search and analytics engine for Open edX legacy search backends.",
+  "category": "search",
+  "provides": ["search", "elasticsearch"],
+  "requires": ["languages/java"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": [9200, 9300]
+}

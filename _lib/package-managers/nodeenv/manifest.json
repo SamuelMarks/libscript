@@ -1,0 +1,9 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "nodeenv",
+  "provides": ["nodeenv", "node-virtualenv"],
+  "os_whitelist": ["all"],
+  "title": "nodeenv",
+  "description": "Bootstrap module for the nodeenv Node.js virtual environment manager.",
+  "category": "package-manager"
+}

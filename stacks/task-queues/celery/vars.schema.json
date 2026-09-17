@@ -5,29 +5,37 @@
   "description": "Variables for celery storage vars",
   "type": "object",
   "properties": {
-    "JUPYTERHUB_SERVICE_USER": {
-      "description": "User (try-create); use for the daemon",
-      "type": "string"
+    "CELERY_SERVICE_USER": {
+      "type": "string",
+      "description": "User account used to run the Celery worker daemon.",
+      "default": "celery"
+    },
+    "CELERY_APP": {
+      "type": "string",
+      "description": "Celery application module (e.g., 'lms.envs.tutor.production')."
+    },
+    "CELERY_QUEUES": {
+      "type": "string",
+      "description": "Comma-separated list of queues to consume from.",
+      "default": "high,default,low"
+    },
+    "CELERY_CONCURRENCY": {
+      "type": ["integer", "string"],
+      "description": "Number of concurrent worker child processes.",
+      "default": 2
+    },
+    "CELERY_BEAT_ENABLED": {
+      "type": "boolean",
+      "description": "Whether to run Celery Beat periodic scheduler.",
+      "default": false
+    },
+    "CELERY_BROKER_URL": {
+      "type": "string",
+      "description": "Broker URL for Celery (e.g. redis://127.0.0.1:6379/0)."
     },
     "PYTHON_VENV": {
       "description": "Python virtualenv to install & then start the celery daemon from",
       "type": "string"
-    },
-    "LIBSCRIPT_GLOBAL_INSTALL_METHOD": {
-      "description": "Global override for how software should be installed across all systems (e.g. system package manager vs downloaded binaries/from-source).",
-      "type": "string",
-      "enum": ["system", "source"],
-      "default": "system"
-    },
-    "LIBSCRIPT_WINDOWS_PKG_MGR": {
-      "description": "Global package manager override for Windows targets (e.g. winget, choco).",
-      "type": "string",
-      "enum": ["winget", "choco"],
-      "default": "winget"
-    },
-    "CELERY_SERVICE_USER": {
-      "type": "string",
-      "description": "Variable CELERY_SERVICE_USER."
     },
     "PREFIX": {
       "type": "string",

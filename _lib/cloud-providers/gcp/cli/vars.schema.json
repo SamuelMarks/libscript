@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/toolchains/cli/vars.schema.json",
-  "title": "Bazel variables",
-  "description": "Configuration variables for Bazel",
+  "title": "GCP CLI variables",
+  "description": "Configuration variables for GCP CLI",
   "type": "object",
   "properties": {
     "CLI_VERSION": {

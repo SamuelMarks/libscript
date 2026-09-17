@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/app-servers/uvicorn/vars.schema.json",
+  "title": "Uvicorn variables",
+  "description": "Configuration variables for Uvicorn ASGI application server.",
+  "type": "object",
+  "properties": {
+    "UVICORN_VERSION": {
+      "description": "Specific version of uvicorn to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "UVICORN_WORKERS": {
+      "description": "Number of worker processes.",
+      "type": ["integer", "string"],
+      "default": 2
+    },
+    "UVICORN_PORT": {
+      "description": "TCP port to bind to.",
+      "type": ["integer", "string"],
+      "default": 8000
+    },
+    "UVICORN_HOST": {
+      "description": "Host/IP to bind to.",
+      "type": "string",
+      "default": "0.0.0.0"
+    }
+  }
+}

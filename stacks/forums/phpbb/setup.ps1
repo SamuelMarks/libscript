@@ -83,17 +83,15 @@ if ($DbType -eq "mariadb" -or $DbType -eq "mysql") {
     }
 } elseif ($DbType -eq "postgres" -or $DbType -eq "postgresql") {
     try {
-        $psqlCmd = "psql -U postgres -tc `"SELECT 1 FROM pg_database WHERE datname = '$DbName'`""
-        $dbExists = Invoke-Expression $psqlCmd
-        if (-not $dbExists -match "1") {
-            Invoke-Expression "psql -U postgres -c `"CREATE DATABASE $DbName`""
+        $dbExists = & psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = '$DbName'"
+        if (-not ($dbExists -match "1")) {
+            & psql -U postgres -c "CREATE DATABASE $DbName"
         }
-        $psqlCmdUser = "psql -U postgres -tc `"SELECT 1 FROM pg_roles WHERE rolname = '$DbUser'`""
-        $userExists = Invoke-Expression $psqlCmdUser
-        if (-not $userExists -match "1") {
-            Invoke-Expression "psql -U postgres -c `"CREATE USER $DbUser WITH PASSWORD '$DbPass'`""
+        $userExists = & psql -U postgres -tc "SELECT 1 FROM pg_roles WHERE rolname = '$DbUser'"
+        if (-not ($userExists -match "1")) {
+            & psql -U postgres -c "CREATE USER $DbUser WITH PASSWORD '$DbPass'"
         }
-        Invoke-Expression "psql -U postgres -c `"GRANT ALL PRIVILEGES ON DATABASE $DbName TO $DbUser`""
+        & psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE $DbName TO $DbUser"
     } catch {
         Write-Warning "Failed to automatically configure PostgreSQL. You may need to create the database manually."
     }

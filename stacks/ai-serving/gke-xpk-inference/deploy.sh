@@ -23,13 +23,9 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}:"
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-
-# Walk up to find root
-_root="$SCRIPT_DIR"
-while [ ! -f "$_root/ROOT" ] && [ "$_root" != "/" ]; do
-    _root=$(dirname "$_root")
-done
-LIBSCRIPT_ROOT_DIR="${LIBSCRIPT_ROOT_DIR:-$_root}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+export DIR="${SCRIPT_DIR}"
+export LIBSCRIPT_ROOT_DIR
 
 set -feu
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then

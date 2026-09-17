@@ -91,9 +91,26 @@ if [ -d '/etc/systemd/system' ]; then
   if ! priv systemctl reload-or-restart -- "${service_name}" ; then
     true
   fi
+elif [ -d '/etc/init.d' ] && command -v rc-service >/dev/null 2>&1; then
+  # OpenRC
+  service_name="${LIBSCRIPT_SERVICE_NAME:-celery}"
+  log_info "Registering OpenRC service for ${service_name}..."
+  rc-service "${service_name}" restart 2>/dev/null || true
+elif [ -d '/usr/local/etc/rc.d' ]; then
+  # FreeBSD
+  service_name="${LIBSCRIPT_SERVICE_NAME:-celery}"
+  log_info "Configuring FreeBSD rc.d service for ${service_name}..."
+  if command -v sysrc >/dev/null 2>&1; then
+    sysrc "${service_name}_enable=YES" || true
+  fi
+elif [ "${TARGET_OS:-}" = "sunos" ] || [ "$(uname -s)" = "SunOS" ]; then
+  # SunOS / OmniOS SMF or background daemon
+  service_name="${LIBSCRIPT_SERVICE_NAME:-celery}"
+  log_info "Starting Celery worker for ${service_name} on SunOS..."
+  nohup "${PYTHON_VENV}/bin/celery" worker -A "${CELERY_APP:-openedx}" -c "${CELERY_CONCURRENCY:-2}" > "/tmp/${service_name}.log" 2>&1 &
 elif [ -d '/Library/LaunchDaemons' ]; then
   >&2 printf 'TODO: macOS service\n'
   exit 0
 else
-  "${PYTHON_VENV}"'/bin/celery' &
+  "${PYTHON_VENV}"'/bin/celery' worker -A "${CELERY_APP:-openedx}" -c "${CELERY_CONCURRENCY:-2}" &
 fi

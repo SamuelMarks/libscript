@@ -15,6 +15,16 @@
       "description": "Path to a Python virtualenv (will create if nonexistent)",
       "type": "string"
     },
+    "PYTHON_CUSTOM_EXECUTABLE_PATH": {
+      "description": "Path to existing host python3.exe executable. If specified, skips downloading or bootstrapping a new Python runtime.",
+      "type": "string",
+      "format": "file-path"
+    },
+    "PYTHON_USE_SYSTEM": {
+      "description": "Reuse host or existing Python runtime located at PYTHON_CUSTOM_EXECUTABLE_PATH rather than installing bundled Python.",
+      "type": ["boolean", "string"],
+      "default": false
+    },
     "PYTHON_INSTALL_METHOD": {
       "description": "How to install PYTHON. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
       "type": "string",

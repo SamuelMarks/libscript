@@ -127,6 +127,22 @@ if "!PKG!"=="bun" (
     if "!PKG_MGR!"=="winget" set "MAPPED_PKG=RabbitMQ.RabbitMQ"
 ) else if "!PKG!"=="memcached" (
     if "!PKG_MGR!"=="choco" set "MAPPED_PKG=memcached"
+) else if "!PKG!"=="mysql" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=Oracle.MySQL"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=mysql"
+) else if "!PKG!"=="mysql-server" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=Oracle.MySQL"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=mysql"
+) else if "!PKG!"=="mysql-client" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=Oracle.MySQL"
+) else if "!PKG!"=="geos" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=OSGeo.GEOS"
+) else if "!PKG!"=="gettext" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=GNU.Gettext"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=gettext"
+) else if "!PKG!"=="graphviz" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=Graphviz.Graphviz"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=graphviz"
 )
 
 :: If no mapping found, return the original name

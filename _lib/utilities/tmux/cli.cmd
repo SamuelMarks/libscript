@@ -117,6 +117,8 @@ exit /b 0
 !TMUX_CMD! list-sessions
 exit /b 0
 
+:: ## delegate
+:: Delegates execution to the shared component_core router.
 :delegate
 call "%~dp0\..\..\_common\component_core.cmd" %*
 exit /b %errorlevel%

@@ -31,7 +31,14 @@
     },
     "MEMCACHED_LISTEN_PORT": {
       "type": ["string", "integer"],
-      "description": "Port for MEMCACHED to listen on"
+      "description": "Port for MEMCACHED to listen on",
+      "default": 11211
+    },
+    "MEMCACHED_PORT_CONFLICT_POLICY": {
+      "type": "string",
+      "description": "Policy if configured port is occupied: abort, auto-increment, or reuse",
+      "enum": ["abort", "auto-increment", "reuse"],
+      "default": "abort"
     },
     "MEMCACHED_LISTEN_ADDRESS": {
       "type": "string",

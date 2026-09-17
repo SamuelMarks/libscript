@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/search/elasticsearch/vars.schema.json",
+  "title": "Elasticsearch variables",
+  "description": "Configuration variables for Elasticsearch search engine.",
+  "type": "object",
+  "properties": {
+    "ELASTICSEARCH_VERSION": {
+      "description": "Version of Elasticsearch to install (e.g. '7.17.21', '8.13.0', 'latest').",
+      "type": "string",
+      "default": "7.17.21"
+    },
+    "ELASTICSEARCH_INSTALL_METHOD": {
+      "description": "How to install Elasticsearch ('system', 'libscript_native').",
+      "type": "string",
+      "default": "system"
+    },
+    "ELASTICSEARCH_HTTP_PORT": {
+      "description": "HTTP REST port for Elasticsearch.",
+      "type": ["integer", "string"],
+      "default": 9200
+    },
+    "ELASTICSEARCH_CLUSTER_NAME": {
+      "description": "Cluster name identifier.",
+      "type": "string",
+      "default": "openedx-cluster"
+    },
+    "ELASTICSEARCH_DATA_DIR": {
+      "description": "Directory where index data is stored.",
+      "type": "string"
+    }
+  }
+}

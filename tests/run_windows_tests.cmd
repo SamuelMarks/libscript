@@ -3,14 +3,17 @@ set "THIS_FILE=%~f0"
 :: # run_windows_tests.cmd
 ::
 :: ## Overview
-:: Batch script wrapper to execute component tests sequentially on Windows 11 Vagrant VM.
+:: Native batch script to execute component tests sequentially on Windows 11 Vagrant VM.
 ::
 :: ## Usage
 :: run_windows_tests.cmd [TARGETS...|all]
 
 setlocal EnableDelayedExpansion
 set "THIS_DIR=%~dp0"
-set "REPO_ROOT=%THIS_DIR%.."
+if "%THIS_DIR:~-1%"=="" set "THIS_DIR=%THIS_DIR:~0,-1%"
+set "REPO_ROOT=%THIS_DIR%\.."
+for %%I in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fI"
+set "LIBSCRIPT_ROOT_DIR=%REPO_ROOT%"
 set "VAGRANT_DIR=%REPO_ROOT%\vagrant\windows-11"
 set "TESTS_TMP_DIR=%REPO_ROOT%\tests_tmp"
 
@@ -23,13 +26,13 @@ if "%~1"=="/?" goto :show_help
 goto :start_tests
 
 :: ## usage_check
-:: Executes usage_check functionality.
+:: Executes usage_check functionality by defaulting targets to all.
 :usage_check
 set "TARGETS=all"
 goto :run_tests
 
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line help and usage parameters.
 :show_help
 echo Usage: run_windows_tests.cmd [TARGETS...^|all]
 echo.
@@ -38,12 +41,12 @@ echo Results are written to tests_tmp\ directory.
 exit /b 0
 
 :: ## start_tests
-:: Executes start_tests functionality.
+:: Parses command-line targets into the test execution variable.
 :start_tests
 set "TARGETS=%*"
 
 :: ## run_tests
-:: Executes run_tests functionality.
+:: Orchestrates VM verification, repository rsync, and component testing loop.
 :run_tests
 echo === Ensuring Windows 11 Vagrant VM is running ===
 pushd "%VAGRANT_DIR%"
@@ -58,9 +61,61 @@ vagrant rsync
 popd
 
 if "%TARGETS%"=="all" (
-    call sh "%THIS_DIR%run_windows_tests.sh" all
+    set "COMPONENTS="
+    for /d %%C in ("%REPO_ROOT%\_lib\*") do (
+        set "cat_name=%%~nxC"
+        if not "!cat_name:~0,1!"=="_" (
+            for /d %%D in ("%%C\*") do (
+                set "comp_name=%%~nxD"
+                if not "!comp_name:~0,1!"=="_" (
+                    set "COMPONENTS=!COMPONENTS! !comp_name!"
+                )
+            )
+        )
+    )
 ) else (
-    call sh "%THIS_DIR%run_windows_tests.sh" %TARGETS%
+    set "COMPONENTS=%TARGETS%"
 )
 
-exit /b %errorlevel%
+for %%T in (!COMPONENTS!) do (
+    call :run_single_test %%T
+)
+
+if exist "%REPO_ROOT%\tests\update_results.cmd" (
+    call "%REPO_ROOT%\tests\update_results.cmd"
+)
+
+exit /b 0
+
+:: ## run_single_test
+:: Runs the install, test, and idempotency cycle for a single component target.
+:run_single_test
+set "target=%~1"
+echo ============================================================
+echo Running test for !target! on windows-11...
+echo ============================================================
+
+set "stdout_file=%TESTS_TMP_DIR%\!target!.windows.stdout"
+set "stderr_file=%TESTS_TMP_DIR%\!target!.windows.stderr"
+set "success_file=%TESTS_TMP_DIR%\!target!.windows.success"
+set "failure_file=%TESTS_TMP_DIR%\!target!.windows.failure"
+set "idempotent_file=%TESTS_TMP_DIR%\!target!.idempotent.success"
+
+if exist "!success_file!" del "!success_file!" >nul 2>&1
+if exist "!failure_file!" del "!failure_file!" >nul 2>&1
+if exist "!idempotent_file!" del "!idempotent_file!" >nul 2>&1
+
+set "test_cmd=Set-Location C:\libscript; cmd.exe /c "C:\libscript\libscript.cmd install !target!" ; $iExit1 = $LASTEXITCODE; cmd.exe /c "C:\libscript\libscript.cmd test !target!" ; $tExit1 = $LASTEXITCODE; cmd.exe /c "C:\libscript\libscript.cmd install !target!" ; $iExit2 = $LASTEXITCODE; cmd.exe /c "C:\libscript\libscript.cmd test !target!" ; $tExit2 = $LASTEXITCODE; if ($iExit1 -ne 0) { exit $iExit1 } elseif ($tExit1 -ne 0) { exit $tExit1 } elseif ($iExit2 -ne 0) { exit $iExit2 } elseif ($tExit2 -ne 0) { exit $tExit2 }"
+
+pushd "%VAGRANT_DIR%"
+vagrant ssh -c "!test_cmd!" > "!stdout_file!" 2> "!stderr_file!"
+if errorlevel 1 (
+    echo Failure > "!failure_file!"
+    echo [FAILED] !target!
+) else (
+    echo Success > "!success_file!"
+    echo Idempotent > "!idempotent_file!"
+    echo [OK] !target! (2x install + test verified)
+)
+popd
+exit /b 0

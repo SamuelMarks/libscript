@@ -16,7 +16,10 @@ $ErrorActionPreference = "Stop"
 
 if (-Not (Get-Command uv -ErrorAction SilentlyContinue)) {
   Write-Host "Installing uv..."
-  Invoke-RestMethod -Uri https://astral.sh/uv/install.ps1 | Invoke-Expression
+  $installer = Join-Path $env:TEMP "install-uv.ps1"
+  Invoke-RestMethod -Uri "https://astral.sh/uv/install.ps1" -OutFile $installer
+  & $installer
+  Remove-Item -Force $installer -ErrorAction SilentlyContinue
 }
 
 if ($Action -eq "ls") {

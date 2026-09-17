@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "hmailserver",
+  "title": "hMailServer",
+  "description": "Free, open-source e-mail server for Microsoft Windows with SMTP relay support.",
+  "category": "utilities",
+  "provides": ["mail", "smtp", "hmailserver"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": [25, 110, 143, 587]
+}

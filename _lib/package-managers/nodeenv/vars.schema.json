@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/package-managers/nodeenv/vars.schema.json",
+  "title": "Nodeenv variables",
+  "description": "Configuration variables for nodeenv",
+  "type": "object",
+  "properties": {
+    "NODEENV_INSTALL_METHOD": {
+      "description": "How to install nodeenv. 'libscript_native' uses pip/uv in isolated dir, 'system' uses system package manager or user python environment.",
+      "type": "string",
+      "default": "system"
+    },
+    "NODEENV_VERSION": {
+      "description": "Specific version of nodeenv to install (e.g. '1.9.1', 'latest').",
+      "type": "string",
+      "default": "latest"
+    }
+  }
+}

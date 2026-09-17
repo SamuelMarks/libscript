@@ -9,6 +9,7 @@ cms solutions in LibScript.
   configuration.
 - **[joomla](joomla/)**: A generic setup script to deploy the [Joomla! CMS](https://www.joomla.org/)
   using LibScript.
+- **[openedx](openedx/)**: Enterprise Open edX LMS and Studio/CMS platform orchestration.
 - **[wordpress](wordpress/)**: This document describes the `WordPress` component within the
   LibScript ecosystem. This module
 

@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/toolchains/huggingface_hub/vars.schema.json",
-  "title": "huggingface_hub variables",
-  "description": "Configuration variables for huggingface_hub",
+  "title": "vLLM variables",
+  "description": "Configuration variables for vLLM",
   "type": "object",
   "properties": {
     "VLLM_VERSION": {

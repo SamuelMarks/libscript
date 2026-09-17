@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/app-servers/waitress/vars.schema.json",
+  "title": "Waitress variables",
+  "description": "Configuration variables for Waitress WSGI application server.",
+  "type": "object",
+  "properties": {
+    "WAITRESS_VERSION": {
+      "description": "Specific version of waitress to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "WAITRESS_THREADS": {
+      "description": "Number of worker threads used to process requests.",
+      "type": ["integer", "string"],
+      "default": 4
+    },
+    "WAITRESS_PORT": {
+      "description": "TCP port to bind to.",
+      "type": ["integer", "string"],
+      "default": 8000
+    },
+    "WAITRESS_LISTEN_PORT": {
+      "description": "Port for Waitress to listen on (alias of WAITRESS_PORT).",
+      "type": ["integer", "string"],
+      "default": 8000
+    },
+    "WAITRESS_HOST": {
+      "description": "Host/IP to bind to.",
+      "type": "string",
+      "default": "0.0.0.0"
+    }
+  }
+}

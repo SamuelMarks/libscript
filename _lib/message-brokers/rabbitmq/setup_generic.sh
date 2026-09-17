@@ -186,8 +186,8 @@ case "$ACTION" in
             if [ "$UNAME_LOWER" = "linux" ]; then
               log_info "Configuring RabbitMQ repository for Linux..."
               if [ -x "/usr/bin/dnf" ] || [ -x "/usr/bin/yum" ]; then
-                curl -s https://packagecloud.io/install/repositories/rabbitmq/erlang/script.rpm.sh | priv bash 2>/dev/null || true
-                curl -s https://packagecloud.io/install/repositories/rabbitmq/rabbitmq-server/script.rpm.sh | priv bash 2>/dev/null || true
+                curl -s https://packagecloud.io/install/repositories/rabbitmq/erlang/script.rpm.sh | priv sh 2>/dev/null || true
+                curl -s https://packagecloud.io/install/repositories/rabbitmq/rabbitmq-server/script.rpm.sh | priv sh 2>/dev/null || true
                 libscript_depends "rabbitmq-server"
               else
                 libscript_depends "rabbitmq-server"

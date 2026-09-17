@@ -16,7 +16,10 @@ $ErrorActionPreference = "Stop"
 
 if (-Not (Get-Command bun -ErrorAction SilentlyContinue)) {
   Write-Host "Installing bun..."
-  Invoke-Expression (Invoke-RestMethod -Uri "https://bun.sh/install.ps1")
+  $installer = Join-Path $env:TEMP "install-bun.ps1"
+  Invoke-RestMethod -Uri "https://bun.sh/install.ps1" -OutFile $installer
+  & $installer
+  Remove-Item -Force $installer -ErrorAction SilentlyContinue
 }
 
 if ($Action -eq "ls") {

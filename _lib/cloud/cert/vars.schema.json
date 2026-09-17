@@ -10,5 +10,7 @@
       "type": "string",
       "description": "The domain name for the certificate."
     }
-  }
+  },
+  "title": "Cloud Certificate variables",
+  "description": "Configuration variables for Cloud Certificates"
 }

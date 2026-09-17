@@ -1,0 +1,15 @@
+# ## Overview
+# PowerShell script for setup.ps1.
+#
+# ## Usage
+# Execute via PowerShell.
+
+<#
+.SYNOPSIS
+    PowerShell setup wrapper for nodeenv.
+.DESCRIPTION
+    Delegates to the shared setup_base.ps1 logic.
+#>
+param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Args)
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+& (Join-Path $ScriptDir "..\..\_common\setup_base.ps1") @Args

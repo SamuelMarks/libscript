@@ -49,7 +49,10 @@ if ($Action -eq "create") {
     if ($LASTEXITCODE -eq 0 -and $filestoreExists -notmatch "was not found") {
         & $LogCmd -Info "Filestore '$InstanceName' already exists in $env:FILESTORE_ZONE."
     } else {
-        Invoke-Expression "gcloud filestore instances create $InstanceName --zone='$env:FILESTORE_ZONE' --tier='$Tier' --file-share='name=vol1,capacity=$($Capacity)GB' --network='name=$Network' $ProjectFlag $TagsArg"
+        $createArgs = @("filestore", "instances", "create", $InstanceName, "--zone=$env:FILESTORE_ZONE", "--tier=$Tier", "--file-share=name=vol1,capacity=$($Capacity)GB", "--network=name=$Network")
+        if ($ProjectFlag) { $createArgs += $ProjectFlag }
+        if ($TagsArg) { $createArgs += $TagsArg }
+        & gcloud @createArgs
     }
 } elseif ($Action -eq "delete") {
     if (-not $InstanceName) {
@@ -64,7 +67,9 @@ if ($Action -eq "create") {
     & $LogCmd -Info "Deleting GCP Filestore $InstanceName in $env:FILESTORE_ZONE..."
     $filestoreExists = gcloud filestore instances describe $InstanceName --zone=$env:FILESTORE_ZONE $ProjectFlag 2>&1
     if ($LASTEXITCODE -eq 0 -and $filestoreExists -notmatch "was not found") {
-        Invoke-Expression "gcloud filestore instances delete $InstanceName --zone='$env:FILESTORE_ZONE' --quiet $ProjectFlag"
+        $deleteArgs = @("filestore", "instances", "delete", $InstanceName, "--zone=$env:FILESTORE_ZONE", "--quiet")
+        if ($ProjectFlag) { $deleteArgs += $ProjectFlag }
+        & gcloud @deleteArgs
     } else {
         & $LogCmd -Info "Filestore '$InstanceName' already deleted or not found."
     }

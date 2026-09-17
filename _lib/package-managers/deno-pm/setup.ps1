@@ -16,7 +16,10 @@ $ErrorActionPreference = "Stop"
 
 if (-Not (Get-Command deno -ErrorAction SilentlyContinue)) {
   Write-Host "Installing deno..."
-  Invoke-Expression (Invoke-RestMethod -Uri "https://deno.land/install.ps1")
+  $installer = Join-Path $env:TEMP "install-deno.ps1"
+  Invoke-RestMethod -Uri "https://deno.land/install.ps1" -OutFile $installer
+  & $installer
+  Remove-Item -Force $installer -ErrorAction SilentlyContinue
 }
 
 if ($Action -eq "ls") {

@@ -331,10 +331,12 @@ multicloud fleet, we want to hear from you.
 | `dnf`              | ✅          | ✅          | ✅          | -       | -     | -       |
 | `docker`           | ✅          | ✅          | ✅          | -       | -     | -       |
 | `duckdb`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `elasticsearch`    | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `elixir`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `emerge`           | ✅          | ✅          | ✅          | -       | -     | -       |
 | `eopkg`            | ✅          | ✅          | ✅          | -       | -     | -       |
 | `etcd`             | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `exim`             | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `flatpak`          | ✅          | ✅          | ✅          | -       | -     | -       |
 | `fluentbit`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `fnm`              | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
@@ -349,8 +351,10 @@ multicloud fleet, we want to hear from you.
 | `google-cloud-sdk` | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `gradle`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `guix`             | ✅          | ✅          | ✅          | -       | -     | -       |
+| `gunicorn`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `hatch`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `helm`             | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `hmailserver`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `httpd`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `huggingface-cli`  | ✅          | ✅          | ✅          | ✅      | -     | -       |
 | `iis`              | -           | -           | -           | ✅      | -     | -       |
@@ -372,6 +376,7 @@ multicloud fleet, we want to hear from you.
 | `mariadb`          | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `mas`              | -           | -           | -           | -       | -     | -       |
 | `maven`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `meilisearch`      | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `memcached`        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `minio`            | ✅          | ✅          | ✅          | -       | -     | -       |
 | `mise`             | ✅          | ✅          | ✅          | -       | -     | -       |
@@ -379,10 +384,12 @@ multicloud fleet, we want to hear from you.
 | `mongodb`          | -           | ✅          | ✅          | -       | -     | -       |
 | `mosquitto`        | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `msys2`            | -           | -           | -           | ✅      | -     | -       |
+| `mysql`            | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `nats`             | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `nginx`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `nimble`           | ✅          | ✅          | ✅          | ✅      | -     | -       |
 | `nix`              | -           | ✅          | ✅          | -       | -     | -       |
+| `nodeenv`          | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `nodejs`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `nodejs-server`    | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `npm`              | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
@@ -438,6 +445,8 @@ multicloud fleet, we want to hear from you.
 | `tmux`             | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `utils`            | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `uv`               | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
+| `uvicorn`          | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
+| `uwsgi`            | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `vagrant`          | -           | ✅          | ✅          | ✅      | -     | ✅      |
 | `valkey`           | ✅          | ✅          | ✅          | -       | -     | ✅      |
 | `vcpkg`            | ✅          | ✅          | ✅          | ✅      | -     | -       |
@@ -446,6 +455,7 @@ multicloud fleet, we want to hear from you.
 | `vllm`             | -           | ✅          | ✅          | -       | -     | -       |
 | `volume`           | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `wait4x`           | ✅          | ✅          | ✅          | ✅      | -     | -       |
+| `waitress`         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `wget`             | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |
 | `winget`           | -           | -           | -           | ✅      | -     | -       |
 | `xbps`             | ✅          | ✅          | ✅          | -       | -     | -       |

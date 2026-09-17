@@ -117,7 +117,7 @@ function libscript_check_health {
             $schema = Get-Content $schemaFile | ConvertFrom-Json
             if ($schema.healthcheck) {
                 log_info "Running custom healthcheck for $ServiceName..."
-                Invoke-Expression $schema.healthcheck
+                powershell -NoProfile -ExecutionPolicy Bypass -Command $schema.healthcheck
                 if ($LASTEXITCODE -eq 0) {
                     log_success "$ServiceName is healthy"
                     return $true

@@ -14,5 +14,7 @@
       "type": "string",
       "description": "The filesystem type (default: ext4)."
     }
-  }
+  },
+  "title": "CloudInit variables",
+  "description": "Configuration variables for CloudInit"
 }

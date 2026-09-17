@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "exim",
+  "title": "Exim",
+  "description": "Exim mail transfer agent and local SMTP relay daemon.",
+  "category": "utilities",
+  "provides": ["mail", "smtp", "exim"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": [25, 587]
+}

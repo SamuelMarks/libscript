@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/hmailserver/vars.schema.json",
+  "title": "hMailServer variables",
+  "description": "Configuration variables for hMailServer on Windows.",
+  "type": "object",
+  "properties": {
+    "HMAILSERVER_VERSION": {
+      "description": "Version of hMailServer to install.",
+      "type": "string",
+      "default": "5.6.8"
+    },
+    "HMAILSERVER_INSTALL_DIR": {
+      "description": "Destination directory for hMailServer installation.",
+      "type": "string"
+    },
+    "HMAILSERVER_SMTP_PORT": {
+      "description": "Port for SMTP listener.",
+      "type": ["integer", "string"],
+      "default": 25
+    },
+    "HMAILSERVER_DATABASE_TYPE": {
+      "description": "Database engine used by hMailServer (e.g. 'built-in', 'mysql').",
+      "type": "string",
+      "default": "built-in"
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "waitress",
+  "title": "Waitress",
+  "description": "Production-quality pure-Python WSGI server with native Windows support.",
+  "category": "app-servers",
+  "provides": ["app-server", "wsgi", "waitress"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": [8000]
+}

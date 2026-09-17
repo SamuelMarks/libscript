@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/databases/mysql/vars.schema.json",
+  "title": "MySQL variables",
+  "description": "Configuration variables for MySQL 8.x database server and client.",
+  "type": "object",
+  "properties": {
+    "MYSQL_VERSION": {
+      "description": "Specific version of MySQL to install (e.g. '8.4.11', '8.0.36', 'latest').",
+      "type": "string",
+      "default": "8.4.11"
+    },
+    "MYSQL_INSTALL_METHOD": {
+      "description": "Installation method for MySQL ('system', 'libscript_native').",
+      "type": "string",
+      "enum": ["system", "libscript_native"],
+      "default": "system"
+    },
+    "MYSQL_PORT": {
+      "description": "TCP port MySQL listens on.",
+      "type": ["integer", "string"],
+      "default": 3306
+    },
+    "MYSQL_ROOT_PASSWORD": {
+      "description": "Root password for MySQL server administration.",
+      "type": "string",
+      "default": ""
+    },
+    "MYSQL_DATABASE": {
+      "description": "Initial database to create upon setup (e.g., 'openedx').",
+      "type": "string",
+      "default": "openedx"
+    },
+    "MYSQL_USER": {
+      "description": "Database user account to create and grant permissions.",
+      "type": "string",
+      "default": "openedx"
+    },
+    "MYSQL_PASSWORD": {
+      "description": "Password for the database user account.",
+      "type": "string",
+      "default": ""
+    },
+    "MYSQL_DATA_DIR": {
+      "description": "Custom directory where MySQL storage engine databases are kept.",
+      "type": "string"
+    },
+    "MYSQL_REMOTE_URL": {
+      "description": "Connection string or URL for external MySQL host (e.g. 'mysql://user:pass@remote-host:3306/db'). If set, local MySQL installation can be skipped.",
+      "type": "string",
+      "format": "uri"
+    },
+    "MYSQL_INSTALL_LOCAL": {
+      "description": "Whether to install and provision a local MySQL database server instance.",
+      "type": ["boolean", "string"],
+      "default": true
+    },
+    "MYSQL_SKIP_LOCAL_INSTALL": {
+      "description": "Explicitly bypass local MySQL server setup when utilizing a managed remote database.",
+      "type": ["boolean", "string"],
+      "default": false
+    },
+    "MYSQL_CHARACTER_SET": {
+      "description": "Default server and database character set.",
+      "type": "string",
+      "default": "utf8mb4"
+    },
+    "MYSQL_COLLATION": {
+      "description": "Default server and database collation sequence.",
+      "type": "string",
+      "default": "utf8mb4_unicode_ci"
+    }
+  }
+}

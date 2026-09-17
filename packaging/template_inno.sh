@@ -38,7 +38,7 @@ AppName=$APP_NAME
 AppVersion=$APP_VERSION
 AppPublisher=$APP_PUBLISHER
 EOF2
-      if [ -n "$APP_URL" ]; then
+      if [ -n "${APP_URL:-}" ]; then
         printf '%s\n' "AppPublisherURL=$APP_URL"
         printf '%s\n' "AppSupportURL=$APP_URL"
         printf '%s\n' "AppUpdatesURL=$APP_URL"
@@ -49,10 +49,11 @@ PrivilegesRequired=${inno_priv:-admin}
 OutputDir=.
 OutputBaseFilename=$OUT_FILE
 EOF2
-      if [ "$UPGRADE_CODE" != "PUT-GUID-HERE" ]; then printf '%s\n' "AppId=$UPGRADE_CODE"; fi
-      if [ -n "$ICON_PATH" ]; then printf '%s\n' "SetupIconFile=$ICON_PATH"; fi
-      if [ -n "$IMAGE_PATH" ]; then printf '%s\n' "WizardImageFile=$IMAGE_PATH"; fi
-      if [ -n "$LICENSE_PATH" ]; then printf '%s\n' "LicenseFile=$LICENSE_PATH"; fi
+      if [ "${UPGRADE_CODE:-}" != "PUT-GUID-HERE" ] && [ -n "${UPGRADE_CODE:-}" ]; then printf '%s\n' "AppId=$UPGRADE_CODE"; fi
+      if [ -n "${ICON_PATH:-}" ]; then printf '%s\n' "SetupIconFile=$ICON_PATH"; fi
+      if [ -n "${BANNER_SIDE_PATH:-${IMAGE_PATH:-}}" ]; then printf '%s\n' "WizardImageFile=${BANNER_SIDE_PATH:-${IMAGE_PATH:-}}"; fi
+      if [ -n "${BANNER_TOP_PATH:-}" ]; then printf '%s\n' "WizardSmallImageFile=$BANNER_TOP_PATH"; fi
+      if [ -n "${LICENSE_PATH:-}" ]; then printf '%s\n' "LicenseFile=$LICENSE_PATH"; fi
 
       deps_list=""
       if [ $# -gt 0 ]; then
@@ -70,8 +71,9 @@ EOF2
       printf '%s\n' "Name: \"full\"; Description: \"Full installation\""
       printf '%s\n' ""
       printf '%s\n' "[Components]"
-      set -- "$deps_list"
-      while [ $# -gt 0 ]; do
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "Name: \"$pkg\"; Description: \"$pkg\"; Types: full custom"
       done
@@ -80,8 +82,9 @@ EOF2
       printf '%s\n' "[Code]"
       printf '%s\n' "var"
 
-      set -- "$deps_list"
-      while [ $# -gt 0 ]; do
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
@@ -97,8 +100,9 @@ EOF2
 
       printf '%s\n' "procedure InitializeWizard;"
       printf '%s\n' "begin"
-      set -- "$deps_list"
-      while [ $# -gt 0 ]; do
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
@@ -126,8 +130,9 @@ EOF2
       printf '%s\n' "function ShouldSkipPage(PageID: Integer): Boolean;"
       printf '%s\n' "begin"
       printf '%s\n' "  Result := False;"
-      set -- "$deps_list"
-      while [ $# -gt 0 ]; do
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
@@ -144,8 +149,9 @@ EOF2
       printf '%s\n' "  ResultCode: Integer;"
       printf '%s\n' "begin"
       printf '%s\n' "  Result := True;"
-      set -- "$deps_list"
-      while [ $# -gt 0 ]; do
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
@@ -179,8 +185,9 @@ EOF2
       printf '%s\n' "  ResultCode: Integer;"
       printf '%s\n' "begin"
       printf '%s\n' "  if CurUninstallStep = usUninstall then begin"
-      set -- "$deps_list"
-      while [ $# -gt 0 ]; do
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "    if MsgBox('Do you want to completely remove the Data Directory and all records for $pkg?', mbConfirmation, MB_YESNO) = idYes then begin"
         printf '%s\n' "      Exec('cmd.exe', '/c libscript.cmd uninstall $pkg --purge-data --service-name ' + Get_${pkg}_$(printf '%s\n' "$pkg" | tr "[:lower:]" "[:upper:]")_SERVICE_NAME(''), '', SW_HIDE, ewWaitUntilTerminated, ResultCode);"
@@ -191,8 +198,9 @@ EOF2
       printf '%s\n' "  end;"
       printf '%s\n' "end;"
 
-      set -- "$deps_list"
-      while [ $# -gt 0 ]; do
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
@@ -212,8 +220,9 @@ EOF2
 
       printf '%s\n' ""
       printf '%s\n' "[Run]"
-      set -- "$deps_list"
-      while [ $# -gt 0 ]; do
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         run_params="/c libscript.cmd install-service $pkg $ver"
         schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)

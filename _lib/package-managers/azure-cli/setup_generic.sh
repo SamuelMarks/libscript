@@ -163,7 +163,7 @@ case "$ACTION" in
           libscript_depends "python3" "py3-pip" "gcc" "musl-dev" "python3-dev" "libffi-dev" "openssl-dev" "make"
           pip install --break-system-packages azure-cli || true
         else
-          curl -sL https://aka.ms/InstallAzureCli | bash || true
+          curl -sL https://aka.ms/InstallAzureCli | sh || true
         fi
         mkdir -p "${TARGET_DIR}/bin"
         ln -sf "$(command -v az)" "${TARGET_DIR}/bin/az" || true

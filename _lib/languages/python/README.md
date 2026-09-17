@@ -102,6 +102,8 @@ running the setup script.
 | `JETSTREAM_IMAGE`                  | Docker image for JetStream TPU inference                                                                                                                               | `none`                     |                  |
 | `PYTHON_VERSION`                   | Version of Python demanded. Can be a specific numeric version number or an alias                                                                                       | `3.11`                     | latest, cpython  |
 | `PYTHON_VENV`                      | Path to a Python virtualenv (will create if nonexistent)                                                                                                               | `none`                     |                  |
+| `PYTHON_CUSTOM_EXECUTABLE_PATH`    | Path to existing host python3.exe executable. If specified, skips downloading or bootstrapping a new Python runtime.                                                   | `none`                     |                  |
+| `PYTHON_USE_SYSTEM`                | Reuse host or existing Python runtime located at PYTHON_CUSTOM_EXECUTABLE_PATH rather than installing bundled Python.                                                  | `none`                     |                  |
 | `PYTHON_INSTALL_METHOD`            | How to install PYTHON. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native`         |                  |
 
 <!-- END_VARS -->

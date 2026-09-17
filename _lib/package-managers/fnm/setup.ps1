@@ -16,7 +16,10 @@ $ErrorActionPreference = "Stop"
 
 if (-Not (Get-Command fnm -ErrorAction SilentlyContinue)) {
   Write-Host "Installing fnm..."
-  Invoke-Expression (Invoke-RestMethod -Uri "https://fnm.vercel.stacks/install")
+  $installer = Join-Path $env:TEMP "install-fnm.ps1"
+  Invoke-RestMethod -Uri "https://fnm.vercel.stacks/install" -OutFile $installer
+  & $installer
+  Remove-Item -Force $installer -ErrorAction SilentlyContinue
 }
 
 if ($Action -eq "ls") {

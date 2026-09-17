@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "gunicorn",
+  "title": "Gunicorn",
+  "description": "Python WSGI HTTP Server for UNIX / POSIX.",
+  "category": "app-servers",
+  "provides": ["app-server", "wsgi", "gunicorn"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": [8000]
+}

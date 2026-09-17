@@ -9,3 +9,4 @@
 
 :: Environment variables for Windows
 set "THIS_FILE=%~f0"
+if not "%DRUPAL_LISTEN%"=="" set "LIBSCRIPT_LISTEN_PORT=%DRUPAL_LISTEN%"

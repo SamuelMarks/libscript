@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/stacks/cms/openedx/vars.schema.json",
+  "title": "Open edX Stack Variables",
+  "description": "Variables for Open edX LMS and CMS stack deployment.",
+  "type": "object",
+  "properties": {
+    "OPENEDX_VERSION": {
+      "type": "string",
+      "description": "Open edX release or git branch (e.g., 'master', 'open-release/quince.master').",
+      "default": "master"
+    },
+    "OPENEDX_EDX_PLATFORM_REPOSITORY": {
+      "type": "string",
+      "description": "Git repository URL for openedx-platform.",
+      "default": "https://github.com/openedx/openedx-platform.git"
+    },
+    "LMS_HOST": {
+      "type": "string",
+      "description": "Public domain/host for LMS web interface.",
+      "default": "openedx.local"
+    },
+    "CMS_HOST": {
+      "type": "string",
+      "description": "Public domain/host for Studio / CMS authoring interface.",
+      "default": "studio.openedx.local"
+    },
+    "LMS_PORT": {
+      "type": ["integer", "string"],
+      "description": "Internal HTTP port for LMS WSGI server.",
+      "default": 8000
+    },
+    "CMS_PORT": {
+      "type": ["integer", "string"],
+      "description": "Internal HTTP port for CMS WSGI server.",
+      "default": 8001
+    },
+    "OPENEDX_ADMIN_EMAIL": {
+      "type": "string",
+      "description": "Administrator email address.",
+      "default": "admin@openedx.local"
+    },
+    "OPENEDX_ADMIN_USERNAME": {
+      "type": "string",
+      "description": "Administrator username.",
+      "default": "admin"
+    },
+    "OPENEDX_ADMIN_PASSWORD": {
+      "type": "string",
+      "description": "Administrator initial password.",
+      "default": "admin"
+    },
+    "OPENEDX_SECRET_KEY": {
+      "type": "string",
+      "description": "Secret key for Django sessions and token encryption.",
+      "default": "insecure-secret-key-replace-in-production"
+    },
+    "OPENEDX_WSGI_WORKERS": {
+      "type": ["integer", "string"],
+      "description": "Number of WSGI worker processes.",
+      "default": 2
+    },
+    "OPENEDX_INSTALL_DIR": {
+      "type": "string",
+      "description": "Directory where openedx-platform is checked out and deployed."
+    }
+  }
+}

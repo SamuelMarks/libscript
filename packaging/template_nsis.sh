@@ -44,10 +44,17 @@ RequestExecutionLevel ${nsis_admin:-admin}
 VIProductVersion "$APP_VERSION"
 VIAddVersionKey "ProductName" "$APP_NAME"
 VIAddVersionKey "CompanyName" "$APP_PUBLISHER"
-VIAddVersionKey "FileDescription" "$WELCOME_TEXT"
+VIAddVersionKey "FileDescription" "${WELCOME_TEXT:-$APP_NAME Installer}"
 VIAddVersionKey "FileVersion" "$APP_VERSION"
 EOF2
-      if [ -n "$ICON_PATH" ]; then printf '%s\n' "Icon \"$ICON_PATH\""; fi
+      if [ -n "${ICON_PATH:-}" ]; then printf '%s\n' "Icon \"$ICON_PATH\""; fi
+      if [ -n "${BANNER_TOP_PATH:-}" ]; then
+        printf '%s\n' "!define MUI_HEADERIMAGE"
+        printf '%s\n' "!define MUI_HEADERIMAGE_BITMAP \"$BANNER_TOP_PATH\""
+      fi
+      if [ -n "${BANNER_SIDE_PATH:-}" ]; then
+        printf '%s\n' "!define MUI_WELCOMEFINISHPAGE_BITMAP \"$BANNER_SIDE_PATH\""
+      fi
       printf '%s\n' ""
 
       deps_list=""
@@ -63,8 +70,9 @@ EOF2
       printf '%s\n' "Include nsDialogs.nsh"
       printf '%s\n' "Page components"
 
-      set -- "$deps_list"
-      while [ $# -gt 0 ]; do
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
@@ -85,8 +93,9 @@ EOF2
       printf '%s\n' "Page instfiles"
       printf '%s\n' ""
 
-      set -- "$deps_list"
-      while [ $# -gt 0 ]; do
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "Section \"$pkg\" SEC_$pkg"
         run_params="/c libscript.cmd install-service $pkg $ver"
@@ -102,8 +111,9 @@ EOF2
         printf '%s\n' "SectionEnd"
       done
 
-      set -- "$deps_list"
-      while [ $# -gt 0 ]; do
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$SCRIPT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
@@ -159,8 +169,9 @@ EOF2
 
       # Uninstaller
       printf '%s\n' "Section \"Uninstall\""
-      set -- "$deps_list"
-      while [ $# -gt 0 ]; do
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "  MessageBox MB_YESNO \"Do you want to completely remove the Data Directory and all records for $pkg?\" IDYES purge_$pkg IDNO keep_$pkg"
         printf '%s\n' "  purge_$pkg:"
