@@ -117,7 +117,7 @@ for %%T in (!TARGETS!) do (
             if !errorlevel! equ 0 (
                 findstr /i /c:""os_blacklist"" "!MANIFEST_PATH!" >nul 2>&1
                 if !errorlevel! equ 0 (
-                    :: Simple check if windows appears in blacklist
+                    REM Simple check if windows appears in blacklist
                     findstr /c:"os_blacklist" "!MANIFEST_PATH!" >nul 2>&1
                 )
             )

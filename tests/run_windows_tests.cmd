@@ -115,7 +115,7 @@ if errorlevel 1 (
 ) else (
     echo Success > "!success_file!"
     echo Idempotent > "!idempotent_file!"
-    echo [OK] !target! (2x install + test verified)
+    echo [OK] !target! ^(2x install + test verified^)
 )
 popd
 exit /b 0

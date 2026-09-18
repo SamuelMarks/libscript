@@ -94,7 +94,7 @@ if "!LOCAL_SUM!"=="!REMOTE_SUM!" (
     echo [INFO] [SYNCING] !APP_NAME! -^> https://!APP_DOMAIN! ^(local: !LOCAL_SUM!, remote: !REMOTE_SUM!^)
     ssh "!TARGET_HOST!" "mkdir -p $HOME/apps/!APP_NAME!"
     
-    :: Basic scp fallback
+    REM Basic scp fallback
     scp -r "!APP_PATH!\*" "!TARGET_HOST!:apps/!APP_NAME!/"
     
     ssh "!TARGET_HOST!" "mkdir -p $HOME/.libscript && echo !LOCAL_SUM! > $HOME/.libscript/deploy_state_!APP_NAME!"
@@ -167,8 +167,8 @@ if "!needs_db!"=="1" (
     if "!SHARED_DB!"=="postgres" (
         set "safe_db_name=!aname:-=_!"
         echo [INFO] Ensuring DB !safe_db_name! exists on !TARGET_HOST!...
-        :: Note: ssh execution happens on the REMOTE host. We use grep since remote is likely Linux. 
-        :: If remote is Windows, this would need an OS abstraction layer, but sticking to PaaS Linux standard for now.
+        REM Note: ssh execution happens on the REMOTE host. We use grep since remote is likely Linux. 
+        REM If remote is Windows, this would need an OS abstraction layer, but sticking to PaaS Linux standard for now.
         ssh "!TARGET_HOST!" "psql -lqt | cut -d \| -f 1 | grep -qw !safe_db_name! || createdb !safe_db_name!"
         ssh "!TARGET_HOST!" "touch $HOME/apps/!aname!/.env && grep -qxF 'DATABASE_URL=postgres://localhost:5432/!safe_db_name!' $HOME/apps/!aname!/.env || echo DATABASE_URL=postgres://localhost:5432/!safe_db_name! >> $HOME/apps/!aname!/.env"
     )

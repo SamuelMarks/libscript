@@ -114,7 +114,7 @@ exit /b 1
 :: Executes validate_args functionality.
 :validate_args
 if "%CMD%"=="" (
-    echo Error: Missing command for cdn (create^|delete^|list^|invalidate^). >&2
+    echo Error: Missing command for cdn ^(create^|delete^|list^|invalidate^). >&2
     exit /b 1
 )
 
@@ -139,7 +139,7 @@ exit /b 1
 :: Executes execute functionality.
 :execute
 if "%LIBSCRIPT_CLOUD%"=="" (
-    echo Error: --cloud (or LIBSCRIPT_CLOUD) is required. >&2
+    echo Error: --cloud ^(or LIBSCRIPT_CLOUD^) is required. >&2
     exit /b 1
 )
 
@@ -150,7 +150,7 @@ if "%CMD%"=="list" (
 
 if "%CMD%"=="create" (
     if "%LIBSCRIPT_BUCKET%"=="" (
-        echo Error: --bucket (or LIBSCRIPT_BUCKET) is required for %CMD%. >&2
+        echo Error: --bucket ^(or LIBSCRIPT_BUCKET^) is required for %CMD%. >&2
         exit /b 1
     )
     call "%~dp0api.cmd" :libscript_cdn_create "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_BUCKET%" "%LIBSCRIPT_DOMAIN%" "%LIBSCRIPT_CERT_ID%"
@@ -159,7 +159,7 @@ if "%CMD%"=="create" (
 
 if "%CMD%"=="delete" (
     if "%LIBSCRIPT_DIST_ID%"=="" (
-        echo Error: --dist-id (or LIBSCRIPT_DIST_ID) is required for %CMD%. >&2
+        echo Error: --dist-id ^(or LIBSCRIPT_DIST_ID^) is required for %CMD%. >&2
         exit /b 1
     )
     call "%~dp0api.cmd" :libscript_cdn_delete "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_DIST_ID%"
@@ -168,7 +168,7 @@ if "%CMD%"=="delete" (
 
 if "%CMD%"=="invalidate" (
     if "%LIBSCRIPT_DIST_ID%"=="" (
-        echo Error: --dist-id (or LIBSCRIPT_DIST_ID) is required for %CMD%. >&2
+        echo Error: --dist-id ^(or LIBSCRIPT_DIST_ID^) is required for %CMD%. >&2
         exit /b 1
     )
     call "%~dp0api.cmd" :libscript_cdn_invalidate "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_DIST_ID%" "%LIBSCRIPT_PATHS%"

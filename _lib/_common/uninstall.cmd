@@ -30,7 +30,7 @@ if "!PURGE_DATA!"=="1" (
     if exist "%LIBSCRIPT_ROOT_DIR%\data\%PACKAGE_NAME%" (
         rmdir /s /q "%LIBSCRIPT_ROOT_DIR%\data\%PACKAGE_NAME%"
     )
-    :: Try to read DATA_DIR from schema defaults or env if possible
+    REM Try to read DATA_DIR from schema defaults or env if possible
     set "pkg_upper=!PACKAGE_NAME!"
     for %%A in (
         "a=A" "b=B" "c=C" "d=D" "e=E" "f=F" "g=G" "h=H" "i=I"
@@ -38,7 +38,7 @@ if "!PURGE_DATA!"=="1" (
         "s=S" "t=T" "u=U" "v=V" "w=W" "x=X" "y=Y" "z=Z" "-=_"
     ) do set "pkg_upper=!pkg_upper:%%~A!"
     
-    :: Nuke service
+    REM Nuke service
     sc stop "libscript_!PACKAGE_NAME!" >nul 2>&1
     sc delete "libscript_!PACKAGE_NAME!" >nul 2>&1
 ) else (

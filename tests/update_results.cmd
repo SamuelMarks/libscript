@@ -291,7 +291,7 @@ if exist "%TODO_FILE%" if exist "%TESTS_TMP_DIR%" (
             )
         ) else if not "!line:Double-check & Idempotency=!"=="!line!" (
             if exist "%TESTS_TMP_DIR%\!curr_comp!.idempotent.success" (
-                echo   - [x] **Double-check & Idempotency Verified (2x run)**
+                echo   - [x] **Double-check ^& Idempotency Verified ^(2x run^)**
             ) else (
                 echo(!line!
             )

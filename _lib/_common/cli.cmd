@@ -45,7 +45,7 @@ set "ARGS="
 :: Executes parse_loop functionality.
 :parse_loop
 if "%~2"=="" (
-    :: Export variables to parent context before exiting
+    REM Export variables to parent context before exiting
     endlocal & (
         set "USE_DEFAULT_TAGS=%USE_DEFAULT_TAGS%"
         set "CUSTOM_TAGS=%CUSTOM_TAGS%"

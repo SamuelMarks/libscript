@@ -174,14 +174,14 @@ for %%T in (!TARGETS!) do (
         set "LIBSCRIPT_TEST_TARGET=!TARGET_NAME!"
         set "LIBSCRIPT_REPO_ROOT=%REPO_ROOT%"
         
-        :: Create an isolated environment for this run
+        REM Create an isolated environment for this run
         set "RUN_DIR=%TESTS_TMP_DIR%\runs\!TARGET_NAME!-!OS_TARGET!"
         if not exist "!RUN_DIR!" mkdir "!RUN_DIR!"
         copy /Y "%REPO_ROOT%\vagrant\!OS_TARGET!\Vagrantfile" "!RUN_DIR!\Vagrantfile" >nul
         
         cd /d "!RUN_DIR!"
         
-        :: Ensure clean state (in case of previous aborted runs in this dir)
+        REM Ensure clean state (in case of previous aborted runs in this dir)
         vagrant destroy -f >nul 2>&1
         timeout /t 2 /nobreak >nul
         

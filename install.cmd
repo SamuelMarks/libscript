@@ -166,7 +166,7 @@ IF "%AMQP_URL%"=="1" (
 
 :: Check and set up WWW root for example.com
 IF "%WWWROOT_example_com_INSTALL%"=="1" (
-    :: Set default values if variables are not defined
+    REM Set default values if variables are not defined
     IF NOT DEFINED WWWROOT_NAME SET "WWWROOT_NAME=example.com"
     IF NOT DEFINED WWWROOT_VENDOR SET "WWWROOT_VENDOR=nginx"
     IF NOT DEFINED WWWROOT_PATH SET "WWWROOT_PATH=.\my_symlinked_wwwroot"
@@ -175,7 +175,7 @@ IF "%WWWROOT_example_com_INSTALL%"=="1" (
 
     ECHO Setting up WWW root for "%WWWROOT_NAME%" with vendor "%WWWROOT_VENDOR%"
 
-    :: Check if the vendor is nginx
+    REM Check if the vendor is nginx
     IF /I "%WWWROOT_VENDOR%"=="nginx" (
         SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\web-servers\nginx\setup.cmd"
         IF NOT EXIST "%SCRIPT_NAME%" (

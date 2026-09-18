@@ -63,7 +63,7 @@ if errorlevel 1 (
 :: The best way on Windows is Visual Studio Build Tools
 where cl >nul 2>&1
 if errorlevel 1 (
-    echo [INFO] MSVC compiler (cl.exe) not found in PATH.
+    echo [INFO] MSVC compiler ^(cl.exe^) not found in PATH.
     echo [INFO] Attempting to install Visual Studio Build Tools via winget...
     winget install --id Microsoft.VisualStudio.2022.BuildTools -e --source winget --override "--wait --quiet --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
     echo [INFO] NOTE: You may need to run this script from a 'x64 Native Tools Command Prompt for VS' after installation.

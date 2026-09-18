@@ -40,11 +40,13 @@ type nul > "%TEST_TMP%\libscript.sh"
 
 > "%TEST_TMP%\TODO_PLAN.md" (
     echo - [ ] _lib/catA/compA
+    echo   - [ ] **Double-check ^& Idempotency Verified ^(2x run^)**
     echo - [ ] compB
     echo - [ ] compC
     echo - [x] already_done
 )
 
+type nul > "%TEST_TMP%\tests_tmp\compA.idempotent.success"
 type nul > "%TEST_TMP%\tests_tmp\compA.linux.alpine.success"
 type nul > "%TEST_TMP%\tests_tmp\compA.sunos.success"
 type nul > "%TEST_TMP%\tests_tmp\compB.windows.failure"
@@ -93,6 +95,13 @@ if not errorlevel 1 (
 findstr /c:"- [x] _lib/catA/compA" "%TEST_TMP%\TODO_PLAN.md" >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] _lib/catA/compA not checked in TODO_PLAN.md
+    rmdir /s /q "%TEST_TMP%" >nul 2>&1
+    exit /b 1
+)
+
+findstr /c:"- [x] **Double-check & Idempotency Verified (2x run)**" "%TEST_TMP%\TODO_PLAN.md" >nul 2>&1
+if errorlevel 1 (
+    echo [ERROR] compA idempotency check not checked in TODO_PLAN.md
     rmdir /s /q "%TEST_TMP%" >nul 2>&1
     exit /b 1
 )

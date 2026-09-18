@@ -204,7 +204,7 @@ copy /y "%src_path%" "%dest_dir%\%bin_name%" >nul 2>&1
 if not errorlevel 1 (
     call "%LOG_CMD%" :log_info "%bin_name% installed to %dest_dir%"
     
-    :: Check if dest_dir is in PATH
+    REM Check if dest_dir is in PATH
     echo %PATH% | findstr /i /c:"%dest_dir%" >nul
     if errorlevel 1 (
         call "%LOG_CMD%" :log_warn "%dest_dir% is not in your PATH."

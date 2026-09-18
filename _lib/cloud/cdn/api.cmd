@@ -26,7 +26,7 @@ if "%provider%"=="aws" (
         echo CDN Distribution already exists for '%bucket%': !existing_dist!
         set "dist_domain=!existing_dist!"
     ) else (
-        :: Basic OAC creation wrapper
+        REM Basic OAC creation wrapper
         for /f "tokens=*" %%i in ('aws cloudfront create-origin-access-control --origin-access-control-config "Name=%bucket%-oac,Description=libscript OAC,OriginAccessControlOriginType=s3,SigningBehavior=always,SigningProtocol=sigv4" --query "OriginAccessControl.Id" --output text 2^>nul') do set "oac_id=%%i"
         if "!oac_id!"=="" (
             for /f "tokens=*" %%i in ('aws cloudfront list-origin-access-controls --query "OriginAccessControlList.Items[?Name=='%bucket%-oac'].Id" --output text') do set "oac_id=%%i"

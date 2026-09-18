@@ -23,7 +23,7 @@ if "%size%"=="" set "size=10"
 if "%vname%"=="" set "vname=vol-libscript"
 
 if "%zone%"=="" (
-    echo Error: --zone (or LIBSCRIPT_VOLUME_ZONE) is required for volume creation. >&2
+    echo Error: --zone ^(or LIBSCRIPT_VOLUME_ZONE^) is required for volume creation. >&2
     exit /b 1
 )
 

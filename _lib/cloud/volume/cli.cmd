@@ -68,7 +68,7 @@ exit /b 1
 :: Executes validate_args functionality.
 :validate_args
 if "%CMD%"=="" (
-    echo Error: Missing command for volume (create^|delete^|list^|attach^|detach^). >&2
+    echo Error: Missing command for volume ^(create^|delete^|list^|attach^|detach^). >&2
     exit /b 1
 )
 
@@ -94,7 +94,7 @@ exit /b 1
 :: Executes execute functionality.
 :execute
 if "%LIBSCRIPT_CLOUD%"=="" (
-    echo Error: --cloud (or LIBSCRIPT_CLOUD) is required. >&2
+    echo Error: --cloud ^(or LIBSCRIPT_CLOUD^) is required. >&2
     exit /b 1
 )
 
@@ -110,7 +110,7 @@ if "%CMD%"=="create" (
 
 if "%CMD%"=="delete" (
     if "%LIBSCRIPT_VOLUME_ID%"=="" (
-        echo Error: --volume-id (or LIBSCRIPT_VOLUME_ID) is required for %CMD%. >&2
+        echo Error: --volume-id ^(or LIBSCRIPT_VOLUME_ID^) is required for %CMD%. >&2
         exit /b 1
     )
     call "%~dp0api.cmd" :libscript_volume_delete "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_VOLUME_ID%"
@@ -119,7 +119,7 @@ if "%CMD%"=="delete" (
 
 if "%CMD%"=="attach" (
     if "%LIBSCRIPT_VOLUME_ID%"=="" (
-        echo Error: --volume-id (or LIBSCRIPT_VOLUME_ID) is required for %CMD%. >&2
+        echo Error: --volume-id ^(or LIBSCRIPT_VOLUME_ID^) is required for %CMD%. >&2
         exit /b 1
     )
     call "%~dp0api.cmd" :libscript_volume_attach "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_VOLUME_ID%" "%LIBSCRIPT_NODE_ID%" "%LIBSCRIPT_DEVICE%"
@@ -128,7 +128,7 @@ if "%CMD%"=="attach" (
 
 if "%CMD%"=="detach" (
     if "%LIBSCRIPT_VOLUME_ID%"=="" (
-        echo Error: --volume-id (or LIBSCRIPT_VOLUME_ID) is required for %CMD%. >&2
+        echo Error: --volume-id ^(or LIBSCRIPT_VOLUME_ID^) is required for %CMD%. >&2
         exit /b 1
     )
     call "%~dp0api.cmd" :libscript_volume_detach "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_VOLUME_ID%" "%LIBSCRIPT_NODE_ID%"

@@ -90,7 +90,7 @@ if /i "!TARGET!"=="local" (
     echo   -^> Mocked AES-256 encryption applied.
     
     echo [BACKUP] Enforcing retention policy: keeping last !KEEP_LAST! backups.
-    :: Windows pruning mock
+    REM Windows pruning mock
     for /f "skip=%KEEP_LAST% delims=" %%F in ('dir /b /o:-d "!BACKUP_DIR!\backup-*.tar.zst" 2^>nul') do (
         del /q "!BACKUP_DIR!\%%F"
     )

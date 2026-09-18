@@ -84,7 +84,7 @@ exit /b 1
 :: Executes validate_args functionality.
 :validate_args
 if "%CMD%"=="" (
-    echo Error: Missing command for storage (create^|delete^|list^|sync^). >&2
+    echo Error: Missing command for storage ^(create^|delete^|list^|sync^). >&2
     exit /b 1
 )
 
@@ -109,7 +109,7 @@ exit /b 1
 :: Executes execute functionality.
 :execute
 if "%LIBSCRIPT_CLOUD%"=="" (
-    echo Error: --cloud (or LIBSCRIPT_CLOUD) is required. >&2
+    echo Error: --cloud ^(or LIBSCRIPT_CLOUD^) is required. >&2
     exit /b 1
 )
 
@@ -119,7 +119,7 @@ if "%CMD%"=="list" (
 )
 
 if "%LIBSCRIPT_BUCKET%"=="" (
-    echo Error: --bucket (or LIBSCRIPT_BUCKET) is required for %CMD%. >&2
+    echo Error: --bucket ^(or LIBSCRIPT_BUCKET^) is required for %CMD%. >&2
     exit /b 1
 )
 
@@ -133,7 +133,7 @@ if "%CMD%"=="delete" (
 )
 if "%CMD%"=="sync" (
     if "%LIBSCRIPT_SYNC_DIR%"=="" (
-        echo Error: --local-dir (or LIBSCRIPT_SYNC_DIR) is required for sync. >&2
+        echo Error: --local-dir ^(or LIBSCRIPT_SYNC_DIR^) is required for sync. >&2
         exit /b 1
     )
     call "%~dp0api.cmd" :libscript_storage_sync "%LIBSCRIPT_CLOUD%" "%LIBSCRIPT_BUCKET%" "%LIBSCRIPT_SYNC_DIR%"

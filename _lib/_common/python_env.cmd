@@ -49,7 +49,7 @@ if "%_backend%"=="uv" (
         uv python find
     )
 ) else if "%_backend%"=="pyenv" (
-    :: Assumes pyenv-win is in PATH
+    REM Assumes pyenv-win is in PATH
     if not "%_version%"=="" (
         set "PYENV_VERSION=%_version%"
         pyenv which python
@@ -57,9 +57,9 @@ if "%_backend%"=="uv" (
         pyenv which python
     )
 ) else if "%_backend%"=="native" (
-    :: Check if a version-specific python is available (less common on Windows but possible)
+    REM Check if a version-specific python is available (less common on Windows but possible)
     if not "%_version%"=="" (
-        :: For Windows, py launcher could be used: py -%_version% -c "import sys; print(sys.executable)"
+        REM For Windows, py launcher could be used: py -%_version% -c "import sys; print(sys.executable)"
         where py >nul 2>nul
         if not errorlevel 1 (
             for /f "delims=" %%I in ('py -%_version% -c "import sys; print(sys.executable)" 2^>nul') do (
@@ -67,7 +67,7 @@ if "%_backend%"=="uv" (
                 exit /b 0
             )
         )
-        :: Fallback to libscript_native installation check
+        REM Fallback to libscript_native installation check
         call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" libscript_get_version_dir python "%_version%" > "%TEMP%\libscript_py_dir.txt"
         set /p _py_dir=<"%TEMP%\libscript_py_dir.txt"
         del "%TEMP%\libscript_py_dir.txt"

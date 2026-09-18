@@ -308,6 +308,6 @@ if !errorlevel! equ 0 (
         jq -n --slurpfile base "%BASE_SCHEMA_FILE%" --slurpfile comp "%SCHEMA_FILE%" "($base[0].properties // {}) * ($comp[0].properties // {}) | to_entries[] | \"  --\" + .key + \"=\" + (.value.default // \"none\") + \"\t\" + .value.description" 2>nul
     )
 ) else (
-    echo   (jq is required for dynamic options list)
+    echo   ^(jq is required for dynamic options list^)
 )
 exit /b 0

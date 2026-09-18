@@ -70,22 +70,22 @@ if "!CMD_TO_RUN!"=="" (
 :: Check if already elevated
 call :check_admin
 if %errorlevel% == 0 (
-    :: Already elevated, run directly
+    REM Already elevated, run directly
     shift
     %CMD_TO_RUN% %2 %3 %4 %5 %6 %7 %8 %9
     exit /b %errorlevel%
 ) else (
-    :: Not elevated, use PowerShell to RunAs Admin
+    REM Not elevated, use PowerShell to RunAs Admin
     echo Requesting administrative privileges for: !CMD_TO_RUN!
     
-    :: Construct the argument string for PowerShell
+    REM Construct the argument string for PowerShell
     set "PS_ARGS="
     set "all_args=%*"
-    :: Skip the label name (%1) and command name (%2)
+    REM Skip the label name (%1) and command name (%2)
     for /f "tokens=2,*" %%a in ("!all_args!") do set "PS_ARGS=%%b"
     
-    :: Use PowerShell Start-Process with -Verb RunAs
-    :: -Wait ensures we get the exit code if possible (though RunAs sometimes hides it)
+    REM Use PowerShell Start-Process with -Verb RunAs
+    REM -Wait ensures we get the exit code if possible (though RunAs sometimes hides it)
     powershell -Command "Start-Process -FilePath '!CMD_TO_RUN!' -ArgumentList '!PS_ARGS!' -Verb RunAs -Wait"
     exit /b %errorlevel%
 )

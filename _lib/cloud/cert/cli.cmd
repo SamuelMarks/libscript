@@ -66,7 +66,7 @@ exit /b 1
 :: Executes validate_args functionality.
 :validate_args
 if "%CMD%"=="" (
-    echo Error: Missing command for cert (create^|delete^|list^). >&2
+    echo Error: Missing command for cert ^(create^|delete^|list^). >&2
     exit /b 1
 )
 
@@ -90,7 +90,7 @@ exit /b 1
 :: Executes execute functionality.
 :execute
 if "%LIBSCRIPT_CLOUD%"=="" (
-    echo Error: --cloud (or LIBSCRIPT_CLOUD) is required. >&2
+    echo Error: --cloud ^(or LIBSCRIPT_CLOUD^) is required. >&2
     exit /b 1
 )
 
@@ -100,7 +100,7 @@ if "%CMD%"=="list" (
 )
 
 if "%LIBSCRIPT_DOMAIN%"=="" (
-    echo Error: --domain (or LIBSCRIPT_DOMAIN) is required for %CMD%. >&2
+    echo Error: --domain ^(or LIBSCRIPT_DOMAIN^) is required for %CMD%. >&2
     exit /b 1
 )
 

@@ -29,7 +29,7 @@ if "%ACTION%"=="install" (
         choco install mysql -y
         exit /b 0
     )
-    echo [ERROR] Package manager (winget or choco) required to install MySQL on Windows.
+    echo [ERROR] Package manager ^(winget or choco^) required to install MySQL on Windows.
     exit /b 1
 ) else if "%ACTION%"=="uninstall" (
     where winget >nul 2>&1 && winget uninstall --id Oracle.MySQL --silent

@@ -88,14 +88,14 @@ if exist "!cache_file!" (
     
         set "download_success=0"
     
-        :: Strategy A: curl
+        REM Strategy A: curl
         where curl >nul 2>&1
         if !errorlevel! equ 0 (
                 curl -L "!url!" -o "!cache_file!"
                 if !errorlevel! equ 0 set "download_success=1"
         )
     
-        :: Strategy B: powershell
+        REM Strategy B: powershell
         if !download_success! equ 0 (
                 where powershell >nul 2>&1
                 if !errorlevel! equ 0 (
@@ -104,7 +104,7 @@ if exist "!cache_file!" (
                 )
         )
     
-        :: Strategy C: certutil
+        REM Strategy C: certutil
         if !download_success! equ 0 (
                 certutil -urlcache -split -f "!url!" "!cache_file!" >nul
                 if !errorlevel! equ 0 set "download_success=1"

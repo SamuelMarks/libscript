@@ -12,7 +12,7 @@ if "%GUNICORN_VERSION%"=="" set "GUNICORN_VERSION=latest"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
 
 if "%ACTION%"=="install" (
-    echo [INFO] Gunicorn uses POSIX fork(). On Windows, installing Waitress and Uvicorn for native WSGI/ASGI execution...
+    echo [INFO] Gunicorn uses POSIX fork^(^). On Windows, installing Waitress and Uvicorn for native WSGI/ASGI execution...
     call "%~dp0\..\waitress\setup.cmd" install
     call "%~dp0\..\uvicorn\setup.cmd" install
     where gunicorn >nul 2>&1

@@ -158,7 +158,7 @@ if defined is_docker (
             jq --version >nul 2>&1
             if not errorlevel 1 (
                 call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\resolve_stack.cmd" "libscript.json" > "libscript.resolved.json" 2>nul
-                for /f "tokens=1,2,3" %%a in (\'jq -r ".selected[] | \"\(.name) \(.version // \\\"latest\\\") \(.override // \\\"\\\")\"" "libscript.resolved.json" 2^>nul\') do (
+                for /f "tokens=1,2,3" %%a in ('jq -r ".selected[] | ^(.name^) + \" \" + ^(.version // \"latest\"^) + \" \" + ^(.override // \"\"^)" "libscript.resolved.json" 2^>nul') do (
                     set "pkg_up=%%a"
                     for %%A in ("a=A" "b=B" "c=C" "d=D" "e=E" "f=F" "g=G" "h=H" "i=I" "j=J" "k=K" "l=L" "m=M" "n=N" "o=O" "p=P" "q=Q" "r=R" "s=S" "t=T" "u=U" "v=V" "w=W" "x=X" "y=Y" "z=Z" "-=_") do set "pkg_up=!pkg_up:%%~A!"
                     
@@ -267,7 +267,7 @@ if defined is_docker (
             jq --version >nul 2>&1
             if not errorlevel 1 (
                 call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\resolve_stack.cmd" "libscript.json" > "libscript.resolved.json" 2>nul
-                for /f "tokens=1,2,3" %%a in (\'jq -r ".selected[] | \"\(.name) \(.version // \\\"latest\\\") \(.override // \\\"\\\")\"" "libscript.resolved.json" 2^>nul\') do (
+                for /f "tokens=1,2,3" %%a in ('jq -r ".selected[] | ^(.name^) + \" \" + ^(.version // \"latest\"^) + \" \" + ^(.override // \"\"^)" "libscript.resolved.json" 2^>nul') do (
                     set "pkg=%%a"
                     set "ver=%%b"
                     set "override=%%c"
@@ -312,7 +312,7 @@ if defined is_docker (
             jq --version >nul 2>&1
             if not errorlevel 1 (
                 call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\resolve_stack.cmd" "libscript.json" > "libscript.resolved.json" 2>nul
-                for /f "tokens=1,2" %%a in (\'jq -r ".selected[] | \"\(.name) \(.version // \\\"latest\\\")\"" "libscript.resolved.json" 2^>nul\') do (
+                for /f "tokens=1,2" %%a in ('jq -r ".selected[] | ^(.name^) + \" \" + ^(.version // \"latest\"^)" "libscript.resolved.json" 2^>nul') do (
                     echo set "ps_script=^!ps_script^![pscustomobject]@{Name='%%a';Version='%%b'},"
                 )
                 if exist "libscript.resolved.json" del "libscript.resolved.json"
@@ -331,11 +331,11 @@ if defined is_docker (
         )
     )
     
-    echo set "ps_script=^!ps_script:~0,-1^!); $selected = $items | Out-GridView -Title 'LibScript Stack Builder - Select components' -PassThru; foreach ($s in $selected) { Write-Output \"$($s.Name) $($s.Version)\" }"
+    echo set "ps_script=^!ps_script:~0,-1^!); $selected = $items | Out-GridView -Title 'LibScript Stack Builder - Select components' -PassThru; $selected | ForEach-Object { $_.Name + ' ' + $_.Version }"
     echo set "items="
     echo set "tmp_sel=%%temp%%\libscript_tui_sel.txt"
     echo powershell -Command "^!ps_script^!" ^> "^!tmp_sel^!"
-    echo for /f "usebackq tokens=1,2" %%%%a in ("^!tmp_sel^!") do ^(
+    echo for /f "usebackq tokens=1,2" %%%%a in ^("^!tmp_sel^!"^) do ^(
     echo     if not "%%%%a"=="" set "items=^!items^! %%%%a %%%%b"
     echo ^)
     echo if "^!items^!"=="" exit /b 0
@@ -345,8 +345,8 @@ if defined is_docker (
     echo echo 2. Dockerfile
     echo echo 3. Dockerfiles + docker-compose
     echo echo 4. .msi installer
-    echo echo 5. .exe (InnoSetup)
-    echo echo 6. .exe (NSIS)
+    echo echo 5. .exe ^(InnoSetup^)
+    echo echo 6. .exe ^(NSIS^)
     echo echo 7. macOS .pkg installer
     echo echo 8. macOS .dmg installer
     echo echo 9. .deb package
@@ -370,11 +370,11 @@ if defined is_docker (
     echo set "os_script=$os_list = @('windows','dos','linux','macos','bsd'); $selected = $os_list | Out-GridView -Title 'LibScript Stack Builder - Select OS Targets' -PassThru; foreach ($s in $selected) { Write-Output $s }"
     echo set "tmp_os=%%temp%%\libscript_tui_os.txt"
     echo powershell -Command "^!os_script^!" ^> "^!tmp_os^!"
-    echo for /f "usebackq" %%%%a in ("^!tmp_os^!") do set "extra_args=^!extra_args^! --os-%%%%a"
+    echo for /f "usebackq" %%%%a in ^("^!tmp_os^!"^) do set "extra_args=^!extra_args^! --os-%%%%a"
     echo if exist "^!tmp_os^!" del "^!tmp_os^!"
     echo echo.
     echo if "^!act^!"=="install" ^(
-    echo     for /f "usebackq tokens=1,2" %%%%a in ("^!tmp_sel^!") do call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install "%%%%a" "%%%%b"
+    echo     for /f "usebackq tokens=1,2" %%%%a in ^("^!tmp_sel^!"^) do call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install "%%%%a" "%%%%b"
     echo ^) else ^(
     echo     call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" package-as "^!act^!" ^!items^! ^!extra_args^!
     echo ^)
@@ -399,7 +399,7 @@ if defined is_docker (
 ) else if /i "%~2"=="txz" (
     goto install_gen_common
 ) else (
-    echo Error: Unsupported package format '%~2'. 1^>&2
+    echo Error: Unsupported package format '%~2'. >&2
     exit /b 1
 )
 exit /b 0

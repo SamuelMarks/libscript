@@ -37,7 +37,7 @@ exit /b 1
 :: Executes validate_args functionality.
 :validate_args
 if "%CMD%"=="" (
-    echo Error: Missing command for cloudinit (generate-mount^). >&2
+    echo Error: Missing command for cloudinit ^(generate-mount^). >&2
     exit /b 1
 )
 
