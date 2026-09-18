@@ -22,6 +22,7 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
+LIBSCRIPT_ENTRY_FILE="${THIS_FILE}"
 LIBSCRIPT_CLI_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 SCRIPT_DIR="${LIBSCRIPT_CLI_DIR}"
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
@@ -40,7 +41,7 @@ show_help() {
   printf '%s\n' "LibScript Global CLI"
   printf '%s\n' "===================="
   printf '%s\n' ""
-  printf '%s\n' "Usage: $0 [COMMAND] [ARGS...]"
+  printf '%s\n' "Usage: ${LIBSCRIPT_ENTRY_FILE##*/} [COMMAND] [ARGS...]"
   printf '%s\n' ""
   printf '%s\n' "Commands:"
   printf '%s\n' "  list                        List all available components"
@@ -79,10 +80,10 @@ show_help() {
   printf '%s\n' "  --listen-socket=<socket>    Global unix socket to listen on"
   printf '%s\n' ""
   printf '%s\n' "Examples:"
-  printf '%s\n' "  $0 list"
-  printf '%s\n' "  $0 search ruby"
-  printf '%s\n' "  $0 ruby --help"
-  printf '%s\n' "  $0 postgres --help"
+  printf '%s\n' "  ${LIBSCRIPT_ENTRY_FILE##*/} list"
+  printf '%s\n' "  ${LIBSCRIPT_ENTRY_FILE##*/} search ruby"
+  printf '%s\n' "  ${LIBSCRIPT_ENTRY_FILE##*/} ruby --help"
+  printf '%s\n' "  ${LIBSCRIPT_ENTRY_FILE##*/} postgres --help"
   printf '%s\n' ""
   printf '%s\n' "You can specify components by their short name (e.g., 'ruby' instead of '_lib/languages/ruby')."
   printf '%s\n' "If there are multiple matches, it will ask you to be more specific."

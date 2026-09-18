@@ -77,6 +77,10 @@ case "$ACTION" in
     resolve_exact_version
     log_info "Installing Gunicorn (${VERSION}) via ${GUNICORN_INSTALL_METHOD}..."
     if [ "$GUNICORN_INSTALL_METHOD" = "libscript_native" ]; then
+      if ! command -v uv >/dev/null 2>&1 && ! command -v python3 >/dev/null 2>&1; then
+        log_info "Python runtime required for gunicorn. Installing python..."
+        libscript_depends "python" || true
+      fi
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/gunicorn/${EXACT_VERSION}"
       mkdir -p "${TARGET_DIR}"
       if command -v uv >/dev/null 2>&1; then

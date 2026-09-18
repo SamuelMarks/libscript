@@ -17,7 +17,7 @@ fi
 
 case "${1:-}" in
   --help|-h|"-?"|"/?")
-    printf '%s\n' "Usage: $0"
+    printf '%s\n' "Usage: ${THIS_FILE##*/}"
     printf '%s\n' "Configure installation via environment variables."
     exit 0
     ;;
@@ -47,7 +47,7 @@ if [ "${POSTGRESQL_INSTALL:-0}" -eq 1 ]; then
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 fi
-if [ "${DATABASE_URL-}" ]; then
+if [ -z "${DATABASE_URL-}" ]; then
   >&2 printf 'DATABASE_URL must be set\n';
   exit 3
 fi
@@ -64,7 +64,7 @@ if [ "${MEMCACHED_INSTALL:-0}" -eq 1 ]; then
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 fi
-if [ "${REDIS_URL-}" ]; then
+if [ -z "${REDIS_URL-}" ]; then
   >&2 printf 'REDIS_URL must be set\n';
   exit 3
 fi

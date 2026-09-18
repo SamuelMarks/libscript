@@ -27,7 +27,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
 ' "$d")}"
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/cli.sh"
+export PACKAGE_NAME="exim"
+SCRIPT_NAME="${SCRIPT_DIR}/../../_common/component_core.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"

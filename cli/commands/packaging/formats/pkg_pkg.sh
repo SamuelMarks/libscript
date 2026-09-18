@@ -102,12 +102,21 @@ EOF_PROMPT
         fi
 
         cat << EOF_SCRIPT >> "$COMP_DIR/scripts/postinstall"
+if [ "\${SCRIPT_NAME-}" ]; then
+  THIS_FILE="\${SCRIPT_NAME}"
+elif [ "\${BASH_SOURCE-}" ]; then
+  THIS_FILE="\${BASH_SOURCE}"
+else
+  THIS_FILE="\${0}"
+fi
+POSTINSTALL_DIR=\$(cd -- "\$(dirname -- "\${THIS_FILE}")" && pwd)
+
 if command -v libscript.sh >/dev/null 2>&1; then
   libscript.sh install-service "$PKG" "$VER" $PARAMS
 elif [ -f "/opt/libscript/libscript.sh" ]; then
   /opt/libscript/libscript.sh install-service "$PKG" "$VER" $PARAMS
-elif [ -f "\$0/../../../libscript.sh" ]; then
-  "\$0/../../../libscript.sh" install-service "$PKG" "$VER" $PARAMS
+elif [ -f "\${POSTINSTALL_DIR}/../../../libscript.sh" ]; then
+  "\${POSTINSTALL_DIR}/../../../libscript.sh" install-service "$PKG" "$VER" $PARAMS
 else
   sudo -u "\$USER_NAME" osascript -e 'Tell application "System Events" to display alert "libscript.sh not found. Installation of '"$PKG"' failed."'
   exit 1
@@ -115,6 +124,20 @@ fi
 
 cat << "EOF_UNINST" > "/opt/libscript/uninstall_${PKG}.command"
 #!/bin/sh
+# ## Overview
+# Uninstaller command for ${PKG}.
+#
+# ## Usage
+# Execute this script to uninstall ${PKG}.
+
+set -feu
+if [ "\${SCRIPT_NAME-}" ]; then
+  THIS_FILE="\${SCRIPT_NAME}"
+elif [ "\${BASH_SOURCE-}" ]; then
+  THIS_FILE="\${BASH_SOURCE}"
+else
+  THIS_FILE="\${0}"
+fi
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 USER_NAME=\$(stat -f "%Su" /dev/console 2>/dev/null || printf '%s\n' "\$SUDO_USER")
 if [ -z "\$USER_NAME" ] || [ "\$USER_NAME" = "root" ]; then

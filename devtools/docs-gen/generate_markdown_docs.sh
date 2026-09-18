@@ -110,7 +110,7 @@ find "$ROOT_DIR" -type f -name "README.md" | grep -E "(_lib|app-servers|stacks)"
             dos2unix -q "$readme" 2>/dev/null || true
         fi
         if command -v npx >/dev/null 2>&1; then
-            npx prettier --write "$readme" >/dev/null 2>&1 || true
+            npx --yes prettier --write "$readme" >/dev/null 2>&1 || true
         fi
     fi
 done

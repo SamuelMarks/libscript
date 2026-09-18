@@ -37,28 +37,32 @@
       "items": {
         "type": "string"
       },
-      "default": ["all"]
+      "default": ["all"],
+      "description": "List of operating systems supported by this component (or ['all'])"
     },
     "os_blacklist": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "default": []
+      "default": [],
+      "description": "List of operating systems explicitly unsupported by this component"
     },
     "arch_whitelist": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "default": ["all"]
+      "default": ["all"],
+      "description": "List of CPU architectures supported by this component (or ['all'])"
     },
     "arch_blacklist": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "default": []
+      "default": [],
+      "description": "List of CPU architectures explicitly unsupported by this component"
     },
     "versions": {
       "type": "array",
@@ -76,6 +80,7 @@
     },
     "category": {
       "type": "string",
+      "description": "Component classification group within the LibScript catalog",
       "enum": [
         "languages",
         "app-servers",

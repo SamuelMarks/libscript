@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LibScript Packaging Specification Schema",
+  "type": "object",
+  "required": ["name", "title", "upgrade_code"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Component or stack identifier (e.g. 'openedx', 'wordpress')"
+    },
+    "title": {
+      "type": "string",
+      "description": "Display name of the application in wizard titles"
+    },
+    "version": {
+      "type": "string",
+      "default": "1.0.0",
+      "description": "Version number of the installer package"
+    },
+    "publisher": {
+      "type": "string",
+      "default": "LibScript Open Source Project",
+      "description": "Company or organization name publishing the installer package"
+    },
+    "upgrade_code": {
+      "type": "string",
+      "pattern": "^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$",
+      "description": "GUID used by Windows Installer to track product versions and manage upgrades"
+    },
+    "branding": {
+      "type": "object",
+      "description": "Visual assets and branding artwork customized for installer dialogs",
+      "properties": {
+        "icon": { "type": "string" },
+        "banner_top": { "type": "string" },
+        "banner_side": { "type": "string" },
+        "license_rtf": { "type": "string" }
+      }
+    },
+    "directories": {
+      "type": "object",
+      "description": "Default installation, data, and log target directory paths",
+      "properties": {
+        "app_default": { "type": "string", "default": "[ProgramFiles64Folder][ProductName]" },
+        "data_default": { "type": "string", "default": "C:\\ProgramData\\[ProductName]\\data" },
+        "logs_default": { "type": "string", "default": "C:\\ProgramData\\[ProductName]\\logs" }
+      }
+    },
+    "runtime_searches": {
+      "type": "array",
+      "description": "Pre-requisite runtime dependencies to detect on the host machine",
+      "items": {
+        "type": "object",
+        "required": ["name", "title"],
+        "properties": {
+          "name": { "type": "string" },
+          "title": { "type": "string" },
+          "required": { "type": "boolean", "default": false },
+          "registry_searches": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "root": { "type": "string", "enum": ["HKLM", "HKCU"] },
+                "key": { "type": "string" },
+                "name": { "type": "string" },
+                "file": { "type": "string" },
+                "win64": { "type": "boolean", "default": true }
+              }
+            }
+          },
+          "path_command": { "type": "string" },
+          "version_regex": { "type": "string" }
+        }
+      }
+    },
+    "source_repository": {
+      "type": "object",
+      "description": "Configuration for the application's source git repository and branch options",
+      "properties": {
+        "default_url": { "type": "string" },
+        "default_branch": { "type": "string" },
+        "presets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["label", "value"],
+            "properties": {
+              "label": { "type": "string" },
+              "value": { "type": "string" }
+            }
+          }
+        },
+        "supports_auth_token": { "type": "boolean", "default": false }
+      }
+    },
+    "browser_launch": {
+      "type": "object",
+      "description": "Post-installation browser URLs and applications to launch",
+      "properties": {
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "title", "url_template"],
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "default": { "type": "boolean", "default": true },
+              "url_template": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

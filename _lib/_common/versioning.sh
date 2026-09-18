@@ -49,6 +49,6 @@ libscript_symlink_alias() {
   mkdir -p "${base_dir}"
   
   if [ "${alias_name}" != "${exact_version}" ]; then
-    (cd "${base_dir}" && rm -f "${alias_name}" && ln -s "${exact_version}" "${alias_name}")
+    (cd "${base_dir}" && ln -sf "${exact_version}" "${alias_name}")
   fi
 }

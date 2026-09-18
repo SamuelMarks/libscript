@@ -14,7 +14,7 @@ if "%~1"=="--help" goto :help
 if "%~1"=="-h" goto :help
 
 call "%~dp0..\..\..\_lib\cloud-providers\gcp\cli\setup.cmd"
-call "%~dp0..\..\..\_lib\toolchains\python\setup.cmd"
+call "%~dp0..\..\..\_lib\languages\python\setup.cmd"
 call "%~dp0..\..\..\_lib\orchestration\kubernetes\kubectl\setup.cmd"
 call "%~dp0..\..\..\_lib\toolchains\xpk\setup.cmd"
 

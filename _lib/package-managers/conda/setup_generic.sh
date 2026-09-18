@@ -177,7 +177,7 @@ case "$ACTION" in
             rm -f "$TEMP_FILE"
             exit 1
           fi
-          bash "$TEMP_FILE" -b -p "${TARGET_DIR}" || true
+          sh "$TEMP_FILE" -b -p "${TARGET_DIR}" 2>/dev/null || (chmod +x "$TEMP_FILE" && "$TEMP_FILE" -b -p "${TARGET_DIR}") || true
           rm -f "$TEMP_FILE"
         fi
       else

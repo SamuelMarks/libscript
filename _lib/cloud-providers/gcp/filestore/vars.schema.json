@@ -6,22 +6,27 @@
   "type": "object",
   "properties": {
     "GCP_PROJECT_ID": {
-      "type": "string"
+      "type": "string",
+      "description": "Google Cloud Platform project ID for Filestore instance provisioning."
     },
     "FILESTORE_ZONE": {
-      "type": "string"
+      "type": "string",
+      "description": "Google Cloud zone where the Filestore instance is deployed."
     },
     "FILESTORE_TIER": {
       "type": "string",
-      "default": "BASIC_HDD"
+      "default": "BASIC_HDD",
+      "description": "Service tier for Filestore instance performance and storage capacity."
     },
     "FILESTORE_CAPACITY_GB": {
       "type": "string",
-      "default": "1024"
+      "default": "1024",
+      "description": "Allocated storage capacity for the Filestore volume in gigabytes."
     },
     "FILESTORE_NETWORK": {
       "type": "string",
-      "default": "default"
+      "default": "default",
+      "description": "VPC network name connected to the Filestore instance."
     }
   },
   "additionalProperties": false

@@ -9,8 +9,12 @@
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+set "SCRIPT_DIR=%~dp0"
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "LIBSCRIPT_ROOT_DIR=%SCRIPT_DIR%..\..\.."
+)
 shift
-call "%~dp0scripts\teardown_cloud.cmd" %*
+call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\teardown_cloud.cmd" %*
 goto :eof
 
 

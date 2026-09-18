@@ -1,5 +1,5 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
+  "$schema": "../../../_common/manifest.schema.json",
   "name": "gpu-vm",
   "title": "GCP GPU VM",
   "description": "Component for provisioning, managing, and connecting to Google Cloud GPU VMs.",

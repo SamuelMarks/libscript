@@ -134,8 +134,12 @@ update_supported_components() {
 |---|---|---|---|---|---|---|
 TABLE_HDR
 
-  # Discover components under _lib/<cat>/<comp> excluding dirs starting with '_'
-  _components=$(cd "${_repo_root}" && find _lib -mindepth 2 -maxdepth 2 -type d ! -path "_lib/_*" ! -name "_*" 2>/dev/null | sed 's|.*/||' | sort -u)
+  # Discover components under _lib/<cat>/<comp> and stacks/<cat>/<comp> excluding dirs starting with '_'
+  _search_dirs=""
+  [ -d "${_repo_root}/_lib" ] && _search_dirs="${_search_dirs} _lib"
+  [ -d "${_repo_root}/stacks" ] && _search_dirs="${_search_dirs} stacks"
+  # shellcheck disable=SC2086
+  _components=$(cd "${_repo_root}" && find ${_search_dirs} -mindepth 2 -maxdepth 2 -type d ! -path "*/_*" ! -name "_*" 2>/dev/null | sed 's|.*/||' | sort -u)
   _first_json_entry=1
 
   for _comp in ${_components}; do
@@ -153,7 +157,13 @@ TABLE_HDR
     _sunos_status="-"
     _freebsd_status="-"
 
-    _mfile=$(find "${_repo_root}/_lib" -maxdepth 2 -type d -name "${_comp}" -exec echo "{}/manifest.json" \; 2>/dev/null | head -n 1)
+    _mfile=""
+    if [ -d "${_repo_root}/_lib" ]; then
+      _mfile=$(find "${_repo_root}/_lib" -maxdepth 3 -type d -name "${_comp}" -exec echo "{}/manifest.json" \; 2>/dev/null | head -n 1)
+    fi
+    if [ -z "${_mfile}" ] && [ -d "${_repo_root}/stacks" ]; then
+      _mfile=$(find "${_repo_root}/stacks" -maxdepth 3 -type d -name "${_comp}" -exec echo "{}/manifest.json" \; 2>/dev/null | head -n 1)
+    fi
     if [ -f "${_mfile}" ]; then
       [ "$(check_manifest_support "${_mfile}" "alpine")" = "yes" ] && _apk_status="❓"
       [ "$(check_manifest_support "${_mfile}" "debian")" = "yes" ] && _deb_status="❓"
@@ -299,7 +309,7 @@ JSON_ROW
       mv "${_tmp_readme}" "${_readme_file}"
     fi
     if command -v npx >/dev/null 2>&1; then
-      npx prettier --write "${_readme_file}" >/dev/null 2>&1 || true
+      npx --yes prettier --write "${_readme_file}" >/dev/null 2>&1 || true
     fi
   fi
   rm -f "${_tmp_table}"

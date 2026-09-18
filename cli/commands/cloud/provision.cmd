@@ -9,7 +9,11 @@
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+set "SCRIPT_DIR=%~dp0"
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "LIBSCRIPT_ROOT_DIR=%SCRIPT_DIR%..\..\.."
+)
 shift
-call "%~dp0scripts\deploy_cloud.cmd" %*
+call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\deploy_cloud.cmd" %*
 goto :eof
 

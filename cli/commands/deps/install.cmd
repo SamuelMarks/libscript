@@ -9,6 +9,10 @@
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+set "SCRIPT_DIR=%~dp0"
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "LIBSCRIPT_ROOT_DIR=%SCRIPT_DIR%..\..\.."
+)
 set "json_file=%~2"
 if "!json_file!"=="" set "json_file=libscript.json"
 if not exist "!json_file!" (
@@ -34,24 +38,14 @@ if "!LIBSCRIPT_SECRETS!"=="" (
     )
 )
 
-        if "!skip_hooks!"=="0" (
-        if /i "!action!"=="start" (
-            call "%~dp0scripts\run_hooks.cmd" "!json_file!" "build"
-            call "%~dp0scripts\run_hooks.cmd" "!json_file!" "pre_start"
-        )
-        if /i "!action!"=="up" (
-            call "%~dp0scripts\run_hooks.cmd" "!json_file!" "build"
-            call "%~dp0scripts\run_hooks.cmd" "!json_file!" "pre_start"
-        )
-    )
-    call "%~dp0scripts\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
 REM Parallel Download Phase
 echo Downloading dependencies in parallel...
-for /f "tokens=1,2,3" %%a in (\'jq -r ".selected[] | \"\(.name) \(.version // \\\"latest\\\") \(.override // \\\"\\\")\"" "!json_file!.resolved.json" 2^>nul\') do (
+for /f "tokens=1,2,3" %%a in ('jq -r ".selected[] | \"\(.name) \(.version // \"latest\") \(.override // \"\")\"" "!json_file!.resolved.json" 2^>nul') do (
     if "%%c"=="" (
-        start "" /b cmd /c "call "%~dp0libscript.cmd" download "%%a" "%%b""
+        start "" /b cmd /c "call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" download "%%a" "%%b""
     ) else if "%%c"=="null" (
-        start "" /b cmd /c "call "%~dp0libscript.cmd" download "%%a" "%%b""
+        start "" /b cmd /c "call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" download "%%a" "%%b""
     )
 )
 
@@ -63,12 +57,12 @@ ping 127.0.0.1 -n 4 >nul
 
 REM Serial Install Phase
 echo Installing dependencies sequentially...
-for /f "tokens=1,2,3" %%a in (\'jq -r ".selected[] | \"\(.name) \(.version // \\\"latest\\\") \(.override // \\\"\\\")\"" "!json_file!.resolved.json" 2^>nul\') do (
+for /f "tokens=1,2,3" %%a in ('jq -r ".selected[] | \"\(.name) \(.version // \"latest\") \(.override // \"\")\"" "!json_file!.resolved.json" 2^>nul') do (
     if not "%%c"=="" if not "%%c"=="null" (
         echo Skipping installation of %%a ^(override provided: %%c^)
     ) else (
         echo Installing %%a %%b...
-        call "%~dp0libscript.cmd" install "%%a" "%%b"
+        call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install "%%a" "%%b"
     )
 )
 if exist "!json_file!.resolved.json" del "!json_file!.resolved.json"

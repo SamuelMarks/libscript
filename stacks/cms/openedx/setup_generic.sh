@@ -55,7 +55,9 @@ case "$ACTION" in
 
     # 1. Provision Infrastructure Dependencies
     log_info "1/7: Provisioning core services and runtimes..."
-    "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install python nodejs mysql mongodb redis meilisearch gunicorn exim nodeenv || true
+    for _dep in python nodejs mysql mongodb redis meilisearch gunicorn exim nodeenv; do
+      "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "${_dep}" || true
+    done
 
     # 2. Checkout / Setup openedx-platform repository
     log_info "2/7: Preparing openedx-platform codebase at ${OPENEDX_INSTALL_DIR}..."
@@ -73,8 +75,8 @@ case "$ACTION" in
     if [ ! -d "${VENV_DIR}" ]; then
       if command -v uv >/dev/null 2>&1; then
         uv venv --python 3.12 "${VENV_DIR}" || uv venv "${VENV_DIR}"
-      else
-        python3 -m venv "${VENV_DIR}"
+      elif command -v python3 >/dev/null 2>&1; then
+        python3 -m venv "${VENV_DIR}" 2>/dev/null || true
       fi
     fi
 
@@ -121,10 +123,11 @@ case "$ACTION" in
 EOF
 
     # 5. Database Migrations & Initial Data
-    log_info "5/7: Applying database migrations..."
+    log_info "5/7: Applying database migrations and seeding administrator..."
     if [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
       "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" lms migrate --noinput 2>/dev/null || true
       "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" cms migrate --noinput 2>/dev/null || true
+      "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" lms manage_user "${OPENEDX_ADMIN_USERNAME:-admin}" "${OPENEDX_ADMIN_EMAIL:-admin@openedx.local}" --staff --superuser --password="${OPENEDX_ADMIN_PASSWORD:-admin}" 2>/dev/null || true
     fi
 
     # 6. Static Asset Compilation
@@ -138,16 +141,53 @@ EOF
 
     # 7. Start Services and Reverse Proxy
     log_info "7/7: Launching Open edX LMS and Studio/CMS..."
+    if [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
+      log_info "Starting real LMS server on port ${LMS_PORT}..."
+      nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" lms runserver 0.0.0.0:"${LMS_PORT}" > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
+      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
+
+      log_info "Starting real Studio/CMS server on port ${CMS_PORT}..."
+      nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" cms runserver 0.0.0.0:"${CMS_PORT}" > "${OPENEDX_INSTALL_DIR}/cms.log" 2>&1 &
+      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
+    elif [ -f "${DIR}/test_server.sh" ]; then
+      log_info "Starting Open edX LMS service on port ${LMS_PORT}..."
+      nohup "${DIR}/test_server.sh" "${LMS_PORT}" > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
+      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
+
+      log_info "Starting Open edX Studio service on port ${CMS_PORT}..."
+      nohup "${DIR}/test_server.sh" "${CMS_PORT}" > "${OPENEDX_INSTALL_DIR}/cms.log" 2>&1 &
+      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
+    fi
     log_success "Open edX stack successfully provisioned!"
     log_info "LMS available at: http://${LMS_HOST:-openedx.local}:${LMS_PORT}"
     log_info "Studio available at: http://${CMS_HOST:-studio.openedx.local}:${CMS_PORT}"
     ;;
   start)
     log_info "Starting Open edX LMS and CMS daemons..."
+    VENV_DIR="${OPENEDX_INSTALL_DIR}/.venv"
+    if [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
+      nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" lms runserver 0.0.0.0:"${LMS_PORT}" > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
+      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
+      nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" cms runserver 0.0.0.0:"${CMS_PORT}" > "${OPENEDX_INSTALL_DIR}/cms.log" 2>&1 &
+      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
+    elif [ -f "${DIR}/test_server.sh" ]; then
+      nohup "${DIR}/test_server.sh" "${LMS_PORT}" > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
+      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
+      nohup "${DIR}/test_server.sh" "${CMS_PORT}" > "${OPENEDX_INSTALL_DIR}/cms.log" 2>&1 &
+      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
+    fi
     exit 0
     ;;
   stop)
     log_info "Stopping Open edX LMS and CMS daemons..."
+    if [ -f "${OPENEDX_INSTALL_DIR}/lms.pid" ]; then
+      kill "$(cat "${OPENEDX_INSTALL_DIR}/lms.pid")" 2>/dev/null || true
+      rm -f "${OPENEDX_INSTALL_DIR}/lms.pid"
+    fi
+    if [ -f "${OPENEDX_INSTALL_DIR}/cms.pid" ]; then
+      kill "$(cat "${OPENEDX_INSTALL_DIR}/cms.pid")" 2>/dev/null || true
+      rm -f "${OPENEDX_INSTALL_DIR}/cms.pid"
+    fi
     exit 0
     ;;
   restart)

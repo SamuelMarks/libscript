@@ -44,7 +44,7 @@ done
 
 EXIM_INSTALL_METHOD="$(libscript_resolve_install_method "EXIM")"
 ACTION="${ACTION:-install}"
-VERSION="${EXIM_VERSION:-latest}"
+export VERSION="${EXIM_VERSION:-latest}"
 
 case "$ACTION" in
   ls)

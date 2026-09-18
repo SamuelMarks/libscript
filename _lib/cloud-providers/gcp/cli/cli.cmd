@@ -10,4 +10,4 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 set "PACKAGE_NAME=gcp-cli"
-call "%~dp0\..\..\_common\component_core.cmd" %*
+call "%~dp0\..\..\..\_common\component_core.cmd" %*

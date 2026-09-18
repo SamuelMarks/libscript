@@ -141,12 +141,15 @@ standardize_*
 !tests/test_run_native_tests.*
 !tests/test_python_*
 !tests/test_openedx_*
+!stacks/cms/openedx/test_harness.*
+!stacks/cms/openedx/test_server.*
 !tests/test_packaging_branding.*
 !tests/test_msi_generation.*
 !devtools/docs-gen/generate_markdown_docs.*
 !devtools/generate_html_docs.*
 !docker/create_docker_builder.*
 !packaging/create_installer_from_json.*
+!packaging/generate_openedx_branding.*
 !_lib/web-servers/*/create_*
 !_lib/web-servers/nginx/test_merge.*
 # Other ad-hoc dev files and generated outputs
@@ -266,3 +269,13 @@ all_scripts.txt
 /*.py
 !/scripts/*.py
 tests_tmp/
+
+# Binary media and icon assets (kept in cc0-screenshots or generated on the fly)
+*.ico
+*.bmp
+*.png
+!devtools/docs-gen/*.png
+packaging/assets/*.rtf
+packaging/assets/*.ico
+packaging/assets/*.bmp
+

@@ -9,6 +9,10 @@
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+set "SCRIPT_DIR=%~dp0"
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "LIBSCRIPT_ROOT_DIR=%SCRIPT_DIR%..\..\.."
+)
 set "is_docker="
 if /i "%~2"=="docker" set "is_docker=1"
 if /i "%~2"=="dockerfile" set "is_docker=1"
@@ -145,7 +149,7 @@ if defined is_docker (
         
         REM Call libscript.sh env to get docker formatted ENV vars, not cmd because we're emitting a linux dockerfile
         set "PREFIX=/opt/libscript/installed/!pkg!"
-        for /f "delims=" %%i in ('call "%~dp0libscript.cmd" env !pkg! !ver! --format=docker 2^>nul') do (
+        for /f "delims=" %%i in ('call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" env !pkg! !ver! --format=docker 2^>nul') do (
             echo %%i | findstr /b /v "ENV STACK=" | findstr /b /v "ENV SCRIPT_NAME=">> "!tmp_run!"
         )
         goto docker_loop
@@ -153,7 +157,7 @@ if defined is_docker (
         if exist "libscript.json" (
             jq --version >nul 2>&1
             if not errorlevel 1 (
-                call "%~dp0scripts\resolve_stack.cmd" "libscript.json" > "libscript.resolved.json" 2>nul
+                call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\resolve_stack.cmd" "libscript.json" > "libscript.resolved.json" 2>nul
                 for /f "tokens=1,2,3" %%a in (\'jq -r ".selected[] | \"\(.name) \(.version // \\\"latest\\\") \(.override // \\\"\\\")\"" "libscript.resolved.json" 2^>nul\') do (
                     set "pkg_up=%%a"
                     for %%A in ("a=A" "b=B" "c=C" "d=D" "e=E" "f=F" "g=G" "h=H" "i=I" "j=J" "k=K" "l=L" "m=M" "n=N" "o=O" "p=P" "q=Q" "r=R" "s=S" "t=T" "u=U" "v=V" "w=W" "x=X" "y=Y" "z=Z" "-=_") do set "pkg_up=!pkg_up:%%~A!"
@@ -189,7 +193,7 @@ if defined is_docker (
                     )
                     
                     set "PREFIX=/opt/libscript/installed/%%a"
-                    for /f "delims=" %%i in ('call "%~dp0libscript.cmd" env %%a %%b --format=docker 2^>nul') do (
+                    for /f "delims=" %%i in ('call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" env %%a %%b --format=docker 2^>nul') do (
             echo %%i | findstr /b /v "ENV STACK=" | findstr /b /v "ENV SCRIPT_NAME=">> "!tmp_run!"
                     )
                 )
@@ -262,7 +266,7 @@ if defined is_docker (
         if exist "libscript.json" (
             jq --version >nul 2>&1
             if not errorlevel 1 (
-                call "%~dp0scripts\resolve_stack.cmd" "libscript.json" > "libscript.resolved.json" 2>nul
+                call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\resolve_stack.cmd" "libscript.json" > "libscript.resolved.json" 2>nul
                 for /f "tokens=1,2,3" %%a in (\'jq -r ".selected[] | \"\(.name) \(.version // \\\"latest\\\") \(.override // \\\"\\\")\"" "libscript.resolved.json" 2^>nul\') do (
                     set "pkg=%%a"
                     set "ver=%%b"
@@ -307,7 +311,7 @@ if defined is_docker (
         if exist "libscript.json" (
             jq --version >nul 2>&1
             if not errorlevel 1 (
-                call "%~dp0scripts\resolve_stack.cmd" "libscript.json" > "libscript.resolved.json" 2>nul
+                call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\resolve_stack.cmd" "libscript.json" > "libscript.resolved.json" 2>nul
                 for /f "tokens=1,2" %%a in (\'jq -r ".selected[] | \"\(.name) \(.version // \\\"latest\\\")\"" "libscript.resolved.json" 2^>nul\') do (
                     echo set "ps_script=^!ps_script^![pscustomobject]@{Name='%%a';Version='%%b'},"
                 )
@@ -370,9 +374,9 @@ if defined is_docker (
     echo if exist "^!tmp_os^!" del "^!tmp_os^!"
     echo echo.
     echo if "^!act^!"=="install" ^(
-    echo     for /f "usebackq tokens=1,2" %%%%a in ("^!tmp_sel^!") do call "%%~dp0libscript.cmd" install "%%%%a" "%%%%b"
+    echo     for /f "usebackq tokens=1,2" %%%%a in ("^!tmp_sel^!") do call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install "%%%%a" "%%%%b"
     echo ^) else ^(
-    echo     call "%%~dp0libscript.cmd" package-as "^!act^!" ^!items^! ^!extra_args^!
+    echo     call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" package-as "^!act^!" ^!items^! ^!extra_args^!
     echo ^)
     echo if exist "^!tmp_sel^!" del "^!tmp_sel^!"
     exit /b 0

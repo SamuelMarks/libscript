@@ -20,4 +20,4 @@ if "%~1"=="-h" (
     exit /b 0
 )
 
-call "%~dp0\..\..\_common\setup_base.cmd" %*
+call "%~dp0\..\..\..\_common\setup_base.cmd" %*

@@ -11,7 +11,7 @@
 setlocal enabledelayedexpansion
 set "THIS_FILE=%~f0"
 
-set "LOG_CMD=%~dp0..\..\_common\log.cmd"
+set "LOG_CMD=%~dp0..\..\..\_common\log.cmd"
 if not exist "%LOG_CMD%" (
     echo [ERROR] Could not find log.cmd
     exit /b 1

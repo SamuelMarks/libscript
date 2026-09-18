@@ -60,6 +60,10 @@ Vagrant.configure("2") do |config|
         Write-Error "Install for #{test_target} failed with exit code $installExit"
         exit $installExit
       }
+      if ("#{test_target}" -like "*openedx*") {
+        Write-Host "Triggering browser verification for Open edX..."
+        & "powershell.exe" -ExecutionPolicy Bypass -File "C:\\libscript\\packaging\\capture_browser_tabs.ps1"
+      }
       Write-Host "Completed #{test_target} test successfully."
     POWERSHELL
   end

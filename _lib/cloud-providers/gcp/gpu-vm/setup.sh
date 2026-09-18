@@ -33,7 +33,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
 fi
 
 
-SCRIPT_NAME="${SCRIPT_DIR}/../../_common/setup_base.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/setup_base.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090
 . "${SCRIPT_NAME}"

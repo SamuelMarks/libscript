@@ -80,7 +80,7 @@ get_merged_properties() {
 # ## show_help
 # Executes show_help functionality.
 show_help() {
-  log_info "Usage: $0 [COMMAND] [PACKAGE_NAME] [VERSION] [OPTIONS]"
+  log_info "Usage: ${THIS_FILE##*/} [COMMAND] [PACKAGE_NAME] [VERSION] [OPTIONS]"
   log_info ""
   log_info "Commands:"
   log_info "  install <package_name> <version>"
@@ -149,7 +149,7 @@ VERSION=""
 
 # Input validation and basic routing
 case "${1:-}" in
-  --help|-h|/\?|"-?")
+  --help|-h|/\?|"-?"|help)
     show_help
     exit 0
     ;;

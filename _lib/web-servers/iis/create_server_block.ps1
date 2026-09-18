@@ -12,14 +12,14 @@ Handles operations related to the component 'iis'.
 Execute this script to perform actions for iis.
 #>
 
-$ErrorActionPreference = "Stop"
-
 param (
     [string]$ServerName = $env:SERVER_NAME,
     [string]$ListenPort = $env:LISTEN,
     [string]$WwwRoot = $env:WWWROOT,
     [string]$PhpFpmListen = $env:PHP_FPM_LISTEN
 )
+
+$ErrorActionPreference = "Stop"
 
 if ([string]::IsNullOrWhiteSpace($ServerName)) { $ServerName = "localhost" }
 if ([string]::IsNullOrWhiteSpace($ListenPort)) { $ListenPort = "80" }

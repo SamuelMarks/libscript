@@ -93,7 +93,7 @@ if defined JSON_FILE (
     set "FIRST_JSON_ROW=1"
 )
 
-for /d %%C in ("%REPO_ROOT%\_lib\*") do (
+for /d %%C in ("%REPO_ROOT%\_lib\*" "%REPO_ROOT%\stacks\*") do (
     set "cat_name=%%~nxC"
     if not "!cat_name:~0,1!"=="_" (
         for /d %%D in ("%%C\*") do (
@@ -255,8 +255,8 @@ if exist "%README_FILE%" (
         type "%TMP_TABLE%" >> "%README_FILE%"
     )
     where npx >nul 2>&1
-    if not errorlevel 1 (
-        call npx prettier --write "%README_FILE%" >nul 2>&1
+    if !errorlevel! equ 0 (
+        call npx --yes prettier --write "%README_FILE%" >nul 2>&1
     )
 )
 if exist "%TMP_TABLE%" del "%TMP_TABLE%" >nul 2>&1

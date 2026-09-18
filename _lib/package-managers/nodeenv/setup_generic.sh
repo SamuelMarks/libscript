@@ -42,7 +42,7 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/ver
   . "${SCRIPT_NAME}"
 done
 
-NODEENV_INSTALL_METHOD="${NODEENV_INSTALL_METHOD:-system}"
+NODEENV_INSTALL_METHOD="${NODEENV_INSTALL_METHOD:-libscript_native}"
 NODEENV_INSTALL_METHOD="$(LIBSCRIPT_DEFAULT_INSTALL_METHOD="$NODEENV_INSTALL_METHOD" libscript_resolve_install_method "NODEENV")"
 ACTION="${ACTION:-install}"
 VERSION="${NODEENV_VERSION:-latest}"
@@ -76,6 +76,10 @@ case "$ACTION" in
   install)
     resolve_exact_version
     if [ "$NODEENV_INSTALL_METHOD" = "libscript_native" ]; then
+      if ! command -v uv >/dev/null 2>&1 && ! command -v python3 >/dev/null 2>&1; then
+        log_info "Python runtime required for nodeenv. Installing python..."
+        libscript_depends "python" || true
+      fi
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nodeenv/${EXACT_VERSION}"
       if [ -f "${TARGET_DIR}/bin/nodeenv" ]; then
         log_info "nodeenv ${EXACT_VERSION} is already installed in ${TARGET_DIR}."

@@ -44,7 +44,7 @@ done
 
 UVICORN_INSTALL_METHOD="$(libscript_resolve_install_method "UVICORN")"
 ACTION="${ACTION:-install}"
-VERSION="${UVICORN_VERSION:-latest}"
+export VERSION="${UVICORN_VERSION:-latest}"
 
 case "$ACTION" in
   ls)

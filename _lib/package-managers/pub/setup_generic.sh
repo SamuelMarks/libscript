@@ -176,7 +176,22 @@ case "$ACTION" in
         # Create a wrapper for pub
         cat << 'WRAPPER' > "${TARGET_DIR}/bin/pub"
 #!/bin/sh
-target_dir=$(cd -- "$(dirname -- "$0")/.." && pwd)
+# ## Overview
+# Executable wrapper for pub (Dart package manager).
+#
+# ## Usage
+# pub "$@"
+
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+else
+  THIS_FILE="${0}"
+fi
+
+target_dir=$(cd -- "$(dirname -- "${THIS_FILE}")/.." && pwd)
 if [ "${1:-}" = "--version" ] || [ "${1:-}" = "-v" ] || [ "${1:-}" = "version" ]; then
   exec "${target_dir}/dart-sdk/bin/dart" --version
 fi

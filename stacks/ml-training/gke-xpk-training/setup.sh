@@ -34,7 +34,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
 fi
 
 "${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp/cli/setup.sh"
-"${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/python/setup.sh"
+"${LIBSCRIPT_ROOT_DIR}/_lib/languages/python/setup.sh"
 "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/kubernetes/kubectl/setup.sh"
 "${LIBSCRIPT_ROOT_DIR}/_lib/toolchains/xpk/setup.sh"
 

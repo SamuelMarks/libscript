@@ -166,8 +166,23 @@ case "$ACTION" in
         # Link main entry points
         cat << 'EOF' > "${TARGET_DIR}/bin/jetstream"
 #!/bin/sh
-SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
-exec "$SCRIPT_DIR/python" -m jetstream "$@"
+# ## Overview
+# Executable wrapper for jetstream.
+#
+# ## Usage
+# jetstream "$@"
+
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+else
+  THIS_FILE="${0}"
+fi
+
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+exec "${SCRIPT_DIR}/python" -m jetstream "$@"
 EOF
         chmod +x "${TARGET_DIR}/bin/jetstream"
       else

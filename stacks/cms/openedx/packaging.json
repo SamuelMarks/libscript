@@ -1,0 +1,80 @@
+{
+  "$schema": "../../../packaging/packaging.schema.json",
+  "name": "openedx",
+  "title": "Open edX Platform",
+  "version": "1.0.0",
+  "publisher": "The Axim Collaborative & LibScript Contributors",
+  "upgrade_code": "B8C8E64E-9B5A-4B7C-A5D8-0F18B9918239",
+  "branding": {
+    "icon": "packaging/assets/openedx.ico",
+    "banner_top": "packaging/assets/openedx_banner_top.bmp",
+    "banner_side": "packaging/assets/openedx_banner_side.bmp",
+    "license_rtf": "packaging/assets/openedx_eula.rtf"
+  },
+  "directories": {
+    "app_default": "[ProgramFiles64Folder]OpenEdX",
+    "data_default": "C:\\ProgramData\\OpenEdX\\data",
+    "logs_default": "C:\\ProgramData\\OpenEdX\\logs"
+  },
+  "runtime_searches": [
+    {
+      "name": "python",
+      "title": "Python 3.11+ Execution Runtime",
+      "required": true,
+      "registry_searches": [
+        {
+          "root": "HKLM",
+          "key": "SOFTWARE\\Python\\PythonCore\\3.12\\InstallPath",
+          "file": "python.exe"
+        },
+        {
+          "root": "HKLM",
+          "key": "SOFTWARE\\Python\\PythonCore\\3.11\\InstallPath",
+          "file": "python.exe"
+        }
+      ],
+      "path_command": "python.exe",
+      "version_regex": "3\\.(1[0-9]|[2-9][0-9])"
+    },
+    {
+      "name": "nodejs",
+      "title": "Node.js 18/20+ Asset Pipeline Runtime",
+      "required": true,
+      "registry_searches": [
+        {
+          "root": "HKLM",
+          "key": "SOFTWARE\\Node.js",
+          "name": "InstallPath",
+          "file": "node.exe"
+        }
+      ],
+      "path_command": "node.exe",
+      "version_regex": "v(1[8-9]|[2-9][0-9])"
+    }
+  ],
+  "source_repository": {
+    "default_url": "https://github.com/openedx/edx-platform.git",
+    "default_branch": "open-release/quince.master",
+    "presets": [
+      { "label": "Stable (Quince Release)", "value": "open-release/quince.master" },
+      { "label": "Development (master)", "value": "master" }
+    ],
+    "supports_auth_token": true
+  },
+  "browser_launch": {
+    "targets": [
+      {
+        "id": "LAUNCH_BROWSER",
+        "title": "Launch Open edX LMS in Web Browser",
+        "default": true,
+        "url_template": "http://[PROP_LMS_HOST]:[PROP_LMS_PORT]/login"
+      },
+      {
+        "id": "LAUNCH_STUDIO",
+        "title": "Launch Open edX Studio in Web Browser",
+        "default": true,
+        "url_template": "http://[PROP_CMS_HOST]:[PROP_CMS_PORT]/signin"
+      }
+    ]
+  }
+}

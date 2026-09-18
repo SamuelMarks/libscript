@@ -95,9 +95,13 @@ for arg in $TARGETS; do
         for dir in "$REPO_ROOT/_lib/$arg"/*; do
             [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS $(basename "$dir")"
         done
+    elif [ -d "$REPO_ROOT/stacks/$arg" ]; then
+        for dir in "$REPO_ROOT/stacks/$arg"/*; do
+            [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS $(basename "$dir")"
+        done
     else
         found=0
-        for cat_dir in "$REPO_ROOT"/_lib/*; do
+        for cat_dir in "$REPO_ROOT"/_lib/* "$REPO_ROOT"/stacks/*; do
             if [ -d "$cat_dir/$arg" ]; then
                 EXPANDED_TARGETS="$EXPANDED_TARGETS $arg"
                 found=1
@@ -149,7 +153,13 @@ else
 fi
 
 for target in $UNIQUE_TARGETS; do
-    MANIFEST_PATH=$(find "$REPO_ROOT/_lib" -maxdepth 2 -type d -name "$target" -exec echo "{}/manifest.json" \;)
+    MANIFEST_PATH=""
+    if [ -d "$REPO_ROOT/_lib" ]; then
+        MANIFEST_PATH=$(find "$REPO_ROOT/_lib" -maxdepth 3 -type d -name "$target" -exec echo "{}/manifest.json" \; 2>/dev/null | head -n 1)
+    fi
+    if [ -z "$MANIFEST_PATH" ] && [ -d "$REPO_ROOT/stacks" ]; then
+        MANIFEST_PATH=$(find "$REPO_ROOT/stacks" -maxdepth 3 -type d -name "$target" -exec echo "{}/manifest.json" \; 2>/dev/null | head -n 1)
+    fi
     if [ -f "$MANIFEST_PATH" ]; then
         SUPPORTED=$(awk -v os="$OS_ID" -v family="$OS_FAMILY" -v arch="$TARGET_ARCH" '
         BEGIN { in_bl=0; in_wl=0; has_wl=0; wl_match=0; in_abl=0; in_awl=0; has_awl=0; awl_match=0; result="yes" }

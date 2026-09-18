@@ -1,0 +1,170 @@
+#!/bin/sh
+# ## Overview
+# Validates Open edX Windows Installer (.msi) packaging and WiX manifest generation.
+# Checks Simple vs Advanced modes, browser launch automation, and parameter masking.
+#
+# ## Usage
+# ./tests/test_openedx_msi.sh
+
+set -feu
+
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"
+' "${THIS_FILE}" >&2
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"
+' "${THIS_FILE}" >&2 ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
+' "$d")}"
+
+TEST_TMP_DIR="${LIBSCRIPT_ROOT_DIR}/tests_tmp/test_openedx_msi_$$"
+mkdir -p "$TEST_TMP_DIR"
+
+# ## cleanup
+# Cleans up temporary test directory upon exit or preserves on error.
+# shellcheck disable=SC2317,SC2329
+cleanup() {
+  _status=$?
+  if [ "$_status" -eq 0 ]; then
+    rm -rf "$TEST_TMP_DIR"
+  else
+    printf '[WARN] Preserving test artifacts in %s for diagnosis
+' "$TEST_TMP_DIR" >&2
+  fi
+}
+trap cleanup EXIT INT TERM
+
+printf '=== Testing Open edX MSI Installer Generation ===
+'
+
+# 1. Create mock visual and licensing assets
+echo "Mock AGPLv3 Open edX License" > "$TEST_TMP_DIR/LICENSE.txt"
+touch "$TEST_TMP_DIR/openedx.ico"
+touch "$TEST_TMP_DIR/banner_top.bmp"
+touch "$TEST_TMP_DIR/banner_side.bmp"
+
+OUT_BASE="$TEST_TMP_DIR/OpenEdX_Test_Setup"
+
+# 2. Invoke generator
+"${LIBSCRIPT_ROOT_DIR}/packaging/build_openedx_msi.sh" \
+  --out "$OUT_BASE" \
+  --version "2.4.0.0" \
+  --icon "$TEST_TMP_DIR/openedx.ico" \
+  --banner-top "$TEST_TMP_DIR/banner_top.bmp" \
+  --banner-side "$TEST_TMP_DIR/banner_side.bmp" \
+  --license "$TEST_TMP_DIR/LICENSE.txt"
+
+WXS_FILE="${OUT_BASE}.wxs"
+if [ ! -f "$WXS_FILE" ]; then
+  printf '[FAIL] Expected WXS manifest %s was not created
+' "$WXS_FILE" >&2
+  exit 1
+fi
+printf '[PASS] Generated WiX manifest: %s
+' "$WXS_FILE"
+
+# ## assert_contains
+# Asserts that a given pattern exists within the generated WiX WXS file.
+# shellcheck disable=SC2317,SC2329
+assert_contains() {
+  _pattern="$1"
+  _desc="$2"
+  if ! grep -q -- "$_pattern" "$WXS_FILE"; then
+    printf '[FAIL] Assertion failed: %s (pattern: "%s")
+' "$_desc" "$_pattern" >&2
+    exit 1
+  fi
+  printf '[PASS] Verified: %s
+' "$_desc"
+}
+
+assert_contains 'Property Id="SETUP_MODE" Value="Simple"' "Default Simple Mode property"
+assert_contains 'Property Id="LAUNCH_BROWSER" Value="1"' "Default Launch Browser enabled property"
+assert_contains 'Property Id="PROP_MYSQL_REMOTE_URL"' "MySQL DBaaS remote connection URL property"
+assert_contains 'Property Id="PROP_REDIS_PORT" Value="6379"' "Customizable Redis port property"
+assert_contains 'Property Id="PROP_REDIS_URL"' "Remote Redis DBaaS connection URI property"
+assert_contains 'Property Id="PROP_MONGODB_URI"' "MongoDB Atlas connection URI property"
+assert_contains 'Dialog Id="Dlg_SetupType"' "Setup Mode selection dialog"
+assert_contains 'Dialog Id="Dlg_OpenEdX_DB"' "Relational Database and DBaaS configuration dialog"
+assert_contains 'Dialog Id="Dlg_OpenEdX_CacheSearch"' "Cache, MongoDB and Search configuration dialog"
+assert_contains 'Dialog Id="Dlg_Exit"' "Exit completion dialog"
+assert_contains 'Control Id="LaunchBrowserCheckBox"' "Launch Browser checkbox control"
+assert_contains 'CustomAction Id="CA_LaunchBrowser"' "Launch Browser custom action"
+assert_contains 'Hidden="yes"' "Sensitive parameter masking via Hidden attribute"
+assert_contains 'Property Id="PROP_MYSQL_REMOTE_URL" Hidden="yes"' "Hidden attribute masks MySQL DBaaS URL"
+assert_contains 'Property Id="PROP_REDIS_URL" Hidden="yes"' "Hidden attribute masks Redis DBaaS URL"
+assert_contains 'python' "Explicit display of Python runtime component"
+assert_contains 'nodejs' "Explicit display of Node.js asset component"
+assert_contains 'meilisearch' "Explicit display of Meilisearch search component"
+assert_contains 'mysql' "Explicit display of MySQL database component"
+assert_contains 'redis' "Explicit display of Redis cache and broker component"
+assert_contains 'mongodb' "Explicit display of MongoDB datastore component"
+assert_contains 'Show Dialog="Dlg_VerifyReady" After="Dlg_SetupType"><!\[CDATA\[NOT Installed AND SETUP_MODE="Simple"\]\]>' "Simple Mode blind install navigation flow"
+assert_contains 'Show Dialog="Dlg_Features" After="Dlg_SetupType"><!\[CDATA\[NOT Installed AND SETUP_MODE="Advanced"\]\]>' "Advanced Mode component navigation flow"
+assert_contains 'MajorUpgrade' "Major upgrade element configured"
+assert_contains 'Schedule="afterInstallInitialize"' "Major upgrade scheduled afterInstallInitialize"
+assert_contains 'Dialog Id="Dlg_InstallLocation"' "Custom installation and data location dialog"
+assert_contains 'Dialog Id="Dlg_RuntimeSelection"' "Runtime auto-detection and selection dialog"
+assert_contains 'Dialog Id="Dlg_OpenEdX_SourceRepo"' "Source Git repository and branch selection dialog"
+assert_contains 'Property Id="MsiHiddenProperties"' "MsiHiddenProperties sensitive parameter registration"
+assert_contains 'Permanent="yes"' "Permanent datastore protection across upgrades and uninstall"
+assert_contains 'NeverOverwrite="yes"' "NeverOverwrite user data protection"
+assert_contains 'DATAFOLDER' "Configurable DATAFOLDER directory property"
+assert_contains 'LOGSFOLDER' "Configurable LOGSFOLDER directory property"
+assert_contains 'FOUND_PYTHON_EXE' "Python runtime auto-detection property"
+assert_contains 'FOUND_NODE_EXE' "Node.js runtime auto-detection property"
+assert_contains 'PROP_OPENEDX_EDX_PLATFORM_REPOSITORY' "Git repository parameter property"
+assert_contains 'PROP_OPENEDX_VERSION' "Git release branch parameter property"
+assert_contains 'PROP_OPENEDX_EDX_PLATFORM_REPOSITORY" Disabled="yes"' "Read-only disabled repository display in MSI GUI"
+assert_contains 'PROP_OPENEDX_VERSION" Disabled="yes"' "Read-only disabled release branch/tag display in MSI GUI"
+assert_contains 'NOT Installed AND INSTALL_MYSQL="1" AND NOT PROP_MYSQL_REMOTE_URL' "Local MySQL install conditional on not using DBaaS"
+assert_contains 'NOT Installed AND INSTALL_REDIS="1" AND NOT PROP_REDIS_URL' "Local Redis install conditional on not using remote Redis"
+
+# 4. Build-time override verification for custom local directory, fork, and branch/tag
+CUSTOM_OUT_BASE="${TEST_TMP_DIR}/OpenEdX_Custom_Override"
+"${LIBSCRIPT_ROOT_DIR}/packaging/build_msi.sh" stacks/cms/openedx \
+  --out "$CUSTOM_OUT_BASE" \
+  --repo "/var/local/repos/edx-platform-custom" \
+  --branch "v3.2.1-custom-tag"
+
+CUSTOM_WXS="${CUSTOM_OUT_BASE}.wxs"
+if [ ! -f "$CUSTOM_WXS" ]; then
+  printf '[FAIL] Expected custom WXS %s was not created\n' "$CUSTOM_WXS" >&2
+  exit 1
+fi
+
+if ! grep -q 'Property Id="PROP_OPENEDX_EDX_PLATFORM_REPOSITORY" Value="/var/local/repos/edx-platform-custom"' "$CUSTOM_WXS"; then
+  printf '[FAIL] Build-time repository override was not reflected in manifest\n' >&2
+  exit 1
+fi
+printf '[PASS] Verified: Build-time local repository path override baked into installer\n'
+
+if ! grep -q 'Property Id="PROP_OPENEDX_VERSION" Value="v3.2.1-custom-tag"' "$CUSTOM_WXS"; then
+  printf '[FAIL] Build-time branch/tag override was not reflected in manifest\n' >&2
+  exit 1
+fi
+printf '[PASS] Verified: Build-time custom branch/tag override baked into installer\n'
+
+# 5. Binary MSI compilation check
+MSI_FILE="${OUT_BASE}.msi"
+if [ -f "$MSI_FILE" ]; then
+  _msi_size=$(wc -c < "$MSI_FILE" | tr -d ' ')
+  printf '[PASS] Generated binary MSI package: %s (size: %s bytes)
+' "$MSI_FILE" "$_msi_size"
+fi
+
+printf '=== Open edX MSI tests completed successfully! ===
+'
+exit 0

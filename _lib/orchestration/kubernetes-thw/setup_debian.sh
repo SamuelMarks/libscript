@@ -51,15 +51,23 @@ if ! ssh -o BatchMode=yes -o StrictHostKeyChecking=no root@server echo ok >/dev/
     ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa 2>/dev/null || true
   fi
   if [ -f ~/.ssh/id_rsa.pub ]; then
-    cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys 2>/dev/null || true
+    if ! grep -q -f ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys 2>/dev/null; then
+      cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys 2>/dev/null || true
+    fi
     if [ -w /root/.ssh ]; then
-      cat ~/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys 2>/dev/null || true
+      if ! grep -q -f ~/.ssh/id_rsa.pub /root/.ssh/authorized_keys 2>/dev/null; then
+        cat ~/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys 2>/dev/null || true
+      fi
     elif command -v sudo >/dev/null 2>&1; then
       sudo mkdir -p /root/.ssh 2>/dev/null || true
-      cat ~/.ssh/id_rsa.pub | sudo tee -a /root/.ssh/authorized_keys >/dev/null || true
+      if ! sudo grep -q -f ~/.ssh/id_rsa.pub /root/.ssh/authorized_keys 2>/dev/null; then
+        cat ~/.ssh/id_rsa.pub | sudo tee -a /root/.ssh/authorized_keys >/dev/null || true
+      fi
     fi
   fi
-  ssh-keyscan 127.0.0.1 server >> ~/.ssh/known_hosts 2>/dev/null || true
+  if ! ssh-keygen -F server >/dev/null 2>&1 && ! ssh-keygen -F 127.0.0.1 >/dev/null 2>&1; then
+    ssh-keyscan 127.0.0.1 server >> ~/.ssh/known_hosts 2>/dev/null || true
+  fi
 fi
 
 # Ensure SSH does not prompt interactively for host authenticity verification

@@ -4,25 +4,32 @@
   "type": "object",
   "properties": {
     "name": {
-      "type": "string"
+      "type": "string",
+      "description": "Name of the application or service being packaged"
     },
     "description": {
-      "type": "string"
+      "type": "string",
+      "description": "Summary description of the application and its installer"
     },
     "version": {
-      "type": "string"
+      "type": "string",
+      "description": "Version string of the application installer"
     },
     "url": {
-      "type": "string"
+      "type": "string",
+      "description": "Primary homepage or source URL for the application"
     },
     "license": {
-      "type": "string"
+      "type": "string",
+      "description": "Software license identifier or file path"
     },
     "scripts_root": {
-      "type": "string"
+      "type": "string",
+      "description": "Base directory containing custom hook and build scripts"
     },
     "wwwroot": {
       "type": "array",
+      "description": "List of web service definitions, endpoints, and virtual host roots",
       "items": {
         "type": "object",
         "properties": {
@@ -88,10 +95,12 @@
       }
     },
     "dependencies": {
-      "$ref": "#/definitions/Dependencies"
+      "$ref": "#/definitions/Dependencies",
+      "description": "Component and service dependencies required by the application"
     },
     "log_server": {
       "type": "object",
+      "description": "Optional log server configuration for installer telemetry and tracking",
       "properties": {
         "optional": {
           "type": "boolean"

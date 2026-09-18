@@ -31,8 +31,8 @@ export LIBSCRIPT_ROOT_DIR
 set -feu
 
 # Ensure base variables are loaded if available
-if [ -f "${SCRIPT_DIR}/../../_common/log.sh" ]; then
-  . "${SCRIPT_DIR}/../../_common/log.sh"
+if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh" ]; then
+  . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 else
   # ## log_info
   # Logs an informational message.

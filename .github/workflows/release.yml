@@ -1,0 +1,310 @@
+# ## Overview
+# Configuration and definition file for release.yml.
+# Builds native installers and publishes installer artifacts to GitHub Releases.
+#
+# ## Usage
+# Triggered on Git release tags (v*), release publication events, or manually via workflow_dispatch.
+
+name: Release Packages
+
+on:
+  release:
+    types: [published]
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Release tag name (e.g. v1.0.0, leave empty to auto-detect)"
+        required: false
+        type: string
+        default: ""
+      draft:
+        description: "Publish as a draft release"
+        required: false
+        type: boolean
+        default: false
+      prerelease:
+        description: "Publish as a pre-release"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  # ============================================================================
+  # 1. Windows Installer (.msi) Build Matrix
+  # ============================================================================
+  build-msi:
+    name: Build MSI - ${{ matrix.package.name }}
+    runs-on: windows-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - id: openedx
+            name: Open edX Platform
+            target_dir: stacks/cms/openedx
+            build_cmd: packaging\build_openedx_msi.cmd
+          # --------------------------------------------------------------------
+          # Extensible across all 160+ packages in libscript:
+          # - id: mysql
+          #   name: MySQL Database Server
+          #   target_dir: _lib/databases/mysql
+          #   build_cmd: packaging\build_msi.cmd _lib\databases\mysql
+          # - id: redis
+          #   name: Redis Datastore
+          #   target_dir: _lib/caches/redis
+          #   build_cmd: packaging\build_msi.cmd _lib/caches/redis
+          # - id: valkey
+          #   name: Valkey Datastore
+          #   target_dir: _lib/caches/valkey
+          #   build_cmd: packaging\build_msi.cmd _lib\caches\valkey
+          # --------------------------------------------------------------------
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup WiX Toolset
+        shell: pwsh
+        run: |
+          $wixV3 = "C:\Program Files (x86)\WiX Toolset v3.11\bin"
+          if (Test-Path "$wixV3\candle.exe") {
+            Write-Host "Found WiX v3 at $wixV3. Adding to GITHUB_PATH."
+            Add-Content -Path $env:GITHUB_PATH -Value $wixV3
+          } elseif (Get-Command candle.exe -ErrorAction SilentlyContinue) {
+            Write-Host "candle.exe is already available in PATH."
+          } elseif (Get-Command wix.exe -ErrorAction SilentlyContinue) {
+            Write-Host "wix.exe is already available in PATH."
+          } else {
+            Write-Host "WiX Toolset compiler not found in PATH. Installing via Chocolatey..."
+            choco install wixtoolset -y --no-progress
+            if (Test-Path "$wixV3\candle.exe") {
+              Add-Content -Path $env:GITHUB_PATH -Value $wixV3
+            }
+          }
+
+      - name: Verify WiX Compiler
+        shell: cmd
+        run: |
+          where candle.exe || where wix.exe || (echo [ERROR] Neither candle.exe nor wix.exe found in PATH & exit /b 1)
+
+      - name: Determine Package Version and Artifact Name
+        id: version
+        shell: pwsh
+        run: |
+          # 1. Resolve raw tag/branch from GitHub context
+          $rawRef = ""
+          if ("${{ github.event.inputs.tag_name }}") {
+            $rawRef = "${{ github.event.inputs.tag_name }}".Trim()
+          } elseif ("${{ github.ref_name }}") {
+            $rawRef = "${{ github.ref_name }}".Trim()
+          }
+
+          # 2. Extract package metadata if packaging.json exists
+          $pkgJsonVer = "1.0.0"
+          $pkgDefaultBranch = ""
+          if (Test-Path "${{ matrix.package.target_dir }}\packaging.json") {
+            $json = Get-Content "${{ matrix.package.target_dir }}\packaging.json" | ConvertFrom-Json
+            if ($json.version) { $pkgJsonVer = "$($json.version)".TrimStart("v").Trim() }
+            if ($json.source_repository -and $json.source_repository.default_branch) {
+              $pkgDefaultBranch = "$($json.source_repository.default_branch)".Trim()
+            }
+          }
+
+          # 3. Determine target ref for naming (use tag/branch, or package default_branch, or manifest version)
+          $targetRef = $rawRef
+          if (-not $targetRef -or $targetRef -eq "master" -or $targetRef -eq "main") {
+            if ($pkgDefaultBranch) {
+              $targetRef = $pkgDefaultBranch
+            } elseif (-not $targetRef) {
+              $targetRef = $pkgJsonVer
+            }
+          }
+
+          # 4. Sanitize version string for filename:
+          # Strips generic prefixes: 'open-release/', 'release/', 'refs/heads/', 'refs/tags/', 'v'
+          $cleanVer = $targetRef -replace '^(refs/(heads|tags)/)?(open-release/|release/)?', ''
+          $cleanVer = $cleanVer -replace '^v(?=\d)', ''
+          # Simplify '<name>.master' release branches to '<name>' (e.g. quince.master -> quince)
+          if ($cleanVer -match '^([a-zA-Z0-9_-]+)\.master$') {
+            $cleanVer = $Matches[1]
+          }
+          $cleanVer = $cleanVer -replace '[^a-zA-Z0-9._-]', '-'
+
+          # 5. Determine numeric WiX Product Version (Major.Minor.Build.Revision)
+          $numericCandidate = ""
+          if ($targetRef -match '(\d+(?:\.\d+)+)') {
+            $numericCandidate = $Matches[1]
+          } else {
+            $numericCandidate = $pkgJsonVer
+          }
+          $parts = $numericCandidate.Split('.')
+          while ($parts.Length -lt 3) { $parts += "0" }
+          $wixVer = ($parts[0..([Math]::Min($parts.Length - 1, 3))]) -join '.'
+
+          # 6. Canonical package filename: <package_id>-<version>
+          $pkgId = "${{ matrix.package.id }}"
+          $outName = "$pkgId-$cleanVer"
+
+          Write-Host "Package: $pkgId"
+          Write-Host "Target Ref: $targetRef"
+          Write-Host "Clean Version: $cleanVer"
+          Write-Host "WiX Product Version: $wixVer"
+          Write-Host "Artifact Base Name: $outName"
+
+          "version=$wixVer" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "clean_version=$cleanVer" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "out_name=$outName" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Build MSI Package (${{ matrix.package.name }})
+        shell: cmd
+        run: |
+          call ${{ matrix.package.build_cmd }} --out ${{ steps.version.outputs.out_name }} --version ${{ steps.version.outputs.version }}
+
+      - name: Verify and Prepare Artifacts
+        shell: pwsh
+        run: |
+          $msiFile = "${{ steps.version.outputs.out_name }}.msi"
+          if (-not (Test-Path $msiFile)) {
+            Write-Error "MSI installer package was not generated: $msiFile"
+            exit 1
+          }
+          $item = Get-Item $msiFile
+          Write-Host "Successfully generated: $msiFile ($($item.Length) bytes)"
+
+          # Generate SHA256 checksum
+          $hash = (Get-FileHash -Path $msiFile -Algorithm SHA256).Hash.ToLower()
+          "$hash  $msiFile" | Out-File -FilePath "$msiFile.sha256" -Encoding ascii
+          Write-Host "SHA256 for $msiFile: $hash"
+
+      - name: Upload MSI Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-msi-${{ matrix.package.id }}
+          path: |
+            ${{ steps.version.outputs.out_name }}.msi
+            ${{ steps.version.outputs.out_name }}.msi.sha256
+          if-no-files-found: error
+
+  # ============================================================================
+  # 2. Future Format Builders (Scaffolded for 160+ Packages)
+  # ============================================================================
+  # Each format job below builds <package_id>-<version>.<ext> and uploads
+  # artifacts via actions/upload-artifact@v4, which publish-release attaches to
+  # the GitHub Release.
+  #
+  # build-exe:
+  #   name: Build EXE - ${{ matrix.package.name }}
+  #   runs-on: windows-latest
+  #   ...
+  #
+  # build-dmg:
+  #   name: Build DMG - ${{ matrix.package.name }}
+  #   runs-on: macos-latest
+  #   ...
+  #
+  # build-pkg:
+  #   name: Build PKG - ${{ matrix.package.name }}
+  #   runs-on: macos-latest
+  #   ...
+  #
+  # build-rpm:
+  #   name: Build RPM - ${{ matrix.package.name }}
+  #   runs-on: ubuntu-latest
+  #   ...
+  #
+  # build-deb:
+  #   name: Build DEB - ${{ matrix.package.name }}
+  #   runs-on: ubuntu-latest
+  #   ...
+  #
+  # build-apk:
+  #   name: Build APK - ${{ matrix.package.name }}
+  #   runs-on: ubuntu-latest
+  #   ...
+  #
+  # build-txz:
+  #   name: Build TXZ - ${{ matrix.package.name }}
+  #   runs-on: ubuntu-latest
+  #   ...
+
+  # ============================================================================
+  # 3. Publish Release Assets to GitHub Releases
+  # ============================================================================
+  publish-release:
+    name: Publish Release Assets
+    needs: [build-msi]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all installer artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Display Release Assets
+        run: |
+          echo "=== Downloaded Artifacts ==="
+          ls -lah dist/
+
+      - name: Generate Consolidated SHA256SUMS
+        run: |
+          cd dist
+          sha256sum *.* > SHA256SUMS.txt || true
+          echo "=== SHA256SUMS.txt ==="
+          cat SHA256SUMS.txt
+
+      - name: Resolve Release Tag & Title
+        id: release_info
+        run: |
+          if [ -n "${{ github.event.inputs.tag_name }}" ]; then
+            TAG="${{ github.event.inputs.tag_name }}"
+          elif [ "${{ github.ref_type }}" = "tag" ] && [ -n "${{ github.ref_name }}" ]; then
+            TAG="${{ github.ref_name }}"
+          elif [ "${{ github.event_name }}" = "release" ] && [ -n "${{ github.event.release.tag_name }}" ]; then
+            TAG="${{ github.event.release.tag_name }}"
+          elif [ -n "${{ github.ref_name }}" ]; then
+            TAG="${{ github.ref_name }}"
+          else
+            TAG="v1.0.0"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Release tag: $TAG"
+
+      - name: Publish Assets to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.release_info.outputs.tag }}
+          IS_DRAFT: ${{ github.event.inputs.draft || false }}
+          IS_PRERELEASE: ${{ github.event.inputs.prerelease || false }}
+        run: |
+          echo "Publishing installer packages for release: $TAG"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists. Uploading assets..."
+            gh release upload "$TAG" dist/* --clobber
+          else
+            echo "Release $TAG does not exist. Creating release..."
+            FLAGS=()
+            if [ "$IS_DRAFT" = "true" ]; then
+              FLAGS+=("--draft")
+            fi
+            if [ "$IS_PRERELEASE" = "true" ]; then
+              FLAGS+=("--prerelease")
+            fi
+            gh release create "$TAG" --title "$TAG" --generate-notes "${FLAGS[@]}" dist/*
+          fi
+          echo "Release assets successfully published to GitHub Releases!"

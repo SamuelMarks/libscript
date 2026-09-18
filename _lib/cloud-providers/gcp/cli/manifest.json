@@ -1,5 +1,5 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
+  "$schema": "../../../_common/manifest.schema.json",
   "name": "gcloud-cli",
   "title": "Google Cloud CLI",
   "description": "Component for installing and managing the Google Cloud CLI (gcloud).",

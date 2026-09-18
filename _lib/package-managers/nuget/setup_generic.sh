@@ -192,10 +192,26 @@ case "$ACTION" in
                   libscript_depends "mono-complete" || libscript_depends "mono-devel" || true
                   NUGET_URL="https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
                   libscript_depends "curl"
-                  if curl -sSLf "$NUGET_URL" -o "${TARGET_DIR}/bin/nuget.exe"; then
+                  if [ -f "${TARGET_DIR}/bin/nuget.exe" ] || curl -sSLf "$NUGET_URL" -o "${TARGET_DIR}/bin/nuget.exe"; then
                     cat <<'EOF' > "${TARGET_DIR}/bin/nuget"
 #!/bin/sh
-NUGET_EXE="$(dirname "$0")/nuget.exe"
+# ## Overview
+# Executable wrapper for nuget.
+#
+# ## Usage
+# nuget "$@"
+
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+else
+  THIS_FILE="${0}"
+fi
+
+BIN_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+NUGET_EXE="${BIN_DIR}/nuget.exe"
 if command -v mono >/dev/null 2>&1; then
   exec mono "$NUGET_EXE" "$@"
 else
@@ -210,7 +226,25 @@ EOF
                 ln -sf "$(command -v nuget)" "${TARGET_DIR}/bin/nuget"
               elif command -v dotnet >/dev/null 2>&1 && [ ! -f "${TARGET_DIR}/bin/nuget" ]; then
                 # dotnet provides nuget functionality usually, but as a test hack we'll create a wrapper
-                printf '#!/bin/sh\ndotnet nuget "$@"\n' > "${TARGET_DIR}/bin/nuget"
+                cat <<'EOF' > "${TARGET_DIR}/bin/nuget"
+#!/bin/sh
+# ## Overview
+# Executable wrapper for dotnet nuget.
+#
+# ## Usage
+# nuget "$@"
+
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+else
+  THIS_FILE="${0}"
+fi
+
+exec dotnet nuget "$@"
+EOF
                 chmod +x "${TARGET_DIR}/bin/nuget"
               fi
             else

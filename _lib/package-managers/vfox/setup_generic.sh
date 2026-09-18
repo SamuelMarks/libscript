@@ -156,12 +156,11 @@ case "$ACTION" in
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing vfox ${VERSION} natively to ${TARGET_DIR}..."
         libscript_depends "curl"
-        libscript_depends "bash"
         libscript_depends "tar"
         libscript_depends "unzip"
 
         mkdir -p "${TARGET_DIR}"
-        curl -sSL https://raw.githubusercontent.com/version-fox/vfox/main/install.sh | PREFIX="${TARGET_DIR}" bash
+        curl -sSL https://raw.githubusercontent.com/version-fox/vfox/main/install.sh | PREFIX="${TARGET_DIR}" sh
       else
         log_info "vfox ${VERSION} is already installed."
       fi

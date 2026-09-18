@@ -28,19 +28,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
 ' "$d")}"
 
-if [ -f "$SCRIPT_DIR/env.sh" ]; then
-  unset SCRIPT_NAME || true
-  . "$SCRIPT_DIR/env.sh"
-fi
-
-printf '==> Executing Open edX End-to-End Registration and Login Verification...
-'
-if command -v python3 >/dev/null 2>&1; then
-  python3 "$SCRIPT_DIR/test_harness.py"
-elif command -v python >/dev/null 2>&1; then
-  python "$SCRIPT_DIR/test_harness.py"
-else
-  printf 'Python runtime required for Open edX end-to-end verification.
-' >&2
-  exit 1
-fi
+SCRIPT_NAME="${SCRIPT_DIR}/test_harness.sh"
+export SCRIPT_NAME
+. "${SCRIPT_NAME}"

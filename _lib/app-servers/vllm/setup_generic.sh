@@ -184,9 +184,24 @@ case "$ACTION" in
         if [ ! -s "${TARGET_DIR}/bin/vllm" ]; then
           cat <<'EOF' > "${TARGET_DIR}/bin/vllm"
 #!/bin/sh
-VENV_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+# ## Overview
+# Executable wrapper for vllm.
+#
+# ## Usage
+# vllm "$@"
+
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+else
+  THIS_FILE="${0}"
+fi
+
+VENV_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")/.." && pwd)
 export VLLM_TARGET_DEVICE="${VLLM_TARGET_DEVICE:-cpu}"
-exec "$VENV_DIR/bin/python3" -m vllm.entrypoints.cli.main "$@"
+exec "${VENV_DIR}/bin/python3" -m vllm.entrypoints.cli.main "$@"
 EOF
           chmod +x "${TARGET_DIR}/bin/vllm"
         fi

@@ -44,7 +44,7 @@ done
 
 WAITRESS_INSTALL_METHOD="$(libscript_resolve_install_method "WAITRESS")"
 ACTION="${ACTION:-install}"
-VERSION="${WAITRESS_VERSION:-latest}"
+export VERSION="${WAITRESS_VERSION:-latest}"
 
 case "$ACTION" in
   ls)

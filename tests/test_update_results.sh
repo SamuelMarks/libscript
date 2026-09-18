@@ -37,6 +37,7 @@ run_tests() {
   # Setup mock directory structure
   mkdir -p "${_test_tmp}/_lib/catA/compA"
   mkdir -p "${_test_tmp}/_lib/catB/compB"
+  mkdir -p "${_test_tmp}/stacks/catS/compS"
   mkdir -p "${_test_tmp}/_lib/_common/helper"
   mkdir -p "${_test_tmp}/tests_tmp"
 
@@ -66,6 +67,7 @@ EOF_TODO
   touch "${_test_tmp}/tests_tmp/compA.linux.alpine.success"
   touch "${_test_tmp}/tests_tmp/compA.sunos.success"
   touch "${_test_tmp}/tests_tmp/compB.windows.failure"
+  touch "${_test_tmp}/tests_tmp/compS.linux.debian.success"
 
   # Execute update_results.sh
   "${REPO_ROOT}/tests/update_results.sh" "${_test_tmp}"
@@ -82,6 +84,14 @@ EOF_TODO
   # shellcheck disable=SC2016
   if ! grep -q '| `compB` | ❓ | ❓ | ❓ | ❌ |' "${_test_tmp}/README.md"; then
     printf 'Error: compB failure status not found in README.md\n' >&2
+    rm -rf "${_test_tmp}"
+    exit 1
+  fi
+
+  # Verification 2b: compS from stacks directory has debian success mark
+  # shellcheck disable=SC2016
+  if ! grep -q '| `compS` | ❓ | ✅ | ❓ |' "${_test_tmp}/README.md"; then
+    printf 'Error: compS stacks component not discovered or deb status not updated in README.md\n' >&2
     rm -rf "${_test_tmp}"
     exit 1
   fi

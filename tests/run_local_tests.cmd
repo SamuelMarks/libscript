@@ -74,9 +74,13 @@ for %%A in (!ARGS!) do (
         for /d %%D in ("%REPO_ROOT%\_lib\%%A\*") do (
             set "TARGETS=!TARGETS! %%~nxD"
         )
+    ) else if exist "%REPO_ROOT%\stacks\%%A\*" (
+        for /d %%D in ("%REPO_ROOT%\stacks\%%A\*") do (
+            set "TARGETS=!TARGETS! %%~nxD"
+        )
     ) else (
         set "FOUND=0"
-        for /d %%C in ("%REPO_ROOT%\_lib\*") do (
+        for /d %%C in ("%REPO_ROOT%\_lib\*" "%REPO_ROOT%\stacks\*") do (
             if exist "%%C\%%A\*" (
                 set "TARGETS=!TARGETS! %%A"
                 set "FOUND=1"

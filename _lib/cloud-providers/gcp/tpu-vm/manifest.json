@@ -1,5 +1,5 @@
 {
-  "$schema": "../../_common/manifest.schema.json",
+  "$schema": "../../../_common/manifest.schema.json",
   "name": "tpu-vm",
   "title": "GCP Cloud TPU VM",
   "description": "Component for provisioning, managing, and connecting to Google Cloud TPU VMs, including robust TFRC support.",

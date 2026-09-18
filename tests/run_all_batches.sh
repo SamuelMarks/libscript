@@ -35,7 +35,7 @@ EXTRA_ARGS=""
 while [ $# -gt 0 ]; do
     case "$1" in
         --help|-h|/?)
-            echo "Usage: $0 [--os <target_os>] [--reuse-vm]"
+            printf '%s\n' "Usage: ${THIS_FILE##*/} [--os <target_os>] [--reuse-vm]"
             exit 0
             ;;
         --os)

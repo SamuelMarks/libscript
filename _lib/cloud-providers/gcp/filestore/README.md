@@ -49,11 +49,11 @@ running the setup script.
 | `MODEL_NAME`                       | HuggingFace model string to serve                                                  | `your-org/your-model-name` |                  |
 | `WORKLOAD_NAME`                    | Name of the XPK workload                                                           | `none`                     |                  |
 | `JETSTREAM_IMAGE`                  | Docker image for JetStream TPU inference                                           | `none`                     |                  |
-| `GCP_PROJECT_ID`                   |                                                                                    | `none`                     |                  |
-| `FILESTORE_ZONE`                   |                                                                                    | `none`                     |                  |
-| `FILESTORE_TIER`                   |                                                                                    | `BASIC_HDD`                |                  |
-| `FILESTORE_CAPACITY_GB`            |                                                                                    | `1024`                     |                  |
-| `FILESTORE_NETWORK`                |                                                                                    | `default`                  |                  |
+| `GCP_PROJECT_ID`                   | Google Cloud Platform project ID for Filestore instance provisioning.              | `none`                     |                  |
+| `FILESTORE_ZONE`                   | Google Cloud zone where the Filestore instance is deployed.                        | `none`                     |                  |
+| `FILESTORE_TIER`                   | Service tier for Filestore instance performance and storage capacity.              | `BASIC_HDD`                |                  |
+| `FILESTORE_CAPACITY_GB`            | Allocated storage capacity for the Filestore volume in gigabytes.                  | `1024`                     |                  |
+| `FILESTORE_NETWORK`                | VPC network name connected to the Filestore instance.                              | `default`                  |                  |
 
 <!-- END_VARS -->
 

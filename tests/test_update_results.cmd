@@ -19,6 +19,7 @@ set "TEST_TMP=%TEMP%\test_update_results_%RANDOM%"
 if not exist "%TEST_TMP%" mkdir "%TEST_TMP%" >nul 2>&1
 if not exist "%TEST_TMP%\_lib\catA\compA" mkdir "%TEST_TMP%\_lib\catA\compA" >nul 2>&1
 if not exist "%TEST_TMP%\_lib\catB\compB" mkdir "%TEST_TMP%\_lib\catB\compB" >nul 2>&1
+if not exist "%TEST_TMP%\stacks\catS\compS" mkdir "%TEST_TMP%\stacks\catS\compS" >nul 2>&1
 if not exist "%TEST_TMP%\_lib\_common\helper" mkdir "%TEST_TMP%\_lib\_common\helper" >nul 2>&1
 if not exist "%TEST_TMP%\tests_tmp" mkdir "%TEST_TMP%\tests_tmp" >nul 2>&1
 
@@ -47,6 +48,7 @@ type nul > "%TEST_TMP%\libscript.sh"
 type nul > "%TEST_TMP%\tests_tmp\compA.linux.alpine.success"
 type nul > "%TEST_TMP%\tests_tmp\compA.sunos.success"
 type nul > "%TEST_TMP%\tests_tmp\compB.windows.failure"
+type nul > "%TEST_TMP%\tests_tmp\compS.linux.debian.success"
 
 call "%REPO_ROOT%\tests\update_results.cmd" "%TEST_TMP%"
 if errorlevel 1 (
@@ -67,6 +69,14 @@ if errorlevel 1 (
 findstr /c:"| `compB` | ❓ | ❓ | ❓ | ❌ |" "%TEST_TMP%\README.md" >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] compB failure status not found in README.md
+    rmdir /s /q "%TEST_TMP%" >nul 2>&1
+    exit /b 1
+)
+
+:: Verification 2b: compS from stacks directory has debian success mark
+findstr /c:"| `compS` | ❓ | ✅ | ❓ |" "%TEST_TMP%\README.md" >nul 2>&1
+if errorlevel 1 (
+    echo [ERROR] compS stacks component not found in README.md
     rmdir /s /q "%TEST_TMP%" >nul 2>&1
     exit /b 1
 )
