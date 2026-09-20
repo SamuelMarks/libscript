@@ -14,7 +14,8 @@
   "directories": {
     "app_default": "[ProgramFiles64Folder]OpenEdX",
     "data_default": "C:\\ProgramData\\OpenEdX\\data",
-    "logs_default": "C:\\ProgramData\\OpenEdX\\logs"
+    "logs_default": "C:\\ProgramData\\OpenEdX\\logs",
+    "backups_default": "C:\\ProgramData\\OpenEdX\\backups"
   },
   "runtime_searches": [
     {
@@ -76,5 +77,99 @@
         "url_template": "http://[PROP_CMS_HOST]:[PROP_CMS_PORT]/signin"
       }
     ]
-  }
+  },
+  "features": [
+    {
+      "id": "core",
+      "title": "Open edX LMS & Studio Core Services",
+      "description": "Core Django WSGI services for LMS and Studio CMS.",
+      "default": true,
+      "mandatory": true
+    },
+    {
+      "id": "workers",
+      "title": "Celery Background Workers & Scheduler",
+      "description": "Asynchronous task workers (lms-worker, cms-worker) and periodic beat scheduler.",
+      "default": true,
+      "mandatory": false
+    },
+    {
+      "id": "demo_content",
+      "title": "Demo Course & Content Libraries",
+      "description": "Ingest the official edX demonstration course and reusable content libraries.",
+      "default": false,
+      "mandatory": false
+    },
+    {
+      "id": "mfes",
+      "title": "Micro-Frontend Applications (MFEs)",
+      "description": "Production builds for Learning, Authn, Account, and Course Authoring MFEs.",
+      "default": false,
+      "mandatory": false
+    },
+    {
+      "id": "theming",
+      "title": "Comprehensive Theming & Branding Engine",
+      "description": "Compile and apply custom corporate or institutional branding themes.",
+      "default": false,
+      "mandatory": false
+    }
+  ],
+  "shortcuts": [
+    {
+      "id": "SC_CLI",
+      "title": "Open edX Management Console",
+      "target": "[INSTALLFOLDER]cli.cmd",
+      "arguments": "",
+      "icon": "openedx.ico",
+      "description": "Command-line administrative interface for Open edX operations."
+    },
+    {
+      "id": "SC_HEALTHCHECK",
+      "title": "Open edX Healthcheck & Diagnostics",
+      "target": "[INSTALLFOLDER]healthcheck.cmd",
+      "arguments": "",
+      "icon": "openedx.ico",
+      "description": "Full-stack health diagnostic probe for all Open edX services."
+    },
+    {
+      "id": "SC_DBSHELL",
+      "title": "Open edX Database Console",
+      "target": "[INSTALLFOLDER]dbshell.cmd",
+      "arguments": "mysql",
+      "icon": "openedx.ico",
+      "description": "Interactive relational database shell connected to Open edX."
+    },
+    {
+      "id": "SC_BACKUP",
+      "title": "Open edX Backup & Restore",
+      "target": "[INSTALLFOLDER]backup.cmd",
+      "arguments": "",
+      "icon": "openedx.ico",
+      "description": "Automated snapshot backup and disaster recovery console."
+    }
+  ],
+  "post_install": [
+    {
+      "id": "healthcheck",
+      "description": "Validate service availability and connectivity across stack components",
+      "command": "[INSTALLFOLDER]healthcheck.cmd",
+      "optional": true,
+      "condition": "NOT Installed"
+    },
+    {
+      "id": "workers_start",
+      "description": "Start Celery background worker daemons and periodic scheduler",
+      "command": "[INSTALLFOLDER]workers.cmd start",
+      "optional": true,
+      "condition": "INSTALL_WORKERS=\"1\""
+    },
+    {
+      "id": "import_demo",
+      "description": "Import edX demonstration course and content library catalog",
+      "command": "[INSTALLFOLDER]import_demo.cmd course",
+      "optional": true,
+      "condition": "IMPORT_DEMO_CONTENT=\"1\""
+    }
+  ]
 }

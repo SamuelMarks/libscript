@@ -21,6 +21,8 @@ if (-not $env:LIBSCRIPT_LOG_LEVEL) { $env:LIBSCRIPT_LOG_LEVEL = 1 }
 if (-not $env:LIBSCRIPT_LOG_FORMAT) { $env:LIBSCRIPT_LOG_FORMAT = "text" }
 if (-not $env:LIBSCRIPT_LOG_FILE) { $env:LIBSCRIPT_LOG_FILE = "" }
 
+# ## write_libscript_log
+# Formats and outputs structured or text logs with timestamps and log level filtering.
 function write_libscript_log {
     param (
         [string]$LevelName,
@@ -66,10 +68,24 @@ function write_libscript_log {
     }
 }
 
+# ## log_debug
+# Emits a debug log message (level 0).
 function log_debug($msg)   { write_libscript_log "DEBUG"   0 $msg }
+
+# ## log_info
+# Emits an informational log message (level 1).
 function log_info($msg)    { write_libscript_log "INFO"    1 $msg }
+
+# ## log_success
+# Emits a success log message (level 2).
 function log_success($msg) { write_libscript_log "SUCCESS" 2 $msg }
+
+# ## log_warn
+# Emits a warning log message (level 3).
 function log_warn($msg)    { write_libscript_log "WARN"    3 $msg }
+
+# ## log_error
+# Emits an error log message (level 4).
 function log_error($msg)   { write_libscript_log "ERROR"   4 $msg }
 
 # Export functions

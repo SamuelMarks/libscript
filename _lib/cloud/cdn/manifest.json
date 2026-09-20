@@ -3,6 +3,7 @@
   "name": "cdn",
   "category": "cloud",
   "title": "Cloud CDN & Distribution",
-  "description": "Multicloud interface for managing content delivery networks and edge caching.",
-  "provides": ["cloud-cdn"]
+  "description": "Multicloud interface for managing content delivery networks and edge caching. Adapter-only component without binary installer lifecycle.",
+  "provides": ["cloud-cdn"],
+  "adapter_only": true
 }

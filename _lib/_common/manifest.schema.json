@@ -78,6 +78,11 @@
       },
       "description": "Default ports used by the component"
     },
+    "adapter_only": {
+      "type": "boolean",
+      "default": false,
+      "description": "Indicates whether this component is an adapter/API-only wrapper that does not provide binary install/env lifecycles"
+    },
     "category": {
       "type": "string",
       "description": "Component classification group within the LibScript catalog",

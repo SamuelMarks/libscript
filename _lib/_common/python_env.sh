@@ -152,9 +152,9 @@ libscript_python_venv() {
   case "${_backend}" in
     uv)
       if [ -n "${_python_version}" ]; then
-        uv venv --python "${_python_version}" -- "${_target_dir}" || return 1
+        uv venv --seed --python "${_python_version}" -- "${_target_dir}" || return 1
       else
-        uv venv -- "${_target_dir}" || return 1
+        uv venv --seed -- "${_target_dir}" || return 1
       fi
       ;;
     venv)

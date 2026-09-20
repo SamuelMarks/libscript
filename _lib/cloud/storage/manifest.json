@@ -3,6 +3,7 @@
   "name": "storage",
   "category": "cloud",
   "title": "Cloud Object Storage",
-  "description": "Multicloud interface for managing object storage buckets (S3, GCS, Azure Blob).",
-  "provides": ["cloud-storage"]
+  "description": "Multicloud interface for managing object storage buckets (S3, GCS, Azure Blob). Adapter-only component without binary installer lifecycle.",
+  "provides": ["cloud-storage"],
+  "adapter_only": true
 }

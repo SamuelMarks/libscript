@@ -37,9 +37,9 @@ if /I "%~1"=="/?" goto :help
 if /I "%~1"=="-?" goto :help
 goto :main
 
-:help
 :: ## help
 :: Prints the help message and exits.
+:help
 echo Usage: %~nx0
 echo Regenerates WiX installer and browser verification screenshots.
 exit /b 0

@@ -15,6 +15,8 @@ Execute this script to perform actions for _common.
 # versioning.ps1
 # Common utilities for managing native libscript installations and version aliases on Windows.
 
+# ## Get-LibscriptBaseDir
+# Returns the base directory for native LibScript component installations.
 function Get-LibscriptBaseDir {
     if ([string]::IsNullOrEmpty($env:LIBSCRIPT_HOME)) {
         return Join-Path $HOME ".libscript"
@@ -22,6 +24,8 @@ function Get-LibscriptBaseDir {
     return $env:LIBSCRIPT_HOME
 }
 
+# ## Get-LibscriptVersionDir
+# Returns the target version installation directory for a component.
 function Get-LibscriptVersionDir {
     param (
         [string]$Component,
@@ -31,6 +35,8 @@ function Get-LibscriptVersionDir {
     return Join-Path $BaseDir "$Component\$Version"
 }
 
+# ## Set-LibscriptAlias
+# Creates directory junction or symlink alias pointing to an exact installed version.
 function Set-LibscriptAlias {
     param (
         [string]$Component,

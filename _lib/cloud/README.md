@@ -17,5 +17,7 @@ This category contains core components and utilities for cloud deployments.
 
 ## Version Management
 
-As outlined in the core philosophy, `libscript` manages the versions natively. Installations are
-isolated by default in `~/.libscript/<component>/<version>` and do not pollute global system paths.
+As outlined in the core philosophy, `libscript` manages versions natively. Note that cloud wrapper
+components (`cdn`, `cert`, `cloudinit`, `storage`, `volume`) operate as **adapter-only** interfaces;
+they provide CLI and API management wrappers around cloud provider APIs (AWS, GCP, Azure) rather
+than managing local binary installer lifecycles (`setup.sh`/`env.sh`).

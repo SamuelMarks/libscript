@@ -3,6 +3,7 @@
   "name": "cloudinit",
   "category": "cloud",
   "title": "Cloud-Init Generator",
-  "description": "Helper component for generating cloud-init configurations for nodes.",
-  "provides": ["cloud-cloudinit"]
+  "description": "Helper component for generating cloud-init configurations for nodes. Adapter-only component without binary installer lifecycle.",
+  "provides": ["cloud-cloudinit"],
+  "adapter_only": true
 }

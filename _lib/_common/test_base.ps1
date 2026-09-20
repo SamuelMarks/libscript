@@ -37,6 +37,8 @@ $env:PATH = "$global:LIBSCRIPT_DATA_DIR\bin;$env:PATH"
 if (-not (Test-Path $global:LIBSCRIPT_BUILD_DIR)) { New-Item -ItemType Directory -Force -Path $global:LIBSCRIPT_BUILD_DIR | Out-Null }
 if (-not (Test-Path $global:LIBSCRIPT_DATA_DIR)) { New-Item -ItemType Directory -Force -Path $global:LIBSCRIPT_DATA_DIR | Out-Null }
 
+# ## assert_version
+# Validates that a CLI command executable version output matches expected pattern.
 function assert_version {
     param([string]$CmdName, [string]$Expected)
     if (-not (Get-Command $CmdName -ErrorAction SilentlyContinue)) {
@@ -52,6 +54,8 @@ function assert_version {
     }
 }
 
+# ## assert_exists
+# Asserts that a target file path exists on the filesystem.
 function assert_exists {
     param([string]$FilePath)
     if (Test-Path $FilePath) {

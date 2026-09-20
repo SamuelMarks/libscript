@@ -132,6 +132,56 @@ assert_contains 'PROP_OPENEDX_VERSION" Disabled="yes"' "Read-only disabled relea
 assert_contains 'NOT Installed AND INSTALL_MYSQL="1" AND NOT PROP_MYSQL_REMOTE_URL' "Local MySQL install conditional on not using DBaaS"
 assert_contains 'NOT Installed AND INSTALL_REDIS="1" AND NOT PROP_REDIS_URL' "Local Redis install conditional on not using remote Redis"
 
+# Modular Command Scripts and Parity Tooling Bundling
+assert_contains 'Source="stacks/cms/openedx/cli.cmd"' "Bundled cli.cmd component"
+assert_contains 'Source="stacks/cms/openedx/user.cmd"' "Bundled user.cmd component"
+assert_contains 'Source="stacks/cms/openedx/import_demo.cmd"' "Bundled import_demo.cmd component"
+assert_contains 'Source="stacks/cms/openedx/dbshell.cmd"' "Bundled dbshell.cmd component"
+assert_contains 'Source="stacks/cms/openedx/healthcheck.cmd"' "Bundled healthcheck.cmd component"
+assert_contains 'Source="stacks/cms/openedx/config.cmd"' "Bundled config.cmd component"
+assert_contains 'Source="stacks/cms/openedx/backup.cmd"' "Bundled backup.cmd component"
+assert_contains 'Source="stacks/cms/openedx/restore.cmd"' "Bundled restore.cmd component"
+assert_contains 'Source="stacks/cms/openedx/workers.cmd"' "Bundled workers.cmd component"
+assert_contains 'Source="stacks/cms/openedx/theme.cmd"' "Bundled theme.cmd component"
+assert_contains 'Source="stacks/cms/openedx/xblock.cmd"' "Bundled xblock.cmd component"
+assert_contains 'Source="stacks/cms/openedx/upgrade.cmd"' "Bundled upgrade.cmd component"
+assert_contains 'Source="stacks/cms/openedx/mfe.cmd"' "Bundled mfe.cmd component"
+assert_contains 'Source="stacks/cms/openedx/vars.schema.json"' "Bundled vars.schema.json component"
+assert_contains 'Source="stacks/cms/openedx/packaging.json"' "Bundled packaging.json component"
+
+# Tutor Parity Properties and Features
+assert_contains 'Property Id="INSTALL_WORKERS" Value="1"' "INSTALL_WORKERS property declared"
+assert_contains 'Property Id="IMPORT_DEMO_CONTENT" Value="0"' "IMPORT_DEMO_CONTENT property declared"
+assert_contains 'Property Id="INSTALL_MFES" Value="0"' "INSTALL_MFES property declared"
+assert_contains 'Property Id="PROP_OPENEDX_THEME" Value="none"' "PROP_OPENEDX_THEME property declared"
+assert_contains 'Property Id="PROP_OPENEDX_THEME_REPO_URL"' "PROP_OPENEDX_THEME_REPO_URL property declared"
+assert_contains 'Property Id="BACKUPFOLDER"' "BACKUPFOLDER directory property declared"
+
+# Dialog Controls
+assert_contains 'Control Id="Chk_Workers"' "Celery background workers checkbox in features dialog"
+assert_contains 'Control Id="Chk_Demo"' "Demo content ingestion checkbox in features dialog"
+assert_contains 'Control Id="Chk_MFEs"' "Micro-Frontend deployment checkbox in features dialog"
+assert_contains 'Control Id="Txt_BackupFolder"' "Backup folder path edit control in destination dialog"
+assert_contains 'Control Id="Txt_Theme"' "Theme selection edit control in configuration dialog"
+
+# Custom Actions and Service Orchestration
+assert_contains 'CustomAction Id="InstallWorkersService"' "InstallWorkersService custom action"
+assert_contains 'CustomAction Id="StopWorkersService"' "StopWorkersService custom action"
+assert_contains 'CustomAction Id="ImportDemoContentAction"' "ImportDemoContentAction custom action"
+assert_contains 'CustomAction Id="BuildMFEsAction"' "BuildMFEsAction custom action"
+assert_contains 'CustomAction Id="PostInstallHealthcheck"' "PostInstallHealthcheck custom action"
+assert_contains '--admin-user=&quot;\[PROP_OPENEDX_ADMIN_USERNAME\]&quot;' "Admin username passed to InstallOpenEdXService"
+assert_contains '--admin-password=&quot;\[PROP_OPENEDX_ADMIN_PASSWORD\]&quot;' "Admin password passed to InstallOpenEdXService"
+assert_contains '--admin-email=&quot;\[PROP_OPENEDX_ADMIN_EMAIL\]&quot;' "Admin email passed to InstallOpenEdXService"
+assert_contains '--backup-dir=&quot;\[BACKUPFOLDER\]&quot;' "Backup folder passed to InstallOpenEdXService"
+
+# Start Menu and Administrative Shortcuts
+assert_contains 'Directory Id="OpenEdXProgramMenuFolder"' "Start Menu directory declared"
+assert_contains 'Shortcut Id="ShortcutCli"' "Management console shortcut declared"
+assert_contains 'Shortcut Id="ShortcutHealth"' "Healthcheck shortcut declared"
+assert_contains 'Shortcut Id="ShortcutDbShell"' "Database console shortcut declared"
+assert_contains 'Shortcut Id="ShortcutBackup"' "Backup tool shortcut declared"
+
 # 4. Build-time override verification for custom local directory, fork, and branch/tag
 CUSTOM_OUT_BASE="${TEST_TMP_DIR}/OpenEdX_Custom_Override"
 "${LIBSCRIPT_ROOT_DIR}/packaging/build_msi.sh" stacks/cms/openedx \

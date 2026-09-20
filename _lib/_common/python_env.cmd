@@ -137,9 +137,9 @@ echo [INFO] Creating Python virtual environment at "%_target_dir%" using backend
 
 if "%_backend%"=="uv" (
     if not "%_python_version%"=="" (
-        uv venv --python "%_python_version%" -- "%_target_dir%"
+        uv venv --seed --python "%_python_version%" -- "%_target_dir%"
     ) else (
-        uv venv -- "%_target_dir%"
+        uv venv --seed -- "%_target_dir%"
     )
 ) else if "%_backend%"=="venv" (
     set "_python_exe="

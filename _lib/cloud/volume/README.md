@@ -3,6 +3,9 @@
 The `volume` component provides a unified multicloud interface for managing and attaching block
 storage volumes.
 
+> **Note**: This component is an adapter-only cloud wrapper; it manages block storage lifecycle via
+> cloud provider APIs and does not provide local `setup.sh`/`env.sh` binary installer lifecycles.
+
 ## Usage
 
 ```sh

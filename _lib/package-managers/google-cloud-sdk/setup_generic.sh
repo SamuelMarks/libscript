@@ -179,7 +179,8 @@ case "$ACTION" in
             GOOGLE_CLOUD_SDK_DOWNLOAD_URL="https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-linux-${_gcloud_arch}.tar.gz"
           fi
           if command -v python3 >/dev/null 2>&1; then
-            _py_minor=$(python3 -c 'import sys; print(sys.version_info.minor)' 2>/dev/null || echo "0")
+            _py_minor=$(python3 -V 2>&1 | sed -n 's/.* 3\.\([0-9]*\).*/\1/p')
+            _py_minor="${_py_minor:-0}"
             if [ "$_py_minor" -lt 10 ] && [ -n "${PKG_MGR:-}" ]; then
               libscript_depends "python3.11" || libscript_depends "python3.12" || true
             fi

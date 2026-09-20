@@ -74,7 +74,7 @@ EOF2
       set -- $deps_list
       while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
-        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" "$LIBSCRIPT_ROOT_DIR/stacks" -name "vars.schema.json" 2>/dev/null | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
           if [ -n "$vars_json" ]; then
@@ -89,7 +89,7 @@ EOF2
         fi
       done
 
-      if [ -n "$LICENSE_PATH" ]; then printf '%s\n' "Page license \"\" \"$LICENSE_PATH\""; fi
+      if [ -n "${LICENSE_PATH:-}" ]; then printf '%s\n' "Page license \"\" \"$LICENSE_PATH\""; fi
       printf '%s\n' "Page instfiles"
       printf '%s\n' ""
 
@@ -99,7 +99,7 @@ EOF2
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "Section \"$pkg\" SEC_$pkg"
         run_params="/c libscript.cmd install-service $pkg $ver"
-        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" "$LIBSCRIPT_ROOT_DIR/stacks" -name "vars.schema.json" 2>/dev/null | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
           if [ -n "$vars_json" ]; then
@@ -108,14 +108,36 @@ EOF2
           fi
         fi
         printf '%s\n' "  ExecWait 'cmd.exe $run_params'"
+        if [ "$pkg" = "openedx" ]; then
+          printf '%s\n' "  ExecWait 'cmd.exe /c \"\$INSTDIR\\stacks\\cms\\openedx\\healthcheck.cmd\"'"
+        fi
         printf '%s\n' "SectionEnd"
+
+        if [ "$pkg" = "openedx" ]; then
+          printf '%s\n' "Section /o \"Celery Background Workers & Scheduler\" SEC_openedx_workers"
+          printf '%s\n' "  ExecWait 'cmd.exe /c \"\$INSTDIR\\stacks\\cms\\openedx\\workers.cmd\" start'"
+          printf '%s\n' "SectionEnd"
+          printf '%s\n' "Section /o \"Import Demo Courseware & Content Libraries\" SEC_openedx_demo"
+          printf '%s\n' "  ExecWait 'cmd.exe /c \"\$INSTDIR\\stacks\\cms\\openedx\\import_demo.cmd\" course && \"\$INSTDIR\\stacks\\cms\\openedx\\import_demo.cmd\" libraries'"
+          printf '%s\n' "SectionEnd"
+          printf '%s\n' "Section /o \"Deploy Micro-Frontends (MFEs)\" SEC_openedx_mfes"
+          printf '%s\n' "  ExecWait 'cmd.exe /c \"\$INSTDIR\\stacks\\cms\\openedx\\mfe.cmd\" build all && \"\$INSTDIR\\stacks\\cms\\openedx\\mfe.cmd\" deploy all'"
+          printf '%s\n' "SectionEnd"
+          printf '%s\n' "Section \"Administrative Shortcuts\" SEC_openedx_shortcuts"
+          printf '%s\n' "  CreateDirectory \"\$SMPROGRAMS\\Open edX\""
+          printf '%s\n' "  CreateShortcut \"\$SMPROGRAMS\\Open edX\\Open edX Management Console.lnk\" \"\$INSTDIR\\stacks\\cms\\openedx\\cli.cmd\""
+          printf '%s\n' "  CreateShortcut \"\$SMPROGRAMS\\Open edX\\Open edX Healthcheck.lnk\" \"\$INSTDIR\\stacks\\cms\\openedx\\healthcheck.cmd\""
+          printf '%s\n' "  CreateShortcut \"\$SMPROGRAMS\\Open edX\\Open edX Database Console.lnk\" \"\$INSTDIR\\stacks\\cms\\openedx\\dbshell.cmd\" \"mysql\""
+          printf '%s\n' "  CreateShortcut \"\$SMPROGRAMS\\Open edX\\Open edX Backup and Restore.lnk\" \"\$INSTDIR\\stacks\\cms\\openedx\\backup.cmd\""
+          printf '%s\n' "SectionEnd"
+        fi
       done
 
       # shellcheck disable=SC2086
       set -- $deps_list
       while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
-        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" "$LIBSCRIPT_ROOT_DIR/stacks" -name "vars.schema.json" 2>/dev/null | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
           if [ -n "$vars_json" ]; then
@@ -173,6 +195,10 @@ EOF2
       set -- $deps_list
       while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
+        if [ "$pkg" = "openedx" ]; then
+          printf '%s\n' "  ExecWait 'cmd.exe /c \"\$INSTDIR\\stacks\\cms\\openedx\\workers.cmd\" stop'"
+          printf '%s\n' "  RMDir /r \"\$SMPROGRAMS\\Open edX\""
+        fi
         printf '%s\n' "  MessageBox MB_YESNO \"Do you want to completely remove the Data Directory and all records for $pkg?\" IDYES purge_$pkg IDNO keep_$pkg"
         printf '%s\n' "  purge_$pkg:"
         printf '%s\n' "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --purge-data --service-name \$VAL_${pkg}_$(printf '%s\n' "$pkg" | tr "[:lower:]" "[:upper:]")_SERVICE_NAME'"

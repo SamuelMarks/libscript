@@ -67,11 +67,19 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [TEST 9/9] Verifying Open edX stack orchestrator on native Windows...
+echo [TEST 9/9] Verifying Open edX stack orchestrator and Tutor parity subcommands on native Windows...
 call "%~dp0/../stacks/cms/openedx/cli.cmd" help
 if errorlevel 1 (
     echo [FAIL] Open edX stack CLI failed on Windows.
     exit /b 1
+)
+
+for %%s in (user demo dbshell healthcheck config backup restore workers theme xblock upgrade mfe) do (
+    call "%~dp0/../stacks/cms/openedx/cli.cmd" %%s help
+    if errorlevel 1 (
+        echo [FAIL] Open edX subcommand '%%s' failed on Windows.
+        exit /b 1
+    )
 )
 
 echo.

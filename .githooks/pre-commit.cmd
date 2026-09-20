@@ -12,6 +12,15 @@ setlocal EnableDelayedExpansion
 
 echo Running pre-commit hooks...
 
+if exist "devtools\audit\audit_standards.cmd" (
+    echo Running LibScript engineering standards audit...
+    call "devtools\audit\audit_standards.cmd" --staged
+    if errorlevel 1 (
+        echo [ERROR] Standards audit failed. Please fix violations before committing.
+        exit /b 1
+    )
+)
+
 :: Note: We don't implement the full dos2unix, prettier, spellcheck 
 :: logic in this pure batch file to keep it simple, but we do trigger 
 :: the markdown regeneration if it exists.
@@ -22,7 +31,7 @@ if exist "devtools\docs-gen\generate_markdown_docs.cmd" (
     for /f "delims=" %%F in ('git ls-files -m ^| findstr /E "README.md"') do (
         where npx >nul 2>&1
         if not errorlevel 1 (
-            call npx prettier --write "%%F" >nul 2>&1
+            call npx --yes prettier --write "%%F" >nul 2>&1
         )
         git add "%%F"
     )
@@ -33,7 +42,7 @@ if exist "tests\update_results.cmd" (
     call "tests\update_results.cmd"
     where npx >nul 2>&1
     if not errorlevel 1 (
-        call npx prettier --write README.md >nul 2>&1
+        call npx --yes prettier --write README.md >nul 2>&1
     )
     git add README.md
 )

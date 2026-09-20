@@ -14,6 +14,8 @@ Execute this script to perform actions for _common.
 
 $ErrorActionPreference = "Stop"
 
+# ## map_package
+# Maps generic component names to package manager specific package identifiers.
 function map_package {
     param([string]$PkgName, [string]$PkgMgr)
     # Native implementation of package mapping logic

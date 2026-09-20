@@ -3,6 +3,9 @@
 The `storage` component provides a unified multicloud interface for managing object storage buckets
 (S3, GCS, Azure Blob).
 
+> **Note**: This component is an adapter-only cloud wrapper; it manages bucket lifecycles via cloud
+> provider storage APIs and does not provide local `setup.sh`/`env.sh` binary installer lifecycles.
+
 ## Usage
 
 ```sh

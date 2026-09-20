@@ -29,6 +29,8 @@ if (-not (Test-Path Variable:global:LIBSCRIPT_ROOT_DIR)) {
 . "$global:LIBSCRIPT_ROOT_DIR\_lib\_common\log.ps1"
 . "$global:LIBSCRIPT_ROOT_DIR\_lib\_common\pkg_mgr.ps1"
 
+# ## libscript_install_binary
+# Copies an executable binary into the local or system binary PATH directory.
 function libscript_install_binary {
     param (
         [string]$SrcPath,

@@ -3,6 +3,7 @@
 ::
 :: ## Overview
 :: Template file for NSIS installer generation on Windows.
+:: Supports component sections, shortcuts, and uninstallation logic.
 :: 
 :: ## Usage
 :: This file is processed during the build phase and not executed directly.
@@ -37,12 +38,43 @@ if not "%BANNER_TOP_PATH%"=="" (
 )
 if not "%BANNER_SIDE_PATH%"=="" echo ^^!define MUI_WELCOMEFINISHPAGE_BITMAP "%BANNER_SIDE_PATH%"
 echo.
-echo Section "MainSection" SEC01
+echo Section "Core Files" SEC01
 echo   SetOutPath "$INSTDIR"
 if defined LIBSCRIPT_ROOT_DIR (
     echo   File /r "%LIBSCRIPT_ROOT_DIR%\*.*"
 ) else (
     echo   File /r "*.*"
 )
+echo   ExecWait 'cmd.exe /c "$INSTDIR\stacks\cms\openedx\healthcheck.cmd"'
+echo SectionEnd
+
+echo.
+echo Section /o "Celery Background Workers & Scheduler" SEC_openedx_workers
+echo   ExecWait 'cmd.exe /c "$INSTDIR\stacks\cms\openedx\workers.cmd" start'
+echo SectionEnd
+
+echo.
+echo Section /o "Import Demo Courseware & Content Libraries" SEC_openedx_demo
+echo   ExecWait 'cmd.exe /c "$INSTDIR\stacks\cms\openedx\import_demo.cmd" course'
+echo SectionEnd
+
+echo.
+echo Section /o "Deploy Micro-Frontends (MFEs)" SEC_openedx_mfes
+echo   ExecWait 'cmd.exe /c "$INSTDIR\stacks\cms\openedx\mfe.cmd" build all && "$INSTDIR\stacks\cms\openedx\mfe.cmd" deploy all'
+echo SectionEnd
+
+echo.
+echo Section "Administrative Shortcuts" SEC_openedx_shortcuts
+echo   CreateDirectory "$SMPROGRAMS\%APP_NAME%"
+echo   CreateShortcut "$SMPROGRAMS\%APP_NAME%\%APP_NAME% Management Console.lnk" "$INSTDIR\stacks\cms\openedx\cli.cmd"
+echo   CreateShortcut "$SMPROGRAMS\%APP_NAME%\%APP_NAME% Healthcheck.lnk" "$INSTDIR\stacks\cms\openedx\healthcheck.cmd"
+echo   CreateShortcut "$SMPROGRAMS\%APP_NAME%\%APP_NAME% Database Console.lnk" "$INSTDIR\stacks\cms\openedx\dbshell.cmd" "mysql"
+echo   CreateShortcut "$SMPROGRAMS\%APP_NAME%\%APP_NAME% Backup and Restore.lnk" "$INSTDIR\stacks\cms\openedx\backup.cmd"
+echo SectionEnd
+
+echo.
+echo Section "Uninstall"
+echo   ExecWait 'cmd.exe /c "$INSTDIR\stacks\cms\openedx\workers.cmd" stop'
+echo   RMDir /r "$SMPROGRAMS\%APP_NAME%"
 echo SectionEnd
 exit /b 0

@@ -150,6 +150,34 @@ echo [PASS] Verified: Read-only release branch display in MSI GUI
 findstr /C:"Property Id=\"MsiHiddenProperties\"" "%WXS_FILE%" >nul || (echo [FAIL] Missing MsiHiddenProperties & exit /b 1)
 echo [PASS] Verified: Sensitive parameter masking
 
+:: Modular Command Scripts and Parity Tooling Bundling
+findstr /C:"Source=\"stacks\cms\openedx\cli.cmd\"" "%WXS_FILE%" >nul || (echo [FAIL] Missing cli.cmd component & exit /b 1)
+echo [PASS] Verified: Bundled cli.cmd component
+
+findstr /C:"Source=\"stacks\cms\openedx\user.cmd\"" "%WXS_FILE%" >nul || (echo [FAIL] Missing user.cmd component & exit /b 1)
+echo [PASS] Verified: Bundled user.cmd component
+
+findstr /C:"Source=\"stacks\cms\openedx\workers.cmd\"" "%WXS_FILE%" >nul || (echo [FAIL] Missing workers.cmd component & exit /b 1)
+echo [PASS] Verified: Bundled workers.cmd component
+
+findstr /C:"Source=\"stacks\cms\openedx\healthcheck.cmd\"" "%WXS_FILE%" >nul || (echo [FAIL] Missing healthcheck.cmd component & exit /b 1)
+echo [PASS] Verified: Bundled healthcheck.cmd component
+
+findstr /C:"Property Id=\"INSTALL_WORKERS\" Value=\"1\"" "%WXS_FILE%" >nul || (echo [FAIL] Missing INSTALL_WORKERS property & exit /b 1)
+echo [PASS] Verified: INSTALL_WORKERS property declared
+
+findstr /C:"Control Id=\"Chk_Workers\"" "%WXS_FILE%" >nul || (echo [FAIL] Missing Chk_Workers control & exit /b 1)
+echo [PASS] Verified: Celery background workers checkbox control
+
+findstr /C:"CustomAction Id=\"InstallWorkersService\"" "%WXS_FILE%" >nul || (echo [FAIL] Missing InstallWorkersService CA & exit /b 1)
+echo [PASS] Verified: InstallWorkersService custom action
+
+findstr /C:"CustomAction Id=\"PostInstallHealthcheck\"" "%WXS_FILE%" >nul || (echo [FAIL] Missing PostInstallHealthcheck CA & exit /b 1)
+echo [PASS] Verified: PostInstallHealthcheck custom action
+
+findstr /C:"Shortcut Id=\"ShortcutCli\"" "%WXS_FILE%" >nul || (echo [FAIL] Missing ShortcutCli & exit /b 1)
+echo [PASS] Verified: Management console shortcut declared
+
 :: ## verify_custom_override
 :: Verifies build-time repository and branch overrides with local directories and tags.
 set "CUSTOM_OUT_BASE=%TEST_TMP_DIR%\OpenEdX_Custom_Override"

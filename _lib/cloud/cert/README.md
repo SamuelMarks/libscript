@@ -3,6 +3,10 @@
 The `cert` component provides a unified multicloud interface for requesting and managing managed SSL
 certificates.
 
+> **Note**: This component is an adapter-only cloud wrapper; it manages cloud SSL certificate
+> resources via provider APIs and does not provide local `setup.sh`/`env.sh` binary installer
+> lifecycles.
+
 ## Usage
 
 ```sh

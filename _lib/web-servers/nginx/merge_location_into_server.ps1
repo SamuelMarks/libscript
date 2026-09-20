@@ -14,6 +14,8 @@ Execute this script to perform actions for nginx.
 
 $ErrorActionPreference = "Stop"
 
+# ## Parse-Tokens
+# Parses nginx configuration lines into directive token streams and nesting hierarchy.
 function Parse-Tokens {
     param([string[]]$Lines)
     $dirs = @()
@@ -79,6 +81,8 @@ function Parse-Tokens {
     return $dirs
 }
 
+# ## Merge-LocationIntoServer
+# Merges a location block into a matching server block within an existing nginx configuration file idempotently.
 function Merge-LocationIntoServer {
     param (
         [string]$ExistingConfig,

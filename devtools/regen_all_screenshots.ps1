@@ -436,7 +436,9 @@ function Invoke-MagickRegen {
     }
 
     $fontArg = @()
-    if (Test-Path "/System/Library/Fonts/Helvetica.ttc") {
+    if (Test-Path "/System/Library/Fonts/Supplemental/Arial.ttf") {
+        $fontArg = @("-font", "/System/Library/Fonts/Supplemental/Arial.ttf")
+    } elseif (Test-Path "/System/Library/Fonts/Helvetica.ttc") {
         $fontArg = @("-font", "/System/Library/Fonts/Helvetica.ttc")
     } elseif (Test-Path "/System/Library/Fonts/SFNS.ttf") {
         $fontArg = @("-font", "/System/Library/Fonts/SFNS.ttf")
@@ -494,10 +496,17 @@ function Invoke-MagickRegen {
         -fill "rgb(0,38,62)" -draw "rectangle 31,98 769,142" `
         -fill "white" -pointsize 16 -draw "text 51,126 'open edX'" `
         -fill "rgb(180,210,230)" -pointsize 11 -draw "text 141,124 '|  Learning Management System'" `
-        -fill "white" -stroke "rgb(220,225,230)" -draw "roundrectangle 220,187 580,477 8,8" `
-        -stroke none -fill "rgb(11,26,48)" -pointsize 16 -draw "text 245,220 'Sign in to Open edX LMS'" `
-        -fill "rgb(0,117,219)" -draw "roundrectangle 245,377 555,411 4,4" `
-        -fill "white" -pointsize 12 -draw "text 370,398 'Sign In'" `
+        -fill "white" -stroke "rgb(220,225,230)" -draw "roundrectangle 220,175 580,475 8,8" `
+        -stroke none -fill "rgb(11,26,48)" -pointsize 15 -draw "text 245,208 'Sign in to Open edX LMS'" `
+        -fill "rgb(70,80,95)" -pointsize 11 -draw "text 245,236 'Username or Email:'" `
+        -fill "white" -stroke "rgb(209,213,219)" -draw "roundrectangle 245,244 555,278 4,4" `
+        -stroke none -fill "rgb(30,41,59)" -pointsize 11 -draw "text 256,266 'edx_admin'" `
+        -fill "rgb(70,80,95)" -pointsize 11 -draw "text 245,302 'Password:'" `
+        -fill "rgb(2,132,199)" -pointsize 10 -draw "text 452,302 'Forgot password?'" `
+        -fill "white" -stroke "rgb(209,213,219)" -draw "roundrectangle 245,310 555,344 4,4" `
+        -stroke none -fill "rgb(75,85,99)" -pointsize 14 -draw "text 256,332 '••••••••••••'" `
+        -fill "rgb(0,117,219)" -draw "roundrectangle 245,372 555,408 4,4" `
+        -fill "white" -pointsize 12 -draw "text 370,395 'Sign In'" `
         $out11
     Write-Host "Regenerated: $out11"
 
@@ -519,12 +528,31 @@ function Invoke-MagickRegen {
         -fill "rgb(30,41,59)" -draw "rectangle 31,98 769,142" `
         -fill "white" -pointsize 16 -draw "text 51,126 'open edX'" `
         -fill "rgb(203,213,225)" -pointsize 11 -draw "text 141,124 '|  Studio Course Authoring'" `
-        -fill "white" -stroke "rgb(220,225,230)" -draw "roundrectangle 220,187 580,477 8,8" `
-        -stroke none -fill "rgb(15,23,42)" -pointsize 16 -draw "text 245,220 'Sign in to Open edX Studio'" `
-        -fill "rgb(2,132,199)" -draw "roundrectangle 245,377 555,411 4,4" `
-        -fill "white" -pointsize 12 -draw "text 340,398 'Sign In to Studio'" `
+        -fill "white" -stroke "rgb(220,225,230)" -draw "roundrectangle 220,175 580,475 8,8" `
+        -stroke none -fill "rgb(15,23,42)" -pointsize 15 -draw "text 245,208 'Sign in to Open edX Studio'" `
+        -fill "rgb(70,80,95)" -pointsize 11 -draw "text 245,236 'Email Address:'" `
+        -fill "white" -stroke "rgb(209,213,219)" -draw "roundrectangle 245,244 555,278 4,4" `
+        -stroke none -fill "rgb(30,41,59)" -pointsize 11 -draw "text 256,266 'staff@openedx.org'" `
+        -fill "rgb(70,80,95)" -pointsize 11 -draw "text 245,302 'Password:'" `
+        -fill "rgb(2,132,199)" -pointsize 10 -draw "text 452,302 'Forgot password?'" `
+        -fill "white" -stroke "rgb(209,213,219)" -draw "roundrectangle 245,310 555,344 4,4" `
+        -stroke none -fill "rgb(75,85,99)" -pointsize 14 -draw "text 256,332 '••••••••••••'" `
+        -fill "rgb(2,132,199)" -draw "roundrectangle 245,372 555,408 4,4" `
+        -fill "white" -pointsize 12 -draw "text 340,395 'Sign In to Studio'" `
         $out12
     Write-Host "Regenerated: $out12"
+
+    # Copy to both locations
+    $pkgDir = Join-Path $PSScriptRoot "..//packaging//screenshots"
+    if (Test-Path $pkgDir) {
+        Copy-Item $out11 (Join-Path $pkgDir "11_browser_lms_focused.png") -Force
+        Copy-Item $out12 (Join-Path $pkgDir "12_browser_studio_focused.png") -Force
+    }
+    $cc0Dir = Join-Path $PSScriptRoot "..//..//cc0-assets//libscript//openedx//screenshots"
+    if (Test-Path $cc0Dir) {
+        Copy-Item $out11 (Join-Path $cc0Dir "11_browser_lms_focused.png") -Force
+        Copy-Item $out12 (Join-Path $cc0Dir "12_browser_studio_focused.png") -Force
+    }
 }
 
 # ## main

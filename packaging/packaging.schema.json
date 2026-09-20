@@ -43,7 +43,11 @@
       "properties": {
         "app_default": { "type": "string", "default": "[ProgramFiles64Folder][ProductName]" },
         "data_default": { "type": "string", "default": "C:\\ProgramData\\[ProductName]\\data" },
-        "logs_default": { "type": "string", "default": "C:\\ProgramData\\[ProductName]\\logs" }
+        "logs_default": { "type": "string", "default": "C:\\ProgramData\\[ProductName]\\logs" },
+        "backups_default": {
+          "type": "string",
+          "default": "C:\\ProgramData\\[ProductName]\\backups"
+        }
       }
     },
     "runtime_searches": {
@@ -110,6 +114,52 @@
               "url_template": { "type": "string" }
             }
           }
+        }
+      }
+    },
+    "features": {
+      "type": "array",
+      "description": "Hierarchical feature tree of optional or configurable stack components",
+      "items": {
+        "type": "object",
+        "required": ["id", "title"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "default": { "type": "boolean", "default": true },
+          "mandatory": { "type": "boolean", "default": false }
+        }
+      }
+    },
+    "shortcuts": {
+      "type": "array",
+      "description": "Administrative shortcuts to create in the Start Menu and Desktop",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "target"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "target": { "type": "string" },
+          "arguments": { "type": "string" },
+          "icon": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "post_install": {
+      "type": "array",
+      "description": "Actions or checks to execute after stack files and services are provisioned",
+      "items": {
+        "type": "object",
+        "required": ["id", "command"],
+        "properties": {
+          "id": { "type": "string" },
+          "description": { "type": "string" },
+          "command": { "type": "string" },
+          "optional": { "type": "boolean", "default": false },
+          "condition": { "type": "string" }
         }
       }
     }

@@ -52,8 +52,9 @@ EOF
     cat << 'EOF'
   3>&1 1>&2 2>&3)
 if [ $? -eq 0 ] && [ -n "$SELECTED" ]; then
-  action=$($DIALOG --title "Action" --menu "What would you like to produce?" 15 60 8 \
+  action=$($DIALOG --title "Action" --menu "What would you like to produce?" 16 65 11 \
     "install" "Install locally now" \
+    "openedx_admin" "Open edX Management Console (Tutor Parity)" \
     "dockerfile" "Dockerfile" \
     "docker_compose" "Dockerfiles + docker-compose" \
     "msi" ".msi installer" \
@@ -65,7 +66,25 @@ if [ $? -eq 0 ] && [ -n "$SELECTED" ]; then
     "rpm" ".rpm package" \
     3>&1 1>&2 2>&3)
 
-  if [ -n "$action" ]; then
+  if [ "$action" = "openedx_admin" ]; then
+    sub_act=$($DIALOG --title "Open edX Management" --menu "Select administrative command:" 18 65 12 \
+      "user" "User management (create/staff/superuser)" \
+      "demo" "Import demo course & content libraries" \
+      "dbshell" "Interactive database console (mysql/mongo/redis)" \
+      "healthcheck" "Full-stack diagnostics & health probe" \
+      "config" "View & modify environment settings" \
+      "backup" "Create backup snapshot archive" \
+      "restore" "Restore from backup snapshot archive" \
+      "workers" "Lifecycle controls for Celery workers & beat" \
+      "theme" "Manage and apply comprehensive themes" \
+      "xblock" "Install & list XBlock plugins" \
+      "upgrade" "Execute database migrations & release upgrade" \
+      "mfe" "Build & deploy Micro-Frontends" \
+      3>&1 1>&2 2>&3)
+    if [ -n "$sub_act" ]; then
+      ./stacks/cms/openedx/cli.sh "$sub_act"
+    fi
+  elif [ -n "$action" ]; then
     offline_ans=$($DIALOG --title "Options" --yesno "Enable --offline mode?" 10 40; printf '%s\n' $?)
     os_ans=$($DIALOG --title "Target OS" --checklist "Select OS targets:" 15 50 5 \
       "windows" "Windows" ON \

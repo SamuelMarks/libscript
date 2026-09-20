@@ -1,9 +1,30 @@
 #!/bin/sh
 # ## Overview
 # Generic setup and provisioning module for the Open edX platform stack.
+# Handles full lifecycle provisioning, configuration generation, user creation,
+# demo course ingestion, worker orchestration, Micro-Frontend deployment,
+# and health probe verification.
 # 
 # ## Usage
-# Executes multi-tier provisioning (Databases, Redis, Meilisearch, Django, WSGI, Assets, Ingress).
+# ./stacks/cms/openedx/setup_generic.sh [OPTIONS]
+#
+# ## Parameters
+#   --admin-user <user>       Administrator username (default: admin)
+#   --admin-password <pass>   Administrator initial password (default: admin)
+#   --admin-email <email>     Administrator email address (default: admin@openedx.local)
+#   --import-demo             Ingest edX demo course and content libraries
+#   --enable-workers          Launch Celery background workers and periodic scheduler
+#   --backup-dir <path>       Directory for automated backup storage
+#   --theme <name>            Comprehensive theme to activate
+#   --enable-mfes             Build and route Micro-Frontend applications
+#   --lms-port <port>         Port for LMS WSGI server (default: 8000)
+#   --cms-port <port>         Port for Studio CMS WSGI server (default: 8001)
+#   --mysql-url <url>         Remote MySQL DBaaS connection string
+#   --redis-port <port>       Redis server port (default: 6379)
+#   --redis-url <url>         Remote Redis DBaaS connection URI
+#   --mongodb-uri <uri>       MongoDB connection URI
+#   --repo <url>              Git repository URL for openedx-platform
+#   --version <ver>           Git release branch or tag (default: master)
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -48,19 +69,88 @@ LMS_PORT="${LMS_PORT:-8000}"
 CMS_PORT="${CMS_PORT:-8001}"
 REPO_URL="${OPENEDX_EDX_PLATFORM_REPOSITORY:-https://github.com/openedx/openedx-platform.git}"
 BRANCH="${OPENEDX_VERSION:-master}"
+ADMIN_USER="${OPENEDX_ADMIN_USERNAME:-admin}"
+ADMIN_PASS="${OPENEDX_ADMIN_PASSWORD:-admin}"
+ADMIN_EMAIL="${OPENEDX_ADMIN_EMAIL:-admin@openedx.local}"
+BACKUP_DIR="${OPENEDX_BACKUP_DIR:-}"
+THEME_NAME="${OPENEDX_THEME:-none}"
+IMPORT_DEMO="${IMPORT_DEMO_CONTENT:-0}"
+ENABLE_WORKERS="${INSTALL_WORKERS:-1}"
+ENABLE_MFES="${INSTALL_MFES:-0}"
+
+# Parse command line options
+while [ $# -gt 0 ]; do
+  case "$1" in
+    install|start|stop|restart|status|test|uninstall)
+      ACTION="$1"
+      shift
+      ;;
+    --admin-user|--admin-username)
+      ADMIN_USER="$2"
+      shift 2
+      ;;
+    --admin-password)
+      ADMIN_PASS="$2"
+      shift 2
+      ;;
+    --admin-email)
+      ADMIN_EMAIL="$2"
+      shift 2
+      ;;
+    --import-demo)
+      IMPORT_DEMO="1"
+      shift
+      ;;
+    --enable-workers)
+      ENABLE_WORKERS="1"
+      shift
+      ;;
+    --backup-dir)
+      BACKUP_DIR="$2"
+      shift 2
+      ;;
+    --theme)
+      THEME_NAME="$2"
+      shift 2
+      ;;
+    --enable-mfes)
+      ENABLE_MFES="1"
+      shift
+      ;;
+    --lms-port)
+      LMS_PORT="$2"
+      shift 2
+      ;;
+    --cms-port)
+      CMS_PORT="$2"
+      shift 2
+      ;;
+    --repo)
+      REPO_URL="$2"
+      shift 2
+      ;;
+    --version)
+      BRANCH="$2"
+      shift 2
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
 
 case "$ACTION" in
   install)
     log_info "=== Initializing Open edX Stack Provisioning ==="
 
     # 1. Provision Infrastructure Dependencies
-    log_info "1/7: Provisioning core services and runtimes..."
+    log_info "1/8: Provisioning core services and runtimes..."
     for _dep in python nodejs mysql mongodb redis meilisearch gunicorn exim nodeenv; do
       "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "${_dep}" || true
     done
 
     # 2. Checkout / Setup openedx-platform repository
-    log_info "2/7: Preparing openedx-platform codebase at ${OPENEDX_INSTALL_DIR}..."
+    log_info "2/8: Preparing openedx-platform codebase at ${OPENEDX_INSTALL_DIR}..."
     mkdir -p "${OPENEDX_INSTALL_DIR}"
     if [ ! -d "${OPENEDX_INSTALL_DIR}/.git" ]; then
       if command -v git >/dev/null 2>&1; then
@@ -70,11 +160,11 @@ case "$ACTION" in
     fi
 
     # 3. Setup Virtualenv & Dependencies
-    log_info "3/7: Creating Python virtual environment..."
+    log_info "3/8: Creating Python virtual environment..."
     VENV_DIR="${OPENEDX_INSTALL_DIR}/.venv"
     if [ ! -d "${VENV_DIR}" ]; then
       if command -v uv >/dev/null 2>&1; then
-        uv venv --python 3.12 "${VENV_DIR}" || uv venv "${VENV_DIR}"
+        uv venv --python 3.12 "${VENV_DIR}" 2>/dev/null || uv venv "${VENV_DIR}" || true
       elif command -v python3 >/dev/null 2>&1; then
         python3 -m venv "${VENV_DIR}" 2>/dev/null || true
       fi
@@ -91,7 +181,7 @@ case "$ACTION" in
     fi
 
     # 4. Generate Platform Settings
-    log_info "4/7: Generating Open edX environment configurations..."
+    log_info "4/8: Generating Open edX environment configurations..."
     CONF_DIR="${OPENEDX_INSTALL_DIR}/config"
     mkdir -p "${CONF_DIR}"
     cat <<EOF > "${CONF_DIR}/lms.env.json"
@@ -118,68 +208,109 @@ case "$ACTION" in
   },
   "MEILISEARCH_URL": "http://127.0.0.1:${MEILISEARCH_PORT:-7700}",
   "EMAIL_HOST": "127.0.0.1",
-  "EMAIL_PORT": ${EXIM_SMTP_PORT:-25}
+  "EMAIL_PORT": ${EXIM_SMTP_PORT:-25},
+  "BACKUP_DIR": "${BACKUP_DIR:-${OPENEDX_INSTALL_DIR}/backups}"
 }
 EOF
 
     # 5. Database Migrations & Initial Data
-    log_info "5/7: Applying database migrations and seeding administrator..."
+    log_info "5/8: Applying database migrations and seeding administrator..."
     if [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
       "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" lms migrate --noinput 2>/dev/null || true
       "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" cms migrate --noinput 2>/dev/null || true
-      "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" lms manage_user "${OPENEDX_ADMIN_USERNAME:-admin}" "${OPENEDX_ADMIN_EMAIL:-admin@openedx.local}" --staff --superuser --password="${OPENEDX_ADMIN_PASSWORD:-admin}" 2>/dev/null || true
+    fi
+    # Idempotently create or update admin superuser using dedicated user tool
+    if [ -f "${DIR}/user.sh" ]; then
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/user.sh" create "${ADMIN_USER}" "${ADMIN_EMAIL}" --password "${ADMIN_PASS}" --staff --superuser 2>/dev/null || true
     fi
 
-    # 6. Static Asset Compilation
-    log_info "6/7: Compiling frontend assets..."
+    # 6. Static Asset Compilation & Theming
+    log_info "6/8: Compiling frontend assets..."
     if [ -f "${OPENEDX_INSTALL_DIR}/package.json" ]; then
       (cd "${OPENEDX_INSTALL_DIR}" && npm clean-install --no-audit 2>/dev/null || npm install 2>/dev/null || true)
       if [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
         "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" lms collectstatic --noinput 2>/dev/null || true
       fi
     fi
-
-    # 7. Start Services and Reverse Proxy
-    log_info "7/7: Launching Open edX LMS and Studio/CMS..."
-    if [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
-      log_info "Starting real LMS server on port ${LMS_PORT}..."
-      nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" lms runserver 0.0.0.0:"${LMS_PORT}" > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
-      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
-
-      log_info "Starting real Studio/CMS server on port ${CMS_PORT}..."
-      nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" cms runserver 0.0.0.0:"${CMS_PORT}" > "${OPENEDX_INSTALL_DIR}/cms.log" 2>&1 &
-      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
-    elif [ -f "${DIR}/test_server.sh" ]; then
-      log_info "Starting Open edX LMS service on port ${LMS_PORT}..."
-      nohup "${DIR}/test_server.sh" "${LMS_PORT}" > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
-      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
-
-      log_info "Starting Open edX Studio service on port ${CMS_PORT}..."
-      nohup "${DIR}/test_server.sh" "${CMS_PORT}" > "${OPENEDX_INSTALL_DIR}/cms.log" 2>&1 &
-      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
+    if [ -n "${THEME_NAME}" ] && [ "${THEME_NAME}" != "none" ] && [ -f "${DIR}/theme.sh" ]; then
+      log_info "Activating theme: ${THEME_NAME}..."
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/theme.sh" apply "${THEME_NAME}" 2>/dev/null || true
     fi
+
+    # 7. Optional Demo Course and MFEs
+    if [ "${IMPORT_DEMO}" = "1" ] && [ -f "${DIR}/import_demo.sh" ]; then
+      log_info "Seeding demo courseware and content libraries..."
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/import_demo.sh" course 2>/dev/null || true
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/import_demo.sh" libraries 2>/dev/null || true
+    fi
+    if [ "${ENABLE_MFES}" = "1" ] && [ -f "${DIR}/mfe.sh" ]; then
+      log_info "Building and deploying Micro-Frontends..."
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/mfe.sh" build all 2>/dev/null || true
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/mfe.sh" deploy all 2>/dev/null || true
+    fi
+
+    # 8. Start Services and Workers
+    log_info "8/8: Launching Open edX LMS, Studio, and background workers..."
+    if [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
+      nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" lms runserver 0.0.0.0:"${LMS_PORT}" > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
+      printf '%s
+' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
+
+      nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" cms runserver 0.0.0.0:"${CMS_PORT}" > "${OPENEDX_INSTALL_DIR}/cms.log" 2>&1 &
+      printf '%s
+' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
+    elif [ -f "${DIR}/test_server.sh" ]; then
+      nohup "${DIR}/test_server.sh" "${LMS_PORT}" > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
+      printf '%s
+' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
+
+      nohup "${DIR}/test_server.sh" "${CMS_PORT}" > "${OPENEDX_INSTALL_DIR}/cms.log" 2>&1 &
+      printf '%s
+' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
+    fi
+
+    if [ "${ENABLE_WORKERS}" = "1" ] && [ -f "${DIR}/workers.sh" ]; then
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" start 2>/dev/null || true
+    fi
+
+    # Post-install verification healthcheck
+    if [ -f "${DIR}/healthcheck.sh" ]; then
+      log_info "Executing post-installation health diagnostic probe..."
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/healthcheck.sh" || true
+    fi
+
     log_success "Open edX stack successfully provisioned!"
     log_info "LMS available at: http://${LMS_HOST:-openedx.local}:${LMS_PORT}"
     log_info "Studio available at: http://${CMS_HOST:-studio.openedx.local}:${CMS_PORT}"
     ;;
   start)
-    log_info "Starting Open edX LMS and CMS daemons..."
+    log_info "Starting Open edX LMS, CMS, and background daemons..."
     VENV_DIR="${OPENEDX_INSTALL_DIR}/.venv"
     if [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
       nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" lms runserver 0.0.0.0:"${LMS_PORT}" > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
-      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
+      printf '%s
+' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
       nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" cms runserver 0.0.0.0:"${CMS_PORT}" > "${OPENEDX_INSTALL_DIR}/cms.log" 2>&1 &
-      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
+      printf '%s
+' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
     elif [ -f "${DIR}/test_server.sh" ]; then
       nohup "${DIR}/test_server.sh" "${LMS_PORT}" > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
-      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
+      printf '%s
+' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
       nohup "${DIR}/test_server.sh" "${CMS_PORT}" > "${OPENEDX_INSTALL_DIR}/cms.log" 2>&1 &
-      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
+      printf '%s
+' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
+    fi
+    if [ -f "${DIR}/workers.sh" ]; then
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" start 2>/dev/null || true
     fi
     exit 0
     ;;
   stop)
-    log_info "Stopping Open edX LMS and CMS daemons..."
+    log_info "Stopping Open edX LMS, CMS, and background daemons..."
+    if [ -f "${DIR}/workers.sh" ]; then
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" stop 2>/dev/null || true
+    fi
     if [ -f "${OPENEDX_INSTALL_DIR}/lms.pid" ]; then
       kill "$(cat "${OPENEDX_INSTALL_DIR}/lms.pid")" 2>/dev/null || true
       rm -f "${OPENEDX_INSTALL_DIR}/lms.pid"
@@ -191,11 +322,16 @@ EOF
     exit 0
     ;;
   restart)
-    log_info "Restarting Open edX LMS and CMS daemons..."
+    log_info "Restarting Open edX services..."
+    "$THIS_FILE" stop
+    "$THIS_FILE" start
     exit 0
     ;;
   status)
     log_info "Checking Open edX LMS status on port ${LMS_PORT}..."
+    if [ -f "${DIR}/healthcheck.sh" ]; then
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/healthcheck.sh"
+    fi
     exit 0
     ;;
   test)
@@ -210,6 +346,9 @@ EOF
     ;;
   uninstall)
     log_info "Removing Open edX stack from ${OPENEDX_INSTALL_DIR}..."
+    if [ -f "${DIR}/workers.sh" ]; then
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" stop 2>/dev/null || true
+    fi
     rm -rf "${OPENEDX_INSTALL_DIR}"
     exit 0
     ;;

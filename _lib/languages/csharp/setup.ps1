@@ -36,6 +36,8 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $LibscriptRootDir = (Get-Item $ScriptDir).Parent.Parent.Parent.FullName
 . (Join-Path $LibscriptRootDir "_lib\_common\versioning.ps1")
 
+# ## Resolve-CsharpChannel
+# Resolves the requested C#/.NET version or channel identifier.
 function Resolve-CsharpChannel {
     if ($CsharpVersion -eq "latest") {
         return "LTS"

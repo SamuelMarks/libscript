@@ -36,6 +36,8 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $LibscriptRootDir = (Get-Item $ScriptDir).Parent.Parent.Parent.FullName
 . (Join-Path $LibscriptRootDir "_lib\_common\versioning.ps1")
 
+# ## Resolve-ExactVersion
+# Resolves the requested version identifier to an exact release version string.
 function Resolve-ExactVersion {
     if ($MavenVersion -eq "latest") {
         return "3.9.6"

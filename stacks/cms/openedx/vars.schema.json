@@ -60,9 +60,68 @@
       "description": "Number of WSGI worker processes.",
       "default": 2
     },
+    "OPENEDX_BACKUP_DIR": {
+      "type": "string",
+      "description": "Directory where backup archives are generated.",
+      "default": "C:\\ProgramData\\OpenEdX\\backups"
+    },
+    "OPENEDX_THEME": {
+      "type": "string",
+      "description": "Active Comprehensive Theme name for LMS and Studio.",
+      "default": "none"
+    },
+    "OPENEDX_THEME_REPO_URL": {
+      "type": "string",
+      "description": "Git repository URL of custom Comprehensive Theme."
+    },
     "OPENEDX_INSTALL_DIR": {
       "type": "string",
       "description": "Directory where openedx-platform is checked out and deployed."
+    },
+    "OPENEDX_IMPORT_DEMO_COURSE": {
+      "type": ["boolean", "string"],
+      "description": "Whether to import the edX demo course during setup.",
+      "default": false
+    },
+    "OPENEDX_IMPORT_DEMO_LIBRARIES": {
+      "type": ["boolean", "string"],
+      "description": "Whether to import demo content libraries during setup.",
+      "default": false
+    },
+    "OPENEDX_ENABLE_WORKERS": {
+      "type": ["boolean", "string"],
+      "description": "Whether to enable and launch Celery background workers.",
+      "default": true
+    },
+    "OPENEDX_ENABLE_CELERY_BEAT": {
+      "type": ["boolean", "string"],
+      "description": "Whether to enable Celery Beat periodic task scheduler.",
+      "default": true
+    },
+    "OPENEDX_ENABLE_MFES": {
+      "type": ["boolean", "string"],
+      "description": "Whether to build and route Micro-Frontends (Learning, Authn, Account, Authoring).",
+      "default": false
+    },
+    "OPENEDX_MFE_LEARNING_PORT": {
+      "type": ["integer", "string"],
+      "description": "HTTP port for Learning Micro-Frontend.",
+      "default": 2000
+    },
+    "OPENEDX_MFE_AUTHN_PORT": {
+      "type": ["integer", "string"],
+      "description": "HTTP port for Authentication Micro-Frontend.",
+      "default": 2001
+    },
+    "OPENEDX_MFE_ACCOUNT_PORT": {
+      "type": ["integer", "string"],
+      "description": "HTTP port for Account Micro-Frontend.",
+      "default": 2002
+    },
+    "OPENEDX_MFE_AUTHORING_PORT": {
+      "type": ["integer", "string"],
+      "description": "HTTP port for Course Authoring Micro-Frontend.",
+      "default": 2003
     }
   }
 }

@@ -47,10 +47,10 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
       while [ $# -gt 0 ]; do
         pkg="$1"
         ver="${2:-latest}"
-        if printf '%s\n' "$3" | grep -q "^http"; then
+        if [ $# -ge 3 ] && printf '%s\n' "${3:-}" | grep -q "^http"; then
           override="$3"
           shift 3
-        elif [ "$2" != "" ]; then
+        elif [ $# -ge 2 ] && [ "$2" != "" ]; then
           override=""
           shift 2
         else
@@ -72,9 +72,11 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
       sorted_deps=$(printf '%b\n' "$deps_list" | awk '
       function get_priority(pkg) {
           if (pkg ~ /^(fluentbit|docker|etcd|openvpn|kubernetes-k0s|kubernetes-thw)$/) return 10;
-          if (pkg ~ /^(postgres|mysql|mariadb|mongodb|redis|valkey|memcached|sqlite|rabbitmq|celery)$/) return 20;
+          if (pkg ~ /^(postgres|mysql|mariadb|mongodb|redis|valkey|memcached|sqlite|rabbitmq|celery|meilisearch)$/) return 20;
           if (pkg ~ /^(php|python|nodejs|ruby|java|go|rust|c|cpp|csharp|bun|deno|elixir|jq|kotlin|swift|wait4x|zig|sh|cc)$/) return 30;
           if (pkg ~ /^(nginx|caddy|httpd|firecrawl|jupyterhub)$/) return 40;
+          if (pkg ~ /^(openedx|openedx-lms|openedx-cms)$/) return 60;
+          if (pkg ~ /^(openedx-workers|openedx-beat)$/) return 70;
           return 50;
       }
       NF > 0 {
@@ -141,6 +143,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
           if [ "$pkg" = "python" ]; then healthcheck="[\"CMD-SHELL\", \"python3 --version || exit 1\"]"; fi
           if [ "$pkg" = "nodejs" ]; then healthcheck="[\"CMD-SHELL\", \"node -v || exit 1\"]"; fi
           if [ "$pkg" = "fluentbit" ]; then healthcheck="[\"CMD-SHELL\", \"wget -qO- http://127.0.0.1:2020/api/v1/health || exit 1\"]"; fi
+          if [ "$pkg" = "meilisearch" ]; then healthcheck="[\"CMD-SHELL\", \"curl -f http://localhost:7700/health || exit 1\"]"; fi
+          if [ "$pkg" = "openedx" ]; then healthcheck="[\"CMD-SHELL\", \"/opt/libscript/stacks/cms/openedx/healthcheck.sh || exit 1\"]"; fi
 
           if [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
               custom_hc=$(jq -r ".deps[\"$pkg\"].healthcheck // .servers[\"$pkg\"].healthcheck // .databases[\"$pkg\"].healthcheck // .third_party[\"$pkg\"].healthcheck // .storage[\"$pkg\"].healthcheck // .toolchains[\"$pkg\"].healthcheck // empty | if type == \"object\" then .test | tojson elif type == \"string\" then \"[\\\"CMD-SHELL\\\", \\\"\" + . + \"\\\"]\" else empty end" libscript.json 2>/dev/null || true)
@@ -153,6 +157,16 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
           printf '%s\n' "    build:"
           printf '%s\n' "      context: ."
           printf '%s\n' "      dockerfile: $df"
+          if [ "$pkg" = "openedx" ]; then
+            printf '%s\n' "    ports:"
+            printf '%s\n' "      - \"8000:8000\""
+            printf '%s\n' "      - \"8001:8001\""
+            printf '%s\n' "    volumes:"
+            printf '%s\n' "      - openedx_data:/opt/openedx/data"
+            printf '%s\n' "      - openedx_logs:/opt/openedx/logs"
+            printf '%s\n' "      - openedx_media:/opt/openedx/media"
+            printf '%s\n' "      - openedx_backups:/opt/openedx/backups"
+          fi
           printf '%s\n' "    healthcheck:"
           printf '%s\n' "      test: $healthcheck"
           printf '%s\n' "      interval: 5s"
@@ -169,12 +183,46 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
           if [ -n "$override" ] && [ "$override" != "null" ]; then
             printf '%s\n' "      - ${pkg_up}_URL=\"$override\""
           fi
-          if env_out=$(PREFIX="/opt/libscript/installed/$pkg" "${THIS_FILE}" env "$pkg" "$ver" --format=docker_compose 2>/dev/null); then
+          if [ -f "$LIBSCRIPT_ROOT_DIR/libscript.sh" ] && env_out=$(PREFIX="/opt/libscript/installed/$pkg" "$LIBSCRIPT_ROOT_DIR/libscript.sh" env "$pkg" "$ver" --format=docker_compose 2>/dev/null); then
             printf '%s\n' "$env_out" | grep -vE '^(STACK=|SCRIPT_NAME=)' | sed 's/^/      - /g'
           fi
 
           prev_pkg="$pkg"
+
+          if [ "$pkg" = "openedx" ]; then
+            printf '%s\n' "  openedx-workers:"
+            printf '%s\n' "    build:"
+            printf '%s\n' "      context: ."
+            printf '%s\n' "      dockerfile: $df"
+            printf '%s\n' "    command: [\"/opt/libscript/stacks/cms/openedx/workers.sh\", \"start\"]"
+            printf '%s\n' "    volumes:"
+            printf '%s\n' "      - openedx_data:/opt/openedx/data"
+            printf '%s\n' "      - openedx_logs:/opt/openedx/logs"
+            printf '%s\n' "    depends_on:"
+            printf '%s\n' "      - openedx"
+            printf '%s\n' "  openedx-beat:"
+            printf '%s\n' "    build:"
+            printf '%s\n' "      context: ."
+            printf '%s\n' "      dockerfile: $df"
+            printf '%s\n' "    command: [\"/opt/libscript/stacks/cms/openedx/workers.sh\", \"start\"]"
+            printf '%s\n' "    volumes:"
+            printf '%s\n' "      - openedx_data:/opt/openedx/data"
+            printf '%s\n' "      - openedx_logs:/opt/openedx/logs"
+            printf '%s\n' "    depends_on:"
+            printf '%s\n' "      - openedx"
+          fi
         fi
       done
+
+      case "$deps_list" in
+        *"openedx"*)
+          printf '%s\n' ""
+          printf '%s\n' "volumes:"
+          printf '%s\n' "  openedx_data:"
+          printf '%s\n' "  openedx_logs:"
+          printf '%s\n' "  openedx_media:"
+          printf '%s\n' "  openedx_backups:"
+          ;;
+      esac
     fi
     exit 0

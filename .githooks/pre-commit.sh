@@ -59,7 +59,7 @@ else
         # Enforce Indent via Prettier where applicable
         if [ "$ext" = "json" ] || [ "$ext" = "yml" ] || [ "$ext" = "yaml" ] || [ "$ext" = "md" ]; then
              if command -v npx >/dev/null 2>&1; then
-                 npx prettier --write "$file" >/dev/null 2>&1 || true
+                 npx --yes prettier --write "$file" >/dev/null 2>&1 || true
              fi
         fi
         
@@ -84,20 +84,26 @@ else
     fi
 fi
 
-# 3. Shellcheck
+# 3. LibScript Standards Audit
+printf '%s\n' "Running LibScript engineering standards audit..."
+if [ -x "devtools/audit/audit_standards.sh" ]; then
+    ./devtools/audit/audit_standards.sh --staged
+fi
+
+# 4. Shellcheck
 printf '%s\n' "Running shellcheck..."
 if printf "%s\n" "$STAGED_FILES" | grep "\.sh$" | grep -vE "node_modules|\.git|top\.sh|bottom\.sh|template_.*\.sh|netctl/lib/.*\.sh|libscript\.sh|patch_.*\.sh|fix_.*\.sh|update_.*\.sh|.*_gen\.sh|gen/.*|test_.*\.sh" >/dev/null 2>&1; then
   printf "%s\n" "$STAGED_FILES" | grep "\.sh$" | grep -vE "node_modules|\.git|top\.sh|bottom\.sh|template_.*\.sh|netctl/lib/.*\.sh|libscript\.sh|patch_.*\.sh|fix_.*\.sh|update_.*\.sh|.*_gen\.sh|gen/.*|test_.*\.sh" | xargs -n 50 -P 4 shellcheck -e SC2086,SC2317,SC2148,SC1090,SC1091,SC3043,SC3040,SC3025,SC2129,SC2016,SC3054,SC2296,SC2209,SC2154,SC2221,SC2222,SC2034,SC2038,SC1009,SC1083,SC1073,SC1072,SC1089,SC2018,SC2019,SC1003,SC1047,SC1046,SC1035,SC2295,SC2251,SC3059,SC2081,SC3010,SC2054,SC3045
 fi
 
-# 4. Regenerate Markdown Readmes
+# 5. Regenerate Markdown Readmes
 printf '%s\n' "Regenerating markdown readme files interpolating the json..."
 if [ -x "devtools/docs-gen/generate_markdown_docs.sh" ]; then
     ./devtools/docs-gen/generate_markdown_docs.sh
     # Re-add any modified README.md files
     for rfile in $(git ls-files -m | grep "README.md$" || true); do
         if command -v dos2unix >/dev/null 2>&1; then dos2unix -q "$rfile" 2>/dev/null || true; fi
-        if command -v npx >/dev/null 2>&1; then npx prettier --write "$rfile" >/dev/null 2>&1 || true; fi
+        if command -v npx >/dev/null 2>&1; then npx --yes prettier --write "$rfile" >/dev/null 2>&1 || true; fi
         git add "$rfile"
     done
 fi
@@ -111,7 +117,7 @@ if command -v dos2unix >/dev/null 2>&1; then
     dos2unix -q README.md 2>/dev/null || true
 fi
 if command -v npx >/dev/null 2>&1; then
-    npx prettier --write README.md >/dev/null 2>&1 || true
+    npx --yes prettier --write README.md >/dev/null 2>&1 || true
 fi
 
 git add README.md

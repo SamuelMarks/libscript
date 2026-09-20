@@ -38,6 +38,8 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $LibscriptRootDir = (Get-Item $ScriptDir).Parent.Parent.Parent.FullName
 . (Join-Path $LibscriptRootDir "_lib\_common\versioning.ps1")
 
+# ## Resolve-ExactVersion
+# Resolves the requested version identifier to an exact release version string.
 function Resolve-ExactVersion {
     if ($PhpVersion -eq "latest") {
         $ExactVersion = "8.3.11"

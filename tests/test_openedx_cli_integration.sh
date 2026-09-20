@@ -63,9 +63,20 @@ printf '[TEST 8/9] Verifying Exim...
 '
 "${LIBSCRIPT_ROOT_DIR}/_lib/utilities/exim/cli.sh" help >/dev/null
 
-printf '[TEST 9/9] Verifying Open edX stack orchestrator...
-'
+printf '[TEST 9/9] Verifying Open edX stack orchestrator and Tutor parity subcommands...\n'
 "${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx/cli.sh" help >/dev/null
+"${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx/cli.sh" user help >/dev/null
+"${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx/cli.sh" demo help >/dev/null
+"${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx/cli.sh" dbshell help >/dev/null
+"${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx/cli.sh" healthcheck help >/dev/null
+"${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx/cli.sh" config help >/dev/null
+"${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx/cli.sh" backup help >/dev/null
+"${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx/cli.sh" restore help >/dev/null
+"${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx/cli.sh" workers help >/dev/null
+"${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx/cli.sh" theme help >/dev/null
+"${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx/cli.sh" xblock help >/dev/null
+"${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx/cli.sh" upgrade help >/dev/null
+"${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx/cli.sh" mfe help >/dev/null
 
 printf '
 ==========================================================

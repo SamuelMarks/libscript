@@ -3,6 +3,7 @@
   "name": "volume",
   "category": "cloud",
   "title": "Cloud Block Storage",
-  "description": "Multicloud interface for managing and attaching block storage volumes.",
-  "provides": ["cloud-volume"]
+  "description": "Multicloud interface for managing and attaching block storage volumes. Adapter-only component without binary installer lifecycle.",
+  "provides": ["cloud-volume"],
+  "adapter_only": true
 }

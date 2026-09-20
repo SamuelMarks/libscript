@@ -492,6 +492,12 @@ EOF_XML
     <Property Id="INSTALL_MEILISEARCH" Value="1" Secure="yes" />
     <Property Id="INSTALL_LMS" Value="1" Secure="yes" />
     <Property Id="INSTALL_CMS" Value="1" Secure="yes" />
+    <Property Id="INSTALL_WORKERS" Value="1" Secure="yes" />
+    <Property Id="IMPORT_DEMO_CONTENT" Value="0" Secure="yes" />
+    <Property Id="INSTALL_MFES" Value="0" Secure="yes" />
+    <Property Id="PROP_OPENEDX_THEME" Value="none" Secure="yes" />
+    <Property Id="PROP_OPENEDX_THEME_REPO_URL" Secure="yes" />
+    <Property Id="BACKUPFOLDER" Value="C:\ProgramData\OpenEdX\backups" Secure="yes" />
 
     <!-- Mask Sensitive Git Credentials and Passwords in Verbose Logs -->
     <Property Id="MsiHiddenProperties" Value="PROP_OPENEDX_ADMIN_PASSWORD;PROP_OPENEDX_SECRET_KEY;PROP_MYSQL_ROOT_PASSWORD;PROP_MYSQL_REMOTE_URL;PROP_REDIS_PASSWORD;PROP_REDIS_URL;PROP_MONGODB_URI;PROP_MEILISEARCH_MASTER_KEY;PROP_OPENEDX_REPO_AUTH_TOKEN" />
@@ -501,10 +507,15 @@ EOF_XML
       <Directory Id="ProgramFiles64Folder">
         <Directory Id="INSTALLFOLDER" Name="OpenEdX" />
       </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="OpenEdXProgramMenuFolder" Name="Open edX" />
+      </Directory>
+      <Directory Id="DesktopFolder" Name="Desktop" />
       <Directory Id="CommonAppDataFolder">
         <Directory Id="COMPANYDATAFOLDER" Name="OpenEdX">
           <Directory Id="DATAFOLDER" Name="data" />
           <Directory Id="LOGSFOLDER" Name="logs" />
+          <Directory Id="BACKUPFOLDER" Name="backups" />
         </Directory>
       </Directory>
     </Directory>
@@ -512,7 +523,12 @@ EOF_XML
     <!-- Custom Actions -->
     <CustomAction Id="CA_LaunchBrowser" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c start http://[PROP_LMS_HOST]:[PROP_LMS_PORT]" Return="asyncNoWait" />
     <CustomAction Id="CA_LaunchStudio" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c start http://[PROP_CMS_HOST]:[PROP_CMS_PORT]" Return="asyncNoWait" />
-    <CustomAction Id="InstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c libscript.cmd install stacks/cms/openedx --lms-port=[PROP_LMS_PORT] --cms-port=[PROP_CMS_PORT] --mysql-url=&quot;[PROP_MYSQL_REMOTE_URL]&quot; --redis-port=[PROP_REDIS_PORT] --redis-url=&quot;[PROP_REDIS_URL]&quot; --mongodb-uri=&quot;[PROP_MONGODB_URI]&quot; --repo=&quot;[PROP_OPENEDX_EDX_PLATFORM_REPOSITORY]&quot; --version=&quot;[PROP_OPENEDX_VERSION]&quot;" Execute="deferred" Return="check" Impersonate="no" />
+    <CustomAction Id="InstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c libscript.cmd install stacks/cms/openedx --lms-port=[PROP_LMS_PORT] --cms-port=[PROP_CMS_PORT] --mysql-url=&quot;[PROP_MYSQL_REMOTE_URL]&quot; --redis-port=[PROP_REDIS_PORT] --redis-url=&quot;[PROP_REDIS_URL]&quot; --mongodb-uri=&quot;[PROP_MONGODB_URI]&quot; --repo=&quot;[PROP_OPENEDX_EDX_PLATFORM_REPOSITORY]&quot; --version=&quot;[PROP_OPENEDX_VERSION]&quot; --admin-user=&quot;[PROP_OPENEDX_ADMIN_USERNAME]&quot; --admin-password=&quot;[PROP_OPENEDX_ADMIN_PASSWORD]&quot; --admin-email=&quot;[PROP_OPENEDX_ADMIN_EMAIL]&quot; --backup-dir=&quot;[BACKUPFOLDER]&quot; --theme=&quot;[PROP_OPENEDX_THEME]&quot;" Execute="deferred" Return="check" Impersonate="no" />
+    <CustomAction Id="InstallWorkersService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]workers.cmd&quot; start" Execute="deferred" Return="ignore" Impersonate="no" />
+    <CustomAction Id="StopWorkersService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]workers.cmd&quot; stop" Execute="deferred" Return="ignore" Impersonate="no" />
+    <CustomAction Id="ImportDemoContentAction" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]import_demo.cmd&quot; course &amp;&amp; &quot;[INSTALLFOLDER]import_demo.cmd&quot; libraries" Execute="deferred" Return="ignore" Impersonate="no" />
+    <CustomAction Id="BuildMFEsAction" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]mfe.cmd&quot; build all &amp;&amp; &quot;[INSTALLFOLDER]mfe.cmd&quot; deploy all" Execute="deferred" Return="ignore" Impersonate="no" />
+    <CustomAction Id="PostInstallHealthcheck" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]healthcheck.cmd&quot;" Execute="deferred" Return="ignore" Impersonate="no" />
     <CustomAction Id="InstallMySQLService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c libscript.cmd install databases/mysql --port=[PROP_MYSQL_PORT]" Execute="deferred" Return="check" Impersonate="no" />
     <CustomAction Id="InstallRedisService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c libscript.cmd install caches/redis --port=[PROP_REDIS_PORT]" Execute="deferred" Return="check" Impersonate="no" />
     <CustomAction Id="UninstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c libscript.cmd uninstall stacks/cms/openedx [PURGE_openedx]" Execute="deferred" Return="check" Impersonate="no" />
@@ -537,12 +553,12 @@ EOF_XML
       </Dialog>
 
       <!-- License Dialog -->
-      <Dialog Id="Dlg_License" Width="370" Height="270" Title="End User License Agreement">
+      <Dialog Id="Dlg_License" Width="370" Height="270" Title="[ProductName] Setup">
         <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" Text="WixUIBannerBmp" />
         <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
-        <Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="End User License Agreement" />
-        <Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Please review license terms before proceeding." />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="End-User License Agreement" />
+        <Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Please read the following license agreement carefully." />
         <Control Id="AgreementText" Type="ScrollableText" X="20" Y="48" Width="330" Height="155" Sunken="yes" TabSkip="no">
           <Text SourceFile="license_placeholder.rtf" />
         </Control>
@@ -550,7 +566,7 @@ EOF_XML
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back">
           <Publish Event="EndDialog" Value="Return">1</Publish>
         </Control>
-        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Next">
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="I Agree">
           <Publish Event="EndDialog" Value="Return"><![CDATA[LICENSE_ACCEPTED="1"]]></Publish>
           <Condition Action="disable"><![CDATA[LICENSE_ACCEPTED<>"1"]]></Condition>
           <Condition Action="enable"><![CDATA[LICENSE_ACCEPTED="1"]]></Condition>
@@ -593,11 +609,14 @@ EOF_XML
         <Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Review required runtimes and configure optional services." />
         <Control Id="Lbl_NonOptHeader" Type="Text" X="20" Y="48" Width="330" Height="14" NoPrefix="yes" Text="Non-Optional Components (always installed):" />
         <Control Id="Lbl_NonOptList" Type="Text" X="28" Y="63" Width="320" Height="50" NoPrefix="yes" Text="- Python (Python 3.11+ runtime &amp; virtual environment)&#13;&#10;- Node.js (Node.js &amp; npm asset pipeline)&#13;&#10;- Meilisearch (Course search and catalog discovery engine)&#13;&#10;- MySQL (Relational database) &amp; Redis (Cache &amp; Celery broker)&#13;&#10;- MongoDB (Course document datastore)" />
-        <Control Id="Lbl_OptHeader" Type="Text" X="20" Y="118" Width="330" Height="14" NoPrefix="yes" Text="Optional / Configurable Services:" />
-        <Control Id="Chk_LMS" Type="CheckBox" X="28" Y="134" Width="320" Height="15" Property="INSTALL_LMS" CheckBoxValue="1" Text="Open edX LMS Core Service (Port 8000)" />
-        <Control Id="Chk_CMS" Type="CheckBox" X="28" Y="150" Width="320" Height="15" Property="INSTALL_CMS" CheckBoxValue="1" Text="Open edX Studio / CMS Course Authoring (Port 8001)" />
-        <Control Id="Chk_MySQL" Type="CheckBox" X="28" Y="166" Width="320" Height="15" Property="INSTALL_MYSQL" CheckBoxValue="1" Text="Install Local MySQL Service (uncheck if using DBaaS)" />
-        <Control Id="Chk_Redis" Type="CheckBox" X="28" Y="182" Width="320" Height="15" Property="INSTALL_REDIS" CheckBoxValue="1" Text="Install Local Redis Service (uncheck if using Cloud Redis)" />
+        <Control Id="Lbl_OptHeader" Type="Text" X="20" Y="114" Width="330" Height="14" NoPrefix="yes" Text="Optional / Configurable Services:" />
+        <Control Id="Chk_LMS" Type="CheckBox" X="28" Y="128" Width="320" Height="14" Property="INSTALL_LMS" CheckBoxValue="1" Text="Open edX LMS Core Service (Port 8000)" />
+        <Control Id="Chk_CMS" Type="CheckBox" X="28" Y="142" Width="320" Height="14" Property="INSTALL_CMS" CheckBoxValue="1" Text="Open edX Studio / CMS Course Authoring (Port 8001)" />
+        <Control Id="Chk_MySQL" Type="CheckBox" X="28" Y="156" Width="320" Height="14" Property="INSTALL_MYSQL" CheckBoxValue="1" Text="Install Local MySQL Service (uncheck if using DBaaS)" />
+        <Control Id="Chk_Redis" Type="CheckBox" X="28" Y="170" Width="320" Height="14" Property="INSTALL_REDIS" CheckBoxValue="1" Text="Install Local Redis Service (uncheck if using Cloud Redis)" />
+        <Control Id="Chk_Workers" Type="CheckBox" X="28" Y="184" Width="320" Height="14" Property="INSTALL_WORKERS" CheckBoxValue="1" Text="Launch Celery Background Workers &amp; Scheduler" />
+        <Control Id="Chk_Demo" Type="CheckBox" X="28" Y="198" Width="320" Height="14" Property="IMPORT_DEMO_CONTENT" CheckBoxValue="1" Text="Import edX Demo Course &amp; Content Libraries" />
+        <Control Id="Chk_MFEs" Type="CheckBox" X="28" Y="212" Width="320" Height="14" Property="INSTALL_MFES" CheckBoxValue="1" Text="Build and Deploy Micro-Frontends (Learning, Authn, Account)" />
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back">
           <Publish Event="EndDialog" Value="Return">1</Publish>
         </Control>
@@ -616,26 +635,33 @@ EOF_XML
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
 
         <Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="Destination Folders" />
-        <Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Select target locations for binaries, databases, and logs." />
+        <Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Select target locations for binaries, databases, logs, and backups." />
 
-        <Control Id="Lbl_AppFolder" Type="Text" X="20" Y="50" Width="330" Height="14" NoPrefix="yes" Text="Application Installation Folder:" />
-        <Control Id="Txt_AppFolder" Type="PathEdit" X="20" Y="65" Width="260" Height="18" Property="INSTALLFOLDER" />
-        <Control Id="Btn_BrowseApp" Type="PushButton" X="285" Y="65" Width="65" Height="18" Text="Browse...">
+        <Control Id="Lbl_AppFolder" Type="Text" X="20" Y="48" Width="330" Height="13" NoPrefix="yes" Text="Application Installation Folder:" />
+        <Control Id="Txt_AppFolder" Type="PathEdit" X="20" Y="61" Width="260" Height="17" Property="INSTALLFOLDER" />
+        <Control Id="Btn_BrowseApp" Type="PushButton" X="285" Y="61" Width="65" Height="17" Text="Browse...">
           <Publish Property="_BrowseProperty" Value="INSTALLFOLDER">1</Publish>
           <Publish Event="SpawnDialog" Value="BrowseDlg">1</Publish>
         </Control>
 
-        <Control Id="Lbl_DataFolder" Type="Text" X="20" Y="95" Width="330" Height="14" NoPrefix="yes" Text="Databases and Media Storage Folder:" />
-        <Control Id="Txt_DataFolder" Type="PathEdit" X="20" Y="110" Width="260" Height="18" Property="DATAFOLDER" />
-        <Control Id="Btn_BrowseData" Type="PushButton" X="285" Y="110" Width="65" Height="18" Text="Browse...">
+        <Control Id="Lbl_DataFolder" Type="Text" X="20" Y="80" Width="330" Height="13" NoPrefix="yes" Text="Databases and Media Storage Folder:" />
+        <Control Id="Txt_DataFolder" Type="PathEdit" X="20" Y="93" Width="260" Height="17" Property="DATAFOLDER" />
+        <Control Id="Btn_BrowseData" Type="PushButton" X="285" Y="93" Width="65" Height="17" Text="Browse...">
           <Publish Property="_BrowseProperty" Value="DATAFOLDER">1</Publish>
           <Publish Event="SpawnDialog" Value="BrowseDlg">1</Publish>
         </Control>
 
-        <Control Id="Lbl_LogsFolder" Type="Text" X="20" Y="140" Width="330" Height="14" NoPrefix="yes" Text="Log Files Folder:" />
-        <Control Id="Txt_LogsFolder" Type="PathEdit" X="20" Y="155" Width="260" Height="18" Property="LOGSFOLDER" />
-        <Control Id="Btn_BrowseLogs" Type="PushButton" X="285" Y="155" Width="65" Height="18" Text="Browse...">
+        <Control Id="Lbl_LogsFolder" Type="Text" X="20" Y="112" Width="330" Height="13" NoPrefix="yes" Text="Log Files Folder:" />
+        <Control Id="Txt_LogsFolder" Type="PathEdit" X="20" Y="125" Width="260" Height="17" Property="LOGSFOLDER" />
+        <Control Id="Btn_BrowseLogs" Type="PushButton" X="285" Y="125" Width="65" Height="17" Text="Browse...">
           <Publish Property="_BrowseProperty" Value="LOGSFOLDER">1</Publish>
+          <Publish Event="SpawnDialog" Value="BrowseDlg">1</Publish>
+        </Control>
+
+        <Control Id="Lbl_BackupFolder" Type="Text" X="20" Y="144" Width="330" Height="13" NoPrefix="yes" Text="Automated Snapshots &amp; Backups Folder:" />
+        <Control Id="Txt_BackupFolder" Type="PathEdit" X="20" Y="157" Width="260" Height="17" Property="BACKUPFOLDER" />
+        <Control Id="Btn_BrowseBackup" Type="PushButton" X="285" Y="157" Width="65" Height="17" Text="Browse...">
+          <Publish Property="_BrowseProperty" Value="BACKUPFOLDER">1</Publish>
           <Publish Event="SpawnDialog" Value="BrowseDlg">1</Publish>
         </Control>
 
@@ -737,6 +763,11 @@ EOF_XML
         <Control Id="Lbl_AdminEmail" Type="Text" X="20" Y="130" Width="300" Height="15" Text="Superuser Email Address:" />
         <Control Id="Txt_AdminEmail" Type="Edit" X="20" Y="145" Width="300" Height="18" Property="PROP_OPENEDX_ADMIN_EMAIL" />
 
+        <Control Id="Lbl_Theme" Type="Text" X="20" Y="170" Width="150" Height="15" Text="Theme Name (or 'none'):" />
+        <Control Id="Txt_Theme" Type="Edit" X="20" Y="185" Width="140" Height="18" Property="PROP_OPENEDX_THEME" />
+        <Control Id="Lbl_ThemeUrl" Type="Text" X="180" Y="170" Width="150" Height="15" Text="Custom Theme Git URL:" />
+        <Control Id="Txt_ThemeUrl" Type="Edit" X="180" Y="185" Width="170" Height="18" Property="PROP_OPENEDX_THEME_REPO_URL" />
+
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back">
           <Publish Event="EndDialog" Value="Return">1</Publish>
         </Control>
@@ -821,7 +852,10 @@ EOF_XML
         <Control Id="CompRedis" Type="Text" X="28" Y="120" Width="320" Height="13" NoPrefix="yes" Text="- redis (In-memory caching and Celery asynchronous task broker)" />
         <Control Id="CompMongo" Type="Text" X="28" Y="134" Width="320" Height="13" NoPrefix="yes" Text="- mongodb (Document datastore for courseware modules)" />
         <Control Id="CompLMS" Type="Text" X="28" Y="148" Width="320" Height="13" NoPrefix="yes" Text="- openedx (Open edX LMS on port [PROP_LMS_PORT], Studio on port [PROP_CMS_PORT])" />
-        <Control Id="Instructions" Type="Text" X="20" Y="168" Width="330" Height="24" Text="Click Install to begin installation. If you want to review or change any settings, click Back." />
+        <Control Id="CompWorkers" Type="Text" X="28" Y="162" Width="320" Height="13" NoPrefix="yes" Text="- workers (Celery asynchronous task workers &amp; beat scheduler)" />
+        <Control Id="CompDemo" Type="Text" X="28" Y="176" Width="320" Height="13" NoPrefix="yes" Text="- content (Demo courseware and content libraries catalog)" />
+        <Control Id="CompMFEs" Type="Text" X="28" Y="190" Width="320" Height="13" NoPrefix="yes" Text="- mfes (Micro-Frontends: Learning, Authn, Account)" />
+        <Control Id="Instructions" Type="Text" X="20" Y="208" Width="330" Height="24" Text="Click Install to begin installation. If you want to review or change any settings, click Back." />
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back">
           <Publish Event="EndDialog" Value="Return">1</Publish>
         </Control>
@@ -878,6 +912,11 @@ EOF_XML
       <Custom Action="InstallMySQLService" Before="InstallOpenEdXService"><![CDATA[NOT Installed AND INSTALL_MYSQL="1" AND NOT PROP_MYSQL_REMOTE_URL]]></Custom>
       <Custom Action="InstallRedisService" Before="InstallOpenEdXService"><![CDATA[NOT Installed AND INSTALL_REDIS="1" AND NOT PROP_REDIS_URL]]></Custom>
       <Custom Action="InstallOpenEdXService" Before="InstallFinalize"><![CDATA[NOT Installed AND INSTALL_LMS="1"]]></Custom>
+      <Custom Action="InstallWorkersService" After="InstallOpenEdXService"><![CDATA[NOT Installed AND INSTALL_WORKERS="1"]]></Custom>
+      <Custom Action="ImportDemoContentAction" After="InstallOpenEdXService"><![CDATA[NOT Installed AND IMPORT_DEMO_CONTENT="1"]]></Custom>
+      <Custom Action="BuildMFEsAction" After="InstallOpenEdXService"><![CDATA[NOT Installed AND INSTALL_MFES="1"]]></Custom>
+      <Custom Action="PostInstallHealthcheck" After="InstallOpenEdXService"><![CDATA[NOT Installed]]></Custom>
+      <Custom Action="StopWorkersService" Before="UninstallOpenEdXService"><![CDATA[REMOVE="ALL"]]></Custom>
       <Custom Action="UninstallOpenEdXService" Before="RemoveFiles">REMOVE="ALL"</Custom>
     </InstallExecuteSequence>
 
@@ -885,6 +924,8 @@ EOF_XML
       <ComponentGroupRef Id="ProductComponents" />
       <ComponentRef Id="CoursewareDataStore" />
       <ComponentRef Id="CoursewareLogStore" />
+      <ComponentRef Id="CoursewareBackupStore" />
+      <ComponentRef Id="ApplicationShortcuts" />
     </Feature>
   </Product>
 
@@ -892,6 +933,64 @@ EOF_XML
     <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
       <Component Id="AppManifestComponent" Guid="E2A89C15-99BD-4720-A0E8-A97A2E504F63">
         <File Id="ManifestFile" Source="stacks/cms/openedx/manifest.json" KeyPath="yes" />
+      </Component>
+      <Component Id="VarsSchemaComponent" Guid="D1A72951-86E3-4E61-A79B-7D8C430931B5">
+        <File Id="VarsSchemaFile" Source="stacks/cms/openedx/vars.schema.json" KeyPath="yes" />
+      </Component>
+      <Component Id="PackagingJsonComponent" Guid="C4A82110-5321-4FA6-9B3B-8D7E6512A098">
+        <File Id="PackagingJsonFile" Source="stacks/cms/openedx/packaging.json" KeyPath="yes" />
+      </Component>
+      <Component Id="CliScriptComponent" Guid="B35F9271-2B4A-48DC-8812-3D7C51094E1A">
+        <File Id="CliCmdFile" Source="stacks/cms/openedx/cli.cmd" KeyPath="yes" />
+        <File Id="CliShFile" Source="stacks/cms/openedx/cli.sh" />
+      </Component>
+      <Component Id="UserScriptComponent" Guid="A91283F1-15D2-46A9-81FE-2B45CD98103F">
+        <File Id="UserCmdFile" Source="stacks/cms/openedx/user.cmd" KeyPath="yes" />
+        <File Id="UserShFile" Source="stacks/cms/openedx/user.sh" />
+      </Component>
+      <Component Id="ImportDemoScriptComponent" Guid="87123A0B-4321-48C1-871B-9430CD7812E5">
+        <File Id="ImportDemoCmdFile" Source="stacks/cms/openedx/import_demo.cmd" KeyPath="yes" />
+        <File Id="ImportDemoShFile" Source="stacks/cms/openedx/import_demo.sh" />
+      </Component>
+      <Component Id="DbShellScriptComponent" Guid="521A79B2-9F12-4C18-91AA-56193BF43109">
+        <File Id="DbShellCmdFile" Source="stacks/cms/openedx/dbshell.cmd" KeyPath="yes" />
+        <File Id="DbShellShFile" Source="stacks/cms/openedx/dbshell.sh" />
+      </Component>
+      <Component Id="HealthcheckScriptComponent" Guid="3190BCA1-71E5-4890-85A2-671239EF1045">
+        <File Id="HealthcheckCmdFile" Source="stacks/cms/openedx/healthcheck.cmd" KeyPath="yes" />
+        <File Id="HealthcheckShFile" Source="stacks/cms/openedx/healthcheck.sh" />
+      </Component>
+      <Component Id="ConfigScriptComponent" Guid="781A3290-E5A1-4F29-B109-873429185CA2">
+        <File Id="ConfigCmdFile" Source="stacks/cms/openedx/config.cmd" KeyPath="yes" />
+        <File Id="ConfigShFile" Source="stacks/cms/openedx/config.sh" />
+      </Component>
+      <Component Id="BackupScriptComponent" Guid="91823CA5-B410-4821-A951-871295A642B1">
+        <File Id="BackupCmdFile" Source="stacks/cms/openedx/backup.cmd" KeyPath="yes" />
+        <File Id="BackupShFile" Source="stacks/cms/openedx/backup.sh" />
+      </Component>
+      <Component Id="RestoreScriptComponent" Guid="65109AB3-7182-4C91-A281-541982736AE4">
+        <File Id="RestoreCmdFile" Source="stacks/cms/openedx/restore.cmd" KeyPath="yes" />
+        <File Id="RestoreShFile" Source="stacks/cms/openedx/restore.sh" />
+      </Component>
+      <Component Id="WorkersScriptComponent" Guid="418293B7-A619-4F52-8719-741982365BAC">
+        <File Id="WorkersCmdFile" Source="stacks/cms/openedx/workers.cmd" KeyPath="yes" />
+        <File Id="WorkersShFile" Source="stacks/cms/openedx/workers.sh" />
+      </Component>
+      <Component Id="ThemeScriptComponent" Guid="27189A45-C918-42A9-9812-651928473ACB">
+        <File Id="ThemeCmdFile" Source="stacks/cms/openedx/theme.cmd" KeyPath="yes" />
+        <File Id="ThemeShFile" Source="stacks/cms/openedx/theme.sh" />
+      </Component>
+      <Component Id="XBlockScriptComponent" Guid="19283746-5A6B-4C8D-9E0F-123456789ABC">
+        <File Id="XBlockCmdFile" Source="stacks/cms/openedx/xblock.cmd" KeyPath="yes" />
+        <File Id="XBlockShFile" Source="stacks/cms/openedx/xblock.sh" />
+      </Component>
+      <Component Id="UpgradeScriptComponent" Guid="38472910-B1C2-4D3E-8F4A-5678901234EF">
+        <File Id="UpgradeCmdFile" Source="stacks/cms/openedx/upgrade.cmd" KeyPath="yes" />
+        <File Id="UpgradeShFile" Source="stacks/cms/openedx/upgrade.sh" />
+      </Component>
+      <Component Id="MfeScriptComponent" Guid="59102837-A2B3-4C4D-8E5F-6789012345FA">
+        <File Id="MfeCmdFile" Source="stacks/cms/openedx/mfe.cmd" KeyPath="yes" />
+        <File Id="MfeShFile" Source="stacks/cms/openedx/mfe.sh" />
       </Component>
     </ComponentGroup>
 
@@ -902,6 +1001,23 @@ EOF_XML
 
     <Component Id="CoursewareLogStore" Directory="LOGSFOLDER" Guid="3E4A1521-884A-49A3-A65B-64771C5091E2" Permanent="yes" NeverOverwrite="yes">
       <CreateFolder />
+    </Component>
+
+    <Component Id="CoursewareBackupStore" Directory="BACKUPFOLDER" Guid="98127364-5A4B-4C3D-8E2F-1029384756BA" Permanent="yes" NeverOverwrite="yes">
+      <CreateFolder />
+    </Component>
+
+    <!-- Administrative Shortcuts in Start Menu -->
+    <Component Id="ApplicationShortcuts" Directory="OpenEdXProgramMenuFolder" Guid="718293A4-B5C6-4D7E-8F90-123456789ABC">
+      <Shortcut Id="ShortcutCli" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]cli.cmd" WorkingDirectory="INSTALLFOLDER" />
+      <Shortcut Id="ShortcutHealth" Name="Open edX Healthcheck" Description="Open edX Diagnostics Probe" Target="[INSTALLFOLDER]healthcheck.cmd" WorkingDirectory="INSTALLFOLDER" />
+      <Shortcut Id="ShortcutDbShell" Name="Open edX Database Console" Description="Open edX MySQL Database Shell" Target="[INSTALLFOLDER]dbshell.cmd" Arguments="mysql" WorkingDirectory="INSTALLFOLDER" />
+      <Shortcut Id="ShortcutBackup" Name="Open edX Backup and Restore" Description="Open edX Backup Tool" Target="[INSTALLFOLDER]backup.cmd" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" />
+      <Shortcut Id="DesktopShortcutCli" Directory="DesktopFolder" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]cli.cmd" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" />
+      <Shortcut Id="DesktopShortcutLms" Directory="DesktopFolder" Name="Open edX LMS" Description="Open edX Learning Management System" Target="[INSTALLFOLDER]cli.cmd" Arguments="lms" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" />
+      <Shortcut Id="DesktopShortcutStudio" Directory="DesktopFolder" Name="Open edX Studio" Description="Open edX Studio Course Authoring" Target="[INSTALLFOLDER]cli.cmd" Arguments="studio" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" />
+      <RemoveFolder Id="CleanUpShortCutDir" Directory="OpenEdXProgramMenuFolder" On="uninstall" />
+      <RegistryValue Root="HKCU" Key="Software\LibScript\OpenEdX" Name="installed" Type="integer" Value="1" KeyPath="yes" />
     </Component>
   </Fragment>
 </Wix>
@@ -925,27 +1041,13 @@ compile_msi() {
   elif command -v wixl >/dev/null 2>&1; then
     _wixl_manifest="${OUT_FILE}_wixl.wxs"
     # Create wixl-compatible subset without vendor-specific UI extensions
-    if command -v python3 >/dev/null 2>&1; then
-      python3 -c 'import re, sys
-w = open(sys.argv[1]).read()
-w = re.sub(r"<WixVariable[^>]*>", "", w)
-w = re.sub(r"<UI Id=\"CustomUI\">.*?</UI>", "", w, flags=re.DOTALL)
-w = re.sub(r"<CustomAction[^>]*>", "", w)
-w = re.sub(r"<InstallExecuteSequence>.*?</InstallExecuteSequence>", "", w, flags=re.DOTALL)
-w = re.sub(r"<MajorUpgrade[^>]*>", "", w)
-w = re.sub(r"<Property Id=\"FOUND_[^\"]*\">.*?</Property>", "", w, flags=re.DOTALL)
-w = re.sub(r"<ComponentRef Id=\"Courseware[^\"]*\" />", "", w)
-w = re.sub(r"<Component Id=\"Courseware.*?</Component>", "", w, flags=re.DOTALL)
-w = re.sub(r" Hidden=\"yes\"", "", w)
-w = re.sub(r" Value=\"\"", "", w)
-open(sys.argv[2], "w").write(w)
-' "$WXS_FILE" "$_wixl_manifest"
+    sed '/<WixVariable/d; /<UI Id="CustomUI">/,/<\/UI>/d; /<CustomAction/d; /<InstallExecuteSequence>/,/<\/InstallExecuteSequence>/d; /<MajorUpgrade/d; /<ComponentRef Id="Courseware/d; /<ComponentRef Id="ApplicationShortcuts/d; /<Component Id="ApplicationShortcuts"/,/<\/Component>/d; /<Directory Id="ProgramMenuFolder"/,/<\/Directory>/d; /<Property Id="FOUND_/,/<\/Property>/d; /Value=""/d; s/ Hidden="yes"//g' "$WXS_FILE" > "$_wixl_manifest"
+    if wixl -o "${OUT_FILE}.msi" "$_wixl_manifest"; then
+      printf '[PASS] Successfully compiled binary MSI via wixl: %s.msi\n' "$OUT_FILE"
     else
-      sed '/<WixVariable/d; /<UI Id="CustomUI">/,/<\/UI>/d; /<CustomAction/d; /<InstallExecuteSequence>/,/<\/InstallExecuteSequence>/d; /<MajorUpgrade/d; /<ComponentRef Id="Courseware/d; /Value=""/d; s/ Hidden="yes"//g' "$WXS_FILE" > "$_wixl_manifest"
+      printf '[WARN] wixl compilation failed; keeping generated .wxs manifest\n' >&2
     fi
-    wixl -o "${OUT_FILE}.msi" "$_wixl_manifest"
     rm -f "$_wixl_manifest"
-    printf '[PASS] Successfully compiled binary MSI via wixl: %s.msi\n' "$OUT_FILE"
   else
     printf '[INFO] Neither WiX toolset nor wixl is present in PATH. Generated XML manifest is ready for compilation.\n'
   fi

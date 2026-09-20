@@ -44,6 +44,8 @@ export ROOT_DIR
 
 printf '%s\n' "Generating markdown docs..."
 
+modified_tmp=$(mktemp)
+
 # We need to process each component
 find "$ROOT_DIR" -type f -name "README.md" | grep -E "(_lib|app-servers|stacks)" | while IFS= read -r readme; do
     dir="$(dirname "$readme")"
@@ -104,15 +106,22 @@ find "$ROOT_DIR" -type f -name "README.md" | grep -E "(_lib|app-servers|stacks)"
         !in_vars && !in_plats { print }
         ' "$readme" > "${readme}.tmp"
         
-        mv "${readme}.tmp" "$readme"
         rm -f "$vars_tmp" "$plat_tmp"
-        if command -v dos2unix >/dev/null 2>&1; then
-            dos2unix -q "$readme" 2>/dev/null || true
-        fi
-        if command -v npx >/dev/null 2>&1; then
-            npx --yes prettier --write "$readme" >/dev/null 2>&1 || true
+        if ! cmp -s "${readme}.tmp" "$readme"; then
+            mv "${readme}.tmp" "$readme"
+            if command -v dos2unix >/dev/null 2>&1; then
+                dos2unix -q "$readme" 2>/dev/null || true
+            fi
+            printf '%s\n' "$readme" >> "$modified_tmp"
+        else
+            rm -f "${readme}.tmp"
         fi
     fi
 done
+
+if [ -s "$modified_tmp" ] && command -v npx >/dev/null 2>&1; then
+    xargs -n 50 npx --yes prettier --write < "$modified_tmp" >/dev/null 2>&1 || true
+fi
+rm -f "$modified_tmp"
 
 printf '%s\n' "Done."

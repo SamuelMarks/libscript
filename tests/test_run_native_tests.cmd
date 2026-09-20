@@ -44,6 +44,9 @@ copy /Y "%REPO_ROOT%\tests\run_native_tests.cmd" "%TEST_TMP%\tests\run_native_te
 if exist "%REPO_ROOT%\tests\update_results.cmd" (
     copy /Y "%REPO_ROOT%\tests\update_results.cmd" "%TEST_TMP%\tests\update_results.cmd" >nul
 )
+if exist "%REPO_ROOT%\tests\update_results.ps1" (
+    copy /Y "%REPO_ROOT%\tests\update_results.ps1" "%TEST_TMP%\tests\update_results.ps1" >nul
+)
 
 > "%TEST_TMP%\README.md" (
     echo # Mock Project

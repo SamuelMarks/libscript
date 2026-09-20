@@ -28,6 +28,8 @@ if (-not $env:LIBSCRIPT_ROOT_DIR) {
 # Source logging
 . (Join-Path $PSScriptRoot "log.ps1")
 
+# ## libscript_download
+# Downloads a remote asset with checksum verification and local cache storage.
 function libscript_download {
     param (
         [string]$Url,
@@ -155,6 +157,8 @@ function libscript_download {
     }
 }
 
+# ## libscript_depends
+# Ensures that required package dependencies are installed on Windows using winget or choco.
 function libscript_depends {
     param (
         [string[]]$Packages
@@ -181,6 +185,8 @@ function libscript_depends {
     }
 }
 
+# ## libscript_fetch
+# Alias wrapper for libscript_download.
 function libscript_fetch {
     libscript_download @args
 }

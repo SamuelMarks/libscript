@@ -3,6 +3,9 @@
 The `cloudinit` component provides a helper for generating `#cloud-config` YAML blocks, specifically
 for automating block volume mounting.
 
+> **Note**: This component is an adapter-only generator utility; it renders declarative cloud-init
+> templates and does not provide local `setup.sh`/`env.sh` binary installer lifecycles.
+
 ## Usage
 
 ```sh

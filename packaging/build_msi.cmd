@@ -214,7 +214,7 @@ if "%LICENSE_PATH%"=="" (
 :: Generate dynamically on the fly if needed
 set "TMP_BRANDING_DIR=%TEMP%\openedx_branding_%RANDOM%"
 if "%ICON_PATH%"=="" (
-    mkdir "%TMP_BRANDING_DIR%" 2>nul
+    if not exist "%TMP_BRANDING_DIR%" mkdir "%TMP_BRANDING_DIR%" 2>nul
     call "%LIBSCRIPT_ROOT_DIR%\packaging\generate_openedx_branding.cmd" --output-dir "%TMP_BRANDING_DIR%" >nul 2>nul
     if exist "%TMP_BRANDING_DIR%\openedx.ico" set "ICON_PATH=%TMP_BRANDING_DIR%\openedx.ico"
     if exist "%TMP_BRANDING_DIR%\openedx_banner_top.bmp" if "%BANNER_TOP_PATH%"=="" set "BANNER_TOP_PATH=%TMP_BRANDING_DIR%\openedx_banner_top.bmp"
@@ -250,9 +250,9 @@ setlocal DisableDelayedExpansion
     if not "%LICENSE_PATH%"=="" echo     ^<WixVariable Id="WixUILicenseRtf" Value="%LICENSE_PATH%" /^>
 
     echo     ^<Property Id="SETUP_MODE" Value="%SETUP_MODE%" Secure="yes" /^>
-    echo     ^<Property Id="LICENSE_ACCEPTED" Value="0" Secure="yes" /^>
+    echo     ^<Property Id="LICENSE_ACCEPTED" Value="1" Secure="yes" /^>
     echo     ^<Property Id="LAUNCH_BROWSER" Value="1" Secure="yes" /^>
-    echo     ^<Property Id="LAUNCH_STUDIO" Value="0" Secure="yes" /^>
+    echo     ^<Property Id="LAUNCH_STUDIO" Value="1" Secure="yes" /^>
 
     echo     ^<Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" /^>
     echo     ^<Property Id="DATAFOLDER" Value="%DATA_DIR%" Secure="yes" /^>
@@ -322,6 +322,12 @@ setlocal DisableDelayedExpansion
     echo     ^<Property Id="INSTALL_MEILISEARCH" Value="1" Secure="yes" /^>
     echo     ^<Property Id="INSTALL_LMS" Value="1" Secure="yes" /^>
     echo     ^<Property Id="INSTALL_CMS" Value="1" Secure="yes" /^>
+    echo     ^<Property Id="INSTALL_WORKERS" Value="1" Secure="yes" /^>
+    echo     ^<Property Id="IMPORT_DEMO_CONTENT" Value="0" Secure="yes" /^>
+    echo     ^<Property Id="INSTALL_MFES" Value="0" Secure="yes" /^>
+    echo     ^<Property Id="PROP_OPENEDX_THEME" Value="none" Secure="yes" /^>
+    echo     ^<Property Id="PROP_OPENEDX_THEME_REPO_URL" Secure="yes" /^>
+    echo     ^<Property Id="BACKUPFOLDER" Value="C:\ProgramData\OpenEdX\backups" Secure="yes" /^>
 
     echo     ^<Property Id="MsiHiddenProperties" Value="PROP_OPENEDX_ADMIN_PASSWORD;PROP_OPENEDX_SECRET_KEY;PROP_MYSQL_ROOT_PASSWORD;PROP_MYSQL_REMOTE_URL;PROP_REDIS_PASSWORD;PROP_REDIS_URL;PROP_MONGODB_URI;PROP_MEILISEARCH_MASTER_KEY;PROP_OPENEDX_REPO_AUTH_TOKEN" /^>
 
@@ -329,17 +335,27 @@ setlocal DisableDelayedExpansion
     echo       ^<Directory Id="ProgramFiles64Folder"^>
     echo         ^<Directory Id="INSTALLFOLDER" Name="OpenEdX" /^>
     echo       ^</Directory^>
+    echo       ^<Directory Id="ProgramMenuFolder"^>
+    echo         ^<Directory Id="OpenEdXProgramMenuFolder" Name="Open edX" /^>
+    echo       ^</Directory^>
+    echo       ^<Directory Id="DesktopFolder" Name="Desktop" /^>
     echo       ^<Directory Id="CommonAppDataFolder"^>
     echo         ^<Directory Id="COMPANYDATAFOLDER" Name="OpenEdX"^>
     echo           ^<Directory Id="DATAFOLDER" Name="data" /^>
     echo           ^<Directory Id="LOGSFOLDER" Name="logs" /^>
+    echo           ^<Directory Id="BACKUPFOLDER" Name="backups" /^>
     echo         ^</Directory^>
     echo       ^</Directory^>
     echo     ^</Directory^>
 
     echo     ^<CustomAction Id="CA_LaunchBrowser" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c start http://[PROP_LMS_HOST]:[PROP_LMS_PORT]" Return="asyncNoWait" /^>
     echo     ^<CustomAction Id="CA_LaunchStudio" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c start http://[PROP_CMS_HOST]:[PROP_CMS_PORT]" Return="asyncNoWait" /^>
-    echo     ^<CustomAction Id="InstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c libscript.cmd install stacks/cms/openedx --lms-port=[PROP_LMS_PORT] --cms-port=[PROP_CMS_PORT] --mysql-url=&quot;[PROP_MYSQL_REMOTE_URL]&quot; --redis-port=[PROP_REDIS_PORT] --redis-url=&quot;[PROP_REDIS_URL]&quot; --mongodb-uri=&quot;[PROP_MONGODB_URI]&quot; --repo=&quot;[PROP_OPENEDX_EDX_PLATFORM_REPOSITORY]&quot; --version=&quot;[PROP_OPENEDX_VERSION]&quot;" Execute="deferred" Return="ignore" Impersonate="no" /^>
+    echo     ^<CustomAction Id="InstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c libscript.cmd install stacks/cms/openedx --lms-port=[PROP_LMS_PORT] --cms-port=[PROP_CMS_PORT] --mysql-url=&quot;[PROP_MYSQL_REMOTE_URL]&quot; --redis-port=[PROP_REDIS_PORT] --redis-url=&quot;[PROP_REDIS_URL]&quot; --mongodb-uri=&quot;[PROP_MONGODB_URI]&quot; --repo=&quot;[PROP_OPENEDX_EDX_PLATFORM_REPOSITORY]&quot; --version=&quot;[PROP_OPENEDX_VERSION]&quot; --admin-user=&quot;[PROP_OPENEDX_ADMIN_USERNAME]&quot; --admin-password=&quot;[PROP_OPENEDX_ADMIN_PASSWORD]&quot; --admin-email=&quot;[PROP_OPENEDX_ADMIN_EMAIL]&quot; --backup-dir=&quot;[BACKUPFOLDER]&quot; --theme=&quot;[PROP_OPENEDX_THEME]&quot;" Execute="deferred" Return="ignore" Impersonate="no" /^>
+    echo     ^<CustomAction Id="InstallWorkersService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]workers.cmd&quot; start" Execute="deferred" Return="ignore" Impersonate="no" /^>
+    echo     ^<CustomAction Id="StopWorkersService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]workers.cmd&quot; stop" Execute="deferred" Return="ignore" Impersonate="no" /^>
+    echo     ^<CustomAction Id="ImportDemoContentAction" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]import_demo.cmd&quot; course &amp;&amp; &quot;[INSTALLFOLDER]import_demo.cmd&quot; libraries" Execute="deferred" Return="ignore" Impersonate="no" /^>
+    echo     ^<CustomAction Id="BuildMFEsAction" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]mfe.cmd&quot; build all &amp;&amp; &quot;[INSTALLFOLDER]mfe.cmd&quot; deploy all" Execute="deferred" Return="ignore" Impersonate="no" /^>
+    echo     ^<CustomAction Id="PostInstallHealthcheck" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]healthcheck.cmd&quot;" Execute="deferred" Return="ignore" Impersonate="no" /^>
     echo     ^<CustomAction Id="InstallMySQLService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c libscript.cmd install databases/mysql --port=[PROP_MYSQL_PORT]" Execute="deferred" Return="ignore" Impersonate="no" /^>
     echo     ^<CustomAction Id="InstallRedisService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c libscript.cmd install caches/redis --port=[PROP_REDIS_PORT]" Execute="deferred" Return="ignore" Impersonate="no" /^>
     echo     ^<CustomAction Id="UninstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c libscript.cmd uninstall stacks/cms/openedx [PURGE_openedx]" Execute="deferred" Return="ignore" Impersonate="no" /^>
@@ -361,19 +377,24 @@ setlocal DisableDelayedExpansion
     echo         ^</Control^>
     echo       ^</Dialog^>
 
-    echo       ^<Dialog Id="Dlg_License" Width="370" Height="270" Title="End User License Agreement"^>
+    echo       ^<Dialog Id="Dlg_License" Width="370" Height="270" Title="[ProductName] Setup"^>
     if not "%BANNER_TOP_PATH%"=="" (
         echo         ^<Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" Text="WixUIBannerBmp" /^>
         echo         ^<Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" /^>
     )
     echo         ^<Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" /^>
-    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="End User License Agreement" /^>
-    echo         ^<Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Please review license terms before proceeding." /^>
+    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="End-User License Agreement" /^>
+    echo         ^<Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Please read the following license agreement carefully." /^>
+    if not "%LICENSE_PATH%"=="" (
+        echo         ^<Control Id="AgreementText" Type="ScrollableText" X="20" Y="48" Width="330" Height="155" Sunken="yes" TabSkip="no"^>
+        echo           ^<Text SourceFile="%LICENSE_PATH%" /^>
+        echo         ^</Control^>
+    )
     echo         ^<Control Id="LicenseAcceptedCheckBox" Type="CheckBox" X="20" Y="208" Width="330" Height="18" Property="LICENSE_ACCEPTED" CheckBoxValue="1" Text="I accept the terms in the License Agreement" /^>
     echo         ^<Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back"^>
     echo           ^<Publish Event="NewDialog" Value="Dlg_Welcome"^>1^</Publish^>
     echo         ^</Control^>
-    echo         ^<Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Next"^>
+    echo         ^<Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="I Agree"^>
     echo           ^<Publish Event="NewDialog" Value="Dlg_SetupType"^>^<![CDATA[LICENSE_ACCEPTED="1"]]^>^</Publish^>
     echo         ^</Control^>
     echo         ^<Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel"^>
@@ -417,11 +438,14 @@ setlocal DisableDelayedExpansion
     echo         ^<Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Review required runtimes and configure optional services." /^>
     echo         ^<Control Id="Lbl_NonOptHeader" Type="Text" X="20" Y="48" Width="330" Height="14" NoPrefix="yes" Text="Non-Optional Components (always installed):" /^>
     echo         ^<Control Id="Lbl_NonOptList" Type="Text" X="28" Y="63" Width="320" Height="50" NoPrefix="yes" Text="- Python (Python 3.11+ runtime &amp; virtual environment)&#13;&#10;- Node.js (Node.js &amp; npm asset pipeline)&#13;&#10;- Meilisearch (Course search and catalog discovery engine)&#13;&#10;- MySQL (Relational database) &amp; Redis (Cache &amp; Celery broker)&#13;&#10;- MongoDB (Course document datastore)" /^>
-    echo         ^<Control Id="Lbl_OptHeader" Type="Text" X="20" Y="118" Width="330" Height="14" NoPrefix="yes" Text="Optional / Configurable Services:" /^>
-    echo         ^<Control Id="Chk_LMS" Type="CheckBox" X="28" Y="134" Width="320" Height="15" Property="INSTALL_LMS" CheckBoxValue="1" Text="Open edX LMS Core Service (Port 8000)" /^>
-    echo         ^<Control Id="Chk_CMS" Type="CheckBox" X="28" Y="150" Width="320" Height="15" Property="INSTALL_CMS" CheckBoxValue="1" Text="Open edX Studio / CMS Course Authoring (Port 8001)" /^>
-    echo         ^<Control Id="Chk_MySQL" Type="CheckBox" X="28" Y="166" Width="320" Height="15" Property="INSTALL_MYSQL" CheckBoxValue="1" Text="Install Local MySQL Service (uncheck if using DBaaS)" /^>
-    echo         ^<Control Id="Chk_Redis" Type="CheckBox" X="28" Y="182" Width="320" Height="15" Property="INSTALL_REDIS" CheckBoxValue="1" Text="Install Local Redis Service (uncheck if using Cloud Redis)" /^>
+    echo         ^<Control Id="Lbl_OptHeader" Type="Text" X="20" Y="114" Width="330" Height="14" NoPrefix="yes" Text="Optional / Configurable Services:" /^>
+    echo         ^<Control Id="Chk_LMS" Type="CheckBox" X="28" Y="128" Width="320" Height="14" Property="INSTALL_LMS" CheckBoxValue="1" Text="Open edX LMS Core Service (Port 8000)" /^>
+    echo         ^<Control Id="Chk_CMS" Type="CheckBox" X="28" Y="142" Width="320" Height="14" Property="INSTALL_CMS" CheckBoxValue="1" Text="Open edX Studio / CMS Course Authoring (Port 8001)" /^>
+    echo         ^<Control Id="Chk_MySQL" Type="CheckBox" X="28" Y="156" Width="320" Height="14" Property="INSTALL_MYSQL" CheckBoxValue="1" Text="Install Local MySQL Service (uncheck if using DBaaS)" /^>
+    echo         ^<Control Id="Chk_Redis" Type="CheckBox" X="28" Y="170" Width="320" Height="14" Property="INSTALL_REDIS" CheckBoxValue="1" Text="Install Local Redis Service (uncheck if using Cloud Redis)" /^>
+    echo         ^<Control Id="Chk_Workers" Type="CheckBox" X="28" Y="184" Width="320" Height="14" Property="INSTALL_WORKERS" CheckBoxValue="1" Text="Launch Celery Background Workers &amp; Scheduler" /^>
+    echo         ^<Control Id="Chk_Demo" Type="CheckBox" X="28" Y="198" Width="320" Height="14" Property="IMPORT_DEMO_CONTENT" CheckBoxValue="1" Text="Import edX Demo Course &amp; Content Libraries" /^>
+    echo         ^<Control Id="Chk_MFEs" Type="CheckBox" X="28" Y="212" Width="320" Height="14" Property="INSTALL_MFES" CheckBoxValue="1" Text="Build and Deploy Micro-Frontends (Learning, Authn, Account)" /^>
     echo         ^<Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back"^>
     echo           ^<Publish Event="NewDialog" Value="Dlg_SetupType"^>1^</Publish^>
     echo         ^</Control^>
@@ -440,23 +464,29 @@ setlocal DisableDelayedExpansion
     )
     echo         ^<Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" /^>
     echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="Destination Folders" /^>
-    echo         ^<Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Select target locations for binaries, databases, and logs." /^>
-    echo         ^<Control Id="Lbl_AppFolder" Type="Text" X="20" Y="50" Width="330" Height="14" NoPrefix="yes" Text="Application Installation Folder:" /^>
-    echo         ^<Control Id="Txt_AppFolder" Type="PathEdit" X="20" Y="65" Width="260" Height="18" Property="INSTALLFOLDER" /^>
-    echo         ^<Control Id="Btn_BrowseApp" Type="PushButton" X="285" Y="65" Width="65" Height="18" Text="Browse..."^>
+    echo         ^<Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Select target locations for binaries, databases, logs, and backups." /^>
+    echo         ^<Control Id="Lbl_AppFolder" Type="Text" X="20" Y="48" Width="330" Height="13" NoPrefix="yes" Text="Application Installation Folder:" /^>
+    echo         ^<Control Id="Txt_AppFolder" Type="PathEdit" X="20" Y="61" Width="260" Height="17" Property="INSTALLFOLDER" /^>
+    echo         ^<Control Id="Btn_BrowseApp" Type="PushButton" X="285" Y="61" Width="65" Height="17" Text="Browse..."^>
     echo           ^<Publish Property="_BrowseProperty" Value="INSTALLFOLDER"^>1^</Publish^>
     echo           ^<Publish Event="SpawnDialog" Value="BrowseDlg"^>1^</Publish^>
     echo         ^</Control^>
-    echo         ^<Control Id="Lbl_DataFolder" Type="Text" X="20" Y="95" Width="330" Height="14" NoPrefix="yes" Text="Databases and Media Storage Folder:" /^>
-    echo         ^<Control Id="Txt_DataFolder" Type="PathEdit" X="20" Y="110" Width="260" Height="18" Property="DATAFOLDER" /^>
-    echo         ^<Control Id="Btn_BrowseData" Type="PushButton" X="285" Y="110" Width="65" Height="18" Text="Browse..."^>
+    echo         ^<Control Id="Lbl_DataFolder" Type="Text" X="20" Y="80" Width="330" Height="13" NoPrefix="yes" Text="Databases and Media Storage Folder:" /^>
+    echo         ^<Control Id="Txt_DataFolder" Type="PathEdit" X="20" Y="93" Width="260" Height="17" Property="DATAFOLDER" /^>
+    echo         ^<Control Id="Btn_BrowseData" Type="PushButton" X="285" Y="93" Width="65" Height="17" Text="Browse..."^>
     echo           ^<Publish Property="_BrowseProperty" Value="DATAFOLDER"^>1^</Publish^>
     echo           ^<Publish Event="SpawnDialog" Value="BrowseDlg"^>1^</Publish^>
     echo         ^</Control^>
-    echo         ^<Control Id="Lbl_LogsFolder" Type="Text" X="20" Y="140" Width="330" Height="14" NoPrefix="yes" Text="Log Files Folder:" /^>
-    echo         ^<Control Id="Txt_LogsFolder" Type="PathEdit" X="20" Y="155" Width="260" Height="18" Property="LOGSFOLDER" /^>
-    echo         ^<Control Id="Btn_BrowseLogs" Type="PushButton" X="285" Y="155" Width="65" Height="18" Text="Browse..."^>
+    echo         ^<Control Id="Lbl_LogsFolder" Type="Text" X="20" Y="112" Width="330" Height="13" NoPrefix="yes" Text="Log Files Folder:" /^>
+    echo         ^<Control Id="Txt_LogsFolder" Type="PathEdit" X="20" Y="125" Width="260" Height="17" Property="LOGSFOLDER" /^>
+    echo         ^<Control Id="Btn_BrowseLogs" Type="PushButton" X="285" Y="125" Width="65" Height="17" Text="Browse..."^>
     echo           ^<Publish Property="_BrowseProperty" Value="LOGSFOLDER"^>1^</Publish^>
+    echo           ^<Publish Event="SpawnDialog" Value="BrowseDlg"^>1^</Publish^>
+    echo         ^</Control^>
+    echo         ^<Control Id="Lbl_BackupFolder" Type="Text" X="20" Y="144" Width="330" Height="13" NoPrefix="yes" Text="Automated Snapshots &amp; Backups Folder:" /^>
+    echo         ^<Control Id="Txt_BackupFolder" Type="PathEdit" X="20" Y="157" Width="260" Height="17" Property="BACKUPFOLDER" /^>
+    echo         ^<Control Id="Btn_BrowseBackup" Type="PushButton" X="285" Y="157" Width="65" Height="17" Text="Browse..."^>
+    echo           ^<Publish Property="_BrowseProperty" Value="BACKUPFOLDER"^>1^</Publish^>
     echo           ^<Publish Event="SpawnDialog" Value="BrowseDlg"^>1^</Publish^>
     echo         ^</Control^>
     echo         ^<Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back"^>
@@ -550,7 +580,10 @@ setlocal DisableDelayedExpansion
 
     echo         ^<Control Id="Lbl_AdminEmail" Type="Text" X="20" Y="130" Width="300" Height="15" Text="Superuser Email Address:" /^>
     echo         ^<Control Id="Txt_AdminEmail" Type="Edit" X="20" Y="145" Width="300" Height="18" Property="PROP_OPENEDX_ADMIN_EMAIL" /^>
-
+    echo         ^<Control Id="Lbl_Theme" Type="Text" X="20" Y="170" Width="150" Height="15" Text="Theme Name (or 'none'):" /^>
+    echo         ^<Control Id="Txt_Theme" Type="Edit" X="20" Y="185" Width="140" Height="18" Property="PROP_OPENEDX_THEME" /^>
+    echo         ^<Control Id="Lbl_ThemeUrl" Type="Text" X="180" Y="170" Width="150" Height="15" Text="Custom Theme Git URL:" /^>
+    echo         ^<Control Id="Txt_ThemeUrl" Type="Edit" X="180" Y="185" Width="170" Height="18" Property="PROP_OPENEDX_THEME_REPO_URL" /^>
     echo         ^<Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back"^>
     echo           ^<Publish Event="NewDialog" Value="Dlg_OpenEdX_SourceRepo"^>1^</Publish^>
     echo         ^</Control^>
@@ -638,7 +671,10 @@ setlocal DisableDelayedExpansion
     echo         ^<Control Id="CompRedis" Type="Text" X="28" Y="120" Width="320" Height="13" NoPrefix="yes" Text="- redis (In-memory caching and Celery asynchronous task broker)" /^>
     echo         ^<Control Id="CompMongo" Type="Text" X="28" Y="134" Width="320" Height="13" NoPrefix="yes" Text="- mongodb (Document datastore for courseware modules)" /^>
     echo         ^<Control Id="CompLMS" Type="Text" X="28" Y="148" Width="320" Height="13" NoPrefix="yes" Text="- openedx (Open edX LMS on port [PROP_LMS_PORT], Studio on port [PROP_CMS_PORT])" /^>
-    echo         ^<Control Id="Instructions" Type="Text" X="20" Y="168" Width="330" Height="24" Text="Click Install to begin installation. If you want to review or change any settings, click Back." /^>
+    echo         ^<Control Id="CompWorkers" Type="Text" X="28" Y="162" Width="320" Height="13" NoPrefix="yes" Text="- workers (Celery asynchronous task workers &amp; beat scheduler)" /^>
+    echo         ^<Control Id="CompDemo" Type="Text" X="28" Y="176" Width="320" Height="13" NoPrefix="yes" Text="- content (Demo courseware and content libraries catalog)" /^>
+    echo         ^<Control Id="CompMFEs" Type="Text" X="28" Y="190" Width="320" Height="13" NoPrefix="yes" Text="- mfes (Micro-Frontends: Learning, Authn, Account)" /^>
+    echo         ^<Control Id="Instructions" Type="Text" X="20" Y="208" Width="330" Height="24" Text="Click Install to begin installation. If you want to review or change any settings, click Back." /^>
     echo         ^<Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back"^>
     echo           ^<Publish Event="NewDialog" Value="Dlg_SetupType"^>^<![CDATA[SETUP_MODE="Simple"]]^>^</Publish^>
     echo           ^<Publish Event="NewDialog" Value="Dlg_OpenEdX_CacheSearch"^>^<![CDATA[SETUP_MODE="Advanced"]]^>^</Publish^>
@@ -691,6 +727,11 @@ setlocal DisableDelayedExpansion
     echo       ^<Custom Action="InstallMySQLService" Before="InstallOpenEdXService"^>^<![CDATA[NOT Installed AND INSTALL_MYSQL="1" AND NOT PROP_MYSQL_REMOTE_URL]]^>^</Custom^>
     echo       ^<Custom Action="InstallRedisService" Before="InstallOpenEdXService"^>^<![CDATA[NOT Installed AND INSTALL_REDIS="1" AND NOT PROP_REDIS_URL]]^>^</Custom^>
     echo       ^<Custom Action="InstallOpenEdXService" Before="InstallFinalize"^>^<![CDATA[NOT Installed AND INSTALL_LMS="1"]]^>^</Custom^>
+    echo       ^<Custom Action="InstallWorkersService" After="InstallOpenEdXService"^>^<![CDATA[NOT Installed AND INSTALL_WORKERS="1"]]^>^</Custom^>
+    echo       ^<Custom Action="ImportDemoContentAction" After="InstallOpenEdXService"^>^<![CDATA[NOT Installed AND IMPORT_DEMO_CONTENT="1"]]^>^</Custom^>
+    echo       ^<Custom Action="BuildMFEsAction" After="InstallOpenEdXService"^>^<![CDATA[NOT Installed AND INSTALL_MFES="1"]]^>^</Custom^>
+    echo       ^<Custom Action="PostInstallHealthcheck" After="InstallOpenEdXService"^>^<![CDATA[NOT Installed]]^>^</Custom^>
+    echo       ^<Custom Action="StopWorkersService" Before="UninstallOpenEdXService"^>^<![CDATA[REMOVE="ALL"]]^>^</Custom^>
     echo       ^<Custom Action="UninstallOpenEdXService" Before="RemoveFiles"^>REMOVE="ALL"^</Custom^>
     echo     ^</InstallExecuteSequence^>
 
@@ -698,13 +739,73 @@ setlocal DisableDelayedExpansion
     echo       ^<ComponentGroupRef Id="ProductComponents" /^>
     echo       ^<ComponentRef Id="CoursewareDataStore" /^>
     echo       ^<ComponentRef Id="CoursewareLogStore" /^>
+    echo       ^<ComponentRef Id="CoursewareBackupStore" /^>
+    echo       ^<ComponentRef Id="ApplicationShortcuts" /^>
     echo     ^</Feature^>
     echo   ^</Product^>
 
     echo   ^<Fragment^>
     echo     ^<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER"^>
-    echo       ^<Component Id="OpenEdXManifest" Guid="E2A89C15-99BD-4720-A0E8-A97A2E504F63"^>
-    echo         ^<File Id="ManifestJson" Source="stacks\cms\openedx\manifest.json" KeyPath="yes" /^>
+    echo       ^<Component Id="AppManifestComponent" Guid="E2A89C15-99BD-4720-A0E8-A97A2E504F63"^>
+    echo         ^<File Id="ManifestFile" Source="stacks\cms\openedx\manifest.json" KeyPath="yes" /^>
+    echo       ^</Component^>
+    echo       ^<Component Id="VarsSchemaComponent" Guid="D1A72951-86E3-4E61-A79B-7D8C430931B5"^>
+    echo         ^<File Id="VarsSchemaFile" Source="stacks\cms\openedx\vars.schema.json" KeyPath="yes" /^>
+    echo       ^</Component^>
+    echo       ^<Component Id="PackagingJsonComponent" Guid="C4A82110-5321-4FA6-9B3B-8D7E6512A098"^>
+    echo         ^<File Id="PackagingJsonFile" Source="stacks\cms\openedx\packaging.json" KeyPath="yes" /^>
+    echo       ^</Component^>
+    echo       ^<Component Id="CliScriptComponent" Guid="B35F9271-2B4A-48DC-8812-3D7C51094E1A"^>
+    echo         ^<File Id="CliCmdFile" Source="stacks\cms\openedx\cli.cmd" KeyPath="yes" /^>
+    echo         ^<File Id="CliShFile" Source="stacks\cms\openedx\cli.sh" /^>
+    echo       ^</Component^>
+    echo       ^<Component Id="UserScriptComponent" Guid="A91283F1-15D2-46A9-81FE-2B45CD98103F"^>
+    echo         ^<File Id="UserCmdFile" Source="stacks\cms\openedx\user.cmd" KeyPath="yes" /^>
+    echo         ^<File Id="UserShFile" Source="stacks\cms\openedx\user.sh" /^>
+    echo       ^</Component^>
+    echo       ^<Component Id="ImportDemoScriptComponent" Guid="87123A0B-4321-48C1-871B-9430CD7812E5"^>
+    echo         ^<File Id="ImportDemoCmdFile" Source="stacks\cms\openedx\import_demo.cmd" KeyPath="yes" /^>
+    echo         ^<File Id="ImportDemoShFile" Source="stacks\cms\openedx\import_demo.sh" /^>
+    echo       ^</Component^>
+    echo       ^<Component Id="DbShellScriptComponent" Guid="521A79B2-9F12-4C18-91AA-56193BF43109"^>
+    echo         ^<File Id="DbShellCmdFile" Source="stacks\cms\openedx\dbshell.cmd" KeyPath="yes" /^>
+    echo         ^<File Id="DbShellShFile" Source="stacks\cms\openedx\dbshell.sh" /^>
+    echo       ^</Component^>
+    echo       ^<Component Id="HealthcheckScriptComponent" Guid="3190BCA1-71E5-4890-85A2-671239EF1045"^>
+    echo         ^<File Id="HealthcheckCmdFile" Source="stacks\cms\openedx\healthcheck.cmd" KeyPath="yes" /^>
+    echo         ^<File Id="HealthcheckShFile" Source="stacks\cms\openedx\healthcheck.sh" /^>
+    echo       ^</Component^>
+    echo       ^<Component Id="ConfigScriptComponent" Guid="781A3290-E5A1-4F29-B109-873429185CA2"^>
+    echo         ^<File Id="ConfigCmdFile" Source="stacks\cms\openedx\config.cmd" KeyPath="yes" /^>
+    echo         ^<File Id="ConfigShFile" Source="stacks\cms\openedx\config.sh" /^>
+    echo       ^</Component^>
+    echo       ^<Component Id="BackupScriptComponent" Guid="91823CA5-B410-4821-A951-871295A642B1"^>
+    echo         ^<File Id="BackupCmdFile" Source="stacks\cms\openedx\backup.cmd" KeyPath="yes" /^>
+    echo         ^<File Id="BackupShFile" Source="stacks\cms\openedx\backup.sh" /^>
+    echo       ^</Component^>
+    echo       ^<Component Id="RestoreScriptComponent" Guid="65109AB3-7182-4C91-A281-541982736AE4"^>
+    echo         ^<File Id="RestoreCmdFile" Source="stacks\cms\openedx\restore.cmd" KeyPath="yes" /^>
+    echo         ^<File Id="RestoreShFile" Source="stacks\cms\openedx\restore.sh" /^>
+    echo       ^</Component^>
+    echo       ^<Component Id="WorkersScriptComponent" Guid="418293B7-A619-4F52-8719-741982365BAC"^>
+    echo         ^<File Id="WorkersCmdFile" Source="stacks\cms\openedx\workers.cmd" KeyPath="yes" /^>
+    echo         ^<File Id="WorkersShFile" Source="stacks\cms\openedx\workers.sh" /^>
+    echo       ^</Component^>
+    echo       ^<Component Id="ThemeScriptComponent" Guid="27189A45-C918-42A9-9812-651928473ACB"^>
+    echo         ^<File Id="ThemeCmdFile" Source="stacks\cms\openedx\theme.cmd" KeyPath="yes" /^>
+    echo         ^<File Id="ThemeShFile" Source="stacks\cms\openedx\theme.sh" /^>
+    echo       ^</Component^>
+    echo       ^<Component Id="XBlockScriptComponent" Guid="19283746-5A6B-4C8D-9E0F-123456789ABC"^>
+    echo         ^<File Id="XBlockCmdFile" Source="stacks\cms\openedx\xblock.cmd" KeyPath="yes" /^>
+    echo         ^<File Id="XBlockShFile" Source="stacks\cms\openedx\xblock.sh" /^>
+    echo       ^</Component^>
+    echo       ^<Component Id="UpgradeScriptComponent" Guid="38472910-B1C2-4D3E-8F4A-5678901234EF"^>
+    echo         ^<File Id="UpgradeCmdFile" Source="stacks\cms\openedx\upgrade.cmd" KeyPath="yes" /^>
+    echo         ^<File Id="UpgradeShFile" Source="stacks\cms\openedx\upgrade.sh" /^>
+    echo       ^</Component^>
+    echo       ^<Component Id="MfeScriptComponent" Guid="59102837-A2B3-4C4D-8E5F-6789012345FA"^>
+    echo         ^<File Id="MfeCmdFile" Source="stacks\cms\openedx\mfe.cmd" KeyPath="yes" /^>
+    echo         ^<File Id="MfeShFile" Source="stacks\cms\openedx\mfe.sh" /^>
     echo       ^</Component^>
     echo     ^</ComponentGroup^>
     echo     ^<Component Id="CoursewareDataStore" Directory="DATAFOLDER" Guid="7F28A541-11C3-4E80-990A-46D91A883C12" Permanent="yes" NeverOverwrite="yes"^>
@@ -712,6 +813,20 @@ setlocal DisableDelayedExpansion
     echo     ^</Component^>
     echo     ^<Component Id="CoursewareLogStore" Directory="LOGSFOLDER" Guid="3E4A1521-884A-49A3-A65B-64771C5091E2" Permanent="yes" NeverOverwrite="yes"^>
     echo       ^<CreateFolder /^>
+    echo     ^</Component^>
+    echo     ^<Component Id="CoursewareBackupStore" Directory="BACKUPFOLDER" Guid="98127364-5A4B-4C3D-8E2F-1029384756BA" Permanent="yes" NeverOverwrite="yes"^>
+    echo       ^<CreateFolder /^>
+    echo     ^</Component^>
+    echo     ^<Component Id="ApplicationShortcuts" Directory="OpenEdXProgramMenuFolder" Guid="718293A4-B5C6-4D7E-8F90-123456789ABC"^>
+    echo       ^<Shortcut Id="ShortcutCli" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]cli.cmd" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
+    echo       ^<Shortcut Id="ShortcutHealth" Name="Open edX Healthcheck" Description="Open edX Diagnostics Probe" Target="[INSTALLFOLDER]healthcheck.cmd" WorkingDirectory="INSTALLFOLDER" /^>
+    echo       ^<Shortcut Id="ShortcutDbShell" Name="Open edX Database Console" Description="Open edX MySQL Database Shell" Target="[INSTALLFOLDER]dbshell.cmd" Arguments="mysql" WorkingDirectory="INSTALLFOLDER" /^>
+    echo       ^<Shortcut Id="ShortcutBackup" Name="Open edX Backup and Restore" Description="Open edX Backup Tool" Target="[INSTALLFOLDER]backup.cmd" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
+    echo       ^<Shortcut Id="DesktopShortcutCli" Directory="DesktopFolder" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]cli.cmd" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
+    echo       ^<Shortcut Id="DesktopShortcutLms" Directory="DesktopFolder" Name="Open edX LMS" Description="Open edX Learning Management System" Target="[INSTALLFOLDER]cli.cmd" Arguments="lms" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
+    echo       ^<Shortcut Id="DesktopShortcutStudio" Directory="DesktopFolder" Name="Open edX Studio" Description="Open edX Studio Course Authoring" Target="[INSTALLFOLDER]cli.cmd" Arguments="studio" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
+    echo       ^<RemoveFolder Id="CleanUpShortCutDir" Directory="OpenEdXProgramMenuFolder" On="uninstall" /^>
+    echo       ^<RegistryValue Root="HKCU" Key="Software\LibScript\OpenEdX" Name="installed" Type="integer" Value="1" KeyPath="yes" /^>
     echo     ^</Component^>
     echo   ^</Fragment^>
     echo ^</Wix^>

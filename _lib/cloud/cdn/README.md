@@ -3,6 +3,10 @@
 The `cdn` component provides a unified multicloud interface for managing content delivery networks
 and edge caching.
 
+> **Note**: This component is an adapter-only cloud wrapper; it interacts directly with cloud APIs
+> (AWS CloudFront, GCP Cloud CDN, Azure CDN) and does not provide local `setup.sh`/`env.sh` binary
+> installer lifecycles.
+
 ## Usage
 
 ```sh

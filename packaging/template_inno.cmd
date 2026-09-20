@@ -3,6 +3,7 @@
 ::
 :: ## Overview
 :: Template file for Inno Setup installer generation on Windows.
+:: Supports tasks, icons, post-install service setup, and uninstallation hooks.
 :: 
 :: ## Usage
 :: This file is processed during the build phase and not executed directly.
@@ -40,6 +41,12 @@ if not "%BANNER_TOP_PATH%"=="" echo WizardSmallImageFile=%BANNER_TOP_PATH%
 if not "%LICENSE_PATH%"=="" echo LicenseFile=%LICENSE_PATH%
 
 echo.
+echo [Tasks]
+echo Name: "workers"; Description: "Launch Celery background workers and beat scheduler"; Flags: unchecked
+echo Name: "demo_content"; Description: "Import edX demo course and content libraries"; Flags: unchecked
+echo Name: "mfes"; Description: "Build and deploy Micro-Frontends (Learning, Authn, Account)"; Flags: unchecked
+
+echo.
 echo [Files]
 if defined LIBSCRIPT_ROOT_DIR (
     echo Source: "%LIBSCRIPT_ROOT_DIR%\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -48,6 +55,21 @@ if defined LIBSCRIPT_ROOT_DIR (
 )
 
 echo.
+echo [Icons]
+echo Name: "{autoprograms}\%APP_NAME%\%APP_NAME% Management Console"; Filename: "{app}\stacks\cms\openedx\cli.cmd"
+echo Name: "{autoprograms}\%APP_NAME%\%APP_NAME% Healthcheck"; Filename: "{app}\stacks\cms\openedx\healthcheck.cmd"
+echo Name: "{autoprograms}\%APP_NAME%\%APP_NAME% Database Console"; Filename: "{app}\stacks\cms\openedx\dbshell.cmd"; Parameters: "mysql"
+echo Name: "{autoprograms}\%APP_NAME%\%APP_NAME% Backup and Restore"; Filename: "{app}\stacks\cms\openedx\backup.cmd"
+
+echo.
 echo [Run]
 echo Filename: "{app}\libscript.cmd"; Parameters: "install-service"; Flags: runhidden
+echo Filename: "cmd.exe"; Parameters: "/c ""{app}\stacks\cms\openedx\workers.cmd"" start"; Tasks: workers; Flags: runhidden
+echo Filename: "cmd.exe"; Parameters: "/c ""{app}\stacks\cms\openedx\import_demo.cmd"" course"; Tasks: demo_content; Flags: runhidden
+echo Filename: "cmd.exe"; Parameters: "/c ""{app}\stacks\cms\openedx\mfe.cmd"" build all && ""{app}\stacks\cms\openedx\mfe.cmd"" deploy all"; Tasks: mfes; Flags: runhidden
+echo Filename: "cmd.exe"; Parameters: "/c ""{app}\stacks\cms\openedx\healthcheck.cmd"""; Flags: runhidden
+
+echo.
+echo [UninstallRun]
+echo Filename: "cmd.exe"; Parameters: "/c ""{app}\stacks\cms\openedx\workers.cmd"" stop"; Flags: runhidden
 exit /b 0

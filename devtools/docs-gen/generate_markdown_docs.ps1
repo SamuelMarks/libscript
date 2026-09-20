@@ -42,6 +42,7 @@ $readmes = @($libReadmes) + @($stackReadmes)
 
 $baseSchema = Join-Path $rootDir '_lib\_common\base_vars.schema.json'
 
+$modifiedReadmes = @()
 foreach ($readme in $readmes) {
     $dir = $readme.DirectoryName
     $schema = Join-Path $dir 'vars.schema.json'
@@ -92,14 +93,18 @@ foreach ($readme in $readmes) {
     $varsBlock = ($varsLines -join "`n") + "`n"
     $platBlock = ($platLines -join "`n") + "`n"
 
-    $content = Get-Content $readme.FullName -Raw
-    $content = $content -replace '(?is)(<!-- BEGIN_VARS -->).*?(<!-- END_VARS -->)', "`$1`n$varsBlock`$2"
+    $oldContent = Get-Content $readme.FullName -Raw
+    $content = $oldContent -replace '(?is)(<!-- BEGIN_VARS -->).*?(<!-- END_VARS -->)', "`$1`n$varsBlock`$2"
     $content = $content -replace '(?is)(<!-- BEGIN_PLATFORMS -->).*?(<!-- END_PLATFORMS -->)', "`$1`n$platBlock`$2"
 
-    [IO.File]::WriteAllText($readme.FullName, $content, $utf8NoBom)
-    if (Get-Command npx -ErrorAction SilentlyContinue) {
-        & npx prettier --write $readme.FullName >$null 2>&1
+    if ($content -ne $oldContent) {
+        [IO.File]::WriteAllText($readme.FullName, $content, $utf8NoBom)
+        $modifiedReadmes += $readme.FullName
     }
+}
+
+if ($modifiedReadmes.Count -gt 0 -and (Get-Command npx -ErrorAction SilentlyContinue)) {
+    & npx --yes prettier --write $modifiedReadmes >$null 2>&1
 }
 
 Write-Host "Done."

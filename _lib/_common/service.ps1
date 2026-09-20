@@ -21,6 +21,8 @@ if (-not (Get-Command log_info -ErrorAction SilentlyContinue)) {
     . (Join-Path $PSScriptRoot "log.ps1")
 }
 
+# ## libscript_service
+# Manages Windows service lifecycles (start, stop, restart, status) via NSSM, Windows Services, or process tracking.
 function libscript_service {
     param (
         [string]$Action,
@@ -96,6 +98,8 @@ function libscript_service {
     }
 }
 
+# ## libscript_check_health
+# Verifies service health using component health scripts, JSON schemas, or Windows service status.
 function libscript_check_health {
     param (
         [string]$ServiceName

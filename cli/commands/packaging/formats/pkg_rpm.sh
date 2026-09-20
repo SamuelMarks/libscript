@@ -64,7 +64,15 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
         printf '%s\n' "touch %{buildroot}/var/LIB/libscript/.${pkg_name}_installed"
         printf '%s\n' "%post"
         printf '%s\n' "if command -v libscript.sh >/dev/null; then libscript.sh install-service $pkg $ver; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh install-service $pkg $ver; fi"
+        if [ "$pkg" = "openedx" ]; then
+          printf '%s\n' "mkdir -p /usr/local/bin && ln -sf /opt/libscript/stacks/cms/openedx/cli.sh /usr/local/bin/openedx"
+          printf '%s\n' "/opt/libscript/stacks/cms/openedx/healthcheck.sh || true"
+        fi
         printf '%s\n' "%preun"
+        if [ "$pkg" = "openedx" ]; then
+          printf '%s\n' "/opt/libscript/stacks/cms/openedx/workers.sh stop 2>/dev/null || true"
+          printf '%s\n' "rm -f /usr/local/bin/openedx"
+        fi
         printf '%s\n' "if command -v libscript.sh >/dev/null; then libscript.sh uninstall $pkg --purge-data; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh uninstall $pkg --purge-data; fi"
         printf '%s\n' "%files"
         printf '%s\n' "/var/LIB/libscript/.${pkg_name}_installed"

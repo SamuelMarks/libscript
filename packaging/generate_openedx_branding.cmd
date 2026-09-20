@@ -38,9 +38,9 @@ if /I "%~1"=="/?" goto :help
 if /I "%~1"=="-?" goto :help
 goto :main
 
-:help
 :: ## help
 :: Prints the help message and exits.
+:help
 echo Usage: %~nx0 [--output-dir DIR]
 echo Generates official Open edX branded assets for Windows Installer.
 exit /b 0

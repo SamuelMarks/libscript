@@ -79,6 +79,33 @@ EOF2
       done
 
       printf '%s\n' ""
+      printf '[Tasks]\n'
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
+        pkg=$1; ver=$2; shift 2
+        if [ "$pkg" = "openedx" ]; then
+          printf '%s\n' "Name: \"workers\"; Description: \"Launch Celery background workers and beat scheduler\"; Components: openedx; Flags: unchecked"
+          printf '%s\n' "Name: \"demo_content\"; Description: \"Import edX demo course and content libraries\"; Components: openedx; Flags: unchecked"
+          printf '%s\n' "Name: \"mfes\"; Description: \"Build and deploy Micro-Frontends (Learning, Authn, Account)\"; Components: openedx; Flags: unchecked"
+        fi
+      done
+
+      printf '%s\n' ""
+      printf '[Icons]\n'
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
+        pkg=$1; ver=$2; shift 2
+        if [ "$pkg" = "openedx" ]; then
+          printf '%s\n' "Name: \"{autoprograms}\\Open edX\\Open edX Management Console\"; Filename: \"{app}\\stacks\\cms\\openedx\\cli.cmd\"; Components: openedx"
+          printf '%s\n' "Name: \"{autoprograms}\\Open edX\\Open edX Healthcheck\"; Filename: \"{app}\\stacks\\cms\\openedx\\healthcheck.cmd\"; Components: openedx"
+          printf '%s\n' "Name: \"{autoprograms}\\Open edX\\Open edX Database Console\"; Filename: \"{app}\\stacks\\cms\\openedx\\dbshell.cmd\"; Parameters: \"mysql\"; Components: openedx"
+          printf '%s\n' "Name: \"{autoprograms}\\Open edX\\Open edX Backup and Restore\"; Filename: \"{app}\\stacks\\cms\\openedx\\backup.cmd\"; Components: openedx"
+        fi
+      done
+
+      printf '%s\n' ""
       printf '%s\n' "[Code]"
       printf '%s\n' "var"
 
@@ -86,7 +113,7 @@ EOF2
       set -- $deps_list
       while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
-        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" "$LIBSCRIPT_ROOT_DIR/stacks" -name "vars.schema.json" 2>/dev/null | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
           if [ -n "$vars_json" ]; then
@@ -104,7 +131,7 @@ EOF2
       set -- $deps_list
       while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
-        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" "$LIBSCRIPT_ROOT_DIR/stacks" -name "vars.schema.json" 2>/dev/null | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
           if [ -n "$vars_json" ]; then
@@ -134,7 +161,7 @@ EOF2
       set -- $deps_list
       while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
-        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" "$LIBSCRIPT_ROOT_DIR/stacks" -name "vars.schema.json" 2>/dev/null | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
           if [ -n "$(jq -c '.properties' "$schema_file")" ]; then
             printf '%s\n' "  if (PageID = Page_$pkg.ID) and not IsComponentSelected('$pkg') then"
@@ -153,7 +180,7 @@ EOF2
       set -- $deps_list
       while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
-        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" "$LIBSCRIPT_ROOT_DIR/stacks" -name "vars.schema.json" 2>/dev/null | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
           if [ -n "$vars_json" ]; then
@@ -202,7 +229,7 @@ EOF2
       set -- $deps_list
       while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
-        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" "$LIBSCRIPT_ROOT_DIR/stacks" -name "vars.schema.json" 2>/dev/null | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
           if [ -n "$vars_json" ]; then
@@ -225,7 +252,7 @@ EOF2
       while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
         run_params="/c libscript.cmd install-service $pkg $ver"
-        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
+        schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" "$LIBSCRIPT_ROOT_DIR/stacks" -name "vars.schema.json" 2>/dev/null | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -r '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | .key' "$schema_file")
           if [ -n "$vars_json" ]; then
@@ -234,5 +261,22 @@ EOF2
           fi
         fi
         printf '%s\n' "Filename: \"cmd.exe\"; Parameters: \"$run_params\"; Components: $pkg; Flags: runhidden"
+        if [ "$pkg" = "openedx" ]; then
+          printf '%s\n' "Filename: \"cmd.exe\"; Parameters: \"/c \"\"{app}\\stacks\\cms\\openedx\\workers.cmd\"\" start\"; Tasks: workers; Flags: runhidden"
+          printf '%s\n' "Filename: \"cmd.exe\"; Parameters: \"/c \"\"{app}\\stacks\\cms\\openedx\\import_demo.cmd\"\" course\"; Tasks: demo_content; Flags: runhidden"
+          printf '%s\n' "Filename: \"cmd.exe\"; Parameters: \"/c \"\"{app}\\stacks\\cms\\openedx\\mfe.cmd\"\" build all && \"\"{app}\\stacks\\cms\\openedx\\mfe.cmd\"\" deploy all\"; Tasks: mfes; Flags: runhidden"
+          printf '%s\n' "Filename: \"cmd.exe\"; Parameters: \"/c \"\"{app}\\stacks\\cms\\openedx\\healthcheck.cmd\"\"\"; Components: openedx; Flags: runhidden"
+        fi
+      done
+
+      printf '%s\n' ""
+      printf '%s\n' "[UninstallRun]"
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
+        pkg=$1; ver=$2; shift 2
+        if [ "$pkg" = "openedx" ]; then
+          printf '%s\n' "Filename: \"cmd.exe\"; Parameters: \"/c \"\"{app}\\stacks\\cms\\openedx\\workers.cmd\"\" stop\"; Components: openedx; Flags: runhidden"
+        fi
       done
       exit 0

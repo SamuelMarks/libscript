@@ -279,3 +279,9 @@ packaging/assets/*.rtf
 packaging/assets/*.ico
 packaging/assets/*.bmp
 
+# Generated installer build artifacts
+packaging/*.msi
+packaging/*.wxs
+packaging/*.wixobj
+
+
