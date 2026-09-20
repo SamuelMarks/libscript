@@ -266,6 +266,9 @@ trap cleanup_tmp EXIT INT TERM
 # Validates or synthesizes placeholder branding assets.
 ensure_branding_assets() {
   local cc0_assets="${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets"
+  if [ ! -d "$cc0_assets" ] && [ -d "${LIBSCRIPT_ROOT_DIR}/cc0-assets/libscript/openedx/assets" ]; then
+    cc0_assets="${LIBSCRIPT_ROOT_DIR}/cc0-assets/libscript/openedx/assets"
+  fi
   local gen_script="${LIBSCRIPT_ROOT_DIR}/packaging/generate_openedx_branding.sh"
   local gen_attempted=0
 

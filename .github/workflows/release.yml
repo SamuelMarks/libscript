@@ -67,16 +67,17 @@ jobs:
           # --------------------------------------------------------------------
 
     steps:
+      - name: Clone CC0 Assets
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "../cc0-assets")) {
+            git clone --depth 1 https://github.com/SamuelMarks/cc0-assets.git ../cc0-assets
+          }
+
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-
-      - name: Checkout CC0 Assets
-        uses: actions/checkout@v7
-        with:
-          repository: SamuelMarks/cc0-assets
-          path: ../cc0-assets
 
       - name: Setup WiX Toolset
         shell: pwsh

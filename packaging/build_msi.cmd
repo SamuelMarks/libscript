@@ -182,6 +182,7 @@ exit /b 0
 
 if "%TARGET_DIR%"=="" set "TARGET_DIR=stacks\cms\openedx"
 set "CC0_ASSETS=%LIBSCRIPT_ROOT_DIR%\..\cc0-assets\libscript\openedx\assets"
+if not exist "%CC0_ASSETS%" if exist "%LIBSCRIPT_ROOT_DIR%\cc0-assets\libscript\openedx\assets" set "CC0_ASSETS=%LIBSCRIPT_ROOT_DIR%\cc0-assets\libscript\openedx\assets"
 if "%ICON_PATH%"=="" (
     if exist "%CC0_ASSETS%\openedx.ico" (
         set "ICON_PATH=%CC0_ASSETS%\openedx.ico"
