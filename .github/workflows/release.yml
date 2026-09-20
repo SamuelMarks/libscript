@@ -170,20 +170,9 @@ jobs:
           call ${{ matrix.package.build_cmd }} --out ${{ steps.version.outputs.out_name }} --version ${{ steps.version.outputs.version }}
 
       - name: Verify and Prepare Artifacts
-        shell: pwsh
+        shell: cmd
         run: |
-          $msiFile = "${{ steps.version.outputs.out_name }}.msi"
-          if (-not (Test-Path $msiFile)) {
-            Write-Error "MSI installer package was not generated: $msiFile"
-            exit 1
-          }
-          $item = Get-Item $msiFile
-          Write-Host "Successfully generated: $msiFile ($($item.Length) bytes)"
-
-          # Generate SHA256 checksum
-          $hash = (Get-FileHash -Path $msiFile -Algorithm SHA256).Hash.ToLower()
-          "$hash  $msiFile" | Out-File -FilePath "$msiFile.sha256" -Encoding ascii
-          Write-Host "SHA256 for $msiFile: $hash"
+          call devtools\ci\prepare_artifacts.cmd ${{ steps.version.outputs.out_name }}.msi
 
       - name: Upload MSI Artifacts
         uses: actions/upload-artifact@v4
@@ -291,20 +280,12 @@ jobs:
           IS_DRAFT: ${{ github.event.inputs.draft || false }}
           IS_PRERELEASE: ${{ github.event.inputs.prerelease || false }}
         run: |
-          echo "Publishing installer packages for release: $TAG"
-
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "Release $TAG already exists. Uploading assets..."
-            gh release upload "$TAG" dist/* --clobber
-          else
-            echo "Release $TAG does not exist. Creating release..."
-            FLAGS=()
-            if [ "$IS_DRAFT" = "true" ]; then
-              FLAGS+=("--draft")
-            fi
-            if [ "$IS_PRERELEASE" = "true" ]; then
-              FLAGS+=("--prerelease")
-            fi
-            gh release create "$TAG" --title "$TAG" --generate-notes "${FLAGS[@]}" dist/*
+          DRAFT_FLAG=""
+          if [ "$IS_DRAFT" = "true" ]; then
+            DRAFT_FLAG="--draft"
           fi
-          echo "Release assets successfully published to GitHub Releases!"
+          PRERELEASE_FLAG=""
+          if [ "$IS_PRERELEASE" = "true" ]; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
+          ./devtools/ci/publish_release.sh --tag "$TAG" --dist-dir dist $DRAFT_FLAG $PRERELEASE_FLAG

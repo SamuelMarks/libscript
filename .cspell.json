@@ -338,6 +338,7 @@
     "gviz",
     "harch",
     "hasattr",
+    "hashfile",
     "HEADERIMAGE",
     "healthcheck",
     "healthchecks",
