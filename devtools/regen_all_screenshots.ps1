@@ -17,8 +17,8 @@ $ErrorActionPreference = "Stop"
 # Resolves repository root, asset directories, and target screenshot output directories.
 $rootDir = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $cc0Base = (Resolve-Path (Join-Path $rootDir "..")).Path
-$screenshotsDir = Join-Path $cc0Base "cc0-screenshots/libscript/openedx/screenshots"
-$cc0AssetsDir = Join-Path $cc0Base "cc0-screenshots/libscript/openedx/assets"
+$screenshotsDir = Join-Path $cc0Base "cc0-assets/libscript/openedx/screenshots"
+$cc0AssetsDir = Join-Path $cc0Base "cc0-assets/libscript/openedx/assets"
 $assetsDir = Join-Path $rootDir "packaging/assets"
 
 if (-not (Test-Path $screenshotsDir)) {

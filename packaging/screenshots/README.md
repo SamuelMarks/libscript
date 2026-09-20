@@ -4,8 +4,8 @@ Automated end-to-end installation and GUI verification screenshots captured duri
 test suites on Vagrant Windows 11 (`bento/windows-11`).
 
 All screenshot binaries are centralized in the
-[cc0-screenshots](https://github.com/SamuelMarks/cc0-assets) repository to avoid repository bloat
-while providing persistent deep links.
+[cc0-assets](https://github.com/SamuelMarks/cc0-assets) repository to avoid repository bloat while
+providing persistent deep links.
 
 ## Screen Captures
 

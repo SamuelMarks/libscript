@@ -181,7 +181,7 @@ exit /b 0
 :after_args
 
 if "%TARGET_DIR%"=="" set "TARGET_DIR=stacks\cms\openedx"
-set "CC0_ASSETS=%LIBSCRIPT_ROOT_DIR%\..\cc0-screenshots\libscript\openedx\assets"
+set "CC0_ASSETS=%LIBSCRIPT_ROOT_DIR%\..\cc0-assets\libscript\openedx\assets"
 if "%ICON_PATH%"=="" (
     if exist "%CC0_ASSETS%\openedx.ico" (
         set "ICON_PATH=%CC0_ASSETS%\openedx.ico"
@@ -221,6 +221,16 @@ if "%ICON_PATH%"=="" (
     if exist "%TMP_BRANDING_DIR%\openedx_banner_side.bmp" if "%BANNER_SIDE_PATH%"=="" set "BANNER_SIDE_PATH=%TMP_BRANDING_DIR%\openedx_banner_side.bmp"
     if exist "%TMP_BRANDING_DIR%\openedx_eula.rtf" if "%LICENSE_PATH%"=="" set "LICENSE_PATH=%TMP_BRANDING_DIR%\openedx_eula.rtf"
 )
+if not exist "%ICON_PATH%" (
+    if exist "%TMP_BRANDING_DIR%\openedx.ico" (
+        set "ICON_PATH=%TMP_BRANDING_DIR%\openedx.ico"
+    ) else (
+        set "ICON_PATH="
+    )
+)
+if not exist "%BANNER_TOP_PATH%" set "BANNER_TOP_PATH="
+if not exist "%BANNER_SIDE_PATH%" set "BANNER_SIDE_PATH="
+if not exist "%LICENSE_PATH%" set "LICENSE_PATH="
 
 set "WXS_FILE=%OUT_FILE%.wxs"
 
@@ -818,13 +828,23 @@ setlocal DisableDelayedExpansion
     echo       ^<CreateFolder /^>
     echo     ^</Component^>
     echo     ^<Component Id="ApplicationShortcuts" Directory="OpenEdXProgramMenuFolder" Guid="718293A4-B5C6-4D7E-8F90-123456789ABC"^>
-    echo       ^<Shortcut Id="ShortcutCli" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]cli.cmd" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
-    echo       ^<Shortcut Id="ShortcutHealth" Name="Open edX Healthcheck" Description="Open edX Diagnostics Probe" Target="[INSTALLFOLDER]healthcheck.cmd" WorkingDirectory="INSTALLFOLDER" /^>
-    echo       ^<Shortcut Id="ShortcutDbShell" Name="Open edX Database Console" Description="Open edX MySQL Database Shell" Target="[INSTALLFOLDER]dbshell.cmd" Arguments="mysql" WorkingDirectory="INSTALLFOLDER" /^>
-    echo       ^<Shortcut Id="ShortcutBackup" Name="Open edX Backup and Restore" Description="Open edX Backup Tool" Target="[INSTALLFOLDER]backup.cmd" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
-    echo       ^<Shortcut Id="DesktopShortcutCli" Directory="DesktopFolder" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]cli.cmd" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
-    echo       ^<Shortcut Id="DesktopShortcutLms" Directory="DesktopFolder" Name="Open edX LMS" Description="Open edX Learning Management System" Target="[INSTALLFOLDER]cli.cmd" Arguments="lms" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
-    echo       ^<Shortcut Id="DesktopShortcutStudio" Directory="DesktopFolder" Name="Open edX Studio" Description="Open edX Studio Course Authoring" Target="[INSTALLFOLDER]cli.cmd" Arguments="studio" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
+    if not "%ICON_PATH%"=="" (
+        echo       ^<Shortcut Id="ShortcutCli" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]cli.cmd" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
+        echo       ^<Shortcut Id="ShortcutHealth" Name="Open edX Healthcheck" Description="Open edX Diagnostics Probe" Target="[INSTALLFOLDER]healthcheck.cmd" WorkingDirectory="INSTALLFOLDER" /^>
+        echo       ^<Shortcut Id="ShortcutDbShell" Name="Open edX Database Console" Description="Open edX MySQL Database Shell" Target="[INSTALLFOLDER]dbshell.cmd" Arguments="mysql" WorkingDirectory="INSTALLFOLDER" /^>
+        echo       ^<Shortcut Id="ShortcutBackup" Name="Open edX Backup and Restore" Description="Open edX Backup Tool" Target="[INSTALLFOLDER]backup.cmd" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
+        echo       ^<Shortcut Id="DesktopShortcutCli" Directory="DesktopFolder" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]cli.cmd" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
+        echo       ^<Shortcut Id="DesktopShortcutLms" Directory="DesktopFolder" Name="Open edX LMS" Description="Open edX Learning Management System" Target="[INSTALLFOLDER]cli.cmd" Arguments="lms" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
+        echo       ^<Shortcut Id="DesktopShortcutStudio" Directory="DesktopFolder" Name="Open edX Studio" Description="Open edX Studio Course Authoring" Target="[INSTALLFOLDER]cli.cmd" Arguments="studio" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
+    ) else (
+        echo       ^<Shortcut Id="ShortcutCli" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]cli.cmd" WorkingDirectory="INSTALLFOLDER" /^>
+        echo       ^<Shortcut Id="ShortcutHealth" Name="Open edX Healthcheck" Description="Open edX Diagnostics Probe" Target="[INSTALLFOLDER]healthcheck.cmd" WorkingDirectory="INSTALLFOLDER" /^>
+        echo       ^<Shortcut Id="ShortcutDbShell" Name="Open edX Database Console" Description="Open edX MySQL Database Shell" Target="[INSTALLFOLDER]dbshell.cmd" Arguments="mysql" WorkingDirectory="INSTALLFOLDER" /^>
+        echo       ^<Shortcut Id="ShortcutBackup" Name="Open edX Backup and Restore" Description="Open edX Backup Tool" Target="[INSTALLFOLDER]backup.cmd" WorkingDirectory="INSTALLFOLDER" /^>
+        echo       ^<Shortcut Id="DesktopShortcutCli" Directory="DesktopFolder" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]cli.cmd" WorkingDirectory="INSTALLFOLDER" /^>
+        echo       ^<Shortcut Id="DesktopShortcutLms" Directory="DesktopFolder" Name="Open edX LMS" Description="Open edX Learning Management System" Target="[INSTALLFOLDER]cli.cmd" Arguments="lms" WorkingDirectory="INSTALLFOLDER" /^>
+        echo       ^<Shortcut Id="DesktopShortcutStudio" Directory="DesktopFolder" Name="Open edX Studio" Description="Open edX Studio Course Authoring" Target="[INSTALLFOLDER]cli.cmd" Arguments="studio" WorkingDirectory="INSTALLFOLDER" /^>
+    )
     echo       ^<RemoveFolder Id="CleanUpShortCutDir" Directory="OpenEdXProgramMenuFolder" On="uninstall" /^>
     echo       ^<RegistryValue Root="HKCU" Key="Software\LibScript\OpenEdX" Name="installed" Type="integer" Value="1" KeyPath="yes" /^>
     echo     ^</Component^>
@@ -842,13 +862,27 @@ where candle.exe >nul 2>&1
 if %ERRORLEVEL%==0 (
     powershell -NoProfile -Command "$w = Get-Content -LiteralPath '%WXS_FILE%' -Raw; $w = $w -replace '<Property Id=\"MsiHiddenProperties\".*?/>', ''; $w = [regex]::Replace($w, '(?s)<InstallUISequence>.*?</InstallUISequence>', '      <InstallUISequence><Show Dialog=\"Dlg_Welcome\" After=\"CostFinalize\" /><Show Dialog=\"Dlg_Exit\" OnExit=\"success\" /></InstallUISequence>'); Set-Content -LiteralPath '%WXS_FILE%.candle.wxs' -Value $w"
     candle.exe -nologo -out "%OUT_FILE%.wixobj" "%WXS_FILE%.candle.wxs"
+    if errorlevel 1 (
+        del /f /q "%WXS_FILE%.candle.wxs" >nul 2>&1
+        echo [ERROR] WiX candle compiler failed >&2
+        exit /b 1
+    )
     light.exe -nologo -sval -ext WixUIExtension -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj"
+    if errorlevel 1 (
+        del /f /q "%WXS_FILE%.candle.wxs" >nul 2>&1
+        echo [ERROR] WiX light linker failed >&2
+        exit /b 1
+    )
     del /f /q "%WXS_FILE%.candle.wxs" >nul 2>&1
     echo [PASS] Successfully built %OUT_FILE%.msi
 ) else (
     where wix.exe >nul 2>&1
     if %ERRORLEVEL%==0 (
         wix.exe build -ext WixToolset.UI.wixext -o "%OUT_FILE%.msi" "%WXS_FILE%"
+        if errorlevel 1 (
+            echo [ERROR] WiX build failed >&2
+            exit /b 1
+        )
         echo [PASS] Successfully built %OUT_FILE%.msi
     ) else (
         echo [INFO] WiX toolset compiler not found in PATH. XML manifest ready for compilation.

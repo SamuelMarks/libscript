@@ -269,7 +269,7 @@ ensure_branding_assets() {
   local gen_script="${LIBSCRIPT_ROOT_DIR}/packaging/generate_openedx_branding.sh"
   local gen_attempted=0
 
-  # Check external cc0-screenshots repository first if not explicitly found
+  # Check external cc0-assets repository first if not explicitly found
   if [ -z "$ICON_PATH" ] || [ ! -f "$ICON_PATH" ]; then
     if [ -f "$cc0_assets/openedx.ico" ]; then
       ICON_PATH="$cc0_assets/openedx.ico"
@@ -1012,10 +1012,10 @@ EOF_XML
       <Shortcut Id="ShortcutCli" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]cli.cmd" WorkingDirectory="INSTALLFOLDER" />
       <Shortcut Id="ShortcutHealth" Name="Open edX Healthcheck" Description="Open edX Diagnostics Probe" Target="[INSTALLFOLDER]healthcheck.cmd" WorkingDirectory="INSTALLFOLDER" />
       <Shortcut Id="ShortcutDbShell" Name="Open edX Database Console" Description="Open edX MySQL Database Shell" Target="[INSTALLFOLDER]dbshell.cmd" Arguments="mysql" WorkingDirectory="INSTALLFOLDER" />
-      <Shortcut Id="ShortcutBackup" Name="Open edX Backup and Restore" Description="Open edX Backup Tool" Target="[INSTALLFOLDER]backup.cmd" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" />
-      <Shortcut Id="DesktopShortcutCli" Directory="DesktopFolder" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]cli.cmd" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" />
-      <Shortcut Id="DesktopShortcutLms" Directory="DesktopFolder" Name="Open edX LMS" Description="Open edX Learning Management System" Target="[INSTALLFOLDER]cli.cmd" Arguments="lms" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" />
-      <Shortcut Id="DesktopShortcutStudio" Directory="DesktopFolder" Name="Open edX Studio" Description="Open edX Studio Course Authoring" Target="[INSTALLFOLDER]cli.cmd" Arguments="studio" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" />
+      <Shortcut Id="ShortcutBackup" Name="Open edX Backup and Restore" Description="Open edX Backup Tool" Target="[INSTALLFOLDER]backup.cmd" WorkingDirectory="INSTALLFOLDER" $([ -n "$ICON_PATH" ] && [ -f "$ICON_PATH" ] && printf 'Icon="AppIcon.ico"') />
+      <Shortcut Id="DesktopShortcutCli" Directory="DesktopFolder" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]cli.cmd" WorkingDirectory="INSTALLFOLDER" $([ -n "$ICON_PATH" ] && [ -f "$ICON_PATH" ] && printf 'Icon="AppIcon.ico"') />
+      <Shortcut Id="DesktopShortcutLms" Directory="DesktopFolder" Name="Open edX LMS" Description="Open edX Learning Management System" Target="[INSTALLFOLDER]cli.cmd" Arguments="lms" WorkingDirectory="INSTALLFOLDER" $([ -n "$ICON_PATH" ] && [ -f "$ICON_PATH" ] && printf 'Icon="AppIcon.ico"') />
+      <Shortcut Id="DesktopShortcutStudio" Directory="DesktopFolder" Name="Open edX Studio" Description="Open edX Studio Course Authoring" Target="[INSTALLFOLDER]cli.cmd" Arguments="studio" WorkingDirectory="INSTALLFOLDER" $([ -n "$ICON_PATH" ] && [ -f "$ICON_PATH" ] && printf 'Icon="AppIcon.ico"') />
       <RemoveFolder Id="CleanUpShortCutDir" Directory="OpenEdXProgramMenuFolder" On="uninstall" />
       <RegistryValue Root="HKCU" Key="Software\LibScript\OpenEdX" Name="installed" Type="integer" Value="1" KeyPath="yes" />
     </Component>

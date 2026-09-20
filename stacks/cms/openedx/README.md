@@ -536,7 +536,7 @@ advanced DBaaS offloading, directory selection, runtime auto-detection, and mult
 verification.
 
 Visual artifacts and gallery screenshots are centralized in the
-[cc0-screenshots](https://github.com/SamuelMarks/cc0-assets) repository:
+[cc0-assets](https://github.com/SamuelMarks/cc0-assets) repository:
 
 | Wizard Step        | Description                                                | Preview                                                                                                                                                                                                                                                                                  |
 | :----------------- | :--------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

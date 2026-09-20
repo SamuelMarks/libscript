@@ -68,9 +68,15 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
+
+      - name: Checkout CC0 Assets
+        uses: actions/checkout@v7
+        with:
+          repository: SamuelMarks/cc0-assets
+          path: ../cc0-assets
 
       - name: Setup WiX Toolset
         shell: pwsh
@@ -175,7 +181,7 @@ jobs:
           call devtools\ci\prepare_artifacts.cmd ${{ steps.version.outputs.out_name }}.msi
 
       - name: Upload MSI Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: installer-msi-${{ matrix.package.id }}
           path: |
@@ -236,10 +242,10 @@ jobs:
       contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Download all installer artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true

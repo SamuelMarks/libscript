@@ -270,7 +270,7 @@ all_scripts.txt
 !/scripts/*.py
 tests_tmp/
 
-# Binary media and icon assets (kept in cc0-screenshots or generated on the fly)
+# Binary media and icon assets (kept in cc0-assets or generated on the fly)
 *.ico
 *.bmp
 *.png
