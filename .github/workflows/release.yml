@@ -259,9 +259,17 @@ jobs:
       - name: Generate Consolidated SHA256SUMS
         run: |
           cd dist
-          sha256sum *.* > SHA256SUMS.txt || true
+          rm -f SHA256SUMS.txt
+          for f in *.*; do
+            case "$f" in
+              *.sha256|SHA256SUMS.txt) continue ;;
+            esac
+            if [ -f "$f" ] && [ -s "$f" ]; then
+              sha256sum "$f" >> SHA256SUMS.txt
+            fi
+          done
           echo "=== SHA256SUMS.txt ==="
-          cat SHA256SUMS.txt
+          cat SHA256SUMS.txt || true
 
       - name: Resolve Release Tag & Title
         id: release_info

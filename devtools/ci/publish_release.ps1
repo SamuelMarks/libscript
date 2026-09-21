@@ -75,15 +75,24 @@ if (-not (Test-Path -LiteralPath $DistDir)) {
 function Generate-Sums {
     param([string]$TargetDirectory)
 
-    $files = Get-ChildItem -LiteralPath $TargetDirectory -File | Where-Object { $_.Name -ne "SHA256SUMS.txt" }
+    $files = Get-ChildItem -LiteralPath $TargetDirectory -File | Where-Object { 
+        $_.Name -ne "SHA256SUMS.txt" -and -not $_.Name.EndsWith(".sha256") -and $_.Length -gt 0
+    }
     $lines = @()
     foreach ($f in $files) {
         $h = (Get-FileHash -LiteralPath $f.FullName -Algorithm SHA256).Hash.ToLower()
         $lines += "$h  $($f.Name)"
     }
+    $dest = Join-Path $TargetDirectory "SHA256SUMS.txt"
     if ($lines.Count -gt 0) {
-        $dest = Join-Path $TargetDirectory "SHA256SUMS.txt"
-        [System.IO.File]::WriteAllLines($dest, $lines, [System.Text.Encoding]::ASCII)
+        $tmpDest = Join-Path $TargetDirectory ".SHA256SUMS.tmp"
+        [System.IO.File]::WriteAllLines($tmpDest, $lines, [System.Text.Encoding]::ASCII)
+        Move-Item -LiteralPath $tmpDest -Destination $dest -Force
+    } elseif (Test-Path -LiteralPath $dest) {
+        $item = Get-Item -LiteralPath $dest
+        if ($item.Length -eq 0) {
+            Remove-Item -LiteralPath $dest -Force
+        }
     }
 }
 
@@ -107,7 +116,11 @@ try {
     $releaseExists = $false
 }
 
-$assetFiles = Get-ChildItem -LiteralPath $DistDir -File | ForEach-Object { $_.FullName }
+$assetFiles = Get-ChildItem -LiteralPath $DistDir -File | Where-Object { $_.Length -gt 0 } | ForEach-Object { $_.FullName }
+if ($assetFiles.Count -eq 0) {
+    Write-Error "No valid non-empty assets found in '$DistDir' to publish."
+    exit 1
+}
 
 if ($releaseExists) {
     Write-Host "[INFO] Release '$Tag' already exists. Uploading assets with clobber..."

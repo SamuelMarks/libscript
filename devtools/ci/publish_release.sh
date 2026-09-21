@@ -6,7 +6,7 @@
 # ## Usage
 # ./devtools/ci/publish_release.sh --tag <tag> [--dist-dir <dir>] [--title <title>] [--draft] [--prerelease]
 
-set -feu
+set -eu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -117,14 +117,34 @@ fi
 generate_sums() {
   _dir="$1"
   if [ -d "$_dir" ]; then
-    (
-      cd "$_dir"
+    _tmp_sums="${_dir}/.SHA256SUMS.tmp.$$"
+    rm -f "$_tmp_sums"
+    for _f in "$_dir"/*; do
+      [ -f "$_f" ] || continue
+      _fname="${_f##*/}"
+      case "$_fname" in
+        SHA256SUMS.txt|*.sha256|.*) continue ;;
+      esac
       if command -v sha256sum >/dev/null 2>&1; then
-        sha256sum ./*.* > SHA256SUMS.txt 2>/dev/null || true
+        (cd "$_dir" && sha256sum "$_fname") >> "$_tmp_sums" 2>/dev/null || true
       elif command -v shasum >/dev/null 2>&1; then
-        shasum -a 256 ./*.* > SHA256SUMS.txt 2>/dev/null || true
+        (cd "$_dir" && shasum -a 256 "$_fname") >> "$_tmp_sums" 2>/dev/null || true
+      elif command -v openssl >/dev/null 2>&1; then
+        _h=$(openssl dgst -sha256 "$_f" 2>/dev/null | awk '{print $NF}')
+        if [ -n "$_h" ]; then
+          printf '%s  %s
+' "$_h" "$_fname" >> "$_tmp_sums"
+        fi
       fi
-    )
+    done
+    if [ -s "$_tmp_sums" ]; then
+      mv -f "$_tmp_sums" "$_dir/SHA256SUMS.txt"
+    else
+      rm -f "$_tmp_sums"
+      if [ -f "$_dir/SHA256SUMS.txt" ] && [ ! -s "$_dir/SHA256SUMS.txt" ]; then
+        rm -f "$_dir/SHA256SUMS.txt"
+      fi
+    fi
   fi
 }
 
@@ -140,21 +160,38 @@ upload_or_create_release() {
   printf '[INFO] Publishing release assets for tag "%s" from "%s"...
 ' "$_tag" "$_dir"
 
+  # Collect all non-empty files from $_dir into positional parameters
+  set --
+  for _f in "$_dir"/*; do
+    if [ -f "$_f" ] && [ -s "$_f" ]; then
+      set -- "$@" "$_f"
+    elif [ -f "$_f" ] && [ ! -s "$_f" ]; then
+      printf '[WARN] Skipping empty asset file (0 bytes): %s
+' "$_f" >&2
+    fi
+  done
+
+  if [ $# -eq 0 ]; then
+    printf '[ERROR] No valid non-empty assets found in "%s" to publish.
+' "$_dir" >&2
+    return 1
+  fi
+
   if gh release view "$_tag" >/dev/null 2>&1; then
     printf '[INFO] Release "%s" already exists. Uploading assets with clobber...
 ' "$_tag"
-    gh release upload "$_tag" "$_dir"/* --clobber
+    gh release upload "$_tag" "$@" --clobber
   else
     printf '[INFO] Creating new release "%s"...
 ' "$_tag"
     if [ "$_draft" = "true" ] && [ "$_pre" = "true" ]; then
-      gh release create "$_tag" --title "$_title" --generate-notes --draft --prerelease "$_dir"/*
+      gh release create "$_tag" --title "$_title" --generate-notes --draft --prerelease "$@"
     elif [ "$_draft" = "true" ]; then
-      gh release create "$_tag" --title "$_title" --generate-notes --draft "$_dir"/*
+      gh release create "$_tag" --title "$_title" --generate-notes --draft "$@"
     elif [ "$_pre" = "true" ]; then
-      gh release create "$_tag" --title "$_title" --generate-notes --prerelease "$_dir"/*
+      gh release create "$_tag" --title "$_title" --generate-notes --prerelease "$@"
     else
-      gh release create "$_tag" --title "$_title" --generate-notes "$_dir"/*
+      gh release create "$_tag" --title "$_title" --generate-notes "$@"
     fi
   fi
 

@@ -5,7 +5,7 @@ set "THIS_FILE=%~f0"
 ::
 :: ## Overview
 :: Publishes built release packages, installer artifacts, and cryptographic
-:: SHA256 checksums to GitHub Releases on Windows.
+:: SHA256 checksums to GitHub Releases on Windows in an idempotent manner.
 ::
 :: ## Usage
 :: devtools\ci\publish_release.cmd --tag <tag> [--dist-dir <dir>] [--title <title>] [--draft] [--prerelease]
@@ -100,8 +100,63 @@ if not exist "%DIST_DIR%" (
     exit /b 1
 )
 
+call :generate_sums "%DIST_DIR%"
+goto :execute_publish
+
+:: ## generate_sums
+:: Consolidates SHA256 checksums into SHA256SUMS.txt.
+:generate_sums
+set "_SUMS_DIR=%~1"
+set "TMP_SUMS=%_SUMS_DIR%\.SHA256SUMS.tmp"
+if exist "%TMP_SUMS%" del /f /q "%TMP_SUMS%"
+
+for %%F in ("%_SUMS_DIR%\*") do (
+    set "FNAME=%%~nxF"
+    set "FILE_EXT=%%~xF"
+    if not "!FNAME!"=="SHA256SUMS.txt" if not "!FILE_EXT!"==".sha256" (
+        for %%A in ("%%F") do set "FSIZE=%%~zA"
+        if not "!FSIZE!"=="0" (
+            set "FILE_HASH="
+            where powershell >nul 2>&1
+            if !ERRORLEVEL! equ 0 (
+                for /f "usebackq delims=" %%H in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "(Get-FileHash -LiteralPath '%%F' -Algorithm SHA256).Hash.ToLower()"`) do (
+                    set "FILE_HASH=%%H"
+                )
+            )
+            if not defined FILE_HASH (
+                where certutil >nul 2>&1
+                if !ERRORLEVEL! equ 0 (
+                    for /f "tokens=* skip=1" %%H in ('certutil -hashfile "%%F" SHA256 2^>nul') do (
+                        if not defined FILE_HASH (
+                            set "line=%%H"
+                            if not "!line:CertUtil=!"=="!line!" goto :skip_hash_item
+                            set "FILE_HASH=!line: =!"
+                        )
+                    )
+                )
+            )
+            :skip_hash_item
+            if defined FILE_HASH (
+                >> "%TMP_SUMS%" echo !FILE_HASH!  !FNAME!
+            )
+        )
+    )
+)
+if exist "%TMP_SUMS%" (
+    for %%A in ("%TMP_SUMS%") do set "SUM_SIZE=%%~zA"
+    if not "!SUM_SIZE!"=="0" (
+        move /y "%TMP_SUMS%" "%_SUMS_DIR%\SHA256SUMS.txt" >nul 2>&1
+    ) else (
+        del /f /q "%TMP_SUMS%" >nul 2>&1
+    )
+)
+if exist "%_SUMS_DIR%\SHA256SUMS.txt" (
+    for %%A in ("%_SUMS_DIR%\SHA256SUMS.txt") do if "%%~zA"=="0" del /f /q "%_SUMS_DIR%\SHA256SUMS.txt" >nul 2>&1
+)
+exit /b 0
+
 :: ## execute_publish
-:: Dispatches to GitHub CLI or PowerShell.
+:: Dispatches to GitHub CLI.
 :execute_publish
 echo [INFO] Publishing release assets for tag "%REL_TAG%" from "%DIST_DIR%"...
 
@@ -111,24 +166,39 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
+set "ASSET_FILES="
+set "ASSET_COUNT=0"
+for %%F in ("%DIST_DIR%\*") do (
+    for %%A in ("%%F") do set "FSIZE=%%~zA"
+    if not "!FSIZE!"=="0" (
+        set "ASSET_FILES=!ASSET_FILES! "%%F""
+        set /a ASSET_COUNT+=1
+    )
+)
+
+if %ASSET_COUNT% equ 0 (
+    echo [ERROR] No valid non-empty assets found in "%DIST_DIR%" to publish. >&2
+    exit /b 1
+)
+
 gh release view "%REL_TAG%" >nul 2>&1
 if %ERRORLEVEL% equ 0 (
     echo [INFO] Release "%REL_TAG%" already exists. Uploading assets with clobber...
-    gh release upload "%REL_TAG%" "%DIST_DIR%\*" --clobber
-    if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+    gh release upload "%REL_TAG%" !ASSET_FILES! --clobber
+    if !ERRORLEVEL! neq 0 exit /b !ERRORLEVEL!
 ) else (
     echo [INFO] Creating new release "%REL_TAG%"...
     if "%IS_DRAFT%"=="true" if "%IS_PRERELEASE%"=="true" (
-        gh release create "%REL_TAG%" --title "%REL_TITLE%" --generate-notes --draft --prerelease "%DIST_DIR%\*"
+        gh release create "%REL_TAG%" --title "%REL_TITLE%" --generate-notes --draft --prerelease !ASSET_FILES!
         if !ERRORLEVEL! neq 0 exit /b !ERRORLEVEL!
     ) else if "%IS_DRAFT%"=="true" (
-        gh release create "%REL_TAG%" --title "%REL_TITLE%" --generate-notes --draft "%DIST_DIR%\*"
+        gh release create "%REL_TAG%" --title "%REL_TITLE%" --generate-notes --draft !ASSET_FILES!
         if !ERRORLEVEL! neq 0 exit /b !ERRORLEVEL!
     ) else if "%IS_PRERELEASE%"=="true" (
-        gh release create "%REL_TAG%" --title "%REL_TITLE%" --generate-notes --prerelease "%DIST_DIR%\*"
+        gh release create "%REL_TAG%" --title "%REL_TITLE%" --generate-notes --prerelease !ASSET_FILES!
         if !ERRORLEVEL! neq 0 exit /b !ERRORLEVEL!
     ) else (
-        gh release create "%REL_TAG%" --title "%REL_TITLE%" --generate-notes "%DIST_DIR%\*"
+        gh release create "%REL_TAG%" --title "%REL_TITLE%" --generate-notes !ASSET_FILES!
         if !ERRORLEVEL! neq 0 exit /b !ERRORLEVEL!
     )
 )
