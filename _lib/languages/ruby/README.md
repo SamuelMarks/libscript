@@ -65,6 +65,9 @@ running the setup script.
 | `DOWNLOAD_DIR`                     | Directory where downloads are stored.                                                                                                                                | `none`                     |                  |
 | `FORMAT`                           | Output format (e.g., json, text).                                                                                                                                    | `none`                     |                  |
 | `LIBSCRIPT_CACHE_DIR`              | Directory where cached files are stored.                                                                                                                             | `none`                     |                  |
+| `LIBSCRIPT_OFFLINE`                | Flag (0 or 1) indicating whether offline mode is active, prohibiting outgoing network calls.                                                                         | `0`                        |                  |
+| `LIBSCRIPT_FORCE_OFFLINE`          | Strict offline flag (0 or 1) that immediately aborts execution if network calls are attempted.                                                                       | `0`                        |                  |
+| `LIBSCRIPT_DOWNLOAD_DIR`           | Staging directory for temporary download artifacts.                                                                                                                  | `none`                     |                  |
 | `LIBSCRIPT_LOG_DRIVER`             | Logging driver to use (e.g., fluentd).                                                                                                                               | `none`                     |                  |
 | `LOGS_DIR`                         | Directory where logs should be stored.                                                                                                                               | `none`                     |                  |
 | `VAULT_TOKEN`                      | Token for HashiCorp Vault authentication.                                                                                                                            | `none`                     |                  |
@@ -84,6 +87,8 @@ running the setup script.
 | `JETSTREAM_IMAGE`                  | Docker image for JetStream TPU inference                                                                                                                             | `none`                     |                  |
 | `RUBY_VERSION`                     | Specific version of ruby to install. Can be a numeric version or an alias.                                                                                           | `latest`                   | latest, stable   |
 | `RUBY_INSTALL_METHOD`              | How to install RUBY. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native`         |                  |
+| `GEM_OFFLINE`                      | Flag (0 or 1) directing gem to install packages only from local archives.                                                                                            | `0`                        |                  |
+| `BUNDLE_LOCAL`                     | Flag ('true' or 'false') instructing Bundler to run in local offline mode without remote queries.                                                                    | `false`                    |                  |
 
 <!-- END_VARS -->
 

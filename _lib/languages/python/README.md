@@ -83,6 +83,9 @@ running the setup script.
 | `DOWNLOAD_DIR`                     | Directory where downloads are stored.                                                                                                                                  | `none`                     |                  |
 | `FORMAT`                           | Output format (e.g., json, text).                                                                                                                                      | `none`                     |                  |
 | `LIBSCRIPT_CACHE_DIR`              | Directory where cached files are stored.                                                                                                                               | `none`                     |                  |
+| `LIBSCRIPT_OFFLINE`                | Flag (0 or 1) indicating whether offline mode is active, prohibiting outgoing network calls.                                                                           | `0`                        |                  |
+| `LIBSCRIPT_FORCE_OFFLINE`          | Strict offline flag (0 or 1) that immediately aborts execution if network calls are attempted.                                                                         | `0`                        |                  |
+| `LIBSCRIPT_DOWNLOAD_DIR`           | Staging directory for temporary download artifacts.                                                                                                                    | `none`                     |                  |
 | `LIBSCRIPT_LOG_DRIVER`             | Logging driver to use (e.g., fluentd).                                                                                                                                 | `none`                     |                  |
 | `LOGS_DIR`                         | Directory where logs should be stored.                                                                                                                                 | `none`                     |                  |
 | `VAULT_TOKEN`                      | Token for HashiCorp Vault authentication.                                                                                                                              | `none`                     |                  |
@@ -105,6 +108,9 @@ running the setup script.
 | `PYTHON_CUSTOM_EXECUTABLE_PATH`    | Path to existing host python3.exe executable. If specified, skips downloading or bootstrapping a new Python runtime.                                                   | `none`                     |                  |
 | `PYTHON_USE_SYSTEM`                | Reuse host or existing Python runtime located at PYTHON_CUSTOM_EXECUTABLE_PATH rather than installing bundled Python.                                                  | `none`                     |                  |
 | `PYTHON_INSTALL_METHOD`            | How to install PYTHON. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools. | `libscript_native`         |                  |
+| `PIP_FIND_LINKS`                   | Directory or URL containing pre-downloaded Python wheels for offline installation.                                                                                     | `none`                     |                  |
+| `PIP_NO_INDEX`                     | When set to 1 or true, pip completely disables querying remote PyPI indexes.                                                                                           | `0`                        |                  |
+| `PIP_WHEEL_DIR`                    | Directory location of pre-downloaded .whl packages for offline pip installs.                                                                                           | `none`                     |                  |
 
 <!-- END_VARS -->
 

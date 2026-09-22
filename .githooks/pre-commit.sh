@@ -78,7 +78,11 @@ else
         done > "$tmp_files"
         
         if [ -s "$tmp_files" ]; then
-             npx --yes --quiet cspell lint --no-progress --no-summary --no-must-find-files --file-list stdin < "$tmp_files" || printf '%s\n' "Spellcheck found potential issues, but continuing..."
+             if ! npx --yes --quiet cspell lint --no-progress --no-summary --no-must-find-files --file-list stdin < "$tmp_files"; then
+                 rm -f "$tmp_files"
+                 printf '%s\n' "[ERROR] Spellcheck failed. Please fix spelling errors or update .cspell.json." >&2
+                 exit 1
+             fi
         fi
         rm -f "$tmp_files"
     fi

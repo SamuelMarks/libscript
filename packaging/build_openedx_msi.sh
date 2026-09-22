@@ -84,7 +84,7 @@ EOF_HELP
       exit 0
       ;;
     *)
-      extra_args="$extra_args "$1""
+      extra_args="$extra_args $1"
       shift
       ;;
   esac

@@ -1137,12 +1137,18 @@ fi
 # ## compile_msi
 # Builds the .msi binary using wixl on POSIX systems or WiX toolset on Windows.
 compile_msi() {
-  if [ "${OS:-}" = "Windows_NT" ] || command -v candle.exe >/dev/null 2>&1 || command -v wix.exe >/dev/null 2>&1; then
-    if command -v wix.exe >/dev/null 2>&1; then
+  if [ "${OS:-}" = "Windows_NT" ] || command -v candle.exe >/dev/null 2>&1 || command -v candle >/dev/null 2>&1 || command -v wix.exe >/dev/null 2>&1 || command -v wix >/dev/null 2>&1; then
+    _candle_cmd="candle"
+    _light_cmd="light"
+    command -v candle.exe >/dev/null 2>&1 && _candle_cmd="candle.exe"
+    command -v light.exe >/dev/null 2>&1 && _light_cmd="light.exe"
+
+    if command -v wix.exe >/dev/null 2>&1 && ! command -v "$_candle_cmd" >/dev/null 2>&1; then
       wix.exe build -ext WixToolset.UI.wixext -o "${OUT_FILE}.msi" "$WXS_FILE" "${PAYLOAD_WXS}"
     else
-      candle.exe "$WXS_FILE" "${PAYLOAD_WXS}"
-      light.exe -ext WixUIExtension -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj" "${OUT_FILE}_payload.wixobj"
+      "$_candle_cmd" -out "${OUT_FILE}.wixobj" "$WXS_FILE"
+      "$_candle_cmd" -out "${OUT_FILE}_payload.wixobj" "${PAYLOAD_WXS}"
+      "$_light_cmd" -sval -ext WixUIExtension -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj" "${OUT_FILE}_payload.wixobj"
     fi
   elif command -v wixl >/dev/null 2>&1; then
     _wixl_manifest="${OUT_FILE}_wixl.wxs"

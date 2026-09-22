@@ -6,7 +6,7 @@ setlocal EnableDelayedExpansion
 :: Windows Batch unit test runner for the LibScript cache hydration engine.
 ::
 :: ## Usage
-:: call tests	est_hydrate_offline_cache.cmd
+:: call tests\test_hydrate_offline_cache.cmd
 
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -22,7 +22,7 @@ set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 for %%I in ("%SCRIPT_DIR%\..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 
-set "TEST_TMP_DIR=%LIBSCRIPT_ROOT_DIR%	ests_tmp	est_hydrate_%RANDOM%"
+set "TEST_TMP_DIR=%LIBSCRIPT_ROOT_DIR%\tests_tmp\test_hydrate_%RANDOM%"
 if not exist "%TEST_TMP_DIR%" mkdir "%TEST_TMP_DIR%"
 
 echo === Testing LibScript Offline Cache Hydration Engine (Windows) ===
@@ -33,7 +33,7 @@ echo LibScript Offline Test Content Windows > "%SRC_DIR%\dummy-runtime.zip"
 
 for /f "tokens=*" %%H in ('powershell -Command "(Get-FileHash -Path '%SRC_DIR%\dummy-runtime.zip' -Algorithm SHA256).Hash.ToLower()"') do set "DUMMY_SHA256=%%H"
 
-set "TEST_MANIFEST=%TEST_TMP_DIR%	est_bundle.json"
+set "TEST_MANIFEST=%TEST_TMP_DIR%\test_bundle.json"
 (
 echo {
 echo   "name": "test-stack",
@@ -68,12 +68,12 @@ if errorlevel 1 (
 
 :: Test 2: Hydrate cache
 echo [TEST 2/3] Verifying hydration...
-call "%LIBSCRIPT_ROOT_DIR%\packaging\hydrate_offline_cache.cmd" --manifest "%TEST_MANIFEST%" --cache-dir "%CACHE_TARGET%" > "%TEST_TMP_DIR%	2.log" 2>&1
-if exist "%CACHE_TARGET%untimes\dummy-runtime.zip" (
+call "%LIBSCRIPT_ROOT_DIR%\packaging\hydrate_offline_cache.cmd" --manifest "%TEST_MANIFEST%" --cache-dir "%CACHE_TARGET%" > "%TEST_TMP_DIR%\t2.log" 2>&1
+if exist "%CACHE_TARGET%\runtimes\dummy-runtime.zip" (
     echo [PASS] Artifact successfully hydrated
 ) else (
     echo [FAIL] Hydration did not produce expected artifact >&2
-    type "%TEST_TMP_DIR%	2.log" >&2
+    type "%TEST_TMP_DIR%\t2.log" >&2
     exit /b 1
 )
 
