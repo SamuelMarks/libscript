@@ -25,8 +25,21 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
     base_image="debian:bookworm-slim"
+    is_offline=0
+    if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ]; then
+      is_offline=1
+    fi
+
     while [ $# -gt 0 ]; do
       case "$1" in
+        --offline|-o)
+          is_offline=1
+          shift
+          ;;
+        --online)
+          is_offline=0
+          shift
+          ;;
         --base|--base-image)
           base_image="$2"
           if [ "$base_image" = "debian" ]; then
@@ -103,8 +116,9 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
       printf '%s\n' "$sorted_deps" | while read -r _layer pkg ver override; do
         if [ -n "$pkg" ]; then
           if [ "$ver" = "null" ]; then ver="latest"; fi
+          pkg_clean=$(basename "$pkg")
 
-          df="Dockerfile.$pkg"
+          df="Dockerfile.$pkg_clean"
           {
             printf '%s\n' "FROM $base_image"
             printf '%s\n' "ARG TARGETOS=linux"
@@ -114,11 +128,19 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
             printf '%s\n' "ENV LIBSCRIPT_BUILD_DIR=\"/opt/libscript_build\""
             printf '%s\n' "ENV LIBSCRIPT_DATA_DIR=\"/opt/libscript_data\""
             printf '%s\n' "ENV LIBSCRIPT_CACHE_DIR=\"/opt/libscript_cache\""
+            if [ "$is_offline" -eq 1 ]; then
+              printf '%s\n' "ENV LIBSCRIPT_OFFLINE=\"1\""
+              printf '%s\n' "ENV PIP_NO_INDEX=\"1\""
+              printf '%s\n' "ENV PIP_FIND_LINKS=\"/opt/libscript_cache/wheels\""
+              printf '%s\n' "ENV npm_config_offline=\"true\""
+              printf '%s\n' "ENV npm_config_prefer_offline=\"true\""
+              printf '%s\n' "ENV npm_config_cache=\"/opt/libscript_cache/npm\""
+            fi
           } > "$df"
 
           pkg_up=$(printf '%s\n' "$pkg" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
           printf '%s\n' "ENV ${pkg_up}_VERSION=\"$ver\"" >> "$df"
-          if [ -n "$override" ] && [ "$override" != "null" ]; then
+          if [ "$is_offline" -ne 1 ] && [ -n "$override" ] && [ "$override" != "null" ]; then
               {
                 printf '%s\n' "ENV ${pkg_up}_URL=\"$override\""
                 filename=$(basename "${override%%\?*}")
@@ -128,7 +150,11 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
           {
             printf '%s\n' "COPY . /opt/libscript"
             printf '%s\n' "WORKDIR /opt/libscript"
-            printf '%s\n' "RUN ./libscript.sh install $pkg \${${pkg_up}_VERSION}"
+            if [ "$is_offline" -eq 1 ]; then
+              printf '%s\n' "RUN ./libscript.sh install $pkg \${${pkg_up}_VERSION} --offline"
+            else
+              printf '%s\n' "RUN ./libscript.sh install $pkg \${${pkg_up}_VERSION}"
+            fi
           } >> "$df"
 
           healthcheck="[\"CMD-SHELL\", \"printf '%s\n' '$pkg is ok' || exit 1\"]"
@@ -138,12 +164,30 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
           if [ "$pkg" = "memcached" ]; then healthcheck="[\"CMD-SHELL\", \"nc -z 127.0.0.1 11211 || exit 1\"]"; fi
           if [ "$pkg" = "mongodb" ]; then healthcheck="[\"CMD\", \"mongosh\", \"--eval\", \"db.adminCommand('ping')\"]"; fi
           if [ "$pkg" = "rabbitmq" ]; then healthcheck="[\"CMD\", \"rabbitmq-diagnostics\", \"ping\"]"; fi
-          if [ "$pkg" = "nginx" ] || [ "$pkg" = "caddy" ] || [ "$pkg" = "httpd" ]; then healthcheck="[\"CMD-SHELL\", \"curl -f http://localhost/ || exit 1\"]"; fi
+          if [ "$pkg" = "nginx" ] || [ "$pkg" = "caddy" ] || [ "$pkg" = "httpd" ]; then
+            if [ "$is_offline" -eq 1 ]; then
+              healthcheck="[\"CMD-SHELL\", \"nc -z 127.0.0.1 80 || exit 1\"]"
+            else
+              healthcheck="[\"CMD-SHELL\", \"curl -f http://localhost/ || exit 1\"]"
+            fi
+          fi
           if [ "$pkg" = "php" ]; then healthcheck="[\"CMD-SHELL\", \"php -v || exit 1\"]"; fi
           if [ "$pkg" = "python" ]; then healthcheck="[\"CMD-SHELL\", \"python3 --version || exit 1\"]"; fi
           if [ "$pkg" = "nodejs" ]; then healthcheck="[\"CMD-SHELL\", \"node -v || exit 1\"]"; fi
-          if [ "$pkg" = "fluentbit" ]; then healthcheck="[\"CMD-SHELL\", \"wget -qO- http://127.0.0.1:2020/api/v1/health || exit 1\"]"; fi
-          if [ "$pkg" = "meilisearch" ]; then healthcheck="[\"CMD-SHELL\", \"curl -f http://localhost:7700/health || exit 1\"]"; fi
+          if [ "$pkg" = "fluentbit" ]; then
+            if [ "$is_offline" -eq 1 ]; then
+              healthcheck="[\"CMD-SHELL\", \"nc -z 127.0.0.1 2020 || exit 1\"]"
+            else
+              healthcheck="[\"CMD-SHELL\", \"wget -qO- http://127.0.0.1:2020/api/v1/health || exit 1\"]"
+            fi
+          fi
+          if [ "$pkg" = "meilisearch" ]; then
+            if [ "$is_offline" -eq 1 ]; then
+              healthcheck="[\"CMD-SHELL\", \"nc -z 127.0.0.1 7700 || exit 1\"]"
+            else
+              healthcheck="[\"CMD-SHELL\", \"curl -f http://localhost:7700/health || exit 1\"]"
+            fi
+          fi
           if [ "$pkg" = "openedx" ]; then healthcheck="[\"CMD-SHELL\", \"/opt/libscript/stacks/cms/openedx/healthcheck.sh || exit 1\"]"; fi
 
           if [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
@@ -153,19 +197,27 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
               fi
           fi
 
-          printf '%s\n' "  $pkg:"
+          printf '%s\n' "  $pkg_clean:"
           printf '%s\n' "    build:"
           printf '%s\n' "      context: ."
           printf '%s\n' "      dockerfile: $df"
-          if [ "$pkg" = "openedx" ]; then
+          printf '%s\n' "    networks:"
+          printf '%s\n' "      - internal_network"
+          if [ "$pkg_clean" = "openedx" ]; then
             printf '%s\n' "    ports:"
             printf '%s\n' "      - \"8000:8000\""
             printf '%s\n' "      - \"8001:8001\""
             printf '%s\n' "    volumes:"
+            if [ "$is_offline" -eq 1 ]; then
+              printf '%s\n' "      - libscript_offline_cache:/opt/libscript_cache:ro"
+            fi
             printf '%s\n' "      - openedx_data:/opt/openedx/data"
             printf '%s\n' "      - openedx_logs:/opt/openedx/logs"
             printf '%s\n' "      - openedx_media:/opt/openedx/media"
             printf '%s\n' "      - openedx_backups:/opt/openedx/backups"
+          elif [ "$is_offline" -eq 1 ]; then
+            printf '%s\n' "    volumes:"
+            printf '%s\n' "      - libscript_offline_cache:/opt/libscript_cache:ro"
           fi
           printf '%s\n' "    healthcheck:"
           printf '%s\n' "      test: $healthcheck"
@@ -180,6 +232,13 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
           fi
 
           printf '%s\n' "    environment:"
+          if [ "$is_offline" -eq 1 ]; then
+            printf '%s\n' "      - LIBSCRIPT_OFFLINE=1"
+            printf '%s\n' "      - MYSQL_HOST=mysql"
+            printf '%s\n' "      - REDIS_HOST=redis"
+            printf '%s\n' "      - MONGODB_HOST=mongodb"
+            printf '%s\n' "      - MEILISEARCH_HOST=meilisearch"
+          fi
           if [ -n "$override" ] && [ "$override" != "null" ]; then
             printf '%s\n' "      - ${pkg_up}_URL=\"$override\""
           fi
@@ -195,7 +254,12 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
             printf '%s\n' "      context: ."
             printf '%s\n' "      dockerfile: $df"
             printf '%s\n' "    command: [\"/opt/libscript/stacks/cms/openedx/workers.sh\", \"start\"]"
+            printf '%s\n' "    networks:"
+            printf '%s\n' "      - internal_network"
             printf '%s\n' "    volumes:"
+            if [ "$is_offline" -eq 1 ]; then
+              printf '%s\n' "      - libscript_offline_cache:/opt/libscript_cache:ro"
+            fi
             printf '%s\n' "      - openedx_data:/opt/openedx/data"
             printf '%s\n' "      - openedx_logs:/opt/openedx/logs"
             printf '%s\n' "    depends_on:"
@@ -205,7 +269,12 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
             printf '%s\n' "      context: ."
             printf '%s\n' "      dockerfile: $df"
             printf '%s\n' "    command: [\"/opt/libscript/stacks/cms/openedx/workers.sh\", \"start\"]"
+            printf '%s\n' "    networks:"
+            printf '%s\n' "      - internal_network"
             printf '%s\n' "    volumes:"
+            if [ "$is_offline" -eq 1 ]; then
+              printf '%s\n' "      - libscript_offline_cache:/opt/libscript_cache:ro"
+            fi
             printf '%s\n' "      - openedx_data:/opt/openedx/data"
             printf '%s\n' "      - openedx_logs:/opt/openedx/logs"
             printf '%s\n' "    depends_on:"
@@ -214,10 +283,20 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
         fi
       done
 
+      printf '%s\n' ""
+      printf '%s\n' "networks:"
+      printf '%s\n' "  internal_network:"
+      if [ "$is_offline" -eq 1 ]; then
+        printf '%s\n' "    internal: true"
+      fi
+
+      printf '%s\n' ""
+      printf '%s\n' "volumes:"
+      if [ "$is_offline" -eq 1 ]; then
+        printf '%s\n' "  libscript_offline_cache:"
+      fi
       case "$deps_list" in
         *"openedx"*)
-          printf '%s\n' ""
-          printf '%s\n' "volumes:"
           printf '%s\n' "  openedx_data:"
           printf '%s\n' "  openedx_logs:"
           printf '%s\n' "  openedx_media:"

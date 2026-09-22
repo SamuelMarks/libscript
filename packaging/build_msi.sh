@@ -13,6 +13,10 @@
 #
 # Options:
 #   --out <name>          Output base file name (default derived from target)
+#   --variant <mode>      Distribution variant: online or offline (default: online)
+#   --offline             Shorthand for --variant offline
+#   --online              Shorthand for --variant online
+#   --cache-dir <dir>     Path to pre-hydrated offline cache directory
 #   --version <ver>       Package version
 #   --upgrade-code <guid> Upgrade code GUID
 #   --icon <path>         Path to .ico icon file
@@ -108,11 +112,39 @@ REPO_BRANCH=""
 REPO_AUTH_TOKEN=""
 SETUP_MODE="Simple"
 
+VARIANT="online"
+[ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] && VARIANT="offline"
+CACHE_DIR="${LIBSCRIPT_CACHE_DIR:-${LIBSCRIPT_ROOT_DIR}/cache}"
+
 while [ $# -gt 0 ]; do
   case "$1" in
     --help|-h|/\?|-\?)
       show_help
       exit 0
+      ;;
+    --variant)
+      VARIANT="$2"
+      shift 2
+      ;;
+    --variant=*)
+      VARIANT="${1#*=}"
+      shift
+      ;;
+    --offline)
+      VARIANT="offline"
+      shift
+      ;;
+    --online)
+      VARIANT="online"
+      shift
+      ;;
+    --cache-dir)
+      CACHE_DIR="$2"
+      shift 2
+      ;;
+    --cache-dir=*)
+      CACHE_DIR="${1#*=}"
+      shift
       ;;
     --out)
       OUT_FILE="$2"
@@ -249,7 +281,20 @@ fi
 : "${LOGS_DIR:=C:\ProgramData\OpenEdX\logs}"
 : "${REPO_URL:=https://github.com/openedx/edx-platform.git}"
 : "${REPO_BRANCH:=open-release/quince.master}"
-: "${OUT_FILE:=OpenEdX-Setup}"
+
+if [ "$VARIANT" = "offline" ]; then
+  PROP_OPENEDX_OFFLINE="1"
+  [ "$APP_NAME" = "Open edX Platform" ] && APP_NAME="Open edX Platform (Offline Air-Gapped)"
+  : "${OUT_FILE:=openedx-offline-${APP_VERSION}}"
+  WELCOME_DESC="The Setup Wizard will deploy Open edX LMS, Studio CMS, and pre-bundled air-gapped runtimes on your computer."
+  COMP_TAG=" [Pre-bundled / Offline]"
+else
+  PROP_OPENEDX_OFFLINE="0"
+  [ "$APP_NAME" = "Open edX Platform" ] && APP_NAME="Open edX Platform (Online)"
+  : "${OUT_FILE:=openedx-${APP_VERSION}}"
+  WELCOME_DESC="The Setup Wizard will download and install Open edX LMS, Studio CMS, and required runtimes on your computer."
+  COMP_TAG=""
+fi
 
 TMP_WORK_DIR="${LIBSCRIPT_ROOT_DIR}/tmp/msi_build_$$"
 mkdir -p "$TMP_WORK_DIR"
@@ -388,8 +433,24 @@ generate_wxs() {
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <Product Id="$PRODUCT_CODE" Name="$_esc_name" Language="1033" Version="$APP_VERSION" Manufacturer="$_esc_pub" UpgradeCode="$UPGRADE_CODE">
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Description="$_esc_name Windows Installer" />
-    <Media Id="1" Cabinet="openedx.cab" EmbedCab="yes" />
+EOF_XML
 
+  if [ "$VARIANT" = "offline" ]; then
+    cat << EOF_MEDIA >> "$WXS_FILE"
+    <!-- Offline Variant (Multi-cab partition) -->
+    <Media Id="1" Cabinet="engine.cab" EmbedCab="yes" CompressionLevel="high" />
+    <Media Id="2" Cabinet="runtimes.cab" EmbedCab="yes" CompressionLevel="medium" />
+    <Media Id="3" Cabinet="databases.cab" EmbedCab="yes" CompressionLevel="medium" />
+    <Media Id="4" Cabinet="codebase.cab" EmbedCab="yes" CompressionLevel="medium" />
+EOF_MEDIA
+  else
+    cat << EOF_MEDIA >> "$WXS_FILE"
+    <!-- Online Variant (Single compressed cab) -->
+    <Media Id="1" Cabinet="engine.cab" EmbedCab="yes" CompressionLevel="high" />
+EOF_MEDIA
+  fi
+
+  cat << EOF_UPGRADE >> "$WXS_FILE"
     <!-- Major Upgrade Rules: Seamlessly replaces superseded binaries and prevents downgrades -->
     <MajorUpgrade
         DowngradeErrorMessage="A newer version of [ProductName] is already installed. Setup will now exit."
@@ -400,7 +461,8 @@ generate_wxs() {
     <Icon Id="AppIcon.ico" SourceFile="$ICON_PATH" />
     <Property Id="ARPPRODUCTICON" Value="AppIcon.ico" />
     <Property Id="ARPURLINFOABOUT" Value="$APP_URL" />
-EOF_XML
+    <Property Id="PROP_OPENEDX_OFFLINE" Value="$PROP_OPENEDX_OFFLINE" Secure="yes" />
+EOF_UPGRADE
 
   if [ -n "$BANNER_TOP_PATH" ] && [ -f "$BANNER_TOP_PATH" ]; then
     printf '    <WixVariable Id="WixUIBannerBmp" Value="%s" />
@@ -508,7 +570,9 @@ EOF_XML
     <!-- Target Directory Layout with CommonAppDataFolder for Mutable User Data -->
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFiles64Folder">
-        <Directory Id="INSTALLFOLDER" Name="OpenEdX" />
+        <Directory Id="INSTALLFOLDER" Name="OpenEdX">
+          <Directory Id="LIBSCRIPT_FOLDER" Name="libscript" />
+        </Directory>
       </Directory>
       <Directory Id="ProgramMenuFolder">
         <Directory Id="OpenEdXProgramMenuFolder" Name="Open edX" />
@@ -524,17 +588,18 @@ EOF_XML
     </Directory>
 
     <!-- Custom Actions -->
-    <CustomAction Id="CA_LaunchBrowser" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c start http://[PROP_LMS_HOST]:[PROP_LMS_PORT]" Return="asyncNoWait" />
-    <CustomAction Id="CA_LaunchStudio" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c start http://[PROP_CMS_HOST]:[PROP_CMS_PORT]" Return="asyncNoWait" />
-    <CustomAction Id="InstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c libscript.cmd install stacks/cms/openedx --lms-port=[PROP_LMS_PORT] --cms-port=[PROP_CMS_PORT] --mysql-url=&quot;[PROP_MYSQL_REMOTE_URL]&quot; --redis-port=[PROP_REDIS_PORT] --redis-url=&quot;[PROP_REDIS_URL]&quot; --mongodb-uri=&quot;[PROP_MONGODB_URI]&quot; --repo=&quot;[PROP_OPENEDX_EDX_PLATFORM_REPOSITORY]&quot; --version=&quot;[PROP_OPENEDX_VERSION]&quot; --admin-user=&quot;[PROP_OPENEDX_ADMIN_USERNAME]&quot; --admin-password=&quot;[PROP_OPENEDX_ADMIN_PASSWORD]&quot; --admin-email=&quot;[PROP_OPENEDX_ADMIN_EMAIL]&quot; --backup-dir=&quot;[BACKUPFOLDER]&quot; --theme=&quot;[PROP_OPENEDX_THEME]&quot;" Execute="deferred" Return="check" Impersonate="no" />
-    <CustomAction Id="InstallWorkersService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]workers.cmd&quot; start" Execute="deferred" Return="ignore" Impersonate="no" />
-    <CustomAction Id="StopWorkersService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]workers.cmd&quot; stop" Execute="deferred" Return="ignore" Impersonate="no" />
-    <CustomAction Id="ImportDemoContentAction" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]import_demo.cmd&quot; course &amp;&amp; &quot;[INSTALLFOLDER]import_demo.cmd&quot; libraries" Execute="deferred" Return="ignore" Impersonate="no" />
-    <CustomAction Id="BuildMFEsAction" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]mfe.cmd&quot; build all &amp;&amp; &quot;[INSTALLFOLDER]mfe.cmd&quot; deploy all" Execute="deferred" Return="ignore" Impersonate="no" />
-    <CustomAction Id="PostInstallHealthcheck" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]healthcheck.cmd&quot;" Execute="deferred" Return="ignore" Impersonate="no" />
-    <CustomAction Id="InstallMySQLService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c libscript.cmd install databases/mysql --port=[PROP_MYSQL_PORT]" Execute="deferred" Return="check" Impersonate="no" />
-    <CustomAction Id="InstallRedisService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c libscript.cmd install caches/redis --port=[PROP_REDIS_PORT]" Execute="deferred" Return="check" Impersonate="no" />
-    <CustomAction Id="UninstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c libscript.cmd uninstall stacks/cms/openedx [PURGE_openedx]" Execute="deferred" Return="check" Impersonate="no" />
+    <CustomAction Id="CA_CheckNetworkConnection" Directory="INSTALLFOLDER" ExeCommand="powershell.exe -NoProfile -Command &quot;try { (New-Object System.Net.Sockets.TcpClient('github.com', 443)).Close(); (New-Object System.Net.Sockets.TcpClient('pypi.org', 443)).Close(); } catch { exit 1 }&quot;" Execute="immediate" Return="ignore" />
+    <CustomAction Id="CA_LaunchBrowser" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\packaging\launch_browser.cmd&quot; http://[PROP_LMS_HOST]:[PROP_LMS_PORT] &quot;Open edX LMS&quot;" Return="asyncNoWait" />
+    <CustomAction Id="CA_LaunchStudio" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\packaging\launch_browser.cmd&quot; http://[PROP_CMS_HOST]:[PROP_CMS_PORT] &quot;Open edX Studio&quot;" Return="asyncNoWait" />
+    <CustomAction Id="InstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install stacks/cms/openedx --offline=[PROP_OPENEDX_OFFLINE] --lms-port=[PROP_LMS_PORT] --cms-port=[PROP_CMS_PORT] --mysql-url=&quot;[PROP_MYSQL_REMOTE_URL]&quot; --redis-port=[PROP_REDIS_PORT] --redis-url=&quot;[PROP_REDIS_URL]&quot; --mongodb-uri=&quot;[PROP_MONGODB_URI]&quot; --repo=&quot;[PROP_OPENEDX_EDX_PLATFORM_REPOSITORY]&quot; --version=&quot;[PROP_OPENEDX_VERSION]&quot; --admin-user=&quot;[PROP_OPENEDX_ADMIN_USERNAME]&quot; --admin-password=&quot;[PROP_OPENEDX_ADMIN_PASSWORD]&quot; --admin-email=&quot;[PROP_OPENEDX_ADMIN_EMAIL]&quot; --backup-dir=&quot;[BACKUPFOLDER]&quot; --theme=&quot;[PROP_OPENEDX_THEME]&quot;" Execute="deferred" Return="check" Impersonate="no" />
+    <CustomAction Id="InstallWorkersService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\workers.cmd&quot; start" Execute="deferred" Return="ignore" Impersonate="no" />
+    <CustomAction Id="StopWorkersService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\workers.cmd&quot; stop" Execute="deferred" Return="ignore" Impersonate="no" />
+    <CustomAction Id="ImportDemoContentAction" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\import_demo.cmd&quot; course &amp;&amp; &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\import_demo.cmd&quot; libraries" Execute="deferred" Return="ignore" Impersonate="no" />
+    <CustomAction Id="BuildMFEsAction" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\mfe.cmd&quot; build all &amp;&amp; &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\mfe.cmd&quot; deploy all" Execute="deferred" Return="ignore" Impersonate="no" />
+    <CustomAction Id="PostInstallHealthcheck" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\healthcheck.cmd&quot;" Execute="deferred" Return="ignore" Impersonate="no" />
+    <CustomAction Id="InstallMySQLService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install databases/mysql --port=[PROP_MYSQL_PORT]" Execute="deferred" Return="check" Impersonate="no" />
+    <CustomAction Id="InstallRedisService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install caches/redis --port=[PROP_REDIS_PORT]" Execute="deferred" Return="check" Impersonate="no" />
+    <CustomAction Id="UninstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; uninstall stacks/cms/openedx [PURGE_openedx]" Execute="deferred" Return="check" Impersonate="no" />
 
     <!-- UI Architecture Supporting Simple and Advanced Modes -->
     <UI Id="CustomUI">
@@ -545,7 +610,7 @@ EOF_XML
         <Control Id="Bitmap" Type="Bitmap" X="0" Y="0" Width="123" Height="234" Text="WixUIDialogBmp" />
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
         <Control Id="Title" Type="Text" X="135" Y="20" Width="220" Height="50" Transparent="yes" NoPrefix="yes" Text="Welcome to the [ProductName] Setup Wizard" />
-        <Control Id="Description" Type="Text" X="135" Y="70" Width="220" Height="70" Transparent="yes" NoPrefix="yes" Text="The Setup Wizard will install Open edX LMS, Studio CMS, and required runtimes on your computer. Core non-optional dependencies include Python, Node.js, Meilisearch, MySQL, Redis, and MongoDB." />
+        <Control Id="Description" Type="Text" X="135" Y="70" Width="220" Height="70" Transparent="yes" NoPrefix="yes" Text="$WELCOME_DESC" />
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Disabled="yes" Text="Back" />
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Next">
           <Publish Event="EndDialog" Value="Return">1</Publish>
@@ -848,16 +913,16 @@ EOF_XML
         <Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="Ready to Install [ProductName]" />
         <Control Id="Description" Type="Text" X="25" Y="22" Width="280" Height="20" Transparent="yes" NoPrefix="yes" Text="Review the components being installed on your computer." />
         <Control Id="Summary" Type="Text" X="20" Y="48" Width="330" Height="14" NoPrefix="yes" Text="Non-optional components to be installed:" />
-        <Control Id="CompPython" Type="Text" X="28" Y="64" Width="320" Height="13" NoPrefix="yes" Text="- python (Python 3.11+ runtime &amp; virtual environment)" />
-        <Control Id="CompNode" Type="Text" X="28" Y="78" Width="320" Height="13" NoPrefix="yes" Text="- nodejs (Node.js &amp; npm asset compilation pipeline)" />
-        <Control Id="CompMeili" Type="Text" X="28" Y="92" Width="320" Height="13" NoPrefix="yes" Text="- meilisearch (Course search and catalog discovery engine)" />
-        <Control Id="CompMySQL" Type="Text" X="28" Y="106" Width="320" Height="13" NoPrefix="yes" Text="- mysql (Relational database for users and course metadata)" />
-        <Control Id="CompRedis" Type="Text" X="28" Y="120" Width="320" Height="13" NoPrefix="yes" Text="- redis (In-memory caching and Celery asynchronous task broker)" />
-        <Control Id="CompMongo" Type="Text" X="28" Y="134" Width="320" Height="13" NoPrefix="yes" Text="- mongodb (Document datastore for courseware modules)" />
-        <Control Id="CompLMS" Type="Text" X="28" Y="148" Width="320" Height="13" NoPrefix="yes" Text="- openedx (Open edX LMS on port [PROP_LMS_PORT], Studio on port [PROP_CMS_PORT])" />
-        <Control Id="CompWorkers" Type="Text" X="28" Y="162" Width="320" Height="13" NoPrefix="yes" Text="- workers (Celery asynchronous task workers &amp; beat scheduler)" />
-        <Control Id="CompDemo" Type="Text" X="28" Y="176" Width="320" Height="13" NoPrefix="yes" Text="- content (Demo courseware and content libraries catalog)" />
-        <Control Id="CompMFEs" Type="Text" X="28" Y="190" Width="320" Height="13" NoPrefix="yes" Text="- mfes (Micro-Frontends: Learning, Authn, Account)" />
+        <Control Id="CompPython" Type="Text" X="28" Y="64" Width="320" Height="13" NoPrefix="yes" Text="- python (Python 3.11+ runtime &amp; virtual environment)$COMP_TAG" />
+        <Control Id="CompNode" Type="Text" X="28" Y="78" Width="320" Height="13" NoPrefix="yes" Text="- nodejs (Node.js &amp; npm asset compilation pipeline)$COMP_TAG" />
+        <Control Id="CompMeili" Type="Text" X="28" Y="92" Width="320" Height="13" NoPrefix="yes" Text="- meilisearch (Course search and catalog discovery engine)$COMP_TAG" />
+        <Control Id="CompMySQL" Type="Text" X="28" Y="106" Width="320" Height="13" NoPrefix="yes" Text="- mysql (Relational database for users and course metadata)$COMP_TAG" />
+        <Control Id="CompRedis" Type="Text" X="28" Y="120" Width="320" Height="13" NoPrefix="yes" Text="- redis (In-memory caching and Celery asynchronous task broker)$COMP_TAG" />
+        <Control Id="CompMongo" Type="Text" X="28" Y="134" Width="320" Height="13" NoPrefix="yes" Text="- mongodb (Document datastore for courseware modules)$COMP_TAG" />
+        <Control Id="CompLMS" Type="Text" X="28" Y="148" Width="320" Height="13" NoPrefix="yes" Text="- openedx (Open edX LMS on port [PROP_LMS_PORT], Studio on port [PROP_CMS_PORT])$COMP_TAG" />
+        <Control Id="CompWorkers" Type="Text" X="28" Y="162" Width="320" Height="13" NoPrefix="yes" Text="- workers (Celery asynchronous task workers &amp; beat scheduler)$COMP_TAG" />
+        <Control Id="CompDemo" Type="Text" X="28" Y="176" Width="320" Height="13" NoPrefix="yes" Text="- content (Demo courseware and content libraries catalog)$COMP_TAG" />
+        <Control Id="CompMFEs" Type="Text" X="28" Y="190" Width="320" Height="13" NoPrefix="yes" Text="- mfes (Micro-Frontends: Learning, Authn, Account)$COMP_TAG" />
         <Control Id="Instructions" Type="Text" X="20" Y="208" Width="330" Height="24" Text="Click Install to begin installation. If you want to review or change any settings, click Back." />
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back">
           <Publish Event="EndDialog" Value="Return">1</Publish>
@@ -889,6 +954,7 @@ EOF_XML
 
       <!-- Sequential UI Navigation Routing -->
       <InstallUISequence>
+        <Custom Action="CA_CheckNetworkConnection" After="CostFinalize"><![CDATA[NOT Installed AND PROP_OPENEDX_OFFLINE="0"]]></Custom>
         <Show Dialog="Dlg_Welcome" After="CostFinalize">NOT Installed</Show>
         <Show Dialog="Dlg_License" After="Dlg_Welcome">NOT Installed</Show>
         <Show Dialog="Dlg_SetupType" After="Dlg_License">NOT Installed</Show>
@@ -925,10 +991,12 @@ EOF_XML
 
     <Feature Id="ProductFeature" Title="$APP_NAME" Level="1">
       <ComponentGroupRef Id="ProductComponents" />
-      <ComponentRef Id="CoursewareDataStore" />
+      <ComponentGroupRef Id="LibscriptHarvestedComponents" />
+$([ "$VARIANT" = "offline" ] && printf '      <ComponentGroupRef Id="LibscriptOfflineCacheComponents" />\n')      <ComponentRef Id="CoursewareDataStore" />
       <ComponentRef Id="CoursewareLogStore" />
       <ComponentRef Id="CoursewareBackupStore" />
       <ComponentRef Id="ApplicationShortcuts" />
+      <ComponentRef Id="EnvironmentSettings" />
     </Feature>
   </Product>
 
@@ -995,62 +1063,99 @@ EOF_XML
         <File Id="MfeCmdFile" Source="stacks/cms/openedx/mfe.cmd" KeyPath="yes" />
         <File Id="MfeShFile" Source="stacks/cms/openedx/mfe.sh" />
       </Component>
+      <Component Id="MockServerComponent" Guid="6A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D">
+        <File Id="MockServerPs1File" Source="stacks/cms/openedx/mock_server.ps1" KeyPath="yes" />
+      </Component>
     </ComponentGroup>
 
+    <!-- Environment Variable Registration -->
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="EnvironmentSettings" Guid="7291A843-159A-46D8-92EF-891029384756">
+        <Environment Id="EnvLibscriptRoot" Name="LIBSCRIPT_ROOT_DIR" Value="[INSTALLFOLDER]libscript" Permanent="no" Action="set" System="yes" />
+        <Environment Id="EnvPathLibscript" Name="PATH" Value="[INSTALLFOLDER]libscript" Permanent="no" Action="set" Part="last" System="yes" />
+        <Environment Id="EnvPathStack" Name="PATH" Value="[INSTALLFOLDER]libscript\stacks\cms\openedx" Permanent="no" Action="set" Part="last" System="yes" />
+        <RegistryValue Root="HKCU" Key="Software\LibScript\OpenEdX" Name="env_configured" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
     <!-- Permanent and NeverOverwrite User Data and Courseware Stores -->
-    <Component Id="CoursewareDataStore" Directory="DATAFOLDER" Guid="7F28A541-11C3-4E80-990A-46D91A883C12" Permanent="yes" NeverOverwrite="yes">
-      <CreateFolder />
-    </Component>
+    <DirectoryRef Id="DATAFOLDER">
+      <Component Id="CoursewareDataStore" Guid="7F28A541-11C3-4E80-990A-46D91A883C12" Permanent="yes" NeverOverwrite="yes">
+        <CreateFolder />
+      </Component>
+    </DirectoryRef>
 
-    <Component Id="CoursewareLogStore" Directory="LOGSFOLDER" Guid="3E4A1521-884A-49A3-A65B-64771C5091E2" Permanent="yes" NeverOverwrite="yes">
-      <CreateFolder />
-    </Component>
+    <DirectoryRef Id="LOGSFOLDER">
+      <Component Id="CoursewareLogStore" Guid="3E4A1521-884A-49A3-A65B-64771C5091E2" Permanent="yes" NeverOverwrite="yes">
+        <CreateFolder />
+      </Component>
+    </DirectoryRef>
 
-    <Component Id="CoursewareBackupStore" Directory="BACKUPFOLDER" Guid="98127364-5A4B-4C3D-8E2F-1029384756BA" Permanent="yes" NeverOverwrite="yes">
-      <CreateFolder />
-    </Component>
+    <DirectoryRef Id="BACKUPFOLDER">
+      <Component Id="CoursewareBackupStore" Guid="98127364-5A4B-4C3D-8E2F-1029384756BA" Permanent="yes" NeverOverwrite="yes">
+        <CreateFolder />
+      </Component>
+    </DirectoryRef>
 
     <!-- Administrative Shortcuts in Start Menu -->
-    <Component Id="ApplicationShortcuts" Directory="OpenEdXProgramMenuFolder" Guid="718293A4-B5C6-4D7E-8F90-123456789ABC">
-      <Shortcut Id="ShortcutCli" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]cli.cmd" WorkingDirectory="INSTALLFOLDER" />
-      <Shortcut Id="ShortcutHealth" Name="Open edX Healthcheck" Description="Open edX Diagnostics Probe" Target="[INSTALLFOLDER]healthcheck.cmd" WorkingDirectory="INSTALLFOLDER" />
-      <Shortcut Id="ShortcutDbShell" Name="Open edX Database Console" Description="Open edX MySQL Database Shell" Target="[INSTALLFOLDER]dbshell.cmd" Arguments="mysql" WorkingDirectory="INSTALLFOLDER" />
-      <Shortcut Id="ShortcutBackup" Name="Open edX Backup and Restore" Description="Open edX Backup Tool" Target="[INSTALLFOLDER]backup.cmd" WorkingDirectory="INSTALLFOLDER" $([ -n "$ICON_PATH" ] && [ -f "$ICON_PATH" ] && printf 'Icon="AppIcon.ico"') />
-      <Shortcut Id="DesktopShortcutCli" Directory="DesktopFolder" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]cli.cmd" WorkingDirectory="INSTALLFOLDER" $([ -n "$ICON_PATH" ] && [ -f "$ICON_PATH" ] && printf 'Icon="AppIcon.ico"') />
-      <Shortcut Id="DesktopShortcutLms" Directory="DesktopFolder" Name="Open edX LMS" Description="Open edX Learning Management System" Target="[INSTALLFOLDER]cli.cmd" Arguments="lms" WorkingDirectory="INSTALLFOLDER" $([ -n "$ICON_PATH" ] && [ -f "$ICON_PATH" ] && printf 'Icon="AppIcon.ico"') />
-      <Shortcut Id="DesktopShortcutStudio" Directory="DesktopFolder" Name="Open edX Studio" Description="Open edX Studio Course Authoring" Target="[INSTALLFOLDER]cli.cmd" Arguments="studio" WorkingDirectory="INSTALLFOLDER" $([ -n "$ICON_PATH" ] && [ -f "$ICON_PATH" ] && printf 'Icon="AppIcon.ico"') />
-      <RemoveFolder Id="CleanUpShortCutDir" Directory="OpenEdXProgramMenuFolder" On="uninstall" />
-      <RegistryValue Root="HKCU" Key="Software\LibScript\OpenEdX" Name="installed" Type="integer" Value="1" KeyPath="yes" />
-    </Component>
+    <DirectoryRef Id="OpenEdXProgramMenuFolder">
+      <Component Id="ApplicationShortcuts" Guid="718293A4-B5C6-4D7E-8F90-123456789ABC">
+        <Shortcut Id="ShortcutCli" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]libscript\stacks\cms\openedx\cli.cmd" WorkingDirectory="[INSTALLFOLDER]libscript\stacks\cms\openedx" />
+        <Shortcut Id="ShortcutHealth" Name="Open edX Healthcheck" Description="Open edX Diagnostics Probe" Target="[INSTALLFOLDER]libscript\stacks\cms\openedx\healthcheck.cmd" WorkingDirectory="[INSTALLFOLDER]libscript\stacks\cms\openedx" />
+        <Shortcut Id="ShortcutDbShell" Name="Open edX Database Console" Description="Open edX MySQL Database Shell" Target="[INSTALLFOLDER]libscript\stacks\cms\openedx\dbshell.cmd" Arguments="mysql" WorkingDirectory="[INSTALLFOLDER]libscript\stacks\cms\openedx" />
+        <Shortcut Id="ShortcutBackup" Name="Open edX Backup and Restore" Description="Open edX Backup Tool" Target="[INSTALLFOLDER]libscript\stacks\cms\openedx\backup.cmd" WorkingDirectory="[INSTALLFOLDER]libscript\stacks\cms\openedx" $([ -n "$ICON_PATH" ] && [ -f "$ICON_PATH" ] && printf 'Icon="AppIcon.ico"') />
+        <Shortcut Id="DesktopShortcutCli" Directory="DesktopFolder" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]libscript\stacks\cms\openedx\cli.cmd" WorkingDirectory="[INSTALLFOLDER]libscript\stacks\cms\openedx" $([ -n "$ICON_PATH" ] && [ -f "$ICON_PATH" ] && printf 'Icon="AppIcon.ico"') />
+        <Shortcut Id="DesktopShortcutLms" Directory="DesktopFolder" Name="Open edX LMS" Description="Open edX Learning Management System" Target="[INSTALLFOLDER]libscript\stacks\cms\openedx\cli.cmd" Arguments="lms" WorkingDirectory="[INSTALLFOLDER]libscript\stacks\cms\openedx" $([ -n "$ICON_PATH" ] && [ -f "$ICON_PATH" ] && printf 'Icon="AppIcon.ico"') />
+        <Shortcut Id="DesktopShortcutStudio" Directory="DesktopFolder" Name="Open edX Studio" Description="Open edX Studio Course Authoring" Target="[INSTALLFOLDER]libscript\stacks\cms\openedx\cli.cmd" Arguments="studio" WorkingDirectory="[INSTALLFOLDER]libscript\stacks\cms\openedx" $([ -n "$ICON_PATH" ] && [ -f "$ICON_PATH" ] && printf 'Icon="AppIcon.ico"') />
+        <RemoveFolder Id="CleanUpShortCutDir" Directory="OpenEdXProgramMenuFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\LibScript\OpenEdX" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
   </Fragment>
 </Wix>
 EOF_PROPS
 }
 
 generate_wxs
-printf '[PASS] Successfully created WiX manifest: %s
-' "$WXS_FILE"
+printf '[PASS] Successfully created WiX manifest: %s\n' "$WXS_FILE"
+
+# ## harvest_engine_payload
+PAYLOAD_WXS="${OUT_FILE}_payload.wxs"
+if [ "$VARIANT" = "offline" ]; then
+  "${SCRIPT_DIR}/harvest_payload.sh" \
+    --wix-fragment "${PAYLOAD_WXS}" \
+    --directory-id "LIBSCRIPT_FOLDER" \
+    --component-group "LibscriptHarvestedComponents" \
+    --include-cache "${CACHE_DIR}"
+else
+  "${SCRIPT_DIR}/harvest_payload.sh" \
+    --wix-fragment "${PAYLOAD_WXS}" \
+    --directory-id "LIBSCRIPT_FOLDER" \
+    --component-group "LibscriptHarvestedComponents"
+fi
 
 # ## compile_msi
 # Builds the .msi binary using wixl on POSIX systems or WiX toolset on Windows.
 compile_msi() {
   if [ "${OS:-}" = "Windows_NT" ] || command -v candle.exe >/dev/null 2>&1 || command -v wix.exe >/dev/null 2>&1; then
     if command -v wix.exe >/dev/null 2>&1; then
-      wix.exe build -ext WixToolset.UI.wixext -o "${OUT_FILE}.msi" "$WXS_FILE"
+      wix.exe build -ext WixToolset.UI.wixext -o "${OUT_FILE}.msi" "$WXS_FILE" "${PAYLOAD_WXS}"
     else
-      candle.exe "$WXS_FILE"
-      light.exe -ext WixUIExtension -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj"
+      candle.exe "$WXS_FILE" "${PAYLOAD_WXS}"
+      light.exe -ext WixUIExtension -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj" "${OUT_FILE}_payload.wixobj"
     fi
   elif command -v wixl >/dev/null 2>&1; then
     _wixl_manifest="${OUT_FILE}_wixl.wxs"
+    _wixl_payload="${OUT_FILE}_payload_wixl.wxs"
     # Create wixl-compatible subset without vendor-specific UI extensions
-    sed '/<WixVariable/d; /<UI Id="CustomUI">/,/<\/UI>/d; /<CustomAction/d; /<InstallExecuteSequence>/,/<\/InstallExecuteSequence>/d; /<MajorUpgrade/d; /<ComponentRef Id="Courseware/d; /<ComponentRef Id="ApplicationShortcuts/d; /<Component Id="ApplicationShortcuts"/,/<\/Component>/d; /<Directory Id="ProgramMenuFolder"/,/<\/Directory>/d; /<Property Id="FOUND_/,/<\/Property>/d; /Value=""/d; s/ Hidden="yes"//g' "$WXS_FILE" > "$_wixl_manifest"
-    if wixl -o "${OUT_FILE}.msi" "$_wixl_manifest"; then
+    sed '/<WixVariable/d; /<UI Id="CustomUI">/,/<\/UI>/d; /<CustomAction/d; /<InstallExecuteSequence>/,/<\/InstallExecuteSequence>/d; /<MajorUpgrade/d; /<ComponentRef Id="Courseware/d; /<ComponentRef Id="ApplicationShortcuts/d; /<ComponentRef Id="EnvironmentSettings/d; /<Component Id="ApplicationShortcuts"/,/<\/Component>/d; /<Component Id="EnvironmentSettings"/,/<\/Component>/d; /<Directory Id="ProgramMenuFolder"/,/<\/Directory>/d; /<Property Id="FOUND_/,/<\/Property>/d; /Value=""/d; s/ Hidden="yes"//g; s/ CompressionLevel="[^"]*"//g; s/ NeverOverwrite="yes"//g; /<Media Id="[2-9]"/d' "$WXS_FILE" > "$_wixl_manifest"
+    sed 's/ DiskId="[0-9]*"/ DiskId="1"/g' "${PAYLOAD_WXS}" > "$_wixl_payload"
+    if wixl -a x64 -o "${OUT_FILE}.msi" "$_wixl_manifest" "$_wixl_payload"; then
       printf '[PASS] Successfully compiled binary MSI via wixl: %s.msi\n' "$OUT_FILE"
     else
       printf '[WARN] wixl compilation failed; keeping generated .wxs manifest\n' >&2
     fi
-    rm -f "$_wixl_manifest"
+    rm -f "$_wixl_manifest" "$_wixl_payload"
   else
     printf '[INFO] Neither WiX toolset nor wixl is present in PATH. Generated XML manifest is ready for compilation.\n'
   fi

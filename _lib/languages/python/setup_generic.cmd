@@ -4,7 +4,47 @@
 ::
 :: ## Usage
 :: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+if defined STACK (
+    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    if not errorlevel 1 (
+        echo [STOP] processing "%THIS_FILE%" >&2
+        exit /b 0
+    )
+)
+set "STACK=%STACK%:%THIS_FILE%:"
+
+:: Parse offline and pip options
+:arg_parse_loop
+if "%~1"=="" goto :arg_parse_done
+if /i "%~1"=="--offline" set "LIBSCRIPT_OFFLINE=1"
+if /i "%~1"=="-o" set "LIBSCRIPT_OFFLINE=1"
+if /i "%~1"=="--pip-no-index" set "PIP_NO_INDEX=1"
+if /i "%~1"=="--pip-find-links" (
+    set "PIP_FIND_LINKS=%~2"
+    shift
+)
+if /i "%~1"=="--pip-wheel-dir" (
+    set "PIP_WHEEL_DIR=%~2"
+    shift
+)
+shift
+goto :arg_parse_loop
+:arg_parse_done
+
+if "%LIBSCRIPT_OFFLINE%"=="1" (
+    set "PIP_NO_INDEX=1"
+    if "%PIP_FIND_LINKS%"=="" (
+        if not "%PIP_WHEEL_DIR%"=="" (
+            set "PIP_FIND_LINKS=%PIP_WHEEL_DIR%"
+        ) else if not "%LIBSCRIPT_CACHE_DIR%"=="" (
+            set "PIP_FIND_LINKS=%LIBSCRIPT_CACHE_DIR%\wheels"
+        ) else (
+            set "PIP_FIND_LINKS=%LIBSCRIPT_ROOT_DIR%\cache\wheels"
+        )
+    )
+)
 
 if "%ACTION%"=="" set ACTION=install
 if "%PYTHON_VERSION%"=="" set PYTHON_VERSION=latest

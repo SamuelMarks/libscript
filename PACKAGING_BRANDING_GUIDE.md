@@ -77,3 +77,38 @@ All packaging generators accept normalized command-line flags across POSIX `/bin
   --license-file "legal/LICENSE.txt"
   --icon "assets/app.ico"
 ```
+
+---
+
+## Dual Distribution Variants (Online & Air-Gapped Offline)
+
+LibScript supports building two distinct deployment variants from the same stack recipes:
+
+1. **Online Variant (`--online`)**:
+   - Lightweight installer (~4 MB).
+   - Dynamically resolves runtimes and datastores from official network mirrors during installation.
+   - Recommended for developer environments and dynamic cloud VMs.
+
+2. **Air-Gapped Offline Variant (`--offline`)**:
+   - Self-contained archive/MSI (~800 MB - 1.5 GB).
+   - Pre-bundles runtimes, datastore binaries, pip wheels, and codebase archives.
+   - Strictly prohibits network access during installation.
+   - Utilizes multi-cabinet partitioning in WiX (`engine.cab`, `runtimes.cab`, `databases.cab`,
+     `codebase.cab`) to avoid 2 GB MSI cabinet limits.
+   - Recommended for secure intranets, defense, banking, and air-gapped server environments.
+
+---
+
+## Container Export Branding & Caching Architecture
+
+When exporting to containerized targets (`package-as docker` and `package-as docker-compose`):
+
+- **Online Dockerfile Export**: Synthesizes `ADD <url> /opt/libscript_cache/<pkg>/<filename>`
+  directives to utilize Docker's native layer caching. Remote artifacts are downloaded only once
+  unless remote HTTP ETag or Last-Modified headers change.
+- **Air-Gapped Offline Dockerfile Export**: Uses `COPY cache/ /opt/libscript_cache/` in the
+  Dockerfile header, sets `ENV LIBSCRIPT_OFFLINE=1`, and prohibits all `curl`/`wget`/`git` commands,
+  allowing hermetic builds via `docker build --network none .`.
+- **Multi-Service Docker Compose Export**: Produces an isolated multi-service topology mounting a
+  shared read-only cache volume (`libscript_offline_cache:/opt/libscript_cache:ro`), an internal
+  isolated network (`internal: true`), and local socket healthcheck probes.

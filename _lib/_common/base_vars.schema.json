@@ -48,6 +48,22 @@
       "type": "string",
       "description": "Directory where cached files are stored."
     },
+    "LIBSCRIPT_OFFLINE": {
+      "type": "string",
+      "description": "Flag (0 or 1) indicating whether offline mode is active, prohibiting outgoing network calls.",
+      "enum": ["0", "1"],
+      "default": "0"
+    },
+    "LIBSCRIPT_FORCE_OFFLINE": {
+      "type": "string",
+      "description": "Strict offline flag (0 or 1) that immediately aborts execution if network calls are attempted.",
+      "enum": ["0", "1"],
+      "default": "0"
+    },
+    "LIBSCRIPT_DOWNLOAD_DIR": {
+      "type": "string",
+      "description": "Staging directory for temporary download artifacts."
+    },
     "LIBSCRIPT_LOG_DRIVER": {
       "type": "string",
       "description": "Logging driver to use (e.g., fluentd)."

@@ -1,0 +1,282 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LibScript Offline Bundle Specification Schema",
+  "type": "object",
+  "description": "Defines the offline air-gapped dependency declarations including runtimes, databases, wheels, npm packages, codebase archives, and SHA-256 integrity checksums for self-contained installer builds.",
+  "required": ["name", "version", "runtimes", "databases", "codebase", "checksums"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Unique identifier of the application stack or offline bundle (e.g. 'openedx')."
+    },
+    "title": {
+      "type": "string",
+      "description": "Human-readable display title of the offline bundle (e.g. 'Open edX Platform Air-Gapped Offline Bundle')."
+    },
+    "version": {
+      "type": "string",
+      "description": "Version string corresponding to the stack release or bundle build (e.g. 'quince.3')."
+    },
+    "target_platform": {
+      "type": "string",
+      "default": "windows-x64",
+      "description": "Target operating system and architecture (e.g. 'windows-x64', 'linux-x86_64')."
+    },
+    "runtimes": {
+      "type": "object",
+      "description": "Runtime environments bundled for offline execution (e.g. Python, Node.js).",
+      "additionalProperties": {
+        "type": "object",
+        "description": "Specification for a standalone runtime archive or installer.",
+        "required": ["name", "version", "filename", "url", "sha256"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Identifier name of the runtime (e.g. 'python', 'nodejs')."
+          },
+          "version": {
+            "type": "string",
+            "description": "Exact version of the runtime package (e.g. '3.11.9', '20.17.0')."
+          },
+          "filename": {
+            "type": "string",
+            "description": "Local cached archive filename stored in cache/runtimes/."
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Upstream source URL where the archive is fetched during cache hydration."
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{64}$",
+            "description": "SHA-256 integrity digest for verifying the downloaded runtime archive."
+          },
+          "type": {
+            "type": "string",
+            "enum": ["zip", "tar.gz", "tar.xz", "exe"],
+            "description": "Archive compression format or executable type."
+          },
+          "extract_dir": {
+            "type": "string",
+            "description": "Target relative destination directory inside the installation root."
+          }
+        }
+      }
+    },
+    "databases": {
+      "type": "object",
+      "description": "Datastore binaries and servers pre-bundled for offline provisioning (e.g. MySQL, Redis, MongoDB, Meilisearch).",
+      "additionalProperties": {
+        "type": "object",
+        "description": "Specification for a database engine binary package.",
+        "required": ["name", "version", "filename", "url", "sha256", "port"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Identifier of the datastore service (e.g. 'mysql', 'redis', 'mongodb', 'meilisearch')."
+          },
+          "version": {
+            "type": "string",
+            "description": "Exact software version of the database binary."
+          },
+          "filename": {
+            "type": "string",
+            "description": "Local cached filename stored in cache/databases/."
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Upstream download URL for the database binary archive."
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{64}$",
+            "description": "SHA-256 integrity digest for database archive verification."
+          },
+          "port": {
+            "type": "integer",
+            "description": "Default TCP listening port for the database service."
+          },
+          "service_name": {
+            "type": "string",
+            "description": "Windows Service or daemon name used for service management."
+          },
+          "extract_dir": {
+            "type": "string",
+            "description": "Target extraction folder relative to installation folder."
+          }
+        }
+      }
+    },
+    "wheels": {
+      "type": "object",
+      "description": "Pre-downloaded Python wheel packages for air-gapped pip installation.",
+      "required": ["target_dir", "packages"],
+      "properties": {
+        "target_dir": {
+          "type": "string",
+          "default": "cache/wheels",
+          "description": "Subdirectory inside cache containing the downloaded .whl packages."
+        },
+        "requirements_files": {
+          "type": "array",
+          "description": "Relative paths to pip requirements files used to generate the wheel manifest.",
+          "items": {
+            "type": "string",
+            "description": "Relative path to requirements.txt file."
+          }
+        },
+        "packages": {
+          "type": "array",
+          "description": "List of core and bootstrap wheels included in the offline bundle.",
+          "items": {
+            "type": "object",
+            "description": "Python package wheel item specification.",
+            "required": ["name", "version", "filename", "url", "sha256"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Package distribution name (e.g. 'waitress', 'django')."
+              },
+              "version": {
+                "type": "string",
+                "description": "Package version string."
+              },
+              "filename": {
+                "type": "string",
+                "description": "Filename of the wheel archive (e.g. 'waitress-3.0.0-py3-none-any.whl')."
+              },
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Direct download URL from PyPI or custom wheel repository."
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-fA-F]{64}$",
+                "description": "SHA-256 hash digest of the wheel file."
+              }
+            }
+          }
+        }
+      }
+    },
+    "npm": {
+      "type": "object",
+      "description": "Pre-cached npm frontend packages and tarballs for offline Studio and LMS frontend builds.",
+      "required": ["target_dir"],
+      "properties": {
+        "target_dir": {
+          "type": "string",
+          "default": "cache/npm",
+          "description": "Subdirectory inside cache storing npm tarballs and cache indexes."
+        },
+        "packages": {
+          "type": "array",
+          "description": "Individual npm packages or tarball archives pre-fetched for the offline cache.",
+          "items": {
+            "type": "object",
+            "description": "Specification for pre-fetched npm package tarball.",
+            "required": ["name", "version", "filename", "url", "sha256"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "npm package name (e.g. '@edx/frontend-component-header')."
+              },
+              "version": {
+                "type": "string",
+                "description": "npm package version."
+              },
+              "filename": {
+                "type": "string",
+                "description": "Tarball filename stored in cache/npm/."
+              },
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Registry download URL."
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-fA-F]{64}$",
+                "description": "SHA-256 checksum of the package tarball."
+              }
+            }
+          }
+        }
+      }
+    },
+    "codebase": {
+      "type": "object",
+      "description": "Main application codebase archive and demo content bundled for offline extraction.",
+      "required": ["name", "archive_filename", "archive_url", "archive_sha256", "extract_target"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Identifier of the core codebase (e.g. 'edx-platform')."
+        },
+        "release_tag": {
+          "type": "string",
+          "description": "Release tag or branch name corresponding to the archive (e.g. 'open-release/quince.3')."
+        },
+        "archive_filename": {
+          "type": "string",
+          "description": "Filename of the codebase archive stored in cache/codebase/."
+        },
+        "archive_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Download URL for the release archive tarball or zip."
+        },
+        "archive_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{64}$",
+          "description": "SHA-256 checksum of the release codebase archive."
+        },
+        "extract_target": {
+          "type": "string",
+          "description": "Destination directory path where the codebase is extracted during setup."
+        },
+        "demo_content": {
+          "type": "array",
+          "description": "Pre-seeded courseware and demonstration content archives.",
+          "items": {
+            "type": "object",
+            "description": "Specification for pre-packaged demonstration courseware or libraries.",
+            "required": ["name", "filename", "url", "sha256"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Title or identifier of the demonstration course (e.g. 'demo-course')."
+              },
+              "filename": {
+                "type": "string",
+                "description": "Filename stored in cache/codebase/."
+              },
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Download URL for demo content."
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-fA-F]{64}$",
+                "description": "SHA-256 checksum of demo content archive."
+              }
+            }
+          }
+        }
+      }
+    },
+    "checksums": {
+      "type": "object",
+      "description": "Global lookup dictionary mapping archive filenames to their verified SHA-256 hex digests.",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[0-9a-fA-F]{64}$",
+        "description": "64-character lowercase SHA-256 hex integrity digest."
+      }
+    }
+  }
+}

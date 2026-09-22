@@ -77,6 +77,31 @@ THEME_NAME="${OPENEDX_THEME:-none}"
 IMPORT_DEMO="${IMPORT_DEMO_CONTENT:-0}"
 ENABLE_WORKERS="${INSTALL_WORKERS:-1}"
 ENABLE_MFES="${INSTALL_MFES:-0}"
+is_offline=0
+if [ "${OPENEDX_OFFLINE:-0}" = "1" ] || [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ]; then
+  is_offline=1
+fi
+offline_cache_dir=""
+
+# ## extract_archive
+# Extracts a zip or tar archive to a target directory.
+extract_archive() {
+  _src="$1"
+  _dest="$2"
+  mkdir -p "$_dest"
+  case "$_src" in
+    *.tar.gz|*.tgz)
+      tar -xzf "$_src" -C "$_dest" 2>/dev/null || true
+      ;;
+    *.zip)
+      if command -v unzip >/dev/null 2>&1; then
+        unzip -q -o "$_src" -d "$_dest" 2>/dev/null || true
+      elif command -v tar >/dev/null 2>&1; then
+        tar -xf "$_src" -C "$_dest" 2>/dev/null || true
+      fi
+      ;;
+  esac
+}
 
 # Parse command line options
 while [ $# -gt 0 ]; do
@@ -84,6 +109,18 @@ while [ $# -gt 0 ]; do
     install|start|stop|restart|status|test|uninstall)
       ACTION="$1"
       shift
+      ;;
+    --offline|-o)
+      is_offline=1
+      shift
+      ;;
+    --online)
+      is_offline=0
+      shift
+      ;;
+    --cache-dir)
+      offline_cache_dir="$2"
+      shift 2
       ;;
     --admin-user|--admin-username)
       ADMIN_USER="$2"
@@ -143,19 +180,104 @@ case "$ACTION" in
   install)
     log_info "=== Initializing Open edX Stack Provisioning ==="
 
-    # 1. Provision Infrastructure Dependencies
-    log_info "1/8: Provisioning core services and runtimes..."
-    for _dep in python nodejs mysql mongodb redis meilisearch gunicorn exim nodeenv; do
-      "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "${_dep}" || true
-    done
+    if [ "$is_offline" -eq 1 ]; then
+      if [ -z "$offline_cache_dir" ]; then
+        if [ -n "${LIBSCRIPT_CACHE_DIR:-}" ] && [ -d "${LIBSCRIPT_CACHE_DIR}" ]; then
+          offline_cache_dir="${LIBSCRIPT_CACHE_DIR}"
+        elif [ -d "${INSTALLFOLDER:-}/libscript/cache" ]; then
+          offline_cache_dir="${INSTALLFOLDER}/libscript/cache"
+        elif [ -d "${OPENEDX_INSTALL_DIR}/libscript/cache" ]; then
+          offline_cache_dir="${OPENEDX_INSTALL_DIR}/libscript/cache"
+        elif [ -d "${OPENEDX_INSTALL_DIR}/cache" ]; then
+          offline_cache_dir="${OPENEDX_INSTALL_DIR}/cache"
+        elif [ -d "${LIBSCRIPT_ROOT_DIR}/cache" ]; then
+          offline_cache_dir="${LIBSCRIPT_ROOT_DIR}/cache"
+        fi
+      fi
+    fi
 
-    # 2. Checkout / Setup openedx-platform repository
-    log_info "2/8: Preparing openedx-platform codebase at ${OPENEDX_INSTALL_DIR}..."
-    mkdir -p "${OPENEDX_INSTALL_DIR}"
-    if [ ! -d "${OPENEDX_INSTALL_DIR}/.git" ]; then
-      if command -v git >/dev/null 2>&1; then
-        git clone --depth 1 --branch "${BRANCH}" "${REPO_URL}" "${OPENEDX_INSTALL_DIR}" 2>/dev/null || 
-          git clone --depth 1 "${REPO_URL}" "${OPENEDX_INSTALL_DIR}" || true
+    if [ "$is_offline" -eq 1 ] && [ -n "$offline_cache_dir" ] && [ -d "$offline_cache_dir" ]; then
+      log_info "Provisioning from air-gapped cache: ${offline_cache_dir}..."
+
+      # Step 1: Extract runtimes
+      if [ -d "${offline_cache_dir}/runtimes" ]; then
+        log_info "Extracting runtimes from cache/runtimes..."
+        for _f in "${offline_cache_dir}/runtimes"/python-*.zip "${offline_cache_dir}/runtimes"/python-*.tar.gz; do
+          [ -f "$_f" ] && extract_archive "$_f" "${OPENEDX_INSTALL_DIR}/runtimes/python"
+        done
+        for _f in "${offline_cache_dir}/runtimes"/node-*.zip "${offline_cache_dir}/runtimes"/node-*.tar.gz; do
+          [ -f "$_f" ] && extract_archive "$_f" "${OPENEDX_INSTALL_DIR}/runtimes/nodejs"
+        done
+      fi
+
+      # Step 2: Extract datastores
+      if [ -d "${offline_cache_dir}/databases" ]; then
+        log_info "Extracting datastores from cache/databases..."
+        for _f in "${offline_cache_dir}/databases"/mysql-*.zip "${offline_cache_dir}/databases"/mysql-*.tar.gz; do
+          [ -f "$_f" ] && extract_archive "$_f" "${OPENEDX_INSTALL_DIR}/databases/mysql"
+        done
+        for _f in "${offline_cache_dir}/databases"/redis-*.zip "${offline_cache_dir}/databases"/redis-*.tar.gz; do
+          [ -f "$_f" ] && extract_archive "$_f" "${OPENEDX_INSTALL_DIR}/databases/redis"
+        done
+        for _f in "${offline_cache_dir}/databases"/mongodb-*.zip "${offline_cache_dir}/databases"/mongodb-*.tar.gz; do
+          [ -f "$_f" ] && extract_archive "$_f" "${OPENEDX_INSTALL_DIR}/databases/mongodb"
+        done
+        mkdir -p "${OPENEDX_INSTALL_DIR}/databases/meilisearch"
+        for _f in "${offline_cache_dir}/databases"/meilisearch-*; do
+          if [ -f "$_f" ]; then
+            cp -f "$_f" "${OPENEDX_INSTALL_DIR}/databases/meilisearch/meilisearch"
+            chmod +x "${OPENEDX_INSTALL_DIR}/databases/meilisearch/meilisearch" 2>/dev/null || true
+          fi
+        done
+      fi
+
+      # Step 4: Extract codebase
+      if [ -d "${offline_cache_dir}/codebase" ]; then
+        log_info "Extracting codebase from cache/codebase..."
+        mkdir -p "${OPENEDX_INSTALL_DIR}/codebase"
+        for _f in "${offline_cache_dir}/codebase"/*edx-platform*.zip "${offline_cache_dir}/codebase"/*openedx-release*.zip "${offline_cache_dir}/codebase"/*.tar.gz; do
+          [ -f "$_f" ] && extract_archive "$_f" "${OPENEDX_INSTALL_DIR}/codebase"
+        done
+      fi
+
+      # Step 3: Install wheels offline
+      if [ -d "${offline_cache_dir}/wheels" ]; then
+        log_info "Installing Python wheels offline from cache/wheels..."
+        _py="python3"
+        if [ -x "${OPENEDX_INSTALL_DIR}/runtimes/python/bin/python3" ]; then
+          _py="${OPENEDX_INSTALL_DIR}/runtimes/python/bin/python3"
+        elif [ -x "${OPENEDX_INSTALL_DIR}/runtimes/python/python" ]; then
+          _py="${OPENEDX_INSTALL_DIR}/runtimes/python/python"
+        fi
+        if [ -f "${OPENEDX_INSTALL_DIR}/codebase/requirements/edx/base.txt" ]; then
+          "$_py" -m pip install --no-index --find-links "${offline_cache_dir}/wheels" -r "${OPENEDX_INSTALL_DIR}/codebase/requirements/edx/base.txt" 2>/dev/null || true
+        else
+          for _w in "${offline_cache_dir}/wheels"/*.whl; do
+            [ -f "$_w" ] && "$_py" -m pip install --no-index --find-links "${offline_cache_dir}/wheels" "$_w" 2>/dev/null || true
+          done
+        fi
+      fi
+
+      # Step 5: Ingest demo content
+      if [ "${IMPORT_DEMO}" = "1" ] && [ -f "${offline_cache_dir}/codebase/demo-course.tar.gz" ]; then
+        log_info "Ingesting demo courseware from cached archive..."
+        extract_archive "${offline_cache_dir}/codebase/demo-course.tar.gz" "${OPENEDX_INSTALL_DIR}/demo-course"
+      fi
+    else
+      # 1. Provision Infrastructure Dependencies
+      log_info "1/8: Provisioning core services and runtimes..."
+      for _dep in python nodejs mysql mongodb redis meilisearch gunicorn exim nodeenv; do
+        "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "${_dep}" || true
+      done
+
+      # 2. Checkout / Setup openedx-platform repository
+      log_info "2/8: Preparing openedx-platform codebase at ${OPENEDX_INSTALL_DIR}..."
+      mkdir -p "${OPENEDX_INSTALL_DIR}"
+      if [ ! -d "${OPENEDX_INSTALL_DIR}/.git" ]; then
+        if command -v git >/dev/null 2>&1; then
+          git clone --depth 1 --branch "${BRANCH}" "${REPO_URL}" "${OPENEDX_INSTALL_DIR}" 2>/dev/null || 
+            git clone --depth 1 "${REPO_URL}" "${OPENEDX_INSTALL_DIR}" || true
+        fi
       fi
     fi
 

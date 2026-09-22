@@ -218,13 +218,33 @@ libscript_depends() {
       case "${PKG_MGR}" in
         'apt-get')
           export DEBIAN_FRONTEND='noninteractive'
-          if [ "${PKG_MGR_UPDATE_REGISTRY}" -eq 1 ]; then
+          if [ "${PKG_MGR_UPDATE_REGISTRY}" -eq 1 ] && [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ]; then
             priv  apt-get -o Dpkg::Lock::Timeout=120 update -qq || true
           fi
-                  priv  apt-get -o Dpkg::Lock::Timeout=120 install -y    ${pkgs_to_install} || _install_failed=1 ;;
-        'apk')    priv  apk add --no-cache    ${pkgs_to_install} || _install_failed=1 ;;
+          _apt_cache="${LIBSCRIPT_APT_CACHE:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}/apt}"
+          if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] && [ -d "$_apt_cache" ]; then
+            log_info "Offline mode: installing deb packages from $_apt_cache..."
+            priv dpkg -i "$_apt_cache"/*.deb || priv apt-get -o Dpkg::Lock::Timeout=120 install -y ${pkgs_to_install} || _install_failed=1
+          else
+            priv  apt-get -o Dpkg::Lock::Timeout=120 install -y    ${pkgs_to_install} || _install_failed=1
+          fi ;;
+        'apk')
+          _apk_cache="${LIBSCRIPT_APK_CACHE:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}/apk}"
+          if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] && [ -d "$_apk_cache" ]; then
+            log_info "Offline mode: installing apk packages from $_apk_cache..."
+            priv apk add --allow-untrusted "$_apk_cache"/*.apk || priv apk add --no-cache ${pkgs_to_install} || _install_failed=1
+          else
+            priv  apk add --no-cache    ${pkgs_to_install} || _install_failed=1
+          fi ;;
         'brew')         brew install          ${pkgs_to_install} || _install_failed=1 ;;
-        'dnf')    priv  dnf install -y        ${pkgs_to_install} || _install_failed=1 ;;
+        'dnf')
+          _dnf_cache="${LIBSCRIPT_DNF_CACHE:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}/dnf}"
+          if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] && [ -d "$_dnf_cache" ]; then
+            log_info "Offline mode: installing rpm packages from $_dnf_cache..."
+            priv dnf install -y "$_dnf_cache"/*.rpm || priv dnf install -y ${pkgs_to_install} || _install_failed=1
+          else
+            priv  dnf install -y        ${pkgs_to_install} || _install_failed=1
+          fi ;;
         'emerge') priv  emerge --quiet        ${pkgs_to_install} || _install_failed=1 ;;
         'eopkg')  priv  eopkg install -y      ${pkgs_to_install} || _install_failed=1 ;;
         'pacman') priv  pacman -S --noconfirm ${pkgs_to_install} || _install_failed=1 ;;
@@ -288,14 +308,16 @@ libscript_download() {
   fi
 
   # Dynamic Checksum Fetching
-  if [ -z "$expected_checksum" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/fetch_checksum.sh" ]; then
-      fetched_checksum="$("${LIBSCRIPT_ROOT_DIR}/_lib/_common/fetch_checksum.sh" "$url" || true)"
-      if [ -n "$fetched_checksum" ]; then
-          expected_checksum="sha-256=$fetched_checksum"
-          log_info "Fetched checksum dynamically: $fetched_checksum"
-      else
-          log_info "Warning: No checksum provided or found in DB/dynamically for $url"
-      fi
+  if [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ] && [ "${LIBSCRIPT_FORCE_OFFLINE:-0}" != "1" ]; then
+    if [ -z "$expected_checksum" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/fetch_checksum.sh" ]; then
+        fetched_checksum="$("${LIBSCRIPT_ROOT_DIR}/_lib/_common/fetch_checksum.sh" "$url" || true)"
+        if [ -n "$fetched_checksum" ]; then
+            expected_checksum="sha-256=$fetched_checksum"
+            log_info "Fetched checksum dynamically: $fetched_checksum"
+        else
+            log_info "Warning: No checksum provided or found in DB/dynamically for $url"
+        fi
+    fi
   fi
 
   # 2. Aria2 Export Mode
@@ -332,9 +354,36 @@ libscript_download() {
   if [ -f "$cache_file" ]; then
     log_info "[CACHED] ${url}"
     download_needed=0
+  else
+    # Check alternate cache directories for pre-hydrated offline bundles
+    for _chk_path in "$cache_dir/$filename" \
+                     "$cache_dir/runtimes/$filename" \
+                     "$cache_dir/databases/$filename" \
+                     "$cache_dir/wheels/$filename" \
+                     "$cache_dir/npm/$filename" \
+                     "$cache_dir/codebase/$filename" \
+                     "${LIBSCRIPT_ROOT_DIR}/cache/$filename" \
+                     "${LIBSCRIPT_ROOT_DIR}/cache/downloads/$filename"; do
+      if [ -f "$_chk_path" ]; then
+        log_info "[CACHED] ${url} (found in ${_chk_path})"
+        cp -f "$_chk_path" "$cache_file" 2>/dev/null || cache_file="$_chk_path"
+        download_needed=0
+        break
+      fi
+    done
   fi
 
   if [ "$download_needed" -eq 1 ]; then
+    if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] || [ "${LIBSCRIPT_FORCE_OFFLINE:-0}" = "1" ]; then
+      log_error "Error: [OFFLINE] Cannot download '${url}'. Artifact not found in local cache at '${cache_file}'."
+      printf 'Error: [OFFLINE] Cannot download "%s". Artifact not found in local cache at "%s".\n' "$url" "$cache_file" >&2
+      if [ "${LIBSCRIPT_FORCE_OFFLINE:-0}" = "1" ]; then
+        printf 'Fatal: LIBSCRIPT_FORCE_OFFLINE=1 strictly prohibits network requests.\n' >&2
+        exit 1
+      fi
+      return 1
+    fi
+
     log_info "[DOWNLOADING] ${url}"
 
     # Ensure tools are available

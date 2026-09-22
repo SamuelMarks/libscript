@@ -49,10 +49,39 @@ fi
 NODEJS_INSTALL_METHOD="system"
 ACTION="${ACTION:-install}"
 
+# Parse offline and npm options
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --offline|-o) export LIBSCRIPT_OFFLINE=1; shift ;;
+    --npm-cache=*) export NPM_CACHE="${1#*=}"; shift ;;
+    --npm-cache) export NPM_CACHE="${2:-}"; shift 2 ;;
+    --yarn-offline-mirror=*) export YARN_OFFLINE_MIRROR="${1#*=}"; shift ;;
+    --yarn-offline-mirror) export YARN_OFFLINE_MIRROR="${2:-}"; shift 2 ;;
+    *) shift ;;
+  esac
+done
+
+if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ]; then
+  export npm_config_offline=true
+  export npm_config_prefer_offline=true
+  _def_npm_cache="${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}/npm"
+  export NPM_CACHE="${NPM_CACHE:-$_def_npm_cache}"
+  export npm_config_cache="${NPM_CACHE}"
+  export YARN_OFFLINE_MIRROR="${YARN_OFFLINE_MIRROR:-$_def_npm_cache}"
+  if command -v yarn >/dev/null 2>&1 && [ -d "$YARN_OFFLINE_MIRROR" ]; then
+    yarn config set yarn-offline-mirror "$YARN_OFFLINE_MIRROR" 2>/dev/null || true
+  fi
+fi
+
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
 resolve_exact_version() {
   clean_version=$(printf '%s\n' "$NODEJS_VERSION" | sed 's/^v//')
+  if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ]; then
+    EXACT_VERSION="20.17.0"
+    NODEJS_BASE_URL="file://${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}/runtimes"
+    return 0
+  fi
   if [ "${clean_version}" = "latest" ] || [ "${clean_version}" = "lts" ]; then
     if [ "${clean_version}" = "latest" ]; then
       NODEJS_BASE_URL="https://nodejs.org/dist/latest"

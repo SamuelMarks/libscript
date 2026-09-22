@@ -70,30 +70,33 @@ EOF
   fi
 
   # 2. Source component's env.sh and print other variables
-  # We use a subshell to avoid polluting the current environment
+  # We use an isolated subshell to avoid polluting or leaking the caller environment
   if [ -f "$SCRIPT_DIR/env.sh" ]; then
-    _filter="^(PWD|SHLVL|_|PATH|FORMAT|SCRIPT_DIR|PREFIX|STACK|SCRIPT_NAME)="
-    # We pass FORMAT and SCRIPT_DIR to the subshell
-    env PATH="$PATH" \
-            FORMAT="$_format" \
-            SCRIPT_DIR="$SCRIPT_DIR" \
-            PREFIX="$_prefix_path" \
-            LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}" \
-            sh << 'EOF_SH'
+    _filter="^(PWD|SHLVL|_|PATH|FORMAT|SCRIPT_DIR|PREFIX|STACK|SCRIPT_NAME|LIBSCRIPT_DATA_DIR|HOME|USER)="
+    env -i \
+      PATH="$PATH" \
+      FORMAT="$_format" \
+      SCRIPT_DIR="$SCRIPT_DIR" \
+      PREFIX="$_prefix_path" \
+      LIBSCRIPT_DATA_DIR="${LIBSCRIPT_DATA_DIR:-${TMPDIR:-/tmp}/libscript_data}" \
+      HOME="${HOME:-/root}" \
+      USER="${USER:-root}" \
+      sh << 'EOF_SH'
             # Source the env.sh
             # shellcheck disable=SC1090
             . "$SCRIPT_DIR/env.sh" >/dev/null 2>&1
             if [ -f "$LIBSCRIPT_DATA_DIR/dyn_env.sh" ]; then
-            . "$LIBSCRIPT_DATA_DIR/dyn_env.sh" >/dev/null 2>&1
+              . "$LIBSCRIPT_DATA_DIR/dyn_env.sh" >/dev/null 2>&1
             fi
 
             # Filter out internal variables
-            _filter="^(PWD|SHLVL|_|PATH|FORMAT|SCRIPT_DIR|PREFIX|STACK|SCRIPT_NAME)="
+            _filter="^(PWD|SHLVL|_|PATH|FORMAT|SCRIPT_DIR|PREFIX|STACK|SCRIPT_NAME|LIBSCRIPT_DATA_DIR|HOME|USER)="
 
             case "$FORMAT" in
             docker)
             env | grep -vE "$_filter" | while read -r line; do
-            printf '%s\n' "ENV ${line%%=*}=\"${line#*=}\""
+              [ -z "$line" ] && continue
+              printf '%s\n' "ENV ${line%%=*}=\"${line#*=}\""
             done
             ;;
             docker_compose)
@@ -101,12 +104,14 @@ EOF
             ;;
             powershell)
             env | grep -vE "$_filter" | while read -r line; do
-            printf '%s\n' "\$env:${line%%=*}=\"${line#*=}\""
+              [ -z "$line" ] && continue
+              printf '%s\n' "\$env:${line%%=*}=\"${line#*=}\""
             done
             ;;
             cmd)
             env | grep -vE "$_filter" | while read -r line; do
-            printf '%s\n' "SET ${line%%=*}=\"${line#*=}\""
+              [ -z "$line" ] && continue
+              printf '%s\n' "SET ${line%%=*}=\"${line#*=}\""
             done
             ;;
             json)
@@ -120,6 +125,7 @@ EOF
             printf "{"
             first=1
             env | grep -vE "$_filter" | while read -r line; do
+              [ -z "$line" ] && continue
               [ "$first" = 0 ] && printf ","
               printf "\"%s\":\"%s\"" "${line%%=*}" "${line#*=}"
               first=0
@@ -129,7 +135,8 @@ EOF
             ;;
             *)
             env | grep -vE "$_filter" | while read -r line; do
-            printf '%s\n' "export ${line%%=*}=\"${line#*=}\""
+              [ -z "$line" ] && continue
+              printf '%s\n' "export ${line%%=*}=\"${line#*=}\""
             done
             ;;
             esac

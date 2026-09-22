@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "LibScript Packaging Specification Schema",
   "type": "object",
+  "description": "Defines the packaging, branding, runtime detection, and deployment configuration for generating native installers",
   "required": ["name", "title", "upgrade_code"],
   "properties": {
     "name": {
@@ -31,22 +32,47 @@
       "type": "object",
       "description": "Visual assets and branding artwork customized for installer dialogs",
       "properties": {
-        "icon": { "type": "string" },
-        "banner_top": { "type": "string" },
-        "banner_side": { "type": "string" },
-        "license_rtf": { "type": "string" }
+        "icon": {
+          "type": "string",
+          "description": "Path to the application icon file (.ico)"
+        },
+        "banner_top": {
+          "type": "string",
+          "description": "Path to top banner bitmap image (.bmp, 493x58)"
+        },
+        "banner_side": {
+          "type": "string",
+          "description": "Path to welcome dialog side splash bitmap image (.bmp, 164x312)"
+        },
+        "license_rtf": {
+          "type": "string",
+          "description": "Path to Rich Text Format or plain text EULA document"
+        }
       }
     },
     "directories": {
       "type": "object",
       "description": "Default installation, data, and log target directory paths",
       "properties": {
-        "app_default": { "type": "string", "default": "[ProgramFiles64Folder][ProductName]" },
-        "data_default": { "type": "string", "default": "C:\\ProgramData\\[ProductName]\\data" },
-        "logs_default": { "type": "string", "default": "C:\\ProgramData\\[ProductName]\\logs" },
+        "app_default": {
+          "type": "string",
+          "default": "[ProgramFiles64Folder][ProductName]",
+          "description": "Default program files installation folder path"
+        },
+        "data_default": {
+          "type": "string",
+          "default": "C:\\ProgramData\\[ProductName]\\data",
+          "description": "Default folder path for database files and mutable state"
+        },
+        "logs_default": {
+          "type": "string",
+          "default": "C:\\ProgramData\\[ProductName]\\logs",
+          "description": "Default folder path for service and operational log files"
+        },
         "backups_default": {
           "type": "string",
-          "default": "C:\\ProgramData\\[ProductName]\\backups"
+          "default": "C:\\ProgramData\\[ProductName]\\backups",
+          "description": "Default folder path for snapshots and backup archives"
         }
       }
     },
@@ -55,26 +81,62 @@
       "description": "Pre-requisite runtime dependencies to detect on the host machine",
       "items": {
         "type": "object",
+        "description": "Specification for detecting an installed runtime dependency",
         "required": ["name", "title"],
         "properties": {
-          "name": { "type": "string" },
-          "title": { "type": "string" },
-          "required": { "type": "boolean", "default": false },
+          "name": {
+            "type": "string",
+            "description": "Identifier token of the runtime (e.g. 'python', 'nodejs')"
+          },
+          "title": {
+            "type": "string",
+            "description": "Display name of the runtime in UI dialogs"
+          },
+          "required": {
+            "type": "boolean",
+            "default": false,
+            "description": "Indicates whether the runtime is mandatory for operation"
+          },
           "registry_searches": {
             "type": "array",
+            "description": "Registry locations to probe for installed runtime paths",
             "items": {
               "type": "object",
+              "description": "Registry key and value search criteria",
               "properties": {
-                "root": { "type": "string", "enum": ["HKLM", "HKCU"] },
-                "key": { "type": "string" },
-                "name": { "type": "string" },
-                "file": { "type": "string" },
-                "win64": { "type": "boolean", "default": true }
+                "root": {
+                  "type": "string",
+                  "enum": ["HKLM", "HKCU"],
+                  "description": "Registry hive root to query"
+                },
+                "key": {
+                  "type": "string",
+                  "description": "Registry subkey path to inspect"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Registry value name to read"
+                },
+                "file": {
+                  "type": "string",
+                  "description": "Executable file name to verify inside target directory"
+                },
+                "win64": {
+                  "type": "boolean",
+                  "default": true,
+                  "description": "Whether to query the 64-bit registry view"
+                }
               }
             }
           },
-          "path_command": { "type": "string" },
-          "version_regex": { "type": "string" }
+          "path_command": {
+            "type": "string",
+            "description": "CLI command to test availability in system PATH"
+          },
+          "version_regex": {
+            "type": "string",
+            "description": "Regular expression pattern to parse version from command output"
+          }
         }
       }
     },
@@ -82,20 +144,38 @@
       "type": "object",
       "description": "Configuration for the application's source git repository and branch options",
       "properties": {
-        "default_url": { "type": "string" },
-        "default_branch": { "type": "string" },
+        "default_url": {
+          "type": "string",
+          "description": "Default Git remote repository URL"
+        },
+        "default_branch": {
+          "type": "string",
+          "description": "Default Git branch, release tag, or commit"
+        },
         "presets": {
           "type": "array",
+          "description": "Predefined release branch or tag selections",
           "items": {
             "type": "object",
+            "description": "Named branch or tag preset option",
             "required": ["label", "value"],
             "properties": {
-              "label": { "type": "string" },
-              "value": { "type": "string" }
+              "label": {
+                "type": "string",
+                "description": "Display label for the preset choice"
+              },
+              "value": {
+                "type": "string",
+                "description": "Git branch or tag name represented by the preset"
+              }
             }
           }
         },
-        "supports_auth_token": { "type": "boolean", "default": false }
+        "supports_auth_token": {
+          "type": "boolean",
+          "default": false,
+          "description": "Indicates whether private repository token authentication is supported"
+        }
       }
     },
     "browser_launch": {
@@ -104,14 +184,29 @@
       "properties": {
         "targets": {
           "type": "array",
+          "description": "List of URLs and options to open after installation completes",
           "items": {
             "type": "object",
+            "description": "Single URL launch target specification",
             "required": ["id", "title", "url_template"],
             "properties": {
-              "id": { "type": "string" },
-              "title": { "type": "string" },
-              "default": { "type": "boolean", "default": true },
-              "url_template": { "type": "string" }
+              "id": {
+                "type": "string",
+                "description": "Unique identifier for the launch target"
+              },
+              "title": {
+                "type": "string",
+                "description": "Checkbox label text displayed in completion dialog"
+              },
+              "default": {
+                "type": "boolean",
+                "default": true,
+                "description": "Whether launch checkbox is initially checked"
+              },
+              "url_template": {
+                "type": "string",
+                "description": "Target web address or parameterized URL template"
+              }
             }
           }
         }
@@ -122,13 +217,31 @@
       "description": "Hierarchical feature tree of optional or configurable stack components",
       "items": {
         "type": "object",
+        "description": "Single configurable feature component in installer",
         "required": ["id", "title"],
         "properties": {
-          "id": { "type": "string" },
-          "title": { "type": "string" },
-          "description": { "type": "string" },
-          "default": { "type": "boolean", "default": true },
-          "mandatory": { "type": "boolean", "default": false }
+          "id": {
+            "type": "string",
+            "description": "Feature identifier token"
+          },
+          "title": {
+            "type": "string",
+            "description": "Display label in feature selection tree"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed explanation of the feature and its role"
+          },
+          "default": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether feature is selected by default"
+          },
+          "mandatory": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether feature cannot be deselected by user"
+          }
         }
       }
     },
@@ -137,14 +250,33 @@
       "description": "Administrative shortcuts to create in the Start Menu and Desktop",
       "items": {
         "type": "object",
+        "description": "Shortcut configuration entry",
         "required": ["id", "title", "target"],
         "properties": {
-          "id": { "type": "string" },
-          "title": { "type": "string" },
-          "target": { "type": "string" },
-          "arguments": { "type": "string" },
-          "icon": { "type": "string" },
-          "description": { "type": "string" }
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the shortcut"
+          },
+          "title": {
+            "type": "string",
+            "description": "Display title on Desktop or Start Menu"
+          },
+          "target": {
+            "type": "string",
+            "description": "Executable binary or script targeted by shortcut"
+          },
+          "arguments": {
+            "type": "string",
+            "description": "Command line arguments passed to target"
+          },
+          "icon": {
+            "type": "string",
+            "description": "Icon resource file for the shortcut"
+          },
+          "description": {
+            "type": "string",
+            "description": "Tooltip and shell description text"
+          }
         }
       }
     },
@@ -153,13 +285,30 @@
       "description": "Actions or checks to execute after stack files and services are provisioned",
       "items": {
         "type": "object",
+        "description": "Custom action or verification probe definition",
         "required": ["id", "command"],
         "properties": {
-          "id": { "type": "string" },
-          "description": { "type": "string" },
-          "command": { "type": "string" },
-          "optional": { "type": "boolean", "default": false },
-          "condition": { "type": "string" }
+          "id": {
+            "type": "string",
+            "description": "Action identifier token"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the operation performed by action"
+          },
+          "command": {
+            "type": "string",
+            "description": "Shell command or script invoked during execution"
+          },
+          "optional": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether execution failure is non-fatal"
+          },
+          "condition": {
+            "type": "string",
+            "description": "WiX conditional expression governing execution"
+          }
         }
       }
     }

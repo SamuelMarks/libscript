@@ -4,7 +4,31 @@
 ::
 :: ## Usage
 :: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+if defined STACK (
+    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    if not errorlevel 1 (
+        echo [STOP] processing "%THIS_FILE%" >&2
+        exit /b 0
+    )
+)
+set "STACK=%STACK%:%THIS_FILE%:"
+
+:: Parse offline and ruby options
+:arg_parse_loop
+if "%~1"=="" goto :arg_parse_done
+if /i "%~1"=="--offline" set "LIBSCRIPT_OFFLINE=1"
+if /i "%~1"=="-o" set "LIBSCRIPT_OFFLINE=1"
+if /i "%~1"=="--gem-local" set "GEM_OFFLINE=1"
+shift
+goto :arg_parse_loop
+:arg_parse_done
+
+if "%LIBSCRIPT_OFFLINE%"=="1" (
+    set "GEM_OFFLINE=1"
+    set "BUNDLE_LOCAL=true"
+)
 
 if "%ACTION%"=="" set ACTION=install
 if "%RUBY_VERSION%"=="" set RUBY_VERSION=latest

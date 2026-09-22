@@ -32,6 +32,12 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${SCRIPT_DIR}"
 
 case "${1:-}" in
+  start|stop|restart|status|lms|studio|cms)
+    SCRIPT_NAME="${SCRIPT_DIR}/service.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090
+    exec "${SCRIPT_NAME}" "$@"
+    ;;
   user)
     shift
     SCRIPT_NAME="${SCRIPT_DIR}/user.sh"

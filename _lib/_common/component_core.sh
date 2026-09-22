@@ -248,6 +248,39 @@ while [ $# -gt 0 ]; do
     break
   fi
   case "$1" in
+    --offline|-o)
+      export LIBSCRIPT_OFFLINE=1
+      shift
+      ;;
+    --force-offline)
+      export LIBSCRIPT_FORCE_OFFLINE=1
+      export LIBSCRIPT_OFFLINE=1
+      shift
+      ;;
+    --online)
+      export LIBSCRIPT_OFFLINE=0
+      shift
+      ;;
+    --cache-dir=*)
+      export LIBSCRIPT_CACHE_DIR="${1#*=}"
+      shift
+      ;;
+    --cache-dir)
+      shift
+      export LIBSCRIPT_CACHE_DIR="${1:-}"
+      shift
+      ;;
+    --download-dir=*)
+      export DOWNLOAD_DIR="${1#*=}"
+      export LIBSCRIPT_DOWNLOAD_DIR="${1#*=}"
+      shift
+      ;;
+    --download-dir)
+      shift
+      export DOWNLOAD_DIR="${1:-}"
+      export LIBSCRIPT_DOWNLOAD_DIR="${DOWNLOAD_DIR}"
+      shift
+      ;;
     --prefix=*)
       export PREFIX="${1#*=}"
       shift

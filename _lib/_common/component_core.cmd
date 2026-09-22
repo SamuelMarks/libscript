@@ -105,6 +105,50 @@ if /i "!ACTION!"=="backup"  goto :routing
 if /i "!ACTION!"=="restore" goto :routing
 if /i "!ACTION!"=="diff"    goto :routing
 
+if /i "!arg!"=="--offline" (
+    set "LIBSCRIPT_OFFLINE=1"
+    shift
+    goto :parse_loop
+)
+if /i "!arg!"=="-o" (
+    set "LIBSCRIPT_OFFLINE=1"
+    shift
+    goto :parse_loop
+)
+if /i "!arg!"=="--force-offline" (
+    set "LIBSCRIPT_FORCE_OFFLINE=1"
+    set "LIBSCRIPT_OFFLINE=1"
+    shift
+    goto :parse_loop
+)
+if /i "!arg!"=="--online" (
+    set "LIBSCRIPT_OFFLINE=0"
+    shift
+    goto :parse_loop
+)
+if "!arg:~0,12!"=="--cache-dir=" (
+    set "LIBSCRIPT_CACHE_DIR=!arg:~12!"
+    shift
+    goto :parse_loop
+)
+if /i "!arg!"=="--cache-dir" (
+    set "LIBSCRIPT_CACHE_DIR=%~2"
+    shift & shift
+    goto :parse_loop
+)
+if "!arg:~0,15!"=="--download-dir=" (
+    set "DOWNLOAD_DIR=!arg:~15!"
+    set "LIBSCRIPT_DOWNLOAD_DIR=!arg:~15!"
+    shift
+    goto :parse_loop
+)
+if /i "!arg!"=="--download-dir" (
+    set "DOWNLOAD_DIR=%~2"
+    set "LIBSCRIPT_DOWNLOAD_DIR=%~2"
+    shift & shift
+    goto :parse_loop
+)
+
 if "!arg:~0,2!"=="--" (
     set "key_val=!arg:~2!"
     for /f "tokens=1* delims==" %%A in ("!key_val!") do (

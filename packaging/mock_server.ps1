@@ -68,38 +68,24 @@ $studioHtml = @"
 </html>
 "@
 
-$lmsListener = [System.Net.HttpListener]::new()
-$lmsListener.Prefixes.Add("http://localhost:8000/")
-$lmsListener.Start()
+$listener = [System.Net.HttpListener]::new()
+$listener.Prefixes.Add("http://localhost:8000/")
+$listener.Prefixes.Add("http://127.0.0.1:8000/")
+$listener.Prefixes.Add("http://localhost:8001/")
+$listener.Prefixes.Add("http://127.0.0.1:8001/")
+$listener.Start()
 
-$studioListener = [System.Net.HttpListener]::new()
-$studioListener.Prefixes.Add("http://localhost:8001/")
-$studioListener.Start()
-
-[System.Threading.Tasks.Task]::Run([Action]{
-    while ($lmsListener.IsListening) {
-        try {
-            $ctx = $lmsListener.GetContext()
-            $buf = [System.Text.Encoding]::UTF8.GetBytes($lmsHtml)
-            $ctx.Response.ContentType = "text/html"
-            $ctx.Response.ContentLength64 = $buf.Length
-            $ctx.Response.OutputStream.Write($buf, 0, $buf.Length)
-            $ctx.Response.Close()
-        } catch {}
+while ($listener.IsListening) {
+    try {
+        $ctx = $listener.GetContext()
+        $isStudio = ($ctx.Request.Url.Port -eq 8001)
+        $html = if ($isStudio) { $studioHtml } else { $lmsHtml }
+        $buf = [System.Text.Encoding]::UTF8.GetBytes($html)
+        $ctx.Response.ContentType = "text/html; charset=utf-8"
+        $ctx.Response.ContentLength64 = $buf.Length
+        $ctx.Response.OutputStream.Write($buf, 0, $buf.Length)
+        $ctx.Response.Close()
+    } catch {
+        break
     }
-})
-
-[System.Threading.Tasks.Task]::Run([Action]{
-    while ($studioListener.IsListening) {
-        try {
-            $ctx = $studioListener.GetContext()
-            $buf = [System.Text.Encoding]::UTF8.GetBytes($studioHtml)
-            $ctx.Response.ContentType = "text/html"
-            $ctx.Response.ContentLength64 = $buf.Length
-            $ctx.Response.OutputStream.Write($buf, 0, $buf.Length)
-            $ctx.Response.Close()
-        } catch {}
-    }
-})
-
-while ($true) { Start-Sleep -Seconds 1 }
+}

@@ -43,6 +43,20 @@ RUBY_INSTALL_METHOD="system"
 ACTION="${ACTION:-install}"
 VERSION="${RUBY_VERSION:-latest}"
 
+# Parse offline and ruby options
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --offline|-o) export LIBSCRIPT_OFFLINE=1; shift ;;
+    --gem-local) export GEM_OFFLINE=1; shift ;;
+    *) shift ;;
+  esac
+done
+
+if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ]; then
+  export GEM_OFFLINE=1
+  export BUNDLE_LOCAL=true
+fi
+
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
 resolve_exact_version() {

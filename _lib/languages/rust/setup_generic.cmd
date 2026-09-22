@@ -4,7 +4,40 @@
 ::
 :: ## Usage
 :: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+if defined STACK (
+    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    if not errorlevel 1 (
+        echo [STOP] processing "%THIS_FILE%" >&2
+        exit /b 0
+    )
+)
+set "STACK=%STACK%:%THIS_FILE%:"
+
+:: Parse offline and cargo options
+:arg_parse_loop
+if "%~1"=="" goto :arg_parse_done
+if /i "%~1"=="--offline" set "LIBSCRIPT_OFFLINE=1"
+if /i "%~1"=="-o" set "LIBSCRIPT_OFFLINE=1"
+if /i "%~1"=="--cargo-vendor" (
+    set "CARGO_VENDOR_DIR=%~2"
+    shift
+)
+shift
+goto :arg_parse_loop
+:arg_parse_done
+
+if "%LIBSCRIPT_OFFLINE%"=="1" (
+    set "CARGO_NET_OFFLINE=true"
+    if "%CARGO_VENDOR_DIR%"=="" (
+        if not "%LIBSCRIPT_CACHE_DIR%"=="" (
+            set "CARGO_VENDOR_DIR=%LIBSCRIPT_CACHE_DIR%\cargo-vendor"
+        ) else (
+            set "CARGO_VENDOR_DIR=%LIBSCRIPT_ROOT_DIR%\cache\cargo-vendor"
+        )
+    )
+)
 
 if "%ACTION%"=="" set ACTION=install
 if "%RUST_VERSION%"=="" set RUST_VERSION=latest

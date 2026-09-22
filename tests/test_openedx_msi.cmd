@@ -198,6 +198,54 @@ echo [PASS] Verified: Build-time local repository path override baked into insta
 findstr /C:"Property Id=\"PROP_OPENEDX_VERSION\" Value=\"v3.2.1-custom-tag\"" "%CUSTOM_WXS%" >nul || (echo [FAIL] Build-time branch/tag override missing & exit /b 1)
 echo [PASS] Verified: Build-time custom branch/tag override baked into installer
 
+:: ## verify_offline_variant
+:: Verifies multi-cabinet partitioning, cache component harvesting, and offline flags.
+echo === Testing Open edX Multi-Cabinet Offline Variant (Windows) ===
+set "MOCK_CACHE=%TEST_TMP_DIR%\mock_cache"
+if not exist "%MOCK_CACHE%\runtimes" mkdir "%MOCK_CACHE%\runtimes"
+if not exist "%MOCK_CACHE%\databases" mkdir "%MOCK_CACHE%\databases"
+if not exist "%MOCK_CACHE%\codebase" mkdir "%MOCK_CACHE%\codebase"
+echo mock python runtime > "%MOCK_CACHE%\runtimes\python-3.11.9-embed-amd64.zip"
+echo mock mysql db > "%MOCK_CACHE%\databases\mysql-8.0.39-winx64.zip"
+echo mock codebase > "%MOCK_CACHE%\codebase\openedx-release-quince.3.zip"
+
+set "OFFLINE_OUT_BASE=%TEST_TMP_DIR%\OpenEdX_Offline_Test"
+call "%LIBSCRIPT_ROOT_DIR%\packaging\build_msi.cmd" stacks\cms\openedx ^
+  --out "%OFFLINE_OUT_BASE%" ^
+  --variant offline ^
+  --cache-dir "%MOCK_CACHE%" ^
+  --version "1.0.0.0"
+
+set "OFFLINE_WXS=%OFFLINE_OUT_BASE%.wxs"
+if not exist "%OFFLINE_WXS%" (
+    echo [FAIL] Offline WXS manifest was not created: %OFFLINE_WXS%
+    exit /b 1
+)
+
+findstr /C:"Property Id=\"PROP_OPENEDX_OFFLINE\" Value=\"1\"" "%OFFLINE_WXS%" >nul || (echo [FAIL] Offline property missing & exit /b 1)
+echo [PASS] Verified Offline: Offline property enabled (1)
+
+findstr /C:"Media Id=\"1\" Cabinet=\"engine.cab\"" "%OFFLINE_WXS%" >nul || (echo [FAIL] Media partition 1 missing & exit /b 1)
+echo [PASS] Verified Offline: Media partition 1 (engine.cab)
+
+findstr /C:"Media Id=\"2\" Cabinet=\"runtimes.cab\"" "%OFFLINE_WXS%" >nul || (echo [FAIL] Media partition 2 missing & exit /b 1)
+echo [PASS] Verified Offline: Media partition 2 (runtimes.cab)
+
+findstr /C:"Media Id=\"3\" Cabinet=\"databases.cab\"" "%OFFLINE_WXS%" >nul || (echo [FAIL] Media partition 3 missing & exit /b 1)
+echo [PASS] Verified Offline: Media partition 3 (databases.cab)
+
+findstr /C:"Media Id=\"4\" Cabinet=\"codebase.cab\"" "%OFFLINE_WXS%" >nul || (echo [FAIL] Media partition 4 missing & exit /b 1)
+echo [PASS] Verified Offline: Media partition 4 (codebase.cab)
+
+findstr /C:"ComponentGroupRef Id=\"LibscriptOfflineCacheComponents\"" "%OFFLINE_WXS%" >nul || (echo [FAIL] LibscriptOfflineCacheComponents missing & exit /b 1)
+echo [PASS] Verified Offline: LibscriptOfflineCacheComponents feature reference
+
+findstr /C:"[Pre-bundled / Offline]" "%OFFLINE_WXS%" >nul || (echo [FAIL] Pre-bundled tag missing in dialog & exit /b 1)
+echo [PASS] Verified Offline: Pre-bundled tag in Verify Ready dialog
+
+findstr /C:"pre-bundled air-gapped runtimes" "%OFFLINE_WXS%" >nul || (echo [FAIL] Offline description missing & exit /b 1)
+echo [PASS] Verified Offline: Offline welcome dialog description
+
 :: Cleanup temporary artifacts
 rmdir /s /q "%TEST_TMP_DIR%" 2>nul
 echo === Open edX MSI Windows tests completed successfully! ===

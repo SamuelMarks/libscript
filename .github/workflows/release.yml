@@ -49,7 +49,11 @@ jobs:
           - id: openedx
             name: Open edX Platform
             target_dir: stacks/cms/openedx
-            build_cmd: packaging\build_openedx_msi.cmd
+            build_cmd: packaging\build_openedx_msi.cmd --online
+          - id: openedx-offline
+            name: Open edX Platform (Offline)
+            target_dir: stacks/cms/openedx
+            build_cmd: packaging\build_openedx_msi.cmd --offline
           # --------------------------------------------------------------------
           # Extensible across all 160+ packages in libscript:
           # - id: mysql

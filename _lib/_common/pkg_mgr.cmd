@@ -81,9 +81,58 @@ for %%F in ("!url!") do set "filename=%%~nxF"
 set "cache_file=!dl_dir!\!filename!"
 
 :: 4. Cache Check & Download
+set "download_needed=1"
 if exist "!cache_file!" (
         call "%LOG_CMD%" :log_info "[CACHED] !url!"
+        set "download_needed=0"
 ) else (
+        if exist "!cache_dir!\!filename!" (
+                call "%LOG_CMD%" :log_info "[CACHED] !url! (found in !cache_dir!\!filename!)"
+                copy /y "!cache_dir!\!filename!" "!cache_file!" >nul 2>&1
+                set "download_needed=0"
+        ) else if exist "!cache_dir!\runtimes\!filename!" (
+                call "%LOG_CMD%" :log_info "[CACHED] !url! (found in !cache_dir!\runtimes\!filename!)"
+                copy /y "!cache_dir!\runtimes\!filename!" "!cache_file!" >nul 2>&1
+                set "download_needed=0"
+        ) else if exist "!cache_dir!\databases\!filename!" (
+                call "%LOG_CMD%" :log_info "[CACHED] !url! (found in !cache_dir!\databases\!filename!)"
+                copy /y "!cache_dir!\databases\!filename!" "!cache_file!" >nul 2>&1
+                set "download_needed=0"
+        ) else if exist "!cache_dir!\wheels\!filename!" (
+                call "%LOG_CMD%" :log_info "[CACHED] !url! (found in !cache_dir!\wheels\!filename!)"
+                copy /y "!cache_dir!\wheels\!filename!" "!cache_file!" >nul 2>&1
+                set "download_needed=0"
+        ) else if exist "!cache_dir!\npm\!filename!" (
+                call "%LOG_CMD%" :log_info "[CACHED] !url! (found in !cache_dir!\npm\!filename!)"
+                copy /y "!cache_dir!\npm\!filename!" "!cache_file!" >nul 2>&1
+                set "download_needed=0"
+        ) else if exist "!cache_dir!\codebase\!filename!" (
+                call "%LOG_CMD%" :log_info "[CACHED] !url! (found in !cache_dir!\codebase\!filename!)"
+                copy /y "!cache_dir!\codebase\!filename!" "!cache_file!" >nul 2>&1
+                set "download_needed=0"
+        ) else if exist "%LIBSCRIPT_ROOT_DIR%\cache\!filename!" (
+                call "%LOG_CMD%" :log_info "[CACHED] !url! (found in %LIBSCRIPT_ROOT_DIR%\cache\!filename!)"
+                copy /y "%LIBSCRIPT_ROOT_DIR%\cache\!filename!" "!cache_file!" >nul 2>&1
+                set "download_needed=0"
+        )
+)
+
+if "!download_needed!"=="1" (
+        if "%LIBSCRIPT_OFFLINE%"=="1" (
+                call "%LOG_CMD%" :log_error "Error: [OFFLINE] Cannot download '!url!'. Artifact not found in local cache at '!cache_file!'."
+                echo Error: [OFFLINE] Cannot download '!url!'. Artifact not found in local cache at '!cache_file!'. >&2
+                if "%LIBSCRIPT_FORCE_OFFLINE%"=="1" (
+                        echo Fatal: LIBSCRIPT_FORCE_OFFLINE=1 strictly prohibits network requests. >&2
+                        exit /b 1
+                )
+                exit /b 1
+        )
+        if "%LIBSCRIPT_FORCE_OFFLINE%"=="1" (
+                call "%LOG_CMD%" :log_error "Fatal: LIBSCRIPT_FORCE_OFFLINE=1 strictly prohibits network requests."
+                echo Fatal: LIBSCRIPT_FORCE_OFFLINE=1 strictly prohibits network requests. >&2
+                exit /b 1
+        )
+
         call "%LOG_CMD%" :log_info "[DOWNLOADING] !url!"
     
         set "download_success=0"

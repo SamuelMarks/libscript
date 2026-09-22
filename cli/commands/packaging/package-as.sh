@@ -29,12 +29,17 @@ if [ "$CMD" = "package-as" ]; then
   shift
   if [ "${pkg_type:-}" = "docker" ] || [ "$pkg_type" = "dockerfile" ]; then
     . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_docker.sh"
-  elif [ "${pkg_type:-}" = "docker_compose" ]; then
+  elif [ "${pkg_type:-}" = "docker_compose" ] || [ "${pkg_type:-}" = "docker-compose" ]; then
     . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_docker_compose.sh"
-  elif [ "${pkg_type:-}" = "TUI" ]; then
-    . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_tui.sh"
   elif [ "${pkg_type:-}" = "msi" ]; then
-    . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_msi.sh"
+    case "${1:-}" in
+      stacks/*|openedx)
+        exec "$LIBSCRIPT_ROOT_DIR/packaging/build_msi.sh" "$@"
+        ;;
+      *)
+        . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_msi.sh"
+        ;;
+    esac
   elif [ "${pkg_type:-}" = "innosetup" ]; then
     . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_innosetup.sh"
   elif [ "${pkg_type:-}" = "nsis" ]; then

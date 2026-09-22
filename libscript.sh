@@ -68,6 +68,11 @@ show_help() {
   printf '%s\n' ""
   printf '%s\n' "Options:"
   printf '%s\n' "  --help, -h, /?, -?          Show this extensive help text"
+  printf '%s\n' "  --offline, -o               Enable offline execution mode (prohibits remote network requests)"
+  printf '%s\n' "  --force-offline             Strictly abort execution if network calls are attempted"
+  printf '%s\n' "  --online                    Explicitly enable online execution mode"
+  printf '%s\n' "  --cache-dir=<dir>           Set local artifact cache directory (LIBSCRIPT_CACHE_DIR)"
+  printf '%s\n' "  --download-dir=<dir>        Set temporary download staging directory (DOWNLOAD_DIR)"
   printf '%s\n' "  --prefix=<dir>              Set local installation prefix"
   printf '%s\n' "  --log-format=<text|json>    Set log output format"
   printf '%s\n' "  --log-level=<0-4>           Set minimum log level (0=DEBUG, 1=INFO, etc)"
@@ -118,10 +123,48 @@ get_desc() {
   fi
 }
 
+# Pre-scan arguments for global offline and cache flags
+for _scan_arg in "$@"; do
+  case "$_scan_arg" in
+    --offline|-o) export LIBSCRIPT_OFFLINE=1 ;;
+    --force-offline) export LIBSCRIPT_FORCE_OFFLINE=1; export LIBSCRIPT_OFFLINE=1 ;;
+    --online) export LIBSCRIPT_OFFLINE=0 ;;
+  esac
+done
+
 while [ $# -gt 0 ]; do
   case "$1" in
+    --offline|-o)
+      export LIBSCRIPT_OFFLINE=1
+      shift
+      ;;
+    --force-offline)
+      export LIBSCRIPT_FORCE_OFFLINE=1
+      export LIBSCRIPT_OFFLINE=1
+      shift
+      ;;
+    --online)
+      export LIBSCRIPT_OFFLINE=0
+      shift
+      ;;
     --cache-dir=*)
       export LIBSCRIPT_CACHE_DIR="${1#*=}"
+      shift
+      ;;
+    --cache-dir)
+      shift
+      export LIBSCRIPT_CACHE_DIR="${1:-}"
+      shift
+      ;;
+    --download-dir=*)
+      export DOWNLOAD_DIR="${1#*=}"
+      export LIBSCRIPT_DOWNLOAD_DIR="${1#*=}"
+      shift
+      ;;
+    --download-dir)
+      shift
+      export DOWNLOAD_DIR="${1:-}"
+      export LIBSCRIPT_DOWNLOAD_DIR="${DOWNLOAD_DIR}"
       shift
       ;;
     --log-format=*)
@@ -178,7 +221,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 CMD="${1:-}"
-if [ -z "$CMD" ] || [ "$CMD" = "--help" ] || [ "$CMD" = "-h" ] || [ "$CMD" = "/?" ] || [ "$CMD" = "-?" ]; then
+if [ -z "$CMD" ] || [ "$CMD" = "help" ] || [ "$CMD" = "--help" ] || [ "$CMD" = "-h" ] || [ "$CMD" = "/?" ] || [ "$CMD" = "-?" ]; then
   show_help
   exit 0
 fi

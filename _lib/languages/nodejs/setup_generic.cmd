@@ -4,7 +4,47 @@
 ::
 :: ## Usage
 :: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+if defined STACK (
+    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    if not errorlevel 1 (
+        echo [STOP] processing "%THIS_FILE%" >&2
+        exit /b 0
+    )
+)
+set "STACK=%STACK%:%THIS_FILE%:"
+
+:: Parse offline and npm options
+:arg_parse_loop
+if "%~1"=="" goto :arg_parse_done
+if /i "%~1"=="--offline" set "LIBSCRIPT_OFFLINE=1"
+if /i "%~1"=="-o" set "LIBSCRIPT_OFFLINE=1"
+if /i "%~1"=="--npm-cache" (
+    set "NPM_CACHE=%~2"
+    shift
+)
+if /i "%~1"=="--yarn-offline-mirror" (
+    set "YARN_OFFLINE_MIRROR=%~2"
+    shift
+)
+shift
+goto :arg_parse_loop
+:arg_parse_done
+
+if "%LIBSCRIPT_OFFLINE%"=="1" (
+    set "npm_config_offline=true"
+    set "npm_config_prefer_offline=true"
+    if "%NPM_CACHE%"=="" (
+        if not "%LIBSCRIPT_CACHE_DIR%"=="" (
+            set "NPM_CACHE=%LIBSCRIPT_CACHE_DIR%\npm"
+        ) else (
+            set "NPM_CACHE=%LIBSCRIPT_ROOT_DIR%\cache\npm"
+        )
+    )
+    set "npm_config_cache=%NPM_CACHE%"
+    if "%YARN_OFFLINE_MIRROR%"=="" set "YARN_OFFLINE_MIRROR=%NPM_CACHE%"
+)
 
 if "%ACTION%"=="" set ACTION=install
 if "%NODEJS_VERSION%"=="" set NODEJS_VERSION=latest

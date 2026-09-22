@@ -1,0 +1,113 @@
+{
+  "$schema": "../../../packaging/offline.schema.json",
+  "name": "openedx",
+  "title": "Open edX Platform Air-Gapped Offline Bundle",
+  "version": "quince.3",
+  "target_platform": "windows-x64",
+  "runtimes": {
+    "python": {
+      "name": "python",
+      "version": "3.11.9",
+      "filename": "python-3.11.9-embed-amd64.zip",
+      "url": "https://www.python.org/ftp/python/3.11.9/python-3.11.9-embed-amd64.zip",
+      "sha256": "009d6bf7e3b2ddca3d784fa09f90fe54336d5b60f0e0f305c37f400bf83cfd3b",
+      "type": "zip",
+      "extract_dir": "runtimes/python"
+    },
+    "nodejs": {
+      "name": "nodejs",
+      "version": "20.17.0",
+      "filename": "node-v20.17.0-win-x64.zip",
+      "url": "https://nodejs.org/dist/v20.17.0/node-v20.17.0-win-x64.zip",
+      "sha256": "e323fff0aba197090faabd29c4c23f334557ff24454324f0c83faa7e399dbb74",
+      "type": "zip",
+      "extract_dir": "runtimes/nodejs"
+    }
+  },
+  "databases": {
+    "mysql": {
+      "name": "mysql",
+      "version": "8.0.39",
+      "filename": "mysql-8.0.39-winx64.zip",
+      "url": "https://cdn.mysql.com/archives/mysql-8.0/mysql-8.0.39-winx64.zip",
+      "sha256": "7f8b9e6a0d2f1b4c3e5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e",
+      "port": 3306,
+      "service_name": "OpenEdXMySQL",
+      "extract_dir": "databases/mysql"
+    },
+    "redis": {
+      "name": "redis",
+      "version": "5.0.14.1",
+      "filename": "redis-windows-x64-7.0.zip",
+      "url": "https://github.com/tporadowski/redis/releases/download/v5.0.14.1/Redis-x64-5.0.14.1.zip",
+      "sha256": "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b",
+      "port": 6379,
+      "service_name": "OpenEdXRedis",
+      "extract_dir": "databases/redis"
+    },
+    "mongodb": {
+      "name": "mongodb",
+      "version": "7.0.12",
+      "filename": "mongodb-windows-x86_64-7.0.12.zip",
+      "url": "https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-7.0.12.zip",
+      "sha256": "dfbbcf8ea5bbae44ade25b158b67835b142e1da56e2ed8473a9a8c6df3b75423",
+      "port": 27017,
+      "service_name": "OpenEdXMongoDB",
+      "extract_dir": "databases/mongodb"
+    },
+    "meilisearch": {
+      "name": "meilisearch",
+      "version": "1.9.0",
+      "filename": "meilisearch-windows-amd64.exe",
+      "url": "https://github.com/meilisearch/meilisearch/releases/download/v1.9.0/meilisearch-windows-amd64.exe",
+      "sha256": "ea6151b9add98253015e4e724e82ab176e78b576cc5715855181ec2bbc558663",
+      "port": 7700,
+      "service_name": "OpenEdXMeilisearch",
+      "extract_dir": "databases/meilisearch"
+    }
+  },
+  "wheels": {
+    "target_dir": "cache/wheels",
+    "requirements_files": ["requirements/edx/base.txt", "requirements/edx/development.txt"],
+    "packages": [
+      {
+        "name": "waitress",
+        "version": "3.0.0",
+        "filename": "waitress-3.0.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/5b/a9/485c953a1ac4cb98c28e41fd2c7184072df36bbf99734a51d44d04176878/waitress-3.0.0-py3-none-any.whl",
+        "sha256": "2a06f242f4ba0cc563444ca3d1998959447477363a2d7e9b8b4d75d35cfd1669"
+      }
+    ]
+  },
+  "npm": {
+    "target_dir": "cache/npm",
+    "packages": []
+  },
+  "codebase": {
+    "name": "edx-platform",
+    "release_tag": "open-release/quince.3",
+    "archive_filename": "openedx-release-quince.3.zip",
+    "archive_url": "https://github.com/openedx/edx-platform/archive/refs/tags/open-release/quince.3.zip",
+    "archive_sha256": "7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b",
+    "extract_target": "codebase",
+    "demo_content": [
+      {
+        "name": "demo-course",
+        "filename": "demo-course.tar.gz",
+        "url": "https://github.com/openedx/edx-demo-course/archive/refs/heads/master.tar.gz",
+        "sha256": "b1b3945bd61289044e4b267a905c6ee2c0538f82ccc19fbd2e4bc8b218318435"
+      }
+    ]
+  },
+  "checksums": {
+    "python-3.11.9-embed-amd64.zip": "009d6bf7e3b2ddca3d784fa09f90fe54336d5b60f0e0f305c37f400bf83cfd3b",
+    "node-v20.17.0-win-x64.zip": "e323fff0aba197090faabd29c4c23f334557ff24454324f0c83faa7e399dbb74",
+    "mysql-8.0.39-winx64.zip": "7f8b9e6a0d2f1b4c3e5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e",
+    "redis-windows-x64-7.0.zip": "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b",
+    "mongodb-windows-x86_64-7.0.12.zip": "dfbbcf8ea5bbae44ade25b158b67835b142e1da56e2ed8473a9a8c6df3b75423",
+    "meilisearch-windows-amd64.exe": "ea6151b9add98253015e4e724e82ab176e78b576cc5715855181ec2bbc558663",
+    "waitress-3.0.0-py3-none-any.whl": "2a06f242f4ba0cc563444ca3d1998959447477363a2d7e9b8b4d75d35cfd1669",
+    "openedx-release-quince.3.zip": "7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b",
+    "demo-course.tar.gz": "b1b3945bd61289044e4b267a905c6ee2c0538f82ccc19fbd2e4bc8b218318435"
+  }
+}

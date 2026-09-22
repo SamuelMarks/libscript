@@ -4,7 +4,39 @@
 ::
 :: ## Usage
 :: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+if defined STACK (
+    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    if not errorlevel 1 (
+        echo [STOP] processing "%THIS_FILE%" >&2
+        exit /b 0
+    )
+)
+set "STACK=%STACK%:%THIS_FILE%:"
+
+:: Parse offline and choco options
+:arg_parse_loop
+if "%~1"=="" goto :arg_parse_done
+if /i "%~1"=="--offline" set "LIBSCRIPT_OFFLINE=1"
+if /i "%~1"=="-o" set "LIBSCRIPT_OFFLINE=1"
+if /i "%~1"=="--choco-source" (
+    set "CHOCO_SOURCE=%~2"
+    shift
+)
+shift
+goto :arg_parse_loop
+:arg_parse_done
+
+if "%LIBSCRIPT_OFFLINE%"=="1" (
+    if "%CHOCO_SOURCE%"=="" (
+        if not "%LIBSCRIPT_CACHE_DIR%"=="" (
+            set "CHOCO_SOURCE=%LIBSCRIPT_CACHE_DIR%\choco"
+        ) else (
+            set "CHOCO_SOURCE=%LIBSCRIPT_ROOT_DIR%\cache\choco"
+        )
+    )
+)
 
 if "%ACTION%"=="" set ACTION=install
 if "%CHOCO_VERSION%"=="" set CHOCO_VERSION=latest

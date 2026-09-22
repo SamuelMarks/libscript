@@ -141,6 +141,9 @@ standardize_*
 !tests/test_run_native_tests.*
 !tests/test_python_*
 !tests/test_openedx_*
+!tests/test_harvest_payload.*
+!tests/test_hydrate_offline_cache.*
+!tests/test_package_as_docker_offline.*
 !stacks/cms/openedx/test_harness.*
 !stacks/cms/openedx/test_server.*
 !tests/test_packaging_branding.*

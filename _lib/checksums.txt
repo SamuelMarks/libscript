@@ -66,3 +66,4 @@ https://github.com/opencontainers/runc/releases/download/v1.3.0-rc.1/runc.amd64 
 https://github.com/containernetworking/plugins/releases/download/v1.6.2/cni-plugins-linux-amd64-v1.6.2.tgz b8e811578fb66023f90d2e238d80cec3bdfca4b44049af74c374d4fae0f9c090
 https://github.com/containerd/containerd/releases/download/v2.1.0-beta.0/containerd-2.1.0-beta.0-linux-amd64.tar.gz 2ec23563527914ed5a084c5fa663cb8a555f777d11757910ee8800fcdf5a9a4a
 https://github.com/etcd-io/etcd/releases/download/v3.6.0-rc.3/etcd-v3.6.0-rc.3-linux-amd64.tar.gz 7ad8e742d133f781193351b296b374c1d95f92f68bdbeb4b1dc3dbc3fe0d3b72
+https://example.com/test-runtime-1.0.tar.gz 133e85a6cb4ae4c6b672bb5a87363422ca2448f79dddffd788ed35e89a77d150

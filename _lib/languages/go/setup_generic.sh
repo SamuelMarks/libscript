@@ -43,6 +43,20 @@ GO_INSTALL_METHOD="$(libscript_resolve_install_method "GO")"
 ACTION="${ACTION:-install}"
 VERSION="${GO_VERSION:-latest}"
 
+# Parse offline and go options
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --offline|-o) export LIBSCRIPT_OFFLINE=1; shift ;;
+    --go-vendor) export GO_VENDOR=1; shift ;;
+    *) shift ;;
+  esac
+done
+
+if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] || [ "${GO_VENDOR:-0}" = "1" ]; then
+  export GOPROXY=off
+  export GOFLAGS="${GOFLAGS:-} -mod=vendor"
+fi
+
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
 resolve_exact_version() {

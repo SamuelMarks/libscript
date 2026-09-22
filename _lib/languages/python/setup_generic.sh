@@ -44,14 +44,37 @@ PYTHON_INSTALL_METHOD="system"
 PYTHON_VERSION="${PYTHON_VERSION:-3.11.9}"
 ACTION="${ACTION:-install}"
 
+# Parse python and pip offline options
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --offline|-o) export LIBSCRIPT_OFFLINE=1; shift ;;
+    --pip-find-links=*) export PIP_FIND_LINKS="${1#*=}"; shift ;;
+    --pip-find-links) export PIP_FIND_LINKS="${2:-}"; shift 2 ;;
+    --pip-no-index) export PIP_NO_INDEX=1; shift ;;
+    --pip-wheel-dir=*) export PIP_WHEEL_DIR="${1#*=}"; shift ;;
+    --pip-wheel-dir) export PIP_WHEEL_DIR="${2:-}"; shift 2 ;;
+    *) shift ;;
+  esac
+done
+
+if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] || [ "${PIP_NO_INDEX:-0}" = "1" ]; then
+  export PIP_NO_INDEX=1
+  _def_wheels="${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}/wheels"
+  export PIP_FIND_LINKS="${PIP_FIND_LINKS:-${PIP_WHEEL_DIR:-$_def_wheels}}"
+fi
+
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
 resolve_exact_version() {
   if [ "${PYTHON_VERSION}" = "latest" ]; then
-    if ! command -v curl >/dev/null 2>&1; then
-      libscript_depends 'curl'
+    if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ]; then
+      EXACT_VERSION="3.11.9"
+    else
+      if ! command -v curl >/dev/null 2>&1; then
+        libscript_depends 'curl'
+      fi
+      EXACT_VERSION=$(curl -sL --compressed https://www.python.org/downloads/ | grep -o 'Python 3\.[0-9]*\.[0-9]*' | sort -V | tail -n 1 | awk '{print $2}')
     fi
-    EXACT_VERSION=$(curl -sL --compressed https://www.python.org/downloads/ | grep -o 'Python 3\.[0-9]*\.[0-9]*' | sort -V | tail -n 1 | awk '{print $2}')
   else
     EXACT_VERSION="${PYTHON_VERSION}"
   fi
@@ -223,10 +246,18 @@ case "$ACTION" in
           # Note: We provide EXACT_VERSION to ensure the newly installed binary is selected by our abstraction router
           libscript_python_venv "${PYTHON_VENV}" "${EXACT_VERSION}"
           
-          "${PYTHON_VENV}/bin/python" -m pip install -U pip setuptools wheel
+          _pip_cmd_opts=""
+          if [ "${PIP_NO_INDEX:-0}" = "1" ]; then
+            _pip_cmd_opts="--no-index"
+            if [ -n "${PIP_FIND_LINKS:-}" ] && [ -d "${PIP_FIND_LINKS}" ]; then
+              _pip_cmd_opts="${_pip_cmd_opts} --find-links ${PIP_FIND_LINKS}"
+            fi
+          fi
+
+          "${PYTHON_VENV}/bin/python" -m pip install ${_pip_cmd_opts} -U pip setuptools wheel 2>/dev/null || true
           
           # Hardware-Optimized ML Profiles
-          if [ -n "${ML_ACCELERATOR_BACKEND:-}" ]; then
+          if [ -n "${ML_ACCELERATOR_BACKEND:-}" ] && [ "${PIP_NO_INDEX:-0}" != "1" ]; then
             log_info "Installing hardware-optimized ML profile: ${ML_ACCELERATOR_BACKEND}"
             case "${ML_ACCELERATOR_BACKEND}" in
               tpu-jax)
@@ -254,10 +285,10 @@ case "$ACTION" in
           fi
           
           if [ -f 'requirements.txt' ]; then
-            "${PYTHON_VENV}/bin/python" -m pip install -r 'requirements.txt'
+            "${PYTHON_VENV}/bin/python" -m pip install ${_pip_cmd_opts} -r 'requirements.txt'
           fi
           if [ -f 'setup.py' ] || [ -f 'setup.cfg' ] || [ -f 'pyproject.toml' ]; then
-            "${PYTHON_VENV}/bin/python" -m pip install -e .
+            "${PYTHON_VENV}/bin/python" -m pip install ${_pip_cmd_opts} -e .
           fi
         fi
       fi

@@ -207,14 +207,59 @@ if ! grep -q 'Property Id="PROP_OPENEDX_VERSION" Value="v3.2.1-custom-tag"' "$CU
 fi
 printf '[PASS] Verified: Build-time custom branch/tag override baked into installer\n'
 
-# 5. Binary MSI compilation check
+# 5. Binary MSI compilation check & Online/Offline Variant Tests
 MSI_FILE="${OUT_BASE}.msi"
 if [ -f "$MSI_FILE" ]; then
   _msi_size=$(wc -c < "$MSI_FILE" | tr -d ' ')
-  printf '[PASS] Generated binary MSI package: %s (size: %s bytes)
-' "$MSI_FILE" "$_msi_size"
+  printf '[PASS] Generated binary MSI package: %s (size: %s bytes)\n' "$MSI_FILE" "$_msi_size"
+  if [ "$_msi_size" -lt 10485760 ]; then
+    printf '[PASS] Verified: Online variant package is lightweight (< 10 MB: %s bytes)\n' "$_msi_size"
+  else
+    printf '[FAIL] Online MSI package exceeded 10 MB limit (%s bytes)\n' "$_msi_size" >&2
+    exit 1
+  fi
 fi
 
-printf '=== Open edX MSI tests completed successfully! ===
-'
+# 6. Test Multi-Cabinet Offline Variant Generation
+printf '=== Testing Open edX Multi-Cabinet Offline Variant ===\n'
+MOCK_CACHE="${TEST_TMP_DIR}/mock_cache"
+mkdir -p "${MOCK_CACHE}/runtimes" "${MOCK_CACHE}/databases" "${MOCK_CACHE}/codebase" "${MOCK_CACHE}/wheels"
+printf 'mock python runtime' > "${MOCK_CACHE}/runtimes/python-3.11.9-embed-amd64.zip"
+printf 'mock mysql db' > "${MOCK_CACHE}/databases/mysql-8.0.39-winx64.zip"
+printf 'mock codebase' > "${MOCK_CACHE}/codebase/openedx-release-quince.3.zip"
+
+OFFLINE_OUT_BASE="${TEST_TMP_DIR}/OpenEdX_Offline_Test"
+"${SCRIPT_DIR}/../packaging/build_msi.sh" "stacks/cms/openedx" \
+  --out "$OFFLINE_OUT_BASE" \
+  --variant offline \
+  --cache-dir "$MOCK_CACHE" \
+  --version "1.0.0.0"
+
+OFFLINE_WXS="${OFFLINE_OUT_BASE}.wxs"
+if [ ! -f "$OFFLINE_WXS" ]; then
+  printf '[FAIL] Expected offline WXS %s was not created\n' "$OFFLINE_WXS" >&2
+  exit 1
+fi
+
+assert_offline_contains() {
+  _pattern="$1"
+  _desc="$2"
+  if grep -q -- "$_pattern" "$OFFLINE_WXS"; then
+    printf '[PASS] Verified Offline: %s\n' "$_desc"
+  else
+    printf '[FAIL] Offline manifest missing: %s (pattern: %s)\n' "$_desc" "$_pattern" >&2
+    exit 1
+  fi
+}
+
+assert_offline_contains 'Property Id="PROP_OPENEDX_OFFLINE" Value="1"' "Offline property enabled (1)"
+assert_offline_contains 'Media Id="1" Cabinet="engine.cab"' "Media partition 1 (engine.cab)"
+assert_offline_contains 'Media Id="2" Cabinet="runtimes.cab"' "Media partition 2 (runtimes.cab)"
+assert_offline_contains 'Media Id="3" Cabinet="databases.cab"' "Media partition 3 (databases.cab)"
+assert_offline_contains 'Media Id="4" Cabinet="codebase.cab"' "Media partition 4 (codebase.cab)"
+assert_offline_contains 'ComponentGroupRef Id="LibscriptOfflineCacheComponents"' "LibscriptOfflineCacheComponents feature reference"
+assert_offline_contains '\[Pre-bundled / Offline\]' "Pre-bundled tag in Verify Ready dialog"
+assert_offline_contains 'pre-bundled air-gapped runtimes' "Offline welcome dialog description"
+
+printf '=== Open edX MSI tests completed successfully! ===\n'
 exit 0

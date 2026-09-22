@@ -165,7 +165,25 @@ libscript_python_venv() {
       else
          _python_exe=$(libscript_python_resolve) || return 1
       fi
-      "${_python_exe}" -m venv "${_target_dir}" || return 1
+      _venv_args=""
+      if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] || [ "${PIP_NO_INDEX:-0}" = "1" ]; then
+        _venv_args="--without-pip"
+      fi
+      if ! "${_python_exe}" -m venv ${_venv_args} "${_target_dir}"; then
+        if [ -z "${_venv_args}" ]; then
+          "${_python_exe}" -m venv --without-pip "${_target_dir}" || return 1
+        else
+          return 1
+        fi
+      fi
+      if [ ! -f "${_target_dir}/bin/pip" ] && [ ! -f "${_target_dir}/Scripts/pip.exe" ]; then
+        _wheels_dir="${PIP_FIND_LINKS:-${PIP_WHEEL_DIR:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}/wheels}}"
+        if [ -d "${_wheels_dir}" ]; then
+          _py_bin="${_target_dir}/bin/python"
+          [ -f "${_target_dir}/Scripts/python.exe" ] && _py_bin="${_target_dir}/Scripts/python.exe"
+          "$_py_bin" -m pip install --no-index --find-links "${_wheels_dir}" pip setuptools wheel 2>/dev/null || true
+        fi
+      fi
       ;;
     *)
       log_error "Unsupported Python venv backend: ${_backend}"

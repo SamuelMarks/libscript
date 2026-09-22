@@ -156,7 +156,26 @@ if "%_backend%"=="uv" (
         echo [ERROR] Failed to resolve Python executable. >&2
         exit /b 1
     )
-    "!_python_exe!" -m venv "%_target_dir%"
+    set "_venv_args="
+    if "%LIBSCRIPT_OFFLINE%"=="1" set "_venv_args=--without-pip"
+    if "%PIP_NO_INDEX%"=="1" set "_venv_args=--without-pip"
+    "!_python_exe!" -m venv !_venv_args! "%_target_dir%"
+    if errorlevel 1 (
+        if "!_venv_args!"=="" (
+            "!_python_exe!" -m venv --without-pip "%_target_dir%"
+            if errorlevel 1 exit /b 1
+        ) else (
+            exit /b 1
+        )
+    )
+    if not exist "%_target_dir%\Scripts\pip.exe" (
+        set "_wheels_dir=%PIP_FIND_LINKS%"
+        if "!_wheels_dir!"=="" set "_wheels_dir=%PIP_WHEEL_DIR%"
+        if "!_wheels_dir!"=="" set "_wheels_dir=%LIBSCRIPT_CACHE_DIR%\wheels"
+        if exist "!_wheels_dir!" (
+            "%_target_dir%\Scripts\python.exe" -m pip install --no-index --find-links "!_wheels_dir!" pip setuptools wheel >nul 2>&1
+        )
+    )
 ) else (
     echo [ERROR] Unsupported Python venv backend: %_backend% >&2
     exit /b 1

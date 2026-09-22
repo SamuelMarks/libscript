@@ -43,6 +43,22 @@ RUST_INSTALL_METHOD="system"
 ACTION="${ACTION:-install}"
 VERSION="${RUST_VERSION:-latest}"
 
+# Parse offline and cargo options
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --offline|-o) export LIBSCRIPT_OFFLINE=1; shift ;;
+    --cargo-vendor=*) export CARGO_VENDOR_DIR="${1#*=}"; shift ;;
+    --cargo-vendor) export CARGO_VENDOR_DIR="${2:-}"; shift 2 ;;
+    *) shift ;;
+  esac
+done
+
+if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ]; then
+  export CARGO_NET_OFFLINE=true
+  _def_cargo_vendor="${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}/cargo-vendor"
+  export CARGO_VENDOR_DIR="${CARGO_VENDOR_DIR:-$_def_cargo_vendor}"
+fi
+
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
 resolve_exact_version() {

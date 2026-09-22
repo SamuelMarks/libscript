@@ -9,12 +9,31 @@
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+if defined STACK (
+    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    if not errorlevel 1 (
+        echo [STOP] processing "%THIS_FILE%" >&2
+        exit /b 0
+    )
+)
+set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 :: Source logging (must be after SCRIPT_DIR)
 set "LOG_CMD=%SCRIPT_DIR%\_lib\_common\log.cmd"
+
+:: Pre-scan arguments for global offline and cache flags
+for %%A in (%*) do (
+    if /i "%%~A"=="--offline" set "LIBSCRIPT_OFFLINE=1"
+    if /i "%%~A"=="-o" set "LIBSCRIPT_OFFLINE=1"
+    if /i "%%~A"=="--force-offline" (
+        set "LIBSCRIPT_FORCE_OFFLINE=1"
+        set "LIBSCRIPT_OFFLINE=1"
+    )
+    if /i "%%~A"=="--online" set "LIBSCRIPT_OFFLINE=0"
+)
 
 :: Global Option Parsing
 :: ## opt_loop
@@ -23,6 +42,43 @@ set "LOG_CMD=%SCRIPT_DIR%\_lib\_common\log.cmd"
 set "arg=%~1"
 if "!arg!"=="" goto :run_cmd
 set "is_opt=0"
+if /i "!arg!"=="--offline" (
+    set "LIBSCRIPT_OFFLINE=1"
+    set "is_opt=1"
+)
+if /i "!arg!"=="-o" (
+    set "LIBSCRIPT_OFFLINE=1"
+    set "is_opt=1"
+)
+if /i "!arg!"=="--force-offline" (
+    set "LIBSCRIPT_FORCE_OFFLINE=1"
+    set "LIBSCRIPT_OFFLINE=1"
+    set "is_opt=1"
+)
+if /i "!arg!"=="--online" (
+    set "LIBSCRIPT_OFFLINE=0"
+    set "is_opt=1"
+)
+if "!arg:~0,12!"=="--cache-dir=" (
+    set "LIBSCRIPT_CACHE_DIR=!arg:~12!"
+    set "is_opt=1"
+)
+if /i "!arg!"=="--cache-dir" (
+    set "LIBSCRIPT_CACHE_DIR=%~2"
+    shift
+    set "is_opt=1"
+)
+if "!arg:~0,15!"=="--download-dir=" (
+    set "DOWNLOAD_DIR=!arg:~15!"
+    set "LIBSCRIPT_DOWNLOAD_DIR=!arg:~15!"
+    set "is_opt=1"
+)
+if /i "!arg!"=="--download-dir" (
+    set "DOWNLOAD_DIR=%~2"
+    set "LIBSCRIPT_DOWNLOAD_DIR=%~2"
+    shift
+    set "is_opt=1"
+)
 if "!arg:~0,9!"=="--prefix=" (
     set "PREFIX=!arg:~9!"
     set "is_opt=1"
@@ -54,6 +110,7 @@ if "!is_opt!"=="1" (
 :run_cmd
 set "cmd=%~1"
 if "%cmd%"=="" goto show_help
+if /i "%cmd%"=="help" goto show_help
 if /i "%cmd%"=="--help" goto show_help
 if /i "%cmd%"=="-h" goto show_help
 if /i "%cmd%"=="/?" goto show_help
@@ -270,6 +327,11 @@ echo.
 echo Options:
 echo   --help, -h, /?, -?          Show this help text
 echo   --version, -v               Show version
+echo   --offline, -o               Enable offline execution mode (prohibits remote network requests)
+echo   --force-offline             Strictly abort execution if network calls are attempted
+echo   --online                    Explicitly enable online execution mode
+echo   --cache-dir=^<dir^>           Set local artifact cache directory (LIBSCRIPT_CACHE_DIR)
+echo   --download-dir=^<dir^>        Set temporary download staging directory (DOWNLOAD_DIR)
 echo   --prefix=^<dir^>              Set local installation prefix
 echo   --log-format=^<text^|json^>      Set log output format
 echo   --log-level=^<0-4^>             Set minimum log level (0=DEBUG, 1=INFO, etc)
