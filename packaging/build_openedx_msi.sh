@@ -65,6 +65,14 @@ while [ $# -gt 0 ]; do
       extra_args="$extra_args --cache-dir $2"
       shift 2
       ;;
+    --out)
+      extra_args="$extra_args --out $2"
+      shift 2
+      ;;
+    --version)
+      extra_args="$extra_args --version $2"
+      shift 2
+      ;;
     --help|-h|/\?|-\?)
       cat << 'EOF_HELP'
 Open edX Windows Installer (.msi) Generator

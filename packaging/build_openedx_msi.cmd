@@ -28,7 +28,7 @@ if defined STACK (
 )
 set "STACK=%STACK%:%THIS_FILE%:"
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 :: ## find_root
 :: Finds the root directory of the libscript repository.
@@ -48,6 +48,8 @@ set "HYDRATE_CACHE=0"
 set "CACHE_DIR=%LIBSCRIPT_ROOT_DIR%\cache"
 if defined LIBSCRIPT_CACHE_DIR set "CACHE_DIR=%LIBSCRIPT_CACHE_DIR%"
 set "MANIFEST_PATH=%LIBSCRIPT_ROOT_DIR%\stacks\cms\openedx\offline_bundle.json"
+set "OUT_FILE="
+set "APP_VERSION="
 set "EXTRA_ARGS="
 
 :parse_loop
@@ -74,6 +76,16 @@ if /I "%~1"=="--hydrate-cache" (
 )
 if /I "%~1"=="--cache-dir" (
     set "CACHE_DIR=%~2"
+    shift & shift
+    goto parse_loop
+)
+if /I "%~1"=="--out" (
+    set "OUT_FILE=%~2"
+    shift & shift
+    goto parse_loop
+)
+if /I "%~1"=="--version" (
+    set "APP_VERSION=%~2"
     shift & shift
     goto parse_loop
 )
@@ -112,6 +124,11 @@ if "%HYDRATE_CACHE%"=="1" (
     call "%SCRIPT_DIR%\hydrate_offline_cache.cmd" --manifest "%MANIFEST_PATH%" --cache-dir "%CACHE_DIR%"
 )
 
+set "OUT_ARG="
+if defined OUT_FILE set "OUT_ARG=--out %OUT_FILE%"
+set "VER_ARG="
+if defined APP_VERSION set "VER_ARG=--version %APP_VERSION%"
+
 :: Delegate build to generic build_msi.cmd
-call "%SCRIPT_DIR%\build_msi.cmd" stacks\cms\openedx --variant %VARIANT% --cache-dir "%CACHE_DIR%" %EXTRA_ARGS%
+call "%SCRIPT_DIR%\build_msi.cmd" stacks\cms\openedx --variant %VARIANT% --cache-dir "%CACHE_DIR%" %OUT_ARG% %VER_ARG% %EXTRA_ARGS%
 exit /b %ERRORLEVEL%

@@ -179,6 +179,10 @@ jobs:
         shell: cmd
         run: |
           call ${{ matrix.package.build_cmd }} --out ${{ steps.version.outputs.out_name }} --version ${{ steps.version.outputs.version }}
+          if not exist "${{ steps.version.outputs.out_name }}.msi" (
+            echo [ERROR] Expected MSI artifact was not generated: ${{ steps.version.outputs.out_name }}.msi >&2
+            exit /b 1
+          )
 
       - name: Verify and Prepare Artifacts
         shell: cmd

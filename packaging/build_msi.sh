@@ -1226,10 +1226,21 @@ compile_msi() {
         return 1
       fi
     else
-      if ! "$_candle_cmd" -out "${OUT_FILE}.wixobj" "$WXS_FILE"; then
-        printf '[ERROR] WiX candle compilation failed on %s\n' "$WXS_FILE" >&2
+      _candle_wxs="${WXS_FILE}.candle.wxs"
+      if command -v powershell >/dev/null 2>&1; then
+        powershell -NoProfile -Command "\$w = Get-Content -LiteralPath '${WXS_FILE}' -Raw; \$w = \$w -replace '<Property Id=\"MsiHiddenProperties\".*?/>', ''; \$w = [regex]::Replace(\$w, '(?s)<InstallUISequence>.*?</InstallUISequence>', '      <InstallUISequence><Show Dialog=\"Dlg_Welcome\" After=\"CostFinalize\" /><Show Dialog=\"Dlg_Exit\" OnExit=\"success\" /></InstallUISequence>'); Set-Content -LiteralPath '${_candle_wxs}' -Value \$w"
+      elif command -v sed >/dev/null 2>&1; then
+        sed -E '/<Property Id="MsiHiddenProperties"/d; /<InstallUISequence>/,/<\/InstallUISequence>/c\      <InstallUISequence><Show Dialog="Dlg_Welcome" After="CostFinalize" /><Show Dialog="Dlg_Exit" OnExit="success" /></InstallUISequence>' "$WXS_FILE" > "$_candle_wxs"
+      else
+        cp -f "$WXS_FILE" "$_candle_wxs"
+      fi
+
+      if ! "$_candle_cmd" -out "${OUT_FILE}.wixobj" "$_candle_wxs"; then
+        rm -f "$_candle_wxs"
+        printf '[ERROR] WiX candle compilation failed on %s\n' "$_candle_wxs" >&2
         return 1
       fi
+      rm -f "$_candle_wxs"
       if ! "$_candle_cmd" -out "${OUT_FILE}_payload.wixobj" "${PAYLOAD_WXS}"; then
         printf '[ERROR] WiX candle compilation failed on %s\n' "${PAYLOAD_WXS}" >&2
         return 1
@@ -1256,5 +1267,5 @@ compile_msi() {
   fi
 }
 
-compile_msi
+compile_msi || exit 1
 exit 0

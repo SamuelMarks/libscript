@@ -18,7 +18,7 @@ if "%PACKAGE_NAME%"=="" (
 
 if "%LIBSCRIPT_ROOT_DIR%"=="" (
     set "SCRIPT_DIR=%~dp0"
-    if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+    if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
     for %%I in ("%SCRIPT_DIR%\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 )
 

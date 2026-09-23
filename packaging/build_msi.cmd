@@ -40,12 +40,6 @@ goto find_root_loop
 :: Target label reached once the libscript root directory is located.
 :found_root
 
-where sh.exe >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    sh "%SCRIPT_DIR%\build_msi.sh" %*
-    exit /b %ERRORLEVEL%
-)
-
 set "TARGET_DIR="
 set "OUT_FILE="
 set "APP_NAME=Open edX Platform"
@@ -998,6 +992,7 @@ if %ERRORLEVEL%==0 (
     )
     del /f /q "%WXS_FILE%.candle.wxs" >nul 2>&1
     echo [PASS] Successfully built %OUT_FILE%.msi
+    goto compile_done
 ) else (
     where wix.exe >nul 2>&1
     if %ERRORLEVEL%==0 (
@@ -1007,9 +1002,14 @@ if %ERRORLEVEL%==0 (
             exit /b 1
         )
         echo [PASS] Successfully built %OUT_FILE%.msi
+        goto compile_done
     ) else (
         echo [INFO] WiX toolset compiler not found in PATH. XML manifest ready for compilation.
     )
 )
 
+:compile_done
+del /f /q "%OUT_FILE%.candle.wxs" >nul 2>&1
+del /f /q "%OUT_FILE%.wixobj" >nul 2>&1
+del /f /q "%OUT_FILE%_payload.wixobj" >nul 2>&1
 exit /b 0

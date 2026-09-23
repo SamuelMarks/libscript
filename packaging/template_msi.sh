@@ -413,10 +413,10 @@ EOF2
         command -v light.exe >/dev/null 2>&1 && _light_cmd="light.exe"
 
         if command -v wix.exe >/dev/null 2>&1 && ! command -v "$_candle_cmd" >/dev/null 2>&1; then
-          wix.exe build -ext WixToolset.UI.wixext -o "${OUT_FILE}.msi" "$wxs_file"
+          wix.exe build -ext WixToolset.UI.wixext -o "${OUT_FILE}.msi" "$wxs_file" || exit 1
         else
-          "$_candle_cmd" -out "${OUT_FILE}.wixobj" "$wxs_file"
-          "$_light_cmd" -sval -ext WixUIExtension -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj"
+          "$_candle_cmd" -out "${OUT_FILE}.wixobj" "$wxs_file" || exit 1
+          "$_light_cmd" -sval -ext WixUIExtension -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj" || exit 1
         fi
       elif command -v wixl >/dev/null 2>&1; then
         # wixl is a lightweight cross-compiler supporting core Product/Feature/Component tags but not full Win32 UI/WixVariable extensions.

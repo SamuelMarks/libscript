@@ -54,13 +54,6 @@ if "%~1"=="--help" goto show_help
 if "%~1"=="-h" goto show_help
 if "%~1"=="/?" goto show_help
 
-where sh.exe >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    sh "%SCRIPT_DIR%\harvest_licenses.sh" %*
-    exit /b %ERRORLEVEL%
-)
-
-:: PowerShell fallback if sh not in PATH
 set "PS_CMD=powershell -NoProfile -ExecutionPolicy Bypass"
 %PS_CMD% -File "%LIBSCRIPT_ROOT_DIR%\packaging\harvest_licenses.ps1" %*
 exit /b %ERRORLEVEL%
