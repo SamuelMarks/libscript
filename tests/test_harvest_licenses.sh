@@ -33,6 +33,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 TEST_TMP_DIR="${LIBSCRIPT_ROOT_DIR}/tests_tmp/test_harvest_licenses_$$"
 mkdir -p "$TEST_TMP_DIR"
 
+# ## cleanup
+# Cleans up temporary test files upon exit.
 # shellcheck disable=SC2329
 cleanup() {
   rm -rf "$TEST_TMP_DIR"

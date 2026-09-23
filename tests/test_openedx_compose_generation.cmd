@@ -5,7 +5,7 @@
 :: Integration test validating Docker Compose YAML generation for Open edX on Windows.
 ::
 :: ## Usage
-:: call tests	est_openedx_compose_generation.cmd
+:: call tests\test_openedx_compose_generation.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -27,7 +27,7 @@ goto find_root_loop
 :: Target label reached once the libscript root directory is located.
 :found_root
 
-set "TEST_TMP_DIR=%LIBSCRIPT_ROOT_DIR%	ests_tmp	est_openedx_compose_%RANDOM%"
+set "TEST_TMP_DIR=%LIBSCRIPT_ROOT_DIR%\tests_tmp\test_openedx_compose_%RANDOM%"
 if not exist "%TEST_TMP_DIR%" mkdir "%TEST_TMP_DIR%" >nul 2>&1
 
 echo === Testing Open edX Docker Compose Generation on Windows ===

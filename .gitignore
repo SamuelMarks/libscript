@@ -217,6 +217,7 @@ kubernetes-the-hard-way/
 
 # Analysis and inconsistency reports
 detect_*.sh
+!packaging/detect_runtimes.sh
 missing_*.txt
 fn_style_*.txt
 structural_inconsistencies.txt

@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "container-docker-base",
+  "description": "Standalone Docker and OCI container base image with zero-daemon multi-arch manifests and clean layer structure.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-glibc",
+    "libc": "glibc",
+    "platform": "docker"
+  },
+  "kernel": {
+    "provider": "none",
+    "config_method": "defconfig"
+  },
+  "init_system": {
+    "provider": "none",
+    "default_target": "multi-user",
+    "services_enabled": []
+  },
+  "container": {
+    "entrypoint": ["/bin/sh"],
+    "working_dir": "/",
+    "env": {
+      "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+    }
+  },
+  "storage": {
+    "disk_size_gib": 1,
+    "partition_table": "none",
+    "boot_mode": "none",
+    "bootloader": "none"
+  },
+  "locale": {
+    "lang": "C.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "packages": ["glibc", "coreutils"]
+}

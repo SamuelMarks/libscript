@@ -126,9 +126,10 @@ done
 
 # ## sanitize_wix_id
 # Sanitizes arbitrary path strings into valid WiX Id tokens (alphanumeric and underscores).
+# shellcheck disable=SC2329
 sanitize_wix_id() {
   _val="$1"
-  printf '%s' "$_val" | tr '/\.:- ' '______' | tr -cd 'A-Za-z0-9_'
+  printf '%s' "$_val" | tr -c 'A-Za-z0-9_' '_'
 }
 
 TMP_LIST="$(mktemp "${TMPDIR:-/tmp}/harvest_files.XXXXXX")"
@@ -170,11 +171,10 @@ done < "${TMP_LIST}"
 if [ -n "${INCLUDE_CACHE}" ] && [ -d "${INCLUDE_CACHE}" ]; then
   _cache_real=$(cd -- "${INCLUDE_CACHE}" && pwd)
   find "$_cache_real" -type f | while read -r _cfile; do
-    _rel_c="${_cfile#${_cache_real}/}"
+    _rel_c="${_cfile#"${_cache_real}"/}"
     _rel_c="${_rel_c#./}"
     [ -z "$_rel_c" ] && continue
-    printf 'cache/%s
-' "$_rel_c" >> "${TMP_FILTERED}"
+    printf 'cache/%s\n' "$_rel_c" >> "${TMP_FILTERED}"
   done
 fi
 
@@ -213,118 +213,107 @@ if [ -n "${WIX_FRAGMENT}" ]; then
   [ -d "$_frag_dir" ] || mkdir -p "$_frag_dir"
 
   _tmp_wix="$(mktemp "${TMPDIR:-/tmp}/harvest_wix.XXXXXX")"
-  {
-    printf '<?xml version="1.0" encoding="UTF-8"?>
-'
-    printf '<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-'
-    printf '  <Fragment>
-'
+  awk -v "root=${ROOT_DIR}" -v "dir_id=${DIRECTORY_ID}" -v "comp_group=${COMPONENT_GROUP}" -v "inc_cache=${INCLUDE_CACHE:-}" '
+function sanitize(s,   res) {
+    res = s
+    gsub(/[^a-zA-Z0-9_]/, "_", res)
+    return res
+}
+BEGIN {
+    print "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+    print "<Wix xmlns=\"http://schemas.microsoft.com/wix/2006/wi\">"
+    print "  <Fragment>"
+}
+{
+    files[NR] = $0
+    n = split($0, parts, "/")
+    cur = ""
+    for (i = 1; i < n; i++) {
+        prev = cur
+        cur = (cur == "") ? parts[i] : (cur "/" parts[i])
+        if (!(cur in dir_exists)) {
+            dir_exists[cur] = 1
+            dirs[++d_count] = cur
+            dir_name[cur] = parts[i]
+            dir_parent[cur] = prev
+        }
+    }
+}
+END {
+    for (i = 1; i <= d_count; i++) {
+        d = dirs[i]
+        d_id = "DIR_" sanitize(d)
+        p = dir_parent[d]
+        p_id = (p == "") ? dir_id : ("DIR_" sanitize(p))
+        print "    <DirectoryRef Id=\"" p_id "\">"
+        print "      <Directory Id=\"" d_id "\" Name=\"" dir_name[d] "\" />"
+        print "    </DirectoryRef>"
+    }
 
-    # Build unique directory paths including all ancestors
-    _dirs_tmp="$(mktemp "${TMPDIR:-/tmp}/harvest_dirs.XXXXXX")"
-    while read -r _file || [ -n "$_file" ]; do
-      _d="$(dirname "$_file")"
-      while [ "$_d" != "." ] && [ "$_d" != "/" ] && [ -n "$_d" ]; do
-        printf '%s\n' "$_d"
-        _d="$(dirname "$_d")"
-      done
-    done < "${TMP_FILTERED}" | sort -u > "$_dirs_tmp"
+    for (i = 1; i <= NR; i++) {
+        f = files[i]
+        if (f == "") continue
+        c_id = "CMP_H_" sanitize(f)
+        f_id = "FIL_H_" sanitize(f)
+        n = split(f, parts, "/")
+        dir_path = ""
+        for (j = 1; j < n; j++) {
+            dir_path = (dir_path == "") ? parts[j] : (dir_path "/" parts[j])
+        }
+        target_dir = (dir_path == "") ? dir_id : ("DIR_" sanitize(dir_path))
 
-    while read -r _d || [ -n "$_d" ]; do
-      [ -z "$_d" ] && continue
-      _d_id="DIR_$(sanitize_wix_id "$_d")"
-      _parent="$(dirname "$_d")"
-      if [ "$_parent" = "." ]; then
-        _p_id="${DIRECTORY_ID}"
-      else
-        _p_id="DIR_$(sanitize_wix_id "$_parent")"
-      fi
-      _name="$(basename "$_d")"
-      printf '    <DirectoryRef Id="%s">\n' "$_p_id"
-      printf '      <Directory Id="%s" Name="%s" />\n' "$_d_id" "$_name"
-      printf '    </DirectoryRef>\n'
-    done < "$_dirs_tmp"
-    rm -f "$_dirs_tmp"
+        if (inc_cache != "" && substr(f, 1, 6) == "cache/") {
+            src = inc_cache "/" substr(f, 7)
+        } else {
+            src = root "/" f
+        }
 
-    # Generate Components wrapped in DirectoryRef with partition DiskIds
-    while IFS= read -r _rel || [ -n "$_rel" ]; do
-      [ -z "$_rel" ] && continue
-      _c_id="CMP_H_$(sanitize_wix_id "$_rel")"
-      _f_id="FIL_H_$(sanitize_wix_id "$_rel")"
-      _dir="$(dirname "$_rel")"
-      if [ "$_dir" = "." ]; then
-        _target_dir="${DIRECTORY_ID}"
-      else
-        _target_dir="DIR_$(sanitize_wix_id "$_dir")"
-      fi
-      if [ "${_rel#cache/}" != "$_rel" ] && [ -n "${INCLUDE_CACHE}" ]; then
-        _cache_sub="${_rel#cache/}"
-        _src="${INCLUDE_CACHE}/${_cache_sub}"
-      else
-        _src="${ROOT_DIR}/${_rel}"
-      fi
+        disk_id = "1"
+        if (substr(f, 1, 15) == "cache/runtimes/") {
+            disk_id = "2"
+        } else if (substr(f, 1, 16) == "cache/databases/") {
+            disk_id = "3"
+        } else if (substr(f, 1, 15) == "cache/codebase/" || substr(f, 1, 13) == "cache/wheels/" || substr(f, 1, 10) == "cache/npm/") {
+            disk_id = "4"
+        }
 
-      case "$_rel" in
-        cache/runtimes/*) _disk_id="2" ;;
-        cache/databases/*) _disk_id="3" ;;
-        cache/codebase/*|cache/wheels/*|cache/npm/*) _disk_id="4" ;;
-        *) _disk_id="1" ;;
-      esac
+        print "    <DirectoryRef Id=\"" target_dir "\">"
+        print "      <Component Id=\"" c_id "\" Guid=\"*\">"
+        print "        <File Id=\"" f_id "\" Source=\"" src "\" KeyPath=\"yes\" DiskId=\"" disk_id "\" />"
+        print "      </Component>"
+        print "    </DirectoryRef>"
+    }
 
-      printf '    <DirectoryRef Id="%s">
-' "$_target_dir"
-      printf '      <Component Id="%s" Guid="*">
-' "$_c_id"
-      printf '        <File Id="%s" Source="%s" KeyPath="yes" DiskId="%s" />
-' "$_f_id" "$_src" "$_disk_id"
-      printf '      </Component>
-'
-      printf '    </DirectoryRef>
-'
-    done < "${TMP_FILTERED}"
+    print "    <ComponentGroup Id=\"" comp_group "\">"
+    for (i = 1; i <= NR; i++) {
+        f = files[i]
+        if (f == "") continue
+        if (inc_cache != "" && substr(f, 1, 6) == "cache/") continue
+        c_id = "CMP_H_" sanitize(f)
+        print "      <ComponentRef Id=\"" c_id "\" />"
+    }
+    print "    </ComponentGroup>"
 
-    # Generate ComponentGroup containing ComponentRefs
-    printf '    <ComponentGroup Id="%s">\n' "${COMPONENT_GROUP}"
-    while IFS= read -r _rel || [ -n "$_rel" ]; do
-      [ -z "$_rel" ] && continue
-      if [ -n "${INCLUDE_CACHE}" ]; then
-        case "$_rel" in
-          cache/*) continue ;;
-        esac
-      fi
-      _c_id="CMP_H_$(sanitize_wix_id "$_rel")"
-      printf '      <ComponentRef Id="%s">\n' "$_c_id"
-    done < "${TMP_FILTERED}"
-    printf '    </ComponentGroup>\n'
+    if (inc_cache != "") {
+        print "    <ComponentGroup Id=\"LibscriptOfflineCacheComponents\">"
+        for (i = 1; i <= NR; i++) {
+            f = files[i]
+            if (f == "") continue
+            if (substr(f, 1, 6) == "cache/") {
+                c_id = "CMP_H_" sanitize(f)
+                print "      <ComponentRef Id=\"" c_id "\" />"
+            }
+        }
+        print "    </ComponentGroup>"
+    }
 
-    # If offline cache is harvested, generate dedicated LibscriptOfflineCacheComponents group
-    if [ -n "${INCLUDE_CACHE}" ]; then
-      printf '    <ComponentGroup Id="LibscriptOfflineCacheComponents">
-'
-      while IFS= read -r _rel || [ -n "$_rel" ]; do
-        [ -z "$_rel" ] && continue
-        case "$_rel" in
-          cache/*)
-            _c_id="CMP_H_$(sanitize_wix_id "$_rel")"
-            printf '      <ComponentRef Id="%s" />
-' "$_c_id"
-            ;;
-        esac
-      done < "${TMP_FILTERED}"
-      printf '    </ComponentGroup>
-'
-    fi
-
-    printf '  </Fragment>
-'
-    printf '</Wix>
-'
-  } > "$_tmp_wix"
+    print "  </Fragment>"
+    print "</Wix>"
+}
+' "${TMP_FILTERED}" > "$_tmp_wix"
 
   mv "$_tmp_wix" "${WIX_FRAGMENT}"
-  printf '[INFO] Generated WiX XML fragment: %s
-' "${WIX_FRAGMENT}"
+  printf '[INFO] Generated WiX XML fragment: %s\n' "${WIX_FRAGMENT}"
 fi
 
 printf '[PASS] Harvesting complete (%s files identified).

@@ -41,7 +41,7 @@ jobs:
   build-msi:
     name: Build MSI - ${{ matrix.package.name }}
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:

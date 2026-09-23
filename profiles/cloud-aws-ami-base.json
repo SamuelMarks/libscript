@@ -1,0 +1,83 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "cloud-aws-ami-base",
+  "description": "AWS EC2 optimized AMI base image with ENA networking, NVMe EBS support, cloud-init AWS datasource, and IMDSv2 token support.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-glibc",
+    "libc": "glibc",
+    "distro_style": "debian-style",
+    "platform": "aws",
+    "submodel": "x86-64-v3"
+  },
+  "cloud_init": {
+    "enabled": true,
+    "datasources": ["AWS", "NoCloud"],
+    "network_config_version": 2,
+    "modules": ["growpart", "resizefs", "set_hostname", "ssh", "users-groups"],
+    "guest_agent": "amazon-ssm-agent"
+  },
+  "kernel": {
+    "provider": "linux-stable",
+    "config_method": "defconfig",
+    "fragments": ["virtio.cfg", "ena.cfg", "nvme.cfg"],
+    "cmdline": "console=ttyS0,115200n8 console=tty0 earlyprintk=ttyS0 root=LABEL=root rw"
+  },
+  "init_system": {
+    "provider": "systemd",
+    "default_target": "multi-user",
+    "services_enabled": ["systemd-networkd", "systemd-resolved", "sshd"]
+  },
+  "display": {
+    "server": "headless",
+    "compositor": "none"
+  },
+  "desktop": {
+    "desktop_suite": "none",
+    "greeter": "none"
+  },
+  "storage": {
+    "disk_size_gib": 10,
+    "partition_table": "gpt",
+    "boot_mode": "hybrid-uefi-bios",
+    "bootloader": "grub2-efi",
+    "partitions": [
+      {
+        "name": "BIOS-BOOT",
+        "filesystem": "none",
+        "mountpoint": "none",
+        "size_mib": 2
+      },
+      {
+        "name": "ESP",
+        "filesystem": "vfat",
+        "mountpoint": "/boot/efi",
+        "size_mib": 128
+      },
+      {
+        "name": "root",
+        "filesystem": "ext4",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "ec2-user",
+      "shell": "/bin/sh",
+      "groups": ["wheel"],
+      "sudo": true
+    }
+  ],
+  "locale": {
+    "lang": "en_US.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "network": {
+    "hostname": "aws-node",
+    "dhcp": true
+  },
+  "packages": ["glibc", "coreutils", "systemd", "openssh", "e2fsprogs", "curl"]
+}

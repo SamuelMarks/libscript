@@ -45,7 +45,7 @@ if "%OPENEDX_INSTALL_DIR%"=="" (
     )
 )
 
-set "RUN_DIR=%OPENEDX_INSTALL_DIR%un"
+set "RUN_DIR=%OPENEDX_INSTALL_DIR%\run"
 set "LOG_DIR=%OPENEDX_INSTALL_DIR%\logs"
 if not exist "%RUN_DIR%" mkdir "%RUN_DIR%" 2>nul
 if not exist "%LOG_DIR%" mkdir "%LOG_DIR%" 2>nul

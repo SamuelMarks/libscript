@@ -41,12 +41,6 @@ if %ERRORLEVEL% EQU 0 (
     exit /b %ERRORLEVEL%
 )
 
-where bash.exe >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    bash "%SCRIPT_DIR%\template_msi.sh" %*
-    exit /b %ERRORLEVEL%
-)
-
 if "%APP_NAME%"=="" set "APP_NAME=LibScript Deployment"
 if "%APP_VERSION%"=="" set "APP_VERSION=1.0.0.0"
 if "%APP_PUBLISHER%"=="" set "APP_PUBLISHER=LibScript"

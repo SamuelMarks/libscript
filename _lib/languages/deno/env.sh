@@ -5,6 +5,7 @@
 # ## Usage
 # Sets up `DENO_VERSION` and prepends Deno to PATH.
 
+set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

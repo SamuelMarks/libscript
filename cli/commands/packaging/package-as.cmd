@@ -58,9 +58,72 @@ if /i "%PKG_TYPE%"=="rootfs_tar" goto do_rootfs_tar
 if /i "%PKG_TYPE%"=="bsd-img" goto do_bsd_img
 if /i "%PKG_TYPE%"=="bsd_img" goto do_bsd_img
 if /i "%PKG_TYPE%"=="unikernel" goto do_unikernel
+if /i "%PKG_TYPE%"=="docker-image" goto do_container_base
+if /i "%PKG_TYPE%"=="oci-image" goto do_container_base
+if /i "%PKG_TYPE%"=="qemu-qcow2" goto do_qemu_img
+if /i "%PKG_TYPE%"=="vmware-vmdk" goto do_vmware_img
+if /i "%PKG_TYPE%"=="hyperv-vhd" goto do_hyperv_img
+if /i "%PKG_TYPE%"=="hyperv-vhdx" goto do_hyperv_img
+if /i "%PKG_TYPE%"=="proxmox-template" goto do_proxmox_img
+if /i "%PKG_TYPE%"=="virtualbox-vdi" goto do_virtualbox_img
+if /i "%PKG_TYPE%"=="virtualbox-ova" goto do_virtualbox_img
+if /i "%PKG_TYPE%"=="xen-img" goto do_xen_img
+if /i "%PKG_TYPE%"=="microvm-disk" goto do_microvm_img
+if /i "%PKG_TYPE%"=="aws-ami" goto do_aws_ami
+if /i "%PKG_TYPE%"=="azure-vhd" goto do_azure_vhd
+if /i "%PKG_TYPE%"=="gcp-image" goto do_gcp_image
+if /i "%PKG_TYPE%"=="cloud-img" goto do_cloud_img
 
 echo Error: Unsupported package format '%PKG_TYPE%'. >&2
 exit /b 1
+
+:do_container_base
+call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\container_base.cmd" %*
+exit /b %ERRORLEVEL%
+
+:do_qemu_img
+call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\qemu_img.cmd" %*
+exit /b %ERRORLEVEL%
+
+:do_vmware_img
+call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\vmware_img.cmd" %*
+exit /b %ERRORLEVEL%
+
+:do_hyperv_img
+call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\hyperv_img.cmd" %*
+exit /b %ERRORLEVEL%
+
+:do_proxmox_img
+call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\proxmox_img.cmd" %*
+exit /b %ERRORLEVEL%
+
+:do_virtualbox_img
+call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\virtualbox_img.cmd" %*
+exit /b %ERRORLEVEL%
+
+:do_xen_img
+call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\xen_img.cmd" %*
+exit /b %ERRORLEVEL%
+
+:do_microvm_img
+call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\microvm_img.cmd" %*
+exit /b %ERRORLEVEL%
+
+:do_aws_ami
+call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\aws_ami.cmd" %*
+exit /b %ERRORLEVEL%
+
+:do_azure_vhd
+call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\azure_vhd.cmd" %*
+exit /b %ERRORLEVEL%
+
+:do_gcp_image
+call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\gcp_image.cmd" %*
+exit /b %ERRORLEVEL%
+
+:do_cloud_img
+call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\cloud_img.cmd" %*
+exit /b %ERRORLEVEL%
 
 :do_raw_img
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\raw_img.cmd" %*

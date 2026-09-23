@@ -60,13 +60,7 @@ if %ERRORLEVEL% EQU 0 (
     exit /b %ERRORLEVEL%
 )
 
-where bash.exe >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    bash "%SCRIPT_DIR%\harvest_licenses.sh" %*
-    exit /b %ERRORLEVEL%
-)
-
-:: PowerShell fallback if sh/bash not in PATH
+:: PowerShell fallback if sh not in PATH
 set "PS_CMD=powershell -NoProfile -ExecutionPolicy Bypass"
 %PS_CMD% -File "%LIBSCRIPT_ROOT_DIR%\packaging\harvest_licenses.ps1" %*
 exit /b %ERRORLEVEL%

@@ -68,6 +68,30 @@ if [ "$CMD" = "package-as" ]; then
     exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/bsd_img.sh" "$@"
   elif [ "${pkg_type:-}" = "unikernel" ]; then
     exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/unikernel.sh" "$@"
+  elif [ "${pkg_type:-}" = "docker-image" ] || [ "${pkg_type:-}" = "oci-image" ] || [ "${pkg_type:-}" = "docker_image" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/container_base.sh" "$@"
+  elif [ "${pkg_type:-}" = "qemu-qcow2" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/qemu_img.sh" "$@"
+  elif [ "${pkg_type:-}" = "vmware-vmdk" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/vmware_img.sh" "$@"
+  elif [ "${pkg_type:-}" = "hyperv-vhd" ] || [ "${pkg_type:-}" = "hyperv-vhdx" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/hyperv_img.sh" "$@"
+  elif [ "${pkg_type:-}" = "proxmox-template" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/proxmox_img.sh" "$@"
+  elif [ "${pkg_type:-}" = "virtualbox-vdi" ] || [ "${pkg_type:-}" = "virtualbox-ova" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/virtualbox_img.sh" "$@"
+  elif [ "${pkg_type:-}" = "xen-img" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/xen_img.sh" "$@"
+  elif [ "${pkg_type:-}" = "microvm-disk" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/microvm_img.sh" "$@"
+  elif [ "${pkg_type:-}" = "aws-ami" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/aws_ami.sh" "$@"
+  elif [ "${pkg_type:-}" = "azure-vhd" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/azure_vhd.sh" "$@"
+  elif [ "${pkg_type:-}" = "gcp-image" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/gcp_image.sh" "$@"
+  elif [ "${pkg_type:-}" = "cloud-img" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/cloud_img.sh" "$@"
   else
     printf '%s\n' "Error: Unsupported package format '$pkg_type'." >&2
     exit 1

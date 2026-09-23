@@ -217,12 +217,15 @@ EOF2
           printf '}\n' >> "$pkg_rtf"
         fi
 
-        printf '%s\n' "      <Dialog Id=\"Dlg_License_${pkg}\" Width=\"370\" Height=\"270\" Title=\"License Agreement - ${pkg_title}\">"
-        printf '%s\n' "        <Control Id=\"Title\" Type=\"Text\" X=\"15\" Y=\"6\" Width=\"340\" Height=\"15\" Transparent=\"yes\" NoPrefix=\"yes\" Text=\"License Terms for ${pkg_title} (${pkg_spdx}):\" />"
+        pkg_title_esc=$(printf '%s\n' "$pkg_title" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g')
+        pkg_spdx_esc=$(printf '%s\n' "$pkg_spdx" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g')
+
+        printf '%s\n' "      <Dialog Id=\"Dlg_License_${pkg}\" Width=\"370\" Height=\"270\" Title=\"License Agreement - ${pkg_title_esc}\">"
+        printf '%s\n' "        <Control Id=\"Title\" Type=\"Text\" X=\"15\" Y=\"6\" Width=\"340\" Height=\"15\" Transparent=\"yes\" NoPrefix=\"yes\" Text=\"License Terms for ${pkg_title_esc} (${pkg_spdx_esc}):\" />"
         printf '%s\n' "        <Control Id=\"AgreementText_${pkg}\" Type=\"ScrollableText\" X=\"20\" Y=\"25\" Width=\"330\" Height=\"180\" Sunken=\"yes\" TabSkip=\"no\">"
         printf '%s\n' "          <Text SourceFile=\"$pkg_rtf\" />"
         printf '%s\n' "        </Control>"
-        printf '%s\n' "        <Control Id=\"Chk_Accept_${pkg}\" Type=\"CheckBox\" X=\"20\" Y=\"212\" Width=\"330\" Height=\"18\" Property=\"LICENSE_ACCEPTED_${pkg}\" CheckBoxValue=\"1\" Text=\"I accept the terms in the ${pkg_title} (${pkg_spdx}) license agreement\" />"
+        printf '%s\n' "        <Control Id=\"Chk_Accept_${pkg}\" Type=\"CheckBox\" X=\"20\" Y=\"212\" Width=\"330\" Height=\"18\" Property=\"LICENSE_ACCEPTED_${pkg}\" CheckBoxValue=\"1\" Text=\"I accept the terms in the ${pkg_title_esc} (${pkg_spdx_esc}) license agreement\" />"
         printf '%s\n' "        <Control Id=\"Next\" Type=\"PushButton\" X=\"236\" Y=\"243\" Width=\"56\" Height=\"17\" Default=\"yes\" Text=\"Next\">"
         printf '%s\n' "          <Publish Event=\"EndDialog\" Value=\"Return\"><![CDATA[LICENSE_ACCEPTED_${pkg}=\"1\"]]></Publish>"
         printf '%s\n' "          <Condition Action=\"disable\"><![CDATA[LICENSE_ACCEPTED_${pkg}<>\"1\"]]></Condition>"

@@ -1,0 +1,80 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "linux-alpine-style-standard",
+  "description": "Alpine Linux-style server and workstation profile with Musl C library, OpenRC init system, apk-tools v3, and community repos.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-musl",
+    "libc": "musl",
+    "distro_style": "alpine-style",
+    "platform": "bare-metal"
+  },
+  "package_manager": {
+    "provider": "apk",
+    "suite_or_branch": "v3.20",
+    "repositories": [
+      {
+        "name": "main",
+        "uri": "https://dl-cdn.alpinelinux.org/alpine/v3.20/main",
+        "components": ["main"],
+        "signing_key_path": "/etc/apk/keys/alpine-devel@alpinelinux.org-4a670830.rsa.pub",
+        "trusted": false
+      }
+    ],
+    "generate_index": true,
+    "core_distribution_packages": ["alpine-base", "busybox", "openrc"]
+  },
+  "kernel": {
+    "provider": "linux-lts",
+    "config_method": "defconfig",
+    "fragments": ["virtio.cfg"],
+    "cmdline": "console=ttyS0 console=tty0 root=/dev/vda2 rw quiet"
+  },
+  "init_system": {
+    "provider": "openrc",
+    "default_target": "default",
+    "services_enabled": ["sshd", "chronyd"]
+  },
+  "display": {
+    "server": "headless",
+    "compositor": "none"
+  },
+  "desktop": {
+    "desktop_suite": "none",
+    "greeter": "none"
+  },
+  "storage": {
+    "disk_size_gib": 10,
+    "partition_table": "gpt",
+    "boot_mode": "uefi",
+    "bootloader": "grub2-efi",
+    "partitions": [
+      {
+        "name": "ESP",
+        "filesystem": "vfat",
+        "mountpoint": "/boot/efi",
+        "size_mib": 256
+      },
+      {
+        "name": "root",
+        "filesystem": "ext4",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "admin",
+      "shell": "/bin/sh",
+      "groups": ["wheel"],
+      "sudo": true
+    }
+  ],
+  "locale": {
+    "lang": "C.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "packages": ["busybox", "openrc", "openssh"]
+}

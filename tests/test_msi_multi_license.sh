@@ -33,16 +33,18 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 TEST_TMP_DIR="${LIBSCRIPT_ROOT_DIR}/tests_tmp/test_msi_multi_license_$$"
 mkdir -p "$TEST_TMP_DIR"
 
+# ## cleanup
+# Removes temporary test directory on script exit.
 # shellcheck disable=SC2329
 cleanup() {
   rm -rf "$TEST_TMP_DIR"
 }
 trap cleanup EXIT INT TERM
 
-printf '=== Testing WiX MSI Multi-License Dialog Sequence ===
-'
+printf '=== Testing WiX MSI Multi-License Dialog Sequence ===\n'
 
-# Assert helper
+# ## assert_wxs_contains
+# Asserts that the generated WiX manifest contains a specified string pattern.
 assert_wxs_contains() {
   _pattern="$1"
   _desc="$2"
@@ -75,12 +77,21 @@ else
   exit 1
 fi
 
-printf '[PASS] Successfully generated test WiX manifest: %s
-' "$TEST_WXS"
+printf '[PASS] Successfully generated test WiX manifest: %s\n' "$TEST_WXS"
+
+if command -v xmllint >/dev/null 2>&1; then
+  if xmllint --noout "$TEST_WXS"; then
+    printf '[PASS] Validated XML syntax via xmllint: %s\n' "$TEST_WXS"
+  else
+    printf '[FAIL] Invalid XML syntax in generated WiX manifest: %s\n' "$TEST_WXS" >&2
+    exit 1
+  fi
+fi
 
 # 1. Verify Top-Level EULA Dialog
 assert_wxs_contains 'Dialog Id="Dlg_License"' "Top-level EULA Dialog exists"
 assert_wxs_contains 'Property="LICENSE_ACCEPTED"' "Top-level license acceptance checkbox property"
+assert_wxs_contains 'Redis In-Memory Cache &amp; Broker' "Properly escaped XML ampersand in Redis license title"
 
 # 2. Verify Individual Component License Dialogs
 for pkg in mysql redis mongodb python nodejs meilisearch; do

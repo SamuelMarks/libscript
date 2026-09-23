@@ -46,12 +46,6 @@ if %ERRORLEVEL% EQU 0 (
     exit /b %ERRORLEVEL%
 )
 
-where bash.exe >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    bash "%SCRIPT_DIR%\build_msi.sh" %*
-    exit /b %ERRORLEVEL%
-)
-
 set "TARGET_DIR="
 set "OUT_FILE="
 set "APP_NAME=Open edX Platform"
@@ -985,10 +979,15 @@ where candle.exe >nul 2>&1
 if %ERRORLEVEL%==0 (
     powershell -NoProfile -Command "$w = Get-Content -LiteralPath '%WXS_FILE%' -Raw; $w = $w -replace '<Property Id=\"MsiHiddenProperties\".*?/>', ''; $w = [regex]::Replace($w, '(?s)<InstallUISequence>.*?</InstallUISequence>', '      <InstallUISequence><Show Dialog=\"Dlg_Welcome\" After=\"CostFinalize\" /><Show Dialog=\"Dlg_Exit\" OnExit=\"success\" /></InstallUISequence>'); Set-Content -LiteralPath '%WXS_FILE%.candle.wxs' -Value $w"
     candle.exe -nologo -out "%OUT_FILE%.wixobj" "%WXS_FILE%.candle.wxs"
+    if errorlevel 1 (
+        del /f /q "%WXS_FILE%.candle.wxs" >nul 2>&1
+        echo [ERROR] WiX candle compiler failed on %WXS_FILE% >&2
+        exit /b 1
+    )
     candle.exe -nologo -out "%OUT_FILE%_payload.wixobj" "%PAYLOAD_WXS%"
     if errorlevel 1 (
         del /f /q "%WXS_FILE%.candle.wxs" >nul 2>&1
-        echo [ERROR] WiX candle compiler failed >&2
+        echo [ERROR] WiX candle compiler failed on %PAYLOAD_WXS% >&2
         exit /b 1
     )
     light.exe -nologo -sval -ext WixUIExtension -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj" "%OUT_FILE%_payload.wixobj"

@@ -5,6 +5,7 @@
 # ## Usage
 # Normally sets up defaults and prepends Bun to PATH.
 
+set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

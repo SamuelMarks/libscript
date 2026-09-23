@@ -5,6 +5,7 @@
 # ## Usage
 # Sets up `PHP_VERSION` and prepends PHP to PATH.
 
+set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

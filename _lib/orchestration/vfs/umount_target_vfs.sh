@@ -35,11 +35,12 @@ TARGET_DIR="${1:-${LIBSCRIPT_TARGET_SYSROOT:-}}"
 if [ -z "$TARGET_DIR" ]; then
   printf '[ERROR] Target sysroot directory must be provided.
 ' >&2
-  printf 'Usage: %s <target_sysroot>
-' "$THIS_FILE" >&2
+  printf 'Usage: %s <target_sysroot>\n' "$THIS_FILE" >&2
   exit 1
 fi
 
+# ## is_mounted
+# Checks if a directory is mounted according to /proc/mounts.
 is_mounted() {
   _dir="$1"
   if [ -r /proc/mounts ]; then
@@ -49,6 +50,8 @@ is_mounted() {
   return 1
 }
 
+# ## safe_umount
+# Safely unmounts a target mount point if currently mounted.
 safe_umount() {
   _mount_point="$1"
   if is_mounted "$_mount_point"; then

@@ -100,24 +100,7 @@ exit /b 0
 echo ==========================================================================
 echo XBLOCK IDENTIFIER                ENTRY POINT / PACKAGE
 echo --------------------------------------------------------------------------
-"%PYTHON_BIN%" -c "import sys, json, os;
-try:
-    from importlib.metadata import entry_points
-    eps = entry_points(group='xblock.v1')
-    found = False
-    for ep in eps:
-        found = True
-        print(f'{ep.name:<32} {ep.value:<40}')
-    if not found:
-        p = r'%XBLOCK_REGISTRY%'
-        if os.path.exists(p):
-            for k in json.load(open(p)): print(f'{k:<32} {"(registered)":<40}')
-        else: print('(No XBlocks currently discovered)')
-except Exception:
-    p = r'%XBLOCK_REGISTRY%'
-    if os.path.exists(p):
-        for k in json.load(open(p)): print(f'{k:<32} {"(registered)":<40}')
-"
+"%PYTHON_BIN%" -c "import json, os, importlib.metadata as im; eps = [f'{e.name:<32} {e.value:<40}' for e in im.entry_points().get('xblock.v1', [])] if hasattr(im.entry_points(), 'get') else []; p = r'%XBLOCK_REGISTRY%'; reg = [f'{k:<32} (registered)' for k in json.load(open(p))] if os.path.exists(p) and os.path.getsize(p) > 0 else []; all_items = eps + [r for r in reg if not any(r.startswith(e[:32]) for e in eps)]; [print(x) for x in all_items] if all_items else print('(No XBlocks currently discovered)')"
 echo ==========================================================================
 exit /b 0
 

@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "cloud-gcp-gce-base",
+  "description": "Google Cloud Platform Compute Engine base image with gVNIC, VirtIO-SCSI, google-guest-agent, OS Login, and disk.raw.tar.gz format.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-glibc",
+    "libc": "glibc",
+    "distro_style": "debian-style",
+    "platform": "gcp"
+  },
+  "cloud_init": {
+    "enabled": true,
+    "datasources": ["GCE", "NoCloud"],
+    "guest_agent": "google-guest-agent"
+  },
+  "kernel": {
+    "provider": "linux-stable",
+    "config_method": "defconfig",
+    "fragments": ["virtio.cfg", "gvnic.cfg"],
+    "cmdline": "console=ttyS0,38400n8 earlyprintk=ttyS0 root=LABEL=root rw scsi_mod.use_blk_mq=Y"
+  },
+  "init_system": {
+    "provider": "systemd",
+    "default_target": "multi-user",
+    "services_enabled": ["systemd-networkd", "sshd"]
+  },
+  "display": {
+    "server": "headless",
+    "compositor": "none"
+  },
+  "desktop": {
+    "desktop_suite": "none",
+    "greeter": "none"
+  },
+  "storage": {
+    "disk_size_gib": 20,
+    "partition_table": "gpt",
+    "boot_mode": "uefi",
+    "bootloader": "systemd-boot",
+    "partitions": [
+      {
+        "name": "ESP",
+        "filesystem": "vfat",
+        "mountpoint": "/boot/efi",
+        "size_mib": 256
+      },
+      {
+        "name": "root",
+        "filesystem": "ext4",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "locale": {
+    "lang": "en_US.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "network": {
+    "hostname": "gce-instance",
+    "dhcp": true
+  },
+  "packages": ["glibc", "coreutils", "systemd", "openssh"]
+}

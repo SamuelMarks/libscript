@@ -83,7 +83,7 @@ fi
 # ## generate_side_banner_posix
 # Pure POSIX awk generator for 164x312 24-bit RGB openedx_banner_side.bmp.
 generate_side_banner_posix() {
-  local out_file="$1"
+  out_file="$1"
   awk '
   function write_u16(val) {
     printf "%c%c", val % 256, int(val / 256) % 256
@@ -133,7 +133,7 @@ generate_side_banner_posix() {
 # ## generate_top_banner_posix
 # Pure POSIX awk generator for 493x58 24-bit RGB openedx_banner_top.bmp.
 generate_top_banner_posix() {
-  local out_file="$1"
+  out_file="$1"
   awk '
   function write_u16(val) {
     printf "%c%c", val % 256, int(val / 256) % 256
@@ -178,7 +178,7 @@ generate_top_banner_posix() {
 # ## generate_icon_posix
 # Pure POSIX awk generator for multi-resolution openedx.ico (256, 48, 32, 16).
 generate_icon_posix() {
-  local out_file="$1"
+  out_file="$1"
   awk '
   function write_u16(val) {
     printf "%c%c", val % 256, int(val / 256) % 256
@@ -261,7 +261,7 @@ generate_icon_posix() {
 # ## generate_eula_posix
 # Emits the RTF End User License Agreement file.
 generate_eula_posix() {
-  local out_file="$1"
+  out_file="$1"
   cat << 'EOF' > "$out_file"
 {\rtf1\ansi\deff0 {\fonttbl {\f0 Courier;}}\fs20
 Open edX Community License Agreement\par

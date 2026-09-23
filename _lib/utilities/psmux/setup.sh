@@ -7,6 +7,7 @@
 # ## Usage
 # Execute this script to install or configure the component.
 
+set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

@@ -217,7 +217,7 @@ if /i "!ACTION!"=="env" (
     ) else (
         set "INSTALLED_DIR=!LIBSCRIPT_ROOT_DIR!\installed\!PACKAGE_NAME!"
     )
-    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.sh" "!FORMAT!" "!INSTALLED_DIR!"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\env_printer.cmd" "!FORMAT!" "!INSTALLED_DIR!"
     exit /b !errorlevel!
 )
 

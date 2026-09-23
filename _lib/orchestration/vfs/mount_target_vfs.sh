@@ -48,6 +48,8 @@ fi
 [ -d "$TARGET_DIR/dev/shm" ] || mkdir -p "$TARGET_DIR/dev/shm"
 [ -d "$TARGET_DIR/run" ] || mkdir -p "$TARGET_DIR/run"
 
+# ## is_mounted
+# Checks if a specified directory is currently mounted under /proc/mounts.
 is_mounted() {
   _dir="$1"
   if [ -r /proc/mounts ]; then

@@ -7,6 +7,7 @@
 # ## Usage
 # Execute this script directly to run the CLI functionality for the component.
 
+set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

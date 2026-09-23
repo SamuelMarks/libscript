@@ -37,6 +37,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 TEST_TMP_DIR="${LIBSCRIPT_ROOT_DIR}/tests_tmp/test_hydrate_$$"
 mkdir -p "$TEST_TMP_DIR"
 
+# ## cleanup
+# Cleans up temporary test directory if tests succeeded.
 cleanup() {
   _status=$?
   if [ "$_status" -eq 0 ]; then

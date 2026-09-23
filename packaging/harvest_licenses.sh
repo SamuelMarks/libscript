@@ -145,6 +145,8 @@ fi
 TMP_DIR="${OUT_DIR}/.tmp_harvest_$$"
 mkdir -p "$TMP_DIR"
 
+# ## cleanup
+# Removes temporary workspace directory upon script termination.
 cleanup() {
   rm -rf "$TMP_DIR"
 }

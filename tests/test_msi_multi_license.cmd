@@ -29,11 +29,5 @@ if %ERRORLEVEL% EQU 0 (
     exit /b %ERRORLEVEL%
 )
 
-where bash.exe >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    bash "%SCRIPT_DIR%\test_msi_multi_license.sh" %*
-    exit /b %ERRORLEVEL%
-)
-
 powershell -NoProfile -ExecutionPolicy Bypass -Command "& '%SCRIPT_DIR%\test_msi_multi_license.sh'" %*
 exit /b %ERRORLEVEL%

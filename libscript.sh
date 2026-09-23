@@ -247,6 +247,8 @@ case "$CMD" in
   semver) . "$LIBSCRIPT_ROOT_DIR/cli/commands/core/semver.sh" ;;
   package-as) . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/package-as.sh" ;;
   config) . "$LIBSCRIPT_ROOT_DIR/cli/commands/config/config.sh" ;;
+  repogen) . "$LIBSCRIPT_ROOT_DIR/_lib/orchestration/repogen/repogen.sh" ;;
+  distro) . "$LIBSCRIPT_ROOT_DIR/_lib/orchestration/distro/distro.sh" ;;
 esac
 
 IS_ACTION=0

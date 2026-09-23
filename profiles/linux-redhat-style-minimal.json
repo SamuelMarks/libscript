@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "linux-redhat-style-minimal",
+  "description": "Minimal Red Hat-inspired micro-appliance and container base (< 75MB rootfs) with microdnf and sqlite rpmdb.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-glibc",
+    "libc": "glibc",
+    "distro_style": "redhat-style",
+    "platform": "docker"
+  },
+  "package_manager": {
+    "provider": "dnf",
+    "suite_or_branch": "9.4",
+    "core_distribution_packages": ["setup", "filesystem", "redhat-release"]
+  },
+  "kernel": {
+    "provider": "none",
+    "config_method": "defconfig"
+  },
+  "init_system": {
+    "provider": "none",
+    "default_target": "multi-user",
+    "services_enabled": []
+  },
+  "container": {
+    "entrypoint": ["/bin/sh"],
+    "working_dir": "/"
+  },
+  "storage": {
+    "disk_size_gib": 2,
+    "partition_table": "none",
+    "boot_mode": "none",
+    "bootloader": "none"
+  },
+  "locale": {
+    "lang": "en_US.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "packages": ["glibc", "coreutils"]
+}

@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "hypervisor-hyperv-gen2",
+  "description": "Microsoft Hyper-V Generation 2 UEFI appliance profile (VHDX) with Hyper-V synthetic devices and daemons.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-glibc",
+    "libc": "glibc",
+    "platform": "hyper-v"
+  },
+  "cloud_init": {
+    "enabled": false,
+    "guest_agent": "hyperv-daemons"
+  },
+  "kernel": {
+    "provider": "linux-stable",
+    "config_method": "defconfig",
+    "fragments": ["virtio.cfg", "hyperv.cfg"],
+    "cmdline": "console=ttyS0 console=tty0 root=LABEL=root rw"
+  },
+  "init_system": {
+    "provider": "systemd",
+    "default_target": "multi-user",
+    "services_enabled": ["systemd-networkd", "sshd"]
+  },
+  "display": {
+    "server": "headless",
+    "compositor": "none"
+  },
+  "desktop": {
+    "desktop_suite": "none",
+    "greeter": "none"
+  },
+  "storage": {
+    "disk_size_gib": 25,
+    "partition_table": "gpt",
+    "boot_mode": "uefi",
+    "bootloader": "systemd-boot",
+    "partitions": [
+      {
+        "name": "ESP",
+        "filesystem": "vfat",
+        "mountpoint": "/boot/efi",
+        "size_mib": 256
+      },
+      {
+        "name": "root",
+        "filesystem": "ext4",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "locale": {
+    "lang": "en_US.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "packages": ["glibc", "coreutils", "systemd", "openssh"]
+}

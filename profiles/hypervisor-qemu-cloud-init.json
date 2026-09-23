@@ -1,0 +1,61 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "hypervisor-qemu-cloud-init",
+  "description": "Headless QEMU QCOW2 appliance profile with cloud-init NoCloud local datasource drive and serial console.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-glibc",
+    "libc": "glibc",
+    "platform": "qemu"
+  },
+  "cloud_init": {
+    "enabled": true,
+    "datasources": ["NoCloud"],
+    "guest_agent": "qemu-guest-agent"
+  },
+  "kernel": {
+    "provider": "linux-stable",
+    "config_method": "defconfig",
+    "fragments": ["virtio.cfg"],
+    "cmdline": "console=ttyS0,115200n8 console=tty0 root=LABEL=root rw"
+  },
+  "init_system": {
+    "provider": "systemd",
+    "default_target": "multi-user",
+    "services_enabled": ["systemd-networkd", "sshd"]
+  },
+  "display": {
+    "server": "headless",
+    "compositor": "none"
+  },
+  "desktop": {
+    "desktop_suite": "none",
+    "greeter": "none"
+  },
+  "storage": {
+    "disk_size_gib": 15,
+    "partition_table": "gpt",
+    "boot_mode": "uefi",
+    "bootloader": "systemd-boot",
+    "partitions": [
+      {
+        "name": "ESP",
+        "filesystem": "vfat",
+        "mountpoint": "/boot/efi",
+        "size_mib": 256
+      },
+      {
+        "name": "root",
+        "filesystem": "ext4",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "locale": {
+    "lang": "en_US.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "packages": ["glibc", "coreutils", "systemd", "openssh"]
+}

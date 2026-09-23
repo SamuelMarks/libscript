@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "cloud-azure-vhd-base",
+  "description": "Microsoft Azure optimized VHD base appliance with fixed-size 1 MiB alignment, Hyper-V LIS drivers, and WALinuxAgent.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-glibc",
+    "libc": "glibc",
+    "distro_style": "debian-style",
+    "platform": "azure"
+  },
+  "cloud_init": {
+    "enabled": true,
+    "datasources": ["Azure", "NoCloud"],
+    "network_config_version": 2,
+    "guest_agent": "walinuxagent"
+  },
+  "kernel": {
+    "provider": "linux-stable",
+    "config_method": "defconfig",
+    "fragments": ["virtio.cfg", "hyperv.cfg"],
+    "cmdline": "console=ttyS0 earlyprintk=ttyS0 root=LABEL=root rw"
+  },
+  "init_system": {
+    "provider": "systemd",
+    "default_target": "multi-user",
+    "services_enabled": ["systemd-networkd", "sshd"]
+  },
+  "display": {
+    "server": "headless",
+    "compositor": "none"
+  },
+  "desktop": {
+    "desktop_suite": "none",
+    "greeter": "none"
+  },
+  "storage": {
+    "disk_size_gib": 30,
+    "partition_table": "gpt",
+    "boot_mode": "uefi",
+    "bootloader": "systemd-boot",
+    "partitions": [
+      {
+        "name": "ESP",
+        "filesystem": "vfat",
+        "mountpoint": "/boot/efi",
+        "size_mib": 256
+      },
+      {
+        "name": "root",
+        "filesystem": "ext4",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "azureuser",
+      "shell": "/bin/sh",
+      "groups": ["wheel", "sudo"],
+      "sudo": true
+    }
+  ],
+  "locale": {
+    "lang": "en_US.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "network": {
+    "hostname": "azure-vm",
+    "dhcp": true
+  },
+  "packages": ["glibc", "coreutils", "systemd", "openssh"]
+}

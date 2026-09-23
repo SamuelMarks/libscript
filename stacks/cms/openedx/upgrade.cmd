@@ -94,8 +94,8 @@ if exist "%OPENEDX_INSTALL_DIR%\.git" (
 )
 
 echo [INFO] Step 3/8: Updating Python requirements...
-if exist "%OPENEDX_INSTALL_DIR%equirements\edx\base.txt" (
-    "%PYTHON_BIN%" -m pip install -r "%OPENEDX_INSTALL_DIR%equirements\edx\base.txt" 2>nul
+if exist "%OPENEDX_INSTALL_DIR%\requirements\edx\base.txt" (
+    "%PYTHON_BIN%" -m pip install -r "%OPENEDX_INSTALL_DIR%\requirements\edx\base.txt" 2>nul
 )
 
 echo [INFO] Step 4/8: Applying database migrations...

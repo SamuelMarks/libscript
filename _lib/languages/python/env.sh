@@ -5,6 +5,7 @@
 # ## Usage
 # Sets up `PYTHON_VERSION` and `PYTHON_VENV` and prepends them to PATH.
 
+set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

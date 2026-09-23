@@ -235,7 +235,7 @@ if "!PROVIDER!"=="gcp" (
 
     if "!IS_TPU!"=="1" (
         call :log "INFRA" "Provisioning GCP TPU VM..."
-        set "TPU_CLI=!SCRIPT_DIR!\..\..\cloud-providers\gcp	pu-vm\cli.cmd"
+        set "TPU_CLI=!SCRIPT_DIR!\..\..\cloud-providers\gcp\tpu-vm\cli.cmd"
         set "TPU_NETWORK=!NODE!-vpc"
 
         if "!SHARED_STORAGE!"=="1" (

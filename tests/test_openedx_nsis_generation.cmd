@@ -5,7 +5,7 @@
 :: Integration test validating NSIS script generation for Open edX on Windows.
 ::
 :: ## Usage
-:: call tests	est_openedx_nsis_generation.cmd
+:: call tests\test_openedx_nsis_generation.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -27,7 +27,7 @@ goto find_root_loop
 :: Target label reached once the libscript root directory is located.
 :found_root
 
-set "TEST_TMP_DIR=%LIBSCRIPT_ROOT_DIR%	ests_tmp	est_openedx_nsis_%RANDOM%"
+set "TEST_TMP_DIR=%LIBSCRIPT_ROOT_DIR%\tests_tmp\test_openedx_nsis_%RANDOM%"
 if not exist "%TEST_TMP_DIR%" mkdir "%TEST_TMP_DIR%" >nul 2>&1
 
 echo === Testing Open edX NSIS Script Generation on Windows ===
@@ -38,7 +38,7 @@ set "APP_PUBLISHER=LibScript Contributors"
 set "OUT_FILE=OpenEdX_NSIS_Setup"
 
 set "NSI_FILE=%TEST_TMP_DIR%\output.nsi"
-call "%LIBSCRIPT_ROOT_DIR%\packaging	emplate_nsis.cmd" > "%NSI_FILE%"
+call "%LIBSCRIPT_ROOT_DIR%\packaging\template_nsis.cmd" > "%NSI_FILE%"
 
 findstr /C:"!define APP_NAME "Open edX"" "%NSI_FILE%" >nul || (echo [FAIL] Missing APP_NAME & exit /b 1)
 echo [PASS] Verified: Application name

@@ -131,8 +131,9 @@ if "${_cid}" not in data:
         json.dump(data, f, indent=2)
 EOF
   else
-    printf '%s
-' "${_cid}" >> "${DATA_DIR}/courses.txt"
+    if [ ! -f "${DATA_DIR}/courses.txt" ] || ! grep -qxF "${_cid}" "${DATA_DIR}/courses.txt" 2>/dev/null; then
+      printf '%s\n' "${_cid}" >> "${DATA_DIR}/courses.txt"
+    fi
   fi
 }
 

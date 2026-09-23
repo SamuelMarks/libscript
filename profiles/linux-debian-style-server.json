@@ -1,0 +1,86 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "linux-debian-style-server",
+  "description": "Full Debian GNU/Linux style enterprise server profile with Glibc, systemd supervisor, dpkg, apt, OpenSSH, Ext4, and standard coreutils.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-glibc",
+    "libc": "glibc",
+    "distro_style": "debian-style",
+    "platform": "bare-metal",
+    "submodel": "x86-64-v2"
+  },
+  "package_manager": {
+    "provider": "apt",
+    "suite_or_branch": "stable",
+    "repositories": [
+      {
+        "name": "main",
+        "uri": "http://deb.debian.org/debian",
+        "components": ["main", "contrib", "non-free"],
+        "signing_key_path": "/etc/apt/trusted.gpg.d/libscript.gpg",
+        "trusted": false
+      }
+    ],
+    "generate_index": true,
+    "core_distribution_packages": ["base-files", "dpkg", "apt", "coreutils", "systemd"]
+  },
+  "kernel": {
+    "provider": "linux-stable",
+    "config_method": "defconfig",
+    "fragments": ["virtio.cfg", "server_hardening.cfg"],
+    "cmdline": "console=ttyS0 console=tty0 root=/dev/vda2 rw quiet"
+  },
+  "init_system": {
+    "provider": "systemd",
+    "default_target": "multi-user",
+    "services_enabled": ["systemd-networkd", "systemd-resolved", "sshd"]
+  },
+  "display": {
+    "server": "headless",
+    "compositor": "none"
+  },
+  "desktop": {
+    "desktop_suite": "none",
+    "greeter": "none"
+  },
+  "storage": {
+    "disk_size_gib": 20,
+    "partition_table": "gpt",
+    "boot_mode": "uefi",
+    "bootloader": "systemd-boot",
+    "uki": false,
+    "partitions": [
+      {
+        "name": "ESP",
+        "filesystem": "vfat",
+        "mountpoint": "/boot/efi",
+        "size_mib": 512
+      },
+      {
+        "name": "root",
+        "filesystem": "ext4",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "admin",
+      "shell": "/bin/sh",
+      "groups": ["wheel", "sudo"],
+      "sudo": true
+    }
+  ],
+  "locale": {
+    "lang": "en_US.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "network": {
+    "hostname": "debian-srv",
+    "dhcp": true
+  },
+  "packages": ["glibc", "coreutils", "systemd", "openssh", "util-linux", "e2fsprogs", "curl"]
+}

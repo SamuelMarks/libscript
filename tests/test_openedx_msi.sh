@@ -241,6 +241,8 @@ if [ ! -f "$OFFLINE_WXS" ]; then
   exit 1
 fi
 
+# ## assert_offline_contains
+# Asserts that the offline WiX manifest contains a required configuration pattern.
 assert_offline_contains() {
   _pattern="$1"
   _desc="$2"

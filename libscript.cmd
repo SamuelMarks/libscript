@@ -145,6 +145,8 @@ if /i "%cmd%"=="db-search" ( call "%SCRIPT_DIR%\cli\commands\registry\search.cmd
 if /i "%cmd%"=="update-db" ( call "%SCRIPT_DIR%\cli\commands\registry\update.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="semver" ( call "%SCRIPT_DIR%\cli\commands\core\semver.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="config" ( call "%SCRIPT_DIR%\cli\commands\config\config.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="repogen" ( call "%SCRIPT_DIR%\_lib\orchestration\repogen\repogen.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="distro" ( call "%SCRIPT_DIR%\_lib\orchestration\distro\distro.cmd" %* & exit /b !errorlevel! )
 
 if /i "%cmd%"=="start" set "is_docker_cmd=1"
 if /i "%cmd%"=="stop" set "is_docker_cmd=1"

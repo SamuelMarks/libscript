@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "linux-redhat-style-server",
+  "description": "Red Hat / Fedora-inspired enterprise server profile with Glibc, systemd, RPM v4, DNF5, SELinux policy, and XFS root.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-glibc",
+    "libc": "glibc",
+    "distro_style": "redhat-style",
+    "platform": "bare-metal",
+    "submodel": "x86-64-v2"
+  },
+  "package_manager": {
+    "provider": "dnf",
+    "suite_or_branch": "9.4",
+    "generate_index": true,
+    "core_distribution_packages": ["setup", "filesystem", "redhat-release", "coreutils", "systemd"]
+  },
+  "kernel": {
+    "provider": "linux-stable",
+    "config_method": "defconfig",
+    "fragments": ["virtio.cfg", "server_hardening.cfg"],
+    "cmdline": "console=ttyS0 console=tty0 root=/dev/vda2 rw quiet"
+  },
+  "init_system": {
+    "provider": "systemd",
+    "default_target": "multi-user",
+    "services_enabled": ["systemd-networkd", "sshd"]
+  },
+  "display": {
+    "server": "headless",
+    "compositor": "none"
+  },
+  "desktop": {
+    "desktop_suite": "none",
+    "greeter": "none"
+  },
+  "storage": {
+    "disk_size_gib": 20,
+    "partition_table": "gpt",
+    "boot_mode": "uefi",
+    "bootloader": "grub2-efi",
+    "partitions": [
+      {
+        "name": "ESP",
+        "filesystem": "vfat",
+        "mountpoint": "/boot/efi",
+        "size_mib": 512
+      },
+      {
+        "name": "root",
+        "filesystem": "xfs",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "admin",
+      "shell": "/bin/sh",
+      "groups": ["wheel"],
+      "sudo": true
+    }
+  ],
+  "locale": {
+    "lang": "en_US.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "network": {
+    "hostname": "rhel-srv",
+    "dhcp": true
+  },
+  "packages": ["glibc", "coreutils", "systemd", "openssh", "util-linux"]
+}

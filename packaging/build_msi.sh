@@ -444,29 +444,31 @@ generate_wxs() {
         _lname=$(jq -r ".licenses[$_lidx].name" "$HARVESTED_LICENSES_DIR/licenses_manifest.json")
         _ltitle=$(jq -r ".licenses[$_lidx].title" "$HARVESTED_LICENSES_DIR/licenses_manifest.json")
         _lspdx=$(jq -r ".licenses[$_lidx].spdx" "$HARVESTED_LICENSES_DIR/licenses_manifest.json")
+        _esc_ltitle=$(printf '%s\n' "$_ltitle" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g')
+        _esc_lspdx=$(printf '%s\n' "$_lspdx" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g')
         _lrtf="${HARVESTED_LICENSES_DIR}/${_lname}_license.rtf"
-        
+
         # Skip top-level app if already shown in Dlg_License
         if [ "$_lname" != "openedx" ] && [ "$_lname" != "app" ] && [ -f "$_lrtf" ]; then
           _dlg_id="Dlg_License_${_lname}"
           _prop_id="LICENSE_ACCEPTED_${_lname}"
 
           MULTI_LICENSE_PROPS="${MULTI_LICENSE_PROPS}
-    <Property Id=\"${_prop_id}\" Value=\"0\" Secure=\"yes\" />"
+      <Property Id=\"${_prop_id}\" Value=\"0\" Secure=\"yes\" />"
           MULTI_LICENSE_EXEC_COND="${MULTI_LICENSE_EXEC_COND} AND NOT (${_prop_id}=\"1\")"
 
           MULTI_LICENSE_XML="${MULTI_LICENSE_XML}
-      <!-- License Agreement Dialog: ${_ltitle} -->
-      <Dialog Id=\"${_dlg_id}\" Width=\"370\" Height=\"270\" Title=\"[ProductName] Setup - ${_ltitle} License\">
+      <!-- License Agreement Dialog: ${_esc_ltitle} -->
+      <Dialog Id=\"${_dlg_id}\" Width=\"370\" Height=\"270\" Title=\"[ProductName] Setup - ${_esc_ltitle} License\">
         <Control Id=\"BannerBitmap\" Type=\"Bitmap\" X=\"0\" Y=\"0\" Width=\"370\" Height=\"44\" Text=\"WixUIBannerBmp\" />
         <Control Id=\"BannerLine\" Type=\"Line\" X=\"0\" Y=\"44\" Width=\"370\" Height=\"0\" />
         <Control Id=\"BottomLine\" Type=\"Line\" X=\"0\" Y=\"234\" Width=\"370\" Height=\"0\" />
-        <Control Id=\"Title\" Type=\"Text\" X=\"15\" Y=\"6\" Width=\"260\" Height=\"15\" Transparent=\"yes\" NoPrefix=\"yes\" Text=\"${_ltitle} License Agreement\" />
-        <Control Id=\"Description\" Type=\"Text\" X=\"25\" Y=\"22\" Width=\"260\" Height=\"20\" Transparent=\"yes\" NoPrefix=\"yes\" Text=\"Please review and accept the terms for ${_ltitle} (${_lspdx}).\" />
+        <Control Id=\"Title\" Type=\"Text\" X=\"15\" Y=\"6\" Width=\"260\" Height=\"15\" Transparent=\"yes\" NoPrefix=\"yes\" Text=\"${_esc_ltitle} License Agreement\" />
+        <Control Id=\"Description\" Type=\"Text\" X=\"25\" Y=\"22\" Width=\"260\" Height=\"20\" Transparent=\"yes\" NoPrefix=\"yes\" Text=\"Please review and accept the terms for ${_esc_ltitle} (${_esc_lspdx}).\" />
         <Control Id=\"AgreementText\" Type=\"ScrollableText\" X=\"20\" Y=\"48\" Width=\"330\" Height=\"155\" Sunken=\"yes\" TabSkip=\"no\">
           <Text SourceFile=\"${_lrtf}\" />
         </Control>
-        <Control Id=\"Chk_Accept_${_lname}\" Type=\"CheckBox\" X=\"20\" Y=\"210\" Width=\"330\" Height=\"18\" Property=\"${_prop_id}\" CheckBoxValue=\"1\" Text=\"I accept the terms in the ${_ltitle} (${_lspdx}) License Agreement\" />
+        <Control Id=\"Chk_Accept_${_lname}\" Type=\"CheckBox\" X=\"20\" Y=\"210\" Width=\"330\" Height=\"18\" Property=\"${_prop_id}\" CheckBoxValue=\"1\" Text=\"I accept the terms in the ${_esc_ltitle} (${_esc_lspdx}) License Agreement\" />
         <Control Id=\"Back\" Type=\"PushButton\" X=\"180\" Y=\"243\" Width=\"56\" Height=\"17\" Text=\"Back\">
           <Publish Event=\"EndDialog\" Value=\"Return\">1</Publish>
         </Control>
@@ -1219,11 +1221,23 @@ compile_msi() {
     command -v light.exe >/dev/null 2>&1 && _light_cmd="light.exe"
 
     if command -v wix.exe >/dev/null 2>&1 && ! command -v "$_candle_cmd" >/dev/null 2>&1; then
-      wix.exe build -ext WixToolset.UI.wixext -o "${OUT_FILE}.msi" "$WXS_FILE" "${PAYLOAD_WXS}"
+      if ! wix.exe build -ext WixToolset.UI.wixext -o "${OUT_FILE}.msi" "$WXS_FILE" "${PAYLOAD_WXS}"; then
+        printf '[ERROR] WiX build failed for %s\n' "${OUT_FILE}.msi" >&2
+        return 1
+      fi
     else
-      "$_candle_cmd" -out "${OUT_FILE}.wixobj" "$WXS_FILE"
-      "$_candle_cmd" -out "${OUT_FILE}_payload.wixobj" "${PAYLOAD_WXS}"
-      "$_light_cmd" -sval -ext WixUIExtension -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj" "${OUT_FILE}_payload.wixobj"
+      if ! "$_candle_cmd" -out "${OUT_FILE}.wixobj" "$WXS_FILE"; then
+        printf '[ERROR] WiX candle compilation failed on %s\n' "$WXS_FILE" >&2
+        return 1
+      fi
+      if ! "$_candle_cmd" -out "${OUT_FILE}_payload.wixobj" "${PAYLOAD_WXS}"; then
+        printf '[ERROR] WiX candle compilation failed on %s\n' "${PAYLOAD_WXS}" >&2
+        return 1
+      fi
+      if ! "$_light_cmd" -sval -ext WixUIExtension -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj" "${OUT_FILE}_payload.wixobj"; then
+        printf '[ERROR] WiX light linker failed for %s.msi\n' "${OUT_FILE}" >&2
+        return 1
+      fi
     fi
   elif command -v wixl >/dev/null 2>&1; then
     _wixl_manifest="${OUT_FILE}_wixl.wxs"

@@ -15,6 +15,33 @@ automated pipeline to compile and bake customized Linux and FreeBSD kernels into
 (`package-as`), or a multicloud operator to orchestrate distributed TPU training clusters and
 inference engines, LibScript handles the entire lifecycle through a single, idempotent interface.
 
+```mermaid
+flowchart TD
+    subgraph T3["3. Multicloud & TPU Deployment"]
+        direction LR
+        c1["Google Cloud"] ~~~ c2["Microsoft Azure"] ~~~ c3["Amazon AWS"] ~~~ c4["TPU Clusters (xpk)"] ~~~ c5["ML Training & vLLM"] ~~~ c6["..."]
+    end
+
+    subgraph T2["2. OS Bakery"]
+        direction LR
+        k1["Linux Kernel & UKI"] ~~~ k2["FreeBSD"] ~~~ k3["Unikernels (OSv, MirageOS, ...)"] ~~~ k4["LUKS2 / ZFS"] ~~~ k5["..."]
+    end
+
+    subgraph T1["1. package-as Formats"]
+        direction LR
+        p1["Docker / Compose"] ~~~ p2[".msi"] ~~~ p3[".deb"] ~~~ p4[".apk"] ~~~ p5["qcow2"] ~~~ p6["raw-img"] ~~~ p7["..."]
+    end
+
+    subgraph T0["0. Version Managers & Catalog Recipes"]
+        direction LR
+        r1["Python"] ~~~ r2["Node.js"] ~~~ r3["nginx"] ~~~ r4["Redis"] ~~~ r5["PostgreSQL"] ~~~ r6["Open edX"] ~~~ r7["..."]
+    end
+
+    T0 ==>|Package Into| T1
+    T1 ==>|Bake Into| T2
+    T2 ==>|Deploy Onto| T3
+```
+
 ---
 
 ## 🌟 The Core Experience: Native Version Management
@@ -47,7 +74,7 @@ flowchart LR
         PathEnv["PATH: ~/.libscript/nodejs/22.14.0/bin:$PATH"]
     end
 
-    subgraph Sandbox[Isolated LIBSCRIPT_HOME (~/.libscript)]
+    subgraph Sandbox["Isolated LIBSCRIPT_HOME (~/.libscript)"]
         Node20["nodejs/20.0.0/bin/node"]
         Node22["nodejs/22.14.0/bin/node"]
         Py311["python/3.11.9/bin/python"]
@@ -107,13 +134,13 @@ pollution while enabling seamless escalation from a single CLI tool to a distrib
 
 ```mermaid
 flowchart TD
-    subgraph Tier3[Tier 3: Operators & Multicloud Deployers]
-        T3_Cloud["Cloud Providers<br/>(AWS EC2, GCP, Azure, Proxmox, Hetzner, Vagrant)"]
-        T3_AI["AI Acceleration<br/>(TPU VMs, GKE + XPK Training, vLLM, JetStream)"]
-        T3_PaaS["Universal PaaS & Ingress<br/>(netctl, Automated TLS, systemd / launchd)"]
+    subgraph Tier1["Tier 1: Leaf Recipes, Toolchains & Native Version Managers"]
+        T1_VM["Universal Version Managers<br/>(Node.js, Python, Rust, Ruby, Go, Java, Postgres)"]
+        T1_Bootstrap["Toolchain Bootstrap<br/>(Stage 0 /tools, Stage 1 minimal userland)"]
+        T1_Base["Base Catalogs & Desktops<br/>(Glibc, Musl, Wayland, Sway, KDE Plasma, PipeWire, Net)"]
     end
 
-    subgraph Tier2[Tier 2: Synthesizers, Assemblers & Image Builders]
+    subgraph Tier2["Tier 2: Synthesizers, Assemblers & Image Builders"]
         T2_Config["Configurator & Solver<br/>(libscript config os, os-config.schema.json, resolve_stack.jq)"]
         T2_VFS["Rootfs & VFS Sandbox<br/>(mount_target_vfs, chroot namespaces, FHS layout)"]
         T2_Storage["Storage & Encryption<br/>(GPT/MBR, LUKS2 argon2id, Ext4, Btrfs, XFS, ZFS)"]
@@ -121,15 +148,14 @@ flowchart TD
         T2_Package["package-as Factory<br/>(raw-img, qcow2, iso, vmdk, bsd-img, docker, unikernel)"]
     end
 
-    subgraph Tier1[Tier 1: Leaf Recipes, Toolchains & Native Version Managers]
-        T1_VM["Universal Version Managers<br/>(Node.js, Python, Rust, Ruby, Go, Java, Postgres)"]
-        T1_Bootstrap["Toolchain Bootstrap<br/>(Stage 0 /tools, Stage 1 minimal userland)"]
-        T1_Base["Base Catalogs & Desktops<br/>(Glibc, Musl, Wayland, Sway, KDE Plasma, PipeWire, Net)"]
+    subgraph Tier3["Tier 3: Operators & Multicloud Deployers"]
+        T3_Cloud["Cloud Providers<br/>(AWS EC2, GCP, Azure, Proxmox, Hetzner, Vagrant)"]
+        T3_AI["AI Acceleration<br/>(TPU VMs, GKE + XPK Training, vLLM, JetStream)"]
+        T3_PaaS["Universal PaaS & Ingress<br/>(netctl, Automated TLS, systemd / launchd)"]
     end
 
-    Tier3 -->|Deploys Images & Orchestrates Nodes| Tier2
-    Tier2 -->|Directs Compilation & Stages Artifacts| Tier1
-    Tier1 -.->|Context Contract: LIBSCRIPT_TARGET_SYSROOT| Tier2
+    T1_Base -->|Context Contract: LIBSCRIPT_TARGET_SYSROOT| T2_VFS
+    T2_Package -->|Deploys Images & Orchestrates Nodes| T3_Cloud
 ```
 
 ---
@@ -548,6 +574,7 @@ at your option.
 | `cert`                             | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `choco`                            | -           | -           | -           | ❓      | -     | -       |
 | `chrony`                           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
+| `cloud`                            | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `cloud-hypervisor`                 | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `cloudinit`                        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `cmake`                            | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
@@ -566,6 +593,7 @@ at your option.
 | `deno`                             | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `deno-pm`                          | ❓          | ❓          | ❓          | ❓      | -     | ❓      |
 | `dhcpcd`                           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
+| `distro`                           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `dnf`                              | ❓          | ❓          | ❓          | -       | -     | -       |
 | `doas`                             | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `docker`                           | ❓          | ❓          | ❓          | -       | -     | -       |
@@ -680,6 +708,7 @@ at your option.
 | `openrc`                           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `openssh`                          | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `openvpn`                          | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
+| `packagers`                        | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `packer`                           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `pacman`                           | ❓          | ❓          | ❓          | -       | -     | -       |
 | `pam`                              | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
@@ -712,6 +741,7 @@ at your option.
 | `rbenv`                            | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `rebar3`                           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `redis`                            | ❓          | ❓          | ❓          | ❓      | -     | ❓      |
+| `repogen`                          | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `ruby`                             | ✅          | ✅          | ✅          | ✅      | -     | ✅      |
 | `runner`                           | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      |
 | `rust`                             | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      |

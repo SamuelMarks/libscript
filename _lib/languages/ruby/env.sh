@@ -5,6 +5,7 @@
 # ## Usage
 # Sets up `RUBY_VERSION` and prepends Ruby to PATH.
 
+set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

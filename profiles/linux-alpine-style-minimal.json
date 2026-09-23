@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "linux-alpine-style-minimal",
+  "description": "Ultra-compact Alpine appliance and container base image profile (< 8MB rootfs) with Musl, BusyBox, and static apk-tools.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-musl",
+    "libc": "musl",
+    "distro_style": "alpine-style",
+    "platform": "docker"
+  },
+  "package_manager": {
+    "provider": "apk",
+    "suite_or_branch": "v3.20",
+    "core_distribution_packages": ["alpine-base", "busybox"]
+  },
+  "kernel": {
+    "provider": "none",
+    "config_method": "defconfig"
+  },
+  "init_system": {
+    "provider": "none",
+    "default_target": "multi-user",
+    "services_enabled": []
+  },
+  "container": {
+    "entrypoint": ["/bin/sh"],
+    "working_dir": "/"
+  },
+  "storage": {
+    "disk_size_gib": 1,
+    "partition_table": "none",
+    "boot_mode": "none",
+    "bootloader": "none"
+  },
+  "locale": {
+    "lang": "C.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "packages": ["busybox"]
+}
