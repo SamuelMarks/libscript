@@ -195,7 +195,7 @@ Tier 2 elevates LibScript from software provisioning to full operating system sy
 relying on pre-baked generic cloud images, Tier 2 builds custom, lean OS images from the ground up.
 
 ```mermaid
-flowchart LR
+flowchart TD
     Config["os-config.json<br/>(Profile Spec)"] --> Solver["resolve_stack.jq<br/>(Tarjan SCC Solver)"]
     Solver --> VFS["Isolated VFS Sandbox<br/>(mount_target_vfs.sh)"]
     VFS --> Staged["Staged Sysroot<br/>(Tier 1 Recipes)"]

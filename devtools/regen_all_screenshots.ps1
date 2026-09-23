@@ -22,14 +22,7 @@ $cc0AssetsDir = Join-Path $cc0Base "cc0-assets/libscript/openedx/assets"
 $assetsDir = Join-Path $rootDir "packaging/assets"
 
 if (-not (Test-Path $screenshotsDir)) {
-    try {
-        [System.IO.Directory]::CreateDirectory($screenshotsDir) | Out-Null
-    } catch {
-        $screenshotsDir = Join-Path $rootDir "packaging/screenshots"
-        if (-not (Test-Path $screenshotsDir)) {
-            [System.IO.Directory]::CreateDirectory($screenshotsDir) | Out-Null
-        }
-    }
+    [System.IO.Directory]::CreateDirectory($screenshotsDir) | Out-Null
 }
 
 # ## ensure_top_banner
@@ -542,12 +535,7 @@ function Invoke-MagickRegen {
         $out12
     Write-Host "Regenerated: $out12"
 
-    # Copy to both locations
-    $pkgDir = Join-Path $PSScriptRoot "..//packaging//screenshots"
-    if (Test-Path $pkgDir) {
-        Copy-Item $out11 (Join-Path $pkgDir "11_browser_lms_focused.png") -Force
-        Copy-Item $out12 (Join-Path $pkgDir "12_browser_studio_focused.png") -Force
-    }
+    # Copy exclusively to cc0-assets
     $cc0Dir = Join-Path $PSScriptRoot "..//..//cc0-assets//libscript//openedx//screenshots"
     if (Test-Path $cc0Dir) {
         Copy-Item $out11 (Join-Path $cc0Dir "11_browser_lms_focused.png") -Force

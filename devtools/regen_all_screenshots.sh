@@ -29,10 +29,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
 ' "$d")}"
 
-TARGET_DIR="${LIBSCRIPT_ROOT_DIR}/packaging/screenshots"
 CC0_DIR="${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/screenshots"
 
-mkdir -p "$TARGET_DIR"
 if [ -d "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx" ]; then
   mkdir -p "$CC0_DIR"
 fi
@@ -146,20 +144,13 @@ regen_studio_auth() {
     -fill "rgb(254,249,195)" -draw "roundrectangle 620,330 710,360 10,10"  \
     -fill "rgb(161,98,7)" -pointsize 10 -draw "text 630,347 'In Authoring'"  \
     "$_out"
-  printf '[OK] Regenerated %s
-' "$_out"
+  printf '[OK] Regenerated %s\n' "$_out"
 }
 
-regen_desktop_icons "${TARGET_DIR}/10b_desktop_icons.png"
-regen_lms_auth "${TARGET_DIR}/13_browser_lms_authenticated.png"
-regen_studio_auth "${TARGET_DIR}/14_browser_studio_authenticated.png"
-
 if [ -d "$CC0_DIR" ]; then
-  cp -f "${TARGET_DIR}/10b_desktop_icons.png" "${CC0_DIR}/10b_desktop_icons.png"
-  cp -f "${TARGET_DIR}/13_browser_lms_authenticated.png" "${CC0_DIR}/13_browser_lms_authenticated.png"
-  cp -f "${TARGET_DIR}/14_browser_studio_authenticated.png" "${CC0_DIR}/14_browser_studio_authenticated.png"
+  regen_desktop_icons "${CC0_DIR}/10b_desktop_icons.png"
+  regen_lms_auth "${CC0_DIR}/13_browser_lms_authenticated.png"
+  regen_studio_auth "${CC0_DIR}/14_browser_studio_authenticated.png"
 fi
 
-printf '
-=== Screen generation complete! ===
-'
+printf '\n=== Screen generation complete! ===\n'

@@ -29,9 +29,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 CC0_SCREENSHOTS_DIR="${REPO_ROOT}/../cc0-assets/libscript/openedx/screenshots"
-PACKAGING_SCREENSHOTS_DIR="${REPO_ROOT}/packaging/screenshots"
 TEMP_DIR="${REPO_ROOT}/tests_tmp/vagrant_screenshots"
-mkdir -p "${TEMP_DIR}" "${PACKAGING_SCREENSHOTS_DIR}"
+mkdir -p "${TEMP_DIR}"
 if [ -d "${REPO_ROOT}/../cc0-assets" ]; then
   mkdir -p "${CC0_SCREENSHOTS_DIR}"
 fi
@@ -73,21 +72,31 @@ vm_run() {
 
 # ## capture_screen
 # Helper to capture QEMU screendump and convert to PNG.
-# Triggers framebuffer dump via QEMU monitor, converts PPM to PNG via sips,
-# and copies the screenshot to packaging and asset directories.
+# Triggers framebuffer dump via QEMU monitor, converts PPM to PNG via sips or magick,
+# and saves directly and exclusively to the cc0-assets repository.
 capture_screen() {
   _name="$1"
   _ppm="${TEMP_DIR}/${_name}.ppm"
   _png="${TEMP_DIR}/${_name}.png"
   sleep 1.5
-  printf 'screendump %s\n' "$_ppm" | nc -U "$MONITOR_SOCK" >/dev/null 2>&1
-  sips -s format png "$_ppm" --out "$_png" >/dev/null 2>&1
-  rm -f "$_ppm"
-  cp "$_png" "${PACKAGING_SCREENSHOTS_DIR}/${_name}.png"
-  if [ -d "${CC0_SCREENSHOTS_DIR}" ]; then
-    cp "$_png" "${CC0_SCREENSHOTS_DIR}/${_name}.png"
+  if [ -S "${MONITOR_SOCK}" ]; then
+    printf 'screendump %s\n' "$_ppm" | nc -U "$MONITOR_SOCK" >/dev/null 2>&1
+    if command -v sips >/dev/null 2>&1; then
+      sips -s format png "$_ppm" --out "$_png" >/dev/null 2>&1
+    elif command -v magick >/dev/null 2>&1; then
+      magick "$_ppm" "$_png" >/dev/null 2>&1
+    fi
+    rm -f "$_ppm"
   fi
-  printf '[CAPTURED] %s (%s bytes)\n' "${_name}.png" "$(wc -c < "$_png" | tr -d ' ')"
+  if [ -f "$_png" ]; then
+    if [ -d "${CC0_SCREENSHOTS_DIR}" ]; then
+      cp -f "$_png" "${CC0_SCREENSHOTS_DIR}/${_name}.png"
+    fi
+    rm -f "$_png"
+    if [ -f "${CC0_SCREENSHOTS_DIR}/${_name}.png" ]; then
+      printf '[CAPTURED] %s.png (%s bytes)\n' "$_name" "$(wc -c < "${CC0_SCREENSHOTS_DIR}/${_name}.png" | tr -d ' ')"
+    fi
+  fi
 }
 
 # ## vm_click
@@ -98,11 +107,20 @@ vm_click() {
   vm_run "Set-Content -Path 'C:/libscript/target_btn.txt' -Value '$_btn'; Start-ScheduledTask -TaskName 'RunGui'; Start-Sleep -Seconds 2"
 }
 
+# ## launch_browser_url
+# Helper to launch Microsoft Edge to a specified URL in Session 1.
+# Sets execution script for RunGui scheduled task and awaits page render.
+launch_browser_url() {
+  _url="$1"
+  vm_run "Set-Content -Path 'C:/libscript/run_gui.ps1' -Value \"Stop-Process -Name msedge -Force -ErrorAction SilentlyContinue; Start-Process 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe' -ArgumentList '--new-window', '--start-maximized', '--no-first-run', '--no-default-browser-check', '$_url'\"; Start-ScheduledTask -TaskName 'RunGui'; Start-Sleep -Seconds 4"
+}
+
 # ## clean_guest_installations
 # Helper to uninstall all Open edX packages from Windows guest.
 # Terminates running msiexec processes and strips any installed Open edX packages or registry keys.
 clean_guest_installations() {
   printf '[INFO] Cleaning any prior installations on guest...\n'
+  # shellcheck disable=SC2016
   vm_run 'Stop-Process -Name msiexec -Force -ErrorAction SilentlyContinue; while ($p = Get-Package -Name "*Open edX*" -ErrorAction SilentlyContinue) { foreach ($pkg in $p) { Start-Process msiexec.exe -ArgumentList "/x $($pkg.FastPackageReference) /qn" -Wait } }; Get-ChildItem -Path "Registry::HKEY_CLASSES_ROOT\Installer\Products" -ErrorAction SilentlyContinue | Get-ItemProperty | Where-Object { $_.ProductName -like "*Open edX*" } | ForEach-Object { Start-Process msiexec.exe -ArgumentList "/x $($_.PSChildName) /qn" -Wait }'
 }
 
@@ -132,6 +150,7 @@ printf '=== Step 2: Compiling full self-contained OpenEdX-Setup.msi on Windows g
 vm_run 'cmd /c "cd C:\libscript && call packaging\build_openedx_msi.cmd --online --out packaging\OpenEdX-Setup --banner-side packaging\assets\openedx_banner_side.bmp --banner-top packaging\assets\openedx_banner_top.bmp --icon packaging\assets\openedx.ico --license packaging\assets\openedx_eula.rtf"'
 
 # Configure RunGui task helper in guest
+# shellcheck disable=SC2016
 vm_run 'Set-Content -Path "C:/libscript/run_gui.ps1" -Value "& powershell.exe -ExecutionPolicy Bypass -File C:/libscript/packaging/click_button.ps1 > C:/libscript/click.log 2>&1"; $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -File C:/libscript/run_gui.ps1"; $principal = New-ScheduledTaskPrincipal -UserId "vagrant" -LogonType Interactive; Register-ScheduledTask -TaskName "RunGui" -Action $action -Principal $principal -Force > $null'
 
 # Ensure broken Edge shortcut is cleaned from desktop
@@ -141,6 +160,7 @@ clean_guest_installations
 
 printf '\n=== Flow 1: Simple Setup Flow Enumeration ===\n'
 printf '[INFO] Launching OpenEdX-Setup.msi in Session 1...\n'
+# shellcheck disable=SC2016
 vm_run 'Set-Content -Path "C:\libscript\run_gui.ps1" -Value "Start-Process msiexec.exe -ArgumentList `"/i C:\libscript\packaging\OpenEdX-Setup.msi`""; Start-ScheduledTask -TaskName "RunGui"; Start-Sleep -Seconds 4; Set-Content -Path "C:\libscript\run_gui.ps1" -Value "& powershell.exe -ExecutionPolicy Bypass -File C:\libscript\packaging\click_button.ps1 > C:\libscript\click.log 2>&1"'
 
 # Step 1: Welcome
@@ -174,6 +194,7 @@ printf '\n=== Flow 2: Advanced Setup Flow Enumeration ===\n'
 clean_guest_installations
 
 printf '[INFO] Launching OpenEdX-Setup.msi for Advanced Flow in Session 1...\n'
+# shellcheck disable=SC2016
 vm_run 'Set-Content -Path "C:\libscript\run_gui.ps1" -Value "Start-Process msiexec.exe -ArgumentList `"/i C:\libscript\packaging\OpenEdX-Setup.msi`""; Start-ScheduledTask -TaskName "RunGui"; Start-Sleep -Seconds 4; Set-Content -Path "C:\libscript\run_gui.ps1" -Value "& powershell.exe -ExecutionPolicy Bypass -File C:\libscript\packaging\click_button.ps1 > C:\libscript\click.log 2>&1"'
 
 # Welcome -> License
@@ -201,10 +222,9 @@ capture_screen "06c_advanced_runtime_selection"
 # Runtime Environment -> Source Repository & Release
 vm_click "Next"
 capture_screen "06d_advanced_source_repo"
-# Keep 06b_advanced_source_repo for backwards compatibility with earlier links
-cp "${PACKAGING_SCREENSHOTS_DIR}/06d_advanced_source_repo.png" "${PACKAGING_SCREENSHOTS_DIR}/06b_advanced_source_repo.png"
-if [ -d "${CC0_SCREENSHOTS_DIR}" ]; then
-  cp "${PACKAGING_SCREENSHOTS_DIR}/06d_advanced_source_repo.png" "${CC0_SCREENSHOTS_DIR}/06b_advanced_source_repo.png"
+# Keep 06b_advanced_source_repo for backwards compatibility with earlier links in cc0-assets
+if [ -d "${CC0_SCREENSHOTS_DIR}" ] && [ -f "${CC0_SCREENSHOTS_DIR}/06d_advanced_source_repo.png" ]; then
+  cp -f "${CC0_SCREENSHOTS_DIR}/06d_advanced_source_repo.png" "${CC0_SCREENSHOTS_DIR}/06b_advanced_source_repo.png"
 fi
 
 # Source Repo -> Network & Credentials Configuration
@@ -233,15 +253,34 @@ capture_screen "10_advanced_exit"
 # Exit -> Finish
 vm_click "Finish"
 
-printf '
-=== Synchronizing browser verification screenshots ===
-'
-if [ -f "${CC0_SCREENSHOTS_DIR}/11_browser_lms_focused.png" ]; then
-  cp "${CC0_SCREENSHOTS_DIR}/11_browser_lms_focused.png" "${PACKAGING_SCREENSHOTS_DIR}/11_browser_lms_focused.png"
-  cp "${CC0_SCREENSHOTS_DIR}/12_browser_studio_focused.png" "${PACKAGING_SCREENSHOTS_DIR}/12_browser_studio_focused.png"
-fi
+printf '\n=== Flow 3: Browser Verification & Authentication Flows ===\n'
+printf '[INFO] Starting mock server on guest for ports 8000 and 8001...\n'
+vm_run 'cmd /c "cd C:\libscript && call packaging\start_mock_server.cmd"'
 
-printf '\n=== All Open edX Vagrant Windows screenshots captured successfully! ===\n'
-find "${PACKAGING_SCREENSHOTS_DIR}" -maxdepth 1 -name "*.png" | sort | while read -r _img; do
+# Step 11: LMS Login Screen
+printf '[INFO] Opening LMS Portal Login (:8000/login) in Edge...\n'
+launch_browser_url "http://localhost:8000/login"
+capture_screen "11_browser_lms_focused"
+
+# Step 12: Studio CMS Sign-in Screen
+printf '[INFO] Opening Studio CMS Sign-in (:8001/signin) in Edge...\n'
+launch_browser_url "http://localhost:8001/signin"
+capture_screen "12_browser_studio_focused"
+
+# Step 13: LMS Authenticated Dashboard (edx_admin)
+printf '[INFO] Logging in with edx_admin credentials to LMS Dashboard (:8000/dashboard)...\n'
+launch_browser_url "http://localhost:8000/dashboard"
+capture_screen "13_browser_lms_authenticated"
+
+# Step 14: Studio CMS Authenticated Dashboard (staff@openedx.org)
+printf '[INFO] Logging in with staff@openedx.org credentials to Studio Dashboard (:8001/home)...\n'
+launch_browser_url "http://localhost:8001/home"
+capture_screen "14_browser_studio_authenticated"
+
+# Clean up browser session
+vm_run 'Stop-Process -Name msedge -Force -ErrorAction SilentlyContinue'
+
+printf '\n=== All Open edX Vagrant Windows screenshots captured successfully in cc0-assets! ===\n'
+find "${CC0_SCREENSHOTS_DIR}" -maxdepth 1 -name "*.png" | sort | while read -r _img; do
   ls -lh "$_img"
 done
