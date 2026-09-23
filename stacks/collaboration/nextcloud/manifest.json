@@ -3,6 +3,8 @@
   "name": "nextcloud",
   "category": "collaboration",
   "title": "nextcloud",
+  "license": "AGPL-3.0-only",
+  "license_name": "GNU Affero General Public License v3.0",
   "description": "nextcloud stack",
   "provides": ["nextcloud"]
 }

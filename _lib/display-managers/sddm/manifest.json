@@ -1,0 +1,14 @@
+{
+  "name": "sddm",
+  "title": "SDDM",
+  "description": "QML-based modern display manager",
+  "provides": ["sddm"],
+  "category": "display-managers",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

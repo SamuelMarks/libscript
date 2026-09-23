@@ -1,0 +1,14 @@
+{
+  "name": "coreutils",
+  "title": "GNU Coreutils",
+  "description": "Basic file, shell and text manipulation utilities",
+  "provides": ["coreutils"],
+  "category": "base-system",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

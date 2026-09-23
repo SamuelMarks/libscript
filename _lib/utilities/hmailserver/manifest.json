@@ -2,6 +2,8 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "hmailserver",
   "title": "hMailServer",
+  "license": "AGPL-3.0-only",
+  "license_name": "GNU Affero General Public License v3.0 only",
   "description": "Free, open-source e-mail server for Microsoft Windows with SMTP relay support.",
   "category": "utilities",
   "provides": ["mail", "smtp", "hmailserver"],

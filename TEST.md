@@ -1,287 +1,226 @@
-# Testing Strategy
+# Testing & Verification Strategy
 
-LibScript relies on a comprehensive testing matrix to ensure reliable cross-platform execution and
-artifact generation. A core focus of our testing is ensuring strict functional parity between POSIX
-and Windows implementations.
+LibScript relies on a multi-tier testing and verification matrix to guarantee cross-platform
+reliability, strict POSIX/Windows parity, operating system boot health, and idempotent
+reproducibility.
 
-## Cross-Platform Parity & Validation
+---
 
-The Continuous Integration (CI) pipeline provisions, installs, and verifies components natively
-across the following environments:
+## 🏛️ Verification Architecture Overview
 
-- **Linux:** Ubuntu, Debian, Alpine, RHEL/AlmaLinux/Rocky Linux.
-- **BSD:** FreeBSD 13/14, OpenBSD.
-- **macOS:** Intel and Apple Silicon.
-- **Windows:** Native Command Prompt (CMD) and PowerShell environments (Windows 10/11 and Server).
+The testing suite validates every layer of the LibScript substrate, from static script linting to
+headless operating system boot in virtualized hardware:
 
-We utilize a suite of parity tests to ensure that `./libscript.sh` and `libscript.cmd` produce
-identical side effects, directory structures, and environment configurations for any given component
-or stack.
+```mermaid
+flowchart TD
+    subgraph Layer1[1. Static Quality & Standards Auditing]
+        Audit["audit_standards.sh / .ps1<br/>(POSIX Shebang, THIS_FILE Dance, STACK Guard, Doc Coverage, Ban Eval)"]
+    end
 
-## Automated Cloud Testing (Combinations Matrix)
+    subgraph Layer2[2. Execution Idempotency Verification]
+        Idempotency["test_idempotency_matrix.sh / .cmd<br/>(2x Consecutive Run Test: Zero Mutation Guarantee)"]
+    end
 
-To rigorously test component implementations against live environments, the repository includes
-orchestrated test combination tools:
+    subgraph Layer3[3. Native & Vagrant Component Matrix]
+        NativeTests["run_native_tests.sh / .cmd<br/>(Host-level install, test, uninstall)"]
+        VagrantTests["run_local_tests.sh / .cmd<br/>(Alpine, Debian, FreeBSD, Windows 11 VMs)"]
+    end
 
-- `test_combinations.sh` (POSIX)
-- `test_combinations.cmd` (Windows Batch)
+    subgraph Layer4[4. Synthesized OS & Hypervisor Verification]
+        BootTest["os_boot_test.sh / .cmd<br/>(Headless QEMU: Kernel Banner, Init PID 1, Login Prompt)"]
+        GUISmoke["os_gui_smoke_test.sh / .cmd<br/>(virtio-gpu: Wayland Socket & PipeWire Daemon Smoke)"]
+        AirGap["test_airgap_boot.sh / .cmd<br/>(Strict LIBSCRIPT_OFFLINE=1 Network Inhibition)"]
+    end
 
-These tools leverage the `cloud` module's multicloud abstraction to dynamically provision temporary
-VPCs, Firewalls (using native NSGs), and Compute Nodes across **AWS**, **Azure**, and **GCP**.
-
-### Usage
-
-```sh
-# Run the test matrix on AWS
-./test_combinations.sh --provider aws
-
-# Run the test matrix on Azure (from Windows)
-test_combinations.cmd --provider azure
-
-# Run without resource cleanup (useful for debugging failures)
-./test_combinations.sh --provider gcp --no-resource-cleanup
+    Layer1 --> Layer2
+    Layer2 --> Layer3
+    Layer3 --> Layer4
 ```
 
-### Flow & Snapshotting
+---
 
-To prevent cloud provisioning bottlenecks, the matrix operates using rapid snapshots:
+## 1. Standards Compliance & Static Audit (`audit_standards.sh`)
 
-1. Provisions a single base node, firewall, and network.
-2. Captures a base snapshot (AMI, Azure Image, or GCP Disk Snapshot).
-3. Iterates over all declared components.
-4. Uses `scp` to upload the LibScript codebase.
-5. Executes the `install` and `uninstall` lifecycle commands remotely.
-6. Asserts structural integrity and pulls results via `scp-from` as JSON.
-7. Executes a hyper-fast `restore` command to scrub the node back to its clean base snapshot before
-   testing the next package.
-
-### Machine Learning Infrastructure
-
-Because TPU and GPU provisioning require specific quotas, ML and hardware-accelerated stacks (such
-as `tpu-vm-vllm` or `gke-xpk-inference`) use mocked dry-runs during standard CI validation. Set
-`E2E_CLOUD=1` to trigger actual cloud quota usage on supported GCP projects.
-
-## Local Testing (Vagrant)
-
-For isolated local testing across different operating systems, LibScript provides predefined Vagrant
-environments (located in the `vagrant/` directory). This is highly useful for validating
-cross-platform compatibility and verifying component behavior without relying on cloud
-infrastructure.
-
-### Vagrant Environments
-
-The repository contains several Vagrant configurations representing our target platforms (e.g.,
-Debian 13, Alpine 3.24, FreeBSD 15.1, Rocky Linux 10.2, Windows 11).
-
-Building the underlying boxes (`bento/windows-11`, `bento/alpine-3.24`, `bento/debian-13`,
-`bento/freebsd-15.1`, `bento/rockylinux-10.2`) requires the custom Bento fork at
-[https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64](https://github.com/SamuelMarks/bento/tree/multi-os-qemu-aarch64)
-(`https://github.com/SamuelMarks/bento` @ branch `multi-os-qemu-aarch64`), supporting builds on
-macOS Apple Silicon (`aarch64`) and other `x86_64` hosts. See [VAGRANT.md](VAGRANT.md) for full box
-building instructions.
-
-You can orchestrate these environments using the main `libscript` tool:
+Every shell and batch script in the repository is audited by `devtools/audit/audit_standards.sh`
+(POSIX) and `devtools/audit/audit_standards.ps1` (PowerShell) to enforce non-negotiable
+architectural invariants:
 
 ```sh
-# Provision the Vagrant environment
-libscript install vagrant
+# Audit a specific script
+./devtools/audit/audit_standards.sh _lib/base-system/glibc/setup.sh
 
-# Start the Vagrant environment
-libscript start vagrant
+# Audit all scripts across a category or directory
+./devtools/audit/audit_standards.sh _lib/
 ```
 
-Alternatively, you can manually navigate to specific platform folders (e.g., `vagrant/debian-12/`)
-and run `vagrant up`.
+### Enforced Invariant Rules
 
-### Component Execution over SSH
+1. **`POSIX_SHEBANG`**: Strict `#!/bin/sh` on line 1; bans non-POSIX shells (`bash`, `zsh`, `ksh`)
+   and non-portable bashisms (`[[ ... ]]`, `source`, `type`).
+2. **`THIS_FILE_DANCE`**: Canonical `THIS_FILE=` path resolution within the first 65 lines.
+3. **`RECURSION_GUARD`**: Re-entrant `STACK` recursion guard in the first 65 lines.
+4. **`WINDOWS_PARITY`**: Exact paired `.cmd` companion for every single `.sh` script.
+5. **`BATCH_THIS_FILE`**: Canonical `set "THIS_FILE=%~f0"` and delayed expansion within the first 25
+   lines of `.cmd` files.
+6. **`IDEMPOTENCY`**: Banned unguarded `mkdir` (requires `mkdir -p` or `if not exist ... mkdir`);
+   banned unguarded `ln -s` (requires `ln -sf`).
+7. **`BAN_EVAL`**: Absolute ban on dynamic string evaluation (`eval` and `Invoke-Expression`).
+8. **`DOC_OVERVIEW` & `DOC_USAGE`**: 100% documentation coverage with structured `## Overview` and
+   `## Usage` headers in the first 30 lines.
 
-Once a Vagrant box is running, you can execute component scripts natively within the isolated VM
-over SSH. For example, to install and test PostgreSQL:
+---
+
+## 2. End-to-End Idempotency Matrix (2x Run Test)
+
+LibScript mandates that any synthesis pipeline, recipe, or installation script pass the **2x
+Consecutive Execution Test**:
 
 ```sh
-# Run the component setup script
-vagrant ssh -c '"${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/setup.sh'
-
-# Source the generated environment block and run tests
-vagrant ssh -c '. "${LIBSCRIPT_ROOT_DIR}"/env.sh && "${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/test.sh'
+# Run idempotency verification matrix
+./tests/test_idempotency_matrix.sh
 ```
 
-### Batch Matrix Testing
+### The 2x Verification Contract
 
-To validate your changes across multiple distributions simultaneously, you can iterate over the
-Vagrant environments locally. Wrapping the `vagrant ssh` executions in parallel subshells allows you
-to mimic a fast CI loop on your local machine.
+1. **Pass 1 (Fresh Run)**: Compiles or installs the component, staging artifacts and writing atomic
+   completion stamps (`.stamp.<component>`).
+2. **Pass 2 (Consecutive Re-run)**: Executes against the identical workspace without modification.
+3. **Assertions**:
+   - Exit code must be `0`.
+   - Must produce zero-op results (skipping re-download, re-compilation, or filesystem mutations).
+   - Zero diff across all output files, rootfs directories, and image artifacts.
 
-### Testing Installation Heuristics
+---
 
-Vagrant VMs are ideal for testing dependency management behaviors. You can inject environment
-variables (e.g., `LIBSCRIPT_GLOBAL_INSTALL_METHOD="system"` or local overrides like
-`PYTHON_INSTALL_METHOD="uv"`) over SSH to verify that fallback resolution paths, system package
-managers, and source compilation scripts act exactly as expected on varied Linux and BSD
-distributions.
+## 3. Headless OS Boot Verification (`os_boot_test.sh`)
 
-### Automated Local Integration Testing
-
-LibScript includes a dedicated harness for running fully automated local end-to-end integration
-tests using Vagrant. Currently, we have validated almost every package to build and test
-successfully against Alpine Linux. The test scripts (`tests/run_local_tests.sh` and
-`tests/run_local_tests.cmd`) iterate over package categories (or specific targets) and execute a
-provisioned VM test loop (defaulting to Alpine Linux via `vagrant/alpine-3.24/Vagrantfile`, with
-support for other targets like `debian-13` via the `--os` flag).
-
-**Running the Test Suite**
-
-You can run the tests for specific categories, individual packages, or the entire repository.
-
-For POSIX (Linux/macOS):
+Synthesized operating system disk images (`raw-img`, `qcow2`) are validated using the automated
+headless QEMU boot test harness (`tests/os_boot_test.sh` and `tests/os_boot_test.cmd`):
 
 ```sh
-# Run tests for default categories (databases, languages, toolchains)
-./tests/run_local_tests.sh
+# Execute headless QEMU boot test with a 60-second milestone timeout
+./tests/os_boot_test.sh build/disk.qcow2 60
 
-# Run tests for specific packages
-./tests/run_local_tests.sh postgres redis
-
-# Run tests for all packages
-./tests/run_local_tests.sh all
+# Run a dry-run check without launching QEMU
+./tests/os_boot_test.sh build/disk.qcow2 60 --dry-run
 ```
 
-For Windows:
+### Monitored Boot Milestones
 
-```cmd
-:: Run tests for default categories (databases, languages, toolchains)
-.\tests\run_local_tests.cmd
+1. **Kernel Initialization**: Detects early kernel boot banners (Linux `Linux version ...` or
+   FreeBSD `FreeBSD ...`).
+2. **Init System Startup**: Asserts PID 1 supervisor activation (systemd, OpenRC, runit, or BSD
+   init).
+3. **Login Prompt Milestone**: Asserts that serial console reaches a multi-user login prompt within
+   the timeout window.
+4. **Failure Capture**: Captures serial console logs and returns a non-zero exit code if milestones
+   fail to trigger.
 
-:: Run tests for specific packages
-.\tests\run_local_tests.cmd postgres redis
+---
 
-:: Run tests for all packages
-.\tests\run_local_tests.cmd all
-```
+## 4. Graphical Desktop Smoke Tests (`os_gui_smoke_test.sh`)
 
-**What the test does under the hood:**
-
-For each target package:
-
-1. **Isolation:** A unique temporary directory (`tests_tmp/runs/<target>`) is created, and the
-   Vagrantfile is copied there. The Vagrantfile dynamically names the VM (e.g.,
-   `bento/alpine-<target>`) to ensure complete, container-like isolation at the hypervisor
-   level—much like building a fresh Docker image.
-2. **Provisioning:** Vagrant boots this isolated Alpine 3.24 virtual machine.
-3. **Synchronization:** The local LibScript repository is mapped into the guest OS
-   (`/opt/repos/libscript`) via `rsync`.
-4. **Execution & Validation:** An inline shell provisioner automatically executes
-   `./libscript.sh install <target>` followed by `./libscript.sh test <target>` directly within the
-   VM.
-5. **Cleanup:** The VM is automatically destroyed after the test concludes (whether successful or
-   not) to prepare for the next package.
-
-**Debugging Failures**
-
-During execution, test logs and results are not printed directly to the console to prevent noise.
-Instead, they are routed to the `tests_tmp/` directory at the repository root.
-
-If a test fails (e.g., outputs `[FAILED] postgres`), you can inspect the corresponding log files to
-diagnose the problem:
+For desktop configurations (Sway, Hyprland, KDE Plasma 6, XFCE4), LibScript runs headless graphical
+smoke tests using virtualized GPU acceleration:
 
 ```sh
-# View standard output of the failed installation/test
-cat tests_tmp/postgres.linux.alpine.stdout
-
-# View error output (standard error)
-cat tests_tmp/postgres.linux.alpine.stderr
+# Run desktop GUI smoke tests
+./tests/os_gui_smoke_test.sh build/disk.qcow2
 ```
 
-When iterating on a fix for a test failure, it is often faster to temporarily comment out the
-`vagrant destroy -f` lines in `tests/run_local_tests.sh` (or `.cmd`). This leaves the isolated VM
-running after a failure, allowing you to `cd tests_tmp/runs/<target> && vagrant ssh` into the box
-and run the failing install or test commands manually.
+- Launches QEMU with `virtio-gpu-pci` and headless display (`-display none` or loopback VNC).
+- **Wayland Socket Assertion**: Asserts that the Wayland compositor binds the runtime socket
+  `/run/user/1000/wayland-0`.
+- **Audio Subsystem Assertion**: Asserts that PipeWire and WirePlumber daemons start and initialize
+  runtime pulse/ALSA sockets.
 
-## Native Host Testing
+---
 
-For direct, high-performance testing without virtual machine overhead, LibScript provides native
-test runners for both POSIX systems and Windows:
+## 5. Air-Gapped Offline Boot Testing (`test_airgap_boot.sh`)
 
-- `tests/run_native_tests.sh` (POSIX `/bin/sh`)
-- `tests/run_native_tests.cmd` (Windows Command Prompt)
-- `tests/run_native_tests.ps1` (PowerShell wrapper)
-
-These runners execute directly on host systems, CI runners, or containerized environments. They
-inspect component manifests for OS compatibility (`os_whitelist` and `os_blacklist`), execute the
-native `./libscript.sh install` / `libscript.cmd install` and `./libscript.sh test` /
-`libscript.cmd test` lifecycle, and capture execution artifacts into `tests_tmp/`.
-
-### Native Testing Usage
-
-POSIX (`/bin/sh`):
+Validates enterprise deployment guarantees under simulated physical network disconnection:
 
 ```sh
-# Test specific components
-./tests/run_native_tests.sh sqlite curl
+# Run the air-gapped verification suite
+./tests/test_airgap_boot.sh
+```
 
-# Test by category
+- Exports `LIBSCRIPT_OFFLINE=1`.
+- Verifies that all dependency queries read exclusively from `${LIBSCRIPT_CACHE_DIR}`.
+- Validates SHA-256 integrity hashes against `offline_bundle.json`.
+- Traps and fails immediately if any recipe invokes network primitives (`curl`, `wget`, `git clone`,
+  `pip`).
+
+---
+
+## 6. Native Host Component Testing (`run_native_tests.sh`)
+
+For high-performance, host-level component validation without virtual machine overhead:
+
+```sh
+# Test specific components natively
+./tests/run_native_tests.sh sqlite curl nodejs
+
+# Test an entire category
 ./tests/run_native_tests.sh --category databases
 
-# Run dry-run simulation
-./tests/run_native_tests.sh --dry-run sqlite
-```
-
-Windows (`cmd.exe`):
-
-```cmd
-:: Test specific components
+# Windows Command Prompt
 call tests\run_native_tests.cmd sqlite curl
-
-:: Test by category
-call tests\run_native_tests.cmd --category databases
-
-:: Run dry-run simulation
-call tests\run_native_tests.cmd --dry-run sqlite
 ```
 
-## Central Results Reporting
+- Verifies OS compatibility against `manifest.json` (`os_whitelist` and `os_blacklist`).
+- Runs `install`, `env`, `test`, and `uninstall` lifecycle sequences.
+- Outputs status markers into `tests_tmp/`: `<component>.<os_tag>.success` or `.failure`.
 
-All test runners output marker files into `tests_tmp/`:
+---
 
-- `<component>.<os_tag>.success`: Component passed install and test lifecycle
-- `<component>.<os_tag>.failure`: Component failed either install or test
+## 7. Multi-Platform Local Hypervisor Testing (Vagrant)
 
-The `tests/update_results.sh` (POSIX) and `tests/update_results.cmd` (Windows) scripts scan these
-markers and update the root `README.md` compatibility matrix:
-
-| Status Badge | Meaning                                                     |
-| ------------ | ----------------------------------------------------------- |
-| `✅`         | Passed integration and verification tests                   |
-| `❌`         | Failed installation or verification test                    |
-| `❓`         | Untested on this platform                                   |
-| `-`          | Explicitly blacklisted or unsupported in component manifest |
-
-You can also export matrix results as structured JSON:
+For clean, hypervisor-level testing across distinct operating systems, LibScript maintains Vagrant
+environments in `vagrant/`:
 
 ```sh
+# Run tests across Alpine Linux 3.24
+./tests/run_local_tests.sh
+
+# Run tests for specific packages on a target OS
+./tests/run_local_tests.sh --os debian-13 postgres redis
+
+# Windows Batch
+tests\run_local_tests.cmd postgres redis
+```
+
+Supported Vagrant testing boxes:
+
+- `bento/windows-11` (Windows 11 / Server)
+- `bento/alpine-3.24` (Alpine Linux)
+- `bento/debian-13` (Debian Trixie)
+- `bento/freebsd-15.1` (FreeBSD)
+- `bento/rockylinux-10.2` (Rocky Linux)
+
+_Box building instructions for Apple Silicon (`aarch64`) and `x86_64` hosts are documented in
+[VAGRANT.md](VAGRANT.md)._
+
+---
+
+## 8. Multi-Platform CI Matrix & Results Reporting
+
+The GitHub Actions workflow (`.github/workflows/multiplatform_tests.yml`) executes parallel matrix
+jobs across Alpine, Debian, FreeBSD, and Windows.
+
+Matrix test results are aggregated and updated automatically:
+
+```sh
+# Update README.md compatibility badges from test run outputs
+./tests/update_results.sh
+
+# Export structured JSON matrix results
 ./tests/update_results.sh --json tests_tmp/matrix_results.json
 ```
 
-## Multi-Platform Continuous Integration Matrix
+---
 
-The `.github/workflows/multiplatform_tests.yml` workflow orchestrates parallel CI validation across
-our primary operating system targets:
+## 🔒 Remote Repository Safety Invariant
 
-1. **Alpine Linux (`test-alpine`):** Executes in an Alpine 3.21 container.
-2. **Debian Linux (`test-debian`):** Executes on native Ubuntu/Debian runner.
-3. **FreeBSD (`test-freebsd`):** Executes inside a FreeBSD 14 virtual machine via
-   `vmactions/freebsd-vm`.
-4. **Windows (`test-windows`):** Executes on `windows-latest` via Windows Command Prompt.
-5. **Aggregate & Report (`aggregate-and-report`):** Downloads test artifacts from all platform jobs,
-   runs `./tests/update_results.sh` to update `README.md`, verifies the diff, and outputs the
-   aggregate matrix to the GitHub Actions Job Summary.
-
-## Artifact Verification
-
-Testing extends beyond native script execution. The CI pipeline actively validates the outputs of
-the `package-as` generator engine:
-
-- **Containers:** Generated `docker-compose.yml` files and Dockerfiles are linted and built to
-  verify syntactic and functional correctness.
-- **Native Installers:** MSI, DEB, RPM, and PKG installers are compiled and tested in isolated
-  sandboxes to confirm they accurately reflect the declared component schemas.
+Under no circumstances may any test script, harness, build pipeline, or CI automation execute
+**`git push`**. All test validations are strictly read-only with respect to remote repositories.

@@ -2,6 +2,8 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "exim",
   "title": "Exim",
+  "license": "GPL-2.0-or-later",
+  "license_name": "GNU General Public License v2.0 or later",
   "description": "Exim mail transfer agent and local SMTP relay daemon.",
   "category": "utilities",
   "provides": ["mail", "smtp", "exim"],

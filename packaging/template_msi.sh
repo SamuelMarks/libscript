@@ -178,6 +178,62 @@ EOF2
         printf '%s\n' "      <Property Id=\"LICENSE_ACCEPTED\" Value=\"0\" Secure=\"yes\" />"
       fi
 
+      # Multi-license agreement dialogs for bundled dependencies
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      license_dialogs=""
+      while [ $# -gt 1 ]; do
+        pkg=$1; ver=$2; shift 2
+        pkg_man=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "manifest.json" | grep "/$pkg/manifest.json" | head -n 1)
+        pkg_spdx="MIT"
+        pkg_title="$pkg"
+        if [ -n "$pkg_man" ] && [ -f "$pkg_man" ]; then
+          pkg_spdx=$(jq -r '.license // "MIT"' "$pkg_man" 2>/dev/null || printf 'MIT')
+          pkg_title=$(jq -r '.title // .name' "$pkg_man" 2>/dev/null || printf '%s' "$pkg")
+        fi
+
+        pkg_rtf="${OUT_FILE}_${pkg}_license.rtf"
+        canon_rtf=""
+        canon_txt=""
+        for _lic_dir in "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/packaging/licenses" \
+                        "${LIBSCRIPT_ROOT_DIR}/cc0-assets/libscript/packaging/licenses"; do
+          if [ -z "$canon_rtf" ] && [ -f "$_lic_dir/${pkg_spdx}.rtf" ]; then
+            canon_rtf="$_lic_dir/${pkg_spdx}.rtf"
+          fi
+          if [ -z "$canon_txt" ] && [ -f "$_lic_dir/${pkg_spdx}.txt" ]; then
+            canon_txt="$_lic_dir/${pkg_spdx}.txt"
+          fi
+        done
+
+        if [ -n "$canon_rtf" ] && [ -f "$canon_rtf" ]; then
+          cp "$canon_rtf" "$pkg_rtf"
+        elif [ -n "$canon_txt" ] && [ -f "$canon_txt" ]; then
+          printf '{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}\\fs20\n' > "$pkg_rtf"
+          sed 's/\\/\\\\/g; s/{/\\{/g; s/}/\\}/g; s/$/\\par/' "$canon_txt" >> "$pkg_rtf"
+          printf '}\n' >> "$pkg_rtf"
+        else
+          printf '{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}\\fs20\n' > "$pkg_rtf"
+          printf 'License terms for %s (%s).\\par\n' "$pkg_title" "$pkg_spdx" >> "$pkg_rtf"
+          printf '}\n' >> "$pkg_rtf"
+        fi
+
+        printf '%s\n' "      <Dialog Id=\"Dlg_License_${pkg}\" Width=\"370\" Height=\"270\" Title=\"License Agreement - ${pkg_title}\">"
+        printf '%s\n' "        <Control Id=\"Title\" Type=\"Text\" X=\"15\" Y=\"6\" Width=\"340\" Height=\"15\" Transparent=\"yes\" NoPrefix=\"yes\" Text=\"License Terms for ${pkg_title} (${pkg_spdx}):\" />"
+        printf '%s\n' "        <Control Id=\"AgreementText_${pkg}\" Type=\"ScrollableText\" X=\"20\" Y=\"25\" Width=\"330\" Height=\"180\" Sunken=\"yes\" TabSkip=\"no\">"
+        printf '%s\n' "          <Text SourceFile=\"$pkg_rtf\" />"
+        printf '%s\n' "        </Control>"
+        printf '%s\n' "        <Control Id=\"Chk_Accept_${pkg}\" Type=\"CheckBox\" X=\"20\" Y=\"212\" Width=\"330\" Height=\"18\" Property=\"LICENSE_ACCEPTED_${pkg}\" CheckBoxValue=\"1\" Text=\"I accept the terms in the ${pkg_title} (${pkg_spdx}) license agreement\" />"
+        printf '%s\n' "        <Control Id=\"Next\" Type=\"PushButton\" X=\"236\" Y=\"243\" Width=\"56\" Height=\"17\" Default=\"yes\" Text=\"Next\">"
+        printf '%s\n' "          <Publish Event=\"EndDialog\" Value=\"Return\"><![CDATA[LICENSE_ACCEPTED_${pkg}=\"1\"]]></Publish>"
+        printf '%s\n' "          <Condition Action=\"disable\"><![CDATA[LICENSE_ACCEPTED_${pkg}<>\"1\"]]></Condition>"
+        printf '%s\n' "          <Condition Action=\"enable\"><![CDATA[LICENSE_ACCEPTED_${pkg}=\"1\"]]></Condition>"
+        printf '%s\n' "        </Control>"
+        printf '%s\n' "      </Dialog>"
+        printf '%s\n' "      <Property Id=\"LICENSE_ACCEPTED_${pkg}\" Value=\"0\" Secure=\"yes\" />"
+        license_dialogs="$license_dialogs Dlg_License_${pkg}"
+      done
+      printf '%s\n' "      <Property Id=\"AGREE_ALL_LICENSES\" Value=\"0\" Secure=\"yes\" />"
+
       printf '%s\n' "      <Dialog Id=\"Dlg_Features\" Width=\"370\" Height=\"270\" Title=\"Select Components\">"
       printf '%s\n' "        <Control Id=\"Lbl_Select\" Type=\"Text\" X=\"20\" Y=\"10\" Width=\"330\" Height=\"15\" Text=\"Select the components you want to install:\" />"
       y=30
@@ -276,6 +332,10 @@ EOF2
         printf '%s\n' "        <Show Dialog=\"Dlg_License\" After=\"$last_dlg\">NOT Installed</Show>"
         last_dlg="Dlg_License"
       fi
+      for ld in $license_dialogs; do
+        printf '%s\n' "        <Show Dialog=\"$ld\" After=\"$last_dlg\">NOT Installed</Show>"
+        last_dlg="$ld"
+      done
       printf '%s\n' "        <Show Dialog=\"Dlg_Features\" After=\"$last_dlg\">NOT Installed</Show>"
       last_dlg="Dlg_Features"
       # shellcheck disable=SC2086

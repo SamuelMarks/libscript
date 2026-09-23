@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "firecracker-microvm-appliance",
+  "description": "Ultra-lightweight Firecracker microVM appliance pairing uncompressed vmlinux kernel and minimal in-memory rootfs.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "microvm-firecracker",
+    "libc": "musl",
+    "submodel": "generic"
+  },
+  "kernel": {
+    "provider": "linux-stable",
+    "config_method": "tinyconfig",
+    "fragments": ["virtio.cfg", "firecracker_minimal.cfg"],
+    "cmdline": "console=ttyS0 reboot=k panic=1 pci=off init=/init root=/dev/vda rw"
+  },
+  "init_system": {
+    "provider": "none",
+    "default_target": "multi-user",
+    "services_enabled": []
+  },
+  "display": {
+    "server": "headless",
+    "compositor": "none"
+  },
+  "desktop": {
+    "desktop_suite": "none",
+    "greeter": "none"
+  },
+  "storage": {
+    "disk_size_gib": 1,
+    "partition_table": "mbr",
+    "boot_mode": "bios-legacy",
+    "bootloader": "none",
+    "uki": false,
+    "partitions": [
+      {
+        "name": "root",
+        "filesystem": "ext4",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "root",
+      "shell": "/bin/sh",
+      "groups": ["root"],
+      "sudo": true
+    }
+  ],
+  "locale": {
+    "lang": "C.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "network": {
+    "hostname": "firecracker-microvm",
+    "dhcp": false,
+    "dns_servers": ["1.1.1.1"]
+  },
+  "offline": {
+    "enabled": false,
+    "cache_dir": "/var/cache/libscript"
+  },
+  "packages": ["busybox", "musl"]
+}

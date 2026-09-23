@@ -2,6 +2,8 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "redis",
   "title": "Redis",
+  "license": "RSALv2 OR SSPL-1.0 OR AGPL-3.0-only",
+  "license_name": "RSALv2 OR SSPL-1.0 OR AGPL-3.0-only (Redis 8+ Tri-License; 7.2 and prior BSD-3-Clause)",
   "description": "In-memory data structure store used as a database, cache, message broker, and streaming engine.",
   "category": "cache",
   "provides": ["cache", "redis", "key-value"],

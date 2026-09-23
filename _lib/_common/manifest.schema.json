@@ -21,21 +21,24 @@
     "provides": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "description": "Provided capability or alias identifier"
       },
       "description": "Capabilities or aliases provided by this component"
     },
     "conflicts": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "description": "Conflicting component identifier"
       },
       "description": "Other components that conflict with this one"
     },
     "os_whitelist": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "description": "Supported operating system name or 'all'"
       },
       "default": ["all"],
       "description": "List of operating systems supported by this component (or ['all'])"
@@ -43,7 +46,8 @@
     "os_blacklist": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "description": "Unsupported operating system name"
       },
       "default": [],
       "description": "List of operating systems explicitly unsupported by this component"
@@ -51,7 +55,8 @@
     "arch_whitelist": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "description": "Supported CPU architecture name or 'all'"
       },
       "default": ["all"],
       "description": "List of CPU architectures supported by this component (or ['all'])"
@@ -59,7 +64,8 @@
     "arch_blacklist": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "description": "Unsupported CPU architecture name"
       },
       "default": [],
       "description": "List of CPU architectures explicitly unsupported by this component"
@@ -67,14 +73,16 @@
     "versions": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "description": "Supported version string"
       },
       "description": "List of supported versions"
     },
     "ports": {
       "type": "array",
       "items": {
-        "type": "integer"
+        "type": "integer",
+        "description": "TCP/UDP port number"
       },
       "description": "Default ports used by the component"
     },
@@ -99,8 +107,154 @@
         "package-managers",
         "security",
         "storage-layers",
-        "toolchains"
+        "toolchains",
+        "base-system",
+        "graphics",
+        "display-servers",
+        "desktops",
+        "display-managers",
+        "audio",
+        "networking",
+        "bootloaders",
+        "kernel"
       ]
+    },
+    "license": {
+      "type": "string",
+      "description": "Standard SPDX license identifier expression (e.g. 'GPL-2.0-only', 'BSD-3-Clause', 'Apache-2.0', 'MIT', 'SSPL-1.0', 'Python-2.0')"
+    },
+    "license_name": {
+      "type": "string",
+      "description": "Human-readable full name of the software license (e.g. 'GNU General Public License v2.0 only')"
+    },
+    "license_file": {
+      "type": "string",
+      "description": "Relative filesystem path to component's local license or copying terms document"
+    },
+    "license_url": {
+      "type": "string",
+      "description": "Authoritative URI pointing to upstream legal terms or repository license document"
+    },
+    "copyright": {
+      "type": "string",
+      "description": "Authoritative copyright notice stating ownership entities and foundation authors"
+    },
+    "variants": {
+      "type": "object",
+      "description": "Standardized USE flag feature variants and compilation flags supported by this component",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "type": "object",
+          "description": "Configuration specification for a specific USE variant",
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "Detailed explanation of feature flag"
+            },
+            "default_enabled": {
+              "type": "boolean",
+              "description": "Whether this variant is enabled by default"
+            },
+            "build_args": {
+              "type": "object",
+              "description": "Structured compilation and configuration flags injected when variant is enabled",
+              "properties": {
+                "configure_args": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "Autotools ./configure argument string"
+                  },
+                  "description": "Autotools configure arguments"
+                },
+                "meson_args": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "Meson build argument string"
+                  },
+                  "description": "Meson setup/configure arguments"
+                },
+                "cmake_args": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "CMake define argument string"
+                  },
+                  "description": "CMake build arguments"
+                },
+                "cflags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "C compiler flag string"
+                  },
+                  "description": "Additional C compiler flags"
+                },
+                "ldflags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "Linker flag string"
+                  },
+                  "description": "Additional linker flags"
+                }
+              }
+            },
+            "requires_variants": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Required variant constraint (e.g. package[variant] or variant)"
+              },
+              "description": "Inter-package or intra-package variant dependencies required when this variant is active"
+            },
+            "conflicts_variants": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Incompatible variant name"
+              },
+              "description": "Incompatible or conflicting variant flags"
+            }
+          }
+        }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "description": "Dependency requirements categorized by build lifecycle phase and criticality tier",
+      "properties": {
+        "host_tools": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Component or tool required on host (e.g. bison, meson)"
+          },
+          "description": "Tools needed on build host during bootstrap and compilation"
+        },
+        "build_deps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Component required in target sysroot headers/libs during build"
+          },
+          "description": "Headers and libraries needed in target sysroot during build"
+        },
+        "runtime_deps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Component required at runtime in rootfs"
+          },
+          "description": "Programs or daemons required in target rootfs at runtime"
+        },
+        "tier": {
+          "type": "string",
+          "enum": ["required", "recommended", "optional"],
+          "description": "Criticality tier of this component in standard stacks"
+        }
+      }
     }
   }
 }

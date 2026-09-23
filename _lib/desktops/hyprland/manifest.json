@@ -1,0 +1,14 @@
+{
+  "name": "hyprland",
+  "title": "Hyprland",
+  "description": "Dynamic tiling Wayland compositor with animations",
+  "provides": ["hyprland"],
+  "category": "desktops",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

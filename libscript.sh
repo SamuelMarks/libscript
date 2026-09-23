@@ -246,6 +246,7 @@ case "$CMD" in
   update-db) . "$LIBSCRIPT_ROOT_DIR/cli/commands/registry/update.sh" ;;
   semver) . "$LIBSCRIPT_ROOT_DIR/cli/commands/core/semver.sh" ;;
   package-as) . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/package-as.sh" ;;
+  config) . "$LIBSCRIPT_ROOT_DIR/cli/commands/config/config.sh" ;;
 esac
 
 IS_ACTION=0

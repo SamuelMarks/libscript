@@ -76,6 +76,42 @@ foreach ($dir in @($runtimesDir, $databasesDir, $wheelsDir, $npmDir, $codebaseDi
     }
 }
 
+function Prune-Archive {
+    param (
+        [string]$Destination,
+        [string]$Category
+    )
+
+    $filename = Split-Path -Leaf $Destination
+    $stampFile = "$Destination.pruned"
+
+    if ($filename -like "*mongodb-*.zip") {
+        Write-Host "[PRUNING] [$Category] Pruning debug symbols from $filename..."
+        $tmpDir = Join-Path (Split-Path -Parent $Destination) "_tmp_mongo_$PID"
+        if (Test-Path $tmpDir) { Remove-Item -Path $tmpDir -Recurse -Force }
+        New-Item -ItemType Directory -Path $tmpDir -Force | Out-Null
+        tar.exe -xf $Destination -C $tmpDir --exclude='*.pdb' --exclude='*mongos*' --exclude='*Compass*' --exclude='*vc_redist*' 2>$null
+        Remove-Item -Path $Destination -Force
+        $topDir = (Get-ChildItem -Path $tmpDir -Directory | Select-Object -First 1).Name
+        tar.exe -a -cf $Destination -C $tmpDir $topDir 2>$null
+        Remove-Item -Path $tmpDir -Recurse -Force
+        Set-Content -Path $stampFile -Value "pruned"
+        Write-Host "[PRUNED] [$Category] $filename successfully pruned."
+    } elseif ($filename -like "*mysql-*.zip") {
+        Write-Host "[PRUNING] [$Category] Pruning debug symbols and static libs from $filename..."
+        $tmpDir = Join-Path (Split-Path -Parent $Destination) "_tmp_mysql_$PID"
+        if (Test-Path $tmpDir) { Remove-Item -Path $tmpDir -Recurse -Force }
+        New-Item -ItemType Directory -Path $tmpDir -Force | Out-Null
+        tar.exe -xf $Destination -C $tmpDir --exclude='*.pdb' --exclude='*.lib' --exclude='*debug*' --exclude='*docs*' --exclude='*include*' --exclude='*test*' 2>$null
+        Remove-Item -Path $Destination -Force
+        $topDir = (Get-ChildItem -Path $tmpDir -Directory | Select-Object -First 1).Name
+        tar.exe -a -cf $Destination -C $tmpDir $topDir 2>$null
+        Remove-Item -Path $tmpDir -Recurse -Force
+        Set-Content -Path $stampFile -Value "pruned"
+        Write-Host "[PRUNED] [$Category] $filename successfully pruned."
+    }
+}
+
 function Process-Artifact {
     param (
         [string]$Url,
@@ -85,11 +121,17 @@ function Process-Artifact {
     )
 
     $filename = Split-Path -Leaf $Destination
+    $stampFile = "$Destination.pruned"
 
     if (Test-Path $Destination) {
+        if (Test-Path $stampFile) {
+            Write-Host "[VALID] [$Category] $filename (pruned archive verified)."
+            return $true
+        }
         $fileHash = (Get-FileHash -Path $Destination -Algorithm SHA256).Hash.ToLower()
         if ($fileHash -eq $ExpectedHash.ToLower()) {
             Write-Host "[VALID] [$Category] $filename matches SHA-256."
+            Prune-Archive -Destination $Destination -Category $Category
             return $true
         } else {
             Write-Warning "[CORRUPT] [$Category] $filename hash mismatch! Expected: $ExpectedHash, Got: $fileHash"
@@ -97,6 +139,7 @@ function Process-Artifact {
                 return $false
             }
             Remove-Item -Path $Destination -Force
+            if (Test-Path $stampFile) { Remove-Item -Path $stampFile -Force }
         }
     }
 
@@ -118,10 +161,12 @@ function Process-Artifact {
     if ($fileHash -ne $ExpectedHash.ToLower()) {
         Write-Error "[FAIL] SHA-256 mismatch for newly downloaded $filename."
         Remove-Item -Path $Destination -Force
+        if (Test-Path $stampFile) { Remove-Item -Path $stampFile -Force }
         return $false
     }
 
     Write-Host "[STORED] [$Category] $filename successfully verified."
+    Prune-Archive -Destination $Destination -Category $Category
     return $true
 }
 

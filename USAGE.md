@@ -1,140 +1,214 @@
 # Usage Guide
 
-LibScript provides a unified interface for provisioning software across Linux, Windows, macOS, and
-BSD. All commands have strict parity across `./libscript.sh` (POSIX) and `libscript.cmd` (Windows).
+LibScript provides a unified, cross-platform interface for software provisioning, toolchain version
+management, operating system synthesis, and multicloud AI cluster orchestration. All commands
+maintain strict functional parity across `./libscript.sh` (POSIX `/bin/sh`) and `libscript.cmd`
+(Windows Batch).
 
-## Native Component Installation
+---
 
-LibScript treats every component as a standalone package manager. You can manage tools either
-through the **Global Orchestrator** or via the **Local CLI** within each component's directory.
+## 1. Native Toolchain Version Management (Tier 1)
 
-### Universal Version Manager Fallback
+LibScript natively replaces external version managers like `nvm`, `fnm`, `pyenv`, `rustup`, `rvm`,
+and `sdkman`. It provides five universal lifecycle operations across all 160+ supported runtimes and
+databases.
 
-When requesting a tool, LibScript can install it using one of several strategies. The system
-dynamically evaluates methods via a default priority chain if an explicit method is not declared or
-if the preferred method is missing from your system:
-
-1. `libscript_native` (LibScript's isolated, native binary provisioning logic)
-2. `mise` (Blazing fast, Rust-based toolchain manager)
-3. `asdf` (Classic, plugin-based toolchain manager)
-4. `pkgx` (Fast, isolated package manager / executable runner)
-5. `vfox` (Version-Fox, cross-platform and natively Windows-friendly manager)
-6. `system` (Your OS-level package manager like apt, winget, or brew)
-
-You can forcefully override this behavior globally via the `LIBSCRIPT_DEFAULT_INSTALL_METHOD`
-environment variable:
+### The Universal Lifecycle Verbs
 
 ```sh
-# Prefer pkgx globally for all installations
-export LIBSCRIPT_DEFAULT_INSTALL_METHOD="pkgx"
+# 1. Query available versions from official upstream sources
+./libscript.sh ls-remote nodejs
+./libscript.sh ls-remote python
+./libscript.sh ls-remote rust
+./libscript.sh ls-remote postgres
+
+# 2. Install specific versions side-by-side into ~/.libscript/<tool>/<version>/
+./libscript.sh install nodejs 22.14.0
+./libscript.sh install python 3.12.3
+./libscript.sh install rust 1.85.0
+./libscript.sh install postgres 16.2
+
+# 3. List locally installed versions
+./libscript.sh ls nodejs
+./libscript.sh ls python
+
+# 4. Activate a specific version in the active shell (prepends isolated bin/ to PATH)
+./libscript.sh use nodejs 22.14.0
+./libscript.sh use python 3.12.3
+
+# 5. Cleanly uninstall a version
+./libscript.sh uninstall nodejs 20.0.0
 ```
 
-Or target specific components via their `[COMPONENT]_INSTALL_METHOD` override:
+### Direct Component CLI Execution
 
-```sh
-# Install Python via system, but Node.js via asdf
-export PYTHON_INSTALL_METHOD="system"
-export NODEJS_INSTALL_METHOD="asdf"
-```
-
-### Global Orchestrator
-
-The global CLI (`libscript.sh` / `libscript.cmd`) handles routing, orchestration, and complex
-version resolution for you.
+Every component in `_lib/` is an autonomous package manager and can be invoked directly:
 
 ```sh
 # POSIX
-./libscript.sh install nodejs 20
-./libscript.sh install postgres latest
+./_lib/languages/nodejs/cli.sh ls-remote
+./_lib/languages/python/cli.sh install 3.12
+./_lib/languages/python/cli.sh use 3.12
+./_lib/databases/postgres/cli.sh install 16
+./_lib/databases/postgres/cli.sh start
 
-# Windows
-libscript.cmd install python 3.11
+# Windows Batch
+_lib\languages\python\cli.cmd install 3.12
+_lib\databases\postgres\cli.cmd start
 ```
 
-### Local Component CLI
+### Installation Method Resolution Chain
 
-Every component is an autonomous package manager. This approach is ideal for managing a single tool
-or when working within a specific component's directory.
+When requesting a component, LibScript dynamically resolves the installation method using a smart
+priority chain:
+
+1. `libscript_native` (Default: isolated binary download or compilation into `${LIBSCRIPT_HOME}`)
+2. `mise` (Rust-based toolchain manager fallback)
+3. `asdf` (Classic plugin-based manager fallback)
+4. `pkgx` (Isolated package runner fallback)
+5. `vfox` (Version-Fox native Windows-friendly manager fallback)
+6. `system` (OS-level package manager: `apt`, `apk`, `dnf`, `brew`, `winget`, `pkg`)
+
+Override globally or per component:
 
 ```sh
-# POSIX (navigate to component directory or call directly)
-./_lib/languages/nodejs/cli.sh install nodejs 20
-./_lib/databases/postgres/cli.sh install postgres latest
+# Global override
+export LIBSCRIPT_DEFAULT_INSTALL_METHOD="pkgx"
 
-# Windows
-_lib\languages\python\cli.cmd install python 3.11
+# Per-component overrides
+export PYTHON_INSTALL_METHOD="system"
+export NODEJS_INSTALL_METHOD="libscript_native"
 ```
 
-### AI & Machine Learning Workloads
-
-LibScript automates the provisioning of hardware-accelerated nodes (like TPUs and GPUs) and
-orchestrates ML stacks.
+### Inspecting Component Environment (`info` & `env`)
 
 ```sh
-# Provision a TPU VM running vLLM for inference
-export MODEL_NAME="your-org/your-model"
-export TPU_NAME="vllm-serving-node"
-./stacks/ai-serving/tpu-vm-vllm/setup.sh
-./stacks/ai-serving/tpu-vm-vllm/deploy.sh
+# View installation paths, status, and ports
+./libscript.sh info postgres 16
+
+# Export environment variables in standard formats (json, docker, cmd, powershell)
+FORMAT=json ./libscript.sh env postgres 16
 ```
 
-### Inspecting Components (`info` & `env`)
+---
 
-Every component provides utilities to inspect its installation state and dynamically generated
-configuration (like connection strings, generated passwords, or default ports).
+## 2. Declarative OS Configuration & TUI Engine (Tier 2)
+
+LibScript can synthesize customized, bootable operating system images from declarative
+specifications conforming to `os-config.schema.json`.
+
+### Interactive Terminal Configurator (`libscript config os`)
+
+Launch an interactive terminal menu (matching Linux kernel `menuconfig` via ANSI VT100 / whiptail /
+dialog):
 
 ```sh
-# View installation path and dynamic outputs
-./libscript.sh info postgres 18
+# POSIX
+./libscript.sh config os
 
-# Source the component's environment variables (including dynamic ones like DATABASE_URL)
-. ./_lib/databases/postgres/env.sh
-
-# Output environment variables in specific formats (docker, docker_compose, powershell, cmd, json)
-FORMAT=json ./libscript.sh env postgres 18
+# Windows Batch
+libscript.cmd config os
 ```
 
-## ☸️ Declarative Stack Provisioning
+### Working with Curated Profiles
 
-For complex stacks, LibScript uses a declarative `libscript.json` and a built-in resolution engine.
+Pre-configured profiles are available in `profiles/`:
 
-### Defining Your Stack
+```sh
+# Load a curated profile in the configurator
+./libscript.sh config os --profile=linux-desktop-sway-wayland
 
-Create a `libscript.json` to define your dependencies, including version constraints like `>16`,
-`~20`, or specific version aliases.
+# Validate an existing configuration against os-config.schema.json
+./libscript.sh config os --validate=my-os.json
+
+# Export the active configuration to a portable JSON file
+./libscript.sh config os --profile=linux-standard-server-glibc --export=server.json
+```
+
+Available curated profiles:
+
+- `linux-minimal-headless-musl.json`: Ultra-compact Musl/BusyBox server appliance.
+- `linux-standard-server-glibc.json`: Production enterprise Glibc server with OpenSSH.
+- `linux-desktop-sway-wayland.json`: Sway, Wayland, PipeWire, seatd, and greetd.
+- `linux-desktop-hyprland.json`: Hyprland Wayland compositor with SDDM.
+- `linux-desktop-kde-plasma.json`: KDE Plasma 6 desktop environment.
+- `linux-desktop-xfce-x11.json`: Lightweight XFCE4 desktop on X11.
+- `freebsd-server-standard.json`: FreeBSD 14.x base with ZFS root pool.
+- `freebsd-desktop-xfce.json`: FreeBSD desktop with DRM KMS graphics drivers.
+- `firecracker-microvm-appliance.json`: Minimalist appliance for sub-15ms microVM boots.
+- `unikraft-nginx-redis.json`: Specialized single-purpose unikernel image.
+
+---
+
+## 3. Universal Artifact Packaging (`package-as`)
+
+The `package-as` engine transforms your local stack, container root, or synthesized OS configuration
+into deployable media:
+
+### Operating System & Virtualization Formats
+
+```sh
+# 1. Raw flashable disk image for bare-metal drives (dd if=... of=/dev/sdX)
+./libscript.sh package-as raw-img
+
+# 2. Virtual machine disk images (compressed)
+./libscript.sh package-as qcow2      # QEMU / KVM / Proxmox VE
+./libscript.sh package-as vmdk       # VMware ESXi / Workstation
+./libscript.sh package-as vdi        # VirtualBox
+
+# 3. Hybrid live bootable ISO (UEFI + BIOS) with SquashFS and OverlayFS
+./libscript.sh package-as iso
+
+# 4. Bootable FreeBSD image with UFS or ZFS pools (for bhyve or bare metal)
+./libscript.sh package-as bsd-img
+
+# 5. Direct-kernel boot image for microVMs (Firecracker / Cloud-Hypervisor)
+./libscript.sh package-as unikernel
+
+# 6. Clean rootfs archives for OCI containers, LXC, or FreeBSD Jails
+./libscript.sh package-as rootfs-tar
+./libscript.sh package-as docker
+```
+
+### Native Application Installers
+
+```sh
+# Windows Installer (WiX MSI)
+./libscript.sh package-as msi
+
+# macOS Installer
+./libscript.sh package-as pkg
+./libscript.sh package-as dmg
+
+# Linux Packages
+./libscript.sh package-as deb        # Debian / Ubuntu
+./libscript.sh package-as rpm        # Fedora / RHEL / CentOS
+./libscript.sh package-as apk        # Alpine Linux
+
+# Interactive Terminal Installer
+./libscript.sh package-as tui
+```
+
+---
+
+## 4. Declarative Stacks & Ingress (`libscript.json`)
+
+Define multi-tier services, databases, and ingress in a `libscript.json` file:
 
 ```json
 {
-  "name": "my-app",
-  "domain": "myapp.example.com",
-  "infrastructure": {
-    "node": {
-      "size": "Standard_B2s",
-      "disk_gb": 64
-    },
-    "network": {
-      "ports": [22, 80, 443]
-    }
-  },
+  "name": "enterprise-app",
+  "domain": "app.example.com",
   "dependencies": {
     "toolchains": [{ "name": "python", "version": "3.12" }],
+    "databases": [{ "name": "postgres", "version": "16" }],
     "servers": [{ "name": "nginx", "ports": [80, 443] }]
-  },
-  "hooks": {
-    "build": [{ "name": "compile", "command": "npm run build" }],
-    "pre_start": [
-      {
-        "name": "migrate",
-        "command": "python manage.py migrate",
-        "condition": "unless_exists /data/db.sqlite3"
-      }
-    ]
   },
   "services": [
     {
       "name": "backend",
       "command": "uvicorn main:app --port 8000",
-      "env": { "ENV": "prod" }
+      "env": { "PORT": "8000" }
     }
   ],
   "ingress": {
@@ -143,173 +217,93 @@ Create a `libscript.json` to define your dependencies, including version constra
       { "path": "/api/", "proxy_pass": "http://127.0.0.1:8000/" },
       { "path": "/", "root": "./web/dist", "try_files": "$uri $uri/ /index.html" }
     ]
-  },
-  "state": {
-    "paths": ["data/"],
-    "bucket": "s3://my-bucket/state-backup",
-    "endpoint": "https://my-minio-or-r2-endpoint.com"
   }
 }
 ```
 
-### Provisioning & Lifecycle
-
-Use `install-deps` to automatically resolve and install the stack requirements natively on your
-machine, followed by `start` to orchestrate your app.
+### Lifecycle Execution
 
 ```sh
-# 1. Resolves constraints, downloads binaries, and runs setups
+# Resolve dependencies across tiers and stage components
 ./libscript.sh install-deps
 
-# 2. Runs hooks (build, pre_start), daemonizes services (systemd/launchd), configures Nginx, and starts background jobs.
+# Daemonize services (systemd/launchd), configure netctl reverse proxy, and start daemons
 ./libscript.sh start
-```
 
-_Note: LibScript acts as a native PaaS. The `start` command automatically translates your `services`
-into system daemons and configures your `ingress` routes via Nginx (powered by `netctl`)._
+# Check running daemon status
+./libscript.sh status all
 
-## 🏗️ Artifact Generation (`package-as`)
-
-Generate production-ready artifacts from your current stack definition.
-
-### Generate a Dockerfile
-
-```sh
-./libscript.sh package-as docker
-```
-
-### Generate a Windows Installer (.msi)
-
-```sh
-# This transforms your shell logic into a WiX-based MSI installer
-./libscript.sh package-as msi
-```
-
-### Generate other native artifacts
-
-```sh
-# Generate a macOS Installer
-./libscript.sh package-as pkg
-
-# Generate a Debian/Ubuntu Package
-./libscript.sh package-as deb
-
-# Generate an Interactive TUI Installer
-./libscript.sh package-as TUI
-```
-
-## 🌍 Cloud Orchestration
-
-LibScript wraps official cloud vendor CLIs into a unified, idempotent interface. The easiest way to
-deploy a stack is via the high-level `provision` command, which orchestrates networking, firewall
-rules, node creation, codebase syncing, and daemonizing your stack.
-
-```sh
-# Provision your stack on AWS
-./libscript.sh provision aws my-node my-vpc us-east-1 ./ ~/app
-
-# Provision your stack on Azure
-./libscript.sh provision azure my-node my-rg eastus ./ ~/app
-```
-
-### Disaster Recovery & Migrations
-
-LibScript includes advanced features to track cloud state, back up critical volumes, and seamlessly
-migrate instances between clouds (AWS, Azure, GCP).
-
-**Tracking Drift & State:** To view all cloud resources created by LibScript or to detect divergence
-between your local `.libscript_state.json` and the cloud:
-
-```sh
-./libscript.sh cloud list-managed
-./libscript.sh cloud diff
-```
-
-**Backing Up Workloads:** Use the `backup` command to snapshot application state before teardowns.
-It supports quiescing hooks to ensure database consistency.
-
-```sh
-# Perform an incremental, encrypted local backup
-./libscript.sh cloud backup my-node --target local --keep-last 3
-
-# Stream backup data to an S3 object store or take an EBS/Azure disk snapshot
-./libscript.sh cloud backup my-node --target s3 --snapshot --paths "/var/lib/postgresql/data /etc/letsencrypt"
-```
-
-**Deprovisioning (with Retention):** When tearing down a node, you can preserve the valuable
-components—the Public IP and the Data Disks—so they can be reused later. Retaining the IP prevents
-your DNS records from breaking.
-
-```sh
-# Delete the compute and network interfaces, but keep the IP and data volume
-./libscript.sh deprovision aws my-node my-vpc us-east-1 --retain-ip --retain-data
-```
-
-**Restoring / Migrating Workloads:** You can restore a backed-up or retained node to the same cloud
-or even migrate it to a different provider.
-
-```sh
-# Restore the node onto Azure using the latest backup (automatically remaps IP configurations)
-./libscript.sh cloud restore my-node --from-backup latest
-```
-
-You can also drop down to lower-level resource management:
-
-```sh
-# Create a Jump-box on AWS
-./libscript.sh cloud aws jumpbox create my-jumpbox ami-0c55b159cbfafe1f0
-
-# Provision a 5-node group on AWS pre-installed with your stack
-./libscript.sh cloud aws node-group create web-tier 5 ami-0c55b159cbfafe1f0 my-vpc \
-  --bootstrap "./libscript.sh install-deps"
-```
-
-### Application Deployment & DNS
-
-LibScript provides built-in primitives to push applications and map domains to node IPs.
-
-```sh
-# Deploy your codebase to a remote Azure node (uses rsync and respects .gitignore)
-./libscript.sh cloud azure node deploy my-vm t1d-rg ./src ~/app
-
-# Securely copy a specific secrets file to an Azure node
-./libscript.sh cloud azure node scp my-vm t1d-rg ./secrets/backend.env ~/app/secrets/backend.env
-
-# Map a cloud node's IP to a domain name via Azure DNS
-./libscript.sh cloud azure dns map-node my-domain.com my-managed-zone t1d-rg my-vm
-```
-
-### Persistent State Management
-
-For workloads relying on local state (like SQLite or file uploads), LibScript supports generic
-bidirectional state synchronization backed by Object Storage (S3-compatible, GCS, Azure Blob, or
-rclone providers). Define a `state` block in your `libscript.json`, and the framework will
-automatically pull state during `provision` and push mutated state during `deprovision`.
-
-### Resource Cleanup
-
-LibScript can safely deprovision individual nodes (and their dedicated resources) or clean up an
-entire region.
-
-```sh
-# Cleanly teardown a specific provisioned stack (and dangling DNS records)
-./libscript.sh deprovision azure my-vm t1d-rg eastus
-
-# List all managed resources across all providers
-./libscript.sh cloud list-managed
-
-# Safe bulk cleanup (leaves data buckets untouched)
-./libscript.sh cloud cleanup
-```
-
-## 🛠️ Service Management
-
-All components support standard lifecycle commands:
-
-```sh
-./libscript.sh start postgres
-./libscript.sh status nodejs
-./libscript.sh test postgres
-./libscript.sh logs -f valkey
+# Stop all background services
 ./libscript.sh stop all
+```
+
+---
+
+## 5. Multicloud & AI Cluster Deployment (Tier 3)
+
+Deploy stacks and custom synthesized OS images across public clouds, hypervisors, and AI hardware.
+
+### High-Level Provisioning & Teardown
+
+```sh
+# Provision a stack on AWS: <provider> <node_name> <vpc/network> <region> <local_path> <remote_path>
+./libscript.sh provision aws prod-node vpc-main us-east-1 ./ ~/app
+
+# Provision on Azure
+./libscript.sh provision azure prod-node rg-east eastus ./ ~/app
+
+# Provision on GCP
+./libscript.sh provision gcp prod-node project-main us-central1-a ./ ~/app
+
+# Clean teardown of provisioned compute, NICs, and firewalls
+./libscript.sh deprovision aws prod-node vpc-main us-east-1
+```
+
+### Hardware-Accelerated AI & TPU Workloads
+
+```sh
+# Provision a Google Cloud TPU VM with GCS FUSE and TensorBoard telemetry
+export TPU_NAME="vllm-node"
+export ACCELERATOR_TYPE="v4-8"
+./stacks/ai-serving/tpu-vm-vllm/setup.sh
+./stacks/ai-serving/tpu-vm-vllm/deploy.sh
+
+# Launch distributed training across TPU Pod slices via GKE and XPK
+xpk cluster create --cluster my-tpu-cluster --tpu-type=v5p-128
+xpk workload create --workload train-job --cluster my-tpu-cluster --command "python3 train.py"
+```
+
+### Reverse Proxy & Ingress Management (`netctl`)
+
+Use the standalone `netctl` routing abstraction to emit configurations directly:
+
+```sh
+# Emit an Nginx reverse proxy configuration with upstream SSL termination
+./netctl.sh --listen 80 --listen 443 --proxy /api http://localhost:8000 --static / /var/www --emit nginx
+
+# Emit an Apache virtualhost configuration
+./netctl.sh --listen 80 --proxy / http://localhost:3000 --emit apache
+```
+
+---
+
+## 6. Testing, Idempotency & Audit Matrix
+
+Verify compliance, boot reliability, and idempotency locally before deploying:
+
+```sh
+# 1. Run static compliance audit across all shell and batch scripts
+./devtools/audit/audit_standards.sh <path_to_script_or_directory>
+
+# 2. Execute the 2x consecutive execution idempotency matrix
+./tests/test_idempotency_matrix.sh
+
+# 3. Headless QEMU boot verification test for synthesized OS disk images
+./tests/os_boot_test.sh build/disk.qcow2 60
+
+# 4. Graphical desktop Wayland and PipeWire headless smoke test
+./tests/os_gui_smoke_test.sh build/disk.qcow2
+
+# 5. Air-gapped offline installation verification test
+./tests/test_airgap_boot.sh
 ```

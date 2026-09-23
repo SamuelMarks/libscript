@@ -185,6 +185,34 @@ function Audit-File {
             Log-Violation -File $FilePath -Rule "DOC_USAGE" -Details "Missing doc block '## Usage' in first 30 lines."
         }
     }
+
+    # 6. Option A Hard Fail Proforma check (Exit code 86)
+    $fileName = [System.IO.Path]::GetFileName($FilePath)
+    if ($fileName -match '^(mount_target_vfs|umount_target_vfs|runner|provision_disk|format_fs)\.(cmd|ps1)$') {
+        $content = Get-Content -Path $FilePath -Raw
+        if ($ext -eq "cmd" -and $content -notmatch 'exit /b 86') {
+            Log-Violation -File $FilePath -Rule "OPTION_A_PROFORMA" -Details "Option A proforma script must exit with status 86."
+        } elseif ($ext -eq "ps1" -and $content -notmatch 'exit 86') {
+            Log-Violation -File $FilePath -Rule "OPTION_A_PROFORMA" -Details "Option A proforma script must exit with status 86."
+        }
+    }
+
+    # 7. Remote Safety Mandate (NEVER execute git push)
+    if ($ext -eq "sh" -or $ext -eq "cmd" -or $ext -eq "bat" -or $ext -eq "ps1") {
+        $pushMatch = Select-String -Path $FilePath -Pattern '^\s*(call\s+)?git\s+push\b' -Quiet
+        if ($pushMatch) {
+            Log-Violation -File $FilePath -Rule "REMOTE_SAFETY" -Details "Strict safety violation: found 'git push' invocation."
+        }
+    }
+
+    # 8. Recipe Boundary Check for leaf packages (_lib/<category>/<component>/)
+    $normPath = $FilePath.Replace([char]92, [char]47)
+    if ($normPath -match '^_lib/[^/]+/[^/]+/.+\.sh$' -and $normPath -notmatch '^_lib/(orchestration|storage|_common|cloud|cloud-providers)/') {
+        $boundaryMatch = Select-String -Path $FilePath -Pattern '^\s*(sudo\s+)?(mount|umount|losetup|fdisk|sfdisk|parted|mkfs(\.[a-z0-9]+)?|cryptsetup)\s' -Quiet
+        if ($boundaryMatch) {
+            Log-Violation -File $FilePath -Rule "RECIPE_BOUNDARY" -Details "Tier 1 leaf recipe directly invokes kernel/storage primitive."
+        }
+    }
 }
 
 # Determine target files

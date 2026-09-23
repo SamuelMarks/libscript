@@ -1,0 +1,74 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "linux-minimal-headless-musl",
+  "description": "Minimal headless Linux system based on Musl libc, BusyBox userland, and runit init supervisor.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-musl",
+    "libc": "musl",
+    "submodel": "generic"
+  },
+  "kernel": {
+    "provider": "linux-lts",
+    "config_method": "fragments",
+    "fragments": ["virtio.cfg", "minimal_headless.cfg"],
+    "cmdline": "console=ttyS0 console=tty0 root=/dev/vda2 rw quiet init=/sbin/init"
+  },
+  "init_system": {
+    "provider": "runit",
+    "default_target": "multi-user",
+    "services_enabled": ["agetty-tty1", "agetty-ttyS0"]
+  },
+  "display": {
+    "server": "headless",
+    "compositor": "none"
+  },
+  "desktop": {
+    "desktop_suite": "none",
+    "greeter": "none"
+  },
+  "storage": {
+    "disk_size_gib": 2,
+    "partition_table": "gpt",
+    "boot_mode": "uefi",
+    "bootloader": "limine",
+    "uki": false,
+    "partitions": [
+      {
+        "name": "ESP",
+        "filesystem": "vfat",
+        "mountpoint": "/boot/efi",
+        "size_mib": 256
+      },
+      {
+        "name": "root",
+        "filesystem": "ext4",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "root",
+      "shell": "/bin/sh",
+      "groups": ["root"],
+      "sudo": true
+    }
+  ],
+  "locale": {
+    "lang": "C.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "network": {
+    "hostname": "libscript-musl",
+    "dhcp": true,
+    "dns_servers": ["1.1.1.1", "8.8.8.8"]
+  },
+  "offline": {
+    "enabled": false,
+    "cache_dir": "/var/cache/libscript"
+  },
+  "packages": ["busybox", "runit", "musl", "ca-certificates"]
+}

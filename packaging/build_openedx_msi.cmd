@@ -101,6 +101,12 @@ echo   --help, -h        Show this help text
 exit /b 0
 
 :after_parse
+if /i "%VARIANT%"=="offline" (
+    if not exist "%CACHE_DIR%\runtimes\python-3.11.9-embed-amd64.zip" (
+        set "HYDRATE_CACHE=1"
+    )
+)
+
 if "%HYDRATE_CACHE%"=="1" (
     echo [INFO] Hydrating offline cache before MSI build...
     call "%SCRIPT_DIR%\hydrate_offline_cache.cmd" --manifest "%MANIFEST_PATH%" --cache-dir "%CACHE_DIR%"

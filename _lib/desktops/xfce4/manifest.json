@@ -1,0 +1,14 @@
+{
+  "name": "xfce4",
+  "title": "XFCE Desktop",
+  "description": "Fast and lightweight desktop environment",
+  "provides": ["xfce4"],
+  "category": "desktops",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

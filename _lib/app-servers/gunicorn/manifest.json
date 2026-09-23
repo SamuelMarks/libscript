@@ -2,6 +2,8 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "gunicorn",
   "title": "Gunicorn",
+  "license": "MIT",
+  "license_name": "MIT License",
   "description": "Python WSGI HTTP Server for UNIX / POSIX.",
   "category": "app-servers",
   "provides": ["app-server", "wsgi", "gunicorn"],

@@ -1,0 +1,14 @@
+{
+  "name": "busybox",
+  "title": "BusyBox",
+  "description": "Swiss Army Knife of embedded Linux utilities",
+  "provides": ["busybox"],
+  "category": "base-system",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

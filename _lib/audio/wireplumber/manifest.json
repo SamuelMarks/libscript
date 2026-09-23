@@ -1,0 +1,14 @@
+{
+  "name": "wireplumber",
+  "title": "WirePlumber",
+  "description": "Modular session and policy manager for PipeWire",
+  "provides": ["wireplumber"],
+  "category": "audio",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

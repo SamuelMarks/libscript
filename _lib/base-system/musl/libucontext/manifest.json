@@ -1,0 +1,14 @@
+{
+  "name": "libucontext",
+  "title": "libucontext",
+  "description": "ucontext library replacement for musl libc",
+  "provides": ["libucontext"],
+  "category": "base-system",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

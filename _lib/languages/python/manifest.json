@@ -2,6 +2,8 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "python",
   "title": "Python Runtime",
+  "license": "Python-2.0",
+  "license_name": "Python Software Foundation License 2.0",
   "description": "A versatile programming language that lets you work quickly and integrate systems more effectively.",
   "category": "languages",
   "provides": ["runtime", "python", "pip"],

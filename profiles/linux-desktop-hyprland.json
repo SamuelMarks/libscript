@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "linux-desktop-hyprland",
+  "description": "Fluid modern Wayland dynamic tiling desktop featuring Hyprland, PipeWire audio subsystem, and SDDM display manager.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-glibc",
+    "libc": "glibc",
+    "submodel": "x86-64-v3"
+  },
+  "kernel": {
+    "provider": "linux-stable",
+    "config_method": "fragments",
+    "fragments": ["virtio.cfg", "wayland_drm.cfg", "pipewire.cfg"],
+    "cmdline": "quiet splash console=tty1"
+  },
+  "init_system": {
+    "provider": "systemd",
+    "default_target": "graphical",
+    "services_enabled": ["sddm", "pipewire", "pipewire-pulse", "NetworkManager"]
+  },
+  "display": {
+    "server": "wayland",
+    "compositor": "hyprland"
+  },
+  "desktop": {
+    "desktop_suite": "none",
+    "greeter": "sddm"
+  },
+  "storage": {
+    "disk_size_gib": 40,
+    "partition_table": "gpt",
+    "boot_mode": "uefi",
+    "bootloader": "systemd-boot",
+    "uki": true,
+    "partitions": [
+      {
+        "name": "ESP",
+        "filesystem": "vfat",
+        "mountpoint": "/boot/efi",
+        "size_mib": 512
+      },
+      {
+        "name": "root",
+        "filesystem": "btrfs",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "user",
+      "shell": "/bin/sh",
+      "groups": ["wheel", "video", "audio", "input"],
+      "sudo": true
+    }
+  ],
+  "locale": {
+    "lang": "en_US.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "network": {
+    "hostname": "libscript-hypr",
+    "dhcp": true,
+    "dns_servers": ["1.1.1.1"]
+  },
+  "offline": {
+    "enabled": false,
+    "cache_dir": "/var/cache/libscript"
+  },
+  "packages": [
+    "glibc",
+    "hyprland",
+    "waybar",
+    "kitty",
+    "rofi-wayland",
+    "pipewire",
+    "wireplumber",
+    "sddm",
+    "mesa",
+    "vulkan-loader"
+  ]
+}

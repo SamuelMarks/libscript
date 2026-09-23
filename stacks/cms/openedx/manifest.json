@@ -3,6 +3,8 @@
   "name": "openedx",
   "category": "cms",
   "title": "Open edX",
+  "license": "AGPL-3.0-only",
+  "license_name": "GNU Affero General Public License v3.0",
   "description": "Open edX LMS and Studio/CMS enterprise learning management platform.",
   "provides": ["openedx", "lms", "cms"],
   "requires": [

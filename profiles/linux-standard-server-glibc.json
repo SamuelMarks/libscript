@@ -1,0 +1,74 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "linux-standard-server-glibc",
+  "description": "Production standard enterprise server profile based on GNU/Linux Glibc, systemd supervisor, OpenSSH, and Ext4 filesystem.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-glibc",
+    "libc": "glibc",
+    "submodel": "x86-64-v3"
+  },
+  "kernel": {
+    "provider": "linux-stable",
+    "config_method": "defconfig",
+    "fragments": ["virtio.cfg", "server_hardening.cfg"],
+    "cmdline": "console=ttyS0 console=tty0 root=/dev/vda2 rw systemd.unified_cgroup_hierarchy=1 quiet"
+  },
+  "init_system": {
+    "provider": "systemd",
+    "default_target": "multi-user",
+    "services_enabled": ["systemd-networkd", "systemd-resolved", "sshd"]
+  },
+  "display": {
+    "server": "headless",
+    "compositor": "none"
+  },
+  "desktop": {
+    "desktop_suite": "none",
+    "greeter": "none"
+  },
+  "storage": {
+    "disk_size_gib": 20,
+    "partition_table": "gpt",
+    "boot_mode": "uefi",
+    "bootloader": "systemd-boot",
+    "uki": true,
+    "partitions": [
+      {
+        "name": "ESP",
+        "filesystem": "vfat",
+        "mountpoint": "/boot/efi",
+        "size_mib": 512
+      },
+      {
+        "name": "root",
+        "filesystem": "ext4",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "admin",
+      "shell": "/bin/sh",
+      "groups": ["wheel", "sudo"],
+      "sudo": true
+    }
+  ],
+  "locale": {
+    "lang": "en_US.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "network": {
+    "hostname": "libscript-srv",
+    "dhcp": true,
+    "dns_servers": ["1.1.1.1", "8.8.8.8"]
+  },
+  "offline": {
+    "enabled": false,
+    "cache_dir": "/var/cache/libscript"
+  },
+  "packages": ["glibc", "coreutils", "systemd", "openssh", "util-linux", "e2fsprogs", "curl"]
+}

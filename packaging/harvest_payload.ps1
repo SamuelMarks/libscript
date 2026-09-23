@@ -86,8 +86,8 @@ try {
 
     # 2. Filter prohibited patterns and directories (always exclude cache/ from repo)
     $filtered = [System.Collections.Generic.List[string]]::new()
-    $excludeRegex = '(^|/)(\.git|\.github|\.githooks|\.vagrant|tests_tmp|dist|build|node_modules|cache)(/|$)'
-    $excludeExtRegex = '\.(tmp|log|ppm|bak|swp|msi|wixobj)$'
+    $excludeRegex = '(^|/)(\.git|\.github|\.githooks|\.vagrant|tests_tmp|dist|build|node_modules|cache|kubernetes-the-hard-way)(/|$)'
+    $excludeExtRegex = '\.(tmp|log|ppm|bak|swp|msi|wixobj|pruned)$'
 
     foreach ($f in $allFiles) {
         if (-not $f) { continue }
@@ -101,8 +101,14 @@ try {
 
     # Add offline cache files if -IncludeCache is provided
     $cacheReal = $null
-    if ($IncludeCache -and (Test-Path $IncludeCache)) {
-        $cacheReal = (Resolve-Path $IncludeCache).Path
+    if ($IncludeCache) {
+        if (Test-Path $IncludeCache) {
+            $cacheReal = (Resolve-Path $IncludeCache).Path
+        } elseif (Test-Path (Join-Path $RootDir $IncludeCache)) {
+            $cacheReal = (Resolve-Path (Join-Path $RootDir $IncludeCache)).Path
+        }
+    }
+    if ($cacheReal) {
         $cacheFiles = Get-ChildItem -Path $cacheReal -Recurse -File -Force
         foreach ($cf in $cacheFiles) {
             $relC = $cf.FullName.Substring($cacheReal.Length).TrimStart('\', '/').Replace('\', '/')
@@ -201,6 +207,7 @@ try {
 
         $sw.WriteLine("    <ComponentGroup Id=""$ComponentGroup"">")
         foreach ($f in $filtered) {
+            if ($IncludeCache -and $f.StartsWith('cache/')) { continue }
             $san = $f -replace '[/\.:\- ]', '_'
             $cId = 'CMP_H_' + $san
             $sw.WriteLine("      <ComponentRef Id=""$cId"" />")

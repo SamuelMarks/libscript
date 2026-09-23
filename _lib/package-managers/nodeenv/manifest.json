@@ -4,6 +4,8 @@
   "provides": ["nodeenv", "node-virtualenv"],
   "os_whitelist": ["all"],
   "title": "nodeenv",
+  "license": "BSD-3-Clause",
+  "license_name": "BSD 3-Clause 'New' or 'Revised' License",
   "description": "Bootstrap module for the nodeenv Node.js virtual environment manager.",
   "category": "package-manager"
 }

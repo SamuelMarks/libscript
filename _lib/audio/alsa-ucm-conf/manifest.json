@@ -1,0 +1,14 @@
+{
+  "name": "alsa-ucm-conf",
+  "title": "ALSA UCM Conf",
+  "description": "ALSA Use Case Manager configuration files",
+  "provides": ["alsa-ucm-conf"],
+  "category": "audio",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

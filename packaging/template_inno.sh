@@ -113,6 +113,13 @@ EOF2
       set -- $deps_list
       while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
+        printf '%s\n' "  LicPage_$pkg: TOutputMsgMemoWizardPage;"
+      done
+
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
+        pkg=$1; ver=$2; shift 2
         schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" "$LIBSCRIPT_ROOT_DIR/stacks" -name "vars.schema.json" 2>/dev/null | grep "/$pkg/" | head -n 1)
         if [ -f "$schema_file" ]; then
           vars_json=$(jq -c '.properties | to_entries[] | select(.key | startswith("LIBSCRIPT_GLOBAL_") | not) | {key: .key, desc: (.value.description // .key), def: (.value.default // "")}' "$schema_file")
@@ -127,6 +134,19 @@ EOF2
 
       printf '%s\n' "procedure InitializeWizard;"
       printf '%s\n' "begin"
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
+        pkg=$1; ver=$2; shift 2
+        pkg_man=$(find "$LIBSCRIPT_ROOT_DIR/_lib" "$LIBSCRIPT_ROOT_DIR/stacks" -name "manifest.json" 2>/dev/null | grep "/$pkg/manifest.json" | head -n 1)
+        pkg_spdx="MIT"
+        pkg_title="$pkg"
+        if [ -n "$pkg_man" ] && [ -f "$pkg_man" ]; then
+          pkg_spdx=$(jq -r '.license // "MIT"' "$pkg_man" 2>/dev/null || printf 'MIT')
+          pkg_title=$(jq -r '.title // .name' "$pkg_man" 2>/dev/null || printf '%s' "$pkg")
+        fi
+        printf '%s\n' "  LicPage_$pkg := CreateOutputMsgMemoPage(wpLicense, 'License Agreement: $pkg_title', 'Please review the license terms for $pkg_title ($pkg_spdx) before continuing.', 'Please read the following license terms carefully.', 'Software License Terms for $pkg_title ($pkg_spdx)');"
+      done
       # shellcheck disable=SC2086
       set -- $deps_list
       while [ $# -gt 1 ]; do

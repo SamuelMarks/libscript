@@ -1,0 +1,321 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/os-config.schema.json",
+  "title": "LibScript Declarative Operating System Specification",
+  "description": "Declarative configuration schema defining target operating systems, unikernels, microVM appliances, and kernel images.",
+  "type": "object",
+  "required": ["schema_version", "target", "kernel", "init_system", "storage"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Semantic schema version identifier for this specification format (e.g. 1.0.0)"
+    },
+    "profile_name": {
+      "type": "string",
+      "description": "Human-readable identifier or compilation profile name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the target operating system appliance or profile"
+    },
+    "target": {
+      "type": "object",
+      "description": "Architecture, operating system family, and runtime target specifications",
+      "required": ["arch", "os_family", "libc"],
+      "properties": {
+        "arch": {
+          "type": "string",
+          "description": "Target processor architecture instruction set",
+          "enum": ["x86_64", "aarch64", "riscv64", "armv7l", "i686"]
+        },
+        "os_family": {
+          "type": "string",
+          "description": "Operating system and kernel ecosystem family",
+          "enum": [
+            "linux-glibc",
+            "linux-musl",
+            "freebsd",
+            "unikernel-unikraft",
+            "microvm-firecracker"
+          ]
+        },
+        "libc": {
+          "type": "string",
+          "description": "Standard C runtime library implementation",
+          "enum": ["glibc", "musl", "bsd-libc", "nolibc"]
+        },
+        "submodel": {
+          "type": "string",
+          "description": "Microarchitecture optimization flags passed to GCC/Clang (e.g. x86-64-v3, neoverse-n1)"
+        }
+      }
+    },
+    "kernel": {
+      "type": "object",
+      "description": "Kernel source provider, configuration fragments, and command line parameters",
+      "required": ["provider", "config_method"],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "description": "Kernel distribution and source branch provider",
+          "enum": [
+            "linux-stable",
+            "linux-lts",
+            "linux-hardened",
+            "freebsd-kernel",
+            "unikraft-core",
+            "none"
+          ]
+        },
+        "config_method": {
+          "type": "string",
+          "description": "Kernel configuration assembly methodology",
+          "enum": ["defconfig", "tinyconfig", "fragments", "custom_file"]
+        },
+        "fragments": {
+          "type": "array",
+          "description": "List of modular kernel configuration fragment names merged during build",
+          "items": {
+            "type": "string",
+            "description": "Kernel configuration fragment filename or identifier"
+          }
+        },
+        "cmdline": {
+          "type": "string",
+          "description": "Default kernel command line parameters string appended at boot"
+        }
+      }
+    },
+    "init_system": {
+      "type": "object",
+      "description": "PID 1 init system supervisor and service management configuration",
+      "required": ["provider"],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "description": "Init system daemon implementation provider",
+          "enum": ["systemd", "openrc", "sysvinit", "runit", "s6", "bsd-init", "none"]
+        },
+        "default_target": {
+          "type": "string",
+          "description": "Default boot runlevel or systemd target unit",
+          "enum": ["multi-user", "graphical", "rescue"]
+        },
+        "services_enabled": {
+          "type": "array",
+          "description": "List of service names enabled on startup",
+          "items": {
+            "type": "string",
+            "description": "System service name"
+          }
+        }
+      }
+    },
+    "display": {
+      "type": "object",
+      "description": "Display server and window compositing subsystems",
+      "properties": {
+        "server": {
+          "type": "string",
+          "description": "Display protocol server implementation",
+          "enum": ["wayland", "x11", "hybrid-xwayland", "headless"]
+        },
+        "compositor": {
+          "type": "string",
+          "description": "Wayland compositor or X11 window manager",
+          "enum": ["sway", "hyprland", "weston", "labwc", "openbox", "none"]
+        }
+      }
+    },
+    "desktop": {
+      "type": "object",
+      "description": "Graphical desktop environment suites and greeter display managers",
+      "properties": {
+        "desktop_suite": {
+          "type": "string",
+          "description": "Full desktop application suite and shell integration",
+          "enum": ["gnome", "kde-plasma-6", "xfce4", "lxqt", "none"]
+        },
+        "greeter": {
+          "type": "string",
+          "description": "Display manager login greeter service",
+          "enum": ["greetd", "sddm", "gdm", "lightdm", "none"]
+        }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "description": "Disk image geometry, partition table layout, and bootloader specifications",
+      "required": ["disk_size_gib", "partition_table", "boot_mode", "bootloader"],
+      "properties": {
+        "disk_size_gib": {
+          "type": "integer",
+          "description": "Total virtual disk capacity allocated in gigabytes"
+        },
+        "partition_table": {
+          "type": "string",
+          "description": "Partition table scheme format",
+          "enum": ["gpt", "mbr", "bsd-slice"]
+        },
+        "boot_mode": {
+          "type": "string",
+          "description": "Target firmware boot mode architecture",
+          "enum": ["uefi", "bios-legacy", "hybrid-uefi-bios"]
+        },
+        "bootloader": {
+          "type": "string",
+          "description": "Bootloader binary and EFI payload implementation",
+          "enum": ["grub2-efi", "grub2-bios", "systemd-boot", "limine", "freebsd-bootcode", "none"]
+        },
+        "uki": {
+          "type": "boolean",
+          "description": "Whether to build a signed Unified Kernel Image (.efi binary combining kernel, initramfs, and cmdline)"
+        },
+        "partitions": {
+          "type": "array",
+          "description": "Ordered disk partition layout specifications",
+          "items": {
+            "type": "object",
+            "description": "Individual disk partition specification",
+            "required": ["name", "filesystem", "mountpoint", "size_mib"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Partition label or volume name"
+              },
+              "filesystem": {
+                "type": "string",
+                "description": "Target filesystem format type",
+                "enum": ["ext4", "btrfs", "xfs", "vfat", "zfs", "swap"]
+              },
+              "mountpoint": {
+                "type": "string",
+                "description": "Mount point path in the target VFS tree"
+              },
+              "size_mib": {
+                "type": "integer",
+                "description": "Partition size in megabytes (0 represents remaining disk space)"
+              },
+              "luks": {
+                "type": "object",
+                "description": "Optional LUKS2 disk encryption parameters",
+                "required": ["enabled"],
+                "properties": {
+                  "enabled": {
+                    "type": "boolean",
+                    "description": "Enables LUKS2 encryption for this partition volume"
+                  },
+                  "cipher": {
+                    "type": "string",
+                    "description": "Cryptographic cipher specification (e.g. aes-xts-plain64)"
+                  },
+                  "pbkdf": {
+                    "type": "string",
+                    "description": "Password-based key derivation function algorithm (e.g. argon2id)"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "users": {
+      "type": "array",
+      "description": "Initial user account accounts provisioned in target system",
+      "items": {
+        "type": "object",
+        "description": "User account definition",
+        "required": ["username"],
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "Login account username"
+          },
+          "shell": {
+            "type": "string",
+            "description": "Default interactive user shell executable path"
+          },
+          "groups": {
+            "type": "array",
+            "description": "Secondary user group memberships",
+            "items": {
+              "type": "string",
+              "description": "Group name"
+            }
+          },
+          "password_hash": {
+            "type": "string",
+            "description": "Encrypted password hash string (e.g. SHA-512 or yescrypt format)"
+          },
+          "sudo": {
+            "type": "boolean",
+            "description": "Grant administrative privileges via sudo/doas"
+          }
+        }
+      }
+    },
+    "locale": {
+      "type": "object",
+      "description": "System locale, keymap, and timezone settings",
+      "properties": {
+        "lang": {
+          "type": "string",
+          "description": "Default POSIX locale language identifier (e.g. en_US.UTF-8, C.UTF-8)"
+        },
+        "keymap": {
+          "type": "string",
+          "description": "Console keyboard keymap layout identifier (e.g. us, de, fr)"
+        },
+        "timezone": {
+          "type": "string",
+          "description": "Olson timezone database identifier (e.g. UTC, America/New_York)"
+        }
+      }
+    },
+    "network": {
+      "type": "object",
+      "description": "Host network stack and initial interface configuration",
+      "properties": {
+        "hostname": {
+          "type": "string",
+          "description": "Network host machine identifier name"
+        },
+        "dhcp": {
+          "type": "boolean",
+          "description": "Enable automatic DHCP address resolution on primary interface"
+        },
+        "dns_servers": {
+          "type": "array",
+          "description": "List of default upstream DNS resolver IP addresses",
+          "items": {
+            "type": "string",
+            "description": "DNS resolver IP address"
+          }
+        }
+      }
+    },
+    "offline": {
+      "type": "object",
+      "description": "Air-gapped execution and pre-hydrated cache controls",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Strictly enforce zero network connectivity during image synthesis"
+        },
+        "cache_dir": {
+          "type": "string",
+          "description": "Filesystem path pointing to pre-fetched offline package cache repository"
+        }
+      }
+    },
+    "packages": {
+      "type": "array",
+      "description": "List of additional LibScript package recipes or components to install",
+      "items": {
+        "type": "string",
+        "description": "Package identifier matching _lib catalog components"
+      }
+    }
+  }
+}

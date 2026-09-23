@@ -1,0 +1,14 @@
+{
+  "name": "vulkan-loader",
+  "title": "Vulkan Loader",
+  "description": "Khronos Vulkan ICD loader and headers",
+  "provides": ["vulkan-loader"],
+  "category": "graphics",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

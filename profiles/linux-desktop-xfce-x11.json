@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "linux-desktop-xfce-x11",
+  "description": "Lightweight traditional X11 desktop environment featuring XFCE 4.18, LightDM greeter, and PulseAudio sound.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-glibc",
+    "libc": "glibc",
+    "submodel": "generic"
+  },
+  "kernel": {
+    "provider": "linux-lts",
+    "config_method": "fragments",
+    "fragments": ["virtio.cfg", "x11_drm.cfg"],
+    "cmdline": "quiet splash console=tty1"
+  },
+  "init_system": {
+    "provider": "openrc",
+    "default_target": "graphical",
+    "services_enabled": ["lightdm", "pulseaudio", "networking"]
+  },
+  "display": {
+    "server": "x11",
+    "compositor": "openbox"
+  },
+  "desktop": {
+    "desktop_suite": "xfce4",
+    "greeter": "lightdm"
+  },
+  "storage": {
+    "disk_size_gib": 30,
+    "partition_table": "mbr",
+    "boot_mode": "bios-legacy",
+    "bootloader": "grub2-bios",
+    "uki": false,
+    "partitions": [
+      {
+        "name": "root",
+        "filesystem": "ext4",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "user",
+      "shell": "/bin/sh",
+      "groups": ["wheel", "video", "audio"],
+      "sudo": true
+    }
+  ],
+  "locale": {
+    "lang": "en_US.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "network": {
+    "hostname": "libscript-xfce",
+    "dhcp": true,
+    "dns_servers": ["1.1.1.1"]
+  },
+  "offline": {
+    "enabled": false,
+    "cache_dir": "/var/cache/libscript"
+  },
+  "packages": ["glibc", "xorg-server", "xfce4", "lightdm", "pulseaudio", "firefox"]
+}

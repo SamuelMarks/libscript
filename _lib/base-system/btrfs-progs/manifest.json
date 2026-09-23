@@ -1,0 +1,14 @@
+{
+  "name": "btrfs-progs",
+  "title": "Btrfs Progs",
+  "description": "Btrfs filesystem creation and management tools",
+  "provides": ["btrfs-progs"],
+  "category": "base-system",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

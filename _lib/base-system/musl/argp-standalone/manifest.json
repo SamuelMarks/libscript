@@ -1,0 +1,14 @@
+{
+  "name": "argp-standalone",
+  "title": "Argp Standalone",
+  "description": "Hierarchical argument parsing library for musl",
+  "provides": ["argp-standalone"],
+  "category": "base-system",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

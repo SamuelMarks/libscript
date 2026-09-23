@@ -1,0 +1,84 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "linux-desktop-kde-plasma",
+  "description": "Comprehensive modern workstation desktop featuring KDE Plasma 6 on Wayland with SDDM and PipeWire.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-glibc",
+    "libc": "glibc",
+    "submodel": "x86-64-v3"
+  },
+  "kernel": {
+    "provider": "linux-stable",
+    "config_method": "fragments",
+    "fragments": ["virtio.cfg", "wayland_drm.cfg", "pipewire.cfg"],
+    "cmdline": "quiet splash console=tty1"
+  },
+  "init_system": {
+    "provider": "systemd",
+    "default_target": "graphical",
+    "services_enabled": ["sddm", "pipewire", "NetworkManager"]
+  },
+  "display": {
+    "server": "wayland",
+    "compositor": "weston"
+  },
+  "desktop": {
+    "desktop_suite": "kde-plasma-6",
+    "greeter": "sddm"
+  },
+  "storage": {
+    "disk_size_gib": 50,
+    "partition_table": "gpt",
+    "boot_mode": "uefi",
+    "bootloader": "systemd-boot",
+    "uki": true,
+    "partitions": [
+      {
+        "name": "ESP",
+        "filesystem": "vfat",
+        "mountpoint": "/boot/efi",
+        "size_mib": 512
+      },
+      {
+        "name": "root",
+        "filesystem": "ext4",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "user",
+      "shell": "/bin/sh",
+      "groups": ["wheel", "video", "audio"],
+      "sudo": true
+    }
+  ],
+  "locale": {
+    "lang": "en_US.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "network": {
+    "hostname": "libscript-kde",
+    "dhcp": true,
+    "dns_servers": ["1.1.1.1"]
+  },
+  "offline": {
+    "enabled": false,
+    "cache_dir": "/var/cache/libscript"
+  },
+  "packages": [
+    "glibc",
+    "plasma-desktop",
+    "kwin",
+    "sddm",
+    "pipewire",
+    "wireplumber",
+    "konsole",
+    "dolphin",
+    "mesa"
+  ]
+}

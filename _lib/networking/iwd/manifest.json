@@ -1,0 +1,14 @@
+{
+  "name": "iwd",
+  "title": "iwd",
+  "description": "Intel Wireless Daemon for Linux",
+  "provides": ["iwd"],
+  "category": "networking",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

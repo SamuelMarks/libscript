@@ -1,0 +1,14 @@
+{
+  "name": "pulseaudio",
+  "title": "PulseAudio",
+  "description": "Networked sound server daemon",
+  "provides": ["pulseaudio"],
+  "category": "audio",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

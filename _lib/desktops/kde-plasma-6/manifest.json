@@ -1,0 +1,14 @@
+{
+  "name": "kde-plasma-6",
+  "title": "KDE Plasma 6",
+  "description": "Feature-rich desktop workspace by KDE",
+  "provides": ["kde-plasma-6"],
+  "category": "desktops",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

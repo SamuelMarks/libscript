@@ -1,0 +1,14 @@
+{
+  "name": "nvidia",
+  "title": "NVIDIA Graphics Driver",
+  "description": "Proprietary NVIDIA display driver and libraries",
+  "provides": ["nvidia"],
+  "category": "graphics",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

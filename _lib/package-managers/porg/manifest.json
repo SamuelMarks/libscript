@@ -1,0 +1,14 @@
+{
+  "name": "porg",
+  "title": "Porg",
+  "description": "Package organizer with LD_PRELOAD logging for LFS",
+  "provides": ["porg"],
+  "category": "package-managers",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

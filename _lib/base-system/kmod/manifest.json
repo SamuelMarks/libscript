@@ -1,0 +1,14 @@
+{
+  "name": "kmod",
+  "title": "Kmod",
+  "description": "Linux kernel module loader and management library",
+  "provides": ["kmod"],
+  "category": "base-system",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

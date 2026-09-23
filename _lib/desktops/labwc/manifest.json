@@ -1,0 +1,14 @@
+{
+  "name": "labwc",
+  "title": "labwc",
+  "description": "Openbox-like stacking Wayland compositor",
+  "provides": ["labwc"],
+  "category": "desktops",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

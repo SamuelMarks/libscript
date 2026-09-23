@@ -1,0 +1,14 @@
+{
+  "name": "toybox",
+  "title": "Toybox",
+  "description": "BSD-licensed POSIX all-in-one command suite",
+  "provides": ["toybox"],
+  "category": "base-system",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

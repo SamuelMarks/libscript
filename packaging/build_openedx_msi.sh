@@ -90,9 +90,12 @@ EOF_HELP
   esac
 done
 
+if [ "$variant" = "offline" ] && [ ! -f "${cache_dir}/runtimes/python-3.11.9-embed-amd64.zip" ]; then
+  hydrate_cache=1
+fi
+
 if [ "$hydrate_cache" -eq 1 ]; then
-  printf '[INFO] Hydrating offline cache before MSI build...
-'
+  printf '[INFO] Hydrating offline cache before MSI build...\n'
   "${SCRIPT_DIR}/hydrate_offline_cache.sh" --manifest "$manifest_path" --cache-dir "$cache_dir"
 fi
 

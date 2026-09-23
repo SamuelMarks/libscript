@@ -2,6 +2,8 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "memcached",
   "title": "Memcached",
+  "license": "BSD-3-Clause",
+  "license_name": "BSD 3-Clause 'New' or 'Revised' License",
   "description": "High-performance, distributed memory object caching system.",
   "category": "caches",
   "provides": ["cache", "memcached", "key-value"],

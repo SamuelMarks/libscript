@@ -1,0 +1,14 @@
+{
+  "name": "greetd",
+  "title": "greetd",
+  "description": "Minimal, generic and agnostic login daemon",
+  "provides": ["greetd"],
+  "category": "display-managers",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

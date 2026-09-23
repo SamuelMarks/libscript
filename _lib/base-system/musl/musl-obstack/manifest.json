@@ -1,0 +1,14 @@
+{
+  "name": "musl-obstack",
+  "title": "Musl Obstack",
+  "description": "GNU obstack library standalone port for musl",
+  "provides": ["musl-obstack"],
+  "category": "base-system",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

@@ -12,6 +12,14 @@
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+if defined STACK (
+    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    if not errorlevel 1 (
+        echo [STOP] processing "%THIS_FILE%" >&2
+        exit /b 0
+    )
+)
+set "STACK=%STACK%:%THIS_FILE%:"
 set "SCRIPT_DIR=%~dp0"
 set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
@@ -31,6 +39,18 @@ goto find_root_loop
 :: ## found_root
 :: Target label reached once the libscript root directory is located.
 :found_root
+
+where sh.exe >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    sh "%SCRIPT_DIR%\build_msi.sh" %*
+    exit /b %ERRORLEVEL%
+)
+
+where bash.exe >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    bash "%SCRIPT_DIR%\build_msi.sh" %*
+    exit /b %ERRORLEVEL%
+)
 
 set "TARGET_DIR="
 set "OUT_FILE="
@@ -410,15 +430,15 @@ setlocal DisableDelayedExpansion
     echo     ^<CustomAction Id="CA_CheckNetworkConnection" Directory="INSTALLFOLDER" ExeCommand="powershell.exe -NoProfile -Command &quot;try { (New-Object System.Net.Sockets.TcpClient('github.com', 443)).Close(); (New-Object System.Net.Sockets.TcpClient('pypi.org', 443)).Close(); } catch { exit 1 }&quot;" Execute="immediate" Return="ignore" /^>
     echo     ^<CustomAction Id="CA_LaunchBrowser" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\packaging\launch_browser.cmd&quot; http://[PROP_LMS_HOST]:[PROP_LMS_PORT] &quot;Open edX LMS&quot;" Return="asyncNoWait" /^>
     echo     ^<CustomAction Id="CA_LaunchStudio" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\packaging\launch_browser.cmd&quot; http://[PROP_CMS_HOST]:[PROP_CMS_PORT] &quot;Open edX Studio&quot;" Return="asyncNoWait" /^>
-    echo     ^<CustomAction Id="InstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install stacks/cms/openedx --offline=[PROP_OPENEDX_OFFLINE] --lms-port=[PROP_LMS_PORT] --cms-port=[PROP_CMS_PORT] --mysql-url=&quot;[PROP_MYSQL_REMOTE_URL]&quot; --redis-port=[PROP_REDIS_PORT] --redis-url=&quot;[PROP_REDIS_URL]&quot; --mongodb-uri=&quot;[PROP_MONGODB_URI]&quot; --repo=&quot;[PROP_OPENEDX_EDX_PLATFORM_REPOSITORY]&quot; --version=&quot;[PROP_OPENEDX_VERSION]&quot; --admin-user=&quot;[PROP_OPENEDX_ADMIN_USERNAME]&quot; --admin-password=&quot;[PROP_OPENEDX_ADMIN_PASSWORD]&quot; --admin-email=&quot;[PROP_OPENEDX_ADMIN_EMAIL]&quot; --backup-dir=&quot;[BACKUPFOLDER]&quot; --theme=&quot;[PROP_OPENEDX_THEME]&quot;" Execute="deferred" Return="check" Impersonate="no" /^>
+    echo     ^<CustomAction Id="InstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install stacks/cms/openedx --offline=[PROP_OPENEDX_OFFLINE] --lms-port=[PROP_LMS_PORT] --cms-port=[PROP_CMS_PORT] --mysql-url=&quot;[PROP_MYSQL_REMOTE_URL]&quot; --redis-port=[PROP_REDIS_PORT] --redis-url=&quot;[PROP_REDIS_URL]&quot; --mongodb-uri=&quot;[PROP_MONGODB_URI]&quot; --repo=&quot;[PROP_OPENEDX_EDX_PLATFORM_REPOSITORY]&quot; --version=&quot;[PROP_OPENEDX_VERSION]&quot; --admin-user=&quot;[PROP_OPENEDX_ADMIN_USERNAME]&quot; --admin-password=&quot;[PROP_OPENEDX_ADMIN_PASSWORD]&quot; --admin-email=&quot;[PROP_OPENEDX_ADMIN_EMAIL]&quot; --backup-dir=&quot;[BACKUPFOLDER]&quot; --theme=&quot;[PROP_OPENEDX_THEME]&quot;" Execute="deferred" Return="ignore" Impersonate="no" /^>
     echo     ^<CustomAction Id="InstallWorkersService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\workers.cmd&quot; start" Execute="deferred" Return="ignore" Impersonate="no" /^>
     echo     ^<CustomAction Id="StopWorkersService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\workers.cmd&quot; stop" Execute="deferred" Return="ignore" Impersonate="no" /^>
     echo     ^<CustomAction Id="ImportDemoContentAction" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\import_demo.cmd&quot; course &amp;&amp; &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\import_demo.cmd&quot; libraries" Execute="deferred" Return="ignore" Impersonate="no" /^>
     echo     ^<CustomAction Id="BuildMFEsAction" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\mfe.cmd&quot; build all &amp;&amp; &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\mfe.cmd&quot; deploy all" Execute="deferred" Return="ignore" Impersonate="no" /^>
     echo     ^<CustomAction Id="PostInstallHealthcheck" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\healthcheck.cmd&quot;" Execute="deferred" Return="ignore" Impersonate="no" /^>
-    echo     ^<CustomAction Id="InstallMySQLService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install databases/mysql --port=[PROP_MYSQL_PORT]" Execute="deferred" Return="check" Impersonate="no" /^>
-    echo     ^<CustomAction Id="InstallRedisService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install caches/redis --port=[PROP_REDIS_PORT]" Execute="deferred" Return="check" Impersonate="no" /^>
-    echo     ^<CustomAction Id="UninstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; uninstall stacks/cms/openedx [PURGE_openedx]" Execute="deferred" Return="check" Impersonate="no" /^>
+    echo     ^<CustomAction Id="InstallMySQLService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install databases/mysql --port=[PROP_MYSQL_PORT]" Execute="deferred" Return="ignore" Impersonate="no" /^>
+    echo     ^<CustomAction Id="InstallRedisService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install caches/redis --port=[PROP_REDIS_PORT]" Execute="deferred" Return="ignore" Impersonate="no" /^>
+    echo     ^<CustomAction Id="UninstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; uninstall stacks/cms/openedx [PURGE_openedx]" Execute="deferred" Return="ignore" Impersonate="no" /^>
 
     echo     ^<UI Id="CustomUI"^>
     echo       ^<Property Id="DefaultUIFont" Value="WixUI_Font_Normal" /^>
@@ -446,16 +466,16 @@ setlocal DisableDelayedExpansion
     echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="End-User License Agreement" /^>
     echo         ^<Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Please read the following license agreement carefully." /^>
     if not "%LICENSE_PATH%"=="" (
-        echo         ^<Control Id="AgreementText" Type="ScrollableText" X="20" Y="48" Width="330" Height="155" Sunken="yes" TabSkip="no"^>
+        echo         ^<Control Id="AgreementText" Type="ScrollableText" X="20" Y="48" Width="330" Height="178" Sunken="yes" TabSkip="no"^>
         echo           ^<Text SourceFile="%LICENSE_PATH%" /^>
         echo         ^</Control^>
     )
-    echo         ^<Control Id="LicenseAcceptedCheckBox" Type="CheckBox" X="20" Y="208" Width="330" Height="18" Property="LICENSE_ACCEPTED" CheckBoxValue="1" Text="I accept the terms in the License Agreement" /^>
     echo         ^<Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back"^>
     echo           ^<Publish Event="NewDialog" Value="Dlg_Welcome"^>1^</Publish^>
     echo         ^</Control^>
     echo         ^<Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="I Agree"^>
-    echo           ^<Publish Event="NewDialog" Value="Dlg_SetupType"^>^<![CDATA[LICENSE_ACCEPTED="1"]]^>^</Publish^>
+    echo           ^<Publish Property="LICENSE_ACCEPTED" Value="1"^>1^</Publish^>
+    echo           ^<Publish Event="NewDialog" Value="Dlg_SetupType"^>1^</Publish^>
     echo         ^</Control^>
     echo         ^<Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel"^>
     echo           ^<Publish Event="EndDialog" Value="Exit"^>1^</Publish^>
@@ -785,8 +805,8 @@ setlocal DisableDelayedExpansion
     echo       ^<CostInitialize Sequence="800" /^>
     echo       ^<FileCost Sequence="900" /^>
     echo       ^<CostFinalize Sequence="1000" /^>
-    echo       ^<Custom Action="InstallMySQLService" Before="InstallOpenEdXService"^>^<![CDATA[NOT Installed AND INSTALL_MYSQL="1" AND NOT PROP_MYSQL_REMOTE_URL]]^>^</Custom^>
-    echo       ^<Custom Action="InstallRedisService" Before="InstallOpenEdXService"^>^<![CDATA[NOT Installed AND INSTALL_REDIS="1" AND NOT PROP_REDIS_URL]]^>^</Custom^>
+    echo       ^<Custom Action="InstallMySQLService" Before="InstallOpenEdXService"^>^<![CDATA[NOT Installed AND INSTALL_MYSQL="1" AND NOT PROP_MYSQL_REMOTE_URL AND NOT PROP_OPENEDX_OFFLINE="1"]]^>^</Custom^>
+    echo       ^<Custom Action="InstallRedisService" Before="InstallOpenEdXService"^>^<![CDATA[NOT Installed AND INSTALL_REDIS="1" AND NOT PROP_REDIS_URL AND NOT PROP_OPENEDX_OFFLINE="1"]]^>^</Custom^>
     echo       ^<Custom Action="InstallOpenEdXService" Before="InstallFinalize"^>^<![CDATA[NOT Installed AND INSTALL_LMS="1"]]^>^</Custom^>
     echo       ^<Custom Action="InstallWorkersService" After="InstallOpenEdXService"^>^<![CDATA[NOT Installed AND INSTALL_WORKERS="1"]]^>^</Custom^>
     echo       ^<Custom Action="ImportDemoContentAction" After="InstallOpenEdXService"^>^<![CDATA[NOT Installed AND IMPORT_DEMO_CONTENT="1"]]^>^</Custom^>
@@ -933,8 +953,34 @@ if errorlevel 1 (
 )
 
 :: ## compile_msi
-:: Compiles the WiX manifest into an MSI binary if WiX toolset is present.
+:: Compiles the WiX manifest into an MSI binary if msi-rs or WiX toolset is present.
+where msi-rs.exe >nul 2>&1
+if %ERRORLEVEL%==0 (
+    msi-rs.exe pack -o "%OUT_FILE%.msi" "%WXS_FILE%"
+    if errorlevel 1 (
+        echo [WARN] msi-rs compilation failed; trying WiX fallback >&2
+    ) else (
+        echo [PASS] Successfully built %OUT_FILE%.msi via msi-rs
+        goto compile_done
+    )
+)
+where msi.exe >nul 2>&1
+if %ERRORLEVEL%==0 (
+    msi.exe pack -o "%OUT_FILE%.msi" "%WXS_FILE%" >nul 2>&1
+    if not errorlevel 1 (
+        echo [PASS] Successfully built %OUT_FILE%.msi via msi
+        goto compile_done
+    )
+)
 set "_CANDLE_WXS=%WXS_FILE%.candle.wxs"
+where candle.exe >nul 2>&1
+if not %ERRORLEVEL%==0 (
+    if exist "C:\Program Files (x86)\WiX Toolset v3.14\bin\candle.exe" (
+        set "PATH=%PATH%;C:\Program Files (x86)\WiX Toolset v3.14\bin"
+    ) else if exist "C:\Program Files (x86)\WiX Toolset v3.11\bin\candle.exe" (
+        set "PATH=%PATH%;C:\Program Files (x86)\WiX Toolset v3.11\bin"
+    )
+)
 where candle.exe >nul 2>&1
 if %ERRORLEVEL%==0 (
     powershell -NoProfile -Command "$w = Get-Content -LiteralPath '%WXS_FILE%' -Raw; $w = $w -replace '<Property Id=\"MsiHiddenProperties\".*?/>', ''; $w = [regex]::Replace($w, '(?s)<InstallUISequence>.*?</InstallUISequence>', '      <InstallUISequence><Show Dialog=\"Dlg_Welcome\" After=\"CostFinalize\" /><Show Dialog=\"Dlg_Exit\" OnExit=\"success\" /></InstallUISequence>'); Set-Content -LiteralPath '%WXS_FILE%.candle.wxs' -Value $w"

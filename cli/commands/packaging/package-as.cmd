@@ -46,9 +46,45 @@ if /i "%PKG_TYPE%"=="txz" goto do_txz
 if /i "%PKG_TYPE%"=="pkg" goto do_pkg
 if /i "%PKG_TYPE%"=="dmg" goto do_dmg
 if /i "%PKG_TYPE%"=="tui" goto do_tui
+if /i "%PKG_TYPE%"=="raw-img" goto do_raw_img
+if /i "%PKG_TYPE%"=="raw_img" goto do_raw_img
+if /i "%PKG_TYPE%"=="img" goto do_raw_img
+if /i "%PKG_TYPE%"=="qcow2" goto do_qcow2
+if /i "%PKG_TYPE%"=="vmdk" goto do_qcow2
+if /i "%PKG_TYPE%"=="vdi" goto do_qcow2
+if /i "%PKG_TYPE%"=="iso" goto do_iso
+if /i "%PKG_TYPE%"=="rootfs-tar" goto do_rootfs_tar
+if /i "%PKG_TYPE%"=="rootfs_tar" goto do_rootfs_tar
+if /i "%PKG_TYPE%"=="bsd-img" goto do_bsd_img
+if /i "%PKG_TYPE%"=="bsd_img" goto do_bsd_img
+if /i "%PKG_TYPE%"=="unikernel" goto do_unikernel
 
 echo Error: Unsupported package format '%PKG_TYPE%'. >&2
 exit /b 1
+
+:do_raw_img
+call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\raw_img.cmd" %*
+exit /b %ERRORLEVEL%
+
+:do_qcow2
+call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\qcow2.cmd" %* %PKG_TYPE%
+exit /b %ERRORLEVEL%
+
+:do_iso
+call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\iso.cmd" %*
+exit /b %ERRORLEVEL%
+
+:do_rootfs_tar
+call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\rootfs_tar.cmd" %*
+exit /b %ERRORLEVEL%
+
+:do_bsd_img
+call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\bsd_img.cmd" %*
+exit /b %ERRORLEVEL%
+
+:do_unikernel
+call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\unikernel.cmd" %*
+exit /b %ERRORLEVEL%
 
 :do_docker
 call "%SCRIPT_DIR%\formats\pkg_docker.cmd" %*

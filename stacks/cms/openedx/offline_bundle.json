@@ -30,7 +30,7 @@
       "version": "8.0.39",
       "filename": "mysql-8.0.39-winx64.zip",
       "url": "https://cdn.mysql.com/archives/mysql-8.0/mysql-8.0.39-winx64.zip",
-      "sha256": "7f8b9e6a0d2f1b4c3e5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e",
+      "sha256": "e6a076113322469205a02c95c6120938b292f480ce82f72819a51c59db2d90d5",
       "port": 3306,
       "service_name": "OpenEdXMySQL",
       "extract_dir": "databases/mysql"
@@ -40,7 +40,7 @@
       "version": "5.0.14.1",
       "filename": "redis-windows-x64-7.0.zip",
       "url": "https://github.com/tporadowski/redis/releases/download/v5.0.14.1/Redis-x64-5.0.14.1.zip",
-      "sha256": "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b",
+      "sha256": "018ea18a35876383cbb5f4cd0258adfc87747cf9d619bce1cf73a2e36f720ccf",
       "port": 6379,
       "service_name": "OpenEdXRedis",
       "extract_dir": "databases/redis"
@@ -88,7 +88,7 @@
     "release_tag": "open-release/quince.3",
     "archive_filename": "openedx-release-quince.3.zip",
     "archive_url": "https://github.com/openedx/edx-platform/archive/refs/tags/open-release/quince.3.zip",
-    "archive_sha256": "7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b",
+    "archive_sha256": "a64bfffba2ad39ab1c6e0bd91028a96a3a33bf8fdd4eb7ab80e9f37a4b12eb1c",
     "extract_target": "codebase",
     "demo_content": [
       {
@@ -102,12 +102,12 @@
   "checksums": {
     "python-3.11.9-embed-amd64.zip": "009d6bf7e3b2ddca3d784fa09f90fe54336d5b60f0e0f305c37f400bf83cfd3b",
     "node-v20.17.0-win-x64.zip": "e323fff0aba197090faabd29c4c23f334557ff24454324f0c83faa7e399dbb74",
-    "mysql-8.0.39-winx64.zip": "7f8b9e6a0d2f1b4c3e5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e",
-    "redis-windows-x64-7.0.zip": "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b",
+    "mysql-8.0.39-winx64.zip": "e6a076113322469205a02c95c6120938b292f480ce82f72819a51c59db2d90d5",
+    "redis-windows-x64-7.0.zip": "018ea18a35876383cbb5f4cd0258adfc87747cf9d619bce1cf73a2e36f720ccf",
     "mongodb-windows-x86_64-7.0.12.zip": "dfbbcf8ea5bbae44ade25b158b67835b142e1da56e2ed8473a9a8c6df3b75423",
     "meilisearch-windows-amd64.exe": "ea6151b9add98253015e4e724e82ab176e78b576cc5715855181ec2bbc558663",
     "waitress-3.0.0-py3-none-any.whl": "2a06f242f4ba0cc563444ca3d1998959447477363a2d7e9b8b4d75d35cfd1669",
-    "openedx-release-quince.3.zip": "7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b",
+    "openedx-release-quince.3.zip": "a64bfffba2ad39ab1c6e0bd91028a96a3a33bf8fdd4eb7ab80e9f37a4b12eb1c",
     "demo-course.tar.gz": "b1b3945bd61289044e4b267a905c6ee2c0538f82ccc19fbd2e4bc8b218318435"
   }
 }

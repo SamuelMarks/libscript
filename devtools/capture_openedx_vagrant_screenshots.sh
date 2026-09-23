@@ -128,17 +128,8 @@ scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
   "${REPO_ROOT}/stacks/cms/openedx/setup_generic.sh" \
   vagrant@127.0.0.1:C:/libscript/stacks/cms/openedx/
 
-printf '=== Step 2: Compiling full self-contained OpenEdX-Setup.msi on host ===\n'
-"${REPO_ROOT}/packaging/build_openedx_msi.sh" \
-  --out "${TEMP_DIR}/OpenEdX-Setup" \
-  --banner-side "${REPO_ROOT}/packaging/assets/openedx_banner_side.bmp" \
-  --banner-top "${REPO_ROOT}/packaging/assets/openedx_banner_top.bmp" \
-  --icon "${REPO_ROOT}/packaging/assets/openedx.ico" \
-  --license "${REPO_ROOT}/packaging/assets/openedx_eula.rtf"
-
-printf '[INFO] Copying compiled MSI (%s bytes) to Windows guest...\n' "$(wc -c < "${TEMP_DIR}/OpenEdX-Setup.msi" | tr -d ' ')"
-scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" \
-  "${TEMP_DIR}/OpenEdX-Setup.msi" vagrant@127.0.0.1:C:/libscript/packaging/OpenEdX-Setup.msi
+printf '=== Step 2: Compiling full self-contained OpenEdX-Setup.msi on Windows guest ===\n'
+vm_run 'cmd /c "cd C:\libscript && call packaging\build_openedx_msi.cmd --online --out packaging\OpenEdX-Setup --banner-side packaging\assets\openedx_banner_side.bmp --banner-top packaging\assets\openedx_banner_top.bmp --icon packaging\assets\openedx.ico --license packaging\assets\openedx_eula.rtf"'
 
 # Configure RunGui task helper in guest
 vm_run 'Set-Content -Path "C:/libscript/run_gui.ps1" -Value "& powershell.exe -ExecutionPolicy Bypass -File C:/libscript/packaging/click_button.ps1 > C:/libscript/click.log 2>&1"; $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -File C:/libscript/run_gui.ps1"; $principal = New-ScheduledTaskPrincipal -UserId "vagrant" -LogonType Interactive; Register-ScheduledTask -TaskName "RunGui" -Action $action -Principal $principal -Force > $null'

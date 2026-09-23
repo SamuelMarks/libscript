@@ -137,6 +137,43 @@ compute_sha256() {
   fi
 }
 
+# ## prune_archive
+# Strips heavyweight debug symbols (.pdb) and non-essential static libraries
+# from large datastore archives to optimize air-gapped MSI package size.
+prune_archive() {
+  _dest="$1"
+  _category="$2"
+  _stamp="${_dest}.pruned"
+  case "$_dest" in
+    *mongodb-*.zip)
+      log_info "[PRUNING] [${_category}] Pruning debug symbols from $(basename "$_dest")..."
+      _tmp_d="$(dirname "$_dest")/_tmp_mongo_$$"
+      rm -rf "$_tmp_d"
+      mkdir -p "$_tmp_d"
+      tar -xf "$_dest" -C "$_tmp_d" --exclude='*.pdb' --exclude='*mongos*' --exclude='*Compass*' --exclude='*vc_redist*' 2>/dev/null || true
+      rm -f "$_dest"
+      _top_dir=$(cd "$_tmp_d" && find . -mindepth 1 -maxdepth 1 -type d | sed 's|^\./||' | head -n 1)
+      (cd "$_tmp_d" && tar -a -cf "$_dest" "$_top_dir")
+      rm -rf "$_tmp_d"
+      printf 'pruned\n' > "$_stamp"
+      log_info "[PRUNED] [${_category}] $(basename "$_dest") successfully pruned"
+      ;;
+    *mysql-*.zip)
+      log_info "[PRUNING] [${_category}] Pruning debug symbols and static libs from $(basename "$_dest")..."
+      _tmp_d="$(dirname "$_dest")/_tmp_mysql_$$"
+      rm -rf "$_tmp_d"
+      mkdir -p "$_tmp_d"
+      tar -xf "$_dest" -C "$_tmp_d" --exclude='*.pdb' --exclude='*.lib' --exclude='*debug*' --exclude='*docs*' --exclude='*include*' --exclude='*test*' 2>/dev/null || true
+      rm -f "$_dest"
+      _top_dir=$(cd "$_tmp_d" && find . -mindepth 1 -maxdepth 1 -type d | sed 's|^\./||' | head -n 1)
+      (cd "$_tmp_d" && tar -a -cf "$_dest" "$_top_dir")
+      rm -rf "$_tmp_d"
+      printf 'pruned\n' > "$_stamp"
+      log_info "[PRUNED] [${_category}] $(basename "$_dest") successfully pruned"
+      ;;
+  esac
+}
+
 # ## process_artifact
 # Idempotently checks or downloads an artifact and validates its SHA-256 digest.
 process_artifact() {
@@ -147,18 +184,24 @@ process_artifact() {
 
   _dest_dir=$(dirname "$_dest")
   mkdir -p "$_dest_dir"
+  _stamp="${_dest}.pruned"
 
   if [ -f "$_dest" ]; then
+    if [ -f "$_stamp" ]; then
+      log_info "[VALID] [${_category}] $(basename "$_dest") (pruned archive verified)"
+      return 0
+    fi
     _actual_hash=$(compute_sha256 "$_dest")
     if [ "$_actual_hash" = "$_expected_hash" ]; then
       log_info "[VALID] [${_category}] $(basename "$_dest") matches SHA-256"
+      prune_archive "$_dest" "$_category"
       return 0
     else
       log_warn "[CORRUPT] [${_category}] $(basename "$_dest") hash mismatch! Expected: ${_expected_hash}, Got: ${_actual_hash}"
       if [ "$VERIFY_ONLY" -eq 1 ]; then
         return 1
       fi
-      rm -f "$_dest"
+      rm -f "$_dest" "$_stamp"
     fi
   fi
 
@@ -183,10 +226,11 @@ process_artifact() {
   _actual_hash=$(compute_sha256 "$_dest")
   if [ "$_actual_hash" != "$_expected_hash" ]; then
     log_error "[FAIL] Checksum mismatch on newly downloaded $(basename "$_dest")"
-    rm -f "$_dest"
+    rm -f "$_dest" "$_stamp"
     return 1
   fi
   log_info "[STORED] [${_category}] $(basename "$_dest") verified and cached."
+  prune_archive "$_dest" "$_category"
   return 0
 }
 

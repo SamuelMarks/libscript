@@ -1,0 +1,74 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "freebsd-desktop-xfce",
+  "description": "Full desktop environment on FreeBSD 14.x running XFCE, drm-kmod GPU acceleration, and devd.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "freebsd",
+    "libc": "bsd-libc",
+    "submodel": "generic"
+  },
+  "kernel": {
+    "provider": "freebsd-kernel",
+    "config_method": "defconfig",
+    "fragments": ["GENERIC", "DRM"],
+    "cmdline": "boot_multicons=\"YES\""
+  },
+  "init_system": {
+    "provider": "bsd-init",
+    "default_target": "graphical",
+    "services_enabled": ["devd", "dbus", "lightdm", "sshd"]
+  },
+  "display": {
+    "server": "x11",
+    "compositor": "openbox"
+  },
+  "desktop": {
+    "desktop_suite": "xfce4",
+    "greeter": "lightdm"
+  },
+  "storage": {
+    "disk_size_gib": 40,
+    "partition_table": "gpt",
+    "boot_mode": "uefi",
+    "bootloader": "freebsd-bootcode",
+    "uki": false,
+    "partitions": [
+      {
+        "name": "efiboot",
+        "filesystem": "vfat",
+        "mountpoint": "/boot/efi",
+        "size_mib": 256
+      },
+      {
+        "name": "zroot",
+        "filesystem": "zfs",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "desktop",
+      "shell": "/bin/sh",
+      "groups": ["wheel", "video"],
+      "sudo": true
+    }
+  ],
+  "locale": {
+    "lang": "en_US.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "network": {
+    "hostname": "libscript-fbsd-desktop",
+    "dhcp": true,
+    "dns_servers": ["1.1.1.1"]
+  },
+  "offline": {
+    "enabled": false,
+    "cache_dir": "/var/cache/libscript"
+  },
+  "packages": ["base", "kernel", "drm-kmod", "xorg", "xfce", "lightdm"]
+}

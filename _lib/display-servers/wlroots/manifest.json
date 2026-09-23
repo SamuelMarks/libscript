@@ -1,0 +1,14 @@
+{
+  "name": "wlroots",
+  "title": "wlroots",
+  "description": "Modular Wayland compositor library",
+  "provides": ["wlroots"],
+  "category": "display-servers",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

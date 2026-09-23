@@ -148,11 +148,17 @@ standardize_*
 !stacks/cms/openedx/test_server.*
 !tests/test_packaging_branding.*
 !tests/test_msi_generation.*
+!tests/os_boot_test.*
+!tests/os_gui_smoke_test.*
+!tests/test_airgap_boot.*
+!tests/test_idempotency_matrix.*
 !devtools/docs-gen/generate_markdown_docs.*
 !devtools/generate_html_docs.*
 !docker/create_docker_builder.*
 !packaging/create_installer_from_json.*
 !packaging/generate_openedx_branding.*
+!_lib/orchestration/create_fhs_layout.*
+!_lib/kernel/initramfs/gen_initramfs.*
 !_lib/web-servers/*/create_*
 !_lib/web-servers/nginx/test_merge.*
 # Other ad-hoc dev files and generated outputs
@@ -161,6 +167,8 @@ README_patch.sh
 gen_table.*
 *_gen.sh
 *_test.*
+!tests/*_test.*
+!tests/test_*
 wait4x-*
 add_pkg.sh
 /cli.cmd
@@ -233,6 +241,8 @@ all_scripts.txt
 !/manifest.schema.json
 !/base_vars.schema.json
 !/installer.schema.json
+!/os-config.schema.json
+!/execution-plan.schema.json
 /*.txt
 !_lib/checksums.txt
 /*.out

@@ -142,8 +142,8 @@ if command -v git >/dev/null 2>&1 && [ -d ".git" ]; then
 else
   find . -type f | sed 's|^\./||' | while read -r _f; do
     case "$_f" in
-      .git/*|.github/*|.githooks/*|.vagrant/*|tests_tmp/*|dist/*|build/*|node_modules/*) continue ;;
-      *.tmp|*.log|*.ppm|*.bak|*.swp|*.tar.gz|*.zip|*.7z|*.msi|*.wixobj|*.wxs) continue ;;
+      .git/*|.github/*|.githooks/*|.vagrant/*|tests_tmp/*|dist/*|build/*|node_modules/*|*kubernetes-the-hard-way*) continue ;;
+      *.tmp|*.log|*.ppm|*.bak|*.swp|*.tar.gz|*.zip|*.7z|*.msi|*.wixobj|*.wxs|*.pruned) continue ;;
       *) printf '%s
 ' "$_f" ;;
     esac
@@ -285,16 +285,18 @@ if [ -n "${WIX_FRAGMENT}" ]; then
     done < "${TMP_FILTERED}"
 
     # Generate ComponentGroup containing ComponentRefs
-    printf '    <ComponentGroup Id="%s">
-' "${COMPONENT_GROUP}"
+    printf '    <ComponentGroup Id="%s">\n' "${COMPONENT_GROUP}"
     while IFS= read -r _rel || [ -n "$_rel" ]; do
       [ -z "$_rel" ] && continue
+      if [ -n "${INCLUDE_CACHE}" ]; then
+        case "$_rel" in
+          cache/*) continue ;;
+        esac
+      fi
       _c_id="CMP_H_$(sanitize_wix_id "$_rel")"
-      printf '      <ComponentRef Id="%s" />
-' "$_c_id"
+      printf '      <ComponentRef Id="%s">\n' "$_c_id"
     done < "${TMP_FILTERED}"
-    printf '    </ComponentGroup>
-'
+    printf '    </ComponentGroup>\n'
 
     # If offline cache is harvested, generate dedicated LibscriptOfflineCacheComponents group
     if [ -n "${INCLUDE_CACHE}" ]; then

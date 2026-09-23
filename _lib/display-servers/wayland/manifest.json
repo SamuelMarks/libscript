@@ -1,0 +1,14 @@
+{
+  "name": "wayland",
+  "title": "Wayland Protocol",
+  "description": "Core Wayland display server library and protocols",
+  "provides": ["wayland"],
+  "category": "display-servers",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "linux-desktop-sway-wayland",
+  "description": "Minimalist Wayland desktop appliance based on Sway tiling window manager, PipeWire audio, seatd, and greetd greeter.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-glibc",
+    "libc": "glibc",
+    "submodel": "x86-64-v3"
+  },
+  "kernel": {
+    "provider": "linux-stable",
+    "config_method": "fragments",
+    "fragments": ["virtio.cfg", "wayland_drm.cfg", "pipewire.cfg"],
+    "cmdline": "quiet splash console=tty1"
+  },
+  "init_system": {
+    "provider": "systemd",
+    "default_target": "graphical",
+    "services_enabled": ["greetd", "seatd", "pipewire", "pipewire-pulse"]
+  },
+  "display": {
+    "server": "wayland",
+    "compositor": "sway"
+  },
+  "desktop": {
+    "desktop_suite": "none",
+    "greeter": "greetd"
+  },
+  "storage": {
+    "disk_size_gib": 30,
+    "partition_table": "gpt",
+    "boot_mode": "uefi",
+    "bootloader": "systemd-boot",
+    "uki": true,
+    "partitions": [
+      {
+        "name": "ESP",
+        "filesystem": "vfat",
+        "mountpoint": "/boot/efi",
+        "size_mib": 512
+      },
+      {
+        "name": "root",
+        "filesystem": "btrfs",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "desktop",
+      "shell": "/bin/sh",
+      "groups": ["wheel", "video", "audio", "input", "seat"],
+      "sudo": true
+    }
+  ],
+  "locale": {
+    "lang": "en_US.UTF-8",
+    "keymap": "us",
+    "timezone": "America/New_York"
+  },
+  "network": {
+    "hostname": "libscript-sway",
+    "dhcp": true,
+    "dns_servers": ["1.1.1.1"]
+  },
+  "offline": {
+    "enabled": false,
+    "cache_dir": "/var/cache/libscript"
+  },
+  "packages": [
+    "glibc",
+    "wayland",
+    "wlroots",
+    "sway",
+    "swaybg",
+    "swaylock",
+    "waybar",
+    "mako",
+    "seatd",
+    "greetd",
+    "pipewire",
+    "wireplumber",
+    "alacritty",
+    "mesa"
+  ]
+}

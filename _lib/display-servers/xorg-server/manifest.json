@@ -1,0 +1,14 @@
+{
+  "name": "xorg-server",
+  "title": "X.Org Server",
+  "description": "Traditional X Window System display server",
+  "provides": ["xorg-server"],
+  "category": "display-servers",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

@@ -56,6 +56,18 @@ if [ "$CMD" = "package-as" ]; then
     . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_apk.sh"
   elif [ "${pkg_type:-}" = "txz" ]; then
     . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_txz.sh"
+  elif [ "${pkg_type:-}" = "raw-img" ] || [ "${pkg_type:-}" = "raw_img" ] || [ "${pkg_type:-}" = "img" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/raw_img.sh" "$@"
+  elif [ "${pkg_type:-}" = "qcow2" ] || [ "${pkg_type:-}" = "vmdk" ] || [ "${pkg_type:-}" = "vdi" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/qcow2.sh" "$@" "$pkg_type"
+  elif [ "${pkg_type:-}" = "iso" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/iso.sh" "$@"
+  elif [ "${pkg_type:-}" = "rootfs-tar" ] || [ "${pkg_type:-}" = "rootfs_tar" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/rootfs_tar.sh" "$@"
+  elif [ "${pkg_type:-}" = "bsd-img" ] || [ "${pkg_type:-}" = "bsd_img" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/bsd_img.sh" "$@"
+  elif [ "${pkg_type:-}" = "unikernel" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/unikernel.sh" "$@"
   else
     printf '%s\n' "Error: Unsupported package format '$pkg_type'." >&2
     exit 1

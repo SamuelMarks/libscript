@@ -1,0 +1,14 @@
+{
+  "name": "libdrm",
+  "title": "Direct Rendering Manager",
+  "description": "Low-level userspace interface to kernel DRM",
+  "provides": ["libdrm"],
+  "category": "graphics",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

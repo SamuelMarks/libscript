@@ -9,7 +9,71 @@
     "icon": "packaging/assets/openedx.ico",
     "banner_top": "packaging/assets/openedx_banner_top.bmp",
     "banner_side": "packaging/assets/openedx_banner_side.bmp",
-    "license_rtf": "packaging/assets/openedx_eula.rtf"
+    "license_rtf": "packaging/assets/openedx_eula.rtf",
+    "license_mode": "chained_dialogs",
+    "require_all_accepted": true,
+    "bundled_licenses": [
+      {
+        "component": "openedx",
+        "title": "Open edX Platform",
+        "spdx_id": "AGPL-3.0-only",
+        "mandatory": true
+      },
+      {
+        "component": "mysql",
+        "title": "MySQL Relational Database",
+        "spdx_id": "GPL-2.0-only",
+        "mandatory": true
+      },
+      {
+        "component": "redis",
+        "title": "Redis In-Memory Cache & Broker",
+        "spdx_id": "RSALv2 OR SSPL-1.0 OR AGPL-3.0-only",
+        "mandatory": true
+      },
+      {
+        "component": "mongodb",
+        "title": "MongoDB Document Datastore",
+        "spdx_id": "SSPL-1.0",
+        "mandatory": true
+      },
+      {
+        "component": "python",
+        "title": "Python Language Runtime",
+        "spdx_id": "Python-2.0",
+        "mandatory": true
+      },
+      {
+        "component": "nodejs",
+        "title": "Node.js JavaScript Runtime",
+        "spdx_id": "MIT",
+        "mandatory": true
+      },
+      {
+        "component": "meilisearch",
+        "title": "Meilisearch Full-Text Search Engine",
+        "spdx_id": "MIT",
+        "mandatory": true
+      },
+      {
+        "component": "gunicorn",
+        "title": "Gunicorn WSGI Application Server",
+        "spdx_id": "MIT",
+        "mandatory": true
+      },
+      {
+        "component": "hmailserver",
+        "title": "hMailServer SMTP Relay",
+        "spdx_id": "AGPL-3.0-only",
+        "mandatory": true
+      },
+      {
+        "component": "nodeenv",
+        "title": "Nodeenv Virtual Environment Manager",
+        "spdx_id": "BSD-3-Clause",
+        "mandatory": true
+      }
+    ]
   },
   "directories": {
     "app_default": "[ProgramFiles64Folder]OpenEdX",

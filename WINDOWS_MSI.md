@@ -42,6 +42,7 @@ Install specific components non-interactively with custom port and credential pa
 
 ```cmd
 msiexec /i MyStack.msi /qn /l*v install.log ^
+  AGREE_ALL_LICENSES=1 ^
   INSTALL_mysql=1 ^
   PROP_mysql_MYSQL_PORT=3307 ^
   PROP_mysql_MYSQL_ROOT_PASSWORD="SecretPassword123" ^
@@ -53,6 +54,14 @@ msiexec /i MyStack.msi /qn /l*v install.log ^
   INSTALL_meilisearch=1 ^
   PROP_meilisearch_MEILISEARCH_MASTER_KEY="MasterKey456"
 ```
+
+> **Mandatory Multi-License Agreement in Unattended Mode:** When an installer bundles third-party
+> software components (such as MySQL, Redis, MongoDB, Python, Node.js, Meilisearch), non-interactive
+> installations (`/qn` or `/qb`) strictly require explicit license acceptance. Pass
+> `AGREE_ALL_LICENSES=1` to acknowledge and accept all bundled software licenses, or specify
+> individual acceptance flags (e.g. `LICENSE_ACCEPTED_mysql=1 LICENSE_ACCEPTED_redis=1 ...`). If
+> omitted, installation terminates immediately prior to file extraction with MSI exit code `1603`
+> (`ERROR_INSTALL_FAILURE`).
 
 ### Uninstallation with Data Cleanup
 

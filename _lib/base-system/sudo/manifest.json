@@ -1,0 +1,14 @@
+{
+  "name": "sudo",
+  "title": "Sudo",
+  "description": "Privilege escalation tool for system administration",
+  "provides": ["sudo"],
+  "category": "base-system",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

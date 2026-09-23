@@ -1,0 +1,14 @@
+{
+  "name": "seatd",
+  "title": "seatd",
+  "description": "Minimal seat management daemon and library",
+  "provides": ["seatd"],
+  "category": "display-servers",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

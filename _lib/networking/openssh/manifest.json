@@ -1,0 +1,14 @@
+{
+  "name": "openssh",
+  "title": "OpenSSH Server",
+  "description": "Hardened secure remote login and shell daemon",
+  "provides": ["openssh"],
+  "category": "networking",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

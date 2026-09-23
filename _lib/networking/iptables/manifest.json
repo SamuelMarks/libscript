@@ -1,0 +1,14 @@
+{
+  "name": "iptables",
+  "title": "iptables",
+  "description": "Traditional Linux packet filter userland utility",
+  "provides": ["iptables"],
+  "category": "networking",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

@@ -2,6 +2,8 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "mongodb",
   "title": "MongoDB",
+  "license": "SSPL-1.0",
+  "license_name": "Server Side Public License v1",
   "description": "MongoDB is a source-available cross-platform document-oriented database program.",
   "category": "databases",
   "provides": ["database", "mongodb"],

@@ -59,13 +59,29 @@ providing persistent deep links.
 
 - [10b_desktop_icons.png](https://raw.githubusercontent.com/SamuelMarks/cc0-assets/master/libscript/openedx/screenshots/10b_desktop_icons.png):
   Windows 11 desktop showing newly installed Open edX application shortcuts (LMS, Studio CMS, and
-  Management Console).
+  Management Console), with distinct high-contrast **"CMS"** and **"LMS"** letters embedded on the
+  emblems so users can pictorially distinguish each component at a glance.
 - [11_browser_lms_focused.png](https://raw.githubusercontent.com/SamuelMarks/cc0-assets/master/libscript/openedx/screenshots/11_browser_lms_focused.png):
-  Web browser window verifying Open edX LMS learning portal interface
+  Web browser window verifying Open edX LMS learning portal login interface
   (`http://localhost:8000/login`).
 - [12_browser_studio_focused.png](https://raw.githubusercontent.com/SamuelMarks/cc0-assets/master/libscript/openedx/screenshots/12_browser_studio_focused.png):
-  Web browser window verifying Open edX Studio course authoring CMS interface
+  Web browser window verifying Open edX Studio course authoring CMS login interface
   (`http://localhost:8001/signin`).
+- [13_browser_lms_authenticated.png](https://raw.githubusercontent.com/SamuelMarks/cc0-assets/master/libscript/openedx/screenshots/13_browser_lms_authenticated.png):
+  Web browser window verifying successful superuser authentication into the Open edX LMS
+  student/instructor dashboard (`http://localhost:8000/dashboard`), displaying active courseware and
+  enrollment cards.
+- [14_browser_studio_authenticated.png](https://raw.githubusercontent.com/SamuelMarks/cc0-assets/master/libscript/openedx/screenshots/14_browser_studio_authenticated.png):
+  Web browser window verifying successful course author authentication into Open edX Studio CMS
+  (`http://localhost:8001/home`), displaying course listings, authoring tools, and content
+  libraries.
+
+### Binary Footprints & Installer Sizes
+
+| Artifact              | Type                 | Exact Byte Size                                                    | Description                                                                                                  |
+| --------------------- | -------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `OpenEdX-Setup.msi`   | Online / Express     | 5,750,976 bytes (~5.48 MB)                                         | WiX MSI installer with embedded management scripts, harvesting runtime & service dependencies on demand      |
+| `OpenEdX-Offline.msi` | Offline / Air-Gapped | 6,733,828 bytes (~6.42 MB base) / 387,204,328 bytes (~369 MB full) | Fully self-contained WiX MSI installer with pre-bundled runtime wheels, database binaries, and offline media |
 
 ## Verification Harness
 

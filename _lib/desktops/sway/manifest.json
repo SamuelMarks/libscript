@@ -1,0 +1,14 @@
+{
+  "name": "sway",
+  "title": "Sway Compositor",
+  "description": "i3-compatible tiling Wayland compositor",
+  "provides": ["sway"],
+  "category": "desktops",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

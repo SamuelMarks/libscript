@@ -1,0 +1,14 @@
+{
+  "name": "glibc",
+  "title": "GNU C Library",
+  "description": "Core C library and dynamic linker",
+  "provides": ["glibc"],
+  "category": "base-system",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

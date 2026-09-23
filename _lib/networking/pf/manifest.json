@@ -1,0 +1,14 @@
+{
+  "name": "pf",
+  "title": "Packet Filter (PF)",
+  "description": "FreeBSD stateful packet inspection firewall",
+  "provides": ["pf"],
+  "category": "networking",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

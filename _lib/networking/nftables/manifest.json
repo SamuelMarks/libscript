@@ -1,0 +1,14 @@
+{
+  "name": "nftables",
+  "title": "nftables",
+  "description": "Netfilter project packet classification framework",
+  "provides": ["nftables"],
+  "category": "networking",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

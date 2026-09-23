@@ -1,0 +1,14 @@
+{
+  "name": "xwayland",
+  "title": "Xwayland",
+  "description": "X11 server running as a Wayland client",
+  "provides": ["xwayland"],
+  "category": "display-servers",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

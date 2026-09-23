@@ -1,0 +1,14 @@
+{
+  "name": "e2fsprogs",
+  "title": "e2fsprogs",
+  "description": "Ext2/Ext3/Ext4 filesystem management utilities",
+  "provides": ["e2fsprogs"],
+  "category": "base-system",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

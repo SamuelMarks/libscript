@@ -1,0 +1,14 @@
+{
+  "name": "eudev-musl",
+  "title": "Eudev (Musl)",
+  "description": "Eudev compiled against musl libc",
+  "provides": ["eudev-musl"],
+  "category": "base-system",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

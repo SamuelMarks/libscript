@@ -1,0 +1,14 @@
+{
+  "name": "intel-media-driver",
+  "title": "Intel Media Driver",
+  "description": "VAAPI hardware accelerated video driver for Intel",
+  "provides": ["intel-media-driver"],
+  "category": "graphics",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

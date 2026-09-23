@@ -1,0 +1,14 @@
+{
+  "name": "wayland-protocols",
+  "title": "Wayland Protocols",
+  "description": "Official protocol extensions for Wayland",
+  "provides": ["wayland-protocols"],
+  "category": "display-servers",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

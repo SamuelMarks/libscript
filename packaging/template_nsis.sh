@@ -90,6 +90,41 @@ EOF2
       done
 
       if [ -n "${LICENSE_PATH:-}" ]; then printf '%s\n' "Page license \"\" \"$LICENSE_PATH\""; fi
+
+      # Multi-license agreement pages for bundled dependencies
+      # shellcheck disable=SC2086
+      set -- $deps_list
+      while [ $# -gt 1 ]; do
+        pkg=$1; ver=$2; shift 2
+        pkg_man=$(find "$LIBSCRIPT_ROOT_DIR/_lib" "$LIBSCRIPT_ROOT_DIR/stacks" -name "manifest.json" 2>/dev/null | grep "/$pkg/manifest.json" | head -n 1)
+        pkg_spdx="MIT"
+        pkg_title="$pkg"
+        if [ -n "$pkg_man" ] && [ -f "$pkg_man" ]; then
+          pkg_spdx=$(jq -r '.license // "MIT"' "$pkg_man" 2>/dev/null || printf 'MIT')
+          pkg_title=$(jq -r '.title // .name' "$pkg_man" 2>/dev/null || printf '%s' "$pkg")
+        fi
+
+        pkg_lic_txt="${OUT_FILE}_${pkg}_license.txt"
+        canon_txt=""
+        for _lic_dir in "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/packaging/licenses" \
+                        "${LIBSCRIPT_ROOT_DIR}/cc0-assets/libscript/packaging/licenses"; do
+          if [ -f "$_lic_dir/${pkg_spdx}.txt" ]; then
+            canon_txt="$_lic_dir/${pkg_spdx}.txt"
+            break
+          fi
+        done
+
+        if [ -n "$canon_txt" ] && [ -f "$canon_txt" ]; then
+          cp "$canon_txt" "$pkg_lic_txt"
+        else
+          printf 'Software License Agreement for %s (%s)\n' "$pkg_title" "$pkg_spdx" > "$pkg_lic_txt"
+        fi
+
+        printf '%s\n' "; License Agreement: $pkg_title ($pkg_spdx)"
+        printf '%s\n' "LicenseText \"Please review the license terms for $pkg_title ($pkg_spdx) before continuing:\" \"I Agree\""
+        printf '%s\n' "LicenseData \"$pkg_lic_txt\""
+        printf '%s\n' "Page license"
+      done
       printf '%s\n' "Page instfiles"
       printf '%s\n' ""
 

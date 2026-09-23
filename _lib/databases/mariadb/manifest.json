@@ -2,6 +2,8 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "mariadb",
   "title": "MariaDB",
+  "license": "GPL-2.0-only",
+  "license_name": "GNU General Public License v2.0 only",
   "description": "A community-developed, commercially supported fork of the MySQL relational database management system.",
   "category": "databases",
   "provides": ["database", "mysql-compatible", "mariadb"],

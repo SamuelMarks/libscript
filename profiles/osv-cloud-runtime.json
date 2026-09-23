@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "osv-cloud-runtime",
+  "description": "OSv modular cloud runtime designed to run unmodified single-application Linux workloads on KVM hypervisors.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "unikernel-unikraft",
+    "libc": "glibc",
+    "submodel": "generic"
+  },
+  "kernel": {
+    "provider": "unikraft-core",
+    "config_method": "defconfig",
+    "fragments": ["osv_base.cfg", "virtio.cfg"],
+    "cmdline": "--verbose /libtools/sysinfo.so"
+  },
+  "init_system": {
+    "provider": "none",
+    "default_target": "multi-user",
+    "services_enabled": []
+  },
+  "display": {
+    "server": "headless",
+    "compositor": "none"
+  },
+  "desktop": {
+    "desktop_suite": "none",
+    "greeter": "none"
+  },
+  "storage": {
+    "disk_size_gib": 2,
+    "partition_table": "mbr",
+    "boot_mode": "bios-legacy",
+    "bootloader": "none",
+    "uki": false,
+    "partitions": [
+      {
+        "name": "root",
+        "filesystem": "ext4",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "root",
+      "shell": "/bin/sh",
+      "groups": ["root"],
+      "sudo": true
+    }
+  ],
+  "locale": {
+    "lang": "C.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "network": {
+    "hostname": "osv-runtime",
+    "dhcp": true,
+    "dns_servers": ["1.1.1.1"]
+  },
+  "offline": {
+    "enabled": false,
+    "cache_dir": "/var/cache/libscript"
+  },
+  "packages": ["osv-core", "curl"]
+}

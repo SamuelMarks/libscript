@@ -2,6 +2,8 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "elasticsearch",
   "title": "Elasticsearch",
+  "license": "Elastic-2.0 OR SSPL-1.0",
+  "license_name": "Elastic License 2.0 / Server Side Public License v1",
   "description": "Distributed, RESTful search and analytics engine for Open edX legacy search backends.",
   "category": "search",
   "provides": ["search", "elasticsearch"],

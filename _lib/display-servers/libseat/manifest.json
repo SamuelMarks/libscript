@@ -1,0 +1,14 @@
+{
+  "name": "libseat",
+  "title": "libseat",
+  "description": "Universal seat management client library",
+  "provides": ["libseat"],
+  "category": "display-servers",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

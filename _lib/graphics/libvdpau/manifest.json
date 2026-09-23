@@ -1,0 +1,14 @@
+{
+  "name": "libvdpau",
+  "title": "LibVDPAU",
+  "description": "Video Decode and Presentation API for Unix",
+  "provides": ["libvdpau"],
+  "category": "graphics",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

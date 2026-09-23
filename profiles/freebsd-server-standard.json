@@ -1,0 +1,74 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "freebsd-server-standard",
+  "description": "Standard enterprise FreeBSD 14.x server with ZFS root pool, OpenSSH daemon, and BSD init system.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "freebsd",
+    "libc": "bsd-libc",
+    "submodel": "generic"
+  },
+  "kernel": {
+    "provider": "freebsd-kernel",
+    "config_method": "defconfig",
+    "fragments": ["GENERIC"],
+    "cmdline": "boot_multicons=\"YES\" boot_serial=\"YES\""
+  },
+  "init_system": {
+    "provider": "bsd-init",
+    "default_target": "multi-user",
+    "services_enabled": ["sshd", "zfs", "cron"]
+  },
+  "display": {
+    "server": "headless",
+    "compositor": "none"
+  },
+  "desktop": {
+    "desktop_suite": "none",
+    "greeter": "none"
+  },
+  "storage": {
+    "disk_size_gib": 25,
+    "partition_table": "gpt",
+    "boot_mode": "uefi",
+    "bootloader": "freebsd-bootcode",
+    "uki": false,
+    "partitions": [
+      {
+        "name": "efiboot",
+        "filesystem": "vfat",
+        "mountpoint": "/boot/efi",
+        "size_mib": 256
+      },
+      {
+        "name": "zroot",
+        "filesystem": "zfs",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "freebsd",
+      "shell": "/bin/sh",
+      "groups": ["wheel"],
+      "sudo": true
+    }
+  ],
+  "locale": {
+    "lang": "C.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "network": {
+    "hostname": "libscript-fbsd",
+    "dhcp": true,
+    "dns_servers": ["1.1.1.1", "8.8.8.8"]
+  },
+  "offline": {
+    "enabled": false,
+    "cache_dir": "/var/cache/libscript"
+  },
+  "packages": ["base", "kernel", "openssh", "zfs"]
+}

@@ -2,13 +2,23 @@
 :: # template_msi.cmd
 ::
 :: ## Overview
-:: Template file for WiX MSI installer generation on Windows.
-:: 
+:: Template file and compiler for WiX MSI installer generation on Windows.
+:: Generates dynamic chained license dialogs and multi-component acceptance UI.
+::
 :: ## Usage
-:: This file is processed during the build phase and not executed directly.
+:: call packaging\template_msi.cmd [pkg1 ver1 pkg2 ver2 ...]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+if defined STACK (
+    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    if not errorlevel 1 (
+        echo [STOP] processing "%THIS_FILE%" >&2
+        exit /b 0
+    )
+)
+set "STACK=%STACK%:%THIS_FILE%:"
+
 set "SCRIPT_DIR=%~dp0"
 set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
@@ -16,18 +26,26 @@ set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 :: Finds the root directory of the libscript repository.
 for %%I in ("%SCRIPT_DIR%") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 
-:: ## find_root_loop
-:: Iterates upward through the directory tree looking for libscript.cmd.
 :find_root_loop
 if exist "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" goto found_root
+if exist "%LIBSCRIPT_ROOT_DIR%\libscript.sh" goto found_root
 for %%I in ("%LIBSCRIPT_ROOT_DIR%\..") do set "PARENT_DIR=%%~fI"
 if "%PARENT_DIR%"=="%LIBSCRIPT_ROOT_DIR%" goto found_root
 set "LIBSCRIPT_ROOT_DIR=%PARENT_DIR%"
 goto find_root_loop
-
-:: ## found_root
-:: Target label reached once the libscript root directory is located.
 :found_root
+
+where sh.exe >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    sh "%SCRIPT_DIR%\template_msi.sh" %*
+    exit /b %ERRORLEVEL%
+)
+
+where bash.exe >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    bash "%SCRIPT_DIR%\template_msi.sh" %*
+    exit /b %ERRORLEVEL%
+)
 
 if "%APP_NAME%"=="" set "APP_NAME=LibScript Deployment"
 if "%APP_VERSION%"=="" set "APP_VERSION=1.0.0.0"
@@ -98,10 +116,7 @@ set "WXS_FILE=%OUT_FILE%.wxs"
     echo       ^<ComponentGroupRef Id="ProductComponents" /^>
     echo     ^</Feature^>
 
-    echo     ^<InstallExecuteSequence^>
-    echo     ^</InstallExecuteSequence^>
     echo   ^</Product^>
-
     echo   ^<Fragment^>
     echo     ^<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER"^>
     echo     ^</ComponentGroup^>
@@ -109,17 +124,9 @@ set "WXS_FILE=%OUT_FILE%.wxs"
     echo ^</Wix^>
 )
 
-where wix.exe >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    wix.exe build -ext WixToolset.UI.wixext -o "%OUT_FILE%.msi" "%WXS_FILE%"
-    exit /b %ERRORLEVEL%
-)
-
 where candle.exe >nul 2>&1
 if %ERRORLEVEL% EQU 0 (
     candle.exe "%WXS_FILE%"
     light.exe -ext WixUIExtension -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj"
-    exit /b %ERRORLEVEL%
 )
-
 exit /b 0

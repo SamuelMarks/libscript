@@ -1,0 +1,14 @@
+{
+  "name": "xfsprogs",
+  "title": "XFS Progs",
+  "description": "XFS filesystem administration utilities",
+  "provides": ["xfsprogs"],
+  "category": "base-system",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

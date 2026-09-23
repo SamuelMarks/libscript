@@ -2,6 +2,8 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "meilisearch",
   "title": "Meilisearch",
+  "license": "MIT",
+  "license_name": "MIT License",
   "description": "A lightning-fast, ultra-relevant search engine built in Rust.",
   "category": "search",
   "provides": ["search", "meilisearch"],

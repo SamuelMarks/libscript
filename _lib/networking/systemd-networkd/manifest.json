@@ -1,0 +1,14 @@
+{
+  "name": "systemd-networkd",
+  "title": "systemd-networkd",
+  "description": "Network device manager integrated into systemd",
+  "provides": ["systemd-networkd"],
+  "category": "networking",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "shadow",
+  "title": "Shadow",
+  "description": "User account and password management suite",
+  "provides": ["shadow"],
+  "category": "base-system",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

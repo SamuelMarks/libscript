@@ -1,0 +1,14 @@
+{
+  "name": "lightdm",
+  "title": "LightDM",
+  "description": "Cross-desktop lightweight display manager",
+  "provides": ["lightdm"],
+  "category": "display-managers",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

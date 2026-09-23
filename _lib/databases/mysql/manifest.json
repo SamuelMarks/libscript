@@ -2,6 +2,8 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "mysql",
   "title": "MySQL",
+  "license": "GPL-2.0-only",
+  "license_name": "GNU General Public License v2.0 only",
   "description": "MySQL 8.x relational database management system.",
   "category": "databases",
   "provides": ["database", "mysql", "rdbms", "sql"],

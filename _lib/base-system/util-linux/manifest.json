@@ -1,0 +1,14 @@
+{
+  "name": "util-linux",
+  "title": "Util-Linux",
+  "description": "Essential system administration and disk utilities",
+  "provides": ["util-linux"],
+  "category": "base-system",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

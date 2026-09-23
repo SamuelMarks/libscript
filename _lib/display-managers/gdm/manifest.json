@@ -1,0 +1,14 @@
+{
+  "name": "gdm",
+  "title": "GDM",
+  "description": "GNOME Display Manager daemon",
+  "provides": ["gdm"],
+  "category": "display-managers",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

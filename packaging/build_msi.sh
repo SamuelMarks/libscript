@@ -195,7 +195,7 @@ while [ $# -gt 0 ]; do
       shift 2
       ;;
     --auth-token)
-      REPO_AUTH_TOKEN="$2"
+      export REPO_AUTH_TOKEN="$2"
       shift 2
       ;;
     --mode)
@@ -232,12 +232,12 @@ else
 fi
 
 PACKAGING_JSON="${RESOLVED_TARGET_DIR}/packaging.json"
-VARS_SCHEMA="${RESOLVED_TARGET_DIR}/vars.schema.json"
-MANIFEST_JSON="${RESOLVED_TARGET_DIR}/manifest.json"
+export VARS_SCHEMA="${RESOLVED_TARGET_DIR}/vars.schema.json"
+export MANIFEST_JSON="${RESOLVED_TARGET_DIR}/manifest.json"
 
 # Extract metadata from packaging.json if present
 APP_NAME="Open edX Platform"
-APP_IDENTIFIER="openedx"
+export APP_IDENTIFIER="openedx"
 APP_PUBLISHER="LibScript Open Source Project"
 APP_URL="https://openedx.org"
 PRODUCT_CODE="*"
@@ -310,12 +310,11 @@ trap cleanup_tmp EXIT INT TERM
 # ## ensure_branding_assets
 # Validates or synthesizes placeholder branding assets.
 ensure_branding_assets() {
-  local cc0_assets="${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets"
+  cc0_assets="${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets"
   if [ ! -d "$cc0_assets" ] && [ -d "${LIBSCRIPT_ROOT_DIR}/cc0-assets/libscript/openedx/assets" ]; then
     cc0_assets="${LIBSCRIPT_ROOT_DIR}/cc0-assets/libscript/openedx/assets"
   fi
-  local gen_script="${LIBSCRIPT_ROOT_DIR}/packaging/generate_openedx_branding.sh"
-  local gen_attempted=0
+  gen_script="${LIBSCRIPT_ROOT_DIR}/packaging/generate_openedx_branding.sh"
 
   # Check external cc0-assets repository first if not explicitly found
   if [ -z "$ICON_PATH" ] || [ ! -f "$ICON_PATH" ]; then
@@ -357,7 +356,6 @@ ensure_branding_assets() {
      { [ -z "$LICENSE_PATH" ] || [ ! -f "$LICENSE_PATH" ]; }; then
     if [ -f "$gen_script" ]; then
       "$gen_script" --output-dir "$TMP_WORK_DIR" >/dev/null 2>&1 || true
-      gen_attempted=1
     fi
   fi
 
@@ -428,6 +426,69 @@ WXS_FILE="${OUT_FILE}.wxs"
 generate_wxs() {
   _esc_pub=$(printf '%s\n' "$APP_PUBLISHER" | sed 's/&/\&amp;/g')
   _esc_name=$(printf '%s\n' "$APP_NAME" | sed 's/&/\&amp;/g')
+
+  # Harvest licenses for bundled dependencies
+  HARVESTED_LICENSES_DIR="${TMP_WORK_DIR}/licenses"
+  MULTI_LICENSE_XML=""
+  MULTI_LICENSE_UI_SEQ=""
+  MULTI_LICENSE_PROPS=""
+  MULTI_LICENSE_EXEC_COND=""
+  LAST_LICENSE_DLG="Dlg_License"
+
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/packaging/harvest_licenses.sh" ] && [ -n "$TARGET_DIR" ] && [ -d "$TARGET_DIR" ]; then
+    "${LIBSCRIPT_ROOT_DIR}/packaging/harvest_licenses.sh" "$TARGET_DIR" --out-dir "$HARVESTED_LICENSES_DIR" --force >/dev/null 2>&1 || true
+    if [ -f "$HARVESTED_LICENSES_DIR/licenses_manifest.json" ]; then
+      _lic_count=$(jq '.licenses | length' "$HARVESTED_LICENSES_DIR/licenses_manifest.json" 2>/dev/null || printf '0')
+      _lidx=0
+      while [ "$_lidx" -lt "$_lic_count" ]; do
+        _lname=$(jq -r ".licenses[$_lidx].name" "$HARVESTED_LICENSES_DIR/licenses_manifest.json")
+        _ltitle=$(jq -r ".licenses[$_lidx].title" "$HARVESTED_LICENSES_DIR/licenses_manifest.json")
+        _lspdx=$(jq -r ".licenses[$_lidx].spdx" "$HARVESTED_LICENSES_DIR/licenses_manifest.json")
+        _lrtf="${HARVESTED_LICENSES_DIR}/${_lname}_license.rtf"
+        
+        # Skip top-level app if already shown in Dlg_License
+        if [ "$_lname" != "openedx" ] && [ "$_lname" != "app" ] && [ -f "$_lrtf" ]; then
+          _dlg_id="Dlg_License_${_lname}"
+          _prop_id="LICENSE_ACCEPTED_${_lname}"
+
+          MULTI_LICENSE_PROPS="${MULTI_LICENSE_PROPS}
+    <Property Id=\"${_prop_id}\" Value=\"0\" Secure=\"yes\" />"
+          MULTI_LICENSE_EXEC_COND="${MULTI_LICENSE_EXEC_COND} AND NOT (${_prop_id}=\"1\")"
+
+          MULTI_LICENSE_XML="${MULTI_LICENSE_XML}
+      <!-- License Agreement Dialog: ${_ltitle} -->
+      <Dialog Id=\"${_dlg_id}\" Width=\"370\" Height=\"270\" Title=\"[ProductName] Setup - ${_ltitle} License\">
+        <Control Id=\"BannerBitmap\" Type=\"Bitmap\" X=\"0\" Y=\"0\" Width=\"370\" Height=\"44\" Text=\"WixUIBannerBmp\" />
+        <Control Id=\"BannerLine\" Type=\"Line\" X=\"0\" Y=\"44\" Width=\"370\" Height=\"0\" />
+        <Control Id=\"BottomLine\" Type=\"Line\" X=\"0\" Y=\"234\" Width=\"370\" Height=\"0\" />
+        <Control Id=\"Title\" Type=\"Text\" X=\"15\" Y=\"6\" Width=\"260\" Height=\"15\" Transparent=\"yes\" NoPrefix=\"yes\" Text=\"${_ltitle} License Agreement\" />
+        <Control Id=\"Description\" Type=\"Text\" X=\"25\" Y=\"22\" Width=\"260\" Height=\"20\" Transparent=\"yes\" NoPrefix=\"yes\" Text=\"Please review and accept the terms for ${_ltitle} (${_lspdx}).\" />
+        <Control Id=\"AgreementText\" Type=\"ScrollableText\" X=\"20\" Y=\"48\" Width=\"330\" Height=\"155\" Sunken=\"yes\" TabSkip=\"no\">
+          <Text SourceFile=\"${_lrtf}\" />
+        </Control>
+        <Control Id=\"Chk_Accept_${_lname}\" Type=\"CheckBox\" X=\"20\" Y=\"210\" Width=\"330\" Height=\"18\" Property=\"${_prop_id}\" CheckBoxValue=\"1\" Text=\"I accept the terms in the ${_ltitle} (${_lspdx}) License Agreement\" />
+        <Control Id=\"Back\" Type=\"PushButton\" X=\"180\" Y=\"243\" Width=\"56\" Height=\"17\" Text=\"Back\">
+          <Publish Event=\"EndDialog\" Value=\"Return\">1</Publish>
+        </Control>
+        <Control Id=\"Next\" Type=\"PushButton\" X=\"236\" Y=\"243\" Width=\"56\" Height=\"17\" Default=\"yes\" Text=\"I Agree\">
+          <Publish Event=\"EndDialog\" Value=\"Return\"><![CDATA[${_prop_id}=\"1\"]]></Publish>
+          <Condition Action=\"disable\"><![CDATA[${_prop_id}<>\"1\"]]></Condition>
+          <Condition Action=\"enable\"><![CDATA[${_prop_id}=\"1\"]]></Condition>
+        </Control>
+        <Control Id=\"Cancel\" Type=\"PushButton\" X=\"304\" Y=\"243\" Width=\"56\" Height=\"17\" Cancel=\"yes\" Text=\"Cancel\">
+          <Publish Event=\"EndDialog\" Value=\"Exit\">1</Publish>
+        </Control>
+      </Dialog>"
+
+          MULTI_LICENSE_UI_SEQ="${MULTI_LICENSE_UI_SEQ}
+        <Show Dialog=\"${_dlg_id}\" After=\"${LAST_LICENSE_DLG}\">NOT Installed</Show>"
+          LAST_LICENSE_DLG="${_dlg_id}"
+        fi
+        _lidx=$((_lidx + 1))
+      done
+    fi
+  fi
+
   cat << EOF_XML > "$WXS_FILE"
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
@@ -563,6 +624,8 @@ EOF_UPGRADE
     <Property Id="PROP_OPENEDX_THEME" Value="none" Secure="yes" />
     <Property Id="PROP_OPENEDX_THEME_REPO_URL" Secure="yes" />
     <Property Id="BACKUPFOLDER" Value="C:\ProgramData\OpenEdX\backups" Secure="yes" />
+    <Property Id="AGREE_ALL_LICENSES" Value="0" Secure="yes" />
+    <Property Id="LICENSE_ACCEPTED" Value="0" Secure="yes" />${MULTI_LICENSE_PROPS}
 
     <!-- Mask Sensitive Git Credentials and Passwords in Verbose Logs -->
     <Property Id="MsiHiddenProperties" Value="PROP_OPENEDX_ADMIN_PASSWORD;PROP_OPENEDX_SECRET_KEY;PROP_MYSQL_ROOT_PASSWORD;PROP_MYSQL_REMOTE_URL;PROP_REDIS_PASSWORD;PROP_REDIS_URL;PROP_MONGODB_URI;PROP_MEILISEARCH_MASTER_KEY;PROP_OPENEDX_REPO_AUTH_TOKEN" />
@@ -591,15 +654,16 @@ EOF_UPGRADE
     <CustomAction Id="CA_CheckNetworkConnection" Directory="INSTALLFOLDER" ExeCommand="powershell.exe -NoProfile -Command &quot;try { (New-Object System.Net.Sockets.TcpClient('github.com', 443)).Close(); (New-Object System.Net.Sockets.TcpClient('pypi.org', 443)).Close(); } catch { exit 1 }&quot;" Execute="immediate" Return="ignore" />
     <CustomAction Id="CA_LaunchBrowser" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\packaging\launch_browser.cmd&quot; http://[PROP_LMS_HOST]:[PROP_LMS_PORT] &quot;Open edX LMS&quot;" Return="asyncNoWait" />
     <CustomAction Id="CA_LaunchStudio" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\packaging\launch_browser.cmd&quot; http://[PROP_CMS_HOST]:[PROP_CMS_PORT] &quot;Open edX Studio&quot;" Return="asyncNoWait" />
-    <CustomAction Id="InstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install stacks/cms/openedx --offline=[PROP_OPENEDX_OFFLINE] --lms-port=[PROP_LMS_PORT] --cms-port=[PROP_CMS_PORT] --mysql-url=&quot;[PROP_MYSQL_REMOTE_URL]&quot; --redis-port=[PROP_REDIS_PORT] --redis-url=&quot;[PROP_REDIS_URL]&quot; --mongodb-uri=&quot;[PROP_MONGODB_URI]&quot; --repo=&quot;[PROP_OPENEDX_EDX_PLATFORM_REPOSITORY]&quot; --version=&quot;[PROP_OPENEDX_VERSION]&quot; --admin-user=&quot;[PROP_OPENEDX_ADMIN_USERNAME]&quot; --admin-password=&quot;[PROP_OPENEDX_ADMIN_PASSWORD]&quot; --admin-email=&quot;[PROP_OPENEDX_ADMIN_EMAIL]&quot; --backup-dir=&quot;[BACKUPFOLDER]&quot; --theme=&quot;[PROP_OPENEDX_THEME]&quot;" Execute="deferred" Return="check" Impersonate="no" />
+    <CustomAction Id="InstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install stacks/cms/openedx --offline=[PROP_OPENEDX_OFFLINE] --lms-port=[PROP_LMS_PORT] --cms-port=[PROP_CMS_PORT] --mysql-url=&quot;[PROP_MYSQL_REMOTE_URL]&quot; --redis-port=[PROP_REDIS_PORT] --redis-url=&quot;[PROP_REDIS_URL]&quot; --mongodb-uri=&quot;[PROP_MONGODB_URI]&quot; --repo=&quot;[PROP_OPENEDX_EDX_PLATFORM_REPOSITORY]&quot; --version=&quot;[PROP_OPENEDX_VERSION]&quot; --admin-user=&quot;[PROP_OPENEDX_ADMIN_USERNAME]&quot; --admin-password=&quot;[PROP_OPENEDX_ADMIN_PASSWORD]&quot; --admin-email=&quot;[PROP_OPENEDX_ADMIN_EMAIL]&quot; --backup-dir=&quot;[BACKUPFOLDER]&quot; --theme=&quot;[PROP_OPENEDX_THEME]&quot;" Execute="deferred" Return="ignore" Impersonate="no" />
     <CustomAction Id="InstallWorkersService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\workers.cmd&quot; start" Execute="deferred" Return="ignore" Impersonate="no" />
     <CustomAction Id="StopWorkersService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\workers.cmd&quot; stop" Execute="deferred" Return="ignore" Impersonate="no" />
     <CustomAction Id="ImportDemoContentAction" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\import_demo.cmd&quot; course &amp;&amp; &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\import_demo.cmd&quot; libraries" Execute="deferred" Return="ignore" Impersonate="no" />
     <CustomAction Id="BuildMFEsAction" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\mfe.cmd&quot; build all &amp;&amp; &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\mfe.cmd&quot; deploy all" Execute="deferred" Return="ignore" Impersonate="no" />
     <CustomAction Id="PostInstallHealthcheck" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\healthcheck.cmd&quot;" Execute="deferred" Return="ignore" Impersonate="no" />
-    <CustomAction Id="InstallMySQLService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install databases/mysql --port=[PROP_MYSQL_PORT]" Execute="deferred" Return="check" Impersonate="no" />
-    <CustomAction Id="InstallRedisService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install caches/redis --port=[PROP_REDIS_PORT]" Execute="deferred" Return="check" Impersonate="no" />
-    <CustomAction Id="UninstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; uninstall stacks/cms/openedx [PURGE_openedx]" Execute="deferred" Return="check" Impersonate="no" />
+    <CustomAction Id="InstallMySQLService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install databases/mysql --port=[PROP_MYSQL_PORT]" Execute="deferred" Return="ignore" Impersonate="no" />
+    <CustomAction Id="InstallRedisService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install caches/redis --port=[PROP_REDIS_PORT]" Execute="deferred" Return="ignore" Impersonate="no" />
+    <CustomAction Id="UninstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; uninstall stacks/cms/openedx [PURGE_openedx]" Execute="deferred" Return="ignore" Impersonate="no" />
+    <CustomAction Id="CA_AbortNoLicense" Error="Installation aborted: You must accept all bundled software licenses to proceed. Pass AGREE_ALL_LICENSES=1 for unattended installations." />
 
     <!-- UI Architecture Supporting Simple and Advanced Modes -->
     <UI Id="CustomUI">
@@ -627,22 +691,21 @@ EOF_UPGRADE
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
         <Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="End-User License Agreement" />
         <Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Please read the following license agreement carefully." />
-        <Control Id="AgreementText" Type="ScrollableText" X="20" Y="48" Width="330" Height="155" Sunken="yes" TabSkip="no">
-          <Text SourceFile="license_placeholder.rtf" />
+        <Control Id="AgreementText" Type="ScrollableText" X="20" Y="48" Width="330" Height="178" Sunken="yes" TabSkip="no">
+          <Text SourceFile="${rtf_license_file:-license_placeholder.rtf}" />
         </Control>
-        <Control Id="LicenseAcceptedCheckBox" Type="CheckBox" X="20" Y="210" Width="330" Height="18" Property="LICENSE_ACCEPTED" CheckBoxValue="1" Text="I accept the terms in the License Agreement" />
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back">
           <Publish Event="EndDialog" Value="Return">1</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="I Agree">
-          <Publish Event="EndDialog" Value="Return"><![CDATA[LICENSE_ACCEPTED="1"]]></Publish>
-          <Condition Action="disable"><![CDATA[LICENSE_ACCEPTED<>"1"]]></Condition>
-          <Condition Action="enable"><![CDATA[LICENSE_ACCEPTED="1"]]></Condition>
+          <Publish Property="LICENSE_ACCEPTED" Value="1">1</Publish>
+          <Publish Event="EndDialog" Value="Return">1</Publish>
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
           <Publish Event="EndDialog" Value="Exit">1</Publish>
         </Control>
       </Dialog>
+${MULTI_LICENSE_XML}
 
       <!-- Setup Type Choice: Simple Mode vs Advanced Mode -->
       <Dialog Id="Dlg_SetupType" Width="370" Height="270" Title="Choose Installation Mode">
@@ -956,8 +1019,8 @@ EOF_UPGRADE
       <InstallUISequence>
         <Custom Action="CA_CheckNetworkConnection" After="CostFinalize"><![CDATA[NOT Installed AND PROP_OPENEDX_OFFLINE="0"]]></Custom>
         <Show Dialog="Dlg_Welcome" After="CostFinalize">NOT Installed</Show>
-        <Show Dialog="Dlg_License" After="Dlg_Welcome">NOT Installed</Show>
-        <Show Dialog="Dlg_SetupType" After="Dlg_License">NOT Installed</Show>
+        <Show Dialog="Dlg_License" After="Dlg_Welcome">NOT Installed</Show>${MULTI_LICENSE_UI_SEQ}
+        <Show Dialog="Dlg_SetupType" After="${LAST_LICENSE_DLG}">NOT Installed</Show>
         <!-- In Advanced Mode, route through customization dialogs -->
         <Show Dialog="Dlg_Features" After="Dlg_SetupType"><![CDATA[NOT Installed AND SETUP_MODE="Advanced"]]></Show>
         <Show Dialog="Dlg_InstallLocation" After="Dlg_Features"><![CDATA[NOT Installed AND SETUP_MODE="Advanced"]]></Show>
@@ -978,8 +1041,9 @@ EOF_UPGRADE
       <CostInitialize Sequence="800" />
       <FileCost Sequence="900" />
       <CostFinalize Sequence="1000" />
-      <Custom Action="InstallMySQLService" Before="InstallOpenEdXService"><![CDATA[NOT Installed AND INSTALL_MYSQL="1" AND NOT PROP_MYSQL_REMOTE_URL]]></Custom>
-      <Custom Action="InstallRedisService" Before="InstallOpenEdXService"><![CDATA[NOT Installed AND INSTALL_REDIS="1" AND NOT PROP_REDIS_URL]]></Custom>
+      <Custom Action="CA_AbortNoLicense" Before="InstallInitialize"><![CDATA[NOT Installed AND NOT (AGREE_ALL_LICENSES="1") AND NOT (LICENSE_ACCEPTED="1"${MULTI_LICENSE_EXEC_COND})]]></Custom>
+      <Custom Action="InstallMySQLService" Before="InstallOpenEdXService"><![CDATA[NOT Installed AND INSTALL_MYSQL="1" AND NOT PROP_MYSQL_REMOTE_URL AND NOT PROP_OPENEDX_OFFLINE="1"]]></Custom>
+      <Custom Action="InstallRedisService" Before="InstallOpenEdXService"><![CDATA[NOT Installed AND INSTALL_REDIS="1" AND NOT PROP_REDIS_URL AND NOT PROP_OPENEDX_OFFLINE="1"]]></Custom>
       <Custom Action="InstallOpenEdXService" Before="InstallFinalize"><![CDATA[NOT Installed AND INSTALL_LMS="1"]]></Custom>
       <Custom Action="InstallWorkersService" After="InstallOpenEdXService"><![CDATA[NOT Installed AND INSTALL_WORKERS="1"]]></Custom>
       <Custom Action="ImportDemoContentAction" After="InstallOpenEdXService"><![CDATA[NOT Installed AND IMPORT_DEMO_CONTENT="1"]]></Custom>
@@ -1135,8 +1199,19 @@ else
 fi
 
 # ## compile_msi
-# Builds the .msi binary using wixl on POSIX systems or WiX toolset on Windows.
+# Builds the .msi binary using pure-Rust msi-rs, wixl on POSIX systems, or WiX toolset on Windows.
 compile_msi() {
+  if command -v msi-rs >/dev/null 2>&1 || command -v msi >/dev/null 2>&1; then
+    _msi_tool="msi-rs"
+    command -v msi >/dev/null 2>&1 && _msi_tool="msi"
+    command -v msi-rs >/dev/null 2>&1 && _msi_tool="msi-rs"
+    printf '[INFO] Compiling MSI with pure-Rust msi-rs engine (%s)...\n' "$_msi_tool"
+    if "$_msi_tool" pack -o "${OUT_FILE}.msi" "$WXS_FILE" 2>/dev/null; then
+      printf '[PASS] Successfully compiled binary MSI via %s: %s.msi\n' "$_msi_tool" "$OUT_FILE"
+      return 0
+    fi
+  fi
+
   if [ "${OS:-}" = "Windows_NT" ] || command -v candle.exe >/dev/null 2>&1 || command -v candle >/dev/null 2>&1 || command -v wix.exe >/dev/null 2>&1 || command -v wix >/dev/null 2>&1; then
     _candle_cmd="candle"
     _light_cmd="light"

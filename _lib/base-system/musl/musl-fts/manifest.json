@@ -1,0 +1,14 @@
+{
+  "name": "musl-fts",
+  "title": "Musl FTS",
+  "description": "FTS implementation shim for musl libc",
+  "provides": ["musl-fts"],
+  "category": "base-system",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

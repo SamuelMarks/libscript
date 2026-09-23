@@ -1,0 +1,14 @@
+{
+  "name": "gnome",
+  "title": "GNOME Desktop",
+  "description": "Modern desktop environment for Linux",
+  "provides": ["gnome"],
+  "category": "desktops",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

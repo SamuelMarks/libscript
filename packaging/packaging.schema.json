@@ -47,6 +47,49 @@
         "license_rtf": {
           "type": "string",
           "description": "Path to Rich Text Format or plain text EULA document"
+        },
+        "license_mode": {
+          "type": "string",
+          "enum": ["chained_dialogs", "consolidated_eula", "per_component_checkboxes"],
+          "default": "chained_dialogs",
+          "description": "Interactive license agreement presentation style in wizard UI"
+        },
+        "require_all_accepted": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enforces that installer cannot advance unless all bundled component licenses are accepted"
+        },
+        "bundled_licenses": {
+          "type": "array",
+          "description": "Explicit per-component license configuration overrides and specifications",
+          "items": {
+            "type": "object",
+            "required": ["component", "title", "spdx_id"],
+            "description": "License agreement specification for an embedded software component",
+            "properties": {
+              "component": {
+                "type": "string",
+                "description": "Identifier of the bundled component matching catalog manifest"
+              },
+              "title": {
+                "type": "string",
+                "description": "Display name of the component presented in the license dialog header"
+              },
+              "spdx_id": {
+                "type": "string",
+                "description": "Standard SPDX license identifier expression (e.g. GPL-2.0-only, BSD-3-Clause)"
+              },
+              "license_file": {
+                "type": "string",
+                "description": "Filesystem path to local RTF or TXT legal agreement document"
+              },
+              "mandatory": {
+                "type": "boolean",
+                "default": true,
+                "description": "Whether acceptance is required to proceed with installation"
+              }
+            }
+          }
         }
       }
     },

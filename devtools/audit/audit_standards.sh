@@ -236,13 +236,80 @@ audit_single_file() {
   case "$ext" in
     sh|cmd|bat|ps1)
       doc_header=$(head -n 30 "$file" 2>/dev/null || true)
-      if ! printf '%s
-' "$doc_header" | grep -q '## Overview'; then
+      if ! printf '%s\n' "$doc_header" | grep -q '## Overview'; then
         log_failure "$file" "DOC_OVERVIEW" "Missing doc block '## Overview' in first 30 lines."
       fi
-      if ! printf '%s
-' "$doc_header" | grep -q '## Usage'; then
+      if ! printf '%s\n' "$doc_header" | grep -q '## Usage'; then
         log_failure "$file" "DOC_USAGE" "Missing doc block '## Usage' in first 30 lines."
+      fi
+      ;;
+  esac
+
+  # 6. Option A Hard Fail Proforma check (Exit code 86)
+  case "$file" in
+    *mount_target_vfs.cmd|*umount_target_vfs.cmd|*runner.cmd|*provision_disk.cmd|*format_fs.cmd)
+      if ! grep -q 'exit /b 86' "$file"; then
+        log_failure "$file" "OPTION_A_PROFORMA" "Option A proforma script must exit with status 86."
+      fi
+      ;;
+    *mount_target_vfs.ps1|*umount_target_vfs.ps1|*runner.ps1|*provision_disk.ps1|*format_fs.ps1)
+      if ! grep -q 'exit 86' "$file"; then
+        log_failure "$file" "OPTION_A_PROFORMA" "Option A proforma script must exit with status 86."
+      fi
+      ;;
+  esac
+
+  # 7. Remote Safety Mandate (NEVER execute git push)
+  case "$ext" in
+    sh|cmd|bat|ps1)
+      git_push_hits=$(grep -nE '^[[:space:]]*(call[[:space:]]+)?git[[:space:]]+push\b' "$file" 2>/dev/null || true)
+      if [ -n "$git_push_hits" ]; then
+        log_failure "$file" "REMOTE_SAFETY" "Strict safety violation: found 'git push' invocation: $git_push_hits"
+      fi
+      ;;
+  esac
+
+  # 8. Recipe Boundary Check for leaf packages (_lib/<category>/<component>/)
+  case "$file" in
+    _lib/orchestration/*|_lib/storage/*|_lib/_common/*|_lib/cloud/*|_lib/cloud-providers/*|_lib/kernel/*|_lib/bootloaders/*)
+      ;;
+    _lib/*/*/*.sh)
+      boundary_hits=$(grep -nE '^[[:space:]]*(sudo[[:space:]]+)?(mount|umount|losetup|fdisk|sfdisk|parted|mkfs(\.[a-z0-9]+)?|cryptsetup)[[:space:]]' "$file" 2>/dev/null || true)
+      if [ -n "$boundary_hits" ]; then
+        log_failure "$file" "RECIPE_BOUNDARY" "Tier 1 leaf recipe directly invokes kernel/storage primitive: $boundary_hits"
+      fi
+      ;;
+  esac
+
+  # 9. Schema 100% Property Description Coverage
+  case "$file" in
+    *.schema.json)
+      if command -v jq >/dev/null 2>&1; then
+        missing_desc=$(jq -r '
+          def check_props:
+            if type == "object" then
+              (if has("properties") and (.properties | type == "object") then
+                .properties | to_entries[] |
+                (if (.value | type == "object") and ((.value | has("description")) | not) then
+                  .key
+                else
+                  empty
+                end),
+                (.value | check_props)
+              else
+                empty
+              end),
+              (to_entries[] | .value | check_props)
+            elif type == "array" then
+              .[] | check_props
+            else
+              empty
+            end;
+          check_props
+        ' "$file" 2>/dev/null || true)
+        if [ -n "$missing_desc" ]; then
+          log_failure "$file" "SCHEMA_DESCRIPTIONS" "Missing property description(s): $(printf '%s' "$missing_desc" | tr '\n' ' ')"
+        fi
       fi
       ;;
   esac
@@ -253,7 +320,7 @@ if [ "${1:-}" = "--all" ]; then
   OIFS="$IFS"
   IFS='
 '
-  for candidate in $(git ls-files "*.sh" "*.cmd" "*.bat" "*.ps1"); do
+  for candidate in $(git ls-files "*.sh" "*.cmd" "*.bat" "*.ps1" "*.schema.json"); do
     [ -f "$candidate" ] && audit_single_file "$candidate"
   done
   IFS="$OIFS"

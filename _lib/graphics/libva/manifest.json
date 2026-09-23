@@ -1,0 +1,14 @@
+{
+  "name": "libva",
+  "title": "LibVA",
+  "description": "Video Acceleration API library",
+  "provides": ["libva"],
+  "category": "graphics",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

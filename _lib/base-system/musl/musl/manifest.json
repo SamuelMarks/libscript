@@ -1,0 +1,14 @@
+{
+  "name": "musl",
+  "title": "Musl C Library",
+  "description": "Lightweight, standards-conformant C standard library",
+  "provides": ["musl"],
+  "category": "base-system",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}

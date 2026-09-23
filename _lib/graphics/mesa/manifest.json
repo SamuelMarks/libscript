@@ -1,0 +1,14 @@
+{
+  "name": "mesa",
+  "title": "Mesa 3D Graphics",
+  "description": "Open-source OpenGL and Vulkan driver collection",
+  "provides": ["mesa"],
+  "category": "graphics",
+  "versions": ["1.0.0"],
+  "dependencies": {
+    "host_tools": [],
+    "build_deps": [],
+    "runtime_deps": [],
+    "tier": "recommended"
+  }
+}
