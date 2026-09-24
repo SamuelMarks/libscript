@@ -91,13 +91,26 @@ for /f "usebackq delims=" %%A in (`call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\uuid_
 set "DISPLAY_NAME=Open edX Platform"
 if /i "%VARIANT%"=="offline" set "DISPLAY_NAME=Open edX Platform (Air-Gapped Offline)"
 
+set "WIX_VERSION=%VERSION%"
+for /f "tokens=1,2,3,4 delims=." %%a in ("%VERSION%") do (
+    if not "%%d"=="" (
+        set "WIX_VERSION=%%a.%%b.%%c.%%d"
+    ) else if not "%%c"=="" (
+        set "WIX_VERSION=%%a.%%b.%%c.0"
+    ) else if not "%%b"=="" (
+        set "WIX_VERSION=%%a.%%b.0.0"
+    ) else (
+        set "WIX_VERSION=%%a.0.0.0"
+    )
+)
+
 (
     echo ^<?xml version="1.0" encoding="UTF-8"?^>
     echo ^<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"^>
     echo   ^<Product Id="%PRODUCT_CODE%"
     echo            Name="%DISPLAY_NAME%"
     echo            Language="1033"
-    echo            Version="%VERSION%.0"
+    echo            Version="%WIX_VERSION%"
     echo            Manufacturer="The Axim Collaborative &amp; LibScript Contributors"
     echo            UpgradeCode="%UPGRADE_CODE%"^>
     echo.

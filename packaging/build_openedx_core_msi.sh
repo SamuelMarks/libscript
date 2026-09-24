@@ -9,7 +9,9 @@
 #
 # ## Parameters
 #   --version <ver>    Package version (default: 22.1.0)
+#   --out <name>       Output file base name or path (default: dist/msi/openedx-core-<version>.msi)
 #   --out-dir <dir>    Output directory (default: dist/msi)
+#   --branch <name>    Branch or tag ref (optional)
 #   --help, -h         Show this help text
 
 set -feu
@@ -36,6 +38,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 ' "$d")}"
 
 VERSION="22.1.0"
+OUT_FILE=""
+BRANCH=""
 OUT_DIR="${LIBSCRIPT_ROOT_DIR}/dist/msi"
 
 # ## show_help
@@ -49,7 +53,9 @@ Usage:
 
 Options:
   --version <ver>    Package version (default: 22.1.0)
+  --out <name>       Output file base name or path
   --out-dir <dir>    Output directory (default: dist/msi)
+  --branch <name>    Branch or tag ref (optional)
   --help, -h         Show this help text
 EOF_HELP
 }
@@ -60,8 +66,16 @@ while [ $# -gt 0 ]; do
       VERSION="$2"
       shift 2
       ;;
+    --out)
+      OUT_FILE="$2"
+      shift 2
+      ;;
     --out-dir)
       OUT_DIR="$2"
+      shift 2
+      ;;
+    --branch)
+      BRANCH="$2"
       shift 2
       ;;
     --help|-h)
@@ -85,17 +99,21 @@ cp -R "${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx/"* "$STAGE_ROOT/" 2>/dev/null ||
 MAIN_WXS="${LIBSCRIPT_ROOT_DIR}/tmp/openedx_core_main.wxs"
 PAYLOAD_WXS="${LIBSCRIPT_ROOT_DIR}/tmp/openedx_core_payload.wxs"
 
-"${SCRIPT_DIR}/template_openedx_core_msi.sh" \
-  --version "$VERSION" \
-  --out "$MAIN_WXS"
+"${SCRIPT_DIR}/template_openedx_core_msi.sh" --version "$VERSION" --out "$MAIN_WXS"
 
-"${SCRIPT_DIR}/harvest_payload.sh" \
-  --output-dir "$STAGE_ROOT" \
-  --wix-fragment "$PAYLOAD_WXS" \
-  --component-group "OpenEdXCorePayloadComponents" \
-  --directory-id "INSTALLFOLDER"
+"${SCRIPT_DIR}/harvest_payload.sh" --output-dir "$STAGE_ROOT" --wix-fragment "$PAYLOAD_WXS" --component-group "OpenEdXCorePayloadComponents" --directory-id "INSTALLFOLDER"
 
-TARGET_MSI="${OUT_DIR}/openedx-core-${VERSION}.msi"
+if [ -n "$OUT_FILE" ]; then
+  case "$OUT_FILE" in
+    *.msi|*.MSI) TARGET_MSI="$OUT_FILE" ;;
+    *) TARGET_MSI="${OUT_FILE}.msi" ;;
+  esac
+else
+  TARGET_MSI="${OUT_DIR}/openedx-core-${VERSION}.msi"
+fi
+
+_target_dir=$(dirname "$TARGET_MSI")
+mkdir -p "$_target_dir" "$OUT_DIR"
 
 if command -v wixl >/dev/null 2>&1; then
   printf '[INFO] Compiling Open edX Core MSI via wixl: %s
@@ -107,8 +125,21 @@ if command -v wixl >/dev/null 2>&1; then
   wixl -a x64 -o "$TARGET_MSI" "$_wixl_main" "$_wixl_payload"
   rm -f "$_wixl_main" "$_wixl_payload"
 elif command -v candle.exe >/dev/null 2>&1 && command -v light.exe >/dev/null 2>&1; then
-  candle.exe -arch x64 "$MAIN_WXS" "$PAYLOAD_WXS" -out "${LIBSCRIPT_ROOT_DIR}/tmp/"
-  light.exe -ext WixUIExtension -out "$TARGET_MSI" "${LIBSCRIPT_ROOT_DIR}/tmp/openedx_core_main.wixobj" "${LIBSCRIPT_ROOT_DIR}/tmp/openedx_core_payload.wixobj"
+  candle.exe -nologo -arch x64 -out "${LIBSCRIPT_ROOT_DIR}/tmp/" "$MAIN_WXS" "$PAYLOAD_WXS"
+  light.exe -nologo -sval -ext WixUIExtension -out "$TARGET_MSI" "${LIBSCRIPT_ROOT_DIR}/tmp/openedx_core_main.wixobj" "${LIBSCRIPT_ROOT_DIR}/tmp/openedx_core_payload.wixobj"
+fi
+
+if [ ! -f "$TARGET_MSI" ]; then
+  printf '[ERROR] Target MSI was not generated: %s
+' "$TARGET_MSI" >&2
+  exit 1
+fi
+
+_target_abs=$(cd -- "$(dirname "$TARGET_MSI")" && pwd)/$(basename "$TARGET_MSI")
+_out_dir_abs=$(cd -- "$OUT_DIR" 2>/dev/null && pwd || true)
+if [ -n "$_out_dir_abs" ] && [ "$(dirname "$_target_abs")" != "$_out_dir_abs" ]; then
+  mkdir -p "$OUT_DIR"
+  cp -f "$TARGET_MSI" "$OUT_DIR/" 2>/dev/null || true
 fi
 
 printf '[PASS] Successfully built Open edX Core MSI: %s

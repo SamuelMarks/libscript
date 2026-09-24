@@ -10,7 +10,9 @@
 # ## Parameters
 #   --version <ver>    Stack release version (default: 22.1.0)
 #   --variant <var>    Installer variant: online, offline, or all (default: all)
+#   --out <name>       Output file base name or path (default: dist/msi/openedx-<version>.msi)
 #   --out-dir <dir>    Output directory (default: dist/msi)
+#   --branch <name>    Branch or tag ref (optional)
 #   --help, -h         Show this help text
 
 set -feu
@@ -38,6 +40,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 VERSION="22.1.0"
 VARIANT="all"
+OUT_FILE=""
+BRANCH=""
 OUT_DIR="${LIBSCRIPT_ROOT_DIR}/dist/msi"
 
 # ## show_help
@@ -52,7 +56,9 @@ Usage:
 Options:
   --version <ver>    Stack release version (default: 22.1.0)
   --variant <var>    Installer variant (online, offline, or all; default: all)
+  --out <name>       Output file base name or path
   --out-dir <dir>    Output directory for built MSIs (default: dist/msi)
+  --branch <name>    Branch or tag ref (optional)
   --help, -h         Show this help text
 EOF_HELP
 }
@@ -67,8 +73,16 @@ while [ $# -gt 0 ]; do
       VARIANT="$2"
       shift 2
       ;;
+    --out)
+      OUT_FILE="$2"
+      shift 2
+      ;;
     --out-dir)
       OUT_DIR="$2"
+      shift 2
+      ;;
+    --branch)
+      BRANCH="$2"
       shift 2
       ;;
     --help|-h)
@@ -104,23 +118,30 @@ build_single_variant() {
   _main_wxs="${LIBSCRIPT_ROOT_DIR}/tmp/openedx_orch_${_v}_main.wxs"
   _payload_wxs="${LIBSCRIPT_ROOT_DIR}/tmp/openedx_orch_${_v}_payload.wxs"
 
-  "${SCRIPT_DIR}/template_openedx_orchestrator.sh" \
-    --version "$VERSION" \
-    --variant "$_v" \
-    --msi-dir "$OUT_DIR" \
-    --out "$_main_wxs"
+  "${SCRIPT_DIR}/template_openedx_orchestrator.sh" --version "$VERSION" --variant "$_v" --msi-dir "$OUT_DIR" --out "$_main_wxs"
 
-  "${SCRIPT_DIR}/harvest_payload.sh" \
-    --output-dir "$_stage" \
-    --wix-fragment "$_payload_wxs" \
-    --component-group "ChainedMsiPayloads" \
-    --directory-id "INSTALLFOLDER"
+  "${SCRIPT_DIR}/harvest_payload.sh" --output-dir "$_stage" --wix-fragment "$_payload_wxs" --component-group "ChainedMsiPayloads" --directory-id "INSTALLFOLDER"
 
-  if [ "$_v" = "offline" ]; then
-    _target_msi="${OUT_DIR}/openedx-offline-${VERSION}.msi"
+  if [ -n "$OUT_FILE" ]; then
+    case "$OUT_FILE" in
+      *.msi|*.MSI) _base="${OUT_FILE%.*}" ;;
+      *) _base="$OUT_FILE" ;;
+    esac
+    if [ "$VARIANT" = "all" ] && [ "$_v" = "offline" ]; then
+      _target_msi="${_base}-offline.msi"
+    else
+      _target_msi="${_base}.msi"
+    fi
   else
-    _target_msi="${OUT_DIR}/openedx-${VERSION}.msi"
+    if [ "$_v" = "offline" ]; then
+      _target_msi="${OUT_DIR}/openedx-offline-${VERSION}.msi"
+    else
+      _target_msi="${OUT_DIR}/openedx-${VERSION}.msi"
+    fi
   fi
+
+  _target_dir=$(dirname "$_target_msi")
+  mkdir -p "$_target_dir" "$OUT_DIR"
 
   if command -v wixl >/dev/null 2>&1; then
     printf '[INFO] Compiling Orchestrator MSI (%s) via wixl: %s
@@ -132,8 +153,21 @@ build_single_variant() {
     wixl -a x64 -o "$_target_msi" "$_wixl_main" "$_wixl_payload"
     rm -f "$_wixl_main" "$_wixl_payload"
   elif command -v candle.exe >/dev/null 2>&1 && command -v light.exe >/dev/null 2>&1; then
-    candle.exe -arch x64 "$_main_wxs" "$_payload_wxs" -out "${LIBSCRIPT_ROOT_DIR}/tmp/"
-    light.exe -ext WixUIExtension -out "$_target_msi" "${LIBSCRIPT_ROOT_DIR}/tmp/openedx_orch_${_v}_main.wixobj" "${LIBSCRIPT_ROOT_DIR}/tmp/openedx_orch_${_v}_payload.wixobj"
+    candle.exe -nologo -arch x64 -out "${LIBSCRIPT_ROOT_DIR}/tmp/" "$_main_wxs" "$_payload_wxs"
+    light.exe -nologo -sval -ext WixUIExtension -out "$_target_msi" "${LIBSCRIPT_ROOT_DIR}/tmp/openedx_orch_${_v}_main.wixobj" "${LIBSCRIPT_ROOT_DIR}/tmp/openedx_orch_${_v}_payload.wixobj"
+  fi
+
+  if [ ! -f "$_target_msi" ]; then
+    printf '[ERROR] Target MSI was not generated: %s
+' "$_target_msi" >&2
+    exit 1
+  fi
+
+  _target_abs=$(cd -- "$(dirname "$_target_msi")" && pwd)/$(basename "$_target_msi")
+  _out_dir_abs=$(cd -- "$OUT_DIR" 2>/dev/null && pwd || true)
+  if [ -n "$_out_dir_abs" ] && [ "$(dirname "$_target_abs")" != "$_out_dir_abs" ]; then
+    mkdir -p "$OUT_DIR"
+    cp -f "$_target_msi" "$OUT_DIR/" 2>/dev/null || true
   fi
 
   printf '[PASS] Successfully built %s

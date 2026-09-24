@@ -129,13 +129,26 @@ if /i "%COMPONENT%"=="python" set "DIR_NAME=Python311"
 if /i "%COMPONENT%"=="nodejs" set "DIR_NAME=Node20"
 if /i "%COMPONENT%"=="meilisearch" set "DIR_NAME=Meilisearch"
 
+set "WIX_VERSION=%VERSION%"
+for /f "tokens=1,2,3,4 delims=." %%a in ("%VERSION%") do (
+    if not "%%d"=="" (
+        set "WIX_VERSION=%%a.%%b.%%c.%%d"
+    ) else if not "%%c"=="" (
+        set "WIX_VERSION=%%a.%%b.%%c.0"
+    ) else if not "%%b"=="" (
+        set "WIX_VERSION=%%a.%%b.0.0"
+    ) else (
+        set "WIX_VERSION=%%a.0.0.0"
+    )
+)
+
 (
     echo ^<?xml version="1.0" encoding="UTF-8"?^>
     echo ^<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"^>
     echo   ^<Product Id="%PRODUCT_CODE%"
     echo            Name="LibScript %TITLE%"
     echo            Language="1033"
-    echo            Version="%VERSION%.0"
+    echo            Version="%WIX_VERSION%"
     echo            Manufacturer="LibScript"
     echo            UpgradeCode="%UPGRADE_CODE%"^>
     echo.

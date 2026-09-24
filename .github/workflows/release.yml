@@ -73,7 +73,7 @@ jobs:
           - id: openedx-core
             name: Open edX Platform Core
             target_dir: stacks/cms/openedx
-            build_cmd: packaging\build_openedx_core_msi.cmd --version 22.1.0
+            build_cmd: packaging\build_openedx_core_msi.cmd
           - id: openedx
             name: Open edX Platform (Master Online)
             target_dir: stacks/cms/openedx

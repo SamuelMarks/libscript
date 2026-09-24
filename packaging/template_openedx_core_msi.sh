@@ -86,13 +86,34 @@ fi
 UPGRADE_CODE="B8C8E64E-9B5A-4B7C-A5D8-0F18B9918239"
 PRODUCT_CODE=$("${LIBSCRIPT_ROOT_DIR}/_lib/_common/uuid_gen.sh" "6ba7b810-9dad-11d1-80b4-00c04fd430c8" "openedx.core.${VERSION}")
 
+_p1="${VERSION%%.*}"
+_rest1="${VERSION#*.}"
+if [ "$_rest1" != "$VERSION" ]; then
+  _p2="${_rest1%%.*}"
+  _rest2="${_rest1#*.}"
+  if [ "$_rest2" != "$_rest1" ]; then
+    _p3="${_rest2%%.*}"
+    _rest3="${_rest2#*.}"
+    if [ "$_rest3" != "$_rest2" ]; then
+      _p4="${_rest3%%.*}"
+      WIX_VERSION="${_p1}.${_p2}.${_p3}.${_p4}"
+    else
+      WIX_VERSION="${_p1}.${_p2}.${_p3}.0"
+    fi
+  else
+    WIX_VERSION="${_p1}.${_p2}.0.0"
+  fi
+else
+  WIX_VERSION="${_p1}.0.0.0"
+fi
+
 cat << EOF_CORE_WXS > "$OUT_FILE"
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <Product Id="${PRODUCT_CODE}"
            Name="Open edX Platform Core"
            Language="1033"
-           Version="${VERSION}.0"
+           Version="${WIX_VERSION}"
            Manufacturer="The Axim Collaborative &amp; LibScript Contributors"
            UpgradeCode="${UPGRADE_CODE}">
 

@@ -105,13 +105,34 @@ if [ "$VARIANT" = "offline" ]; then
   DISPLAY_NAME="Open edX Platform (Air-Gapped Offline)"
 fi
 
+_p1="${VERSION%%.*}"
+_rest1="${VERSION#*.}"
+if [ "$_rest1" != "$VERSION" ]; then
+  _p2="${_rest1%%.*}"
+  _rest2="${_rest1#*.}"
+  if [ "$_rest2" != "$_rest1" ]; then
+    _p3="${_rest2%%.*}"
+    _rest3="${_rest2#*.}"
+    if [ "$_rest3" != "$_rest2" ]; then
+      _p4="${_rest3%%.*}"
+      WIX_VERSION="${_p1}.${_p2}.${_p3}.${_p4}"
+    else
+      WIX_VERSION="${_p1}.${_p2}.${_p3}.0"
+    fi
+  else
+    WIX_VERSION="${_p1}.${_p2}.0.0"
+  fi
+else
+  WIX_VERSION="${_p1}.0.0.0"
+fi
+
 cat << EOF_ORCH_WXS > "$OUT_FILE"
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <Product Id="${PRODUCT_CODE}"
            Name="${DISPLAY_NAME}"
            Language="1033"
-           Version="${VERSION}.0"
+           Version="${WIX_VERSION}"
            Manufacturer="The Axim Collaborative &amp; LibScript Contributors"
            UpgradeCode="${UPGRADE_CODE}">
 

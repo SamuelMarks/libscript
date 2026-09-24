@@ -10,8 +10,10 @@
 # ## Parameters
 #   --component <name>       Component to package (mysql, redis, mongodb, python, nodejs, meilisearch)
 #   --version <ver>          Component release version (default: auto-detected from offline bundle)
+#   --out <name>             Output file base name or path (default: dist/msi/libscript-<component>-<version>.msi)
 #   --out-dir <dir>          Target directory for generated .msi (default: dist/msi)
 #   --offline-source <dir>   Cache directory containing source archives/binaries (default: cache)
+#   --branch <name>          Branch or tag ref (optional)
 #   --help, -h               Show this help text
 
 set -feu
@@ -39,6 +41,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 COMPONENT=""
 VERSION=""
+OUT_FILE=""
+BRANCH=""
 OUT_DIR="${LIBSCRIPT_ROOT_DIR}/dist/msi"
 OFFLINE_SOURCE="${LIBSCRIPT_ROOT_DIR}/cache"
 
@@ -54,8 +58,10 @@ Usage:
 Options:
   --component <name>       Component identifier (mysql, redis, mongodb, python, nodejs, meilisearch)
   --version <ver>          Release version (defaults to version from offline_bundle.json)
+  --out <name>             Output file base name or path
   --out-dir <dir>          Output directory (default: dist/msi)
   --offline-source <dir>   Offline cache directory containing binary archives (default: cache)
+  --branch <name>          Branch or tag ref (optional)
   --help, -h               Show this help text
 EOF_HELP
 }
@@ -70,12 +76,20 @@ while [ $# -gt 0 ]; do
       VERSION="$2"
       shift 2
       ;;
+    --out)
+      OUT_FILE="$2"
+      shift 2
+      ;;
     --out-dir)
       OUT_DIR="$2"
       shift 2
       ;;
     --offline-source)
       OFFLINE_SOURCE="$2"
+      shift 2
+      ;;
+    --branch)
+      BRANCH="$2"
       shift 2
       ;;
     --help|-h)
@@ -197,7 +211,17 @@ PAYLOAD_WXS="${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_payload.wxs"
   --component-group "PayloadComponents" \
   --directory-id "INSTALLFOLDER"
 
-TARGET_MSI="${OUT_DIR}/libscript-${COMPONENT}-${VERSION}.msi"
+if [ -n "$OUT_FILE" ]; then
+  case "$OUT_FILE" in
+    *.msi|*.MSI) TARGET_MSI="$OUT_FILE" ;;
+    *) TARGET_MSI="${OUT_FILE}.msi" ;;
+  esac
+else
+  TARGET_MSI="${OUT_DIR}/libscript-${COMPONENT}-${VERSION}.msi"
+fi
+
+_target_dir=$(dirname "$TARGET_MSI")
+mkdir -p "$_target_dir" "$OUT_DIR"
 
 # Compile with wixl (cross-platform) or WiX toolset
 if command -v wixl >/dev/null 2>&1; then
@@ -209,14 +233,23 @@ if command -v wixl >/dev/null 2>&1; then
   wixl -a x64 -o "$TARGET_MSI" "$_wixl_main" "$_wixl_payload"
   rm -f "$_wixl_main" "$_wixl_payload"
 elif command -v candle.exe >/dev/null 2>&1 && command -v light.exe >/dev/null 2>&1; then
-  printf '[INFO] Compiling standalone MSI via WiX toolset...
-'
-  candle.exe -arch x64 "$MAIN_WXS" "$PAYLOAD_WXS" -out "${LIBSCRIPT_ROOT_DIR}/tmp/"
-  light.exe -ext WixUIExtension -out "$TARGET_MSI" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_main.wixobj" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_payload.wixobj"
+  printf '[INFO] Compiling standalone MSI via WiX toolset...\n'
+  candle.exe -nologo -arch x64 -out "${LIBSCRIPT_ROOT_DIR}/tmp/" "$MAIN_WXS" "$PAYLOAD_WXS"
+  light.exe -nologo -sval -ext WixUIExtension -out "$TARGET_MSI" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_main.wixobj" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_payload.wixobj"
 else
-  printf '[WARN] Neither wixl nor WiX toolset found. Created XML manifests at %s
-' "$MAIN_WXS"
+  printf '[WARN] Neither wixl nor WiX toolset found. Created XML manifests at %s\n' "$MAIN_WXS"
 fi
 
-printf '[PASS] Successfully processed standalone component MSI: %s
-' "$TARGET_MSI"
+if [ ! -f "$TARGET_MSI" ]; then
+  printf '[ERROR] Target MSI was not generated: %s\n' "$TARGET_MSI" >&2
+  exit 1
+fi
+
+_target_abs=$(cd -- "$(dirname "$TARGET_MSI")" && pwd)/$(basename "$TARGET_MSI")
+_out_dir_abs=$(cd -- "$OUT_DIR" 2>/dev/null && pwd || true)
+if [ -n "$_out_dir_abs" ] && [ "$(dirname "$_target_abs")" != "$_out_dir_abs" ]; then
+  mkdir -p "$OUT_DIR"
+  cp -f "$TARGET_MSI" "$OUT_DIR/" 2>/dev/null || true
+fi
+
+printf '[PASS] Successfully processed standalone component MSI: %s\n' "$TARGET_MSI"
