@@ -7,6 +7,6 @@
   "provides": ["app-server", "nodejs"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": [],
+  "os_blacklist": ["sunos"],
   "ports": []
 }

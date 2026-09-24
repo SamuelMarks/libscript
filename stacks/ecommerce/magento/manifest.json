@@ -6,5 +6,6 @@
   "license": "OSL-3.0",
   "license_name": "Open Software License 3.0",
   "description": "magento stack",
-  "provides": ["magento"]
+  "provides": ["magento"],
+  "os_blacklist": ["sunos"]
 }

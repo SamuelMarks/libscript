@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/cloud/vars.schema.json",
+  "title": "Cloud Orchestration Utilities variables",
+  "description": "Configuration variables for Cloud Orchestration Utilities",
+  "type": "object",
+  "properties": {
+    "CLOUD_VERSION": {
+      "description": "Specific version of cloud to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "CLOUD_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install CLOUD. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

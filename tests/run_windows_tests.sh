@@ -90,8 +90,25 @@ sync_repo_to_guest() {
 
     rsync -av --copy-links --no-owner --no-group \
         -e "ssh -p $_port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $_key" \
-        --exclude ".vagrant" --exclude ".git" --exclude "tests_tmp" \
+        --exclude ".vagrant" --exclude ".git" --exclude "tests_tmp" --exclude "*.msi" \
         "$REPO_ROOT/" "vagrant@127.0.0.1:/cygdrive/c/libscript/"
+}
+
+# ## update_component_in_readme
+# Updates the status of a single component in README.md Supported Components table.
+update_component_in_readme() {
+    _comp="$1"
+    _status="$2"
+    _rm="$REPO_ROOT/README.md"
+    [ ! -f "$_rm" ] && return 0
+    _tmp_rm=$(mktemp "${TMPDIR:-/tmp}/readme_line.XXXXXX")
+    awk -v comp="$_comp" -v st="$_status" '
+        BEGIN { FS="|"; OFS="|" }
+        $2 ~ "^[ \t]*`" comp "`[ \t]*$" {
+            $6 = " " st " "
+        }
+        { print }
+    ' "$_rm" > "$_tmp_rm" && mv "$_tmp_rm" "$_rm"
 }
 
 while [ $# -gt 0 ]; do
@@ -149,7 +166,7 @@ fi
 EXPANDED_TARGETS=""
 for arg in $TARGETS; do
     if [ "$arg" = "all" ]; then
-        for cat_dir in "$REPO_ROOT"/_lib/*; do
+        for cat_dir in "$REPO_ROOT"/_lib/* "$REPO_ROOT"/stacks/*; do
             if [ -d "$cat_dir" ] && [ "$(basename "$cat_dir")" != "_common" ]; then
                 for dir in "$cat_dir"/*; do
                     [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS $(basename "$dir")"
@@ -160,9 +177,13 @@ for arg in $TARGETS; do
         for dir in "$REPO_ROOT/_lib/$arg"/*; do
             [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS $(basename "$dir")"
         done
+    elif [ -d "$REPO_ROOT/stacks/$arg" ]; then
+        for dir in "$REPO_ROOT/stacks/$arg"/*; do
+            [ -d "$dir" ] && EXPANDED_TARGETS="$EXPANDED_TARGETS $(basename "$dir")"
+        done
     else
         found=0
-        for cat_dir in "$REPO_ROOT"/_lib/*; do
+        for cat_dir in "$REPO_ROOT"/_lib/* "$REPO_ROOT"/stacks/*; do
             if [ -d "$cat_dir/$arg" ]; then
                 EXPANDED_TARGETS="$EXPANDED_TARGETS $arg"
                 found=1
@@ -170,14 +191,12 @@ for arg in $TARGETS; do
             fi
         done
         if [ $found -eq 0 ]; then
-            echo "Warning: Target '$arg' not found in _lib/."
+            echo "Warning: Target '$arg' not found in _lib/ or stacks/."
         fi
     fi
 done
 
-UNIQUE_TARGETS=$(echo "$EXPANDED_TARGETS" | tr ' ' '
-' | grep -v '^$' | sort -u | tr '
-' ' ')
+UNIQUE_TARGETS=$(echo "$EXPANDED_TARGETS" | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ')
 
 iteration=1
 
@@ -191,13 +210,19 @@ while true; do
     DISK_IMG=""
     if [ "$USE_SNAPSHOT" = "1" ]; then
         DISK_IMG=$(find_disk_image || true)
+        if [ -n "$DISK_IMG" ] && command -v qemu-img >/dev/null 2>&1; then
+            if ! qemu-img snapshot -U -l "$DISK_IMG" 2>/dev/null | grep -q "vanilla"; then
+                echo "Notice: No 'vanilla' snapshot found on $DISK_IMG. Disabling snapshot restoration and enabling in-place cleanup."
+                USE_SNAPSHOT="0"
+            fi
+        fi
     fi
 
     echo "=== Ensuring Windows 11 Vagrant VM is running ==="
     cd "$VAGRANT_DIR"
     vm_status=$(vagrant status 2>&1 || true)
     if ! echo "$vm_status" | grep -q "running"; then
-        if [ -n "$DISK_IMG" ]; then
+        if [ -n "$DISK_IMG" ] && [ "$USE_SNAPSHOT" = "1" ]; then
             restore_vanilla_snapshot "$DISK_IMG" || vagrant up --no-provision
         else
             echo "Starting Windows 11 Vagrant VM..."
@@ -206,6 +231,12 @@ while true; do
     fi
 
     sync_repo_to_guest
+
+    _ssh_info=$(cd "$VAGRANT_DIR" && vagrant ssh-config 2>/dev/null || true)
+    _port=$(echo "$_ssh_info" | awk '/Port / {print $2; exit}')
+    _key=$(echo "$_ssh_info" | awk '/IdentityFile / {print $2; exit}')
+    : "${_port:=50022}"
+    : "${_key:=$HOME/.vagrant.d/insecure_private_key}"
 
     test_count=0
     success_count=0
@@ -219,8 +250,15 @@ while true; do
         fi
 
         # Check manifest for OS support
-        MANIFEST_PATH=$(find "$REPO_ROOT/_lib" -maxdepth 2 -type d -name "$target" -exec echo "{}/manifest.json" \; 2>/dev/null | head -n 1)
-        if [ -f "$MANIFEST_PATH" ]; then
+        MANIFEST_PATH=""
+        for _m in "$REPO_ROOT/_lib"/*/"$target/manifest.json" "$REPO_ROOT/stacks"/*/"$target/manifest.json"; do
+            if [ -f "$_m" ]; then
+                MANIFEST_PATH="$_m"
+                break
+            fi
+        done
+
+        if [ -n "$MANIFEST_PATH" ]; then
             SUPPORTED=$(awk '
             BEGIN { in_bl=0; in_wl=0; has_wl=0; wl_match=0; result="yes" }
             /"os_blacklist"\s*:/ {
@@ -248,6 +286,7 @@ while true; do
             if [ "$SUPPORTED" = "no" ]; then
                 echo "Skipping $target (not supported on windows)"
                 skipped_count=$((skipped_count + 1))
+                update_component_in_readme "$target" "-"
                 continue
             fi
         fi
@@ -271,30 +310,32 @@ while true; do
 
         rm -f "$success_file" "$failure_file" "$idempotent_file"
 
-        # Execute test via vagrant ssh: install -> test -> install (idempotency) -> test (verification)
-        test_cmd='Set-Location C:\libscript; cmd.exe /c "C:\libscript\libscript.cmd install '$target'" ; $iExit1 = $LASTEXITCODE; cmd.exe /c "C:\libscript\libscript.cmd test '$target'" ; $tExit1 = $LASTEXITCODE; cmd.exe /c "C:\libscript\libscript.cmd install '$target'" ; $iExit2 = $LASTEXITCODE; cmd.exe /c "C:\libscript\libscript.cmd test '$target'" ; $tExit2 = $LASTEXITCODE; if ($iExit1 -ne 0) { exit $iExit1 } elseif ($tExit1 -ne 0) { exit $tExit1 } elseif ($iExit2 -ne 0) { exit $iExit2 } elseif ($tExit2 -ne 0) { exit $tExit2 }'
+        # Execute test via ssh: install -> test -> install (idempotency) -> test (verification)
+        test_cmd="cmd.exe /c \"C:\\libscript\\libscript.cmd install $target && C:\\libscript\\libscript.cmd test $target && C:\\libscript\\libscript.cmd install $target && C:\\libscript\\libscript.cmd test $target\""
 
-        if vagrant ssh -c "$test_cmd" > "$stdout_file" 2> "$stderr_file"; then
+        if ssh -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 "$test_cmd" > "$stdout_file" 2> "$stderr_file"; then
             echo "Success" > "$success_file"
             echo "Idempotent" > "$idempotent_file"
             echo "[OK] $target (2x install + test verified)"
             success_count=$((success_count + 1))
+            update_component_in_readme "$target" "✅"
         else
             echo "Failure" > "$failure_file"
             echo "[FAILED] $target"
             failure_count=$((failure_count + 1))
-        fi
-
-        if [ -x "$REPO_ROOT/tests/update_results.sh" ]; then
-            "$REPO_ROOT/tests/update_results.sh" || true
+            update_component_in_readme "$target" "❌"
         fi
 
         # Clean up installed files if snapshot restoration is disabled
         if [ "$USE_SNAPSHOT" != "1" ] && [ -z "$SKIP_UNINSTALL" ]; then
-            cleanup_cmd="cd C:\libscript; & C:\libscript\libscript.cmd uninstall $target *>&1 | Out-Null; Remove-Item -Recurse -Force \"\$env:USERPROFILE\.libscript\\$target\" -ErrorAction SilentlyContinue"
-            vagrant ssh -c "powershell -Command \"$cleanup_cmd\"" >/dev/null 2>&1 || true
+            cleanup_cmd="cmd.exe /c \"C:\\libscript\\libscript.cmd uninstall $target & rmdir /s /q %USERPROFILE%\\.libscript\\$target\""
+            ssh -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 "$cleanup_cmd" >/dev/null 2>&1 || true
         fi
     done
+
+    if [ -x "$REPO_ROOT/tests/update_results.sh" ]; then
+        "$REPO_ROOT/tests/update_results.sh" || true
+    fi
 
     echo ""
     echo "============================================================"

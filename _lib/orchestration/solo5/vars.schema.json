@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/solo5/vars.schema.json",
+  "title": "Solo5 variables",
+  "description": "Configuration variables for Solo5",
+  "type": "object",
+  "properties": {
+    "SOLO5_VERSION": {
+      "description": "Specific version of solo5 to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "SOLO5_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install SOLO5. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

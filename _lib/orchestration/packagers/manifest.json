@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "packagers",
+  "title": "Multi-Packagers",
+  "description": "Polyglot package builder for deb, rpm, and apk targets",
+  "category": "orchestration",
+  "provides": ["packagers"],
+  "os_whitelist": ["linux"],
+  "os_blacklist": ["windows"]
+}

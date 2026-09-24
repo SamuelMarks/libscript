@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/graphics/libva/vars.schema.json",
+  "title": "Libva variables",
+  "description": "Configuration variables for Libva",
+  "type": "object",
+  "properties": {
+    "LIBVA_VERSION": {
+      "description": "Specific version of libva to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "LIBVA_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install LIBVA. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

@@ -184,11 +184,13 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
+            if [ -n "${PKG_MGR:-}" ]; then
               log_info "Falling back to system package manager for cargo..."
               libscript_depends "cargo"
               if command -v cargo >/dev/null 2>&1; then
                 ln -sf "$(command -v cargo)" "${TARGET_DIR}/bin/cargo"
+              elif [ -x "/opt/ooce/bin/cargo" ]; then
+                ln -sf "/opt/ooce/bin/cargo" "${TARGET_DIR}/bin/cargo"
               fi
             else
               log_warn "No download URL provided for cargo ${VERSION}."

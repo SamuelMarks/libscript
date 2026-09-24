@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/audio/wireplumber/vars.schema.json",
+  "title": "WirePlumber variables",
+  "description": "Configuration variables for WirePlumber",
+  "type": "object",
+  "properties": {
+    "WIREPLUMBER_VERSION": {
+      "description": "Specific version of wireplumber to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "WIREPLUMBER_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install WIREPLUMBER. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

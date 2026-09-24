@@ -38,6 +38,18 @@ if [ ! -d "$STAMPS_DIR" ]; then
   mkdir -p "$STAMPS_DIR"
 fi
 
+if ! command -v startlxqt >/dev/null 2>&1 && ! command -v lxqt-session >/dev/null 2>&1; then
+  if command -v apk >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv apk add --no-cache lxqt-session || priv apk add --no-cache lxqt-desktop || true
+  fi
+fi
+
 if [ -f "$STAMP_FILE" ]; then
   printf '[SKIP]  %s already installed (%s)
 ' "lxqt" "$STAMP_FILE"

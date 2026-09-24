@@ -406,8 +406,11 @@ if [ "$ACTION" = "test" ]; then
   if [ -x "$COMP_DIR/test.sh" ]; then
     unset SCRIPT_NAME || true
     exec "$COMP_DIR/test.sh"
+  elif [ -f "$COMP_DIR/test.sh" ]; then
+    unset SCRIPT_NAME || true
+    exec sh "$COMP_DIR/test.sh"
   else
-    log_info "Error: test.sh not found in $SCRIPT_DIR"
+    log_info "Error: test.sh not found in $COMP_DIR"
     exit 1
   fi
 elif [ "$ACTION" = "uninstall" ] || [ "$ACTION" = "remove" ]; then

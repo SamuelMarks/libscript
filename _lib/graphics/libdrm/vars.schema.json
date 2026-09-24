@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/graphics/libdrm/vars.schema.json",
+  "title": "Libdrm variables",
+  "description": "Configuration variables for Libdrm",
+  "type": "object",
+  "properties": {
+    "LIBDRM_VERSION": {
+      "description": "Specific version of libdrm to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "LIBDRM_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install LIBDRM. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

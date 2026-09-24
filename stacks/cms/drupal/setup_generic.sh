@@ -65,7 +65,7 @@ export DRUPAL_WWWROOT
 if [ ! -d "${DRUPAL_WWWROOT}/core" ]; then
   printf '%s\n' "Downloading Drupal (${DRUPAL_VERSION}) to ${DRUPAL_WWWROOT}..."
   priv mkdir -p "${DRUPAL_WWWROOT}"
-  dl_export url="https://ftp.drupal.org/files/projects/drupal-${DRUPAL_VERSION}.tar.gz"
+  dl_url="https://ftp.drupal.org/files/projects/drupal-${DRUPAL_VERSION}.tar.gz"
 
   if command -v libscript_download >/dev/null 2>&1; then
     tmp_dp=$(mktemp)
@@ -108,9 +108,7 @@ elif [ "${DRUPAL_DB_TYPE}" = "sqlite" ]; then
   priv mkdir -p "${DRUPAL_WWWROOT}/sites/default/files"
 fi
 
-if ! priv chown -R www-data:www-data "${DRUPAL_WWWROOT}" ; then
-  true
-fi
+priv chown -R www-data:www-data "${DRUPAL_WWWROOT}" 2>/dev/null || priv chown -R nginx:nginx "${DRUPAL_WWWROOT}" 2>/dev/null || true
 
 if [ -z "${DRUPAL_PHP_FPM_LISTEN:-}" ]; then
   if [ -e /run/php/php-fpm.sock ]; then
@@ -138,8 +136,20 @@ printf '%s\n' "Configuring webserver: ${DRUPAL_WEBSERVER}"
 ENV_SCRIPT_FILE=$(mktemp)
 cat <<ENV_EOF > "${ENV_SCRIPT_FILE}"
 export DRUPAL_SERVER_NAME="${DRUPAL_SERVER_NAME}"
+export SERVER_NAME="${DRUPAL_SERVER_NAME}"
+export WWWROOT="${DRUPAL_WWWROOT}"
+export PHP_FPM_LISTEN="${DRUPAL_PHP_FPM_LISTEN}"
 export DRUPAL_WWWROOT="${DRUPAL_WWWROOT}"
 export DRUPAL_PHP_FPM_LISTEN="${DRUPAL_PHP_FPM_LISTEN}"
+export NGINX_SERVER_NAME="${DRUPAL_SERVER_NAME}"
+export NGINX_WWWROOT="${DRUPAL_WWWROOT}"
+export NGINX_PHP_FPM_LISTEN="${DRUPAL_PHP_FPM_LISTEN}"
+export HTTPD_SERVER_NAME="${DRUPAL_SERVER_NAME}"
+export HTTPD_WWWROOT="${DRUPAL_WWWROOT}"
+export HTTPD_PHP_FPM_LISTEN="${DRUPAL_PHP_FPM_LISTEN}"
+export CADDY_SERVER_NAME="${DRUPAL_SERVER_NAME}"
+export CADDY_WWWROOT="${DRUPAL_WWWROOT}"
+export CADDY_PHP_FPM_LISTEN="${DRUPAL_PHP_FPM_LISTEN}"
 export LISTEN="${DRUPAL_LISTEN:-80}"
 export NGINX_LISTEN="${DRUPAL_LISTEN:-80}"
 export HTTPD_LISTEN="${DRUPAL_LISTEN:-80}"
@@ -159,12 +169,18 @@ if [ "${DRUPAL_WEBSERVER}" = "nginx" ]; then
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" > "${SERVER_BLOCK_TMP}"
 
   NGINX_CONF_DIR="${LIBSCRIPT_ROOT_DIR}/installed/nginx/conf"
-  if [ -d /etc/nginx/sites-available ]; then
-    NGINX_CONF_DIR="/etc/nginx"
+  if [ -d /etc/nginx/http.d ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/http.d/${DRUPAL_SERVER_NAME}.conf"
+  elif [ -d /etc/nginx/conf.d ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/conf.d/${DRUPAL_SERVER_NAME}.conf"
+  elif [ -d /etc/nginx/sites-available ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/sites-available/${DRUPAL_SERVER_NAME}.conf"
+    priv ln -sf "/etc/nginx/sites-available/${DRUPAL_SERVER_NAME}.conf" "/etc/nginx/sites-enabled/${DRUPAL_SERVER_NAME}.conf"
+  else
+    priv mkdir -p "${NGINX_CONF_DIR}/sites-available" "${NGINX_CONF_DIR}/sites-enabled"
+    priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${DRUPAL_SERVER_NAME}.conf"
+    priv ln -sf "${NGINX_CONF_DIR}/sites-available/${DRUPAL_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${DRUPAL_SERVER_NAME}.conf"
   fi
-
-  priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${DRUPAL_SERVER_NAME}.conf"
-  priv ln -sf "${NGINX_CONF_DIR}/sites-available/${DRUPAL_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${DRUPAL_SERVER_NAME}.conf"
   if ! priv systemctl reload nginx ; then
     true
   fi

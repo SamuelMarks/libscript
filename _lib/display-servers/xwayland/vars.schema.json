@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/display-servers/xwayland/vars.schema.json",
+  "title": "Xwayland variables",
+  "description": "Configuration variables for Xwayland",
+  "type": "object",
+  "properties": {
+    "XWAYLAND_VERSION": {
+      "description": "Specific version of xwayland to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "XWAYLAND_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install XWAYLAND. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

@@ -4,5 +4,6 @@
   "category": "cms",
   "title": "joomla",
   "description": "joomla stack",
-  "provides": ["joomla"]
+  "provides": ["joomla"],
+  "os_blacklist": ["sunos"]
 }

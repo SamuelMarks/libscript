@@ -35,12 +35,14 @@ for LIB in '_lib/_common/pkg_mgr.sh' '_lib/languages/nodejs/setup.sh' '_lib/git-
   . "${SCRIPT_NAME}"
 done
 
-DIR="${_DIR}"
+DIR="${_DIR:-$SCRIPT_DIR}"
 SCRIPT_NAME="${DIR}"'/env.sh'
 export SCRIPT_NAME
 # shellcheck source=/dev/null
 # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
+
+: "${LIBSCRIPT_DATA_DIR:=${LIBSCRIPT_ROOT_DIR}/data/firecrawl}"
 
 if [ "${FIRECRAWL_DEST-}" ]; then
   DEST="${FIRECRAWL_DEST}"

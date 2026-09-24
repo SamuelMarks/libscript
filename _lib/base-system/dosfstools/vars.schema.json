@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/base-system/dosfstools/vars.schema.json",
+  "title": "Dosfstools variables",
+  "description": "Configuration variables for Dosfstools",
+  "type": "object",
+  "properties": {
+    "DOSFSTOOLS_VERSION": {
+      "description": "Specific version of dosfstools to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "DOSFSTOOLS_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install DOSFSTOOLS. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

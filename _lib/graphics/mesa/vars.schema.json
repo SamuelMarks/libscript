@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/graphics/mesa/vars.schema.json",
+  "title": "Mesa variables",
+  "description": "Configuration variables for Mesa",
+  "type": "object",
+  "properties": {
+    "MESA_VERSION": {
+      "description": "Specific version of mesa to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "MESA_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install MESA. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

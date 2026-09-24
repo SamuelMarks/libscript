@@ -282,6 +282,7 @@ all_scripts.txt
 # Python scripts generated during investigation/refactoring
 /*.py
 !/scripts/*.py
+tests_tmp
 tests_tmp/
 
 # Binary media and icon assets (kept in cc0-assets or generated on the fly)

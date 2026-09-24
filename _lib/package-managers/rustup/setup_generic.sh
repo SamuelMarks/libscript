@@ -158,12 +158,14 @@ case "$ACTION" in
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/rustup/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing rustup ${VERSION} natively to ${TARGET_DIR}..."
-        if [ "$UNAME_LOWER" = "freebsd" ]; then
-          log_info "No native binary for FreeBSD. Falling back to system package manager for rustup..."
+        if [ "$UNAME_LOWER" = "freebsd" ] || [ "$UNAME_LOWER" = "sunos" ]; then
+          log_info "No native binary for $UNAME_LOWER. Falling back to system package manager for rustup..."
           libscript_depends "rust"
           mkdir -p "${TARGET_DIR}/.cargo/bin"
-          ln -sf "$(command -v "rustc")" "${TARGET_DIR}/.cargo/bin/rustc" || true
-          ln -sf "$(command -v "cargo")" "${TARGET_DIR}/.cargo/bin/cargo" || true
+          _rustc_bin=$(command -v "rustc" 2>/dev/null || echo "/opt/ooce/bin/rustc")
+          _cargo_bin=$(command -v "cargo" 2>/dev/null || echo "/opt/ooce/bin/cargo")
+          ln -sf "$_rustc_bin" "${TARGET_DIR}/.cargo/bin/rustc" || true
+          ln -sf "$_cargo_bin" "${TARGET_DIR}/.cargo/bin/cargo" || true
         else
           libscript_depends "curl"
           if [ -f /etc/alpine-release ]; then

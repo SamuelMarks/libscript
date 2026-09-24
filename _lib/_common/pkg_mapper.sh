@@ -68,7 +68,7 @@ map_package() {
       ;;
     'postgres'|'postgresql')
       case "${PKG_MGR}" in
-        'apk') printf 'postgresql14 postgresql14-contrib postgresql14-openrc\n' ;;
+        'apk') printf 'postgresql16 postgresql16-contrib postgresql16-openrc\n' ;;
         'apt-get') printf 'postgresql-common postgresql-server-dev-14 postgresql-14\n' ;;
         'dnf') printf 'postgresql-server postgresql-contrib\n' ;;
         'yum') printf 'postgresql-server postgresql-contrib\n' ;;
@@ -125,12 +125,27 @@ map_package() {
     'libpq-dev')
       case "${PKG_MGR}" in
         'brew') printf 'libpq\n' ;;
+        'apk') printf 'libpq-dev\n' ;;
+        'dnf'|'yum') printf 'libpq-devel\n' ;;
+        'zypper') printf 'postgresql-devel\n' ;;
+        'pacman') printf 'postgresql-libs\n' ;;
         *) printf 'libpq-dev\n' ;;
       esac
       ;;
-    'libsqlite3-dev')
+    'libsqlite3-dev'|'sqlite-dev')
       case "${PKG_MGR}" in
+        'apk') printf 'sqlite-dev\n' ;;
         'brew') printf 'sqlite\n' ;;
+        'dnf'|'yum') printf 'sqlite-devel\n' ;;
+        'zypper') printf 'sqlite3-devel\n' ;;
+        'pacman') printf 'sqlite\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'database/sqlite-3\n'
+          else
+            printf 'databases/sqlite3\n'
+          fi
+          ;;
         *) printf 'libsqlite3-dev\n' ;;
       esac
       ;;
@@ -517,6 +532,18 @@ map_package() {
         *) return 1 ;;
       esac
       ;;
+    'powershell')
+      case "${PKG_MGR}" in
+        'apk') printf 'powershell\n' ;;
+        'brew') printf 'powershell\n' ;;
+        'apt-get') printf 'powershell\n' ;;
+        'dnf'|'yum') printf 'powershell\n' ;;
+        'pacman') printf 'powershell-bin\n' ;;
+        'winget') printf 'Microsoft.PowerShell\n' ;;
+        'choco') printf 'powershell-core\n' ;;
+        *) printf 'powershell\n' ;;
+      esac
+      ;;
     'deno')
       case "${PKG_MGR}" in
         'apk') printf 'deno\n' ;;
@@ -633,8 +660,13 @@ map_package() {
 " ;;
         "pacman") printf "python-pip
 " ;;
-        "pkg") printf "py312-pip
-" ;;
+        "pkg")
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf "library/python-3/pip-313\n"
+          else
+            printf "py312-pip\n"
+          fi
+          ;;
         *) printf "pip
 " ;;
       esac ;;
@@ -676,7 +708,7 @@ map_package() {
         *) printf "7zip\n" ;;
       esac ;;
 
-    'python')
+    'python'|'python3')
       case "${PKG_MGR}" in
         'apk') printf 'python3 py3-pip\n' ;;
         'apt-get') printf 'python3 python3-pip python3-venv python-is-python3\n' ;;
@@ -833,6 +865,17 @@ map_package() {
         *) printf 'cabal\n' ;;
       esac
       ;;
+    'r'|'r-base')
+      case "${PKG_MGR}" in
+        'apk') printf 'R\n' ;;
+        'apt-get') printf 'r-base\n' ;;
+        'dnf'|'yum') printf 'R\n' ;;
+        'pacman') printf 'r\n' ;;
+        'brew') printf 'r\n' ;;
+        'pkg') printf 'math/R\n' ;;
+        *) printf 'R\n' ;;
+      esac
+      ;;
     'cargo')
       case "${PKG_MGR}" in
         'apk') printf 'cargo\n' ;;
@@ -858,6 +901,22 @@ map_package() {
         'apk') printf 'perl-app-cpanminus\n' ;;
         'pkg') printf 'p5-App-cpanminus\n' ;;
         *) printf 'cpanminus\n' ;;
+      esac
+      ;;
+    'rebar3')
+      case "${PKG_MGR}" in
+        'apk') printf 'rebar3\n' ;;
+        'pkg') printf 'rebar3\n' ;;
+        'brew') printf 'rebar3\n' ;;
+        *) printf 'rebar3\n' ;;
+      esac
+      ;;
+    'opam')
+      case "${PKG_MGR}" in
+        'apk') printf 'opam\n' ;;
+        'brew') printf 'opam\n' ;;
+        'apt-get') printf 'opam\n' ;;
+        *) printf 'opam\n' ;;
       esac
       ;;
     'docker')

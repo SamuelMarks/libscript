@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "vfs",
+  "title": "Virtual Filesystem Mounter",
+  "description": "Kernel virtual filesystem mounter (proc, sysfs, devtmpfs, devpts, shm) for rootfs synthesis",
+  "category": "orchestration",
+  "provides": ["vfs"],
+  "os_whitelist": ["linux"],
+  "os_blacklist": ["windows"]
+}

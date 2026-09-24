@@ -110,7 +110,8 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-    
+    VERSION="${VERSION:-latest}"
+    EXACT_VERSION="${EXACT_VERSION:-${VERSION}}"
     TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/cli/${EXACT_VERSION}"
     if [ ! -d "${TARGET_DIR}" ]; then
       log_info "Installing cli ${VERSION} natively to ${TARGET_DIR}..."

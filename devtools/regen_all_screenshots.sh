@@ -35,11 +35,16 @@ if [ -d "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx" ]; then
   mkdir -p "$CC0_DIR"
 fi
 
+MAGICK_CMD="magick"
+if [ -f "/System/Library/Fonts/Supplemental/Arial.ttf" ]; then
+  MAGICK_CMD="magick -font /System/Library/Fonts/Supplemental/Arial.ttf"
+fi
+
 # ## regen_desktop_icons
 # Renders 10b_desktop_icons.png with clear "CMS" and "LMS" lettered desktop icons.
 regen_desktop_icons() {
   _out="$1"
-  magick -size 800x600 xc:"rgb(140,180,210)"  \
+  $MAGICK_CMD -size 800x600 xc:"rgb(140,180,210)"  \
     -fill "rgb(238,238,238)" -draw "rectangle 0,552 799,599"  \
     -stroke "rgb(215,215,215)" -draw "line 0,552 799,552"  \
     -stroke none -fill "rgb(60,60,60)" -pointsize 10 -draw "text 720,576 '12:00 PM'"  \
@@ -64,7 +69,7 @@ regen_desktop_icons() {
 # Renders 13_browser_lms_authenticated.png showing the logged in dashboard.
 regen_lms_auth() {
   _out="$1"
-  magick -size 800x600 xc:"rgb(140,180,210)"  \
+  $MAGICK_CMD -size 800x600 xc:"rgb(140,180,210)"  \
     -fill "rgb(238,238,238)" -draw "rectangle 0,552 799,599"  \
     -fill "rgb(243,243,243)" -stroke "rgb(190,190,190)" -draw "roundrectangle 30,25 770,535 8,8"  \
     -stroke none -fill "white" -draw "roundrectangle 40,33 230,65 6,6"  \
@@ -106,7 +111,7 @@ regen_lms_auth() {
 # Renders 14_browser_studio_authenticated.png showing the logged in Studio authoring catalog.
 regen_studio_auth() {
   _out="$1"
-  magick -size 800x600 xc:"rgb(140,180,210)"  \
+  $MAGICK_CMD -size 800x600 xc:"rgb(140,180,210)"  \
     -fill "rgb(238,238,238)" -draw "rectangle 0,552 799,599"  \
     -fill "rgb(243,243,243)" -stroke "rgb(190,190,190)" -draw "roundrectangle 30,25 770,535 8,8"  \
     -stroke none -fill "white" -draw "roundrectangle 235,33 425,65 6,6"  \
@@ -147,8 +152,80 @@ regen_studio_auth() {
   printf '[OK] Regenerated %s\n' "$_out"
 }
 
+# ## regen_lms_login
+# Renders 11_browser_lms_focused.png showing the LMS login screen.
+regen_lms_login() {
+  _out="$1"
+  $MAGICK_CMD -size 800x600 xc:"rgb(140,180,210)"  \
+    -fill "rgb(238,238,238)" -draw "rectangle 0,552 799,599"  \
+    -fill "rgb(243,243,243)" -stroke "rgb(190,190,190)" -draw "roundrectangle 30,25 770,535 8,8"  \
+    -stroke none -fill "white" -draw "roundrectangle 40,33 230,65 6,6"  \
+    -fill "rgb(0,120,215)" -draw "line 44,33 226,33"  \
+    -fill "rgb(30,30,30)" -pointsize 11 -draw "text 55,51 'Open edX LMS'"  \
+    -fill "rgb(230,230,230)" -draw "roundrectangle 235,36 425,61 6,6"  \
+    -fill "rgb(100,100,100)" -pointsize 11 -draw "text 250,51 'Open edX Studio'"  \
+    -fill "white" -draw "rectangle 30,61 770,97"  \
+    -stroke "rgb(220,220,220)" -draw "line 30,97 770,97"  \
+    -stroke "rgb(210,210,210)" -fill "rgb(245,245,245)" -draw "roundrectangle 125,67 720,91 12,12"  \
+    -stroke none -fill "rgb(40,40,40)" -pointsize 11 -draw "text 140,83 'http://localhost:8000/login'"  \
+    -fill "rgb(248,249,250)" -draw "rectangle 31,98 769,534"  \
+    -fill "rgb(0,38,62)" -draw "rectangle 31,98 769,142"  \
+    -fill "white" -pointsize 16 -draw "text 51,126 'open edX'"  \
+    -fill "rgb(180,210,230)" -pointsize 11 -draw "text 141,124 '|  Learning Management System'"  \
+    -fill "white" -stroke "rgb(220,225,230)" -draw "roundrectangle 220,175 580,475 8,8"  \
+    -stroke none -fill "rgb(11,26,48)" -pointsize 15 -draw "text 245,208 'Sign in to Open edX LMS'"  \
+    -fill "rgb(70,80,95)" -pointsize 11 -draw "text 245,236 'Username or Email:'"  \
+    -fill "white" -stroke "rgb(209,213,219)" -draw "roundrectangle 245,244 555,278 4,4"  \
+    -stroke none -fill "rgb(30,41,59)" -pointsize 11 -draw "text 256,266 'edx_admin'"  \
+    -fill "rgb(70,80,95)" -pointsize 11 -draw "text 245,302 'Password:'"  \
+    -fill "rgb(2,132,199)" -pointsize 10 -draw "text 452,302 'Forgot password?'"  \
+    -fill "white" -stroke "rgb(209,213,219)" -draw "roundrectangle 245,310 555,344 4,4"  \
+    -stroke none -fill "rgb(75,85,99)" -pointsize 14 -draw "text 256,332 '••••••••••••'"  \
+    -fill "rgb(0,117,219)" -draw "roundrectangle 245,372 555,408 4,4"  \
+    -fill "white" -pointsize 12 -draw "text 370,395 'Sign In'"  \
+    "$_out"
+  printf '[OK] Regenerated %s\n' "$_out"
+}
+
+# ## regen_studio_login
+# Renders 12_browser_studio_focused.png showing the Studio login screen.
+regen_studio_login() {
+  _out="$1"
+  $MAGICK_CMD -size 800x600 xc:"rgb(140,180,210)"  \
+    -fill "rgb(238,238,238)" -draw "rectangle 0,552 799,599"  \
+    -fill "rgb(243,243,243)" -stroke "rgb(190,190,190)" -draw "roundrectangle 30,25 770,535 8,8"  \
+    -stroke none -fill "rgb(230,230,230)" -draw "roundrectangle 40,36 230,61 6,6"  \
+    -fill "rgb(100,100,100)" -pointsize 11 -draw "text 55,51 'Open edX LMS'"  \
+    -fill "white" -draw "roundrectangle 235,33 425,65 6,6"  \
+    -fill "rgb(0,120,215)" -draw "line 239,33 421,33"  \
+    -fill "rgb(30,30,30)" -pointsize 11 -draw "text 250,51 'Open edX Studio'"  \
+    -fill "white" -draw "rectangle 30,61 770,97"  \
+    -stroke "rgb(220,220,220)" -draw "line 30,97 770,97"  \
+    -stroke "rgb(210,210,210)" -fill "rgb(245,245,245)" -draw "roundrectangle 125,67 720,91 12,12"  \
+    -stroke none -fill "rgb(40,40,40)" -pointsize 11 -draw "text 140,83 'http://localhost:8001/signin'"  \
+    -fill "rgb(248,249,250)" -draw "rectangle 31,98 769,534"  \
+    -fill "rgb(30,41,59)" -draw "rectangle 31,98 769,142"  \
+    -fill "white" -pointsize 16 -draw "text 51,126 'open edX'"  \
+    -fill "rgb(203,213,225)" -pointsize 11 -draw "text 141,124 '|  Studio Course Authoring'"  \
+    -fill "white" -stroke "rgb(220,225,230)" -draw "roundrectangle 220,175 580,475 8,8"  \
+    -stroke none -fill "rgb(15,23,42)" -pointsize 15 -draw "text 245,208 'Sign in to Open edX Studio'"  \
+    -fill "rgb(70,80,95)" -pointsize 11 -draw "text 245,236 'Email Address:'"  \
+    -fill "white" -stroke "rgb(209,213,219)" -draw "roundrectangle 245,244 555,278 4,4"  \
+    -stroke none -fill "rgb(30,41,59)" -pointsize 11 -draw "text 256,266 'staff@openedx.org'"  \
+    -fill "rgb(70,80,95)" -pointsize 11 -draw "text 245,302 'Password:'"  \
+    -fill "rgb(2,132,199)" -pointsize 10 -draw "text 452,302 'Forgot password?'"  \
+    -fill "white" -stroke "rgb(209,213,219)" -draw "roundrectangle 245,310 555,344 4,4"  \
+    -stroke none -fill "rgb(75,85,99)" -pointsize 14 -draw "text 256,332 '••••••••••••'"  \
+    -fill "rgb(2,132,199)" -draw "roundrectangle 245,372 555,408 4,4"  \
+    -fill "white" -pointsize 12 -draw "text 340,395 'Sign In to Studio'"  \
+    "$_out"
+  printf '[OK] Regenerated %s\n' "$_out"
+}
+
 if [ -d "$CC0_DIR" ]; then
   regen_desktop_icons "${CC0_DIR}/10b_desktop_icons.png"
+  regen_lms_login "${CC0_DIR}/11_browser_lms_focused.png"
+  regen_studio_login "${CC0_DIR}/12_browser_studio_focused.png"
   regen_lms_auth "${CC0_DIR}/13_browser_lms_authenticated.png"
   regen_studio_auth "${CC0_DIR}/14_browser_studio_authenticated.png"
 fi

@@ -3,7 +3,7 @@
   "name": "composer",
   "provides": ["package-manager", "composer"],
   "os_whitelist": ["all"],
-  "os_blacklist": [],
+  "os_blacklist": ["sunos"],
   "title": "composer",
   "description": "Bootstrap module for the `composer` package manager.",
   "category": "package-manager"

@@ -43,7 +43,7 @@ goto find_root_loop
 set "TARGET_DIR="
 set "OUT_FILE="
 set "APP_NAME=Open edX Platform"
-set "APP_VERSION=1.0.0.0"
+set "APP_VERSION=22.1.0.0"
 set "APP_PUBLISHER=LibScript Open Source Project"
 set "PRODUCT_CODE=*"
 set "UPGRADE_CODE=B8C8E64E-9B5A-4B7C-A5D8-0F18B9918239"
@@ -52,8 +52,8 @@ set "APP_URL=https://openedx.org"
 set "INSTALL_DIR=[ProgramFiles64Folder]OpenEdX"
 set "DATA_DIR=C:\ProgramData\OpenEdX\data"
 set "LOGS_DIR=C:\ProgramData\OpenEdX\logs"
-set "REPO_URL=https://github.com/openedx/edx-platform.git"
-set "REPO_BRANCH=open-release/quince.master"
+set "REPO_URL=https://github.com/openedx/openedx-platform.git"
+set "REPO_BRANCH=release/verawood.1"
 set "REPO_AUTH_TOKEN="
 set "ICON_PATH="
 set "BANNER_TOP_PATH="
@@ -261,25 +261,71 @@ if not exist "%ICON_PATH%" (
         set "ICON_PATH="
     )
 )
-if not exist "%BANNER_TOP_PATH%" set "BANNER_TOP_PATH="
-if not exist "%BANNER_SIDE_PATH%" set "BANNER_SIDE_PATH="
+if not exist "%BANNER_TOP_PATH%" (
+    if not exist "%TMP_BRANDING_DIR%" mkdir "%TMP_BRANDING_DIR%" 2>nul
+    set "BANNER_TOP_PATH=%TMP_BRANDING_DIR%\banner_top.bmp"
+    powershell -NoProfile -Command "$b = New-Object System.Drawing.Bitmap 493, 58; $b.Save('%TMP_BRANDING_DIR%\banner_top.bmp', [System.Drawing.Imaging.ImageFormat]::Bmp); $b.Dispose()" >nul 2>&1
+)
+if not exist "%BANNER_SIDE_PATH%" (
+    if not exist "%TMP_BRANDING_DIR%" mkdir "%TMP_BRANDING_DIR%" 2>nul
+    set "BANNER_SIDE_PATH=%TMP_BRANDING_DIR%\banner_side.bmp"
+    powershell -NoProfile -Command "$b = New-Object System.Drawing.Bitmap 164, 312; $b.Save('%TMP_BRANDING_DIR%\banner_side.bmp', [System.Drawing.Imaging.ImageFormat]::Bmp); $b.Dispose()" >nul 2>&1
+)
 if not exist "%LICENSE_PATH%" set "LICENSE_PATH="
+
+echo %APP_VERSION% | findstr /I "verawood" >nul 2>&1
+if not errorlevel 1 set "APP_VERSION=22.1.0.0"
+
+set "CLEAN_BRANCH=%REPO_BRANCH%"
+for %%A in ("%REPO_BRANCH:/=\%") do set "CLEAN_BRANCH=%%~nxA"
+if "%CLEAN_BRANCH:~-7%"==".master" set "CLEAN_BRANCH=%CLEAN_BRANCH:~0,-7%"
+if "%CLEAN_BRANCH%"=="" set "CLEAN_BRANCH=%APP_VERSION%"
 
 if /I "%VARIANT%"=="offline" (
     set "PROP_OPENEDX_OFFLINE=1"
     if "%APP_NAME%"=="Open edX Platform" set "APP_NAME=Open edX Platform (Offline Air-Gapped)"
-    if "%OUT_FILE%"=="" set "OUT_FILE=openedx-offline-%APP_VERSION%"
+    if "%OUT_FILE%"=="" set "OUT_FILE=openedx-offline-%CLEAN_BRANCH%"
     set "WELCOME_DESC=The Setup Wizard will deploy Open edX LMS, Studio CMS, and pre-bundled air-gapped runtimes on your computer."
     set "COMP_TAG= [Pre-bundled / Offline]"
 ) else (
     set "PROP_OPENEDX_OFFLINE=0"
     if "%APP_NAME%"=="Open edX Platform" set "APP_NAME=Open edX Platform (Online)"
-    if "%OUT_FILE%"=="" set "OUT_FILE=openedx-%APP_VERSION%"
+    if "%OUT_FILE%"=="" set "OUT_FILE=openedx-%CLEAN_BRANCH%"
     set "WELCOME_DESC=The Setup Wizard will download and install Open edX LMS, Studio CMS, and required runtimes on your computer."
     set "COMP_TAG="
 )
 
 set "WXS_FILE=%OUT_FILE%.wxs"
+
+:: Harvest bundled dependency licenses
+set "TMP_WORK_DIR=%LIBSCRIPT_ROOT_DIR%\tmp\msi_build_%RANDOM%"
+if not exist "%TMP_WORK_DIR%" mkdir "%TMP_WORK_DIR%" >nul 2>&1
+set "HARVESTED_LICENSES_DIR=%TMP_WORK_DIR%\licenses"
+set "MULTI_LICENSE_PROPS_FILE=%TMP_WORK_DIR%\multi_license_props.xml"
+set "MULTI_LICENSE_DLGS_FILE=%TMP_WORK_DIR%\multi_license_dlgs.xml"
+set "MULTI_LICENSE_UISEQ_FILE=%TMP_WORK_DIR%\multi_license_uiseq.xml"
+set "MULTI_LICENSE_EXEC_SEQ_FILE=%TMP_WORK_DIR%\multi_license_exec_seq.xml"
+set "LAST_LICENSE_DLG=Dlg_License"
+
+set "LICENSE_MODE=consolidated_eula"
+if exist "%TARGET_DIR%\packaging.json" (
+    powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.branding -and $j.branding.license_mode) { $j.branding.license_mode } else { 'consolidated_eula' }" > "%TMP_WORK_DIR%\lic_mode.txt" 2>nul
+    if exist "%TMP_WORK_DIR%\lic_mode.txt" set /p LICENSE_MODE=<"%TMP_WORK_DIR%\lic_mode.txt"
+)
+
+if /I "%LICENSE_MODE%"=="chained_dialogs" (
+    if exist "%LIBSCRIPT_ROOT_DIR%\packaging\harvest_licenses.cmd" (
+        if not "%TARGET_DIR%"=="" (
+            if exist "%TARGET_DIR%" (
+                call "%LIBSCRIPT_ROOT_DIR%\packaging\harvest_licenses.cmd" "%TARGET_DIR%" --out-dir "%HARVESTED_LICENSES_DIR%" --force >nul 2>&1
+            )
+        )
+    )
+    if exist "%HARVESTED_LICENSES_DIR%\licenses_manifest.json" (
+        powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%LIBSCRIPT_ROOT_DIR%\packaging\generate_multi_license.ps1" "%HARVESTED_LICENSES_DIR%\licenses_manifest.json" "%TMP_WORK_DIR%"
+        if exist "%TMP_WORK_DIR%\last_license_dlg.txt" set /p LAST_LICENSE_DLG=<"%TMP_WORK_DIR%\last_license_dlg.txt"
+    )
+)
 
 :: ## write_wxs
 :: Emits the complete WiX XML manifest.
@@ -315,7 +361,9 @@ setlocal DisableDelayedExpansion
     if not "%LICENSE_PATH%"=="" echo     ^<WixVariable Id="WixUILicenseRtf" Value="%LICENSE_PATH%" /^>
 
     echo     ^<Property Id="SETUP_MODE" Value="%SETUP_MODE%" Secure="yes" /^>
-    echo     ^<Property Id="LICENSE_ACCEPTED" Value="1" Secure="yes" /^>
+    echo     ^<Property Id="AGREE_ALL_LICENSES" Value="0" Secure="yes" /^>
+    echo     ^<Property Id="LICENSE_ACCEPTED" Value="0" Secure="yes" /^>
+    if exist "%MULTI_LICENSE_PROPS_FILE%" type "%MULTI_LICENSE_PROPS_FILE%"
     echo     ^<Property Id="LAUNCH_BROWSER" Value="1" Secure="yes" /^>
     echo     ^<Property Id="LAUNCH_STUDIO" Value="1" Secure="yes" /^>
 
@@ -354,7 +402,7 @@ setlocal DisableDelayedExpansion
     echo     ^<Property Id="PROP_OPENEDX_BRANCH_TYPE" Value="NamedRelease" Secure="yes" /^>
     echo     ^<Property Id="PROP_OPENEDX_REPO_AUTH_TOKEN" Hidden="yes" Secure="yes" /^>
     echo     ^<Property Id="PROP_OPENEDX_GIT_DEPTH" Value="1" Secure="yes" /^>
-    echo     ^<Property Id="PROP_OPENEDX_BRANCH_PRESET" Value="Quince" Secure="yes" /^>
+    echo     ^<Property Id="PROP_OPENEDX_BRANCH_PRESET" Value="Verawood" Secure="yes" /^>
 
     echo     ^<Property Id="PROP_LMS_HOST" Value="localhost" Secure="yes" /^>
     echo     ^<Property Id="PROP_LMS_PORT" Value="8000" Secure="yes" /^>
@@ -416,6 +464,7 @@ setlocal DisableDelayedExpansion
     echo     ^</Directory^>
 
     echo     ^<CustomAction Id="CA_CheckNetworkConnection" Directory="INSTALLFOLDER" ExeCommand="powershell.exe -NoProfile -Command &quot;try { (New-Object System.Net.Sockets.TcpClient('github.com', 443)).Close(); (New-Object System.Net.Sockets.TcpClient('pypi.org', 443)).Close(); } catch { exit 1 }&quot;" Execute="immediate" Return="ignore" /^>
+    echo     ^<CustomAction Id="CA_AbortNoLicense" Error="Installation aborted: You must accept all bundled software licenses to proceed. Pass AGREE_ALL_LICENSES=1 for unattended installations." /^>
     echo     ^<CustomAction Id="CA_LaunchBrowser" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\packaging\launch_browser.cmd&quot; http://[PROP_LMS_HOST]:[PROP_LMS_PORT] &quot;Open edX LMS&quot;" Return="asyncNoWait" /^>
     echo     ^<CustomAction Id="CA_LaunchStudio" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\packaging\launch_browser.cmd&quot; http://[PROP_CMS_HOST]:[PROP_CMS_PORT] &quot;Open edX Studio&quot;" Return="asyncNoWait" /^>
     echo     ^<CustomAction Id="InstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install stacks/cms/openedx --offline=[PROP_OPENEDX_OFFLINE] --lms-port=[PROP_LMS_PORT] --cms-port=[PROP_CMS_PORT] --mysql-url=&quot;[PROP_MYSQL_REMOTE_URL]&quot; --redis-port=[PROP_REDIS_PORT] --redis-url=&quot;[PROP_REDIS_URL]&quot; --mongodb-uri=&quot;[PROP_MONGODB_URI]&quot; --repo=&quot;[PROP_OPENEDX_EDX_PLATFORM_REPOSITORY]&quot; --version=&quot;[PROP_OPENEDX_VERSION]&quot; --admin-user=&quot;[PROP_OPENEDX_ADMIN_USERNAME]&quot; --admin-password=&quot;[PROP_OPENEDX_ADMIN_PASSWORD]&quot; --admin-email=&quot;[PROP_OPENEDX_ADMIN_EMAIL]&quot; --backup-dir=&quot;[BACKUPFOLDER]&quot; --theme=&quot;[PROP_OPENEDX_THEME]&quot;" Execute="deferred" Return="ignore" Impersonate="no" /^>
@@ -452,7 +501,7 @@ setlocal DisableDelayedExpansion
     )
     echo         ^<Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" /^>
     echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="End-User License Agreement" /^>
-    echo         ^<Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Please read the following license agreement carefully." /^>
+    echo         ^<Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Please review the bundled software licenses and terms." /^>
     if not "%LICENSE_PATH%"=="" (
         echo         ^<Control Id="AgreementText" Type="ScrollableText" X="20" Y="48" Width="330" Height="178" Sunken="yes" TabSkip="no"^>
         echo           ^<Text SourceFile="%LICENSE_PATH%" /^>
@@ -463,12 +512,14 @@ setlocal DisableDelayedExpansion
     echo         ^</Control^>
     echo         ^<Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="I Agree"^>
     echo           ^<Publish Property="LICENSE_ACCEPTED" Value="1"^>1^</Publish^>
+    echo           ^<Publish Property="AGREE_ALL_LICENSES" Value="1"^>1^</Publish^>
     echo           ^<Publish Event="NewDialog" Value="Dlg_SetupType"^>1^</Publish^>
     echo         ^</Control^>
     echo         ^<Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel"^>
     echo           ^<Publish Event="EndDialog" Value="Exit"^>1^</Publish^>
     echo         ^</Control^>
     echo       ^</Dialog^>
+    if exist "%MULTI_LICENSE_DLGS_FILE%" type "%MULTI_LICENSE_DLGS_FILE%"
 
     echo       ^<Dialog Id="Dlg_SetupType" Width="370" Height="270" Title="Choose Installation Mode"^>
     if not "%BANNER_TOP_PATH%"=="" (
@@ -775,7 +826,8 @@ setlocal DisableDelayedExpansion
     echo         ^<Custom Action="CA_CheckNetworkConnection" After="CostFinalize"^>^<![CDATA[NOT Installed AND PROP_OPENEDX_OFFLINE="0"]]^>^</Custom^>
     echo         ^<Show Dialog="Dlg_Welcome" After="CostFinalize"^>NOT Installed^</Show^>
     echo         ^<Show Dialog="Dlg_License" After="Dlg_Welcome"^>NOT Installed^</Show^>
-    echo         ^<Show Dialog="Dlg_SetupType" After="Dlg_License"^>NOT Installed^</Show^>
+    if exist "%MULTI_LICENSE_UISEQ_FILE%" type "%MULTI_LICENSE_UISEQ_FILE%"
+    echo         ^<Show Dialog="Dlg_SetupType" After="%LAST_LICENSE_DLG%"^>NOT Installed^</Show^>
     echo         ^<Show Dialog="Dlg_Features" After="Dlg_SetupType"^>^<![CDATA[NOT Installed AND SETUP_MODE="Advanced"]]^>^</Show^>
     echo         ^<Show Dialog="Dlg_InstallLocation" After="Dlg_Features"^>^<![CDATA[NOT Installed AND SETUP_MODE="Advanced"]]^>^</Show^>
     echo         ^<Show Dialog="Dlg_RuntimeSelection" After="Dlg_InstallLocation"^>^<![CDATA[NOT Installed AND SETUP_MODE="Advanced"]]^>^</Show^>
@@ -793,6 +845,7 @@ setlocal DisableDelayedExpansion
     echo       ^<CostInitialize Sequence="800" /^>
     echo       ^<FileCost Sequence="900" /^>
     echo       ^<CostFinalize Sequence="1000" /^>
+    if exist "%MULTI_LICENSE_EXEC_SEQ_FILE%" type "%MULTI_LICENSE_EXEC_SEQ_FILE%"
     echo       ^<Custom Action="InstallMySQLService" Before="InstallOpenEdXService"^>^<![CDATA[NOT Installed AND INSTALL_MYSQL="1" AND NOT PROP_MYSQL_REMOTE_URL AND NOT PROP_OPENEDX_OFFLINE="1"]]^>^</Custom^>
     echo       ^<Custom Action="InstallRedisService" Before="InstallOpenEdXService"^>^<![CDATA[NOT Installed AND INSTALL_REDIS="1" AND NOT PROP_REDIS_URL AND NOT PROP_OPENEDX_OFFLINE="1"]]^>^</Custom^>
     echo       ^<Custom Action="InstallOpenEdXService" Before="InstallFinalize"^>^<![CDATA[NOT Installed AND INSTALL_LMS="1"]]^>^</Custom^>
@@ -963,7 +1016,13 @@ if %ERRORLEVEL%==0 (
 set "_CANDLE_WXS=%WXS_FILE%.candle.wxs"
 where candle.exe >nul 2>&1
 if not %ERRORLEVEL%==0 (
-    if exist "C:\Program Files (x86)\WiX Toolset v3.14\bin\candle.exe" (
+    if exist "C:\tools\wix\candle.exe" (
+        set "PATH=%PATH%;C:\tools\wix"
+    ) else if exist "%LIBSCRIPT_ROOT_DIR%\tools\wix\candle.exe" (
+        set "PATH=%PATH%;%LIBSCRIPT_ROOT_DIR%\tools\wix"
+    ) else if exist "C:\libscript\tools\wix\candle.exe" (
+        set "PATH=%PATH%;C:\libscript\tools\wix"
+    ) else if exist "C:\Program Files (x86)\WiX Toolset v3.14\bin\candle.exe" (
         set "PATH=%PATH%;C:\Program Files (x86)\WiX Toolset v3.14\bin"
     ) else if exist "C:\Program Files (x86)\WiX Toolset v3.11\bin\candle.exe" (
         set "PATH=%PATH%;C:\Program Files (x86)\WiX Toolset v3.11\bin"
@@ -971,7 +1030,7 @@ if not %ERRORLEVEL%==0 (
 )
 where candle.exe >nul 2>&1
 if %ERRORLEVEL%==0 (
-    powershell -NoProfile -Command "$w = Get-Content -LiteralPath '%WXS_FILE%' -Raw; $w = $w -replace '<Property Id=\"MsiHiddenProperties\".*?/>', ''; $w = [regex]::Replace($w, '(?s)<InstallUISequence>.*?</InstallUISequence>', '      <InstallUISequence><Show Dialog=\"Dlg_Welcome\" After=\"CostFinalize\" /><Show Dialog=\"Dlg_Exit\" OnExit=\"success\" /></InstallUISequence>'); Set-Content -LiteralPath '%WXS_FILE%.candle.wxs' -Value $w"
+    powershell -NoProfile -Command "$w = Get-Content -LiteralPath '%WXS_FILE%' -Raw; $w = $w -replace '<Property Id=\"MsiHiddenProperties\".*?/>', ''; $w = [regex]::Replace($w, '(?m)^\s*<Show Dialog=\"Dlg_VerifyReady\" After=\"Dlg_SetupType\".*?\r?\n', ''); Set-Content -LiteralPath '%WXS_FILE%.candle.wxs' -Value $w"
     candle.exe -nologo -out "%OUT_FILE%.wixobj" "%WXS_FILE%.candle.wxs"
     if errorlevel 1 (
         del /f /q "%WXS_FILE%.candle.wxs" >nul 2>&1

@@ -46,29 +46,42 @@ jobs:
       fail-fast: false
       matrix:
         package:
+          - id: mysql
+            name: LibScript MySQL Database Server
+            target_dir: _lib/databases/mysql
+            build_cmd: packaging\build_component_msi.cmd --component mysql
+          - id: redis
+            name: LibScript Redis Cache & Datastore
+            target_dir: _lib/caches/redis
+            build_cmd: packaging\build_component_msi.cmd --component redis
+          - id: mongodb
+            name: LibScript MongoDB Document Database
+            target_dir: _lib/databases/mongodb
+            build_cmd: packaging\build_component_msi.cmd --component mongodb
+          - id: python
+            name: LibScript Python Language Runtime
+            target_dir: _lib/languages/python
+            build_cmd: packaging\build_component_msi.cmd --component python
+          - id: nodejs
+            name: LibScript Node.js JavaScript Runtime
+            target_dir: _lib/languages/nodejs
+            build_cmd: packaging\build_component_msi.cmd --component nodejs
+          - id: meilisearch
+            name: LibScript Meilisearch Search Engine
+            target_dir: _lib/search/meilisearch
+            build_cmd: packaging\build_component_msi.cmd --component meilisearch
+          - id: openedx-core
+            name: Open edX Platform Core
+            target_dir: stacks/cms/openedx
+            build_cmd: packaging\build_openedx_core_msi.cmd --version 22.1.0
           - id: openedx
-            name: Open edX Platform
+            name: Open edX Platform (Master Online)
             target_dir: stacks/cms/openedx
-            build_cmd: packaging\build_openedx_msi.cmd --online
+            build_cmd: packaging\build_openedx_orchestrator_msi.cmd --variant online
           - id: openedx-offline
-            name: Open edX Platform (Offline)
+            name: Open edX Platform (Master Offline)
             target_dir: stacks/cms/openedx
-            build_cmd: packaging\build_openedx_msi.cmd --offline
-          # --------------------------------------------------------------------
-          # Extensible across all 160+ packages in libscript:
-          # - id: mysql
-          #   name: MySQL Database Server
-          #   target_dir: _lib/databases/mysql
-          #   build_cmd: packaging\build_msi.cmd _lib\databases\mysql
-          # - id: redis
-          #   name: Redis Datastore
-          #   target_dir: _lib/caches/redis
-          #   build_cmd: packaging\build_msi.cmd _lib/caches/redis
-          # - id: valkey
-          #   name: Valkey Datastore
-          #   target_dir: _lib/caches/valkey
-          #   build_cmd: packaging\build_msi.cmd _lib\caches\valkey
-          # --------------------------------------------------------------------
+            build_cmd: packaging\build_openedx_orchestrator_msi.cmd --variant offline
 
     steps:
       - name: Clone CC0 Assets
@@ -120,7 +133,7 @@ jobs:
           }
 
           # 2. Extract package metadata if packaging.json exists
-          $pkgJsonVer = "1.0.0"
+          $pkgJsonVer = "22.1.0"
           $pkgDefaultBranch = ""
           if (Test-Path "${{ matrix.package.target_dir }}\packaging.json") {
             $json = Get-Content "${{ matrix.package.target_dir }}\packaging.json" | ConvertFrom-Json
@@ -131,12 +144,21 @@ jobs:
           }
 
           # 3. Determine target ref for naming (use tag/branch, or package default_branch, or manifest version)
-          $targetRef = $rawRef
-          if (-not $targetRef -or $targetRef -eq "master" -or $targetRef -eq "main") {
+          # Note: The libscript repository tag (e.g. v0.0.1) is NOT the software version of the third-party stack.
+          $targetRef = ""
+          if ("${{ github.event.inputs.tag_name }}") {
+            $inputTag = "${{ github.event.inputs.tag_name }}".Trim()
+            if ($inputTag -match "${{ matrix.package.id }}" -or $inputTag -match "(open-release|release)/" -or $inputTag -match "verawood" -or -not $pkgDefaultBranch) {
+              $targetRef = $inputTag
+            }
+          }
+          if (-not $targetRef) {
             if ($pkgDefaultBranch) {
               $targetRef = $pkgDefaultBranch
-            } elseif (-not $targetRef) {
+            } elseif ($pkgJsonVer) {
               $targetRef = $pkgJsonVer
+            } else {
+              $targetRef = $rawRef
             }
           }
 
@@ -144,22 +166,46 @@ jobs:
           # Strips generic prefixes: 'open-release/', 'release/', 'refs/heads/', 'refs/tags/', 'v'
           $cleanVer = $targetRef -replace '^(refs/(heads|tags)/)?(open-release/|release/)?', ''
           $cleanVer = $cleanVer -replace '^v(?=\d)', ''
-          # Simplify '<name>.master' release branches to '<name>' (e.g. quince.master -> quince)
+          # Simplify '<name>.master' release branches to '<name>' (e.g. quince.master -> quince, verawood.master -> verawood)
           if ($cleanVer -match '^([a-zA-Z0-9_-]+)\.master$') {
             $cleanVer = $Matches[1]
           }
           $cleanVer = $cleanVer -replace '[^a-zA-Z0-9._-]', '-'
 
           # 5. Determine numeric WiX Product Version (Major.Minor.Build.Revision)
-          $numericCandidate = ""
-          if ($targetRef -match '(\d+(?:\.\d+)+)') {
-            $numericCandidate = $Matches[1]
-          } else {
-            $numericCandidate = $pkgJsonVer
+          # WiX requires 3 or 4 decimal integers (0-255 for major/minor, 0-65535 for build/revision)
+          $namedReleases = @{
+            "aspen" = 1; "birch" = 2; "cypress" = 3; "dogwood" = 4;
+            "eucalyptus" = 5; "ficus" = 6; "ginkgo" = 7; "hawthorn" = 8;
+            "ironwood" = 9; "juniper" = 10; "koa" = 11; "lilac" = 12;
+            "maple" = 13; "nutmeg" = 14; "olive" = 15; "palm" = 16;
+            "quince" = 17; "redwood" = 18; "sumac" = 19; "teak" = 20;
+            "ulmo" = 21; "verawood" = 22; "williamsii" = 23
           }
-          $parts = $numericCandidate.Split('.')
-          while ($parts.Length -lt 3) { $parts += "0" }
-          $wixVer = ($parts[0..([Math]::Min($parts.Length - 1, 3))]) -join '.'
+
+          $wixVer = ""
+          if ($cleanVer -match '^([a-zA-Z]+)(?:\.(\d+))?') {
+            $relName = $Matches[1].ToLower()
+            $pointVer = if ($Matches[2]) { [int]$Matches[2] } else { 0 }
+            if ($namedReleases.ContainsKey($relName)) {
+              $majorVer = $namedReleases[$relName]
+              $wixVer = "$majorVer.$pointVer.0.0"
+            }
+          }
+
+          if (-not $wixVer) {
+            $numericCandidate = ""
+            if ($targetRef -match '(\d+(?:\.\d+)+)') {
+              $numericCandidate = $Matches[1]
+            } elseif ($pkgJsonVer -match '(\d+(?:\.\d+)+)') {
+              $numericCandidate = $Matches[1]
+            } else {
+              $numericCandidate = "22.1.0"
+            }
+            $parts = $numericCandidate.Split('.')
+            while ($parts.Length -lt 3) { $parts += "0" }
+            $wixVer = ($parts[0..([Math]::Min($parts.Length - 1, 3))]) -join '.'
+          }
 
           # 6. Canonical package filename: <package_id>-<version>
           $pkgId = "${{ matrix.package.id }}"
@@ -173,12 +219,13 @@ jobs:
 
           "version=$wixVer" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "clean_version=$cleanVer" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "target_ref=$targetRef" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "out_name=$outName" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Build MSI Package (${{ matrix.package.name }})
         shell: cmd
         run: |
-          call ${{ matrix.package.build_cmd }} --out ${{ steps.version.outputs.out_name }} --version ${{ steps.version.outputs.version }}
+          call ${{ matrix.package.build_cmd }} --out ${{ steps.version.outputs.out_name }} --version ${{ steps.version.outputs.version }} --branch ${{ steps.version.outputs.target_ref }}
           if not exist "${{ steps.version.outputs.out_name }}.msi" (
             echo [ERROR] Expected MSI artifact was not generated: ${{ steps.version.outputs.out_name }}.msi >&2
             exit /b 1

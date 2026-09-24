@@ -4,7 +4,7 @@
   "provides": ["git-server", "gitea"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": [],
+  "os_blacklist": ["sunos"],
   "ports": ["3000", "2222"],
   "title": "Gitea",
   "description": "LibScript component for GITEA",

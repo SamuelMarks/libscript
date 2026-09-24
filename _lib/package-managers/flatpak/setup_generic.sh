@@ -184,7 +184,12 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_warn "No download URL provided for flatpak ${VERSION}."
+            log_info "No download URL provided for flatpak ${VERSION}. Falling back to system package manager..."
+            libscript_depends "flatpak"
+            mkdir -p "${TARGET_DIR}/bin"
+            if command -v flatpak >/dev/null 2>&1; then
+              ln -sf "$(command -v flatpak)" "${TARGET_DIR}/bin/flatpak"
+            fi
           fi
         fi
       else

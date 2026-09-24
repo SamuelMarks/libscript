@@ -3,6 +3,7 @@
   "name": "snap",
   "provides": ["snap"],
   "os_whitelist": ["linux"],
+  "os_blacklist": ["windows", "sunos", "alpine", "freebsd"],
   "title": "snap",
   "description": "Bootstrap module for the `snap` package manager/tool.",
   "category": "package-manager"

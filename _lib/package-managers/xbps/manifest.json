@@ -2,7 +2,7 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "xbps",
   "provides": ["package-manager", "xbps"],
-  "os_whitelist": ["linux"],
+  "os_whitelist": ["void"],
   "os_blacklist": ["darwin", "windows", "freebsd"],
   "title": "xbps",
   "description": "Bootstrap module for the Void Linux `xbps` package manager.",

@@ -44,7 +44,11 @@ if [ ! -d "${JUPYTERHUB_VENV}" ]; then
   else
     priv  chown -R -- "${USER}":"${GROUP:-${USER}}" "${JUPYTERHUB_VENV}"
   fi
-  uv venv --python "${PYTHON_VERSION}" -- "${JUPYTERHUB_VENV}"
+  if command -v uv >/dev/null 2>&1; then
+    uv venv --python "${PYTHON_VERSION}" -- "${JUPYTERHUB_VENV}"
+  else
+    python3 -m venv "${JUPYTERHUB_VENV}"
+  fi
   "${JUPYTERHUB_VENV}"'/bin/python' -m ensurepip
   "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U pip
   "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U setuptools wheel
@@ -113,15 +117,17 @@ elif [ -d '/Library/LaunchDaemons' ]; then
   >&2 printf 'TODO: macOS service\n'
   exit 0
 else
-  "${JUPYTERHUB_VENV}"'/bin/jupyter' notebook \
-    --NotebookApp.notebook_dir="${JUPYTERHUB_NOTEBOOK_DIR}" \
-    --NotebookApp.ip="${JUPYTERHUB_IP}" \
-    --NotebookApp.port="${JUPYTERHUB_PORT}" \
-    --Session.username="${JUPYTERHUB_USERNAME}" \
-    --NotebookApp.password="${JUPYTERHUB_PASSWORD}" \
-    --NotebookApp.password_required=True \
-    --NotebookApp.allow_remote_access=True \
-    --NotebookApp.iopub_data_rate_limit=2147483647 \
-    --no-browser \
-    --NotebookApp.open_browser=False &
+  if [ "${ACTION:-install}" = "start" ] && [ -x "${JUPYTERHUB_VENV}/bin/jupyter" ]; then
+    "${JUPYTERHUB_VENV}"'/bin/jupyter' notebook \
+      --NotebookApp.notebook_dir="${JUPYTERHUB_NOTEBOOK_DIR}" \
+      --NotebookApp.ip="${JUPYTERHUB_IP}" \
+      --NotebookApp.port="${JUPYTERHUB_PORT}" \
+      --Session.username="${JUPYTERHUB_USERNAME}" \
+      --NotebookApp.password="${JUPYTERHUB_PASSWORD}" \
+      --NotebookApp.password_required=True \
+      --NotebookApp.allow_remote_access=True \
+      --NotebookApp.iopub_data_rate_limit=2147483647 \
+      --no-browser \
+      --NotebookApp.open_browser=False &
+  fi
 fi

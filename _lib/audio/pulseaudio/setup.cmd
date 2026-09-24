@@ -39,6 +39,10 @@ if "%~1"=="-h" (
 
 set "ACTION=%~1"
 if "!ACTION!"=="" set "ACTION=compile"
+if /i "!ACTION!"=="install" (
+    call "%~dp0setup_windows.cmd"
+    exit /b !ERRORLEVEL!
+)
 
 set "SCRIPT_DIR=%~dp0"
 if "%LIBSCRIPT_TARGET_SYSROOT%"=="" (

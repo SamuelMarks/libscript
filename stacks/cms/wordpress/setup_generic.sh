@@ -66,9 +66,9 @@ if [ ! -d "${WORDPRESS_WWWROOT}/wp-admin" ]; then
   printf '%s\n' "Downloading WordPress (${WORDPRESS_VERSION}) to ${WORDPRESS_WWWROOT}..."
   priv mkdir -p "${WORDPRESS_WWWROOT}"
   if [ "${WORDPRESS_VERSION}" = "latest" ]; then
-    dl_export url="https://wordpress.org/latest.tar.gz"
+    dl_url="https://wordpress.org/latest.tar.gz"
   else
-    dl_export url="https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz"
+    dl_url="https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz"
   fi
 
   if command -v libscript_download >/dev/null 2>&1; then
@@ -154,7 +154,7 @@ fi
 priv sed -i "s/define( *'DB_NAME', *'[^']*' *);/define( 'DB_NAME', '${DB_NAME}' );/" "${WORDPRESS_WWWROOT}/wp-config.php"
 priv sed -i "s/define( *'DB_USER', *'[^']*' *);/define( 'DB_USER', '${DB_USER}' );/" "${WORDPRESS_WWWROOT}/wp-config.php"
 priv sed -i "s/define( *'DB_PASSWORD', *'[^']*' *);/define( 'DB_PASSWORD', '${DB_PASS}' );/" "${WORDPRESS_WWWROOT}/wp-config.php"
-priv chown -R www-data:www-data "${WORDPRESS_WWWROOT}" || true # fallback for distros without www-data
+priv chown -R www-data:www-data "${WORDPRESS_WWWROOT}" 2>/dev/null || priv chown -R nginx:nginx "${WORDPRESS_WWWROOT}" 2>/dev/null || true
 
 # Determine PHP_FPM Socket (OS specific usually)
 if [ -z "${WORDPRESS_PHP_FPM_LISTEN:-}" ]; then
@@ -186,6 +186,9 @@ printf '%s\n' "Configuring webserver: ${WORDPRESS_WEBSERVER}"
 ENV_SCRIPT_FILE=$(mktemp)
 cat <<EOF > "${ENV_SCRIPT_FILE}"
 export WORDPRESS_SERVER_NAME="${WORDPRESS_SERVER_NAME}"
+export SERVER_NAME="${WORDPRESS_SERVER_NAME}"
+export WWWROOT="${WORDPRESS_WWWROOT}"
+export PHP_FPM_LISTEN="${WORDPRESS_PHP_FPM_LISTEN}"
 export WORDPRESS_WWWROOT="${WORDPRESS_WWWROOT}"
 export WORDPRESS_PHP_FPM_LISTEN="${WORDPRESS_PHP_FPM_LISTEN}"
 export LISTEN="${WORDPRESS_LISTEN:-80}"
@@ -216,12 +219,18 @@ if [ "${WORDPRESS_WEBSERVER}" = "nginx" ]; then
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" > "${SERVER_BLOCK_TMP}"
 
   NGINX_CONF_DIR="${LIBSCRIPT_ROOT_DIR}/installed/nginx/conf"
-  if [ -d /etc/nginx/sites-available ]; then
-    NGINX_CONF_DIR="/etc/nginx"
+  if [ -d /etc/nginx/http.d ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/http.d/${WORDPRESS_SERVER_NAME}.conf"
+  elif [ -d /etc/nginx/conf.d ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/conf.d/${WORDPRESS_SERVER_NAME}.conf"
+  elif [ -d /etc/nginx/sites-available ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/sites-available/${WORDPRESS_SERVER_NAME}.conf"
+    priv ln -sf "/etc/nginx/sites-available/${WORDPRESS_SERVER_NAME}.conf" "/etc/nginx/sites-enabled/${WORDPRESS_SERVER_NAME}.conf"
+  else
+    priv mkdir -p "${NGINX_CONF_DIR}/sites-available" "${NGINX_CONF_DIR}/sites-enabled"
+    priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${WORDPRESS_SERVER_NAME}.conf"
+    priv ln -sf "${NGINX_CONF_DIR}/sites-available/${WORDPRESS_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${WORDPRESS_SERVER_NAME}.conf"
   fi
-
-  priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${WORDPRESS_SERVER_NAME}.conf"
-  priv ln -sf "${NGINX_CONF_DIR}/sites-available/${WORDPRESS_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${WORDPRESS_SERVER_NAME}.conf"
   if ! priv systemctl reload nginx ; then
     true
   fi

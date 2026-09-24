@@ -38,6 +38,18 @@ if [ ! -d "$STAMPS_DIR" ]; then
   mkdir -p "$STAMPS_DIR"
 fi
 
+if ! command -v gnome-shell >/dev/null 2>&1; then
+  if command -v apk >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv apk add --no-cache gnome-shell || true
+  fi
+fi
+
 if [ -f "$STAMP_FILE" ]; then
   printf '[SKIP]  %s already installed (%s)
 ' "gnome" "$STAMP_FILE"

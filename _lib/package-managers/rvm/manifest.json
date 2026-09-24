@@ -3,6 +3,7 @@
   "name": "rvm",
   "provides": ["rvm"],
   "os_whitelist": ["all"],
+  "os_blacklist": ["sunos"],
   "title": "rvm",
   "description": "Bootstrap module for the `rvm` package manager.",
   "category": "package-manager"

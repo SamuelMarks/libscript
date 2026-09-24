@@ -17,5 +17,6 @@
     "app-servers/gunicorn",
     "utilities/exim",
     "package-managers/nodeenv"
-  ]
+  ],
+  "os_blacklist": ["sunos", "alpine", "freebsd"]
 }

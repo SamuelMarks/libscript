@@ -2,7 +2,7 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "yay",
   "provides": ["yay"],
-  "os_whitelist": ["linux"],
+  "os_whitelist": ["arch", "artix", "manjaro"],
   "title": "yay",
   "description": "Bootstrap module for the `yay` package manager.",
   "category": "package-manager",

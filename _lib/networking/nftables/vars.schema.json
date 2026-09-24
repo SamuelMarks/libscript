@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/networking/nftables/vars.schema.json",
+  "title": "Nftables variables",
+  "description": "Configuration variables for Nftables",
+  "type": "object",
+  "properties": {
+    "NFTABLES_VERSION": {
+      "description": "Specific version of nftables to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "NFTABLES_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install NFTABLES. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

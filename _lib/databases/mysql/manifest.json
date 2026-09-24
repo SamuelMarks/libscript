@@ -9,6 +9,6 @@
   "provides": ["database", "mysql", "rdbms", "sql"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": [],
+  "os_blacklist": ["sunos"],
   "ports": [3306]
 }

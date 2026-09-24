@@ -88,25 +88,17 @@ if command -v xmllint >/dev/null 2>&1; then
   fi
 fi
 
-# 1. Verify Top-Level EULA Dialog
+# 1. Verify Consolidated EULA Dialog with single I Agree button
 assert_wxs_contains 'Dialog Id="Dlg_License"' "Top-level EULA Dialog exists"
-assert_wxs_contains 'Property="LICENSE_ACCEPTED"' "Top-level license acceptance checkbox property"
-assert_wxs_contains 'Redis In-Memory Cache &amp; Broker' "Properly escaped XML ampersand in Redis license title"
+assert_wxs_contains 'Property="LICENSE_ACCEPTED"' "License acceptance property configured"
+assert_wxs_contains 'Text="I Agree"' "Button text is I Agree instead of Next>"
 
-# 2. Verify Individual Component License Dialogs
-for pkg in mysql redis mongodb python nodejs meilisearch; do
-  assert_wxs_contains "Dialog Id=\"Dlg_License_${pkg}\"" "Dedicated license dialog for bundled component: ${pkg}"
-  assert_wxs_contains "Control Id=\"Chk_Accept_${pkg}\"" "Individual acceptance checkbox for component: ${pkg}"
-  assert_wxs_contains "Property=\"LICENSE_ACCEPTED_${pkg}\"" "Secure acceptance property for component: ${pkg}"
-  assert_wxs_contains "Property Id=\"LICENSE_ACCEPTED_${pkg}\" Value=\"0\" Secure=\"yes\"" "Secure registration of component license property: ${pkg}"
-done
-
-# 3. Verify InstallUISequence Routing
+# 2. Verify InstallUISequence Routing (Single License step)
 assert_wxs_contains '<Show Dialog="Dlg_Welcome" After="CostFinalize">NOT Installed</Show>' "Welcome dialog shown after CostFinalize"
-assert_wxs_contains '<Show Dialog="Dlg_License" After="Dlg_Welcome">NOT Installed</Show>' "Top-level license shown after Welcome"
-assert_wxs_contains '<Show Dialog="Dlg_License_mysql" After="Dlg_License">NOT Installed</Show>' "MySQL license chained after top-level license"
+assert_wxs_contains '<Show Dialog="Dlg_License" After="Dlg_Welcome">NOT Installed</Show>' "License shown after Welcome"
+assert_wxs_contains '<Show Dialog="Dlg_SetupType" After="Dlg_License">NOT Installed</Show>' "SetupType directly after License"
 
-# 4. Verify Unattended Silent Installation Guard
+# 3. Verify Unattended Silent Installation Guard
 assert_wxs_contains 'CustomAction Id="CA_AbortNoLicense"' "Unattended install license validation custom action"
 assert_wxs_contains 'AGREE_ALL_LICENSES="1"' "Blanket opt-in property AGREE_ALL_LICENSES supported"
 assert_wxs_contains '<Custom Action="CA_AbortNoLicense" Before="InstallInitialize">' "License agreement check scheduled before InstallInitialize"

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/base-system/doas/vars.schema.json",
+  "title": "Doas variables",
+  "description": "Configuration variables for Doas",
+  "type": "object",
+  "properties": {
+    "DOAS_VERSION": {
+      "description": "Specific version of doas to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "DOAS_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install DOAS. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

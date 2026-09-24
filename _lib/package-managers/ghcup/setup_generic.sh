@@ -184,7 +184,18 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_warn "No download URL provided for ghcup ${VERSION}."
+            log_info "No download URL provided for ghcup ${VERSION}. Downloading official binary..."
+            _arch=$(uname -m)
+            if [ "$_arch" = "x86_64" ]; then _arch="x86_64"; elif [ "$_arch" = "aarch64" ] || [ "$_arch" = "arm64" ]; then _arch="aarch64"; fi
+            _os=$(uname -s | tr '[:upper:]' '[:lower:]')
+            if [ "$_os" = "darwin" ]; then
+              _ghcup_url="https://downloads.haskell.org/~ghcup/${_arch}-apple-darwin-ghcup"
+            else
+              _ghcup_url="https://downloads.haskell.org/~ghcup/${_arch}-linux-ghcup"
+            fi
+            libscript_depends "curl"
+            curl -fsSL "$_ghcup_url" -o "${TARGET_DIR}/bin/ghcup" || true
+            chmod +x "${TARGET_DIR}/bin/ghcup" || true
           fi
         fi
       else

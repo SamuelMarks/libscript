@@ -45,9 +45,9 @@ if [ ! -d "${PLUGIN_DIR}" ]; then
   libscript_depends 'unzip'
   printf '%s\n' "Downloading WooCommerce (${WOOCOMMERCE_VERSION}) to ${WOOCOMMERCE_WWWROOT}..."
   if [ "${WOOCOMMERCE_VERSION}" = "latest" ]; then
-    dl_export url="https://downloads.wordpress.org/plugin/woocommerce.zip"
+    dl_url="https://downloads.wordpress.org/plugin/woocommerce.zip"
   else
-    dl_export url="https://downloads.wordpress.org/plugin/woocommerce.${WOOCOMMERCE_VERSION}.zip"
+    dl_url="https://downloads.wordpress.org/plugin/woocommerce.${WOOCOMMERCE_VERSION}.zip"
   fi
 
   tmp_woo=$(mktemp)

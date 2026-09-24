@@ -140,7 +140,15 @@ case "$ACTION" in
     ;;
   install)
     if [ "$PIP_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "pip"
+      libscript_depends "pip" || true
+      if ! pip --version >/dev/null 2>&1; then
+        if command -v python3 >/dev/null 2>&1 && python3 -m pip --version >/dev/null 2>&1; then
+          mkdir -p "${LIBSCRIPT_HOME:-$HOME/.libscript}/pip/latest/bin"
+          printf '#!/bin/sh\nexec python3 -m pip "$@"\n' > "${LIBSCRIPT_HOME:-$HOME/.libscript}/pip/latest/bin/pip"
+          chmod +x "${LIBSCRIPT_HOME:-$HOME/.libscript}/pip/latest/bin/pip"
+          libscript_symlink_alias "pip" "latest" "latest" || true
+        fi
+      fi
     elif [ "$PIP_INSTALL_METHOD" = "mise" ]; then
       mise install "pip@${VERSION}"
     elif [ "$PIP_INSTALL_METHOD" = "asdf" ]; then

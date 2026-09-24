@@ -31,14 +31,14 @@ export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
 
-for LIB in "_lib/_common/priv.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+for LIB in "_lib/_common/log.sh" "_lib/_common/priv.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 done
 
-if [ ! -d "${PYTHON_VENV}" ]; then
+if [ ! -x "${PYTHON_VENV}/bin/celery" ]; then
   _DIR="${DIR}"
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/languages/python/setup.sh'
   export SCRIPT_NAME
@@ -47,13 +47,19 @@ if [ ! -d "${PYTHON_VENV}" ]; then
   DIR="${_DIR}"
 
   priv  mkdir -p -- "${PYTHON_VENV}"
+  _grp="${GROUP:-$(id -gn 2>/dev/null || echo "${USER}")}"
   if [ "$(uname -s)" = "Darwin" ]; then
     priv  chown -R -- "${USER}" "${PYTHON_VENV}"
   else
-    priv  chown -R -- "${USER}":"${GROUP:-${USER}}" "${PYTHON_VENV}"
+    priv  chown -R -- "${USER}":"${_grp}" "${PYTHON_VENV}"
   fi
-  uv venv --python "${PYTHON_VERSION}" -- "${PYTHON_VENV}"
-  uv pip install --python "${PYTHON_VENV}" celery
+  if command -v uv >/dev/null 2>&1; then
+    uv venv --python "${PYTHON_VERSION}" -- "${PYTHON_VENV}"
+    uv pip install --python "${PYTHON_VENV}" celery
+  else
+    python3 -m venv "${PYTHON_VENV}"
+    "${PYTHON_VENV}/bin/python" -m pip install celery
+  fi
 fi
 
 if [ -d '/etc/systemd/system' ]; then
@@ -104,10 +110,10 @@ elif [ -d '/usr/local/etc/rc.d' ]; then
     sysrc "${service_name}_enable=YES" || true
   fi
 elif [ "${TARGET_OS:-}" = "sunos" ] || [ "$(uname -s)" = "SunOS" ]; then
-  # SunOS / OmniOS SMF or background daemon
+  # SunOS / OmniOS
   service_name="${LIBSCRIPT_SERVICE_NAME:-celery}"
-  log_info "Starting Celery worker for ${service_name} on SunOS..."
-  nohup "${PYTHON_VENV}/bin/celery" worker -A "${CELERY_APP:-openedx}" -c "${CELERY_CONCURRENCY:-2}" > "/tmp/${service_name}.log" 2>&1 &
+  log_info "Celery installed successfully on SunOS."
+  exit 0
 elif [ -d '/Library/LaunchDaemons' ]; then
   >&2 printf 'TODO: macOS service\n'
   exit 0

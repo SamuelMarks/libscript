@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/cloud-providers/hetzner/vars.schema.json",
+  "title": "Hetzner variables",
+  "description": "Configuration variables for Hetzner provider",
+  "type": "object",
+  "properties": {
+    "HETZNER_VERSION": {
+      "description": "Specific version of Hetzner tooling to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "HETZNER_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install HETZNER. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

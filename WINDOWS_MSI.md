@@ -299,3 +299,48 @@ Before rolling out `OpenEdX-Offline-Setup.msi` into production air-gapped zones:
    - Diagnostic: Port check fails for MySQL or MongoDB.
    - Resolution: Review `%OPENEDX_INSTALL_DIR%\logs` to verify local service initialization and
      check that antivirus/EDR software is not blocking loopback TCP bindings.
+
+---
+
+## Modular Zero-.EXE MSI Architecture & Side-by-Side Component Reuse
+
+LibScript supports decomposing monolithic stack installers into **modular standalone component
+MSIs** chained via Windows Installer 4.5+ native multi-package transactions (`MsiEmbeddedChainer`)
+with **ZERO `.exe` bootstrappers**.
+
+### Standalone Component MSIs
+
+Every core dependency is compiled into a self-contained, reference-counted `.msi`:
+
+- `libscript-mysql-${VERSION}.msi` (`LibScript_MySQL` service on port 3306)
+- `libscript-redis-${VERSION}.msi` (`LibScript_Redis` service on port 6379)
+- `libscript-mongodb-${VERSION}.msi` (`LibScript_MongoDB` service on port 27017)
+- `libscript-python-${VERSION}.msi` (Shared runtime at `[ProgramFiles64Folder]LibScript\Python311`)
+- `libscript-nodejs-${VERSION}.msi` (Shared runtime at `[ProgramFiles64Folder]LibScript\Node20`)
+- `libscript-meilisearch-${VERSION}.msi` (`LibScript_Meilisearch` service on port 7700)
+- `openedx-core-${VERSION}.msi` (LMS/CMS application files, virtualenv wheels, CLI scripts)
+
+### Deterministic GUID Identity (`packaging/guid_registry.json`)
+
+All components adhere to fixed `UpgradeCode` lineages and shared `ComponentId` GUIDs registered in
+`packaging/guid_registry.json`:
+
+- **MySQL Service Component GUID**: `{5B2783B0-9A1F-4348-9F93-87CE43C21001}`
+- **MySQL UpgradeCode**: `{E0F45901-83B4-4B21-9B5A-01D38FE81001}`
+
+### Side-by-Side Application Reuse (e.g. Open edX and WordPress)
+
+Multiple applications can safely share a single MySQL service on Windows without interference:
+
+1. **Shared Engine, Isolated Schemas**:
+   - Single running MySQL instance on `127.0.0.1:3306`.
+   - Open edX provisions database `openedx` and user `openedx`@`localhost`.
+   - WordPress provisions database `wordpress` and user `wordpress`@`localhost`.
+2. **Windows Installer Reference Counting**:
+   - Both installers reference identical Component GUID `{5B2783B0-9A1F-4348-9F93-87CE43C21001}`
+     with `SharedDllRefCount="yes"`.
+   - Uninstalling Open edX drops only its `openedx` schema and decrements the component reference
+     count from 2 to 1.
+   - The MySQL Windows service and WordPress database remain running and intact.
+   - The MySQL Windows service is only removed when the last consuming application is uninstalled
+     (ref count reaches 0).

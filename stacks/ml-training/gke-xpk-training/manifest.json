@@ -12,5 +12,6 @@
     "WORKLOAD_NAME": "Default is 'ml-training-job'",
     "TPU_ACCELERATOR_TYPE": "Default is 'v4-8'",
     "DOCKER_IMAGE": "The training image to use."
-  }
+  },
+  "os_blacklist": ["windows", "sunos"]
 }

@@ -161,23 +161,31 @@ case "$ACTION" in
         if [ ! -d "${TARGET_DIR}" ]; then
           log_info "Installing powershell ${VERSION} natively to ${TARGET_DIR}..."
           mkdir -p "${TARGET_DIR}/bin"
-          ARCH=$(uname -m)
-          OS=$(uname -s | tr "[:upper:]" "[:lower:]")
-          if [ "$ARCH" = "x86_64" ]; then ARCH="x64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
-          if [ "$OS" = "darwin" ]; then OS="osx"; fi
-          URL="https://github.com/PowerShell/PowerShell/releases/download/v${EXACT_VERSION}/powershell-${EXACT_VERSION}-${OS}-${ARCH}.tar.gz"
-          TEMP_FILE=$(mktemp)
-          libscript_depends "curl" "tar"
-          if [ "$OS" = "linux" ]; then libscript_depends "libicu" || true; fi
-          if ! curl -sSLf "$URL" -o "$TEMP_FILE.tar.gz"; then
-            log_error "Failed to download powershell from $URL"
+          if [ "${TARGET_OS:-}" = "alpine" ]; then
+            libscript_depends "powershell" || true
+            if command -v pwsh >/dev/null 2>&1; then
+              ln -sf "$(command -v pwsh)" "${TARGET_DIR}/bin/pwsh"
+              ln -sf "$(command -v pwsh)" "${TARGET_DIR}/pwsh"
+            fi
+          else
+            ARCH=$(uname -m)
+            OS=$(uname -s | tr "[:upper:]" "[:lower:]")
+            if [ "$ARCH" = "x86_64" ]; then ARCH="x64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
+            if [ "$OS" = "darwin" ]; then OS="osx"; fi
+            URL="https://github.com/PowerShell/PowerShell/releases/download/v${EXACT_VERSION}/powershell-${EXACT_VERSION}-${OS}-${ARCH}.tar.gz"
+            TEMP_FILE=$(mktemp)
+            libscript_depends "curl" "tar"
+            if [ "$OS" = "linux" ]; then libscript_depends "libicu" || true; fi
+            if ! curl -sSLf "$URL" -o "$TEMP_FILE.tar.gz"; then
+              log_error "Failed to download powershell from $URL"
+              rm -f "$TEMP_FILE.tar.gz"
+              exit 1
+            fi
+            tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}" || true
+            ln -sf "${TARGET_DIR}/pwsh" "${TARGET_DIR}/bin/pwsh"
+            chmod +x "${TARGET_DIR}/pwsh" || true
             rm -f "$TEMP_FILE.tar.gz"
-            exit 1
           fi
-          tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}" || true
-          ln -sf "${TARGET_DIR}/pwsh" "${TARGET_DIR}/bin/pwsh"
-          chmod +x "${TARGET_DIR}/pwsh" || true
-          rm -f "$TEMP_FILE.tar.gz"
         else
           log_info "powershell ${VERSION} is already installed."
         fi

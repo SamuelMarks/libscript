@@ -68,9 +68,9 @@ if [ ! -d "${NEXTCLOUD_WWWROOT}/core" ]; then
   printf '%s\n' "Downloading Nextcloud (${NEXTCLOUD_VERSION}) to ${NEXTCLOUD_WWWROOT}..."
   priv mkdir -p "${NEXTCLOUD_WWWROOT}"
   if [ "${NEXTCLOUD_VERSION}" = "latest" ]; then
-    dl_export url="https://download.nextcloud.com/server/releases/latest.tar.bz2"
+    dl_url="https://download.nextcloud.com/server/releases/latest.tar.bz2"
   else
-    dl_export url="https://download.nextcloud.com/server/releases/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2"
+    dl_url="https://download.nextcloud.com/server/releases/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2"
   fi
 
   if command -v libscript_download >/dev/null 2>&1; then
@@ -136,9 +136,7 @@ EOF
   rm -f "${tmp_ac}"
 fi
 
-if ! priv chown -R www-data:www-data "${NEXTCLOUD_WWWROOT}" ; then
-  true
-fi
+priv chown -R www-data:www-data "${NEXTCLOUD_WWWROOT}" 2>/dev/null || priv chown -R nginx:nginx "${NEXTCLOUD_WWWROOT}" 2>/dev/null || true
 
 if [ -z "${NEXTCLOUD_PHP_FPM_LISTEN:-}" ]; then
   if [ -e /run/php/php-fpm.sock ]; then
@@ -146,7 +144,7 @@ if [ -z "${NEXTCLOUD_PHP_FPM_LISTEN:-}" ]; then
   elif [ -e /var/run/php-fpm/php-fpm.sock ]; then
     export NEXTCLOUD_PHP_FPM_LISTEN="unix:/var/run/php-fpm/php-fpm.sock"
   elif [ -e /var/run/php-fpm.sock ]; then
-    export NEXTCLOUD_PHP_FPM_LISTEN="unix:/var/run/php-fpm.sock"
+    export NEXTCLOUD_PHP_FPM_LISTEN="unix:/var/run/php-fpm/php-fpm.sock"
   else
     export NEXTCLOUD_PHP_FPM_LISTEN="127.0.0.1:9000"
     for sock in /run/php/php*.sock; do
@@ -166,6 +164,9 @@ printf '%s\n' "Configuring webserver: ${NEXTCLOUD_WEBSERVER}"
 ENV_SCRIPT_FILE=$(mktemp)
 cat <<EOF > "${ENV_SCRIPT_FILE}"
 export NEXTCLOUD_SERVER_NAME="${NEXTCLOUD_SERVER_NAME}"
+export SERVER_NAME="${NEXTCLOUD_SERVER_NAME}"
+export WWWROOT="${NEXTCLOUD_WWWROOT}"
+export PHP_FPM_LISTEN="${NEXTCLOUD_PHP_FPM_LISTEN}"
 export NEXTCLOUD_WWWROOT="${NEXTCLOUD_WWWROOT}"
 export NEXTCLOUD_PHP_FPM_LISTEN="${NEXTCLOUD_PHP_FPM_LISTEN}"
 export LISTEN="${NEXTCLOUD_LISTEN:-80}"
@@ -194,11 +195,18 @@ if [ "${NEXTCLOUD_WEBSERVER}" = "nginx" ]; then
   SERVER_BLOCK_TMP=$(mktemp)
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" > "${SERVER_BLOCK_TMP}"
   NGINX_CONF_DIR="${LIBSCRIPT_ROOT_DIR}/installed/nginx/conf"
-  if [ -d /etc/nginx/sites-available ]; then
-    NGINX_CONF_DIR="/etc/nginx"
+  if [ -d /etc/nginx/http.d ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/http.d/${NEXTCLOUD_SERVER_NAME}.conf"
+  elif [ -d /etc/nginx/conf.d ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/conf.d/${NEXTCLOUD_SERVER_NAME}.conf"
+  elif [ -d /etc/nginx/sites-available ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/sites-available/${NEXTCLOUD_SERVER_NAME}.conf"
+    priv ln -sf "/etc/nginx/sites-available/${NEXTCLOUD_SERVER_NAME}.conf" "/etc/nginx/sites-enabled/${NEXTCLOUD_SERVER_NAME}.conf"
+  else
+    priv mkdir -p "${NGINX_CONF_DIR}/sites-available" "${NGINX_CONF_DIR}/sites-enabled"
+    priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${NEXTCLOUD_SERVER_NAME}.conf"
+    priv ln -sf "${NGINX_CONF_DIR}/sites-available/${NEXTCLOUD_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${NEXTCLOUD_SERVER_NAME}.conf"
   fi
-  priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${NEXTCLOUD_SERVER_NAME}.conf"
-  priv ln -sf "${NGINX_CONF_DIR}/sites-available/${NEXTCLOUD_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${NEXTCLOUD_SERVER_NAME}.conf"
   if ! priv systemctl reload nginx ; then
     true
   fi

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/desktops/gnome/vars.schema.json",
+  "title": "GNOME variables",
+  "description": "Configuration variables for GNOME",
+  "type": "object",
+  "properties": {
+    "GNOME_VERSION": {
+      "description": "Specific version of gnome to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "GNOME_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install GNOME. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

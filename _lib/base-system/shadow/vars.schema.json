@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/base-system/shadow/vars.schema.json",
+  "title": "Shadow variables",
+  "description": "Configuration variables for Shadow",
+  "type": "object",
+  "properties": {
+    "SHADOW_VERSION": {
+      "description": "Specific version of shadow to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "SHADOW_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install SHADOW. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

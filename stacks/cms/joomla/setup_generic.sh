@@ -75,7 +75,7 @@ if [ ! -d "${JOOMLA_WWWROOT}/administrator" ]; then
     fi
   fi
 
-  dl_export url="https://github.com/joomla/joomla-cms/releases/download/${JOOMLA_VERSION}/Joomla_${JOOMLA_VERSION}-Stable-Full_Package.tar.gz"
+  dl_url="https://github.com/joomla/joomla-cms/releases/download/${JOOMLA_VERSION}/Joomla_${JOOMLA_VERSION}-Stable-Full_Package.tar.gz"
 
   tmp_j=$(mktemp)
   if command -v libscript_download >/dev/null 2>&1; then
@@ -121,7 +121,7 @@ elif [ "${JOOMLA_DB_TYPE}" = "postgres" ] || [ "${JOOMLA_DB_TYPE}" = "postgresql
   fi
 fi
 
-priv chown -R www-data:www-data "${JOOMLA_WWWROOT}" || true # fallback for distros without www-data
+priv chown -R www-data:www-data "${JOOMLA_WWWROOT}" 2>/dev/null || priv chown -R nginx:nginx "${JOOMLA_WWWROOT}" 2>/dev/null || true
 
 # Determine PHP_FPM Socket (OS specific usually)
 if [ -z "${JOOMLA_PHP_FPM_LISTEN:-}" ]; then
@@ -130,7 +130,7 @@ if [ -z "${JOOMLA_PHP_FPM_LISTEN:-}" ]; then
   elif [ -e /var/run/php-fpm/php-fpm.sock ]; then
     export JOOMLA_PHP_FPM_LISTEN="unix:/var/run/php-fpm/php-fpm.sock"
   elif [ -e /var/run/php-fpm.sock ]; then
-    export JOOMLA_PHP_FPM_LISTEN="unix:/var/run/php-fpm.sock"
+    export JOOMLA_PHP_FPM_LISTEN="unix:/var/run/php-fpm/php-fpm.sock"
   else
     # Let's try to find it dynamically or fallback to localhost port
     export JOOMLA_PHP_FPM_LISTEN="127.0.0.1:9000"
@@ -153,6 +153,9 @@ printf '%s\n' "Configuring webserver: ${JOOMLA_WEBSERVER}"
 ENV_SCRIPT_FILE=$(mktemp)
 cat <<EOF > "${ENV_SCRIPT_FILE}"
 export JOOMLA_SERVER_NAME="${JOOMLA_SERVER_NAME}"
+export SERVER_NAME="${JOOMLA_SERVER_NAME}"
+export WWWROOT="${JOOMLA_WWWROOT}"
+export PHP_FPM_LISTEN="${JOOMLA_PHP_FPM_LISTEN}"
 export JOOMLA_WWWROOT="${JOOMLA_WWWROOT}"
 export JOOMLA_PHP_FPM_LISTEN="${JOOMLA_PHP_FPM_LISTEN}"
 export LISTEN="${JOOMLA_LISTEN:-80}"
@@ -183,12 +186,18 @@ if [ "${JOOMLA_WEBSERVER}" = "nginx" ]; then
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" > "${SERVER_BLOCK_TMP}"
 
   NGINX_CONF_DIR="${LIBSCRIPT_ROOT_DIR}/installed/nginx/conf"
-  if [ -d /etc/nginx/sites-available ]; then
-    NGINX_CONF_DIR="/etc/nginx"
+  if [ -d /etc/nginx/http.d ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/http.d/${JOOMLA_SERVER_NAME}.conf"
+  elif [ -d /etc/nginx/conf.d ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/conf.d/${JOOMLA_SERVER_NAME}.conf"
+  elif [ -d /etc/nginx/sites-available ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/sites-available/${JOOMLA_SERVER_NAME}.conf"
+    priv ln -sf "/etc/nginx/sites-available/${JOOMLA_SERVER_NAME}.conf" "/etc/nginx/sites-enabled/${JOOMLA_SERVER_NAME}.conf"
+  else
+    priv mkdir -p "${NGINX_CONF_DIR}/sites-available" "${NGINX_CONF_DIR}/sites-enabled"
+    priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${JOOMLA_SERVER_NAME}.conf"
+    priv ln -sf "${NGINX_CONF_DIR}/sites-available/${JOOMLA_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${JOOMLA_SERVER_NAME}.conf"
   fi
-
-  priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${JOOMLA_SERVER_NAME}.conf"
-  priv ln -sf "${NGINX_CONF_DIR}/sites-available/${JOOMLA_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${JOOMLA_SERVER_NAME}.conf"
   if ! priv systemctl reload nginx ; then
     true
   fi

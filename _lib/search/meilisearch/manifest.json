@@ -9,6 +9,6 @@
   "provides": ["search", "meilisearch"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": [],
+  "os_blacklist": ["sunos"],
   "ports": [7700]
 }

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/base-system/kmod/vars.schema.json",
+  "title": "Kmod variables",
+  "description": "Configuration variables for Kmod",
+  "type": "object",
+  "properties": {
+    "KMOD_VERSION": {
+      "description": "Specific version of kmod to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "KMOD_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install KMOD. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

@@ -184,9 +184,17 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            if [ "$UNAME_LOWER" = "freebsd" ]; then
-              log_info "No native binary for FreeBSD. Falling back to system package manager for r..."
+            if [ "$UNAME_LOWER" = "freebsd" ] || [ "${TARGET_OS:-}" = "alpine" ] || [ -z "${R_DOWNLOAD_URL:-}" ]; then
+              log_info "No native binary for ${TARGET_OS:-$UNAME_LOWER}. Falling back to system package manager for r..."
               libscript_depends "r"
+              mkdir -p "${TARGET_DIR}/bin"
+              if command -v R >/dev/null 2>&1; then
+                ln -sf "$(command -v R)" "${TARGET_DIR}/bin/R"
+                ln -sf "$(command -v R)" "${TARGET_DIR}/bin/r"
+                if command -v Rscript >/dev/null 2>&1; then
+                  ln -sf "$(command -v Rscript)" "${TARGET_DIR}/bin/Rscript"
+                fi
+              fi
             else
               log_warn "No download URL provided for r ${VERSION}."
             fi

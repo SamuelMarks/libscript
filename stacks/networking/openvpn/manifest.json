@@ -4,5 +4,6 @@
   "category": "networking",
   "title": "openvpn",
   "description": "openvpn stack",
-  "provides": ["openvpn"]
+  "provides": ["openvpn"],
+  "os_blacklist": ["sunos"]
 }

@@ -3,7 +3,7 @@
   "name": "nuget",
   "provides": ["package-manager", "nuget"],
   "os_whitelist": ["linux", "darwin", "windows"],
-  "os_blacklist": ["freebsd"],
+  "os_blacklist": ["freebsd", "alpine", "sunos"],
   "title": "nuget",
   "description": "Bootstrap module for the `nuget` package manager.",
   "category": "package-manager"

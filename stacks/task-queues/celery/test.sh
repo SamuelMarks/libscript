@@ -22,7 +22,8 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+COMP_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+SCRIPT_DIR="${COMP_DIR}"
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 export LIBSCRIPT_ROOT_DIR
@@ -35,6 +36,9 @@ done
 
 
 set -feu
+unset SCRIPT_NAME || true
+SCRIPT_NAME="${COMP_DIR}/env.sh"
+export SCRIPT_NAME
 # shellcheck disable=SC1090,SC1091
-. "$SCRIPT_DIR/env.sh"
+. "${SCRIPT_NAME}"
 "${PYTHON_VENV}/bin/celery" --version

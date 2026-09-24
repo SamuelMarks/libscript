@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "proxmox",
+  "title": "Proxmox VE",
+  "description": "Debian-based open-source enterprise virtualization platform",
+  "category": "cloud-providers",
+  "provides": ["proxmox"],
+  "os_whitelist": ["linux"],
+  "os_blacklist": ["windows"]
+}

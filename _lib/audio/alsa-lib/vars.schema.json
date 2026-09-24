@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/audio/alsa-lib/vars.schema.json",
+  "title": "Alsa-Lib variables",
+  "description": "Configuration variables for Alsa-Lib",
+  "type": "object",
+  "properties": {
+    "ALSA_LIB_VERSION": {
+      "description": "Specific version of alsa-lib to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "ALSA_LIB_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install ALSA_LIB. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

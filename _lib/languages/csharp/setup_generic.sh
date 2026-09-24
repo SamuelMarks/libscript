@@ -183,9 +183,14 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            if [ "$UNAME_LOWER" = "freebsd" ]; then
-              log_info "No native binary for FreeBSD. Falling back to system package manager for csharp..."
+            if [ "$UNAME_LOWER" = "freebsd" ] || [ "${TARGET_OS:-}" = "alpine" ]; then
+              log_info "No native binary for ${TARGET_OS:-$UNAME_LOWER}. Falling back to system package manager for csharp..."
               libscript_depends "csharp"
+              mkdir -p "${TARGET_DIR}/bin"
+              if command -v dotnet >/dev/null 2>&1; then
+                ln -sf "$(command -v dotnet)" "${TARGET_DIR}/bin/dotnet"
+                ln -sf "$(command -v dotnet)" "${TARGET_DIR}/bin/csharp"
+              fi
             else
               log_info "No download URL provided for csharp ${VERSION}. Attempting fallback to dotnet-install.sh..."
               libscript_depends "curl" "tar" "wget" "libicu"

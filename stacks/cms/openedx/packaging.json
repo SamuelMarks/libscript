@@ -2,7 +2,7 @@
   "$schema": "../../../packaging/packaging.schema.json",
   "name": "openedx",
   "title": "Open edX Platform",
-  "version": "1.0.0",
+  "version": "22.1.0",
   "publisher": "The Axim Collaborative & LibScript Contributors",
   "upgrade_code": "B8C8E64E-9B5A-4B7C-A5D8-0F18B9918239",
   "branding": {
@@ -10,7 +10,7 @@
     "banner_top": "packaging/assets/openedx_banner_top.bmp",
     "banner_side": "packaging/assets/openedx_banner_side.bmp",
     "license_rtf": "packaging/assets/openedx_eula.rtf",
-    "license_mode": "chained_dialogs",
+    "license_mode": "consolidated_eula",
     "require_all_accepted": true,
     "bundled_licenses": [
       {
@@ -118,10 +118,11 @@
     }
   ],
   "source_repository": {
-    "default_url": "https://github.com/openedx/edx-platform.git",
-    "default_branch": "open-release/quince.master",
+    "default_url": "https://github.com/openedx/openedx-platform.git",
+    "default_branch": "release/verawood.1",
     "presets": [
-      { "label": "Stable (Quince Release)", "value": "open-release/quince.master" },
+      { "label": "Stable (Verawood Release)", "value": "release/verawood.1" },
+      { "label": "Tracking Branch (release/verawood)", "value": "release/verawood" },
       { "label": "Development (master)", "value": "master" }
     ],
     "supports_auth_token": true

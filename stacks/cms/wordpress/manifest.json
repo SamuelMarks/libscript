@@ -6,5 +6,6 @@
   "license": "GPL-2.0-or-later",
   "license_name": "GNU General Public License v2.0 or later",
   "description": "wordpress stack",
-  "provides": ["wordpress"]
+  "provides": ["wordpress"],
+  "os_blacklist": ["sunos"]
 }

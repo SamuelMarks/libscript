@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/networking/iwd/vars.schema.json",
+  "title": "Iwd variables",
+  "description": "Configuration variables for Iwd",
+  "type": "object",
+  "properties": {
+    "IWD_VERSION": {
+      "description": "Specific version of iwd to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "IWD_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install IWD. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

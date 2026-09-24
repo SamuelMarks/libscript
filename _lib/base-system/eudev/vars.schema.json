@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/base-system/eudev/vars.schema.json",
+  "title": "Eudev variables",
+  "description": "Configuration variables for Eudev",
+  "type": "object",
+  "properties": {
+    "EUDEV_VERSION": {
+      "description": "Specific version of eudev to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "EUDEV_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install EUDEV. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

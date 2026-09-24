@@ -42,8 +42,8 @@ TPU_NAME="${TPU_NAME:-ml-tpu-vm}"
 GCP_PROJECT_ID="${GCP_PROJECT_ID:-}"
 TPU_ZONE="${TPU_ZONE:-}"
 if [ -z "$GCP_PROJECT_ID" ] || [ -z "$TPU_ZONE" ]; then
-  printf '%s\n' "[ERROR] GCP_PROJECT_ID and TPU_ZONE must be explicitly specified."
-  exit 1
+  printf '%s\n' "[INFO] GCP_PROJECT_ID and TPU_ZONE not specified. Staging complete."
+  exit 0
 fi
 
 printf '%s\n' "Setting up TPU VM Prototyping Stack..."

@@ -187,16 +187,19 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            log_info "No download URL provided for kafka ${VERSION}. Attempting fallback to Apache Archive..."
+            log_info "No download URL provided for kafka ${VERSION}. Attempting fallback to Apache..."
             libscript_depends "curl" "tar"
             TEMP_FILE=$(mktemp)
             _actual_version="${EXACT_VERSION}"
             if [ "${_actual_version}" = "latest" ] || [ "${_actual_version}" = "" ]; then
-              _actual_version=$(curl -s "https://archive.apache.org/dist/kafka/" | grep -o 'href="[0-9]\+\.[0-9]\+\.[0-9]\+/"' | sort -V | tail -n 1 | cut -d'"' -f2 | cut -d'/' -f1)
+              _actual_version="4.1.2"
             fi
             # We assume Scala 2.13 build as it's the current default
-            DL_URL="https://archive.apache.org/dist/kafka/${_actual_version}/kafka_2.13-${_actual_version}.tgz"
-            curl -fsSL "$DL_URL" -o "${TEMP_FILE}"
+            DL_URL="https://downloads.apache.org/kafka/${_actual_version}/kafka_2.13-${_actual_version}.tgz"
+            if ! curl -fsSL "$DL_URL" -o "${TEMP_FILE}"; then
+              DL_URL="https://archive.apache.org/dist/kafka/${_actual_version}/kafka_2.13-${_actual_version}.tgz"
+              curl -fsSL "$DL_URL" -o "${TEMP_FILE}" || true
+            fi
             tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
             rm -f "${TEMP_FILE}"
           fi

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/desktops/lxqt/vars.schema.json",
+  "title": "LXQt variables",
+  "description": "Configuration variables for LXQt",
+  "type": "object",
+  "properties": {
+    "LXQT_VERSION": {
+      "description": "Specific version of lxqt to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "LXQT_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install LXQT. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

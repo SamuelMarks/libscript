@@ -2,7 +2,7 @@
   "$schema": "../../../packaging/offline.schema.json",
   "name": "openedx",
   "title": "Open edX Platform Air-Gapped Offline Bundle",
-  "version": "quince.3",
+  "version": "verawood.1",
   "target_platform": "windows-x64",
   "runtimes": {
     "python": {
@@ -84,11 +84,11 @@
     "packages": []
   },
   "codebase": {
-    "name": "edx-platform",
-    "release_tag": "open-release/quince.3",
-    "archive_filename": "openedx-release-quince.3.zip",
-    "archive_url": "https://github.com/openedx/edx-platform/archive/refs/tags/open-release/quince.3.zip",
-    "archive_sha256": "a64bfffba2ad39ab1c6e0bd91028a96a3a33bf8fdd4eb7ab80e9f37a4b12eb1c",
+    "name": "openedx-platform",
+    "release_tag": "release/verawood.1",
+    "archive_filename": "openedx-release-verawood.1.zip",
+    "archive_url": "https://github.com/openedx/openedx-platform/archive/refs/tags/release/verawood.1.zip",
+    "archive_sha256": "830914c1dba85c24f67934d27f0b03bf2ec75afa8b6ddf7d9fd9b57bb46d7c3f",
     "extract_target": "codebase",
     "demo_content": [
       {
@@ -107,7 +107,7 @@
     "mongodb-windows-x86_64-7.0.12.zip": "dfbbcf8ea5bbae44ade25b158b67835b142e1da56e2ed8473a9a8c6df3b75423",
     "meilisearch-windows-amd64.exe": "ea6151b9add98253015e4e724e82ab176e78b576cc5715855181ec2bbc558663",
     "waitress-3.0.0-py3-none-any.whl": "2a06f242f4ba0cc563444ca3d1998959447477363a2d7e9b8b4d75d35cfd1669",
-    "openedx-release-quince.3.zip": "a64bfffba2ad39ab1c6e0bd91028a96a3a33bf8fdd4eb7ab80e9f37a4b12eb1c",
+    "openedx-release-verawood.1.zip": "830914c1dba85c24f67934d27f0b03bf2ec75afa8b6ddf7d9fd9b57bb46d7c3f",
     "demo-course.tar.gz": "b1b3945bd61289044e4b267a905c6ee2c0538f82ccc19fbd2e4bc8b218318435"
   }
 }

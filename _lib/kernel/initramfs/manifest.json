@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "initramfs",
+  "title": "Initramfs",
+  "description": "Linux initial ramdisk generation utilities",
+  "category": "kernel",
+  "provides": ["initramfs"],
+  "os_whitelist": ["linux"],
+  "os_blacklist": ["windows"]
+}

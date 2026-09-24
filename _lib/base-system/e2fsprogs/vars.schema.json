@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/base-system/e2fsprogs/vars.schema.json",
+  "title": "E2fsprogs variables",
+  "description": "Configuration variables for E2fsprogs",
+  "type": "object",
+  "properties": {
+    "E2FSPROGS_VERSION": {
+      "description": "Specific version of e2fsprogs to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "E2FSPROGS_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install E2FSPROGS. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

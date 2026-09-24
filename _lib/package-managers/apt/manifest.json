@@ -2,7 +2,7 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "apt",
   "provides": ["apt"],
-  "os_whitelist": ["linux"],
+  "os_whitelist": ["debian", "ubuntu"],
   "title": "apt",
   "description": "Bootstrap module for the `apt` package manager.",
   "category": "package-manager"

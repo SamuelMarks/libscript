@@ -3,6 +3,7 @@
   "name": "gem",
   "provides": ["gem"],
   "os_whitelist": ["all"],
+  "os_blacklist": ["sunos"],
   "title": "gem",
   "description": "Bootstrap module for the `gem` package manager.",
   "category": "package-manager"

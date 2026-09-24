@@ -154,37 +154,20 @@ case "$ACTION" in
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/go-pm/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
+      if [ ! -d "${TARGET_DIR}" ] || [ ! -x "${TARGET_DIR}/bin/go" ]; then
         log_info "Installing go-pm ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
-        if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/go-pm/"*"${VERSION}"* >/dev/null 2>&1; then
-          log_info "Extracting from cache..."
-          cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/go-pm/" -maxdepth 1 -type f -name "*${VERSION}*" 2>/dev/null | head -n 1 || true)
-          if [ -n "$cache_file" ]; then
-            if case "$cache_file" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "$cache_file" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "$cache_file" in *.zip) true;; *) false;; esac; then
-              unzip -q "$cache_file" -d "${TARGET_DIR}" || true
-            else
-              cp "$cache_file" "${TARGET_DIR}/bin/go-pm" || true
-              chmod +x "${TARGET_DIR}/bin/go-pm" || true
-            fi
-          fi
+        if command -v go >/dev/null 2>&1; then
+          ln -sf "$(command -v go)" "${TARGET_DIR}/bin/go"
+          ln -sf "$(command -v go)" "${TARGET_DIR}/bin/go-pm"
+        elif [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/go/latest/bin/go" ]; then
+          ln -sf "${LIBSCRIPT_HOME:-$HOME/.libscript}/go/latest/bin/go" "${TARGET_DIR}/bin/go"
+          ln -sf "${LIBSCRIPT_HOME:-$HOME/.libscript}/go/latest/bin/go" "${TARGET_DIR}/bin/go-pm"
         else
-          if [ -n "${GO_PM_DOWNLOAD_URL:-}" ]; then
-            TEMP_FILE=$(mktemp)
-            libscript_download "${GO_PM_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-            if case "${GO_PM_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "${GO_PM_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
-            else
-              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/go-pm" || true
-              chmod +x "${TARGET_DIR}/bin/go-pm" || true
-            fi
-            rm -f "${TEMP_FILE}"
-          else
-            log_warn "No download URL provided for go-pm ${VERSION}."
+          "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install go || true
+          if command -v go >/dev/null 2>&1; then
+            ln -sf "$(command -v go)" "${TARGET_DIR}/bin/go"
+            ln -sf "$(command -v go)" "${TARGET_DIR}/bin/go-pm"
           fi
         fi
       else

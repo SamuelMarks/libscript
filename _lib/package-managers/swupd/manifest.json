@@ -2,7 +2,7 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "swupd",
   "provides": ["swupd"],
-  "os_whitelist": ["linux"],
+  "os_whitelist": ["clearlinux"],
   "title": "swupd",
   "description": "Bootstrap module for `swupd` (Clear Linux OS package manager).",
   "category": "package-manager"

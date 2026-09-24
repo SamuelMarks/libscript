@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/display-servers/wlroots/vars.schema.json",
+  "title": "Wlroots variables",
+  "description": "Configuration variables for Wlroots",
+  "type": "object",
+  "properties": {
+    "WLROOTS_VERSION": {
+      "description": "Specific version of wlroots to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "WLROOTS_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install WLROOTS. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

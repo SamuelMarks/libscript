@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/cloud-providers/proxmox/vars.schema.json",
+  "title": "Proxmox variables",
+  "description": "Configuration variables for Proxmox",
+  "type": "object",
+  "properties": {
+    "PROXMOX_VERSION": {
+      "description": "Specific version of proxmox to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "PROXMOX_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install PROXMOX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

@@ -2,7 +2,7 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "paru",
   "provides": ["paru"],
-  "os_whitelist": ["linux"],
+  "os_whitelist": ["arch", "artix", "manjaro"],
   "title": "paru",
   "description": "Bootstrap module for the `paru` package manager.",
   "category": "package-manager",

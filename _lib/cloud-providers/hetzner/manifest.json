@@ -1,0 +1,8 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "hetzner",
+  "title": "Hetzner Cloud & Bare-Metal Provider",
+  "description": "Deployment engine and CLI for Hetzner Cloud and Bare-Metal servers",
+  "category": "cloud-providers",
+  "provides": ["hetzner", "hcloud"]
+}

@@ -86,7 +86,7 @@ Options:
   --hydrate-cache   Pre-fetch and verify all offline dependencies before building
   --cache-dir <dir> Override offline artifact cache directory
   --out <name>      Override output base file name
-  --version <ver>   Package version (default: 1.0.0.0)
+  --version <ver>   Package version (default: 22.1.0.0)
   --help, -h        Show this help text
 EOF_HELP
       exit 0

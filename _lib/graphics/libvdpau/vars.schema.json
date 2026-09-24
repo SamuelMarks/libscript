@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/graphics/libvdpau/vars.schema.json",
+  "title": "Libvdpau variables",
+  "description": "Configuration variables for Libvdpau",
+  "type": "object",
+  "properties": {
+    "LIBVDPAU_VERSION": {
+      "description": "Specific version of libvdpau to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "LIBVDPAU_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install LIBVDPAU. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

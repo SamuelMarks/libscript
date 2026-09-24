@@ -6,5 +6,6 @@
     "cloud-providers/gcp/cli": "latest",
     "cloud-providers/gcp/tpu-vm": "latest",
     "toolchains/huggingface-cli": "latest"
-  }
+  },
+  "os_blacklist": ["windows", "sunos"]
 }

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/display-servers/libseat/vars.schema.json",
+  "title": "Libseat variables",
+  "description": "Configuration variables for Libseat",
+  "type": "object",
+  "properties": {
+    "LIBSEAT_VERSION": {
+      "description": "Specific version of libseat to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "LIBSEAT_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install LIBSEAT. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

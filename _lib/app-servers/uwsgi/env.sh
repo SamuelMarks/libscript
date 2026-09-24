@@ -32,3 +32,6 @@ UWSGI_VERSION="${UWSGI_VERSION:-2.0.24}"
 if [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/uwsgi/${UWSGI_VERSION}/bin" ]; then
   export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/uwsgi/${UWSGI_VERSION}/bin:${PATH}"
 fi
+if [ -d "${HOME}/.local/bin" ]; then
+  export PATH="${HOME}/.local/bin:${PATH}"
+fi

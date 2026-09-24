@@ -161,7 +161,11 @@ case "$ACTION" in
         libscript_depends "unzip"
         mkdir -p "${TARGET_DIR}"
         export SDKMAN_DIR="${TARGET_DIR}"
-        curl -s "https://get.sdkman.io?rcupdate=false" | sh
+        if command -v bash >/dev/null 2>&1; then
+          curl -s "https://get.sdkman.io?rcupdate=false" | bash || true
+        else
+          curl -s "https://get.sdkman.io?rcupdate=false" | sh || true
+        fi
       else
         log_info "sdkman ${VERSION} is already installed."
       fi

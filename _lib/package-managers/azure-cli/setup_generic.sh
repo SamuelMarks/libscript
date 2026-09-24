@@ -156,17 +156,30 @@ case "$ACTION" in
       log_info "DEBUG: ls -la $TARGET_DIR : $(ls -la "$TARGET_DIR" 2>&1 || true)"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing azure-cli ${VERSION} natively to ${TARGET_DIR}..."
-        if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
+        if [ -f /etc/alpine-release ] || [ "${TARGET_OS:-}" = "alpine" ]; then
+          log_info "Installing azure-cli via pip on Alpine Linux..."
+          libscript_depends "python3" "py3-pip"
+          python3 -m pip install --break-system-packages azure-cli || true
+          mkdir -p "${TARGET_DIR}/bin"
+          if [ -x "$HOME/.local/bin/az" ]; then
+            ln -sf "$HOME/.local/bin/az" "${TARGET_DIR}/bin/az"
+          elif command -v az >/dev/null 2>&1; then
+            ln -sf "$(command -v az)" "${TARGET_DIR}/bin/az"
+          fi
+        elif [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
           log_info "Falling back to system package manager for azure-cli..."
           libscript_depends "azure-cli"
-        elif [ -f /etc/alpine-release ]; then
-          libscript_depends "python3" "py3-pip" "gcc" "musl-dev" "python3-dev" "libffi-dev" "openssl-dev" "make"
-          pip install --break-system-packages azure-cli || true
+          mkdir -p "${TARGET_DIR}/bin"
+          if command -v az >/dev/null 2>&1; then
+            ln -sf "$(command -v az)" "${TARGET_DIR}/bin/az"
+          fi
         else
           curl -sL https://aka.ms/InstallAzureCli | sh || true
+          mkdir -p "${TARGET_DIR}/bin"
+          if command -v az >/dev/null 2>&1; then
+            ln -sf "$(command -v az)" "${TARGET_DIR}/bin/az"
+          fi
         fi
-        mkdir -p "${TARGET_DIR}/bin"
-        ln -sf "$(command -v az)" "${TARGET_DIR}/bin/az" || true
       else
         log_info "azure-cli ${VERSION} is already installed."
       fi

@@ -86,7 +86,7 @@ try {
 
     # 2. Filter prohibited patterns and directories (always exclude cache/ from repo)
     $filtered = [System.Collections.Generic.List[string]]::new()
-    $excludeRegex = '(^|/)(\.git|\.github|\.githooks|\.vagrant|tests_tmp|dist|build|node_modules|cache|kubernetes-the-hard-way)(/|$)'
+    $excludeRegex = '(^|/)(\.git|\.github|\.githooks|\.vagrant|tests_tmp|dist|build|tmp|node_modules|cache|kubernetes-the-hard-way)(/|$)'
     $excludeExtRegex = '\.(tmp|log|ppm|bak|swp|msi|wixobj|pruned)$'
 
     foreach ($f in $allFiles) {

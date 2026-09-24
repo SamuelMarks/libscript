@@ -67,7 +67,7 @@ export PHPBB_WWWROOT
 if [ ! -d "${PHPBB_WWWROOT}/phpbb" ] && [ ! -d "${PHPBB_WWWROOT}/install" ]; then
   printf '%s\n' "Downloading phpBB (${PHPBB_VERSION}) to ${PHPBB_WWWROOT}..."
   priv mkdir -p "${PHPBB_WWWROOT}"
-  dl_export url="https://download.phpbb.com/pub/release/${PHPBB_MAJOR_VERSION}/${PHPBB_VERSION}/phpBB-${PHPBB_VERSION}.tar.bz2"
+  dl_url="https://download.phpbb.com/pub/release/${PHPBB_MAJOR_VERSION}/${PHPBB_VERSION}/phpBB-${PHPBB_VERSION}.tar.bz2"
 
   if ! libscript_depends 'bzip2' ; then
     true
@@ -140,6 +140,8 @@ if [ -z "${PHPBB_PHP_FPM_LISTEN:-}" ]; then
   fi
 fi
 
+priv chown -R www-data:www-data "${PHPBB_WWWROOT}" 2>/dev/null || priv chown -R nginx:nginx "${PHPBB_WWWROOT}" 2>/dev/null || true
+
 PHPBB_SERVER_NAME="${PHPBB_SERVER_NAME:-localhost}"
 export PHPBB_SERVER_NAME
 
@@ -148,8 +150,20 @@ printf '%s\n' "Configuring webserver: ${PHPBB_WEBSERVER}"
 ENV_SCRIPT_FILE=$(mktemp)
 cat <<ENV_EOF > "${ENV_SCRIPT_FILE}"
 export PHPBB_SERVER_NAME="${PHPBB_SERVER_NAME}"
+export SERVER_NAME="${PHPBB_SERVER_NAME}"
+export WWWROOT="${PHPBB_WWWROOT}"
+export PHP_FPM_LISTEN="${PHPBB_PHP_FPM_LISTEN}"
 export PHPBB_WWWROOT="${PHPBB_WWWROOT}"
 export PHPBB_PHP_FPM_LISTEN="${PHPBB_PHP_FPM_LISTEN}"
+export NGINX_SERVER_NAME="${PHPBB_SERVER_NAME}"
+export NGINX_WWWROOT="${PHPBB_WWWROOT}"
+export NGINX_PHP_FPM_LISTEN="${PHPBB_PHP_FPM_LISTEN}"
+export HTTPD_SERVER_NAME="${PHPBB_SERVER_NAME}"
+export HTTPD_WWWROOT="${PHPBB_WWWROOT}"
+export HTTPD_PHP_FPM_LISTEN="${PHPBB_PHP_FPM_LISTEN}"
+export CADDY_SERVER_NAME="${PHPBB_SERVER_NAME}"
+export CADDY_WWWROOT="${PHPBB_WWWROOT}"
+export CADDY_PHP_FPM_LISTEN="${PHPBB_PHP_FPM_LISTEN}"
 export LISTEN="${PHPBB_LISTEN:-80}"
 export NGINX_LISTEN="${PHPBB_LISTEN:-80}"
 export HTTPD_LISTEN="${PHPBB_LISTEN:-80}"
@@ -169,12 +183,18 @@ if [ "${PHPBB_WEBSERVER}" = "nginx" ]; then
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" > "${SERVER_BLOCK_TMP}"
 
   NGINX_CONF_DIR="${LIBSCRIPT_ROOT_DIR}/installed/nginx/conf"
-  if [ -d /etc/nginx/sites-available ]; then
-    NGINX_CONF_DIR="/etc/nginx"
+  if [ -d /etc/nginx/http.d ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/http.d/${PHPBB_SERVER_NAME}.conf"
+  elif [ -d /etc/nginx/conf.d ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/conf.d/${PHPBB_SERVER_NAME}.conf"
+  elif [ -d /etc/nginx/sites-available ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/sites-available/${PHPBB_SERVER_NAME}.conf"
+    priv ln -sf "/etc/nginx/sites-available/${PHPBB_SERVER_NAME}.conf" "/etc/nginx/sites-enabled/${PHPBB_SERVER_NAME}.conf"
+  else
+    priv mkdir -p "${NGINX_CONF_DIR}/sites-available" "${NGINX_CONF_DIR}/sites-enabled"
+    priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${PHPBB_SERVER_NAME}.conf"
+    priv ln -sf "${NGINX_CONF_DIR}/sites-available/${PHPBB_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${PHPBB_SERVER_NAME}.conf"
   fi
-
-  priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${PHPBB_SERVER_NAME}.conf"
-  priv ln -sf "${NGINX_CONF_DIR}/sites-available/${PHPBB_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${PHPBB_SERVER_NAME}.conf"
   if ! priv systemctl reload nginx ; then
     true
   fi

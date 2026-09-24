@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/bootstrap/vars.schema.json",
+  "title": "Bootstrap Toolchain variables",
+  "description": "Configuration variables for Bootstrap Toolchain",
+  "type": "object",
+  "properties": {
+    "BOOTSTRAP_VERSION": {
+      "description": "Specific version of bootstrap to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "BOOTSTRAP_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install BOOTSTRAP. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

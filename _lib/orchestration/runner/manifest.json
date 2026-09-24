@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "runner",
+  "title": "Rootfs Command Runner",
+  "description": "Namespace and chroot isolated command runner for rootfs synthesis",
+  "category": "orchestration",
+  "provides": ["runner"],
+  "os_whitelist": ["linux"],
+  "os_blacklist": ["windows"]
+}

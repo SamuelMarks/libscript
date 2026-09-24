@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/audio/alsa-ucm-conf/vars.schema.json",
+  "title": "Alsa-Ucm-Conf variables",
+  "description": "Configuration variables for Alsa-Ucm-Conf",
+  "type": "object",
+  "properties": {
+    "ALSA_UCM_CONF_VERSION": {
+      "description": "Specific version of alsa-ucm-conf to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "ALSA_UCM_CONF_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install ALSA_UCM_CONF. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

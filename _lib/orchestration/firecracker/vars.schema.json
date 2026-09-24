@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/firecracker/vars.schema.json",
+  "title": "Firecracker variables",
+  "description": "Configuration variables for Firecracker",
+  "type": "object",
+  "properties": {
+    "FIRECRACKER_VERSION": {
+      "description": "Specific version of firecracker to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "FIRECRACKER_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install FIRECRACKER. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

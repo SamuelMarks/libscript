@@ -165,7 +165,11 @@ case "$ACTION" in
         curl -sSL https://rvm.io/mpapis.asc | gpg --import - || true
         curl -sSL https://rvm.io/pkuczynski.asc | gpg --import - || true
         export rvm_path="${TARGET_DIR}"
-        curl -sSL https://get.rvm.io | sh -s stable
+        if command -v bash >/dev/null 2>&1; then
+          curl -sSL https://get.rvm.io | bash -s stable || true
+        else
+          curl -sSL https://get.rvm.io | sh -s stable || true
+        fi
       else
         log_info "rvm ${VERSION} is already installed."
       fi

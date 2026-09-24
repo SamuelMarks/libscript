@@ -183,9 +183,13 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            if [ "$UNAME_LOWER" = "freebsd" ]; then
-              log_info "No native binary for FreeBSD. Falling back to system package manager for deno..."
+            if [ "$UNAME_LOWER" = "freebsd" ] || [ "${TARGET_OS:-}" = "alpine" ]; then
+              log_info "No native prebuilt binary for ${TARGET_OS:-$UNAME_LOWER}. Falling back to system package manager for deno..."
               libscript_depends "deno"
+              mkdir -p "${TARGET_DIR}/bin"
+              if command -v deno >/dev/null 2>&1; then
+                ln -sf "$(command -v deno)" "${TARGET_DIR}/bin/deno"
+              fi
             else
               log_info "No download URL provided for deno ${VERSION}. Using official installer..."
             libscript_depends "curl" "unzip"

@@ -3,7 +3,7 @@
   "name": "krew",
   "provides": ["package-manager", "krew", "kubectl-krew"],
   "os_whitelist": ["all"],
-  "os_blacklist": [],
+  "os_blacklist": ["sunos"],
   "title": "krew",
   "description": "Bootstrap script for [Krew](https://krew.sigs.k8s.io/), the plugin manager for `kubectl` command-line tool.",
   "category": "package-manager"

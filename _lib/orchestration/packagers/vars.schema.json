@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/packagers/vars.schema.json",
+  "title": "Packagers variables",
+  "description": "Configuration variables for Packagers",
+  "type": "object",
+  "properties": {
+    "PACKAGERS_VERSION": {
+      "description": "Specific version of packagers to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "PACKAGERS_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install PACKAGERS. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

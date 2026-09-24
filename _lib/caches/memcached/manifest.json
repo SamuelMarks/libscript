@@ -9,6 +9,6 @@
   "provides": ["cache", "memcached", "key-value"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": [],
+  "os_blacklist": ["sunos"],
   "ports": [11211]
 }

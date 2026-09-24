@@ -16,7 +16,7 @@ setlocal EnableDelayedExpansion
 :: --hydrate-cache     : Pre-fetch and verify all offline assets prior to building MSI
 :: --cache-dir <dir>   : Override offline dependency cache directory
 :: --out <name>        : Override output base file name
-:: --version <ver>     : Package version (default: 1.0.0.0)
+:: --version <ver>     : Package version (default: 22.1.0.0)
 
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -108,7 +108,7 @@ echo   --offline, -o     Build completely air-gapped offline installer (~1 GB)
 echo   --hydrate-cache   Pre-fetch and verify all offline dependencies before building
 echo   --cache-dir ^<dir^> Override offline artifact cache directory
 echo   --out ^<name^>      Override output base file name
-echo   --version ^<ver^>   Package version (default: 1.0.0.0)
+echo   --version ^<ver^>   Package version (default: 22.1.0.0)
 echo   --help, -h        Show this help text
 exit /b 0
 

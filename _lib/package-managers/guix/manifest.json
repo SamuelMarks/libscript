@@ -3,7 +3,7 @@
   "name": "guix",
   "provides": ["package-manager", "guix"],
   "os_whitelist": ["linux"],
-  "os_blacklist": ["darwin", "windows", "freebsd"],
+  "os_blacklist": ["darwin", "windows", "freebsd", "alpine"],
   "title": "guix",
   "description": "Bootstrap module for the `guix` (GNU Guix) package manager.",
   "category": "package-manager"

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/vfs/vars.schema.json",
+  "title": "VFS variables",
+  "description": "Configuration variables for VFS",
+  "type": "object",
+  "properties": {
+    "VFS_VERSION": {
+      "description": "Specific version of vfs to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "VFS_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install VFS. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

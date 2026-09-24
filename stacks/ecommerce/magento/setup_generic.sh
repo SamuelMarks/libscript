@@ -65,7 +65,7 @@ if [ ! -d "${MAGENTO_WWWROOT}/app" ]; then
   priv mkdir -p "${MAGENTO_WWWROOT}"
 
   # For a full install without auth.json typically use a pre-packaged tarball, but we use github releases for simplicity
-  dl_export url="https://github.com/magento/magento2/archive/refs/tags/${MAGENTO_VERSION}.tar.gz"
+  dl_url="https://github.com/magento/magento2/archive/refs/tags/${MAGENTO_VERSION}.tar.gz"
 
   if command -v libscript_download >/dev/null 2>&1; then
     tmp_magento=$(mktemp)
@@ -110,9 +110,7 @@ elif [ "${MAGENTO_DB_DRIVER}" = "sqlite" ]; then
   fi
 fi
 
-if ! priv chown -R www-data:www-data "${MAGENTO_WWWROOT}" ; then
-  true
-fi
+priv chown -R www-data:www-data "${MAGENTO_WWWROOT}" 2>/dev/null || priv chown -R nginx:nginx "${MAGENTO_WWWROOT}" 2>/dev/null || true
 
 if [ -z "${MAGENTO_PHP_FPM_LISTEN:-}" ]; then
   if [ -e /run/php/php-fpm.sock ]; then
@@ -141,6 +139,9 @@ printf '%s\n' "Configuring webserver: ${MAGENTO_WEBSERVER}"
 ENV_SCRIPT_FILE=$(mktemp)
 cat <<EOF > "${ENV_SCRIPT_FILE}"
 export MAGENTO_SERVER_NAME="${MAGENTO_SERVER_NAME}"
+export SERVER_NAME="${MAGENTO_SERVER_NAME}"
+export WWWROOT="${MAGENTO_WWWROOT}/pub"
+export PHP_FPM_LISTEN="${MAGENTO_PHP_FPM_LISTEN}"
 export MAGENTO_WWWROOT="${MAGENTO_WWWROOT}/pub"
 export MAGENTO_PHP_FPM_LISTEN="${MAGENTO_PHP_FPM_LISTEN}"
 export LISTEN="${MAGENTO_LISTEN:-80}"
@@ -171,12 +172,18 @@ if [ "${MAGENTO_WEBSERVER}" = "nginx" ]; then
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" > "${SERVER_BLOCK_TMP}"
 
   NGINX_CONF_DIR="${LIBSCRIPT_ROOT_DIR}/installed/nginx/conf"
-  if [ -d /etc/nginx/sites-available ]; then
-    NGINX_CONF_DIR="/etc/nginx"
+  if [ -d /etc/nginx/http.d ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/http.d/${MAGENTO_SERVER_NAME}.conf"
+  elif [ -d /etc/nginx/conf.d ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/conf.d/${MAGENTO_SERVER_NAME}.conf"
+  elif [ -d /etc/nginx/sites-available ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/sites-available/${MAGENTO_SERVER_NAME}.conf"
+    priv ln -sf "/etc/nginx/sites-available/${MAGENTO_SERVER_NAME}.conf" "/etc/nginx/sites-enabled/${MAGENTO_SERVER_NAME}.conf"
+  else
+    priv mkdir -p "${NGINX_CONF_DIR}/sites-available" "${NGINX_CONF_DIR}/sites-enabled"
+    priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${MAGENTO_SERVER_NAME}.conf"
+    priv ln -sf "${NGINX_CONF_DIR}/sites-available/${MAGENTO_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${MAGENTO_SERVER_NAME}.conf"
   fi
-
-  priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${MAGENTO_SERVER_NAME}.conf"
-  priv ln -sf "${NGINX_CONF_DIR}/sites-available/${MAGENTO_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${MAGENTO_SERVER_NAME}.conf"
   if ! priv systemctl reload nginx ; then
     true
   fi

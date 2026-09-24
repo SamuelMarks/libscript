@@ -226,7 +226,7 @@ MOCK_CACHE="${TEST_TMP_DIR}/mock_cache"
 mkdir -p "${MOCK_CACHE}/runtimes" "${MOCK_CACHE}/databases" "${MOCK_CACHE}/codebase" "${MOCK_CACHE}/wheels"
 printf 'mock python runtime' > "${MOCK_CACHE}/runtimes/python-3.11.9-embed-amd64.zip"
 printf 'mock mysql db' > "${MOCK_CACHE}/databases/mysql-8.0.39-winx64.zip"
-printf 'mock codebase' > "${MOCK_CACHE}/codebase/openedx-release-quince.3.zip"
+printf 'mock codebase' > "${MOCK_CACHE}/codebase/openedx-release-verawood.1.zip"
 
 OFFLINE_OUT_BASE="${TEST_TMP_DIR}/OpenEdX_Offline_Test"
 "${SCRIPT_DIR}/../packaging/build_msi.sh" "stacks/cms/openedx" \

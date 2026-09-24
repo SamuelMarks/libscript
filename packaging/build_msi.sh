@@ -274,24 +274,38 @@ if [ -f "$PACKAGING_JSON" ] && command -v jq >/dev/null 2>&1; then
   [ -z "$REPO_BRANCH" ] && [ -n "$_pkg_repobranch" ] && REPO_BRANCH="$_pkg_repobranch"
 fi
 
-: "${APP_VERSION:=1.0.0.0}"
+case "${APP_VERSION:-}" in
+  *verawood*|*Verawood*) APP_VERSION="22.1.0.0" ;;
+  *ulmo*|*Ulmo*) APP_VERSION="21.1.0.0" ;;
+  *teak*|*Teak*) APP_VERSION="20.1.0.0" ;;
+  *sumac*|*Sumac*) APP_VERSION="19.1.0.0" ;;
+  *redwood*|*Redwood*) APP_VERSION="18.1.0.0" ;;
+  *quince*|*Quince*) APP_VERSION="17.1.0.0" ;;
+  *palm*|*Palm*) APP_VERSION="16.1.0.0" ;;
+esac
+
+: "${APP_VERSION:=22.1.0.0}"
 : "${UPGRADE_CODE:=B8C8E64E-9B5A-4B7C-A5D8-0F18B9918239}"
 : "${INSTALL_DIR:=[ProgramFiles64Folder]OpenEdX}"
 : "${DATA_DIR:=C:\ProgramData\OpenEdX\data}"
 : "${LOGS_DIR:=C:\ProgramData\OpenEdX\logs}"
-: "${REPO_URL:=https://github.com/openedx/edx-platform.git}"
-: "${REPO_BRANCH:=open-release/quince.master}"
+: "${REPO_URL:=https://github.com/openedx/openedx-platform.git}"
+: "${REPO_BRANCH:=release/verawood.1}"
+
+_clean_branch="${REPO_BRANCH##*/}"
+_clean_branch="${_clean_branch%.master}"
+[ -z "$_clean_branch" ] && _clean_branch="${APP_VERSION}"
 
 if [ "$VARIANT" = "offline" ]; then
   PROP_OPENEDX_OFFLINE="1"
   [ "$APP_NAME" = "Open edX Platform" ] && APP_NAME="Open edX Platform (Offline Air-Gapped)"
-  : "${OUT_FILE:=openedx-offline-${APP_VERSION}}"
+  : "${OUT_FILE:=openedx-offline-${_clean_branch}}"
   WELCOME_DESC="The Setup Wizard will deploy Open edX LMS, Studio CMS, and pre-bundled air-gapped runtimes on your computer."
   COMP_TAG=" [Pre-bundled / Offline]"
 else
   PROP_OPENEDX_OFFLINE="0"
   [ "$APP_NAME" = "Open edX Platform" ] && APP_NAME="Open edX Platform (Online)"
-  : "${OUT_FILE:=openedx-${APP_VERSION}}"
+  : "${OUT_FILE:=openedx-${_clean_branch}}"
   WELCOME_DESC="The Setup Wizard will download and install Open edX LMS, Studio CMS, and required runtimes on your computer."
   COMP_TAG=""
 fi
@@ -435,7 +449,12 @@ generate_wxs() {
   MULTI_LICENSE_EXEC_COND=""
   LAST_LICENSE_DLG="Dlg_License"
 
-  if [ -f "${LIBSCRIPT_ROOT_DIR}/packaging/harvest_licenses.sh" ] && [ -n "$TARGET_DIR" ] && [ -d "$TARGET_DIR" ]; then
+  _lic_mode="consolidated_eula"
+  if [ -n "$TARGET_DIR" ] && [ -f "${TARGET_DIR}/packaging.json" ]; then
+    _lic_mode=$(jq -r '.branding.license_mode // "consolidated_eula"' "${TARGET_DIR}/packaging.json" 2>/dev/null || printf 'consolidated_eula')
+  fi
+
+  if [ "$_lic_mode" = "chained_dialogs" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/packaging/harvest_licenses.sh" ] && [ -n "$TARGET_DIR" ] && [ -d "$TARGET_DIR" ]; then
     "${LIBSCRIPT_ROOT_DIR}/packaging/harvest_licenses.sh" "$TARGET_DIR" --out-dir "$HARVESTED_LICENSES_DIR" --force >/dev/null 2>&1 || true
     if [ -f "$HARVESTED_LICENSES_DIR/licenses_manifest.json" ]; then
       _lic_count=$(jq '.licenses | length' "$HARVESTED_LICENSES_DIR/licenses_manifest.json" 2>/dev/null || printf '0')
@@ -451,7 +470,8 @@ generate_wxs() {
         # Skip top-level app if already shown in Dlg_License
         if [ "$_lname" != "openedx" ] && [ "$_lname" != "app" ] && [ -f "$_lrtf" ]; then
           _dlg_id="Dlg_License_${_lname}"
-          _prop_id="LICENSE_ACCEPTED_${_lname}"
+          _lname_upper=$(printf '%s\n' "$_lname" | tr '[:lower:]' '[:upper:]')
+          _prop_id="LICENSE_ACCEPTED_${_lname_upper}"
 
           MULTI_LICENSE_PROPS="${MULTI_LICENSE_PROPS}
       <Property Id=\"${_prop_id}\" Value=\"0\" Secure=\"yes\" />"
@@ -585,7 +605,7 @@ EOF_UPGRADE
     <Property Id="PROP_OPENEDX_BRANCH_TYPE" Value="NamedRelease" Secure="yes" />
     <Property Id="PROP_OPENEDX_REPO_AUTH_TOKEN" Hidden="yes" Secure="yes" />
     <Property Id="PROP_OPENEDX_GIT_DEPTH" Value="1" Secure="yes" />
-    <Property Id="PROP_OPENEDX_BRANCH_PRESET" Value="Quince" Secure="yes" />
+    <Property Id="PROP_OPENEDX_BRANCH_PRESET" Value="Verawood" Secure="yes" />
 
     <!-- Open edX Stack Properties Synthesized from vars.schema.json -->
     <Property Id="PROP_LMS_HOST" Value="localhost" Secure="yes" />
@@ -697,11 +717,12 @@ EOF_UPGRADE
           <Text SourceFile="${rtf_license_file:-license_placeholder.rtf}" />
         </Control>
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back">
-          <Publish Event="EndDialog" Value="Return">1</Publish>
+          <Publish Event="NewDialog" Value="Dlg_Welcome">1</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="I Agree">
           <Publish Property="LICENSE_ACCEPTED" Value="1">1</Publish>
-          <Publish Event="EndDialog" Value="Return">1</Publish>
+          <Publish Property="AGREE_ALL_LICENSES" Value="1">1</Publish>
+          <Publish Event="NewDialog" Value="Dlg_SetupType">1</Publish>
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
           <Publish Event="EndDialog" Value="Exit">1</Publish>
@@ -1228,9 +1249,9 @@ compile_msi() {
     else
       _candle_wxs="${WXS_FILE}.candle.wxs"
       if command -v powershell >/dev/null 2>&1; then
-        powershell -NoProfile -Command "\$w = Get-Content -LiteralPath '${WXS_FILE}' -Raw; \$w = \$w -replace '<Property Id=\"MsiHiddenProperties\".*?/>', ''; \$w = [regex]::Replace(\$w, '(?s)<InstallUISequence>.*?</InstallUISequence>', '      <InstallUISequence><Show Dialog=\"Dlg_Welcome\" After=\"CostFinalize\" /><Show Dialog=\"Dlg_Exit\" OnExit=\"success\" /></InstallUISequence>'); Set-Content -LiteralPath '${_candle_wxs}' -Value \$w"
+        powershell -NoProfile -Command "\$w = Get-Content -LiteralPath '${WXS_FILE}' -Raw; \$w = \$w -replace '<Property Id=\"MsiHiddenProperties\".*?/>', ''; \$w = [regex]::Replace(\$w, '(?m)^\s*<Show Dialog=\"Dlg_VerifyReady\" After=\"Dlg_SetupType\".*?\r?\n', ''); Set-Content -LiteralPath '${_candle_wxs}' -Value \$w"
       elif command -v sed >/dev/null 2>&1; then
-        sed -E '/<Property Id="MsiHiddenProperties"/d; /<InstallUISequence>/,/<\/InstallUISequence>/c\      <InstallUISequence><Show Dialog="Dlg_Welcome" After="CostFinalize" /><Show Dialog="Dlg_Exit" OnExit="success" /></InstallUISequence>' "$WXS_FILE" > "$_candle_wxs"
+        sed -E '/<Property Id="MsiHiddenProperties"/d; /<Show Dialog="Dlg_VerifyReady" After="Dlg_SetupType"/d' "$WXS_FILE" > "$_candle_wxs"
       else
         cp -f "$WXS_FILE" "$_candle_wxs"
       fi

@@ -66,7 +66,7 @@ export PRESTASHOP_WWWROOT
 if [ ! -d "${PRESTASHOP_WWWROOT}/classes" ] && [ ! -d "${PRESTASHOP_WWWROOT}/install" ]; then
   printf '%s\n' "Downloading PrestaShop (${PRESTASHOP_VERSION}) to ${PRESTASHOP_WWWROOT}..."
   priv mkdir -p "${PRESTASHOP_WWWROOT}"
-  dl_export url="https://github.com/PrestaShop/PrestaShop/releases/download/${PRESTASHOP_VERSION}/prestashop_${PRESTASHOP_VERSION}.zip"
+  dl_url="https://github.com/PrestaShop/PrestaShop/releases/download/${PRESTASHOP_VERSION}/prestashop_${PRESTASHOP_VERSION}.zip"
 
   tmp_zip=$(mktemp)
   if command -v libscript_download >/dev/null 2>&1; then
@@ -116,9 +116,7 @@ elif [ "${PRESTASHOP_DB_TYPE}" = "sqlite" ]; then
   priv mkdir -p "${PRESTASHOP_WWWROOT}/var/sqlite"
 fi
 
-if ! priv chown -R www-data:www-data "${PRESTASHOP_WWWROOT}" ; then
-  true
-fi
+priv chown -R www-data:www-data "${PRESTASHOP_WWWROOT}" 2>/dev/null || priv chown -R nginx:nginx "${PRESTASHOP_WWWROOT}" 2>/dev/null || true
 
 if [ -z "${PRESTASHOP_PHP_FPM_LISTEN:-}" ]; then
   if [ -e /run/php/php-fpm.sock ]; then
@@ -146,8 +144,20 @@ printf '%s\n' "Configuring webserver: ${PRESTASHOP_WEBSERVER}"
 ENV_SCRIPT_FILE=$(mktemp)
 cat <<ENV_EOF > "${ENV_SCRIPT_FILE}"
 export PRESTASHOP_SERVER_NAME="${PRESTASHOP_SERVER_NAME}"
+export SERVER_NAME="${PRESTASHOP_SERVER_NAME}"
+export WWWROOT="${PRESTASHOP_WWWROOT}"
+export PHP_FPM_LISTEN="${PRESTASHOP_PHP_FPM_LISTEN}"
 export PRESTASHOP_WWWROOT="${PRESTASHOP_WWWROOT}"
 export PRESTASHOP_PHP_FPM_LISTEN="${PRESTASHOP_PHP_FPM_LISTEN}"
+export NGINX_SERVER_NAME="${PRESTASHOP_SERVER_NAME}"
+export NGINX_WWWROOT="${PRESTASHOP_WWWROOT}"
+export NGINX_PHP_FPM_LISTEN="${PRESTASHOP_PHP_FPM_LISTEN}"
+export HTTPD_SERVER_NAME="${PRESTASHOP_SERVER_NAME}"
+export HTTPD_WWWROOT="${PRESTASHOP_WWWROOT}"
+export HTTPD_PHP_FPM_LISTEN="${PRESTASHOP_PHP_FPM_LISTEN}"
+export CADDY_SERVER_NAME="${PRESTASHOP_SERVER_NAME}"
+export CADDY_WWWROOT="${PRESTASHOP_WWWROOT}"
+export CADDY_PHP_FPM_LISTEN="${PRESTASHOP_PHP_FPM_LISTEN}"
 export LISTEN="${PRESTASHOP_LISTEN:-80}"
 export NGINX_LISTEN="${PRESTASHOP_LISTEN:-80}"
 export HTTPD_LISTEN="${PRESTASHOP_LISTEN:-80}"
@@ -167,12 +177,18 @@ if [ "${PRESTASHOP_WEBSERVER}" = "nginx" ]; then
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" > "${SERVER_BLOCK_TMP}"
 
   NGINX_CONF_DIR="${LIBSCRIPT_ROOT_DIR}/installed/nginx/conf"
-  if [ -d /etc/nginx/sites-available ]; then
-    NGINX_CONF_DIR="/etc/nginx"
+  if [ -d /etc/nginx/http.d ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/http.d/${PRESTASHOP_SERVER_NAME}.conf"
+  elif [ -d /etc/nginx/conf.d ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/conf.d/${PRESTASHOP_SERVER_NAME}.conf"
+  elif [ -d /etc/nginx/sites-available ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/sites-available/${PRESTASHOP_SERVER_NAME}.conf"
+    priv ln -sf "/etc/nginx/sites-available/${PRESTASHOP_SERVER_NAME}.conf" "/etc/nginx/sites-enabled/${PRESTASHOP_SERVER_NAME}.conf"
+  else
+    priv mkdir -p "${NGINX_CONF_DIR}/sites-available" "${NGINX_CONF_DIR}/sites-enabled"
+    priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${PRESTASHOP_SERVER_NAME}.conf"
+    priv ln -sf "${NGINX_CONF_DIR}/sites-available/${PRESTASHOP_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${PRESTASHOP_SERVER_NAME}.conf"
   fi
-
-  priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${PRESTASHOP_SERVER_NAME}.conf"
-  priv ln -sf "${NGINX_CONF_DIR}/sites-available/${PRESTASHOP_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${PRESTASHOP_SERVER_NAME}.conf"
   if ! priv systemctl reload nginx ; then
     true
   fi

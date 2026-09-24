@@ -7,6 +7,6 @@
   "provides": ["kubernetes", "k0s", "orchestration", "server"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": ["windows"],
+  "os_blacklist": ["windows", "sunos"],
   "ports": [6443, 8132, 10250]
 }

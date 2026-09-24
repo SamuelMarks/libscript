@@ -2,7 +2,7 @@
   "$schema": "../../_common/manifest.schema.json",
   "name": "pacman",
   "provides": ["pacman"],
-  "os_whitelist": ["linux"],
+  "os_whitelist": ["arch", "artix", "manjaro"],
   "title": "pacman",
   "description": "Bootstrap module for the `pacman` package manager.",
   "category": "package-manager"

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/networking/dhcpcd/vars.schema.json",
+  "title": "Dhcpcd variables",
+  "description": "Configuration variables for Dhcpcd",
+  "type": "object",
+  "properties": {
+    "DHCPCD_VERSION": {
+      "description": "Specific version of dhcpcd to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "DHCPCD_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install DHCPCD. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

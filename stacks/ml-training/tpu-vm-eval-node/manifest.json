@@ -9,5 +9,6 @@
     "utilities/tmux": "latest",
     "logging/tensorboard": "latest",
     "databases/duckdb": "latest"
-  }
+  },
+  "os_blacklist": ["windows", "sunos"]
 }

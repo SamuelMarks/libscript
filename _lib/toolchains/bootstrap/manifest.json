@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "bootstrap",
+  "title": "Bootstrap Toolchain",
+  "description": "Tier 1 Linux LFS multi-stage cross-toolchain bootstrapping",
+  "category": "toolchains",
+  "provides": ["bootstrap"],
+  "os_whitelist": ["linux"],
+  "os_blacklist": ["windows"]
+}

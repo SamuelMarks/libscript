@@ -6,5 +6,6 @@
   "license": "BSD-3-Clause",
   "license_name": "BSD 3-Clause 'New' or 'Revised' License",
   "description": "jupyterhub stack",
-  "provides": ["jupyterhub"]
+  "provides": ["jupyterhub"],
+  "os_blacklist": ["sunos"]
 }

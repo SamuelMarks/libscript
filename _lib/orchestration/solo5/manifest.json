@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "solo5",
+  "title": "Solo5",
+  "description": "Sandboxed execution environment for unikernels using KVM/bhyve",
+  "category": "orchestration",
+  "provides": ["solo5"],
+  "os_whitelist": ["linux"],
+  "os_blacklist": ["windows"]
+}

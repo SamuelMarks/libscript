@@ -194,9 +194,17 @@ case "$ACTION" in
              fi
           fi
         fi
+        if [ -x "${TARGET_DIR}/venv/bin/poetry" ] && [ ! -x "${TARGET_DIR}/bin/poetry" ]; then
+          mkdir -p "${TARGET_DIR}/bin"
+          ln -sf "${TARGET_DIR}/venv/bin/poetry" "${TARGET_DIR}/bin/poetry"
+        fi
         fi
       else
         log_info "poetry ${VERSION} is already installed."
+        if [ -x "${TARGET_DIR}/venv/bin/poetry" ] && [ ! -x "${TARGET_DIR}/bin/poetry" ]; then
+          mkdir -p "${TARGET_DIR}/bin"
+          ln -sf "${TARGET_DIR}/venv/bin/poetry" "${TARGET_DIR}/bin/poetry"
+        fi
       fi
       libscript_symlink_alias "poetry" "latest" "${EXACT_VERSION}"
       libscript_symlink_alias "poetry" "default" "${EXACT_VERSION}"

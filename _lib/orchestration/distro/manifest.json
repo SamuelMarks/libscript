@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "distro",
+  "title": "Distro Synthesizer",
+  "description": "LibScript minimal bootable Linux distribution builder",
+  "category": "orchestration",
+  "provides": ["distro"],
+  "os_whitelist": ["linux"],
+  "os_blacklist": ["windows"]
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "musl",
+  "title": "Musl libc",
+  "description": "Clean, efficient and standards-conformant C library implementation for Linux",
+  "category": "base-system",
+  "provides": ["musl", "libc"],
+  "os_whitelist": ["linux"],
+  "os_blacklist": ["windows"]
+}

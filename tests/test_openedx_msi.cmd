@@ -207,7 +207,7 @@ if not exist "%MOCK_CACHE%\databases" mkdir "%MOCK_CACHE%\databases"
 if not exist "%MOCK_CACHE%\codebase" mkdir "%MOCK_CACHE%\codebase"
 echo mock python runtime > "%MOCK_CACHE%\runtimes\python-3.11.9-embed-amd64.zip"
 echo mock mysql db > "%MOCK_CACHE%\databases\mysql-8.0.39-winx64.zip"
-echo mock codebase > "%MOCK_CACHE%\codebase\openedx-release-quince.3.zip"
+echo mock codebase > "%MOCK_CACHE%\codebase\openedx-release-verawood.1.zip"
 
 set "OFFLINE_OUT_BASE=%TEST_TMP_DIR%\OpenEdX_Offline_Test"
 call "%LIBSCRIPT_ROOT_DIR%\packaging\build_msi.cmd" stacks\cms\openedx ^

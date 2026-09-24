@@ -29,4 +29,4 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 
 CONAN_VERSION="${CONAN_VERSION:-latest}"
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/conan/${CONAN_VERSION}/bin:${PATH}"
+export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/conan/${CONAN_VERSION}/bin:${LIBSCRIPT_HOME:-$HOME/.libscript}/conan/${CONAN_VERSION}/venv/bin:${PATH}"

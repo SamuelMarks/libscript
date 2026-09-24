@@ -7,6 +7,6 @@
   "provides": ["openbao", "security", "secrets", "server"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": [],
+  "os_blacklist": ["sunos"],
   "ports": [8200, 8201]
 }

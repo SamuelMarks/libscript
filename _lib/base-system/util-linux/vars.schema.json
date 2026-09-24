@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/base-system/util-linux/vars.schema.json",
+  "title": "Util-Linux variables",
+  "description": "Configuration variables for Util-Linux",
+  "type": "object",
+  "properties": {
+    "UTIL_LINUX_VERSION": {
+      "description": "Specific version of util-linux to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "UTIL_LINUX_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install UTIL_LINUX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

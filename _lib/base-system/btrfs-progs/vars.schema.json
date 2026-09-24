@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/base-system/btrfs-progs/vars.schema.json",
+  "title": "Btrfs-Progs variables",
+  "description": "Configuration variables for Btrfs-Progs",
+  "type": "object",
+  "properties": {
+    "BTRFS_PROGS_VERSION": {
+      "description": "Specific version of btrfs-progs to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "BTRFS_PROGS_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install BTRFS_PROGS. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

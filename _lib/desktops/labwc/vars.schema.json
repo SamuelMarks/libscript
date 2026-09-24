@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/desktops/labwc/vars.schema.json",
+  "title": "Labwc variables",
+  "description": "Configuration variables for Labwc",
+  "type": "object",
+  "properties": {
+    "LABWC_VERSION": {
+      "description": "Specific version of labwc to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "LABWC_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install LABWC. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

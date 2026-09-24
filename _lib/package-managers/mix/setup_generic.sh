@@ -170,6 +170,8 @@ case "$ACTION" in
         ELIXIR_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/elixir/${ELIXIR_EXACT_VERSION}"
         if [ -f "${ELIXIR_DIR}/bin/mix" ]; then
           ln -sf "${ELIXIR_DIR}/bin/mix" "${TARGET_DIR}/bin/mix"
+        elif command -v mix >/dev/null 2>&1; then
+          ln -sf "$(command -v mix)" "${TARGET_DIR}/bin/mix"
         fi
       else
         log_info "mix ${VERSION} is already installed."

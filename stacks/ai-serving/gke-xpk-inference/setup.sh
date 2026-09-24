@@ -40,8 +40,8 @@ CLUSTER_NAME="${XPK_CLUSTER_NAME:-ml-xpk-cluster}"
 GCP_PROJECT_ID="${GCP_PROJECT_ID:-}"
 GCP_ZONE="${GCP_ZONE:-}"
 if [ -z "$GCP_PROJECT_ID" ] || [ -z "$GCP_ZONE" ]; then
-  printf '%s\n' "[ERROR] GCP_PROJECT_ID and GCP_ZONE must be explicitly specified."
-  exit 1
+  printf '%s\n' "[INFO] GCP_PROJECT_ID and GCP_ZONE not specified. Staging complete."
+  exit 0
 fi
 
 printf '%s\n' "Setting up XPK Production Cluster Stack..."

@@ -172,21 +172,33 @@ case "$ACTION" in
           fi
         else
           if [ -n "${REBAR3_DOWNLOAD_URL:-}" ]; then
-            TEMP_FILE=$(mktemp)
-            libscript_download "${REBAR3_DOWNLOAD_URL:-}" "${TEMP_FILE}"
-            if case "${REBAR3_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
-              tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
-            elif case "${REBAR3_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
-              unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+              TEMP_FILE=$(mktemp)
+              libscript_download "${REBAR3_DOWNLOAD_URL:-}" "${TEMP_FILE}"
+              if case "${REBAR3_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then
+                tar -xzf "${TEMP_FILE}" -C "${TARGET_DIR}" --strip-components=1 || true
+              elif case "${REBAR3_DOWNLOAD_URL:-}" in *.zip) true;; *) false;; esac; then
+                unzip -q "${TEMP_FILE}" -d "${TARGET_DIR}" || true
+              else
+                cp "${TEMP_FILE}" "${TARGET_DIR}/bin/rebar3" || true
+                chmod +x "${TARGET_DIR}/bin/rebar3" || true
+              fi
+              rm -f "${TEMP_FILE}"
             else
-              cp "${TEMP_FILE}" "${TARGET_DIR}/bin/rebar3" || true
-              chmod +x "${TARGET_DIR}/bin/rebar3" || true
+              log_info "No download URL provided for rebar3 ${VERSION}. Using system package or official binary..."
+              mkdir -p "${TARGET_DIR}/bin"
+              if command -v rebar3 >/dev/null 2>&1; then
+                ln -sf "$(command -v rebar3)" "${TARGET_DIR}/bin/rebar3"
+              elif [ "${TARGET_OS:-}" = "alpine" ]; then
+                libscript_depends "rebar3" || true
+                if command -v rebar3 >/dev/null 2>&1; then
+                  ln -sf "$(command -v rebar3)" "${TARGET_DIR}/bin/rebar3"
+                fi
+              else
+                curl -fsSL https://s3.amazonaws.com/rebar3/rebar3 -o "${TARGET_DIR}/bin/rebar3" || true
+                chmod +x "${TARGET_DIR}/bin/rebar3" || true
+              fi
             fi
-            rm -f "${TEMP_FILE}"
-          else
-            log_warn "No download URL provided for rebar3 ${VERSION}."
           fi
-        fi
       else
         log_info "rebar3 ${VERSION} is already installed."
       fi
@@ -197,6 +209,7 @@ case "$ACTION" in
     if [ "$REBAR3_INSTALL_METHOD" = "libscript_native" ] || [ "$REBAR3_INSTALL_METHOD" = "system" ]; then
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
       export SCRIPT_NAME
+      # shellcheck disable=SC1090
       . "${SCRIPT_NAME}"
       service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-rebar3}}"
       libscript_service "$ACTION" "$service_name" "$@"
@@ -209,6 +222,7 @@ case "$ACTION" in
     if [ "$REBAR3_INSTALL_METHOD" = "libscript_native" ] || [ "$REBAR3_INSTALL_METHOD" = "system" ]; then
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
       export SCRIPT_NAME
+      # shellcheck disable=SC1090
       . "${SCRIPT_NAME}"
       service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-rebar3}}"
       libscript_install_service "$service_name" "$@"
@@ -221,6 +235,7 @@ case "$ACTION" in
     if [ "$REBAR3_INSTALL_METHOD" = "libscript_native" ] || [ "$REBAR3_INSTALL_METHOD" = "system" ]; then
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
       export SCRIPT_NAME
+      # shellcheck disable=SC1090
       . "${SCRIPT_NAME}"
       service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-rebar3}}"
       libscript_uninstall_service "$service_name" "$@"

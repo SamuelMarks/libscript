@@ -10,6 +10,6 @@
   "requires": ["languages/java"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": [],
+  "os_blacklist": ["sunos"],
   "ports": [9200, 9300]
 }

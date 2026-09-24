@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/packaging/guid_registry.schema.json",
+  "title": "Deterministic GUID and Service Registry Schema",
+  "description": "Schema for Windows Installer (MSI) component identity, deterministic UpgradeCodes, ComponentId GUIDs, and shared service metadata.",
+  "type": "object",
+  "required": ["version", "components"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Registry schema version"
+    },
+    "components": {
+      "type": "object",
+      "description": "Dictionary of standalone component specifications indexed by component name",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["upgrade_code", "title", "install_dir"],
+        "properties": {
+          "upgrade_code": {
+            "type": "string",
+            "pattern": "^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$",
+            "description": "Permanent Windows Installer UpgradeCode GUID for this component lineage"
+          },
+          "component_guid": {
+            "type": "string",
+            "pattern": "^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$",
+            "description": "Primary shared ComponentId GUID for binary/service reference counting"
+          },
+          "title": {
+            "type": "string",
+            "description": "Display name of the component"
+          },
+          "service_name": {
+            "type": ["string", "null"],
+            "description": "Windows Service name registered in SCM (null if runtime/non-daemon)"
+          },
+          "default_port": {
+            "type": ["integer", "null"],
+            "description": "Default TCP port component listens on (null if non-networked)"
+          },
+          "install_dir": {
+            "type": "string",
+            "description": "Standard target directory for component installation"
+          },
+          "data_dir": {
+            "type": ["string", "null"],
+            "description": "Standard persistent data directory"
+          },
+          "shared_dll_ref_count": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether component participates in Windows Installer shared reference counting"
+          }
+        }
+      }
+    }
+  }
+}

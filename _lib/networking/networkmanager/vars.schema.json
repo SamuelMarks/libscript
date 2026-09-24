@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/networking/networkmanager/vars.schema.json",
+  "title": "NetworkManager variables",
+  "description": "Configuration variables for NetworkManager",
+  "type": "object",
+  "properties": {
+    "NETWORKMANAGER_VERSION": {
+      "description": "Specific version of networkmanager to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "NETWORKMANAGER_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install NETWORKMANAGER. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

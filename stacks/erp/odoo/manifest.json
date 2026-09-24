@@ -4,5 +4,6 @@
   "category": "erp",
   "title": "odoo",
   "description": "odoo stack",
-  "provides": ["odoo"]
+  "provides": ["odoo"],
+  "os_blacklist": ["sunos"]
 }

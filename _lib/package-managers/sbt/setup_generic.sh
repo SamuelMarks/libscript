@@ -157,8 +157,8 @@ case "$ACTION" in
       resolve_exact_version
       if [ "${EXACT_VERSION}" = "latest" ]; then
          libscript_depends "curl"
-         EXACT_VERSION=$(curl -sL https://api.github.com/repos/sbt/sbt/releases/latest | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
-         if [ -z "${EXACT_VERSION}" ]; then EXACT_VERSION="latest"; fi
+         EXACT_VERSION=$(curl -sL https://api.github.com/repos/sbt/sbt/releases/latest 2>/dev/null | grep -oE "\"tag_name\": *\"v[^\"]+\"" | sed -E "s/.*\"v([^\"]+)\".*/\1/" | head -n 1)
+         if [ -z "${EXACT_VERSION}" ] || [ "${EXACT_VERSION}" = "latest" ]; then EXACT_VERSION="1.10.7"; fi
       fi
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/sbt/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then

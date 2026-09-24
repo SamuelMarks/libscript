@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/graphics/vulkan-loader/vars.schema.json",
+  "title": "Vulkan-Loader variables",
+  "description": "Configuration variables for Vulkan-Loader",
+  "type": "object",
+  "properties": {
+    "VULKAN_LOADER_VERSION": {
+      "description": "Specific version of vulkan-loader to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "VULKAN_LOADER_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install VULKAN_LOADER. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

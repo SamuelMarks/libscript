@@ -102,15 +102,13 @@ case "$ACTION" in
         libscript_depends "www/uwsgi" || libscript_depends "uwsgi"
       else
         export UWSGI_PROFILE_OVERRIDE="xml=no"
-        if command -v uv >/dev/null 2>&1; then
-          uv tool install uwsgi 2>/dev/null || uv pip install uwsgi
-        elif command -v pip3 >/dev/null 2>&1; then
-          pip3 install --user uwsgi
+        if command -v pip3 >/dev/null 2>&1; then
+          pip3 install --user uwsgi || python3 -m pip install --user uwsgi
         elif command -v pip >/dev/null 2>&1; then
-          pip install --user uwsgi
+          pip install --user uwsgi || python3 -m pip install --user uwsgi
         else
           libscript_depends "python"
-          pip3 install --user uwsgi || true
+          python3 -m pip install --user uwsgi || true
         fi
       fi
     fi

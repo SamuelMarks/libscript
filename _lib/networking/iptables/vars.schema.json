@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/networking/iptables/vars.schema.json",
+  "title": "Iptables variables",
+  "description": "Configuration variables for Iptables",
+  "type": "object",
+  "properties": {
+    "IPTABLES_VERSION": {
+      "description": "Specific version of iptables to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "IPTABLES_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install IPTABLES. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

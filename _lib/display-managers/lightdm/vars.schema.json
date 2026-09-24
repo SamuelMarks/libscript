@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/display-managers/lightdm/vars.schema.json",
+  "title": "LightDM variables",
+  "description": "Configuration variables for LightDM",
+  "type": "object",
+  "properties": {
+    "LIGHTDM_VERSION": {
+      "description": "Specific version of lightdm to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "LIGHTDM_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install LIGHTDM. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

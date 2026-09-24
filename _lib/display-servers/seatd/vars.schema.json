@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/display-servers/seatd/vars.schema.json",
+  "title": "Seatd variables",
+  "description": "Configuration variables for Seatd",
+  "type": "object",
+  "properties": {
+    "SEATD_VERSION": {
+      "description": "Specific version of seatd to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "SEATD_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install SEATD. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

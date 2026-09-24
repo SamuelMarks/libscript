@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/package-managers/porg/vars.schema.json",
+  "title": "Porg variables",
+  "description": "Configuration variables for Porg",
+  "type": "object",
+  "properties": {
+    "PORG_VERSION": {
+      "description": "Specific version of porg to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "PORG_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install PORG. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

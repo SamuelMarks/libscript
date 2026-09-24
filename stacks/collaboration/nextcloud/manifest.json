@@ -6,5 +6,6 @@
   "license": "AGPL-3.0-only",
   "license_name": "GNU Affero General Public License v3.0",
   "description": "nextcloud stack",
-  "provides": ["nextcloud"]
+  "provides": ["nextcloud"],
+  "os_blacklist": ["sunos"]
 }

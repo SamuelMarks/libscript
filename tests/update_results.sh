@@ -158,12 +158,12 @@ TABLE_HDR
     _freebsd_status="-"
 
     _mfile=""
-    if [ -d "${_repo_root}/_lib" ]; then
-      _mfile=$(find "${_repo_root}/_lib" -maxdepth 3 -type d -name "${_comp}" -exec echo "{}/manifest.json" \; 2>/dev/null | head -n 1)
-    fi
-    if [ -z "${_mfile}" ] && [ -d "${_repo_root}/stacks" ]; then
-      _mfile=$(find "${_repo_root}/stacks" -maxdepth 3 -type d -name "${_comp}" -exec echo "{}/manifest.json" \; 2>/dev/null | head -n 1)
-    fi
+    for _candidate in "${_repo_root}/_lib"/*/"${_comp}/manifest.json" "${_repo_root}/stacks"/*/"${_comp}/manifest.json"; do
+      if [ -f "${_candidate}" ]; then
+        _mfile="${_candidate}"
+        break
+      fi
+    done
     if [ -f "${_mfile}" ]; then
       [ "$(check_manifest_support "${_mfile}" "alpine")" = "yes" ] && _apk_status="❓"
       [ "$(check_manifest_support "${_mfile}" "debian")" = "yes" ] && _deb_status="❓"
@@ -181,12 +181,18 @@ TABLE_HDR
     fi
 
     if [ -n "${_existing_line}" ]; then
-      _e_apk=$(printf '%s\n' "${_existing_line}" | awk -F'|' '{print $3}' | tr -d ' ')
-      _e_deb=$(printf '%s\n' "${_existing_line}" | awk -F'|' '{print $4}' | tr -d ' ')
-      _e_rpm=$(printf '%s\n' "${_existing_line}" | awk -F'|' '{print $5}' | tr -d ' ')
-      _e_win=$(printf '%s\n' "${_existing_line}" | awk -F'|' '{print $6}' | tr -d ' ')
-      _e_sunos=$(printf '%s\n' "${_existing_line}" | awk -F'|' '{print $7}' | tr -d ' ')
-      _e_freebsd=$(printf '%s\n' "${_existing_line}" | awk -F'|' '{print $8}' | tr -d ' ')
+      _old_ifs="${IFS}"
+      IFS='|'
+      # shellcheck disable=SC2086
+      set -- ${_existing_line}
+      IFS="${_old_ifs}"
+
+      _e_apk=$(printf '%s' "${3:-}" | tr -d ' ')
+      _e_deb=$(printf '%s' "${4:-}" | tr -d ' ')
+      _e_rpm=$(printf '%s' "${5:-}" | tr -d ' ')
+      _e_win=$(printf '%s' "${6:-}" | tr -d ' ')
+      _e_sunos=$(printf '%s' "${7:-}" | tr -d ' ')
+      _e_freebsd=$(printf '%s' "${8:-}" | tr -d ' ')
 
       [ -n "${_e_apk}" ] && [ "${_apk_status}" != "-" ] && _apk_status="${_e_apk}"
       [ -n "${_e_deb}" ] && [ "${_deb_status}" != "-" ] && _deb_status="${_e_deb}"
@@ -328,6 +334,14 @@ update_todo_plan() {
 
   _tmp_todo=$(mktemp "${TMPDIR:-/tmp}/todo_update.XXXXXX")
   _current_comp=""
+  _is_alpine=0
+  _is_sunos=0
+  if grep -qi "alpine" "${_todo_file}"; then
+    _is_alpine=1
+  elif grep -qi "sunos\|omnios" "${_todo_file}"; then
+    _is_sunos=1
+  fi
+
   while IFS= read -r _line || [ -n "${_line}" ]; do
     case "${_line}" in
       "- [ ] "*)
@@ -336,8 +350,27 @@ update_todo_plan() {
         _comp_name="${_comp_target##*/}"
         _comp_name=$(printf '%s' "${_comp_name}" | tr -d '` ')
         _current_comp="${_comp_name}"
-        if [ -n "${_comp_name}" ] && (ls "${_tests_tmp_dir}/${_comp_name}"*.success >/dev/null 2>&1 || 
-           ls "${_tests_tmp_dir}/${_comp_name}"*.failure >/dev/null 2>&1); then
+        _has_res=0
+        if [ -n "${_comp_name}" ]; then
+          if [ "${_is_alpine}" -eq 1 ]; then
+            if ls "${_tests_tmp_dir}/${_comp_name}".linux.alpine.* >/dev/null 2>&1 || \
+               ls "${_tests_tmp_dir}/${_comp_name}".alpine.* >/dev/null 2>&1 || \
+               ls "${_tests_tmp_dir}/${_comp_name}".apk.* >/dev/null 2>&1; then
+              _has_res=1
+            fi
+          elif [ "${_is_sunos}" -eq 1 ]; then
+            if ls "${_tests_tmp_dir}/${_comp_name}".sunos.* >/dev/null 2>&1; then
+              _has_res=1
+            fi
+          else
+            if ls "${_tests_tmp_dir}/${_comp_name}"*.success >/dev/null 2>&1 || \
+               ls "${_tests_tmp_dir}/${_comp_name}"*.failure >/dev/null 2>&1; then
+              _has_res=1
+            fi
+          fi
+        fi
+
+        if [ "${_has_res}" -eq 1 ]; then
           printf -- '- [x] %s\n' "${_item}" >>"${_tmp_todo}"
         else
           printf '%s\n' "${_line}" >>"${_tmp_todo}"
@@ -352,7 +385,27 @@ update_todo_plan() {
         printf '%s\n' "${_line}" >>"${_tmp_todo}"
         ;;
       *"[ ] **Double-check & Idempotency Verified (2x run)**"*)
-        if [ -n "${_current_comp}" ] && (ls "${_tests_tmp_dir}/${_current_comp}".idempotent.success >/dev/null 2>&1); then
+        _has_idem=0
+        if [ -n "${_current_comp}" ]; then
+          if [ "${_is_alpine}" -eq 1 ]; then
+            if (ls "${_tests_tmp_dir}/${_current_comp}".linux.alpine.success >/dev/null 2>&1 || \
+                ls "${_tests_tmp_dir}/${_current_comp}".alpine.success >/dev/null 2>&1) && \
+               ls "${_tests_tmp_dir}/${_current_comp}".idempotent.success >/dev/null 2>&1; then
+              _has_idem=1
+            fi
+          elif [ "${_is_sunos}" -eq 1 ]; then
+            if ls "${_tests_tmp_dir}/${_current_comp}".sunos.success >/dev/null 2>&1 && \
+               ls "${_tests_tmp_dir}/${_current_comp}".idempotent.success >/dev/null 2>&1; then
+              _has_idem=1
+            fi
+          else
+            if ls "${_tests_tmp_dir}/${_current_comp}".idempotent.success >/dev/null 2>&1; then
+              _has_idem=1
+            fi
+          fi
+        fi
+
+        if [ "${_has_idem}" -eq 1 ]; then
           printf '  - [x] **Double-check & Idempotency Verified (2x run)**\n' >>"${_tmp_todo}"
         else
           printf '%s\n' "${_line}" >>"${_tmp_todo}"

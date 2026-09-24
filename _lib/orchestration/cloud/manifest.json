@@ -1,0 +1,10 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "cloud",
+  "title": "Cloud Orchestration Utilities",
+  "description": "Utilities for bootstrapping virtual machine instances using cloud-init and nocloud iso generation.",
+  "category": "orchestration",
+  "provides": ["cloud", "nocloud-iso"],
+  "os_whitelist": ["linux", "darwin"],
+  "os_blacklist": ["windows", "sunos"]
+}

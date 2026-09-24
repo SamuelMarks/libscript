@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/desktops/hyprland/vars.schema.json",
+  "title": "Hyprland variables",
+  "description": "Configuration variables for Hyprland",
+  "type": "object",
+  "properties": {
+    "HYPRLAND_VERSION": {
+      "description": "Specific version of hyprland to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "HYPRLAND_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install HYPRLAND. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

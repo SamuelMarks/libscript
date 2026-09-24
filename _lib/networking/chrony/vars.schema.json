@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/networking/chrony/vars.schema.json",
+  "title": "Chrony variables",
+  "description": "Configuration variables for Chrony",
+  "type": "object",
+  "properties": {
+    "CHRONY_VERSION": {
+      "description": "Specific version of chrony to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "CHRONY_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install CHRONY. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

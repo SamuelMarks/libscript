@@ -7,6 +7,6 @@
   "provides": ["message-broker", "nats", "nats-server"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": [],
+  "os_blacklist": ["sunos"],
   "ports": ["4222", "6222", "8222"]
 }

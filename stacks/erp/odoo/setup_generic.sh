@@ -61,7 +61,7 @@ if [ ! -d "${ODOO_WWWROOT}/odoo-bin" ]; then
   log_info "Downloading Odoo (${ODOO_VERSION}) to ${ODOO_WWWROOT}..."
   priv mkdir -p "${ODOO_WWWROOT}"
 
-  dl_export url="https://github.com/odoo/odoo/archive/refs/heads/${ODOO_VERSION}.tar.gz"
+  dl_url="https://github.com/odoo/odoo/archive/refs/heads/${ODOO_VERSION}.tar.gz"
 
   if command -v libscript_download >/dev/null 2>&1; then
     tmp_odoo=$(mktemp)
@@ -76,9 +76,9 @@ if [ ! -d "${ODOO_WWWROOT}/odoo-bin" ]; then
   if [ -f "${ODOO_WWWROOT}/requirements.txt" ]; then
     log_info "Installing Odoo Python dependencies..."
     if command -v pip3 >/dev/null 2>&1; then
-      priv pip3 install -r "${ODOO_WWWROOT}/requirements.txt"
+      priv pip3 install --break-system-packages -r "${ODOO_WWWROOT}/requirements.txt" || true
     elif command -v pip >/dev/null 2>&1; then
-      priv pip install -r "${ODOO_WWWROOT}/requirements.txt"
+      priv pip install --break-system-packages -r "${ODOO_WWWROOT}/requirements.txt" || true
     else
       log_warn "pip not found. Skipping python dependencies."
     fi
@@ -125,16 +125,14 @@ http_port = ${ODOO_PORT}
 proxy_mode = True
 addons_path = ${ODOO_WWWROOT}/addons
 EOF
-  if ! priv chown -R www-data:www-data "${ODOO_WWWROOT}" ; then
-    true
-  fi
+  priv chown -R www-data:www-data "${ODOO_WWWROOT}" 2>/dev/null || priv chown -R nginx:nginx "${ODOO_WWWROOT}" 2>/dev/null || true
 fi
 
 # Start Odoo as a background service or daemon if possible (simplified start script)
 log_info "Starting Odoo in the background..."
 if command -v python3 >/dev/null 2>&1; then
-  priv -u www-data sh -c "cd ${ODOO_WWWROOT} && python3 odoo-bin -c odoo.conf > odoo.log 2>&1 &" || \
-  priv sh -c "cd ${ODOO_WWWROOT} && python3 odoo-bin -c odoo.conf > odoo.log 2>&1 &" || true
+  priv -u www-data sh -c "cd ${ODOO_WWWROOT} && python3 odoo-bin -c odoo.conf > odoo.log 2>&1 &" 2>/dev/null || \
+  priv sh -c "cd ${ODOO_WWWROOT} && python3 odoo-bin -c odoo.conf > odoo.log 2>&1 &" 2>/dev/null || true
 fi
 
 log_info "Configuring webserver: ${ODOO_WEBSERVER}"
@@ -142,6 +140,8 @@ log_info "Configuring webserver: ${ODOO_WEBSERVER}"
 ENV_SCRIPT_FILE=$(mktemp)
 cat <<EOF > "${ENV_SCRIPT_FILE}"
 export ODOO_SERVER_NAME="${ODOO_SERVER_NAME}"
+export SERVER_NAME="${ODOO_SERVER_NAME}"
+export WWWROOT="${ODOO_WWWROOT}"
 export PROXY_PASS="http://127.0.0.1:${ODOO_PORT}"
 export PROXY_WEBSOCKETS=1
 export LISTEN="${LISTEN_PORT}"
@@ -152,13 +152,13 @@ export LOCATION_EXPR="/"
 export NGINX_LOCATION_EXPR="/"
 export NGINX_SERVER_NAME="${ODOO_SERVER_NAME}"
 export NGINX_WWWROOT="${ODOO_WWWROOT}"
-export NGINX_PHP_FPM_LISTEN="${ODOO_PHP_FPM_LISTEN}"
+export NGINX_PHP_FPM_LISTEN="${ODOO_PHP_FPM_LISTEN:-}"
 export HTTPD_SERVER_NAME="${ODOO_SERVER_NAME}"
 export HTTPD_WWWROOT="${ODOO_WWWROOT}"
-export HTTPD_PHP_FPM_LISTEN="${ODOO_PHP_FPM_LISTEN}"
+export HTTPD_PHP_FPM_LISTEN="${ODOO_PHP_FPM_LISTEN:-}"
 export CADDY_SERVER_NAME="${ODOO_SERVER_NAME}"
 export CADDY_WWWROOT="${ODOO_WWWROOT}"
-export CADDY_PHP_FPM_LISTEN="${ODOO_PHP_FPM_LISTEN}"
+export CADDY_PHP_FPM_LISTEN="${ODOO_PHP_FPM_LISTEN:-}"
 EOF
 export ENV_SCRIPT_FILE
 
@@ -172,12 +172,18 @@ if [ "${ODOO_WEBSERVER}" = "nginx" ]; then
   env SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-servers/nginx/create_server_block.sh" > "${SERVER_BLOCK_TMP}"
 
   NGINX_CONF_DIR="${LIBSCRIPT_ROOT_DIR}/installed/nginx/conf"
-  if [ -d /etc/nginx/sites-available ]; then
-    NGINX_CONF_DIR="/etc/nginx"
+  if [ -d /etc/nginx/http.d ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/http.d/${ODOO_SERVER_NAME}.conf"
+  elif [ -d /etc/nginx/conf.d ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/conf.d/${ODOO_SERVER_NAME}.conf"
+  elif [ -d /etc/nginx/sites-available ]; then
+    priv cp "${SERVER_BLOCK_TMP}" "/etc/nginx/sites-available/${ODOO_SERVER_NAME}.conf"
+    priv ln -sf "/etc/nginx/sites-available/${ODOO_SERVER_NAME}.conf" "/etc/nginx/sites-enabled/${ODOO_SERVER_NAME}.conf"
+  else
+    priv mkdir -p "${NGINX_CONF_DIR}/sites-available" "${NGINX_CONF_DIR}/sites-enabled"
+    priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${ODOO_SERVER_NAME}.conf"
+    priv ln -sf "${NGINX_CONF_DIR}/sites-available/${ODOO_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${ODOO_SERVER_NAME}.conf"
   fi
-
-  priv cp "${SERVER_BLOCK_TMP}" "${NGINX_CONF_DIR}/sites-available/${ODOO_SERVER_NAME}.conf"
-  priv ln -sf "${NGINX_CONF_DIR}/sites-available/${ODOO_SERVER_NAME}.conf" "${NGINX_CONF_DIR}/sites-enabled/${ODOO_SERVER_NAME}.conf"
   if ! priv systemctl reload nginx ; then
     true
   fi

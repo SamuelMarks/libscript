@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/networking/wpa_supplicant/vars.schema.json",
+  "title": "Wpa_Supplicant variables",
+  "description": "Configuration variables for Wpa_Supplicant",
+  "type": "object",
+  "properties": {
+    "WPA_SUPPLICANT_VERSION": {
+      "description": "Specific version of wpa_supplicant to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "WPA_SUPPLICANT_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install WPA_SUPPLICANT. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

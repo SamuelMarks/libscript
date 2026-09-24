@@ -184,9 +184,13 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            if [ "$UNAME_LOWER" = "freebsd" ]; then
-              log_info "No native binary for FreeBSD. Falling back to system package manager for opam..."
+            if [ "$UNAME_LOWER" = "freebsd" ] || [ "${TARGET_OS:-}" = "alpine" ] || [ -z "${OPAM_DOWNLOAD_URL:-}" ]; then
+              log_info "No native binary for ${TARGET_OS:-$UNAME_LOWER}. Falling back to system package manager for opam..."
               libscript_depends "opam"
+              mkdir -p "${TARGET_DIR}/bin"
+              if command -v opam >/dev/null 2>&1; then
+                ln -sf "$(command -v opam)" "${TARGET_DIR}/bin/opam"
+              fi
             else
               log_warn "No download URL provided for opam ${VERSION}."
             fi

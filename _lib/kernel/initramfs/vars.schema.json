@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/kernel/initramfs/vars.schema.json",
+  "title": "Initramfs variables",
+  "description": "Configuration variables for Initramfs",
+  "type": "object",
+  "properties": {
+    "INITRAMFS_VERSION": {
+      "description": "Specific version of initramfs to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "INITRAMFS_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install INITRAMFS. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

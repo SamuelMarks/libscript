@@ -157,8 +157,8 @@ while IFS= read -r _rel || [ -n "$_rel" ]; do
   [ -f "${ROOT_DIR}/${_rel}" ] || continue
 
   case "$_rel" in
-    .git*|.vagrant*|tests_tmp/*|dist/*|build/*|node_modules/*) continue ;;
-    */.git/*|*/.git|*/.github/*|*/.githooks/*|*/.vagrant/*|*/tests_tmp/*|*/dist/*|*/build/*|*/node_modules/*) continue ;;
+    .git*|.vagrant*|tests_tmp/*|dist/*|build/*|tmp/*|node_modules/*) continue ;;
+    */.git/*|*/.git|*/.github/*|*/.githooks/*|*/.vagrant/*|*/tests_tmp/*|*/dist/*|*/build/*|*/tmp/*|*/node_modules/*) continue ;;
     cache/*|*/cache/*) continue ;;
     *.tmp|*.log|*.ppm|*.bak|*.swp|*.msi|*.wixobj) continue ;;
     packaging/screenshots/release_test/*) continue ;;

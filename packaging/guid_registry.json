@@ -1,0 +1,86 @@
+{
+  "$schema": "./guid_registry.schema.json",
+  "version": "1.0.0",
+  "components": {
+    "mysql": {
+      "upgrade_code": "E0F45901-83B4-4B21-9B5A-01D38FE81001",
+      "component_guid": "5B2783B0-9A1F-4348-9F93-87CE43C21001",
+      "title": "MySQL Relational Database Server",
+      "service_name": "LibScript_MySQL",
+      "default_port": 3306,
+      "install_dir": "[ProgramFiles64Folder]LibScript\\MySQL",
+      "data_dir": "[CommonAppDataFolder]LibScript\\MySQL\\data",
+      "shared_dll_ref_count": true
+    },
+    "redis": {
+      "upgrade_code": "E0F45901-83B4-4B21-9B5A-01D38FE81002",
+      "component_guid": "5B2783B0-9A1F-4348-9F93-87CE43C21002",
+      "title": "Redis In-Memory Datastore & Cache",
+      "service_name": "LibScript_Redis",
+      "default_port": 6379,
+      "install_dir": "[ProgramFiles64Folder]LibScript\\Redis",
+      "data_dir": "[CommonAppDataFolder]LibScript\\Redis\\data",
+      "shared_dll_ref_count": true
+    },
+    "mongodb": {
+      "upgrade_code": "E0F45901-83B4-4B21-9B5A-01D38FE81003",
+      "component_guid": "5B2783B0-9A1F-4348-9F93-87CE43C21003",
+      "title": "MongoDB Document Database",
+      "service_name": "LibScript_MongoDB",
+      "default_port": 27017,
+      "install_dir": "[ProgramFiles64Folder]LibScript\\MongoDB",
+      "data_dir": "[CommonAppDataFolder]LibScript\\MongoDB\\data",
+      "shared_dll_ref_count": true
+    },
+    "python": {
+      "upgrade_code": "E0F45901-83B4-4B21-9B5A-01D38FE81004",
+      "component_guid": "5B2783B0-9A1F-4348-9F93-87CE43C21004",
+      "title": "Python Language Execution Runtime",
+      "service_name": null,
+      "default_port": null,
+      "install_dir": "[ProgramFiles64Folder]LibScript\\Python311",
+      "data_dir": null,
+      "shared_dll_ref_count": true
+    },
+    "nodejs": {
+      "upgrade_code": "E0F45901-83B4-4B21-9B5A-01D38FE81005",
+      "component_guid": "5B2783B0-9A1F-4348-9F93-87CE43C21005",
+      "title": "Node.js JavaScript Runtime & npm",
+      "service_name": null,
+      "default_port": null,
+      "install_dir": "[ProgramFiles64Folder]LibScript\\Node20",
+      "data_dir": null,
+      "shared_dll_ref_count": true
+    },
+    "meilisearch": {
+      "upgrade_code": "E0F45901-83B4-4B21-9B5A-01D38FE81006",
+      "component_guid": "5B2783B0-9A1F-4348-9F93-87CE43C21006",
+      "title": "Meilisearch Full-Text Search Engine",
+      "service_name": "LibScript_Meilisearch",
+      "default_port": 7700,
+      "install_dir": "[ProgramFiles64Folder]LibScript\\Meilisearch",
+      "data_dir": "[CommonAppDataFolder]LibScript\\Meilisearch\\data",
+      "shared_dll_ref_count": true
+    },
+    "openedx-core": {
+      "upgrade_code": "B8C8E64E-9B5A-4B7C-A5D8-0F18B9918239",
+      "component_guid": "E2A89C15-99BD-4720-A0E8-A97A2E504F63",
+      "title": "Open edX LMS & Studio Core Services",
+      "service_name": "OpenEdXLMS",
+      "default_port": 8000,
+      "install_dir": "[ProgramFiles64Folder]OpenEdX",
+      "data_dir": "C:\\ProgramData\\OpenEdX\\data",
+      "shared_dll_ref_count": false
+    },
+    "openedx": {
+      "upgrade_code": "C9D8E74F-0A6B-4C8D-B6E9-1F29C0029340",
+      "component_guid": "A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D",
+      "title": "Open edX Platform Unified Orchestrator",
+      "service_name": null,
+      "default_port": null,
+      "install_dir": "[ProgramFiles64Folder]OpenEdX",
+      "data_dir": "C:\\ProgramData\\OpenEdX\\data",
+      "shared_dll_ref_count": false
+    }
+  }
+}

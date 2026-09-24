@@ -154,10 +154,27 @@ case "$ACTION" in
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/deno-pm/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
+      if [ "${TARGET_OS:-}" = "alpine" ] || [ "$UNAME_LOWER" = "freebsd" ]; then
+        log_info "Configuring deno-pm for ${TARGET_OS:-$UNAME_LOWER}..."
+        libscript_depends "deno" || true
+        mkdir -p "${TARGET_DIR}/bin"
+        _deno_bin=""
+        if [ -x /usr/bin/deno ]; then
+          _deno_bin="/usr/bin/deno"
+        elif [ -x /usr/local/bin/deno ]; then
+          _deno_bin="/usr/local/bin/deno"
+        elif command -v deno >/dev/null 2>&1; then
+          _deno_bin="$(command -v deno)"
+        fi
+        if [ -n "$_deno_bin" ] && [ "$_deno_bin" != "${TARGET_DIR}/bin/deno" ]; then
+          rm -f "${TARGET_DIR}/bin/deno"
+          ln -sf "$_deno_bin" "${TARGET_DIR}/bin/deno"
+        fi
+      elif [ ! -d "${TARGET_DIR}" ] || [ ! -x "${TARGET_DIR}/bin/deno" ]; then
         log_info "Installing deno-pm ${VERSION} natively to ${TARGET_DIR}..."
+        mkdir -p "${TARGET_DIR}/bin"
         libscript_depends "curl" "unzip" || true
-        curl -fsSL https://deno.land/install.sh | DENO_INSTALL="${TARGET_DIR}" sh
+        curl -fsSL https://deno.land/install.sh | DENO_INSTALL="${TARGET_DIR}" sh || true
       else
         log_info "deno-pm ${VERSION} is already installed."
       fi

@@ -232,9 +232,9 @@ libscript_depends() {
           _apk_cache="${LIBSCRIPT_APK_CACHE:-${LIBSCRIPT_CACHE_DIR:-$LIBSCRIPT_ROOT_DIR/cache}/apk}"
           if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] && [ -d "$_apk_cache" ]; then
             log_info "Offline mode: installing apk packages from $_apk_cache..."
-            priv apk add --allow-untrusted "$_apk_cache"/*.apk || priv apk add --no-cache ${pkgs_to_install} || _install_failed=1
+            priv apk add --allow-untrusted "$_apk_cache"/*.apk || priv apk add --no-cache ${pkgs_to_install} || (priv apk fix && priv apk add --no-cache ${pkgs_to_install}) || _install_failed=1
           else
-            priv  apk add --no-cache    ${pkgs_to_install} || _install_failed=1
+            priv apk add --no-cache ${pkgs_to_install} || (priv apk fix && priv apk add --no-cache ${pkgs_to_install}) || _install_failed=1
           fi ;;
         'brew')         brew install          ${pkgs_to_install} || _install_failed=1 ;;
         'dnf')

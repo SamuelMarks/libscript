@@ -7,5 +7,6 @@
     "toolchains/python": "latest",
     "orchestration/kubernetes/kubectl": "latest",
     "toolchains/xpk": "latest"
-  }
+  },
+  "os_blacklist": ["windows", "sunos"]
 }

@@ -10,5 +10,6 @@
     "build_deps": [],
     "runtime_deps": [],
     "tier": "recommended"
-  }
+  },
+  "os_blacklist": ["windows", "sunos"]
 }

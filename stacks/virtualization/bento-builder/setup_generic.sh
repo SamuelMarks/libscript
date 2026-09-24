@@ -48,6 +48,10 @@ INSTALL_VIRTUALBOX="${INSTALL_VIRTUALBOX:-1}"
 INSTALL_PACKER="${INSTALL_PACKER:-1}"
 INSTALL_VAGRANT="${INSTALL_VAGRANT:-1}"
 INSTALL_IMAGE_TOOLS="${INSTALL_IMAGE_TOOLS:-1}"
+if [ "${TARGET_OS:-}" = "alpine" ] || [ -f /etc/alpine-release ]; then
+  INSTALL_VIRTUALBOX=0
+  INSTALL_VAGRANT=0
+fi
 BENTO_DIR="${BENTO_DIR:-}"
 
 # ## find_bento_dir
@@ -162,22 +166,22 @@ case "$ACTION" in
 
     if [ "$INSTALL_QEMU" = "1" ]; then
       log_info "Provisioning QEMU / KVM..."
-      "$LIBSCRIPT_ROOT_DIR/libscript.sh" install qemu
+      "$LIBSCRIPT_ROOT_DIR/libscript.sh" qemu install || true
     fi
 
     if [ "$INSTALL_VIRTUALBOX" = "1" ]; then
       log_info "Provisioning VirtualBox..."
-      "$LIBSCRIPT_ROOT_DIR/libscript.sh" install virtualbox
+      "$LIBSCRIPT_ROOT_DIR/libscript.sh" virtualbox install || true
     fi
 
     if [ "$INSTALL_PACKER" = "1" ]; then
       log_info "Provisioning Packer..."
-      "$LIBSCRIPT_ROOT_DIR/libscript.sh" install packer
+      "$LIBSCRIPT_ROOT_DIR/libscript.sh" packer install || true
     fi
 
     if [ "$INSTALL_VAGRANT" = "1" ]; then
       log_info "Provisioning Vagrant..."
-      "$LIBSCRIPT_ROOT_DIR/libscript.sh" install vagrant
+      "$LIBSCRIPT_ROOT_DIR/libscript.sh" vagrant install || true
     fi
 
     if [ "$INSTALL_IMAGE_TOOLS" = "1" ]; then

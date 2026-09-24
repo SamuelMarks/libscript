@@ -153,17 +153,22 @@ case "$ACTION" in
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/bun-pm/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
+      if [ ! -x "${TARGET_DIR}/bin/bun" ]; then
         log_info "Installing bun-pm ${VERSION} natively to ${TARGET_DIR}..."
-        if [ -f /etc/alpine-release ]; then
-          libscript_depends "curl" "unzip" "libstdc++" "gcompat" || true
-        else
-          libscript_depends "curl" "unzip" || true
-        fi
-        curl -fsSL https://bun.sh/install | sh || true
         mkdir -p "${TARGET_DIR}/bin"
-        if [ -f ~/.bun/bin/bun ]; then
-          cp ~/.bun/bin/bun "${TARGET_DIR}/bin/bun" || true
+        if command -v bun >/dev/null 2>&1; then
+          ln -sf "$(command -v bun)" "${TARGET_DIR}/bin/bun"
+        elif [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/bun/latest/bin/bun" ]; then
+          ln -sf "${LIBSCRIPT_HOME:-$HOME/.libscript}/bun/latest/bin/bun" "${TARGET_DIR}/bin/bun"
+        else
+          "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install bun || true
+          if command -v bun >/dev/null 2>&1; then
+            ln -sf "$(command -v bun)" "${TARGET_DIR}/bin/bun"
+          elif [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/bun/latest/bin/bun" ]; then
+            ln -sf "${LIBSCRIPT_HOME:-$HOME/.libscript}/bun/latest/bin/bun" "${TARGET_DIR}/bin/bun"
+          elif [ -f "$HOME/.bun/bin/bun" ]; then
+            ln -sf "$HOME/.bun/bin/bun" "${TARGET_DIR}/bin/bun"
+          fi
         fi
       else
         log_info "bun-pm ${VERSION} is already installed."
@@ -175,6 +180,7 @@ case "$ACTION" in
     if [ "$BUN_PM_INSTALL_METHOD" = "libscript_native" ] || [ "$BUN_PM_INSTALL_METHOD" = "system" ]; then
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service.sh"
       export SCRIPT_NAME
+      # shellcheck disable=SC1090
       . "${SCRIPT_NAME}"
       service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-bun-pm}}"
       libscript_service "$ACTION" "$service_name" "$@"
@@ -187,6 +193,7 @@ case "$ACTION" in
     if [ "$BUN_PM_INSTALL_METHOD" = "libscript_native" ] || [ "$BUN_PM_INSTALL_METHOD" = "system" ]; then
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
       export SCRIPT_NAME
+      # shellcheck disable=SC1090
       . "${SCRIPT_NAME}"
       service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-bun-pm}}"
       libscript_install_service "$service_name" "$@"
@@ -199,6 +206,7 @@ case "$ACTION" in
     if [ "$BUN_PM_INSTALL_METHOD" = "libscript_native" ] || [ "$BUN_PM_INSTALL_METHOD" = "system" ]; then
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
       export SCRIPT_NAME
+      # shellcheck disable=SC1090
       . "${SCRIPT_NAME}"
       service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-bun-pm}}"
       libscript_uninstall_service "$service_name" "$@"

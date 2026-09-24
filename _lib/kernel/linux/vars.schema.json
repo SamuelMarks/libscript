@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/kernel/linux/vars.schema.json",
+  "title": "Linux Kernel variables",
+  "description": "Configuration variables for Linux Kernel",
+  "type": "object",
+  "properties": {
+    "LINUX_VERSION": {
+      "description": "Specific version of linux to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "LINUX_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install LINUX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/display-managers/greetd/vars.schema.json",
+  "title": "Greetd variables",
+  "description": "Configuration variables for Greetd",
+  "type": "object",
+  "properties": {
+    "GREETD_VERSION": {
+      "description": "Specific version of greetd to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "GREETD_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install GREETD. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

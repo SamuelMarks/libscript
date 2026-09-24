@@ -3,7 +3,7 @@
   "name": "luarocks",
   "provides": ["package-manager", "luarocks"],
   "os_whitelist": ["all"],
-  "os_blacklist": [],
+  "os_blacklist": ["sunos"],
   "title": "luarocks",
   "description": "Bootstrap script for [LuaRocks](https://luarocks.org/), the package manager for Lua modules.",
   "category": "package-manager"

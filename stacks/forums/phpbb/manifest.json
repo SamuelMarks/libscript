@@ -4,5 +4,6 @@
   "category": "forums",
   "title": "phpbb",
   "description": "phpbb stack",
-  "provides": ["phpbb"]
+  "provides": ["phpbb"],
+  "os_blacklist": ["sunos"]
 }
