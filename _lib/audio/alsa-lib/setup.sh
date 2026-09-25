@@ -47,6 +47,15 @@ if [ ! -f /usr/lib/libasound.so.2 ] && [ ! -f /lib/libasound.so.2 ]; then
       . "${SCRIPT_NAME}"
     fi
     priv apk add --no-cache alsa-lib || true
+  elif command -v apt-get >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv apt-get update -qq || true
+    priv apt-get install -y libasound2t64 || priv apt-get install -y libasound2 || true
   fi
 fi
 

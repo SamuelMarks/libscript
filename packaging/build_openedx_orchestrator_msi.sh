@@ -153,8 +153,10 @@ build_single_variant() {
     wixl -a x64 -o "$_target_msi" "$_wixl_main" "$_wixl_payload"
     rm -f "$_wixl_main" "$_wixl_payload"
   elif command -v candle.exe >/dev/null 2>&1 && command -v light.exe >/dev/null 2>&1; then
-    candle.exe -nologo -arch x64 -out "${LIBSCRIPT_ROOT_DIR}/tmp/" "$_main_wxs" "$_payload_wxs"
-    light.exe -nologo -sval -ext WixUIExtension -out "$_target_msi" "${LIBSCRIPT_ROOT_DIR}/tmp/openedx_orch_${_v}_main.wixobj" "${LIBSCRIPT_ROOT_DIR}/tmp/openedx_orch_${_v}_payload.wixobj"
+    printf '[INFO] Compiling Orchestrator MSI (%s) via WiX toolset...\n' "$_v"
+    candle.exe -nologo -arch x64 -out "${LIBSCRIPT_ROOT_DIR}/tmp/openedx_orch_${_v}_main.wixobj" "$_main_wxs" || exit 1
+    candle.exe -nologo -arch x64 -out "${LIBSCRIPT_ROOT_DIR}/tmp/openedx_orch_${_v}_payload.wixobj" "$_payload_wxs" || exit 1
+    light.exe -nologo -sval -ext WixUIExtension -out "$_target_msi" "${LIBSCRIPT_ROOT_DIR}/tmp/openedx_orch_${_v}_main.wixobj" "${LIBSCRIPT_ROOT_DIR}/tmp/openedx_orch_${_v}_payload.wixobj" || exit 1
   fi
 
   if [ ! -f "$_target_msi" ]; then

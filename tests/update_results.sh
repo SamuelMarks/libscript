@@ -335,9 +335,12 @@ update_todo_plan() {
   _tmp_todo=$(mktemp "${TMPDIR:-/tmp}/todo_update.XXXXXX")
   _current_comp=""
   _is_alpine=0
+  _is_debian=0
   _is_sunos=0
   if grep -qi "alpine" "${_todo_file}"; then
     _is_alpine=1
+  elif grep -qi "debian\|ubuntu" "${_todo_file}"; then
+    _is_debian=1
   elif grep -qi "sunos\|omnios" "${_todo_file}"; then
     _is_sunos=1
   fi
@@ -347,6 +350,7 @@ update_todo_plan() {
       "- [ ] "*)
         _item="${_line#- \[ \] }"
         _comp_target="${_item%%:*}"
+        _comp_target="${_comp_target%% (*}"
         _comp_name="${_comp_target##*/}"
         _comp_name=$(printf '%s' "${_comp_name}" | tr -d '` ')
         _current_comp="${_comp_name}"
@@ -356,6 +360,14 @@ update_todo_plan() {
             if ls "${_tests_tmp_dir}/${_comp_name}".linux.alpine.* >/dev/null 2>&1 || \
                ls "${_tests_tmp_dir}/${_comp_name}".alpine.* >/dev/null 2>&1 || \
                ls "${_tests_tmp_dir}/${_comp_name}".apk.* >/dev/null 2>&1; then
+              _has_res=1
+            fi
+          elif [ "${_is_debian}" -eq 1 ]; then
+            if ls "${_tests_tmp_dir}/${_comp_name}".linux.debian.* >/dev/null 2>&1 || \
+               ls "${_tests_tmp_dir}/${_comp_name}".linux.ubuntu.* >/dev/null 2>&1 || \
+               ls "${_tests_tmp_dir}/${_comp_name}".debian.* >/dev/null 2>&1 || \
+               ls "${_tests_tmp_dir}/${_comp_name}".ubuntu.* >/dev/null 2>&1 || \
+               ls "${_tests_tmp_dir}/${_comp_name}".deb.* >/dev/null 2>&1; then
               _has_res=1
             fi
           elif [ "${_is_sunos}" -eq 1 ]; then
@@ -379,6 +391,7 @@ update_todo_plan() {
       "- [x] "*)
         _item="${_line#- \[x\] }"
         _comp_target="${_item%%:*}"
+        _comp_target="${_comp_target%% (*}"
         _comp_name="${_comp_target##*/}"
         _comp_name=$(printf '%s' "${_comp_name}" | tr -d '` ')
         _current_comp="${_comp_name}"
@@ -390,6 +403,15 @@ update_todo_plan() {
           if [ "${_is_alpine}" -eq 1 ]; then
             if (ls "${_tests_tmp_dir}/${_current_comp}".linux.alpine.success >/dev/null 2>&1 || \
                 ls "${_tests_tmp_dir}/${_current_comp}".alpine.success >/dev/null 2>&1) && \
+               ls "${_tests_tmp_dir}/${_current_comp}".idempotent.success >/dev/null 2>&1; then
+              _has_idem=1
+            fi
+          elif [ "${_is_debian}" -eq 1 ]; then
+            if (ls "${_tests_tmp_dir}/${_current_comp}".linux.debian.success >/dev/null 2>&1 || \
+                ls "${_tests_tmp_dir}/${_current_comp}".linux.ubuntu.success >/dev/null 2>&1 || \
+                ls "${_tests_tmp_dir}/${_current_comp}".debian.success >/dev/null 2>&1 || \
+                ls "${_tests_tmp_dir}/${_current_comp}".ubuntu.success >/dev/null 2>&1 || \
+                ls "${_tests_tmp_dir}/${_current_comp}".deb.success >/dev/null 2>&1) && \
                ls "${_tests_tmp_dir}/${_current_comp}".idempotent.success >/dev/null 2>&1; then
               _has_idem=1
             fi

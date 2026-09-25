@@ -408,6 +408,7 @@ function Update-TodoPlan {
         if ($line.StartsWith("- [ ] ")) {
             $item = $line.Substring(6)
             $compTarget = ($item -split ':')[0]
+            $compTarget = ($compTarget -split ' \(')[0]
             $compName = (Split-Path -Leaf $compTarget) -replace '[` ]', ''
             $currentComp = $compName
             if ($compName -and ((Test-AnyFilePattern $testsTmpDir "$compName*.success") -or (Test-AnyFilePattern $testsTmpDir "$compName*.failure"))) {
@@ -418,6 +419,7 @@ function Update-TodoPlan {
         } elseif ($line.StartsWith("- [x] ")) {
             $item = $line.Substring(6)
             $compTarget = ($item -split ':')[0]
+            $compTarget = ($compTarget -split ' \(')[0]
             $compName = (Split-Path -Leaf $compTarget) -replace '[` ]', ''
             $currentComp = $compName
             $newLines += $line

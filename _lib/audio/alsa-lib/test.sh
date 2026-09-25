@@ -29,7 +29,17 @@ if [ -f /usr/lib/libasound.so ] || [ -f /usr/lib/libasound.so.2 ] || [ -f /lib/l
   exit 0
 fi
 
+for _lib_dir in /usr/lib/*-linux-gnu*; do
+  if [ -f "${_lib_dir}/libasound.so.2" ] || [ -f "${_lib_dir}/libasound.so" ]; then
+    exit 0
+  fi
+done
+
 if command -v apk >/dev/null 2>&1 && apk info -e alsa-lib >/dev/null 2>&1; then
+  exit 0
+fi
+
+if command -v dpkg-query >/dev/null 2>&1 && (dpkg-query -W -f='${Status}\n' libasound2t64 2>/dev/null | grep -q 'install ok installed' || dpkg-query -W -f='${Status}\n' libasound2 2>/dev/null | grep -q 'install ok installed'); then
   exit 0
 fi
 

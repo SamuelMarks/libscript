@@ -98,7 +98,7 @@ show_help() {
 # ## find_components
 # Executes find_components functionality.
 find_components() {
-  find "$LIBSCRIPT_CLI_DIR" -name "cli.sh" | while read -r cli_script; do
+  find "$LIBSCRIPT_CLI_DIR" -name "cli.sh" ! -path "*/tmp/*" ! -path "*/.*" | while read -r cli_script; do
     dir=$(dirname "$cli_script")
     if [ -f "$dir/vars.schema.json" ]; then
       rel_dir="${dir#"$LIBSCRIPT_CLI_DIR"/}"

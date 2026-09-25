@@ -125,8 +125,10 @@ if command -v wixl >/dev/null 2>&1; then
   wixl -a x64 -o "$TARGET_MSI" "$_wixl_main" "$_wixl_payload"
   rm -f "$_wixl_main" "$_wixl_payload"
 elif command -v candle.exe >/dev/null 2>&1 && command -v light.exe >/dev/null 2>&1; then
-  candle.exe -nologo -arch x64 -out "${LIBSCRIPT_ROOT_DIR}/tmp/" "$MAIN_WXS" "$PAYLOAD_WXS"
-  light.exe -nologo -sval -ext WixUIExtension -out "$TARGET_MSI" "${LIBSCRIPT_ROOT_DIR}/tmp/openedx_core_main.wixobj" "${LIBSCRIPT_ROOT_DIR}/tmp/openedx_core_payload.wixobj"
+  printf '[INFO] Compiling Open edX Core MSI via WiX toolset...\n'
+  candle.exe -nologo -arch x64 -out "${LIBSCRIPT_ROOT_DIR}/tmp/openedx_core_main.wixobj" "$MAIN_WXS" || exit 1
+  candle.exe -nologo -arch x64 -out "${LIBSCRIPT_ROOT_DIR}/tmp/openedx_core_payload.wixobj" "$PAYLOAD_WXS" || exit 1
+  light.exe -nologo -sval -ext WixUIExtension -out "$TARGET_MSI" "${LIBSCRIPT_ROOT_DIR}/tmp/openedx_core_main.wixobj" "${LIBSCRIPT_ROOT_DIR}/tmp/openedx_core_payload.wixobj" || exit 1
 fi
 
 if [ ! -f "$TARGET_MSI" ]; then

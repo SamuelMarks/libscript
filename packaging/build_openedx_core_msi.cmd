@@ -131,15 +131,20 @@ if %ERRORLEVEL% equ 0 (
 where candle.exe >nul 2>nul
 if %ERRORLEVEL% equ 0 (
     echo [INFO] Compiling Open edX Core MSI via WiX toolset...
-    candle.exe -nologo -arch x64 -out "%LIBSCRIPT_ROOT_DIR%\tmp\" "%MAIN_WXS%" "%PAYLOAD_WXS%"
-    if %ERRORLEVEL% neq 0 (
-        echo [ERROR] WiX candle compilation failed. >&2
-        exit /b %ERRORLEVEL%
+    candle.exe -nologo -arch x64 -out "%LIBSCRIPT_ROOT_DIR%\tmp\openedx_core_main.wixobj" "%MAIN_WXS%"
+    if !ERRORLEVEL! neq 0 (
+        echo [ERROR] WiX candle compilation failed for %MAIN_WXS%. >&2
+        exit /b !ERRORLEVEL!
+    )
+    candle.exe -nologo -arch x64 -out "%LIBSCRIPT_ROOT_DIR%\tmp\openedx_core_payload.wixobj" "%PAYLOAD_WXS%"
+    if !ERRORLEVEL! neq 0 (
+        echo [ERROR] WiX candle compilation failed for %PAYLOAD_WXS%. >&2
+        exit /b !ERRORLEVEL!
     )
     light.exe -nologo -sval -ext WixUIExtension -out "%TARGET_MSI%" "%LIBSCRIPT_ROOT_DIR%\tmp\openedx_core_main.wixobj" "%LIBSCRIPT_ROOT_DIR%\tmp\openedx_core_payload.wixobj"
-    if %ERRORLEVEL% neq 0 (
+    if !ERRORLEVEL! neq 0 (
         echo [ERROR] WiX light linking failed. >&2
-        exit /b %ERRORLEVEL%
+        exit /b !ERRORLEVEL!
     )
     goto compile_done
 )

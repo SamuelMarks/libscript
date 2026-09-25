@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Command-line interface entry point for PulseAudio sound server.
+# Command-line interface entry point for Coreutils.
 #
 # ## Usage
 # ./cli.sh [action]
@@ -29,7 +29,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
 ' "$d")}"
 
-export PACKAGE_NAME="pulseaudio"
+export PACKAGE_NAME="coreutils"
 SCRIPT_NAME="${SCRIPT_DIR}/../../_common/component_core.sh"
 export SCRIPT_NAME
 # shellcheck disable=SC1090

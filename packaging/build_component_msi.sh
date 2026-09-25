@@ -234,8 +234,9 @@ if command -v wixl >/dev/null 2>&1; then
   rm -f "$_wixl_main" "$_wixl_payload"
 elif command -v candle.exe >/dev/null 2>&1 && command -v light.exe >/dev/null 2>&1; then
   printf '[INFO] Compiling standalone MSI via WiX toolset...\n'
-  candle.exe -nologo -arch x64 -out "${LIBSCRIPT_ROOT_DIR}/tmp/" "$MAIN_WXS" "$PAYLOAD_WXS"
-  light.exe -nologo -sval -ext WixUIExtension -out "$TARGET_MSI" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_main.wixobj" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_payload.wixobj"
+  candle.exe -nologo -arch x64 -out "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_main.wixobj" "$MAIN_WXS" || exit 1
+  candle.exe -nologo -arch x64 -out "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_payload.wixobj" "$PAYLOAD_WXS" || exit 1
+  light.exe -nologo -sval -ext WixUIExtension -out "$TARGET_MSI" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_main.wixobj" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_payload.wixobj" || exit 1
 else
   printf '[WARN] Neither wixl nor WiX toolset found. Created XML manifests at %s\n' "$MAIN_WXS"
 fi

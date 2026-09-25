@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/audio/pipewire/vars.schema.json",
+  "title": "Pipewire variables",
+  "description": "Configuration variables for PipeWire",
+  "type": "object",
+  "properties": {
+    "PIPEWIRE_VERSION": {
+      "description": "Specific version of pipewire to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "PIPEWIRE_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install PIPEWIRE. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}
