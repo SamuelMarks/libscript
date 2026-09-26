@@ -151,7 +151,21 @@ case "$ACTION" in
     ;;
   install)
     if [ "$APK_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "apk"
+      if command -v dnf >/dev/null 2>&1; then
+        if ! command -v apk >/dev/null 2>&1; then
+          _arch="${ARCH:-$(uname -m)}"
+          case "$_arch" in
+            arm64|aarch64) _apk_arch="aarch64" ;;
+            x86_64|amd64) _apk_arch="x86_64" ;;
+            armv7*) _apk_arch="armv7" ;;
+            *) _apk_arch="$_arch" ;;
+          esac
+          priv curl -fsSL "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.14.9/${_apk_arch}/apk.static" -o /usr/local/bin/apk 2>/dev/null || true
+          priv chmod +x /usr/local/bin/apk 2>/dev/null || true
+        fi
+      else
+        libscript_depends "apk"
+      fi
     elif [ "$APK_INSTALL_METHOD" = "mise" ]; then
       mise install "apk@${VERSION}"
     elif [ "$APK_INSTALL_METHOD" = "asdf" ]; then

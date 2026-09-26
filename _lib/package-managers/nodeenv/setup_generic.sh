@@ -76,9 +76,11 @@ case "$ACTION" in
   install)
     resolve_exact_version
     if [ "$NODEENV_INSTALL_METHOD" = "libscript_native" ]; then
-      if ! command -v uv >/dev/null 2>&1 && ! command -v python3 >/dev/null 2>&1; then
-        log_info "Python runtime required for nodeenv. Installing python..."
-        libscript_depends "python" || true
+      if ! command -v uv >/dev/null 2>&1; then
+        if ! command -v python3 >/dev/null 2>&1 || ! python3 -c 'import ensurepip' >/dev/null 2>&1; then
+          log_info "Python runtime required for nodeenv. Installing python..."
+          libscript_depends "python" || true
+        fi
       fi
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nodeenv/${EXACT_VERSION}"
       if [ -f "${TARGET_DIR}/bin/nodeenv" ]; then

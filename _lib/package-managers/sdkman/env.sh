@@ -33,7 +33,13 @@ export SDKMAN_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/sdkman/${SDKMAN_VERSION:-
 if [ -n "${BASH_VERSION:-}" ] || [ -n "${ZSH_VERSION:-}" ]; then
   if [ -s "$SDKMAN_DIR/bin/sdkman-init.sh" ]; then
     # shellcheck disable=SC1091
+    _old_u="$(set +o | grep nounset || true)"
+    set +u
     . "$SDKMAN_DIR/bin/sdkman-init.sh" || true
+    case "$_old_u" in
+      *set\ -o\ nounset*|*nounset\ on*) set -u ;;
+      *) set +u ;;
+    esac
   fi
 fi
 

@@ -161,7 +161,7 @@ case "$ACTION" in
         elif [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/bun/latest/bin/bun" ]; then
           ln -sf "${LIBSCRIPT_HOME:-$HOME/.libscript}/bun/latest/bin/bun" "${TARGET_DIR}/bin/bun"
         else
-          "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install bun || true
+          (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install bun || true)
           if command -v bun >/dev/null 2>&1; then
             ln -sf "$(command -v bun)" "${TARGET_DIR}/bin/bun"
           elif [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/bun/latest/bin/bun" ]; then

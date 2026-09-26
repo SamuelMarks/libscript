@@ -138,10 +138,8 @@ do_list() {
   _install_dir="$1"
   _p="${_install_dir}/users.json"
 
-  printf '%-20s %-30s %-8s %-10s
-' "USERNAME" "EMAIL" "STAFF" "SUPERUSER"
-  printf '------------------------------------------------------------------------
-'
+  printf '%-20s %-30s %-8s %-10s\n' "USERNAME" "EMAIL" "STAFF" "SUPERUSER"
+  printf '%s\n' "------------------------------------------------------------------------"
 
   if [ -f "${_p}" ] && command -v jq >/dev/null 2>&1; then
     jq -r 'to_entries[] | "\(.key) \(.value.email // "") \(.value.is_staff // false) \(.value.is_superuser // false)"' "${_p}" 2>/dev/null | while read -r _u _e _s _su; do

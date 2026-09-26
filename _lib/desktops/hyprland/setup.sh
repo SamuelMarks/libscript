@@ -47,6 +47,15 @@ if ! command -v Hyprland >/dev/null 2>&1 && ! command -v hyprland >/dev/null 2>&
       . "${SCRIPT_NAME}"
     fi
     priv apk add --no-cache hyprland || true
+  elif command -v apt-get >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv apt-get update -qq || true
+    priv apt-get install -y hyprland || true
   fi
 fi
 

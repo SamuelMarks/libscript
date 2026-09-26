@@ -47,6 +47,23 @@ if ! command -v mkfs.ext4 >/dev/null 2>&1 && ! command -v tune2fs >/dev/null 2>&
       . "${SCRIPT_NAME}"
     fi
     priv apk add --no-cache e2fsprogs || true
+  elif command -v apt-get >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv apt-get update -qq || true
+    priv apt-get install -y e2fsprogs || true
+  elif command -v dnf >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv dnf install -y e2fsprogs || true
   fi
 fi
 

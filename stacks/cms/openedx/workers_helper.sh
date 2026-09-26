@@ -128,10 +128,8 @@ do_stop() {
 do_status() {
   _run_dir="$1"
 
-  printf '%-20s %-12s %s
-' "SERVICE" "STATUS" "DETAILS"
-  printf '--------------------------------------------------
-'
+  printf '%-20s %-12s %s\n' "SERVICE" "STATUS" "DETAILS"
+  printf '%s\n' "--------------------------------------------------"
 
   for _svc in lms-worker cms-worker celery-beat; do
     _pid_file="${_run_dir}/${_svc}.pid"

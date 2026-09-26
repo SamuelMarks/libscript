@@ -26,5 +26,5 @@ esac
 export STACK="${STACK:-}${THIS_FILE}:"
 
 command -v sddm >/dev/null 2>&1 || exit 1
-sddm --version >/dev/null 2>&1 || sddm -v >/dev/null 2>&1 || true
+sddm --help >/dev/null 2>&1 || true
 exit 0

@@ -38,6 +38,35 @@ if [ ! -d "$STAMPS_DIR" ]; then
   mkdir -p "$STAMPS_DIR"
 fi
 
+if ! command -v wayland-scanner >/dev/null 2>&1 && [ ! -f /usr/lib/libwayland-client.so.0 ] && [ ! -f /usr/lib64/libwayland-client.so.0 ] && [ ! -f /lib/libwayland-client.so.0 ]; then
+  if command -v apk >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv apk add --no-cache wayland-libs-client wayland-dev || true
+  elif command -v apt-get >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv apt-get update -qq || true
+    priv apt-get install --no-install-recommends -y libwayland-client0 libwayland-bin || true
+  elif command -v dnf >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv dnf install -y libwayland-client wayland-devel || true
+  fi
+fi
+
 if [ -f "$STAMP_FILE" ]; then
   printf '[SKIP]  %s already installed (%s)
 ' "wayland" "$STAMP_FILE"

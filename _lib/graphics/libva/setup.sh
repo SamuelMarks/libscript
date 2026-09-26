@@ -38,7 +38,7 @@ if [ ! -d "$STAMPS_DIR" ]; then
   mkdir -p "$STAMPS_DIR"
 fi
 
-if [ ! -f /usr/lib/libva.so.2 ] && [ ! -f /lib/libva.so.2 ]; then
+if [ ! -f /usr/lib/libva.so.2 ] && [ ! -f /usr/lib64/libva.so.2 ] && [ ! -f /lib/libva.so.2 ]; then
   if command -v apk >/dev/null 2>&1; then
     if ! command -v priv >/dev/null 2>&1; then
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
@@ -47,6 +47,23 @@ if [ ! -f /usr/lib/libva.so.2 ] && [ ! -f /lib/libva.so.2 ]; then
       . "${SCRIPT_NAME}"
     fi
     priv apk add --no-cache libva || true
+  elif command -v apt-get >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv apt-get update -qq || true
+    priv apt-get install -y libva2 || true
+  elif command -v dnf >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv dnf install -y libva || true
   fi
 fi
 

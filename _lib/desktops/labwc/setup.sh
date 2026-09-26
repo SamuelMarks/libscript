@@ -47,6 +47,23 @@ if ! command -v labwc >/dev/null 2>&1; then
       . "${SCRIPT_NAME}"
     fi
     priv apk add --no-cache labwc || true
+  elif command -v apt-get >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv apt-get update -qq || true
+    priv apt-get install --no-install-recommends -y labwc || true
+  elif command -v dnf >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv dnf install -y labwc || true
   fi
 fi
 

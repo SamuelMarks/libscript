@@ -25,7 +25,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}:"
 
-if [ -f "/usr/lib/libvulkan.so" ] || [ -f "/usr/lib64/libvulkan.so" ] || [ -f "/usr/local/lib/libvulkan.so" ] || command -v vulkaninfo >/dev/null 2>&1; then
+if [ -f "/usr/lib/libvulkan.so" ] || [ -f "/usr/lib/libvulkan.so.1" ] || [ -f "/usr/lib64/libvulkan.so" ] || [ -f "/usr/lib64/libvulkan.so.1" ] || [ -f "/usr/local/lib/libvulkan.so" ] || command -v vulkaninfo >/dev/null 2>&1; then
   printf '[OK] Vulkan loader verified
 '
 else

@@ -141,7 +141,24 @@ case "$ACTION" in
         if ! type libscript_python_venv >/dev/null 2>&1; then
           . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
         fi
-        libscript_python_venv "${TARGET_DIR}"
+        _py_ver=""
+        if python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
+          _py_ver=""
+        elif command -v python3.11 >/dev/null 2>&1; then
+          _py_ver="3.11"
+        elif command -v python3.12 >/dev/null 2>&1; then
+          _py_ver="3.12"
+        elif command -v python3.10 >/dev/null 2>&1; then
+          _py_ver="3.10"
+        else
+          if [ "${PKG_MGR:-}" = "dnf" ] || [ "${PKG_MGR:-}" = "yum" ]; then
+            pkg_mgr_install python3.11 python3.11-pip python3.11-devel || true
+            if command -v python3.11 >/dev/null 2>&1; then
+              _py_ver="3.11"
+            fi
+          fi
+        fi
+        libscript_python_venv "${TARGET_DIR}" "${_py_ver}"
         
         JETSTREAM_SRC_DIR="${DOWNLOAD_DIR:-/tmp/libscript_downloads}/jetstream-src"
         if [ ! -d "${JETSTREAM_SRC_DIR}/.git" ]; then

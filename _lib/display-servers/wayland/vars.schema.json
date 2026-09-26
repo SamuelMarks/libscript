@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/display-servers/wayland/vars.schema.json",
+  "title": "wayland vars",
+  "description": "Configuration variables for Wayland Protocol",
+  "type": "object",
+  "properties": {
+    "WAYLAND_VERSION": {
+      "description": "Specific version of wayland to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "WAYLAND_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install WAYLAND. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

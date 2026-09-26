@@ -12,7 +12,7 @@ Generates official Open edX branding assets (BMP banners, ICO, and RTF EULA).
 
 [CmdletBinding()]
 param(
-    [Alias("o")]
+    [Alias("output-dir", "OutputDirectory", "o")]
     [string]$OutputDir
 )
 

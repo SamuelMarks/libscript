@@ -38,7 +38,7 @@ if [ ! -d "$STAMPS_DIR" ]; then
   mkdir -p "$STAMPS_DIR"
 fi
 
-if [ ! -f /usr/lib/libwlroots-0.20.so ] && [ ! -f /usr/lib/libwlroots-0.19.so ] && [ ! -f /usr/lib/libwlroots.so ]; then
+if [ ! -f /usr/lib/libwlroots-0.20.so ] && [ ! -f /usr/lib/libwlroots-0.19.so ] && [ ! -f /usr/lib/libwlroots-0.18.so ] && [ ! -f /usr/lib/libwlroots.so ]; then
   if command -v apk >/dev/null 2>&1; then
     if ! command -v priv >/dev/null 2>&1; then
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
@@ -47,6 +47,23 @@ if [ ! -f /usr/lib/libwlroots-0.20.so ] && [ ! -f /usr/lib/libwlroots-0.19.so ] 
       . "${SCRIPT_NAME}"
     fi
     priv apk add --no-cache wlroots0.20 || priv apk add --no-cache wlroots0.19 || priv apk add --no-cache wlroots || true
+  elif command -v apt-get >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv apt-get update -qq || true
+    priv apt-get install --no-install-recommends -y libwlroots-0.18 || true
+  elif command -v dnf >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv dnf install -y wlroots || true
   fi
 fi
 

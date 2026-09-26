@@ -71,6 +71,7 @@ else
     printf '%s\n' "Running spellcheck..."
     if command -v npx >/dev/null 2>&1; then
         tmp_files=$(mktemp)
+        trap 'rm -f "$tmp_files" 2>/dev/null || true' EXIT INT TERM HUP
         printf '%s\n' "$STAGED_FILES" | while IFS= read -r file; do
              if [ -f "$file" ]; then
                  printf '%s\n' "$file"
@@ -80,11 +81,13 @@ else
         if [ -s "$tmp_files" ]; then
              if ! npx --yes --quiet cspell lint --no-progress --no-summary --no-must-find-files --file-list stdin < "$tmp_files"; then
                  rm -f "$tmp_files"
+                 trap - EXIT INT TERM HUP
                  printf '%s\n' "[ERROR] Spellcheck failed. Please fix spelling errors or update .cspell.json." >&2
                  exit 1
              fi
         fi
         rm -f "$tmp_files"
+        trap - EXIT INT TERM HUP
     fi
 fi
 

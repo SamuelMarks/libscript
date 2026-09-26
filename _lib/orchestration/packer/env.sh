@@ -29,4 +29,4 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 export PACKER_INSTALL_METHOD="${PACKER_INSTALL_METHOD:-system}"
 PACKER_VERSION="${PACKER_VERSION:-latest}"
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/packer/${PACKER_VERSION}/bin:${PATH}"
+export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/packer/${PACKER_VERSION}/bin:/usr/bin:${PATH}"

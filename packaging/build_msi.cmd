@@ -264,12 +264,12 @@ if not exist "%ICON_PATH%" (
 if not exist "%BANNER_TOP_PATH%" (
     if not exist "%TMP_BRANDING_DIR%" mkdir "%TMP_BRANDING_DIR%" 2>nul
     set "BANNER_TOP_PATH=%TMP_BRANDING_DIR%\banner_top.bmp"
-    powershell -NoProfile -Command "$b = New-Object System.Drawing.Bitmap 493, 58; $b.Save('%TMP_BRANDING_DIR%\banner_top.bmp', [System.Drawing.Imaging.ImageFormat]::Bmp); $b.Dispose()" >nul 2>&1
+    powershell -NoProfile -Command "Add-Type -AssemblyName System.Drawing; $b = New-Object System.Drawing.Bitmap 493, 58; $b.Save('%TMP_BRANDING_DIR%\banner_top.bmp', [System.Drawing.Imaging.ImageFormat]::Bmp); $b.Dispose()" >nul 2>&1
 )
 if not exist "%BANNER_SIDE_PATH%" (
     if not exist "%TMP_BRANDING_DIR%" mkdir "%TMP_BRANDING_DIR%" 2>nul
     set "BANNER_SIDE_PATH=%TMP_BRANDING_DIR%\banner_side.bmp"
-    powershell -NoProfile -Command "$b = New-Object System.Drawing.Bitmap 164, 312; $b.Save('%TMP_BRANDING_DIR%\banner_side.bmp', [System.Drawing.Imaging.ImageFormat]::Bmp); $b.Dispose()" >nul 2>&1
+    powershell -NoProfile -Command "Add-Type -AssemblyName System.Drawing; $b = New-Object System.Drawing.Bitmap 164, 312; $b.Save('%TMP_BRANDING_DIR%\banner_side.bmp', [System.Drawing.Imaging.ImageFormat]::Bmp); $b.Dispose()" >nul 2>&1
 )
 if not exist "%LICENSE_PATH%" set "LICENSE_PATH="
 

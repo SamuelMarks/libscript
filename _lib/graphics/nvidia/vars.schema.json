@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/graphics/nvidia/vars.schema.json",
+  "title": "nvidia vars",
+  "description": "Configuration variables for NVIDIA Graphics Driver",
+  "type": "object",
+  "properties": {
+    "NVIDIA_VERSION": {
+      "description": "Specific version of nvidia driver to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "NVIDIA_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install NVIDIA driver. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

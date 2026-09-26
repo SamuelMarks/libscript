@@ -33,4 +33,12 @@ if command -v apk >/dev/null 2>&1 && apk info -e alsa-ucm-conf >/dev/null 2>&1; 
   exit 0
 fi
 
+if command -v dpkg-query >/dev/null 2>&1 && dpkg-query -W -f='${Status}\n' alsa-ucm-conf 2>/dev/null | grep -q 'install ok installed'; then
+  exit 0
+fi
+
+if command -v rpm >/dev/null 2>&1 && (rpm -q alsa-ucm >/dev/null 2>&1 || rpm -q alsa-ucm-conf >/dev/null 2>&1); then
+  exit 0
+fi
+
 exit 1

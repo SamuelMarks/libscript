@@ -96,10 +96,16 @@ case "$ACTION" in
     ;;
   install)
     if [ "$CABAL_INSTALL_METHOD" = "system" ]; then
+      if command -v dnf >/dev/null 2>&1; then
+        priv dnf install -y epel-release || true
+      fi
       libscript_depends "cabal"
     elif [ "$CABAL_INSTALL_METHOD" = "libscript_native" ]; then
       if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
         log_info "Falling back to system package manager for cabal..."
+        if command -v dnf >/dev/null 2>&1; then
+          priv dnf install -y epel-release || true
+        fi
         libscript_depends "cabal"
       else
         if ! command -v cabal >/dev/null 2>&1; then

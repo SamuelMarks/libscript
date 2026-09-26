@@ -140,6 +140,9 @@ case "$ACTION" in
     ;;
   install)
     if [ "$PIPX_INSTALL_METHOD" = "system" ]; then
+      if command -v dnf >/dev/null 2>&1; then
+        priv dnf install -y epel-release || true
+      fi
       libscript_depends "pipx"
     elif [ "$PIPX_INSTALL_METHOD" = "mise" ]; then
       mise install "pipx@${VERSION}"

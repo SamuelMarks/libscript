@@ -39,9 +39,9 @@ VIRTIOFS_DIR="${4:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
 mkdir -p "$STAMPS_DIR"
-STAMP_FILE="${STAMPS_DIR}/.stamp.cloud_hypervisor"
+STAMP_FILE="${STAMPS_DIR}/.stamp.cloud-hypervisor"
 
-if [ "$ACTION" = "install" ] && [ -f "$STAMP_FILE" ]; then
+if [ -f "$STAMP_FILE" ]; then
   printf '[SKIP]  Cloud-Hypervisor provider already configured (%s)
 ' "$STAMP_FILE"
   exit 0
@@ -51,7 +51,7 @@ printf '[ORCHESTRATION] Cloud-Hypervisor provider action: %s
 ' "$ACTION"
 
 case "$ACTION" in
-  install|configure)
+  install|configure|compile)
     CFG_FILE="${LIBSCRIPT_ROOT_DIR}/build/cloud_hypervisor.json"
     mkdir -p "${LIBSCRIPT_ROOT_DIR}/build"
     cat <<EOF > "$CFG_FILE"

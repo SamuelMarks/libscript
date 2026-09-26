@@ -76,6 +76,15 @@ case "$ACTION" in
     resolve_exact_version
     log_info "Installing uWSGI (${VERSION}) via ${UWSGI_INSTALL_METHOD}..."
     if [ "$UWSGI_INSTALL_METHOD" = "libscript_native" ]; then
+      if ! command -v uv >/dev/null 2>&1; then
+        if ! command -v python3 >/dev/null 2>&1 || ! python3 -c 'import ensurepip' >/dev/null 2>&1; then
+          log_info "Python runtime required for uwsgi. Installing python..."
+          libscript_depends "python" || true
+        fi
+        if ! command -v gcc >/dev/null 2>&1 && ! command -v clang >/dev/null 2>&1; then
+          libscript_depends "c" || true
+        fi
+      fi
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/uwsgi/${EXACT_VERSION}"
       mkdir -p "${TARGET_DIR}"
       export UWSGI_PROFILE_OVERRIDE="xml=no"

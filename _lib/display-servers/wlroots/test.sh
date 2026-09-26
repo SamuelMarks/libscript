@@ -29,7 +29,17 @@ if [ -f /usr/lib/libwlroots.so ] || [ -f /usr/lib/libwlroots-0.20.so ] || [ -f /
   exit 0
 fi
 
+for _lib_dir in /usr/lib/*-linux-gnu*; do
+  if [ -f "${_lib_dir}/libwlroots.so" ] || [ -f "${_lib_dir}/libwlroots-0.20.so" ] || [ -f "${_lib_dir}/libwlroots-0.19.so" ] || [ -f "${_lib_dir}/libwlroots-0.18.so" ] || [ -f "${_lib_dir}/libwlroots-0.18.so.18" ]; then
+    exit 0
+  fi
+done
+
 if command -v apk >/dev/null 2>&1 && apk info | grep -q '^wlroots'; then
+  exit 0
+fi
+
+if command -v dpkg-query >/dev/null 2>&1 && dpkg-query -W -f='${Status}\n' 'libwlroots*' 2>/dev/null | grep -q 'install ok installed'; then
   exit 0
 fi
 

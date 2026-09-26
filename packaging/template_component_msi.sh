@@ -109,7 +109,7 @@ fi
 UPGRADE_CODE=$(jq -r --arg comp "$COMPONENT" '.components[$comp].upgrade_code // empty' "$REGISTRY_JSON")
 COMPONENT_GUID=$(jq -r --arg comp "$COMPONENT" '.components[$comp].component_guid // empty' "$REGISTRY_JSON")
 TITLE=$(jq -r --arg comp "$COMPONENT" '.components[$comp].title // $comp' "$REGISTRY_JSON")
-TITLE=$(printf '%s\n' "$TITLE" | sed 's/&/\&amp;/g')
+TITLE=$(printf '%s\n' "$TITLE" | sed 's/&amp;/\&/g; s/&/\&amp;/g')
 SERVICE_NAME=$(jq -r --arg comp "$COMPONENT" '.components[$comp].service_name // empty' "$REGISTRY_JSON")
 DEFAULT_PORT=$(jq -r --arg comp "$COMPONENT" '.components[$comp].default_port // empty' "$REGISTRY_JSON")
 SHARED_REF=$(jq -r --arg comp "$COMPONENT" '.components[$comp].shared_dll_ref_count // true' "$REGISTRY_JSON")
@@ -135,7 +135,7 @@ esac
 
 SHARED_ATTR=""
 if [ "$SHARED_REF" = "true" ]; then
-  SHARED_ATTR='SharedDllRefCount="yes"'
+  SHARED_ATTR=' SharedDllRefCount="yes"'
 fi
 
 _p1="${VERSION%%.*}"
@@ -224,7 +224,7 @@ cat << EOF_FOOTER >> "$OUT_FILE"
     </Feature>
 
     <DirectoryRef Id="INSTALLFOLDER">
-      <Component Id="ComponentIdentityRecord" Guid="${COMPONENT_GUID}" ${SHARED_ATTR}>
+      <Component Id="ComponentIdentityRecord" Guid="${COMPONENT_GUID}"${SHARED_ATTR}>
         <RegistryKey Root="HKLM" Key="Software\\LibScript\\$COMPONENT">
           <RegistryValue Name="Installed" Type="integer" Value="1" KeyPath="yes" />
           <RegistryValue Name="Version" Type="string" Value="${VERSION}" />
@@ -239,7 +239,7 @@ if [ -n "$SERVICE_NAME" ]; then
   SERVICE_GUID=$("${LIBSCRIPT_ROOT_DIR}/_lib/_common/uuid_gen.sh" "6ba7b810-9dad-11d1-80b4-00c04fd430c8" "service.${COMPONENT}")
   cat << EOF_SVC_DEF >> "$OUT_FILE"
     <DirectoryRef Id="BIN_DIR">
-      <Component Id="ServiceRegistrationComponent" Guid="${SERVICE_GUID}" ${SHARED_ATTR}>
+      <Component Id="ServiceRegistrationComponent" Guid="${SERVICE_GUID}"${SHARED_ATTR}>
         <RegistryValue Root="HKLM" Key="Software\\LibScript\\$COMPONENT\\Service" Name="ServiceName" Type="string" Value="[SERVICE_NAME]" KeyPath="yes" />
         <ServiceInstall Id="Install_${COMPONENT}_Service"
                         Name="${SERVICE_NAME}"

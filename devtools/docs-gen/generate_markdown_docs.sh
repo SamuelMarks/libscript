@@ -38,6 +38,18 @@ fi
 SCRIPT_DIR=$(cd "$(dirname -- "${THIS_FILE}")" && pwd)
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
+# ## handle_interrupt
+# Signal handler to abort documentation generation immediately on interruption.
+handle_interrupt() {
+  trap - INT TERM HUP EXIT
+  [ -n "${vars_tmp-}" ] && [ -f "${vars_tmp-}" ] && rm -f "$vars_tmp" 2>/dev/null || true
+  [ -n "${plat_tmp-}" ] && [ -f "${plat_tmp-}" ] && rm -f "$plat_tmp" 2>/dev/null || true
+  [ -n "${modified_tmp-}" ] && [ -f "${modified_tmp-}" ] && rm -f "$modified_tmp" 2>/dev/null || true
+  exit 130
+}
+
+trap 'handle_interrupt' INT TERM HUP
+
 # Ensure markers exist
 export ROOT_DIR
 "${SCRIPT_DIR}/inject_markers.sh"

@@ -25,6 +25,9 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}:"
 
+PATH="/usr/local/sbin:/usr/sbin:/sbin:$PATH"
+export PATH
+
 command -v seatd >/dev/null 2>&1 || exit 1
 seatd -v >/dev/null 2>&1 || true
 exit 0

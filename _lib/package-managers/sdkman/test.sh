@@ -36,7 +36,7 @@ if [ -f /etc/alpine-release ]; then
 fi
 
 if command -v bash >/dev/null 2>&1; then
-  bash +eu -c "export SDKMAN_DIR=\"\${LIBSCRIPT_HOME:-\$HOME/.libscript}/sdkman/latest\"; source \"\$SDKMAN_DIR/bin/sdkman-init.sh\"; sdk version"
+  bash -c "set +u +e; export SDKMAN_DIR=\"\${LIBSCRIPT_HOME:-\$HOME/.libscript}/sdkman/latest\"; . \"\$SDKMAN_DIR/bin/sdkman-init.sh\"; sdk version"
 else
   printf '%s\n' "sdkman requires bash, which is not available."
   exit 0

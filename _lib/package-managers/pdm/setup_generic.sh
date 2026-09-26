@@ -161,9 +161,22 @@ case "$ACTION" in
            if [ -z "${EXACT_VERSION}" ]; then EXACT_VERSION="latest"; fi
         fi
         TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/pdm/${EXACT_VERSION}"
+        PY_BIN="python3"
+        if command -v python3.12 >/dev/null 2>&1; then
+          PY_BIN="python3.12"
+        elif command -v python3.11 >/dev/null 2>&1; then
+          PY_BIN="python3.11"
+        elif ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
+          if command -v dnf >/dev/null 2>&1; then
+            priv dnf install -y python3.11 || true
+            if command -v python3.11 >/dev/null 2>&1; then
+              PY_BIN="python3.11"
+            fi
+          fi
+        fi
         if [ ! -d "${TARGET_DIR}" ]; then
            mkdir -p "${TARGET_DIR}"
-           curl -sSL https://pdm-project.org/install-pdm.py | PDM_HOME="$TARGET_DIR" python3 - --version "$EXACT_VERSION"
+           curl -sSL https://pdm-project.org/install-pdm.py | PDM_HOME="$TARGET_DIR" "$PY_BIN" - --version "$EXACT_VERSION"
         fi
       else
         log_info "pdm ${VERSION} is already installed."

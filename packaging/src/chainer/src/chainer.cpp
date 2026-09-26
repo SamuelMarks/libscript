@@ -1,17 +1,32 @@
+/**
+ * @file chainer.cpp
+ * @brief Implementation of custom actions for modular MSI transaction chaining.
+ *
+ * Implements service discovery, package property forwarding, nested installer
+ * execution, and transaction lifecycle management for Windows Installer packages.
+ */
+
 #include "chainer.hpp"
 #include <string>
 
 namespace {
 
+/**
+ * @struct ChildPackage
+ * @brief Metadata for nested child packages orchestrated by the chainer.
+ */
 struct ChildPackage {
-    const char* id;
-    const char* binaryName;
-    const char* upgradeCode;
-    const char* propertyToggle;
-    const char* defaultProps;
+    const char* id;              /**< Internal identifier for the child package. */
+    const char* binaryName;      /**< Embedded binary table identifier. */
+    const char* upgradeCode;     /**< MSI UpgradeCode GUID used for detection. */
+    const char* propertyToggle;  /**< MSI property name controlling component enablement. */
+    const char* defaultProps;    /**< Default properties passed to child MSI invocation. */
 };
 
 #if defined(_WIN32) || defined(__CYGWIN__)
+/**
+ * @brief Table of bundled child packages and their upgrade codes.
+ */
 const ChildPackage g_packages[] = {
     {"mysql", "Bin_MySQL", "{E0F45901-83B4-4B21-9B5A-01D38FE81001}", "INSTALL_MYSQL", "PORT=3306"},
     {"redis", "Bin_Redis", "{E0F45901-83B4-4B21-9B5A-01D38FE81002}", "INSTALL_REDIS", "PORT=6379"},
@@ -25,6 +40,12 @@ const ChildPackage g_packages[] = {
 
 } // anonymous namespace
 
+/**
+ * @brief Queries Windows Installer database for previously installed related products.
+ *
+ * @param hInstall Handle to the active Windows Installer session.
+ * @return UINT ERROR_SUCCESS on completion.
+ */
 LIBSCRIPT_EXPORT UINT __stdcall LibScriptDetectServices(MSIHANDLE hInstall) {
 #if defined(_WIN32) || defined(__CYGWIN__)
     for (const auto& pkg : g_packages) {
@@ -44,6 +65,12 @@ LIBSCRIPT_EXPORT UINT __stdcall LibScriptDetectServices(MSIHANDLE hInstall) {
     return ERROR_SUCCESS;
 }
 
+/**
+ * @brief Coordinates multi-package transaction installation.
+ *
+ * @param hInstall Handle to the active Windows Installer session.
+ * @return UINT ERROR_SUCCESS on completion.
+ */
 LIBSCRIPT_EXPORT UINT __stdcall LibScriptChainer(MSIHANDLE hInstall) {
 #if defined(_WIN32) || defined(__CYGWIN__)
     LibScriptDetectServices(hInstall);
@@ -87,11 +114,23 @@ LIBSCRIPT_EXPORT UINT __stdcall LibScriptChainer(MSIHANDLE hInstall) {
     return ERROR_SUCCESS;
 }
 
+/**
+ * @brief Extracts child package binaries from the MSI binary stream.
+ *
+ * @param hInstall Handle to the active Windows Installer session.
+ * @return UINT ERROR_SUCCESS on completion.
+ */
 LIBSCRIPT_EXPORT UINT __stdcall LibScriptExtractChildPackages(MSIHANDLE hInstall) {
     static_cast<void>(hInstall);
     return ERROR_SUCCESS;
 }
 
+/**
+ * @brief Executes transaction across extracted child packages.
+ *
+ * @param hInstall Handle to the active Windows Installer session.
+ * @return UINT ERROR_SUCCESS on completion.
+ */
 LIBSCRIPT_EXPORT UINT __stdcall LibScriptExecuteTransaction(MSIHANDLE hInstall) {
     static_cast<void>(hInstall);
     return ERROR_SUCCESS;

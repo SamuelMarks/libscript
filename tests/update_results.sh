@@ -58,6 +58,15 @@ show_help() {
 ' "  --help, -h, /?         Show this help message."
 }
 
+# ## handle_interrupt
+# Signal handler to abort test results updating immediately on interruption.
+handle_interrupt() {
+  trap - INT TERM HUP EXIT
+  exit 130
+}
+
+trap 'handle_interrupt' INT TERM HUP
+
 # ## check_manifest_support
 # Checks if a component supports the given OS based on its manifest.json
 check_manifest_support() {
@@ -337,12 +346,15 @@ update_todo_plan() {
   _is_alpine=0
   _is_debian=0
   _is_sunos=0
+  _is_rocky=0
   if grep -qi "alpine" "${_todo_file}"; then
     _is_alpine=1
   elif grep -qi "debian\|ubuntu" "${_todo_file}"; then
     _is_debian=1
   elif grep -qi "sunos\|omnios" "${_todo_file}"; then
     _is_sunos=1
+  elif grep -qi "rocky\|rhel" "${_todo_file}"; then
+    _is_rocky=1
   fi
 
   while IFS= read -r _line || [ -n "${_line}" ]; do
@@ -372,6 +384,13 @@ update_todo_plan() {
             fi
           elif [ "${_is_sunos}" -eq 1 ]; then
             if ls "${_tests_tmp_dir}/${_comp_name}".sunos.* >/dev/null 2>&1; then
+              _has_res=1
+            fi
+          elif [ "${_is_rocky}" -eq 1 ]; then
+            if ls "${_tests_tmp_dir}/${_comp_name}".linux.rocky.* >/dev/null 2>&1 || \
+               ls "${_tests_tmp_dir}/${_comp_name}".rocky.* >/dev/null 2>&1 || \
+               ls "${_tests_tmp_dir}/${_comp_name}".rockylinux.* >/dev/null 2>&1 || \
+               ls "${_tests_tmp_dir}/${_comp_name}".rpm.* >/dev/null 2>&1; then
               _has_res=1
             fi
           else
@@ -417,6 +436,14 @@ update_todo_plan() {
             fi
           elif [ "${_is_sunos}" -eq 1 ]; then
             if ls "${_tests_tmp_dir}/${_current_comp}".sunos.success >/dev/null 2>&1 && \
+               ls "${_tests_tmp_dir}/${_current_comp}".idempotent.success >/dev/null 2>&1; then
+              _has_idem=1
+            fi
+          elif [ "${_is_rocky}" -eq 1 ]; then
+            if (ls "${_tests_tmp_dir}/${_current_comp}".linux.rocky.success >/dev/null 2>&1 || \
+                ls "${_tests_tmp_dir}/${_current_comp}".rocky.success >/dev/null 2>&1 || \
+                ls "${_tests_tmp_dir}/${_current_comp}".rockylinux.success >/dev/null 2>&1 || \
+                ls "${_tests_tmp_dir}/${_current_comp}".rpm.success >/dev/null 2>&1) && \
                ls "${_tests_tmp_dir}/${_current_comp}".idempotent.success >/dev/null 2>&1; then
               _has_idem=1
             fi

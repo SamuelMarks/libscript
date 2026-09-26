@@ -37,22 +37,23 @@ for LIB in "_lib/_common/priv.sh" "_lib/_common/envsubst_safe.sh" \
   . "${SCRIPT_NAME}"
 done
 
+libscript_depends "python"
+
 if [ ! -d "${JUPYTERHUB_VENV}" ]; then
   priv  mkdir -p -- "${JUPYTERHUB_VENV}"
   if [ "$(uname -s)" = "Darwin" ]; then
-    priv  chown -R -- "${USER}" "${JUPYTERHUB_VENV}"
+    priv  chown -R -- "${USER:-$(id -un)}" "${JUPYTERHUB_VENV}"
   else
-    priv  chown -R -- "${USER}":"${GROUP:-${USER}}" "${JUPYTERHUB_VENV}"
+    priv  chown -R -- "${USER:-$(id -un)}":"${GROUP:-${USER:-$(id -un)}}" "${JUPYTERHUB_VENV}"
   fi
   if command -v uv >/dev/null 2>&1; then
     uv venv --python "${PYTHON_VERSION}" -- "${JUPYTERHUB_VENV}"
   else
     python3 -m venv "${JUPYTERHUB_VENV}"
   fi
-  "${JUPYTERHUB_VENV}"'/bin/python' -m ensurepip
-  "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U pip
-  "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U setuptools wheel
-  "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U "jupyverse[auth,jupyterlab]" jupyterhub fps-jupyterlab fps-auth jupyter-collaboration oauthenticator jupyterhub-nativeauthenticator
+  if [ -x "${JUPYTERHUB_VENV}/bin/python" ]; then
+    "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U pip setuptools wheel "jupyverse[auth,jupyterlab]" jupyterhub fps-jupyterlab fps-auth jupyter-collaboration oauthenticator jupyterhub-nativeauthenticator || true
+  fi
   # "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U jupyter notebook pyright python-language-server python-lsp-server
 fi
 if ! libscript_cmd_avail configurable-http-proxy; then

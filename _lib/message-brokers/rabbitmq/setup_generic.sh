@@ -139,7 +139,10 @@ case "$ACTION" in
     ;;
   install)
     if [ "$RABBITMQ_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "rabbitmq"
+      if command -v dnf >/dev/null 2>&1; then
+        priv dnf install -y epel-release || true
+      fi
+      libscript_depends "rabbitmq-server"
     elif [ "$RABBITMQ_INSTALL_METHOD" = "mise" ]; then
       mise install "rabbitmq@${VERSION}"
     elif [ "$RABBITMQ_INSTALL_METHOD" = "asdf" ]; then
@@ -186,6 +189,7 @@ case "$ACTION" in
             if [ "$UNAME_LOWER" = "linux" ]; then
               log_info "Configuring RabbitMQ repository for Linux..."
               if [ -x "/usr/bin/dnf" ] || [ -x "/usr/bin/yum" ]; then
+                priv dnf install -y epel-release || true
                 curl -s https://packagecloud.io/install/repositories/rabbitmq/erlang/script.rpm.sh | priv sh 2>/dev/null || true
                 curl -s https://packagecloud.io/install/repositories/rabbitmq/rabbitmq-server/script.rpm.sh | priv sh 2>/dev/null || true
                 libscript_depends "rabbitmq-server"

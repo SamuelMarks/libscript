@@ -38,7 +38,7 @@ if [ ! -d "$STAMPS_DIR" ]; then
   mkdir -p "$STAMPS_DIR"
 fi
 
-if [ ! -f /usr/lib/libvdpau.so.1 ] && [ ! -f /lib/libvdpau.so.1 ]; then
+if [ ! -f /usr/lib/libvdpau.so.1 ] && [ ! -f /usr/lib64/libvdpau.so.1 ] && [ ! -f /lib/libvdpau.so.1 ]; then
   if command -v apk >/dev/null 2>&1; then
     if ! command -v priv >/dev/null 2>&1; then
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
@@ -47,6 +47,23 @@ if [ ! -f /usr/lib/libvdpau.so.1 ] && [ ! -f /lib/libvdpau.so.1 ]; then
       . "${SCRIPT_NAME}"
     fi
     priv apk add --no-cache libvdpau || true
+  elif command -v apt-get >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv apt-get update -qq || true
+    priv apt-get install -y libvdpau1 || priv apt-get install -y libvdpau || true
+  elif command -v dnf >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv dnf install -y libvdpau || (priv dnf install -y epel-release && priv dnf install -y libvdpau) || true
   fi
 fi
 

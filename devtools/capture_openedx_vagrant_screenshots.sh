@@ -136,7 +136,6 @@ scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
   "${REPO_ROOT}/packaging/build_msi.sh" \
   "${REPO_ROOT}/packaging/build_openedx_msi.cmd" \
   "${REPO_ROOT}/packaging/build_openedx_msi.sh" \
-  "${REPO_ROOT}/packaging/generate_multi_license.ps1" \
   "${REPO_ROOT}/packaging/harvest_licenses.cmd" \
   "${REPO_ROOT}/packaging/harvest_licenses.ps1" \
   "${REPO_ROOT}/packaging/harvest_licenses.sh" \

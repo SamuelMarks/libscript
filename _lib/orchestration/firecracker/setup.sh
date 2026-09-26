@@ -42,17 +42,15 @@ STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
 mkdir -p "$STAMPS_DIR"
 STAMP_FILE="${STAMPS_DIR}/.stamp.firecracker"
 
-if [ "$ACTION" = "install" ] && [ -f "$STAMP_FILE" ]; then
-  printf '[SKIP]  Firecracker provider already configured (%s)
-' "$STAMP_FILE"
+if [ -f "$STAMP_FILE" ]; then
+  printf '[SKIP]  Firecracker provider already configured (%s)\n' "$STAMP_FILE"
   exit 0
 fi
 
-printf '[ORCHESTRATION] Firecracker MicroVM provider action: %s
-' "$ACTION"
+printf '[ORCHESTRATION] Firecracker MicroVM provider action: %s\n' "$ACTION"
 
 case "$ACTION" in
-  install|configure)
+  install|configure|compile)
     # Generate microVM configuration JSON
     CFG_FILE="${LIBSCRIPT_ROOT_DIR}/build/firecracker_vm.json"
     mkdir -p "${LIBSCRIPT_ROOT_DIR}/build"

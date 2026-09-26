@@ -74,6 +74,9 @@ case "$ACTION" in
     elif [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
       libscript_depends "exim" || true
     else
+      if command -v dnf >/dev/null 2>&1; then
+        priv dnf install -y epel-release || true
+      fi
       libscript_depends "exim"
     fi
     ;;

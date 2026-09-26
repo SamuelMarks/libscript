@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/desktops/sway/vars.schema.json",
+  "title": "Sway variables",
+  "description": "Configuration variables for Sway Compositor",
+  "type": "object",
+  "properties": {
+    "SWAY_VERSION": {
+      "description": "Specific version of sway to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "SWAY_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install SWAY. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

@@ -1,8 +1,24 @@
+/**
+ * @file sql_provisioner.cpp
+ * @brief Custom action implementation for SQL database provisioning in MSI packages.
+ *
+ * Implements database schema creation, user granting, and deprovisioning operations
+ * executed directly within the MSI installation process.
+ */
+
 #include "sql_provisioner.hpp"
 #include <string>
 
 namespace {
 
+/**
+ * @brief Retrieves a string property value from the active Windows Installer session.
+ *
+ * @param hInstall Handle to the active Windows Installer installation session.
+ * @param name Property name to query.
+ * @param defVal Fallback default value if property is unset or empty.
+ * @return std::string Property string value or fallback default.
+ */
 std::string GetMsiProp(MSIHANDLE hInstall, const std::string& name, const std::string& defVal) {
 #if defined(_WIN32) || defined(__CYGWIN__)
     char buf[512] = {0};
@@ -20,6 +36,12 @@ std::string GetMsiProp(MSIHANDLE hInstall, const std::string& name, const std::s
 
 } // anonymous namespace
 
+/**
+ * @brief Provisions database and credentials during MSI installation.
+ *
+ * @param hInstall Handle to the active Windows Installer session.
+ * @return UINT ERROR_SUCCESS on completion.
+ */
 LIBSCRIPT_EXPORT UINT __stdcall ProvisionDatabase(MSIHANDLE hInstall) {
     std::string host = GetMsiProp(hInstall, "PROP_MYSQL_HOST", "127.0.0.1");
     std::string port = GetMsiProp(hInstall, "PROP_MYSQL_PORT", "3306");
@@ -44,6 +66,12 @@ LIBSCRIPT_EXPORT UINT __stdcall ProvisionDatabase(MSIHANDLE hInstall) {
     return ERROR_SUCCESS;
 }
 
+/**
+ * @brief Deprovisions database and credentials during MSI uninstallation.
+ *
+ * @param hInstall Handle to the active Windows Installer session.
+ * @return UINT ERROR_SUCCESS on completion.
+ */
 LIBSCRIPT_EXPORT UINT __stdcall DeprovisionDatabase(MSIHANDLE hInstall) {
     std::string purge = GetMsiProp(hInstall, "PURGE_DATA", "0");
     std::string dbName = GetMsiProp(hInstall, "PROP_PROVISION_DB_NAME", "openedx");

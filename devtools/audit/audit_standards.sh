@@ -61,6 +61,16 @@ fi
 
 cd "$REPO_ROOT"
 
+# ## handle_interrupt
+# Signal handler to abort audit immediately on interruption.
+# shellcheck disable=SC2329
+handle_interrupt() {
+  trap - INT TERM HUP EXIT
+  exit 130
+}
+
+trap 'handle_interrupt' INT TERM HUP
+
 ERRORS=0
 
 # ## log_failure
@@ -246,13 +256,14 @@ audit_single_file() {
   esac
 
   # 6. Option A Hard Fail Proforma check (Exit code 86)
-  case "$file" in
-    *mount_target_vfs.cmd|*umount_target_vfs.cmd|*runner.cmd|*provision_disk.cmd|*format_fs.cmd)
+  file_name=$(basename "$file")
+  case "$file_name" in
+    mount_target_vfs.cmd|umount_target_vfs.cmd|runner.cmd|provision_disk.cmd|format_fs.cmd)
       if ! grep -q 'exit /b 86' "$file"; then
         log_failure "$file" "OPTION_A_PROFORMA" "Option A proforma script must exit with status 86."
       fi
       ;;
-    *mount_target_vfs.ps1|*umount_target_vfs.ps1|*runner.ps1|*provision_disk.ps1|*format_fs.ps1)
+    mount_target_vfs.ps1|umount_target_vfs.ps1|runner.ps1|provision_disk.ps1|format_fs.ps1)
       if ! grep -q 'exit 86' "$file"; then
         log_failure "$file" "OPTION_A_PROFORMA" "Option A proforma script must exit with status 86."
       fi

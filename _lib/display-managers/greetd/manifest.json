@@ -11,5 +11,5 @@
     "runtime_deps": [],
     "tier": "recommended"
   },
-  "os_blacklist": ["windows", "sunos"]
+  "os_blacklist": ["windows", "sunos", "rhel"]
 }

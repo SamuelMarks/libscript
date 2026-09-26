@@ -131,8 +131,10 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-
     if [ "${DASH_INSTALL_METHOD}" = "system" ]; then
+      if command -v dnf >/dev/null 2>&1; then
+        priv dnf install -y epel-release || true
+      fi
       libscript_depends 'dash'
     elif [ "${DASH_INSTALL_METHOD}" = "mise" ]; then
       mise install "dash@${DASH_VERSION}"

@@ -39,17 +39,15 @@ STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
 mkdir -p "$STAMPS_DIR"
 STAMP_FILE="${STAMPS_DIR}/.stamp.solo5"
 
-if [ "$ACTION" = "install" ] && [ -f "$STAMP_FILE" ]; then
-  printf '[SKIP]  Solo5 tender already configured (%s)
-' "$STAMP_FILE"
+if [ -f "$STAMP_FILE" ]; then
+  printf '[SKIP]  Solo5 tender already configured (%s)\n' "$STAMP_FILE"
   exit 0
 fi
 
-printf '[ORCHESTRATION] Solo5 tender action: %s (tender: %s)
-' "$ACTION" "$TENDER"
+printf '[ORCHESTRATION] Solo5 tender action: %s (tender: %s)\n' "$ACTION" "$TENDER"
 
 case "$ACTION" in
-  install|configure)
+  install|configure|compile)
     date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
     mv "${STAMP_FILE}.tmp" "$STAMP_FILE"
     printf '[OK] Configured Solo5 tender engine: %s

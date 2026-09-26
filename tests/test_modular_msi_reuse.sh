@@ -138,6 +138,32 @@ fi
 printf '[PASS] MySQL Component GUID and Windows Service identity verified.
 '
 
+# 7. Verify XML entity escaping and SharedDllRefCount attribute syntax
+NODE_WXS="${LIBSCRIPT_ROOT_DIR}/tmp/nodejs_main.wxs"
+if [ ! -f "$NODE_WXS" ] || ! grep -q 'Name="LibScript Node\.js JavaScript Runtime &amp; npm"' "$NODE_WXS"; then
+  printf '[FAIL] Node.js manifest missing or unescaped entity in product name
+' >&2
+  exit 1
+fi
+
+REDIS_WXS="${LIBSCRIPT_ROOT_DIR}/tmp/redis_main.wxs"
+if [ ! -f "$REDIS_WXS" ] || ! grep -q 'Name="LibScript Redis In-Memory Datastore &amp; Cache"' "$REDIS_WXS"; then
+  printf '[FAIL] Redis manifest missing or unescaped entity in product name
+' >&2
+  exit 1
+fi
+
+for _comp in mysql redis mongodb python nodejs meilisearch; do
+  _manifest="${LIBSCRIPT_ROOT_DIR}/tmp/${_comp}_main.wxs"
+  if grep -q 'SharedDllRefCount=""' "$_manifest"; then
+    printf '[FAIL] %s manifest contains invalid double-quoted SharedDllRefCount
+' "$_comp" >&2
+    exit 1
+  fi
+done
+printf '[PASS] XML entity escaping and SharedDllRefCount attribute syntax verified.
+'
+
 printf '=== All Modular Zero-.EXE MSI Reuse Tests Passed ===
 '
 exit 0

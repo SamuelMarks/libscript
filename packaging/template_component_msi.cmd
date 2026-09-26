@@ -33,6 +33,8 @@ set "VERSION=1.0.0"
 set "OUT_FILE="
 set "SOURCE_DIR="
 
+:: ## parse_loop
+:: Iterates over command line arguments and populates options.
 :parse_loop
 if "%~1"=="" goto parse_done
 if /i "%~1"=="--component" (
@@ -64,6 +66,8 @@ if /i "%~1"=="-h" goto show_help
 shift
 goto parse_loop
 
+:: ## show_help
+:: Displays usage documentation and supported parameters.
 :show_help
 echo Standalone Component WiX Generator
 echo.
@@ -78,6 +82,8 @@ echo   --source-dir ^<dir^>   Payload directory containing files to bundle
 echo   --help, -h           Show this help text
 exit /b 0
 
+:: ## parse_done
+:: Validates parameters, queries guid_registry.json, and generates WiX XML manifest.
 :parse_done
 if "%COMPONENT%"=="" (
     echo [ERROR] --component is required. >&2
@@ -102,7 +108,7 @@ for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command ^
     "$reg = Get-Content -Raw '%REGISTRY_JSON%' | ConvertFrom-Json; $c = $reg.components.'%COMPONENT%'; if ($c) { $c.component_guid } else { '' }"`) do set "COMPONENT_GUID=%%A"
 
 for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command ^
-    "$reg = Get-Content -Raw '%REGISTRY_JSON%' | ConvertFrom-Json; $c = $reg.components.'%COMPONENT%'; if ($c -and $c.title) { $c.title } else { '%COMPONENT%' }"`) do set "TITLE=%%A"
+    "$reg = Get-Content -Raw '%REGISTRY_JSON%' | ConvertFrom-Json; $c = $reg.components.'%COMPONENT%'; if ($c -and $c.title) { $c.title.Replace('&amp;', '&').Replace('&', '&amp;') } else { '%COMPONENT%' }"`) do set "TITLE=%%A"
 
 for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command ^
     "$reg = Get-Content -Raw '%REGISTRY_JSON%' | ConvertFrom-Json; $c = $reg.components.'%COMPONENT%'; if ($c -and $c.service_name) { $c.service_name } else { '' }"`) do set "SERVICE_NAME=%%A"
@@ -110,8 +116,11 @@ for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command ^
 for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command ^
     "$reg = Get-Content -Raw '%REGISTRY_JSON%' | ConvertFrom-Json; $c = $reg.components.'%COMPONENT%'; if ($c -and $c.default_port) { $c.default_port } else { '' }"`) do set "DEFAULT_PORT=%%A"
 
+set "SHARED_ATTR="
 for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command ^
-    "$reg = Get-Content -Raw '%REGISTRY_JSON%' | ConvertFrom-Json; $c = $reg.components.'%COMPONENT%'; if ($c -and $c.shared_dll_ref_count -eq $false) { 'no' } else { 'yes' }"`) do set "SHARED_ATTR=SharedDllRefCount=""%%A"""
+    "$reg = Get-Content -Raw '%REGISTRY_JSON%' | ConvertFrom-Json; $c = $reg.components.'%COMPONENT%'; if ($c -and $c.shared_dll_ref_count -ne $false) { 'yes' } else { 'no' }"`) do (
+    if "%%A"=="yes" set "SHARED_ATTR=SharedDllRefCount="yes""
+)
 
 if "%UPGRADE_CODE%"=="" (
     echo [ERROR] Component %COMPONENT% not found in registry %REGISTRY_JSON% >&2
@@ -161,8 +170,8 @@ for /f "tokens=1,2,3,4 delims=." %%a in ("%VERSION%") do (
     echo     ^<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." Schedule="afterInstallInitialize" /^>
     echo     ^<Media Id="1" Cabinet="payload.cab" EmbedCab="yes" /^>
     echo.
-    echo     ^<Property Id="PORT" Value="%DEFAULT_PORT%" /^>
-    echo     ^<Property Id="SERVICE_NAME" Value="%SERVICE_NAME%" /^>
+    if not "%DEFAULT_PORT%"=="" echo     ^<Property Id="PORT" Value="%DEFAULT_PORT%" /^>
+    if not "%SERVICE_NAME%"=="" echo     ^<Property Id="SERVICE_NAME" Value="%SERVICE_NAME%" /^>
     echo.
     echo     ^<Directory Id="TARGETDIR" Name="SourceDir"^>
     echo       ^<Directory Id="ProgramFiles64Folder"^>
@@ -188,7 +197,11 @@ for /f "tokens=1,2,3,4 delims=." %%a in ("%VERSION%") do (
     echo     ^</Feature^>
     echo.
     echo     ^<DirectoryRef Id="INSTALLFOLDER"^>
-    echo       ^<Component Id="ComponentIdentityRecord" Guid="%COMPONENT_GUID%" %SHARED_ATTR%^>
+    if defined SHARED_ATTR (
+        echo       ^<Component Id="ComponentIdentityRecord" Guid="%COMPONENT_GUID%" %SHARED_ATTR%^>
+    ) else (
+        echo       ^<Component Id="ComponentIdentityRecord" Guid="%COMPONENT_GUID%"^>
+    )
     echo         ^<RegistryKey Root="HKLM" Key="Software\LibScript\%COMPONENT%"^>
     echo           ^<RegistryValue Name="Installed" Type="integer" Value="1" KeyPath="yes" /^>
     echo           ^<RegistryValue Name="Version" Type="string" Value="%VERSION%" /^>
@@ -203,7 +216,11 @@ if not "%SERVICE_NAME%"=="" (
     for /f "usebackq delims=" %%A in (`call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\uuid_gen.cmd" 6ba7b810-9dad-11d1-80b4-00c04fd430c8 "service.%COMPONENT%"`) do set "SERVICE_GUID=%%A"
     (
         echo     ^<DirectoryRef Id="BIN_DIR"^>
-        echo       ^<Component Id="ServiceRegistrationComponent" Guid="!SERVICE_GUID!" %SHARED_ATTR%^>
+        if defined SHARED_ATTR (
+            echo       ^<Component Id="ServiceRegistrationComponent" Guid="!SERVICE_GUID!" %SHARED_ATTR%^>
+        ) else (
+            echo       ^<Component Id="ServiceRegistrationComponent" Guid="!SERVICE_GUID!"^>
+        )
         echo         ^<RegistryValue Root="HKLM" Key="Software\LibScript\%COMPONENT%\Service" Name="ServiceName" Type="string" Value="[SERVICE_NAME]" KeyPath="yes" /^>
         echo         ^<ServiceInstall Id="Install_%COMPONENT%_Service"
         echo                         Name="%SERVICE_NAME%"

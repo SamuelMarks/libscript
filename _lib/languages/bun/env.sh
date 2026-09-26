@@ -25,4 +25,4 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 _SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 BUN_VERSION="${BUN_VERSION:-latest}"
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/bun/${BUN_VERSION}/bin:${PATH}"
+export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/bun/${BUN_VERSION}/bin:${HOME}/.bun/bin:${PATH}"

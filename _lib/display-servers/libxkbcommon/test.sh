@@ -25,11 +25,25 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}:"
 
-if [ -f /usr/lib/libxkbcommon.so ] || [ -f /usr/lib/libxkbcommon.so.0 ] || [ -f /lib/libxkbcommon.so.0 ] || [ -d /usr/include/xkbcommon ]; then
+if [ -f /usr/lib/libxkbcommon.so ] || [ -f /usr/lib/libxkbcommon.so.0 ] || [ -f /usr/lib64/libxkbcommon.so.0 ] || [ -f /usr/lib64/libxkbcommon.so ] || [ -f /lib/libxkbcommon.so.0 ] || [ -d /usr/include/xkbcommon ]; then
   exit 0
 fi
 
+for _lib_dir in /usr/lib/*-linux-gnu* /usr/lib64; do
+  if [ -f "${_lib_dir}/libxkbcommon.so.0" ] || [ -f "${_lib_dir}/libxkbcommon.so" ]; then
+    exit 0
+  fi
+done
+
 if command -v apk >/dev/null 2>&1 && apk info -e libxkbcommon >/dev/null 2>&1; then
+  exit 0
+fi
+
+if command -v dpkg-query >/dev/null 2>&1 && (dpkg-query -W -f='${Status}\n' libxkbcommon0 2>/dev/null | grep -q 'install ok installed' || dpkg-query -W -f='${Status}\n' libxkbcommon 2>/dev/null | grep -q 'install ok installed'); then
+  exit 0
+fi
+
+if command -v rpm >/dev/null 2>&1 && rpm -q libxkbcommon >/dev/null 2>&1; then
   exit 0
 fi
 

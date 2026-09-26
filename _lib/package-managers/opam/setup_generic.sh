@@ -139,6 +139,9 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ "$OPAM_INSTALL_METHOD" = "system" ] && command -v dnf >/dev/null 2>&1; then
+      OPAM_INSTALL_METHOD="libscript_native"
+    fi
     if [ "$OPAM_INSTALL_METHOD" = "system" ]; then
       libscript_depends "opam"
     elif [ "$OPAM_INSTALL_METHOD" = "mise" ]; then
@@ -152,6 +155,16 @@ case "$ACTION" in
       vfox install "opam@${VERSION}"
     else
       # libscript_native implementation
+      if [ -z "${OPAM_DOWNLOAD_URL:-}" ]; then
+        _opam_ver="2.2.1"
+        _arch="${ARCH:-$(uname -m)}"
+        case "$_arch" in
+          aarch64|arm64) _opam_arch="arm64" ;;
+          x86_64|amd64) _opam_arch="x86_64" ;;
+          *) _opam_arch="$_arch" ;;
+        esac
+        OPAM_DOWNLOAD_URL="https://github.com/ocaml/opam/releases/download/${_opam_ver}/opam-${_opam_ver}-${_opam_arch}-linux"
+      fi
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/opam/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then

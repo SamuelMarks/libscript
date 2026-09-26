@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/base-system/musl/vars.schema.json",
+  "title": "musl vars",
+  "description": "Configuration variables for Musl libc",
+  "type": "object",
+  "properties": {
+    "MUSL_VERSION": {
+      "description": "Specific version of musl to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "MUSL_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install MUSL. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

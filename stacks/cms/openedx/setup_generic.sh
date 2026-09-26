@@ -267,7 +267,7 @@ case "$ACTION" in
       # 1. Provision Infrastructure Dependencies
       log_info "1/8: Provisioning core services and runtimes..."
       for _dep in python nodejs mysql mongodb redis meilisearch gunicorn exim nodeenv; do
-        "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "${_dep}" || true
+        (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "${_dep}" || true)
       done
 
       # 2. Checkout / Setup openedx-platform repository

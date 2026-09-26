@@ -182,8 +182,18 @@ case "$ACTION" in
              if command -v dpkg-deb >/dev/null 2>&1; then
                dpkg-deb -x "$TEMP_FILE.deb" "$TEMP_EXTRACT"
              else
-               libscript_depends "binutils" "tar" "xz-utils" || true
-               (cd "$TEMP_EXTRACT" && ar x "$TEMP_FILE.deb" && for dt in data.tar.*; do [ -f "$dt" ] && tar -xf "$dt"; done)
+               libscript_depends "binutils" "tar" "xz" || true
+               (
+                 cd "$TEMP_EXTRACT"
+                 ar x "$TEMP_FILE.deb" || true
+                 if [ -f data.tar.xz ]; then
+                   tar -xf data.tar.xz || true
+                 elif [ -f data.tar.gz ]; then
+                   tar -xf data.tar.gz || true
+                 elif [ -f data.tar.zst ]; then
+                   tar -xf data.tar.zst || true
+                 fi
+               )
              fi
              cp "$TEMP_EXTRACT/usr/bin/gcsfuse" "${TARGET_DIR}/bin/gcsfuse" 2>/dev/null || cp "$TEMP_EXTRACT/usr/local/bin/gcsfuse" "${TARGET_DIR}/bin/gcsfuse" 2>/dev/null || true
              rm -rf "$TEMP_EXTRACT"

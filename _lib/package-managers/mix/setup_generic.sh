@@ -168,7 +168,9 @@ case "$ACTION" in
         fi
         
         ELIXIR_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/elixir/${ELIXIR_EXACT_VERSION}"
-        if [ -f "${ELIXIR_DIR}/bin/mix" ]; then
+        if [ -f "${LIBSCRIPT_HOME:-$HOME/.libscript}/elixir/latest/bin/mix" ]; then
+          ln -sf "${LIBSCRIPT_HOME:-$HOME/.libscript}/elixir/latest/bin/mix" "${TARGET_DIR}/bin/mix"
+        elif [ -f "${ELIXIR_DIR}/bin/mix" ]; then
           ln -sf "${ELIXIR_DIR}/bin/mix" "${TARGET_DIR}/bin/mix"
         elif command -v mix >/dev/null 2>&1; then
           ln -sf "$(command -v mix)" "${TARGET_DIR}/bin/mix"

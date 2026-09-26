@@ -138,7 +138,11 @@ case "$ACTION" in
     ;;
   install)
     if [ "$AZURE_CLI_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "azure-cli"
+      if command -v dnf >/dev/null 2>&1; then
+        AZURE_CLI_INSTALL_METHOD="libscript_native"
+      else
+        libscript_depends "azure-cli"
+      fi
     elif [ "$AZURE_CLI_INSTALL_METHOD" = "mise" ]; then
       mise install "azure-cli@${VERSION}"
     elif [ "$AZURE_CLI_INSTALL_METHOD" = "asdf" ]; then
@@ -156,12 +160,19 @@ case "$ACTION" in
       log_info "DEBUG: ls -la $TARGET_DIR : $(ls -la "$TARGET_DIR" 2>&1 || true)"
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing azure-cli ${VERSION} natively to ${TARGET_DIR}..."
-        if [ -f /etc/alpine-release ] || [ "${TARGET_OS:-}" = "alpine" ]; then
-          log_info "Installing azure-cli via pip on Alpine Linux..."
-          libscript_depends "python3" "py3-pip"
-          python3 -m pip install --break-system-packages azure-cli || true
+        if [ -f /etc/alpine-release ] || [ "${TARGET_OS:-}" = "alpine" ] || [ "${TARGET_OS:-}" = "rhel" ] || [ "${PKG_MGR:-}" = "dnf" ]; then
+          log_info "Installing azure-cli via pip on ${TARGET_OS:-system}..."
+          if command -v dnf >/dev/null 2>&1; then
+            priv dnf install -y python3-pip || true
+            priv pip3 install azure-cli || true
+          else
+            libscript_depends "python3" "py3-pip"
+            python3 -m pip install --break-system-packages azure-cli || true
+          fi
           mkdir -p "${TARGET_DIR}/bin"
-          if [ -x "$HOME/.local/bin/az" ]; then
+          if [ -x "/usr/local/bin/az" ]; then
+            ln -sf "/usr/local/bin/az" "${TARGET_DIR}/bin/az"
+          elif [ -x "$HOME/.local/bin/az" ]; then
             ln -sf "$HOME/.local/bin/az" "${TARGET_DIR}/bin/az"
           elif command -v az >/dev/null 2>&1; then
             ln -sf "$(command -v az)" "${TARGET_DIR}/bin/az"

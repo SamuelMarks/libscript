@@ -182,13 +182,26 @@ case "$ACTION" in
           else
             libscript_depends "python" || true
             libscript_depends "curl" || true
+            PY_BIN="python3"
+            if command -v python3.12 >/dev/null 2>&1; then
+              PY_BIN="python3.12"
+            elif command -v python3.11 >/dev/null 2>&1; then
+              PY_BIN="python3.11"
+            elif ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
+              if command -v dnf >/dev/null 2>&1; then
+                priv dnf install -y python3.11 || true
+                if command -v python3.11 >/dev/null 2>&1; then
+                  PY_BIN="python3.11"
+                fi
+              fi
+            fi
           if [ "${EXACT_VERSION}" = "latest" ]; then
-             if ! curl -sSLf https://install.python-poetry.org | POETRY_HOME="${TARGET_DIR}" python3 -; then
+             if ! curl -sSLf https://install.python-poetry.org | POETRY_HOME="${TARGET_DIR}" "$PY_BIN" -; then
                 log_error "Failed to install poetry."
                 exit 1
              fi
           else
-             if ! curl -sSLf https://install.python-poetry.org | POETRY_HOME="${TARGET_DIR}" python3 - --version "$EXACT_VERSION"; then
+             if ! curl -sSLf https://install.python-poetry.org | POETRY_HOME="${TARGET_DIR}" "$PY_BIN" - --version "$EXACT_VERSION"; then
                 log_error "Failed to install poetry version $EXACT_VERSION."
                 exit 1
              fi

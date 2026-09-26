@@ -140,6 +140,9 @@ case "$ACTION" in
     ;;
   install)
     if [ "$COMPOSER_INSTALL_METHOD" = "system" ]; then
+      if command -v dnf >/dev/null 2>&1; then
+        priv dnf install -y epel-release || true
+      fi
       libscript_depends "composer"
     elif [ "$COMPOSER_INSTALL_METHOD" = "mise" ]; then
       mise install "composer@${VERSION}"
@@ -186,6 +189,9 @@ case "$ACTION" in
           else
             if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
               log_info "Falling back to system package manager for composer..."
+              if command -v dnf >/dev/null 2>&1; then
+                priv dnf install -y epel-release || true
+              fi
               libscript_depends "composer"
               if command -v composer >/dev/null 2>&1; then
                 ln -sf "$(command -v composer)" "${TARGET_DIR}/bin/composer"

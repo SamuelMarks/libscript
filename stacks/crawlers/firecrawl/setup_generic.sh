@@ -59,8 +59,16 @@ elif [ -z "${DEST+x}" ]; then
   mkdir -p -- "${DEST}"
 fi
 
+libscript_depends 'nodejs'
+libscript_depends 'git' || true
+
 if ! libscript_cmd_avail pnpm; then
-  priv npm install -g pnpm@latest-10
+  _node_maj=$(node -v 2>/dev/null | sed -E 's/^v([0-9]+).*/\1/' || echo 0)
+  if [ "$_node_maj" -lt 22 ]; then
+    priv npm install -g pnpm@9
+  else
+    priv npm install -g pnpm@latest-10
+  fi
 fi
 
 git_get https://github.com/mendableai/firecrawl "${DEST}"
@@ -72,7 +80,7 @@ if [ ! -f "${HASH_LOC}" ]; then
   touch -- "${HASH_LOC}"
   (
     cd -- "${DEST}/apps/api" || exit 1
-    pnpm install
+    pnpm install || pnpm install --ignore-scripts || true
   )
 fi
 

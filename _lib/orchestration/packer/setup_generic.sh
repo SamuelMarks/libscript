@@ -54,6 +54,7 @@ configure_hashicorp_repo_debian() {
   fi
 
   log_info "Configuring HashiCorp official APT repository..."
+  libscript_depends "gpg" || libscript_depends "gnupg" || true
   priv mkdir -p /usr/share/keyrings
 
   key_tmp=$(mktemp)
@@ -66,10 +67,21 @@ configure_hashicorp_repo_debian() {
     codename=$(lsb_release -cs 2>/dev/null || printf '%s' "jammy")
   fi
 
-  printf 'deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com %s main
-' "$codename" | priv tee /etc/apt/sources.list.d/hashicorp.list >/dev/null
+  printf 'deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com %s main\n' "$codename" | priv tee /etc/apt/sources.list.d/hashicorp.list >/dev/null
 
   priv apt-get update -y
+}
+
+# ## configure_hashicorp_repo_rhel
+# Configures the official HashiCorp yum repository on RHEL/Rocky/Fedora systems.
+configure_hashicorp_repo_rhel() {
+  if [ -f /etc/yum.repos.d/hashicorp.repo ]; then
+    return 0
+  fi
+
+  log_info "Configuring HashiCorp official RPM repository..."
+  priv curl -fsSL https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo -o /etc/yum.repos.d/hashicorp.repo 2>/dev/null || true
+  priv rpm --import https://rpm.releases.hashicorp.com/gpg 2>/dev/null || true
 }
 
 case "$ACTION" in
@@ -77,14 +89,12 @@ case "$ACTION" in
     if command -v packer >/dev/null 2>&1; then
       packer --version
     else
-      printf '%s
-' "Packer not installed."
+      printf '%s\n' "Packer not installed."
     fi
     exit 0
     ;;
   ls-remote)
-    curl -fsSL https://checkpoint-api.hashicorp.com/v1/check/packer | grep -oE '"current_version":"[^"]+"' | cut -d'"' -f4 || printf '%s
-' "latest"
+    curl -fsSL https://checkpoint-api.hashicorp.com/v1/check/packer | grep -oE '"current_version":"[^"]+"' | cut -d'"' -f4 || printf '%s\n' "latest"
     exit 0
     ;;
   install)
@@ -96,6 +106,10 @@ case "$ACTION" in
       case "${PKG_MGR}" in
         'apt-get')
           configure_hashicorp_repo_debian
+          libscript_depends "packer"
+          ;;
+        'dnf'|'yum')
+          configure_hashicorp_repo_rhel
           libscript_depends "packer"
           ;;
         'brew')
@@ -145,6 +159,7 @@ case "$ACTION" in
       fi
       log_info "Packer installed to $target_dir/packer"
     fi
+    exit 0
     ;;
   uninstall)
     log_info "Uninstalling Packer..."

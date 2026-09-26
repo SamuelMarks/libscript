@@ -56,6 +56,14 @@ if ! command -v aplay >/dev/null 2>&1 && ! command -v amixer >/dev/null 2>&1; th
     fi
     priv apt-get update -qq || true
     priv apt-get install -y alsa-utils || true
+  elif command -v dnf >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv dnf install -y alsa-utils || true
   fi
 fi
 

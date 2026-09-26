@@ -43,12 +43,17 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh" ]; then
   . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 else
-  log_info() { printf '[INFO]  %s
-' "$*"; }
-  log_warn() { printf '[WARN]  %s
-' "$*" >&2; }
-  log_error() { printf '[ERROR] %s
-' "$*" >&2; }
+  # ## log_info
+  # Outputs informational message to stdout.
+  log_info() { printf '[INFO]  %s\n' "$*"; }
+
+  # ## log_warn
+  # Outputs warning message to stderr.
+  log_warn() { printf '[WARN]  %s\n' "$*" >&2; }
+
+  # ## log_error
+  # Outputs error message to stderr.
+  log_error() { printf '[ERROR] %s\n' "$*" >&2; }
 fi
 
 MANIFEST_PATH="${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx/offline_bundle.json"

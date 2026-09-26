@@ -25,11 +25,25 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}:"
 
-if [ -f /usr/lib/libseat.so ] || [ -f /usr/lib/libseat.so.1 ] || [ -f /lib/libseat.so.1 ] || [ -f /usr/include/libseat.h ]; then
+if [ -f /usr/lib/libseat.so ] || [ -f /usr/lib/libseat.so.1 ] || [ -f /usr/lib64/libseat.so.1 ] || [ -f /usr/lib64/libseat.so ] || [ -f /lib/libseat.so.1 ] || [ -f /usr/include/libseat.h ]; then
   exit 0
 fi
 
+for _lib_dir in /usr/lib/*-linux-gnu* /usr/lib64; do
+  if [ -f "${_lib_dir}/libseat.so.1" ] || [ -f "${_lib_dir}/libseat.so" ]; then
+    exit 0
+  fi
+done
+
 if command -v apk >/dev/null 2>&1 && apk info -e libseat >/dev/null 2>&1; then
+  exit 0
+fi
+
+if command -v dpkg-query >/dev/null 2>&1 && (dpkg-query -W -f='${Status}\n' libseat1 2>/dev/null | grep -q 'install ok installed' || dpkg-query -W -f='${Status}\n' libseat 2>/dev/null | grep -q 'install ok installed'); then
+  exit 0
+fi
+
+if command -v rpm >/dev/null 2>&1 && rpm -q libseat >/dev/null 2>&1; then
   exit 0
 fi
 

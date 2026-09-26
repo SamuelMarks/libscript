@@ -25,11 +25,19 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}:"
 
-if [ -d /usr/share/wayland-protocols ] || [ -f /usr/share/pkgconfig/wayland-protocols.pc ] || [ -f /usr/lib/pkgconfig/wayland-protocols.pc ]; then
+if [ -d /usr/share/wayland-protocols ] || [ -f /usr/share/pkgconfig/wayland-protocols.pc ] || [ -f /usr/lib/pkgconfig/wayland-protocols.pc ] || [ -f /usr/lib64/pkgconfig/wayland-protocols.pc ]; then
   exit 0
 fi
 
 if command -v apk >/dev/null 2>&1 && apk info -e wayland-protocols >/dev/null 2>&1; then
+  exit 0
+fi
+
+if command -v dpkg-query >/dev/null 2>&1 && dpkg-query -W -f='${Status}\n' wayland-protocols 2>/dev/null | grep -q 'install ok installed'; then
+  exit 0
+fi
+
+if command -v rpm >/dev/null 2>&1 && (rpm -q wayland-protocols >/dev/null 2>&1 || rpm -q wayland-protocols-devel >/dev/null 2>&1); then
   exit 0
 fi
 

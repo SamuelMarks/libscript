@@ -176,7 +176,7 @@ case "$ACTION" in
           export CARGO_HOME="${TARGET_DIR}/.cargo"
           unset RUSTUP_VERSION
 
-          curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
+          curl --proto =https --tlsv1.2 -sSf --retry 3 --retry-connrefused https://sh.rustup.rs | sh -s -- -y --no-modify-path
         fi
       else
         log_info "rustup ${VERSION} is already installed."

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/base-system/glibc/vars.schema.json",
+  "title": "glibc vars",
+  "description": "Configuration variables for GNU C Library",
+  "type": "object",
+  "properties": {
+    "GLIBC_VERSION": {
+      "description": "Specific version of glibc to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "GLIBC_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install GLIBC. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

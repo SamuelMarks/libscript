@@ -155,7 +155,18 @@ case "$ACTION" in
         if ! type libscript_python_venv >/dev/null 2>&1; then
           . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
         fi
-        libscript_python_venv "${TARGET_DIR}"
+        if ! python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
+          if command -v dnf >/dev/null 2>&1; then
+            priv dnf install -y python3.11 || true
+          fi
+        fi
+        _py_ver=""
+        if command -v python3.11 >/dev/null 2>&1; then
+          _py_ver="3.11"
+        elif command -v python3.12 >/dev/null 2>&1; then
+          _py_ver="3.12"
+        fi
+        libscript_python_venv "${TARGET_DIR}" "${_py_ver}"
         if [ "${EXACT_VERSION}" = "latest" ]; then
           "${TARGET_DIR}/bin/pip" install -U "xpk"
         else

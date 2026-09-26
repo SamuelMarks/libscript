@@ -118,8 +118,12 @@ test_tcp_port() {
     nc -z -w 1 "${_host}" "${_port}" >/dev/null 2>&1
   elif command -v curl >/dev/null 2>&1; then
     curl -s --connect-timeout 1 "telnet://${_host}:${_port}" >/dev/null 2>&1 || [ $? -eq 49 ] || [ $? -eq 52 ]
+  elif command -v telnet >/dev/null 2>&1; then
+    (printf '\035\nquit\n' | telnet "${_host}" "${_port}") >/dev/null 2>&1
+  elif command -v wget >/dev/null 2>&1; then
+    wget -q -T 1 --spider "http://${_host}:${_port}" >/dev/null 2>&1 || [ $? -eq 8 ]
   else
-    ( : < /dev/tcp/"${_host}"/"${_port}" ) 2>/dev/null
+    return 1
   fi
 }
 

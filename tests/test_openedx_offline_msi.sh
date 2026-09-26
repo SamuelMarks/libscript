@@ -160,7 +160,7 @@ vm_run() {
 ' "$_cmd"
     return 0
   fi
-  (cd "$VAGRANT_DIR" && vagrant ssh --no-tty -c "powershell -NoProfile -Command "$_cmd"")
+  (cd "$VAGRANT_DIR" && vagrant ssh --no-tty -c "powershell -NoProfile -Command \"$_cmd\"")
 }
 
 # Check if Windows 11 Vagrant VM is configured

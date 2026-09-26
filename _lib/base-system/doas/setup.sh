@@ -56,6 +56,20 @@ if ! command -v doas >/dev/null 2>&1; then
     fi
     priv apt-get update -qq || true
     priv apt-get install -y doas || priv apt-get install -y opendoas || true
+  elif command -v dnf >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv dnf install -y doas opendoas 2>/dev/null || {
+      priv dnf install -y gcc make byacc pam-devel tar curl || true
+      _doas_tmp=$(mktemp -d)
+      curl -sSL https://github.com/Duncaen/OpenDoas/archive/refs/tags/v6.8.2.tar.gz | tar -xz -C "$_doas_tmp"
+      (cd "$_doas_tmp"/OpenDoas-6.8.2 && ./configure --prefix=/usr --with-pam && make && priv make install)
+      rm -rf "$_doas_tmp"
+    }
   fi
 fi
 

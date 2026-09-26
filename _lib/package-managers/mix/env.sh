@@ -29,4 +29,10 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 
 MIX_VERSION="${MIX_VERSION:-latest}"
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/mix/${MIX_VERSION}/bin:${PATH}"
+export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/mix/${MIX_VERSION}/bin:${LIBSCRIPT_HOME:-$HOME/.libscript}/elixir/latest/bin:${PATH}"
+
+if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/elixir/env.sh" ]; then
+  # shellcheck disable=SC1090,SC1091
+  unset SCRIPT_NAME || true
+  . "${LIBSCRIPT_ROOT_DIR}/_lib/languages/elixir/env.sh"
+fi

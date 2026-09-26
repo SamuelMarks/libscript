@@ -139,7 +139,13 @@ case "$ACTION" in
     ;;
   install)
     if [ "$SWIFT_INSTALL_METHOD" = "system" ]; then
-      if ! libscript_depends "swift"; then
+      if command -v dnf >/dev/null 2>&1; then
+        if ! command -v swift >/dev/null 2>&1; then
+          priv dnf install -y epel-release || true
+          command -v crb >/dev/null 2>&1 && priv crb enable || true
+          priv dnf install -y swift-lang || true
+        fi
+      elif ! libscript_depends "swift"; then
         log_warn "System package for swift failed. Falling back to native mock installation."
         SWIFT_INSTALL_METHOD="libscript_native"
       fi

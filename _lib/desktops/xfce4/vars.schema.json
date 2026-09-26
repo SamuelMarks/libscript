@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/desktops/xfce4/vars.schema.json",
+  "title": "XFCE4 variables",
+  "description": "Configuration variables for XFCE4 Desktop",
+  "type": "object",
+  "properties": {
+    "XFCE4_VERSION": {
+      "description": "Specific version of xfce4 to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "XFCE4_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install XFCE4. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

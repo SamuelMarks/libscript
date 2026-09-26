@@ -139,6 +139,9 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ "$REBAR3_INSTALL_METHOD" = "system" ] && command -v dnf >/dev/null 2>&1; then
+      REBAR3_INSTALL_METHOD="libscript_native"
+    fi
     if [ "$REBAR3_INSTALL_METHOD" = "system" ]; then
       libscript_depends "rebar3"
     elif [ "$REBAR3_INSTALL_METHOD" = "mise" ]; then
@@ -152,6 +155,16 @@ case "$ACTION" in
       vfox install "rebar3@${VERSION}"
     else
       # libscript_native implementation
+      if [ -z "${REBAR3_DOWNLOAD_URL:-}" ]; then
+        if command -v dnf >/dev/null 2>&1; then
+          priv dnf install -y epel-release || true
+          priv dnf install -y erlang || true
+        elif command -v apt-get >/dev/null 2>&1; then
+          priv apt-get update -qq || true
+          priv apt-get install -y erlang-base || true
+        fi
+        REBAR3_DOWNLOAD_URL="https://s3.amazonaws.com/rebar3/rebar3"
+      fi
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/rebar3/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then

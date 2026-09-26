@@ -126,8 +126,7 @@ backup_create() {
     mysqldump --single-transaction --quick -h "${MYSQL_HOST}" -P "${MYSQL_PORT}" -u "${MYSQL_USER}" "${MYSQL_DATABASE}" > "${_stage_dir}/mysql_dump.sql" 2>/dev/null || true
   fi
   # Touch dummy dump if mysql is not active in staging
-  [ -f "${_stage_dir}/mysql_dump.sql" ] || printf '-- Open edX MySQL snapshot
-' > "${_stage_dir}/mysql_dump.sql"
+  [ -f "${_stage_dir}/mysql_dump.sql" ] || printf '%s\n' '-- Open edX MySQL snapshot' > "${_stage_dir}/mysql_dump.sql"
 
   # 2. Document Database Dump
   log_info "Dumping MongoDB collections..."

@@ -25,11 +25,19 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}:"
 
-if [ -f /usr/lib/libpam.so.0 ] || [ -f /lib/libpam.so.0 ] || [ -f /lib/security/pam_unix.so ] || [ -f /usr/lib/security/pam_unix.so ] || [ -f /etc/security/pam_env.conf ]; then
+if [ -f /usr/lib/libpam.so.0 ] || [ -f /usr/lib64/libpam.so.0 ] || [ -f /lib/libpam.so.0 ] || [ -f /lib64/libpam.so.0 ] || [ -f /lib/security/pam_unix.so ] || [ -f /lib64/security/pam_unix.so ] || [ -f /usr/lib/security/pam_unix.so ] || [ -f /usr/lib64/security/pam_unix.so ] || [ -f /etc/security/pam_env.conf ]; then
   exit 0
 fi
 
 if command -v apk >/dev/null 2>&1 && apk info -e linux-pam >/dev/null 2>&1; then
+  exit 0
+fi
+
+if command -v dpkg-query >/dev/null 2>&1 && dpkg-query -W -f='${Status}\n' libpam0g 2>/dev/null | grep -q 'install ok installed'; then
+  exit 0
+fi
+
+if command -v rpm >/dev/null 2>&1 && rpm -q pam >/dev/null 2>&1; then
   exit 0
 fi
 

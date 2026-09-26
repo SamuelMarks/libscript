@@ -69,7 +69,19 @@ map_package() {
     'postgres'|'postgresql')
       case "${PKG_MGR}" in
         'apk') printf 'postgresql16 postgresql16-contrib postgresql16-openrc\n' ;;
-        'apt-get') printf 'postgresql-common postgresql-server-dev-14 postgresql-14\n' ;;
+        'apt-get')
+          if apt-cache show postgresql-server-dev-17 >/dev/null 2>&1; then
+            printf 'postgresql-common postgresql-server-dev-17 postgresql-17\n'
+          elif apt-cache show postgresql-server-dev-16 >/dev/null 2>&1; then
+            printf 'postgresql-common postgresql-server-dev-16 postgresql-16\n'
+          elif apt-cache show postgresql-server-dev-15 >/dev/null 2>&1; then
+            printf 'postgresql-common postgresql-server-dev-15 postgresql-15\n'
+          elif apt-cache show postgresql-server-dev-14 >/dev/null 2>&1; then
+            printf 'postgresql-common postgresql-server-dev-14 postgresql-14\n'
+          else
+            printf 'postgresql postgresql-contrib\n'
+          fi
+          ;;
         'dnf') printf 'postgresql-server postgresql-contrib\n' ;;
         'yum') printf 'postgresql-server postgresql-contrib\n' ;;
         'zypper') printf 'postgresql-server\n' ;;
@@ -173,7 +185,7 @@ map_package() {
       case "${PKG_MGR}" in
         'apk') printf 'mariadb-connector-c-dev mariadb-client\n' ;;
         'apt-get') printf 'default-libmysqlclient-dev default-mysql-client\n' ;;
-        'dnf'|'yum') printf 'mysql-devel mysql\n' ;;
+        'dnf'|'yum') printf 'mariadb-connector-c-devel mysql\n' ;;
         'zypper') printf 'libmysqlclient-devel mysql-client\n' ;;
         'pacman') printf 'mariadb-libs mariadb-clients\n' ;;
         'pkg')
@@ -465,7 +477,13 @@ map_package() {
       case "${PKG_MGR}" in
         'apk') printf 'qemu-system-aarch64 qemu-system-x86_64 qemu-img\n' ;;
         'apt-get') printf 'qemu-system-x86 qemu-system-arm qemu-utils ovmf qemu-efi-aarch64 libvirt-daemon-system libvirt-clients bridge-utils virtinst swtpm swtpm-tools\n' ;;
-        'dnf'|'yum') printf 'qemu-kvm qemu-img edk2-ovmf edk2-aarch64 libvirt virt-install swtpm\n' ;;
+        'dnf'|'yum')
+          if [ "${ARCH:-$(uname -m)}" = "aarch64" ] || [ "${ARCH:-$(uname -m)}" = "arm64" ]; then
+            printf 'qemu-kvm qemu-img edk2-aarch64 libvirt virt-install swtpm\n'
+          else
+            printf 'qemu-kvm qemu-img edk2-ovmf libvirt virt-install swtpm\n'
+          fi
+          ;;
         'pacman') printf 'qemu-desktop edk2-ovmf edk2-arm virt-install libvirt swtpm\n' ;;
         'pkg')
           if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
@@ -571,7 +589,13 @@ map_package() {
     'java')
       case "${PKG_MGR}" in
         'apk') printf 'openjdk17\n' ;;
-        'apt-get') printf 'openjdk-17-jdk\n' ;;
+        'apt-get')
+          if apt-cache show default-jdk >/dev/null 2>&1; then
+            printf 'default-jdk\n'
+          else
+            printf 'openjdk-17-jdk\n'
+          fi
+          ;;
         'dnf') printf 'java-17-openjdk-devel\n' ;;
         'yum') printf 'java-17-openjdk-devel\n' ;;
         'zypper') printf 'java-17-openjdk\n' ;;
@@ -687,7 +711,7 @@ map_package() {
       case "${PKG_MGR}" in
         "apk") printf "R R-dev\n" ;;
         "apt-get") printf "r-base r-base-dev\n" ;;
-        "dnf"|"yum"|"zypper") printf "R\n" ;;
+        "dnf"|"yum"|"zypper") printf "R-core\n" ;;
         "pacman") printf "r\n" ;;
         *) printf "r\n" ;;
       esac ;;
@@ -696,7 +720,7 @@ map_package() {
       case "${PKG_MGR}" in
         "apk") printf "7zip\n" ;;
         "apt-get") printf "p7zip-full\n" ;;
-        "dnf"|"yum"|"zypper") printf "p7zip\n" ;;
+        "dnf"|"yum"|"zypper") printf "p7zip p7zip-plugins\n" ;;
         "pacman") printf "p7zip\n" ;;
         "pkg")
           if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
@@ -810,7 +834,8 @@ map_package() {
       ;;
     'ansible-galaxy')
       case "${PKG_MGR}" in
-        'apk'|'apt-get'|'dnf'|'yum'|'pacman') printf 'ansible\n' ;;
+        'dnf'|'yum') printf 'ansible-core\n' ;;
+        'apk'|'apt-get'|'pacman') printf 'ansible\n' ;;
         'pkg') printf 'py312-ansible\n' ;;
         *) printf 'ansible-galaxy\n' ;;
       esac
@@ -853,7 +878,7 @@ map_package() {
       ;;
     'bundler')
       case "${PKG_MGR}" in
-        'pkg') printf 'rubygem-bundler\n' ;;
+        'pkg'|'dnf'|'yum') printf 'rubygem-bundler\n' ;;
         'apk') printf 'ruby-bundler\n' ;;
         *) printf 'bundler\n' ;;
       esac
@@ -861,15 +886,15 @@ map_package() {
     'cabal')
       case "${PKG_MGR}" in
         'pkg') printf 'hs-cabal-install\n' ;;
-        'apt-get') printf 'cabal-install\n' ;;
+        'apt-get'|'dnf'|'yum') printf 'cabal-install\n' ;;
         *) printf 'cabal\n' ;;
       esac
       ;;
-    'r'|'r-base')
+    'r-base')
       case "${PKG_MGR}" in
         'apk') printf 'R\n' ;;
         'apt-get') printf 'r-base\n' ;;
-        'dnf'|'yum') printf 'R\n' ;;
+        'dnf'|'yum') printf 'R-core\n' ;;
         'pacman') printf 'r\n' ;;
         'brew') printf 'r\n' ;;
         'pkg') printf 'math/R\n' ;;
@@ -898,7 +923,7 @@ map_package() {
       ;;
     'cpanm')
       case "${PKG_MGR}" in
-        'apk') printf 'perl-app-cpanminus\n' ;;
+        'apk'|'dnf'|'yum') printf 'perl-App-cpanminus\n' ;;
         'pkg') printf 'p5-App-cpanminus\n' ;;
         *) printf 'cpanminus\n' ;;
       esac

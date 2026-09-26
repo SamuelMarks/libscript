@@ -154,10 +154,14 @@ case "$ACTION" in
             . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/python_env.sh"
           fi
           libscript_python_venv "${TARGET_DIR}"
+          "${TARGET_DIR}/bin/pip" install --upgrade pip 2>/dev/null || true
           if [ "${EXACT_VERSION}" = "latest" ]; then
-            "${TARGET_DIR}/bin/pip" install -U "huggingface_hub[cli]"
+            "${TARGET_DIR}/bin/pip" install -U "huggingface_hub[cli]" || "${TARGET_DIR}/bin/pip" install -U "huggingface_hub"
           else
-            "${TARGET_DIR}/bin/pip" install "huggingface_hub[cli]==${EXACT_VERSION}"
+            "${TARGET_DIR}/bin/pip" install "huggingface_hub[cli]==${EXACT_VERSION}" || "${TARGET_DIR}/bin/pip" install -U "huggingface_hub"
+          fi
+          if [ -x "${TARGET_DIR}/bin/hf" ] && [ ! -x "${TARGET_DIR}/bin/huggingface-cli" ]; then
+            ln -sf "${TARGET_DIR}/bin/hf" "${TARGET_DIR}/bin/huggingface-cli"
           fi
         else
           log_info "huggingface-cli ${VERSION} is already installed."

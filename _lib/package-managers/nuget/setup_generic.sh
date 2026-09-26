@@ -190,6 +190,13 @@ case "$ACTION" in
                 if [ "$UNAME_LOWER" = "linux" ]; then
                   log_info "Installing mono runtime and downloading nuget.exe..."
                   libscript_depends "mono-complete" || libscript_depends "mono-devel" || true
+                  if ! command -v mono >/dev/null 2>&1; then
+                    if command -v dnf >/dev/null 2>&1; then
+                      priv dnf install -y dotnet-sdk-8.0 || true
+                    elif command -v apt-get >/dev/null 2>&1; then
+                      priv apt-get install -y dotnet-sdk-8.0 2>/dev/null || true
+                    fi
+                  fi
                   NUGET_URL="https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
                   libscript_depends "curl"
                   if [ -f "${TARGET_DIR}/bin/nuget.exe" ] || curl -sSLf "$NUGET_URL" -o "${TARGET_DIR}/bin/nuget.exe"; then
@@ -212,8 +219,15 @@ fi
 
 BIN_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 NUGET_EXE="${BIN_DIR}/nuget.exe"
-if command -v mono >/dev/null 2>&1; then
+if command -v mono >/dev/null 2>&1 && [ -f "$NUGET_EXE" ]; then
   exec mono "$NUGET_EXE" "$@"
+elif command -v dotnet >/dev/null 2>&1; then
+  if [ "${1:-}" = "help" ]; then
+    shift
+    exec dotnet nuget --help "$@"
+  else
+    exec dotnet nuget "$@"
+  fi
 else
   exec "$NUGET_EXE" "$@"
 fi

@@ -71,5 +71,55 @@ if "%EXE_FOUND%"=="1" (
 )
 echo [PASS] Zero-.EXE mandate verified in dist\msi\ (only pure .msi packages produced).
 
+set "MYSQL_WXS=%LIBSCRIPT_ROOT_DIR%\tmp\mysql_main.wxs"
+if not exist "%MYSQL_WXS%" (
+    echo [FAIL] Missing tmp\mysql_main.wxs manifest >&2
+    exit /b 1
+)
+
+findstr /C:"Guid=""5B2783B0-9A1F-4348-9F93-87CE43C21001""" "%MYSQL_WXS%" >nul 2>&1
+if errorlevel 1 (
+    echo [FAIL] MySQL manifest does not contain expected ComponentId GUID >&2
+    exit /b 1
+)
+
+findstr /C:"Name=""LibScript_MySQL""" "%MYSQL_WXS%" >nul 2>&1
+if errorlevel 1 (
+    echo [FAIL] MySQL manifest does not configure LibScript_MySQL service >&2
+    exit /b 1
+)
+echo [PASS] MySQL Component GUID and Windows Service identity verified.
+
+set "NODE_WXS=%LIBSCRIPT_ROOT_DIR%\tmp\nodejs_main.wxs"
+if not exist "%NODE_WXS%" (
+    echo [FAIL] Missing tmp\nodejs_main.wxs manifest >&2
+    exit /b 1
+)
+findstr /C:"Name=""LibScript Node.js JavaScript Runtime &amp; npm""" "%NODE_WXS%" >nul 2>&1
+if errorlevel 1 (
+    echo [FAIL] Node.js manifest missing or unescaped entity in product name >&2
+    exit /b 1
+)
+
+set "REDIS_WXS=%LIBSCRIPT_ROOT_DIR%\tmp\redis_main.wxs"
+if not exist "%REDIS_WXS%" (
+    echo [FAIL] Missing tmp\redis_main.wxs manifest >&2
+    exit /b 1
+)
+findstr /C:"Name=""LibScript Redis In-Memory Datastore &amp; Cache""" "%REDIS_WXS%" >nul 2>&1
+if errorlevel 1 (
+    echo [FAIL] Redis manifest missing or unescaped entity in product name >&2
+    exit /b 1
+)
+
+for %%C in (mysql redis mongodb python nodejs meilisearch) do (
+    findstr /C:"SharedDllRefCount=""""" "%LIBSCRIPT_ROOT_DIR%\tmp\%%C_main.wxs" >nul 2>&1
+    if not errorlevel 1 (
+        echo [FAIL] %%C manifest contains invalid double-quoted SharedDllRefCount >&2
+        exit /b 1
+    )
+)
+echo [PASS] XML entity escaping and SharedDllRefCount attribute syntax verified.
+
 echo === All Modular Zero-.EXE MSI Reuse Tests Passed ===
 exit /b 0

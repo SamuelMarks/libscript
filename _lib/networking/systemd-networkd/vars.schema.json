@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/networking/systemd-networkd/vars.schema.json",
+  "title": "systemd-networkd variables",
+  "description": "Configuration variables for systemd-networkd",
+  "type": "object",
+  "properties": {
+    "SYSTEMD_NETWORKD_VERSION": {
+      "description": "Specific version of systemd-networkd to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "SYSTEMD_NETWORKD_INSTALL_METHOD": {
+      "type": "string",
+      "description": "How to install SYSTEMD_NETWORKD. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "default": "system"
+    }
+  }
+}

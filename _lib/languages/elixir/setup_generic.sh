@@ -151,6 +151,25 @@ case "$ACTION" in
       vfox install "elixir@${VERSION}"
     else
       # libscript_native implementation
+      if command -v dnf >/dev/null 2>&1; then
+        if ! command -v erl >/dev/null 2>&1; then
+          priv dnf install -y epel-release || true
+          priv dnf install -y erlang unzip || true
+        fi
+      elif command -v apt-get >/dev/null 2>&1; then
+        if ! command -v erl >/dev/null 2>&1; then
+          priv apt-get update -qq || true
+          priv apt-get install -y erlang-base unzip || true
+        fi
+      fi
+      if [ -z "${ELIXIR_DOWNLOAD_URL:-}" ]; then
+        if [ "$VERSION" = "latest" ]; then
+          _elixir_ver="1.17.3"
+        else
+          _elixir_ver="${VERSION#v}"
+        fi
+        ELIXIR_DOWNLOAD_URL="https://github.com/elixir-lang/elixir/releases/download/v${_elixir_ver}/elixir-otp-26.zip"
+      fi
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/elixir/${EXACT_VERSION}"
       if [ ! -d "${TARGET_DIR}" ]; then

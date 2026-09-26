@@ -133,8 +133,10 @@ case "$ACTION" in
     exit 0
     ;;
   install)
-
     if [ "${CADDY_INSTALL_METHOD}" = "system" ]; then
+      if command -v dnf >/dev/null 2>&1; then
+        priv dnf install -y epel-release || true
+      fi
       if ! libscript_depends 'caddy'; then
         log_info "System package manager unavailable for caddy. Falling back to native..."
         CADDY_INSTALL_METHOD="libscript_native"
