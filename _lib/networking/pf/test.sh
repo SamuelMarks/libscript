@@ -1,0 +1,37 @@
+#!/bin/sh
+# ## Overview
+# Verifies Packet Filter (PF) functionality.
+#
+# ## Usage
+# ./test.sh
+
+set -feu
+
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"
+' "${THIS_FILE}" >&2
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"
+' "${THIS_FILE}" >&2 ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}:"
+
+export PATH="/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin:${PATH:-}"
+
+if command -v pfctl >/dev/null 2>&1; then
+  pfctl -h >/dev/null 2>&1 || true
+  exit 0
+else
+  printf 'pfctl command not found
+' >&2
+  exit 1
+fi

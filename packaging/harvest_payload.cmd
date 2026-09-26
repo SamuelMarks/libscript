@@ -2,23 +2,12 @@
 :: # harvest_payload.cmd
 ::
 :: ## Overview
-:: Harvests the complete LibScript repository into a deployment staging directory or WiX
-:: manifest fragment while strictly respecting .gitignore exclusion rules.
-:: Embeds the core execution engine, library recipes, stacks, CLIs, and utilities
-:: required for standalone, self-contained installation on Windows targets.
+:: Harvests the LibScript repository or staged directories into a deployment staging directory
+:: or WiX manifest fragment while respecting exclusion rules.
 :: Delegates to harvest_payload.ps1 with complete argument passthrough.
 ::
 :: ## Usage
 :: call packaging\harvest_payload.cmd [OPTIONS]
-::
-:: Options:
-::   --output-dir <dir>       Target staging directory where harvested files will be copied
-::   --manifest-file <path>   Path to output newline-delimited list of harvested relative paths
-::   --wix-fragment <path>    Path to output WiX XML (<Fragment>) file with components and files
-::   --component-group <id>   WiX ComponentGroup ID (default: LibscriptHarvestedComponents)
-::   --directory-id <id>      WiX Directory ID for root of payload (default: LIBSCRIPT_FOLDER)
-::   --root-dir <path>        Root directory of repository (default: auto-detected)
-::   --help, -h               Show this help text
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -43,6 +32,7 @@ goto run_script
 echo Usage: %~nx0 [OPTIONS]
 echo.
 echo Options:
+echo   --source-dir ^<dir^>       Source directory to harvest files from directly
 echo   --output-dir ^<dir^>       Target staging directory for harvested files
 echo   --manifest-file ^<path^>   Output file containing relative paths list
 echo   --wix-fragment ^<path^>    Output file containing WiX XML fragment
@@ -50,6 +40,7 @@ echo   --component-group ^<id^>   WiX ComponentGroup ID (default: LibscriptHarve
 echo   --directory-id ^<id^>      WiX Directory ID (default: LIBSCRIPT_FOLDER)
 echo   --root-dir ^<path^>        Root repository directory
 echo   --include-cache ^<dir^>    Include hydrated offline cache directory into payload
+echo   --include-msi            Allow harvesting of .msi installer packages into payload
 echo   --help, -h               Show this help text
 exit /b 0
 

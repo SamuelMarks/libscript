@@ -64,6 +64,14 @@ if ! command -v labwc >/dev/null 2>&1; then
       . "${SCRIPT_NAME}"
     fi
     priv dnf install -y labwc || true
+  elif command -v pkg >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv pkg install -y labwc || true
   fi
 fi
 

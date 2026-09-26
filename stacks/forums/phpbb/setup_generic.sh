@@ -57,6 +57,9 @@ esac
 libscript_depends "${PHPBB_WEBSERVER}"
 
 PHPBB_VERSION="${PHPBB_VERSION:-3.3.11}"
+if [ "${PHPBB_VERSION}" = "latest" ]; then
+  PHPBB_VERSION="3.3.11"
+fi
 export PHPBB_VERSION
 
 PHPBB_MAJOR_VERSION=$(printf '%s\n' "${PHPBB_VERSION}" | cut -d. -f1,2)

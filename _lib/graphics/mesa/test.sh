@@ -25,15 +25,19 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}:"
 
-if [ -f /usr/lib/libgbm.so ] || [ -f /usr/lib/libgbm.so.1 ] || [ -f /usr/lib64/libgbm.so.1 ] || [ -f /usr/lib64/libgbm.so ] || [ -f /usr/lib/libGL.so ] || [ -f /usr/lib/libGL.so.1 ] || [ -f /usr/lib64/libGL.so.1 ] || [ -f /usr/lib64/libGL.so ] || [ -f /usr/lib/libEGL.so ] || [ -f /usr/lib/libEGL.so.1 ] || [ -f /usr/lib64/libEGL.so.1 ] || [ -f /usr/lib64/libEGL.so ]; then
+if [ -f /usr/lib/libgbm.so ] || [ -f /usr/lib/libgbm.so.1 ] || [ -f /usr/lib64/libgbm.so.1 ] || [ -f /usr/lib64/libgbm.so ] || [ -f /usr/lib/libGL.so ] || [ -f /usr/lib/libGL.so.1 ] || [ -f /usr/lib64/libGL.so.1 ] || [ -f /usr/lib64/libGL.so ] || [ -f /usr/lib/libEGL.so ] || [ -f /usr/lib/libEGL.so.1 ] || [ -f /usr/lib64/libEGL.so.1 ] || [ -f /usr/lib64/libEGL.so ] || [ -f /usr/local/lib/libgbm.so ] || [ -f /usr/local/lib/libGL.so ] || [ -f /usr/local/lib/libEGL.so ]; then
   exit 0
 fi
 
-for _lib_dir in /usr/lib/*-linux-gnu* /usr/lib64; do
+for _lib_dir in /usr/lib/*-linux-gnu* /usr/lib64 /usr/local/lib; do
   if [ -f "${_lib_dir}/libgbm.so.1" ] || [ -f "${_lib_dir}/libGL.so.1" ] || [ -f "${_lib_dir}/libgbm.so" ] || [ -f "${_lib_dir}/libGL.so" ]; then
     exit 0
   fi
 done
+
+if command -v pkg >/dev/null 2>&1 && (pkg info -e mesa-libs >/dev/null 2>&1 || pkg info -e mesa-dri >/dev/null 2>&1); then
+  exit 0
+fi
 
 if command -v apk >/dev/null 2>&1 && apk info -e mesa >/dev/null 2>&1; then
   exit 0

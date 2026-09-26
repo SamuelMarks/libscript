@@ -3,7 +3,7 @@
   "name": "rye",
   "provides": ["rye"],
   "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"],
+  "os_blacklist": ["sunos", "freebsd", "bsd"],
   "title": "rye",
   "description": "Bootstrap module for the `rye` package manager.",
   "category": "package-manager"

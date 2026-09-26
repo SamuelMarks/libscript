@@ -140,7 +140,13 @@ case "$ACTION" in
           _kos="$(uname -s | tr '[:upper:]' '[:lower:]')"
           KUBECTL_DOWNLOAD_URL="https://dl.k8s.io/release/v${_kver}/bin/${_kos}/${_karch}/kubectl"
         fi
-        if [ -n "${KUBECTL_DOWNLOAD_URL:-}" ]; then
+        if [ "${_kos:-}" = "freebsd" ]; then
+          log_info "FreeBSD detected, installing kubectl via system package manager..."
+          libscript_depends "kubectl"
+          if command -v kubectl >/dev/null 2>&1; then
+            ln -sf "$(command -v kubectl)" "${TARGET_DIR}/bin/kubectl"
+          fi
+        elif [ -n "${KUBECTL_DOWNLOAD_URL:-}" ]; then
           TEMP_FILE=$(mktemp)
           libscript_download "${KUBECTL_DOWNLOAD_URL:-}" "${TEMP_FILE}"
           if case "${KUBECTL_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then

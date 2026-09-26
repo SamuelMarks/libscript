@@ -111,7 +111,10 @@ v1.36.0
         if command -v meilisearch >/dev/null 2>&1; then
           ln -sf "$(command -v meilisearch)" "${TARGET_DIR}/bin/meilisearch"
         elif [ "${UNAME_LOWER}" = "freebsd" ]; then
-          libscript_depends "textproc/meilisearch" || true
+          libscript_depends "meilisearch" || libscript_depends "textproc/meilisearch" || true
+          if command -v meilisearch >/dev/null 2>&1; then
+            ln -sf "$(command -v meilisearch)" "${TARGET_DIR}/bin/meilisearch"
+          fi
         elif command -v cargo >/dev/null 2>&1; then
           log_info "Compiling meilisearch from source via cargo..."
           cargo install meilisearch --root "${TARGET_DIR}" || true

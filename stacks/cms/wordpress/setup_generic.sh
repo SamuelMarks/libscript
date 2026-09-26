@@ -103,8 +103,9 @@ if [ "${WORDPRESS_DB_ENGINE}" = "sqlite" ]; then
     priv unzip -q -o "${tmp_sqlite}" -d "${WORDPRESS_WWWROOT}/wp-content/plugins"
     priv cp "${WORDPRESS_WWWROOT}/wp-content/plugins/sqlite-database-integration/db.copy" "${WORDPRESS_WWWROOT}/wp-content/db.php"
     rm -f "${tmp_sqlite}"
-    priv sed -i "s|{SQLITE_DB_DROPIN_VERSION}|1.0.0|" "${WORDPRESS_WWWROOT}/wp-content/db.php" || true
-    priv sed -i "s|{SQLITE_PLUGIN}|sqlite-database-integration/load.php|" "${WORDPRESS_WWWROOT}/wp-content/db.php" || true
+    priv sed -i.bak "s|{SQLITE_DB_DROPIN_VERSION}|1.0.0|" "${WORDPRESS_WWWROOT}/wp-content/db.php" || true
+    priv sed -i.bak "s|{SQLITE_PLUGIN}|sqlite-database-integration/load.php|" "${WORDPRESS_WWWROOT}/wp-content/db.php" || true
+    priv rm -f "${WORDPRESS_WWWROOT}/wp-content/db.php.bak" 2>/dev/null || true
     printf '%s\n' "SQLite database integration plugin installed."
   fi
 elif [ "${WORDPRESS_DB_ENGINE}" = "postgres" ] || [ "${WORDPRESS_DB_ENGINE}" = "postgresql" ]; then
@@ -151,10 +152,11 @@ fi
 if [ ! -f "${WORDPRESS_WWWROOT}/wp-config.php" ]; then
   priv cp "${WORDPRESS_WWWROOT}/wp-config-sample.php" "${WORDPRESS_WWWROOT}/wp-config.php"
 fi
-priv sed -i "s/define( *'DB_NAME', *'[^']*' *);/define( 'DB_NAME', '${DB_NAME}' );/" "${WORDPRESS_WWWROOT}/wp-config.php"
-priv sed -i "s/define( *'DB_USER', *'[^']*' *);/define( 'DB_USER', '${DB_USER}' );/" "${WORDPRESS_WWWROOT}/wp-config.php"
-priv sed -i "s/define( *'DB_PASSWORD', *'[^']*' *);/define( 'DB_PASSWORD', '${DB_PASS}' );/" "${WORDPRESS_WWWROOT}/wp-config.php"
-priv chown -R www-data:www-data "${WORDPRESS_WWWROOT}" 2>/dev/null || priv chown -R nginx:nginx "${WORDPRESS_WWWROOT}" 2>/dev/null || true
+priv sed -i.bak "s/define( *'DB_NAME', *'[^']*' *);/define( 'DB_NAME', '${DB_NAME}' );/" "${WORDPRESS_WWWROOT}/wp-config.php"
+priv sed -i.bak "s/define( *'DB_USER', *'[^']*' *);/define( 'DB_USER', '${DB_USER}' );/" "${WORDPRESS_WWWROOT}/wp-config.php"
+priv sed -i.bak "s/define( *'DB_PASSWORD', *'[^']*' *);/define( 'DB_PASSWORD', '${DB_PASS}' );/" "${WORDPRESS_WWWROOT}/wp-config.php"
+priv rm -f "${WORDPRESS_WWWROOT}/wp-config.php.bak" 2>/dev/null || true
+priv chown -R www-data:www-data "${WORDPRESS_WWWROOT}" 2>/dev/null || priv chown -R www:www "${WORDPRESS_WWWROOT}" 2>/dev/null || priv chown -R nginx:nginx "${WORDPRESS_WWWROOT}" 2>/dev/null || true
 
 # Determine PHP_FPM Socket (OS specific usually)
 if [ -z "${WORDPRESS_PHP_FPM_LISTEN:-}" ]; then

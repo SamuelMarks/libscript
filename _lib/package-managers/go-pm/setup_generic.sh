@@ -157,6 +157,9 @@ case "$ACTION" in
       if [ ! -d "${TARGET_DIR}" ] || [ ! -x "${TARGET_DIR}/bin/go" ]; then
         log_info "Installing go-pm ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
+        if ! command -v go >/dev/null 2>&1 && [ ! -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/go/latest/bin/go" ]; then
+          libscript_depends "go" || true
+        fi
         if command -v go >/dev/null 2>&1; then
           ln -sf "$(command -v go)" "${TARGET_DIR}/bin/go"
           ln -sf "$(command -v go)" "${TARGET_DIR}/bin/go-pm"

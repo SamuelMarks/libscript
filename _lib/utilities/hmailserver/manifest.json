@@ -8,7 +8,7 @@
   "category": "utilities",
   "provides": ["mail", "smtp", "hmailserver"],
   "conflicts": [],
-  "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"],
+  "os_whitelist": ["windows"],
+  "os_blacklist": ["sunos", "freebsd", "bsd", "linux", "darwin"],
   "ports": [25, 110, 143, 587]
 }

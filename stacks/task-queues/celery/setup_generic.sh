@@ -53,7 +53,10 @@ if [ ! -x "${PYTHON_VENV}/bin/celery" ]; then
   else
     priv  chown -R -- "${USER}":"${_grp}" "${PYTHON_VENV}"
   fi
-  if command -v uv >/dev/null 2>&1; then
+  if [ "$(uname -s)" = "FreeBSD" ]; then
+    python3 -m venv "${PYTHON_VENV}"
+    "${PYTHON_VENV}/bin/pip" install celery
+  elif command -v uv >/dev/null 2>&1; then
     uv venv --python "${PYTHON_VERSION}" -- "${PYTHON_VENV}"
     uv pip install --python "${PYTHON_VENV}" celery
   else
@@ -65,7 +68,9 @@ fi
 if [ -d '/etc/systemd/system' ]; then
   CELERY_SERVICE_USER="${CELERY_SERVICE_USER:-celery}"
   if ! id "${CELERY_SERVICE_USER}" >/dev/null 2>&1; then
-    if command -v useradd >/dev/null 2>&1; then
+    if command -v pw >/dev/null 2>&1; then
+      priv pw useradd "${CELERY_SERVICE_USER}" -m -d '/home/'"${CELERY_SERVICE_USER}"'/' -s /bin/sh
+    elif command -v useradd >/dev/null 2>&1; then
       priv useradd -m -d '/home/'"${CELERY_SERVICE_USER}"'/' -c '' "${CELERY_SERVICE_USER}"
     else
       priv adduser --disabled-password --gecos '' --home '/home/'"${CELERY_SERVICE_USER}"'/' "${CELERY_SERVICE_USER}"

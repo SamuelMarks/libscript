@@ -56,7 +56,10 @@ esac
 
 libscript_depends "${DRUPAL_WEBSERVER}"
 
-DRUPAL_VERSION="${DRUPAL_VERSION:-10.2.6}"
+DRUPAL_VERSION="${DRUPAL_VERSION:-10.3.5}"
+if [ "${DRUPAL_VERSION}" = "latest" ]; then
+  DRUPAL_VERSION="10.3.5"
+fi
 export DRUPAL_VERSION
 
 DRUPAL_WWWROOT="${DRUPAL_WWWROOT:-/var/www/drupal}"

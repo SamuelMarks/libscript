@@ -25,6 +25,8 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}:"
 
+export PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:${PATH:-}"
+
 command -v aplay >/dev/null 2>&1 || command -v amixer >/dev/null 2>&1 || command -v alsamixer >/dev/null 2>&1 || exit 1
 aplay --version >/dev/null 2>&1 || amixer --version >/dev/null 2>&1 || true
 exit 0

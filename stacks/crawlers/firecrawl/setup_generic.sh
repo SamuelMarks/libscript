@@ -65,9 +65,9 @@ libscript_depends 'git' || true
 if ! libscript_cmd_avail pnpm; then
   _node_maj=$(node -v 2>/dev/null | sed -E 's/^v([0-9]+).*/\1/' || echo 0)
   if [ "$_node_maj" -lt 22 ]; then
-    priv npm install -g pnpm@9
+    priv env "PATH=$PATH:/usr/local/bin" npm install -g pnpm@9 || true
   else
-    priv npm install -g pnpm@latest-10
+    priv env "PATH=$PATH:/usr/local/bin" npm install -g pnpm@latest-10 || true
   fi
 fi
 

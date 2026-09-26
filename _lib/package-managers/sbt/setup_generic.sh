@@ -168,13 +168,20 @@ case "$ACTION" in
 
 
         mkdir -p "${TARGET_DIR}/bin"
-        URL="https://github.com/sbt/sbt/releases/download/v${EXACT_VERSION}/sbt-${EXACT_VERSION}.tgz"
-        TEMP_FILE=$(mktemp)
-        libscript_depends "curl"
-        libscript_depends "tar"
-        curl -sSL "$URL" -o "$TEMP_FILE.tgz"
-        tar -xzf "$TEMP_FILE.tgz" -C "${TARGET_DIR}" --strip-components=1
-        rm -f "$TEMP_FILE.tgz"
+        if [ "$(uname -s)" = "FreeBSD" ]; then
+          libscript_depends "sbt"
+          if command -v sbt >/dev/null 2>&1; then
+            ln -sf "$(command -v sbt)" "${TARGET_DIR}/bin/sbt"
+          fi
+        else
+          URL="https://github.com/sbt/sbt/releases/download/v${EXACT_VERSION}/sbt-${EXACT_VERSION}.tgz"
+          TEMP_FILE=$(mktemp)
+          libscript_depends "curl"
+          libscript_depends "tar"
+          curl -sSL "$URL" -o "$TEMP_FILE.tgz"
+          tar -xzf "$TEMP_FILE.tgz" -C "${TARGET_DIR}" --strip-components=1
+          rm -f "$TEMP_FILE.tgz"
+        fi
       else
         log_info "sbt ${VERSION} is already installed."
       fi

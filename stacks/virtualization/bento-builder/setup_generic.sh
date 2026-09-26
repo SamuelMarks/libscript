@@ -102,6 +102,9 @@ ensure_ruby() {
         'dnf'|'yum')
           priv "${PKG_MGR}" install -y ruby ruby-devel gcc make
           ;;
+        'pkg')
+          priv pkg install -y ruby
+          ;;
       esac
     fi
   fi
@@ -111,7 +114,7 @@ ensure_ruby() {
     if [ -w "$(ruby -e 'puts Gem.dir' 2>/dev/null || true)" ]; then
       gem install bundler
     else
-      priv gem install bundler
+      priv env PATH="/usr/local/bin:${PATH}" gem install bundler || true
     fi
   fi
 }
@@ -166,22 +169,22 @@ case "$ACTION" in
 
     if [ "$INSTALL_QEMU" = "1" ]; then
       log_info "Provisioning QEMU / KVM..."
-      "$LIBSCRIPT_ROOT_DIR/libscript.sh" qemu install || true
+      "$LIBSCRIPT_ROOT_DIR/libscript.sh" install qemu || true
     fi
 
     if [ "$INSTALL_VIRTUALBOX" = "1" ]; then
       log_info "Provisioning VirtualBox..."
-      "$LIBSCRIPT_ROOT_DIR/libscript.sh" virtualbox install || true
+      "$LIBSCRIPT_ROOT_DIR/libscript.sh" install virtualbox || true
     fi
 
     if [ "$INSTALL_PACKER" = "1" ]; then
       log_info "Provisioning Packer..."
-      "$LIBSCRIPT_ROOT_DIR/libscript.sh" packer install || true
+      "$LIBSCRIPT_ROOT_DIR/libscript.sh" install packer || true
     fi
 
     if [ "$INSTALL_VAGRANT" = "1" ]; then
       log_info "Provisioning Vagrant..."
-      "$LIBSCRIPT_ROOT_DIR/libscript.sh" vagrant install || true
+      "$LIBSCRIPT_ROOT_DIR/libscript.sh" install vagrant || true
     fi
 
     if [ "$INSTALL_IMAGE_TOOLS" = "1" ]; then

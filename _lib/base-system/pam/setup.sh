@@ -38,7 +38,7 @@ if [ ! -d "$STAMPS_DIR" ]; then
   mkdir -p "$STAMPS_DIR"
 fi
 
-if [ ! -f /usr/lib/libpam.so.0 ] && [ ! -f /usr/lib64/libpam.so.0 ] && [ ! -f /lib/libpam.so.0 ] && [ ! -f /lib64/libpam.so.0 ]; then
+if [ ! -f /usr/lib/libpam.so ] && [ ! -f /usr/lib/libpam.so.0 ] && [ ! -f /usr/lib64/libpam.so.0 ] && [ ! -f /lib/libpam.so.0 ] && [ ! -f /lib64/libpam.so.0 ]; then
   if command -v apk >/dev/null 2>&1; then
     if ! command -v priv >/dev/null 2>&1; then
       SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"

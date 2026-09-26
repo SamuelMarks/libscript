@@ -79,7 +79,7 @@ case "$ACTION" in
     if [ "$MYSQL_INSTALL_METHOD" = "system" ]; then
       if [ "${UNAME_LOWER}" = "freebsd" ]; then
         log_info "Installing MySQL on FreeBSD via pkg..."
-        libscript_depends "databases/mysql84-server" || libscript_depends "mysql-server"
+        libscript_depends "mysql84-client" "mysql84-server" || libscript_depends "mysql80-client" "mysql80-server" || libscript_depends "mysql-client" "mysql-server"
         if command -v sysrc >/dev/null 2>&1; then
           sysrc mysql_enable="YES" || true
         fi

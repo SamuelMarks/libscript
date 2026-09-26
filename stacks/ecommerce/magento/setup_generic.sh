@@ -36,6 +36,9 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh"; do
 done
 
 MAGENTO_VERSION="${MAGENTO_VERSION:-2.4.6}"
+if [ "${MAGENTO_VERSION}" = "latest" ]; then
+  MAGENTO_VERSION="2.4.6"
+fi
 export MAGENTO_VERSION
 MAGENTO_WEBSERVER="${MAGENTO_WEBSERVER:-nginx}"
 export MAGENTO_WEBSERVER

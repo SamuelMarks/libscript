@@ -3,7 +3,7 @@
   "name": "julia",
   "provides": ["julia"],
   "os_whitelist": ["all"],
-  "os_blacklist": ["sunos", "alpine"],
+  "os_blacklist": ["sunos", "alpine", "freebsd", "bsd"],
   "title": "julia",
   "description": "Bootstrap module for the `julia` package manager.",
   "category": "package-manager"

@@ -161,7 +161,7 @@ case "$ACTION" in
         if [ ! -d "${TARGET_DIR}" ]; then
           log_info "Installing powershell ${VERSION} natively to ${TARGET_DIR}..."
           mkdir -p "${TARGET_DIR}/bin"
-          if [ "${TARGET_OS:-}" = "alpine" ]; then
+          if [ "${TARGET_OS:-}" = "alpine" ] || [ "${UNAME_LOWER:-}" = "freebsd" ]; then
             libscript_depends "powershell" || true
             if command -v pwsh >/dev/null 2>&1; then
               ln -sf "$(command -v pwsh)" "${TARGET_DIR}/bin/pwsh"

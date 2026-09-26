@@ -25,15 +25,19 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}:"
 
-if [ -f /usr/lib/libva.so ] || [ -f /usr/lib/libva.so.2 ] || [ -f /usr/lib64/libva.so.2 ] || [ -f /usr/lib64/libva.so ] || [ -f /lib/libva.so.2 ] || [ -d /usr/include/va ]; then
+if [ -f /usr/lib/libva.so ] || [ -f /usr/lib/libva.so.2 ] || [ -f /usr/lib64/libva.so.2 ] || [ -f /usr/lib64/libva.so ] || [ -f /lib/libva.so.2 ] || [ -d /usr/include/va ] || [ -f /usr/local/lib/libva.so ] || [ -d /usr/local/include/va ]; then
   exit 0
 fi
 
-for _lib_dir in /usr/lib/*-linux-gnu* /usr/lib64; do
+for _lib_dir in /usr/lib/*-linux-gnu* /usr/lib64 /usr/local/lib; do
   if [ -f "${_lib_dir}/libva.so.2" ] || [ -f "${_lib_dir}/libva.so" ]; then
     exit 0
   fi
 done
+
+if command -v pkg >/dev/null 2>&1 && pkg info -e libva >/dev/null 2>&1; then
+  exit 0
+fi
 
 if command -v apk >/dev/null 2>&1 && apk info -e libva >/dev/null 2>&1; then
   exit 0

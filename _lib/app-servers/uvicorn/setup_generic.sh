@@ -60,6 +60,8 @@ case "$ACTION" in
     log_info "Installing Uvicorn ASGI server via ${UVICORN_INSTALL_METHOD}..."
     if command -v uvicorn >/dev/null 2>&1; then
       log_info "uvicorn is already available on the system."
+    elif [ "$(uname -s)" = "FreeBSD" ]; then
+      libscript_depends "uvicorn"
     elif command -v uv >/dev/null 2>&1; then
       uv tool install uvicorn 2>/dev/null || uv pip install uvicorn
     elif command -v pipx >/dev/null 2>&1; then

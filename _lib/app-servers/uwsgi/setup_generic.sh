@@ -75,7 +75,15 @@ case "$ACTION" in
   install)
     resolve_exact_version
     log_info "Installing uWSGI (${VERSION}) via ${UWSGI_INSTALL_METHOD}..."
-    if [ "$UWSGI_INSTALL_METHOD" = "libscript_native" ]; then
+    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/uwsgi/${EXACT_VERSION}"
+    mkdir -p "${TARGET_DIR}/bin"
+    if [ "$(uname -s)" = "FreeBSD" ]; then
+      libscript_depends "uwsgi"
+      if command -v uwsgi >/dev/null 2>&1; then
+        ln -sf "$(command -v uwsgi)" "${TARGET_DIR}/bin/uwsgi"
+      fi
+      libscript_symlink_alias "uwsgi" "$VERSION" "${EXACT_VERSION}"
+    elif [ "$UWSGI_INSTALL_METHOD" = "libscript_native" ]; then
       if ! command -v uv >/dev/null 2>&1; then
         if ! command -v python3 >/dev/null 2>&1 || ! python3 -c 'import ensurepip' >/dev/null 2>&1; then
           log_info "Python runtime required for uwsgi. Installing python..."

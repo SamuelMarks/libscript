@@ -32,12 +32,21 @@ WiX Directory ID for the payload root (default: LIBSCRIPT_FOLDER).
 .PARAMETER RootDir
 Root repository directory (default: parent of packaging).
 
+.PARAMETER SourceDir
+Source staging directory to harvest files from directly.
+
 .PARAMETER IncludeCache
 Path to hydrated offline cache directory to embed in payload.
+
+.PARAMETER IncludeMsi
+Allows harvesting of .msi installer packages into payload.
 #>
 
 [CmdletBinding()]
 param(
+    [Alias('source-dir', 'stage-dir')]
+    [string]$SourceDir,
+
     [Alias('output-dir')]
     [string]$OutputDir,
 
@@ -57,12 +66,20 @@ param(
     [string]$RootDir,
 
     [Alias('include-cache')]
-    [string]$IncludeCache
+    [string]$IncludeCache,
+
+    [Alias('include-msi')]
+    [switch]$IncludeMsi
 )
 
 $ErrorActionPreference = 'Stop'
 
-if (-not $RootDir) {
+if ($SourceDir) {
+    if (-not (Test-Path $SourceDir)) {
+        throw "Source directory does not exist: $SourceDir"
+    }
+    $RootDir = (Resolve-Path $SourceDir).Path
+} elseif (-not $RootDir) {
     $RootDir = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 } else {
     $RootDir = (Resolve-Path $RootDir).Path
@@ -72,7 +89,7 @@ if (-not $RootDir) {
 Push-Location $RootDir
 try {
     $hasGit = $false
-    if (Test-Path (Join-Path $RootDir '.git')) {
+    if ((-not $SourceDir) -and (Test-Path (Join-Path $RootDir '.git'))) {
         $gitCmd = Get-Command git -ErrorAction SilentlyContinue
         if ($gitCmd) { $hasGit = $true }
     }
@@ -87,14 +104,19 @@ try {
     # 2. Filter prohibited patterns and directories (always exclude cache/ from repo)
     $filtered = [System.Collections.Generic.List[string]]::new()
     $excludeRegex = '(^|/)(\.git|\.github|\.githooks|\.vagrant|tests_tmp|dist|build|tmp|node_modules|cache|kubernetes-the-hard-way)(/|$)'
-    $excludeExtRegex = '\.(tmp|log|ppm|bak|swp|msi|wixobj|pruned)$'
+    $excludeExtRegex = '\.(tmp|log|ppm|bak|swp|wixobj|pruned)$'
 
     foreach ($f in $allFiles) {
         if (-not $f) { continue }
         $norm = $f.Replace('\', '/')
-        if ($norm -match $excludeRegex) { continue }
+        if (-not $SourceDir) {
+            if ($norm -match $excludeRegex) { continue }
+            if ($norm -like 'packaging/screenshots/release_test/*') { continue }
+        } else {
+            if ($norm -match '(^|/)(\.git|\.vagrant)(/|$)') { continue }
+        }
         if ($norm -match $excludeExtRegex) { continue }
-        if ($norm -like 'packaging/screenshots/release_test/*') { continue }
+        if ((-not $IncludeMsi) -and (-not $SourceDir) -and ($norm -match '\.msi$')) { continue }
         if (-not (Test-Path (Join-Path $RootDir $norm) -PathType Leaf)) { continue }
         $filtered.Add($norm)
     }

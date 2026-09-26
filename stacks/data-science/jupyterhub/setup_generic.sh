@@ -46,7 +46,9 @@ if [ ! -d "${JUPYTERHUB_VENV}" ]; then
   else
     priv  chown -R -- "${USER:-$(id -un)}":"${GROUP:-${USER:-$(id -un)}}" "${JUPYTERHUB_VENV}"
   fi
-  if command -v uv >/dev/null 2>&1; then
+  if [ "$(uname -s)" = "FreeBSD" ]; then
+    python3 -m venv "${JUPYTERHUB_VENV}"
+  elif command -v uv >/dev/null 2>&1; then
     uv venv --python "${PYTHON_VERSION}" -- "${JUPYTERHUB_VENV}"
   else
     python3 -m venv "${JUPYTERHUB_VENV}"
@@ -63,7 +65,9 @@ fi
 if [ "$(uname -s)" = "Darwin" ]; then
   JUPYTERHUB_SERVICE_USER="${USER}"
 elif ! id "${JUPYTERHUB_SERVICE_USER}" >/dev/null 2>&1; then
-  if command -v useradd >/dev/null 2>&1; then
+  if command -v pw >/dev/null 2>&1; then
+    priv pw useradd "${JUPYTERHUB_SERVICE_USER}" -m -d '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' -s /bin/sh
+  elif command -v useradd >/dev/null 2>&1; then
     priv useradd -m -d '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' -c '' "${JUPYTERHUB_SERVICE_USER}"
   else
     priv adduser --disabled-password --gecos '' --home '/home/'"${JUPYTERHUB_SERVICE_USER}"'/' "${JUPYTERHUB_SERVICE_USER}"

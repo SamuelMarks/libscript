@@ -25,6 +25,8 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}:"
 
+export PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:${PATH:-}"
+
 command -v gnome-shell >/dev/null 2>&1 || exit 1
 gnome-shell --version >/dev/null 2>&1 || true
 exit 0

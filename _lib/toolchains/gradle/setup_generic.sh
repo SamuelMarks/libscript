@@ -157,8 +157,13 @@ case "$ACTION" in
       fi
 
       mkdir -p "${TARGET_DIR}/bin"
-      
-      if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gradle/"*"${VERSION:-}"* >/dev/null 2>&1; then
+
+      if [ "$(uname -s)" = "FreeBSD" ]; then
+        libscript_depends "gradle"
+        if command -v gradle >/dev/null 2>&1; then
+          ln -sf "$(command -v gradle)" "${TARGET_DIR}/bin/gradle"
+        fi
+      elif ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gradle/"*"${VERSION:-}"* >/dev/null 2>&1; then
         log_info "Extracting from cache..."
         cache_file=$(find "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/gradle/" -maxdepth 1 -type f -name "*${VERSION:-}*" 2>/dev/null | head -n 1 || true)
         if [ -n "$cache_file" ]; then

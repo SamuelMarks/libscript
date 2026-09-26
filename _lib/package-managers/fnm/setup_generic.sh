@@ -170,8 +170,12 @@ case "$ACTION" in
               chmod +x "${TARGET_DIR}/bin/fnm" || true
             fi
           fi
-        else
-          if [ -n "${FNM_DOWNLOAD_URL:-}" ]; then
+        if [ "$(uname -s)" = "FreeBSD" ] || [ "${UNAME_LOWER:-}" = "freebsd" ]; then
+          libscript_depends "fnm" || true
+          if command -v fnm >/dev/null 2>&1; then
+            ln -sf "$(command -v fnm)" "${TARGET_DIR}/bin/fnm"
+          fi
+        elif [ -n "${FNM_DOWNLOAD_URL:-}" ]; then
             TEMP_FILE=$(mktemp)
             libscript_download "${FNM_DOWNLOAD_URL:-}" "${TEMP_FILE}"
             if case "${FNM_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then

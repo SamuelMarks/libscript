@@ -186,7 +186,13 @@ case "$ACTION" in
             _hos="$(uname -s | tr '[:upper:]' '[:lower:]')"
             HELM_DOWNLOAD_URL="https://get.helm.sh/helm-v${_hver}-${_hos}-${_harch}.tar.gz"
           fi
-          if [ -n "${HELM_DOWNLOAD_URL:-}" ]; then
+          if [ "${_hos:-}" = "freebsd" ]; then
+            log_info "FreeBSD detected, installing helm via system package manager..."
+            libscript_depends "helm"
+            if command -v helm >/dev/null 2>&1; then
+              ln -sf "$(command -v helm)" "${TARGET_DIR}/bin/helm"
+            fi
+          elif [ -n "${HELM_DOWNLOAD_URL:-}" ]; then
             TEMP_FILE=$(mktemp)
             libscript_download "${HELM_DOWNLOAD_URL:-}" "${TEMP_FILE}"
             if case "${HELM_DOWNLOAD_URL:-}" in *.tar.gz|*.tgz) true;; *) false;; esac; then

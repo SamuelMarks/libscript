@@ -25,15 +25,19 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}:"
 
-if [ -f /usr/lib/libxkbcommon.so ] || [ -f /usr/lib/libxkbcommon.so.0 ] || [ -f /usr/lib64/libxkbcommon.so.0 ] || [ -f /usr/lib64/libxkbcommon.so ] || [ -f /lib/libxkbcommon.so.0 ] || [ -d /usr/include/xkbcommon ]; then
+if [ -f /usr/lib/libxkbcommon.so ] || [ -f /usr/lib/libxkbcommon.so.0 ] || [ -f /usr/lib64/libxkbcommon.so.0 ] || [ -f /usr/lib64/libxkbcommon.so ] || [ -f /lib/libxkbcommon.so.0 ] || [ -d /usr/include/xkbcommon ] || [ -f /usr/local/lib/libxkbcommon.so ] || [ -d /usr/local/include/xkbcommon ]; then
   exit 0
 fi
 
-for _lib_dir in /usr/lib/*-linux-gnu* /usr/lib64; do
+for _lib_dir in /usr/lib/*-linux-gnu* /usr/lib64 /usr/local/lib; do
   if [ -f "${_lib_dir}/libxkbcommon.so.0" ] || [ -f "${_lib_dir}/libxkbcommon.so" ]; then
     exit 0
   fi
 done
+
+if command -v pkg >/dev/null 2>&1 && pkg info -e libxkbcommon >/dev/null 2>&1; then
+  exit 0
+fi
 
 if command -v apk >/dev/null 2>&1 && apk info -e libxkbcommon >/dev/null 2>&1; then
   exit 0

@@ -16,7 +16,7 @@
 #   --branch <name>          Branch or tag ref (optional)
 #   --help, -h               Show this help text
 
-set -feu
+set -eu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -127,6 +127,7 @@ fi
 : "${VERSION:=1.0.0}"
 
 STAGE_ROOT="${LIBSCRIPT_ROOT_DIR}/tmp/stage_component_${COMPONENT}"
+rm -rf "$STAGE_ROOT"
 mkdir -p "$STAGE_ROOT/bin" "$OUT_DIR"
 
 # Stage dummy or extracted component binaries into $STAGE_ROOT
@@ -206,7 +207,7 @@ PAYLOAD_WXS="${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_payload.wxs"
 
 # Generate payload WiX fragment harvesting staged files
 "${SCRIPT_DIR}/harvest_payload.sh" \
-  --output-dir "$STAGE_ROOT" \
+  --source-dir "$STAGE_ROOT" \
   --wix-fragment "$PAYLOAD_WXS" \
   --component-group "PayloadComponents" \
   --directory-id "INSTALLFOLDER"

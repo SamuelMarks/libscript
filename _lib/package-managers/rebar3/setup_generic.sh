@@ -162,6 +162,10 @@ case "$ACTION" in
         elif command -v apt-get >/dev/null 2>&1; then
           priv apt-get update -qq || true
           priv apt-get install -y erlang-base || true
+        elif command -v pkg >/dev/null 2>&1; then
+          if ! command -v erl >/dev/null 2>&1; then
+            priv pkg install -y erlang || true
+          fi
         fi
         REBAR3_DOWNLOAD_URL="https://s3.amazonaws.com/rebar3/rebar3"
       fi

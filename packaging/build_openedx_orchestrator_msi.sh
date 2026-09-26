@@ -11,11 +11,11 @@
 #   --version <ver>    Stack release version (default: 22.1.0)
 #   --variant <var>    Installer variant: online, offline, or all (default: all)
 #   --out <name>       Output file base name or path (default: dist/msi/openedx-<version>.msi)
-#   --out-dir <dir>    Output directory (default: dist/msi)
+#   --out-dir <dir>    Output directory for built MSIs (default: dist/msi)
 #   --branch <name>    Branch or tag ref (optional)
 #   --help, -h         Show this help text
 
-set -feu
+set -eu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -110,9 +110,24 @@ build_single_variant() {
   mkdir -p "$_stage/bundle"
 
   if [ "$_v" = "offline" ]; then
+    # Ensure all required child component MSIs are built in OUT_DIR
+    for _comp in mysql redis mongodb python nodejs meilisearch; do
+      if ! ls "${OUT_DIR}"/libscript-${_comp}-*.msi >/dev/null 2>&1; then
+        printf '[INFO] Building missing component MSI: %s\n' "$_comp"
+        "${SCRIPT_DIR}/build_component_msi.sh" --component "$_comp" --out-dir "$OUT_DIR"
+      fi
+    done
+    if ! ls "${OUT_DIR}"/openedx-core-*.msi >/dev/null 2>&1; then
+      printf '[INFO] Building missing component MSI: openedx-core\n'
+      "${SCRIPT_DIR}/build_openedx_core_msi.sh" --version "$VERSION" --out-dir "$OUT_DIR"
+    fi
+
     # Copy all compiled sub-MSIs into bundle directory for offline installer embedding
-    cp "${OUT_DIR}"/libscript-*.msi "$_stage/bundle/" 2>/dev/null || true
-    cp "${OUT_DIR}"/openedx-core-*.msi "$_stage/bundle/" 2>/dev/null || true
+    for _msi in "${OUT_DIR}"/libscript-*.msi "${OUT_DIR}"/openedx-core-*.msi; do
+      if [ -f "$_msi" ]; then
+        cp -f "$_msi" "$_stage/bundle/"
+      fi
+    done
   fi
 
   _main_wxs="${LIBSCRIPT_ROOT_DIR}/tmp/openedx_orch_${_v}_main.wxs"
@@ -120,7 +135,21 @@ build_single_variant() {
 
   "${SCRIPT_DIR}/template_openedx_orchestrator.sh" --version "$VERSION" --variant "$_v" --msi-dir "$OUT_DIR" --out "$_main_wxs"
 
-  "${SCRIPT_DIR}/harvest_payload.sh" --output-dir "$_stage" --wix-fragment "$_payload_wxs" --component-group "ChainedMsiPayloads" --directory-id "INSTALLFOLDER"
+  if [ "$_v" = "offline" ]; then
+    "${SCRIPT_DIR}/harvest_payload.sh" \
+      --source-dir "$_stage/bundle" \
+      --include-msi \
+      --wix-fragment "$_payload_wxs" \
+      --component-group "ChainedMsiPayloads" \
+      --directory-id "BUNDLE_DIR"
+  else
+    printf 'Open edX Online Master Orchestrator\n' > "$_stage/bundle/online.txt"
+    "${SCRIPT_DIR}/harvest_payload.sh" \
+      --source-dir "$_stage/bundle" \
+      --wix-fragment "$_payload_wxs" \
+      --component-group "ChainedMsiPayloads" \
+      --directory-id "BUNDLE_DIR"
+  fi
 
   if [ -n "$OUT_FILE" ]; then
     case "$OUT_FILE" in

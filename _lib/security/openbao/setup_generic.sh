@@ -163,17 +163,24 @@ case "$ACTION" in
       if [ ! -d "${TARGET_DIR}" ]; then
         log_info "Installing openbao ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
-        ARCH=$(uname -m)
-        OS=$(uname -s | tr "[:upper:]" "[:lower:]")
-        if [ "$ARCH" = "x86_64" ]; then ARCH="amd64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
-        URL="https://github.com/openbao/openbao/releases/download/v${EXACT_VERSION}/openbao_${EXACT_VERSION}_${OS}_${ARCH}.tar.gz"
-        TEMP_FILE=$(mktemp)
-        libscript_depends "curl"
-        libscript_depends "tar"
-        curl -fsSL "$URL" -o "$TEMP_FILE.tar.gz"
-        tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" "bao" || cp "$TEMP_FILE.tar.gz" "${TARGET_DIR}/bin/bao"
-        chmod +x "${TARGET_DIR}/bin/bao"
-        rm -f "$TEMP_FILE.tar.gz"
+        if [ "$(uname -s)" = "FreeBSD" ]; then
+          libscript_depends "openbao"
+          if command -v bao >/dev/null 2>&1; then
+            ln -sf "$(command -v bao)" "${TARGET_DIR}/bin/bao"
+          fi
+        else
+          ARCH=$(uname -m)
+          OS=$(uname -s | tr "[:upper:]" "[:lower:]")
+          if [ "$ARCH" = "x86_64" ]; then ARCH="amd64"; elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then ARCH="arm64"; fi
+          URL="https://github.com/openbao/openbao/releases/download/v${EXACT_VERSION}/openbao_${EXACT_VERSION}_${OS}_${ARCH}.tar.gz"
+          TEMP_FILE=$(mktemp)
+          libscript_depends "curl"
+          libscript_depends "tar"
+          curl -fsSL "$URL" -o "$TEMP_FILE.tar.gz"
+          tar -xzf "$TEMP_FILE.tar.gz" -C "${TARGET_DIR}/bin" "bao" || cp "$TEMP_FILE.tar.gz" "${TARGET_DIR}/bin/bao"
+          chmod +x "${TARGET_DIR}/bin/bao"
+          rm -f "$TEMP_FILE.tar.gz"
+        fi
       else
         log_info "openbao ${VERSION} is already installed."
       fi

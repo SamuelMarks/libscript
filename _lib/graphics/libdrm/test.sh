@@ -25,15 +25,19 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}:"
 
-if [ -f /usr/lib/libdrm.so ] || [ -f /usr/lib/libdrm.so.2 ] || [ -f /usr/lib64/libdrm.so.2 ] || [ -f /usr/lib64/libdrm.so ] || [ -f /lib/libdrm.so.2 ] || [ -d /usr/include/libdrm ]; then
+if [ -f /usr/lib/libdrm.so ] || [ -f /usr/lib/libdrm.so.2 ] || [ -f /usr/lib64/libdrm.so.2 ] || [ -f /usr/lib64/libdrm.so ] || [ -f /lib/libdrm.so.2 ] || [ -d /usr/include/libdrm ] || [ -f /usr/local/lib/libdrm.so ] || [ -d /usr/local/include/libdrm ]; then
   exit 0
 fi
 
-for _lib_dir in /usr/lib/*-linux-gnu* /usr/lib64; do
+for _lib_dir in /usr/lib/*-linux-gnu* /usr/lib64 /usr/local/lib; do
   if [ -f "${_lib_dir}/libdrm.so.2" ] || [ -f "${_lib_dir}/libdrm.so" ]; then
     exit 0
   fi
 done
+
+if command -v pkg >/dev/null 2>&1 && pkg info -e libdrm >/dev/null 2>&1; then
+  exit 0
+fi
 
 if command -v apk >/dev/null 2>&1 && apk info -e libdrm >/dev/null 2>&1; then
   exit 0

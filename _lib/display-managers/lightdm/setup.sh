@@ -64,6 +64,14 @@ if ! command -v lightdm >/dev/null 2>&1; then
       . "${SCRIPT_NAME}"
     fi
     priv dnf install -y lightdm || (priv dnf install -y epel-release && priv dnf install -y lightdm) || true
+  elif command -v pkg >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv pkg install -y lightdm || true
   fi
 fi
 

@@ -64,6 +64,14 @@ if ! command -v mkfs.ext4 >/dev/null 2>&1 && ! command -v tune2fs >/dev/null 2>&
       . "${SCRIPT_NAME}"
     fi
     priv dnf install -y e2fsprogs || true
+  elif command -v pkg >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv pkg install -y e2fsprogs || priv pkg install -y e2fsprogs-core || true
   fi
 fi
 

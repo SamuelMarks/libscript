@@ -112,6 +112,9 @@ case "$ACTION" in
           configure_hashicorp_repo_rhel
           libscript_depends "packer"
           ;;
+        'pkg')
+          libscript_depends "packer"
+          ;;
         'brew')
           brew install hashicorp/tap/packer 2>/dev/null || brew install packer
           ;;

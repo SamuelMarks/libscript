@@ -25,15 +25,19 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}:"
 
-if [ -f /usr/lib/libwlroots.so ] || [ -f /usr/lib/libwlroots-0.20.so ] || [ -f /usr/lib/libwlroots-0.19.so ] || [ -f /usr/lib/libwlroots-0.18.so ]; then
+if [ -f /usr/lib/libwlroots.so ] || [ -f /usr/lib/libwlroots-0.20.so ] || [ -f /usr/lib/libwlroots-0.19.so ] || [ -f /usr/lib/libwlroots-0.18.so ] || [ -f /usr/local/lib/libwlroots.so ] || ls /usr/local/lib/libwlroots*.so* >/dev/null 2>&1; then
   exit 0
 fi
 
-for _lib_dir in /usr/lib/*-linux-gnu*; do
-  if [ -f "${_lib_dir}/libwlroots.so" ] || [ -f "${_lib_dir}/libwlroots-0.20.so" ] || [ -f "${_lib_dir}/libwlroots-0.19.so" ] || [ -f "${_lib_dir}/libwlroots-0.18.so" ] || [ -f "${_lib_dir}/libwlroots-0.18.so.18" ]; then
+for _lib_dir in /usr/lib/*-linux-gnu* /usr/local/lib; do
+  if [ -f "${_lib_dir}/libwlroots.so" ] || [ -f "${_lib_dir}/libwlroots-0.20.so" ] || [ -f "${_lib_dir}/libwlroots-0.19.so" ] || [ -f "${_lib_dir}/libwlroots-0.18.so" ] || [ -f "${_lib_dir}/libwlroots-0.18.so.18" ] || ls "${_lib_dir}"/libwlroots*.so* >/dev/null 2>&1; then
     exit 0
   fi
 done
+
+if command -v pkg >/dev/null 2>&1 && (pkg info -e wlroots >/dev/null 2>&1 || pkg info | grep -q '^wlroots'); then
+  exit 0
+fi
 
 if command -v apk >/dev/null 2>&1 && apk info | grep -q '^wlroots'; then
   exit 0

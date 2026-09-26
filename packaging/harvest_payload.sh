@@ -4,12 +4,14 @@
 # manifest fragment while strictly respecting .gitignore exclusion rules.
 # Embeds the core execution engine, library recipes, stacks, CLIs, and utilities
 # required for standalone, self-contained installation on target systems.
-# Supports optional offline cache harvesting via `--include-cache <dir>` for air-gapped installers.
+# Supports optional offline cache harvesting via `--include-cache <dir>` for air-gapped installers
+# as well as direct arbitrary stage directory harvesting via `--source-dir <dir>`.
 #
 # ## Usage
 # ./packaging/harvest_payload.sh [OPTIONS]
 #
 # Options:
+#   --source-dir <dir>       Source directory to harvest files from directly
 #   --output-dir <dir>       Target staging directory where harvested files will be copied
 #   --manifest-file <path>   Path to output newline-delimited list of harvested relative paths
 #   --wix-fragment <path>    Path to output WiX XML (<Fragment>) file with components and files
@@ -17,6 +19,7 @@
 #   --directory-id <id>      WiX Directory ID for root of payload (default: LIBSCRIPT_FOLDER)
 #   --root-dir <path>        Root directory of repository (default: auto-detected)
 #   --include-cache <dir>    Include hydrated offline cache directory into payload
+#   --include-msi            Allow harvesting of .msi installer packages into payload
 #   --help, -h               Show this help text
 
 set -feu
@@ -31,17 +34,15 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
+SOURCE_DIR=""
 OUTPUT_DIR=""
 MANIFEST_FILE=""
 WIX_FRAGMENT=""
@@ -49,31 +50,23 @@ COMPONENT_GROUP="LibscriptHarvestedComponents"
 DIRECTORY_ID="LIBSCRIPT_FOLDER"
 ROOT_DIR="${LIBSCRIPT_ROOT_DIR}"
 INCLUDE_CACHE=""
+INCLUDE_MSI=0
 
 # ## show_help
 # Prints usage and parameter documentation.
 show_help() {
-  printf 'Usage: %s [OPTIONS]
-
-' "$(basename "$THIS_FILE")"
-  printf 'Options:
-'
-  printf '  --output-dir <dir>       Target staging directory for harvested files
-'
-  printf '  --manifest-file <path>   Output file containing relative paths list
-'
-  printf '  --wix-fragment <path>    Output file containing WiX XML fragment
-'
-  printf '  --component-group <id>   WiX ComponentGroup ID (default: LibscriptHarvestedComponents)
-'
-  printf '  --directory-id <id>      WiX Directory ID (default: LIBSCRIPT_FOLDER)
-'
-  printf '  --root-dir <path>        Root repository directory
-'
-  printf '  --include-cache <dir>    Include hydrated offline cache directory into payload
-'
-  printf '  --help, -h               Show this help text
-'
+  printf 'Usage: %s [OPTIONS]\n\n' "$(basename "$THIS_FILE")"
+  printf 'Options:\n'
+  printf '  --source-dir <dir>       Source directory to harvest files from directly\n'
+  printf '  --output-dir <dir>       Target staging directory for harvested files\n'
+  printf '  --manifest-file <path>   Output file containing relative paths list\n'
+  printf '  --wix-fragment <path>    Output file containing WiX XML fragment\n'
+  printf '  --component-group <id>   WiX ComponentGroup ID (default: LibscriptHarvestedComponents)\n'
+  printf '  --directory-id <id>      WiX Directory ID (default: LIBSCRIPT_FOLDER)\n'
+  printf '  --root-dir <path>        Root repository directory\n'
+  printf '  --include-cache <dir>    Include hydrated offline cache directory into payload\n'
+  printf '  --include-msi            Allow harvesting of .msi installer packages\n'
+  printf '  --help, -h               Show this help text\n'
   exit 0
 }
 
@@ -81,6 +74,14 @@ show_help() {
 # Parses CLI arguments and options.
 while [ $# -gt 0 ]; do
   case "$1" in
+    --source-dir|--stage-dir)
+      SOURCE_DIR="$2"
+      shift 2
+      ;;
+    --source-dir=*|--stage-dir=*)
+      SOURCE_DIR="${1#*=}"
+      shift
+      ;;
     --output-dir)
       OUTPUT_DIR="$2"
       shift 2
@@ -113,12 +114,15 @@ while [ $# -gt 0 ]; do
       INCLUDE_CACHE="${1#*=}"
       shift
       ;;
+    --include-msi)
+      INCLUDE_MSI=1
+      shift
+      ;;
     --help|-h|/?)
       show_help
       ;;
     *)
-      printf '[ERROR] Unknown argument: %s
-' "$1" >&2
+      printf '[ERROR] Unknown argument: %s\n' "$1" >&2
       exit 1
       ;;
   esac
@@ -137,16 +141,30 @@ TMP_FILTERED="$(mktemp "${TMPDIR:-/tmp}/harvest_filtered.XXXXXX")"
 trap 'rm -f "$TMP_LIST" "$TMP_FILTERED"' EXIT INT TERM
 
 # Gather files list
-cd "${ROOT_DIR}"
-if command -v git >/dev/null 2>&1 && [ -d ".git" ]; then
+if [ -n "${SOURCE_DIR}" ]; then
+  if [ ! -d "${SOURCE_DIR}" ]; then
+    printf '[ERROR] Source directory does not exist: %s\n' "${SOURCE_DIR}" >&2
+    exit 1
+  fi
+  _source_real=$(cd -- "${SOURCE_DIR}" && pwd)
+  ROOT_DIR="${_source_real}"
+  cd "${_source_real}"
+  find . -type f | sed 's|^\./||' > "${TMP_LIST}"
+elif command -v git >/dev/null 2>&1 && [ -d "${ROOT_DIR}/.git" ]; then
+  cd "${ROOT_DIR}"
   git ls-files -c -o --exclude-standard > "${TMP_LIST}"
 else
+  cd "${ROOT_DIR}"
   find . -type f | sed 's|^\./||' | while read -r _f; do
     case "$_f" in
       .git/*|.github/*|.githooks/*|.vagrant/*|tests_tmp/*|dist/*|build/*|node_modules/*|*kubernetes-the-hard-way*) continue ;;
-      *.tmp|*.log|*.ppm|*.bak|*.swp|*.tar.gz|*.zip|*.7z|*.msi|*.wixobj|*.wxs|*.pruned) continue ;;
-      *) printf '%s
-' "$_f" ;;
+      *.tmp|*.log|*.ppm|*.bak|*.swp|*.tar.gz|*.zip|*.7z|*.wixobj|*.wxs|*.pruned) continue ;;
+      *)
+        if [ "$INCLUDE_MSI" -eq 0 ]; then
+          case "$_f" in *.msi) continue ;; esac
+        fi
+        printf '%s\n' "$_f"
+        ;;
     esac
   done > "${TMP_LIST}"
 fi
@@ -156,15 +174,30 @@ while IFS= read -r _rel || [ -n "$_rel" ]; do
   [ -z "$_rel" ] && continue
   [ -f "${ROOT_DIR}/${_rel}" ] || continue
 
-  case "$_rel" in
-    .git*|.vagrant*|tests_tmp/*|dist/*|build/*|tmp/*|node_modules/*) continue ;;
-    */.git/*|*/.git|*/.github/*|*/.githooks/*|*/.vagrant/*|*/tests_tmp/*|*/dist/*|*/build/*|*/tmp/*|*/node_modules/*) continue ;;
-    cache/*|*/cache/*) continue ;;
-    *.tmp|*.log|*.ppm|*.bak|*.swp|*.msi|*.wixobj) continue ;;
-    packaging/screenshots/release_test/*) continue ;;
-    *) printf '%s
-' "$_rel" >> "${TMP_FILTERED}" ;;
-  esac
+  if [ -n "${SOURCE_DIR}" ]; then
+    case "$_rel" in
+      .git*|.vagrant*|*.tmp|*.log|*.ppm|*.bak|*.swp|*.wixobj) continue ;;
+      *)
+        if [ "$INCLUDE_MSI" -eq 0 ]; then
+          case "$_rel" in *.msi) continue ;; esac
+        fi
+        printf '%s\n' "$_rel" >> "${TMP_FILTERED}"
+        ;;
+    esac
+  else
+    case "$_rel" in
+      .git*|.vagrant*|tests_tmp/*|dist/*|build/*|tmp/*|node_modules/*) continue ;;
+      */.git/*|*/.git|*/.github/*|*/.githooks/*|*/.vagrant/*|*/tests_tmp/*|*/dist/*|*/build/*|*/tmp/*|*/node_modules/*) continue ;;
+      cache/*|*/cache/*) continue ;;
+      *.tmp|*.log|*.ppm|*.bak|*.swp|*.wixobj) continue ;;
+      *.msi)
+        [ "$INCLUDE_MSI" -eq 1 ] && printf '%s\n' "$_rel" >> "${TMP_FILTERED}"
+        continue
+        ;;
+      packaging/screenshots/release_test/*) continue ;;
+      *) printf '%s\n' "$_rel" >> "${TMP_FILTERED}" ;;
+    esac
+  fi
 done < "${TMP_LIST}"
 
 # If --include-cache is specified, harvest the offline cache files

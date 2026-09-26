@@ -141,6 +141,14 @@ case "$ACTION" in
   install)
     if [ "$LUAROCKS_INSTALL_METHOD" = "system" ]; then
       libscript_depends "luarocks" || log_info "luarocks is not supported or failed to install natively on this OS."
+      if [ ! -f /usr/local/bin/luarocks ] && [ -f /usr/local/bin/luarocks54 ]; then
+        if ! command -v priv >/dev/null 2>&1; then
+          SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+          export SCRIPT_NAME
+          . "${SCRIPT_NAME}"
+        fi
+        priv ln -sf /usr/local/bin/luarocks54 /usr/local/bin/luarocks || true
+      fi
     elif [ "$LUAROCKS_INSTALL_METHOD" = "mise" ]; then
       mise install "luarocks@${VERSION}"
     elif [ "$LUAROCKS_INSTALL_METHOD" = "asdf" ]; then

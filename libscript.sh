@@ -312,9 +312,9 @@ fi
 
 if [ "$IS_ACTION" = "1" ]; then
   if [ -x "$TARGET/cli.sh" ]; then
-    exec "$TARGET/cli.sh" "$CMD" "$@"
+    exec "$TARGET/cli.sh" "$@"
   elif [ -f "$TARGET/cli.sh" ]; then
-    exec sh "$TARGET/cli.sh" "$CMD" "$@"
+    exec sh "$TARGET/cli.sh" "$@"
   else
     printf '%s\n' "Error: Local CLI not found in $TARGET" >&2
     exit 1

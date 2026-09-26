@@ -194,7 +194,9 @@ if [ -z "${INIT_SYS+x}" ]; then
       'FreeBSD')
           if [ -d '/etc/inittab' ]; then
             export INIT_SYS='systemv_init'
-          elif [ -f '/sbib/init' ]; then
+          elif [ -f '/sbin/init' ]; then
+            export INIT_SYS='bsd_init'
+          else
             export INIT_SYS='bsd_init'
           fi
           ;;

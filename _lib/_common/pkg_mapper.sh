@@ -141,6 +141,13 @@ map_package() {
         'dnf'|'yum') printf 'libpq-devel\n' ;;
         'zypper') printf 'postgresql-devel\n' ;;
         'pacman') printf 'postgresql-libs\n' ;;
+        'pkg')
+          if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
+            printf 'database/postgres-16/library\n'
+          else
+            printf 'postgresql17-client\n'
+          fi
+          ;;
         *) printf 'libpq-dev\n' ;;
       esac
       ;;
@@ -661,17 +668,23 @@ map_package() {
         'apk') printf 'php84 php84-cli\n' ;;
         'apt-get') printf 'php-cli\n' ;;
         'dnf') printf 'php-cli\n' ;;
-        'yum') printf 'php-cli\n' ;;
         'pkg')
           if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
             printf 'ooce/runtime/php-82\n'
           else
-            printf 'php82\n'
+            printf 'php84\n'
           fi
           ;;
         'winget') printf 'PHP.PHP\n' ;;
         'emerge') printf 'dev-lang/php\n' ;;
         *) printf 'php\n' ;;
+      esac
+      ;;
+    'php-fpm')
+      case "${PKG_MGR}" in
+        'pkg') printf 'php84\n' ;;
+        'apk') printf 'php83-fpm\n' ;;
+        *) printf 'php-fpm\n' ;;
       esac
       ;;
     'pip')
@@ -803,6 +816,36 @@ map_package() {
         *) printf 'poetry\n' ;;
       esac
       ;;
+    'pdm')
+      case "${PKG_MGR}" in
+        'pkg') printf 'py312-pdm\n' ;;
+        *) printf 'pdm\n' ;;
+      esac
+      ;;
+    'gunicorn')
+      case "${PKG_MGR}" in
+        'pkg') printf 'py312-gunicorn\n' ;;
+        *) printf 'gunicorn\n' ;;
+      esac
+      ;;
+    'uvicorn')
+      case "${PKG_MGR}" in
+        'pkg') printf 'py312-uvicorn\n' ;;
+        *) printf 'uvicorn\n' ;;
+      esac
+      ;;
+    'waitress')
+      case "${PKG_MGR}" in
+        'pkg') printf 'py312-waitress\n' ;;
+        *) printf 'waitress\n' ;;
+      esac
+      ;;
+    'uwsgi')
+      case "${PKG_MGR}" in
+        'pkg') printf 'uwsgi-py312\n' ;;
+        *) printf 'uwsgi\n' ;;
+      esac
+      ;;
     'pipx')
       case "${PKG_MGR}" in
         'pkg') printf 'py312-pipx\n' ;;
@@ -836,7 +879,7 @@ map_package() {
       case "${PKG_MGR}" in
         'dnf'|'yum') printf 'ansible-core\n' ;;
         'apk'|'apt-get'|'pacman') printf 'ansible\n' ;;
-        'pkg') printf 'py312-ansible\n' ;;
+        'pkg') printf 'py312-ansible-core\n' ;;
         *) printf 'ansible-galaxy\n' ;;
       esac
       ;;
@@ -1040,7 +1083,7 @@ map_package() {
         'dnf') printf 'rabbitmq-server\n' ;;
         'yum') printf 'rabbitmq-server\n' ;;
         'zypper') printf 'rabbitmq-server\n' ;;
-        'brew') printf 'rabbitmq\n' ;;
+        'brew'|'pkg') printf 'rabbitmq\n' ;;
         'winget') printf 'RabbitMQ.RabbitMQ\n' ;;
         'emerge') printf 'net-misc/rabbitmq-server\n' ;;
         *) printf 'rabbitmq-server\n' ;;
@@ -1051,11 +1094,25 @@ map_package() {
         'apk') printf 'ruby\n' ;;
         'apt-get') printf 'ruby\n' ;;
         'dnf'|'yum'|'zypper'|'pacman') printf 'rubygems\n' ;;
-        'brew') printf 'ruby\n' ;;
+        'brew'|'pkg') printf 'ruby\n' ;;
         *) return 1 ;;
       esac
       ;;
-    'ghcup'|'go-pm'|'google-cloud-sdk')
+    'ghcup')
+      case "${PKG_MGR}" in
+        'pkg') printf 'hs-ghcup\n' ;;
+        'brew') printf 'ghcup\n' ;;
+        *) return 1 ;;
+      esac
+      ;;
+    'google-cloud-sdk')
+      case "${PKG_MGR}" in
+        'pkg') printf 'google-cloud-sdk\n' ;;
+        'brew') printf 'google-cloud-sdk\n' ;;
+        *) return 1 ;;
+      esac
+      ;;
+    'go-pm')
       case "${PKG_MGR}" in
         'brew') printf '%s\n' "${pkg}" ;;
         *) return 1 ;;
@@ -1067,22 +1124,38 @@ map_package() {
         *) return 1 ;;
       esac
       ;;
-    'hatch'|'krew')
+    'hatch')
       case "${PKG_MGR}" in
-        'brew') printf '%s\n' "${pkg}" ;;
+        'pkg') printf 'py312-hatch\n' ;;
+        'brew') printf 'hatch\n' ;;
         *) return 1 ;;
       esac
       ;;
-    'helm'|'julia'|'luarocks')
+    'krew')
+      case "${PKG_MGR}" in
+        'brew') printf 'krew\n' ;;
+        *) return 1 ;;
+      esac
+      ;;
+    'luarocks')
+      case "${PKG_MGR}" in
+        'pkg') printf 'lua54-luarocks\n' ;;
+        'apk') printf 'luarocks\n' ;;
+        'brew') printf 'luarocks\n' ;;
+        *) return 1 ;;
+      esac
+      ;;
+    'helm')
+      case "${PKG_MGR}" in
+        'pkg') printf 'helm\n' ;;
+        'apk') printf 'helm\n' ;;
+        'brew') printf 'helm\n' ;;
+        *) return 1 ;;
+      esac
+      ;;
+    'julia')
       case "${PKG_MGR}" in
         'brew') printf '%s\n' "${pkg}" ;;
-        'apk') 
-           if [ "${pkg}" = "helm" ] || [ "${pkg}" = "luarocks" ]; then
-             printf '%s\n' "${pkg}"
-           else
-             return 1
-           fi
-           ;;
         *) return 1 ;;
       esac
       ;;

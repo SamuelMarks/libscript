@@ -161,6 +161,10 @@ case "$ACTION" in
           priv apt-get update -qq || true
           priv apt-get install -y erlang-base unzip || true
         fi
+      elif command -v pkg >/dev/null 2>&1; then
+        if ! command -v erl >/dev/null 2>&1; then
+          priv pkg install -y erlang unzip || true
+        fi
       fi
       if [ -z "${ELIXIR_DOWNLOAD_URL:-}" ]; then
         if [ "$VERSION" = "latest" ]; then

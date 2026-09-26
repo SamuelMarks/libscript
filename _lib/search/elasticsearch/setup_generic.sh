@@ -67,7 +67,7 @@ case "$ACTION" in
     if command -v elasticsearch >/dev/null 2>&1; then
       log_info "elasticsearch is already available on the system."
     elif [ "${UNAME_LOWER}" = "freebsd" ]; then
-      libscript_depends "textproc/elasticsearch7" || true
+      libscript_depends "elasticsearch8" || libscript_depends "textproc/elasticsearch8" || libscript_depends "textproc/elasticsearch7" || true
     else
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/elasticsearch/${VERSION}"
       if [ ! -f "${TARGET_DIR}/bin/elasticsearch" ]; then

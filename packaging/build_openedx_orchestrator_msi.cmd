@@ -126,6 +126,17 @@ if exist "%STAGE%" rd /s /q "%STAGE%" >nul 2>&1
 if not exist "%STAGE%\bundle" mkdir "%STAGE%\bundle" >nul 2>&1
 
 if /i "%CURR_VAR%"=="offline" (
+    :: Build any missing child component MSIs
+    for %%C in (mysql redis mongodb python nodejs meilisearch) do (
+        if not exist "%OUT_DIR%\libscript-%%C-*.msi" (
+            echo [INFO] Building missing child component MSI: %%C
+            call "%SCRIPT_DIR%build_component_msi.cmd" --component %%C --out-dir "%OUT_DIR%"
+        )
+    )
+    if not exist "%OUT_DIR%\openedx-core-*.msi" (
+        echo [INFO] Building missing child component MSI: openedx-core
+        call "%SCRIPT_DIR%build_openedx_core_msi.cmd" --version "%VERSION%" --out-dir "%OUT_DIR%"
+    )
     xcopy /Y /Q "%OUT_DIR%\libscript-*.msi" "%STAGE%\bundle" >nul 2>&1
     xcopy /Y /Q "%OUT_DIR%\openedx-core-*.msi" "%STAGE%\bundle" >nul 2>&1
 )
@@ -136,7 +147,12 @@ set "PAYLOAD_WXS=%LIBSCRIPT_ROOT_DIR%\tmp\openedx_orch_%CURR_VAR%_payload.wxs"
 call "%SCRIPT_DIR%template_openedx_orchestrator.cmd" --version "%VERSION%" --variant "%CURR_VAR%" --msi-dir "%OUT_DIR%" --out "%MAIN_WXS%"
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
-call "%SCRIPT_DIR%harvest_payload.cmd" --output-dir "%STAGE%" --wix-fragment "%PAYLOAD_WXS%" --component-group "ChainedMsiPayloads" --directory-id "INSTALLFOLDER"
+if /i "%CURR_VAR%"=="offline" (
+    call "%SCRIPT_DIR%harvest_payload.cmd" --source-dir "%STAGE%\bundle" --include-msi --wix-fragment "%PAYLOAD_WXS%" --component-group "ChainedMsiPayloads" --directory-id "BUNDLE_DIR"
+) else (
+    echo Open edX Online Master Orchestrator > "%STAGE%\bundle\online.txt"
+    call "%SCRIPT_DIR%harvest_payload.cmd" --source-dir "%STAGE%\bundle" --wix-fragment "%PAYLOAD_WXS%" --component-group "ChainedMsiPayloads" --directory-id "BUNDLE_DIR"
+)
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 if defined OUT_FILE (

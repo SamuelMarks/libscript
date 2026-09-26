@@ -25,7 +25,11 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}:"
 
-if [ -d /usr/share/wayland-protocols ] || [ -f /usr/share/pkgconfig/wayland-protocols.pc ] || [ -f /usr/lib/pkgconfig/wayland-protocols.pc ] || [ -f /usr/lib64/pkgconfig/wayland-protocols.pc ]; then
+if [ -d /usr/share/wayland-protocols ] || [ -f /usr/share/pkgconfig/wayland-protocols.pc ] || [ -f /usr/lib/pkgconfig/wayland-protocols.pc ] || [ -f /usr/lib64/pkgconfig/wayland-protocols.pc ] || [ -d /usr/local/share/wayland-protocols ] || [ -f /usr/local/share/pkgconfig/wayland-protocols.pc ] || [ -f /usr/local/libdata/pkgconfig/wayland-protocols.pc ]; then
+  exit 0
+fi
+
+if command -v pkg >/dev/null 2>&1 && pkg info -e wayland-protocols >/dev/null 2>&1; then
   exit 0
 fi
 

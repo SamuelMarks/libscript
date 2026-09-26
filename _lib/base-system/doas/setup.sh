@@ -70,6 +70,14 @@ if ! command -v doas >/dev/null 2>&1; then
       (cd "$_doas_tmp"/OpenDoas-6.8.2 && ./configure --prefix=/usr --with-pam && make && priv make install)
       rm -rf "$_doas_tmp"
     }
+  elif command -v pkg >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv pkg install -y doas || priv pkg install -y opendoas || true
   fi
 fi
 

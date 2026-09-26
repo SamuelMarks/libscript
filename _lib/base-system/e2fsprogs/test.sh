@@ -25,5 +25,7 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}:"
 
+export PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:${PATH:-}"
+
 command -v mkfs.ext4 >/dev/null 2>&1 || command -v tune2fs >/dev/null 2>&1 || exit 1
 exit 0

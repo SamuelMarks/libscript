@@ -203,12 +203,12 @@ TABLE_HDR
       _e_sunos=$(printf '%s' "${7:-}" | tr -d ' ')
       _e_freebsd=$(printf '%s' "${8:-}" | tr -d ' ')
 
-      [ -n "${_e_apk}" ] && [ "${_apk_status}" != "-" ] && _apk_status="${_e_apk}"
-      [ -n "${_e_deb}" ] && [ "${_deb_status}" != "-" ] && _deb_status="${_e_deb}"
-      [ -n "${_e_rpm}" ] && [ "${_rpm_status}" != "-" ] && _rpm_status="${_e_rpm}"
-      [ -n "${_e_win}" ] && [ "${_win_status}" != "-" ] && _win_status="${_e_win}"
-      [ -n "${_e_sunos}" ] && [ "${_sunos_status}" != "-" ] && _sunos_status="${_e_sunos}"
-      [ -n "${_e_freebsd}" ] && [ "${_freebsd_status}" != "-" ] && _freebsd_status="${_e_freebsd}"
+      [ -n "${_e_apk}" ] && _apk_status="${_e_apk}"
+      [ -n "${_e_deb}" ] && _deb_status="${_e_deb}"
+      [ -n "${_e_rpm}" ] && _rpm_status="${_e_rpm}"
+      [ -n "${_e_win}" ] && _win_status="${_e_win}"
+      [ -n "${_e_sunos}" ] && _sunos_status="${_e_sunos}"
+      [ -n "${_e_freebsd}" ] && _freebsd_status="${_e_freebsd}"
     fi
 
     if [ -d "${_tests_tmp_dir}" ]; then
@@ -347,7 +347,10 @@ update_todo_plan() {
   _is_debian=0
   _is_sunos=0
   _is_rocky=0
-  if grep -qi "alpine" "${_todo_file}"; then
+  _is_freebsd=0
+  if grep -qi "freebsd" "${_todo_file}"; then
+    _is_freebsd=1
+  elif grep -qi "alpine" "${_todo_file}"; then
     _is_alpine=1
   elif grep -qi "debian\|ubuntu" "${_todo_file}"; then
     _is_debian=1
@@ -384,6 +387,11 @@ update_todo_plan() {
             fi
           elif [ "${_is_sunos}" -eq 1 ]; then
             if ls "${_tests_tmp_dir}/${_comp_name}".sunos.* >/dev/null 2>&1; then
+              _has_res=1
+            fi
+          elif [ "${_is_freebsd}" -eq 1 ]; then
+            if ls "${_tests_tmp_dir}/${_comp_name}".freebsd.* >/dev/null 2>&1 || \
+               ls "${_tests_tmp_dir}/${_comp_name}".bsd.* >/dev/null 2>&1; then
               _has_res=1
             fi
           elif [ "${_is_rocky}" -eq 1 ]; then
@@ -436,6 +444,14 @@ update_todo_plan() {
             fi
           elif [ "${_is_sunos}" -eq 1 ]; then
             if ls "${_tests_tmp_dir}/${_current_comp}".sunos.success >/dev/null 2>&1 && \
+               ls "${_tests_tmp_dir}/${_current_comp}".idempotent.success >/dev/null 2>&1; then
+              _has_idem=1
+            fi
+          elif [ "${_is_freebsd}" -eq 1 ]; then
+            if ls "${_tests_tmp_dir}/${_current_comp}".freebsd.unsupported >/dev/null 2>&1; then
+              _has_idem=1
+            elif (ls "${_tests_tmp_dir}/${_current_comp}".freebsd.success >/dev/null 2>&1 || \
+                ls "${_tests_tmp_dir}/${_current_comp}".bsd.success >/dev/null 2>&1) && \
                ls "${_tests_tmp_dir}/${_current_comp}".idempotent.success >/dev/null 2>&1; then
               _has_idem=1
             fi

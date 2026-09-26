@@ -25,17 +25,21 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}:"
 
-if [ -f /usr/lib/libasound.so ] || [ -f /usr/lib/libasound.so.2 ] || [ -f /usr/lib64/libasound.so.2 ] || [ -f /lib/libasound.so.2 ] || [ -f /usr/include/alsa/asoundlib.h ]; then
+if [ -f /usr/lib/libasound.so ] || [ -f /usr/lib/libasound.so.2 ] || [ -f /usr/lib64/libasound.so.2 ] || [ -f /lib/libasound.so.2 ] || [ -f /usr/include/alsa/asoundlib.h ] || [ -f /usr/local/lib/libasound.so ] || [ -f /usr/local/lib/libasound.so.2 ] || [ -f /usr/local/include/alsa/asoundlib.h ]; then
   exit 0
 fi
 
-for _lib_dir in /usr/lib/*-linux-gnu* /usr/lib64; do
+for _lib_dir in /usr/lib/*-linux-gnu* /usr/lib64 /usr/local/lib; do
   if [ -f "${_lib_dir}/libasound.so.2" ] || [ -f "${_lib_dir}/libasound.so" ]; then
     exit 0
   fi
 done
 
 if command -v apk >/dev/null 2>&1 && apk info -e alsa-lib >/dev/null 2>&1; then
+  exit 0
+fi
+
+if command -v pkg >/dev/null 2>&1 && pkg info -e alsa-lib >/dev/null 2>&1; then
   exit 0
 fi
 

@@ -58,6 +58,9 @@ libscript_depends "${PRESTASHOP_WEBSERVER}"
 libscript_depends 'unzip'
 
 PRESTASHOP_VERSION="${PRESTASHOP_VERSION:-8.2.4}"
+if [ "${PRESTASHOP_VERSION}" = "latest" ]; then
+  PRESTASHOP_VERSION="8.2.4"
+fi
 export PRESTASHOP_VERSION
 
 PRESTASHOP_WWWROOT="${PRESTASHOP_WWWROOT:-/var/www/prestashop}"

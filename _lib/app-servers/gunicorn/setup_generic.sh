@@ -83,7 +83,13 @@ case "$ACTION" in
       fi
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/gunicorn/${EXACT_VERSION}"
       mkdir -p "${TARGET_DIR}"
-      if command -v uv >/dev/null 2>&1; then
+      if [ "$(uname -s)" = "FreeBSD" ]; then
+        libscript_depends "gunicorn"
+        if command -v gunicorn >/dev/null 2>&1; then
+          mkdir -p "${TARGET_DIR}/bin"
+          ln -sf "$(command -v gunicorn)" "${TARGET_DIR}/bin/gunicorn"
+        fi
+      elif command -v uv >/dev/null 2>&1; then
         uv venv "${TARGET_DIR}"
         if [ "${VERSION}" = "latest" ]; then
           uv pip install --python "${TARGET_DIR}/bin/python" gunicorn

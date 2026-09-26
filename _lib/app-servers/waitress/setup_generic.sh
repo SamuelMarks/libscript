@@ -61,6 +61,8 @@ case "$ACTION" in
     log_info "Installing Waitress WSGI server via ${WAITRESS_INSTALL_METHOD}..."
     if command -v waitress-serve >/dev/null 2>&1; then
       log_info "waitress is already available on the system."
+    elif [ "$(uname -s)" = "FreeBSD" ]; then
+      libscript_depends "waitress"
     elif command -v uv >/dev/null 2>&1; then
       uv tool install waitress 2>/dev/null || uv pip install waitress
     elif command -v pipx >/dev/null 2>&1; then

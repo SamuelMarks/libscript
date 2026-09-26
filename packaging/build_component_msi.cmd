@@ -123,6 +123,38 @@ set "STAGE_ROOT=%LIBSCRIPT_ROOT_DIR%\tmp\stage_component_%COMPONENT%"
 if not exist "%STAGE_ROOT%\bin" mkdir "%STAGE_ROOT%\bin"
 if not exist "%OUT_DIR%" mkdir "%OUT_DIR%"
 
+:: Extract binary archive if available in offline cache, else stage mock executable
+if /i "%COMPONENT%"=="mysql" (
+    if exist "%OFFLINE_SOURCE%\databases\mysql-%VERSION%-winx64.zip" (
+        powershell -NoProfile -Command "Expand-Archive -Path '%OFFLINE_SOURCE%\databases\mysql-%VERSION%-winx64.zip' -DestinationPath '%STAGE_ROOT%' -Force" >nul 2>&1
+    )
+)
+if /i "%COMPONENT%"=="redis" (
+    for %%F in ("%OFFLINE_SOURCE%\databases\redis-windows-x64-*.zip") do (
+        if exist "%%~fF" powershell -NoProfile -Command "Expand-Archive -Path '%%~fF' -DestinationPath '%STAGE_ROOT%' -Force" >nul 2>&1
+    )
+)
+if /i "%COMPONENT%"=="mongodb" (
+    for %%F in ("%OFFLINE_SOURCE%\databases\mongodb-windows-*.zip") do (
+        if exist "%%~fF" powershell -NoProfile -Command "Expand-Archive -Path '%%~fF' -DestinationPath '%STAGE_ROOT%' -Force" >nul 2>&1
+    )
+)
+if /i "%COMPONENT%"=="python" (
+    if exist "%OFFLINE_SOURCE%\runtimes\python-%VERSION%-embed-amd64.zip" (
+        powershell -NoProfile -Command "Expand-Archive -Path '%OFFLINE_SOURCE%\runtimes\python-%VERSION%-embed-amd64.zip' -DestinationPath '%STAGE_ROOT%' -Force" >nul 2>&1
+    )
+)
+if /i "%COMPONENT%"=="nodejs" (
+    if exist "%OFFLINE_SOURCE%\runtimes\node-v%VERSION%-win-x64.zip" (
+        powershell -NoProfile -Command "Expand-Archive -Path '%OFFLINE_SOURCE%\runtimes\node-v%VERSION%-win-x64.zip' -DestinationPath '%STAGE_ROOT%' -Force" >nul 2>&1
+    )
+)
+if /i "%COMPONENT%"=="meilisearch" (
+    if exist "%OFFLINE_SOURCE%\databases\meilisearch-windows-amd64.exe" (
+        copy /y "%OFFLINE_SOURCE%\databases\meilisearch-windows-amd64.exe" "%STAGE_ROOT%\bin\meilisearch.exe" >nul 2>&1
+    )
+)
+
 if not exist "%STAGE_ROOT%\bin\%COMPONENT%.exe" (
     echo Mock %COMPONENT% binary > "%STAGE_ROOT%\bin\%COMPONENT%.exe"
 )
@@ -133,7 +165,7 @@ set "PAYLOAD_WXS=%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_payload.wxs"
 call "%SCRIPT_DIR%template_component_msi.cmd" --component "%COMPONENT%" --version "%VERSION%" --out "%MAIN_WXS%"
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
-call "%SCRIPT_DIR%harvest_payload.cmd" --output-dir "%STAGE_ROOT%" --wix-fragment "%PAYLOAD_WXS%" --component-group "PayloadComponents" --directory-id "INSTALLFOLDER"
+call "%SCRIPT_DIR%harvest_payload.cmd" --source-dir "%STAGE_ROOT%" --wix-fragment "%PAYLOAD_WXS%" --component-group "PayloadComponents" --directory-id "INSTALLFOLDER"
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 if defined OUT_FILE (

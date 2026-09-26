@@ -64,6 +64,14 @@ if [ ! -f /usr/lib/libxkbcommon.so.0 ] && [ ! -f /usr/lib64/libxkbcommon.so.0 ] 
       . "${SCRIPT_NAME}"
     fi
     priv dnf install -y libxkbcommon || true
+  elif command -v pkg >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv pkg install -y libxkbcommon || true
   fi
 fi
 

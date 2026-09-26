@@ -162,8 +162,8 @@ case "$ACTION" in
           log_info "No native binary for $UNAME_LOWER. Falling back to system package manager for rustup..."
           libscript_depends "rust"
           mkdir -p "${TARGET_DIR}/.cargo/bin"
-          _rustc_bin=$(command -v "rustc" 2>/dev/null || echo "/opt/ooce/bin/rustc")
-          _cargo_bin=$(command -v "cargo" 2>/dev/null || echo "/opt/ooce/bin/cargo")
+          _rustc_bin=$(command -v "rustc" 2>/dev/null || echo "/usr/local/bin/rustc")
+          _cargo_bin=$(command -v "cargo" 2>/dev/null || echo "/usr/local/bin/cargo")
           ln -sf "$_rustc_bin" "${TARGET_DIR}/.cargo/bin/rustc" || true
           ln -sf "$_cargo_bin" "${TARGET_DIR}/.cargo/bin/cargo" || true
         else

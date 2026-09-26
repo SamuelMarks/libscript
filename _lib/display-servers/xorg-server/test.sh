@@ -25,6 +25,8 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}:"
 
+export PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:${PATH:-}"
+
 command -v Xorg >/dev/null 2>&1 || command -v X >/dev/null 2>&1 || exit 1
 Xorg -version >/dev/null 2>&1 || X -version >/dev/null 2>&1 || true
 exit 0

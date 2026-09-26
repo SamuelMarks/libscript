@@ -64,6 +64,15 @@ if ! command -v mkfs.fat >/dev/null 2>&1 && ! command -v mkfs.vfat >/dev/null 2>
       . "${SCRIPT_NAME}"
     fi
     priv dnf install -y dosfstools || true
+  elif command -v newfs_msdos >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv ln -sf /sbin/newfs_msdos /usr/local/sbin/mkfs.vfat 2>/dev/null || true
+    priv ln -sf /sbin/newfs_msdos /usr/local/sbin/mkfs.fat 2>/dev/null || true
   fi
 fi
 

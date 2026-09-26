@@ -14,7 +14,7 @@
 #   --branch <name>    Branch or tag ref (optional)
 #   --help, -h         Show this help text
 
-set -feu
+set -eu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -91,17 +91,18 @@ while [ $# -gt 0 ]; do
 done
 
 STAGE_ROOT="${LIBSCRIPT_ROOT_DIR}/tmp/stage_openedx_core"
+rm -rf "$STAGE_ROOT"
 mkdir -p "$STAGE_ROOT" "$OUT_DIR"
 
 # Stage Open edX scripts and configuration into staging directory
-cp -R "${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx/"* "$STAGE_ROOT/" 2>/dev/null || true
+cp -R "${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx/." "$STAGE_ROOT/" 2>/dev/null || true
 
 MAIN_WXS="${LIBSCRIPT_ROOT_DIR}/tmp/openedx_core_main.wxs"
 PAYLOAD_WXS="${LIBSCRIPT_ROOT_DIR}/tmp/openedx_core_payload.wxs"
 
 "${SCRIPT_DIR}/template_openedx_core_msi.sh" --version "$VERSION" --out "$MAIN_WXS"
 
-"${SCRIPT_DIR}/harvest_payload.sh" --output-dir "$STAGE_ROOT" --wix-fragment "$PAYLOAD_WXS" --component-group "OpenEdXCorePayloadComponents" --directory-id "INSTALLFOLDER"
+"${SCRIPT_DIR}/harvest_payload.sh" --source-dir "$STAGE_ROOT" --wix-fragment "$PAYLOAD_WXS" --component-group "OpenEdXCorePayloadComponents" --directory-id "INSTALLFOLDER"
 
 if [ -n "$OUT_FILE" ]; then
   case "$OUT_FILE" in

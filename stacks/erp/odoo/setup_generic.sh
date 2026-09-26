@@ -39,6 +39,9 @@ done
 ODOO_WEBSERVER="${ODOO_WEBSERVER:-nginx}"
 ODOO_DB_TYPE="${ODOO_DB_TYPE:-postgres}"
 ODOO_VERSION="${ODOO_VERSION:-17.0}"
+if [ "${ODOO_VERSION}" = "latest" ]; then
+  ODOO_VERSION="17.0"
+fi
 ODOO_WWWROOT="${ODOO_WWWROOT:-/var/www/odoo}"
 ODOO_DB_NAME="${ODOO_DB_NAME:-odoo}"
 ODOO_DB_USER="${ODOO_DB_USER:-odoo}"
@@ -57,7 +60,7 @@ libscript_depends "${ODOO_DB_TYPE}"
 libscript_depends "${ODOO_WEBSERVER}"
 
 # Create directories
-if [ ! -d "${ODOO_WWWROOT}/odoo-bin" ]; then
+if [ ! -f "${ODOO_WWWROOT}/odoo-bin" ]; then
   log_info "Downloading Odoo (${ODOO_VERSION}) to ${ODOO_WWWROOT}..."
   priv mkdir -p "${ODOO_WWWROOT}"
 

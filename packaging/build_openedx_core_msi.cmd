@@ -97,7 +97,7 @@ set "PAYLOAD_WXS=%LIBSCRIPT_ROOT_DIR%\tmp\openedx_core_payload.wxs"
 call "%SCRIPT_DIR%template_openedx_core_msi.cmd" --version "%VERSION%" --out "%MAIN_WXS%"
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
-call "%SCRIPT_DIR%harvest_payload.cmd" --output-dir "%STAGE_ROOT%" --wix-fragment "%PAYLOAD_WXS%" --component-group "OpenEdXCorePayloadComponents" --directory-id "INSTALLFOLDER"
+call "%SCRIPT_DIR%harvest_payload.cmd" --source-dir "%STAGE_ROOT%" --wix-fragment "%PAYLOAD_WXS%" --component-group "OpenEdXCorePayloadComponents" --directory-id "INSTALLFOLDER"
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 if defined OUT_FILE (

@@ -184,11 +184,13 @@ case "$ACTION" in
             rm -f "${TEMP_FILE}"
           else
             if [ "$UNAME_LOWER" = "freebsd" ]; then
-              log_info "No native binary for FreeBSD. Falling back to system package manager for $PACKAGE_NAME..."
-              libscript_depends "$PACKAGE_NAME"
-              if command -v "$PACKAGE_NAME" >/dev/null 2>&1; then
-                ln -sf "$(command -v "$PACKAGE_NAME")" "${TARGET_DIR}/bin/$PACKAGE_NAME"
-              fi
+              log_info "No native binary for FreeBSD. Falling back to system package manager for etcd..."
+              libscript_depends "etcd"
+              for _b in etcd etcdctl etcdutl; do
+                if command -v "$_b" >/dev/null 2>&1; then
+                  ln -sf "$(command -v "$_b")" "${TARGET_DIR}/bin/$_b"
+                fi
+              done
             else
               log_info "No download URL provided for etcd ${VERSION}. Attempting fallback to Github..."
             libscript_depends "curl" "tar"

@@ -64,6 +64,14 @@ if [ ! -f /usr/lib/libgbm.so.1 ] && [ ! -f /usr/lib64/libgbm.so.1 ] && [ ! -f /u
       . "${SCRIPT_NAME}"
     fi
     priv dnf install -y mesa-libGL mesa-libgbm mesa-dri-drivers || true
+  elif command -v pkg >/dev/null 2>&1; then
+    if ! command -v priv >/dev/null 2>&1; then
+      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+      export SCRIPT_NAME
+      # shellcheck disable=SC1090
+      . "${SCRIPT_NAME}"
+    fi
+    priv pkg install -y mesa-libs mesa-dri || true
   fi
 fi
 
