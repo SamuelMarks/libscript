@@ -160,6 +160,47 @@ fi
 
 printf '[PASS] Offline cache harvesting and multi-cabinet WiX fragment verified\n'
 
+# Test 6: Verify legal WiX identifier generation, length capping (<= 72 chars), and character sanitization
+printf '[TEST 6] Verifying WiX identifier legality, length capping, and character sanitization...\n'
+MOCK_STAGE_DIR="${TEST_TMP_DIR}/mock_stage"
+mkdir -p "${MOCK_STAGE_DIR}/node_modules/npm/node_modules/@isaacs/cliui/build/lib"
+touch "${MOCK_STAGE_DIR}/node_modules/npm/node_modules/@isaacs/cliui/build/lib/index.js"
+mkdir -p "${MOCK_STAGE_DIR}/node_modules/npm/node_modules/@isaacs/cliui/node_modules/emoji-regex/es2015"
+touch "${MOCK_STAGE_DIR}/node_modules/npm/node_modules/@isaacs/cliui/node_modules/emoji-regex/es2015/index.js"
+mkdir -p "${MOCK_STAGE_DIR}/node_modules/npm/node_modules/validate-npm-package-license/node_modules/spdx-expression-parse"
+touch "${MOCK_STAGE_DIR}/node_modules/npm/node_modules/validate-npm-package-license/node_modules/spdx-expression-parse/package.json"
+
+STAGE_WIX="${TEST_TMP_DIR}/stage_fragment.wxs"
+"${LIBSCRIPT_ROOT_DIR}/packaging/harvest_payload.sh" \
+  --source-dir "${MOCK_STAGE_DIR}" \
+  --wix-fragment "${STAGE_WIX}" \
+  --component-group "PayloadComponents" \
+  --directory-id "INSTALLFOLDER" >/dev/null
+
+# Ensure all identifiers in Id attributes adhere to WiX spec: [A-Za-z_][A-Za-z0-9_.]* and length <= 72
+_invalid_id=$(awk '
+{
+  line = $0
+  while (match(line, /[ \t]Id="[^"]*"/)) {
+    val = substr(line, RSTART + 5, RLENGTH - 6)
+    if (length(val) > 72) {
+      print "LENGTH_EXCEEDED:" val
+      exit 1
+    }
+    if (val !~ /^[A-Za-z_][A-Za-z0-9_.]*$/) {
+      print "ILLEGAL_CHAR:" val
+      exit 1
+    }
+    line = substr(line, RSTART + RLENGTH)
+  }
+}' "${STAGE_WIX}")
+
+if [ -n "$_invalid_id" ]; then
+  printf '[FAIL] Invalid WiX identifier found: %s\n' "$_invalid_id" >&2
+  exit 1
+fi
+printf '[PASS] WiX identifiers are legal, sanitized, and within the 72-character limit\n'
+
 printf '=== All Harvest Payload Tests Passed ===
 '
 exit 0

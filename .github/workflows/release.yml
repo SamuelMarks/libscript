@@ -36,10 +36,56 @@ permissions:
 
 jobs:
   # ============================================================================
-  # 1. Windows Installer (.msi) Build Matrix
+  # 1. Centralized Offline Cache Hydration
+  # ============================================================================
+  hydrate-cache:
+    name: Centralized Cache Hydration
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Restore Existing Offline Cache
+        uses: actions/cache/restore@v4
+        id: restore-cache
+        with:
+          path: cache
+          key:
+            offline-cache-${{ runner.os }}-${{ hashFiles('stacks/cms/openedx/offline_bundle.json',
+            'packaging/hydrate_offline_cache.*') }}
+          restore-keys: |
+            offline-cache-${{ runner.os }}-
+
+      - name: Hydrate Offline Artifact Cache
+        shell: cmd
+        run: |
+          call packaging\hydrate_offline_cache.cmd --wheels --codebase
+
+      - name: Save Hydrated Cache
+        uses: actions/cache/save@v4
+        if: steps.restore-cache.outputs.cache-hit != 'true'
+        with:
+          path: cache
+          key:
+            offline-cache-${{ runner.os }}-${{ hashFiles('stacks/cms/openedx/offline_bundle.json',
+            'packaging/hydrate_offline_cache.*') }}
+
+      - name: Upload Hydrated Cache Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: hydrated-offline-cache
+          path: cache/
+          if-no-files-found: error
+
+  # ============================================================================
+  # 2. Windows Installer (.msi) Build Matrix (Parallel)
   # ============================================================================
   build-msi:
     name: Build MSI - ${{ matrix.package.name }}
+    needs: [hydrate-cache]
     runs-on: windows-latest
     timeout-minutes: 60
     strategy:
@@ -123,6 +169,24 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+
+      - name: Restore Hydrated Cache
+        uses: actions/cache/restore@v4
+        id: restore-cache
+        with:
+          path: cache
+          key:
+            offline-cache-${{ runner.os }}-${{ hashFiles('stacks/cms/openedx/offline_bundle.json',
+            'packaging/hydrate_offline_cache.*') }}
+          restore-keys: |
+            offline-cache-${{ runner.os }}-
+
+      - name: Download Hydrated Cache (Fallback)
+        if: steps.restore-cache.outputs.cache-hit != 'true'
+        uses: actions/download-artifact@v8
+        with:
+          name: hydrated-offline-cache
+          path: cache
 
       - name: Setup WiX Toolset
         shell: pwsh
@@ -274,7 +338,7 @@ jobs:
           if-no-files-found: error
 
   # ============================================================================
-  # 2. Future Format Builders (Scaffolded for 160+ Packages)
+  # 3. Future Format Builders (Scaffolded for 160+ Packages)
   # ============================================================================
   # Each format job below builds <package_id>-<version>.<ext> and uploads
   # artifacts via actions/upload-artifact@v4, which publish-release attaches to
@@ -282,41 +346,48 @@ jobs:
   #
   # build-exe:
   #   name: Build EXE - ${{ matrix.package.name }}
+  #   needs: [hydrate-cache]
   #   runs-on: windows-latest
   #   ...
   #
   # build-dmg:
   #   name: Build DMG - ${{ matrix.package.name }}
+  #   needs: [hydrate-cache]
   #   runs-on: macos-latest
   #   ...
   #
   # build-pkg:
   #   name: Build PKG - ${{ matrix.package.name }}
+  #   needs: [hydrate-cache]
   #   runs-on: macos-latest
   #   ...
   #
   # build-rpm:
   #   name: Build RPM - ${{ matrix.package.name }}
+  #   needs: [hydrate-cache]
   #   runs-on: ubuntu-latest
   #   ...
   #
   # build-deb:
   #   name: Build DEB - ${{ matrix.package.name }}
+  #   needs: [hydrate-cache]
   #   runs-on: ubuntu-latest
   #   ...
   #
   # build-apk:
   #   name: Build APK - ${{ matrix.package.name }}
+  #   needs: [hydrate-cache]
   #   runs-on: ubuntu-latest
   #   ...
   #
   # build-txz:
   #   name: Build TXZ - ${{ matrix.package.name }}
+  #   needs: [hydrate-cache]
   #   runs-on: ubuntu-latest
   #   ...
 
   # ============================================================================
-  # 3. Publish Release Assets to GitHub Releases
+  # 4. Publish Release Assets to GitHub Releases
   # ============================================================================
   publish-release:
     name: Publish Release Assets
@@ -331,6 +402,7 @@ jobs:
       - name: Download all installer artifacts
         uses: actions/download-artifact@v8
         with:
+          pattern: installer-*
           path: dist
           merge-multiple: true
 

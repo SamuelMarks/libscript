@@ -39,9 +39,9 @@ libscript_verify_signature() {
   
   # NodeJS Signature Verification
   if printf '%s\n' "$url" | grep -q "nodejs.org/dist/"; then
-    base_export url="${url%/*}"
-    sig_export url="${base_url:-}/SHASUMS256.txt.sig"
-    sums_export url="$base_url/SHASUMS256.txt"
+    base_url="${url%/*}"
+    sig_url="${base_url:-}/SHASUMS256.txt.sig"
+    sums_url="$base_url/SHASUMS256.txt"
     
     # Download the signature and sums file
     tmp_sig="$(mktemp)"

@@ -24,10 +24,15 @@ Releases.
   - Manual trigger via `workflow_dispatch` (with optional `tag_name`, `draft`, and `prerelease`
     parameters).
 - **Architecture**:
-  - **`build-msi`**: Generates WiX Windows Installer (`.msi`) packages on `windows-latest` via an
-    extensible matrix strategy (starting with Open edX Platform). Computes SHA256 checksums and
-    uploads artifacts.
+  - **`hydrate-cache`**: Centralized offline artifact cache hydration step running first. Downloads
+    and cryptographically verifies runtimes, datastores, wheels, and codebase archives into
+    `cache/`, prunes debug symbols, caches via `actions/cache`, and uploads the hydrated cache
+    artifact.
+  - **`build-msi`**: Runs in parallel across the package matrix after `hydrate-cache` completes.
+    Restores the hydrated cache, builds WiX Windows Installer (`.msi`) packages on `windows-latest`
+    for online and offline variants, and uploads MSI artifacts.
   - **Future Builders**: Scaffolding and architecture ready for `.exe` (Inno Setup / NSIS), macOS
-    (`.pkg` / `.dmg`), and Linux (`.deb` / `.rpm`) builders.
-  - **`publish-release`**: Consolidates all built artifacts, generates a unified `SHA256SUMS.txt`,
-    and publishes them directly to GitHub Releases via the GitHub CLI.
+    (`.pkg` / `.dmg`), and Linux (`.deb` / `.rpm`) builders, all chained downstream of
+    `hydrate-cache`.
+  - **`publish-release`**: Consolidates all built installer artifacts, generates a unified
+    `SHA256SUMS.txt`, and publishes them directly to GitHub Releases via the GitHub CLI.

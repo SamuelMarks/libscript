@@ -128,6 +128,30 @@ map_package() {
         *) printf 'rabbitmq-server\n' ;;
       esac
       ;;
+    'chrony')
+      case "${PKG_MGR}" in
+        'apk') printf 'chrony\n' ;;
+        'apt-get') printf 'chrony\n' ;;
+        'dnf'|'yum') printf 'chrony\n' ;;
+        'zypper') printf 'chrony\n' ;;
+        'pacman') printf 'chrony\n' ;;
+        'pkg') printf 'net/chrony\n' ;;
+        'brew') printf 'chrony\n' ;;
+        *) return 1 ;;
+      esac
+      ;;
+    'busybox')
+      case "${PKG_MGR}" in
+        'apk') printf 'busybox\n' ;;
+        'apt-get') printf 'busybox\n' ;;
+        'dnf'|'yum') printf 'busybox\n' ;;
+        'zypper') printf 'busybox\n' ;;
+        'pacman') printf 'busybox\n' ;;
+        'pkg') printf 'shells/busybox\n' ;;
+        'brew') printf 'busybox\n' ;;
+        *) return 1 ;;
+      esac
+      ;;
     'clang')
       case "${PKG_MGR}" in
         'brew') printf 'llvm\n' ;;

@@ -67,28 +67,16 @@ export DRUPAL_WWWROOT
 
 if [ ! -d "${DRUPAL_WWWROOT}/core" ]; then
   printf '%s\n' "Downloading Drupal (${DRUPAL_VERSION}) to ${DRUPAL_WWWROOT}..."
-  if [ "$(uname -s)" = "Darwin" ]; then
-    mkdir -p "${DRUPAL_WWWROOT}"
-  else
-    priv mkdir -p "${DRUPAL_WWWROOT}"
-  fi
+  priv mkdir -p "${DRUPAL_WWWROOT}"
   dl_url="https://ftp.drupal.org/files/projects/drupal-${DRUPAL_VERSION}.tar.gz"
 
   if command -v libscript_download >/dev/null 2>&1; then
     tmp_dp=$(mktemp)
     libscript_download "${dl_url:-}" "${tmp_dp}"
-    if [ "$(uname -s)" = "Darwin" ]; then
-      tar xzf "${tmp_dp}" --strip-components=1 -C "${DRUPAL_WWWROOT}"
-    else
-      priv tar xzf "${tmp_dp}" --strip-components=1 -C "${DRUPAL_WWWROOT}"
-    fi
+    priv tar xzf "${tmp_dp}" --strip-components=1 -C "${DRUPAL_WWWROOT}"
     rm -f "${tmp_dp}"
   else
-    if [ "$(uname -s)" = "Darwin" ]; then
-      curl -sSL "${dl_url}" | tar xz --strip-components=1 -C "${DRUPAL_WWWROOT}"
-    else
-      wget -qO- "${dl_url}" | priv tar xz --strip-components=1 -C "${DRUPAL_WWWROOT}"
-    fi
+    wget -qO- "${dl_url}" 2>/dev/null | priv tar xz --strip-components=1 -C "${DRUPAL_WWWROOT}" || curl -sSL "${dl_url}" | priv tar xz --strip-components=1 -C "${DRUPAL_WWWROOT}"
   fi
 fi
 

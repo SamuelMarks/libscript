@@ -44,6 +44,25 @@ if [ -f "$STAMP_FILE" ]; then
   exit 0
 fi
 
+if command -v apk >/dev/null 2>&1; then
+  if ! command -v priv >/dev/null 2>&1; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+  fi
+  priv apk add --no-cache intel-media-driver 2>/dev/null || true
+elif command -v apt-get >/dev/null 2>&1; then
+  if ! command -v priv >/dev/null 2>&1; then
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+  fi
+  priv apt-get update -qq 2>/dev/null || true
+  priv apt-get install -y intel-media-va-driver-non-free 2>/dev/null || priv apt-get install -y intel-media-va-driver 2>/dev/null || true
+fi
+
 printf '[RECIPE] Staging %s into %s (action: %s)
 ' "Intel Media Driver" "$TARGET_SYSROOT" "$ACTION"
 

@@ -72,6 +72,8 @@ if ! command -v chronyd >/dev/null 2>&1 && ! command -v chronyc >/dev/null 2>&1;
       . "${SCRIPT_NAME}"
     fi
     priv pkg install -y chrony || true
+  elif command -v brew >/dev/null 2>&1; then
+    brew install chrony || true
   fi
 fi
 

@@ -252,7 +252,36 @@ function sanitize(s,   res) {
     gsub(/[^a-zA-Z0-9_]/, "_", res)
     return res
 }
+function str_hash32(s, seed, mult, mod,   res, i, len, c) {
+    res = seed
+    len = length(s)
+    for (i = 1; i <= len; i++) {
+        c = ord[substr(s, i, 1)]
+        res = (res * mult + c) % mod
+    }
+    return res
+}
+function make_hash(s,   h1, h2, h3, h4) {
+    h1 = str_hash32(s, 5381, 33, 2147483647)
+    h2 = str_hash32(s, 52711, 37, 2147483629)
+    h3 = str_hash32(s, 7919, 31, 2147483587)
+    h4 = str_hash32(s, 179424673, 41, 2147483579)
+    return sprintf("%08x%08x%08x%08x", h1, h2, h3, h4)
+}
+function make_id(prefix, raw_path,   san, cand, max_pre, avail, trimmed, h) {
+    san = sanitize(raw_path)
+    cand = prefix san
+    if (length(cand) <= 72) {
+        return cand
+    }
+    h = make_hash(raw_path)
+    max_pre = 72 - 32 - 1
+    avail = max_pre - length(prefix)
+    trimmed = (avail > 0) ? substr(san, 1, avail) : ""
+    return prefix trimmed "_" h
+}
 BEGIN {
+    for (i = 1; i <= 255; i++) ord[sprintf("%c", i)] = i
     print "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
     print "<Wix xmlns=\"http://schemas.microsoft.com/wix/2006/wi\">"
     print "  <Fragment>"
@@ -275,9 +304,9 @@ BEGIN {
 END {
     for (i = 1; i <= d_count; i++) {
         d = dirs[i]
-        d_id = "DIR_" sanitize(d)
+        d_id = make_id("DIR_", d)
         p = dir_parent[d]
-        p_id = (p == "") ? dir_id : ("DIR_" sanitize(p))
+        p_id = (p == "") ? dir_id : make_id("DIR_", p)
         print "    <DirectoryRef Id=\"" p_id "\">"
         print "      <Directory Id=\"" d_id "\" Name=\"" dir_name[d] "\" />"
         print "    </DirectoryRef>"
@@ -286,14 +315,14 @@ END {
     for (i = 1; i <= NR; i++) {
         f = files[i]
         if (f == "") continue
-        c_id = "CMP_H_" sanitize(f)
-        f_id = "FIL_H_" sanitize(f)
+        c_id = make_id("CMP_H_", f)
+        f_id = make_id("FIL_H_", f)
         n = split(f, parts, "/")
         dir_path = ""
         for (j = 1; j < n; j++) {
             dir_path = (dir_path == "") ? parts[j] : (dir_path "/" parts[j])
         }
-        target_dir = (dir_path == "") ? dir_id : ("DIR_" sanitize(dir_path))
+        target_dir = (dir_path == "") ? dir_id : make_id("DIR_", dir_path)
 
         if (inc_cache != "" && substr(f, 1, 6) == "cache/") {
             src = inc_cache "/" substr(f, 7)
@@ -322,7 +351,7 @@ END {
         f = files[i]
         if (f == "") continue
         if (inc_cache != "" && substr(f, 1, 6) == "cache/") continue
-        c_id = "CMP_H_" sanitize(f)
+        c_id = make_id("CMP_H_", f)
         print "      <ComponentRef Id=\"" c_id "\" />"
     }
     print "    </ComponentGroup>"
@@ -333,7 +362,7 @@ END {
             f = files[i]
             if (f == "") continue
             if (substr(f, 1, 6) == "cache/") {
-                c_id = "CMP_H_" sanitize(f)
+                c_id = make_id("CMP_H_", f)
                 print "      <ComponentRef Id=\"" c_id "\" />"
             }
         }

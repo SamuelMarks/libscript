@@ -40,7 +40,7 @@ libscript_fetch_checksum() {
 
   # 1. NodeJS
   if printf '%s\n' "$url" | grep -q "nodejs.org/dist/"; then
-    base_export url="${url%/*}"
+    base_url="${url%/*}"
     filename="${url##*/}"
     curl -sL "${base_url:-}/SHASUMS256.txt" | grep "$filename" | awk '{print $1}'
     return 0

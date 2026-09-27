@@ -93,7 +93,7 @@ if [ "${WORDPRESS_DB_ENGINE}" = "sqlite" ]; then
   # We just need to download the sqlite-database-integration drop-in
   if [ ! -f "${WORDPRESS_WWWROOT}/wp-content/db.php" ]; then
     priv mkdir -p "${WORDPRESS_WWWROOT}/wp-content/mu-plugins"
-    dl_sqlite_export url="https://downloads.wordpress.org/plugin/sqlite-database-integration.zip"
+    dl_sqlite_url="https://downloads.wordpress.org/plugin/sqlite-database-integration.zip"
     tmp_sqlite=$(mktemp)
     if command -v libscript_download >/dev/null 2>&1; then
       libscript_download "${dl_sqlite_url:-}" "${tmp_sqlite}"
@@ -112,7 +112,7 @@ elif [ "${WORDPRESS_DB_ENGINE}" = "postgres" ] || [ "${WORDPRESS_DB_ENGINE}" = "
   libscript_depends 'unzip'
   # Install PG4WP drop-in
   if [ ! -f "${WORDPRESS_WWWROOT}/wp-content/db.php" ]; then
-    dl_pg_export url="https://downloads.wordpress.org/plugin/postgresql-for-wordpress.zip"
+    dl_pg_url="https://downloads.wordpress.org/plugin/postgresql-for-wordpress.zip"
     tmp_pg=$(mktemp)
     if command -v libscript_download >/dev/null 2>&1; then
       libscript_download "${dl_pg_url:-}" "${tmp_pg}"

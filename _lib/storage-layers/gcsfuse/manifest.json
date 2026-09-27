@@ -6,7 +6,7 @@
   "category": "storage-layers",
   "provides": ["gcsfuse"],
   "conflicts": [],
-  "os_whitelist": ["linux"],
-  "os_blacklist": ["freebsd", "windows", "sunos", "darwin"],
+  "os_whitelist": ["linux", "darwin"],
+  "os_blacklist": ["freebsd", "windows", "sunos"],
   "ports": []
 }

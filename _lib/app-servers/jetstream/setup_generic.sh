@@ -173,7 +173,7 @@ case "$ACTION" in
         fi
 
         "${TARGET_DIR}/bin/pip" install --upgrade pip
-        "${TARGET_DIR}/bin/pip" install -e "${JETSTREAM_SRC_DIR}" || PIP_FAILED=1
+        "${TARGET_DIR}/bin/pip" install -e "${JETSTREAM_SRC_DIR}" || "${TARGET_DIR}/bin/pip" install -e "${JETSTREAM_SRC_DIR}" --no-deps || PIP_FAILED=1
         
         if [ "${PIP_FAILED:-0}" = "1" ]; then
           log_error "Failed to install Jetstream via pip."

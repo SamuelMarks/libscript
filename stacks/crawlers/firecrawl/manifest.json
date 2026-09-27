@@ -5,5 +5,5 @@
   "title": "firecrawl",
   "description": "firecrawl stack",
   "provides": ["firecrawl"],
-  "os_blacklist": ["sunos", "alpine", "windows"]
+  "os_blacklist": ["sunos", "windows"]
 }

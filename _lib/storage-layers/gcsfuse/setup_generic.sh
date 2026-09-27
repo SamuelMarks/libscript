@@ -198,8 +198,19 @@ case "$ACTION" in
              cp "$TEMP_EXTRACT/usr/bin/gcsfuse" "${TARGET_DIR}/bin/gcsfuse" 2>/dev/null || cp "$TEMP_EXTRACT/usr/local/bin/gcsfuse" "${TARGET_DIR}/bin/gcsfuse" 2>/dev/null || true
              rm -rf "$TEMP_EXTRACT"
              rm -f "$TEMP_FILE.deb" "$TEMP_FILE"
+           elif [ "$OS" = "darwin" ]; then
+             if command -v brew >/dev/null 2>&1; then
+               brew install gcsfuse 2>/dev/null || true
+             fi
+             if [ -x "/opt/homebrew/bin/gcsfuse" ]; then
+               cp "/opt/homebrew/bin/gcsfuse" "${TARGET_DIR}/bin/gcsfuse" 2>/dev/null || true
+             elif [ -x "/usr/local/bin/gcsfuse" ]; then
+               cp "/usr/local/bin/gcsfuse" "${TARGET_DIR}/bin/gcsfuse" 2>/dev/null || true
+             elif command -v go >/dev/null 2>&1; then
+               GOBIN="${TARGET_DIR}/bin" go install github.com/googlecloudplatform/gcsfuse/v2@latest 2>/dev/null || true
+             fi
            else
-             log_error "gcsfuse native installation only supports Linux currently."
+             log_error "gcsfuse native installation only supports Linux and macOS currently."
              exit 1
            fi
            chmod +x "${TARGET_DIR}/bin/gcsfuse" || true

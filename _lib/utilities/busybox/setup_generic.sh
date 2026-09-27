@@ -135,7 +135,17 @@ case "$ACTION" in
       if command -v dnf >/dev/null 2>&1; then
         priv dnf install -y epel-release || true
       fi
-      libscript_depends 'busybox'
+      if [ "$(uname -s)" = "Darwin" ]; then
+        if ! command -v busybox >/dev/null 2>&1; then
+          if command -v brew >/dev/null 2>&1; then
+            brew install busybox 2>/dev/null || true
+          fi
+          if ! command -v busybox >/dev/null 2>&1 && command -v cargo >/dev/null 2>&1; then
+            cargo install busybox 2>/dev/null || true
+          fi
+        fi
+      fi
+      libscript_depends 'busybox' || true
     elif [ "${BUSYBOX_INSTALL_METHOD}" = "mise" ]; then
       mise install "busybox@${BUSYBOX_VERSION}"
     elif [ "${BUSYBOX_INSTALL_METHOD}" = "asdf" ]; then

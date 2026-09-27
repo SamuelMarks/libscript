@@ -1229,7 +1229,14 @@ compile_msi() {
     command -v msi >/dev/null 2>&1 && _msi_tool="msi"
     command -v msi-rs >/dev/null 2>&1 && _msi_tool="msi-rs"
     printf '[INFO] Compiling MSI with pure-Rust msi-rs engine (%s)...\n' "$_msi_tool"
-    if "$_msi_tool" pack -o "${OUT_FILE}.msi" "$WXS_FILE" 2>/dev/null; then
+    if [ -f "$PAYLOAD_WXS" ]; then
+      _pack_status=0
+      "$_msi_tool" pack -o "${OUT_FILE}.msi" "$WXS_FILE" "$PAYLOAD_WXS" 2>/dev/null || _pack_status=$?
+    else
+      _pack_status=0
+      "$_msi_tool" pack -o "${OUT_FILE}.msi" "$WXS_FILE" 2>/dev/null || _pack_status=$?
+    fi
+    if [ "$_pack_status" -eq 0 ]; then
       printf '[PASS] Successfully compiled binary MSI via %s: %s.msi\n' "$_msi_tool" "$OUT_FILE"
       return 0
     fi

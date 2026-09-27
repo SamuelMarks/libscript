@@ -90,6 +90,29 @@ if errorlevel 1 (
 )
 echo [PASS] WiX fragment validated successfully
 
+:: Test 5: Verify legal WiX identifier generation, length capping (<= 72 chars), and character sanitization
+set "MOCK_STAGE_DIR=%TEST_TMP_DIR%\mock_stage"
+if not exist "%MOCK_STAGE_DIR%\node_modules\npm\node_modules\@isaacs\cliui\build\lib" mkdir "%MOCK_STAGE_DIR%\node_modules\npm\node_modules\@isaacs\cliui\build\lib" 2>nul
+type nul > "%MOCK_STAGE_DIR%\node_modules\npm\node_modules\@isaacs\cliui\build\lib\index.js"
+if not exist "%MOCK_STAGE_DIR%\node_modules\npm\node_modules\@isaacs\cliui\node_modules\emoji-regex\es2015" mkdir "%MOCK_STAGE_DIR%\node_modules\npm\node_modules\@isaacs\cliui\node_modules\emoji-regex\es2015" 2>nul
+type nul > "%MOCK_STAGE_DIR%\node_modules\npm\node_modules\@isaacs\cliui\node_modules\emoji-regex\es2015\index.js"
+if not exist "%MOCK_STAGE_DIR%\node_modules\npm\node_modules\validate-npm-package-license\node_modules\spdx-expression-parse" mkdir "%MOCK_STAGE_DIR%\node_modules\npm\node_modules\validate-npm-package-license\node_modules\spdx-expression-parse" 2>nul
+type nul > "%MOCK_STAGE_DIR%\node_modules\npm\node_modules\validate-npm-package-license\node_modules\spdx-expression-parse\package.json"
+
+set "STAGE_WIX=%TEST_TMP_DIR%\stage_fragment.wxs"
+call "%LIBSCRIPT_ROOT_DIR%\packaging\harvest_payload.cmd" --source-dir "%MOCK_STAGE_DIR%" --wix-fragment "%STAGE_WIX%" --component-group "PayloadComponents" --directory-id "INSTALLFOLDER"
+if errorlevel 1 (
+    echo [FAIL] harvest_payload.cmd failed on mock stage >&2
+    exit /b 1
+)
+
+powershell -NoProfile -Command "$w = Get-Content '%STAGE_WIX%' -Raw; $matches = [regex]::Matches($w, '(?<!Disk)Id=.([^""]+).'); foreach ($m in $matches) { $id = $m.Groups[1].Value; if ($id.Length -gt 72) { Write-Error ('Identifier exceeds 72 characters: ' + $id); exit 1 }; if ($id -notmatch '^[A-Za-z_][A-Za-z0-9_.]*$') { Write-Error ('Illegal identifier syntax: ' + $id); exit 1 } }"
+if errorlevel 1 (
+    echo [FAIL] WiX identifier validation failed on stage fragment >&2
+    exit /b 1
+)
+echo [PASS] WiX identifiers are legal, sanitized, and within the 72-character limit
+
 rmdir /s /q "%TEST_TMP_DIR%" 2>nul
 echo === All Harvest Payload Windows Tests Passed ===
 exit /b 0

@@ -6,5 +6,5 @@
   "category": "utility",
   "provides": ["busybox"],
   "os_whitelist": ["all"],
-  "os_blacklist": ["sunos", "darwin"]
+  "os_blacklist": ["sunos"]
 }

@@ -186,6 +186,37 @@ try {
             }
         }
 
+        # ## Get-DeterministicHash
+        # Generates a 32-character hex hash based on multi-seed polynomial hashing (matching POSIX awk implementation).
+        function Get-DeterministicHash([string]$str) {
+            $bytes = [System.Text.Encoding]::UTF8.GetBytes($str)
+            [long]$h1 = 5381
+            [long]$h2 = 52711
+            [long]$h3 = 7919
+            [long]$h4 = 179424673
+            foreach ($b in $bytes) {
+                $h1 = ($h1 * 33 + $b) % 2147483647
+                $h2 = ($h2 * 37 + $b) % 2147483629
+                $h3 = ($h3 * 31 + $b) % 2147483587
+                $h4 = ($h4 * 41 + $b) % 2147483579
+            }
+            return ('{0:x8}{1:x8}{2:x8}{3:x8}' -f [int]$h1, [int]$h2, [int]$h3, [int]$h4)
+        }
+
+        # ## Get-WixIdentifier
+        # Sanitizes and truncates identifiers to <= 72 characters adhering to WiX and Windows Installer MSI limits.
+        function Get-WixIdentifier([string]$prefix, [string]$rawPath) {
+            $san = $rawPath -replace '[^a-zA-Z0-9_]', '_'
+            $candidate = $prefix + $san
+            if ($candidate.Length -le 72) {
+                return $candidate
+            }
+            $hash = Get-DeterministicHash $rawPath
+            $avail = 72 - 32 - 1 - $prefix.Length
+            $trimmed = if ($avail -gt 0) { $san.Substring(0, [Math]::Min($san.Length, $avail)) } else { '' }
+            return "$prefix$trimmed`_$hash"
+        }
+
         $sw = [System.IO.StreamWriter]::new($WixFragment, $false, [System.Text.Encoding]::UTF8)
         $sw.WriteLine('<?xml version="1.0" encoding="UTF-8"?>')
         $sw.WriteLine('<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">')
@@ -193,17 +224,16 @@ try {
 
         foreach ($k in $dirs.Keys) {
             $entry = $dirs[$k]
-            $dId = 'DIR_' + ($k -replace '[/\\.:\- ]', '_')
-            $parentDirId = if ($entry.Parent) { 'DIR_' + ($entry.Parent -replace '[/\\.:\- ]', '_') } else { $DirectoryId }
+            $dId = Get-WixIdentifier 'DIR_' $k
+            $parentDirId = if ($entry.Parent) { Get-WixIdentifier 'DIR_' $entry.Parent } else { $DirectoryId }
             $sw.WriteLine("    <DirectoryRef Id=""$parentDirId""><Directory Id=""$dId"" Name=""$($entry.Name)"" /></DirectoryRef>")
         }
 
         foreach ($f in $filtered) {
-            $san = $f -replace '[/\\.:\- ]', '_'
-            $cId = 'CMP_H_' + $san
-            $fId = 'FIL_H_' + $san
+            $cId = Get-WixIdentifier 'CMP_H_' $f
+            $fId = Get-WixIdentifier 'FIL_H_' $f
             $d = Split-Path $f -Parent
-            $targetDir = if ($d -and $d -ne '.') { 'DIR_' + ($d.Replace('\', '/') -replace '[/\\.:\- ]', '_') } else { $DirectoryId }
+            $targetDir = if ($d -and $d -ne '.') { Get-WixIdentifier 'DIR_' ($d.Replace('\', '/')) } else { $DirectoryId }
             
             if ($f.StartsWith('cache/') -and $cacheReal) {
                 $srcPath = Join-Path $cacheReal ($f.Substring(6).Replace('/', '\'))
@@ -230,8 +260,7 @@ try {
         $sw.WriteLine("    <ComponentGroup Id=""$ComponentGroup"">")
         foreach ($f in $filtered) {
             if ($IncludeCache -and $f.StartsWith('cache/')) { continue }
-            $san = $f -replace '[/\.:\- ]', '_'
-            $cId = 'CMP_H_' + $san
+            $cId = Get-WixIdentifier 'CMP_H_' $f
             $sw.WriteLine("      <ComponentRef Id=""$cId"" />")
         }
         $sw.WriteLine('    </ComponentGroup>')
@@ -240,8 +269,7 @@ try {
             $sw.WriteLine('    <ComponentGroup Id="LibscriptOfflineCacheComponents">')
             foreach ($f in $filtered) {
                 if ($f.StartsWith('cache/')) {
-                    $san = $f -replace '[/\.:\- ]', '_'
-                    $cId = 'CMP_H_' + $san
+                    $cId = Get-WixIdentifier 'CMP_H_' $f
                     $sw.WriteLine("      <ComponentRef Id=""$cId"" />")
                 }
             }
