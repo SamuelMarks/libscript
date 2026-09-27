@@ -43,6 +43,9 @@ VARIANT="all"
 OUT_FILE=""
 BRANCH=""
 OUT_DIR="${LIBSCRIPT_ROOT_DIR}/dist/msi"
+OFFLINE_SOURCE="${LIBSCRIPT_ROOT_DIR}/cache"
+HYDRATE=0
+ALLOW_MOCK=0
 
 # ## show_help
 # Displays command usage documentation.
@@ -54,12 +57,17 @@ Usage:
   ./packaging/build_openedx_orchestrator_msi.sh [OPTIONS]
 
 Options:
-  --version <ver>    Stack release version (default: 22.1.0)
-  --variant <var>    Installer variant (online, offline, or all; default: all)
-  --out <name>       Output file base name or path
-  --out-dir <dir>    Output directory for built MSIs (default: dist/msi)
-  --branch <name>    Branch or tag ref (optional)
-  --help, -h         Show this help text
+  --version <ver>          Stack release version (default: 22.1.0)
+  --variant <var>          Installer variant: online, offline, or all (default: all)
+  --online                 Shorthand for --variant online
+  --offline                Shorthand for --variant offline
+  --out <name>             Output file base name or path
+  --out-dir <dir>          Output directory for built MSIs (default: dist/msi)
+  --offline-source <dir>   Offline cache directory (default: cache)
+  --hydrate                Force hydration of offline cache before building
+  --allow-mock             Allow fallback to mock binaries if offline assets cannot be acquired
+  --branch <name>          Branch or tag ref (optional)
+  --help, -h               Show this help text
 EOF_HELP
 }
 
@@ -73,6 +81,14 @@ while [ $# -gt 0 ]; do
       VARIANT="$2"
       shift 2
       ;;
+    --online)
+      VARIANT="online"
+      shift
+      ;;
+    --offline)
+      VARIANT="offline"
+      shift
+      ;;
     --out)
       OUT_FILE="$2"
       shift 2
@@ -80,6 +96,18 @@ while [ $# -gt 0 ]; do
     --out-dir)
       OUT_DIR="$2"
       shift 2
+      ;;
+    --offline-source)
+      OFFLINE_SOURCE="$2"
+      shift 2
+      ;;
+    --hydrate)
+      HYDRATE=1
+      shift
+      ;;
+    --allow-mock)
+      ALLOW_MOCK=1
+      shift
       ;;
     --branch)
       BRANCH="$2"
@@ -90,12 +118,13 @@ while [ $# -gt 0 ]; do
       exit 0
       ;;
     *)
-      printf '[ERROR] Unknown parameter: %s
-' "$1" >&2
+      printf '[ERROR] Unknown parameter: %s\n' "$1" >&2
       exit 1
       ;;
   esac
 done
+
+: "${BRANCH:=}"
 
 mkdir -p "$OUT_DIR"
 
@@ -109,21 +138,50 @@ build_single_variant() {
   rm -rf "$_stage"
   mkdir -p "$_stage/bundle"
 
+  _extra_args=""
+  [ "$ALLOW_MOCK" -eq 1 ] && _extra_args="${_extra_args} --allow-mock"
+  [ "$HYDRATE" -eq 1 ] && _extra_args="${_extra_args} --hydrate"
+  [ -n "$OFFLINE_SOURCE" ] && _extra_args="${_extra_args} --offline-source ${OFFLINE_SOURCE}"
+
   if [ "$_v" = "offline" ]; then
     # Ensure all required child component MSIs are built in OUT_DIR
     for _comp in mysql redis mongodb python nodejs meilisearch; do
-      if ! ls "${OUT_DIR}"/libscript-${_comp}-*.msi >/dev/null 2>&1; then
-        printf '[INFO] Building missing component MSI: %s\n' "$_comp"
-        "${SCRIPT_DIR}/build_component_msi.sh" --component "$_comp" --out-dir "$OUT_DIR"
+      if ! ls "${OUT_DIR}"/libscript-${_comp}-offline-*.msi >/dev/null 2>&1; then
+        printf '[INFO] Building missing offline component MSI: %s\n' "$_comp"
+        # shellcheck disable=SC2086
+        "${SCRIPT_DIR}/build_component_msi.sh" --component "$_comp" --variant offline --out-dir "$OUT_DIR" $_extra_args
       fi
     done
-    if ! ls "${OUT_DIR}"/openedx-core-*.msi >/dev/null 2>&1; then
-      printf '[INFO] Building missing component MSI: openedx-core\n'
-      "${SCRIPT_DIR}/build_openedx_core_msi.sh" --version "$VERSION" --out-dir "$OUT_DIR"
+    if ! ls "${OUT_DIR}"/openedx-core-offline-*.msi >/dev/null 2>&1; then
+      printf '[INFO] Building missing offline component MSI: openedx-core\n'
+      # shellcheck disable=SC2086
+      "${SCRIPT_DIR}/build_openedx_core_msi.sh" --variant offline --version "$VERSION" --out-dir "$OUT_DIR" $_extra_args
     fi
 
-    # Copy all compiled sub-MSIs into bundle directory for offline installer embedding
+    # Copy all compiled offline sub-MSIs into bundle directory for offline installer embedding
+    for _msi in "${OUT_DIR}"/libscript-*-offline-*.msi "${OUT_DIR}"/openedx-core-offline-*.msi; do
+      if [ -f "$_msi" ]; then
+        cp -f "$_msi" "$_stage/bundle/"
+      fi
+    done
+  else
+    # Ensure all required online child component MSIs are built in OUT_DIR
+    for _comp in mysql redis mongodb python nodejs meilisearch; do
+      if ! ls "${OUT_DIR}"/libscript-${_comp}-[0-9]*.msi >/dev/null 2>&1 && ! ls "${OUT_DIR}"/libscript-${_comp}-online-*.msi >/dev/null 2>&1; then
+        printf '[INFO] Building missing online component MSI: %s\n' "$_comp"
+        "${SCRIPT_DIR}/build_component_msi.sh" --component "$_comp" --variant online --out-dir "$OUT_DIR"
+      fi
+    done
+    if ! ls "${OUT_DIR}"/openedx-core-[0-9]*.msi >/dev/null 2>&1 && ! ls "${OUT_DIR}"/openedx-core-online-*.msi >/dev/null 2>&1; then
+      printf '[INFO] Building missing online component MSI: openedx-core\n'
+      "${SCRIPT_DIR}/build_openedx_core_msi.sh" --variant online --version "$VERSION" --out-dir "$OUT_DIR"
+    fi
+
+    # Copy all compiled online sub-MSIs into bundle directory
     for _msi in "${OUT_DIR}"/libscript-*.msi "${OUT_DIR}"/openedx-core-*.msi; do
+      case "$_msi" in
+        *-offline-*) continue ;;
+      esac
       if [ -f "$_msi" ]; then
         cp -f "$_msi" "$_stage/bundle/"
       fi
@@ -135,21 +193,12 @@ build_single_variant() {
 
   "${SCRIPT_DIR}/template_openedx_orchestrator.sh" --version "$VERSION" --variant "$_v" --msi-dir "$OUT_DIR" --out "$_main_wxs"
 
-  if [ "$_v" = "offline" ]; then
-    "${SCRIPT_DIR}/harvest_payload.sh" \
-      --source-dir "$_stage/bundle" \
-      --include-msi \
-      --wix-fragment "$_payload_wxs" \
-      --component-group "ChainedMsiPayloads" \
-      --directory-id "BUNDLE_DIR"
-  else
-    printf 'Open edX Online Master Orchestrator\n' > "$_stage/bundle/online.txt"
-    "${SCRIPT_DIR}/harvest_payload.sh" \
-      --source-dir "$_stage/bundle" \
-      --wix-fragment "$_payload_wxs" \
-      --component-group "ChainedMsiPayloads" \
-      --directory-id "BUNDLE_DIR"
-  fi
+  "${SCRIPT_DIR}/harvest_payload.sh" \
+    --source-dir "$_stage/bundle" \
+    --include-msi \
+    --wix-fragment "$_payload_wxs" \
+    --component-group "ChainedMsiPayloads" \
+    --directory-id "BUNDLE_DIR"
 
   if [ -n "$OUT_FILE" ]; then
     case "$OUT_FILE" in

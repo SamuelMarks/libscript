@@ -153,7 +153,7 @@ case "$ACTION" in
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nuget/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
+      if [ ! -x "${TARGET_DIR}/bin/nuget" ]; then
         log_info "Installing nuget ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
 
@@ -184,8 +184,11 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
+            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] || [ "$UNAME_LOWER" = "darwin" ]; then
               log_info "Falling back to system package manager for nuget (via mono/dotnet)..."
+              if command -v brew >/dev/null 2>&1; then
+                brew install nuget || true
+              fi
               if ! libscript_depends "nuget" 2>/dev/null; then
                 if [ "$UNAME_LOWER" = "linux" ]; then
                   log_info "Installing mono runtime and downloading nuget.exe..."

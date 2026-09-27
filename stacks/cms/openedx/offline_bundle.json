@@ -37,10 +37,10 @@
     },
     "redis": {
       "name": "redis",
-      "version": "5.0.14.1",
-      "filename": "redis-windows-x64-7.0.zip",
-      "url": "https://github.com/tporadowski/redis/releases/download/v5.0.14.1/Redis-x64-5.0.14.1.zip",
-      "sha256": "018ea18a35876383cbb5f4cd0258adfc87747cf9d619bce1cf73a2e36f720ccf",
+      "version": "8.10.2",
+      "filename": "redis-8.10.2-win64.zip",
+      "url": "https://github.com/SamuelMarks/redis-windows/releases/download/8.10.2/redis-8.10.2-win64.zip",
+      "sha256": "1c166b61b1480211e238103d3aaaf1022e73a30fc5203438ae2bab01aaed84ba",
       "port": 6379,
       "service_name": "OpenEdXRedis",
       "extract_dir": "databases/redis"

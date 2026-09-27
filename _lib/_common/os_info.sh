@@ -49,7 +49,9 @@ if [ -z ${UNAME+x} ]; then
         if [ ! -f '/opt/homebrew/bin/brew' ] && [ ! -f '/usr/local/bin/brew' ]; then
           NONINTERACTIVE=1 /bin/sh -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         fi
-        TARGET_OS="$(sw_vers --productName)"
+        TARGET_OS="darwin"
+        TARGET_OS_NAME="$(sw_vers --productName)"
+        export TARGET_OS_NAME
         ;;
       'Linux')
         # shellcheck disable=SC1091

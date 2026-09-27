@@ -153,18 +153,25 @@ case "$ACTION" in
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/mise/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
+      if [ ! -x "${TARGET_DIR}/bin/mise" ]; then
         log_info "Installing mise ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         
         libscript_depends curl || true
            
         log_info "Downloading mise..."
-        export MISE_INSTALL_PATH="${TARGET_DIR}/bin/mise"
-        if ! curl -sSLf https://mise.run | sh; then
+        _mise_env_opts=""
+        if [ "${VERSION}" = "latest" ]; then
+          unset MISE_VERSION || true
+        fi
+        if ! curl -sSLf https://mise.run | env MISE_INSTALL_FROM_GITHUB=1 MISE_INSTALL_PATH="${TARGET_DIR}/bin/mise" sh; then
            log_error "Failed to install mise"
            exit 1
         fi
+        if [ ! -f "${TARGET_DIR}/bin/mise" ] && [ -f "$HOME/.local/bin/mise" ]; then
+          cp "$HOME/.local/bin/mise" "${TARGET_DIR}/bin/mise" || true
+        fi
+        chmod +x "${TARGET_DIR}/bin/mise" 2>/dev/null || true
       else
         log_info "mise ${VERSION} is already installed."
       fi

@@ -32,8 +32,8 @@ if "%SEED_NAME%"=="" (
     exit /b 1
 )
 
-:: Prefer Python if available
-where python >nul 2>nul
+:: Prefer Python if available and functional
+python --version >nul 2>nul
 if %ERRORLEVEL% equ 0 (
     python -c "import uuid, sys; print(str(uuid.uuid5(uuid.UUID(sys.argv[1]), sys.argv[2])).upper())" "%NAMESPACE%" "%SEED_NAME%"
     exit /b 0
@@ -43,7 +43,7 @@ if %ERRORLEVEL% equ 0 (
 where powershell >nul 2>nul
 if %ERRORLEVEL% equ 0 (
     powershell -NoProfile -Command ^
-        "$ns = [Guid]::Parse('%NAMESPACE%'); $bytes = $ns.ToByteArray(); [Array]::Reverse($bytes, 0, 4); [Array]::Reverse($bytes, 4, 2); [Array]::Reverse($bytes, 6, 2); $nameBytes = [System.Text.Encoding]::UTF8.GetBytes('%SEED_NAME%'); $sha = [System.Security.Cryptography.SHA1]::Create(); $hash = $sha.ComputeHash($bytes + $nameBytes); $hash[6] = ($hash[6] -band 0x0f) -bor 0x50; $hash[8] = ($hash[8] -band 0x3f) -bor 0x80; [Array]::Reverse($hash, 0, 4); [Array]::Reverse($hash, 4, 2); [Array]::Reverse($hash, 6, 2); [Guid]::new($hash[0..15]).ToString().ToUpper()"
+        "$ns = [Guid]::Parse('%NAMESPACE%'); $bytes = $ns.ToByteArray(); [Array]::Reverse($bytes, 0, 4); [Array]::Reverse($bytes, 4, 2); [Array]::Reverse($bytes, 6, 2); $nameBytes = [System.Text.Encoding]::UTF8.GetBytes('%SEED_NAME%'); $sha = [System.Security.Cryptography.SHA1]::Create(); $hash = $sha.ComputeHash($bytes + $nameBytes); $hash[6] = ($hash[6] -band 0x0f) -bor 0x50; $hash[8] = ($hash[8] -band 0x3f) -bor 0x80; [Array]::Reverse($hash, 0, 4); [Array]::Reverse($hash, 4, 2); [Array]::Reverse($hash, 6, 2); [Guid]::new([byte[]]($hash[0..15])).ToString().ToUpper()"
     exit /b 0
 )
 

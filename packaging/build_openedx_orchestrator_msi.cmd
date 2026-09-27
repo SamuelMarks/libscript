@@ -19,7 +19,8 @@ setlocal enabledelayedexpansion
 
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1 && (
+    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    if not errorlevel 1 (
         echo [STOP] processing "%THIS_FILE%" >&2
         exit /b 0
     )
@@ -128,17 +129,35 @@ if not exist "%STAGE%\bundle" mkdir "%STAGE%\bundle" >nul 2>&1
 if /i "%CURR_VAR%"=="offline" (
     :: Build any missing child component MSIs
     for %%C in (mysql redis mongodb python nodejs meilisearch) do (
+        if not exist "%OUT_DIR%\libscript-%%C-offline-*.msi" (
+            echo [INFO] Building missing child offline component MSI: %%C
+            call "%SCRIPT_DIR%build_component_msi.cmd" --component %%C --variant offline --out-dir "%OUT_DIR%"
+        )
+    )
+    if not exist "%OUT_DIR%\openedx-core-offline-*.msi" (
+        echo [INFO] Building missing child offline component MSI: openedx-core
+        call "%SCRIPT_DIR%build_openedx_core_msi.cmd" --variant offline --version "%VERSION%" --out-dir "%OUT_DIR%"
+    )
+    xcopy /Y /Q "%OUT_DIR%\libscript-*-offline-*.msi" "%STAGE%\bundle" >nul 2>&1
+    xcopy /Y /Q "%OUT_DIR%\openedx-core-offline-*.msi" "%STAGE%\bundle" >nul 2>&1
+) else (
+    :: Build any missing child online component MSIs
+    for %%C in (mysql redis mongodb python nodejs meilisearch) do (
         if not exist "%OUT_DIR%\libscript-%%C-*.msi" (
-            echo [INFO] Building missing child component MSI: %%C
-            call "%SCRIPT_DIR%build_component_msi.cmd" --component %%C --out-dir "%OUT_DIR%"
+            echo [INFO] Building missing child online component MSI: %%C
+            call "%SCRIPT_DIR%build_component_msi.cmd" --component %%C --variant online --out-dir "%OUT_DIR%"
         )
     )
     if not exist "%OUT_DIR%\openedx-core-*.msi" (
-        echo [INFO] Building missing child component MSI: openedx-core
-        call "%SCRIPT_DIR%build_openedx_core_msi.cmd" --version "%VERSION%" --out-dir "%OUT_DIR%"
+        echo [INFO] Building missing child online component MSI: openedx-core
+        call "%SCRIPT_DIR%build_openedx_core_msi.cmd" --variant online --version "%VERSION%" --out-dir "%OUT_DIR%"
     )
-    xcopy /Y /Q "%OUT_DIR%\libscript-*.msi" "%STAGE%\bundle" >nul 2>&1
-    xcopy /Y /Q "%OUT_DIR%\openedx-core-*.msi" "%STAGE%\bundle" >nul 2>&1
+    for %%M in ("%OUT_DIR%\libscript-*.msi" "%OUT_DIR%\openedx-core-*.msi") do (
+        set "_fn=%%~nxM"
+        if "!_fn:-offline-=!"=="!_fn!" (
+            copy /y "%%~fM" "%STAGE%\bundle" >nul 2>&1
+        )
+    )
 )
 
 set "MAIN_WXS=%LIBSCRIPT_ROOT_DIR%\tmp\openedx_orch_%CURR_VAR%_main.wxs"
@@ -147,12 +166,7 @@ set "PAYLOAD_WXS=%LIBSCRIPT_ROOT_DIR%\tmp\openedx_orch_%CURR_VAR%_payload.wxs"
 call "%SCRIPT_DIR%template_openedx_orchestrator.cmd" --version "%VERSION%" --variant "%CURR_VAR%" --msi-dir "%OUT_DIR%" --out "%MAIN_WXS%"
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
-if /i "%CURR_VAR%"=="offline" (
-    call "%SCRIPT_DIR%harvest_payload.cmd" --source-dir "%STAGE%\bundle" --include-msi --wix-fragment "%PAYLOAD_WXS%" --component-group "ChainedMsiPayloads" --directory-id "BUNDLE_DIR"
-) else (
-    echo Open edX Online Master Orchestrator > "%STAGE%\bundle\online.txt"
-    call "%SCRIPT_DIR%harvest_payload.cmd" --source-dir "%STAGE%\bundle" --wix-fragment "%PAYLOAD_WXS%" --component-group "ChainedMsiPayloads" --directory-id "BUNDLE_DIR"
-)
+call "%SCRIPT_DIR%harvest_payload.cmd" --source-dir "%STAGE%\bundle" --include-msi --wix-fragment "%PAYLOAD_WXS%" --component-group "ChainedMsiPayloads" --directory-id "BUNDLE_DIR"
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 if defined OUT_FILE (
@@ -168,6 +182,11 @@ if defined OUT_FILE (
 
 for %%I in ("!TARGET_MSI!") do (
     if not exist "%%~dpI" mkdir "%%~dpI" 2>nul
+)
+
+where candle.exe >nul 2>nul
+if %ERRORLEVEL% neq 0 if exist "%LIBSCRIPT_ROOT_DIR%\tools\wix\candle.exe" (
+    set "PATH=%LIBSCRIPT_ROOT_DIR%\tools\wix;!PATH!"
 )
 
 where wixl >nul 2>nul

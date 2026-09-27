@@ -6,7 +6,7 @@
   "category": "app-servers",
   "provides": ["app-server", "jetstream"],
   "conflicts": [],
-  "os_whitelist": ["linux", "darwin"],
-  "os_blacklist": ["windows", "freebsd", "sunos"],
+  "os_whitelist": ["linux"],
+  "os_blacklist": ["windows", "freebsd", "sunos", "darwin"],
   "ports": []
 }

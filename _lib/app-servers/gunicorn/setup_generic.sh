@@ -90,7 +90,7 @@ case "$ACTION" in
           ln -sf "$(command -v gunicorn)" "${TARGET_DIR}/bin/gunicorn"
         fi
       elif command -v uv >/dev/null 2>&1; then
-        uv venv "${TARGET_DIR}"
+        uv venv --allow-existing "${TARGET_DIR}"
         if [ "${VERSION}" = "latest" ]; then
           uv pip install --python "${TARGET_DIR}/bin/python" gunicorn
         else

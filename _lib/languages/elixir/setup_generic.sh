@@ -165,6 +165,10 @@ case "$ACTION" in
         if ! command -v erl >/dev/null 2>&1; then
           priv pkg install -y erlang unzip || true
         fi
+      elif command -v brew >/dev/null 2>&1; then
+        if ! command -v erl >/dev/null 2>&1; then
+          brew install erlang unzip || true
+        fi
       fi
       if [ -z "${ELIXIR_DOWNLOAD_URL:-}" ]; then
         if [ "$VERSION" = "latest" ]; then
@@ -176,7 +180,7 @@ case "$ACTION" in
       fi
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/elixir/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
+      if [ ! -x "${TARGET_DIR}/bin/elixir" ]; then
         log_info "Installing elixir ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/elixir/"*"${VERSION}"* >/dev/null 2>&1; then

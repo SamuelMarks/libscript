@@ -153,7 +153,7 @@ case "$ACTION" in
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/conda/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
+      if [ ! -x "${TARGET_DIR}/bin/conda" ]; then
         log_info "Installing conda ${VERSION} natively to ${TARGET_DIR}..."
         if [ -f /etc/alpine-release ]; then
           log_info "Package is not supported on Alpine Linux (musl)."
@@ -177,7 +177,7 @@ case "$ACTION" in
             rm -f "$TEMP_FILE"
             exit 1
           fi
-          sh "$TEMP_FILE" -b -p "${TARGET_DIR}" 2>/dev/null || (chmod +x "$TEMP_FILE" && "$TEMP_FILE" -b -p "${TARGET_DIR}") || true
+          sh "$TEMP_FILE" -b -u -p "${TARGET_DIR}" 2>/dev/null || (chmod +x "$TEMP_FILE" && "$TEMP_FILE" -b -u -p "${TARGET_DIR}") || true
           rm -f "$TEMP_FILE"
         fi
       else

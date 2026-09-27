@@ -153,7 +153,7 @@ case "$ACTION" in
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/nimble/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
+      if [ ! -x "${TARGET_DIR}/bin/nimble" ]; then
         log_info "Installing nimble ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
 
@@ -165,6 +165,12 @@ case "$ACTION" in
               ln -sf "$(command -v nimble)" "${TARGET_DIR}/bin/nimble"
               installed=1
             fi
+          fi
+        elif command -v brew >/dev/null 2>&1; then
+          brew install nim || true
+          if command -v nimble >/dev/null 2>&1; then
+            ln -sf "$(command -v nimble)" "${TARGET_DIR}/bin/nimble"
+            installed=1
           fi
         fi
 

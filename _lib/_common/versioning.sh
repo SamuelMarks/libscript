@@ -50,6 +50,13 @@ libscript_symlink_alias() {
   mkdir -p "${base_dir}"
   
   if [ "${alias_name}" != "${exact_version}" ]; then
-    (cd "${base_dir}" && ln -sf "${exact_version}" "${alias_name}")
+    if [ -L "${base_dir}/${alias_name}" ] || [ -f "${base_dir}/${alias_name}" ]; then
+      rm -f "${base_dir}/${alias_name}"
+    elif [ -d "${base_dir}/${alias_name}" ]; then
+      rm -rf "${base_dir:?}/${alias_name:?}"
+    fi
+    if ! (cd "${base_dir}" && ln -sfn "${exact_version}" "${alias_name}" 2>/dev/null); then
+      (cd "${base_dir}" && ln -sf "${exact_version}" "${alias_name}")
+    fi
   fi
 }

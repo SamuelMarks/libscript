@@ -61,6 +61,7 @@ CACHE_DIR="${LIBSCRIPT_CACHE_DIR:-${LIBSCRIPT_ROOT_DIR}/cache}"
 VERIFY_ONLY=0
 HYDRATE_WHEELS=0
 HYDRATE_CODEBASE=0
+TARGET_COMPONENT=""
 
 # Option Parsing Loop
 while [ $# -gt 0 ]; do
@@ -81,6 +82,14 @@ while [ $# -gt 0 ]; do
       CACHE_DIR="${1#*=}"
       shift
       ;;
+    --component)
+      TARGET_COMPONENT="$2"
+      shift 2
+      ;;
+    --component=*)
+      TARGET_COMPONENT="${1#*=}"
+      shift
+      ;;
     --verify-only)
       VERIFY_ONLY=1
       shift
@@ -94,22 +103,15 @@ while [ $# -gt 0 ]; do
       shift
       ;;
     --help|-h)
-      printf 'Usage: %s [OPTIONS]
-' "$0"
-      printf 'Options:
-'
-      printf '  --manifest <path>    Path to offline_bundle.json manifest
-'
-      printf '  --cache-dir <dir>    Target cache staging directory
-'
-      printf '  --verify-only        Validate SHA-256 hashes of cached files without downloading
-'
-      printf '  --wheels             Trigger pip download for wheels
-'
-      printf '  --codebase           Fetch codebase archives
-'
-      printf '  --help, -h           Show this help text
-'
+      printf 'Usage: %s [OPTIONS]\n' "$0"
+      printf 'Options:\n'
+      printf '  --manifest <path>    Path to offline_bundle.json manifest\n'
+      printf '  --cache-dir <dir>    Target cache staging directory\n'
+      printf '  --component <name>   Filter by component (mysql, redis, mongodb, python, nodejs, meilisearch, codebase, wheels, all)\n'
+      printf '  --verify-only        Validate SHA-256 hashes of cached files without downloading\n'
+      printf '  --wheels             Trigger pip download for wheels\n'
+      printf '  --codebase           Fetch codebase archives\n'
+      printf '  --help, -h           Show this help text\n'
       exit 0
       ;;
     *)
@@ -248,6 +250,9 @@ TOTAL_ERRORS=0
 if command -v jq >/dev/null 2>&1; then
   _runtime_keys=$(jq -r '.runtimes | keys[]' "$MANIFEST_PATH" 2>/dev/null || true)
   for key in $_runtime_keys; do
+    if [ -n "$TARGET_COMPONENT" ] && [ "$TARGET_COMPONENT" != "all" ] && [ "$TARGET_COMPONENT" != "$key" ]; then
+      continue
+    fi
     _fn=$(jq -r --arg k "$key" '.runtimes[$k].filename' "$MANIFEST_PATH")
     _url=$(jq -r --arg k "$key" '.runtimes[$k].url' "$MANIFEST_PATH")
     _hash=$(jq -r --arg k "$key" '.runtimes[$k].sha256' "$MANIFEST_PATH")
@@ -257,6 +262,9 @@ if command -v jq >/dev/null 2>&1; then
   # 2. Databases
   _db_keys=$(jq -r '.databases | keys[]' "$MANIFEST_PATH" 2>/dev/null || true)
   for key in $_db_keys; do
+    if [ -n "$TARGET_COMPONENT" ] && [ "$TARGET_COMPONENT" != "all" ] && [ "$TARGET_COMPONENT" != "$key" ]; then
+      continue
+    fi
     _fn=$(jq -r --arg k "$key" '.databases[$k].filename' "$MANIFEST_PATH")
     _url=$(jq -r --arg k "$key" '.databases[$k].url' "$MANIFEST_PATH")
     _hash=$(jq -r --arg k "$key" '.databases[$k].sha256' "$MANIFEST_PATH")
@@ -264,34 +272,38 @@ if command -v jq >/dev/null 2>&1; then
   done
 
   # 3. Pre-declared Wheels
-  _wheel_count=$(jq -r '.wheels.packages | length' "$MANIFEST_PATH" 2>/dev/null || printf '0')
-  _idx=0
-  while [ "$_idx" -lt "$_wheel_count" ]; do
-    _fn=$(jq -r ".wheels.packages[$_idx].filename" "$MANIFEST_PATH")
-    _url=$(jq -r ".wheels.packages[$_idx].url" "$MANIFEST_PATH")
-    _hash=$(jq -r ".wheels.packages[$_idx].sha256" "$MANIFEST_PATH")
-    process_artifact "$_url" "${CACHE_DIR}/wheels/${_fn}" "$_hash" "Wheel" || TOTAL_ERRORS=$((TOTAL_ERRORS + 1))
-    _idx=$((_idx + 1))
-  done
-
-  # 4. Codebase
-  _code_fn=$(jq -r '.codebase.archive_filename' "$MANIFEST_PATH" 2>/dev/null || true)
-  if [ -n "$_code_fn" ] && [ "$_code_fn" != "null" ]; then
-    _code_url=$(jq -r '.codebase.archive_url' "$MANIFEST_PATH")
-    _code_hash=$(jq -r '.codebase.archive_sha256' "$MANIFEST_PATH")
-    process_artifact "$_code_url" "${CACHE_DIR}/codebase/${_code_fn}" "$_code_hash" "Codebase" || TOTAL_ERRORS=$((TOTAL_ERRORS + 1))
+  if [ -z "$TARGET_COMPONENT" ] || [ "$TARGET_COMPONENT" = "all" ] || [ "$TARGET_COMPONENT" = "wheels" ] || [ "$TARGET_COMPONENT" = "openedx-core" ] || [ "$TARGET_COMPONENT" = "openedx" ] || [ "$HYDRATE_WHEELS" -eq 1 ]; then
+    _wheel_count=$(jq -r '.wheels.packages | length' "$MANIFEST_PATH" 2>/dev/null || printf '0')
+    _idx=0
+    while [ "$_idx" -lt "$_wheel_count" ]; do
+      _fn=$(jq -r ".wheels.packages[$_idx].filename" "$MANIFEST_PATH")
+      _url=$(jq -r ".wheels.packages[$_idx].url" "$MANIFEST_PATH")
+      _hash=$(jq -r ".wheels.packages[$_idx].sha256" "$MANIFEST_PATH")
+      process_artifact "$_url" "${CACHE_DIR}/wheels/${_fn}" "$_hash" "Wheel" || TOTAL_ERRORS=$((TOTAL_ERRORS + 1))
+      _idx=$((_idx + 1))
+    done
   fi
 
-  # Demo Content
-  _demo_count=$(jq -r '.codebase.demo_content | length' "$MANIFEST_PATH" 2>/dev/null || printf '0')
-  _didx=0
-  while [ "$_didx" -lt "$_demo_count" ]; do
-    _dfn=$(jq -r ".codebase.demo_content[$_didx].filename" "$MANIFEST_PATH")
-    _durl=$(jq -r ".codebase.demo_content[$_didx].url" "$MANIFEST_PATH")
-    _dhash=$(jq -r ".codebase.demo_content[$_didx].sha256" "$MANIFEST_PATH")
-    process_artifact "$_durl" "${CACHE_DIR}/codebase/${_dfn}" "$_dhash" "DemoContent" || TOTAL_ERRORS=$((TOTAL_ERRORS + 1))
-    _didx=$((_didx + 1))
-  done
+  # 4. Codebase
+  if [ -z "$TARGET_COMPONENT" ] || [ "$TARGET_COMPONENT" = "all" ] || [ "$TARGET_COMPONENT" = "codebase" ] || [ "$TARGET_COMPONENT" = "openedx-core" ] || [ "$TARGET_COMPONENT" = "openedx" ] || [ "$HYDRATE_CODEBASE" -eq 1 ]; then
+    _code_fn=$(jq -r '.codebase.archive_filename' "$MANIFEST_PATH" 2>/dev/null || true)
+    if [ -n "$_code_fn" ] && [ "$_code_fn" != "null" ]; then
+      _code_url=$(jq -r '.codebase.archive_url' "$MANIFEST_PATH")
+      _code_hash=$(jq -r '.codebase.archive_sha256' "$MANIFEST_PATH")
+      process_artifact "$_code_url" "${CACHE_DIR}/codebase/${_code_fn}" "$_code_hash" "Codebase" || TOTAL_ERRORS=$((TOTAL_ERRORS + 1))
+    fi
+
+    # Demo Content
+    _demo_count=$(jq -r '.codebase.demo_content | length' "$MANIFEST_PATH" 2>/dev/null || printf '0')
+    _didx=0
+    while [ "$_didx" -lt "$_demo_count" ]; do
+      _dfn=$(jq -r ".codebase.demo_content[$_didx].filename" "$MANIFEST_PATH")
+      _durl=$(jq -r ".codebase.demo_content[$_didx].url" "$MANIFEST_PATH")
+      _dhash=$(jq -r ".codebase.demo_content[$_didx].sha256" "$MANIFEST_PATH")
+      process_artifact "$_durl" "${CACHE_DIR}/codebase/${_dfn}" "$_dhash" "DemoContent" || TOTAL_ERRORS=$((TOTAL_ERRORS + 1))
+      _didx=$((_didx + 1))
+    done
+  fi
 fi
 
 # Synchronize manifest and checksums file into cache root

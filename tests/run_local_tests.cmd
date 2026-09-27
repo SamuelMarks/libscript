@@ -105,6 +105,8 @@ if /I "!OS_ID!"=="omnios" set "OS_TAG=sunos"
 if /I "!OS_ID!"=="sunos" set "OS_TAG=sunos"
 if /I "!OS_ID!"=="solaris" set "OS_TAG=sunos"
 if /I "!OS_ID!"=="illumos" set "OS_TAG=sunos"
+if /I "!OS_ID!"=="macos" set "OS_TAG=darwin"
+if /I "!OS_ID!"=="darwin" set "OS_TAG=darwin"
 
 if "!REUSE_VM!"=="1" (
     echo === Ensuring !OS_TARGET! Vagrant VM is running ===

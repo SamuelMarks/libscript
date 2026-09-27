@@ -47,33 +47,61 @@ jobs:
       matrix:
         package:
           - id: mysql
-            name: LibScript MySQL Database Server
+            name: LibScript MySQL Database Server (Online)
             target_dir: _lib/databases/mysql
-            build_cmd: packaging\build_component_msi.cmd --component mysql
+            build_cmd: packaging\build_component_msi.cmd --component mysql --variant online
+          - id: mysql-offline
+            name: LibScript MySQL Database Server (Offline)
+            target_dir: _lib/databases/mysql
+            build_cmd: packaging\build_component_msi.cmd --component mysql --variant offline
           - id: redis
-            name: LibScript Redis Cache & Datastore
+            name: LibScript Redis Cache & Datastore (Online)
             target_dir: _lib/caches/redis
-            build_cmd: packaging\build_component_msi.cmd --component redis
+            build_cmd: packaging\build_component_msi.cmd --component redis --variant online
+          - id: redis-offline
+            name: LibScript Redis Cache & Datastore (Offline)
+            target_dir: _lib/caches/redis
+            build_cmd: packaging\build_component_msi.cmd --component redis --variant offline
           - id: mongodb
-            name: LibScript MongoDB Document Database
+            name: LibScript MongoDB Document Database (Online)
             target_dir: _lib/databases/mongodb
-            build_cmd: packaging\build_component_msi.cmd --component mongodb
+            build_cmd: packaging\build_component_msi.cmd --component mongodb --variant online
+          - id: mongodb-offline
+            name: LibScript MongoDB Document Database (Offline)
+            target_dir: _lib/databases/mongodb
+            build_cmd: packaging\build_component_msi.cmd --component mongodb --variant offline
           - id: python
-            name: LibScript Python Language Runtime
+            name: LibScript Python Language Runtime (Online)
             target_dir: _lib/languages/python
-            build_cmd: packaging\build_component_msi.cmd --component python
+            build_cmd: packaging\build_component_msi.cmd --component python --variant online
+          - id: python-offline
+            name: LibScript Python Language Runtime (Offline)
+            target_dir: _lib/languages/python
+            build_cmd: packaging\build_component_msi.cmd --component python --variant offline
           - id: nodejs
-            name: LibScript Node.js JavaScript Runtime
+            name: LibScript Node.js JavaScript Runtime (Online)
             target_dir: _lib/languages/nodejs
-            build_cmd: packaging\build_component_msi.cmd --component nodejs
+            build_cmd: packaging\build_component_msi.cmd --component nodejs --variant online
+          - id: nodejs-offline
+            name: LibScript Node.js JavaScript Runtime (Offline)
+            target_dir: _lib/languages/nodejs
+            build_cmd: packaging\build_component_msi.cmd --component nodejs --variant offline
           - id: meilisearch
-            name: LibScript Meilisearch Search Engine
+            name: LibScript Meilisearch Search Engine (Online)
             target_dir: _lib/search/meilisearch
-            build_cmd: packaging\build_component_msi.cmd --component meilisearch
+            build_cmd: packaging\build_component_msi.cmd --component meilisearch --variant online
+          - id: meilisearch-offline
+            name: LibScript Meilisearch Search Engine (Offline)
+            target_dir: _lib/search/meilisearch
+            build_cmd: packaging\build_component_msi.cmd --component meilisearch --variant offline
           - id: openedx-core
-            name: Open edX Platform Core
+            name: Open edX Platform Core (Online)
             target_dir: stacks/cms/openedx
-            build_cmd: packaging\build_openedx_core_msi.cmd
+            build_cmd: packaging\build_openedx_core_msi.cmd --variant online
+          - id: openedx-core-offline
+            name: Open edX Platform Core (Offline)
+            target_dir: stacks/cms/openedx
+            build_cmd: packaging\build_openedx_core_msi.cmd --variant offline
           - id: openedx
             name: Open edX Platform (Master Online)
             target_dir: stacks/cms/openedx

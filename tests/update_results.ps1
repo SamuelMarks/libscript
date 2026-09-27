@@ -91,7 +91,8 @@ function Check-ManifestSupport {
     $family = switch ($TargetOs) {
         { $_ -in 'alpine', 'debian', 'rhel', 'rocky', 'linux' } { 'linux' }
         { $_ -in 'freebsd', 'bsd' } { 'bsd' }
-        'windows' { 'windows' }
+        { $_ -in 'darwin', 'macos' } { 'darwin' }
+        { $_ -in 'windows' } { 'windows' }
         'darwin'  { 'darwin' }
         'sunos'   { 'sunos' }
         default   { '' }
@@ -178,7 +179,7 @@ function Update-SupportedComponents {
     if (Test-Path -LiteralPath $TargetReadme) {
         $existingLines = [System.IO.File]::ReadAllLines($TargetReadme, [System.Text.Encoding]::UTF8)
         foreach ($line in $existingLines) {
-            if ($line -match '^\s*\|\s*`([^`]+)`\s*\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|') {
+            if ($line -match '^\s*\|\s*`([^`]+)`\s*\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|(\s*([^|]+)\|)?') {
                 $compKey = $Matches[1].Trim()
                 $existingMap[$compKey] = @{
                     apk     = $Matches[2].Trim()
@@ -187,6 +188,7 @@ function Update-SupportedComponents {
                     win     = $Matches[5].Trim()
                     sunos   = $Matches[6].Trim()
                     freebsd = $Matches[7].Trim()
+                    macos   = if ($Matches[9]) { $Matches[9].Trim() } else { "" }
                 }
             }
         }
@@ -204,6 +206,7 @@ function Update-SupportedComponents {
         $winStatus = "-"
         $sunosStatus = "-"
         $freebsdStatus = "-"
+        $macosStatus = "-"
 
         if ($mfile) {
             if (Check-ManifestSupport $mfile "alpine")  { $apkStatus = "❓" }
@@ -212,6 +215,7 @@ function Update-SupportedComponents {
             if (Check-ManifestSupport $mfile "windows") { $winStatus = "❓" }
             if (Check-ManifestSupport $mfile "sunos")   { $sunosStatus = "❓" }
             if (Check-ManifestSupport $mfile "freebsd") { $freebsdStatus = "❓" }
+            if (Check-ManifestSupport $mfile "darwin")  { $macosStatus = "❓" }
         } else {
             $apkStatus = "❓"
             $debStatus = "❓"
@@ -219,6 +223,7 @@ function Update-SupportedComponents {
             $winStatus = "❓"
             $sunosStatus = "❓"
             $freebsdStatus = "❓"
+            $macosStatus = "❓"
         }
 
         if ($existingMap.ContainsKey($comp)) {
@@ -229,6 +234,7 @@ function Update-SupportedComponents {
             if ($winStatus -ne "-" -and $ex.win) { $winStatus = $ex.win }
             if ($sunosStatus -ne "-" -and $ex.sunos) { $sunosStatus = $ex.sunos }
             if ($freebsdStatus -ne "-" -and $ex.freebsd) { $freebsdStatus = $ex.freebsd }
+            if ($macosStatus -ne "-" -and $ex.macos) { $macosStatus = $ex.macos }
         }
 
         if (Test-Path -LiteralPath $testsTmpDir) {
@@ -317,6 +323,15 @@ function Update-SupportedComponents {
                       (Test-AnyFilePattern $testsTmpDir "$comp.linux.freebsd*.failure")) {
                 $freebsdStatus = "❌"
             }
+
+            # macOS / Darwin
+            if ((Test-AnyFilePattern $testsTmpDir "$comp.darwin*.success") -or
+                (Test-AnyFilePattern $testsTmpDir "$comp.macos*.success")) {
+                $macosStatus = "✅"
+            } elseif ((Test-AnyFilePattern $testsTmpDir "$comp.darwin*.failure") -or
+                      (Test-AnyFilePattern $testsTmpDir "$comp.macos*.failure")) {
+                $macosStatus = "❌"
+            }
         }
 
         $rows += [PSCustomObject]@{
@@ -327,6 +342,7 @@ function Update-SupportedComponents {
             win     = $winStatus
             sunos   = $sunosStatus
             freebsd = $freebsdStatus
+            macos   = $macosStatus
         }
     }
 
@@ -334,11 +350,11 @@ function Update-SupportedComponents {
     $tableLines = @(
         "## Supported Components",
         "",
-        "| Component | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD |",
-        "|---|---|---|---|---|---|---|"
+        "| Component | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |",
+        "|---|---|---|---|---|---|---|---|"
     )
     foreach ($r in $rows) {
-        $tableLines += "| ``$($r.comp)`` | $($r.apk) | $($r.deb) | $($r.rpm) | $($r.win) | $($r.sunos) | $($r.freebsd) |"
+        $tableLines += "| ``$($r.comp)`` | $($r.apk) | $($r.deb) | $($r.rpm) | $($r.win) | $($r.sunos) | $($r.freebsd) | $($r.macos) |"
     }
     $tableBlock = ($tableLines -join "`n") + "`n"
 
@@ -358,6 +374,7 @@ function Update-SupportedComponents {
                 windows   = $r.win
                 sunos     = $r.sunos
                 freebsd   = $r.freebsd
+                macos     = $r.macos
             }
         }
         $jsonText = ConvertTo-Json -InputObject $jsonItems -Depth 3

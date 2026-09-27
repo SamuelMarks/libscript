@@ -90,6 +90,8 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+: "${MSI_DIR:=}"
+
 if [ -z "$OUT_FILE" ]; then
   printf '[ERROR] --out is required.
 ' >&2
@@ -103,6 +105,8 @@ PRODUCT_CODE=$("${LIBSCRIPT_ROOT_DIR}/_lib/_common/uuid_gen.sh" "6ba7b810-9dad-1
 DISPLAY_NAME="Open edX Platform"
 if [ "$VARIANT" = "offline" ]; then
   DISPLAY_NAME="Open edX Platform (Air-Gapped Offline)"
+elif [ "$VARIANT" = "online" ]; then
+  DISPLAY_NAME="Open edX Platform (Online)"
 fi
 
 _p1="${VERSION%%.*}"

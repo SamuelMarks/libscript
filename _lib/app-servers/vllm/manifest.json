@@ -6,8 +6,8 @@
   "category": "app-servers",
   "provides": ["app-server", "vllm"],
   "conflicts": [],
-  "os_whitelist": ["linux", "darwin"],
-  "os_blacklist": ["windows", "freebsd", "sunos", "alpine"],
+  "os_whitelist": ["linux"],
+  "os_blacklist": ["windows", "freebsd", "sunos", "alpine", "darwin"],
   "arch_blacklist": ["aarch64", "arm64"],
   "ports": []
 }

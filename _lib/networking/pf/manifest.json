@@ -11,5 +11,5 @@
     "runtime_deps": [],
     "tier": "recommended"
   },
-  "os_whitelist": ["freebsd", "bsd"]
+  "os_whitelist": ["freebsd", "bsd", "darwin"]
 }

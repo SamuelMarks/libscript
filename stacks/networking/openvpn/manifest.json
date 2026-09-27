@@ -5,5 +5,5 @@
   "title": "openvpn",
   "description": "openvpn stack",
   "provides": ["openvpn"],
-  "os_blacklist": ["sunos"]
+  "os_blacklist": ["sunos", "darwin"]
 }

@@ -1,0 +1,91 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# ## Overview
+# Configuration and definition file for macOS 14 ARM64 Vagrant environment.
+#
+# ## Usage
+# Processed automatically during build or runtime via Vagrant.
+
+# Locate Bento library path from environment, local cache, sibling directory, or user home
+bento_candidates = [
+  ENV['BENTO_DIR'] ? File.join(ENV['BENTO_DIR'], 'lib') : nil,
+  ENV['BENTO_PATH'] ? File.join(ENV['BENTO_PATH'], 'lib') : nil,
+  File.expand_path('../../cache/bento/lib', __dir__),
+  File.expand_path('../../../bento/lib', __dir__),
+  File.expand_path('~/repos/bento/lib'),
+  File.expand_path('~/bento/lib'),
+  File.expand_path('~/.cache/bento/lib')
+].compact
+
+bento_lib = bento_candidates.find { |dir| Dir.exist?(dir) }
+
+# Clone bento if missing from all candidate paths
+unless bento_lib
+  cache_bento = File.expand_path('../../cache/bento', __dir__)
+  system("git clone --depth 1 -b multi-os-qemu-aarch64 https://github.com/SamuelMarks/bento.git \"#{cache_bento}\"") unless Dir.exist?(cache_bento)
+  bento_lib = File.join(cache_bento, 'lib') if Dir.exist?(File.join(cache_bento, 'lib'))
+end
+
+$LOAD_PATH.unshift(bento_lib) if bento_lib && Dir.exist?(bento_lib)
+
+begin
+  require 'bento/vagrant_utm_macos_snapshot'
+  Bento::VagrantUtmMacosSnapshot.install!
+rescue LoadError
+  # Fallback if bento library is not in path
+end
+
+# Read environment variables for target package and repository root
+test_target = ENV['LIBSCRIPT_TEST_TARGET'] || 'sqlite'
+repo_root = ENV['LIBSCRIPT_REPO_ROOT'] || "../.."
+
+# VM name for persistent snapshotting across component test runs
+vm_name = ENV['LIBSCRIPT_VM_NAME'] || "macos-14-arm64"
+
+Vagrant.configure("2") do |config|
+  config.vm.define vm_name do |t|
+    t.vm.box = "bento/macos-14-arm64"
+    t.vm.box_version = "0"
+
+    t.vm.guest = :darwin
+    t.vm.communicator = "ssh"
+
+    t.ssh.username = "vagrant"
+    t.ssh.password = "vagrant"
+    t.ssh.insert_key = false
+    t.ssh.private_key_path = [
+      File.expand_path("~/.vagrant.d/insecure_private_keys/vagrant.key.ed25519"),
+      File.expand_path("~/.vagrant.d/insecure_private_key")
+    ]
+    t.ssh.shell = "/bin/sh"
+
+    t.vm.provider "utm" do |utm|
+      utm.cpus = 4
+      utm.memory = 4096
+      utm.check_guest_additions = false
+      utm.directory_share_mode = "virtFS"
+    end
+
+    t.vm.synced_folder ".", "/vagrant", disabled: true
+    t.vm.allowed_synced_folder_types = [:rsync]
+
+    # Sync the repository root directory
+    t.vm.synced_folder repo_root, "/Users/vagrant/libscript", type: "rsync",
+      rsync_exclude: [".git/", "tests_tmp/", "vagrant/", "cache/"]
+
+    # Provision the VM and run the test
+    t.vm.provision "shell", inline: <<-SHELL
+      set -e
+
+      echo "Configuring libscript..."
+      export LIBSCRIPT_ROOT_DIR=/Users/vagrant/libscript
+
+      echo "Installing #{test_target} using libscript..."
+      /Users/vagrant/libscript/libscript.sh install #{test_target}
+
+      echo "Running test for #{test_target}..."
+      /Users/vagrant/libscript/libscript.sh test #{test_target}
+    SHELL
+  end
+end

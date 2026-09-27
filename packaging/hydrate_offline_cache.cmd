@@ -33,6 +33,7 @@ for %%I in ("%SCRIPT_DIR%\..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 
 set "MANIFEST="
 set "CACHE_DIR="
+set "COMPONENT="
 set "VERIFY_ONLY="
 set "WHEELS="
 set "CODEBASE="
@@ -46,6 +47,11 @@ if /i "%~1"=="--manifest" (
 )
 if /i "%~1"=="--cache-dir" (
     set "CACHE_DIR=%~2"
+    shift & shift
+    goto :parse_loop
+)
+if /i "%~1"=="--component" (
+    set "COMPONENT=%~2"
     shift & shift
     goto :parse_loop
 )
@@ -77,6 +83,7 @@ echo.
 echo Options:
 echo   --manifest ^<path^>     Path to offline_bundle.json manifest
 echo   --cache-dir ^<dir^>     Target cache staging directory
+echo   --component ^<name^>    Filter by component (mysql, redis, mongodb, python, nodejs, meilisearch, codebase, wheels, all)
 echo   --verify-only         Verify SHA-256 integrity without downloading
 echo   --wheels              Trigger Python wheels downloading
 echo   --codebase            Fetch core codebase archive
@@ -87,6 +94,7 @@ exit /b 0
 set "PS_ARGS="
 if not "%MANIFEST%"=="" set PS_ARGS=!PS_ARGS! -Manifest "%MANIFEST%"
 if not "%CACHE_DIR%"=="" set PS_ARGS=!PS_ARGS! -CacheDir "%CACHE_DIR%"
+if not "%COMPONENT%"=="" set PS_ARGS=!PS_ARGS! -Component "%COMPONENT%"
 if "%VERIFY_ONLY%"=="1" set PS_ARGS=!PS_ARGS! -VerifyOnly
 if "%WHEELS%"=="1" set PS_ARGS=!PS_ARGS! -Wheels
 if "%CODEBASE%"=="1" set PS_ARGS=!PS_ARGS! -Codebase

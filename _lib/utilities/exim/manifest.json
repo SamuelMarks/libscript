@@ -9,6 +9,6 @@
   "provides": ["mail", "smtp", "exim"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"],
+  "os_blacklist": ["sunos", "darwin"],
   "ports": [25, 587]
 }

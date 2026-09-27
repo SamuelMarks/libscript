@@ -33,6 +33,7 @@ Download or fetch edx-platform release archive into cache/codebase/.
 param (
     [string]$Manifest = "",
     [string]$CacheDir = "",
+    [string]$Component = "",
     [switch]$VerifyOnly,
     [switch]$Wheels,
     [switch]$Codebase
@@ -175,6 +176,7 @@ $totalErrors = 0
 # 1. Runtimes
 if ($manifestContent.runtimes) {
     foreach ($prop in $manifestContent.runtimes.PSObject.Properties) {
+        if ($Component -and $Component -ne "all" -and $prop.Name -ne $Component) { continue }
         $rt = $prop.Value
         $dest = Join-Path $runtimesDir $rt.filename
         if (-not (Process-Artifact -Url $rt.url -Destination $dest -ExpectedHash $rt.sha256 -Category "Runtime")) {
@@ -186,6 +188,7 @@ if ($manifestContent.runtimes) {
 # 2. Databases
 if ($manifestContent.databases) {
     foreach ($prop in $manifestContent.databases.PSObject.Properties) {
+        if ($Component -and $Component -ne "all" -and $prop.Name -ne $Component) { continue }
         $db = $prop.Value
         $dest = Join-Path $databasesDir $db.filename
         if (-not (Process-Artifact -Url $db.url -Destination $dest -ExpectedHash $db.sha256 -Category "Database")) {
@@ -196,28 +199,34 @@ if ($manifestContent.databases) {
 
 # 3. Wheels
 if ($manifestContent.wheels -and $manifestContent.wheels.packages) {
-    foreach ($whl in $manifestContent.wheels.packages) {
-        $dest = Join-Path $wheelsDir $whl.filename
-        if (-not (Process-Artifact -Url $whl.url -Destination $dest -ExpectedHash $whl.sha256 -Category "Wheel")) {
-            $totalErrors++
+    if (-not $Component -or $Component -eq "all" -or $Component -eq "wheels" -or $Component -eq "openedx-core" -or $Component -eq "openedx" -or $Wheels) {
+        foreach ($whl in $manifestContent.wheels.packages) {
+            $dest = Join-Path $wheelsDir $whl.filename
+            if (-not (Process-Artifact -Url $whl.url -Destination $dest -ExpectedHash $whl.sha256 -Category "Wheel")) {
+                $totalErrors++
+            }
         }
     }
 }
 
 # 4. Codebase
 if ($manifestContent.codebase -and $manifestContent.codebase.archive_filename) {
-    $codeDest = Join-Path $codebaseDir $manifestContent.codebase.archive_filename
-    if (-not (Process-Artifact -Url $manifestContent.codebase.archive_url -Destination $codeDest -ExpectedHash $manifestContent.codebase.archive_sha256 -Category "Codebase")) {
-        $totalErrors++
+    if (-not $Component -or $Component -eq "all" -or $Component -eq "codebase" -or $Component -eq "openedx-core" -or $Component -eq "openedx" -or $Codebase) {
+        $codeDest = Join-Path $codebaseDir $manifestContent.codebase.archive_filename
+        if (-not (Process-Artifact -Url $manifestContent.codebase.archive_url -Destination $codeDest -ExpectedHash $manifestContent.codebase.archive_sha256 -Category "Codebase")) {
+            $totalErrors++
+        }
     }
 }
 
 # Demo Content
 if ($manifestContent.codebase -and $manifestContent.codebase.demo_content) {
-    foreach ($demo in $manifestContent.codebase.demo_content) {
-        $demoDest = Join-Path $codebaseDir $demo.filename
-        if (-not (Process-Artifact -Url $demo.url -Destination $demoDest -ExpectedHash $demo.sha256 -Category "DemoContent")) {
-            $totalErrors++
+    if (-not $Component -or $Component -eq "all" -or $Component -eq "codebase" -or $Component -eq "openedx-core" -or $Component -eq "openedx" -or $Codebase) {
+        foreach ($demo in $manifestContent.codebase.demo_content) {
+            $demoDest = Join-Path $codebaseDir $demo.filename
+            if (-not (Process-Artifact -Url $demo.url -Destination $demoDest -ExpectedHash $demo.sha256 -Category "DemoContent")) {
+                $totalErrors++
+            }
         }
     }
 }

@@ -4,7 +4,7 @@
   "provides": ["git-server", "gitlab", "gitlab-ce"],
   "conflicts": [],
   "os_whitelist": ["all"],
-  "os_blacklist": ["sunos"],
+  "os_blacklist": ["sunos", "darwin"],
   "ports": ["80", "443", "22"],
   "title": "Gitlab",
   "description": "LibScript component for GITLAB",

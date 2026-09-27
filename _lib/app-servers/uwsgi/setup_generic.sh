@@ -97,7 +97,7 @@ case "$ACTION" in
       mkdir -p "${TARGET_DIR}"
       export UWSGI_PROFILE_OVERRIDE="xml=no"
       if command -v uv >/dev/null 2>&1; then
-        uv venv "${TARGET_DIR}"
+        uv venv --allow-existing "${TARGET_DIR}"
         if [ "${VERSION}" = "latest" ]; then
           uv pip install --python "${TARGET_DIR}/bin/python" uwsgi
         else

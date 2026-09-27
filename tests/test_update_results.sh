@@ -146,6 +146,19 @@ EOF_TODO
     exit 1
   fi
 
+  # Verification 7: compA has macOS success
+  touch "${_test_tmp}/tests_tmp/compA.darwin.success"
+  "${REPO_ROOT}/tests/update_results.sh" "${_test_tmp}" \
+    --output "${_test_tmp}/CUSTOM_REPORT.md" \
+    --json "${_test_tmp}/tests_tmp/matrix_results.json"
+
+  # shellcheck disable=SC2016
+  if ! grep -q '| `compA` |.*| ✅ |$' "${_test_tmp}/CUSTOM_REPORT.md"; then
+    printf 'Error: compA macOS status not updated in CUSTOM_REPORT.md\n' >&2
+    rm -rf "${_test_tmp}"
+    exit 1
+  fi
+
   if [ ! -f "${_test_tmp}/tests_tmp/matrix_results.json" ]; then
     printf 'Error: matrix_results.json was not generated\n' >&2
     rm -rf "${_test_tmp}"

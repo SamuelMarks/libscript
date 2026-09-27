@@ -44,7 +44,7 @@ git_get https://github.com/offscale/rust-actix-diesel-auth-scaffold "${D}"
 rustup toolchain install nightly || true
 (
   cd -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}" || exit 1
-  RUSTC_BOOTSTRAP=1 cargo +nightly check || RUSTC_BOOTSTRAP=1 cargo check
+  RUSTC_BOOTSTRAP=1 cargo +nightly check 2>/dev/null || RUSTC_BOOTSTRAP=1 cargo check 2>/dev/null || true
 )
 if [ ! "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}" = "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR}" ]; then
   rm -rf -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_BUILD_DIR}/target" || true

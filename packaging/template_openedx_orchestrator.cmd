@@ -90,6 +90,7 @@ for /f "usebackq delims=" %%A in (`call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\uuid_
 
 set "DISPLAY_NAME=Open edX Platform"
 if /i "%VARIANT%"=="offline" set "DISPLAY_NAME=Open edX Platform (Air-Gapped Offline)"
+if /i "%VARIANT%"=="online" set "DISPLAY_NAME=Open edX Platform (Online)"
 
 set "WIX_VERSION=%VERSION%"
 for /f "tokens=1,2,3,4 delims=." %%a in ("%VERSION%") do (

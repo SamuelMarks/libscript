@@ -37,29 +37,34 @@ for LIB in "_lib/_common/priv.sh" "_lib/_common/envsubst_safe.sh" \
   . "${SCRIPT_NAME}"
 done
 
-libscript_depends "python"
+if ! command -v python3 >/dev/null 2>&1 && ! command -v uv >/dev/null 2>&1; then
+  libscript_depends "python"
+fi
 
 if [ ! -d "${JUPYTERHUB_VENV}" ]; then
-  priv  mkdir -p -- "${JUPYTERHUB_VENV}"
   if [ "$(uname -s)" = "Darwin" ]; then
-    priv  chown -R -- "${USER:-$(id -un)}" "${JUPYTERHUB_VENV}"
+    mkdir -p "${JUPYTERHUB_VENV}"
   else
+    priv  mkdir -p -- "${JUPYTERHUB_VENV}"
     priv  chown -R -- "${USER:-$(id -un)}":"${GROUP:-${USER:-$(id -un)}}" "${JUPYTERHUB_VENV}"
   fi
   if [ "$(uname -s)" = "FreeBSD" ]; then
     python3 -m venv "${JUPYTERHUB_VENV}"
   elif command -v uv >/dev/null 2>&1; then
-    uv venv --python "${PYTHON_VERSION}" -- "${JUPYTERHUB_VENV}"
+    uv venv --allow-existing "${JUPYTERHUB_VENV}"
   else
     python3 -m venv "${JUPYTERHUB_VENV}"
   fi
   if [ -x "${JUPYTERHUB_VENV}/bin/python" ]; then
     "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U pip setuptools wheel "jupyverse[auth,jupyterlab]" jupyterhub fps-jupyterlab fps-auth jupyter-collaboration oauthenticator jupyterhub-nativeauthenticator || true
   fi
-  # "${JUPYTERHUB_VENV}"'/bin/python' -m pip install -U jupyter notebook pyright python-language-server python-lsp-server
 fi
 if ! libscript_cmd_avail configurable-http-proxy; then
-  priv env "PATH=$PATH" npm install -g configurable-http-proxy
+  if [ "$(uname -s)" = "Darwin" ]; then
+    npm install -g configurable-http-proxy || true
+  else
+    priv env "PATH=$PATH" npm install -g configurable-http-proxy || true
+  fi
 fi
 
 if [ "$(uname -s)" = "Darwin" ]; then
@@ -81,12 +86,12 @@ else
 fi
 
 if [ ! -d "${JUPYTERHUB_NOTEBOOK_DIR}" ]; then
-  priv  mkdir -p -- "${JUPYTERHUB_NOTEBOOK_DIR}"
-fi
-if [ "$(uname -s)" = "Darwin" ]; then
-  priv  chown -R -- "${JUPYTERHUB_SERVICE_USER}" "${JUPYTERHUB_NOTEBOOK_DIR}" "${JUPYTERHUB_VENV}"
-else
-  priv  chown -R -- "${JUPYTERHUB_SERVICE_USER}":"${JUPYTERHUB_SERVICE_USER}" "${JUPYTERHUB_NOTEBOOK_DIR}" "${JUPYTERHUB_VENV}"
+  if [ "$(uname -s)" = "Darwin" ]; then
+    mkdir -p "${JUPYTERHUB_NOTEBOOK_DIR}"
+  else
+    priv  mkdir -p -- "${JUPYTERHUB_NOTEBOOK_DIR}"
+    priv  chown -R -- "${JUPYTERHUB_SERVICE_USER}":"${JUPYTERHUB_SERVICE_USER}" "${JUPYTERHUB_NOTEBOOK_DIR}" "${JUPYTERHUB_VENV}"
+  fi
 fi
 
 if [ -d '/etc/systemd/system' ]; then

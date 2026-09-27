@@ -166,12 +166,16 @@ case "$ACTION" in
           if ! command -v erl >/dev/null 2>&1; then
             priv pkg install -y erlang || true
           fi
+        elif command -v brew >/dev/null 2>&1; then
+          if ! command -v erl >/dev/null 2>&1; then
+            brew install erlang || true
+          fi
         fi
         REBAR3_DOWNLOAD_URL="https://s3.amazonaws.com/rebar3/rebar3"
       fi
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/rebar3/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
+      if [ ! -x "${TARGET_DIR}/bin/rebar3" ]; then
         log_info "Installing rebar3 ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/rebar3/"*"${VERSION}"* >/dev/null 2>&1; then

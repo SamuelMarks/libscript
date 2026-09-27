@@ -153,7 +153,12 @@ case "$ACTION" in
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/bun/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
+      if [ -x "${TARGET_DIR}/bin/bun" ]; then
+        log_info "bun ${VERSION} is already installed."
+      elif command -v bun >/dev/null 2>&1; then
+        mkdir -p "${TARGET_DIR}/bin"
+        ln -sf "$(command -v bun)" "${TARGET_DIR}/bin/bun"
+      else
         log_info "Installing bun ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/bun/"*"${VERSION}"* >/dev/null 2>&1; then
@@ -203,8 +208,6 @@ case "$ACTION" in
             fi
           fi
         fi
-      else
-        log_info "bun ${VERSION} is already installed."
       fi
       libscript_symlink_alias "bun" "$VERSION" "${EXACT_VERSION}"
     fi

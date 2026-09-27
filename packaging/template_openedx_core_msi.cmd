@@ -5,10 +5,13 @@ rem Packages the Open edX LMS/CMS codebase, scripts, configuration, and data fol
 rem Expects third-party dependencies (MySQL, Redis, etc.) as standalone reference-counted MSIs.
 rem
 rem ## Usage
-rem   call packaging	emplate_openedx_core_msi.cmd [OPTIONS]
+rem   call packaging\template_openedx_core_msi.cmd [OPTIONS]
 rem
 rem ## Parameters
 rem   --version <version>   Package version (default: 22.1.0)
+rem   --variant <var>       Installer variant: online or offline (default: online)
+rem   --online              Shorthand for --variant online
+rem   --offline             Shorthand for --variant offline
 rem   --out <file.wxs>      Output path for the generated WiX XML manifest
 rem   --help, -h            Show this help text
 
@@ -27,6 +30,7 @@ set "SCRIPT_DIR=%~dp0"
 for %%I in ("%SCRIPT_DIR%..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 
 set "VERSION=22.1.0"
+set "VARIANT=online"
 set "OUT_FILE="
 
 :parse_loop
@@ -34,6 +38,22 @@ if "%~1"=="" goto parse_done
 if /i "%~1"=="--version" (
     set "VERSION=%~2"
     shift
+    shift
+    goto parse_loop
+)
+if /i "%~1"=="--variant" (
+    set "VARIANT=%~2"
+    shift
+    shift
+    goto parse_loop
+)
+if /i "%~1"=="--online" (
+    set "VARIANT=online"
+    shift
+    goto parse_loop
+)
+if /i "%~1"=="--offline" (
+    set "VARIANT=offline"
     shift
     goto parse_loop
 )
@@ -52,10 +72,13 @@ goto parse_loop
 echo Open edX Core WiX Template Generator
 echo.
 echo Usage:
-echo   call packaging	emplate_openedx_core_msi.cmd [OPTIONS]
+echo   call packaging\template_openedx_core_msi.cmd [OPTIONS]
 echo.
 echo Options:
 echo   --version ^<ver^>    Package version (default: 22.1.0)
+echo   --variant ^<var^>    Installer variant: online or offline (default: online)
+echo   --online           Shorthand for --variant online
+echo   --offline          Shorthand for --variant offline
 echo   --out ^<file.wxs^>   Output WiX manifest path
 echo   --help, -h         Show this help text
 exit /b 0
@@ -68,7 +91,14 @@ if "%OUT_FILE%"=="" (
 
 set "UPGRADE_CODE=B8C8E64E-9B5A-4B7C-A5D8-0F18B9918239"
 
-for /f "usebackq delims=" %%A in (`call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\uuid_gen.cmd" 6ba7b810-9dad-11d1-80b4-00c04fd430c8 "openedx.core.%VERSION%"`) do set "PRODUCT_CODE=%%A"
+for /f "usebackq delims=" %%A in (`call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\uuid_gen.cmd" 6ba7b810-9dad-11d1-80b4-00c04fd430c8 "openedx.core.%VARIANT%.%VERSION%"`) do set "PRODUCT_CODE=%%A"
+
+set "DISPLAY_NAME=Open edX Platform Core"
+set "PKG_DESC=Open edX Platform Core application bundle."
+if /i "%VARIANT%"=="offline" (
+    set "DISPLAY_NAME=Open edX Platform Core (Air-Gapped Offline)"
+    set "PKG_DESC=Open edX Platform Core air-gapped application bundle."
+)
 
 set "WIX_VERSION=%VERSION%"
 for /f "tokens=1,2,3,4 delims=." %%a in ("%VERSION%") do (
@@ -87,7 +117,7 @@ for /f "tokens=1,2,3,4 delims=." %%a in ("%VERSION%") do (
     echo ^<?xml version="1.0" encoding="UTF-8"?^>
     echo ^<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"^>
     echo   ^<Product Id="%PRODUCT_CODE%"
-    echo            Name="Open edX Platform Core"
+    echo            Name="%DISPLAY_NAME%"
     echo            Language="1033"
     echo            Version="%WIX_VERSION%"
     echo            Manufacturer="The Axim Collaborative &amp; LibScript Contributors"
@@ -97,7 +127,7 @@ for /f "tokens=1,2,3,4 delims=." %%a in ("%VERSION%") do (
     echo              InstallerVersion="405"
     echo              Compressed="yes"
     echo              InstallScope="perMachine"
-    echo              Description="Open edX Platform Core LMS and Studio Services" /^>
+    echo              Description="%PKG_DESC%" /^>
     echo.
     echo     ^<MajorUpgrade DowngradeErrorMessage="A newer version of Open edX Platform Core is already installed." Schedule="afterInstallInitialize" /^>
     echo     ^<Media Id="1" Cabinet="openedx_core.cab" EmbedCab="yes" /^>
@@ -143,6 +173,7 @@ for /f "tokens=1,2,3,4 delims=." %%a in ("%VERSION%") do (
     echo       ^<Component Id="CoreIdentityRecord" Guid="E2A89C15-99BD-4720-A0E8-A97A2E504F63"^>
     echo         ^<RegistryKey Root="HKLM" Key="Software\LibScript\OpenEdX"^>
     echo           ^<RegistryValue Name="Installed" Type="integer" Value="1" KeyPath="yes" /^>
+    echo           ^<RegistryValue Name="Variant" Type="string" Value="%VARIANT%" /^>
     echo           ^<RegistryValue Name="Version" Type="string" Value="%VERSION%" /^>
     echo           ^<RegistryValue Name="InstallDir" Type="string" Value="[INSTALLFOLDER]" /^>
     echo           ^<RegistryValue Name="DataDir" Type="string" Value="[DATA_DIR]" /^>

@@ -153,14 +153,19 @@ case "$ACTION" in
       brew install qemu
     fi
 
-    if [ "$QEMU_SETUP_UEFI_FIRMWARE" = "1" ] && [ "${TARGET_OS}" != "darwin" ]; then
-      setup_uefi_symlinks
-    fi
+    case "${TARGET_OS:-}${UNAME:-}" in
+      *[Dd]arwin*|*[Mm]ac[Oo][Ss]*) ;;
+      *)
+        if [ "$QEMU_SETUP_UEFI_FIRMWARE" = "1" ]; then
+          setup_uefi_symlinks
+        fi
 
-    if [ "$QEMU_SETUP_KVM_GROUPS" = "1" ] && [ "${TARGET_OS}" != "darwin" ]; then
-      setup_user_groups
-      setup_kvm_permissions
-    fi
+        if [ "$QEMU_SETUP_KVM_GROUPS" = "1" ]; then
+          setup_user_groups
+          setup_kvm_permissions
+        fi
+        ;;
+    esac
 
     if command -v systemctl >/dev/null 2>&1; then
       if systemctl list-unit-files libvirtd.service >/dev/null 2>&1; then

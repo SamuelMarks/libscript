@@ -30,6 +30,7 @@ for %%I in ("%SCRIPT_DIR%..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 
 set "COMPONENT="
 set "VERSION=1.0.0"
+set "VARIANT=offline"
 set "OUT_FILE="
 set "SOURCE_DIR="
 
@@ -46,6 +47,22 @@ if /i "%~1"=="--component" (
 if /i "%~1"=="--version" (
     set "VERSION=%~2"
     shift
+    shift
+    goto parse_loop
+)
+if /i "%~1"=="--variant" (
+    set "VARIANT=%~2"
+    shift
+    shift
+    goto parse_loop
+)
+if /i "%~1"=="--online" (
+    set "VARIANT=online"
+    shift
+    goto parse_loop
+)
+if /i "%~1"=="--offline" (
+    set "VARIANT=offline"
     shift
     goto parse_loop
 )
@@ -72,11 +89,14 @@ goto parse_loop
 echo Standalone Component WiX Generator
 echo.
 echo Usage:
-echo   call packaging	emplate_component_msi.cmd [OPTIONS]
+echo   call packaging\template_component_msi.cmd [OPTIONS]
 echo.
 echo Options:
 echo   --component ^<name^>   Component name (mysql, redis, mongodb, python, nodejs, meilisearch)
 echo   --version ^<ver^>      Version string (e.g. 8.0.39, default: 1.0.0)
+echo   --variant ^<var^>      Installer variant: online or offline (default: offline)
+echo   --online             Shorthand for --variant online
+echo   --offline            Shorthand for --variant offline
 echo   --out ^<file.wxs^>     Output WiX file path
 echo   --source-dir ^<dir^>   Payload directory containing files to bundle
 echo   --help, -h           Show this help text
@@ -128,7 +148,29 @@ if "%UPGRADE_CODE%"=="" (
 )
 
 :: Generate deterministic ProductCode
-for /f "usebackq delims=" %%A in (`call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\uuid_gen.cmd" 6ba7b810-9dad-11d1-80b4-00c04fd430c8 "libscript.%COMPONENT%.%VERSION%"`) do set "PRODUCT_CODE=%%A"
+for /f "usebackq delims=" %%A in (`call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\uuid_gen.cmd" 6ba7b810-9dad-11d1-80b4-00c04fd430c8 "libscript.%COMPONENT%.%VARIANT%.%VERSION%"`) do set "PRODUCT_CODE=%%A"
+
+set "DISPLAY_TITLE=LibScript %TITLE%"
+set "PKG_DESC=LibScript %TITLE% Standalone Installer"
+if /i "%VARIANT%"=="online" (
+    set "DISPLAY_TITLE=LibScript %TITLE% (Online)"
+    set "PKG_DESC=LibScript %TITLE% Online Standalone Installer"
+)
+if /i "%VARIANT%"=="offline" (
+    set "DISPLAY_TITLE=LibScript %TITLE% (Offline)"
+    set "PKG_DESC=LibScript %TITLE% Offline Air-Gapped Standalone Installer"
+)
+
+set "DOWNLOAD_URL="
+set "BUNDLE_JSON=%LIBSCRIPT_ROOT_DIR%\stacks\cms\openedx\offline_bundle.json"
+if exist "%BUNDLE_JSON%" (
+    if /i "%COMPONENT%"=="python" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).runtimes.python.url"`) do set "DOWNLOAD_URL=%%A"
+    if /i "%COMPONENT%"=="nodejs" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).runtimes.nodejs.url"`) do set "DOWNLOAD_URL=%%A"
+    if /i "%COMPONENT%"=="mysql" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.mysql.url"`) do set "DOWNLOAD_URL=%%A"
+    if /i "%COMPONENT%"=="redis" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.redis.url"`) do set "DOWNLOAD_URL=%%A"
+    if /i "%COMPONENT%"=="mongodb" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.mongodb.url"`) do set "DOWNLOAD_URL=%%A"
+    if /i "%COMPONENT%"=="meilisearch" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.meilisearch.url"`) do set "DOWNLOAD_URL=%%A"
+)
 
 set "DIR_NAME=%COMPONENT%"
 if /i "%COMPONENT%"=="mysql" set "DIR_NAME=MySQL"
@@ -155,7 +197,7 @@ for /f "tokens=1,2,3,4 delims=." %%a in ("%VERSION%") do (
     echo ^<?xml version="1.0" encoding="UTF-8"?^>
     echo ^<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"^>
     echo   ^<Product Id="%PRODUCT_CODE%"
-    echo            Name="LibScript %TITLE%"
+    echo            Name="%DISPLAY_TITLE%"
     echo            Language="1033"
     echo            Version="%WIX_VERSION%"
     echo            Manufacturer="LibScript"
@@ -165,7 +207,7 @@ for /f "tokens=1,2,3,4 delims=." %%a in ("%VERSION%") do (
     echo              InstallerVersion="405"
     echo              Compressed="yes"
     echo              InstallScope="perMachine"
-    echo              Description="LibScript %TITLE% Standalone Installer" /^>
+    echo              Description="%PKG_DESC%" /^>
     echo.
     echo     ^<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." Schedule="afterInstallInitialize" /^>
     echo     ^<Media Id="1" Cabinet="payload.cab" EmbedCab="yes" /^>
@@ -204,6 +246,7 @@ for /f "tokens=1,2,3,4 delims=." %%a in ("%VERSION%") do (
     )
     echo         ^<RegistryKey Root="HKLM" Key="Software\LibScript\%COMPONENT%"^>
     echo           ^<RegistryValue Name="Installed" Type="integer" Value="1" KeyPath="yes" /^>
+    echo           ^<RegistryValue Name="Variant" Type="string" Value="%VARIANT%" /^>
     echo           ^<RegistryValue Name="Version" Type="string" Value="%VERSION%" /^>
     echo           ^<RegistryValue Name="InstallDir" Type="string" Value="[INSTALLFOLDER]" /^>
     echo           ^<RegistryValue Name="Port" Type="string" Value="[PORT]" /^>
@@ -211,6 +254,20 @@ for /f "tokens=1,2,3,4 delims=." %%a in ("%VERSION%") do (
     echo       ^</Component^>
     echo     ^</DirectoryRef^>
 ) > "%OUT_FILE%"
+
+if /i "%VARIANT%"=="online" if not "%DOWNLOAD_URL%"=="" (
+    (
+        echo     ^<CustomAction Id="CA_Download_%COMPONENT%"
+        echo                   Directory="INSTALLFOLDER"
+        echo                   ExeCommand="powershell.exe -NoProfile -ExecutionPolicy Bypass -Command &quot;if (-not (Test-Path '[INSTALLFOLDER]bin\*.exe')) { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $tmp = [IO.Path]::GetTempFileName() + '.zip'; Invoke-WebRequest -Uri '%DOWNLOAD_URL%' -OutFile $tmp; Expand-Archive -Path $tmp -DestinationPath '[INSTALLFOLDER]' -Force; Remove-Item $tmp -Force }&quot;"
+        echo                   Execute="deferred"
+        echo                   Return="ignore"
+        echo                   Impersonate="no" /^>
+        echo     ^<InstallExecuteSequence^>
+        echo       ^<Custom Action="CA_Download_%COMPONENT%" Before="InstallServices"^>NOT Installed^</Custom^>
+        echo     ^</InstallExecuteSequence^>
+    ) >> "%OUT_FILE%"
+)
 
 if not "%SERVICE_NAME%"=="" (
     for /f "usebackq delims=" %%A in (`call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\uuid_gen.cmd" 6ba7b810-9dad-11d1-80b4-00c04fd430c8 "service.%COMPONENT%"`) do set "SERVICE_GUID=%%A"
@@ -231,7 +288,6 @@ if not "%SERVICE_NAME%"=="" (
         echo                         Description="Managed service daemon for LibScript %TITLE%." /^>
         echo         ^<ServiceControl Id="Control_%COMPONENT%_Service"
         echo                         Name="%SERVICE_NAME%"
-        echo                         Start="install"
         echo                         Stop="both"
         echo                         Remove="uninstall"
         echo                         Wait="yes" /^>

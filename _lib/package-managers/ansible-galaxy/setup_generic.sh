@@ -153,7 +153,7 @@ case "$ACTION" in
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/ansible-galaxy/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
+      if [ ! -x "${TARGET_DIR}/bin/ansible-galaxy" ]; then
         log_info "Installing ansible-galaxy ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/ansible-galaxy/"*"${VERSION}"* >/dev/null 2>&1; then
@@ -183,11 +183,18 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] || [ "$UNAME_LOWER" = "sunos" ] && [ -n "${PKG_MGR:-}" ]; then
+            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] || [ "$UNAME_LOWER" = "sunos" ] || [ "$UNAME_LOWER" = "darwin" ]; then
               log_info "Falling back to system package manager or pip for ansible-galaxy..."
+              if command -v brew >/dev/null 2>&1; then
+                brew install ansible || true
+              fi
               libscript_depends "ansible-galaxy" || true
               if ! command -v ansible-galaxy >/dev/null 2>&1; then
-                if command -v python3 >/dev/null 2>&1 && python3 -m pip --version >/dev/null 2>&1; then
+                if command -v uv >/dev/null 2>&1; then
+                  uv tool install ansible-core || true
+                elif command -v pipx >/dev/null 2>&1; then
+                  pipx install ansible-core || true
+                elif command -v python3 >/dev/null 2>&1 && python3 -m pip --version >/dev/null 2>&1; then
                   python3 -m pip install --quiet ansible-core || true
                 fi
               fi

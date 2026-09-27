@@ -81,7 +81,7 @@ check_manifest_support() {
     'alpine'|'debian'|'rhel'|'rocky'|'linux') _m_family="linux" ;;
     'freebsd'|'bsd') _m_family="bsd" ;;
     'windows') _m_family="windows" ;;
-    'darwin') _m_family="darwin" ;;
+    'darwin'|'macos') _m_family="darwin" ;;
     'sunos') _m_family="sunos" ;;
   esac
 
@@ -89,22 +89,22 @@ check_manifest_support() {
     BEGIN { in_bl=0; in_wl=0; has_wl=0; wl_match=0; result="yes" }
     /"os_blacklist"\s*:/ {
       in_bl=1; in_wl=0
-      if ($0 ~ "\"" os "\"" || (family != "" && $0 ~ "\"" family "\"")) { result="no"; exit }
+      if ($0 ~ "\"" os "\"" || (family != "" && $0 ~ "\"" family "\"") || (os ~ /darwin|macos/ && ($0 ~ "\"darwin\"" || $0 ~ "\"macos\""))) { result="no"; exit }
       if ($0 ~ /\]/) { in_bl=0 }
       next
     }
     /"os_whitelist"\s*:/ {
       in_wl=1; in_bl=0; has_wl=1
-      if ($0 ~ "\"" os "\"" || $0 ~ "\"all\"" || (family != "" && $0 ~ "\"" family "\"")) { wl_match=1 }
+      if ($0 ~ "\"" os "\"" || $0 ~ "\"all\"" || (family != "" && $0 ~ "\"" family "\"") || (os ~ /darwin|macos/ && ($0 ~ "\"darwin\"" || $0 ~ "\"macos\""))) { wl_match=1 }
       if ($0 ~ /\]/) { in_wl=0 }
       next
     }
     in_bl {
-      if ($0 ~ "\"" os "\"" || (family != "" && $0 ~ "\"" family "\"")) { result="no"; exit }
+      if ($0 ~ "\"" os "\"" || (family != "" && $0 ~ "\"" family "\"") || (os ~ /darwin|macos/ && ($0 ~ "\"darwin\"" || $0 ~ "\"macos\""))) { result="no"; exit }
       if ($0 ~ /\]/) { in_bl=0 }
     }
     in_wl {
-      if ($0 ~ "\"" os "\"" || $0 ~ "\"all\"" || (family != "" && $0 ~ "\"" family "\"")) { wl_match=1 }
+      if ($0 ~ "\"" os "\"" || $0 ~ "\"all\"" || (family != "" && $0 ~ "\"" family "\"") || (os ~ /darwin|macos/ && ($0 ~ "\"darwin\"" || $0 ~ "\"macos\""))) { wl_match=1 }
       if ($0 ~ /\]/) { in_wl=0 }
     }
     END {
@@ -139,8 +139,8 @@ update_supported_components() {
   cat <<'TABLE_HDR' >"${_tmp_table}"
 ## Supported Components
 
-| Component | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD |
-|---|---|---|---|---|---|---|
+| Component | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
+|---|---|---|---|---|---|---|---|
 TABLE_HDR
 
   # Discover components under _lib/<cat>/<comp> and stacks/<cat>/<comp> excluding dirs starting with '_'
@@ -165,6 +165,7 @@ TABLE_HDR
     _win_status="-"
     _sunos_status="-"
     _freebsd_status="-"
+    _macos_status="-"
 
     _mfile=""
     for _candidate in "${_repo_root}/_lib"/*/"${_comp}/manifest.json" "${_repo_root}/stacks"/*/"${_comp}/manifest.json"; do
@@ -180,6 +181,7 @@ TABLE_HDR
       [ "$(check_manifest_support "${_mfile}" "windows")" = "yes" ] && _win_status="❓"
       [ "$(check_manifest_support "${_mfile}" "sunos")" = "yes" ] && _sunos_status="❓"
       [ "$(check_manifest_support "${_mfile}" "freebsd")" = "yes" ] && _freebsd_status="❓"
+      [ "$(check_manifest_support "${_mfile}" "darwin")" = "yes" ] && _macos_status="❓"
     else
       _apk_status="❓"
       _deb_status="❓"
@@ -187,6 +189,7 @@ TABLE_HDR
       _win_status="❓"
       _sunos_status="❓"
       _freebsd_status="❓"
+      _macos_status="❓"
     fi
 
     if [ -n "${_existing_line}" ]; then
@@ -202,6 +205,7 @@ TABLE_HDR
       _e_win=$(printf '%s' "${6:-}" | tr -d ' ')
       _e_sunos=$(printf '%s' "${7:-}" | tr -d ' ')
       _e_freebsd=$(printf '%s' "${8:-}" | tr -d ' ')
+      _e_macos=$(printf '%s' "${9:-}" | tr -d ' ')
 
       [ -n "${_e_apk}" ] && _apk_status="${_e_apk}"
       [ -n "${_e_deb}" ] && _deb_status="${_e_deb}"
@@ -209,6 +213,7 @@ TABLE_HDR
       [ -n "${_e_win}" ] && _win_status="${_e_win}"
       [ -n "${_e_sunos}" ] && _sunos_status="${_e_sunos}"
       [ -n "${_e_freebsd}" ] && _freebsd_status="${_e_freebsd}"
+      [ -n "${_e_macos}" ] && _macos_status="${_e_macos}"
     fi
 
     if [ -d "${_tests_tmp_dir}" ]; then
@@ -253,17 +258,23 @@ TABLE_HDR
       elif ls "${_tests_tmp_dir}/${_comp}".freebsd*.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp}".bsd*.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp}".linux.freebsd*.failure >/dev/null 2>&1; then
         _freebsd_status="❌"
       fi
+
+      # macOS / Darwin
+      if ls "${_tests_tmp_dir}/${_comp}".darwin*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp}".macos*.success >/dev/null 2>&1; then
+        _macos_status="✅"
+      elif ls "${_tests_tmp_dir}/${_comp}".darwin*.failure >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp}".macos*.failure >/dev/null 2>&1; then
+        _macos_status="❌"
+      fi
     fi
 
     # shellcheck disable=SC2016
-    printf '| `%s` | %s | %s | %s | %s | %s | %s |\n' "${_comp}" "${_apk_status}" "${_deb_status}" "${_rpm_status}" "${_win_status}" "${_sunos_status}" "${_freebsd_status}" >>"${_tmp_table}"
+    printf '| `%s` | %s | %s | %s | %s | %s | %s | %s |\n' "${_comp}" "${_apk_status}" "${_deb_status}" "${_rpm_status}" "${_win_status}" "${_sunos_status}" "${_freebsd_status}" "${_macos_status}" >>"${_tmp_table}"
 
     if [ -n "${_tmp_json}" ]; then
       if [ "${_first_json_entry}" -eq 1 ]; then
         _first_json_entry=0
       else
-        printf ',
-' >>"${_tmp_json}"
+        printf ',\n' >>"${_tmp_json}"
       fi
       cat <<JSON_ROW >>"${_tmp_json}"
   {
@@ -273,7 +284,8 @@ TABLE_HDR
     "rpm": "${_rpm_status}",
     "windows": "${_win_status}",
     "sunos": "${_sunos_status}",
-    "freebsd": "${_freebsd_status}"
+    "freebsd": "${_freebsd_status}",
+    "macos": "${_macos_status}"
   }
 JSON_ROW
     fi
@@ -348,7 +360,10 @@ update_todo_plan() {
   _is_sunos=0
   _is_rocky=0
   _is_freebsd=0
-  if grep -qi "freebsd" "${_todo_file}"; then
+  _is_macos=0
+  if grep -qi "macos\|darwin" "${_todo_file}"; then
+    _is_macos=1
+  elif grep -qi "freebsd" "${_todo_file}"; then
     _is_freebsd=1
   elif grep -qi "alpine" "${_todo_file}"; then
     _is_alpine=1
@@ -392,6 +407,11 @@ update_todo_plan() {
           elif [ "${_is_freebsd}" -eq 1 ]; then
             if ls "${_tests_tmp_dir}/${_comp_name}".freebsd.* >/dev/null 2>&1 || \
                ls "${_tests_tmp_dir}/${_comp_name}".bsd.* >/dev/null 2>&1; then
+              _has_res=1
+            fi
+          elif [ "${_is_macos}" -eq 1 ]; then
+            if ls "${_tests_tmp_dir}/${_comp_name}".darwin.* >/dev/null 2>&1 || \
+               ls "${_tests_tmp_dir}/${_comp_name}".macos.* >/dev/null 2>&1; then
               _has_res=1
             fi
           elif [ "${_is_rocky}" -eq 1 ]; then
@@ -452,6 +472,15 @@ update_todo_plan() {
               _has_idem=1
             elif (ls "${_tests_tmp_dir}/${_current_comp}".freebsd.success >/dev/null 2>&1 || \
                 ls "${_tests_tmp_dir}/${_current_comp}".bsd.success >/dev/null 2>&1) && \
+               ls "${_tests_tmp_dir}/${_current_comp}".idempotent.success >/dev/null 2>&1; then
+              _has_idem=1
+            fi
+          elif [ "${_is_macos}" -eq 1 ]; then
+            if ls "${_tests_tmp_dir}/${_current_comp}".darwin.unsupported >/dev/null 2>&1 || \
+               ls "${_tests_tmp_dir}/${_current_comp}".macos.unsupported >/dev/null 2>&1; then
+              _has_idem=1
+            elif (ls "${_tests_tmp_dir}/${_current_comp}".darwin.success >/dev/null 2>&1 || \
+                ls "${_tests_tmp_dir}/${_current_comp}".macos.success >/dev/null 2>&1) && \
                ls "${_tests_tmp_dir}/${_current_comp}".idempotent.success >/dev/null 2>&1; then
               _has_idem=1
             fi

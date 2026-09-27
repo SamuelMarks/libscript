@@ -10,6 +10,9 @@
 # ## Parameters
 #   --component <name>    Component identifier (e.g. mysql, redis, mongodb, python, nodejs, meilisearch)
 #   --version <version>   Component release version (e.g. 8.0.39, 20.17.0)
+#   --variant <var>       Installer variant: online or offline (default: offline)
+#   --online              Shorthand for --variant online
+#   --offline             Shorthand for --variant offline
 #   --out <file.wxs>      Output path for the generated WiX XML file
 #   --source-dir <dir>    Directory containing component payload binaries to package
 #   --help, -h            Show this help text
@@ -39,6 +42,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 COMPONENT=""
 VERSION="1.0.0"
+VARIANT="offline"
 OUT_FILE=""
 SOURCE_DIR=""
 SERVICE_GUID=""
@@ -55,6 +59,9 @@ Usage:
 Options:
   --component <name>   Component name (mysql, redis, mongodb, python, nodejs, meilisearch)
   --version <ver>      Version string (e.g. 8.0.39, default: 1.0.0)
+  --variant <var>      Installer variant: online or offline (default: offline)
+  --online             Shorthand for --variant online
+  --offline            Shorthand for --variant offline
   --out <file.wxs>     Output WiX file path
   --source-dir <dir>   Payload directory containing files to bundle
   --help, -h           Show this help text
@@ -70,6 +77,18 @@ while [ $# -gt 0 ]; do
     --version)
       VERSION="$2"
       shift 2
+      ;;
+    --variant)
+      VARIANT="$2"
+      shift 2
+      ;;
+    --online)
+      VARIANT="online"
+      shift
+      ;;
+    --offline)
+      VARIANT="offline"
+      shift
       ;;
     --out)
       OUT_FILE="$2"
@@ -90,6 +109,8 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
+
+: "${SOURCE_DIR:=}"
 
 if [ -z "$COMPONENT" ] || [ -z "$OUT_FILE" ]; then
   printf '[ERROR] --component and --out are mandatory parameters.
@@ -120,7 +141,7 @@ if [ -z "$UPGRADE_CODE" ]; then
 fi
 
 # Calculate deterministic ProductCode using uuid_gen.sh
-PRODUCT_CODE=$("${LIBSCRIPT_ROOT_DIR}/_lib/_common/uuid_gen.sh" "6ba7b810-9dad-11d1-80b4-00c04fd430c8" "libscript.${COMPONENT}.${VERSION}")
+PRODUCT_CODE=$("${LIBSCRIPT_ROOT_DIR}/_lib/_common/uuid_gen.sh" "6ba7b810-9dad-11d1-80b4-00c04fd430c8" "libscript.${COMPONENT}.${VARIANT}.${VERSION}")
 
 # Map directory name for WiX
 DIR_NAME="${COMPONENT}"
@@ -136,6 +157,25 @@ esac
 SHARED_ATTR=""
 if [ "$SHARED_REF" = "true" ]; then
   SHARED_ATTR=' SharedDllRefCount="yes"'
+fi
+
+DISPLAY_TITLE="LibScript ${TITLE}"
+PKG_DESC="LibScript ${TITLE} Standalone Installer"
+if [ "$VARIANT" = "online" ]; then
+  DISPLAY_TITLE="LibScript ${TITLE} (Online)"
+  PKG_DESC="LibScript ${TITLE} Online Standalone Installer"
+elif [ "$VARIANT" = "offline" ]; then
+  DISPLAY_TITLE="LibScript ${TITLE} (Offline)"
+  PKG_DESC="LibScript ${TITLE} Offline Air-Gapped Standalone Installer"
+fi
+
+BUNDLE_JSON="${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx/offline_bundle.json"
+DOWNLOAD_URL=""
+if [ -f "$BUNDLE_JSON" ] && command -v jq >/dev/null 2>&1; then
+  case "$COMPONENT" in
+    python|nodejs) DOWNLOAD_URL=$(jq -r --arg c "$COMPONENT" '.runtimes[$c].url // empty' "$BUNDLE_JSON") ;;
+    *) DOWNLOAD_URL=$(jq -r --arg c "$COMPONENT" '.databases[$c].url // empty' "$BUNDLE_JSON") ;;
+  esac
 fi
 
 _p1="${VERSION%%.*}"
@@ -163,7 +203,7 @@ cat << EOF_WXS > "$OUT_FILE"
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <Product Id="${PRODUCT_CODE}"
-           Name="LibScript ${TITLE}"
+           Name="${DISPLAY_TITLE}"
            Language="1033"
            Version="${WIX_VERSION}"
            Manufacturer="LibScript"
@@ -173,7 +213,7 @@ cat << EOF_WXS > "$OUT_FILE"
              InstallerVersion="405"
              Compressed="yes"
              InstallScope="perMachine"
-             Description="LibScript ${TITLE} Standalone Installer" />
+             Description="${PKG_DESC}" />
 
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." Schedule="afterInstallInitialize" />
     <Media Id="1" Cabinet="payload.cab" EmbedCab="yes" />
@@ -227,6 +267,7 @@ cat << EOF_FOOTER >> "$OUT_FILE"
       <Component Id="ComponentIdentityRecord" Guid="${COMPONENT_GUID}"${SHARED_ATTR}>
         <RegistryKey Root="HKLM" Key="Software\\LibScript\\$COMPONENT">
           <RegistryValue Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+          <RegistryValue Name="Variant" Type="string" Value="${VARIANT}" />
           <RegistryValue Name="Version" Type="string" Value="${VERSION}" />
           <RegistryValue Name="InstallDir" Type="string" Value="[INSTALLFOLDER]" />
           <RegistryValue Name="Port" Type="string" Value="[PORT]" />
@@ -234,6 +275,20 @@ cat << EOF_FOOTER >> "$OUT_FILE"
       </Component>
     </DirectoryRef>
 EOF_FOOTER
+
+if [ "$VARIANT" = "online" ] && [ -n "$DOWNLOAD_URL" ]; then
+  cat << EOF_CA >> "$OUT_FILE"
+    <CustomAction Id="CA_Download_${COMPONENT}"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="powershell.exe -NoProfile -ExecutionPolicy Bypass -Command &quot;if (-not (Test-Path '[INSTALLFOLDER]bin\*.exe')) { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; \$tmp = [IO.Path]::GetTempFileName() + '.zip'; Invoke-WebRequest -Uri '${DOWNLOAD_URL}' -OutFile \$tmp; Expand-Archive -Path \$tmp -DestinationPath '[INSTALLFOLDER]' -Force; Remove-Item \$tmp -Force }&quot;"
+                  Execute="deferred"
+                  Return="ignore"
+                  Impersonate="no" />
+    <InstallExecuteSequence>
+      <Custom Action="CA_Download_${COMPONENT}" Before="InstallServices"><![CDATA[NOT Installed]]></Custom>
+    </InstallExecuteSequence>
+EOF_CA
+fi
 
 if [ -n "$SERVICE_NAME" ]; then
   SERVICE_GUID=$("${LIBSCRIPT_ROOT_DIR}/_lib/_common/uuid_gen.sh" "6ba7b810-9dad-11d1-80b4-00c04fd430c8" "service.${COMPONENT}")
@@ -250,7 +305,6 @@ if [ -n "$SERVICE_NAME" ]; then
                         Description="Managed service daemon for LibScript ${TITLE}." />
         <ServiceControl Id="Control_${COMPONENT}_Service"
                         Name="${SERVICE_NAME}"
-                        Start="install"
                         Stop="both"
                         Remove="uninstall"
                         Wait="yes" />

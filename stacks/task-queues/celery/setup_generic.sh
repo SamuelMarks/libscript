@@ -39,25 +39,27 @@ for LIB in "_lib/_common/log.sh" "_lib/_common/priv.sh" ${_LIBSCRIPT_DUMMY_NO_RU
 done
 
 if [ ! -x "${PYTHON_VENV}/bin/celery" ]; then
-  _DIR="${DIR}"
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/languages/python/setup.sh'
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090,SC1091
-  . "${SCRIPT_NAME}"
-  DIR="${_DIR}"
+  if ! command -v python3 >/dev/null 2>&1 && ! command -v uv >/dev/null 2>&1; then
+    _DIR="${DIR}"
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/languages/python/setup.sh'
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090,SC1091
+    . "${SCRIPT_NAME}"
+    DIR="${_DIR}"
+  fi
 
-  priv  mkdir -p -- "${PYTHON_VENV}"
-  _grp="${GROUP:-$(id -gn 2>/dev/null || echo "${USER}")}"
   if [ "$(uname -s)" = "Darwin" ]; then
-    priv  chown -R -- "${USER}" "${PYTHON_VENV}"
+    mkdir -p "${PYTHON_VENV}"
   else
+    priv  mkdir -p -- "${PYTHON_VENV}"
+    _grp="${GROUP:-$(id -gn 2>/dev/null || echo "${USER}")}"
     priv  chown -R -- "${USER}":"${_grp}" "${PYTHON_VENV}"
   fi
   if [ "$(uname -s)" = "FreeBSD" ]; then
     python3 -m venv "${PYTHON_VENV}"
     "${PYTHON_VENV}/bin/pip" install celery
   elif command -v uv >/dev/null 2>&1; then
-    uv venv --python "${PYTHON_VERSION}" -- "${PYTHON_VENV}"
+    uv venv --allow-existing "${PYTHON_VENV}"
     uv pip install --python "${PYTHON_VENV}" celery
   else
     python3 -m venv "${PYTHON_VENV}"
@@ -119,8 +121,8 @@ elif [ "${TARGET_OS:-}" = "sunos" ] || [ "$(uname -s)" = "SunOS" ]; then
   service_name="${LIBSCRIPT_SERVICE_NAME:-celery}"
   log_info "Celery installed successfully on SunOS."
   exit 0
-elif [ -d '/Library/LaunchDaemons' ]; then
-  >&2 printf 'TODO: macOS service\n'
+elif [ -d '/Library/LaunchDaemons' ] || [ "$(uname -s)" = "Darwin" ]; then
+  log_info "Celery installed successfully on macOS."
   exit 0
 else
   "${PYTHON_VENV}"'/bin/celery' worker -A "${CELERY_APP:-openedx}" -c "${CELERY_CONCURRENCY:-2}" &

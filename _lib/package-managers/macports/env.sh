@@ -29,4 +29,4 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 
 MACPORTS_VERSION="${MACPORTS_VERSION:-latest}"
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/macports/${MACPORTS_VERSION}/bin:${PATH}"
+export PATH="/opt/local/bin:/opt/local/sbin:${LIBSCRIPT_HOME:-$HOME/.libscript}/macports/${MACPORTS_VERSION}/bin:${PATH}"

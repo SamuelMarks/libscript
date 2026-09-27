@@ -9,6 +9,9 @@
 #
 # ## Parameters
 #   --version <version>   Package version (default: 22.1.0)
+#   --variant <var>       Installer variant: online or offline (default: online)
+#   --online              Shorthand for --variant online
+#   --offline             Shorthand for --variant offline
 #   --out <file.wxs>      Output path for the generated WiX XML manifest
 #   --help, -h            Show this help text
 
@@ -36,6 +39,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 ' "$d")}"
 
 VERSION="22.1.0"
+VARIANT="online"
 OUT_FILE=""
 
 # ## show_help
@@ -49,6 +53,9 @@ Usage:
 
 Options:
   --version <ver>    Package version (default: 22.1.0)
+  --variant <var>    Installer variant: online or offline (default: online)
+  --online           Shorthand for --variant online
+  --offline          Shorthand for --variant offline
   --out <file.wxs>   Output WiX manifest path
   --help, -h         Show this help text
 EOF_HELP
@@ -59,6 +66,18 @@ while [ $# -gt 0 ]; do
     --version)
       VERSION="$2"
       shift 2
+      ;;
+    --variant)
+      VARIANT="$2"
+      shift 2
+      ;;
+    --online)
+      VARIANT="online"
+      shift
+      ;;
+    --offline)
+      VARIANT="offline"
+      shift
       ;;
     --out)
       OUT_FILE="$2"
@@ -84,7 +103,14 @@ if [ -z "$OUT_FILE" ]; then
 fi
 
 UPGRADE_CODE="B8C8E64E-9B5A-4B7C-A5D8-0F18B9918239"
-PRODUCT_CODE=$("${LIBSCRIPT_ROOT_DIR}/_lib/_common/uuid_gen.sh" "6ba7b810-9dad-11d1-80b4-00c04fd430c8" "openedx.core.${VERSION}")
+PRODUCT_CODE=$("${LIBSCRIPT_ROOT_DIR}/_lib/_common/uuid_gen.sh" "6ba7b810-9dad-11d1-80b4-00c04fd430c8" "openedx.core.${VARIANT}.${VERSION}")
+
+DISPLAY_NAME="Open edX Platform Core"
+PKG_DESC="Open edX Platform Core application bundle."
+if [ "$VARIANT" = "offline" ]; then
+  DISPLAY_NAME="Open edX Platform Core (Air-Gapped Offline)"
+  PKG_DESC="Open edX Platform Core air-gapped application bundle."
+fi
 
 _p1="${VERSION%%.*}"
 _rest1="${VERSION#*.}"
@@ -111,7 +137,7 @@ cat << EOF_CORE_WXS > "$OUT_FILE"
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <Product Id="${PRODUCT_CODE}"
-           Name="Open edX Platform Core"
+           Name="${DISPLAY_NAME}"
            Language="1033"
            Version="${WIX_VERSION}"
            Manufacturer="The Axim Collaborative &amp; LibScript Contributors"
@@ -121,7 +147,7 @@ cat << EOF_CORE_WXS > "$OUT_FILE"
              InstallerVersion="405"
              Compressed="yes"
              InstallScope="perMachine"
-             Description="Open edX Platform Core LMS and Studio Services" />
+             Description="${PKG_DESC}" />
 
     <MajorUpgrade DowngradeErrorMessage="A newer version of Open edX Platform Core is already installed." Schedule="afterInstallInitialize" />
     <Media Id="1" Cabinet="openedx_core.cab" EmbedCab="yes" />
@@ -167,6 +193,7 @@ cat << EOF_CORE_WXS > "$OUT_FILE"
       <Component Id="CoreIdentityRecord" Guid="E2A89C15-99BD-4720-A0E8-A97A2E504F63">
         <RegistryKey Root="HKLM" Key="Software\LibScript\OpenEdX">
           <RegistryValue Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+          <RegistryValue Name="Variant" Type="string" Value="${VARIANT}" />
           <RegistryValue Name="Version" Type="string" Value="${VERSION}" />
           <RegistryValue Name="InstallDir" Type="string" Value="[INSTALLFOLDER]" />
           <RegistryValue Name="DataDir" Type="string" Value="[DATA_DIR]" />

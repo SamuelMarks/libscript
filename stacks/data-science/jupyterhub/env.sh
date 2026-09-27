@@ -26,7 +26,13 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export PYTHON_VERSION="${PYTHON_VERSION:-3.10}"
 
-export JUPYTERHUB_NOTEBOOK_DIR="${JUPYTERHUB_NOTEBOOK_DIR:-/opt/notebooks}"
+if [ "$(uname -s)" = "Darwin" ]; then
+  export JUPYTERHUB_NOTEBOOK_DIR="${JUPYTERHUB_NOTEBOOK_DIR:-$HOME/.libscript/notebooks}"
+  export JUPYTERHUB_VENV="${JUPYTERHUB_VENV:-$HOME/.libscript/venvs/jupyter-${PYTHON_VERSION}}"
+else
+  export JUPYTERHUB_NOTEBOOK_DIR="${JUPYTERHUB_NOTEBOOK_DIR:-/opt/notebooks}"
+  export JUPYTERHUB_VENV="${JUPYTERHUB_VENV:-/opt/venvs/jupyter-${PYTHON_VERSION}}"
+fi
 export JUPYTERHUB_IP="${JUPYTERHUB_IP:-127.0.0.1}"
 DEFAULT_PASSWORD="-argon2:\$argon2id\$v=19\$m=10240,t=10,p=8\$HeC4C022haY1PxTUcAPk+A\$ULz24zkP3jNHvScVul9t/OAOjhdgTNJYfPUvMWSOGcg"
 export JUPYTERHUB_PASSWORD="${JUPYTERHUB_PASSWORD:-${DEFAULT_PASSWORD}}"
@@ -34,4 +40,3 @@ export JUPYTERHUB_PORT="${JUPYTERHUB_PORT:-8888}"
 export JUPYTERHUB_SERVICE_GROUP="${JUPYTERHUB_SERVICE_GROUP:-jupyter}"
 export JUPYTERHUB_SERVICE_USER="${JUPYTERHUB_SERVICE_USER:-jupyter}"
 export JUPYTERHUB_USERNAME="${JUPYTERHUB_USERNAME:-jupyter}"
-export JUPYTERHUB_VENV="${JUPYTERHUB_VENV:-/opt/venvs/jupyter-${PYTHON_VERSION}}"

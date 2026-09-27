@@ -27,6 +27,11 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/versioning.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
+
 CABAL_INSTALL_METHOD="${CABAL_INSTALL_METHOD:-system}"
 CABAL_INSTALL_METHOD="$(libscript_resolve_install_method "CABAL")"
 ACTION="${ACTION:-install}"
@@ -95,6 +100,8 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    resolve_exact_version
+    TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/cabal/${EXACT_VERSION}"
     if [ "$CABAL_INSTALL_METHOD" = "system" ]; then
       if command -v dnf >/dev/null 2>&1; then
         priv dnf install -y epel-release || true
@@ -109,23 +116,30 @@ case "$ACTION" in
         libscript_depends "cabal"
       else
         if ! command -v cabal >/dev/null 2>&1; then
-          if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/ghcup/setup.sh" ]; then
+          if command -v brew >/dev/null 2>&1; then
+            brew install cabal-install || true
+          fi
+          if ! command -v cabal >/dev/null 2>&1 && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/ghcup/setup.sh" ]; then
             unset SCRIPT_NAME || true
             "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/ghcup/setup.sh"
+            GHCUP_BIN="$HOME/.ghcup/bin/ghcup"
+            [ ! -x "$GHCUP_BIN" ] && GHCUP_BIN="${LIBSCRIPT_HOME:-$HOME/.libscript}/ghcup/latest/bin/ghcup"
+            if [ -x "$GHCUP_BIN" ]; then
+              "$GHCUP_BIN" install cabal || true
+              "$GHCUP_BIN" set cabal || true
+            fi
             if [ -x "$HOME/.ghcup/bin/cabal" ]; then
               export PATH="$HOME/.ghcup/bin:$PATH"
             fi
-          else
-            printf "Error: Cannot find ghcup setup script to bootstrap cabal.\n" >&2
-            exit 1
           fi
         fi
 
-        if ! command -v cabal >/dev/null 2>&1 && [ -x "$HOME/.ghcup/bin/cabal" ]; then
-          export PATH="$HOME/.ghcup/bin:$PATH"
+        if command -v cabal >/dev/null 2>&1; then
+          mkdir -p "${TARGET_DIR}/bin"
+          ln -sf "$(command -v cabal)" "${TARGET_DIR}/bin/cabal"
         fi
       fi
-
+      libscript_symlink_alias "cabal" "$VERSION" "${EXACT_VERSION}"
     else
       >&2 printf 'Method %s not supported\n' "$CABAL_INSTALL_METHOD"
       exit 1

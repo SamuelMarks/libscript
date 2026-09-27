@@ -36,9 +36,13 @@ printf '%s
 ' "--- QEMU ---"
 if command -v qemu-system-x86_64 >/dev/null 2>&1; then
   qemu-system-x86_64 --version | head -n 1
+elif command -v qemu-system-aarch64 >/dev/null 2>&1; then
+  qemu-system-aarch64 --version | head -n 1
+elif command -v qemu-img >/dev/null 2>&1; then
+  qemu-img --version | head -n 1
 else
   printf '%s
-' "qemu-system-x86_64 not found!" >&2
+' "qemu not found!" >&2
 fi
 
 if [ -e "/dev/kvm" ]; then
@@ -53,7 +57,7 @@ if command -v VBoxManage >/dev/null 2>&1; then
   VBoxManage list extpacks 2>/dev/null || true
 else
   printf '%s
-' "VBoxManage not found!" >&2
+' "VBoxManage not found (optional on arm64/macOS)." >&2
 fi
 
 printf '%s

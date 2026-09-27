@@ -124,6 +124,7 @@ case "$OS_ID" in
     freebsd|bsd) OS_TAG="freebsd"; OS_FAMILY="bsd" ;;
     windows) OS_TAG="windows"; OS_FAMILY="windows" ;;
     omnios|sunos|solaris|illumos) OS_TAG="sunos"; OS_FAMILY="sunos" ;;
+    macos*|darwin*) OS_TAG="darwin"; OS_FAMILY="darwin" ;;
     *) OS_TAG="$OS_ID"; OS_FAMILY="" ;;
 esac
 

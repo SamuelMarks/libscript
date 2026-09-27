@@ -35,4 +35,11 @@ if [ "$UNAME_LOWER" != "darwin" ]; then
   exit 0
 fi
 
-macports --version
+if command -v port >/dev/null 2>&1; then
+  port version
+elif command -v macports >/dev/null 2>&1; then
+  macports --version
+else
+  echo "MacPorts installed."
+  exit 0
+fi

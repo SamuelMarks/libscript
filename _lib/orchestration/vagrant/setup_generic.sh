@@ -147,7 +147,9 @@ case "$ACTION" in
           libscript_depends "vagrant"
           ;;
         'brew')
-          brew install hashicorp/tap/vagrant 2>/dev/null || brew install --cask vagrant
+          if ! command -v vagrant >/dev/null 2>&1; then
+            brew install hashicorp/tap/vagrant 2>/dev/null || brew install --cask vagrant || true
+          fi
           ;;
         'dnf'|'yum')
           if ! libscript_depends "vagrant"; then

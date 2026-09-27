@@ -684,6 +684,7 @@ map_package() {
       case "${PKG_MGR}" in
         'pkg') printf 'php84\n' ;;
         'apk') printf 'php83-fpm\n' ;;
+        'brew') printf 'php\n' ;;
         *) printf 'php-fpm\n' ;;
       esac
       ;;

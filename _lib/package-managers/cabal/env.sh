@@ -29,4 +29,4 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 
 CABAL_VERSION="${CABAL_VERSION:-latest}"
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/cabal/${CABAL_VERSION}/bin:${PATH}"
+export PATH="${HOME}/.ghcup/bin:${LIBSCRIPT_HOME:-$HOME/.libscript}/cabal/${CABAL_VERSION}/bin:${PATH}"

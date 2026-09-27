@@ -51,10 +51,10 @@ resolve_exact_version() {
     if [ -n "$_latest" ] && [ "$_latest" != "No versions found" ] && [ "$_latest" != "ls-remote not fully implemented natively yet." ]; then
       EXACT_VERSION="$_latest"
     else
-      EXACT_VERSION="${VERSION:-latest}"
+      EXACT_VERSION="1.0.12"
     fi
   else
-    EXACT_VERSION="${VERSION:-latest}"
+    EXACT_VERSION="${VERSION:-1.0.12}"
   fi
 }
 
@@ -153,14 +153,27 @@ case "$ACTION" in
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/vfox/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
+      if [ ! -x "${TARGET_DIR}/bin/vfox" ]; then
         log_info "Installing vfox ${VERSION} natively to ${TARGET_DIR}..."
         libscript_depends "curl"
         libscript_depends "tar"
         libscript_depends "unzip"
 
-        mkdir -p "${TARGET_DIR}"
-        curl -sSL https://raw.githubusercontent.com/version-fox/vfox/main/install.sh | PREFIX="${TARGET_DIR}" sh
+        mkdir -p "${TARGET_DIR}/bin"
+        os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+        case "${os}" in
+          darwin) os="macos" ;;
+        esac
+        arch="$(uname -m)"
+        case "${arch}" in
+          'x86_64') arch='x86_64' ;;
+          'aarch64'|'arm64') arch='aarch64' ;;
+        esac
+        vfox_ver="${EXACT_VERSION}"
+        curl -sSL "https://github.com/version-fox/vfox/releases/download/v${vfox_ver}/vfox_${vfox_ver}_${os}_${arch}.tar.gz" | tar -xzf - -C "${TARGET_DIR}/bin" --strip-components=1 2>/dev/null || \
+        curl -sSL "https://github.com/version-fox/vfox/releases/download/v${vfox_ver}/vfox_${vfox_ver}_${os}_${arch}.tar.gz" | tar -xzf - -C "${TARGET_DIR}/bin" 2>/dev/null || true
+        find "${TARGET_DIR}" -type f -name vfox -exec mv {} "${TARGET_DIR}/bin/vfox" \; 2>/dev/null || true
+        chmod +x "${TARGET_DIR}/bin/vfox" 2>/dev/null || true
       else
         log_info "vfox ${VERSION} is already installed."
       fi

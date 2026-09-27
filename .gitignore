@@ -273,6 +273,7 @@ all_scripts.txt
 /bin/
 /tmp/
 /temp/
+/tools/
 # Ignore the generated investigation scripts
 /find_inconsistencies.sh
 /find_stacks_inconsistencies.sh
