@@ -10,6 +10,8 @@ Modular TUI engine providing Windows console prompts and PowerShell fallback dia
 [CmdletBinding()]
 param()
 
+# ## Show-TuiMessageBox
+# Displays an interactive console message box requiring user acknowledgment.
 function Show-TuiMessageBox {
     param([string]$Title, [string]$Message)
     Write-Host "`n=== $Title ===`n$Message`n"
@@ -17,6 +19,8 @@ function Show-TuiMessageBox {
     [Console]::ReadLine() | Out-Null
 }
 
+# ## Show-TuiMenu
+# Displays an interactive selection menu and returns the selected key.
 function Show-TuiMenu {
     param([string]$Title, [string]$Prompt, [hashtable]$Options)
     Write-Host "`n=== $Title ===`n$Prompt`n"
@@ -27,6 +31,8 @@ function Show-TuiMenu {
     return [Console]::ReadLine()
 }
 
+# ## Show-TuiInput
+# Displays a text prompt with an optional default value and returns user input.
 function Show-TuiInput {
     param([string]$Title, [string]$Prompt, [string]$DefaultValue)
     Write-Host -NoNewline "$Prompt [$DefaultValue]: "

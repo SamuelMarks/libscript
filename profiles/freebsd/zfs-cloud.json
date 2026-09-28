@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "zfs-cloud",
+  "description": "Headless FreeBSD server with bsd-rc, ZFS root pool, and cloud/vagrant integration.",
+  "freebsd_version": "14.1-RELEASE",
+  "target": {
+    "arch": "amd64",
+    "os_family": "freebsd",
+    "libc": "bsd-libc"
+  },
+  "init_system": {
+    "provider": "bsd-rc",
+    "services_enabled": ["sshd", "cron", "devd", "syslogd", "zfs"]
+  },
+  "display": {
+    "protocol": "none",
+    "graphics_driver": "none"
+  },
+  "desktop": {
+    "environment": "none",
+    "display_manager": "none"
+  },
+  "audio": {
+    "subsystem": "none"
+  },
+  "storage": {
+    "filesystem": "zfs",
+    "bootloader": "freebsd-loader",
+    "disk_size_gib": 20
+  },
+  "users": [
+    {
+      "username": "vagrant",
+      "shell": "/bin/sh",
+      "groups": ["wheel", "operator"],
+      "sudo": true
+    }
+  ],
+  "network": {
+    "hostname": "freebsd-zfs-cloud",
+    "dhcp": true,
+    "dns_servers": ["1.1.1.1", "8.8.8.8"]
+  },
+  "packages": ["curl", "ca_root_nss", "sudo", "doas", "rsync"]
+}

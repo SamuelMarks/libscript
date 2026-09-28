@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "pkgsrc-developer",
+  "description": "Developer-centric illumos workstation profile with Joyent pkgin/pkgsrc bootstrap, build toolchains, and ZFS workspaces.",
+  "illumos_version": "r151048",
+  "target": {
+    "arch": "amd64",
+    "os_family": "illumos",
+    "flavor": "omnios",
+    "libc": "sunos-libc"
+  },
+  "init_system": {
+    "provider": "smf",
+    "milestone": "svc:/milestone/multi-user-server:default",
+    "services_enabled": [
+      "svc:/network/ssh:default",
+      "svc:/system/cron:default",
+      "svc:/system/system-log:default"
+    ]
+  },
+  "display": {
+    "protocol": "none",
+    "graphics_driver": "none"
+  },
+  "desktop": {
+    "environment": "none",
+    "display_manager": "none"
+  },
+  "audio": {
+    "subsystem": "none"
+  },
+  "storage": {
+    "filesystem": "zfs",
+    "pool_name": "rpool",
+    "bootloader": "illumos-loader",
+    "disk_size_gib": 50,
+    "compression": "lz4"
+  },
+  "package_manager": {
+    "provider": "pkgin",
+    "publisher_url": "https://pkgsrc.joyent.com/packages/SmartOS/trunk/x86_64/All",
+    "catalog": "trunk"
+  },
+  "users": [
+    {
+      "username": "developer",
+      "shell": "/bin/sh",
+      "groups": ["staff", "sysadmin"],
+      "rbac_profiles": ["Primary Administrator"],
+      "sudo": true
+    }
+  ],
+  "network": {
+    "hostname": "illumos-dev",
+    "dhcp": true,
+    "interface_strategy": "ipadm",
+    "dns_servers": ["1.1.1.1", "8.8.8.8"]
+  },
+  "packages": [
+    "pkg:/system/core-os",
+    "pkg:/developer/build/make",
+    "pkg:/developer/gcc",
+    "pkg:/developer/versioning/git",
+    "pkg:/security/sudo",
+    "pkg:/network/curl",
+    "pkg:/network/rsync"
+  ]
+}

@@ -27,6 +27,7 @@ You can install and manage components in this category using the global `libscri
 - [kde-plasma-6](./kde-plasma-6/README.md)
 - [labwc](./labwc/README.md)
 - [lxqt](./lxqt/README.md)
+- [openbox](./openbox/README.md)
 - [sway](./sway/README.md)
 - [weston](./weston/README.md)
 - [xfce4](./xfce4/README.md)

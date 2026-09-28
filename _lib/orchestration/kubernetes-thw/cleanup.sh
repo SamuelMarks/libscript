@@ -5,7 +5,7 @@
 # ## Usage
 # Used to manually cleanup lock files.
 
-set -e
+set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"

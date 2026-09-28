@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "minimal-server",
+  "description": "Minimal FreeBSD headless server with bsd-rc, UFS2 filesystem, and no GUI.",
+  "freebsd_version": "14.1-RELEASE",
+  "target": {
+    "arch": "amd64",
+    "os_family": "freebsd",
+    "libc": "bsd-libc"
+  },
+  "init_system": {
+    "provider": "bsd-rc",
+    "services_enabled": ["sshd", "cron", "devd", "syslogd"]
+  },
+  "display": {
+    "protocol": "none",
+    "graphics_driver": "none"
+  },
+  "desktop": {
+    "environment": "none",
+    "display_manager": "none"
+  },
+  "audio": {
+    "subsystem": "none"
+  },
+  "storage": {
+    "filesystem": "ufs2",
+    "bootloader": "freebsd-loader",
+    "disk_size_gib": 10
+  },
+  "users": [
+    {
+      "username": "freebsd",
+      "shell": "/bin/sh",
+      "groups": ["wheel"],
+      "sudo": true
+    }
+  ],
+  "network": {
+    "hostname": "freebsd-minimal",
+    "dhcp": true,
+    "dns_servers": ["1.1.1.1", "8.8.8.8"]
+  },
+  "packages": ["curl", "ca_root_nss", "doas"]
+}

@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "plasma-wayland",
+  "description": "Modern FreeBSD desktop environment with bsd-rc, Wayland, KDE Plasma 6, and SDDM.",
+  "freebsd_version": "14.1-RELEASE",
+  "target": {
+    "arch": "amd64",
+    "os_family": "freebsd",
+    "libc": "bsd-libc"
+  },
+  "init_system": {
+    "provider": "bsd-rc",
+    "services_enabled": ["sshd", "cron", "devd", "syslogd", "dbus", "seatd", "sddm"]
+  },
+  "display": {
+    "protocol": "wayland",
+    "graphics_driver": "drm-kmod"
+  },
+  "desktop": {
+    "environment": "kde-plasma-6",
+    "display_manager": "sddm"
+  },
+  "audio": {
+    "subsystem": "pipewire"
+  },
+  "storage": {
+    "filesystem": "zfs",
+    "bootloader": "freebsd-loader",
+    "disk_size_gib": 35
+  },
+  "users": [
+    {
+      "username": "kdeuser",
+      "shell": "/bin/sh",
+      "groups": ["wheel", "operator", "video"],
+      "sudo": true
+    }
+  ],
+  "network": {
+    "hostname": "freebsd-plasma",
+    "dhcp": true,
+    "dns_servers": ["1.1.1.1", "8.8.8.8"]
+  },
+  "packages": [
+    "curl",
+    "ca_root_nss",
+    "doas",
+    "sudo",
+    "plasma6-plasma",
+    "sddm",
+    "seatd",
+    "pipewire",
+    "wireplumber"
+  ]
+}

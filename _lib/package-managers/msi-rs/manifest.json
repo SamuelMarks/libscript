@@ -1,0 +1,28 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "msi-rs",
+  "provides": [
+    "msi-rs",
+    "msi",
+    "msi-cli",
+    "candle",
+    "light",
+    "wix",
+    "dark",
+    "heat",
+    "torch",
+    "pyro",
+    "lit",
+    "smoke",
+    "msiinfo",
+    "msibuild",
+    "msidump",
+    "msidiff",
+    "msiextract",
+    "package-manager"
+  ],
+  "os_whitelist": ["linux", "darwin", "windows", "freebsd", "sunos"],
+  "title": "msi-rs",
+  "description": "Bootstrap module for the `msi-rs` package manager and WiX/msitools/msiexec replacement toolchain.",
+  "category": "package-managers"
+}

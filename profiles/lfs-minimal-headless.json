@@ -1,0 +1,74 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "lfs-minimal-headless",
+  "description": "Minimal headless Linux From Scratch appliance with OpenRC supervisor and busybox/coreutils.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-glibc",
+    "libc": "glibc",
+    "submodel": "generic"
+  },
+  "kernel": {
+    "provider": "linux-lts",
+    "config_method": "fragments",
+    "fragments": ["virtio.cfg", "minimal_headless.cfg"],
+    "cmdline": "console=ttyS0 console=tty0 root=/dev/vda2 rw quiet"
+  },
+  "init_system": {
+    "provider": "openrc",
+    "default_target": "multi-user",
+    "services_enabled": ["syslog", "networking", "sshd"]
+  },
+  "display": {
+    "server": "headless",
+    "compositor": "none"
+  },
+  "desktop": {
+    "desktop_suite": "none",
+    "greeter": "none"
+  },
+  "storage": {
+    "disk_size_gib": 4,
+    "partition_table": "gpt",
+    "boot_mode": "uefi",
+    "bootloader": "limine",
+    "uki": false,
+    "partitions": [
+      {
+        "name": "ESP",
+        "filesystem": "vfat",
+        "mountpoint": "/boot/efi",
+        "size_mib": 512
+      },
+      {
+        "name": "root",
+        "filesystem": "ext4",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "vagrant",
+      "shell": "/bin/sh",
+      "groups": ["wheel", "sudo"],
+      "sudo": true
+    }
+  ],
+  "locale": {
+    "lang": "C.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "network": {
+    "hostname": "lfs-headless",
+    "dhcp": true,
+    "dns_servers": ["1.1.1.1", "8.8.8.8"]
+  },
+  "offline": {
+    "enabled": false,
+    "cache_dir": "/var/cache/libscript"
+  },
+  "packages": ["openrc", "eudev", "dhcpcd", "openssh"]
+}

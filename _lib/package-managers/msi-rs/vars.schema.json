@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/package-managers/msi-rs/vars.schema.json",
+  "title": "msi-rs variables",
+  "description": "Configuration variables for msi-rs",
+  "type": "object",
+  "properties": {
+    "MSI_RS_INSTALL_METHOD": {
+      "description": "How to install msi-rs. 'libscript_native' builds and isolates version dirs, 'cargo' installs via cargo, or 'system' defers to system package managers.",
+      "type": "string",
+      "default": "libscript_native"
+    },
+    "MSI_RS_VERSION": {
+      "description": "Specific version or release tag of msi-rs to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "MSI_RS_REPO_URL": {
+      "description": "Upstream source Git repository URL for msi-rs.",
+      "type": "string",
+      "default": "https://github.com/SamuelMarks/msi-rs"
+    },
+    "MSI_RS_DOWNLOAD_URL": {
+      "description": "Direct download URL for prebuilt binary archive if available.",
+      "type": "string"
+    }
+  }
+}

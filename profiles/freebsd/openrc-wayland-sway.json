@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "openrc-wayland-sway",
+  "description": "Modular FreeBSD distribution with OpenRC init, Wayland, Sway compositor, seatd, and PipeWire audio.",
+  "freebsd_version": "14.1-RELEASE",
+  "target": {
+    "arch": "amd64",
+    "os_family": "freebsd",
+    "libc": "bsd-libc"
+  },
+  "init_system": {
+    "provider": "openrc",
+    "services_enabled": ["sshd", "cron", "devd", "seatd", "dbus"]
+  },
+  "display": {
+    "protocol": "wayland",
+    "graphics_driver": "drm-kmod"
+  },
+  "desktop": {
+    "environment": "sway",
+    "display_manager": "greetd"
+  },
+  "audio": {
+    "subsystem": "pipewire"
+  },
+  "storage": {
+    "filesystem": "zfs",
+    "bootloader": "freebsd-loader",
+    "disk_size_gib": 25
+  },
+  "users": [
+    {
+      "username": "freebsd",
+      "shell": "/bin/sh",
+      "groups": ["wheel", "operator", "video"],
+      "sudo": true
+    }
+  ],
+  "network": {
+    "hostname": "freebsd-openrc-sway",
+    "dhcp": true,
+    "dns_servers": ["1.1.1.1", "8.8.8.8"]
+  },
+  "packages": [
+    "curl",
+    "ca_root_nss",
+    "doas",
+    "seatd",
+    "wayland",
+    "sway",
+    "swayidle",
+    "swaylock",
+    "waybar",
+    "foot",
+    "greetd",
+    "pipewire",
+    "wireplumber"
+  ]
+}

@@ -5,7 +5,7 @@
 # ## Usage
 # Execute this script to perform actions for .githooks.
 
-set -e
+set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"

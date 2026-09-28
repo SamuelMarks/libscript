@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "hardened-runit",
+  "description": "Minimal hardened illumos micro-appliance running runit process supervision with zero GUI footprint and locked-down network services.",
+  "illumos_version": "r151048",
+  "target": {
+    "arch": "amd64",
+    "os_family": "illumos",
+    "flavor": "omnios",
+    "libc": "sunos-libc"
+  },
+  "init_system": {
+    "provider": "runit",
+    "services_enabled": [
+      "sshd",
+      "cron",
+      "socklog"
+    ]
+  },
+  "display": {
+    "protocol": "none",
+    "graphics_driver": "none"
+  },
+  "desktop": {
+    "environment": "none",
+    "display_manager": "none"
+  },
+  "audio": {
+    "subsystem": "none"
+  },
+  "storage": {
+    "filesystem": "zfs",
+    "pool_name": "rpool",
+    "bootloader": "illumos-loader",
+    "disk_size_gib": 10,
+    "compression": "lz4"
+  },
+  "package_manager": {
+    "provider": "ips",
+    "publisher_url": "https://pkg.omnios.org/r151048/core",
+    "catalog": "core"
+  },
+  "users": [
+    {
+      "username": "secops",
+      "shell": "/bin/sh",
+      "groups": ["staff", "sysadmin"],
+      "rbac_profiles": ["System Administrator"],
+      "sudo": true
+    }
+  ],
+  "network": {
+    "hostname": "illumos-runit-sec",
+    "dhcp": true,
+    "interface_strategy": "ipadm",
+    "dns_servers": ["9.9.9.9", "1.1.1.1"]
+  },
+  "packages": [
+    "pkg:/system/core-os",
+    "pkg:/service/network/ssh",
+    "pkg:/security/sudo"
+  ]
+}

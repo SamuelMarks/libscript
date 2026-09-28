@@ -11,7 +11,7 @@
 # Execute this script to audit files:
 #   ./devtools/audit/audit_standards.sh [--all | --staged | <file>...]
 
-set -eu
+set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"

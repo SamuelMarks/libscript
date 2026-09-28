@@ -21,7 +21,7 @@
 #   --branch <name>          Branch or tag ref (optional)
 #   --help, -h               Show this help text
 
-set -eu
+set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"

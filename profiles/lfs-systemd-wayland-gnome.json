@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "lfs-systemd-wayland-gnome",
+  "description": "Full-featured modern Linux From Scratch desktop appliance with Systemd, Wayland, GNOME desktop suite, and GDM.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-glibc",
+    "libc": "glibc",
+    "submodel": "generic"
+  },
+  "kernel": {
+    "provider": "linux-lts",
+    "config_method": "fragments",
+    "fragments": ["virtio.cfg", "drm_kms.cfg", "systemd.cfg"],
+    "cmdline": "console=ttyS0 console=tty0 root=/dev/vda2 rw quiet"
+  },
+  "init_system": {
+    "provider": "systemd",
+    "default_target": "graphical",
+    "services_enabled": ["systemd-networkd", "systemd-resolved", "gdm", "sshd"]
+  },
+  "display": {
+    "server": "wayland",
+    "compositor": "none"
+  },
+  "desktop": {
+    "desktop_suite": "gnome",
+    "greeter": "gdm"
+  },
+  "storage": {
+    "disk_size_gib": 20,
+    "partition_table": "gpt",
+    "boot_mode": "uefi",
+    "bootloader": "systemd-boot",
+    "uki": false,
+    "partitions": [
+      {
+        "name": "ESP",
+        "filesystem": "vfat",
+        "mountpoint": "/boot/efi",
+        "size_mib": 512
+      },
+      {
+        "name": "root",
+        "filesystem": "ext4",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "vagrant",
+      "shell": "/bin/sh",
+      "groups": ["wheel", "sudo", "audio", "video", "input"],
+      "sudo": true
+    }
+  ],
+  "locale": {
+    "lang": "en_US.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "network": {
+    "hostname": "lfs-gnome",
+    "dhcp": true,
+    "dns_servers": ["1.1.1.1", "8.8.8.8"]
+  },
+  "offline": {
+    "enabled": false,
+    "cache_dir": "/var/cache/libscript"
+  },
+  "packages": [
+    "systemd",
+    "dbus",
+    "polkit",
+    "mutter",
+    "gnome-shell",
+    "gnome-session",
+    "gnome-control-center",
+    "nautilus",
+    "gnome-terminal",
+    "gdm",
+    "pipewire",
+    "wireplumber",
+    "openssh"
+  ]
+}

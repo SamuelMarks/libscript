@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "zfs-cloud",
+  "description": "Illumos cloud and Vagrant appliance profile with SMF, ZFS dataset hierarchies, and vagrant bootstrap credentials.",
+  "illumos_version": "r151048",
+  "target": {
+    "arch": "amd64",
+    "os_family": "illumos",
+    "flavor": "omnios",
+    "libc": "sunos-libc"
+  },
+  "init_system": {
+    "provider": "smf",
+    "milestone": "svc:/milestone/multi-user-server:default",
+    "services_enabled": [
+      "svc:/network/ssh:default",
+      "svc:/system/cron:default",
+      "svc:/system/system-log:default",
+      "svc:/system/identity:nodename"
+    ]
+  },
+  "display": {
+    "protocol": "none",
+    "graphics_driver": "none"
+  },
+  "desktop": {
+    "environment": "none",
+    "display_manager": "none"
+  },
+  "audio": {
+    "subsystem": "none"
+  },
+  "storage": {
+    "filesystem": "zfs",
+    "pool_name": "rpool",
+    "bootloader": "illumos-loader",
+    "disk_size_gib": 20,
+    "compression": "lz4"
+  },
+  "package_manager": {
+    "provider": "ips",
+    "publisher_url": "https://pkg.omnios.org/r151048/core",
+    "catalog": "core"
+  },
+  "users": [
+    {
+      "username": "vagrant",
+      "shell": "/bin/sh",
+      "groups": ["staff", "sysadmin"],
+      "rbac_profiles": ["Primary Administrator"],
+      "sudo": true,
+      "ssh_keys": [
+        "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8ial5... vagrant insecure public key"
+      ]
+    }
+  ],
+  "network": {
+    "hostname": "illumos-cloud",
+    "dhcp": true,
+    "interface_strategy": "ipadm",
+    "dns_servers": ["1.1.1.1", "8.8.8.8"]
+  },
+  "packages": [
+    "pkg:/system/core-os",
+    "pkg:/service/network/ssh",
+    "pkg:/network/curl",
+    "pkg:/network/rsync",
+    "pkg:/security/sudo",
+    "pkg:/developer/versioning/git"
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "lfs-sysvinit-x11-openbox",
+  "description": "Lightweight Linux From Scratch desktop appliance with SysVinit, X11, Openbox window manager, and LightDM greeter.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-glibc",
+    "libc": "glibc",
+    "submodel": "generic"
+  },
+  "kernel": {
+    "provider": "linux-lts",
+    "config_method": "fragments",
+    "fragments": ["virtio.cfg", "drm_kms.cfg"],
+    "cmdline": "console=ttyS0 console=tty0 root=/dev/vda2 rw quiet"
+  },
+  "init_system": {
+    "provider": "sysvinit",
+    "default_target": "graphical",
+    "services_enabled": ["sysklogd", "networking", "dbus", "lightdm", "sshd"]
+  },
+  "display": {
+    "server": "x11",
+    "compositor": "openbox"
+  },
+  "desktop": {
+    "desktop_suite": "none",
+    "greeter": "lightdm"
+  },
+  "storage": {
+    "disk_size_gib": 8,
+    "partition_table": "gpt",
+    "boot_mode": "uefi",
+    "bootloader": "grub2-efi",
+    "uki": false,
+    "partitions": [
+      {
+        "name": "ESP",
+        "filesystem": "vfat",
+        "mountpoint": "/boot/efi",
+        "size_mib": 512
+      },
+      {
+        "name": "root",
+        "filesystem": "ext4",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "vagrant",
+      "shell": "/bin/sh",
+      "groups": ["wheel", "sudo", "audio", "video", "input"],
+      "sudo": true
+    }
+  ],
+  "locale": {
+    "lang": "en_US.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "network": {
+    "hostname": "lfs-openbox",
+    "dhcp": true,
+    "dns_servers": ["1.1.1.1", "8.8.8.8"]
+  },
+  "offline": {
+    "enabled": false,
+    "cache_dir": "/var/cache/libscript"
+  },
+  "packages": [
+    "sysvinit",
+    "eudev",
+    "xorg-server",
+    "openbox",
+    "lightdm",
+    "tint2",
+    "dbus",
+    "pipewire",
+    "wireplumber",
+    "dhcpcd",
+    "openssh"
+  ]
+}

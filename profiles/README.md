@@ -7,6 +7,27 @@ microVM appliances, desktop environments, and server images orchestrated by LibS
 
 ## Available Profiles
 
+### Linux From Scratch (LFS) Modular Appliances
+
+- `lfs-minimal-headless.json`: Minimal headless LFS appliance with OpenRC supervisor and
+  busybox/coreutils.
+- `lfs-sysvinit-x11-openbox.json`: Lightweight desktop LFS appliance with SysVinit, X11, Openbox
+  window manager, and LightDM.
+- `lfs-openrc-wayland-sway.json`: Workstation LFS appliance with OpenRC, Wayland, Sway tiling
+  compositor, and Greetd.
+- `lfs-runit-wayland-hyprland.json`: Dynamic tiling Wayland LFS appliance with Runit supervisor,
+  Hyprland, and Greetd.
+- `lfs-s6-wayland-labwc.json`: Stacking Wayland LFS appliance with S6/S6-rc supervision, Labwc
+  compositor, and Greetd.
+- `lfs-systemd-wayland-gnome.json`: Full-featured modern LFS desktop appliance with Systemd,
+  Wayland, GNOME suite, and GDM.
+- `lfs-systemd-wayland-plasma6.json`: Modern LFS desktop appliance with Systemd, Wayland, KDE Plasma
+  6, and SDDM.
+- `lfs-dinit-musl-minimal.json`: Ultra-lightweight microVM/container LFS appliance with Musl libc
+  and Dinit supervisor.
+
+### General & Cloud Profiles
+
 - `firecracker-microvm-appliance.json`: Minimalist Firecracker microVM image with tailored Linux
   kernel.
 - `freebsd-desktop-xfce.json`: FreeBSD workstation profile running XFCE desktop environment.

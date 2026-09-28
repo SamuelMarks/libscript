@@ -7,7 +7,7 @@
 # ## Usage
 # Called internally by `pkg_mgr.sh` (`libscript_download`) after downloading an artifact.
 
-set -eu
+set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

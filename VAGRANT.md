@@ -191,3 +191,40 @@ Vagrant.configure("2") do |config|
   end
 end
 ```
+
+## 4. Packaging Custom Vagrant Boxes Directly with LibScript
+
+LibScript also includes built-in automation to transform synthesized Linux From Scratch or custom
+sysroots directly into redistributable Vagrant `.box` archives without needing Packer:
+
+```bash
+# Package a synthesized disk image into a Vagrant .box
+./libscript.sh package-as vagrant-box build/output/lfs-disk.qcow2 build/output/lfs-custom.box qemu
+
+# Add the generated box directly to Vagrant
+vagrant box add --name custom-lfs --provider qemu build/output/lfs-custom.box
+
+# Spin up the VM
+vagrant up --provider qemu
+```
+
+## 5. FreeBSD Distribution Multi-Platform Verification Matrix
+
+LibScript requires testing exclusively via Vagrant environments for non-native and cross-platform verification across `{macOS, Windows, FreeBSD, SunOS, Linux}`.
+
+The FreeBSD modular distribution suite can be run across all environments:
+```bash
+# Run multi-platform matrix verification across all 5 platforms
+./tests/run_freebsd_distro_matrix.sh --all
+
+# Or on Windows Command Prompt:
+.\tests\run_freebsd_distro_matrix.cmd
+```
+
+Individual platform execution runners:
+- `tests/run_freebsd_distro_on_freebsd.sh` (`.cmd`)
+- `tests/run_freebsd_distro_on_linux.sh` (`.cmd`)
+- `tests/run_freebsd_distro_on_macos.sh` (`.cmd`)
+- `tests/run_freebsd_distro_on_windows.sh` (`.cmd`)
+- `tests/run_freebsd_distro_on_sunos.sh` (`.cmd`)
+

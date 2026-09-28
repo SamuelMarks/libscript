@@ -9,7 +9,7 @@
 # `./fetch_checksum.sh <url>`. It will print the matched checksum to stdout or 
 # return a non-zero exit code if a checksum could not be found.
 
-set -eu
+set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

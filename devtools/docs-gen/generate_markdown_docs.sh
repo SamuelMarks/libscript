@@ -6,7 +6,7 @@
 # Execute this script to rebuild the markdown documentation.
 
 
-set -eu
+set -feu
 
 
 if [ "${SCRIPT_NAME-}" ]; then

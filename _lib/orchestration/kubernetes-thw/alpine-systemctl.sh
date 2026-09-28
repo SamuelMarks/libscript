@@ -5,7 +5,7 @@
 # ## Usage
 # Used internally to mock systemd commands on Alpine Linux.
 
-set -e
+set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"

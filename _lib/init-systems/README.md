@@ -7,8 +7,12 @@ OpenRC.
 
 <!-- BEGIN_COMPONENTS -->
 
+- [dinit](./dinit/README.md)
 - [openrc](./openrc/README.md)
+- [runit](./runit/README.md)
+- [s6](./s6/README.md)
 - [systemd](./systemd/README.md)
+- [sysvinit](./sysvinit/README.md)
 
 <!-- END_COMPONENTS -->
 

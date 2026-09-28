@@ -5,7 +5,7 @@
 # ## Usage
 # Execute this script without arguments.
 
-set -e
+set -feu
 
 
 if [ "${SCRIPT_NAME-}" ]; then

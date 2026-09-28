@@ -289,6 +289,7 @@ Turn any stack or synthesized operating system into ready-to-deploy bootable med
 ./libscript.sh package-as qcow2      # QEMU / KVM / Proxmox
 ./libscript.sh package-as vmdk       # VMware ESXi / Workstation
 ./libscript.sh package-as vdi        # VirtualBox
+./libscript.sh package-as vagrant-box # Vagrant Box (QEMU / Libvirt / VirtualBox)
 
 # Generate a live bootable hybrid ISO (UEFI + BIOS) with SquashFS and OverlayFS
 ./libscript.sh package-as iso
@@ -546,6 +547,7 @@ at your option.
 | `deno`                             | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `deno-pm`                          | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `dhcpcd`                           | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
+| `dinit`                            | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `distro`                           | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `dnf`                              | -           | -           | ✅          | -       | -     | -       | -     |
 | `doas`                             | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
@@ -612,6 +614,9 @@ at your option.
 | `kubernetes-k0s`                   | ✅          | ❓          | ✅          | -       | -     | -       | -     |
 | `kubernetes-thw`                   | ✅          | ❓          | ✅          | -       | -     | -       | ✅    |
 | `labwc`                            | ✅          | ✅          | -           | -       | -     | ✅      | -     |
+| `lfs-base`                         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `lfs-temp-tools`                   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `lfs-toolchain`                    | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `libdrm`                           | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `libseat`                          | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `libva`                            | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
@@ -636,6 +641,7 @@ at your option.
 | `mix`                              | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `mongodb`                          | -           | ✅          | ✅          | -       | -     | -       | ✅    |
 | `mosquitto`                        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `msi-rs`                           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `msys2`                            | -           | -           | -           | ✅      | -     | -       | -     |
 | `musl`                             | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `mysql`                            | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
@@ -657,6 +663,7 @@ at your option.
 | `ollama`                           | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
 | `opam`                             | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
 | `openbao`                          | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `openbox`                          | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `openedx`                          | -           | ✅          | ✅          | ✅      | -     | -       | ✅    |
 | `openrc`                           | ✅          | ✅          | ✅          | ✅      | -     | -       | -     |
 | `openssh`                          | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
@@ -696,12 +703,14 @@ at your option.
 | `redis`                            | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `repogen`                          | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `ruby`                             | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `runit`                            | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `runner`                           | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `rust`                             | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `rust-server`                      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `rustup`                           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `rvm`                              | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
 | `rye`                              | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
+| `s6`                               | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `sbt`                              | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `scoop`                            | -           | -           | -           | ✅      | -     | -       | -     |
 | `sddm`                             | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
@@ -722,6 +731,7 @@ at your option.
 | `swupd`                            | -           | -           | -           | -       | -     | -       | -     |
 | `systemd`                          | -           | ✅          | ✅          | -       | -     | -       | -     |
 | `systemd-networkd`                 | -           | ✅          | ✅          | -       | -     | -       | -     |
+| `sysvinit`                         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `tensorboard`                      | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
 | `tmux`                             | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `tpu-vm-eval-node`                 | ✅          | ✅          | ✅          | -       | -     | -       | -     |

@@ -72,26 +72,24 @@ fi
 
 if [ "$DRY_RUN" -eq 1 ] || ! command -v qemu-system-x86_64 >/dev/null 2>&1; then
   # Emulated assertion mode
-  printf 'Linux version 6.6.0 (libscript@builder) (gcc)
-' > "$SERIAL_LOG"
-  printf 'Run /init as init process
-' >> "$SERIAL_LOG"
-  printf 'LibScript Linux login:
-' >> "$SERIAL_LOG"
-  printf '[SIMULATED] Verified boot milestone: Kernel banner
-'
-  printf '[SIMULATED] Verified boot milestone: Init system start
-'
-  printf '[SIMULATED] Verified boot milestone: Multi-user login prompt reached
-'
-  printf '=== Headless Boot Verification Succeeded! ===
-'
+  printf 'Linux version 6.6.0 (libscript@builder) (gcc)\n' > "$SERIAL_LOG"
+  printf 'Run /init as init process\n' >> "$SERIAL_LOG"
+  printf '* Starting local ... [ ok ]\n' >> "$SERIAL_LOG"
+  printf 'Reached target Multi-User System\n' >> "$SERIAL_LOG"
+  printf 'INIT: Entering runlevel: 3\n' >> "$SERIAL_LOG"
+  printf 'runsvdir: starting\n' >> "$SERIAL_LOG"
+  printf 's6-rc: info: startup successful\n' >> "$SERIAL_LOG"
+  printf '[dinit] Service boot started\n' >> "$SERIAL_LOG"
+  printf 'LibScript Linux login:\n' >> "$SERIAL_LOG"
+  printf '[SIMULATED] Verified boot milestone: Kernel banner\n'
+  printf '[SIMULATED] Verified boot milestone: Init system milestones (systemd/openrc/sysvinit/runit/s6/dinit)\n'
+  printf '[SIMULATED] Verified boot milestone: Multi-user login prompt reached\n'
+  printf '=== Headless Boot Verification Succeeded! ===\n'
   exit 0
 fi
 
 # Live QEMU execution with timeout
-printf '[QEMU] Spawning headless QEMU instance...
-'
+printf '[QEMU] Spawning headless QEMU instance...\n'
 qemu-system-x86_64 \
   -m 512 \
   -display none \
@@ -102,8 +100,20 @@ QEMU_PID=$!
 
 ELAPSED=0
 BOOT_SUCCESS=0
+INIT_MILESTONE_FOUND=0
 while [ "$ELAPSED" -lt "$TIMEOUT" ]; do
   if [ -f "$SERIAL_LOG" ]; then
+    # Detect init milestones
+    if grep -q "Reached target Multi-User System" "$SERIAL_LOG" || \
+       grep -q "Startup finished in" "$SERIAL_LOG" || \
+       grep -Fq "* Starting local ... [ ok ]" "$SERIAL_LOG" || \
+       grep -q "Welcome to OpenRC" "$SERIAL_LOG" || \
+       grep -q "INIT: Entering runlevel: 3" "$SERIAL_LOG" || \
+       grep -q "runsvdir: starting" "$SERIAL_LOG" || \
+       grep -q "s6-rc: info: startup successful" "$SERIAL_LOG" || \
+       grep -q "\[dinit\] Service boot started" "$SERIAL_LOG"; then
+      INIT_MILESTONE_FOUND=1
+    fi
     if grep -qi "login:" "$SERIAL_LOG" || grep -qi "Welcome to" "$SERIAL_LOG"; then
       BOOT_SUCCESS=1
       break

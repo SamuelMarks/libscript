@@ -138,6 +138,7 @@ standardize_*
 !_lib/_common/test_base.*
 !tests/update_results.*
 !tests/test_update_results.*
+!cli/commands/config/validate_lfs_profile.*
 !tests/test_run_native_tests.*
 !tests/test_python_*
 !tests/test_openedx_*
@@ -161,11 +162,11 @@ standardize_*
 !_lib/kernel/initramfs/gen_initramfs.*
 !_lib/web-servers/*/create_*
 !_lib/web-servers/nginx/test_merge.*
-# Other ad-hoc dev files and generated outputs
 run_cmd.sh
 README_patch.sh
 gen_table.*
 *_gen.sh
+!_lib/_common/uuid_gen.*
 *_test.*
 !tests/*_test.*
 !tests/test_*
@@ -244,6 +245,8 @@ all_scripts.txt
 !/installer.schema.json
 !/os-config.schema.json
 !/execution-plan.schema.json
+!/execution-plan.illumos.schema.json
+!/execution-plan.freebsd.schema.json
 /*.txt
 !_lib/checksums.txt
 /*.out

@@ -1,0 +1,91 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "lfs-runit-wayland-hyprland",
+  "description": "Dynamic tiling Wayland Linux From Scratch appliance with Runit init supervisor, Hyprland, and Greetd.",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-glibc",
+    "libc": "glibc",
+    "submodel": "generic"
+  },
+  "kernel": {
+    "provider": "linux-lts",
+    "config_method": "fragments",
+    "fragments": ["virtio.cfg", "drm_kms.cfg"],
+    "cmdline": "console=ttyS0 console=tty0 root=/dev/vda2 rw quiet"
+  },
+  "init_system": {
+    "provider": "runit",
+    "default_target": "graphical",
+    "services_enabled": ["agetty-tty1", "seatd", "dbus", "greetd", "dhcpcd", "sshd"]
+  },
+  "display": {
+    "server": "wayland",
+    "compositor": "hyprland"
+  },
+  "desktop": {
+    "desktop_suite": "none",
+    "greeter": "greetd"
+  },
+  "storage": {
+    "disk_size_gib": 10,
+    "partition_table": "gpt",
+    "boot_mode": "uefi",
+    "bootloader": "limine",
+    "uki": false,
+    "partitions": [
+      {
+        "name": "ESP",
+        "filesystem": "vfat",
+        "mountpoint": "/boot/efi",
+        "size_mib": 512
+      },
+      {
+        "name": "root",
+        "filesystem": "ext4",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "vagrant",
+      "shell": "/bin/sh",
+      "groups": ["wheel", "sudo", "audio", "video", "input", "seat"],
+      "sudo": true
+    }
+  ],
+  "locale": {
+    "lang": "en_US.UTF-8",
+    "keymap": "us",
+    "timezone": "UTC"
+  },
+  "network": {
+    "hostname": "lfs-hyprland",
+    "dhcp": true,
+    "dns_servers": ["1.1.1.1", "8.8.8.8"]
+  },
+  "offline": {
+    "enabled": false,
+    "cache_dir": "/var/cache/libscript"
+  },
+  "packages": [
+    "runit",
+    "eudev",
+    "seatd",
+    "wayland",
+    "wayland-protocols",
+    "wlroots",
+    "hyprland",
+    "hyprpaper",
+    "hypridle",
+    "hyprlock",
+    "waybar",
+    "greetd",
+    "pipewire",
+    "wireplumber",
+    "dhcpcd",
+    "openssh"
+  ]
+}

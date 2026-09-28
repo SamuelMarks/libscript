@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "desktop-mate-x11",
+  "description": "Full illumos workstation with SMF, X11 Xorg server, MATE desktop suite, LightDM, and Boomer audio.",
+  "illumos_version": "hipster-2024",
+  "target": {
+    "arch": "amd64",
+    "os_family": "illumos",
+    "flavor": "openindiana",
+    "libc": "sunos-libc"
+  },
+  "init_system": {
+    "provider": "smf",
+    "milestone": "svc:/milestone/multi-user:default",
+    "services_enabled": [
+      "svc:/network/ssh:default",
+      "svc:/system/cron:default",
+      "svc:/system/dbus:default",
+      "svc:/system/hal:default",
+      "svc:/application/graphical-login/lightdm:default"
+    ]
+  },
+  "display": {
+    "protocol": "x11",
+    "graphics_driver": "modesetting"
+  },
+  "desktop": {
+    "environment": "mate",
+    "display_manager": "lightdm"
+  },
+  "audio": {
+    "subsystem": "boomer"
+  },
+  "storage": {
+    "filesystem": "zfs",
+    "pool_name": "rpool",
+    "bootloader": "illumos-loader",
+    "disk_size_gib": 40,
+    "compression": "lz4"
+  },
+  "package_manager": {
+    "provider": "ips",
+    "publisher_url": "https://pkg.openindiana.org/hipster",
+    "catalog": "hipster"
+  },
+  "users": [
+    {
+      "username": "illumos",
+      "shell": "/bin/sh",
+      "groups": ["staff", "sysadmin"],
+      "rbac_profiles": ["Primary Administrator"],
+      "sudo": true
+    }
+  ],
+  "network": {
+    "hostname": "illumos-mate-ws",
+    "dhcp": true,
+    "interface_strategy": "ipadm",
+    "dns_servers": ["1.1.1.1", "8.8.8.8"]
+  },
+  "packages": [
+    "pkg:/system/core-os",
+    "pkg:/x11/server/xorg",
+    "pkg:/mate/mate-desktop",
+    "pkg:/system/display-manager/lightdm",
+    "pkg:/system/display-manager/lightdm/gtk-greeter",
+    "pkg:/audio/audio-utilities",
+    "pkg:/security/sudo",
+    "pkg:/network/curl"
+  ]
+}

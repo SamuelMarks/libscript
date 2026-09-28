@@ -73,9 +73,22 @@ if /i "%PKG_TYPE%"=="aws-ami" goto do_aws_ami
 if /i "%PKG_TYPE%"=="azure-vhd" goto do_azure_vhd
 if /i "%PKG_TYPE%"=="gcp-image" goto do_gcp_image
 if /i "%PKG_TYPE%"=="cloud-img" goto do_cloud_img
+if /i "%PKG_TYPE%"=="vagrant-box" goto do_vagrant_box
+if /i "%PKG_TYPE%"=="vagrant_box" goto do_vagrant_box
+if /i "%PKG_TYPE%"=="vagrant" goto do_vagrant_box
+if /i "%PKG_TYPE%"=="disk-builder" goto do_disk_builder
+if /i "%PKG_TYPE%"=="disk_builder" goto do_disk_builder
 
 echo Error: Unsupported package format '%PKG_TYPE%'. >&2
 exit /b 1
+
+:do_vagrant_box
+call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\vagrant_box.cmd" %*
+exit /b %ERRORLEVEL%
+
+:do_disk_builder
+call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\disk_builder.cmd" %*
+exit /b %ERRORLEVEL%
 
 :do_container_base
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\container_base.cmd" %*

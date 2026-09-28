@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "desktop-xfce-x11",
+  "description": "Standard FreeBSD desktop environment with bsd-rc, X11 Xorg, XFCE4, and LightDM.",
+  "freebsd_version": "14.1-RELEASE",
+  "target": {
+    "arch": "amd64",
+    "os_family": "freebsd",
+    "libc": "bsd-libc"
+  },
+  "init_system": {
+    "provider": "bsd-rc",
+    "services_enabled": ["sshd", "cron", "devd", "syslogd", "dbus", "lightdm"]
+  },
+  "display": {
+    "protocol": "x11",
+    "graphics_driver": "drm-kmod"
+  },
+  "desktop": {
+    "environment": "xfce4",
+    "display_manager": "lightdm"
+  },
+  "audio": {
+    "subsystem": "oss"
+  },
+  "storage": {
+    "filesystem": "ufs2",
+    "bootloader": "freebsd-loader",
+    "disk_size_gib": 30
+  },
+  "users": [
+    {
+      "username": "desktop",
+      "shell": "/bin/sh",
+      "groups": ["wheel", "operator", "video"],
+      "sudo": true
+    }
+  ],
+  "network": {
+    "hostname": "freebsd-xfce-desktop",
+    "dhcp": true,
+    "dns_servers": ["1.1.1.1", "8.8.8.8"]
+  },
+  "packages": [
+    "curl",
+    "ca_root_nss",
+    "doas",
+    "sudo",
+    "xorg",
+    "xfce",
+    "xfce4-terminal",
+    "thunar",
+    "lightdm",
+    "lightdm-gtk-greeter"
+  ]
+}

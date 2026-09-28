@@ -14,15 +14,30 @@ Execute this script to install and configure wordpress on the local system.
 
 $ErrorActionPreference = "Stop"
 
+# ## log_info
+# Outputs informational message.
 function log_info($msg)    { Write-Host "[INFO] $msg" }
+
+# ## log_warn
+# Outputs warning message.
 function log_warn($msg)    { Write-Warning "$msg" }
+
+# ## log_error
+# Outputs error message.
 function log_error($msg)   { Write-Error "$msg" }
+
+# ## log_success
+# Outputs success message.
 function log_success($msg) { Write-Host "[SUCCESS] $msg" }
 
+# ## libscript_depends
+# Optional dependency tracking placeholder for Windows environments.
 function libscript_depends($packages) {
     # Optional dependency tracking for Windows
 }
 
+# ## libscript_download
+# Downloads file from specified URL to destination path using curl or Invoke-WebRequest.
 function libscript_download($url, $dest) {
     if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
         curl.exe -sSL "$url" -o "$dest"

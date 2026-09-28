@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/execution-plan.freebsd.schema.json",
+  "title": "LibScript FreeBSD Distribution Specification & Execution Plan Schema",
+  "description": "Schema definition for modular FreeBSD-based operating system distribution profiles and execution plans.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "profile_name",
+    "target",
+    "init_system",
+    "display",
+    "desktop",
+    "storage"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Semantic version of execution plan schema format",
+      "default": "1.0.0"
+    },
+    "profile_name": {
+      "type": "string",
+      "description": "Unique identifier of the FreeBSD distribution profile"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable summary of this profile's architecture and purpose"
+    },
+    "freebsd_version": {
+      "type": "string",
+      "description": "Target FreeBSD base release or branch (e.g. 14.1-RELEASE, 15.0-CURRENT)",
+      "default": "14.1-RELEASE"
+    },
+    "target": {
+      "type": "object",
+      "description": "Hardware and OS target specification",
+      "required": ["arch", "os_family"],
+      "properties": {
+        "arch": {
+          "type": "string",
+          "enum": ["amd64", "x86_64", "aarch64", "arm64"],
+          "description": "Target CPU architecture"
+        },
+        "os_family": {
+          "type": "string",
+          "const": "freebsd",
+          "description": "Target operating system family"
+        },
+        "libc": {
+          "type": "string",
+          "default": "bsd-libc",
+          "description": "Standard C library implementation"
+        }
+      }
+    },
+    "init_system": {
+      "type": "object",
+      "description": "Init system and service supervisor configuration",
+      "required": ["provider"],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["bsd-rc", "openrc", "runit", "s6", "dinit"],
+          "description": "Init supervisor implementation"
+        },
+        "services_enabled": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of service daemons enabled by default"
+        }
+      }
+    },
+    "display": {
+      "type": "object",
+      "description": "Display protocol, graphics, and compositor configuration",
+      "required": ["protocol"],
+      "properties": {
+        "protocol": {
+          "type": "string",
+          "enum": ["wayland", "x11", "none"],
+          "description": "Display protocol subsystem"
+        },
+        "graphics_driver": {
+          "type": "string",
+          "enum": ["drm-kmod", "scfb", "none"],
+          "default": "drm-kmod",
+          "description": "Kernel graphics driver stack"
+        }
+      }
+    },
+    "desktop": {
+      "type": "object",
+      "description": "Desktop environment or window manager configuration",
+      "required": ["environment"],
+      "properties": {
+        "environment": {
+          "type": "string",
+          "enum": [
+            "none",
+            "xfce4",
+            "kde-plasma-6",
+            "gnome",
+            "sway",
+            "hyprland",
+            "openbox",
+            "labwc",
+            "lxqt",
+            "weston"
+          ],
+          "description": "Desktop environment or standalone compositor/window manager"
+        },
+        "display_manager": {
+          "type": "string",
+          "enum": ["none", "lightdm", "sddm", "gdm", "greetd"],
+          "default": "none",
+          "description": "Display / login greeter manager"
+        }
+      }
+    },
+    "audio": {
+      "type": "object",
+      "description": "Audio subsystem configuration",
+      "properties": {
+        "subsystem": {
+          "type": "string",
+          "enum": ["oss", "pipewire", "none"],
+          "default": "oss",
+          "description": "Audio server and driver layer"
+        }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "description": "Disk layout, filesystem and bootloader configuration",
+      "required": ["filesystem", "bootloader"],
+      "properties": {
+        "filesystem": {
+          "type": "string",
+          "enum": ["zfs", "ufs2"],
+          "description": "Root filesystem type"
+        },
+        "bootloader": {
+          "type": "string",
+          "enum": ["freebsd-loader", "uefi", "bios"],
+          "default": "freebsd-loader",
+          "description": "Bootloader implementation"
+        },
+        "disk_size_gib": {
+          "type": "integer",
+          "default": 20,
+          "description": "Virtual disk image size in GiB"
+        }
+      }
+    },
+    "users": {
+      "type": "array",
+      "description": "User accounts to provision",
+      "items": {
+        "type": "object",
+        "required": ["username"],
+        "properties": {
+          "username": { "type": "string" },
+          "shell": { "type": "string", "default": "/bin/sh" },
+          "groups": {
+            "type": "array",
+            "items": { "type": "string" },
+            "default": ["wheel"]
+          },
+          "sudo": { "type": "boolean", "default": true },
+          "ssh_authorized_keys": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "network": {
+      "type": "object",
+      "description": "Network configuration defaults",
+      "properties": {
+        "hostname": { "type": "string", "default": "freebsd-distro" },
+        "dhcp": { "type": "boolean", "default": true },
+        "dns_servers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": ["1.1.1.1", "8.8.8.8"]
+        }
+      }
+    },
+    "packages": {
+      "type": "array",
+      "description": "Additional FreeBSD binary packages to stage",
+      "items": { "type": "string" }
+    }
+  }
+}

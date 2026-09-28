@@ -40,18 +40,38 @@ printf '=== LibScript 2x Consecutive Run Idempotency Matrix ===
 '
 
 # Pass 1: Initial execution
-printf '[PASS 1] Executing initial rootfs and FHS staging in %s...
-' "$TEST_DIR"
+printf '[PASS 1] Executing initial rootfs and FHS staging in %s...\n' "$TEST_DIR"
 "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/rootfs.sh" "$TEST_DIR"
+"${LIBSCRIPT_ROOT_DIR}/_lib/base-system/lfs-base/setup.sh" install
+"${LIBSCRIPT_ROOT_DIR}/_lib/kernel/setup.sh" install
+"${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/setup.sh" openrc install
+"${LIBSCRIPT_ROOT_DIR}/_lib/display-servers/setup.sh" wayland install
+"${LIBSCRIPT_ROOT_DIR}/_lib/desktops/setup.sh" sway install
+"${LIBSCRIPT_ROOT_DIR}/_lib/display-managers/setup.sh" greetd install
+"${LIBSCRIPT_ROOT_DIR}/_lib/audio/setup.sh" install
+"${LIBSCRIPT_ROOT_DIR}/_lib/graphics/setup.sh" install
+"${LIBSCRIPT_ROOT_DIR}/_lib/networking/setup.sh" install
+"${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/disk_builder.sh"
+"${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/vagrant_box.sh"
 
 # Snapshot stamps after Pass 1
 STAMP_SNAPSHOT="${TEST_DIR}/pass1_stamps.txt"
 ls -la "${TEST_DIR}/var/lib/libscript/stamps" > "$STAMP_SNAPSHOT" 2>/dev/null || true
 
 # Pass 2: Re-entrant consecutive execution
-printf '[PASS 2] Executing second consecutive pass on identical workspace...
-'
+printf '[PASS 2] Executing second consecutive pass on identical workspace...\n'
 "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/rootfs.sh" "$TEST_DIR"
+"${LIBSCRIPT_ROOT_DIR}/_lib/base-system/lfs-base/setup.sh" install
+"${LIBSCRIPT_ROOT_DIR}/_lib/kernel/setup.sh" install
+"${LIBSCRIPT_ROOT_DIR}/_lib/init-systems/setup.sh" openrc install
+"${LIBSCRIPT_ROOT_DIR}/_lib/display-servers/setup.sh" wayland install
+"${LIBSCRIPT_ROOT_DIR}/_lib/desktops/setup.sh" sway install
+"${LIBSCRIPT_ROOT_DIR}/_lib/display-managers/setup.sh" greetd install
+"${LIBSCRIPT_ROOT_DIR}/_lib/audio/setup.sh" install
+"${LIBSCRIPT_ROOT_DIR}/_lib/graphics/setup.sh" install
+"${LIBSCRIPT_ROOT_DIR}/_lib/networking/setup.sh" install
+"${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/disk_builder.sh"
+"${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/vagrant_box.sh"
 
 # Snapshot stamps after Pass 2
 PASS2_STAMPS="${TEST_DIR}/pass2_stamps.txt"

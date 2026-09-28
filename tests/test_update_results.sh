@@ -6,7 +6,7 @@
 # ## Usage
 # ./tests/test_update_results.sh
 
-set -eu
+set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"

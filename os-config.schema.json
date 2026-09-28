@@ -123,7 +123,7 @@
         "provider": {
           "type": "string",
           "description": "Init system daemon implementation provider",
-          "enum": ["systemd", "openrc", "sysvinit", "runit", "s6", "bsd-init", "none"]
+          "enum": ["systemd", "openrc", "sysvinit", "runit", "s6", "dinit", "bsd-init", "none"]
         },
         "default_target": {
           "type": "string",
@@ -147,7 +147,7 @@
         "server": {
           "type": "string",
           "description": "Display protocol server implementation",
-          "enum": ["wayland", "x11", "hybrid-xwayland", "headless"]
+          "enum": ["wayland", "x11", "hybrid-xwayland", "headless", "none"]
         },
         "compositor": {
           "type": "string",

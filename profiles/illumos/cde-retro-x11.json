@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "cde-retro-x11",
+  "description": "Heritage SunOS/illumos desktop running Common Desktop Environment (CDE) with Xorg, dtlogin/xdm, and classic Motif appearance.",
+  "illumos_version": "m30",
+  "target": {
+    "arch": "amd64",
+    "os_family": "illumos",
+    "flavor": "tribblix",
+    "libc": "sunos-libc"
+  },
+  "init_system": {
+    "provider": "smf",
+    "milestone": "svc:/milestone/multi-user:default",
+    "services_enabled": [
+      "svc:/network/ssh:default",
+      "svc:/system/cron:default",
+      "svc:/application/graphical-login/cde-login:default"
+    ]
+  },
+  "display": {
+    "protocol": "x11",
+    "graphics_driver": "vesa"
+  },
+  "desktop": {
+    "environment": "cde",
+    "display_manager": "xdm"
+  },
+  "audio": {
+    "subsystem": "boomer"
+  },
+  "storage": {
+    "filesystem": "zfs",
+    "pool_name": "rpool",
+    "bootloader": "illumos-loader",
+    "disk_size_gib": 25,
+    "compression": "lz4"
+  },
+  "package_manager": {
+    "provider": "zap",
+    "publisher_url": "http://pkgs.tribblix.org/m30",
+    "catalog": "main"
+  },
+  "users": [
+    {
+      "username": "solaris",
+      "shell": "/bin/sh",
+      "groups": ["staff", "sysadmin"],
+      "rbac_profiles": ["Primary Administrator"],
+      "sudo": true
+    }
+  ],
+  "network": {
+    "hostname": "illumos-cde",
+    "dhcp": true,
+    "interface_strategy": "ipadm",
+    "dns_servers": ["1.1.1.1", "8.8.8.8"]
+  },
+  "packages": [
+    "pkg:/system/core-os",
+    "pkg:/x11/server/xorg",
+    "pkg:/desktop/cde",
+    "pkg:/x11/session/xdm",
+    "pkg:/security/sudo"
+  ]
+}

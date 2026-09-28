@@ -90,6 +90,10 @@ if [ "$CMD" = "package-as" ]; then
     exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/azure_vhd.sh" "$@"
   elif [ "${pkg_type:-}" = "gcp-image" ]; then
     exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/gcp_image.sh" "$@"
+  elif [ "${pkg_type:-}" = "vagrant-box" ] || [ "${pkg_type:-}" = "vagrant_box" ] || [ "${pkg_type:-}" = "vagrant" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/vagrant_box.sh" "$@"
+  elif [ "${pkg_type:-}" = "disk-builder" ] || [ "${pkg_type:-}" = "disk_builder" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/disk_builder.sh" "$@"
   elif [ "${pkg_type:-}" = "cloud-img" ]; then
     exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/cloud_img.sh" "$@"
   else

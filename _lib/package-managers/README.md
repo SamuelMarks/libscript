@@ -121,6 +121,7 @@ cli.cmd uninstall package-managers
 - [mas](./mas/README.md)
 - [mise](./mise/README.md)
 - [mix](./mix/README.md)
+- [msi-rs](./msi-rs/README.md)
 - [msys2](./msys2/README.md)
 - [nimble](./nimble/README.md)
 - [nix](./nix/README.md)

@@ -10,7 +10,7 @@
 # ## Parameters
 #   None. Environment variables respected if provided.
 
-set -eu
+set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"

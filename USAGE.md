@@ -155,6 +155,7 @@ into deployable media:
 ./libscript.sh package-as qcow2      # QEMU / KVM / Proxmox VE
 ./libscript.sh package-as vmdk       # VMware ESXi / Workstation
 ./libscript.sh package-as vdi        # VirtualBox
+./libscript.sh package-as vagrant-box # Vagrant .box archive (QEMU / Libvirt / VirtualBox)
 
 # 3. Hybrid live bootable ISO (UEFI + BIOS) with SquashFS and OverlayFS
 ./libscript.sh package-as iso

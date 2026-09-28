@@ -314,19 +314,42 @@ LibScript compiles and configures operating system kernels natively:
 The `package-as` engine (`cli/commands/package_as/`) transforms synthesized environments into
 distributable deployment formats:
 
-- **`raw-img`**: Partitioned raw disk images (`.img`) ready for physical drive flashing (`dd`).
+- **`raw-img` / `disk-builder`**: Partitioned raw disk images (`.raw` / `.img`) ready for physical
+  drive flashing (`dd`) or hypervisors.
 - **`qcow2` / `vmdk` / `vdi`**: Compressed virtual machine disk images for QEMU/KVM, VMware ESXi,
   and VirtualBox.
+- **`vagrant-box`**: Redistributable Vagrant `.box` archives bundling metadata, Vagrantfile, and
+  qcow2 disk for QEMU/libvirt.
 - **`iso`**: Bootable hybrid live ISO media with SquashFS compression and copy-on-write OverlayFS
   RAM persistence.
 - **`rootfs-tar` / `docker`**: Clean archive tarballs ready for OCI image ingestion
   (`docker import`) or container/jail roots.
 - **`bsd-img`**: Bootable FreeBSD images formatted with UFS or ZFS for bhyve hypervisors or bare
   metal.
+- **`illumos-distro`**: Bootable illumos / SunOS images with ZFS root pools (`rpool`), SMF init, and pluggable desktop/audio.
 - **`unikernel`**: Direct-kernel boot images (`vmlinux` / `unikraft.bin`) optimized for Firecracker
   and Cloud-Hypervisor microVMs.
 - **Native Installers**: Automated `.msi` (WiX), `.exe` (InnoSetup/NSIS), `.deb`, `.rpm`, `.apk`,
   and `.pkg` builders.
+
+### 6. Modular Operating System Distribution Substrates
+
+LibScript implements modular, declarative OS distribution synthesis engines for non-Linux Unix operating systems:
+
+#### FreeBSD Distribution Substrate (`_lib/freebsd/distro/`)
+- Declarative profile schema: `execution-plan.freebsd.schema.json`.
+- Pluggable init supervisors: `bsd-rc`, `openrc`, `runit`, `s6`, `dinit`.
+- Storage architectures: UFS2 and ZFS root pools with boot environment support.
+- Multi-format packaging: Raw GPT, QCOW2, Vagrant `.box`, VHD, VMDK, ISO.
+
+#### Illumos Distribution Substrate (`_lib/illumos/distro/`)
+- Declarative profile schema: `execution-plan.illumos.schema.json`.
+- Pluggable init systems: Native SMF (`svc.startd`), `runit`, `s6`, `dinit`, `inittab-sysv`.
+- Pluggable desktop environments: Headless none, MATE, XFCE4, Common Desktop Environment (CDE), minimal window managers.
+- Storage & ZFS hierarchy: Canonical root pool (`rpool`), boot environment datasets (`beadm`), and `/etc/vfstab` integration.
+- Hardware audio subsystems: Solaris Boomer in-kernel audio (`/dev/audio`), OSS, PulseAudio.
+- Multi-format packaging: Raw GPT/VTOC, QCOW2, Vagrant `.box`, VHD, VMDK, ISO (`cli/commands/package_as/illumos_distro.sh` / `.cmd`).
+- Multi-platform verification: 5-platform Vagrant matrix spanning `{macOS, Windows, FreeBSD, SunOS, Linux}`.
 
 ---
 

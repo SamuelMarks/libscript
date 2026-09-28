@@ -77,6 +77,8 @@ foreach ($dir in @($runtimesDir, $databasesDir, $wheelsDir, $npmDir, $codebaseDi
     }
 }
 
+# ## Prune-Archive
+# Prunes debug symbols and unneeded assets from downloaded database archives.
 function Prune-Archive {
     param (
         [string]$Destination,
@@ -113,6 +115,8 @@ function Prune-Archive {
     }
 }
 
+# ## Process-Artifact
+# Validates, downloads, verifies hash, and prunes an individual packaging artifact.
 function Process-Artifact {
     param (
         [string]$Url,

@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "desktop-xfce-x11",
+  "description": "Lightweight illumos workstation with SMF, X11 Xorg server, XFCE4 desktop suite, Slim login manager, and Boomer audio.",
+  "illumos_version": "r151048",
+  "target": {
+    "arch": "amd64",
+    "os_family": "illumos",
+    "flavor": "omnios",
+    "libc": "sunos-libc"
+  },
+  "init_system": {
+    "provider": "smf",
+    "milestone": "svc:/milestone/multi-user:default",
+    "services_enabled": [
+      "svc:/network/ssh:default",
+      "svc:/system/cron:default",
+      "svc:/system/dbus:default",
+      "svc:/application/graphical-login/slim:default"
+    ]
+  },
+  "display": {
+    "protocol": "x11",
+    "graphics_driver": "vesa"
+  },
+  "desktop": {
+    "environment": "xfce4",
+    "display_manager": "slim"
+  },
+  "audio": {
+    "subsystem": "boomer"
+  },
+  "storage": {
+    "filesystem": "zfs",
+    "pool_name": "rpool",
+    "bootloader": "illumos-loader",
+    "disk_size_gib": 30,
+    "compression": "lz4"
+  },
+  "package_manager": {
+    "provider": "ips",
+    "publisher_url": "https://pkg.omnios.org/r151048/core",
+    "catalog": "core"
+  },
+  "users": [
+    {
+      "username": "xfceuser",
+      "shell": "/bin/sh",
+      "groups": ["staff", "sysadmin"],
+      "rbac_profiles": ["Primary Administrator"],
+      "sudo": true
+    }
+  ],
+  "network": {
+    "hostname": "illumos-xfce",
+    "dhcp": true,
+    "interface_strategy": "ipadm",
+    "dns_servers": ["1.1.1.1", "8.8.8.8"]
+  },
+  "packages": [
+    "pkg:/system/core-os",
+    "pkg:/x11/server/xorg",
+    "pkg:/desktop/xfce4",
+    "pkg:/desktop/xfce4/terminal",
+    "pkg:/system/display-manager/slim",
+    "pkg:/security/sudo",
+    "pkg:/network/curl"
+  ]
+}
