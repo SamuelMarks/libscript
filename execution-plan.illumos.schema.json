@@ -180,20 +180,32 @@
         "type": "object",
         "required": ["username"],
         "properties": {
-          "username": { "type": "string" },
-          "shell": { "type": "string" },
+          "username": {
+            "type": "string",
+            "description": "Login username"
+          },
+          "shell": {
+            "type": "string",
+            "description": "User login shell path"
+          },
           "groups": {
             "type": "array",
-            "items": { "type": "string" }
+            "items": { "type": "string" },
+            "description": "Supplementary group memberships"
           },
           "rbac_profiles": {
             "type": "array",
-            "items": { "type": "string" }
+            "items": { "type": "string" },
+            "description": "Illumos RBAC execution profile names"
           },
-          "sudo": { "type": "boolean" },
+          "sudo": {
+            "type": "boolean",
+            "description": "Grant administrative privileges via sudo/doas"
+          },
           "ssh_keys": {
             "type": "array",
-            "items": { "type": "string" }
+            "items": { "type": "string" },
+            "description": "Public SSH keys installed into authorized_keys"
           }
         }
       }
@@ -202,8 +214,14 @@
       "type": "object",
       "description": "Network configuration and interface management",
       "properties": {
-        "hostname": { "type": "string" },
-        "dhcp": { "type": "boolean" },
+        "hostname": {
+          "type": "string",
+          "description": "System network hostname"
+        },
+        "dhcp": {
+          "type": "boolean",
+          "description": "Enable DHCP client on primary interface"
+        },
         "interface_strategy": {
           "type": "string",
           "enum": ["ipadm", "nwam"],
@@ -211,7 +229,8 @@
         },
         "dns_servers": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": { "type": "string" },
+          "description": "Upstream DNS nameservers for resolv.conf"
         }
       }
     },

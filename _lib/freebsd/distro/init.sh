@@ -55,13 +55,15 @@ printf '[INIT]     Configuring init provider %s...
 case "${PROVIDER}" in
   bsd-rc)
     # Traditional BSD rc.d framework
-    printf '# BSD rc.d enabled services
-' >> "${SYSROOT}/etc/rc.conf"
+    if ! grep -q '# BSD rc.d enabled services' "${SYSROOT}/etc/rc.conf" 2>/dev/null; then
+      printf '# BSD rc.d enabled services\n' >> "${SYSROOT}/etc/rc.conf"
+    fi
     IFS=','
     for s in ${SERVICES}; do
       [ -z "${s}" ] && continue
-      printf '%s_enable="YES"
-' "${s}" >> "${SYSROOT}/etc/rc.conf"
+      if ! grep -q "^${s}_enable=" "${SYSROOT}/etc/rc.conf" 2>/dev/null; then
+        printf '%s_enable="YES"\n' "${s}" >> "${SYSROOT}/etc/rc.conf"
+      fi
     done
     unset IFS
     ;;
@@ -79,8 +81,9 @@ EOF
     chmod +x "${SYSROOT}/etc/init.d/sshd" 2>/dev/null || true
     ln -sf "/etc/init.d/sshd" "${SYSROOT}/etc/runlevels/default/sshd" 2>/dev/null || true
     # Specify openrc-init as init_path in loader.conf if available
-    printf 'init_path="/sbin/openrc-init:/sbin/init"
-' >> "${SYSROOT}/boot/loader.conf"
+    if ! grep -q '^init_path=' "${SYSROOT}/boot/loader.conf" 2>/dev/null; then
+      printf 'init_path="/sbin/openrc-init:/sbin/init"\n' >> "${SYSROOT}/boot/loader.conf"
+    fi
     ;;
 
   runit)
@@ -93,15 +96,17 @@ exec 2>&1
 exec /usr/sbin/sshd -D -e
 EOF
     chmod +x "${SYSROOT}/var/service/sshd/run" 2>/dev/null || true
-    printf 'init_path="/usr/local/sbin/runit-init:/sbin/init"
-' >> "${SYSROOT}/boot/loader.conf"
+    if ! grep -q '^init_path=' "${SYSROOT}/boot/loader.conf" 2>/dev/null; then
+      printf 'init_path="/usr/local/sbin/runit-init:/sbin/init"\n' >> "${SYSROOT}/boot/loader.conf"
+    fi
     ;;
 
   s6)
     # s6 supervision suite
     mkdir -p "${SYSROOT}/etc/s6" "${SYSROOT}/etc/s6-rc/sources" "${SYSROOT}/var/run/s6"
-    printf 'init_path="/usr/local/bin/s6-svscan:/sbin/init"
-' >> "${SYSROOT}/boot/loader.conf"
+    if ! grep -q '^init_path=' "${SYSROOT}/boot/loader.conf" 2>/dev/null; then
+      printf 'init_path="/usr/local/bin/s6-svscan:/sbin/init"\n' >> "${SYSROOT}/boot/loader.conf"
+    fi
     ;;
 
   dinit)

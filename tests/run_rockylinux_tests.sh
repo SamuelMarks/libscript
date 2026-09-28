@@ -11,7 +11,7 @@
 # Example: ./tests/run_rockylinux_tests.sh all
 # Example: ./tests/run_rockylinux_tests.sh all --loop --stop-after 10
 
-set -e
+set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -34,6 +34,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
 ' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
+set +f
 VAGRANT_DIR="$REPO_ROOT/vagrant/rockylinux-10.2"
 TESTS_TMP_DIR="$REPO_ROOT/tests_tmp"
 

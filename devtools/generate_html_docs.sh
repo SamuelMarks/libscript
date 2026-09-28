@@ -24,7 +24,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
   printf '%s\n' "Usage: $0 [OPTIONS]"
-  printf '%s\n' "See script source or documentation for more details."
+  printf '%s\n' "See script implementation or documentation for more details."
   exit 0
 fi
 
@@ -50,7 +50,18 @@ fi
 
 export GIT_REPO="${GIT_REPO:-https://github.com/SamuelMarks/libscript}"
 
-ENVSUBST_PATH="$(which awk cat env printenv sort grep | sort -u | xargs dirname | tr '\n' ':')"
+_envsubst_dirs=""
+for _tool in awk cat env printenv sort grep; do
+  _tool_path=$(command -v "$_tool" 2>/dev/null || true)
+  if [ -n "$_tool_path" ]; then
+    _tool_dir=$(dirname "$_tool_path")
+    case ":${_envsubst_dirs}:" in
+      *":${_tool_dir}:"*) ;;
+      *) _envsubst_dirs="${_envsubst_dirs:+${_envsubst_dirs}:}${_tool_dir}" ;;
+    esac
+  fi
+done
+ENVSUBST_PATH="${_envsubst_dirs}:"
 export ENVSUBST_PATH
 
 export SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/find_replace.sh'

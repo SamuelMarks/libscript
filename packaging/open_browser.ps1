@@ -19,13 +19,14 @@ if (-not (Test-Path $browserExe)) {
 }
 
 # 3. Create profile dir if needed
-$profileDir = "C:\ChromeProfile"
+$hash = [Math]::Abs($Url.GetHashCode())
+$profileDir = "C:\EdgeProfile_$hash"
 if (-not (Test-Path $profileDir)) {
     New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
 }
 
 # 4. Launch browser
-$browserArgs = "--user-data-dir=`"$profileDir`" --no-first-run --no-default-browser-check --disable-fre --disable-search-engine-choice-screen --disable-features=SearchEngineChoice --disable-session-crashed-bubble --hide-crash-restore-bubble --disable-gpu --start-maximized `"$Url`""
+$browserArgs = "--user-data-dir=`"$profileDir`" --no-first-run --no-default-browser-check --disable-fre --disable-search-engine-choice-screen --disable-features=SearchEngineChoice,msEdgeFirstRunExperience --disable-session-crashed-bubble --hide-crash-restore-bubble --disable-gpu --start-maximized `"$Url`""
 $action = New-ScheduledTaskAction -Execute $browserExe -Argument $browserArgs
 $principal = New-ScheduledTaskPrincipal -UserId "vagrant" -LogonType Interactive
 Register-ScheduledTask -TaskName "ShowBrowser" -Action $action -Principal $principal -Force | Out-Null

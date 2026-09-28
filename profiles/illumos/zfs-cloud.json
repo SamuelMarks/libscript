@@ -49,9 +49,7 @@
       "groups": ["staff", "sysadmin"],
       "rbac_profiles": ["Primary Administrator"],
       "sudo": true,
-      "ssh_keys": [
-        "ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8ial5... vagrant insecure public key"
-      ]
+      "ssh_keys": ["ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8ial5... vagrant insecure public key"]
     }
   ],
   "network": {

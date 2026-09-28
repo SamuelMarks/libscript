@@ -160,17 +160,30 @@
         "type": "object",
         "required": ["username"],
         "properties": {
-          "username": { "type": "string" },
-          "shell": { "type": "string", "default": "/bin/sh" },
+          "username": {
+            "type": "string",
+            "description": "Login username"
+          },
+          "shell": {
+            "type": "string",
+            "default": "/bin/sh",
+            "description": "User login shell path"
+          },
           "groups": {
             "type": "array",
             "items": { "type": "string" },
-            "default": ["wheel"]
+            "default": ["wheel"],
+            "description": "Supplementary groups for the user account"
           },
-          "sudo": { "type": "boolean", "default": true },
+          "sudo": {
+            "type": "boolean",
+            "default": true,
+            "description": "Grant passwordless root privilege escalation"
+          },
           "ssh_authorized_keys": {
             "type": "array",
-            "items": { "type": "string" }
+            "items": { "type": "string" },
+            "description": "Public SSH keys authorized for the user"
           }
         }
       }
@@ -179,12 +192,21 @@
       "type": "object",
       "description": "Network configuration defaults",
       "properties": {
-        "hostname": { "type": "string", "default": "freebsd-distro" },
-        "dhcp": { "type": "boolean", "default": true },
+        "hostname": {
+          "type": "string",
+          "default": "freebsd-distro",
+          "description": "System network hostname"
+        },
+        "dhcp": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable DHCP client on primary network interface"
+        },
         "dns_servers": {
           "type": "array",
           "items": { "type": "string" },
-          "default": ["1.1.1.1", "8.8.8.8"]
+          "default": ["1.1.1.1", "8.8.8.8"],
+          "description": "Upstream DNS nameservers for resolv.conf"
         }
       }
     },

@@ -118,13 +118,20 @@ headless QEMU boot test harness (`tests/os_boot_test.sh` and `tests/os_boot_test
 
 ### FreeBSD Modular Distribution Smoketests
 
-FreeBSD distribution profiles synthesized by LibScript undergo dedicated headless serial boot, GUI, and multi-platform matrix verification:
-- `tests/freebsd_boot_test.sh` (`.cmd`): Asserts kernel bootstrap banner, root mount, configured init system PID 1 (`bsd-rc`, `openrc`, `runit`, `s6`, `dinit`), and multi-user login prompt.
-- `tests/freebsd_gui_smoke_test.sh` (`.cmd`): Verifies `seatd` daemon, `XDG_RUNTIME_DIR`, X11 sockets, and display manager configuration (`lightdm`, `sddm`, `greetd`).
-- `tests/freebsd_vagrant_box_test.sh` (`.cmd`): Validates `.box` tarball archive structure, embedded metadata, and Vagrantfile descriptors.
-- `tests/freebsd_network_smoke_test.sh` (`.cmd`): Asserts DHCP client interface configuration and OpenSSH daemon activation.
+FreeBSD distribution profiles synthesized by LibScript undergo dedicated headless serial boot, GUI,
+and multi-platform matrix verification:
+
+- `tests/freebsd_boot_test.sh` (`.cmd`): Asserts kernel bootstrap banner, root mount, configured
+  init system PID 1 (`bsd-rc`, `openrc`, `runit`, `s6`, `dinit`), and multi-user login prompt.
+- `tests/freebsd_gui_smoke_test.sh` (`.cmd`): Verifies `seatd` daemon, `XDG_RUNTIME_DIR`, X11
+  sockets, and display manager configuration (`lightdm`, `sddm`, `greetd`).
+- `tests/freebsd_vagrant_box_test.sh` (`.cmd`): Validates `.box` tarball archive structure, embedded
+  metadata, and Vagrantfile descriptors.
+- `tests/freebsd_network_smoke_test.sh` (`.cmd`): Asserts DHCP client interface configuration and
+  OpenSSH daemon activation.
 - `tests/test_freebsd_idempotency.sh` (`.cmd`): Verifies two-pass idempotency and stamp emission.
-- `tests/run_freebsd_distro_matrix.sh` (`.cmd`): Multi-platform verification orchestrator across all 5 Vagrant targets `{macOS, Windows, FreeBSD, SunOS, Linux}`.
+- `tests/run_freebsd_distro_matrix.sh` (`.cmd`): Multi-platform verification orchestrator across all
+  5 Vagrant targets `{macOS, Windows, FreeBSD, SunOS, Linux}`.
 
 ```sh
 # Run FreeBSD distribution test suite
@@ -240,20 +247,25 @@ Matrix test results are aggregated and updated automatically:
 
 ## 9. Illumos Distribution Verification Suite & 5-Platform Matrix
 
-The illumos distribution subsystem (`_lib/illumos/distro/`) includes a dedicated verification harness executing exclusively inside Vagrant virtual machine environments across 5 target platforms: `{macOS, Windows, FreeBSD, SunOS, Linux}`.
+The illumos distribution subsystem (`_lib/illumos/distro/`) includes a dedicated verification
+harness executing exclusively inside Vagrant virtual machine environments across 5 target platforms:
+`{macOS, Windows, FreeBSD, SunOS, Linux}`.
 
 ### Verification Tools
 
-- **Headless Serial Boot Smoketest** (`tests/illumos_boot_test.sh` / `.cmd`):
-  Validates 4 milestones in order: 1) Kernel bootstrap banner (`SunOS 5.11`), 2) ZFS root filesystem mount (`rpool/ROOT/...`), 3) Init supervisor milestone (SMF `milestone/multi-user:default` or alternative), and 4) Multi-user login prompt.
-- **GUI Desktop Smoketest** (`tests/illumos_gui_smoke_test.sh` / `.cmd`):
-  Validates X11 Xorg server sockets, Display Manager status (`lightdm`, `slim`, `xdm`), and desktop session startup scripts.
-- **2-Pass Idempotency Verification** (`tests/test_illumos_idempotency.sh` / `.cmd`):
-  Executes two consecutive synthesis passes and asserts Pass 2 produces exit code 0, emits `[SKIP]` markers, and introduces zero filesystem mutations.
-- **Vagrant Box Verification** (`tests/illumos_vagrant_box_test.sh` / `.cmd`):
-  Validates `.box` tarball integrity, `metadata.json`, and Solaris/OmniOS guest configuration in `Vagrantfile`.
-- **Network & SSH Smoketest** (`tests/illumos_network_smoke_test.sh` / `.cmd`):
-  Validates `ipadm` network interfaces, `/etc/nodename`, DNS resolver, and SSH service registration.
+- **Headless Serial Boot Smoketest** (`tests/illumos_boot_test.sh` / `.cmd`): Validates 4 milestones
+  in order: 1) Kernel bootstrap banner (`SunOS 5.11`), 2) ZFS root filesystem mount
+  (`rpool/ROOT/...`), 3) Init supervisor milestone (SMF `milestone/multi-user:default` or
+  alternative), and 4) Multi-user login prompt.
+- **GUI Desktop Smoketest** (`tests/illumos_gui_smoke_test.sh` / `.cmd`): Validates X11 Xorg server
+  sockets, Display Manager status (`lightdm`, `slim`, `xdm`), and desktop session startup scripts.
+- **2-Pass Idempotency Verification** (`tests/test_illumos_idempotency.sh` / `.cmd`): Executes two
+  consecutive synthesis passes and asserts Pass 2 produces exit code 0, emits `[SKIP]` markers, and
+  introduces zero filesystem mutations.
+- **Vagrant Box Verification** (`tests/illumos_vagrant_box_test.sh` / `.cmd`): Validates `.box`
+  tarball integrity, `metadata.json`, and Solaris/OmniOS guest configuration in `Vagrantfile`.
+- **Network & SSH Smoketest** (`tests/illumos_network_smoke_test.sh` / `.cmd`): Validates `ipadm`
+  network interfaces, `/etc/nodename`, DNS resolver, and SSH service registration.
 
 ### 5-Platform Vagrant Matrix Orchestrator
 

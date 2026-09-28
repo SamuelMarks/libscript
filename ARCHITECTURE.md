@@ -17,6 +17,29 @@ The architecture follows two foundational design patterns:
 
 ---
 
+## 🗺️ System Capabilities: From Toolchains to Multicloud & OS Images
+
+LibScript provides an end-to-end operational substrate spanning from individual language runtimes
+and full-stack applications to cross-vendor cloud orchestrators, custom OS kernels, and native
+installer generators.
+
+```mermaid
+flowchart TD
+    UI["<b>3. GUI / TUI / CLI DELIVERY</b><hr/>CLI Shell Router<hr/>TUI Dialog Menus<hr/>Windows MSI & EXE<hr/>macOS PKG & DMG"]
+
+    APP["<b>0. STACKS & SERVICES</b><hr/>PostgreSQL<hr/>Node.js<hr/>Python<hr/>WordPress<hr/>Open edX<hr/>Service Daemons"]
+
+    OS["<b>2. MULTI-OS IMAGE BAKERY</b><hr/>Linux (Kernel + UKI)<hr/>FreeBSD (World + ZFS)<hr/>illumos (SMF + rpool)<hr/>Live Hybrid ISO<hr/>QCOW2, VMDK & Vagrant"]
+
+    CLOUD["<b>1. MULTICLOUD & AI FLEETS</b><hr/>AWS & Azure<hr/>GCP & Hetzner<hr/>Proxmox VE & Vagrant<hr/>TPU Pods & GPUs<hr/>vLLM & JetStream"]
+
+    UI ==>|"Configure & Run"| APP
+    APP ==>|"Bake into Image"| OS
+    OS ==>|"Provision onto"| CLOUD
+```
+
+---
+
 ## 🏛️ The Three-Tier Architectural Division of Concerns
 
 To prevent scope creep and ensure deterministic reproducibility, LibScript codifies strict boundary
@@ -326,7 +349,8 @@ distributable deployment formats:
   (`docker import`) or container/jail roots.
 - **`bsd-img`**: Bootable FreeBSD images formatted with UFS or ZFS for bhyve hypervisors or bare
   metal.
-- **`illumos-distro`**: Bootable illumos / SunOS images with ZFS root pools (`rpool`), SMF init, and pluggable desktop/audio.
+- **`illumos-distro`**: Bootable illumos / SunOS images with ZFS root pools (`rpool`), SMF init, and
+  pluggable desktop/audio.
 - **`unikernel`**: Direct-kernel boot images (`vmlinux` / `unikraft.bin`) optimized for Firecracker
   and Cloud-Hypervisor microVMs.
 - **Native Installers**: Automated `.msi` (WiX), `.exe` (InnoSetup/NSIS), `.deb`, `.rpm`, `.apk`,
@@ -334,22 +358,29 @@ distributable deployment formats:
 
 ### 6. Modular Operating System Distribution Substrates
 
-LibScript implements modular, declarative OS distribution synthesis engines for non-Linux Unix operating systems:
+LibScript implements modular, declarative OS distribution synthesis engines for non-Linux Unix
+operating systems:
 
 #### FreeBSD Distribution Substrate (`_lib/freebsd/distro/`)
+
 - Declarative profile schema: `execution-plan.freebsd.schema.json`.
 - Pluggable init supervisors: `bsd-rc`, `openrc`, `runit`, `s6`, `dinit`.
 - Storage architectures: UFS2 and ZFS root pools with boot environment support.
 - Multi-format packaging: Raw GPT, QCOW2, Vagrant `.box`, VHD, VMDK, ISO.
 
 #### Illumos Distribution Substrate (`_lib/illumos/distro/`)
+
 - Declarative profile schema: `execution-plan.illumos.schema.json`.
 - Pluggable init systems: Native SMF (`svc.startd`), `runit`, `s6`, `dinit`, `inittab-sysv`.
-- Pluggable desktop environments: Headless none, MATE, XFCE4, Common Desktop Environment (CDE), minimal window managers.
-- Storage & ZFS hierarchy: Canonical root pool (`rpool`), boot environment datasets (`beadm`), and `/etc/vfstab` integration.
+- Pluggable desktop environments: Headless none, MATE, XFCE4, Common Desktop Environment (CDE),
+  minimal window managers.
+- Storage & ZFS hierarchy: Canonical root pool (`rpool`), boot environment datasets (`beadm`), and
+  `/etc/vfstab` integration.
 - Hardware audio subsystems: Solaris Boomer in-kernel audio (`/dev/audio`), OSS, PulseAudio.
-- Multi-format packaging: Raw GPT/VTOC, QCOW2, Vagrant `.box`, VHD, VMDK, ISO (`cli/commands/package_as/illumos_distro.sh` / `.cmd`).
-- Multi-platform verification: 5-platform Vagrant matrix spanning `{macOS, Windows, FreeBSD, SunOS, Linux}`.
+- Multi-format packaging: Raw GPT/VTOC, QCOW2, Vagrant `.box`, VHD, VMDK, ISO
+  (`cli/commands/package_as/illumos_distro.sh` / `.cmd`).
+- Multi-platform verification: 5-platform Vagrant matrix spanning
+  `{macOS, Windows, FreeBSD, SunOS, Linux}`.
 
 ---
 

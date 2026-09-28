@@ -18,8 +18,10 @@ virtual machine disk appliances.
 - `live_iso`: Synthesizes an El Torito / EFI hybrid bootable Live ISO image.
 - `docker`: Builds an OCI/Docker container image directly from target sysroot rootfs.
 - `tarball`: Archives target sysroot into a compressed distribution tarball.
-- `freebsd_distro`: Packages modular FreeBSD distributions into raw, qcow2, vagrant box, vhd, vmdk, or iso.
-- `illumos_distro`: Packages modular illumos distributions into raw, qcow2, vagrant box, vhd, vmdk, or iso.
+- `freebsd_distro`: Packages modular FreeBSD distributions into raw, qcow2, vagrant box, vhd, vmdk,
+  or iso.
+- `illumos_distro`: Packages modular illumos distributions into raw, qcow2, vagrant box, vhd, vmdk,
+  or iso.
 
 ## Usage
 

@@ -1014,7 +1014,7 @@ ${MULTI_LICENSE_XML}
           <Publish Event="EndDialog" Value="Return">1</Publish>
         </Control>
         <Control Id="Install" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Install">
-          <Publish Event="EndDialog" Value="Return">1</Publish>
+          <Publish Event="NewDialog" Value="Dlg_Exit">1</Publish>
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
           <Publish Event="EndDialog" Value="Exit">1</Publish>

@@ -1,35 +1,42 @@
 @echo off
+set "THIS_FILE=%~f0"
 :: # test_table.cmd
 ::
 :: ## Overview
-:: Generates a markdown table displaying the testing status of components on Windows.
+:: Generates a markdown table displaying the testing status of components.
 ::
 :: ## Usage
-:: Run this script to generate components_table.tmp and print it.
+:: call "%~dp0test_table.cmd"
 
 setlocal EnableDelayedExpansion
-set "THIS_FILE=%~f0"
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
-> components_table.tmp (
-    echo ## Supported Components
-    echo.
-    echo ^| Component ^| Linux ^| Windows ^| DOS ^| SunOS ^| FreeBSD ^|
-    echo ^|---^|---^|---^|---^|---^|---^|
-)
+set "REPO_ROOT=%SCRIPT_DIR%"
+set "TMP_TABLE=%REPO_ROOT%\components_table.tmp"
 
-for /d %%C in ("%SCRIPT_DIR%\_lib\*") do (
-    for /d %%D in ("%%C\*") do (
-        set "comp_name=%%~nxD"
-        if not "!comp_name!"=="_common" (
-            set "linux_status=-"
-            if exist "%SCRIPT_DIR%\tests_tmp\!comp_name!.linux.alpine.success" set "linux_status=OK"
-            if exist "%SCRIPT_DIR%\tests_tmp\!comp_name!.linux.alpine.failure" set "linux_status=FAIL"
-            >> components_table.tmp echo ^| `!comp_name!` ^| !linux_status! ^| - ^| - ^| - ^| - ^|
-        )
+(
+  echo ## Supported Components
+  echo.
+  echo ^| Component ^| Linux ^| Windows ^| DOS ^| SunOS ^| FreeBSD ^|
+  echo ^|---^|---^|---^|---^|---^|---^|
+) > "!TMP_TABLE!"
+
+for /d %%C in ("%REPO_ROOT%\_lib\*") do (
+  set "CAT_NAME=%%~nxC"
+  if not "!CAT_NAME!"=="_common" (
+    for /d %%P in ("%%C\*") do (
+      set "COMP_NAME=%%~nxP"
+      set "LINUX_STATUS=❓"
+      if exist "%REPO_ROOT%\tests_tmp\!COMP_NAME!.linux.alpine.success" (
+        set "LINUX_STATUS=✅"
+      ) else if exist "%REPO_ROOT%\tests_tmp\!COMP_NAME!.linux.alpine.failure" (
+        set "LINUX_STATUS=❌"
+      )
+      echo ^| `!COMP_NAME!` ^| !LINUX_STATUS! ^| - ^| - ^| - ^| - ^| >> "!TMP_TABLE!"
     )
+  )
 )
 
-type components_table.tmp
+type "!TMP_TABLE!"
 exit /b 0

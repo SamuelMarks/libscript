@@ -45,28 +45,24 @@ printf '[TEST]     Executing FreeBSD GUI smoketest (%s, %s, %s)...
 
 if [ "${PROTOCOL}" = "wayland" ]; then
   # Verify seatd and wayland environment profile
-  if [ -f "${SYSROOT}/etc/rc.conf" ] && grep -q "seatd_enable="YES"" "${SYSROOT}/etc/rc.conf"; then
-    printf '[PASS]     seatd daemon enabled in rc.conf
-' >> "${LOG_FILE}"
+  if [ -f "${SYSROOT}/etc/rc.conf" ] && grep -q 'seatd_enable="YES"' "${SYSROOT}/etc/rc.conf"; then
+    printf '[PASS]     seatd daemon enabled in rc.conf\n' >> "${LOG_FILE}"
   else
-    printf '[WARN]     seatd not found in rc.conf (simulated)
-' >> "${LOG_FILE}"
+    printf '[WARN]     seatd not found in rc.conf (simulated)\n' >> "${LOG_FILE}"
   fi
   if [ -f "${SYSROOT}/etc/profile.d/wayland.sh" ]; then
-    printf '[PASS]     XDG_RUNTIME_DIR profile configuration verified
-' >> "${LOG_FILE}"
+    printf '[PASS]     XDG_RUNTIME_DIR profile configuration verified\n' >> "${LOG_FILE}"
   fi
 elif [ "${PROTOCOL}" = "x11" ]; then
   # Verify Xorg configuration directory
   if [ -d "${SYSROOT}/usr/local/etc/X11" ]; then
-    printf '[PASS]     X11 configuration path verified
-' >> "${LOG_FILE}"
+    printf '[PASS]     X11 configuration path verified\n' >> "${LOG_FILE}"
   fi
 fi
 
 # Verify Display Manager configuration
 if [ "${DM}" != "none" ]; then
-  if [ -f "${SYSROOT}/etc/rc.conf" ] && grep -q "${DM}_enable="YES"" "${SYSROOT}/etc/rc.conf"; then
+  if [ -f "${SYSROOT}/etc/rc.conf" ] && grep -q "${DM}_enable=\"YES\"" "${SYSROOT}/etc/rc.conf"; then
     printf '[PASS]     Display manager %s enabled
 ' "${DM}" >> "${LOG_FILE}"
   else

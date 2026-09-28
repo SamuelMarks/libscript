@@ -6,7 +6,7 @@
 # ./run_all_batches.sh [--os <target_os>]
 # Example: ./run_all_batches.sh --os debian-13
 
-set -e
+set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -25,8 +25,8 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-THIS_DIR="${SCRIPT_DIR}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
+set +f
 
 OS_TARGET="alpine-3.24"
 EXTRA_ARGS=""

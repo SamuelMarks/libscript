@@ -60,8 +60,9 @@ fi
 
 # Kernel DRM driver loading in rc.conf
 if [ "${DRIVER}" = "drm-kmod" ]; then
-  printf 'kld_list="${kld_list:-} /boot/modules/virtio_gpu.ko"
-' >> "${SYSROOT}/etc/rc.conf"
+  if ! grep -q 'virtio_gpu.ko' "${SYSROOT}/etc/rc.conf" 2>/dev/null; then
+    printf 'kld_list="${kld_list:-} /boot/modules/virtio_gpu.ko"\n' >> "${SYSROOT}/etc/rc.conf"
+  fi
 fi
 
 # devfs rules for graphics and input devices (/dev/dri, /dev/input)
@@ -71,13 +72,15 @@ add path 'dri/*' mode 0666 group video
 add path 'drm/*' mode 0666 group video
 add path 'input/*' mode 0660 group video
 EOF
-printf 'devfs_system_ruleset="system"
-' >> "${SYSROOT}/etc/rc.conf"
+if ! grep -q 'devfs_system_ruleset="system"' "${SYSROOT}/etc/rc.conf" 2>/dev/null; then
+  printf 'devfs_system_ruleset="system"\n' >> "${SYSROOT}/etc/rc.conf"
+fi
 
 if [ "${PROTOCOL}" = "wayland" ]; then
   # Wayland session configuration & seatd daemon
-  printf 'seatd_enable="YES"
-' >> "${SYSROOT}/etc/rc.conf"
+  if ! grep -q 'seatd_enable="YES"' "${SYSROOT}/etc/rc.conf" 2>/dev/null; then
+    printf 'seatd_enable="YES"\n' >> "${SYSROOT}/etc/rc.conf"
+  fi
   # Environment profile for XDG_RUNTIME_DIR
   mkdir -p "${SYSROOT}/etc/profile.d"
   cat << 'EOF' > "${SYSROOT}/etc/profile.d/wayland.sh"

@@ -11,7 +11,7 @@
 #   ./tests/run_native_tests.sh --category databases
 #   ./tests/run_native_tests.sh all
 
-set -e
+set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -36,6 +36,7 @@ THIS_DIR="${SCRIPT_DIR}"
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
 ' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
+set +f
 
 # ## show_help
 # Displays usage instructions and supported CLI options.

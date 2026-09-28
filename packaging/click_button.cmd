@@ -29,5 +29,5 @@ if not "%~1"=="" (
 :: ## run_click
 :: Executes the click automation via PowerShell Win32 API bridge.
 :run_click
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%PS_SCRIPT%" > "%LOG_FILE%" 2>&1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "%PS_SCRIPT%" > "%LOG_FILE%" 2>&1
 exit /b %ERRORLEVEL%

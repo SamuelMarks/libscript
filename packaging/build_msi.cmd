@@ -799,7 +799,7 @@ setlocal DisableDelayedExpansion
     echo           ^<Publish Event="NewDialog" Value="Dlg_OpenEdX_CacheSearch"^>^<![CDATA[SETUP_MODE="Advanced"]]^>^</Publish^>
     echo         ^</Control^>
     echo         ^<Control Id="Install" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Install"^>
-    echo           ^<Publish Event="EndDialog" Value="Return"^>1^</Publish^>
+    echo           ^<Publish Event="NewDialog" Value="Dlg_Exit"^>1^</Publish^>
     echo         ^</Control^>
     echo         ^<Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel"^>
     echo           ^<Publish Event="EndDialog" Value="Exit"^>1^</Publish^>
@@ -1014,22 +1014,19 @@ if %ERRORLEVEL%==0 (
     )
 )
 set "_CANDLE_WXS=%WXS_FILE%.candle.wxs"
-where candle.exe >nul 2>&1
-if not %ERRORLEVEL%==0 (
-    if exist "C:\tools\wix\candle.exe" (
-        set "PATH=%PATH%;C:\tools\wix"
-    ) else if exist "%LIBSCRIPT_ROOT_DIR%\tools\wix\candle.exe" (
-        set "PATH=%PATH%;%LIBSCRIPT_ROOT_DIR%\tools\wix"
-    ) else if exist "C:\libscript\tools\wix\candle.exe" (
-        set "PATH=%PATH%;C:\libscript\tools\wix"
-    ) else if exist "C:\Program Files (x86)\WiX Toolset v3.14\bin\candle.exe" (
-        set "PATH=%PATH%;C:\Program Files (x86)\WiX Toolset v3.14\bin"
-    ) else if exist "C:\Program Files (x86)\WiX Toolset v3.11\bin\candle.exe" (
-        set "PATH=%PATH%;C:\Program Files (x86)\WiX Toolset v3.11\bin"
-    )
+if exist "%LIBSCRIPT_ROOT_DIR%\tools\wix\candle.exe" (
+    set "PATH=!PATH!;%LIBSCRIPT_ROOT_DIR%\tools\wix"
+) else if exist "C:\libscript\tools\wix\candle.exe" (
+    set "PATH=!PATH!;C:\libscript\tools\wix"
+) else if exist "C:\tools\wix\candle.exe" (
+    set "PATH=!PATH!;C:\tools\wix"
+) else if exist "C:\Program Files (x86)\WiX Toolset v3.14\bin\candle.exe" (
+    set "PATH=!PATH!;C:\Program Files (x86)\WiX Toolset v3.14\bin"
+) else if exist "C:\Program Files (x86)\WiX Toolset v3.11\bin\candle.exe" (
+    set "PATH=!PATH!;C:\Program Files (x86)\WiX Toolset v3.11\bin"
 )
 where candle.exe >nul 2>&1
-if %ERRORLEVEL%==0 (
+if !ERRORLEVEL!==0 (
     powershell -NoProfile -Command "$w = Get-Content -LiteralPath '%WXS_FILE%' -Raw; $w = $w -replace '<Property Id=\"MsiHiddenProperties\".*?/>', ''; $w = [regex]::Replace($w, '(?m)^\s*<Show Dialog=\"Dlg_VerifyReady\" After=\"Dlg_SetupType\".*?\r?\n', ''); Set-Content -LiteralPath '%WXS_FILE%.candle.wxs' -Value $w"
     candle.exe -nologo -out "%OUT_FILE%.wixobj" "%WXS_FILE%.candle.wxs"
     if errorlevel 1 (

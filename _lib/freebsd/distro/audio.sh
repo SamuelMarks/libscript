@@ -57,19 +57,23 @@ case "${SUBSYSTEM}" in
 
   oss)
     # Native FreeBSD Open Sound System
-    printf 'snd_driver_load="YES"
-' >> "${SYSROOT}/boot/loader.conf"
+    if ! grep -q 'snd_driver_load="YES"' "${SYSROOT}/boot/loader.conf" 2>/dev/null; then
+      printf 'snd_driver_load="YES"\n' >> "${SYSROOT}/boot/loader.conf"
+    fi
     # Ensure syscons / devfs permissions for /dev/dsp*
-    cat << 'EOF' >> "${SYSROOT}/etc/devfs.rules"
+    if ! grep -q "group audio" "${SYSROOT}/etc/devfs.rules" 2>/dev/null; then
+      cat << 'EOF' >> "${SYSROOT}/etc/devfs.rules"
 add path 'dsp*' mode 0666 group audio
 add path 'audio*' mode 0666 group audio
 EOF
+    fi
     ;;
 
   pipewire)
     # PipeWire + WirePlumber daemon integration
-    printf 'snd_driver_load="YES"
-' >> "${SYSROOT}/boot/loader.conf"
+    if ! grep -q 'snd_driver_load="YES"' "${SYSROOT}/boot/loader.conf" 2>/dev/null; then
+      printf 'snd_driver_load="YES"\n' >> "${SYSROOT}/boot/loader.conf"
+    fi
     mkdir -p "${SYSROOT}/usr/local/etc/pipewire"
     ;;
 

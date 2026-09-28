@@ -97,13 +97,65 @@ capture_screen() {
   fi
 }
 
+# ## vm_action
+# Helper to execute UI automation actions in Session 1 without visible console windows.
+vm_action() {
+  _act="$1"
+  vm_run "Set-Content -Path 'C:/libscript/target_btn.txt' -Value '$_act'; Start-ScheduledTask -TaskName 'ClickGui'; \$sw = [System.Diagnostics.Stopwatch]::StartNew(); while ((Get-ScheduledTask -TaskName 'ClickGui').State -eq 'Running' -and \$sw.Elapsed.TotalSeconds -lt 25) { Start-Sleep -Milliseconds 250 }"
+  sleep 0.8
+}
+
 # ## vm_click
-# Helper to click a button or radio control in Session 1.
-# Sets target button text in guest and triggers the interactive ClickGui scheduled task.
+# Helper to click a button in Session 1.
 vm_click() {
+  vm_action "CLICK:$1"
+  sleep 1.5
+}
+
+# ## vm_radio
+# Helper to select a radio button in Session 1.
+vm_radio() {
+  vm_action "RADIO:$1"
+  sleep 1.5
+}
+
+# ## vm_check
+# Helper to check a checkbox in Session 1.
+vm_check() {
+  vm_action "CHECK:$1"
+  sleep 1
+}
+
+# ## vm_uncheck
+# Helper to uncheck a checkbox in Session 1.
+vm_uncheck() {
+  vm_action "UNCHECK:$1"
+  sleep 1
+}
+
+# ## vm_set_edit
+# Helper to set text of an edit control in Session 1.
+vm_set_edit() {
+  _idx="$1"
+  _val="$2"
+  vm_action "SET_EDIT:${_idx}|${_val}"
+  sleep 1
+}
+
+# ## vm_wait_dialog
+# Helper to wait for a dialog with a specified title in Session 1.
+vm_wait_dialog() {
+  _title="$1"
+  vm_action "WAIT_DIALOG:$_title"
+  sleep 1
+}
+
+# ## vm_wait
+# Helper to wait for a control or button to appear in Session 1 without clicking.
+vm_wait() {
   _btn="$1"
-  vm_run "Set-Content -Path 'C:/libscript/target_btn.txt' -Value '$_btn'; Start-ScheduledTask -TaskName 'ClickGui'; Start-Sleep -Seconds 3"
-  sleep 2
+  vm_action "WAIT:$_btn"
+  sleep 1.5
 }
 
 # ## vm_launch_msi
@@ -152,6 +204,9 @@ scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
   "${REPO_ROOT}/packaging/start_mock_server.sh" \
   "${REPO_ROOT}/packaging/mock_server.ps1" \
   "${REPO_ROOT}/packaging/click_button.ps1" \
+  "${REPO_ROOT}/packaging/create_desktop_shortcuts.cmd" \
+  "${REPO_ROOT}/packaging/create_desktop_shortcuts.ps1" \
+  "${REPO_ROOT}/packaging/create_desktop_shortcuts.sh" \
   vagrant@127.0.0.1:C:/libscript/packaging/
 
 scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" \
@@ -181,7 +236,7 @@ fi
 
 # Configure LaunchMsi, ClickGui, and RunGui scheduled tasks on guest
 # shellcheck disable=SC2016
-vm_run '$principal = New-ScheduledTaskPrincipal -UserId "vagrant" -LogonType Interactive; $aLaunch = New-ScheduledTaskAction -Execute "msiexec.exe" -Argument "/i C:\libscript\packaging\OpenEdX-Setup.msi"; Register-ScheduledTask -TaskName "LaunchMsi" -Action $aLaunch -Principal $principal -Force > $null; $aClick = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File C:\libscript\packaging\click_button.ps1"; Register-ScheduledTask -TaskName "ClickGui" -Action $aClick -Principal $principal -Force > $null; $aRun = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File C:\libscript\run_gui.ps1"; Register-ScheduledTask -TaskName "RunGui" -Action $aRun -Principal $principal -Force > $null'
+vm_run '$principal = New-ScheduledTaskPrincipal -UserId "vagrant" -LogonType Interactive; $settings = New-ScheduledTaskSettingsSet -MultipleInstances Parallel -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries; $aLaunch = New-ScheduledTaskAction -Execute "msiexec.exe" -Argument "/i C:\libscript\packaging\OpenEdX-Setup.msi"; Register-ScheduledTask -TaskName "LaunchMsi" -Action $aLaunch -Principal $principal -Force > $null; $aClick = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File C:\libscript\packaging\click_button.ps1"; Register-ScheduledTask -TaskName "ClickGui" -Action $aClick -Principal $principal -Settings $settings -Force > $null; $aRun = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File C:\libscript\run_gui.ps1"; Register-ScheduledTask -TaskName "RunGui" -Action $aRun -Principal $principal -Force > $null'
 
 # Ensure broken Edge shortcut is cleaned from desktop
 vm_run 'Remove-Item "C:/Users/Public/Desktop/Microsoft Edge.lnk" -Force -ErrorAction SilentlyContinue; Remove-Item "C:/Users/vagrant/Desktop/Microsoft Edge.lnk" -Force -ErrorAction SilentlyContinue'
@@ -193,26 +248,30 @@ printf '[INFO] Launching OpenEdX-Setup.msi in Session 1...\n'
 vm_launch_msi
 
 # Step 1: Welcome
+vm_wait_dialog "Welcome"
 capture_screen "01_simple_welcome"
 
 # Step 2: License Agreement (consolidated EULA with I Agree button, no checkbox)
 vm_click "Next"
+vm_wait_dialog "License"
 capture_screen "02_simple_license"
 
 # Single "I Agree" button advances to Setup Type
 vm_click "I Agree"
+vm_wait_dialog "Installation Mode"
 
 # Step 3: Setup Type (Simple selected by default)
 capture_screen "03_simple_setup_type"
 
 # Step 4: Verify Ready (Simple Mode)
 vm_click "Next"
+vm_wait_dialog "Ready to Install"
 capture_screen "04_simple_verify_ready"
 
 # Trigger Simple Mode installation and capture exit
 printf '[INFO] Triggering installation in Simple Mode...\n'
 vm_click "Install"
-sleep 4
+vm_wait_dialog "Setup Complete"
 capture_screen "05_simple_exit"
 vm_click "Finish"
 sleep 2
@@ -222,56 +281,88 @@ clean_guest_installations
 printf '\n=== Flow 2: Advanced Mode Customization ===\n'
 printf '[INFO] Launching OpenEdX-Setup.msi for Advanced Mode in Session 1...\n'
 vm_launch_msi
+vm_wait_dialog "Welcome"
 vm_click "Next"
+vm_wait_dialog "License"
 vm_click "I Agree"
+vm_wait_dialog "Installation Mode"
 
 # Step 5: Advanced Mode Selected
-vm_click "Advanced Mode"
+vm_radio "Advanced Mode"
+vm_wait_dialog "Installation Mode"
 capture_screen "06_advanced_setup_type_selected"
 
 # Setup Type -> Component Selection (Features)
 vm_click "Next"
+vm_wait_dialog "Component Selection"
+vm_check "Demo Course"
+vm_check "Micro-Frontends"
 capture_screen "06a_advanced_features"
 
 # Features -> Destination Folders
 vm_click "Next"
+vm_wait_dialog "Destination Folders"
+vm_set_edit 0 'C:\OpenEdX\app'
+vm_set_edit 1 'C:\OpenEdX\data'
+vm_set_edit 2 'C:\OpenEdX\logs'
+vm_set_edit 3 'C:\OpenEdX\backups'
 capture_screen "06b_advanced_install_location"
 
 # Destination Folders -> Runtime Environment Selection
 vm_click "Next"
+vm_wait_dialog "Runtime Environment"
+vm_radio "Install isolated private Python"
+vm_radio "Install isolated private Node.js"
 capture_screen "06c_advanced_runtime_selection"
 
 # Runtime Environment -> Source Repository & Release
 vm_click "Next"
+vm_wait_dialog "Source Repository"
+vm_set_edit 2 "ghp_edxAdminTokenSecret2026ExampleKey"
 capture_screen "06d_advanced_source_repo"
 
 # Source Repo -> Network & Credentials Configuration
 vm_click "Next"
+vm_wait_dialog "Network and Credentials"
+vm_set_edit 0 "8000"
+vm_set_edit 1 "8001"
+vm_set_edit 2 "edx_admin"
+vm_set_edit 3 "edx_password_2026!"
+vm_set_edit 4 "admin@openedx.local"
 capture_screen "06e_advanced_config"
 
 # Config -> Relational Database / DBaaS
 vm_click "Next"
+vm_wait_dialog "Database"
+vm_set_edit 0 "3306"
+vm_set_edit 1 "mysql://edx_app:Secr3tP@ss@db.internal:3306/edxapp"
 capture_screen "07_advanced_db"
 
 # DB -> Cache, Document Store & Search
 vm_click "Next"
+vm_wait_dialog "Cache"
+vm_set_edit 0 "6379"
+vm_set_edit 1 "rediss://:RedisSecret2026@cache.internal:6379/0"
+vm_set_edit 2 "mongodb://edx_mongo:MongoSecret@docdb.internal:27017/edx"
+vm_set_edit 3 "https://meili.cloud.internal:7700"
 capture_screen "08_advanced_cache_search"
 
 # Cache -> Verify Ready (Advanced)
 vm_click "Next"
+vm_wait_dialog "Ready to Install"
 capture_screen "09_advanced_verify_ready"
 
 # Verify Ready -> Install & Exit
 printf '[INFO] Triggering installation in Advanced Mode...\n'
 vm_click "Install"
-sleep 4
+vm_wait_dialog "Setup Complete"
 capture_screen "10_advanced_exit"
 
 # Exit -> Finish
 printf '[INFO] Waiting for installation to complete and clicking Finish...\n'
 vm_click "Finish"
 sleep 2
-vm_run 'Stop-Process -Name msiexec -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 2'
+vm_run 'cmd /c call C:\libscript\packaging\create_desktop_shortcuts.cmd; Start-Sleep -Seconds 2'
 capture_screen "10b_desktop_icons"
 
 printf '\n=== Flow 3: Browser Verification & Authentication Flows ===\n'

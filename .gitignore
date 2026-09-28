@@ -148,6 +148,8 @@ standardize_*
 !stacks/cms/openedx/test_harness.*
 !stacks/cms/openedx/test_server.*
 !tests/test_packaging_branding.*
+!test_table.*
+!packaging/create_desktop_shortcuts.*
 !tests/test_msi_generation.*
 !tests/os_boot_test.*
 !tests/os_gui_smoke_test.*
@@ -261,10 +263,12 @@ all_scripts.txt
 !_lib/_common/prelude.sh
 !/top.sh
 !/bottom.sh
+!/test_table.sh
 /*.cmd
 !/libscript.cmd
 !/install.cmd
 !/make.cmd
+!/test_table.cmd
 /*.bat
 !/libscript.bat
 !/make.bat

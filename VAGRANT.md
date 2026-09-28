@@ -210,9 +210,11 @@ vagrant up --provider qemu
 
 ## 5. FreeBSD Distribution Multi-Platform Verification Matrix
 
-LibScript requires testing exclusively via Vagrant environments for non-native and cross-platform verification across `{macOS, Windows, FreeBSD, SunOS, Linux}`.
+LibScript requires testing exclusively via Vagrant environments for non-native and cross-platform
+verification across `{macOS, Windows, FreeBSD, SunOS, Linux}`.
 
 The FreeBSD modular distribution suite can be run across all environments:
+
 ```bash
 # Run multi-platform matrix verification across all 5 platforms
 ./tests/run_freebsd_distro_matrix.sh --all
@@ -222,9 +224,9 @@ The FreeBSD modular distribution suite can be run across all environments:
 ```
 
 Individual platform execution runners:
+
 - `tests/run_freebsd_distro_on_freebsd.sh` (`.cmd`)
 - `tests/run_freebsd_distro_on_linux.sh` (`.cmd`)
 - `tests/run_freebsd_distro_on_macos.sh` (`.cmd`)
 - `tests/run_freebsd_distro_on_windows.sh` (`.cmd`)
 - `tests/run_freebsd_distro_on_sunos.sh` (`.cmd`)
-

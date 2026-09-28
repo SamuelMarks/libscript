@@ -65,8 +65,7 @@ EOF
 fi
 
 if ! grep -q "^${PRIMARY_USER}:" "${SYSROOT}/etc/passwd" 2>/dev/null; then
-  printf '%s:x:1000:10:%s User:/export/home/%s:/bin/sh
-' 
+  printf '%s:x:1000:10:%s User:/export/home/%s:/bin/sh\n' \
     "${PRIMARY_USER}" "${PRIMARY_USER}" "${PRIMARY_USER}" >> "${SYSROOT}/etc/passwd"
 fi
 
@@ -107,11 +106,17 @@ if ! grep -q "staff:.*${PRIMARY_USER}" "${SYSROOT}/etc/group" 2>/dev/null; then
 fi
 
 # 3. Solaris / illumos RBAC attributes (/etc/user_attr)
-cat << EOF >> "${SYSROOT}/etc/user_attr"
+if [ ! -f "${SYSROOT}/etc/user_attr" ]; then
+  cat << EOF > "${SYSROOT}/etc/user_attr"
 # Solaris / illumos RBAC user attributes (managed by LibScript)
 root::::type=normal;auths=solaris.*;profiles=All
 ${PRIMARY_USER}::::type=normal;profiles=Primary Administrator;defaultpriv=basic
 EOF
+elif ! grep -q "^${PRIMARY_USER}:" "${SYSROOT}/etc/user_attr" 2>/dev/null; then
+  cat << EOF >> "${SYSROOT}/etc/user_attr"
+${PRIMARY_USER}::::type=normal;profiles=Primary Administrator;defaultpriv=basic
+EOF
+fi
 
 # 4. Sudoers & doas
 cat << EOF > "${SYSROOT}/etc/sudoers.d/${PRIMARY_USER}"

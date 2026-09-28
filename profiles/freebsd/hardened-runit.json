@@ -41,9 +41,5 @@
     "dhcp": true,
     "dns_servers": ["1.1.1.1", "8.8.8.8"]
   },
-  "packages": [
-    "runit",
-    "doas",
-    "ca_root_nss"
-  ]
+  "packages": ["runit", "doas", "ca_root_nss"]
 }

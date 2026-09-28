@@ -11,11 +11,7 @@
   },
   "init_system": {
     "provider": "runit",
-    "services_enabled": [
-      "sshd",
-      "cron",
-      "socklog"
-    ]
+    "services_enabled": ["sshd", "cron", "socklog"]
   },
   "display": {
     "protocol": "none",
@@ -55,9 +51,5 @@
     "interface_strategy": "ipadm",
     "dns_servers": ["9.9.9.9", "1.1.1.1"]
   },
-  "packages": [
-    "pkg:/system/core-os",
-    "pkg:/service/network/ssh",
-    "pkg:/security/sudo"
-  ]
+  "packages": ["pkg:/system/core-os", "pkg:/service/network/ssh", "pkg:/security/sudo"]
 }

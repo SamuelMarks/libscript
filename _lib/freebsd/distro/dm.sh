@@ -58,8 +58,9 @@ case "${DM}" in
     ;;
 
   lightdm)
-    printf 'lightdm_enable="YES"
-' >> "${SYSROOT}/etc/rc.conf"
+    if ! grep -q 'lightdm_enable="YES"' "${SYSROOT}/etc/rc.conf" 2>/dev/null; then
+      printf 'lightdm_enable="YES"\n' >> "${SYSROOT}/etc/rc.conf"
+    fi
     mkdir -p "${SYSROOT}/usr/local/etc/lightdm"
     if [ -n "${AUTOLOGIN_USER}" ]; then
       cat << EOF > "${SYSROOT}/usr/local/etc/lightdm/lightdm.conf"
@@ -72,8 +73,9 @@ EOF
     ;;
 
   sddm)
-    printf 'sddm_enable="YES"
-' >> "${SYSROOT}/etc/rc.conf"
+    if ! grep -q 'sddm_enable="YES"' "${SYSROOT}/etc/rc.conf" 2>/dev/null; then
+      printf 'sddm_enable="YES"\n' >> "${SYSROOT}/etc/rc.conf"
+    fi
     mkdir -p "${SYSROOT}/usr/local/etc/sddm.conf.d"
     if [ -n "${AUTOLOGIN_USER}" ]; then
       cat << EOF > "${SYSROOT}/usr/local/etc/sddm.conf.d/autologin.conf"
@@ -85,8 +87,9 @@ EOF
     ;;
 
   greetd)
-    printf 'greetd_enable="YES"
-' >> "${SYSROOT}/etc/rc.conf"
+    if ! grep -q 'greetd_enable="YES"' "${SYSROOT}/etc/rc.conf" 2>/dev/null; then
+      printf 'greetd_enable="YES"\n' >> "${SYSROOT}/etc/rc.conf"
+    fi
     mkdir -p "${SYSROOT}/usr/local/etc/greetd"
     cat << 'EOF' > "${SYSROOT}/usr/local/etc/greetd/config.toml"
 [terminal]
@@ -99,8 +102,9 @@ EOF
     ;;
 
   gdm)
-    printf 'gdm_enable="YES"
-' >> "${SYSROOT}/etc/rc.conf"
+    if ! grep -q 'gdm_enable="YES"' "${SYSROOT}/etc/rc.conf" 2>/dev/null; then
+      printf 'gdm_enable="YES"\n' >> "${SYSROOT}/etc/rc.conf"
+    fi
     ;;
 
   *)

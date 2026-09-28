@@ -37,7 +37,7 @@ for LIB in "_lib/_common/environ.sh" "_lib/_common/pkg_mgr.sh"; do
 done
 
 # Ensure 'server' hostname and localhost ssh loopback are available for single-node execution
-if ! getent hosts server >/dev/null 2>&1; then
+if ! grep -q "[[:space:]]server\([[:space:]]\|\$\)" /etc/hosts 2>/dev/null && ! getent hosts server >/dev/null 2>&1; then
   if [ -w /etc/hosts ]; then
     printf '127.0.0.1 server node-0 node-1\n' >> /etc/hosts
   elif command -v sudo >/dev/null 2>&1; then
