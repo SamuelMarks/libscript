@@ -43,9 +43,10 @@ these official tools into a unified, idempotent interface. Whether you are on AW
 the commands to create a network, a group of nodes, or a storage bucket remain consistent, reducing
 vendor lock-in and operational cognitive load.
 
-## Automated Cross-Platform Packaging
+## Automated Cross-Platform Packaging & OS Synthesis
 
-Creating native installers for multiple OSs traditionally requires learning distinct toolchains
-(WiX, DEB/RPM scripts, PKG). LibScript uses its internal component model to dynamically compile a
-single declarative definition into functional installers for Windows, macOS, Linux, and FreeBSD,
-ensuring environment parity across the entire development lifecycle.
+Creating native installers and bootable OS images for multiple platforms traditionally requires
+learning distinct toolchains (WiX, Inno, DEB/RPM scripts, PKG, GRUB, UKI, ZFS loaders). LibScript
+uses its unified component model to dynamically compile declarative definitions into functional
+installers for Windows, macOS, Linux, and FreeBSD, as well as full bootable OS disk images (raw-img,
+qcow2, ISO, illumos-distro) and multiboot live media.

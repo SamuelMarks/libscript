@@ -8,6 +8,7 @@
 # ./tests/update_results.sh [REPO_ROOT] [--output <markdown_file>] [--json [json_file]] [--help]
 
 set -feu
+set +f
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -154,7 +155,7 @@ TABLE_HDR
 
     _existing_line=""
     if [ -f "${_readme_file}" ]; then
-      _existing_line=$(awk -v comp="${_comp}" '$2 == "`"comp"`" { print; exit }' "${_readme_file}" 2>/dev/null || true)
+      _existing_line=$(awk -F'|' -v comp="${_comp}" '$2 ~ "^[ \t]*`" comp "`[ \t]*$" { print; exit }' "${_readme_file}" 2>/dev/null || true)
     fi
 
     _apk_status="-"

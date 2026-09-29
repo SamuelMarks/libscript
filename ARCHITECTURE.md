@@ -54,11 +54,11 @@ flowchart TD
     end
 
     subgraph Tier2[Tier 2: Synthesizers, Assemblers & Image Builders]
-        ConfigEngine[Declarative Configurator: libscript config os, os-config.schema.json]
+        ConfigEngine[Declarative Configurator: libscript config os, os-config / execution-plan schemas]
         Solver[Constraint Solver: resolve_stack.jq + Tarjan SCC Cycle Breaking]
         RootfsEngine[Rootfs Staging & VFS Isolation: mount_target_vfs, chroot runner]
         StorageEngine[Storage & Partitioning: GPT/MBR, LUKS2, Ext4, Btrfs, XFS, ZFS]
-        KernelEngine[Kernel Baking: Linux vmlinuz + Initramfs UKI & FreeBSD World/Kernel]
+        KernelEngine[Kernel Baking: Linux vmlinuz + Initramfs UKI, FreeBSD & illumos World/Kernel]
         Packager[package-as: raw-img, qcow2, iso, vmdk, bsd-img, docker, unikernel]
     end
 
@@ -237,31 +237,38 @@ sequenceDiagram
     participant Solver as resolve_stack.jq (Tarjan SCC)
     participant Storage as _lib/storage/ (Partition & LUKS)
     participant VFS as _lib/orchestration/vfs/ (Chroot & Mounts)
-    participant Kernel as _lib/kernel/ (Linux & FreeBSD Baking)
+    participant Kernel as _lib/{kernel,freebsd,illumos}/ (Multi-OS Baking)
     participant PackageAs as cli/commands/package_as/ (Artifact Factory)
 
     User->>Config: libscript config os --profile=linux-desktop-sway-wayland
     Config->>Solver: Evaluate os-config.json against manifest.schema.json
     Solver-->>Config: Deterministic, topologically sorted execution plan
-    Config->>Storage: provision_disk.sh & format_fs.sh (GPT, LUKS2, Btrfs)
+    Config->>Storage: provision_disk.sh & format_fs.sh (GPT, LUKS2, Btrfs, ZFS)
     Storage-->>VFS: Mounted rootfs block device
     Config->>VFS: create_fhs_layout.sh & mount_target_vfs.sh
-    VFS->>Kernel: Compile vmlinuz, assemble CPIO initramfs, generate UKI
-    Kernel-->>VFS: Kernel & modules staged in /boot
-    Config->>PackageAs: package-as qcow2 / raw-img / iso
+    VFS->>Kernel: Compile vmlinuz / world, assemble CPIO initramfs, generate UKI / loader
+    Kernel-->>VFS: Kernel, world, & modules staged in target sysroot
+    Config->>PackageAs: package-as qcow2 / raw-img / iso / bsd-img
     PackageAs-->>User: Production-ready bootable OS artifact
 ```
 
 ### 1. Declarative OS Configuration & TUI Engine
 
-OS definitions are declared in JSON adhering to `os-config.schema.json`. Users can configure
-instances via:
+OS definitions are declared in JSON adhering to `os-config.schema.json` and the
+`execution-plan.*.schema.json` suite. Users can configure instances via:
 
 - **Interactive TUI Configurator (`cli/commands/config/config.sh`, `tui_engine.sh`)**: A portable
   ANSI VT100 / whiptail / dialog menu engine matching kernel `menuconfig`.
-- **Curated Profiles (`profiles/`)**: Ready-to-build configurations covering headless minimal
-  servers, full Wayland desktops (Sway, Hyprland, Plasma 6), FreeBSD ZFS appliances, and microVM
-  appliances.
+- **Curated Profiles (`profiles/`)**: Ready-to-build configurations covering:
+  - **Minimal & Enterprise Servers**: Headless Musl/BusyBox, production Glibc, FreeBSD ZFS root
+    pool, and illumos minimal servers.
+  - **Modern Desktops & Compositors**: Wayland (Sway, Hyprland, KDE Plasma 6), X11 (XFCE4), MATE,
+    and Common Desktop Environment (CDE).
+  - **Linux From Scratch (LFS) Systems**: Pure source-built userlands under Systemd, OpenRC, Runit,
+    S6, Dinit, and SysVinit.
+  - **Distribution-Style Stacks**: Alpine, Debian, and Red Hat style configurations.
+  - **Cloud & MicroVM Appliances**: Firecracker MicroVM, OSv, Unikraft, AWS AMI, Azure VHD, GCP GCE,
+    and VMware/Proxmox hypervisor templates.
 
 ### 2. Isolated Rootfs & Virtual Kernel Filesystems (VFS)
 
@@ -291,9 +298,9 @@ Tier 2 provisions an independent filesystem root to guarantee zero host pollutio
 - **Filesystem Formatting (`format_fs.sh`)**: Idempotently formats Ext4, Btrfs (including nested
   subvolume layouts: `@`, `@home`, `@snapshots`), XFS, VFAT, and ZFS zpools.
 
-### 4. Linux & FreeBSD Kernel Baking
+### 4. Linux, FreeBSD & illumos Kernel Baking
 
-LibScript compiles and configures operating system kernels natively:
+LibScript compiles and configures operating system kernels and worlds natively:
 
 #### Linux Kernel Engine (`_lib/kernel/linux/`)
 
@@ -326,37 +333,67 @@ LibScript compiles and configures operating system kernels natively:
 - Executes `installworld` and `distribution` to populate target sysroots, generating
   `/boot/loader.conf` and `/etc/rc.conf` for ZFS-on-root booting.
 
+#### illumos Kernel & Distribution Subsystem (`_lib/illumos/`)
+
+- Automates illumos kernel and userland staging across OmniOS and OpenIndiana base targets.
+- Provisions ZFS root pools (`rpool`), boot environment datasets (BEs via `beadm`), SMF service
+  manifests (`svc.startd`), and IPS (`pkg5`) or pkgsrc catalogs.
+- Configures Solaris Boomer in-kernel audio (`/dev/audio`), OSS, and `/etc/vfstab`.
+
 #### Bootloaders & Unified Kernel Images (UKI)
 
-- Installs GRUB2 (EFI and BIOS), `systemd-boot`, or Limine.
+- Installs GRUB2 (EFI and BIOS), `systemd-boot`, FreeBSD loader, illumos loader, or Limine.
 - Generates UEFI Unified Kernel Images (UKI): single signed `.efi` binaries combining the Linux
   kernel stub, initramfs, OS release, and kernel command line.
 
-### 5. Universal Artifact Packaging (`package-as`)
+### 5. Universal Live-CD / Live-USB Multiboot Installer Engine
+
+LibScript features a dedicated architecture for baking turnkey live bootable installation media
+powered by `msi-rs` (`devtools/build_live_installer.sh` and `execution-plan.live.schema.json`):
+
+- **Tri-Modal Operational Design**:
+  - **Headless Mode (`msiexec`)**: Unattended, scriptable deployments driven by Windows Installer
+    (`.msi`) properties, JSON response files, and concurrent multi-OS target pipelines.
+  - **TUI Mode**: High-contrast, keyboard-driven terminal wizard with interactive disk mapping,
+    partition layout reviews, and scrollable catalog selection.
+  - **GUI Mode (`msi-gui`)**: Fullscreen kiosk graphical wizard on Wayland (`cage`) or X11
+    (`openbox`), featuring interactive visual manipulation of disks, filesystems, MBR/GPT table
+    schemes, and active flag toggles.
+- **Multiboot Co-Installation**: Partitions target storage devices and provisions single, dual, or
+  triple-boot co-installations across Linux, FreeBSD, and illumos with unified bootloader chaining.
+- **Air-Gapped Modality**: Embeds dynamically selected LibScript application stacks (Nginx,
+  WordPress, Open edX) with zero network dependency. For implementation specifications, see
+  [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md).
+
+### 6. Universal Artifact Packaging (`package-as`)
 
 The `package-as` engine (`cli/commands/package_as/`) transforms synthesized environments into
 distributable deployment formats:
 
 - **`raw-img` / `disk-builder`**: Partitioned raw disk images (`.raw` / `.img`) ready for physical
   drive flashing (`dd`) or hypervisors.
-- **`qcow2` / `vmdk` / `vdi`**: Compressed virtual machine disk images for QEMU/KVM, VMware ESXi,
-  and VirtualBox.
+- **`qcow2` / `vmdk` / `vdi` / `hyperv-vhd`**: Compressed virtual machine disk images for QEMU/KVM,
+  VMware ESXi, VirtualBox, and Microsoft Hyper-V.
+- **`proxmox-template`**: Ready-to-import template images for Proxmox VE.
+- **`aws-ami` / `azure-vhd` / `gcp-image`**: Direct cloud images synthesized for Amazon AWS,
+  Microsoft Azure, and Google Cloud Platform.
 - **`vagrant-box`**: Redistributable Vagrant `.box` archives bundling metadata, Vagrantfile, and
   qcow2 disk for QEMU/libvirt.
 - **`iso`**: Bootable hybrid live ISO media with SquashFS compression and copy-on-write OverlayFS
   RAM persistence.
-- **`rootfs-tar` / `docker`**: Clean archive tarballs ready for OCI image ingestion
+- **`rootfs-tar` / `docker` / `docker-image`**: Clean archive tarballs ready for OCI image ingestion
   (`docker import`) or container/jail roots.
-- **`bsd-img`**: Bootable FreeBSD images formatted with UFS or ZFS for bhyve hypervisors or bare
-  metal.
-- **`illumos-distro`**: Bootable illumos / SunOS images with ZFS root pools (`rpool`), SMF init, and
-  pluggable desktop/audio.
+- **`bsd-img` / `illumos-distro`**: Bootable FreeBSD images (UFS/ZFS) and illumos / SunOS images
+  with ZFS root pools (`rpool`) and SMF init.
 - **`unikernel`**: Direct-kernel boot images (`vmlinux` / `unikraft.bin`) optimized for Firecracker
   and Cloud-Hypervisor microVMs.
-- **Native Installers**: Automated `.msi` (WiX), `.exe` (InnoSetup/NSIS), `.deb`, `.rpm`, `.apk`,
-  and `.pkg` builders.
+- **Native Installers & Packages**:
+  - Windows: `.msi` (WiX / `msi-rs`), Inno Setup (`.exe`), NSIS (`.exe`).
+  - macOS: Flat installer packages (`.pkg`) and disk images (`.dmg`).
+  - Linux: Debian (`.deb`), Red Hat (`.rpm`), Alpine (`.apk`).
+  - BSD: FreeBSD package tarballs (`.txz`).
 
-### 6. Modular Operating System Distribution Substrates
+### 7. Modular Operating System Distribution Substrates
 
 LibScript implements modular, declarative OS distribution synthesis engines for non-Linux Unix
 operating systems:
@@ -445,6 +482,17 @@ infrastructure into a managed PaaS:
 - **Service Daemonization**: Automatically templates and registers application service supervisors
   for `systemd` (Linux), `launchd` (macOS), or Windows Service Control Manager.
 
+### 4. LibScript REST API & OpenAPI Engine (`libscript-rest-api`)
+
+For programmatic cluster orchestration and remote build execution, LibScript includes a native C++
+REST API microservice located in `libscript-rest-api/`:
+
+- **OpenAPI 3.0 Conformance**: Fully typed API contract defined in `openapi.yaml`.
+- **Remote Lifecycle Control**: Endpoints for component installs, stack provisioning, packaging
+  jobs, and real-time log streaming over HTTP.
+- **Embedded Lightweight Server**: Zero heavy dependencies, compilable via CMake, with system
+  service integration scripts.
+
 ---
 
 ## 🧮 Declarative Constraint Solver & Tarjan SCC Algorithm
@@ -452,18 +500,32 @@ infrastructure into a managed PaaS:
 LibScript incorporates a pure POSIX + `jq` dependency and constraint solver
 (`_lib/orchestration/resolve_stack.jq`, `resolve_stack.sh`):
 
-### 1. Extended Manifest Schema (`manifest.schema.json`)
+### 1. Extended Manifest & Schema Hierarchy
 
-Components declare fine-grained capabilities:
+LibScript defines a strongly typed contract hierarchy:
 
-- **USE Variants (`variants`)**: Feature flags (e.g., `wayland`, `x11`, `pipewire`, `lto`, `static`)
-  that conditionally inject compilation flags (`configure_args`, `meson_args`, `cmake_args`,
-  `cflags`, `ldflags`).
-- **Dependency Classification**:
-  - `host_tools`: Tools required on the build host (e.g., `bison`, `meson`, `ninja`).
-  - `build_deps`: Headers and libraries required in `LIBSCRIPT_TARGET_SYSROOT`.
-  - `runtime_deps`: Daemons and programs required in the target rootfs at runtime.
-  - `tier`: Criticality tier (`required`, `recommended`, `optional`).
+- **Manifest Schemas (`_lib/_common/manifest.schema.json`, `vars.schema.json`)**: Declare component
+  capabilities, versions, platform blacklists/whitelists, build scripts, service configurations, and
+  fine-grained USE variants:
+  - **USE Variants (`variants`)**: Feature flags (e.g., `wayland`, `x11`, `pipewire`, `lto`,
+    `static`) that conditionally inject compilation flags (`configure_args`, `meson_args`,
+    `cmake_args`, `cflags`, `ldflags`).
+  - **Dependency Classification**:
+    - `host_tools`: Tools required on the build host (e.g., `bison`, `meson`, `ninja`).
+    - `build_deps`: Headers and libraries required in `LIBSCRIPT_TARGET_SYSROOT`.
+    - `runtime_deps`: Daemons and programs required in the target rootfs at runtime.
+    - `tier`: Criticality tier (`required`, `recommended`, `optional`).
+- **OS Configuration & Execution Plan Schemas**:
+  - `os-config.schema.json`: Declarative profile specifications for synthesized operating systems.
+  - `execution-plan.schema.json`: Solved, topologically sorted execution graph for system synthesis.
+  - `execution-plan.freebsd.schema.json`: Modular FreeBSD kernel, world, and userland execution
+    spec.
+  - `execution-plan.illumos.schema.json`: Modular illumos/SunOS kernel, SMF, and desktop execution
+    spec.
+  - `execution-plan.live.schema.json`: Specification for multiboot live installation media.
+- **Packaging & Offline Schemas (`packaging/*.schema.json`)**:
+  - `installer.schema.json`, `packaging.schema.json`, `offline.schema.json`, and
+    `guid_registry.schema.json`.
 
 ### 2. Tarjan's Strongly Connected Components (SCC) Cycle Breaking
 
@@ -590,3 +652,22 @@ All scripts must be strictly idempotent:
   headers in its first 30 lines.
 - **Git Safety Invariant**: Automated test suites, CI runners, and build harnesses are strictly
   forbidden from executing `git push`.
+
+### 6. Automated Verification Matrix & Headless CI Harness
+
+LibScript enforces multi-OS automated testing and regression tracking across all supported
+platforms:
+
+- **Headless QEMU / Hypervisor Boot Tests (`tests/*_boot_test.sh`)**:
+  - `os_boot_test.sh`: Boots synthesized Linux QCOW2 images headless under QEMU, checking kernel
+    initialization and shell login prompts within a specified timeout.
+  - `freebsd_boot_test.sh`: Boot verification of synthesized FreeBSD UFS/ZFS images.
+  - `illumos_boot_test.sh`: Automated QEMU boot test for synthesized illumos/SunOS appliances.
+- **GUI & Network Smoke Harnesses**:
+  - Headless framebuffer and display server smoke tests (`os_gui_smoke_test.sh`,
+    `freebsd_gui_smoke_test.sh`, `illumos_gui_smoke_test.sh`).
+  - Network stack integration tests validating DHCP, DNS, and SSH connectivity.
+- **Continuous Results Aggregation (`tests/update_results.sh` / `.cmd` / `.ps1`)**:
+  - Aggregates atomic test markers (`.success`, `.failure`) across multi-platform CI runs.
+  - Idempotently synchronizes the Supported Components compatibility matrix in `README.md` and
+    exports machine-readable test results (`matrix_results.json`).

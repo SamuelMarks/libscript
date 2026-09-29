@@ -57,4 +57,27 @@ or operating system.
 - [x] Vagrant-only multi-platform verification matrix across
       `{macOS, Windows, FreeBSD, SunOS, Linux}`.
 
+## Phase 8: Universal Live-CD / Live-USB Multiboot Installer (`msi-rs`)
+
+- [x] Specification and execution schema (`execution-plan.live.schema.json`).
+- [x] Live installer image builder (`devtools/build_live_installer.sh` / `.cmd`).
+- [x] Tri-modal operator interface: Headless unattended (`msiexec`), curses TUI, and kiosk GUI
+      (`msi-gui` on Wayland `cage` / X11 `openbox`).
+- [x] Multiboot co-installation across Linux, FreeBSD, and illumos on a single machine with
+      automated bootloader chaining.
+- [x] Automated visual screenshot capture harness (`devtools/capture_msi_live_screenshots.sh` /
+      `.cmd`).
+- [x] Air-gapped offline payload baking and USB physical drive writer (`devtools/write_usb.sh` /
+      `.cmd`).
+- [x] Engineering specification and checklist tracked in
+      [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md).
+
+## Phase 9: Native REST API & OpenAPI 3.0 Control Plane
+
+- [x] High-performance C++ HTTP daemon in `libscript-rest-api/`.
+- [x] Strongly typed OpenAPI 3.0 specification (`libscript-rest-api/openapi.yaml`).
+- [x] REST endpoints for component lifecycle, stack synthesis, artifact packaging, and job status
+      polling.
+- [x] Native CMake build system, architecture guide, and daemon integration scripts.
+
 _For completed phases (Phase 1 and 2), please see the [CHANGELOG.md](CHANGELOG.md)._

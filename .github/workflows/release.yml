@@ -49,7 +49,7 @@ jobs:
           fetch-depth: 0
 
       - name: Restore Existing Offline Cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         id: restore-cache
         with:
           path: cache
@@ -65,7 +65,7 @@ jobs:
           call packaging\hydrate_offline_cache.cmd --wheels --codebase
 
       - name: Save Hydrated Cache
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         if: steps.restore-cache.outputs.cache-hit != 'true'
         with:
           path: cache
@@ -171,7 +171,7 @@ jobs:
           fetch-depth: 0
 
       - name: Restore Hydrated Cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         id: restore-cache
         with:
           path: cache

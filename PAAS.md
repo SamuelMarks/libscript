@@ -41,6 +41,9 @@ can run on any infrastructure—from a single laptop to a distributed multicloud
 - **Machine Learning Primitives:** Out-of-the-box infrastructure definitions for AI Serving and ML
   Training, including TPU/GPU VM lifecycles, GKE integration (via XPK), and automated data ingestion
   workflows using `gcsfuse` and `tmux`.
+- **Programmatic REST API & OpenAPI Engine:** The native C++ microservice (`libscript-rest-api`)
+  provides an HTTP API conforming to OpenAPI 3.0 for remote provisioning, continuous deployment, and
+  fleet management.
 
 ## Roadmap to Maturity
 
@@ -58,10 +61,10 @@ resolution, and service bootstrapping into a single atomic operation.
 Development of a lightweight, distributed state store to track managed resources across multiple
 cloud providers and local nodes.
 
-### Phase 4: Edge-First Management Interface
+### Phase 4: Programmatic REST API & Edge Interface (Implemented)
 
-A decentralized management CLI and optional web dashboard for monitoring stack health and
-orchestrating updates across the fleet.
+A decentralized C++ HTTP management microservice (`libscript-rest-api`) and OpenAPI specification
+for orchestrating provisioning, monitoring stack health, and remote execution across fleets.
 
 ## Automated Orchestration
 

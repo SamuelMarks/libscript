@@ -125,18 +125,27 @@ Pre-configured profiles are available in `profiles/`:
 ./libscript.sh config os --profile=linux-standard-server-glibc --export=server.json
 ```
 
-Available curated profiles:
+Available curated profiles include:
 
-- `linux-minimal-headless-musl.json`: Ultra-compact Musl/BusyBox server appliance.
-- `linux-standard-server-glibc.json`: Production enterprise Glibc server with OpenSSH.
-- `linux-desktop-sway-wayland.json`: Sway, Wayland, PipeWire, seatd, and greetd.
-- `linux-desktop-hyprland.json`: Hyprland Wayland compositor with SDDM.
-- `linux-desktop-kde-plasma.json`: KDE Plasma 6 desktop environment.
-- `linux-desktop-xfce-x11.json`: Lightweight XFCE4 desktop on X11.
-- `freebsd-server-standard.json`: FreeBSD 14.x base with ZFS root pool.
-- `freebsd-desktop-xfce.json`: FreeBSD desktop with DRM KMS graphics drivers.
-- `firecracker-microvm-appliance.json`: Minimalist appliance for sub-15ms microVM boots.
-- `unikraft-nginx-redis.json`: Specialized single-purpose unikernel image.
+- **Minimal & Enterprise Servers**: `linux-minimal-headless-musl.json`,
+  `linux-standard-server-glibc.json`, `freebsd-server-standard.json`
+- **Modern Desktops & Compositors**: `linux-desktop-sway-wayland.json`,
+  `linux-desktop-hyprland.json`, `linux-desktop-kde-plasma.json`, `linux-desktop-xfce-x11.json`,
+  `freebsd-desktop-xfce.json`
+- **Linux From Scratch (LFS) Workstations**: `lfs-minimal-headless.json`,
+  `lfs-openrc-wayland-sway.json`, `lfs-runit-wayland-hyprland.json`, `lfs-s6-wayland-labwc.json`,
+  `lfs-systemd-wayland-plasma6.json`, `lfs-systemd-wayland-gnome.json`,
+  `lfs-sysvinit-x11-openbox.json`, `lfs-dinit-musl-minimal.json`
+- **Distribution-Style Stacks**: `linux-alpine-style-minimal.json`,
+  `linux-alpine-style-standard.json`, `linux-debian-style-minimal.json`,
+  `linux-debian-style-server.json`, `linux-redhat-style-minimal.json`,
+  `linux-redhat-style-server.json`
+- **illumos & SunOS Syntheses (`profiles/illumos/`)**: `minimal-server.json`, `cde-retro-x11.json`,
+  `desktop-mate-x11.json`, `desktop-xfce-x11.json`, `hardened-runit.json`, `pkgsrc-developer.json`,
+  `zfs-cloud.json`
+- **Cloud & MicroVM Appliances**: `cloud-aws-ami-base.json`, `cloud-azure-vhd-base.json`,
+  `cloud-gcp-gce-base.json`, `hypervisor-vmware-esxi.json`, `hypervisor-proxmox-template.json`,
+  `firecracker-microvm-appliance.json`, `unikraft-nginx-redis.json`, `osv-cloud-runtime.json`
 
 ---
 
@@ -151,22 +160,30 @@ into deployable media:
 # 1. Raw flashable disk image for bare-metal drives (dd if=... of=/dev/sdX)
 ./libscript.sh package-as raw-img
 
-# 2. Virtual machine disk images (compressed)
-./libscript.sh package-as qcow2      # QEMU / KVM / Proxmox VE
-./libscript.sh package-as vmdk       # VMware ESXi / Workstation
-./libscript.sh package-as vdi        # VirtualBox
-./libscript.sh package-as vagrant-box # Vagrant .box archive (QEMU / Libvirt / VirtualBox)
+# 2. Virtual machine and hypervisor disk images (compressed)
+./libscript.sh package-as qcow2            # QEMU / KVM / Proxmox VE
+./libscript.sh package-as vmdk             # VMware ESXi / Workstation
+./libscript.sh package-as vdi              # VirtualBox
+./libscript.sh package-as vagrant-box       # Vagrant .box archive (QEMU / Libvirt / VirtualBox)
+./libscript.sh package-as hyperv-vhd       # Microsoft Hyper-V (VHD/VHDX)
+./libscript.sh package-as proxmox-template # Proxmox VE template
 
-# 3. Hybrid live bootable ISO (UEFI + BIOS) with SquashFS and OverlayFS
+# 3. Direct cloud image synthesis
+./libscript.sh package-as aws-ami          # Amazon AWS AMI
+./libscript.sh package-as azure-vhd        # Microsoft Azure VHD
+./libscript.sh package-as gcp-image        # Google Cloud Platform image
+
+# 4. Hybrid live bootable ISO (UEFI + BIOS) with SquashFS and OverlayFS
 ./libscript.sh package-as iso
 
-# 4. Bootable FreeBSD image with UFS or ZFS pools (for bhyve or bare metal)
-./libscript.sh package-as bsd-img
+# 5. Bootable FreeBSD and illumos images with UFS or ZFS pools
+./libscript.sh package-as bsd-img          # FreeBSD UFS/ZFS image
+./libscript.sh package-as illumos-distro   # illumos / SunOS ZFS root pool image
 
-# 5. Direct-kernel boot image for microVMs (Firecracker / Cloud-Hypervisor)
+# 6. Direct-kernel boot image for microVMs (Firecracker / Cloud-Hypervisor)
 ./libscript.sh package-as unikernel
 
-# 6. Clean rootfs archives for OCI containers, LXC, or FreeBSD Jails
+# 7. Clean rootfs archives for OCI containers, LXC, or FreeBSD Jails
 ./libscript.sh package-as rootfs-tar
 ./libscript.sh package-as docker
 ```
@@ -174,17 +191,20 @@ into deployable media:
 ### Native Application Installers
 
 ```sh
-# Windows Installer (WiX MSI)
-./libscript.sh package-as msi
+# Windows Installers
+./libscript.sh package-as msi              # Windows Installer (WiX / msi-rs)
+./libscript.sh package-as innosetup        # Inno Setup (.exe)
+./libscript.sh package-as nsis             # NSIS (.exe)
 
-# macOS Installer
-./libscript.sh package-as pkg
-./libscript.sh package-as dmg
+# macOS Packages
+./libscript.sh package-as pkg              # Flat installer package
+./libscript.sh package-as dmg              # Disk image
 
-# Linux Packages
-./libscript.sh package-as deb        # Debian / Ubuntu
-./libscript.sh package-as rpm        # Fedora / RHEL / CentOS
-./libscript.sh package-as apk        # Alpine Linux
+# Linux & BSD Packages
+./libscript.sh package-as deb              # Debian / Ubuntu
+./libscript.sh package-as rpm              # Fedora / RHEL / CentOS
+./libscript.sh package-as apk              # Alpine Linux
+./libscript.sh package-as txz              # FreeBSD package tarball
 
 # Interactive Terminal Installer
 ./libscript.sh package-as tui
@@ -192,7 +212,28 @@ into deployable media:
 
 ---
 
-## 4. Declarative Stacks & Ingress (`libscript.json`)
+## 4. Universal Live-CD / Live-USB Multiboot Installer
+
+LibScript provides an automated engine for building turn-key live bootable installer ISOs powered by
+`msi-rs`:
+
+```sh
+# 1. Build a live hybrid installer ISO from an execution plan schema
+./devtools/build_live_installer.sh execution-plan.live.schema.json build/live-installer.iso
+
+# 2. Write the bootable installer image directly to physical USB media
+./devtools/write_usb.sh build/live-installer.iso /dev/sdX
+
+# 3. Capture automated visual verification screenshots across installer stages
+./devtools/capture_msi_live_screenshots.sh build/live-installer.iso
+```
+
+For mode options (Headless, TUI, kiosk GUI) and multi-OS co-installation details, consult
+[LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md).
+
+---
+
+## 5. Declarative Stacks & Ingress (`libscript.json`)
 
 Define multi-tier services, databases, and ingress in a `libscript.json` file:
 
@@ -240,7 +281,7 @@ Define multi-tier services, databases, and ingress in a `libscript.json` file:
 
 ---
 
-## 5. Multicloud & AI Cluster Deployment (Tier 3)
+## 6. Multicloud & AI Cluster Deployment (Tier 3)
 
 Deploy stacks and custom synthesized OS images across public clouds, hypervisors, and AI hardware.
 
@@ -286,9 +327,24 @@ Use the standalone `netctl` routing abstraction to emit configurations directly:
 ./netctl.sh --listen 80 --proxy / http://localhost:3000 --emit apache
 ```
 
+### Programmatic Orchestration via REST API (`libscript-rest-api`)
+
+Build and launch the lightweight C++ daemon to orchestrate LibScript over HTTP:
+
+```sh
+# Build and run the REST API daemon
+cd libscript-rest-api && mkdir -p build && cd build
+cmake .. && cmake --build .
+./libscript_api_server --port 8080
+
+# Query API health or submit a component install
+curl http://localhost:8080/health
+curl -X POST http://localhost:8080/api/v1/install -H "Content-Type: application/json" -d '{"component":"nodejs","version":"22.14.0"}'
+```
+
 ---
 
-## 6. Testing, Idempotency & Audit Matrix
+## 7. Testing, Idempotency & Audit Matrix
 
 Verify compliance, boot reliability, and idempotency locally before deploying:
 
@@ -299,12 +355,17 @@ Verify compliance, boot reliability, and idempotency locally before deploying:
 # 2. Execute the 2x consecutive execution idempotency matrix
 ./tests/test_idempotency_matrix.sh
 
-# 3. Headless QEMU boot verification test for synthesized OS disk images
+# 3. Headless QEMU boot verification tests for Linux, FreeBSD, and illumos
 ./tests/os_boot_test.sh build/disk.qcow2 60
+./tests/freebsd_boot_test.sh build/freebsd.qcow2 60
+./tests/illumos_boot_test.sh build/illumos.qcow2 60
 
 # 4. Graphical desktop Wayland and PipeWire headless smoke test
 ./tests/os_gui_smoke_test.sh build/disk.qcow2
 
 # 5. Air-gapped offline installation verification test
 ./tests/test_airgap_boot.sh
+
+# 6. Aggregate test markers and update README compatibility table
+./tests/update_results.sh
 ```

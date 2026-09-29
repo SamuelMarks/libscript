@@ -27,9 +27,10 @@ flowchart TD
     end
 
     subgraph Layer4[4. Synthesized OS & Hypervisor Verification]
-        BootTest["os_boot_test.sh / .cmd<br/>(Headless QEMU: Kernel Banner, Init PID 1, Login Prompt)"]
-        GUISmoke["os_gui_smoke_test.sh / .cmd<br/>(virtio-gpu: Wayland Socket & PipeWire Daemon Smoke)"]
+        BootTest["Multi-OS Boot Tests (os_boot_test.sh, freebsd_boot_test.sh, illumos_boot_test.sh)<br/>(Headless QEMU: Kernel Banner, Init Supervisor, Login Prompt)"]
+        GUISmoke["os_gui_smoke_test.sh / .cmd<br/>(virtio-gpu: Wayland Socket, X11, PipeWire)"]
         AirGap["test_airgap_boot.sh / .cmd<br/>(Strict LIBSCRIPT_OFFLINE=1 Network Inhibition)"]
+        LiveMatrix["test_live_installer_matrix.sh / .cmd<br/>(msi-rs Multiboot Live-CD / USB Verification & Screenshot Capture)"]
     end
 
     Layer1 --> Layer2
@@ -282,6 +283,25 @@ harness executing exclusively inside Vagrant virtual machine environments across
 ```
 
 Aggregates structured verification statuses into `tests_tmp/illumos_matrix_summary.json`.
+
+---
+
+## 10. Live Installer Verification Matrix & Automated Screenshot Harness
+
+The `msi-rs` live installer subsystem (`devtools/build_live_installer.sh`) undergoes automated
+cross-platform matrix testing and screenshot verification:
+
+- **Live Installer Matrix Test (`tests/test_live_installer_matrix.sh` / `.cmd` / `.ps1`)**:
+  - Builds live bootable ISO media adhering to `execution-plan.live.schema.json`.
+  - Boots the live image headless in QEMU across Headless, TUI, and kiosk GUI modes.
+  - Asserts disk discovery, partitioning schemes, and co-installation pipeline execution across
+    Linux, FreeBSD, and illumos.
+  - Aggregates results into `tests_tmp/live_installer_matrix_summary.json`.
+- **Automated Visual Screenshot Capture (`devtools/capture_msi_live_screenshots.sh` / `.cmd`)**:
+  - Spawns a virtual framebuffer under QEMU to record installer wizard milestones (Welcome, EULA,
+    Disk Mapping Canvas, OS Flavor selection, and Completion).
+  - Emits PNG artifacts directly into assets directories for documentation and release validation.
+  - Architectural contracts are detailed in [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md).
 
 ---
 

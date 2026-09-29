@@ -14,6 +14,13 @@ framework's native execution and generation capabilities.
 - **Generator Documentation:** Provide detailed examples of utilizing the `package-as` command to
   generate Dockerfiles, Docker Compose setups, and native OS installers (Windows, Linux, FreeBSD,
   macOS).
+- **Universal Live Installer Documentation:** Document the `msi-rs` live multiboot installer
+  architecture, console parameters, interactive canvas, and multi-OS co-installation in
+  [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md).
+- **illumos Distribution Synthesis:** Document the illumos kernel, SMF services, and ZFS `rpool`
+  hierarchy across OmniOS and OpenIndiana profiles.
+- **REST API & OpenAPI Documentation:** Document the programmatic C++ HTTP microservice and OpenAPI
+  3.0 contract in `libscript-rest-api/`.
 
 ## Future Enhancements
 

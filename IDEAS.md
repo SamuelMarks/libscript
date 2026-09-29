@@ -10,10 +10,12 @@ We have implemented automation for provisioning GPU and TPU Virtual Machines on 
 complex, hardware-dependent stacks (such as CUDA drivers and vLLM) locally on bare-metal host
 machines to avoid the overhead associated with containerized GPU passthrough.
 
-## Immutable OS Deployment
+## Immutable OS Deployment (Partially Implemented)
 
-Exploring integrations with tools like `ostree` to compile declarative `libscript.json` definitions
-into customized, bootable operating system images.
+Tier 2 now natively synthesizes signed Unified Kernel Images (UKI), immutable SquashFS + OverlayFS
+hybrid live ISOs, and Firecracker microVM direct boot kernels. We are now exploring integrations
+with tools like `ostree` and transactional A/B sysroot update partitions for atomic over-the-air
+upgrades.
 
 ## Auto-Scaling Native Clusters
 

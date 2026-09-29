@@ -237,23 +237,40 @@ mutated diffs.
   ```sh
   STAMP_FILE="${STAMPS_DIR}/.stamp.my_component"
   if [ -f "$STAMP_FILE" ]; then
-    printf '[SKIP]  my_component already installed (%s)
+    printf '[SKIP]  my_component already installed (%s)\n' "$STAMP_FILE"
+    exit 0
+  fi
+
+  # ... perform build ...
+
+  date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
+  mv "${STAMP_FILE}.tmp" "$STAMP_FILE"
   ```
 
-' "$STAMP_FILE" exit 0 fi
+### 7. Option A Win32 Hard-Fail Proforma
 
-# ... perform build ...
+Operating system synthesis operations that rely on Linux/Unix kernel primitives (`mount`, `unshare`,
+`losetup`, `mknod`) must never be simulated with fake emulation on Windows. Instead, companion
+`.cmd` scripts must immediately terminate with **exit code `86`** (`EX_UNAVAILABLE` / `ENOSYS`) and
+direct the developer to `vm_builder.cmd` or `package-as docker`.
 
-date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
-  mv "${STAMP_FILE}.tmp" "$STAMP_FILE"
+### 8. Contributing to `libscript-rest-api`
 
-````
+When working on the C++ REST API microservice in `libscript-rest-api/`:
 
-### 7. Absolute Ban on Dynamic Eval
-Dynamic string evaluation (`eval` in POSIX, `Invoke-Expression` / `iex` in PowerShell) is strictly prohibited. It introduces security vulnerabilities and code obfuscation.
+- Place `.hpp` and `.cpp` files in `src/`.
+- Ensure strict adherence to the OpenAPI 3.0 specification in `openapi.yaml`.
+- Build with standard CMake (`cmake -B build && cmake --build build`).
 
-### 8. Git Safety Invariant
-Under no circumstances should any build script, test runner, CI job, or subagent invoke **`git push`**.
+### 9. Absolute Ban on Dynamic Eval
+
+Dynamic string evaluation (`eval` in POSIX, `Invoke-Expression` / `iex` in PowerShell) is strictly
+prohibited. It introduces security vulnerabilities and code obfuscation.
+
+### 10. Git Safety Invariant
+
+Under no circumstances should any build script, test runner, CI job, or subagent invoke
+**`git push`**.
 
 ---
 
@@ -270,10 +287,15 @@ Before submitting changes, execute the repository's automated compliance and aud
 
 # 3. Verify headless QEMU boot test for synthesized OS images
 ./tests/os_boot_test.sh build/disk.qcow2 60
+./tests/freebsd_boot_test.sh build/freebsd.qcow2 60
+./tests/illumos_boot_test.sh build/illumos.qcow2 60
 
 # 4. Verify graphical desktop Wayland/PipeWire smoke tests
 ./tests/os_gui_smoke_test.sh build/disk.qcow2
 
 # 5. Verify air-gapped offline installation modality
 ./tests/test_airgap_boot.sh
-````
+
+# 6. Aggregate test results and update README matrix
+./tests/update_results.sh
+```

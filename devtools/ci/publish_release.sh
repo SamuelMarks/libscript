@@ -7,6 +7,7 @@
 # ./devtools/ci/publish_release.sh --tag <tag> [--dist-dir <dir>] [--title <title>] [--draft] [--prerelease]
 
 set -feu
+set +f
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"

@@ -52,9 +52,11 @@ All notable changes to the LibScript framework are documented here.
       `MAKEOBJDIRPREFIX` boundaries and ZFS-on-root loader configuration.
     - Bootloader installation (`_lib/bootloaders/setup.sh` / `.cmd`) for GRUB2 (UEFI/BIOS),
       `systemd-boot`, and Limine.
-    - Universal media packaging via `package-as`: `raw-img`, `qcow2`, `vmdk`, `vdi`, hybrid live
-      `iso` (SquashFS + OverlayFS), `rootfs-tar`, `docker`, `bsd-img`, and direct-kernel
-      `unikernel`.
+    - Universal media packaging via `package-as`: `raw-img`, `qcow2`, `vmdk`, `vdi`, `hyperv-vhd`,
+      `proxmox-template`, `aws-ami`, `azure-vhd`, `gcp-image`, hybrid live `iso` (SquashFS +
+      OverlayFS), `rootfs-tar`, `docker`, `bsd-img`, `illumos-distro`, direct-kernel `unikernel`,
+      Windows `.msi` / `innosetup` / `nsis`, macOS `.pkg` / `.dmg`, Debian `.deb`, Red Hat `.rpm`,
+      Alpine `.apk`, and FreeBSD `.txz`.
   - **Tier 3: Operators & Multicloud Deployers (`_lib/cloud-providers/`)**:
     - Multicloud VM and resource lifecycle management for AWS EC2, GCP Compute Engine, Azure
       Compute, Proxmox VE, Hetzner Cloud, and Vagrant.
@@ -65,6 +67,7 @@ All notable changes to the LibScript framework are documented here.
     - Built-in PaaS & universal reverse proxying via `netctl` for Nginx, Caddy, Apache, and Windows
       IIS with automated Let's Encrypt TLS and OS init supervision (`systemd`, `launchd`, Windows
       Services).
+    - Programmatic REST API and OpenAPI 3.0 control plane via `libscript-rest-api`.
   - **Declarative Constraint Solver & Tarjan SCC Cycle Breaking**:
     - Extended manifest schema (`manifest.schema.json`) with USE flag variants (`configure_args`,
       `meson_args`, `cmake_args`, `cflags`, `ldflags`) and dependency classifications (`host_tools`,
@@ -77,16 +80,58 @@ All notable changes to the LibScript framework are documented here.
     - Option A Win32 Hard-Fail Boundary Proforma (exit code `86` / `EX_UNAVAILABLE` / `ENOSYS`) on
       Windows for Linux kernel primitives, delegating to VM/Docker builders.
     - Static audit validation toolchain (`devtools/audit/audit_standards.sh` / `.ps1`).
-    - Comprehensive verification matrix: headless QEMU boot tests (`tests/os_boot_test.sh` /
-      `.cmd`), graphical Wayland/PipeWire smoke tests (`tests/os_gui_smoke_test.sh` / `.cmd`),
-      air-gapped boot tests (`tests/test_airgap_boot.sh` / `.cmd`), and 2x consecutive execution
-      idempotency tests (`tests/test_idempotency_matrix.sh` / `.cmd`).
+    - Comprehensive verification matrix: headless QEMU boot tests (`tests/os_boot_test.sh` / `.cmd`,
+      `freebsd_boot_test.sh`, `illumos_boot_test.sh`), graphical Wayland/PipeWire smoke tests
+      (`tests/os_gui_smoke_test.sh` / `.cmd`), air-gapped boot tests (`tests/test_airgap_boot.sh` /
+      `.cmd`), live installer matrix (`tests/test_live_installer_matrix.sh`), and 2x consecutive
+      execution idempotency tests (`tests/test_idempotency_matrix.sh` / `.cmd`).
+    - Continuous test result aggregation and automated `README.md` compatibility table
+      synchronization via `tests/update_results.sh` / `.cmd` / `.ps1`.
     - Repository safety invariant: automated test suites and CI workflows strictly ban `git push`.
 - Added support for `pkgx` and `vfox` as valid universal version manager fallbacks.
 - Re-architected component method resolution with a smart fallback priority chain:
   `libscript_native` -> `mise` -> `asdf` -> `pkgx` -> `vfox` -> `system`.
 
 ### Completed Initiatives
+
+#### Phase 9: Native REST API & OpenAPI 3.0 Control Plane
+
+- High-performance C++ HTTP microservice daemon in `libscript-rest-api/`.
+- Strongly typed OpenAPI 3.0 specification (`libscript-rest-api/openapi.yaml`).
+- REST endpoints for remote component installation, stack synthesis, packaging execution, and log
+  streaming.
+- CMake build configuration and platform daemon service scripts.
+
+#### Phase 8: Universal Live-CD / Live-USB Multiboot Installer (`msi-rs`)
+
+- Declarative live execution schema (`execution-plan.live.schema.json`).
+- Live media builder (`devtools/build_live_installer.sh` / `.cmd`) and USB flasher
+  (`devtools/write_usb.sh` / `.cmd`).
+- Tri-modal operator experience: Headless unattended (`msiexec`), curses TUI wizard, and fullscreen
+  kiosk GUI (`msi-gui` on Wayland/X11).
+- Multiboot co-installation across Linux, FreeBSD, and illumos with bootloader chaining.
+- Automated screenshot verification harness (`devtools/capture_msi_live_screenshots.sh`).
+- Architecture and operator guide in [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md).
+
+#### Phase 7: Illumos-Based Modular Distribution & Verification Matrix
+
+- Declarative profile schema (`execution-plan.illumos.schema.json`) and 7 curated profiles.
+- Pluggable init systems (`smf`, `runit`, `s6`, `dinit`, `inittab-sysv`) and desktop environments
+  (MATE, XFCE4, CDE).
+- Canonical ZFS root pool (`rpool`) hierarchy, boot environment management (`beadm`), and
+  `/etc/vfstab` integration.
+- Solaris Boomer in-kernel audio (`/dev/audio`), OSS, and PulseAudio support.
+- Multi-format packaging: Raw GPT/VTOC, QCOW2, Vagrant `.box`, VHD, VMDK, ISO.
+- 5-platform Vagrant verification matrix across `{macOS, Windows, FreeBSD, SunOS, Linux}`.
+
+#### Phase 6: FreeBSD-Based Modular Distribution & Verification Matrix
+
+- Specification & schema (`execution-plan.freebsd.schema.json`) with modular profiles.
+- Pluggable Init Systems (`bsd-rc`, `openrc`, `runit`, `s6`, `dinit`).
+- Display & Desktop modular staging (Wayland, X11, Sway, XFCE4, Plasma 6, seatd, PipeWire).
+- Multi-format disk image export (Raw GPT, QCOW2, Vagrant `.box`, VHD, VMDK, ISO).
+- Headless boot, GUI smoketests, Vagrant lifecycle, and 2-pass idempotency test harness.
+- Vagrant-only multi-platform verification matrix across `{macOS, Windows, FreeBSD, SunOS, Linux}`.
 
 #### Phase 5: AI & Machine Learning Infrastructure
 

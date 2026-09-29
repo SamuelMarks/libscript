@@ -23,6 +23,9 @@ LibScript generates enterprise-grade `.msi` packages supporting:
   choosing external runtime executables (e.g. host `python3.exe` or `node.exe`).
 - **Port Conflict Validation**: VBScript custom actions verifying TCP port availability prior to
   commit.
+- **Cross-Platform MSI Engine (`msi-rs`)**: In addition to standard WiX and `wixl` compilation,
+  LibScript incorporates the `msi-rs` engine to power universal live-CD/USB installer environments
+  across Linux, FreeBSD, and illumos (see [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md)).
 
 ---
 

@@ -19,7 +19,7 @@ flowchart TD
     end
 
     subgraph Tier2[Tier 2: Synthesizers & Assemblers]
-        OSDeps["Operating System Assembly Constraints<br/>(Rootfs FHS, Storage/LUKS2, Linux/FreeBSD Kernel, UKI, package-as)"]
+        OSDeps["Operating System Assembly Constraints<br/>(Rootfs FHS, Storage/LUKS2, Linux/FreeBSD/illumos Kernel, UKI, package-as)"]
         SolverEngine["Constraint Solver: resolve_stack.jq<br/>(Tarjan SCC Cycle Breaking & USE Flag Variant Propagation)"]
     end
 
@@ -210,6 +210,19 @@ Standard triplets are calculated dynamically:
 - `aarch64` + `musl` + `linux` $\rightarrow$ `aarch64-libscript-linux-musl`
 - `riscv64` + `glibc` + `linux` $\rightarrow$ `riscv64-libscript-linux-gnu`
 - `x86_64` + `bsd-libc` + `freebsd` $\rightarrow$ `x86_64-unknown-freebsd14.0`
+- `x86_64` + `illumos-libc` + `sunos` $\rightarrow$ `x86_64-pc-solaris2.11`
+
+### Execution Plan Schema Suite
+
+The topological output of `resolve_stack.jq` is validated against target-specific execution plan
+schemas:
+
+- **`execution-plan.schema.json`**: Standard Linux system assembly and package execution graph.
+- **`execution-plan.freebsd.schema.json`**: FreeBSD kernel, world, UFS/ZFS, and userland execution
+  plan.
+- **`execution-plan.illumos.schema.json`**: illumos/SunOS kernel, SMF init, ZFS `rpool`, and desktop
+  plan.
+- **`execution-plan.live.schema.json`**: Live multiboot ISO/USB installer execution graph.
 
 ---
 
