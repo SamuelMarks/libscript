@@ -51,6 +51,7 @@ msi_path=""
 
 # ## cleanup
 # Removes temporary artifacts and guarantees network adapter is re-enabled if stopped.
+# shellcheck disable=SC2317,SC2329
 cleanup() {
   _status=$?
   rm -rf "$TEST_TMP_DIR"
@@ -110,7 +111,7 @@ if [ -z "$msi_path" ] && [ "$skip_compile" -eq 0 ]; then
   touch "$TEST_TMP_DIR/banner_top.bmp"
   touch "$TEST_TMP_DIR/banner_side.bmp"
 
-  "${LIBSCRIPT_ROOT_DIR}/packaging/build_openedx_msi.sh" \
+  "${LIBSCRIPT_ROOT_DIR}/packaging/build_msi.sh" "stacks/cms/openedx" \
     --offline \
     --out "$OUT_BASE" \
     --version "2.4.0.0" \
@@ -237,8 +238,8 @@ vm_run "Get-NetAdapter | Enable-NetAdapter -Confirm:\$false"
 printf '[PASS] Guest network connectivity restored
 '
 
-printf '=== Step 8: Capturing Diagnostic Screenshots ===
-'
+printf '=== Step 8: Capturing Diagnostic Screenshots ===\n'
+# shellcheck disable=SC2016
 screenshot_ps1='
 Add-Type -AssemblyName System.Windows.Forms, System.Drawing
 function Capture-Screen($path) {

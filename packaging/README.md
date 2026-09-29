@@ -10,9 +10,8 @@ installers and distribution packages from LibScript stack manifests.
 - **Inno Setup (`template_inno.*`)**: Inno Setup script templates for creating customized Windows
   installers (`.exe`).
 - **MSI (`template_msi.*` / `build_msi.*`)**: WiX-based Windows Installer package definitions
-  (`.msi`).
-- **Open edX Stack MSI (`build_openedx_msi.*`)**: Production-grade Windows installer supporting dual
-  distribution: lightweight online (~4 MB) and completely self-contained air-gapped offline (~1 GB).
+  (`.msi`) supporting dual distribution: lightweight online and completely self-contained air-gapped
+  offline.
 - **Offline Cache Hydration (`hydrate_offline_cache.*`)**: Downloads, validates SHA-256 integrity,
   and stages runtime archives, datastores, pip wheels, and codebase packages.
 - **Payload Harvester (`harvest_payload.*`)**: Gathers and filters the LibScript repository honoring
@@ -115,8 +114,8 @@ Builds successfully without network access via `docker build --network none .`.
 
 ```sh
 # Online and Offline MSI builds
-./packaging/build_openedx_msi.sh --online
-./packaging/build_openedx_msi.sh --offline --hydrate-cache
+./packaging/build_msi.sh stacks/cms/openedx --online
+./packaging/build_msi.sh stacks/cms/openedx --offline
 
 # Docker and Compose exports
 ./libscript.sh package-as docker stacks/cms/openedx --online

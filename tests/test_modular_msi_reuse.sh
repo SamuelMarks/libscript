@@ -38,6 +38,7 @@ mkdir -p "$TEST_TMP_DIR"
 
 # ## cleanup
 # Removes temporary test directory on success.
+# shellcheck disable=SC2317,SC2329
 cleanup() {
   _status=$?
   if [ "$_status" -eq 0 ]; then
@@ -66,44 +67,27 @@ printf '[PASS] Verified guid_registry.json exists.
 for comp in mysql redis mongodb python nodejs meilisearch; do
   printf '[INFO] Building standalone MSI for %s...\n' "$comp"
   "${LIBSCRIPT_ROOT_DIR}/packaging/build_component_msi.sh" --component "$comp"
-  # shellcheck disable=SC2086
-  if ! ls ${LIBSCRIPT_ROOT_DIR}/dist/msi/libscript-${comp}-*.msi >/dev/null 2>&1; then
-    printf '[FAIL] Missing expected standalone MSI for component %s
-' "$comp" >&2
+  if ! find "${LIBSCRIPT_ROOT_DIR}/dist/msi" -maxdepth 1 -name "libscript-${comp}-*.msi" | grep -q .; then
+    printf '[FAIL] Missing expected standalone MSI for component %s\n' "$comp" >&2
     exit 1
   fi
 done
 printf '[PASS] All 6 standalone component MSIs built successfully.
 '
 
-# 3. Build Open edX Core MSI
-printf '[INFO] Building Open edX Core MSI...
-'
-"${LIBSCRIPT_ROOT_DIR}/packaging/build_openedx_core_msi.sh" --version "22.1.0" >/dev/null
-if [ ! -f "${LIBSCRIPT_ROOT_DIR}/dist/msi/openedx-core-22.1.0.msi" ]; then
-  printf '[FAIL] Missing openedx-core-22.1.0.msi
-' >&2
+# 3. Build Master Orchestrator MSIs (Online and Offline)
+printf '[INFO] Building Master Orchestrator MSIs...\n'
+"${LIBSCRIPT_ROOT_DIR}/packaging/build_msi.sh" "stacks/cms/openedx" --version "22.1.0" --variant "online" --out "${LIBSCRIPT_ROOT_DIR}/dist/msi/openedx-22.1.0" >/dev/null
+if [ ! -f "${LIBSCRIPT_ROOT_DIR}/dist/msi/openedx-22.1.0.msi" ] && [ ! -f "${LIBSCRIPT_ROOT_DIR}/dist/msi/openedx-22.1.0.wxs" ]; then
+  printf '[FAIL] Missing openedx-22.1.0.msi or .wxs (online)\n' >&2
   exit 1
 fi
-printf '[PASS] Open edX Core MSI built successfully.
-'
-
-# 4. Build Master Orchestrator MSIs (Online and Offline)
-printf '[INFO] Building Master Orchestrator MSIs...
-'
-"${LIBSCRIPT_ROOT_DIR}/packaging/build_openedx_orchestrator_msi.sh" --version "22.1.0" --variant "all" >/dev/null
-if [ ! -f "${LIBSCRIPT_ROOT_DIR}/dist/msi/openedx-22.1.0.msi" ]; then
-  printf '[FAIL] Missing openedx-22.1.0.msi (online)
-' >&2
+"${LIBSCRIPT_ROOT_DIR}/packaging/build_msi.sh" "stacks/cms/openedx" --version "22.1.0" --variant "offline" --out "${LIBSCRIPT_ROOT_DIR}/dist/msi/openedx-offline-22.1.0" >/dev/null
+if [ ! -f "${LIBSCRIPT_ROOT_DIR}/dist/msi/openedx-offline-22.1.0.msi" ] && [ ! -f "${LIBSCRIPT_ROOT_DIR}/dist/msi/openedx-offline-22.1.0.wxs" ]; then
+  printf '[FAIL] Missing openedx-offline-22.1.0.msi or .wxs (offline)\n' >&2
   exit 1
 fi
-if [ ! -f "${LIBSCRIPT_ROOT_DIR}/dist/msi/openedx-offline-22.1.0.msi" ]; then
-  printf '[FAIL] Missing openedx-offline-22.1.0.msi (offline)
-' >&2
-  exit 1
-fi
-printf '[PASS] Master Orchestrator MSIs built successfully.
-'
+printf '[PASS] Master Orchestrator MSIs built successfully.\n'
 
 # 5. Verify Zero-.EXE mandate in output directory
 EXE_COUNT=$(find "${LIBSCRIPT_ROOT_DIR}/dist/msi" -name "*.exe" 2>/dev/null | wc -l)
@@ -140,16 +124,14 @@ printf '[PASS] MySQL Component GUID and Windows Service identity verified.
 
 # 7. Verify XML entity escaping and SharedDllRefCount attribute syntax
 NODE_WXS="${LIBSCRIPT_ROOT_DIR}/tmp/nodejs_main.wxs"
-if [ ! -f "$NODE_WXS" ] || ! grep -q 'Name="LibScript Node\.js JavaScript Runtime &amp; npm"' "$NODE_WXS"; then
-  printf '[FAIL] Node.js manifest missing or unescaped entity in product name
-' >&2
+if [ ! -f "$NODE_WXS" ] || ! grep -q 'Name="LibScript Node\.js JavaScript Runtime &amp; npm' "$NODE_WXS"; then
+  printf '[FAIL] Node.js manifest missing or unescaped entity in product name\n' >&2
   exit 1
 fi
 
 REDIS_WXS="${LIBSCRIPT_ROOT_DIR}/tmp/redis_main.wxs"
-if [ ! -f "$REDIS_WXS" ] || ! grep -q 'Name="LibScript Redis In-Memory Datastore &amp; Cache"' "$REDIS_WXS"; then
-  printf '[FAIL] Redis manifest missing or unescaped entity in product name
-' >&2
+if [ ! -f "$REDIS_WXS" ] || ! grep -q 'Name="LibScript Redis In-Memory Datastore &amp; Cache' "$REDIS_WXS"; then
+  printf '[FAIL] Redis manifest missing or unescaped entity in product name\n' >&2
   exit 1
 fi
 

@@ -58,7 +58,7 @@ touch "$TEST_TMP_DIR/banner_side.bmp"
 OUT_BASE="$TEST_TMP_DIR/OpenEdX_Test_Setup"
 
 # 2. Invoke generator
-"${LIBSCRIPT_ROOT_DIR}/packaging/build_openedx_msi.sh" \
+"${LIBSCRIPT_ROOT_DIR}/packaging/build_msi.sh" "stacks/cms/openedx" \
   --out "$OUT_BASE" \
   --version "2.4.0.0" \
   --icon "$TEST_TMP_DIR/openedx.ico" \

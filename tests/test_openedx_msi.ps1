@@ -40,12 +40,12 @@ function Test-OpenedxMsi {
     New-Item -ItemType File -Path (Join-Path $TestTmpDir "banner_side.bmp") -Force | Out-Null
 
     $outBase = Join-Path $TestTmpDir "OpenEdX_Test_Setup"
-    $buildCmd = Join-Path $LibscriptRootDir "packaging\build_openedx_msi.cmd"
+    $buildCmd = Join-Path $LibscriptRootDir "packaging\build_msi.cmd"
     if (Test-Path $buildCmd) {
-        & cmd.exe /c "call `"$buildCmd`" --out `"$outBase`" --version `"2.4.0.0`" --icon `"$TestTmpDir\openedx.ico`" --banner-top `"$TestTmpDir\banner_top.bmp`" --banner-side `"$TestTmpDir\banner_side.bmp`" --license `"$TestTmpDir\LICENSE.txt`""
+        & cmd.exe /c "call `"$buildCmd`" stacks\cms\openedx --out `"$outBase`" --version `"2.4.0.0`" --icon `"$TestTmpDir\openedx.ico`" --banner-top `"$TestTmpDir\banner_top.bmp`" --banner-side `"$TestTmpDir\banner_side.bmp`" --license `"$TestTmpDir\LICENSE.txt`""
     } else {
-        $buildSh = Join-Path $LibscriptRootDir "packaging/build_openedx_msi.sh"
-        & /bin/sh "$buildSh" --out "$outBase" --version "2.4.0.0" --icon "$TestTmpDir/openedx.ico" --banner-top "$TestTmpDir/banner_top.bmp" --banner-side "$TestTmpDir/banner_side.bmp" --license "$TestTmpDir/LICENSE.txt"
+        $buildSh = Join-Path $LibscriptRootDir "packaging/build_msi.sh"
+        & /bin/sh "$buildSh" "stacks/cms/openedx" --out "$outBase" --version "2.4.0.0" --icon "$TestTmpDir/openedx.ico" --banner-top "$TestTmpDir/banner_top.bmp" --banner-side "$TestTmpDir/banner_side.bmp" --license "$TestTmpDir/LICENSE.txt"
     }
 
     $wxsFile = "${outBase}.wxs"

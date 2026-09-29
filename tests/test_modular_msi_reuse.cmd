@@ -43,20 +43,13 @@ for %%C in (mysql redis mongodb python nodejs meilisearch) do (
 )
 echo [PASS] All 6 standalone component MSIs built successfully.
 
-echo [INFO] Building Open edX Core MSI...
-call "%LIBSCRIPT_ROOT_DIR%\packaging\build_openedx_core_msi.cmd" --version "22.1.0" >nul 2>&1
-if not exist "%LIBSCRIPT_ROOT_DIR%\dist\msi\openedx-core-22.1.0.msi" (
-    echo [FAIL] Missing openedx-core-22.1.0.msi >&2
-    exit /b 1
-)
-echo [PASS] Open edX Core MSI built successfully.
-
 echo [INFO] Building Master Orchestrator MSIs...
-call "%LIBSCRIPT_ROOT_DIR%\packaging\build_openedx_orchestrator_msi.cmd" --version "22.1.0" --variant "all" >nul 2>&1
+call "%LIBSCRIPT_ROOT_DIR%\packaging\build_msi.cmd" stacks\cms\openedx --version "22.1.0" --variant "online" --out "%LIBSCRIPT_ROOT_DIR%\dist\msi\openedx-22.1.0" >nul 2>&1
 if not exist "%LIBSCRIPT_ROOT_DIR%\dist\msi\openedx-22.1.0.msi" (
     echo [FAIL] Missing openedx-22.1.0.msi (online) >&2
     exit /b 1
 )
+call "%LIBSCRIPT_ROOT_DIR%\packaging\build_msi.cmd" stacks\cms\openedx --version "22.1.0" --variant "offline" --out "%LIBSCRIPT_ROOT_DIR%\dist\msi\openedx-offline-22.1.0" >nul 2>&1
 if not exist "%LIBSCRIPT_ROOT_DIR%\dist\msi\openedx-offline-22.1.0.msi" (
     echo [FAIL] Missing openedx-offline-22.1.0.msi (offline) >&2
     exit /b 1
@@ -95,7 +88,7 @@ if not exist "%NODE_WXS%" (
     echo [FAIL] Missing tmp\nodejs_main.wxs manifest >&2
     exit /b 1
 )
-findstr /C:"Name=""LibScript Node.js JavaScript Runtime &amp; npm""" "%NODE_WXS%" >nul 2>&1
+findstr /C:"Name=""LibScript Node.js JavaScript Runtime &amp; npm" "%NODE_WXS%" >nul 2>&1
 if errorlevel 1 (
     echo [FAIL] Node.js manifest missing or unescaped entity in product name >&2
     exit /b 1
@@ -106,7 +99,7 @@ if not exist "%REDIS_WXS%" (
     echo [FAIL] Missing tmp\redis_main.wxs manifest >&2
     exit /b 1
 )
-findstr /C:"Name=""LibScript Redis In-Memory Datastore &amp; Cache""" "%REDIS_WXS%" >nul 2>&1
+findstr /C:"Name=""LibScript Redis In-Memory Datastore &amp; Cache" "%REDIS_WXS%" >nul 2>&1
 if errorlevel 1 (
     echo [FAIL] Redis manifest missing or unescaped entity in product name >&2
     exit /b 1

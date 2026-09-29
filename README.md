@@ -11,8 +11,8 @@ LibScript is a unified software delivery substrate written in pure, zero-depende
 everyday developer toolchain management and full-system operating system engineering.
 
 Whether you need a lightweight, universal replacement for `nvm`, `pyenv`, `rustup`, and `rvm`, an
-automated pipeline to compile and bake customized Linux and FreeBSD kernels into bootable images
-(`package-as`), or a multicloud operator to orchestrate distributed TPU training clusters and
+automated pipeline to compile and bake customized Linux, FreeBSD, and illumos systems into bootable
+images (`package-as`), or a multicloud operator to orchestrate distributed TPU training clusters and
 inference engines, LibScript handles the entire lifecycle through a single, idempotent interface.
 
 ```mermaid
@@ -24,7 +24,7 @@ flowchart TD
 
     subgraph T2["2. OS Bakery"]
         direction LR
-        k1["Linux Kernel & UKI"] ~~~ k2["FreeBSD"] ~~~ k3["Unikernels (OSv, MirageOS, ...)"] ~~~ k4["LUKS2 / ZFS"] ~~~ k5["..."]
+        k1["Linux Kernel & UKI"] ~~~ k2["FreeBSD & illumos"] ~~~ k3["Unikernels (OSv, MirageOS, ...)"] ~~~ k4["LUKS2 / ZFS"] ~~~ k5["..."]
     end
 
     subgraph T1["1. package-as Formats"]
@@ -144,7 +144,7 @@ flowchart TD
         T2_Config["Configurator & Solver<br/>(libscript config os, os-config.schema.json, resolve_stack.jq)"]
         T2_VFS["Rootfs & VFS Sandbox<br/>(mount_target_vfs, chroot namespaces, FHS layout)"]
         T2_Storage["Storage & Encryption<br/>(GPT/MBR, LUKS2 argon2id, Ext4, Btrfs, XFS, ZFS)"]
-        T2_Kernel["Kernel Baking Subsystem<br/>(Linux vmlinuz + Initramfs UKI, FreeBSD World/Kernel)"]
+        T2_Kernel["Kernel & Distro Subsystem<br/>(Linux vmlinuz + UKI, FreeBSD World, illumos IPS)"]
         T2_Package["package-as Factory<br/>(raw-img, qcow2, iso, vmdk, bsd-img, docker, unikernel)"]
     end
 
@@ -232,12 +232,14 @@ Curated profiles ship out-of-the-box in `profiles/`:
 - `linux-desktop-xfce-x11.json` (lightweight XFCE4, X11, LightDM)
 - `freebsd-server-standard.json` (FreeBSD 14.x, ZFS root pool, OpenSSH)
 - `freebsd-desktop-xfce.json` (FreeBSD desktop with DRM KMS graphics)
+- `profiles/illumos/` (illumos / OpenIndiana / OmniOS minimal and server profiles)
 - `firecracker-microvm-appliance.json` (sub-15ms boot MicroVM appliance)
 - `unikraft-nginx-redis.json` & `osv-cloud-runtime.json` (specialized unikernels)
 
 #### 2. Rootfs Staging, VFS & Chroot Isolation
 
-- Initializes standard FHS hierarchies (`create_fhs_layout.sh`) with merged or split `/usr`.
+- Initializes standard FHS hierarchies (`_lib/orchestration/create_fhs_layout.sh`) with merged or
+  split `/usr`.
 - Automates virtual kernel filesystem mounting (`_lib/orchestration/vfs/mount_target_vfs.sh`):
   mounts `devtmpfs`, `devpts`, `proc`, `sysfs`, and `tmpfs` idempotently with cleanup traps.
 - Executes build phases in isolated chroot namespaces (`_lib/orchestration/runner/runner.sh`).
@@ -253,9 +255,9 @@ Automates virtual disk provisioning (`_lib/storage/`):
 - **Filesystem Assembly**: High-performance formatting for Ext4, Btrfs (with subvolumes `@`,
   `@home`, `@snapshots`), XFS, VFAT, and ZFS datasets.
 
-#### 4. Linux & FreeBSD Kernel Baking
+#### 4. Linux, FreeBSD & illumos Kernel/Distro Baking
 
-LibScript bakes custom kernels directly into the image:
+LibScript bakes custom kernels and operating system environments directly into bootable media:
 
 - **Linux Kernel Engine (`_lib/kernel/linux/`)**:
   - Cryptographically verifies kernel sources.
@@ -272,6 +274,10 @@ LibScript bakes custom kernels directly into the image:
   - Automates FreeBSD source checkout and `/etc/src.conf` / `/etc/make.conf` generation.
   - Orchestrates isolated `buildworld` and `buildkernel` with `MAKEOBJDIRPREFIX`.
   - Installs world and distribution files into the target rootfs.
+- **illumos Distro & Packaging Engine (`_lib/illumos/distro/`)**:
+  - Orchestrates bootable illumos image synthesis (OpenIndiana and OmniOS userland and kernel).
+  - Configures IPS (Image Packaging System) repositories, ZFS boot environments, and SMF services.
+  - Generates bootable raw disk images, ISOs, and Vagrant boxes.
 - **Bootloaders & Unified Kernel Images (UKI)**:
   - Installs GRUB2 (UEFI/BIOS), `systemd-boot`, or Limine.
   - Combines kernel, initramfs, cmdline, and OS release into single signed `.efi` Unified Kernel
@@ -294,21 +300,29 @@ Turn any stack or synthesized operating system into ready-to-deploy bootable med
 # Generate a live bootable hybrid ISO (UEFI + BIOS) with SquashFS and OverlayFS
 ./libscript.sh package-as iso
 
-# Export clean rootfs archives for Docker, Podman, LXC, or FreeBSD Jails
+# Export clean rootfs archives and multi-container environments
 ./libscript.sh package-as rootfs-tar
 ./libscript.sh package-as docker
+./libscript.sh package-as docker-compose
 
-# Generate bootable FreeBSD images (UFS/ZFS) for bhyve or bare metal
+# Generate bootable FreeBSD & illumos images (UFS/ZFS) for bhyve or bare metal
 ./libscript.sh package-as bsd-img
+./libscript.sh package-as illumos-distro
 
 # Emit microVM direct boot kernels for Firecracker or Cloud-Hypervisor
 ./libscript.sh package-as unikernel
 
 # Generate native enterprise installers
-./libscript.sh package-as msi        # Windows Installer (WiX)
+./libscript.sh package-as msi        # Windows Installer (WiX / msi-rs)
+./libscript.sh package-as nsis       # Windows NSIS installer
+./libscript.sh package-as innosetup  # Windows Inno Setup installer
 ./libscript.sh package-as deb        # Debian / Ubuntu package
 ./libscript.sh package-as rpm        # Red Hat / Fedora package
 ./libscript.sh package-as apk        # Alpine Linux package
+./libscript.sh package-as txz        # FreeBSD / illumos archive package
+./libscript.sh package-as pkg        # macOS flat installer (.pkg)
+./libscript.sh package-as dmg        # macOS disk image (.dmg)
+./libscript.sh package-as tui        # Interactive Terminal UI installer
 ```
 
 ---
@@ -470,10 +484,17 @@ cd libscript
 - [ARCHITECTURE.md](ARCHITECTURE.md): Comprehensive architectural breakdown and design principles.
 - [WHAT_A_VERSION_MANAGER_SHOULD_LOOK_LIKE.md](WHAT_A_VERSION_MANAGER_SHOULD_LOOK_LIKE.md):
   Specification for native toolchain version isolation.
-- [TIERED_TODO_PLAN.md](TIERED_TODO_PLAN.md): Master roadmap detailing Tier 1, Tier 2, and Tier 3
-  deliverables.
+- [ROADMAP.md](ROADMAP.md): Master development roadmap across all tiers and release phases.
+- [TODO_PLAN.md](TODO_PLAN.md): Engineering roadmap for universal database discovery and
+  multi-tenant packaging.
 - [USAGE.md](USAGE.md): Full CLI command reference, flags, and execution modes.
 - [DEPENDENCIES.md](DEPENDENCIES.md): Dependency management and solver mechanics.
+- [PAAS.md](PAAS.md): Universal PaaS orchestration, reverse proxy (`netctl`), and daemon
+  supervision.
+- [LIVE_INSTALLER_GUIDE.md](LIVE_INSTALLER_GUIDE.md): Native GUI Live Installer and branding
+  architecture.
+- [WINDOWS_MSI.md](WINDOWS_MSI.md): Modular Windows Installer (`.msi`) generation and runtime
+  detection.
 - [DEVELOPING.md](DEVELOPING.md): Developer contribution guidelines and standards.
 
 ---

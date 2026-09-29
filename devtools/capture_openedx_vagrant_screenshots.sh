@@ -186,8 +186,6 @@ printf '=== Step 1: Syncing updated packaging and stack files to Windows guest =
 scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" \
   "${REPO_ROOT}/packaging/build_msi.cmd" \
   "${REPO_ROOT}/packaging/build_msi.sh" \
-  "${REPO_ROOT}/packaging/build_openedx_msi.cmd" \
-  "${REPO_ROOT}/packaging/build_openedx_msi.sh" \
   "${REPO_ROOT}/packaging/harvest_licenses.cmd" \
   "${REPO_ROOT}/packaging/harvest_licenses.ps1" \
   "${REPO_ROOT}/packaging/harvest_licenses.sh" \
@@ -243,7 +241,7 @@ if [ -n "${MSI_OVERRIDE}" ] && [ -f "${MSI_OVERRIDE}" ]; then
     "${MSI_OVERRIDE}" vagrant@127.0.0.1:C:/libscript/packaging/OpenEdX-Setup.msi
 else
   printf '=== Step 2: Compiling full self-contained OpenEdX-Setup.msi on Windows guest ===\n'
-  vm_run 'cmd /c "cd C:\libscript && call packaging\build_openedx_msi.cmd --online --out packaging\OpenEdX-Setup --banner-side packaging\assets\openedx_banner_side.bmp --banner-top packaging\assets\openedx_banner_top.bmp --icon packaging\assets\openedx.ico --license packaging\assets\openedx_eula.rtf"'
+  vm_run 'cmd /c "cd C:\libscript && call packaging\build_msi.cmd stacks\cms\openedx --online --out packaging\OpenEdX-Setup --banner-side packaging\assets\openedx_banner_side.bmp --banner-top packaging\assets\openedx_banner_top.bmp --icon packaging\assets\openedx.ico --license packaging\assets\openedx_eula.rtf"'
 fi
 
 # Configure LaunchMsi, ClickGui, and RunGui scheduled tasks on guest

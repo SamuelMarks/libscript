@@ -163,16 +163,23 @@ fi
 
 # ## find_first_file
 # Returns the path of the first existing file matching any of the passed glob arguments.
+# Temporarily enables filename expansion since the script operates under set -f.
 #
 # ## Parameters
 #   $@ - Glob patterns or file paths
 find_first_file() {
-  for _target in "$@"; do
-    if [ -f "$_target" ]; then
-      printf '%s\n' "$_target"
-      return 0
-    fi
+  set +f
+  for _pat in "$@"; do
+    # shellcheck disable=SC2086
+    for _target in $_pat; do
+      if [ -f "$_target" ]; then
+        set -f
+        printf '%s\n' "$_target"
+        return 0
+      fi
+    done
   done
+  set -f
   return 0
 }
 
@@ -188,6 +195,7 @@ build_single_variant() {
   mkdir -p "$STAGE_ROOT/bin" "$OUT_DIR"
 
   if [ "$_v" = "offline" ]; then
+    set +f
     _need_hydrate=0
     case "$COMPONENT" in
       mysql)
@@ -330,11 +338,11 @@ build_single_variant() {
         ;;
       *)
         if [ ! -f "$STAGE_ROOT/bin/${COMPONENT}.exe" ]; then
-          printf 'Mock Component binary
-' > "$STAGE_ROOT/bin/${COMPONENT}.exe"
+          printf 'Mock Component binary\n' > "$STAGE_ROOT/bin/${COMPONENT}.exe"
         fi
         ;;
     esac
+    set -f
   else
     # Online variant: lightweight manifest and stub
     printf '{"component":"%s","version":"%s","variant":"online"}
@@ -355,6 +363,7 @@ build_single_variant() {
     --version "$VERSION" \
     --variant "$_v" \
     --out "$MAIN_WXS"
+  cp -f "$MAIN_WXS" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_main.wxs" 2>/dev/null || true
 
   # Generate payload WiX fragment harvesting staged files
   "${SCRIPT_DIR}/harvest_payload.sh" \

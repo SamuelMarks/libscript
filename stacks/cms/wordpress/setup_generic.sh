@@ -58,11 +58,50 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh"; do
   . "${SCRIPT_NAME}"
 done
 
-# Safe file helpers that avoid priv/sudo if user has write permissions
-safe_mkdir() { mkdir -p "$@" 2>/dev/null || safe_mkdir -p "$@"; }
-safe_tee() { tee "$@" 2>/dev/null || safe_tee "$@"; }
-safe_cp() { cp "$@" 2>/dev/null || safe_cp "$@"; }
-safe_rm() { rm "$@" 2>/dev/null || safe_rm "$@"; }
+# ## safe_mkdir
+# Creates directories idempotently with optional privilege escalation.
+#
+# ## Parameters
+#   $@ - Arguments to pass to mkdir
+safe_mkdir() {
+  mkdir -p "$@" 2>/dev/null || sudo mkdir -p "$@" 2>/dev/null || mkdir -p "$@"
+}
+
+# ## safe_tee
+# Writes content to target file safely with optional privilege escalation.
+#
+# ## Parameters
+#   $@ - Arguments to pass to tee
+safe_tee() {
+  tee "$@" 2>/dev/null || sudo tee "$@" 2>/dev/null || tee "$@"
+}
+
+# ## safe_cp
+# Copies files safely with optional privilege escalation.
+#
+# ## Parameters
+#   $@ - Arguments to pass to cp
+safe_cp() {
+  cp "$@" 2>/dev/null || sudo cp "$@" 2>/dev/null || cp "$@"
+}
+
+# ## safe_rm
+# Removes files safely with optional privilege escalation.
+#
+# ## Parameters
+#   $@ - Arguments to pass to rm
+safe_rm() {
+  rm "$@" 2>/dev/null || sudo rm "$@" 2>/dev/null || rm "$@"
+}
+
+# ## safe_tar
+# Extracts tar archives safely with optional privilege escalation.
+#
+# ## Parameters
+#   $@ - Arguments to pass to tar
+safe_tar() {
+  tar "$@" 2>/dev/null || sudo tar "$@" 2>/dev/null || tar "$@"
+}
 
 # Initialize configuration variables from environment or defaults
 WORDPRESS_VERSION="${WORDPRESS_VERSION:-7.1.2}"

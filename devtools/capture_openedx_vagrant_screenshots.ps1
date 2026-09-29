@@ -168,8 +168,6 @@ Write-Host "[INFO] Open edX Windows Vagrant screenshot automation initialized."
 Write-Host "=== Step 1: Syncing updated packaging and stack files to Windows guest ==="
 Invoke-VmScp (Join-Path $RepoRoot "packaging\build_msi.cmd") "C:/libscript/packaging/"
 Invoke-VmScp (Join-Path $RepoRoot "packaging\build_msi.sh") "C:/libscript/packaging/"
-Invoke-VmScp (Join-Path $RepoRoot "packaging\build_openedx_msi.cmd") "C:/libscript/packaging/"
-Invoke-VmScp (Join-Path $RepoRoot "packaging\build_openedx_msi.sh") "C:/libscript/packaging/"
 Invoke-VmScp (Join-Path $RepoRoot "packaging\harvest_licenses.cmd") "C:/libscript/packaging/"
 Invoke-VmScp (Join-Path $RepoRoot "packaging\harvest_licenses.ps1") "C:/libscript/packaging/"
 Invoke-VmScp (Join-Path $RepoRoot "packaging\harvest_licenses.sh") "C:/libscript/packaging/"
@@ -217,7 +215,7 @@ if ($MsiOverride -and (Test-Path $MsiOverride)) {
     Invoke-VmScp $MsiOverride "C:/libscript/packaging/OpenEdX-Setup.msi"
 } else {
     Write-Host "=== Step 2: Compiling full self-contained OpenEdX-Setup.msi on Windows guest ==="
-    Invoke-VmRun 'cmd /c "cd C:\libscript && call packaging\build_openedx_msi.cmd --online --out packaging\OpenEdX-Setup --banner-side packaging\assets\openedx_banner_side.bmp --banner-top packaging\assets\openedx_banner_top.bmp --icon packaging\assets\openedx.ico --license packaging\assets\openedx_eula.rtf"'
+    Invoke-VmRun 'cmd /c "cd C:\libscript && call packaging\build_msi.cmd stacks\cms\openedx --online --out packaging\OpenEdX-Setup --banner-side packaging\assets\openedx_banner_side.bmp --banner-top packaging\assets\openedx_banner_top.bmp --icon packaging\assets\openedx.ico --license packaging\assets\openedx_eula.rtf"'
 }
 
 Invoke-VmRun '$principal = New-ScheduledTaskPrincipal -UserId "vagrant" -LogonType Interactive; $settings = New-ScheduledTaskSettingsSet -MultipleInstances Parallel -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries; $aLaunch = New-ScheduledTaskAction -Execute "msiexec.exe" -Argument "/i C:\libscript\packaging\OpenEdX-Setup.msi"; Register-ScheduledTask -TaskName "LaunchMsi" -Action $aLaunch -Principal $principal -Force > $null; $aClick = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File C:\libscript\packaging\click_button.ps1"; Register-ScheduledTask -TaskName "ClickGui" -Action $aClick -Principal $principal -Settings $settings -Force > $null; $aRun = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File C:\libscriptun_gui.ps1"; Register-ScheduledTask -TaskName "RunGui" -Action $aRun -Principal $principal -Force > $null'

@@ -45,8 +45,8 @@ type nul > "%TEST_TMP_DIR%\banner_side.bmp"
 set "OUT_BASE=%TEST_TMP_DIR%\OpenEdX_Test_Setup"
 
 :: ## run_builder
-:: Invokes build_openedx_msi.cmd with test arguments.
-call "%LIBSCRIPT_ROOT_DIR%\packaging\build_openedx_msi.cmd" ^
+:: Invokes build_msi.cmd with test arguments.
+call "%LIBSCRIPT_ROOT_DIR%\packaging\build_msi.cmd" stacks\cms\openedx ^
   --out "%OUT_BASE%" ^
   --version "2.4.0.0" ^
   --icon "%TEST_TMP_DIR%\openedx.ico" ^

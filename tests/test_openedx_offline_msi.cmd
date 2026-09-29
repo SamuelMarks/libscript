@@ -91,7 +91,7 @@ if not defined MSI_PATH if "%SKIP_COMPILE%"=="0" (
     type nul > "%TEST_TMP_DIR%\banner_top.bmp"
     type nul > "%TEST_TMP_DIR%\banner_side.bmp"
 
-    call "%LIBSCRIPT_ROOT_DIR%\packaging\build_openedx_msi.cmd" ^
+    call "%LIBSCRIPT_ROOT_DIR%\packaging\build_msi.cmd" stacks\cms\openedx ^
         --offline ^
         --out "%OUT_BASE%" ^
         --version "2.4.0.0" ^

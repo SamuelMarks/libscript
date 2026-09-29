@@ -197,10 +197,10 @@ LibScript provides dual-distribution packaging architecture for Windows environm
 
 ```sh
 # POSIX / macOS / Linux build host
-./packaging/build_openedx_msi.sh --online --out OpenEdX-Online-Setup
+./packaging/build_msi.sh stacks/cms/openedx --online --out OpenEdX-Online-Setup
 
 # Windows build host
-call packaging\build_openedx_msi.cmd --online --out OpenEdX-Online-Setup
+call packaging\build_msi.cmd stacks\cms\openedx --online --out OpenEdX-Online-Setup
 ```
 
 #### 2. Hydrating the Offline Artifact Cache
@@ -228,10 +228,10 @@ call packaging\hydrate_offline_cache.cmd ^
 
 ```sh
 # POSIX build host (compiles with multi-cabinet partitioning)
-./packaging/build_openedx_msi.sh --offline --cache-dir cache/ --out OpenEdX-Offline-Setup
+./packaging/build_msi.sh stacks/cms/openedx --offline --cache-dir cache/ --out OpenEdX-Offline-Setup
 
 # Windows build host
-call packaging\build_openedx_msi.cmd --offline --cache-dir cache\ --out OpenEdX-Offline-Setup
+call packaging\build_msi.cmd stacks\cms\openedx --offline --cache-dir cache\ --out OpenEdX-Offline-Setup
 ```
 
 Alternatively, use the unified CLI dispatcher:
@@ -321,7 +321,7 @@ Every core dependency is compiled into a self-contained, reference-counted `.msi
 - `libscript-python-${VERSION}.msi` (Shared runtime at `[ProgramFiles64Folder]LibScript\Python311`)
 - `libscript-nodejs-${VERSION}.msi` (Shared runtime at `[ProgramFiles64Folder]LibScript\Node20`)
 - `libscript-meilisearch-${VERSION}.msi` (`LibScript_Meilisearch` service on port 7700)
-- `openedx-core-${VERSION}.msi` (LMS/CMS application files, virtualenv wheels, CLI scripts)
+- `openedx-${VERSION}.msi` (LMS/CMS application files, virtualenv wheels, CLI scripts)
 
 ### Deterministic GUID Identity (`packaging/guid_registry.json`)
 

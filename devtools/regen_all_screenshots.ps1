@@ -33,9 +33,9 @@ function Ensure-TopBanner {
         $topBmp = Join-Path $assetsDir "openedx_banner_top.bmp"
     }
     if (-not (Test-Path $topBmp)) {
-        $genScript = Join-Path $rootDir "packaging/generate_openedx_branding.ps1"
+        $genScript = Join-Path $rootDir "packaging/synthesize_branding.ps1"
         if (Test-Path $genScript) {
-            & $genScript -OutputDir $assetsDir
+            & $genScript -TargetSpec (Join-Path $rootDir "stacks/cms/openedx") -OutputDir $assetsDir
             $topBmp = Join-Path $assetsDir "openedx_banner_top.bmp"
         }
     }

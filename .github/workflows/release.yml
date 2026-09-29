@@ -140,22 +140,14 @@ jobs:
             name: LibScript Meilisearch Search Engine (Offline)
             target_dir: _lib/search/meilisearch
             build_cmd: packaging\build_component_msi.cmd --component meilisearch --variant offline
-          - id: openedx-core
-            name: Open edX Platform Core (Online)
-            target_dir: stacks/cms/openedx
-            build_cmd: packaging\build_openedx_core_msi.cmd --variant online
-          - id: openedx-core-offline
-            name: Open edX Platform Core (Offline)
-            target_dir: stacks/cms/openedx
-            build_cmd: packaging\build_openedx_core_msi.cmd --variant offline
           - id: openedx
-            name: Open edX Platform (Master Online)
+            name: Open edX Platform (Online)
             target_dir: stacks/cms/openedx
-            build_cmd: packaging\build_openedx_orchestrator_msi.cmd --variant online
+            build_cmd: packaging\build_msi.cmd stacks\cms\openedx --variant online
           - id: openedx-offline
-            name: Open edX Platform (Master Offline)
+            name: Open edX Platform (Offline)
             target_dir: stacks/cms/openedx
-            build_cmd: packaging\build_openedx_orchestrator_msi.cmd --variant offline
+            build_cmd: packaging\build_msi.cmd stacks\cms\openedx --variant offline
 
     steps:
       - name: Clone CC0 Assets

@@ -98,7 +98,7 @@ print(f'EULA_COMPS={eula_comps}')
 
 while IFS='=' read -r _key _val; do
   case "$_key" in
-    APP_NAME) APP_NAME="$_val" ;;
+    APP_NAME) APP_NAME="$_val"; : "${APP_NAME}" ;;
     APP_TITLE) APP_TITLE="$_val" ;;
     PRIMARY_HEX) PRIMARY_HEX="$_val" ;;
     SECONDARY_HEX) SECONDARY_HEX="$_val" ;;
@@ -109,9 +109,25 @@ done << EOF
 $_branding_props
 EOF
 
-# Convert HEX to RGB decimal
+# ## hex_to_r
+# Extracts the red channel decimal integer from a 6-character hex color string.
+#
+# ## Parameters
+#   $1 - 6-character hex color string (e.g. 00263E)
 hex_to_r() { printf '%d' "0x$(printf '%s' "$1" | cut -c1-2)"; }
+
+# ## hex_to_g
+# Extracts the green channel decimal integer from a 6-character hex color string.
+#
+# ## Parameters
+#   $1 - 6-character hex color string (e.g. 00263E)
 hex_to_g() { printf '%d' "0x$(printf '%s' "$1" | cut -c3-4)"; }
+
+# ## hex_to_b
+# Extracts the blue channel decimal integer from a 6-character hex color string.
+#
+# ## Parameters
+#   $1 - 6-character hex color string (e.g. 00263E)
 hex_to_b() { printf '%d' "0x$(printf '%s' "$1" | cut -c5-6)"; }
 
 PR_R=$(hex_to_r "$PRIMARY_HEX"); PR_G=$(hex_to_g "$PRIMARY_HEX"); PR_B=$(hex_to_b "$PRIMARY_HEX")

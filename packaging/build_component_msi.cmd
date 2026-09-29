@@ -342,6 +342,7 @@ set "PAYLOAD_WXS=%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_payload.wxs"
 
 call "%SCRIPT_DIR%template_component_msi.cmd" --component "%COMPONENT%" --version "%VERSION%" --variant "%CURR_VAR%" --out "%MAIN_WXS%"
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
+copy /y "%MAIN_WXS%" "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_main.wxs" >nul 2>&1
 
 call "%SCRIPT_DIR%harvest_payload.cmd" --source-dir "%STAGE_ROOT%" --wix-fragment "%PAYLOAD_WXS%" --component-group "PayloadComponents" --directory-id "INSTALLFOLDER"
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
