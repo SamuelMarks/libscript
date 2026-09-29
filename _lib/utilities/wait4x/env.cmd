@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for wait4x.
 
 :: Windows env stub for wait4x
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

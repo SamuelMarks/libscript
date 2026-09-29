@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for cygwin.
 
 :: Windows env stub for cygwin
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

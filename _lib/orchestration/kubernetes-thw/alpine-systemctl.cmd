@@ -4,6 +4,7 @@
 ::
 :: ## Usage
 :: Used internally to mock systemd commands on Alpine Linux.
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 echo alpine-systemctl is not supported on Windows.

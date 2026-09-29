@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for gradle.
 
 :: Windows env stub for gradle
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

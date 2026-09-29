@@ -8,6 +8,7 @@
 ::
 :: ## Usage
 :: Call this script to load the environment variables. Do not execute it directly without context.
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%CMAKE_VERSION%"=="" set CMAKE_VERSION=latest

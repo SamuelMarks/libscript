@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for duckdb.
 
 :: Windows env stub for duckdb
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

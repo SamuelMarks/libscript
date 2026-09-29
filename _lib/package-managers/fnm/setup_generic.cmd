@@ -5,6 +5,7 @@
 :: ## Usage
 :: Managed by libscript. Provides download, install, ls, ls-remote, use capabilities.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%ACTION%"=="" set ACTION=install

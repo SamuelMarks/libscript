@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for nats.
 
 :: Windows env stub for nats
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

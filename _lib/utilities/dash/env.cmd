@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for dash.
 
 :: Windows env stub for dash
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

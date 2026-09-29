@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: Executes initialization, logic, or testing for huggingface-cli.
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

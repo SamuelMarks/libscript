@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for powershell.
 
 :: Windows env stub for powershell
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

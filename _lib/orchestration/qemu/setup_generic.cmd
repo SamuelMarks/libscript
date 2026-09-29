@@ -4,6 +4,7 @@
 ::
 :: ## Usage
 :: Managed by libscript. Installs QEMU on Windows via winget or choco.
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%ACTION%"=="" set ACTION=install

@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for postgres.
 
 :: Windows env stub for postgres
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

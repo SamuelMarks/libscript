@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: Sets `JAVA_HOME` and prepends it to PATH.
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%JAVA_VERSION%"=="" set JAVA_VERSION=17

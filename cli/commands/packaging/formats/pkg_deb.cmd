@@ -6,6 +6,7 @@
 :: 
 :: ## Usage
 :: This script is called by the packaging system and should not be executed manually.
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 echo This script (%~nx0) is not implemented natively for Windows.

@@ -7,6 +7,7 @@
 :: ## Usage
 :: Call this script to install Vagrant on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%ACTION%"=="" set ACTION=install

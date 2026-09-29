@@ -8,5 +8,6 @@
 :: Source or call this script to configure the environment for phpbb.
 
 :: Environment variables for Windows
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if not "%PHPBB_LISTEN%"=="" set "LIBSCRIPT_LISTEN_PORT=%PHPBB_LISTEN%"

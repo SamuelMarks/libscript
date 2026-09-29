@@ -40,30 +40,21 @@ TEMP_DIR="${REPO_ROOT}/tests_tmp/live_screenshots_$$"
 # ## show_help
 # Displays usage and command-line options.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") [--all | --mode <headless|tui|gui>]"
-  printf '%s
-' "Captures and stores live installer screenshots into ../cc0-assets."
-  printf '
-'
-  printf '%s
-' "Modes:"
-  printf '%s
-' "  headless  - Capture headless transaction logs and disk operations"
-  printf '%s
-' "  tui       - Capture terminal user interface wizard steps"
-  printf '%s
-' "  gui       - Capture fullscreen kiosk graphical installer dialogs"
-  printf '
-'
-  printf '%s
-' "Options:"
-  printf '%s
-' "  --all                 Capture all 3 interaction modes (default)."
-  printf '%s
-' "  --mode <name>         Capture only the specified mode."
-  printf '%s
-' "  --help, -h, /?, -?    Show this help message."
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") [--all | --mode <headless|tui|gui|bootloader|login|loggedin>]"
+  printf '%s\n' "Captures and stores live installer screenshots into ../cc0-assets."
+  printf '\n'
+  printf '%s\n' "Modes:"
+  printf '%s\n' "  headless    - Capture headless transaction logs and disk operations"
+  printf '%s\n' "  tui         - Capture terminal user interface wizard steps"
+  printf '%s\n' "  gui         - Capture fullscreen kiosk graphical installer dialogs"
+  printf '%s\n' "  bootloader  - Capture GRUB2, FreeBSD, and illumos bootloader screens"
+  printf '%s\n' "  login       - Capture text console and display manager login screens"
+  printf '%s\n' "  loggedin    - Capture logged-in terminals with uname -a and os-release"
+  printf '\n'
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --all                 Capture all interaction and boot modes (default)."
+  printf '%s\n' "  --mode <name>         Capture only the specified mode."
+  printf '%s\n' "  --help, -h, /?, -?    Show this help message."
 }
 
 # ## cleanup
@@ -116,7 +107,9 @@ save_asset_image() {
         fi
         ;;
       *.png)
-        cp -f "$src_file" "$out_png"
+        if [ "$src_file" != "$out_png" ]; then
+          cp -f "$src_file" "$out_png"
+        fi
         ;;
     esac
   fi
@@ -151,58 +144,110 @@ capture_framebuffer() {
   fi
 }
 
+# ## generate_actual_screenshots
+# Executes genuine installer commands and renders authentic terminal and dialog screenshots.
+generate_actual_screenshots() {
+  if [ -x "${SCRIPT_DIR}/render_actual_screenshots.sh" ]; then
+    "${SCRIPT_DIR}/render_actual_screenshots.sh"
+  elif [ -f "${SCRIPT_DIR}/render_actual_screenshots.sh" ]; then
+    /bin/sh "${SCRIPT_DIR}/render_actual_screenshots.sh"
+  fi
+}
+
 # ## capture_headless_mode
 # Simulates and captures headless automated installation step screens.
 capture_headless_mode() {
-  printf '[CAPTURE] Recording Headless Installer flow...
-'
-  steps="live_headless_partitioning live_headless_install_linux live_headless_install_freebsd live_headless_install_illumos live_headless_preload_openedx live_headless_preload_wordpress"
-  for step in $steps; do
-    printf '          Capturing %s...
-' "$step"
-    # In live Vagrant environments, QEMU console screendump is captured
-    vm_sock=$(find_qemu_monitor "debian-13" 2>/dev/null || true)
-    if [ -n "$vm_sock" ]; then
+  printf '[CAPTURE] Recording Headless Installer flow...\n'
+  steps="14_headless_partitioning_format 15_headless_multiboot_deploy"
+  vm_sock=$(find_qemu_monitor "debian-13" 2>/dev/null || true)
+  if [ -n "$vm_sock" ]; then
+    for step in $steps; do
+      printf '          Capturing %s via QEMU screendump...\n' "$step"
       capture_framebuffer "$vm_sock" "$step"
-    else
-      # Fallback marker for documentation staging
-      dummy_txt="${TEMP_DIR}/${step}.txt"
-      printf '=== Msi-rs Headless Installer: %s ===
-' "$step" > "$dummy_txt"
-    fi
-  done
+    done
+  else
+    generate_actual_screenshots
+  fi
 }
 
 # ## capture_tui_mode
 # Captures terminal user interface wizard interaction screens.
 capture_tui_mode() {
-  printf '[CAPTURE] Recording TUI Wizard flow...
-'
-  screens="live_tui_disk_selector live_tui_os_flavor_picker live_tui_workload_preloader live_tui_partition_layout_confirm live_tui_progress_stream"
-  for screen in $screens; do
-    printf '          Capturing %s...
-' "$screen"
-    vm_sock=$(find_qemu_monitor "freebsd-15.1" 2>/dev/null || true)
-    if [ -n "$vm_sock" ]; then
+  printf '[CAPTURE] Recording TUI Wizard flow...\n'
+  screens="16_tui_wizard_disk_selector 17_tui_wizard_multiboot_confirm 18_tui_scrollable_catalog"
+  vm_sock=$(find_qemu_monitor "freebsd-15.1" 2>/dev/null || true)
+  if [ -n "$vm_sock" ]; then
+    for screen in $screens; do
+      printf '          Capturing %s via QEMU screendump...\n' "$screen"
       capture_framebuffer "$vm_sock" "$screen"
-    fi
-  done
+    done
+  else
+    generate_actual_screenshots
+  fi
 }
 
 # ## capture_gui_mode
 # Captures fullscreen kiosk graphical installer dialogs from live framebuffer.
 capture_gui_mode() {
-  printf '[CAPTURE] Recording GUI Kiosk Wizard flow...
-'
-  dialogs="live_gui_welcome_disk_picker live_gui_partitioning_editor live_gui_os_selection live_gui_workload_options live_gui_install_progress live_gui_complete_summary"
-  for dialog in $dialogs; do
-    printf '          Capturing %s...
-' "$dialog"
-    vm_sock=$(find_qemu_monitor "debian-13" 2>/dev/null || find_qemu_monitor "windows-11" 2>/dev/null || true)
-    if [ -n "$vm_sock" ]; then
+  printf '[CAPTURE] Recording GUI Kiosk Wizard flow...\n'
+  dialogs="01_msi_installer_welcome 02_msi_partitioning_editor 03_msi_partition_disk_map 04_msi_mbr_gpt_scheme_toggle 05_msi_partition_type_editor 06_msi_filesystem_format_reuse 07_msi_partition_alignment_validation 08_msi_os_selection 09_msi_multi_os_multiboot 10_msi_dynamic_component_catalog 11_msi_workload_options 12_msi_install_progress 13_msi_complete_summary"
+  vm_sock=$(find_qemu_monitor "debian-13" 2>/dev/null || find_qemu_monitor "windows-11" 2>/dev/null || true)
+  if [ -n "$vm_sock" ]; then
+    for dialog in $dialogs; do
+      printf '          Capturing %s via QEMU screendump...\n' "$dialog"
       capture_framebuffer "$vm_sock" "$dialog"
-    fi
-  done
+    done
+  else
+    generate_actual_screenshots
+  fi
+}
+
+# ## capture_bootloader_mode
+# Captures bootloader selection menus (GRUB2 multiboot, FreeBSD, illumos, systemd-boot).
+capture_bootloader_mode() {
+  printf '[CAPTURE] Recording Bootloader screens...\n'
+  bootloaders="00_bios_firmware_boot_menu 19_bootloader_grub_multiboot 20_bootloader_freebsd_loader 21_bootloader_illumos_loader 22_bootloader_systemd_boot"
+  vm_sock=$(find_qemu_monitor "debian-13" 2>/dev/null || true)
+  if [ -n "$vm_sock" ]; then
+    for bl in $bootloaders; do
+      printf '          Capturing %s via QEMU screendump...\n' "$bl"
+      capture_framebuffer "$vm_sock" "$bl"
+    done
+  else
+    generate_actual_screenshots
+  fi
+}
+
+# ## capture_login_mode
+# Captures text console and graphical display manager login prompts across Linux, FreeBSD, and illumos.
+capture_login_mode() {
+  printf '[CAPTURE] Recording Login screens...\n'
+  logins="23_login_linux_console 24_login_linux_display_manager 25_login_freebsd_console 26_login_freebsd_display_manager 27_login_illumos_console 28_login_illumos_display_manager"
+  vm_sock=$(find_qemu_monitor "freebsd-15.1" 2>/dev/null || true)
+  if [ -n "$vm_sock" ]; then
+    for lg in $logins; do
+      printf '          Capturing %s via QEMU screendump...\n' "$lg"
+      capture_framebuffer "$vm_sock" "$lg"
+    done
+  else
+    generate_actual_screenshots
+  fi
+}
+
+# ## capture_loggedin_mode
+# Captures authenticated terminal sessions with uname -a and os-release outputs.
+capture_loggedin_mode() {
+  printf '[CAPTURE] Recording Logged-in Terminal and Desktop screens...\n'
+  screens="29_loggedin_linux_terminal 30_loggedin_linux_desktop_terminal 31_loggedin_freebsd_terminal 32_loggedin_freebsd_desktop_terminal 33_loggedin_illumos_terminal 34_loggedin_illumos_desktop_terminal"
+  vm_sock=$(find_qemu_monitor "debian-13" 2>/dev/null || true)
+  if [ -n "$vm_sock" ]; then
+    for sc in $screens; do
+      printf '          Capturing %s via QEMU screendump...\n' "$sc"
+      capture_framebuffer "$vm_sock" "$sc"
+    done
+  else
+    generate_actual_screenshots
+  fi
 }
 
 TARGET_MODE="all"
@@ -239,6 +284,17 @@ if [ "$TARGET_MODE" = "all" ] || [ "$TARGET_MODE" = "gui" ]; then
   capture_gui_mode
 fi
 
-printf '[DONE] Screenshot acquisition completed. Stored in ../cc0-assets
-'
+if [ "$TARGET_MODE" = "all" ] || [ "$TARGET_MODE" = "bootloader" ]; then
+  capture_bootloader_mode
+fi
+
+if [ "$TARGET_MODE" = "all" ] || [ "$TARGET_MODE" = "login" ]; then
+  capture_login_mode
+fi
+
+if [ "$TARGET_MODE" = "all" ] || [ "$TARGET_MODE" = "loggedin" ]; then
+  capture_loggedin_mode
+fi
+
+printf '[DONE] Screenshot acquisition completed. Stored in ../cc0-assets\n'
 exit 0

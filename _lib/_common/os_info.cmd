@@ -7,6 +7,7 @@
 :: ## Usage
 :: Call this script to initialize OS, TARGET_OS, ARCH, and PKG_MGR variables on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 :: ## detect_os_info

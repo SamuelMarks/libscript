@@ -1,3 +1,11 @@
+/**
+ * ## Overview
+ * Sidebar navigation toggle and path breadcrumb formatting routines
+ * for the LibScript documentation template.
+ *
+ * ## Usage
+ * Included as a script asset in HTML documentation pages.
+ */
 let firstRun = true;
 
 let nicerName = (s) => {

@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for wget.
 
 :: Windows env stub for wget
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

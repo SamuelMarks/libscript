@@ -8,6 +8,7 @@
 :: Call or execute in the current command shell:
 ::   call env.cmd
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%ELASTICSEARCH_HTTP_PORT%"=="" set "ELASTICSEARCH_HTTP_PORT=9200"

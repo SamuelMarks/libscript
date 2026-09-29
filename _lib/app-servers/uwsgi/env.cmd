@@ -8,6 +8,7 @@
 :: Call or execute in the current command shell:
 ::   call env.cmd
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%UWSGI_WORKERS%"=="" set "UWSGI_WORKERS=2"

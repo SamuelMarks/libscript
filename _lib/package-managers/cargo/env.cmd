@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for cargo.
 
 :: Windows env stub for cargo
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

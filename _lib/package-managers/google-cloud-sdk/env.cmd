@@ -6,6 +6,7 @@ REM to function correctly within the libscript context.
 REM 
 REM ## Usage
 REM Call this script to load the environment variables.
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

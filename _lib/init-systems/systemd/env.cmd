@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for systemd.
 
 :: Windows env stub for systemd
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

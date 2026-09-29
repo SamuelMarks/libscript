@@ -73,21 +73,18 @@ audit_file() {
     ERRORS=$((ERRORS + 1))
   fi
 
-  if grep -n '^[[:space:]]*function ' "$file" >/dev/null 2>&1; then
-    printf '[FAIL] [%s] Banned bashism: `function foo()` syntax detected
-' "$file" >&2
+  if grep -nE '^[[:space:]]*function[[:space:]]+[a-zA-Z0-9_]+([[:space:]]*\([[:space:]]*\))?[[:space:]]*\{?[[:space:]]*$' "$file" >/dev/null 2>&1; then
+    printf '[FAIL] [%s] Banned bashism: `function foo()` syntax detected\n' "$file" >&2
     ERRORS=$((ERRORS + 1))
   fi
 
-  if grep -n 'source ' "$file" >/dev/null 2>&1; then
-    printf '[FAIL] [%s] Banned bashism: `source` used instead of POSIX `.`
-' "$file" >&2
+  if grep -nE '^[[:space:]]*source[[:space:]]+|[;&|][[:space:]]*source[[:space:]]+' "$file" >/dev/null 2>&1; then
+    printf '[FAIL] [%s] Banned bashism: `source` used instead of POSIX `.`\n' "$file" >&2
     ERRORS=$((ERRORS + 1))
   fi
 
-  if grep -n 'echo -e ' "$file" >/dev/null 2>&1; then
-    printf '[FAIL] [%s] Banned bashism: `echo -e` used instead of `printf`
-' "$file" >&2
+  if grep -nE '^[[:space:]]*echo[[:space:]]+-e[[:space:]]+|[;&|][[:space:]]*echo[[:space:]]+-e[[:space:]]+' "$file" >/dev/null 2>&1; then
+    printf '[FAIL] [%s] Banned bashism: `echo -e` used instead of `printf`\n' "$file" >&2
     ERRORS=$((ERRORS + 1))
   fi
 

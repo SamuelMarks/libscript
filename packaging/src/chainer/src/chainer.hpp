@@ -1,11 +1,12 @@
 /**
- * @file chainer.hpp
- * @brief Custom action DLL declarations for modular MSI package chaining and transaction management.
- *
+ * ## Overview
+ * Custom action DLL declarations for modular MSI package chaining and transaction management.
  * Implements transaction management, child MSI payload extraction, service detection,
  * and orchestration for composite installers without external runtime dependencies.
+ *
+ * ## Usage
+ * Included in WiX custom action C++ compilation units.
  */
-
 #ifndef LIBSCRIPT_MSI_CHAINER_HPP
 #define LIBSCRIPT_MSI_CHAINER_HPP
 

@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for cli.
 
 :: Windows env stub for cli
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if "%GCP_CLI_ENABLED%"=="" set "GCP_CLI_ENABLED=1"
 if "%CLI_VERSION%"=="" set "CLI_VERSION=latest"

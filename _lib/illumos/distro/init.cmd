@@ -73,7 +73,8 @@ if "%PROVIDER%"=="smf" (
 ) else if "%PROVIDER%"=="runit" (
     if not exist "%SYSROOT%\etcunit" mkdir "%SYSROOT%\etcunit"
     if not exist "%SYSROOT%\service" mkdir "%SYSROOT%\service"
-    echo init_path="/usr/local/sbin/runit-init:/sbin/init">> "%SYSROOT%/boot/loader.conf"
+    findstr /C:"init_path=" "%SYSROOT%oot\loader.conf" >nul 2>&1
+    if errorlevel 1 echo init_path="/usr/local/sbin/runit-init:/sbin/init">> "%SYSROOT%oot\loader.conf"
 )
 
 echo %DATE% %TIME%> "%STAMP_FILE%"

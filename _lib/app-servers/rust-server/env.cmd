@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for rust-server.
 
 :: Windows env stub for rust-server
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for mongodb.
 
 :: Windows env stub for mongodb
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

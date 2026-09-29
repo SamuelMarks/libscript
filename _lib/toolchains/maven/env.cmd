@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for maven.
 
 :: Windows env stub for maven
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

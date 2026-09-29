@@ -68,8 +68,7 @@ if "%PROTOCOL%"=="none" (
 )
 
 if "%DRIVER%"=="drm-kmod" (
-    echo kld_list="${kld_list:-} /boot/modules/virtio_gpu.ko">> "%SYSROOT%\etc
-c.conf"
+    echo kld_list="${kld_list:-} /boot/modules/virtio_gpu.ko">> "%SYSROOT%\etcc.conf"
 )
 
 (
@@ -78,12 +77,10 @@ c.conf"
     echo add path 'drm/*' mode 0666 group video
     echo add path 'input/*' mode 0660 group video
 ) > "%SYSROOT%\etc\devfs.rules"
-echo devfs_system_ruleset="system">> "%SYSROOT%\etc
-c.conf"
+echo devfs_system_ruleset="system">> "%SYSROOT%\etcc.conf"
 
 if "%PROTOCOL%"=="wayland" (
-    echo seatd_enable="YES">> "%SYSROOT%\etc
-c.conf"
+    echo seatd_enable="YES">> "%SYSROOT%\etcc.conf"
 )
 if "%PROTOCOL%"=="x11" (
     if not exist "%SYSROOT%\usr\local\etc\X11\xorg.conf.d" mkdir "%SYSROOT%\usr\local\etc\X11\xorg.conf.d"

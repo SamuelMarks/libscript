@@ -8,6 +8,7 @@
 :: Source or call this script to configure the environment for jupyterhub.
 
 :: Environment variables for Windows
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if "%PYTHON_VERSION%"=="" set "PYTHON_VERSION=3.10"
 if "%JUPYTERHUB_NOTEBOOK_DIR%"=="" set "JUPYTERHUB_NOTEBOOK_DIR=C:\notebooks"

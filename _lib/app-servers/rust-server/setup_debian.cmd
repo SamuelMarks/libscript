@@ -8,7 +8,7 @@
 :: ## Usage
 :: Typically skipped; present for cross-platform repository consistency.
 
-setlocal
+setlocal EnableDelayedExpansion
 
 :: This is a placeholder for the native Windows component setup.
 :: By default, many tools rely on winget, choco, or scoop for installation on Windows.

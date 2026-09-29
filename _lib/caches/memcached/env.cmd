@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for memcached.
 
 :: Windows env stub for memcached
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

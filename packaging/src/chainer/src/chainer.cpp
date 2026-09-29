@@ -1,11 +1,12 @@
 /**
- * @file chainer.cpp
- * @brief Implementation of custom actions for modular MSI transaction chaining.
- *
+ * ## Overview
+ * Implementation of custom actions for modular MSI transaction chaining.
  * Implements service discovery, package property forwarding, nested installer
  * execution, and transaction lifecycle management for Windows Installer packages.
+ *
+ * ## Usage
+ * Compiled into chainer.dll and invoked by Windows Installer CustomAction table.
  */
-
 #include "chainer.hpp"
 #include <string>
 

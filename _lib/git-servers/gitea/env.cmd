@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for gitea.
 
 :: Windows env stub for gitea
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for rabbitmq.
 
 :: Windows env stub for rabbitmq
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

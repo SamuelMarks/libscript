@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for gcp.
 
 :: Windows env stub for gcp
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

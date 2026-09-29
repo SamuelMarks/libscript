@@ -60,16 +60,13 @@ if exist "%STAMP_FILE%" (
 echo [DM]       Configuring display manager: %DM%...
 
 if "%DM%"=="lightdm" (
-    echo lightdm_enable="YES">> "%SYSROOT%\etc
-c.conf"
+    echo lightdm_enable="YES">> "%SYSROOT%\etcc.conf"
 )
 if "%DM%"=="sddm" (
-    echo sddm_enable="YES">> "%SYSROOT%\etc
-c.conf"
+    echo sddm_enable="YES">> "%SYSROOT%\etcc.conf"
 )
 if "%DM%"=="greetd" (
-    echo greetd_enable="YES">> "%SYSROOT%\etc
-c.conf"
+    echo greetd_enable="YES">> "%SYSROOT%\etcc.conf"
 )
 
 echo %DATE% %TIME%> "%STAMP_FILE%"

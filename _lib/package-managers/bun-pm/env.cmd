@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for bun-pm.
 
 :: Windows env stub for bun-pm
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

@@ -7,7 +7,7 @@ set "THIS_FILE=%~f0"
 :: make.bat <target>
 :: Targets: local_tests_toolchain, local_tests_languages, local_tests_databases
 
-setlocal
+setlocal EnableDelayedExpansion
 
 if "%~1"=="test" goto local_tests_all
 if "%~1"=="local_tests_all" goto local_tests_all

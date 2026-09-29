@@ -9,7 +9,7 @@
 :: ## Usage
 :: Called internally during artifact fetching on Windows.
 
-setlocal
+setlocal EnableDelayedExpansion
 :: Windows placeholder script
 set "THIS_FILE=%~f0"
 echo Script not implemented for Windows natively.

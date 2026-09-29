@@ -63,30 +63,33 @@ if exist "%STAMP_FILE%" (
 echo [INIT]     Configuring init provider %PROVIDER%...
 
 if "%PROVIDER%"=="bsd-rc" (
-    echo # BSD rc.d enabled services>> "%SYSROOT%\etc
-c.conf"
-    echo sshd_enable="YES">> "%SYSROOT%\etc
-c.conf"
-    echo cron_enable="YES">> "%SYSROOT%\etc
-c.conf"
-    echo devd_enable="YES">> "%SYSROOT%\etc
-c.conf"
+    findstr /C:"# BSD rc.d enabled services" "%SYSROOT%\etcc.conf" >nul 2>&1
+    if errorlevel 1 (
+        echo # BSD rc.d enabled services>> "%SYSROOT%\etcc.conf"
+        echo sshd_enable="YES">> "%SYSROOT%\etcc.conf"
+        echo cron_enable="YES">> "%SYSROOT%\etcc.conf"
+        echo devd_enable="YES">> "%SYSROOT%\etcc.conf"
+    )
 )
 if "%PROVIDER%"=="openrc" (
     if not exist "%SYSROOT%\etc\init.d" mkdir "%SYSROOT%\etc\init.d"
-    echo init_path="/sbin/openrc-init:/sbin/init">> "%SYSROOT%\boot\loader.conf"
+    findstr /C:"init_path=" "%SYSROOT%\boot\loader.conf" >nul 2>&1
+    if errorlevel 1 echo init_path="/sbin/openrc-init:/sbin/init">> "%SYSROOT%\boot\loader.conf"
 )
 if "%PROVIDER%"=="runit" (
     if not exist "%SYSROOT%\var\service" mkdir "%SYSROOT%\var\service"
-    echo init_path="/usr/local/sbin/runit-init:/sbin/init">> "%SYSROOT%\boot\loader.conf"
+    findstr /C:"init_path=" "%SYSROOT%\boot\loader.conf" >nul 2>&1
+    if errorlevel 1 echo init_path="/usr/local/sbin/runit-init:/sbin/init">> "%SYSROOT%\boot\loader.conf"
 )
 if "%PROVIDER%"=="s6" (
     if not exist "%SYSROOT%\etc\s6" mkdir "%SYSROOT%\etc\s6"
-    echo init_path="/usr/local/bin/s6-svscan:/sbin/init">> "%SYSROOT%\boot\loader.conf"
+    findstr /C:"init_path=" "%SYSROOT%\boot\loader.conf" >nul 2>&1
+    if errorlevel 1 echo init_path="/usr/local/bin/s6-svscan:/sbin/init">> "%SYSROOT%\boot\loader.conf"
 )
 if "%PROVIDER%"=="dinit" (
     if not exist "%SYSROOT%\etc\dinit.d" mkdir "%SYSROOT%\etc\dinit.d"
-    echo init_path="/usr/local/sbin/dinit:/sbin/init">> "%SYSROOT%\boot\loader.conf"
+    findstr /C:"init_path=" "%SYSROOT%\boot\loader.conf" >nul 2>&1
+    if errorlevel 1 echo init_path="/usr/local/sbin/dinit:/sbin/init">> "%SYSROOT%\boot\loader.conf"
 )
 
 echo %DATE% %TIME%> "%STAMP_FILE%"

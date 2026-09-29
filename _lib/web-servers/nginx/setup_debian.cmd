@@ -7,7 +7,7 @@
 :: ## Usage
 :: See setup_debian.cmd for implementation details.
 
-setlocal
+setlocal EnableDelayedExpansion
 
 :: This is a placeholder for the native Windows component setup.
 :: By default, many tools rely on winget, choco, or scoop for installation on Windows.

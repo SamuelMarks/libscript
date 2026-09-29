@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for just.
 
 :: Windows env stub for just
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for lighttpd.
 
 :: Windows env stub for lighttpd
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

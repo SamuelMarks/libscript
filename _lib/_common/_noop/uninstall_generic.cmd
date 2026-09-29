@@ -9,4 +9,5 @@
 :: Typically called internally by `uninstall.cmd` when attempting generic teardown on Windows.
 
 :: Generic uninstall for Windows skipped
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

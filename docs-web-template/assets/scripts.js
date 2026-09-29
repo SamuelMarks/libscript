@@ -1,3 +1,11 @@
+/**
+ * ## Overview
+ * Interactive UI actions including URI copying to clipboard and
+ * toast notifications for the LibScript documentation viewer.
+ *
+ * ## Usage
+ * Included as a client-side bundle in generated documentation pages.
+ */
 const currentPage = window.location.pathname;
 
 const copyURI = (evt) => {

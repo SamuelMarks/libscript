@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: libscript cert [create|delete|list] [--cloud aws|gcp|azure] [--domain name]
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 set "CMD=%~1"

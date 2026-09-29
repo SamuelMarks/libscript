@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for apt.
 
 :: Windows env stub for apt
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

@@ -121,8 +121,9 @@ type = process
 command = /usr/sbin/sshd -D
 smooth-recovery = true
 EOF
-    printf 'init_path="/usr/local/sbin/dinit:/sbin/init"
-' >> "${SYSROOT}/boot/loader.conf"
+    if ! grep -q '^init_path=' "${SYSROOT}/boot/loader.conf" 2>/dev/null; then
+      printf 'init_path="/usr/local/sbin/dinit:/sbin/init"\n' >> "${SYSROOT}/boot/loader.conf"
+    fi
     ;;
 
   *)

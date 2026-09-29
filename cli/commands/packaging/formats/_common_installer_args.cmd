@@ -7,6 +7,7 @@
 :: ## Usage
 :: Call this script to parse installer arguments and generate GUIDs.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 set "install_scope=perMachine"

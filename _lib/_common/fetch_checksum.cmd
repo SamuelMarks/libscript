@@ -9,7 +9,7 @@
 :: ## Usage
 :: See `fetch_checksum.sh` for the cross-platform checksum discovery tool.
 
-setlocal
+setlocal EnableDelayedExpansion
 :: Windows placeholder script
 set "THIS_FILE=%~f0"
 echo Script not implemented for Windows natively.

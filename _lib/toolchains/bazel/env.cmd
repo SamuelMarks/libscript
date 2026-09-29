@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for bazel.
 
 :: Windows env stub for bazel
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

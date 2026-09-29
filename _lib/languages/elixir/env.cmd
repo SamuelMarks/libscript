@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: Sets `ELIXIR_VERSION` and prepends Elixir to PATH.
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%ELIXIR_VERSION%"=="" set ELIXIR_VERSION=1.16.2

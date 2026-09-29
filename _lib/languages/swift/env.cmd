@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: Sets `SWIFT_VERSION` and prepends Swift to PATH.
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%SWIFT_VERSION%"=="" set SWIFT_VERSION=5.10

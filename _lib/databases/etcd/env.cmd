@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for etcd.
 
 :: Windows env stub for etcd
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

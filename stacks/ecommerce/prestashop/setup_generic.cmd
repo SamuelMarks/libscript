@@ -7,6 +7,7 @@
 :: 
 :: ## Usage
 :: Execute this script to perform generic initialization steps.
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if exist "%~dp0setup.cmd" (

@@ -9,7 +9,7 @@
 :: Targets: test, local_tests_all, test_component, local_tests_toolchain, local_tests_languages, local_tests_databases
 
 set "THIS_FILE=%~f0"
-setlocal
+setlocal EnableDelayedExpansion
 
 if "%~1"=="--help" goto show_help
 if "%~1"=="-h" goto show_help

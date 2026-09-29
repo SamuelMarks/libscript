@@ -7,6 +7,7 @@
 :: ## Usage
 :: Call this script to resolve DOWNLOAD_DIR, DATA_DIR, BIN_DIR, and LOGS_DIR for a component.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 :: ## resolve_component_paths

@@ -24,28 +24,30 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-if [ "$CMD" = "semver" ]; then
-  v1="$1"
-  op="$2"
-  v2="$3"
-  if [ -z "$v1" ] || [ -z "$op" ] || [ -z "$v2" ]; then
-    printf '%s\n' "Usage: $0 semver <v1> <operator> <v2>" >&2
-    printf '%s\n' "Operators: = != > < >= <=" >&2
-    exit 1
-  fi
+if [ "${1:-}" = "semver" ]; then
+  shift
+fi
+v1="${1:-}"
+op="${2:-}"
+v2="${3:-}"
+if [ -z "$v1" ] || [ -z "$op" ] || [ -z "$v2" ]; then
+  printf '%s\n' "Usage: $0 [semver] <v1> <operator> <v2>" >&2
+  printf '%s\n' "Operators: = != > < >= <=" >&2
+  exit 1
+fi
   res=$(awk -v v1="$v1" -v v2="$v2" '
-    function cmp(a, b) {
-      la=split(a, aa, /[^0-9]+/)
-      lb=split(b, bb, /[^0-9]+/)
+    BEGIN {
+      la = split(v1, aa, /[^0-9]+/)
+      lb = split(v2, bb, /[^0-9]+/)
       len = la > lb ? la : lb
-      for (i=1; i<=len; i++) {
+      r = 0
+      for (i = 1; i <= len; i++) {
         av = aa[i] + 0; bv = bb[i] + 0
-        if (av < bv) return -1
-        if (av > bv) return 1
+        if (av < bv) { r = -1; break }
+        if (av > bv) { r = 1; break }
       }
-      return 0
+      print r
     }
-    BEGIN { print cmp(v1, v2) }
   ')
   case "$op" in
     "=")  [ "$res" -eq 0 ] && exit 0 || exit 1 ;;

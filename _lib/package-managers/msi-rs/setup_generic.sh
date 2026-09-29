@@ -54,15 +54,10 @@ REPO_URL="${MSI_RS_REPO_URL:-https://github.com/SamuelMarks/msi-rs}"
 # ## resolve_exact_version
 # Resolves the exact semver or branch version for msi-rs.
 resolve_exact_version() {
-  if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
-    _latest=$(git ls-remote --tags "${REPO_URL}" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -n 1 || true)
-    if [ -n "$_latest" ]; then
-      EXACT_VERSION="$_latest"
-    else
-      EXACT_VERSION="0.0.1"
-    fi
+  if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ] || [ -z "${VERSION:-}" ]; then
+    EXACT_VERSION="c075557d4fe8f8fb32183a5160a68779fbc8b708"
   else
-    EXACT_VERSION="${VERSION:-latest}"
+    EXACT_VERSION="${VERSION}"
   fi
 }
 
@@ -257,10 +252,10 @@ case "$ACTION" in
         tar -xzf "${tmp_archive}" -C "${TARGET_DIR}" --strip-components=1 2>/dev/null || unzip -q "${tmp_archive}" -d "${TARGET_DIR}" || true
         rm -f "${tmp_archive}"
       else
-        log_info "Cloning upstream repository from ${REPO_URL}..."
+        log_info "Cloning upstream repository from ${REPO_URL} at ${EXACT_VERSION}..."
         mkdir -p "${build_stage_dir}"
-        git clone --depth 1 "${REPO_URL}" "${build_stage_dir}"
-        (cd "${build_stage_dir}" && cargo build --release -p msi-cli)
+        git clone "${REPO_URL}" "${build_stage_dir}"
+        (cd "${build_stage_dir}" && git checkout "${EXACT_VERSION}" && cargo build --release -p msi-cli)
         install_binaries_from_dir "${build_stage_dir}/target/release"
         rm -rf "${build_stage_dir}"
       fi

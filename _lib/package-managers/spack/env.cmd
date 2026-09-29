@@ -4,6 +4,7 @@ REM Environment variable initialization script for the spack component.
 REM 
 REM ## Usage
 REM Call this script to load the environment variables.
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 IF "%SPACK_VERSION%"=="" SET "SPACK_VERSION=latest"

@@ -7,7 +7,7 @@
 :: ## Usage
 :: Execute this script to deploy tpu-vm-vllm to the target environment.
 
-setlocal
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if "%~1"=="--help" (
     echo Usage: %~nx0

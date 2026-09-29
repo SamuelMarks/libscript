@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for nginx.
 
 :: Windows env stub for nginx
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

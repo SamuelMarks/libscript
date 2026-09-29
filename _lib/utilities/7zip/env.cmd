@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for 7zip.
 
 :: Windows env stub for 7zip
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

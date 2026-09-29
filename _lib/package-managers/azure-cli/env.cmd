@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for azure-cli.
 
 :: Windows env stub for azure-cli
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

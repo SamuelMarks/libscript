@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for kafka.
 
 :: Windows env stub for kafka
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

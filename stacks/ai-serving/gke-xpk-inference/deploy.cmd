@@ -7,7 +7,7 @@
 :: ## Usage
 :: Execute this script to deploy gke-xpk-inference to the target environment.
 
-setlocal
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if "%~1"=="--help" (
     echo Usage: %~nx0

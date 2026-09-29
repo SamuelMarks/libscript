@@ -1,11 +1,12 @@
 /**
- * @file main.c
- * @brief LibScript REST API server entry point.
+ * ## Overview
+ * LibScript REST API server entry point. Provides the HTTP entrypoint
+ * and daemon initialization for the LibScript REST API service.
  *
- * Provides the HTTP entrypoint and daemon initialization for the
- * LibScript REST API service.
+ * ## Usage
+ * Execute binary directly or launch as a system daemon:
+ *   libscript-rest-api [port]
  */
-
 #include <stdio.h>
 #include <stdlib.h>
 

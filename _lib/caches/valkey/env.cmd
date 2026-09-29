@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for valkey.
 
 :: Windows env stub for valkey
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

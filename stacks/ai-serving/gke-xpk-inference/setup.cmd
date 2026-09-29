@@ -7,7 +7,7 @@
 :: ## Usage
 :: Execute this script to install and configure gke-xpk-inference on the local system.
 
-setlocal
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if "%~1"=="--help" (
     echo Usage: %~nx0

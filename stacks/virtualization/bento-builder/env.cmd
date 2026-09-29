@@ -7,6 +7,7 @@
 :: ## Usage
 :: Call this script to configure the Bento Builder environment on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 call "%~dp0\..\..\..\_lib\orchestration\qemu\env.cmd"

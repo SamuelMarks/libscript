@@ -4,6 +4,7 @@ REM Environment variable initialization script for the msys2 component.
 REM 
 REM ## Usage
 REM Call this script to load the environment variables.
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 IF "%MSYS2_VERSION%"=="" SET "MSYS2_VERSION=latest"

@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 :: # cli.cmd
 ::

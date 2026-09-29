@@ -7,6 +7,7 @@
 :: ## Usage
 :: Call this script to configure the environment.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 set "RUST_INSTALL=0"
 set "NODEJS_INSTALL=0"

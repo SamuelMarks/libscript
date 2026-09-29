@@ -4,6 +4,7 @@ REM Environment variable initialization script for the swupd component.
 REM 
 REM ## Usage
 REM Call this script to load the environment variables.
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 IF "%SWUPD_VERSION%"=="" SET "SWUPD_VERSION=latest"

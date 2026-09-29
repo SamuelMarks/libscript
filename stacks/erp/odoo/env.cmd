@@ -8,5 +8,6 @@
 :: Source or call this script to configure the environment for odoo.
 
 :: Environment variables for Windows
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if not "%ODOO_LISTEN%"=="" set "LIBSCRIPT_LISTEN_PORT=%ODOO_LISTEN%"

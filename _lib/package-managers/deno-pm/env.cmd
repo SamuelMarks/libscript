@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for deno-pm.
 
 :: Windows env stub for deno-pm
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

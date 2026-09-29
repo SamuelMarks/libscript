@@ -106,22 +106,25 @@ rx -f /etc/runit/stopit
 EOF
     chmod +x "${SYSROOT}/etc/runit/3" 2>/dev/null || true
 
-    printf 'init_path="/usr/local/sbin/runit-init:/sbin/init"
-' >> "${SYSROOT}/boot/loader.conf"
+    if ! grep -q '^init_path=' "${SYSROOT}/boot/loader.conf" 2>/dev/null; then
+      printf 'init_path="/usr/local/sbin/runit-init:/sbin/init"\n' >> "${SYSROOT}/boot/loader.conf"
+    fi
     ;;
 
   s6)
     # s6 supervision suite
     mkdir -p "${SYSROOT}/etc/s6" "${SYSROOT}/etc/s6/scan"
-    printf 'init_path="/usr/local/bin/s6-svscanboot:/sbin/init"
-' >> "${SYSROOT}/boot/loader.conf"
+    if ! grep -q '^init_path=' "${SYSROOT}/boot/loader.conf" 2>/dev/null; then
+      printf 'init_path="/usr/local/bin/s6-svscanboot:/sbin/init"\n' >> "${SYSROOT}/boot/loader.conf"
+    fi
     ;;
 
   dinit)
     # dinit service manager
     mkdir -p "${SYSROOT}/etc/dinit.d"
-    printf 'init_path="/usr/local/sbin/dinit:/sbin/init"
-' >> "${SYSROOT}/boot/loader.conf"
+    if ! grep -q '^init_path=' "${SYSROOT}/boot/loader.conf" 2>/dev/null; then
+      printf 'init_path="/usr/local/sbin/dinit:/sbin/init"\n' >> "${SYSROOT}/boot/loader.conf"
+    fi
     ;;
 
   inittab-sysv)

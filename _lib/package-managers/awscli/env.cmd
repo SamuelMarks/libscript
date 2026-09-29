@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for awscli.
 
 :: Windows env stub for awscli
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

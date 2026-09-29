@@ -8,6 +8,7 @@
 :: Call or execute in the current command shell:
 ::   call env.cmd
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%WAITRESS_PORT%"=="" set "WAITRESS_PORT=8000"

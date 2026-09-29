@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for sqlite.
 
 :: Windows env stub for sqlite
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

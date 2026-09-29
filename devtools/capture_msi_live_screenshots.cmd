@@ -21,13 +21,21 @@ goto :main
 :: ## show_help
 :: Displays usage and help information for the screenshot capture tool.
 :show_help
-echo Usage: %~nx0 [--all ^| --mode ^<headless^|tui^|gui^>]
+echo Usage: %~nx0 [--all ^| --mode ^<headless^|tui^|gui^|bootloader^|login^|loggedin^>]
 echo.
 echo Automates capturing screenshots of the msi-rs live installer.
 echo Stored directly into ..\cc0-assets.
 echo.
+echo Modes:
+echo   headless    - Capture headless transaction logs and disk operations
+echo   tui         - Capture terminal user interface wizard steps
+echo   gui         - Capture fullscreen kiosk graphical installer dialogs
+echo   bootloader  - Capture GRUB2, FreeBSD, and illumos bootloader screens
+echo   login       - Capture text console and display manager login screens
+echo   loggedin    - Capture logged-in terminals with uname -a and os-release
+echo.
 echo Options:
-echo   --all                 Capture all 3 interaction modes (default).
+echo   --all                 Capture all interaction and boot modes (default).
 echo   --mode ^<name^>         Capture only the specified mode.
 echo   --help, -h, /?, -?    Show this help message and exit.
 exit /b 0

@@ -6,6 +6,7 @@
 ::
 :: ## Usage
 :: Sets `KOTLIN_VERSION` and prepends Kotlin to PATH.
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%KOTLIN_VERSION%"=="" set KOTLIN_VERSION=1.9.20

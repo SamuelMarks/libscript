@@ -92,10 +92,12 @@ BE_DATASET="${POOL_NAME}/ROOT/illumos"
 EOF
 
 # 4. Loader configuration for ZFS root mount
-cat << EOF >> "${SYSROOT}/boot/loader.conf"
+if ! grep -q '^zfs_load=' "${SYSROOT}/boot/loader.conf" 2>/dev/null; then
+  cat << EOF >> "${SYSROOT}/boot/loader.conf"
 zfs_load="YES"
 vfs.root.mountfrom="zfs:${POOL_NAME}/ROOT/illumos"
 EOF
+fi
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
 mv "${STAMP_FILE}.tmp" "${STAMP_FILE}"

@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for core.
 
 :: Windows env stub for core
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

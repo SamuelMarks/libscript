@@ -7,7 +7,7 @@
 :: ## Usage
 :: Execute this script to install and configure tpu-vm-eval-node on the local system.
 
-setlocal
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if "%~1"=="--help" (
     echo Usage: %~nx0

@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for kubernetes-thw.
 
 :: Windows env stub for kubernetes-thw
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

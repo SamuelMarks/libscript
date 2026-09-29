@@ -1,11 +1,12 @@
 /**
- * @file sql_provisioner.hpp
- * @brief Custom action DLL declarations for in-process SQL database provisioning.
- *
+ * ## Overview
+ * Custom action DLL declarations for in-process SQL database provisioning.
  * Provides entry points invoked during Windows Installer execution to provision
  * and deprovision relational database instances without spawning external shell processes.
+ *
+ * ## Usage
+ * Included in WiX SQL provisioner C++ compilation units.
  */
-
 #ifndef LIBSCRIPT_SQL_PROVISIONER_HPP
 #define LIBSCRIPT_SQL_PROVISIONER_HPP
 

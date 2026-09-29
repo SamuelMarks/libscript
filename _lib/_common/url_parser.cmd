@@ -11,5 +11,6 @@
 
 :: Shim for url_parser
 :: Native Windows implementation pending or handled internally by core modules.
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 exit /b 0

@@ -1,11 +1,12 @@
 /**
- * @file sql_provisioner.cpp
- * @brief Custom action implementation for SQL database provisioning in MSI packages.
- *
+ * ## Overview
+ * Custom action implementation for SQL database provisioning in MSI packages.
  * Implements database schema creation, user granting, and deprovisioning operations
  * executed directly within the MSI installation process.
+ *
+ * ## Usage
+ * Compiled into sql_provisioner.dll and invoked by Windows Installer CustomAction table.
  */
-
 #include "sql_provisioner.hpp"
 #include <string>
 

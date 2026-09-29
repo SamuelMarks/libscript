@@ -84,7 +84,8 @@ echo [ZFS]      Configuring illumos ZFS dataset hierarchy (pool: %POOL_NAME%, co
     echo /dev/zvol/dsk/%POOL_NAME%/swap - -             swap    -       no      -
 ) > "%SYSROOT%\etc\vfstab"
 
-(
+findstr /C:"zfs_load=" "%SYSROOT%\boot\loader.conf" >nul 2>&1
+if errorlevel 1 (
     echo zfs_load="YES"
     echo vfs.root.mountfrom="zfs:%POOL_NAME%/ROOT/illumos"
 ) >> "%SYSROOT%\boot\loader.conf"

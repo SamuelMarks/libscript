@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for tmux.
 
 :: Windows env stub for tmux
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

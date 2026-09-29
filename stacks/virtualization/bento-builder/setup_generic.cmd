@@ -5,6 +5,7 @@
 :: ## Usage
 :: Internal generic setup script for Bento Builder on Windows.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%ACTION%"=="" set ACTION=install

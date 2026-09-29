@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for coursier.
 
 :: Windows env stub for coursier
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

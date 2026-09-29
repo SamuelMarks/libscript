@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for nodejs-server.
 
 :: Windows env stub for nodejs-server
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

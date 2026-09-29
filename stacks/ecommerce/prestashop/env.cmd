@@ -8,5 +8,6 @@
 :: Source or call this script to configure the environment for prestashop.
 
 :: Environment variables for Windows
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if not "%PRESTASHOP_LISTEN%"=="" set "LIBSCRIPT_LISTEN_PORT=%PRESTASHOP_LISTEN%"

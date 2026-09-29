@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for choco.
 
 :: Windows env stub for choco
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

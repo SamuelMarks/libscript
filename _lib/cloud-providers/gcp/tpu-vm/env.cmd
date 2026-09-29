@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for tpu-vm.
 
 :: Windows env stub for tpu-vm
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if "%GCP_TPU_VM_ENABLED%"=="" set "GCP_TPU_VM_ENABLED=1"
 if "%TPU_VM_VERSION%"=="" set "TPU_VM_VERSION=latest"

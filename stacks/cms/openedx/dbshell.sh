@@ -4,34 +4,22 @@
 # Provides unified CLI access to MySQL, MongoDB, and Redis datastores.
 #
 # ## Usage
-#   ./dbshell.sh mysql [optional_mysql_args...]
-#   ./dbshell.sh mongo [optional_mongo_args...]
-#   ./dbshell.sh redis [optional_redis_args...]
-#   ./dbshell.sh query <sql_statement>
-#   ./dbshell.sh help
+#   ./dbshell.sh [mysql|mongo|redis|query <sql>|help]
 #
 # ## Parameters
 # - `mysql`: Connects to MySQL using configured stack credentials.
 # - `mongo`: Connects to MongoDB via mongosh or mongo client.
 # - `redis`: Connects to Redis via redis-cli.
-# - `query`: Runs a non-interactive SQL query against the primary MySQL database.
+# - `query`: Runs a non-interactive SQL query against primary MySQL database.
 #
 # ## Environment Variables
 # - `OPENEDX_INSTALL_DIR`: Path to openedx installation directory.
-# - `MYSQL_DATABASE`: MySQL database name (default: openedx).
-# - `MYSQL_USER`: MySQL user (default: openedx).
-# - `MYSQL_PASSWORD`: MySQL password.
-# - `MYSQL_HOST`: MySQL host (default: 127.0.0.1).
-# - `MYSQL_PORT`: MySQL port (default: 3306).
-# - `MONGODB_HOST`: MongoDB host (default: 127.0.0.1).
-# - `MONGODB_PORT`: MongoDB port (default: 27017).
-# - `MONGODB_DATABASE`: MongoDB database name (default: openedx).
-# - `REDIS_HOST`: Redis host (default: 127.0.0.1).
-# - `REDIS_PORT`: Redis port (default: 6379).
+# - `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_HOST`, `MYSQL_PORT`.
+# - `MONGODB_HOST`, `MONGODB_PORT`, `MONGODB_DATABASE`.
+# - `REDIS_HOST`, `REDIS_PORT`.
 #
 # ## Exit Codes
-# - `0`: Success.
-# - `1`: Client invocation failure or missing database client binary.
+# - `0`: Success; `1`: Client invocation failure or missing database client binary.
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then

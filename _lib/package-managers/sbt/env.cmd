@@ -4,6 +4,7 @@ REM Environment variable initialization script for the sbt component.
 REM 
 REM ## Usage
 REM Call this script to load the environment variables.
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 IF "%SBT_VERSION%"=="" SET "SBT_VERSION=latest"

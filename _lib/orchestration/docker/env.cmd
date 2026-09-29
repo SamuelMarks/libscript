@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for docker.
 
 :: Windows env stub for docker
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

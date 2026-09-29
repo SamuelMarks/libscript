@@ -7,6 +7,7 @@
 ::
 :: ## Usage
 :: Execute this script to install or configure the component.
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup.ps1" %*

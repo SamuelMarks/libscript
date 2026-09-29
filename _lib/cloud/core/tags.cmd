@@ -8,6 +8,7 @@
 :: ## Usage
 :: call "%~dp0tags.cmd" :init
 :: call "%~dp0tags.cmd" :libscript_format_tags aws
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 goto :%1

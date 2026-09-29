@@ -8,4 +8,5 @@
 :: Source or call this script to configure the environment for openvpn.
 
 :: Environment variables for Windows
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

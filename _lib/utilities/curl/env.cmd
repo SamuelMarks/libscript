@@ -8,6 +8,7 @@
 :: Executes initialization, logic, or testing for curl.
 
 :: Windows env stub for curl
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if "%LIBSCRIPT_HOME%"=="" (

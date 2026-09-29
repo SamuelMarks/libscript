@@ -78,7 +78,7 @@ exit /b 0
 :: Executes action_use functionality.
 :action_use
 set "EXACT_VERSION=%MSI_RS_VERSION%"
-if "%MSI_RS_VERSION%"=="latest" set "EXACT_VERSION=0.0.1"
+if "%MSI_RS_VERSION%"=="latest" set "EXACT_VERSION=c075557d4fe8f8fb32183a5160a68779fbc8b708"
 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\msi-rs\%EXACT_VERSION%"
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\msi-rs\%MSI_RS_VERSION%"
@@ -102,7 +102,7 @@ exit /b 0
 :: Executes action_download functionality.
 :action_download
 set "EXACT_VERSION=%MSI_RS_VERSION%"
-if "%MSI_RS_VERSION%"=="latest" set "EXACT_VERSION=0.0.1"
+if "%MSI_RS_VERSION%"=="latest" set "EXACT_VERSION=c075557d4fe8f8fb32183a5160a68779fbc8b708"
 set "CACHE_DIR=%DOWNLOAD_DIR%\msi-rs"
 if not exist "%CACHE_DIR%" mkdir "%CACHE_DIR%"
 echo Downloading msi-rs %MSI_RS_VERSION% artifacts to %CACHE_DIR%...
@@ -117,7 +117,7 @@ exit /b 0
 :: Executes action_install functionality.
 :action_install
 set "EXACT_VERSION=%MSI_RS_VERSION%"
-if "%MSI_RS_VERSION%"=="latest" set "EXACT_VERSION=0.0.1"
+if "%MSI_RS_VERSION%"=="latest" set "EXACT_VERSION=c075557d4fe8f8fb32183a5160a68779fbc8b708"
 set "TARGET_DIR=%LIBSCRIPT_HOME%\msi-rs\%EXACT_VERSION%"
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\msi-rs\%MSI_RS_VERSION%"
 set "DEFAULT_DIR=%LIBSCRIPT_HOME%\msi-rs\default"
@@ -183,7 +183,9 @@ if exist "%CACHE_ZIP%" (
     del "%TEMP%\msi_rs_prebuilt.zip" >nul 2>&1
 ) else (
     echo Cloning source repository from %MSI_RS_REPO_URL%...
-    git clone --depth 1 "%MSI_RS_REPO_URL%" "%BUILD_DIR%"
+    git clone "%MSI_RS_REPO_URL%" "%BUILD_DIR%"
+    cd /d "%BUILD_DIR%"
+    git checkout %EXACT_VERSION%
     cd /d "%BUILD_DIR%"
     cargo build --release -p msi-cli
     call :install_binaries "%BUILD_DIR%\target\release"
@@ -252,7 +254,7 @@ exit /b 0
 :: Executes action_uninstall functionality.
 :action_uninstall
 set "EXACT_VERSION=%MSI_RS_VERSION%"
-if "%MSI_RS_VERSION%"=="latest" set "EXACT_VERSION=0.0.1"
+if "%MSI_RS_VERSION%"=="latest" set "EXACT_VERSION=c075557d4fe8f8fb32183a5160a68779fbc8b708"
 set "TARGET_DIR=%LIBSCRIPT_HOME%\msi-rs\%EXACT_VERSION%"
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\msi-rs\%MSI_RS_VERSION%"
 set "DEFAULT_DIR=%LIBSCRIPT_HOME%\msi-rs\default"
