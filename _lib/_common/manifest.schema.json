@@ -91,6 +91,48 @@
       "default": false,
       "description": "Indicates whether this component is an adapter/API-only wrapper that does not provide binary install/env lifecycles"
     },
+    "requires_database": {
+      "type": "object",
+      "description": "Declarative database dependency requirement for the component or stack",
+      "required": ["engine"],
+      "properties": {
+        "engine": {
+          "type": "string",
+          "enum": ["mysql", "mariadb", "postgres", "mongodb", "redis", "sqlite"],
+          "description": "Required database engine type"
+        },
+        "min_version": {
+          "type": "string",
+          "description": "Minimum semantic version string required"
+        },
+        "allow_shared_instance": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether component can share an active database server with peer stacks"
+        },
+        "default_schema_name": {
+          "type": "string",
+          "description": "Default schema or keyspace name for tenant isolation"
+        },
+        "default_user_name": {
+          "type": "string",
+          "description": "Default database user account identifier"
+        },
+        "default_port": {
+          "type": "integer",
+          "description": "Default listening port for database engine"
+        },
+        "character_set": {
+          "type": "string",
+          "default": "utf8mb4",
+          "description": "Required character encoding"
+        },
+        "collation": {
+          "type": "string",
+          "description": "Required database collation sequence"
+        }
+      }
+    },
     "category": {
       "type": "string",
       "description": "Component classification group within the LibScript catalog",

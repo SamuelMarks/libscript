@@ -322,96 +322,48 @@ cleanup_tmp() {
 trap cleanup_tmp EXIT INT TERM
 
 # ## ensure_branding_assets
-# Validates or synthesizes placeholder branding assets.
+# Validates or synthesizes placeholder branding assets via synthesize_branding.sh.
 ensure_branding_assets() {
-  cc0_assets="${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets"
-  if [ ! -d "$cc0_assets" ] && [ -d "${LIBSCRIPT_ROOT_DIR}/cc0-assets/libscript/openedx/assets" ]; then
-    cc0_assets="${LIBSCRIPT_ROOT_DIR}/cc0-assets/libscript/openedx/assets"
-  fi
-  gen_script="${LIBSCRIPT_ROOT_DIR}/packaging/generate_openedx_branding.sh"
+  synth_script="${LIBSCRIPT_ROOT_DIR}/packaging/synthesize_branding.sh"
 
-  # Check external cc0-assets repository first if not explicitly found
-  if [ -z "$ICON_PATH" ] || [ ! -f "$ICON_PATH" ]; then
-    if [ -f "$cc0_assets/openedx.ico" ]; then
-      ICON_PATH="$cc0_assets/openedx.ico"
-    elif [ -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx.ico" ]; then
-      ICON_PATH="${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx.ico"
-    fi
-  fi
-
-  if [ -z "$BANNER_TOP_PATH" ] || [ ! -f "$BANNER_TOP_PATH" ]; then
-    if [ -f "$cc0_assets/openedx_banner_top.bmp" ]; then
-      BANNER_TOP_PATH="$cc0_assets/openedx_banner_top.bmp"
-    elif [ -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_banner_top.bmp" ]; then
-      BANNER_TOP_PATH="${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_banner_top.bmp"
-    fi
-  fi
-
-  if [ -z "$BANNER_SIDE_PATH" ] || [ ! -f "$BANNER_SIDE_PATH" ]; then
-    if [ -f "$cc0_assets/openedx_banner_side.bmp" ]; then
-      BANNER_SIDE_PATH="$cc0_assets/openedx_banner_side.bmp"
-    elif [ -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_banner_side.bmp" ]; then
-      BANNER_SIDE_PATH="${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_banner_side.bmp"
-    fi
-  fi
-
-  if [ -z "$LICENSE_PATH" ] || [ ! -f "$LICENSE_PATH" ]; then
-    if [ -f "$cc0_assets/openedx_eula.rtf" ]; then
-      LICENSE_PATH="$cc0_assets/openedx_eula.rtf"
-    elif [ -f "${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_eula.rtf" ]; then
-      LICENSE_PATH="${LIBSCRIPT_ROOT_DIR}/packaging/assets/openedx_eula.rtf"
-    fi
-  fi
-
-  # Synthesize assets dynamically on the fly if still missing
   if { [ -z "$ICON_PATH" ] || [ ! -f "$ICON_PATH" ]; } || \
      { [ -z "$BANNER_TOP_PATH" ] || [ ! -f "$BANNER_TOP_PATH" ]; } || \
      { [ -z "$BANNER_SIDE_PATH" ] || [ ! -f "$BANNER_SIDE_PATH" ]; } || \
      { [ -z "$LICENSE_PATH" ] || [ ! -f "$LICENSE_PATH" ]; }; then
-    if [ -f "$gen_script" ]; then
-      "$gen_script" --output-dir "$TMP_WORK_DIR" >/dev/null 2>&1 || true
+    if [ -f "$synth_script" ] && [ -f "$PACKAGING_JSON" ]; then
+      "$synth_script" "$RESOLVED_TARGET_DIR" --output-dir "$TMP_WORK_DIR" >/dev/null 2>&1 || true
     fi
   fi
 
   if [ -z "$ICON_PATH" ] || [ ! -f "$ICON_PATH" ]; then
-    if [ -f "${TMP_WORK_DIR}/openedx.ico" ]; then
-      ICON_PATH="${TMP_WORK_DIR}/openedx.ico"
-    else
+    if [ -f "${TMP_WORK_DIR}/app.ico" ]; then
       ICON_PATH="${TMP_WORK_DIR}/app.ico"
-      touch "$ICON_PATH"
+    elif [ -f "${TMP_WORK_DIR}/openedx.ico" ]; then
+      ICON_PATH="${TMP_WORK_DIR}/openedx.ico"
     fi
   fi
 
   if [ -z "$BANNER_TOP_PATH" ] || [ ! -f "$BANNER_TOP_PATH" ]; then
-    if [ -f "${TMP_WORK_DIR}/openedx_banner_top.bmp" ]; then
-      BANNER_TOP_PATH="${TMP_WORK_DIR}/openedx_banner_top.bmp"
-    else
+    if [ -f "${TMP_WORK_DIR}/banner_top.bmp" ]; then
       BANNER_TOP_PATH="${TMP_WORK_DIR}/banner_top.bmp"
-      touch "$BANNER_TOP_PATH"
+    elif [ -f "${TMP_WORK_DIR}/openedx_banner_top.bmp" ]; then
+      BANNER_TOP_PATH="${TMP_WORK_DIR}/openedx_banner_top.bmp"
     fi
   fi
 
   if [ -z "$BANNER_SIDE_PATH" ] || [ ! -f "$BANNER_SIDE_PATH" ]; then
-    if [ -f "${TMP_WORK_DIR}/openedx_banner_side.bmp" ]; then
-      BANNER_SIDE_PATH="${TMP_WORK_DIR}/openedx_banner_side.bmp"
-    else
+    if [ -f "${TMP_WORK_DIR}/banner_side.bmp" ]; then
       BANNER_SIDE_PATH="${TMP_WORK_DIR}/banner_side.bmp"
-      touch "$BANNER_SIDE_PATH"
+    elif [ -f "${TMP_WORK_DIR}/openedx_banner_side.bmp" ]; then
+      BANNER_SIDE_PATH="${TMP_WORK_DIR}/openedx_banner_side.bmp"
     fi
   fi
 
   if [ -z "$LICENSE_PATH" ] || [ ! -f "$LICENSE_PATH" ]; then
-    if [ -f "${TMP_WORK_DIR}/openedx_eula.rtf" ]; then
-      LICENSE_PATH="${TMP_WORK_DIR}/openedx_eula.rtf"
-    else
+    if [ -f "${TMP_WORK_DIR}/license.rtf" ]; then
       LICENSE_PATH="${TMP_WORK_DIR}/license.rtf"
-      cat << 'EOF_EULA' > "$LICENSE_PATH"
-{\rtf1\ansi\deff0 {\fonttbl {\f0 Courier;}}\fs20
-Open edX Community License Agreement\par
-This software is licensed under the AGPLv3 and respective dependency licenses.\par
-By proceeding with the installation, you agree to comply with all applicable terms.\par
-}
-EOF_EULA
+    elif [ -f "${TMP_WORK_DIR}/openedx_eula.rtf" ]; then
+      LICENSE_PATH="${TMP_WORK_DIR}/openedx_eula.rtf"
     fi
   fi
 }
@@ -646,6 +598,8 @@ EOF_UPGRADE
     <Property Id="PROP_OPENEDX_THEME" Value="none" Secure="yes" />
     <Property Id="PROP_OPENEDX_THEME_REPO_URL" Secure="yes" />
     <Property Id="BACKUPFOLDER" Value="C:\ProgramData\OpenEdX\backups" Secure="yes" />
+    <Property Id="CREATE_SHORTCUT_LMS" Value="1" Secure="yes" />
+    <Property Id="CREATE_SHORTCUT_CMS" Value="1" Secure="yes" />
     <Property Id="AGREE_ALL_LICENSES" Value="0" Secure="yes" />
     <Property Id="LICENSE_ACCEPTED" Value="0" Secure="yes" />${MULTI_LICENSE_PROPS}
 
@@ -1021,14 +975,16 @@ ${MULTI_LICENSE_XML}
         </Control>
       </Dialog>
 
-      <!-- Completion/Exit Dialog with Launch Browser Checkbox -->
+      <!-- Completion/Exit Dialog with Desktop Shortcuts and Launch Browser Checkboxes -->
       <Dialog Id="Dlg_Exit" Width="370" Height="270" Title="[ProductName] Setup Complete">
         <Control Id="Bitmap" Type="Bitmap" X="0" Y="0" Width="123" Height="234" Text="WixUIDialogBmp" />
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
         <Control Id="Title" Type="Text" X="135" Y="20" Width="220" Height="50" Transparent="yes" NoPrefix="yes" Text="Completed [ProductName] Setup" />
-        <Control Id="Desc" Type="Text" X="135" Y="70" Width="220" Height="50" Transparent="yes" NoPrefix="yes" Text="Open edX services have been successfully installed and started." />
-        <Control Id="LaunchBrowserCheckBox" Type="CheckBox" X="135" Y="150" Width="220" Height="18" Property="LAUNCH_BROWSER" CheckBoxValue="1" Text="Launch Open edX LMS in Web Browser" />
-        <Control Id="LaunchStudioCheckBox" Type="CheckBox" X="135" Y="172" Width="220" Height="18" Property="LAUNCH_STUDIO" CheckBoxValue="1" Text="Launch Open edX Studio in Web Browser" />
+        <Control Id="Desc" Type="Text" X="135" Y="70" Width="220" Height="35" Transparent="yes" NoPrefix="yes" Text="Open edX services have been successfully installed and started." />
+        <Control Id="CreateLmsShortcutCheckBox" Type="CheckBox" X="135" Y="115" Width="230" Height="15" Property="CREATE_SHORTCUT_LMS" CheckBoxValue="1" Text="Create Open edX LMS shortcut (LMS logo)" />
+        <Control Id="CreateCmsShortcutCheckBox" Type="CheckBox" X="135" Y="135" Width="230" Height="15" Property="CREATE_SHORTCUT_CMS" CheckBoxValue="1" Text="Create Open edX Studio shortcut (CMS logo)" />
+        <Control Id="LaunchBrowserCheckBox" Type="CheckBox" X="135" Y="155" Width="230" Height="15" Property="LAUNCH_BROWSER" CheckBoxValue="1" Text="Launch Open edX LMS in Web Browser" />
+        <Control Id="LaunchStudioCheckBox" Type="CheckBox" X="135" Y="175" Width="230" Height="15" Property="LAUNCH_STUDIO" CheckBoxValue="1" Text="Launch Open edX Studio in Web Browser" />
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Disabled="yes" Text="Back" />
         <Control Id="Finish" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Finish">
           <Publish Event="DoAction" Value="CA_LaunchBrowser"><![CDATA[LAUNCH_BROWSER="1" AND NOT Installed]]></Publish>

@@ -248,14 +248,20 @@ if "%LICENSE_PATH%"=="" (
 set "TMP_BRANDING_DIR=%TEMP%\openedx_branding_%RANDOM%"
 if "%ICON_PATH%"=="" (
     if not exist "%TMP_BRANDING_DIR%" mkdir "%TMP_BRANDING_DIR%" 2>nul
-    call "%LIBSCRIPT_ROOT_DIR%\packaging\generate_openedx_branding.cmd" --output-dir "%TMP_BRANDING_DIR%" >nul 2>nul
-    if exist "%TMP_BRANDING_DIR%\openedx.ico" set "ICON_PATH=%TMP_BRANDING_DIR%\openedx.ico"
+    call "%LIBSCRIPT_ROOT_DIR%\packaging\synthesize_branding.cmd" "%TARGET_DIR%" --output-dir "%TMP_BRANDING_DIR%" >nul 2>nul
+    if exist "%TMP_BRANDING_DIR%\app.ico" set "ICON_PATH=%TMP_BRANDING_DIR%\app.ico"
+    if exist "%TMP_BRANDING_DIR%\openedx.ico" if "%ICON_PATH%"=="" set "ICON_PATH=%TMP_BRANDING_DIR%\openedx.ico"
+    if exist "%TMP_BRANDING_DIR%\banner_top.bmp" if "%BANNER_TOP_PATH%"=="" set "BANNER_TOP_PATH=%TMP_BRANDING_DIR%\banner_top.bmp"
     if exist "%TMP_BRANDING_DIR%\openedx_banner_top.bmp" if "%BANNER_TOP_PATH%"=="" set "BANNER_TOP_PATH=%TMP_BRANDING_DIR%\openedx_banner_top.bmp"
+    if exist "%TMP_BRANDING_DIR%\banner_side.bmp" if "%BANNER_SIDE_PATH%"=="" set "BANNER_SIDE_PATH=%TMP_BRANDING_DIR%\banner_side.bmp"
     if exist "%TMP_BRANDING_DIR%\openedx_banner_side.bmp" if "%BANNER_SIDE_PATH%"=="" set "BANNER_SIDE_PATH=%TMP_BRANDING_DIR%\openedx_banner_side.bmp"
+    if exist "%TMP_BRANDING_DIR%\license.rtf" if "%LICENSE_PATH%"=="" set "LICENSE_PATH=%TMP_BRANDING_DIR%\license.rtf"
     if exist "%TMP_BRANDING_DIR%\openedx_eula.rtf" if "%LICENSE_PATH%"=="" set "LICENSE_PATH=%TMP_BRANDING_DIR%\openedx_eula.rtf"
 )
 if not exist "%ICON_PATH%" (
-    if exist "%TMP_BRANDING_DIR%\openedx.ico" (
+    if exist "%TMP_BRANDING_DIR%\app.ico" (
+        set "ICON_PATH=%TMP_BRANDING_DIR%\app.ico"
+    ) else if exist "%TMP_BRANDING_DIR%\openedx.ico" (
         set "ICON_PATH=%TMP_BRANDING_DIR%\openedx.ico"
     ) else (
         set "ICON_PATH="
@@ -441,6 +447,8 @@ setlocal DisableDelayedExpansion
     echo     ^<Property Id="PROP_OPENEDX_THEME" Value="none" Secure="yes" /^>
     echo     ^<Property Id="PROP_OPENEDX_THEME_REPO_URL" Secure="yes" /^>
     echo     ^<Property Id="BACKUPFOLDER" Value="C:\ProgramData\OpenEdX\backups" Secure="yes" /^>
+    echo     ^<Property Id="CREATE_SHORTCUT_LMS" Value="1" Secure="yes" /^>
+    echo     ^<Property Id="CREATE_SHORTCUT_CMS" Value="1" Secure="yes" /^>
 
     echo     ^<Property Id="MsiHiddenProperties" Value="PROP_OPENEDX_ADMIN_PASSWORD;PROP_OPENEDX_SECRET_KEY;PROP_MYSQL_ROOT_PASSWORD;PROP_MYSQL_REMOTE_URL;PROP_REDIS_PASSWORD;PROP_REDIS_URL;PROP_MONGODB_URI;PROP_MEILISEARCH_MASTER_KEY;PROP_OPENEDX_REPO_AUTH_TOKEN" /^>
 
@@ -810,9 +818,11 @@ setlocal DisableDelayedExpansion
     if not "%BANNER_SIDE_PATH%"=="" echo         ^<Control Id="Bitmap" Type="Bitmap" X="0" Y="0" Width="123" Height="234" Text="WixUIDialogBmp" /^>
     echo         ^<Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" /^>
     echo         ^<Control Id="Title" Type="Text" X="135" Y="20" Width="220" Height="50" Transparent="yes" NoPrefix="yes" Text="Completed [ProductName] Setup" /^>
-    echo         ^<Control Id="Desc" Type="Text" X="135" Y="70" Width="220" Height="50" Transparent="yes" NoPrefix="yes" Text="Open edX services have been successfully installed and started." /^>
-    echo         ^<Control Id="LaunchBrowserCheckBox" Type="CheckBox" X="135" Y="150" Width="220" Height="18" Property="LAUNCH_BROWSER" CheckBoxValue="1" Text="Launch Open edX LMS in Web Browser" /^>
-    echo         ^<Control Id="LaunchStudioCheckBox" Type="CheckBox" X="135" Y="172" Width="220" Height="18" Property="LAUNCH_STUDIO" CheckBoxValue="1" Text="Launch Open edX Studio in Web Browser" /^>
+    echo         ^<Control Id="Desc" Type="Text" X="135" Y="70" Width="220" Height="35" Transparent="yes" NoPrefix="yes" Text="Open edX services have been successfully installed and started." /^>
+    echo         ^<Control Id="CreateLmsShortcutCheckBox" Type="CheckBox" X="135" Y="115" Width="230" Height="15" Property="CREATE_SHORTCUT_LMS" CheckBoxValue="1" Text="Create Open edX LMS shortcut (LMS logo)" /^>
+    echo         ^<Control Id="CreateCmsShortcutCheckBox" Type="CheckBox" X="135" Y="135" Width="230" Height="15" Property="CREATE_SHORTCUT_CMS" CheckBoxValue="1" Text="Create Open edX Studio shortcut (CMS logo)" /^>
+    echo         ^<Control Id="LaunchBrowserCheckBox" Type="CheckBox" X="135" Y="155" Width="230" Height="15" Property="LAUNCH_BROWSER" CheckBoxValue="1" Text="Launch Open edX LMS in Web Browser" /^>
+    echo         ^<Control Id="LaunchStudioCheckBox" Type="CheckBox" X="135" Y="175" Width="230" Height="15" Property="LAUNCH_STUDIO" CheckBoxValue="1" Text="Launch Open edX Studio in Web Browser" /^>
     echo         ^<Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Disabled="yes" Text="Back" /^>
     echo         ^<Control Id="Finish" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Finish"^>
     echo           ^<Publish Event="DoAction" Value="CA_LaunchBrowser"^>^<![CDATA[LAUNCH_BROWSER="1" AND NOT Installed]]^>^</Publish^>

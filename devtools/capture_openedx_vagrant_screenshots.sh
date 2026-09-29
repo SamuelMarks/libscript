@@ -78,7 +78,7 @@ capture_screen() {
   _png="${TEMP_DIR}/${_name}.png"
   sleep 1.5
   if [ -S "${MONITOR_SOCK}" ]; then
-    printf 'screendump %s\n' "$_ppm" | nc -U "$MONITOR_SOCK" >/dev/null 2>&1
+    python3 -c "import socket, time, sys; s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM); s.settimeout(3.0); s.connect(sys.argv[1]); s.sendall(f'screendump {sys.argv[2]}\n'.encode()); time.sleep(0.3); s.close()" "${MONITOR_SOCK}" "${_ppm}" >/dev/null 2>&1 || true
     if command -v sips >/dev/null 2>&1; then
       sips -s format png "$_ppm" --out "$_png" >/dev/null 2>&1
     elif command -v magick >/dev/null 2>&1; then
@@ -178,8 +178,8 @@ launch_browser_url() {
 clean_guest_installations() {
   printf '[INFO] Cleaning any prior installations on guest...\n'
   # shellcheck disable=SC2016
-  vm_run 'Stop-Process -Name msiexec -Force -ErrorAction SilentlyContinue; while ($p = Get-Package -Name "*Open edX*" -ErrorAction SilentlyContinue) { foreach ($pkg in $p) { Start-Process msiexec.exe -ArgumentList "/x $($pkg.FastPackageReference) /qn" -Wait } }; Get-ChildItem -Path "Registry::HKEY_CLASSES_ROOT\Installer\Products" -ErrorAction SilentlyContinue | Get-ItemProperty | Where-Object { $_.ProductName -like "*Open edX*" } | ForEach-Object { Start-Process msiexec.exe -ArgumentList "/x $($_.PSChildName) /qn" -Wait }'
-  vm_run 'Stop-Process -Name WindowsTerminal -Force -ErrorAction SilentlyContinue'
+  vm_run 'Stop-Process -Name chrome, msedge, msiexec, WindowsTerminal -Force -ErrorAction SilentlyContinue; while ($p = Get-Package -Name "*Open edX*" -ErrorAction SilentlyContinue) { foreach ($pkg in $p) { Start-Process msiexec.exe -ArgumentList "/x $($pkg.FastPackageReference) /qn" -Wait } }; Get-ChildItem -Path "Registry::HKEY_CLASSES_ROOT\Installer\Products" -ErrorAction SilentlyContinue | Get-ItemProperty | Where-Object { $_.ProductName -like "*Open edX*" } | ForEach-Object { Start-Process msiexec.exe -ArgumentList "/x $($_.PSChildName) /qn" -Wait }; Remove-Item "C:/Users/*/Desktop/Open edX*.lnk", "C:/Users/*/Desktop/Management CLI.lnk", "C:/Users/Public/Desktop/Open edX*.lnk", "C:/Users/Public/Desktop/Management CLI.lnk" -Force -ErrorAction SilentlyContinue'
+  vm_run 'Stop-Process -Name chrome, msedge, msiexec, WindowsTerminal -Force -ErrorAction SilentlyContinue'
 }
 
 printf '=== Step 1: Syncing updated packaging and stack files to Windows guest ===\n'
@@ -208,6 +208,18 @@ scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
   "${REPO_ROOT}/packaging/create_desktop_shortcuts.ps1" \
   "${REPO_ROOT}/packaging/create_desktop_shortcuts.sh" \
   vagrant@127.0.0.1:C:/libscript/packaging/
+
+vm_run 'New-Item -ItemType Directory -Path "C:/libscript/packaging/assets" -Force -ErrorAction SilentlyContinue | Out-Null'
+
+scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" \
+  "${REPO_ROOT}/packaging/assets/openedx.ico" \
+  "${REPO_ROOT}/packaging/assets/openedx_lms.ico" \
+  "${REPO_ROOT}/packaging/assets/openedx_cms.ico" \
+  "${REPO_ROOT}/packaging/assets/openedx_studio.ico" \
+  "${REPO_ROOT}/packaging/assets/openedx_banner_side.bmp" \
+  "${REPO_ROOT}/packaging/assets/openedx_banner_top.bmp" \
+  "${REPO_ROOT}/packaging/assets/openedx_eula.rtf" \
+  vagrant@127.0.0.1:C:/libscript/packaging/assets/
 
 scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" \
   "${REPO_ROOT}/stacks/cms/openedx/packaging.json" \
@@ -362,11 +374,13 @@ capture_screen "10_advanced_exit"
 printf '[INFO] Waiting for installation to complete and clicking Finish...\n'
 vm_click "Finish"
 sleep 2
+vm_run 'Stop-Process -Name msiexec -Force -ErrorAction SilentlyContinue'
 vm_run 'cmd /c call C:\libscript\packaging\create_desktop_shortcuts.cmd; Start-Sleep -Seconds 2'
 capture_screen "10b_desktop_icons"
 
 printf '\n=== Flow 3: Browser Verification & Authentication Flows ===\n'
-printf '[INFO] Starting mock server on guest for ports 8000 and 8001...\n'
+printf '[INFO] Suppressing notifications and starting mock server on guest for ports 8000 and 8001...\n'
+vm_run 'New-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Force -ErrorAction SilentlyContinue | Out-Null; Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoLowDiskSpaceChecks" -Value 1 -Type DWord -Force; Stop-Process -Name ShellExperienceHost, msiexec -Force -ErrorAction SilentlyContinue'
 vm_run 'cmd /c "cd C:\libscript && call packaging\start_mock_server.cmd"'
 
 # Step 11: LMS Login Screen

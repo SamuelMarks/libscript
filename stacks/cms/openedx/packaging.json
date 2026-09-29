@@ -5,6 +5,54 @@
   "version": "22.1.0",
   "publisher": "The Axim Collaborative & LibScript Contributors",
   "upgrade_code": "B8C8E64E-9B5A-4B7C-A5D8-0F18B9918239",
+  "topology": "suite_orchestrator",
+  "database_contract": {
+    "engine": "mysql",
+    "min_version": "8.0",
+    "allow_shared_instance": true,
+    "default_schema_name": "openedx",
+    "default_user_name": "openedx",
+    "default_port": 3306,
+    "character_set": "utf8mb4",
+    "collation": "utf8mb4_unicode_ci",
+    "ssl_required": false,
+    "dbaas_supported": true
+  },
+  "branding_palette": {
+    "primary_color": "#00263E",
+    "secondary_color": "#0075B4",
+    "dark_color": "#0A192F",
+    "app_title": "Open edX Platform",
+    "eula_components": [
+      "Open edX Platform",
+      "MySQL Relational Database",
+      "Redis Cache",
+      "MongoDB Datastore"
+    ]
+  },
+  "chained_packages": [
+    {
+      "id": "mysql",
+      "component": "_lib/databases/mysql",
+      "upgrade_code": "E0F45901-83B4-4B21-9B5A-01D38FE81001",
+      "install_condition": "INSTALL_MYSQL=\"1\"",
+      "property_forwarding": { "PROP_MYSQL_PORT": "PORT" }
+    },
+    {
+      "id": "redis",
+      "component": "_lib/caches/redis",
+      "upgrade_code": "E0F45901-83B4-4B21-9B5A-01D38FE81002",
+      "install_condition": "INSTALL_REDIS=\"1\"",
+      "property_forwarding": { "PROP_REDIS_PORT": "PORT" }
+    },
+    {
+      "id": "mongodb",
+      "component": "_lib/databases/mongodb",
+      "upgrade_code": "E0F45901-83B4-4B21-9B5A-01D38FE81003",
+      "install_condition": "INSTALL_MONGODB=\"1\"",
+      "property_forwarding": { "PROP_MONGODB_PORT": "PORT" }
+    }
+  ],
   "branding": {
     "icon": "packaging/assets/openedx.ico",
     "banner_top": "packaging/assets/openedx_banner_top.bmp",

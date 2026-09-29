@@ -6,6 +6,10 @@
 
 $desktop = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::Desktop)
 $iconPath = "C:\libscript\packaging\assets\openedx.ico"
+$lmsIconPath = "C:\libscript\packaging\assets\openedx_lms.ico"
+$cmsIconPath = "C:\libscript\packaging\assets\openedx_cms.ico"
+if (-not (Test-Path $lmsIconPath)) { $lmsIconPath = $iconPath }
+if (-not (Test-Path $cmsIconPath)) { $cmsIconPath = $iconPath }
 
 $wsh = New-Object -ComObject WScript.Shell
 
@@ -13,7 +17,7 @@ $s1 = $wsh.CreateShortcut((Join-Path $desktop "Open edX LMS.lnk"))
 $s1.TargetPath = "cmd.exe"
 $s1.Arguments = '/c call "C:\Program Files\OpenEdX\libscript\stacks\cms\openedx\cli.cmd" lms'
 $s1.WorkingDirectory = "C:\Program Files\OpenEdX"
-$s1.IconLocation = "$iconPath,0"
+$s1.IconLocation = "$lmsIconPath,0"
 $s1.Description = "Open edX Learning Management System"
 $s1.Save()
 
@@ -21,7 +25,7 @@ $s2 = $wsh.CreateShortcut((Join-Path $desktop "Open edX Studio.lnk"))
 $s2.TargetPath = "cmd.exe"
 $s2.Arguments = '/c call "C:\Program Files\OpenEdX\libscript\stacks\cms\openedx\cli.cmd" studio'
 $s2.WorkingDirectory = "C:\Program Files\OpenEdX"
-$s2.IconLocation = "$iconPath,0"
+$s2.IconLocation = "$cmsIconPath,0"
 $s2.Description = "Open edX Studio Course Authoring"
 $s2.Save()
 

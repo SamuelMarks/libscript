@@ -1,0 +1,53 @@
+{
+  "$schema": "../../../packaging/packaging.schema.json",
+  "name": "gitea",
+  "title": "Gitea Git Service",
+  "version": "1.21.0.0",
+  "publisher": "The Gitea Authors & LibScript Contributors",
+  "upgrade_code": "F0A1B2C3-D4E5-4F6A-9B0C-1D2E3F4A5B6C",
+  "topology": "standalone",
+  "database_contract": {
+    "engine": "postgres",
+    "min_version": "14.0",
+    "allow_shared_instance": true,
+    "default_schema_name": "gitea",
+    "default_user_name": "gitea",
+    "default_port": 5432,
+    "character_set": "utf8",
+    "collation": "en_US.UTF-8",
+    "ssl_required": false,
+    "dbaas_supported": true
+  },
+  "branding_palette": {
+    "primary_color": "#609926",
+    "secondary_color": "#8BC34A",
+    "dark_color": "#2C4B13",
+    "app_title": "Gitea Git Service",
+    "eula_components": ["Gitea Binary", "Git VCS Engine", "PostgreSQL Engine"]
+  },
+  "directories": {
+    "app_default": "[ProgramFiles64Folder]Gitea",
+    "data_default": "C:\\ProgramData\\Gitea\\data",
+    "logs_default": "C:\\ProgramData\\Gitea\\logs",
+    "backups_default": "C:\\ProgramData\\Gitea\\backups"
+  },
+  "features": [
+    {
+      "id": "core",
+      "title": "Gitea Core Git Engine",
+      "description": "Gitea standalone binary service and web interface.",
+      "default": true,
+      "mandatory": true
+    }
+  ],
+  "shortcuts": [
+    {
+      "id": "SC_CLI",
+      "title": "Gitea Administration Console",
+      "target": "[INSTALLFOLDER]cli.cmd",
+      "arguments": "",
+      "icon": "gitea.ico",
+      "description": "Gitea command line operations shell."
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "$schema": "../../../packaging/packaging.schema.json",
+  "name": "nextcloud",
+  "title": "Nextcloud Hub Platform",
+  "version": "28.0.0.0",
+  "publisher": "Nextcloud GmbH & LibScript Contributors",
+  "upgrade_code": "E9F0A1B2-C3D4-4E5F-8A9B-0C1D2E3F4A5B",
+  "topology": "standalone",
+  "database_contract": {
+    "engine": "postgres",
+    "min_version": "14.0",
+    "allow_shared_instance": true,
+    "default_schema_name": "nextcloud",
+    "default_user_name": "nextcloud",
+    "default_port": 5432,
+    "character_set": "utf8",
+    "collation": "en_US.UTF-8",
+    "ssl_required": false,
+    "dbaas_supported": true
+  },
+  "branding_palette": {
+    "primary_color": "#0082C9",
+    "secondary_color": "#1CA0E8",
+    "dark_color": "#003A59",
+    "app_title": "Nextcloud Hub Platform",
+    "eula_components": ["Nextcloud Server", "PHP Runtime", "PostgreSQL Engine"]
+  },
+  "directories": {
+    "app_default": "[ProgramFiles64Folder]Nextcloud",
+    "data_default": "C:\\ProgramData\\Nextcloud\\data",
+    "logs_default": "C:\\ProgramData\\Nextcloud\\logs",
+    "backups_default": "C:\\ProgramData\\Nextcloud\\backups"
+  },
+  "features": [
+    {
+      "id": "core",
+      "title": "Nextcloud Server Core",
+      "description": "Nextcloud collaboration platform files and web application assets.",
+      "default": true,
+      "mandatory": true
+    },
+    {
+      "id": "occ",
+      "title": "Nextcloud OCC Administrative CLI",
+      "description": "Command line management tool for Nextcloud administration.",
+      "default": true,
+      "mandatory": false
+    }
+  ],
+  "shortcuts": [
+    {
+      "id": "SC_CLI",
+      "title": "Nextcloud OCC Shell",
+      "target": "[INSTALLFOLDER]cli.cmd",
+      "arguments": "",
+      "icon": "nextcloud.ico",
+      "description": "Nextcloud command-line administration tool."
+    }
+  ]
+}

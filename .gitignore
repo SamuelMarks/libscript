@@ -160,6 +160,11 @@ standardize_*
 !docker/create_docker_builder.*
 !packaging/create_installer_from_json.*
 !packaging/generate_openedx_branding.*
+!packaging/generate_wordpress_branding.*
+!tests/test_wordpress_*
+!_lib/databases/parse_dbaas_url.*
+!_lib/databases/parse_connection_uri.*
+!_lib/databases/detect_openedx_db.*
 !_lib/orchestration/create_fhs_layout.*
 !_lib/kernel/initramfs/gen_initramfs.*
 !_lib/web-servers/*/create_*
@@ -222,6 +227,7 @@ kubernetes-the-hard-way/
 # Analysis and inconsistency reports
 detect_*.sh
 !packaging/detect_runtimes.sh
+!_lib/databases/detect_openedx_db.sh
 missing_*.txt
 fn_style_*.txt
 structural_inconsistencies.txt
@@ -251,6 +257,7 @@ all_scripts.txt
 !/execution-plan.illumos.schema.json
 !/execution-plan.freebsd.schema.json
 !/execution-plan.live.schema.json
+!/.cspell.json
 /*.txt
 !_lib/checksums.txt
 /*.out

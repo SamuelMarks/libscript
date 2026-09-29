@@ -84,10 +84,18 @@ EOF2
       set -- $deps_list
       while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
-        if [ "$pkg" = "openedx" ]; then
-          printf '%s\n' "Name: \"workers\"; Description: \"Launch Celery background workers and beat scheduler\"; Components: openedx; Flags: unchecked"
-          printf '%s\n' "Name: \"demo_content\"; Description: \"Import edX demo course and content libraries\"; Components: openedx; Flags: unchecked"
-          printf '%s\n' "Name: \"mfes\"; Description: \"Build and deploy Micro-Frontends (Learning, Authn, Account)\"; Components: openedx; Flags: unchecked"
+        pkg_json=$(find "$LIBSCRIPT_ROOT_DIR/_lib" "$LIBSCRIPT_ROOT_DIR/stacks" -name "packaging.json" 2>/dev/null | grep "/$pkg/" | head -n 1 || true)
+        if [ -f "$pkg_json" ]; then
+          feat_count=$(jq '.features | length' "$pkg_json" 2>/dev/null || printf '0')
+          if [ "$feat_count" -gt 0 ]; then
+            feat_idx=0
+            while [ "$feat_idx" -lt "$feat_count" ]; do
+              fid=$(jq -r ".features[$feat_idx].id" "$pkg_json")
+              feat_title=$(jq -r ".features[$feat_idx].title" "$pkg_json")
+              printf '%s\n' "Name: \"${fid}\"; Description: \"${feat_title}\"; Components: ${pkg}; Flags: unchecked"
+              feat_idx=$((feat_idx + 1))
+            done
+          fi
         fi
       done
 
@@ -97,11 +105,19 @@ EOF2
       set -- $deps_list
       while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
-        if [ "$pkg" = "openedx" ]; then
-          printf '%s\n' "Name: \"{autoprograms}\\Open edX\\Open edX Management Console\"; Filename: \"{app}\\stacks\\cms\\openedx\\cli.cmd\"; Components: openedx"
-          printf '%s\n' "Name: \"{autoprograms}\\Open edX\\Open edX Healthcheck\"; Filename: \"{app}\\stacks\\cms\\openedx\\healthcheck.cmd\"; Components: openedx"
-          printf '%s\n' "Name: \"{autoprograms}\\Open edX\\Open edX Database Console\"; Filename: \"{app}\\stacks\\cms\\openedx\\dbshell.cmd\"; Parameters: \"mysql\"; Components: openedx"
-          printf '%s\n' "Name: \"{autoprograms}\\Open edX\\Open edX Backup and Restore\"; Filename: \"{app}\\stacks\\cms\\openedx\\backup.cmd\"; Components: openedx"
+        pkg_json=$(find "$LIBSCRIPT_ROOT_DIR/_lib" "$LIBSCRIPT_ROOT_DIR/stacks" -name "packaging.json" 2>/dev/null | grep "/$pkg/" | head -n 1 || true)
+        if [ -f "$pkg_json" ]; then
+          short_count=$(jq '.shortcuts | length' "$pkg_json" 2>/dev/null || printf '0')
+          if [ "$short_count" -gt 0 ]; then
+            short_idx=0
+            while [ "$short_idx" -lt "$short_count" ]; do
+              short_title=$(jq -r ".shortcuts[$short_idx].title" "$pkg_json")
+              short_target=$(jq -r ".shortcuts[$short_idx].target" "$pkg_json")
+              short_args=$(jq -r ".shortcuts[$short_idx].arguments // \"\"" "$pkg_json")
+              printf '%s\n' "Name: \"{autoprograms}\\$APP_NAME\\$short_title\"; Filename: \"{app}\\$short_target\"; Parameters: \"$short_args\"; Components: $pkg"
+              short_idx=$((short_idx + 1))
+            done
+          fi
         fi
       done
 

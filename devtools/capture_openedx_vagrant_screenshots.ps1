@@ -159,8 +159,8 @@ function Invoke-LaunchBrowserUrl {
 
 function Invoke-CleanGuestInstallations {
     Write-Host "[INFO] Cleaning any prior installations on guest..."
-    Invoke-VmRun 'Stop-Process -Name msiexec -Force -ErrorAction SilentlyContinue; while ($p = Get-Package -Name "*Open edX*" -ErrorAction SilentlyContinue) { foreach ($pkg in $p) { Start-Process msiexec.exe -ArgumentList "/x $($pkg.FastPackageReference) /qn" -Wait } }; Get-ChildItem -Path "Registry::HKEY_CLASSES_ROOT\Installer\Products" -ErrorAction SilentlyContinue | Get-ItemProperty | Where-Object { $_.ProductName -like "*Open edX*" } | ForEach-Object { Start-Process msiexec.exe -ArgumentList "/x $($_.PSChildName) /qn" -Wait }'
-    Invoke-VmRun 'Stop-Process -Name WindowsTerminal -Force -ErrorAction SilentlyContinue'
+    Invoke-VmRun 'Stop-Process -Name chrome, msedge, msiexec, WindowsTerminal -Force -ErrorAction SilentlyContinue; while ($p = Get-Package -Name "*Open edX*" -ErrorAction SilentlyContinue) { foreach ($pkg in $p) { Start-Process msiexec.exe -ArgumentList "/x $($pkg.FastPackageReference) /qn" -Wait } }; Get-ChildItem -Path "Registry::HKEY_CLASSES_ROOT\Installer\Products" -ErrorAction SilentlyContinue | Get-ItemProperty | Where-Object { $_.ProductName -like "*Open edX*" } | ForEach-Object { Start-Process msiexec.exe -ArgumentList "/x $($_.PSChildName) /qn" -Wait }; Remove-Item "C:/Users/*/Desktop/Open edX*.lnk", "C:/Users/*/Desktop/Management CLI.lnk", "C:/Users/Public/Desktop/Open edX*.lnk", "C:/Users/Public/Desktop/Management CLI.lnk" -Force -ErrorAction SilentlyContinue'
+    Invoke-VmRun 'Stop-Process -Name chrome, msedge, msiexec, WindowsTerminal -Force -ErrorAction SilentlyContinue'
 }
 
 Write-Host "[INFO] Open edX Windows Vagrant screenshot automation initialized."
@@ -189,6 +189,16 @@ Invoke-VmScp (Join-Path $RepoRoot "packaging\click_button.ps1") "C:/libscript/pa
 Invoke-VmScp (Join-Path $RepoRoot "packaging\create_desktop_shortcuts.cmd") "C:/libscript/packaging/"
 Invoke-VmScp (Join-Path $RepoRoot "packaging\create_desktop_shortcuts.ps1") "C:/libscript/packaging/"
 Invoke-VmScp (Join-Path $RepoRoot "packaging\create_desktop_shortcuts.sh") "C:/libscript/packaging/"
+
+Invoke-VmRun 'New-Item -ItemType Directory -Path "C:/libscript/packaging/assets" -Force -ErrorAction SilentlyContinue | Out-Null'
+
+Invoke-VmScp (Join-Path $RepoRoot "packaging\assets\openedx.ico") "C:/libscript/packaging/assets/"
+Invoke-VmScp (Join-Path $RepoRoot "packaging\assets\openedx_lms.ico") "C:/libscript/packaging/assets/"
+Invoke-VmScp (Join-Path $RepoRoot "packaging\assets\openedx_cms.ico") "C:/libscript/packaging/assets/"
+Invoke-VmScp (Join-Path $RepoRoot "packaging\assets\openedx_studio.ico") "C:/libscript/packaging/assets/"
+Invoke-VmScp (Join-Path $RepoRoot "packaging\assets\openedx_banner_side.bmp") "C:/libscript/packaging/assets/"
+Invoke-VmScp (Join-Path $RepoRoot "packaging\assets\openedx_banner_top.bmp") "C:/libscript/packaging/assets/"
+Invoke-VmScp (Join-Path $RepoRoot "packaging\assets\openedx_eula.rtf") "C:/libscript/packaging/assets/"
 Invoke-VmScp (Join-Path $RepoRoot "stacks\cms\openedx\packaging.json") "C:/libscript/stacks/cms/openedx/"
 Invoke-VmScp (Join-Path $RepoRoot "stacks\cms\openedx\offline_bundle.json") "C:/libscript/stacks/cms/openedx/"
 Invoke-VmScp (Join-Path $RepoRoot "stacks\cms\openedx\manifest.json") "C:/libscript/stacks/cms/openedx/"
@@ -332,11 +342,13 @@ Invoke-CaptureScreen "10_advanced_exit"
 Write-Host "[INFO] Waiting for installation to complete and clicking Finish..."
 Invoke-VmClick "Finish"
 Start-Sleep -Seconds 2
+Invoke-VmRun 'Stop-Process -Name msiexec -Force -ErrorAction SilentlyContinue'
 Invoke-VmRun 'cmd /c call C:\libscript\packaging\create_desktop_shortcuts.cmd; Start-Sleep -Seconds 2'
 Invoke-CaptureScreen "10b_desktop_icons"
 
 Write-Host "`n=== Flow 3: Browser Verification & Authentication Flows ==="
-Write-Host "[INFO] Starting mock server on guest for ports 8000 and 8001..."
+Write-Host "[INFO] Suppressing notifications and starting mock server on guest for ports 8000 and 8001..."
+Invoke-VmRun 'New-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Force -ErrorAction SilentlyContinue | Out-Null; Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoLowDiskSpaceChecks" -Value 1 -Type DWord -Force; Stop-Process -Name ShellExperienceHost, msiexec -Force -ErrorAction SilentlyContinue'
 Invoke-VmRun 'cmd /c "cd C:\libscript && call packaging\start_mock_server.cmd"'
 
 # Step 11: LMS Login Screen

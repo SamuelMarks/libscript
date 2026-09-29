@@ -1,49 +1,192 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/stacks/cms/wordpress/vars.schema.json",
-  "title": "wordpress vars",
-  "description": "Variables for wordpress vars",
+  "title": "WordPress 7.1.2 Stack Variables",
+  "description": "Configuration variables and deployment parameters for WordPress 7.1.2 enterprise WAMP/LAMP stack.",
   "type": "object",
   "properties": {
-    "WORDPRESS_PHP_FPM_LISTEN": {
-      "type": "string",
-      "description": "Variable PHP_FPM_LISTEN."
-    },
-    "WORDPRESS_DB_USER": {
-      "type": "string",
-      "description": "Variable WORDPRESS_DB_USER."
-    },
-    "WORDPRESS_DB_NAME": {
-      "type": "string",
-      "description": "Variable WORDPRESS_DB_NAME."
-    },
-    "WORDPRESS_WEBSERVER": {
-      "type": "string",
-      "description": "Variable WORDPRESS_WEBSERVER."
-    },
-    "WORDPRESS_LISTEN": {
-      "type": "string",
-      "description": "Variable WORDPRESS_LISTEN."
-    },
-    "WORDPRESS_DB_ENGINE": {
-      "type": "string",
-      "description": "Variable WORDPRESS_DB_ENGINE."
-    },
     "WORDPRESS_VERSION": {
       "type": "string",
-      "description": "Variable WORDPRESS_VERSION."
+      "description": "Target WordPress core version to deploy (e.g. '7.1.2' or 'latest').",
+      "default": "7.1.2"
     },
-    "WORDPRESS_WWWROOT": {
+    "WORDPRESS_SITE_TITLE": {
       "type": "string",
-      "description": "Variable WWWROOT."
+      "description": "Initial website and blog title for the WordPress installation.",
+      "default": "LibScript WordPress 7.1.2"
     },
-    "WORDPRESS_DB_PASS": {
+    "WORDPRESS_ADMIN_USER": {
       "type": "string",
-      "description": "Variable WORDPRESS_DB_PASS."
+      "description": "Initial administrator username for WordPress authentication.",
+      "default": "admin"
+    },
+    "WORDPRESS_ADMIN_PASSWORD": {
+      "type": "string",
+      "description": "Initial administrator password for WordPress authentication.",
+      "default": "admin"
+    },
+    "WORDPRESS_ADMIN_EMAIL": {
+      "type": "string",
+      "description": "Initial administrator email address receiving system notifications.",
+      "default": "admin@example.local"
+    },
+    "WORDPRESS_SITE_URL": {
+      "type": "string",
+      "description": "Canonical public site URL (WP_SITEURL), including protocol and optional port.",
+      "default": "http://wordpress.local"
+    },
+    "WORDPRESS_HOME_URL": {
+      "type": "string",
+      "description": "Canonical public homepage URL (WP_HOME), including protocol and optional port.",
+      "default": "http://wordpress.local"
     },
     "WORDPRESS_SERVER_NAME": {
       "type": "string",
-      "description": "Variable WORDPRESS_SERVER_NAME."
+      "description": "Virtual host domain name or hostname used in web server configuration.",
+      "default": "wordpress.local"
+    },
+    "WORDPRESS_LISTEN": {
+      "type": ["integer", "string"],
+      "description": "TCP port on which the web server listens for incoming HTTP requests.",
+      "default": 80
+    },
+    "WORDPRESS_WEBSERVER": {
+      "type": "string",
+      "description": "Ingress web server engine ('nginx', 'caddy', 'httpd', or 'iis').",
+      "default": "nginx"
+    },
+    "WORDPRESS_WWWROOT": {
+      "type": "string",
+      "description": "Filesystem path to the WordPress document root directory.",
+      "default": "/var/www/wordpress"
+    },
+    "WORDPRESS_PHP_VERSION": {
+      "type": "string",
+      "description": "Target PHP runtime version required for WordPress execution.",
+      "default": "8.2"
+    },
+    "WORDPRESS_PHP_FPM_LISTEN": {
+      "type": "string",
+      "description": "UNIX domain socket path or TCP host:port where PHP-FPM FastCGI listens.",
+      "default": "127.0.0.1:9000"
+    },
+    "WORDPRESS_PHP_MEMORY_LIMIT": {
+      "type": "string",
+      "description": "PHP memory limit directive (e.g. '256M' or '512M').",
+      "default": "256M"
+    },
+    "WORDPRESS_PHP_UPLOAD_MAX_FILESIZE": {
+      "type": "string",
+      "description": "Maximum upload file size directive (e.g. '128M').",
+      "default": "128M"
+    },
+    "WORDPRESS_PHP_POST_MAX_SIZE": {
+      "type": "string",
+      "description": "Maximum POST request body size directive (e.g. '128M').",
+      "default": "128M"
+    },
+    "WORDPRESS_PHP_MAX_EXECUTION_TIME": {
+      "type": ["integer", "string"],
+      "description": "Maximum script execution timeout in seconds.",
+      "default": 300
+    },
+    "WORDPRESS_PHP_MAX_INPUT_VARS": {
+      "type": ["integer", "string"],
+      "description": "Maximum number of input variables accepted via GET/POST/cookies.",
+      "default": 5000
+    },
+    "WORDPRESS_PHP_OPCACHE_ENABLE": {
+      "type": ["boolean", "string"],
+      "description": "Whether to enable Zend OPcache bytecode accelerator.",
+      "default": true
+    },
+    "WORDPRESS_REUSE_OPENEDX_DB": {
+      "type": ["boolean", "string"],
+      "description": "Whether to detect, reuse, and coexist with an existing Open edX MySQL/MariaDB database instance.",
+      "default": true
+    },
+    "WORDPRESS_OPENEDX_CONFIG_PATH": {
+      "type": "string",
+      "description": "Custom filesystem path override for Open edX configuration discovery.",
+      "default": "/etc/edx/config.json"
+    },
+    "WORDPRESS_DB_ENGINE": {
+      "type": "string",
+      "description": "Database management engine ('mariadb', 'mysql', 'sqlite', or 'postgres').",
+      "default": "mariadb"
+    },
+    "WORDPRESS_DBAAS_URL": {
+      "type": "string",
+      "description": "Connection URI for remote hosted DBaaS (e.g. 'mysql://user:pass@host:3306/db?ssl-ca=ca.pem')."
+    },
+    "WORDPRESS_DB_HOST": {
+      "type": "string",
+      "description": "Relational database server host or TCP host:port.",
+      "default": "127.0.0.1:3306"
+    },
+    "WORDPRESS_DB_NAME": {
+      "type": "string",
+      "description": "Database schema name dedicated to WordPress.",
+      "default": "wordpress"
+    },
+    "WORDPRESS_DB_USER": {
+      "type": "string",
+      "description": "Database user account credential for WordPress connections.",
+      "default": "wordpress"
+    },
+    "WORDPRESS_DB_PASS": {
+      "type": "string",
+      "description": "Database user password credential for WordPress connections.",
+      "default": "wordpress"
+    },
+    "WORDPRESS_DB_SSL_CA": {
+      "type": "string",
+      "description": "Filesystem path to certificate authority (CA) bundle for TLS database connections."
+    },
+    "WORDPRESS_DB_SSL_VERIFY": {
+      "type": ["boolean", "string"],
+      "description": "Whether to strictly verify the database server TLS certificate.",
+      "default": true
+    },
+    "WORDPRESS_TABLE_PREFIX": {
+      "type": "string",
+      "description": "Relational database table prefix for WordPress tables.",
+      "default": "wp_"
+    },
+    "WORDPRESS_REVERSE_PROXY_MODE": {
+      "type": ["boolean", "string"],
+      "description": "Whether to trust reverse-proxy SSL headers (HTTP_X_FORWARDED_PROTO/HOST) to avoid redirect loops.",
+      "default": true
+    },
+    "WORDPRESS_ENABLE_REDIS": {
+      "type": ["boolean", "string"],
+      "description": "Whether to install and activate Redis Object Cache drop-in for WordPress.",
+      "default": false
+    },
+    "WORDPRESS_REDIS_HOST": {
+      "type": "string",
+      "description": "Redis daemon host for object caching.",
+      "default": "127.0.0.1"
+    },
+    "WORDPRESS_REDIS_PORT": {
+      "type": ["integer", "string"],
+      "description": "Redis daemon TCP port for object caching.",
+      "default": 6379
+    },
+    "WORDPRESS_ENABLE_PHPMYADMIN": {
+      "type": ["boolean", "string"],
+      "description": "Whether to deploy Adminer/phpMyAdmin database management web interface.",
+      "default": true
+    },
+    "WORDPRESS_ENABLE_CRON_OFFLOAD": {
+      "type": ["boolean", "string"],
+      "description": "Whether to disable web traffic WP-Cron and offload to native host crontab or Task Scheduler.",
+      "default": true
+    },
+    "WORDPRESS_UPDATE_HOSTS_FILE": {
+      "type": ["boolean", "string"],
+      "description": "Whether to automatically register the virtual hostname in the operating system hosts file.",
+      "default": false
     }
   }
 }

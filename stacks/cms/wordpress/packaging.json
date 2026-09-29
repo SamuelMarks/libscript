@@ -1,0 +1,205 @@
+{
+  "$schema": "../../../packaging/packaging.schema.json",
+  "name": "wordpress",
+  "title": "WordPress 7.1.2 Platform",
+  "version": "7.1.2.0",
+  "publisher": "WordPress Foundation & LibScript Contributors",
+  "upgrade_code": "B6C77413-58C9-4C41-8636-93026363B81A",
+  "topology": "standalone",
+  "database_contract": {
+    "engine": "mysql",
+    "min_version": "5.7",
+    "allow_shared_instance": true,
+    "default_schema_name": "wordpress",
+    "default_user_name": "wordpress",
+    "default_port": 3306,
+    "character_set": "utf8mb4",
+    "collation": "utf8mb4_unicode_520_ci",
+    "ssl_required": false,
+    "dbaas_supported": true
+  },
+  "branding_palette": {
+    "primary_color": "#21759B",
+    "secondary_color": "#0073AA",
+    "dark_color": "#1E1E1E",
+    "app_title": "WordPress Platform",
+    "eula_components": ["WordPress Core", "PHP Runtime", "MariaDB Server", "Nginx HTTP Server"]
+  },
+  "branding": {
+    "icon": "packaging/assets/wordpress.ico",
+    "banner_top": "packaging/assets/wordpress_banner_top.bmp",
+    "banner_side": "packaging/assets/wordpress_banner_side.bmp",
+    "license_rtf": "packaging/assets/wordpress_eula.rtf",
+    "license_mode": "consolidated_eula",
+    "require_all_accepted": true,
+    "bundled_licenses": [
+      {
+        "component": "wordpress",
+        "title": "WordPress Publishing Platform",
+        "spdx_id": "GPL-2.0-or-later",
+        "mandatory": true
+      },
+      {
+        "component": "php",
+        "title": "PHP Hypertext Preprocessor Runtime",
+        "spdx_id": "PHP-3.01",
+        "mandatory": true
+      },
+      {
+        "component": "mariadb",
+        "title": "MariaDB Relational Database Management System",
+        "spdx_id": "GPL-2.0-only",
+        "mandatory": false
+      },
+      {
+        "component": "nginx",
+        "title": "Nginx HTTP and Reverse Proxy Server",
+        "spdx_id": "BSD-2-Clause",
+        "mandatory": false
+      },
+      {
+        "component": "adminer",
+        "title": "Adminer Database Management Tool",
+        "spdx_id": "Apache-2.0 OR GPL-2.0-only",
+        "mandatory": false
+      }
+    ]
+  },
+  "directories": {
+    "app_default": "[ProgramFiles64Folder]WordPress",
+    "data_default": "C:\\ProgramData\\WordPress\\data",
+    "logs_default": "C:\\ProgramData\\WordPress\\logs",
+    "backups_default": "C:\\ProgramData\\WordPress\\backups"
+  },
+  "runtime_searches": [
+    {
+      "name": "php",
+      "title": "PHP 8.2+ Execution Runtime",
+      "required": true,
+      "registry_searches": [
+        {
+          "root": "HKLM",
+          "key": "SOFTWARE\\PHP\\8.3",
+          "file": "php.exe"
+        },
+        {
+          "root": "HKLM",
+          "key": "SOFTWARE\\PHP\\8.2",
+          "file": "php.exe"
+        }
+      ],
+      "path_command": "php.exe",
+      "version_regex": "8\\.[2-9]"
+    }
+  ],
+  "browser_launch": {
+    "targets": [
+      {
+        "id": "LAUNCH_BROWSER",
+        "title": "Launch WordPress Site in Web Browser",
+        "default": true,
+        "url_template": "http://[PROP_WORDPRESS_HOST]:[PROP_WORDPRESS_PORT]/"
+      },
+      {
+        "id": "LAUNCH_ADMIN",
+        "title": "Launch WordPress Administration Dashboard",
+        "default": true,
+        "url_template": "http://[PROP_WORDPRESS_HOST]:[PROP_WORDPRESS_PORT]/wp-admin/"
+      }
+    ]
+  },
+  "features": [
+    {
+      "id": "core",
+      "title": "WordPress 7.1.2 Core Application",
+      "description": "Core WordPress files, wp-config synthesis, and web root staging.",
+      "default": true,
+      "mandatory": true
+    },
+    {
+      "id": "php",
+      "title": "PHP 8.2+ Runtime & WAMP Optimizations",
+      "description": "Bundled or linked PHP runtime with tuned memory, upload limits, and OPcache.",
+      "default": true,
+      "mandatory": true
+    },
+    {
+      "id": "webserver",
+      "title": "Nginx Web Server & FastCGI Ingress",
+      "description": "HTTP web server configured for WordPress pretty permalinks.",
+      "default": true,
+      "mandatory": true
+    },
+    {
+      "id": "database",
+      "title": "Local MariaDB Database Server",
+      "description": "Standalone MariaDB database server (automatically deselected when Open edX is reused or DBaaS is specified).",
+      "default": true,
+      "mandatory": false
+    },
+    {
+      "id": "tools",
+      "title": "WP-CLI and Adminer Database Console",
+      "description": "Command-line administrative utilities and web-based database management console.",
+      "default": true,
+      "mandatory": false
+    },
+    {
+      "id": "cron",
+      "title": "Windows Task Scheduler WP-Cron Offload",
+      "description": "Registers a periodic task to run WP-Cron in the background.",
+      "default": true,
+      "mandatory": false
+    }
+  ],
+  "shortcuts": [
+    {
+      "id": "SC_CLI",
+      "title": "WordPress Management Console",
+      "target": "[INSTALLFOLDER]cli.cmd",
+      "arguments": "",
+      "icon": "wordpress.ico",
+      "description": "Unified command-line administrative interface for WordPress operations."
+    },
+    {
+      "id": "SC_HEALTHCHECK",
+      "title": "WordPress Diagnostics & Healthcheck",
+      "target": "[INSTALLFOLDER]healthcheck.cmd",
+      "arguments": "",
+      "icon": "wordpress.ico",
+      "description": "Full-stack diagnostics probe for WordPress and web server services."
+    },
+    {
+      "id": "SC_DBSHELL",
+      "title": "WordPress Database Console",
+      "target": "[INSTALLFOLDER]dbshell.cmd",
+      "arguments": "",
+      "icon": "wordpress.ico",
+      "description": "Interactive relational database shell connected to WordPress database."
+    },
+    {
+      "id": "SC_BACKUP",
+      "title": "WordPress Backup Utility",
+      "target": "[INSTALLFOLDER]backup.cmd",
+      "arguments": "",
+      "icon": "wordpress.ico",
+      "description": "Automated snapshot backup and disaster recovery console."
+    }
+  ],
+  "post_install": [
+    {
+      "id": "healthcheck",
+      "description": "Validate service availability and connectivity across stack components",
+      "command": "[INSTALLFOLDER]healthcheck.cmd",
+      "optional": true,
+      "condition": "NOT Installed"
+    },
+    {
+      "id": "cron_register",
+      "description": "Register background WP-Cron scheduled task in Windows Task Scheduler",
+      "command": "[INSTALLFOLDER]cron.cmd install",
+      "optional": true,
+      "condition": "INSTALL_CRON=\"1\""
+    }
+  ]
+}

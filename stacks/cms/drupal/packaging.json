@@ -1,0 +1,60 @@
+{
+  "$schema": "../../../packaging/packaging.schema.json",
+  "name": "drupal",
+  "title": "Drupal CMS Platform",
+  "version": "10.2.0.0",
+  "publisher": "Drupal Community & LibScript Contributors",
+  "upgrade_code": "D8E74F0A-6B4C-8DB6-E91F-29C0029340D1",
+  "topology": "standalone",
+  "database_contract": {
+    "engine": "mysql",
+    "min_version": "8.0",
+    "allow_shared_instance": true,
+    "default_schema_name": "drupal",
+    "default_user_name": "drupal",
+    "default_port": 3306,
+    "character_set": "utf8mb4",
+    "collation": "utf8mb4_unicode_ci",
+    "ssl_required": false,
+    "dbaas_supported": true
+  },
+  "branding_palette": {
+    "primary_color": "#0678BE",
+    "secondary_color": "#279CEB",
+    "dark_color": "#00476E",
+    "app_title": "Drupal CMS Platform",
+    "eula_components": ["Drupal Core", "PHP Runtime", "Web Server Ingress"]
+  },
+  "directories": {
+    "app_default": "[ProgramFiles64Folder]Drupal",
+    "data_default": "C:\\ProgramData\\Drupal\\data",
+    "logs_default": "C:\\ProgramData\\Drupal\\logs",
+    "backups_default": "C:\\ProgramData\\Drupal\\backups"
+  },
+  "features": [
+    {
+      "id": "core",
+      "title": "Drupal 10 Core Application",
+      "description": "Drupal CMS framework core files and web document root.",
+      "default": true,
+      "mandatory": true
+    },
+    {
+      "id": "drush",
+      "title": "Drush Command-Line Interface",
+      "description": "Administrative shell and scripting utility for Drupal.",
+      "default": true,
+      "mandatory": false
+    }
+  ],
+  "shortcuts": [
+    {
+      "id": "SC_CLI",
+      "title": "Drupal Management Console",
+      "target": "[INSTALLFOLDER]cli.cmd",
+      "arguments": "",
+      "icon": "drupal.ico",
+      "description": "Administrative command shell for Drupal operations."
+    }
+  ]
+}

@@ -2,10 +2,11 @@
   "$schema": "../../../_lib/_common/manifest.schema.json",
   "name": "wordpress",
   "category": "cms",
-  "title": "wordpress",
+  "title": "WordPress 7.1.2 Platform",
   "license": "GPL-2.0-or-later",
   "license_name": "GNU General Public License v2.0 or later",
-  "description": "wordpress stack",
-  "provides": ["wordpress"],
-  "os_blacklist": ["sunos"]
+  "description": "Turnkey enterprise WordPress 7.1.2 publishing platform with WAMP/LAMP optimization, Open edX database coexistence, and DBaaS support.",
+  "provides": ["wordpress", "wp-cli", "wamp"],
+  "requires": ["languages/php", "web-servers/nginx"],
+  "os_blacklist": []
 }

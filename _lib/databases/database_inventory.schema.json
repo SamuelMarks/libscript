@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/databases/database_inventory.schema.json",
+  "title": "LibScript Database Inventory Schema",
+  "description": "Schema validating detected or active database services and instances on the host system",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "description": "Single discovered database service instance",
+    "required": ["engine", "host", "port", "is_active", "source"],
+    "properties": {
+      "engine": {
+        "type": "string",
+        "enum": ["mysql", "mariadb", "postgres", "mongodb", "redis", "sqlite"],
+        "description": "Database engine type"
+      },
+      "version": {
+        "type": "string",
+        "description": "Version string extracted from binary or greeting packet"
+      },
+      "host": {
+        "type": "string",
+        "description": "Hostname or IP address of the database service (e.g. '127.0.0.1')"
+      },
+      "port": {
+        "type": "integer",
+        "description": "TCP listening port number"
+      },
+      "socket": {
+        "type": "string",
+        "description": "UNIX domain socket path or Windows named pipe"
+      },
+      "service_name": {
+        "type": "string",
+        "description": "Windows service name or systemd/rc.d unit name"
+      },
+      "is_active": {
+        "type": "boolean",
+        "description": "Boolean status indicating whether daemon is currently running and responsive"
+      },
+      "source": {
+        "type": "string",
+        "enum": ["windows_service", "systemd", "rc_d", "smf", "socket", "tcp_probe", "config_file"],
+        "description": "Discovery mechanism or probe that identified this instance"
+      },
+      "existing_schemas": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "description": "Name of an existing database schema or keyspace"
+        },
+        "description": "Array of pre-existing database schema names hosted by this instance"
+      }
+    }
+  }
+}

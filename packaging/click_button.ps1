@@ -291,6 +291,20 @@ public class Win32Helper {
                 found = true;
                 return false;
             }
+            if (IsInstallerWindow(hWnd)) {
+                EnumChildWindows(hWnd, (hChild, lChildParam) => {
+                    if (!IsWindowVisible(hChild)) return true;
+                    StringBuilder csb = new StringBuilder(256);
+                    GetWindowText(hChild, csb, 256);
+                    string cleanCs = NormalizeText(csb.ToString());
+                    if (cleanCs.IndexOf(cleanTitle, StringComparison.OrdinalIgnoreCase) >= 0) {
+                        found = true;
+                        return false;
+                    }
+                    return true;
+                }, IntPtr.Zero);
+                if (found) return false;
+            }
             return true;
         }, IntPtr.Zero);
         return found;

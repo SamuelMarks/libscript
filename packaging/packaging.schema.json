@@ -28,6 +28,212 @@
       "pattern": "^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$",
       "description": "GUID used by Windows Installer to track product versions and manage upgrades"
     },
+    "topology": {
+      "type": "string",
+      "enum": ["standalone", "suite_orchestrator", "modular_component"],
+      "default": "standalone",
+      "description": "Specifies whether package compiles as an independent installer, an orchestrator chaining embedded child MSIs, or a shared modular dependency"
+    },
+    "database_contract": {
+      "type": "object",
+      "description": "Declarative database requirements and multi-tenant isolation configuration",
+      "required": ["engine"],
+      "properties": {
+        "engine": {
+          "type": "string",
+          "enum": ["mysql", "mariadb", "postgres", "mongodb", "redis", "sqlite"],
+          "description": "Target relational or document database engine required by the stack"
+        },
+        "min_version": {
+          "type": "string",
+          "description": "Minimum supported semantic version string for the database engine"
+        },
+        "allow_shared_instance": {
+          "type": "boolean",
+          "default": true,
+          "description": "Boolean flag indicating whether the stack can share a database server instance with peer applications"
+        },
+        "default_schema_name": {
+          "type": "string",
+          "description": "Default database or keyspace name for tenant isolation"
+        },
+        "default_user_name": {
+          "type": "string",
+          "description": "Default database user account identifier"
+        },
+        "default_port": {
+          "type": "integer",
+          "description": "Default TCP listening port for database engine"
+        },
+        "character_set": {
+          "type": "string",
+          "default": "utf8mb4",
+          "description": "Character encoding requirement (e.g. utf8mb4)"
+        },
+        "collation": {
+          "type": "string",
+          "description": "Relational collation sequence (e.g. utf8mb4_unicode_520_ci)"
+        },
+        "ssl_required": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether TLS encryption is mandatory for remote DBaaS connections"
+        },
+        "dbaas_supported": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether remote cloud managed connection strings are accepted"
+        }
+      }
+    },
+    "chained_packages": {
+      "type": "array",
+      "description": "Child component packages orchestrated and installed via MsiEmbeddedChainer",
+      "items": {
+        "type": "object",
+        "description": "Child package configuration within the suite orchestrator",
+        "required": ["id", "component"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identifier of the child package in the chainer table"
+          },
+          "component": {
+            "type": "string",
+            "description": "Sub-directory or component identifier matching repository catalog"
+          },
+          "upgrade_code": {
+            "type": "string",
+            "pattern": "^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$",
+            "description": "WiX UpgradeCode GUID for product state inspection"
+          },
+          "install_condition": {
+            "type": "string",
+            "description": "WiX conditional expression governing child package installation"
+          },
+          "property_forwarding": {
+            "type": "object",
+            "description": "Map of master installer public properties forwarded to child package",
+            "additionalProperties": {
+              "type": "string",
+              "description": "Child installer target property name"
+            }
+          }
+        }
+      }
+    },
+    "ui_wizard": {
+      "type": "array",
+      "description": "Declarative definition of installer wizard sequence and dialog flow",
+      "items": {
+        "type": "object",
+        "description": "Wizard dialog page specification",
+        "required": ["id", "page_type"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique dialog page identifier"
+          },
+          "page_type": {
+            "type": "string",
+            "enum": [
+              "welcome",
+              "eula",
+              "target_directory",
+              "database_selection",
+              "web_ingress",
+              "credentials",
+              "tuning_options",
+              "feature_tree",
+              "progress",
+              "finish"
+            ],
+            "description": "Standard dialog template type in wizard flow"
+          },
+          "title": {
+            "type": "string",
+            "description": "Custom header title for the dialog page"
+          },
+          "subtitle": {
+            "type": "string",
+            "description": "Custom subheader or explanation text for the dialog page"
+          },
+          "condition": {
+            "type": "string",
+            "description": "Conditional expression determining if page should be displayed"
+          },
+          "fields": {
+            "type": "array",
+            "description": "Interactive form fields and property bindings on this page",
+            "items": {
+              "type": "object",
+              "description": "Form input field on wizard page",
+              "required": ["name", "property", "control_type"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Field label text displayed next to control"
+                },
+                "property": {
+                  "type": "string",
+                  "description": "MSI public property bound to this field"
+                },
+                "control_type": {
+                  "type": "string",
+                  "enum": ["edit", "password", "checkbox", "radio_group", "directory_picker"],
+                  "description": "UI control type rendered on the wizard page"
+                },
+                "default": {
+                  "type": "string",
+                  "description": "Default initial value for the field"
+                },
+                "validation_regex": {
+                  "type": "string",
+                  "description": "Regular expression pattern validating user input before proceeding"
+                },
+                "validation_message": {
+                  "type": "string",
+                  "description": "Error message displayed if input fails validation_regex"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "branding_palette": {
+      "type": "object",
+      "description": "Color palette and artwork parameters for automatic installer branding synthesis",
+      "properties": {
+        "primary_color": {
+          "type": "string",
+          "pattern": "^#([A-Fa-f0-9]{6})$",
+          "description": "Hex color string for title banners and side splash gradients (e.g. #0078D4)"
+        },
+        "secondary_color": {
+          "type": "string",
+          "pattern": "^#([A-Fa-f0-9]{6})$",
+          "description": "Hex color string for gradient transitions (e.g. #2B88D8)"
+        },
+        "dark_color": {
+          "type": "string",
+          "pattern": "^#([A-Fa-f0-9]{6})$",
+          "description": "Hex color string for background contrast and typography (e.g. #101820)"
+        },
+        "app_title": {
+          "type": "string",
+          "description": "Application title text rendered into synthetic splash bitmaps"
+        },
+        "eula_components": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Component name or path whose legal text is aggregated into the RTF EULA"
+          },
+          "description": "Array of component names whose legal texts are concatenated into RTF EULA"
+        }
+      }
+    },
     "branding": {
       "type": "object",
       "description": "Visual assets and branding artwork customized for installer dialogs",

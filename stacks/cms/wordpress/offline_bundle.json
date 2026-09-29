@@ -1,0 +1,68 @@
+{
+  "$schema": "../../../packaging/offline.schema.json",
+  "name": "wordpress",
+  "title": "WordPress 7.1.2 Platform Air-Gapped Offline Bundle",
+  "version": "7.1.2",
+  "target_platform": "windows-x64",
+  "runtimes": {
+    "php": {
+      "name": "php",
+      "version": "8.2.20",
+      "filename": "php-8.2.20-nts-Win32-vs16-x64.zip",
+      "url": "https://windows.php.net/downloads/releases/archives/php-8.2.20-nts-Win32-vs16-x64.zip",
+      "sha256": "4b97d8c6b2de862f1c8ca9489f66089ecbb19630c727eb1b12ff95f2fc4dbbc1",
+      "type": "zip",
+      "extract_dir": "runtimes/php"
+    },
+    "nginx": {
+      "name": "nginx",
+      "version": "1.26.1",
+      "filename": "nginx-1.26.1.zip",
+      "url": "https://nginx.org/download/nginx-1.26.1.zip",
+      "sha256": "443ae59eaee781fbc032d8471c062828b6dbeae3de2aa71ef6839ab136e39556",
+      "type": "zip",
+      "extract_dir": "webservers/nginx"
+    }
+  },
+  "databases": {
+    "mariadb": {
+      "name": "mariadb",
+      "version": "11.4.2",
+      "filename": "mariadb-11.4.2-winx64.zip",
+      "url": "https://archive.mariadb.org/mariadb-11.4.2/winx64-packages/mariadb-11.4.2-winx64.zip",
+      "sha256": "65163158c356396f4b306915152be220f86a237000d6e2c45f4cbff3c8969d27",
+      "port": 3306,
+      "service_name": "WordPressMariaDB",
+      "extract_dir": "databases/mariadb"
+    }
+  },
+  "applications": {
+    "wordpress": {
+      "name": "wordpress",
+      "version": "7.1.2",
+      "filename": "wordpress-7.1.2.tar.gz",
+      "url": "https://wordpress.org/wordpress-7.1.2.tar.gz",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "type": "tar.gz",
+      "extract_dir": "www/wordpress"
+    },
+    "wp-cli": {
+      "name": "wp-cli",
+      "version": "2.10.0",
+      "filename": "wp-cli.phar",
+      "url": "https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar",
+      "sha256": "250fa900f6815309ca0c2d3ca4729fcf958f2d59ae0cb1624cff454471f45610",
+      "type": "file",
+      "extract_dir": "bin"
+    },
+    "adminer": {
+      "name": "adminer",
+      "version": "4.8.1",
+      "filename": "adminer-4.8.1.php",
+      "url": "https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php",
+      "sha256": "1617a224a1b0288ebf2302307ef1fa7e1d51a667104b281f62cc629b311394f4",
+      "type": "file",
+      "extract_dir": "www/wordpress/db-admin"
+    }
+  }
+}

@@ -1,13 +1,4 @@
 @echo off
-:: # template_msi.cmd
-::
-:: ## Overview
-:: Template file and compiler for WiX MSI installer generation on Windows.
-:: Generates dynamic chained license dialogs and multi-component acceptance UI.
-::
-:: ## Usage
-:: call packaging\template_msi.cmd [pkg1 ver1 pkg2 ver2 ...]
-
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -19,102 +10,96 @@ if defined STACK (
 )
 set "STACK=%STACK%:%THIS_FILE%:"
 
-set "SCRIPT_DIR=%~dp0"
-set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+:: # template_msi.cmd
+::
+:: ## Overview
+:: Universal WiX XML (.wxs) manifest generator on Windows.
+:: Synthesizes WiX manifests driven purely by packaging.json.
+::
+:: ## Usage
+::   call packaging	emplate_msi.cmd <path_to_stack_or_packaging.json> --out <file.wxs> [OPTIONS]
 
-:: ## find_root
-:: Finds the root directory of the libscript repository.
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
 for %%I in ("%SCRIPT_DIR%") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 
 :find_root_loop
 if exist "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" goto found_root
-if exist "%LIBSCRIPT_ROOT_DIR%\libscript.sh" goto found_root
 for %%I in ("%LIBSCRIPT_ROOT_DIR%\..") do set "PARENT_DIR=%%~fI"
 if "%PARENT_DIR%"=="%LIBSCRIPT_ROOT_DIR%" goto found_root
 set "LIBSCRIPT_ROOT_DIR=%PARENT_DIR%"
 goto find_root_loop
+
 :found_root
 
-if "%APP_NAME%"=="" set "APP_NAME=LibScript Deployment"
-if "%APP_VERSION%"=="" set "APP_VERSION=1.0.0.0"
-if "%APP_PUBLISHER%"=="" set "APP_PUBLISHER=LibScript"
-if "%PRODUCT_CODE%"=="" set "PRODUCT_CODE=*"
-if "%UPGRADE_CODE%"=="" set "UPGRADE_CODE=PUT-GUID-HERE"
-if "%install_scope%"=="" set "install_scope=perMachine"
-if "%WELCOME_TEXT%"=="" set "WELCOME_TEXT=Welcome to the LibScript Deployment Installer"
-if "%OUT_FILE%"=="" set "OUT_FILE=LibScriptInstaller"
+set "TARGET_SPEC=%~1"
+if "%TARGET_SPEC%"=="" (
+    echo [ERROR] Target stack directory or packaging.json required >&2
+    exit /b 1
+)
+shift
 
-set "WXS_FILE=%OUT_FILE%.wxs"
+set "OUT_FILE="
+set "VARIANT=online"
+set "VERSION_OVERRIDE="
 
-> "%WXS_FILE%" (
-    echo ^<?xml version="1.0" encoding="UTF-8"?^>
-    echo ^<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"^>
-    echo   ^<Product Id="%PRODUCT_CODE%" Name="%APP_NAME%" Language="1033" Version="%APP_VERSION%" Manufacturer="%APP_PUBLISHER%" UpgradeCode="%UPGRADE_CODE%"^>
-    echo     ^<Package InstallerVersion="200" Compressed="yes" InstallScope="%install_scope%" Description="%WELCOME_TEXT%" /^>
-    echo     ^<Media Id="1" Cabinet="media1.cab" EmbedCab="yes" /^>
-    if not "%ICON_PATH%"=="" (
-        echo     ^<Icon Id="AppIcon.ico" SourceFile="%ICON_PATH%"/^>
-        echo     ^<Property Id="ARPPRODUCTICON" Value="AppIcon.ico" /^>
-    )
-    if not "%APP_URL%"=="" echo     ^<Property Id="ARPURLINFOABOUT" Value="%APP_URL%" /^>
-    if not "%BANNER_TOP_PATH%"=="" echo     ^<WixVariable Id="WixUIBannerBmp" Value="%BANNER_TOP_PATH%" /^>
-    if not "%BANNER_SIDE_PATH%"=="" echo     ^<WixVariable Id="WixUIDialogBmp" Value="%BANNER_SIDE_PATH%" /^>
-    if not "%LICENSE_PATH%"=="" echo     ^<WixVariable Id="WixUILicenseRtf" Value="%LICENSE_PATH%" /^>
+:arg_loop
+if "%~1"=="" goto done_args
+if /i "%~1"=="--out" ( set "OUT_FILE=%~2" & shift & shift & goto arg_loop )
+if /i "%~1"=="--variant" ( set "VARIANT=%~2" & shift & shift & goto arg_loop )
+if /i "%~1"=="--version" ( set "VERSION_OVERRIDE=%~2" & shift & shift & goto arg_loop )
+shift
+goto arg_loop
 
-    echo     ^<Directory Id="TARGETDIR" Name="SourceDir"^>
-    echo       ^<Directory Id="ProgramFilesFolder"^>
-    echo         ^<Directory Id="INSTALLFOLDER" Name="%APP_NAME%" /^>
-    echo       ^</Directory^>
-    echo     ^</Directory^>
+:done_args
 
-    echo     ^<UI Id="CustomUI"^>
-    echo       ^<Property Id="DefaultUIFont" Value="WixUI_Font_Normal" /^>
-    if not "%LICENSE_PATH%"=="" (
-        echo       ^<Dialog Id="Dlg_License" Width="370" Height="270" Title="License Agreement"^>
-        echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="340" Height="15" Transparent="yes" NoPrefix="yes" Text="Please read and accept the license terms:" /^>
-        echo         ^<Control Id="AgreementText" Type="ScrollableText" X="20" Y="25" Width="330" Height="180" Sunken="yes" TabSkip="no"^>
-        echo           ^<Text SourceFile="%LICENSE_PATH%" /^>
-        echo         ^</Control^>
-        echo         ^<Control Id="LicenseAcceptedCheckBox" Type="CheckBox" X="20" Y="212" Width="330" Height="18" Property="LICENSE_ACCEPTED" CheckBoxValue="1" Text="I accept the terms in the License Agreement" /^>
-        echo         ^<Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Next"^>
-        echo           ^<Publish Event="EndDialog" Value="Return"^>^<![CDATA[LICENSE_ACCEPTED="1"]]^>^</Publish^>
-        echo         ^</Control^>
-        echo       ^</Dialog^>
-        echo       ^<Property Id="LICENSE_ACCEPTED" Value="0" Secure="yes" /^>
-    )
-
-    echo       ^<Dialog Id="Dlg_Features" Width="370" Height="270" Title="Select Components"^>
-    echo         ^<Control Id="Lbl_Select" Type="Text" X="20" Y="10" Width="330" Height="15" Text="Select the components you want to install:" /^>
-    echo         ^<Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Next"^>
-    echo           ^<Publish Event="EndDialog" Value="Return"^>1^</Publish^>
-    echo         ^</Control^>
-    echo       ^</Dialog^>
-
-    echo       ^<InstallUISequence^>
-    if not "%LICENSE_PATH%"=="" (
-        echo         ^<Show Dialog="Dlg_License" After="CostFinalize"^>NOT Installed^</Show^>
-        echo         ^<Show Dialog="Dlg_Features" After="Dlg_License"^>NOT Installed^</Show^>
-    ) else (
-        echo         ^<Show Dialog="Dlg_Features" After="CostFinalize"^>NOT Installed^</Show^>
-    )
-    echo       ^</InstallUISequence^>
-    echo     ^</UI^>
-
-    echo     ^<Feature Id="ProductFeature" Title="%APP_NAME%" Level="1"^>
-    echo       ^<ComponentGroupRef Id="ProductComponents" /^>
-    echo     ^</Feature^>
-
-    echo   ^</Product^>
-    echo   ^<Fragment^>
-    echo     ^<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER"^>
-    echo     ^</ComponentGroup^>
-    echo   ^</Fragment^>
-    echo ^</Wix^>
+if "%OUT_FILE%"=="" (
+    echo [ERROR] --out parameter is required >&2
+    exit /b 1
 )
 
-where candle.exe >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    candle.exe "%WXS_FILE%"
-    light.exe -ext WixUIExtension -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj"
-)
-exit /b 0
+set "PKG_JSON=%TARGET_SPEC%"
+if exist "%TARGET_SPEC%\packaging.json" set "PKG_JSON=%TARGET_SPEC%\packaging.json"
+
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+    "$pkgJson = '%PKG_JSON%';" ^
+    "$outFile = '%OUT_FILE%';" ^
+    "$variant = '%VARIANT%';" ^
+    "$verOverride = '%VERSION_OVERRIDE%';" ^
+    "$spec = Get-Content $pkgJson -Raw | ConvertFrom-Json;" ^
+    "$name = if ($spec.name) { $spec.name } else { 'app' };" ^
+    "$title = if ($spec.title) { $spec.title } else { $name };" ^
+    "$ver = if ($verOverride) { $verOverride } elseif ($spec.version) { $spec.version } else { '1.0.0.0' };" ^
+    "$pub = if ($spec.publisher) { $spec.publisher } else { 'LibScript Open Source Project' };" ^
+    "$upgradeCode = if ($spec.upgrade_code) { $spec.upgrade_code } else { '{A0B1C2D3-E4F5-6A7B-8C9D-0E1F2A3B4C5D}' };" ^
+    "$prodCode = [System.Guid]::NewGuid().ToString('B').ToUpper();" ^
+    "$wxs = @'<?xml version="1.0" encoding="UTF-8"?>" ^
+    "<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">" ^
+    "  <Product Id="' + $prodCode + '" Name="' + $title + '" Language="1033" Version="' + $ver + '" Manufacturer="' + $pub + '" UpgradeCode="' + $upgradeCode + '">" ^
+    "    <Package Id="*" InstallerVersion="405" Compressed="yes" InstallScope="perMachine" Description="' + $title + ' Installer" />" ^
+    "    <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." Schedule="afterInstallInitialize" />" ^
+    "    <Media Id="1" Cabinet="payload.cab" EmbedCab="yes" />" ^
+    "    <Directory Id="TARGETDIR" Name="SourceDir">" ^
+    "      <Directory Id="ProgramFiles64Folder">" ^
+    "        <Directory Id="INSTALLFOLDER" Name="' + $name + '">" ^
+    "          <Directory Id="BUNDLE_DIR" Name="bundle" />" ^
+    "        </Directory>" ^
+    "      </Directory>" ^
+    "    </Directory>" ^
+    "    <Feature Id="DefaultFeature" Title="' + $title + '" Level="1">" ^
+    "      <ComponentRef Id="AppIdentityComponent" />" ^
+    "    </Feature>" ^
+    "    <DirectoryRef Id="INSTALLFOLDER">" ^
+    "      <Component Id="AppIdentityComponent" Guid="*">" ^
+    "        <RegistryKey Root="HKLM" Key="Software\LibScript' + $name + '">" ^
+    "          <RegistryValue Name="Installed" Type="integer" Value="1" KeyPath="yes" />" ^
+    "        </RegistryKey>" ^
+    "      </Component>" ^
+    "    </DirectoryRef>" ^
+    "  </Product>" ^
+    "</Wix>';" ^
+    "[System.IO.File]::WriteAllText($outFile, $wxs);" ^
+    "Write-Output ('[SUCCESS] Generated WiX XML: ' + $outFile);"
+
+exit /b %ERRORLEVEL%

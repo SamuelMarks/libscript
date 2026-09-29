@@ -143,28 +143,47 @@ EOF2
           fi
         fi
         printf '%s\n' "  ExecWait 'cmd.exe $run_params'"
-        if [ "$pkg" = "openedx" ]; then
-          printf '%s\n' "  ExecWait 'cmd.exe /c \"\$INSTDIR\\stacks\\cms\\openedx\\healthcheck.cmd\"'"
+        pkg_json=$(find "$LIBSCRIPT_ROOT_DIR/_lib" "$LIBSCRIPT_ROOT_DIR/stacks" -name "packaging.json" 2>/dev/null | grep "/$pkg/" | head -n 1 || true)
+        if [ -f "$pkg_json" ]; then
+          # Post-install actions from packaging.json
+          post_cmds=$(jq -r '.post_install[]?.command // empty' "$pkg_json" 2>/dev/null || true)
+          if [ -n "$post_cmds" ]; then
+            printf '%s\n' "$post_cmds" | while IFS= read -r post_cmd; do
+              [ -n "$post_cmd" ] && printf '%s\n' "  ExecWait 'cmd.exe /c \"\$INSTDIR\\$post_cmd\"'"
+            done
+          fi
         fi
         printf '%s\n' "SectionEnd"
 
-        if [ "$pkg" = "openedx" ]; then
-          printf '%s\n' "Section /o \"Celery Background Workers & Scheduler\" SEC_openedx_workers"
-          printf '%s\n' "  ExecWait 'cmd.exe /c \"\$INSTDIR\\stacks\\cms\\openedx\\workers.cmd\" start'"
-          printf '%s\n' "SectionEnd"
-          printf '%s\n' "Section /o \"Import Demo Courseware & Content Libraries\" SEC_openedx_demo"
-          printf '%s\n' "  ExecWait 'cmd.exe /c \"\$INSTDIR\\stacks\\cms\\openedx\\import_demo.cmd\" course && \"\$INSTDIR\\stacks\\cms\\openedx\\import_demo.cmd\" libraries'"
-          printf '%s\n' "SectionEnd"
-          printf '%s\n' "Section /o \"Deploy Micro-Frontends (MFEs)\" SEC_openedx_mfes"
-          printf '%s\n' "  ExecWait 'cmd.exe /c \"\$INSTDIR\\stacks\\cms\\openedx\\mfe.cmd\" build all && \"\$INSTDIR\\stacks\\cms\\openedx\\mfe.cmd\" deploy all'"
-          printf '%s\n' "SectionEnd"
-          printf '%s\n' "Section \"Administrative Shortcuts\" SEC_openedx_shortcuts"
-          printf '%s\n' "  CreateDirectory \"\$SMPROGRAMS\\Open edX\""
-          printf '%s\n' "  CreateShortcut \"\$SMPROGRAMS\\Open edX\\Open edX Management Console.lnk\" \"\$INSTDIR\\stacks\\cms\\openedx\\cli.cmd\""
-          printf '%s\n' "  CreateShortcut \"\$SMPROGRAMS\\Open edX\\Open edX Healthcheck.lnk\" \"\$INSTDIR\\stacks\\cms\\openedx\\healthcheck.cmd\""
-          printf '%s\n' "  CreateShortcut \"\$SMPROGRAMS\\Open edX\\Open edX Database Console.lnk\" \"\$INSTDIR\\stacks\\cms\\openedx\\dbshell.cmd\" \"mysql\""
-          printf '%s\n' "  CreateShortcut \"\$SMPROGRAMS\\Open edX\\Open edX Backup and Restore.lnk\" \"\$INSTDIR\\stacks\\cms\\openedx\\backup.cmd\""
-          printf '%s\n' "SectionEnd"
+        if [ -f "$pkg_json" ]; then
+          # Features tree from packaging.json
+          feat_count=$(jq '.features | length' "$pkg_json" 2>/dev/null || printf '0')
+          if [ "$feat_count" -gt 0 ]; then
+            feat_idx=0
+            while [ "$feat_idx" -lt "$feat_count" ]; do
+              fid=$(jq -r ".features[$feat_idx].id" "$pkg_json")
+              feat_title=$(jq -r ".features[$feat_idx].title" "$pkg_json")
+              printf '%s\n' "Section /o \"$feat_title\" SEC_${pkg}_${fid}"
+              printf '%s\n' "SectionEnd"
+              feat_idx=$((feat_idx + 1))
+            done
+          fi
+
+          # Shortcuts from packaging.json
+          short_count=$(jq '.shortcuts | length' "$pkg_json" 2>/dev/null || printf '0')
+          if [ "$short_count" -gt 0 ]; then
+            printf '%s\n' "Section \"Administrative Shortcuts\" SEC_${pkg}_shortcuts"
+            printf '%s\n' "  CreateDirectory \"\$SMPROGRAMS\\$APP_NAME\""
+            short_idx=0
+            while [ "$short_idx" -lt "$short_count" ]; do
+              short_title=$(jq -r ".shortcuts[$short_idx].title" "$pkg_json")
+              short_target=$(jq -r ".shortcuts[$short_idx].target" "$pkg_json")
+              short_args=$(jq -r ".shortcuts[$short_idx].arguments // \"\"" "$pkg_json")
+              printf '%s\n' "  CreateShortcut \"\$SMPROGRAMS\\$APP_NAME\\$short_title.lnk\" \"\$INSTDIR\\$short_target\" \"$short_args\""
+              short_idx=$((short_idx + 1))
+            done
+            printf '%s\n' "SectionEnd"
+          fi
         fi
       done
 

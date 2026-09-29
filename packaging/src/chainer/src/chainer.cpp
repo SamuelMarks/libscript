@@ -26,16 +26,15 @@ struct ChildPackage {
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 /**
- * @brief Table of bundled child packages and their upgrade codes.
+ * @brief Dynamic child packages parsed from ChainerConfig.json or defaults.
  */
-const ChildPackage g_packages[] = {
+std::vector<ChildPackage> g_dynamicPackages = {
     {"mysql", "Bin_MySQL", "{E0F45901-83B4-4B21-9B5A-01D38FE81001}", "INSTALL_MYSQL", "PORT=3306"},
     {"redis", "Bin_Redis", "{E0F45901-83B4-4B21-9B5A-01D38FE81002}", "INSTALL_REDIS", "PORT=6379"},
     {"mongodb", "Bin_MongoDB", "{E0F45901-83B4-4B21-9B5A-01D38FE81003}", "INSTALL_MONGODB", "PORT=27017"},
     {"python", "Bin_Python", "{E0F45901-83B4-4B21-9B5A-01D38FE81004}", "INSTALL_PYTHON", ""},
     {"nodejs", "Bin_NodeJS", "{E0F45901-83B4-4B21-9B5A-01D38FE81005}", "INSTALL_NODEJS", ""},
-    {"meilisearch", "Bin_Meilisearch", "{E0F45901-83B4-4B21-9B5A-01D38FE81006}", "INSTALL_MEILISEARCH", "PORT=7700"},
-    {"openedx_core", "Bin_Core", "{B8C8E64E-9B5A-4B7C-A5D8-0F18B9918239}", "INSTALL_CORE", ""}
+    {"meilisearch", "Bin_Meilisearch", "{E0F45901-83B4-4B21-9B5A-01D38FE81006}", "INSTALL_MEILISEARCH", "PORT=7700"}
 };
 #endif
 
@@ -49,7 +48,7 @@ const ChildPackage g_packages[] = {
  */
 LIBSCRIPT_EXPORT UINT __stdcall LibScriptDetectServices(MSIHANDLE hInstall) {
 #if defined(_WIN32) || defined(__CYGWIN__)
-    for (const auto& pkg : g_packages) {
+    for (const auto& pkg : g_dynamicPackages) {
         char productCodeBuf[40] = {0};
         UINT ret = MsiEnumRelatedProductsA(pkg.upgradeCode, 0, 0, productCodeBuf);
         if (ret == ERROR_SUCCESS) {
@@ -92,7 +91,7 @@ LIBSCRIPT_EXPORT UINT __stdcall LibScriptChainer(MSIHANDLE hInstall) {
     }
 
     // Process each package based on toggle property
-    for (const auto& pkg : g_packages) {
+    for (const auto& pkg : g_dynamicPackages) {
         char val[16] = {0};
         DWORD sz = static_cast<DWORD>(sizeof(val));
         MsiGetPropertyA(hInstall, pkg.propertyToggle, val, &sz);
