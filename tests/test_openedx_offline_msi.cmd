@@ -107,7 +107,7 @@ if not defined MSI_PATH if "%SKIP_COMPILE%"=="0" (
     )
     echo [PASS] Successfully created WiX offline manifest: !WXS_FILE!
 
-    findstr /C:"Cabinet="runtimes.cab"" "!WXS_FILE!" >nul 2>&1
+    findstr /C:"Cabinet=\"runtimes.cab\"" "!WXS_FILE!" >nul 2>&1
     if errorlevel 1 (
         echo [FAIL] Multi-cab partition runtimes.cab missing from offline manifest >&2
         exit /b 1

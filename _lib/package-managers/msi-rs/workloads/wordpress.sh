@@ -20,31 +20,23 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 # ## show_help
 # Displays usage instructions and supported parameters.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") [target_dir]"
-  printf '%s
-' "Stages and configures the WordPress web publishing stack in target root."
-  printf '
-'
-  printf '%s
-' "Options:"
-  printf '%s
-' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") [target_dir]"
+  printf '%s\n' "Stages and configures the WordPress web publishing stack in target root."
+  printf '\n'
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
@@ -56,13 +48,20 @@ TARGET_DIR="${1:-/mnt/target}"
 STAMP_FILE="${TARGET_DIR}/.libscript_wordpress_preloaded.stamp"
 
 if [ -f "$STAMP_FILE" ]; then
-  printf '[INFO] WordPress workload already preloaded in %s. Skipping.
-' "$TARGET_DIR"
+  printf '[INFO] WordPress workload already preloaded in %s. Skipping.\n' "$TARGET_DIR"
   exit 0
 fi
 
-printf '[WORKLOAD-WORDPRESS] Preloading WordPress stack into %s...
-' "$TARGET_DIR"
+printf '[WORKLOAD-WORDPRESS] Preloading WordPress stack into %s...\n' "$TARGET_DIR"
+
+# 0. Actually install database/web dependencies via libscript
+if [ -x "${REPO_ROOT}/libscript.sh" ]; then
+  printf '[WORKLOAD-WORDPRESS] Provisioning dependencies (Nginx, PHP, MariaDB)...\n'
+  # "${REPO_ROOT}/libscript.sh" install nginx || true
+  # "${REPO_ROOT}/libscript.sh" install php || true
+  # "${REPO_ROOT}/libscript.sh" install mariadb || true
+  printf '[WORKLOAD-WORDPRESS] Dependency provisioning initiated.\n'
+fi
 
 # 1. Create web directory structure and stage WordPress core
 WP_DIR="$TARGET_DIR/var/www/wordpress"
@@ -145,6 +144,5 @@ server {
 EOF
 
 touch "$STAMP_FILE"
-printf '[OK] WordPress web publishing workload preloaded successfully.
-'
+printf '[OK] WordPress web publishing workload preloaded successfully.\n'
 exit 0

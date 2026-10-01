@@ -223,31 +223,17 @@ set "WP_CFG=%WORDPRESS_WWWROOT%\wp-config.php"
     echo require_once ABSPATH . 'wp-settings.php';
 ) > "%WP_CFG%"
 
-:: 5. Create core bootstrap stubs if files missing
+:: 5. Configure IIS FastCGI (if webserver is IIS)
+if /I "%WORDPRESS_WEBSERVER%"=="iis" (
+    echo [INFO] Configuring IIS FastCGI for PHP...
+    %SystemRoot%\System32\inetsrv\appcmd.exe set config /section:system.webServer/fastCgi /+[fullPath='%LIBSCRIPT_ROOT_DIR%\runtimes\php\php-cgi.exe'] 2>nul
+    %SystemRoot%\System32\inetsrv\appcmd.exe set config /section:system.webServer/handlers /+[name='PHP_via_FastCGI',path='*.php',verb='*',modules='FastCgiModule',scriptProcessor='%LIBSCRIPT_ROOT_DIR%\runtimes\php\php-cgi.exe',resourceType='Either'] 2>nul
+)
+
+:: 6. Ensure authentic core structure exists
 if not exist "%WORDPRESS_WWWROOT%\index.php" (
-    (
-        echo ^<?php
-        echo define^('WP_USE_THEMES', true^);
-        echo require __DIR__ . '/wp-blog-header.php';
-    ) > "%WORDPRESS_WWWROOT%\index.php"
-)
-if not exist "%WORDPRESS_WWWROOT%\wp-blog-header.php" (
-    (
-        echo ^<?php
-        echo if ^(^!isset^($wp_did_header^)^) {
-        echo     $wp_did_header = true;
-        echo     require_once __DIR__ . '/wp-load.php';
-        echo     wp^(^);
-        echo     require_once ABSPATH . WPINC . '/template-loader.php';
-        echo }
-    ) > "%WORDPRESS_WWWROOT%\wp-blog-header.php"
-)
-if not exist "%WORDPRESS_WWWROOT%\wp-load.php" (
-    (
-        echo ^<?php
-        echo define^('ABSPATH', __DIR__ . '/'^);
-        echo require_once ABSPATH . 'wp-config.php';
-    ) > "%WORDPRESS_WWWROOT%\wp-load.php"
+    echo [ERROR] Failed to download or locate WordPress core at "%WORDPRESS_WWWROOT%" >&2
+    exit /b 1
 )
 
 :: 6. Optional Adminer Staging

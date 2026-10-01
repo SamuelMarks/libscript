@@ -20,16 +20,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 SUMMARY_FILE="${REPO_ROOT}/tests_tmp/live_installer_matrix_summary.json"
@@ -38,24 +35,15 @@ TARGET_PLATFORM="all"
 # ## show_help
 # Displays usage instructions and supported CLI parameters.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") [OPTIONS]"
-  printf '%s
-' "Runs multi-platform live installer verification strictly inside Vagrant VMs."
-  printf '
-'
-  printf '%s
-' "Platforms:"
-  printf '%s
-' "  --all                  Execute verification across all 5 target environments (default)"
-  printf '%s
-' "  --platform <name>      Target specific VM: linux, freebsd, sunos, windows, macos"
-  printf '
-'
-  printf '%s
-' "Options:"
-  printf '%s
-' "  --help, -h, /?, -?     Show this help message."
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") [OPTIONS]"
+  printf '%s\n' "Runs multi-platform live installer verification strictly inside Vagrant VMs."
+  printf '\n'
+  printf '%s\n' "Platforms:"
+  printf '%s\n' "  --all                  Execute verification across all 5 target environments (default)"
+  printf '%s\n' "  --platform <name>      Target specific VM: linux, freebsd, sunos, windows, macos"
+  printf '\n'
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --help, -h, /?, -?     Show this help message."
 }
 
 while [ $# -gt 0 ]; do
@@ -81,33 +69,58 @@ done
 
 mkdir -p "${REPO_ROOT}/tests_tmp"
 
+if ! command -v vagrant >/dev/null 2>&1; then
+  printf '[ERROR] Vagrant is not installed or not in PATH.\n' >&2
+  exit 1
+fi
+
+VAGRANT_DIR="${REPO_ROOT}/vagrant"
+if [ ! -f "${VAGRANT_DIR}/Vagrantfile" ]; then
+  printf '[ERROR] Vagrantfile not found at %s.\n' "${VAGRANT_DIR}/Vagrantfile" >&2
+  exit 1
+fi
+
 # ## run_vagrant_suite
 # Runs the live installer verification scenarios inside a target Vagrant guest VM.
 run_vagrant_suite() {
   _os="$1"
-  _vagrant_dir="${REPO_ROOT}/vagrant/${_os}"
 
-  printf '[VAGRANT-MATRIX] Testing live installer on %s VM...
-' "$_os"
-  if [ ! -d "$_vagrant_dir" ]; then
-    printf '[WARN] Vagrant directory %s not found. Skipping.
-' "$_vagrant_dir"
-    return 0
+  printf '[VAGRANT-MATRIX] Testing live installer on %s VM...\n' "$_os"
+  
+  cd "${VAGRANT_DIR}"
+  
+  printf '[VAGRANT] Booting %s...\n' "$_os"
+  if ! vagrant up "$_os"; then
+    printf '[ERROR] Failed to boot %s. Destroying and returning failure.\n' "$_os" >&2
+    vagrant destroy -f "$_os" || true
+    cd "${SCRIPT_DIR}"
+    return 1
   fi
 
-  # Run verification scenarios
-  printf '       Scenario 1: Storage partitioning and formatting idempotency (2-pass run)...\n'
-  printf '       Scenario 2: Headless installation with preseed configuration...\n'
-  printf '       Scenario 3: Terminal user interface wizard smoke validation...\n'
-  printf '       Scenario 4: GUI kiosk session launch validation...\n'
-  printf '       Scenario 5: Preloaded workloads verification (Open edX and WordPress)...\n'
-  printf '       Scenario 6: Re-run idempotency interlock check...\n'
-  printf '       Scenario 7: Triple-Boot Co-Installation Verification (Linux + FreeBSD + illumos)...\n'
-  printf '       Scenario 8: Clean Base (Zero LibScript Workloads) Installation Verification...\n'
-  printf '       Scenario 9: Dynamic Component Catalog Selection Verification (Nginx + WordPress + Odoo)...\n'
-  printf '       Scenario 10: Bootloader, Login, and Logged-in Screen Capture Verification...\n'
+  printf '[VAGRANT] Executing smoke tests on %s...\n' "$_os"
+  
+  if [ "$_os" = "windows-11" ]; then
+     # Windows uses winrm/cmd
+     _status=0
+     vagrant powershell "$_os" -c "Write-Output 'Vagrant connection successful.'" || _status=1
+  else
+     # POSIX uses ssh/sh
+     _status=0
+     vagrant ssh "$_os" -c "echo 'Vagrant connection successful.' && uname -a" || _status=1
+  fi
 
-  return 0
+  printf '[VAGRANT] Destroying %s...\n' "$_os"
+  vagrant destroy -f "$_os" || true
+  
+  cd "${SCRIPT_DIR}"
+  
+  if [ "$_status" -eq 0 ]; then
+    printf '[PASS] %s completed successfully.\n' "$_os"
+    return 0
+  else
+    printf '[FAIL] %s failed execution.\n' "$_os" >&2
+    return 1
+  fi
 }
 
 LINUX_STATUS="SKIPPED"
@@ -178,14 +191,11 @@ cat << EOF > "${SUMMARY_FILE}"
 }
 EOF
 
-printf '[VAGRANT-MATRIX] Summary written to %s
-' "${SUMMARY_FILE}"
+printf '[VAGRANT-MATRIX] Summary written to %s\n' "${SUMMARY_FILE}"
 if [ "$OVERALL_SUCCESS" -eq 1 ]; then
-  printf '[OK] All 5 Vagrant platforms verified successfully.
-'
+  printf '[OK] All targeted Vagrant platforms verified successfully.\n'
   exit 0
 else
-  printf '[ERROR] One or more platform tests failed.
-' >&2
+  printf '[ERROR] One or more platform tests failed.\n' >&2
   exit 1
 fi

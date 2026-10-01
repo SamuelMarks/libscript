@@ -93,6 +93,12 @@ echo [PASS] Verified: Cache and search configuration dialog
 findstr /C:"Dialog Id=\"Dlg_Exit\"" "%WXS_FILE%" >nul || (echo [FAIL] Missing Dlg_Exit & exit /b 1)
 echo [PASS] Verified: Exit completion dialog
 
+findstr /C:"CustomAction Id=\"CA_CheckPorts\"" "%WXS_FILE%" >nul || (echo [FAIL] Missing CA_CheckPorts & exit /b 1)
+echo [PASS] Verified: Port collision detection custom action
+
+findstr /C:"CustomAction Id=\"CA_DetectExistingRuntimes\"" "%WXS_FILE%" >nul || (echo [FAIL] Missing CA_DetectExistingRuntimes & exit /b 1)
+echo [PASS] Verified: Runtime auto-detection custom action
+
 findstr /C:"Control Id=\"CompPython\"" "%WXS_FILE%" >nul || (echo [FAIL] Missing CompPython & exit /b 1)
 echo [PASS] Verified: Explicit Python component display
 
@@ -107,6 +113,12 @@ echo [PASS] Verified: Explicit MySQL component display
 
 findstr /C:"Control Id=\"CompRedis\"" "%WXS_FILE%" >nul || (echo [FAIL] Missing CompRedis & exit /b 1)
 echo [PASS] Verified: Explicit Redis component display
+
+findstr /C:"Publish Event=\"NewDialog\" Value=\"Dlg_VerifyReady\"" "%WXS_FILE%" >nul || (echo [FAIL] Missing Simple Mode navigation & exit /b 1)
+echo [PASS] Verified: Simple Mode blind install navigation flow
+
+findstr /C:"Publish Event=\"NewDialog\" Value=\"Dlg_Features\"" "%WXS_FILE%" >nul || (echo [FAIL] Missing Advanced Mode navigation & exit /b 1)
+echo [PASS] Verified: Advanced Mode component navigation flow
 
 findstr /C:"Control Id=\"LaunchBrowserCheckBox\"" "%WXS_FILE%" >nul || (echo [FAIL] Missing LaunchBrowserCheckBox & exit /b 1)
 echo [PASS] Verified: Launch Browser checkbox control

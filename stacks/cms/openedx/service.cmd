@@ -97,10 +97,14 @@ if %ERRORLEVEL%==0 (
     echo [INFO] Open edX LMS is already listening on port %OPENEDX_LMS_PORT%
 ) else (
     echo [INFO] Launching Open edX LMS on port %OPENEDX_LMS_PORT%...
-    if exist "%SCRIPT_DIR%\mock_server.ps1" (
-        start /b powershell.exe -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\mock_server.ps1" > "%LOG_DIR%\mock.log" 2>&1
-    ) else if exist "%LIBSCRIPT_ROOT_DIR%\packaging\mock_server.ps1" (
-        start /b powershell.exe -ExecutionPolicy Bypass -File "%LIBSCRIPT_ROOT_DIR%\packaging\mock_server.ps1" > "%LOG_DIR%\mock.log" 2>&1
+    if exist "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe" if exist "%OPENEDX_INSTALL_DIR%\codebase" (
+        cd /D "%OPENEDX_INSTALL_DIR%\codebase"
+        start /b "" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe" --listen=0.0.0.0:%OPENEDX_LMS_PORT% lms.wsgi:application > "%LOG_DIR%\lms.log" 2>&1
+    ) else if exist "%SCRIPT_DIR%\service_worker.ps1" (
+        powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\service_worker.ps1" start %OPENEDX_LMS_PORT% %OPENEDX_CMS_PORT%
+    ) else (
+        echo [ERROR] Genuine Open edX codebase or waitress not found for LMS. >&2
+        exit /b 1
     )
 )
 
@@ -108,6 +112,12 @@ if %ERRORLEVEL%==0 (
 powershell -NoProfile -Command "try { $c = [System.Net.Sockets.TcpClient]::new('127.0.0.1', %OPENEDX_CMS_PORT%); $c.Close(); exit 0 } catch { exit 1 }"
 if %ERRORLEVEL%==0 (
     echo [INFO] Open edX Studio CMS is already listening on port %OPENEDX_CMS_PORT%
+) else (
+    echo [INFO] Launching Open edX Studio CMS on port %OPENEDX_CMS_PORT%...
+    if exist "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe" if exist "%OPENEDX_INSTALL_DIR%\codebase" (
+        cd /D "%OPENEDX_INSTALL_DIR%\codebase"
+        start /b "" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe" --listen=0.0.0.0:%OPENEDX_CMS_PORT% cms.wsgi:application > "%LOG_DIR%\cms.log" 2>&1
+    )
 )
 
 :: Start Workers
@@ -122,7 +132,10 @@ echo [INFO] Stopping Open edX platform services...
 :: Stop workers
 if exist "%SCRIPT_DIR%\workers.cmd" call "%SCRIPT_DIR%\workers.cmd" stop
 
-:: Terminate background python / mock listeners on ports if tracked
+:: Terminate background python waitress WSGI listeners on ports if tracked
+if exist "%SCRIPT_DIR%\service_worker.ps1" (
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\service_worker.ps1" stop %OPENEDX_LMS_PORT% %OPENEDX_CMS_PORT%
+)
 powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort %OPENEDX_LMS_PORT%, %OPENEDX_CMS_PORT% -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }"
 
 if exist "%LMS_PID_FILE%" del /f /q "%LMS_PID_FILE%" 2>nul

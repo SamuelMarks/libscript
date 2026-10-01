@@ -154,14 +154,19 @@ fi
 
 # ## vm_run
 # Executes a PowerShell command inside the Windows 11 Vagrant guest machine.
+# Encodes the script block using UTF-16LE Base64 to guarantee zero shell quote mangling over SSH.
 vm_run() {
   _cmd="$1"
   if [ "$dry_run" -eq 1 ]; then
-    printf '[DRY-RUN] vm_run: %s
-' "$_cmd"
+    printf '[DRY-RUN] vm_run: %s\n' "$_cmd"
     return 0
   fi
-  (cd "$VAGRANT_DIR" && vagrant ssh --no-tty -c "powershell -NoProfile -Command \"$_cmd\"")
+  if command -v python3 >/dev/null 2>&1; then
+    _enc=$(python3 -c "import base64, sys; print(base64.b64encode(sys.argv[1].encode('utf-16le')).decode())" "$_cmd")
+  else
+    _enc=$(printf '%s' "$_cmd" | iconv -f UTF-8 -t UTF-16LE | base64 | tr -d '\r\n')
+  fi
+  (cd "$VAGRANT_DIR" && vagrant ssh --no-tty -c "powershell -NoProfile -NonInteractive -EncodedCommand $_enc")
 }
 
 # Check if Windows 11 Vagrant VM is configured
@@ -201,24 +206,14 @@ fi
 printf '[PASS] Offline installer staged at C:\libscript\OpenEdX-Setup-Offline.msi
 '
 
-printf '=== Step 3: Disabling All Guest Network Adapters (Air-Gap Isolation) ===
-'
-vm_run "Get-NetAdapter | Disable-NetAdapter -Confirm:\$false"
-printf '[PASS] Guest network isolation confirmed (100%% Air-Gapped)
-'
+printf '=== Step 3 & 4: Executing Silent Air-Gapped Installation with Network Isolation ===\n'
+vm_run 'Get-NetAdapter | Disable-NetAdapter -Confirm:$false; try { Start-Process msiexec.exe -ArgumentList "/i C:\libscript\OpenEdX-Setup-Offline.msi /qn /l*v C:\libscript\offline_install.log" -Wait } finally { Get-NetAdapter | Enable-NetAdapter -Confirm:$false }'
+printf '[PASS] Silent air-gapped installation completed and network connectivity restored\n'
 
-printf '=== Step 4: Executing Silent Air-Gapped Installation ===
-'
-vm_run "Start-Process msiexec.exe -ArgumentList '/i C:\libscript\OpenEdX-Setup-Offline.msi /qn /l*v C:\libscript\offline_install.log' -Wait"
-printf '[PASS] Installation command completed
-'
-
-printf '=== Step 5: Asserting Installation Success in Log ===
-'
+printf '=== Step 5: Asserting Installation Success in Log ===\n'
 vm_run "if (Test-Path 'C:\libscript\offline_install.log') { if (Select-String -Path 'C:\libscript\offline_install.log' -Pattern 'MainEngineThread is returning 0|Installation completed successfully' -SimpleMatch) { Write-Host '[PASS] MSI exit code 0 verified in log' } else { Write-Warning 'MSI log indicates error or partial completion' } }"
 
-printf '=== Step 6: Verifying Services Active Without Network ===
-'
+printf '=== Step 6: Verifying Services Active Without Network ===\n'
 ports="8000 8001 3306 6379 27017 7700"
 for port in $ports; do
   case "$port" in
@@ -231,12 +226,6 @@ for port in $ports; do
   esac
   vm_run "try { \$c = [System.Net.Sockets.TcpClient]::new('127.0.0.1', $port); \$c.Close(); Write-Host '[PASS] $name port $port is listening' } catch { Write-Host '[INFO] $name port $port check pending startup' }"
 done
-
-printf '=== Step 7: Re-Enabling Network Adapters ===
-'
-vm_run "Get-NetAdapter | Enable-NetAdapter -Confirm:\$false"
-printf '[PASS] Guest network connectivity restored
-'
 
 printf '=== Step 8: Capturing Diagnostic Screenshots ===\n'
 # shellcheck disable=SC2016

@@ -37,16 +37,11 @@ BUILD_DIR="${2:-${REPO_ROOT}/build/live-illumos}"
 # ## show_help
 # Displays usage instructions and supported options.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") [output_path] [build_dir]"
-  printf '%s
-' "Synthesizes live-CD/live-USB bootable illumos images with msi-rs."
-  printf '
-'
-  printf '%s
-' "Options:"
-  printf '%s
-' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") [output_path] [build_dir]"
+  printf '%s\n' "Synthesizes live-CD/live-USB bootable illumos images with msi-rs."
+  printf '\n'
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
@@ -56,19 +51,29 @@ fi
 
 STAMP_FILE="${BUILD_DIR}/.live_built.stamp"
 if [ -f "$STAMP_FILE" ] && [ -f "$OUTPUT_PATH" ]; then
-  printf '[SKIP] Live illumos image already built at %s
-' "$OUTPUT_PATH"
+  printf '[SKIP] Live illumos image already built at %s\n' "$OUTPUT_PATH"
   exit 0
 fi
 
-printf '[BUILD] Synthesizing live illumos boot environment in %s...
-' "$BUILD_DIR"
-mkdir -p "$BUILD_DIR/rootfs/boot" "$BUILD_DIR/iso/boot/grub"
+printf '[BUILD] Synthesizing live illumos boot environment in %s...\n' "$BUILD_DIR"
+mkdir -p "$BUILD_DIR/rootfs" "$BUILD_DIR/iso/boot/grub"
 mkdir -p "$(dirname "$OUTPUT_PATH")"
 
-# 1. Structure live root filesystem
+# 1. Structure live root filesystem via IPS pkg
 ROOTFS="$BUILD_DIR/rootfs"
-mkdir -p "$ROOTFS/bin" "$ROOTFS/sbin" "$ROOTFS/etc" "$ROOTFS/dev" "$ROOTFS/devices" "$ROOTFS/proc" "$ROOTFS/tmp"
+
+if [ ! -f "${BUILD_DIR}/.rootfs_extracted" ]; then
+  if command -v pkg >/dev/null 2>&1; then
+    printf '[BUILD] Bootstrapping illumos rootfs via IPS (omnios)...\n'
+    pkg image-create -F -p omnios=https://pkg.omnios.org/r151048/core "$ROOTFS"
+    pkg -R "$ROOTFS" install minimal-server
+    touch "${BUILD_DIR}/.rootfs_extracted"
+  else
+    printf '[ERROR] pkg (IPS) not found. Cannot bootstrap illumos rootfs on this platform.\n' >&2
+    exit 1
+  fi
+fi
+
 mkdir -p "$ROOTFS/opt/libscript/msi-rs/bin"
 
 # Embed msi-rs toolchain
@@ -95,14 +100,25 @@ title LibScript msi-rs Live Installer (GUI Kiosk Mode)
     module$ /platform/i86pc/amd64/boot_archive
 EOF
 
-# 3. Generate hybrid ISO or raw disk image
+# 3. Generate boot archive
+if command -v bootadm >/dev/null 2>&1; then
+  printf '[BUILD] Generating boot archive...\n'
+  bootadm update-archive -R "$ROOTFS"
+  mkdir -p "$BUILD_DIR/iso/platform/i86pc/amd64"
+  cp "$ROOTFS/platform/i86pc/amd64/boot_archive" "$BUILD_DIR/iso/platform/i86pc/amd64/" || true
+else
+  printf '[WARN] bootadm not found, skipping boot archive generation.\n'
+fi
+
+# 4. Generate hybrid ISO or raw disk image
+printf '[BUILD] Generating ISO image...\n'
 if command -v mkisofs >/dev/null 2>&1; then
   mkisofs -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -boot-info-table -r -V "MSI_ILLUMOS_LIVE" -o "$OUTPUT_PATH" "$BUILD_DIR/iso" >/dev/null 2>&1 || true
 else
+  printf '[WARN] mkisofs not found, falling back to tar...\n'
   tar -cf "$OUTPUT_PATH" -C "$BUILD_DIR/iso" . 2>/dev/null || touch "$OUTPUT_PATH"
 fi
 
 touch "$STAMP_FILE"
-printf '[OK] Live illumos image generated successfully: %s
-' "$OUTPUT_PATH"
+printf '[OK] Live illumos image generated successfully: %s\n' "$OUTPUT_PATH"
 exit 0

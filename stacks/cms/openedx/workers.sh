@@ -113,16 +113,8 @@ start_daemon() {
     esac
     _new_pid="$!"
   else
-    # Mock / simulation worker daemon for headless / test environments
-    case "${_svc}" in
-      celery-beat)
-        nohup sh -c 'while true; do sleep 30; done' > "${_logfile}" 2>&1 &
-        ;;
-      *)
-        nohup sh -c 'while true; do sleep 10; done' > "${_logfile}" 2>&1 &
-        ;;
-    esac
-    _new_pid="$!"
+    log_err "Genuine Open edX codebase or python not found. Cannot start worker '${_svc}'."
+    return 1
   fi
 
   printf '%s

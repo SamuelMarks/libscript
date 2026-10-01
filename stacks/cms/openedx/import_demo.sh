@@ -61,7 +61,7 @@ done
 
 OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
 PYTHON_BIN="${OPENEDX_INSTALL_DIR}/.venv/bin/python"
-MANAGE_PY="${OPENEDX_INSTALL_DIR}/manage.py"
+MANAGE_PY="${OPENEDX_INSTALL_DIR}/codebase/manage.py"
 DATA_DIR="${OPENEDX_INSTALL_DIR}/data"
 
 # ## resolve_python
@@ -185,9 +185,11 @@ import_course() {
   _py="$(resolve_python)"
   if [ -f "${MANAGE_PY}" ] && [ -n "${_py}" ]; then
     log_info "Importing course XML/tarball via Studio cms import..."
-    "${_py}" "${MANAGE_PY}" cms import "${OPENEDX_INSTALL_DIR}/data" "${_staging_dir}" 2>/dev/null || true
+    (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${_py}" manage.py cms import "${OPENEDX_INSTALL_DIR}/data" "${_staging_dir}") || exit 1
     log_info "Reindexing search index for course '${_course_id}'..."
-    "${_py}" "${MANAGE_PY}" lms reindex_course --course-id "${_course_id}" 2>/dev/null || true
+    (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${_py}" manage.py lms reindex_course --course-id "${_course_id}") || exit 1
+  else
+    log_warn "manage.py not found in codebase, skipping demo import."
   fi
 
   record_course "${_course_id}"

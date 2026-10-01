@@ -337,14 +337,33 @@ EOF2
 
       exec 1>&3 3>&-
 
-      if [ "$OS" = "Windows_NT" ] || command -v candle.exe >/dev/null 2>&1 || command -v wix.exe >/dev/null 2>&1; then
-        if command -v wix.exe >/dev/null 2>&1; then
-          wix.exe build -ext WixToolset.UI.wixext -o "${OUT_FILE}.msi" "$wxs_file"
-        else
-          candle.exe "$wxs_file"
-          light.exe -ext WixUIExtension -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj"
+      # Ensure msi-rs is available via libscript mechanisms
+      if ! command -v candle >/dev/null 2>&1 && ! command -v candle.exe >/dev/null 2>&1 && ! command -v wix >/dev/null 2>&1 && ! command -v wix.exe >/dev/null 2>&1; then
+        if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" ]; then
+          . "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" >/dev/null 2>&1 || true
         fi
-      else
+      fi
+      if ! command -v candle >/dev/null 2>&1 && ! command -v candle.exe >/dev/null 2>&1 && ! command -v wix >/dev/null 2>&1 && ! command -v wix.exe >/dev/null 2>&1; then
+        if [ -x "${LIBSCRIPT_ROOT_DIR}/libscript.sh" ]; then
+          "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install msi-rs v0.0.1 >/dev/null 2>&1 || true
+          if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" ]; then
+            . "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" >/dev/null 2>&1 || true
+          fi
+        fi
+      fi
+
+      if command -v candle >/dev/null 2>&1 || command -v candle.exe >/dev/null 2>&1; then
+        _candle="candle"
+        _light="light"
+        command -v candle.exe >/dev/null 2>&1 && _candle="candle.exe"
+        command -v light.exe >/dev/null 2>&1 && _light="light.exe"
+        "$_candle" -arch x64 -out "${OUT_FILE}.wixobj" "$wxs_file"
+        "$_light" -sval -ext WixUIExtension -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj"
+      elif command -v wix.exe >/dev/null 2>&1 || command -v wix >/dev/null 2>&1; then
+        _wix="wix"
+        command -v wix.exe >/dev/null 2>&1 && _wix="wix.exe"
+        "$_wix" build -ext WixToolset.UI.wixext -o "${OUT_FILE}.msi" "$wxs_file"
+      elif command -v wixl >/dev/null 2>&1; then
         wixl -o "${OUT_FILE}.msi" "$wxs_file"
       fi
       exit 0

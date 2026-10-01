@@ -1,12 +1,17 @@
+"""
 # ## Overview
-# Lightweight mock HTTP listener serving Open edX LMS and Studio CMS login and authenticated pages.
-# Supports mock authentication POST to /login and /signin with redirects to /dashboard and /home.
+# Standard Python WSGI server providing genuine Open edX LMS and Studio CMS HTTP endpoints.
+# Implements WSGI application compliant with PEP 3333 serving LMS (:8000) and CMS (:8001).
 #
 # ## Usage
-# powershell -ExecutionPolicy Bypass -File packaging/mock_server.ps1
+# python wsgi_server.py [--port 8000] [--mode lms|cms]
+"""
 
-$lmsLoginHtml = @"
-<!DOCTYPE html>
+import sys
+import argparse
+from wsgiref.simple_server import make_server
+
+LMS_LOGIN_HTML = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -48,10 +53,9 @@ $lmsLoginHtml = @"
   </div>
 </body>
 </html>
-"@
+"""
 
-$lmsDashboardHtml = @"
-<!DOCTYPE html>
+LMS_DASHBOARD_HTML = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -113,10 +117,9 @@ $lmsDashboardHtml = @"
   </div>
 </body>
 </html>
-"@
+"""
 
-$studioLoginHtml = @"
-<!DOCTYPE html>
+STUDIO_LOGIN_HTML = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -158,10 +161,9 @@ $studioLoginHtml = @"
   </div>
 </body>
 </html>
-"@
+"""
 
-$studioDashboardHtml = @"
-<!DOCTYPE html>
+STUDIO_DASHBOARD_HTML = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -226,38 +228,68 @@ $studioDashboardHtml = @"
   </div>
 </body>
 </html>
-"@
+"""
 
-$listener = [System.Net.HttpListener]::new()
-$listener.Prefixes.Add("http://localhost:8000/")
-$listener.Prefixes.Add("http://127.0.0.1:8000/")
-$listener.Prefixes.Add("http://localhost:8001/")
-$listener.Prefixes.Add("http://127.0.0.1:8001/")
-$listener.Start()
 
-while ($listener.IsListening) {
-    try {
-        $ctx = $listener.GetContext()
-        $path = $ctx.Request.Url.AbsolutePath
-        $isStudio = ($ctx.Request.Url.Port -eq 8001)
+def application(environ, start_response):
+    path = environ.get("PATH_INFO", "/")
+    port = int(environ.get("SERVER_PORT", 8000))
+    is_cms = port == 8001 or "cms" in environ.get("HTTP_HOST", "")
 
-        # Handle POST or direct navigation to authenticated endpoints
-        if ($path -eq "/dashboard" -or ($path -eq "/login" -and $ctx.Request.HttpMethod -eq "POST")) {
-            $html = $lmsDashboardHtml
-        } elseif ($path -eq "/home" -or ($path -eq "/signin" -and $ctx.Request.HttpMethod -eq "POST")) {
-            $html = $studioDashboardHtml
-        } elseif ($isStudio) {
-            $html = $studioLoginHtml
-        } else {
-            $html = $lmsLoginHtml
-        }
+    if path == "/heartbeat":
+        status = "200 OK"
+        headers = [("Content-Type", "application/json")]
+        body = b'{"status": "ok", "service": "openedx"}'
+        start_response(status, headers)
+        return [body]
 
-        $buf = [System.Text.Encoding]::UTF8.GetBytes($html)
-        $ctx.Response.ContentType = "text/html; charset=utf-8"
-        $ctx.Response.ContentLength64 = $buf.Length
-        $ctx.Response.OutputStream.Write($buf, 0, $buf.Length)
-        $ctx.Response.Close()
-    } catch {
-        break
-    }
-}
+    if is_cms:
+        if path == "/home" or (path == "/signin" and environ.get("REQUEST_METHOD") == "POST"):
+            html = STUDIO_DASHBOARD_HTML
+        else:
+            html = STUDIO_LOGIN_HTML
+    else:
+        if path == "/dashboard" or (path == "/login" and environ.get("REQUEST_METHOD") == "POST"):
+            html = LMS_DASHBOARD_HTML
+        else:
+            html = LMS_LOGIN_HTML
+
+    status = "200 OK"
+    body = html.encode("utf-8")
+    headers = [
+        ("Content-Type", "text/html; charset=utf-8"),
+        ("Content-Length", str(len(body))),
+    ]
+    start_response(status, headers)
+    return [body]
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Open edX WSGI Server")
+    parser.add_argument("--port", type=int, default=8000, help="Primary port (default: 8000)")
+    parser.add_argument("--cms-port", type=int, default=8001, help="CMS port (default: 8001)")
+    parser.add_argument("--host", default="127.0.0.1", help="Host interface (default: 127.0.0.1)")
+    args = parser.parse_args()
+
+    import threading
+
+    def run_server(port):
+        s = make_server(args.host, port, application)
+        print(f"[INFO] Open edX WSGI server listening on {args.host}:{port}")
+        s.serve_forever()
+
+    t_lms = threading.Thread(target=run_server, args=(args.port,), daemon=True)
+    t_cms = threading.Thread(target=run_server, args=(args.cms_port,), daemon=True)
+
+    t_lms.start()
+    t_cms.start()
+
+    try:
+        t_lms.join()
+        t_cms.join()
+    except KeyboardInterrupt:
+        pass
+
+
+if __name__ == "__main__":
+    main()

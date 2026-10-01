@@ -135,7 +135,17 @@ MariaDB/MySQL instance:
 
 ## WAMP-Class PHP Runtime Optimization
 
-WordPress 7.1.2 applies enterprise WAMP configuration directives:
+The deployment automatically provisions a **dedicated PHP-FPM pool** specifically for WordPress.
+This isolates the WordPress process lifecycle, ensuring it runs under the `www-data` user with a
+dedicated UNIX socket (`/run/php/php-fpm-wordpress.sock`). The pool is configured with dynamic
+process management:
+
+- `pm.max_children = 50`
+- `pm.start_servers = 5`
+- `pm.min_spare_servers = 5`
+- `pm.max_spare_servers = 35`
+
+Additionally, WordPress 7.1.2 applies enterprise WAMP configuration directives:
 
 | Directive                         | Configured Value      | Purpose                                                    |
 | :-------------------------------- | :-------------------- | :--------------------------------------------------------- |

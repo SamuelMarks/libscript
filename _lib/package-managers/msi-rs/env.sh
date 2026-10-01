@@ -31,4 +31,11 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 ' "$d")}"
 
 MSI_RS_VERSION="${MSI_RS_VERSION:-latest}"
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/${MSI_RS_VERSION}/bin:${PATH}"
+if [ -d "${LIBSCRIPT_ROOT_DIR}/tools/wix" ]; then
+  PATH="${LIBSCRIPT_ROOT_DIR}/tools/wix:${PATH}"
+fi
+if [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/default/bin" ]; then
+  PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/default/bin:${PATH}"
+fi
+PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/${MSI_RS_VERSION}/bin:${PATH}"
+export PATH

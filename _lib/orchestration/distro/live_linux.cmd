@@ -59,7 +59,6 @@ if !errorlevel! EQU 0 (
     exit /b !errorlevel!
 )
 
-if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
-echo LibScript Live Linux Placeholder > "%OUTPUT_PATH%"
-echo [OK] Live Linux image generated: %OUTPUT_PATH%
-exit /b 0
+echo [ERROR] No POSIX shell (wsl or sh) found on this Windows system.
+echo [ERROR] Please install WSL or Git Bash to generate Linux live media.
+exit /b 1

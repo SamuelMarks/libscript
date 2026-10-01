@@ -57,16 +57,16 @@ libscript_fetch_checksum() {
   if printf '%s\n' "$url" | grep -q "github.com/.*/releases/download/"; then
      base_url="${url%/*}"
      filename="${url##*/}"
-     sums="$(curl -sL "${base_url:-}/SHASUMS256.txt")"
-     if [ -n "$sums" ] && ! printf '%s\n' "$sums" | grep -q "Not Found"; then
-         printf '%s\n' "$sums" | grep "$filename" | awk '{print $1}'
-         return 0
-     fi
-     sums="$(curl -sL "${base_url:-}/checksums.txt")"
-     if [ -n "$sums" ] && ! printf '%s\n' "$sums" | grep -q "Not Found"; then
-         printf '%s\n' "$sums" | grep "$filename" | awk '{print $1}'
-         return 0
-     fi
+     for sumfile in "SHA256SUMS.txt" "SHA256SUMS" "SHASUMS256.txt" "checksums.txt"; do
+       sums="$(curl -sL "${base_url:-}/${sumfile}")"
+       if [ -n "$sums" ] && ! printf '%s\n' "$sums" | grep -iqE "Not Found|NoSuchKey|<html|<xml"; then
+         match_hash="$(printf '%s\n' "$sums" | grep "$filename" | awk '{print $1}')"
+         if [ -n "$match_hash" ]; then
+           printf '%s\n' "$match_hash"
+           return 0
+         fi
+       fi
+     done
   fi
   
   # 4. Fallback checking if .sha256 file exists

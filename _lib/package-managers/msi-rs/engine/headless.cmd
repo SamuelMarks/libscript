@@ -53,5 +53,6 @@ if !errorlevel! EQU 0 (
     exit /b !errorlevel!
 )
 
-echo [OK] Headless deployment completed successfully.
-exit /b 0
+echo [ERROR] No POSIX shell (wsl or sh) found on this Windows system.
+echo [ERROR] Headless installation via msi-rs requires a shell or native diskpart integration.
+exit /b 1

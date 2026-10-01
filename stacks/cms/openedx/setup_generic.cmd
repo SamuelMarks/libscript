@@ -259,6 +259,16 @@ if "%ACTION%"=="install" (
         call "%SCRIPT_DIR%\service.cmd" start 2>nul
     )
 
+    :: Database Migrations
+    echo [INFO] Applying database migrations...
+    if exist "%OPENEDX_INSTALL_DIR%\codebase\manage.py" (
+        cd /D "%OPENEDX_INSTALL_DIR%\codebase"
+        call "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" manage.py lms migrate --noinput || exit /b 1
+        call "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" manage.py cms migrate --noinput || exit /b 1
+    ) else (
+        echo [WARN] manage.py not found in codebase, skipping migrations.
+    )
+
     if exist "%SCRIPT_DIR%\healthcheck.cmd" (
         echo [INFO] Running healthcheck diagnostic probe...
         call "%SCRIPT_DIR%\healthcheck.cmd" 2>nul

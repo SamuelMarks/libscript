@@ -103,9 +103,10 @@ if not errorlevel 1 (
     git clone --depth 1 "%REPO_URL%" "%STAGING_DIR%" 2>nul
 )
 
-if exist "%OPENEDX_INSTALL_DIR%\manage.py" (
-    "%PYTHON_BIN%" "%OPENEDX_INSTALL_DIR%\manage.py" cms import "%DATA_DIR%" "%STAGING_DIR%" 2>nul
-    "%PYTHON_BIN%" "%OPENEDX_INSTALL_DIR%\manage.py" lms reindex_course --course-id "%COURSE_ID%" 2>nul
+if exist "%OPENEDX_INSTALL_DIR%\codebase\manage.py" (
+    cd /D "%OPENEDX_INSTALL_DIR%\codebase"
+    call "%PYTHON_BIN%" manage.py cms import "%DATA_DIR%" "%STAGING_DIR%" || exit /b 1
+    call "%PYTHON_BIN%" manage.py lms reindex_course --course-id "%COURSE_ID%" || exit /b 1
 )
 
 where powershell >nul 2>&1

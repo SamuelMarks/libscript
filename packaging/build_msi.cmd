@@ -2,12 +2,12 @@
 :: # build_msi.cmd
 ::
 :: ## Overview
+:: ## Overview
 :: Generic library engine for generating WiX Windows Installer (.msi) packages on Windows.
 :: Synthesizes WiX manifests from packaging.json and vars.schema.json, supporting
 :: Simple and Advanced setup modes, DBaaS offloading, custom directories,
 :: runtime auto-detection, and repository fork selection.
 ::
-:: ## Usage
 :: call packaging\build_msi.cmd [TARGET_DIR] [OPTIONS]
 
 setlocal EnableDelayedExpansion
@@ -24,10 +24,12 @@ set "SCRIPT_DIR=%~dp0"
 set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 :: ## find_root
+:: ## Overview
 :: Finds the root directory of the libscript repository.
 for %%I in ("%SCRIPT_DIR%") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 
 :: ## find_root_loop
+:: ## Overview
 :: Iterates upward through the directory tree looking for libscript.cmd.
 :find_root_loop
 if exist "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" goto found_root
@@ -37,6 +39,7 @@ set "LIBSCRIPT_ROOT_DIR=%PARENT_DIR%"
 goto find_root_loop
 
 :: ## found_root
+:: ## Overview
 :: Target label reached once the libscript root directory is located.
 :found_root
 
@@ -66,6 +69,7 @@ set "CACHE_DIR=%LIBSCRIPT_CACHE_DIR%"
 if "%CACHE_DIR%"=="" set "CACHE_DIR=%LIBSCRIPT_ROOT_DIR%\cache"
 
 :: ## parse_args
+:: ## Overview
 :: Parses command-line arguments and flags.
 :parse_args
 if "%~1"=="" goto after_args
@@ -185,6 +189,7 @@ shift
 goto parse_args
 
 :: ## show_help
+:: ## Overview
 :: Displays command-line usage and options.
 :show_help
 echo Usage: %~nx0 [TARGET_DIR] [OPTIONS]
@@ -209,60 +214,77 @@ echo   --help, -h            Show this help text
 exit /b 0
 
 :: ## after_args
+:: ## Overview
 :: Resolves paths and fallback assets after argument processing.
 :after_args
 
 if "%TARGET_DIR%"=="" set "TARGET_DIR=stacks\cms\openedx"
-set "CC0_ASSETS=%LIBSCRIPT_ROOT_DIR%\..\cc0-assets\libscript\openedx\assets"
-if not exist "%CC0_ASSETS%" if exist "%LIBSCRIPT_ROOT_DIR%\cc0-assets\libscript\openedx\assets" set "CC0_ASSETS=%LIBSCRIPT_ROOT_DIR%\cc0-assets\libscript\openedx\assets"
+set "STACK_NAME="
+if exist "%TARGET_DIR%\packaging.json" (
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.name) { $j.name }"`) do set "STACK_NAME=%%A"
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.title) { $j.title.Replace('&', 'and') }"`) do set "APP_NAME=%%A"
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.version) { $j.version }"`) do set "APP_VERSION=%%A"
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.publisher) { $j.publisher.Replace('&', 'and') }"`) do set "APP_PUBLISHER=%%A"
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.upgrade_code) { $j.upgrade_code }"`) do set "UPGRADE_CODE=%%A"
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.directories.app_default) { $j.directories.app_default }"`) do set "INSTALL_DIR=%%A"
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.directories.data_default) { $j.directories.data_default }"`) do set "DATA_DIR=%%A"
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.directories.logs_default) { $j.directories.logs_default }"`) do set "LOGS_DIR=%%A"
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.branding.icon) { $j.branding.icon }"`) do if not defined ICON_PATH set "ICON_PATH=%LIBSCRIPT_ROOT_DIR%\%%A"
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.branding.banner_top) { $j.branding.banner_top }"`) do if not defined BANNER_TOP_PATH set "BANNER_TOP_PATH=%LIBSCRIPT_ROOT_DIR%\%%A"
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.branding.banner_side) { $j.branding.banner_side }"`) do if not defined BANNER_SIDE_PATH set "BANNER_SIDE_PATH=%LIBSCRIPT_ROOT_DIR%\%%A"
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.branding.license_rtf) { $j.branding.license_rtf }"`) do if not defined LICENSE_PATH set "LICENSE_PATH=%LIBSCRIPT_ROOT_DIR%\%%A"
+)
+if "%STACK_NAME%"=="" set "STACK_NAME=openedx"
+set "CC0_ASSETS=%LIBSCRIPT_ROOT_DIR%\..\cc0-assets\libscript\%STACK_NAME%\assets"
+if not exist "%CC0_ASSETS%" if exist "%LIBSCRIPT_ROOT_DIR%\cc0-assets\libscript\%STACK_NAME%\assets" set "CC0_ASSETS=%LIBSCRIPT_ROOT_DIR%\cc0-assets\libscript\%STACK_NAME%\assets"
 if "%ICON_PATH%"=="" (
-    if exist "%CC0_ASSETS%\openedx.ico" (
-        set "ICON_PATH=%CC0_ASSETS%\openedx.ico"
-    ) else if exist "%LIBSCRIPT_ROOT_DIR%\packaging\assets\openedx.ico" (
-        set "ICON_PATH=%LIBSCRIPT_ROOT_DIR%\packaging\assets\openedx.ico"
+    if exist "%CC0_ASSETS%\%STACK_NAME%.ico" (
+        set "ICON_PATH=%CC0_ASSETS%\%STACK_NAME%.ico"
+    ) else if exist "%LIBSCRIPT_ROOT_DIR%\packaging\assets\%STACK_NAME%.ico" (
+        set "ICON_PATH=%LIBSCRIPT_ROOT_DIR%\packaging\assets\%STACK_NAME%.ico"
     )
 )
 if "%BANNER_TOP_PATH%"=="" (
-    if exist "%CC0_ASSETS%\openedx_banner_top.bmp" (
-        set "BANNER_TOP_PATH=%CC0_ASSETS%\openedx_banner_top.bmp"
-    ) else if exist "%LIBSCRIPT_ROOT_DIR%\packaging\assets\openedx_banner_top.bmp" (
-        set "BANNER_TOP_PATH=%LIBSCRIPT_ROOT_DIR%\packaging\assets\openedx_banner_top.bmp"
+    if exist "%CC0_ASSETS%\%STACK_NAME%_banner_top.bmp" (
+        set "BANNER_TOP_PATH=%CC0_ASSETS%\%STACK_NAME%_banner_top.bmp"
+    ) else if exist "%LIBSCRIPT_ROOT_DIR%\packaging\assets\%STACK_NAME%_banner_top.bmp" (
+        set "BANNER_TOP_PATH=%LIBSCRIPT_ROOT_DIR%\packaging\assets\%STACK_NAME%_banner_top.bmp"
     )
 )
 if "%BANNER_SIDE_PATH%"=="" (
-    if exist "%CC0_ASSETS%\openedx_banner_side.bmp" (
-        set "BANNER_SIDE_PATH=%CC0_ASSETS%\openedx_banner_side.bmp"
-    ) else if exist "%LIBSCRIPT_ROOT_DIR%\packaging\assets\openedx_banner_side.bmp" (
-        set "BANNER_SIDE_PATH=%LIBSCRIPT_ROOT_DIR%\packaging\assets\openedx_banner_side.bmp"
+    if exist "%CC0_ASSETS%\%STACK_NAME%_banner_side.bmp" (
+        set "BANNER_SIDE_PATH=%CC0_ASSETS%\%STACK_NAME%_banner_side.bmp"
+    ) else if exist "%LIBSCRIPT_ROOT_DIR%\packaging\assets\%STACK_NAME%_banner_side.bmp" (
+        set "BANNER_SIDE_PATH=%LIBSCRIPT_ROOT_DIR%\packaging\assets\%STACK_NAME%_banner_side.bmp"
     )
 )
 if "%LICENSE_PATH%"=="" (
-    if exist "%CC0_ASSETS%\openedx_eula.rtf" (
-        set "LICENSE_PATH=%CC0_ASSETS%\openedx_eula.rtf"
-    ) else if exist "%LIBSCRIPT_ROOT_DIR%\packaging\assets\openedx_eula.rtf" (
-        set "LICENSE_PATH=%LIBSCRIPT_ROOT_DIR%\packaging\assets\openedx_eula.rtf"
+    if exist "%CC0_ASSETS%\%STACK_NAME%_eula.rtf" (
+        set "LICENSE_PATH=%CC0_ASSETS%\%STACK_NAME%_eula.rtf"
+    ) else if exist "%LIBSCRIPT_ROOT_DIR%\packaging\assets\%STACK_NAME%_eula.rtf" (
+        set "LICENSE_PATH=%LIBSCRIPT_ROOT_DIR%\packaging\assets\%STACK_NAME%_eula.rtf"
     )
 )
 
 :: Generate dynamically on the fly if needed
-set "TMP_BRANDING_DIR=%TEMP%\openedx_branding_%RANDOM%"
+set "TMP_BRANDING_DIR=%TEMP%\%STACK_NAME%_branding_%RANDOM%"
 if "%ICON_PATH%"=="" (
     if not exist "%TMP_BRANDING_DIR%" mkdir "%TMP_BRANDING_DIR%" 2>nul
     call "%LIBSCRIPT_ROOT_DIR%\packaging\synthesize_branding.cmd" "%TARGET_DIR%" --output-dir "%TMP_BRANDING_DIR%" >nul 2>nul
     if exist "%TMP_BRANDING_DIR%\app.ico" set "ICON_PATH=%TMP_BRANDING_DIR%\app.ico"
-    if exist "%TMP_BRANDING_DIR%\openedx.ico" if "%ICON_PATH%"=="" set "ICON_PATH=%TMP_BRANDING_DIR%\openedx.ico"
+    if exist "%TMP_BRANDING_DIR%\%STACK_NAME%.ico" if "%ICON_PATH%"=="" set "ICON_PATH=%TMP_BRANDING_DIR%\%STACK_NAME%.ico"
     if exist "%TMP_BRANDING_DIR%\banner_top.bmp" if "%BANNER_TOP_PATH%"=="" set "BANNER_TOP_PATH=%TMP_BRANDING_DIR%\banner_top.bmp"
-    if exist "%TMP_BRANDING_DIR%\openedx_banner_top.bmp" if "%BANNER_TOP_PATH%"=="" set "BANNER_TOP_PATH=%TMP_BRANDING_DIR%\openedx_banner_top.bmp"
+    if exist "%TMP_BRANDING_DIR%\%STACK_NAME%_banner_top.bmp" if "%BANNER_TOP_PATH%"=="" set "BANNER_TOP_PATH=%TMP_BRANDING_DIR%\%STACK_NAME%_banner_top.bmp"
     if exist "%TMP_BRANDING_DIR%\banner_side.bmp" if "%BANNER_SIDE_PATH%"=="" set "BANNER_SIDE_PATH=%TMP_BRANDING_DIR%\banner_side.bmp"
-    if exist "%TMP_BRANDING_DIR%\openedx_banner_side.bmp" if "%BANNER_SIDE_PATH%"=="" set "BANNER_SIDE_PATH=%TMP_BRANDING_DIR%\openedx_banner_side.bmp"
+    if exist "%TMP_BRANDING_DIR%\%STACK_NAME%_banner_side.bmp" if "%BANNER_SIDE_PATH%"=="" set "BANNER_SIDE_PATH=%TMP_BRANDING_DIR%\%STACK_NAME%_banner_side.bmp"
     if exist "%TMP_BRANDING_DIR%\license.rtf" if "%LICENSE_PATH%"=="" set "LICENSE_PATH=%TMP_BRANDING_DIR%\license.rtf"
-    if exist "%TMP_BRANDING_DIR%\openedx_eula.rtf" if "%LICENSE_PATH%"=="" set "LICENSE_PATH=%TMP_BRANDING_DIR%\openedx_eula.rtf"
+    if exist "%TMP_BRANDING_DIR%\%STACK_NAME%_eula.rtf" if "%LICENSE_PATH%"=="" set "LICENSE_PATH=%TMP_BRANDING_DIR%\%STACK_NAME%_eula.rtf"
 )
 if not exist "%ICON_PATH%" (
     if exist "%TMP_BRANDING_DIR%\app.ico" (
         set "ICON_PATH=%TMP_BRANDING_DIR%\app.ico"
-    ) else if exist "%TMP_BRANDING_DIR%\openedx.ico" (
-        set "ICON_PATH=%TMP_BRANDING_DIR%\openedx.ico"
+    ) else if exist "%TMP_BRANDING_DIR%\%STACK_NAME%.ico" (
+        set "ICON_PATH=%TMP_BRANDING_DIR%\%STACK_NAME%.ico"
     ) else (
         set "ICON_PATH="
     )
@@ -289,15 +311,13 @@ if "%CLEAN_BRANCH%"=="" set "CLEAN_BRANCH=%APP_VERSION%"
 
 if /I "%VARIANT%"=="offline" (
     set "PROP_OPENEDX_OFFLINE=1"
-    if "%APP_NAME%"=="Open edX Platform" set "APP_NAME=Open edX Platform (Offline Air-Gapped)"
-    if "%OUT_FILE%"=="" set "OUT_FILE=openedx-offline-%CLEAN_BRANCH%"
-    set "WELCOME_DESC=The Setup Wizard will deploy Open edX LMS, Studio CMS, and pre-bundled air-gapped runtimes on your computer."
+    if "%OUT_FILE%"=="" set "OUT_FILE=%STACK_NAME%-offline-%CLEAN_BRANCH%"
+    set "WELCOME_DESC=The Setup Wizard will deploy %APP_NAME% and pre-bundled air-gapped runtimes on your computer."
     set "COMP_TAG= [Pre-bundled / Offline]"
 ) else (
     set "PROP_OPENEDX_OFFLINE=0"
-    if "%APP_NAME%"=="Open edX Platform" set "APP_NAME=Open edX Platform (Online)"
-    if "%OUT_FILE%"=="" set "OUT_FILE=openedx-%CLEAN_BRANCH%"
-    set "WELCOME_DESC=The Setup Wizard will download and install Open edX LMS, Studio CMS, and required runtimes on your computer."
+    if "%OUT_FILE%"=="" set "OUT_FILE=%STACK_NAME%-%CLEAN_BRANCH%"
+    set "WELCOME_DESC=The Setup Wizard will download and install %APP_NAME% and required runtimes on your computer."
     set "COMP_TAG="
 )
 
@@ -333,7 +353,14 @@ if /I "%LICENSE_MODE%"=="chained_dialogs" (
     )
 )
 
+:: Prevent absolute host paths from leaking into the generated WiX source files
+if defined ICON_PATH set "ICON_PATH=!ICON_PATH:%LIBSCRIPT_ROOT_DIR%\=!"
+if defined BANNER_TOP_PATH set "BANNER_TOP_PATH=!BANNER_TOP_PATH:%LIBSCRIPT_ROOT_DIR%\=!"
+if defined BANNER_SIDE_PATH set "BANNER_SIDE_PATH=!BANNER_SIDE_PATH:%LIBSCRIPT_ROOT_DIR%\=!"
+if defined rtf_license_file set "rtf_license_file=!rtf_license_file:%LIBSCRIPT_ROOT_DIR%\=!"
+
 :: ## write_wxs
+:: ## Overview
 :: Emits the complete WiX XML manifest.
 setlocal DisableDelayedExpansion
 (
@@ -472,6 +499,8 @@ setlocal DisableDelayedExpansion
     echo     ^</Directory^>
 
     echo     ^<CustomAction Id="CA_CheckNetworkConnection" Directory="INSTALLFOLDER" ExeCommand="powershell.exe -NoProfile -Command &quot;try { (New-Object System.Net.Sockets.TcpClient('github.com', 443)).Close(); (New-Object System.Net.Sockets.TcpClient('pypi.org', 443)).Close(); } catch { exit 1 }&quot;" Execute="immediate" Return="ignore" /^>
+    echo     ^<CustomAction Id="CA_CheckPorts" Directory="INSTALLFOLDER" ExeCommand="powershell.exe -NoProfile -Command &quot;foreach ($p in @(8000, 8001, 3306, 6379, 27017, 7700)) { try { $s = [System.Net.Sockets.TcpClient]::new('127.0.0.1', $p); $s.Close(); Write-Warning &quot;Port $p is currently occupied&quot; } catch {} }&quot;" Execute="immediate" Return="ignore" /^>
+    echo     ^<CustomAction Id="CA_DetectExistingRuntimes" Directory="INSTALLFOLDER" ExeCommand="powershell.exe -NoProfile -Command &quot;if (Get-Command python -ErrorAction SilentlyContinue) { [Environment]::SetEnvironmentVariable('FOUND_PYTHON_EXE', (Get-Command python).Source, 'Process') }; if (Get-Command node -ErrorAction SilentlyContinue) { [Environment]::SetEnvironmentVariable('FOUND_NODE_EXE', (Get-Command node).Source, 'Process') }&quot;" Execute="immediate" Return="ignore" /^>
     echo     ^<CustomAction Id="CA_AbortNoLicense" Error="Installation aborted: You must accept all bundled software licenses to proceed. Pass AGREE_ALL_LICENSES=1 for unattended installations." /^>
     echo     ^<CustomAction Id="CA_LaunchBrowser" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\packaging\launch_browser.cmd&quot; http://[PROP_LMS_HOST]:[PROP_LMS_PORT] &quot;Open edX LMS&quot;" Return="asyncNoWait" /^>
     echo     ^<CustomAction Id="CA_LaunchStudio" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\packaging\launch_browser.cmd&quot; http://[PROP_CMS_HOST]:[PROP_CMS_PORT] &quot;Open edX Studio&quot;" Return="asyncNoWait" /^>
@@ -715,6 +744,7 @@ setlocal DisableDelayedExpansion
     echo           ^<Publish Event="NewDialog" Value="Dlg_OpenEdX_SourceRepo"^>1^</Publish^>
     echo         ^</Control^>
     echo         ^<Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Next"^>
+    echo           ^<Publish Event="DoAction" Value="CA_CheckPorts"^>1^</Publish^>
     echo           ^<Publish Event="NewDialog" Value="Dlg_OpenEdX_DB"^>1^</Publish^>
     echo         ^</Control^>
     echo         ^<Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel"^>
@@ -833,20 +863,10 @@ setlocal DisableDelayedExpansion
     echo       ^</Dialog^>
 
     echo       ^<InstallUISequence^>
-    echo         ^<Custom Action="CA_CheckNetworkConnection" After="CostFinalize"^>^<![CDATA[NOT Installed AND PROP_OPENEDX_OFFLINE="0"]]^>^</Custom^>
     echo         ^<Show Dialog="Dlg_Welcome" After="CostFinalize"^>NOT Installed^</Show^>
     echo         ^<Show Dialog="Dlg_License" After="Dlg_Welcome"^>NOT Installed^</Show^>
-    if exist "%MULTI_LICENSE_UISEQ_FILE%" type "%MULTI_LICENSE_UISEQ_FILE%"
+    if exist "%MULTI_LICENSE_UI_SEQ_FILE%" type "%MULTI_LICENSE_UI_SEQ_FILE%"
     echo         ^<Show Dialog="Dlg_SetupType" After="%LAST_LICENSE_DLG%"^>NOT Installed^</Show^>
-    echo         ^<Show Dialog="Dlg_Features" After="Dlg_SetupType"^>^<![CDATA[NOT Installed AND SETUP_MODE="Advanced"]]^>^</Show^>
-    echo         ^<Show Dialog="Dlg_InstallLocation" After="Dlg_Features"^>^<![CDATA[NOT Installed AND SETUP_MODE="Advanced"]]^>^</Show^>
-    echo         ^<Show Dialog="Dlg_RuntimeSelection" After="Dlg_InstallLocation"^>^<![CDATA[NOT Installed AND SETUP_MODE="Advanced"]]^>^</Show^>
-    echo         ^<Show Dialog="Dlg_OpenEdX_SourceRepo" After="Dlg_RuntimeSelection"^>^<![CDATA[NOT Installed AND SETUP_MODE="Advanced"]]^>^</Show^>
-    echo         ^<Show Dialog="Dlg_OpenEdX_Config" After="Dlg_OpenEdX_SourceRepo"^>^<![CDATA[NOT Installed AND SETUP_MODE="Advanced"]]^>^</Show^>
-    echo         ^<Show Dialog="Dlg_OpenEdX_DB" After="Dlg_OpenEdX_Config"^>^<![CDATA[NOT Installed AND SETUP_MODE="Advanced"]]^>^</Show^>
-    echo         ^<Show Dialog="Dlg_OpenEdX_CacheSearch" After="Dlg_OpenEdX_DB"^>^<![CDATA[NOT Installed AND SETUP_MODE="Advanced"]]^>^</Show^>
-    echo         ^<Show Dialog="Dlg_VerifyReady" After="Dlg_OpenEdX_CacheSearch"^>^<![CDATA[NOT Installed AND SETUP_MODE="Advanced"]]^>^</Show^>
-    echo         ^<Show Dialog="Dlg_VerifyReady" After="Dlg_SetupType"^>^<![CDATA[NOT Installed AND SETUP_MODE="Simple"]]^>^</Show^>
     echo         ^<Show Dialog="Dlg_Exit" OnExit="success"^>NOT Installed^</Show^>
     echo       ^</InstallUISequence^>
     echo     ^</UI^>
@@ -942,9 +962,6 @@ setlocal DisableDelayedExpansion
     echo         ^<File Id="MfeCmdFile" Source="stacks\cms\openedx\mfe.cmd" KeyPath="yes" /^>
     echo         ^<File Id="MfeShFile" Source="stacks\cms\openedx\mfe.sh" /^>
     echo       ^</Component^>
-    echo       ^<Component Id="MockServerComponent" Guid="6A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D"^>
-    echo         ^<File Id="MockServerPs1File" Source="stacks\cms\openedx\mock_server.ps1" KeyPath="yes" /^>
-    echo       ^</Component^>
     echo     ^</ComponentGroup^>
     echo     ^<DirectoryRef Id="INSTALLFOLDER"^>
     echo       ^<Component Id="EnvironmentSettings" Guid="7291A843-159A-46D8-92EF-891029384756"^>
@@ -992,6 +1009,7 @@ endlocal
 echo [PASS] Successfully generated WiX manifest: %WXS_FILE%
 
 :: ## harvest_payload
+:: ## Overview
 set "PAYLOAD_WXS=%OUT_FILE%_payload.wxs"
 if /I "%VARIANT%"=="offline" (
     call "%SCRIPT_DIR%\harvest_payload.cmd" --wix-fragment "%PAYLOAD_WXS%" --directory-id "LIBSCRIPT_FOLDER" --component-group "LibscriptHarvestedComponents" --include-cache "%CACHE_DIR%"
@@ -1004,78 +1022,70 @@ if errorlevel 1 (
 )
 
 :: ## compile_msi
-:: Compiles the WiX manifest into an MSI binary if msi-rs or WiX toolset is present.
-where msi-rs.exe >nul 2>&1
-if %ERRORLEVEL%==0 (
-    msi-rs.exe pack -o "%OUT_FILE%.msi" "%WXS_FILE%"
-    if errorlevel 1 (
-        echo [WARN] msi-rs compilation failed; trying WiX fallback >&2
-    ) else (
-        echo [PASS] Successfully built %OUT_FILE%.msi via msi-rs
-        goto compile_done
-    )
+:: ## Overview
+:: Compiles the WiX manifest into an MSI binary using cross-platform msi-rs.
+if exist "%USERPROFILE%\.libscript\msi-rs\default\bin\candle.exe" (
+    set "PATH=!PATH!;%USERPROFILE%\.libscript\msi-rs\default\bin"
+) else if exist "%USERPROFILE%\.libscript\msi-rs\latest\bin\candle.exe" (
+    set "PATH=!PATH!;%USERPROFILE%\.libscript\msi-rs\latest\bin"
+) else if exist "%USERPROFILE%\.libscript\msi-rs\v0.0.1\bin\candle.exe" (
+    set "PATH=!PATH!;%USERPROFILE%\.libscript\msi-rs\v0.0.1\bin"
 )
-where msi.exe >nul 2>&1
-if %ERRORLEVEL%==0 (
-    msi.exe pack -o "%OUT_FILE%.msi" "%WXS_FILE%" >nul 2>&1
-    if not errorlevel 1 (
-        echo [PASS] Successfully built %OUT_FILE%.msi via msi
-        goto compile_done
-    )
-)
-set "_CANDLE_WXS=%WXS_FILE%.candle.wxs"
-if exist "%LIBSCRIPT_ROOT_DIR%\tools\wix\candle.exe" (
-    set "PATH=!PATH!;%LIBSCRIPT_ROOT_DIR%\tools\wix"
-) else if exist "C:\libscript\tools\wix\candle.exe" (
-    set "PATH=!PATH!;C:\libscript\tools\wix"
-) else if exist "C:\tools\wix\candle.exe" (
-    set "PATH=!PATH!;C:\tools\wix"
-) else if exist "C:\Program Files (x86)\WiX Toolset v3.14\bin\candle.exe" (
-    set "PATH=!PATH!;C:\Program Files (x86)\WiX Toolset v3.14\bin"
-) else if exist "C:\Program Files (x86)\WiX Toolset v3.11\bin\candle.exe" (
-    set "PATH=!PATH!;C:\Program Files (x86)\WiX Toolset v3.11\bin"
-)
+
 where candle.exe >nul 2>&1
-if !ERRORLEVEL!==0 (
-    powershell -NoProfile -Command "$w = Get-Content -LiteralPath '%WXS_FILE%' -Raw; $w = $w -replace '<Property Id=\"MsiHiddenProperties\".*?/>', ''; $w = [regex]::Replace($w, '(?m)^\s*<Show Dialog=\"Dlg_VerifyReady\" After=\"Dlg_SetupType\".*?\r?\n', ''); Set-Content -LiteralPath '%WXS_FILE%.candle.wxs' -Value $w"
-    candle.exe -nologo -out "%OUT_FILE%.wixobj" "%WXS_FILE%.candle.wxs"
-    if errorlevel 1 (
-        del /f /q "%WXS_FILE%.candle.wxs" >nul 2>&1
-        echo [ERROR] WiX candle compiler failed on %WXS_FILE% >&2
-        exit /b 1
-    )
-    candle.exe -nologo -out "%OUT_FILE%_payload.wixobj" "%PAYLOAD_WXS%"
-    if errorlevel 1 (
-        del /f /q "%WXS_FILE%.candle.wxs" >nul 2>&1
-        echo [ERROR] WiX candle compiler failed on %PAYLOAD_WXS% >&2
-        exit /b 1
-    )
-    light.exe -nologo -sval -ext WixUIExtension -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj" "%OUT_FILE%_payload.wixobj"
-    if errorlevel 1 (
-        del /f /q "%WXS_FILE%.candle.wxs" >nul 2>&1
-        echo [ERROR] WiX light linker failed >&2
-        exit /b 1
-    )
-    del /f /q "%WXS_FILE%.candle.wxs" >nul 2>&1
-    echo [PASS] Successfully built %OUT_FILE%.msi
-    goto compile_done
-) else (
-    where wix.exe >nul 2>&1
-    if %ERRORLEVEL%==0 (
-        wix.exe build -ext WixToolset.UI.wixext -o "%OUT_FILE%.msi" "%WXS_FILE%" "%PAYLOAD_WXS%"
-        if errorlevel 1 (
-            echo [ERROR] WiX build failed >&2
-            exit /b 1
-        )
-        echo [PASS] Successfully built %OUT_FILE%.msi
-        goto compile_done
-    ) else (
-        echo [INFO] WiX toolset compiler not found in PATH. XML manifest ready for compilation.
+if errorlevel 1 (
+    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\package-managers\msi-rs\env.cmd" (
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\package-managers\msi-rs\env.cmd" >nul 2>&1
     )
 )
 
+where candle.exe >nul 2>&1
+if errorlevel 1 (
+    if exist "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" (
+        call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install msi-rs v0.0.1 >nul 2>&1
+        if exist "%LIBSCRIPT_ROOT_DIR%\_lib\package-managers\msi-rs\env.cmd" (
+            call "%LIBSCRIPT_ROOT_DIR%\_lib\package-managers\msi-rs\env.cmd" >nul 2>&1
+        )
+    )
+)
+
+where candle.exe >nul 2>&1
+if errorlevel 1 (
+    echo [ERROR] msi-rs not found. Please install msi-rs. >&2
+    goto compile_err
+)
+
+echo [INFO] Compiling MSI with pure-Rust msi-rs...
+candle.exe -nologo -out "%OUT_FILE%.wixobj" "%WXS_FILE%"
+if errorlevel 1 (
+    echo [ERROR] msi-rs candle compiler failed on %WXS_FILE% >&2
+    goto compile_err
+)
+candle.exe -nologo -out "%OUT_FILE%_payload.wixobj" "%PAYLOAD_WXS%"
+if errorlevel 1 (
+    echo [ERROR] msi-rs candle compiler failed on %PAYLOAD_WXS% >&2
+    goto compile_err
+)
+light.exe -nologo -sval -ext WixUIExtension -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj" "%OUT_FILE%_payload.wixobj"
+if errorlevel 1 (
+    echo [ERROR] msi-rs light linker failed >&2
+    goto compile_err
+)
+
+echo [PASS] Successfully built %OUT_FILE%.msi
 :compile_done
-del /f /q "%OUT_FILE%.candle.wxs" >nul 2>&1
+set "ERR=0"
+goto cleanup
+
+:compile_err
+set "ERR=1"
+goto cleanup
+
+:cleanup
+if exist "%TMP_WORK_DIR%" rmdir /s /q "%TMP_WORK_DIR%" >nul 2>&1
 del /f /q "%OUT_FILE%.wixobj" >nul 2>&1
 del /f /q "%OUT_FILE%_payload.wixobj" >nul 2>&1
-exit /b 0
+del /f /q "%WXS_FILE%" >nul 2>&1
+del /f /q "%PAYLOAD_WXS%" >nul 2>&1
+exit /b !ERR!
+

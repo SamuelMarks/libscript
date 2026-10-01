@@ -93,16 +93,13 @@ grep -q 'Type="PathEdit"' "$WXS_FILE" || { echo "[FAIL] Missing PathEdit browse 
 printf '[PASS] All XML assertions passed!
 '
 
-# 4. If an MSI was generated (e.g. via wixl or candle/light), verify its existence
+# 4. If an MSI was generated (e.g. via msi-rs, candle/light, or wixl), verify its existence
 MSI_FILE="${TEST_TMP_DIR}/TestPackage.msi"
 if [ -f "$MSI_FILE" ]; then
-  printf '[PASS] Successfully generated MSI: %s (size: %s bytes)
-' "$MSI_FILE" "$(wc -c < "$MSI_FILE" | tr -d ' ')"
+  printf '[PASS] Successfully generated MSI: %s (size: %s bytes)\n' "$MSI_FILE" "$(wc -c < "$MSI_FILE" | tr -d ' ')"
 else
-  printf '[INFO] Note: WiX tools (wix.exe/candle.exe/wixl) not present or skipped, .wxs is validated.
-'
+  printf '[INFO] Note: msi-rs / WiX tools (candle/light/wix) not present or skipped, .wxs is validated.\n'
 fi
 
-printf '=== All MSI tests completed successfully ===
-'
+printf '=== All MSI tests completed successfully ===\n'
 exit 0

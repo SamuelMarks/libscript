@@ -51,12 +51,6 @@ if !errorlevel! EQU 0 (
     exit /b !errorlevel!
 )
 
-echo ================================================================================
-echo                LIBSCRIPT MSI-RS UNIVERSAL LIVE INSTALLER (TUI)
-echo ================================================================================
-echo  Target Disk: Auto (Primary Disk)
-echo  Operating System: Linux / FreeBSD / illumos
-echo  Workload: Open edX / WordPress / Minimal Base
-echo  Progress: [========================================] 100%%
-echo [OK] TUI installer session concluded successfully.
-exit /b 0
+echo [ERROR] No POSIX shell (wsl or sh) found on this Windows system.
+echo [ERROR] The TUI mode requires a POSIX environment providing 'dialog' or 'whiptail'.
+exit /b 1

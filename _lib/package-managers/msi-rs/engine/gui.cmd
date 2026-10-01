@@ -39,22 +39,6 @@ for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 
 echo [GUI] Initializing msi-gui graphical installer subsystem on Windows...
 
-if /i "%~1"=="--test" (
-    echo [OK] Windows display subsystem operational.
-    exit /b 0
-)
-
-where msi-gui.exe >nul 2>&1
-if !errorlevel! EQU 0 (
-    start "" msi-gui.exe
-    exit /b 0
-)
-
-if exist "%USERPROFILE%\.libscript\msi-rs\latest\bin\msi-gui.exe" (
-    start "" "%USERPROFILE%\.libscript\msi-rs\latest\bin\msi-gui.exe"
-    exit /b 0
-)
-
-echo [WARN] msi-gui.exe not found; falling back to TUI wizard.
-call "%SCRIPT_DIR%tui.cmd" %*
-exit /b !errorlevel!
+echo [ERROR] No POSIX shell (wsl or sh) found on this Windows system.
+echo [ERROR] The GUI launcher requires a shell environment to bootstrap.
+exit /b 1

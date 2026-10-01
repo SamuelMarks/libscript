@@ -2,7 +2,8 @@
 # ## Overview
 # Captures high-resolution screenshots of the WordPress 7.1.2 platform,
 # including CLI management operations, healthcheck diagnostics reports,
-# and web portal views, saving output to ../cc0-assets/libscript/wordpress/screenshots/.
+# and live Windows Installer (.msi) wizard and web portal views,
+# saving output to ../cc0-assets/libscript/wordpress/screenshots/.
 #
 # ## Usage
 #   ./devtools/capture_wordpress_screenshots.sh [--output-dir <dir>]
@@ -47,11 +48,9 @@ if [ -x "$WP_CLI_SH" ]; then
   "$WP_CLI_SH" healthcheck > "${OUT_DIR}/healthcheck_report.txt" 2>&1 || true
 fi
 
-# 2. Capture Web Portal homepage if web browser / screenshot tool available
-if command -v shot-scraper >/dev/null 2>&1; then
-  shot-scraper "http://localhost:80/" -o "${OUT_DIR}/01_wordpress_homepage.png" 2>/dev/null || true
-elif command -v wkhtmltoimage >/dev/null 2>&1; then
-  wkhtmltoimage "http://localhost:80/" "${OUT_DIR}/01_wordpress_homepage.png" 2>/dev/null || true
+# 2. Execute Vagrant Windows 11 MSI capture harness if Vagrant box is present
+if [ -f "${SCRIPT_DIR}/capture_wordpress_vagrant_screenshots.sh" ]; then
+  "${SCRIPT_DIR}/capture_wordpress_vagrant_screenshots.sh" "$@"
 fi
 
 printf '[OK] WordPress screenshots captured in %s

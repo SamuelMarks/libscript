@@ -17,7 +17,7 @@ set "STACK=%STACK%:%THIS_FILE%:"
 :: Synthesizes WiX manifests driven purely by packaging.json.
 ::
 :: ## Usage
-::   call packaging	emplate_msi.cmd <path_to_stack_or_packaging.json> --out <file.wxs> [OPTIONS]
+::   call packaging\template_msi.cmd <path_to_stack_or_packaging.json> --out <file.wxs> [OPTIONS]
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
@@ -74,31 +74,40 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "$pub = if ($spec.publisher) { $spec.publisher } else { 'LibScript Open Source Project' };" ^
     "$upgradeCode = if ($spec.upgrade_code) { $spec.upgrade_code } else { '{A0B1C2D3-E4F5-6A7B-8C9D-0E1F2A3B4C5D}' };" ^
     "$prodCode = [System.Guid]::NewGuid().ToString('B').ToUpper();" ^
-    "$wxs = @'<?xml version="1.0" encoding="UTF-8"?>" ^
-    "<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">" ^
-    "  <Product Id="' + $prodCode + '" Name="' + $title + '" Language="1033" Version="' + $ver + '" Manufacturer="' + $pub + '" UpgradeCode="' + $upgradeCode + '">" ^
-    "    <Package Id="*" InstallerVersion="405" Compressed="yes" InstallScope="perMachine" Description="' + $title + ' Installer" />" ^
-    "    <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." Schedule="afterInstallInitialize" />" ^
-    "    <Media Id="1" Cabinet="payload.cab" EmbedCab="yes" />" ^
-    "    <Directory Id="TARGETDIR" Name="SourceDir">" ^
-    "      <Directory Id="ProgramFiles64Folder">" ^
-    "        <Directory Id="INSTALLFOLDER" Name="' + $name + '">" ^
-    "          <Directory Id="BUNDLE_DIR" Name="bundle" />" ^
-    "        </Directory>" ^
-    "      </Directory>" ^
-    "    </Directory>" ^
-    "    <Feature Id="DefaultFeature" Title="' + $title + '" Level="1">" ^
-    "      <ComponentRef Id="AppIdentityComponent" />" ^
-    "    </Feature>" ^
-    "    <DirectoryRef Id="INSTALLFOLDER">" ^
-    "      <Component Id="AppIdentityComponent" Guid="*">" ^
-    "        <RegistryKey Root="HKLM" Key="Software\LibScript' + $name + '">" ^
-    "          <RegistryValue Name="Installed" Type="integer" Value="1" KeyPath="yes" />" ^
-    "        </RegistryKey>" ^
-    "      </Component>" ^
-    "    </DirectoryRef>" ^
-    "  </Product>" ^
-    "</Wix>';" ^
+    "$hasChainer = ($spec.orchestrator -eq $true -or $spec.embedded_chainer -eq $true -or $spec.topology -eq 'suite_orchestrator' -or ($spec.chained_packages -and $spec.chained_packages.Count -gt 0) -or ($spec.dependencies -and $spec.dependencies.Count -gt 0));" ^
+    "$lines = @(" ^
+    "  '<?xml version=\"1.0\" encoding=\"UTF-8\"?>'," ^
+    "  '<Wix xmlns=\"http://schemas.microsoft.com/wix/2006/wi\">'," ^
+    "  ('  <Product Id=\"' + $prodCode + '\" Name=\"' + $title + '\" Language=\"1033\" Version=\"' + $ver + '\" Manufacturer=\"' + $pub + '\" UpgradeCode=\"' + $upgradeCode + '\">')," ^
+    "  ('    <Package Id=\"*\" InstallerVersion=\"405\" Compressed=\"yes\" InstallScope=\"perMachine\" Description=\"' + $title + ' Installer\" />')," ^
+    "  '    <MajorUpgrade DowngradeErrorMessage=\"A newer version is already installed.\" Schedule=\"afterInstallInitialize\" />'," ^
+    "  '    <Media Id=\"1\" Cabinet=\"payload.cab\" EmbedCab=\"yes\" />'," ^
+    "  '    <Directory Id=\"TARGETDIR\" Name=\"SourceDir\">'," ^
+    "  '      <Directory Id=\"ProgramFiles64Folder\">'," ^
+    "  ('        <Directory Id=\"INSTALLFOLDER\" Name=\"' + $name + '\">')," ^
+    "  '          <Directory Id=\"BUNDLE_DIR\" Name=\"bundle\" />'," ^
+    "  '        </Directory>'," ^
+    "  '      </Directory>'," ^
+    "  '    </Directory>'," ^
+    "  ('    <Feature Id=\"DefaultFeature\" Title=\"' + $title + '\" Level=\"1\">')," ^
+    "  '      <ComponentRef Id=\"AppIdentityComponent\" />'," ^
+    "  '    </Feature>'," ^
+    "  '    <DirectoryRef Id=\"INSTALLFOLDER\">'," ^
+    "  '      <Component Id=\"AppIdentityComponent\" Guid=\"*\">'," ^
+    "  ('        <RegistryKey Root=\"HKLM\" Key=\"Software\LibScript\' + $name + '\">')," ^
+    "  '          <RegistryValue Name=\"Installed\" Type=\"integer\" Value=\"1\" KeyPath=\"yes\" />'," ^
+    "  '        </RegistryKey>'," ^
+    "  '      </Component>'," ^
+    "  '    </DirectoryRef>'" ^
+    ");" ^
+    "if ($hasChainer) {" ^
+    "  $lines += '    <UI>';" ^
+    "  $lines += '      <EmbeddedChainer Id=\"LibScriptChainer\" SourceFile=\"binary\libscript_chainer.dll\" />';" ^
+    "  $lines += '    </UI>';" ^
+    "}" ^
+    "$lines += '  </Product>';" ^
+    "$lines += '</Wix>';" ^
+    "$wxs = $lines -join \"`r`n\";" ^
     "[System.IO.File]::WriteAllText($outFile, $wxs);" ^
     "Write-Output ('[SUCCESS] Generated WiX XML: ' + $outFile);"
 

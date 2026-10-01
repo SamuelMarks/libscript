@@ -75,7 +75,8 @@ function Do-Start {
         if ((Test-Path $managePy) -and [System.IO.File]::Exists($PyBin)) {
             $p = Start-Process -FilePath $PyBin -ArgumentList @("-m", "celery", "worker", "-c", "2") -RedirectStandardOutput $logFile -RedirectStandardError $logFile -PassThru
         } else {
-            $p = Start-Process -FilePath "powershell.exe" -ArgumentList @("-NoProfile", "-Command", "Start-Sleep -Seconds 86400") -WindowStyle Hidden -PassThru
+            Write-Error "Genuine Open edX codebase or python not found. Cannot start worker $svc."
+            exit 1
         }
 
         Set-Content -Path $pidFile -Value $p.Id -Encoding Ascii

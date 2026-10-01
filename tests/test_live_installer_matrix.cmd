@@ -50,20 +50,6 @@ if !errorlevel! EQU 0 (
     exit /b !errorlevel!
 )
 
-(
-    echo {
-    echo   "suite": "msi-live-installer-matrix",
-    echo   "platforms": {
-    echo     "linux": "PASS",
-    echo     "freebsd": "PASS",
-    echo     "sunos": "PASS",
-    echo     "windows": "PASS",
-    echo     "macos": "PASS"
-    echo   },
-    echo   "overall_status": "PASS"
-    echo }
-) > "%SUMMARY_FILE%"
-
-echo [OK] All 5 Vagrant platforms verified successfully!
-echo [OK] Summary written to %SUMMARY_FILE%
-exit /b 0
+echo [ERROR] No POSIX shell (wsl or sh) found on this Windows system.
+echo [ERROR] The test suite orchestrator requires a shell environment.
+exit /b 1

@@ -108,7 +108,9 @@ public class Win32Helper {
         }
 
         if (proc.Equals("msiexec", StringComparison.OrdinalIgnoreCase)) return true;
-        if (s.IndexOf("Open edX", StringComparison.OrdinalIgnoreCase) >= 0 ||
+        if (s.IndexOf("Windows Security", StringComparison.OrdinalIgnoreCase) >= 0 ||
+            s.IndexOf("Open edX", StringComparison.OrdinalIgnoreCase) >= 0 ||
+            s.IndexOf("WordPress", StringComparison.OrdinalIgnoreCase) >= 0 ||
             s.IndexOf("Setup", StringComparison.OrdinalIgnoreCase) >= 0 ||
             s.IndexOf("Installation Mode", StringComparison.OrdinalIgnoreCase) >= 0 ||
             s.IndexOf("Component Selection", StringComparison.OrdinalIgnoreCase) >= 0 ||
@@ -347,7 +349,7 @@ $timeoutSec = 5
 
 if ($target.StartsWith("WAIT_DIALOG:")) {
     $title = $target.Substring(12)
-    $timeoutSec = 15
+    $timeoutSec = if ($title -like "*Setup Complete*") { 180 } else { 20 }
     while ($sw.Elapsed.TotalSeconds -lt $timeoutSec) {
         if ([Win32Helper]::FindDialog($title)) { $res = $true; break }
         Start-Sleep -Milliseconds 400

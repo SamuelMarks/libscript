@@ -271,14 +271,27 @@ function make_hash(s,   h1, h2, h3, h4) {
 function make_id(prefix, raw_path,   san, cand, max_pre, avail, trimmed, h) {
     san = sanitize(raw_path)
     cand = prefix san
-    if (length(cand) <= 72) {
+    if (cand in used_ids && used_ids[cand] != raw_path) {
+        cand = ""
+    }
+    if (cand != "" && length(cand) <= 72) {
+        used_ids[cand] = raw_path
         return cand
     }
     h = make_hash(raw_path)
     max_pre = 72 - 32 - 1
     avail = max_pre - length(prefix)
     trimmed = (avail > 0) ? substr(san, 1, avail) : ""
-    return prefix trimmed "_" h
+    cand = prefix trimmed "_" h
+    used_ids[cand] = raw_path
+    return cand
+}
+function strip_root(path) {
+    if (substr(path, 1, length(root) + 1) == root "/") {
+        return substr(path, length(root) + 2)
+    }
+    if (path == root) return "."
+    return path
 }
 BEGIN {
     for (i = 1; i <= 255; i++) ord[sprintf("%c", i)] = i
@@ -329,6 +342,7 @@ END {
         } else {
             src = root "/" f
         }
+        src = strip_root(src)
 
         disk_id = "1"
         if (substr(f, 1, 15) == "cache/runtimes/") {

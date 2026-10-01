@@ -312,8 +312,12 @@ packaging/assets/*.ico
 packaging/assets/*.bmp
 
 # Generated installer build artifacts
+*.wxs
+*.wixobj
+*.msi
 packaging/*.msi
 packaging/*.wxs
 packaging/*.wixobj
 
 
+streams/

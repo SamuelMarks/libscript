@@ -1,5 +1,6 @@
 #!/bin/sh
 # ## Overview
+# ## Overview
 # Generic library engine for generating WiX Windows Installer (.msi) packages.
 # Synthesizes WiX manifests from packaging.json and vars.schema.json, supporting
 # Simple and Advanced setup modes, DBaaS offloading, custom directories,
@@ -56,6 +57,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 ' "$d")}"
 
 # ## show_help
+# ## Overview
 # Prints script usage instructions and available command-line switches.
 show_help() {
   printf '%s
@@ -314,15 +316,22 @@ TMP_WORK_DIR="${LIBSCRIPT_ROOT_DIR}/tmp/msi_build_$$"
 mkdir -p "$TMP_WORK_DIR"
 
 # ## cleanup_tmp
+# ## Overview
 # Removes temporary build directory.
 # shellcheck disable=SC2317,SC2329
+# ## Usage
+#   Internal function.
 cleanup_tmp() {
   rm -rf "$TMP_WORK_DIR"
+  rm -f "${OUT_FILE}.wixobj" "${OUT_FILE}_payload.wixobj" "${OUT_FILE}.candle.wxs" "${OUT_FILE}_wixl.wxs" "${OUT_FILE}_payload_wixl.wxs" "${WXS_FILE}" "${PAYLOAD_WXS}"
 }
 trap cleanup_tmp EXIT INT TERM
 
 # ## ensure_branding_assets
+# ## Overview
 # Validates or synthesizes placeholder branding assets via synthesize_branding.sh.
+# ## Usage
+#   Internal function.
 ensure_branding_assets() {
   synth_script="${LIBSCRIPT_ROOT_DIR}/packaging/synthesize_branding.sh"
 
@@ -388,7 +397,10 @@ fi
 WXS_FILE="${OUT_FILE}.wxs"
 
 # ## generate_wxs
+# ## Overview
 # Generates the WiX XML (.wxs) manifest synthesizing properties from schema and packaging config.
+# ## Usage
+#   Internal function.
 generate_wxs() {
   _esc_pub=$(printf '%s\n' "$APP_PUBLISHER" | sed 's/&/\&amp;/g')
   _esc_name=$(printf '%s\n' "$APP_NAME" | sed 's/&/\&amp;/g')
@@ -463,6 +475,21 @@ generate_wxs() {
     fi
   fi
 
+  # Prevent absolute host paths from leaking into the generated WiX source files
+  strip_root() {
+    _path="$1"
+    _root="$2"
+    case "$_path" in
+      "${_root}"/*) printf '%s' "${_path#"${_root}/"}" ;;
+      "${_root}") printf '.' ;;
+      *) printf '%s' "$_path" ;;
+    esac
+  }
+  [ -n "$ICON_PATH" ] && ICON_PATH=$(strip_root "$ICON_PATH" "$LIBSCRIPT_ROOT_DIR")
+  [ -n "$BANNER_TOP_PATH" ] && BANNER_TOP_PATH=$(strip_root "$BANNER_TOP_PATH" "$LIBSCRIPT_ROOT_DIR")
+  [ -n "$BANNER_SIDE_PATH" ] && BANNER_SIDE_PATH=$(strip_root "$BANNER_SIDE_PATH" "$LIBSCRIPT_ROOT_DIR")
+  [ -n "${rtf_license_file:-}" ] && rtf_license_file=$(strip_root "$rtf_license_file" "$LIBSCRIPT_ROOT_DIR")
+
   cat << EOF_XML > "$WXS_FILE"
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
@@ -500,12 +527,10 @@ EOF_MEDIA
 EOF_UPGRADE
 
   if [ -n "$BANNER_TOP_PATH" ] && [ -f "$BANNER_TOP_PATH" ]; then
-    printf '    <WixVariable Id="WixUIBannerBmp" Value="%s" />
-' "$BANNER_TOP_PATH" >> "$WXS_FILE"
+    printf '    <Binary Id="WixUIBannerBmp" SourceFile="%s" />\n    <WixVariable Id="WixUIBannerBmp" Value="%s" />\n' "$BANNER_TOP_PATH" "$BANNER_TOP_PATH" >> "$WXS_FILE"
   fi
   if [ -n "$BANNER_SIDE_PATH" ] && [ -f "$BANNER_SIDE_PATH" ]; then
-    printf '    <WixVariable Id="WixUIDialogBmp" Value="%s" />
-' "$BANNER_SIDE_PATH" >> "$WXS_FILE"
+    printf '    <Binary Id="WixUIDialogBmp" SourceFile="%s" />\n    <WixVariable Id="WixUIDialogBmp" Value="%s" />\n' "$BANNER_SIDE_PATH" "$BANNER_SIDE_PATH" >> "$WXS_FILE"
   fi
   if [ -n "$rtf_license_file" ] && [ -f "$rtf_license_file" ]; then
     printf '    <WixVariable Id="WixUILicenseRtf" Value="%s" />
@@ -600,8 +625,7 @@ EOF_UPGRADE
     <Property Id="BACKUPFOLDER" Value="C:\ProgramData\OpenEdX\backups" Secure="yes" />
     <Property Id="CREATE_SHORTCUT_LMS" Value="1" Secure="yes" />
     <Property Id="CREATE_SHORTCUT_CMS" Value="1" Secure="yes" />
-    <Property Id="AGREE_ALL_LICENSES" Value="0" Secure="yes" />
-    <Property Id="LICENSE_ACCEPTED" Value="0" Secure="yes" />${MULTI_LICENSE_PROPS}
+    <Property Id="AGREE_ALL_LICENSES" Value="0" Secure="yes" />${MULTI_LICENSE_PROPS}
 
     <!-- Mask Sensitive Git Credentials and Passwords in Verbose Logs -->
     <Property Id="MsiHiddenProperties" Value="PROP_OPENEDX_ADMIN_PASSWORD;PROP_OPENEDX_SECRET_KEY;PROP_MYSQL_ROOT_PASSWORD;PROP_MYSQL_REMOTE_URL;PROP_REDIS_PASSWORD;PROP_REDIS_URL;PROP_MONGODB_URI;PROP_MEILISEARCH_MASTER_KEY;PROP_OPENEDX_REPO_AUTH_TOKEN" />
@@ -628,6 +652,8 @@ EOF_UPGRADE
 
     <!-- Custom Actions -->
     <CustomAction Id="CA_CheckNetworkConnection" Directory="INSTALLFOLDER" ExeCommand="powershell.exe -NoProfile -Command &quot;try { (New-Object System.Net.Sockets.TcpClient('github.com', 443)).Close(); (New-Object System.Net.Sockets.TcpClient('pypi.org', 443)).Close(); } catch { exit 1 }&quot;" Execute="immediate" Return="ignore" />
+    <CustomAction Id="CA_CheckPorts" Directory="INSTALLFOLDER" ExeCommand="powershell.exe -NoProfile -Command &quot;foreach (\$p in @(8000, 8001, 3306, 6379, 27017, 7700)) { try { \$s = [System.Net.Sockets.TcpClient]::new('127.0.0.1', \$p); \$s.Close(); Write-Warning &quot;Port \$p is currently occupied&quot; } catch {} }&quot;" Execute="immediate" Return="ignore" />
+    <CustomAction Id="CA_DetectExistingRuntimes" Directory="INSTALLFOLDER" ExeCommand="powershell.exe -NoProfile -Command &quot;if (Get-Command python -ErrorAction SilentlyContinue) { [Environment]::SetEnvironmentVariable('FOUND_PYTHON_EXE', (Get-Command python).Source, 'Process') }; if (Get-Command node -ErrorAction SilentlyContinue) { [Environment]::SetEnvironmentVariable('FOUND_NODE_EXE', (Get-Command node).Source, 'Process') }&quot;" Execute="immediate" Return="ignore" />
     <CustomAction Id="CA_LaunchBrowser" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\packaging\launch_browser.cmd&quot; http://[PROP_LMS_HOST]:[PROP_LMS_PORT] &quot;Open edX LMS&quot;" Return="asyncNoWait" />
     <CustomAction Id="CA_LaunchStudio" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\packaging\launch_browser.cmd&quot; http://[PROP_CMS_HOST]:[PROP_CMS_PORT] &quot;Open edX Studio&quot;" Return="asyncNoWait" />
     <CustomAction Id="InstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install stacks/cms/openedx --offline=[PROP_OPENEDX_OFFLINE] --lms-port=[PROP_LMS_PORT] --cms-port=[PROP_CMS_PORT] --mysql-url=&quot;[PROP_MYSQL_REMOTE_URL]&quot; --redis-port=[PROP_REDIS_PORT] --redis-url=&quot;[PROP_REDIS_URL]&quot; --mongodb-uri=&quot;[PROP_MONGODB_URI]&quot; --repo=&quot;[PROP_OPENEDX_EDX_PLATFORM_REPOSITORY]&quot; --version=&quot;[PROP_OPENEDX_VERSION]&quot; --admin-user=&quot;[PROP_OPENEDX_ADMIN_USERNAME]&quot; --admin-password=&quot;[PROP_OPENEDX_ADMIN_PASSWORD]&quot; --admin-email=&quot;[PROP_OPENEDX_ADMIN_EMAIL]&quot; --backup-dir=&quot;[BACKUPFOLDER]&quot; --theme=&quot;[PROP_OPENEDX_THEME]&quot;" Execute="deferred" Return="ignore" Impersonate="no" />
@@ -698,10 +724,11 @@ ${MULTI_LICENSE_XML}
           </RadioButtonGroup>
         </Control>
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back">
-          <Publish Event="EndDialog" Value="Return">1</Publish>
+          <Publish Event="NewDialog" Value="Dlg_License">1</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Next">
-          <Publish Event="EndDialog" Value="Return">1</Publish>
+          <Publish Event="NewDialog" Value="Dlg_Features"><![CDATA[SETUP_MODE="Advanced"]]></Publish>
+          <Publish Event="NewDialog" Value="Dlg_VerifyReady"><![CDATA[SETUP_MODE="Simple"]]></Publish>
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
           <Publish Event="EndDialog" Value="Exit">1</Publish>
@@ -726,10 +753,10 @@ ${MULTI_LICENSE_XML}
         <Control Id="Chk_Demo" Type="CheckBox" X="28" Y="198" Width="320" Height="14" Property="IMPORT_DEMO_CONTENT" CheckBoxValue="1" Text="Import edX Demo Course &amp; Content Libraries" />
         <Control Id="Chk_MFEs" Type="CheckBox" X="28" Y="212" Width="320" Height="14" Property="INSTALL_MFES" CheckBoxValue="1" Text="Build and Deploy Micro-Frontends (Learning, Authn, Account)" />
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back">
-          <Publish Event="EndDialog" Value="Return">1</Publish>
+          <Publish Event="NewDialog" Value="Dlg_SetupType">1</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Next">
-          <Publish Event="EndDialog" Value="Return">1</Publish>
+          <Publish Event="NewDialog" Value="Dlg_InstallLocation">1</Publish>
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
           <Publish Event="EndDialog" Value="Exit">1</Publish>
@@ -774,10 +801,10 @@ ${MULTI_LICENSE_XML}
         </Control>
 
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back">
-          <Publish Event="EndDialog" Value="Return">1</Publish>
+          <Publish Event="NewDialog" Value="Dlg_Features">1</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Next">
-          <Publish Event="EndDialog" Value="Return">1</Publish>
+          <Publish Event="NewDialog" Value="Dlg_RuntimeSelection">1</Publish>
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
           <Publish Event="EndDialog" Value="Exit">1</Publish>
@@ -810,10 +837,10 @@ ${MULTI_LICENSE_XML}
         </Control>
 
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back">
-          <Publish Event="EndDialog" Value="Return">1</Publish>
+          <Publish Event="NewDialog" Value="Dlg_InstallLocation">1</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Next">
-          <Publish Event="EndDialog" Value="Return">1</Publish>
+          <Publish Event="NewDialog" Value="Dlg_OpenEdX_SourceRepo">1</Publish>
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
           <Publish Event="EndDialog" Value="Exit">1</Publish>
@@ -841,10 +868,10 @@ ${MULTI_LICENSE_XML}
         <Control Id="Txt_Token" Type="Edit" X="20" Y="190" Width="330" Height="18" Property="PROP_OPENEDX_REPO_AUTH_TOKEN" Password="yes" />
 
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back">
-          <Publish Event="EndDialog" Value="Return">1</Publish>
+          <Publish Event="NewDialog" Value="Dlg_RuntimeSelection">1</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Next">
-          <Publish Event="EndDialog" Value="Return">1</Publish>
+          <Publish Event="NewDialog" Value="Dlg_OpenEdX_Config">1</Publish>
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
           <Publish Event="EndDialog" Value="Exit">1</Publish>
@@ -877,10 +904,11 @@ ${MULTI_LICENSE_XML}
         <Control Id="Txt_ThemeUrl" Type="Edit" X="180" Y="185" Width="170" Height="18" Property="PROP_OPENEDX_THEME_REPO_URL" />
 
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back">
-          <Publish Event="EndDialog" Value="Return">1</Publish>
+          <Publish Event="NewDialog" Value="Dlg_OpenEdX_SourceRepo">1</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Next">
-          <Publish Event="EndDialog" Value="Return">1</Publish>
+          <Publish Event="DoAction" Value="CA_CheckPorts">1</Publish>
+          <Publish Event="NewDialog" Value="Dlg_OpenEdX_DB">1</Publish>
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
           <Publish Event="EndDialog" Value="Exit">1</Publish>
@@ -905,10 +933,10 @@ ${MULTI_LICENSE_XML}
         <Control Id="Txt_RootPass" Type="Edit" X="20" Y="170" Width="200" Height="18" Property="PROP_MYSQL_ROOT_PASSWORD" Password="yes" />
 
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back">
-          <Publish Event="EndDialog" Value="Return">1</Publish>
+          <Publish Event="NewDialog" Value="Dlg_OpenEdX_Config">1</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Next">
-          <Publish Event="EndDialog" Value="Return">1</Publish>
+          <Publish Event="NewDialog" Value="Dlg_OpenEdX_CacheSearch">1</Publish>
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
           <Publish Event="EndDialog" Value="Exit">1</Publish>
@@ -935,10 +963,10 @@ ${MULTI_LICENSE_XML}
         <Control Id="Txt_MeiliUrl" Type="Edit" X="20" Y="150" Width="330" Height="18" Property="PROP_MEILISEARCH_CUSTOM_URL" />
 
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back">
-          <Publish Event="EndDialog" Value="Return">1</Publish>
+          <Publish Event="NewDialog" Value="Dlg_OpenEdX_DB">1</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Next">
-          <Publish Event="EndDialog" Value="Return">1</Publish>
+          <Publish Event="NewDialog" Value="Dlg_VerifyReady">1</Publish>
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
           <Publish Event="EndDialog" Value="Exit">1</Publish>
@@ -965,10 +993,11 @@ ${MULTI_LICENSE_XML}
         <Control Id="CompMFEs" Type="Text" X="28" Y="190" Width="320" Height="13" NoPrefix="yes" Text="- mfes (Micro-Frontends: Learning, Authn, Account)$COMP_TAG" />
         <Control Id="Instructions" Type="Text" X="20" Y="208" Width="330" Height="24" Text="Click Install to begin installation. If you want to review or change any settings, click Back." />
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back">
-          <Publish Event="EndDialog" Value="Return">1</Publish>
+          <Publish Event="NewDialog" Value="Dlg_SetupType"><![CDATA[SETUP_MODE="Simple"]]></Publish>
+          <Publish Event="NewDialog" Value="Dlg_OpenEdX_CacheSearch"><![CDATA[SETUP_MODE="Advanced"]]></Publish>
         </Control>
         <Control Id="Install" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Install">
-          <Publish Event="NewDialog" Value="Dlg_Exit">1</Publish>
+          <Publish Event="EndDialog" Value="Return">1</Publish>
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
           <Publish Event="EndDialog" Value="Exit">1</Publish>
@@ -996,21 +1025,9 @@ ${MULTI_LICENSE_XML}
 
       <!-- Sequential UI Navigation Routing -->
       <InstallUISequence>
-        <Custom Action="CA_CheckNetworkConnection" After="CostFinalize"><![CDATA[NOT Installed AND PROP_OPENEDX_OFFLINE="0"]]></Custom>
         <Show Dialog="Dlg_Welcome" After="CostFinalize">NOT Installed</Show>
         <Show Dialog="Dlg_License" After="Dlg_Welcome">NOT Installed</Show>${MULTI_LICENSE_UI_SEQ}
         <Show Dialog="Dlg_SetupType" After="${LAST_LICENSE_DLG}">NOT Installed</Show>
-        <!-- In Advanced Mode, route through customization dialogs -->
-        <Show Dialog="Dlg_Features" After="Dlg_SetupType"><![CDATA[NOT Installed AND SETUP_MODE="Advanced"]]></Show>
-        <Show Dialog="Dlg_InstallLocation" After="Dlg_Features"><![CDATA[NOT Installed AND SETUP_MODE="Advanced"]]></Show>
-        <Show Dialog="Dlg_RuntimeSelection" After="Dlg_InstallLocation"><![CDATA[NOT Installed AND SETUP_MODE="Advanced"]]></Show>
-        <Show Dialog="Dlg_OpenEdX_SourceRepo" After="Dlg_RuntimeSelection"><![CDATA[NOT Installed AND SETUP_MODE="Advanced"]]></Show>
-        <Show Dialog="Dlg_OpenEdX_Config" After="Dlg_OpenEdX_SourceRepo"><![CDATA[NOT Installed AND SETUP_MODE="Advanced"]]></Show>
-        <Show Dialog="Dlg_OpenEdX_DB" After="Dlg_OpenEdX_Config"><![CDATA[NOT Installed AND SETUP_MODE="Advanced"]]></Show>
-        <Show Dialog="Dlg_OpenEdX_CacheSearch" After="Dlg_OpenEdX_DB"><![CDATA[NOT Installed AND SETUP_MODE="Advanced"]]></Show>
-        <Show Dialog="Dlg_VerifyReady" After="Dlg_OpenEdX_CacheSearch"><![CDATA[NOT Installed AND SETUP_MODE="Advanced"]]></Show>
-        <!-- In Simple Mode, skip directly to VerifyReady -->
-        <Show Dialog="Dlg_VerifyReady" After="Dlg_SetupType"><![CDATA[NOT Installed AND SETUP_MODE="Simple"]]></Show>
         <Show Dialog="Dlg_Exit" OnExit="success">NOT Installed</Show>
       </InstallUISequence>
     </UI>
@@ -1106,9 +1123,6 @@ $([ "$VARIANT" = "offline" ] && printf '      <ComponentGroupRef Id="LibscriptOf
         <File Id="MfeCmdFile" Source="stacks/cms/openedx/mfe.cmd" KeyPath="yes" />
         <File Id="MfeShFile" Source="stacks/cms/openedx/mfe.sh" />
       </Component>
-      <Component Id="MockServerComponent" Guid="6A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D">
-        <File Id="MockServerPs1File" Source="stacks/cms/openedx/mock_server.ps1" KeyPath="yes" />
-      </Component>
     </ComponentGroup>
 
     <!-- Environment Variable Registration -->
@@ -1163,6 +1177,7 @@ generate_wxs
 printf '[PASS] Successfully created WiX manifest: %s\n' "$WXS_FILE"
 
 # ## harvest_engine_payload
+# ## Overview
 PAYLOAD_WXS="${OUT_FILE}_payload.wxs"
 if [ "$VARIANT" = "offline" ]; then
   "${SCRIPT_DIR}/harvest_payload.sh" \
@@ -1178,77 +1193,64 @@ else
 fi
 
 # ## compile_msi
-# Builds the .msi binary using pure-Rust msi-rs, wixl on POSIX systems, or WiX toolset on Windows.
+# ## Overview
+# Builds the .msi binary using cross-platform msi-rs, 
+# ## Usage
+#   Internal function.
 compile_msi() {
-  if command -v msi-rs >/dev/null 2>&1 || command -v msi >/dev/null 2>&1; then
-    _msi_tool="msi-rs"
-    command -v msi >/dev/null 2>&1 && _msi_tool="msi"
-    command -v msi-rs >/dev/null 2>&1 && _msi_tool="msi-rs"
-    printf '[INFO] Compiling MSI with pure-Rust msi-rs engine (%s)...\n' "$_msi_tool"
-    if [ -f "$PAYLOAD_WXS" ]; then
-      _pack_status=0
-      "$_msi_tool" pack -o "${OUT_FILE}.msi" "$WXS_FILE" "$PAYLOAD_WXS" 2>/dev/null || _pack_status=$?
-    else
-      _pack_status=0
-      "$_msi_tool" pack -o "${OUT_FILE}.msi" "$WXS_FILE" 2>/dev/null || _pack_status=$?
-    fi
-    if [ "$_pack_status" -eq 0 ]; then
-      printf '[PASS] Successfully compiled binary MSI via %s: %s.msi\n' "$_msi_tool" "$OUT_FILE"
-      return 0
+  if [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/default/bin" ]; then
+    PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/default/bin:${PATH}"
+    export PATH
+  elif [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/v0.0.1/bin" ]; then
+    PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/v0.0.1/bin:${PATH}"
+    export PATH
+  fi
+
+  if ! command -v candle >/dev/null 2>&1 && ! command -v candle.exe >/dev/null 2>&1; then
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" ]; then
+      . "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" >/dev/null 2>&1 || true
     fi
   fi
 
-  if [ "${OS:-}" = "Windows_NT" ] || command -v candle.exe >/dev/null 2>&1 || command -v candle >/dev/null 2>&1 || command -v wix.exe >/dev/null 2>&1 || command -v wix >/dev/null 2>&1; then
-    _candle_cmd="candle"
-    _light_cmd="light"
+  if ! command -v candle >/dev/null 2>&1 && ! command -v candle.exe >/dev/null 2>&1; then
+    if [ -x "${LIBSCRIPT_ROOT_DIR}/libscript.sh" ]; then
+      "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install msi-rs v0.0.1 >/dev/null 2>&1 || true
+      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" ]; then
+        . "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" >/dev/null 2>&1 || true
+      fi
+    fi
+  fi
+
+  _candle_cmd="candle"
+  _light_cmd="light"
+  if [ "${OS:-}" = "Windows_NT" ]; then
     command -v candle.exe >/dev/null 2>&1 && _candle_cmd="candle.exe"
     command -v light.exe >/dev/null 2>&1 && _light_cmd="light.exe"
-
-    if command -v wix.exe >/dev/null 2>&1 && ! command -v "$_candle_cmd" >/dev/null 2>&1; then
-      if ! wix.exe build -ext WixToolset.UI.wixext -o "${OUT_FILE}.msi" "$WXS_FILE" "${PAYLOAD_WXS}"; then
-        printf '[ERROR] WiX build failed for %s\n' "${OUT_FILE}.msi" >&2
-        return 1
-      fi
-    else
-      _candle_wxs="${WXS_FILE}.candle.wxs"
-      if command -v powershell >/dev/null 2>&1; then
-        powershell -NoProfile -Command "\$w = Get-Content -LiteralPath '${WXS_FILE}' -Raw; \$w = \$w -replace '<Property Id=\"MsiHiddenProperties\".*?/>', ''; \$w = [regex]::Replace(\$w, '(?m)^\s*<Show Dialog=\"Dlg_VerifyReady\" After=\"Dlg_SetupType\".*?\r?\n', ''); Set-Content -LiteralPath '${_candle_wxs}' -Value \$w"
-      elif command -v sed >/dev/null 2>&1; then
-        sed -E '/<Property Id="MsiHiddenProperties"/d; /<Show Dialog="Dlg_VerifyReady" After="Dlg_SetupType"/d' "$WXS_FILE" > "$_candle_wxs"
-      else
-        cp -f "$WXS_FILE" "$_candle_wxs"
-      fi
-
-      if ! "$_candle_cmd" -out "${OUT_FILE}.wixobj" "$_candle_wxs"; then
-        rm -f "$_candle_wxs"
-        printf '[ERROR] WiX candle compilation failed on %s\n' "$_candle_wxs" >&2
-        return 1
-      fi
-      rm -f "$_candle_wxs"
-      if ! "$_candle_cmd" -out "${OUT_FILE}_payload.wixobj" "${PAYLOAD_WXS}"; then
-        printf '[ERROR] WiX candle compilation failed on %s\n' "${PAYLOAD_WXS}" >&2
-        return 1
-      fi
-      if ! "$_light_cmd" -sval -ext WixUIExtension -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj" "${OUT_FILE}_payload.wixobj"; then
-        printf '[ERROR] WiX light linker failed for %s.msi\n' "${OUT_FILE}" >&2
-        return 1
-      fi
-    fi
-  elif command -v wixl >/dev/null 2>&1; then
-    _wixl_manifest="${OUT_FILE}_wixl.wxs"
-    _wixl_payload="${OUT_FILE}_payload_wixl.wxs"
-    # Create wixl-compatible subset without vendor-specific UI extensions
-    sed '/<WixVariable/d; /<UI Id="CustomUI">/,/<\/UI>/d; /<CustomAction/d; /<InstallExecuteSequence>/,/<\/InstallExecuteSequence>/d; /<MajorUpgrade/d; /<ComponentRef Id="Courseware/d; /<ComponentRef Id="ApplicationShortcuts/d; /<ComponentRef Id="EnvironmentSettings/d; /<Component Id="ApplicationShortcuts"/,/<\/Component>/d; /<Component Id="EnvironmentSettings"/,/<\/Component>/d; /<Directory Id="ProgramMenuFolder"/,/<\/Directory>/d; /<Property Id="FOUND_/,/<\/Property>/d; /Value=""/d; s/ Hidden="yes"//g; s/ CompressionLevel="[^"]*"//g; s/ NeverOverwrite="yes"//g; /<Media Id="[2-9]"/d' "$WXS_FILE" > "$_wixl_manifest"
-    sed 's/ DiskId="[0-9]*"/ DiskId="1"/g' "${PAYLOAD_WXS}" > "$_wixl_payload"
-    if wixl -a x64 -o "${OUT_FILE}.msi" "$_wixl_manifest" "$_wixl_payload"; then
-      printf '[PASS] Successfully compiled binary MSI via wixl: %s.msi\n' "$OUT_FILE"
-    else
-      printf '[WARN] wixl compilation failed; keeping generated .wxs manifest\n' >&2
-    fi
-    rm -f "$_wixl_manifest" "$_wixl_payload"
-  else
-    printf '[INFO] Neither WiX toolset nor wixl is present in PATH. Generated XML manifest is ready for compilation.\n'
   fi
+
+  if ! command -v "$_candle_cmd" >/dev/null 2>&1; then
+    printf '[ERROR] msi-rs not found. Please install msi-rs.n' >&2
+    return 1
+  fi
+
+  printf '[INFO] Compiling MSI with pure-Rust msi-rs (%s / %s)...n' "$_candle_cmd" "$_light_cmd"
+
+  if ! "$_candle_cmd" -arch x64 -out "${OUT_FILE}.wixobj" "$WXS_FILE"; then
+    printf '[ERROR] msi-rs candle compilation failed on %sn' "$WXS_FILE" >&2
+    return 1
+  fi
+
+  if ! "$_candle_cmd" -arch x64 -out "${OUT_FILE}_payload.wixobj" "${PAYLOAD_WXS}"; then
+    printf '[ERROR] msi-rs candle compilation failed on %sn' "${PAYLOAD_WXS}" >&2
+    return 1
+  fi
+
+  if ! "$_light_cmd" -sval -ext WixUIExtension -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj" "${OUT_FILE}_payload.wixobj"; then
+    printf '[ERROR] msi-rs light linker failed for %s.msin' "${OUT_FILE}" >&2
+    return 1
+  fi
+
+  printf '[PASS] Successfully built %s.msin' "${OUT_FILE}"
 }
 
 compile_msi || exit 1

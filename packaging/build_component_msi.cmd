@@ -35,10 +35,12 @@ set "BRANCH="
 set "OUT_DIR=%LIBSCRIPT_ROOT_DIR%\dist\msi"
 set "OFFLINE_SOURCE=%LIBSCRIPT_ROOT_DIR%\cache"
 set "HYDRATE=0"
-set "ALLOW_MOCK=0"
 
 :: ## parse_loop
+:: ## Overview
 :: Iterates over and parses command line arguments.
+:: ## Usage
+::   Internal function.
 :parse_loop
 if "%~1"=="" goto parse_done
 if /i "%~1"=="--component" (
@@ -92,8 +94,6 @@ if /i "%~1"=="--hydrate" (
     shift
     goto parse_loop
 )
-if /i "%~1"=="--allow-mock" (
-    set "ALLOW_MOCK=1"
     shift
     goto parse_loop
 )
@@ -109,7 +109,10 @@ shift
 goto parse_loop
 
 :: ## show_help
+:: ## Overview
 :: Displays command usage documentation.
+:: ## Usage
+::   Internal function.
 :show_help
 echo LibScript Standalone Component MSI Builder
 echo.
@@ -126,13 +129,15 @@ echo   --out ^<name^>             Output file base name or path
 echo   --out-dir ^<dir^>          Output directory (default: dist\msi)
 echo   --offline-source ^<dir^>   Offline cache directory containing binary archives (default: cache)
 echo   --hydrate                Force hydration of offline cache before building
-echo   --allow-mock             Allow fallback to mock binaries if offline assets cannot be acquired
 echo   --branch ^<name^>          Branch or tag ref (optional)
 echo   --help, -h               Show this help text
 exit /b 0
 
 :: ## parse_done
+:: ## Overview
 :: Prepares configuration and triggers variant compilation.
+:: ## Usage
+::   Internal function.
 :parse_done
 if "%COMPONENT%"=="" (
     echo [ERROR] --component is mandatory. >&2
@@ -160,19 +165,22 @@ if /i "%VARIANT%"=="offline" (
 )
 if /i "%VARIANT%"=="all" (
     call :build_single_variant online
-    if !ERRORLEVEL! neq 0 exit /b !ERRORLEVEL!
+    if !ERRORLEVEL! neq 0 goto compile_err
     call :build_single_variant offline
-    exit /b !ERRORLEVEL!
+    goto compile_err
 )
 
 echo [ERROR] Unknown variant: %VARIANT%. Use online, offline, or all. >&2
 exit /b 1
 
 :: ## build_single_variant
+:: ## Overview
 :: Compiles an individual variant (online or offline) for the specified component.
 ::
 :: ## Parameters
 ::   %~1 - Variant ("online" or "offline")
+:: ## Usage
+::   Internal function.
 :build_single_variant
 set "CURR_VAR=%~1"
 set "STAGE_ROOT=%LIBSCRIPT_ROOT_DIR%\tmp\stage_component_%COMPONENT%_%CURR_VAR%"
@@ -214,7 +222,7 @@ if /i "%CURR_VAR%"=="offline" (
     )
 
     if "%HYDRATE%"=="1" set "NEED_HYDRATE=1"
-    if "!NEED_HYDRATE!"=="1" if "%ALLOW_MOCK%"=="0" (
+    if "!NEED_HYDRATE!"=="1" (
         echo [INFO] Hydrating %COMPONENT% offline cache before build...
         call "%SCRIPT_DIR%hydrate_offline_cache.cmd" --manifest "%BUNDLE_JSON%" --cache-dir "%OFFLINE_SOURCE%" --component "%COMPONENT%"
     )
@@ -230,8 +238,6 @@ if /i "%CURR_VAR%"=="offline" (
                     rmdir /s /q "%%~fD" >nul 2>&1
                 )
             )
-        ) else if "%ALLOW_MOCK%"=="1" (
-            echo Mock MySQL binary > "%STAGE_ROOT%\bin\mysqld.exe"
         ) else (
             echo [ERROR] Offline MySQL archive missing from %OFFLINE_SOURCE% >&2
             exit /b 1
@@ -259,8 +265,6 @@ if /i "%CURR_VAR%"=="offline" (
                 copy /y "%STAGE_ROOT%\redis-server.exe" "%STAGE_ROOT%\bin" >nul 2>&1
                 copy /y "%STAGE_ROOT%\redis-cli.exe" "%STAGE_ROOT%\bin" >nul 2>&1
             )
-        ) else if "%ALLOW_MOCK%"=="1" (
-            echo Mock Redis binary > "%STAGE_ROOT%\bin\redis-server.exe"
         ) else (
             echo [ERROR] Offline Redis archive missing from %OFFLINE_SOURCE% >&2
             exit /b 1
@@ -277,8 +281,6 @@ if /i "%CURR_VAR%"=="offline" (
                     rmdir /s /q "%%~fD" >nul 2>&1
                 )
             )
-        ) else if "%ALLOW_MOCK%"=="1" (
-            echo Mock MongoDB binary > "%STAGE_ROOT%\bin\mongod.exe"
         ) else (
             echo [ERROR] Offline MongoDB archive missing from %OFFLINE_SOURCE% >&2
             exit /b 1
@@ -292,8 +294,6 @@ if /i "%CURR_VAR%"=="offline" (
             if exist "%STAGE_ROOT%\python.exe" if not exist "%STAGE_ROOT%\bin\python.exe" (
                 copy /y "%STAGE_ROOT%\python.exe" "%STAGE_ROOT%\bin" >nul 2>&1
             )
-        ) else if "%ALLOW_MOCK%"=="1" (
-            echo Mock Python binary > "%STAGE_ROOT%\bin\python.exe"
         ) else (
             echo [ERROR] Offline Python archive missing from %OFFLINE_SOURCE% >&2
             exit /b 1
@@ -311,8 +311,6 @@ if /i "%CURR_VAR%"=="offline" (
             if exist "%STAGE_ROOT%\node.exe" if not exist "%STAGE_ROOT%\bin\node.exe" (
                 copy /y "%STAGE_ROOT%\node.exe" "%STAGE_ROOT%\bin" >nul 2>&1
             )
-        ) else if "%ALLOW_MOCK%"=="1" (
-            echo Mock Node.js binary > "%STAGE_ROOT%\bin\node.exe"
         ) else (
             echo [ERROR] Offline Node.js archive missing from %OFFLINE_SOURCE% >&2
             exit /b 1
@@ -324,8 +322,6 @@ if /i "%CURR_VAR%"=="offline" (
         if not "!FOUND_BIN!"=="" (
             copy /y "!FOUND_BIN!" "%STAGE_ROOT%\bin\meilisearch.exe" >nul 2>&1
             copy /y "!FOUND_BIN!" "%STAGE_ROOT%\meilisearch.exe" >nul 2>&1
-        ) else if "%ALLOW_MOCK%"=="1" (
-            echo Mock Meilisearch binary > "%STAGE_ROOT%\bin\meilisearch.exe"
         ) else (
             echo [ERROR] Offline Meilisearch binary missing from %OFFLINE_SOURCE% >&2
             exit /b 1
@@ -371,63 +367,83 @@ for %%I in ("%TARGET_MSI%") do (
     if not exist "%%~dpI" mkdir "%%~dpI" 2>nul
 )
 
-where candle.exe >nul 2>nul
-if %ERRORLEVEL% neq 0 if exist "%LIBSCRIPT_ROOT_DIR%\tools\wix\candle.exe" (
-    set "PATH=%LIBSCRIPT_ROOT_DIR%\tools\wix;!PATH!"
+if exist "%USERPROFILE%\.libscript\msi-rs\default\bin\candle.exe" (
+    set "PATH=!PATH!;%USERPROFILE%\.libscript\msi-rs\default\bin"
+) else if exist "%USERPROFILE%\.libscript\msi-rs\latest\bin\candle.exe" (
+    set "PATH=!PATH!;%USERPROFILE%\.libscript\msi-rs\latest\bin"
+) else if exist "%USERPROFILE%\.libscript\msi-rs\v0.0.1\bin\candle.exe" (
+    set "PATH=!PATH!;%USERPROFILE%\.libscript\msi-rs\v0.0.1\bin"
 )
 
-where wixl >nul 2>nul
-if %ERRORLEVEL% equ 0 (
-    echo [INFO] Compiling standalone %CURR_VAR% MSI via wixl: %TARGET_MSI%
-    set "WIXL_MAIN=%MAIN_WXS%_clean.wxs"
-    set "WIXL_PAYLOAD=%PAYLOAD_WXS%_clean.wxs"
-    powershell -NoProfile -Command "(Get-Content '%MAIN_WXS%') -replace ' Schedule=`"[^`"]*`"', '' -replace ' SharedDllRefCount=`"[^`"]*`"', '' -replace '(?s)<CustomAction.*?</InstallExecuteSequence>', '' | Set-Content '%WIXL_MAIN%'"
-    powershell -NoProfile -Command "(Get-Content '%PAYLOAD_WXS%') -replace ' DiskId=`"[0-9]*`"', ' DiskId=`"1`"' | Set-Content '%WIXL_PAYLOAD%'"
-    wixl -a x64 -o "%TARGET_MSI%" "%WIXL_MAIN%" "%WIXL_PAYLOAD%"
-    set "WIXL_EXIT=!ERRORLEVEL!"
-    del /f /q "%WIXL_MAIN%" "%WIXL_PAYLOAD%" 2>nul
-    if !WIXL_EXIT! neq 0 (
-        echo [ERROR] wixl compilation failed. >&2
-        exit /b !WIXL_EXIT!
+where candle.exe >nul 2>&1
+if errorlevel 1 (
+    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\package-managers\msi-rs\env.cmd" (
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\package-managers\msi-rs\env.cmd" >nul 2>&1
     )
-    goto compile_done
 )
 
-where candle.exe >nul 2>nul
-if %ERRORLEVEL% equ 0 (
-    echo [INFO] Compiling standalone %CURR_VAR% MSI via WiX toolset...
-    candle.exe -nologo -arch x64 -out "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_main.wixobj" "%MAIN_WXS%"
-    if !ERRORLEVEL! neq 0 (
-        echo [ERROR] WiX candle compilation failed for %MAIN_WXS%. >&2
-        exit /b !ERRORLEVEL!
+where candle.exe >nul 2>&1
+if errorlevel 1 (
+    if exist "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" (
+        call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install msi-rs v0.0.1 >nul 2>&1
+        if exist "%LIBSCRIPT_ROOT_DIR%\_lib\package-managers\msi-rs\env.cmd" (
+            call "%LIBSCRIPT_ROOT_DIR%\_lib\package-managers\msi-rs\env.cmd" >nul 2>&1
+        )
     )
-    candle.exe -nologo -arch x64 -out "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_payload.wixobj" "%PAYLOAD_WXS%"
-    if !ERRORLEVEL! neq 0 (
-        echo [ERROR] WiX candle compilation failed for %PAYLOAD_WXS%. >&2
-        exit /b !ERRORLEVEL!
-    )
-    light.exe -nologo -sval -ext WixUIExtension -out "%TARGET_MSI%" "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_main.wixobj" "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_payload.wixobj"
-    if !ERRORLEVEL! neq 0 (
-        echo [ERROR] WiX light linking failed. >&2
-        exit /b !ERRORLEVEL!
-    )
-    goto compile_done
 )
 
-echo [WARN] Neither wixl nor WiX toolset found in PATH.
-
-:: ## compile_done
-:: Validates the built MSI output package and syncs to output directory.
-:compile_done
-if not exist "%TARGET_MSI%" (
-    echo [ERROR] Target MSI was not generated: %TARGET_MSI% >&2
+where candle.exe >nul 2>&1
+if errorlevel 1 (
+    echo [ERROR] msi-rs not found. Please install msi-rs. >&2
     exit /b 1
 )
+
+echo [INFO] Compiling standalone %CURR_VAR% MSI via msi-rs: %TARGET_MSI%
+candle.exe -nologo -arch x64 -out "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_main.wixobj" "%MAIN_WXS%"
+if !ERRORLEVEL! neq 0 (
+    echo [ERROR] msi-rs candle compilation failed for %MAIN_WXS%. >&2
+    goto compile_err
+)
+candle.exe -nologo -arch x64 -out "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_payload.wixobj" "%PAYLOAD_WXS%"
+if !ERRORLEVEL! neq 0 (
+    echo [ERROR] msi-rs candle compilation failed for %PAYLOAD_WXS%. >&2
+    goto compile_err
+)
+light.exe -nologo -sval -ext WixUIExtension -out "%TARGET_MSI%" "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_main.wixobj" "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_payload.wixobj"
+if !ERRORLEVEL! neq 0 (
+    echo [ERROR] msi-rs light linking failed. >&2
+    goto compile_err
+)
+goto compile_done
+
+:: ## compile_done
+:: ## Overview
+:: Validates the built MSI output package and syncs to output directory.
+:: ## Usage
+::   Internal function.
+:compile_done
+set "ERR=0"
+if not exist "%TARGET_MSI%" (
+    echo [ERROR] Target MSI was not generated: %TARGET_MSI% >&2
+    set "ERR=1"
+    goto cleanup
+)
 for %%I in ("%TARGET_MSI%") do (
-    if /i not "%%~dpI"=="%OUT_DIR%" (
+    if /i not "%%~dpI"=="%OUT_DIR%\" (
         if not exist "%OUT_DIR%" mkdir "%OUT_DIR%" 2>nul
         copy /y "%TARGET_MSI%" "%OUT_DIR%" >nul 2>&1
     )
 )
 echo [PASS] Successfully processed standalone component MSI (%CURR_VAR%): %TARGET_MSI%
-exit /b 0
+goto cleanup
+
+:compile_err
+set "ERR=1"
+goto cleanup
+
+:cleanup
+del /f /q "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_main.wixobj" >nul 2>&1
+del /f /q "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_payload.wixobj" >nul 2>&1
+del /f /q "%MAIN_WXS%" >nul 2>&1
+del /f /q "%PAYLOAD_WXS%" >nul 2>&1
+exit /b !ERR!

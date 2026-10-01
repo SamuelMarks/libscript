@@ -1,5 +1,6 @@
 #!/bin/sh
 # ## Overview
+# ## Overview
 # Builds a standalone Windows Installer (.msi) package for an individual LibScript dependency.
 # Decomposes full stack deployments into modular, reference-counted component MSIs.
 # Supports lightweight online installer and air-gapped offline installer with pre-bundled dependencies.
@@ -17,7 +18,6 @@
 #   --out-dir <dir>          Target directory for generated .msi (default: dist/msi)
 #   --offline-source <dir>   Cache directory containing source archives/binaries (default: cache)
 #   --hydrate                Force hydration of offline cache before building
-#   --allow-mock             Allow fallback to mock binaries if offline assets cannot be acquired
 #   --branch <name>          Branch or tag ref (optional)
 #   --help, -h               Show this help text
 
@@ -52,10 +52,23 @@ BRANCH=""
 OUT_DIR="${LIBSCRIPT_ROOT_DIR}/dist/msi"
 OFFLINE_SOURCE="${LIBSCRIPT_ROOT_DIR}/cache"
 HYDRATE=0
-ALLOW_MOCK=0
+
+# ## cleanup_artifacts
+# ## Overview
+# Removes transient MSI compilation artifacts.
+cleanup_artifacts() {
+  rm -f "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v:-}_main.wixobj" \
+        "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v:-}_payload.wixobj" \
+        "${MAIN_WXS:-}" "${PAYLOAD_WXS:-}"
+}
+trap cleanup_artifacts EXIT INT TERM
+
 
 # ## show_help
+# ## Overview
 # Displays usage and supported parameters.
+# ## Usage
+#   Internal function.
 show_help() {
   cat << EOF_HELP
 LibScript Standalone Component MSI Builder
@@ -73,7 +86,6 @@ Options:
   --out-dir <dir>          Output directory (default: dist/msi)
   --offline-source <dir>   Offline cache directory containing binary archives (default: cache)
   --hydrate                Force hydration of offline cache before building
-  --allow-mock             Allow fallback to mock binaries if offline assets cannot be acquired
   --branch <name>          Branch or tag ref (optional)
   --help, -h               Show this help text
 EOF_HELP
@@ -117,10 +129,7 @@ while [ $# -gt 0 ]; do
       HYDRATE=1
       shift
       ;;
-    --allow-mock)
-      ALLOW_MOCK=1
-      shift
-      ;;
+
     --branch)
       BRANCH="$2"
       shift 2
@@ -162,11 +171,14 @@ fi
 : "${VERSION:=1.0.0}"
 
 # ## find_first_file
+# ## Overview
 # Returns the path of the first existing file matching any of the passed glob arguments.
 # Temporarily enables filename expansion since the script operates under set -f.
 #
 # ## Parameters
 #   $@ - Glob patterns or file paths
+# ## Usage
+#   Internal function.
 find_first_file() {
   set +f
   for _pat in "$@"; do
@@ -184,10 +196,13 @@ find_first_file() {
 }
 
 # ## build_single_variant
+# ## Overview
 # Builds a specific component installer variant (online or offline).
 #
 # ## Parameters
 #   $1 - Variant ("online" or "offline")
+# ## Usage
+#   Internal function.
 build_single_variant() {
   _v="$1"
   STAGE_ROOT="${LIBSCRIPT_ROOT_DIR}/tmp/stage_component_${COMPONENT}_${_v}"
@@ -225,11 +240,10 @@ build_single_variant() {
     esac
 
     if [ "$HYDRATE" -eq 1 ] || [ "$_need_hydrate" -eq 1 ]; then
-      if [ "$ALLOW_MOCK" -eq 0 ]; then
         printf '[INFO] Hydrating %s offline cache before build...\n' "$COMPONENT"
         "${SCRIPT_DIR}/hydrate_offline_cache.sh" --manifest "$BUNDLE_JSON" --cache-dir "$OFFLINE_SOURCE" --component "$COMPONENT" || true
-      fi
     fi
+
 
     case "$COMPONENT" in
       mysql)
@@ -241,8 +255,6 @@ build_single_variant() {
             mv "$_sub"/* "$STAGE_ROOT/"
             rmdir "$_sub" 2>/dev/null || true
           fi
-        elif [ "$ALLOW_MOCK" -eq 1 ]; then
-          printf 'Mock MySQL binary\n' > "$STAGE_ROOT/bin/mysqld.exe"
         else
           printf '[ERROR] Offline MySQL archive missing from %s\n' "$OFFLINE_SOURCE" >&2
           exit 1
@@ -267,9 +279,7 @@ build_single_variant() {
             cp -f "$STAGE_ROOT/redis-server.exe" "$STAGE_ROOT/bin/"
             cp -f "$STAGE_ROOT/redis-cli.exe" "$STAGE_ROOT/bin/" 2>/dev/null || true
           fi
-        elif [ "$ALLOW_MOCK" -eq 1 ]; then
           mkdir -p "$STAGE_ROOT/bin"
-          printf 'Mock Redis binary\n' > "$STAGE_ROOT/bin/redis-server.exe"
         else
           printf '[ERROR] Offline Redis archive missing from %s\n' "$OFFLINE_SOURCE" >&2
           exit 1
@@ -284,8 +294,6 @@ build_single_variant() {
             mv "$_sub"/* "$STAGE_ROOT/"
             rmdir "$_sub" 2>/dev/null || true
           fi
-        elif [ "$ALLOW_MOCK" -eq 1 ]; then
-          printf 'Mock MongoDB binary\n' > "$STAGE_ROOT/bin/mongod.exe"
         else
           printf '[ERROR] Offline MongoDB archive missing from %s\n' "$OFFLINE_SOURCE" >&2
           exit 1
@@ -298,8 +306,6 @@ build_single_variant() {
           if [ -f "$STAGE_ROOT/python.exe" ] && [ ! -f "$STAGE_ROOT/bin/python.exe" ]; then
             cp -f "$STAGE_ROOT/python.exe" "$STAGE_ROOT/bin/"
           fi
-        elif [ "$ALLOW_MOCK" -eq 1 ]; then
-          printf 'Mock Python binary\n' > "$STAGE_ROOT/bin/python.exe"
         else
           printf '[ERROR] Offline Python archive missing from %s\n' "$OFFLINE_SOURCE" >&2
           exit 1
@@ -317,8 +323,6 @@ build_single_variant() {
           if [ -f "$STAGE_ROOT/node.exe" ] && [ ! -f "$STAGE_ROOT/bin/node.exe" ]; then
             cp -f "$STAGE_ROOT/node.exe" "$STAGE_ROOT/bin/"
           fi
-        elif [ "$ALLOW_MOCK" -eq 1 ]; then
-          printf 'Mock Node.js binary\n' > "$STAGE_ROOT/bin/node.exe"
         else
           printf '[ERROR] Offline Node.js archive missing from %s\n' "$OFFLINE_SOURCE" >&2
           exit 1
@@ -329,8 +333,6 @@ build_single_variant() {
         if [ -n "$_bin" ] && [ -f "$_bin" ]; then
           cp -f "$_bin" "$STAGE_ROOT/bin/meilisearch.exe"
           cp -f "$_bin" "$STAGE_ROOT/meilisearch.exe" 2>/dev/null || true
-        elif [ "$ALLOW_MOCK" -eq 1 ]; then
-          printf 'Mock Meilisearch binary\n' > "$STAGE_ROOT/bin/meilisearch.exe"
         else
           printf '[ERROR] Offline Meilisearch binary missing from %s\n' "$OFFLINE_SOURCE" >&2
           exit 1
@@ -338,8 +340,9 @@ build_single_variant() {
         ;;
       *)
         if [ ! -f "$STAGE_ROOT/bin/${COMPONENT}.exe" ]; then
-          printf 'Mock Component binary\n' > "$STAGE_ROOT/bin/${COMPONENT}.exe"
+          :
         fi
+
         ;;
     esac
     set -f
@@ -397,26 +400,45 @@ build_single_variant() {
   _target_dir=$(dirname "$TARGET_MSI")
   mkdir -p "$_target_dir" "$OUT_DIR"
 
-  # Compile with wixl (cross-platform) or WiX toolset
-  if command -v wixl >/dev/null 2>&1; then
-    printf '[INFO] Compiling standalone %s MSI via wixl: %s
-' "$_v" "$TARGET_MSI"
-    _wixl_main="${MAIN_WXS}_clean.wxs"
-    _wixl_payload="${PAYLOAD_WXS}_clean.wxs"
-    sed 's/ Schedule="[^"]*"//g; s/ SharedDllRefCount="[^"]*"//g; /<CustomAction/d; /<InstallExecuteSequence>/,/<\/InstallExecuteSequence>/d' "$MAIN_WXS" > "$_wixl_main"
-    sed 's/ DiskId="[0-9]*"/ DiskId="1"/g' "$PAYLOAD_WXS" > "$_wixl_payload"
-    wixl -a x64 -o "$TARGET_MSI" "$_wixl_main" "$_wixl_payload"
-    rm -f "$_wixl_main" "$_wixl_payload"
-  elif command -v candle.exe >/dev/null 2>&1 && command -v light.exe >/dev/null 2>&1; then
-    printf '[INFO] Compiling standalone %s MSI via WiX toolset: %s
-' "$_v" "$TARGET_MSI"
-    candle.exe -nologo -arch x64 -out "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_main.wixobj" "$MAIN_WXS" || exit 1
-    candle.exe -nologo -arch x64 -out "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_payload.wixobj" "$PAYLOAD_WXS" || exit 1
-    light.exe -nologo -sval -ext WixUIExtension -out "$TARGET_MSI" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_main.wixobj" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_payload.wixobj" || exit 1
-  else
-    printf '[WARN] Neither wixl nor WiX toolset found. Created XML manifests at %s
-' "$MAIN_WXS"
+  # Ensure msi-rs is available via libscript mechanisms
+  if [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/default/bin" ]; then
+    PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/default/bin:${PATH}"
+    export PATH
+  elif [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/v0.0.1/bin" ]; then
+    PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/v0.0.1/bin:${PATH}"
+    export PATH
   fi
+  if ! command -v candle >/dev/null 2>&1 && ! command -v candle.exe >/dev/null 2>&1; then
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" ]; then
+      . "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" >/dev/null 2>&1 || true
+    fi
+  fi
+  if ! command -v candle >/dev/null 2>&1 && ! command -v candle.exe >/dev/null 2>&1; then
+    if [ -x "${LIBSCRIPT_ROOT_DIR}/libscript.sh" ]; then
+      "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install msi-rs v0.0.1 >/dev/null 2>&1 || true
+      if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" ]; then
+        . "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" >/dev/null 2>&1 || true
+      fi
+    fi
+  fi
+
+  _candle="candle"
+  _light="light"
+  if [ "${OS:-}" = "Windows_NT" ]; then
+    command -v candle.exe >/dev/null 2>&1 && _candle="candle.exe"
+    command -v light.exe >/dev/null 2>&1 && _light="light.exe"
+  fi
+
+  if ! command -v "$_candle" >/dev/null 2>&1; then
+    printf '[ERROR] msi-rs not found. Please install msi-rs.n' >&2
+    exit 1
+  fi
+
+  printf '[INFO] Compiling standalone %s MSI via msi-rs: %sn' "$_v" "$TARGET_MSI"
+  "$_candle" -nologo -arch x64 -out "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_main.wixobj" "$MAIN_WXS" || exit 1
+  "$_candle" -nologo -arch x64 -out "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_payload.wixobj" "$PAYLOAD_WXS" || exit 1
+  "$_light" -nologo -sval -ext WixUIExtension -out "$TARGET_MSI" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_main.wixobj" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_payload.wixobj" || exit 1
+
 
   if [ ! -f "$TARGET_MSI" ]; then
     printf '[ERROR] Target MSI was not generated: %s
@@ -431,6 +453,7 @@ build_single_variant() {
     cp -f "$TARGET_MSI" "$OUT_DIR/" 2>/dev/null || true
   fi
 
+  rm -f "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_main.wixobj" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_payload.wixobj" "${MAIN_WXS}" "${PAYLOAD_WXS}"
   _fsize=$(wc -c < "$TARGET_MSI" | tr -d ' ')
   printf '[PASS] Successfully processed standalone component MSI (%s): %s (%s bytes)
 ' "$_v" "$TARGET_MSI" "$_fsize"

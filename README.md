@@ -313,7 +313,7 @@ Turn any stack or synthesized operating system into ready-to-deploy bootable med
 ./libscript.sh package-as unikernel
 
 # Generate native enterprise installers
-./libscript.sh package-as msi        # Windows Installer (WiX / msi-rs)
+./libscript.sh package-as msi        # Windows Installer (msi-rs)
 ./libscript.sh package-as nsis       # Windows NSIS installer
 ./libscript.sh package-as innosetup  # Windows Inno Setup installer
 ./libscript.sh package-as deb        # Debian / Ubuntu package
@@ -637,7 +637,7 @@ at your option.
 | `labwc`                            | ✅          | ✅          | -           | -       | -     | ✅      | -     |
 | `lfs-base`                         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `lfs-temp-tools`                   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `lfs-toolchain`                    | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
+| `lfs-toolchain`                    | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❌    |
 | `libdrm`                           | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `libseat`                          | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `libva`                            | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |

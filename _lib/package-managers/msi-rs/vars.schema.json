@@ -13,7 +13,7 @@
     "MSI_RS_VERSION": {
       "description": "Specific version or release tag of msi-rs to install.",
       "type": "string",
-      "default": "c075557d4fe8f8fb32183a5160a68779fbc8b708"
+      "default": "v0.0.1"
     },
     "MSI_RS_REPO_URL": {
       "description": "Upstream source Git repository URL for msi-rs.",

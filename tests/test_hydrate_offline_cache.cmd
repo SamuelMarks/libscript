@@ -52,7 +52,7 @@ echo   "wheels": { "target_dir": "cache/wheels", "packages": [] },
 echo   "codebase": {},
 echo   "checksums": { "dummy-runtime.zip": "%DUMMY_SHA256%" }
 echo }
-) > "%TEST_MANIFEST"
+) > "%TEST_MANIFEST%"
 
 set "CACHE_TARGET=%TEST_TMP_DIR%\cache"
 

@@ -103,27 +103,25 @@ start_services() {
     printf '[INFO] Open edX LMS is already running on port %s
 ' "$LMS_PORT"
   else
-    printf '[INFO] Launching Open edX LMS on port %s...
-' "$LMS_PORT"
-    if [ -f "${OPENEDX_INSTALL_DIR}/mock_active" ] || [ ! -d "${OPENEDX_INSTALL_DIR}/codebase" ]; then
-      # Lightweight built-in server fallback
-      python3 -m http.server "$LMS_PORT" --directory "${OPENEDX_INSTALL_DIR}" > "${LOG_DIR}/lms.log" 2>&1 &
-      printf '%s
-' "$!" > "${LMS_PID_FILE}"
+    printf '[INFO] Launching Open edX LMS on port %s...\n' "$LMS_PORT"
+    if [ -f "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" ] && [ -d "${OPENEDX_INSTALL_DIR}/codebase" ]; then
+      (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" --bind "0.0.0.0:${LMS_PORT}" --workers 4 lms.wsgi:application > "${LOG_DIR}/lms.log" 2>&1 & printf '%s\n' "$!" > "${LMS_PID_FILE}")
+    else
+      printf '[ERROR] Genuine Open edX codebase or Gunicorn not found for LMS.\n' >&2
+      exit 1
     fi
   fi
 
   # Start CMS Studio if not already listening
   if is_port_listening "$CMS_PORT"; then
-    printf '[INFO] Open edX Studio CMS is already running on port %s
-' "$CMS_PORT"
+    printf '[INFO] Open edX Studio CMS is already running on port %s\n' "$CMS_PORT"
   else
-    printf '[INFO] Launching Open edX Studio CMS on port %s...
-' "$CMS_PORT"
-    if [ -f "${OPENEDX_INSTALL_DIR}/mock_active" ] || [ ! -d "${OPENEDX_INSTALL_DIR}/codebase" ]; then
-      python3 -m http.server "$CMS_PORT" --directory "${OPENEDX_INSTALL_DIR}" > "${LOG_DIR}/cms.log" 2>&1 &
-      printf '%s
-' "$!" > "${CMS_PID_FILE}"
+    printf '[INFO] Launching Open edX Studio CMS on port %s...\n' "$CMS_PORT"
+    if [ -f "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" ] && [ -d "${OPENEDX_INSTALL_DIR}/codebase" ]; then
+      (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" --bind "0.0.0.0:${CMS_PORT}" --workers 2 cms.wsgi:application > "${LOG_DIR}/cms.log" 2>&1 & printf '%s\n' "$!" > "${CMS_PID_FILE}")
+    else
+      printf '[ERROR] Genuine Open edX codebase or Gunicorn not found for CMS.\n' >&2
+      exit 1
     fi
   fi
 

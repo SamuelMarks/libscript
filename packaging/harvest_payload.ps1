@@ -205,16 +205,33 @@ try {
 
         # ## Get-WixIdentifier
         # Sanitizes and truncates identifiers to <= 72 characters adhering to WiX and Windows Installer MSI limits.
+        $usedIdentifiers = @{}
         function Get-WixIdentifier([string]$prefix, [string]$rawPath) {
             $san = $rawPath -replace '[^a-zA-Z0-9_]', '_'
             $candidate = $prefix + $san
-            if ($candidate.Length -le 72) {
+            if ($candidate.Length -le 72 -and (-not ($usedIdentifiers.ContainsKey($candidate) -and $usedIdentifiers[$candidate] -ne $rawPath))) {
+                $usedIdentifiers[$candidate] = $rawPath
                 return $candidate
             }
             $hash = Get-DeterministicHash $rawPath
             $avail = 72 - 32 - 1 - $prefix.Length
             $trimmed = if ($avail -gt 0) { $san.Substring(0, [Math]::Min($san.Length, $avail)) } else { '' }
-            return "$prefix$trimmed`_$hash"
+            $candidate = "$prefix$trimmed`_$hash"
+            $usedIdentifiers[$candidate] = $rawPath
+            return $candidate
+        }
+
+        # ## Strip-Root
+        # Strips the RootDir from a path to avoid leaking absolute host paths into WiX source files.
+        function Strip-Root([string]$path) {
+            $r = [regex]::Escape($RootDir)
+            if ($path -match "^$r[\\/](.*)") {
+                return $matches[1]
+            }
+            if ($path -eq $RootDir) {
+                return '.'
+            }
+            return $path
         }
 
         $sw = [System.IO.StreamWriter]::new($WixFragment, $false, [System.Text.Encoding]::UTF8)
@@ -240,6 +257,7 @@ try {
             } else {
                 $srcPath = Join-Path $RootDir ($f.Replace('/', '\'))
             }
+            $srcPath = Strip-Root $srcPath
 
             $diskId = '1'
             if ($f -like 'cache/runtimes/*') {

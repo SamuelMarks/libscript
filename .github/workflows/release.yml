@@ -180,29 +180,37 @@ jobs:
           name: hydrated-offline-cache
           path: cache
 
-      - name: Setup WiX Toolset
+      - name: Setup msi-rs Toolset
         shell: pwsh
         run: |
-          $wixV3 = "C:\Program Files (x86)\WiX Toolset v3.11\bin"
-          if (Test-Path "$wixV3\candle.exe") {
-            Write-Host "Found WiX v3 at $wixV3. Adding to GITHUB_PATH."
-            Add-Content -Path $env:GITHUB_PATH -Value $wixV3
-          } elseif (Get-Command candle.exe -ErrorAction SilentlyContinue) {
-            Write-Host "candle.exe is already available in PATH."
-          } elseif (Get-Command wix.exe -ErrorAction SilentlyContinue) {
-            Write-Host "wix.exe is already available in PATH."
+          Write-Host "Installing msi-rs v0.0.1 via LibScript..."
+          cmd.exe /c "call .\libscript.cmd install msi-rs v0.0.1"
+          $msiRsBin = "$HOME\.libscript\msi-rs\v0.0.1\bin"
+          if (Test-Path "$msiRsBin\candle.exe") {
+            Write-Host "Found msi-rs at $msiRsBin. Adding to GITHUB_PATH."
+            Add-Content -Path $env:GITHUB_PATH -Value $msiRsBin
           } else {
-            Write-Host "WiX Toolset compiler not found in PATH. Installing via Chocolatey..."
-            choco install wixtoolset -y --no-progress
+            $wixV3 = "C:\Program Files (x86)\WiX Toolset v3.11\bin"
             if (Test-Path "$wixV3\candle.exe") {
+              Write-Host "Found WiX v3 at $wixV3. Adding to GITHUB_PATH."
               Add-Content -Path $env:GITHUB_PATH -Value $wixV3
+            } elseif (Get-Command candle.exe -ErrorAction SilentlyContinue) {
+              Write-Host "candle.exe is already available in PATH."
+            } elseif (Get-Command wix.exe -ErrorAction SilentlyContinue) {
+              Write-Host "wix.exe is already available in PATH."
+            } else {
+              Write-Host "WiX Toolset compiler not found in PATH. Installing via Chocolatey..."
+              choco install wixtoolset -y --no-progress
+              if (Test-Path "$wixV3\candle.exe") {
+                Add-Content -Path $env:GITHUB_PATH -Value $wixV3
+              }
             }
           }
 
-      - name: Verify WiX Compiler
+      - name: Verify MSI Compiler
         shell: cmd
         run: |
-          where candle.exe || where wix.exe || (echo [ERROR] Neither candle.exe nor wix.exe found in PATH & exit /b 1)
+          where candle.exe || where candle || where wix.exe || where wix || (echo [ERROR] Neither candle nor wix found in PATH & exit /b 1)
 
       - name: Determine Package Version and Artifact Name
         id: version

@@ -32,6 +32,9 @@ Vagrant.configure("2") do |config|
       qe.ssh_port = 50022 + rand(1000)
     end
 
+    t.vm.network :forwarded_port, id: "rdp", guest: 3389, host: 3389, disabled: true
+    t.vm.network :forwarded_port, id: "winrm", guest: 5985, host: 5985, disabled: true
+
     t.vm.synced_folder ".", "/vagrant", disabled: true
     t.vm.allowed_synced_folder_types = [:rsync]
 

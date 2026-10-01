@@ -21,5 +21,10 @@ if (Test-Path $WpCliCmd) {
     & $WpCliCmd healthcheck | Out-File -FilePath (Join-Path $OutputDir "healthcheck_windows.txt") -Encoding utf8
 }
 
+$vagrantCapture = Join-Path $PSScriptRoot "capture_wordpress_vagrant_screenshots.ps1"
+if (Test-Path $vagrantCapture) {
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $vagrantCapture
+}
+
 Write-Host "[OK] WordPress screenshots and terminal captures completed in $OutputDir"
 exit 0

@@ -37,18 +37,12 @@ TEST_MODE="0"
 # ## show_help
 # Displays usage instructions and supported options.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") [OPTIONS]"
-  printf '%s
-' "Launches fullscreen kiosk GUI installer using msi-gui."
-  printf '
-'
-  printf '%s
-' "Options:"
-  printf '%s
-' "  --test              Test display stack availability and validation in headless mode."
-  printf '%s
-' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") [OPTIONS]"
+  printf '%s\n' "Launches fullscreen kiosk GUI installer using msi-gui."
+  printf '\n'
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --test              Test display stack availability and validation in headless mode."
+  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
 }
 
 while [ $# -gt 0 ]; do
@@ -70,14 +64,12 @@ done
 # ## probe_gpu_hardware
 # Detects available graphics hardware and DRM/KMS drivers.
 probe_gpu_hardware() {
-  printf '[INFO] Probing graphics hardware and display pipeline...
-'
+  printf '[INFO] Probing graphics hardware and display pipeline...\n'
   if [ -d /sys/class/drm ]; then
     for card in /sys/class/drm/card[0-9]*; do
       [ -d "$card" ] || continue
       _cname=$(basename "$card")
-      printf '       Found DRM device: %s
-' "$_cname"
+      printf '       Found DRM device: %s\n' "$_cname"
     done
   fi
 
@@ -92,8 +84,7 @@ configure_software_rasterizer() {
   export LIBGL_ALWAYS_SOFTWARE=1
   export GALLIUM_DRIVER=llvmpipe
   export MESA_GL_VERSION_OVERRIDE=3.3
-  printf '[INFO] Software rasterization fallback configured (Mesa llvmpipe).
-'
+  printf '[INFO] Software rasterization fallback configured (Mesa llvmpipe).\n'
 }
 
 # ## find_msi_gui
@@ -121,35 +112,30 @@ probe_gpu_hardware
 # If test mode, validate environment and exit
 if [ "$TEST_MODE" = "1" ]; then
   configure_software_rasterizer
-  printf '[OK] GUI display pipeline test passed.
-'
+  printf '[OK] GUI display pipeline test passed.\n'
   exit 0
 fi
 
 # Locate executable
 GUI_BIN=$(find_msi_gui || true)
 if [ -z "$GUI_BIN" ]; then
-  printf '[WARN] msi-gui binary not installed. Falling back to terminal user interface.
-'
+  printf '[WARN] msi-gui binary not installed in release package. Falling back to terminal user interface.\n'
   exec "${SCRIPT_DIR}/tui.sh"
 fi
 
 # 1. Wayland Kiosk Session via Cage
 if command -v cage >/dev/null 2>&1; then
-  printf '[INFO] Launching Wayland kiosk compositor (cage)...
-'
+  printf '[INFO] Launching Wayland kiosk compositor (cage)...\n'
   exec cage -- "$GUI_BIN"
 fi
 
 # 2. X11 Kiosk Session via xinit and Openbox
 if command -v xinit >/dev/null 2>&1; then
-  printf '[INFO] Launching X11 kiosk session (xinit)...
-'
+  printf '[INFO] Launching X11 kiosk session (xinit)...\n'
   configure_software_rasterizer
   exec xinit "$GUI_BIN" -- :0 -nolisten tcp vt7
 fi
 
 # Fallback to TUI
-printf '[WARN] No suitable Wayland/X11 compositor available. Falling back to TUI wizard.
-'
+printf '[WARN] No suitable Wayland/X11 compositor available. Falling back to TUI wizard.\n'
 exec "${SCRIPT_DIR}/tui.sh"

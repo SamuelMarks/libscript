@@ -337,9 +337,11 @@ EOF
 
     # 5. Database Migrations & Initial Data
     log_info "5/8: Applying database migrations and seeding administrator..."
-    if [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
-      "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" lms migrate --noinput 2>/dev/null || true
-      "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" cms migrate --noinput 2>/dev/null || true
+    if [ -f "${OPENEDX_INSTALL_DIR}/codebase/manage.py" ]; then
+      (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${VENV_DIR}/bin/python" manage.py lms migrate --noinput) || exit 1
+      (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${VENV_DIR}/bin/python" manage.py cms migrate --noinput) || exit 1
+    else
+      log_warn "manage.py not found in codebase, skipping migrations."
     fi
     # Idempotently create or update admin superuser using dedicated user tool
     if [ -f "${DIR}/user.sh" ]; then

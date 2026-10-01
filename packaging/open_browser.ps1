@@ -17,6 +17,11 @@ $browserExe = "C:\Program Files\Google\Chrome\Application\chrome.exe"
 if (-not (Test-Path $browserExe)) {
     $browserExe = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 }
+if (-not (Test-Path $browserExe)) {
+    Write-Host "[INFO] Browser not detected; installing Google Chrome via winget..."
+    & winget install --id Google.Chrome --silent --accept-package-agreements --accept-source-agreements > $null 2>&1
+    $browserExe = "C:\Program Files\Google\Chrome\Application\chrome.exe"
+}
 
 # 3. Create profile dir if needed
 $hash = [Math]::Abs($Url.GetHashCode())

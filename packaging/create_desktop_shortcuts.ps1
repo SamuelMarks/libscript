@@ -1,41 +1,84 @@
 # ## Overview
-# Ensures Open edX desktop shortcuts exist with proper icons on user desktop and refreshes shell.
+# Ensures desktop shortcuts exist with proper icons on user desktop and refreshes shell.
 #
 # ## Usage
-# powershell -ExecutionPolicy Bypass -File packaging/create_desktop_shortcuts.ps1
+# powershell -ExecutionPolicy Bypass -File packaging/create_desktop_shortcuts.ps1 [-Stack <openedx|wordpress>]
+
+[CmdletBinding()]
+param(
+    [string]$Stack = "openedx"
+)
 
 $desktop = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::Desktop)
-$iconPath = "C:\libscript\packaging\assets\openedx.ico"
-$lmsIconPath = "C:\libscript\packaging\assets\openedx_lms.ico"
-$cmsIconPath = "C:\libscript\packaging\assets\openedx_cms.ico"
-if (-not (Test-Path $lmsIconPath)) { $lmsIconPath = $iconPath }
-if (-not (Test-Path $cmsIconPath)) { $cmsIconPath = $iconPath }
-
 $wsh = New-Object -ComObject WScript.Shell
 
-$s1 = $wsh.CreateShortcut((Join-Path $desktop "Open edX LMS.lnk"))
-$s1.TargetPath = "cmd.exe"
-$s1.Arguments = '/c call "C:\Program Files\OpenEdX\libscript\stacks\cms\openedx\cli.cmd" lms'
-$s1.WorkingDirectory = "C:\Program Files\OpenEdX"
-$s1.IconLocation = "$lmsIconPath,0"
-$s1.Description = "Open edX Learning Management System"
-$s1.Save()
+if ($Stack -eq "wordpress" -or ($Stack -ne "openedx" -and (Test-Path "C:\libscript\packaging\assets\wordpress.ico") -and -not (Test-Path "C:\libscript\packaging\assets\openedx.ico"))) {
+    $iconPath = "C:\libscript\packaging\assets\wordpress.ico"
+    $wpDir = "C:\Program Files\WordPress"
+    if (-not (Test-Path $wpDir)) { [void](New-Item -ItemType Directory -Path $wpDir -Force) }
+    
+    $s1 = $wsh.CreateShortcut((Join-Path $desktop "WordPress Management Console.lnk"))
+    $s1.TargetPath = "cmd.exe"
+    $s1.Arguments = '/c call "C:\Program Files\WordPress\cli.cmd"'
+    $s1.WorkingDirectory = $wpDir
+    $s1.IconLocation = "$iconPath,0"
+    $s1.Description = "WordPress Administrative Management Console"
+    $s1.Save()
 
-$s2 = $wsh.CreateShortcut((Join-Path $desktop "Open edX Studio.lnk"))
-$s2.TargetPath = "cmd.exe"
-$s2.Arguments = '/c call "C:\Program Files\OpenEdX\libscript\stacks\cms\openedx\cli.cmd" studio'
-$s2.WorkingDirectory = "C:\Program Files\OpenEdX"
-$s2.IconLocation = "$cmsIconPath,0"
-$s2.Description = "Open edX Studio Course Authoring"
-$s2.Save()
+    $s2 = $wsh.CreateShortcut((Join-Path $desktop "WordPress Diagnostics & Healthcheck.lnk"))
+    $s2.TargetPath = "cmd.exe"
+    $s2.Arguments = '/c call "C:\Program Files\WordPress\healthcheck.cmd"'
+    $s2.WorkingDirectory = $wpDir
+    $s2.IconLocation = "$iconPath,0"
+    $s2.Description = "WordPress Full-Stack Health Diagnostics Probe"
+    $s2.Save()
 
-$s3 = $wsh.CreateShortcut((Join-Path $desktop "Management CLI.lnk"))
-$s3.TargetPath = "cmd.exe"
-$s3.Arguments = '/c call "C:\Program Files\OpenEdX\libscript\stacks\cms\openedx\cli.cmd"'
-$s3.WorkingDirectory = "C:\Program Files\OpenEdX"
-$s3.IconLocation = "$iconPath,0"
-$s3.Description = "Open edX Management CLI"
-$s3.Save()
+    $s3 = $wsh.CreateShortcut((Join-Path $desktop "WordPress Database Console.lnk"))
+    $s3.TargetPath = "cmd.exe"
+    $s3.Arguments = '/c call "C:\Program Files\WordPress\dbshell.cmd"'
+    $s3.WorkingDirectory = $wpDir
+    $s3.IconLocation = "$iconPath,0"
+    $s3.Description = "WordPress Relational Database Interactive Shell"
+    $s3.Save()
+
+    $s4 = $wsh.CreateShortcut((Join-Path $desktop "WordPress Backup Utility.lnk"))
+    $s4.TargetPath = "cmd.exe"
+    $s4.Arguments = '/c call "C:\Program Files\WordPress\backup.cmd"'
+    $s4.WorkingDirectory = $wpDir
+    $s4.IconLocation = "$iconPath,0"
+    $s4.Description = "WordPress Backup and Disaster Recovery Utility"
+    $s4.Save()
+} else {
+    $iconPath = "C:\libscript\packaging\assets\openedx.ico"
+    $lmsIconPath = "C:\libscript\packaging\assets\openedx_lms.ico"
+    $cmsIconPath = "C:\libscript\packaging\assets\openedx_cms.ico"
+    if (-not (Test-Path $lmsIconPath)) { $lmsIconPath = $iconPath }
+    if (-not (Test-Path $cmsIconPath)) { $cmsIconPath = $iconPath }
+
+    $s1 = $wsh.CreateShortcut((Join-Path $desktop "Open edX LMS.lnk"))
+    $s1.TargetPath = "cmd.exe"
+    $s1.Arguments = '/c call "C:\Program Files\OpenEdX\libscript\stacks\cms\openedx\cli.cmd" lms'
+    $s1.WorkingDirectory = "C:\Program Files\OpenEdX"
+    $s1.IconLocation = "$lmsIconPath,0"
+    $s1.Description = "Open edX Learning Management System"
+    $s1.Save()
+
+    $s2 = $wsh.CreateShortcut((Join-Path $desktop "Open edX Studio.lnk"))
+    $s2.TargetPath = "cmd.exe"
+    $s2.Arguments = '/c call "C:\Program Files\OpenEdX\libscript\stacks\cms\openedx\cli.cmd" studio'
+    $s2.WorkingDirectory = "C:\Program Files\OpenEdX"
+    $s2.IconLocation = "$cmsIconPath,0"
+    $s2.Description = "Open edX Studio Course Authoring"
+    $s2.Save()
+
+    $s3 = $wsh.CreateShortcut((Join-Path $desktop "Management CLI.lnk"))
+    $s3.TargetPath = "cmd.exe"
+    $s3.Arguments = '/c call "C:\Program Files\OpenEdX\libscript\stacks\cms\openedx\cli.cmd"'
+    $s3.WorkingDirectory = "C:\Program Files\OpenEdX"
+    $s3.IconLocation = "$iconPath,0"
+    $s3.Description = "Open edX Management CLI"
+    $s3.Save()
+}
 
 $code = @'
 using System;

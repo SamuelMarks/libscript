@@ -271,28 +271,10 @@ if [ ! -d "${WORDPRESS_WWWROOT}/wp-admin" ]; then
     wget -qO- "${dl_url}" 2>/dev/null | safe_tar xz --strip-components=1 -C "${WORDPRESS_WWWROOT}" 2>/dev/null || true
   fi
 
-  # Fallback: Populate authentic core structure if offline without cache
+  # Ensure authentic core structure exists
   if [ ! -f "${WORDPRESS_WWWROOT}/index.php" ]; then
-    safe_mkdir -p "${WORDPRESS_WWWROOT}/wp-admin" "${WORDPRESS_WWWROOT}/wp-includes" "${WORDPRESS_WWWROOT}/wp-content/themes" "${WORDPRESS_WWWROOT}/wp-content/plugins"
-    cat << 'EOF_IDX' | safe_tee "${WORDPRESS_WWWROOT}/index.php" >/dev/null
-<?php
-define('WP_USE_THEMES', true);
-require __DIR__ . '/wp-blog-header.php';
-EOF_IDX
-    cat << 'EOF_HEADER' | safe_tee "${WORDPRESS_WWWROOT}/wp-blog-header.php" >/dev/null
-<?php
-if (!isset($wp_did_header)) {
-    $wp_did_header = true;
-    require_once __DIR__ . '/wp-load.php';
-    wp();
-    require_once ABSPATH . WPINC . '/template-loader.php';
-}
-EOF_HEADER
-    cat << 'EOF_LOAD' | safe_tee "${WORDPRESS_WWWROOT}/wp-load.php" >/dev/null
-<?php
-define('ABSPATH', __DIR__ . '/');
-require_once ABSPATH . 'wp-config.php';
-EOF_LOAD
+    printf '[ERROR] Failed to download or locate WordPress core at %s.\n' "${WORDPRESS_WWWROOT}" >&2
+    exit 1
   fi
 fi
 
@@ -524,21 +506,32 @@ for php_ini in /etc/php/*/fpm/php.ini /etc/php/*/cli/php.ini /etc/php.ini /usr/l
   fi
 done
 
-# Determine PHP-FPM Socket
-if [ -z "${WORDPRESS_PHP_FPM_LISTEN:-}" ]; then
-  if [ -e /run/php/php-fpm.sock ]; then
-    WORDPRESS_PHP_FPM_LISTEN="unix:/run/php/php-fpm.sock"
-  elif [ -e /var/run/php-fpm/php-fpm.sock ]; then
-    WORDPRESS_PHP_FPM_LISTEN="unix:/var/run/php-fpm/php-fpm.sock"
-  else
-    WORDPRESS_PHP_FPM_LISTEN="127.0.0.1:9000"
-    for sock in /run/php/php*.sock; do
-      if [ -e "$sock" ]; then
-        WORDPRESS_PHP_FPM_LISTEN="unix:$sock"
-        break
-      fi
-    done
-  fi
+# Provision dedicated PHP-FPM pool for WordPress
+php_fpm_pool_dir=""
+if [ -d "/etc/php/8.2/fpm/pool.d" ]; then php_fpm_pool_dir="/etc/php/8.2/fpm/pool.d";
+elif [ -d "/etc/php/8.3/fpm/pool.d" ]; then php_fpm_pool_dir="/etc/php/8.3/fpm/pool.d";
+elif [ -d "/etc/php/8.1/fpm/pool.d" ]; then php_fpm_pool_dir="/etc/php/8.1/fpm/pool.d";
+elif [ -d "/etc/php-fpm.d" ]; then php_fpm_pool_dir="/etc/php-fpm.d";
+fi
+
+WORDPRESS_PHP_FPM_LISTEN="127.0.0.1:9000"
+if [ -n "$php_fpm_pool_dir" ]; then
+  cat << EOF_FPM | safe_tee "${php_fpm_pool_dir}/wordpress.conf" >/dev/null
+[wordpress]
+user = www-data
+group = www-data
+listen = /run/php/php-fpm-wordpress.sock
+listen.owner = www-data
+listen.group = www-data
+listen.mode = 0660
+pm = dynamic
+pm.max_children = 50
+pm.start_servers = 5
+pm.min_spare_servers = 5
+pm.max_spare_servers = 35
+EOF_FPM
+  WORDPRESS_PHP_FPM_LISTEN="unix:/run/php/php-fpm-wordpress.sock"
+  priv systemctl restart php8.2-fpm 2>/dev/null || priv systemctl restart php8.3-fpm 2>/dev/null || priv systemctl restart php-fpm 2>/dev/null || true
 fi
 
 # 6. Configure Ingress Webserver

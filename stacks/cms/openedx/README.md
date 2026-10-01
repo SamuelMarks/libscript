@@ -535,6 +535,42 @@ Open edX packages into a turnkey native Windows Installer (`.msi`) featuring exp
 advanced DBaaS offloading, directory selection, runtime auto-detection, and multi-tab browser
 verification.
 
+### Building Open edX MSI via Pure-Rust `msi-rs`
+
+LibScript compiles Windows Installers cross-platform (on macOS, Linux, and Windows) using the
+pure-Rust `msi-rs` toolchain (`candle` and `light` drop-ins):
+
+```sh
+# 1. Source msi-rs environment
+. _lib/package-managers/msi-rs/env.sh
+
+# 2. Build lightweight online installer (< 10 MB)
+./packaging/build_msi.sh stacks/cms/openedx \
+  --online \
+  --out dist/msi/OpenEdX-Setup \
+  --version 22.1.0
+
+# 3. Build air-gapped 100% offline installer with multi-cabinet caching
+./packaging/build_msi.sh stacks/cms/openedx \
+  --offline \
+  --cache-dir cache/ \
+  --out dist/msi/OpenEdX-Setup-Offline \
+  --version 22.1.0
+```
+
+On Windows (`cmd.exe`):
+
+```cmd
+:: Load msi-rs environment
+call _lib\package-managers\msi-rs\env.cmd
+
+:: Build online installer
+call packaging\build_msi.cmd stacks\cms\openedx --online --out dist\msi\OpenEdX-Setup --version 22.1.0
+
+:: Build offline air-gapped installer
+call packaging\build_msi.cmd stacks\cms\openedx --offline --cache-dir cache\ --out dist\msi\OpenEdX-Setup-Offline --version 22.1.0
+```
+
 Visual artifacts and gallery screenshots are centralized in the
 [cc0-assets](https://github.com/SamuelMarks/cc0-assets) repository:
 

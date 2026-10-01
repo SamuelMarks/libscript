@@ -179,10 +179,6 @@ Invoke-VmScp (Join-Path $RepoRoot "packaging\launch_browser.ps1") "C:/libscript/
 Invoke-VmScp (Join-Path $RepoRoot "packaging\launch_browser.sh") "C:/libscript/packaging/"
 Invoke-VmScp (Join-Path $RepoRoot "packaging\open_browser.cmd") "C:/libscript/packaging/"
 Invoke-VmScp (Join-Path $RepoRoot "packaging\open_browser.ps1") "C:/libscript/packaging/"
-Invoke-VmScp (Join-Path $RepoRoot "packaging\start_mock_server.cmd") "C:/libscript/packaging/"
-Invoke-VmScp (Join-Path $RepoRoot "packaging\start_mock_server.ps1") "C:/libscript/packaging/"
-Invoke-VmScp (Join-Path $RepoRoot "packaging\start_mock_server.sh") "C:/libscript/packaging/"
-Invoke-VmScp (Join-Path $RepoRoot "packaging\mock_server.ps1") "C:/libscript/packaging/"
 Invoke-VmScp (Join-Path $RepoRoot "packaging\click_button.ps1") "C:/libscript/packaging/"
 Invoke-VmScp (Join-Path $RepoRoot "packaging\create_desktop_shortcuts.cmd") "C:/libscript/packaging/"
 Invoke-VmScp (Join-Path $RepoRoot "packaging\create_desktop_shortcuts.ps1") "C:/libscript/packaging/"
@@ -345,9 +341,9 @@ Invoke-VmRun 'cmd /c call C:\libscript\packaging\create_desktop_shortcuts.cmd; S
 Invoke-CaptureScreen "10b_desktop_icons"
 
 Write-Host "`n=== Flow 3: Browser Verification & Authentication Flows ==="
-Write-Host "[INFO] Suppressing notifications and starting mock server on guest for ports 8000 and 8001..."
-Invoke-VmRun 'New-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Force -ErrorAction SilentlyContinue | Out-Null; Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoLowDiskSpaceChecks" -Value 1 -Type DWord -Force; Stop-Process -Name ShellExperienceHost, msiexec -Force -ErrorAction SilentlyContinue'
-Invoke-VmRun 'cmd /c "cd C:\libscript && call packaging\start_mock_server.cmd"'
+Write-Host "[INFO] Waiting for LMS (8000) and CMS (8001) ports to become responsive..."
+Invoke-VmRun 'while ((Test-NetConnection localhost -Port 8000 -InformationLevel Quiet) -eq $false) { Start-Sleep -Seconds 2; Write-Host "Waiting for 8000..." }'
+Invoke-VmRun 'while ((Test-NetConnection localhost -Port 8001 -InformationLevel Quiet) -eq $false) { Start-Sleep -Seconds 2; Write-Host "Waiting for 8001..." }'
 
 # Step 11: LMS Login Screen
 Write-Host "[INFO] Opening LMS Portal Login (:8000/login) in Browser..."

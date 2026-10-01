@@ -39,6 +39,24 @@ set "wxs_file=%OUT_FILE%.wxs"
 
 echo Generated %wxs_file%
 where candle >nul 2>&1
+if errorlevel 1 where candle.exe >nul 2>&1
+if errorlevel 1 (
+    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\package-managers\msi-rs\env.cmd" (
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\package-managers\msi-rs\env.cmd" >nul 2>&1
+    )
+)
+where candle >nul 2>&1
+if errorlevel 1 where candle.exe >nul 2>&1
+if errorlevel 1 (
+    if exist "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" (
+        call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install msi-rs v0.0.1 >nul 2>&1
+        if exist "%LIBSCRIPT_ROOT_DIR%\_lib\package-managers\msi-rs\env.cmd" (
+            call "%LIBSCRIPT_ROOT_DIR%\_lib\package-managers\msi-rs\env.cmd" >nul 2>&1
+        )
+    )
+)
+where candle >nul 2>&1
+if errorlevel 1 where candle.exe >nul 2>&1
 if %errorlevel% equ 0 (
     candle "%wxs_file%"
     if exist "%OUT_FILE%.wixobj" light "%OUT_FILE%.wixobj" -out "%OUT_FILE%.msi"
