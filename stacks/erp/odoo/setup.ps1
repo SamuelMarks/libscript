@@ -12,7 +12,16 @@ Orchestrates the setup and installation process for the Odoo ERP system stack.
 Execute this script to install and configure odoo on the local system.
 #>
 
+[CmdletBinding()]
+param (
+    [switch]$SkipDeps
+)
+
 $ErrorActionPreference = "Stop"
+
+if ($env:LIBSCRIPT_SKIP_SYSTEM_DEPS -eq "1") {
+    $SkipDeps = $true
+}
 
 $OdooVersion = if ($env:ODOO_VERSION) { $env:ODOO_VERSION } else { "17.0" }
 $WwwRoot = if ($env:ODOO_WWWROOT) { $env:ODOO_WWWROOT } else { "C:\inetpub\wwwroot\odoo" }
@@ -29,20 +38,22 @@ $WebServer = if ($env:ODOO_WEBSERVER) { $env:ODOO_WEBSERVER } else { "iis" }
 
 Write-Host "Installing dependencies for Odoo ($WebServer)..."
 
-if (-not (Get-Command "python" -ErrorAction SilentlyContinue)) {
-    Write-Host "Python not found. Attempting to install via Winget..."
-    winget install --silent --force --id=Python.Python.3.11 --accept-package-agreements --accept-source-agreements
-}
-
-if ($DbType -eq "postgres") {
-    if (-not (Get-Command "psql" -ErrorAction SilentlyContinue)) {
-        Write-Host "PostgreSQL not found. Attempting to install via Winget..."
-        winget install --silent --force --id=PostgreSQL.PostgreSQL --accept-package-agreements --accept-source-agreements
+if (-not $SkipDeps) {
+    if (-not (Get-Command "python" -ErrorAction SilentlyContinue)) {
+        Write-Host "Python not found. Attempting to install via Winget..."
+        winget install --silent --force --id=Python.Python.3.11 --accept-package-agreements --accept-source-agreements
     }
-} elseif ($DbType -eq "mariadb") {
-    if (-not (Get-Command "mysql" -ErrorAction SilentlyContinue)) {
-        Write-Host "MariaDB not found. Attempting to install via Winget..."
-        winget install --silent --force --id=MariaDB.Server --accept-package-agreements --accept-source-agreements
+
+    if ($DbType -eq "postgres") {
+        if (-not (Get-Command "psql" -ErrorAction SilentlyContinue)) {
+            Write-Host "PostgreSQL not found. Attempting to install via Winget..."
+            winget install --silent --force --id=PostgreSQL.PostgreSQL --accept-package-agreements --accept-source-agreements
+        }
+    } elseif ($DbType -eq "mariadb") {
+        if (-not (Get-Command "mysql" -ErrorAction SilentlyContinue)) {
+            Write-Host "MariaDB not found. Attempting to install via Winget..."
+            winget install --silent --force --id=MariaDB.Server --accept-package-agreements --accept-source-agreements
+        }
     }
 }
 

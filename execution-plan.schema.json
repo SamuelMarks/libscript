@@ -106,6 +106,99 @@
                 "is_bundled": {
                   "type": "boolean",
                   "description": "Indicates whether component payload is physically bundled into installer distribution"
+                },
+                "logical_resources": {
+                  "type": "array",
+                  "description": "Collection of logical resources (e.g., virtual hosts, logical databases, runtimes) to be provisioned on top of physical shared components",
+                  "items": {
+                    "type": "object",
+                    "description": "A logical resource definition mapping to a physical provider",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": ["virtual_host", "logical_database", "runtime_isolation"],
+                        "description": "Type of logical resource being provisioned"
+                      },
+                      "virtual_hosts": {
+                        "type": "object",
+                        "description": "Virtual host routing configuration mapping domain/port bindings to the shared Reverse Proxy component",
+                        "properties": {
+                          "server_name": { "type": "string", "description": "Domain name or IP address for the virtual host" },
+                          "listen_ports": {
+                            "type": "array",
+                            "description": "Array of ports the virtual host listens on (default [80, 443])",
+                            "items": { "type": "integer", "description": "TCP port number" }
+                          },
+                          "document_root": { "type": "string", "description": "Optional document root path for static assets" },
+                          "routes": {
+                            "type": "array",
+                            "description": "Path matching rules for routing requests",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "path": { "type": "string", "description": "Route path prefix (e.g., '/', '/api')" },
+                                "route_type": { "type": "string", "enum": ["proxy", "fastcgi", "static"], "description": "Type of routing action" },
+                                "target": { "type": "string", "description": "Upstream target address or fastcgi socket" }
+                              }
+                            }
+                          },
+                          "provider_overrides": {
+                            "type": "object",
+                            "description": "Engine-specific configuration escape hatches",
+                            "properties": {
+                              "apache2": { "type": "object", "description": "Apache-specific configuration overrides (e.g., AllowOverride)" },
+                              "nginx": { "type": "object", "description": "Nginx-specific configuration overrides (e.g., client_max_body_size)" }
+                            }
+                          }
+                        }
+                      },
+                      "logical_databases": {
+                        "type": "object",
+                        "description": "Database provisioning mapping CREATE DATABASE and users to shared physical MariaDB/PostgreSQL components",
+                        "properties": {
+                          "db_name": { "type": "string", "description": "Name of the logical database to create or utilize" },
+                          "db_user": { "type": "string", "description": "Username with privileges to the logical database" }
+                        }
+                      },
+                      "runtime_isolation": {
+                        "type": "object",
+                        "description": "Environment isolation configurations defining venv or node_modules paths originating from shared Runtime components",
+                        "properties": {
+                          "strategy": { "type": "string", "enum": ["python_venv", "node_modules"], "description": "Isolation mechanism to utilize" },
+                          "base_runtime_ref": { "type": "string", "description": "Reference to the underlying physical runtime component installation" }
+                        }
+                      }
+                    }
+                  }
+                },
+                "configuration_parameters": {
+                  "type": "object",
+                  "description": "User-selectable configuration inputs (or properties) to override default provisioning behaviors (e.g. local vs remote)",
+                  "properties": {
+                    "preferred_reverse_proxy": {
+                      "type": "string",
+                      "enum": ["nginx", "apache2"],
+                      "default": "nginx",
+                      "description": "Preferred reverse proxy engine for multiplexing (nginx or apache2)"
+                    },
+                    "db_strategy": {
+                      "type": "string",
+                      "enum": ["local", "remote"],
+                      "description": "Strategy for database provisioning: utilize local shared component or connect to remote/managed database"
+                    },
+                    "db_host": {
+                      "type": "string",
+                      "description": "Host address for remote database connections"
+                    },
+                    "db_name": {
+                      "type": "string",
+                      "description": "Custom logical database name overriding the default"
+                    },
+                    "db_url": {
+                      "type": "string",
+                      "description": "Full connection string or URI for remote databases"
+                    }
+                  }
                 }
               }
             }

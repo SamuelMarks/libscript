@@ -10,85 +10,92 @@ if defined STACK (
 )
 set "STACK=%STACK%:%THIS_FILE%:"
 
-:: # deprovision_schema.cmd
-::
 :: ## Overview
-:: Non-destructive universal multi-tenant database schema deprovisioner on Windows.
-:: Drops only the specified tenant application schema and user account.
-:: GUARANTEE: Never stops, uninstalls, or harms the shared database server daemon.
+:: Safely deprovisions a multi-tenant database schema and user account on Windows.
+:: Supports MySQL/MariaDB, PostgreSQL, MongoDB.
 ::
 :: ## Usage
-::   call deprovision_schema.cmd [OPTIONS]
+::   call deprovision_schema.cmd --engine <engine> --host <host> --port <port> --admin-user <user> --admin-pass <pass> --schema <name> --user <tenant>
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
-
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 for %%I in ("%SCRIPT_DIR%") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
-
 :find_root_loop
 if exist "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" goto found_root
 for %%I in ("%LIBSCRIPT_ROOT_DIR%\..") do set "PARENT_DIR=%%~fI"
 if "%PARENT_DIR%"=="%LIBSCRIPT_ROOT_DIR%" goto found_root
 set "LIBSCRIPT_ROOT_DIR=%PARENT_DIR%"
 goto find_root_loop
-
 :found_root
 
-set "ENGINE=mysql"
+set "ENGINE="
 set "HOST=127.0.0.1"
 set "PORT="
 set "ADMIN_USER="
 set "ADMIN_PASS="
 set "SCHEMA_NAME="
-set "APP_USER="
+set "TENANT_USER="
 
-:parse_loop
-if "%~1"=="" goto done_parse
-if /i "%~1"=="--engine" ( set "ENGINE=%~2" & shift & shift & goto parse_loop )
-if /i "%~1"=="--host" ( set "HOST=%~2" & shift & shift & goto parse_loop )
-if /i "%~1"=="--port" ( set "PORT=%~2" & shift & shift & goto parse_loop )
-if /i "%~1"=="--admin-user" ( set "ADMIN_USER=%~2" & shift & shift & goto parse_loop )
-if /i "%~1"=="--admin-pass" ( set "ADMIN_PASS=%~2" & shift & shift & goto parse_loop )
-if /i "%~1"=="--schema" ( set "SCHEMA_NAME=%~2" & shift & shift & goto parse_loop )
-if /i "%~1"=="--user" ( set "APP_USER=%~2" & shift & shift & goto parse_loop )
-echo [ERROR] Unknown option: %~1 >&2
+:parse_args
+if "%~1"=="" goto run_deprovision
+if "%~1"=="--engine" ( set "ENGINE=%~2" & shift & shift & goto parse_args )
+if "%~1"=="--host" ( set "HOST=%~2" & shift & shift & goto parse_args )
+if "%~1"=="--port" ( set "PORT=%~2" & shift & shift & goto parse_args )
+if "%~1"=="--admin-user" ( set "ADMIN_USER=%~2" & shift & shift & goto parse_args )
+if "%~1"=="--admin-pass" ( set "ADMIN_PASS=%~2" & shift & shift & goto parse_args )
+if "%~1"=="--schema" ( set "SCHEMA_NAME=%~2" & shift & shift & goto parse_args )
+if "%~1"=="--user" ( set "TENANT_USER=%~2" & shift & shift & goto parse_args )
+shift
+goto parse_args
+
+:run_deprovision
+if "%ENGINE%"=="" ( echo Error: Missing engine >&2 & exit /b 1 )
+if "%SCHEMA_NAME%"=="" ( echo Error: Missing schema >&2 & exit /b 1 )
+if "%TENANT_USER%"=="" ( echo Error: Missing tenant user >&2 & exit /b 1 )
+
+if "%ENGINE%"=="mysql" goto do_mysql
+if "%ENGINE%"=="mariadb" goto do_mysql
+if "%ENGINE%"=="postgres" goto do_postgres
+if "%ENGINE%"=="postgresql" goto do_postgres
+if "%ENGINE%"=="mongodb" goto do_mongodb
+if "%ENGINE%"=="sqlite" goto do_sqlite
+echo Error: Unsupported engine "%ENGINE%" >&2
 exit /b 1
 
-:done_parse
-
-if "%SCHEMA_NAME%"=="" (
-    echo [ERROR] --schema name is required >&2
-    exit /b 1
+:do_mysql
+if "%PORT%"=="" set "PORT=3306"
+if "%ADMIN_USER%"=="" set "ADMIN_USER=root"
+set "TMP_SQL=%TEMP%\deprovision_!RANDOM!.sql"
+echo DROP DATABASE IF EXISTS `%SCHEMA_NAME%`; > "%TMP_SQL%"
+echo DROP USER IF EXISTS '%TENANT_USER%'@'localhost'; >> "%TMP_SQL%"
+echo DROP USER IF EXISTS '%TENANT_USER%'@'127.0.0.1'; >> "%TMP_SQL%"
+echo DROP USER IF EXISTS '%TENANT_USER%'@'%%'; >> "%TMP_SQL%"
+echo FLUSH PRIVILEGES; >> "%TMP_SQL%"
+if "%ADMIN_PASS%"=="" (
+    mysql -h "%HOST%" -P "%PORT%" -u "%ADMIN_USER%" < "%TMP_SQL%"
+) else (
+    mysql -h "%HOST%" -P "%PORT%" -u "%ADMIN_USER%" -p"%ADMIN_PASS%" < "%TMP_SQL%"
 )
+del "%TMP_SQL%"
+exit /b 0
 
-:: ## execute_deprovisioning
-powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-    "$engine = '%ENGINE%';" ^
-    "$host_val = '%HOST%';" ^
-    "$port = '%PORT%';" ^
-    "$admin_user = '%ADMIN_USER%';" ^
-    "$admin_pass = '%ADMIN_PASS%';" ^
-    "$schema = '%SCHEMA_NAME%';" ^
-    "$user = '%APP_USER%';" ^
-    "if ($engine -in @('mysql','mariadb')) {" ^
-    "  if (-not $port) { $port = '3306'; };" ^
-    "  if (-not $admin_user) { $admin_user = 'root'; };" ^
-    "  $cmd = 'mysql';" ^
-    "  if (Get-Command mariadb -ErrorAction SilentlyContinue) { $cmd = 'mariadb'; };" ^
-    "  $pArg = if ($admin_pass) { '-p' + $admin_pass } else { '' };" ^
-    "  & $cmd -h $host_val -P $port -u $admin_user $pArg -e ('DROP DATABASE IF EXISTS `' + $schema + '`;');" ^
-    "  if ($user) {" ^
-    "    & $cmd -h $host_val -P $port -u $admin_user $pArg -e ('DROP USER IF EXISTS ''' + $user + '''@''localhost''; DROP USER IF EXISTS ''' + $user + '''@''127.0.0.1''; DROP USER IF EXISTS ''' + $user + '''@''%''; FLUSH PRIVILEGES;');" ^
-    "  }" ^
-    "} elseif ($engine -in @('postgres','postgresql')) {" ^
-    "  if (-not $port) { $port = '5432'; };" ^
-    "  if (-not $admin_user) { $admin_user = 'postgres'; };" ^
-    "  $env:PGPASSWORD = $admin_pass; $env:PGHOST = $host_val; $env:PGPORT = $port; $env:PGUSER = $admin_user;" ^
-    "  & psql -c ('DROP DATABASE IF EXISTS "' + $schema + '";');" ^
-    "  if ($user) { & psql -c ('DROP USER IF EXISTS "' + $user + '";'); };" ^
-    "} elseif ($engine -eq 'sqlite') {" ^
-    "  if (Test-Path $schema) { Remove-Item -Path $schema -Force; };" ^
-    "};" ^
-    "Write-Output ('[SUCCESS] Database schema ' + $schema + ' successfully deprovisioned.');"
+:do_postgres
+if "%PORT%"=="" set "PORT=5432"
+if "%ADMIN_USER%"=="" set "ADMIN_USER=postgres"
+set "PGPASSWORD=%ADMIN_PASS%"
+psql -h "%HOST%" -p "%PORT%" -U "%ADMIN_USER%" -c "DROP DATABASE IF EXISTS \"%SCHEMA_NAME%\";"
+psql -h "%HOST%" -p "%PORT%" -U "%ADMIN_USER%" -c "DROP USER IF EXISTS \"%TENANT_USER%\";"
+set "PGPASSWORD="
+exit /b 0
 
-exit /b %ERRORLEVEL%
+:do_mongodb
+if "%PORT%"=="" set "PORT=27017"
+set "MONGO_ARGS=--host %HOST% --port %PORT%"
+if not "%ADMIN_USER%"=="" set "MONGO_ARGS=%MONGO_ARGS% -u %ADMIN_USER% -p %ADMIN_PASS% --authenticationDatabase admin"
+set "JS_CMD=db.getSiblingDB('%SCHEMA_NAME%').dropDatabase(); db.getSiblingDB('%SCHEMA_NAME%').dropUser('%TENANT_USER%');"
+mongosh %MONGO_ARGS% --eval "%JS_CMD%" --quiet
+exit /b 0
+
+:do_sqlite
+if exist "%SCHEMA_NAME%" del /Q "%SCHEMA_NAME%" "%SCHEMA_NAME%-wal" "%SCHEMA_NAME%-shm"
+exit /b 0

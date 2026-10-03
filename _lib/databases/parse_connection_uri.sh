@@ -1,15 +1,10 @@
 #!/bin/sh
 # ## Overview
-# Universal database connection URI parser supporting MySQL, MariaDB, PostgreSQL,
-# MongoDB, Redis, and SQLite. Decodes percent-encoded credentials and extracts
-# query parameters (TLS/SSL certificates, timeouts, SNI).
+# Universal connection URI parser for database connection strings.
+# Supports mysql://, postgres://, mongodb://, redis://, sqlite://.
 #
 # ## Usage
-#   ./_lib/databases/parse_connection_uri.sh <URI> [--eval|--json|--export]
-#
-# ## Exit Codes
-#   0 - URI successfully parsed
-#   1 - Invalid URI format or missing required parameter
+#   ./parse_connection_uri.sh <URI> [--eval | --json | --export]
 
 set -feu
 
@@ -20,304 +15,118 @@ elif [ "${BASH_SOURCE-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
-RAW_URI="${1:-}"
-MODE="${2:---eval}"
+uri="${1:-}"
+mode="${2:---eval}"
 
-if [ -z "$RAW_URI" ]; then
-  printf '[ERROR] No URI provided to parse_connection_uri.sh
-' >&2
+if [ -z "$uri" ]; then
+  printf 'Error: URI required\n' >&2
   exit 1
 fi
 
-# ## urldecode
-# Decodes percent-encoded characters (%20, %40, etc.) in a URI component.
-urldecode() {
-  _val="$1"
-  printf '%s' "$_val" | awk '
-  BEGIN {
-    for (i = 0; i <= 255; i++) hex[sprintf("%02X", i)] = sprintf("%c", i);
-    for (i = 0; i <= 255; i++) hex[sprintf("%02x", i)] = sprintf("%c", i);
-  }
-  {
-    gsub(/\+/, " ");
-    s = "";
-    len = length($0);
-    for (i = 1; i <= len; i++) {
-      c = substr($0, i, 1);
-      if (c == "%" && i + 2 <= len) {
-        h = substr($0, i + 1, 2);
-        if (h in hex) {
-          s = s hex[h];
-          i += 2;
-          continue;
-        }
-      }
-      s = s c;
-    }
-    printf "%s", s;
-  }'
-}
+# Extract protocol (engine)
+engine="${uri%%://*}"
+rest="${uri#*://}"
 
-# 1. Identify and strip scheme
-scheme=""
-body="$RAW_URI"
-case "$body" in
-  mysql://*)
-    scheme="mysql"
-    body="${body#mysql://}"
-    ;;
-  mariadb://*)
-    scheme="mariadb"
-    body="${body#mariadb://}"
-    ;;
-  postgres://*)
-    scheme="postgres"
-    body="${body#postgres://}"
-    ;;
-  postgresql://*)
-    scheme="postgres"
-    body="${body#postgresql://}"
-    ;;
-  mongodb://*)
-    scheme="mongodb"
-    body="${body#mongodb://}"
-    ;;
-  redis://*)
-    scheme="redis"
-    body="${body#redis://}"
-    ;;
-  sqlite://*)
-    scheme="sqlite"
-    body="${body#sqlite://}"
+# Extract credentials if present
+case "$rest" in
+  *@*)
+    creds="${rest%%@*}"
+    hostport_path="${rest#*@}"
+    user="${creds%%:*}"
+    pass="${creds#*:}"
+    [ "$user" = "$pass" ] && pass=""
     ;;
   *)
-    scheme="mysql"
+    user=""
+    pass=""
+    hostport_path="$rest"
     ;;
 esac
 
-# Handle SQLite specifically (sqlite:///path/to/file.db or sqlite://C:/path)
-if [ "$scheme" = "sqlite" ]; then
-  sqlite_path="$body"
-  query_str=""
-  case "$sqlite_path" in
-    *\?*)
-      query_str="${sqlite_path#*\?}"
-      sqlite_path="${sqlite_path%%\?*}"
-      ;;
-  esac
-  case "$MODE" in
-    --export)
-      export DB_ENGINE="sqlite"
-      export DB_PATH="$sqlite_path"
-      ;;
-    --json)
-      printf '{"engine":"sqlite","path":"%s"}
-' "$sqlite_path"
-      ;;
-    --eval|*)
-      printf 'DB_ENGINE="sqlite"
-'
-      printf 'DB_PATH="%s"
-' "$sqlite_path"
-      ;;
-  esac
-  exit 0
+# Extract path and query params
+path_params="${hostport_path#*/}"
+hostport="${hostport_path%%/*}"
+if [ "$hostport_path" = "$hostport" ]; then
+    path_params=""
 fi
 
-# 2. Extract query string
-query_str=""
-case "$body" in
-  *\?*)
-    query_str="${body#*\?}"
-    body="${body%%\?*}"
-    ;;
-esac
+# Extract host and port
+host="${hostport%%:*}"
+port="${hostport#*:}"
+[ "$host" = "$port" ] && port=""
 
-# 3. Extract path (database or keyspace name or redis db index)
-db_name=""
-case "$body" in
-  */*)
-    db_name="${body#*/}"
-    body="${body%%/*}"
-    ;;
-esac
+# Extract dbname and query
+dbname="${path_params%%[?]*}"
+query="${path_params#*[?]}"
+[ "$dbname" = "$query" ] && query=""
 
-# 4. Extract auth part vs host part
-db_user=""
-db_pass=""
-host_part="$body"
+# Minimal awk percent decoding
+if [ -n "$pass" ]; then
+  pass=$(printf '%s' "$pass" | awk '{
+    gsub(/%20/, " "); gsub(/%21/, "!"); gsub(/%40/, "@"); gsub(/%23/, "#"); 
+    gsub(/%24/, "$"); gsub(/%25/, "%"); gsub(/%5E/, "^"); 
+    gsub(/%26/, "\\&"); gsub(/%2A/, "*"); gsub(/%3D/, "="); print
+  }')
+fi
+if [ -n "$user" ]; then
+  user=$(printf '%s' "$user" | awk '{
+    gsub(/%40/, "@"); print
+  }')
+fi
 
-case "$body" in
-  *@*)
-    auth_part="${body%%@*}"
-    host_part="${body#*@}"
-    case "$auth_part" in
-      *:*)
-        db_user="$(urldecode "${auth_part%%:*}")"
-        db_pass="$(urldecode "${auth_part#*:}")"
-        ;;
-      *)
-        db_user="$(urldecode "$auth_part")"
-        ;;
-    esac
-    ;;
-esac
-
-# 5. Extract host vs port
-default_port="3306"
-case "$scheme" in
-  mysql|mariadb) default_port="3306" ;;
-  postgres) default_port="5432" ;;
-  mongodb) default_port="27017" ;;
-  redis) default_port="6379" ;;
-esac
-
-db_host="127.0.0.1"
-db_port="$default_port"
-
-case "$host_part" in
-  *:*)
-    db_host="${host_part%%:*}"
-    db_port="${host_part#*:}"
-    ;;
-  *)
-    if [ -n "$host_part" ]; then
-      db_host="$host_part"
-    fi
-    ;;
-esac
-
-# 6. Parse query string parameters (ssl-ca, ssl-cert, ssl-key, ssl-mode, timeout, charset)
+db_use_ssl="0"
 db_ssl_ca=""
 db_ssl_cert=""
 db_ssl_key=""
 db_ssl_mode=""
-db_use_ssl=0
 db_timeout=""
 db_charset=""
 
-if [ -n "$query_str" ]; then
-  db_use_ssl=1
-  old_ifs="$IFS"
-  IFS='&'
-  set -- $query_str
-  IFS="$old_ifs"
-  for param in "$@"; do
-    case "$param" in
-      ssl-ca=*|ssl_ca=*)
-        db_ssl_ca="$(urldecode "${param#*=}")"
-        ;;
-      ssl-cert=*|ssl_cert=*)
-        db_ssl_cert="$(urldecode "${param#*=}")"
-        ;;
-      ssl-key=*|ssl_key=*)
-        db_ssl_key="$(urldecode "${param#*=}")"
-        ;;
-      ssl-mode=*|ssl_mode=*)
-        db_ssl_mode="$(urldecode "${param#*=}")"
-        ;;
-      ssl=true|ssl=1)
-        db_use_ssl=1
-        ;;
-      timeout=*)
-        db_timeout="$(urldecode "${param#*=}")"
-        ;;
-      charset=*)
-        db_charset="$(urldecode "${param#*=}")"
-        ;;
+if [ -n "$query" ]; then
+  # Parse query string
+  # Split query on & and iterate
+  OIFS="$IFS"
+  IFS="&"
+  for param in $query; do
+    IFS="$OIFS"
+    k="${param%%=*}"
+    v="${param#*=}"
+    case "$k" in
+      ssl-ca|ssl_ca) db_ssl_ca="$v"; db_use_ssl="1" ;;
+      ssl-cert|ssl_cert) db_ssl_cert="$v"; db_use_ssl="1" ;;
+      ssl-key|ssl_key) db_ssl_key="$v"; db_use_ssl="1" ;;
+      ssl-mode|sslmode) db_ssl_mode="$v"; db_use_ssl="1" ;;
+      timeout|connect_timeout) db_timeout="$v" ;;
+      charset) db_charset="$v" ;;
+      ssl) if [ "$v" = "true" ] || [ "$v" = "1" ]; then db_use_ssl="1"; fi ;;
     esac
   done
+  IFS="$OIFS"
 fi
 
-case "$MODE" in
+case "$mode" in
+  --eval)
+    printf 'DB_ENGINE="%s"\nDB_HOST="%s"\nDB_PORT="%s"\nDB_USER="%s"\nDB_PASS="%s"\nDB_NAME="%s"\nDB_QUERY="%s"\nDB_USE_SSL="%s"\nDB_SSL_CA="%s"\nDB_SSL_CERT="%s"\nDB_SSL_KEY="%s"\nDB_SSL_MODE="%s"\nDB_TIMEOUT="%s"\nDB_CHARSET="%s"\n' \
+      "$engine" "$host" "$port" "$user" "$pass" "$dbname" "$query" "$db_use_ssl" "$db_ssl_ca" "$db_ssl_cert" "$db_ssl_key" "$db_ssl_mode" "$db_timeout" "$db_charset"
+    ;;
   --export)
-    export DB_ENGINE="$scheme"
-    export DB_HOST="$db_host"
-    export DB_PORT="$db_port"
-    export DB_NAME="$db_name"
-    export DB_USER="$db_user"
-    export DB_PASSWORD="$db_pass"
-    export DB_USE_SSL="$db_use_ssl"
-    export DB_SSL_CA="$db_ssl_ca"
-    export DB_SSL_CERT="$db_ssl_cert"
-    export DB_SSL_KEY="$db_ssl_key"
-    export DB_SSL_MODE="$db_ssl_mode"
-    export DB_TIMEOUT="$db_timeout"
-    export DB_CHARSET="$db_charset"
+    printf 'export DB_ENGINE="%s"\nexport DB_HOST="%s"\nexport DB_PORT="%s"\nexport DB_USER="%s"\nexport DB_PASS="%s"\nexport DB_NAME="%s"\nexport DB_QUERY="%s"\nexport DB_USE_SSL="%s"\nexport DB_SSL_CA="%s"\nexport DB_SSL_CERT="%s"\nexport DB_SSL_KEY="%s"\nexport DB_SSL_MODE="%s"\nexport DB_TIMEOUT="%s"\nexport DB_CHARSET="%s"\n' \
+      "$engine" "$host" "$port" "$user" "$pass" "$dbname" "$query" "$db_use_ssl" "$db_ssl_ca" "$db_ssl_cert" "$db_ssl_key" "$db_ssl_mode" "$db_timeout" "$db_charset"
     ;;
   --json)
-    printf '{
-'
-    printf '  "engine": "%s",
-' "$scheme"
-    printf '  "host": "%s",
-' "$db_host"
-    printf '  "port": %s,
-' "$db_port"
-    printf '  "name": "%s",
-' "$db_name"
-    printf '  "user": "%s",
-' "$db_user"
-    printf '  "password": "%s",
-' "$db_pass"
-    printf '  "use_ssl": %s,
-' "$([ "$db_use_ssl" -eq 1 ] && printf 'true' || printf 'false')"
-    printf '  "ssl_ca": "%s",
-' "$db_ssl_ca"
-    printf '  "ssl_cert": "%s",
-' "$db_ssl_cert"
-    printf '  "ssl_key": "%s",
-' "$db_ssl_key"
-    printf '  "ssl_mode": "%s",
-' "$db_ssl_mode"
-    printf '  "timeout": "%s",
-' "$db_timeout"
-    printf '  "charset": "%s"
-' "$db_charset"
-    printf '}
-'
-    ;;
-  --eval|*)
-    printf 'DB_ENGINE="%s"
-' "$scheme"
-    printf 'DB_HOST="%s"
-' "$db_host"
-    printf 'DB_PORT=%s
-' "$db_port"
-    printf 'DB_NAME="%s"
-' "$db_name"
-    printf 'DB_USER="%s"
-' "$db_user"
-    printf 'DB_PASSWORD="%s"
-' "$db_pass"
-    printf 'DB_USE_SSL=%d
-' "$db_use_ssl"
-    printf 'DB_SSL_CA="%s"
-' "$db_ssl_ca"
-    printf 'DB_SSL_CERT="%s"
-' "$db_ssl_cert"
-    printf 'DB_SSL_KEY="%s"
-' "$db_ssl_key"
-    printf 'DB_SSL_MODE="%s"
-' "$db_ssl_mode"
-    printf 'DB_TIMEOUT="%s"
-' "$db_timeout"
-    printf 'DB_CHARSET="%s"
-' "$db_charset"
+    printf '{"engine":"%s","host":"%s","port":"%s","user":"%s","pass":"%s","dbname":"%s","query":"%s","use_ssl":%s,"ssl_ca":"%s","ssl_cert":"%s","ssl_key":"%s","ssl_mode":"%s","timeout":"%s","charset":"%s"}\n' \
+      "$engine" "$host" "$port" "$user" "$pass" "$dbname" "$query" "${db_use_ssl:-0}" "$db_ssl_ca" "$db_ssl_cert" "$db_ssl_key" "$db_ssl_mode" "$db_timeout" "$db_charset"
     ;;
 esac
+exit 0

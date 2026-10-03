@@ -43,18 +43,25 @@ printf '[TEST 1] Synthesizing WiX manifest for Open edX...
 "$TEMPLATE_SH" "${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx" --out "$TMP_DIR/openedx.wxs"
 grep -q "Open edX Platform" "$TMP_DIR/openedx.wxs" || exit 1
 grep -q "PROP_DB_TYPE" "$TMP_DIR/openedx.wxs" || exit 1
+grep -q "USER_DB_HOST" "$TMP_DIR/openedx.wxs" || exit 1
+grep -q "USER_DB_NAME" "$TMP_DIR/openedx.wxs" || exit 1
+grep -q "USER_DB_STRATEGY" "$TMP_DIR/openedx.wxs" || exit 1
+grep -q "DatabaseConfigUI" "$TMP_DIR/openedx.wxs" || exit 1
 
 # 2. Test WordPress WiX generation
 printf '[TEST 2] Synthesizing WiX manifest for WordPress...
 '
 "$TEMPLATE_SH" "${LIBSCRIPT_ROOT_DIR}/stacks/cms/wordpress" --out "$TMP_DIR/wordpress.wxs"
 grep -q "WordPress" "$TMP_DIR/wordpress.wxs" || exit 1
+grep -q "USER_DB_HOST" "$TMP_DIR/wordpress.wxs" || exit 1
+grep -q "USER_DB_STRATEGY" "$TMP_DIR/wordpress.wxs" || exit 1
 
 # 3. Test Drupal WiX generation
 printf '[TEST 3] Synthesizing WiX manifest for Drupal...
 '
 "$TEMPLATE_SH" "${LIBSCRIPT_ROOT_DIR}/stacks/cms/drupal" --out "$TMP_DIR/drupal.wxs"
 grep -q "Drupal" "$TMP_DIR/drupal.wxs" || exit 1
+grep -q "USER_DB_STRATEGY" "$TMP_DIR/drupal.wxs" || exit 1
 
 # 4. Test Nextcloud WiX generation
 printf '[TEST 4] Synthesizing WiX manifest for Nextcloud...
@@ -62,5 +69,25 @@ printf '[TEST 4] Synthesizing WiX manifest for Nextcloud...
 "$TEMPLATE_SH" "${LIBSCRIPT_ROOT_DIR}/stacks/collaboration/nextcloud" --out "$TMP_DIR/nextcloud.wxs"
 grep -q "Nextcloud" "$TMP_DIR/nextcloud.wxs" || exit 1
 
-printf '[SUCCESS] All Declarative MSI Synthesis Tests Passed!
-'
+# 5. Test Suite Orchestrator Topology Generation
+printf '[TEST 5] Synthesizing WiX manifest for Suite Orchestrator Topology...\n'
+cat << 'EOF' > "$TMP_DIR/mock_orchestrator.json"
+{
+  "name": "enterprise-suite",
+  "title": "Enterprise Suite Orchestrator",
+  "version": "2.0.0",
+  "topology": "suite_orchestrator",
+  "chained_packages": [
+    {
+      "id": "mysql",
+      "install_condition": "NOT PROP_DB_TYPE"
+    }
+  ]
+}
+EOF
+"$TEMPLATE_SH" "$TMP_DIR/mock_orchestrator.json" --out "$TMP_DIR/orchestrator.wxs"
+grep -q "Enterprise Suite Orchestrator" "$TMP_DIR/orchestrator.wxs" || exit 1
+grep -q "PROP_TOPOLOGY\" Value=\"suite_orchestrator\"" "$TMP_DIR/orchestrator.wxs" || exit 1
+grep -q "EmbeddedChainer" "$TMP_DIR/orchestrator.wxs" || exit 1
+
+printf '[SUCCESS] All Declarative MSI Synthesis Tests Passed!\n'

@@ -23,7 +23,11 @@
     "secondary_color": "#279CEB",
     "dark_color": "#00476E",
     "app_title": "Drupal CMS Platform",
-    "eula_components": ["Drupal Core", "PHP Runtime", "Web Server Ingress"]
+    "eula_components": [
+      "Drupal Core",
+      "PHP Runtime",
+      "Web Server Ingress"
+    ]
   },
   "directories": {
     "app_default": "[ProgramFiles64Folder]Drupal",
@@ -56,5 +60,33 @@
       "icon": "drupal.ico",
       "description": "Administrative command shell for Drupal operations."
     }
-  ]
+  ],
+  "logical_resources": [
+    {
+      "type": "logical_database",
+      "logical_databases": {
+        "db_name": "[PROP_PROVISION_DB_NAME]",
+        "db_user": "[PROP_PROVISION_USER]"
+      }
+    },
+    {
+      "type": "virtual_host",
+      "virtual_hosts": {
+        "server_name": "[DRUPAL_SERVER_NAME]",
+        "upstream_port": 80
+      }
+    },
+    {
+      "type": "runtime_isolation",
+      "runtime_isolation": {
+        "strategy": "python_venv",
+        "base_runtime_ref": "php"
+      }
+    }
+  ],
+  "configuration_parameters": {
+    "db_strategy": "local",
+    "db_host": "127.0.0.1",
+    "db_name": "drupal"
+  }
 }

@@ -193,6 +193,7 @@ cat << EOF_WXS > "$OUT_FILE"
     <Property Id="PROP_VARIANT" Value="${VARIANT}" Secure="yes" />
     <Property Id="PROP_APP_IDENTIFIER" Value="${APP_NAME}" Secure="yes" />
     <Property Id="PROP_TOPOLOGY" Value="${TOPOLOGY}" Secure="yes" />
+    <Property Id="MsiHiddenProperties" Value="PROP_PROVISION_PASSWORD;PROP_MYSQL_ROOT_PASSWORD;PROP_MONGODB_ROOT_PASSWORD;PROP_REDIS_PASSWORD" />
 EOF_WXS
 
 # Inject database contract properties if applicable
@@ -200,14 +201,45 @@ if [ "$HAS_DB" = "true" ]; then
   cat << EOF_DB_PROPS >> "$OUT_FILE"
     <!-- Universal Database Contract Properties -->
     <Property Id="PROP_DB_TYPE" Value="${DB_ENGINE}" Secure="yes" />
-    <Property Id="PROP_DB_HOST" Value="127.0.0.1" Secure="yes" />
-    <Property Id="PROP_DB_PORT" Value="${DB_PORT}" Secure="yes" />
-    <Property Id="PROP_PROVISION_DB_NAME" Value="${DB_SCHEMA}" Secure="yes" />
+    <Property Id="USER_DB_HOST" Value="127.0.0.1" Secure="yes" />
+    <Property Id="USER_DB_PORT" Value="${DB_PORT}" Secure="yes" />
+    <Property Id="USER_DB_NAME" Value="${DB_SCHEMA}" Secure="yes" />
     <Property Id="PROP_PROVISION_USER" Value="${DB_USER}" Secure="yes" />
     <Property Id="PROP_PROVISION_PASSWORD" Value="${APP_NAME}123" Secure="yes" />
+    <Property Id="PROP_MYSQL_ROOT_PASSWORD" Secure="yes" Hidden="yes" />
+    <Property Id="PROP_MONGODB_ROOT_PASSWORD" Secure="yes" Hidden="yes" />
     <Property Id="PROP_PROVISION_CHARSET" Value="utf8mb4" Secure="yes" />
     <Property Id="PROP_PROVISION_COLLATION" Value="utf8mb4_unicode_ci" Secure="yes" />
     <Property Id="PURGE_DATA" Value="0" Secure="yes" />
+    <Property Id="USER_DB_STRATEGY" Value="local" Secure="yes" />
+    <Property Id="INSTALL_MYSQL" Value="1" Secure="yes" />
+
+    <UI Id="DatabaseConfigUI">
+      <Dialog Id="Dlg_DatabaseConfig" Width="370" Height="270" Title="Database Configuration">
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="Database Configuration" />
+        <Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Select your database deployment strategy." />
+        <Control Id="RadioGroup" Type="RadioButtonGroup" X="20" Y="60" Width="330" Height="50" Property="USER_DB_STRATEGY">
+          <RadioButtonGroup Property="USER_DB_STRATEGY">
+            <RadioButton Value="local" X="0" Y="0" Width="320" Height="20" Text="Install Local Database Component" />
+            <RadioButton Value="remote" X="0" Y="25" Width="320" Height="20" Text="Connect to Existing/Remote Database" />
+          </RadioButtonGroup>
+        </Control>
+        <Control Id="Lbl_DbHost" Type="Text" X="20" Y="120" Width="100" Height="15" Text="Database Host:" />
+        <Control Id="Txt_DbHost" Type="Edit" X="120" Y="118" Width="200" Height="18" Property="USER_DB_HOST" />
+        <Control Id="Lbl_DbName" Type="Text" X="20" Y="145" Width="100" Height="15" Text="Database Name:" />
+        <Control Id="Txt_DbName" Type="Edit" X="120" Y="143" Width="200" Height="18" Property="USER_DB_NAME" />
+      </Dialog>
+    </UI>
+
+    <CustomAction Id="SetInstallMySQL" Property="INSTALL_MYSQL" Value="0" />
+    <CustomAction Id="ProvisionLogicalDB" Execute="deferred" Impersonate="no" Return="check" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]bundle\_lib\databases\provision_logical_db.cmd&quot; --host &quot;[USER_DB_HOST]&quot; --port &quot;[USER_DB_PORT]&quot; --db-name &quot;[USER_DB_NAME]&quot;" Directory="INSTALLFOLDER" />
+    <CustomAction Id="RollbackLogicalDB" Execute="rollback" Impersonate="no" Return="ignore" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]bundle\_lib\databases\provision_logical_db.cmd&quot; --rollback" Directory="INSTALLFOLDER" />
+    
+    <InstallExecuteSequence>
+      <Custom Action="SetInstallMySQL" Before="ProvisionLogicalDB">USER_DB_STRATEGY="remote"</Custom>
+      <Custom Action="ProvisionLogicalDB" Before="InstallFinalize">1</Custom>
+      <Custom Action="RollbackLogicalDB" Before="ProvisionLogicalDB">1</Custom>
+    </InstallExecuteSequence>
 EOF_DB_PROPS
 fi
 

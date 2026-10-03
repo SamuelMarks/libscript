@@ -46,7 +46,10 @@
       "default": "wordpress.local"
     },
     "WORDPRESS_LISTEN": {
-      "type": ["integer", "string"],
+      "type": [
+        "integer",
+        "string"
+      ],
       "description": "TCP port on which the web server listens for incoming HTTP requests.",
       "default": 80
     },
@@ -86,22 +89,34 @@
       "default": "128M"
     },
     "WORDPRESS_PHP_MAX_EXECUTION_TIME": {
-      "type": ["integer", "string"],
+      "type": [
+        "integer",
+        "string"
+      ],
       "description": "Maximum script execution timeout in seconds.",
       "default": 300
     },
     "WORDPRESS_PHP_MAX_INPUT_VARS": {
-      "type": ["integer", "string"],
+      "type": [
+        "integer",
+        "string"
+      ],
       "description": "Maximum number of input variables accepted via GET/POST/cookies.",
       "default": 5000
     },
     "WORDPRESS_PHP_OPCACHE_ENABLE": {
-      "type": ["boolean", "string"],
+      "type": [
+        "boolean",
+        "string"
+      ],
       "description": "Whether to enable Zend OPcache bytecode accelerator.",
       "default": true
     },
     "WORDPRESS_REUSE_OPENEDX_DB": {
-      "type": ["boolean", "string"],
+      "type": [
+        "boolean",
+        "string"
+      ],
       "description": "Whether to detect, reuse, and coexist with an existing Open edX MySQL/MariaDB database instance.",
       "default": true
     },
@@ -144,7 +159,10 @@
       "description": "Filesystem path to certificate authority (CA) bundle for TLS database connections."
     },
     "WORDPRESS_DB_SSL_VERIFY": {
-      "type": ["boolean", "string"],
+      "type": [
+        "boolean",
+        "string"
+      ],
       "description": "Whether to strictly verify the database server TLS certificate.",
       "default": true
     },
@@ -154,12 +172,18 @@
       "default": "wp_"
     },
     "WORDPRESS_REVERSE_PROXY_MODE": {
-      "type": ["boolean", "string"],
+      "type": [
+        "boolean",
+        "string"
+      ],
       "description": "Whether to trust reverse-proxy SSL headers (HTTP_X_FORWARDED_PROTO/HOST) to avoid redirect loops.",
       "default": true
     },
     "WORDPRESS_ENABLE_REDIS": {
-      "type": ["boolean", "string"],
+      "type": [
+        "boolean",
+        "string"
+      ],
       "description": "Whether to install and activate Redis Object Cache drop-in for WordPress.",
       "default": false
     },
@@ -169,24 +193,55 @@
       "default": "127.0.0.1"
     },
     "WORDPRESS_REDIS_PORT": {
-      "type": ["integer", "string"],
+      "type": [
+        "integer",
+        "string"
+      ],
       "description": "Redis daemon TCP port for object caching.",
       "default": 6379
     },
     "WORDPRESS_ENABLE_PHPMYADMIN": {
-      "type": ["boolean", "string"],
+      "type": [
+        "boolean",
+        "string"
+      ],
       "description": "Whether to deploy Adminer/phpMyAdmin database management web interface.",
       "default": true
     },
     "WORDPRESS_ENABLE_CRON_OFFLOAD": {
-      "type": ["boolean", "string"],
+      "type": [
+        "boolean",
+        "string"
+      ],
       "description": "Whether to disable web traffic WP-Cron and offload to native host crontab or Task Scheduler.",
       "default": true
     },
     "WORDPRESS_UPDATE_HOSTS_FILE": {
-      "type": ["boolean", "string"],
+      "type": [
+        "boolean",
+        "string"
+      ],
       "description": "Whether to automatically register the virtual hostname in the operating system hosts file.",
       "default": false
+    },
+    "db_strategy": {
+      "type": "string",
+      "enum": [
+        "local",
+        "remote"
+      ],
+      "default": "local"
+    },
+    "db_host": {
+      "type": "string",
+      "default": "127.0.0.1"
+    },
+    "db_name": {
+      "type": "string",
+      "default": "wordpress"
+    },
+    "db_url": {
+      "type": "string"
     }
   }
 }

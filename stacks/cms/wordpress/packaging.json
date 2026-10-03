@@ -23,7 +23,12 @@
     "secondary_color": "#0073AA",
     "dark_color": "#1E1E1E",
     "app_title": "WordPress Platform",
-    "eula_components": ["WordPress Core", "PHP Runtime", "MariaDB Server", "Nginx HTTP Server"]
+    "eula_components": [
+      "WordPress Core",
+      "PHP Runtime",
+      "MariaDB Server",
+      "Nginx HTTP Server"
+    ]
   },
   "branding": {
     "icon": "packaging/assets/wordpress.ico",
@@ -201,5 +206,34 @@
       "optional": true,
       "condition": "INSTALL_CRON=\"1\""
     }
-  ]
+  ],
+  "logical_resources": [
+    {
+      "type": "logical_database",
+      "logical_databases": {
+        "db_name": "[PROP_PROVISION_DB_NAME]",
+        "db_user": "[PROP_PROVISION_USER]",
+        "table_prefix": "[WORDPRESS_TABLE_PREFIX]"
+      }
+    },
+    {
+      "type": "virtual_host",
+      "virtual_hosts": {
+        "server_name": "[WORDPRESS_SERVER_NAME]",
+        "upstream_port": 80
+      }
+    },
+    {
+      "type": "runtime_isolation",
+      "runtime_isolation": {
+        "strategy": "python_venv",
+        "base_runtime_ref": "php"
+      }
+    }
+  ],
+  "configuration_parameters": {
+    "db_strategy": "local",
+    "db_host": "127.0.0.1",
+    "db_name": "wordpress"
+  }
 }

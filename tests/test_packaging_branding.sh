@@ -32,13 +32,6 @@ mkdir -p "$TEST_TMP_DIR"
 
 # ## cleanup
 # Cleans up temporary test artifacts upon exit or preserves them on error.
-cleanup() {
-  if [ $? -eq 0 ]; then
-    rm -rf "$TEST_TMP_DIR"
-  else
-    printf 'Preserving test artifacts in %s for inspection\n' "$TEST_TMP_DIR"
-  fi
-}
 trap cleanup EXIT INT TERM
 
 printf '=== Testing Cross-Platform Installer Branding ===

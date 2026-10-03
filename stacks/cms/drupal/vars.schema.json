@@ -44,6 +44,25 @@
     "DRUPAL_LISTEN": {
       "type": "string",
       "description": "Variable DRUPAL_LISTEN."
+    },
+    "db_strategy": {
+      "type": "string",
+      "enum": [
+        "local",
+        "remote"
+      ],
+      "default": "local"
+    },
+    "db_host": {
+      "type": "string",
+      "default": "127.0.0.1"
+    },
+    "db_name": {
+      "type": "string",
+      "default": "drupal"
+    },
+    "db_url": {
+      "type": "string"
     }
   }
 }

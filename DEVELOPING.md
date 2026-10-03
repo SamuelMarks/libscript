@@ -274,7 +274,34 @@ Under no circumstances should any build script, test runner, CI job, or subagent
 
 ---
 
-## 🧪 Verification & Audit Matrix
+## 🗺️ Configuration State Mappings & Recovery States (Logical Provisioning)
+
+When the MSI embedded chainer (`msi-rs`) orchestrates side-by-side installations using user-provided inputs, it manages state using a defined set of configuration properties and recovery points.
+
+### State Property Mapping
+The following table outlines how user UI inputs map to MSI properties and eventually map to shell/batch script environment variables during Deferred Custom Action execution:
+
+| MSI Property | Config Schema Key | Shell Environment Variable | Purpose |
+|--------------|-------------------|----------------------------|---------|
+| `[USER_DB_STRATEGY]` | `db_strategy` | `USER_DB_STRATEGY` | Identifies whether the database is `local` (installed via component) or `remote` (skipped component). |
+| `[USER_DB_HOST]` | `db_host` | `DB_HOST` / `ODOO_DB_HOST` | Target IP or hostname. Defers to `127.0.0.1` when local. |
+| `[USER_DB_NAME]` | `db_name` | `DB_NAME` / `ODOO_DB_NAME` | Logical separation context (e.g. `odoo_prod`). |
+| `[USER_DB_USER]` | `db_user` | `DB_USER` | Target authentication context. |
+| `[USER_DB_PASS]` | `db_pass` | `DB_PASS` | Target authentication secret (Secure property). |
+
+### Failure & Recovery States
+The embedded chainer executes in phases (Immediate, Deferred, Rollback). Configuration recovery states depend on the component and strategy.
+
+1. **Local DB Failure:** 
+   - **Deferred Phase:** If local database initialization fails (e.g., port conflict, initialization timeout).
+   - **Rollback State:** The rollback custom action triggers `uninstall_generic.cmd`, which attempts to `DROP DATABASE` if it was created during the same transaction. Core binaries are removed by the MSI engine.
+2. **Remote DB Verification Failure:**
+   - **Immediate/Deferred Phase:** If `USER_DB_STRATEGY=remote`, the provisioning script (`provision_logical_db`) connects to the specified remote IP to verify access.
+   - **Recovery State:** If connection fails or times out, the script exits with code `1`. The MSI installer catches this, aborts the application deployment, and leaves the remote database completely untouched (no `DROP DATABASE` on rollback).
+3. **Idempotency Recovery:**
+   - If an installation is interrupted (e.g., system restart), subsequent re-runs will detect existing `.stamp` files or evaluate SQL `IF NOT EXISTS` constructs to safely resume or bypass already provisioned logical configurations.
+
+---
 
 Before submitting changes, execute the repository's automated compliance and audit suites:
 

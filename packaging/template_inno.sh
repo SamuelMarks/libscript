@@ -297,12 +297,8 @@ EOF2
           fi
         fi
         printf '%s\n' "Filename: \"cmd.exe\"; Parameters: \"$run_params\"; Components: $pkg; Flags: runhidden"
-        if [ "$pkg" = "openedx" ]; then
-          printf '%s\n' "Filename: \"cmd.exe\"; Parameters: \"/c \"\"{app}\\stacks\\cms\\openedx\\workers.cmd\"\" start\"; Tasks: workers; Flags: runhidden"
-          printf '%s\n' "Filename: \"cmd.exe\"; Parameters: \"/c \"\"{app}\\stacks\\cms\\openedx\\import_demo.cmd\"\" course\"; Tasks: demo_content; Flags: runhidden"
-          printf '%s\n' "Filename: \"cmd.exe\"; Parameters: \"/c \"\"{app}\\stacks\\cms\\openedx\\mfe.cmd\"\" build all && \"\"{app}\\stacks\\cms\\openedx\\mfe.cmd\"\" deploy all\"; Tasks: mfes; Flags: runhidden"
-          printf '%s\n' "Filename: \"cmd.exe\"; Parameters: \"/c \"\"{app}\\stacks\\cms\\openedx\\healthcheck.cmd\"\"\"; Components: openedx; Flags: runhidden"
-        fi
+        # Note: Hardcoded post-install actions (e.g. for openedx) have been removed.
+        # Future implementations will load post-install actions declaratively from packaging.json
       done
 
       printf '%s\n' ""
@@ -311,8 +307,7 @@ EOF2
       set -- $deps_list
       while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
-        if [ "$pkg" = "openedx" ]; then
-          printf '%s\n' "Filename: \"cmd.exe\"; Parameters: \"/c \"\"{app}\\stacks\\cms\\openedx\\workers.cmd\"\" stop\"; Components: openedx; Flags: runhidden"
-        fi
+        # Note: Hardcoded pre-uninstall actions have been removed.
+        # Future implementations will load uninstall actions declaratively from packaging.json
       done
       exit 0

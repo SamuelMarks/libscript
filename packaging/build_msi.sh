@@ -1250,8 +1250,13 @@ compile_msi() {
     return 1
   fi
 
+  if ! msiinfo suminfo "${OUT_FILE}.msi" >/dev/null 2>&1; then
+    printf '[ERROR] msiinfo structural validation failed. The generated MSI is likely corrupt or the OLE CFB header is malformed.\n' >&2
+    return 1
+  fi
+
   printf '[PASS] Successfully built %s.msin' "${OUT_FILE}"
 }
 
-compile_msi || exit 1
+compile_msi || { exit 1; }
 exit 0

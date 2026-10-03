@@ -168,18 +168,78 @@ if (Test-Path -Path $resolvedTarget -PathType Container) {
         $pkgObj = Get-Content -LiteralPath $pkgJsonPath -Raw | ConvertFrom-Json
         if ($pkgObj.branding -and $pkgObj.branding.bundled_licenses) {
             foreach ($entry in $pkgObj.branding.bundled_licenses) {
-                $comp = $entry.component
-                $title = if ($entry.title) { $entry.title } else { $comp }
-                $spdx = if ($entry.spdx_id) { $entry.spdx_id } else { "MIT" }
-                $licFile = if ($entry.license_file) { $entry.license_file } else { "" }
-                $mandatory = if ($null -ne $entry.mandatory) { [bool]$entry.mandatory } else { $true }
+                if (-not ($items | Where-Object { $_.name -eq $entry.component })) {
+                    $items += [PSCustomObject]@{
+                        name = $entry.component
+                        title = if ($entry.title) { $entry.title } else { $entry.component }
+                        spdx = if ($entry.spdx_id) { $entry.spdx_id } else { "MIT" }
+                        license_file = if ($entry.license_file) { $entry.license_file } else { "" }
+                        mandatory = if ($null -ne $entry.mandatory) { [bool]$entry.mandatory } else { $true }
+                    }
+                }
+            }
+        }
+        if ($pkgObj.chained_packages) {
+            foreach ($chained in $pkgObj.chained_packages) {
+                if ($chained.component) {
+                    $comp = $chained.component
+                    $compMan = Join-Path $libscriptRoot "_lib\$comp\manifest.json"
+                    if (-not (Test-Path $compMan)) {
+                        $compManObj = Get-ChildItem -Path (Join-Path $libscriptRoot "_lib") -Filter "manifest.json" -Recurse | Where-Object { $_.FullName -match "\\$comp\\manifest\.json$" } | Select-Object -First 1
+                        if ($compManObj) { $compMan = $compManObj.FullName }
+                    }
+                    if ($compMan -and (Test-Path $compMan)) {
+                        $manObj = Get-Content -LiteralPath $compMan -Raw | ConvertFrom-Json
+                        $name = $manObj.name
+                        if (-not ($items | Where-Object { $_.name -eq $name })) {
+                            $items += [PSCustomObject]@{
+                                name = $name
+                                title = if ($manObj.title) { $manObj.title } else { $name }
+                                spdx = if ($manObj.license) { $manObj.license } else { "MIT" }
+                                license_file = if ($manObj.license_file) { $manObj.license_file } else { "" }
+                                mandatory = $true
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
-                $items += [PSCustomObject]@{
-                    name = $comp
-                    title = $title
-                    spdx = $spdx
-                    license_file = $licFile
-                    mandatory = $mandatory
+    if (Test-Path $manifestJsonPath) {
+        $manObj = Get-Content -LiteralPath $manifestJsonPath -Raw | ConvertFrom-Json
+        $name = if ($manObj.name) { $manObj.name } else { "app" }
+        if (-not ($items | Where-Object { $_.name -eq $name })) {
+            $items += [PSCustomObject]@{
+                name = $name
+                title = if ($manObj.title) { $manObj.title } elseif ($manObj.name) { $manObj.name } else { "Application" }
+                spdx = if ($manObj.license) { $manObj.license } else { "Proprietary" }
+                license_file = ""
+                mandatory = $true
+            }
+        }
+        if ($manObj.requires) {
+            foreach ($req in $manObj.requires) {
+                $reqMan = Join-Path $libscriptRoot "_lib\$req\manifest.json"
+                if (-not (Test-Path $reqMan)) {
+                    $reqMan = Join-Path $libscriptRoot "_lib\_common\$req\manifest.json"
+                }
+                if (-not (Test-Path $reqMan)) {
+                    $reqManObj = Get-ChildItem -Path (Join-Path $libscriptRoot "_lib") -Filter "manifest.json" -Recurse | Where-Object { $_.FullName -match "\\$req\\manifest\.json$" } | Select-Object -First 1
+                    if ($reqManObj) { $reqMan = $reqManObj.FullName }
+                }
+                if ($reqMan -and (Test-Path $reqMan)) {
+                    $reqObj = Get-Content -LiteralPath $reqMan -Raw | ConvertFrom-Json
+                    $rname = $reqObj.name
+                    if (-not ($items | Where-Object { $_.name -eq $rname })) {
+                        $items += [PSCustomObject]@{
+                            name = $rname
+                            title = if ($reqObj.title) { $reqObj.title } else { $rname }
+                            spdx = if ($reqObj.license) { $reqObj.license } else { "MIT" }
+                            license_file = if ($reqObj.license_file) { $reqObj.license_file } else { "" }
+                            mandatory = $true
+                        }
+                    }
                 }
             }
         }

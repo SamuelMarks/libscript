@@ -45,7 +45,7 @@ fi
 discover_environment() {
   SSH_PORT=""
   # shellcheck disable=SC2009
-  SSH_PORT=$(ps aux | grep -i 'qemu.*windows-11' | grep -v grep | sed -n 's/.*hostfwd=tcp::\([0-9]*\)-:22.*/\1/p' | head -n 1 || true)
+  SSH_PORT=$(ps auxww | grep -i 'qemu.*windows-11' | grep -v grep | sed -n 's/.*hostfwd=tcp::\([0-9]*\)-:22.*/\1/p' | head -n 1 || true)
   if [ -z "${SSH_PORT}" ] && [ -d "${VAGRANT_DIR}" ]; then
     SSH_PORT=$(cd "${VAGRANT_DIR}" && vagrant ssh-config 2>/dev/null | awk '/Port / {print $2; exit}' || true)
   fi
@@ -56,7 +56,7 @@ discover_environment() {
 
   MONITOR_SOCK=""
   # shellcheck disable=SC2009
-  MONITOR_SOCK=$(ps aux | grep -i 'qemu.*windows-11' | grep -v grep | sed -n 's/.*path=\([^,]*qemu_socket\).*/\1/p' | head -n 1 || true)
+  MONITOR_SOCK=$(ps auxww | grep -i 'qemu.*windows-11' | grep -v grep | sed -n 's/.*path=\([^,]*qemu_socket\).*/\1/p' | head -n 1 || true)
   if [ -z "$MONITOR_SOCK" ] || [ ! -S "$MONITOR_SOCK" ]; then
     MONITOR_SOCK=$(find "${HOME}/.vagrant.d/tmp/vagrant-qemu" -name "qemu_socket" 2>/dev/null | head -n 1 || true)
   fi
@@ -111,8 +111,7 @@ capture_screen() {
   _png="${TEMP_DIR}/${_name}.png"
   sleep 1.5
   if [ -n "${MONITOR_SOCK}" ] && [ -S "${MONITOR_SOCK}" ]; then
-    python3 -c "import socket, time, sys; s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM); s.settimeout(3.0); s.connect(sys.argv[1]); s.sendall(f'screendump {sys.argv[2]}
-'.encode()); time.sleep(0.3); s.close()" "${MONITOR_SOCK}" "${_ppm}" >/dev/null 2>&1 || true
+    python3 -c "import socket, time, sys; s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM); s.settimeout(3.0); s.connect(sys.argv[1]); s.sendall(f'screendump {sys.argv[2]}\n'.encode()); time.sleep(0.3); s.close()" "${MONITOR_SOCK}" "${_ppm}" >/dev/null 2>&1 || true
     if command -v sips >/dev/null 2>&1; then
       sips -s format png "$_ppm" --out "$_png" >/dev/null 2>&1
     elif command -v magick >/dev/null 2>&1; then
@@ -140,7 +139,7 @@ vm_action() {
   case "$_act" in
     *"Setup Complete"*|*"Finish"*) _limit=180 ;;
   esac
-  vm_run "Set-Content -Path 'C:/libscript/target_btn.txt' -Value '$_act'; Start-ScheduledTask -TaskName 'ClickGui'; \$sw = [System.Diagnostics.Stopwatch]::StartNew(); while ((Get-ScheduledTask -TaskName 'ClickGui').State -eq 'Running' -and \$sw.Elapsed.TotalSeconds -lt ${_limit}) { Start-Sleep -Milliseconds 250 }"
+  vm_run "Set-Content -Path 'C:/libscript/target_btn.txt' -Value '$_act'; Start-ScheduledTask -TaskName 'ClickGui'; \$sw = [System.Diagnostics.Stopwatch]::StartNew(); while ((Get-ScheduledTask -TaskName 'ClickGui').State -eq 'Running' -and \$sw.Elapsed.TotalSeconds -lt 2) { Start-Sleep -Milliseconds 250 }"
   sleep 0.8
 }
 
@@ -165,12 +164,6 @@ vm_check() {
   sleep 1
 }
 
-# ## vm_uncheck
-# Helper to uncheck a checkbox in Session 1.
-vm_uncheck() {
-  vm_action "UNCHECK:$1"
-  sleep 1
-}
 
 # ## vm_set_edit
 # Helper to set text of an edit control in Session 1.
@@ -192,8 +185,8 @@ vm_wait_dialog() {
 # ## vm_launch_msi
 # Helper to launch MSI in Session 1 via LaunchMsi scheduled task.
 vm_launch_msi() {
-  _msi_path="$1"
-  vm_run "\$principal = New-ScheduledTaskPrincipal -UserId 'vagrant' -LogonType Interactive; \$aLaunch = New-ScheduledTaskAction -Execute 'msiexec.exe' -Argument '/i ${_msi_path}'; Register-ScheduledTask -TaskName 'LaunchMsi' -Action \$aLaunch -Principal \$principal -Force > \$null; Start-ScheduledTask -TaskName 'LaunchMsi'; Start-Sleep -Seconds 4"
+  _msi_path="$(echo "$1" | sed 's|/|\\|g')"
+  vm_run "\$principal = New-ScheduledTaskPrincipal -UserId 'vagrant' -LogonType Interactive -RunLevel Highest; \$aLaunch = New-ScheduledTaskAction -Execute 'msiexec.exe' -Argument \"/i \`\"C:\libscript\packaging\\\\${_msi_path}\`\"\"; Register-ScheduledTask -TaskName 'LaunchMsi' -Action \$aLaunch -Principal \$principal -Force > \$null; Start-ScheduledTask -TaskName 'LaunchMsi'; Start-Sleep -Seconds 4"
 }
 
 # ## launch_browser_url
@@ -264,7 +257,7 @@ sync_guest_environment() {
 
   # Configure scheduled tasks on guest
   # shellcheck disable=SC2016
-  vm_run '$principal = New-ScheduledTaskPrincipal -UserId "vagrant" -LogonType Interactive; $settings = New-ScheduledTaskSettingsSet -MultipleInstances Parallel -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries; $aClick = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File C:/libscript/packaging/click_button.ps1"; Register-ScheduledTask -TaskName "ClickGui" -Action $aClick -Principal $principal -Settings $settings -Force > $null; $aRun = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File C:/libscript/run_gui.ps1"; Register-ScheduledTask -TaskName "RunGui" -Action $aRun -Principal $principal -Force > $null'
+  vm_run '$principal = New-ScheduledTaskPrincipal -UserId "vagrant" -LogonType Interactive -RunLevel Highest; $settings = New-ScheduledTaskSettingsSet -MultipleInstances Parallel -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries; $aClick = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File C:/libscript/packaging/click_button.ps1"; Register-ScheduledTask -TaskName "ClickGui" -Action $aClick -Principal $principal -Settings $settings -Force > $null; $aRun = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File C:/libscript/run_gui.ps1"; Register-ScheduledTask -TaskName "RunGui" -Action $aRun -Principal $principal -Force > $null'
 
   # Ensure broken Edge shortcuts are cleaned from desktop
   vm_run 'Remove-Item "C:/Users/Public/Desktop/Microsoft Edge.lnk" -Force -ErrorAction SilentlyContinue; Remove-Item "C:/Users/vagrant/Desktop/Microsoft Edge.lnk" -Force -ErrorAction SilentlyContinue'

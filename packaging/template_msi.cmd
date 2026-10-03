@@ -82,6 +82,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "  ('    <Package Id=\"*\" InstallerVersion=\"405\" Compressed=\"yes\" InstallScope=\"perMachine\" Description=\"' + $title + ' Installer\" />')," ^
     "  '    <MajorUpgrade DowngradeErrorMessage=\"A newer version is already installed.\" Schedule=\"afterInstallInitialize\" />'," ^
     "  '    <Media Id=\"1\" Cabinet=\"payload.cab\" EmbedCab=\"yes\" />'," ^
+    "  ('    <Property Id=\"PROP_VARIANT\" Value=\"' + $variant + '\" Secure=\"yes\" />')," ^
+    "  ('    <Property Id=\"PROP_APP_IDENTIFIER\" Value=\"' + $name + '\" Secure=\"yes\" />')," ^
+    "  '    <Property Id=\"MsiHiddenProperties\" Value=\"PROP_PROVISION_PASSWORD;PROP_MYSQL_ROOT_PASSWORD;PROP_MONGODB_ROOT_PASSWORD;PROP_REDIS_PASSWORD\" />'," ^
     "  '    <Directory Id=\"TARGETDIR\" Name=\"SourceDir\">'," ^
     "  '      <Directory Id=\"ProgramFiles64Folder\">'," ^
     "  ('        <Directory Id=\"INSTALLFOLDER\" Name=\"' + $name + '\">')," ^
@@ -101,7 +104,21 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "  '    </DirectoryRef>'" ^
     ");" ^
     "if ($hasChainer) {" ^
-    "  $lines += '    <UI>';" ^
+    "  $lines += '    <UI Id=\"DatabaseConfigUI\">';" ^
+    "  $lines += '      <Dialog Id=\"Dlg_DatabaseConfig\" Width=\"370\" Height=\"270\" Title=\"Database Configuration\">';" ^
+    "  $lines += '        <Control Id=\"Title\" Type=\"Text\" X=\"15\" Y=\"6\" Width=\"260\" Height=\"15\" Transparent=\"yes\" NoPrefix=\"yes\" Text=\"Database Configuration\" />';" ^
+    "  $lines += '        <Control Id=\"Description\" Type=\"Text\" X=\"25\" Y=\"22\" Width=\"260\" Height=\"20\" Transparent=\"yes\" NoPrefix=\"yes\" Text=\"Select your database deployment strategy.\" />';" ^
+    "  $lines += '        <Control Id=\"RadioGroup\" Type=\"RadioButtonGroup\" X=\"20\" Y=\"60\" Width=\"330\" Height=\"50\" Property=\"USER_DB_STRATEGY\">';" ^
+    "  $lines += '          <RadioButtonGroup Property=\"USER_DB_STRATEGY\">';" ^
+    "  $lines += '            <RadioButton Value=\"local\" X=\"0\" Y=\"0\" Width=\"320\" Height=\"20\" Text=\"Install Local Database Component\" />';" ^
+    "  $lines += '            <RadioButton Value=\"remote\" X=\"0\" Y=\"25\" Width=\"320\" Height=\"20\" Text=\"Connect to Existing/Remote Database\" />';" ^
+    "  $lines += '          </RadioButtonGroup>';" ^
+    "  $lines += '        </Control>';" ^
+    "  $lines += '        <Control Id=\"Lbl_DbHost\" Type=\"Text\" X=\"20\" Y=\"120\" Width=\"100\" Height=\"15\" Text=\"Database Host:\" />';" ^
+    "  $lines += '        <Control Id=\"Txt_DbHost\" Type=\"Edit\" X=\"120\" Y=\"118\" Width=\"200\" Height=\"18\" Property=\"USER_DB_HOST\" />';" ^
+    "  $lines += '        <Control Id=\"Lbl_DbName\" Type=\"Text\" X=\"20\" Y=\"145\" Width=\"100\" Height=\"15\" Text=\"Database Name:\" />';" ^
+    "  $lines += '        <Control Id=\"Txt_DbName\" Type=\"Edit\" X=\"120\" Y=\"143\" Width=\"200\" Height=\"18\" Property=\"USER_DB_NAME\" />';" ^
+    "  $lines += '      </Dialog>';" ^
     "  $lines += '      <EmbeddedChainer Id=\"LibScriptChainer\" SourceFile=\"binary\libscript_chainer.dll\" />';" ^
     "  $lines += '    </UI>';" ^
     "}" ^

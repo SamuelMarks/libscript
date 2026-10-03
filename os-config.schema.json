@@ -324,6 +324,32 @@
         }
       }
     },
+    "web_servers": {
+      "type": "object",
+      "description": "Web server and reverse proxy OS-specific path and command configurations",
+      "properties": {
+        "apache2": {
+          "type": "object",
+          "description": "Apache httpd configurations",
+          "properties": {
+            "conf_dir": { "type": "string", "description": "Directory for virtual host configuration files (e.g., sites-available, conf/extra)" },
+            "test_cmd_template": { "type": "string", "description": "Command to test syntax (e.g., httpd -t)" },
+            "reload_cmd_template": { "type": "string", "description": "Command to gracefully reload the server (e.g., httpd -k restart)" },
+            "main_conf_path": { "type": "string", "description": "Path to the main configuration file (e.g., /etc/apache2/apache2.conf)" }
+          }
+        },
+        "nginx": {
+          "type": "object",
+          "description": "Nginx configurations",
+          "properties": {
+            "conf_dir": { "type": "string", "description": "Directory for virtual host configuration files (e.g., conf.d)" },
+            "test_cmd_template": { "type": "string", "description": "Command to test syntax (e.g., nginx -t)" },
+            "reload_cmd_template": { "type": "string", "description": "Command to gracefully reload the server (e.g., nginx -s reload)" },
+            "main_conf_path": { "type": "string", "description": "Path to the main configuration file (e.g., /etc/nginx/nginx.conf)" }
+          }
+        }
+      }
+    },
     "offline": {
       "type": "object",
       "description": "Air-gapped execution and pre-hydrated cache controls",

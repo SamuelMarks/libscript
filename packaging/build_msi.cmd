@@ -2,12 +2,12 @@
 :: # build_msi.cmd
 ::
 :: ## Overview
-:: ## Overview
 :: Generic library engine for generating WiX Windows Installer (.msi) packages on Windows.
 :: Synthesizes WiX manifests from packaging.json and vars.schema.json, supporting
 :: Simple and Advanced setup modes, DBaaS offloading, custom directories,
 :: runtime auto-detection, and repository fork selection.
 ::
+:: ## Usage
 :: call packaging\build_msi.cmd [TARGET_DIR] [OPTIONS]
 
 setlocal EnableDelayedExpansion
@@ -1069,6 +1069,12 @@ if errorlevel 1 (
 light.exe -nologo -sval -ext WixUIExtension -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj" "%OUT_FILE%_payload.wixobj"
 if errorlevel 1 (
     echo [ERROR] msi-rs light linker failed >&2
+    goto compile_err
+)
+
+msiinfo suminfo "%OUT_FILE%.msi" >nul 2>&1
+if errorlevel 1 (
+    echo [ERROR] msiinfo structural validation failed. The generated MSI is likely corrupt or the OLE CFB header is malformed. >&2
     goto compile_err
 )
 

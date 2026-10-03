@@ -215,6 +215,33 @@ for /f "tokens=1,2,3,4 delims=." %%a in ("%VERSION%") do (
     if not "%DEFAULT_PORT%"=="" echo     ^<Property Id="PORT" Value="%DEFAULT_PORT%" /^>
     if not "%SERVICE_NAME%"=="" echo     ^<Property Id="SERVICE_NAME" Value="%SERVICE_NAME%" /^>
     echo.
+    echo     ^<Property Id="USER_PROXY_CHOICE" Value="nginx" /^>
+    echo     ^<Property Id="USER_VHOST_DOMAIN" Value="localhost" /^>
+    echo.
+    echo     ^<UI Id="WixUI_ProxyDialog"^>
+    echo       ^<Dialog Id="ProxySelectionDlg" Width="370" Height="270" Title="Select Reverse Proxy"^>
+    echo         ^<Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="!(loc.WixUINext)"^>
+    echo           ^<Publish Event="NewDialog" Value="VerifyReadyDlg"^>1^</Publish^>
+    echo         ^</Control^>
+    echo         ^<Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="!(loc.WixUIBack)"^>
+    echo           ^<Publish Event="NewDialog" Value="WelcomeDlg"^>1^</Publish^>
+    echo         ^</Control^>
+    echo         ^<Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="!(loc.WixUICancel)"^>
+    echo           ^<Publish Event="SpawnDialog" Value="CancelDlg"^>1^</Publish^>
+    echo         ^</Control^>
+    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Title}Reverse Proxy Configuration" /^>
+    echo         ^<Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes" Text="Select the reverse proxy engine for multiplexing." /^>
+    echo         ^<Control Id="ProxyRadioGroup" Type="RadioButtonGroup" X="20" Y="60" Width="330" Height="80" Property="USER_PROXY_CHOICE" /^>
+    echo         ^<Control Id="DomainLabel" Type="Text" X="20" Y="160" Width="100" Height="15" Text="Virtual Host Domain:" /^>
+    echo         ^<Control Id="DomainEdit" Type="Edit" X="130" Y="157" Width="200" Height="18" Property="USER_VHOST_DOMAIN" /^>
+    echo       ^</Dialog^>
+    echo       ^<RadioButtonGroup Property="USER_PROXY_CHOICE"^>
+    echo         ^<RadioButton Value="nginx" X="0" Y="0" Width="300" Height="17" Text="Nginx (Default)" /^>
+    echo         ^<RadioButton Value="apache2" X="0" Y="20" Width="300" Height="17" Text="Apache httpd" /^>
+    echo         ^<RadioButton Value="none" X="0" Y="40" Width="300" Height="17" Text="Existing / External (Skip Provisioning)" /^>
+    echo       ^</RadioButtonGroup^>
+    echo     ^</UI^>
+    echo.
     echo     ^<Directory Id="TARGETDIR" Name="SourceDir"^>
     echo       ^<Directory Id="ProgramFiles64Folder"^>
     echo         ^<Directory Id="LibScriptRootFolder" Name="LibScript"^>
@@ -298,6 +325,33 @@ if not "%SERVICE_NAME%"=="" (
 
 (
     echo   ^</Product^>
+    
+    echo   ^<Fragment^>
+    echo     ^<CustomAction Id="CA_ProvisionVhost"
+    echo                   Directory="INSTALLFOLDER"
+    echo                   ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]bin\provision_vhost_abstract.cmd&quot; --app-id &quot;%COMPONENT%&quot; --server-name &quot;[USER_VHOST_DOMAIN]&quot; --proxy-engine &quot;[USER_PROXY_CHOICE]&quot; --conf-file &quot;[CommonAppDataFolder]LibScript\ReverseProxy\conf.d\%COMPONENT%.conf&quot;"
+    echo                   Execute="deferred"
+    echo                   Return="check"
+    echo                   Impersonate="no" /^>
+    echo     ^<CustomAction Id="CA_RollbackVhost"
+    echo                   Directory="INSTALLFOLDER"
+    echo                   ExeCommand="cmd.exe /c &quot;if exist &quot;[CommonAppDataFolder]LibScript\ReverseProxy\conf.d\%COMPONENT%.conf&quot; del /f /q &quot;[CommonAppDataFolder]LibScript\ReverseProxy\conf.d\%COMPONENT%.conf&quot;&quot;"
+    echo                   Execute="rollback"
+    echo                   Return="ignore"
+    echo                   Impersonate="no" /^>
+    echo     ^<CustomAction Id="CA_UninstallVhost"
+    echo                   Directory="INSTALLFOLDER"
+    echo                   ExeCommand="cmd.exe /c &quot;if exist &quot;[CommonAppDataFolder]LibScript\ReverseProxy\conf.d\%COMPONENT%.conf&quot; del /f /q &quot;[CommonAppDataFolder]LibScript\ReverseProxy\conf.d\%COMPONENT%.conf&quot;&quot;"
+    echo                   Execute="deferred"
+    echo                   Return="ignore"
+    echo                   Impersonate="no" /^>
+    echo     ^<InstallExecuteSequence^>
+    echo       ^<Custom Action="CA_RollbackVhost" Before="CA_ProvisionVhost"^>NOT Installed AND USER_PROXY_CHOICE ^&lt;^&gt; "none"^</Custom^>
+    echo       ^<Custom Action="CA_ProvisionVhost" Before="InstallFinalize"^>NOT Installed AND USER_PROXY_CHOICE ^&lt;^&gt; "none"^</Custom^>
+    echo       ^<Custom Action="CA_UninstallVhost" Before="RemoveFiles"^>REMOVE="ALL"^</Custom^>
+    echo     ^</InstallExecuteSequence^>
+    echo   ^</Fragment^>
+
     echo ^</Wix^>
 ) >> "%OUT_FILE%"
 

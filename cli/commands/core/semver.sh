@@ -58,4 +58,3 @@ fi
     "<=") [ "$res" -le 0 ] && exit 0 || exit 1 ;;
     *) printf '%s\n' "Unknown operator: $op" >&2; exit 1 ;;
   esac
-fi

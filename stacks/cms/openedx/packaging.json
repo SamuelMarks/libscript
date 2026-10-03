@@ -3,7 +3,7 @@
   "name": "openedx",
   "title": "Open edX Platform",
   "version": "22.1.0",
-  "publisher": "The Axim Collaborative & LibScript Contributors",
+  "publisher": "libscript packager (Open edX copyright holder)",
   "upgrade_code": "B8C8E64E-9B5A-4B7C-A5D8-0F18B9918239",
   "topology": "suite_orchestrator",
   "database_contract": {
@@ -36,21 +36,27 @@
       "component": "_lib/databases/mysql",
       "upgrade_code": "E0F45901-83B4-4B21-9B5A-01D38FE81001",
       "install_condition": "INSTALL_MYSQL=\"1\"",
-      "property_forwarding": { "PROP_MYSQL_PORT": "PORT" }
+      "property_forwarding": {
+        "PROP_MYSQL_PORT": "PORT"
+      }
     },
     {
       "id": "redis",
       "component": "_lib/caches/redis",
       "upgrade_code": "E0F45901-83B4-4B21-9B5A-01D38FE81002",
       "install_condition": "INSTALL_REDIS=\"1\"",
-      "property_forwarding": { "PROP_REDIS_PORT": "PORT" }
+      "property_forwarding": {
+        "PROP_REDIS_PORT": "PORT"
+      }
     },
     {
       "id": "mongodb",
       "component": "_lib/databases/mongodb",
       "upgrade_code": "E0F45901-83B4-4B21-9B5A-01D38FE81003",
       "install_condition": "INSTALL_MONGODB=\"1\"",
-      "property_forwarding": { "PROP_MONGODB_PORT": "PORT" }
+      "property_forwarding": {
+        "PROP_MONGODB_PORT": "PORT"
+      }
     }
   ],
   "branding": {
@@ -169,9 +175,18 @@
     "default_url": "https://github.com/openedx/openedx-platform.git",
     "default_branch": "release/verawood.1",
     "presets": [
-      { "label": "Stable (Verawood Release)", "value": "release/verawood.1" },
-      { "label": "Tracking Branch (release/verawood)", "value": "release/verawood" },
-      { "label": "Development (master)", "value": "master" }
+      {
+        "label": "Stable (Verawood Release)",
+        "value": "release/verawood.1"
+      },
+      {
+        "label": "Tracking Branch (release/verawood)",
+        "value": "release/verawood"
+      },
+      {
+        "label": "Development (master)",
+        "value": "master"
+      }
     ],
     "supports_auth_token": true
   },
@@ -284,5 +299,33 @@
       "optional": true,
       "condition": "IMPORT_DEMO_CONTENT=\"1\""
     }
-  ]
+  ],
+  "logical_resources": [
+    {
+      "type": "logical_database",
+      "logical_databases": {
+        "db_name": "[PROP_PROVISION_DB_NAME]",
+        "db_user": "[PROP_PROVISION_USER]"
+      }
+    },
+    {
+      "type": "virtual_host",
+      "virtual_hosts": {
+        "server_name": "[PROP_LMS_HOST]",
+        "upstream_port": 8000
+      }
+    },
+    {
+      "type": "runtime_isolation",
+      "runtime_isolation": {
+        "strategy": "python_venv",
+        "base_runtime_ref": "python"
+      }
+    }
+  ],
+  "configuration_parameters": {
+    "db_strategy": "local",
+    "db_host": "127.0.0.1",
+    "db_name": "openedx"
+  }
 }

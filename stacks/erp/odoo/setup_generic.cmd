@@ -10,14 +10,25 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
+:parse_args
+if "%~1"=="" goto run
+if /i "%~1"=="--skip-deps" (
+    set "LIBSCRIPT_SKIP_SYSTEM_DEPS=1"
+    shift
+    goto parse_args
+)
+shift
+goto parse_args
+
+:run
 if exist "%~dp0setup.cmd" (
-    call "%~dp0setup.cmd" %*
+    call "%~dp0setup.cmd"
     exit /b %ERRORLEVEL%
 )
 
 where powershell >nul 2>&1
 if %ERRORLEVEL% EQU 0 (
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup.ps1" %*
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup.ps1"
     exit /b %ERRORLEVEL%
 )
 

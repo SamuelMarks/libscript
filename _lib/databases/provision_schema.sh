@@ -1,27 +1,13 @@
 #!/bin/sh
 # ## Overview
-# Universal multi-tenant database schema and credential provisioner.
-# Idempotently creates isolated schemas/databases and scoped least-privilege user
-# credentials across MySQL, MariaDB, PostgreSQL, MongoDB, and SQLite.
+# Idempotently provisions a multi-tenant database schema and least-privilege user account.
+# Supports MySQL/MariaDB, PostgreSQL, MongoDB, and SQLite.
 #
 # ## Usage
-#   ./_lib/databases/provision_schema.sh [OPTIONS]
-#
-# ## Options
-#   --engine <type>          Database engine (mysql, mariadb, postgres, mongodb, sqlite)
-#   --host <host>            Server hostname (default: 127.0.0.1)
-#   --port <port>            Server TCP port (default based on engine)
-#   --admin-user <user>      Administrative username (e.g. root or postgres)
-#   --admin-pass <pass>      Administrative password
-#   --schema <name>          Tenant schema/database name to create
-#   --user <user>            Tenant application username to create
-#   --password <pass>        Tenant application password to assign
-#   --charset <charset>      Character set (default: utf8mb4)
-#   --collation <collation>  Collation sequence (default: utf8mb4_unicode_ci)
-#
-# ## Exit Codes
-#   0 - Provisioning succeeded or already in desired state (idempotent)
-#   1 - Provisioning failed
+#   ./provision_schema.sh --engine <engine> --host <host> --port <port> \
+#     --admin-user <user> --admin-pass <pass> \
+#     --schema <name> --user <tenant> --password <tenant_pass> \
+#     [--charset <charset>] [--collation <collation>]
 
 set -feu
 
@@ -32,205 +18,105 @@ elif [ "${BASH_SOURCE-}" ]; then
 else
   THIS_FILE="${0}"
 fi
-
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
-ENGINE="mysql"
-HOST="127.0.0.1"
-PORT=""
-ADMIN_USER=""
-ADMIN_PASS=""
-SCHEMA_NAME=""
-APP_USER=""
-APP_PASS=""
-CHARSET="utf8mb4"
-COLLATION="utf8mb4_unicode_ci"
+engine=""
+host="127.0.0.1"
+port=""
+admin_user=""
+admin_pass=""
+schema_name=""
+tenant_user=""
+tenant_pass=""
+charset="utf8mb4"
+collation="utf8mb4_unicode_ci"
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --engine)
-      ENGINE="$2"
-      shift 2
-      ;;
-    --host)
-      HOST="$2"
-      shift 2
-      ;;
-    --port)
-      PORT="$2"
-      shift 2
-      ;;
-    --admin-user)
-      ADMIN_USER="$2"
-      shift 2
-      ;;
-    --admin-pass)
-      ADMIN_PASS="$2"
-      shift 2
-      ;;
-    --schema)
-      SCHEMA_NAME="$2"
-      shift 2
-      ;;
-    --user)
-      APP_USER="$2"
-      shift 2
-      ;;
-    --password)
-      APP_PASS="$2"
-      shift 2
-      ;;
-    --charset)
-      CHARSET="$2"
-      shift 2
-      ;;
-    --collation)
-      COLLATION="$2"
-      shift 2
-      ;;
-    *)
-      printf '[ERROR] Unknown parameter: %s
-' "$1" >&2
-      exit 1
-      ;;
+    --engine) engine="$2"; shift 2 ;;
+    --host) host="$2"; shift 2 ;;
+    --port) port="$2"; shift 2 ;;
+    --admin-user) admin_user="$2"; shift 2 ;;
+    --admin-pass) admin_pass="$2"; shift 2 ;;
+    --schema) schema_name="$2"; shift 2 ;;
+    --user) tenant_user="$2"; shift 2 ;;
+    --password) tenant_pass="$2"; shift 2 ;;
+    --charset) charset="$2"; shift 2 ;;
+    --collation) collation="$2"; shift 2 ;;
+    *) shift ;;
   esac
 done
 
-if [ -z "$SCHEMA_NAME" ]; then
-  printf '[ERROR] --schema name must be provided
-' >&2
+if [ -z "$engine" ] || [ -z "$schema_name" ] || [ -z "$tenant_user" ] || [ -z "$tenant_pass" ]; then
+  printf 'Error: Missing required arguments.\n' >&2
   exit 1
 fi
 
-case "$ENGINE" in
+case "$engine" in
   mysql|mariadb)
-    : "${PORT:=3306}"
-    : "${ADMIN_USER:=root}"
-    CLIENT_BIN="mysql"
-    command -v mariadb >/dev/null 2>&1 && CLIENT_BIN="mariadb"
-
-    if ! command -v "$CLIENT_BIN" >/dev/null 2>&1; then
-      printf '[WARN] Client %s not found in PATH; attempting direct script if available
-' "$CLIENT_BIN"
-    fi
-
-    AUTH_ARGS="-h $HOST -P $PORT -u $ADMIN_USER"
-    if [ -n "$ADMIN_PASS" ]; then
-      AUTH_ARGS="$AUTH_ARGS -p$ADMIN_PASS"
-    fi
-
-    # 1. Create Schema idempotently
-    printf '[INFO] Provisioning %s database `%s` on %s:%s...
-' "$ENGINE" "$SCHEMA_NAME" "$HOST" "$PORT"
-    $CLIENT_BIN $AUTH_ARGS -e "CREATE DATABASE IF NOT EXISTS \`$SCHEMA_NAME\` DEFAULT CHARACTER SET $CHARSET COLLATE $COLLATION;"
-
-    # 2. Provision Tenant User if specified
-    if [ -n "$APP_USER" ]; then
-      printf '[INFO] Configuring tenant user `%s` with least privilege on `%s`...
-' "$APP_USER" "$SCHEMA_NAME"
-      if [ -n "$APP_PASS" ]; then
-        $CLIENT_BIN $AUTH_ARGS -e "CREATE USER IF NOT EXISTS '$APP_USER'@'localhost' IDENTIFIED BY '$APP_PASS';"
-        $CLIENT_BIN $AUTH_ARGS -e "ALTER USER '$APP_USER'@'localhost' IDENTIFIED BY '$APP_PASS';"
-        $CLIENT_BIN $AUTH_ARGS -e "CREATE USER IF NOT EXISTS '$APP_USER'@'127.0.0.1' IDENTIFIED BY '$APP_PASS';"
-        $CLIENT_BIN $AUTH_ARGS -e "ALTER USER '$APP_USER'@'127.0.0.1' IDENTIFIED BY '$APP_PASS';"
-        $CLIENT_BIN $AUTH_ARGS -e "CREATE USER IF NOT EXISTS '$APP_USER'@'%' IDENTIFIED BY '$APP_PASS';"
-        $CLIENT_BIN $AUTH_ARGS -e "ALTER USER '$APP_USER'@'%' IDENTIFIED BY '$APP_PASS';"
-      else
-        $CLIENT_BIN $AUTH_ARGS -e "CREATE USER IF NOT EXISTS '$APP_USER'@'localhost';"
-        $CLIENT_BIN $AUTH_ARGS -e "CREATE USER IF NOT EXISTS '$APP_USER'@'127.0.0.1';"
-        $CLIENT_BIN $AUTH_ARGS -e "CREATE USER IF NOT EXISTS '$APP_USER'@'%';"
-      fi
-      $CLIENT_BIN $AUTH_ARGS -e "GRANT ALL PRIVILEGES ON \`$SCHEMA_NAME\`.* TO '$APP_USER'@'localhost';"
-      $CLIENT_BIN $AUTH_ARGS -e "GRANT ALL PRIVILEGES ON \`$SCHEMA_NAME\`.* TO '$APP_USER'@'127.0.0.1';"
-      $CLIENT_BIN $AUTH_ARGS -e "GRANT ALL PRIVILEGES ON \`$SCHEMA_NAME\`.* TO '$APP_USER'@'%';"
-      $CLIENT_BIN $AUTH_ARGS -e "FLUSH PRIVILEGES;"
+    [ -z "$port" ] && port="3306"
+    [ -z "$admin_user" ] && admin_user="root"
+    sql="CREATE DATABASE IF NOT EXISTS \`${schema_name}\` DEFAULT CHARACTER SET ${charset} COLLATE ${collation};
+         CREATE USER IF NOT EXISTS '${tenant_user}'@'localhost' IDENTIFIED BY '${tenant_pass}';
+         CREATE USER IF NOT EXISTS '${tenant_user}'@'127.0.0.1' IDENTIFIED BY '${tenant_pass}';
+         CREATE USER IF NOT EXISTS '${tenant_user}'@'%' IDENTIFIED BY '${tenant_pass}';
+         GRANT ALL PRIVILEGES ON \`${schema_name}\`.* TO '${tenant_user}'@'localhost';
+         GRANT ALL PRIVILEGES ON \`${schema_name}\`.* TO '${tenant_user}'@'127.0.0.1';
+         GRANT ALL PRIVILEGES ON \`${schema_name}\`.* TO '${tenant_user}'@'%';
+         FLUSH PRIVILEGES;"
+    if [ -n "$admin_pass" ]; then
+      mysql -h "$host" -P "$port" -u "$admin_user" -p"$admin_pass" -e "$sql"
+    else
+      mysql -h "$host" -P "$port" -u "$admin_user" -e "$sql"
     fi
     ;;
-
   postgres|postgresql)
-    : "${PORT:=5432}"
-    : "${ADMIN_USER:=postgres}"
-    CLIENT_BIN="psql"
-    
-    export PGPASSWORD="$ADMIN_PASS"
-    export PGHOST="$HOST"
-    export PGPORT="$PORT"
-    export PGUSER="$ADMIN_USER"
-
-    # 1. Create Schema idempotently
-    printf '[INFO] Provisioning PostgreSQL database `%s` on %s:%s...
-' "$SCHEMA_NAME" "$HOST" "$PORT"
-    _exists=$($CLIENT_BIN -tAc "SELECT 1 FROM pg_database WHERE datname = '$SCHEMA_NAME';" || true)
-    if [ "$_exists" != "1" ]; then
-      $CLIENT_BIN -c "CREATE DATABASE \"$SCHEMA_NAME\";"
+    [ -z "$port" ] && port="5432"
+    [ -z "$admin_user" ] && admin_user="postgres"
+    export PGPASSWORD="$admin_pass"
+    # Idempotent DB creation
+    if ! psql -h "$host" -p "$port" -U "$admin_user" -tAc "SELECT 1 FROM pg_database WHERE datname='${schema_name}'" | grep -q 1; then
+      psql -h "$host" -p "$port" -U "$admin_user" -c "CREATE DATABASE \"${schema_name}\";"
     fi
-
-    # 2. Provision Tenant User if specified
-    if [ -n "$APP_USER" ]; then
-      printf '[INFO] Configuring PostgreSQL tenant user `%s` on `%s`...
-' "$APP_USER" "$SCHEMA_NAME"
-      _user_exists=$($CLIENT_BIN -tAc "SELECT 1 FROM pg_roles WHERE rolname = '$APP_USER';" || true)
-      if [ "$_user_exists" != "1" ]; then
-        if [ -n "$APP_PASS" ]; then
-          $CLIENT_BIN -c "CREATE USER \"$APP_USER\" WITH ENCRYPTED PASSWORD '$APP_PASS';"
-        else
-          $CLIENT_BIN -c "CREATE USER \"$APP_USER\";"
-        fi
-      elif [ -n "$APP_PASS" ]; then
-        $CLIENT_BIN -c "ALTER USER \"$APP_USER\" WITH ENCRYPTED PASSWORD '$APP_PASS';"
-      fi
-      $CLIENT_BIN -c "GRANT ALL PRIVILEGES ON DATABASE \"$SCHEMA_NAME\" TO \"$APP_USER\";"
+    # Idempotent Role creation
+    if ! psql -h "$host" -p "$port" -U "$admin_user" -tAc "SELECT 1 FROM pg_roles WHERE rolname='${tenant_user}'" | grep -q 1; then
+      psql -h "$host" -p "$port" -U "$admin_user" -c "CREATE USER \"${tenant_user}\" WITH ENCRYPTED PASSWORD '${tenant_pass}';"
     fi
+    psql -h "$host" -p "$port" -U "$admin_user" -c "GRANT ALL PRIVILEGES ON DATABASE \"${schema_name}\" TO \"${tenant_user}\";"
+    psql -h "$host" -p "$port" -U "$admin_user" -d "$schema_name" -c "ALTER SCHEMA public OWNER TO \"${tenant_user}\";"
+    unset PGPASSWORD
     ;;
-
-  sqlite)
-    DB_FILE="$SCHEMA_NAME"
-    printf '[INFO] Provisioning SQLite database file `%s`...
-' "$DB_FILE"
-    _parent_dir=$(dirname "$DB_FILE")
-    mkdir -p "$_parent_dir"
-    if command -v sqlite3 >/dev/null 2>&1; then
-      sqlite3 "$DB_FILE" "PRAGMA journal_mode=WAL;"
-    else
-      touch "$DB_FILE"
-    fi
-    chmod 0600 "$DB_FILE"
-    ;;
-
   mongodb)
-    : "${PORT:=27017}"
-    printf '[INFO] Provisioning MongoDB database `%s` on %s:%s...
-' "$SCHEMA_NAME" "$HOST" "$PORT"
-    if command -v mongosh >/dev/null 2>&1; then
-      _cli="mongosh"
-    elif command -v mongo >/dev/null 2>&1; then
-      _cli="mongo"
-    else
-      _cli=""
+    [ -z "$port" ] && port="27017"
+    mongosh_args="--host $host --port $port"
+    if [ -n "$admin_user" ]; then
+        mongosh_args="$mongosh_args -u $admin_user -p $admin_pass --authenticationDatabase admin"
     fi
-    if [ -n "$_cli" ] && [ -n "$APP_USER" ]; then
-      "$_cli" "mongodb://$HOST:$PORT/$SCHEMA_NAME" --eval "db.createUser({user: '$APP_USER', pwd: '$APP_PASS', roles: [{role: 'readWrite', db: '$SCHEMA_NAME'}]})" || true
-    fi
+    js_cmd="db.getSiblingDB('${schema_name}').createUser({user: '${tenant_user}', pwd: '${tenant_pass}', roles: [{role: 'readWrite', db: '${schema_name}'}]});"
+    # mongosh createUser throws if user exists, so we ignore errors or check first.
+    js_check="var res = db.getSiblingDB('${schema_name}').getUser('${tenant_user}'); if (!res) { ${js_cmd} }"
+    mongosh $mongosh_args --eval "$js_check" --quiet
     ;;
-
+  sqlite)
+    # schema_name is treated as the file path
+    db_dir=$(dirname "$schema_name")
+    mkdir -p "$db_dir"
+    sqlite3 "$schema_name" "PRAGMA journal_mode=WAL;"
+    chmod 600 "$schema_name"
+    ;;
   *)
-    printf '[ERROR] Unsupported database engine for provisioning: %s
-' "$ENGINE" >&2
+    printf 'Error: Unsupported engine "%s"\n' "$engine" >&2
     exit 1
     ;;
 esac
 
-printf '[SUCCESS] Database schema `%s` successfully provisioned.
-' "$SCHEMA_NAME"
+exit 0

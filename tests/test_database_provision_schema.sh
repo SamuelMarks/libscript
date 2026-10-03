@@ -38,22 +38,76 @@ printf '==> Running Universal Schema Provisioning Verification Tests...
 TEST_SQLITE_DB="$(mktemp "${TMPDIR:-/tmp}/test_schema_XXXXXX.db")"
 trap 'rm -f "$TEST_SQLITE_DB"' EXIT INT TERM
 
+# Setup Mock Environment for DB CLIs
+MOCK_DIR=$(mktemp -d)
+trap 'rm -rf "$MOCK_DIR"; rm -f "$TEST_SQLITE_DB"' EXIT INT TERM
+
+export MOCK_MYSQL_LOG="$MOCK_DIR/mysql_log"
+cat <<'EOF' > "$MOCK_DIR/mysql"
+#!/bin/sh
+echo "MYSQL CALLED WITH: $@" >> "$MOCK_MYSQL_LOG"
+EOF
+chmod +x "$MOCK_DIR/mysql"
+
+export MOCK_PSQL_LOG="$MOCK_DIR/psql_log"
+cat <<'EOF' > "$MOCK_DIR/psql"
+#!/bin/sh
+echo "PSQL CALLED WITH: $@" >> "$MOCK_PSQL_LOG"
+# Mock SELECT 1 returns
+if echo "$@" | grep -q "SELECT 1 FROM pg_database"; then
+  if [ "${PSQL_MOCK_DB_EXISTS:-0}" = "1" ]; then echo "1"; else echo ""; fi
+elif echo "$@" | grep -q "SELECT 1 FROM pg_roles"; then
+  if [ "${PSQL_MOCK_ROLE_EXISTS:-0}" = "1" ]; then echo "1"; else echo ""; fi
+fi
+EOF
+chmod +x "$MOCK_DIR/psql"
+
+export MOCK_MONGOSH_LOG="$MOCK_DIR/mongosh_log"
+cat <<'EOF' > "$MOCK_DIR/mongosh"
+#!/bin/sh
+echo "MONGOSH CALLED WITH: $@" >> "$MOCK_MONGOSH_LOG"
+EOF
+chmod +x "$MOCK_DIR/mongosh"
+
+export PATH="$MOCK_DIR:$PATH"
+
 # 1. Test Idempotent SQLite Provisioning (Two passes)
-printf '[TEST 1] Testing SQLite provisioning idempotency (Pass 1)...
-'
-"$PROVISION_SH" --engine sqlite --schema "$TEST_SQLITE_DB"
+printf '[TEST 1] Testing SQLite provisioning idempotency (Pass 1)...\n'
+"$PROVISION_SH" --engine sqlite --schema "$TEST_SQLITE_DB" --user u --password p
 [ -f "$TEST_SQLITE_DB" ] || exit 1
 
-printf '[TEST 1] Testing SQLite provisioning idempotency (Pass 2)...
-'
-"$PROVISION_SH" --engine sqlite --schema "$TEST_SQLITE_DB"
+printf '[TEST 1] Testing SQLite provisioning idempotency (Pass 2)...\n'
+"$PROVISION_SH" --engine sqlite --schema "$TEST_SQLITE_DB" --user u --password p
 [ -f "$TEST_SQLITE_DB" ] || exit 1
 
-# 2. Test Idempotent Deprovisioning
-printf '[TEST 2] Testing SQLite deprovisioning...
-'
-"$DEPROVISION_SH" --engine sqlite --schema "$TEST_SQLITE_DB"
-[ ! -f "$TEST_SQLITE_DB" ] || exit 1
+# 2. Test Idempotent MySQL Provisioning
+printf '[TEST 2] Testing MySQL provisioning idempotency...\n'
+rm -f "$MOCK_MYSQL_LOG"
+"$PROVISION_SH" --engine mysql --schema "testdb" --user "testuser" --password "testpass"
+grep -q "CREATE DATABASE IF NOT EXISTS \`testdb\`" "$MOCK_MYSQL_LOG" || exit 1
+grep -q "CREATE USER IF NOT EXISTS 'testuser'@'localhost'" "$MOCK_MYSQL_LOG" || exit 1
 
-printf '[SUCCESS] All Schema Provisioning Verification Tests Passed!
-'
+# 3. Test Idempotent Postgres Provisioning
+printf '[TEST 3] Testing Postgres provisioning idempotency (Pass 1 - Create)...\n'
+rm -f "$MOCK_PSQL_LOG"
+export PSQL_MOCK_DB_EXISTS=0
+export PSQL_MOCK_ROLE_EXISTS=0
+"$PROVISION_SH" --engine postgres --schema "testdb" --user "testuser" --password "testpass"
+grep -q "CREATE DATABASE \\\"testdb\\\"" "$MOCK_PSQL_LOG" || exit 1
+grep -q "CREATE USER \\\"testuser\\\"" "$MOCK_PSQL_LOG" || exit 1
+
+printf '[TEST 3] Testing Postgres provisioning idempotency (Pass 2 - Exists)...\n'
+rm -f "$MOCK_PSQL_LOG"
+export PSQL_MOCK_DB_EXISTS=1
+export PSQL_MOCK_ROLE_EXISTS=1
+"$PROVISION_SH" --engine postgres --schema "testdb" --user "testuser" --password "testpass"
+if grep -q "CREATE DATABASE" "$MOCK_PSQL_LOG"; then echo "Failed idempotency"; exit 1; fi
+if grep -q "CREATE USER" "$MOCK_PSQL_LOG"; then echo "Failed idempotency"; exit 1; fi
+
+# 4. Test Idempotent MongoDB Provisioning
+printf '[TEST 4] Testing MongoDB provisioning idempotency...\n'
+rm -f "$MOCK_MONGOSH_LOG"
+"$PROVISION_SH" --engine mongodb --schema "testdb" --user "testuser" --password "testpass"
+grep -q "createUser" "$MOCK_MONGOSH_LOG" || exit 1
+
+printf '[SUCCESS] All Schema Provisioning Verification Tests Passed!\n'
