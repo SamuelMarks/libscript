@@ -10,111 +10,109 @@ if defined STACK (
 )
 set "STACK=%STACK%:%THIS_FILE%:"
 
-:: # provision_schema.cmd
-::
 :: ## Overview
-:: Universal multi-tenant database schema and credential provisioner on Windows.
-:: Idempotently creates isolated schemas/databases and scoped user credentials
-:: across MySQL, MariaDB, PostgreSQL, MongoDB, and SQLite.
+:: Idempotently provisions a multi-tenant database schema and least-privilege user account on Windows.
+:: Supports MySQL/MariaDB, PostgreSQL, MongoDB, and SQLite.
 ::
 :: ## Usage
-::   call provision_schema.cmd [OPTIONS]
+::   call provision_schema.cmd --engine <engine> --host <host> --port <port> --admin-user <user> --admin-pass <pass> --schema <name> --user <tenant> --password <tenant_pass>
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
-
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 for %%I in ("%SCRIPT_DIR%") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
-
 :find_root_loop
 if exist "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" goto found_root
 for %%I in ("%LIBSCRIPT_ROOT_DIR%\..") do set "PARENT_DIR=%%~fI"
 if "%PARENT_DIR%"=="%LIBSCRIPT_ROOT_DIR%" goto found_root
 set "LIBSCRIPT_ROOT_DIR=%PARENT_DIR%"
 goto find_root_loop
-
 :found_root
 
-set "ENGINE=mysql"
+set "ENGINE="
 set "HOST=127.0.0.1"
 set "PORT="
 set "ADMIN_USER="
 set "ADMIN_PASS="
 set "SCHEMA_NAME="
-set "APP_USER="
-set "APP_PASS="
+set "TENANT_USER="
+set "TENANT_PASS="
 set "CHARSET=utf8mb4"
 set "COLLATION=utf8mb4_unicode_ci"
 
-:parse_loop
-if "%~1"=="" goto done_parse
-if /i "%~1"=="--engine" ( set "ENGINE=%~2" & shift & shift & goto parse_loop )
-if /i "%~1"=="--host" ( set "HOST=%~2" & shift & shift & goto parse_loop )
-if /i "%~1"=="--port" ( set "PORT=%~2" & shift & shift & goto parse_loop )
-if /i "%~1"=="--admin-user" ( set "ADMIN_USER=%~2" & shift & shift & goto parse_loop )
-if /i "%~1"=="--admin-pass" ( set "ADMIN_PASS=%~2" & shift & shift & goto parse_loop )
-if /i "%~1"=="--schema" ( set "SCHEMA_NAME=%~2" & shift & shift & goto parse_loop )
-if /i "%~1"=="--user" ( set "APP_USER=%~2" & shift & shift & goto parse_loop )
-if /i "%~1"=="--password" ( set "APP_PASS=%~2" & shift & shift & goto parse_loop )
-if /i "%~1"=="--charset" ( set "CHARSET=%~2" & shift & shift & goto parse_loop )
-if /i "%~1"=="--collation" ( set "COLLATION=%~2" & shift & shift & goto parse_loop )
-echo [ERROR] Unknown option: %~1 >&2
+:parse_args
+if "%~1"=="" goto run_provision
+if "%~1"=="--engine" ( set "ENGINE=%~2" & shift & shift & goto parse_args )
+if "%~1"=="--host" ( set "HOST=%~2" & shift & shift & goto parse_args )
+if "%~1"=="--port" ( set "PORT=%~2" & shift & shift & goto parse_args )
+if "%~1"=="--admin-user" ( set "ADMIN_USER=%~2" & shift & shift & goto parse_args )
+if "%~1"=="--admin-pass" ( set "ADMIN_PASS=%~2" & shift & shift & goto parse_args )
+if "%~1"=="--schema" ( set "SCHEMA_NAME=%~2" & shift & shift & goto parse_args )
+if "%~1"=="--user" ( set "TENANT_USER=%~2" & shift & shift & goto parse_args )
+if "%~1"=="--password" ( set "TENANT_PASS=%~2" & shift & shift & goto parse_args )
+if "%~1"=="--charset" ( set "CHARSET=%~2" & shift & shift & goto parse_args )
+if "%~1"=="--collation" ( set "COLLATION=%~2" & shift & shift & goto parse_args )
+shift
+goto parse_args
+
+:run_provision
+if "%ENGINE%"=="" ( echo Error: Missing engine >&2 & exit /b 1 )
+if "%SCHEMA_NAME%"=="" ( echo Error: Missing schema >&2 & exit /b 1 )
+if "%TENANT_USER%"=="" ( echo Error: Missing tenant user >&2 & exit /b 1 )
+if "%TENANT_PASS%"=="" ( echo Error: Missing tenant pass >&2 & exit /b 1 )
+
+if "%ENGINE%"=="mysql" goto do_mysql
+if "%ENGINE%"=="mariadb" goto do_mysql
+if "%ENGINE%"=="postgres" goto do_postgres
+if "%ENGINE%"=="postgresql" goto do_postgres
+if "%ENGINE%"=="mongodb" goto do_mongodb
+if "%ENGINE%"=="sqlite" goto do_sqlite
+echo Error: Unsupported engine "%ENGINE%" >&2
 exit /b 1
 
-:done_parse
-
-if "%SCHEMA_NAME%"=="" (
-    echo [ERROR] --schema name is required >&2
-    exit /b 1
+:do_mysql
+if "%PORT%"=="" set "PORT=3306"
+if "%ADMIN_USER%"=="" set "ADMIN_USER=root"
+set "TMP_SQL=%TEMP%\provision_!RANDOM!.sql"
+echo CREATE DATABASE IF NOT EXISTS `%SCHEMA_NAME%` DEFAULT CHARACTER SET %CHARSET% COLLATE %COLLATION%; > "%TMP_SQL%"
+echo CREATE USER IF NOT EXISTS '%TENANT_USER%'@'localhost' IDENTIFIED BY '%TENANT_PASS%'; >> "%TMP_SQL%"
+echo CREATE USER IF NOT EXISTS '%TENANT_USER%'@'127.0.0.1' IDENTIFIED BY '%TENANT_PASS%'; >> "%TMP_SQL%"
+echo CREATE USER IF NOT EXISTS '%TENANT_USER%'@'%%' IDENTIFIED BY '%TENANT_PASS%'; >> "%TMP_SQL%"
+echo GRANT ALL PRIVILEGES ON `%SCHEMA_NAME%`.* TO '%TENANT_USER%'@'localhost'; >> "%TMP_SQL%"
+echo GRANT ALL PRIVILEGES ON `%SCHEMA_NAME%`.* TO '%TENANT_USER%'@'127.0.0.1'; >> "%TMP_SQL%"
+echo GRANT ALL PRIVILEGES ON `%SCHEMA_NAME%`.* TO '%TENANT_USER%'@'%%'; >> "%TMP_SQL%"
+echo FLUSH PRIVILEGES; >> "%TMP_SQL%"
+if "%ADMIN_PASS%"=="" (
+    mysql -h "%HOST%" -P "%PORT%" -u "%ADMIN_USER%" < "%TMP_SQL%"
+) else (
+    mysql -h "%HOST%" -P "%PORT%" -u "%ADMIN_USER%" -p"%ADMIN_PASS%" < "%TMP_SQL%"
 )
+del "%TMP_SQL%"
+exit /b 0
 
-:: ## execute_provisioning
-powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-    "$engine = '%ENGINE%';" ^
-    "$host_val = '%HOST%';" ^
-    "$port = '%PORT%';" ^
-    "$admin_user = '%ADMIN_USER%';" ^
-    "$admin_pass = '%ADMIN_PASS%';" ^
-    "$schema = '%SCHEMA_NAME%';" ^
-    "$user = '%APP_USER%';" ^
-    "$pass = '%APP_PASS%';" ^
-    "$charset = '%CHARSET%';" ^
-    "$collation = '%COLLATION%';" ^
-    "if ($engine -in @('mysql','mariadb')) {" ^
-    "  if (-not $port) { $port = '3306'; };" ^
-    "  if (-not $admin_user) { $admin_user = 'root'; };" ^
-    "  $cmd = 'mysql';" ^
-    "  if (Get-Command mariadb -ErrorAction SilentlyContinue) { $cmd = 'mariadb'; };" ^
-    "  $pArg = if ($admin_pass) { '-p' + $admin_pass } else { '' };" ^
-    "  & $cmd -h $host_val -P $port -u $admin_user $pArg -e ('CREATE DATABASE IF NOT EXISTS `' + $schema + '` DEFAULT CHARACTER SET ' + $charset + ' COLLATE ' + $collation + ';');" ^
-    "  if ($user) {" ^
-    "    if ($pass) {" ^
-    "      & $cmd -h $host_val -P $port -u $admin_user $pArg -e ('CREATE USER IF NOT EXISTS ''' + $user + '''@''localhost'' IDENTIFIED BY ''' + $pass + '''; ALTER USER ''' + $user + '''@''localhost'' IDENTIFIED BY ''' + $pass + ''';');" ^
-    "      & $cmd -h $host_val -P $port -u $admin_user $pArg -e ('CREATE USER IF NOT EXISTS ''' + $user + '''@''127.0.0.1'' IDENTIFIED BY ''' + $pass + '''; ALTER USER ''' + $user + '''@''127.0.0.1'' IDENTIFIED BY ''' + $pass + ''';');" ^
-    "    } else {" ^
-    "      & $cmd -h $host_val -P $port -u $admin_user $pArg -e ('CREATE USER IF NOT EXISTS ''' + $user + '''@''localhost''; CREATE USER IF NOT EXISTS ''' + $user + '''@''127.0.0.1'';');" ^
-    "    };" ^
-    "    & $cmd -h $host_val -P $port -u $admin_user $pArg -e ('GRANT ALL PRIVILEGES ON `' + $schema + '`.* TO ''' + $user + '''@''localhost''; GRANT ALL PRIVILEGES ON `' + $schema + '`.* TO ''' + $user + '''@''127.0.0.1''; FLUSH PRIVILEGES;');" ^
-    "  }" ^
-    "} elseif ($engine -in @('postgres','postgresql')) {" ^
-    "  if (-not $port) { $port = '5432'; };" ^
-    "  if (-not $admin_user) { $admin_user = 'postgres'; };" ^
-    "  $env:PGPASSWORD = $admin_pass; $env:PGHOST = $host_val; $env:PGPORT = $port; $env:PGUSER = $admin_user;" ^
-    "  $exists = & psql -tAc ('SELECT 1 FROM pg_database WHERE datname = ''' + $schema + ''';');" ^
-    "  if ($exists -ne '1') { & psql -c ('CREATE DATABASE "' + $schema + '";'); };" ^
-    "  if ($user) {" ^
-    "    $user_exists = & psql -tAc ('SELECT 1 FROM pg_roles WHERE rolname = ''' + $user + ''';');" ^
-    "    if ($user_exists -ne '1') {" ^
-    "      if ($pass) { & psql -c ('CREATE USER "' + $user + '" WITH ENCRYPTED PASSWORD ''' + $pass + ''';'); } else { & psql -c ('CREATE USER "' + $user + '";'); }" ^
-    "    } elseif ($pass) {" ^
-    "      & psql -c ('ALTER USER "' + $user + '" WITH ENCRYPTED PASSWORD ''' + $pass + ''';');" ^
-    "    };" ^
-    "    & psql -c ('GRANT ALL PRIVILEGES ON DATABASE "' + $schema + '" TO "' + $user + '";');" ^
-    "  }" ^
-    "} elseif ($engine -eq 'sqlite') {" ^
-    "  $dir = Split-Path -Parent $schema;" ^
-    "  if ($dir -and -not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null; };" ^
-    "  if (-not (Test-Path $schema)) { New-Item -ItemType File -Path $schema | Out-Null; };" ^
-    "};" ^
-    "Write-Output ('[SUCCESS] Database schema ' + $schema + ' successfully provisioned.');"
+:do_postgres
+if "%PORT%"=="" set "PORT=5432"
+if "%ADMIN_USER%"=="" set "ADMIN_USER=postgres"
+set "PGPASSWORD=%ADMIN_PASS%"
+psql -h "%HOST%" -p "%PORT%" -U "%ADMIN_USER%" -tAc "SELECT 1 FROM pg_database WHERE datname='%SCHEMA_NAME%'" | findstr "1" >nul
+if errorlevel 1 ( psql -h "%HOST%" -p "%PORT%" -U "%ADMIN_USER%" -c "CREATE DATABASE \"%SCHEMA_NAME%\";" )
+psql -h "%HOST%" -p "%PORT%" -U "%ADMIN_USER%" -tAc "SELECT 1 FROM pg_roles WHERE rolname='%TENANT_USER%'" | findstr "1" >nul
+if errorlevel 1 ( psql -h "%HOST%" -p "%PORT%" -U "%ADMIN_USER%" -c "CREATE USER \"%TENANT_USER%\" WITH ENCRYPTED PASSWORD '%TENANT_PASS%';" )
+psql -h "%HOST%" -p "%PORT%" -U "%ADMIN_USER%" -c "GRANT ALL PRIVILEGES ON DATABASE \"%SCHEMA_NAME%\" TO \"%TENANT_USER%\";"
+psql -h "%HOST%" -p "%PORT%" -U "%ADMIN_USER%" -d "%SCHEMA_NAME%" -c "ALTER SCHEMA public OWNER TO \"%TENANT_USER%\";"
+set "PGPASSWORD="
+exit /b 0
 
-exit /b %ERRORLEVEL%
+:do_mongodb
+if "%PORT%"=="" set "PORT=27017"
+set "MONGO_ARGS=--host %HOST% --port %PORT%"
+if not "%ADMIN_USER%"=="" set "MONGO_ARGS=%MONGO_ARGS% -u %ADMIN_USER% -p %ADMIN_PASS% --authenticationDatabase admin"
+set "JS_CHECK=var res = db.getSiblingDB('%SCHEMA_NAME%').getUser('%TENANT_USER%'); if (!res) { db.getSiblingDB('%SCHEMA_NAME%').createUser({user: '%TENANT_USER%', pwd: '%TENANT_PASS%', roles: [{role: 'readWrite', db: '%SCHEMA_NAME%'}]}); }"
+mongosh %MONGO_ARGS% --eval "%JS_CHECK%" --quiet
+exit /b 0
+
+:do_sqlite
+:: schema_name is treated as the file path
+for %%I in ("%SCHEMA_NAME%") do set "DB_DIR=%%~dpI"
+if not exist "%DB_DIR%" mkdir "%DB_DIR%"
+sqlite3 "%SCHEMA_NAME%" "PRAGMA journal_mode=WAL;"
+exit /b 0

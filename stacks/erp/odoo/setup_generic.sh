@@ -52,7 +52,31 @@ ODOO_SERVER_NAME="${ODOO_SERVER_NAME:-localhost}"
 LISTEN_PORT="${ODOO_LISTEN:-80}"
 ODOO_PORT="${ODOO_PORT:-8069}"
 
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --skip-deps)
+      export LIBSCRIPT_SKIP_SYSTEM_DEPS=1
+      export PRIV=""
+      shift
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+
 export ODOO_WEBSERVER ODOO_DB_TYPE ODOO_VERSION ODOO_WWWROOT ODOO_SERVER_NAME LISTEN_PORT ODOO_PORT
+
+# ## safe_tee
+safe_tee() {
+  if [ "${PRIV:-}" != "" ] && command -v sudo >/dev/null 2>&1; then
+    sudo tee "$@"
+  elif [ "${PRIV:-}" != "" ] && command -v doas >/dev/null 2>&1; then
+    doas tee "$@"
+  else
+    tee "$@"
+  fi
+}
 
 # Dependencies
 libscript_depends 'python'
@@ -116,7 +140,7 @@ fi
 # Configure Odoo
 if [ ! -f "${ODOO_WWWROOT}/odoo.conf" ]; then
   log_info "Creating Odoo configuration..."
-  cat <<EOF | priv tee "${ODOO_WWWROOT}/odoo.conf" >/dev/null
+  cat <<EOF | safe_tee "${ODOO_WWWROOT}/odoo.conf" >/dev/null
 [options]
 admin_passwd = admin
 db_host = ${ODOO_DB_HOST}
@@ -199,7 +223,7 @@ elif [ "${ODOO_WEBSERVER}" = "caddy" ]; then
     [ -d /etc/caddy/caddy.d ] && conf_dir="/etc/caddy/caddy.d"
     priv cp "${CADDY_BLOCK_TMP}" "${conf_dir}/${ODOO_SERVER_NAME}.caddy"
   else
-    grep -q "${ODOO_SERVER_NAME}" /etc/caddy/Caddyfile 2>/dev/null || priv tee -a /etc/caddy/Caddyfile < "${CADDY_BLOCK_TMP}" >/dev/null
+    grep -q "${ODOO_SERVER_NAME}" /etc/caddy/Caddyfile 2>/dev/null || safe_tee -a /etc/caddy/Caddyfile < "${CADDY_BLOCK_TMP}" >/dev/null
   fi
   if ! priv systemctl reload caddy ; then
     true
@@ -220,7 +244,7 @@ elif [ "${ODOO_WEBSERVER}" = "httpd" ]; then
       true
     fi
   else
-    grep -q "${ODOO_SERVER_NAME}" /etc/httpd/conf/httpd.conf 2>/dev/null || priv tee -a /etc/httpd/conf/httpd.conf < "${HTTPD_BLOCK_TMP}" >/dev/null
+    grep -q "${ODOO_SERVER_NAME}" /etc/httpd/conf/httpd.conf 2>/dev/null || safe_tee -a /etc/httpd/conf/httpd.conf < "${HTTPD_BLOCK_TMP}" >/dev/null
   fi
   rm -f "${HTTPD_BLOCK_TMP}"
 fi

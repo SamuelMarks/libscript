@@ -17,6 +17,8 @@ $pyCmd = Get-Command python.exe -ErrorAction SilentlyContinue
 $pyExe = if ($pyCmd) { $pyCmd.Source } else { (Get-Command py.exe -ErrorAction SilentlyContinue).Source }
 if (-not $pyExe -or -not (Test-Path $pyExe)) {
     $candidates = @(
+        "C:\OpenEdX\app\runtimes\python\python.exe",
+        "C:\OpenEdX\app\.venv\Scripts\python.exe",
         "C:\libscript\tmp\stage_component_python_offline\python.exe",
         "C:\libscript\tmp\stage_component_python_offline\bin\python.exe",
         "C:\Users\vagrant\AppData\Local\Programs\Python\Python312-arm64\python.exe",

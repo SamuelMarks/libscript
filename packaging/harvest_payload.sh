@@ -392,6 +392,11 @@ END {
   printf '[INFO] Generated WiX XML fragment: %s\n' "${WIX_FRAGMENT}"
 fi
 
+if [ "$(wc -l < "${TMP_FILTERED}" | tr -d ' ')" -eq 0 ]; then
+  printf '[ERROR] Harvested 0 files. Payload is empty.\n' >&2
+  exit 1
+fi
+
 printf '[PASS] Harvesting complete (%s files identified).
 ' "$(wc -l < "${TMP_FILTERED}" | tr -d ' ')"
 exit 0

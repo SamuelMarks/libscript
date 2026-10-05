@@ -2,7 +2,7 @@
 # ## Overview
 # Command-line interface router for the Open edX stack.
 # Routes subcommands to core lifecycle handlers or dedicated feature modules:
-# user, demo, dbshell, healthcheck, config, backup, restore, workers, theme, xblock, upgrade, mfe.
+# user, demo, dbshell, healthcheck, config, backup, restore, workers, theme, xblock, upgrade, mfe, logs.
 #
 # ## Usage
 #   ./cli.sh <subcommand> [args...]
@@ -69,6 +69,13 @@ case "${1:-}" in
   healthcheck|health|status-all)
     shift
     SCRIPT_NAME="${SCRIPT_DIR}/healthcheck.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090
+    exec "${SCRIPT_NAME}" "$@"
+    ;;
+  logs)
+    shift
+    SCRIPT_NAME="${SCRIPT_DIR}/logs.sh"
     export SCRIPT_NAME
     # shellcheck disable=SC1090
     exec "${SCRIPT_NAME}" "$@"

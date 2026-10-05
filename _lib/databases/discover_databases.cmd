@@ -10,117 +10,97 @@ if defined STACK (
 )
 set "STACK=%STACK%:%THIS_FILE%:"
 
-:: # discover_databases.cmd
-::
 :: ## Overview
-:: Universal multi-platform database discovery engine on Windows.
-:: Inspects Windows Services and TCP listening sockets across MySQL, MariaDB,
-:: PostgreSQL, MongoDB, and Redis.
+:: Discovers active database instances on Windows.
+:: Uses sc.exe and netstat for probing.
 ::
 :: ## Usage
-::   call discover_databases.cmd [--json^|--eval^|--check] [--engine <type>]
+::   call discover_databases.cmd [--json | --eval | --check --engine <type>]
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
-
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 for %%I in ("%SCRIPT_DIR%") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
-
 :find_root_loop
 if exist "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" goto found_root
 for %%I in ("%LIBSCRIPT_ROOT_DIR%\..") do set "PARENT_DIR=%%~fI"
 if "%PARENT_DIR%"=="%LIBSCRIPT_ROOT_DIR%" goto found_root
 set "LIBSCRIPT_ROOT_DIR=%PARENT_DIR%"
 goto find_root_loop
-
 :found_root
 
-set "MODE=--check"
-set "FILTER_ENGINE="
+set "MODE=eval"
+set "TARGET_ENGINE="
 
 :parse_args
-if "%~1"=="" goto done_args
-if /i "%~1"=="--json" (
-    set "MODE=--json"
-    shift
-    goto parse_args
-)
-if /i "%~1"=="--eval" (
-    set "MODE=--eval"
-    shift
-    goto parse_args
-)
-if /i "%~1"=="--check" (
-    set "MODE=--check"
-    shift
-    goto parse_args
-)
-if /i "%~1"=="--engine" (
-    set "FILTER_ENGINE=%~2"
-    shift
-    shift
-    goto parse_args
-)
+if "%~1"=="" goto run_discovery
+if "%~1"=="--json" ( set "MODE=json" & shift & goto parse_args )
+if "%~1"=="--eval" ( set "MODE=eval" & shift & goto parse_args )
+if "%~1"=="--check" ( set "MODE=check" & shift & goto parse_args )
+if "%~1"=="--engine" ( set "TARGET_ENGINE=%~2" & shift & shift & goto parse_args )
 shift
 goto parse_args
 
-:done_args
+:run_discovery
+set "FOUND_MYSQL=0"
+set "FOUND_PG=0"
+set "FOUND_MONGO=0"
+set "FOUND_REDIS=0"
 
-:: ## probe_service
-:: Checks if a Windows service is actively running and outputs details via PowerShell
-powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-    "$mode = '%MODE%';" ^
-    "$filter = '%FILTER_ENGINE%';" ^
-    "$results = @();" ^
-    "$services = @(" ^
-    "  @{engine='mysql'; port=3306; names=@('MySQL','MariaDB','MySQL57','MySQL80','OpenEdXMySQL')}," ^
-    "  @{engine='postgres'; port=5432; names=@('postgresql','postgresql-x64-14','postgresql-x64-15','postgresql-x64-16')}," ^
-    "  @{engine='mongodb'; port=27017; names=@('MongoDB')}," ^
-    "  @{engine='redis'; port=6379; names=@('Redis')}" ^
-    ");" ^
-    "foreach ($s in $services) {" ^
-    "  if ($filter -ne '' -and $filter -ne $s.engine) { continue; }" ^
-    "  $found = $false;" ^
-    "  foreach ($name in $s.names) {" ^
-    "    $svc = Get-Service -Name $name -ErrorAction SilentlyContinue;" ^
-    "    if ($svc -and $svc.Status -eq 'Running') {" ^
-    "      $results += [PSCustomObject]@{engine=$s.engine; version='auto'; host='127.0.0.1'; port=$s.port; service_name=$name; is_active=$true; source='windows_service'; existing_schemas=@()};" ^
-    "      $found = $true; break;" ^
-    "    }" ^
-    "  }" ^
-    "  if (-not $found) {" ^
-    "    try {" ^
-    "      $tcp = New-Object System.Net.Sockets.TcpClient;" ^
-    "      $ar = $tcp.BeginConnect('127.0.0.1', $s.port, $null, $null);" ^
-    "      $wait = $ar.AsyncWaitHandle.WaitOne(400, $false);" ^
-    "      if ($wait -and $tcp.Connected) {" ^
-    "        $results += [PSCustomObject]@{engine=$s.engine; version='auto'; host='127.0.0.1'; port=$s.port; service_name=''; is_active=$true; source='tcp_probe'; existing_schemas=@()};" ^
-    "        $tcp.EndConnect($ar);" ^
-    "      }" ^
-    "      $tcp.Close();" ^
-    "    } catch {}" ^
-    "  }" ^
-    "};" ^
-    "if ($mode -eq '--json') {" ^
-    "  ConvertTo-Json -InputObject @($results) -Compress:$false;" ^
-    "} elseif ($mode -eq '--eval') {" ^
-    "  if ($results.Count -gt 0) {" ^
-    "    $first = $results[0];" ^
-    "    Write-Output ('DETECTED_DB_COUNT=' + $results.Count);" ^
-    "    Write-Output ('DETECTED_DB_ENGINE=' + $first.engine);" ^
-    "    Write-Output ('DETECTED_DB_HOST=' + $first.host);" ^
-    "    Write-Output ('DETECTED_DB_PORT=' + $first.port);" ^
-    "    Write-Output ('DETECTED_DB_SOURCE=' + $first.source);" ^
-    "  } else {" ^
-    "    Write-Output 'DETECTED_DB_COUNT=0';" ^
-    "  }" ^
-    "} else {" ^
-    "  if ($results.Count -gt 0) {" ^
-    "    Write-Output ('[INFO] Discovered ' + $results.Count + ' active database instance(s).');" ^
-    "    exit 0;" ^
-    "  } else {" ^
-    "    Write-Output '[INFO] No matching database instances discovered.';" ^
-    "    exit 1;" ^
-    "  }" ^
-    "}"
+:: ## TCP Port Probing via netstat
+netstat -an | findstr "LISTENING" | findstr ":3306 " >nul && set "FOUND_MYSQL=1"
+netstat -an | findstr "LISTENING" | findstr ":5432 " >nul && set "FOUND_PG=1"
+netstat -an | findstr "LISTENING" | findstr ":27017 " >nul && set "FOUND_MONGO=1"
+netstat -an | findstr "LISTENING" | findstr ":6379 " >nul && set "FOUND_REDIS=1"
 
-exit /b %ERRORLEVEL%
+:: ## Service Probing via sc.exe
+sc.exe query MySQL80 >nul 2>&1 && set "FOUND_MYSQL=1"
+sc.exe query PostgreSQL >nul 2>&1 && set "FOUND_PG=1"
+sc.exe query MongoDB >nul 2>&1 && set "FOUND_MONGO=1"
+sc.exe query Redis >nul 2>&1 && set "FOUND_REDIS=1"
+
+if "%MODE%"=="check" (
+    if "%TARGET_ENGINE%"=="mysql" ( if "!FOUND_MYSQL!"=="1" exit /b 0 else exit /b 1 )
+    if "%TARGET_ENGINE%"=="mariadb" ( if "!FOUND_MYSQL!"=="1" exit /b 0 else exit /b 1 )
+    if "%TARGET_ENGINE%"=="postgres" ( if "!FOUND_PG!"=="1" exit /b 0 else exit /b 1 )
+    if "%TARGET_ENGINE%"=="mongodb" ( if "!FOUND_MONGO!"=="1" exit /b 0 else exit /b 1 )
+    if "%TARGET_ENGINE%"=="redis" ( if "!FOUND_REDIS!"=="1" exit /b 0 else exit /b 1 )
+    exit /b 1
+)
+
+if "%MODE%"=="json" (
+    echo [
+    set "FIRST=1"
+    if "!FOUND_MYSQL!"=="1" (
+        echo   {"engine": "mysql", "host": "127.0.0.1", "port": 3306, "is_active": true, "source": "tcp_probe"}
+        set "FIRST=0"
+    )
+    if "!FOUND_PG!"=="1" (
+        if "!FIRST!"=="0" echo ,
+        echo   {"engine": "postgres", "host": "127.0.0.1", "port": 5432, "is_active": true, "source": "tcp_probe"}
+        set "FIRST=0"
+    )
+    if "!FOUND_MONGO!"=="1" (
+        if "!FIRST!"=="0" echo ,
+        echo   {"engine": "mongodb", "host": "127.0.0.1", "port": 27017, "is_active": true, "source": "tcp_probe"}
+        set "FIRST=0"
+    )
+    if "!FOUND_REDIS!"=="1" (
+        if "!FIRST!"=="0" echo ,
+        echo   {"engine": "redis", "host": "127.0.0.1", "port": 6379, "is_active": true, "source": "tcp_probe"}
+    )
+    echo ]
+    exit /b 0
+)
+
+if "%MODE%"=="eval" (
+    if "!FOUND_MYSQL!"=="1" (
+        echo set "DETECTED_DB_ENGINE=mysql"
+        echo set "DETECTED_DB_HOST=127.0.0.1"
+        echo set "DETECTED_DB_PORT=3306"
+    ) else if "!FOUND_PG!"=="1" (
+        echo set "DETECTED_DB_ENGINE=postgres"
+        echo set "DETECTED_DB_HOST=127.0.0.1"
+        echo set "DETECTED_DB_PORT=5432"
+    )
+)
+exit /b 0

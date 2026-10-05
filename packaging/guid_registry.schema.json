@@ -10,6 +10,29 @@
       "type": "string",
       "description": "Registry schema version"
     },
+    "vhost_components": {
+      "type": "object",
+      "description": "Dictionary of deterministic GUIDs for injected virtual host configurations to prevent MSI upgrade collisions",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["component_guid", "app_id"],
+        "properties": {
+          "component_guid": {
+            "type": "string",
+            "pattern": "^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$",
+            "description": "Deterministic ComponentId GUID derived from server_name and app_id"
+          },
+          "app_id": {
+            "type": "string",
+            "description": "The application identifier (e.g., openedx-lms, wordpress) generating the vhost"
+          },
+          "server_name": {
+            "type": "string",
+            "description": "Primary domain name of the virtual host"
+          }
+        }
+      }
+    },
     "components": {
       "type": "object",
       "description": "Dictionary of standalone component specifications indexed by component name",

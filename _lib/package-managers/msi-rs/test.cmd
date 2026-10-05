@@ -33,7 +33,7 @@ where candle.exe >nul 2>&1
 if not errorlevel 1 where light.exe >nul 2>&1
 if not errorlevel 1 (
     set "TMP_TEST=%TEMP%\msi_rs_roundtrip_%RANDOM%"
-    mkdir "!TMP_TEST!" >nul 2>&1
+    if not exist "!TMP_TEST!" mkdir "!TMP_TEST!" >nul 2>&1
     echo hello 1 > "!TMP_TEST!\test1.txt"
     echo hello 2 > "!TMP_TEST!\test2.txt"
 

@@ -48,6 +48,7 @@ COMPONENT=""
 VERSION=""
 VARIANT="all"
 OUT_FILE=""
+TARGET_ARCH="${LIBSCRIPT_TARGET_ARCH:-x64}"
 BRANCH=""
 OUT_DIR="${LIBSCRIPT_ROOT_DIR}/dist/msi"
 OFFLINE_SOURCE="${LIBSCRIPT_ROOT_DIR}/cache"
@@ -133,6 +134,14 @@ while [ $# -gt 0 ]; do
     --branch)
       BRANCH="$2"
       shift 2
+      ;;
+    --arch)
+      TARGET_ARCH="$2"
+      shift 2
+      ;;
+    --arch=*)
+      TARGET_ARCH="${1#*=}"
+      shift
       ;;
     --help|-h)
       show_help
@@ -435,8 +444,8 @@ build_single_variant() {
   fi
 
   printf '[INFO] Compiling standalone %s MSI via msi-rs: %sn' "$_v" "$TARGET_MSI"
-  "$_candle" -nologo -arch x64 -out "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_main.wixobj" "$MAIN_WXS" || exit 1
-  "$_candle" -nologo -arch x64 -out "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_payload.wixobj" "$PAYLOAD_WXS" || exit 1
+  "$_candle" -nologo -arch ${TARGET_ARCH} -out "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_main.wixobj" "$MAIN_WXS" || exit 1
+  "$_candle" -nologo -arch ${TARGET_ARCH} -out "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_payload.wixobj" "$PAYLOAD_WXS" || exit 1
   "$_light" -nologo -sval -ext WixUIExtension -out "$TARGET_MSI" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_main.wixobj" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_payload.wixobj" || exit 1
 
 

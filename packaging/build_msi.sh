@@ -31,6 +31,7 @@
 #   --branch <branch>     Target Git release branch or tag
 #   --auth-token <token>  Private repository authentication token
 #   --mode <mode>         Default setup mode (Simple or Advanced)
+#   --use-wix             Use traditional WiX Toolset instead of msi-rs
 #   --help, -h            Show this help text
 
 set -feu
@@ -117,9 +118,23 @@ SETUP_MODE="Simple"
 VARIANT="online"
 [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] && VARIANT="offline"
 CACHE_DIR="${LIBSCRIPT_CACHE_DIR:-${LIBSCRIPT_ROOT_DIR}/cache}"
+USE_WIX="${LIBSCRIPT_USE_WIX:-0}"
+TARGET_ARCH="${LIBSCRIPT_TARGET_ARCH:-x64}"
 
 while [ $# -gt 0 ]; do
   case "$1" in
+    --use-wix)
+      USE_WIX="1"
+      shift
+      ;;
+    --arch)
+      TARGET_ARCH="$2"
+      shift 2
+      ;;
+    --arch=*)
+      TARGET_ARCH="${1#*=}"
+      shift
+      ;;
     --help|-h|/\?|-\?)
       show_help
       exit 0
@@ -323,7 +338,7 @@ mkdir -p "$TMP_WORK_DIR"
 #   Internal function.
 cleanup_tmp() {
   rm -rf "$TMP_WORK_DIR"
-  rm -f "${OUT_FILE}.wixobj" "${OUT_FILE}_payload.wixobj" "${OUT_FILE}.candle.wxs" "${OUT_FILE}_wixl.wxs" "${OUT_FILE}_payload_wixl.wxs" "${WXS_FILE}" "${PAYLOAD_WXS}"
+  rm -f "${OUT_FILE}.wixobj" "${OUT_FILE}_payload.wixobj" "${OUT_FILE}.candle.wxs" "${OUT_FILE}_wixl.wxs" "${OUT_FILE}_payload_wixl.wxs"
 }
 trap cleanup_tmp EXIT INT TERM
 
@@ -494,7 +509,7 @@ generate_wxs() {
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <Product Id="$PRODUCT_CODE" Name="$_esc_name" Language="1033" Version="$APP_VERSION" Manufacturer="$_esc_pub" UpgradeCode="$UPGRADE_CODE">
-    <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Description="$_esc_name Windows Installer" />
+    <Package InstallerVersion="200" Compressed="yes" Platform="${TARGET_ARCH}" InstallScope="perMachine" Description="$_esc_name Windows Installer" />
 EOF_XML
 
   if [ "$VARIANT" = "offline" ]; then
@@ -628,7 +643,6 @@ EOF_UPGRADE
     <Property Id="AGREE_ALL_LICENSES" Value="0" Secure="yes" />${MULTI_LICENSE_PROPS}
 
     <!-- Mask Sensitive Git Credentials and Passwords in Verbose Logs -->
-    <Property Id="MsiHiddenProperties" Value="PROP_OPENEDX_ADMIN_PASSWORD;PROP_OPENEDX_SECRET_KEY;PROP_MYSQL_ROOT_PASSWORD;PROP_MYSQL_REMOTE_URL;PROP_REDIS_PASSWORD;PROP_REDIS_URL;PROP_MONGODB_URI;PROP_MEILISEARCH_MASTER_KEY;PROP_OPENEDX_REPO_AUTH_TOKEN" />
 
     <!-- Target Directory Layout with CommonAppDataFolder for Mutable User Data -->
     <Directory Id="TARGETDIR" Name="SourceDir">
@@ -656,14 +670,14 @@ EOF_UPGRADE
     <CustomAction Id="CA_DetectExistingRuntimes" Directory="INSTALLFOLDER" ExeCommand="powershell.exe -NoProfile -Command &quot;if (Get-Command python -ErrorAction SilentlyContinue) { [Environment]::SetEnvironmentVariable('FOUND_PYTHON_EXE', (Get-Command python).Source, 'Process') }; if (Get-Command node -ErrorAction SilentlyContinue) { [Environment]::SetEnvironmentVariable('FOUND_NODE_EXE', (Get-Command node).Source, 'Process') }&quot;" Execute="immediate" Return="ignore" />
     <CustomAction Id="CA_LaunchBrowser" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\packaging\launch_browser.cmd&quot; http://[PROP_LMS_HOST]:[PROP_LMS_PORT] &quot;Open edX LMS&quot;" Return="asyncNoWait" />
     <CustomAction Id="CA_LaunchStudio" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\packaging\launch_browser.cmd&quot; http://[PROP_CMS_HOST]:[PROP_CMS_PORT] &quot;Open edX Studio&quot;" Return="asyncNoWait" />
-    <CustomAction Id="InstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install stacks/cms/openedx --offline=[PROP_OPENEDX_OFFLINE] --lms-port=[PROP_LMS_PORT] --cms-port=[PROP_CMS_PORT] --mysql-url=&quot;[PROP_MYSQL_REMOTE_URL]&quot; --redis-port=[PROP_REDIS_PORT] --redis-url=&quot;[PROP_REDIS_URL]&quot; --mongodb-uri=&quot;[PROP_MONGODB_URI]&quot; --repo=&quot;[PROP_OPENEDX_EDX_PLATFORM_REPOSITORY]&quot; --version=&quot;[PROP_OPENEDX_VERSION]&quot; --admin-user=&quot;[PROP_OPENEDX_ADMIN_USERNAME]&quot; --admin-password=&quot;[PROP_OPENEDX_ADMIN_PASSWORD]&quot; --admin-email=&quot;[PROP_OPENEDX_ADMIN_EMAIL]&quot; --backup-dir=&quot;[BACKUPFOLDER]&quot; --theme=&quot;[PROP_OPENEDX_THEME]&quot;" Execute="deferred" Return="ignore" Impersonate="no" />
-    <CustomAction Id="InstallWorkersService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\workers.cmd&quot; start" Execute="deferred" Return="ignore" Impersonate="no" />
+    <CustomAction Id="InstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;if not exist &quot;&quot;[LOGSFOLDER]&quot;&quot; mkdir &quot;&quot;[LOGSFOLDER]&quot;&quot; &amp; &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install stacks/cms/openedx --offline=[PROP_OPENEDX_OFFLINE] --lms-port=[PROP_LMS_PORT] --cms-port=[PROP_CMS_PORT] --mysql-url=&quot;[PROP_MYSQL_REMOTE_URL]&quot; --redis-port=[PROP_REDIS_PORT] --redis-url=&quot;[PROP_REDIS_URL]&quot; --mongodb-uri=&quot;[PROP_MONGODB_URI]&quot; --repo=&quot;[PROP_OPENEDX_EDX_PLATFORM_REPOSITORY]&quot; --version=&quot;[PROP_OPENEDX_VERSION]&quot; --admin-user=&quot;[PROP_OPENEDX_ADMIN_USERNAME]&quot; --admin-password=&quot;[PROP_OPENEDX_ADMIN_PASSWORD]&quot; --admin-email=&quot;[PROP_OPENEDX_ADMIN_EMAIL]&quot; --backup-dir=&quot;[BACKUPFOLDER]&quot; --theme=&quot;[PROP_OPENEDX_THEME]&quot; &gt;&gt; &quot;[LOGSFOLDER]install_openedx.log&quot; 2&gt;&amp;1&quot;" Execute="deferred" Return="ignore" Impersonate="no" />
+    <CustomAction Id="InstallWorkersService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\workers.cmd&quot; start &gt;&gt; &quot;[LOGSFOLDER]install_workers.log&quot; 2&gt;&amp;1" Execute="deferred" Return="ignore" Impersonate="no" />
     <CustomAction Id="StopWorkersService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\workers.cmd&quot; stop" Execute="deferred" Return="ignore" Impersonate="no" />
-    <CustomAction Id="ImportDemoContentAction" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\import_demo.cmd&quot; course &amp;&amp; &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\import_demo.cmd&quot; libraries" Execute="deferred" Return="ignore" Impersonate="no" />
-    <CustomAction Id="BuildMFEsAction" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\mfe.cmd&quot; build all &amp;&amp; &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\mfe.cmd&quot; deploy all" Execute="deferred" Return="ignore" Impersonate="no" />
-    <CustomAction Id="PostInstallHealthcheck" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\healthcheck.cmd&quot;" Execute="deferred" Return="ignore" Impersonate="no" />
-    <CustomAction Id="InstallMySQLService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install databases/mysql --port=[PROP_MYSQL_PORT]" Execute="deferred" Return="ignore" Impersonate="no" />
-    <CustomAction Id="InstallRedisService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install caches/redis --port=[PROP_REDIS_PORT]" Execute="deferred" Return="ignore" Impersonate="no" />
+    <CustomAction Id="ImportDemoContentAction" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\import_demo.cmd&quot; course &gt;&gt; &quot;[LOGSFOLDER]install_demo.log&quot; 2&gt;&amp;1 &amp;&amp; &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\import_demo.cmd&quot; libraries &gt;&gt; &quot;[LOGSFOLDER]install_demo.log&quot; 2&gt;&amp;1" Execute="deferred" Return="ignore" Impersonate="no" />
+    <CustomAction Id="BuildMFEsAction" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\mfe.cmd&quot; build all &gt;&gt; &quot;[LOGSFOLDER]install_mfe.log&quot; 2&gt;&amp;1 &amp;&amp; &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\mfe.cmd&quot; deploy all &gt;&gt; &quot;[LOGSFOLDER]install_mfe.log&quot; 2&gt;&amp;1" Execute="deferred" Return="ignore" Impersonate="no" />
+    <CustomAction Id="PostInstallHealthcheck" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\healthcheck.cmd&quot; &gt;&gt; &quot;[LOGSFOLDER]install_health.log&quot; 2&gt;&amp;1" Execute="deferred" Return="ignore" Impersonate="no" />
+    <CustomAction Id="InstallMySQLService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;if not exist &quot;&quot;[LOGSFOLDER]&quot;&quot; mkdir &quot;&quot;[LOGSFOLDER]&quot;&quot; &amp; &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install databases/mysql --port=[PROP_MYSQL_PORT] &gt;&gt; &quot;[LOGSFOLDER]install_mysql.log&quot; 2&gt;&amp;1&quot;" Execute="deferred" Return="ignore" Impersonate="no" />
+    <CustomAction Id="InstallRedisService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;if not exist &quot;&quot;[LOGSFOLDER]&quot;&quot; mkdir &quot;&quot;[LOGSFOLDER]&quot;&quot; &amp; &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install caches/redis --port=[PROP_REDIS_PORT] &gt;&gt; &quot;[LOGSFOLDER]install_redis.log&quot; 2&gt;&amp;1&quot;" Execute="deferred" Return="ignore" Impersonate="no" />
     <CustomAction Id="UninstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; uninstall stacks/cms/openedx [PURGE_openedx]" Execute="deferred" Return="ignore" Impersonate="no" />
     <CustomAction Id="CA_AbortNoLicense" Error="Installation aborted: You must accept all bundled software licenses to proceed. Pass AGREE_ALL_LICENSES=1 for unattended installations." />
 
@@ -1198,25 +1212,32 @@ fi
 # ## Usage
 #   Internal function.
 compile_msi() {
-  if [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/default/bin" ]; then
-    PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/default/bin:${PATH}"
-    export PATH
-  elif [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/v0.0.1/bin" ]; then
-    PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/v0.0.1/bin:${PATH}"
-    export PATH
-  fi
-
-  if ! command -v candle >/dev/null 2>&1 && ! command -v candle.exe >/dev/null 2>&1; then
-    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" ]; then
-      . "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" >/dev/null 2>&1 || true
+  if [ "$USE_WIX" = "1" ]; then
+    printf '[INFO] Using traditional WiX Toolset...\n'
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/wix/env.sh" ]; then
+      . "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/wix/env.sh" >/dev/null 2>&1 || true
     fi
-  fi
+  else
+    if [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/default/bin" ]; then
+      PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/default/bin:${PATH}"
+      export PATH
+    elif [ -d "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/v0.0.1/bin" ]; then
+      PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/v0.0.1/bin:${PATH}"
+      export PATH
+    fi
 
-  if ! command -v candle >/dev/null 2>&1 && ! command -v candle.exe >/dev/null 2>&1; then
-    if [ -x "${LIBSCRIPT_ROOT_DIR}/libscript.sh" ]; then
-      "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install msi-rs v0.0.1 >/dev/null 2>&1 || true
+    if ! command -v candle >/dev/null 2>&1 && ! command -v candle.exe >/dev/null 2>&1; then
       if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" ]; then
         . "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" >/dev/null 2>&1 || true
+      fi
+    fi
+
+    if ! command -v candle >/dev/null 2>&1 && ! command -v candle.exe >/dev/null 2>&1; then
+      if [ -x "${LIBSCRIPT_ROOT_DIR}/libscript.sh" ]; then
+        # "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install msi-rs v0.0.1 >/dev/null 2>"${LIBSCRIPT_ROOT_DIR}/libscript.sh" install msi-rs v0.0.1 >/dev/null 2>&1 || true1 || true
+        if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" ]; then
+          . "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" >/dev/null 2>&1 || true
+        fi
       fi
     fi
   fi
@@ -1228,30 +1249,61 @@ compile_msi() {
     command -v light.exe >/dev/null 2>&1 && _light_cmd="light.exe"
   fi
 
-  if ! command -v "$_candle_cmd" >/dev/null 2>&1; then
-    printf '[ERROR] msi-rs not found. Please install msi-rs.n' >&2
+
+  if [ "$USE_WIX" = "1" ]; then
+    printf "[INFO] Delegating MSI compilation to remote Windows VM via compile_msi_remote.sh...\n"
+    if ! "${LIBSCRIPT_ROOT_DIR}/packaging/compile_msi_remote.sh" "${OUT_FILE}"; then
+      printf "[ERROR] Remote compilation failed\n" >&2
+      return 1
+    fi
+    return 0
+  else
+    printf "[INFO] Compiling MSI with pure-Rust msi-rs (%s / %s)...\n" "$_candle_cmd" "$_light_cmd"
+  fi
+  if ! "$_candle_cmd" -arch ${TARGET_ARCH} -out "${OUT_FILE}.wixobj" "$WXS_FILE"; then
+    printf '[ERROR] candle compilation failed on %s\n' "$WXS_FILE" >&2
     return 1
   fi
 
-  printf '[INFO] Compiling MSI with pure-Rust msi-rs (%s / %s)...n' "$_candle_cmd" "$_light_cmd"
-
-  if ! "$_candle_cmd" -arch x64 -out "${OUT_FILE}.wixobj" "$WXS_FILE"; then
-    printf '[ERROR] msi-rs candle compilation failed on %sn' "$WXS_FILE" >&2
-    return 1
-  fi
-
-  if ! "$_candle_cmd" -arch x64 -out "${OUT_FILE}_payload.wixobj" "${PAYLOAD_WXS}"; then
-    printf '[ERROR] msi-rs candle compilation failed on %sn' "${PAYLOAD_WXS}" >&2
+  if ! "$_candle_cmd" -arch ${TARGET_ARCH} -out "${OUT_FILE}_payload.wixobj" "${PAYLOAD_WXS}"; then
+    printf '[ERROR] candle compilation failed on %s\n' "${PAYLOAD_WXS}" >&2
     return 1
   fi
 
   if ! "$_light_cmd" -sval -ext WixUIExtension -out "${OUT_FILE}.msi" "${OUT_FILE}.wixobj" "${OUT_FILE}_payload.wixobj"; then
-    printf '[ERROR] msi-rs light linker failed for %s.msin' "${OUT_FILE}" >&2
+    printf '[ERROR] light linker failed for %s.msi\n' "${OUT_FILE}" >&2
+    return 1
+  fi
+
+  if ! msiinfo tables "${OUT_FILE}.msi" | grep -q "CustomAction"; then 
+    printf "[ERROR] MSI validation failed. Missing CustomAction table.\n" >&2; 
+    return 1; 
+  fi
+  if ! msiinfo tables "${OUT_FILE}.msi" | grep -q "Dialog"; then 
+    printf "[ERROR] MSI validation failed. Missing Dialog table.\n" >&2; 
+    return 1; 
+  fi
+
+  if ! msiinfo "${OUT_FILE}.msi" >/dev/null 2>&1; then
+    if ! msiinfo tables "${OUT_FILE}.msi" >/dev/null 2>&1; then
+      printf '[ERROR] msiinfo structural validation failed. The generated MSI is likely corrupt or the OLE CFB header is malformed.\n' >&2
+      return 1
+    fi
+  fi
+
+  if ! msiinfo tables "${OUT_FILE}.msi" | grep -q "Property"; then
+    printf '[ERROR] msiinfo structural validation failed. Missing fundamental MSI tables.\n' >&2
+    return 1
+  fi
+  
+  _msi_size=$(wc -c < "${OUT_FILE}.msi" | tr -d ' ')
+  if [ "$_msi_size" -lt 10240 ]; then
+    printf '[ERROR] MSI validation failed. The generated MSI is abnormally small (%s bytes).\n' "$_msi_size" >&2
     return 1
   fi
 
   printf '[PASS] Successfully built %s.msin' "${OUT_FILE}"
 }
 
-compile_msi || exit 1
+compile_msi || { exit 1; }
 exit 0

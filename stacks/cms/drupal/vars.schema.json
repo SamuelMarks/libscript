@@ -44,6 +44,26 @@
     "DRUPAL_LISTEN": {
       "type": "string",
       "description": "Variable DRUPAL_LISTEN."
+    },
+    "db_strategy": {
+      "type": "string",
+      "enum": ["local", "remote"],
+      "default": "local",
+      "description": "Database provisioning strategy (e.g. relational vs nosql)."
+    },
+    "db_host": {
+      "type": "string",
+      "default": "127.0.0.1",
+      "description": "Database connection host."
+    },
+    "db_name": {
+      "type": "string",
+      "default": "drupal",
+      "description": "Database name."
+    },
+    "db_url": {
+      "type": "string",
+      "description": "Full database connection string or URL."
     }
   }
 }

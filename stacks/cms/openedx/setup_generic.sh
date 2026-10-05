@@ -91,13 +91,13 @@ extract_archive() {
   mkdir -p "$_dest"
   case "$_src" in
     *.tar.gz|*.tgz)
-      tar -xzf "$_src" -C "$_dest" 2>/dev/null || true
+      tar -xzf "$_src" -C "$_dest" 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
       ;;
     *.zip)
       if command -v unzip >/dev/null 2>&1; then
-        unzip -q -o "$_src" -d "$_dest" 2>/dev/null || true
+        unzip -q -o "$_src" -d "$_dest" 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
       elif command -v tar >/dev/null 2>&1; then
-        tar -xf "$_src" -C "$_dest" 2>/dev/null || true
+        tar -xf "$_src" -C "$_dest" 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
       fi
       ;;
   esac
@@ -226,7 +226,7 @@ case "$ACTION" in
         for _f in "${offline_cache_dir}/databases"/meilisearch-*; do
           if [ -f "$_f" ]; then
             cp -f "$_f" "${OPENEDX_INSTALL_DIR}/databases/meilisearch/meilisearch"
-            chmod +x "${OPENEDX_INSTALL_DIR}/databases/meilisearch/meilisearch" 2>/dev/null || true
+            chmod +x "${OPENEDX_INSTALL_DIR}/databases/meilisearch/meilisearch" 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
           fi
         done
       fi
@@ -250,10 +250,10 @@ case "$ACTION" in
           _py="${OPENEDX_INSTALL_DIR}/runtimes/python/python"
         fi
         if [ -f "${OPENEDX_INSTALL_DIR}/codebase/requirements/edx/base.txt" ]; then
-          "$_py" -m pip install --no-index --find-links "${offline_cache_dir}/wheels" -r "${OPENEDX_INSTALL_DIR}/codebase/requirements/edx/base.txt" 2>/dev/null || true
+          "$_py" -m pip install --no-index --find-links "${offline_cache_dir}/wheels" -r "${OPENEDX_INSTALL_DIR}/codebase/requirements/edx/base.txt" 2>&1 | tee -a "${OPENEDX_INSTALL_DIR}/logs/install.log" || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
         else
           for _w in "${offline_cache_dir}/wheels"/*.whl; do
-            [ -f "$_w" ] && "$_py" -m pip install --no-index --find-links "${offline_cache_dir}/wheels" "$_w" 2>/dev/null || true
+            [ -f "$_w" ] && "$_py" -m pip install --no-index --find-links "${offline_cache_dir}/wheels" "$_w" 2>&1 | tee -a "${OPENEDX_INSTALL_DIR}/logs/install.log" || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
           done
         fi
       fi
@@ -267,7 +267,7 @@ case "$ACTION" in
       # 1. Provision Infrastructure Dependencies
       log_info "1/8: Provisioning core services and runtimes..."
       for _dep in python nodejs mysql mongodb redis meilisearch gunicorn exim nodeenv; do
-        (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "${_dep}" || true)
+        (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "${_dep}" || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; })
       done
 
       # 2. Checkout / Setup openedx-platform repository
@@ -276,9 +276,23 @@ case "$ACTION" in
       if [ ! -d "${OPENEDX_INSTALL_DIR}/.git" ]; then
         if command -v git >/dev/null 2>&1; then
           git clone --depth 1 --branch "${BRANCH}" "${REPO_URL}" "${OPENEDX_INSTALL_DIR}" 2>/dev/null || 
-            git clone --depth 1 "${REPO_URL}" "${OPENEDX_INSTALL_DIR}" || true
+            git clone --depth 1 "${REPO_URL}" "${OPENEDX_INSTALL_DIR}" || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
         fi
       fi
+    fi
+
+    mkdir -p "${OPENEDX_INSTALL_DIR}/logs"
+
+    # Pre-flight python check
+    _py="python3"
+    if [ -x "${OPENEDX_INSTALL_DIR}/runtimes/python/bin/python3" ]; then
+      _py="${OPENEDX_INSTALL_DIR}/runtimes/python/bin/python3"
+    elif [ -x "${OPENEDX_INSTALL_DIR}/runtimes/python/python" ]; then
+      _py="${OPENEDX_INSTALL_DIR}/runtimes/python/python"
+    fi
+    if ! "$_py" -c "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)" 2>/dev/null; then
+      log_error "Python 3.11 or 3.12 is required."
+      exit 1
     fi
 
     # 3. Setup Virtualenv & Dependencies
@@ -286,9 +300,9 @@ case "$ACTION" in
     VENV_DIR="${OPENEDX_INSTALL_DIR}/.venv"
     if [ ! -d "${VENV_DIR}" ]; then
       if command -v uv >/dev/null 2>&1; then
-        uv venv --python 3.12 "${VENV_DIR}" 2>/dev/null || uv venv "${VENV_DIR}" || true
-      elif command -v python3 >/dev/null 2>&1; then
-        python3 -m venv "${VENV_DIR}" 2>/dev/null || true
+        uv venv --python "$_py" "${VENV_DIR}" 2>/dev/null || uv venv "${VENV_DIR}" || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
+      else
+        "$_py" -m venv "${VENV_DIR}" 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
       fi
     fi
 
@@ -296,9 +310,9 @@ case "$ACTION" in
     if [ -f "${OPENEDX_INSTALL_DIR}/requirements/edx/base.txt" ]; then
       log_info "Installing Python dependencies via uv/pip..."
       if command -v uv >/dev/null 2>&1; then
-        uv pip install --python "${VENV_DIR}/bin/python" -r "${OPENEDX_INSTALL_DIR}/requirements/edx/base.txt" || true
+        uv pip install --python "${VENV_DIR}/bin/python" -r "${OPENEDX_INSTALL_DIR}/requirements/edx/base.txt" 2>&1 | tee -a "${OPENEDX_INSTALL_DIR}/logs/install.log" || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
       else
-        "${VENV_DIR}/bin/python" -m pip install --no-cache-dir -r "${OPENEDX_INSTALL_DIR}/requirements/edx/base.txt" || true
+        "${VENV_DIR}/bin/python" -m pip install --no-cache-dir -r "${OPENEDX_INSTALL_DIR}/requirements/edx/base.txt" 2>&1 | tee -a "${OPENEDX_INSTALL_DIR}/logs/install.log" || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
       fi
     fi
 
@@ -336,41 +350,47 @@ case "$ACTION" in
 EOF
 
     # 5. Database Migrations & Initial Data
-    log_info "5/8: Applying database migrations and seeding administrator..."
+    log_info "5/8: Initializing databases..."
+    if [ -f "${DIR}/dbshell.sh" ]; then
+      "${DIR}/dbshell.sh" query "CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE:-openedx}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
+    fi
+
+    log_info "Applying database migrations and seeding administrator..."
     if [ -f "${OPENEDX_INSTALL_DIR}/codebase/manage.py" ]; then
-      (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${VENV_DIR}/bin/python" manage.py lms migrate --noinput) || exit 1
-      (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${VENV_DIR}/bin/python" manage.py cms migrate --noinput) || exit 1
+      (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${VENV_DIR}/bin/python" manage.py lms migrate --noinput 2>&1 | tee -a "${OPENEDX_INSTALL_DIR}/logs/install.log") || exit 1
+      (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${VENV_DIR}/bin/python" manage.py cms migrate --noinput 2>&1 | tee -a "${OPENEDX_INSTALL_DIR}/logs/install.log") || exit 1
     else
       log_warn "manage.py not found in codebase, skipping migrations."
     fi
     # Idempotently create or update admin superuser using dedicated user tool
     if [ -f "${DIR}/user.sh" ]; then
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/user.sh" create "${ADMIN_USER}" "${ADMIN_EMAIL}" --password "${ADMIN_PASS}" --staff --superuser 2>/dev/null || true
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/user.sh" create "${ADMIN_USER}" "${ADMIN_EMAIL}" --password "${ADMIN_PASS}" --staff --superuser 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
     fi
 
     # 6. Static Asset Compilation & Theming
     log_info "6/8: Compiling frontend assets..."
     if [ -f "${OPENEDX_INSTALL_DIR}/package.json" ]; then
-      (cd "${OPENEDX_INSTALL_DIR}" && npm clean-install --no-audit 2>/dev/null || npm install 2>/dev/null || true)
-      if [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
-        "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" lms collectstatic --noinput 2>/dev/null || true
+      (cd "${OPENEDX_INSTALL_DIR}" && { npm clean-install --no-audit 2>&1 || npm install 2>&1; } | tee -a "${OPENEDX_INSTALL_DIR}/logs/install.log") || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
+      if [ -f "${OPENEDX_INSTALL_DIR}/codebase/pavement.py" ]; then
+        (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${VENV_DIR}/bin/python" -m paver update_assets lms --settings=universal.production 2>&1 | tee -a "${OPENEDX_INSTALL_DIR}/logs/install.log") || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
+        (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${VENV_DIR}/bin/python" -m paver update_assets cms --settings=universal.production 2>&1 | tee -a "${OPENEDX_INSTALL_DIR}/logs/install.log") || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
       fi
     fi
     if [ -n "${THEME_NAME}" ] && [ "${THEME_NAME}" != "none" ] && [ -f "${DIR}/theme.sh" ]; then
       log_info "Activating theme: ${THEME_NAME}..."
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/theme.sh" apply "${THEME_NAME}" 2>/dev/null || true
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/theme.sh" apply "${THEME_NAME}" 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
     fi
 
     # 7. Optional Demo Course and MFEs
     if [ "${IMPORT_DEMO}" = "1" ] && [ -f "${DIR}/import_demo.sh" ]; then
       log_info "Seeding demo courseware and content libraries..."
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/import_demo.sh" course 2>/dev/null || true
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/import_demo.sh" libraries 2>/dev/null || true
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/import_demo.sh" course 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/import_demo.sh" libraries 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
     fi
     if [ "${ENABLE_MFES}" = "1" ] && [ -f "${DIR}/mfe.sh" ]; then
       log_info "Building and deploying Micro-Frontends..."
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/mfe.sh" build all 2>/dev/null || true
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/mfe.sh" deploy all 2>/dev/null || true
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/mfe.sh" build all 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/mfe.sh" deploy all 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
     fi
 
     # 8. Start Services and Workers
@@ -394,13 +414,13 @@ EOF
     fi
 
     if [ "${ENABLE_WORKERS}" = "1" ] && [ -f "${DIR}/workers.sh" ]; then
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" start 2>/dev/null || true
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" start 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
     fi
 
     # Post-install verification healthcheck
     if [ -f "${DIR}/healthcheck.sh" ]; then
       log_info "Executing post-installation health diagnostic probe..."
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/healthcheck.sh" || true
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/healthcheck.sh" || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
     fi
 
     log_success "Open edX stack successfully provisioned!"
@@ -426,21 +446,21 @@ EOF
 ' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
     fi
     if [ -f "${DIR}/workers.sh" ]; then
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" start 2>/dev/null || true
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" start 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
     fi
     exit 0
     ;;
   stop)
     log_info "Stopping Open edX LMS, CMS, and background daemons..."
     if [ -f "${DIR}/workers.sh" ]; then
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" stop 2>/dev/null || true
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" stop 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
     fi
     if [ -f "${OPENEDX_INSTALL_DIR}/lms.pid" ]; then
-      kill "$(cat "${OPENEDX_INSTALL_DIR}/lms.pid")" 2>/dev/null || true
+      kill "$(cat "${OPENEDX_INSTALL_DIR}/lms.pid")" 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
       rm -f "${OPENEDX_INSTALL_DIR}/lms.pid"
     fi
     if [ -f "${OPENEDX_INSTALL_DIR}/cms.pid" ]; then
-      kill "$(cat "${OPENEDX_INSTALL_DIR}/cms.pid")" 2>/dev/null || true
+      kill "$(cat "${OPENEDX_INSTALL_DIR}/cms.pid")" 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
       rm -f "${OPENEDX_INSTALL_DIR}/cms.pid"
     fi
     exit 0
@@ -471,7 +491,7 @@ EOF
   uninstall)
     log_info "Removing Open edX stack from ${OPENEDX_INSTALL_DIR}..."
     if [ -f "${DIR}/workers.sh" ]; then
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" stop 2>/dev/null || true
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" stop 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
     fi
     rm -rf "${OPENEDX_INSTALL_DIR}"
     exit 0

@@ -35,6 +35,8 @@ set "BRANCH="
 set "OUT_DIR=%LIBSCRIPT_ROOT_DIR%\dist\msi"
 set "OFFLINE_SOURCE=%LIBSCRIPT_ROOT_DIR%\cache"
 set "HYDRATE=0"
+if not defined LIBSCRIPT_TARGET_ARCH set "LIBSCRIPT_TARGET_ARCH=x64"
+set "TARGET_ARCH=%LIBSCRIPT_TARGET_ARCH%"
 
 :: ## parse_loop
 :: ## Overview
@@ -91,6 +93,12 @@ if /i "%~1"=="--offline-source" (
 )
 if /i "%~1"=="--hydrate" (
     set "HYDRATE=1"
+    shift
+    goto parse_loop
+)
+if /i "%~1"=="--arch" (
+    set "TARGET_ARCH=%~2"
+    shift
     shift
     goto parse_loop
 )
@@ -399,12 +407,12 @@ if errorlevel 1 (
 )
 
 echo [INFO] Compiling standalone %CURR_VAR% MSI via msi-rs: %TARGET_MSI%
-candle.exe -nologo -arch x64 -out "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_main.wixobj" "%MAIN_WXS%"
+candle.exe -nologo -arch %TARGET_ARCH% -out "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_main.wixobj" "%MAIN_WXS%"
 if !ERRORLEVEL! neq 0 (
     echo [ERROR] msi-rs candle compilation failed for %MAIN_WXS%. >&2
     goto compile_err
 )
-candle.exe -nologo -arch x64 -out "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_payload.wixobj" "%PAYLOAD_WXS%"
+candle.exe -nologo -arch %TARGET_ARCH% -out "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_payload.wixobj" "%PAYLOAD_WXS%"
 if !ERRORLEVEL! neq 0 (
     echo [ERROR] msi-rs candle compilation failed for %PAYLOAD_WXS%. >&2
     goto compile_err

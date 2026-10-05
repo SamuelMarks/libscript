@@ -243,47 +243,87 @@ if [ -n "$PKG_JSON" ] && [ -f "$PKG_JSON" ]; then
   fi
 fi
 
-# 3. If still empty, inspect manifest.json in target directory
-if [ "$(jq 'length' "$ITEMS_JSON" 2>/dev/null || printf '0')" = "0" ]; then
-  MAN_JSON=""
-  if [ -d "$TARGET_PATH" ] && [ -f "$TARGET_PATH/manifest.json" ]; then
-    MAN_JSON="$TARGET_PATH/manifest.json"
-  elif [ -f "$TARGET_PATH" ] && [ "$(basename "$TARGET_PATH")" = "manifest.json" ]; then
-    MAN_JSON="$TARGET_PATH"
+# 3. Inspect manifest.json and packaging.json to dynamically infer dependencies
+MAN_JSON=""
+if [ -d "$TARGET_PATH" ] && [ -f "$TARGET_PATH/manifest.json" ]; then
+  MAN_JSON="$TARGET_PATH/manifest.json"
+elif [ -f "$TARGET_PATH" ] && [ "$(basename "$TARGET_PATH")" = "manifest.json" ]; then
+  MAN_JSON="$TARGET_PATH"
+fi
+
+if [ -n "$MAN_JSON" ] && [ -f "$MAN_JSON" ]; then
+  # Add top-level component itself
+  _self_name=$(jq -r '.name // "app"' "$MAN_JSON")
+  _self_title=$(jq -r '.title // .name // "Application"' "$MAN_JSON")
+  _self_spdx=$(jq -r '.license // "Proprietary"' "$MAN_JSON")
+
+  # Add to ITEMS_JSON if not already present
+  if ! jq -e --arg name "$_self_name" '.[].name == $name' "$ITEMS_JSON" >/dev/null 2>&1; then
+    jq --arg name "$_self_name" \
+       --arg title "$_self_title" \
+       --arg spdx "$_self_spdx" \
+       '. += [{name: $name, title: $title, spdx: $spdx, mandatory: true}]' \
+       "$ITEMS_JSON" > "$TMP_DIR/tmp_items.json" && mv "$TMP_DIR/tmp_items.json" "$ITEMS_JSON"
   fi
 
-  if [ -n "$MAN_JSON" ] && [ -f "$MAN_JSON" ]; then
-    # Add top-level component itself
-    _self_name=$(jq -r '.name // "app"' "$MAN_JSON")
-    _self_title=$(jq -r '.title // .name // "Application"' "$MAN_JSON")
-    _self_spdx=$(jq -r '.license // "Proprietary"' "$MAN_JSON")
-
-    jq -n \
-      --arg name "$_self_name" \
-      --arg title "$_self_title" \
-      --arg spdx "$_self_spdx" \
-      '[{name: $name, title: $title, spdx: $spdx, mandatory: true}]' > "$ITEMS_JSON"
-
-    # Add required components
-    _reqs=$(jq -r '.requires[]? // empty' "$MAN_JSON")
-    for req in $_reqs; do
+  # Add required components
+  _reqs=$(jq -r '.requires[]? // empty' "$MAN_JSON")
+  for req in $_reqs; do
+    _req_man=""
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/${req}/manifest.json" ]; then
       _req_man="${LIBSCRIPT_ROOT_DIR}/_lib/${req}/manifest.json"
-      if [ -f "$_req_man" ]; then
-        _req_name=$(jq -r '.name' "$_req_man")
-        _req_title=$(jq -r '.title // .name' "$_req_man")
-        _req_spdx=$(jq -r '.license // "MIT"' "$_req_man")
-        _req_lic_file=$(jq -r '.license_file // ""' "$_req_man")
+    elif [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/${req}/manifest.json" ]; then
+      _req_man="${LIBSCRIPT_ROOT_DIR}/_lib/_common/${req}/manifest.json"
+    else
+      # Attempt deep find if not in standard locations
+      _req_man=$(find "${LIBSCRIPT_ROOT_DIR}/_lib" -name "manifest.json" -path "*/${req}/manifest.json" | head -n 1)
+    fi
+    
+    if [ -n "$_req_man" ] && [ -f "$_req_man" ]; then
+      _req_name=$(jq -r '.name' "$_req_man")
+      _req_title=$(jq -r '.title // .name' "$_req_man")
+      _req_spdx=$(jq -r '.license // "MIT"' "$_req_man")
+      _req_lic_file=$(jq -r '.license_file // ""' "$_req_man")
 
-        jq \
-          --arg name "$_req_name" \
-          --arg title "$_req_title" \
-          --arg spdx "$_req_spdx" \
-          --arg lic_file "$_req_lic_file" \
-          '. += [{name: $name, title: $title, spdx: $spdx, license_file: $lic_file, mandatory: true}]' \
-          "$ITEMS_JSON" > "$TMP_DIR/tmp_items.json" && mv "$TMP_DIR/tmp_items.json" "$ITEMS_JSON"
+      if ! jq -e --arg name "$_req_name" '.[].name == $name' "$ITEMS_JSON" >/dev/null 2>&1; then
+        jq --arg name "$_req_name" \
+           --arg title "$_req_title" \
+           --arg spdx "$_req_spdx" \
+           --arg lic_file "$_req_lic_file" \
+           '. += [{name: $name, title: $title, spdx: $spdx, license_file: $lic_file, mandatory: true}]' \
+           "$ITEMS_JSON" > "$TMP_DIR/tmp_items.json" && mv "$TMP_DIR/tmp_items.json" "$ITEMS_JSON"
       fi
-    done
-  fi
+    fi
+  done
+fi
+
+if [ -n "$PKG_JSON" ] && [ -f "$PKG_JSON" ]; then
+  # Add chained packages
+  _chained=$(jq -r '.chained_packages[].component // empty' "$PKG_JSON")
+  for comp in $_chained; do
+    _comp_man=""
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/${comp}/manifest.json" ]; then
+      _comp_man="${LIBSCRIPT_ROOT_DIR}/_lib/${comp}/manifest.json"
+    else
+      _comp_man=$(find "${LIBSCRIPT_ROOT_DIR}/_lib" -name "manifest.json" -path "*/${comp}/manifest.json" | head -n 1)
+    fi
+    
+    if [ -n "$_comp_man" ] && [ -f "$_comp_man" ]; then
+      _req_name=$(jq -r '.name' "$_comp_man")
+      _req_title=$(jq -r '.title // .name' "$_comp_man")
+      _req_spdx=$(jq -r '.license // "MIT"' "$_comp_man")
+      _req_lic_file=$(jq -r '.license_file // ""' "$_comp_man")
+
+      if ! jq -e --arg name "$_req_name" '.[].name == $name' "$ITEMS_JSON" >/dev/null 2>&1; then
+        jq --arg name "$_req_name" \
+           --arg title "$_req_title" \
+           --arg spdx "$_req_spdx" \
+           --arg lic_file "$_req_lic_file" \
+           '. += [{name: $name, title: $title, spdx: $spdx, license_file: $lic_file, mandatory: true}]' \
+           "$ITEMS_JSON" > "$TMP_DIR/tmp_items.json" && mv "$TMP_DIR/tmp_items.json" "$ITEMS_JSON"
+      fi
+    fi
+  done
 fi
 
 # Process harvested items and build output manifest

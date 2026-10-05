@@ -121,7 +121,10 @@ if "%ACTION%"=="install" (
     if not exist "%OPENEDX_INSTALL_DIR%\config" mkdir "%OPENEDX_INSTALL_DIR%\config" 2>nul
     if not exist "%BACKUP_DIR%" mkdir "%BACKUP_DIR%" 2>nul
 
-    if "%IS_OFFLINE%"=="1" if defined OFFLINE_CACHE_DIR (
+    set "USE_OFFLINE=0"
+    if "%IS_OFFLINE%"=="1" if defined OFFLINE_CACHE_DIR set "USE_OFFLINE=1"
+
+    if "!USE_OFFLINE!"=="1" (
         echo [INFO] 1/7: Provisioning core services and runtimes from air-gapped cache...
 
         :: Step 1 (Runtimes): Extract Python and Node.js
@@ -167,11 +170,12 @@ if "%ACTION%"=="install" (
             echo [INFO] Installing Python wheels with --no-index from cache\wheels...
             set "PY_EXE=python"
             if exist "%OPENEDX_INSTALL_DIR%\runtimes\python\python.exe" set "PY_EXE=%OPENEDX_INSTALL_DIR%\runtimes\python\python.exe"
+            if not exist "%OPENEDX_INSTALL_DIR%\logs" mkdir "%OPENEDX_INSTALL_DIR%\logs"
             if exist "%OPENEDX_INSTALL_DIR%\codebase\requirements\edx\base.txt" (
-                "%PY_EXE%" -m pip install --no-index --find-links "!OFFLINE_CACHE_DIR!\wheels" -r "%OPENEDX_INSTALL_DIR%\codebase\requirements\edx\base.txt" 2>nul || rem
+                "%PY_EXE%" -m pip install --no-index --find-links "!OFFLINE_CACHE_DIR!\wheels" -r "%OPENEDX_INSTALL_DIR%\codebase\requirements\edx\base.txt" >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1 || (powershell -Command "Get-Content '%OPENEDX_INSTALL_DIR%\logs\install.log' -Tail 50" & exit /b 1)
             ) else (
                 for %%W in ("!OFFLINE_CACHE_DIR!\wheels\*.whl") do (
-                    "%PY_EXE%" -m pip install --no-index --find-links "!OFFLINE_CACHE_DIR!\wheels" "%%~fW" 2>nul || rem
+                    "%PY_EXE%" -m pip install --no-index --find-links "!OFFLINE_CACHE_DIR!\wheels" "%%~fW" >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1 || (powershell -Command "Get-Content '%OPENEDX_INSTALL_DIR%\logs\install.log' -Tail 50" & exit /b 1)
                 )
             )
         )
@@ -179,16 +183,57 @@ if "%ACTION%"=="install" (
         :: Step 5 (Demo Content): Ingest demo courseware from cache/codebase
         if "%IMPORT_DEMO%"=="1" if exist "!OFFLINE_CACHE_DIR!\codebase\demo-course.tar.gz" (
             echo [INFO] Ingesting demo courseware from cached archive...
-            tar -xzf "!OFFLINE_CACHE_DIR!\codebase\demo-course.tar.gz" -C "%OPENEDX_INSTALL_DIR%" 2>nul || rem
+            tar -xzf "!OFFLINE_CACHE_DIR!\codebase\demo-course.tar.gz" -C "%OPENEDX_INSTALL_DIR%" 2>nul || (powershell -Command "Get-Content '%OPENEDX_INSTALL_DIR%\logs\install.log' -Tail 50" & exit /b 1)
         )
     ) else (
         echo [INFO] 1/7: Provisioning core services and runtimes online...
         call "%LIBSCRIPT_BIN%" install python nodejs mysql mongodb redis meilisearch waitress
+        
+        echo [INFO] Cloning edx-platform codebase...
+        if not exist "%OPENEDX_INSTALL_DIR%\codebase" (
+            git clone --depth 1 -b open-release/quince.master https://github.com/openedx/edx-platform.git "%OPENEDX_INSTALL_DIR%\codebase" || exit /b 1
+        )
     )
 
     echo [INFO] 2/7: Preparing directories at %OPENEDX_INSTALL_DIR%...
+    if not exist "%OPENEDX_INSTALL_DIR%\logs" mkdir "%OPENEDX_INSTALL_DIR%\logs"
 
-    echo [INFO] 3/7: Generating Open edX environment configurations...
+    :: Pre-flight python check
+    set "PY_EXE=python"
+    if exist "%OPENEDX_INSTALL_DIR%\runtimes\python\python.exe" set "PY_EXE=%OPENEDX_INSTALL_DIR%\runtimes\python\python.exe"
+    if exist "C:\Program Files\Python312\python.exe" set "PY_EXE=C:\Program Files\Python312\python.exe"
+    if exist "C:\Program Files\Python311\python.exe" set "PY_EXE=C:\Program Files\Python311\python.exe"
+    if exist "%USERPROFILE%\AppData\Local\Programs\Python\Python312\python.exe" set "PY_EXE=%USERPROFILE%\AppData\Local\Programs\Python\Python312\python.exe"
+    if exist "%USERPROFILE%\AppData\Local\Programs\Python\Python312-arm64\python.exe" set "PY_EXE=%USERPROFILE%\AppData\Local\Programs\Python\Python312-arm64\python.exe"
+    if exist "%USERPROFILE%\AppData\Local\Programs\Python\Python311-arm64\python.exe" set "PY_EXE=%USERPROFILE%\AppData\Local\Programs\Python\Python311-arm64\python.exe"
+    
+    echo [DEBUG] PY_EXE resolved to: !PY_EXE!
+    "!PY_EXE!" --version
+    "!PY_EXE!" -c "import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)" 2>nul
+    if errorlevel 1 (
+        echo [ERROR] Python 3.10+ is required. >&2
+        exit /b 1
+    )
+
+    echo [INFO] 3/7: Generating Open edX environment configurations and venv...
+    if not exist "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" (
+        "%PY_EXE%" -m venv "%OPENEDX_INSTALL_DIR%\.venv"
+    )
+
+    :: Install Python Requirements if repo exists
+    if exist "%OPENEDX_INSTALL_DIR%\codebase\requirements\edx\base.txt" (
+        echo [INFO] Installing Python dependencies...
+        powershell -NoProfile -Command "(Get-Content '%OPENEDX_INSTALL_DIR%\codebase\requirements\edx\base.txt') -replace 'mysqlclient==.*', 'mysqlclient==2.3.0' | Set-Content '%OPENEDX_INSTALL_DIR%\codebase\requirements\edx\base.txt'"
+        powershell -NoProfile -Command "(Get-Content '%OPENEDX_INSTALL_DIR%\codebase\requirements\edx\base.txt') -replace 'xmlsec==.*', 'xmlsec==1.3.17' | Set-Content '%OPENEDX_INSTALL_DIR%\codebase\requirements\edx\base.txt'"
+        "!PY_EXE!" -m pip install --only-binary=:all: setuptools wheel pkgconfig mysqlclient xmlsec cffi
+        where uv >nul 2>&1
+        if errorlevel 1 (
+            "!PY_EXE!" -m pip install --no-cache-dir waitress -r "%OPENEDX_INSTALL_DIR%\codebase\requirements\edx\base.txt" >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1 || (powershell -NoProfile -Command "Get-Content '%OPENEDX_INSTALL_DIR%\logs\install.log' -Tail 50" & exit /b 1)
+        ) else (
+            uv pip install --python "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" waitress -r "%OPENEDX_INSTALL_DIR%\codebase\requirements\edx\base.txt" >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1 || (powershell -NoProfile -Command "Get-Content '%OPENEDX_INSTALL_DIR%\logs\install.log' -Tail 50" & exit /b 1)
+        )
+    )
+
     (
         echo {
         echo   "SITE_NAME": "openedx.local",
@@ -247,26 +292,38 @@ if "%ACTION%"=="install" (
         )
     )
 
-    if "%ENABLE_WORKERS%"=="1" (
-        if exist "%SCRIPT_DIR%workers.cmd" (
-            echo [INFO] Launching background workers...
-            call "%SCRIPT_DIR%workers.cmd" start 2>nul
-        )
-    )
-
     if exist "%SCRIPT_DIR%\service.cmd" (
         echo [INFO] Starting Open edX platform services...
-        call "%SCRIPT_DIR%\service.cmd" start 2>nul
+        call "%SCRIPT_DIR%\service.cmd" start || exit /b 1
+    )
+
+    :: Database Initialization
+    echo [INFO] Initializing databases...
+    if "%MYSQL_DATABASE%"=="" set "MYSQL_DATABASE=openedx"
+    if exist "%SCRIPT_DIR%\dbshell.cmd" (
+        call "%SCRIPT_DIR%\dbshell.cmd" query "CREATE DATABASE IF NOT EXISTS `%MYSQL_DATABASE%` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>nul
     )
 
     :: Database Migrations
     echo [INFO] Applying database migrations...
     if exist "%OPENEDX_INSTALL_DIR%\codebase\manage.py" (
         cd /D "%OPENEDX_INSTALL_DIR%\codebase"
-        call "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" manage.py lms migrate --noinput || exit /b 1
-        call "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" manage.py cms migrate --noinput || exit /b 1
+        call "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" manage.py lms migrate --noinput >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1 || exit /b 1
+        call "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" manage.py cms migrate --noinput >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1 || exit /b 1
     ) else (
         echo [WARN] manage.py not found in codebase, skipping migrations.
+    )
+
+    :: Static Asset Compilation & Theming
+    echo [INFO] Compiling frontend assets...
+    if exist "%OPENEDX_INSTALL_DIR%\package.json" (
+        cd /D "%OPENEDX_INSTALL_DIR%"
+        (call npm clean-install --no-audit >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1 || call npm install >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1) || (powershell -Command "Get-Content '%OPENEDX_INSTALL_DIR%\logs\install.log' -Tail 50" & exit /b 1)
+        if exist "%OPENEDX_INSTALL_DIR%\codebase\pavement.py" (
+            cd /D "%OPENEDX_INSTALL_DIR%\codebase"
+            call "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" -m paver update_assets lms --settings=universal.production >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1 || (powershell -Command "Get-Content '%OPENEDX_INSTALL_DIR%\logs\install.log' -Tail 50" & exit /b 1)
+            call "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" -m paver update_assets cms --settings=universal.production >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1 || (powershell -Command "Get-Content '%OPENEDX_INSTALL_DIR%\logs\install.log' -Tail 50" & exit /b 1)
+        )
     )
 
     if exist "%SCRIPT_DIR%\healthcheck.cmd" (

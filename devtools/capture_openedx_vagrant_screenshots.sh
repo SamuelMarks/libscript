@@ -44,24 +44,21 @@ fi
 # Discovers dynamic SSH port, QEMU monitor socket, and disk image path.
 discover_environment() {
   SSH_PORT=""
-  # shellcheck disable=SC2009
-  SSH_PORT=$(ps aux | grep -i 'qemu.*windows-11' | grep -v grep | sed -n 's/.*hostfwd=tcp::\([0-9]*\)-:22.*/\1/p' | head -n 1 || true)
-  if [ -z "${SSH_PORT}" ] && [ -d "${VAGRANT_DIR}" ]; then
-    SSH_PORT=$(cd "${VAGRANT_DIR}" && vagrant ssh-config 2>/dev/null | awk '/Port / {print $2; exit}' || true)
+  SSH_PORT=""
+  if [ -d "${VAGRANT_DIR}" ]; then
+    SSH_PORT=$(cd "${VAGRANT_DIR}" && export LIBSCRIPT_TEST_TARGET="${LIBSCRIPT_TEST_TARGET:-openedx}" && vagrant ssh-config 2>/dev/null | awk '/Port / {print $2; exit}' || true)
   fi
   : "${SSH_PORT:=50523}"
 
   SSH_KEY="${HOME}/.vagrant.d/insecure_private_key"
   SSH_CMD="ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i ${SSH_KEY} vagrant@127.0.0.1"
 
-  MONITOR_SOCK=""
-  # shellcheck disable=SC2009
-  MONITOR_SOCK=$(ps aux | grep -i 'qemu.*windows-11' | grep -v grep | sed -n 's/.*path=\([^,]*qemu_socket\).*/\1/p' | head -n 1 || true)
+  MONITOR_SOCK=$(find "${HOME}/.vagrant.d/tmp/vagrant-qemu" -name "qemu_socket" 2>/dev/null | head -n 1 || true)
   if [ -z "$MONITOR_SOCK" ] || [ ! -S "$MONITOR_SOCK" ]; then
-    MONITOR_SOCK=$(find "${HOME}/.vagrant.d/tmp/vagrant-qemu" -name "qemu_socket" 2>/dev/null | head -n 1 || true)
+      printf '[ERROR] QEMU Monitor socket not found in ~/.vagrant.d/tmp. VM might not be running.\n' >&2
   fi
 
-  DISK_IMG=$(find "${VAGRANT_DIR}/.vagrant" -name "linked-box.img" 2>/dev/null | head -n 1 || true)
+  DISK_IMG=$(find -L "${VAGRANT_DIR}/.vagrant" -name "linked-box.img" 2>/dev/null | head -n 1 || true)
 
   printf '[INFO] Using SSH port: %s
 ' "$SSH_PORT"
@@ -111,8 +108,7 @@ capture_screen() {
   _png="${TEMP_DIR}/${_name}.png"
   sleep 1.5
   if [ -n "${MONITOR_SOCK}" ] && [ -S "${MONITOR_SOCK}" ]; then
-    python3 -c "import socket, time, sys; s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM); s.settimeout(3.0); s.connect(sys.argv[1]); s.sendall(f'screendump {sys.argv[2]}
-'.encode()); time.sleep(0.3); s.close()" "${MONITOR_SOCK}" "${_ppm}" >/dev/null 2>&1 || true
+    python3 -c "import socket, time, sys; s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM); s.settimeout(3.0); s.connect(sys.argv[1]); s.sendall(f'screendump {sys.argv[2]}\n'.encode()); time.sleep(0.3); s.close()" "${MONITOR_SOCK}" "${_ppm}" >/dev/null 2>&1 || true
     if command -v sips >/dev/null 2>&1; then
       sips -s format png "$_ppm" --out "$_png" >/dev/null 2>&1
     elif command -v magick >/dev/null 2>&1; then
@@ -140,7 +136,7 @@ vm_action() {
   case "$_act" in
     *"Setup Complete"*|*"Finish"*) _limit=180 ;;
   esac
-  vm_run "Set-Content -Path 'C:/libscript/target_btn.txt' -Value '$_act'; Start-ScheduledTask -TaskName 'ClickGui'; \$sw = [System.Diagnostics.Stopwatch]::StartNew(); while ((Get-ScheduledTask -TaskName 'ClickGui').State -eq 'Running' -and \$sw.Elapsed.TotalSeconds -lt ${_limit}) { Start-Sleep -Milliseconds 250 }"
+  vm_run "Set-Content -Path 'C:/libscript/target_btn.txt' -Value '$_act'; Start-ScheduledTask -TaskName 'ClickGui'; \$sw = [System.Diagnostics.Stopwatch]::StartNew(); while ((Get-ScheduledTask -TaskName 'ClickGui').State -eq 'Running' -and \$sw.Elapsed.TotalSeconds -lt 2) { Start-Sleep -Milliseconds 250 }; \$task = Get-ScheduledTask -TaskName 'ClickGui'; if (\$task.State -eq 'Ready' -and (Get-ScheduledTaskInfo -TaskName 'ClickGui').LastTaskResult -ne 0) { Write-Error 'ClickGui task failed'; exit 1 }"
   sleep 0.8
 }
 
@@ -165,12 +161,6 @@ vm_check() {
   sleep 1
 }
 
-# ## vm_uncheck
-# Helper to uncheck a checkbox in Session 1.
-vm_uncheck() {
-  vm_action "UNCHECK:$1"
-  sleep 1
-}
 
 # ## vm_set_edit
 # Helper to set text of an edit control in Session 1.
@@ -185,6 +175,19 @@ vm_set_edit() {
 # Helper to wait for a dialog with a specified title in Session 1.
 vm_wait_dialog() {
   _title="$1"
+  
+  # Check for error dialogs first
+  vm_run "\$principal = New-ScheduledTaskPrincipal -UserId 'vagrant' -LogonType Interactive -RunLevel Highest; \$aClick = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument \"-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command \`\"if ([Win32Helper]::FindDialog('could not be opened') -or [Win32Helper]::FindDialog('Setup Error')) { Out-File -FilePath 'C:\libscript\msi_error.txt' }\`\"\"; Register-ScheduledTask -TaskName 'CheckError' -Action \$aClick -Principal \$principal -Force > \$null; Start-ScheduledTask -TaskName 'CheckError'"
+  sleep 1
+  if vm_run "if (Test-Path 'C:\libscript\msi_error.txt') { exit 1 } else { exit 0 }" >/dev/null 2>&1; then
+     # Success (exit 0) means no error file
+     true
+  else
+     printf '[ERROR] Windows Installer Error Dialog Detected (The installation package could not be opened, etc.)! Halting.\n' >&2
+     capture_screen "99_ERROR_DETECTED"
+     exit 1
+  fi
+
   vm_action "WAIT_DIALOG:$_title"
   sleep 1
 }
@@ -192,8 +195,10 @@ vm_wait_dialog() {
 # ## vm_launch_msi
 # Helper to launch MSI in Session 1 via LaunchMsi scheduled task.
 vm_launch_msi() {
-  _msi_path="$1"
-  vm_run "\$principal = New-ScheduledTaskPrincipal -UserId 'vagrant' -LogonType Interactive; \$aLaunch = New-ScheduledTaskAction -Execute 'msiexec.exe' -Argument '/i ${_msi_path}'; Register-ScheduledTask -TaskName 'LaunchMsi' -Action \$aLaunch -Principal \$principal -Force > \$null; Start-ScheduledTask -TaskName 'LaunchMsi'; Start-Sleep -Seconds 4"
+  _msi_fwd="$1"
+  _msi_path="$(echo "$1" | sed 's|/|\\|g')"
+  vm_run "if (-not (Test-Path '${_msi_fwd}')) { Write-Error 'MSI missing'; exit 1 }; if ((Get-Item '${_msi_fwd}').Length -lt 10240) { Write-Error 'MSI invalid/empty'; exit 1 }; Unblock-File -Path '${_msi_fwd}' -ErrorAction SilentlyContinue"
+  vm_run "\$principal = New-ScheduledTaskPrincipal -UserId 'vagrant' -LogonType Interactive -RunLevel Highest; \$aLaunch = New-ScheduledTaskAction -Execute 'msiexec.exe' -Argument \"/i \`\"${_msi_path}\`\" /l*v \`\"C:\libscript\msi_debug.log\`\"\"; Register-ScheduledTask -TaskName 'LaunchMsi' -Action \$aLaunch -Principal \$principal -Force > \$null; Start-ScheduledTask -TaskName 'LaunchMsi'; Start-Sleep -Seconds 4"
 }
 
 # ## launch_browser_url
@@ -264,7 +269,7 @@ sync_guest_environment() {
 
   # Configure scheduled tasks on guest
   # shellcheck disable=SC2016
-  vm_run '$principal = New-ScheduledTaskPrincipal -UserId "vagrant" -LogonType Interactive; $settings = New-ScheduledTaskSettingsSet -MultipleInstances Parallel -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries; $aClick = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File C:/libscript/packaging/click_button.ps1"; Register-ScheduledTask -TaskName "ClickGui" -Action $aClick -Principal $principal -Settings $settings -Force > $null; $aRun = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File C:/libscript/run_gui.ps1"; Register-ScheduledTask -TaskName "RunGui" -Action $aRun -Principal $principal -Force > $null'
+  vm_run '$principal = New-ScheduledTaskPrincipal -UserId "vagrant" -LogonType Interactive -RunLevel Highest; $settings = New-ScheduledTaskSettingsSet -MultipleInstances Parallel -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries; $aClick = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File C:/libscript/packaging/click_button.ps1"; Register-ScheduledTask -TaskName "ClickGui" -Action $aClick -Principal $principal -Settings $settings -Force > $null; $aRun = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File C:/libscript/run_gui.ps1"; Register-ScheduledTask -TaskName "RunGui" -Action $aRun -Principal $principal -Force > $null'
 
   # Ensure broken Edge shortcuts are cleaned from desktop
   vm_run 'Remove-Item "C:/Users/Public/Desktop/Microsoft Edge.lnk" -Force -ErrorAction SilentlyContinue; Remove-Item "C:/Users/vagrant/Desktop/Microsoft Edge.lnk" -Force -ErrorAction SilentlyContinue'
@@ -283,7 +288,7 @@ restore_vanilla_snapshot() {
 
   printf '[INFO] Stopping Windows 11 Vagrant machine...
 '
-  (cd "${VAGRANT_DIR}" && vagrant halt windows-11-test-sqlite) || true
+  (cd "${VAGRANT_DIR}" && vagrant halt windows-11-test-openedx) || true
   sleep 3
 
   printf '[INFO] Reverting disk image to vanilla snapshot...
@@ -298,7 +303,7 @@ restore_vanilla_snapshot() {
 
   printf '[INFO] Powering on Windows 11 Vagrant VM from vanilla snapshot...
 '
-  (cd "${VAGRANT_DIR}" && vagrant up --no-provision windows-11-test-sqlite)
+  (cd "${VAGRANT_DIR}" && vagrant up --no-provision windows-11-test-openedx)
   sleep 5
 
   discover_environment
@@ -333,6 +338,7 @@ run_installer_wizard() {
   capture_screen "${_prefix}01_simple_welcome"
 
   # Step 2: License Agreement
+
   vm_click "Next"
   vm_wait_dialog "License"
   capture_screen "${_prefix}02_simple_license"
@@ -343,6 +349,7 @@ run_installer_wizard() {
   capture_screen "${_prefix}03_simple_setup_type"
 
   # Step 4: Verify Ready
+
   vm_click "Next"
   vm_wait_dialog "Ready to Install"
   capture_screen "${_prefix}04_simple_verify_ready"
@@ -350,6 +357,7 @@ run_installer_wizard() {
   # Step 5: Install & Complete
   printf '[INFO] Triggering installation in Simple Mode...
 '
+
   vm_click "Install"
   vm_wait_dialog "Setup Complete"
   capture_screen "${_prefix}05_simple_exit"
@@ -370,6 +378,7 @@ run_installer_wizard() {
 ' "$_msi_file"
   vm_launch_msi "C:/libscript/packaging/${_msi_file}"
   vm_wait_dialog "Welcome"
+
   vm_click "Next"
   vm_wait_dialog "License"
   vm_click "I Agree"
@@ -381,6 +390,7 @@ run_installer_wizard() {
   capture_screen "${_prefix}06_advanced_setup_type_selected"
 
   # Setup Type -> Component Selection (Features)
+
   vm_click "Next"
   vm_wait_dialog "Component Selection"
   vm_check "Demo Course"
@@ -388,6 +398,7 @@ run_installer_wizard() {
   capture_screen "${_prefix}06a_advanced_features"
 
   # Features -> Destination Folders
+
   vm_click "Next"
   vm_wait_dialog "Destination Folders"
   vm_set_edit 0 'C:\OpenEdX\app'
@@ -397,6 +408,7 @@ run_installer_wizard() {
   capture_screen "${_prefix}06b_advanced_install_location"
 
   # Destination Folders -> Runtime Environment Selection
+
   vm_click "Next"
   vm_wait_dialog "Runtime Environment"
   vm_radio "Install isolated private Python"
@@ -404,12 +416,14 @@ run_installer_wizard() {
   capture_screen "${_prefix}06c_advanced_runtime_selection"
 
   # Runtime Environment -> Source Repository & Release
+
   vm_click "Next"
   vm_wait_dialog "Source Repository"
   vm_set_edit 2 "ghp_edxAdminTokenSecret2026ExampleKey"
   capture_screen "${_prefix}06d_advanced_source_repo"
 
   # Source Repo -> Network & Credentials Configuration
+
   vm_click "Next"
   vm_wait_dialog "Network and Credentials"
   vm_set_edit 0 "8000"
@@ -420,6 +434,7 @@ run_installer_wizard() {
   capture_screen "${_prefix}06e_advanced_config"
 
   # Config -> Relational Database / DBaaS
+
   vm_click "Next"
   vm_wait_dialog "Database"
   vm_set_edit 0 "3306"
@@ -427,6 +442,7 @@ run_installer_wizard() {
   capture_screen "${_prefix}07_advanced_db"
 
   # DB -> Cache, Document Store & Search
+
   vm_click "Next"
   vm_wait_dialog "Cache"
   vm_set_edit 0 "6379"
@@ -436,6 +452,7 @@ run_installer_wizard() {
   capture_screen "${_prefix}08_advanced_cache_search"
 
   # Cache -> Verify Ready (Advanced)
+
   vm_click "Next"
   vm_wait_dialog "Ready to Install"
   capture_screen "${_prefix}09_advanced_verify_ready"
@@ -443,6 +460,7 @@ run_installer_wizard() {
   # Verify Ready -> Install & Exit
   printf '[INFO] Triggering installation in Advanced Mode...
 '
+
   vm_click "Install"
   vm_wait_dialog "Setup Complete"
   capture_screen "${_prefix}10_advanced_exit"
@@ -483,10 +501,10 @@ if [ -n "$DISK_IMG" ] && [ -f "$DISK_IMG" ]; then
   if ! qemu-img snapshot -U -l "${DISK_IMG}" 2>/dev/null | grep -q "vanilla"; then
     printf '[INFO] Snapshot tag "vanilla" not found. Creating snapshot now...
 '
-    (cd "${VAGRANT_DIR}" && vagrant halt windows-11-test-sqlite)
+    (cd "${VAGRANT_DIR}" && vagrant halt windows-11-test-openedx)
     qemu-img snapshot -c vanilla "${DISK_IMG}"
     cp -cf "${DISK_IMG}" "${DISK_IMG}.vanilla" 2>/dev/null || cp -f "${DISK_IMG}" "${DISK_IMG}.vanilla"
-    (cd "${VAGRANT_DIR}" && vagrant up --no-provision windows-11-test-sqlite)
+    (cd "${VAGRANT_DIR}" && vagrant up --no-provision windows-11-test-openedx)
     discover_environment
     wait_for_ssh
     sync_guest_environment
@@ -524,7 +542,7 @@ printf '=== Step 3: Install Open edX Online Mode ===
 '
 printf '=======================================================
 '
-run_installer_wizard "Online Mode" "OpenEdX-Setup.msi" ""
+run_installer_wizard "Online Mode" "OpenEdX-Setup-Offline.msi" ""
 
 # --- Steps 4 - 7: Browser Verification Tabs ---
 printf '
@@ -537,8 +555,8 @@ printf '=======================================================
 
 printf '[INFO] Waiting for real LMS (8000) and CMS (8001) ports to become responsive...
 '
-vm_run 'powershell -NoProfile -Command "while (-not (Test-NetConnection localhost -Port 8000 -InformationLevel Quiet)) { Start-Sleep -Seconds 2; Write-Host ''Waiting for 8000...'' }"'
-vm_run 'powershell -NoProfile -Command "while (-not (Test-NetConnection localhost -Port 8001 -InformationLevel Quiet)) { Start-Sleep -Seconds 2; Write-Host ''Waiting for 8001...'' }"'
+vm_run 'powershell -NoProfile -Command "$tries=0; while (-not (Test-NetConnection localhost -Port 8000 -InformationLevel Quiet)) { Start-Sleep -Seconds 2; Write-Host ''Waiting for 8000...''; $tries++; if ($tries % 5 -eq 0) { Get-ChildItem C:\OpenEdX\logs\* -File -ErrorAction SilentlyContinue | ForEach-Object { Write-Host \"\`n--- $($_.Name) ---\"; Get-Content $_.FullName -Tail 30 -ErrorAction SilentlyContinue } } }"'
+vm_run 'powershell -NoProfile -Command "$tries=0; while (-not (Test-NetConnection localhost -Port 8001 -InformationLevel Quiet)) { Start-Sleep -Seconds 2; Write-Host ''Waiting for 8001...''; $tries++; if ($tries % 5 -eq 0) { Get-ChildItem C:\OpenEdX\logs\* -File -ErrorAction SilentlyContinue | ForEach-Object { Write-Host \"\`n--- $($_.Name) ---\"; Get-Content $_.FullName -Tail 30 -ErrorAction SilentlyContinue } } }"'
 
 # Step 4: browser tab (CMS)
 printf '

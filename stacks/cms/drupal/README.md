@@ -9,18 +9,22 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable                | Description                  | Default | Aliases/Examples |
-| ----------------------- | ---------------------------- | ------- | ---------------- |
-| `DRUPAL_PHP_FPM_LISTEN` | Variable PHP_FPM_LISTEN.     | `none`  |                  |
-| `DRUPAL_DB_TYPE`        | Variable DRUPAL_DB_TYPE.     | `none`  |                  |
-| `DRUPAL_DB_NAME`        | Variable DRUPAL_DB_NAME.     | `none`  |                  |
-| `DRUPAL_DB_USER`        | Variable DRUPAL_DB_USER.     | `none`  |                  |
-| `DRUPAL_WWWROOT`        | Variable WWWROOT.            | `none`  |                  |
-| `DRUPAL_SERVER_NAME`    | Variable DRUPAL_SERVER_NAME. | `none`  |                  |
-| `DRUPAL_VERSION`        | Variable DRUPAL_VERSION.     | `none`  |                  |
-| `DRUPAL_DB_PASS`        | Variable DRUPAL_DB_PASS.     | `none`  |                  |
-| `DRUPAL_WEBSERVER`      | Variable DRUPAL_WEBSERVER.   | `none`  |                  |
-| `DRUPAL_LISTEN`         | Variable DRUPAL_LISTEN.      | `none`  |                  |
+| Variable                | Description                                                | Default     | Aliases/Examples |
+| ----------------------- | ---------------------------------------------------------- | ----------- | ---------------- |
+| `DRUPAL_PHP_FPM_LISTEN` | Variable PHP_FPM_LISTEN.                                   | `none`      |                  |
+| `DRUPAL_DB_TYPE`        | Variable DRUPAL_DB_TYPE.                                   | `none`      |                  |
+| `DRUPAL_DB_NAME`        | Variable DRUPAL_DB_NAME.                                   | `none`      |                  |
+| `DRUPAL_DB_USER`        | Variable DRUPAL_DB_USER.                                   | `none`      |                  |
+| `DRUPAL_WWWROOT`        | Variable WWWROOT.                                          | `none`      |                  |
+| `DRUPAL_SERVER_NAME`    | Variable DRUPAL_SERVER_NAME.                               | `none`      |                  |
+| `DRUPAL_VERSION`        | Variable DRUPAL_VERSION.                                   | `none`      |                  |
+| `DRUPAL_DB_PASS`        | Variable DRUPAL_DB_PASS.                                   | `none`      |                  |
+| `DRUPAL_WEBSERVER`      | Variable DRUPAL_WEBSERVER.                                 | `none`      |                  |
+| `DRUPAL_LISTEN`         | Variable DRUPAL_LISTEN.                                    | `none`      |                  |
+| `db_strategy`           | Database provisioning strategy (e.g. relational vs nosql). | `local`     |                  |
+| `db_host`               | Database connection host.                                  | `127.0.0.1` |                  |
+| `db_name`               | Database name.                                             | `drupal`    |                  |
+| `db_url`                | Full database connection string or URL.                    | `none`      |                  |
 
 <!-- END_VARS -->
 

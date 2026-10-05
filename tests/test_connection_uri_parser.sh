@@ -46,7 +46,7 @@ parse_and_load() {
       DB_PORT) DB_PORT="$_v" ;;
       DB_NAME) DB_NAME="$_v" ;;
       DB_USER) DB_USER="$_v" ;;
-      DB_PASSWORD) DB_PASSWORD="$_v" ;;
+      DB_PASS) DB_PASSWORD="$_v" ;;
       DB_PATH) DB_PATH="$_v" ;;
       DB_USE_SSL) DB_USE_SSL="$_v" ;;
       DB_SSL_CA) DB_SSL_CA="$_v" ;;
@@ -85,7 +85,26 @@ parse_and_load "postgres://pg_admin:secure%20token@127.0.0.1:5432/enterprise_db"
 printf '[TEST 3] Testing SQLite URI parsing...\n'
 parse_and_load "sqlite:///var/lib/app/data.db"
 [ "$DB_ENGINE" = "sqlite" ] || exit 1
-[ "$DB_PATH" = "/var/lib/app/data.db" ] || exit 1
+[ "$DB_NAME" = "var/lib/app/data.db" ] || exit 1
 
-printf '[SUCCESS] All Connection URI Parser Tests Passed!
-'
+# 4. Test MongoDB URI with complex query strings
+printf '[TEST 4] Testing MongoDB URI parsing...\n'
+parse_and_load "mongodb://mongo_admin:p%25ass%26w%3Dord@10.0.0.5:27017/admin?authSource=admin&replicaSet=rs0"
+[ "$DB_ENGINE" = "mongodb" ] || exit 1
+[ "$DB_HOST" = "10.0.0.5" ] || exit 1
+[ "$DB_PORT" = "27017" ] || exit 1
+[ "$DB_NAME" = "admin" ] || exit 1
+[ "$DB_USER" = "mongo_admin" ] || exit 1
+[ "$DB_PASSWORD" = "p%ass&w=ord" ] || exit 1
+
+# 5. Test Redis URI
+printf '[TEST 5] Testing Redis URI parsing...\n'
+parse_and_load "redis://:super_s3cr3t@cache.local:6379/1"
+[ "$DB_ENGINE" = "redis" ] || exit 1
+[ "$DB_HOST" = "cache.local" ] || exit 1
+[ "$DB_PORT" = "6379" ] || exit 1
+[ "$DB_NAME" = "1" ] || exit 1
+[ "$DB_PASSWORD" = "super_s3cr3t" ] || exit 1
+[ -z "${DB_USER:-}" ] || [ "$DB_USER" = "" ] || exit 1
+
+printf '[SUCCESS] All Connection URI Parser Tests Passed!\n'

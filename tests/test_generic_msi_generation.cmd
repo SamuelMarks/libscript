@@ -45,6 +45,36 @@ if not exist "%TMP_DIR%\openedx.wxs" (
     exit /b 1
 )
 
+findstr /C:"USER_DB_HOST" "%TMP_DIR%\openedx.wxs" >nul
+if errorlevel 1 ( echo [ERROR] Missing USER_DB_HOST in openedx.wxs >&2 & exit /b 1 )
+
+findstr /C:"DatabaseConfigUI" "%TMP_DIR%\openedx.wxs" >nul
+if errorlevel 1 ( echo [ERROR] Missing DatabaseConfigUI in openedx.wxs >&2 & exit /b 1 )
+
+findstr /C:"USER_DB_STRATEGY" "%TMP_DIR%\wordpress.wxs" >nul
+if errorlevel 1 ( echo [ERROR] Missing USER_DB_STRATEGY in wordpress.wxs >&2 & exit /b 1 )
+
+echo [TEST 5] Synthesizing WiX manifest for Suite Orchestrator Topology...
+(
+echo {
+echo   "name": "enterprise-suite",
+echo   "title": "Enterprise Suite Orchestrator",
+echo   "version": "2.0.0",
+echo   "topology": "suite_orchestrator"
+echo }
+) > "%TMP_DIR%\mock_orchestrator.json"
+
+call "%LIBSCRIPT_ROOT_DIR%\packaging\template_msi.cmd" "%TMP_DIR%\mock_orchestrator.json" --out "%TMP_DIR%\orchestrator.wxs"
+
+findstr /C:"Enterprise Suite Orchestrator" "%TMP_DIR%\orchestrator.wxs" >nul
+if errorlevel 1 ( echo [ERROR] Missing Title in orchestrator.wxs >&2 & exit /b 1 )
+
+findstr /C:"PROP_TOPOLOGY\" Value=\"suite_orchestrator\"" "%TMP_DIR%\orchestrator.wxs" >nul
+if errorlevel 1 ( echo [ERROR] Missing Topology in orchestrator.wxs >&2 & exit /b 1 )
+
+findstr /C:"EmbeddedChainer" "%TMP_DIR%\orchestrator.wxs" >nul
+if errorlevel 1 ( echo [ERROR] Missing EmbeddedChainer in orchestrator.wxs >&2 & exit /b 1 )
+
 rd /s /q "%TMP_DIR%"
 echo [SUCCESS] Declarative MSI synthesis verification succeeded on Windows!
 exit /b 0

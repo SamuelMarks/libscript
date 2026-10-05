@@ -300,6 +300,11 @@ try {
         Write-Host "[INFO] Generated WiX XML fragment: $WixFragment"
     }
 
+    if ($filtered.Count -eq 0) {
+        Write-Error "[ERROR] Harvested 0 files. Payload is empty."
+        exit 1
+    }
+
     Write-Host "[PASS] Harvesting complete ($($filtered.Count) files identified)."
 }
 finally {

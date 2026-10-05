@@ -39,15 +39,6 @@ mkdir -p "$TEST_TMP_DIR"
 
 # ## cleanup
 # Cleans up temporary test directory if tests succeeded.
-cleanup() {
-  _status=$?
-  if [ "$_status" -eq 0 ]; then
-    rm -rf "$TEST_TMP_DIR"
-  else
-    printf '[WARN] Preserving test artifacts in %s
-' "$TEST_TMP_DIR" >&2
-  fi
-}
 trap cleanup EXIT INT TERM
 
 printf '=== Testing LibScript Offline Cache Hydration Engine ===

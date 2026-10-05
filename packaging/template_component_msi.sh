@@ -209,8 +209,8 @@ cat << EOF_WXS > "$OUT_FILE"
            Manufacturer="LibScript"
            UpgradeCode="${UPGRADE_CODE}">
 
-    <Package Id="*"
-             InstallerVersion="405"
+    <Package Id="*" Platform="${TARGET_ARCH}"
+             InstallerVersion="500"
              Compressed="yes"
              InstallScope="perMachine"
              Description="${PKG_DESC}" />

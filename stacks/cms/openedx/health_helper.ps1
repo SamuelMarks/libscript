@@ -97,6 +97,28 @@ function Test-HttpEndpoint {
     }
 }
 
+# ## Test-Workers
+# Probes for running Celery, Waitress, or Gunicorn worker processes.
+function Test-Workers {
+    try {
+        $procs = Get-Process -Name celery, waitress, gunicorn, python, node -ErrorAction SilentlyContinue
+        foreach ($p in $procs) {
+            $cmd = $p.CommandLine -as [string]
+            if ($cmd -match "celery" -or $cmd -match "waitress" -or $cmd -match "gunicorn") {
+                return "OK"
+            }
+        }
+        # Fallback to just process names
+        $fallback = Get-Process -Name celery, waitress, gunicorn -ErrorAction SilentlyContinue
+        if ($fallback.Count -gt 0) {
+            return "OK"
+        }
+        return "WARN (inactive)"
+    } catch {
+        return "WARN (inactive)"
+    }
+}
+
 $res = @{}
 $res["mysql"] = Test-TcpPort -HostName $MyH -Port ([int]$MyP)
 $res["mongodb"] = Test-TcpPort -HostName $MgH -Port ([int]$MgP)
@@ -104,7 +126,7 @@ $res["redis"] = Test-TcpPort -HostName $RdH -Port ([int]$RdP)
 $res["meilisearch"] = Test-HttpEndpoint -Url "http://$MeH`:$MeP/health"
 $res["lms"] = Test-HttpEndpoint -Url "http://$LmsH`:$LmsP/"
 $res["cms"] = Test-HttpEndpoint -Url "http://$CmsH`:$CmsP/signin"
-$res["workers"] = "WARN (inactive)"
+$res["workers"] = Test-Workers
 $res["smtp"] = Test-TcpPort -HostName $SmH -Port ([int]$SmP)
 if ($res["smtp"] -eq "FAIL") {
     $res["smtp"] = "WARN (offline)"

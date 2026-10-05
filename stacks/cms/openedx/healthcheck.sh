@@ -208,7 +208,7 @@ probe_http() {
 }
 
 # ## probe_workers
-# Checks if background Celery worker processes are active.
+# Checks if background Celery, Gunicorn, or Waitress worker processes are active.
 probe_workers() {
   _pid_file="${OPENEDX_INSTALL_DIR}/run/worker.pid"
   if [ -f "${_pid_file}" ] && kill -0 "$(cat "${_pid_file}")" 2>/dev/null; then
@@ -216,7 +216,7 @@ probe_workers() {
     return 0
   fi
   # shellcheck disable=SC2009
-  if ps aux 2>/dev/null | grep -v grep | grep -E "(celery|openedx-worker)" >/dev/null 2>&1; then
+  if ps aux 2>/dev/null | grep -v grep | grep -E "(celery|openedx-worker|waitress|gunicorn)" >/dev/null 2>&1; then
     printf 'OK'
     return 0
   fi

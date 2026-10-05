@@ -15,7 +15,7 @@ param(
 )
 
 # Launch browser with both tabs
-Start-Process "msedge.exe" -ArgumentList "--new-window", "$LmsUrl", "$StudioUrl"
+Start-Process "chrome.exe" -ArgumentList "--new-window", "$LmsUrl", "$StudioUrl"
 Start-Sleep -Seconds 5
 
 $wshell = New-Object -ComObject WScript.Shell

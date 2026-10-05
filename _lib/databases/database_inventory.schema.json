@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/databases/database_inventory.schema.json",
-  "title": "LibScript Database Inventory Schema",
-  "description": "Schema validating detected or active database services and instances on the host system",
+  "title": "LibScript Database Inventory",
+  "description": "Schema for detected database instances across the host operating system.",
   "type": "array",
   "items": {
     "type": "object",
-    "description": "Single discovered database service instance",
+    "description": "A discovered database server instance",
     "required": ["engine", "host", "port", "is_active", "source"],
     "properties": {
       "engine": {
@@ -16,40 +16,47 @@
       },
       "version": {
         "type": "string",
-        "description": "Version string extracted from binary or greeting packet"
+        "description": "Semantic version string extracted from the binary or protocol greeting"
       },
       "host": {
         "type": "string",
-        "description": "Hostname or IP address of the database service (e.g. '127.0.0.1')"
+        "description": "Hostname or IP address bound to the listener (e.g. 127.0.0.1)"
       },
       "port": {
         "type": "integer",
-        "description": "TCP listening port number"
+        "description": "TCP/UDP port number"
       },
       "socket": {
         "type": "string",
-        "description": "UNIX domain socket path or Windows named pipe"
+        "description": "Absolute path to UNIX domain socket or Windows named pipe"
       },
       "service_name": {
         "type": "string",
-        "description": "Windows service name or systemd/rc.d unit name"
+        "description": "Name of the Windows Service, systemd unit, or RC script managing the daemon"
       },
       "is_active": {
         "type": "boolean",
-        "description": "Boolean status indicating whether daemon is currently running and responsive"
+        "description": "Indicates whether the daemon is currently running and accepting connections"
       },
       "source": {
         "type": "string",
-        "enum": ["windows_service", "systemd", "rc_d", "smf", "socket", "tcp_probe", "config_file"],
-        "description": "Discovery mechanism or probe that identified this instance"
+        "enum": [
+          "windows_service",
+          "systemd",
+          "bsd_rc",
+          "smf",
+          "socket",
+          "tcp_probe",
+          "config_file"
+        ],
+        "description": "Discovery mechanism used to identify the instance"
       },
       "existing_schemas": {
         "type": "array",
+        "description": "List of discovered database schema or keyspace names inside this instance",
         "items": {
-          "type": "string",
-          "description": "Name of an existing database schema or keyspace"
-        },
-        "description": "Array of pre-existing database schema names hosted by this instance"
+          "type": "string"
+        }
       }
     }
   }

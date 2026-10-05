@@ -516,6 +516,10 @@ call stacks\cms\openedx\cli.cmd mfe list
 | `OPENEDX_MFE_AUTHN_PORT`          | HTTP port for Authentication Micro-Frontend.                                      | `2001`                                            |                  |
 | `OPENEDX_MFE_ACCOUNT_PORT`        | HTTP port for Account Micro-Frontend.                                             | `2002`                                            |                  |
 | `OPENEDX_MFE_AUTHORING_PORT`      | HTTP port for Course Authoring Micro-Frontend.                                    | `2003`                                            |                  |
+| `db_strategy`                     | Database provisioning strategy (e.g. relational vs nosql).                        | `local`                                           |                  |
+| `db_host`                         | Database connection host.                                                         | `127.0.0.1`                                       |                  |
+| `db_name`                         | Database name.                                                                    | `openedx`                                         |                  |
+| `db_url`                          | Full database connection string or URL.                                           | `none`                                            |                  |
 
 <!-- END_VARS -->
 

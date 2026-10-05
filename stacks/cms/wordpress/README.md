@@ -204,6 +204,10 @@ Additionally, WordPress 7.1.2 applies enterprise WAMP configuration directives:
 | `WORDPRESS_ENABLE_PHPMYADMIN`       | Whether to deploy Adminer/phpMyAdmin database management web interface.                           | `true`                      |                  |
 | `WORDPRESS_ENABLE_CRON_OFFLOAD`     | Whether to disable web traffic WP-Cron and offload to native host crontab or Task Scheduler.      | `true`                      |                  |
 | `WORDPRESS_UPDATE_HOSTS_FILE`       | Whether to automatically register the virtual hostname in the operating system hosts file.        | `none`                      |                  |
+| `db_strategy`                       | Database provisioning strategy (e.g. relational vs nosql).                                        | `local`                     |                  |
+| `db_host`                           | Database connection host.                                                                         | `127.0.0.1`                 |                  |
+| `db_name`                           | Database name.                                                                                    | `wordpress`                 |                  |
+| `db_url`                            | Full database connection string or URL.                                                           | `none`                      |                  |
 
 <!-- END_VARS -->
 

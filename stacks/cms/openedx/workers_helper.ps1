@@ -56,7 +56,7 @@ function Do-Start {
     }
 
     $services = @("lms-worker", "cms-worker", "celery-beat")
-    $managePy = Join-Path $InstallDir "manage.py"
+    $managePy = Join-Path $InstallDir "codebase\manage.py"
 
     foreach ($svc in $services) {
         $pidFile = Join-Path $RunDir "$svc.pid"
@@ -73,7 +73,7 @@ function Do-Start {
         }
 
         if ((Test-Path $managePy) -and [System.IO.File]::Exists($PyBin)) {
-            $p = Start-Process -FilePath $PyBin -ArgumentList @("-m", "celery", "worker", "-c", "2") -RedirectStandardOutput $logFile -RedirectStandardError $logFile -PassThru
+            $p = Start-Process -FilePath $PyBin -ArgumentList @("-m", "celery", "worker", "-c", "2") -WindowStyle Hidden -RedirectStandardOutput $logFile -RedirectStandardError "$logFile.err" -PassThru
         } else {
             Write-Error "Genuine Open edX codebase or python not found. Cannot start worker $svc."
             exit 1

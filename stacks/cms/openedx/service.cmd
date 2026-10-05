@@ -99,7 +99,7 @@ if %ERRORLEVEL%==0 (
     echo [INFO] Launching Open edX LMS on port %OPENEDX_LMS_PORT%...
     if exist "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe" if exist "%OPENEDX_INSTALL_DIR%\codebase" (
         cd /D "%OPENEDX_INSTALL_DIR%\codebase"
-        start /b "" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe" --listen=0.0.0.0:%OPENEDX_LMS_PORT% lms.wsgi:application > "%LOG_DIR%\lms.log" 2>&1
+        powershell -WindowStyle Hidden -Command "Start-Process '%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe' -ArgumentList '--listen=0.0.0.0:%OPENEDX_LMS_PORT% lms.wsgi:application' -RedirectStandardOutput '%LOG_DIR%\lms.log' -RedirectStandardError '%LOG_DIR%\lms_err.log' -WindowStyle Hidden"
     ) else if exist "%SCRIPT_DIR%\service_worker.ps1" (
         powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\service_worker.ps1" start %OPENEDX_LMS_PORT% %OPENEDX_CMS_PORT%
     ) else (
@@ -116,14 +116,20 @@ if %ERRORLEVEL%==0 (
     echo [INFO] Launching Open edX Studio CMS on port %OPENEDX_CMS_PORT%...
     if exist "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe" if exist "%OPENEDX_INSTALL_DIR%\codebase" (
         cd /D "%OPENEDX_INSTALL_DIR%\codebase"
-        start /b "" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe" --listen=0.0.0.0:%OPENEDX_CMS_PORT% cms.wsgi:application > "%LOG_DIR%\cms.log" 2>&1
+        powershell -WindowStyle Hidden -Command "Start-Process '%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe' -ArgumentList '--listen=0.0.0.0:%OPENEDX_CMS_PORT% cms.wsgi:application' -RedirectStandardOutput '%LOG_DIR%\cms.log' -RedirectStandardError '%LOG_DIR%\cms_err.log' -WindowStyle Hidden"
     )
 )
 
 :: Start Workers
 if exist "%SCRIPT_DIR%\workers.cmd" call "%SCRIPT_DIR%\workers.cmd" start
 
-echo [PASS] Open edX platform services started.
+echo [INFO] Waiting for LMS and CMS to become responsive...
+powershell -NoProfile -Command "$ports = @(%OPENEDX_LMS_PORT%, %OPENEDX_CMS_PORT%); $timeout = 30; $sw = [System.Diagnostics.Stopwatch]::StartNew(); while ($sw.Elapsed.TotalSeconds -lt $timeout) { $allUp = $true; foreach ($p in $ports) { try { $c = [System.Net.Sockets.TcpClient]::new('127.0.0.1', $p); $c.Close() } catch { $allUp = $false } }; if ($allUp) { Write-Host '[PASS] Open edX platform services started and listening.'; exit 0 }; Start-Sleep -Seconds 2 }; Write-Error '[ERROR] Timeout waiting for Open edX services to start listening.'; exit 1"
+if %ERRORLEVEL% neq 0 (
+    echo [ERROR] Services failed to start properly. Check logs. >&2
+    exit /b 1
+)
+
 exit /b 0
 
 :do_stop

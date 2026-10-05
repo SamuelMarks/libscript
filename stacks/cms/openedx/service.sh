@@ -130,8 +130,20 @@ start_services() {
     "${SCRIPT_DIR}/workers.sh" start
   fi
 
-  printf '[PASS] Open edX platform services started.
-'
+  printf '[INFO] Waiting for LMS and CMS to become responsive...\n'
+  _timeout=30
+  _count=0
+  while [ $_count -lt $_timeout ]; do
+    if is_port_listening "$LMS_PORT" && is_port_listening "$CMS_PORT"; then
+      printf '[PASS] Open edX platform services started and listening.\n'
+      return 0
+    fi
+    sleep 2
+    _count=$((_count + 2))
+  done
+
+  printf '[ERROR] Timeout waiting for Open edX services to start listening.\n' >&2
+  return 1
 }
 
 # ## stop_services

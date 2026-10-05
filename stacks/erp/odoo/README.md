@@ -24,20 +24,24 @@ running the setup script.
 
 <!-- BEGIN_VARS -->
 
-| Variable           | Description                | Default | Aliases/Examples |
-| ------------------ | -------------------------- | ------- | ---------------- |
-| `ODOO_DB_TYPE`     | Variable ODOO_DB_TYPE.     | `none`  |                  |
-| `ODOO_LISTEN`      | Variable ODOO_LISTEN.      | `none`  |                  |
-| `ODOO_VERSION`     | Variable ODOO_VERSION.     | `none`  |                  |
-| `ODOO_DB_USER`     | Variable ODOO_DB_USER.     | `none`  |                  |
-| `ODOO_DB_HOST`     | Variable ODOO_DB_HOST.     | `none`  |                  |
-| `ODOO_WEBSERVER`   | Variable ODOO_WEBSERVER.   | `none`  |                  |
-| `ODOO_WWWROOT`     | Variable WWWROOT.          | `none`  |                  |
-| `ODOO_SERVER_NAME` | Variable ODOO_SERVER_NAME. | `none`  |                  |
-| `ODOO_DB_NAME`     | Variable ODOO_DB_NAME.     | `none`  |                  |
-| `ODOO_DB_PASS`     | Variable ODOO_DB_PASS.     | `none`  |                  |
-| `ODOO_DB_PORT`     | Variable ODOO_DB_PORT.     | `none`  |                  |
-| `ODOO_PORT`        | Variable ODOO_PORT.        | `none`  |                  |
+| Variable           | Description                                                | Default     | Aliases/Examples |
+| ------------------ | ---------------------------------------------------------- | ----------- | ---------------- |
+| `ODOO_DB_TYPE`     | Variable ODOO_DB_TYPE.                                     | `none`      |                  |
+| `ODOO_LISTEN`      | Variable ODOO_LISTEN.                                      | `none`      |                  |
+| `ODOO_VERSION`     | Variable ODOO_VERSION.                                     | `none`      |                  |
+| `ODOO_DB_USER`     | Variable ODOO_DB_USER.                                     | `none`      |                  |
+| `ODOO_DB_HOST`     | Variable ODOO_DB_HOST.                                     | `none`      |                  |
+| `ODOO_WEBSERVER`   | Variable ODOO_WEBSERVER.                                   | `none`      |                  |
+| `ODOO_WWWROOT`     | Variable WWWROOT.                                          | `none`      |                  |
+| `ODOO_SERVER_NAME` | Variable ODOO_SERVER_NAME.                                 | `none`      |                  |
+| `ODOO_DB_NAME`     | Variable ODOO_DB_NAME.                                     | `none`      |                  |
+| `ODOO_DB_PASS`     | Variable ODOO_DB_PASS.                                     | `none`      |                  |
+| `ODOO_DB_PORT`     | Variable ODOO_DB_PORT.                                     | `none`      |                  |
+| `ODOO_PORT`        | Variable ODOO_PORT.                                        | `none`      |                  |
+| `db_strategy`      | Database provisioning strategy (e.g. relational vs nosql). | `local`     |                  |
+| `db_host`          | Database connection host.                                  | `127.0.0.1` |                  |
+| `db_name`          | Database name.                                             | `odoo`      |                  |
+| `db_url`           | Full database connection string or URL.                    | `none`      |                  |
 
 <!-- END_VARS -->
 

@@ -85,6 +85,10 @@ if "%SUBCMD%"=="health" (
     call "%SCRIPT_DIR%\healthcheck.cmd" %2 %3 %4 %5 %6 %7 %8 %9
     exit /b %errorlevel%
 )
+if "%SUBCMD%"=="logs" (
+    call "%SCRIPT_DIR%\logs.cmd" %2 %3 %4 %5 %6 %7 %8 %9
+    exit /b %errorlevel%
+)
 if "%SUBCMD%"=="config" (
     call "%SCRIPT_DIR%\config.cmd" %2 %3 %4 %5 %6 %7 %8 %9
     exit /b %errorlevel%

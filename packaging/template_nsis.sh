@@ -249,10 +249,8 @@ EOF2
       set -- $deps_list
       while [ $# -gt 1 ]; do
         pkg=$1; ver=$2; shift 2
-        if [ "$pkg" = "openedx" ]; then
-          printf '%s\n' "  ExecWait 'cmd.exe /c \"\$INSTDIR\\stacks\\cms\\openedx\\workers.cmd\" stop'"
-          printf '%s\n' "  RMDir /r \"\$SMPROGRAMS\\Open edX\""
-        fi
+        # Note: Hardcoded stack checks (e.g. openedx) have been removed.
+        # Future implementations will load uninstall actions declaratively from packaging.json
         printf '%s\n' "  MessageBox MB_YESNO \"Do you want to completely remove the Data Directory and all records for $pkg?\" IDYES purge_$pkg IDNO keep_$pkg"
         printf '%s\n' "  purge_$pkg:"
         printf '%s\n' "    ExecWait 'cmd.exe /c libscript.cmd uninstall $pkg --purge-data --service-name \$VAL_${pkg}_$(printf '%s\n' "$pkg" | tr "[:lower:]" "[:upper:]")_SERVICE_NAME'"

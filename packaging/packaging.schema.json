@@ -34,55 +34,96 @@
       "default": "standalone",
       "description": "Specifies whether package compiles as an independent installer, an orchestrator chaining embedded child MSIs, or a shared modular dependency"
     },
-    "database_contract": {
-      "type": "object",
+    "database_contracts": {
+      "type": "array",
       "description": "Declarative database requirements and multi-tenant isolation configuration",
-      "required": ["engine"],
-      "properties": {
-        "engine": {
-          "type": "string",
-          "enum": ["mysql", "mariadb", "postgres", "mongodb", "redis", "sqlite"],
-          "description": "Target relational or document database engine required by the stack"
-        },
-        "min_version": {
-          "type": "string",
-          "description": "Minimum supported semantic version string for the database engine"
-        },
-        "allow_shared_instance": {
-          "type": "boolean",
-          "default": true,
-          "description": "Boolean flag indicating whether the stack can share a database server instance with peer applications"
-        },
-        "default_schema_name": {
-          "type": "string",
-          "description": "Default database or keyspace name for tenant isolation"
-        },
-        "default_user_name": {
-          "type": "string",
-          "description": "Default database user account identifier"
-        },
-        "default_port": {
-          "type": "integer",
-          "description": "Default TCP listening port for database engine"
-        },
-        "character_set": {
-          "type": "string",
-          "default": "utf8mb4",
-          "description": "Character encoding requirement (e.g. utf8mb4)"
-        },
-        "collation": {
-          "type": "string",
-          "description": "Relational collation sequence (e.g. utf8mb4_unicode_520_ci)"
-        },
-        "ssl_required": {
-          "type": "boolean",
-          "default": false,
-          "description": "Whether TLS encryption is mandatory for remote DBaaS connections"
-        },
-        "dbaas_supported": {
-          "type": "boolean",
-          "default": true,
-          "description": "Whether remote cloud managed connection strings are accepted"
+      "items": {
+        "type": "object",
+        "required": ["engine"],
+        "properties": {
+          "engine": {
+            "type": "string",
+            "enum": ["mysql", "mariadb", "postgres", "mongodb", "redis", "sqlite"],
+            "description": "Target relational or document database engine required by the stack"
+          },
+          "min_version": {
+            "type": "string",
+            "description": "Minimum supported semantic version string for the database engine"
+          },
+          "allow_shared_instance": {
+            "type": "boolean",
+            "default": true,
+            "description": "Boolean flag indicating whether the stack can share a database server instance with peer applications"
+          },
+          "default_schema_name": {
+            "type": "string",
+            "description": "Default database or keyspace name for tenant isolation"
+          },
+          "default_user_name": {
+            "type": "string",
+            "description": "Default database user account identifier"
+          },
+          "default_port": {
+            "type": "integer",
+            "description": "Default TCP listening port for database engine"
+          },
+          "character_set": {
+            "type": "string",
+            "default": "utf8mb4",
+            "description": "Character encoding requirement (e.g. utf8mb4)"
+          },
+          "collation": {
+            "type": "string",
+            "description": "Relational collation sequence (e.g. utf8mb4_unicode_520_ci)"
+          },
+          "ssl_required": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether TLS encryption is mandatory for remote DBaaS connections"
+          },
+          "dbaas_supported": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether remote cloud managed connection strings are accepted"
+          }
+        }
+      }
+    },
+    "services": {
+      "type": "array",
+      "description": "Declarative multi-daemon services supporting n-tier architectures",
+      "items": {
+        "type": "object",
+        "required": ["id", "type"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the service daemon (e.g. lms, cms, celery-worker)"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["wsgi", "asgi", "worker", "beat", "static", "proxy", "custom"],
+            "description": "Service capability or protocol type"
+          },
+          "port_binding": {
+            "type": "integer",
+            "description": "TCP port mapping for HTTP-bound application servers"
+          },
+          "environment_overrides": {
+            "type": "object",
+            "description": "Map of static environment overrides required by this specific service",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "wsgi_entrypoint": {
+            "type": "string",
+            "description": "Python WSGI/ASGI application entrypoint module (e.g. myapp.wsgi:application)"
+          },
+          "worker_class": {
+            "type": "string",
+            "description": "Celery worker class or generic daemon runner invocation"
+          }
         }
       }
     },
@@ -529,35 +570,54 @@
         }
       }
     },
-    "post_install": {
-      "type": "array",
-      "description": "Actions or checks to execute after stack files and services are provisioned",
-      "items": {
-        "type": "object",
-        "description": "Custom action or verification probe definition",
-        "required": ["id", "command"],
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Action identifier token"
-          },
-          "description": {
-            "type": "string",
-            "description": "Description of the operation performed by action"
-          },
-          "command": {
-            "type": "string",
-            "description": "Shell command or script invoked during execution"
-          },
-          "optional": {
-            "type": "boolean",
-            "default": false,
-            "description": "Whether execution failure is non-fatal"
-          },
-          "condition": {
-            "type": "string",
-            "description": "WiX conditional expression governing execution"
-          }
+    "lifecycle_hooks": {
+      "type": "object",
+      "description": "Declarative lifecycle hooks for operations like data migrations, search indexing, and static asset compilation",
+      "properties": {
+        "pre_install": {
+          "type": "array",
+          "description": "Actions to execute before stack files and services are provisioned",
+          "items": { "$ref": "#/$defs/hook_action" }
+        },
+        "post_install": {
+          "type": "array",
+          "description": "Actions or checks to execute after stack files and services are provisioned",
+          "items": { "$ref": "#/$defs/hook_action" }
+        },
+        "on_upgrade": {
+          "type": "array",
+          "description": "Actions to execute specifically during a product upgrade cycle",
+          "items": { "$ref": "#/$defs/hook_action" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "hook_action": {
+      "type": "object",
+      "description": "Custom action or verification probe definition",
+      "required": ["id", "command"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Action identifier token"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the operation performed by action"
+        },
+        "command": {
+          "type": "string",
+          "description": "Shell command or script invoked during execution"
+        },
+        "optional": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether execution failure is non-fatal"
+        },
+        "condition": {
+          "type": "string",
+          "description": "WiX conditional expression governing execution"
         }
       }
     }

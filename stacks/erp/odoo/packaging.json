@@ -1,0 +1,62 @@
+{
+  "$schema": "../../../packaging/packaging.schema.json",
+  "name": "odoo",
+  "title": "Odoo ERP Platform",
+  "version": "17.0.0.0",
+  "publisher": "Odoo S.A. & LibScript Contributors",
+  "upgrade_code": "C7F63E1B-4A5B-9CA5-D80E-18B1118230C0",
+  "topology": "standalone",
+  "database_contract": {
+    "engine": "postgres",
+    "min_version": "13.0",
+    "allow_shared_instance": true,
+    "default_schema_name": "odoo",
+    "default_user_name": "odoo",
+    "default_port": 5432,
+    "character_set": "utf8",
+    "collation": "en_US.UTF-8",
+    "ssl_required": false,
+    "dbaas_supported": true
+  },
+  "branding_palette": {
+    "primary_color": "#714B67",
+    "secondary_color": "#017E84",
+    "dark_color": "#4A3243",
+    "app_title": "Odoo ERP Platform",
+    "eula_components": ["Odoo ERP Core", "Python Runtime", "PostgreSQL Server"]
+  },
+  "directories": {
+    "app_default": "[ProgramFiles64Folder]Odoo",
+    "data_default": "C:\\ProgramData\\Odoo\\data",
+    "logs_default": "C:\\ProgramData\\Odoo\\logs",
+    "backups_default": "C:\\ProgramData\\Odoo\\backups"
+  },
+  "logical_resources": [
+    {
+      "type": "logical_database",
+      "logical_databases": {
+        "db_name": "[PROP_PROVISION_DB_NAME]",
+        "db_user": "[PROP_PROVISION_USER]"
+      }
+    },
+    {
+      "type": "virtual_host",
+      "virtual_hosts": {
+        "server_name": "[ODOO_SERVER_NAME]",
+        "upstream_port": 8069
+      }
+    },
+    {
+      "type": "runtime_isolation",
+      "runtime_isolation": {
+        "strategy": "python_venv",
+        "base_runtime_ref": "python"
+      }
+    }
+  ],
+  "configuration_parameters": {
+    "db_strategy": "local",
+    "db_host": "127.0.0.1",
+    "db_name": "odoo"
+  }
+}
