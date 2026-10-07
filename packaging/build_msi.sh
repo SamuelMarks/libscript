@@ -38,8 +38,11 @@ set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -316,13 +319,15 @@ _clean_branch="${_clean_branch%.master}"
 if [ "$VARIANT" = "offline" ]; then
   PROP_OPENEDX_OFFLINE="1"
   [ "$APP_NAME" = "Open edX Platform" ] && APP_NAME="Open edX Platform (Offline Air-Gapped)"
-  : "${OUT_FILE:=openedx-offline-${_clean_branch}}"
+  : "${OUT_FILE:=${LIBSCRIPT_ROOT_DIR}/build/packages/msi/${APP_IDENTIFIER}-${TARGET_ARCH}-${_clean_branch}-${VARIANT}}"
+  mkdir -p "${OUT_FILE%/*}" 2>/dev/null || true
   WELCOME_DESC="The Setup Wizard will deploy Open edX LMS, Studio CMS, and pre-bundled air-gapped runtimes on your computer."
   COMP_TAG=" [Pre-bundled / Offline]"
 else
   PROP_OPENEDX_OFFLINE="0"
   [ "$APP_NAME" = "Open edX Platform" ] && APP_NAME="Open edX Platform (Online)"
-  : "${OUT_FILE:=openedx-${_clean_branch}}"
+  : "${OUT_FILE:=${LIBSCRIPT_ROOT_DIR}/build/packages/msi/${APP_IDENTIFIER}-${TARGET_ARCH}-${_clean_branch}-${VARIANT}}"
+  mkdir -p "${OUT_FILE%/*}" 2>/dev/null || true
   WELCOME_DESC="The Setup Wizard will download and install Open edX LMS, Studio CMS, and required runtimes on your computer."
   COMP_TAG=""
 fi
@@ -564,28 +569,6 @@ EOF_UPGRADE
     <Property Id="DATAFOLDER" Value="$DATA_DIR" Secure="yes" />
     <Property Id="LOGSFOLDER" Value="$LOGS_DIR" Secure="yes" />
 
-    <!-- Runtime Auto-Detection Registry Searches -->
-    <Property Id="FOUND_PYTHON_EXE">
-      <RegistrySearch Id="SearchPython64" Root="HKLM" Key="SOFTWARE\Python\PythonCore\3.12\InstallPath" Type="raw" Win64="yes">
-        <FileSearch Id="SearchPythonExe64" Name="python.exe" />
-      </RegistrySearch>
-      <RegistrySearch Id="SearchPython311" Root="HKLM" Key="SOFTWARE\Python\PythonCore\3.11\InstallPath" Type="raw" Win64="yes">
-        <FileSearch Id="SearchPythonExe311" Name="python.exe" />
-      </RegistrySearch>
-    </Property>
-
-    <Property Id="FOUND_NODE_EXE">
-      <RegistrySearch Id="SearchNodeReg" Root="HKLM" Key="SOFTWARE\Node.js" Name="InstallPath" Type="raw">
-        <FileSearch Id="SearchNodeExe" Name="node.exe" />
-      </RegistrySearch>
-    </Property>
-
-    <Property Id="FOUND_MYSQL_EXE">
-      <RegistrySearch Id="SearchMySQL8" Root="HKLM" Key="SOFTWARE\\MySQL AB\\MySQL Server 8.0" Name="Location" Type="raw">
-        <FileSearch Id="SearchMySQLDaemon" Name="mysqld.exe" />
-      </RegistrySearch>
-    </Property>
-
     <Property Id="USE_EXISTING_PYTHON" Value="1" Secure="yes" />
     <Property Id="USE_EXISTING_NODE" Value="1" Secure="yes" />
     <Property Id="USE_EXISTING_MYSQL" Value="0" Secure="yes" />
@@ -667,7 +650,8 @@ EOF_UPGRADE
     <!-- Custom Actions -->
     <CustomAction Id="CA_CheckNetworkConnection" Directory="INSTALLFOLDER" ExeCommand="powershell.exe -NoProfile -Command &quot;try { (New-Object System.Net.Sockets.TcpClient('github.com', 443)).Close(); (New-Object System.Net.Sockets.TcpClient('pypi.org', 443)).Close(); } catch { exit 1 }&quot;" Execute="immediate" Return="ignore" />
     <CustomAction Id="CA_CheckPorts" Directory="INSTALLFOLDER" ExeCommand="powershell.exe -NoProfile -Command &quot;foreach (\$p in @(8000, 8001, 3306, 6379, 27017, 7700)) { try { \$s = [System.Net.Sockets.TcpClient]::new('127.0.0.1', \$p); \$s.Close(); Write-Warning &quot;Port \$p is currently occupied&quot; } catch {} }&quot;" Execute="immediate" Return="ignore" />
-    <CustomAction Id="CA_DetectExistingRuntimes" Directory="INSTALLFOLDER" ExeCommand="powershell.exe -NoProfile -Command &quot;if (Get-Command python -ErrorAction SilentlyContinue) { [Environment]::SetEnvironmentVariable('FOUND_PYTHON_EXE', (Get-Command python).Source, 'Process') }; if (Get-Command node -ErrorAction SilentlyContinue) { [Environment]::SetEnvironmentVariable('FOUND_NODE_EXE', (Get-Command node).Source, 'Process') }&quot;" Execute="immediate" Return="ignore" />
+    <CustomAction Id="CA_DetectExistingRuntimes" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\status_runtimes.cmd runtimes/python &amp; [INSTALLFOLDER]libscript\stacks\cms\openedx\status_runtimes.cmd runtimes/nodejs&quot;" Execute="deferred" Return="ignore" Impersonate="no" />
+    <CustomAction Id="CA_DetectDatabases" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\status_databases.cmd databases/mysql&quot;" Execute="deferred" Return="ignore" Impersonate="no" />
     <CustomAction Id="CA_LaunchBrowser" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\packaging\launch_browser.cmd&quot; http://[PROP_LMS_HOST]:[PROP_LMS_PORT] &quot;Open edX LMS&quot;" Return="asyncNoWait" />
     <CustomAction Id="CA_LaunchStudio" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\packaging\launch_browser.cmd&quot; http://[PROP_CMS_HOST]:[PROP_CMS_PORT] &quot;Open edX Studio&quot;" Return="asyncNoWait" />
     <CustomAction Id="InstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;if not exist &quot;&quot;[LOGSFOLDER]&quot;&quot; mkdir &quot;&quot;[LOGSFOLDER]&quot;&quot; &amp; &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install stacks/cms/openedx --offline=[PROP_OPENEDX_OFFLINE] --lms-port=[PROP_LMS_PORT] --cms-port=[PROP_CMS_PORT] --mysql-url=&quot;[PROP_MYSQL_REMOTE_URL]&quot; --redis-port=[PROP_REDIS_PORT] --redis-url=&quot;[PROP_REDIS_URL]&quot; --mongodb-uri=&quot;[PROP_MONGODB_URI]&quot; --repo=&quot;[PROP_OPENEDX_EDX_PLATFORM_REPOSITORY]&quot; --version=&quot;[PROP_OPENEDX_VERSION]&quot; --admin-user=&quot;[PROP_OPENEDX_ADMIN_USERNAME]&quot; --admin-password=&quot;[PROP_OPENEDX_ADMIN_PASSWORD]&quot; --admin-email=&quot;[PROP_OPENEDX_ADMIN_EMAIL]&quot; --backup-dir=&quot;[BACKUPFOLDER]&quot; --theme=&quot;[PROP_OPENEDX_THEME]&quot; &gt;&gt; &quot;[LOGSFOLDER]install_openedx.log&quot; 2&gt;&amp;1&quot;" Execute="deferred" Return="ignore" Impersonate="no" />
@@ -837,7 +821,7 @@ ${MULTI_LICENSE_XML}
         <Control Id="Grp_Python" Type="GroupBox" X="20" Y="50" Width="330" Height="70" Text="Python 3.11+ Execution Runtime" />
         <Control Id="Rad_PythonExisting" Type="RadioButtonGroup" X="28" Y="65" Width="310" Height="45" Property="USE_EXISTING_PYTHON">
           <RadioButtonGroup Property="USE_EXISTING_PYTHON">
-            <RadioButton Value="1" X="0" Y="0" Width="310" Height="20" Text="Reuse existing system Python: [FOUND_PYTHON_EXE]" />
+            <RadioButton Value="1" X="0" Y="0" Width="310" Height="20" Text="Reuse existing system Python (Detected)" />
             <RadioButton Value="0" X="0" Y="22" Width="310" Height="20" Text="Install isolated private Python runtime via LibScript" />
           </RadioButtonGroup>
         </Control>
@@ -845,7 +829,7 @@ ${MULTI_LICENSE_XML}
         <Control Id="Grp_Node" Type="GroupBox" X="20" Y="125" Width="330" Height="70" Text="Node.js 18/20+ Asset Pipeline Runtime" />
         <Control Id="Rad_NodeExisting" Type="RadioButtonGroup" X="28" Y="140" Width="310" Height="45" Property="USE_EXISTING_NODE">
           <RadioButtonGroup Property="USE_EXISTING_NODE">
-            <RadioButton Value="1" X="0" Y="0" Width="310" Height="20" Text="Reuse existing system Node.js: [FOUND_NODE_EXE]" />
+            <RadioButton Value="1" X="0" Y="0" Width="310" Height="20" Text="Reuse existing system Node.js (Detected)" />
             <RadioButton Value="0" X="0" Y="22" Width="310" Height="20" Text="Install isolated private Node.js runtime via LibScript" />
           </RadioButtonGroup>
         </Control>
@@ -1302,7 +1286,7 @@ compile_msi() {
     return 1
   fi
 
-  printf '[PASS] Successfully built %s.msin' "${OUT_FILE}"
+  printf '[PASS] Successfully built %s.msi\n' "${OUT_FILE}"
 }
 
 compile_msi || { exit 1; }

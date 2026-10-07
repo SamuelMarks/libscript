@@ -8,8 +8,11 @@
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -228,7 +231,9 @@ case "$ACTION" in
       export SCRIPT_NAME
       . "${SCRIPT_NAME}"
       service_name="${LIBSCRIPT_SERVICE_NAME:-libscript_${PACKAGE_NAME:-mongodb}}"
-      libscript_install_service "$service_name" "$@"
+      exec_start="${2:-${LIBSCRIPT_HOME:-$HOME/.libscript}/mongodb/latest/bin/mongod --dbpath /var/lib/mongodb}"
+      mkdir -p /var/lib/mongodb || true
+      libscript_install_service "$service_name" "$exec_start"
     else
       log_info "install-service not implemented for $MONGODB_INSTALL_METHOD."
     fi

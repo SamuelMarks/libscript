@@ -25,8 +25,11 @@ set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -390,20 +393,12 @@ build_single_variant() {
       *) _base="$OUT_FILE" ;;
     esac
     if [ "$VARIANT" = "all" ]; then
-      if [ "$_v" = "offline" ]; then
-        TARGET_MSI="${_base}-offline.msi"
-      else
-        TARGET_MSI="${_base}.msi"
-      fi
+      TARGET_MSI="${_base}-${TARGET_ARCH}-${VERSION}-${_v}.msi"
     else
       TARGET_MSI="${_base}.msi"
     fi
   else
-    if [ "$_v" = "offline" ]; then
-      TARGET_MSI="${OUT_DIR}/libscript-${COMPONENT}-offline-${VERSION}.msi"
-    else
-      TARGET_MSI="${OUT_DIR}/libscript-${COMPONENT}-${VERSION}.msi"
-    fi
+    TARGET_MSI="${OUT_DIR}/${COMPONENT}-${TARGET_ARCH}-${VERSION}-${_v}.msi"
   fi
 
   _target_dir=$(dirname "$TARGET_MSI")

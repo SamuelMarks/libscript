@@ -34,8 +34,15 @@ if "%STAGE_DIR%"=="" set "STAGE_DIR=%LIBSCRIPT_ROOT_DIR%\build\stage_deb"
 set "OUT_DIR=%~4"
 if "%OUT_DIR%"=="" set "OUT_DIR=%LIBSCRIPT_ROOT_DIR%\build\packages\deb"
 
+if "%VARIANT%"=="" set "VARIANT=online"
+if "%TARGET_ARCH%"=="" set "TARGET_ARCH=amd64"
+
 if not exist "%OUT_DIR%" mkdir "%OUT_DIR%"
-set "TARGET_DEB=%OUT_DIR%\%PKG_NAME%_%PKG_VER%_amd64.deb"
+set "TARGET_DEB=%OUT_DIR%\%PKG_NAME%_%PKG_VER%_%TARGET_ARCH%.deb"
+
+if /i "%VARIANT%"=="offline" (
+    set "TARGET_DEB=%OUT_DIR%\%PKG_NAME%-offline_%PKG_VER%_%TARGET_ARCH%.deb"
+)
 
 if exist "%TARGET_DEB%" (
     echo [IDEMPOTENT] Target DEB already exists: %TARGET_DEB%
@@ -56,8 +63,13 @@ if exist "%STAGE_DIR%" (
     echo echo %PKG_NAME% %PKG_VER% > "%WORK_DIR%\data\usr\bin\%PKG_NAME%.cmd"
 )
 
+set "DEBIAN_PKG_NAME=%PKG_NAME%"
+if /i "%VARIANT%"=="offline" (
+    set "DEBIAN_PKG_NAME=%PKG_NAME%-offline"
+)
+
 (
-    echo Package: %PKG_NAME%
+    echo Package: !DEBIAN_PKG_NAME!
     echo Version: %PKG_VER%
     echo Architecture: amd64
     echo Maintainer: LibScript OS Synthesizer ^<libscript@local^>

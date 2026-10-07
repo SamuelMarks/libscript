@@ -123,39 +123,21 @@ if "%ACTION%"=="install" (
 
     set "USE_OFFLINE=0"
     if "%IS_OFFLINE%"=="1" if defined OFFLINE_CACHE_DIR set "USE_OFFLINE=1"
+    if "!USE_OFFLINE!"=="1" (
+        set "LIBSCRIPT_CACHE_DIR=!OFFLINE_CACHE_DIR!"
+    )
+
+    echo [INFO] 1/7: Provisioning core services and runtimes...
+    set "_offline_flag="
+    if "!USE_OFFLINE!"=="1" set "_offline_flag=--offline"
+    set "_OLD_STACK=!STACK!"
+    set "STACK="
+    for %%P in (python nodejs mysql mongodb redis meilisearch waitress) do (
+        call "%LIBSCRIPT_BIN%" install %%P latest !_offline_flag! || (powershell -Command "Get-Content '%OPENEDX_INSTALL_DIR%\logs\install.log' -Tail 50" 2>nul & exit /b 1)
+    )
+    set "STACK=!_OLD_STACK!"
 
     if "!USE_OFFLINE!"=="1" (
-        echo [INFO] 1/7: Provisioning core services and runtimes from air-gapped cache...
-
-        :: Step 1 (Runtimes): Extract Python and Node.js
-        if exist "!OFFLINE_CACHE_DIR!\runtimes" (
-            echo [INFO] Extracting runtimes from cache\runtimes...
-            for %%F in ("!OFFLINE_CACHE_DIR!\runtimes\python-*.zip") do (
-                call :extract_zip "%%~fF" "%OPENEDX_INSTALL_DIR%\runtimes\python"
-            )
-            for %%F in ("!OFFLINE_CACHE_DIR!\runtimes\node-*.zip") do (
-                call :extract_zip "%%~fF" "%OPENEDX_INSTALL_DIR%\runtimes\nodejs"
-            )
-        )
-
-        :: Step 2 (Datastores): Extract MySQL, Redis, MongoDB, Meilisearch
-        if exist "!OFFLINE_CACHE_DIR!\databases" (
-            echo [INFO] Extracting datastores from cache\databases...
-            for %%F in ("!OFFLINE_CACHE_DIR!\databases\mysql-*.zip") do (
-                call :extract_zip "%%~fF" "%OPENEDX_INSTALL_DIR%\databases\mysql"
-            )
-            for %%F in ("!OFFLINE_CACHE_DIR!\databases\redis-*.zip") do (
-                call :extract_zip "%%~fF" "%OPENEDX_INSTALL_DIR%\databases\redis"
-            )
-            for %%F in ("!OFFLINE_CACHE_DIR!\databases\mongodb-*.zip") do (
-                call :extract_zip "%%~fF" "%OPENEDX_INSTALL_DIR%\databases\mongodb"
-            )
-            if not exist "%OPENEDX_INSTALL_DIR%\databases\meilisearch" mkdir "%OPENEDX_INSTALL_DIR%\databases\meilisearch" 2>nul
-            for %%F in ("!OFFLINE_CACHE_DIR!\databases\meilisearch-*.exe") do (
-                copy /y "%%~fF" "%OPENEDX_INSTALL_DIR%\databases\meilisearch\meilisearch.exe" >nul 2>&1
-            )
-        )
-
         :: Step 4 (Codebase): Extract edx-platform.zip into codebase
         if exist "!OFFLINE_CACHE_DIR!\codebase" (
             echo [INFO] Extracting codebase from cache\codebase...
@@ -186,9 +168,6 @@ if "%ACTION%"=="install" (
             tar -xzf "!OFFLINE_CACHE_DIR!\codebase\demo-course.tar.gz" -C "%OPENEDX_INSTALL_DIR%" 2>nul || (powershell -Command "Get-Content '%OPENEDX_INSTALL_DIR%\logs\install.log' -Tail 50" & exit /b 1)
         )
     ) else (
-        echo [INFO] 1/7: Provisioning core services and runtimes online...
-        call "%LIBSCRIPT_BIN%" install python nodejs mysql mongodb redis meilisearch waitress
-        
         echo [INFO] Cloning edx-platform codebase...
         if not exist "%OPENEDX_INSTALL_DIR%\codebase" (
             git clone --depth 1 -b open-release/quince.master https://github.com/openedx/edx-platform.git "%OPENEDX_INSTALL_DIR%\codebase" || exit /b 1
@@ -202,10 +181,12 @@ if "%ACTION%"=="install" (
     set "PY_EXE=python"
     if exist "%OPENEDX_INSTALL_DIR%\runtimes\python\python.exe" set "PY_EXE=%OPENEDX_INSTALL_DIR%\runtimes\python\python.exe"
     if exist "C:\Program Files\Python312\python.exe" set "PY_EXE=C:\Program Files\Python312\python.exe"
-    if exist "C:\Program Files\Python311\python.exe" set "PY_EXE=C:\Program Files\Python311\python.exe"
-    if exist "%USERPROFILE%\AppData\Local\Programs\Python\Python312\python.exe" set "PY_EXE=%USERPROFILE%\AppData\Local\Programs\Python\Python312\python.exe"
-    if exist "%USERPROFILE%\AppData\Local\Programs\Python\Python312-arm64\python.exe" set "PY_EXE=%USERPROFILE%\AppData\Local\Programs\Python\Python312-arm64\python.exe"
-    if exist "%USERPROFILE%\AppData\Local\Programs\Python\Python311-arm64\python.exe" set "PY_EXE=%USERPROFILE%\AppData\Local\Programs\Python\Python311-arm64\python.exe"
+    if exist "C:\Program Files\Python310\python.exe" set "PY_EXE=C:\Program Files\Python310\python.exe"
+    if exist "%USERPROFILE%\AppData\Local\Programs\Python\Python310\python.exe" set "PY_EXE=%USERPROFILE%\AppData\Local\Programs\Python\Python310\python.exe"
+
+    
+    
+    
     
     echo [DEBUG] PY_EXE resolved to: !PY_EXE!
     "!PY_EXE!" --version

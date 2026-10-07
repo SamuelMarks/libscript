@@ -8,8 +8,11 @@
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -36,3 +39,10 @@ export SCRIPT_NAME
 . "$SCRIPT_NAME"
 
 check_service_status "mongod" "mongodb"
+
+if command -v mongosh >/dev/null 2>&1; then
+  mongosh --quiet --eval 'db.adminCommand("ping")' >/dev/null 2>&1 || exit 1
+elif command -v mongo >/dev/null 2>&1; then
+  mongo --quiet --eval 'db.adminCommand("ping")' >/dev/null 2>&1 || exit 1
+fi
+

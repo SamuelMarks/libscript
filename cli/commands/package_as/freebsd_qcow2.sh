@@ -11,8 +11,11 @@ set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -31,8 +34,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 ' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
-INPUT="${1:-${REPO_ROOT}/build/freebsd.raw}"
-OUT_QCOW2="${2:-${REPO_ROOT}/build/freebsd.qcow2}"
+INPUT="${1:-${REPO_ROOT}/build/images/raw/freebsd.raw}"
+OUT_QCOW2="${2:-${REPO_ROOT}/build/images/qemu/freebsd.qcow2}"
 SIZE_GIB="${3:-20}"
 
 OUT_DIR="${OUT_QCOW2%/*}"

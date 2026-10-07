@@ -17,7 +17,6 @@ vm_name = "rockylinux-test-#{test_target}"
 Vagrant.configure("2") do |config|
   config.vm.define vm_name do |t|
     t.vm.box = "bento/rockylinux-10.2"
-    t.vm.box_version = "0"
 
     t.ssh.username = "vagrant"
     t.ssh.insert_key = false
@@ -25,7 +24,7 @@ Vagrant.configure("2") do |config|
       File.expand_path("~/.vagrant.d/insecure_private_keys/vagrant.key.ed25519"),
       File.expand_path("~/.vagrant.d/insecure_private_key")
     ]
-    t.ssh.shell = "/bin/bash"
+    t.ssh.shell = "/bin/sh"
 
     t.vm.provider "qemu" do |qe|
       qe.net_mode = :user
@@ -40,10 +39,11 @@ Vagrant.configure("2") do |config|
       bios_path = bios_candidates.find { |path| File.exist?(path) }
       qe.extra_qemu_args = bios_path ? ["-bios", bios_path, "-device", "virtio-gpu-pci"] : ["-device", "virtio-gpu-pci"]
       qe.ssh_auto_correct = true
-      qe.ssh_port = 50022 + rand(1000)
+      qe.ssh_port = 2225
       qe.memory = "4G"
       qe.smp = "2"
     end
+    t.vm.usable_port_range = 2200..2220
     t.vm.allowed_synced_folder_types = [:rsync]
 
     # Sync the repository root directory

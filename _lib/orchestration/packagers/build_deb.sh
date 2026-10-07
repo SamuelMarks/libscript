@@ -11,8 +11,11 @@ set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -35,9 +38,15 @@ PKG_NAME="${1:-sample-pkg}"
 PKG_VER="${2:-1.0.0}"
 STAGE_DIR="${3:-${LIBSCRIPT_ROOT_DIR}/build/stage_deb}"
 OUT_DIR="${4:-${LIBSCRIPT_ROOT_DIR}/build/packages/deb}"
+VARIANT="${VARIANT:-online}"
+TARGET_ARCH="${TARGET_ARCH:-amd64}"
 
 mkdir -p "$OUT_DIR"
-TARGET_DEB="${OUT_DIR}/${PKG_NAME}_${PKG_VER}_amd64.deb"
+TARGET_DEB="${OUT_DIR}/${PKG_NAME}_${PKG_VER}_${TARGET_ARCH}.deb"
+
+if [ "$VARIANT" = "offline" ]; then
+  TARGET_DEB="${OUT_DIR}/${PKG_NAME}-offline_${PKG_VER}_${TARGET_ARCH}.deb"
+fi
 
 if [ -f "$TARGET_DEB" ]; then
   printf '[IDEMPOTENT] Target DEB already exists: %s
@@ -80,8 +89,13 @@ if command -v objdump >/dev/null 2>&1; then
   done
 fi
 
+_debian_pkg_name="${PKG_NAME}"
+if [ "$VARIANT" = "offline" ]; then
+  _debian_pkg_name="${PKG_NAME}-offline"
+fi
+
 cat <<EOF > "$WORK_DIR/control/control"
-Package: ${PKG_NAME}
+Package: ${_debian_pkg_name}
 Version: ${PKG_VER}
 Architecture: amd64
 Maintainer: LibScript OS Synthesizer <libscript@local>

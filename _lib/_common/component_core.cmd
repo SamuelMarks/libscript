@@ -339,7 +339,7 @@ if exist "%MANIFEST_FILE%" (
         for /f "delims=" %%A in ('jq -r "if .title and .description then .title + \": \" + .description elif .title then .title elif .description then .description else \"\" end" "%MANIFEST_FILE%"') do (
             if not "%%A"=="" echo   %%A
         )
-        for /f "delims=" %%A in ('jq -r "if \.versions then \"Supported Versions: \" + (.versions | join(\", \")) else \"\" end" "%MANIFEST_FILE%"') do (
+        for /f "delims=" %%A in ('jq -r --arg p "Supported Versions: " --arg s ", " "if .versions then $p + (.versions | join($s)) else empty end" "%MANIFEST_FILE%"') do (
             if not "%%A"=="" echo   %%A
         )
     )

@@ -11,8 +11,11 @@ set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -32,7 +35,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 SYSROOT="${1:-${LIBSCRIPT_TARGET_SYSROOT:-${REPO_ROOT}/build/freebsd-sysroot}}"
-OUT_ISO="${2:-${REPO_ROOT}/build/freebsd.iso}"
+OUT_ISO="${2:-${REPO_ROOT}/build/images/iso/freebsd.iso}"
 
 OUT_DIR="${OUT_ISO%/*}"
 [ -z "$OUT_DIR" ] || mkdir -p "$OUT_DIR"

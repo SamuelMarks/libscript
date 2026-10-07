@@ -119,11 +119,33 @@ function Test-Workers {
     }
 }
 
+# ## Test-LibscriptStatus
+# Probes component using standard libscript status
+function Test-LibscriptStatus {
+    param([string]$Component)
+    try {
+        $libscript = ""
+        if ($env:LIBSCRIPT_ROOT_DIR) {
+            $libscript = Join-Path $env:LIBSCRIPT_ROOT_DIR "libscript.cmd"
+        } else {
+            $libscript = Join-Path (Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent) "libscript.cmd"
+        }
+        
+        $p = Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$libscript`" status $Component" -NoNewWindow -Wait -PassThru
+        if ($p.ExitCode -eq 0) {
+            return "OK"
+        }
+        return "FAIL"
+    } catch {
+        return "FAIL"
+    }
+}
+
 $res = @{}
-$res["mysql"] = Test-TcpPort -HostName $MyH -Port ([int]$MyP)
-$res["mongodb"] = Test-TcpPort -HostName $MgH -Port ([int]$MgP)
-$res["redis"] = Test-TcpPort -HostName $RdH -Port ([int]$RdP)
-$res["meilisearch"] = Test-HttpEndpoint -Url "http://$MeH`:$MeP/health"
+$res["mysql"] = Test-LibscriptStatus -Component "databases/mysql"
+$res["mongodb"] = Test-LibscriptStatus -Component "databases/mongodb"
+$res["redis"] = Test-LibscriptStatus -Component "caches/redis"
+$res["meilisearch"] = Test-LibscriptStatus -Component "search/meilisearch"
 $res["lms"] = Test-HttpEndpoint -Url "http://$LmsH`:$LmsP/"
 $res["cms"] = Test-HttpEndpoint -Url "http://$CmsH`:$CmsP/signin"
 $res["workers"] = Test-Workers

@@ -19,6 +19,17 @@ set "APP_PUBLISHER=LibScript"
 set "APP_URL="
 set "UPGRADE_CODE=PUT-GUID-HERE"
 set "OUT_FILE=LibScriptInstaller"
+if defined pkg_type (
+  if "%pkg_type%"=="msi" set "OUT_FILE=%LIBSCRIPT_ROOT_DIR%\build\packages\msi\LibScriptInstaller"
+  if "%pkg_type%"=="exe" set "OUT_FILE=%LIBSCRIPT_ROOT_DIR%\build\packages\exe\LibScriptInstaller"
+  if "%pkg_type%"=="innosetup" set "OUT_FILE=%LIBSCRIPT_ROOT_DIR%\build\packages\exe\LibScriptInstaller"
+  if "%pkg_type%"=="nsis" set "OUT_FILE=%LIBSCRIPT_ROOT_DIR%\build\packages\exe\LibScriptInstaller"
+  if "%pkg_type%"=="pkg" set "OUT_FILE=%LIBSCRIPT_ROOT_DIR%\build\packages\pkg\LibScriptInstaller"
+  if "%pkg_type%"=="dmg" set "OUT_FILE=%LIBSCRIPT_ROOT_DIR%\build\packages\dmg\LibScriptInstaller"
+  if not exist "%LIBSCRIPT_ROOT_DIR%\build\packages\%pkg_type%" mkdir "%LIBSCRIPT_ROOT_DIR%\build\packages\%pkg_type%" 2>nul
+  if "%pkg_type%"=="innosetup" if not exist "%LIBSCRIPT_ROOT_DIR%\build\packages\exe" mkdir "%LIBSCRIPT_ROOT_DIR%\build\packages\exe" 2>nul
+  if "%pkg_type%"=="nsis" if not exist "%LIBSCRIPT_ROOT_DIR%\build\packages\exe" mkdir "%LIBSCRIPT_ROOT_DIR%\build\packages\exe" 2>nul
+)
 set "ICON_PATH="
 set "IMAGE_PATH="
 set "LOGO_PATH="
@@ -167,6 +178,7 @@ if /i "%~1"=="--offline" (
     shift
     goto args_loop
 )
+set "pos_args=!pos_args! %~1"
 shift
 goto args_loop
 

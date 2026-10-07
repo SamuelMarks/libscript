@@ -9,8 +9,11 @@
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -33,6 +36,16 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
     export APP_URL=""
     UPGRADE_CODE="PUT-GUID-HERE"
     export OUT_FILE="LibScriptInstaller"
+    if [ -n "${pkg_type:-}" ]; then
+      case "${pkg_type}" in
+        msi|exe|pkg|dmg|innosetup|nsis)
+          _fmt="${pkg_type}"
+          if [ "$_fmt" = "innosetup" ] || [ "$_fmt" = "nsis" ]; then _fmt="exe"; fi
+          export OUT_FILE="${LIBSCRIPT_ROOT_DIR}/build/packages/${_fmt}/LibScriptInstaller"
+          mkdir -p "${LIBSCRIPT_ROOT_DIR}/build/packages/${_fmt}" 2>/dev/null || true
+          ;;
+      esac
+    fi
     export ICON_PATH=""
     export IMAGE_PATH=""
     export LOGO_PATH=""
@@ -48,6 +61,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
     export FINISH_TEXT=""
     export OFFLINE="0"
 
+    pos_args=""
     while [ $# -gt 0 ]; do
       case "$1" in
         --user-mode) export install_scope="perUser"; export inno_priv="lowest"; export nsis_admin="user"; shift ;;
@@ -76,9 +90,13 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
         --finish-body) export FINISH_TEXT="$2"; shift 2 ;;
         --offline) export OFFLINE="1"; shift ;;
         -*) printf '%s\n' "Error: Unknown option $1" >&2; exit 1 ;;
-        *) break ;;
+        *)
+          pos_args="${pos_args}${pos_args:+ }$1"
+          shift
+          ;;
       esac
     done
+    eval "set -- ${pos_args:-}" # libscript-allow-eval
 
 
 

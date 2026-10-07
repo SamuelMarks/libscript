@@ -10,8 +10,11 @@ set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -31,7 +34,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export LIBSCRIPT_ROOT_DIR
 
 ROOTFS="${1:-${LIBSCRIPT_ROOT_DIR}/build/lfs/rootfs}"
-OUT_RAW="${2:-${LIBSCRIPT_ROOT_DIR}/build/output/lfs-disk.raw}"
+OUT_RAW="${2:-${LIBSCRIPT_ROOT_DIR}/build/images/raw/lfs-disk.raw}"
 SIZE_GIB="${3:-4}"
 BOOTLOADER="${4:-limine}"
 

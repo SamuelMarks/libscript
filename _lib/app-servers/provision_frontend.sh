@@ -10,8 +10,11 @@ set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -91,7 +94,7 @@ if command -v jq >/dev/null 2>&1; then
     # Check if this hook looks like an asset compilation hook
     case "$cmd" in
         *collectstatic*|*paver*update_assets*)
-            (cd "$app_dir" && eval "$cmd") || true
+            (cd "$app_dir" && sh -c "$cmd") || true
             ;;
     esac
   done

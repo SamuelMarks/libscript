@@ -126,6 +126,7 @@ tmp/
 fix_*
 patch_*
 test_*
+!TEST_OPENEDX_PLAN.md
 update_*
 rewrite_*
 validate_*
@@ -306,6 +307,8 @@ tests_tmp/
 *.ico
 *.bmp
 *.png
+*.jpg
+*.jpeg
 !devtools/docs-gen/*.png
 packaging/assets/*.rtf
 packaging/assets/*.ico

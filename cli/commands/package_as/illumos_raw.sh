@@ -11,8 +11,11 @@ set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -32,7 +35,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 TARGET_SYSROOT="${1:-${LIBSCRIPT_TARGET_SYSROOT:-${REPO_ROOT}/build/illumos-sysroot}}"
-OUT_IMG="${2:-${REPO_ROOT}/build/illumos.raw}"
+OUT_IMG="${2:-${REPO_ROOT}/build/images/raw/illumos.raw}"
 SIZE_GIB="${3:-20}"
 
 OUT_DIR="${OUT_IMG%/*}"

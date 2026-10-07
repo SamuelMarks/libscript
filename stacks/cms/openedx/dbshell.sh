@@ -24,8 +24,11 @@
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -76,7 +79,7 @@ REDIS_HOST="${REDIS_HOST:-127.0.0.1}"
 REDIS_PORT="${REDIS_PORT:-6379}"
 
 # If lms.env.json exists, parse configuration overrides using python
-if [ -f "${CONFIG_JSON}" ] && command -v python3 >/dev/null 2>&1; then
+if [ "${SKIP_CONFIG:-0}" != "1" ] && [ -f "${CONFIG_JSON}" ] && command -v python3 >/dev/null 2>&1; then
   _cfg_tmp=$(mktemp)
   python3 - "${CONFIG_JSON}" > "$_cfg_tmp" 2>/dev/null << 'EOF' || true
 import json, sys

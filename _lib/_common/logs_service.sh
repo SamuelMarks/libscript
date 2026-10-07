@@ -9,8 +9,11 @@
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -30,7 +33,7 @@ read_logs() {
     ACTION="$1"
     SVC_NAME="$2"
     shift 2
-    LOG_FILES="$@"
+    LOG_FILES="$*"
 
     OS_NAME=$(uname -s)
     

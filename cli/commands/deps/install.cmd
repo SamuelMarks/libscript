@@ -41,7 +41,7 @@ if "!LIBSCRIPT_SECRETS!"=="" (
     call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
 REM Parallel Download Phase
 echo Downloading dependencies in parallel...
-for /f "tokens=1,2,3" %%a in ('jq -r ".selected[] | \"\(.name) \(.version // \"latest\") \(.override // \"\")\"" "!json_file!.resolved.json" 2^>nul') do (
+for /f "tokens=1,2,3" %%a in ('jq -r --arg def "latest" --arg empty "" ".selected[] | [.name, (.version // $def), (.override // $empty)] | @tsv" "!json_file!.resolved.json" 2^>nul') do (
     if "%%c"=="" (
         start "" /b cmd /c "call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" download "%%a" "%%b""
     ) else if "%%c"=="null" (
@@ -57,7 +57,7 @@ ping 127.0.0.1 -n 4 >nul
 
 REM Serial Install Phase
 echo Installing dependencies sequentially...
-for /f "tokens=1,2,3" %%a in ('jq -r ".selected[] | \"\(.name) \(.version // \"latest\") \(.override // \"\")\"" "!json_file!.resolved.json" 2^>nul') do (
+for /f "tokens=1,2,3" %%a in ('jq -r --arg def "latest" --arg empty "" ".selected[] | [.name, (.version // $def), (.override // $empty)] | @tsv" "!json_file!.resolved.json" 2^>nul') do (
     if not "%%c"=="" if not "%%c"=="null" (
         echo Skipping installation of %%a ^(override provided: %%c^)
     ) else (

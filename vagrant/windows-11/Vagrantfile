@@ -39,8 +39,8 @@ Vagrant.configure("2") do |config|
     t.vm.allowed_synced_folder_types = [:rsync]
 
     # Sync the repository root directory
-    # t.vm.synced_folder repo_root, "/cygdrive/c/libscript", type: "rsync",
-    #  rsync_exclude: [".git/", "tests_tmp/", "vagrant/", "cache/", "_lib/orchestration/kubernetes-thw/kubernetes-the-hard-way/"]
+    t.vm.synced_folder repo_root, "/cygdrive/c/libscript", type: "rsync",
+      rsync_exclude: [".git/", "tests_tmp/", "vagrant/", "cache/", "_lib/orchestration/kubernetes-thw/kubernetes-the-hard-way/"]
 
     t.vm.provision "shell", inline: <<-POWERSHELL
       Write-Host "Configuring libscript on Windows 11..."
@@ -64,6 +64,10 @@ Vagrant.configure("2") do |config|
         exit $installExit
       }
       if ("#{test_target}" -like "*openedx*") {
+        Write-Host "Triggering MSI generation test for Open edX..."
+        & "cmd.exe" "/c" "C:\\libscript\\vagrant\\windows-11\\test_openedx_msi.cmd"
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
         Write-Host "Triggering browser verification for Open edX..."
         & "powershell.exe" -ExecutionPolicy Bypass -File "C:\\libscript\\packaging\\capture_browser_tabs.ps1"
       }

@@ -27,8 +27,11 @@
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -49,6 +52,13 @@ export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/env.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+fi
+
+if [ -f "${DIR}/env.sh" ]; then
+  SCRIPT_NAME="${DIR}/env.sh"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
@@ -176,9 +186,9 @@ status_daemon() {
 # Starts all workers.
 workers_start() {
   log_info "Starting Open edX Celery workers and scheduler..."
-  start_daemon "lms-worker" "lms.envs.production"
-  start_daemon "cms-worker" "cms.envs.production"
-  start_daemon "celery-beat" "lms.envs.production"
+  start_daemon "lms-worker" "lms"
+  start_daemon "cms-worker" "cms"
+  start_daemon "celery-beat" "lms"
   log_success "All Open edX background workers started."
 }
 

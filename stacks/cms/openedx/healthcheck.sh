@@ -33,8 +33,11 @@
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -127,65 +130,7 @@ test_tcp_port() {
   fi
 }
 
-# ## probe_mysql
-# Checks MySQL connectivity.
-probe_mysql() {
-  if command -v mysqladmin >/dev/null 2>&1; then
-    if mysqladmin ping -h "${MYSQL_HOST}" -P "${MYSQL_PORT}" --silent >/dev/null 2>&1; then
-      printf 'OK'
-      return 0
-    fi
-  fi
-  if test_tcp_port "${MYSQL_HOST}" "${MYSQL_PORT}"; then
-    printf 'OK'
-    return 0
-  fi
-  printf 'FAIL'
-  return 1
-}
 
-# ## probe_mongo
-# Checks MongoDB connectivity.
-probe_mongo() {
-  if test_tcp_port "${MONGODB_HOST}" "${MONGODB_PORT}"; then
-    printf 'OK'
-    return 0
-  fi
-  printf 'FAIL'
-  return 1
-}
-
-# ## probe_redis
-# Checks Redis connectivity.
-probe_redis() {
-  if command -v redis-cli >/dev/null 2>&1; then
-    if redis-cli -h "${REDIS_HOST}" -p "${REDIS_PORT}" ping 2>/dev/null | grep -i "PONG" >/dev/null 2>&1; then
-      printf 'OK'
-      return 0
-    fi
-  fi
-  if test_tcp_port "${REDIS_HOST}" "${REDIS_PORT}"; then
-    printf 'OK'
-    return 0
-  fi
-  printf 'FAIL'
-  return 1
-}
-
-# ## probe_meilisearch
-# Checks Meilisearch HTTP health endpoint.
-probe_meilisearch() {
-  if curl -sf --connect-timeout 1 "http://${MEILISEARCH_HOST}:${MEILISEARCH_PORT}/health" 2>/dev/null | grep -i "available" >/dev/null 2>&1; then
-    printf 'OK'
-    return 0
-  fi
-  if test_tcp_port "${MEILISEARCH_HOST}" "${MEILISEARCH_PORT}"; then
-    printf 'OK'
-    return 0
-  fi
-  printf 'FAIL'
-  return 1
-}
 
 # ## probe_http
 # Probes an HTTP service for a valid response code.
@@ -212,12 +157,12 @@ probe_http() {
 probe_workers() {
   _pid_file="${OPENEDX_INSTALL_DIR}/run/worker.pid"
   if [ -f "${_pid_file}" ] && kill -0 "$(cat "${_pid_file}")" 2>/dev/null; then
-    printf 'OK'
+    echo 'OK'
     return 0
   fi
   # shellcheck disable=SC2009
   if ps aux 2>/dev/null | grep -v grep | grep -E "(celery|openedx-worker|waitress|gunicorn)" >/dev/null 2>&1; then
-    printf 'OK'
+    echo 'OK'
     return 0
   fi
   printf 'WARN (inactive)'
@@ -228,7 +173,7 @@ probe_workers() {
 # Probes local SMTP mail relay port.
 probe_smtp() {
   if test_tcp_port "${SMTP_HOST}" "${SMTP_PORT}"; then
-    printf 'OK'
+    echo 'OK'
     return 0
   fi
   printf 'WARN (offline)'
@@ -236,16 +181,14 @@ probe_smtp() {
 }
 
 # Run diagnostics
-STATUS_MYSQL=$(probe_mysql || true)
+STATUS_MYSQL=$( /opt/repos/libscript/libscript.sh status databases/mysql >/dev/null 2>&1 && echo "OK" || echo "FAIL" )
 [ "${STATUS_MYSQL}" = "FAIL" ] && TOTAL_FAILURES=$((TOTAL_FAILURES + 1))
 
-STATUS_MONGO=$(probe_mongo || true)
-[ "${STATUS_MONGO}" = "FAIL" ] && TOTAL_FAILURES=$((TOTAL_FAILURES + 1))
 
-STATUS_REDIS=$(probe_redis || true)
+STATUS_REDIS=$( /opt/repos/libscript/libscript.sh status caches/redis >/dev/null 2>&1 && echo "OK" || echo "FAIL" )
 [ "${STATUS_REDIS}" = "FAIL" ] && TOTAL_FAILURES=$((TOTAL_FAILURES + 1))
 
-STATUS_MEILI=$(probe_meilisearch || true)
+STATUS_MEILI=$( /opt/repos/libscript/libscript.sh status search/meilisearch >/dev/null 2>&1 && echo "OK" || echo "FAIL" )
 [ "${STATUS_MEILI}" = "FAIL" ] && TOTAL_FAILURES=$((TOTAL_FAILURES + 1))
 
 STATUS_LMS=$(probe_http "http://${LMS_HOST}:${LMS_PORT}/" || true)
@@ -264,7 +207,6 @@ if [ "${JSON_OUTPUT}" = "1" ]; then
   "failures": ${TOTAL_FAILURES},
   "services": {
     "mysql": "${STATUS_MYSQL}",
-    "mongodb": "${STATUS_MONGO}",
     "redis": "${STATUS_REDIS}",
     "meilisearch": "${STATUS_MEILI}",
     "lms": "${STATUS_LMS}",
@@ -287,8 +229,6 @@ else
 ' "--------------------" "--------------------------------" "----------------"
   printf '%-20s %-32s %-16s
 ' "MySQL" "${MYSQL_HOST}:${MYSQL_PORT}" "${STATUS_MYSQL}"
-  printf '%-20s %-32s %-16s
-' "MongoDB" "${MONGODB_HOST}:${MONGODB_PORT}" "${STATUS_MONGO}"
   printf '%-20s %-32s %-16s
 ' "Redis" "${REDIS_HOST}:${REDIS_PORT}" "${STATUS_REDIS}"
   printf '%-20s %-32s %-16s

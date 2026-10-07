@@ -9,8 +9,11 @@
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -29,22 +32,26 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
   if [ $# -gt 0 ]; then
     while [ $# -gt 0 ]; do
       deps_list="$deps_list $1 ${2:-latest}"
-      if [ "$2" != "" ]; then shift 2; else shift; fi
+      if [ "${2:-}" != "" ]; then shift 2; else shift; fi
     done
   elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
     deps_list=$("${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null | tr '\n' ' ')
   else
     deps_list=$(find_components | sort | awk '{printf "%s latest ", $1}')
   fi
+
       printf '%s\n' "#!/bin/sh"
       printf '%s\n' "set -e"
       printf '%s\n' "OUT_DIR=\"${OUT_DIR:-.}\""
       printf '%s\n' "mkdir -p \"\$OUT_DIR\""
+      printf '%s\n' "OUT_DIR=\"\$(cd \"\$OUT_DIR\" && pwd)\""
       meta_depends=""
-      set -- "$deps_list"
+      safe_app_name="$(printf '%s\n' "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9+.-' '-' | sed 's/^-*//;s/-*$//')"
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
-        pkg_name="${APP_NAME}-${pkg}"
+        safe_pkg="$(printf '%s\n' "$pkg" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9+.-' '-' | sed 's/^-*//;s/-*$//')"
+        pkg_name="${safe_app_name}-${safe_pkg}"
         if [ -n "$meta_depends" ]; then meta_depends="${meta_depends} "; fi
         meta_depends="${meta_depends}${pkg_name}"
         printf '%s\n' "printf '%s\n' \"Building $pkg_name ...\""
@@ -67,49 +74,37 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
         printf '%s\n' "}"
         printf '%s\n' "EOF"
         printf '%s\n' "cat << 'EOF' > \"\$BUILD_DIR/${pkg_name}.post-install\""
-  . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/_common_installer_args.sh"
-  deps_list=""
-  if [ $# -gt 0 ]; then
-    while [ $# -gt 0 ]; do
-      deps_list="$deps_list $1 ${2:-latest}"
-      if [ "$2" != "" ]; then shift 2; else shift; fi
-    done
-  elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
-    deps_list=$("${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null | tr '\n' ' ')
-  else
-    deps_list=$(find_components | sort | awk '{printf "%s latest ", $1}')
-  fi
+
         printf '%s\n' "#!/bin/sh"
         printf '%s\n' "if command -v libscript.sh >/dev/null; then libscript.sh install-service $pkg $ver; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh install-service $pkg $ver; fi"
+        if [ "$pkg" = "openedx" ] || [ "$pkg" = "stacks/cms/openedx" ]; then
+          printf '%s\n' "mkdir -p /usr/local/bin && ln -sf /opt/libscript/stacks/cms/openedx/cli.sh /usr/local/bin/openedx"
+          printf '%s\n' "/opt/libscript/stacks/cms/openedx/healthcheck.sh || true"
+        fi
         printf '%s\n' "EOF"
         printf '%s\n' "chmod +x \"\$BUILD_DIR/${pkg_name}.post-install\""
         printf '%s\n' "cat << 'EOF' > \"\$BUILD_DIR/${pkg_name}.pre-deinstall\""
-  . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/_common_installer_args.sh"
-  deps_list=""
-  if [ $# -gt 0 ]; then
-    while [ $# -gt 0 ]; do
-      deps_list="$deps_list $1 ${2:-latest}"
-      if [ "$2" != "" ]; then shift 2; else shift; fi
-    done
-  elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
-    deps_list=$("${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null | tr '\n' ' ')
-  else
-    deps_list=$(find_components | sort | awk '{printf "%s latest ", $1}')
-  fi
+
         printf '%s\n' "#!/bin/sh"
+        if [ "$pkg" = "openedx" ] || [ "$pkg" = "stacks/cms/openedx" ]; then
+          printf '%s\n' "/opt/libscript/stacks/cms/openedx/workers.sh stop 2>/dev/null || true"
+          printf '%s\n' "rm -f /usr/local/bin/openedx"
+        fi
         printf '%s\n' "if command -v libscript.sh >/dev/null; then libscript.sh uninstall $pkg --purge-data; elif [ -f /opt/libscript/libscript.sh ]; then cd /opt/libscript && ./libscript.sh uninstall $pkg --purge-data; fi"
         printf '%s\n' "EOF"
         printf '%s\n' "chmod +x \"\$BUILD_DIR/${pkg_name}.pre-deinstall\""
+        printf '%s\n' "if [ ! -f \"\$HOME/.abuild/abuild.conf\" ]; then abuild-keygen -a -n 2>/dev/null || true; fi"
         printf '%s\n' "if [ \"\$(id -u)\" = \"0\" ]; then ABUILD_OPTS=\"-F\"; else ABUILD_OPTS=\"\"; fi"
         printf '%s\n' "cd \"\$BUILD_DIR\" && abuild \$ABUILD_OPTS -P \"\$BUILD_DIR/out\" rootpkg"
         printf '%s\n' "find \"\$BUILD_DIR/out\" -name \"*.apk\" -exec cp {} \"\$OUT_DIR/\" \\;"
         printf '%s\n' "rm -rf \"\$BUILD_DIR\""
       done
-      printf '%s\n' "printf '%s\n' \"Building ${APP_NAME}-meta ...\""
-      printf '%s\n' "BUILD_DIR=\"/tmp/${APP_NAME}-meta_apkbuild\""
+      meta_pkg_name="${safe_app_name}-meta"
+      printf '%s\n' "printf '%s\n' \"Building ${meta_pkg_name} ...\""
+      printf '%s\n' "BUILD_DIR=\"/tmp/${meta_pkg_name}_apkbuild\""
       printf '%s\n' "mkdir -p \"\$BUILD_DIR\""
       printf '%s\n' "cat << 'EOF' > \"\$BUILD_DIR/APKBUILD\""
-      printf '%s\n' "pkgname=\"${APP_NAME}-meta\""
+      printf '%s\n' "pkgname=\"${meta_pkg_name}\""
       printf '%s\n' "pkgver=\"$APP_VERSION\""
       printf '%s\n' "pkgrel=1"
       printf '%s\n' "pkgdesc=\"$APP_NAME deployment metapackage\""
@@ -120,7 +115,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
       printf '%s\n' "build() { return 0; }"
       printf '%s\n' "package() {"
       printf '%s\n' "  mkdir -p \"\$pkgdir/var/LIB/libscript\""
-      printf '%s\n' "  touch \"\$pkgdir/var/LIB/libscript/.${APP_NAME}-meta_installed\""
+      printf '%s\n' "  touch \"\$pkgdir/var/LIB/libscript/.${meta_pkg_name}_installed\""
       printf '%s\n' "}"
       printf '%s\n' "EOF"
       printf '%s\n' "if [ \"\$(id -u)\" = \"0\" ]; then ABUILD_OPTS=\"-F\"; else ABUILD_OPTS=\"\"; fi"

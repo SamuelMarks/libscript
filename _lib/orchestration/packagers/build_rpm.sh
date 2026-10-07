@@ -11,8 +11,11 @@ set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -35,9 +38,11 @@ PKG_NAME="${1:-sample-pkg}"
 PKG_VER="${2:-1.0.0}"
 STAGE_DIR="${3:-${LIBSCRIPT_ROOT_DIR}/build/stage_rpm}"
 OUT_DIR="${4:-${LIBSCRIPT_ROOT_DIR}/build/packages/rpm}"
+VARIANT="${VARIANT:-online}"
+TARGET_ARCH="${TARGET_ARCH:-x86_64}"
 
 mkdir -p "$OUT_DIR"
-TARGET_RPM="${OUT_DIR}/${PKG_NAME}-${PKG_VER}-1.x86_64.rpm"
+TARGET_RPM="${OUT_DIR}/${PKG_NAME}-${TARGET_ARCH}-${PKG_VER}-${VARIANT}.rpm"
 
 if [ -f "$TARGET_RPM" ]; then
   printf '[IDEMPOTENT] Target RPM already exists: %s
@@ -64,8 +69,13 @@ fi
 
 SPEC_FILE="$WORK_DIR/SPECS/${PKG_NAME}.spec"
 
+_rpm_pkg_name="${PKG_NAME}"
+if [ "$VARIANT" = "offline" ]; then
+  _rpm_pkg_name="${PKG_NAME}-offline"
+fi
+
 cat <<EOF > "$SPEC_FILE"
-Name:           ${PKG_NAME}
+Name:           ${_rpm_pkg_name}
 Version:        ${PKG_VER}
 Release:        1%{?dist}
 Summary:        ${PKG_NAME} packaged by LibScript

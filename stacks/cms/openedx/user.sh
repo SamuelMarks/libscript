@@ -24,8 +24,11 @@
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -46,6 +49,13 @@ export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/env.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+fi
+
+if [ -f "${DIR}/env.sh" ]; then
+  SCRIPT_NAME="${DIR}/env.sh"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
   . "${SCRIPT_NAME}"
@@ -93,7 +103,7 @@ run_django_code() {
   fi
 
   if [ -f "${MANAGE_PY}" ]; then
-    "${_py}" "${MANAGE_PY}" lms shell -c "$1"
+    "${_py}" "${MANAGE_PY}" lms --settings=lms.envs.production shell -c "$1"
   else
     # Fallback simulation or mock mode when full platform is not checked out
     "${_py}" -c "$1"

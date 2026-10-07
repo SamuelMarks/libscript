@@ -8,8 +8,11 @@
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -33,3 +36,5 @@ export CMS_HOST="${CMS_HOST:-studio.openedx.local}"
 export LMS_PORT="${LMS_PORT:-8000}"
 export CMS_PORT="${CMS_PORT:-8001}"
 export OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
+export LMS_CFG="${OPENEDX_INSTALL_DIR}/lms/envs/minimal.yml"
+export CMS_CFG="${OPENEDX_INSTALL_DIR}/lms/envs/minimal.yml"

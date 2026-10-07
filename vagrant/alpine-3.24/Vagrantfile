@@ -18,7 +18,6 @@ vm_name = "alpine-3.24-test-#{test_target}"
 Vagrant.configure("2") do |config|
   config.vm.define vm_name do |t|
     t.vm.box = "bento/alpine-3.24"
-    t.vm.box_version = "0"
 
     t.ssh.username = "vagrant"
     t.ssh.insert_key = false
@@ -40,8 +39,9 @@ Vagrant.configure("2") do |config|
       bios_path = bios_candidates.find { |path| File.exist?(path) }
       qe.extra_qemu_args = ["-bios", bios_path] if bios_path
       qe.ssh_auto_correct = true
-      qe.ssh_port = 50022
+      qe.ssh_port = 2224
     end
+    t.vm.usable_port_range = 2210..2230
     t.vm.allowed_synced_folder_types = [:rsync]
 
     # Sync the repository root directory

@@ -10,8 +10,11 @@ set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -32,7 +35,7 @@ export LIBSCRIPT_ROOT_DIR
 
 PROVIDER="all"
 INPUT="${LIBSCRIPT_ROOT_DIR}/build/target.img"
-OUT_DIR="${LIBSCRIPT_ROOT_DIR}/build/cloud_images"
+OUT_DIR="${LIBSCRIPT_ROOT_DIR}/build/images/cloud"
 
 while [ $# -gt 0 ]; do
   case "$1" in

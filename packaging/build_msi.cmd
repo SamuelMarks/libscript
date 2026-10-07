@@ -327,12 +327,14 @@ if "%CLEAN_BRANCH%"=="" set "CLEAN_BRANCH=%APP_VERSION%"
 
 if /I "%VARIANT%"=="offline" (
     set "PROP_OPENEDX_OFFLINE=1"
-    if "%OUT_FILE%"=="" set "OUT_FILE=%STACK_NAME%-offline-%CLEAN_BRANCH%"
+    if "%OUT_FILE%"=="" set "OUT_FILE=%LIBSCRIPT_ROOT_DIR%\build\packages\msi\%STACK_NAME%-%TARGET_ARCH%-%CLEAN_BRANCH%-%VARIANT%"
+    if not exist "%LIBSCRIPT_ROOT_DIR%\build\packages\msi" mkdir "%LIBSCRIPT_ROOT_DIR%\build\packages\msi"
     set "WELCOME_DESC=The Setup Wizard will deploy %APP_NAME% and pre-bundled air-gapped runtimes on your computer."
     set "COMP_TAG= [Pre-bundled / Offline]"
 ) else (
     set "PROP_OPENEDX_OFFLINE=0"
-    if "%OUT_FILE%"=="" set "OUT_FILE=%STACK_NAME%-%CLEAN_BRANCH%"
+    if "%OUT_FILE%"=="" set "OUT_FILE=%LIBSCRIPT_ROOT_DIR%\build\packages\msi\%STACK_NAME%-%TARGET_ARCH%-%CLEAN_BRANCH%-%VARIANT%"
+    if not exist "%LIBSCRIPT_ROOT_DIR%\build\packages\msi" mkdir "%LIBSCRIPT_ROOT_DIR%\build\packages\msi"
     set "WELCOME_DESC=The Setup Wizard will download and install %APP_NAME% and required runtimes on your computer."
     set "COMP_TAG="
 )
@@ -420,27 +422,6 @@ setlocal DisableDelayedExpansion
     echo     ^<Property Id="DATAFOLDER" Value="%DATA_DIR%" Secure="yes" /^>
     echo     ^<Property Id="LOGSFOLDER" Value="%LOGS_DIR%" Secure="yes" /^>
 
-    echo     ^<Property Id="FOUND_PYTHON_EXE"^>
-    echo       ^<RegistrySearch Id="SearchPython64" Root="HKLM" Key="SOFTWARE\Python\PythonCore\3.12\InstallPath" Type="raw" Win64="yes"^>
-    echo         ^<FileSearch Id="SearchPythonExe64" Name="python.exe" /^>
-    echo       ^</RegistrySearch^>
-    echo       ^<RegistrySearch Id="SearchPython311" Root="HKLM" Key="SOFTWARE\Python\PythonCore\3.11\InstallPath" Type="raw" Win64="yes"^>
-    echo         ^<FileSearch Id="SearchPythonExe311" Name="python.exe" /^>
-    echo       ^</RegistrySearch^>
-    echo     ^</Property^>
-
-    echo     ^<Property Id="FOUND_NODE_EXE"^>
-    echo       ^<RegistrySearch Id="SearchNodeReg" Root="HKLM" Key="SOFTWARE\Node.js" Name="InstallPath" Type="raw"^>
-    echo         ^<FileSearch Id="SearchNodeExe" Name="node.exe" /^>
-    echo       ^</RegistrySearch^>
-    echo     ^</Property^>
-
-    echo     ^<Property Id="FOUND_MYSQL_EXE"^>
-    echo       ^<RegistrySearch Id="SearchMySQL8" Root="HKLM" Key="SOFTWARE\MySQL AB\MySQL Server 8.0" Name="Location" Type="raw"^>
-    echo         ^<FileSearch Id="SearchMySQLDaemon" Name="mysqld.exe" /^>
-    echo       ^</RegistrySearch^>
-    echo     ^</Property^>
-
     echo     ^<Property Id="USE_EXISTING_PYTHON" Value="1" Secure="yes" /^>
     echo     ^<Property Id="USE_EXISTING_NODE" Value="1" Secure="yes" /^>
     echo     ^<Property Id="USE_EXISTING_MYSQL" Value="0" Secure="yes" /^>
@@ -514,7 +495,8 @@ setlocal DisableDelayedExpansion
 
     echo     ^<CustomAction Id="CA_CheckNetworkConnection" Directory="INSTALLFOLDER" ExeCommand="powershell.exe -NoProfile -Command &quot;try { (New-Object System.Net.Sockets.TcpClient('github.com', 443)).Close(); (New-Object System.Net.Sockets.TcpClient('pypi.org', 443)).Close(); } catch { exit 1 }&quot;" Execute="immediate" Return="ignore" /^>
     echo     ^<CustomAction Id="CA_CheckPorts" Directory="INSTALLFOLDER" ExeCommand="powershell.exe -NoProfile -Command &quot;foreach ($p in @(8000, 8001, 3306, 6379, 27017, 7700)) { try { $s = [System.Net.Sockets.TcpClient]::new('127.0.0.1', $p); $s.Close(); Write-Warning &quot;Port $p is currently occupied&quot; } catch {} }&quot;" Execute="immediate" Return="ignore" /^>
-    echo     ^<CustomAction Id="CA_DetectExistingRuntimes" Directory="INSTALLFOLDER" ExeCommand="powershell.exe -NoProfile -Command &quot;if (Get-Command python -ErrorAction SilentlyContinue) { [Environment]::SetEnvironmentVariable('FOUND_PYTHON_EXE', (Get-Command python).Source, 'Process') }; if (Get-Command node -ErrorAction SilentlyContinue) { [Environment]::SetEnvironmentVariable('FOUND_NODE_EXE', (Get-Command node).Source, 'Process') }&quot;" Execute="immediate" Return="ignore" /^>
+    echo     ^<CustomAction Id="CA_DetectExistingRuntimes" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\status_runtimes.cmd runtimes/python ^&amp; [INSTALLFOLDER]libscript\stacks\cms\openedx\status_runtimes.cmd runtimes/nodejs&quot;" Execute="deferred" Return="ignore" Impersonate="no" /^>
+    echo     ^<CustomAction Id="CA_DetectDatabases" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\status_databases.cmd databases/mysql&quot;" Execute="deferred" Return="ignore" Impersonate="no" /^>
     echo     ^<CustomAction Id="CA_AbortNoLicense" Error="Installation aborted: You must accept all bundled software licenses to proceed. Pass AGREE_ALL_LICENSES=1 for unattended installations." /^>
     echo     ^<CustomAction Id="CA_LaunchBrowser" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\packaging\launch_browser.cmd&quot; http://[PROP_LMS_HOST]:[PROP_LMS_PORT] &quot;Open edX LMS&quot;" Return="asyncNoWait" /^>
     echo     ^<CustomAction Id="CA_LaunchStudio" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\packaging\launch_browser.cmd&quot; http://[PROP_CMS_HOST]:[PROP_CMS_PORT] &quot;Open edX Studio&quot;" Return="asyncNoWait" /^>
@@ -681,14 +663,14 @@ setlocal DisableDelayedExpansion
     echo         ^<Control Id="Grp_Python" Type="GroupBox" X="20" Y="50" Width="330" Height="70" Text="Python 3.11+ Execution Runtime" /^>
     echo         ^<Control Id="Rad_PythonExisting" Type="RadioButtonGroup" X="28" Y="65" Width="310" Height="45" Property="USE_EXISTING_PYTHON"^>
     echo           ^<RadioButtonGroup Property="USE_EXISTING_PYTHON"^>
-    echo             ^<RadioButton Value="1" X="0" Y="0" Width="310" Height="20" Text="Reuse existing system Python: [FOUND_PYTHON_EXE]" /^>
+    echo             ^<RadioButton Value="1" X="0" Y="0" Width="310" Height="20" Text="Reuse existing system Python (Detected)" /^>
     echo             ^<RadioButton Value="0" X="0" Y="22" Width="310" Height="20" Text="Install isolated private Python runtime via LibScript" /^>
     echo           ^</RadioButtonGroup^>
     echo         ^</Control^>
     echo         ^<Control Id="Grp_Node" Type="GroupBox" X="20" Y="125" Width="330" Height="70" Text="Node.js 18/20+ Asset Pipeline Runtime" /^>
     echo         ^<Control Id="Rad_NodeExisting" Type="RadioButtonGroup" X="28" Y="140" Width="310" Height="45" Property="USE_EXISTING_NODE"^>
     echo           ^<RadioButtonGroup Property="USE_EXISTING_NODE"^>
-    echo             ^<RadioButton Value="1" X="0" Y="0" Width="310" Height="20" Text="Reuse existing system Node.js: [FOUND_NODE_EXE]" /^>
+    echo             ^<RadioButton Value="1" X="0" Y="0" Width="310" Height="20" Text="Reuse existing system Node.js (Detected)" /^>
     echo             ^<RadioButton Value="0" X="0" Y="22" Width="310" Height="20" Text="Install isolated private Node.js runtime via LibScript" /^>
     echo           ^</RadioButtonGroup^>
     echo         ^</Control^>

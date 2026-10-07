@@ -57,7 +57,7 @@ if "!is_json!"=="1" (
         )
     )
     call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\resolve_stack.cmd" "!json_file!" > "!json_file!.resolved.json" 2>nul
-    for /f "tokens=1,2 delims= " %%A in ('jq -r ".selected[] | \"\(.name) \(.version // \"latest\")\"" "!json_file!.resolved.json" 2^>nul') do (
+    for /f "tokens=1,2 delims= " %%A in ('jq -r --arg def "latest" ".selected[] | [.name, (.version // $def)] | @tsv" "!json_file!.resolved.json" 2^>nul') do (
         set "pkg=%%A"
         set "ver=%%B"
         if "!ver!"=="null" set "ver=latest"

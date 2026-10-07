@@ -28,8 +28,11 @@
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -470,8 +473,14 @@ elif [ "$ACTION" = "exec" ]; then
   exec "$@"
 fi
 
-# Default to setup.sh for installation and other actions
-if [ -x "$COMP_DIR/setup.sh" ]; then
+# Default to action script or setup.sh for installation and other actions
+if [ -n "$ACTION" ] && [ -x "$COMP_DIR/${ACTION}.sh" ]; then
+  unset SCRIPT_NAME || true
+  exec "$COMP_DIR/${ACTION}.sh" "$@"
+elif [ -n "$ACTION" ] && [ -f "$COMP_DIR/${ACTION}.sh" ]; then
+  unset SCRIPT_NAME || true
+  exec sh "$COMP_DIR/${ACTION}.sh" "$@"
+elif [ -x "$COMP_DIR/setup.sh" ]; then
   unset SCRIPT_NAME || true
   exec "$COMP_DIR/setup.sh" "$@"
 elif [ -f "$COMP_DIR/setup.sh" ]; then

@@ -10,8 +10,11 @@ set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -31,7 +34,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export LIBSCRIPT_ROOT_DIR
 
 INPUT_IMAGE="${1:-${LIBSCRIPT_ROOT_DIR}/build/output/lfs-disk.qcow2}"
-OUT_BOX="${2:-${LIBSCRIPT_ROOT_DIR}/build/output/lfs-custom.box}"
+OUT_BOX="${2:-${LIBSCRIPT_ROOT_DIR}/build/images/vagrant/lfs-custom.box}"
 PROVIDER="${3:-qemu}"
 
 case "$INPUT_IMAGE" in /*) ;; *) INPUT_IMAGE="${PWD}/${INPUT_IMAGE}" ;; esac
@@ -50,7 +53,7 @@ fi
 
 # Ensure input image exists, or build intermediate if raw exists
 if [ ! -f "$INPUT_IMAGE" ]; then
-  RAW_IMG="${LIBSCRIPT_ROOT_DIR}/build/output/lfs-disk.raw"
+  RAW_IMG="${LIBSCRIPT_ROOT_DIR}/build/images/raw/lfs-disk.raw"
   if [ -f "$RAW_IMG" ]; then
     printf '[INFO] Converting raw disk to qcow2 for Vagrant box packaging...
 '

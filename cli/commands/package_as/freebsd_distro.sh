@@ -11,8 +11,11 @@ set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -72,29 +75,29 @@ printf '[DISTRO]   Synthesizing FreeBSD sysroot from %s...
 # Step 2: Dispatch to requested format exporter
 case "${FORMAT}" in
   raw)
-    : "${OUTPUT:=${REPO_ROOT}/build/freebsd.raw}"
+    : "${OUTPUT:=${REPO_ROOT}/build/images/raw/freebsd.raw}"
     "${SCRIPT_DIR}/freebsd_raw.sh" "${SYSROOT}" "${OUTPUT}" 20
     ;;
   qcow2)
-    : "${OUTPUT:=${REPO_ROOT}/build/freebsd.qcow2}"
+    : "${OUTPUT:=${REPO_ROOT}/build/images/qemu/freebsd.qcow2}"
     "${SCRIPT_DIR}/freebsd_qcow2.sh" "${SYSROOT}" "${OUTPUT}" 20
     ;;
   box)
-    : "${OUTPUT:=${REPO_ROOT}/build/freebsd.box}"
-    QCOW_TMP="${REPO_ROOT}/build/freebsd.qcow2"
+    : "${OUTPUT:=${REPO_ROOT}/build/images/vagrant/freebsd.box}"
+    QCOW_TMP="${REPO_ROOT}/build/images/qemu/freebsd.qcow2"
     "${SCRIPT_DIR}/freebsd_qcow2.sh" "${SYSROOT}" "${QCOW_TMP}" 20
     "${SCRIPT_DIR}/freebsd_vagrant_box.sh" "${QCOW_TMP}" "${OUTPUT}" "qemu"
     ;;
   vhd)
-    : "${OUTPUT:=${REPO_ROOT}/build/freebsd.vhd}"
+    : "${OUTPUT:=${REPO_ROOT}/build/images/hyperv/freebsd.vhd}"
     "${SCRIPT_DIR}/freebsd_vhd.sh" "${SYSROOT}" "${OUTPUT}" 20
     ;;
   vmdk)
-    : "${OUTPUT:=${REPO_ROOT}/build/freebsd.vmdk}"
+    : "${OUTPUT:=${REPO_ROOT}/build/images/vmware/freebsd.vmdk}"
     "${SCRIPT_DIR}/freebsd_vmdk.sh" "${SYSROOT}" "${OUTPUT}" 20
     ;;
   iso)
-    : "${OUTPUT:=${REPO_ROOT}/build/freebsd.iso}"
+    : "${OUTPUT:=${REPO_ROOT}/build/images/iso/freebsd.iso}"
     "${SCRIPT_DIR}/freebsd_iso.sh" "${SYSROOT}" "${OUTPUT}"
     ;;
   *)

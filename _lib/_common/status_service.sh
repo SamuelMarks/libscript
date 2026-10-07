@@ -9,8 +9,11 @@
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -32,38 +35,38 @@ check_service_status() {
         if [ "$OS_NAME" = "Linux" ]; then
             if command -v systemctl >/dev/null 2>&1; then
                 if systemctl is-active --quiet "$svc"; then
-                    echo "Service $svc is running (systemctl)"
+                    
                     return 0
                 fi
             elif command -v service >/dev/null 2>&1; then
                 if service "$svc" status >/dev/null 2>&1; then
-                    echo "Service $svc is running (service)"
+                    
                     return 0
                 fi
             fi
         elif [ "$OS_NAME" = "SunOS" ]; then
             if command -v svcs >/dev/null 2>&1; then
                 if svcs -H -o state "$svc" 2>/dev/null | grep -q "^online"; then
-                    echo "Service $svc is running (svcs)"
+                    
                     return 0
                 fi
             fi
         elif [ "$OS_NAME" = "FreeBSD" ]; then
             if command -v service >/dev/null 2>&1; then
                 if service "$svc" onestatus >/dev/null 2>&1 || service "$svc" status >/dev/null 2>&1; then
-                    echo "Service $svc is running (service)"
+                    
                     return 0
                 fi
             fi
         elif [ "$OS_NAME" = "Darwin" ]; then
             if command -v launchctl >/dev/null 2>&1; then
                 if launchctl print "system/$svc" >/dev/null 2>&1 || launchctl list | grep -q "$svc"; then
-                    echo "Service $svc is running (launchctl)"
+                    
                     return 0
                 fi
             fi
         fi
     done
-    echo "Service(s) $@ not found or not running."
+    
     return 1
 }

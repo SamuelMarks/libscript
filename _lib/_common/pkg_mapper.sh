@@ -8,8 +8,11 @@
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -1243,6 +1246,36 @@ map_package() {
       esac
       ;;
 
+    'pkg-config')
+      case "${PKG_MGR}" in
+        'apk') printf 'pkgconf\n' ;;
+        'apt-get') printf 'pkg-config\n' ;;
+        'dnf'|'yum') printf 'pkgconf-pkg-config\n' ;;
+        'zypper') printf 'pkg-config\n' ;;
+        'pacman') printf 'pkgconf\n' ;;
+        'pkg') printf 'pkgconf\n' ;;
+        'brew') printf 'pkg-config\n' ;;
+        *) printf 'pkg-config\n' ;;
+      esac
+      ;;
+    'libxml2-dev')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'libxml2-dev\n' ;;
+        'dnf'|'yum') printf 'libxml2-devel\n' ;;
+        'zypper') printf 'libxml2-devel\n' ;;
+        'apk') printf 'libxml2-dev\n' ;;
+        *) printf 'libxml2-dev\n' ;;
+      esac
+      ;;
+    'libxslt-dev')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'libxslt1-dev\n' ;;
+        'dnf'|'yum') printf 'libxslt-devel\n' ;;
+        'zypper') printf 'libxslt-devel\n' ;;
+        'apk') printf 'libxslt-dev\n' ;;
+        *) printf 'libxslt-dev\n' ;;
+      esac
+      ;;
     *)
       printf '%s\n' "${pkg}"
       ;;

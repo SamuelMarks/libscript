@@ -355,20 +355,12 @@ if defined OUT_FILE (
     set "TARGET_MSI=%OUT_FILE%"
     if /i "!TARGET_MSI:~-4!"==".msi" set "TARGET_MSI=!TARGET_MSI:~0,-4!"
     if /i "%VARIANT%"=="all" (
-        if /i "%CURR_VAR%"=="offline" (
-            set "TARGET_MSI=!TARGET_MSI!-offline.msi"
-        ) else (
-            set "TARGET_MSI=!TARGET_MSI!.msi"
-        )
+        set "TARGET_MSI=!TARGET_MSI!-%TARGET_ARCH%-%VERSION%-%CURR_VAR%.msi"
     ) else (
         set "TARGET_MSI=!TARGET_MSI!.msi"
     )
 ) else (
-    if /i "%CURR_VAR%"=="offline" (
-        set "TARGET_MSI=%OUT_DIR%\libscript-%COMPONENT%-offline-%VERSION%.msi"
-    ) else (
-        set "TARGET_MSI=%OUT_DIR%\libscript-%COMPONENT%-%VERSION%.msi"
-    )
+    set "TARGET_MSI=%OUT_DIR%\%COMPONENT%-%TARGET_ARCH%-%VERSION%-%CURR_VAR%.msi"
 )
 
 for %%I in ("%TARGET_MSI%") do (

@@ -34,8 +34,11 @@ if "%STAGE_DIR%"=="" set "STAGE_DIR=%LIBSCRIPT_ROOT_DIR%\build\stage_rpm"
 set "OUT_DIR=%~4"
 if "%OUT_DIR%"=="" set "OUT_DIR=%LIBSCRIPT_ROOT_DIR%\build\packages\rpm"
 
+if "%VARIANT%"=="" set "VARIANT=online"
+if "%TARGET_ARCH%"=="" set "TARGET_ARCH=x86_64"
+
 if not exist "%OUT_DIR%" mkdir "%OUT_DIR%"
-set "TARGET_RPM=%OUT_DIR%\%PKG_NAME%-%PKG_VER%-1.x86_64.rpm"
+set "TARGET_RPM=%OUT_DIR%\%PKG_NAME%-%TARGET_ARCH%-%PKG_VER%-%VARIANT%.rpm"
 
 if exist "%TARGET_RPM%" (
     echo [IDEMPOTENT] Target RPM already exists: %TARGET_RPM%

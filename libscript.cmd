@@ -150,9 +150,7 @@ if /i "%cmd%"=="distro" ( call "%SCRIPT_DIR%\_lib\orchestration\distro\distro.cm
 
 if /i "%cmd%"=="start" set "is_docker_cmd=1"
 if /i "%cmd%"=="stop" set "is_docker_cmd=1"
-if /i "%cmd%"=="status" set "is_docker_cmd=1"
 if /i "%cmd%"=="health" set "is_docker_cmd=1"
-if /i "%cmd%"=="logs" set "is_docker_cmd=1"
 if /i "%cmd%"=="restart" set "is_docker_cmd=1"
 if /i "%cmd%"=="up" set "is_docker_cmd=1"
 if /i "%cmd%"=="down" set "is_docker_cmd=1"

@@ -152,7 +152,7 @@ exit /b 0
 :: Executes action_install functionality.
 :action_install
 if "%PYTHON_INSTALL_METHOD%"=="system" (
-    winget install python --accept-package-agreements --accept-source-agreements
+    winget install --id Python.Python.3.10 -e --source winget -a x64 --accept-package-agreements --accept-source-agreements
     exit /b !errorlevel!
 )
 if "%PYTHON_INSTALL_METHOD%"=="mise" ( mise install "python@%PYTHON_VERSION%" & exit /b 0 )

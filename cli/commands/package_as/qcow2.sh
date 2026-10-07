@@ -10,8 +10,11 @@ set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
+elif [ "${BASH_SOURCE[0]-}" ]; then
+  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
   THIS_FILE="${0}"
 fi
@@ -30,7 +33,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 ' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-INPUT="${1:-${LIBSCRIPT_ROOT_DIR}/build/disk.img}"
+INPUT="${1:-${LIBSCRIPT_ROOT_DIR}/build/images/raw/disk.img}"
 FMT="${3:-qcow2}"
 OUT_FILE="${2:-${LIBSCRIPT_ROOT_DIR}/build/disk.${FMT}}"
 

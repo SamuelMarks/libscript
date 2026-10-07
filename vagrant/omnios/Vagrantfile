@@ -17,7 +17,6 @@ vm_name = "omnios-test-#{test_target}"
 Vagrant.configure("2") do |config|
   config.vm.define vm_name do |t|
     t.vm.box = "bento/omnios"
-    t.vm.box_version = "0"
 
     t.ssh.username = "vagrant"
     t.ssh.insert_key = false
@@ -31,9 +30,10 @@ Vagrant.configure("2") do |config|
       qe.net_mode = :user
       qe.firmware_format = nil
       qe.ssh_auto_correct = true
-      qe.ssh_port = 50022
+      qe.ssh_port = 2226
       qe.qemu_args = %w(-m 4G -smp 2)
     end
+    t.vm.usable_port_range = 2200..2215
 
     t.vm.allowed_synced_folder_types = [:rsync]
 
