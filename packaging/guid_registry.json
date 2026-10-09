@@ -55,11 +55,51 @@
     "meilisearch": {
       "upgrade_code": "E0F45901-83B4-4B21-9B5A-01D38FE81006",
       "component_guid": "5B2783B0-9A1F-4348-9F93-87CE43C21006",
-      "title": "Meilisearch Full-Text Search Engine",
+      "title": "Meilisearch Search Engine",
       "service_name": "LibScript_Meilisearch",
       "default_port": 7700,
       "install_dir": "[ProgramFiles64Folder]LibScript\\Meilisearch",
       "data_dir": "[CommonAppDataFolder]LibScript\\Meilisearch\\data",
+      "shared_dll_ref_count": true
+    },
+    "caddy": {
+      "upgrade_code": "E0F45901-83B4-4B21-9B5A-01D38FE81007",
+      "component_guid": "5B2783B0-9A1F-4348-9F93-87CE43C21007",
+      "title": "Caddy Web Server",
+      "service_name": "LibScript_Caddy",
+      "default_port": 80,
+      "install_dir": "[ProgramFiles64Folder]LibScript\\Caddy",
+      "data_dir": "[CommonAppDataFolder]LibScript\\Caddy\\data",
+      "shared_dll_ref_count": true
+    },
+    "gunicorn": {
+      "upgrade_code": "B73D52F0-7831-47AC-AF7A-559CE043F383",
+      "component_guid": "270F1648-5CCD-4856-9090-D69A405F8F88",
+      "title": "Gunicorn WSGI Server",
+      "service_name": null,
+      "default_port": null,
+      "install_dir": "[ProgramFiles64Folder]LibScript\\Gunicorn",
+      "data_dir": null,
+      "shared_dll_ref_count": true
+    },
+    "exim": {
+      "upgrade_code": "F0C85729-7B2D-4736-8E12-086D0019C075",
+      "component_guid": "701CF709-1F5E-4DBC-8178-8A08AF6B2116",
+      "title": "Exim Mail Transfer Agent",
+      "service_name": null,
+      "default_port": 25,
+      "install_dir": "[ProgramFiles64Folder]LibScript\\Exim",
+      "data_dir": "[CommonAppDataFolder]LibScript\\Exim\\data",
+      "shared_dll_ref_count": true
+    },
+    "nodeenv": {
+      "upgrade_code": "9FFFC866-F734-43E8-B1EE-5F1E9F81B018",
+      "component_guid": "FF7D1C4D-F5BA-46EB-928C-4F0343E92EFB",
+      "title": "Nodeenv Virtual Environment",
+      "service_name": null,
+      "default_port": null,
+      "install_dir": "[ProgramFiles64Folder]LibScript\\Nodeenv",
+      "data_dir": null,
       "shared_dll_ref_count": true
     },
     "openedx-core": {
@@ -69,7 +109,7 @@
       "service_name": "OpenEdXLMS",
       "default_port": 8000,
       "install_dir": "[ProgramFiles64Folder]OpenEdX",
-      "data_dir": "C:\\ProgramData\\OpenEdX\\data",
+      "data_dir": "[CommonAppDataFolder]OpenEdX\\data",
       "shared_dll_ref_count": false
     },
     "openedx": {
@@ -79,7 +119,7 @@
       "service_name": null,
       "default_port": null,
       "install_dir": "[ProgramFiles64Folder]OpenEdX",
-      "data_dir": "C:\\ProgramData\\OpenEdX\\data",
+      "data_dir": "[CommonAppDataFolder]OpenEdX\\data",
       "shared_dll_ref_count": false
     }
   }

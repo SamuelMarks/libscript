@@ -1,9 +1,0 @@
-{
-  "$schema": "../../../_lib/_common/manifest.schema.json",
-  "name": "phpbb",
-  "category": "forums",
-  "title": "phpbb",
-  "description": "phpbb stack",
-  "provides": ["phpbb"],
-  "os_blacklist": ["sunos"]
-}

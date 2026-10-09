@@ -12,8 +12,8 @@
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE[0]-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
@@ -607,6 +607,10 @@ case "$CMD" in
   list-managed) aws_list_managed "$@" ;;
   cleanup) aws_cleanup "$@" ;;
   install) check_deps ;;
+  logs|status|use|env|ls|download|uninstall)
+    printf '%s\n' "AWS provider does not require daemon management or local versioning for this action."
+    exit 0
+    ;;
   test)
     if [ -f "$SCRIPT_DIR/test.sh" ]; then
       SCRIPT_NAME="$SCRIPT_DIR/test.sh"

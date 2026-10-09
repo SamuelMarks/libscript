@@ -13,8 +13,8 @@
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE[0]-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
@@ -91,3 +91,6 @@ log_warn()    { _libscript_log_msg "WARN"    3 "${1:-}"; }
 # ## log_error
 # Logs an error message.
 log_error()   { _libscript_log_msg "ERROR"   4 "${1:-}"; }
+# ## log_err
+# Alias for log_error.
+log_err()     { _libscript_log_msg "ERROR"   4 "${1:-}"; }

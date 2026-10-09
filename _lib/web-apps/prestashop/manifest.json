@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "prestashop",
+  "category": "web-apps",
+  "title": "prestashop",
+  "description": "prestashop stack",
+  "provides": ["prestashop"],
+  "runtime_deps": ["php", "nginx", "mysql", "unzip"],
+  "os_blacklist": ["sunos"]
+}

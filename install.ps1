@@ -1,30 +1,29 @@
-# ## Overview
-# PowerShell script for install.ps1.
-#
-# ## Usage
-# Execute via PowerShell.
-
 <#
 .SYNOPSIS
-Global PowerShell installer for the libscript framework.
+Global installer for the libscript framework.
 
 .DESCRIPTION
+## Overview
+Global installer for the libscript framework.
+
+## Usage
 Execute this script to install libscript on the local system.
 #>
 
 $ErrorActionPreference = "Stop"
 
 if ($args -contains "--help" -or $args -contains "-h" -or $args -contains "/?" -or $args -contains "-?") {
-    Write-Output "Usage: install.ps1"
-    Write-Output "Configure installation via environment variables."
+    Write-Host "Usage: install.ps1"
+    Write-Host "Bootstraps the LibScript environment."
     exit 0
 }
 
-$InstallCmd = Join-Path $PSScriptRoot "install.cmd"
+Write-Host "========================================"
+Write-Host " LibScript Environment Bootstrap"
+Write-Host "========================================"
 
-if (Test-Path $InstallCmd) {
-    & $InstallCmd @args
-} else {
-    Write-Error "Could not find install.cmd in $PSScriptRoot"
-    exit 1
-}
+$LibScriptDir = $PSScriptRoot
+Write-Host "To use LibScript, add the following directory to your PATH:"
+Write-Host "  $LibScriptDir"
+Write-Host ""
+Write-Host "Bootstrap complete."

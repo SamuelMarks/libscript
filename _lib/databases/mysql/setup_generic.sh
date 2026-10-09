@@ -8,8 +8,8 @@
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE[0]-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
@@ -94,6 +94,9 @@ case "$ACTION" in
         fi
       else
         libscript_depends "mysql"
+        if [ -f "/etc/my.cnf.d/mariadb-server.cnf" ]; then
+          sed -i 's/^skip-networking/#skip-networking/' /etc/my.cnf.d/mariadb-server.cnf 2>/dev/null || true
+        fi
       fi
     else
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/mysql/${EXACT_VERSION}"

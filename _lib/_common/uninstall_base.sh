@@ -12,8 +12,8 @@
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE[0]-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
@@ -77,15 +77,15 @@ _LISTEN_PORT=$(printenv "${_PKG_UPPER}_LISTEN_PORT" 2>/dev/null || true)
 : "${_LISTEN_PORT:=${LIBSCRIPT_LISTEN_PORT:-}}"
 
 if [ -n "${_LISTEN_SOCKET}" ]; then
-  if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --unlisten "unix:${_LISTEN_SOCKET}" >/dev/null 2>&1 ; then
+  if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --unlisten "unix:${_LISTEN_SOCKET}" >/dev/null 2>&1 ; then
     true
   fi
 elif [ -n "${_LISTEN_ADDRESS}" ] && [ -n "${_LISTEN_PORT}" ]; then
-  if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --unlisten "${_LISTEN_ADDRESS}:${_LISTEN_PORT}" >/dev/null 2>&1 ; then
+  if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --unlisten "${_LISTEN_ADDRESS}:${_LISTEN_PORT}" >/dev/null 2>&1 ; then
     true
   fi
 elif [ -n "${_LISTEN_PORT}" ]; then
-  if ! "${LIBSCRIPT_ROOT_DIR}/netctl/netctl.sh" --unlisten "${_LISTEN_PORT}" >/dev/null 2>&1 ; then
+  if ! "${LIBSCRIPT_ROOT_DIR}/_lib/networking/netctl/cli.sh" --unlisten "${_LISTEN_PORT}" >/dev/null 2>&1 ; then
     true
   fi
 fi

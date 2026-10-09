@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "joomla",
+  "category": "web-apps",
+  "title": "joomla",
+  "description": "joomla stack",
+  "provides": ["joomla"],
+  "runtime_deps": ["php", "nginx", "mysql", "unzip"],
+  "os_blacklist": ["sunos"]
+}

@@ -1,4 +1,16 @@
 @echo off
+:: # sync_libscript_to_targets.cmd
+::
+:: ## Overview
+:: Syncs the libscript repository to a Vagrant environment or a generic SSH target.
+:: It automatically detects if a Vagrant environment is specified and uses its SSH config.
+::
+:: ## Usage
+::   ./sync_libscript_to_targets.cmd [vagrant_dir | target_user@target_host target_path]
+::
+::   Example 1 (Vagrant auto-detect): ./sync_libscript_to_targets.cmd vagrant/windows-11
+::   Example 2 (Manual target):       ./sync_libscript_to_targets.cmd vagrant@127.0.0.1 C:/libscript
+
 setlocal enabledelayedexpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -9,10 +21,38 @@ if defined STACK (
     )
 )
 set "STACK=%STACK%:%THIS_FILE%:"
-set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
-:: ## Overview
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "d=%SCRIPT_DIR%"
+    call :find_root
+)
+goto :root_found
+
+:: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
+:find_root
+if exist "!d!\libscript.cmd" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+if exist "!d!\ROOT" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+for %%P in ("!d!") do set "parent=%%~dpP"
+set "d=!parent:~0,-1!"
+if "!d!"=="" (
+    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
+    exit /b 1
+)
+goto :find_root
+
+:: ## root_found
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
+:root_found
 :: Syncs the libscript repository to a specified target testing environment (Windows equivalent).
 ::
 :: ## Usage

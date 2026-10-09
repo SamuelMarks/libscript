@@ -10,8 +10,8 @@
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE[0]-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
@@ -84,6 +84,10 @@ case "$ACTION" in
       --zone "$GCP_ZONE" \
       "$PROJECT_FLAG"
     log_info "Cluster $CLUSTER_NAME deleted."
+    ;;
+  logs|status|use|env|ls|download|uninstall)
+    printf '%s\n' "Action not applicable for this provisioning module."
+    exit 0
     ;;
   *)
     log_error "Unknown action: $ACTION. Supported: create, delete."

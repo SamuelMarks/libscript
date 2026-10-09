@@ -13,8 +13,8 @@ set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE[0]-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
@@ -56,7 +56,16 @@ discover_environment() {
   SSH_KEY="${HOME}/.vagrant.d/insecure_private_key"
   SSH_CMD="ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i ${SSH_KEY} vagrant@127.0.0.1"
 
-  MONITOR_SOCK=$(find "${HOME}/.vagrant.d/tmp/vagrant-qemu" -name "qemu_socket" 2>/dev/null | head -n 1 || true)
+  MONITOR_SOCK=""
+  while IFS= read -r sock; do
+    [ -z "$sock" ] && continue
+    if python3 -c "import socket; s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM); s.settimeout(0.5); s.connect('$sock'); s.close()" 2>/dev/null; then
+      MONITOR_SOCK="$sock"
+      break
+    fi
+  done <<EOF
+$(find "${HOME}/.vagrant.d/tmp/vagrant-qemu" -name "qemu_socket" 2>/dev/null || true)
+EOF
   if [ -z "$MONITOR_SOCK" ] || [ ! -S "$MONITOR_SOCK" ]; then
       printf '[ERROR] QEMU Monitor socket not found in ~/.vagrant.d/tmp. VM might not be running.\n' >&2
   fi

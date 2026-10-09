@@ -140,6 +140,38 @@ jobs:
             name: LibScript Meilisearch Search Engine (Offline)
             target_dir: _lib/search/meilisearch
             build_cmd: packaging\build_component_msi.cmd --component meilisearch --variant offline
+          - id: caddy
+            name: LibScript Caddy Web Server (Online)
+            target_dir: _lib/web-servers/caddy
+            build_cmd: packaging\build_component_msi.cmd --component caddy --variant online
+          - id: caddy-offline
+            name: LibScript Caddy Web Server (Offline)
+            target_dir: _lib/web-servers/caddy
+            build_cmd: packaging\build_component_msi.cmd --component caddy --variant offline
+          - id: gunicorn
+            name: LibScript Gunicorn WSGI Server (Online)
+            target_dir: _lib/app-servers/gunicorn
+            build_cmd: packaging\build_component_msi.cmd --component gunicorn --variant online
+          - id: gunicorn-offline
+            name: LibScript Gunicorn WSGI Server (Offline)
+            target_dir: _lib/app-servers/gunicorn
+            build_cmd: packaging\build_component_msi.cmd --component gunicorn --variant offline
+          - id: exim
+            name: LibScript Exim Mail Transfer Agent (Online)
+            target_dir: _lib/utilities/exim
+            build_cmd: packaging\build_component_msi.cmd --component exim --variant online
+          - id: exim-offline
+            name: LibScript Exim Mail Transfer Agent (Offline)
+            target_dir: _lib/utilities/exim
+            build_cmd: packaging\build_component_msi.cmd --component exim --variant offline
+          - id: nodeenv
+            name: LibScript Nodeenv Virtual Environment (Online)
+            target_dir: _lib/package-managers/nodeenv
+            build_cmd: packaging\build_component_msi.cmd --component nodeenv --variant online
+          - id: nodeenv-offline
+            name: LibScript Nodeenv Virtual Environment (Offline)
+            target_dir: _lib/package-managers/nodeenv
+            build_cmd: packaging\build_component_msi.cmd --component nodeenv --variant offline
           - id: openedx
             name: Open edX Platform (Online)
             target_dir: stacks/cms/openedx
@@ -299,9 +331,17 @@ jobs:
             $wixVer = ($parts[0..([Math]::Min($parts.Length - 1, 3))]) -join '.'
           }
 
-          # 6. Canonical package filename: <package_id>-<version>
+          # 6. Canonical package filename: <package_id>-<version>-<arch>-<variant>
           $pkgId = "${{ matrix.package.id }}"
-          $outName = "$pkgId-$cleanVer"
+          if ($pkgId -match "-offline") {
+            $baseId = $pkgId -replace "-offline",""
+            $variant = "offline"
+          } else {
+            $baseId = $pkgId
+            $variant = "online"
+          }
+          $arch = "x64"
+          $outName = "$baseId-$cleanVer-$arch-$variant"
 
           Write-Host "Package: $pkgId"
           Write-Host "Target Ref: $targetRef"

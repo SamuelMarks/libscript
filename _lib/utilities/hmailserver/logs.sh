@@ -8,8 +8,8 @@
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE[0]-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
@@ -30,12 +30,9 @@ export LIBSCRIPT_ROOT_DIR
 
 if [ -f "$SCRIPT_DIR/env.sh" ]; then
   SCRIPT_NAME="$SCRIPT_DIR/env.sh"
-  export SCRIPT_NAME
-  . "$SCRIPT_NAME"
 fi
 
-SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/_lib/_common/logs_service.sh"
-export SCRIPT_NAME
-. "$SCRIPT_NAME"
 
-read_logs "$*" "hMailServer" ""
+SCRIPT_NAME="$LIBSCRIPT_ROOT_DIR/_lib/_common/service.sh"
+
+libscript_service logs "hMailServer" "$@"

@@ -1,0 +1,9 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "celery",
+  "category": "web-apps",
+  "title": "celery",
+  "description": "celery stack",
+  "provides": ["celery"],
+  "runtime_deps": ["python", "redis"]
+}

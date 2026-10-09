@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "drupal",
+  "category": "web-apps",
+  "title": "drupal",
+  "description": "drupal stack",
+  "provides": ["drupal"],
+  "runtime_deps": ["php", "nginx", "mysql", "unzip"],
+  "os_blacklist": ["sunos"]
+}

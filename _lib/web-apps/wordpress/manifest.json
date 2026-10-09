@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "wordpress",
+  "category": "web-apps",
+  "title": "WordPress 7.1.2 Platform",
+  "license": "GPL-2.0-or-later",
+  "license_name": "GNU General Public License v2.0 or later",
+  "description": "Turnkey enterprise WordPress 7.1.2 publishing platform.",
+  "provides": ["wordpress", "wp-cli"],
+  "runtime_deps": ["php", "nginx", "mysql", "unzip"],
+  "os_blacklist": []
+}

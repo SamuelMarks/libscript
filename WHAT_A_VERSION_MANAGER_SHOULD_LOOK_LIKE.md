@@ -113,6 +113,9 @@ dynamically branch to delegate the lifecycle command to that specific package/ve
 - **`start`**: Executes the component. For services, this runs the daemon process; for languages, it
   might start a REPL or a development server if applicable.
 - **`stop`**: Safely terminates the running instance of the component.
+- **`status`**: Checks the health and current state of the running component (e.g., active,
+  inactive, failed).
+- **`logs`**: Outputs or tails the recent logs of the component's background daemon or service.
 - **`install-service`**: Registers the component as a persistent background service using the
   OS-native init system (e.g., `systemd`, `launchd`, or Windows Services).
 - **`uninstall-service`**: Stops the daemon if running and safely unregisters/removes it from the

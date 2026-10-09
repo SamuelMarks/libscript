@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "magento",
+  "category": "web-apps",
+  "title": "magento",
+  "license": "OSL-3.0",
+  "license_name": "Open Software License 3.0",
+  "description": "magento stack",
+  "provides": ["magento"],
+  "runtime_deps": ["php", "nginx", "mysql", "unzip"],
+  "os_blacklist": ["sunos"]
+}

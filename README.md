@@ -667,6 +667,7 @@ at your option.
 | `musl`                             | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `mysql`                            | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `nats`                             | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
+| `netctl`                           | ✅          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `networkmanager`                   | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `nextcloud`                        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
 | `nftables`                         | ✅          | ✅          | ✅          | -       | -     | -       | -     |
@@ -755,8 +756,6 @@ at your option.
 | `sysvinit`                         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
 | `tensorboard`                      | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
 | `tmux`                             | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `tpu-vm-eval-node`                 | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `tpu-vm-vllm`                      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
 | `util-linux`                       | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
 | `utils`                            | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
 | `uv`                               | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |

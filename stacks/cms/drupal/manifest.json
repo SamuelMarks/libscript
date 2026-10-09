@@ -1,9 +1,0 @@
-{
-  "$schema": "../../../_lib/_common/manifest.schema.json",
-  "name": "drupal",
-  "category": "cms",
-  "title": "drupal",
-  "description": "drupal stack",
-  "provides": ["drupal"],
-  "os_blacklist": ["sunos"]
-}

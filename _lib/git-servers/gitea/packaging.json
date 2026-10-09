@@ -27,9 +27,9 @@
   },
   "directories": {
     "app_default": "[ProgramFiles64Folder]Gitea",
-    "data_default": "C:\\ProgramData\\Gitea\\data",
-    "logs_default": "C:\\ProgramData\\Gitea\\logs",
-    "backups_default": "C:\\ProgramData\\Gitea\\backups"
+    "data_default": "[CommonAppDataFolder]Gitea\\data",
+    "logs_default": "[CommonAppDataFolder]Gitea\\logs",
+    "backups_default": "[CommonAppDataFolder]Gitea\\backups"
   },
   "features": [
     {

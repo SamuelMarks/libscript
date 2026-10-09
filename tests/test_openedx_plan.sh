@@ -13,8 +13,8 @@ set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE[0]-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
@@ -122,7 +122,7 @@ run_step_2() {
       vagrant ssh -c 'cmd.exe /c "call C:\libscript\_lib\message-brokers\rabbitmq\status.cmd & call C:\libscript\_lib\caches\redis\status.cmd & call C:\libscript\_lib\caches\memcached\status.cmd"' || true
 
       printf '[INFO] Checking Application Services (LMS & CMS)...\n'
-      vagrant ssh -c 'cmd.exe /c "call C:\libscript\stacks\cms\openedx\cli.cmd status"' || true
+      vagrant ssh -c 'cmd.exe /c "call C:\libscript\_lib\web-apps\openedx\cli.cmd status"' || true
 
       printf '[INFO] Checking General System Health...\n'
       vagrant ssh -c 'powershell -Command "Get-PSDrive -PSProvider FileSystem; hostname"' || true
@@ -141,7 +141,7 @@ run_step_2() {
       vagrant ssh -c "sudo /opt/repos/libscript/_lib/caches/memcached/status.sh || true"
 
       printf '[INFO] Checking Application Services (LMS & CMS)...\n'
-      vagrant ssh -c "sudo /opt/repos/libscript/_lib/package-managers/msi-rs/workloads/openedx.sh status || sudo systemctl status openedx-lms || sudo rc-service openedx-lms status || sudo service openedx-lms status || true"
+      vagrant ssh -c "sudo /opt/repos/libscript/_lib/web-apps/openedx/cli.sh status || sudo systemctl status openedx-lms || sudo rc-service openedx-lms status || sudo service openedx-lms status || true"
       
       printf '[INFO] Checking General System Health...\n'
       vagrant ssh -c "df -h && free -m && uptime || true"
@@ -167,7 +167,7 @@ run_step_3() {
       vagrant ssh -c 'cmd.exe /c "call C:\libscript\_lib\message-brokers\rabbitmq\logs.cmd & call C:\libscript\_lib\caches\redis\logs.cmd & call C:\libscript\_lib\caches\memcached\logs.cmd"' || true
 
       printf '[INFO] Checking Application Services (LMS & CMS)...\n'
-      vagrant ssh -c 'cmd.exe /c "call C:\libscript\stacks\cms\openedx\logs.cmd"' || true
+      vagrant ssh -c 'cmd.exe /c "call C:\libscript\_lib\web-apps\openedx\logs.cmd"' || true
       ;;
     *)
       printf '[INFO] Checking Databases (MongoDB & MySQL)...\n'
@@ -180,7 +180,7 @@ run_step_3() {
       vagrant ssh -c "sudo /opt/repos/libscript/_lib/caches/memcached/logs.sh || true"
 
       printf '[INFO] Checking Application Services (LMS & CMS)...\n'
-      vagrant ssh -c "sudo journalctl -u openedx-lms --no-pager -n 50 || sudo tail -n 50 /var/log/openedx-lms.log || sudo tail -n 50 /var/svc/log/application-openedx-lms:default.log || true"
+      vagrant ssh -c "sudo /opt/repos/libscript/_lib/web-apps/openedx/logs.sh || sudo journalctl -u openedx-lms --no-pager -n 50 || sudo tail -n 50 /var/log/openedx-lms.log || sudo tail -n 50 /var/svc/log/application-openedx-lms:default.log || true"
       ;;
   esac
   

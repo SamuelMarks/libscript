@@ -1,0 +1,157 @@
+#!/bin/sh
+# ## Overview
+# Network control utility for managing local services and ports.
+# 
+# ## Usage
+# Execute this script to manage networking configurations.
+
+
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+NETCTL_DIR="${SCRIPT_DIR}"
+export LIBSCRIPT_ROOT_DIR NETCTL_DIR
+
+for LIB in "_lib/networking/netctl/lib/prelude.sh" "_lib/networking/netctl/lib/state.sh" "_lib/networking/netctl/lib/nginx.sh" "_lib/networking/netctl/lib/caddy.sh" "_lib/networking/netctl/lib/apache.sh" "_lib/networking/netctl/lib/dockerfile.sh" "_lib/networking/netctl/lib/vagrantfile.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090
+  . "${SCRIPT_NAME}"
+done
+
+# ## usage
+# Executes usage functionality.
+usage() {
+  cat <<EOF
+netctl - Singular and Additive network config generator
+
+Usage:
+  netctl [COMMAND] [ARGS...]
+  netctl [OPTIONS...]
+
+Commands:
+  init                           Initialize .netctl.json
+  listen <port>                  Add a listening port
+  static <path> <target>         Add a static file route
+  proxy <path> <target>          Add a reverse proxy route
+  rewrite <path> <pattern>       Add a rewrite rule
+  emit <format>                  Emit the configuration for a given format
+                                 Formats: nginx, caddy, apache, dockerfile, vagrantfile
+
+Options (Singular mode):
+  --listen <port>                Add a listening port
+  --static <path> <target>       Add a static route
+  --proxy <path> <target>        Add a proxy route
+  --rewrite <path> <pattern>     Add a rewrite rule
+  --emit <format>                Emit to specified format and exit
+EOF
+  exit 1
+}
+
+# If no arguments, show usage
+[ $# -eq 0 ] && usage
+
+SINGULAR_MODE=0
+EMIT_FORMAT=""
+
+# Check if we are using the sub-command (additive) mode or the flags (singular) mode
+case "$1" in
+  install|use|env|logs|status)
+    printf '%s\n' "netctl is a native shell module. No installation or daemon management required."
+    exit 0
+    ;;
+  uninstall)
+    exec "$NETCTL_DIR/uninstall.sh"
+    ;;
+  test)
+    exec "$NETCTL_DIR/test.sh"
+    ;;
+  init) netctl_init; exit 0 ;;
+  listen) netctl_add_listen "$2"; exit 0 ;;
+  static) netctl_add_static "$2" "$3"; exit 0 ;;
+  proxy) netctl_add_proxy "$2" "$3"; exit 0 ;;
+  rewrite) netctl_add_rewrite "$2" "$3"; exit 0 ;;
+  emit)
+    case "$2" in
+      nginx) netctl_emit_nginx ;;
+      caddy) netctl_emit_caddy ;;
+      apache) netctl_emit_apache ;;
+      dockerfile) netctl_emit_dockerfile ;;
+      vagrantfile) netctl_emit_vagrantfile ;;
+      *) printf '%s\n' "Unknown format: $2" >&2; exit 1 ;;
+    esac
+    exit 0
+    ;;
+  -h|--help|-\?|/\?) usage ;;
+  *) SINGULAR_MODE=1 ;;
+esac
+
+# Singular Mode (using flags)
+if [ "$SINGULAR_MODE" -eq 1 ]; then
+  # Create a temporary state file for singular runs to not pollute the working directory
+  NETCTL_STATE_FILE=$(mktemp)
+  export NETCTL_STATE_FILE
+
+  # Ensure cleanup
+  trap 'rm -f "$NETCTL_STATE_FILE" "$NETCTL_STATE_FILE.tmp"' EXIT
+
+  netctl_init
+
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --listen)
+        netctl_add_listen "$2"
+        shift 2
+        ;;
+      --static)
+        netctl_add_static "$2" "$3"
+        shift 3
+        ;;
+      --proxy)
+        netctl_add_proxy "$2" "$3"
+        shift 3
+        ;;
+      --rewrite)
+        netctl_add_rewrite "$2" "$3"
+        shift 3
+        ;;
+      --emit)
+        EMIT_FORMAT="$2"
+        shift 2
+        ;;
+      *)
+        printf '%s\n' "Unknown option: $1" >&2
+        usage
+        ;;
+    esac
+  done
+
+  if [ -n "$EMIT_FORMAT" ]; then
+    case "$EMIT_FORMAT" in
+      nginx) netctl_emit_nginx ;;
+      caddy) netctl_emit_caddy ;;
+      apache) netctl_emit_apache ;;
+      dockerfile) netctl_emit_dockerfile ;;
+      vagrantfile) netctl_emit_vagrantfile ;;
+      *) printf '%s\n' "Unknown format: $EMIT_FORMAT" >&2; exit 1 ;;
+    esac
+  fi
+fi

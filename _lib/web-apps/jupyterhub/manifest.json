@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "jupyterhub",
+  "category": "web-apps",
+  "title": "jupyterhub",
+  "license": "BSD-3-Clause",
+  "license_name": "BSD 3-Clause 'New' or 'Revised' License",
+  "description": "jupyterhub stack",
+  "provides": ["jupyterhub"],
+  "runtime_deps": ["python", "nginx"],
+  "os_blacklist": ["sunos"]
+}

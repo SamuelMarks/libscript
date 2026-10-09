@@ -165,7 +165,7 @@ if not errorlevel 1 (
     vagrant ssh -c "cmd.exe /c \"call C:\libscript\_lib\message-brokers\rabbitmq\status.cmd & call C:\libscript\_lib\caches\redis\status.cmd & call C:\libscript\_lib\caches\memcached\status.cmd\""
 
     echo [INFO] Checking Application Services (LMS ^& CMS)...
-    vagrant ssh -c "cmd.exe /c \"call C:\libscript\stacks\cms\openedx\cli.cmd status\""
+    vagrant ssh -c "cmd.exe /c \"call C:\libscript\_lib\web-apps\openedx\cli.cmd status\""
 
     echo [INFO] Checking General System Health...
     vagrant ssh -c "powershell -Command \"Get-PSDrive -PSProvider FileSystem; hostname\""
@@ -183,7 +183,7 @@ if not errorlevel 1 (
     vagrant ssh -c "sudo /opt/repos/libscript/_lib/caches/memcached/status.sh || true"
 
     echo [INFO] Checking Application Services (LMS ^& CMS)...
-    vagrant ssh -c "sudo /opt/repos/libscript/_lib/package-managers/msi-rs/workloads/openedx.sh status || sudo systemctl status openedx-lms || sudo rc-service openedx-lms status || sudo service openedx-lms status || true"
+    vagrant ssh -c "sudo /opt/repos/libscript/_lib/web-apps/openedx/cli.sh status || sudo systemctl status openedx-lms || sudo rc-service openedx-lms status || sudo service openedx-lms status || true"
 
     echo [INFO] Checking General System Health...
     vagrant ssh -c "df -h && free -m && uptime || true"
@@ -208,7 +208,7 @@ if not errorlevel 1 (
     vagrant ssh -c "cmd.exe /c \"call C:\libscript\_lib\message-brokers\rabbitmq\logs.cmd & call C:\libscript\_lib\caches\redis\logs.cmd & call C:\libscript\_lib\caches\memcached\logs.cmd\""
 
     echo [INFO] Checking Application Services (LMS ^& CMS)...
-    vagrant ssh -c "cmd.exe /c \"call C:\libscript\stacks\cms\openedx\logs.cmd\""
+    vagrant ssh -c "cmd.exe /c \"call C:\libscript\_lib\web-apps\openedx\logs.cmd\""
 ) else (
     echo [INFO] Checking Databases (MongoDB ^& MySQL)...
     vagrant ssh -c "sudo /opt/repos/libscript/_lib/databases/mongodb/logs.sh || true"
@@ -220,7 +220,7 @@ if not errorlevel 1 (
     vagrant ssh -c "sudo /opt/repos/libscript/_lib/caches/memcached/logs.sh || true"
 
     echo [INFO] Checking Application Services (LMS ^& CMS)...
-    vagrant ssh -c "sudo journalctl -u openedx-lms --no-pager -n 50 || sudo tail -n 50 /var/log/openedx-lms.log || sudo tail -n 50 /var/svc/log/application-openedx-lms:default.log || true"
+    vagrant ssh -c "sudo /opt/repos/libscript/_lib/web-apps/openedx/logs.sh || sudo journalctl -u openedx-lms --no-pager -n 50 || sudo tail -n 50 /var/log/openedx-lms.log || sudo tail -n 50 /var/svc/log/application-openedx-lms:default.log || true"
 )
 
 echo [PASS] Log inspection completed.

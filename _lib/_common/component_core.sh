@@ -28,8 +28,8 @@
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE[0]-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
@@ -473,20 +473,28 @@ elif [ "$ACTION" = "exec" ]; then
   exec "$@"
 fi
 
-# Default to action script or setup.sh for installation and other actions
-if [ -n "$ACTION" ] && [ -x "$COMP_DIR/${ACTION}.sh" ]; then
-  unset SCRIPT_NAME || true
-  exec "$COMP_DIR/${ACTION}.sh" "$@"
-elif [ -n "$ACTION" ] && [ -f "$COMP_DIR/${ACTION}.sh" ]; then
-  unset SCRIPT_NAME || true
-  exec sh "$COMP_DIR/${ACTION}.sh" "$@"
-elif [ -x "$COMP_DIR/setup.sh" ]; then
+# Execute the requested action script
+if [ -n "$ACTION" ] && [ "$ACTION" != "install" ] && [ "$ACTION" != "setup" ] && [ "$ACTION" != "install-service" ] && [ "$ACTION" != "uninstall-service" ] && [ "$ACTION" != "test" ] && [ "$ACTION" != "start" ] && [ "$ACTION" != "stop" ] && [ "$ACTION" != "restart" ] && [ "$ACTION" != "status" ] && [ "$ACTION" != "health" ] && [ "$ACTION" != "logs" ] && [ "$ACTION" != "up" ] && [ "$ACTION" != "down" ]; then
+  if [ -x "$COMP_DIR/${ACTION}.sh" ]; then
+    unset SCRIPT_NAME || true
+    exec "$COMP_DIR/${ACTION}.sh" "$@"
+  elif [ -f "$COMP_DIR/${ACTION}.sh" ]; then
+    unset SCRIPT_NAME || true
+    exec sh "$COMP_DIR/${ACTION}.sh" "$@"
+  else
+    log_error "Action '$ACTION' is not implemented for this component."
+    exit 1
+  fi
+fi
+
+# Fallback to setup.sh for install, setup, and service actions
+if [ -x "$COMP_DIR/setup.sh" ]; then
   unset SCRIPT_NAME || true
   exec "$COMP_DIR/setup.sh" "$@"
 elif [ -f "$COMP_DIR/setup.sh" ]; then
   unset SCRIPT_NAME || true
   exec sh "$COMP_DIR/setup.sh" "$@"
 else
-  log_info "Error: setup.sh not found in $SCRIPT_DIR"
+  log_error "Error: setup.sh not found in $COMP_DIR"
   exit 1
 fi

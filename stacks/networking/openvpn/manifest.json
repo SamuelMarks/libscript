@@ -1,9 +1,0 @@
-{
-  "$schema": "../../../_lib/_common/manifest.schema.json",
-  "name": "openvpn",
-  "category": "networking",
-  "title": "openvpn",
-  "description": "openvpn stack",
-  "provides": ["openvpn"],
-  "os_blacklist": ["sunos", "darwin"]
-}

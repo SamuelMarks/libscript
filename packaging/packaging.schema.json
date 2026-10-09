@@ -351,17 +351,17 @@
         },
         "data_default": {
           "type": "string",
-          "default": "C:\\ProgramData\\[ProductName]\\data",
+          "default": "[CommonAppDataFolder][ProductName]\\data",
           "description": "Default folder path for database files and mutable state"
         },
         "logs_default": {
           "type": "string",
-          "default": "C:\\ProgramData\\[ProductName]\\logs",
+          "default": "[CommonAppDataFolder][ProductName]\\logs",
           "description": "Default folder path for service and operational log files"
         },
         "backups_default": {
           "type": "string",
-          "default": "C:\\ProgramData\\[ProductName]\\backups",
+          "default": "[CommonAppDataFolder][ProductName]\\backups",
           "description": "Default folder path for snapshots and backup archives"
         }
       }

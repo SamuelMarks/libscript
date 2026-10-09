@@ -42,6 +42,9 @@ Vagrant.configure("2") do |config|
     t.vm.synced_folder repo_root, "/cygdrive/c/libscript", type: "rsync",
       rsync_exclude: [".git/", "tests_tmp/", "vagrant/", "cache/", "_lib/orchestration/kubernetes-thw/kubernetes-the-hard-way/"]
 
+    t.vm.synced_folder "../../../msi-rs", "/cygdrive/c/msi-rs", type: "rsync",
+      rsync_exclude: [".git/", "target/"]
+
     t.vm.provision "shell", inline: <<-POWERSHELL
       Write-Host "Configuring libscript on Windows 11..."
       $env:LIBSCRIPT_ROOT_DIR = "C:\\libscript"

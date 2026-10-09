@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "openedx",
+  "category": "web-apps",
+  "title": "Open edX",
+  "license": "AGPL-3.0-only",
+  "license_name": "GNU Affero General Public License v3.0",
+  "description": "Open edX LMS and Studio/CMS enterprise learning management platform.",
+  "provides": ["openedx", "lms", "cms"],
+  "runtime_deps": [
+    "python",
+    "nodejs",
+    "mysql",
+    "mongodb",
+    "redis",
+    "caddy",
+    "meilisearch",
+    "gunicorn",
+    "exim",
+    "nodeenv"
+  ],
+  "os_blacklist": []
+}

@@ -25,8 +25,8 @@ set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE[0]-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
@@ -177,6 +177,7 @@ if [ -z "$VERSION" ] && [ -f "$BUNDLE_JSON" ] && command -v jq >/dev/null 2>&1; 
     python)      VERSION=$(jq -r '.runtimes.python.version // "3.11.9"' "$BUNDLE_JSON") ;;
     nodejs)      VERSION=$(jq -r '.runtimes.nodejs.version // "20.17.0"' "$BUNDLE_JSON") ;;
     meilisearch) VERSION=$(jq -r '.databases.meilisearch.version // "1.9.0"' "$BUNDLE_JSON") ;;
+    caddy)       VERSION=$(jq -r '.webservers.caddy.version // "2.8.4"' "$BUNDLE_JSON") ;;
     *)           VERSION="1.0.0" ;;
   esac
 fi
@@ -247,6 +248,10 @@ build_single_variant() {
         ;;
       meilisearch)
         _bin=$(find_first_file "${OFFLINE_SOURCE}/databases/meilisearch-"*".exe")
+        [ -n "$_bin" ] && [ -f "$_bin" ] || _need_hydrate=1
+        ;;
+      caddy)
+        _bin=$(find_first_file "${OFFLINE_SOURCE}/webservers/caddy/caddy"*".exe")
         [ -n "$_bin" ] && [ -f "$_bin" ] || _need_hydrate=1
         ;;
     esac
@@ -347,6 +352,16 @@ build_single_variant() {
           cp -f "$_bin" "$STAGE_ROOT/meilisearch.exe" 2>/dev/null || true
         else
           printf '[ERROR] Offline Meilisearch binary missing from %s\n' "$OFFLINE_SOURCE" >&2
+          exit 1
+        fi
+        ;;
+      caddy)
+        _bin=$(find_first_file "${OFFLINE_SOURCE}/webservers/caddy/caddy"*".exe")
+        if [ -n "$_bin" ] && [ -f "$_bin" ]; then
+          cp -f "$_bin" "$STAGE_ROOT/bin/caddy.exe"
+          cp -f "$_bin" "$STAGE_ROOT/caddy.exe" 2>/dev/null || true
+        else
+          printf '[ERROR] Offline Caddy binary missing from %s\n' "$OFFLINE_SOURCE" >&2
           exit 1
         fi
         ;;

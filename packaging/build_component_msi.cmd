@@ -25,6 +25,37 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "d=%SCRIPT_DIR%"
+    call :find_root
+)
+goto :root_found
+
+:: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
+:find_root
+if exist "!d!\libscript.cmd" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+if exist "!d!\ROOT" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+for %%P in ("!d!") do set "parent=%%~dpP"
+set "d=!parent:~0,-1!"
+if "!d!"=="" (
+    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
+    exit /b 1
+)
+goto :find_root
+
+:: ## root_found
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
+:root_found
+
 for %%I in ("%SCRIPT_DIR%..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 
 set "COMPONENT="
@@ -160,6 +191,7 @@ if "%VERSION%"=="" if exist "%BUNDLE_JSON%" (
     if /i "%COMPONENT%"=="python" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).runtimes.python.version"`) do set "VERSION=%%A"
     if /i "%COMPONENT%"=="nodejs" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).runtimes.nodejs.version"`) do set "VERSION=%%A"
     if /i "%COMPONENT%"=="meilisearch" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.meilisearch.version"`) do set "VERSION=%%A"
+    if /i "%COMPONENT%"=="caddy" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).webservers.caddy.version"`) do set "VERSION=%%A"
 )
 if "%VERSION%"=="" set "VERSION=1.0.0"
 
@@ -226,6 +258,11 @@ if /i "%CURR_VAR%"=="offline" (
     if /i "%COMPONENT%"=="meilisearch" (
         set "FOUND_ARC="
         for %%F in ("%OFFLINE_SOURCE%\databases\meilisearch-*.exe") do if exist "%%~fF" set "FOUND_ARC=%%~fF"
+        if "!FOUND_ARC!"=="" set "NEED_HYDRATE=1"
+    )
+    if /i "%COMPONENT%"=="caddy" (
+        set "FOUND_ARC="
+        for %%F in ("%OFFLINE_SOURCE%\webservers\caddy\caddy*.exe") do if exist "%%~fF" set "FOUND_ARC=%%~fF"
         if "!FOUND_ARC!"=="" set "NEED_HYDRATE=1"
     )
 
@@ -332,6 +369,17 @@ if /i "%CURR_VAR%"=="offline" (
             copy /y "!FOUND_BIN!" "%STAGE_ROOT%\meilisearch.exe" >nul 2>&1
         ) else (
             echo [ERROR] Offline Meilisearch binary missing from %OFFLINE_SOURCE% >&2
+            exit /b 1
+        )
+    )
+    if /i "%COMPONENT%"=="caddy" (
+        set "FOUND_BIN="
+        for %%F in ("%OFFLINE_SOURCE%\webservers\caddy\caddy*.exe") do if exist "%%~fF" set "FOUND_BIN=%%~fF"
+        if not "!FOUND_BIN!"=="" (
+            copy /y "!FOUND_BIN!" "%STAGE_ROOT%\bin\caddy.exe" >nul 2>&1
+            copy /y "!FOUND_BIN!" "%STAGE_ROOT%\caddy.exe" >nul 2>&1
+        ) else (
+            echo [ERROR] Offline Caddy binary missing from %OFFLINE_SOURCE% >&2
             exit /b 1
         )
     )

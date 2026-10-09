@@ -1,10 +1,57 @@
 @echo off
-set "THIS_FILE=%~f0"
-setlocal EnableDelayedExpansion
-:: # LibScript Package Mapper Module (Windows Batch)
+:: # pkg_mapper.cmd
 ::
 :: ## Overview
-:: This module translates generic package names (e.g., 'php', 'postgres') into 
+:: Cross-platform package name translation dictionary across native OS package managers.
+::
+:: ## Usage
+:: Maps generic dependency names to platform-specific package identifiers.
+
+set "THIS_FILE=%~f0"
+if defined STACK (
+    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    if not errorlevel 1 (
+        echo [STOP] processing "%THIS_FILE%" >&2
+        exit /b 0
+    )
+)
+set "STACK=%STACK%:%THIS_FILE%:"
+
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "d=%SCRIPT_DIR%"
+    call :find_root
+)
+goto :root_found
+
+:: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
+:find_root
+if exist "!d!\libscript.cmd" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+if exist "!d!\ROOT" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+for %%P in ("!d!") do set "parent=%%~dpP"
+set "d=!parent:~0,-1!"
+if "!d!"=="" (
+    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
+    exit /b 1
+)
+goto :find_root
+
+:: ## root_found
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
+:root_found
+
+setlocal EnableDelayedExpansion
+:: # LibScript Package Mapper Module (Windows Batch)
+:::: This module translates generic package names (e.g., 'php', 'postgres') into 
 :: specific package IDs used by Windows package managers (winget, choco, scoop).
 :: It mirrors the logic in `pkg_mapper.sh` to ensure cross-platform consistency.
 ::

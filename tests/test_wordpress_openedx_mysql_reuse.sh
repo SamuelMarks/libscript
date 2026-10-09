@@ -11,8 +11,8 @@ set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE[0]-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
@@ -61,7 +61,7 @@ TMP_WWW=$(mktemp -d)
 printf '[INFO] Testing wp-config generation with Open edX MySQL reuse in %s...
 ' "$TMP_WWW"
 
-"${LIBSCRIPT_ROOT_DIR}/stacks/cms/wordpress/setup_generic.sh" --wwwroot "$TMP_WWW" --reuse-openedx-db --skip-deps --server-name "wordpress.local" --site-title "Open edX Shared WP"
+"${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/wordpress/setup_generic.sh" --wwwroot "$TMP_WWW" --reuse-openedx-db --skip-deps --server-name "wordpress.local" --site-title "Open edX Shared WP"
 
 if [ ! -f "${TMP_WWW}/wp-config.php" ]; then
   printf '[ERROR] wp-config.php was not created during Open edX reuse setup!

@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "odoo",
+  "category": "web-apps",
+  "title": "odoo",
+  "description": "odoo stack",
+  "provides": ["odoo"],
+  "runtime_deps": ["python", "nginx", "postgres"],
+  "os_blacklist": ["sunos"]
+}

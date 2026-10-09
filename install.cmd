@@ -10,7 +10,47 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
-SET "LIBSCRIPT_ROOT_DIR=%~dp0"
+if defined STACK (
+    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    if not errorlevel 1 (
+        echo [STOP] processing "%THIS_FILE%" >&2
+        exit /b 0
+    )
+)
+set "STACK=%STACK%:%THIS_FILE%:"
+
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "d=%SCRIPT_DIR%"
+    call :find_root
+)
+goto :root_found
+
+:: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
+:find_root
+if exist "!d!\libscript.cmd" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+if exist "!d!\ROOT" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+for %%P in ("!d!") do set "parent=%%~dpP"
+set "d=!parent:~0,-1!"
+if "!d!"=="" (
+    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
+    exit /b 1
+)
+goto :find_root
+
+:: ## root_found
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
+:root_found
+
 if "%~1"=="--help" goto show_help
 if "%~1"=="-h" goto show_help
 if "%~1"=="/?" goto show_help
@@ -21,7 +61,7 @@ goto start_install
 :: Executes show_help functionality.
 :show_help
 echo Usage: %0
-echo Configure installation via environment variables.
+echo Bootstraps the LibScript environment.
 exit /b 0
 
 :: ## start_install
@@ -30,184 +70,12 @@ exit /b 0
 
 SET "LIBSCRIPT_ROOT_DIR=%LIBSCRIPT_ROOT_DIR:~0,-1%"
 
-setlocal EnableDelayedExpansion
+echo ========================================
+echo  LibScript Environment Bootstrap
+echo ========================================
 
-:: Initialize STACK variable
-SET "searchVal=;%THIS_FILE%;"
-IF NOT DEFINED STACK (
-    SET "STACK=;%THIS_FILE%;"
-    echo [CONTINUE] processing "%THIS_FILE%"
-) ELSE (
-    IF NOT "!STACK:%searchVal%=!"=="!STACK!" (
-        echo [STOP]     processing "%THIS_FILE%"
-        SET ERRORLEVEL=0
-        goto end
-    ) ELSE (
-        SET "STACK=!STACK!%THIS_FILE%;"
-        echo [CONTINUE] processing "%THIS_FILE%"
-    )
-)
-
-:: ------------------------------------------------------------------------------
-::                             Toolchains [Required]
-:: ------------------------------------------------------------------------------
-
-IF "%NODEJS_INSTALL_DIR%"=="1" SET "NODEJS_INSTALL=1"
-IF "%NODEJS_INSTALL%"=="1" (
-    SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\languages\nodejs\setup.cmd"
-    IF NOT EXIST "%SCRIPT_NAME%" (
-        >&2 ECHO Unable to setup Node.js toolchain, as file not found "%SCRIPT_NAME%"
-        SET ERRORLEVEL=2
-        goto end
-    )
-    CALL "%SCRIPT_NAME%"
-)
-
-IF "%PYTHON_INSTALL_DIR%"=="1" SET "PYTHON_INSTALL=1"
-IF "%PYTHON_INSTALL%"=="1" (
-    SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\languages\python\setup.cmd"
-    IF NOT EXIST "%SCRIPT_NAME%" (
-        >&2 ECHO Unable to setup Python toolchain, as file not found "%SCRIPT_NAME%"
-        SET ERRORLEVEL=2
-        goto end
-    )
-    CALL "%SCRIPT_NAME%"
-)
-
-IF "%RUST_INSTALL_DIR%"=="1" SET "RUST_INSTALL=1"
-IF "%RUST_INSTALL%"=="1" (
-    SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\languages\rust\setup.cmd"
-    IF NOT EXIST "%SCRIPT_NAME%" (
-        >&2 ECHO Unable to setup Rust toolchain, as file not found "%SCRIPT_NAME%"
-        SET ERRORLEVEL=2
-        goto end
-    )
-    CALL "%SCRIPT_NAME%"
-)
-
-:: ------------------------------------------------------------------------------
-::                           Databases [Required]
-:: ------------------------------------------------------------------------------
-
-IF "%POSTGRES_URL%"=="1" SET "POSTGRESQL_INSTALL=1"
-IF "%POSTGRESQL_INSTALL%"=="1" (
-    SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\databases\postgres\setup.cmd"
-    IF NOT EXIST "%SCRIPT_NAME%" (
-        >&2 ECHO Unable to setup PostgreSQL, as file not found "%SCRIPT_NAME%"
-        SET ERRORLEVEL=2
-        goto end
-    )
-    CALL "%SCRIPT_NAME%"
-)
-
-:: Check and set up Redis/Valkey
-IF "%REDIS_URL%"=="1" SET "VALKEY_INSTALL=1"
-IF "%VALKEY_INSTALL%"=="1" (
-    SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\caches\valkey\setup.cmd"
-    IF NOT EXIST "%SCRIPT_NAME%" (
-        >&2 ECHO Unable to setup Valkey, as file not found "%SCRIPT_NAME%"
-        SET ERRORLEVEL=2
-        goto end
-    )
-    CALL "%SCRIPT_NAME%"
-)
-
-IF "%MEMCACHED_INSTALL%"=="1" (
-    SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\caches\memcached\setup.cmd"
-    IF NOT EXIST "%SCRIPT_NAME%" (
-        >&2 ECHO Unable to setup Memcached, as file not found "%SCRIPT_NAME%"
-        SET ERRORLEVEL=2
-        goto end
-    )
-    CALL "%SCRIPT_NAME%"
-)
-
-:: ------------------------------------------------------------------------------
-::                             Servers [Required]
-:: ------------------------------------------------------------------------------
-
-IF "%SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD%"=="1" (
-    SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\stacks\scaffolds\serve-actix-diesel-auth-scaffold\setup.cmd"
-    IF NOT EXIST "%SCRIPT_NAME%" (
-        >&2 ECHO Unable to setup serve-actix-diesel-auth-scaffold, as file not found "%SCRIPT_NAME%"
-        SET ERRORLEVEL=2
-        goto end
-    )
-    CALL "%SCRIPT_NAME%"
-)
-
-IF "%JUPYTERHUB%"=="1" (
-    SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\stacks\data-science\jupyterhub\setup.cmd"
-    IF NOT EXIST "%SCRIPT_NAME%" (
-        >&2 ECHO Unable to setup JupyterHub, as file not found "%SCRIPT_NAME%"
-        SET ERRORLEVEL=2
-        goto end
-    )
-    CALL "%SCRIPT_NAME%"
-)
-
-:: ------------------------------------------------------------------------------
-::                           Databases [Optional]
-:: ------------------------------------------------------------------------------
-
-IF "%AMQP_URL%"=="1" (
-    SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\message-brokers\rabbitmq\setup.cmd"
-    IF NOT EXIST "%SCRIPT_NAME%" (
-        >&2 ECHO Unable to setup RabbitMQ, as file not found "%SCRIPT_NAME%"
-        SET ERRORLEVEL=2
-        goto end
-    )
-    CALL "%SCRIPT_NAME%"
-)
-
-:: ------------------------------------------------------------------------------
-::                            WWWroot(s)
-:: ------------------------------------------------------------------------------
-
-:: Check and set up WWW root for example.com
-IF "%WWWROOT_example_com_INSTALL%"=="1" (
-    REM Set default values if variables are not defined
-    IF NOT DEFINED WWWROOT_NAME SET "WWWROOT_NAME=example.com"
-    IF NOT DEFINED WWWROOT_VENDOR SET "WWWROOT_VENDOR=nginx"
-    IF NOT DEFINED WWWROOT_PATH SET "WWWROOT_PATH=.\my_symlinked_wwwroot"
-    IF NOT DEFINED WWWROOT_LISTEN SET "WWWROOT_LISTEN=80"
-    IF NOT DEFINED WWWROOT_HTTPS_PROVIDER SET "WWWROOT_HTTPS_PROVIDER=letsencrypt"
-
-    ECHO Setting up WWW root for "%WWWROOT_NAME%" with vendor "%WWWROOT_VENDOR%"
-
-    REM Check if the vendor is nginx
-    IF /I "%WWWROOT_VENDOR%"=="nginx" (
-        SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\web-servers\nginx\setup.cmd"
-        IF NOT EXIST "%SCRIPT_NAME%" (
-            >&2 ECHO Unable to setup NGINX, as file not found "%SCRIPT_NAME%"
-            SET ERRORLEVEL=2
-            goto end
-        )
-        CALL "%SCRIPT_NAME%"
-    )
-    IF /I "%WWWROOT_VENDOR%"=="caddy" (
-        SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\web-servers\caddy\setup.cmd"
-        IF NOT EXIST "%SCRIPT_NAME%" (
-            >&2 ECHO Unable to setup CADDY, as file not found "%SCRIPT_NAME%"
-            SET ERRORLEVEL=2
-            goto end
-        )
-        CALL "%SCRIPT_NAME%"
-    )
-    IF /I "%WWWROOT_VENDOR%"=="httpd" (
-        SET "SCRIPT_NAME=%LIBSCRIPT_ROOT_DIR%\_lib\web-servers\httpd\setup.cmd"
-        IF NOT EXIST "%SCRIPT_NAME%" (
-            >&2 ECHO Unable to setup HTTPD, as file not found "%SCRIPT_NAME%"
-            SET ERRORLEVEL=2
-            goto end
-        )
-        CALL "%SCRIPT_NAME%"
-    )
-)
-
-ENDLOCAL
-
-:: ## end
-:: Exits the script with the current ERRORLEVEL.
-:end
-@%COMSPEC% /C exit %ERRORLEVEL% >nul
+echo To use LibScript, add the following directory to your PATH:
+echo   %LIBSCRIPT_ROOT_DIR%
+echo.
+echo Bootstrap complete.
+exit /b 0

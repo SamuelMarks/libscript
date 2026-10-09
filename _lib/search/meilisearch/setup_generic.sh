@@ -8,8 +8,8 @@
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE[0]-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
@@ -109,6 +109,22 @@ v1.36.0
       if libscript_download "${BIN_URL}" "${TEMP_BIN}" 2>/dev/null; then
         mv "${TEMP_BIN}" "${TARGET_DIR}/bin/meilisearch"
         chmod +x "${TARGET_DIR}/bin/meilisearch"
+        if [ -f "/etc/alpine-release" ] && command -v apk >/dev/null 2>&1; then
+          apk add --no-cache gcompat gcc musl-dev >/dev/null 2>&1 || true
+          mkdir -p /usr/local/lib
+          if [ ! -f "/usr/local/lib/libresinit.so" ]; then
+            printf 'int __res_init(void) { return 0; }\nint res_init(void) { return 0; }\n' | gcc -shared -fPIC -x c - -o /usr/local/lib/libresinit.so 2>/dev/null || true
+          fi
+          if [ -f "/usr/local/lib/libresinit.so" ]; then
+            mv "${TARGET_DIR}/bin/meilisearch" "${TARGET_DIR}/bin/meilisearch.bin"
+            cat << 'SHIM' > "${TARGET_DIR}/bin/meilisearch"
+#!/bin/sh
+export LD_PRELOAD="/usr/local/lib/libresinit.so:${LD_PRELOAD:-}"
+exec "$(dirname "$0")/meilisearch.bin" "$@"
+SHIM
+            chmod +x "${TARGET_DIR}/bin/meilisearch"
+          fi
+        fi
       else
         rm -f "${TEMP_BIN}"
         if command -v meilisearch >/dev/null 2>&1; then

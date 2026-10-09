@@ -8,8 +8,8 @@
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE[0]-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
@@ -146,7 +146,7 @@ configure_routing() {
   
   if [ "$is_static" -eq 1 ]; then
     # shellcheck disable=SC2029
-    ssh "$TARGET_HOST" "\$HOME/libscript/netctl/netctl.sh route add \"$app_name\" \"$domain\" --static \"\$HOME/$remote_dir\""
+    ssh "$TARGET_HOST" "\$HOME/libscript/_lib/networking/netctl/cli.sh route add \"$app_name\" \"$domain\" --static \"\$HOME/$remote_dir\""
   else
     remote_port=3000
     if [ -f "$app_path/libscript.json" ]; then
@@ -154,7 +154,7 @@ configure_routing() {
       if [ -n "$parsed_port" ] && [ "$parsed_port" != "null" ]; then remote_port="$parsed_port"; fi
     fi
     # shellcheck disable=SC2029
-    ssh "$TARGET_HOST" "\$HOME/libscript/netctl/netctl.sh route add \"$app_name\" \"$domain\" --port \"$remote_port\""
+    ssh "$TARGET_HOST" "\$HOME/libscript/_lib/networking/netctl/cli.sh route add \"$app_name\" \"$domain\" --port \"$remote_port\""
   fi
 }
 

@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../_lib/_common/manifest.schema.json",
+  "name": "nextcloud",
+  "category": "web-apps",
+  "title": "nextcloud",
+  "license": "AGPL-3.0-only",
+  "license_name": "GNU Affero General Public License v3.0",
+  "description": "nextcloud stack",
+  "provides": ["nextcloud"],
+  "runtime_deps": ["php", "nginx", "mysql", "unzip"],
+  "os_blacklist": ["sunos"]
+}

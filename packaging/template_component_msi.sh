@@ -21,8 +21,8 @@ set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE[0]-}" ]; then
-  THIS_FILE="${BASH_SOURCE[0]}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
@@ -202,11 +202,13 @@ else
   WIX_VERSION="${_p1}.0.0.0"
 fi
 
+: "${TARGET_ARCH:=x64}"
+
 cat << EOF_WXS > "$OUT_FILE"
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <Product Id="${PRODUCT_CODE}"
-           Name="${DISPLAY_TITLE}"
+           Name="${TITLE}"
            Language="1033"
            Version="${WIX_VERSION}"
            Manufacturer="LibScript"
