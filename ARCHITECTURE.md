@@ -247,6 +247,28 @@ LibScript implements an automated, reproducible bootstrap sequence:
 - **Sanitization Invariant**: Binaries produced in Stage 1 are verified with `readelf -l` to ensure
   zero references to host linkers (e.g., `/lib64/ld-linux-x86-64.so.2`).
 
+### 5. Generic 3-Mode Build Substrate & Multi-Compiler Verification (`_lib/_common/source_builder.{sh,cmd}`)
+
+Every component in `_lib/` can be provisioned or compiled through three orthogonal mechanisms
+handled by `_lib/_common/pkg_mgr.{sh,cmd}`, `_lib/_common/source_builder.{sh,cmd}`, and
+`_lib/_common/component_core.{sh,cmd}`:
+
+1. **Mode 1 — Install via `<specific package manager>` (`--pkg-mgr=<pm>`)**: Explicitly targets any
+   OS or ecosystem package manager (`apt-get`, `apk`, `dnf`, `yum`, `zypper`, `pacman`, `brew`,
+   `port`, `pkg`, `xbps`, `emerge`, `winget`, `choco`, `scoop`, `nix`, `guix`, `spack`, `vcpkg`,
+   `conan`, `pkgx`) and auto-bootstraps `_lib/package-managers/<pm>` if missing.
+2. **Mode 2 — Build from `<source>` with Default Toolchain (`--from-source --toolchain=default`)**:
+   Automatically resolves the host platform's default C toolchain (`_lib/languages/c`) and compiles
+   the component from its cached source archive into `${LIBSCRIPT_HOME}/<pkg>/<version>/`, emitting
+   `build-metrics.json`.
+3. **Mode 3 — Build from `<source>` with Custom Toolchain
+   (`--from-source --toolchain=gcc|clang|tcc|custom-cc` or `--custom-cc=<path>`)**: Activates the
+   specified compiler recipe (`_lib/languages/{gcc,clang,tcc,custom-cc}/`), injects the
+   flag-normalizing telemetry shim (`cc_wrapper.{sh,cmd}`), compiles into a compiler-namespaced
+   prefix (`${LIBSCRIPT_HOME}/<pkg>/<version>-<cc>/`), and supports 4-way differential verification
+   across the SQLite C amalgamation (`_lib/databases/sqlite/compare_compilers.{sh,cmd}`) and the
+   Linux kernel (`_lib/kernel/linux/compare_compilers.{sh,cmd}`).
+
 ---
 
 ## ⚙️ Tier 2: Synthesizers, Assemblers & Kernel Image Baking

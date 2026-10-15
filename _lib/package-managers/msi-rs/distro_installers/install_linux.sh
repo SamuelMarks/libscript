@@ -15,6 +15,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -38,8 +39,6 @@ TARGET_DIR="${3:-/mnt/target}"
 
 # ## show_help
 # Displays usage instructions and supported Linux distributions.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") <target_dev> [flavor] [target_dir]"
   printf '%s\n' "Installs a complete Linux base operating system to target storage."

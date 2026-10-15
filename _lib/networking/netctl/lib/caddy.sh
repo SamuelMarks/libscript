@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -33,9 +34,7 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 # ## netctl_emit_caddy
-# Executes netctl_emit_caddy functionality.
-# ## netctl_emit_caddy
-# Executes the netctl_emit_caddy logic.
+# Performs the netctl_emit_caddy operation and updates component state.
 netctl_emit_caddy() {
   state_file="${1:-$NETCTL_STATE_FILE}"
 

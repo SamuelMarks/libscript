@@ -11,6 +11,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -46,9 +47,7 @@ SEVENZIP_VERSION="${SEVENZIP_VERSION:-latest}"
 ACTION="${ACTION:-install}"
 
 # ## resolve_exact_version
-# Executes resolve_exact_version functionality.
-# ## resolve_exact_version
-# Executes the resolve_exact_version logic.
+# Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${SEVENZIP_VERSION}" = "latest" ] || [ "${SEVENZIP_VERSION}" = "lts" ]; then
     EXACT_VERSION=$(curl -sL 'https://www.7-zip.org/download.html' | grep -o 'Download 7-Zip [0-9.]*' | head -n1 | sed 's/Download 7-Zip //')

@@ -63,7 +63,7 @@ set "VARIANT=online"
 set "VERSION_OVERRIDE="
 
 :: ## arg_loop
-:: Executes arg_loop functionality.
+:: Parses command-line arguments and populates configuration variables.
 :arg_loop
 if "%~1"=="" goto done_args
 if /i "%~1"=="--out" ( set "OUT_FILE=%~2" & shift & shift & goto arg_loop )
@@ -73,7 +73,7 @@ shift
 goto arg_loop
 
 :: ## done_args
-:: Executes done_args functionality.
+:: Continues execution after command-line argument parsing completes.
 :done_args
 
 if "%OUT_FILE%"=="" (

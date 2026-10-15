@@ -10,6 +10,7 @@
 :: Execute this script to preload components into a target system root:
 ::   ./_lib/package-managers/msi-rs/preloader/preload_assets.cmd [target_dir] [component_list...]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -52,14 +53,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # preload_assets.cmd
-:::: Offline preload asset manager for Windows environments.
-:: Stages pre-compiled components and offline caches into target installation directories.
-::
-:: ## Usage
-:: Call preload_assets.cmd [target_dir] [component_list...]
 
-setlocal EnableDelayedExpansion
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help

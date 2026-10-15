@@ -54,7 +54,7 @@ goto :find_root
 set "OS_TARGET=alpine-3.24"
 
 :: ## parse_args
-:: Executes parse_args functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_args
 if "%~1"=="" goto end_parse_args
 if /i "%~1"=="--help" (
@@ -78,7 +78,7 @@ if /i "%~1"=="--os" (
 echo Unknown option: %~1
 exit /b 1
 :: ## end_parse_args
-:: Executes end_parse_args functionality.
+:: Performs the end_parse_args operation and updates component state.
 :end_parse_args
 
 cd /d "%SCRIPT_DIR%\.." || exit /b 1
@@ -95,7 +95,7 @@ if not exist "TODO_PLAN.md" (
 )
 
 :: ## loop
-:: Executes loop functionality.
+:: Parses command-line arguments and populates configuration variables.
 :loop
 for /f "delims=" %%I in ('call "%SCRIPT_DIR%\run_next_batch.cmd"') do set "BATCH=%%I"
 if "!BATCH!"=="" (
@@ -123,5 +123,5 @@ if not "!NEW_BATCH!"=="" (
 
 goto loop
 :: ## end_loop
-:: Executes end_loop functionality.
+:: Performs the end_loop operation and updates component state.
 :end_loop

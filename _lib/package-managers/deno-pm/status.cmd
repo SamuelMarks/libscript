@@ -12,9 +12,11 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 :: ## Overview
+:: Performs the Overview operation and updates component state.
 rem Status check for package-managers/deno-pm.
 rem
 :: ## Usage
+:: Performs the Usage operation and updates component state.
 rem status.cmd
 
 set "SCRIPT_DIR=%~dp0"

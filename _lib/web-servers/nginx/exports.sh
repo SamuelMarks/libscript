@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -38,9 +39,7 @@ for LIB in "_lib/_common/environ.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
 done
 
 # ## infer_locations
-# Executes infer_locations functionality.
-# ## infer_locations
-# Executes the infer_locations logic.
+# Performs the infer_locations operation and updates component state.
 infer_locations() {
   cwd="$(pwd)"
   locations_conf="${cwd}"'/.config/nginx/locations.conf'

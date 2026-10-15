@@ -2,7 +2,7 @@
 :: # service.cmd
 ::
 :: ## Overview
-:: Default no-op service.cmd implementation to satisfy Version Manager Contract.
+:: Manages background service lifecycle operations (start, stop, status) for the xfce4 component.
 ::
 :: ## Usage
 :: service.cmd

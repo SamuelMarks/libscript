@@ -65,7 +65,7 @@ if not errorlevel 1 (
 )
 
 :: ## create_shims
-:: Executes create_shims functionality.
+:: Creates executable command shims in the local binary directory.
 :create_shims
 set "HTTPD_BIN="
 if exist "%APPDATA%\Apache24\bin\httpd.exe" set "HTTPD_BIN=%APPDATA%\Apache24\bin"

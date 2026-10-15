@@ -59,10 +59,8 @@ if /I "%~1"=="-?" goto :show_help
 goto :main
 
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line usage instructions for generating HTML documentation.
 :show_help
-:: ## show_help
-:: Executes show_help functionality.
 echo Usage: %~nx0
 echo Generates HTML documentation from markdown sources.
 echo.
@@ -71,9 +69,8 @@ echo   --help, -h, /?, -?  Show this help message.
 exit /b 0
 
 :: ## main
-:: Executes main functionality.
+:: Dispatches HTML documentation generation to the PowerShell implementation.
 :main
-setlocal EnableDelayedExpansion
 set "REPO_ROOT=%SCRIPT_DIR%.."
 set "LIBSCRIPT_EXTENDED_SCHEMAS=topologies/topology.schema.json topologies/topology-state.schema.json payloads/payload.schema.json traits/trait.schema.json _lib/_common/manifest.schema.json"
 

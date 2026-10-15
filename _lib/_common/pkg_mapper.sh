@@ -11,6 +11,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -31,9 +32,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 #
 
 # ## map_package
-# Executes map_package functionality.
-# ## map_package
-# Executes the map_package logic.
+# Translates a generic package identifier into the native OS package manager name.
 map_package() {
   pkg="${1}"
   
@@ -160,7 +159,84 @@ map_package() {
     'clang')
       case "${PKG_MGR}" in
         'brew') printf 'llvm\n' ;;
+        'winget') printf 'LLVM.LLVM\n' ;;
+        'choco'|'scoop') printf 'llvm\n' ;;
         *) printf 'clang\n' ;;
+      esac
+      ;;
+    'llvm')
+      case "${PKG_MGR}" in
+        'winget') printf 'LLVM.LLVM\n' ;;
+        *) printf 'llvm\n' ;;
+      esac
+      ;;
+    'lld')
+      case "${PKG_MGR}" in
+        'brew') printf 'lld\n' ;;
+        'winget') printf 'LLVM.LLVM\n' ;;
+        *) printf 'lld\n' ;;
+      esac
+      ;;
+    'tcc'|'tinycc')
+      case "${PKG_MGR}" in
+        'apk'|'apt-get'|'dnf'|'yum'|'zypper'|'pacman'|'brew'|'port'|'pkg'|'xbps'|'nix'|'spack'|'choco'|'scoop') printf 'tcc\n' ;;
+        'emerge') printf 'dev-lang/tcc\n' ;;
+        'winget') printf 'Bellard.TCC\n' ;;
+        *) printf 'tcc\n' ;;
+      esac
+      ;;
+    'binutils')
+      case "${PKG_MGR}" in
+        'winget') printf 'MSYS2.MSYS2\n' ;;
+        'choco') printf 'mingw\n' ;;
+        *) printf 'binutils\n' ;;
+      esac
+      ;;
+    'bc')
+      case "${PKG_MGR}" in
+        *) printf 'bc\n' ;;
+      esac
+      ;;
+    'flex')
+      case "${PKG_MGR}" in
+        'winget') printf 'WinFlexBison.win_flex_bison\n' ;;
+        'choco') printf 'winflexbison3\n' ;;
+        *) printf 'flex\n' ;;
+      esac
+      ;;
+    'bison')
+      case "${PKG_MGR}" in
+        'winget') printf 'WinFlexBison.win_flex_bison\n' ;;
+        'choco') printf 'winflexbison3\n' ;;
+        *) printf 'bison\n' ;;
+      esac
+      ;;
+    'libelf-dev'|'elfutils-libelf-devel')
+      case "${PKG_MGR}" in
+        'apk') printf 'elfutils-dev\n' ;;
+        'apt-get') printf 'libelf-dev\n' ;;
+        'dnf'|'yum'|'zypper') printf 'elfutils-libelf-devel\n' ;;
+        'pacman') printf 'libelf\n' ;;
+        'brew') printf 'libelf\n' ;;
+        *) printf 'libelf-dev\n' ;;
+      esac
+      ;;
+    'pahole'|'dwarves')
+      case "${PKG_MGR}" in
+        'apt-get'|'dnf'|'yum'|'zypper') printf 'dwarves\n' ;;
+        'apk'|'pacman') printf 'pahole\n' ;;
+        *) printf 'pahole\n' ;;
+      esac
+      ;;
+    'cpio')
+      case "${PKG_MGR}" in
+        *) printf 'cpio\n' ;;
+      esac
+      ;;
+    'zstd')
+      case "${PKG_MGR}" in
+        'winget') printf 'Facebook.zstd\n' ;;
+        *) printf 'zstd\n' ;;
       esac
       ;;
     'libpq-dev')
@@ -460,9 +536,10 @@ map_package() {
       ;;
     'sqlite'|'sqlite3')
       case "${PKG_MGR}" in
-        'apk'|'dnf'|'yum') printf 'sqlite\n' ;;
-        'apt-get'|'zypper'|'pacman') printf 'sqlite3\n' ;;
-        'brew') printf 'sqlite\n' ;;
+        'apk'|'dnf'|'yum'|'brew'|'nix'|'spack'|'choco'|'scoop'|'pkgx') printf 'sqlite\n' ;;
+        'apt-get'|'zypper'|'pacman'|'port'|'xbps'|'vcpkg') printf 'sqlite3\n' ;;
+        'winget') printf 'SQLite.SQLite\n' ;;
+        'emerge') printf 'dev-db/sqlite\n' ;;
         'pkg')
           if [ "${TARGET_OS:-}" = "sunos" ] || [ "${UNAME:-$(uname)}" = "SunOS" ]; then
             printf 'database/sqlite-3\n'
@@ -1276,6 +1353,199 @@ map_package() {
         'zypper') printf 'libxslt-devel\n' ;;
         'apk') printf 'libxslt-dev\n' ;;
         *) printf 'libxslt-dev\n' ;;
+      esac
+      ;;
+    'alsa-lib')
+      case "${PKG_MGR}" in
+        'apt-get')
+          if apt-cache show libasound2t64 >/dev/null 2>&1; then
+            printf 'libasound2t64\n'
+          else
+            printf 'libasound2\n'
+          fi
+          ;;
+        *) printf 'alsa-lib\n' ;;
+      esac
+      ;;
+    'alsa-ucm-conf')
+      case "${PKG_MGR}" in
+        'dnf'|'yum') printf 'alsa-ucm\n' ;;
+        *) printf 'alsa-ucm-conf\n' ;;
+      esac
+      ;;
+    'doas')
+      case "${PKG_MGR}" in
+        'apt-get')
+          if apt-cache show doas >/dev/null 2>&1; then
+            printf 'doas\n'
+          else
+            printf 'opendoas\n'
+          fi
+          ;;
+        'dnf'|'yum') printf 'opendoas\n' ;;
+        *) printf 'doas\n' ;;
+      esac
+      ;;
+    'eudev')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'udev\n' ;;
+        'dnf'|'yum') printf 'systemd-udev\n' ;;
+        *) printf 'eudev\n' ;;
+      esac
+      ;;
+    'pam')
+      case "${PKG_MGR}" in
+        'apk') printf 'linux-pam\n' ;;
+        'apt-get') printf 'libpam0g\n' ;;
+        *) printf 'pam\n' ;;
+      esac
+      ;;
+    'shadow')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'passwd\n' ;;
+        'dnf'|'yum') printf 'shadow-utils\n' ;;
+        *) printf 'shadow\n' ;;
+      esac
+      ;;
+    'gnome')
+      case "${PKG_MGR}" in
+        *) printf 'gnome-shell\n' ;;
+      esac
+      ;;
+    'lxqt')
+      case "${PKG_MGR}" in
+        'pkg') printf 'lxqt\n' ;;
+        *) printf 'lxqt-session\n' ;;
+      esac
+      ;;
+    'xfce4')
+      case "${PKG_MGR}" in
+        'apk'|'pkg') printf 'xfce4\n' ;;
+        *) printf 'xfce4-session xfwm4 xfce4-panel\n' ;;
+      esac
+      ;;
+    'gdm')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'gdm3\n' ;;
+        *) printf 'gdm\n' ;;
+      esac
+      ;;
+    'libseat')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'libseat1\n' ;;
+        'pkg') printf 'seatd\n' ;;
+        *) printf 'libseat\n' ;;
+      esac
+      ;;
+    'libxkbcommon')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'libxkbcommon0\n' ;;
+        *) printf 'libxkbcommon\n' ;;
+      esac
+      ;;
+    'wayland')
+      case "${PKG_MGR}" in
+        'apk') printf 'wayland-libs-client wayland-dev\n' ;;
+        'apt-get') printf 'libwayland-client0 libwayland-bin\n' ;;
+        'dnf'|'yum') printf 'libwayland-client wayland-devel\n' ;;
+        *) printf 'wayland\n' ;;
+      esac
+      ;;
+    'wayland-protocols')
+      case "${PKG_MGR}" in
+        'dnf'|'yum') printf 'wayland-protocols-devel\n' ;;
+        *) printf 'wayland-protocols\n' ;;
+      esac
+      ;;
+    'wlroots')
+      case "${PKG_MGR}" in
+        'apk') printf 'wlroots\n' ;;
+        'apt-get') printf 'libwlroots-0.18\n' ;;
+        'pkg') printf 'wlroots\n' ;;
+        *) printf 'wlroots\n' ;;
+      esac
+      ;;
+    'xorg-server')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'xserver-xorg-core\n' ;;
+        'dnf'|'yum') printf 'xorg-x11-server-Xorg\n' ;;
+        *) printf 'xorg-server\n' ;;
+      esac
+      ;;
+    'xwayland')
+      case "${PKG_MGR}" in
+        'dnf'|'yum') printf 'xorg-x11-server-Xwayland\n' ;;
+        *) printf 'xwayland\n' ;;
+      esac
+      ;;
+    'intel-media-driver')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'intel-media-va-driver\n' ;;
+        *) printf 'intel-media-driver\n' ;;
+      esac
+      ;;
+    'libdrm')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'libdrm2\n' ;;
+        *) printf 'libdrm\n' ;;
+      esac
+      ;;
+    'libva')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'libva2\n' ;;
+        *) printf 'libva\n' ;;
+      esac
+      ;;
+    'libvdpau')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'libvdpau1\n' ;;
+        *) printf 'libvdpau\n' ;;
+      esac
+      ;;
+    'mesa')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'libgl1-mesa-dri libglx-mesa0 libgbm1\n' ;;
+        'dnf'|'yum') printf 'mesa-libGL mesa-libgbm mesa-dri-drivers\n' ;;
+        'pkg') printf 'mesa-libs mesa-dri\n' ;;
+        *) printf 'mesa\n' ;;
+      esac
+      ;;
+    'vulkan-loader')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'libvulkan1\n' ;;
+        *) printf 'vulkan-loader\n' ;;
+      esac
+      ;;
+    'dhcpcd')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'dhcpcd-base\n' ;;
+        *) printf 'dhcpcd\n' ;;
+      esac
+      ;;
+    'networkmanager')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'network-manager\n' ;;
+        'dnf'|'yum') printf 'NetworkManager\n' ;;
+        *) printf 'networkmanager\n' ;;
+      esac
+      ;;
+    'systemd-networkd')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'systemd\n' ;;
+        *) printf 'systemd-networkd\n' ;;
+      esac
+      ;;
+    'wpa_supplicant')
+      case "${PKG_MGR}" in
+        'apt-get') printf 'wpasupplicant\n' ;;
+        *) printf 'wpa_supplicant\n' ;;
+      esac
+      ;;
+    'bootstrap')
+      case "${PKG_MGR}" in
+        'apk') printf 'gcc musl-dev\n' ;;
+        'apt-get') printf 'gcc build-essential\n' ;;
+        *) printf 'gcc\n' ;;
       esac
       ;;
     *)

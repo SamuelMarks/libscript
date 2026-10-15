@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "custom-cc",
+  "title": "Custom C Compiler (custom-cc)",
+  "description": "Standalone version manager, source builder, and flag-normalizing telemetry wrapper for a custom C compiler.",
+  "category": "languages",
+  "provides": ["compiler", "c", "cc", "custom-cc"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": []
+}

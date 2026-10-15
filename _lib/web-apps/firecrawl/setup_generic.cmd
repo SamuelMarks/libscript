@@ -1,15 +1,14 @@
 @echo off
-:: # setup_generic.cmd
+:: # setup.cmd
 ::
 :: ## Overview
-:: Provides a generic, cross-platform setup mechanism for the Firecrawl crawler stack.
-:: Delegates to setup.cmd for Windows provisioning.
+:: Orchestrates the setup and installation process for the Firecrawl crawler stack.
 :: 
 :: ## Usage
-:: Execute this script to perform generic initialization steps.
+:: Execute this script to install and configure firecrawl on the local system.
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
-
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
     if not errorlevel 1 (
@@ -51,20 +50,8 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if exist "%~dp0setup.cmd" (
-    call "%~dp0setup.cmd" %*
-    exit /b %ERRORLEVEL%
-)
-
-where powershell >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup.ps1" %*
-if exist "%LIBSCRIPT_HOME%\firecrawl\%VERSION%" (
-    echo [INFO] firecrawl %VERSION% is already installed.
-    exit /b 0
-)
-    exit /b %ERRORLEVEL%
-)
-
-echo [ERROR] No suitable Windows setup executor found.
-exit /b 1
+if not defined LIBSCRIPT_ROOT_DIR set "LIBSCRIPT_ROOT_DIR=%~dp0..\..\.."
+set "LOG_CMD=%~dp0\..\..\..\_lib\_common\log.cmd"
+if not exist "!LOG_CMD!" set "LOG_CMD=%LIBSCRIPT_ROOT_DIR%\_lib\_common\log.cmd"
+call "!LOG_CMD!" :log_warn "firecrawl is not supported on Windows natively."
+exit /b 0

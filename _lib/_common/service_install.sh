@@ -13,6 +13,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,9 +38,7 @@ for LIB in "_lib/_common/os_info.sh" "_lib/_common/priv.sh" "_lib/_common/log.sh
 done
 
 # ## libscript_install_service
-# Executes libscript_install_service functionality.
-# ## libscript_install_service
-# Executes the libscript_install_service logic.
+# Performs the libscript_install_service operation and updates component state.
 libscript_install_service() {
   _service_name="$1"
   _exec_start="$2"
@@ -98,7 +97,7 @@ output_log="/var/log/${_service_name}.log"
 error_log="/var/log/${_service_name}_err.log"
 
 # ## depend
-# Executes the depend logic.
+# Performs the depend operation and updates component state.
 depend() {
     need net
 }
@@ -169,9 +168,7 @@ EOF
 }
 
 # ## libscript_uninstall_service
-# Executes libscript_uninstall_service functionality.
-# ## libscript_uninstall_service
-# Executes the libscript_uninstall_service logic.
+# Performs the libscript_uninstall_service operation and updates component state.
 libscript_uninstall_service() {
   _service_name="$1"
   _rc_name=$(printf '%s\n' "$_service_name" | tr '-' '_')

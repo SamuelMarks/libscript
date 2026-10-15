@@ -15,6 +15,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -34,8 +35,6 @@ export LIBSCRIPT_ROOT_DIR
 
 # ## show_help
 # Displays usage instructions and supported options.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [OPTIONS]"
   printf '%s\n' "Manages hierarchical mount operations and sysroot staging under /mnt/target."
@@ -50,8 +49,6 @@ show_help() {
 
 # ## detect_os
 # Identifies the active operating system kernel family.
-# ## detect_os
-# Executes the detect_os logic.
 detect_os() {
   uname -s | tr '[:upper:]' '[:lower:]'
 }
@@ -63,8 +60,6 @@ ESP_DEV=""
 
 # ## is_mounted
 # Checks if the specified mountpoint is currently active.
-# ## is_mounted
-# Executes the is_mounted logic.
 is_mounted() {
   _dir="$1"
   if command -v mountpoint >/dev/null 2>&1; then
@@ -85,8 +80,6 @@ is_mounted() {
 
 # ## safe_mount
 # Mounts a filesystem only if the destination is not already mounted.
-# ## safe_mount
-# Executes the safe_mount logic.
 safe_mount() {
   _src="$1"
   _dest="$2"
@@ -108,8 +101,6 @@ safe_mount() {
 
 # ## mount_virtual_filesystems
 # Bind-mounts kernel pseudo-filesystems (/dev, /proc, /sys) into target sysroot.
-# ## mount_virtual_filesystems
-# Executes the mount_virtual_filesystems logic.
 mount_virtual_filesystems() {
   _tgt="$1"
   _os=$(detect_os)
@@ -136,8 +127,6 @@ mount_virtual_filesystems() {
 
 # ## unmount_all
 # Cleanly unmounts all target partitions and virtual filesystems in reverse order.
-# ## unmount_all
-# Executes the unmount_all logic.
 unmount_all() {
   _tgt="$1"
   printf '[INFO] Unmounting target filesystems from %s...\n' "$_tgt"
@@ -154,8 +143,6 @@ unmount_all() {
 
 # ## generate_fstab
 # Synthesizes persistent fstab or vfstab table for target sysroot.
-# ## generate_fstab
-# Executes the generate_fstab logic.
 generate_fstab() {
   _tgt="$1"
   _rdev="${2:-/dev/sda2}"

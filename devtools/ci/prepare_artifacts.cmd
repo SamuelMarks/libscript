@@ -51,12 +51,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # prepare_artifacts.cmd
-:::: Validates generated installer artifact packages and produces cryptographic
-:: SHA256 checksums (.sha256) on Windows.
-::
-:: ## Usage
-:: devtools\ci\prepare_artifacts.cmd <artifact_path> [artifact_path...]
 
 if "%~1"=="" goto :no_args
 if /I "%~1"=="--help" goto :show_help
@@ -87,7 +81,7 @@ exit /b 1
 :main
 set "ERRORS=0"
 :: ## process_loop
-:: Executes process_loop functionality.
+:: Performs the process_loop operation and updates component state.
 :process_loop
 if "%~1"=="" goto :finish
 call :process_single "%~1"
@@ -137,7 +131,7 @@ if not defined SHA256_HASH (
     )
 )
 :: ## skip_hash
-:: Executes skip_hash functionality.
+:: Performs the skip_hash operation and updates component state.
 :skip_hash
 
 if not defined SHA256_HASH (

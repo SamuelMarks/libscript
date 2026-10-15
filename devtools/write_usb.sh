@@ -15,6 +15,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -34,8 +35,6 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 # ## show_help
 # Displays usage instructions and safety guidelines.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") <image_path> <target_usb_device>"
   printf '%s\n' "Flashes a bootable ISO or disk image to a removable USB block device."
@@ -66,8 +65,6 @@ fi
 
 # ## is_boot_drive
 # Ensures target device is not an active system drive.
-# ## is_boot_drive
-# Executes the is_boot_drive logic.
 is_boot_drive() {
   _dev="$1"
   if [ -f /proc/mounts ]; then

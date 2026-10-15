@@ -31,6 +31,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -66,8 +67,6 @@ BASE_SCHEMA_FILE="$LIBSCRIPT_ROOT_DIR/_lib/_common/base_vars.schema.json"
 
 # ## get_merged_properties
 # Utility function to get the merged schema properties
-# ## get_merged_properties
-# Executes the get_merged_properties logic.
 get_merged_properties() {
   if [ -f "$SCHEMA_FILE" ] && [ -f "$BASE_SCHEMA_FILE" ]; then
     jq -n --argjson base "$(cat "$BASE_SCHEMA_FILE")" --argjson comp "$(cat "$SCHEMA_FILE")" '
@@ -83,9 +82,7 @@ get_merged_properties() {
 }
 
 # ## show_help
-# Executes show_help functionality.
-# ## show_help
-# Executes the show_help logic.
+# Displays command-line usage instructions and available options.
 show_help() {
   log_info "Usage: ${THIS_FILE##*/} [COMMAND] [PACKAGE_NAME] [VERSION] [OPTIONS]"
   log_info ""
@@ -292,6 +289,55 @@ while [ $# -gt 0 ]; do
       export PREFIX="${1#*=}"
       shift
       ;;
+    --install-method=*)
+      _im_val="${1#*=}"
+      export LIBSCRIPT_DEFAULT_INSTALL_METHOD="${_im_val}"
+      if [ -n "${pkg_upper:-}" ]; then
+        export "${pkg_upper}_INSTALL_METHOD=${_im_val}"
+      fi
+      shift
+      ;;
+    --from-source)
+      export LIBSCRIPT_DEFAULT_INSTALL_METHOD="from-source"
+      if [ -n "${pkg_upper:-}" ]; then
+        export "${pkg_upper}_INSTALL_METHOD=from-source"
+      fi
+      shift
+      ;;
+    --pkg-mgr=*)
+      _pm_val="${1#*=}"
+      export LIBSCRIPT_PKG_MGR="${_pm_val}"
+      if [ -n "${pkg_upper:-}" ]; then
+        export "${pkg_upper}_PKG_MGR=${_pm_val}"
+        _cur_im="$(printenv "${pkg_upper}_INSTALL_METHOD" 2>/dev/null || true)"
+        if [ -z "${_cur_im}" ]; then
+          export "${pkg_upper}_INSTALL_METHOD=system"
+        fi
+      fi
+      shift
+      ;;
+    --toolchain=*|--with-compiler=*)
+      _tc_val="${1#*=}"
+      export LIBSCRIPT_BUILD_TOOLCHAIN="${_tc_val}"
+      if [ -n "${pkg_upper:-}" ]; then
+        export "${pkg_upper}_BUILD_TOOLCHAIN=${_tc_val}"
+        export "${pkg_upper}_COMPILER=${_tc_val}"
+      fi
+      shift
+      ;;
+    --custom-cc=*)
+      _cc_val="${1#*=}"
+      export CUSTOM_CC_BIN="${_cc_val}"
+      export LIBSCRIPT_CUSTOM_CC_BIN="${_cc_val}"
+      export LIBSCRIPT_BUILD_TOOLCHAIN="custom-cc"
+      export LIBSCRIPT_DEFAULT_INSTALL_METHOD="from-source"
+      if [ -n "${pkg_upper:-}" ]; then
+        export "${pkg_upper}_BUILD_TOOLCHAIN=custom-cc"
+        export "${pkg_upper}_COMPILER=custom-cc"
+        export "${pkg_upper}_INSTALL_METHOD=from-source"
+      fi
+      shift
+      ;;
     --service-name=*)
       export LIBSCRIPT_SERVICE_NAME="${1#*=}"
       shift
@@ -478,7 +524,7 @@ elif [ "$ACTION" = "exec" ]; then
 fi
 
 # Execute the requested action script
-if [ -n "$ACTION" ] && [ "$ACTION" != "install" ] && [ "$ACTION" != "setup" ] && [ "$ACTION" != "install-service" ] && [ "$ACTION" != "uninstall-service" ] && [ "$ACTION" != "test" ] && [ "$ACTION" != "start" ] && [ "$ACTION" != "stop" ] && [ "$ACTION" != "restart" ] && [ "$ACTION" != "status" ] && [ "$ACTION" != "health" ] && [ "$ACTION" != "logs" ] && [ "$ACTION" != "up" ] && [ "$ACTION" != "down" ]; then
+if [ -n "$ACTION" ] && [ "$ACTION" != "install" ] && [ "$ACTION" != "setup" ] && [ "$ACTION" != "ls" ] && [ "$ACTION" != "ls-remote" ] && [ "$ACTION" != "use" ] && [ "$ACTION" != "download" ] && [ "$ACTION" != "install-service" ] && [ "$ACTION" != "uninstall-service" ] && [ "$ACTION" != "test" ] && [ "$ACTION" != "start" ] && [ "$ACTION" != "stop" ] && [ "$ACTION" != "restart" ] && [ "$ACTION" != "status" ] && [ "$ACTION" != "health" ] && [ "$ACTION" != "logs" ] && [ "$ACTION" != "up" ] && [ "$ACTION" != "down" ]; then
   if [ -x "$COMP_DIR/${ACTION}.sh" ]; then
     unset SCRIPT_NAME || true
     exec "$COMP_DIR/${ACTION}.sh" "$@"

@@ -15,6 +15,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -42,8 +43,6 @@ MSI_PACKAGE=""
 
 # ## show_help
 # Displays usage instructions and supported CLI parameters.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [OPTIONS] [KEY=VALUE...]"
   printf '%s\n' "Executes headless automated installations using msi-rs msiexec CLI semantics."
@@ -61,8 +60,6 @@ show_help() {
 
 # ## log_msg
 # Streams log messages to stdout, log file, and serial consoles.
-# ## log_msg
-# Executes the log_msg logic.
 log_msg() {
   _msg="$1"
   _ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")

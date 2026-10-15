@@ -2,8 +2,8 @@
 :: # setup.cmd
 ::
 :: ## Overview
-:: Recipe for Musl libc.
-:: Complies with standard LibScript Context Contract and stamp idempotency.
+:: Installation and configuration entrypoint for the musl component on Windows.
+:: Delegates execution to the shared _lib\_common\setup_base.cmd module.
 ::
 :: ## Usage
 :: setup.cmd [action]
@@ -52,55 +52,4 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-SET "searchVal=;%THIS_FILE%;"
-IF NOT DEFINED STACK (
-    SET "STACK=;%THIS_FILE%;"
-    echo [CONTINUE] processing "%THIS_FILE%"
-) ELSE (
-    IF NOT "!STACK:%searchVal%=!"=="!STACK!" (
-        echo [STOP]     processing "%THIS_FILE%"
-        SET ERRORLEVEL=0
-        goto :eof
-    ) ELSE (
-        SET "STACK=!STACK!%THIS_FILE%;"
-        echo [CONTINUE] processing "%THIS_FILE%"
-    )
-)
-
-if "%~1"=="--help" (
-    echo Usage: %~nx0 [action]
-    echo Recipe for Musl libc.
-    exit /b 0
-)
-if "%~1"=="-h" (
-    echo Usage: %~nx0 [action]
-    echo Recipe for Musl libc.
-    exit /b 0
-)
-
-set "ACTION=%~1"
-if "%ACTION%"=="" set "ACTION=compile"
-
-if not defined LIBSCRIPT_TARGET_SYSROOT (
-    for %%I in ("%SCRIPT_DIR%..\..\..") do set "REPO_ROOT=%%~fI"
-    set "TARGET_SYSROOT=!REPO_ROOT!\build\target-sysroot"
-) else (
-    set "TARGET_SYSROOT=%LIBSCRIPT_TARGET_SYSROOT%"
-)
-
-set "STAMPS_DIR=%TARGET_SYSROOT%\var\lib\libscript\stamps"
-set "STAMP_FILE=%STAMPS_DIR%\.stamp.musl"
-
-if not exist "%STAMPS_DIR%" mkdir "%STAMPS_DIR%"
-
-if exist "%STAMP_FILE%" (
-    echo [SKIP]  musl already installed ^(%STAMP_FILE%^)
-    exit /b 0
-)
-
-echo [RECIPE] Staging Musl libc into %TARGET_SYSROOT% ^(action: %ACTION%^)
-echo completed > "%STAMP_FILE%.tmp"
-move /y "%STAMP_FILE%.tmp" "%STAMP_FILE%" >nul
-echo [OK]    musl staged successfully: %STAMP_FILE%
-
-endlocal
+call "%~dp0\..\..\_common\setup_base.cmd" %*

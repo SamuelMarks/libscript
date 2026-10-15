@@ -1,0 +1,13 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "dinit",
+  "title": "Dinit",
+  "description": "Service manager and dependency-aware init system for Unix-like operating systems.",
+  "category": "init-system",
+  "provides": ["dinit", "init-system"],
+  "conflicts": [],
+  "versions": ["latest", "0.18.0"],
+  "os_whitelist": ["linux", "freebsd"],
+  "os_blacklist": ["windows"],
+  "ports": []
+}

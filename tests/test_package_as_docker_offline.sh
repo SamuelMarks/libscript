@@ -13,6 +13,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -36,8 +37,6 @@ trap 'rm -rf "$TEST_TMP_DIR"' EXIT INT TERM
 
 # ## assert_contains
 # Asserts that a file contains a given string or pattern.
-# ## assert_contains
-# Executes the assert_contains logic.
 assert_contains() {
   _file="$1"
   _pattern="$2"
@@ -51,8 +50,6 @@ assert_contains() {
 
 # ## assert_not_contains
 # Asserts that a file does not contain a given string or pattern.
-# ## assert_not_contains
-# Executes the assert_not_contains logic.
 assert_not_contains() {
   _file="$1"
   _pattern="$2"

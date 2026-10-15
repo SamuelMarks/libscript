@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/base-system/lfs-base/vars.schema.json",
+  "title": "LFS Base variables",
+  "description": "Configuration variables for LFS Base System synthesis.",
+  "type": "object",
+  "properties": {
+    "LFS_BASE_VERSION": {
+      "description": "Specific version of LFS Base System to synthesize.",
+      "type": "string",
+      "default": "latest"
+    },
+    "LFS_BASE_INSTALL_METHOD": {
+      "description": "How to install LFS_BASE. 'libscript_native' uses isolated sysroot staging, 'system' uses OS package manager.",
+      "type": "string",
+      "default": "libscript_native"
+    }
+  }
+}

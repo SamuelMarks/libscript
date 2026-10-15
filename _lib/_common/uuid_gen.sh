@@ -1,14 +1,11 @@
 #!/bin/sh
 # ## Overview
 # Deterministic UUIDv5 generator utility for LibScript Windows Installer packaging.
-# Generates reproducible GUIDs based on namespace and component name/version.
+# Generates reproducible GUIDs based on namespace and component name/version using
+# pure POSIX /bin/sh primitives (awk, printf, sha1sum/shasum/openssl).
 #
 # ## Usage
 #   _lib/_common/uuid_gen.sh <NAMESPACE_UUID> <NAME>
-#
-# ## Parameters
-#   NAMESPACE_UUID  Base UUID namespace (e.g. 6ba7b810-9dad-11d1-80b4-00c04fd430c8)
-#   NAME            Unique string seed (e.g. "libscript.mysql.8.0.39")
 
 set -feu
 
@@ -17,6 +14,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -32,6 +30,56 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+
+# ## generate_uuid_v5
+# Computes a deterministic RFC 4122 UUIDv5 string from a namespace UUID and seed name
+# using only POSIX shell utilities and standard SHA-1 digest commands.
+generate_uuid_v5() {
+  _ns="$1"
+  _seed="$2"
+
+  _ns_hex=$(printf '%s' "$_ns" | tr -d '-' | tr '[:upper:]' '[:lower:]')
+  if [ "${#_ns_hex}" -ne 32 ]; then
+    printf '[ERROR] Invalid namespace UUID: %s\n' "$_ns" >&2
+    return 1
+  fi
+
+  _octal_ns=$(printf '%s' "$_ns_hex" | awk '{
+    bs = sprintf("%c", 92)
+    for (i = 1; i <= 32; i += 2) {
+      b = substr($0, i, 2)
+      hi = index("0123456789abcdef", substr(b, 1, 1)) - 1
+      lo = index("0123456789abcdef", substr(b, 2, 1)) - 1
+      val = hi * 16 + lo
+      printf "%s0%03o", bs, val
+    }
+  }')
+
+  _sha1_hex=""
+  if command -v sha1sum >/dev/null 2>&1; then
+    _sha1_hex=$( { printf '%b' "$_octal_ns"; printf '%s' "$_seed"; } | sha1sum | awk '{print tolower($1)}' )
+  elif command -v shasum >/dev/null 2>&1; then
+    _sha1_hex=$( { printf '%b' "$_octal_ns"; printf '%s' "$_seed"; } | shasum -a 1 | awk '{print tolower($1)}' )
+  elif command -v openssl >/dev/null 2>&1; then
+    _sha1_hex=$( { printf '%b' "$_octal_ns"; printf '%s' "$_seed"; } | openssl dgst -sha1 | awk '{print tolower($NF)}' )
+  else
+    printf '[ERROR] No SHA-1 utility (sha1sum, shasum, or openssl) found.\n' >&2
+    return 1
+  fi
+
+  printf '%s' "$_sha1_hex" | awk '{
+    b6_lo = index("0123456789abcdef", substr($0, 14, 1)) - 1
+    b6_hex = sprintf("5%x", b6_lo)
+
+    b8_hi = index("0123456789abcdef", substr($0, 17, 1)) - 1
+    b8_lo = index("0123456789abcdef", substr($0, 18, 1)) - 1
+    b8_new_hi = (b8_hi % 4) + 8
+    b8_hex = sprintf("%x%x", b8_new_hi, b8_lo)
+
+    u = substr($0, 1, 8) "-" substr($0, 9, 4) "-" b6_hex substr($0, 15, 2) "-" b8_hex substr($0, 19, 2) "-" substr($0, 21, 12)
+    print toupper(u)
+  }'
+}
 
 if [ $# -ge 2 ]; then
   NAMESPACE="$1"
@@ -53,40 +101,4 @@ if [ -z "${SEED_NAME}" ]; then
   exit 1
 fi
 
-# Prefer Python if available
-if command -v python3 >/dev/null 2>&1; then
-  python3 -c "import sys, uuid; print(str(uuid.uuid5(uuid.UUID(sys.argv[1]), sys.argv[2])).upper())" "${NAMESPACE}" "${SEED_NAME}"
-  exit 0
-fi
-
-if command -v python >/dev/null 2>&1; then
-  python -c "import sys, uuid; print(str(uuid.uuid5(uuid.UUID(sys.argv[1]), sys.argv[2])).upper())" "${NAMESPACE}" "${SEED_NAME}"
-  exit 0
-fi
-
-# Prefer PowerShell if available
-if command -v pwsh >/dev/null 2>&1; then
-  # shellcheck disable=SC2016
-  pwsh -NoProfile -Command '$ns = [Guid]::Parse("'"${NAMESPACE}"'"); $bytes = $ns.ToByteArray(); [Array]::Reverse($bytes, 0, 4); [Array]::Reverse($bytes, 4, 2); [Array]::Reverse($bytes, 6, 2); $nameBytes = [System.Text.Encoding]::UTF8.GetBytes("'"${SEED_NAME}"'"); $sha = [System.Security.Cryptography.SHA1]::Create(); $hash = $sha.ComputeHash($bytes + $nameBytes); $hash[6] = ($hash[6] -band 0x0f) -bor 0x50; $hash[8] = ($hash[8] -band 0x3f) -bor 0x80; [Array]::Reverse($hash, 0, 4); [Array]::Reverse($hash, 4, 2); [Array]::Reverse($hash, 6, 2); [Guid]::new($hash[0..15]).ToString().ToUpper()'
-  exit 0
-fi
-
-# Prefer Node.js if available
-if command -v node >/dev/null 2>&1; then
-  # shellcheck disable=SC2016
-  node -e '
-const crypto = require("crypto");
-const nsStr = process.argv[1].replace(/-/g, "");
-const nsBuf = Buffer.from(nsStr, "hex");
-const nameBuf = Buffer.from(process.argv[2], "utf8");
-const hash = crypto.createHash("sha1").update(Buffer.concat([nsBuf, nameBuf])).digest();
-hash[6] = (hash[6] & 0x0f) | 0x50;
-hash[8] = (hash[8] & 0x3f) | 0x80;
-const h = hash.subarray(0, 16).toString("hex").toUpperCase();
-console.log(`${h.slice(0,8)}-${h.slice(8,12)}-${h.slice(12,16)}-${h.slice(16,20)}-${h.slice(20,32)}`);
-' "${NAMESPACE}" "${SEED_NAME}"
-  exit 0
-fi
-
-printf '[ERROR] No Python, pwsh, or Node.js available to generate UUID.\n' >&2
-exit 1
+generate_uuid_v5 "${NAMESPACE}" "${SEED_NAME}"

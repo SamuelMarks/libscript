@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/init-systems/sysvinit/vars.schema.json",
+  "title": "SysVinit variables",
+  "description": "Configuration variables for the SysVinit init system.",
+  "type": "object",
+  "properties": {
+    "SYSVINIT_VERSION": {
+      "description": "Specific version of sysvinit to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "SYSVINIT_INSTALL_METHOD": {
+      "description": "How to install SYSVINIT ('libscript_native' or 'system').",
+      "type": "string",
+      "default": "system"
+    }
+  }
+}

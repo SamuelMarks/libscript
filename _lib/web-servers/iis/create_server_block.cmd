@@ -52,11 +52,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # create_server_block.cmd
-:::: Creates and configures an IIS site and FastCGI handler on Windows.
-::
-:: ## Usage
-:: create_server_block.cmd
 
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0create_server_block.ps1" %*
 exit /b %ERRORLEVEL%

@@ -53,7 +53,7 @@ goto :find_root
 goto :%1
 
 :: ## libscript_volume_create
-:: Executes libscript_volume_create functionality.
+:: Performs the libscript_volume_create operation and updates component state.
 :libscript_volume_create
 set "provider=%~2"
 set "size=%~3"
@@ -123,7 +123,7 @@ if "%provider%"=="aws" (
 exit /b 0
 
 :: ## libscript_volume_delete
-:: Executes libscript_volume_delete functionality.
+:: Performs the libscript_volume_delete operation and updates component state.
 :libscript_volume_delete
 set "provider=%~2"
 set "vid=%~3"
@@ -158,7 +158,7 @@ if "%provider%"=="aws" (
 exit /b 0
 
 :: ## libscript_volume_list
-:: Executes libscript_volume_list functionality.
+:: Performs the libscript_volume_list operation and updates component state.
 :libscript_volume_list
 set "provider=%~2"
 call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :init
@@ -189,7 +189,7 @@ if "%provider%"=="aws" (
 exit /b 0
 
 :: ## libscript_volume_attach
-:: Executes libscript_volume_attach functionality.
+:: Performs the libscript_volume_attach operation and updates component state.
 :libscript_volume_attach
 set "provider=%~2"
 set "vid=%~3"
@@ -223,7 +223,7 @@ if "%provider%"=="aws" (
 exit /b 0
 
 :: ## libscript_volume_detach
-:: Executes libscript_volume_detach functionality.
+:: Performs the libscript_volume_detach operation and updates component state.
 :libscript_volume_detach
 set "provider=%~2"
 set "vid=%~3"

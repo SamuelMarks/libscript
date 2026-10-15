@@ -66,7 +66,7 @@ for %%A in (%*) do (
 
 :: Global Option Parsing
 :: ## opt_loop
-:: Executes opt_loop functionality.
+:: Performs the opt_loop operation and updates component state.
 :opt_loop
 set "arg=%~1"
 if "!arg!"=="" goto :run_cmd
@@ -135,7 +135,7 @@ if "!is_opt!"=="1" (
 )
 
 :: ## run_cmd
-:: Executes run_cmd functionality.
+:: Performs the run_cmd operation and updates component state.
 :run_cmd
 set "cmd=%~1"
 if "%cmd%"=="" goto show_help
@@ -246,7 +246,7 @@ if "%is_action%"=="1" (
 )
 
 :: ## match_component
-:: Executes match_component functionality.
+:: Performs the match_component operation and updates component state.
 :match_component
 set "target="
 if /i "%action_pkg%"=="cloud" (
@@ -315,7 +315,7 @@ for /d %%C in ("%SCRIPT_DIR%\_lib\*") do (
 exit /b 1
 
 :: ## run_target
-:: Executes run_target functionality.
+:: Performs the run_target operation and updates component state.
 :run_target
 if exist "%target%\cli.cmd" (
     call "%target%\cli.cmd" %*
@@ -326,7 +326,7 @@ if exist "%target%\cli.cmd" (
 )
 
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line usage instructions and available options.
 :show_help
 echo LibScript Global CLI
 echo ====================

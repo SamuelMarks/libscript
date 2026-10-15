@@ -10,6 +10,7 @@
 :: Execute this script to perform multi-platform Vagrant verification:
 ::   ./tests/test_live_installer_matrix.cmd [--all | --platform <linux|freebsd|sunos|windows|macos>]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -52,14 +53,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # test_live_installer_matrix.cmd
-:::: Multi-platform Vagrant verification harness for the msi-rs live installer on Windows.
-:: Runs end-to-end testing strictly inside isolated Vagrant virtual machines.
-::
-:: ## Usage
-:: Call test_live_installer_matrix.cmd [--all | --platform <name>]
 
-setlocal EnableDelayedExpansion
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help

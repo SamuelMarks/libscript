@@ -52,13 +52,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # update_results.cmd
-:::: Updates the Supported Components table in README.md (or custom output file)
-:: with test results from tests_tmp, updates component tasks in TODO_PLAN.md if present,
-:: and optionally exports an aggregated JSON test results matrix on Windows.
-::
-:: ## Usage
-:: tests\update_results.cmd [REPO_ROOT] [--output <markdown_file>] [--json [json_file]] [--help]
 
 set "THIS_DIR=%~dp0"
 if "%THIS_DIR:~-1%"=="" set "THIS_DIR=%THIS_DIR:~0,-1%"

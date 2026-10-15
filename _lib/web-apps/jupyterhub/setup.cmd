@@ -2,11 +2,11 @@
 :: # setup.cmd
 ::
 :: ## Overview
-:: Orchestrates the setup and installation process for the JupyterHub data science platform stack on Windows.
-:: Installs jupyterhub via Python and configurable-http-proxy via npm if available.
-:: 
+:: Installation and configuration entrypoint for the jupyterhub component on Windows.
+:: Delegates execution to the shared _lib\_common\setup_base.cmd module.
+::
 :: ## Usage
-:: Execute this script to install and configure jupyterhub on the local system.
+:: setup.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -52,35 +52,4 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-where python >nul 2>&1
-if errorlevel 1 (
-    echo [ERROR] Python is required for JupyterHub.
-    exit /b 1
-)
-
-echo [INFO] Installing JupyterHub via Python pip...
-python -m pip install --quiet --upgrade jupyterhub
-if errorlevel 1 (
-    echo [ERROR] Failed to install JupyterHub via pip.
-    exit /b 1
-)
-
-where npm >nul 2>&1
-if not errorlevel 1 (
-    echo [INFO] Installing configurable-http-proxy via npm...
-    call npm install -g configurable-http-proxy >nul 2>&1
-)
-
-set "BIN_DIR=%USERPROFILE%\.libscript\jupyterhub\latest\bin"
-if not exist "!BIN_DIR!" mkdir "!BIN_DIR!"
-
-(
-    echo @echo off
-    echo python -m jupyterhub %%*
-) > "!BIN_DIR!\jupyterhub.cmd"
-
-if not exist "%USERPROFILE%\.local\bin" mkdir "%USERPROFILE%\.local\bin"
-copy /y "!BIN_DIR!\jupyterhub.cmd" "%USERPROFILE%\.local\bin\jupyterhub.cmd" >nul 2>&1
-
-echo [INFO] JupyterHub setup completed successfully.
-exit /b 0
+call "%~dp0\..\..\_common\setup_base.cmd" %*

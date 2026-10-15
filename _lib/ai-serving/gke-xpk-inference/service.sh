@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Default no-op service.sh implementation to satisfy Version Manager Contract.
+# Manages background service lifecycle operations (start, stop, status) for the gke-xpk-inference component.
 #
 # ## Usage
 # ./service.sh

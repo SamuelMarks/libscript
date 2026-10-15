@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/freebsd/distro/vars.schema.json",
+  "title": "FreeBSD Distro variables",
+  "description": "Configuration variables for FreeBSD distribution synthesis.",
+  "type": "object",
+  "properties": {
+    "FREEBSD_DISTRO_VERSION": {
+      "description": "Target FreeBSD release version to synthesize.",
+      "type": "string",
+      "default": "14.1-RELEASE"
+    },
+    "FREEBSD_DISTRO_INSTALL_METHOD": {
+      "description": "How to run FreeBSD distro synthesis ('libscript_native' or 'system').",
+      "type": "string",
+      "default": "libscript_native"
+    }
+  }
+}

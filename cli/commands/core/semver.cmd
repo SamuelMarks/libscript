@@ -93,7 +93,7 @@ if "!b3!"=="" set "b3=0"
 if "!b4!"=="" set "b4=0"
 
 :: ## compare_semver
-:: Executes compare_semver functionality.
+:: Performs the compare_semver operation and updates component state.
 :compare_semver
 set "cmp=0"
 if !a1! GTR !b1! (set "cmp=1") else if !a1! LSS !b1! (set "cmp=-1") else (

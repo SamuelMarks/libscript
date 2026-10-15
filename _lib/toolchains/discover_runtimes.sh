@@ -13,6 +13,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -32,36 +33,34 @@ export DIR="${SCRIPT_DIR}"
 
 # ## discover_python
 # Probes for Python in standard PATH, common installation prefixes, and legacy libscript bundles.
-# ## discover_python
-# Executes the discover_python logic.
 discover_python() {
-  local py_path=""
+  _py_path=""
   if command -v python3 >/dev/null 2>&1; then
-    py_path=$(command -v python3)
+    _py_path=$(command -v python3)
   elif command -v python >/dev/null 2>&1; then
-    py_path=$(command -v python)
+    _py_path=$(command -v python)
   fi
 
-  if [ -z "$py_path" ]; then
+  if [ -z "$_py_path" ]; then
     for p in /usr/bin/python3 /usr/local/bin/python3 /opt/homebrew/bin/python3 /opt/local/bin/python3; do
       if [ -x "$p" ]; then
-        py_path="$p"
+        _py_path="$p"
         break
       fi
     done
   fi
 
-  if [ -z "$py_path" ]; then
+  if [ -z "$_py_path" ]; then
     for p in "/opt/libscript/python/bin/python3" "/usr/local/libscript/python/bin/python3"; do
       if [ -x "$p" ]; then
-        py_path="$p"
+        _py_path="$p"
         break
       fi
     done
   fi
 
-  if [ -n "$py_path" ]; then
-    printf 'python_path="%s"\n' "$py_path"
+  if [ -n "$_py_path" ]; then
+    printf 'python_path="%s"\n' "$_py_path"
     return 0
   fi
   return 1

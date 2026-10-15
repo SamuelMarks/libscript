@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/languages/tcc/vars.schema.json",
+  "title": "tcc vars",
+  "description": "Configuration variables for the Tiny C Compiler (TCC) recipe",
+  "type": "object",
+  "properties": {
+    "TCC_VERSION": {
+      "description": "Version of Tiny C Compiler (TCC) to install or build.",
+      "type": "string",
+      "default": "0.9.27",
+      "version_aliases": ["latest", "stable"]
+    },
+    "TCC_INSTALL_METHOD": {
+      "description": "Installation strategy for TCC ('system' via package manager, 'from-source' compiled from source, or 'libscript_native').",
+      "type": "string",
+      "enum": ["system", "from-source", "libscript_native"],
+      "default": "system"
+    },
+    "TCC_PKG_MGR": {
+      "description": "Specific package manager to use when installing TCC (e.g., apt-get, apk, dnf, brew, pacman, winget, choco, scoop, nix, spack).",
+      "type": "string"
+    },
+    "TCC_BUILD_TOOLCHAIN": {
+      "description": "Bootstrap C toolchain used when TCC_INSTALL_METHOD='from-source' ('default', 'gcc', 'clang', 'custom-cc').",
+      "type": "string",
+      "default": "default"
+    },
+    "TCC_DOWNLOAD_URL": {
+      "description": "Explicit source tarball or archive URL for TCC.",
+      "type": "string"
+    },
+    "TCC_GIT_URL": {
+      "description": "Git repository URL for building TCC from source.",
+      "type": "string",
+      "default": "https://repo.or.cz/tinycc.git"
+    },
+    "TCC_CFLAGS": {
+      "description": "Default compiler flags exported when using TCC.",
+      "type": "string",
+      "default": "-O2"
+    }
+  }
+}

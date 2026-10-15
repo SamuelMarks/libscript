@@ -51,12 +51,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # capture_openedx_screenshots.cmd
-:::: Captures pixel-perfect screenshots of every step and enumeration in the Open edX
-:: Windows Installer (.msi) wizard using Vagrant Windows 11 and QEMU screendump.
-::
-:: ## Usage
-:: Call devtools\capture_openedx_screenshots.cmd [--help]
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help
@@ -79,6 +73,5 @@ exit /b 0
 :: ## main
 :: Executes primary orchestration routine.
 :main
-setlocal EnableDelayedExpansion
 call "%SCRIPT_DIR%capture_openedx_vagrant_screenshots.cmd" %*
 exit /b %ERRORLEVEL%

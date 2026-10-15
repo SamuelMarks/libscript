@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/graphics/intel-media-driver/vars.schema.json",
+  "title": "Intel Media Driver variables",
+  "description": "Configuration variables for the Intel Media Driver (VA-API).",
+  "type": "object",
+  "properties": {
+    "INTEL_MEDIA_DRIVER_VERSION": {
+      "description": "Specific version of intel-media-driver to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "INTEL_MEDIA_DRIVER_INSTALL_METHOD": {
+      "description": "How to install INTEL_MEDIA_DRIVER ('libscript_native' or 'system').",
+      "type": "string",
+      "default": "system"
+    }
+  }
+}

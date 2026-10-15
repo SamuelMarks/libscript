@@ -10,6 +10,7 @@
 :: Execute this script to stage Open edX in target sysroot:
 ::   ./_lib/package-managers/msi-rs/workloads/openedx.cmd [target_dir]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -52,14 +53,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # openedx.cmd
-:::: Open edX workload deployment orchestrator for Windows environments.
-:: Preloads Open edX platform components and database configurations into target directories.
-::
-:: ## Usage
-:: Call openedx.cmd [target_dir]
 
-setlocal EnableDelayedExpansion
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help

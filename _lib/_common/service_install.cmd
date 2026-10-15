@@ -1,13 +1,11 @@
-:: LibScript Service Installer for Windows
-:: Registers a Windows service
 @echo off
 :: # service_install.cmd
 ::
 :: ## Overview
-:: Internal script for service_install on Windows.
+:: Internal script for service_install on Windows. Registers or removes a Windows service.
 ::
 :: ## Usage
-:: Executes initialization, logic, or testing for service_install.
+:: service_install.cmd <install|uninstall> <service_name> [exec_start] [description]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"

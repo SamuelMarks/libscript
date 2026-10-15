@@ -50,7 +50,7 @@ goto :find_root
 
 :: Parse offline and npm options
 :: ## arg_parse_loop
-:: Executes arg_parse_loop functionality.
+:: Parses command-line arguments and populates configuration variables.
 :arg_parse_loop
 if "%~1"=="" goto :arg_parse_done
 if /i "%~1"=="--offline" set "LIBSCRIPT_OFFLINE=1"
@@ -66,7 +66,7 @@ if /i "%~1"=="--yarn-offline-mirror" (
 shift
 goto :arg_parse_loop
 :: ## arg_parse_done
-:: Executes arg_parse_done functionality.
+:: Continues execution after command-line argument parsing completes.
 :arg_parse_done
 
 if "%LIBSCRIPT_OFFLINE%"=="1" (
@@ -121,7 +121,7 @@ goto :action_install
 goto :action_install
 
 :: ## action_ls
-:: Executes action_ls functionality.
+:: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
 :action_ls
 if "%NODEJS_INSTALL_METHOD%"=="mise" ( mise ls nodejs & exit /b 0 )
 if "%NODEJS_INSTALL_METHOD%"=="asdf" ( asdf list nodejs & exit /b 0 )
@@ -132,7 +132,7 @@ if exist "%LIBSCRIPT_HOME%\nodejs" ( dir /b "%LIBSCRIPT_HOME%\nodejs" )
 exit /b 0
 
 :: ## action_ls_remote
-:: Executes action_ls_remote functionality.
+:: Lists upstream release versions available for download.
 :action_ls_remote
 if "%NODEJS_INSTALL_METHOD%"=="mise" ( mise ls-remote nodejs & exit /b 0 )
 if "%NODEJS_INSTALL_METHOD%"=="asdf" ( asdf list all nodejs & exit /b 0 )
@@ -147,7 +147,7 @@ if not "%NODEJS_RELEASES_URL%"=="" (
 exit /b 0
 
 :: ## action_use
-:: Executes action_use functionality.
+:: Activates the specified component version by updating the active symlink or junction.
 :action_use
 if "%NODEJS_INSTALL_METHOD%"=="mise" ( mise use "nodejs@%NODEJS_VERSION%" & exit /b 0 )
 if "%NODEJS_INSTALL_METHOD%"=="asdf" ( asdf global nodejs "%NODEJS_VERSION%" & exit /b 0 )
@@ -172,7 +172,7 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 exit /b 0
 
 :: ## action_download
-:: Executes action_download functionality.
+:: Downloads the component release archive into the local offline cache directory.
 :action_download
 if "%NODEJS_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading nodejs %NODEJS_VERSION% to %DOWNLOAD_DIR%\nodejs...
@@ -186,7 +186,7 @@ if "%NODEJS_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_install
-:: Executes action_install functionality.
+:: Installs and configures the requested version of the component.
 :action_install
 if "%NODEJS_INSTALL_METHOD%"=="system" (
     winget install nodejs --accept-package-agreements --accept-source-agreements
@@ -226,7 +226,7 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 exit /b 0
 
 :: ## action_service
-:: Executes action_service functionality.
+:: Routes service daemon control actions (start, stop, restart, status) to the service manager.
 :action_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -247,7 +247,7 @@ if "%NODEJS_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_install_service
-:: Executes action_install_service functionality.
+:: Registers and configures the component as a persistent system service.
 :action_install_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -268,7 +268,7 @@ if "%NODEJS_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_uninstall_service
-:: Executes action_uninstall_service functionality.
+:: Stops and removes the registered system service for the component.
 :action_uninstall_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (

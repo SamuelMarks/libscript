@@ -16,6 +16,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -41,8 +42,6 @@ VAGRANT_DIR="${REPO_ROOT}/vagrant/windows-11"
 
 # ## discover_environment
 # Discovers running QEMU process, SSH port, and monitor socket for Windows 11 Vagrant VM.
-# ## discover_environment
-# Executes the discover_environment logic.
 discover_environment() {
   printf '[INFO] Discovering Windows 11 Vagrant environment...\n'
   SSH_PORT=$(ps aux | awk '/[q]emu.*windows-11/' | sed -n 's/.*hostfwd=tcp::\([0-9]*\)-:22.*/\1/p' | head -n 1 || true)
@@ -71,16 +70,12 @@ discover_environment() {
 
 # ## vm_run
 # Helper to run commands in the guest via SSH.
-# ## vm_run
-# Executes the vm_run logic.
 vm_run() {
   $SSH_CMD "$*; exit 0"
 }
 
 # ## wait_for_ssh
 # Waits until Windows guest is reachable via SSH.
-# ## wait_for_ssh
-# Executes the wait_for_ssh logic.
 wait_for_ssh() {
   printf '[INFO] Waiting for Windows guest SSH to become available...\n'
   _attempts=0
@@ -98,8 +93,6 @@ wait_for_ssh() {
 
 # ## capture_screen
 # Helper to capture QEMU screendump and convert to PNG.
-# ## capture_screen
-# Executes the capture_screen logic.
 capture_screen() {
   _name="$1"
   _ppm="${TEMP_DIR}/${_name}.ppm"
@@ -125,8 +118,6 @@ capture_screen() {
 
 # ## vm_action
 # Helper to execute UI automation actions in Session 1 without visible console windows.
-# ## vm_action
-# Executes the vm_action logic.
 vm_action() {
   _act="$1"
   _limit=25
@@ -138,12 +129,14 @@ vm_action() {
 }
 
 # ## vm_click
+# Performs the vm_click operation and updates component state.
 vm_click() {
   vm_action "CLICK:$1"
   sleep 1.5
 }
 
 # ## vm_radio
+# Performs the vm_radio operation and updates component state.
 vm_radio() {
   vm_action "RADIO:$1"
   sleep 1.5
@@ -151,8 +144,6 @@ vm_radio() {
 
 # ## vm_check
 # shellcheck disable=SC2329
-# ## vm_check
-# Executes the vm_check logic.
 vm_check() {
   vm_action "CHECK:$1"
   sleep 1
@@ -160,14 +151,13 @@ vm_check() {
 
 # ## vm_uncheck
 # shellcheck disable=SC2329
-# ## vm_uncheck
-# Executes the vm_uncheck logic.
 vm_uncheck() {
   vm_action "UNCHECK:$1"
   sleep 1
 }
 
 # ## vm_set_edit
+# Performs the vm_set_edit operation and updates component state.
 vm_set_edit() {
   _idx="$1"
   _val="$2"
@@ -176,6 +166,7 @@ vm_set_edit() {
 }
 
 # ## vm_wait_dialog
+# Performs the vm_wait_dialog operation and updates component state.
 vm_wait_dialog() {
   _title="$1"
   vm_action "WAIT_DIALOG:$_title"
@@ -184,8 +175,6 @@ vm_wait_dialog() {
 
 # ## vm_wait
 # shellcheck disable=SC2329
-# ## vm_wait
-# Executes the vm_wait logic.
 vm_wait() {
   _btn="$1"
   vm_action "WAIT:$_btn"
@@ -193,12 +182,14 @@ vm_wait() {
 }
 
 # ## vm_launch_msi
+# Performs the vm_launch_msi operation and updates component state.
 vm_launch_msi() {
   _msi_path="$1"
   vm_run "\$principal = New-ScheduledTaskPrincipal -UserId 'vagrant' -LogonType Interactive; \$aLaunch = New-ScheduledTaskAction -Execute 'msiexec.exe' -Argument '/i ${_msi_path}'; Register-ScheduledTask -TaskName 'LaunchMsi' -Action \$aLaunch -Principal \$principal -Force | Out-Null; Start-ScheduledTask -TaskName 'LaunchMsi'; Start-Sleep -Seconds 4"
 }
 
 # ## launch_browser_url
+# Performs the launch_browser_url operation and updates component state.
 launch_browser_url() {
   _url="$1"
   vm_run "cmd.exe /c call C:\libscript\packaging\open_browser.cmd $_url"
@@ -206,6 +197,7 @@ launch_browser_url() {
 }
 
 # ## clean_guest_installations
+# Performs the clean_guest_installations operation and updates component state.
 clean_guest_installations() {
   printf '[INFO] Cleaning prior installations and browser sessions on guest...\n'
   # shellcheck disable=SC2016
@@ -214,6 +206,7 @@ clean_guest_installations() {
 }
 
 # ## sync_guest_environment
+# Synchronizes the LibScript repository and environment to the guest VM.
 sync_guest_environment() {
   printf '[INFO] Syncing scripts, assets, and MSIs to Windows guest...\n'
   scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" \
@@ -279,8 +272,6 @@ vagrant@127.0.0.1:C:/libscript/stacks/cms/wordpress/
 
 # ## restore_vanilla_snapshot
 # Restores VM disk image to vanilla snapshot and restarts Vagrant machine.
-# ## restore_vanilla_snapshot
-# Executes the restore_vanilla_snapshot logic.
 restore_vanilla_snapshot() {
   printf '
 =======================================================
@@ -313,8 +304,6 @@ restore_vanilla_snapshot() {
 
 # ## run_installer_wizard
 # Executes the complete Simple and Advanced mode UI wizard flows, capturing all screenshots.
-# ## run_installer_wizard
-# Executes the run_installer_wizard logic.
 run_installer_wizard() {
   _mode_name="$1"
   _msi_file="$2"

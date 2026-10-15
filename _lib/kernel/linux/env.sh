@@ -1,9 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Default no-op env.sh implementation to satisfy Version Manager Contract.
+# Exports isolated environment paths and runtime variables for the linux component.
 #
 # ## Usage
-# ./env.sh
+# . ./_lib/kernel/linux/env.sh
 
 set -feu
 
@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -27,5 +28,8 @@ esac
 export STACK="${STACK:-}${THIS_FILE}":
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+export LIBSCRIPT_ROOT_DIR
 
-exit 0
+export LINUX_VERSION="${LINUX_VERSION:-6.6.52}"
+export LINUX_CONFIG_TARGET="${LINUX_CONFIG_TARGET:-tinyconfig}"
+export LINUX_BUILD_TOOLCHAIN="${LINUX_BUILD_TOOLCHAIN:-${LINUX_COMPILER:-default}}"

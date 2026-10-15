@@ -67,7 +67,7 @@ if /i "%ACTION%"=="build-redhat" goto do_redhat
 if /i "%ACTION%"=="redhat" goto do_redhat
 
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line usage instructions and available options.
 :show_help
 echo Usage: distro.cmd ^<build-debian ^| build-alpine ^| build-redhat^> [options...]
 echo Commands:
@@ -77,19 +77,19 @@ echo   build-redhat   Synthesizes Red Hat-style distribution (.rpm, dnf, rpmbuil
 exit /b 1
 
 :: ## do_debian
-:: Executes do_debian functionality.
+:: Performs the do_debian operation and updates component state.
 :do_debian
 call "%SCRIPT_DIR%\build_debian.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_alpine
-:: Executes do_alpine functionality.
+:: Performs the do_alpine operation and updates component state.
 :do_alpine
 call "%SCRIPT_DIR%\build_alpine.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_redhat
-:: Executes do_redhat functionality.
+:: Performs the do_redhat operation and updates component state.
 :do_redhat
 call "%SCRIPT_DIR%\build_redhat.cmd" %*
 exit /b %ERRORLEVEL%

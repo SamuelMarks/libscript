@@ -63,7 +63,7 @@ if "%~1"=="push_state" goto push_state
 goto :eof
 
 :: ## lock_state
-:: Executes lock_state functionality.
+:: Performs the lock_state operation and updates component state.
 :lock_state
 if "%REMOTE_STATE_URI%"=="" (
     if exist "%STATE_FILE%.lock" (
@@ -78,7 +78,7 @@ echo   -^> Mock: Lock acquired for %REMOTE_STATE_URI%
 exit /b 0
 
 :: ## unlock_state
-:: Executes unlock_state functionality.
+:: Performs the unlock_state operation and updates component state.
 :unlock_state
 if "%REMOTE_STATE_URI%"=="" (
     if exist "%STATE_FILE%.lock" del "%STATE_FILE%.lock"
@@ -89,7 +89,7 @@ echo   -^> Mock: Lock released for %REMOTE_STATE_URI%
 exit /b 0
 
 :: ## pull_state
-:: Executes pull_state functionality.
+:: Performs the pull_state operation and updates component state.
 :pull_state
 if not "%REMOTE_STATE_URI%"=="" (
     echo [STATE] Pulling state from %REMOTE_STATE_URI%...
@@ -97,7 +97,7 @@ if not "%REMOTE_STATE_URI%"=="" (
 exit /b 0
 
 :: ## push_state
-:: Executes push_state functionality.
+:: Performs the push_state operation and updates component state.
 :push_state
 if not "%REMOTE_STATE_URI%"=="" (
     echo [STATE] Pushing state to %REMOTE_STATE_URI%...

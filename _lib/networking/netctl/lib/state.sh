@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,9 +36,7 @@ export SCRIPT_NAME
 NETCTL_STATE_FILE="${NETCTL_STATE_FILE:-.netctl.json}"
 
 # ## netctl_init
-# Executes netctl_init functionality.
-# ## netctl_init
-# Executes the netctl_init logic.
+# Performs the netctl_init operation and updates component state.
 netctl_init() {
   if [ ! -s "$NETCTL_STATE_FILE" ]; then
     printf '%s\n' '{"listen":[],"routes":{}}' > "$NETCTL_STATE_FILE"
@@ -45,9 +44,7 @@ netctl_init() {
 }
 
 # ## netctl_state_write
-# Executes netctl_state_write functionality.
-# ## netctl_state_write
-# Executes the netctl_state_write logic.
+# Performs the netctl_state_write operation and updates component state.
 netctl_state_write() {
   # Write stdin to state file safely
   cat > "${NETCTL_STATE_FILE}.tmp"
@@ -55,9 +52,7 @@ netctl_state_write() {
 }
 
 # ## netctl_add_listen
-# Executes netctl_add_listen functionality.
-# ## netctl_add_listen
-# Executes the netctl_add_listen logic.
+# Performs the netctl_add_listen operation and updates component state.
 netctl_add_listen() {
   port="$1"
   netctl_init
@@ -65,9 +60,7 @@ netctl_add_listen() {
 }
 
 # ## netctl_add_static
-# Executes netctl_add_static functionality.
-# ## netctl_add_static
-# Executes the netctl_add_static logic.
+# Performs the netctl_add_static operation and updates component state.
 netctl_add_static() {
   path="$1"
   target="$2"
@@ -76,9 +69,7 @@ netctl_add_static() {
 }
 
 # ## netctl_add_proxy
-# Executes netctl_add_proxy functionality.
-# ## netctl_add_proxy
-# Executes the netctl_add_proxy logic.
+# Performs the netctl_add_proxy operation and updates component state.
 netctl_add_proxy() {
   path="$1"
   target="$2"
@@ -87,9 +78,7 @@ netctl_add_proxy() {
 }
 
 # ## netctl_add_rewrite
-# Executes netctl_add_rewrite functionality.
-# ## netctl_add_rewrite
-# Executes the netctl_add_rewrite logic.
+# Performs the netctl_add_rewrite operation and updates component state.
 netctl_add_rewrite() {
   path="$1"
   pattern="$2"

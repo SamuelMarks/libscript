@@ -11,6 +11,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -31,9 +32,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 . "$LIBSCRIPT_ROOT_DIR/_lib/cloud/core/tags.sh"
 
 # ## libscript_cdn_create
-# Executes libscript_cdn_create functionality.
-# ## libscript_cdn_create
-# Executes the libscript_cdn_create logic.
+# Performs the libscript_cdn_create operation and updates component state.
 libscript_cdn_create() {
   provider="$1"
   bucket="$2"
@@ -174,9 +173,7 @@ POLICY_EOF
 }
 
 # ## libscript_cdn_delete
-# Executes libscript_cdn_delete functionality.
-# ## libscript_cdn_delete
-# Executes the libscript_cdn_delete logic.
+# Performs the libscript_cdn_delete operation and updates component state.
 libscript_cdn_delete() {
   provider="$1"
   dist_id="$2"
@@ -208,9 +205,7 @@ libscript_cdn_delete() {
 }
 
 # ## libscript_cdn_list
-# Executes libscript_cdn_list functionality.
-# ## libscript_cdn_list
-# Executes the libscript_cdn_list logic.
+# Performs the libscript_cdn_list operation and updates component state.
 libscript_cdn_list() {
   provider="$1"
   
@@ -229,9 +224,7 @@ libscript_cdn_list() {
 }
 
 # ## libscript_cdn_invalidate
-# Executes libscript_cdn_invalidate functionality.
-# ## libscript_cdn_invalidate
-# Executes the libscript_cdn_invalidate logic.
+# Performs the libscript_cdn_invalidate operation and updates component state.
 libscript_cdn_invalidate() {
   provider="$1"
   dist_id="$2"

@@ -13,6 +13,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -31,8 +32,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## show_help
 # Displays usage instructions and available parameters.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") <artifact_path> [artifact_path...]"
   printf '%s\n' "Validates artifact files and produces companion .sha256 checksum files."
@@ -55,8 +54,6 @@ fi
 
 # ## compute_sha256
 # Computes the SHA256 cryptographic hash of a file using available system tools.
-# ## compute_sha256
-# Executes the compute_sha256 logic.
 compute_sha256() {
   _target="$1"
   if command -v sha256sum >/dev/null 2>&1; then
@@ -73,8 +70,6 @@ compute_sha256() {
 
 # ## prepare_single_artifact
 # Verifies target artifact file exists and generates companion .sha256 checksum file.
-# ## prepare_single_artifact
-# Executes the prepare_single_artifact logic.
 prepare_single_artifact() {
   _file="$1"
   if [ ! -f "$_file" ]; then

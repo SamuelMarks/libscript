@@ -68,15 +68,11 @@ for /d %%S in ("%ProgramFiles%\Swift\Toolchains\*") do (
     )
 )
 
-echo Installing Swift Toolchain via winget...
-winget install --id Swift.Toolchain --silent --accept-package-agreements --accept-source-agreements --override "/quiet /install /norestart OptionsInstallDBG=0 OptionsInstallIDE=0 OptionsInstallPy=0 OptionsInstallSupport=0 OptionsInstallUtilities=0 OptionsInstallWindowsSDKX86=0 OptionsInstallWindowsRedistX86=0 OptionsInstallWindowsSDKAMD64=0 OptionsInstallWindowsRedistAMD64=0 OptionsInstallAndroidPlatform=0 OptionsInstallAndroidSDKARM64=0 OptionsInstallAndroidSDKAMD64=0"
-if errorlevel 1 (
-    echo Retrying Swift Toolchain install with standard parameters...
-    winget install --id Swift.Toolchain --silent --accept-package-agreements --accept-source-agreements
-)
+echo Installing Swift Toolchain via pkg_mgr...
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends "Swift.Toolchain"
 
 :: ## create_shims
-:: Executes create_shims functionality.
+:: Creates executable command shims for the installed Swift toolchain in the user bin directory.
 :create_shims
 for /d %%S in ("%LOCALAPPDATA%\Programs\Swift\Toolchains\*") do (
     if exist "%%S\usr\bin\swift.exe" set "SWIFT_BIN=%%S\usr\bin"

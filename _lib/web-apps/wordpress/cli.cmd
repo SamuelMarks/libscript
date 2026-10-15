@@ -83,65 +83,66 @@ if /I "%CMD%"=="cron" goto do_cron
 if /I "%CMD%"=="upgrade" goto do_upgrade
 if /I "%CMD%"=="wp" goto do_wp
 
-echo [ERROR] Unknown subcommand: %CMD% >&2
-goto show_help
+set "PACKAGE_NAME=wordpress"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\component_core.cmd" %*
+exit /b %ERRORLEVEL%
 
 :: ## do_service
-:: Executes do_service functionality.
+:: Dispatches service lifecycle actions (start, stop, restart, status) to service.cmd.
 :do_service
 call "%SCRIPT_DIR%\service.cmd" %CMD% %*
 exit /b %ERRORLEVEL%
 
 :: ## do_user
-:: Executes do_user functionality.
+:: Dispatches WordPress user administration subcommands to user.cmd.
 :do_user
 call "%SCRIPT_DIR%\user.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_config
-:: Executes do_config functionality.
+:: Dispatches wp-config.php and environment configuration subcommands to config.cmd.
 :do_config
 call "%SCRIPT_DIR%\config.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_dbshell
-:: Executes do_dbshell functionality.
+:: Dispatches interactive MySQL shell and SQL query execution to dbshell.cmd.
 :do_dbshell
 call "%SCRIPT_DIR%\dbshell.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_healthcheck
-:: Executes do_healthcheck functionality.
+:: Dispatches system diagnostics and connectivity checks to healthcheck.cmd.
 :do_healthcheck
 call "%SCRIPT_DIR%\healthcheck.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_backup
-:: Executes do_backup functionality.
+:: Dispatches snapshot archive creation to backup.cmd.
 :do_backup
 call "%SCRIPT_DIR%\backup.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_restore
-:: Executes do_restore functionality.
+:: Dispatches snapshot archive restoration to restore.cmd.
 :do_restore
 call "%SCRIPT_DIR%\restore.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_cron
-:: Executes do_cron functionality.
+:: Dispatches WP-Cron background task management to cron.cmd.
 :do_cron
 call "%SCRIPT_DIR%\cron.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_upgrade
-:: Executes do_upgrade functionality.
+:: Dispatches WordPress core/plugin upgrade pipelines to upgrade.cmd.
 :do_upgrade
 call "%SCRIPT_DIR%\upgrade.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_wp
-:: Executes do_wp functionality.
+:: Executes raw WP-CLI commands against the configured WordPress document root.
 :do_wp
 where wp >nul 2>&1
 if not errorlevel 1 (
@@ -156,7 +157,7 @@ echo [ERROR] WP-CLI executable or phar not found. >&2
 exit /b 1
 
 :: ## show_help
-:: Executes show_help functionality.
+:: Prints usage instructions and available subcommands for the WordPress CLI on Windows.
 :show_help
 echo WordPress 7.1.2 Management Console on Windows
 echo.

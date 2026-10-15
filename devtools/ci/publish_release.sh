@@ -14,6 +14,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -32,8 +33,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## show_help
 # Displays usage instructions and supported CLI parameters.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") --tag <tag> [OPTIONS]"
   printf '%s\n' "Publishes installer artifacts and checksums to GitHub Releases."
@@ -105,8 +104,6 @@ fi
 
 # ## generate_sums
 # Generates consolidated SHA256SUMS.txt inside the distribution directory if needed.
-# ## generate_sums
-# Executes the generate_sums logic.
 generate_sums() {
   _dir="$1"
   if [ -d "$_dir" ]; then
@@ -142,8 +139,6 @@ generate_sums() {
 
 # ## upload_or_create_release
 # Creates a new GitHub Release or attaches assets to an existing release idempotently.
-# ## upload_or_create_release
-# Executes the upload_or_create_release logic.
 upload_or_create_release() {
   _tag="$1"
   _title="$2"

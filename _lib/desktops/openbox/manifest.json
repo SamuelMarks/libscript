@@ -1,0 +1,13 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "openbox",
+  "title": "Openbox",
+  "description": "Highly configurable, next-generation X11 stacking window manager with extensive standards support.",
+  "category": "desktop",
+  "provides": ["openbox", "window-manager"],
+  "conflicts": [],
+  "versions": ["latest", "3.6.1"],
+  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd"],
+  "os_blacklist": ["windows"],
+  "ports": []
+}

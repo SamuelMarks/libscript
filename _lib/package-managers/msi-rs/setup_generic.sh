@@ -14,6 +14,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -54,8 +55,6 @@ REPO_URL="${MSI_RS_REPO_URL:-https://github.com/SamuelMarks/msi-rs}"
 
 # ## resolve_exact_version
 # Resolves the exact semver or branch version for msi-rs.
-# ## resolve_exact_version
-# Executes the resolve_exact_version logic.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ] || [ -z "${VERSION:-}" ]; then
     EXACT_VERSION="v0.0.1"
@@ -66,8 +65,6 @@ resolve_exact_version() {
 
 # ## ensure_c_toolchain
 # Verifies presence of a functional C compiler or installs it using libscript languages/c.
-# ## ensure_c_toolchain
-# Executes the ensure_c_toolchain logic.
 ensure_c_toolchain() {
   if ! command -v cc >/dev/null 2>&1 && ! command -v gcc >/dev/null 2>&1 && ! command -v clang >/dev/null 2>&1; then
     log_info "C toolchain not detected; bootstrapping standard C compiler..."
@@ -82,8 +79,6 @@ ensure_c_toolchain() {
 
 # ## ensure_rust_toolchain
 # Verifies presence of cargo and rustc or installs the Rust toolchain via libscript languages/rust.
-# ## ensure_rust_toolchain
-# Executes the ensure_rust_toolchain logic.
 ensure_rust_toolchain() {
   [ -f "${HOME}/.cargo/env" ] && . "${HOME}/.cargo/env"
   [ -d "${HOME}/.cargo/bin" ] && export PATH="${HOME}/.cargo/bin:${PATH}"
@@ -109,8 +104,6 @@ ensure_rust_toolchain() {
 
 # ## install_binaries_from_dir
 # Copies built binaries from target release folder into the target prefix and links aliases.
-# ## install_binaries_from_dir
-# Executes the install_binaries_from_dir logic.
 install_binaries_from_dir() {
   src_dir="$1"
   dest_bin="${TARGET_DIR}/bin"

@@ -57,7 +57,7 @@ if /I "%~1"=="-?" goto :show_help
 goto :main
 
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line usage instructions and available options.
 :show_help
 echo Usage: %~nx0
 echo Runs the test suite and validation scripts for the 'netctl' stack.
@@ -67,7 +67,7 @@ echo   --help, -h, /?, -?  Show this help message.
 exit /b 0
 
 :: ## main
-:: Executes main functionality.
+:: Executes the primary orchestration workflow for this script.
 :main
 echo Testing netctl is not supported via this script.
 exit /b 0

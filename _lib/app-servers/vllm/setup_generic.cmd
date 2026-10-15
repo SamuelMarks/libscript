@@ -87,7 +87,7 @@ goto :action_install
 goto :action_install
 
 :: ## action_ls
-:: Executes action_ls functionality.
+:: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
 :action_ls
 if "%VLLM_INSTALL_METHOD%"=="mise" ( mise ls vllm & exit /b 0 )
 if "%VLLM_INSTALL_METHOD%"=="asdf" ( asdf list vllm & exit /b 0 )
@@ -98,7 +98,7 @@ if exist "%LIBSCRIPT_HOME%\vllm" ( dir /b "%LIBSCRIPT_HOME%\vllm" )
 exit /b 0
 
 :: ## action_ls_remote
-:: Executes action_ls_remote functionality.
+:: Lists upstream release versions available for download.
 :action_ls_remote
 if "%VLLM_INSTALL_METHOD%"=="mise" ( mise ls-remote vllm & exit /b 0 )
 if "%VLLM_INSTALL_METHOD%"=="asdf" ( asdf list all vllm & exit /b 0 )
@@ -113,7 +113,7 @@ if not "%VLLM_RELEASES_URL%"=="" (
 exit /b 0
 
 :: ## action_use
-:: Executes action_use functionality.
+:: Activates the specified component version by updating the active symlink or junction.
 :action_use
 if "%VLLM_INSTALL_METHOD%"=="mise" ( mise use "vllm@%VLLM_VERSION%" & exit /b 0 )
 if "%VLLM_INSTALL_METHOD%"=="asdf" ( asdf global vllm "%VLLM_VERSION%" & exit /b 0 )
@@ -138,13 +138,13 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 exit /b 0
 
 :: ## action_download
-:: Executes action_download functionality.
+:: Downloads the vllm release archive into the local download cache.
 :action_download
 if "%VLLM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading vllm %VLLM_VERSION% to %DOWNLOAD_DIR%\vllm...
     if not exist "%DOWNLOAD_DIR%\vllm" mkdir "%DOWNLOAD_DIR%\vllm"
     if not "%VLLM_DOWNLOAD_URL%"=="" (
-        curl -sSL "%VLLM_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\vllm\vllm-%VLLM_VERSION%.zip"
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "%VLLM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\vllm\vllm-%VLLM_VERSION%.zip"
     ) else (
         echo VLLM_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -152,10 +152,10 @@ if "%VLLM_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_install
-:: Executes action_install functionality.
+:: Installs the requested vllm version using the configured installation method.
 :action_install
 if "%VLLM_INSTALL_METHOD%"=="system" (
-    winget install vllm --accept-package-agreements --accept-source-agreements
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends vllm
     exit /b !errorlevel!
 )
 if "%VLLM_INSTALL_METHOD%"=="mise" ( mise install "vllm@%VLLM_VERSION%" & exit /b 0 )
@@ -211,7 +211,7 @@ if errorlevel 1 (
 popd
 
 :: ## create_alias
-:: Executes create_alias functionality.
+:: Performs the create_alias operation and updates component state.
 :create_alias
 set "ALIAS_DIR=%LIBSCRIPT_HOME%\vllm\%VLLM_VERSION%"
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
@@ -221,7 +221,7 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 exit /b 0
 
 :: ## action_service
-:: Executes action_service functionality.
+:: Routes service daemon control actions (start, stop, restart, status) to the service manager.
 :action_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -242,7 +242,7 @@ if "%VLLM_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_install_service
-:: Executes action_install_service functionality.
+:: Registers and configures the component as a persistent system service.
 :action_install_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -263,7 +263,7 @@ if "%VLLM_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_uninstall_service
-:: Executes action_uninstall_service functionality.
+:: Stops and removes the registered system service for the component.
 :action_uninstall_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (

@@ -94,6 +94,10 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
   ($cfg.target.os_family // "linux-glibc") as $os_fam |
   (if ($os_fam | startswith("freebsd")) then "freebsd" elif ($os_fam | startswith("unikraft")) then "unikraft" else "linux" end) as $target_os |
   ($cfg.profile_name // "custom") as $profile |
+  ($cfg.kernel.compiler // "default") as $kcompiler |
+  ($cfg.kernel.config_method // "defconfig") as $kconfig |
+  ($cfg.kernel.kcflags // "-O2") as $kkcflags |
+  ($cfg.kernel.custom_cc_bin // "") as $kcustom_bin |
 
   # Derive active global variants/USE flags from profile
   [
@@ -149,7 +153,8 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
     "target": {
       "arch": $arch,
       "libc": $libc,
-      "os": $target_os
+      "os": $target_os,
+      "compiler": $kcompiler
     },
     "stages": [
       {
@@ -165,12 +170,16 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
             "env": { "LIBSCRIPT_STAGE": "stage0" }
           },
           {
-            "name": "gcc-pass1",
-            "component": "_lib/toolchains/gcc",
+            "name": (if $kcompiler == "default" then "gcc-pass1" else ($kcompiler + "-pass1") end),
+            "component": (if $kcompiler == "default" then "_lib/toolchains/gcc" else ("_lib/languages/" + $kcompiler) end),
             "action": "bootstrap",
-            "stamp": ".stamp.stage0_gcc_pass1",
+            "stamp": (".stamp.stage0_" + (if $kcompiler == "default" then "gcc" else $kcompiler end) + "_pass1"),
             "variants": ["bootstrap", "static"],
-            "env": { "LIBSCRIPT_STAGE": "stage0" }
+            "env": {
+              "LIBSCRIPT_STAGE": "stage0",
+              "CC_BACKEND": $kcompiler,
+              "CUSTOM_CC_BIN": $kcustom_bin
+            }
           }
         ]
       },
@@ -239,11 +248,18 @@ if ($cfg.target != null and ($cfg.target.os_family != null or $cfg.target.libc !
           },
           {
             "name": "kernel-assembly",
-            "component": "_lib/kernel",
-            "action": "assemble",
-            "stamp": ".stamp.stage3_kernel",
+            "component": "_lib/kernel/linux",
+            "action": "compile",
+            "stamp": (".stamp.stage3_kernel_" + $kcompiler + "_" + $kconfig),
             "variants": [],
-            "env": { "LIBSCRIPT_STAGE": "stage3" }
+            "env": {
+              "LIBSCRIPT_STAGE": "stage3",
+              "LINUX_BUILD_TOOLCHAIN": $kcompiler,
+              "LINUX_COMPILER": $kcompiler,
+              "LINUX_CONFIG_TARGET": $kconfig,
+              "LINUX_KCFLAGS": $kkcflags,
+              "CUSTOM_CC_BIN": $kcustom_bin
+            }
           },
           {
             "name": "initramfs-assembly",

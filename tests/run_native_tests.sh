@@ -18,6 +18,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,8 +41,6 @@ set +f
 
 # ## show_help
 # Displays usage instructions and supported CLI options.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [TARGETS...|all] [--category <category>] [--os <os_name>] [--dry-run] [--help]"
   printf '%s\n' ""
@@ -61,8 +60,6 @@ show_help() {
 
 # ## detect_host_os
 # Determines the normalized OS identifier and log artifact tag.
-# ## detect_host_os
-# Executes the detect_host_os logic.
 detect_host_os() {
   _user_os="${1:-}"
   if [ -n "${_user_os}" ]; then
@@ -121,8 +118,6 @@ detect_host_os() {
 
 # ## check_manifest_support
 # Validates whether a component supports the given OS using its manifest.json.
-# ## check_manifest_support
-# Executes the check_manifest_support logic.
 check_manifest_support() {
   _manifest_file="$1"
   _os_name="$2"
@@ -174,8 +169,6 @@ check_manifest_support() {
 
 # ## execute_test_target
 # Runs the install and test lifecycle for a single target component and records output.
-# ## execute_test_target
-# Executes the execute_test_target logic.
 execute_test_target() {
   _target="$1"
   _os_id="$2"
@@ -228,8 +221,6 @@ execute_test_target() {
 
 # ## main
 # Coordinates CLI argument resolution, OS detection, execution loop, and reporting.
-# ## main
-# Executes the main logic.
 main() {
   _os_override=""
   _dry_run=0

@@ -53,14 +53,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # mfe_helper.cmd
-:::: Frontend Micro-Frontend (MFE) build and deployment helper for Open edX on Windows.
-:: Manages frontend applications, asset compilation, and static distribution.
-::
-:: ## Usage
-:: Call stacks\cms\openedx\mfe_helper.cmd build <root_dir> <mfe_name> [version]
-:: Call stacks\cms\openedx\mfe_helper.cmd deploy <root_dir> <dist_root> <mfe_name> [dest_path]
-:: Call stacks\cms\openedx\mfe_helper.cmd list <root_dir>
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help
@@ -81,7 +73,6 @@ exit /b 0
 :: ## main
 :: Executes primary entrypoint delegating to mfe_helper.ps1.
 :main
-setlocal EnableDelayedExpansion
 
 where powershell >nul 2>&1
 if %ERRORLEVEL% EQU 0 (

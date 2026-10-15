@@ -87,7 +87,7 @@ goto :action_install
 goto :action_install
 
 :: ## action_ls
-:: Executes action_ls functionality.
+:: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
 :action_ls
 if "%MAVEN_INSTALL_METHOD%"=="mise" ( mise ls maven & exit /b 0 )
 if "%MAVEN_INSTALL_METHOD%"=="asdf" ( asdf list maven & exit /b 0 )
@@ -98,7 +98,7 @@ if exist "%LIBSCRIPT_HOME%\maven" ( dir /b "%LIBSCRIPT_HOME%\maven" )
 exit /b 0
 
 :: ## action_ls_remote
-:: Executes action_ls_remote functionality.
+:: Lists upstream release versions available for download.
 :action_ls_remote
 if "%MAVEN_INSTALL_METHOD%"=="mise" ( mise ls-remote maven & exit /b 0 )
 if "%MAVEN_INSTALL_METHOD%"=="asdf" ( asdf list all maven & exit /b 0 )
@@ -113,7 +113,7 @@ if not "%MAVEN_RELEASES_URL%"=="" (
 exit /b 0
 
 :: ## action_use
-:: Executes action_use functionality.
+:: Activates the specified component version by updating the active symlink or junction.
 :action_use
 if "%MAVEN_INSTALL_METHOD%"=="mise" ( mise use "maven@%MAVEN_VERSION%" & exit /b 0 )
 if "%MAVEN_INSTALL_METHOD%"=="asdf" ( asdf global maven "%MAVEN_VERSION%" & exit /b 0 )
@@ -138,7 +138,7 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 exit /b 0
 
 :: ## action_download
-:: Executes action_download functionality.
+:: Downloads the component release archive into the local offline cache directory.
 :action_download
 if "%MAVEN_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading maven %MAVEN_VERSION% to %DOWNLOAD_DIR%\maven...
@@ -152,7 +152,7 @@ if "%MAVEN_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_install
-:: Executes action_install functionality.
+:: Installs and configures the requested version of the component.
 :action_install
 if "%MAVEN_INSTALL_METHOD%"=="system" (
     winget install maven --accept-package-agreements --accept-source-agreements
@@ -192,7 +192,7 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 exit /b 0
 
 :: ## action_service
-:: Executes action_service functionality.
+:: Routes service daemon control actions (start, stop, restart, status) to the service manager.
 :action_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -213,7 +213,7 @@ if "%MAVEN_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_install_service
-:: Executes action_install_service functionality.
+:: Registers and configures the component as a persistent system service.
 :action_install_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -234,7 +234,7 @@ if "%MAVEN_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_uninstall_service
-:: Executes action_uninstall_service functionality.
+:: Stops and removes the registered system service for the component.
 :action_uninstall_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (

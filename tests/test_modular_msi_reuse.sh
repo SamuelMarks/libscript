@@ -17,6 +17,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,8 +40,6 @@ mkdir -p "$TEST_TMP_DIR"
 # ## cleanup
 # Removes temporary test directory on success.
 # shellcheck disable=SC2317,SC2329
-# ## cleanup
-# Executes the cleanup logic.
 cleanup() {
   _status=$?
   if [ "$_status" -eq 0 ]; then

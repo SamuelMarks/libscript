@@ -76,7 +76,7 @@ if "%ACTION%"=="install" goto :action_install
 goto :action_install
 
 :: ## action_ls
-:: Executes action_ls functionality.
+:: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
 :action_ls
 if "%KUBECTL_INSTALL_METHOD%"=="mise" ( mise ls kubectl & exit /b 0 )
 if "%KUBECTL_INSTALL_METHOD%"=="asdf" ( asdf list kubectl & exit /b 0 )
@@ -87,7 +87,7 @@ dir /b "%LIBSCRIPT_HOME%\kubectl\" 2>nul
 exit /b 0
 
 :: ## action_ls_remote
-:: Executes action_ls_remote functionality.
+:: Lists upstream release versions available for download.
 :action_ls_remote
 if "%KUBECTL_INSTALL_METHOD%"=="mise" ( mise ls-remote kubectl & exit /b 0 )
 if "%KUBECTL_INSTALL_METHOD%"=="asdf" ( asdf list all kubectl & exit /b 0 )
@@ -102,7 +102,7 @@ if not "%KUBECTL_RELEASES_URL%"=="" (
 exit /b 0
 
 :: ## action_use
-:: Executes action_use functionality.
+:: Activates the specified component version by updating the active symlink or junction.
 :action_use
 if "%KUBECTL_INSTALL_METHOD%"=="mise" ( mise use "kubectl@%KUBECTL_VERSION%" & exit /b 0 )
 if "%KUBECTL_INSTALL_METHOD%"=="asdf" ( asdf global kubectl "%KUBECTL_VERSION%" & exit /b 0 )
@@ -113,7 +113,7 @@ echo libscript_symlink_alias not implemented natively in cmd yet.
 exit /b 0
 
 :: ## action_download
-:: Executes action_download functionality.
+:: Downloads the component release archive into the local offline cache directory.
 :action_download
 if "%KUBECTL_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading kubectl %KUBECTL_VERSION% to %DOWNLOAD_DIR%\kubectl...
@@ -127,7 +127,7 @@ if "%KUBECTL_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_install
-:: Executes action_install functionality.
+:: Installs and configures the requested version of the component.
 :action_install
 if exist "%LIBSCRIPT_HOME%\kubectl\%VERSION%" (
     echo [INFO] kubectl %VERSION% is already installed.

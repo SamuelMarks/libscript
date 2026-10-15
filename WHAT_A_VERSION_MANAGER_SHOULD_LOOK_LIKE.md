@@ -138,8 +138,15 @@ Supported methods:
 
 - **`libscript_native`**: (Default) The libscript_native isolated version manager logic detailed in
   this document.
-- **`system`**: Defers to the OS-level package manager (e.g., `apt`, `brew`, `winget`). Disables
-  strict version isolation.
+- **`from-source`**: Compiles the component from verified source code via
+  `_lib/_common/source_builder.{sh,cmd}` using either the default platform C toolchain
+  (`--toolchain=default`) or a specified C compiler (`--toolchain=gcc|clang|tcc|custom-cc` or
+  `--custom-cc=/path/to/cc`), staging into `${LIBSCRIPT_HOME}/<component>/<version>[-<cc>]/` and
+  writing `build-metrics.json`.
+- **`system` / `pkg_mgr:<pm>`**: Defers to the OS-level or explicitly requested package manager
+  (`--pkg-mgr=<pm>` / `LIBSCRIPT_PKG_MGR=<pm>`, e.g., `apt-get`, `apk`, `dnf`, `brew`, `winget`,
+  `choco`, `scoop`, `nix`, `spack`, `vcpkg`), auto-bootstrapping `_lib/package-managers/<pm>` if not
+  yet installed.
 
 ## 6. Exceptions & Pragmatic Overrides
 

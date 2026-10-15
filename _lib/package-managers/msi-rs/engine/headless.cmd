@@ -10,6 +10,7 @@
 :: Execute this script to run headless installation:
 ::   ./_lib/package-managers/msi-rs/engine/headless.cmd [/i <package.msi>] [/qn|/passive] [KEY=VALUE...] [--config <autoinstall.json>]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -52,14 +53,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # headless.cmd
-:::: Headless non-interactive installer orchestrator for Windows environments.
-:: Implements msiexec property injection and unattended execution workflows.
-::
-:: ## Usage
-:: Call headless.cmd [/i <package.msi>] [/qn|/passive] [KEY=VALUE...]
 
-setlocal EnableDelayedExpansion
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help

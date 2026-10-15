@@ -1,14 +1,34 @@
 #!/bin/sh
 # ## Overview
-# ## Overview
 # Generic library engine for generating WiX Windows Installer (.msi) packages.
-# Synthesizes WiX manifests from packaging.json and vars.schema.json, supporting
-# Simple and Advanced setup modes, DBaaS offloading, custom directories,
-# runtime auto-detection, and repository fork selection.
 #
 # ## Usage
 # ./packaging/build_msi.sh [TARGET_DIR] [OPTIONS]
-#
+
+set -feu
+
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+
 # Arguments:
 #   TARGET_DIR            Component or stack path (e.g. stacks/cms/openedx)
 #
@@ -34,34 +54,8 @@
 #   --use-wix             Use traditional WiX Toolset instead of msi-rs
 #   --help, -h            Show this help text
 
-set -feu
-
-if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
-elif [ "${ZSH_VERSION-}" ]; then
-  # shellcheck disable=SC2296
-  THIS_FILE="${(%):-%x}"
-else
-  THIS_FILE="${0}"
-fi
-
-case "${STACK+x}" in
-  *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
-esac
-export STACK="${STACK:-}${THIS_FILE}"':'
-SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-
 # ## show_help
-# ## Overview
 # Prints script usage instructions and available command-line switches.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $0 [TARGET_DIR] [OPTIONS]"
   printf '%s\n' "Generates a generic WiX Windows Installer (.msi) package."
@@ -315,13 +309,14 @@ TMP_WORK_DIR="${LIBSCRIPT_ROOT_DIR}/tmp/msi_build_$$"
 mkdir -p "$TMP_WORK_DIR"
 
 # ## cleanup_tmp
+# Performs the cleanup_tmp operation and updates component state.
 # ## Overview
 # Removes temporary build directory.
 # shellcheck disable=SC2317,SC2329
 # ## Usage
 #   Internal function.
 # ## cleanup_tmp
-# Executes the cleanup_tmp logic.
+# Performs the cleanup_tmp operation and updates component state.
 cleanup_tmp() {
   rm -rf "$TMP_WORK_DIR"
   rm -f "${OUT_FILE}.wixobj" "${OUT_FILE}_payload.wixobj" "${OUT_FILE}.candle.wxs" "${OUT_FILE}_wixl.wxs" "${OUT_FILE}_payload_wixl.wxs"
@@ -329,12 +324,13 @@ cleanup_tmp() {
 trap cleanup_tmp EXIT INT TERM
 
 # ## ensure_branding_assets
+# Performs the ensure_branding_assets operation and updates component state.
 # ## Overview
 # Validates or synthesizes placeholder branding assets via synthesize_branding.sh.
 # ## Usage
 #   Internal function.
 # ## ensure_branding_assets
-# Executes the ensure_branding_assets logic.
+# Performs the ensure_branding_assets operation and updates component state.
 ensure_branding_assets() {
   synth_script="${LIBSCRIPT_ROOT_DIR}/packaging/synthesize_branding.sh"
 
@@ -400,12 +396,13 @@ fi
 WXS_FILE="${OUT_FILE}.wxs"
 
 # ## generate_wxs
+# Performs the generate_wxs operation and updates component state.
 # ## Overview
 # Generates the WiX XML (.wxs) manifest synthesizing properties from schema and packaging config.
 # ## Usage
 #   Internal function.
 # ## generate_wxs
-# Executes the generate_wxs logic.
+# Performs the generate_wxs operation and updates component state.
 generate_wxs() {
   _esc_pub=$(printf '%s\n' "$APP_PUBLISHER" | sed 's/&/\&amp;/g')
   _esc_name=$(printf '%s\n' "$APP_NAME" | sed 's/&/\&amp;/g')
@@ -1159,7 +1156,9 @@ generate_wxs
 printf '[PASS] Successfully created WiX manifest: %s\n' "$WXS_FILE"
 
 # ## harvest_engine_payload
+# Performs the harvest_engine_payload operation and updates component state.
 # ## Overview
+# Performs the Overview operation and updates component state.
 PAYLOAD_WXS="${OUT_FILE}_payload.wxs"
 if [ "$VARIANT" = "offline" ]; then
   "${SCRIPT_DIR}/harvest_payload.sh" \
@@ -1175,12 +1174,13 @@ else
 fi
 
 # ## compile_msi
+# Performs the compile_msi operation and updates component state.
 # ## Overview
 # Builds the .msi binary using cross-platform msi-rs, 
 # ## Usage
 #   Internal function.
 # ## compile_msi
-# Executes the compile_msi logic.
+# Performs the compile_msi operation and updates component state.
 compile_msi() {
   if [ "$USE_WIX" = "1" ]; then
     printf '[INFO] Using traditional WiX Toolset...\n'

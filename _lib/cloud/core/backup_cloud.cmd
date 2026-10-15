@@ -69,7 +69,7 @@ set "TAKE_SNAPSHOT=0"
 set "PATHS="
 
 :: ## parse_args
-:: Executes parse_args functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_args
 if "%~1"=="" goto :args_done
 if /i "%~1"=="--keep-last" (
@@ -96,7 +96,7 @@ shift
 goto :parse_args
 
 :: ## args_done
-:: Executes args_done functionality.
+:: Continues execution after command-line argument parsing completes.
 :args_done
 
 echo [BACKUP] Starting backup for node: !NODE!

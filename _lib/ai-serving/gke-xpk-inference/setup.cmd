@@ -2,10 +2,11 @@
 :: # setup.cmd
 ::
 :: ## Overview
-:: Backward-compatible forwarding shim for GKE XPK inference setup on Windows.
+:: Installation and configuration entrypoint for the gke-xpk-inference component on Windows.
+:: Delegates execution to the shared _lib\_common\setup_base.cmd module.
 ::
 :: ## Usage
-:: _lib\ai-serving\gke-xpk-inference\setup.cmd [args]
+:: setup.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -51,6 +52,4 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-echo [WARN] DEPRECATED: _lib\ai-serving\gke-xpk-inference has moved to payloads\ai\gke-xpk-inference. 1>&2
-call "%LIBSCRIPT_ROOT_DIR%\payloads\ai\gke-xpk-inference\setup.cmd" %*
-exit /b %errorlevel%
+call "%~dp0\..\..\_common\setup_base.cmd" %*

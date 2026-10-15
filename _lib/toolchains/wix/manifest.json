@@ -1,0 +1,13 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "wix",
+  "title": "WiX Toolset",
+  "description": "Windows Installer XML (WiX) Toolset for building Windows MSI installation packages.",
+  "category": "toolchain",
+  "provides": ["wix", "msi-builder"],
+  "conflicts": [],
+  "versions": ["latest", "3.14"],
+  "os_whitelist": ["windows"],
+  "os_blacklist": [],
+  "ports": []
+}

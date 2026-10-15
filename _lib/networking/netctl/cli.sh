@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,9 +41,7 @@ for LIB in "_lib/networking/netctl/lib/prelude.sh" "_lib/networking/netctl/lib/s
 done
 
 # ## usage
-# Executes usage functionality.
-# ## usage
-# Executes the usage logic.
+# Displays command-line usage instructions and exit status 1.
 usage() {
   cat <<EOF
 netctl - Singular and Additive network config generator
@@ -78,7 +77,7 @@ EMIT_FORMAT=""
 
 # Check if we are using the sub-command (additive) mode or the flags (singular) mode
 case "$1" in
-  install|use|env|logs|status)
+  download|install|ls|ls-remote|use|start|stop|restart|install-service|uninstall-service|env|logs|status|health)
     printf '%s\n' "netctl is a native shell module. No installation or daemon management required."
     exit 0
     ;;

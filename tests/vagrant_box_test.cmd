@@ -51,20 +51,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-SET "searchVal=;%THIS_FILE%;"
-IF NOT DEFINED STACK (
-    SET "STACK=;%THIS_FILE%;"
-    echo [CONTINUE] processing "%THIS_FILE%"
-) ELSE (
-    IF NOT "!STACK:%searchVal%=!"=="!STACK!" (
-        echo [STOP]     processing "%THIS_FILE%"
-        SET ERRORLEVEL=0
-        goto end
-    ) ELSE (
-        SET "STACK=!STACK!%THIS_FILE%;"
-        echo [CONTINUE] processing "%THIS_FILE%"
-    )
-)
 
 SET "SCRIPT_DIR=%~dp0"
 SET "LIBSCRIPT_ROOT_DIR=%SCRIPT_DIR%.."
@@ -83,6 +69,6 @@ echo [ERROR] Please execute via container or VM builder: vm_builder.cmd >&2
 exit /b 86
 
 :: ## end
-:: Executes end functionality.
+:: Performs the end operation and updates component state.
 :end
 exit /b 0

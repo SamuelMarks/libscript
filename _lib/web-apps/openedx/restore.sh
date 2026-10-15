@@ -4,24 +4,7 @@
 # Unpacks backup archives, restores MySQL and MongoDB state, and reinstates media and configs.
 #
 # ## Usage
-#   ./restore.sh apply <archive_path> [--yes]
-#   ./restore.sh help
-#
-# ## Parameters
-# - `apply`: Restores Open edX data from specified archive.
-# - `--yes`: Bypasses interactive confirmation prompts.
-#
-# ## Environment Variables
-# - `OPENEDX_INSTALL_DIR`: Target path for restored Open edX stack.
-# - `MYSQL_HOST`: MySQL database host.
-# - `MYSQL_PORT`: MySQL database port.
-# - `MYSQL_USER`: MySQL database user.
-# - `MYSQL_PASSWORD`: MySQL database password.
-# - `MYSQL_DATABASE`: MySQL database name.
-#
-# ## Exit Codes
-# - `0`: Restore completed successfully.
-# - `1`: Missing archive or restoration error.
+#   ./restore.sh [apply <archive_path> [--yes]|help]
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -29,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -45,6 +29,22 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
+
+# ## Parameters
+# - `apply`: Restores Open edX data from specified archive.
+# - `--yes`: Bypasses interactive confirmation prompts.
+#
+# ## Environment Variables
+# - `OPENEDX_INSTALL_DIR`: Target path for restored Open edX stack.
+# - `MYSQL_HOST`: MySQL database host.
+# - `MYSQL_PORT`: MySQL database port.
+# - `MYSQL_USER`: MySQL database user.
+# - `MYSQL_PASSWORD`: MySQL database password.
+# - `MYSQL_DATABASE`: MySQL database name.
+#
+# ## Exit Codes
+# - `0`: Restore completed successfully.
+# - `1`: Missing archive or restoration error.
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/env.sh"
@@ -69,8 +69,6 @@ MYSQL_DATABASE="${MYSQL_DATABASE:-openedx}"
 
 # ## restore_apply
 # Extracts and restores backup archive into local installation.
-# ## restore_apply
-# Executes the restore_apply logic.
 restore_apply() {
   if [ $# -lt 1 ]; then
     log_err "Usage: $0 apply <archive_path> [--yes]"
@@ -156,8 +154,6 @@ restore_apply() {
 
 # ## show_help
 # Displays usage guide.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   cat <<EOF
 Open edX Disaster Recovery & Restore Utility

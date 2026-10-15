@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -34,9 +35,7 @@ STATE_FILE="${STATE_FILE:-.libscript_state.json}"
 REMOTE_STATE_URI="${REMOTE_STATE_URI:-}"
 
 # ## lock_state
-# Executes lock_state functionality.
-# ## lock_state
-# Executes the lock_state logic.
+# Performs the lock_state operation and updates component state.
 lock_state() {
   if [ -z "$REMOTE_STATE_URI" ]; then
     if [ -f "${STATE_FILE}.lock" ]; then
@@ -67,9 +66,7 @@ lock_state() {
 }
 
 # ## unlock_state
-# Executes unlock_state functionality.
-# ## unlock_state
-# Executes the unlock_state logic.
+# Performs the unlock_state operation and updates component state.
 unlock_state() {
   if [ -z "$REMOTE_STATE_URI" ]; then
     rm -f "${STATE_FILE}.lock"
@@ -91,9 +88,7 @@ unlock_state() {
 }
 
 # ## pull_state
-# Executes pull_state functionality.
-# ## pull_state
-# Executes the pull_state logic.
+# Performs the pull_state operation and updates component state.
 pull_state() {
   if [ -n "$REMOTE_STATE_URI" ]; then
     printf '%s\n' "[STATE] Pulling state from $REMOTE_STATE_URI..."
@@ -102,9 +97,7 @@ pull_state() {
 }
 
 # ## push_state
-# Executes push_state functionality.
-# ## push_state
-# Executes the push_state logic.
+# Performs the push_state operation and updates component state.
 push_state() {
   if [ -n "$REMOTE_STATE_URI" ]; then
     printf '%s\n' "[STATE] Pushing state to $REMOTE_STATE_URI..."

@@ -56,7 +56,7 @@ set "SERVER_NAME="
 set "UPSTREAM_PORT="
 
 :: ## ParseArgs
-:: Executes ParseArgs functionality.
+:: Parses command-line arguments and populates configuration variables.
 :ParseArgs
 if "%~1"=="" goto ValidateArgs
 if "%~1"=="--server-name" (
@@ -75,7 +75,7 @@ echo [ERROR] Unknown argument: %~1 >&2
 exit /b 1
 
 :: ## ValidateArgs
-:: Executes ValidateArgs functionality.
+:: Validates required command-line arguments and configuration parameters.
 :ValidateArgs
 :: Validates arguments ensuring essential flags are passed
 if "!SERVER_NAME!"=="" (
@@ -89,7 +89,7 @@ if "!UPSTREAM_PORT!"=="" (
 goto ProvisionVHost
 
 :: ## ProvisionVHost
-:: Executes ProvisionVHost functionality.
+:: Performs the ProvisionVHost operation and updates component state.
 :ProvisionVHost
 :: Provisions the virtual host
 :: Generates configuration and conditionally restarts the web server.

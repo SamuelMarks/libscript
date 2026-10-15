@@ -15,6 +15,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -38,8 +39,6 @@ OUTPUT_PATH=""
 
 # ## show_help
 # Displays usage instructions and supported build parameters.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [OPTIONS]"
   printf '%s\n' "Builds bootable live-CD/live-USB images containing msi-rs."
@@ -87,8 +86,6 @@ mkdir -p "${REPO_ROOT}/build"
 
 # ## build_linux
 # Builds live Linux media.
-# ## build_linux
-# Executes the build_linux logic.
 build_linux() {
   _out="${OUTPUT_PATH:-${REPO_ROOT}/build/msi-linux-live.iso}"
   printf '[ORCHESTRATE] Building Live Linux installer (%s)...\n' "$MODE"
@@ -97,8 +94,6 @@ build_linux() {
 
 # ## build_freebsd
 # Builds live FreeBSD media.
-# ## build_freebsd
-# Executes the build_freebsd logic.
 build_freebsd() {
   _out="${OUTPUT_PATH:-${REPO_ROOT}/build/msi-freebsd-live.iso}"
   printf '[ORCHESTRATE] Building Live FreeBSD installer (%s)...\n' "$MODE"
@@ -107,8 +102,6 @@ build_freebsd() {
 
 # ## build_illumos
 # Builds live illumos media.
-# ## build_illumos
-# Executes the build_illumos logic.
 build_illumos() {
   _out="${OUTPUT_PATH:-${REPO_ROOT}/build/msi-illumos-live.iso}"
   printf '[ORCHESTRATE] Building Live illumos installer (%s)...\n' "$MODE"

@@ -14,6 +14,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -45,8 +46,6 @@ fi
 
 # ## check_tmux
 # Verifies that tmux binary is installed and available in PATH.
-# ## check_tmux
-# Executes the check_tmux logic.
 check_tmux() {
   if ! command -v tmux >/dev/null 2>&1; then
     log_error "tmux not found. Please install the utilities/tmux component first."

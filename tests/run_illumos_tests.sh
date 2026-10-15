@@ -16,6 +16,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -45,8 +46,6 @@ LOOP_MODE=""
 
 # ## sync_repo_to_guest
 # Synchronizes the libscript codebase to the guest VM using vagrant rsync.
-# ## sync_repo_to_guest
-# Executes the sync_repo_to_guest logic.
 sync_repo_to_guest() {
     echo "=== Syncing LibScript repository to SunOS/OmniOS ==="
     (cd "$VAGRANT_DIR" && vagrant rsync)
@@ -54,8 +53,6 @@ sync_repo_to_guest() {
 
 # ## update_component_in_readme
 # Updates the status of a single component in README.md Supported Components table (illumos/SunOS column).
-# ## update_component_in_readme
-# Executes the update_component_in_readme logic.
 update_component_in_readme() {
     _comp="$1"
     _status="$2"

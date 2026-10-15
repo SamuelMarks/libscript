@@ -2,13 +2,15 @@
 :: # setup.cmd
 ::
 :: ## Overview
-:: Installation script for gcp-gke-tpu-cluster component on Windows.
+:: Installation and configuration entrypoint for the gcp-gke-tpu-cluster component on Windows.
+:: Delegates execution to the shared _lib\_common\setup_base.cmd module.
 ::
 :: ## Usage
-:: Run this to install the component.
+:: setup.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
     if not errorlevel 1 (

@@ -51,20 +51,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-SET "searchVal=;%THIS_FILE%;"
-IF NOT DEFINED STACK (
-    SET "STACK=;%THIS_FILE%;"
-    echo [CONTINUE] processing "%THIS_FILE%"
-) ELSE (
-    IF NOT "!STACK:%searchVal%=!"=="!STACK!" (
-        echo [STOP]     processing "%THIS_FILE%"
-        SET ERRORLEVEL=0
-        goto :eof
-    ) ELSE (
-        SET "STACK=!STACK!%THIS_FILE%;"
-        echo [CONTINUE] processing "%THIS_FILE%"
-    )
-)
 
 if "%~1"=="--help" (
     echo Usage: %~nx0 --format [qcow2^|box^|raw^|vhd^|vmdk^|iso] --profile [path]
@@ -85,7 +71,7 @@ set "PROFILE=%REPO_ROOT%\profiles\freebsd\minimal-server.json"
 set "OUTPUT="
 
 :: ## parse_loop
-:: Executes parse_loop functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_loop
 if "%~1"=="" goto after_parse
 if "%~1"=="--format" (
@@ -128,7 +114,7 @@ shift
 goto parse_loop
 
 :: ## after_parse
-:: Executes after_parse functionality.
+:: Performs the after_parse operation and updates component state.
 :after_parse
 set "SYSROOT=%REPO_ROOT%\build\freebsd-sysroot"
 

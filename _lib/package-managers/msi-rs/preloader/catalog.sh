@@ -15,6 +15,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -38,8 +39,6 @@ FILTER_CAT=""
 
 # ## show_help
 # Displays usage instructions and supported query options.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [OPTIONS]"
   printf '%s\n' "Scans and displays the dynamic LibScript component catalog."
@@ -83,8 +82,6 @@ done
 
 # ## scan_components
 # Discovers components by scanning manifest.json files across _lib.
-# ## scan_components
-# Executes the scan_components logic.
 scan_components() {
   _mode="$1"
   _search="$2"

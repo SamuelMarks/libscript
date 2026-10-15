@@ -1,0 +1,13 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "vcredist",
+  "title": "Microsoft Visual C++ Redistributable",
+  "description": "Microsoft Visual C++ Redistributable runtime libraries (2015-2022 x64/x86).",
+  "category": "utility",
+  "provides": ["vcredist", "vcruntime"],
+  "conflicts": [],
+  "versions": ["latest", "14"],
+  "os_whitelist": ["windows"],
+  "os_blacklist": [],
+  "ports": []
+}

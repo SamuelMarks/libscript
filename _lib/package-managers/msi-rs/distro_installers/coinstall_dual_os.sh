@@ -16,6 +16,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,8 +41,6 @@ ESP_PART="${4:-}"
 
 # ## show_help
 # Displays usage instructions and supported parameters.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") <disk_dev> <linux_part> <freebsd_part> [esp_part]"
   printf '%s\n' "Concurrently deploys Linux and FreeBSD to separate partitions with dual-boot GRUB."

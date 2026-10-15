@@ -112,6 +112,20 @@
         "cmdline": {
           "type": "string",
           "description": "Default kernel command line parameters string appended at boot"
+        },
+        "compiler": {
+          "type": "string",
+          "description": "C compiler backend used to compile the kernel ('default', 'gcc', 'clang', 'tcc', or 'custom-cc')",
+          "enum": ["default", "gcc", "clang", "tcc", "custom-cc"],
+          "default": "default"
+        },
+        "kcflags": {
+          "type": "string",
+          "description": "Additional KCFLAGS passed to Kbuild during kernel compilation"
+        },
+        "custom_cc_bin": {
+          "type": "string",
+          "description": "Filesystem path to a custom C compiler binary when kernel.compiler is set to 'custom-cc'"
         }
       }
     },

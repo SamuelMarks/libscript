@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/utilities/vcredist/vars.schema.json",
+  "title": "Visual C++ Redistributable variables",
+  "description": "Configuration variables for the Microsoft Visual C++ Redistributable runtime.",
+  "type": "object",
+  "properties": {
+    "VCREDIST_VERSION": {
+      "description": "Specific version of the Visual C++ Redistributable to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "VCREDIST_INSTALL_METHOD": {
+      "description": "How to install VCREDIST ('libscript_native' or 'system').",
+      "type": "string",
+      "default": "system"
+    }
+  }
+}

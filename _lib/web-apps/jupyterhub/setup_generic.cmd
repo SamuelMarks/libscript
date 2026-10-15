@@ -1,12 +1,13 @@
 @echo off
-:: # setup_generic.cmd
+:: # setup.cmd
 ::
 :: ## Overview
-:: Provides a generic, cross-platform setup mechanism for the JupyterHub data science platform stack.
-:: Delegates to setup.cmd for Windows provisioning.
+:: Orchestrates the setup and installation process for the JupyterHub data science platform stack on Windows.
+:: Installs jupyterhub via Python and configurable-http-proxy via npm if available.
 :: 
 :: ## Usage
-:: Execute this script to perform generic initialization steps.
+:: Execute this script to install and configure jupyterhub on the local system.
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
@@ -51,20 +52,35 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if exist "%~dp0setup.cmd" (
-    call "%~dp0setup.cmd" %*
-    exit /b %ERRORLEVEL%
+where python >nul 2>&1
+if errorlevel 1 (
+    echo [ERROR] Python is required for JupyterHub.
+    exit /b 1
 )
 
-where powershell >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup.ps1" %*
-if exist "%LIBSCRIPT_HOME%\jupyterhub\%VERSION%" (
-    echo [INFO] jupyterhub %VERSION% is already installed.
-    exit /b 0
-)
-    exit /b %ERRORLEVEL%
+echo [INFO] Installing JupyterHub via Python pip...
+python -m pip install --quiet --upgrade jupyterhub
+if errorlevel 1 (
+    echo [ERROR] Failed to install JupyterHub via pip.
+    exit /b 1
 )
 
-echo [ERROR] No suitable Windows setup executor found.
-exit /b 1
+where npm >nul 2>&1
+if not errorlevel 1 (
+    echo [INFO] Installing configurable-http-proxy via npm...
+    call npm install -g configurable-http-proxy >nul 2>&1
+)
+
+set "BIN_DIR=%USERPROFILE%\.libscript\jupyterhub\latest\bin"
+if not exist "!BIN_DIR!" mkdir "!BIN_DIR!"
+
+(
+    echo @echo off
+    echo python -m jupyterhub %%*
+) > "!BIN_DIR!\jupyterhub.cmd"
+
+if not exist "%USERPROFILE%\.local\bin" mkdir "%USERPROFILE%\.local\bin"
+copy /y "!BIN_DIR!\jupyterhub.cmd" "%USERPROFILE%\.local\bin\jupyterhub.cmd" >nul 2>&1
+
+echo [INFO] JupyterHub setup completed successfully.
+exit /b 0

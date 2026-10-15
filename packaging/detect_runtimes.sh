@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -31,8 +32,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## detect_python
 # Detects Python 3 binary and outputs detected version.
-# ## detect_python
-# Executes the detect_python logic.
 detect_python() {
   _py=""
   if command -v python3 >/dev/null 2>&1; then
@@ -51,8 +50,6 @@ detect_python() {
 
 # ## detect_node
 # Detects Node.js binary and outputs detected version.
-# ## detect_node
-# Executes the detect_node logic.
 detect_node() {
   if command -v node >/dev/null 2>&1; then
     _ver="$(node --version 2>&1)"

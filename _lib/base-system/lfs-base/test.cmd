@@ -2,7 +2,7 @@
 :: # test.cmd
 ::
 :: ## Overview
-:: Default no-op test.cmd implementation to satisfy Version Manager Contract.
+:: Executes smoke tests and binary verification checks for the lfs-base component.
 ::
 :: ## Usage
 :: test.cmd

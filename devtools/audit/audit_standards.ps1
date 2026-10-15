@@ -131,6 +131,12 @@ function Audit-File {
             if ($headerText -notmatch 'STACK') {
                 Log-Violation -File $FilePath -Rule "RECURSION_GUARD" -Details "Missing 'STACK' recursion guard in first 40 lines."
             }
+            if ($headerText -notmatch 'LIBSCRIPT_ROOT_DIR') {
+                Log-Violation -File $FilePath -Rule "ROOT_DIR_RESOLUTION" -Details "Missing 'LIBSCRIPT_ROOT_DIR' resolution in header."
+            }
+            if ($headerText -notmatch '# libscript-allow-eval') {
+                Log-Violation -File $FilePath -Rule "ZSH_ALLOW_EVAL_TAG" -Details "Missing '# libscript-allow-eval' in ZSH_VERSION header block."
+            }
         }
 
         # 2. Windows batch parity (.cmd or .bat)
@@ -143,9 +149,27 @@ function Audit-File {
         }
     }
 
+    if ($ext -eq "ps1") {
+        $shFile = [System.IO.Path]::ChangeExtension($FilePath, ".sh")
+        $cmdFile = [System.IO.Path]::ChangeExtension($FilePath, ".cmd")
+        if (-not (Test-Path $shFile)) {
+            Log-Violation -File $FilePath -Rule "POSIX_PARITY" -Details "Missing POSIX shell equivalent file ('$shFile')."
+        }
+        if (-not (Test-Path $cmdFile)) {
+            Log-Violation -File $FilePath -Rule "WINDOWS_PARITY" -Details "Missing Windows batch equivalent file ('$cmdFile')."
+        }
+    }
+
     # Batch script header verification
     if ($ext -eq "cmd" -or $ext -eq "bat") {
-        if ($headerText -notmatch 'THIS_FILE=%~f0') {
+        if ($lines[0].Trim() -notmatch '^@echo off$') {
+            Log-Violation -File $FilePath -Rule "BATCH_ECHO_OFF" -Details "Missing '@echo off' on line 1."
+        }
+        $top25 = ($lines | Select-Object -First 25) -join "`n"
+        if ($top25 -notmatch 'EnableDelayedExpansion') {
+            Log-Violation -File $FilePath -Rule "BATCH_DELAYED_EXPANSION" -Details "Missing 'setlocal EnableDelayedExpansion' in first 25 lines."
+        }
+        if ($top25 -notmatch 'THIS_FILE=%~f0') {
             Log-Violation -File $FilePath -Rule "BATCH_THIS_FILE" -Details "Missing 'set `"THIS_FILE=%~f0`"' in first 25 lines."
         }
     }

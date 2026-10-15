@@ -17,6 +17,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -44,8 +45,6 @@ fi
 
 # ## urldecode
 # Decodes percent-encoded characters in a URI component.
-# ## urldecode
-# Executes the urldecode logic.
 urldecode() {
   _val="$1"
   printf '%s' "$_val" | awk '

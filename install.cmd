@@ -58,14 +58,14 @@ if "%~1"=="-?" goto show_help
 goto start_install
 
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line usage instructions and available options.
 :show_help
 echo Usage: %0
 echo Bootstraps the LibScript environment.
 exit /b 0
 
 :: ## start_install
-:: Executes start_install functionality.
+:: Performs the start_install operation and updates component state.
 :start_install
 
 SET "LIBSCRIPT_ROOT_DIR=%LIBSCRIPT_ROOT_DIR:~0,-1%"

@@ -13,6 +13,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -32,8 +33,6 @@ _SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## libscript_verify_signature
 # Signature verification wrapper
-# ## libscript_verify_signature
-# Executes the libscript_verify_signature logic.
 libscript_verify_signature() {
   file="${1:-}"
   export url="${2:-}"

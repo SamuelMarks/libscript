@@ -10,6 +10,7 @@
 :: Execute this script to start the GUI installer session:
 ::   ./_lib/package-managers/msi-rs/engine/gui.cmd [--test | --help]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -52,14 +53,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # gui.cmd
-:::: Graphical User Interface (GUI) launcher for msi-gui on Windows.
-:: Launches the interactive msi-gui desktop application or validates display drivers.
-::
-:: ## Usage
-:: Call gui.cmd [--test | --help]
 
-setlocal EnableDelayedExpansion
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help

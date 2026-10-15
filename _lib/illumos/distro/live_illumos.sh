@@ -14,6 +14,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -36,8 +37,6 @@ BUILD_DIR="${2:-${REPO_ROOT}/build/live-illumos}"
 
 # ## show_help
 # Displays usage instructions and supported options.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [output_path] [build_dir]"
   printf '%s\n' "Synthesizes live-CD/live-USB bootable illumos images with msi-rs."

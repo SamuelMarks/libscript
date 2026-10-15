@@ -11,6 +11,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -32,9 +33,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # If PREFIX_PATH is provided, it will be added to the PATH variable.
 
 # ## libscript_print_env
-# Executes libscript_print_env functionality.
-# ## libscript_print_env
-# Executes the libscript_print_env logic.
+# Performs the libscript_print_env operation and updates component state.
 libscript_print_env() {
   _format="${1:-sh}"
   _prefix_path="${2:-}"

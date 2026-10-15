@@ -56,7 +56,7 @@ set "IS_OFFLINE=0"
 if "%LIBSCRIPT_OFFLINE%"=="1" set "IS_OFFLINE=1"
 
 :: ## parse_loop
-:: Executes parse_loop functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_loop
 if "%~1"=="" goto generate
 if /I "%~1"=="--offline" (
@@ -78,7 +78,7 @@ shift
 goto parse_loop
 
 :: ## generate
-:: Executes generate functionality.
+:: Performs the generate operation and updates component state.
 :generate
 echo version: '3.8'
 echo services:

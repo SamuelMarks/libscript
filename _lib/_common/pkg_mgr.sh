@@ -16,6 +16,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -43,13 +44,28 @@ PKG_MGR_UPDATE_REGISTRY="${PKG_MGR_UPDATE_REGISTRY:-1}"
 export PKG_MGR_UPDATE_REGISTRY
 
 # ## libscript_resolve_install_method
-# Executes libscript_resolve_install_method functionality.
-# ## libscript_resolve_install_method
-# Executes the libscript_resolve_install_method logic.
+# Performs the libscript_resolve_install_method operation and updates component state.
 libscript_resolve_install_method() {
   comp_method_var="${1}_INSTALL_METHOD"
   requested="$(printenv "$comp_method_var" 2>/dev/null || true)"
   : "${requested:=${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-}}"
+
+  case "${requested}" in
+    pkg_mgr:*)
+      export LIBSCRIPT_PKG_MGR="${requested#pkg_mgr:}"
+      printf '%s\n' "system"
+      return 0
+      ;;
+    from-source|libscript_native|system)
+      printf '%s\n' "$requested"
+      return 0
+      ;;
+    brew|winget|choco|scoop|nix|guix|spack|vcpkg|conan)
+      export LIBSCRIPT_PKG_MGR="$requested"
+      printf '%s\n' "system"
+      return 0
+      ;;
+  esac
 
   chain="libscript_native mise asdf pkgx vfox system"
   check_chain=""
@@ -72,7 +88,7 @@ libscript_resolve_install_method() {
   fi
 
   for m in $check_chain; do
-    if [ "$m" = "libscript_native" ] || [ "$m" = "system" ]; then
+    if [ "$m" = "libscript_native" ] || [ "$m" = "system" ] || [ "$m" = "from-source" ]; then
       printf '%s\n' "$m"
       return 0
     fi
@@ -87,18 +103,68 @@ libscript_resolve_install_method() {
 }
 
 # ## libscript_cmd_avail
-# Executes libscript_cmd_avail functionality.
-# ## libscript_cmd_avail
-# Executes the libscript_cmd_avail logic.
+# Performs the libscript_cmd_avail operation and updates component state.
 libscript_cmd_avail() {
   command -v -- "${1}" >/dev/null 2>&1
 }
 
+# ## resolve_requested_pkg_mgr
+# Resolves an explicit package manager override from component or global variables, normalizing aliases and auto-bootstrapping if needed.
+resolve_requested_pkg_mgr() {
+  _comp_upper="${1:-}"
+  _req_pm=""
+  if [ -n "${_comp_upper}" ]; then
+    _req_pm="$(printenv "${_comp_upper}_PKG_MGR" 2>/dev/null || true)"
+    if [ -z "${_req_pm}" ]; then
+      _comp_im="$(printenv "${_comp_upper}_INSTALL_METHOD" 2>/dev/null || true)"
+      case "${_comp_im}" in
+        pkg_mgr:*) _req_pm="${_comp_im#pkg_mgr:}" ;;
+        brew|winget|choco|scoop|nix|guix|spack|vcpkg|conan) _req_pm="${_comp_im}" ;;
+      esac
+    fi
+  fi
+  if [ -z "${_req_pm}" ] && [ -n "${LIBSCRIPT_PKG_MGR:-}" ]; then
+    _req_pm="${LIBSCRIPT_PKG_MGR}"
+  fi
+  if [ -z "${_req_pm}" ]; then
+    case "${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-}" in
+      pkg_mgr:*) _req_pm="${LIBSCRIPT_DEFAULT_INSTALL_METHOD#pkg_mgr:}" ;;
+    esac
+  fi
+  if [ -z "${_req_pm}" ]; then
+    return 1
+  fi
+
+  case "${_req_pm}" in
+    apt|apt-get) _req_pm="apt-get" ;;
+    homebrew|brew) _req_pm="brew" ;;
+    macports|port) _req_pm="port" ;;
+    chocolatey|choco) _req_pm="choco" ;;
+    xbps|xbps-install) _req_pm="xbps" ;;
+  esac
+
+  _pm_bin="${_req_pm}"
+  [ "${_req_pm}" = "xbps" ] && _pm_bin="xbps-install"
+
+  if [ "${LIBSCRIPT_DRY_RUN_PKG_MGR:-0}" != "1" ] && ! libscript_cmd_avail "${_pm_bin}"; then
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/${_req_pm}/setup.sh" ]; then
+      log_info "Auto-bootstrapping requested package manager '${_req_pm}'..."
+      unset SCRIPT_NAME || true
+      "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "${_req_pm}" latest || true
+    fi
+  fi
+
+  PKG_MGR="${_req_pm}"
+  export PKG_MGR
+  return 0
+}
+
 # ## detect_pkg_mgr
-# Executes detect_pkg_mgr functionality.
-# ## detect_pkg_mgr
-# Executes the detect_pkg_mgr logic.
+# Performs the detect_pkg_mgr operation and updates component state.
 detect_pkg_mgr() {
+  if resolve_requested_pkg_mgr "${1:-}"; then
+    return 0
+  fi
   if libscript_cmd_avail apt-get; then
     PKG_MGR='apt-get' # Debian, Ubuntu, and other derivatives
   elif libscript_cmd_avail apk; then
@@ -125,6 +191,18 @@ detect_pkg_mgr() {
     PKG_MGR='xbps'  # Void Linux
   elif libscript_cmd_avail eopkg; then
     PKG_MGR='eopkg'  # Solus
+  elif libscript_cmd_avail nix; then
+    PKG_MGR='nix'
+  elif libscript_cmd_avail guix; then
+    PKG_MGR='guix'
+  elif libscript_cmd_avail spack; then
+    PKG_MGR='spack'
+  elif libscript_cmd_avail vcpkg; then
+    PKG_MGR='vcpkg'
+  elif libscript_cmd_avail conan; then
+    PKG_MGR='conan'
+  elif libscript_cmd_avail pkgx; then
+    PKG_MGR='pkgx'
   else
     if [ "${TARGET_OS:-$(uname -s | tr '[:upper:]' '[:lower:]')}" = "darwin" ]; then
       if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/brew/setup.sh" ]; then
@@ -149,9 +227,7 @@ detect_pkg_mgr() {
 }
 
 # ## is_installed
-# Executes is_installed functionality.
-# ## is_installed
-# Executes the is_installed logic.
+# Performs the is_installed operation and updates component state.
 is_installed() {
   pkg="${1}"
   case "${PKG_MGR}" in
@@ -172,20 +248,44 @@ is_installed() {
     'port')               port installed "${pkg}" | grep -q 'active' ;;
     'swupd')              swupd bundle-list | grep -qx "${pkg}" ;;
     'xbps')               xbps-query -Rs '^'"${pkg}"'$' | grep -q '\[installed\]' ;;
+    'nix')                nix profile list 2>/dev/null | grep -q "${pkg}" ;;
+    'guix')               guix package --list-installed 2>/dev/null | grep -q "^${pkg}[[:space:]]" ;;
+    'spack')              spack find "${pkg}" >/dev/null 2>&1 ;;
+    'vcpkg')              vcpkg list 2>/dev/null | grep -q "^${pkg}:" ;;
+    'conan')              conan list "${pkg}/*" 2>/dev/null | grep -q "${pkg}" ;;
+    'pkgx')               command -v "${pkg}" >/dev/null 2>&1 ;;
+    'winget')             winget list --id "${pkg}" >/dev/null 2>&1 ;;
+    'choco')              choco list --local-only "${pkg}" 2>/dev/null | grep -qi "^${pkg} " ;;
+    'scoop')              scoop list "${pkg}" 2>/dev/null | grep -qi "${pkg}" ;;
     *)
       log_error "is_installed function not implemented for ${PKG_MGR}"
       exit 1 ;;
   esac
 }
 
+# ## libscript_depends_via
+# Installs one or more packages explicitly using a specified package manager name.
+libscript_depends_via() {
+  _via_pm="${1}"
+  shift
+  _saved_pm="${LIBSCRIPT_PKG_MGR:-}"
+  export LIBSCRIPT_PKG_MGR="${_via_pm}"
+  detect_pkg_mgr
+  libscript_depends "$@"
+  _rc=$?
+  export LIBSCRIPT_PKG_MGR="${_saved_pm}"
+  return "${_rc}"
+}
+
 # ## libscript_depends
-# Executes libscript_depends functionality.
-# ## libscript_depends
-# Executes the libscript_depends logic.
+# Performs the libscript_depends operation and updates component state.
 libscript_depends() {
   if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" = "1" ]; then
     log_info "Skipping system dependencies due to LIBSCRIPT_SKIP_SYSTEM_DEPS=1"
     return 0
+  fi
+  if [ -n "${LIBSCRIPT_PKG_MGR:-}" ] || [ -z "${PKG_MGR:-}" ]; then
+    detect_pkg_mgr
   fi
   pkgs_to_install=''
   for pkg in "$@"; do
@@ -194,14 +294,16 @@ libscript_depends() {
       return 1
     }
     for mapped_pkg in ${mapped_pkgs}; do
-      # log_info "Checking if package is installed (${PKG_MGR}): ${mapped_pkg}"
-      if ! is_installed "${mapped_pkg}"; then
+      if [ "${LIBSCRIPT_DRY_RUN_PKG_MGR:-0}" = "1" ] || ! is_installed "${mapped_pkg}"; then
         pkgs_to_install="${pkgs_to_install:+"${pkgs_to_install}" }${mapped_pkg}"
       fi
     done
   done
   if [ -n "${pkgs_to_install}" ]; then
-    # log_info "Installing packages (${PKG_MGR}): "${pkgs_to_install}""
+    if [ "${LIBSCRIPT_DRY_RUN_PKG_MGR:-0}" = "1" ]; then
+      log_info "[DRY-RUN] (${PKG_MGR}) install ${pkgs_to_install}"
+      return 0
+    fi
     _lockdir="${TMPDIR:-/tmp}/libscript_pkg_mgr_lock"
     _lock_timeout=30
     _lock_count=0
@@ -273,6 +375,19 @@ libscript_depends() {
         'xbps')   priv  xbps-install -Sy      ${pkgs_to_install} || _install_failed=1 ;;
         'yum')    priv  yum install -y        ${pkgs_to_install} || _install_failed=1 ;;
         'zypper') priv  zypper install -y     ${pkgs_to_install} || _install_failed=1 ;;
+        'nix')
+          for _npkg in ${pkgs_to_install}; do
+            nix profile install "nixpkgs#${_npkg}" || _install_failed=1
+          done
+          ;;
+        'guix')   guix install                ${pkgs_to_install} || _install_failed=1 ;;
+        'spack')  spack install               ${pkgs_to_install} || _install_failed=1 ;;
+        'vcpkg')  vcpkg install               ${pkgs_to_install} || _install_failed=1 ;;
+        'conan')  conan install --requires="${pkgs_to_install}" --build=missing || _install_failed=1 ;;
+        'pkgx')   pkgx install                ${pkgs_to_install} || _install_failed=1 ;;
+        'winget') winget install --exact --id ${pkgs_to_install} --accept-package-agreements --accept-source-agreements --silent || _install_failed=1 ;;
+        'choco')  choco install -y            ${pkgs_to_install} || _install_failed=1 ;;
+        'scoop')  scoop install               ${pkgs_to_install} || _install_failed=1 ;;
         *)
           log_error "libscript_depends function not implemented for ${PKG_MGR}"
           exit 1
@@ -282,7 +397,7 @@ libscript_depends() {
     )
     _install_failed=$?
 
-    rmdir "$_lockdir" 2>/dev/null || true
+    rm -rf "$_lockdir" 2>/dev/null || true
     if [ "$_install_failed" -ne 0 ]; then
       return 1
     fi
@@ -295,8 +410,6 @@ fi
 
 # ## libscript_download
 # Unified Caching Downloader for remote artifacts.
-# ## libscript_download
-# Executes the libscript_download logic.
 libscript_download() {
   export url="${1:-}"
   dest="${2:-}"
@@ -512,18 +625,14 @@ libscript_download() {
 }
 
 # ## libscript_fetch
-# Executes libscript_fetch functionality.
-# ## libscript_fetch
-# Executes the libscript_fetch logic.
+# Performs the libscript_fetch operation and updates component state.
 libscript_fetch() {
   libscript_download "$@"
 }
 
 
 # ## libscript_process_aria2_file
-# Executes libscript_process_aria2_file functionality.
-# ## libscript_process_aria2_file
-# Executes the libscript_process_aria2_file logic.
+# Performs the libscript_process_aria2_file operation and updates component state.
 libscript_process_aria2_file() {
   list_file="${1:-}"
   if [ -z "$list_file" ] || [ ! -f "$list_file" ]; then

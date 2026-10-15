@@ -55,7 +55,7 @@ if "%cmd%" == "-v" goto :show_version
 goto :eof
 
 :: ## show_version
-:: Executes show_version functionality.
+:: Performs the show_version operation and updates component state.
 :show_version
 if defined LIBSCRIPT_VERSION (
     echo %LIBSCRIPT_VERSION%

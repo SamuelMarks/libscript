@@ -59,7 +59,7 @@ set "REPO_BASE=%LIBSCRIPT_ROOT_DIR%\build\packages"
 set "ACTION=all"
 
 :: ## parse_loop
-:: Executes parse_loop functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_loop
 if "%~1"=="" goto run_gen
 if /i "%~1"=="--apk" ( set "ACTION=apk" & shift & goto parse_loop )
@@ -72,7 +72,7 @@ shift
 goto parse_loop
 
 :: ## run_gen
-:: Executes run_gen functionality.
+:: Performs the run_gen operation and updates component state.
 :run_gen
 if not exist "%REPO_BASE%\apk" mkdir "%REPO_BASE%\apk"
 if not exist "%REPO_BASE%\deb" mkdir "%REPO_BASE%\deb"
@@ -86,7 +86,7 @@ if /i "%ACTION%"=="deb" goto do_deb
 if /i "%ACTION%"=="rpm" goto do_rpm
 
 :: ## do_all
-:: Executes do_all functionality.
+:: Performs the do_all operation and updates component state.
 :do_all
 call "%SCRIPT_DIR%\apk_index.cmd" "%REPO_BASE%\apk"
 call "%SCRIPT_DIR%\deb_index.cmd" "%REPO_BASE%\deb"
@@ -94,25 +94,25 @@ call "%SCRIPT_DIR%\rpm_index.cmd" "%REPO_BASE%\rpm"
 goto finish
 
 :: ## do_apk
-:: Executes do_apk functionality.
+:: Performs the do_apk operation and updates component state.
 :do_apk
 call "%SCRIPT_DIR%\apk_index.cmd" "%REPO_BASE%\apk"
 goto finish
 
 :: ## do_deb
-:: Executes do_deb functionality.
+:: Performs the do_deb operation and updates component state.
 :do_deb
 call "%SCRIPT_DIR%\deb_index.cmd" "%REPO_BASE%\deb"
 goto finish
 
 :: ## do_rpm
-:: Executes do_rpm functionality.
+:: Performs the do_rpm operation and updates component state.
 :do_rpm
 call "%SCRIPT_DIR%\rpm_index.cmd" "%REPO_BASE%\rpm"
 goto finish
 
 :: ## finish
-:: Executes finish functionality.
+:: Performs the finish operation and updates component state.
 :finish
 set "KEY_DIR=%REPO_BASE%\keys"
 if not exist "%KEY_DIR%" mkdir "%KEY_DIR%"

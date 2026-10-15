@@ -52,20 +52,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-SET "searchVal=;%THIS_FILE%;"
-IF NOT DEFINED STACK (
-    SET "STACK=;%THIS_FILE%;"
-    echo [CONTINUE] processing "%THIS_FILE%"
-) ELSE (
-    IF NOT "!STACK:%searchVal%=!"=="!STACK!" (
-        echo [STOP]     processing "%THIS_FILE%"
-        SET ERRORLEVEL=0
-        goto :eof
-    ) ELSE (
-        SET "STACK=!STACK!%THIS_FILE%;"
-        echo [CONTINUE] processing "%THIS_FILE%"
-    )
-)
 
 if "%~1"=="--help" (
     echo Usage: %~nx0 [target_arch] [target_libc] [target_os]
@@ -121,12 +107,38 @@ set "LIBSCRIPT_SECURITY_CFLAGS=-fno-common -fPIC -fstack-protector-strong -D_FOR
 set "LIBSCRIPT_SECURITY_LDFLAGS=-Wl,-z,relro -Wl,-z,now"
 if not defined SOURCE_DATE_EPOCH set "SOURCE_DATE_EPOCH=1700000000"
 
-echo [INFO] Triplet: !LIBSCRIPT_TARGET_TRIPLET!
-echo [INFO] CFLAGS:  !LIBSCRIPT_SECURITY_CFLAGS!
+call :resolve_compiler_flags "%CC_BACKEND%"
+
+if not "%LIBSCRIPT_TRIPLETS_QUIET%"=="1" (
+    echo [INFO] Triplet: !LIBSCRIPT_TARGET_TRIPLET!
+    echo [INFO] CFLAGS:  !LIBSCRIPT_SECURITY_CFLAGS!
+)
 
 endlocal & (
     set "LIBSCRIPT_TARGET_TRIPLET=%LIBSCRIPT_TARGET_TRIPLET%"
     set "LIBSCRIPT_SECURITY_CFLAGS=%LIBSCRIPT_SECURITY_CFLAGS%"
     set "LIBSCRIPT_SECURITY_LDFLAGS=%LIBSCRIPT_SECURITY_LDFLAGS%"
+    set "LIBSCRIPT_COMPILER_CFLAGS=%LIBSCRIPT_COMPILER_CFLAGS%"
+    set "LIBSCRIPT_COMPILER_LDFLAGS=%LIBSCRIPT_COMPILER_LDFLAGS%"
     set "SOURCE_DATE_EPOCH=%SOURCE_DATE_EPOCH%"
 )
+exit /b 0
+
+:: ## resolve_compiler_flags
+:: Resolves compiler-specific security and optimization flags, omitting GNU-only hardening flags for minimal compilers such as tcc and custom-cc.
+:resolve_compiler_flags
+set "_cc_id=%~1"
+if "!_cc_id!"=="" set "_cc_id=default"
+if /i "!_cc_id!"=="tcc" (
+    set "LIBSCRIPT_COMPILER_CFLAGS=-O2"
+    set "LIBSCRIPT_COMPILER_LDFLAGS="
+    exit /b 0
+)
+if /i "!_cc_id!"=="custom-cc" (
+    set "LIBSCRIPT_COMPILER_CFLAGS=-O2"
+    set "LIBSCRIPT_COMPILER_LDFLAGS="
+    exit /b 0
+)
+set "LIBSCRIPT_COMPILER_CFLAGS=!LIBSCRIPT_SECURITY_CFLAGS! -O2"
+set "LIBSCRIPT_COMPILER_LDFLAGS=!LIBSCRIPT_SECURITY_LDFLAGS!"
+exit /b 0

@@ -1,15 +1,16 @@
 @echo off
-:: # setup_generic.cmd
+:: # setup.cmd
 ::
 :: ## Overview
-:: Provides a generic, cross-platform setup mechanism for the Drupal CMS stack.
-:: Delegates to setup.cmd for Windows provisioning.
+:: Orchestrates the setup and installation process for the Drupal CMS stack.
 :: 
 :: ## Usage
-:: Execute this script to perform generic initialization steps.
-setlocal EnableDelayedExpansion
-set "THIS_FILE=%~f0"
+:: Execute this script to install and configure drupal on the local system.
 
+setlocal EnableDelayedExpansion
+
+:: Fallback to running PowerShell for Windows provisioning
+set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
     if not errorlevel 1 (
@@ -51,20 +52,11 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if exist "%~dp0setup.cmd" (
-    call "%~dp0setup.cmd" %*
-    exit /b %ERRORLEVEL%
-)
-
 where powershell >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup.ps1" %*
-if exist "%LIBSCRIPT_HOME%\drupal\%VERSION%" (
-    echo [INFO] drupal %VERSION% is already installed.
-    exit /b 0
-)
-    exit /b %ERRORLEVEL%
+if %ERRORLEVEL% NEQ 0 (
+    echo [ERROR] PowerShell not found. Cannot configure Drupal on Windows.
+    exit /b 1
 )
 
-echo [ERROR] No suitable Windows setup executor found.
-exit /b 1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup.ps1"
+if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%

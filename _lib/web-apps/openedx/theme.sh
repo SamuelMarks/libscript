@@ -4,27 +4,7 @@
 # Manages installation, compilation, site binding, listing, and removal of comprehensive themes.
 #
 # ## Usage
-#   ./theme.sh install <name> <git_url> [--branch <branch>]
-#   ./theme.sh build <name>
-#   ./theme.sh apply <name> [--site <domain>]
-#   ./theme.sh list
-#   ./theme.sh remove <name>
-#   ./theme.sh help
-#
-# ## Parameters
-# - `install`: Clones or downloads theme into themes repository directory.
-# - `build`: Compiles theme assets, SCSS, and webpack bundles.
-# - `apply`: Binds theme to Open edX site configurations.
-# - `list`: Lists all installed themes and active assignments.
-# - `remove`: Deletes theme directory and resets theme assignment.
-#
-# ## Environment Variables
-# - `OPENEDX_INSTALL_DIR`: Path to openedx installation directory.
-# - `LIBSCRIPT_ROOT_DIR`: Root directory of LibScript repository.
-#
-# ## Exit Codes
-# - `0`: Success.
-# - `1`: Error during theme processing or git operation failure.
+#   ./theme.sh [install|build|apply|list|remove|help] [args...]
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -32,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -48,6 +29,21 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
+
+# ## Parameters
+# - `install`: Clones or downloads theme into themes repository directory.
+# - `build`: Compiles theme assets, SCSS, and webpack bundles.
+# - `apply`: Binds theme to Open edX site configurations.
+# - `list`: Lists all installed themes and active assignments.
+# - `remove`: Deletes theme directory and resets theme assignment.
+#
+# ## Environment Variables
+# - `OPENEDX_INSTALL_DIR`: Path to openedx installation directory.
+# - `LIBSCRIPT_ROOT_DIR`: Root directory of LibScript repository.
+#
+# ## Exit Codes
+# - `0`: Success.
+# - `1`: Error during theme processing or git operation failure.
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/env.sh"
@@ -73,8 +69,6 @@ mkdir -p "${THEMES_DIR}"
 
 # ## resolve_python
 # Resolves python interpreter.
-# ## resolve_python
-# Executes the resolve_python logic.
 resolve_python() {
   if [ -x "${PYTHON_BIN}" ]; then
     printf '%s\n' "${PYTHON_BIN}"
@@ -94,8 +88,6 @@ resolve_python() {
 #   $1 - name
 #   $2 - git_url
 #   --branch <branch>
-# ## theme_install
-# Executes the theme_install logic.
 theme_install() {
   if [ $# -lt 2 ]; then
     log_err "Usage: $0 install <name> <git_url> [--branch <branch>]"
@@ -155,8 +147,6 @@ EOF
 #
 # Inputs:
 #   $1 - name
-# ## theme_build
-# Executes the theme_build logic.
 theme_build() {
   if [ $# -lt 1 ]; then
     log_err "Usage: $0 build <name>"
@@ -193,8 +183,6 @@ theme_build() {
 # Inputs:
 #   $1 - name
 #   --site <domain>
-# ## theme_apply
-# Executes the theme_apply logic.
 theme_apply() {
   if [ $# -lt 1 ]; then
     log_err "Usage: $0 apply <name> [--site <domain>]"
@@ -262,8 +250,6 @@ EOF
 
 # ## theme_list
 # Lists all themes.
-# ## theme_list
-# Executes the theme_list logic.
 theme_list() {
   log_info "Listing installed Open edX themes..."
   _py="$(resolve_python)"
@@ -294,8 +280,6 @@ EOF
 #
 # Inputs:
 #   $1 - name
-# ## theme_remove
-# Executes the theme_remove logic.
 theme_remove() {
   if [ $# -lt 1 ]; then
     log_err "Usage: $0 remove <name>"
@@ -323,8 +307,6 @@ EOF
 
 # ## show_help
 # Displays usage guide.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   cat <<EOF
 Open edX Theming & Branding CLI

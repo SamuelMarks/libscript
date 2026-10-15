@@ -52,7 +52,7 @@ goto :find_root
 :root_found
 
 :: ## resolve_component_paths
-:: Executes resolve_component_paths functionality.
+:: Computes standard installation, binary, configuration, and data paths for a component.
 :resolve_component_paths
 if "%PACKAGE_NAME%"=="" (
     for %%I in ("%CD%") do set "PACKAGE_NAME=%%~nxI"

@@ -21,6 +21,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -44,8 +45,6 @@ FORCE=0
 
 # ## show_help
 # Prints usage and options documentation to standard output.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf 'Usage: %s <TARGET_DIR_OR_PLAN> [OPTIONS]
 
@@ -138,8 +137,6 @@ mkdir -p "$TMP_DIR"
 
 # ## cleanup
 # Removes temporary workspace directory upon script termination.
-# ## cleanup
-# Executes the cleanup logic.
 cleanup() {
   rm -rf "$TMP_DIR"
 }
@@ -147,8 +144,6 @@ trap cleanup EXIT INT TERM
 
 # ## resolve_spdx_file
 # Locates the best matching canonical license file for a given SPDX identifier.
-# ## resolve_spdx_file
-# Executes the resolve_spdx_file logic.
 resolve_spdx_file() {
   _spdx="$1"
   _candidate=""
@@ -185,8 +180,6 @@ resolve_spdx_file() {
 
 # ## convert_to_rtf
 # Idempotently converts a plain-text license file to a WiX-compatible RTF document.
-# ## convert_to_rtf
-# Executes the convert_to_rtf logic.
 convert_to_rtf() {
   _src_txt="$1"
   _dst_rtf="$2"

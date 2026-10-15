@@ -10,6 +10,7 @@
 :: Execute this script to mount or unmount target sysroot:
 ::   ./_lib/storage/mount_sysroot.cmd [--mount <root_dev> [esp_dev] | --unmount | --fstab <target_dir>]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -52,14 +53,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # mount_sysroot.cmd
-:::: Target storage mount manager for Windows environments.
-:: Mounts virtual hard disks (VHD/VHDX), assigns target drive letters, and manages mount lifecycles.
-::
-:: ## Usage
-:: Call mount_sysroot.cmd [--mount <vhd_or_volume> [drive_letter] | --unmount <vhd_or_volume>]
 
-setlocal EnableDelayedExpansion
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help

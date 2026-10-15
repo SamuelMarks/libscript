@@ -58,7 +58,7 @@ goto :find_root
 goto :eof
 
 :: ## libscript_get_version_dir
-:: Executes libscript_get_version_dir functionality.
+:: Performs the libscript_get_version_dir operation and updates component state.
 :libscript_get_version_dir
 set "component=%~1"
 set "version=%~2"
@@ -71,7 +71,7 @@ set "LIBSCRIPT_VERSION_DIR=%LIBSCRIPT_BASE_DIR%\%component%\%version%"
 goto :eof
 
 :: ## libscript_symlink_alias
-:: Executes libscript_symlink_alias functionality.
+:: Performs the libscript_symlink_alias operation and updates component state.
 :libscript_symlink_alias
 set "component=%~1"
 set "alias_name=%~2"

@@ -1,0 +1,13 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "s6",
+  "title": "s6",
+  "description": "skarnet.org small and secure supervision suite and init system.",
+  "category": "init-system",
+  "provides": ["s6", "init-system"],
+  "conflicts": [],
+  "versions": ["latest", "2.12.0.4"],
+  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd"],
+  "os_blacklist": ["windows"],
+  "ports": []
+}

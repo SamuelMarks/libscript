@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/languages/gcc/vars.schema.json",
+  "title": "gcc vars",
+  "description": "Configuration variables for the GNU Compiler Collection (GCC) component",
+  "type": "object",
+  "properties": {
+    "GCC_VERSION": {
+      "description": "Version of GCC to install or build.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "GCC_INSTALL_METHOD": {
+      "description": "Installation strategy for GCC ('system' via OS/selected package manager, 'from-source' compiled from source, 'libscript_native' prebuilt archive, or version managers).",
+      "type": "string",
+      "enum": ["system", "from-source", "libscript_native", "mise", "asdf", "pkgx", "vfox"],
+      "default": "system"
+    },
+    "GCC_PKG_MGR": {
+      "description": "Specific package manager to use when installing GCC (e.g., apt-get, apk, dnf, brew, pacman, winget, choco, scoop, nix, spack).",
+      "type": "string"
+    },
+    "GCC_BUILD_TOOLCHAIN": {
+      "description": "Bootstrap C toolchain used when GCC_INSTALL_METHOD='from-source'.",
+      "type": "string",
+      "default": "default"
+    },
+    "GCC_DOWNLOAD_URL": {
+      "description": "Optional explicit download URL for GCC source or prebuilt archive.",
+      "type": "string"
+    },
+    "GCC_CFLAGS": {
+      "description": "Default compiler flags exported by the GCC environment.",
+      "type": "string",
+      "default": "-O2"
+    }
+  }
+}

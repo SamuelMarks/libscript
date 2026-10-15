@@ -14,6 +14,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -43,8 +44,6 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 # ## handle_interrupt
 # Signal handler to abort documentation generation immediately on interruption.
-# ## handle_interrupt
-# Executes the handle_interrupt logic.
 handle_interrupt() {
   trap - INT TERM HUP EXIT
   [ -n "${vars_tmp-}" ] && [ -f "${vars_tmp-}" ] && rm -f "$vars_tmp" 2>/dev/null || true

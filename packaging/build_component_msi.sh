@@ -1,6 +1,5 @@
 #!/bin/sh
 # ## Overview
-# ## Overview
 # Builds a standalone Windows Installer (.msi) package for an individual LibScript dependency.
 # Decomposes full stack deployments into modular, reference-counted component MSIs.
 # Supports lightweight online installer and air-gapped offline installer with pre-bundled dependencies.
@@ -28,6 +27,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -55,10 +55,11 @@ OFFLINE_SOURCE="${LIBSCRIPT_ROOT_DIR}/cache"
 HYDRATE=0
 
 # ## cleanup_artifacts
+# Performs the cleanup_artifacts operation and updates component state.
 # ## Overview
 # Removes transient MSI compilation artifacts.
 # ## cleanup_artifacts
-# Executes the cleanup_artifacts logic.
+# Performs the cleanup_artifacts operation and updates component state.
 cleanup_artifacts() {
   rm -f "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v:-}_main.wixobj" \
         "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v:-}_payload.wixobj" \
@@ -68,12 +69,13 @@ trap cleanup_artifacts EXIT INT TERM
 
 
 # ## show_help
+# Displays command-line usage instructions and available options.
 # ## Overview
 # Displays usage and supported parameters.
 # ## Usage
 #   Internal function.
 # ## show_help
-# Executes the show_help logic.
+# Displays command-line usage instructions and available options.
 show_help() {
   cat << EOF_HELP
 LibScript Standalone Component MSI Builder
@@ -183,6 +185,7 @@ fi
 : "${VERSION:=1.0.0}"
 
 # ## find_first_file
+# Performs the find_first_file operation and updates component state.
 # ## Overview
 # Returns the path of the first existing file matching any of the passed glob arguments.
 # Temporarily enables filename expansion since the script operates under set -f.
@@ -192,7 +195,7 @@ fi
 # ## Usage
 #   Internal function.
 # ## find_first_file
-# Executes the find_first_file logic.
+# Performs the find_first_file operation and updates component state.
 find_first_file() {
   set +f
   for _pat in "$@"; do
@@ -210,6 +213,7 @@ find_first_file() {
 }
 
 # ## build_single_variant
+# Performs the build_single_variant operation and updates component state.
 # ## Overview
 # Builds a specific component installer variant (online or offline).
 #
@@ -218,7 +222,7 @@ find_first_file() {
 # ## Usage
 #   Internal function.
 # ## build_single_variant
-# Executes the build_single_variant logic.
+# Performs the build_single_variant operation and updates component state.
 build_single_variant() {
   _v="$1"
   STAGE_ROOT="${LIBSCRIPT_ROOT_DIR}/tmp/stage_component_${COMPONENT}_${_v}"

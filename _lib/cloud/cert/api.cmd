@@ -53,7 +53,7 @@ goto :find_root
 goto :%1
 
 :: ## libscript_cert_create
-:: Executes libscript_cert_create functionality.
+:: Performs the libscript_cert_create operation and updates component state.
 :libscript_cert_create
 set "provider=%~2"
 set "domain=%~3"
@@ -77,7 +77,7 @@ if "%provider%"=="aws" (
 exit /b 0
 
 :: ## libscript_cert_delete
-:: Executes libscript_cert_delete functionality.
+:: Performs the libscript_cert_delete operation and updates component state.
 :libscript_cert_delete
 set "provider=%~2"
 set "domain=%~3"
@@ -116,7 +116,7 @@ if "%provider%"=="aws" (
 exit /b 0
 
 :: ## libscript_cert_list
-:: Executes libscript_cert_list functionality.
+:: Performs the libscript_cert_list operation and updates component state.
 :libscript_cert_list
 set "provider=%~2"
 

@@ -9,6 +9,7 @@
 :: ## Usage
 ::   ./_lib/bootloaders/grub_multiboot.cmd [output_cfg]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -51,13 +52,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # grub_multiboot.cmd
-:::: Windows wrapper for grub_multiboot.sh
-::
-:: ## Usage
-:: Call grub_multiboot.cmd [output_cfg]
 
-setlocal EnableDelayedExpansion
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help
@@ -67,13 +62,13 @@ if /i "%~1"=="-?" goto :show_help
 goto :main
 
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line usage instructions and available options.
 :show_help
 echo Usage: %~nx0 [output_cfg]
 exit /b 0
 
 :: ## main
-:: Executes main functionality.
+:: Executes the primary orchestration workflow for this script.
 :main
 
 where wsl >nul 2>&1
@@ -88,5 +83,5 @@ if !errorlevel! EQU 0 (
     exit /b !errorlevel!
 )
 
-echo [ERROR] No POSIX shell (wsl or sh) found on this Windows system.
-exit /b 1
+echo [ERROR] No POSIX shell (wsl or sh) found on this Windows system. >&2
+exit /b 86

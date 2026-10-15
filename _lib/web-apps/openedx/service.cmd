@@ -105,7 +105,7 @@ echo [ERROR] Unknown subcommand: %ACTION% >&2
 goto show_help
 
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line usage instructions and available options.
 :show_help
 echo Open edX Service Manager (Windows)
 echo.
@@ -122,7 +122,7 @@ echo   help, -h  Show this help text
 exit /b 0
 
 :: ## do_start
-:: Executes do_start functionality.
+:: Performs the do_start operation and updates component state.
 :do_start
 echo [INFO] Starting Open edX platform services...
 
@@ -168,7 +168,7 @@ if %ERRORLEVEL% neq 0 (
 exit /b 0
 
 :: ## do_stop
-:: Executes do_stop functionality.
+:: Performs the do_stop operation and updates component state.
 :do_stop
 echo [INFO] Stopping Open edX platform services...
 
@@ -187,14 +187,14 @@ echo [PASS] Open edX platform services stopped.
 exit /b 0
 
 :: ## do_restart
-:: Executes do_restart functionality.
+:: Performs the do_restart operation and updates component state.
 :do_restart
 call :do_stop
 call :do_start
 exit /b 0
 
 :: ## do_status
-:: Executes do_status functionality.
+:: Performs the do_status operation and updates component state.
 :do_status
 echo ======================================================
 echo              Open edX Platform Status (Windows)
@@ -205,21 +205,21 @@ echo ======================================================
 exit /b 0
 
 :: ## do_lms
-:: Executes do_lms functionality.
+:: Performs the do_lms operation and updates component state.
 :do_lms
 call :do_status
 start http://localhost:%OPENEDX_LMS_PORT%
 exit /b 0
 
 :: ## do_studio
-:: Executes do_studio functionality.
+:: Performs the do_studio operation and updates component state.
 :do_studio
 call :do_status
 start http://localhost:%OPENEDX_CMS_PORT%
 exit /b 0
 
 :: ## do_install_service
-:: Executes do_install_service functionality.
+:: Performs the do_install_service operation and updates component state.
 :do_install_service
 echo [INFO] Installing Open edX native services...
 
@@ -234,7 +234,7 @@ echo [PASS] Successfully installed Open edX services.
 exit /b 0
 
 :: ## do_uninstall_service
-:: Executes do_uninstall_service functionality.
+:: Performs the do_uninstall_service operation and updates component state.
 :do_uninstall_service
 echo [INFO] Uninstalling Open edX native services...
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" --uninstall "openedx-lms"

@@ -4,10 +4,34 @@
 # Handles full lifecycle provisioning, configuration generation, user creation,
 # demo course ingestion, worker orchestration, Micro-Frontend deployment,
 # and health probe verification.
-# 
-# ## Usage
-# ./stacks/cms/openedx/setup_generic.sh [OPTIONS]
 #
+# ## Usage
+#   ./_lib/web-apps/openedx/setup_generic.sh [OPTIONS]
+
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+export DIR="${SCRIPT_DIR}"
+
 # ## Parameters
 #   --admin-user <user>       Administrator username (default: admin)
 #   --admin-password <pass>   Administrator initial password (default: admin)
@@ -25,29 +49,6 @@
 #   --mongodb-uri <uri>       MongoDB connection URI
 #   --repo <url>              Git repository URL for openedx-platform
 #   --version <ver>           Git release branch or tag (default: master)
-
-set -feu
-if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
-elif [ "${ZSH_VERSION-}" ]; then
-  # shellcheck disable=SC2296
-  THIS_FILE="${(%):-%x}"
-else
-  THIS_FILE="${0}"
-fi
-
-case "${STACK+x}" in
-  *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
-esac
-export STACK="${STACK:-}${THIS_FILE}"':'
-SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
@@ -85,8 +86,6 @@ offline_cache_dir=""
 
 # ## extract_archive
 # Extracts a zip or tar archive to a target directory.
-# ## extract_archive
-# Executes the extract_archive logic.
 extract_archive() {
   _src="$1"
   _dest="$2"
@@ -233,11 +232,7 @@ case "$ACTION" in
     else
       if [ ! -d "${OPENEDX_INSTALL_DIR}/.git" ]; then
         if ! command -v git >/dev/null 2>&1; then
-           if command -v apt-get >/dev/null 2>&1; then apt-get update -qq && apt-get install -y -qq git; fi
-           if command -v dnf >/dev/null 2>&1; then dnf install -y -q git; fi
-           if command -v yum >/dev/null 2>&1; then yum install -y -q git; fi
-           if command -v apk >/dev/null 2>&1; then apk add --no-cache -q git; fi
-           if command -v pkg >/dev/null 2>&1; then pkg install -y git; fi
+          libscript_depends "git" || true
         fi
         if command -v git >/dev/null 2>&1; then
           if [ -d "${OPENEDX_INSTALL_DIR}" ] && [ ! -d "${OPENEDX_INSTALL_DIR}/.git" ]; then
@@ -313,7 +308,7 @@ case "$ACTION" in
     # Inject imghdr for Python 3.13+ compatibility
     _sp_dir=$("${VENV_DIR}/bin/python" -c "import site; print(site.getsitepackages()[0])" 2>/dev/null || echo "${VENV_DIR}/lib/python3.13/site-packages")
     if [ ! -f "${_sp_dir}/imghdr.py" ]; then
-        curl -sSL "https://raw.githubusercontent.com/python/cpython/3.12/Lib/imghdr.py" -o "${_sp_dir}/imghdr.py" || true
+        libscript_download "https://raw.githubusercontent.com/python/cpython/3.12/Lib/imghdr.py" "${_sp_dir}/imghdr.py" || true
         sed -i 's/warnings\._deprecated.*//g' "${_sp_dir}/imghdr.py" 2>/dev/null || true
     fi
 

@@ -70,7 +70,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\launch_browser
 exit /b 0
 
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line usage instructions and available options.
 :show_help
 echo Usage: %~nx0 ^<url^> [shortcut_name]
 echo.

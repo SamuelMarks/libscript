@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -25,6 +26,8 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}:"
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 if [ -f /usr/lib/libgbm.so ] || [ -f /usr/lib/libgbm.so.1 ] || [ -f /usr/lib64/libgbm.so.1 ] || [ -f /usr/lib64/libgbm.so ] || [ -f /usr/lib/libGL.so ] || [ -f /usr/lib/libGL.so.1 ] || [ -f /usr/lib64/libGL.so.1 ] || [ -f /usr/lib64/libGL.so ] || [ -f /usr/lib/libEGL.so ] || [ -f /usr/lib/libEGL.so.1 ] || [ -f /usr/lib64/libEGL.so.1 ] || [ -f /usr/lib64/libEGL.so ] || [ -f /usr/local/lib/libgbm.so ] || [ -f /usr/local/lib/libGL.so ] || [ -f /usr/local/lib/libEGL.so ]; then
   exit 0

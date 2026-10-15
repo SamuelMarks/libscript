@@ -11,6 +11,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -47,8 +48,6 @@ BENTO_DIR="${BENTO_DIR:-}"
 
 # ## find_bento_dir
 # Locates the bento project directory on the filesystem.
-# ## find_bento_dir
-# Executes the find_bento_dir logic.
 find_bento_dir() {
   if [ -n "$BENTO_DIR" ] && [ -d "$BENTO_DIR" ]; then
     printf '%s\n' "$BENTO_DIR"
@@ -65,8 +64,6 @@ find_bento_dir() {
 
 # ## configure_bento_repo
 # Configures the local Bento repository dependencies and plugins.
-# ## configure_bento_repo
-# Executes the configure_bento_repo logic.
 configure_bento_repo() {
   if b_dir=$(find_bento_dir); then
     log_info "Found Bento repository at $b_dir"

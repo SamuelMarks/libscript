@@ -10,6 +10,7 @@
 :: Execute this script to install Linux to a target device:
 ::   ./_lib/package-managers/msi-rs/distro_installers/install_linux.cmd <target_dev> [flavor] [target_dir]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -52,14 +53,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # install_linux.cmd
-:::: Target Linux installation orchestrator for Windows environments.
-:: Dispatches Linux distribution installation workflows targeting raw disks or virtual disks.
-::
-:: ## Usage
-:: Call install_linux.cmd <target_dev> [flavor] [target_dir]
 
-setlocal EnableDelayedExpansion
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help
@@ -111,7 +105,5 @@ if !errorlevel! EQU 0 (
     exit /b !errorlevel!
 )
 
-if not exist "%TARGET_DIR%" mkdir "%TARGET_DIR%"
-echo LibScript Linux %FLAVOR% installed > "%TARGET_DIR%\.libscript_installed.stamp"
-echo [OK] Linux (%FLAVOR%) installation completed successfully.
-exit /b 0
+echo [ERROR] Native Linux rootfs installation is unsupported on Win32 without WSL/sh. >&2
+exit /b 86

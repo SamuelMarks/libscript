@@ -14,6 +14,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -61,12 +62,36 @@ LIBSCRIPT_SECURITY_CFLAGS="-fno-common -fPIC -fstack-protector-strong -D_FORTIFY
 LIBSCRIPT_SECURITY_LDFLAGS="-Wl,-z,relro -Wl,-z,now"
 : "${SOURCE_DATE_EPOCH:=1700000000}"
 
+# ## resolve_compiler_flags
+# Resolves compiler-specific security and optimization flags, omitting GNU-only hardening flags for minimal compilers such as tcc and custom-cc.
+resolve_compiler_flags() {
+  _cc_id="${1:-${CC_BACKEND:-default}}"
+  case "${_cc_id}" in
+    tcc|custom-cc)
+      LIBSCRIPT_COMPILER_CFLAGS="-O2"
+      LIBSCRIPT_COMPILER_LDFLAGS=""
+      ;;
+    clang)
+      LIBSCRIPT_COMPILER_CFLAGS="${LIBSCRIPT_SECURITY_CFLAGS} -O2"
+      LIBSCRIPT_COMPILER_LDFLAGS="${LIBSCRIPT_SECURITY_LDFLAGS}"
+      ;;
+    gcc|default|*)
+      LIBSCRIPT_COMPILER_CFLAGS="${LIBSCRIPT_SECURITY_CFLAGS} -O2"
+      LIBSCRIPT_COMPILER_LDFLAGS="${LIBSCRIPT_SECURITY_LDFLAGS}"
+      ;;
+  esac
+  export LIBSCRIPT_COMPILER_CFLAGS
+  export LIBSCRIPT_COMPILER_LDFLAGS
+}
+
+resolve_compiler_flags "${CC_BACKEND:-default}"
+
 export LIBSCRIPT_TARGET_TRIPLET
 export LIBSCRIPT_SECURITY_CFLAGS
 export LIBSCRIPT_SECURITY_LDFLAGS
 export SOURCE_DATE_EPOCH
 
-if [ "${4:-}" != "--quiet" ]; then
+if [ "${4:-}" != "--quiet" ] && [ "${LIBSCRIPT_TRIPLETS_QUIET:-0}" != "1" ]; then
   printf '[INFO] Triplet: %s\n' "$LIBSCRIPT_TARGET_TRIPLET"
   printf '[INFO] CFLAGS:  %s\n' "$LIBSCRIPT_SECURITY_CFLAGS"
 fi

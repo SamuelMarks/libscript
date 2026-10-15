@@ -60,12 +60,115 @@ if not defined LIBSCRIPT_ROOT_DIR (
 
 :: Source logging
 set "LOG_CMD=%LIBSCRIPT_ROOT_DIR%\_lib\_common\log.cmd"
+set "MAPPER_CMD=%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mapper.cmd"
 
+if not "%~1"=="" (
+    set "_pm_sub=%~1"
+    if "!_pm_sub:~0,1!"==":" (
+        shift
+        goto !_pm_sub!
+    )
+)
 goto :eof
+
+:: ## libscript_resolve_install_method
+:: Resolves the installation method for a component on Windows, supporting pkg_mgr:<pm>, from-source, libscript_native, and system.
+:libscript_resolve_install_method
+set "_comp_up=%~1"
+set "_req=!%_comp_up%_INSTALL_METHOD!"
+if "!_req!"=="" set "_req=%LIBSCRIPT_DEFAULT_INSTALL_METHOD%"
+if "!_req:~0,8!"=="pkg_mgr:" (
+    set "LIBSCRIPT_PKG_MGR=!_req:~8!"
+    set "_req=system"
+)
+if "!_req!"=="" set "_req=system"
+endlocal & (
+    set "LIBSCRIPT_PKG_MGR=%LIBSCRIPT_PKG_MGR%"
+    set "RESOLVED_INSTALL_METHOD=%_req%"
+)
+exit /b 0
+
+:: ## detect_pkg_mgr
+:: Detects or honors an explicitly requested Windows package manager (winget, choco, scoop, vcpkg, conan).
+:detect_pkg_mgr
+set "_comp_up=%~1"
+set "_req_pm="
+if not "!_comp_up!"=="" set "_req_pm=!%_comp_up%_PKG_MGR!"
+if "!_req_pm!"=="" if defined LIBSCRIPT_PKG_MGR set "_req_pm=%LIBSCRIPT_PKG_MGR%"
+if /i "!_req_pm!"=="chocolatey" set "_req_pm=choco"
+if not "!_req_pm!"=="" (
+    set "PKG_MGR=!_req_pm!"
+    exit /b 0
+)
+where winget >nul 2>&1
+if !errorlevel! equ 0 (
+    set "PKG_MGR=winget"
+    exit /b 0
+)
+where choco >nul 2>&1
+if !errorlevel! equ 0 (
+    set "PKG_MGR=choco"
+    exit /b 0
+)
+where scoop >nul 2>&1
+if !errorlevel! equ 0 (
+    set "PKG_MGR=scoop"
+    exit /b 0
+)
+set "PKG_MGR=winget"
+exit /b 0
+
+:: ## libscript_depends_via
+:: Installs one or more packages explicitly using a specified Windows package manager name.
+:libscript_depends_via
+set "_via_pm=%~1"
+shift
+set "_saved_pm=%LIBSCRIPT_PKG_MGR%"
+set "LIBSCRIPT_PKG_MGR=%_via_pm%"
+call :detect_pkg_mgr
+call :libscript_depends %1 %2 %3 %4 %5 %6 %7 %8 %9
+set "_rc=!errorlevel!"
+set "LIBSCRIPT_PKG_MGR=%_saved_pm%"
+exit /b !_rc!
+
+:: ## libscript_depends
+:: Resolves and installs system dependencies on Windows via the active package manager.
+:libscript_depends
+if "%LIBSCRIPT_SKIP_SYSTEM_DEPS%"=="1" exit /b 0
+if defined LIBSCRIPT_PKG_MGR call :detect_pkg_mgr
+if not defined PKG_MGR call :detect_pkg_mgr
+
+:: ## depends_loop
+:: Iterates over requested package arguments, mapping and installing each dependency.
+:depends_loop
+if "%~1"=="" exit /b 0
+set "_generic_pkg=%~1"
+call "%MAPPER_CMD%" :map_package "!_generic_pkg!"
+if "!MAPPED_PKG!"=="" set "MAPPED_PKG=!_generic_pkg!"
+if "%LIBSCRIPT_DRY_RUN_PKG_MGR%"=="1" (
+    echo [INFO] [DRY-RUN] ^(!PKG_MGR!^) install !MAPPED_PKG!
+    shift
+    goto :depends_loop
+)
+if /i "!PKG_MGR!"=="winget" (
+    winget install --exact --id "!MAPPED_PKG!" --accept-package-agreements --accept-source-agreements --silent
+) else if /i "!PKG_MGR!"=="choco" (
+    choco install -y "!MAPPED_PKG!"
+) else if /i "!PKG_MGR!"=="scoop" (
+    scoop install "!MAPPED_PKG!"
+) else if /i "!PKG_MGR!"=="vcpkg" (
+    vcpkg install "!MAPPED_PKG!"
+) else if /i "!PKG_MGR!"=="conan" (
+    conan install --requires="!MAPPED_PKG!" --build=missing
+) else (
+    winget install --exact --id "!MAPPED_PKG!" --accept-package-agreements --accept-source-agreements --silent
+)
+shift
+goto :depends_loop
 
 :: Unified Caching Downloader (Windows)
 :: ## libscript_download
-:: Executes libscript_download functionality.
+:: Performs the libscript_download operation and updates component state.
 :libscript_download
 set "url=%~1"
 set "dest=%~2"
@@ -85,7 +188,7 @@ if "!expected_checksum!"=="" (
         )
 )
 :: ## found_checksum
-:: Executes found_checksum functionality.
+:: Performs the found_checksum operation and updates component state.
 :found_checksum
 
 :: 2. Aria2 Export Mode
@@ -242,7 +345,7 @@ if not "!dest!"=="" (
 exit /b 0
 
 :: ## libscript_fetch
-:: Executes libscript_fetch functionality.
+:: Performs the libscript_fetch operation and updates component state.
 :libscript_fetch
 call :libscript_download %*
 exit /b %errorlevel%

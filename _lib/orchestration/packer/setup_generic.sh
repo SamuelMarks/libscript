@@ -11,6 +11,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -48,8 +49,6 @@ PACKER_VERSION="${PACKER_VERSION:-latest}"
 
 # ## configure_hashicorp_repo_debian
 # Configures the official HashiCorp apt repository on Debian/Ubuntu systems.
-# ## configure_hashicorp_repo_debian
-# Executes the configure_hashicorp_repo_debian logic.
 configure_hashicorp_repo_debian() {
   if [ -f /etc/apt/sources.list.d/hashicorp.list ]; then
     return 0
@@ -76,8 +75,6 @@ configure_hashicorp_repo_debian() {
 
 # ## configure_hashicorp_repo_rhel
 # Configures the official HashiCorp yum repository on RHEL/Rocky/Fedora systems.
-# ## configure_hashicorp_repo_rhel
-# Executes the configure_hashicorp_repo_rhel logic.
 configure_hashicorp_repo_rhel() {
   if [ -f /etc/yum.repos.d/hashicorp.repo ]; then
     return 0

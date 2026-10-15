@@ -2,13 +2,15 @@
 :: # setup.cmd
 ::
 :: ## Overview
-:: Setup script for systemd on Windows.
+:: Installation and configuration entrypoint for the systemd component on Windows.
+:: Delegates execution to the shared _lib\_common\setup_base.cmd module.
 ::
 :: ## Usage
-:: Automatically skipped on Windows (returns 0).
+:: setup.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
     if not errorlevel 1 (
@@ -50,4 +52,4 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-exit /b 0
+call "%~dp0\..\..\_common\setup_base.cmd" %*

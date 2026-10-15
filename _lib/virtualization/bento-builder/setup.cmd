@@ -2,13 +2,14 @@
 :: # setup.cmd
 ::
 :: ## Overview
-:: Primary setup script for Bento Builder stack on Windows.
+:: Installation and configuration entrypoint for the bento-builder component on Windows.
 ::
 :: ## Usage
-:: Call this script to set up Bento Builder on Windows.
+:: setup.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
     if not errorlevel 1 (
@@ -50,4 +51,4 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "%~dp0\..\..\..\_lib\_common\setup_base.cmd" %*
+call "%~dp0\..\..\_common\setup_base.cmd" %*

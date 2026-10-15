@@ -15,6 +15,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -33,8 +34,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## show_help
 # Displays command usage documentation.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") build <root_dir> <mfe_name> [version]"
   printf '%s\n' "       $(basename "$THIS_FILE") deploy <root_dir> <dist_root> <mfe_name> [dest_path]"
@@ -49,8 +48,6 @@ show_help() {
 #   $1 - MFE root directory
 #   $2 - MFE identifier name
 #   $3 - Version branch or tag (default: master)
-# ## do_build
-# Executes the do_build logic.
 do_build() {
   _root_dir="$1"
   _mfe_name="$2"
@@ -107,8 +104,6 @@ do_build() {
 #   $2 - Dist root directory
 #   $3 - MFE identifier name
 #   $4 - Optional explicit destination path
-# ## do_deploy
-# Executes the do_deploy logic.
 do_deploy() {
   _root_dir="$1"
   _dist_root="$2"
@@ -149,8 +144,6 @@ do_deploy() {
 #
 # Inputs:
 #   $1 - MFE root directory
-# ## do_list
-# Executes the do_list logic.
 do_list() {
   _root_dir="$1"
   _reg_file="${_root_dir}/registry.json"
@@ -167,8 +160,6 @@ do_list() {
 
 # ## main
 # Main entrypoint parsing action commands.
-# ## main
-# Executes the main logic.
 main() {
   if [ $# -lt 1 ]; then
     show_help

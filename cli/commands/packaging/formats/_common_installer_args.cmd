@@ -87,7 +87,7 @@ set "FINISH_TEXT="
 set "OFFLINE=0"
 
 :: ## args_loop
-:: Executes args_loop functionality.
+:: Performs the args_loop operation and updates component state.
 :args_loop
 if "%~1"=="" goto args_done
 if /i "%~1"=="--user-mode" (
@@ -224,7 +224,7 @@ shift
 goto args_loop
 
 :: ## args_done
-:: Executes args_done functionality.
+:: Continues execution after command-line argument parsing completes.
 :args_done
 set "PRODUCT_CODE=*"
 set "_SVC_NAME=%APP_NAME: =_%"

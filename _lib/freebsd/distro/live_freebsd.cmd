@@ -9,6 +9,7 @@
 :: Execute this script to generate a live FreeBSD image:
 ::   ./_lib/freebsd/distro/live_freebsd.cmd [output_path] [build_dir]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -51,14 +52,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # live_freebsd.cmd
-:::: FreeBSD live-CD/USB image synthesis orchestrator for Windows environments.
-:: Directs building bootable FreeBSD live media with embedded msi-rs installer suite.
-::
-:: ## Usage
-:: Call live_freebsd.cmd [output_path] [build_dir]
 
-setlocal EnableDelayedExpansion
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help
@@ -101,6 +95,6 @@ if !errorlevel! EQU 0 (
     exit /b !errorlevel!
 )
 
-echo [ERROR] No POSIX shell (wsl or sh) found on this Windows system.
-echo [ERROR] Please install WSL or Git Bash to generate FreeBSD live media.
-exit /b 1
+echo [ERROR] No POSIX shell (wsl or sh) found on this Windows system. >&2
+echo [ERROR] Please install WSL or Git Bash to generate FreeBSD live media. >&2
+exit /b 86

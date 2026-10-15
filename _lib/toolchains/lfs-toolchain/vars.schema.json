@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/lfs-toolchain/vars.schema.json",
+  "title": "LFS Toolchain variables",
+  "description": "Configuration variables for the LFS Cross-Compilation Toolchain.",
+  "type": "object",
+  "properties": {
+    "LFS_TOOLCHAIN_VERSION": {
+      "description": "Specific version of the LFS Toolchain to build.",
+      "type": "string",
+      "default": "latest"
+    },
+    "LFS_TOOLCHAIN_INSTALL_METHOD": {
+      "description": "How to install LFS_TOOLCHAIN ('libscript_native' or 'system').",
+      "type": "string",
+      "default": "libscript_native"
+    }
+  }
+}

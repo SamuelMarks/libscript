@@ -52,20 +52,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-SET "searchVal=;%THIS_FILE%;"
-IF NOT DEFINED STACK (
-    SET "STACK=;%THIS_FILE%;"
-    echo [CONTINUE] processing "%THIS_FILE%"
-) ELSE (
-    IF NOT "!STACK:%searchVal%=!"=="!STACK!" (
-        echo [STOP]     processing "%THIS_FILE%"
-        SET ERRORLEVEL=0
-        goto :eof
-    ) ELSE (
-        SET "STACK=!STACK!%THIS_FILE%;"
-        echo [CONTINUE] processing "%THIS_FILE%"
-    )
-)
 
 if "%~1"=="--help" (
     echo Usage: %~nx0 --format [qcow2^|box^|raw^|vhd^|vmdk^|iso] --profile [path]
@@ -86,7 +72,7 @@ set "PROFILE=%REPO_ROOT%\profiles\illumos\minimal-server.json"
 set "OUTPUT="
 
 :: ## parse_loop
-:: Executes parse_loop functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_loop
 if "%~1"=="" goto parse_done
 if /I "%~1"=="--format" (
@@ -128,7 +114,7 @@ if /I "%~1"=="-o" (
 shift
 goto parse_loop
 :: ## parse_done
-:: Executes parse_done functionality.
+:: Performs the parse_done operation and updates component state.
 :parse_done
 
 set "SYSROOT=%REPO_ROOT%\build\illumos-sysroot"

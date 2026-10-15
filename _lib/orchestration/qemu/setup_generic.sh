@@ -11,6 +11,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -49,8 +50,6 @@ QEMU_SETUP_UEFI_FIRMWARE="${QEMU_SETUP_UEFI_FIRMWARE:-1}"
 
 # ## setup_uefi_symlinks
 # Configures standard UEFI firmware symlinks for QEMU/KVM.
-# ## setup_uefi_symlinks
-# Executes the setup_uefi_symlinks logic.
 setup_uefi_symlinks() {
   log_info "Configuring QEMU/OVMF UEFI firmware symlinks in /usr/local/share/qemu..."
   priv mkdir -p /usr/local/share/qemu
@@ -90,8 +89,6 @@ setup_uefi_symlinks() {
 
 # ## setup_kvm_permissions
 # Configures /dev/kvm permissions and group access.
-# ## setup_kvm_permissions
-# Executes the setup_kvm_permissions logic.
 setup_kvm_permissions() {
   if [ -e "/dev/kvm" ]; then
     priv chmod 666 /dev/kvm 2>/dev/null || true
@@ -103,8 +100,6 @@ setup_kvm_permissions() {
 
 # ## setup_libvirt_network
 # Ensures default libvirt NAT network is configured and started.
-# ## setup_libvirt_network
-# Executes the setup_libvirt_network logic.
 setup_libvirt_network() {
   if command -v virsh >/dev/null 2>&1; then
     for net_file in /etc/libvirt/qemu/networks/default.xml /usr/share/libvirt/networks/default.xml; do
@@ -120,8 +115,6 @@ setup_libvirt_network() {
 
 # ## setup_user_groups
 # Adds the current user to libvirt and kvm groups.
-# ## setup_user_groups
-# Executes the setup_user_groups logic.
 setup_user_groups() {
   target_user="${SUDO_USER:-$(id -un)}"
   if [ "$target_user" = "root" ]; then

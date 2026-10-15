@@ -2,15 +2,15 @@
 :: # setup.cmd
 ::
 :: ## Overview
-:: Installation and configuration script for the msi-rs component on Windows.
-:: It handles downloading, verifying, and installing the component on the host system.
+:: Installation and configuration entrypoint for the msi-rs component on Windows.
+:: Delegates execution to the shared _lib\_common\setup_base.cmd module.
 ::
 :: ## Usage
-:: Execute this script to install or configure the component:
-::   setup.cmd [install|download|use]
+:: setup.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
     if not errorlevel 1 (

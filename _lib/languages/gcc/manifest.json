@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "gcc",
+  "title": "GNU Compiler Collection (GCC)",
+  "description": "Standalone version manager and source builder for the GNU C Compiler (GCC).",
+  "category": "languages",
+  "provides": ["compiler", "c", "gcc"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": []
+}

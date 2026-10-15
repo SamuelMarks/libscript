@@ -6,15 +6,53 @@
   "type": "object",
   "properties": {
     "LIBSCRIPT_DEFAULT_INSTALL_METHOD": {
-      "description": "Global override for how software should be installed (system vs libscript_native).",
+      "description": "Global override for how software should be installed ('libscript_native' prebuilt binary, 'from-source' compiled from source code, 'system' via OS/selected package manager, or third-party version managers).",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": [
+        "libscript_native",
+        "from-source",
+        "system",
+        "mise",
+        "asdf",
+        "pkgx",
+        "vfox",
+        "nix",
+        "guix",
+        "spack",
+        "vcpkg",
+        "conan",
+        "brew",
+        "winget",
+        "choco",
+        "scoop"
+      ],
       "default": "libscript_native"
     },
-    "LIBSCRIPT_WINDOWS_PKG_MGR": {
-      "description": "Global package manager override for Windows (winget, choco).",
+    "LIBSCRIPT_PKG_MGR": {
+      "description": "Explicit package manager override for 'system' or package-manager-driven installations (e.g., 'apt-get', 'apk', 'dnf', 'yum', 'zypper', 'pacman', 'brew', 'port', 'pkg', 'xbps', 'emerge', 'winget', 'choco', 'scoop', 'nix', 'guix', 'spack', 'vcpkg', 'conan', 'pkgx'). When set, overrides auto-detection in detect_pkg_mgr.",
+      "type": "string"
+    },
+    "LIBSCRIPT_BUILD_TOOLCHAIN": {
+      "description": "Toolchain selector used when building components from source ('default' uses the platform default C/C++ compiler via _lib/languages/c, whereas 'gcc', 'clang', 'tcc', 'custom-cc', or an explicit binary path compiles the component with that specific toolchain).",
       "type": "string",
-      "enum": ["winget", "choco"],
+      "default": "default"
+    },
+    "LIBSCRIPT_CUSTOM_CC_BIN": {
+      "description": "Optional filesystem path to a custom C compiler binary when LIBSCRIPT_BUILD_TOOLCHAIN='custom-cc'.",
+      "type": "string"
+    },
+    "LIBSCRIPT_BUILD_CFLAGS": {
+      "description": "Global extra CFLAGS passed to source builds across components.",
+      "type": "string"
+    },
+    "LIBSCRIPT_BUILD_LDFLAGS": {
+      "description": "Global extra LDFLAGS passed to source builds across components.",
+      "type": "string"
+    },
+    "LIBSCRIPT_WINDOWS_PKG_MGR": {
+      "description": "Global package manager override for Windows (winget, choco, scoop, vcpkg).",
+      "type": "string",
+      "enum": ["winget", "choco", "scoop", "vcpkg"],
       "default": "winget"
     },
     "LIBSCRIPT_LOG_LEVEL": {

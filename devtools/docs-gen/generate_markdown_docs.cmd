@@ -58,10 +58,10 @@ if /I "%~1"=="-?" goto :show_help
 goto :main
 
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line usage instructions and available options.
 :show_help
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line usage instructions and available options.
 echo Usage: %~nx0
 echo Generates markdown documentation for the libscript codebase.
 echo.
@@ -70,10 +70,10 @@ echo   --help, -h, /?, -?  Show this help message.
 exit /b 0
 
 :: ## main
-:: Executes main functionality.
+:: Executes the primary orchestration workflow for this script.
 :main
 :: ## main
-:: Executes main functionality.
+:: Executes the primary orchestration workflow for this script.
 set "ROOT_DIR=%~dp0..\.."
 
 where powershell >nul 2>&1

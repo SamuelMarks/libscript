@@ -60,7 +60,7 @@ shift
 
 set "OUTPUT_DIR="
 :: ## arg_loop
-:: Executes arg_loop functionality.
+:: Parses command-line arguments and populates configuration variables.
 :arg_loop
 if "%~1"=="" goto done_args
 if /i "%~1"=="--output-dir" ( set "OUTPUT_DIR=%~2" & shift & shift & goto arg_loop )
@@ -70,7 +70,7 @@ shift
 goto arg_loop
 
 :: ## done_args
-:: Executes done_args functionality.
+:: Continues execution after command-line argument parsing completes.
 :done_args
 
 powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\synthesize_branding.ps1" -TargetSpec "%TARGET_SPEC%" -OutputDir "%OUTPUT_DIR%"

@@ -56,14 +56,14 @@ echo Running generic uninstaller for %PACKAGE_NAME%
 
 set "PURGE_DATA=0"
 :: ## parse_args
-:: Executes parse_args functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_args
 if "%~1"=="" goto after_parse
 if /i "%~1"=="--purge-data" set "PURGE_DATA=1"
 shift
 goto parse_args
 :: ## after_parse
-:: Executes after_parse functionality.
+:: Performs the after_parse operation and updates component state.
 :after_parse
 
 if "!PURGE_DATA!"=="1" (

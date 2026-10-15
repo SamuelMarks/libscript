@@ -15,6 +15,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -33,8 +34,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## show_help
 # Displays user helper usage instructions.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") create <install_dir> <username> <email> <password> <is_staff> <is_superuser>"
   printf '%s\n' "       $(basename "$THIS_FILE") set_password <install_dir> <username> <password>"
@@ -52,8 +51,6 @@ show_help() {
 #   $4 - Password
 #   $5 - Is staff (true/false)
 #   $6 - Is superuser (true/false)
-# ## do_create
-# Executes the do_create logic.
 do_create() {
   _install_dir="$1"
   _username="$2"
@@ -97,8 +94,6 @@ do_create() {
 #   $1 - Installation directory
 #   $2 - Username
 #   $3 - Password
-# ## do_set_password
-# Executes the do_set_password logic.
 do_set_password() {
   _install_dir="$1"
   _username="$2"
@@ -136,8 +131,6 @@ do_set_password() {
 #
 # Inputs:
 #   $1 - Installation directory
-# ## do_list
-# Executes the do_list logic.
 do_list() {
   _install_dir="$1"
   _p="${_install_dir}/users.json"
@@ -154,8 +147,6 @@ do_list() {
 
 # ## main
 # Main entrypoint parsing user commands.
-# ## main
-# Executes the main logic.
 main() {
   if [ $# -lt 1 ]; then
     show_help

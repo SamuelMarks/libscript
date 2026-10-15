@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/languages/custom-cc/vars.schema.json",
+  "title": "custom-cc vars",
+  "description": "Configuration variables for the Custom C Compiler (custom-cc) recipe",
+  "type": "object",
+  "properties": {
+    "CUSTOM_CC_VERSION": {
+      "description": "Version identifier for the custom C compiler.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "CUSTOM_CC_INSTALL_METHOD": {
+      "description": "Installation strategy for custom-cc ('local_binary' registers an existing binary, 'from-source' compiles custom-cc from source, 'libscript_native' downloads an archive, 'pkg_mgr' uses a package manager, 'wrapper' creates a self-test telemetry wrapper).",
+      "type": "string",
+      "enum": ["local_binary", "from-source", "libscript_native", "pkg_mgr", "wrapper"],
+      "default": "local_binary"
+    },
+    "CUSTOM_CC_PKG_MGR": {
+      "description": "Specific package manager if installing custom-cc from a custom tap or repository.",
+      "type": "string"
+    },
+    "CUSTOM_CC_BUILD_TOOLCHAIN": {
+      "description": "Host C toolchain used to compile custom-cc itself when CUSTOM_CC_INSTALL_METHOD='from-source' (e.g., 'default', 'gcc', 'clang', 'tcc', or self-hosting 'custom-cc').",
+      "type": "string",
+      "default": "default"
+    },
+    "CUSTOM_CC_BIN": {
+      "description": "Filesystem path to a prebuilt custom C compiler binary.",
+      "type": "string"
+    },
+    "CUSTOM_CC_DOWNLOAD_URL": {
+      "description": "URL for downloading a custom C compiler source or binary archive.",
+      "type": "string"
+    },
+    "CUSTOM_CC_GIT_URL": {
+      "description": "Git repository URL for building custom-cc from source.",
+      "type": "string"
+    },
+    "CUSTOM_CC_BUILD_CMD": {
+      "description": "Command used to build custom-cc from source.",
+      "type": "string",
+      "default": "make"
+    },
+    "CUSTOM_CC_EXTRA_CFLAGS": {
+      "description": "Additional CFLAGS appended by the custom-cc wrapper.",
+      "type": "string",
+      "default": ""
+    },
+    "CUSTOM_CC_STRIP_GNU_FLAGS": {
+      "description": "Whether cc_wrapper should strip GCC/Clang-specific warning and hardening flags unsupported by minimal C compilers.",
+      "type": "boolean",
+      "default": true
+    },
+    "CUSTOM_CC_FALLBACK_CC": {
+      "description": "Optional fallback C compiler binary invoked when custom-cc encounters unsupported GNU extensions or when running in CI wrapper mode.",
+      "type": "string",
+      "default": ""
+    },
+    "CUSTOM_CC_FALLBACK_ON_ERROR": {
+      "description": "Whether cc_wrapper should retry failed compilation units with CUSTOM_CC_FALLBACK_CC and record fallback telemetry.",
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

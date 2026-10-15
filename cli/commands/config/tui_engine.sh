@@ -14,6 +14,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -41,8 +42,6 @@ fi
 
 # ## tui_msgbox
 # Displays an informational message box.
-# ## tui_msgbox
-# Executes the tui_msgbox logic.
 tui_msgbox() {
   _title="$1"
   _text="$2"
@@ -66,8 +65,6 @@ Press ENTER to continue...' "$_title" "$_text"
 
 # ## tui_menu
 # Displays a single-choice menu and returns the selected tag to stdout.
-# ## tui_menu
-# Executes the tui_menu logic.
 tui_menu() {
   _title="$1"
   _text="$2"
@@ -102,8 +99,6 @@ tui_menu() {
 
 # ## tui_input
 # Prompts for text input and returns the value to stdout.
-# ## tui_input
-# Executes the tui_input logic.
 tui_input() {
   _title="$1"
   _prompt="$2"

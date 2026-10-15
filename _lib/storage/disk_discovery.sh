@@ -15,6 +15,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -34,8 +35,6 @@ export LIBSCRIPT_ROOT_DIR
 
 # ## show_help
 # Displays usage instructions and command-line options.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [OPTIONS]"
   printf '%s\n' "Discovers and inspects storage devices on Linux, FreeBSD, and illumos."
@@ -49,16 +48,12 @@ show_help() {
 
 # ## detect_os
 # Identifies the active operating system kernel family.
-# ## detect_os
-# Executes the detect_os logic.
 detect_os() {
   uname -s | tr '[:upper:]' '[:lower:]'
 }
 
 # ## is_device_mounted
 # Checks if the specified block device or any of its partitions are mounted.
-# ## is_device_mounted
-# Executes the is_device_mounted logic.
 is_device_mounted() {
   _dev="$1"
   if command -v mount >/dev/null 2>&1; then
@@ -76,8 +71,6 @@ is_device_mounted() {
 
 # ## is_boot_media
 # Checks if the given device hosts the active rootfs or live-boot media.
-# ## is_boot_media
-# Executes the is_boot_media logic.
 is_boot_media() {
   _dev="$1"
   # Check if root is on this device
@@ -99,8 +92,6 @@ is_boot_media() {
 
 # ## wipe_device
 # Destructively removes all filesystem signatures, GPT, and MBR partition headers.
-# ## wipe_device
-# Executes the wipe_device logic.
 wipe_device() {
   _target="$1"
   if [ -z "$_target" ]; then
@@ -141,8 +132,6 @@ wipe_device() {
 
 # ## probe_linux_disks
 # Discovers storage devices on Linux environments.
-# ## probe_linux_disks
-# Executes the probe_linux_disks logic.
 probe_linux_disks() {
   _format="$1"
   if [ "$_format" = "json" ]; then
@@ -178,8 +167,6 @@ probe_linux_disks() {
 
 # ## probe_freebsd_disks
 # Discovers storage devices on FreeBSD environments.
-# ## probe_freebsd_disks
-# Executes the probe_freebsd_disks logic.
 probe_freebsd_disks() {
   _format="$1"
   if [ "$_format" = "json" ]; then
@@ -212,8 +199,6 @@ probe_freebsd_disks() {
 
 # ## probe_illumos_disks
 # Discovers storage devices on illumos / SunOS environments.
-# ## probe_illumos_disks
-# Executes the probe_illumos_disks logic.
 probe_illumos_disks() {
   _format="$1"
   if [ "$_format" = "json" ]; then

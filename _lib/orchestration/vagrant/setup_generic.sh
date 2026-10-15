@@ -11,6 +11,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -50,8 +51,6 @@ VAGRANT_INSTALL_QEMU_PLUGIN="${VAGRANT_INSTALL_QEMU_PLUGIN:-1}"
 
 # ## configure_hashicorp_repo_debian
 # Configures the official HashiCorp apt repository on Debian/Ubuntu systems.
-# ## configure_hashicorp_repo_debian
-# Executes the configure_hashicorp_repo_debian logic.
 configure_hashicorp_repo_debian() {
   if [ -f /etc/apt/sources.list.d/hashicorp.list ]; then
     return 0
@@ -77,8 +76,6 @@ configure_hashicorp_repo_debian() {
 
 # ## install_libvirt_plugin
 # Installs vagrant-libvirt provider plugin and required build headers.
-# ## install_libvirt_plugin
-# Executes the install_libvirt_plugin logic.
 install_libvirt_plugin() {
   if ! command -v vagrant >/dev/null 2>&1; then
     return 0
@@ -107,8 +104,6 @@ install_libvirt_plugin() {
 
 # ## install_qemu_plugin
 # Installs vagrant-qemu provider plugin.
-# ## install_qemu_plugin
-# Executes the install_qemu_plugin logic.
 install_qemu_plugin() {
   if ! command -v vagrant >/dev/null 2>&1; then
     return 0

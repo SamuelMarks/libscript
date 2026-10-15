@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
@@ -18,7 +19,6 @@ set "STACK=%STACK%:%THIS_FILE%:"
 :: ## Usage
 :: Execute this script to perform actions for .githooks.
 
-setlocal EnableDelayedExpansion
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 if not defined LIBSCRIPT_ROOT_DIR (

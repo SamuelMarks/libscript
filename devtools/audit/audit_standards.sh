@@ -18,6 +18,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,8 +38,6 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 # ## show_help
 # Displays usage and help information for the audit tool.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [--all | --staged | <file>...]"
   printf '%s\n' "Audits files for adherence to LibScript engineering standards."
@@ -60,8 +59,6 @@ cd "$REPO_ROOT"
 # ## handle_interrupt
 # Signal handler to abort audit immediately on interruption.
 # shellcheck disable=SC2329
-# ## handle_interrupt
-# Executes the handle_interrupt logic.
 handle_interrupt() {
   trap - INT TERM HUP EXIT
   exit 130
@@ -73,8 +70,6 @@ ERRORS=0
 
 # ## log_failure
 # Records and outputs an audit violation message.
-# ## log_failure
-# Executes the log_failure logic.
 log_failure() {
   target_file="$1"
   rule_name="$2"
@@ -85,8 +80,6 @@ log_failure() {
 
 # ## is_excluded_path
 # Checks whether a given path should be skipped from audits.
-# ## is_excluded_path
-# Executes the is_excluded_path logic.
 is_excluded_path() {
   check_path="$1"
   case "$check_path" in
@@ -101,8 +94,6 @@ is_excluded_path() {
 
 # ## audit_single_file
 # Runs all static standard checks on an individual file.
-# ## audit_single_file
-# Executes the audit_single_file logic.
 audit_single_file() {
   file="$1"
 
@@ -116,28 +107,28 @@ audit_single_file() {
 
   ext="${file##*.}"
 
-  # 1. POSIX /bin/sh and THIS_FILE dance (for .sh files)
+  # 1. POSIX /bin/sh, THIS_FILE dance, idempotency, eval, and doc header (for .sh files)
   if [ "$ext" = "sh" ]; then
-    first_line=$(head -n 1 "$file" 2>/dev/null || true)
-    case "$first_line" in
-      *bash*|*zsh*|*ksh*)
-        log_failure "$file" "POSIX_SHEBANG" "Non-POSIX shebang found: '$first_line'. LibScript requires '#!/bin/sh'."
-        ;;
-      "#!/bin/sh"*)
-        ;;
-      *)
-        case "$file" in
-          *.tpl|*.template|*docker*|*test*|*docs-web-template*) ;;
-          *)
-            log_failure "$file" "POSIX_SHEBANG" "Missing '#!/bin/sh' shebang on line 1."
-            ;;
-        esac
-        ;;
-    esac
-
-    # Validate no duplicate shebangs outside of heredocs
-    multi_shebangs=$(awk '
-      BEGIN { in_heredoc = 0; delim = ""; count = 0; lines = ""; }
+    sh_violations=$(awk '
+      BEGIN {
+        in_heredoc = 0; delim = ""; shebang_count = 0; shebang_lines = "";
+        has_this_file = 0; has_stack = 0; has_root_dir = 0; has_zsh_eval = 0;
+        has_overview = 0; has_usage = 0;
+        mkdir_hits = ""; ln_hits = ""; eval_hits = ""; git_push_hits = "";
+      }
+      NR == 1 {
+        first_line = $0
+      }
+      NR <= 30 {
+        if ($0 ~ /## Overview/) has_overview = 1
+        if ($0 ~ /## Usage/) has_usage = 1
+      }
+      NR <= 45 {
+        if ($0 ~ /THIS_FILE=/) has_this_file = 1
+        if ($0 ~ /STACK/) has_stack = 1
+        if ($0 ~ /LIBSCRIPT_ROOT_DIR/) has_root_dir = 1
+        if ($0 ~ /# libscript-allow-eval/) has_zsh_eval = 1
+      }
       {
         if (in_heredoc) {
           cur = $0
@@ -162,34 +153,71 @@ audit_single_file() {
           }
         }
         if ($0 ~ /^#!/) {
-          count++
-          lines = (lines ? lines ", " : "") NR
+          shebang_count++
+          shebang_lines = (shebang_lines ? shebang_lines ", " : "") NR
+        }
+        if ($0 ~ /^[[:space:]]*mkdir[[:space:]]+[^-]/ && tolower($0) !~ /lock|while|if[[:space:]]+!/) {
+          mkdir_hits = (mkdir_hits ? mkdir_hits "; " : "") NR ":" $0
+        }
+        if ($0 ~ /^[[:space:]]*ln[[:space:]]+-s[[:space:]]+[^-]/) {
+          ln_hits = (ln_hits ? ln_hits "; " : "") NR ":" $0
+        }
+        if (($0 ~ /^[[:space:]]*eval([[:space:]]|$)/ || $0 ~ /;[[:space:]]*eval([[:space:]]|$)/) && $0 !~ /libscript-allow-eval/) {
+          eval_hits = (eval_hits ? eval_hits "; " : "") NR ":" $0
+        }
+        if ($0 ~ /^[[:space:]]*(call[[:space:]]+)?git[[:space:]]+push([[:space:]]|$)/) {
+          git_push_hits = (git_push_hits ? git_push_hits "; " : "") NR ":" $0
         }
       }
       END {
-        if (count > 1) {
-          print lines
+        if (first_line ~ /bash|zsh|ksh/) {
+          print "POSIX_SHEBANG|Non-POSIX shebang found: " first_line ". LibScript requires #!/bin/sh."
+        } else if (first_line !~ /^#!\/bin\/sh/) {
+          print "MISSING_SHEBANG|Missing #!/bin/sh shebang on line 1."
         }
+        if (shebang_count > 1) {
+          print "DUPLICATE_SHEBANG|Multiple shebangs found outside of heredocs at lines: " shebang_lines "."
+        }
+        if (!has_this_file) print "THIS_FILE_DANCE|Missing canonical THIS_FILE= resolution in first 30 lines."
+        if (!has_stack) print "RECURSION_GUARD|Missing STACK recursion guard in first 35 lines."
+        if (!has_root_dir) print "ROOT_DIR_RESOLUTION|Missing LIBSCRIPT_ROOT_DIR resolution in header."
+        if (!has_zsh_eval) print "ZSH_ALLOW_EVAL_TAG|Missing # libscript-allow-eval in ZSH_VERSION header block."
+        if (!has_overview) print "DOC_OVERVIEW|Missing doc block ## Overview in first 30 lines."
+        if (!has_usage) print "DOC_USAGE|Missing doc block ## Usage in first 30 lines."
+        if (mkdir_hits != "") print "IDEMPOTENCY|Unguarded mkdir found without -p: " mkdir_hits
+        if (ln_hits != "") print "IDEMPOTENCY|Unguarded ln -s found without -f: " ln_hits
+        if (eval_hits != "") print "BAN_EVAL|Disallowed use of eval found: " eval_hits
+        if (git_push_hits != "") print "REMOTE_SAFETY|Strict safety violation: found git push invocation: " git_push_hits
       }
     ' "$file" 2>/dev/null || true)
-    if [ -n "$multi_shebangs" ]; then
-      log_failure "$file" "DUPLICATE_SHEBANG" "Multiple shebangs found outside of heredocs at lines: $multi_shebangs."
-    fi
 
-    # Validate THIS_FILE preamble dance in first 65 lines
-    head_block=$(head -n 65 "$file" 2>/dev/null || true)
-    case "$file" in
-      *Dockerfile*|*.tpl|*dockerfiles-ssh*|*docker/*)
-        ;;
-      *)
-        if ! printf '%s\n' "$head_block" | grep -q 'THIS_FILE='; then
-          log_failure "$file" "THIS_FILE_DANCE" "Missing canonical 'THIS_FILE=' resolution in first 65 lines."
-        fi
-        if ! printf '%s\n' "$head_block" | grep -q 'STACK'; then
-          log_failure "$file" "RECURSION_GUARD" "Missing 'STACK' recursion guard in first 65 lines."
-        fi
-        ;;
-    esac
+    if [ -n "$sh_violations" ]; then
+      OIFS_V="$IFS"
+      IFS='
+'
+      for v_line in $sh_violations; do
+        v_rule="${v_line%%|*}"
+        v_msg="${v_line#*|}"
+        case "$v_rule" in
+          MISSING_SHEBANG)
+            case "$file" in
+              *.tpl|*.template|*docker*|*test*|*docs-web-template*) ;;
+              *) log_failure "$file" "POSIX_SHEBANG" "$v_msg" ;;
+            esac
+            ;;
+          THIS_FILE_DANCE|RECURSION_GUARD|ROOT_DIR_RESOLUTION|ZSH_ALLOW_EVAL_TAG)
+            case "$file" in
+              *Dockerfile*|*.tpl|*dockerfiles-ssh*|*docker/*) ;;
+              *) log_failure "$file" "$v_rule" "$v_msg" ;;
+            esac
+            ;;
+          *)
+            log_failure "$file" "$v_rule" "$v_msg"
+            ;;
+        esac
+      done
+      IFS="$OIFS_V"
+    fi
 
     # 2. Windows batch parity (.cmd or .bat equivalent)
     case "$file" in
@@ -205,80 +233,110 @@ audit_single_file() {
     esac
   fi
 
-  # Validate Windows batch headers
+  # Validate .ps1 companion parity (.sh and .cmd equivalents) and checks
+  if [ "$ext" = "ps1" ]; then
+    sh_equiv="${file%.ps1}.sh"
+    cmd_equiv="${file%.ps1}.cmd"
+    if [ ! -f "$sh_equiv" ]; then
+      log_failure "$file" "POSIX_PARITY" "Missing POSIX shell equivalent file ('$sh_equiv') for PowerShell script."
+    fi
+    if [ ! -f "$cmd_equiv" ]; then
+      log_failure "$file" "WINDOWS_PARITY" "Missing Windows batch equivalent file ('$cmd_equiv') for PowerShell script."
+    fi
+    ps1_violations=$(awk '
+      BEGIN { has_overview = 0; has_usage = 0; eval_hits = ""; git_push_hits = "" }
+      { sub(/\r$/, "", $0) }
+      NR <= 30 {
+        if ($0 ~ /## Overview/) has_overview = 1
+        if ($0 ~ /## Usage/) has_usage = 1
+      }
+      {
+        if (tolower($0) ~ /^[[:space:]]*(invoke-expression|iex)([[:space:]]|$)/ && $0 !~ /libscript-allow-eval/) {
+          eval_hits = (eval_hits ? eval_hits "; " : "") NR ":" $0
+        }
+        if (tolower($0) ~ /^[[:space:]]*(call[[:space:]]+)?git[[:space:]]+push([[:space:]]|$)/) {
+          git_push_hits = (git_push_hits ? git_push_hits "; " : "") NR ":" $0
+        }
+      }
+      END {
+        if (!has_overview) print "DOC_OVERVIEW|Missing doc block ## Overview in first 30 lines."
+        if (!has_usage) print "DOC_USAGE|Missing doc block ## Usage in first 30 lines."
+        if (eval_hits != "") print "BAN_EVAL|Disallowed use of Invoke-Expression found: " eval_hits
+        if (git_push_hits != "") print "REMOTE_SAFETY|Strict safety violation: found git push invocation: " git_push_hits
+      }
+    ' "$file" 2>/dev/null || true)
+    if [ -n "$ps1_violations" ]; then
+      OIFS_V="$IFS"
+      IFS='
+'
+      for v_line in $ps1_violations; do
+        log_failure "$file" "${v_line%%|*}" "${v_line#*|}"
+      done
+      IFS="$OIFS_V"
+    fi
+  fi
+
+  # Validate Windows batch headers, idempotency, docstrings, and safety in single awk pass
   if [ "$ext" = "cmd" ] || [ "$ext" = "bat" ]; then
-    cmd_head=$(head -n 25 "$file" 2>/dev/null || true)
-    if ! printf '%s\n' "$cmd_head" | grep -qi 'THIS_FILE=%~f0'; then
-      log_failure "$file" "BATCH_THIS_FILE" "Missing 'set \"THIS_FILE=%~f0\"' in first 25 lines."
+    cmd_violations=$(awk '
+      BEGIN {
+        has_echo_off = 0; has_delayed = 0; has_this_file = 0;
+        has_overview = 0; has_usage = 0; has_dup_stack = 0;
+        mkdir_hits = ""; git_push_hits = "";
+      }
+      { sub(/\r$/, "", $0) }
+      NR == 1 {
+        if (tolower($0) == "@echo off") has_echo_off = 1
+      }
+      NR <= 25 {
+        if (tolower($0) ~ /enabledelayedexpansion/) has_delayed = 1
+        if (tolower($0) ~ /this_file=%~f0/) has_this_file = 1
+      }
+      NR <= 30 {
+        if ($0 ~ /## Overview/) has_overview = 1
+        if ($0 ~ /## Usage/) has_usage = 1
+      }
+      {
+        if (tolower($0) ~ /searchval=;%this_file%;/) has_dup_stack = 1
+        if (tolower($0) ~ /^[[:space:]]*(mkdir|md)[[:space:]]+/ && tolower($0) !~ /if[[:space:]]+not[[:space:]]+exist/) {
+          mkdir_hits = (mkdir_hits ? mkdir_hits "; " : "") NR ":" $0
+        }
+        if (tolower($0) ~ /^[[:space:]]*(call[[:space:]]+)?git[[:space:]]+push([[:space:]]|$)/) {
+          git_push_hits = (git_push_hits ? git_push_hits "; " : "") NR ":" $0
+        }
+      }
+      END {
+        if (!has_echo_off) print "BATCH_ECHO_OFF|Missing @echo off on line 1."
+        if (!has_delayed) print "BATCH_DELAYED_EXPANSION|Missing setlocal EnableDelayedExpansion in first 25 lines (before :find_root)."
+        if (!has_this_file) print "BATCH_THIS_FILE|Missing set \"THIS_FILE=%~f0\" in first 25 lines."
+        if (has_dup_stack) print "BATCH_DUPLICATE_STACK|Duplicate legacy searchVal=;%THIS_FILE%; STACK block found."
+        if (!has_overview) print "DOC_OVERVIEW|Missing doc block ## Overview in first 30 lines."
+        if (!has_usage) print "DOC_USAGE|Missing doc block ## Usage in first 30 lines."
+        if (mkdir_hits != "") print "IDEMPOTENCY|Unguarded mkdir in batch script: " mkdir_hits
+        if (git_push_hits != "") print "REMOTE_SAFETY|Strict safety violation: found git push invocation: " git_push_hits
+      }
+    ' "$file" 2>/dev/null || true)
+    if [ -n "$cmd_violations" ]; then
+      OIFS_V="$IFS"
+      IFS='
+'
+      for v_line in $cmd_violations; do
+        log_failure "$file" "${v_line%%|*}" "${v_line#*|}"
+      done
+      IFS="$OIFS_V"
     fi
   fi
-
-  # 3. Idempotency checks
-  if [ "$ext" = "sh" ]; then
-    # Catch unguarded mkdir without -p (excluding atomic lock acquisition patterns)
-    unguarded_mkdir=$(grep -nE '^[[:space:]]*mkdir[[:space:]]+[^-]' "$file" 2>/dev/null | grep -vEi 'lock|while|if[[:space:]]+!' || true)
-    if [ -n "$unguarded_mkdir" ]; then
-      log_failure "$file" "IDEMPOTENCY" "Unguarded 'mkdir' found without '-p': $unguarded_mkdir. Use 'mkdir -p' for idempotency."
-    fi
-    # Catch unguarded ln -s without -f
-    unguarded_ln=$(grep -nE '^[[:space:]]*ln[[:space:]]+-s[[:space:]]+[^-]' "$file" 2>/dev/null || true)
-    if [ -n "$unguarded_ln" ]; then
-      log_failure "$file" "IDEMPOTENCY" "Unguarded 'ln -s' found without '-f': $unguarded_ln. Use 'ln -sf' for idempotency."
-    fi
-  elif [ "$ext" = "cmd" ] || [ "$ext" = "bat" ]; then
-    # Catch unguarded mkdir in batch without if not exist
-    unguarded_batch_mkdir=$(grep -nEi '^[[:space:]]*(mkdir|md)[[:space:]]+' "$file" 2>/dev/null | grep -vEi 'if[[:space:]]+not[[:space:]]+exist' || true)
-    if [ -n "$unguarded_batch_mkdir" ]; then
-      log_failure "$file" "IDEMPOTENCY" "Unguarded 'mkdir' in batch script: $unguarded_batch_mkdir. Wrap with 'if not exist <dir> mkdir <dir>'."
-    fi
-  fi
-
-  # 4. Ban eval check
-  if [ "$ext" = "sh" ] || [ "$ext" = "ps1" ]; then
-    if [ "$ext" = "sh" ]; then
-      eval_hits=$(grep -nE '^[[:space:]]*eval([[:space:]]|$)|;[[:space:]]*eval([[:space:]]|$)' "$file" | grep -v 'libscript-allow-eval' || true)
-    else
-      eval_hits=$(grep -nEi '^[[:space:]]*(Invoke-Expression|iex)\b|;[[:space:]]*(Invoke-Expression|iex)\b' "$file" | grep -v 'libscript-allow-eval' || true)
-    fi
-    if [ -n "$eval_hits" ]; then
-      log_failure "$file" "BAN_EVAL" "Disallowed use of eval/Invoke-Expression found: $eval_hits"
-    fi
-  fi
-
-  # 5. 100% Doc coverage (## Overview and ## Usage)
-  case "$ext" in
-    sh|cmd|bat|ps1)
-      doc_header=$(head -n 30 "$file" 2>/dev/null || true)
-      if ! printf '%s\n' "$doc_header" | grep -q '## Overview'; then
-        log_failure "$file" "DOC_OVERVIEW" "Missing doc block '## Overview' in first 30 lines."
-      fi
-      if ! printf '%s\n' "$doc_header" | grep -q '## Usage'; then
-        log_failure "$file" "DOC_USAGE" "Missing doc block '## Usage' in first 30 lines."
-      fi
-      ;;
-  esac
 
   # 6. Option A Hard Fail Proforma check (Exit code 86)
-  file_name=$(basename "$file")
-  case "$file_name" in
-    mount_target_vfs.cmd|umount_target_vfs.cmd|runner.cmd|provision_disk.cmd|format_fs.cmd)
+  case "$file" in
+    */mount_target_vfs.cmd|*/umount_target_vfs.cmd|*/runner.cmd|*/provision_disk.cmd|*/format_fs.cmd|*/live_freebsd.cmd|*/live_illumos.cmd|*/live_linux.cmd|*/coinstall_dual_os.cmd|*/install_freebsd.cmd|*/install_illumos.cmd|*/install_linux.cmd|*/multiboot_orchestrator.cmd|*/grub_multiboot.cmd)
       if ! grep -q 'exit /b 86' "$file"; then
         log_failure "$file" "OPTION_A_PROFORMA" "Option A proforma script must exit with status 86."
       fi
       ;;
-    mount_target_vfs.ps1|umount_target_vfs.ps1|runner.ps1|provision_disk.ps1|format_fs.ps1)
+    */mount_target_vfs.ps1|*/umount_target_vfs.ps1|*/runner.ps1|*/provision_disk.ps1|*/format_fs.ps1)
       if ! grep -q 'exit 86' "$file"; then
         log_failure "$file" "OPTION_A_PROFORMA" "Option A proforma script must exit with status 86."
-      fi
-      ;;
-  esac
-
-  # 7. Remote Safety Mandate (NEVER execute git push)
-  case "$ext" in
-    sh|cmd|bat|ps1)
-      git_push_hits=$(grep -nE '^[[:space:]]*(call[[:space:]]+)?git[[:space:]]+push\b' "$file" 2>/dev/null || true)
-      if [ -n "$git_push_hits" ]; then
-        log_failure "$file" "REMOTE_SAFETY" "Strict safety violation: found 'git push' invocation: $git_push_hits"
       fi
       ;;
   esac
@@ -338,6 +396,18 @@ if [ "${1:-}" = "--all" ]; then
     [ -f "$candidate" ] && audit_single_file "$candidate"
   done
   IFS="$OIFS"
+  for cat_dir in _lib/*; do
+    [ -d "$cat_dir" ] || continue
+    [ "$(basename "$cat_dir")" = "_common" ] && continue
+    for comp_dir in "$cat_dir"/*; do
+      [ -d "$comp_dir" ] || continue
+      for req_file in cli.sh cli.cmd setup.sh setup.cmd env.sh env.cmd service.sh service.cmd test.sh test.cmd manifest.json vars.schema.json README.md; do
+        if [ ! -f "$comp_dir/$req_file" ]; then
+          log_failure "$comp_dir" "VERSION_MANAGER_CONTRACT" "Missing required Version Manager Contract file: $req_file"
+        fi
+      done
+    done
+  done
 elif [ "${1:-}" = "--staged" ] || [ $# -eq 0 ]; then
   staged_files=$(git diff --no-ext-diff --cached --name-only --diff-filter=ACM || true)
   if [ -z "$staged_files" ]; then

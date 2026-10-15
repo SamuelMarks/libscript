@@ -23,6 +23,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -130,8 +131,6 @@ mkdir -p "${CACHE_DIR}/runtimes" "${CACHE_DIR}/databases" "${CACHE_DIR}/wheels" 
 
 # ## compute_sha256
 # Computes the 64-character lowercase SHA-256 checksum of a file.
-# ## compute_sha256
-# Executes the compute_sha256 logic.
 compute_sha256() {
   _file="$1"
   if command -v sha256sum >/dev/null 2>&1; then
@@ -149,8 +148,6 @@ compute_sha256() {
 # ## prune_archive
 # Strips heavyweight debug symbols (.pdb) and non-essential static libraries
 # from large datastore archives to optimize air-gapped MSI package size.
-# ## prune_archive
-# Executes the prune_archive logic.
 prune_archive() {
   _dest="$1"
   _category="$2"
@@ -187,8 +184,6 @@ prune_archive() {
 
 # ## process_artifact
 # Idempotently checks or downloads an artifact and validates its SHA-256 digest.
-# ## process_artifact
-# Executes the process_artifact logic.
 process_artifact() {
   _url="$1"
   _dest="$2"

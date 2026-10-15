@@ -15,6 +15,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -129,8 +130,10 @@ EOF_HELP
     exit 0
     ;;
   *)
-    printf '[ERROR] Unknown subcommand: %s\n' "$1" >&2
-    printf 'Run "./cli.sh help" for available commands.\n' >&2
-    exit 1
+    export PACKAGE_NAME="wordpress"
+    SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/component_core.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
     ;;
 esac

@@ -14,6 +14,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -70,8 +71,6 @@ mkdir -p "$TEST_DIR"
 # ## cleanup
 # Cleans up temporary test directory and destroys test Vagrant VM instances.
 # shellcheck disable=SC2329
-# ## cleanup
-# Executes the cleanup logic.
 cleanup() {
   if [ "$DRY_RUN" -eq 0 ] && command -v vagrant >/dev/null 2>&1; then
     (cd "$TEST_DIR" && vagrant destroy -f 2>/dev/null || true)

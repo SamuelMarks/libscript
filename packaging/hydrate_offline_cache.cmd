@@ -70,7 +70,7 @@ set "WHEELS="
 set "CODEBASE="
 
 :: ## parse_loop
-:: Executes parse_loop functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_loop
 if "%~1"=="" goto :execute
 if /i "%~1"=="--manifest" (
@@ -111,7 +111,7 @@ echo Error: Unknown option "%~1" >&2
 exit /b 1
 
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line usage instructions and available options.
 :show_help
 echo Usage: %~nx0 [OPTIONS]
 echo.
@@ -126,7 +126,7 @@ echo   --help, -h            Show this help text
 exit /b 0
 
 :: ## execute
-:: Executes execute functionality.
+:: Executes the primary orchestration workflow for this script.
 :execute
 set "PS_ARGS="
 if not "%MANIFEST%"=="" set PS_ARGS=!PS_ARGS! -Manifest "%MANIFEST%"

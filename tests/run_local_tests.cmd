@@ -56,7 +56,7 @@ set "REUSE_VM=0"
 set "ARGS="
 
 :: ## parse_args
-:: Executes parse_args functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_args
 if "%~1"=="" goto :done_args
 if /I "%~1"=="--help" goto :show_help
@@ -83,7 +83,7 @@ shift
 goto :parse_args
 
 :: ## done_args
-:: Executes done_args functionality.
+:: Continues execution after command-line argument parsing completes.
 :done_args
 
 set "THIS_DIR=%~dp0"

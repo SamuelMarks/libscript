@@ -17,6 +17,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -36,8 +37,6 @@ export DIR="${SCRIPT_DIR}"
 
 # ## handle_tutor_do
 # Dispatches tutor 'do' task commands to native Open edX handlers.
-# ## handle_tutor_do
-# Executes the handle_tutor_do logic.
 handle_tutor_do() {
   _job="${1:-}"
   if [ -z "${_job}" ]; then

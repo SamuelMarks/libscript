@@ -15,6 +15,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,8 +40,6 @@ TEMP_DIR="${REPO_ROOT}/tests_tmp/live_screenshots_$$"
 
 # ## show_help
 # Displays usage and command-line options.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [--all | --mode <headless|tui|gui|bootloader|login|loggedin>]"
   printf '%s\n' "Captures and stores live installer screenshots into ../cc0-assets."
@@ -62,8 +61,6 @@ show_help() {
 # ## cleanup
 # Removes temporary artifacts and staging directory.
 # shellcheck disable=SC2329
-# ## cleanup
-# Executes the cleanup logic.
 cleanup() {
   rm -rf "${TEMP_DIR}" 2>/dev/null || true
 }
@@ -78,8 +75,6 @@ fi
 
 # ## find_qemu_monitor
 # Discovers the active QEMU monitor UNIX domain socket for the running Vagrant VM.
-# ## find_qemu_monitor
-# Executes the find_qemu_monitor logic.
 find_qemu_monitor() {
   target_os="$1"
   for _id_file in "${REPO_ROOT}/vagrant/${target_os}/.vagrant/machines"/*/qemu/id; do
@@ -97,8 +92,6 @@ find_qemu_monitor() {
 
 # ## save_asset_image
 # Converts raw PPM framebuffer dumps to PNG and copies to cc0-assets.
-# ## save_asset_image
-# Executes the save_asset_image logic.
 save_asset_image() {
   src_file="$1"
   asset_name="$2"
@@ -134,8 +127,6 @@ save_asset_image() {
 
 # ## capture_framebuffer
 # Triggers screendump on active QEMU monitor socket.
-# ## capture_framebuffer
-# Executes the capture_framebuffer logic.
 capture_framebuffer() {
   sock="$1"
   name="$2"
@@ -153,8 +144,6 @@ capture_framebuffer() {
 
 # ## generate_actual_screenshots
 # Executes genuine installer commands and renders authentic terminal and dialog screenshots.
-# ## generate_actual_screenshots
-# Executes the generate_actual_screenshots logic.
 generate_actual_screenshots() {
   if [ -x "${SCRIPT_DIR}/render_actual_screenshots.sh" ]; then
     "${SCRIPT_DIR}/render_actual_screenshots.sh"
@@ -165,8 +154,6 @@ generate_actual_screenshots() {
 
 # ## capture_headless_mode
 # Simulates and captures headless automated installation step screens.
-# ## capture_headless_mode
-# Executes the capture_headless_mode logic.
 capture_headless_mode() {
   printf '[CAPTURE] Recording Headless Installer flow...\n'
   steps="14_headless_partitioning_format 15_headless_multiboot_deploy"
@@ -183,8 +170,6 @@ capture_headless_mode() {
 
 # ## capture_tui_mode
 # Captures terminal user interface wizard interaction screens.
-# ## capture_tui_mode
-# Executes the capture_tui_mode logic.
 capture_tui_mode() {
   printf '[CAPTURE] Recording TUI Wizard flow...\n'
   screens="16_tui_wizard_disk_selector 17_tui_wizard_multiboot_confirm 18_tui_scrollable_catalog"
@@ -201,8 +186,6 @@ capture_tui_mode() {
 
 # ## capture_gui_mode
 # Captures fullscreen kiosk graphical installer dialogs from live framebuffer.
-# ## capture_gui_mode
-# Executes the capture_gui_mode logic.
 capture_gui_mode() {
   printf '[CAPTURE] Recording GUI Kiosk Wizard flow...\n'
   dialogs="01_msi_installer_welcome 02_msi_partitioning_editor 03_msi_partition_disk_map 04_msi_mbr_gpt_scheme_toggle 05_msi_partition_type_editor 06_msi_filesystem_format_reuse 07_msi_partition_alignment_validation 08_msi_os_selection 09_msi_multi_os_multiboot 10_msi_dynamic_component_catalog 11_msi_workload_options 12_msi_install_progress 13_msi_complete_summary"
@@ -219,8 +202,6 @@ capture_gui_mode() {
 
 # ## capture_bootloader_mode
 # Captures bootloader selection menus (GRUB2 multiboot, FreeBSD, illumos, systemd-boot).
-# ## capture_bootloader_mode
-# Executes the capture_bootloader_mode logic.
 capture_bootloader_mode() {
   printf '[CAPTURE] Recording Bootloader screens...\n'
   bootloaders="00_bios_firmware_boot_menu 19_bootloader_grub_multiboot 20_bootloader_freebsd_loader 21_bootloader_illumos_loader 22_bootloader_systemd_boot"
@@ -237,8 +218,6 @@ capture_bootloader_mode() {
 
 # ## capture_login_mode
 # Captures text console and graphical display manager login prompts across Linux, FreeBSD, and illumos.
-# ## capture_login_mode
-# Executes the capture_login_mode logic.
 capture_login_mode() {
   printf '[CAPTURE] Recording Login screens...\n'
   logins="23_login_linux_console 24_login_linux_display_manager 25_login_freebsd_console 26_login_freebsd_display_manager 27_login_illumos_console 28_login_illumos_display_manager"
@@ -255,8 +234,6 @@ capture_login_mode() {
 
 # ## capture_loggedin_mode
 # Captures authenticated terminal sessions with uname -a and os-release outputs.
-# ## capture_loggedin_mode
-# Executes the capture_loggedin_mode logic.
 capture_loggedin_mode() {
   printf '[CAPTURE] Recording Logged-in Terminal and Desktop screens...\n'
   screens="29_loggedin_linux_terminal 30_loggedin_linux_desktop_terminal 31_loggedin_freebsd_terminal 32_loggedin_freebsd_desktop_terminal 33_loggedin_illumos_terminal 34_loggedin_illumos_desktop_terminal"

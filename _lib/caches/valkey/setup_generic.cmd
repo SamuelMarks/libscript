@@ -104,7 +104,7 @@ goto :action_install
 goto :action_install
 
 :: ## action_ls
-:: Executes action_ls functionality.
+:: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
 :action_ls
 if "%VALKEY_INSTALL_METHOD%"=="mise" ( mise ls valkey & exit /b 0 )
 if "%VALKEY_INSTALL_METHOD%"=="asdf" ( asdf list valkey & exit /b 0 )
@@ -115,7 +115,7 @@ if exist "%LIBSCRIPT_HOME%\valkey" ( dir /b "%LIBSCRIPT_HOME%\valkey" )
 exit /b 0
 
 :: ## action_ls_remote
-:: Executes action_ls_remote functionality.
+:: Lists upstream release versions available for download.
 :action_ls_remote
 if "%VALKEY_INSTALL_METHOD%"=="mise" ( mise ls-remote valkey & exit /b 0 )
 if "%VALKEY_INSTALL_METHOD%"=="asdf" ( asdf list all valkey & exit /b 0 )
@@ -130,7 +130,7 @@ if not "%VALKEY_RELEASES_URL%"=="" (
 exit /b 0
 
 :: ## action_use
-:: Executes action_use functionality.
+:: Activates the specified component version by updating the active symlink or junction.
 :action_use
 if "%VALKEY_INSTALL_METHOD%"=="mise" ( mise use "valkey@%VALKEY_VERSION%" & exit /b 0 )
 if "%VALKEY_INSTALL_METHOD%"=="asdf" ( asdf global valkey "%VALKEY_VERSION%" & exit /b 0 )
@@ -155,7 +155,7 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 exit /b 0
 
 :: ## action_download
-:: Executes action_download functionality.
+:: Downloads the component release archive into the local offline cache directory.
 :action_download
 if "%VALKEY_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading valkey %VALKEY_VERSION% to %DOWNLOAD_DIR%\valkey...
@@ -169,7 +169,7 @@ if "%VALKEY_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_install
-:: Executes action_install functionality.
+:: Installs and configures the requested version of the component.
 :action_install
 if "%VALKEY_INSTALL_METHOD%"=="system" (
     winget install valkey --accept-package-agreements --accept-source-agreements
@@ -209,7 +209,7 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 exit /b 0
 
 :: ## action_service
-:: Executes action_service functionality.
+:: Routes service daemon control actions (start, stop, restart, status) to the service manager.
 :action_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -230,7 +230,7 @@ if "%VALKEY_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_install_service
-:: Executes action_install_service functionality.
+:: Registers and configures the component as a persistent system service.
 :action_install_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -251,7 +251,7 @@ if "%VALKEY_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_uninstall_service
-:: Executes action_uninstall_service functionality.
+:: Stops and removes the registered system service for the component.
 :action_uninstall_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (

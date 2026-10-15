@@ -1,19 +1,17 @@
 @echo off
 :: # uuid_gen.cmd
+::
 :: ## Overview
-rem Deterministic UUIDv5 generator utility for LibScript Windows Installer packaging.
-rem Generates reproducible GUIDs based on namespace and component name/version.
-rem
+:: Deterministic UUIDv5 generator utility for LibScript Windows Installer packaging.
+:: Generates reproducible GUIDs based on namespace and component name/version using
+:: built-in Windows PowerShell or certutil without external interpreter dependencies.
+::
 :: ## Usage
-rem   call _lib\_common\uuid_gen.cmd <NAMESPACE_UUID> <NAME>
-rem
-:: ## Parameters
-rem   NAMESPACE_UUID  Base UUID namespace (e.g. 6ba7b810-9dad-11d1-80b4-00c04fd430c8)
-rem   NAME            Unique string seed (e.g. "libscript.mysql.8.0.39")
+:: uuid_gen.cmd [NAMESPACE_UUID] <NAME>
 
 setlocal EnableDelayedExpansion
-
 set "THIS_FILE=%~f0"
+
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
     if not errorlevel 1 (
@@ -58,6 +56,11 @@ goto :find_root
 set "NAMESPACE=%~1"
 set "SEED_NAME=%~2"
 
+if not "%NAMESPACE%"=="" if "%SEED_NAME%"=="" (
+    set "SEED_NAME=%~1"
+    set "NAMESPACE=6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+)
+
 if "%NAMESPACE%"=="" (
     set "NAMESPACE=6ba7b810-9dad-11d1-80b4-00c04fd430c8"
 )
@@ -66,20 +69,25 @@ if "%SEED_NAME%"=="" (
     exit /b 1
 )
 
-:: Prefer Python if available and functional
-python --version >nul 2>nul
-if %ERRORLEVEL% equ 0 (
-    python -c "import uuid, sys; print(str(uuid.uuid5(uuid.UUID(sys.argv[1]), sys.argv[2])).upper())" "%NAMESPACE%" "%SEED_NAME%"
-    exit /b 0
-)
+call :generate_uuid_v5 "%NAMESPACE%" "%SEED_NAME%"
+exit /b %ERRORLEVEL%
 
-:: Prefer PowerShell if available
+:: ## generate_uuid_v5
+:: Generates an RFC 4122 UUIDv5 string using native Windows PowerShell SHA1 cryptography.
+:generate_uuid_v5
 where powershell >nul 2>nul
 if %ERRORLEVEL% equ 0 (
     powershell -NoProfile -Command ^
-        "$ns = [Guid]::Parse('%NAMESPACE%'); $bytes = $ns.ToByteArray(); [Array]::Reverse($bytes, 0, 4); [Array]::Reverse($bytes, 4, 2); [Array]::Reverse($bytes, 6, 2); $nameBytes = [System.Text.Encoding]::UTF8.GetBytes('%SEED_NAME%'); $sha = [System.Security.Cryptography.SHA1]::Create(); $hash = $sha.ComputeHash($bytes + $nameBytes); $hash[6] = ($hash[6] -band 0x0f) -bor 0x50; $hash[8] = ($hash[8] -band 0x3f) -bor 0x80; [Array]::Reverse($hash, 0, 4); [Array]::Reverse($hash, 4, 2); [Array]::Reverse($hash, 6, 2); [Guid]::new([byte[]]($hash[0..15])).ToString().ToUpper()"
+        "$ns = [Guid]::Parse('%~1'); $bytes = $ns.ToByteArray(); [Array]::Reverse($bytes, 0, 4); [Array]::Reverse($bytes, 4, 2); [Array]::Reverse($bytes, 6, 2); $nameBytes = [System.Text.Encoding]::UTF8.GetBytes('%~2'); $sha = [System.Security.Cryptography.SHA1]::Create(); $hash = $sha.ComputeHash($bytes + $nameBytes); $hash[6] = ($hash[6] -band 0x0f) -bor 0x50; $hash[8] = ($hash[8] -band 0x3f) -bor 0x80; [Array]::Reverse($hash, 0, 4); [Array]::Reverse($hash, 4, 2); [Array]::Reverse($hash, 6, 2); [Guid]::new([byte[]]($hash[0..15])).ToString().ToUpper()"
     exit /b 0
 )
 
-echo [ERROR] No Python or PowerShell available to generate UUID. >&2
+where pwsh >nul 2>nul
+if %ERRORLEVEL% equ 0 (
+    pwsh -NoProfile -Command ^
+        "$ns = [Guid]::Parse('%~1'); $bytes = $ns.ToByteArray(); [Array]::Reverse($bytes, 0, 4); [Array]::Reverse($bytes, 4, 2); [Array]::Reverse($bytes, 6, 2); $nameBytes = [System.Text.Encoding]::UTF8.GetBytes('%~2'); $sha = [System.Security.Cryptography.SHA1]::Create(); $hash = $sha.ComputeHash($bytes + $nameBytes); $hash[6] = ($hash[6] -band 0x0f) -bor 0x50; $hash[8] = ($hash[8] -band 0x3f) -bor 0x80; [Array]::Reverse($hash, 0, 4); [Array]::Reverse($hash, 4, 2); [Array]::Reverse($hash, 6, 2); [Guid]::new([byte[]]($hash[0..15])).ToString().ToUpper()"
+    exit /b 0
+)
+
+echo [ERROR] Built-in Windows PowerShell is required to generate UUIDv5. >&2
 exit /b 1

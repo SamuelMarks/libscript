@@ -2,12 +2,12 @@
 :: # env.cmd
 ::
 :: ## Overview
-:: Internal script for sqlite on Windows.
+:: Environment initialization for SQLite on Windows.
+:: Resolves the active SQLite prefix and prepends its bin directory to PATH.
 ::
 :: ## Usage
-:: Executes initialization, logic, or testing for sqlite.
+:: call _lib\databases\sqlite\env.cmd
 
-:: Windows env stub for sqlite
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
@@ -21,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -52,12 +52,10 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if "%LIBSCRIPT_HOME%"=="" (
-    set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+if "%SQLITE_VERSION%"=="" set "SQLITE_VERSION=default"
+endlocal & (
+    set "SQLITE_PREFIX=%LIBSCRIPT_HOME%\sqlite\%SQLITE_VERSION%"
+    set "PATH=%LIBSCRIPT_HOME%\sqlite\%SQLITE_VERSION%\bin;%LIBSCRIPT_HOME%\sqlite\default\bin;%PATH%"
 )
-
-if "%SQLITE_VERSION%"=="" (
-    set "SQLITE_VERSION=latest"
-)
-
-set "PATH=%LIBSCRIPT_HOME%\sqlite\%SQLITE_VERSION%\bin;%PATH%"
+exit /b 0

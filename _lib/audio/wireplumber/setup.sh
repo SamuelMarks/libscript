@@ -1,10 +1,10 @@
 #!/bin/sh
 # ## Overview
-# Recipe for WirePlumber: Modular session and policy manager for PipeWire.
-# Complies with standard LibScript Context Contract and stamp idempotency.
+# Installation and configuration entrypoint for the wireplumber component.
+# Delegates execution to the shared _lib/_common/setup_base.sh module.
 #
 # ## Usage
-# Run `setup.sh [action]` (default action: install/compile).
+# ./setup.sh [action]
 
 set -feu
 
@@ -13,6 +13,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -29,59 +30,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-ACTION="${1:-compile}"
-TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
-STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"
-STAMP_FILE="${STAMPS_DIR}/.stamp.wireplumber"
-
-if [ ! -d "$STAMPS_DIR" ]; then
-  mkdir -p "$STAMPS_DIR"
-fi
-
-if ! command -v wireplumber >/dev/null 2>&1; then
-  if command -v apk >/dev/null 2>&1; then
-    if ! command -v priv >/dev/null 2>&1; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
-      export SCRIPT_NAME
-      # shellcheck disable=SC1090
-      . "${SCRIPT_NAME}"
-    fi
-    priv apk add --no-cache wireplumber || true
-  elif command -v apt-get >/dev/null 2>&1; then
-    if ! command -v priv >/dev/null 2>&1; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
-      export SCRIPT_NAME
-      # shellcheck disable=SC1090
-      . "${SCRIPT_NAME}"
-    fi
-    priv apt-get update -qq || true
-    priv apt-get install -y wireplumber || true
-  elif command -v dnf >/dev/null 2>&1; then
-    if ! command -v priv >/dev/null 2>&1; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
-      export SCRIPT_NAME
-      # shellcheck disable=SC1090
-      . "${SCRIPT_NAME}"
-    fi
-    priv dnf install -y wireplumber || true
-  elif command -v pkg >/dev/null 2>&1; then
-    if ! command -v priv >/dev/null 2>&1; then
-      SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/priv.sh"
-      export SCRIPT_NAME
-      # shellcheck disable=SC1090
-      . "${SCRIPT_NAME}"
-    fi
-    priv pkg install -y wireplumber || true
-  fi
-fi
-
-if [ -f "$STAMP_FILE" ]; then
-  printf '[SKIP]  %s already installed (%s)\n' "wireplumber" "$STAMP_FILE"
-  exit 0
-fi
-
-printf '[RECIPE] Staging %s into %s (action: %s)\n' "WirePlumber" "$TARGET_SYSROOT" "$ACTION"
-
-date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
-mv "${STAMP_FILE}.tmp" "$STAMP_FILE"
-printf '[OK]    %s staged successfully: %s\n' "wireplumber" "$STAMP_FILE"
+SCRIPT_NAME="${SCRIPT_DIR}/../../_common/setup_base.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"

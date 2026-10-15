@@ -16,6 +16,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -42,8 +43,6 @@ fi
 
 # ## discover_environment
 # Discovers dynamic SSH port, QEMU monitor socket, and disk image path.
-# ## discover_environment
-# Executes the discover_environment logic.
 discover_environment() {
   SSH_PORT=""
   SSH_PORT=""
@@ -78,8 +77,6 @@ EOF
 
 # ## wait_for_ssh
 # Waits until Windows guest SSH service responds.
-# ## wait_for_ssh
-# Executes the wait_for_ssh logic.
 wait_for_ssh() {
   printf '[INFO] Waiting for Windows 11 SSH service to respond on port %s...\n' "${SSH_PORT}"
   _count=0
@@ -96,8 +93,6 @@ wait_for_ssh() {
 
 # ## vm_run
 # Helper to run commands in the guest via SSH.
-# ## vm_run
-# Executes the vm_run logic.
 vm_run() {
   _rc=1
   for _try in 1 2 3 4 5; do
@@ -111,8 +106,6 @@ vm_run() {
 
 # ## capture_screen
 # Helper to capture QEMU screendump and convert to PNG.
-# ## capture_screen
-# Executes the capture_screen logic.
 capture_screen() {
   _name="$1"
   _ppm="/tmp/${_name}.ppm"
@@ -140,8 +133,6 @@ capture_screen() {
 
 # ## vm_action
 # Helper to execute UI automation actions in Session 1 without visible console windows.
-# ## vm_action
-# Executes the vm_action logic.
 vm_action() {
   _act="$1"
   _limit=25
@@ -154,8 +145,6 @@ vm_action() {
 
 # ## vm_click
 # Helper to click a button in Session 1.
-# ## vm_click
-# Executes the vm_click logic.
 vm_click() {
   vm_action "CLICK:$1"
   sleep 1.5
@@ -163,8 +152,6 @@ vm_click() {
 
 # ## vm_radio
 # Helper to select a radio button in Session 1.
-# ## vm_radio
-# Executes the vm_radio logic.
 vm_radio() {
   vm_action "RADIO:$1"
   sleep 1.5
@@ -172,8 +159,6 @@ vm_radio() {
 
 # ## vm_check
 # Helper to check a checkbox in Session 1.
-# ## vm_check
-# Executes the vm_check logic.
 vm_check() {
   vm_action "CHECK:$1"
   sleep 1
@@ -182,8 +167,6 @@ vm_check() {
 
 # ## vm_set_edit
 # Helper to set text of an edit control in Session 1.
-# ## vm_set_edit
-# Executes the vm_set_edit logic.
 vm_set_edit() {
   _idx="$1"
   _val="$2"
@@ -193,8 +176,6 @@ vm_set_edit() {
 
 # ## vm_wait_dialog
 # Helper to wait for a dialog with a specified title in Session 1.
-# ## vm_wait_dialog
-# Executes the vm_wait_dialog logic.
 vm_wait_dialog() {
   _title="$1"
   
@@ -216,8 +197,6 @@ vm_wait_dialog() {
 
 # ## vm_launch_msi
 # Helper to launch MSI in Session 1 via LaunchMsi scheduled task.
-# ## vm_launch_msi
-# Executes the vm_launch_msi logic.
 vm_launch_msi() {
   _msi_fwd="$1"
   _msi_path="$(echo "$1" | sed 's|/|\\|g')"
@@ -227,8 +206,6 @@ vm_launch_msi() {
 
 # ## launch_browser_url
 # Helper to launch web browser to a specified URL in Session 1 without console windows.
-# ## launch_browser_url
-# Executes the launch_browser_url logic.
 launch_browser_url() {
   _url="$1"
   vm_run "cmd.exe /c call C:\libscript\packaging\open_browser.cmd $_url"
@@ -237,16 +214,12 @@ launch_browser_url() {
 
 # ## clean_guest_installations
 # Helper to uninstall all Open edX packages from Windows guest.
-# ## clean_guest_installations
-# Executes the clean_guest_installations logic.
 clean_guest_installations() {
   :
 }
 
 # ## sync_guest_environment
 # Transfers packaging tooling, assets, stacks, and MSIs to the Windows guest.
-# ## sync_guest_environment
-# Executes the sync_guest_environment logic.
 sync_guest_environment() {
   printf '=== Syncing packaging and stack files to Windows guest ===\n'
   vm_run 'New-Item -ItemType Directory -Path "C:/libscript/packaging/assets", "C:/libscript/stacks/cms/openedx" -Force -ErrorAction SilentlyContinue | Out-Null'
@@ -306,8 +279,6 @@ sync_guest_environment() {
 
 # ## restore_vanilla_snapshot
 # Stops the VM and restores the vanilla snapshot on the disk image.
-# ## restore_vanilla_snapshot
-# Executes the restore_vanilla_snapshot logic.
 restore_vanilla_snapshot() {
   printf '
 =======================================================
@@ -340,8 +311,6 @@ restore_vanilla_snapshot() {
 
 # ## run_installer_wizard
 # Executes Simple and Advanced mode UI wizard flows, capturing all screenshots.
-# ## run_installer_wizard
-# Executes the run_installer_wizard logic.
 run_installer_wizard() {
   _mode_name="$1"
   _msi_file="$2"

@@ -2,10 +2,11 @@
 :: # setup.cmd
 ::
 :: ## Overview
-:: Default no-op setup.cmd implementation to satisfy Version Manager Contract.
+:: Installation and configuration entrypoint for the distro component on Windows.
+:: Delegates execution to the shared _lib\_common\setup_base.cmd module.
 ::
 :: ## Usage
-:: setup.cmd
+:: setup.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -51,4 +52,4 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-exit /b 0
+call "%~dp0\..\..\_common\setup_base.cmd" %*

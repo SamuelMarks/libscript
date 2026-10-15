@@ -16,6 +16,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -46,8 +47,6 @@ USE_SNAPSHOT="1"
 
 # ## find_disk_image
 # Finds the active qcow2 disk image for the FreeBSD Vagrant machine.
-# ## find_disk_image
-# Executes the find_disk_image logic.
 find_disk_image() {
     for _id_file in "$VAGRANT_DIR"/.vagrant/machines/*/qemu/id; do
         if [ -f "$_id_file" ]; then
@@ -65,8 +64,6 @@ find_disk_image() {
 
 # ## find_qemu_socket
 # Finds the active QEMU monitor UNIX socket for live snapshot control.
-# ## find_qemu_socket
-# Executes the find_qemu_socket logic.
 find_qemu_socket() {
     for _id_file in "$VAGRANT_DIR"/.vagrant/machines/*/qemu/id; do
         if [ -f "$_id_file" ]; then
@@ -83,8 +80,6 @@ find_qemu_socket() {
 
 # ## restore_vanilla_snapshot
 # Restores the vanilla snapshot on the FreeBSD VM via qemu-img.
-# ## restore_vanilla_snapshot
-# Executes the restore_vanilla_snapshot logic.
 restore_vanilla_snapshot() {
     _img=$(find_disk_image || true)
     if [ -n "$_img" ] && command -v qemu-img >/dev/null 2>&1; then
@@ -103,8 +98,6 @@ restore_vanilla_snapshot() {
 
 # ## sync_repo_to_guest
 # Synchronizes the libscript codebase to the guest VM using vagrant rsync.
-# ## sync_repo_to_guest
-# Executes the sync_repo_to_guest logic.
 sync_repo_to_guest() {
     echo "=== Syncing LibScript repository to FreeBSD ==="
     (cd "$VAGRANT_DIR" && vagrant rsync)
@@ -112,8 +105,6 @@ sync_repo_to_guest() {
 
 # ## update_component_in_readme
 # Updates the status of a single component in README.md Supported Components table (FreeBSD column).
-# ## update_component_in_readme
-# Executes the update_component_in_readme logic.
 update_component_in_readme() {
     _comp="$1"
     _status="$2"

@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,9 +40,7 @@ for LIB in "_lib/_common/log.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
 done
 
 # ## show_help
-# Executes show_help functionality.
-# ## show_help
-# Executes the show_help logic.
+# Displays command-line usage instructions and available options.
 show_help() {
   printf '%s\n' "LibScript Global CLI"
   printf '%s\n' "===================="
@@ -101,9 +100,7 @@ show_help() {
 }
 
 # ## find_components
-# Executes find_components functionality.
-# ## find_components
-# Executes the find_components logic.
+# Performs the find_components operation and updates component state.
 find_components() {
   find "$LIBSCRIPT_CLI_DIR" -name "cli.sh" ! -path "*/tmp/*" ! -path "*/.*" | while read -r cli_script; do
     dir=$(dirname "$cli_script")
@@ -117,9 +114,7 @@ find_components() {
 }
 
 # ## get_desc
-# Executes get_desc functionality.
-# ## get_desc
-# Executes the get_desc logic.
+# Performs the get_desc operation and updates component state.
 get_desc() {
   schema="$LIBSCRIPT_CLI_DIR/$1/vars.schema.json"
   if command -v jq >/dev/null 2>&1; then

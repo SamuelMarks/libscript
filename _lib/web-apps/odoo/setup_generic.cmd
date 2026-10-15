@@ -1,15 +1,16 @@
 @echo off
-:: # setup_generic.cmd
+:: # setup.cmd
 ::
 :: ## Overview
-:: Provides a generic, cross-platform setup mechanism for the Odoo ERP system stack.
-:: Delegates to setup.cmd for Windows provisioning.
+:: Orchestrates the setup and installation process for the Odoo ERP system stack.
 :: 
 :: ## Usage
-:: Execute this script to perform generic initialization steps.
-setlocal EnableDelayedExpansion
-set "THIS_FILE=%~f0"
+:: Execute this script to install and configure odoo on the local system.
 
+setlocal EnableDelayedExpansion
+
+:: Fallback to running PowerShell for Windows provisioning
+set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
     if not errorlevel 1 (
@@ -51,35 +52,11 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: ## parse_args
-:: Executes parse_args functionality.
-:parse_args
-if "%~1"=="" goto run
-if /i "%~1"=="--skip-deps" (
-    set "LIBSCRIPT_SKIP_SYSTEM_DEPS=1"
-    shift
-    goto parse_args
-if exist "%LIBSCRIPT_HOME%\odoo\%VERSION%" (
-    echo [INFO] odoo %VERSION% is already installed.
-    exit /b 0
-)
-)
-shift
-goto parse_args
-
-:: ## run
-:: Executes run functionality.
-:run
-if exist "%~dp0setup.cmd" (
-    call "%~dp0setup.cmd"
-    exit /b %ERRORLEVEL%
-)
-
 where powershell >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup.ps1"
-    exit /b %ERRORLEVEL%
+if %ERRORLEVEL% NEQ 0 (
+    echo [ERROR] PowerShell not found. Cannot configure Odoo on Windows.
+    exit /b 1
 )
 
-echo [ERROR] No suitable Windows setup executor found.
-exit /b 1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup.ps1"
+if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%

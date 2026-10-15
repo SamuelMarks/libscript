@@ -11,6 +11,7 @@
 :: Execute this script to generate screenshots:
 ::   ./devtools/render_actual_screenshots.cmd
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -53,16 +54,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # render_actual_screenshots.cmd
-:::: Actual screenshot rendering engine for LibScript msi-rs live installer.
-:: Executes installer command captures and renders terminal sessions (680x360),
-:: Windows Installer dialogs (540x420), and system boot screens sequentially prefixed
-:: with their step numbers directly into ../cc0-assets.
-::
-:: ## Usage
-:: call devtools\render_actual_screenshots.cmd
 
-setlocal EnableDelayedExpansion
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help

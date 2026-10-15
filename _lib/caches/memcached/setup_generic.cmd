@@ -104,7 +104,7 @@ if "%ACTION%"=="uninstall" goto :action_uninstall
 goto :action_install
 
 :: ## action_ls
-:: Executes action_ls functionality.
+:: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
 :action_ls
 if "%MEMCACHED_INSTALL_METHOD%"=="mise" ( mise ls memcached & exit /b 0 )
 if "%MEMCACHED_INSTALL_METHOD%"=="asdf" ( asdf list memcached & exit /b 0 )
@@ -115,7 +115,7 @@ if exist "%LIBSCRIPT_HOME%\memcached" ( dir /b "%LIBSCRIPT_HOME%\memcached" )
 exit /b 0
 
 :: ## action_ls_remote
-:: Executes action_ls_remote functionality.
+:: Lists upstream release versions available for download.
 :action_ls_remote
 if "%MEMCACHED_INSTALL_METHOD%"=="mise" ( mise ls-remote memcached & exit /b 0 )
 if "%MEMCACHED_INSTALL_METHOD%"=="asdf" ( asdf list all memcached & exit /b 0 )
@@ -130,7 +130,7 @@ if not "%MEMCACHED_RELEASES_URL%"=="" (
 exit /b 0
 
 :: ## action_use
-:: Executes action_use functionality.
+:: Activates the specified component version by updating the active symlink or junction.
 :action_use
 if "%MEMCACHED_INSTALL_METHOD%"=="mise" ( mise use "memcached@%MEMCACHED_VERSION%" & exit /b 0 )
 if "%MEMCACHED_INSTALL_METHOD%"=="asdf" ( asdf global memcached "%MEMCACHED_VERSION%" & exit /b 0 )
@@ -155,7 +155,7 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 exit /b 0
 
 :: ## action_download
-:: Executes action_download functionality.
+:: Downloads the component release archive into the local offline cache directory.
 :action_download
 if "%MEMCACHED_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading memcached %MEMCACHED_VERSION% to %DOWNLOAD_DIR%\memcached...
@@ -169,7 +169,7 @@ if "%MEMCACHED_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_install
-:: Executes action_install functionality.
+:: Installs and configures the requested version of the component.
 :action_install
 if "%MEMCACHED_INSTALL_METHOD%"=="system" (
     winget install memcached --accept-package-agreements --accept-source-agreements 2>nul || choco install memcached -y
@@ -217,7 +217,7 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 exit /b 0
 
 :: ## action_service
-:: Executes action_service functionality.
+:: Routes service daemon control actions (start, stop, restart, status) to the service manager.
 :action_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -238,7 +238,7 @@ if "%MEMCACHED_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_install_service
-:: Executes action_install_service functionality.
+:: Registers and configures the component as a persistent system service.
 :action_install_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -259,7 +259,7 @@ if "%MEMCACHED_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_uninstall_service
-:: Executes action_uninstall_service functionality.
+:: Stops and removes the registered system service for the component.
 :action_uninstall_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -280,7 +280,7 @@ if "%MEMCACHED_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_uninstall
-:: Executes action_uninstall functionality.
+:: Uninstalls the component and removes its isolated version directory.
 :action_uninstall
 if "%MEMCACHED_INSTALL_METHOD%"=="libscript_native" (
     echo Uninstalling memcached %MEMCACHED_VERSION%...

@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -67,9 +68,7 @@ if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ] || [ "${PIP_NO_INDEX:-0}" = "1" ]; then
 fi
 
 # ## resolve_exact_version
-# Executes resolve_exact_version functionality.
-# ## resolve_exact_version
-# Executes the resolve_exact_version logic.
+# Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${PYTHON_VERSION}" = "latest" ]; then
     if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ]; then

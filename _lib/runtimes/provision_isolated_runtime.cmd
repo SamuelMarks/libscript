@@ -56,7 +56,7 @@ set "RUNTIME_TYPE="
 set "ISOLATION_PATH="
 
 :: ## ParseArgs
-:: Executes ParseArgs functionality.
+:: Parses command-line arguments and populates configuration variables.
 :ParseArgs
 if "%~1"=="" goto ValidateArgs
 if "%~1"=="--runtime" (
@@ -75,7 +75,7 @@ echo [ERROR] Unknown argument: %~1 >&2
 exit /b 1
 
 :: ## ValidateArgs
-:: Executes ValidateArgs functionality.
+:: Validates required command-line arguments and configuration parameters.
 :ValidateArgs
 :: Validates the parsed arguments
 if "!RUNTIME_TYPE!"=="" (
@@ -89,7 +89,7 @@ if "!ISOLATION_PATH!"=="" (
 goto ProvisionRuntime
 
 :: ## ProvisionRuntime
-:: Executes ProvisionRuntime functionality.
+:: Performs the ProvisionRuntime operation and updates component state.
 :ProvisionRuntime
 :: Provisions the isolated runtime
 echo [INFO] Provisioning isolated !RUNTIME_TYPE! runtime at !ISOLATION_PATH!

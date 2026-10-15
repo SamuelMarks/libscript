@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -57,9 +58,7 @@ shift "$((OPTIND - 1))"
 REMAINING="$*"
 
 # ## help
-# Executes help functionality.
-# ## help
-# Executes the help logic.
+# Displays command-line usage instructions and available options.
 help() {
     >&2 printf 'Create install scripts from JSON.\n
 \t-a whether to install all dependencies (required AND optional)

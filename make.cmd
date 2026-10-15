@@ -8,6 +8,7 @@
 :: make.cmd <target> [component_name]
 :: Targets: test, local_tests_all, test_component, local_tests_toolchain, local_tests_languages, local_tests_databases
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -50,7 +51,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-setlocal EnableDelayedExpansion
 
 if "%~1"=="--help" goto show_help
 if "%~1"=="-h" goto show_help
@@ -76,13 +76,13 @@ echo Targets: test, local_tests_all, test_component, local_tests_toolchain, loca
 exit /b 0
 
 :: ## local_tests_all
-:: Executes local_tests_all functionality.
+:: Performs the local_tests_all operation and updates component state.
 :local_tests_all
 call tests\run_local_tests.cmd all
 exit /b
 
 :: ## test_component
-:: Executes test_component functionality.
+:: Performs the test_component operation and updates component state.
 :test_component
 if "%~2"=="" (
     echo Usage: make.cmd test_component ^<component_name^> >&2
@@ -92,19 +92,19 @@ call tests\run_local_tests.cmd %2
 exit /b
 
 :: ## local_tests_toolchain
-:: Executes local_tests_toolchain functionality.
+:: Performs the local_tests_toolchain operation and updates component state.
 :local_tests_toolchain
 call tests\run_local_tests.cmd toolchains
 exit /b
 
 :: ## local_tests_languages
-:: Executes local_tests_languages functionality.
+:: Performs the local_tests_languages operation and updates component state.
 :local_tests_languages
 call tests\run_local_tests.cmd languages
 exit /b
 
 :: ## local_tests_databases
-:: Executes local_tests_databases functionality.
+:: Performs the local_tests_databases operation and updates component state.
 :local_tests_databases
 call tests\run_local_tests.cmd databases
 exit /b

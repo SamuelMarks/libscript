@@ -62,37 +62,37 @@ if "%LIBSCRIPT_LOG_FORMAT%"=="" set "LIBSCRIPT_LOG_FORMAT=text"
 goto :eof
 
 :: ## log_debug
-:: Executes log_debug functionality.
+:: Logs a debug-level diagnostic message.
 :log_debug
 call :_libscript_log_msg "DEBUG" 0 "%~1"
 exit /b
 
 :: ## log_info
-:: Executes log_info functionality.
+:: Logs an informational status message.
 :log_info
 call :_libscript_log_msg "INFO" 1 "%~1"
 exit /b
 
 :: ## log_success
-:: Executes log_success functionality.
+:: Logs a success confirmation message.
 :log_success
 call :_libscript_log_msg "SUCCESS" 2 "%~1"
 exit /b
 
 :: ## log_warn
-:: Executes log_warn functionality.
+:: Logs a warning message to standard error.
 :log_warn
 call :_libscript_log_msg "WARN" 3 "%~1"
 exit /b
 
 :: ## log_error
-:: Executes log_error functionality.
+:: Logs an error message to standard error.
 :log_error
 call :_libscript_log_msg "ERROR" 4 "%~1"
 exit /b
 
 :: ## _libscript_log_msg
-:: Executes _libscript_log_msg functionality.
+:: Formats and emits a timestamped log message at the specified severity level.
 :_libscript_log_msg
 set "level_name=%~1"
 set "level_num=%~2"

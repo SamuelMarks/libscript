@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -25,6 +26,8 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}:"
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 if [ -f /usr/lib/libvdpau.so ] || [ -f /usr/lib/libvdpau.so.1 ] || [ -f /usr/lib64/libvdpau.so.1 ] || [ -f /usr/lib64/libvdpau.so ] || [ -f /lib/libvdpau.so.1 ] || [ -d /usr/include/vdpau ] || [ -f /usr/local/lib/libvdpau.so ] || [ -d /usr/local/include/vdpau ]; then
   exit 0

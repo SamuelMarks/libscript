@@ -1,35 +1,14 @@
 @echo off
-setlocal EnableDelayedExpansion
-set "THIS_FILE=%~f0"
 :: # setup_generic.cmd
 ::
 :: ## Overview
-:: Provides an enterprise-grade, turnkey setup mechanism for WordPress 7.1.2.
-:: Provisions PHP runtime, optimizes php.ini WAMP parameters, configures web servers,
-:: detects and reuses Open edX MySQL/MariaDB or connects to hosted DBaaS, and generates
-:: a hardened wp-config.php with unique salts, TLS options, and reverse-proxy awareness.
+:: Provides an enterprise-grade, turnkey setup mechanism for WordPress 7.1.2 on Windows.
 ::
 :: ## Usage
-::   ./stacks/cms/wordpress/setup_generic.cmd [OPTIONS]
-::
-:: :::: Options
-::   --mysql-url <url>           Remote hosted MySQL/MariaDB DBaaS connection URI
-::   --reuse-openedx-db          Auto-detect and reuse Open edX database instance (default: on)
-::   --skip-openedx-db           Bypass Open edX database detection and use standalone database
-::   --webserver <server>        Web server to configure (nginx, caddy, httpd, iis; default: nginx)
-::   --version <ver>             WordPress core version (default: 7.1.2)
-::   --wwwroot <path>            Web document root directory (default: /var/www/wordpress)
-::   --server-name <domain>      Server hostname or domain (default: wordpress.local)
-::   --site-title <title>        Initial WordPress blog title
-::   --admin-user <user>         Initial administrator username (default: admin)
-::   --admin-password <pass>     Initial administrator password
-::   --admin-email <email>       Initial administrator email (default: admin@example.local)
-::   --site-url <url>            Canonical public site URL (default: http://wordpress.local)
-::   --home-url <url>            Canonical public homepage URL (default: http://wordpress.local)
-::   --table-prefix <prefix>     WordPress database table prefix (default: wp_)
-::   --enable-adminer            Deploy Adminer database management console (default: on)
-::   --enable-cron-offload       Offload WP-Cron to native system scheduler (default: on)
-::   --update-hosts              Register server name in /etc/hosts
+:: setup_generic.cmd [OPTIONS]
+
+setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -72,33 +51,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # setup_generic.cmd
-:::: Enterprise-grade Windows setup script for WordPress 7.1.2 platform.
-:: Provisions PHP runtime, optimizes php.ini WAMP parameters, configures web servers,
-:: detects and reuses Open edX MySQL/MariaDB or connects to hosted DBaaS, and generates
-:: a hardened wp-config.php with unique salts, TLS options, and reverse-proxy awareness.
-::
-:: ## Usage
-::   call setup_generic.cmd [OPTIONS]
-::
-:: ## Options
-::   --mysql-url <url>           Remote hosted MySQL/MariaDB DBaaS connection URI
-::   --reuse-openedx-db          Auto-detect and reuse Open edX database instance (default: on)
-::   --skip-openedx-db           Bypass Open edX database detection and use standalone database
-::   --webserver <server>        Web server to configure (nginx, iis, httpd; default: nginx)
-::   --version <ver>             WordPress core version (default: 7.1.2)
-::   --wwwroot <path>            Web document root directory (default: C:\Program Files\WordPress\www)
-::   --server-name <domain>      Server hostname or domain (default: wordpress.local)
-::   --site-title <title>        Initial WordPress blog title
-::   --admin-user <user>         Initial administrator username (default: admin)
-::   --admin-password <pass>     Initial administrator password
-::   --admin-email <email>       Initial administrator email (default: admin@example.local)
-::   --site-url <url>            Canonical public site URL (default: http://wordpress.local)
-::   --home-url <url>            Canonical public homepage URL (default: http://wordpress.local)
-::   --table-prefix <prefix>     WordPress database table prefix (default: wp_)
-::   --enable-adminer            Deploy Adminer database management console (default: on)
-::   --enable-cron-offload       Offload WP-Cron to Windows Task Scheduler (default: on)
-::   --update-hosts              Register server name in Windows hosts file
 
 
 if "%LIBSCRIPT_ROOT_DIR%"=="" (
@@ -158,7 +110,7 @@ shift
 goto parse_args
 
 :: ## after_args
-:: Executes after_args functionality.
+:: Continues execution after command-line argument parsing completes.
 :after_args
 if exist "%WORDPRESS_WWWROOT%\wp-config.php" (
     echo [INFO] wordpress is already installed at %WORDPRESS_WWWROOT%.

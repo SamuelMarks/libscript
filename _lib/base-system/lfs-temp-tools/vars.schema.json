@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/base-system/lfs-temp-tools/vars.schema.json",
+  "title": "LFS Temporary Tools variables",
+  "description": "Configuration variables for LFS Temporary Tools synthesis.",
+  "type": "object",
+  "properties": {
+    "LFS_TEMP_TOOLS_VERSION": {
+      "description": "Specific version of LFS Temporary Tools to build.",
+      "type": "string",
+      "default": "latest"
+    },
+    "LFS_TEMP_TOOLS_INSTALL_METHOD": {
+      "description": "How to install LFS_TEMP_TOOLS. 'libscript_native' builds into the target sysroot.",
+      "type": "string",
+      "default": "libscript_native"
+    }
+  }
+}

@@ -15,6 +15,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -59,6 +60,10 @@ printf '[PASS 1] Executing initial rootfs and FHS staging in %s...\n' "$TEST_DIR
 "${LIBSCRIPT_ROOT_DIR}/tests/test_ingress_netctl_bridge.sh"
 "${LIBSCRIPT_ROOT_DIR}/tests/test_topology_state_machine.sh"
 "${LIBSCRIPT_ROOT_DIR}/tests/test_scheduler_translations.sh"
+"${LIBSCRIPT_ROOT_DIR}/tests/test_generic_build_modes.sh"
+"${LIBSCRIPT_ROOT_DIR}/tests/test_c_compilers_lifecycle.sh"
+"${LIBSCRIPT_ROOT_DIR}/tests/test_sqlite_compiler_matrix.sh"
+"${LIBSCRIPT_ROOT_DIR}/tests/test_kernel_compiler_compare.sh"
 
 # Snapshot stamps after Pass 1
 STAMP_SNAPSHOT="${TEST_DIR}/pass1_stamps.txt"
@@ -85,6 +90,10 @@ printf '[PASS 2] Executing second consecutive pass on identical workspace...\n'
 "${LIBSCRIPT_ROOT_DIR}/tests/test_ingress_netctl_bridge.sh"
 "${LIBSCRIPT_ROOT_DIR}/tests/test_topology_state_machine.sh"
 "${LIBSCRIPT_ROOT_DIR}/tests/test_scheduler_translations.sh"
+"${LIBSCRIPT_ROOT_DIR}/tests/test_generic_build_modes.sh"
+"${LIBSCRIPT_ROOT_DIR}/tests/test_c_compilers_lifecycle.sh"
+"${LIBSCRIPT_ROOT_DIR}/tests/test_sqlite_compiler_matrix.sh"
+"${LIBSCRIPT_ROOT_DIR}/tests/test_kernel_compiler_compare.sh"
 
 # Snapshot stamps after Pass 2
 PASS2_STAMPS="${TEST_DIR}/pass2_stamps.txt"

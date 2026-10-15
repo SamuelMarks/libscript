@@ -54,7 +54,7 @@ set "APP_DIR="
 set "PACKAGING_PATH="
 
 :: ## parse_args
-:: Executes parse_args functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_args
 if "%~1"=="" goto run_provision
 if "%~1"=="--proxy" ( set "PROXY_TYPE=%~2" & shift & shift & goto parse_args )
@@ -64,7 +64,7 @@ shift
 goto parse_args
 
 :: ## run_provision
-:: Executes run_provision functionality.
+:: Performs the run_provision operation and updates component state.
 :run_provision
 if "%PROXY_TYPE%"=="" ( echo Error: Missing proxy >&2 & exit /b 1 )
 if "%APP_DIR%"=="" ( echo Error: Missing app-dir >&2 & exit /b 1 )

@@ -14,6 +14,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -45,8 +46,6 @@ fi
 
 # ## check_gcsfuse
 # Verifies that gcsfuse binary is installed and available in PATH.
-# ## check_gcsfuse
-# Executes the check_gcsfuse logic.
 check_gcsfuse() {
   if ! command -v gcsfuse >/dev/null 2>&1; then
     if [ -x "${LIBSCRIPT_ROOT_DIR}/installed/gcsfuse/bin/gcsfuse" ]; then

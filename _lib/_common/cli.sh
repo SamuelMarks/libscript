@@ -11,6 +11,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -50,9 +51,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # Standardized logging
 
 # ## parse_args
-# Executes parse_args functionality.
-# ## parse_args
-# Executes the parse_args logic.
+# Parses command-line arguments and populates configuration variables.
 parse_args() {
   USE_DEFAULT_TAGS=true
   CUSTOM_TAGS=""

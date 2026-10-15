@@ -25,6 +25,8 @@ if not defined LIBSCRIPT_ROOT_DIR (
 )
 goto :root_found
 
+:: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
 :find_root
 if exist "!d!\libscript.cmd" (
     set "LIBSCRIPT_ROOT_DIR=!d!"
@@ -42,6 +44,8 @@ if "!d!"=="" (
 )
 goto :find_root
 
+:: ## root_found
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 if not "%ACTION%"=="install" exit /b 0
 
@@ -56,7 +60,7 @@ if exist "%TARGET_DIR%\bin\candle.exe" (
 if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
 
 echo [INFO] Downloading WiX Toolset...
-curl -sSL -o "%TEMP%\wix.zip" "https://github.com/wixtoolset/wix3/releases/download/wix3141rtm/wix314-binaries.zip"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "https://github.com/wixtoolset/wix3/releases/download/wix3141rtm/wix314-binaries.zip" "%TEMP%\wix.zip"
 
 echo [INFO] Extracting WiX Toolset...
 powershell -Command "$ErrorActionPreference = 'Stop'; Expand-Archive -Path '%TEMP%\wix.zip' -DestinationPath '%TARGET_DIR%\bin' -Force"

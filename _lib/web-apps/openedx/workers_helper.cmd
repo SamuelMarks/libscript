@@ -53,14 +53,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # workers_helper.cmd
-:::: Background worker process manager helper for Open edX on Windows.
-:: Manages daemon lifecycle, status monitoring, and graceful termination of workers.
-::
-:: ## Usage
-:: Call stacks\cms\openedx\workers_helper.cmd start <run_dir> <log_dir> <py_bin> <install_dir>
-:: Call stacks\cms\openedx\workers_helper.cmd stop <run_dir>
-:: Call stacks\cms\openedx\workers_helper.cmd status <run_dir>
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help
@@ -81,7 +73,6 @@ exit /b 0
 :: ## main
 :: Executes primary entrypoint delegating to workers_helper.ps1.
 :main
-setlocal EnableDelayedExpansion
 
 where powershell >nul 2>&1
 if %ERRORLEVEL% EQU 0 (

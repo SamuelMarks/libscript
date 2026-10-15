@@ -51,12 +51,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # health_helper.cmd
-:::: Diagnostic healthcheck helper utility for Open edX on Windows.
-:: Validates connectivity and responsiveness across databases, caches, and web services.
-::
-:: ## Usage
-:: Call stacks\cms\openedx\health_helper.cmd <is_json> <lms_h> <lms_p> <cms_h> <cms_p> <my_h> <my_p> <mg_h> <mg_p> <rd_h> <rd_p> <me_h> <me_p> <sm_h> <sm_p>
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help
@@ -75,7 +69,6 @@ exit /b 0
 :: ## main
 :: Executes primary entrypoint delegating to health_helper.ps1.
 :main
-setlocal EnableDelayedExpansion
 
 where powershell >nul 2>&1
 if %ERRORLEVEL% EQU 0 (

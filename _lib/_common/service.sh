@@ -17,6 +17,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -44,9 +45,7 @@ for LIB in "_lib/_common/os_info.sh" "_lib/_common/priv.sh" "_lib/_common/log.sh
 done
 
 # ## libscript_service
-# Executes libscript_service functionality.
-# ## libscript_service
-# Executes the libscript_service logic.
+# Performs the libscript_service operation and updates component state.
 libscript_service() {
   _action="${1:-}"
   _service="${2:-}"
@@ -177,9 +176,7 @@ libscript_service() {
 }
 
 # ## libscript_check_health
-# Executes libscript_check_health functionality.
-# ## libscript_check_health
-# Executes the libscript_check_health logic.
+# Performs the libscript_check_health operation and updates component state.
 libscript_check_health() {
   _service="${1:-}"
   shift || true

@@ -12,9 +12,11 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 :: ## Overview
+:: Performs the Overview operation and updates component state.
 rem Abstracts reading logs for a given service on Windows.
 rem
 :: ## Usage
+:: Performs the Usage operation and updates component state.
 rem call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\logs_service.cmd" "%*" "postgresql" "C:\path\to\log.txt"
 
 set "SCRIPT_DIR=%~dp0"

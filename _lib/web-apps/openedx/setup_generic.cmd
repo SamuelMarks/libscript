@@ -1,34 +1,14 @@
 @echo off
-setlocal EnableDelayedExpansion
-set "THIS_FILE=%~f0"
 :: # setup_generic.cmd
 ::
 :: ## Overview
-:: Generic setup and provisioning module for the Open edX platform stack.
-:: Handles full lifecycle provisioning, configuration generation, user creation,
-:: demo course ingestion, worker orchestration, Micro-Frontend deployment,
-:: and health probe verification.
-:: 
-:: ## Usage
-:: setup_generic.cmd stacks/cms/openedx/setup_generic.cmd [OPTIONS]
+:: Generic setup and provisioning module for the Open edX platform stack on Windows.
 ::
-:: :::: Parameters
-::   --admin-user <user>       Administrator username (default: admin)
-::   --admin-password <pass>   Administrator initial password (default: admin)
-::   --admin-email <email>     Administrator email address (default: admin@openedx.local)
-::   --import-demo             Ingest edX demo course and content libraries
-::   --enable-workers          Launch Celery background workers and periodic scheduler
-::   --backup-dir <path>       Directory for automated backup storage
-::   --theme <name>            Comprehensive theme to activate
-::   --enable-mfes             Build and route Micro-Frontend applications
-::   --lms-port <port>         Port for LMS WSGI server (default: 8000)
-::   --cms-port <port>         Port for Studio CMS WSGI server (default: 8001)
-::   --mysql-url <url>         Remote MySQL DBaaS connection string
-::   --redis-port <port>       Redis server port (default: 6379)
-::   --redis-url <url>         Remote Redis DBaaS connection URI
-::   --mongodb-uri <uri>       MongoDB connection URI
-::   --repo <url>              Git repository URL for openedx-platform
-::   --version <ver>           Git release branch or tag (default: master)
+:: ## Usage
+:: setup_generic.cmd [ACTION] [OPTIONS]
+
+setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
 
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -71,28 +51,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # setup_generic.cmd
-:::: Windows setup script for Open edX stack.
-:: Orchestrates provisioning of dependencies, directory layout, environment configuration,
-:: user seeding, demo content ingestion, worker processes, Micro-Frontends, and health diagnostics.
-:: Seamlessly supports online provisioning as well as 100% air-gapped offline extraction from cache.
-::
-:: ## Usage
-::   call setup_generic.cmd [ACTION] [OPTIONS]
-::
-:: ## Parameters
-::   --offline, -o             Enable 100% air-gapped offline provisioning from local cache
-::   --cache-dir <dir>         Override location of hydrated offline cache
-::   --admin-user <user>       Administrator username (default: admin)
-::   --admin-password <pass>   Administrator password (default: admin)
-::   --admin-email <email>     Administrator email (default: admin@openedx.local)
-::   --import-demo             Import edX demo course and content libraries
-::   --enable-workers          Start Celery background workers
-::   --backup-dir <path>       Directory for automated backup storage
-::   --theme <name>            Theme name to activate
-::   --enable-mfes             Build and deploy Micro-Frontends
-::   --lms-port <port>         LMS port (default: 8000)
-::   --cms-port <port>         CMS Studio port (default: 8001)
 
 
 
@@ -244,7 +202,7 @@ if "%ACTION%"=="install" (
     ) else (
         echo [INFO] Cloning edx-platform codebase...
         if not exist "%OPENEDX_INSTALL_DIR%\codebase" (
-            where git >nul 2>&1 || winget install Git.Git -e --source winget --accept-package-agreements --accept-source-agreements
+            where git >nul 2>&1 || call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install git latest
             git clone --depth 1 -b open-release/quince.master https://github.com/openedx/edx-platform.git "%OPENEDX_INSTALL_DIR%\codebase" || exit /b 1
         )
     )
@@ -279,7 +237,8 @@ if "%ACTION%"=="install" (
     for /f "usebackq tokens=*" %%A in (`"%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" -c "import site; print(site.getsitepackages()[1])" 2^>nul`) do set "_sp_dir=%%A"
     if not defined _sp_dir set "_sp_dir=%OPENEDX_INSTALL_DIR%\.venv\Lib\site-packages"
     if not exist "!_sp_dir!\imghdr.py" (
-        powershell -NoProfile -Command "Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/python/cpython/3.12/Lib/imghdr.py' -OutFile '!_sp_dir!\imghdr.py'; (Get-Content '!_sp_dir!\imghdr.py') -replace 'warnings._deprecated.*', '' | Set-Content '!_sp_dir!\imghdr.py'" 2>nul
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "https://raw.githubusercontent.com/python/cpython/3.12/Lib/imghdr.py" "!_sp_dir!\imghdr.py"
+        powershell -NoProfile -Command "if (Test-Path '!_sp_dir!\imghdr.py') { (Get-Content '!_sp_dir!\imghdr.py') -replace 'warnings._deprecated.*', '' | Set-Content '!_sp_dir!\imghdr.py' }" 2>nul
     )
 
     :: Install Python Requirements if repo exists

@@ -27,6 +27,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -65,8 +66,6 @@ MANAGE_PY="${OPENEDX_INSTALL_DIR}/manage.py"
 
 # ## resolve_python
 # Resolves python interpreter.
-# ## resolve_python
-# Executes the resolve_python logic.
 resolve_python() {
   if [ -x "${PYTHON_BIN}" ]; then
     printf '%s\n' "${PYTHON_BIN}"
@@ -84,8 +83,6 @@ resolve_python() {
 #
 # Inputs:
 #   [--from <release>] [--to <release>]
-# ## upgrade_run
-# Executes the upgrade_run logic.
 upgrade_run() {
   _from="current"
   _to="master"
@@ -176,8 +173,6 @@ upgrade_run() {
 
 # ## show_help
 # Displays usage guide.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   cat <<EOF
 Open edX Release Upgrade & Migration CLI

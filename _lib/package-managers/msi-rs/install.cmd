@@ -98,7 +98,7 @@ echo Unknown action "%ACTION%" for msi-rs >&2
 exit /b 1
 
 :: ## action_ls
-:: Executes action_ls functionality.
+:: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
 :action_ls
 if exist "%LIBSCRIPT_HOME%\msi-rs" (
     dir /b "%LIBSCRIPT_HOME%\msi-rs"
@@ -106,7 +106,7 @@ if exist "%LIBSCRIPT_HOME%\msi-rs" (
 exit /b 0
 
 :: ## action_ls_remote
-:: Executes action_ls_remote functionality.
+:: Lists upstream release versions available for download.
 :action_ls_remote
 if not "%MSI_RS_RELEASES_URL%"=="" (
     curl -sSL "%MSI_RS_RELEASES_URL%"
@@ -117,7 +117,7 @@ if not "%MSI_RS_RELEASES_URL%"=="" (
 exit /b 0
 
 :: ## action_use
-:: Executes action_use functionality.
+:: Activates the specified component version by updating the active symlink or junction.
 :action_use
 set "EXACT_VERSION=%MSI_RS_VERSION%"
 if "%MSI_RS_VERSION%"=="latest" set "EXACT_VERSION=v0.0.1"
@@ -141,7 +141,7 @@ echo Default msi-rs set to %EXACT_VERSION%.
 exit /b 0
 
 :: ## action_download
-:: Executes action_download functionality.
+:: Downloads the component release archive into the local offline cache directory.
 :action_download
 set "EXACT_VERSION=%MSI_RS_VERSION%"
 if "%MSI_RS_VERSION%"=="latest" set "EXACT_VERSION=v0.0.1"
@@ -156,7 +156,7 @@ if not "%MSI_RS_DOWNLOAD_URL%"=="" (
 exit /b 0
 
 :: ## action_install
-:: Executes action_install functionality.
+:: Installs and configures the requested version of the component.
 :action_install
 set "EXACT_VERSION=%MSI_RS_VERSION%"
 if "%MSI_RS_VERSION%"=="latest" set "EXACT_VERSION=v0.0.1"
@@ -259,7 +259,7 @@ if exist "%CACHE_ZIP%" (
 )
 
 :: ## link_aliases
-:: Executes link_aliases functionality.
+:: Performs the link_aliases operation and updates component state.
 :link_aliases
 if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
     if exist "%ALIAS_DIR%" rmdir "%ALIAS_DIR%"
@@ -290,7 +290,7 @@ if exist "%TARGET_DIR%\bin\msi-cli.exe" (
 exit /b 0
 
 :: ## action_service
-:: Executes action_service functionality.
+:: Routes service daemon control actions (start, stop, restart, status) to the service manager.
 :action_service
 set "SVC_NAME=libscript_msi-rs"
 if not "%LIBSCRIPT_SERVICE_NAME%"=="" set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
@@ -300,7 +300,7 @@ if exist "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" (
 exit /b 0
 
 :: ## action_install_service
-:: Executes action_install_service functionality.
+:: Registers and configures the component as a persistent system service.
 :action_install_service
 set "SVC_NAME=libscript_msi-rs"
 if not "%LIBSCRIPT_SERVICE_NAME%"=="" set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
@@ -310,7 +310,7 @@ if exist "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" (
 exit /b 0
 
 :: ## action_uninstall_service
-:: Executes action_uninstall_service functionality.
+:: Stops and removes the registered system service for the component.
 :action_uninstall_service
 set "SVC_NAME=libscript_msi-rs"
 if not "%LIBSCRIPT_SERVICE_NAME%"=="" set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
@@ -320,7 +320,7 @@ if exist "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" (
 exit /b 0
 
 :: ## action_uninstall
-:: Executes action_uninstall functionality.
+:: Uninstalls the component and removes its isolated version directory.
 :action_uninstall
 set "EXACT_VERSION=%MSI_RS_VERSION%"
 if "%MSI_RS_VERSION%"=="latest" set "EXACT_VERSION=v0.0.1"

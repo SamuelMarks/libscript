@@ -15,6 +15,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -61,9 +62,7 @@ cd -- "${TARGET}"
 HASH="$(git rev-list HEAD -1)"
 
 # ## build_install
-# Executes build_install functionality.
-# ## build_install
-# Executes the build_install logic.
+# Performs the build_install operation and updates component state.
 build_install() {
   [ -d 'build' ] || mkdir -p -- 'build'
   touch 'build/'"${HASH}"

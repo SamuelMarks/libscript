@@ -10,6 +10,7 @@
 :: Execute this script with image and target device:
 ::   ./devtools/write_usb.cmd <image_path> <target_usb_device>
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -52,14 +53,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # write_usb.cmd
-:::: USB drive flasher and write verification utility for Windows.
-:: Flashes bootable ISO or disk images to USB drives with safety validations.
-::
-:: ## Usage
-:: Call write_usb.cmd <image_path> <usb_drive_letter>
 
-setlocal EnableDelayedExpansion
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help

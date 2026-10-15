@@ -58,7 +58,7 @@ set "SCHEMA_NAME="
 set "TENANT_USER="
 
 :: ## parse_args
-:: Executes parse_args functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_args
 if "%~1"=="" goto run_deprovision
 if "%~1"=="--engine" ( set "ENGINE=%~2" & shift & shift & goto parse_args )
@@ -72,7 +72,7 @@ shift
 goto parse_args
 
 :: ## run_deprovision
-:: Executes run_deprovision functionality.
+:: Performs the run_deprovision operation and updates component state.
 :run_deprovision
 if "%ENGINE%"=="" ( echo Error: Missing engine >&2 & exit /b 1 )
 if "%SCHEMA_NAME%"=="" ( echo Error: Missing schema >&2 & exit /b 1 )
@@ -88,7 +88,7 @@ echo Error: Unsupported engine "%ENGINE%" >&2
 exit /b 1
 
 :: ## do_mysql
-:: Executes do_mysql functionality.
+:: Performs the do_mysql operation and updates component state.
 :do_mysql
 if "%PORT%"=="" set "PORT=3306"
 if "%ADMIN_USER%"=="" set "ADMIN_USER=root"
@@ -107,7 +107,7 @@ del "%TMP_SQL%"
 exit /b 0
 
 :: ## do_postgres
-:: Executes do_postgres functionality.
+:: Performs the do_postgres operation and updates component state.
 :do_postgres
 if "%PORT%"=="" set "PORT=5432"
 if "%ADMIN_USER%"=="" set "ADMIN_USER=postgres"
@@ -118,7 +118,7 @@ set "PGPASSWORD="
 exit /b 0
 
 :: ## do_mongodb
-:: Executes do_mongodb functionality.
+:: Performs the do_mongodb operation and updates component state.
 :do_mongodb
 if "%PORT%"=="" set "PORT=27017"
 set "MONGO_ARGS=--host %HOST% --port %PORT%"
@@ -128,7 +128,7 @@ mongosh %MONGO_ARGS% --eval "%JS_CMD%" --quiet
 exit /b 0
 
 :: ## do_sqlite
-:: Executes do_sqlite functionality.
+:: Performs the do_sqlite operation and updates component state.
 :do_sqlite
 if exist "%SCHEMA_NAME%" del /Q "%SCHEMA_NAME%" "%SCHEMA_NAME%-wal" "%SCHEMA_NAME%-shm"
 exit /b 0

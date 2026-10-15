@@ -80,4 +80,16 @@ or operating system.
       polling.
 - [x] Native CMake build system, architecture guide, and daemon integration scripts.
 
+## Phase 10: Generic 3-Mode Build Substrate & 4-Way C Compiler Differential Verification
+
+- [x] Universal 3-mode build/install substrate (`_lib/_common/source_builder.{sh,cmd}`,
+      `pkg_mgr.{sh,cmd}`, `component_core.{sh,cmd}`) supporting `--pkg-mgr=<pm>`,
+      `--from-source --toolchain=default`, and `--from-source --toolchain=gcc|clang|tcc|custom-cc`.
+- [x] Standalone Tier 1 C compiler recipes (`_lib/languages/{gcc,clang,tcc,custom-cc}/`) and unified
+      `cc` / `c` routers with `cc_wrapper.{sh,cmd}` JSONL telemetry.
+- [x] SQLite C amalgamation multi-compiler builder, 6-stage SQL torture suite, and 4-way
+      differential benchmark (`_lib/databases/sqlite/compare_compilers.{sh,cmd}`).
+- [x] Linux kernel multi-toolchain Kbuild engine, ELF/`System.map` ABI differential harness
+      (`_lib/kernel/linux/compare_compilers.{sh,cmd}`), and declarative kernel compiler profiles.
+
 _For completed phases (Phase 1 and 2), please see the [CHANGELOG.md](CHANGELOG.md)._

@@ -10,6 +10,7 @@
 :: Execute this script to capture and synchronize installer screenshots:
 ::   ./devtools/capture_msi_live_screenshots.cmd [--all | --mode <headless|tui|gui>]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -52,14 +53,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # capture_msi_live_screenshots.cmd
-:::: Automates capturing and archiving high-resolution screenshots of the live-CD/live-USB
-:: installer process (headless, TUI, and GUI kiosk modes) into ../cc0-assets on Windows.
-::
-:: ## Usage
-:: Call devtools\capture_msi_live_screenshots.cmd [--help]
 
-setlocal EnableDelayedExpansion
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help

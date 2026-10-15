@@ -11,6 +11,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -31,9 +32,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 . "$LIBSCRIPT_ROOT_DIR/_lib/cloud/core/tags.sh"
 
 # ## libscript_volume_create
-# Executes libscript_volume_create functionality.
-# ## libscript_volume_create
-# Executes the libscript_volume_create logic.
+# Performs the libscript_volume_create operation and updates component state.
 libscript_volume_create() {
   provider="$1"
   size="${2:-10}"
@@ -101,9 +100,7 @@ libscript_volume_create() {
 }
 
 # ## libscript_volume_delete
-# Executes libscript_volume_delete functionality.
-# ## libscript_volume_delete
-# Executes the libscript_volume_delete logic.
+# Performs the libscript_volume_delete operation and updates component state.
 libscript_volume_delete() {
   provider="$1"
   vid="$2"
@@ -140,9 +137,7 @@ libscript_volume_delete() {
 }
 
 # ## libscript_volume_list
-# Executes libscript_volume_list functionality.
-# ## libscript_volume_list
-# Executes the libscript_volume_list logic.
+# Performs the libscript_volume_list operation and updates component state.
 libscript_volume_list() {
   provider="$1"
   
@@ -177,9 +172,7 @@ libscript_volume_list() {
 }
 
 # ## libscript_volume_attach
-# Executes libscript_volume_attach functionality.
-# ## libscript_volume_attach
-# Executes the libscript_volume_attach logic.
+# Performs the libscript_volume_attach operation and updates component state.
 libscript_volume_attach() {
   provider="$1"
   vid="$2"
@@ -215,9 +208,7 @@ libscript_volume_attach() {
 }
 
 # ## libscript_volume_detach
-# Executes libscript_volume_detach functionality.
-# ## libscript_volume_detach
-# Executes the libscript_volume_detach logic.
+# Performs the libscript_volume_detach operation and updates component state.
 libscript_volume_detach() {
   provider="$1"
   vid="$2"

@@ -1,0 +1,13 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "netctl",
+  "title": "LibScript Network Control (netctl)",
+  "description": "Unified network port, reverse proxy, and firewall orchestration engine for LibScript.",
+  "category": "networking",
+  "provides": ["netctl", "firewall-router"],
+  "conflicts": [],
+  "versions": ["latest", "1.0.0"],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": []
+}

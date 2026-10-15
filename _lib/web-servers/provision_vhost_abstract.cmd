@@ -66,7 +66,7 @@ set "DOC_ROOT="
 set "CONF_FILE="
 
 :: ## parse_args
-:: Executes parse_args functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_args
 if "%~1"=="" goto validate_args
 if /I "%~1"=="--app-id" (
@@ -108,7 +108,7 @@ echo [ERROR] Unknown argument: %~1 >&2
 exit /b 1
 
 :: ## validate_args
-:: Executes validate_args functionality.
+:: Validates required command-line arguments and configuration parameters.
 :validate_args
 if "%APP_ID%"=="" (
     echo [ERROR] --app-id is required >&2
@@ -125,7 +125,7 @@ if "%CONF_FILE%"=="" (
 goto interpolate_block
 
 :: ## generate_nginx_block
-:: Executes generate_nginx_block functionality.
+:: Performs the generate_nginx_block operation and updates component state.
 :generate_nginx_block
 (
     echo # BEGIN libscript-managed: %APP_ID%
@@ -149,7 +149,7 @@ goto interpolate_block
 exit /b 0
 
 :: ## generate_apache2_block
-:: Executes generate_apache2_block functionality.
+:: Performs the generate_apache2_block operation and updates component state.
 :generate_apache2_block
 (
     echo # BEGIN libscript-managed: %APP_ID%
@@ -169,7 +169,7 @@ exit /b 0
 exit /b 0
 
 :: ## interpolate_block
-:: Executes interpolate_block functionality.
+:: Performs the interpolate_block operation and updates component state.
 :interpolate_block
 set "NEW_BLOCK_FILE=%THIS_DIR%.tmp_block_%APP_ID%"
 set "BACKUP_FILE=%CONF_FILE%.bak"
@@ -233,7 +233,7 @@ del /f /q "%NEW_BLOCK_FILE%"
 goto test_and_reload
 
 :: ## test_and_reload
-:: Executes test_and_reload functionality.
+:: Performs the test_and_reload operation and updates component state.
 :test_and_reload
 set "TEST_CMD="
 set "RELOAD_CMD="

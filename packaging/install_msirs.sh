@@ -30,59 +30,14 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 # ## install_msirs
-# Orchestrates compiling msi-rs on the Vagrant Windows guest.
+# Connects to the Windows Vagrant guest via SSH and invokes LibScript's msi-rs recipe.
 install_msirs() {
-  cd "${LIBSCRIPT_ROOT_DIR}/vagrant/windows-11"
-  PORT=$(vagrant ssh-config | awk '/Port / {print $2}')
-  cd - >/dev/null
+  VM_IP="192.168.56.10"
+  KEY="${LIBSCRIPT_ROOT_DIR}/vagrant/windows-11/.vagrant/machines/default/vmware_desktop/private_key"
+  SSH_CMD="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $KEY vagrant@$VM_IP"
 
-  VM_IP=127.0.0.1
-  KEY=~/.vagrant.d/insecure_private_key
-  SSH_CMD="ssh -p $PORT -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $KEY vagrant@$VM_IP"
-
-  echo "[INFO] Ensuring VC++ Redistributable, MSVC, and Rust are installed..."
-  # Idempotent dependency resolution via LibScript
-  $SSH_CMD "powershell -Command \"\$ErrorActionPreference = 'Stop'; Set-Location C:\libscript; & 'C:\libscript\libscript.cmd' install vcredist latest; & 'C:\libscript\libscript.cmd' install msvc latest; & 'C:\libscript\libscript.cmd' install rust latest\""
-
-  echo "[INFO] Compiling msi-rs from synced folder..."
-  # Conditionally compile if it doesn't already exist
-  cat << 'PS1_EOF' > "${LIBSCRIPT_ROOT_DIR}/tmp/install_msirs.ps1"
-$ErrorActionPreference = 'Stop'
-if (Test-Path "C:\msi-rs\target\release\candle.exe") {
-  Write-Host "[INFO] msi-rs is already compiled. Skipping."
-} else {
-  Set-Location C:\msi-rs
-  # Ensure the LibScript installed Rust is used
-  $env:PATH = "C:\Users\vagrant\.cargo\bin;$env:PATH"
-  $env:USERPROFILE = "C:\Users\vagrant"
-  & rustup toolchain install 1.85.0-x86_64-pc-windows-msvc --force-non-host
-  & rustup default 1.85.0-x86_64-pc-windows-msvc --force-non-host
-
-  $vcvars = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
-  if (-not (Test-Path $vcvars)) {
-      $vcvars = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat"
-      $cmd = "`"$vcvars`" x64 && cargo build --release"
-  } else {
-      $cmd = "`"$vcvars`" && cargo build --release"
-  }
-
-  cmd.exe /c $cmd
-  if ($LASTEXITCODE -ne 0) {
-    Write-Error "cargo build failed"
-    exit 1
-  }
-}
-$env:PATH = "C:\msi-rs\target\release;$env:PATH"
-if (-not (Get-Command candle.exe -ErrorAction SilentlyContinue) -or -not (Get-Command light.exe -ErrorAction SilentlyContinue)) {
-  Write-Error "msi-rs candle.exe or light.exe not found in PATH"
-  exit 1
-} else {
-  Write-Host "msi-rs successfully compiled and verified."
-}
-PS1_EOF
-  
-  scp -P $PORT -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $KEY "${LIBSCRIPT_ROOT_DIR}/tmp/install_msirs.ps1" vagrant@$VM_IP:C:/install_msirs.ps1
-  $SSH_CMD "powershell -ExecutionPolicy Bypass -File C:\install_msirs.ps1"
+  printf '[INFO] Installing msi-rs on VM via LibScript...\n'
+  $SSH_CMD "powershell -Command \"\$ErrorActionPreference = 'Stop'; Set-Location C:\libscript; & 'C:\libscript\libscript.cmd' install msi-rs latest\""
 }
 
 install_msirs

@@ -13,6 +13,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -41,7 +42,12 @@ case "$target" in
       printf '%s\n' "Usage: ./make.sh test_component <component_name>" >&2
       exit 1
     fi
-    "$SCRIPT_DIR/tests/run_local_tests.sh" "$2"
+    if [ "${LIBSCRIPT_USE_VAGRANT:-0}" = "1" ]; then
+      "$SCRIPT_DIR/tests/run_local_tests.sh" "$2"
+    else
+      "$SCRIPT_DIR/libscript.sh" install "$2" latest
+      "$SCRIPT_DIR/libscript.sh" test "$2"
+    fi
     ;;
   local_tests_toolchain)
     "$SCRIPT_DIR/tests/run_local_tests.sh" toolchains

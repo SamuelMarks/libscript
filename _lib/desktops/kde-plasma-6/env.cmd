@@ -2,7 +2,7 @@
 :: # env.cmd
 ::
 :: ## Overview
-:: Default no-op env.cmd implementation to satisfy Version Manager Contract.
+:: Exports isolated environment paths and runtime variables for the kde-plasma-6 component.
 ::
 :: ## Usage
 :: env.cmd

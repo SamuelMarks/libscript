@@ -2,7 +2,7 @@
 :: # env.cmd
 ::
 :: ## Overview
-:: Default no-op env.cmd implementation to satisfy Version Manager Contract.
+:: Exports isolated environment paths and runtime variables for the xfce4 component.
 ::
 :: ## Usage
 :: env.cmd

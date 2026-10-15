@@ -15,7 +15,6 @@ setlocal EnableDelayedExpansion
 :: call "%~dp0\..\..\..\_lib\_common\uninstall_base.cmd"
 :: ```
 
-setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (

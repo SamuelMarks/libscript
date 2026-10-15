@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -152,9 +153,7 @@ URLS_JS="${URLS_JS%,}"']'
 #printf '%s\n' "${URLS_JS}"
 
 # ## to_html_tree
-# Executes to_html_tree functionality.
-# ## to_html_tree
-# Executes the to_html_tree logic.
+# Converts a JSON array of file paths into a nested HTML unordered list tree.
 to_html_tree() {
   # Read input from argument or stdin
   if [ "$#" -gt 0 ] && [ -n "$1" ]; then
@@ -171,8 +170,8 @@ to_html_tree() {
 
   # Check if jq is installed
   if ! command -v jq >/dev/null 2>&1; then
-    if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/_lib/utilities/jq/setup.sh" ]; then
-      "${LIBSCRIPT_ROOT_DIR:-.}/_lib/utilities/jq/setup.sh"
+    if [ -f "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" ]; then
+      "${LIBSCRIPT_ROOT_DIR:-.}/libscript.sh" install jq latest
     fi
   fi
   if ! command -v jq >/dev/null 2>&1; then

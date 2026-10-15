@@ -9,6 +9,7 @@
 :: ## Usage
 :: Source this file and prefix commands requiring elevated rights with `priv`.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -51,17 +52,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-setlocal EnableDelayedExpansion
-:: # LibScript Privilege Escalation Module (Windows Batch)
-:: :: This module provides a consistent way to handle privilege escalation on Windows,
-:: mirroring the functionality of `priv.sh` on POSIX systems.
-::
-:: ## Usage
-:: To use this module, call the desired label within this script.
-::
-:: Example:
-::   call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\priv.cmd" :priv <command> <args...>
-::
 :: ## Labels
 ::
 :: ### :check_admin
@@ -77,7 +67,6 @@ setlocal EnableDelayedExpansion
 :: Placeholder for future 'run as specific user' functionality on Windows.
 :: Currently falls back to :priv as multi-user escalation is non-standard in Batch.
 
-setlocal EnableDelayedExpansion
 
 :: Prevent accidental direct execution
 set "THIS_FILE=%~f0"
@@ -94,7 +83,7 @@ goto %1
 :: -----------------------------------------------------------------------------
 :: Returns: errorlevel 0 (Admin) or 1 (Non-Admin)
 :: ## check_admin
-:: Executes check_admin functionality.
+:: Performs the check_admin operation and updates component state.
 :check_admin
 net session >nul 2>&1
 if %errorlevel% == 0 (
@@ -109,7 +98,7 @@ if %errorlevel% == 0 (
 :: Param: %~2 - The command to run
 :: Param: %~3-9 - Arguments for the command
 :: ## priv
-:: Executes priv functionality.
+:: Performs the priv operation and updates component state.
 :priv
 set "CMD_TO_RUN=%~2"
 if "!CMD_TO_RUN!"=="" (
@@ -146,7 +135,7 @@ if %errorlevel% == 0 (
 :: Param: %~2 - The user to run as (currently ignored, defaults to Admin)
 :: Param: %~3 - The command to run
 :: ## priv_as
-:: Executes priv_as functionality.
+:: Performs the priv_as operation and updates component state.
 :priv_as
 :: On Windows, 'priv_as' usually implies 'run as admin' for most LibScript tasks.
 :: Proper 'runas /user:...' requires a password, which is interactive.

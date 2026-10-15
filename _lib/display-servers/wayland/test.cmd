@@ -50,10 +50,5 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # test.cmd
-:::: Test verification wrapper for wayland on Windows.
-::
-:: ## Usage
-:: test.cmd
 
 exit /b 0

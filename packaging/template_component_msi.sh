@@ -24,6 +24,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -49,8 +50,6 @@ SERVICE_GUID=""
 
 # ## show_help
 # Displays usage information and supported flags.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   cat << EOF_HELP
 Standalone Component WiX Generator

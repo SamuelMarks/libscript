@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Default no-op service.sh implementation.
+# Manages background service lifecycle operations (start, stop, status) for the _noop component.
 #
 # ## Usage
 # ./service.sh

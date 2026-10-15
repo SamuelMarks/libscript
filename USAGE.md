@@ -57,27 +57,37 @@ _lib\languages\python\cli.cmd install 3.12
 _lib\databases\postgres\cli.cmd start
 ```
 
-### Installation Method Resolution Chain
+### Installation Method Resolution Chain & Generic 3-Mode Build Substrate
 
-When requesting a component, LibScript dynamically resolves the installation method using a smart
-priority chain:
+When requesting a component, LibScript supports three universal installation and source-compilation
+modes in addition to version manager fallbacks:
 
-1. `libscript_native` (Default: isolated binary download or compilation into `${LIBSCRIPT_HOME}`)
-2. `mise` (Rust-based toolchain manager fallback)
-3. `asdf` (Classic plugin-based manager fallback)
-4. `pkgx` (Isolated package runner fallback)
-5. `vfox` (Version-Fox native Windows-friendly manager fallback)
-6. `system` (OS-level package manager: `apt`, `apk`, `dnf`, `brew`, `winget`, `pkg`)
+1. **`libscript_native`** (Default: isolated binary download or compilation into
+   `${LIBSCRIPT_HOME}`)
+2. **`from-source`** (Compiles from verified source archive using `--toolchain=default` or a custom
+   C toolchain: `gcc`, `clang`, `tcc`, `custom-cc`, or `--custom-cc=/path/to/cc`)
+3. **`system` / `--pkg-mgr=<pm>`** (Explicitly targets any OS or ecosystem package manager:
+   `apt-get`, `apk`, `dnf`, `brew`, `winget`, `choco`, `scoop`, `nix`, `spack`, `vcpkg`, `pkgx`,
+   auto-bootstrapping `_lib/package-managers/<pm>` if not yet installed)
+4. **`mise` / `asdf` / `pkgx` / `vfox`** (Third-party version manager delegation)
 
-Override globally or per component:
+Override globally or per component via CLI flags or environment variables:
 
 ```sh
-# Global override
-export LIBSCRIPT_DEFAULT_INSTALL_METHOD="pkgx"
+# Mode 1: Install via a specific package manager
+./libscript.sh install sqlite latest --pkg-mgr=brew
+./libscript.sh install sqlite latest --pkg-mgr=apt-get
 
-# Per-component overrides
-export PYTHON_INSTALL_METHOD="system"
-export NODEJS_INSTALL_METHOD="libscript_native"
+# Mode 2: Build from source with the default platform C toolchain
+./libscript.sh install sqlite 3.46.1 --from-source --toolchain=default
+
+# Mode 3: Build from source with a custom C toolchain (gcc, clang, tcc, custom-cc)
+./libscript.sh install sqlite 3.46.1 --from-source --toolchain=custom-cc
+./libscript.sh install sqlite 3.46.1 --custom-cc=/path/to/my-c-compiler
+
+# Run 4-way differential C compiler verification (SQLite amalgamation & Linux kernel)
+./_lib/databases/sqlite/compare_compilers.sh
+./_lib/kernel/linux/compare_compilers.sh
 ```
 
 ### Inspecting Component Environment (`info` & `env`)
@@ -146,6 +156,9 @@ Available curated profiles include:
 - **Cloud & MicroVM Appliances**: `cloud-aws-ami-base.json`, `cloud-azure-vhd-base.json`,
   `cloud-gcp-gce-base.json`, `hypervisor-vmware-esxi.json`, `hypervisor-proxmox-template.json`,
   `firecracker-microvm-appliance.json`, `unikraft-nginx-redis.json`, `osv-cloud-runtime.json`
+- **Multi-Compiler Linux Kernel Profiles**: `linux-kernel-gcc-tiny.json`,
+  `linux-kernel-clang-tiny.json`, `linux-kernel-tcc-tiny.json`, `linux-kernel-custom-cc-tiny.json`,
+  `linux-kernel-gcc-defconfig.json`, `linux-kernel-custom-cc-defconfig.json`
 
 ---
 

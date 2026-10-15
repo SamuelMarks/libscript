@@ -51,12 +51,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # publish_release.cmd
-:::: Publishes built release packages, installer artifacts, and cryptographic
-:: SHA256 checksums to GitHub Releases on Windows in an idempotent manner.
-::
-:: ## Usage
-:: devtools\ci\publish_release.cmd --tag <tag> [--dist-dir <dir>] [--title <title>] [--draft] [--prerelease]
 
 if "%~1"=="" goto :no_args
 if /I "%~1"=="--help" goto :show_help
@@ -97,7 +91,7 @@ set "IS_DRAFT=false"
 set "IS_PRERELEASE=false"
 
 :: ## args_loop
-:: Executes args_loop functionality.
+:: Performs the args_loop operation and updates component state.
 :args_loop
 if "%~1"=="" goto :validate_args
 if /I "%~1"=="--tag" (

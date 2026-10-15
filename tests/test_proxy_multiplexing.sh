@@ -13,6 +13,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -27,12 +28,14 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -46,7 +49,7 @@ TARGET_PLATFORM="all"
 ## parse_args
 ## Parses arguments
 # ## parse_args
-# Executes the parse_args logic.
+# Parses command-line arguments and populates configuration variables.
 parse_args() {
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -60,7 +63,7 @@ parse_args() {
 ## run_vagrant_suite
 ## Orchestrates validation for a specific OS within Vagrant
 # ## run_vagrant_suite
-# Executes the run_vagrant_suite logic.
+# Performs the run_vagrant_suite operation and updates component state.
 run_vagrant_suite() {
   _os="$1"
   _proxy_engine="${2:-nginx}"
@@ -93,7 +96,7 @@ run_vagrant_suite() {
 ## main
 ## Main execution routine
 # ## main
-# Executes the main logic.
+# Executes the primary orchestration workflow for this script.
 main() {
   parse_args "$@"
   

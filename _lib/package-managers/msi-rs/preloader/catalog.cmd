@@ -10,6 +10,7 @@
 :: Execute this script to list, search, or export the component catalog:
 ::   ./_lib/package-managers/msi-rs/preloader/catalog.cmd [--json | --search <term> | --category <name> | --clean-base]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -52,14 +53,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # catalog.cmd
-:::: Dynamic LibScript Component Catalog Engine for Windows Command Prompt.
-:: Queries and filters all components across the ecosystem for live installer menus.
-::
-:: ## Usage
-:: Call catalog.cmd [--json | --search <term> | --clean-base]
 
-setlocal EnableDelayedExpansion
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help

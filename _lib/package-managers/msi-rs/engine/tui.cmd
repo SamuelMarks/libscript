@@ -10,6 +10,7 @@
 :: Execute this script to launch the interactive TUI installer:
 ::   ./_lib/package-managers/msi-rs/engine/tui.cmd [--test | --help]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -52,14 +53,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # tui.cmd
-:::: Terminal User Interface (TUI) interactive installer wizard for Windows Command Prompt.
-:: Provides multi-screen keyboard navigation, disk selection, and installation progress streams.
-::
-:: ## Usage
-:: Call tui.cmd [--test | --help]
 
-setlocal EnableDelayedExpansion
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help

@@ -1,10 +1,10 @@
 #!/bin/sh
 # ## Overview
-# Environment initialization for C.
+# Environment initialization for the Unified C Toolchain Router (c).
+# Routes to the selected CC_BACKEND ('gcc', 'clang', 'tcc', 'custom-cc', or 'default').
 #
 # ## Usage
-# Normally sets up defaults. Currently a no-op placeholder.
-
+# . ./_lib/languages/c/env.sh
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -27,7 +28,27 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+export LIBSCRIPT_ROOT_DIR
 
 export C_INSTALL_METHOD="${C_INSTALL_METHOD:-system}"
 C_VERSION="${C_VERSION:-latest}"
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/c/${C_VERSION}/bin:${PATH}"
+_backend="${CC_BACKEND:-default}"
+
+if [ "${_backend}" != "default" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/${_backend}/env.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/languages/${_backend}/env.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+else
+  export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/c/${C_VERSION}/bin:${PATH}"
+  if command -v cc >/dev/null 2>&1; then
+    CC="$(command -v cc)"
+    export CC
+  elif command -v gcc >/dev/null 2>&1; then
+    CC="$(command -v gcc)"
+    export CC
+  elif command -v clang >/dev/null 2>&1; then
+    CC="$(command -v clang)"
+    export CC
+  fi
+fi

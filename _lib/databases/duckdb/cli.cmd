@@ -61,7 +61,7 @@ call "%~dp0\..\..\_common\component_core.cmd" %*
 exit /b %errorlevel%
 
 :: ## execute
-:: Executes execute functionality.
+:: Executes the primary orchestration workflow for this script.
 :execute
 set "DB_PATH=%~2"
 if "%DB_PATH%"=="" set "DB_PATH=:memory:"
@@ -75,7 +75,7 @@ duckdb "%DB_PATH%" -c "%QUERY%"
 exit /b 0
 
 :: ## repl
-:: Executes repl functionality.
+:: Performs the repl operation and updates component state.
 :repl
 set "DB_PATH=%~2"
 if "%DB_PATH%"=="" set "DB_PATH=:memory:"

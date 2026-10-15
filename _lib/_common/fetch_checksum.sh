@@ -15,6 +15,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -34,8 +35,6 @@ _SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## libscript_fetch_checksum
 # Dynamic checksum fetcher
-# ## libscript_fetch_checksum
-# Executes the libscript_fetch_checksum logic.
 libscript_fetch_checksum() {
   export url="${1:-}"
   

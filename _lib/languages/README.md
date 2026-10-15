@@ -10,10 +10,13 @@ Python, Rust, Go).
 - [bun](./bun/README.md)
 - [c](./c/README.md)
 - [cc](./cc/README.md)
+- [clang](./clang/README.md)
 - [cpp](./cpp/README.md)
 - [csharp](./csharp/README.md)
+- [custom-cc](./custom-cc/README.md)
 - [deno](./deno/README.md)
 - [elixir](./elixir/README.md)
+- [gcc](./gcc/README.md)
 - [go](./go/README.md)
 - [java](./java/README.md)
 - [kotlin](./kotlin/README.md)
@@ -24,6 +27,7 @@ Python, Rust, Go).
 - [rust](./rust/README.md)
 - [sh](./sh/README.md)
 - [swift](./swift/README.md)
+- [tcc](./tcc/README.md)
 - [zig](./zig/README.md)
 
 <!-- END_COMPONENTS -->

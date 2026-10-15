@@ -10,6 +10,7 @@
 :: Execute this script to list or inspect disks:
 ::   ./_lib/storage/disk_discovery.cmd [--json | --help | --wipe <device>]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -52,14 +53,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # disk_discovery.cmd
-:::: Cross-platform disk device discovery engine for Windows environments.
-:: Enumerates physical drives, virtual disks, and volumes with sector sizes and health status.
-::
-:: ## Usage
-:: Call disk_discovery.cmd [--json | --help | --wipe <disk_number>]
 
-setlocal EnableDelayedExpansion
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help

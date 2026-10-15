@@ -13,6 +13,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -31,8 +32,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## show_help
 # Displays usage instructions.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") <is_json> <lms_h> <lms_p> <cms_h> <cms_p> <my_h> <my_p> <mg_h> <mg_p> <rd_h> <rd_p> <me_h> <me_p> <sm_h> <sm_p>"
   exit 0
@@ -44,8 +43,6 @@ show_help() {
 # Inputs:
 #   $1 - Host
 #   $2 - Port
-# ## test_tcp
-# Executes the test_tcp logic.
 test_tcp() {
   _host="$1"
   _port="$2"
@@ -69,8 +66,6 @@ test_tcp() {
 #
 # Inputs:
 #   $1 - URL
-# ## test_http
-# Executes the test_http logic.
 test_http() {
   _url="$1"
   if command -v curl >/dev/null 2>&1; then
@@ -92,8 +87,6 @@ test_http() {
 
 # ## main
 # Main entrypoint parsing endpoint arguments and executing diagnostics.
-# ## main
-# Executes the main logic.
 main() {
   if [ $# -lt 15 ]; then
     show_help

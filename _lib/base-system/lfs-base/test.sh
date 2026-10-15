@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Default no-op test.sh implementation to satisfy Version Manager Contract.
+# Executes smoke tests and binary verification checks for the lfs-base component.
 #
 # ## Usage
 # ./test.sh
@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else

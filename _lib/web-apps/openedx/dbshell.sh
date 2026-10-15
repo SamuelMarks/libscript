@@ -27,6 +27,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -109,8 +110,6 @@ fi
 #
 # Inputs:
 #   $@ - optional mysql arguments
-# ## run_mysql
-# Executes the run_mysql logic.
 run_mysql() {
   log_info "Connecting to MySQL on ${MYSQL_HOST}:${MYSQL_PORT} (db: ${MYSQL_DATABASE})..."
   if command -v mysql >/dev/null 2>&1; then
@@ -134,8 +133,6 @@ run_mysql() {
 #
 # Inputs:
 #   $@ - optional mongo arguments
-# ## run_mongo
-# Executes the run_mongo logic.
 run_mongo() {
   _uri="mongodb://${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}"
   log_info "Connecting to MongoDB at ${_uri}..."
@@ -154,8 +151,6 @@ run_mongo() {
 #
 # Inputs:
 #   $@ - optional redis-cli arguments
-# ## run_redis
-# Executes the run_redis logic.
 run_redis() {
   log_info "Connecting to Redis on ${REDIS_HOST}:${REDIS_PORT}..."
   if command -v redis-cli >/dev/null 2>&1; then
@@ -173,8 +168,6 @@ run_redis() {
 #
 # Inputs:
 #   $1 - SQL statement
-# ## run_query
-# Executes the run_query logic.
 run_query() {
   if [ $# -lt 1 ]; then
     log_err "Usage: $0 query <sql_statement>"
@@ -200,8 +193,6 @@ run_query() {
 
 # ## show_help
 # Displays usage guide.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   cat <<EOF
 Open edX Database Console Wrapper

@@ -14,6 +14,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -30,9 +31,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 # ## libscript_url_parser
-# Executes libscript_url_parser functionality.
-# ## libscript_url_parser
-# Executes the libscript_url_parser logic.
+# Performs the libscript_url_parser operation and updates component state.
 libscript_url_parser() {
   # Inspired by: https://gist.github.com/joshisa/297b0bc1ec0dcdda0d1625029711fa24
   # Referenced and tweaked from http://stackoverflow.com/questions/6174220/parse-url-in-shell-script#6174447
@@ -76,8 +75,6 @@ libscript_url_parser() {
 
 # ## git_args_from_url
 # Used to turn an URL into two args: `${repo} ${branch}`
-# ## git_args_from_url
-# Executes the git_args_from_url logic.
 git_args_from_url() {
   libscript_url_parser "${1}"
   printf "%s\n" "${protocol}${host}"

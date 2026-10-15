@@ -63,7 +63,7 @@ echo Installing Google Cloud SDK via winget...
 winget install --id Google.CloudSDK --silent --accept-package-agreements --accept-source-agreements --override "/S /D=C:\GoogleCloudSDK"
 
 :: ## create_shims
-:: Executes create_shims functionality.
+:: Creates executable command shims in the local binary directory.
 :create_shims
 set "GCLOUD_BIN="
 if exist "C:\GoogleCloudSDK\google-cloud-sdk\bin\gcloud.cmd" set "GCLOUD_BIN=C:\GoogleCloudSDK\google-cloud-sdk\bin"

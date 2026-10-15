@@ -64,7 +64,7 @@ set "P5="
 set "P6="
 
 :: ## parse_args
-:: Executes parse_args functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_args
 set "arg=%~1"
 if "!arg!"=="" goto :args_done
@@ -111,7 +111,7 @@ shift
 goto :parse_args
 
 :: ## args_done
-:: Executes args_done functionality.
+:: Continues execution after command-line argument parsing completes.
 :args_done
 
 set "PROVIDER=!P1!"
@@ -304,7 +304,7 @@ exit /b 0
 :: Functions
 :: -----------------------------------------------------------------------------
 :: ## log
-:: Executes log functionality.
+:: Formats and emits a timestamped log message at the specified severity level.
 :log
 echo [%~1] %~2
 echo [%DATE% %TIME%] [%~1] %~2 >> "!LOG_FILE!"

@@ -11,6 +11,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -47,9 +48,7 @@ ACTION="${ACTION:-install}"
 VERSION="${VLLM_VERSION:-latest}"
 
 # ## resolve_exact_version
-# Executes resolve_exact_version functionality.
-# ## resolve_exact_version
-# Executes the resolve_exact_version logic.
+# Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
     _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote vllm 2>/dev/null | tail -n 1)
@@ -201,6 +200,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -220,9 +220,7 @@ EOF
             log_warn "vllm is known to fail on Alpine due to lack of PyTorch musl wheels. Falling back to build from source."
             
             # Install build dependencies
-            if type apk >/dev/null 2>&1; then
-              apk add --no-cache git build-base cmake ninja linux-headers python3-dev py3-pip
-            fi
+            libscript_depends "git" "c" "cmake" "ninja" "python" || true
             
             # Create a temporary directory for the source
             VLLM_SRC_DIR="${DOWNLOAD_DIR:-/tmp/libscript_downloads}/vllm-src"

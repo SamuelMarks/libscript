@@ -14,6 +14,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -36,7 +37,7 @@ TEST_CONF="${THIS_DIR}/.tmp_test_proxy.conf"
 ## setup_env
 ## Prepares a mocked test environment for testing the awk engine locally
 # ## setup_env
-# Executes the setup_env logic.
+# Performs the setup_env operation and updates component state.
 setup_env() {
   printf '[INFO] Initializing test configuration...\n'
   cat <<EOF > "$TEST_CONF"
@@ -51,7 +52,7 @@ EOF
 ## teardown_env
 ## Cleans up test artifacts
 # ## teardown_env
-# Executes the teardown_env logic.
+# Performs the teardown_env operation and updates component state.
 teardown_env() {
   rm -f "${TEST_CONF}" "${TEST_CONF}.bak"
 }
@@ -59,7 +60,7 @@ teardown_env() {
 ## run_idempotency_scenario
 ## Executes the provision script twice to assert no duplication occurs
 # ## run_idempotency_scenario
-# Executes the run_idempotency_scenario logic.
+# Performs the run_idempotency_scenario operation and updates component state.
 run_idempotency_scenario() {
   printf '[TEST] Scenario: Run Twice (Idempotency)...\n'
   
@@ -102,7 +103,7 @@ EOF
 ## run_rollback_scenario
 ## Simulates a bad config rollback (verifies backup restoration)
 # ## run_rollback_scenario
-# Executes the run_rollback_scenario logic.
+# Performs the run_rollback_scenario operation and updates component state.
 run_rollback_scenario() {
   printf '[TEST] Scenario: Bad Config Rollback...\n'
   
@@ -127,7 +128,7 @@ run_rollback_scenario() {
 ## run_side_by_side_scenario
 ## Asserts two distinct application vhosts can coexist
 # ## run_side_by_side_scenario
-# Executes the run_side_by_side_scenario logic.
+# Performs the run_side_by_side_scenario operation and updates component state.
 run_side_by_side_scenario() {
   printf '[TEST] Scenario: Side-by-Side Coexistence...\n'
   
@@ -164,7 +165,7 @@ run_side_by_side_scenario() {
 ## main
 ## Main execution flow
 # ## main
-# Executes the main logic.
+# Executes the primary orchestration workflow for this script.
 main() {
   setup_env
   run_idempotency_scenario

@@ -52,19 +52,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-set "searchVal=;%THIS_FILE%;"
-if not defined STACK (
-    set "STACK=;%THIS_FILE%;"
-    echo [CONTINUE] processing "%THIS_FILE%"
-) else (
-    if not "!STACK:%searchVal%=!"=="!STACK!" (
-        echo [STOP]     processing "%THIS_FILE%" 1>&2
-        exit /b 0
-    ) else (
-        set "STACK=!STACK!%THIS_FILE%;"
-        echo [CONTINUE] processing "%THIS_FILE%"
-    )
-)
 
 IF NOT DEFINED LIBSCRIPT_ROOT_DIR (
     SET "LIBSCRIPT_ROOT_DIR=%~dp0"
@@ -90,7 +77,7 @@ IF NOT EXIST "%LIBSCRIPT_DATA_DIR%" mkdir "%LIBSCRIPT_DATA_DIR%"
 exit /b 0
 
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line usage instructions and available options.
 :show_help
 echo Usage: %0
 exit /b 0

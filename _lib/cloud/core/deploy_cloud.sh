@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -79,9 +80,7 @@ TIMESTAMP=$(date +%s)
 LOG_FILE="$LOG_DIR/provision-${TIMESTAMP}.log"
 
 # ## log
-# Executes log functionality.
-# ## log
-# Executes the log logic.
+# Formats and emits a timestamped log message at the specified severity level.
 log() {
   printf '%s\n' "$(date '+%Y-%m-%d %H:%M:%S') [$1] $2" | tee -a "$LOG_FILE"
 }
@@ -93,9 +92,7 @@ log "INIT" "Logging to $LOG_FILE"
 # Retries & Fault Tolerance
 # -----------------------------------------------------------------------------
 # ## with_retry
-# Executes a command with exponential backoff and retry logic.
-# ## with_retry
-# Executes the with_retry logic.
+# Performs the with_retry operation and updates component state.
 with_retry() {
   max_attempts=5
   timeout=5
@@ -170,9 +167,7 @@ with_retry() {
 STATE_FILE="$REPO_PATH/.deploy_state"
 
 # ## wait_for_tpu_active
-# Executes wait_for_tpu_active functionality.
-# ## wait_for_tpu_active
-# Executes the wait_for_tpu_active logic.
+# Performs the wait_for_tpu_active operation and updates component state.
 wait_for_tpu_active() {
   target_node=$1
   target_loc=$2
@@ -196,9 +191,7 @@ wait_for_tpu_active() {
 }
 
 # ## record_state
-# Executes record_state functionality.
-# ## record_state
-# Executes the record_state logic.
+# Performs the record_state operation and updates component state.
 record_state() {
   key=$1
   val=$2
@@ -291,8 +284,6 @@ record_state "REGION" "$LOC"
 # -----------------------------------------------------------------------------
 # ## ensure_cli
 # Ensures required CLI commands and packages are installed.
-# ## ensure_cli
-# Executes the ensure_cli logic.
 ensure_cli() {
   cmd=$1
   pkg=$2
@@ -407,9 +398,7 @@ if [ "$PROVIDER" = "gcp" ] || [ "$PROVIDER" = "aws" ]; then CTX="$LOC"; fi
 # -----------------------------------------------------------------------------
 
 # ## wait_for_ssh
-# Executes wait_for_ssh functionality.
-# ## wait_for_ssh
-# Executes the wait_for_ssh logic.
+# Polls the target host until SSH connectivity is established or timeout expires.
 wait_for_ssh() {
   target_node=$1
   target_ctx=$2
@@ -443,8 +432,6 @@ with_retry "$CLI" node exec "$NODE" "$CTX" "mkdir -p $REMOTE_DEST"
 
 # ## transfer_files
 # Explicit rsync fallback to scp/winrm behavior
-# ## transfer_files
-# Executes the transfer_files logic.
 transfer_files() {
   src=$1
   dst=$2
@@ -526,7 +513,7 @@ if [ "$IS_TPU" -eq 1 ]; then
   if [ "$SHARED_STORAGE" -eq 1 ]; then
     log "INFRA" "Mounting Filestore across all TPU workers..."
     NFS_IP=$(gcloud filestore instances describe "${NODE}-nfs" --zone="$LOC" --format="value(networks.ipAddresses[0])")
-    with_retry "$TPU_CLI" ssh "$NODE" --all-workers "if ! dpkg -s nfs-common >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y nfs-common; fi && sudo mkdir -p /mnt/shared && if ! grep -qs '/mnt/shared ' /proc/mounts; then sudo mount $NFS_IP:/vol1 /mnt/shared; fi && sudo chmod a+w /mnt/shared"
+    with_retry "$TPU_CLI" ssh "$NODE" --all-workers "sudo LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/traits/storage/nfs.sh ${NFS_IP}:/vol1 /mnt/shared && sudo chmod a+w /mnt/shared"
   fi
   with_retry "$TPU_CLI" ssh "$NODE" --all-workers "cd $REMOTE_DEST && sudo LIBSCRIPT_TARGET_OS=linux LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/libscript.sh install-deps"
 else
@@ -551,9 +538,7 @@ fi
 
 
 # ## wait_for_health
-# Executes wait_for_health functionality.
-# ## wait_for_health
-# Executes the wait_for_health logic.
+# Polls service endpoints until health checks pass or timeout expires.
 wait_for_health() {
   log "HEALTH" "Polling application health (via libscript health)..."
   max_attempts=12

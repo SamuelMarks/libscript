@@ -53,7 +53,7 @@ set "MODE=eval"
 set "TARGET_ENGINE="
 
 :: ## parse_args
-:: Executes parse_args functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_args
 if "%~1"=="" goto run_discovery
 if "%~1"=="--json" ( set "MODE=json" & shift & goto parse_args )
@@ -64,7 +64,7 @@ shift
 goto parse_args
 
 :: ## run_discovery
-:: Executes run_discovery functionality.
+:: Performs the run_discovery operation and updates component state.
 :run_discovery
 set "FOUND_MYSQL=0"
 set "FOUND_PG=0"

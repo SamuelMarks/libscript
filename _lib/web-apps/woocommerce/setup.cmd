@@ -2,15 +2,15 @@
 :: # setup.cmd
 ::
 :: ## Overview
-:: Orchestrates the setup and installation process for the WooCommerce e-commerce platform stack.
-:: 
+:: Installation and configuration entrypoint for the woocommerce component on Windows.
+:: Delegates execution to the shared _lib\_common\setup_base.cmd module.
+::
 :: ## Usage
-:: Execute this script to install and configure woocommerce on the local system.
+:: setup.cmd [action]
 
 setlocal EnableDelayedExpansion
-
-:: Fallback to running PowerShell for Windows provisioning
 set "THIS_FILE=%~f0"
+
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
     if not errorlevel 1 (
@@ -52,11 +52,4 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-where powershell >nul 2>&1
-if %ERRORLEVEL% NEQ 0 (
-    echo [ERROR] PowerShell not found. Cannot configure WooCommerce on Windows.
-    exit /b 1
-)
-
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup.ps1"
-if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+call "%~dp0\..\..\_common\setup_base.cmd" %*

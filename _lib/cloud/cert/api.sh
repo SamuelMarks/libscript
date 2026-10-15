@@ -11,6 +11,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -31,9 +32,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 . "$LIBSCRIPT_ROOT_DIR/_lib/cloud/core/tags.sh"
 
 # ## libscript_cert_create
-# Executes libscript_cert_create functionality.
-# ## libscript_cert_create
-# Executes the libscript_cert_create logic.
+# Performs the libscript_cert_create operation and updates component state.
 libscript_cert_create() {
   provider="$1"
   domain="$2"
@@ -59,9 +58,7 @@ libscript_cert_create() {
 }
 
 # ## libscript_cert_delete
-# Executes libscript_cert_delete functionality.
-# ## libscript_cert_delete
-# Executes the libscript_cert_delete logic.
+# Performs the libscript_cert_delete operation and updates component state.
 libscript_cert_delete() {
   provider="$1"
   domain="$2"
@@ -100,9 +97,7 @@ libscript_cert_delete() {
 }
 
 # ## libscript_cert_list
-# Executes libscript_cert_list functionality.
-# ## libscript_cert_list
-# Executes the libscript_cert_list logic.
+# Performs the libscript_cert_list operation and updates component state.
 libscript_cert_list() {
   provider="$1"
   

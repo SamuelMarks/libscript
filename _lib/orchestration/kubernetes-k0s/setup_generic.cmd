@@ -87,7 +87,7 @@ goto :action_install
 goto :action_install
 
 :: ## action_ls
-:: Executes action_ls functionality.
+:: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
 :action_ls
 if "%KUBERNETES_K0S_INSTALL_METHOD%"=="mise" ( mise ls kubernetes-k0s & exit /b 0 )
 if "%KUBERNETES_K0S_INSTALL_METHOD%"=="asdf" ( asdf list kubernetes-k0s & exit /b 0 )
@@ -98,7 +98,7 @@ if exist "%LIBSCRIPT_HOME%\kubernetes-k0s" ( dir /b "%LIBSCRIPT_HOME%\kubernetes
 exit /b 0
 
 :: ## action_ls_remote
-:: Executes action_ls_remote functionality.
+:: Lists upstream release versions available for download.
 :action_ls_remote
 if "%KUBERNETES_K0S_INSTALL_METHOD%"=="mise" ( mise ls-remote kubernetes-k0s & exit /b 0 )
 if "%KUBERNETES_K0S_INSTALL_METHOD%"=="asdf" ( asdf list all kubernetes-k0s & exit /b 0 )
@@ -113,7 +113,7 @@ if not "%KUBERNETES_K0S_RELEASES_URL%"=="" (
 exit /b 0
 
 :: ## action_use
-:: Executes action_use functionality.
+:: Activates the specified component version by updating the active symlink or junction.
 :action_use
 if "%KUBERNETES_K0S_INSTALL_METHOD%"=="mise" ( mise use "kubernetes-k0s@%KUBERNETES_K0S_VERSION%" & exit /b 0 )
 if "%KUBERNETES_K0S_INSTALL_METHOD%"=="asdf" ( asdf global kubernetes-k0s "%KUBERNETES_K0S_VERSION%" & exit /b 0 )
@@ -138,7 +138,7 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 exit /b 0
 
 :: ## action_download
-:: Executes action_download functionality.
+:: Downloads the component release archive into the local offline cache directory.
 :action_download
 if "%KUBERNETES_K0S_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading kubernetes-k0s %KUBERNETES_K0S_VERSION% to %DOWNLOAD_DIR%\kubernetes-k0s...
@@ -152,7 +152,7 @@ if "%KUBERNETES_K0S_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_install
-:: Executes action_install functionality.
+:: Installs and configures the requested version of the component.
 :action_install
 if "%KUBERNETES_K0S_INSTALL_METHOD%"=="system" (
     winget install kubernetes-k0s --accept-package-agreements --accept-source-agreements
@@ -192,7 +192,7 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 exit /b 0
 
 :: ## action_service
-:: Executes action_service functionality.
+:: Routes service daemon control actions (start, stop, restart, status) to the service manager.
 :action_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -213,7 +213,7 @@ if "%KUBERNETES_K0S_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_install_service
-:: Executes action_install_service functionality.
+:: Registers and configures the component as a persistent system service.
 :action_install_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -234,7 +234,7 @@ if "%KUBERNETES_K0S_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_uninstall_service
-:: Executes action_uninstall_service functionality.
+:: Stops and removes the registered system service for the component.
 :action_uninstall_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (

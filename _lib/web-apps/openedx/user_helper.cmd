@@ -53,14 +53,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # user_helper.cmd
-:::: User management helper utility for Open edX on Windows.
-:: Manages user account creation, credentials, staff roles, and catalog enumeration.
-::
-:: ## Usage
-:: Call stacks\cms\openedx\user_helper.cmd create <install_dir> <username> <email> <password> <is_staff> <is_superuser>
-:: Call stacks\cms\openedx\user_helper.cmd set_password <install_dir> <username> <password>
-:: Call stacks\cms\openedx\user_helper.cmd list <install_dir>
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help
@@ -81,7 +73,6 @@ exit /b 0
 :: ## main
 :: Executes primary entrypoint delegating to user_helper.ps1.
 :main
-setlocal EnableDelayedExpansion
 
 where powershell >nul 2>&1
 if %ERRORLEVEL% EQU 0 (

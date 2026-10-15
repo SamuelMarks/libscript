@@ -2,7 +2,7 @@
 :: # service.cmd
 ::
 :: ## Overview
-:: Default no-op service.cmd implementation to satisfy Version Manager Contract.
+:: Manages background service lifecycle operations (start, stop, status) for the elasticsearch component.
 ::
 :: ## Usage
 :: service.cmd

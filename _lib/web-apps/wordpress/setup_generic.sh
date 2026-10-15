@@ -2,12 +2,36 @@
 # ## Overview
 # Provides an enterprise-grade, turnkey setup mechanism for WordPress 7.1.2.
 # Provisions PHP runtime, optimizes php.ini WAMP parameters, configures web servers,
-# detects and reuses Open edX MySQL/MariaDB or connects to hosted DBaaS, and generates
-# a hardened wp-config.php with unique salts, TLS options, and reverse-proxy awareness.
+# and generates a hardened wp-config.php with unique salts and reverse-proxy awareness.
 #
 # ## Usage
-#   ./stacks/cms/wordpress/setup_generic.sh [OPTIONS]
-#
+#   ./_lib/web-apps/wordpress/setup_generic.sh [OPTIONS]
+
+set -feu
+
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+export DIR="${SCRIPT_DIR}"
+
 # ## Options
 #   --mysql-url <url>           Remote hosted MySQL/MariaDB DBaaS connection URI
 #   --reuse-openedx-db          Auto-detect and reuse Open edX database instance (default: on)
@@ -27,30 +51,6 @@
 #   --enable-cron-offload       Offload WP-Cron to native system scheduler (default: on)
 #   --update-hosts              Register server name in /etc/hosts
 
-set -feu
-
-if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
-elif [ "${ZSH_VERSION-}" ]; then
-  # shellcheck disable=SC2296
-  THIS_FILE="${(%):-%x}"
-else
-  THIS_FILE="${0}"
-fi
-
-case "${STACK+x}" in
-  *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
-esac
-export STACK="${STACK:-}${THIS_FILE}"':'
-SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-export DIR="${SCRIPT_DIR}"
-
 for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
@@ -64,7 +64,7 @@ done
 # ## Parameters
 #   $@ - Arguments to pass to mkdir
 # ## safe_mkdir
-# Executes the safe_mkdir logic.
+# Performs the safe_mkdir operation and updates component state.
 safe_mkdir() {
   mkdir -p "$@" 2>/dev/null || sudo mkdir -p "$@" 2>/dev/null || mkdir -p "$@"
 }
@@ -75,7 +75,7 @@ safe_mkdir() {
 # ## Parameters
 #   $@ - Arguments to pass to tee
 # ## safe_tee
-# Executes the safe_tee logic.
+# Performs the safe_tee operation and updates component state.
 safe_tee() {
   tee "$@" 2>/dev/null || sudo tee "$@" 2>/dev/null || tee "$@"
 }
@@ -86,7 +86,7 @@ safe_tee() {
 # ## Parameters
 #   $@ - Arguments to pass to cp
 # ## safe_cp
-# Executes the safe_cp logic.
+# Performs the safe_cp operation and updates component state.
 safe_cp() {
   cp "$@" 2>/dev/null || sudo cp "$@" 2>/dev/null || cp "$@"
 }
@@ -97,7 +97,7 @@ safe_cp() {
 # ## Parameters
 #   $@ - Arguments to pass to rm
 # ## safe_rm
-# Executes the safe_rm logic.
+# Performs the safe_rm operation and updates component state.
 safe_rm() {
   rm "$@" 2>/dev/null || sudo rm "$@" 2>/dev/null || rm "$@"
 }
@@ -108,7 +108,7 @@ safe_rm() {
 # ## Parameters
 #   $@ - Arguments to pass to tar
 # ## safe_tar
-# Executes the safe_tar logic.
+# Performs the safe_tar operation and updates component state.
 safe_tar() {
   tar "$@" 2>/dev/null || sudo tar "$@" 2>/dev/null || tar "$@"
 }
@@ -242,8 +242,6 @@ export WORDPRESS_DB_NAME WORDPRESS_DB_USER WORDPRESS_DB_PASS
 
 # ## generate_salt
 # Generates a cryptographically strong 64-character random string.
-# ## generate_salt
-# Executes the generate_salt logic.
 generate_salt() {
   if [ -c /dev/urandom ]; then
     LC_ALL=C tr -dc 'a-zA-Z0-9!@#$%&*()-_=+' < /dev/urandom 2>/dev/null | head -c 64 || true

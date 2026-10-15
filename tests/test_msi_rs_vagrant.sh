@@ -15,6 +15,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -34,8 +35,6 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 # ## show_help
 # Displays usage and CLI option details for Vagrant msi-rs testing.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [--all | --platform <macos|windows|freebsd|sunos|linux>]"
   printf '%s\n' "Runs msi-rs verification exclusively inside isolated Vagrant virtual machines."
@@ -82,8 +81,6 @@ SUMMARY_FILE="${REPO_ROOT}/tests_tmp/msi_rs_matrix_summary.json"
 
 # ## run_platform_test
 # Executes msi-rs installation and test on a given platform runner script.
-# ## run_platform_test
-# Executes the run_platform_test logic.
 run_platform_test() {
   plat="$1"
   runner="$2"

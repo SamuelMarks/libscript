@@ -18,6 +18,7 @@
 ::   slice     - Create FreeBSD bsdlabel or illumos VTOC sub-slices inside partition
 ::   wipe      - Sanitize and erase partition table headers safely
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -60,16 +61,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # partitionary.cmd
-:::: Universal cross-platform storage partitioning and disk geometry abstraction engine on Windows.
-:: Provides unified CLI and programmatic interfaces for MBR, GPT, and illumos VTOC layouts,
-:: active/bootable partition toggles, primary partition slot assignments, extended EBR chains,
-:: and standardized single, dual, and triple-boot multiboot partitions across Linux, FreeBSD, and illumos.
-::
-:: ## Usage
-:: Call partitionary.cmd <subcommand> [options...]
 
-setlocal EnableDelayedExpansion
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help

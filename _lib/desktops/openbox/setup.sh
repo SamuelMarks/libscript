@@ -1,10 +1,10 @@
 #!/bin/sh
 # ## Overview
-# Configures the Openbox lightweight X11 window manager, tint2 taskbar panel,
-# and default desktop autostart configurations inside target rootfs.
+# Installation and configuration entrypoint for the openbox component.
+# Delegates execution to the shared _lib/_common/setup_base.sh module.
 #
 # ## Usage
-# ./_lib/desktops/openbox/setup.sh [install|clean|status] [target_rootfs]
+# ./setup.sh [action]
 
 set -feu
 
@@ -13,6 +13,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -28,68 +29,8 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-export LIBSCRIPT_ROOT_DIR
 
-ACTION="${1:-install}"
-ROOTFS="${2:-${LIBSCRIPT_ROOT_DIR}/build/lfs/rootfs}"
-STAMPS_DIR="${LIBSCRIPT_ROOT_DIR}/build/stamps"
-
-mkdir -p "$STAMPS_DIR"
-STAMP_OPENBOX="${STAMPS_DIR}/.stamp.lfs_desktop_openbox"
-
-if [ "$ACTION" = "clean" ]; then
-  printf '[CLEAN] Removing Openbox stamp...\n'
-  rm -f "$STAMP_OPENBOX"
-  exit 0
-fi
-
-if [ "$ACTION" = "status" ]; then
-  if [ -f "$STAMP_OPENBOX" ]; then
-    printf 'Openbox: INSTALLED (%s)\n' "$(cat "$STAMP_OPENBOX")"
-  else
-    printf 'Openbox: NOT INSTALLED\n'
-  fi
-  exit 0
-fi
-
-if [ -f "$STAMP_OPENBOX" ]; then
-  printf '[SKIP]  Openbox already installed (%s)\n' "$STAMP_OPENBOX"
-  exit 0
-fi
-
-printf '=== LibScript Openbox Window Manager ===\n'
-printf '[INFO] Target Rootfs: %s\n' "$ROOTFS"
-
-mkdir -p "${ROOTFS}/etc/xdg/openbox"
-mkdir -p "${ROOTFS}/usr/bin"
-
-# 1. Openbox configuration stub
-cat << 'EOF' > "${ROOTFS}/etc/xdg/openbox/rc.xml"
-<?xml version="1.0" encoding="UTF-8"?>
-<openbox_config xmlns="http://openbox.org/3.4/rc">
-  <theme>
-    <name>Clearlooks</name>
-  </theme>
-</openbox_config>
-EOF
-
-# 2. Openbox autostart script
-cat << 'EOF' > "${ROOTFS}/etc/xdg/openbox/autostart"
-#!/bin/sh
-tint2 &
-EOF
-chmod +x "${ROOTFS}/etc/xdg/openbox/autostart"
-
-if [ ! -f "${ROOTFS}/usr/bin/openbox" ]; then
-  cat << 'EOF' > "${ROOTFS}/usr/bin/openbox"
-#!/bin/sh
-printf '[OPENBOX] Openbox X11 Window Manager running.\n'
-exit 0
-EOF
-  chmod +x "${ROOTFS}/usr/bin/openbox"
-fi
-
-date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_OPENBOX}.tmp"
-mv "${STAMP_OPENBOX}.tmp" "$STAMP_OPENBOX"
-printf '[DONE]  Openbox configured successfully.\n'
-exit 0
+SCRIPT_NAME="${SCRIPT_DIR}/../../_common/setup_base.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"

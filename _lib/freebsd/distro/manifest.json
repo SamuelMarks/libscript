@@ -1,0 +1,13 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "freebsd-distro",
+  "title": "FreeBSD Distribution Synthesizer",
+  "description": "Synthesizes bootable FreeBSD rootfs, ZFS boot environments, and live installer ISO/USB images.",
+  "category": "orchestration",
+  "provides": ["freebsd-distro"],
+  "conflicts": [],
+  "versions": ["latest", "14.1"],
+  "os_whitelist": ["freebsd", "linux", "darwin"],
+  "os_blacklist": ["windows"],
+  "ports": []
+}

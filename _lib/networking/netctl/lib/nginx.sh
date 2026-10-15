@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -33,9 +34,7 @@ export SCRIPT_NAME
 . "${SCRIPT_NAME}"
 
 # ## netctl_emit_nginx
-# Executes netctl_emit_nginx functionality.
-# ## netctl_emit_nginx
-# Executes the netctl_emit_nginx logic.
+# Performs the netctl_emit_nginx operation and updates component state.
 netctl_emit_nginx() {
   state_file="${1:-$NETCTL_STATE_FILE}"
 

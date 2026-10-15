@@ -59,7 +59,7 @@ set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 set "LIBSCRIPT_ROOT_DIR="
 set "d=%SCRIPT_DIR%"
 :: ## find_root
-:: Executes find_root functionality.
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
 :find_root
 if exist "%d%\libscript.cmd" (
     set "LIBSCRIPT_ROOT_DIR=%d%"
@@ -74,14 +74,14 @@ if "%d%"=="%parent%" (
 set "d=%parent%"
 goto :find_root
 :: ## found_root
-:: Executes found_root functionality.
+:: Performs the found_root operation and updates component state.
 :found_root
 
 set "TARGET_OS=debian-13"
 set "STEP=0"
 
 :: ## parse_args
-:: Executes parse_args functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_args
 if "%~1"=="" goto :end_args
 if "%~1"=="-o" (
@@ -106,7 +106,7 @@ if not errorlevel 1 (
 echo [ERROR] Unknown option %~1 1>&2
 exit /b 1
 :: ## end_args
-:: Executes end_args functionality.
+:: Performs the end_args operation and updates component state.
 :end_args
 
 set "VAGRANT_DIR=%LIBSCRIPT_ROOT_DIR%\vagrant\%TARGET_OS%"

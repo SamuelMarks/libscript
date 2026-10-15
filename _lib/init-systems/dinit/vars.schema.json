@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/init-systems/dinit/vars.schema.json",
+  "title": "Dinit variables",
+  "description": "Configuration variables for the Dinit init system.",
+  "type": "object",
+  "properties": {
+    "DINIT_VERSION": {
+      "description": "Specific version of dinit to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "DINIT_INSTALL_METHOD": {
+      "description": "How to install DINIT ('libscript_native' or 'system').",
+      "type": "string",
+      "default": "system"
+    }
+  }
+}

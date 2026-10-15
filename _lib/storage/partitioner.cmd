@@ -10,6 +10,7 @@
 :: Execute this script to partition a target disk or raw image:
 ::   ./_lib/storage/partitioner.cmd <device_or_image> [scheme] [boot_mode] [swap_mib]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -52,14 +53,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # partitioner.cmd
-:::: Cross-platform disk partitioning engine for Windows environments.
-:: Initializes GPT or MBR partition tables, creates EFI System Partitions, and formats volumes.
-::
-:: ## Usage
-:: Call partitioner.cmd <disk_number> [scheme] [boot_mode]
 
-setlocal EnableDelayedExpansion
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help

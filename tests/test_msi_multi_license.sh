@@ -14,6 +14,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -36,8 +37,6 @@ mkdir -p "$TEST_TMP_DIR"
 # ## cleanup
 # Removes temporary test directory on script exit.
 # shellcheck disable=SC2329
-# ## cleanup
-# Executes the cleanup logic.
 cleanup() {
   rm -rf "$TEST_TMP_DIR"
 }
@@ -47,8 +46,6 @@ printf '=== Testing WiX MSI Multi-License Dialog Sequence ===\n'
 
 # ## assert_wxs_contains
 # Asserts that the generated WiX manifest contains a specified string pattern.
-# ## assert_wxs_contains
-# Executes the assert_wxs_contains logic.
 assert_wxs_contains() {
   _pattern="$1"
   _desc="$2"

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/illumos/distro/vars.schema.json",
+  "title": "illumos Distro variables",
+  "description": "Configuration variables for illumos/OmniOS distribution synthesis.",
+  "type": "object",
+  "properties": {
+    "ILLUMOS_DISTRO_VERSION": {
+      "description": "Target illumos/OmniOS release version to synthesize.",
+      "type": "string",
+      "default": "r151050"
+    },
+    "ILLUMOS_DISTRO_INSTALL_METHOD": {
+      "description": "How to run illumos distro synthesis ('libscript_native' or 'system').",
+      "type": "string",
+      "default": "libscript_native"
+    }
+  }
+}

@@ -11,6 +11,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -47,9 +48,7 @@ ACTION="${ACTION:-install}"
 VERSION="${C_VERSION:-latest}"
 
 # ## resolve_exact_version
-# Executes resolve_exact_version functionality.
-# ## resolve_exact_version
-# Executes the resolve_exact_version logic.
+# Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
     _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote c 2>/dev/null | tail -n 1)
@@ -143,8 +142,18 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    _backend="${CC_BACKEND:-${C_BUILD_TOOLCHAIN:-default}}"
+    if [ "${_backend}" != "default" ] && [ -d "${LIBSCRIPT_ROOT_DIR}/_lib/languages/${_backend}" ]; then
+      unset SCRIPT_NAME || true
+      "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install "${_backend}" "${VERSION}"
+      exit 0
+    fi
     if [ "$C_INSTALL_METHOD" = "system" ]; then
-      libscript_depends "gcc"
+      if command -v cc >/dev/null 2>&1 || command -v gcc >/dev/null 2>&1 || command -v clang >/dev/null 2>&1; then
+        log_info "Host C toolchain already available."
+      else
+        libscript_depends "gcc"
+      fi
     elif [ "$C_INSTALL_METHOD" = "mise" ]; then
       mise install "c@${VERSION}"
     elif [ "$C_INSTALL_METHOD" = "asdf" ]; then

@@ -18,6 +18,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -49,8 +50,6 @@ USE_NATIVE=""
 
 # ## find_utm_vm_name
 # Discovers the active or configured UTM virtual machine name for macOS.
-# ## find_utm_vm_name
-# Executes the find_utm_vm_name logic.
 find_utm_vm_name() {
     _found=""
     if command -v utmctl >/dev/null 2>&1; then
@@ -67,8 +66,6 @@ find_utm_vm_name() {
 
 # ## restore_vanilla_snapshot
 # Restores the vanilla snapshot on the macOS Vagrant VM using vagrant snapshot or utmctl.
-# ## restore_vanilla_snapshot
-# Executes the restore_vanilla_snapshot logic.
 restore_vanilla_snapshot() {
     echo "Restoring macOS vanilla snapshot..."
     if [ -d "$VAGRANT_DIR" ]; then
@@ -94,8 +91,6 @@ restore_vanilla_snapshot() {
 
 # ## save_vanilla_snapshot
 # Creates a vanilla snapshot on the running macOS VM if not already present.
-# ## save_vanilla_snapshot
-# Executes the save_vanilla_snapshot logic.
 save_vanilla_snapshot() {
     echo "Creating vanilla snapshot for macOS VM..."
     if [ -d "$VAGRANT_DIR" ]; then
@@ -116,8 +111,6 @@ save_vanilla_snapshot() {
 
 # ## sync_repo_to_guest
 # Synchronizes the libscript codebase to the macOS Vagrant VM.
-# ## sync_repo_to_guest
-# Executes the sync_repo_to_guest logic.
 sync_repo_to_guest() {
     echo "=== Syncing LibScript repository to macOS Vagrant VM ==="
     (cd "$VAGRANT_DIR" && vagrant rsync 2>/dev/null) || true
@@ -125,8 +118,6 @@ sync_repo_to_guest() {
 
 # ## update_component_in_readme
 # Updates the status of a single component in README.md Supported Components table (macOS column).
-# ## update_component_in_readme
-# Executes the update_component_in_readme logic.
 update_component_in_readme() {
     _comp="$1"
     _status="$2"

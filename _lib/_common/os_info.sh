@@ -16,6 +16,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -124,9 +125,7 @@ if [ -z "${UNAME+x}" ]; then
 fi
 
 # ## _fallback
-# Executes _fallback functionality.
-# ## _fallback
-# Executes the _fallback logic.
+# Performs the _fallback operation and updates component state.
 _fallback() {
   possible="$(cat -- '/proc/1/comm')"
   if [ "${possible}" = 'systemd' ]; then

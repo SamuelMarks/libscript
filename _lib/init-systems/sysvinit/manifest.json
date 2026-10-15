@@ -1,0 +1,13 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "sysvinit",
+  "title": "SysVinit",
+  "description": "Traditional System V style init program and runlevel controller.",
+  "category": "init-system",
+  "provides": ["sysvinit", "init-system"],
+  "conflicts": [],
+  "versions": ["latest", "3.09"],
+  "os_whitelist": ["linux"],
+  "os_blacklist": ["windows"],
+  "ports": []
+}

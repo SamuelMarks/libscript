@@ -2,25 +2,9 @@
 # ## Overview
 # Harvests the complete LibScript repository into a deployment staging directory or WiX
 # manifest fragment while strictly respecting .gitignore exclusion rules.
-# Embeds the core execution engine, library recipes, stacks, CLIs, and utilities
-# required for standalone, self-contained installation on target systems.
-# Supports optional offline cache harvesting via `--include-cache <dir>` for air-gapped installers
-# as well as direct arbitrary stage directory harvesting via `--source-dir <dir>`.
 #
 # ## Usage
 # ./packaging/harvest_payload.sh [OPTIONS]
-#
-# Options:
-#   --source-dir <dir>       Source directory to harvest files from directly
-#   --output-dir <dir>       Target staging directory where harvested files will be copied
-#   --manifest-file <path>   Path to output newline-delimited list of harvested relative paths
-#   --wix-fragment <path>    Path to output WiX XML (<Fragment>) file with components and files
-#   --component-group <id>   WiX ComponentGroup ID (default: LibscriptHarvestedComponents)
-#   --directory-id <id>      WiX Directory ID for root of payload (default: LIBSCRIPT_FOLDER)
-#   --root-dir <path>        Root directory of repository (default: auto-detected)
-#   --include-cache <dir>    Include hydrated offline cache directory into payload
-#   --include-msi            Allow harvesting of .msi installer packages into payload
-#   --help, -h               Show this help text
 
 set -feu
 
@@ -29,6 +13,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -45,6 +30,18 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
+# Options:
+#   --source-dir <dir>       Source directory to harvest files from directly
+#   --output-dir <dir>       Target staging directory where harvested files will be copied
+#   --manifest-file <path>   Path to output newline-delimited list of harvested relative paths
+#   --wix-fragment <path>    Path to output WiX XML (<Fragment>) file with components and files
+#   --component-group <id>   WiX ComponentGroup ID (default: LibscriptHarvestedComponents)
+#   --directory-id <id>      WiX Directory ID for root of payload (default: LIBSCRIPT_FOLDER)
+#   --root-dir <path>        Root directory of repository (default: auto-detected)
+#   --include-cache <dir>    Include hydrated offline cache directory into payload
+#   --include-msi            Allow harvesting of .msi installer packages into payload
+#   --help, -h               Show this help text
+
 SOURCE_DIR=""
 OUTPUT_DIR=""
 MANIFEST_FILE=""
@@ -57,8 +54,6 @@ INCLUDE_MSI=0
 
 # ## show_help
 # Prints usage and parameter documentation.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf 'Usage: %s [OPTIONS]\n\n' "$(basename "$THIS_FILE")"
   printf 'Options:\n'
@@ -136,8 +131,6 @@ done
 # ## sanitize_wix_id
 # Sanitizes arbitrary path strings into valid WiX Id tokens (alphanumeric and underscores).
 # shellcheck disable=SC2329
-# ## sanitize_wix_id
-# Executes the sanitize_wix_id logic.
 sanitize_wix_id() {
   _val="$1"
   printf '%s' "$_val" | tr -c 'A-Za-z0-9_' '_'
@@ -219,6 +212,7 @@ if [ -n "${INCLUDE_CACHE}" ] && [ -d "${INCLUDE_CACHE}" ]; then
 fi
 
 # ## write_manifest
+# Performs the write_manifest operation and updates component state.
 if [ -n "${MANIFEST_FILE}" ]; then
   _manifest_dir="$(dirname "${MANIFEST_FILE}")"
   [ -d "$_manifest_dir" ] || mkdir -p "$_manifest_dir"
@@ -227,6 +221,7 @@ if [ -n "${MANIFEST_FILE}" ]; then
 fi
 
 # ## copy_payload
+# Performs the copy_payload operation and updates component state.
 if [ -n "${OUTPUT_DIR}" ]; then
   [ -d "${OUTPUT_DIR}" ] || mkdir -p "${OUTPUT_DIR}"
   while IFS= read -r _rel || [ -n "$_rel" ]; do
@@ -246,6 +241,7 @@ if [ -n "${OUTPUT_DIR}" ]; then
 fi
 
 # ## generate_wix_fragment
+# Performs the generate_wix_fragment operation and updates component state.
 if [ -n "${WIX_FRAGMENT}" ]; then
   _frag_dir="$(dirname "${WIX_FRAGMENT}")"
   [ -d "$_frag_dir" ] || mkdir -p "$_frag_dir"

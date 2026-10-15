@@ -60,7 +60,7 @@ set "INPUT=%LIBSCRIPT_ROOT_DIR%\build\target.img"
 set "OUT_DIR=%LIBSCRIPT_ROOT_DIR%\build\cloud_images"
 
 :: ## parse_loop
-:: Executes parse_loop functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_loop
 if "%~1"=="" goto run_pkg
 if /i "%~1"=="--provider=aws" ( set "PROVIDER=aws" & shift & goto parse_loop )
@@ -75,7 +75,7 @@ shift
 goto parse_loop
 
 :: ## run_pkg
-:: Executes run_pkg functionality.
+:: Performs the run_pkg operation and updates component state.
 :run_pkg
 if not exist "%OUT_DIR%" mkdir "%OUT_DIR%"
 
@@ -87,7 +87,7 @@ if /i "%PROVIDER%"=="azure" goto do_azure
 if /i "%PROVIDER%"=="gcp" goto do_gcp
 
 :: ## do_all
-:: Executes do_all functionality.
+:: Performs the do_all operation and updates component state.
 :do_all
 call "%SCRIPT_DIR%\aws_ami.cmd" "%INPUT%" "%OUT_DIR%\aws-ebs-root.raw"
 call "%SCRIPT_DIR%\azure_vhd.cmd" "%INPUT%" "%OUT_DIR%\disk.vhd"
@@ -95,25 +95,25 @@ call "%SCRIPT_DIR%\gcp_image.cmd" "%INPUT%" "%OUT_DIR%\gcp-disk.raw.tar.gz"
 goto finish
 
 :: ## do_aws
-:: Executes do_aws functionality.
+:: Performs the do_aws operation and updates component state.
 :do_aws
 call "%SCRIPT_DIR%\aws_ami.cmd" "%INPUT%" "%OUT_DIR%\aws-ebs-root.raw"
 goto finish
 
 :: ## do_azure
-:: Executes do_azure functionality.
+:: Performs the do_azure operation and updates component state.
 :do_azure
 call "%SCRIPT_DIR%\azure_vhd.cmd" "%INPUT%" "%OUT_DIR%\disk.vhd"
 goto finish
 
 :: ## do_gcp
-:: Executes do_gcp functionality.
+:: Performs the do_gcp operation and updates component state.
 :do_gcp
 call "%SCRIPT_DIR%\gcp_image.cmd" "%INPUT%" "%OUT_DIR%\gcp-disk.raw.tar.gz"
 goto finish
 
 :: ## finish
-:: Executes finish functionality.
+:: Performs the finish operation and updates component state.
 :finish
 echo [OK] Cloud packaging completed under: %OUT_DIR%
 exit /b 0

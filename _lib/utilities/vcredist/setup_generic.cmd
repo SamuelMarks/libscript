@@ -25,6 +25,8 @@ if not defined LIBSCRIPT_ROOT_DIR (
 )
 goto :root_found
 
+:: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
 :find_root
 if exist "!d!\libscript.cmd" (
     set "LIBSCRIPT_ROOT_DIR=!d!"
@@ -42,6 +44,8 @@ if "!d!"=="" (
 )
 goto :find_root
 
+:: ## root_found
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 if not "%ACTION%"=="install" exit /b 0
 
@@ -56,8 +60,8 @@ if exist "%TARGET_DIR%\bin\vcredist.installed" (
 if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
 
 echo [INFO] Downloading VC++ Redistributable...
-curl -sSL -o "%TEMP%\vc_redist.arm64.exe" "https://aka.ms/vs/17/release/vc_redist.arm64.exe"
-curl -sSL -o "%TEMP%\vc_redist.x64.exe" "https://aka.ms/vs/17/release/vc_redist.x64.exe"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "https://aka.ms/vs/17/release/vc_redist.arm64.exe" "%TEMP%\vc_redist.arm64.exe"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "https://aka.ms/vs/17/release/vc_redist.x64.exe" "%TEMP%\vc_redist.x64.exe"
 
 echo [INFO] Installing VC++ Redistributable...
 start /wait "" "%TEMP%\vc_redist.arm64.exe" /install /quiet /norestart

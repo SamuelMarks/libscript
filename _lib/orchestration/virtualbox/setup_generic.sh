@@ -11,6 +11,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -48,8 +49,6 @@ VIRTUALBOX_INSTALL_EXTPACK="${VIRTUALBOX_INSTALL_EXTPACK:-1}"
 
 # ## configure_virtualbox_repo_debian
 # Configures the Oracle VirtualBox apt repository on Debian/Ubuntu systems.
-# ## configure_virtualbox_repo_debian
-# Executes the configure_virtualbox_repo_debian logic.
 configure_virtualbox_repo_debian() {
   if [ -f /etc/apt/sources.list.d/virtualbox.list ]; then
     return 0
@@ -75,8 +74,6 @@ configure_virtualbox_repo_debian() {
 
 # ## install_extension_pack
 # Downloads and installs the Oracle VM VirtualBox Extension Pack.
-# ## install_extension_pack
-# Executes the install_extension_pack logic.
 install_extension_pack() {
   if ! command -v VBoxManage >/dev/null 2>&1; then
     return 0
@@ -109,8 +106,6 @@ install_extension_pack() {
 
 # ## setup_user_groups
 # Adds the current user to the vboxusers group.
-# ## setup_user_groups
-# Executes the setup_user_groups logic.
 setup_user_groups() {
   target_user="${SUDO_USER:-$(id -un)}"
   if [ "$target_user" = "root" ]; then

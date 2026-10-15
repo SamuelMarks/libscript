@@ -2,10 +2,10 @@
 :: # env.cmd
 ::
 :: ## Overview
-:: Environment initialization for CC on Windows.
+:: Environment initialization for the Unified C Compiler Router (cc) on Windows.
 ::
 :: ## Usage
-:: Sets up default environment variables for CC.
+:: call _lib\languages\cc\env.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -20,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -54,4 +54,10 @@ goto :find_root
 if "%CC_INSTALL_METHOD%"=="" set "CC_INSTALL_METHOD=system"
 if "%CC_VERSION%"=="" set "CC_VERSION=latest"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
-set "PATH=%LIBSCRIPT_HOME%\cc\%CC_VERSION%\bin;%PATH%"
+if not "%CC_BACKEND%"=="" if not "%CC_BACKEND%"=="default" (
+    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\languages\%CC_BACKEND%\env.cmd" (
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\languages\%CC_BACKEND%\env.cmd"
+    )
+)
+endlocal & set "PATH=%LIBSCRIPT_HOME%\cc\%CC_VERSION%\bin;%PATH%"
+exit /b 0

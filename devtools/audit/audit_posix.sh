@@ -14,6 +14,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,8 +38,6 @@ ERRORS=0
 
 # ## audit_file
 # Validates individual file against strict POSIX /bin/sh invariants and Windows batch pairing.
-# ## audit_file
-# Executes the audit_file logic.
 audit_file() {
   file="$1"
   [ -f "$file" ] || return 0

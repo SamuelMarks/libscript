@@ -64,7 +64,7 @@ set "APPS_DOMAINS="
 set "SHARED_DB="
 
 :: ## parse_args
-:: Executes parse_args functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_args
 if "%~1"=="" goto parse_done
 if "%~1"=="--app" (
@@ -94,7 +94,7 @@ echo [ERROR] Unknown argument: %~1
 exit /b 1
 
 :: ## parse_done
-:: Executes parse_done functionality.
+:: Performs the parse_done operation and updates component state.
 :parse_done
 
 call :provision_shared_db
@@ -105,7 +105,7 @@ set "REMAINING_DOMAINS=!APPS_DOMAINS!"
 set "HEALTH_APPS="
 
 :: ## loop_apps
-:: Executes loop_apps functionality.
+:: Performs the loop_apps operation and updates component state.
 :loop_apps
 if "!REMAINING_PATHS!"=="" goto done
 
@@ -164,7 +164,7 @@ if exist "!APP_PATH!\libscript.json" (
 goto loop_apps
 
 :: ## done
-:: Executes done functionality.
+:: Performs the done operation and updates component state.
 :done
 if not "!HEALTH_APPS!"=="" (
     echo [INFO] Running health checks for backend services:!HEALTH_APPS!...
@@ -176,7 +176,7 @@ echo [INFO] Deployment remote complete.
 exit /b 0
 
 :: ## provision_shared_db
-:: Executes provision_shared_db functionality.
+:: Performs the provision_shared_db operation and updates component state.
 :provision_shared_db
 if not "!SHARED_DB!"=="" (
     echo [INFO] Provisioning shared DB ^(!SHARED_DB!^) on !TARGET_HOST! ^(if missing^)...
@@ -189,7 +189,7 @@ if not "!SHARED_DB!"=="" (
 exit /b 0
 
 :: ## calculate_checksum
-:: Executes calculate_checksum functionality.
+:: Performs the calculate_checksum operation and updates component state.
 :calculate_checksum
 set "tgt_dir=%~1"
 if exist "!tgt_dir!\.git" (
@@ -200,7 +200,7 @@ if exist "!tgt_dir!\.git" (
 exit /b 0
 
 :: ## setup_app_db
-:: Executes setup_app_db functionality.
+:: Performs the setup_app_db operation and updates component state.
 :setup_app_db
 set "aname=%~1"
 set "needs_db=%~2"
@@ -217,7 +217,7 @@ if "!needs_db!"=="1" (
 exit /b 0
 
 :: ## execute_lifecycle_hooks
-:: Executes execute_lifecycle_hooks functionality.
+:: Performs the execute_lifecycle_hooks operation and updates component state.
 :execute_lifecycle_hooks
 set "rdir=%~1"
 set "aname=%~2"
@@ -228,7 +228,7 @@ ssh "!TARGET_HOST!" "cd \"!rdir!\" && if [ -f libscript.json ]; then LIBSCRIPT_R
 exit /b 0
 
 :: ## configure_routing
-:: Executes configure_routing functionality.
+:: Performs the configure_routing operation and updates component state.
 :configure_routing
 set "aname=%~1"
 set "adomain=%~2"

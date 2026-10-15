@@ -15,6 +15,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -37,8 +38,6 @@ set +f
 
 # ## show_help
 # Displays usage instructions and supported CLI parameters.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [REPO_ROOT] [--output <markdown_file>] [--json [json_file]] [--help]"
   printf '%s\n' ""
@@ -54,8 +53,6 @@ show_help() {
 
 # ## handle_interrupt
 # Signal handler to abort test results updating immediately on interruption.
-# ## handle_interrupt
-# Executes the handle_interrupt logic.
 handle_interrupt() {
   trap - INT TERM HUP EXIT
   exit 130
@@ -65,8 +62,6 @@ trap 'handle_interrupt' INT TERM HUP
 
 # ## check_manifest_support
 # Checks if a component supports the given OS based on its manifest.json
-# ## check_manifest_support
-# Executes the check_manifest_support logic.
 check_manifest_support() {
   _m_file="$1"
   _m_os="$2"
@@ -116,8 +111,6 @@ check_manifest_support() {
 
 # ## update_supported_components
 # Discovers components, aggregates test results from tests_tmp/, updates Markdown file and JSON export.
-# ## update_supported_components
-# Executes the update_supported_components logic.
 update_supported_components() {
   _repo_root="$1"
   _readme_file="$2"
@@ -343,8 +336,6 @@ JSON_ROW
 
 # ## update_todo_plan
 # Updates TODO_PLAN.md to mark completed tasks when result files exist in tests_tmp/.
-# ## update_todo_plan
-# Executes the update_todo_plan logic.
 update_todo_plan() {
   _repo_root="$1"
   _todo_file="${_repo_root}/TODO_PLAN.md"
@@ -517,8 +508,6 @@ update_todo_plan() {
 
 # ## main
 # Parses command-line flags and invokes update functions.
-# ## main
-# Executes the main logic.
 main() {
   _repo="${REPO_ROOT}"
   _output=""

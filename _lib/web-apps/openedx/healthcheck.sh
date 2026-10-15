@@ -4,9 +4,32 @@
 # Validates MySQL, MongoDB, Redis, Meilisearch, Celery, LMS HTTP, CMS HTTP, and SMTP listeners.
 #
 # ## Usage
-#   ./healthcheck.sh [--json]
-#   ./healthcheck.sh help
-#
+#   ./healthcheck.sh [--json|help]
+
+set -feu
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+export DIR="${SCRIPT_DIR}"
+
 # ## Parameters
 # - `--json`: Formats diagnostic health report in JSON rather than human-readable tabular format.
 #
@@ -29,29 +52,6 @@
 # ## Exit Codes
 # - `0`: All required endpoints are healthy.
 # - `1`: One or more health checks failed or returned an error.
-
-set -feu
-if [ "${SCRIPT_NAME-}" ]; then
-  THIS_FILE="${SCRIPT_NAME}"
-elif [ "${BASH_SOURCE-}" ]; then
-  THIS_FILE="${BASH_SOURCE}"
-elif [ "${ZSH_VERSION-}" ]; then
-  # shellcheck disable=SC2296
-  THIS_FILE="${(%):-%x}"
-else
-  THIS_FILE="${0}"
-fi
-
-case "${STACK+x}" in
-  *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
-esac
-export STACK="${STACK:-}${THIS_FILE}"':'
-SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/env.sh"
@@ -111,8 +111,6 @@ TOTAL_FAILURES=0
 #   $2 - port
 # Returns:
 #   0 if listening, 1 if refused or timeout.
-# ## test_tcp_port
-# Executes the test_tcp_port logic.
 test_tcp_port() {
   _host="$1"
   _port="$2"
@@ -136,8 +134,6 @@ test_tcp_port() {
 #
 # Inputs:
 #   $1 - URL
-# ## probe_http
-# Executes the probe_http logic.
 probe_http() {
   _url="$1"
   _code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "${_url}" 2>/dev/null || printf '000')
@@ -155,8 +151,6 @@ probe_http() {
 
 # ## probe_workers
 # Checks if background Celery, Gunicorn, or Waitress worker processes are active.
-# ## probe_workers
-# Executes the probe_workers logic.
 probe_workers() {
   _pid_file="${OPENEDX_INSTALL_DIR}/run/worker.pid"
   if [ -f "${_pid_file}" ] && kill -0 "$(cat "${_pid_file}")" 2>/dev/null; then
@@ -174,8 +168,6 @@ probe_workers() {
 
 # ## probe_smtp
 # Probes local SMTP mail relay port.
-# ## probe_smtp
-# Executes the probe_smtp logic.
 probe_smtp() {
   if test_tcp_port "${SMTP_HOST}" "${SMTP_PORT}"; then
     echo 'OK'

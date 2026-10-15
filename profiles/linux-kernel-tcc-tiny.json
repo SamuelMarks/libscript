@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.0.0",
+  "profile_name": "linux-kernel-tcc-tiny",
+  "description": "Minimal Linux kernel (tinyconfig) built from source with Tiny C Compiler (TCC).",
+  "target": {
+    "arch": "x86_64",
+    "os_family": "linux-musl",
+    "libc": "musl",
+    "submodel": "generic"
+  },
+  "kernel": {
+    "provider": "linux-lts",
+    "config_method": "tinyconfig",
+    "compiler": "tcc",
+    "kcflags": "-O2",
+    "cmdline": "console=ttyS0 panic=-1 quiet"
+  },
+  "init_system": {
+    "provider": "none",
+    "default_target": "multi-user"
+  },
+  "storage": {
+    "disk_size_gib": 2,
+    "partition_table": "gpt",
+    "boot_mode": "uefi",
+    "bootloader": "limine",
+    "uki": false,
+    "partitions": [
+      {
+        "name": "ESP",
+        "filesystem": "vfat",
+        "mountpoint": "/boot/efi",
+        "size_mib": 256
+      },
+      {
+        "name": "root",
+        "filesystem": "ext4",
+        "mountpoint": "/",
+        "size_mib": 0
+      }
+    ]
+  },
+  "packages": ["tcc", "sqlite"]
+}

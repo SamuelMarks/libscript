@@ -1,16 +1,19 @@
 #!/bin/sh
 # ## Overview
-# Installation and configuration script for gcp-gke-tpu-cluster.
+# Installation and configuration entrypoint for the gcp-gke-tpu-cluster component.
+# Delegates execution to the shared _lib/_common/setup_base.sh module.
 #
 # ## Usage
-# Execute this script to install or configure the component.
+# ./setup.sh [action]
 
 set -feu
+
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else

@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "clang",
+  "title": "LLVM Clang C/C++ Compiler",
+  "description": "Standalone version manager and source builder for LLVM Clang.",
+  "category": "languages",
+  "provides": ["compiler", "c", "clang", "llvm"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": []
+}

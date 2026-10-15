@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -83,9 +84,7 @@ TIMESTAMP=$(date +%s)
 LOG_FILE="$LOG_DIR/teardown-${TIMESTAMP}.log"
 
 # ## log
-# Executes log functionality.
-# ## log
-# Executes the log logic.
+# Formats and emits a timestamped log message at the specified severity level.
 log() {
   printf '%s\n' "$(date '+%Y-%m-%d %H:%M:%S') [$1] $2" | tee -a "$LOG_FILE"
 }
@@ -94,9 +93,7 @@ log "INIT" "Starting $PROVIDER teardown for $NODE..."
 
 STATE_FILE="$REPO_PATH/.deploy_state"
 # ## get_state
-# Executes get_state functionality.
-# ## get_state
-# Executes the get_state logic.
+# Performs the get_state operation and updates component state.
 get_state() {
 key=$1
   if [ -f "$STATE_FILE" ]; then
@@ -127,8 +124,6 @@ if [ ! -f "$CLI" ]; then printf '%s\n' "Provider $PROVIDER not supported."; exit
 # -----------------------------------------------------------------------------
 # ## ensure_cli
 # Ensures required CLI commands and packages are installed.
-# ## ensure_cli
-# Executes the ensure_cli logic.
 ensure_cli() {
   cmd=$1
   pkg=$2
@@ -152,9 +147,7 @@ elif [ "$PROVIDER" = "gcp" ]; then
 fi
 
 # ## run_with_auth_check
-# Executes run_with_auth_check functionality.
-# ## run_with_auth_check
-# Executes the run_with_auth_check logic.
+# Performs the run_with_auth_check operation and updates component state.
 run_with_auth_check() {
   cmd="$1"
   shift

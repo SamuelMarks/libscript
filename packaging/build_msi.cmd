@@ -24,6 +24,7 @@ set "SCRIPT_DIR=%~dp0"
 set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 :: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
 :: ## Overview
 :: Finds the root directory of the libscript repository.
 if not defined LIBSCRIPT_ROOT_DIR (
@@ -85,6 +86,7 @@ if not defined LIBSCRIPT_TARGET_ARCH set "LIBSCRIPT_TARGET_ARCH=x64"
 set "TARGET_ARCH=%LIBSCRIPT_TARGET_ARCH%"
 
 :: ## parse_args
+:: Parses command-line arguments and populates configuration variables.
 :: ## Overview
 :: Parses command-line arguments and flags.
 :parse_args
@@ -216,6 +218,7 @@ shift
 goto parse_args
 
 :: ## show_help
+:: Displays command-line usage instructions and available options.
 :: ## Overview
 :: Displays command-line usage and options.
 :show_help
@@ -242,6 +245,7 @@ echo   --help, -h            Show this help text
 exit /b 0
 
 :: ## after_args
+:: Continues execution after command-line argument parsing completes.
 :: ## Overview
 :: Resolves paths and fallback assets after argument processing.
 :after_args
@@ -390,6 +394,7 @@ if defined BANNER_SIDE_PATH set "BANNER_SIDE_PATH=!BANNER_SIDE_PATH:%LIBSCRIPT_R
 if defined rtf_license_file set "rtf_license_file=!rtf_license_file:%LIBSCRIPT_ROOT_DIR%\=!"
 
 :: ## write_wxs
+:: Performs the write_wxs operation and updates component state.
 :: ## Overview
 :: Emits the complete WiX XML manifest.
 setlocal DisableDelayedExpansion
@@ -1017,7 +1022,9 @@ endlocal
 echo [PASS] Successfully generated WiX manifest: %WXS_FILE%
 
 :: ## harvest_payload
+:: Performs the harvest_payload operation and updates component state.
 :: ## Overview
+:: Performs the Overview operation and updates component state.
 set "PAYLOAD_WXS=%OUT_FILE%_payload.wxs"
 if /I "%VARIANT%"=="offline" (
     call "%SCRIPT_DIR%\harvest_payload.cmd" --wix-fragment "%PAYLOAD_WXS%" --directory-id "LIBSCRIPT_FOLDER" --component-group "LibscriptHarvestedComponents" --include-cache "%CACHE_DIR%"
@@ -1030,6 +1037,7 @@ if errorlevel 1 (
 )
 
 :: ## compile_msi
+:: Performs the compile_msi operation and updates component state.
 :: ## Overview
 :: Compiles the WiX manifest into an MSI binary using cross-platform msi-rs.
 if "%USE_WIX%"=="1" (
@@ -1110,23 +1118,23 @@ if errorlevel 1 (
 )
 
 :: ## skip_msiinfo
-:: Executes skip_msiinfo functionality.
+:: Performs the skip_msiinfo operation and updates component state.
 :skip_msiinfo
 echo [PASS] Successfully built %OUT_FILE%.msi
 :: ## compile_done
-:: Executes compile_done functionality.
+:: Performs the compile_done operation and updates component state.
 :compile_done
 set "ERR=0"
 goto cleanup
 
 :: ## compile_err
-:: Executes compile_err functionality.
+:: Performs the compile_err operation and updates component state.
 :compile_err
 set "ERR=1"
 goto cleanup
 
 :: ## cleanup
-:: Executes cleanup functionality.
+:: Cleans up temporary files, mounts, and background processes before exiting.
 :cleanup
 if exist "%TMP_WORK_DIR%" rmdir /s /q "%TMP_WORK_DIR%" >nul 2>&1
 del /f /q "%OUT_FILE%.wixobj" >nul 2>&1

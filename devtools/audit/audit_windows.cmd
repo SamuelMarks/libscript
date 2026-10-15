@@ -9,6 +9,7 @@
 :: ## Usage
 :: audit_windows.cmd devtools/audit/audit_windows.cmd
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -51,13 +52,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # audit_windows.cmd
-:::: Audits all LibScript components on the Windows 11 Vagrant VM.
-:: 
-:: ## Usage
-:: Execute this script to audit components on Windows.
 
-setlocal EnableDelayedExpansion
 
 if /I "%~1"=="--help" goto :show_help
 if /I "%~1"=="-h" goto :show_help
@@ -66,7 +61,7 @@ if /I "%~1"=="-?" goto :show_help
 goto :main
 
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line usage instructions and available options.
 :show_help
 echo Usage: %~nx0
 echo Audits all LibScript components on the Windows 11 Vagrant VM.
@@ -76,7 +71,7 @@ echo   --help, -h, /?, -?  Show this help message.
 exit /b 0
 
 :: ## main
-:: Executes main functionality.
+:: Executes the primary orchestration workflow for this script.
 :main
 set "ROOT_DIR=%~dp0..\.."
 

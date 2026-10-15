@@ -25,6 +25,7 @@ set "SCRIPT_DIR=%~dp0"
 set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 :: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
     call :find_root

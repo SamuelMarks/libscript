@@ -11,6 +11,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -46,9 +47,7 @@ GRADLE_VERSION="${GRADLE_VERSION:-latest}"
 ACTION="${ACTION:-install}"
 
 # ## resolve_exact_version
-# Executes resolve_exact_version functionality.
-# ## resolve_exact_version
-# Executes the resolve_exact_version logic.
+# Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${GRADLE_VERSION}" = "latest" ] || [ "${GRADLE_VERSION}" = "lts" ]; then
     EXACT_VERSION=$(curl -sL https://api.github.com/repos/gradle/gradle/releases/latest | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')

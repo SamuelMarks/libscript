@@ -3,25 +3,11 @@
 ::
 :: ## Overview
 :: Universal Multiboot Co-Installation Orchestrator across Linux, FreeBSD, and illumos.
-:: Deploys Linux, FreeBSD, and illumos sysroots concurrently onto separate target partitions,
-:: configures shared EFI System Partition (ESP), and synthesizes a unified master GRUB2
-:: multiboot menu chainloading FreeBSD loader.efi and illumos bootx64.efi / direct kernel.
 ::
 :: ## Usage
-:: Execute this script with target device and partition paths:
-::   ./_lib/package-managers/msi-rs/distro_installers/multiboot_orchestrator.cmd <disk_dev> [options...]
-::
-:: Arguments:
-::   <disk_dev>              Target storage device path (e.g. /dev/nvme0n1 or /dev/sda)
-::
-:: Options:
-::   --linux-part <dev>      Dedicated partition for Linux root (ext4/btrfs)
-::   --freebsd-part <dev>    Dedicated partition for FreeBSD root (UFS2 or ZFS zroot)
-::   --illumos-part <dev>    Dedicated partition for illumos ZFS root pool (rpool)
-::   --esp-part <dev>        Shared EFI System Partition (FAT32, /boot/efi)
-::   --default-os <name>     Default OS in GRUB boot menu (debian, freebsd, or omnios)
-::   --timeout <seconds>     Bootloader countdown timer (default: 5)
+:: multiboot_orchestrator.cmd <disk_dev> [options...]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -64,16 +50,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # multiboot_orchestrator.cmd
-:::: Universal Multiboot Co-Installation Orchestrator across Linux, FreeBSD, and illumos on Windows.
-:: Deploys Linux, FreeBSD, and illumos sysroots concurrently onto separate target partitions,
-:: configures shared EFI System Partition (ESP), and synthesizes a unified master GRUB2
-:: multiboot menu chainloading FreeBSD loader.efi and illumos bootx64.efi / direct kernel.
-::
-:: ## Usage
-:: Call multiboot_orchestrator.cmd <disk_dev> [options...]
 
-setlocal EnableDelayedExpansion
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help
@@ -118,5 +95,5 @@ if !errorlevel! EQU 0 (
     exit /b !errorlevel!
 )
 
-echo [OK] Multiboot deployment completed on Windows.
-exit /b 0
+echo [ERROR] Multiboot Linux/FreeBSD/illumos orchestration is unsupported on native Win32 without WSL/sh. >&2
+exit /b 86

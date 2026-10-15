@@ -2,10 +2,11 @@
 :: # setup.cmd
 ::
 :: ## Overview
-:: Setup script for TensorBoard on Windows.
+:: Installation and configuration entrypoint for the tensorboard component on Windows.
 ::
 :: ## Usage
-:: Delegates to PowerShell setup script.
+:: setup.cmd [action]
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
@@ -50,4 +51,4 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup.ps1" %*
+call "%~dp0\..\..\_common\setup_base.cmd" %*

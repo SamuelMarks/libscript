@@ -41,6 +41,17 @@ microVM appliances, desktop environments, and server images orchestrated by LibS
 - `osv-cloud-runtime.json`: OSv unikernel cloud runtime profile.
 - `unikraft-nginx-redis.json`: Unikraft unikernel appliance bundling Nginx and Redis.
 
+### Multi-Compiler Linux Kernel Profiles
+
+- `linux-kernel-gcc-tiny.json`: Minimal Linux kernel (`tinyconfig`) built with GCC.
+- `linux-kernel-clang-tiny.json`: Minimal Linux kernel (`tinyconfig`) built with LLVM Clang.
+- `linux-kernel-tcc-tiny.json`: Minimal Linux kernel (`tinyconfig`) built with Tiny C Compiler
+  (TCC).
+- `linux-kernel-custom-cc-tiny.json`: Minimal Linux kernel (`tinyconfig`) built with `custom-cc`.
+- `linux-kernel-gcc-defconfig.json`: Standard Linux kernel (`defconfig`) built with GCC.
+- `linux-kernel-custom-cc-defconfig.json`: Standard Linux kernel (`defconfig`) built with
+  `custom-cc`.
+
 ## Usage
 
 Profiles are compiled using the LibScript OS orchestrator:

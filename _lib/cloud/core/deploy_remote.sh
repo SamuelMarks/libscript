@@ -11,6 +11,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -71,9 +72,7 @@ while [ $# -gt 0 ]; do
 done
 
 # ## calculate_checksum
-# Executes calculate_checksum functionality.
-# ## calculate_checksum
-# Executes the calculate_checksum logic.
+# Performs the calculate_checksum operation and updates component state.
 calculate_checksum() {
   local_path="$1"
   if [ -d "$local_path/.git" ] && command -v git >/dev/null 2>&1; then
@@ -84,9 +83,7 @@ calculate_checksum() {
 }
 
 # ## provision_shared_db
-# Executes provision_shared_db functionality.
-# ## provision_shared_db
-# Executes the provision_shared_db logic.
+# Performs the provision_shared_db operation and updates component state.
 provision_shared_db() {
   if [ -n "$SHARED_DB" ]; then
     log_info "Provisioning shared DB ($SHARED_DB) on $TARGET_HOST (if missing)..."
@@ -101,9 +98,7 @@ provision_shared_db() {
 }
 
 # ## setup_app_db
-# Executes setup_app_db functionality.
-# ## setup_app_db
-# Executes the setup_app_db logic.
+# Performs the setup_app_db operation and updates component state.
 setup_app_db() {
   app_name="$1"
   needs_db="$2"
@@ -118,9 +113,7 @@ setup_app_db() {
 }
 
 # ## execute_lifecycle_hooks
-# Executes execute_lifecycle_hooks functionality.
-# ## execute_lifecycle_hooks
-# Executes the execute_lifecycle_hooks logic.
+# Performs the execute_lifecycle_hooks operation and updates component state.
 execute_lifecycle_hooks() {
   remote_dir="$1"
   app_name="$2"
@@ -134,9 +127,7 @@ execute_lifecycle_hooks() {
 }
 
 # ## configure_routing
-# Executes configure_routing functionality.
-# ## configure_routing
-# Executes the configure_routing logic.
+# Performs the configure_routing operation and updates component state.
 configure_routing() {
   app_name="$1"
   domain="$2"

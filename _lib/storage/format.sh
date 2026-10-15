@@ -15,6 +15,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -34,8 +35,6 @@ export LIBSCRIPT_ROOT_DIR
 
 # ## show_help
 # Displays usage instructions and supported filesystem options.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") <device_or_slice> [fs_type] [pool_name]"
   printf '%s\n' "Formats block partitions or creates structured ZFS root pools."
@@ -71,16 +70,12 @@ fi
 
 # ## detect_os
 # Identifies the active operating system kernel family.
-# ## detect_os
-# Executes the detect_os logic.
 detect_os() {
   uname -s | tr '[:upper:]' '[:lower:]'
 }
 
 # ## probe_existing_fs
 # Determines if the target partition is already formatted.
-# ## probe_existing_fs
-# Executes the probe_existing_fs logic.
 probe_existing_fs() {
   _dev="$1"
   if command -v blkid >/dev/null 2>&1; then
@@ -92,8 +87,6 @@ probe_existing_fs() {
 
 # ## format_fat32
 # Formats partition as FAT32 for EFI ESP.
-# ## format_fat32
-# Executes the format_fat32 logic.
 format_fat32() {
   _dev="$1"
   printf '[INFO] Formatting %s as FAT32 EFI System Partition...\n' "$_dev"
@@ -108,8 +101,6 @@ format_fat32() {
 
 # ## format_ext4
 # Formats partition as Linux ext4.
-# ## format_ext4
-# Executes the format_ext4 logic.
 format_ext4() {
   _dev="$1"
   printf '[INFO] Formatting %s as ext4...\n' "$_dev"
@@ -118,8 +109,6 @@ format_ext4() {
 
 # ## format_xfs
 # Formats partition as Linux XFS.
-# ## format_xfs
-# Executes the format_xfs logic.
 format_xfs() {
   _dev="$1"
   printf '[INFO] Formatting %s as xfs...\n' "$_dev"
@@ -128,8 +117,6 @@ format_xfs() {
 
 # ## format_btrfs
 # Formats partition as Linux Btrfs.
-# ## format_btrfs
-# Executes the format_btrfs logic.
 format_btrfs() {
   _dev="$1"
   printf '[INFO] Formatting %s as btrfs...\n' "$_dev"
@@ -138,8 +125,6 @@ format_btrfs() {
 
 # ## format_ufs2
 # Formats partition as FreeBSD UFS2 with soft updates.
-# ## format_ufs2
-# Executes the format_ufs2 logic.
 format_ufs2() {
   _dev="$1"
   printf '[INFO] Formatting %s as FreeBSD UFS2...\n' "$_dev"
@@ -148,8 +133,6 @@ format_ufs2() {
 
 # ## init_zfs_pool
 # Initializes canonical OpenZFS root pool and builds structured dataset hierarchy.
-# ## init_zfs_pool
-# Executes the init_zfs_pool logic.
 init_zfs_pool() {
   _dev="$1"
   _pool="$2"

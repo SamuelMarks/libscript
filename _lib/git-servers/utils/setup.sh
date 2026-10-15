@@ -1,17 +1,19 @@
 #!/bin/sh
 # ## Overview
-# Setup script for Git server utils.
+# Installation and configuration entrypoint for the utils component.
+# Delegates execution to the shared _lib/_common/setup_base.sh module.
 #
 # ## Usage
-# Normally sets up dependencies. Currently a no-op placeholder.
-
+# ./setup.sh [action]
 
 set -feu
+
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -28,4 +30,7 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-# Utilities setup: no-op
+SCRIPT_NAME="${SCRIPT_DIR}/../../_common/setup_base.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"

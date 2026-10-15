@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/wix/vars.schema.json",
+  "title": "WiX Toolset variables",
+  "description": "Configuration variables for the WiX Toolset.",
+  "type": "object",
+  "properties": {
+    "WIX_VERSION": {
+      "description": "Specific version of the WiX Toolset to install (e.g., '3.14' or 'latest').",
+      "type": "string",
+      "default": "3.14"
+    },
+    "WIX_INSTALL_METHOD": {
+      "description": "How to install WIX ('libscript_native' or 'system').",
+      "type": "string",
+      "default": "libscript_native"
+    }
+  }
+}

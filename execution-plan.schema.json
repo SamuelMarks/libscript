@@ -30,6 +30,10 @@
         "os": {
           "type": "string",
           "description": "Target operating system family (e.g. linux, freebsd, unikraft)"
+        },
+        "compiler": {
+          "type": "string",
+          "description": "Selected C compiler toolchain for kernel and target compilation ('default', 'gcc', 'clang', 'tcc', 'custom-cc')"
         }
       }
     },

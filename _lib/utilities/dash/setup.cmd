@@ -2,14 +2,14 @@
 :: # setup.cmd
 ::
 :: ## Overview
-:: Installation and configuration script for the dash component on Windows.
-:: It handles downloading, verifying, and installing the component on the host system.
+:: Installation and configuration entrypoint for the dash component on Windows.
 ::
 :: ## Usage
-:: Execute this script to install or configure the component.
+:: setup.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
     if not errorlevel 1 (
@@ -51,5 +51,4 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-echo dash is POSIX-only. On Windows, please use busybox sh or git-bash.
-exit /b 0
+call "%~dp0\..\..\_common\setup_base.cmd" %*

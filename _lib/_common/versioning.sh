@@ -14,6 +14,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,9 +36,7 @@ _SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # Common utilities for managing native libscript installations and version aliases.
 
 # ## libscript_get_version_dir
-# Executes libscript_get_version_dir functionality.
-# ## libscript_get_version_dir
-# Executes the libscript_get_version_dir logic.
+# Performs the libscript_get_version_dir operation and updates component state.
 libscript_get_version_dir() {
   component="$1"
   version="$2"
@@ -45,9 +44,7 @@ libscript_get_version_dir() {
 }
 
 # ## libscript_symlink_alias
-# Executes libscript_symlink_alias functionality.
-# ## libscript_symlink_alias
-# Executes the libscript_symlink_alias logic.
+# Performs the libscript_symlink_alias operation and updates component state.
 libscript_symlink_alias() {
   component="$1"
   alias_name="$2"

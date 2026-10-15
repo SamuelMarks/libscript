@@ -53,7 +53,7 @@ goto :find_root
 goto :%1
 
 :: ## libscript_check_preflight
-:: Executes libscript_check_preflight functionality.
+:: Performs the libscript_check_preflight operation and updates component state.
 :libscript_check_preflight
 set "provider=%~2"
 if "%provider%"=="" (

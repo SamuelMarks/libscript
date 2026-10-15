@@ -10,6 +10,7 @@
 :: Execute this script to generate target live media:
 ::   ./devtools/build_live_installer.cmd [--target <linux|freebsd|illumos|all>] [--mode <all|headless|tui|gui>] [--output <path>]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -52,14 +53,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # build_live_installer.cmd
-:::: Unified Live Media Generator CLI for Windows environments.
-:: Coordinates building bootable live ISO images for Linux, FreeBSD, and illumos.
-::
-:: ## Usage
-:: Call build_live_installer.cmd [--target <linux|freebsd|illumos|all>] [--mode <all|headless|tui|gui>]
 
-setlocal EnableDelayedExpansion
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help

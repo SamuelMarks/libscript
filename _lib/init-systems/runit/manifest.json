@@ -1,0 +1,13 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "runit",
+  "title": "runit",
+  "description": "Cross-platform Unix init scheme with service supervision.",
+  "category": "init-system",
+  "provides": ["runit", "init-system"],
+  "conflicts": [],
+  "versions": ["latest", "2.1.2"],
+  "os_whitelist": ["linux", "freebsd", "openbsd", "netbsd", "darwin"],
+  "os_blacklist": ["windows"],
+  "ports": []
+}

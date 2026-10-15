@@ -58,10 +58,10 @@ if /I "%~1"=="-?" goto :show_help
 goto :main
 
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line usage instructions and available options.
 :show_help
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line usage instructions and available options.
 echo Usage: %~nx0
 echo Injects specific markers or tags into documentation files.
 echo.
@@ -70,10 +70,9 @@ echo   --help, -h, /?, -?  Show this help message.
 exit /b 0
 
 :: ## main
-:: Executes main functionality.
+:: Executes the primary orchestration workflow for this script.
 :main
 :: ## main
-:: Executes main functionality.
 :: Injects <!-- BEGIN_VARS --> and <!-- BEGIN_PLATFORMS --> markers into
 :: README.md files. Windows equivalent of inject_markers.sh
 

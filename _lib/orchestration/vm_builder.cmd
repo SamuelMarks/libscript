@@ -53,20 +53,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-SET "searchVal=;%THIS_FILE%;"
-IF NOT DEFINED STACK (
-    SET "STACK=;%THIS_FILE%;"
-    echo [CONTINUE] processing "%THIS_FILE%"
-) ELSE (
-    IF NOT "!STACK:%searchVal%=!"=="!STACK!" (
-        echo [STOP]     processing "%THIS_FILE%"
-        SET ERRORLEVEL=0
-        goto :eof
-    ) ELSE (
-        SET "STACK=!STACK!%THIS_FILE%;"
-        echo [CONTINUE] processing "%THIS_FILE%"
-    )
-)
 
 if "%~1"=="--help" (
     echo Usage: %~nx0 [--worker=docker^|wsl2] ^<command...^>
@@ -83,7 +69,7 @@ set "WORKER_TYPE=auto"
 set "CMD_ARGS="
 
 :: ## parse_loop
-:: Executes parse_loop functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_loop
 if "%~1"=="" goto after_parse
 set "arg=%~1"
@@ -96,7 +82,7 @@ set "CMD_ARGS=%*"
 goto after_parse
 
 :: ## after_parse
-:: Executes after_parse functionality.
+:: Performs the after_parse operation and updates component state.
 :after_parse
 if "%CMD_ARGS%"=="" (
     echo [ERROR] No command specified for vm_builder.

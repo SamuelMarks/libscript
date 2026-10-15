@@ -55,7 +55,7 @@ goto :find_root
 goto :%1
 
 :: ## init
-:: Executes init functionality.
+:: Initializes default environment variables and module state.
 :init
 if "%LIBSCRIPT_TAG_ENABLE%"=="" set "LIBSCRIPT_TAG_ENABLE=true"
 if "%LIBSCRIPT_TAG_KEY%"=="" set "LIBSCRIPT_TAG_KEY=libscript"
@@ -75,10 +75,7 @@ exit /b 0
 ::
 :: Returns:
 ::   errorlevel 0 if managed (or overridden), 1 if not managed.
-:: ## libscript_verify_managed
-:: Executes libscript_verify_managed functionality.
 :libscript_verify_managed
-setlocal EnableDelayedExpansion
 set "provider=%~2"
 set "type=%~3"
 set "name=%~4"
@@ -173,7 +170,7 @@ endlocal
 exit /b 1
 
 :: ## libscript_format_tags
-:: Executes libscript_format_tags functionality.
+:: Performs the libscript_format_tags operation and updates component state.
 :libscript_format_tags
 set "provider=%~2"
 if not "%LIBSCRIPT_TAG_ENABLE%"=="true" exit /b 0
@@ -191,7 +188,7 @@ if "%provider%"=="aws" (
 exit /b 0
 
 :: ## libscript_format_tag_filter
-:: Executes libscript_format_tag_filter functionality.
+:: Performs the libscript_format_tag_filter operation and updates component state.
 :libscript_format_tag_filter
 set "provider=%~2"
 if not "%LIBSCRIPT_TAG_ENABLE%"=="true" exit /b 0

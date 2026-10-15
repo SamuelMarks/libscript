@@ -28,6 +28,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -66,8 +67,6 @@ DATA_DIR="${OPENEDX_INSTALL_DIR}/data"
 
 # ## resolve_python
 # Resolves python interpreter.
-# ## resolve_python
-# Executes the resolve_python logic.
 resolve_python() {
   if [ -x "${PYTHON_BIN}" ]; then
     printf '%s\n' "${PYTHON_BIN}"
@@ -87,8 +86,6 @@ resolve_python() {
 #   $1 - course_id
 # Outputs:
 #   Return 0 if course already exists, 1 otherwise.
-# ## course_exists
-# Executes the course_exists logic.
 course_exists() {
   _cid="$1"
   _py="$(resolve_python)"
@@ -114,8 +111,6 @@ course_exists() {
 
 # ## record_course
 # Registers course ID in the local catalog.
-# ## record_course
-# Executes the record_course logic.
 record_course() {
   _cid="$1"
   _py="$(resolve_python)"
@@ -149,8 +144,6 @@ EOF
 #   Optional arguments:
 #     --course-id <id>
 #     --repo <url>
-# ## import_course
-# Executes the import_course logic.
 import_course() {
   _course_id="course-v1:edX+DemoX+Demo_Course"
   _repo_url="https://github.com/openedx/edx-demo-course.git"
@@ -210,8 +203,6 @@ import_course() {
 # Inputs:
 #   Optional arguments:
 #     --owner <username>
-# ## import_libraries
-# Executes the import_libraries logic.
 import_libraries() {
   _owner="${OPENEDX_ADMIN_USERNAME:-admin}"
   while [ $# -gt 0 ]; do
@@ -273,8 +264,6 @@ EOF
 
 # ## show_help
 # Displays usage guide.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   cat <<EOF
 Open edX Demo Content Ingestion CLI

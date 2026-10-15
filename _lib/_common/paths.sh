@@ -11,6 +11,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -35,9 +36,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # ```
 
 # ## resolve_component_paths
-# Executes resolve_component_paths functionality.
-# ## resolve_component_paths
-# Executes the resolve_component_paths logic.
+# Computes standard installation, binary, configuration, and data paths for a component.
 resolve_component_paths() {
   # Requirement: PACKAGE_NAME and LIBSCRIPT_ROOT_DIR must be set.
   if [ -z "${PACKAGE_NAME:-}" ]; then

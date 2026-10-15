@@ -2,11 +2,11 @@
 :: # setup.cmd
 ::
 :: ## Overview
-:: Installation and configuration script for the tmux component on Windows.
-:: It handles downloading, verifying, and installing the component on the host system.
+:: Installation and configuration entrypoint for the tmux component on Windows.
 ::
 :: ## Usage
-:: Execute this script to install or configure the component.
+:: setup.cmd [action]
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
@@ -51,4 +51,4 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup.ps1" %*
+call "%~dp0\..\..\_common\setup_base.cmd" %*

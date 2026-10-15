@@ -56,7 +56,7 @@ set "LINES=50"
 set "FOLLOW=0"
 
 :: ## parse_args
-:: Executes parse_args functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_args
 if "%~1"=="" goto run_logs
 if /i "%~1"=="-n" (
@@ -96,13 +96,13 @@ shift
 goto parse_args
 
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line usage instructions and available options.
 :show_help
 echo Usage: logs.cmd [install^|lms^|cms^|worker] [-n NUM^|--tail NUM] [-f^|--follow]
 exit /b 0
 
 :: ## run_logs
-:: Executes run_logs functionality.
+:: Performs the run_logs operation and updates component state.
 :run_logs
 if "%OPENEDX_INSTALL_DIR%"=="" (
     if defined LIBSCRIPT_HOME (

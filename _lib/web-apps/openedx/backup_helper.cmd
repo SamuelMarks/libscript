@@ -52,13 +52,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # backup_helper.cmd
-:::: Backup and disaster recovery helper utility for Open edX on Windows.
-:: Creates consolidated compressed archives and applies restoration snapshots.
-::
-:: ## Usage
-:: Call stacks\cms\openedx\backup_helper.cmd backup <backup_dir> <install_dir> [out_path]
-:: Call stacks\cms\openedx\backup_helper.cmd restore <archive> <install_dir> [force]
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help
@@ -78,7 +71,6 @@ exit /b 0
 :: ## main
 :: Executes primary entrypoint delegating to backup_helper.ps1.
 :main
-setlocal EnableDelayedExpansion
 
 where powershell >nul 2>&1
 if %ERRORLEVEL% EQU 0 (

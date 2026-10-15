@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/init-systems/runit/vars.schema.json",
+  "title": "runit variables",
+  "description": "Configuration variables for the runit init system.",
+  "type": "object",
+  "properties": {
+    "RUNIT_VERSION": {
+      "description": "Specific version of runit to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "RUNIT_INSTALL_METHOD": {
+      "description": "How to install RUNIT ('libscript_native' or 'system').",
+      "type": "string",
+      "default": "system"
+    }
+  }
+}

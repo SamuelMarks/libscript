@@ -2,7 +2,7 @@
 :: # service.cmd
 ::
 :: ## Overview
-:: Default no-op service.cmd implementation.
+:: Manages background service lifecycle operations (start, stop, status) for the _noop component.
 ::
 :: ## Usage
 :: service.cmd

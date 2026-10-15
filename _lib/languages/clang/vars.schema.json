@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/languages/clang/vars.schema.json",
+  "title": "clang vars",
+  "description": "Configuration variables for the LLVM Clang C/C++ Compiler recipe",
+  "type": "object",
+  "properties": {
+    "CLANG_VERSION": {
+      "description": "Version of LLVM Clang to install or build.",
+      "type": "string",
+      "default": "latest",
+      "version_aliases": ["latest", "stable"]
+    },
+    "CLANG_INSTALL_METHOD": {
+      "description": "Installation strategy for Clang ('system' via package manager, 'from-source' compiled from source, 'libscript_native' prebuilt archive, or version managers).",
+      "type": "string",
+      "enum": ["system", "from-source", "libscript_native", "mise", "asdf", "pkgx", "vfox"],
+      "default": "system"
+    },
+    "CLANG_PKG_MGR": {
+      "description": "Specific package manager to use when installing Clang (e.g., apt-get, apk, dnf, brew, pacman, winget, choco, scoop, nix, spack).",
+      "type": "string"
+    },
+    "CLANG_BUILD_TOOLCHAIN": {
+      "description": "Bootstrap C toolchain used when CLANG_INSTALL_METHOD='from-source'.",
+      "type": "string",
+      "default": "default"
+    },
+    "CLANG_DOWNLOAD_URL": {
+      "description": "Explicit source or binary archive URL for LLVM Clang.",
+      "type": "string"
+    },
+    "CLANG_USE_LLD": {
+      "description": "Whether to configure LLD as the default linker when using Clang.",
+      "type": "boolean",
+      "default": true
+    },
+    "CLANG_CFLAGS": {
+      "description": "Default optimization and code generation flags exported when using Clang.",
+      "type": "string",
+      "default": "-O2"
+    }
+  }
+}

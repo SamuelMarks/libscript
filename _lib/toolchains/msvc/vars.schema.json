@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/toolchains/msvc/vars.schema.json",
+  "title": "MSVC Build Tools variables",
+  "description": "Configuration variables for Microsoft Visual C++ (MSVC) Build Tools.",
+  "type": "object",
+  "properties": {
+    "MSVC_VERSION": {
+      "description": "Specific version of MSVC Build Tools to install (e.g., '2022' or 'latest').",
+      "type": "string",
+      "default": "latest"
+    },
+    "MSVC_INSTALL_METHOD": {
+      "description": "How to install MSVC ('libscript_native' or 'system').",
+      "type": "string",
+      "default": "system"
+    }
+  }
+}

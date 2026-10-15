@@ -24,7 +24,7 @@ set "SCRIPT_DIR=%~dp0"
 :: Resolve LIBSCRIPT_ROOT_DIR
 set "LIBSCRIPT_ROOT_DIR=!SCRIPT_DIR!"
 :: ## find_root
-:: Executes find_root functionality.
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
 :find_root
 if exist "!LIBSCRIPT_ROOT_DIR!libscript.cmd" goto root_found
 set "PARENT_DIR=!LIBSCRIPT_ROOT_DIR!..\"
@@ -35,13 +35,13 @@ if "!LIBSCRIPT_ROOT_DIR!"=="!PARENT_DIR!" (
 )
 goto find_root
 :: ## root_found
-:: Executes root_found functionality.
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
 set "TARGET_OS=debian-13"
 
 :: ## parse_args
-:: Executes parse_args functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_args
 if "%~1"=="" goto args_done
 if /i "%~1"=="-o" (
@@ -59,7 +59,7 @@ if /i "%~1"=="--os" (
 echo [ERROR] Unknown option %~1 >&2
 exit /b 1
 :: ## args_done
-:: Executes args_done functionality.
+:: Continues execution after command-line argument parsing completes.
 :args_done
 
 set "VAGRANT_DIR=!LIBSCRIPT_ROOT_DIR!vagrant\!TARGET_OS!"
@@ -119,7 +119,7 @@ if not errorlevel 1 (
 )
 
 :: ## step1
-:: Executes step1 functionality.
+:: Performs the step1 operation and updates component state.
 :step1
 echo === Step 1: Initialization (!TARGET_OS!) ===
 echo [INFO] Ensuring clean machine state...
@@ -155,7 +155,7 @@ if not errorlevel 1 (
 )
 
 :: ## sync_pkg
-:: Executes sync_pkg functionality.
+:: Performs the sync_pkg operation and updates component state.
 :sync_pkg
 echo [INFO] Syncing packages to target machine...
 vagrant rsync || ( echo [ERROR] Failed to rsync to Vagrant. >&2 & exit /b 1 )
@@ -190,7 +190,7 @@ echo [ERROR] Unsupported OS: !TARGET_OS! >&2
 exit /b 1
 
 :: ## verify
-:: Executes verify functionality.
+:: Performs the verify operation and updates component state.
 :verify
 echo === Step 3: Verification (!TARGET_OS!) ===
 echo !TARGET_OS! | findstr /b /i "windows" >nul
@@ -234,7 +234,7 @@ if not errorlevel 1 (
 )
 
 :: ## end_uninstall
-:: Executes end_uninstall functionality.
+:: Performs the end_uninstall operation and updates component state.
 :end_uninstall
 echo [PASS] Uninstallation complete.
 exit /b 0

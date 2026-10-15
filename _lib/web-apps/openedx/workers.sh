@@ -30,6 +30,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -81,8 +82,6 @@ mkdir -p "${RUN_DIR}" "${LOG_DIR}"
 #
 # Inputs:
 #   $1 - PID
-# ## is_pid_running
-# Executes the is_pid_running logic.
 is_pid_running() {
   _pid="$1"
   [ -n "${_pid}" ] && kill -0 "${_pid}" 2>/dev/null
@@ -94,8 +93,6 @@ is_pid_running() {
 # Inputs:
 #   $1 - service identifier (e.g. lms-worker, cms-worker, celery-beat)
 #   $2 - settings module / service target
-# ## start_daemon
-# Executes the start_daemon logic.
 start_daemon() {
   _svc="$1"
   _target="$2"
@@ -143,8 +140,6 @@ start_daemon() {
 #
 # Inputs:
 #   $1 - service identifier
-# ## stop_daemon
-# Executes the stop_daemon logic.
 stop_daemon() {
   _svc="$1"
   _pidfile="${RUN_DIR}/${_svc}.pid"
@@ -175,8 +170,6 @@ stop_daemon() {
 #
 # Inputs:
 #   $1 - service identifier
-# ## status_daemon
-# Executes the status_daemon logic.
 status_daemon() {
   _svc="$1"
   _pidfile="${RUN_DIR}/${_svc}.pid"
@@ -192,8 +185,6 @@ status_daemon() {
 
 # ## workers_start
 # Starts all workers.
-# ## workers_start
-# Executes the workers_start logic.
 workers_start() {
   log_info "Starting Open edX Celery workers and scheduler..."
   start_daemon "lms-worker" "lms"
@@ -204,8 +195,6 @@ workers_start() {
 
 # ## workers_stop
 # Stops all workers.
-# ## workers_stop
-# Executes the workers_stop logic.
 workers_stop() {
   log_info "Stopping Open edX Celery workers and scheduler..."
   stop_daemon "lms-worker"
@@ -216,8 +205,6 @@ workers_stop() {
 
 # ## workers_status
 # Displays status report for workers.
-# ## workers_status
-# Executes the workers_status logic.
 workers_status() {
   printf '======================================================\n'
   printf '             Open edX Background Workers Status        \n'
@@ -230,8 +217,6 @@ workers_status() {
 
 # ## show_help
 # Displays usage guide.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   cat <<EOF
 Open edX Worker & Scheduler Management CLI

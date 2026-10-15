@@ -28,6 +28,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -67,6 +68,7 @@ MFE_REGISTRY="${MFE_ROOT_DIR}/registry.json"
 mkdir -p "${MFE_ROOT_DIR}" "${MFE_DIST_DIR}"
 
 # ## resolve_python
+# Locates a compatible Python interpreter or provisions one via LibScript.
 resolve_python() {
   if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/python" ]; then
     printf '%s\n' "${OPENEDX_INSTALL_DIR}/.venv/bin/python"
@@ -81,8 +83,6 @@ resolve_python() {
 
 # ## get_mfe_repo
 # Returns git URL for standard MFEs.
-# ## get_mfe_repo
-# Executes the get_mfe_repo logic.
 get_mfe_repo() {
   case "$1" in
     learning|frontend-app-learning)
@@ -109,8 +109,6 @@ get_mfe_repo() {
 # Inputs:
 #   $1 - name
 #   --version <version>
-# ## mfe_build
-# Executes the mfe_build logic.
 mfe_build() {
   if [ $# -lt 1 ]; then
     log_err "Usage: $0 build <mfe_name> [--version <version>]"
@@ -184,8 +182,6 @@ EOF
 # Inputs:
 #   $1 - name
 #   --dest <path>
-# ## mfe_deploy
-# Executes the mfe_deploy logic.
 mfe_deploy() {
   if [ $# -lt 1 ]; then
     log_err "Usage: $0 deploy <mfe_name> [--dest <path>]"
@@ -249,8 +245,6 @@ EOF
 
 # ## mfe_list
 # Lists all managed MFEs.
-# ## mfe_list
-# Executes the mfe_list logic.
 mfe_list() {
   log_info "Listing Open edX Micro-Frontends (MFEs)..."
   _py="$(resolve_python)"
@@ -274,8 +268,6 @@ EOF
 
 # ## show_help
 # Displays usage guide.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   cat <<EOF
 Open edX Micro-Frontend (MFE) Pipeline CLI

@@ -28,6 +28,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -69,8 +70,6 @@ mkdir -p "${OPENEDX_INSTALL_DIR}/data"
 
 # ## resolve_python
 # Resolves python interpreter.
-# ## resolve_python
-# Executes the resolve_python logic.
 resolve_python() {
   if [ -x "${PYTHON_BIN}" ]; then
     printf '%s\n' "${PYTHON_BIN}"
@@ -88,8 +87,6 @@ resolve_python() {
 #
 # Inputs:
 #   $1 - package specification (PyPI name, wheel, or git URL)
-# ## xblock_install
-# Executes the xblock_install logic.
 xblock_install() {
   if [ $# -lt 1 ]; then
     log_err "Usage: $0 install <package_spec_or_git_url>"
@@ -143,8 +140,6 @@ EOF
 #
 # Inputs:
 #   $1 - package name
-# ## xblock_uninstall
-# Executes the xblock_uninstall logic.
 xblock_uninstall() {
   if [ $# -lt 1 ]; then
     log_err "Usage: $0 uninstall <package_name>"
@@ -176,8 +171,6 @@ EOF
 
 # ## xblock_list
 # Lists installed XBlocks.
-# ## xblock_list
-# Executes the xblock_list logic.
 xblock_list() {
   log_info "Discovering installed XBlock extensions..."
   _py="$(resolve_python)"
@@ -223,8 +216,6 @@ EOF
 
 # ## show_help
 # Displays usage guide.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   cat <<EOF
 Open edX XBlock & Plugin Management CLI

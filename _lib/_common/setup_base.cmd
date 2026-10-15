@@ -15,7 +15,6 @@ setlocal EnableDelayedExpansion
 :: call "%~dp0\..\..\..\_lib\_common\setup_base.cmd"
 :: ```
 
-setlocal EnableDelayedExpansion
 set "CALLER_FILE=%THIS_FILE%"
 set "THIS_FILE=%~f0"
 
@@ -36,7 +35,7 @@ if not defined LIBSCRIPT_ROOT_DIR (
 goto :root_found
 
 :: ## find_root
-:: Executes find_root functionality.
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
 :find_root
 if exist "!d!\ROOT" (
     set "LIBSCRIPT_ROOT_DIR=!d!"
@@ -51,7 +50,7 @@ if "!d!"=="" (
 goto :find_root
 
 :: ## root_found
-:: Executes root_found functionality.
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
 :: Source logging
@@ -190,7 +189,7 @@ exit /b !SETUP_ERR!
 goto :eof
 
 :: ## libscript_install_binary
-:: Executes libscript_install_binary functionality.
+:: Performs the libscript_install_binary operation and updates component state.
 :libscript_install_binary
 set "src_path=%~1"
 set "bin_name=%~2"

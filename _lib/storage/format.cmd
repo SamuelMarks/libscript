@@ -10,6 +10,7 @@
 :: Execute this script to format a block partition or initialize a ZFS pool:
 ::   ./_lib/storage/format.cmd <device_or_slice> [fs_type] [pool_name]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -52,14 +53,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # format.cmd
-:::: Filesystem formatting engine for Windows environments.
-:: Formats volumes as FAT32, NTFS, or ReFS with label assignment and idempotency verification.
-::
-:: ## Usage
-:: Call format.cmd <drive_letter_or_number> [fs_type] [volume_label]
 
-setlocal EnableDelayedExpansion
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help

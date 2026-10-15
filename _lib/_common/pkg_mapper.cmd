@@ -7,6 +7,7 @@
 :: ## Usage
 :: Maps generic dependency names to platform-specific package identifiers.
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -49,21 +50,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-setlocal EnableDelayedExpansion
-:: # LibScript Package Mapper Module (Windows Batch)
-:::: This module translates generic package names (e.g., 'php', 'postgres') into 
-:: specific package IDs used by Windows package managers (winget, choco, scoop).
-:: It mirrors the logic in `pkg_mapper.sh` to ensure cross-platform consistency.
-::
-:: ## Usage
-:: Call the `:map_package` label with the generic package name and the package manager.
-:: The result is returned in the `MAPPED_PKG` environment variable.
-::
-:: Example:
-::   set "PKG_MGR=winget"
-::   call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mapper.cmd" :map_package "php"
-::   echo Mapped package: %MAPPED_PKG%
-::
 :: ## Labels
 ::
 :: ### :map_package <generic_name>
@@ -76,7 +62,6 @@ setlocal EnableDelayedExpansion
 ::   MAPPED_PKG - The resulting package ID(s).
 ::   errorlevel - 0 if mapping found, 1 if not supported.
 
-setlocal EnableDelayedExpansion
 
 :: Prevent accidental direct execution
 set "THIS_FILE=%~f0"
@@ -92,7 +77,7 @@ goto %1
 :: :map_package <generic_name>
 :: -----------------------------------------------------------------------------
 :: ## map_package
-:: Executes map_package functionality.
+:: Translates a generic package identifier into the native OS package manager name.
 :map_package
 set "PKG=%~2"
 set "MAPPED_PKG="
@@ -122,8 +107,55 @@ if "!PKG!"=="bun" (
     if "!PKG_MGR!"=="choco" set "MAPPED_PKG=mingw"
 ) else if "!PKG!"=="gcc" (
     if "!PKG_MGR!"=="winget" set "MAPPED_PKG=MSYS2.MSYS2"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=mingw"
+    if "!PKG_MGR!"=="scoop" set "MAPPED_PKG=gcc"
 ) else if "!PKG!"=="g++" (
     if "!PKG_MGR!"=="winget" set "MAPPED_PKG=MSYS2.MSYS2"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=mingw"
+    if "!PKG_MGR!"=="scoop" set "MAPPED_PKG=gcc"
+) else if "!PKG!"=="clang" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=LLVM.LLVM"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=llvm"
+    if "!PKG_MGR!"=="scoop" set "MAPPED_PKG=llvm"
+) else if "!PKG!"=="llvm" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=LLVM.LLVM"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=llvm"
+    if "!PKG_MGR!"=="scoop" set "MAPPED_PKG=llvm"
+) else if "!PKG!"=="lld" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=LLVM.LLVM"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=llvm"
+    if "!PKG_MGR!"=="scoop" set "MAPPED_PKG=llvm"
+) else if "!PKG!"=="tcc" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=Bellard.TCC"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=tcc"
+    if "!PKG_MGR!"=="scoop" set "MAPPED_PKG=tcc"
+) else if "!PKG!"=="tinycc" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=Bellard.TCC"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=tcc"
+    if "!PKG_MGR!"=="scoop" set "MAPPED_PKG=tcc"
+) else if "!PKG!"=="binutils" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=MSYS2.MSYS2"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=mingw"
+) else if "!PKG!"=="flex" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=WinFlexBison.win_flex_bison"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=winflexbison3"
+) else if "!PKG!"=="bison" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=WinFlexBison.win_flex_bison"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=winflexbison3"
+) else if "!PKG!"=="zstd" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=Facebook.zstd"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=zstandard"
+    if "!PKG_MGR!"=="scoop" set "MAPPED_PKG=zstd"
+) else if "!PKG!"=="sqlite" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=SQLite.SQLite"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=sqlite"
+    if "!PKG_MGR!"=="scoop" set "MAPPED_PKG=sqlite"
+    if "!PKG_MGR!"=="vcpkg" set "MAPPED_PKG=sqlite3"
+) else if "!PKG!"=="sqlite3" (
+    if "!PKG_MGR!"=="winget" set "MAPPED_PKG=SQLite.SQLite"
+    if "!PKG_MGR!"=="choco" set "MAPPED_PKG=sqlite"
+    if "!PKG_MGR!"=="scoop" set "MAPPED_PKG=sqlite"
+    if "!PKG_MGR!"=="vcpkg" set "MAPPED_PKG=sqlite3"
 ) else if "!PKG!"=="make" (
     if "!PKG_MGR!"=="winget" set "MAPPED_PKG=GnuWin32.Make"
 ) else if "!PKG!"=="git" (

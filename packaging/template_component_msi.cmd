@@ -1,14 +1,17 @@
 @echo off
 :: # template_component_msi.cmd
 :: ## Overview
+:: Performs the Overview operation and updates component state.
 rem Generates a pure WiX XML (.wxs) manifest for a standalone LibScript component MSI.
 rem Utilizes deterministic GUIDs and reference-counted services from packaging\guid_registry.json.
 rem Supports 100% pure Windows Installer with zero external .exe dependencies.
 rem
 :: ## Usage
+:: Performs the Usage operation and updates component state.
 rem   call packaging\template_component_msi.cmd [OPTIONS]
 rem
 :: ## Parameters
+:: Performs the Parameters operation and updates component state.
 rem   --component <name>    Component identifier (e.g. mysql, redis, mongodb, python, nodejs, meilisearch)
 rem   --version <version>   Component release version (e.g. 8.0.39, 20.17.0)
 rem   --out <file.wxs>      Output path for the generated WiX XML file

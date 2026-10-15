@@ -51,12 +51,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # test_run_native_tests.cmd
-:::: Validates run_native_tests.cmd execution, verifying CLI options,
-:: dry-run mode, and output artifact creation on Windows.
-::
-:: ## Usage
-:: tests\test_run_native_tests.cmd
 
 set "THIS_DIR=%~dp0"
 if "%THIS_DIR:~-1%"=="" set "THIS_DIR=%THIS_DIR:~0,-1%"

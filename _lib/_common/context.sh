@@ -14,6 +14,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -81,8 +82,6 @@ export LIBSCRIPT_STAMP_DIR
 
 # ## libscript_stamp_path
 # Returns the absolute path for a given step's stamp file.
-# ## libscript_stamp_path
-# Executes the libscript_stamp_path logic.
 libscript_stamp_path() {
   _step_name="${1:-}"
   if [ -z "$_step_name" ]; then
@@ -94,8 +93,6 @@ libscript_stamp_path() {
 
 # ## libscript_stamp_check
 # Checks if a step has already been marked completed.
-# ## libscript_stamp_check
-# Executes the libscript_stamp_check logic.
 libscript_stamp_check() {
   _step_name="${1:-}"
   _stamp_file=$(libscript_stamp_path "$_step_name")
@@ -107,8 +104,6 @@ libscript_stamp_check() {
 
 # ## libscript_stamp_mark
 # Atomically marks a step as completed by writing its stamp file.
-# ## libscript_stamp_mark
-# Executes the libscript_stamp_mark logic.
 libscript_stamp_mark() {
   _step_name="${1:-}"
   _stamp_file=$(libscript_stamp_path "$_step_name")
@@ -121,8 +116,6 @@ libscript_stamp_mark() {
 
 # ## libscript_context_validate
 # Validates that all required context variables meet architectural contracts.
-# ## libscript_context_validate
-# Executes the libscript_context_validate logic.
 libscript_context_validate() {
   case "$LIBSCRIPT_STAGE" in
     stage0|stage1|stage2|target-userland|runtime) ;;

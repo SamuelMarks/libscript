@@ -14,6 +14,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -33,9 +34,7 @@ export NL='
 '
 
 # ## save_environment
-# Executes save_environment functionality.
-# ## save_environment
-# Executes the save_environment logic.
+# Performs the save_environment operation and updates component state.
 save_environment() {
   env | while IFS='' read -r line || [ -n "${line}" ]; do
     case "${line}" in
@@ -53,9 +52,7 @@ save_environment() {
 }
 
 # ## clear_environment
-# Executes clear_environment functionality.
-# ## clear_environment
-# Executes the clear_environment logic.
+# Performs the clear_environment operation and updates component state.
 clear_environment() {
   PATH="${PATH}"':/usr/bin:/bin'
   export PATH
@@ -87,9 +84,7 @@ clear_environment() {
 # unset ENV_SAVED_FILE
 
 # ## libscript_object2key_val
-# Executes libscript_object2key_val functionality.
-# ## libscript_object2key_val
-# Executes the libscript_object2key_val logic.
+# Performs the libscript_object2key_val operation and updates component state.
 libscript_object2key_val() {
   obj="${1:-}"
   prefix="${2:-}"

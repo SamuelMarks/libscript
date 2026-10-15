@@ -54,14 +54,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # capture_openedx_vagrant_screenshots.cmd
-:::: Automates launching Open edX Windows Installer (.msi) wizard inside Vagrant Windows 11,
-:: stepping through every enumeration (Simple Mode and Advanced Mode flows),
-:: capturing pixel-perfect screenshots of every wizard step, the desktop icons,
-:: and the browser validation tabs directly from the live QEMU display framebuffer.
-::
-:: ## Usage
-:: Call devtools\capture_openedx_vagrant_screenshots.cmd [--help]
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help
@@ -90,7 +82,6 @@ goto :main
 :: ## main
 :: Executes primary orchestration routine.
 :main
-setlocal EnableDelayedExpansion
 set "REPO_ROOT=%SCRIPT_DIR%.."
 
 where powershell >nul 2>&1

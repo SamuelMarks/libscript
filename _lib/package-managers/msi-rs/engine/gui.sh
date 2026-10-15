@@ -15,6 +15,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -36,8 +37,6 @@ TEST_MODE="0"
 
 # ## show_help
 # Displays usage instructions and supported options.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [OPTIONS]"
   printf '%s\n' "Launches fullscreen kiosk GUI installer using msi-gui."
@@ -65,8 +64,6 @@ done
 
 # ## probe_gpu_hardware
 # Detects available graphics hardware and DRM/KMS drivers.
-# ## probe_gpu_hardware
-# Executes the probe_gpu_hardware logic.
 probe_gpu_hardware() {
   printf '[INFO] Probing graphics hardware and display pipeline...\n'
   if [ -d /sys/class/drm ]; then
@@ -84,8 +81,6 @@ probe_gpu_hardware() {
 
 # ## configure_software_rasterizer
 # Sets up Mesa llvmpipe / softpipe fallback environment variables.
-# ## configure_software_rasterizer
-# Executes the configure_software_rasterizer logic.
 configure_software_rasterizer() {
   export LIBGL_ALWAYS_SOFTWARE=1
   export GALLIUM_DRIVER=llvmpipe
@@ -95,8 +90,6 @@ configure_software_rasterizer() {
 
 # ## find_msi_gui
 # Resolves binary path for msi-gui.
-# ## find_msi_gui
-# Executes the find_msi_gui logic.
 find_msi_gui() {
   if command -v msi-gui >/dev/null 2>&1; then
     printf '%s\n' "$(command -v msi-gui)"

@@ -59,10 +59,10 @@ if /I "%~1"=="-?" goto :show_help
 goto :main
 
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line usage instructions and available options.
 :show_help
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line usage instructions and available options.
 echo Usage: %~nx0
 echo Vagrant environment configuration and setup scripts.
 echo.
@@ -71,10 +71,10 @@ echo   --help, -h, /?, -?  Show this help message.
 exit /b 0
 
 :: ## main
-:: Executes main functionality.
+:: Executes the primary orchestration workflow for this script.
 :main
 :: ## main
-:: Executes main functionality.
+:: Executes the primary orchestration workflow for this script.
 set "DIR=%~dp0"
 :: Remove trailing backslash if present
 if "%DIR:~-1%"=="\" set "DIR=%DIR:~0,-1%"

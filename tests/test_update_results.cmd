@@ -51,12 +51,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # test_update_results.cmd
-:::: Validates update_results.cmd execution, verifying component discovery,
-:: markdown table updating in README.md, and task tracking in TODO_PLAN.md on Windows.
-::
-:: ## Usage
-:: tests\test_update_results.cmd
 
 set "THIS_DIR=%~dp0"
 if "%THIS_DIR:~-1%"=="" set "THIS_DIR=%THIS_DIR:~0,-1%"

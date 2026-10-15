@@ -50,10 +50,5 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # cli.cmd
-:::: Command-line interface wrapper for tpu-vm-eval-node component on Windows.
-::
-:: ## Usage
-:: cli.cmd [action]
 
 exit /b 0

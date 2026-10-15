@@ -11,6 +11,7 @@
 :: Execute this script with target device and partition paths:
 ::   ./_lib/package-managers/msi-rs/distro_installers/coinstall_dual_os.cmd <disk_dev> <linux_part> <freebsd_part> [esp_part]
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -53,14 +54,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # coinstall_dual_os.cmd
-:::: Concurrent Multi-OS Co-Installation Orchestrator for Windows environments.
-:: Directs concurrent Linux and FreeBSD dual-partition deployments with unified bootloader chaining.
-::
-:: ## Usage
-:: Call coinstall_dual_os.cmd <disk_dev> <linux_part> <freebsd_part> [esp_part]
 
-setlocal EnableDelayedExpansion
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help
@@ -97,5 +91,5 @@ if !errorlevel! EQU 0 (
     exit /b !errorlevel!
 )
 
-echo [OK] Concurrent Dual-OS deployment completed on Windows.
-exit /b 0
+echo [ERROR] Concurrent Dual-OS Linux/FreeBSD partitioning is unsupported on native Win32 without WSL/sh. >&2
+exit /b 86

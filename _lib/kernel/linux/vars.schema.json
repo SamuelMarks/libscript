@@ -2,18 +2,62 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/kernel/linux/vars.schema.json",
   "title": "Linux Kernel variables",
-  "description": "Configuration variables for Linux Kernel",
+  "description": "Configuration variables for the Linux Kernel multi-toolchain Kbuild engine",
   "type": "object",
   "properties": {
     "LINUX_VERSION": {
-      "description": "Specific version of linux to install.",
+      "description": "Specific version of the Linux kernel to install or compile (e.g., '6.6.52' or 'latest').",
       "type": "string",
-      "default": "latest"
+      "default": "6.6.52"
     },
     "LINUX_INSTALL_METHOD": {
+      "description": "How to provision the Linux kernel ('from-source' compiles via Kbuild, 'system' installs via OS package manager, 'libscript_native' stages prebuilt artifacts).",
       "type": "string",
-      "description": "How to install LINUX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
-      "default": "system"
+      "enum": ["system", "from-source", "libscript_native"],
+      "default": "from-source"
+    },
+    "LINUX_PKG_MGR": {
+      "description": "Specific package manager when LINUX_INSTALL_METHOD='system'.",
+      "type": "string"
+    },
+    "LINUX_BUILD_TOOLCHAIN": {
+      "description": "Toolchain used to compile the Linux kernel ('default', 'gcc', 'clang', 'tcc', 'custom-cc', or compiler binary path).",
+      "type": "string",
+      "default": "default"
+    },
+    "LINUX_COMPILER": {
+      "description": "Alias for LINUX_BUILD_TOOLCHAIN specifying the C compiler for Kbuild.",
+      "type": "string",
+      "default": "default"
+    },
+    "LINUX_HOSTCC": {
+      "description": "Host C compiler used for Kbuild host utilities (scripts/basic/fixdep, scripts/kconfig/conf).",
+      "type": "string",
+      "default": ""
+    },
+    "LINUX_KCFLAGS": {
+      "description": "Extra KCFLAGS passed to the Linux kernel Kbuild invocation.",
+      "type": "string",
+      "default": "-O2"
+    },
+    "LINUX_CONFIG_TARGET": {
+      "description": "Kernel Kconfig target ('tinyconfig', 'defconfig', 'allnoconfig', 'virtconfig', or 'custom').",
+      "type": "string",
+      "enum": ["tinyconfig", "defconfig", "allnoconfig", "virtconfig", "custom"],
+      "default": "tinyconfig"
+    },
+    "LINUX_SOURCE_URL": {
+      "description": "Optional explicit download URL for the Linux kernel source tarball.",
+      "type": "string"
+    },
+    "LINUX_SHA256": {
+      "description": "Optional SHA-256 checksum for verifying the downloaded Linux kernel source archive.",
+      "type": "string"
+    },
+    "LINUX_SYNTHETIC_FALLBACK": {
+      "description": "Whether to compile a freestanding multi-TU kernel ELF harness with the target compiler when full Linux kernel source is not cached locally.",
+      "type": "boolean",
+      "default": true
     }
   }
 }

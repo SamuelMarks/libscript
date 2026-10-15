@@ -24,6 +24,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -54,8 +55,6 @@ CMS_PORT="${OPENEDX_CMS_PORT:-8001}"
 
 # ## show_help
 # Displays service management command options.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf 'Open edX Service Manager
 
@@ -76,8 +75,6 @@ show_help() {
 
 # ## is_port_listening
 # Tests if a given TCP port is currently accepting connections.
-# ## is_port_listening
-# Executes the is_port_listening logic.
 is_port_listening() {
   _port="$1"
   if command -v nc >/dev/null 2>&1; then
@@ -91,8 +88,6 @@ is_port_listening() {
 
 # ## start_services
 # Starts Open edX LMS, Studio CMS, and worker services idempotently.
-# ## start_services
-# Executes the start_services logic.
 start_services() {
   printf '[INFO] Starting Open edX platform services...\n'
 
@@ -151,8 +146,6 @@ start_services() {
 
 # ## stop_services
 # Stops all running Open edX processes.
-# ## stop_services
-# Executes the stop_services logic.
 stop_services() {
   printf '[INFO] Stopping Open edX platform services...\n'
 
@@ -181,8 +174,6 @@ stop_services() {
 
 # ## print_status
 # Prints formatted operational status of all services.
-# ## print_status
-# Executes the print_status logic.
 print_status() {
   printf '======================================================\n'
   printf '              Open edX Platform Status\n'
@@ -231,8 +222,6 @@ print_status() {
 
 # ## install_services
 # Registers Open edX components as native OS services.
-# ## install_services
-# Executes the install_services logic.
 install_services() {
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
   export SCRIPT_NAME
@@ -271,8 +260,6 @@ install_services() {
 
 # ## uninstall_services
 # Unregisters Open edX components from native OS services.
-# ## uninstall_services
-# Executes the uninstall_services logic.
 uninstall_services() {
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
   export SCRIPT_NAME

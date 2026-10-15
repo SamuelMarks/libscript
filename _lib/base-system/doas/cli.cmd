@@ -2,13 +2,14 @@
 :: # cli.cmd
 ::
 :: ## Overview
-:: Command-line interface entry point for Doas.
+:: Command-line interface entrypoint for the doas component on Windows.
 ::
 :: ## Usage
-:: cli.cmd cli.cmd [action]
+:: cli.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
     if not errorlevel 1 (
@@ -50,10 +51,5 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # cli.cmd
-:::: Command-line interface wrapper for doas component on Windows.
-::
-:: ## Usage
-:: cli.cmd [action]
-
-exit /b 0
+set "PACKAGE_NAME=doas"
+call "%~dp0\..\..\_common\component_core.cmd" %*

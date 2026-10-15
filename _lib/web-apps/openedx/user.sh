@@ -27,6 +27,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -71,8 +72,6 @@ MANAGE_PY="${OPENEDX_INSTALL_DIR}/manage.py"
 
 # ## resolve_python
 # Resolves the python executable for executing manage.py or direct python code.
-# ## resolve_python
-# Executes the resolve_python logic.
 resolve_python() {
   if [ -x "${PYTHON_BIN}" ]; then
     printf '%s\n' "${PYTHON_BIN}"
@@ -93,8 +92,6 @@ resolve_python() {
 #   $1 - Python script string
 # Outputs:
 #   Stdout/stderr of Python execution.
-# ## run_django_code
-# Executes the run_django_code logic.
 run_django_code() {
   _py="$(resolve_python)"
   if [ -z "${_py}" ]; then
@@ -120,8 +117,6 @@ run_django_code() {
 #     --password <password>
 #     --staff
 #     --superuser
-# ## user_create
-# Executes the user_create logic.
 user_create() {
   if [ $# -lt 2 ]; then
     log_err "Usage: $0 create <username> <email> [--password <password>] [--staff] [--superuser]"
@@ -248,8 +243,6 @@ EOF
 # Inputs:
 #   $1 - username
 #   $2 - password
-# ## user_set_password
-# Executes the user_set_password logic.
 user_set_password() {
   if [ $# -lt 2 ]; then
     log_err "Usage: $0 set_password <username> <password>"
@@ -313,8 +306,6 @@ EOF
 
 # ## user_list
 # Lists active staff and superuser accounts.
-# ## user_list
-# Executes the user_list logic.
 user_list() {
   log_info "Listing Open edX staff and superuser accounts..."
   _py="$(resolve_python)"
@@ -361,8 +352,6 @@ EOF
 
 # ## show_help
 # Displays usage guide.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   cat <<EOF
 Open edX User Management CLI

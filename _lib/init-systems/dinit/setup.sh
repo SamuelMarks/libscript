@@ -1,10 +1,10 @@
 #!/bin/sh
 # ## Overview
-# Configures Dinit modern dependency-based service supervisor, service descriptors,
-# and /sbin/init PID 1 entrypoint inside the target rootfs.
+# Installation and configuration entrypoint for the dinit component.
+# Delegates execution to the shared _lib/_common/setup_base.sh module.
 #
 # ## Usage
-# ./_lib/init-systems/dinit/setup.sh [install|clean|status] [target_rootfs]
+# ./setup.sh [action]
 
 set -feu
 
@@ -13,6 +13,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -28,66 +29,8 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-export LIBSCRIPT_ROOT_DIR
 
-ACTION="${1:-install}"
-ROOTFS="${2:-${LIBSCRIPT_ROOT_DIR}/build/lfs/rootfs}"
-STAMPS_DIR="${LIBSCRIPT_ROOT_DIR}/build/stamps"
-
-mkdir -p "$STAMPS_DIR"
-STAMP_DINIT="${STAMPS_DIR}/.stamp.lfs_init_dinit"
-
-if [ "$ACTION" = "clean" ]; then
-  printf '[CLEAN] Removing Dinit stamp...\n'
-  rm -f "$STAMP_DINIT"
-  exit 0
-fi
-
-if [ "$ACTION" = "status" ]; then
-  if [ -f "$STAMP_DINIT" ]; then
-    printf 'Dinit: INSTALLED (%s)\n' "$(cat "$STAMP_DINIT")"
-  else
-    printf 'Dinit: NOT INSTALLED\n'
-  fi
-  exit 0
-fi
-
-if [ -f "$STAMP_DINIT" ]; then
-  printf '[SKIP]  Dinit already installed (%s)\n' "$STAMP_DINIT"
-  exit 0
-fi
-
-printf '=== LibScript Dinit Init Provider ===\n'
-printf '[INFO] Target Rootfs: %s\n' "$ROOTFS"
-
-mkdir -p "${ROOTFS}/etc/dinit.d"
-mkdir -p "${ROOTFS}/sbin"
-
-# 1. Base boot service descriptor
-cat << 'EOF' > "${ROOTFS}/etc/dinit.d/boot"
-type = scripted
-command = /bin/sh -c "echo '[dinit] Service boot started'; /bin/mount -a 2>/dev/null || true"
-EOF
-
-# 2. Login service descriptor
-cat << 'EOF' > "${ROOTFS}/etc/dinit.d/login"
-type = process
-command = /sbin/agetty -L 115200 ttyS0 vt102
-depends-on = boot
-EOF
-
-# 3. PID 1 entrypoint
-if [ ! -f "${ROOTFS}/sbin/init" ]; then
-  cat << 'EOF' > "${ROOTFS}/sbin/init"
-#!/bin/sh
-echo "[dinit] Service boot started"
-printf '[DINIT] Dinit supervisor initialized.\n'
-exec /sbin/agetty -L 115200 ttyS0 vt102 2>/dev/null || exec /bin/sh
-EOF
-  chmod +x "${ROOTFS}/sbin/init"
-fi
-
-date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_DINIT}.tmp"
-mv "${STAMP_DINIT}.tmp" "$STAMP_DINIT"
-printf '[DONE]  Dinit configured successfully.\n'
-exit 0
+SCRIPT_NAME="${SCRIPT_DIR}/../../_common/setup_base.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"

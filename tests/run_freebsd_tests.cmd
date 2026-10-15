@@ -11,6 +11,7 @@
 :: Example: ./tests/run_freebsd_tests.cmd curl sqlite tmux
 :: Example: ./tests/run_freebsd_tests.cmd all
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -53,13 +54,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # run_freebsd_tests.cmd
-:::: Native batch script to execute component tests sequentially on FreeBSD Vagrant VM.
-::
-:: ## Usage
-:: run_freebsd_tests.cmd [TARGETS...|all]
 
-setlocal EnableDelayedExpansion
 set "THIS_DIR=%~dp0"
 if "%THIS_DIR:~-1%"=="" set "THIS_DIR=%THIS_DIR:~0,-1%"
 set "REPO_ROOT=%THIS_DIR%\.."

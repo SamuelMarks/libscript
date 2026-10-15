@@ -2,13 +2,13 @@
 :: # setup.cmd
 ::
 :: ## Overview
-:: Setup script for Git server utils on Windows.
+:: Installation and configuration entrypoint for the utils component on Windows.
+:: Delegates execution to the shared _lib\_common\setup_base.cmd module.
 ::
 :: ## Usage
-:: Normally sets up dependencies. Currently a no-op placeholder.
+:: setup.cmd [action]
 
 setlocal EnableDelayedExpansion
-:: Utilities setup: no-op
 set "THIS_FILE=%~f0"
 
 if defined STACK (
@@ -52,3 +52,4 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+call "%~dp0\..\..\_common\setup_base.cmd" %*

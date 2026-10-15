@@ -9,6 +9,7 @@
 :: ## Usage
 :: create_desktop_shortcuts.cmd packaging/create_desktop_shortcuts.cmd
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -51,13 +52,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # create_desktop_shortcuts.cmd
-:::: Ensures Open edX desktop shortcuts exist with proper icons on user desktop and refreshes shell.
-::
-:: ## Usage
-:: call "%~dp0create_desktop_shortcuts.cmd"
 
-setlocal EnableDelayedExpansion
 
 powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "%SCRIPT_DIR%\create_desktop_shortcuts.ps1" %*
 exit /b %ERRORLEVEL%

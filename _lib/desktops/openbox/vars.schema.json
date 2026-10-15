@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/desktops/openbox/vars.schema.json",
+  "title": "Openbox variables",
+  "description": "Configuration variables for Openbox window manager.",
+  "type": "object",
+  "properties": {
+    "OPENBOX_VERSION": {
+      "description": "Specific version of Openbox to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "OPENBOX_INSTALL_METHOD": {
+      "description": "How to install OPENBOX. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager.",
+      "type": "string",
+      "default": "system"
+    }
+  }
+}

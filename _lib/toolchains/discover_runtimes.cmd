@@ -83,7 +83,7 @@ echo Usage: %0 [--json ^| --eval] >&2
 exit /b 1
 
 :: ## discover_python
-:: Executes discover_python functionality.
+:: Performs the discover_python operation and updates component state.
 :discover_python
 :: Try PATH
 for %%P in (python.exe) do set "PY_PATH=%%~$PATH:P"

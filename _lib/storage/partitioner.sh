@@ -15,6 +15,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -34,8 +35,6 @@ export LIBSCRIPT_ROOT_DIR
 
 # ## show_help
 # Displays usage information and supported options.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") <device_or_image> [scheme] [boot_mode] [swap_mib]"
   printf '%s\n' "Partitions storage media for Linux, FreeBSD, or illumos installations."
@@ -74,16 +73,12 @@ fi
 
 # ## detect_os
 # Identifies the active operating system kernel family.
-# ## detect_os
-# Executes the detect_os logic.
 detect_os() {
   uname -s | tr '[:upper:]' '[:lower:]'
 }
 
 # ## check_existing_partitions
 # Checks if the target device already has valid partitions configured.
-# ## check_existing_partitions
-# Executes the check_existing_partitions logic.
 check_existing_partitions() {
   _dev="$1"
   if command -v parted >/dev/null 2>&1; then
@@ -103,8 +98,6 @@ check_existing_partitions() {
 
 # ## partition_linux_gpt
 # Creates standardized GPT partitions using sgdisk or parted on Linux.
-# ## partition_linux_gpt
-# Executes the partition_linux_gpt logic.
 partition_linux_gpt() {
   _dev="$1"
   _boot="$2"
@@ -158,8 +151,6 @@ partition_linux_gpt() {
 
 # ## partition_freebsd_gpt
 # Creates standardized GPT partitions using gpart on FreeBSD.
-# ## partition_freebsd_gpt
-# Executes the partition_freebsd_gpt logic.
 partition_freebsd_gpt() {
   _dev="$1"
   _boot="$2"
@@ -186,8 +177,6 @@ partition_freebsd_gpt() {
 
 # ## partition_illumos_vtoc
 # Creates standardized VTOC slice layout on illumos.
-# ## partition_illumos_vtoc
-# Executes the partition_illumos_vtoc logic.
 partition_illumos_vtoc() {
   _dev="$1"
   printf '[INFO] Configuring illumos partition slices for %s...\n' "$_dev"
@@ -198,8 +187,6 @@ partition_illumos_vtoc() {
 
 # ## partition_dual_os_gpt
 # Partitions storage media with dual root partitions for concurrent Linux and FreeBSD installations.
-# ## partition_dual_os_gpt
-# Executes the partition_dual_os_gpt logic.
 partition_dual_os_gpt() {
   _dev="$1"
   _swap="$2"

@@ -87,7 +87,7 @@ goto :action_install
 goto :action_install
 
 :: ## action_ls
-:: Executes action_ls functionality.
+:: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
 :action_ls
 if "%CC_INSTALL_METHOD%"=="mise" ( mise ls cc & exit /b 0 )
 if "%CC_INSTALL_METHOD%"=="asdf" ( asdf list cc & exit /b 0 )
@@ -98,7 +98,7 @@ if exist "%LIBSCRIPT_HOME%\cc" ( dir /b "%LIBSCRIPT_HOME%\cc" )
 exit /b 0
 
 :: ## action_ls_remote
-:: Executes action_ls_remote functionality.
+:: Lists upstream release versions available for download.
 :action_ls_remote
 if "%CC_INSTALL_METHOD%"=="mise" ( mise ls-remote cc & exit /b 0 )
 if "%CC_INSTALL_METHOD%"=="asdf" ( asdf list all cc & exit /b 0 )
@@ -113,7 +113,7 @@ if not "%CC_RELEASES_URL%"=="" (
 exit /b 0
 
 :: ## action_use
-:: Executes action_use functionality.
+:: Activates the specified component version by updating the active symlink or junction.
 :action_use
 if "%CC_INSTALL_METHOD%"=="mise" ( mise use "cc@%CC_VERSION%" & exit /b 0 )
 if "%CC_INSTALL_METHOD%"=="asdf" ( asdf global cc "%CC_VERSION%" & exit /b 0 )
@@ -138,7 +138,7 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 exit /b 0
 
 :: ## action_download
-:: Executes action_download functionality.
+:: Downloads the component release archive into the local offline cache directory.
 :action_download
 if "%CC_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading cc %CC_VERSION% to %DOWNLOAD_DIR%\cc...
@@ -152,10 +152,14 @@ if "%CC_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_install
-:: Executes action_install functionality.
+:: Installs and configures the requested version of the component.
 :action_install
+if not "%CC_BACKEND%"=="" if not "%CC_BACKEND%"=="default" (
+    call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install "%CC_BACKEND%" "%CC_VERSION%"
+    exit /b !errorlevel!
+)
 if "%CC_INSTALL_METHOD%"=="system" (
-    winget install cc --accept-package-agreements --accept-source-agreements
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends "gcc"
     exit /b !errorlevel!
 )
 if "%CC_INSTALL_METHOD%"=="mise" ( mise install "cc@%CC_VERSION%" & exit /b 0 )
@@ -192,7 +196,7 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 exit /b 0
 
 :: ## action_service
-:: Executes action_service functionality.
+:: Routes service daemon control actions (start, stop, restart, status) to the service manager.
 :action_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -213,7 +217,7 @@ if "%CC_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_install_service
-:: Executes action_install_service functionality.
+:: Registers and configures the component as a persistent system service.
 :action_install_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -234,7 +238,7 @@ if "%CC_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_uninstall_service
-:: Executes action_uninstall_service functionality.
+:: Stops and removes the registered system service for the component.
 :action_uninstall_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (

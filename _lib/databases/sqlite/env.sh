@@ -1,10 +1,11 @@
 #!/bin/sh
 # ## Overview
 # Environment initialization for SQLite.
+# Resolves the active SQLite installation prefix (including compiler-namespaced
+# source builds) and exports PATH, CPATH, and LIBRARY_PATH.
 #
 # ## Usage
-# Normally sets up defaults. Currently a placeholder.
-
+# . ./_lib/databases/sqlite/env.sh
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -12,6 +13,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -27,7 +29,27 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+export LIBSCRIPT_ROOT_DIR
 
+SQLITE_VERSION="${SQLITE_VERSION:-default}"
+_tc="${SQLITE_BUILD_TOOLCHAIN:-${SQLITE_COMPILER:-${LIBSCRIPT_BUILD_TOOLCHAIN:-default}}}"
+_sqlite_base="${LIBSCRIPT_HOME:-$HOME/.libscript}/sqlite"
 
-SQLITE_VERSION="${SQLITE_VERSION:-latest}"
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/sqlite/${SQLITE_VERSION}/bin:${PATH}"
+if [ "${_tc}" != "default" ] && [ -d "${_sqlite_base}/default-${_tc}/bin" ]; then
+  _sqlite_prefix="${_sqlite_base}/default-${_tc}"
+elif [ -d "${_sqlite_base}/${SQLITE_VERSION}/bin" ]; then
+  _sqlite_prefix="${_sqlite_base}/${SQLITE_VERSION}"
+elif [ -d "${_sqlite_base}/default/bin" ]; then
+  _sqlite_prefix="${_sqlite_base}/default"
+else
+  _sqlite_prefix="${_sqlite_base}/${SQLITE_VERSION}"
+fi
+
+export SQLITE_PREFIX="${_sqlite_prefix}"
+export PATH="${_sqlite_prefix}/bin:${PATH}"
+if [ -d "${_sqlite_prefix}/include" ]; then
+  export CPATH="${_sqlite_prefix}/include${CPATH:+:${CPATH}}"
+fi
+if [ -d "${_sqlite_prefix}/lib" ]; then
+  export LIBRARY_PATH="${_sqlite_prefix}/lib${LIBRARY_PATH:+:${LIBRARY_PATH}}"
+fi

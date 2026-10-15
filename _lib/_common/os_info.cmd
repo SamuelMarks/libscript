@@ -52,7 +52,7 @@ goto :find_root
 :root_found
 
 :: ## detect_os_info
-:: Executes detect_os_info functionality.
+:: Detects the host operating system, distribution, and CPU architecture.
 :detect_os_info
 set "OS=Windows_NT"
 set "TARGET_OS=windows"

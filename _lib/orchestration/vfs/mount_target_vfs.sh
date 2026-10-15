@@ -13,6 +13,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -48,8 +49,6 @@ fi
 
 # ## is_mounted
 # Checks if a specified directory is currently mounted under /proc/mounts.
-# ## is_mounted
-# Executes the is_mounted logic.
 is_mounted() {
   _dir="$1"
   if [ -r /proc/mounts ]; then

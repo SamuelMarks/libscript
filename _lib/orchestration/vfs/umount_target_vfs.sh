@@ -13,6 +13,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -40,8 +41,6 @@ fi
 
 # ## is_mounted
 # Checks if a directory is mounted according to /proc/mounts.
-# ## is_mounted
-# Executes the is_mounted logic.
 is_mounted() {
   _dir="$1"
   if [ -r /proc/mounts ]; then
@@ -53,8 +52,6 @@ is_mounted() {
 
 # ## safe_umount
 # Safely unmounts a target mount point if currently mounted.
-# ## safe_umount
-# Executes the safe_umount logic.
 safe_umount() {
   _mount_point="$1"
   if is_mounted "$_mount_point"; then

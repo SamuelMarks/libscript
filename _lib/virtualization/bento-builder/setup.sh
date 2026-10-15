@@ -11,6 +11,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -26,33 +27,8 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-export DIR="${SCRIPT_DIR}"
-export LIBSCRIPT_ROOT_DIR
 
-for LIB in "_lib/_common/os_info.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
-  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  . "${SCRIPT_NAME}"
-done
-
-ENV_SCRIPT="${DIR}"'/env.sh'
-if [ -f "${ENV_SCRIPT}" ]; then
-  SCRIPT_NAME="${ENV_SCRIPT}"
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090,SC1091
-  . "${SCRIPT_NAME}"
-fi
-
-OS_SETUP_SCRIPT="${DIR}"'/setup_'"${TARGET_OS}"'.sh'
-if [ -f "${OS_SETUP_SCRIPT}" ]; then
-  SCRIPT_NAME="${OS_SETUP_SCRIPT}"
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090,SC1091
-  . "${SCRIPT_NAME}"
-else
-  SCRIPT_NAME="${DIR}"'/setup_generic.sh'
-  export SCRIPT_NAME
-  # shellcheck disable=SC1090,SC1091
-  . "${SCRIPT_NAME}"
-fi
+SCRIPT_NAME="${SCRIPT_DIR}/../../_common/setup_base.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"

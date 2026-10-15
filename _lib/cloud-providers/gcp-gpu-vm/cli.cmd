@@ -63,14 +63,14 @@ set "GPU_NAME=%~2"
 set "REST_ARGS="
 
 :: ## parse_args
-:: Executes parse_args functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_args
 if "%~3"=="" goto :done_parse
 set "REST_ARGS=%REST_ARGS% %3"
 shift
 goto :parse_args
 :: ## done_parse
-:: Executes done_parse functionality.
+:: Performs the done_parse operation and updates component state.
 :done_parse
 
 if "%GPU_ZONE%"=="" (
@@ -101,7 +101,7 @@ call "%LOG_CMD%" :log_error "Unknown or missing action: %ACTION%. Supported: cre
 exit /b 1
 
 :: ## create
-:: Executes create functionality.
+:: Performs the create operation and updates component state.
 :create
 if "%GPU_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: gpu-vm create <name>"
@@ -149,7 +149,7 @@ if %errorlevel% equ 0 (
 exit /b 0
 
 :: ## delete
-:: Executes delete functionality.
+:: Performs the delete operation and updates component state.
 :delete
 if "%GPU_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: gpu-vm delete <name>"
@@ -179,7 +179,7 @@ if %errorlevel% equ 0 (
 exit /b 0
 
 :: ## start
-:: Executes start functionality.
+:: Performs the start operation and updates component state.
 :start
 if "%GPU_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: gpu-vm start <name>"
@@ -190,7 +190,7 @@ gcloud compute instances start "%GPU_NAME%" --zone="%GPU_ZONE%" %PROJECT_FLAG%
 exit /b 0
 
 :: ## stop
-:: Executes stop functionality.
+:: Performs the stop operation and updates component state.
 :stop
 if "%GPU_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: gpu-vm stop <name>"
@@ -201,7 +201,7 @@ gcloud compute instances stop "%GPU_NAME%" --zone="%GPU_ZONE%" %PROJECT_FLAG%
 exit /b 0
 
 :: ## ssh
-:: Executes ssh functionality.
+:: Performs the ssh operation and updates component state.
 :ssh
 if "%GPU_NAME%"=="" (
     call "%LOG_CMD%" :log_error "Usage: gpu-vm ssh <name> [--detached] [--forward-port <local>:<remote>] [command]"
@@ -212,7 +212,7 @@ shift
 set "DETACHED="
 set "FORWARD_PORT="
 :: ## arg_loop
-:: Executes arg_loop functionality.
+:: Parses command-line arguments and populates configuration variables.
 :arg_loop
 if "%~1"=="--detached" (
     set "DETACHED=true"
@@ -234,14 +234,14 @@ if not "%FORWARD_PORT%"=="" (
 
 set "REST_ARGS="
 :: ## gather_ssh_args
-:: Executes gather_ssh_args functionality.
+:: Performs the gather_ssh_args operation and updates component state.
 :gather_ssh_args
 if "%~1"=="" goto :done_ssh_args
 set "REST_ARGS=%REST_ARGS% %1"
 shift
 goto :gather_ssh_args
 :: ## done_ssh_args
-:: Executes done_ssh_args functionality.
+:: Performs the done_ssh_args operation and updates component state.
 :done_ssh_args
 
 if "%REST_ARGS%"=="" (

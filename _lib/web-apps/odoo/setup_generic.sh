@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -71,6 +72,7 @@ done
 export ODOO_WEBSERVER ODOO_DB_TYPE ODOO_VERSION ODOO_WWWROOT ODOO_SERVER_NAME LISTEN_PORT ODOO_PORT
 
 # ## safe_tee
+# Performs the safe_tee operation and updates component state.
 safe_tee() {
   if [ "${PRIV:-}" != "" ] && command -v sudo >/dev/null 2>&1; then
     sudo tee "$@"

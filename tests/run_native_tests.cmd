@@ -56,16 +56,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # run_native_tests.cmd
-:::: Runs native tests directly on the current Windows host environment across
-:: specified targets or categories without Vagrant. Results are written to tests_tmp.
-::
-:: ## Usage
-:: tests\run_native_tests.cmd [TARGETS...|all] [--category <category>] [--dry-run] [--help]
-:: Examples:
-::   tests\run_native_tests.cmd sqlite curl
-::   tests\run_native_tests.cmd --category databases
-::   tests\run_native_tests.cmd all
 
 set "THIS_DIR=%~dp0"
 if "%THIS_DIR:~-1%"=="" set "THIS_DIR=%THIS_DIR:~0,-1%"

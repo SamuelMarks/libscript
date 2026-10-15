@@ -1,11 +1,12 @@
 @echo off
 :: # setup.cmd
+::
 :: ## Overview
-:: Windows Batch companion for LFS cross-toolchain bootstrap.
-:: Implements Option A Win32 Hard-Fail boundary proforma.
+:: Installation and configuration entrypoint for the lfs-toolchain component on Windows.
+:: Delegates execution to the shared _lib\_common\setup_base.cmd module.
 ::
 :: ## Usage
-:: _lib\toolchains\lfs-toolchain\setup.cmd [install|clean|status]
+:: setup.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -51,37 +52,4 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-SET "searchVal=;%THIS_FILE%;"
-IF NOT DEFINED STACK (
-    SET "STACK=;%THIS_FILE%;"
-    echo [CONTINUE] processing "%THIS_FILE%"
-) ELSE (
-    IF NOT "!STACK:%searchVal%=!"=="!STACK!" (
-        echo [STOP]     processing "%THIS_FILE%"
-        SET ERRORLEVEL=0
-        goto end
-    ) ELSE (
-        SET "STACK=!STACK!%THIS_FILE%;"
-        echo [CONTINUE] processing "%THIS_FILE%"
-    )
-)
-
-SET "SCRIPT_DIR=%~dp0"
-SET "LIBSCRIPT_ROOT_DIR=%SCRIPT_DIR%..\..\.."
-FOR %%i IN ("%LIBSCRIPT_ROOT_DIR%") DO SET "LIBSCRIPT_ROOT_DIR=%%~fi"
-
-IF "%~1"=="status" (
-    echo === LFS Toolchain Status (Win32) ===
-    echo Toolchain builds are executed via Linux container or Vagrant VM builder.
-    goto end
-)
-
-:: Option A Win32 Hard-Fail Boundary Proforma
-echo [ERROR] Native Linux kernel assembly (mount/unshare) and LFS toolchain cross-compilation is unavailable on Win32. >&2
-echo [ERROR] Please execute via container or VM builder: vm_builder.cmd >&2
-exit /b 86
-
-:: ## end
-:: Executes end functionality.
-:end
-exit /b 0
+call "%~dp0\..\..\_common\setup_base.cmd" %*

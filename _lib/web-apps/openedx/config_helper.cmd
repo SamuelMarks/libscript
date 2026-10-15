@@ -54,15 +54,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # config_helper.cmd
-:::: Configuration helper utility for Open edX configuration management on Windows.
-:: Provides key inspection, mutation, default generation, and syntax validation.
-::
-:: ## Usage
-:: Call stacks\cms\openedx\config_helper.cmd get <conf_file> <key>
-:: Call stacks\cms\openedx\config_helper.cmd set <conf_file1> <conf_file2> <key> <val>
-:: Call stacks\cms\openedx\config_helper.cmd generate <conf_file1> <conf_file2>
-:: Call stacks\cms\openedx\config_helper.cmd validate <conf_file> <schema_file>
 
 if /i "%~1"=="--help" goto :show_help
 if /i "%~1"=="-h" goto :show_help
@@ -84,7 +75,6 @@ exit /b 0
 :: ## main
 :: Executes primary entrypoint delegating to config_helper.ps1.
 :main
-setlocal EnableDelayedExpansion
 
 where powershell >nul 2>&1
 if %ERRORLEVEL% EQU 0 (

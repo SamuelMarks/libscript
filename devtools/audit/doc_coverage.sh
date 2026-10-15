@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -49,19 +50,30 @@ find "${LIBSCRIPT_ROOT_DIR}" -name "*.sh" -type f | grep -v "node_modules" > "$t
 
 while IFS= read -r sh_file; do
   missing_in_file=$(awk -v file="${sh_file#${LIBSCRIPT_ROOT_DIR}/}" '
-    BEGIN { has_doc = 0 }
-    /^# ##/ { has_doc = 1 }
+    BEGIN { has_doc = 0; prev_hdr = "" }
+    /^# ## / {
+        if ($0 == prev_hdr) {
+            print file ":" NR " (duplicate docstring header)";
+        }
+        prev_hdr = $0
+        has_doc = 1
+        next
+    }
+    /^# Executes .* (functionality|logic)\.$/ {
+        print file ":" NR " (placeholder docstring)";
+    }
     /^[a-zA-Z_][a-zA-Z0-9_]*\(\) *\{/ {
         if (!has_doc) {
             print file ":" NR;
         }
         has_doc = 0
+        prev_hdr = ""
     }
-    /^[^#]/ && NF > 0 && !/^[a-zA-Z_][a-zA-Z0-9_]*\(\) *\{/ { has_doc = 0 }
+    /^[^#]/ && NF > 0 && !/^[a-zA-Z_][a-zA-Z0-9_]*\(\) *\{/ { has_doc = 0; prev_hdr = "" }
   ' "$sh_file")
   
   if [ -n "$missing_in_file" ]; then
-    printf '[WARN] Missing function docstring(s) in %s:\n%s\n' "${sh_file#${LIBSCRIPT_ROOT_DIR}/}" "$missing_in_file"
+    printf '[WARN] Missing or invalid function docstring(s) in %s:\n%s\n' "${sh_file#${LIBSCRIPT_ROOT_DIR}/}" "$missing_in_file"
     MISSING_FUNC_DOCS=$((MISSING_FUNC_DOCS + 1))
   fi
 done < "$tmp_sh"
@@ -74,19 +86,31 @@ find "${LIBSCRIPT_ROOT_DIR}" -name "*.cmd" -type f | grep -v "node_modules" > "$
 
 while IFS= read -r cmd_file; do
   missing_in_file=$(awk -v file="${cmd_file#${LIBSCRIPT_ROOT_DIR}/}" '
-    BEGIN { has_doc = 0 }
-    /^:: ##/ { has_doc = 1 }
+    BEGIN { has_doc = 0; prev_hdr = "" }
+    { sub(/\r$/, "", $0) }
+    /^:: ## / {
+        if ($0 == prev_hdr) {
+            print file ":" NR " (duplicate docstring header)";
+        }
+        prev_hdr = $0
+        has_doc = 1
+        next
+    }
+    /^:: Executes .* (functionality|logic)\.$/ {
+        print file ":" NR " (placeholder docstring)";
+    }
     /^:[a-zA-Z0-9_]+/ && !/^:EOF/ && !/^:eof/ && !/^:root_found/ && !/^:find_root/ { 
         if (!has_doc) {
             print file ":" NR;
         }
-        has_doc = 0 
+        has_doc = 0
+        prev_hdr = ""
     }
-    /^[^:]/ && NF > 0 { has_doc = 0 }
+    /^[^:]/ && NF > 0 { has_doc = 0; prev_hdr = "" }
   ' "$cmd_file")
   
   if [ -n "$missing_in_file" ]; then
-    printf '[WARN] Missing label docstring(s) in %s:\n%s\n' "${cmd_file#${LIBSCRIPT_ROOT_DIR}/}" "$missing_in_file"
+    printf '[WARN] Missing or invalid label docstring(s) in %s:\n%s\n' "${cmd_file#${LIBSCRIPT_ROOT_DIR}/}" "$missing_in_file"
     MISSING_CMD_DOCS=$((MISSING_CMD_DOCS + 1))
   fi
 done < "$tmp_cmd"
@@ -114,6 +138,6 @@ if [ "$TOTAL_ERRORS" -eq 0 ]; then
   printf '[PASS] 100%% Documentation Coverage Audit Passed!\n'
   exit 0
 else
-  printf '[WARN] Found %d schema files, %d shell scripts, %d batch files, and %d powershell scripts with potential missing docs.\n' "$MISSING_SCHEMA_DOCS" "$MISSING_FUNC_DOCS" "$MISSING_CMD_DOCS" "$MISSING_PS1_DOCS"
-  exit 0
+  printf '[ERROR] Found %d schema files, %d shell scripts, %d batch files, and %d powershell scripts with missing or placeholder docs.\n' "$MISSING_SCHEMA_DOCS" "$MISSING_FUNC_DOCS" "$MISSING_CMD_DOCS" "$MISSING_PS1_DOCS" >&2
+  exit 1
 fi

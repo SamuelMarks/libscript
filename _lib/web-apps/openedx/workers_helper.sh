@@ -15,6 +15,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -33,8 +34,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## show_help
 # Displays usage documentation.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") start <run_dir> <log_dir> <py_bin> <install_dir>"
   printf '%s\n' "       $(basename "$THIS_FILE") stop <run_dir>"
@@ -47,8 +46,6 @@ show_help() {
 #
 # Inputs:
 #   $1 - Process ID
-# ## is_pid_alive
-# Executes the is_pid_alive logic.
 is_pid_alive() {
   _pid="$1"
   kill -0 "${_pid}" 2>/dev/null
@@ -62,8 +59,6 @@ is_pid_alive() {
 #   $2 - Log directory
 #   $3 - Python executable
 #   $4 - Installation directory
-# ## do_start
-# Executes the do_start logic.
 do_start() {
   _run_dir="$1"
   _log_dir="$2"
@@ -103,8 +98,6 @@ do_start() {
 #
 # Inputs:
 #   $1 - Run directory
-# ## do_stop
-# Executes the do_stop logic.
 do_stop() {
   _run_dir="$1"
 
@@ -126,8 +119,6 @@ do_stop() {
 #
 # Inputs:
 #   $1 - Run directory
-# ## do_status
-# Executes the do_status logic.
 do_status() {
   _run_dir="$1"
 
@@ -153,8 +144,6 @@ do_status() {
 
 # ## main
 # Main entrypoint parsing action commands.
-# ## main
-# Executes the main logic.
 main() {
   if [ $# -lt 1 ]; then
     show_help

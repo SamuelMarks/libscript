@@ -58,7 +58,7 @@ if not "%~1"=="" goto %~1
 exit /b 0
 
 :: ## find_replace
-:: Executes find_replace functionality.
+:: Performs the find_replace operation and updates component state.
 :find_replace
 set "SEARCH=%~1"
 set "REPLACE=%~2"

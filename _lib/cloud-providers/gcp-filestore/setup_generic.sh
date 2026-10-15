@@ -11,6 +11,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,9 +40,7 @@ if [ -z "${_PKG_MGR_NAME}" ]; then
   _PKG_MGR_NAME=$(basename "$(pwd)")
 
 # ## validate_filestore_config
-# Executes validate_filestore_config functionality.
-# ## validate_filestore_config
-# Executes the validate_filestore_config logic.
+# Performs the validate_filestore_config operation and updates component state.
 validate_filestore_config() {
   if [ -n "${TPU_ACCELERATOR_TYPE:-}" ] && [ -n "${TPU_VERSION:-}" ]; then
     case "${TPU_ACCELERATOR_TYPE}" in
@@ -83,9 +82,7 @@ ACTION="${ACTION:-install}"
 VERSION="${FILESTORE_VERSION:-latest}"
 
 # ## resolve_exact_version
-# Executes resolve_exact_version functionality.
-# ## resolve_exact_version
-# Executes the resolve_exact_version logic.
+# Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
     _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote filestore 2>/dev/null | tail -n 1)

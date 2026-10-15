@@ -35,7 +35,7 @@ set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 set "LIBSCRIPT_ROOT_DIR="
 set "CURR_DIR=%SCRIPT_DIR%"
 :: ## find_root_loop
-:: Executes find_root_loop functionality.
+:: Performs the find_root_loop operation and updates component state.
 :find_root_loop
 if exist "%CURR_DIR%\libscript.cmd" (
     set "LIBSCRIPT_ROOT_DIR=%CURR_DIR%"
@@ -50,7 +50,7 @@ if "%PARENT_DIR%"=="%CURR_DIR%" goto root_found
 set "CURR_DIR=%PARENT_DIR%"
 goto find_root_loop
 :: ## root_found
-:: Executes root_found functionality.
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
 if "%~1"=="" goto show_help
@@ -63,7 +63,7 @@ set "PS_CMD=powershell -NoProfile -ExecutionPolicy Bypass"
 exit /b %ERRORLEVEL%
 
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line usage instructions and available options.
 :show_help
 echo Usage: %~nx0 ^<TARGET_DIR_OR_PLAN^> [OPTIONS]
 echo.

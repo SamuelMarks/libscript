@@ -66,7 +66,7 @@ if "%~1"=="libscript_python_resolve" goto libscript_python_resolve
 goto :EOF
 
 :: ## libscript_python_resolve
-:: Executes libscript_python_resolve functionality.
+:: Performs the libscript_python_resolve operation and updates component state.
 :libscript_python_resolve
 :: ## libscript_python_resolve
 :: Resolves the path to the Python executable for a given version.
@@ -79,7 +79,6 @@ goto :EOF
 ::
 :: **Returns:**
 :: Prints the path to the executable and exits with 0 on success, or non-zero on failure.
-setlocal EnableDelayedExpansion
 set "_version=%~2"
 set "_backend=%LIBSCRIPT_PYTHON_BACKEND%"
 if "%_backend%"=="" set "_backend=native"
@@ -150,7 +149,7 @@ exit /b 0
 
 
 :: ## libscript_python_venv
-:: Executes libscript_python_venv functionality.
+:: Performs the libscript_python_venv operation and updates component state.
 :libscript_python_venv
 :: ## libscript_python_venv
 :: Creates a Python virtual environment at the specified directory.
@@ -169,7 +168,6 @@ if "%~2"=="" (
     exit /b 1
 )
 
-setlocal EnableDelayedExpansion
 set "_target_dir=%~2"
 set "_python_version=%~3"
 set "_backend=%LIBSCRIPT_PYTHON_VENV_BACKEND%"

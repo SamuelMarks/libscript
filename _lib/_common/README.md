@@ -70,6 +70,12 @@ cli.cmd uninstall _common
 
 - `setup.sh`: The main entrypoint that resolves the OS and invokes the correct script.
 - `setup_generic.sh`: Fallback installation logic using the package manager mapper.
+- `pkg_mgr.sh` / `pkg_mgr.cmd`: Multi-ecosystem package manager abstraction supporting explicit
+  `--pkg-mgr=<pm>` overrides (`apt-get`, `apk`, `dnf`, `brew`, `winget`, `choco`, `scoop`, `nix`,
+  `spack`, `vcpkg`, etc.) and automatic package manager bootstrapping.
+- `source_builder.sh` / `source_builder.cmd`: Generic source compilation engine supporting Mode 2
+  (`--from-source --toolchain=default`) and Mode 3
+  (`--from-source --toolchain=gcc|clang|tcc|custom-cc`) with `build-metrics.json` telemetry.
 - `test.sh` / `test.cmd`: Verification scripts to ensure the component is installed and functioning
   correctly.
 - `vars.schema.json`: The schema definition for the CLI arguments.

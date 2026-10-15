@@ -59,7 +59,7 @@ set "OUTPUT_FOLDER=%LIBSCRIPT_ROOT_DIR%\tmp"
 set "FILENAME="
 
 :: ## parse_args
-:: Executes parse_args functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_args
 if "%~1"=="" goto validate_args
 if /i "%~1"=="-h" goto show_help
@@ -87,7 +87,7 @@ shift
 goto parse_args
 
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line usage instructions and available options.
 :show_help
 echo Create install scripts from JSON.
 echo   -a whether to install all dependencies (required AND optional)
@@ -97,7 +97,7 @@ echo   -h show help text
 exit /b 0
 
 :: ## validate_args
-:: Executes validate_args functionality.
+:: Validates required command-line arguments and configuration parameters.
 :validate_args
 if "%FILENAME%"=="" (
     call :show_help

@@ -76,7 +76,7 @@ if "%ACTION%"=="install" goto :action_install
 goto :action_install
 
 :: ## action_ls
-:: Executes action_ls functionality.
+:: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
 :action_ls
 if "%GPU_VM_INSTALL_METHOD%"=="mise" ( mise ls gpu-vm & exit /b 0 )
 if "%GPU_VM_INSTALL_METHOD%"=="asdf" ( asdf list gpu-vm & exit /b 0 )
@@ -87,7 +87,7 @@ dir /b "%LIBSCRIPT_HOME%\gpu-vm\" 2>nul
 exit /b 0
 
 :: ## action_ls_remote
-:: Executes action_ls_remote functionality.
+:: Lists upstream release versions available for download.
 :action_ls_remote
 if "%GPU_VM_INSTALL_METHOD%"=="mise" ( mise ls-remote gpu-vm & exit /b 0 )
 if "%GPU_VM_INSTALL_METHOD%"=="asdf" ( asdf list all gpu-vm & exit /b 0 )
@@ -102,7 +102,7 @@ if not "%GPU_VM_RELEASES_URL%"=="" (
 exit /b 0
 
 :: ## action_use
-:: Executes action_use functionality.
+:: Activates the specified component version by updating the active symlink or junction.
 :action_use
 if "%GPU_VM_INSTALL_METHOD%"=="mise" ( mise use "gpu-vm@%GPU_VM_VERSION%" & exit /b 0 )
 if "%GPU_VM_INSTALL_METHOD%"=="asdf" ( asdf global gpu-vm "%GPU_VM_VERSION%" & exit /b 0 )
@@ -113,7 +113,7 @@ echo libscript_symlink_alias not implemented natively in cmd yet.
 exit /b 0
 
 :: ## action_download
-:: Executes action_download functionality.
+:: Downloads the component release archive into the local offline cache directory.
 :action_download
 if "%GPU_VM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading gpu-vm %GPU_VM_VERSION% to %DOWNLOAD_DIR%\gpu-vm...
@@ -127,7 +127,7 @@ if "%GPU_VM_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_install
-:: Executes action_install functionality.
+:: Installs and configures the requested version of the component.
 :action_install
 if exist "%LIBSCRIPT_HOME%\gcp-gpu-vm\%VERSION%" (
     echo [INFO] gcp-gpu-vm %VERSION% is already installed.

@@ -2,20 +2,77 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/databases/sqlite/vars.schema.json",
   "title": "sqlite vars",
-  "description": "Variables for SQLite",
+  "description": "Configuration variables for the SQLite database engine and C amalgamation source builder",
   "type": "object",
   "properties": {
     "SQLITE_VERSION": {
-      "description": "Specific version of sqlite to install. Can be a numeric version or an alias.",
+      "description": "Specific version of SQLite to install or compile (e.g., '3.46.1' or 'latest').",
       "type": "string",
       "default": "latest",
       "version_aliases": ["latest", "stable"]
     },
     "SQLITE_INSTALL_METHOD": {
-      "description": "How to install SQLITE. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "description": "How to install SQLite ('libscript_native' prebuilt binary, 'from-source' compiled from the C amalgamation, 'system' via OS/selected package manager, or third-party version managers).",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": [
+        "libscript_native",
+        "from-source",
+        "system",
+        "mise",
+        "asdf",
+        "pkgx",
+        "vfox",
+        "nix",
+        "brew",
+        "winget",
+        "choco",
+        "scoop",
+        "vcpkg"
+      ],
       "default": "libscript_native"
+    },
+    "SQLITE_PKG_MGR": {
+      "description": "Specific package manager to use when installing SQLite via package manager (e.g., apt-get, apk, dnf, brew, winget, choco, scoop, nix, vcpkg).",
+      "type": "string"
+    },
+    "SQLITE_BUILD_TOOLCHAIN": {
+      "description": "Build toolchain used when SQLITE_INSTALL_METHOD='from-source' ('default' uses platform default C compiler; 'gcc', 'clang', 'tcc', 'custom-cc', or a binary path uses that custom compiler).",
+      "type": "string",
+      "default": "default"
+    },
+    "SQLITE_COMPILER": {
+      "description": "Alias for SQLITE_BUILD_TOOLCHAIN specifying the C compiler for source builds.",
+      "type": "string",
+      "default": "default"
+    },
+    "SQLITE_CFLAGS": {
+      "description": "Compiler flags passed when compiling the SQLite amalgamation from source.",
+      "type": "string",
+      "default": "-O2 -DSQLITE_ENABLE_MATH_FUNCTIONS -DSQLITE_ENABLE_FTS5 -DSQLITE_ENABLE_RTREE"
+    },
+    "SQLITE_LDFLAGS": {
+      "description": "Linker flags passed when linking the SQLite CLI and library from source.",
+      "type": "string",
+      "default": "-lpthread -ldl -lm"
+    },
+    "SQLITE_SINGLE_THREADED": {
+      "description": "When true, compiles SQLite with -DSQLITE_THREADSAFE=0 and -DSQLITE_OMIT_LOAD_EXTENSION=1 for minimal C compilers.",
+      "type": "boolean",
+      "default": false
+    },
+    "SQLITE_AMALGAMATION_URL": {
+      "description": "Optional explicit download URL for the SQLite C amalgamation archive.",
+      "type": "string"
+    },
+    "SQLITE_AMALGAMATION_YEAR": {
+      "description": "Release year directory on sqlite.org used when constructing the default amalgamation URL.",
+      "type": "string",
+      "default": "2024"
+    },
+    "SQLITE_BUILD_SHARED_LIB": {
+      "description": "Whether to also compile the shared library (libsqlite3.so / libsqlite3.dylib / sqlite3.dll) during from-source builds.",
+      "type": "boolean",
+      "default": true
     },
     "LIBSCRIPT_LISTEN_PORT": {
       "type": ["string", "integer"],

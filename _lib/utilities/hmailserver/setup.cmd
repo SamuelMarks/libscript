@@ -2,13 +2,14 @@
 :: # setup.cmd
 ::
 :: ## Overview
-:: Windows setup entry point for hMailServer.
-
+:: Installation and configuration entrypoint for the hmailserver component on Windows.
 ::
 :: ## Usage
-:: Call this script to trigger setup for hmailserver on Windows.
+:: setup.cmd [action]
+
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
     if not errorlevel 1 (
@@ -50,4 +51,4 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "%~dp0setup_generic.cmd" %*
+call "%~dp0\..\..\_common\setup_base.cmd" %*

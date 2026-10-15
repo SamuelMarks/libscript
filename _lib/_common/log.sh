@@ -16,6 +16,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -39,9 +40,7 @@ LIBSCRIPT_LOG_FORMAT="${LIBSCRIPT_LOG_FORMAT:-text}"
 LIBSCRIPT_LOG_FILE="${LIBSCRIPT_LOG_FILE:-}"
 
 # ## _libscript_log_msg
-# Executes _libscript_log_msg functionality.
-# ## _libscript_log_msg
-# Executes the _libscript_log_msg logic.
+# Formats and emits a timestamped log message at the specified severity level.
 _libscript_log_msg() {
   level_name="${1:-}"
   level_num="${2:-}"
@@ -80,31 +79,19 @@ _libscript_log_msg() {
 
 # ## log_debug
 # Logs a debug message.
-# ## log_debug
-# Executes the log_debug logic.
 log_debug()   { _libscript_log_msg "DEBUG"   0 "${1:-}"; }
 # ## log_info
 # Logs an informational message.
-# ## log_info
-# Executes the log_info logic.
 log_info()    { _libscript_log_msg "INFO"    1 "${1:-}"; }
 # ## log_success
-# Executes log_success functionality.
-# ## log_success
-# Executes the log_success logic.
+# Logs a success confirmation message.
 log_success() { _libscript_log_msg "SUCCESS" 2 "${1:-}"; }
 # ## log_warn
 # Logs a warning message.
-# ## log_warn
-# Executes the log_warn logic.
 log_warn()    { _libscript_log_msg "WARN"    3 "${1:-}"; }
 # ## log_error
 # Logs an error message.
-# ## log_error
-# Executes the log_error logic.
 log_error()   { _libscript_log_msg "ERROR"   4 "${1:-}"; }
 # ## log_err
 # Alias for log_error.
-# ## log_err
-# Executes the log_err logic.
 log_err()     { _libscript_log_msg "ERROR"   4 "${1:-}"; }

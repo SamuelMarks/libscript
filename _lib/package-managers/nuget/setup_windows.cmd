@@ -59,13 +59,13 @@ if not "%PREFIX%"=="" set "DEST_DIR=%PREFIX%"
 if not exist "%DEST_DIR%" mkdir "%DEST_DIR%"
 
 echo Downloading nuget.exe from https://dist.nuget.org/win-x86-commandline/latest/nuget.exe...
-curl -sSL "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -o "%DEST_DIR%/nuget.exe"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" "%DEST_DIR%\nuget.exe"
 if errorlevel 1 (
     echo Failed to download nuget.exe.
     exit /b 1
 )
 
-if exist "%DEST_DIR%/nuget.exe" (
+if exist "%DEST_DIR%\nuget.exe" (
     echo nuget installed successfully to %DEST_DIR%.
     exit /b 0
 )

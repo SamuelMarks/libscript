@@ -14,6 +14,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -32,8 +33,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## show_help
 # Displays usage documentation.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") backup <backup_dir> <install_dir> [out_path]"
   printf '%s\n' "       $(basename "$THIS_FILE") restore <archive> <install_dir> [force]"
@@ -47,8 +46,6 @@ show_help() {
 #   $1 - Path to file
 # Outputs:
 #   Prints SHA-256 hex string
-# ## compute_sha256
-# Executes the compute_sha256 logic.
 compute_sha256() {
   _file="$1"
   if command -v sha256sum >/dev/null 2>&1; then
@@ -69,8 +66,6 @@ compute_sha256() {
 #   $1 - Backup root directory
 #   $2 - Open edX installation directory
 #   $3 - (Optional) Destination archive path
-# ## do_backup
-# Executes the do_backup logic.
 do_backup() {
   _backup_dir="$1"
   _install_dir="$2"
@@ -130,8 +125,6 @@ do_backup() {
 #   $1 - Backup archive path
 #   $2 - Open edX installation directory
 #   $3 - Force overwrite flag (1 or 0)
-# ## do_restore
-# Executes the do_restore logic.
 do_restore() {
   _archive="$1"
   _install_dir="$2"
@@ -177,8 +170,6 @@ do_restore() {
 
 # ## main
 # Main entrypoint parsing subcommands.
-# ## main
-# Executes the main logic.
 main() {
   if [ $# -lt 1 ]; then
     show_help

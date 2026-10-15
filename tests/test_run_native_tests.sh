@@ -13,6 +13,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -34,8 +35,6 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 # ## run_tests
 # Creates a temporary mock environment and verifies run_native_tests.sh execution.
-# ## run_tests
-# Executes the run_tests logic.
 run_tests() {
   _test_tmp=$(mktemp -d "${TMPDIR:-/tmp}/test_run_native.XXXXXX")
 

@@ -11,6 +11,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -31,9 +32,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 . "$LIBSCRIPT_ROOT_DIR/_lib/cloud/core/tags.sh"
 
 # ## libscript_storage_create
-# Executes libscript_storage_create functionality.
-# ## libscript_storage_create
-# Executes the libscript_storage_create logic.
+# Performs the libscript_storage_create operation and updates component state.
 libscript_storage_create() {
   provider="$1"
   bucket="$2"
@@ -92,9 +91,7 @@ libscript_storage_create() {
 }
 
 # ## libscript_storage_delete
-# Executes libscript_storage_delete functionality.
-# ## libscript_storage_delete
-# Executes the libscript_storage_delete logic.
+# Performs the libscript_storage_delete operation and updates component state.
 libscript_storage_delete() {
   provider="$1"
   bucket="$2"
@@ -126,9 +123,7 @@ libscript_storage_delete() {
 }
 
 # ## libscript_storage_list
-# Executes libscript_storage_list functionality.
-# ## libscript_storage_list
-# Executes the libscript_storage_list logic.
+# Performs the libscript_storage_list operation and updates component state.
 libscript_storage_list() {
   provider="$1"
   
@@ -163,9 +158,7 @@ libscript_storage_list() {
 }
 
 # ## libscript_storage_sync
-# Executes libscript_storage_sync functionality.
-# ## libscript_storage_sync
-# Executes the libscript_storage_sync logic.
+# Performs the libscript_storage_sync operation and updates component state.
 libscript_storage_sync() {
   provider="$1"
   bucket="$2"

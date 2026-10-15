@@ -62,7 +62,7 @@ set "P5="
 set "P6="
 
 :: ## arg_loop
-:: Executes arg_loop functionality.
+:: Parses command-line arguments and populates configuration variables.
 :arg_loop
 set "arg=%~1"
 if "!arg!"=="" goto :args_done
@@ -99,7 +99,7 @@ shift
 goto :arg_loop
 
 :: ## args_done
-:: Executes args_done functionality.
+:: Continues execution after command-line argument parsing completes.
 :args_done
 
 set "PROVIDER=!P1!"
@@ -319,7 +319,7 @@ call :log "HEALTH" "Waiting for SSH/WinRM readiness on node !NODE!..."
 set "ATTEMPT=1"
 set "MAX_ATTEMPTS=30"
 :: ## ssh_loop
-:: Executes ssh_loop functionality.
+:: Performs the ssh_loop operation and updates component state.
 :ssh_loop
 call "!CLI!" node exec "!NODE!" "!CTX!" "echo SSH_READY" >nul 2>&1
 if %errorlevel% equ 0 (
@@ -336,7 +336,7 @@ set /a ATTEMPT+=1
 goto :ssh_loop
 
 :: ## ssh_ready
-:: Executes ssh_ready functionality.
+:: Performs the ssh_ready operation and updates component state.
 :ssh_ready
 
 :: -----------------------------------------------------------------------------
@@ -414,7 +414,7 @@ if "!IS_TPU!"=="1" (
     if "!SHARED_STORAGE!"=="1" (
         call :log "INFRA" "Mounting Filestore across all TPU workers..."
         for /f "tokens=*" %%i in ('gcloud filestore instances describe "!NODE!-nfs" --zone="!LOC!" --format="value(networks.ipAddresses[0])"') do set "NFS_IP=%%i"
-        call :retry "!TPU_CLI!" ssh "!NODE!" --all-workers "if ! dpkg -s nfs-common >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y nfs-common; fi && sudo mkdir -p /mnt/shared && if ! grep -qs '/mnt/shared ' /proc/mounts; then sudo mount !NFS_IP!:/vol1 /mnt/shared; fi && sudo chmod a+w /mnt/shared"
+        call :retry "!TPU_CLI!" ssh "!NODE!" --all-workers "sudo LIBSCRIPT_ROOT_DIR=~/libscript ~/libscript/traits/storage/nfs.sh !NFS_IP!:/vol1 /mnt/shared && sudo chmod a+w /mnt/shared"
     )
     call :retry "!TPU_CLI!" ssh "!NODE!" --all-workers "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh install-deps"
     call :retry "!TPU_CLI!" ssh "!NODE!" --all-workers "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh start"
@@ -430,7 +430,7 @@ call :log "HEALTH" "Polling application health (via libscript health)..."
 set "ATTEMPT=1"
 set "MAX_ATTEMPTS=12"
 :: ## health_loop
-:: Executes health_loop functionality.
+:: Performs the health_loop operation and updates component state.
 :health_loop
 if "!IS_TPU!"=="1" (
     call "!TPU_CLI!" ssh "!NODE!" "cd !REMOTE_DEST! && sudo ~/libscript/libscript.sh health" >nul 2>&1
@@ -451,7 +451,7 @@ set /a ATTEMPT+=1
 goto :health_loop
 
 :: ## health_ready
-:: Executes health_ready functionality.
+:: Performs the health_ready operation and updates component state.
 :health_ready
 
 call :log "DONE" "Deployment complete. View logs at !LOG_FILE!"
@@ -461,14 +461,14 @@ exit /b 0
 :: Functions
 :: -----------------------------------------------------------------------------
 :: ## log
-:: Executes log functionality.
+:: Formats and emits a timestamped log message at the specified severity level.
 :log
 echo [%~1] %~2
 echo [%DATE% %TIME%] [%~1] %~2 >> "!LOG_FILE!"
 exit /b 0
 
 :: ## record_state
-:: Executes record_state functionality.
+:: Performs the record_state operation and updates component state.
 :record_state
 if exist "!STATE_FILE!" (
     findstr /v /b /c:"%~1=" "!STATE_FILE!" > "!STATE_FILE!.tmp"
@@ -479,13 +479,13 @@ call :log "STATE" "Recorded %~1=%~2"
 exit /b 0
 
 :: ## retry
-:: Executes retry functionality.
+:: Performs the retry operation and updates component state.
 :retry
 set "RETRY_ATTEMPT=1"
 set "RETRY_MAX=5"
 set "RETRY_WAIT=5"
 :: ## retry_loop
-:: Executes retry_loop functionality.
+:: Performs the retry_loop operation and updates component state.
 :retry_loop
 call :log "RETRY" "Attempt !RETRY_ATTEMPT! of !RETRY_MAX!: %*"
 call %* >> "!LOG_FILE!" 2>&1

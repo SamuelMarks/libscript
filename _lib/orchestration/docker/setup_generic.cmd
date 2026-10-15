@@ -87,7 +87,7 @@ goto :action_install
 goto :action_install
 
 :: ## action_ls
-:: Executes action_ls functionality.
+:: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
 :action_ls
 if "%DOCKER_INSTALL_METHOD%"=="mise" ( mise ls docker & exit /b 0 )
 if "%DOCKER_INSTALL_METHOD%"=="asdf" ( asdf list docker & exit /b 0 )
@@ -98,7 +98,7 @@ if exist "%LIBSCRIPT_HOME%\docker" ( dir /b "%LIBSCRIPT_HOME%\docker" )
 exit /b 0
 
 :: ## action_ls_remote
-:: Executes action_ls_remote functionality.
+:: Lists upstream release versions available for download.
 :action_ls_remote
 if "%DOCKER_INSTALL_METHOD%"=="mise" ( mise ls-remote docker & exit /b 0 )
 if "%DOCKER_INSTALL_METHOD%"=="asdf" ( asdf list all docker & exit /b 0 )
@@ -113,7 +113,7 @@ if not "%DOCKER_RELEASES_URL%"=="" (
 exit /b 0
 
 :: ## action_use
-:: Executes action_use functionality.
+:: Activates the specified component version by updating the active symlink or junction.
 :action_use
 if "%DOCKER_INSTALL_METHOD%"=="mise" ( mise use "docker@%DOCKER_VERSION%" & exit /b 0 )
 if "%DOCKER_INSTALL_METHOD%"=="asdf" ( asdf global docker "%DOCKER_VERSION%" & exit /b 0 )
@@ -138,7 +138,7 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 exit /b 0
 
 :: ## action_download
-:: Executes action_download functionality.
+:: Downloads the component release archive into the local offline cache directory.
 :action_download
 if "%DOCKER_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading docker %DOCKER_VERSION% to %DOWNLOAD_DIR%\docker...
@@ -152,7 +152,7 @@ if "%DOCKER_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_install
-:: Executes action_install functionality.
+:: Installs and configures the requested version of the component.
 :action_install
 if "%DOCKER_INSTALL_METHOD%"=="system" (
     winget install docker --accept-package-agreements --accept-source-agreements
@@ -192,7 +192,7 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 exit /b 0
 
 :: ## action_service
-:: Executes action_service functionality.
+:: Routes service daemon control actions (start, stop, restart, status) to the service manager.
 :action_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -213,7 +213,7 @@ if "%DOCKER_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_install_service
-:: Executes action_install_service functionality.
+:: Registers and configures the component as a persistent system service.
 :action_install_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -234,7 +234,7 @@ if "%DOCKER_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_uninstall_service
-:: Executes action_uninstall_service functionality.
+:: Stops and removes the registered system service for the component.
 :action_uninstall_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (

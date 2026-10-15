@@ -1,13 +1,16 @@
 @echo off
 :: # build_component_msi.cmd
 :: ## Overview
+:: Performs the Overview operation and updates component state.
 rem Builds a standalone Windows Installer (.msi) package for an individual LibScript dependency.
 rem Supports lightweight online installer and air-gapped offline installer with pre-bundled dependencies.
 rem
 :: ## Usage
+:: Performs the Usage operation and updates component state.
 rem   call packaging\build_component_msi.cmd [OPTIONS]
 rem
 :: ## Parameters
+:: Performs the Parameters operation and updates component state.
 rem   --component <name>       Component to package (mysql, redis, mongodb, python, nodejs, meilisearch)
 rem   --version <ver>          Component release version (default: auto-detected from offline bundle)
 rem   --variant <var>          Installer variant: online, offline, or all (default: all)
@@ -71,6 +74,7 @@ if not defined LIBSCRIPT_TARGET_ARCH set "LIBSCRIPT_TARGET_ARCH=x64"
 set "TARGET_ARCH=%LIBSCRIPT_TARGET_ARCH%"
 
 :: ## parse_loop
+:: Parses command-line arguments and populates configuration variables.
 :: ## Overview
 :: Iterates over and parses command line arguments.
 :: ## Usage
@@ -149,6 +153,7 @@ shift
 goto parse_loop
 
 :: ## show_help
+:: Displays command-line usage instructions and available options.
 :: ## Overview
 :: Displays command usage documentation.
 :: ## Usage
@@ -174,6 +179,7 @@ echo   --help, -h               Show this help text
 exit /b 0
 
 :: ## parse_done
+:: Performs the parse_done operation and updates component state.
 :: ## Overview
 :: Prepares configuration and triggers variant compilation.
 :: ## Usage
@@ -215,6 +221,7 @@ echo [ERROR] Unknown variant: %VARIANT%. Use online, offline, or all. >&2
 exit /b 1
 
 :: ## build_single_variant
+:: Performs the build_single_variant operation and updates component state.
 :: ## Overview
 :: Compiles an individual variant (online or offline) for the specified component.
 ::
@@ -466,6 +473,7 @@ if !ERRORLEVEL! neq 0 (
 goto compile_done
 
 :: ## compile_done
+:: Performs the compile_done operation and updates component state.
 :: ## Overview
 :: Validates the built MSI output package and syncs to output directory.
 :: ## Usage
@@ -487,13 +495,13 @@ echo [PASS] Successfully processed standalone component MSI (%CURR_VAR%): %TARGE
 goto cleanup
 
 :: ## compile_err
-:: Executes compile_err functionality.
+:: Performs the compile_err operation and updates component state.
 :compile_err
 set "ERR=1"
 goto cleanup
 
 :: ## cleanup
-:: Executes cleanup functionality.
+:: Cleans up temporary files, mounts, and background processes before exiting.
 :cleanup
 del /f /q "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_main.wixobj" >nul 2>&1
 del /f /q "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_payload.wixobj" >nul 2>&1

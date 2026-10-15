@@ -2,10 +2,10 @@
 :: # cli.cmd
 ::
 :: ## Overview
-:: Default no-op cli.cmd implementation to satisfy Version Manager Contract.
+:: Command-line interface entrypoint for the illumos-distro component on Windows.
 ::
 :: ## Usage
-:: cli.cmd
+:: cli.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -51,4 +51,5 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-exit /b 0
+set "PACKAGE_NAME=illumos-distro"
+call "%~dp0\..\..\_common\component_core.cmd" %*

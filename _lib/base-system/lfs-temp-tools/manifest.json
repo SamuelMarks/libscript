@@ -1,0 +1,13 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "lfs-temp-tools",
+  "title": "LFS Temporary Tools",
+  "description": "Linux From Scratch (LFS) Chapter 6/7 cross-compiled temporary userland utilities.",
+  "category": "base-system",
+  "provides": ["lfs-temp-tools"],
+  "conflicts": [],
+  "versions": ["latest", "12.2"],
+  "os_whitelist": ["linux"],
+  "os_blacklist": ["windows", "darwin", "sunos"],
+  "ports": []
+}

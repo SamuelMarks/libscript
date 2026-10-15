@@ -18,6 +18,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -113,7 +114,7 @@ EOF
 # ## Parameters
 #   $1 - 6-character hex color string (e.g. 00263E)
 # ## hex_to_r
-# Executes the hex_to_r logic.
+# Performs the hex_to_r operation and updates component state.
 hex_to_r() { printf '%d' "0x$(printf '%s' "$1" | cut -c1-2)"; }
 
 # ## hex_to_g
@@ -122,7 +123,7 @@ hex_to_r() { printf '%d' "0x$(printf '%s' "$1" | cut -c1-2)"; }
 # ## Parameters
 #   $1 - 6-character hex color string (e.g. 00263E)
 # ## hex_to_g
-# Executes the hex_to_g logic.
+# Performs the hex_to_g operation and updates component state.
 hex_to_g() { printf '%d' "0x$(printf '%s' "$1" | cut -c3-4)"; }
 
 # ## hex_to_b
@@ -131,7 +132,7 @@ hex_to_g() { printf '%d' "0x$(printf '%s' "$1" | cut -c3-4)"; }
 # ## Parameters
 #   $1 - 6-character hex color string (e.g. 00263E)
 # ## hex_to_b
-# Executes the hex_to_b logic.
+# Performs the hex_to_b operation and updates component state.
 hex_to_b() { printf '%d' "0x$(printf '%s' "$1" | cut -c5-6)"; }
 
 PR_R=$(hex_to_r "$PRIMARY_HEX"); PR_G=$(hex_to_g "$PRIMARY_HEX"); PR_B=$(hex_to_b "$PRIMARY_HEX")
@@ -140,8 +141,6 @@ DK_R=$(hex_to_r "$DARK_HEX"); DK_G=$(hex_to_g "$DARK_HEX"); DK_B=$(hex_to_b "$DA
 
 # ## generate_side_banner
 # Synthesizes 164x312 24-bit uncompressed RGB BMP side splash banner.
-# ## generate_side_banner
-# Executes the generate_side_banner logic.
 generate_side_banner() {
   _out="$1"
   awk -v pr_r="$PR_R" -v pr_g="$PR_G" -v pr_b="$PR_B" -v sc_r="$SC_R" -v sc_g="$SC_G" -v sc_b="$SC_B" -v dk_r="$DK_R" -v dk_g="$DK_G" -v dk_b="$DK_B" '
@@ -186,8 +185,6 @@ generate_side_banner() {
 
 # ## generate_top_banner
 # Synthesizes 493x58 24-bit uncompressed RGB BMP top header banner.
-# ## generate_top_banner
-# Executes the generate_top_banner logic.
 generate_top_banner() {
   _out="$1"
   awk -v pr_r="$PR_R" -v pr_g="$PR_G" -v pr_b="$PR_B" '
@@ -227,8 +224,6 @@ generate_top_banner() {
 
 # ## generate_ico
 # Synthesizes multi-resolution application icon (.ico).
-# ## generate_ico
-# Executes the generate_ico logic.
 generate_ico() {
   _out="$1"
   awk -v pr_r="$PR_R" -v pr_g="$PR_G" -v pr_b="$PR_B" -v sc_r="$SC_R" -v sc_g="$SC_G" -v sc_b="$SC_B" -v dk_r="$DK_R" -v dk_g="$DK_G" -v dk_b="$DK_B" '
@@ -297,8 +292,6 @@ generate_ico() {
 
 # ## generate_eula
 # Synthesizes Rich Text Format (.rtf) EULA.
-# ## generate_eula
-# Executes the generate_eula logic.
 generate_eula() {
   _out="$1"
   cat << EOF > "$_out"

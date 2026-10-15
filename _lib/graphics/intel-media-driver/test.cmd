@@ -1,9 +1,11 @@
 @echo off
 :: # test.cmd
 :: ## Overview
+:: Performs the Overview operation and updates component state.
 rem Verifies Intel Media Driver staging and installation.
 rem
 :: ## Usage
+:: Performs the Usage operation and updates component state.
 rem   call test.cmd
 
 setlocal EnableDelayedExpansion

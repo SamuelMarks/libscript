@@ -101,7 +101,7 @@ call "%LOG_CMD%" :log_error "Unknown action: %ACTION%. Supported: new-session, a
 exit /b 1
 
 :: ## new_session
-:: Executes new_session functionality.
+:: Performs the new_session operation and updates component state.
 :new_session
 set "SESSION_NAME=%~2"
 if "%SESSION_NAME%"=="" set "SESSION_NAME=ml-session"
@@ -109,7 +109,7 @@ shift
 shift
 set "REST_ARGS="
 :: ## loop
-:: Executes loop functionality.
+:: Parses command-line arguments and populates configuration variables.
 :loop
 if "%~1"=="" goto run
 set "REST_ARGS=%REST_ARGS% %~1"
@@ -117,7 +117,7 @@ shift
 goto loop
 
 :: ## run
-:: Executes run functionality.
+:: Performs the run operation and updates component state.
 :run
 !TMUX_CMD! has-session -t "%SESSION_NAME%" >nul 2>&1
 if %errorlevel% equ 0 (
@@ -135,7 +135,7 @@ if %errorlevel% equ 0 (
 exit /b 0
 
 :: ## attach
-:: Executes attach functionality.
+:: Performs the attach operation and updates component state.
 :attach
 set "SESSION_NAME=%~2"
 if "%SESSION_NAME%"=="" set "SESSION_NAME=ml-session"
@@ -144,7 +144,7 @@ call "%LOG_CMD%" :log_info "Attaching to session: %SESSION_NAME%"
 exit /b 0
 
 :: ## kill
-:: Executes kill functionality.
+:: Performs the kill operation and updates component state.
 :kill
 set "SESSION_NAME=%~2"
 if "%SESSION_NAME%"=="" set "SESSION_NAME=ml-session"
@@ -153,7 +153,7 @@ call "%LOG_CMD%" :log_info "Killing session: %SESSION_NAME%"
 exit /b 0
 
 :: ## list
-:: Executes list functionality.
+:: Performs the list operation and updates component state.
 :list
 !TMUX_CMD! list-sessions
 exit /b 0

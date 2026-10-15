@@ -52,20 +52,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-SET "searchVal=;%THIS_FILE%;"
-IF NOT DEFINED STACK (
-    SET "STACK=;%THIS_FILE%;"
-    echo [CONTINUE] processing "%THIS_FILE%"
-) ELSE (
-    IF NOT "!STACK:%searchVal%=!"=="!STACK!" (
-        echo [STOP]     processing "%THIS_FILE%"
-        SET ERRORLEVEL=0
-        goto :eof
-    ) ELSE (
-        SET "STACK=!STACK!%THIS_FILE%;"
-        echo [CONTINUE] processing "%THIS_FILE%"
-    )
-)
 
 if "%~1"=="--help" (
     echo Usage: %~nx0 [register-image ^<image_path^> [bucket] [image_name]]
@@ -87,7 +73,7 @@ call "%~dp0\..\..\_common\setup_base.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_register_image
-:: Executes do_register_image functionality.
+:: Performs the do_register_image operation and updates component state.
 :do_register_image
 set "IMG_PATH=%~2"
 if "%IMG_PATH%"=="" set "IMG_PATH=%LIBSCRIPT_ROOT_DIR%\build\disk.img"

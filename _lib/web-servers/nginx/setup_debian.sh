@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -61,9 +62,7 @@ if [ "${run_before}" -eq 0 ]; then
 fi
 
 # ## rtrim
-# Executes rtrim functionality.
-# ## rtrim
-# Executes the rtrim logic.
+# Performs the rtrim operation and updates component state.
 rtrim() {
   trimmed="${1}"
   while :
@@ -81,9 +80,7 @@ rtrim() {
 }
 
 # ## remove_last
-# Executes remove_last functionality.
-# ## remove_last
-# Executes the remove_last logic.
+# Performs the remove_last operation and updates component state.
 remove_last() {
   c="${1}"
   s="${2}"
@@ -109,9 +106,7 @@ remove_last() {
 }
 
 # ## merge_location_into_nginx_server
-# Executes merge_location_into_nginx_server functionality.
-# ## merge_location_into_nginx_server
-# Executes the merge_location_into_nginx_server logic.
+# Performs the merge_location_into_nginx_server operation and updates component state.
 merge_location_into_nginx_server() {
   conf_existing="${1}"
   location_conf="${2}"

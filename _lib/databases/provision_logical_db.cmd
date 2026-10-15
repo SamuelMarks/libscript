@@ -58,7 +58,7 @@ set "DB_NAME="
 set "DB_URL="
 
 :: ## ParseArgs
-:: Executes ParseArgs functionality.
+:: Parses command-line arguments and populates configuration variables.
 :ParseArgs
 if "%~1"=="" goto ValidateArgs
 if "%~1"=="--host" (
@@ -89,7 +89,7 @@ echo [ERROR] Unknown argument: %~1 >&2
 exit /b 1
 
 :: ## ValidateArgs
-:: Executes ValidateArgs functionality.
+:: Validates required command-line arguments and configuration parameters.
 :ValidateArgs
 :: Validates the parsed arguments
 if "!DB_NAME!"=="" (
@@ -99,7 +99,7 @@ if "!DB_NAME!"=="" (
 goto ProvisionDB
 
 :: ## ProvisionDB
-:: Executes ProvisionDB functionality.
+:: Performs the ProvisionDB operation and updates component state.
 :ProvisionDB
 :: Provisions the database
 :: Connects to the host (local or remote) and conditionally executes CREATE DATABASE.

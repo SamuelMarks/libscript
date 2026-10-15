@@ -2,19 +2,34 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/languages/cc/vars.schema.json",
   "title": "cc vars",
-  "description": "Variables for C Compiler",
+  "description": "Variables for Unified C Compiler Router (cc)",
   "type": "object",
   "properties": {
     "CC_INSTALL_METHOD": {
-      "description": "How to install CC. 'libscript_native' uses isolated version dirs, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools.",
+      "description": "How to install CC ('libscript_native' uses isolated version dirs, 'from-source' compiles from source, 'system' uses OS package manager, 'mise', 'asdf', 'pkgx', or 'vfox' defers to third-party tools).",
       "type": "string",
-      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "enum": ["libscript_native", "from-source", "system", "mise", "asdf", "pkgx", "vfox"],
       "default": "system"
     },
     "CC_VERSION": {
       "description": "Version of C Compiler to install",
       "type": "string",
       "default": "latest"
+    },
+    "CC_BACKEND": {
+      "description": "Active C compiler backend routed by cc ('default', 'gcc', 'clang', 'tcc', 'custom-cc').",
+      "type": "string",
+      "enum": ["default", "gcc", "clang", "tcc", "custom-cc"],
+      "default": "default"
+    },
+    "CC_PKG_MGR": {
+      "description": "Explicit package manager override for CC installation.",
+      "type": "string"
+    },
+    "CC_BUILD_TOOLCHAIN": {
+      "description": "Bootstrap C toolchain used when building CC from source.",
+      "type": "string",
+      "default": "default"
     }
   }
 }

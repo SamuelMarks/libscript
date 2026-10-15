@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -66,9 +67,7 @@ shift "$((OPTIND - 1))"
 REMAINING="$*"
 
 # ## help
-# Executes help functionality.
-# ## help
-# Executes the help logic.
+# Displays command-line usage instructions and available options.
 help() {
     # shellcheck disable=SC2016
     >&2 printf 'Create Docker image builder scripts.\n
@@ -98,9 +97,7 @@ awk 'NR==1,/^fi$/' "${DIR}"'/../_lib/_common/prelude.sh' | tee -a "${DOCKER_BUIL
 chmod +x "${DOCKER_BUILDER}" "${DOCKER_BUILDER_PARALLEL}"
 
 # ## collect_when_pattern
-# Executes collect_when_pattern functionality.
-# ## collect_when_pattern
-# Executes the collect_when_pattern logic.
+# Performs the collect_when_pattern operation and updates component state.
 collect_when_pattern() {
   pattern="$1"
     result=''
@@ -148,9 +145,7 @@ fi
 NL='
 '
 # ## process_one_dockerfile
-# Executes process_one_dockerfile functionality.
-# ## process_one_dockerfile
-# Executes the process_one_dockerfile logic.
+# Performs the process_one_dockerfile operation and updates component state.
 process_one_dockerfile() {
   dockerfile="${1}";
   end="${2:-${NL}}"
@@ -175,9 +170,7 @@ EOF
 }
 
 # ## section2name
-# Executes section2name functionality.
-# ## section2name
-# Executes the section2name logic.
+# Performs the section2name operation and updates component state.
 section2name() {
   case "${1}" in
     "${SERVER_DFS}") res='Servers' ;;

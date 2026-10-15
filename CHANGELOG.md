@@ -94,6 +94,25 @@ All notable changes to the LibScript framework are documented here.
 
 ### Completed Initiatives
 
+#### Phase 10: Generic 3-Mode Build Substrate & 4-Way C Compiler Differential Verification
+
+- Added universal 3-mode component provisioning and source compilation in `_lib/_common/`:
+  - **Mode 1 (`--pkg-mgr=<pm>`)**: Explicit package manager selection and auto-bootstrapping across
+    `apt-get`, `apk`, `dnf`, `yum`, `zypper`, `pacman`, `brew`, `port`, `pkg`, `xbps`, `emerge`,
+    `winget`, `choco`, `scoop`, `nix`, `guix`, `spack`, `vcpkg`, `conan`, and `pkgx`.
+  - **Mode 2 (`--from-source --toolchain=default`)**: Generic source compilation engine
+    (`_lib/_common/source_builder.{sh,cmd}`) using the host's default C toolchain.
+  - **Mode 3 (`--from-source --toolchain=<cc>` / `--custom-cc=<path>`)**: Compiler-namespaced source
+    builds with `build-metrics.json` section and timing telemetry.
+- Added standalone Tier 1 C compiler version managers (`_lib/languages/{gcc,clang,tcc,custom-cc}/`)
+  with `cc_wrapper.{sh,cmd}` GNU flag sanitization and per-TU JSONL telemetry.
+- Upgraded `_lib/databases/sqlite/` with 3-mode provisioning, C amalgamation source compilation, a
+  deterministic 6-stage SQL torture suite (`test.{sh,cmd}`), and a 4-way differential compiler
+  benchmark (`compare_compilers.{sh,cmd}`).
+- Upgraded `_lib/kernel/linux/` and `_lib/orchestration/resolve_stack.jq` with multi-toolchain
+  Kbuild support, ELF/`System.map` differential analysis (`compare_compilers.{sh,cmd}`), and 6
+  declarative kernel compiler profiles in `profiles/`.
+
 #### Phase 9: Native REST API & OpenAPI 3.0 Control Plane
 
 - High-performance C++ HTTP microservice daemon in `libscript-rest-api/`.

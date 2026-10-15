@@ -2,13 +2,15 @@
 :: # setup.cmd
 ::
 :: ## Overview
-:: Setup wrapper for RepoGen repository metadata synthesizer.
+:: Installation and configuration entrypoint for the repogen component on Windows.
+:: Delegates execution to the shared _lib\_common\setup_base.cmd module.
 ::
 :: ## Usage
-:: setup.cmd setup.cmd [action]
+:: setup.cmd [action]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
     if not errorlevel 1 (
@@ -50,10 +52,4 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # setup.cmd
-:::: Setup wrapper for RepoGen repository metadata synthesizer on Windows.
-::
-:: ## Usage
-:: setup.cmd [action]
-
-exit /b 0
+call "%~dp0\..\..\_common\setup_base.cmd" %*

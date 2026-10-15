@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/init-systems/s6/vars.schema.json",
+  "title": "s6 variables",
+  "description": "Configuration variables for the s6 supervision suite and init system.",
+  "type": "object",
+  "properties": {
+    "S6_VERSION": {
+      "description": "Specific version of s6 to install.",
+      "type": "string",
+      "default": "latest"
+    },
+    "S6_INSTALL_METHOD": {
+      "description": "How to install S6 ('libscript_native' or 'system').",
+      "type": "string",
+      "default": "system"
+    }
+  }
+}

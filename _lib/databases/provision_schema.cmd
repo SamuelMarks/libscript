@@ -61,7 +61,7 @@ set "CHARSET=utf8mb4"
 set "COLLATION=utf8mb4_unicode_ci"
 
 :: ## parse_args
-:: Executes parse_args functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_args
 if "%~1"=="" goto run_provision
 if "%~1"=="--engine" ( set "ENGINE=%~2" & shift & shift & goto parse_args )
@@ -78,7 +78,7 @@ shift
 goto parse_args
 
 :: ## run_provision
-:: Executes run_provision functionality.
+:: Performs the run_provision operation and updates component state.
 :run_provision
 if "%ENGINE%"=="" ( echo Error: Missing engine >&2 & exit /b 1 )
 if "%SCHEMA_NAME%"=="" ( echo Error: Missing schema >&2 & exit /b 1 )
@@ -95,7 +95,7 @@ echo Error: Unsupported engine "%ENGINE%" >&2
 exit /b 1
 
 :: ## do_mysql
-:: Executes do_mysql functionality.
+:: Performs the do_mysql operation and updates component state.
 :do_mysql
 if "%PORT%"=="" set "PORT=3306"
 if "%ADMIN_USER%"=="" set "ADMIN_USER=root"
@@ -117,7 +117,7 @@ del "%TMP_SQL%"
 exit /b 0
 
 :: ## do_postgres
-:: Executes do_postgres functionality.
+:: Performs the do_postgres operation and updates component state.
 :do_postgres
 if "%PORT%"=="" set "PORT=5432"
 if "%ADMIN_USER%"=="" set "ADMIN_USER=postgres"
@@ -132,7 +132,7 @@ set "PGPASSWORD="
 exit /b 0
 
 :: ## do_mongodb
-:: Executes do_mongodb functionality.
+:: Performs the do_mongodb operation and updates component state.
 :do_mongodb
 if "%PORT%"=="" set "PORT=27017"
 set "MONGO_ARGS=--host %HOST% --port %PORT%"
@@ -142,7 +142,7 @@ mongosh %MONGO_ARGS% --eval "%JS_CHECK%" --quiet
 exit /b 0
 
 :: ## do_sqlite
-:: Executes do_sqlite functionality.
+:: Performs the do_sqlite operation and updates component state.
 :do_sqlite
 :: schema_name is treated as the file path
 for %%I in ("%SCHEMA_NAME%") do set "DB_DIR=%%~dpI"

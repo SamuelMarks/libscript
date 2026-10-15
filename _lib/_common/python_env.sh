@@ -23,6 +23,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -52,10 +53,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 #
 # **Returns:**
 # Prints the path to the executable and returns 0 on success, or non-zero on failure.
-# ## libscript_python_resolve
 # Resolves the path to the python interpreter.
-# ## libscript_python_resolve
-# Executes the libscript_python_resolve logic.
 libscript_python_resolve() {
   _version="${1:-}"
   _backend="${LIBSCRIPT_PYTHON_BACKEND:-native}"
@@ -140,10 +138,7 @@ libscript_python_resolve() {
 #
 # **Returns:**
 # 0 on success, non-zero on failure.
-# ## libscript_python_venv
 # Creates a Python virtual environment.
-# ## libscript_python_venv
-# Executes the libscript_python_venv logic.
 libscript_python_venv() {
   if [ "$#" -lt 1 ]; then
     log_error "Usage: libscript_python_venv <target_dir> [python_version]"

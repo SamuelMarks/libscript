@@ -100,7 +100,7 @@ copy /y "%CONF_FILE%" "%NGINX_CONF_DIR%\sites-enabled\%DOMAIN%.conf" >nul
 echo Route updated: %DOMAIN%%LOCATION% -^> %DESTINATION%
 exit /b 0
 :: ## usage
-:: Executes usage functionality.
+:: Displays command-line usage instructions and available options.
 :usage
 echo Usage: libscript.cmd route nginx ^<version^> ^<domain^> ^<location^> ^<destination^> 1^>^&2
 exit /b 1

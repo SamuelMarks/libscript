@@ -13,6 +13,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -31,8 +32,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## show_help
 # Displays usage and option information.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [--help]"
   printf '%s\n' "Automates capturing screenshots of the Open edX MSI installer."
@@ -45,8 +44,6 @@ fi
 
 # ## main
 # Executes primary screenshot routine by delegating to capture_openedx_vagrant_screenshots.sh.
-# ## main
-# Executes the main logic.
 main() {
   "${SCRIPT_DIR}/capture_openedx_vagrant_screenshots.sh" "$@"
 }

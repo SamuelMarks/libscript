@@ -54,7 +54,7 @@ set "CMD=%~1"
 if not "%CMD%"=="" shift
 
 :: ## parse_args
-:: Executes parse_args functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_args
 if "%~1"=="" goto validate_args
 if /i "%~1"=="cdn" (
@@ -153,7 +153,7 @@ echo Error: Unknown argument '%~1' >&2
 exit /b 1
 
 :: ## validate_args
-:: Executes validate_args functionality.
+:: Validates required command-line arguments and configuration parameters.
 :validate_args
 if "%CMD%"=="" (
     echo Error: Missing command for cdn ^(create^|delete^|list^|invalidate^). >&2
@@ -178,7 +178,7 @@ echo Error: Unknown cdn command '%CMD%' >&2
 exit /b 1
 
 :: ## execute
-:: Executes execute functionality.
+:: Executes the primary orchestration workflow for this script.
 :execute
 if "%LIBSCRIPT_CLOUD%"=="" (
     echo Error: --cloud ^(or LIBSCRIPT_CLOUD^) is required. >&2

@@ -50,11 +50,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # create_server_block.cmd
-:::: Generates an Apache HTTPD VirtualHost block configuration on Windows.
-::
-:: ## Usage
-:: Set ENV_SCRIPT_FILE and execute create_server_block.cmd.
 
 if not "%ENV_SCRIPT_FILE%"=="" (
     if exist "%ENV_SCRIPT_FILE%" call "%ENV_SCRIPT_FILE%"

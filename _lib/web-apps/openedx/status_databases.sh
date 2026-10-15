@@ -14,8 +14,12 @@ if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
 else
-  THIS_FILE="$0"
+  THIS_FILE="${0}"
 fi
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
@@ -24,9 +28,8 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-
-SCRIPT_DIR="$(cd "$(dirname "${THIS_FILE}")" && pwd)"
-LIBSCRIPT_ROOT_DIR="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 if [ -z "${1-}" ]; then
     printf "[ERROR] Missing component argument.\n" >&2

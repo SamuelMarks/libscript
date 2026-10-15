@@ -1,0 +1,13 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "lfs-base",
+  "title": "LFS Base System",
+  "description": "Linux From Scratch (LFS) final chroot userland and base system synthesis.",
+  "category": "base-system",
+  "provides": ["lfs-base", "base-system"],
+  "conflicts": [],
+  "versions": ["latest", "12.2"],
+  "os_whitelist": ["linux"],
+  "os_blacklist": ["windows", "darwin", "sunos"],
+  "ports": []
+}

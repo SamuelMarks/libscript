@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -34,8 +35,6 @@ PARSE_SH="${LIBSCRIPT_ROOT_DIR}/_lib/databases/parse_connection_uri.sh"
 
 # ## parse_and_load
 # Parses URI into environment variables safely without dynamic eval.
-# ## parse_and_load
-# Executes the parse_and_load logic.
 parse_and_load() {
   _uri_raw="$1"
   _uri_out=$("$PARSE_SH" "$_uri_raw" --eval)

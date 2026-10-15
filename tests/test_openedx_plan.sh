@@ -16,6 +16,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -50,8 +51,6 @@ export LIBSCRIPT_TEST_TARGET="openedx"
 # ## run_step_0
 # Executes Step 0 of the Open edX test plan: Provision local Vagrant machine
 # and run basic sanity checks (SSH accessibility).
-# ## run_step_0
-# Executes the run_step_0 logic.
 run_step_0() {
   printf '=== Step 0: Test locally on Vagrant (%s) ===\n' "${TARGET_OS}"
   
@@ -81,8 +80,6 @@ run_step_0() {
 
 # ## run_step_1
 # Executes Step 1 of the Open edX test plan: Rsync libscript over and install Open edX.
-# ## run_step_1
-# Executes the run_step_1 logic.
 run_step_1() {
   printf '=== Step 1: Install Open edX via SSH (%s) ===\n' "${TARGET_OS}"
   
@@ -109,8 +106,6 @@ run_step_1() {
 
 # ## run_step_2
 # Executes Step 2 of the Open edX test plan: Show status & Component-Level Debugging.
-# ## run_step_2
-# Executes the run_step_2 logic.
 run_step_2() {
   printf '=== Step 2: Show status & Component-Level Debugging (%s) ===\n' "${TARGET_OS}"
   
@@ -159,8 +154,6 @@ run_step_2() {
 
 # ## run_step_3
 # Executes Step 3 of the Open edX test plan: Show logs.
-# ## run_step_3
-# Executes the run_step_3 logic.
 run_step_3() {
   printf '=== Step 3: Show logs (%s) ===\n' "${TARGET_OS}"
   

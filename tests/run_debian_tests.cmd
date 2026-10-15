@@ -56,12 +56,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-:: # run_debian_tests.cmd
-:::: Runs component installation and test verification sequentially for libscript
-:: components on a local Debian Linux Vagrant VM (`bento/debian-13`).
-::
-:: ## Usage
-:: tests\run_debian_tests.cmd [TARGETS...|all]
 
 set "THIS_DIR=%~dp0"
 if "%THIS_DIR:~-1%"=="" set "THIS_DIR=%THIS_DIR:~0,-1%"
@@ -82,7 +76,7 @@ set "TARGETS=%*"
 goto :run_tests
 
 :: ## usage_all
-:: Executes usage_all functionality.
+:: Displays command-line usage instructions and available options.
 :usage_all
 set "TARGETS=all"
 goto :run_tests

@@ -1,17 +1,19 @@
 #!/bin/sh
 # ## Overview
-# Action dispatcher for cloud core operations.
+# Installation and configuration entrypoint for the core component.
+# Delegates execution to the shared _lib/_common/setup_base.sh module.
 #
 # ## Usage
-# Evaluates `$ACTION` (e.g. `list-managed`, `diff`, `backup`, `restore`, or provider aliases) and dispatches execution.
-
+# ./setup.sh [action]
 
 set -feu
+
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -25,90 +27,10 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
-
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-action="${ACTION:-}"
-
-# Load JSON variables for tags/filtering if present
-export FILTER_TAG=""
-for arg in "$@"; do
-  case "$arg" in
-    --tags=*) export FILTER_TAG="${arg#*=}" ;;
-    *=*) export FILTER_TAG="$arg" ;;
-  esac
-done
-
-# ## handle_list_managed
-# Executes handle_list_managed functionality.
-# ## handle_list_managed
-# Executes the handle_list_managed logic.
-handle_list_managed() {
-  printf '%s\n' "--- AWS Resources"
-  if command -v aws >/dev/null 2>&1; then
-    # We will implement actual listing logic later. For now mock it to pass tests.
-    printf '%s\n' "AWS Managed Resource Listing Placeholder"
-  fi
-  printf '%s\n' "--- Azure Resources"
-  if command -v az >/dev/null 2>&1; then
-    printf '%s\n' "Azure Managed Resource Listing Placeholder"
-  fi
-  printf '%s\n' "--- GCP Resources"
-  if command -v gcloud >/dev/null 2>&1; then
-    printf '%s\n' "GCP Managed Resource Listing Placeholder"
-  fi
-}
-
-# ## handle_diff
-# Executes handle_diff functionality.
-# ## handle_diff
-# Executes the handle_diff logic.
-handle_diff() {
-  printf '%s\n' "Comparing local .libscript_state.json with cloud provider reality..."
-  if [ ! -f ".libscript_state.json" ]; then
-    printf '%s\n' "No local .libscript_state.json found. All discovered resources are untracked."
-  fi
-  printf '%s\n' "--- AWS Drift"
-  printf '%s\n' "AWS Diff Placeholder"
-  printf '%s\n' "--- Azure Drift"
-  printf '%s\n' "Azure Diff Placeholder"
-  printf '%s\n' "--- GCP Drift"
-  printf '%s\n' "GCP Diff Placeholder"
-}
-
-case "$action" in
-  list-managed|status)
-    handle_list_managed
-    exit 0
-    ;;
-  diff)
-    handle_diff
-    exit 0
-    ;;
-  backup)
-    exec "$SCRIPT_DIR/backup_cloud.sh" "$@"
-    ;;
-  restore)
-    exec "$SCRIPT_DIR/restore_cloud.sh" "$@"
-    ;;
-  aws|azure|gcp)
-    PROVIDER="$action"
-    CLI_PATH="$LIBSCRIPT_ROOT_DIR/_lib/cloud-providers/$PROVIDER/cli.sh"
-    if [ ! -f "$CLI_PATH" ]; then
-      printf '%s\n' "Error: Provider $PROVIDER not supported or installed." >&2
-      exit 1
-    fi
-    exec "$CLI_PATH" "$@"
-    ;;
-  cleanup)
-    printf '%s\n' "Cleaning up all cloud resources..."
-    if command -v aws >/dev/null 2>&1; then printf '%s\n' "Cleaning up aws..."; fi
-    if command -v az >/dev/null 2>&1; then printf '%s\n' "Cleaning up azure..."; fi
-    if command -v gcloud >/dev/null 2>&1; then printf '%s\n' "Cleaning up gcp..."; fi
-    exit 0
-    ;;
-  *)
-    # Default wrapper behavior (no-op/pass-through)
-    ;;
-esac
+SCRIPT_NAME="${SCRIPT_DIR}/../../_common/setup_base.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"

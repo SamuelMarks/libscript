@@ -87,7 +87,7 @@ goto :action_install
 goto :action_install
 
 :: ## action_ls
-:: Executes action_ls functionality.
+:: Lists all locally installed versions of the component under LIBSCRIPT_HOME.
 :action_ls
 if "%JETSTREAM_INSTALL_METHOD%"=="mise" ( mise ls jetstream & exit /b 0 )
 if "%JETSTREAM_INSTALL_METHOD%"=="asdf" ( asdf list jetstream & exit /b 0 )
@@ -98,7 +98,7 @@ if exist "%LIBSCRIPT_HOME%\jetstream" ( dir /b "%LIBSCRIPT_HOME%\jetstream" )
 exit /b 0
 
 :: ## action_ls_remote
-:: Executes action_ls_remote functionality.
+:: Lists upstream release versions available for download.
 :action_ls_remote
 if "%JETSTREAM_INSTALL_METHOD%"=="mise" ( mise ls-remote jetstream & exit /b 0 )
 if "%JETSTREAM_INSTALL_METHOD%"=="asdf" ( asdf list all jetstream & exit /b 0 )
@@ -113,7 +113,7 @@ if not "%JETSTREAM_RELEASES_URL%"=="" (
 exit /b 0
 
 :: ## action_use
-:: Executes action_use functionality.
+:: Activates the specified component version by updating the active symlink or junction.
 :action_use
 if "%JETSTREAM_INSTALL_METHOD%"=="mise" ( mise use "jetstream@%JETSTREAM_VERSION%" & exit /b 0 )
 if "%JETSTREAM_INSTALL_METHOD%"=="asdf" ( asdf global jetstream "%JETSTREAM_VERSION%" & exit /b 0 )
@@ -138,13 +138,13 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 exit /b 0
 
 :: ## action_download
-:: Executes action_download functionality.
+:: Downloads the jetstream release archive into the local download cache.
 :action_download
 if "%JETSTREAM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading jetstream %JETSTREAM_VERSION% to %DOWNLOAD_DIR%\jetstream...
     if not exist "%DOWNLOAD_DIR%\jetstream" mkdir "%DOWNLOAD_DIR%\jetstream"
     if not "%JETSTREAM_DOWNLOAD_URL%"=="" (
-        curl -sSL "%JETSTREAM_DOWNLOAD_URL%" -o "%DOWNLOAD_DIR%\jetstream\jetstream-%JETSTREAM_VERSION%.zip"
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "%JETSTREAM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\jetstream\jetstream-%JETSTREAM_VERSION%.zip"
     ) else (
         echo JETSTREAM_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -152,10 +152,10 @@ if "%JETSTREAM_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_install
-:: Executes action_install functionality.
+:: Installs the requested jetstream version using the configured installation method.
 :action_install
 if "%JETSTREAM_INSTALL_METHOD%"=="system" (
-    winget install jetstream --accept-package-agreements --accept-source-agreements
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends jetstream
     exit /b !errorlevel!
 )
 if "%JETSTREAM_INSTALL_METHOD%"=="mise" ( mise install "jetstream@%JETSTREAM_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\jetstream\jetstream-%JETSTREAM_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%JETSTREAM_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        curl -sSL "%JETSTREAM_DOWNLOAD_URL%" -o "%TEMP%\jetstream.zip"
+        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "%JETSTREAM_DOWNLOAD_URL%" "%TEMP%\jetstream.zip"
         tar -xf "%TEMP%\jetstream.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for jetstream.
@@ -192,7 +192,7 @@ if not "%TARGET_DIR%"=="%ALIAS_DIR%" (
 exit /b 0
 
 :: ## action_service
-:: Executes action_service functionality.
+:: Routes service daemon control actions (start, stop, restart, status) to the service manager.
 :action_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -213,7 +213,7 @@ if "%JETSTREAM_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_install_service
-:: Executes action_install_service functionality.
+:: Registers and configures the component as a persistent system service.
 :action_install_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (
@@ -234,7 +234,7 @@ if "%JETSTREAM_INSTALL_METHOD%"=="libscript_native" (
 exit /b 0
 
 :: ## action_uninstall_service
-:: Executes action_uninstall_service functionality.
+:: Stops and removes the registered system service for the component.
 :action_uninstall_service
 if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     if "%PACKAGE_NAME%"=="" (

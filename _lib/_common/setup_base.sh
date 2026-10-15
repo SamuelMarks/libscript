@@ -15,6 +15,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -57,8 +58,6 @@ resolve_component_paths
 
 # ## libscript_install_binary
 # Helper for installing a binary to a local or system bin directory
-# ## libscript_install_binary
-# Executes the libscript_install_binary logic.
 libscript_install_binary() {
   src_path="$1"
   bin_name="$2"

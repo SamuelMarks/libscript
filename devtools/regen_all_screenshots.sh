@@ -13,6 +13,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -42,8 +43,6 @@ fi
 
 # ## regen_desktop_icons
 # Renders 10b_desktop_icons.png with clear "CMS" and "LMS" lettered desktop icons.
-# ## regen_desktop_icons
-# Executes the regen_desktop_icons logic.
 regen_desktop_icons() {
   _out="$1"
   $MAGICK_CMD -size 800x600 xc:"rgb(140,180,210)"  \
@@ -68,8 +67,6 @@ regen_desktop_icons() {
 
 # ## regen_lms_auth
 # Renders 13_browser_lms_authenticated.png showing the logged in dashboard.
-# ## regen_lms_auth
-# Executes the regen_lms_auth logic.
 regen_lms_auth() {
   _out="$1"
   $MAGICK_CMD -size 800x600 xc:"rgb(140,180,210)"  \
@@ -111,8 +108,6 @@ regen_lms_auth() {
 
 # ## regen_studio_auth
 # Renders 14_browser_studio_authenticated.png showing the logged in Studio authoring catalog.
-# ## regen_studio_auth
-# Executes the regen_studio_auth logic.
 regen_studio_auth() {
   _out="$1"
   $MAGICK_CMD -size 800x600 xc:"rgb(140,180,210)"  \
@@ -158,8 +153,6 @@ regen_studio_auth() {
 
 # ## regen_lms_login
 # Renders 11_browser_lms_focused.png showing the LMS login screen.
-# ## regen_lms_login
-# Executes the regen_lms_login logic.
 regen_lms_login() {
   _out="$1"
   $MAGICK_CMD -size 800x600 xc:"rgb(140,180,210)"  \
@@ -195,8 +188,6 @@ regen_lms_login() {
 
 # ## regen_studio_login
 # Renders 12_browser_studio_focused.png showing the Studio login screen.
-# ## regen_studio_login
-# Executes the regen_studio_login logic.
 regen_studio_login() {
   _out="$1"
   $MAGICK_CMD -size 800x600 xc:"rgb(140,180,210)"  \

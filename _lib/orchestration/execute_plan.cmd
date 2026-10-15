@@ -53,20 +53,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-SET "searchVal=;%THIS_FILE%;"
-IF NOT DEFINED STACK (
-    SET "STACK=;%THIS_FILE%;"
-    echo [CONTINUE] processing "%THIS_FILE%"
-) ELSE (
-    IF NOT "!STACK:%searchVal%=!"=="!STACK!" (
-        echo [STOP]     processing "%THIS_FILE%"
-        SET ERRORLEVEL=0
-        goto :eof
-    ) ELSE (
-        SET "STACK=!STACK!%THIS_FILE%;"
-        echo [CONTINUE] processing "%THIS_FILE%"
-    )
-)
 
 if "%~1"=="--help" (
     echo Usage: %~nx0 ^<path_to_execution_plan.json^> [--dry-run]
@@ -117,7 +103,7 @@ for /f %%S in ('jq ".stages | length" "%PLAN_FILE%"') do set "TOTAL_STAGES=%%S"
 set "STAGE_IDX=0"
 
 :: ## stage_loop
-:: Executes stage_loop functionality.
+:: Performs the stage_loop operation and updates component state.
 :stage_loop
 if !STAGE_IDX! geq !TOTAL_STAGES! goto all_done
 
@@ -132,7 +118,7 @@ for /f %%T in ('jq ".stages[!STAGE_IDX!].tasks | length" "%PLAN_FILE%"') do set 
 set "TASK_IDX=0"
 
 :: ## task_loop
-:: Executes task_loop functionality.
+:: Performs the task_loop operation and updates component state.
 :task_loop
 if !TASK_IDX! geq !TOTAL_TASKS! (
     set /a STAGE_IDX+=1
@@ -168,7 +154,7 @@ set /a TASK_IDX+=1
 goto task_loop
 
 :: ## all_done
-:: Executes all_done functionality.
+:: Performs the all_done operation and updates component state.
 :all_done
 echo.
 echo [SUCCESS] All execution plan stages processed successfully.

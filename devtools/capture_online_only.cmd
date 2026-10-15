@@ -6,6 +6,7 @@
 :: ## Usage
 ::   call script.cmd
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -72,7 +73,6 @@ goto :main
 :: ## main
 :: Executes primary orchestration routine.
 :main
-setlocal EnableDelayedExpansion
 set "REPO_ROOT=%SCRIPT_DIR%.."
 
 where powershell >nul 2>&1

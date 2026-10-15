@@ -63,7 +63,7 @@ shift
 set "BACKUP_ID=latest"
 
 :: ## parse_args
-:: Executes parse_args functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_args
 if "%~1"=="" goto :args_done
 if /i "%~1"=="--from-backup" (
@@ -75,7 +75,7 @@ shift
 goto :parse_args
 
 :: ## args_done
-:: Executes args_done functionality.
+:: Continues execution after command-line argument parsing completes.
 :args_done
 
 echo [RESTORE] Starting restoration ^& reprovisioning for node: !NODE!

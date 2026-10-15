@@ -12,6 +12,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -25,6 +26,8 @@ case "${STACK+x}" in
   *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}:"
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 if [ -f /usr/lib/libasound.so ] || [ -f /usr/lib/libasound.so.2 ] || [ -f /usr/lib64/libasound.so.2 ] || [ -f /lib/libasound.so.2 ] || [ -f /usr/include/alsa/asoundlib.h ] || [ -f /usr/local/lib/libasound.so ] || [ -f /usr/local/lib/libasound.so.2 ] || [ -f /usr/local/include/alsa/asoundlib.h ]; then
   exit 0

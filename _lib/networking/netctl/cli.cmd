@@ -60,11 +60,20 @@ if "%~1"=="" goto usage
 set SINGULAR_MODE=0
 set EMIT_FORMAT=
 
+if /I "%~1"=="download" goto :noop
 if /I "%~1"=="install" goto :noop
+if /I "%~1"=="ls" goto :noop
+if /I "%~1"=="ls-remote" goto :noop
 if /I "%~1"=="use" goto :noop
+if /I "%~1"=="start" goto :noop
+if /I "%~1"=="stop" goto :noop
+if /I "%~1"=="restart" goto :noop
+if /I "%~1"=="install-service" goto :noop
+if /I "%~1"=="uninstall-service" goto :noop
 if /I "%~1"=="env" goto :noop
 if /I "%~1"=="logs" goto :noop
 if /I "%~1"=="status" goto :noop
+if /I "%~1"=="health" goto :noop
 if /I "%~1"=="uninstall" (
     call "%NETCTL_DIR%\uninstall.cmd"
     exit /b %ERRORLEVEL%
@@ -109,7 +118,7 @@ if "!SINGULAR_MODE!"=="1" (
     call "%NETCTL_DIR%lib\state.cmd" init
     
 :: ## loop
-:: Executes loop functionality.
+:: Iterates through singular-mode CLI flags to populate temporary netctl state.
     :loop
     if "%~1"=="" goto done_loop
     if /I "%~1"=="--listen" (
@@ -149,7 +158,7 @@ if "!SINGULAR_MODE!"=="1" (
     goto usage
 
 :: ## done_loop
-:: Executes done_loop functionality.
+:: Emits the requested reverse-proxy configuration and removes temporary state files.
     :done_loop
     if not "!EMIT_FORMAT!"=="" (
         call "%NETCTL_DIR%lib\!EMIT_FORMAT!.cmd"
@@ -159,7 +168,7 @@ if "!SINGULAR_MODE!"=="1" (
 exit /b 0
 
 :: ## usage
-:: Executes usage functionality.
+:: Displays command-line usage instructions for netctl on Windows.
 :usage
 echo netctl - Singular and Additive network config generator
 echo.
@@ -184,7 +193,7 @@ echo   --rewrite ^<path^> ^<pattern^>     Add a rewrite rule
 echo   --emit ^<format^>                Emit to specified format and exit
 exit /b 1
 :: ## noop
-:: Executes noop functionality.
+:: Handles standard Version Manager Contract lifecycle verbs that are no-ops for netctl.
 :noop
 echo netctl is a native shell module. No installation or daemon management required.
 exit /b 0

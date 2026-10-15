@@ -103,20 +103,20 @@ if "%CMD%"=="import" goto do_import
 exit /b %ERRORLEVEL%
 
 :: ## do_interactive
-:: Executes do_interactive functionality.
+:: Performs the do_interactive operation and updates component state.
 :do_interactive
 %CLIENT% -h %DB_HOST% -P %DB_PORT% -u %DB_USER% %DB_NAME%
 exit /b %ERRORLEVEL%
 
 :: ## do_query
-:: Executes do_query functionality.
+:: Performs the do_query operation and updates component state.
 :do_query
 shift
 %CLIENT% -h %DB_HOST% -P %DB_PORT% -u %DB_USER% -e "%~1" %DB_NAME%
 exit /b %ERRORLEVEL%
 
 :: ## do_export
-:: Executes do_export functionality.
+:: Performs the do_export operation and updates component state.
 :do_export
 shift
 set "OUT_FILE=%~1"
@@ -126,7 +126,7 @@ echo [OK] WordPress database exported to %OUT_FILE%
 exit /b %ERRORLEVEL%
 
 :: ## do_import
-:: Executes do_import functionality.
+:: Performs the do_import operation and updates component state.
 :do_import
 shift
 set "IN_FILE=%~1"
@@ -139,7 +139,7 @@ echo [OK] WordPress database imported from %IN_FILE%
 exit /b %ERRORLEVEL%
 
 :: ## show_help
-:: Executes show_help functionality.
+:: Displays command-line usage instructions and available options.
 :show_help
 echo WordPress Database Console on Windows
 echo.

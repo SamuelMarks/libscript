@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "tcc",
+  "title": "Tiny C Compiler (TCC)",
+  "description": "Standalone version manager and fast source builder for Fabrice Bellard's Tiny C Compiler (TCC).",
+  "category": "languages",
+  "provides": ["compiler", "c", "tcc"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": []
+}

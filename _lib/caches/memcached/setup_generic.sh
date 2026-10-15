@@ -11,6 +11,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -48,8 +49,6 @@ VERSION="${MEMCACHED_VERSION:-latest}"
 
 # ## resolve_exact_version
 # Resolves the exact numeric version from version aliases such as latest or stable.
-# ## resolve_exact_version
-# Executes the resolve_exact_version logic.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
     _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote memcached 2>/dev/null | tail -n 1)

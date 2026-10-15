@@ -14,7 +14,6 @@ setlocal EnableDelayedExpansion
 :: call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\cli.cmd" :parse_args %*
 :: ```
 
-setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
@@ -75,7 +74,7 @@ echo Usage: %~n0 [command] [options]
 exit /b 0
 
 :: ## parse_args
-:: Executes parse_args functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_args
 set "USE_DEFAULT_TAGS=true"
 set "CUSTOM_TAGS="
@@ -84,7 +83,7 @@ set "DRY_RUN=false"
 set "ARGS="
 
 :: ## parse_loop
-:: Executes parse_loop functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_loop
 if "%~2"=="" (
     REM Export variables to parent context before exiting

@@ -62,7 +62,7 @@ if not exist "%BACKUP_DIR%" mkdir "%BACKUP_DIR%"
 
 set "OUT_FILE="
 :: ## parse_args
-:: Executes parse_args functionality.
+:: Parses command-line arguments and populates configuration variables.
 :parse_args
 if "%~1"=="" goto run_backup
 if /I "%~1"=="create" ( shift & goto parse_args )
@@ -72,7 +72,7 @@ shift
 goto parse_args
 
 :: ## run_backup
-:: Executes run_backup functionality.
+:: Performs the run_backup operation and updates component state.
 :run_backup
 if "%OUT_FILE%"=="" (
     for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value 2^>nul') do set "DT=%%I"

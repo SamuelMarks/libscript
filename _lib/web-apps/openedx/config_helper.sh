@@ -16,6 +16,7 @@ if [ "${SCRIPT_NAME-}" ]; then
 elif [ "${BASH_SOURCE-}" ]; then
   THIS_FILE="${BASH_SOURCE}"
 elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
   # shellcheck disable=SC2296
   THIS_FILE="${(%):-%x}"
 else
@@ -34,8 +35,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## show_help
 # Displays usage instructions.
-# ## show_help
-# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") get <conf_file> <key>"
   printf '%s\n' "       $(basename "$THIS_FILE") set <conf_file1> <conf_file2> <key> <val>"
@@ -50,8 +49,6 @@ show_help() {
 # Inputs:
 #   $1 - Configuration file path
 #   $2 - Dot-separated key path
-# ## do_get
-# Executes the do_get logic.
 do_get() {
   _conf_file="$1"
   _key="$2"
@@ -106,8 +103,6 @@ do_get() {
 #   $2 - Secondary configuration file
 #   $3 - Dot-separated key path
 #   $4 - New property value
-# ## do_set
-# Executes the do_set logic.
 do_set() {
   _cf1="$1"
   _cf2="$2"
@@ -163,8 +158,6 @@ do_set() {
 # Inputs:
 #   $1 - Primary configuration file
 #   $2 - Secondary configuration file
-# ## do_generate
-# Executes the do_generate logic.
 do_generate() {
   _cf1="$1"
   _cf2="$2"
@@ -219,8 +212,6 @@ JSONEOF
 # Inputs:
 #   $1 - Configuration file path
 #   $2 - JSON schema file path
-# ## do_validate
-# Executes the do_validate logic.
 do_validate() {
   _conf_file="$1"
   _schema_file="$2"
@@ -247,8 +238,6 @@ do_validate() {
 
 # ## main
 # Main entrypoint dispatching commands.
-# ## main
-# Executes the main logic.
 main() {
   if [ $# -lt 1 ]; then
     show_help
