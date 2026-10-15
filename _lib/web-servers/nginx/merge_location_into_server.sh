@@ -29,6 +29,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## merge_location_into_server
 # Executes merge_location_into_server functionality.
+# ## merge_location_into_server
+# Executes the merge_location_into_server logic.
 merge_location_into_server() {
   EXISTING_CONFIG="$1"
   NEW_LOCATION_BLOCK="$2"

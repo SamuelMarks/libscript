@@ -20,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -51,10 +51,43 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-cd "%LIBSCRIPT_ROOT_DIR%\vagrant\windows-11"
+call :build_msirs
+exit /b 0
+
+:: ## build_msirs
+:: Orchestrates the building of the nodejs MSI artifact using the compiled msi-rs toolchain.
+:build_msirs
+set COMPONENT=nodejs
+set VERSION=20.17.0
+set "STAGE_ROOT=%LIBSCRIPT_ROOT_DIR%\tmp\stage_component_%COMPONENT%_offline"
+
+if not exist "%LIBSCRIPT_ROOT_DIR%\cache\runtimes" mkdir "%LIBSCRIPT_ROOT_DIR%\cache\runtimes"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "https://nodejs.org/dist/v%VERSION%/node-v%VERSION%-win-x64.zip" "%LIBSCRIPT_ROOT_DIR%\cache\runtimes\node-v%VERSION%-win-x64.zip"
+
+if exist "%STAGE_ROOT%" rmdir /s /q "%STAGE_ROOT%"
+if not exist "%STAGE_ROOT%\bin" mkdir "%STAGE_ROOT%\bin"
+tar -xf "%LIBSCRIPT_ROOT_DIR%\cache\runtimes\node-v%VERSION%-win-x64.zip" -C "%STAGE_ROOT%"
+
+for /d %%I in ("%STAGE_ROOT%\node-*") do (
+    xcopy /s /e /y "%%I\*" "%STAGE_ROOT%\"
+    rmdir /s /q "%%I"
+)
+
+if exist "%STAGE_ROOT%\node.exe" if not exist "%STAGE_ROOT%\bin\node.exe" (
+    copy /y "%STAGE_ROOT%\node.exe" "%STAGE_ROOT%\bin\node.exe"
+)
+
+set "MAIN_WXS=%STAGE_ROOT%\%COMPONENT%_offline_main.wxs"
+set "PAYLOAD_WXS=%STAGE_ROOT%\%COMPONENT%_offline_payload.wxs"
+
+call "%LIBSCRIPT_ROOT_DIR%\packaging\template_component_msi.cmd" --component "%COMPONENT%" --version "%VERSION%" --variant offline --out "%MAIN_WXS%"
+call "%LIBSCRIPT_ROOT_DIR%\packaging\harvest_payload.cmd" --source-dir "%STAGE_ROOT%" --wix-fragment "%PAYLOAD_WXS%" --component-group PayloadComponents --directory-id INSTALLFOLDER
+
+echo [INFO] Syncing files to guest...
+cd /d "%LIBSCRIPT_ROOT_DIR%\vagrant\windows-11"
 call vagrant rsync
 for /f "tokens=2" %%i in ('vagrant ssh-config ^| findstr /C:"Port "') do set PORT=%%i
-cd "%SCRIPT_DIR%"
+cd /d "%SCRIPT_DIR%"
 
 set VM_IP=127.0.0.1
 set "KEY=%USERPROFILE%\.vagrant.d\insecure_private_key"
@@ -64,19 +97,19 @@ set SCP_CMD=scp -P %PORT% -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev
 echo [INFO] Building MSI via msi-rs on guest...
 (
 echo $ErrorActionPreference = 'Stop'
-echo $env:PATH = "C:\msi-rs\target\release;" + $env:PATH
 echo Set-Location C:\libscript\tmp\stage_component_nodejs_offline
-echo C:\msi-rs\target\release\candle.exe -nologo -arch x64 -out nodejs_offline_main.wixobj nodejs_offline_main.wxs
-echo C:\msi-rs\target\release\candle.exe -nologo -arch x64 -out nodejs_offline_payload.wixobj nodejs_offline_payload.wxs
-echo C:\msi-rs\target\release\light.exe -nologo -sval -ext WixUIExtension -out nodejs-msi-rs.msi nodejs_offline_main.wixobj nodejs_offline_payload.wixobj
-echo if (-not (Test-Path nodejs-msi-rs.msi^)^) {
-echo   Write-Error "Failed to build nodejs-msi-rs.msi"
+echo ^& "C:\msi-rs\target\release\candle.exe" -nologo -arch x64 -out nodejs_offline_main.wixobj nodejs_offline_main.wxs
+echo ^& "C:\msi-rs\target\release\candle.exe" -nologo -arch x64 -out nodejs_offline_payload.wixobj nodejs_offline_payload.wxs
+echo ^& "C:\msi-rs\target\release\light.exe" -nologo -sval -ext WixUIExtension -out nodejs-msirs.msi nodejs_offline_main.wixobj nodejs_offline_payload.wixobj
+echo if (-not (Test-Path nodejs-msirs.msi^^)^^) {
+echo   Write-Error "Failed to build nodejs-msirs.msi"
 echo   exit 1
 echo } else {
-echo   Write-Host "Successfully built nodejs-msi-rs.msi"
-echo   Copy-Item nodejs-msi-rs.msi -Destination C:\libscript\tmp\nodejs-msi-rs.msi -Force
+echo   Write-Host "Successfully built nodejs-msirs.msi"
+echo   Copy-Item nodejs-msirs.msi -Destination C:\libscript\tmp\nodejs-msirs.msi -Force
 echo }
 ) > "%LIBSCRIPT_ROOT_DIR%\tmp\build_msirs.ps1"
 
 %SCP_CMD% "%LIBSCRIPT_ROOT_DIR%\tmp\build_msirs.ps1" vagrant@%VM_IP%:C:/build_msirs.ps1
 %SSH_CMD% "powershell -ExecutionPolicy Bypass -File C:\build_msirs.ps1"
+exit /b 0

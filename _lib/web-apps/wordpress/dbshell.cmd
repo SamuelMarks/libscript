@@ -22,7 +22,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -102,15 +102,21 @@ if "%CMD%"=="import" goto do_import
 %CLIENT% -h %DB_HOST% -P %DB_PORT% -u %DB_USER% %DB_NAME% %*
 exit /b %ERRORLEVEL%
 
+:: ## do_interactive
+:: Executes do_interactive functionality.
 :do_interactive
 %CLIENT% -h %DB_HOST% -P %DB_PORT% -u %DB_USER% %DB_NAME%
 exit /b %ERRORLEVEL%
 
+:: ## do_query
+:: Executes do_query functionality.
 :do_query
 shift
 %CLIENT% -h %DB_HOST% -P %DB_PORT% -u %DB_USER% -e "%~1" %DB_NAME%
 exit /b %ERRORLEVEL%
 
+:: ## do_export
+:: Executes do_export functionality.
 :do_export
 shift
 set "OUT_FILE=%~1"
@@ -119,6 +125,8 @@ mysqldump -h %DB_HOST% -P %DB_PORT% -u %DB_USER% --single-transaction --quick %D
 echo [OK] WordPress database exported to %OUT_FILE%
 exit /b %ERRORLEVEL%
 
+:: ## do_import
+:: Executes do_import functionality.
 :do_import
 shift
 set "IN_FILE=%~1"
@@ -130,6 +138,8 @@ if "%IN_FILE%"=="" (
 echo [OK] WordPress database imported from %IN_FILE%
 exit /b %ERRORLEVEL%
 
+:: ## show_help
+:: Executes show_help functionality.
 :show_help
 echo WordPress Database Console on Windows
 echo.

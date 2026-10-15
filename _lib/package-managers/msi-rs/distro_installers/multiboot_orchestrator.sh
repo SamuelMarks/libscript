@@ -35,43 +35,32 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 # ## show_help
 # Displays usage instructions and supported parameters.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") <disk_dev> [options...]"
-  printf '%s
-' "Concurrently deploys Linux, FreeBSD, and illumos to separate partitions with master GRUB2."
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") <disk_dev> [options...]"
+  printf '%s\n' "Concurrently deploys Linux, FreeBSD, and illumos to separate partitions with master GRUB2."
   printf '
 '
-  printf '%s
-' "Options:"
-  printf '%s
-' "  --linux-part <dev>      Dedicated Linux partition path"
-  printf '%s
-' "  --freebsd-part <dev>    Dedicated FreeBSD partition path"
-  printf '%s
-' "  --illumos-part <dev>    Dedicated illumos partition path"
-  printf '%s
-' "  --esp-part <dev>        Shared EFI System Partition path"
-  printf '%s
-' "  --default-os <name>     Default boot entry: debian, freebsd, omnios (default: debian)"
-  printf '%s
-' "  --timeout <sec>         Bootloader menu timeout in seconds (default: 5)"
-  printf '%s
-' "  --help, -h, /?, -?      Show this help message and exit."
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --linux-part <dev>      Dedicated Linux partition path"
+  printf '%s\n' "  --freebsd-part <dev>    Dedicated FreeBSD partition path"
+  printf '%s\n' "  --illumos-part <dev>    Dedicated illumos partition path"
+  printf '%s\n' "  --esp-part <dev>        Shared EFI System Partition path"
+  printf '%s\n' "  --default-os <name>     Default boot entry: debian, freebsd, omnios (default: debian)"
+  printf '%s\n' "  --timeout <sec>         Bootloader menu timeout in seconds (default: 5)"
+  printf '%s\n' "  --help, -h, /?, -?      Show this help message and exit."
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
@@ -81,8 +70,7 @@ fi
 
 DISK_DEV="${1:-}"
 if [ -z "$DISK_DEV" ]; then
-  printf '[ERROR] Disk device path is required.
-' >&2
+  printf '[ERROR] Disk device path is required.\n' >&2
   show_help
   exit 1
 fi
@@ -125,34 +113,25 @@ done
 
 STAMP_FILE="/mnt/target/.multiboot_complete.stamp"
 if [ -f "$STAMP_FILE" ]; then
-  printf '[INFO] Multiboot co-installation already completed on %s. Skipping.
-' "$DISK_DEV"
+  printf '[INFO] Multiboot co-installation already completed on %s. Skipping.\n' "$DISK_DEV"
   exit 0
 fi
 
-printf '[MULTIBOOT] Starting Multiboot Orchestration on %s...
-' "$DISK_DEV"
-printf '            Linux Partition:   %s
-' "$LINUX_PART"
-printf '            FreeBSD Partition: %s
-' "$FREEBSD_PART"
-printf '            illumos Partition: %s
-' "$ILLUMOS_PART"
-printf '            Shared ESP:        %s
-' "$ESP_PART"
+printf '[MULTIBOOT] Starting Multiboot Orchestration on %s...\n' "$DISK_DEV"
+printf '            Linux Partition:   %s\n' "$LINUX_PART"
+printf '            FreeBSD Partition: %s\n' "$FREEBSD_PART"
+printf '            illumos Partition: %s\n' "$ILLUMOS_PART"
+printf '            Shared ESP:        %s\n' "$ESP_PART"
 
 # 1. Format target filesystems
 if [ -x "${REPO_ROOT}/_lib/storage/format.sh" ]; then
-  printf '[MULTIBOOT] Formatting Linux partition (%s) as ext4...
-' "$LINUX_PART"
+  printf '[MULTIBOOT] Formatting Linux partition (%s) as ext4...\n' "$LINUX_PART"
   "${REPO_ROOT}/_lib/storage/format.sh" "$LINUX_PART" "ext4" "linuxroot" 2>/dev/null || true
 
-  printf '[MULTIBOOT] Formatting FreeBSD partition (%s) as UFS2/ZFS...
-' "$FREEBSD_PART"
+  printf '[MULTIBOOT] Formatting FreeBSD partition (%s) as UFS2/ZFS...\n' "$FREEBSD_PART"
   "${REPO_ROOT}/_lib/storage/format.sh" "$FREEBSD_PART" "ufs2" "freebsdroot" 2>/dev/null || true
 
-  printf '[MULTIBOOT] Initializing illumos ZFS root pool on %s...
-' "$ILLUMOS_PART"
+  printf '[MULTIBOOT] Initializing illumos ZFS root pool on %s...\n' "$ILLUMOS_PART"
   "${REPO_ROOT}/_lib/storage/format.sh" "$ILLUMOS_PART" "zfs" "rpool" 2>/dev/null || true
 fi
 
@@ -164,8 +143,7 @@ TARGET_ILLUMOS="/mnt/target/illumos"
 mkdir -p "$TARGET_ESP" "$TARGET_LINUX" "$TARGET_FREEBSD" "$TARGET_ILLUMOS"
 
 # 3. Concurrent Multi-OS Base Deployment
-printf '[MULTIBOOT] Deploying Linux, FreeBSD, and illumos userlands concurrently...
-'
+printf '[MULTIBOOT] Deploying Linux, FreeBSD, and illumos userlands concurrently...\n'
 
 # Job 1: Linux Userland
 (
@@ -194,12 +172,10 @@ PID_ILLUMOS=$!
 wait "$PID_LINUX"
 wait "$PID_FREEBSD"
 wait "$PID_ILLUMOS"
-printf '[OK] All 3 target operating systems successfully unpacked and staged.
-'
+printf '[OK] All 3 target operating systems successfully unpacked and staged.\n'
 
 # 4. Shared Bootloader & UEFI ESP Multi-Vendor Staging
-printf '[MULTIBOOT] Configuring Shared EFI System Partition and Master GRUB2...
-'
+printf '[MULTIBOOT] Configuring Shared EFI System Partition and Master GRUB2...\n'
 mkdir -p "${TARGET_ESP}/EFI/libscript"
 mkdir -p "${TARGET_ESP}/EFI/freebsd"
 mkdir -p "${TARGET_ESP}/EFI/illumos"
@@ -277,6 +253,5 @@ cp -f "${TARGET_ESP}/boot/grub/grub.cfg" "${TARGET_LINUX}/boot/grub/grub.cfg" 2>
 mkdir -p "$(dirname "$STAMP_FILE")"
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "$STAMP_FILE"
 
-printf '[PASS] Multiboot Co-Installation completed successfully across Linux, FreeBSD, and illumos.
-'
+printf '[PASS] Multiboot Co-Installation completed successfully across Linux, FreeBSD, and illumos.\n'
 exit 0

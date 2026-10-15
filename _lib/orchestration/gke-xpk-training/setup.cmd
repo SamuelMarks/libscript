@@ -2,12 +2,12 @@
 :: # setup.cmd
 ::
 :: ## Overview
-:: Orchestrates the setup and installation process for the GKE XPK machine learning training stack stack.
-:: 
+:: Backward-compatible forwarding shim for GKE XPK training setup on Windows.
+::
 :: ## Usage
-:: Execute this script to install and configure gke-xpk-training on the local system.
+:: _lib\orchestration\gke-xpk-training\setup.cmd [args]
 
-setlocal enabledelayedexpansion
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
@@ -20,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -51,37 +51,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if "%~1"=="--help" goto :help
-if "%~1"=="-h" goto :help
-
-call "%~dp0..\..\..\_lib\cloud-providers\gcp\cli\setup.cmd"
-call "%~dp0..\..\..\_lib\languages\python\setup.cmd"
-call "%~dp0..\..\..\_lib\orchestration\kubernetes\kubectl\setup.cmd"
-call "%~dp0..\..\..\_lib\toolchains\xpk\setup.cmd"
-
-if "%XPK_CLUSTER_NAME%"=="" set "XPK_CLUSTER_NAME=ml-xpk-cluster"
-if "%TPU_ACCELERATOR_TYPE%"=="" set "TPU_ACCELERATOR_TYPE=v4-8"
-
-if "%GCP_PROJECT_ID%"=="" (
-    echo [ERROR] GCP_PROJECT_ID must be explicitly specified.
-    exit /b 1
-)
-if "%GCP_ZONE%"=="" (
-    echo [ERROR] GCP_ZONE must be explicitly specified.
-    exit /b 1
-)
-
-echo Authenticating with GCP...
-call "%~dp0..\..\..\_lib\cloud-providers\gcp\cli\cli.cmd" auth
-
-echo Provisioning XPK cluster: %XPK_CLUSTER_NAME%...
-xpk cluster create --cluster "%XPK_CLUSTER_NAME%" --tpu-type "%TPU_ACCELERATOR_TYPE%" --project "%GCP_PROJECT_ID%" --zone "%GCP_ZONE%"
-
-echo Setup complete.
-exit /b 0
-
-:: ## help
-:: Executes help functionality.
-:help
-echo Usage: setup.cmd
-exit /b 0
+echo [WARN] DEPRECATED: _lib\orchestration\gke-xpk-training has moved to payloads\ai\gke-xpk-training. 1>&2
+call "%LIBSCRIPT_ROOT_DIR%\payloads\ai\gke-xpk-training\setup.cmd" %*
+exit /b %errorlevel%

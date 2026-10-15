@@ -1,4 +1,5 @@
 @echo off
+:: # setup_base.cmd
 setlocal EnableDelayedExpansion
 :: # LibScript Common Setup Entrypoint (Windows Batch)
 ::
@@ -17,6 +18,16 @@ setlocal EnableDelayedExpansion
 setlocal EnableDelayedExpansion
 set "CALLER_FILE=%THIS_FILE%"
 set "THIS_FILE=%~f0"
+
+if defined STACK (
+    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2^>^&1
+    if not errorlevel 1 (
+        echo [STOP] processing "%THIS_FILE%" ^>^&2
+        exit /b 0
+    )
+)
+set "STACK=%STACK%:%THIS_FILE%:"
+
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%~dp0"

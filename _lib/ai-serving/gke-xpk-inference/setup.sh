@@ -1,12 +1,12 @@
 #!/bin/sh
 # ## Overview
-# Orchestrates the setup and installation process for the GKE XPK inference stack stack.
-# 
+# Backward-compatible forwarding shim for GKE XPK inference setup (relocated to payloads/ai/gke-xpk-inference).
+#
 # ## Usage
-# Execute this script to install and configure gke-xpk-inference on the local system.
-
+# ./_lib/ai-serving/gke-xpk-inference/setup.sh [args]
 
 set -feu
+
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then
@@ -27,31 +27,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}:"
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-export DIR="${SCRIPT_DIR}"
 export LIBSCRIPT_ROOT_DIR
 
-set -feu
-if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  printf '%s\n' "Usage: $0"
-  printf '%s\n' "See README.md for details."
-  exit 0
-fi
-
-
-CLUSTER_NAME="${XPK_CLUSTER_NAME:-ml-xpk-cluster}"
-
-GCP_PROJECT_ID="${GCP_PROJECT_ID:-}"
-GCP_ZONE="${GCP_ZONE:-}"
-if [ -z "$GCP_PROJECT_ID" ] || [ -z "$GCP_ZONE" ]; then
-  printf '%s\n' "[INFO] GCP_PROJECT_ID and GCP_ZONE not specified. Staging complete."
-  exit 0
-fi
-
-printf '%s\n' "Setting up XPK Production Cluster Stack..."
-
-gcloud auth print-access-token >/dev/null 2>&1 || gcloud auth login
-
-printf '%s\n' "Creating GKE cluster $CLUSTER_NAME via xpk..."
-"${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp/gke-tpu-cluster/cli.sh" create "$CLUSTER_NAME"
-
-printf '%s\n' "Setup complete."
+printf '%s\n' "[WARN] DEPRECATED: _lib/ai-serving/gke-xpk-inference has moved to payloads/ai/gke-xpk-inference." >&2
+exec "${LIBSCRIPT_ROOT_DIR}/payloads/ai/gke-xpk-inference/setup.sh" "$@"

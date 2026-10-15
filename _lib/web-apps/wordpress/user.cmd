@@ -24,7 +24,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -63,6 +63,8 @@ if "%CMD%"=="set-password" goto do_setpass
 if "%CMD%"=="delete" goto do_delete
 if "%CMD%"=="help" goto show_help
 
+:: ## do_create
+:: Executes do_create functionality.
 :do_create
 shift
 set "U_NAME=%~1"
@@ -72,6 +74,8 @@ shift
 set "U_PASS=WpPass_%U_NAME%_%RANDOM%"
 set "U_ROLE=administrator"
 
+:: ## parse_create_opt
+:: Executes parse_create_opt functionality.
 :parse_create_opt
 if "%~1"=="" goto run_create
 if /I "%~1"=="--password" ( set "U_PASS=%~2" & shift & shift & goto parse_create_opt )
@@ -79,6 +83,8 @@ if /I "%~1"=="--role" ( set "U_ROLE=%~2" & shift & shift & goto parse_create_opt
 shift
 goto parse_create_opt
 
+:: ## run_create
+:: Executes run_create functionality.
 :run_create
 if "%U_NAME%"=="" (
     echo [ERROR] Usage: user.cmd create ^<username^> ^<email^> [--password ^<pwd^>] >&2
@@ -88,6 +94,8 @@ call "%SCRIPT_DIR%\dbshell.cmd" query "INSERT INTO wp_users (user_login, user_pa
 echo [OK] WordPress user %U_NAME% (%U_EMAIL%) provisioned with role %U_ROLE%
 exit /b 0
 
+:: ## do_setpass
+:: Executes do_setpass functionality.
 :do_setpass
 shift
 set "U_NAME=%~1"
@@ -98,10 +106,14 @@ call "%SCRIPT_DIR%\dbshell.cmd" query "UPDATE wp_users SET user_pass = MD5('%U_P
 echo [OK] Password updated for user %U_NAME%
 exit /b 0
 
+:: ## do_list
+:: Executes do_list functionality.
 :do_list
 call "%SCRIPT_DIR%\dbshell.cmd" query "SELECT ID, user_login, user_email, user_registered FROM wp_users;"
 exit /b 0
 
+:: ## do_delete
+:: Executes do_delete functionality.
 :do_delete
 shift
 set "U_NAME=%~1"
@@ -113,6 +125,8 @@ call "%SCRIPT_DIR%\dbshell.cmd" query "DELETE FROM wp_users WHERE user_login = '
 echo [OK] WordPress user %U_NAME% removed
 exit /b 0
 
+:: ## show_help
+:: Executes show_help functionality.
 :show_help
 echo WordPress User Management on Windows
 echo.

@@ -20,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -51,16 +51,24 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+:: ## parse_args
+:: Executes parse_args functionality.
 :parse_args
 if "%~1"=="" goto run
 if /i "%~1"=="--skip-deps" (
     set "LIBSCRIPT_SKIP_SYSTEM_DEPS=1"
     shift
     goto parse_args
+if exist "%LIBSCRIPT_HOME%\odoo\%VERSION%" (
+    echo [INFO] odoo %VERSION% is already installed.
+    exit /b 0
+)
 )
 shift
 goto parse_args
 
+:: ## run
+:: Executes run functionality.
 :run
 if exist "%~dp0setup.cmd" (
     call "%~dp0setup.cmd"

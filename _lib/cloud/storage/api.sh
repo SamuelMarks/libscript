@@ -32,6 +32,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## libscript_storage_create
 # Executes libscript_storage_create functionality.
+# ## libscript_storage_create
+# Executes the libscript_storage_create logic.
 libscript_storage_create() {
   provider="$1"
   bucket="$2"
@@ -91,6 +93,8 @@ libscript_storage_create() {
 
 # ## libscript_storage_delete
 # Executes libscript_storage_delete functionality.
+# ## libscript_storage_delete
+# Executes the libscript_storage_delete logic.
 libscript_storage_delete() {
   provider="$1"
   bucket="$2"
@@ -123,6 +127,8 @@ libscript_storage_delete() {
 
 # ## libscript_storage_list
 # Executes libscript_storage_list functionality.
+# ## libscript_storage_list
+# Executes the libscript_storage_list logic.
 libscript_storage_list() {
   provider="$1"
   
@@ -158,6 +164,8 @@ libscript_storage_list() {
 
 # ## libscript_storage_sync
 # Executes libscript_storage_sync functionality.
+# ## libscript_storage_sync
+# Executes the libscript_storage_sync logic.
 libscript_storage_sync() {
   provider="$1"
   bucket="$2"

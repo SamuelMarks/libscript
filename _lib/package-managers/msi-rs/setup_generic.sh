@@ -22,11 +22,9 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
@@ -56,6 +54,8 @@ REPO_URL="${MSI_RS_REPO_URL:-https://github.com/SamuelMarks/msi-rs}"
 
 # ## resolve_exact_version
 # Resolves the exact semver or branch version for msi-rs.
+# ## resolve_exact_version
+# Executes the resolve_exact_version logic.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ] || [ -z "${VERSION:-}" ]; then
     EXACT_VERSION="v0.0.1"
@@ -66,6 +66,8 @@ resolve_exact_version() {
 
 # ## ensure_c_toolchain
 # Verifies presence of a functional C compiler or installs it using libscript languages/c.
+# ## ensure_c_toolchain
+# Executes the ensure_c_toolchain logic.
 ensure_c_toolchain() {
   if ! command -v cc >/dev/null 2>&1 && ! command -v gcc >/dev/null 2>&1 && ! command -v clang >/dev/null 2>&1; then
     log_info "C toolchain not detected; bootstrapping standard C compiler..."
@@ -80,6 +82,8 @@ ensure_c_toolchain() {
 
 # ## ensure_rust_toolchain
 # Verifies presence of cargo and rustc or installs the Rust toolchain via libscript languages/rust.
+# ## ensure_rust_toolchain
+# Executes the ensure_rust_toolchain logic.
 ensure_rust_toolchain() {
   [ -f "${HOME}/.cargo/env" ] && . "${HOME}/.cargo/env"
   [ -d "${HOME}/.cargo/bin" ] && export PATH="${HOME}/.cargo/bin:${PATH}"
@@ -105,6 +109,8 @@ ensure_rust_toolchain() {
 
 # ## install_binaries_from_dir
 # Copies built binaries from target release folder into the target prefix and links aliases.
+# ## install_binaries_from_dir
+# Executes the install_binaries_from_dir logic.
 install_binaries_from_dir() {
   src_dir="$1"
   dest_bin="${TARGET_DIR}/bin"
@@ -136,8 +142,7 @@ case "$ACTION" in
     elif [ "$MSI_RS_INSTALL_METHOD" = "vfox" ]; then
       vfox ls msi-rs || true
     elif [ "$MSI_RS_INSTALL_METHOD" = "system" ]; then
-      printf '%s
-' "System packages do not support ls here."
+      printf '%s\n' "System packages do not support ls here."
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/msi-rs/" 2>/dev/null || true
     fi
@@ -152,16 +157,13 @@ case "$ACTION" in
       vfox ls all msi-rs || true
     else
       if [ -n "${MSI_RS_RELEASES_URL:-}" ]; then
-        curl -sSL "${MSI_RS_RELEASES_URL}" | grep -oE 'v?[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s
-' "0.0.1"
+        curl -sSL "${MSI_RS_RELEASES_URL}" | grep -oE 'v?[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "0.0.1"
       else
         _remote_tags=$(git ls-remote --tags "${REPO_URL}" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || true)
         if [ -n "$_remote_tags" ]; then
-          printf '%s
-' "$_remote_tags"
+          printf '%s\n' "$_remote_tags"
         else
-          printf '%s
-' "0.0.1"
+          printf '%s\n' "0.0.1"
         fi
       fi
     fi
@@ -175,8 +177,7 @@ case "$ACTION" in
     elif [ "$MSI_RS_INSTALL_METHOD" = "vfox" ]; then
       vfox use "msi-rs@${VERSION}"
     elif [ "$MSI_RS_INSTALL_METHOD" = "system" ]; then
-      printf '%s
-' "System packages do not support use here."
+      printf '%s\n' "System packages do not support use here."
     else
       resolve_exact_version
       libscript_symlink_alias "msi-rs" "$VERSION" "${EXACT_VERSION}"

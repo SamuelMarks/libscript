@@ -21,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -103,17 +103,12 @@ if exist "%STAMP_FILE%" (
 echo [INIT]     Configuring init provider %PROVIDER%...
 
 if "%PROVIDER%"=="bsd-rc" (
-    findstr /C:"# BSD rc.d enabled services" "%SYSROOT%\etc
-c.conf" >nul 2>&1
+    findstr /C:"# BSD rc.d enabled services" "%SYSROOT%\etc\rc.conf" >nul 2>&1
     if errorlevel 1 (
-        echo # BSD rc.d enabled services>> "%SYSROOT%\etc
-c.conf"
-        echo sshd_enable="YES">> "%SYSROOT%\etc
-c.conf"
-        echo cron_enable="YES">> "%SYSROOT%\etc
-c.conf"
-        echo devd_enable="YES">> "%SYSROOT%\etc
-c.conf"
+        echo # BSD rc.d enabled services>> "%SYSROOT%\etc\rc.conf"
+        echo sshd_enable="YES">> "%SYSROOT%\etc\rc.conf"
+        echo cron_enable="YES">> "%SYSROOT%\etc\rc.conf"
+        echo devd_enable="YES">> "%SYSROOT%\etc\rc.conf"
     )
 )
 if "%PROVIDER%"=="openrc" (

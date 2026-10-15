@@ -1,0 +1,35 @@
+{
+  "$schema": "../topology.schema.json",
+  "name": "k0s-ha",
+  "version": "1.0.0",
+  "description": "Multi-control-plane Kubernetes (k0s) high-availability cluster with netctl API load-balancing.",
+  "quorum_strategy": "raft",
+  "fencing_policy": "cloud-api-poweroff",
+  "node_groups": [
+    {
+      "name": "k0s-controllers",
+      "provider": "hetzner",
+      "region": "fsn1",
+      "size": "cx31",
+      "count": 3,
+      "role": "leader",
+      "components": ["orchestration/kubernetes-k0s", "networking/netctl"],
+      "traits": ["storage", "secrets", "mesh", "firewall", "discovery", "tls", "ingress"]
+    },
+    {
+      "name": "k0s-workers",
+      "provider": "hetzner",
+      "region": "fsn1",
+      "size": "cx41",
+      "count": 3,
+      "role": "worker",
+      "components": ["orchestration/kubernetes-k0s"],
+      "traits": ["storage", "secrets", "mesh", "firewall", "discovery"]
+    }
+  ],
+  "network": {
+    "vpc_cidr": "10.45.0.0/16",
+    "mesh_overlay": "wireguard",
+    "internal_domain": "k0s.internal"
+  }
+}

@@ -47,6 +47,8 @@ ACTION="${ACTION:-install}"
 
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
+# ## resolve_exact_version
+# Executes the resolve_exact_version logic.
 resolve_exact_version() {
   if [ "${CADDY_VERSION}" = "latest" ] || [ "${CADDY_VERSION}" = "lts" ]; then
     libscript_depends "curl"

@@ -19,16 +19,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
@@ -51,6 +48,8 @@ VERSION="${MEMCACHED_VERSION:-latest}"
 
 # ## resolve_exact_version
 # Resolves the exact numeric version from version aliases such as latest or stable.
+# ## resolve_exact_version
+# Executes the resolve_exact_version logic.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
     _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote memcached 2>/dev/null | tail -n 1)
@@ -87,13 +86,11 @@ case "$ACTION" in
     elif [ "$MEMCACHED_INSTALL_METHOD" = "asdf" ]; then
       asdf list memcached || true
     elif [ "$MEMCACHED_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s
-' "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$MEMCACHED_INSTALL_METHOD" = "vfox" ]; then
       vfox ls memcached || true
     elif [ "$MEMCACHED_INSTALL_METHOD" = "system" ]; then
-      printf '%s
-' "System packages do not support ls here."
+      printf '%s\n' "System packages do not support ls here."
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/memcached/" 2>/dev/null || true
     fi
@@ -105,23 +102,19 @@ case "$ACTION" in
     elif [ "$MEMCACHED_INSTALL_METHOD" = "asdf" ]; then
       asdf list all memcached || true
     elif [ "$MEMCACHED_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s
-' "pkgx does not have a local list command"
+      printf '%s\n' "pkgx does not have a local list command"
     elif [ "$MEMCACHED_INSTALL_METHOD" = "vfox" ]; then
       vfox ls all memcached || true
     else
       if [ -n "${MEMCACHED_RELEASES_URL:-}" ]; then
-        curl -sSL "${MEMCACHED_RELEASES_URL}" | grep -oE 'v?[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s
-' "No versions found"
+        curl -sSL "${MEMCACHED_RELEASES_URL}" | grep -oE 'v?[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
       else
         case "$TARGET_OS" in
           windows|mingw|cygwin)
-            git ls-remote --tags "https://github.com/SamuelMarks/memcached-windows" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s
-' "No versions found"
+            git ls-remote --tags "https://github.com/SamuelMarks/memcached-windows" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
             ;;
           *)
-            git ls-remote --tags "https://github.com/memcached/memcached" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s
-' "No versions found"
+            git ls-remote --tags "https://github.com/memcached/memcached" 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | uniq || printf '%s\n' "No versions found"
             ;;
         esac
       fi
@@ -134,13 +127,11 @@ case "$ACTION" in
     elif [ "$MEMCACHED_INSTALL_METHOD" = "asdf" ]; then
       asdf global memcached "${VERSION}"
     elif [ "$MEMCACHED_INSTALL_METHOD" = "pkgx" ]; then
-      printf '%s
-' "pkgx does not use explicit versions this way"
+      printf '%s\n' "pkgx does not use explicit versions this way"
     elif [ "$MEMCACHED_INSTALL_METHOD" = "vfox" ]; then
       vfox use "memcached@${VERSION}"
     elif [ "$MEMCACHED_INSTALL_METHOD" = "system" ]; then
-      printf '%s
-' "System packages do not support use here."
+      printf '%s\n' "System packages do not support use here."
     else
       resolve_exact_version
       libscript_symlink_alias "memcached" "$VERSION" "${EXACT_VERSION}"

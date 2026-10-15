@@ -1,4 +1,5 @@
 @echo off
+:: # hydrate_offline_cache.cmd
 setlocal EnableDelayedExpansion
 :: # packaging/hydrate_offline_cache.cmd
 ::
@@ -28,7 +29,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -68,6 +69,8 @@ set "VERIFY_ONLY="
 set "WHEELS="
 set "CODEBASE="
 
+:: ## parse_loop
+:: Executes parse_loop functionality.
 :parse_loop
 if "%~1"=="" goto :execute
 if /i "%~1"=="--manifest" (
@@ -107,6 +110,8 @@ if /i "%~1"=="/?" goto :show_help
 echo Error: Unknown option "%~1" >&2
 exit /b 1
 
+:: ## show_help
+:: Executes show_help functionality.
 :show_help
 echo Usage: %~nx0 [OPTIONS]
 echo.
@@ -120,6 +125,8 @@ echo   --codebase            Fetch core codebase archive
 echo   --help, -h            Show this help text
 exit /b 0
 
+:: ## execute
+:: Executes execute functionality.
 :execute
 set "PS_ARGS="
 if not "%MANIFEST%"=="" set PS_ARGS=!PS_ARGS! -Manifest "%MANIFEST%"

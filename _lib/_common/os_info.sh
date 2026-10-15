@@ -125,6 +125,8 @@ fi
 
 # ## _fallback
 # Executes _fallback functionality.
+# ## _fallback
+# Executes the _fallback logic.
 _fallback() {
   possible="$(cat -- '/proc/1/comm')"
   if [ "${possible}" = 'systemd' ]; then

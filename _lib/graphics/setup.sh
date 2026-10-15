@@ -21,16 +21,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 ACTION="${1:-install}"
@@ -41,33 +38,27 @@ mkdir -p "$STAMPS_DIR"
 STAMP_GRAPHICS="${STAMPS_DIR}/.stamp.lfs_graphics_mesa"
 
 if [ "$ACTION" = "clean" ]; then
-  printf '[CLEAN] Removing graphics stack stamp...
-'
+  printf '[CLEAN] Removing graphics stack stamp...\n'
   rm -f "$STAMP_GRAPHICS"
   exit 0
 fi
 
 if [ "$ACTION" = "status" ]; then
   if [ -f "$STAMP_GRAPHICS" ]; then
-    printf 'Graphics Stack: INSTALLED (%s)
-' "$(cat "$STAMP_GRAPHICS")"
+    printf 'Graphics Stack: INSTALLED (%s)\n' "$(cat "$STAMP_GRAPHICS")"
   else
-    printf 'Graphics Stack: NOT INSTALLED
-'
+    printf 'Graphics Stack: NOT INSTALLED\n'
   fi
   exit 0
 fi
 
 if [ -f "$STAMP_GRAPHICS" ]; then
-  printf '[SKIP]  Graphics stack already installed (%s)
-' "$STAMP_GRAPHICS"
+  printf '[SKIP]  Graphics stack already installed (%s)\n' "$STAMP_GRAPHICS"
   exit 0
 fi
 
-printf '=== LibScript Hardware Acceleration & Graphics (Mesa/DRM) ===
-'
-printf '[INFO] Target Rootfs: %s
-' "$ROOTFS"
+printf '=== LibScript Hardware Acceleration & Graphics (Mesa/DRM) ===\n'
+printf '[INFO] Target Rootfs: %s\n' "$ROOTFS"
 
 mkdir -p "${ROOTFS}/usr/lib/dri"
 mkdir -p "${ROOTFS}/usr/share/fonts/dejavu"
@@ -111,6 +102,5 @@ EOF
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_GRAPHICS}.tmp"
 mv "${STAMP_GRAPHICS}.tmp" "$STAMP_GRAPHICS"
-printf '[DONE]  Graphics and Mesa acceleration stack staged successfully.
-'
+printf '[DONE]  Graphics and Mesa acceleration stack staged successfully.\n'
 exit 0

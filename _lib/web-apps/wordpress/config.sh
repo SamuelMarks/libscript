@@ -21,16 +21,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 WWWROOT="${WORDPRESS_WWWROOT:-/var/www/wordpress}"
@@ -51,8 +48,7 @@ EOF_HELP
 fi
 
 if [ ! -f "$WP_CONFIG" ]; then
-  printf '[ERROR] wp-config.php not found at %s
-' "$WP_CONFIG" >&2
+  printf '[ERROR] wp-config.php not found at %s\n' "$WP_CONFIG" >&2
   exit 1
 fi
 
@@ -60,8 +56,7 @@ case "$CMD" in
   get)
     shift
     if [ $# -lt 1 ]; then
-      printf '[ERROR] Usage: %s get <CONSTANT_NAME>
-' "$THIS_FILE" >&2
+      printf '[ERROR] Usage: %s get <CONSTANT_NAME>\n' "$THIS_FILE" >&2
       exit 1
     fi
     KEY="$1"
@@ -70,8 +65,7 @@ case "$CMD" in
   set)
     shift
     if [ $# -lt 2 ]; then
-      printf '[ERROR] Usage: %s set <CONSTANT_NAME> <VALUE>
-' "$THIS_FILE" >&2
+      printf '[ERROR] Usage: %s set <CONSTANT_NAME> <VALUE>\n' "$THIS_FILE" >&2
       exit 1
     fi
     KEY="$1"
@@ -92,8 +86,7 @@ case "$CMD" in
       cp "$TMP_CFG" "$WP_CONFIG"
       rm -f "$TMP_CFG"
     fi
-    printf '[OK] Config key %s updated.
-' "$KEY"
+    printf '[OK] Config key %s updated.\n' "$KEY"
     ;;
   dump)
     cat << 'EOF_HEADER'
@@ -113,8 +106,7 @@ EOF_HELP
     exit 0
     ;;
   *)
-    printf '[ERROR] Unknown command: %s
-' "$CMD" >&2
+    printf '[ERROR] Unknown command: %s\n' "$CMD" >&2
     exit 1
     ;;
 esac

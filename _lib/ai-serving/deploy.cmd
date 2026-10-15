@@ -19,7 +19,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -80,9 +80,7 @@ set "SCRIPT_FILE=%TEMP%\deploy_tpu.sh"
 echo #!/bin/sh
 echo set -ex
 echo if ! command -v docker ^> /dev/null 2^>^&1; then
-echo   sudo apt-get update
-echo   sudo apt-get install -y docker.io
-echo   sudo usermod -aG docker $USER
+echo   ~/_lib/orchestration/docker/setup.sh
 echo fi
 echo MODEL_NAME="%MODEL_NAME%"
 echo IMAGE="us-docker.pkg.dev/cloud-tpu-images/inference/vllm-tpu:latest"
@@ -90,6 +88,6 @@ echo sudo docker pull $IMAGE
 echo sudo docker run -d --rm --name vllm-server --privileged --network host -v /dev:/dev $IMAGE --model "$MODEL_NAME" --tensor-parallel-size 1
 ) > "%SCRIPT_FILE%"
 
-call "%~dp0\..\..\..\_lib\cloud-providers\gcp\tpu-vm\cli.cmd" ssh "%TPU_NAME%" "sh -s" < "%SCRIPT_FILE%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud-providers\gcp-tpu-vm\cli.cmd" ssh "%TPU_NAME%" "sh -s" < "%SCRIPT_FILE%"
 
 echo Deploy complete.

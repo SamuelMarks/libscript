@@ -21,55 +21,41 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-printf '[TEST-HYPERVISOR] Starting Guest Agent Protocol & Integration Validation...
-'
+printf '[TEST-HYPERVISOR] Starting Guest Agent Protocol & Integration Validation...\n'
 
 # 1. Test guest-ping payload
 PING_REQ='{"execute":"guest-ping"}'
 PING_RESP='{"return":{}}'
-printf '[TEST-HYPERVISOR] Validating guest-ping format...
-'
+printf '[TEST-HYPERVISOR] Validating guest-ping format...\n'
 case "$PING_RESP" in
-  *'{"return":{}}'*) printf '[PASS] guest-ping handshake matches QGA specification.
-' ;;
-  *) printf '[FAIL] Invalid guest-ping response.
-' >&2; exit 1 ;;
+  *'{"return":{}}'*) printf '[PASS] guest-ping handshake matches QGA specification.\n' ;;
+  *) printf '[FAIL] Invalid guest-ping response.\n' >&2; exit 1 ;;
 esac
 
 # 2. Test guest-info payload
 INFO_RESP='{"return":{"version":"8.2.0","supported_commands":[{"name":"guest-ping","enabled":true}]}}'
-printf '[TEST-HYPERVISOR] Validating guest-info capabilities structure...
-'
+printf '[TEST-HYPERVISOR] Validating guest-info capabilities structure...\n'
 case "$INFO_RESP" in
-  *supported_commands*guest-ping*) printf '[PASS] guest-info capabilities structure valid.
-' ;;
-  *) printf '[FAIL] Invalid guest-info response.
-' >&2; exit 1 ;;
+  *supported_commands*guest-ping*) printf '[PASS] guest-info capabilities structure valid.\n' ;;
+  *) printf '[FAIL] Invalid guest-info response.\n' >&2; exit 1 ;;
 esac
 
 # 3. Test guest-network-get-interfaces structure
 NET_RESP='{"return":[{"name":"eth0","ip-addresses":[{"ip-address-type":"ipv4","ip-address":"192.168.122.100"}]}]}'
-printf '[TEST-HYPERVISOR] Validating guest-network-get-interfaces response structure...
-'
+printf '[TEST-HYPERVISOR] Validating guest-network-get-interfaces response structure...\n'
 case "$NET_RESP" in
-  *ipv4*192.168.*) printf '[PASS] guest-network-get-interfaces schema valid.
-' ;;
-  *) printf '[FAIL] Invalid network interface payload.
-' >&2; exit 1 ;;
+  *ipv4*192.168.*) printf '[PASS] guest-network-get-interfaces schema valid.\n' ;;
+  *) printf '[FAIL] Invalid network interface payload.\n' >&2; exit 1 ;;
 esac
 
-printf '[OK] Hypervisor guest agent validation harness completed successfully.
-'
+printf '[OK] Hypervisor guest agent validation harness completed successfully.\n'
 exit 0

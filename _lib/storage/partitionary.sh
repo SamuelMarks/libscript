@@ -31,20 +31,19 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 # ## show_help
 # Displays comprehensive usage, subcommands, and flags for partitionary.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") <subcommand> [options...]"
   printf '%s\n' "Universal cross-platform partition & geometry abstraction engine."
@@ -68,12 +67,16 @@ show_help() {
 
 # ## detect_platform
 # Detects host operating system kernel family in lower-case.
+# ## detect_platform
+# Executes the detect_platform logic.
 detect_platform() {
   uname -s | tr '[:upper:]' '[:lower:]'
 }
 
 # ## has_partition
 # Idempotency helper to check if a specific partition index already exists
+# ## has_partition
+# Executes the has_partition logic.
 has_partition() {
   _dev="$1"
   _idx="$2"
@@ -98,6 +101,8 @@ has_partition() {
 
 # ## inspect_device
 # Probes disk geometry, sector sizing, bus transport, and partition table signature.
+# ## inspect_device
+# Executes the inspect_device logic.
 inspect_device() {
   _dev="$1"
   if [ -z "$_dev" ]; then
@@ -148,6 +153,8 @@ inspect_device() {
 
 # ## wipe_headers
 # Sanitizes LBA 0..33 and clears existing partition tables idempotently.
+# ## wipe_headers
+# Executes the wipe_headers logic.
 wipe_headers() {
   _dev="$1"
   printf '[INFO] Sanitizing partition table headers on %s...\n' "$_dev"
@@ -167,6 +174,8 @@ wipe_headers() {
 
 # ## activate_partition
 # Toggles the active/bootable flag (0x80 byte) on an MBR primary partition slot.
+# ## activate_partition
+# Executes the activate_partition logic.
 activate_partition() {
   _dev="$1"
   _part_num="$2"
@@ -198,6 +207,8 @@ activate_partition() {
 
 # ## apply_sub_slices
 # Creates FreeBSD bsdlabel slices or illumos VTOC slices inside a designated MBR partition.
+# ## apply_sub_slices
+# Executes the apply_sub_slices logic.
 apply_sub_slices() {
   _dev="$1"
   _slice_type="$2"
@@ -228,6 +239,8 @@ apply_sub_slices() {
 # ## layout_multiboot_gpt
 # Synthesizes standardized GPT partitions for single, dual, or triple-boot operating systems.
 # Aligns to 1MiB (2048 sector) boundaries.
+# ## layout_multiboot_gpt
+# Executes the layout_multiboot_gpt logic.
 layout_multiboot_gpt() {
   _dev="$1"
   _mode="$2"
@@ -302,6 +315,8 @@ layout_multiboot_gpt() {
 
 # ## layout_multiboot_mbr
 # Synthesizes standardized MBR partitions (primary slots 1..4 and logical EBR chaining).
+# ## layout_multiboot_mbr
+# Executes the layout_multiboot_mbr logic.
 layout_multiboot_mbr() {
   _dev="$1"
   _mode="$2"
@@ -344,6 +359,8 @@ layout_multiboot_mbr() {
 
 # ## main
 # Entrypoint for subcommand dispatching.
+# ## main
+# Executes the main logic.
 main() {
   if [ $# -eq 0 ]; then
     show_help

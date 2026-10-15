@@ -21,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -57,6 +57,8 @@ if "%~1"=="-h" goto show_help
 if "%~1"=="/?" goto show_help
 goto run_script
 
+:: ## show_help
+:: Executes show_help functionality.
 :show_help
 echo Usage: %~nx0 [OPTIONS]
 echo.
@@ -73,6 +75,8 @@ echo   --include-msi            Allow harvesting of .msi installer packages into
 echo   --help, -h               Show this help text
 exit /b 0
 
+:: ## run_script
+:: Executes run_script functionality.
 :run_script
 set "PS1_FILE=%SCRIPT_DIR%\harvest_payload.ps1"
 powershell -NoProfile -ExecutionPolicy Bypass -File "%PS1_FILE%" %*

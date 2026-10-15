@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 SYSROOT="${1:-${REPO_ROOT}/build/freebsd-sysroot}"
@@ -43,8 +40,7 @@ mkdir -p "${REPO_ROOT}/tests_tmp"
 LOG_FILE="${REPO_ROOT}/tests_tmp/freebsd_gui_smoke_test.log"
 printf '' > "${LOG_FILE}"
 
-printf '[TEST]     Executing FreeBSD GUI smoketest (%s, %s, %s)...
-' "${PROTOCOL}" "${DESKTOP}" "${DM}"
+printf '[TEST]     Executing FreeBSD GUI smoketest (%s, %s, %s)...\n' "${PROTOCOL}" "${DESKTOP}" "${DM}"
 
 if [ "${PROTOCOL}" = "wayland" ]; then
   # Verify seatd and wayland environment profile
@@ -66,13 +62,10 @@ fi
 # Verify Display Manager configuration
 if [ "${DM}" != "none" ]; then
   if [ -f "${SYSROOT}/etc/rc.conf" ] && grep -q "${DM}_enable=\"YES\"" "${SYSROOT}/etc/rc.conf"; then
-    printf '[PASS]     Display manager %s enabled
-' "${DM}" >> "${LOG_FILE}"
+    printf '[PASS]     Display manager %s enabled\n' "${DM}" >> "${LOG_FILE}"
   else
-    printf '[PASS]     Display manager configuration acknowledged
-' >> "${LOG_FILE}"
+    printf '[PASS]     Display manager configuration acknowledged\n' >> "${LOG_FILE}"
   fi
 fi
 
-printf '[OK]       FreeBSD GUI smoketest PASSED.
-'
+printf '[OK]       FreeBSD GUI smoketest PASSED.\n'

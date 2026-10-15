@@ -80,3 +80,21 @@ for Odoo or Open edX).
 
 If a remote database was used, the uninstall Custom Action respects the configuration state and
 safely bypasses `DROP DATABASE` on external infrastructure.
+
+## Dual-Layer Component Hook Integration (`_lib/_common/hooks.{sh,cmd}`)
+
+Logical provisioning delegates directly to each component's **Logical Multi-Tenant Hooks** in
+`_lib/<category>/<component>/hooks/`:
+
+- **`provision_tenant.{sh,cmd}`**: Invoked by `sql_provisioner` and `traits/ingress` with
+  `LIBSCRIPT_TENANT_ID=<app_id>`. Queries existing schemas
+  (`SELECT 1 FROM pg_database WHERE datname=...`) or `# BEGIN libscript-managed: <tenant>` markers
+  before applying changes.
+- **`deprovision_tenant.{sh,cmd}`**: Invoked on tenant uninstall to drop only the tenant's schema or
+  vhost while preserving the shared physical engine.
+- **`backup_tenant.{sh,cmd}` & `restore_tenant.{sh,cmd}`**: Performs per-tenant logical snapshots
+  and restores.
+- **Remote / Adapter-Only Bypass Contract**: When `LIBSCRIPT_REMOTE_STRATEGY=remote` (or
+  `[USER_DB_STRATEGY]=remote`), `hooks/probe` validates remote connectivity (`--remote-host`), and
+  `provision_tenant` / `deprovision_tenant` safely skip local superuser DDL if administrative
+  credentials are not provided.

@@ -1,6 +1,4 @@
 #!/bin/sh
-# # LibScript Unified Service Management Utility
-#
 # ## Overview
 # This module provides a cross-platform abstraction for managing services
 # (daemons) across different init systems (systemd, openrc, sc.exe, etc.).
@@ -11,6 +9,8 @@
 #
 # Actions: start, stop, restart, status, health, logs, enable, disable
 
+# # LibScript Unified Service Management Utility
+#
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -45,6 +45,8 @@ done
 
 # ## libscript_service
 # Executes libscript_service functionality.
+# ## libscript_service
+# Executes the libscript_service logic.
 libscript_service() {
   _action="${1:-}"
   _service="${2:-}"
@@ -176,6 +178,8 @@ libscript_service() {
 
 # ## libscript_check_health
 # Executes libscript_check_health functionality.
+# ## libscript_check_health
+# Executes the libscript_check_health logic.
 libscript_check_health() {
   _service="${1:-}"
   shift || true

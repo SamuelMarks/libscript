@@ -155,3 +155,49 @@ integration or prohibitive compilation requirements:
   for their dependencies and execution context. They inherently use an alternative isolation
   mechanism (the virtual environment) and do not fit the pure binary extraction model. Their
   `INSTALL_METHOD` effectively delegates to Python package managers.
+
+---
+
+## 7. Dual-Layer Component Lifecycle Hook Contract (`hooks/<action>.{sh,cmd}`)
+
+Stateful daemons and multi-tenant engines expose an optional `hooks/` directory dispatched via
+`_lib/_common/hooks.sh` and `_lib/_common/hooks.cmd`
+(`libscript_exec_hook <component> <hook> [args...]`).
+
+### 7.1 Physical Instance Hooks
+
+Manage the physical daemon instance and its data directory:
+
+1. **`configure`**: Renders configuration templates via `_lib/_common/envsubst_safe.{sh,cmd}`,
+   accepting `--role <standalone|leader|follower|arbiter>`, `--sysroot <path>`, and
+   `--secrets-file <fifo_or_path>` (for zero-env-leak secret streaming).
+2. **`probe <startup|liveness|readiness> [--remote-host <host>]`**:
+   - Exit `0`: Healthy / Ready to serve traffic (and replication lag within threshold).
+   - Exit `1`: Starting / Degraded / Not Ready.
+   - Exit `2`: Unhealthy / Deadlocked / Failed.
+3. **`announce`**: Emits deterministic JSON to stdout:
+   `{"component":"postgres","endpoints":[{"port":5432,"protocol":"tcp","visibility":"internal","probe":"pg_isready"}]}`.
+4. **`log_stream`**: Emits JSON listing active log files, journald/SMF/EventLog identifiers, and
+   format (`json`, `clf`, `syslog`, `postgres`).
+5. **`metrics`**: Emits JSON specifying Prometheus/OpenTelemetry scrape port, path (`/metrics`,
+   `/stub_status`), and exporter status.
+6. **`backup <dest_dir>` & `restore <src_dir>`**: Produces and restores full-instance snapshots with
+   a `.sha256` manifest.
+7. **`upgrade <old_ver> <new_ver>` & `rollback <old_ver> <new_ver>`**: Performs data directory
+   migrations (`pg_upgrade`) and atomic rollback on failure.
+8. **`maintenance`**: Runs idempotent periodic housekeeping (`VACUUM (ANALYZE)`, WAL pruning, log
+   rotation).
+
+### 7.2 Logical Multi-Tenant Hooks
+
+Components with `"multitenant": true` in `manifest.json` (PostgreSQL, MySQL, MariaDB, MongoDB,
+Redis, Valkey, Meilisearch, Nginx, Caddy, HTTPD, IIS) expose tenant-scoped hooks:
+
+1. **`provision_tenant --tenant <id> [--db-name <db>] [--db-user <user>] [--server-name <fqdn>]`**:
+   Idempotently verifies whether the tenant schema, user, keyspace, or
+   `# BEGIN libscript-managed: <tenant>` vhost block exists and creates it only if missing. Safely
+   bypasses local physical mutations when `LIBSCRIPT_REMOTE_STRATEGY=remote`.
+2. **`deprovision_tenant --tenant <id>`**: Removes only the specified tenant's schema or virtual
+   host block while leaving the shared physical engine running for co-tenant stacks.
+3. **`backup_tenant --tenant <id> <dest_dir>` & `restore_tenant --tenant <id> <src_dir>`**: Exports
+   and restores tenant-isolated logical dumps without affecting neighboring tenants.

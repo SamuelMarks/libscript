@@ -47,6 +47,8 @@ fi
 # Parse tags from arguments
 # ## parse_tags
 # Returns a space-separated list of Key=V,Value=V strings
+# ## parse_tags
+# Executes the parse_tags logic.
 parse_tags() {
   USE_DEFAULT=true
   CUSTOM_TAGS=""
@@ -73,6 +75,8 @@ parse_tags() {
 
 # ## aws
 # Dry run helper wrapper around the AWS CLI executable.
+# ## aws
+# Executes the aws logic.
 aws() {
   if [ "${DRY_RUN:-}" = "true" ]; then
     printf '[DRY_RUN] aws %s\n' "$*" >&2
@@ -94,6 +98,8 @@ aws() {
 
 # ## check_deps
 # Ensure aws-cli and jq are installed
+# ## check_deps
+# Executes the check_deps logic.
 check_deps() {
   if ! command -v aws >/dev/null 2>&1; then
     printf '%s\n' "aws-cli not found, installing..."
@@ -107,6 +113,8 @@ check_deps() {
 
 # ## aws_auth
 # Executes aws_auth functionality.
+# ## aws_auth
+# Executes the aws_auth logic.
 aws_auth() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -133,6 +141,8 @@ aws_auth() {
 
 # ## aws_location
 # Executes aws_location functionality.
+# ## aws_location
+# Executes the aws_location logic.
 aws_location() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -151,6 +161,8 @@ aws_location() {
 
 # ## aws_dns
 # Executes aws_dns functionality.
+# ## aws_dns
+# Executes the aws_dns logic.
 aws_dns() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -209,6 +221,8 @@ aws_dns() {
 
 # ## aws_network
 # Executes aws_network functionality.
+# ## aws_network
+# Executes the aws_network logic.
 aws_network() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -279,6 +293,8 @@ aws_network() {
 
 # ## aws_firewall
 # Executes aws_firewall functionality.
+# ## aws_firewall
+# Executes the aws_firewall logic.
 aws_firewall() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -346,6 +362,8 @@ aws_firewall() {
 
 # ## aws_node
 # Executes aws_node functionality.
+# ## aws_node
+# Executes the aws_node logic.
 aws_node() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -450,6 +468,8 @@ aws_node() {
 
 # ## aws_node_group
 # Executes aws_node_group functionality.
+# ## aws_node_group
+# Executes the aws_node_group logic.
 aws_node_group() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -470,6 +490,8 @@ aws_node_group() {
 
 # ## aws_cron
 # Executes aws_cron functionality.
+# ## aws_cron
+# Executes the aws_cron logic.
 aws_cron() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -485,6 +507,8 @@ aws_cron() {
 
 # ## aws_jumpbox
 # Executes aws_jumpbox functionality.
+# ## aws_jumpbox
+# Executes the aws_jumpbox logic.
 aws_jumpbox() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -503,6 +527,8 @@ aws_jumpbox() {
 
 # ## aws_storage
 # Executes aws_storage functionality.
+# ## aws_storage
+# Executes the aws_storage logic.
 aws_storage() {
   ACTION=$1; shift
   case "$ACTION" in
@@ -542,6 +568,8 @@ aws_storage() {
 
 # ## aws_list_managed
 # Executes aws_list_managed functionality.
+# ## aws_list_managed
+# Executes the aws_list_managed logic.
 aws_list_managed() {
   FILTER_KEY=${1:-$TAG_KEY}
   FILTER_VAL=${2:-$TAG_VAL}
@@ -552,6 +580,8 @@ aws_list_managed() {
 
 # ## aws_cleanup
 # Executes aws_cleanup functionality.
+# ## aws_cleanup
+# Executes the aws_cleanup logic.
 aws_cleanup() {
   PURGE_BUCKETS=$1
   FILTER_KEY=${2:-$TAG_KEY}

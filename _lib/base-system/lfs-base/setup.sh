@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 ACTION="install"
@@ -46,8 +43,7 @@ for arg in "$@"; do
       HOSTNAME="${arg#*=}"
       ;;
     -h|--help)
-      printf 'Usage: %s [install|clean|status] [--hostname=name]
-' "$0"
+      printf 'Usage: %s [install|clean|status] [--hostname=name]\n' "$0"
       exit 0
       ;;
     *)
@@ -63,39 +59,31 @@ mkdir -p "$STAMPS_DIR"
 STAMP_BASE="${STAMPS_DIR}/.stamp.lfs_base_system"
 
 if [ "$ACTION" = "clean" ]; then
-  printf '[CLEAN] Removing LFS base system stamp...
-'
+  printf '[CLEAN] Removing LFS base system stamp...\n'
   rm -f "$STAMP_BASE"
   exit 0
 fi
 
 if [ "$ACTION" = "status" ]; then
   if [ -f "$STAMP_BASE" ]; then
-    printf 'LFS Base System: INSTALLED (%s)
-' "$(cat "$STAMP_BASE")"
+    printf 'LFS Base System: INSTALLED (%s)\n' "$(cat "$STAMP_BASE")"
   else
-    printf 'LFS Base System: NOT INSTALLED
-'
+    printf 'LFS Base System: NOT INSTALLED\n'
   fi
   exit 0
 fi
 
 if [ -f "$STAMP_BASE" ]; then
-  printf '[SKIP]  LFS base system already installed (%s)
-' "$STAMP_BASE"
+  printf '[SKIP]  LFS base system already installed (%s)\n' "$STAMP_BASE"
   exit 0
 fi
 
-printf '=== LibScript LFS Base System & FHS Layout (Stage 3) ===
-'
-printf '[INFO] Rootfs:   %s
-' "$ROOTFS"
-printf '[INFO] Hostname: %s
-' "$HOSTNAME"
+printf '=== LibScript LFS Base System & FHS Layout (Stage 3) ===\n'
+printf '[INFO] Rootfs:   %s\n' "$ROOTFS"
+printf '[INFO] Hostname: %s\n' "$HOSTNAME"
 
 # 1. Establish Standard FHS 3.0 Hierarchy
-printf '[STAGE] Creating FHS directory layout...
-'
+printf '[STAGE] Creating FHS directory layout...\n'
 mkdir -p "${ROOTFS}/bin"
 mkdir -p "${ROOTFS}/boot/efi"
 mkdir -p "${ROOTFS}/dev"
@@ -140,8 +128,7 @@ ln -sf usr/bin "${ROOTFS}/bin_link" 2>/dev/null || true
 chmod 1777 "${ROOTFS}/tmp" "${ROOTFS}/var/tmp" 2>/dev/null || true
 
 # 2. Deploy Essential Identity & Authentication Files
-printf '[STAGE] Configuring system identity files...
-'
+printf '[STAGE] Configuring system identity files...\n'
 if [ ! -f "${ROOTFS}/etc/passwd" ]; then
   cat << 'EOF' > "${ROOTFS}/etc/passwd"
 root:x:0:0:root:/root:/bin/sh
@@ -190,8 +177,7 @@ EOF
 fi
 
 # 3. Deploy Filesystem Table & Release Information
-printf '[STAGE] Configuring filesystem mounts and release metadata...
-'
+printf '[STAGE] Configuring filesystem mounts and release metadata...\n'
 if [ ! -f "${ROOTFS}/etc/fstab" ]; then
   cat << 'EOF' > "${ROOTFS}/etc/fstab"
 # /etc/fstab: static file system information
@@ -219,10 +205,8 @@ EOF
 fi
 
 # 4. Networking Defaults & Hostname
-printf '[STAGE] Configuring hostname and network resolution...
-'
-printf '%s
-' "$HOSTNAME" > "${ROOTFS}/etc/hostname"
+printf '[STAGE] Configuring hostname and network resolution...\n'
+printf '%s\n' "$HOSTNAME" > "${ROOTFS}/etc/hostname"
 
 if [ ! -f "${ROOTFS}/etc/hosts" ]; then
   cat << EOF > "${ROOTFS}/etc/hosts"
@@ -240,8 +224,7 @@ EOF
 fi
 
 # 5. Vagrant Defaults & Sudoers
-printf '[STAGE] Provisioning Vagrant user defaults and sudoers policies...
-'
+printf '[STAGE] Provisioning Vagrant user defaults and sudoers policies...\n'
 cat << 'EOF' > "${ROOTFS}/etc/sudoers.d/vagrant"
 vagrant ALL=(ALL) NOPASSWD: ALL
 EOF
@@ -268,6 +251,5 @@ fi
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_BASE}.tmp"
 mv "${STAMP_BASE}.tmp" "$STAMP_BASE"
-printf '[DONE]  LFS Base System initialized successfully.
-'
+printf '[DONE]  LFS Base System initialized successfully.\n'
 exit 0

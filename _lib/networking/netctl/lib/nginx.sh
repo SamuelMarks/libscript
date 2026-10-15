@@ -34,6 +34,8 @@ export SCRIPT_NAME
 
 # ## netctl_emit_nginx
 # Executes netctl_emit_nginx functionality.
+# ## netctl_emit_nginx
+# Executes the netctl_emit_nginx logic.
 netctl_emit_nginx() {
   state_file="${1:-$NETCTL_STATE_FILE}"
 

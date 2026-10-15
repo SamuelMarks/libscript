@@ -35,16 +35,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
@@ -74,10 +71,11 @@ MANAGE_PY="${OPENEDX_INSTALL_DIR}/manage.py"
 
 # ## resolve_python
 # Resolves the python executable for executing manage.py or direct python code.
+# ## resolve_python
+# Executes the resolve_python logic.
 resolve_python() {
   if [ -x "${PYTHON_BIN}" ]; then
-    printf '%s
-' "${PYTHON_BIN}"
+    printf '%s\n' "${PYTHON_BIN}"
   elif command -v python3 >/dev/null 2>&1; then
     command -v python3
   elif command -v python >/dev/null 2>&1; then
@@ -95,6 +93,8 @@ resolve_python() {
 #   $1 - Python script string
 # Outputs:
 #   Stdout/stderr of Python execution.
+# ## run_django_code
+# Executes the run_django_code logic.
 run_django_code() {
   _py="$(resolve_python)"
   if [ -z "${_py}" ]; then
@@ -120,6 +120,8 @@ run_django_code() {
 #     --password <password>
 #     --staff
 #     --superuser
+# ## user_create
+# Executes the user_create logic.
 user_create() {
   if [ $# -lt 2 ]; then
     log_err "Usage: $0 create <username> <email> [--password <password>] [--staff] [--superuser]"
@@ -246,6 +248,8 @@ EOF
 # Inputs:
 #   $1 - username
 #   $2 - password
+# ## user_set_password
+# Executes the user_set_password logic.
 user_set_password() {
   if [ $# -lt 2 ]; then
     log_err "Usage: $0 set_password <username> <password>"
@@ -309,6 +313,8 @@ EOF
 
 # ## user_list
 # Lists active staff and superuser accounts.
+# ## user_list
+# Executes the user_list logic.
 user_list() {
   log_info "Listing Open edX staff and superuser accounts..."
   _py="$(resolve_python)"
@@ -355,6 +361,8 @@ EOF
 
 # ## show_help
 # Displays usage guide.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
   cat <<EOF
 Open edX User Management CLI

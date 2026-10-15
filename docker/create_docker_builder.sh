@@ -67,6 +67,8 @@ REMAINING="$*"
 
 # ## help
 # Executes help functionality.
+# ## help
+# Executes the help logic.
 help() {
     # shellcheck disable=SC2016
     >&2 printf 'Create Docker image builder scripts.\n
@@ -97,6 +99,8 @@ chmod +x "${DOCKER_BUILDER}" "${DOCKER_BUILDER_PARALLEL}"
 
 # ## collect_when_pattern
 # Executes collect_when_pattern functionality.
+# ## collect_when_pattern
+# Executes the collect_when_pattern logic.
 collect_when_pattern() {
   pattern="$1"
     result=''
@@ -145,6 +149,8 @@ NL='
 '
 # ## process_one_dockerfile
 # Executes process_one_dockerfile functionality.
+# ## process_one_dockerfile
+# Executes the process_one_dockerfile logic.
 process_one_dockerfile() {
   dockerfile="${1}";
   end="${2:-${NL}}"
@@ -170,6 +176,8 @@ EOF
 
 # ## section2name
 # Executes section2name functionality.
+# ## section2name
+# Executes the section2name logic.
 section2name() {
   case "${1}" in
     "${SERVER_DFS}") res='Servers' ;;

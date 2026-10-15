@@ -34,6 +34,8 @@ _SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## libscript_fetch_checksum
 # Dynamic checksum fetcher
+# ## libscript_fetch_checksum
+# Executes the libscript_fetch_checksum logic.
 libscript_fetch_checksum() {
   export url="${1:-}"
   

@@ -24,16 +24,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 CC0_SCREENSHOTS_DIR="${REPO_ROOT}/../cc0-assets/libscript/wordpress/screenshots"
 TEMP_DIR="${REPO_ROOT}/tests_tmp/vagrant_screenshots"
@@ -44,9 +41,10 @@ VAGRANT_DIR="${REPO_ROOT}/vagrant/windows-11"
 
 # ## discover_environment
 # Discovers running QEMU process, SSH port, and monitor socket for Windows 11 Vagrant VM.
+# ## discover_environment
+# Executes the discover_environment logic.
 discover_environment() {
-  printf '[INFO] Discovering Windows 11 Vagrant environment...
-'
+  printf '[INFO] Discovering Windows 11 Vagrant environment...\n'
   SSH_PORT=$(ps aux | awk '/[q]emu.*windows-11/' | sed -n 's/.*hostfwd=tcp::\([0-9]*\)-:22.*/\1/p' | head -n 1 || true)
   if [ -z "${SSH_PORT:-}" ] && [ -d "${VAGRANT_DIR}" ]; then
     SSH_PORT=$(cd "${VAGRANT_DIR}" && vagrant ssh-config 2>/dev/null | awk '/Port / {print $2; exit}' || true)
@@ -57,8 +55,7 @@ discover_environment() {
 
   MONITOR_SOCK=$(ps aux | awk '/[q]emu.*windows-11/' | sed -n 's/.*path=\([^,]*qemu_socket\).*/\1/p' | head -n 1 || true)
   if [ -z "$MONITOR_SOCK" ] || [ ! -S "$MONITOR_SOCK" ]; then
-    printf '[ERROR] QEMU monitor socket not found. Is Windows 11 Vagrant VM running?
-' >&2
+    printf '[ERROR] QEMU monitor socket not found. Is Windows 11 Vagrant VM running?\n' >&2
     exit 1
   fi
 
@@ -67,42 +64,42 @@ discover_environment() {
     DISK_IMG=$(find "${VAGRANT_DIR}/.vagrant" -name "linked-box.img" 2>/dev/null | head -n 1 || true)
   fi
 
-  printf '[INFO] SSH port: %s
-' "$SSH_PORT"
-  printf '[INFO] Monitor socket: %s
-' "$MONITOR_SOCK"
-  printf '[INFO] Disk image: %s
-' "$DISK_IMG"
+  printf '[INFO] SSH port: %s\n' "$SSH_PORT"
+  printf '[INFO] Monitor socket: %s\n' "$MONITOR_SOCK"
+  printf '[INFO] Disk image: %s\n' "$DISK_IMG"
 }
 
 # ## vm_run
 # Helper to run commands in the guest via SSH.
+# ## vm_run
+# Executes the vm_run logic.
 vm_run() {
   $SSH_CMD "$*; exit 0"
 }
 
 # ## wait_for_ssh
 # Waits until Windows guest is reachable via SSH.
+# ## wait_for_ssh
+# Executes the wait_for_ssh logic.
 wait_for_ssh() {
-  printf '[INFO] Waiting for Windows guest SSH to become available...
-'
+  printf '[INFO] Waiting for Windows guest SSH to become available...\n'
   _attempts=0
   while [ "$_attempts" -lt 60 ]; do
     if $SSH_CMD 'Write-Host "PONG"' 2>/dev/null | grep -q "PONG"; then
-      printf '[INFO] Windows guest SSH is online and responsive.
-'
+      printf '[INFO] Windows guest SSH is online and responsive.\n'
       return 0
     fi
     sleep 3
     _attempts=$((_attempts + 1))
   done
-  printf '[ERROR] Timed out waiting for guest SSH.
-' >&2
+  printf '[ERROR] Timed out waiting for guest SSH.\n' >&2
   exit 1
 }
 
 # ## capture_screen
 # Helper to capture QEMU screendump and convert to PNG.
+# ## capture_screen
+# Executes the capture_screen logic.
 capture_screen() {
   _name="$1"
   _ppm="${TEMP_DIR}/${_name}.ppm"
@@ -128,6 +125,8 @@ capture_screen() {
 
 # ## vm_action
 # Helper to execute UI automation actions in Session 1 without visible console windows.
+# ## vm_action
+# Executes the vm_action logic.
 vm_action() {
   _act="$1"
   _limit=25
@@ -152,6 +151,8 @@ vm_radio() {
 
 # ## vm_check
 # shellcheck disable=SC2329
+# ## vm_check
+# Executes the vm_check logic.
 vm_check() {
   vm_action "CHECK:$1"
   sleep 1
@@ -159,6 +160,8 @@ vm_check() {
 
 # ## vm_uncheck
 # shellcheck disable=SC2329
+# ## vm_uncheck
+# Executes the vm_uncheck logic.
 vm_uncheck() {
   vm_action "UNCHECK:$1"
   sleep 1
@@ -181,6 +184,8 @@ vm_wait_dialog() {
 
 # ## vm_wait
 # shellcheck disable=SC2329
+# ## vm_wait
+# Executes the vm_wait logic.
 vm_wait() {
   _btn="$1"
   vm_action "WAIT:$_btn"
@@ -202,8 +207,7 @@ launch_browser_url() {
 
 # ## clean_guest_installations
 clean_guest_installations() {
-  printf '[INFO] Cleaning prior installations and browser sessions on guest...
-'
+  printf '[INFO] Cleaning prior installations and browser sessions on guest...\n'
   # shellcheck disable=SC2016
   vm_run 'Stop-Process -Name chrome, msedge, msiexec, WindowsTerminal -Force -ErrorAction SilentlyContinue; while ($p = Get-Package -Name "*WordPress*" -ErrorAction SilentlyContinue) { foreach ($pkg in $p) { Start-Process msiexec.exe -ArgumentList "/x $($pkg.FastPackageReference) /qn" -Wait } }; Get-ChildItem -Path "Registry::HKEY_CLASSES_ROOT\Installer\Products" -ErrorAction SilentlyContinue | Get-ItemProperty | Where-Object { $_.ProductName -like "*WordPress*" } | ForEach-Object { Start-Process msiexec.exe -ArgumentList "/x $($_.PSChildName) /qn" -Wait }; Remove-Item "C:/Users/*/Desktop/WordPress*.lnk", "C:/Users/Public/Desktop/WordPress*.lnk" -Force -ErrorAction SilentlyContinue'
   vm_run 'Stop-Process -Name chrome, msedge, msiexec, WindowsTerminal -Force -ErrorAction SilentlyContinue'
@@ -275,17 +279,16 @@ vagrant@127.0.0.1:C:/libscript/stacks/cms/wordpress/
 
 # ## restore_vanilla_snapshot
 # Restores VM disk image to vanilla snapshot and restarts Vagrant machine.
+# ## restore_vanilla_snapshot
+# Executes the restore_vanilla_snapshot logic.
 restore_vanilla_snapshot() {
   printf '
 =======================================================
 '
-  printf '==> Restoring Vanilla Windows 11 Snapshot via QEMU <==
-'
-  printf '=======================================================
-'
+  printf '==> Restoring Vanilla Windows 11 Snapshot via QEMU <==\n'
+  printf '=======================================================\n'
 
-  printf '[INFO] Stopping Windows 11 Vagrant machine...
-'
+  printf '[INFO] Stopping Windows 11 Vagrant machine...\n'
   (cd "${VAGRANT_DIR}" && vagrant halt windows-11-test-sqlite) || true
   sleep 3
 
@@ -297,8 +300,7 @@ restore_vanilla_snapshot() {
   fi
   printf '[INFO] Successfully reverted disk image to vanilla.\n'
 
-  printf '[INFO] Powering on Windows 11 Vagrant VM from vanilla snapshot...
-'
+  printf '[INFO] Powering on Windows 11 Vagrant VM from vanilla snapshot...\n'
   (cd "${VAGRANT_DIR}" && vagrant up windows-11-test-sqlite)
   sleep 5
 
@@ -306,12 +308,13 @@ restore_vanilla_snapshot() {
   wait_for_ssh
   sync_guest_environment
   clean_guest_installations
-  printf '[INFO] Vanilla environment restored and ready.
-'
+  printf '[INFO] Vanilla environment restored and ready.\n'
 }
 
 # ## run_installer_wizard
 # Executes the complete Simple and Advanced mode UI wizard flows, capturing all screenshots.
+# ## run_installer_wizard
+# Executes the run_installer_wizard logic.
 run_installer_wizard() {
   _mode_name="$1"
   _msi_file="$2"
@@ -323,8 +326,7 @@ run_installer_wizard() {
 
   clean_guest_installations
 
-  printf '[FLOW 1] Simple Mode Installation (%s)...
-' "$_mode_name"
+  printf '[FLOW 1] Simple Mode Installation (%s)...\n' "$_mode_name"
   vm_launch_msi "C:\libscript\packaging\${_msi_file}"
 
   # Step 1: Welcome
@@ -347,8 +349,7 @@ run_installer_wizard() {
   capture_screen "${_prefix}04_simple_verify_ready"
 
   # Step 5: Install & Complete
-  printf '[INFO] Triggering installation in Simple Mode...
-'
+  printf '[INFO] Triggering installation in Simple Mode...\n'
   vm_click "Install"
   vm_wait_dialog "Setup Complete"
   capture_screen "${_prefix}05_simple_exit"
@@ -357,8 +358,7 @@ run_installer_wizard() {
 
   # Confirm simple mode installation works
   vm_run 'Get-ItemProperty "HKLM:\Software\LibScriptwordpress" -ErrorAction SilentlyContinue | Out-String | Write-Host'
-  printf '[PASS] Confirmed WordPress %s Simple Mode installed successfully.
-' "$_mode_name"
+  printf '[PASS] Confirmed WordPress %s Simple Mode installed successfully.\n' "$_mode_name"
 
   clean_guest_installations
 
@@ -432,8 +432,7 @@ run_installer_wizard() {
   capture_screen "${_prefix}09_advanced_verify_ready"
 
   # Step 10: Trigger Installation & Complete
-  printf '[INFO] Triggering installation in Advanced Mode...
-'
+  printf '[INFO] Triggering installation in Advanced Mode...\n'
   vm_click "Install"
   vm_wait_dialog "Setup Complete"
   capture_screen "${_prefix}10_advanced_exit"
@@ -449,20 +448,16 @@ run_installer_wizard() {
 
   # Confirm advanced mode installation works
   vm_run 'Get-ItemProperty "HKLM:\Software\LibScriptwordpress" -ErrorAction SilentlyContinue | Out-String | Write-Host'
-  printf '[PASS] Confirmed WordPress %s Advanced Mode installed successfully.
-' "$_mode_name"
+  printf '[PASS] Confirmed WordPress %s Advanced Mode installed successfully.\n' "$_mode_name"
 }
 
 # =========================================================================
 # MAIN EXECUTION SEQUENCE
 # =========================================================================
 
-printf '=======================================================
-'
-printf 'WordPress MSI Screenshots & Full Verification Harness 
-'
-printf '=======================================================
-'
+printf '=======================================================\n'
+printf 'WordPress MSI Screenshots & Full Verification Harness \n'
+printf '=======================================================\n'
 
 discover_environment
 
@@ -473,15 +468,13 @@ printf '
 === Step 0: Verifying Vanilla Snapshot ===
 '
 qemu-img snapshot -U -l "${DISK_IMG}" | grep -q "vanilla" || {
-  printf '[INFO] Snapshot tag "vanilla" not found. Creating snapshot now...
-'
+  printf '[INFO] Snapshot tag "vanilla" not found. Creating snapshot now...\n'
   (cd "${VAGRANT_DIR}" && vagrant halt windows-11-test-sqlite)
   qemu-img snapshot -c vanilla "${DISK_IMG}"
   (cd "${VAGRANT_DIR}" && vagrant up windows-11-test-sqlite)
   discover_environment
 }
-printf '[PASS] Vanilla snapshot verified.
-'
+printf '[PASS] Vanilla snapshot verified.\n'
 
 sync_guest_environment
 
@@ -516,28 +509,24 @@ printf '
 === Steps 4, 5, 6: Browser Verification Tabs ===
 '
 
-printf '[INFO] Waiting for real PHP-FPM/Nginx stack on port 80...
-'
+printf '[INFO] Waiting for real PHP-FPM/Nginx stack on port 80...\n'
 vm_run 'New-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Force -ErrorAction SilentlyContinue | Out-Null; Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoLowDiskSpaceChecks" -Value 1 -Type DWord -Force; Stop-Process -Name ShellExperienceHost, msiexec -Force -ErrorAction SilentlyContinue'
 vm_run 'powershell -NoProfile -Command "while ((Test-NetConnection localhost -Port 80 -InformationLevel Quiet) -eq $false) { Start-Sleep -Seconds 2; Write-Host ''Waiting for 80...'' }"'
 
 # 4. browser tab (WordPress homepage)
-printf '[INFO] Step 4: Opening WordPress homepage (:80/) in Browser...
-'
+printf '[INFO] Step 4: Opening WordPress homepage (:80/) in Browser...\n'
 launch_browser_url "http://localhost:80/"
 capture_screen "11_browser_wordpress_home"
 capture_screen "11_browser_tab"
 
 # 5. logged in browser tab (WordPress Admin Dashboard)
-printf '[INFO] Step 5: Opening WordPress Admin Dashboard (:80/wp-admin/) in Browser...
-'
+printf '[INFO] Step 5: Opening WordPress Admin Dashboard (:80/wp-admin/) in Browser...\n'
 launch_browser_url "http://localhost:80/wp-admin/"
 capture_screen "12_browser_wordpress_admin_authenticated"
 capture_screen "12_browser_logged_in"
 
 # 6. logged in health check admin interface (WordPress Site Health)
-printf '[INFO] Step 6: Opening WordPress Site Health (:80/wp-admin/site-health.php) in Browser...
-'
+printf '[INFO] Step 6: Opening WordPress Site Health (:80/wp-admin/site-health.php) in Browser...\n'
 launch_browser_url "http://localhost:80/wp-admin/site-health.php"
 capture_screen "13_browser_wordpress_site_health"
 capture_screen "13_browser_health_check"
@@ -548,10 +537,8 @@ vm_run 'Stop-Process -Name chrome, msedge -Force -ErrorAction SilentlyContinue'
 printf '
 =======================================================
 '
-printf '=== All WordPress Screenshots Captured Successfully! ===
-'
-printf '=======================================================
-'
+printf '=== All WordPress Screenshots Captured Successfully! ===\n'
+printf '=======================================================\n'
 find "${CC0_SCREENSHOTS_DIR}" -maxdepth 1 -name "*.png" | sort | while read -r _img; do
   ls -lh "$_img"
 done

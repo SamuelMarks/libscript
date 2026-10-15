@@ -19,16 +19,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
@@ -51,6 +48,8 @@ PACKER_VERSION="${PACKER_VERSION:-latest}"
 
 # ## configure_hashicorp_repo_debian
 # Configures the official HashiCorp apt repository on Debian/Ubuntu systems.
+# ## configure_hashicorp_repo_debian
+# Executes the configure_hashicorp_repo_debian logic.
 configure_hashicorp_repo_debian() {
   if [ -f /etc/apt/sources.list.d/hashicorp.list ]; then
     return 0
@@ -77,6 +76,8 @@ configure_hashicorp_repo_debian() {
 
 # ## configure_hashicorp_repo_rhel
 # Configures the official HashiCorp yum repository on RHEL/Rocky/Fedora systems.
+# ## configure_hashicorp_repo_rhel
+# Executes the configure_hashicorp_repo_rhel logic.
 configure_hashicorp_repo_rhel() {
   if [ -f /etc/yum.repos.d/hashicorp.repo ]; then
     return 0

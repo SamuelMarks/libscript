@@ -1,16 +1,17 @@
 @echo off
-rem ## Overview
+:: # test_modular_msi_reuse.cmd
+:: ## Overview
 rem Validates the modular zero-.EXE Windows Installer packaging and component reuse architecture.
 rem Verifies standalone dependency MSIs, master orchestrator packages, deterministic GUID integrity,
 rem and side-by-side database sharing between Open edX and WordPress.
 rem
-rem ## Usage
+:: ## Usage
 rem   call tests\test_modular_msi_reuse.cmd
 rem
-rem ## Parameters
+:: ## Parameters
 rem   None.
 
-setlocal enabledelayedexpansion
+setlocal EnableDelayedExpansion
 
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -23,7 +24,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"

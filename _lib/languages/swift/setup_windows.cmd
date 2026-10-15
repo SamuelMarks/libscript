@@ -1,4 +1,5 @@
 @echo off
+:: # setup_windows.cmd
 setlocal EnableDelayedExpansion
 :: ## Overview
 :: Setup script for Swift on Windows.
@@ -20,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -74,6 +75,8 @@ if errorlevel 1 (
     winget install --id Swift.Toolchain --silent --accept-package-agreements --accept-source-agreements
 )
 
+:: ## create_shims
+:: Executes create_shims functionality.
 :create_shims
 for /d %%S in ("%LOCALAPPDATA%\Programs\Swift\Toolchains\*") do (
     if exist "%%S\usr\bin\swift.exe" set "SWIFT_BIN=%%S\usr\bin"

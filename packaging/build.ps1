@@ -4,7 +4,7 @@
 # ## Usage
 # .build.ps1
 
-$env:Path += ';C:\wix'
+$env:Path += ';' + $env:USERPROFILE + '\.libscript\wix\3.14\bin'
 Set-Location C:\libscript\packaging
 Write-Host "[INFO] Building Online MSI..."
 candle.exe -nologo -out OpenEdX-Setup.wixobj OpenEdX-Setup.wxs

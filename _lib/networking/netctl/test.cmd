@@ -2,14 +2,13 @@
 :: # test.cmd
 ::
 :: ## Overview
-:: Implements automated tests to verify the correctness of the component 'netctl' stack.
+:: Runs the test suite and validation scripts for the 'netctl' stack.
 :: 
 :: ## Usage
-:: Execute this script to run the test suite for netctl.
+:: Execute this script to test netctl functionality.
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
-
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
     if not errorlevel 1 (
@@ -20,7 +19,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -60,10 +59,8 @@ goto :main
 :: ## show_help
 :: Executes show_help functionality.
 :show_help
-:: ## show_help
-:: Executes show_help functionality.
 echo Usage: %~nx0
-echo Implements automated tests to verify the correctness of the component 'netctl' stack.
+echo Runs the test suite and validation scripts for the 'netctl' stack.
 echo.
 echo Options:
 echo   --help, -h, /?, -?  Show this help message.
@@ -72,7 +69,5 @@ exit /b 0
 :: ## main
 :: Executes main functionality.
 :main
-:: ## main
-:: Executes main functionality.
-echo netctl test pass
+echo Testing netctl is not supported via this script.
 exit /b 0

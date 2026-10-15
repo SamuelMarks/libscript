@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 PKG_NAME="${1:-sample-pkg}"
@@ -45,13 +42,11 @@ mkdir -p "$OUT_DIR"
 TARGET_RPM="${OUT_DIR}/${PKG_NAME}-${TARGET_ARCH}-${PKG_VER}-${VARIANT}.rpm"
 
 if [ -f "$TARGET_RPM" ]; then
-  printf '[IDEMPOTENT] Target RPM already exists: %s
-' "$TARGET_RPM"
+  printf '[IDEMPOTENT] Target RPM already exists: %s\n' "$TARGET_RPM"
   exit 0
 fi
 
-printf '[BUILD-RPM] Building RPM package %s version %s...
-' "$PKG_NAME" "$PKG_VER"
+printf '[BUILD-RPM] Building RPM package %s version %s...\n' "$PKG_NAME" "$PKG_VER"
 
 WORK_DIR="${LIBSCRIPT_ROOT_DIR}/build/tmp_rpm_${PKG_NAME}"
 rm -rf "$WORK_DIR"
@@ -114,13 +109,11 @@ if [ ! -f "$TARGET_RPM" ]; then
     cd "$WORK_DIR/pkg"
     find . | cpio -o -H newc 2>/dev/null | gzip -9 > "$TARGET_RPM" 2>/dev/null || 
       tar -czf "$TARGET_RPM" . 2>/dev/null || 
-      printf 'LibScript RPM Stub: %s %s
-' "$PKG_NAME" "$PKG_VER" > "$TARGET_RPM"
+      printf 'LibScript RPM Stub: %s %s\n' "$PKG_NAME" "$PKG_VER" > "$TARGET_RPM"
   )
 fi
 
 rm -rf "$WORK_DIR"
 
-printf '[OK] RPM package generated successfully: %s
-' "$TARGET_RPM"
+printf '[OK] RPM package generated successfully: %s\n' "$TARGET_RPM"
 exit 0

@@ -21,25 +21,20 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 TARGET_DIR="${1:-${LIBSCRIPT_TARGET_SYSROOT:-}}"
 
 if [ -z "$TARGET_DIR" ]; then
-  printf '[ERROR] Target sysroot directory must be provided.
-' >&2
-  printf 'Usage: %s <target_sysroot>
-' "$THIS_FILE" >&2
+  printf '[ERROR] Target sysroot directory must be provided.\n' >&2
+  printf 'Usage: %s <target_sysroot>\n' "$THIS_FILE" >&2
   exit 1
 fi
 
@@ -53,6 +48,8 @@ fi
 
 # ## is_mounted
 # Checks if a specified directory is currently mounted under /proc/mounts.
+# ## is_mounted
+# Executes the is_mounted logic.
 is_mounted() {
   _dir="$1"
   if [ -r /proc/mounts ]; then
@@ -92,6 +89,5 @@ if ! is_mounted "$TARGET_DIR/run"; then
   mount -v -t tmpfs tmpfs "$TARGET_DIR/run" -o mode=0755 2>/dev/null || true
 fi
 
-printf '[INFO] Target VFS mount complete for: %s
-' "$TARGET_DIR"
+printf '[INFO] Target VFS mount complete for: %s\n' "$TARGET_DIR"
 exit 0

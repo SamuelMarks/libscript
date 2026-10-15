@@ -31,16 +31,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 # Source core logging
 if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh" ]; then
@@ -133,6 +130,8 @@ mkdir -p "${CACHE_DIR}/runtimes" "${CACHE_DIR}/databases" "${CACHE_DIR}/wheels" 
 
 # ## compute_sha256
 # Computes the 64-character lowercase SHA-256 checksum of a file.
+# ## compute_sha256
+# Executes the compute_sha256 logic.
 compute_sha256() {
   _file="$1"
   if command -v sha256sum >/dev/null 2>&1; then
@@ -150,6 +149,8 @@ compute_sha256() {
 # ## prune_archive
 # Strips heavyweight debug symbols (.pdb) and non-essential static libraries
 # from large datastore archives to optimize air-gapped MSI package size.
+# ## prune_archive
+# Executes the prune_archive logic.
 prune_archive() {
   _dest="$1"
   _category="$2"
@@ -186,6 +187,8 @@ prune_archive() {
 
 # ## process_artifact
 # Idempotently checks or downloads an artifact and validates its SHA-256 digest.
+# ## process_artifact
+# Executes the process_artifact logic.
 process_artifact() {
   _url="$1"
   _dest="$2"
@@ -318,8 +321,7 @@ for _f in "${CACHE_DIR}/runtimes"/* "${CACHE_DIR}/databases"/* "${CACHE_DIR}/whe
   if [ -f "$_f" ]; then
     _h=$(compute_sha256 "$_f" || true)
     if [ -n "$_h" ]; then
-      printf '%s  %s
-' "$_h" "$(basename "$_f")" >> "$_hash_file"
+      printf '%s  %s\n' "$_h" "$(basename "$_f")" >> "$_hash_file"
     fi
   fi
 done

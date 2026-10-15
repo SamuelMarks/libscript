@@ -21,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -108,8 +108,7 @@ if "%PROTOCOL%"=="none" (
 )
 
 if "%DRIVER%"=="drm-kmod" (
-    echo kld_list="${kld_list:-} /boot/modules/virtio_gpu.ko">> "%SYSROOT%\etc
-c.conf"
+    echo kld_list="${kld_list:-} /boot/modules/virtio_gpu.ko">> "%SYSROOT%\etc\rc.conf"
 )
 
 (
@@ -118,12 +117,10 @@ c.conf"
     echo add path 'drm/*' mode 0666 group video
     echo add path 'input/*' mode 0660 group video
 ) > "%SYSROOT%\etc\devfs.rules"
-echo devfs_system_ruleset="system">> "%SYSROOT%\etc
-c.conf"
+echo devfs_system_ruleset="system">> "%SYSROOT%\etc\rc.conf"
 
 if "%PROTOCOL%"=="wayland" (
-    echo seatd_enable="YES">> "%SYSROOT%\etc
-c.conf"
+    echo seatd_enable="YES">> "%SYSROOT%\etc\rc.conf"
 )
 if "%PROTOCOL%"=="x11" (
     if not exist "%SYSROOT%\usr\local\etc\X11\xorg.conf.d" mkdir "%SYSROOT%\usr\local\etc\X11\xorg.conf.d"

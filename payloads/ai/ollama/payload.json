@@ -1,0 +1,33 @@
+{
+  "$schema": "../../payload.schema.json",
+  "name": "ollama",
+  "version": "1.0.0",
+  "description": "Standalone local and edge large language model serving runtime powered by _lib/utilities/ollama.",
+  "type": "ai-inference",
+  "artifact": {
+    "format": "libscript-component",
+    "component": "_lib/utilities/ollama",
+    "entrypoint": ["ollama", "serve"],
+    "args": [],
+    "working_dir": "/var/lib/ollama"
+  },
+  "resources": {
+    "cpu_cores": 4,
+    "memory_mb": 16384,
+    "gpu_count": 0
+  },
+  "scaling": {
+    "replicas": 1,
+    "strategy": "RollingUpdate",
+    "gang_scheduling": false,
+    "restart_policy": "Always"
+  },
+  "ports": [
+    {
+      "name": "ollama-http",
+      "port": 11434,
+      "protocol": "http",
+      "visibility": "internal"
+    }
+  ]
+}

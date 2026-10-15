@@ -34,6 +34,8 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 # ## show_help
 # Displays usage instructions and supported parameters.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [target_dir]"
   printf '%s\n' "Stages and configures the WordPress web publishing stack in target root."

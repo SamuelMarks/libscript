@@ -32,6 +32,8 @@ export DIR="${SCRIPT_DIR}"
 
 # ## discover_tcp_port
 # Checks if a given TCP port is locally listening.
+# ## discover_tcp_port
+# Executes the discover_tcp_port logic.
 discover_tcp_port() {
   _port="$1"
   if command -v ss >/dev/null 2>&1; then
@@ -44,6 +46,8 @@ discover_tcp_port() {
 
 # ## discover_unix_socket
 # Checks if a given UNIX socket exists.
+# ## discover_unix_socket
+# Executes the discover_unix_socket logic.
 discover_unix_socket() {
   _sock="$1"
   if [ -S "$_sock" ]; then return 0; else return 1; fi

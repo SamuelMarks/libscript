@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 PROFILE=""
@@ -48,14 +45,12 @@ for arg in "$@"; do
 done
 
 if [ -n "$PROFILE" ] && [ -f "$PROFILE" ]; then
-  printf '[PROVISION] Preparing deployment from profile: %s
-' "$PROFILE"
+  printf '[PROVISION] Preparing deployment from profile: %s\n' "$PROFILE"
   if [ -z "$IMAGE_PATH" ]; then
     IMAGE_PATH="${LIBSCRIPT_ROOT_DIR}/build/disk.img"
   fi
   if [ ! -f "$IMAGE_PATH" ]; then
-    printf '[INFO] Target disk image %s missing; synthesizing via Tier 2 pipeline...
-' "$IMAGE_PATH"
+    printf '[INFO] Target disk image %s missing; synthesizing via Tier 2 pipeline...\n' "$IMAGE_PATH"
     "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/raw_img.sh" "${LIBSCRIPT_ROOT_DIR}/build/target-sysroot" "$IMAGE_PATH" 2>/dev/null || true
   fi
 fi

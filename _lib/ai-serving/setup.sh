@@ -59,7 +59,7 @@ printf '%s\n' "Creating TPU VM $TPU_NAME..."
 if [ -x "${LIBSCRIPT_ROOT_DIR}/installed/gcp-cli/bin/tpu-vm-cli" ]; then
   "${LIBSCRIPT_ROOT_DIR}/installed/gcp-cli/bin/tpu-vm-cli" create "$TPU_NAME"
 else
-  "${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp/tpu-vm/cli.sh" create "$TPU_NAME"
+  "${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp-tpu-vm/cli.sh" create "$TPU_NAME"
 fi
 
 printf '%s\n' "Setup complete."

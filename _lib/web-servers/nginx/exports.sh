@@ -39,6 +39,8 @@ done
 
 # ## infer_locations
 # Executes infer_locations functionality.
+# ## infer_locations
+# Executes the infer_locations logic.
 infer_locations() {
   cwd="$(pwd)"
   locations_conf="${cwd}"'/.config/nginx/locations.conf'

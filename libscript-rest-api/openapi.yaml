@@ -1356,6 +1356,249 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  /api/v1/topologies:
+    get:
+      tags:
+        - Stack
+      summary: List cluster topologies and runtime state machine checkpoints
+      operationId: listTopologies
+      responses:
+        "200":
+          description: Active cluster topologies and state machine status
+          content:
+            application/json:
+              schema:
+                type: array
+                description: Array of active topology status records
+                items:
+                  type: object
+                  description: Topology runtime status summary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags:
+        - Stack
+      summary: Deploy or reconcile a Tier 3.5 multi-node cluster topology asynchronously
+      operationId: deployTopology
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description:
+                Declarative topology specification conforming to topologies/topology.schema.json
+      responses:
+        "202":
+          description: Async topology deployment job started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      tags:
+        - Stack
+      summary: Destroy a deployed cluster topology with graceful draining and Cloud DNS unmapping
+      operationId: destroyTopology
+      responses:
+        "202":
+          description: Async topology teardown job started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/topologies/{id}/drain:
+    post:
+      tags:
+        - Stack
+      summary: Gracefully drain a node in a Tier 3.5 cluster topology
+      operationId: drainTopologyNode
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Topology deployment identifier
+          schema:
+            type: string
+      responses:
+        "202":
+          description: Node drain job started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/topologies/{id}/failover:
+    post:
+      tags:
+        - Stack
+      summary:
+        Trigger split-brain fencing of the old leader and promote a replica in a Tier 3.5 topology
+      operationId: failoverTopologyLeader
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Topology deployment identifier
+          schema:
+            type: string
+      responses:
+        "202":
+          description: Leader failover and split-brain fencing job started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/payloads:
+    get:
+      tags:
+        - Services
+      summary:
+        List Tier 4 workloads scheduled across K8s, Nomad, Mesos, Native Inits, MicroVMs, or XPK
+      operationId: listPayloads
+      responses:
+        "200":
+          description: List of active Tier 4 workloads
+          content:
+            application/json:
+              schema:
+                type: array
+                description: Scheduled workload items
+                items:
+                  type: object
+                  description: Workload status record
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags:
+        - Services
+      summary: Compile and submit a Tier 4 declarative payload to a target scheduler
+      operationId: submitPayload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description:
+                Declarative workload specification conforming to payloads/payload.schema.json
+      responses:
+        "202":
+          description: Workload submission job started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/payloads/{id}/logs:
+    get:
+      tags:
+        - Services
+      summary: Stream execution logs for a scheduled Tier 4 workload
+      operationId: getPayloadLogs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Workload identifier
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Workload log stream
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: Plaintext log stream output
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/traits:
+    get:
+      tags:
+        - System
+      summary: List available and enabled Unified Node Traits in priority execution order
+      operationId: listTraits
+      responses:
+        "200":
+          description: Ordered list of node and sysroot traits
+          content:
+            application/json:
+              schema:
+                type: array
+                description: Trait identifiers in execution priority order
+                items:
+                  type: string
+                  description: Trait identifier
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags:
+        - System
+      summary: Apply or verify a node-level or offline sysroot trait asynchronously
+      operationId: applyTrait
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Trait invocation request conforming to traits/trait.schema.json
+      responses:
+        "202":
+          description: Trait execution job started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/components/{name}/hooks/{hook}:
+    post:
+      tags:
+        - Installations
+      summary: Invoke a Tier 1 Physical Instance Hook or Logical Multi-Tenant Hook
+      operationId: invokeComponentHook
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Component name in _lib/
+          schema:
+            type: string
+        - name: hook
+          in: path
+          required: true
+          description:
+            Physical or logical hook name (configure, probe, announce, log_stream, metrics, backup,
+            restore, upgrade, rollback, maintenance, provision_tenant, deprovision_tenant,
+            backup_tenant, restore_tenant)
+          schema:
+            type: string
+      responses:
+        "202":
+          description: Component lifecycle hook execution job started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobReference"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
 components:
   securitySchemes:
     OAuth2PasswordBearer:

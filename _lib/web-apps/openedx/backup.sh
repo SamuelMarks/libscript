@@ -41,16 +41,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
@@ -77,6 +74,8 @@ MYSQL_DATABASE="${MYSQL_DATABASE:-openedx}"
 
 # ## compute_sha256
 # Computes sha256 checksum of a file portably.
+# ## compute_sha256
+# Executes the compute_sha256 logic.
 compute_sha256() {
   _file="$1"
   if command -v sha256sum >/dev/null 2>&1; then
@@ -92,6 +91,8 @@ compute_sha256() {
 
 # ## backup_create
 # Orchestrates full state snapshot.
+# ## backup_create
+# Executes the backup_create logic.
 backup_create() {
   _out=""
   while [ $# -gt 0 ]; do
@@ -165,14 +166,15 @@ backup_create() {
   rm -rf "${_stage_dir}"
 
   _hash=$(compute_sha256 "${_archive}")
-  printf '%s  %s
-' "${_hash}" "$(basename "${_archive}")" > "${_archive}.sha256"
+  printf '%s  %s\n' "${_hash}" "$(basename "${_archive}")" > "${_archive}.sha256"
   log_success "Backup complete: ${_archive}"
   log_info "SHA-256 Checksum: ${_hash}"
 }
 
 # ## backup_list
 # Lists existing backups.
+# ## backup_list
+# Executes the backup_list logic.
 backup_list() {
   log_info "Listing available backups in ${OPENEDX_BACKUP_DIR}..."
   if [ ! -d "${OPENEDX_BACKUP_DIR}" ]; then
@@ -195,6 +197,8 @@ backup_list() {
 
 # ## show_help
 # Displays usage guide.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
   cat <<EOF
 Open edX Backup Utility

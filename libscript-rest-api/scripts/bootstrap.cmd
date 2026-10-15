@@ -7,7 +7,7 @@
 :: ## Usage
 :: Run via: `.\scripts\bootstrap.cmd`
 
-setlocal enabledelayedexpansion
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
@@ -20,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -83,8 +83,8 @@ echo [INFO] Detected Windows. Checking for required build tools...
 :: Check for Git
 where git >nul 2>&1
 if errorlevel 1 (
-    echo [INFO] Git not found. Attempting to install via winget...
-    winget install --id Git.Git -e --source winget
+    echo [INFO] Git not found. Attempting to install via libscript...
+    call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install git
 ) else (
     echo [INFO] Git is already installed.
 )
@@ -92,19 +92,18 @@ if errorlevel 1 (
 :: Check for CMake
 where cmake >nul 2>&1
 if errorlevel 1 (
-    echo [INFO] CMake not found. Attempting to install via winget...
-    winget install --id Kitware.CMake -e --source winget
+    echo [INFO] CMake not found. Attempting to install via libscript...
+    call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install cmake
 ) else (
     echo [INFO] CMake is already installed.
 )
 
-:: Check for C Compiler (MSVC / cl.exe)
-:: The best way on Windows is Visual Studio Build Tools
+:: Check for C Compiler
 where cl >nul 2>&1
 if errorlevel 1 (
     echo [INFO] MSVC compiler ^(cl.exe^) not found in PATH.
-    echo [INFO] Attempting to install Visual Studio Build Tools via winget...
-    winget install --id Microsoft.VisualStudio.2022.BuildTools -e --source winget --override "--wait --quiet --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
+    echo [INFO] Attempting to install via libscript...
+    call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install c
     echo [INFO] NOTE: You may need to run this script from a 'x64 Native Tools Command Prompt for VS' after installation.
 ) else (
     echo [INFO] MSVC compiler is already installed.
@@ -113,8 +112,8 @@ if errorlevel 1 (
 :: Check for jq
 where jq >nul 2>&1
 if errorlevel 1 (
-    echo [INFO] jq not found. Attempting to install via winget...
-    winget install --id jqlang.jq -e --source winget
+    echo [INFO] jq not found. Attempting to install via libscript...
+    call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install jq
 ) else (
     echo [INFO] jq is already installed.
 )

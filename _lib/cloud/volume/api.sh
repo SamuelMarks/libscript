@@ -32,6 +32,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## libscript_volume_create
 # Executes libscript_volume_create functionality.
+# ## libscript_volume_create
+# Executes the libscript_volume_create logic.
 libscript_volume_create() {
   provider="$1"
   size="${2:-10}"
@@ -100,6 +102,8 @@ libscript_volume_create() {
 
 # ## libscript_volume_delete
 # Executes libscript_volume_delete functionality.
+# ## libscript_volume_delete
+# Executes the libscript_volume_delete logic.
 libscript_volume_delete() {
   provider="$1"
   vid="$2"
@@ -137,6 +141,8 @@ libscript_volume_delete() {
 
 # ## libscript_volume_list
 # Executes libscript_volume_list functionality.
+# ## libscript_volume_list
+# Executes the libscript_volume_list logic.
 libscript_volume_list() {
   provider="$1"
   
@@ -172,6 +178,8 @@ libscript_volume_list() {
 
 # ## libscript_volume_attach
 # Executes libscript_volume_attach functionality.
+# ## libscript_volume_attach
+# Executes the libscript_volume_attach logic.
 libscript_volume_attach() {
   provider="$1"
   vid="$2"
@@ -208,6 +216,8 @@ libscript_volume_attach() {
 
 # ## libscript_volume_detach
 # Executes libscript_volume_detach functionality.
+# ## libscript_volume_detach
+# Executes the libscript_volume_detach logic.
 libscript_volume_detach() {
   provider="$1"
   vid="$2"

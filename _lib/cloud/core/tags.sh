@@ -47,6 +47,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 #   0 if managed (or overridden), 1 if not managed.
 # ## libscript_verify_managed
 # Verifies if a cloud resource is managed by LibScript via tags/labels.
+# ## libscript_verify_managed
+# Executes the libscript_verify_managed logic.
 libscript_verify_managed() {
   provider="${1:-}"
   type="${2:-}"
@@ -132,6 +134,8 @@ libscript_verify_managed() {
 #   --tags libscript=managed
 # ## libscript_format_tags
 # Formats tags/labels arguments for CLI resource creation.
+# ## libscript_format_tags
+# Executes the libscript_format_tags logic.
 libscript_format_tags() {
   provider="${1:-}"
   
@@ -167,6 +171,8 @@ libscript_format_tags() {
 #   --filter=labels.libscript=managed
 # ## libscript_format_tag_filter
 # Formats tag filters for querying and describing cloud resources.
+# ## libscript_format_tag_filter
+# Executes the libscript_format_tag_filter logic.
 libscript_format_tag_filter() {
   provider="${1:-}"
   

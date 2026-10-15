@@ -32,6 +32,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## map_package
 # Executes map_package functionality.
+# ## map_package
+# Executes the map_package logic.
 map_package() {
   pkg="${1}"
   

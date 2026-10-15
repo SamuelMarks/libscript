@@ -21,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -90,9 +90,7 @@ set "STAMP_DIR=%SYSROOT%\.libscript_stamps"
 set "STAMP_FILE=%STAMP_DIR%\pkg.stamp"
 
 if not exist "%STAMP_DIR%" mkdir "%STAMP_DIR%"
-if not exist "%SYSROOT%\usr\local\etc\pkg
-epos" mkdir "%SYSROOT%\usr\local\etc\pkg
-epos"
+if not exist "%SYSROOT%\usr\local\etc\pkg\repos" mkdir "%SYSROOT%\usr\local\etc\pkg\repos"
 if not exist "%SYSROOT%\var\db\pkg" mkdir "%SYSROOT%\var\db\pkg"
 if not exist "%SYSROOT%\var\cache\pkg" mkdir "%SYSROOT%\var\cache\pkg"
 
@@ -111,8 +109,7 @@ echo [PKG]      Configuring FreeBSD pkg repository (%BRANCH% branch)...
     echo   fingerprints: "/usr/share/keys/pkg",
     echo   enabled: yes
     echo }
-) > "%SYSROOT%\usr\local\etc\pkg
-epos\FreeBSD.conf"
+) > "%SYSROOT%\usr\local\etc\pkg\repos\FreeBSD.conf"
 
 (
     echo PKG_DBDIR = "/var/db/pkg";

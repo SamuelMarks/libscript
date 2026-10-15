@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 TARGET_ROOTFS="${LIBSCRIPT_TARGET_ROOTFS:-${LIBSCRIPT_ROOT_DIR}/build/rootfs_debian}"
@@ -45,30 +42,24 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-printf '[DISTRO-DEBIAN] Initializing Debian-style distribution synthesis pipeline...
-'
-printf '[DISTRO-DEBIAN] Target rootfs: %s
-' "$TARGET_ROOTFS"
-printf '[DISTRO-DEBIAN] Profile: %s
-' "$PROFILE"
+printf '[DISTRO-DEBIAN] Initializing Debian-style distribution synthesis pipeline...\n'
+printf '[DISTRO-DEBIAN] Target rootfs: %s\n' "$TARGET_ROOTFS"
+printf '[DISTRO-DEBIAN] Profile: %s\n' "$PROFILE"
 
 mkdir -p "$TARGET_ROOTFS"
 
 STAMP_FILE="${TARGET_ROOTFS}/.debian_distro_built"
 if [ -f "$STAMP_FILE" ]; then
-  printf '[IDEMPOTENT] Debian distribution already synthesized at: %s
-' "$TARGET_ROOTFS"
+  printf '[IDEMPOTENT] Debian distribution already synthesized at: %s\n' "$TARGET_ROOTFS"
   exit 0
 fi
 
 # Phase 1: Toolchain & Sysroot Bootstrap (FHS Layout)
-printf '[DISTRO-DEBIAN] Phase 1: Creating FHS layout and system skeleton...
-'
+printf '[DISTRO-DEBIAN] Phase 1: Creating FHS layout and system skeleton...\n'
 "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/create_fhs_layout.sh" "$TARGET_ROOTFS"
 
 # Phase 2: Dpkg & APT Toolchain Setup
-printf '[DISTRO-DEBIAN] Phase 2: Bootstrapping dpkg and apt administrative state...
-'
+printf '[DISTRO-DEBIAN] Phase 2: Bootstrapping dpkg and apt administrative state...\n'
 mkdir -p "$TARGET_ROOTFS/var/lib/dpkg/info" "$TARGET_ROOTFS/var/lib/dpkg/updates" "$TARGET_ROOTFS/var/lib/dpkg/alternatives" "$TARGET_ROOTFS/etc/apt/sources.list.d" "$TARGET_ROOTFS/etc/apt/apt.conf.d" "$TARGET_ROOTFS/etc/apt/trusted.gpg.d"
 
 touch "$TARGET_ROOTFS/var/lib/dpkg/status" "$TARGET_ROOTFS/var/lib/dpkg/available"
@@ -86,8 +77,7 @@ APT::Sandbox::User "root";
 EOF
 
 # Phase 3 & 4: Package Synthesis & Repository Generation
-printf '[DISTRO-DEBIAN] Phase 3 & 4: Generating base distribution packages and APT repository...
-'
+printf '[DISTRO-DEBIAN] Phase 3 & 4: Generating base distribution packages and APT repository...\n'
 PACKAGES_OUT="${LIBSCRIPT_ROOT_DIR}/build/packages/deb"
 mkdir -p "$PACKAGES_OUT"
 
@@ -95,8 +85,7 @@ mkdir -p "$PACKAGES_OUT"
 "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/repogen/deb_index.sh" "$PACKAGES_OUT" "bookworm" "amd64" "main"
 
 # Phase 5: Target Rootfs Installation via Dpkg Status Registration
-printf '[DISTRO-DEBIAN] Phase 5: Finalizing package manager status database...
-'
+printf '[DISTRO-DEBIAN] Phase 5: Finalizing package manager status database...\n'
 cat <<EOF >> "$TARGET_ROOTFS/var/lib/dpkg/status"
 Package: base-files
 Status: install ok installed
@@ -122,6 +111,5 @@ HOME_URL="https://github.com/libscript/libscript"
 EOF
 
 touch "$STAMP_FILE"
-printf '[OK] Debian-style distribution synthesis complete at: %s
-' "$TARGET_ROOTFS"
+printf '[OK] Debian-style distribution synthesis complete at: %s\n' "$TARGET_ROOTFS"
 exit 0

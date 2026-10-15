@@ -20,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -58,6 +58,8 @@ if not defined LIBSCRIPT_ROOT_DIR (
 set "REPO_BASE=%LIBSCRIPT_ROOT_DIR%\build\packages"
 set "ACTION=all"
 
+:: ## parse_loop
+:: Executes parse_loop functionality.
 :parse_loop
 if "%~1"=="" goto run_gen
 if /i "%~1"=="--apk" ( set "ACTION=apk" & shift & goto parse_loop )
@@ -69,6 +71,8 @@ set "REPO_BASE=%~1"
 shift
 goto parse_loop
 
+:: ## run_gen
+:: Executes run_gen functionality.
 :run_gen
 if not exist "%REPO_BASE%\apk" mkdir "%REPO_BASE%\apk"
 if not exist "%REPO_BASE%\deb" mkdir "%REPO_BASE%\deb"
@@ -81,24 +85,34 @@ if /i "%ACTION%"=="apk" goto do_apk
 if /i "%ACTION%"=="deb" goto do_deb
 if /i "%ACTION%"=="rpm" goto do_rpm
 
+:: ## do_all
+:: Executes do_all functionality.
 :do_all
 call "%SCRIPT_DIR%\apk_index.cmd" "%REPO_BASE%\apk"
 call "%SCRIPT_DIR%\deb_index.cmd" "%REPO_BASE%\deb"
 call "%SCRIPT_DIR%\rpm_index.cmd" "%REPO_BASE%\rpm"
 goto finish
 
+:: ## do_apk
+:: Executes do_apk functionality.
 :do_apk
 call "%SCRIPT_DIR%\apk_index.cmd" "%REPO_BASE%\apk"
 goto finish
 
+:: ## do_deb
+:: Executes do_deb functionality.
 :do_deb
 call "%SCRIPT_DIR%\deb_index.cmd" "%REPO_BASE%\deb"
 goto finish
 
+:: ## do_rpm
+:: Executes do_rpm functionality.
 :do_rpm
 call "%SCRIPT_DIR%\rpm_index.cmd" "%REPO_BASE%\rpm"
 goto finish
 
+:: ## finish
+:: Executes finish functionality.
 :finish
 set "KEY_DIR=%REPO_BASE%\keys"
 if not exist "%KEY_DIR%" mkdir "%KEY_DIR%"

@@ -19,16 +19,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
@@ -54,12 +51,15 @@ case "$ACTION" in
     if command -v uvicorn >/dev/null 2>&1; then
       uvicorn --version
     else
-      printf 'uvicorn not installed
-'
+      printf 'uvicorn not installed\n'
     fi
     exit 0
     ;;
   install)
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/uvicorn/${VERSION:-latest}/bin/uvicorn" ]; then
+      log_info "uvicorn ${VERSION:-latest} is already installed."
+      exit 0
+    fi
     log_info "Installing Uvicorn ASGI server via ${UVICORN_INSTALL_METHOD}..."
     if command -v uvicorn >/dev/null 2>&1; then
       log_info "uvicorn is already available on the system."
@@ -90,8 +90,7 @@ case "$ACTION" in
       uvicorn --version
       exit 0
     else
-      printf 'uvicorn not found in PATH
-' >&2
+      printf 'uvicorn not found in PATH\n' >&2
       exit 1
     fi
     ;;

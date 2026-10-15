@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 TARGET_ROOTFS="${LIBSCRIPT_TARGET_ROOTFS:-${LIBSCRIPT_ROOT_DIR}/build/rootfs_alpine}"
@@ -45,30 +42,24 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-printf '[DISTRO-ALPINE] Initializing Alpine Linux-style distribution synthesis pipeline...
-'
-printf '[DISTRO-ALPINE] Target rootfs: %s
-' "$TARGET_ROOTFS"
-printf '[DISTRO-ALPINE] Profile: %s
-' "$PROFILE"
+printf '[DISTRO-ALPINE] Initializing Alpine Linux-style distribution synthesis pipeline...\n'
+printf '[DISTRO-ALPINE] Target rootfs: %s\n' "$TARGET_ROOTFS"
+printf '[DISTRO-ALPINE] Profile: %s\n' "$PROFILE"
 
 mkdir -p "$TARGET_ROOTFS"
 
 STAMP_FILE="${TARGET_ROOTFS}/.alpine_distro_built"
 if [ -f "$STAMP_FILE" ]; then
-  printf '[IDEMPOTENT] Alpine distribution already synthesized at: %s
-' "$TARGET_ROOTFS"
+  printf '[IDEMPOTENT] Alpine distribution already synthesized at: %s\n' "$TARGET_ROOTFS"
   exit 0
 fi
 
 # Phase 1: Musl & BusyBox Bootstrap
-printf '[DISTRO-ALPINE] Phase 1: Creating FHS directory layout and BusyBox links...
-'
+printf '[DISTRO-ALPINE] Phase 1: Creating FHS directory layout and BusyBox links...\n'
 "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/create_fhs_layout.sh" "$TARGET_ROOTFS"
 
 # Phase 2: Apk-Tools Configuration
-printf '[DISTRO-ALPINE] Phase 2: Initializing apk-tools directories and repositories...
-'
+printf '[DISTRO-ALPINE] Phase 2: Initializing apk-tools directories and repositories...\n'
 mkdir -p "$TARGET_ROOTFS/etc/apk/keys" "$TARGET_ROOTFS/lib/apk/db" "$TARGET_ROOTFS/var/cache/apk"
 
 cat <<EOF > "$TARGET_ROOTFS/etc/apk/repositories"
@@ -83,8 +74,7 @@ openrc
 EOF
 
 # Phase 3 & 4: Package Synthesis & Repository Indexing
-printf '[DISTRO-ALPINE] Phase 3 & 4: Generating base APK packages and APKINDEX...
-'
+printf '[DISTRO-ALPINE] Phase 3 & 4: Generating base APK packages and APKINDEX...\n'
 PACKAGES_OUT="${LIBSCRIPT_ROOT_DIR}/build/packages/apk"
 mkdir -p "$PACKAGES_OUT"
 
@@ -92,8 +82,7 @@ mkdir -p "$PACKAGES_OUT"
 "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/repogen/apk_index.sh" "$PACKAGES_OUT" "x86_64" "v3.20"
 
 # Phase 5: Target Rootfs Installation via APK DB Registration
-printf '[DISTRO-ALPINE] Phase 5: Registering installed packages in APK database...
-'
+printf '[DISTRO-ALPINE] Phase 5: Registering installed packages in APK database...\n'
 cat <<EOF > "$TARGET_ROOTFS/lib/apk/db/installed"
 C:Q1dummyhash
 P:alpine-base
@@ -123,6 +112,5 @@ HOME_URL="https://github.com/libscript/libscript"
 EOF
 
 touch "$STAMP_FILE"
-printf '[OK] Alpine Linux-style distribution synthesis complete at: %s
-' "$TARGET_ROOTFS"
+printf '[OK] Alpine Linux-style distribution synthesis complete at: %s\n' "$TARGET_ROOTFS"
 exit 0

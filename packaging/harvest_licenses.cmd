@@ -34,6 +34,8 @@ set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 :: Traverses parent directories to identify LIBSCRIPT_ROOT_DIR.
 set "LIBSCRIPT_ROOT_DIR="
 set "CURR_DIR=%SCRIPT_DIR%"
+:: ## find_root_loop
+:: Executes find_root_loop functionality.
 :find_root_loop
 if exist "%CURR_DIR%\libscript.cmd" (
     set "LIBSCRIPT_ROOT_DIR=%CURR_DIR%"
@@ -47,6 +49,8 @@ for %%I in ("%CURR_DIR%\..") do set "PARENT_DIR=%%~fI"
 if "%PARENT_DIR%"=="%CURR_DIR%" goto root_found
 set "CURR_DIR=%PARENT_DIR%"
 goto find_root_loop
+:: ## root_found
+:: Executes root_found functionality.
 :root_found
 
 if "%~1"=="" goto show_help
@@ -58,6 +62,8 @@ set "PS_CMD=powershell -NoProfile -ExecutionPolicy Bypass"
 %PS_CMD% -File "%LIBSCRIPT_ROOT_DIR%\packaging\harvest_licenses.ps1" %*
 exit /b %ERRORLEVEL%
 
+:: ## show_help
+:: Executes show_help functionality.
 :show_help
 echo Usage: %~nx0 ^<TARGET_DIR_OR_PLAN^> [OPTIONS]
 echo.

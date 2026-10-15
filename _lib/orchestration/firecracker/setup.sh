@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 ACTION="${1:-boot}"
@@ -79,8 +76,7 @@ case "$ACTION" in
 EOF
     date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
     mv "${STAMP_FILE}.tmp" "$STAMP_FILE"
-    printf '[OK] Configured Firecracker microVM template: %s
-' "$CFG_FILE"
+    printf '[OK] Configured Firecracker microVM template: %s\n' "$CFG_FILE"
     ;;
 
   boot)
@@ -91,8 +87,7 @@ EOF
       ROOTFS="${LIBSCRIPT_ROOT_DIR}/build/disk.img"
     fi
 
-    printf '[ORCHESTRATION] Starting microVM with kernel %s and rootfs %s...
-' "$KERNEL" "$ROOTFS"
+    printf '[ORCHESTRATION] Starting microVM with kernel %s and rootfs %s...\n' "$KERNEL" "$ROOTFS"
     if command -v firecracker >/dev/null 2>&1; then
       rm -f "$SOCKET"
       # Configure TAP network if ip tool is present and running as root
@@ -104,8 +99,7 @@ EOF
       # Launch Firecracker in background with API socket
       firecracker --api-sock "$SOCKET" --config-file "${LIBSCRIPT_ROOT_DIR}/build/firecracker_vm.json" 2>/dev/null || true
     else
-      printf '[INFO] firecracker binary not present in host PATH. MicroVM definition staged.
-'
+      printf '[INFO] firecracker binary not present in host PATH. MicroVM definition staged.\n'
     fi
     ;;
 
@@ -114,8 +108,7 @@ EOF
       curl --unix-socket "$SOCKET" -i -X PUT 'http://localhost/actions' -H 'Accept: application/json' -d '{"action_type": "SendCtrlAltDel"}' 2>/dev/null || true
       rm -f "$SOCKET"
     fi
-    printf '[OK] MicroVM stopped: %s
-' "$SOCKET"
+    printf '[OK] MicroVM stopped: %s\n' "$SOCKET"
     ;;
 esac
 

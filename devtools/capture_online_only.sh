@@ -24,16 +24,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 CC0_SCREENSHOTS_DIR="${REPO_ROOT}/../cc0-assets/libscript/openedx/screenshots"
 TEMP_DIR="${REPO_ROOT}/tests_tmp/vagrant_screenshots"
@@ -45,6 +42,8 @@ fi
 
 # ## discover_environment
 # Discovers dynamic SSH port, QEMU monitor socket, and disk image path.
+# ## discover_environment
+# Executes the discover_environment logic.
 discover_environment() {
   SSH_PORT=""
   # shellcheck disable=SC2009
@@ -66,35 +65,33 @@ discover_environment() {
 
   DISK_IMG=$(find -L "${VAGRANT_DIR}/.vagrant" -name "linked-box.img" 2>/dev/null | head -n 1 || true)
 
-  printf '[INFO] Using SSH port: %s
-' "$SSH_PORT"
-  printf '[INFO] Found QEMU monitor socket: %s
-' "$MONITOR_SOCK"
-  printf '[INFO] Found VM disk image: %s
-' "$DISK_IMG"
+  printf '[INFO] Using SSH port: %s\n' "$SSH_PORT"
+  printf '[INFO] Found QEMU monitor socket: %s\n' "$MONITOR_SOCK"
+  printf '[INFO] Found VM disk image: %s\n' "$DISK_IMG"
 }
 
 # ## wait_for_ssh
 # Waits until Windows guest SSH service responds.
+# ## wait_for_ssh
+# Executes the wait_for_ssh logic.
 wait_for_ssh() {
-  printf '[INFO] Waiting for Windows 11 SSH service to respond on port %s...
-' "${SSH_PORT}"
+  printf '[INFO] Waiting for Windows 11 SSH service to respond on port %s...\n' "${SSH_PORT}"
   _count=0
   while ! ${SSH_CMD} 'hostname' >/dev/null 2>&1; do
     sleep 3
     _count=$((_count + 1))
     if [ "$_count" -gt 60 ]; then
-      printf '[ERROR] Timed out waiting for guest SSH.
-' >&2
+      printf '[ERROR] Timed out waiting for guest SSH.\n' >&2
       return 1
     fi
   done
-  printf '[INFO] Windows 11 guest SSH is responsive.
-'
+  printf '[INFO] Windows 11 guest SSH is responsive.\n'
 }
 
 # ## vm_run
 # Helper to run commands in the guest via SSH.
+# ## vm_run
+# Executes the vm_run logic.
 vm_run() {
   _rc=1
   for _try in 1 2 3 4 5; do
@@ -108,6 +105,8 @@ vm_run() {
 
 # ## capture_screen
 # Helper to capture QEMU screendump and convert to PNG.
+# ## capture_screen
+# Executes the capture_screen logic.
 capture_screen() {
   _name="$1"
   _ppm="/tmp/${_name}.ppm"
@@ -128,14 +127,15 @@ capture_screen() {
     fi
     rm -f "$_png"
     if [ -f "${CC0_SCREENSHOTS_DIR}/${_name}.png" ]; then
-      printf '[CAPTURED] %s.png (%s bytes)
-' "$_name" "$(wc -c < "${CC0_SCREENSHOTS_DIR}/${_name}.png" | tr -d ' ')"
+      printf '[CAPTURED] %s.png (%s bytes)\n' "$_name" "$(wc -c < "${CC0_SCREENSHOTS_DIR}/${_name}.png" | tr -d ' ')"
     fi
   fi
 }
 
 # ## vm_action
 # Helper to execute UI automation actions in Session 1 without visible console windows.
+# ## vm_action
+# Executes the vm_action logic.
 vm_action() {
   _act="$1"
   _limit=25
@@ -148,6 +148,8 @@ vm_action() {
 
 # ## vm_click
 # Helper to click a button in Session 1.
+# ## vm_click
+# Executes the vm_click logic.
 vm_click() {
   vm_action "CLICK:$1"
   sleep 1.5
@@ -155,6 +157,8 @@ vm_click() {
 
 # ## vm_radio
 # Helper to select a radio button in Session 1.
+# ## vm_radio
+# Executes the vm_radio logic.
 vm_radio() {
   vm_action "RADIO:$1"
   sleep 1.5
@@ -162,6 +166,8 @@ vm_radio() {
 
 # ## vm_check
 # Helper to check a checkbox in Session 1.
+# ## vm_check
+# Executes the vm_check logic.
 vm_check() {
   vm_action "CHECK:$1"
   sleep 1
@@ -170,6 +176,8 @@ vm_check() {
 
 # ## vm_set_edit
 # Helper to set text of an edit control in Session 1.
+# ## vm_set_edit
+# Executes the vm_set_edit logic.
 vm_set_edit() {
   _idx="$1"
   _val="$2"
@@ -179,6 +187,8 @@ vm_set_edit() {
 
 # ## vm_wait_dialog
 # Helper to wait for a dialog with a specified title in Session 1.
+# ## vm_wait_dialog
+# Executes the vm_wait_dialog logic.
 vm_wait_dialog() {
   _title="$1"
   vm_action "WAIT_DIALOG:$_title"
@@ -187,6 +197,8 @@ vm_wait_dialog() {
 
 # ## vm_launch_msi
 # Helper to launch MSI in Session 1 via LaunchMsi scheduled task.
+# ## vm_launch_msi
+# Executes the vm_launch_msi logic.
 vm_launch_msi() {
   _msi_path="$(echo "$1" | sed 's|/|\\|g')"
   vm_run "\$principal = New-ScheduledTaskPrincipal -UserId 'vagrant' -LogonType Interactive -RunLevel Highest; \$aLaunch = New-ScheduledTaskAction -Execute 'msiexec.exe' -Argument \"/i \`\"C:\libscript\packaging\\\\${_msi_path}\`\"\"; Register-ScheduledTask -TaskName 'LaunchMsi' -Action \$aLaunch -Principal \$principal -Force > \$null; Start-ScheduledTask -TaskName 'LaunchMsi'; Start-Sleep -Seconds 4"
@@ -194,6 +206,8 @@ vm_launch_msi() {
 
 # ## launch_browser_url
 # Helper to launch web browser to a specified URL in Session 1 without console windows.
+# ## launch_browser_url
+# Executes the launch_browser_url logic.
 launch_browser_url() {
   _url="$1"
   vm_run "cmd.exe /c call C:\libscript\packaging\open_browser.cmd $_url"
@@ -202,15 +216,18 @@ launch_browser_url() {
 
 # ## clean_guest_installations
 # Helper to uninstall all Open edX packages from Windows guest.
+# ## clean_guest_installations
+# Executes the clean_guest_installations logic.
 clean_guest_installations() {
   :
 }
 
 # ## sync_guest_environment
 # Transfers packaging tooling, assets, stacks, and MSIs to the Windows guest.
+# ## sync_guest_environment
+# Executes the sync_guest_environment logic.
 sync_guest_environment() {
-  printf '=== Syncing packaging and stack files to Windows guest ===
-'
+  printf '=== Syncing packaging and stack files to Windows guest ===\n'
   vm_run 'New-Item -ItemType Directory -Path "C:/libscript/packaging/assets", "C:/libscript/stacks/cms/openedx" -Force -ErrorAction SilentlyContinue | Out-Null'
 
   scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" \
@@ -268,32 +285,28 @@ sync_guest_environment() {
 
 # ## restore_vanilla_snapshot
 # Stops the VM and restores the vanilla snapshot on the disk image.
+# ## restore_vanilla_snapshot
+# Executes the restore_vanilla_snapshot logic.
 restore_vanilla_snapshot() {
   printf '
 =======================================================
 '
-  printf '==> Restoring Vanilla Windows 11 Snapshot via QEMU <==
-'
-  printf '=======================================================
-'
+  printf '==> Restoring Vanilla Windows 11 Snapshot via QEMU <==\n'
+  printf '=======================================================\n'
 
-  printf '[INFO] Stopping Windows 11 Vagrant machine...
-'
+  printf '[INFO] Stopping Windows 11 Vagrant machine...\n'
   (cd "${VAGRANT_DIR}" && vagrant halt windows-11-test-sqlite) || true
   sleep 3
 
-  printf '[INFO] Reverting disk image to vanilla snapshot...
-'
+  printf '[INFO] Reverting disk image to vanilla snapshot...\n'
   if [ -f "${DISK_IMG}.vanilla" ]; then
     cp -cf "${DISK_IMG}.vanilla" "${DISK_IMG}" 2>/dev/null || cp -f "${DISK_IMG}.vanilla" "${DISK_IMG}"
   else
     qemu-img snapshot -a vanilla "${DISK_IMG}"
   fi
-  printf '[INFO] Successfully reverted disk image to vanilla.
-'
+  printf '[INFO] Successfully reverted disk image to vanilla.\n'
 
-  printf '[INFO] Powering on Windows 11 Vagrant VM from vanilla snapshot...
-'
+  printf '[INFO] Powering on Windows 11 Vagrant VM from vanilla snapshot...\n'
   (cd "${VAGRANT_DIR}" && vagrant up --no-provision windows-11-test-sqlite)
   sleep 5
 
@@ -301,12 +314,13 @@ restore_vanilla_snapshot() {
   wait_for_ssh
   sync_guest_environment
   clean_guest_installations
-  printf '[INFO] Vanilla environment restored and ready.
-'
+  printf '[INFO] Vanilla environment restored and ready.\n'
 }
 
 # ## run_installer_wizard
 # Executes Simple and Advanced mode UI wizard flows, capturing all screenshots.
+# ## run_installer_wizard
+# Executes the run_installer_wizard logic.
 run_installer_wizard() {
   _mode_name="$1"
   _msi_file="$2"
@@ -320,8 +334,7 @@ run_installer_wizard() {
   printf '
 === Flow 1: Simple Mode Installation (%s) ===
 ' "$_mode_name"
-  printf '[INFO] Launching %s in Session 1...
-' "$_msi_file"
+  printf '[INFO] Launching %s in Session 1...\n' "$_msi_file"
   vm_launch_msi "C:/libscript/packaging/${_msi_file}"
 
   # Step 1: Welcome
@@ -344,8 +357,7 @@ run_installer_wizard() {
   capture_screen "${_prefix}04_simple_verify_ready"
 
   # Step 5: Install & Complete
-  printf '[INFO] Triggering installation in Simple Mode...
-'
+  printf '[INFO] Triggering installation in Simple Mode...\n'
   vm_click "Install"
   vm_wait_dialog "Setup Complete"
   capture_screen "${_prefix}05_simple_exit"
@@ -354,16 +366,14 @@ run_installer_wizard() {
 
   # Confirm simple mode installation works
   vm_run 'Get-ItemProperty "HKCU:\Software\LibScript\OpenEdX" -ErrorAction SilentlyContinue | Out-String | Write-Host'
-  printf '[PASS] Confirmed Open edX %s Simple Mode installed successfully.
-' "$_mode_name"
+  printf '[PASS] Confirmed Open edX %s Simple Mode installed successfully.\n' "$_mode_name"
 
   clean_guest_installations
 
   printf '
 === Flow 2: Advanced Mode Customization (%s) ===
 ' "$_mode_name"
-  printf '[INFO] Launching %s for Advanced Mode in Session 1...
-' "$_msi_file"
+  printf '[INFO] Launching %s for Advanced Mode in Session 1...\n' "$_msi_file"
   vm_launch_msi "C:/libscript/packaging/${_msi_file}"
   vm_wait_dialog "Welcome"
   vm_click "Next"
@@ -437,15 +447,13 @@ run_installer_wizard() {
   capture_screen "${_prefix}09_advanced_verify_ready"
 
   # Verify Ready -> Install & Exit
-  printf '[INFO] Triggering installation in Advanced Mode...
-'
+  printf '[INFO] Triggering installation in Advanced Mode...\n'
   vm_click "Install"
   vm_wait_dialog "Setup Complete"
   capture_screen "${_prefix}10_advanced_exit"
 
   # Exit -> Finish
-  printf '[INFO] Waiting for installation to complete and clicking Finish...
-'
+  printf '[INFO] Waiting for installation to complete and clicking Finish...\n'
   vm_click "Finish"
   sleep 2
   vm_run 'Stop-Process -Name msiexec -Force -ErrorAction SilentlyContinue'
@@ -454,8 +462,7 @@ run_installer_wizard() {
 
   # Confirm advanced mode installation works
   vm_run 'Get-ItemProperty "HKCU:\Software\LibScript\OpenEdX" -ErrorAction SilentlyContinue | Out-String | Write-Host'
-  printf '[PASS] Confirmed Open edX %s Advanced Mode installed successfully.
-' "$_mode_name"
+  printf '[PASS] Confirmed Open edX %s Advanced Mode installed successfully.\n' "$_mode_name"
 }
 
 # =======================================================
@@ -471,14 +478,11 @@ clean_guest_installations
 printf '
 =======================================================
 '
-printf '=== Step 0: Verifying Vanilla Snapshot ===
-'
-printf '=======================================================
-'
+printf '=== Step 0: Verifying Vanilla Snapshot ===\n'
+printf '=======================================================\n'
 if [ -n "$DISK_IMG" ] && [ -f "$DISK_IMG" ]; then
   if ! qemu-img snapshot -U -l "${DISK_IMG}" 2>/dev/null | grep -q "vanilla"; then
-    printf '[INFO] Snapshot tag "vanilla" not found. Creating snapshot now...
-'
+    printf '[INFO] Snapshot tag "vanilla" not found. Creating snapshot now...\n'
     (cd "${VAGRANT_DIR}" && vagrant halt windows-11-test-sqlite)
     qemu-img snapshot -c vanilla "${DISK_IMG}"
     cp -cf "${DISK_IMG}" "${DISK_IMG}.vanilla" 2>/dev/null || cp -f "${DISK_IMG}" "${DISK_IMG}.vanilla"
@@ -487,41 +491,33 @@ if [ -n "$DISK_IMG" ] && [ -f "$DISK_IMG" ]; then
     wait_for_ssh
     sync_guest_environment
   else
-    printf '[PASS] Vanilla snapshot verified on %s
-' "${DISK_IMG}"
+    printf '[PASS] Vanilla snapshot verified on %s\n' "${DISK_IMG}"
   fi
 fi
 
 printf '
 =======================================================
 '
-printf '=== Step 2: Restore Snapshot ===
-'
-printf '=======================================================
-'
+printf '=== Step 2: Restore Snapshot ===\n'
+printf '=======================================================\n'
 restore_vanilla_snapshot
 
 # --- Step 3: Install Open edX Online Mode (Simple and Advanced) ---
 printf '
 =======================================================
 '
-printf '=== Step 3: Install Open edX Online Mode ===
-'
-printf '=======================================================
-'
+printf '=== Step 3: Install Open edX Online Mode ===\n'
+printf '=======================================================\n'
 run_installer_wizard "Online Mode" "OpenEdX-Setup.msi" ""
 
 # --- Steps 4 - 7: Browser Verification Tabs ---
 printf '
 =======================================================
 '
-printf '=== Steps 4 - 7: Browser Verification & Authentication Tabs ===
-'
-printf '=======================================================
-'
+printf '=== Steps 4 - 7: Browser Verification & Authentication Tabs ===\n'
+printf '=======================================================\n'
 
-printf '[INFO] Waiting for real LMS (8000) and CMS (8001) ports to become responsive...
-'
+printf '[INFO] Waiting for real LMS (8000) and CMS (8001) ports to become responsive...\n'
 vm_run 'powershell -NoProfile -Command "while (-not (Test-NetConnection localhost -Port 8000 -InformationLevel Quiet)) { Start-Sleep -Seconds 2; Write-Host ''Waiting for 8000...'' }"'
 vm_run 'powershell -NoProfile -Command "while (-not (Test-NetConnection localhost -Port 8001 -InformationLevel Quiet)) { Start-Sleep -Seconds 2; Write-Host ''Waiting for 8001...'' }"'
 
@@ -563,10 +559,8 @@ vm_run 'Stop-Process -Name chrome, msedge -Force -ErrorAction SilentlyContinue'
 printf '
 =======================================================
 '
-printf '=== All Open edX Vagrant Windows Screenshots Captured Successfully! ===
-'
-printf '=======================================================
-'
+printf '=== All Open edX Vagrant Windows Screenshots Captured Successfully! ===\n'
+printf '=======================================================\n'
 find "${CC0_SCREENSHOTS_DIR}" -maxdepth 1 -name "*.png" | sort | while read -r _img; do
   ls -lh "$_img"
 done

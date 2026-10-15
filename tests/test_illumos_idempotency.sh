@@ -23,16 +23,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 PROFILE="${1:-${REPO_ROOT}/profiles/illumos/minimal-server.json}"
@@ -43,43 +40,35 @@ mkdir -p "${REPO_ROOT}/tests_tmp"
 LOG_PASS1="${REPO_ROOT}/tests_tmp/pass1_$$.log"
 LOG_PASS2="${REPO_ROOT}/tests_tmp/pass2_$$.log"
 
-printf '[TEST]     Starting 2-Pass Idempotency Verification Test on illumos...
-'
+printf '[TEST]     Starting 2-Pass Idempotency Verification Test on illumos...\n'
 
 # --- PASS 1: Initial Clean Build ---
-printf '[PASS 1]   Executing initial build and export pass...
-'
+printf '[PASS 1]   Executing initial build and export pass...\n'
 "${REPO_ROOT}/_lib/illumos/distro/assemble.sh" "${PROFILE}" "${TEST_SYSROOT}" > "${LOG_PASS1}" 2>&1
 "${REPO_ROOT}/cli/commands/package_as/illumos_qcow2.sh" "${TEST_SYSROOT}" "${TEST_IMG}" 10 >> "${LOG_PASS1}" 2>&1
 
 if [ ! -f "${TEST_IMG}.stamp" ]; then
-  printf '[FAIL]     Pass 1 failed to generate valid stamp marker!
-' >&2
+  printf '[FAIL]     Pass 1 failed to generate valid stamp marker!\n' >&2
   exit 1
 fi
-printf '[PASS 1]   Initial build completed successfully.
-'
+printf '[PASS 1]   Initial build completed successfully.\n'
 
 # Capture sysroot mtime snapshot
 MTIME_PASS1=$(ls -lR "${TEST_SYSROOT}" | awk '{print $5, $6, $7, $8, $9}' | sum 2>/dev/null || cksum 2>/dev/null || true)
 
 # --- PASS 2: Consecutive Idempotency Re-run ---
-printf '[PASS 2]   Executing consecutive idempotency verification pass...
-'
+printf '[PASS 2]   Executing consecutive idempotency verification pass...\n'
 "${REPO_ROOT}/_lib/illumos/distro/assemble.sh" "${PROFILE}" "${TEST_SYSROOT}" > "${LOG_PASS2}" 2>&1
 "${REPO_ROOT}/cli/commands/package_as/illumos_qcow2.sh" "${TEST_SYSROOT}" "${TEST_IMG}" 10 >> "${LOG_PASS2}" 2>&1
 
 # Assert Pass 2 emitted [SKIP]
 if ! grep -q "\[SKIP\]" "${LOG_PASS2}"; then
-  printf '[FAIL]     Pass 2 did not skip completed steps!
-' >&2
+  printf '[FAIL]     Pass 2 did not skip completed steps!\n' >&2
   cat "${LOG_PASS2}" >&2
   exit 1
 fi
-printf '[PASS]     Pass 2 skipped previously completed tasks.
-'
+printf '[PASS]     Pass 2 skipped previously completed tasks.\n'
 
 # Cleanup
 rm -rf "${TEST_SYSROOT}" "${TEST_IMG}" "${LOG_PASS1}" "${LOG_PASS2}" "${TEST_IMG}.stamp"
-printf '[OK]       illumos idempotency matrix test PASSED.
-'
+printf '[OK]       illumos idempotency matrix test PASSED.\n'

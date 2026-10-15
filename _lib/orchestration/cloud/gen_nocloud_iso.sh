@@ -21,16 +21,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 HOSTNAME="${1:-libscript-vm}"
@@ -41,8 +38,7 @@ OUT_DIR="${OUT_ISO%/*}"
 [ -z "$OUT_DIR" ] || mkdir -p "$OUT_DIR"
 
 if [ -f "$OUT_ISO" ]; then
-  printf '[IDEMPOTENT] Target NoCloud ISO already exists: %s
-' "$OUT_ISO"
+  printf '[IDEMPOTENT] Target NoCloud ISO already exists: %s\n' "$OUT_ISO"
   exit 0
 fi
 
@@ -80,8 +76,7 @@ ethernets:
     dhcp4: true
 EOF
 
-printf '[NOCLOUD] Packaging NoCloud ISO with label cidata...
-'
+printf '[NOCLOUD] Packaging NoCloud ISO with label cidata...\n'
 
 if command -v genisoimage >/dev/null 2>&1; then
   genisoimage -output "$OUT_ISO" -volid cidata -joliet -rock "$TMP_STAGING" >/dev/null 2>&1
@@ -90,11 +85,9 @@ elif command -v mkisofs >/dev/null 2>&1; then
 elif command -v xorrisofs >/dev/null 2>&1; then
   xorrisofs -output "$OUT_ISO" -volid cidata -joliet -rock "$TMP_STAGING" >/dev/null 2>&1
 else
-  printf 'LibScript NoCloud CIDATA Stub
-' > "$OUT_ISO"
+  printf 'LibScript NoCloud CIDATA Stub\n' > "$OUT_ISO"
 fi
 
 rm -rf "$TMP_STAGING"
-printf '[OK] Cloud-Init NoCloud ISO generated: %s
-' "$OUT_ISO"
+printf '[OK] Cloud-Init NoCloud ISO generated: %s\n' "$OUT_ISO"
 exit 0

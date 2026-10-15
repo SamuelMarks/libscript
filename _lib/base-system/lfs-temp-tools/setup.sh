@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 ACTION="${1:-install}"
@@ -44,35 +41,28 @@ mkdir -p "$STAMPS_DIR"
 STAMP_TEMP_TOOLS="${STAMPS_DIR}/.stamp.lfs_temp_tools"
 
 if [ "$ACTION" = "clean" ]; then
-  printf '[CLEAN] Removing LFS temp tools stamp...
-'
+  printf '[CLEAN] Removing LFS temp tools stamp...\n'
   rm -f "$STAMP_TEMP_TOOLS"
   exit 0
 fi
 
 if [ "$ACTION" = "status" ]; then
   if [ -f "$STAMP_TEMP_TOOLS" ]; then
-    printf 'LFS Temp Tools: INSTALLED (%s)
-' "$(cat "$STAMP_TEMP_TOOLS")"
+    printf 'LFS Temp Tools: INSTALLED (%s)\n' "$(cat "$STAMP_TEMP_TOOLS")"
   else
-    printf 'LFS Temp Tools: NOT INSTALLED
-'
+    printf 'LFS Temp Tools: NOT INSTALLED\n'
   fi
   exit 0
 fi
 
 if [ -f "$STAMP_TEMP_TOOLS" ]; then
-  printf '[SKIP]  LFS temporary tools already installed (%s)
-' "$STAMP_TEMP_TOOLS"
+  printf '[SKIP]  LFS temporary tools already installed (%s)\n' "$STAMP_TEMP_TOOLS"
   exit 0
 fi
 
-printf '=== LibScript LFS Temporary Tools (Stage 2) ===
-'
-printf '[INFO] Target Rootfs: %s
-' "$ROOTFS"
-printf '[INFO] Tools Directory: %s
-' "$TOOLS_DIR"
+printf '=== LibScript LFS Temporary Tools (Stage 2) ===\n'
+printf '[INFO] Target Rootfs: %s\n' "$ROOTFS"
+printf '[INFO] Tools Directory: %s\n' "$TOOLS_DIR"
 
 mkdir -p "${ROOTFS}/bin"
 mkdir -p "${ROOTFS}/usr/bin"
@@ -88,8 +78,7 @@ mkdir -p "$TOOLS_DIR"
 # Stage temporary utilities
 TEMP_TOOLS="m4 ncurses sh coreutils diffutils file findutils gawk grep gzip make patch sed tar xz"
 for tool in $TEMP_TOOLS; do
-  printf '[STAGE] Staging temporary tool: %s
-' "$tool"
+  printf '[STAGE] Staging temporary tool: %s\n' "$tool"
   # In build/simulation harness, establish functional stubs or link host tool
   if command -v "$tool" >/dev/null 2>&1; then
     ln -sf "$(command -v "$tool")" "${TOOLS_DIR}/${tool}" 2>/dev/null || true
@@ -110,6 +99,5 @@ fi
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_TEMP_TOOLS}.tmp"
 mv "${STAMP_TEMP_TOOLS}.tmp" "$STAMP_TEMP_TOOLS"
-printf '[DONE]  LFS Stage 2 Temporary Tools installed successfully.
-'
+printf '[DONE]  LFS Stage 2 Temporary Tools installed successfully.\n'
 exit 0

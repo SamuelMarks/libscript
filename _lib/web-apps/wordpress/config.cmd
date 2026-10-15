@@ -21,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -70,6 +70,8 @@ if "%CMD%"=="get" goto do_get
 if "%CMD%"=="set" goto do_set
 if "%CMD%"=="help" goto show_help
 
+:: ## do_get
+:: Executes do_get functionality.
 :do_get
 shift
 set "KEY=%~1"
@@ -83,6 +85,8 @@ for /f "tokens=2 delims='" %%a in ('findstr /i "'%KEY%'" "%WP_CONFIG%"') do (
 )
 exit /b 1
 
+:: ## do_set
+:: Executes do_set functionality.
 :do_set
 shift
 set "KEY=%~1"
@@ -101,11 +105,15 @@ if not errorlevel 1 (
 echo [OK] Config key %KEY% updated.
 exit /b 0
 
+:: ## do_dump
+:: Executes do_dump functionality.
 :do_dump
 echo === WordPress 7.1.2 Configuration Constants ===
 findstr /i "define" "%WP_CONFIG%" | findstr /v "KEY SALT"
 exit /b 0
 
+:: ## show_help
+:: Executes show_help functionality.
 :show_help
 echo WordPress Configuration Management on Windows
 echo.

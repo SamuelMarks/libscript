@@ -30,15 +30,19 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 NETCTL_DIR="${SCRIPT_DIR}"
 export LIBSCRIPT_ROOT_DIR NETCTL_DIR
 
-for LIB in "_lib/networking/netctl/lib/prelude.sh" "_lib/networking/netctl/lib/state.sh" "_lib/networking/netctl/lib/nginx.sh" "_lib/networking/netctl/lib/caddy.sh" "_lib/networking/netctl/lib/apache.sh" "_lib/networking/netctl/lib/dockerfile.sh" "_lib/networking/netctl/lib/vagrantfile.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+for LIB in "_lib/networking/netctl/lib/prelude.sh" "_lib/networking/netctl/lib/state.sh" "_lib/networking/netctl/lib/nginx.sh" "_lib/networking/netctl/lib/caddy.sh" "_lib/networking/netctl/lib/apache.sh" "_lib/networking/netctl/lib/traefik.sh" "_lib/networking/netctl/lib/vagrantfile.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
-  # shellcheck disable=SC1090
-  . "${SCRIPT_NAME}"
+  if [ -f "${SCRIPT_NAME}" ]; then
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+  fi
 done
 
 # ## usage
 # Executes usage functionality.
+# ## usage
+# Executes the usage logic.
 usage() {
   cat <<EOF
 netctl - Singular and Additive network config generator
@@ -93,7 +97,9 @@ case "$1" in
     case "$2" in
       nginx) netctl_emit_nginx ;;
       caddy) netctl_emit_caddy ;;
-      apache) netctl_emit_apache ;;
+      apache|httpd) netctl_emit_apache ;;
+      traefik) netctl_emit_traefik ;;
+      iis) netctl_emit_apache ;;
       dockerfile) netctl_emit_dockerfile ;;
       vagrantfile) netctl_emit_vagrantfile ;;
       *) printf '%s\n' "Unknown format: $2" >&2; exit 1 ;;
@@ -148,7 +154,9 @@ if [ "$SINGULAR_MODE" -eq 1 ]; then
     case "$EMIT_FORMAT" in
       nginx) netctl_emit_nginx ;;
       caddy) netctl_emit_caddy ;;
-      apache) netctl_emit_apache ;;
+      apache|httpd) netctl_emit_apache ;;
+      traefik) netctl_emit_traefik ;;
+      iis) netctl_emit_apache ;;
       dockerfile) netctl_emit_dockerfile ;;
       vagrantfile) netctl_emit_vagrantfile ;;
       *) printf '%s\n' "Unknown format: $EMIT_FORMAT" >&2; exit 1 ;;

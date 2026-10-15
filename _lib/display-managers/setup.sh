@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 GREETER="none"
@@ -59,40 +56,33 @@ STAMP_GREETER="${STAMPS_DIR}/.stamp.lfs_greeter_${GREETER}"
 
 if [ "$ACTION" = "status" ]; then
   if [ -f "$STAMP_GREETER" ]; then
-    printf 'Greeter %s: INSTALLED (%s)
-' "$GREETER" "$(cat "$STAMP_GREETER")"
+    printf 'Greeter %s: INSTALLED (%s)\n' "$GREETER" "$(cat "$STAMP_GREETER")"
   else
-    printf 'Greeter %s: NOT INSTALLED
-' "$GREETER"
+    printf 'Greeter %s: NOT INSTALLED\n' "$GREETER"
   fi
   exit 0
 fi
 
 if [ "$ACTION" = "clean" ]; then
-  printf '[CLEAN] Removing greeter stamp for %s...
-' "$GREETER"
+  printf '[CLEAN] Removing greeter stamp for %s...\n' "$GREETER"
   rm -f "$STAMP_GREETER"
   exit 0
 fi
 
 if [ -f "$STAMP_GREETER" ]; then
-  printf '[SKIP]  Greeter %s already configured (%s)
-' "$GREETER" "$STAMP_GREETER"
+  printf '[SKIP]  Greeter %s already configured (%s)\n' "$GREETER" "$STAMP_GREETER"
   exit 0
 fi
 
-printf '=== Configuring Display Manager: %s ===
-' "$GREETER"
-printf '[INFO] Target Rootfs: %s
-' "$ROOTFS"
+printf '=== Configuring Display Manager: %s ===\n' "$GREETER"
+printf '[INFO] Target Rootfs: %s\n' "$ROOTFS"
 
 mkdir -p "${ROOTFS}/usr/bin"
 mkdir -p "${ROOTFS}/etc"
 
 case "$GREETER" in
   none)
-    printf '[STAGE] Direct console login selected.
-'
+    printf '[STAGE] Direct console login selected.\n'
     ;;
 
   greetd)
@@ -108,8 +98,7 @@ EOF
     if [ ! -f "${ROOTFS}/usr/bin/greetd" ]; then
       cat << 'EOF' > "${ROOTFS}/usr/bin/greetd"
 #!/bin/sh
-printf '[GREETD] Greetd login daemon active.
-'
+printf '[GREETD] Greetd login daemon active.\n'
 exit 0
 EOF
       chmod +x "${ROOTFS}/usr/bin/greetd"
@@ -127,8 +116,7 @@ EOF
     if [ ! -f "${ROOTFS}/usr/bin/sddm" ]; then
       cat << 'EOF' > "${ROOTFS}/usr/bin/sddm"
 #!/bin/sh
-printf '[SDDM] SDDM Display Manager active.
-'
+printf '[SDDM] SDDM Display Manager active.\n'
 exit 0
 EOF
       chmod +x "${ROOTFS}/usr/bin/sddm"
@@ -144,8 +132,7 @@ EOF
     if [ ! -f "${ROOTFS}/usr/bin/lightdm" ]; then
       cat << 'EOF' > "${ROOTFS}/usr/bin/lightdm"
 #!/bin/sh
-printf '[LIGHTDM] LightDM Display Manager active.
-'
+printf '[LIGHTDM] LightDM Display Manager active.\n'
 exit 0
 EOF
       chmod +x "${ROOTFS}/usr/bin/lightdm"
@@ -161,8 +148,7 @@ EOF
     if [ ! -f "${ROOTFS}/usr/bin/gdm" ]; then
       cat << 'EOF' > "${ROOTFS}/usr/bin/gdm"
 #!/bin/sh
-printf '[GDM] GNOME Display Manager active.
-'
+printf '[GDM] GNOME Display Manager active.\n'
 exit 0
 EOF
       chmod +x "${ROOTFS}/usr/bin/gdm"
@@ -170,14 +156,12 @@ EOF
     ;;
 
   *)
-    printf '[ERROR] Unknown greeter provider: %s
-' "$GREETER" >&2
+    printf '[ERROR] Unknown greeter provider: %s\n' "$GREETER" >&2
     exit 1
     ;;
 esac
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_GREETER}.tmp"
 mv "${STAMP_GREETER}.tmp" "$STAMP_GREETER"
-printf '[DONE]  Greeter %s configured successfully.
-' "$GREETER"
+printf '[DONE]  Greeter %s configured successfully.\n' "$GREETER"
 exit 0

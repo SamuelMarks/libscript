@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 SYSROOT="${1:-${LIBSCRIPT_TARGET_SYSROOT:-${REPO_ROOT}/build/freebsd-sysroot}}"
@@ -45,17 +42,14 @@ mkdir -p "${STAMP_DIR}"
 mkdir -p "${SYSROOT}/etc"
 
 if [ -f "${STAMP_FILE}" ]; then
-  printf '[SKIP]     FreeBSD display protocol %s already configured in %s
-' "${PROTOCOL}" "${SYSROOT}"
+  printf '[SKIP]     FreeBSD display protocol %s already configured in %s\n' "${PROTOCOL}" "${SYSROOT}"
   exit 0
 fi
 
-printf '[DISPLAY]  Configuring display protocol: %s (driver: %s)...
-' "${PROTOCOL}" "${DRIVER}"
+printf '[DISPLAY]  Configuring display protocol: %s (driver: %s)...\n' "${PROTOCOL}" "${DRIVER}"
 
 if [ "${PROTOCOL}" = "none" ]; then
-  printf '[DISPLAY]  Headless mode active, zero display packages staged.
-'
+  printf '[DISPLAY]  Headless mode active, zero display packages staged.\n'
   date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
   mv "${STAMP_FILE}.tmp" "${STAMP_FILE}"
   exit 0
@@ -99,5 +93,4 @@ fi
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
 mv "${STAMP_FILE}.tmp" "${STAMP_FILE}"
-printf '[OK]       Display protocol %s configured.
-' "${PROTOCOL}"
+printf '[OK]       Display protocol %s configured.\n' "${PROTOCOL}"

@@ -19,24 +19,19 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 export PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:${PATH:-}"
 
-printf '%s
-' "=== Checking Hypervisors & Tools ==="
+printf '%s\n' "=== Checking Hypervisors & Tools ==="
 
-printf '%s
-' "--- QEMU ---"
+printf '%s\n' "--- QEMU ---"
 if command -v qemu-system-x86_64 >/dev/null 2>&1; then
   qemu-system-x86_64 --version | head -n 1
 elif command -v qemu-system-aarch64 >/dev/null 2>&1; then
@@ -44,63 +39,51 @@ elif command -v qemu-system-aarch64 >/dev/null 2>&1; then
 elif command -v qemu-img >/dev/null 2>&1; then
   qemu-img --version | head -n 1
 else
-  printf '%s
-' "qemu not found!" >&2
+  printf '%s\n' "qemu not found!" >&2
 fi
 
 if [ -e "/dev/kvm" ]; then
-  printf '%s
-' "KVM device: /dev/kvm is available."
+  printf '%s\n' "KVM device: /dev/kvm is available."
 fi
 
-printf '%s
-' "--- VirtualBox ---"
+printf '%s\n' "--- VirtualBox ---"
 if command -v VBoxManage >/dev/null 2>&1; then
   VBoxManage --version
   VBoxManage list extpacks 2>/dev/null || true
 else
-  printf '%s
-' "VBoxManage not found (optional on arm64/macOS)." >&2
+  printf '%s\n' "VBoxManage not found (optional on arm64/macOS)." >&2
 fi
 
-printf '%s
-' "--- Packer ---"
+printf '%s\n' "--- Packer ---"
 if command -v packer >/dev/null 2>&1; then
   packer --version
 else
-  printf '%s
-' "packer not found!" >&2
+  printf '%s\n' "packer not found!" >&2
 fi
 
-printf '%s
-' "--- Vagrant ---"
+printf '%s\n' "--- Vagrant ---"
 if command -v vagrant >/dev/null 2>&1; then
   vagrant --version
   vagrant plugin list 2>/dev/null || true
 else
-  printf '%s
-' "vagrant not found!" >&2
+  printf '%s\n' "vagrant not found!" >&2
 fi
 
-printf '%s
-' "--- Ruby & Bundler ---"
+printf '%s\n' "--- Ruby & Bundler ---"
 if command -v ruby >/dev/null 2>&1; then
   ruby -v
 else
-  printf '%s
-' "ruby not found!" >&2
+  printf '%s\n' "ruby not found!" >&2
 fi
 
 if command -v bundle >/dev/null 2>&1; then
   bundle --version
 fi
 
-printf '%s
-' "--- Image Utilities ---"
+printf '%s\n' "--- Image Utilities ---"
 for tool in xorriso genisoimage wimlib-imagex 7z cabextract; do
   if command -v "$tool" >/dev/null 2>&1; then
-    printf 'Found %s: %s
-' "$tool" "$(command -v "$tool")"
+    printf 'Found %s: %s\n' "$tool" "$(command -v "$tool")"
   fi
 done
 
@@ -113,24 +96,20 @@ for candidate in "$PWD" "$PWD/bento" "$PWD/../bento" "$PWD/../bento/bento" "$HOM
 done
 
 if [ -n "$bento_dir" ]; then
-  printf '%s
-' "=== Validating Bento Repository at $bento_dir ==="
+  printf '%s\n' "=== Validating Bento Repository at $bento_dir ==="
   if [ -x "$bento_dir/bin/bento" ]; then
     (cd "$bento_dir" && bundle exec ./bin/bento version 2>/dev/null || ./bin/bento version 2>/dev/null || true)
   fi
 
   if [ -f "$bento_dir/os_pkrvars/windows/windows-11-x86_64.pkrvars.hcl" ]; then
-    printf '%s
-' "Validating Windows 11 template..."
+    printf '%s\n' "Validating Windows 11 template..."
     (cd "$bento_dir/packer_templates" && packer validate -var-file=../os_pkrvars/windows/windows-11-x86_64.pkrvars.hcl .)
   fi
 
   if [ -f "$bento_dir/os_pkrvars/windows/windows-2025-x86_64.pkrvars.hcl" ]; then
-    printf '%s
-' "Validating Windows Server 2025 template..."
+    printf '%s\n' "Validating Windows Server 2025 template..."
     (cd "$bento_dir/packer_templates" && packer validate -var-file=../os_pkrvars/windows/windows-2025-x86_64.pkrvars.hcl .)
   fi
 fi
 
-printf '%s
-' "=== All Bento Builder checks completed successfully! ==="
+printf '%s\n' "=== All Bento Builder checks completed successfully! ==="

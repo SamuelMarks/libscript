@@ -21,16 +21,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 ACTION="${1:-install}"
@@ -41,33 +38,27 @@ mkdir -p "$STAMPS_DIR"
 STAMP_RUNIT="${STAMPS_DIR}/.stamp.lfs_init_runit"
 
 if [ "$ACTION" = "clean" ]; then
-  printf '[CLEAN] Removing Runit stamp...
-'
+  printf '[CLEAN] Removing Runit stamp...\n'
   rm -f "$STAMP_RUNIT"
   exit 0
 fi
 
 if [ "$ACTION" = "status" ]; then
   if [ -f "$STAMP_RUNIT" ]; then
-    printf 'Runit: INSTALLED (%s)
-' "$(cat "$STAMP_RUNIT")"
+    printf 'Runit: INSTALLED (%s)\n' "$(cat "$STAMP_RUNIT")"
   else
-    printf 'Runit: NOT INSTALLED
-'
+    printf 'Runit: NOT INSTALLED\n'
   fi
   exit 0
 fi
 
 if [ -f "$STAMP_RUNIT" ]; then
-  printf '[SKIP]  Runit already installed (%s)
-' "$STAMP_RUNIT"
+  printf '[SKIP]  Runit already installed (%s)\n' "$STAMP_RUNIT"
   exit 0
 fi
 
-printf '=== LibScript Runit Init Provider ===
-'
-printf '[INFO] Target Rootfs: %s
-' "$ROOTFS"
+printf '=== LibScript Runit Init Provider ===\n'
+printf '[INFO] Target Rootfs: %s\n' "$ROOTFS"
 
 mkdir -p "${ROOTFS}/etc/runit"
 mkdir -p "${ROOTFS}/etc/sv"
@@ -78,8 +69,7 @@ mkdir -p "${ROOTFS}/sbin"
 cat << 'EOF' > "${ROOTFS}/etc/runit/1"
 #!/bin/sh
 echo "runsvdir: starting"
-printf '[RUNIT] Stage 1: System initialization...
-'
+printf '[RUNIT] Stage 1: System initialization...\n'
 /bin/mount -a 2>/dev/null || true
 touch /etc/runit/stopit
 chmod 0 /etc/runit/stopit
@@ -89,8 +79,7 @@ chmod +x "${ROOTFS}/etc/runit/1"
 # 2. Runit Stage 2 (Supervision loop)
 cat << 'EOF' > "${ROOTFS}/etc/runit/2"
 #!/bin/sh
-printf '[RUNIT] Stage 2: Service supervisor active.
-'
+printf '[RUNIT] Stage 2: Service supervisor active.\n'
 exec env - PATH=/bin:/sbin:/usr/bin:/usr/sbin 
   runsvdir -P /etc/service 'log: .................................................................................................................................................................................................................................................................................................................................................................................................... ' 2>/dev/null || exec /sbin/agetty -L 115200 ttyS0 vt102
 EOF
@@ -99,8 +88,7 @@ chmod +x "${ROOTFS}/etc/runit/2"
 # 3. Runit Stage 3 (Clean shutdown)
 cat << 'EOF' > "${ROOTFS}/etc/runit/3"
 #!/bin/sh
-printf '[RUNIT] Stage 3: System shutdown...
-'
+printf '[RUNIT] Stage 3: System shutdown...\n'
 /bin/umount -a -r 2>/dev/null || true
 EOF
 chmod +x "${ROOTFS}/etc/runit/3"
@@ -118,6 +106,5 @@ fi
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_RUNIT}.tmp"
 mv "${STAMP_RUNIT}.tmp" "$STAMP_RUNIT"
-printf '[DONE]  Runit configured successfully.
-'
+printf '[DONE]  Runit configured successfully.\n'
 exit 0

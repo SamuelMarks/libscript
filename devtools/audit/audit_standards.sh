@@ -26,35 +26,28 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 # ## show_help
 # Displays usage and help information for the audit tool.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") [--all | --staged | <file>...]"
-  printf '%s
-' "Audits files for adherence to LibScript engineering standards."
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") [--all | --staged | <file>...]"
+  printf '%s\n' "Audits files for adherence to LibScript engineering standards."
   printf '
 '
-  printf '%s
-' "Options:"
-  printf '%s
-' "  --all               Audit all tracked script files in repository."
-  printf '%s
-' "  --staged            Audit git-staged files (default if no files given)."
-  printf '%s
-' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --all               Audit all tracked script files in repository."
+  printf '%s\n' "  --staged            Audit git-staged files (default if no files given)."
+  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
@@ -67,6 +60,8 @@ cd "$REPO_ROOT"
 # ## handle_interrupt
 # Signal handler to abort audit immediately on interruption.
 # shellcheck disable=SC2329
+# ## handle_interrupt
+# Executes the handle_interrupt logic.
 handle_interrupt() {
   trap - INT TERM HUP EXIT
   exit 130
@@ -78,17 +73,20 @@ ERRORS=0
 
 # ## log_failure
 # Records and outputs an audit violation message.
+# ## log_failure
+# Executes the log_failure logic.
 log_failure() {
   target_file="$1"
   rule_name="$2"
   details="$3"
-  printf '[STANDARDS VIOLATION] [%s] %s: %s
-' "$rule_name" "$target_file" "$details" >&2
+  printf '[STANDARDS VIOLATION] [%s] %s: %s\n' "$rule_name" "$target_file" "$details" >&2
   ERRORS=$((ERRORS + 1))
 }
 
 # ## is_excluded_path
 # Checks whether a given path should be skipped from audits.
+# ## is_excluded_path
+# Executes the is_excluded_path logic.
 is_excluded_path() {
   check_path="$1"
   case "$check_path" in
@@ -103,6 +101,8 @@ is_excluded_path() {
 
 # ## audit_single_file
 # Runs all static standard checks on an individual file.
+# ## audit_single_file
+# Executes the audit_single_file logic.
 audit_single_file() {
   file="$1"
 
@@ -362,6 +362,5 @@ if [ "$ERRORS" -gt 0 ]; then
   exit 1
 fi
 
-printf '%s
-' "[AUDIT] All inspected files adhere to LibScript engineering standards."
+printf '%s\n' "[AUDIT] All inspected files adhere to LibScript engineering standards."
 exit 0

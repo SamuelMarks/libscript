@@ -1,0 +1,25 @@
+{
+  "$schema": "../topology.schema.json",
+  "name": "minio-distributed",
+  "version": "1.0.0",
+  "description": "Multi-node erasure-coded MinIO distributed S3-compatible object storage cluster.",
+  "quorum_strategy": "erasure-coded",
+  "fencing_policy": "cloud-api-detach-nic",
+  "node_groups": [
+    {
+      "name": "minio-storage-nodes",
+      "provider": "proxmox",
+      "region": "dc1",
+      "size": "storage-xlarge",
+      "count": 4,
+      "role": "leader",
+      "components": ["storage-layers/minio", "networking/netctl"],
+      "traits": ["storage", "secrets", "mesh", "firewall", "discovery", "tls", "ingress"]
+    }
+  ],
+  "network": {
+    "vpc_cidr": "10.46.0.0/16",
+    "mesh_overlay": "wireguard",
+    "internal_domain": "minio.internal"
+  }
+}

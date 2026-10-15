@@ -23,7 +23,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -86,42 +86,62 @@ if /I "%CMD%"=="wp" goto do_wp
 echo [ERROR] Unknown subcommand: %CMD% >&2
 goto show_help
 
+:: ## do_service
+:: Executes do_service functionality.
 :do_service
 call "%SCRIPT_DIR%\service.cmd" %CMD% %*
 exit /b %ERRORLEVEL%
 
+:: ## do_user
+:: Executes do_user functionality.
 :do_user
 call "%SCRIPT_DIR%\user.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_config
+:: Executes do_config functionality.
 :do_config
 call "%SCRIPT_DIR%\config.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_dbshell
+:: Executes do_dbshell functionality.
 :do_dbshell
 call "%SCRIPT_DIR%\dbshell.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_healthcheck
+:: Executes do_healthcheck functionality.
 :do_healthcheck
 call "%SCRIPT_DIR%\healthcheck.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_backup
+:: Executes do_backup functionality.
 :do_backup
 call "%SCRIPT_DIR%\backup.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_restore
+:: Executes do_restore functionality.
 :do_restore
 call "%SCRIPT_DIR%\restore.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_cron
+:: Executes do_cron functionality.
 :do_cron
 call "%SCRIPT_DIR%\cron.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_upgrade
+:: Executes do_upgrade functionality.
 :do_upgrade
 call "%SCRIPT_DIR%\upgrade.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_wp
+:: Executes do_wp functionality.
 :do_wp
 where wp >nul 2>&1
 if not errorlevel 1 (
@@ -135,6 +155,8 @@ if exist "%LIBSCRIPT_ROOT_DIR%\cache\wp-cli.phar" (
 echo [ERROR] WP-CLI executable or phar not found. >&2
 exit /b 1
 
+:: ## show_help
+:: Executes show_help functionality.
 :show_help
 echo WordPress 7.1.2 Management Console on Windows
 echo.

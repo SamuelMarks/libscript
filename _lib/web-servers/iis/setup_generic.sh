@@ -46,6 +46,8 @@ ACTION="${ACTION:-install}"
 
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
+# ## resolve_exact_version
+# Executes the resolve_exact_version logic.
 resolve_exact_version() {
   if [ "${IIS_VERSION}" = "latest" ] || [ "${IIS_VERSION}" = "lts" ]; then
     EXACT_VERSION="10.0"
@@ -133,6 +135,10 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/iis/${VERSION:-latest}/bin/iis" ]; then
+      log_info "iis ${VERSION:-latest} is already installed."
+      exit 0
+    fi
 
     if [ "${IIS_INSTALL_METHOD}" = "system" ]; then
       libscript_depends 'iis'

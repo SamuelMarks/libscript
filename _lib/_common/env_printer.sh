@@ -33,6 +33,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## libscript_print_env
 # Executes libscript_print_env functionality.
+# ## libscript_print_env
+# Executes the libscript_print_env logic.
 libscript_print_env() {
   _format="${1:-sh}"
   _prefix_path="${2:-}"

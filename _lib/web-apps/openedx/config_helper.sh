@@ -24,28 +24,23 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 # ## show_help
 # Displays usage instructions.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") get <conf_file> <key>"
-  printf '%s
-' "       $(basename "$THIS_FILE") set <conf_file1> <conf_file2> <key> <val>"
-  printf '%s
-' "       $(basename "$THIS_FILE") generate <conf_file1> <conf_file2>"
-  printf '%s
-' "       $(basename "$THIS_FILE") validate <conf_file> <schema_file>"
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") get <conf_file> <key>"
+  printf '%s\n' "       $(basename "$THIS_FILE") set <conf_file1> <conf_file2> <key> <val>"
+  printf '%s\n' "       $(basename "$THIS_FILE") generate <conf_file1> <conf_file2>"
+  printf '%s\n' "       $(basename "$THIS_FILE") validate <conf_file> <schema_file>"
   exit 0
 }
 
@@ -55,6 +50,8 @@ show_help() {
 # Inputs:
 #   $1 - Configuration file path
 #   $2 - Dot-separated key path
+# ## do_get
+# Executes the do_get logic.
 do_get() {
   _conf_file="$1"
   _key="$2"
@@ -66,8 +63,7 @@ do_get() {
   if command -v jq >/dev/null 2>&1; then
     _jq_path=$(printf '%s' "${_key}" | sed 's/\([^.]*\)/."\1"/g')
     _val=$(jq -r "${_jq_path} // null" "${_conf_file}" 2>/dev/null || printf 'null')
-    printf '%s
-' "${_val}"
+    printf '%s\n' "${_val}"
     return 0
   fi
 
@@ -95,13 +91,10 @@ do_get() {
   _leaf="${_key##*.}"
   _match=$(grep -E "${_leaf}[[:space:]]*:" "${_conf_file}" 2>/dev/null | head -n 1 || true)
   if [ -n "${_match}" ]; then
-    _val=$(printf '%s
-' "${_match}" | sed -E 's/.*:[[:space:]]*"?([^",]+)"?.*/\1/')
-    printf '%s
-' "${_val}"
+    _val=$(printf '%s\n' "${_match}" | sed -E 's/.*:[[:space:]]*"?([^",]+)"?.*/\1/')
+    printf '%s\n' "${_val}"
   else
-    printf 'null
-'
+    printf 'null\n'
   fi
 }
 
@@ -113,6 +106,8 @@ do_get() {
 #   $2 - Secondary configuration file
 #   $3 - Dot-separated key path
 #   $4 - New property value
+# ## do_set
+# Executes the do_set logic.
 do_set() {
   _cf1="$1"
   _cf2="$2"
@@ -124,8 +119,7 @@ do_set() {
     mkdir -p "${_cf_dir}"
     if command -v jq >/dev/null 2>&1; then
       if [ ! -f "${_cf}" ]; then
-        printf '{}
-' > "${_cf}"
+        printf '{}\n' > "${_cf}"
       fi
       _jq_path=$(printf '%s' "${_key}" | sed 's/\([^.]*\)/."\1"/g')
       # Attempt to parse as JSON or fallback to string
@@ -160,8 +154,7 @@ do_set() {
       ' "${_cf}" "${_key}" "${_val}"
     fi
   done
-  printf 'Updated %s.
-' "${_key}"
+  printf 'Updated %s.\n' "${_key}"
 }
 
 # ## do_generate
@@ -170,6 +163,8 @@ do_set() {
 # Inputs:
 #   $1 - Primary configuration file
 #   $2 - Secondary configuration file
+# ## do_generate
+# Executes the do_generate logic.
 do_generate() {
   _cf1="$1"
   _cf2="$2"
@@ -215,8 +210,7 @@ do_generate() {
 JSONEOF
     fi
   done
-  printf 'Configurations generated.
-'
+  printf 'Configurations generated.\n'
 }
 
 # ## do_validate
@@ -225,36 +219,36 @@ JSONEOF
 # Inputs:
 #   $1 - Configuration file path
 #   $2 - JSON schema file path
+# ## do_validate
+# Executes the do_validate logic.
 do_validate() {
   _conf_file="$1"
   _schema_file="$2"
 
   if [ ! -f "${_conf_file}" ]; then
-    printf 'Error: %s does not exist
-' "${_conf_file}" >&2
+    printf 'Error: %s does not exist\n' "${_conf_file}" >&2
     exit 1
   fi
 
   if command -v jq >/dev/null 2>&1; then
     if ! jq empty "${_conf_file}" >/dev/null 2>&1; then
-      printf 'Error: Invalid JSON syntax in %s
-' "${_conf_file}" >&2
+      printf 'Error: Invalid JSON syntax in %s\n' "${_conf_file}" >&2
       exit 1
     fi
   elif command -v node >/dev/null 2>&1; then
     if ! node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' "${_conf_file}" >/dev/null 2>&1; then
-      printf 'Error: Invalid JSON syntax in %s
-' "${_conf_file}" >&2
+      printf 'Error: Invalid JSON syntax in %s\n' "${_conf_file}" >&2
       exit 1
     fi
   fi
 
-  printf 'Configuration validation PASSED.
-'
+  printf 'Configuration validation PASSED.\n'
 }
 
 # ## main
 # Main entrypoint dispatching commands.
+# ## main
+# Executes the main logic.
 main() {
   if [ $# -lt 1 ]; then
     show_help
@@ -284,8 +278,7 @@ main() {
       show_help
       ;;
     *)
-      printf 'Error: Unknown action %s
-' "${_action}" >&2
+      printf 'Error: Unknown action %s\n' "${_action}" >&2
       exit 1
       ;;
   esac

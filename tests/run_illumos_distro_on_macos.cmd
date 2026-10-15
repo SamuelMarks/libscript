@@ -20,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -87,7 +87,7 @@ echo [MATRIX]   Running illumos distribution validation on macOS environment...
 
 call "%REPO_ROOT%/tests\illumos_boot_test.cmd"
 call "%REPO_ROOT%/tests\illumos_gui_smoke_test.cmd"
-call "%REPO_ROOT%/tests	est_illumos_idempotency.cmd"
+call "%REPO_ROOT%/tests\test_illumos_idempotency.cmd"
 
 (
     echo {

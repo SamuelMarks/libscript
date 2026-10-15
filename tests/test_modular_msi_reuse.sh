@@ -25,16 +25,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 TEST_TMP_DIR="${LIBSCRIPT_ROOT_DIR}/tests_tmp/test_msi_reuse_$$"
 mkdir -p "$TEST_TMP_DIR"
@@ -42,29 +39,27 @@ mkdir -p "$TEST_TMP_DIR"
 # ## cleanup
 # Removes temporary test directory on success.
 # shellcheck disable=SC2317,SC2329
+# ## cleanup
+# Executes the cleanup logic.
 cleanup() {
   _status=$?
   if [ "$_status" -eq 0 ]; then
     rm -rf "$TEST_TMP_DIR"
   else
-    printf '[WARN] Test artifacts preserved at %s for diagnosis
-' "$TEST_TMP_DIR" >&2
+    printf '[WARN] Test artifacts preserved at %s for diagnosis\n' "$TEST_TMP_DIR" >&2
   fi
 }
 trap cleanup EXIT INT TERM
 
-printf '=== Test: Validating Modular Zero-.EXE MSI Packaging and Reuse ===
-'
+printf '=== Test: Validating Modular Zero-.EXE MSI Packaging and Reuse ===\n'
 
 # 1. Validate GUID registry existence and format
 REGISTRY_JSON="${LIBSCRIPT_ROOT_DIR}/packaging/guid_registry.json"
 if [ ! -f "$REGISTRY_JSON" ]; then
-  printf '[FAIL] guid_registry.json missing.
-' >&2
+  printf '[FAIL] guid_registry.json missing.\n' >&2
   exit 1
 fi
-printf '[PASS] Verified guid_registry.json exists.
-'
+printf '[PASS] Verified guid_registry.json exists.\n'
 
 # 2. Build standalone component MSIs
 for comp in mysql redis mongodb python nodejs meilisearch; do
@@ -75,8 +70,7 @@ for comp in mysql redis mongodb python nodejs meilisearch; do
     exit 1
   fi
 done
-printf '[PASS] All 6 standalone component MSIs built successfully.
-'
+printf '[PASS] All 6 standalone component MSIs built successfully.\n'
 
 # 3. Build Master Orchestrator MSIs (Online and Offline)
 printf '[INFO] Building Master Orchestrator MSIs...\n'
@@ -95,35 +89,29 @@ printf '[PASS] Master Orchestrator MSIs built successfully.\n'
 # 5. Verify Zero-.EXE mandate in output directory
 EXE_COUNT=$(find "${LIBSCRIPT_ROOT_DIR}/dist/msi" -name "*.exe" 2>/dev/null | wc -l)
 if [ "$EXE_COUNT" -ne 0 ]; then
-  printf '[FAIL] Found %d .exe file(s) in dist/msi. Zero-.EXE mandate violated!
-' "$EXE_COUNT" >&2
+  printf '[FAIL] Found %d .exe file(s) in dist/msi. Zero-.EXE mandate violated!\n' "$EXE_COUNT" >&2
   exit 1
 fi
-printf '[PASS] Zero-.EXE mandate verified in dist/msi/ (only pure .msi packages produced).
-'
+printf '[PASS] Zero-.EXE mandate verified in dist/msi/ (only pure .msi packages produced).\n'
 
 # 6. Verify side-by-side MySQL reuse compatibility
 MYSQL_WXS="${LIBSCRIPT_ROOT_DIR}/tmp/mysql_main.wxs"
 if [ ! -f "$MYSQL_WXS" ]; then
-  printf '[FAIL] Missing tmp/mysql_main.wxs manifest
-' >&2
+  printf '[FAIL] Missing tmp/mysql_main.wxs manifest\n' >&2
   exit 1
 fi
 
 # Verify MySQL ComponentId and Service Name
 if ! grep -q 'Guid="5B2783B0-9A1F-4348-9F93-87CE43C21001"' "$MYSQL_WXS"; then
-  printf '[FAIL] MySQL manifest does not contain expected ComponentId GUID
-' >&2
+  printf '[FAIL] MySQL manifest does not contain expected ComponentId GUID\n' >&2
   exit 1
 fi
 
 if ! grep -q 'Name="LibScript_MySQL"' "$MYSQL_WXS"; then
-  printf '[FAIL] MySQL manifest does not configure LibScript_MySQL service
-' >&2
+  printf '[FAIL] MySQL manifest does not configure LibScript_MySQL service\n' >&2
   exit 1
 fi
-printf '[PASS] MySQL Component GUID and Windows Service identity verified.
-'
+printf '[PASS] MySQL Component GUID and Windows Service identity verified.\n'
 
 # 7. Verify XML entity escaping and SharedDllRefCount attribute syntax
 NODE_WXS="${LIBSCRIPT_ROOT_DIR}/tmp/nodejs_main.wxs"
@@ -141,14 +129,11 @@ fi
 for _comp in mysql redis mongodb python nodejs meilisearch; do
   _manifest="${LIBSCRIPT_ROOT_DIR}/tmp/${_comp}_main.wxs"
   if grep -q 'SharedDllRefCount=""' "$_manifest"; then
-    printf '[FAIL] %s manifest contains invalid double-quoted SharedDllRefCount
-' "$_comp" >&2
+    printf '[FAIL] %s manifest contains invalid double-quoted SharedDllRefCount\n' "$_comp" >&2
     exit 1
   fi
 done
-printf '[PASS] XML entity escaping and SharedDllRefCount attribute syntax verified.
-'
+printf '[PASS] XML entity escaping and SharedDllRefCount attribute syntax verified.\n'
 
-printf '=== All Modular Zero-.EXE MSI Reuse Tests Passed ===
-'
+printf '=== All Modular Zero-.EXE MSI Reuse Tests Passed ===\n'
 exit 0

@@ -9,8 +9,8 @@
 :: ## Usage
 :: Call subroutines like `:libscript_symlink_alias` from other batch scripts to manage versions.
 
-REM versioning.cmd
-REM Common utilities for managing native libscript installations and version aliases on Windows.
+:: versioning.cmd
+:: Common utilities for managing native libscript installations and version aliases on Windows.
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
@@ -24,7 +24,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"

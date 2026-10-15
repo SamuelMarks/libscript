@@ -1,0 +1,35 @@
+{
+  "$schema": "../../payload.schema.json",
+  "name": "gke-xpk-inference",
+  "version": "1.0.0",
+  "description": "High-throughput distributed LLM inference serving workload deployed onto GKE TPU slices via XPK.",
+  "type": "ai-inference",
+  "artifact": {
+    "format": "oci-image",
+    "image": "us-docker.pkg.dev/cloud-tpu-images/inference/vllm-tpu:latest",
+    "entrypoint": ["python", "-m", "vllm.entrypoints.openai.api_server"],
+    "args": ["--tensor-parallel-size", "1", "--port", "8000"],
+    "working_dir": "/workspace"
+  },
+  "resources": {
+    "cpu_cores": 16,
+    "memory_mb": 65536,
+    "tpu_accelerator_type": "v4-8",
+    "tpu_topology": "2x2x1",
+    "tpu_slice_count": 1
+  },
+  "scaling": {
+    "replicas": 1,
+    "strategy": "RollingUpdate",
+    "gang_scheduling": true,
+    "restart_policy": "Always"
+  },
+  "ports": [
+    {
+      "name": "http-openai",
+      "port": 8000,
+      "protocol": "http",
+      "visibility": "public"
+    }
+  ]
+}

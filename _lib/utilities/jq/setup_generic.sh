@@ -47,6 +47,8 @@ ACTION="${ACTION:-install}"
 
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
+# ## resolve_exact_version
+# Executes the resolve_exact_version logic.
 resolve_exact_version() {
   if [ "${JQ_VERSION}" = "latest" ] || [ "${JQ_VERSION}" = "lts" ]; then
     if ! command -v curl >/dev/null 2>&1; then
@@ -137,6 +139,10 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/jq/${VERSION:-latest}/bin/jq" ]; then
+      log_info "jq ${VERSION:-latest} is already installed."
+      exit 0
+    fi
 
     if [ "${JQ_INSTALL_METHOD}" = "system" ]; then
       libscript_depends 'jq'

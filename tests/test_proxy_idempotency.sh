@@ -35,6 +35,8 @@ TEST_CONF="${THIS_DIR}/.tmp_test_proxy.conf"
 
 ## setup_env
 ## Prepares a mocked test environment for testing the awk engine locally
+# ## setup_env
+# Executes the setup_env logic.
 setup_env() {
   printf '[INFO] Initializing test configuration...\n'
   cat <<EOF > "$TEST_CONF"
@@ -48,12 +50,16 @@ EOF
 
 ## teardown_env
 ## Cleans up test artifacts
+# ## teardown_env
+# Executes the teardown_env logic.
 teardown_env() {
   rm -f "${TEST_CONF}" "${TEST_CONF}.bak"
 }
 
 ## run_idempotency_scenario
 ## Executes the provision script twice to assert no duplication occurs
+# ## run_idempotency_scenario
+# Executes the run_idempotency_scenario logic.
 run_idempotency_scenario() {
   printf '[TEST] Scenario: Run Twice (Idempotency)...\n'
   
@@ -95,6 +101,8 @@ EOF
 
 ## run_rollback_scenario
 ## Simulates a bad config rollback (verifies backup restoration)
+# ## run_rollback_scenario
+# Executes the run_rollback_scenario logic.
 run_rollback_scenario() {
   printf '[TEST] Scenario: Bad Config Rollback...\n'
   
@@ -118,6 +126,8 @@ run_rollback_scenario() {
 
 ## run_side_by_side_scenario
 ## Asserts two distinct application vhosts can coexist
+# ## run_side_by_side_scenario
+# Executes the run_side_by_side_scenario logic.
 run_side_by_side_scenario() {
   printf '[TEST] Scenario: Side-by-Side Coexistence...\n'
   
@@ -153,6 +163,8 @@ run_side_by_side_scenario() {
 
 ## main
 ## Main execution flow
+# ## main
+# Executes the main logic.
 main() {
   setup_env
   run_idempotency_scenario

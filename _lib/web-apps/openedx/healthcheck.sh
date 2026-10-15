@@ -44,16 +44,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
@@ -114,6 +111,8 @@ TOTAL_FAILURES=0
 #   $2 - port
 # Returns:
 #   0 if listening, 1 if refused or timeout.
+# ## test_tcp_port
+# Executes the test_tcp_port logic.
 test_tcp_port() {
   _host="$1"
   _port="$2"
@@ -137,6 +136,8 @@ test_tcp_port() {
 #
 # Inputs:
 #   $1 - URL
+# ## probe_http
+# Executes the probe_http logic.
 probe_http() {
   _url="$1"
   _code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "${_url}" 2>/dev/null || printf '000')
@@ -154,6 +155,8 @@ probe_http() {
 
 # ## probe_workers
 # Checks if background Celery, Gunicorn, or Waitress worker processes are active.
+# ## probe_workers
+# Executes the probe_workers logic.
 probe_workers() {
   _pid_file="${OPENEDX_INSTALL_DIR}/run/worker.pid"
   if [ -f "${_pid_file}" ] && kill -0 "$(cat "${_pid_file}")" 2>/dev/null; then
@@ -171,6 +174,8 @@ probe_workers() {
 
 # ## probe_smtp
 # Probes local SMTP mail relay port.
+# ## probe_smtp
+# Executes the probe_smtp logic.
 probe_smtp() {
   if test_tcp_port "${SMTP_HOST}" "${SMTP_PORT}"; then
     echo 'OK'
@@ -228,32 +233,19 @@ if [ "${JSON_OUTPUT}" = "1" ]; then
 }
 EOF
 else
-  printf '========================================================================
-'
-  printf '               Open edX Full-Stack Health Diagnostics                  
-'
-  printf '========================================================================
-'
-  printf '%-20s %-32s %-16s
-' "SERVICE" "TARGET ENDPOINT" "STATUS"
-  printf '%-20s %-32s %-16s
-' "--------------------" "--------------------------------" "----------------"
-  printf '%-20s %-32s %-16s
-' "MySQL" "${MYSQL_HOST}:${MYSQL_PORT}" "${STATUS_MYSQL}"
-  printf '%-20s %-32s %-16s
-' "Redis" "${REDIS_HOST}:${REDIS_PORT}" "${STATUS_REDIS}"
-  printf '%-20s %-32s %-16s
-' "Meilisearch" "http://${MEILISEARCH_HOST}:${MEILISEARCH_PORT}" "${STATUS_MEILI}"
-  printf '%-20s %-32s %-16s
-' "LMS Web" "http://${LMS_HOST}:${LMS_PORT}/" "${STATUS_LMS}"
-  printf '%-20s %-32s %-16s
-' "Studio Web" "http://${CMS_HOST}:${CMS_PORT}/signin" "${STATUS_CMS}"
-  printf '%-20s %-32s %-16s
-' "Celery Workers" "celery-lms, cms-worker" "${STATUS_WORKERS}"
-  printf '%-20s %-32s %-16s
-' "SMTP Mail Relay" "${SMTP_HOST}:${SMTP_PORT}" "${STATUS_SMTP}"
-  printf '========================================================================
-'
+  printf '========================================================================\n'
+  printf '               Open edX Full-Stack Health Diagnostics                  \n'
+  printf '========================================================================\n'
+  printf '%-20s %-32s %-16s\n' "SERVICE" "TARGET ENDPOINT" "STATUS"
+  printf '%-20s %-32s %-16s\n' "--------------------" "--------------------------------" "----------------"
+  printf '%-20s %-32s %-16s\n' "MySQL" "${MYSQL_HOST}:${MYSQL_PORT}" "${STATUS_MYSQL}"
+  printf '%-20s %-32s %-16s\n' "Redis" "${REDIS_HOST}:${REDIS_PORT}" "${STATUS_REDIS}"
+  printf '%-20s %-32s %-16s\n' "Meilisearch" "http://${MEILISEARCH_HOST}:${MEILISEARCH_PORT}" "${STATUS_MEILI}"
+  printf '%-20s %-32s %-16s\n' "LMS Web" "http://${LMS_HOST}:${LMS_PORT}/" "${STATUS_LMS}"
+  printf '%-20s %-32s %-16s\n' "Studio Web" "http://${CMS_HOST}:${CMS_PORT}/signin" "${STATUS_CMS}"
+  printf '%-20s %-32s %-16s\n' "Celery Workers" "celery-lms, cms-worker" "${STATUS_WORKERS}"
+  printf '%-20s %-32s %-16s\n' "SMTP Mail Relay" "${SMTP_HOST}:${SMTP_PORT}" "${STATUS_SMTP}"
+  printf '========================================================================\n'
   if [ "$TOTAL_FAILURES" -eq 0 ]; then
     log_success "All Open edX core services and endpoints are healthy."
   else

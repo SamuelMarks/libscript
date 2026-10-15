@@ -47,6 +47,8 @@ ACTION="${ACTION:-install}"
 
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
+# ## resolve_exact_version
+# Executes the resolve_exact_version logic.
 resolve_exact_version() {
   if [ "${DASH_VERSION}" = "latest" ] || [ "${DASH_VERSION}" = "lts" ]; then
     EXACT_VERSION="0.5.12"
@@ -134,6 +136,10 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/dash/${VERSION:-latest}/bin/dash" ]; then
+      log_info "dash ${VERSION:-latest} is already installed."
+      exit 0
+    fi
     if [ "${DASH_INSTALL_METHOD}" = "system" ]; then
       if command -v dnf >/dev/null 2>&1; then
         priv dnf install -y epel-release || true

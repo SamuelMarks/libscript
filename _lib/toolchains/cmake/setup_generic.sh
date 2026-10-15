@@ -52,6 +52,8 @@ ACTION="${ACTION:-install}"
 
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
+# ## resolve_exact_version
+# Executes the resolve_exact_version logic.
 resolve_exact_version() {
   if [ "${CMAKE_VERSION}" = "latest" ]; then
     EXACT_VERSION="3.31.2"
@@ -136,6 +138,10 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/cmake/${VERSION:-latest}/bin/cmake" ]; then
+      log_info "cmake ${VERSION:-latest} is already installed."
+      exit 0
+    fi
 
     if [ "$CMAKE_INSTALL_METHOD" = "system" ]; then
       libscript_depends 'cmake'

@@ -36,16 +36,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
@@ -72,10 +69,11 @@ mkdir -p "${OPENEDX_INSTALL_DIR}/data"
 
 # ## resolve_python
 # Resolves python interpreter.
+# ## resolve_python
+# Executes the resolve_python logic.
 resolve_python() {
   if [ -x "${PYTHON_BIN}" ]; then
-    printf '%s
-' "${PYTHON_BIN}"
+    printf '%s\n' "${PYTHON_BIN}"
   elif command -v python3 >/dev/null 2>&1; then
     command -v python3
   elif command -v python >/dev/null 2>&1; then
@@ -90,6 +88,8 @@ resolve_python() {
 #
 # Inputs:
 #   $1 - package specification (PyPI name, wheel, or git URL)
+# ## xblock_install
+# Executes the xblock_install logic.
 xblock_install() {
   if [ $# -lt 1 ]; then
     log_err "Usage: $0 install <package_spec_or_git_url>"
@@ -143,6 +143,8 @@ EOF
 #
 # Inputs:
 #   $1 - package name
+# ## xblock_uninstall
+# Executes the xblock_uninstall logic.
 xblock_uninstall() {
   if [ $# -lt 1 ]; then
     log_err "Usage: $0 uninstall <package_name>"
@@ -174,6 +176,8 @@ EOF
 
 # ## xblock_list
 # Lists installed XBlocks.
+# ## xblock_list
+# Executes the xblock_list logic.
 xblock_list() {
   log_info "Discovering installed XBlock extensions..."
   _py="$(resolve_python)"
@@ -219,6 +223,8 @@ EOF
 
 # ## show_help
 # Displays usage guide.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
   cat <<EOF
 Open edX XBlock & Plugin Management CLI

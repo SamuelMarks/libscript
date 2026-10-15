@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 WWWROOT="${WORDPRESS_WWWROOT:-/var/www/wordpress}"
@@ -75,8 +72,7 @@ DUMP_CLIENT="mysqldump"
 command -v mariadb-dump >/dev/null 2>&1 && DUMP_CLIENT="mariadb-dump"
 
 if ! command -v "$CLIENT" >/dev/null 2>&1; then
-  printf '[ERROR] No MySQL/MariaDB client executable found in PATH.
-' >&2
+  printf '[ERROR] No MySQL/MariaDB client executable found in PATH.\n' >&2
   exit 1
 fi
 
@@ -97,8 +93,7 @@ case "$CMD" in
   query|sql)
     shift
     if [ $# -lt 1 ]; then
-      printf '[ERROR] Usage: %s query "<sql_statement>"
-' "$THIS_FILE" >&2
+      printf '[ERROR] Usage: %s query "<sql_statement>"\n' "$THIS_FILE" >&2
       exit 1
     fi
     # shellcheck disable=SC2086
@@ -109,20 +104,17 @@ case "$CMD" in
     OUT_FILE="${1:-wordpress_dump_$(date +%Y%m%d_%H%M%S).sql}"
     # shellcheck disable=SC2086
     "$DUMP_CLIENT" -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" $SSL_FLAGS --single-transaction --quick "$DB_NAME" > "$OUT_FILE"
-    printf '[OK] WordPress database exported to %s
-' "$OUT_FILE"
+    printf '[OK] WordPress database exported to %s\n' "$OUT_FILE"
     ;;
   import)
     shift
     if [ $# -lt 1 ] || [ ! -f "$1" ]; then
-      printf '[ERROR] Usage: %s import <file.sql>
-' "$THIS_FILE" >&2
+      printf '[ERROR] Usage: %s import <file.sql>\n' "$THIS_FILE" >&2
       exit 1
     fi
     # shellcheck disable=SC2086
     "$CLIENT" -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" $SSL_FLAGS "$DB_NAME" < "$1"
-    printf '[OK] WordPress database imported from %s
-' "$1"
+    printf '[OK] WordPress database imported from %s\n' "$1"
     ;;
   help|--help|-h)
     cat << 'EOF_HELP'

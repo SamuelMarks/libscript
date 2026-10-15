@@ -23,24 +23,20 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 PROFILE="${1:-${REPO_ROOT}/profiles/freebsd/minimal-server.json}"
 SYSROOT="${2:-${REPO_ROOT}/build/freebsd-sysroot}"
 
 if [ ! -f "${PROFILE}" ]; then
-  printf '[ERROR]    Profile configuration "%s" not found!
-' "${PROFILE}" >&2
+  printf '[ERROR]    Profile configuration "%s" not found!\n' "${PROFILE}" >&2
   exit 1
 fi
 
@@ -50,13 +46,11 @@ STAMP_FILE="${STAMP_DIR}/assembled.stamp"
 mkdir -p "${STAMP_DIR}"
 
 if [ -f "${STAMP_FILE}" ]; then
-  printf '[SKIP]     FreeBSD distribution already assembled in %s
-' "${SYSROOT}"
+  printf '[SKIP]     FreeBSD distribution already assembled in %s\n' "${SYSROOT}"
   exit 0
 fi
 
-printf '[ASSEMBLE] Synthesizing FreeBSD distribution using profile: %s...
-' "${PROFILE}"
+printf '[ASSEMBLE] Synthesizing FreeBSD distribution using profile: %s...\n' "${PROFILE}"
 
 # Extract key profile fields via python / sh helper
 PROFILE_NAME=$(awk -F'"' '/"profile_name":/ { print $4 }' "${PROFILE}" | head -n 1)
@@ -114,5 +108,4 @@ printf '[ASSEMBLE] Profile: %s | Init: %s | Desktop: %s | DM: %s | FS: %s\n' \
 # Final assembly stamp
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
 mv "${STAMP_FILE}.tmp" "${STAMP_FILE}"
-printf '[OK]       FreeBSD distribution assembly complete for %s.
-' "${PROFILE_NAME}"
+printf '[OK]       FreeBSD distribution assembly complete for %s.\n' "${PROFILE_NAME}"

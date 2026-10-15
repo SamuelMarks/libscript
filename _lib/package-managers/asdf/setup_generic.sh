@@ -47,6 +47,8 @@ VERSION="${ASDF_VERSION:-latest}"
 
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
+# ## resolve_exact_version
+# Executes the resolve_exact_version logic.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ] || [ "${VERSION:-}" = "lts" ] || [ "${VERSION:-}" = "stable" ]; then
     _latest=$("${LIBSCRIPT_ROOT_DIR}/libscript.sh" ls-remote asdf 2>/dev/null | tail -n 1)
@@ -144,6 +146,10 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/asdf/${VERSION:-latest}/bin/asdf" ]; then
+      log_info "asdf ${VERSION:-latest} is already installed."
+      exit 0
+    fi
     if [ "$ASDF_INSTALL_METHOD" = "system" ]; then
       libscript_depends "asdf"
     elif [ "$ASDF_INSTALL_METHOD" = "mise" ]; then

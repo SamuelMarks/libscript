@@ -21,16 +21,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 INPUT="${1:-${LIBSCRIPT_ROOT_DIR}/build/target.img}"
@@ -41,13 +38,11 @@ OUT_DIR="${OUT_FILE%/*}"
 [ -z "$OUT_DIR" ] || mkdir -p "$OUT_DIR"
 
 if [ -f "$OUT_FILE" ]; then
-  printf '[IDEMPOTENT] Target Azure VHD already exists: %s
-' "$OUT_FILE"
+  printf '[IDEMPOTENT] Target Azure VHD already exists: %s\n' "$OUT_FILE"
   exit 0
 fi
 
-printf '[AZURE-VHD] Synthesizing 1 MiB-aligned fixed VHD for Azure: %s...
-' "$OUT_FILE"
+printf '[AZURE-VHD] Synthesizing 1 MiB-aligned fixed VHD for Azure: %s...\n' "$OUT_FILE"
 
 # Ensure input raw image exists
 if [ ! -f "$INPUT" ]; then
@@ -61,16 +56,14 @@ RAW_SIZE=$(wc -c < "$INPUT" | tr -d ' ' 2>/dev/null || echo 10485760000)
 REMAINDER=$(( RAW_SIZE % 1048576 ))
 if [ "$REMAINDER" -ne 0 ]; then
   PAD_SIZE=$(( 1048576 - REMAINDER ))
-  printf '[AZURE-VHD] Aligning raw disk to 1 MiB boundary (padding %s bytes)...
-' "$PAD_SIZE"
+  printf '[AZURE-VHD] Aligning raw disk to 1 MiB boundary (padding %s bytes)...\n' "$PAD_SIZE"
   dd if=/dev/zero bs=1 count="$PAD_SIZE" >> "$INPUT" 2>/dev/null || true
 fi
 
 if command -v qemu-img >/dev/null 2>&1; then
   qemu-img convert -f raw -O vpc -o subformat=fixed,force_size "$INPUT" "$OUT_FILE"
 else
-  printf 'Azure Fixed VHD 1MiB Aligned Stub
-' > "$OUT_FILE"
+  printf 'Azure Fixed VHD 1MiB Aligned Stub\n' > "$OUT_FILE"
 fi
 
 # Validate final VHD size (accounts for 512-byte VHD footer or raw 1MB alignment)

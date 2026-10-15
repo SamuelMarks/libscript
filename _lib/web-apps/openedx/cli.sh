@@ -25,25 +25,23 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 # ## handle_tutor_do
 # Dispatches tutor 'do' task commands to native Open edX handlers.
+# ## handle_tutor_do
+# Executes the handle_tutor_do logic.
 handle_tutor_do() {
   _job="${1:-}"
   if [ -z "${_job}" ]; then
-    printf 'Error: Tutor "do" requires a task command (e.g., createuser, setpassword, importdemocourse, settheme, sqlshell, mongosh, reindex, run)
-' >&2
+    printf 'Error: Tutor "do" requires a task command (e.g., createuser, setpassword, importdemocourse, settheme, sqlshell, mongosh, reindex, run)\n' >&2
     exit 1
   fi
   shift
@@ -88,16 +86,14 @@ handle_tutor_do() {
       if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/python" ] && [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
         (cd "${OPENEDX_INSTALL_DIR}" && "${OPENEDX_INSTALL_DIR}/.venv/bin/python" manage.py cms reindex_course --active)
       else
-        printf 'Error: Open edX environment not initialized at %s
-' "${OPENEDX_INSTALL_DIR}" >&2
+        printf 'Error: Open edX environment not initialized at %s\n' "${OPENEDX_INSTALL_DIR}" >&2
         exit 1
       fi
       ;;
     run)
       _svc="${1:-}"
       if [ -z "${_svc}" ]; then
-        printf 'Usage: do run <lms|cms> <command...>
-' >&2
+        printf 'Usage: do run <lms|cms> <command...>\n' >&2
         exit 1
       fi
       shift
@@ -106,14 +102,12 @@ handle_tutor_do() {
         export PATH="${OPENEDX_INSTALL_DIR}/.venv/bin:${PATH}"
         (cd "${OPENEDX_INSTALL_DIR}" && "$@")
       else
-        printf 'Error: Virtual environment not found in %s
-' "${OPENEDX_INSTALL_DIR}" >&2
+        printf 'Error: Virtual environment not found in %s\n' "${OPENEDX_INSTALL_DIR}" >&2
         exit 1
       fi
       ;;
     *)
-      printf 'Error: Unknown tutor job "%s"
-' "${_job}" >&2
+      printf 'Error: Unknown tutor job "%s"\n' "${_job}" >&2
       exit 1
       ;;
   esac

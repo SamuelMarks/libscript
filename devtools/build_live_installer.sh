@@ -23,16 +23,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 TARGET_OS="all"
@@ -41,31 +38,24 @@ OUTPUT_PATH=""
 
 # ## show_help
 # Displays usage instructions and supported build parameters.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") [OPTIONS]"
-  printf '%s
-' "Builds bootable live-CD/live-USB images containing msi-rs."
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") [OPTIONS]"
+  printf '%s\n' "Builds bootable live-CD/live-USB images containing msi-rs."
   printf '
 '
-  printf '%s
-' "Targets:"
-  printf '%s
-' "  --target <linux|freebsd|illumos|all>   Target OS distribution family (default: all)"
+  printf '%s\n' "Targets:"
+  printf '%s\n' "  --target <linux|freebsd|illumos|all>   Target OS distribution family (default: all)"
   printf '
 '
-  printf '%s
-' "Modes:"
-  printf '%s
-' "  --mode <all|headless|tui|gui>          Installer interaction mode embedded (default: all)"
+  printf '%s\n' "Modes:"
+  printf '%s\n' "  --mode <all|headless|tui|gui>          Installer interaction mode embedded (default: all)"
   printf '
 '
-  printf '%s
-' "Options:"
-  printf '%s
-' "  --output <file_path>                   Output image path override"
-  printf '%s
-' "  --help, -h, /?, -?                     Show this help message"
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --output <file_path>                   Output image path override"
+  printf '%s\n' "  --help, -h, /?, -?                     Show this help message"
 }
 
 while [ $# -gt 0 ]; do
@@ -87,8 +77,7 @@ while [ $# -gt 0 ]; do
       exit 0
       ;;
     *)
-      printf '[WARN] Unknown option: %s
-' "$1" >&2
+      printf '[WARN] Unknown option: %s\n' "$1" >&2
       shift
       ;;
   esac
@@ -98,28 +87,31 @@ mkdir -p "${REPO_ROOT}/build"
 
 # ## build_linux
 # Builds live Linux media.
+# ## build_linux
+# Executes the build_linux logic.
 build_linux() {
   _out="${OUTPUT_PATH:-${REPO_ROOT}/build/msi-linux-live.iso}"
-  printf '[ORCHESTRATE] Building Live Linux installer (%s)...
-' "$MODE"
+  printf '[ORCHESTRATE] Building Live Linux installer (%s)...\n' "$MODE"
   "${REPO_ROOT}/_lib/orchestration/distro/live_linux.sh" "alpine" "$_out" "${REPO_ROOT}/build/live-linux-stage"
 }
 
 # ## build_freebsd
 # Builds live FreeBSD media.
+# ## build_freebsd
+# Executes the build_freebsd logic.
 build_freebsd() {
   _out="${OUTPUT_PATH:-${REPO_ROOT}/build/msi-freebsd-live.iso}"
-  printf '[ORCHESTRATE] Building Live FreeBSD installer (%s)...
-' "$MODE"
+  printf '[ORCHESTRATE] Building Live FreeBSD installer (%s)...\n' "$MODE"
   "${REPO_ROOT}/_lib/freebsd/distro/live_freebsd.sh" "$_out" "${REPO_ROOT}/build/live-freebsd-stage"
 }
 
 # ## build_illumos
 # Builds live illumos media.
+# ## build_illumos
+# Executes the build_illumos logic.
 build_illumos() {
   _out="${OUTPUT_PATH:-${REPO_ROOT}/build/msi-illumos-live.iso}"
-  printf '[ORCHESTRATE] Building Live illumos installer (%s)...
-' "$MODE"
+  printf '[ORCHESTRATE] Building Live illumos installer (%s)...\n' "$MODE"
   "${REPO_ROOT}/_lib/illumos/distro/live_illumos.sh" "$_out" "${REPO_ROOT}/build/live-illumos-stage"
 }
 
@@ -139,12 +131,10 @@ case "$TARGET_OS" in
     build_illumos
     ;;
   *)
-    printf '[ERROR] Unsupported target OS: %s
-' "$TARGET_OS" >&2
+    printf '[ERROR] Unsupported target OS: %s\n' "$TARGET_OS" >&2
     exit 1
     ;;
 esac
 
-printf '[OK] Live media generation completed successfully.
-'
+printf '[OK] Live media generation completed successfully.\n'
 exit 0

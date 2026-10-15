@@ -40,16 +40,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
@@ -88,6 +85,8 @@ offline_cache_dir=""
 
 # ## extract_archive
 # Extracts a zip or tar archive to a target directory.
+# ## extract_archive
+# Executes the extract_archive logic.
 extract_archive() {
   _src="$1"
   _dest="$2"
@@ -181,6 +180,10 @@ done
 
 case "$ACTION" in
   install)
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx/${VERSION:-latest}/bin/openedx" ]; then
+      log_info "openedx ${VERSION:-latest} is already installed."
+      exit 0
+    fi
     log_info "=== Initializing Open edX Stack Provisioning ==="
 
     if [ "$is_offline" -eq 1 ]; then
@@ -494,20 +497,16 @@ EOF
     log_info "8/8: Launching Open edX LMS, Studio, and background workers..."
     if [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
       nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" lms --settings=libscript runserver 0.0.0.0:"${LMS_PORT}" > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
-      printf '%s
-' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
+      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
 
       nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" cms --settings=libscript runserver 0.0.0.0:"${CMS_PORT}" > "${OPENEDX_INSTALL_DIR}/cms.log" 2>&1 &
-      printf '%s
-' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
+      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
     elif [ -f "${DIR}/test_server.sh" ]; then
       nohup "${DIR}/test_server.sh" "${LMS_PORT}" > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
-      printf '%s
-' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
+      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
 
       nohup "${DIR}/test_server.sh" "${CMS_PORT}" > "${OPENEDX_INSTALL_DIR}/cms.log" 2>&1 &
-      printf '%s
-' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
+      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
     fi
 
     if [ "${ENABLE_WORKERS}" = "1" ] && [ -f "${DIR}/workers.sh" ]; then
@@ -529,18 +528,14 @@ EOF
     VENV_DIR="${OPENEDX_INSTALL_DIR}/.venv"
     if [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
       nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" lms --settings=libscript runserver 0.0.0.0:"${LMS_PORT}" > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
-      printf '%s
-' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
+      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
       nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" cms --settings=libscript runserver 0.0.0.0:"${CMS_PORT}" > "${OPENEDX_INSTALL_DIR}/cms.log" 2>&1 &
-      printf '%s
-' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
+      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
     elif [ -f "${DIR}/test_server.sh" ]; then
       nohup "${DIR}/test_server.sh" "${LMS_PORT}" > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
-      printf '%s
-' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
+      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
       nohup "${DIR}/test_server.sh" "${CMS_PORT}" > "${OPENEDX_INSTALL_DIR}/cms.log" 2>&1 &
-      printf '%s
-' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
+      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
     fi
     if [ -f "${DIR}/workers.sh" ]; then
       OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" start 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }

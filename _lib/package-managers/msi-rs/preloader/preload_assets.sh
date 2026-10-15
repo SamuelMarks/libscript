@@ -23,31 +23,26 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 # ## show_help
 # Displays usage instructions and supported options.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") [target_dir] [component_list...]"
-  printf '%s
-' "Stages offline components and executes chroot activation hooks in target sysroot."
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") [target_dir] [component_list...]"
+  printf '%s\n' "Stages offline components and executes chroot activation hooks in target sysroot."
   printf '
 '
-  printf '%s
-' "Options:"
-  printf '%s
-' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
@@ -61,8 +56,7 @@ shift || true
 CACHE_DIR="${TARGET_DIR}/opt/libscript/cache"
 mkdir -p "$CACHE_DIR" "${TARGET_DIR}/usr/local/bin"
 
-printf '[PRELOAD] Staging offline LibScript payloads into %s...
-' "$CACHE_DIR"
+printf '[PRELOAD] Staging offline LibScript payloads into %s...\n' "$CACHE_DIR"
 
 # Copy libscript orchestrator to target
 if [ -f "${REPO_ROOT}/libscript.sh" ]; then
@@ -73,8 +67,7 @@ fi
 # Stage components
 for comp in "$@"; do
   [ -n "$comp" ] || continue
-  printf '          Preloading component: %s...
-' "$comp"
+  printf '          Preloading component: %s...\n' "$comp"
   mkdir -p "${CACHE_DIR}/${comp}"
 
   # Stage pre-compiled local artifacts if present
@@ -83,6 +76,5 @@ for comp in "$@"; do
   fi
 done
 
-printf '[OK] Offline component staging completed in %s.
-' "$TARGET_DIR"
+printf '[OK] Offline component staging completed in %s.\n' "$TARGET_DIR"
 exit 0

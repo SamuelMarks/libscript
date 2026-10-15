@@ -32,6 +32,8 @@ _SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## libscript_verify_signature
 # Signature verification wrapper
+# ## libscript_verify_signature
+# Executes the libscript_verify_signature logic.
 libscript_verify_signature() {
   file="${1:-}"
   export url="${2:-}"

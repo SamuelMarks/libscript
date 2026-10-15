@@ -9,7 +9,6 @@
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
-
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
     if not errorlevel 1 (
@@ -20,7 +19,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -60,8 +59,6 @@ goto :main
 :: ## show_help
 :: Executes show_help functionality.
 :show_help
-:: ## show_help
-:: Executes show_help functionality.
 echo Usage: %~nx0
 echo Handles the removal and uninstallation process for the component 'netctl' stack.
 echo.
@@ -72,7 +69,5 @@ exit /b 0
 :: ## main
 :: Executes main functionality.
 :main
-:: ## main
-:: Executes main functionality.
 echo Uninstalling netctl is not supported via this script.
 exit /b 0

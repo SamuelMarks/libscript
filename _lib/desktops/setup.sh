@@ -23,16 +23,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 SUITE="none"
@@ -60,40 +57,33 @@ STAMP_DESKTOP="${STAMPS_DIR}/.stamp.lfs_desktop_${SUITE}"
 
 if [ "$ACTION" = "status" ]; then
   if [ -f "$STAMP_DESKTOP" ]; then
-    printf 'Desktop Suite %s: INSTALLED (%s)
-' "$SUITE" "$(cat "$STAMP_DESKTOP")"
+    printf 'Desktop Suite %s: INSTALLED (%s)\n' "$SUITE" "$(cat "$STAMP_DESKTOP")"
   else
-    printf 'Desktop Suite %s: NOT INSTALLED
-' "$SUITE"
+    printf 'Desktop Suite %s: NOT INSTALLED\n' "$SUITE"
   fi
   exit 0
 fi
 
 if [ "$ACTION" = "clean" ]; then
-  printf '[CLEAN] Removing desktop stamp for %s...
-' "$SUITE"
+  printf '[CLEAN] Removing desktop stamp for %s...\n' "$SUITE"
   rm -f "$STAMP_DESKTOP"
   exit 0
 fi
 
 if [ -f "$STAMP_DESKTOP" ]; then
-  printf '[SKIP]  Desktop suite %s already configured (%s)
-' "$SUITE" "$STAMP_DESKTOP"
+  printf '[SKIP]  Desktop suite %s already configured (%s)\n' "$SUITE" "$STAMP_DESKTOP"
   exit 0
 fi
 
-printf '=== Configuring Desktop Suite: %s ===
-' "$SUITE"
-printf '[INFO] Target Rootfs: %s
-' "$ROOTFS"
+printf '=== Configuring Desktop Suite: %s ===\n' "$SUITE"
+printf '[INFO] Target Rootfs: %s\n' "$ROOTFS"
 
 mkdir -p "${ROOTFS}/usr/bin"
 mkdir -p "${ROOTFS}/etc/xdg"
 
 case "$SUITE" in
   none)
-    printf '[STAGE] Headless / CLI terminal profile selected.
-'
+    printf '[STAGE] Headless / CLI terminal profile selected.\n'
     ;;
 
   sway)
@@ -108,8 +98,7 @@ EOF
     if [ ! -f "${ROOTFS}/usr/bin/sway" ]; then
       cat << 'EOF' > "${ROOTFS}/usr/bin/sway"
 #!/bin/sh
-printf '[SWAY] Sway Wayland Compositor running.
-'
+printf '[SWAY] Sway Wayland Compositor running.\n'
 exit 0
 EOF
       chmod +x "${ROOTFS}/usr/bin/sway"
@@ -125,8 +114,7 @@ EOF
     if [ ! -f "${ROOTFS}/usr/bin/hyprland" ]; then
       cat << 'EOF' > "${ROOTFS}/usr/bin/hyprland"
 #!/bin/sh
-printf '[HYPRLAND] Hyprland Dynamic Wayland Compositor running.
-'
+printf '[HYPRLAND] Hyprland Dynamic Wayland Compositor running.\n'
 exit 0
 EOF
       chmod +x "${ROOTFS}/usr/bin/hyprland"
@@ -142,8 +130,7 @@ EOF
     if [ ! -f "${ROOTFS}/usr/bin/weston" ]; then
       cat << 'EOF' > "${ROOTFS}/usr/bin/weston"
 #!/bin/sh
-printf '[WESTON] Weston Reference Compositor running.
-'
+printf '[WESTON] Weston Reference Compositor running.\n'
 exit 0
 EOF
       chmod +x "${ROOTFS}/usr/bin/weston"
@@ -162,8 +149,7 @@ EOF
     if [ ! -f "${ROOTFS}/usr/bin/labwc" ]; then
       cat << 'EOF' > "${ROOTFS}/usr/bin/labwc"
 #!/bin/sh
-printf '[LABWC] Labwc Stacking Wayland Compositor running.
-'
+printf '[LABWC] Labwc Stacking Wayland Compositor running.\n'
 exit 0
 EOF
       chmod +x "${ROOTFS}/usr/bin/labwc"
@@ -179,8 +165,7 @@ EOF
     if [ ! -f "${ROOTFS}/usr/bin/startxfce4" ]; then
       cat << 'EOF' > "${ROOTFS}/usr/bin/startxfce4"
 #!/bin/sh
-printf '[XFCE4] XFCE4 Desktop Session active.
-'
+printf '[XFCE4] XFCE4 Desktop Session active.\n'
 exit 0
 EOF
       chmod +x "${ROOTFS}/usr/bin/startxfce4"
@@ -192,8 +177,7 @@ EOF
     if [ ! -f "${ROOTFS}/usr/bin/startlxqt" ]; then
       cat << 'EOF' > "${ROOTFS}/usr/bin/startlxqt"
 #!/bin/sh
-printf '[LXQT] LXQt Desktop Session active.
-'
+printf '[LXQT] LXQt Desktop Session active.\n'
 exit 0
 EOF
       chmod +x "${ROOTFS}/usr/bin/startlxqt"
@@ -205,8 +189,7 @@ EOF
     if [ ! -f "${ROOTFS}/usr/bin/gnome-session" ]; then
       cat << 'EOF' > "${ROOTFS}/usr/bin/gnome-session"
 #!/bin/sh
-printf '[GNOME] GNOME Shell Session active.
-'
+printf '[GNOME] GNOME Shell Session active.\n'
 exit 0
 EOF
       chmod +x "${ROOTFS}/usr/bin/gnome-session"
@@ -218,8 +201,7 @@ EOF
     if [ ! -f "${ROOTFS}/usr/bin/startplasma-wayland" ]; then
       cat << 'EOF' > "${ROOTFS}/usr/bin/startplasma-wayland"
 #!/bin/sh
-printf '[KDE] KDE Plasma 6 Wayland Session active.
-'
+printf '[KDE] KDE Plasma 6 Wayland Session active.\n'
 exit 0
 EOF
       chmod +x "${ROOTFS}/usr/bin/startplasma-wayland"
@@ -227,14 +209,12 @@ EOF
     ;;
 
   *)
-    printf '[ERROR] Unknown desktop suite: %s
-' "$SUITE" >&2
+    printf '[ERROR] Unknown desktop suite: %s\n' "$SUITE" >&2
     exit 1
     ;;
 esac
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_DESKTOP}.tmp"
 mv "${STAMP_DESKTOP}.tmp" "$STAMP_DESKTOP"
-printf '[DONE]  Desktop suite %s configured successfully.
-' "$SUITE"
+printf '[DONE]  Desktop suite %s configured successfully.\n' "$SUITE"
 exit 0

@@ -1,4 +1,5 @@
 @echo off
+:: # disk_builder.cmd
 :: ## Overview
 :: Windows Batch companion for LFS disk layout and assembly.
 :: Implements Option A Win32 Hard-Fail boundary proforma.
@@ -19,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -74,5 +75,7 @@ echo [ERROR] Native Linux kernel disk assembly (loop/mount/mkfs) is unavailable 
 echo [ERROR] Please execute via container or VM builder: vm_builder.cmd >&2
 exit /b 86
 
+:: ## end
+:: Executes end functionality.
 :end
 exit /b 0

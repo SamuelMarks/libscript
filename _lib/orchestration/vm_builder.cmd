@@ -22,7 +22,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -82,6 +82,8 @@ if "%~1"=="-h" (
 set "WORKER_TYPE=auto"
 set "CMD_ARGS="
 
+:: ## parse_loop
+:: Executes parse_loop functionality.
 :parse_loop
 if "%~1"=="" goto after_parse
 set "arg=%~1"
@@ -93,6 +95,8 @@ if "!arg:~0,9!"=="--worker=" (
 set "CMD_ARGS=%*"
 goto after_parse
 
+:: ## after_parse
+:: Executes after_parse functionality.
 :after_parse
 if "%CMD_ARGS%"=="" (
     echo [ERROR] No command specified for vm_builder.

@@ -47,6 +47,8 @@ ACTION="${ACTION:-install}"
 
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
+# ## resolve_exact_version
+# Executes the resolve_exact_version logic.
 resolve_exact_version() {
   if [ "${ARIA2_VERSION}" = "latest" ] || [ "${ARIA2_VERSION}" = "lts" ]; then
     EXACT_VERSION=$(curl -sL https://api.github.com/repos/aria2/aria2/releases/latest | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^release-//')
@@ -134,6 +136,10 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/aria2/${VERSION:-latest}/bin/aria2" ]; then
+      log_info "aria2 ${VERSION:-latest} is already installed."
+      exit 0
+    fi
     if [ "${ARIA2_INSTALL_METHOD}" = "system" ]; then
       if command -v dnf >/dev/null 2>&1; then
         priv dnf install -y epel-release || true

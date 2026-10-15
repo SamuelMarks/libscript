@@ -1,0 +1,35 @@
+{
+  "$schema": "../../payload.schema.json",
+  "name": "gcp-tpu-vm-workload",
+  "version": "1.0.0",
+  "description": "AI training and evaluation workload wrapper executing over Tier 3 GCP Cloud TPU VMs with gcsfuse and TensorBoard.",
+  "type": "ai-training",
+  "artifact": {
+    "format": "libscript-component",
+    "component": "_lib/cloud-providers/gcp-tpu-vm",
+    "entrypoint": ["python3", "train.py"],
+    "args": [],
+    "working_dir": "/mnt/ml_data"
+  },
+  "resources": {
+    "cpu_cores": 16,
+    "memory_mb": 65536,
+    "tpu_accelerator_type": "v4-8",
+    "tpu_topology": "2x2x1",
+    "tpu_slice_count": 1
+  },
+  "scaling": {
+    "replicas": 1,
+    "strategy": "Recreate",
+    "gang_scheduling": true,
+    "restart_policy": "OnFailure"
+  },
+  "ports": [
+    {
+      "name": "tensorboard",
+      "port": 6006,
+      "protocol": "http",
+      "visibility": "internal"
+    }
+  ]
+}

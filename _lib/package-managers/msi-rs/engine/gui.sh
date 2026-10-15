@@ -23,22 +23,21 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 TEST_MODE="0"
 
 # ## show_help
 # Displays usage instructions and supported options.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [OPTIONS]"
   printf '%s\n' "Launches fullscreen kiosk GUI installer using msi-gui."
@@ -66,6 +65,8 @@ done
 
 # ## probe_gpu_hardware
 # Detects available graphics hardware and DRM/KMS drivers.
+# ## probe_gpu_hardware
+# Executes the probe_gpu_hardware logic.
 probe_gpu_hardware() {
   printf '[INFO] Probing graphics hardware and display pipeline...\n'
   if [ -d /sys/class/drm ]; then
@@ -83,6 +84,8 @@ probe_gpu_hardware() {
 
 # ## configure_software_rasterizer
 # Sets up Mesa llvmpipe / softpipe fallback environment variables.
+# ## configure_software_rasterizer
+# Executes the configure_software_rasterizer logic.
 configure_software_rasterizer() {
   export LIBGL_ALWAYS_SOFTWARE=1
   export GALLIUM_DRIVER=llvmpipe
@@ -92,6 +95,8 @@ configure_software_rasterizer() {
 
 # ## find_msi_gui
 # Resolves binary path for msi-gui.
+# ## find_msi_gui
+# Executes the find_msi_gui logic.
 find_msi_gui() {
   if command -v msi-gui >/dev/null 2>&1; then
     printf '%s\n' "$(command -v msi-gui)"

@@ -35,16 +35,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
@@ -112,6 +109,8 @@ fi
 #
 # Inputs:
 #   $@ - optional mysql arguments
+# ## run_mysql
+# Executes the run_mysql logic.
 run_mysql() {
   log_info "Connecting to MySQL on ${MYSQL_HOST}:${MYSQL_PORT} (db: ${MYSQL_DATABASE})..."
   if command -v mysql >/dev/null 2>&1; then
@@ -135,6 +134,8 @@ run_mysql() {
 #
 # Inputs:
 #   $@ - optional mongo arguments
+# ## run_mongo
+# Executes the run_mongo logic.
 run_mongo() {
   _uri="mongodb://${MONGODB_HOST}:${MONGODB_PORT}/${MONGODB_DATABASE}"
   log_info "Connecting to MongoDB at ${_uri}..."
@@ -153,6 +154,8 @@ run_mongo() {
 #
 # Inputs:
 #   $@ - optional redis-cli arguments
+# ## run_redis
+# Executes the run_redis logic.
 run_redis() {
   log_info "Connecting to Redis on ${REDIS_HOST}:${REDIS_PORT}..."
   if command -v redis-cli >/dev/null 2>&1; then
@@ -170,6 +173,8 @@ run_redis() {
 #
 # Inputs:
 #   $1 - SQL statement
+# ## run_query
+# Executes the run_query logic.
 run_query() {
   if [ $# -lt 1 ]; then
     log_err "Usage: $0 query <sql_statement>"
@@ -195,6 +200,8 @@ run_query() {
 
 # ## show_help
 # Displays usage guide.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
   cat <<EOF
 Open edX Database Console Wrapper

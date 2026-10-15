@@ -29,16 +29,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 TARGET_INPUT=""
 OUT_DIR=""
@@ -47,20 +44,17 @@ FORCE=0
 
 # ## show_help
 # Prints usage and options documentation to standard output.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
   printf 'Usage: %s <TARGET_DIR_OR_PLAN> [OPTIONS]
 
 ' "$(basename "$THIS_FILE")"
-  printf 'Options:
-'
-  printf '  --out-dir <dir>   Output directory for harvested license assets (default: <target>/licenses)
-'
-  printf '  --format <type>   Format to generate: rtf, txt, or all (default: all)
-'
-  printf '  --force           Regenerate licenses even if stamp file exists
-'
-  printf '  --help, -h        Show this help text
-'
+  printf 'Options:\n'
+  printf '  --out-dir <dir>   Output directory for harvested license assets (default: <target>/licenses)\n'
+  printf '  --format <type>   Format to generate: rtf, txt, or all (default: all)\n'
+  printf '  --force           Regenerate licenses even if stamp file exists\n'
+  printf '  --help, -h        Show this help text\n'
   exit 0
 }
 
@@ -84,8 +78,7 @@ while [ $# -gt 0 ]; do
       show_help
       ;;
     -*)
-      printf '[ERROR] Unknown option: %s
-' "$1" >&2
+      printf '[ERROR] Unknown option: %s\n' "$1" >&2
       exit 1
       ;;
     *)
@@ -93,8 +86,7 @@ while [ $# -gt 0 ]; do
         TARGET_INPUT="$1"
         shift
       else
-        printf '[ERROR] Unexpected argument: %s
-' "$1" >&2
+        printf '[ERROR] Unexpected argument: %s\n' "$1" >&2
         exit 1
       fi
       ;;
@@ -102,10 +94,8 @@ while [ $# -gt 0 ]; do
 done
 
 if [ -z "$TARGET_INPUT" ]; then
-  printf '[ERROR] Missing required target directory or execution plan argument.
-' >&2
-  printf 'Run %s --help for usage.
-' "$(basename "$THIS_FILE")" >&2
+  printf '[ERROR] Missing required target directory or execution plan argument.\n' >&2
+  printf 'Run %s --help for usage.\n' "$(basename "$THIS_FILE")" >&2
   exit 1
 fi
 
@@ -117,8 +107,7 @@ elif [ -f "$TARGET_INPUT" ]; then
   _file=$(basename -- "$TARGET_INPUT")
   TARGET_PATH="$_dir/$_file"
 else
-  printf '[ERROR] Target input does not exist: %s
-' "$TARGET_INPUT" >&2
+  printf '[ERROR] Target input does not exist: %s\n' "$TARGET_INPUT" >&2
   exit 1
 fi
 
@@ -133,8 +122,7 @@ fi
 # Check stamp file for idempotency
 STAMP_FILE="$OUT_DIR/.stamp.licenses_harvested"
 if [ "$FORCE" -eq 0 ] && [ -f "$STAMP_FILE" ] && [ -f "$OUT_DIR/licenses_manifest.json" ]; then
-  printf '[INFO] Licenses already harvested and up-to-date at: %s
-' "$OUT_DIR"
+  printf '[INFO] Licenses already harvested and up-to-date at: %s\n' "$OUT_DIR"
   exit 0
 fi
 
@@ -150,6 +138,8 @@ mkdir -p "$TMP_DIR"
 
 # ## cleanup
 # Removes temporary workspace directory upon script termination.
+# ## cleanup
+# Executes the cleanup logic.
 cleanup() {
   rm -rf "$TMP_DIR"
 }
@@ -157,14 +147,15 @@ trap cleanup EXIT INT TERM
 
 # ## resolve_spdx_file
 # Locates the best matching canonical license file for a given SPDX identifier.
+# ## resolve_spdx_file
+# Executes the resolve_spdx_file logic.
 resolve_spdx_file() {
   _spdx="$1"
   _candidate=""
 
   # Exact match
   if [ -f "$CANONICAL_LICENSES_DIR/${_spdx}.txt" ]; then
-    printf '%s
-' "$CANONICAL_LICENSES_DIR/${_spdx}.txt"
+    printf '%s\n' "$CANONICAL_LICENSES_DIR/${_spdx}.txt"
     return 0
   fi
 
@@ -176,8 +167,7 @@ resolve_spdx_file() {
         ;;
       *)
         if [ -f "$CANONICAL_LICENSES_DIR/${_token}.txt" ]; then
-          printf '%s
-' "$CANONICAL_LICENSES_DIR/${_token}.txt"
+          printf '%s\n' "$CANONICAL_LICENSES_DIR/${_token}.txt"
           return 0
         fi
         ;;
@@ -186,8 +176,7 @@ resolve_spdx_file() {
 
   # Fallback to MIT if unknown
   if [ -f "$CANONICAL_LICENSES_DIR/MIT.txt" ]; then
-    printf '%s
-' "$CANONICAL_LICENSES_DIR/MIT.txt"
+    printf '%s\n' "$CANONICAL_LICENSES_DIR/MIT.txt"
     return 0
   fi
 
@@ -196,6 +185,8 @@ resolve_spdx_file() {
 
 # ## convert_to_rtf
 # Idempotently converts a plain-text license file to a WiX-compatible RTF document.
+# ## convert_to_rtf
+# Executes the convert_to_rtf logic.
 convert_to_rtf() {
   _src_txt="$1"
   _dst_rtf="$2"
@@ -435,7 +426,5 @@ jq -n \
 # Write idempotency stamp
 touch "$STAMP_FILE"
 
-printf '[INFO] Successfully harvested %s licenses into %s
-' "$_item_count" "$OUT_DIR"
-printf '[INFO] Manifest written to %s/licenses_manifest.json
-' "$OUT_DIR"
+printf '[INFO] Successfully harvested %s licenses into %s\n' "$_item_count" "$OUT_DIR"
+printf '[INFO] Manifest written to %s/licenses_manifest.json\n' "$OUT_DIR"

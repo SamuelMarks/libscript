@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 SYSROOT="${1:-${LIBSCRIPT_TARGET_SYSROOT:-${REPO_ROOT}/build/illumos-sysroot}}"
@@ -47,13 +44,11 @@ mkdir -p "${SYSROOT}/boot"
 mkdir -p "${SYSROOT}/rpool"
 
 if [ -f "${STAMP_FILE}" ]; then
-  printf '[SKIP]     illumos ZFS storage layout already configured in %s
-' "${SYSROOT}"
+  printf '[SKIP]     illumos ZFS storage layout already configured in %s\n' "${SYSROOT}"
   exit 0
 fi
 
-printf '[ZFS]      Configuring illumos ZFS dataset hierarchy (pool: %s, compression: %s)...
-' "${POOL_NAME}" "${COMPRESSION}"
+printf '[ZFS]      Configuring illumos ZFS dataset hierarchy (pool: %s, compression: %s)...\n' "${POOL_NAME}" "${COMPRESSION}"
 
 # 1. ZFS dataset hierarchy manifest (for synthesis / packaging)
 cat << EOF > "${SYSROOT}/etc/zfs-datasets.conf"
@@ -105,5 +100,4 @@ fi
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
 mv "${STAMP_FILE}.tmp" "${STAMP_FILE}"
 
-printf '[OK]       illumos ZFS storage layout configured successfully: %s
-' "${SYSROOT}"
+printf '[OK]       illumos ZFS storage layout configured successfully: %s\n' "${SYSROOT}"

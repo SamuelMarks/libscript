@@ -1,4 +1,5 @@
 @echo off
+:: # provision_logical_vhost.cmd
 setlocal EnableDelayedExpansion
 
 :: ## Overview
@@ -20,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -54,6 +55,8 @@ goto :find_root
 set "SERVER_NAME="
 set "UPSTREAM_PORT="
 
+:: ## ParseArgs
+:: Executes ParseArgs functionality.
 :ParseArgs
 if "%~1"=="" goto ValidateArgs
 if "%~1"=="--server-name" (
@@ -71,6 +74,8 @@ if "%~1"=="--upstream-port" (
 echo [ERROR] Unknown argument: %~1 >&2
 exit /b 1
 
+:: ## ValidateArgs
+:: Executes ValidateArgs functionality.
 :ValidateArgs
 :: Validates arguments ensuring essential flags are passed
 if "!SERVER_NAME!"=="" (
@@ -83,6 +88,8 @@ if "!UPSTREAM_PORT!"=="" (
 )
 goto ProvisionVHost
 
+:: ## ProvisionVHost
+:: Executes ProvisionVHost functionality.
 :ProvisionVHost
 :: Provisions the virtual host
 :: Generates configuration and conditionally restarts the web server.

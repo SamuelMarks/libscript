@@ -45,6 +45,8 @@ fi
 
 # ## check_gcsfuse
 # Verifies that gcsfuse binary is installed and available in PATH.
+# ## check_gcsfuse
+# Executes the check_gcsfuse logic.
 check_gcsfuse() {
   if ! command -v gcsfuse >/dev/null 2>&1; then
     if [ -x "${LIBSCRIPT_ROOT_DIR}/installed/gcsfuse/bin/gcsfuse" ]; then

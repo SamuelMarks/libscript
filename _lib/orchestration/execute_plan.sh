@@ -22,30 +22,23 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  printf '%s
-' "Usage: ${THIS_FILE} <path_to_execution_plan.json> [--dry-run]"
-  printf '%s
-' "Executes a linear build execution plan step-by-step with stamp tracking."
+  printf '%s\n' "Usage: ${THIS_FILE} <path_to_execution_plan.json> [--dry-run]"
+  printf '%s\n' "Executes a linear build execution plan step-by-step with stamp tracking."
   exit 0
 fi
 
 if [ -z "${1:-}" ]; then
-  printf '[ERROR] Missing required execution plan argument.
-' >&2
-  printf 'Usage: %s <path_to_execution_plan.json> [--dry-run]
-' "${THIS_FILE}" >&2
+  printf '[ERROR] Missing required execution plan argument.\n' >&2
+  printf 'Usage: %s <path_to_execution_plan.json> [--dry-run]\n' "${THIS_FILE}" >&2
   exit 1
 fi
 
@@ -57,14 +50,12 @@ if [ "${2:-}" = "--dry-run" ]; then
 fi
 
 if [ ! -f "$PLAN_FILE" ]; then
-  printf '[ERROR] Execution plan file not found: %s
-' "$PLAN_FILE" >&2
+  printf '[ERROR] Execution plan file not found: %s\n' "$PLAN_FILE" >&2
   exit 1
 fi
 
 if ! command -v jq >/dev/null 2>&1; then
-  printf '[ERROR] jq is required but not installed.
-' >&2
+  printf '[ERROR] jq is required but not installed.\n' >&2
   exit 1
 fi
 
@@ -98,14 +89,11 @@ while [ "$STAGE_IDX" -lt "$TOTAL_STAGES" ]; do
 
     # Check if task already completed
     if [ -f "$STAMP_FILE" ]; then
-      printf '[SKIP]  Task "%s" (%s) already satisfied by %s
-' "$TASK_NAME" "$TASK_ACTION" "$TASK_STAMP"
+      printf '[SKIP]  Task "%s" (%s) already satisfied by %s\n' "$TASK_NAME" "$TASK_ACTION" "$TASK_STAMP"
     else
-      printf '[RUN]   Task "%s" (%s) [%s]
-' "$TASK_NAME" "$TASK_ACTION" "$TASK_COMP"
+      printf '[RUN]   Task "%s" (%s) [%s]\n' "$TASK_NAME" "$TASK_ACTION" "$TASK_COMP"
       if [ "$DRY_RUN" -eq 1 ]; then
-        printf '[DRYRUN] Would execute %s on %s and touch %s
-' "$TASK_ACTION" "$TASK_COMP" "$STAMP_FILE"
+        printf '[DRYRUN] Would execute %s on %s and touch %s\n' "$TASK_ACTION" "$TASK_COMP" "$STAMP_FILE"
       else
         # Locate task executable script if present
         EXEC_SCRIPT="${LIBSCRIPT_ROOT_DIR}/${TASK_COMP}/setup.sh"
@@ -117,14 +105,12 @@ while [ "$STAGE_IDX" -lt "$TOTAL_STAGES" ]; do
             LIBSCRIPT_STAGE="$STAGE_NAME" 
             sh "$EXEC_SCRIPT" "$TASK_ACTION"
         else
-          printf '[INFO]  No leaf script %s; registering step completion
-' "$EXEC_SCRIPT"
+          printf '[INFO]  No leaf script %s; registering step completion\n' "$EXEC_SCRIPT"
         fi
         # Atomically record stage completion stamp
         date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
         mv "${STAMP_FILE}.tmp" "$STAMP_FILE"
-        printf '[OK]    Completed "%s" -> %s
-' "$TASK_NAME" "$TASK_STAMP"
+        printf '[OK]    Completed "%s" -> %s\n' "$TASK_NAME" "$TASK_STAMP"
       fi
     fi
 

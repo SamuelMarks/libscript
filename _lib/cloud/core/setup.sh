@@ -42,6 +42,8 @@ done
 
 # ## handle_list_managed
 # Executes handle_list_managed functionality.
+# ## handle_list_managed
+# Executes the handle_list_managed logic.
 handle_list_managed() {
   printf '%s\n' "--- AWS Resources"
   if command -v aws >/dev/null 2>&1; then
@@ -60,6 +62,8 @@ handle_list_managed() {
 
 # ## handle_diff
 # Executes handle_diff functionality.
+# ## handle_diff
+# Executes the handle_diff logic.
 handle_diff() {
   printf '%s\n' "Comparing local .libscript_state.json with cloud provider reality..."
   if [ ! -f ".libscript_state.json" ]; then

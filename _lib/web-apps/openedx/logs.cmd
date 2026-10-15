@@ -20,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -55,6 +55,8 @@ set "TARGET=install"
 set "LINES=50"
 set "FOLLOW=0"
 
+:: ## parse_args
+:: Executes parse_args functionality.
 :parse_args
 if "%~1"=="" goto run_logs
 if /i "%~1"=="-n" (
@@ -93,10 +95,14 @@ set "TARGET=%~1"
 shift
 goto parse_args
 
+:: ## show_help
+:: Executes show_help functionality.
 :show_help
 echo Usage: logs.cmd [install^|lms^|cms^|worker] [-n NUM^|--tail NUM] [-f^|--follow]
 exit /b 0
 
+:: ## run_logs
+:: Executes run_logs functionality.
 :run_logs
 if "%OPENEDX_INSTALL_DIR%"=="" (
     if defined LIBSCRIPT_HOME (

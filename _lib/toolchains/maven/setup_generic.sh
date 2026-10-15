@@ -47,6 +47,8 @@ ACTION="${ACTION:-install}"
 
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
+# ## resolve_exact_version
+# Executes the resolve_exact_version logic.
 resolve_exact_version() {
   if [ "${MAVEN_VERSION}" = "latest" ] || [ "${MAVEN_VERSION}" = "lts" ]; then
     EXACT_VERSION=$(curl -sL https://api.github.com/repos/apache/maven/tags | grep '"name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^maven-//')
@@ -134,6 +136,10 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/maven/${VERSION:-latest}/bin/maven" ]; then
+      log_info "maven ${VERSION:-latest} is already installed."
+      exit 0
+    fi
 
     if [ "${MAVEN_INSTALL_METHOD}" = "system" ]; then
       libscript_depends 'maven'

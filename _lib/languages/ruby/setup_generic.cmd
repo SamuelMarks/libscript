@@ -1,4 +1,5 @@
 @echo off
+:: # setup_generic.cmd
 :: ## Overview
 :: Windows setup for ruby
 ::
@@ -16,7 +17,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -48,6 +49,8 @@ goto :find_root
 :root_found
 
 :: Parse offline and ruby options
+:: ## arg_parse_loop
+:: Executes arg_parse_loop functionality.
 :arg_parse_loop
 if "%~1"=="" goto :arg_parse_done
 if /i "%~1"=="--offline" set "LIBSCRIPT_OFFLINE=1"
@@ -55,6 +58,8 @@ if /i "%~1"=="-o" set "LIBSCRIPT_OFFLINE=1"
 if /i "%~1"=="--gem-local" set "GEM_OFFLINE=1"
 shift
 goto :arg_parse_loop
+:: ## arg_parse_done
+:: Executes arg_parse_done functionality.
 :arg_parse_done
 
 if "%LIBSCRIPT_OFFLINE%"=="1" (

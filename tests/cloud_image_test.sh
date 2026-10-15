@@ -21,20 +21,16 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-printf '[TEST-CLOUD] Starting Cloud Image Geometry & Milestone Verification...
-'
+printf '[TEST-CLOUD] Starting Cloud Image Geometry & Milestone Verification...\n'
 
 TEST_DIR="${LIBSCRIPT_ROOT_DIR}/build/test_cloud_verify"
 rm -rf "$TEST_DIR"
@@ -51,12 +47,10 @@ VHD_SIZE=$(wc -c < "$AZURE_VHD" | tr -d ' ' 2>/dev/null || echo 0)
 VHD_REM=$(( VHD_SIZE % 1048576 ))
 
 if [ "$VHD_REM" -ne 0 ] && [ "$VHD_REM" -ne 512 ]; then
-  printf '[FAIL] Azure VHD (%s bytes) is not aligned to 1 MiB boundary (rem=%s).
-' "$VHD_SIZE" "$VHD_REM" >&2
+  printf '[FAIL] Azure VHD (%s bytes) is not aligned to 1 MiB boundary (rem=%s).\n' "$VHD_SIZE" "$VHD_REM" >&2
   exit 1
 fi
-printf '[PASS] Azure VHD geometry validated (size=%s bytes, remainder=%s mod 1MB).
-' "$VHD_SIZE" "$VHD_REM"
+printf '[PASS] Azure VHD geometry validated (size=%s bytes, remainder=%s mod 1MB).\n' "$VHD_SIZE" "$VHD_REM"
 
 # 2. GCP Image Verification
 GCP_TAR="$TEST_DIR/gcp.tar.gz"
@@ -65,12 +59,10 @@ GCP_TAR="$TEST_DIR/gcp.tar.gz"
 GCP_MEMBERS=$(tar -tf "$GCP_TAR" 2>/dev/null || echo "")
 case "$GCP_MEMBERS" in
   disk.raw)
-    printf '[PASS] GCP archive contains strictly disk.raw at root.
-'
+    printf '[PASS] GCP archive contains strictly disk.raw at root.\n'
     ;;
   *)
-    printf '[FAIL] GCP archive contains unexpected members: %s
-' "$GCP_MEMBERS" >&2
+    printf '[FAIL] GCP archive contains unexpected members: %s\n' "$GCP_MEMBERS" >&2
     exit 1
     ;;
 esac
@@ -80,26 +72,21 @@ AWS_RAW="$TEST_DIR/aws.raw"
 "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/aws_ami.sh" "$RAW_DISK" "$AWS_RAW" "1"
 
 if [ ! -f "$AWS_RAW" ]; then
-  printf '[FAIL] AWS raw EBS volume was not generated.
-' >&2
+  printf '[FAIL] AWS raw EBS volume was not generated.\n' >&2
   exit 1
 fi
-printf '[PASS] AWS AMI raw EBS image verified successfully.
-'
+printf '[PASS] AWS AMI raw EBS image verified successfully.\n'
 
 # 4. Cloud-Init NoCloud ISO Verification
 CIDATA_ISO="$TEST_DIR/cidata.iso"
 "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/cloud/gen_nocloud_iso.sh" "test-node" "" "$CIDATA_ISO"
 
 if [ ! -f "$CIDATA_ISO" ]; then
-  printf '[FAIL] Cloud-Init NoCloud ISO was not generated.
-' >&2
+  printf '[FAIL] Cloud-Init NoCloud ISO was not generated.\n' >&2
   exit 1
 fi
-printf '[PASS] Cloud-Init NoCloud configuration ISO verified.
-'
+printf '[PASS] Cloud-Init NoCloud configuration ISO verified.\n'
 
 rm -rf "$TEST_DIR"
-printf '[OK] All cloud image geometries and invariants verified successfully.
-'
+printf '[OK] All cloud image geometries and invariants verified successfully.\n'
 exit 0

@@ -45,7 +45,7 @@ echo "[INFO] Uploading WXS files..."
 $SCP_CMD OpenEdX-Setup.wxs OpenEdX-Setup_payload.wxs OpenEdX-Setup-Offline.wxs OpenEdX-Setup-Offline_payload.wxs vagrant@$VM_IP:C:/libscript/packaging/
 
 cat << 'PS1_EOF' > build.ps1
-$env:Path += ';C:\wix'
+$env:Path += ';' + $env:USERPROFILE + '\.libscript\wix\3.14\bin'
 Set-Location C:\libscript\packaging
 Write-Host "[INFO] Building Online MSI..."
 candle.exe -nologo -out OpenEdX-Setup.wixobj OpenEdX-Setup.wxs

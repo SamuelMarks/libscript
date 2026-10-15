@@ -1,6 +1,4 @@
 #!/bin/sh
-# # LibScript Component Core Module
-#
 # ## Overview
 # This module provides the unified CLI routing and lifecycle management logic
 # for LibScript components. It eliminates redundancy by centralizing the
@@ -25,6 +23,8 @@
 # - A `vars.schema.json` in the component directory for dynamic argument parsing.
 # - A `setup.sh` in the component directory for installation logic.
 
+# # LibScript Component Core Module
+#
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
@@ -66,6 +66,8 @@ BASE_SCHEMA_FILE="$LIBSCRIPT_ROOT_DIR/_lib/_common/base_vars.schema.json"
 
 # ## get_merged_properties
 # Utility function to get the merged schema properties
+# ## get_merged_properties
+# Executes the get_merged_properties logic.
 get_merged_properties() {
   if [ -f "$SCHEMA_FILE" ] && [ -f "$BASE_SCHEMA_FILE" ]; then
     jq -n --argjson base "$(cat "$BASE_SCHEMA_FILE")" --argjson comp "$(cat "$SCHEMA_FILE")" '
@@ -82,6 +84,8 @@ get_merged_properties() {
 
 # ## show_help
 # Executes show_help functionality.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
   log_info "Usage: ${THIS_FILE##*/} [COMMAND] [PACKAGE_NAME] [VERSION] [OPTIONS]"
   log_info ""

@@ -24,16 +24,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 DISK_DEV="${1:-}"
@@ -43,17 +40,15 @@ ESP_PART="${4:-}"
 
 # ## show_help
 # Displays usage instructions and supported parameters.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") <disk_dev> <linux_part> <freebsd_part> [esp_part]"
-  printf '%s
-' "Concurrently deploys Linux and FreeBSD to separate partitions with dual-boot GRUB."
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") <disk_dev> <linux_part> <freebsd_part> [esp_part]"
+  printf '%s\n' "Concurrently deploys Linux and FreeBSD to separate partitions with dual-boot GRUB."
   printf '
 '
-  printf '%s
-' "Options:"
-  printf '%s
-' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
@@ -62,29 +57,24 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "$
 fi
 
 if [ -z "$DISK_DEV" ] || [ -z "$LINUX_PART" ] || [ -z "$FREEBSD_PART" ]; then
-  printf '[ERROR] Disk device, Linux partition, and FreeBSD partition are all required.
-' >&2
+  printf '[ERROR] Disk device, Linux partition, and FreeBSD partition are all required.\n' >&2
   show_help
   exit 1
 fi
 
 STAMP_FILE="/mnt/target/.coinstall_complete.stamp"
 if [ -f "$STAMP_FILE" ]; then
-  printf '[INFO] Co-installation already completed on %s. Skipping.
-' "$DISK_DEV"
+  printf '[INFO] Co-installation already completed on %s. Skipping.\n' "$DISK_DEV"
   exit 0
 fi
 
-printf '[COINSTALL] Starting Concurrent Linux + FreeBSD Dual-Boot Deployment on %s...
-' "$DISK_DEV"
+printf '[COINSTALL] Starting Concurrent Linux + FreeBSD Dual-Boot Deployment on %s...\n' "$DISK_DEV"
 
 # 1. Format individual partitions
-printf '[COINSTALL] Formatting Linux partition (%s) as ext4...
-' "$LINUX_PART"
+printf '[COINSTALL] Formatting Linux partition (%s) as ext4...\n' "$LINUX_PART"
 if [ -x "${REPO_ROOT}/_lib/storage/format.sh" ]; then
   "${REPO_ROOT}/_lib/storage/format.sh" "$LINUX_PART" "ext4" "linuxroot"
-  printf '[COINSTALL] Formatting FreeBSD partition (%s) as UFS2...
-' "$FREEBSD_PART"
+  printf '[COINSTALL] Formatting FreeBSD partition (%s) as UFS2...\n' "$FREEBSD_PART"
   "${REPO_ROOT}/_lib/storage/format.sh" "$FREEBSD_PART" "ufs2" "freebsdroot"
 fi
 
@@ -98,8 +88,7 @@ if [ -x "${REPO_ROOT}/_lib/storage/mount_sysroot.sh" ]; then
 fi
 
 # 3. Concurrent Installation Dispatch
-printf '[COINSTALL] Concurrently installing Linux userland and FreeBSD userland...
-'
+printf '[COINSTALL] Concurrently installing Linux userland and FreeBSD userland...\n'
 
 # Background Job 1: Linux Base
 (
@@ -121,12 +110,10 @@ PID_FREEBSD=$!
 wait "$PID_LINUX"
 wait "$PID_FREEBSD"
 
-printf '[COINSTALL] Both OS userland deployments successfully finished.
-'
+printf '[COINSTALL] Both OS userland deployments successfully finished.\n'
 
 # 4. Synthesize Dual-Boot GRUB Bootloader Configuration
-printf '[COINSTALL] Configuring unified Dual-Boot GRUB menu entries...
-'
+printf '[COINSTALL] Configuring unified Dual-Boot GRUB menu entries...\n'
 GRUB_CUSTOM="${TARGET_LINUX}/etc/grub.d/40_custom"
 mkdir -p "$(dirname "$GRUB_CUSTOM")"
 
@@ -150,6 +137,5 @@ if command -v grub-mkconfig >/dev/null 2>&1; then
 fi
 
 touch "$STAMP_FILE" 2>/dev/null || true
-printf '[OK] Concurrent Linux + FreeBSD Dual-Boot Co-Installation completed successfully!
-'
+printf '[OK] Concurrent Linux + FreeBSD Dual-Boot Co-Installation completed successfully!\n'
 exit 0

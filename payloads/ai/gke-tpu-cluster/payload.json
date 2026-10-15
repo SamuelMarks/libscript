@@ -1,0 +1,27 @@
+{
+  "$schema": "../../payload.schema.json",
+  "name": "gke-tpu-cluster-workload",
+  "version": "1.0.0",
+  "description": "Multi-slice TPU workload template scheduled onto a Tier 3.5 GKE TPU cluster topology.",
+  "type": "ai-training",
+  "artifact": {
+    "format": "oci-image",
+    "image": "gcr.io/cloud-tpu-v2-images/jax-ai-image:latest",
+    "entrypoint": ["python3", "-c", "import jax; print(jax.devices())"],
+    "args": [],
+    "working_dir": "/workspace"
+  },
+  "resources": {
+    "cpu_cores": 32,
+    "memory_mb": 131072,
+    "tpu_accelerator_type": "v4-8",
+    "tpu_topology": "2x2x1",
+    "tpu_slice_count": 2
+  },
+  "scaling": {
+    "replicas": 2,
+    "strategy": "Recreate",
+    "gang_scheduling": true,
+    "restart_policy": "OnFailure"
+  }
+}

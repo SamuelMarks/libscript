@@ -26,22 +26,34 @@ set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 :: ## find_root
 :: ## Overview
 :: Finds the root directory of the libscript repository.
-for %%I in ("%SCRIPT_DIR%") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "d=%SCRIPT_DIR%"
+    call :find_root
+)
+goto :root_found
 
-:: ## find_root_loop
-:: ## Overview
-:: Iterates upward through the directory tree looking for libscript.cmd.
-:find_root_loop
-if exist "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" goto found_root
-for %%I in ("%LIBSCRIPT_ROOT_DIR%\..") do set "PARENT_DIR=%%~fI"
-if "%PARENT_DIR%"=="%LIBSCRIPT_ROOT_DIR%" goto found_root
-set "LIBSCRIPT_ROOT_DIR=%PARENT_DIR%"
-goto find_root_loop
+:: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
+:find_root
+if exist "!d!\libscript.cmd" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+if exist "!d!\ROOT" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+for %%P in ("!d!") do set "parent=%%~dpP"
+set "d=!parent:~0,-1!"
+if "!d!"=="" (
+    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
+    exit /b 1
+)
+goto :find_root
 
-:: ## found_root
-:: ## Overview
-:: Target label reached once the libscript root directory is located.
-:found_root
+:: ## root_found
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
+:root_found
 
 set "TARGET_DIR="
 set "OUT_FILE="
@@ -1097,16 +1109,24 @@ if errorlevel 1 (
     )
 )
 
+:: ## skip_msiinfo
+:: Executes skip_msiinfo functionality.
 :skip_msiinfo
 echo [PASS] Successfully built %OUT_FILE%.msi
+:: ## compile_done
+:: Executes compile_done functionality.
 :compile_done
 set "ERR=0"
 goto cleanup
 
+:: ## compile_err
+:: Executes compile_err functionality.
 :compile_err
 set "ERR=1"
 goto cleanup
 
+:: ## cleanup
+:: Executes cleanup functionality.
 :cleanup
 if exist "%TMP_WORK_DIR%" rmdir /s /q "%TMP_WORK_DIR%" >nul 2>&1
 del /f /q "%OUT_FILE%.wixobj" >nul 2>&1

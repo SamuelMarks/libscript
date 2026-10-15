@@ -23,16 +23,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 MODE="table"
@@ -41,25 +38,19 @@ FILTER_CAT=""
 
 # ## show_help
 # Displays usage instructions and supported query options.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") [OPTIONS]"
-  printf '%s
-' "Scans and displays the dynamic LibScript component catalog."
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") [OPTIONS]"
+  printf '%s\n' "Scans and displays the dynamic LibScript component catalog."
   printf '
 '
-  printf '%s
-' "Options:"
-  printf '%s
-' "  --json                 Output full component catalog in JSON format."
-  printf '%s
-' "  --search <term>        Filter components matching search keyword."
-  printf '%s
-' "  --category <name>      Filter components within specified category."
-  printf '%s
-' "  --clean-base           Specify zero components (install clean base OS only)."
-  printf '%s
-' "  --help, -h, /?, -?     Show this help message."
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --json                 Output full component catalog in JSON format."
+  printf '%s\n' "  --search <term>        Filter components matching search keyword."
+  printf '%s\n' "  --category <name>      Filter components within specified category."
+  printf '%s\n' "  --clean-base           Specify zero components (install clean base OS only)."
+  printf '%s\n' "  --help, -h, /?, -?     Show this help message."
 }
 
 while [ $# -gt 0 ]; do
@@ -77,8 +68,7 @@ while [ $# -gt 0 ]; do
       shift 2
       ;;
     --clean-base)
-      printf '[]
-'
+      printf '[]\n'
       exit 0
       ;;
     --help|-h|/\?|-\?)
@@ -93,6 +83,8 @@ done
 
 # ## scan_components
 # Discovers components by scanning manifest.json files across _lib.
+# ## scan_components
+# Executes the scan_components logic.
 scan_components() {
   _mode="$1"
   _search="$2"

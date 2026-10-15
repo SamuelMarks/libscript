@@ -21,47 +21,36 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 WP_DIR="${LIBSCRIPT_ROOT_DIR}/stacks/cms/wordpress"
 
-printf '==> Testing WordPress CLI Router...
-'
+printf '==> Testing WordPress CLI Router...\n'
 "${WP_DIR}/cli.sh" help
 
-printf '==> Testing WordPress Database Console...
-'
+printf '==> Testing WordPress Database Console...\n'
 "${WP_DIR}/dbshell.sh" help
 
-printf '==> Testing WordPress Config Engine...
-'
+printf '==> Testing WordPress Config Engine...\n'
 "${WP_DIR}/config.sh" help
 
-printf '==> Testing WordPress User Management...
-'
+printf '==> Testing WordPress User Management...\n'
 "${WP_DIR}/user.sh" help
 
-printf '==> Testing WordPress Backup Utility...
-'
+printf '==> Testing WordPress Backup Utility...\n'
 "${WP_DIR}/backup.sh" help
 
-printf '==> Testing WordPress Cron Scheduler...
-'
+printf '==> Testing WordPress Cron Scheduler...\n'
 "${WP_DIR}/cron.sh" help
 
-printf '==> Testing WordPress Healthcheck...
-'
+printf '==> Testing WordPress Healthcheck...\n'
 "${WP_DIR}/healthcheck.sh" help
 
-printf '==> All WordPress 7.1.2 stack tools verified successfully!
-'
+printf '==> All WordPress 7.1.2 stack tools verified successfully!\n'
 exit 0

@@ -46,6 +46,8 @@ ACTION="${ACTION:-install}"
 
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
+# ## resolve_exact_version
+# Executes the resolve_exact_version logic.
 resolve_exact_version() {
   if [ "${PSMUX_VERSION}" = "latest" ] || [ "${PSMUX_VERSION}" = "lts" ]; then
     EXACT_VERSION="0.1.0"
@@ -133,6 +135,10 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/psmux/${VERSION:-latest}/bin/psmux" ]; then
+      log_info "psmux ${VERSION:-latest} is already installed."
+      exit 0
+    fi
 
     if [ "${PSMUX_INSTALL_METHOD}" = "system" ]; then
       libscript_depends 'psmux'

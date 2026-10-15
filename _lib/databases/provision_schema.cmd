@@ -1,4 +1,5 @@
 @echo off
+:: # provision_schema.cmd
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -19,14 +20,34 @@ set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
-for %%I in ("%SCRIPT_DIR%") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
-:find_root_loop
-if exist "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" goto found_root
-for %%I in ("%LIBSCRIPT_ROOT_DIR%\..") do set "PARENT_DIR=%%~fI"
-if "%PARENT_DIR%"=="%LIBSCRIPT_ROOT_DIR%" goto found_root
-set "LIBSCRIPT_ROOT_DIR=%PARENT_DIR%"
-goto find_root_loop
-:found_root
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "d=%SCRIPT_DIR%"
+    call :find_root
+)
+goto :root_found
+
+:: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
+:find_root
+if exist "!d!\libscript.cmd" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+if exist "!d!\ROOT" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+for %%P in ("!d!") do set "parent=%%~dpP"
+set "d=!parent:~0,-1!"
+if "!d!"=="" (
+    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
+    exit /b 1
+)
+goto :find_root
+
+:: ## root_found
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
+:root_found
 
 set "ENGINE="
 set "HOST=127.0.0.1"
@@ -39,6 +60,8 @@ set "TENANT_PASS="
 set "CHARSET=utf8mb4"
 set "COLLATION=utf8mb4_unicode_ci"
 
+:: ## parse_args
+:: Executes parse_args functionality.
 :parse_args
 if "%~1"=="" goto run_provision
 if "%~1"=="--engine" ( set "ENGINE=%~2" & shift & shift & goto parse_args )
@@ -54,6 +77,8 @@ if "%~1"=="--collation" ( set "COLLATION=%~2" & shift & shift & goto parse_args 
 shift
 goto parse_args
 
+:: ## run_provision
+:: Executes run_provision functionality.
 :run_provision
 if "%ENGINE%"=="" ( echo Error: Missing engine >&2 & exit /b 1 )
 if "%SCHEMA_NAME%"=="" ( echo Error: Missing schema >&2 & exit /b 1 )
@@ -69,6 +94,8 @@ if "%ENGINE%"=="sqlite" goto do_sqlite
 echo Error: Unsupported engine "%ENGINE%" >&2
 exit /b 1
 
+:: ## do_mysql
+:: Executes do_mysql functionality.
 :do_mysql
 if "%PORT%"=="" set "PORT=3306"
 if "%ADMIN_USER%"=="" set "ADMIN_USER=root"
@@ -89,6 +116,8 @@ if "%ADMIN_PASS%"=="" (
 del "%TMP_SQL%"
 exit /b 0
 
+:: ## do_postgres
+:: Executes do_postgres functionality.
 :do_postgres
 if "%PORT%"=="" set "PORT=5432"
 if "%ADMIN_USER%"=="" set "ADMIN_USER=postgres"
@@ -102,6 +131,8 @@ psql -h "%HOST%" -p "%PORT%" -U "%ADMIN_USER%" -d "%SCHEMA_NAME%" -c "ALTER SCHE
 set "PGPASSWORD="
 exit /b 0
 
+:: ## do_mongodb
+:: Executes do_mongodb functionality.
 :do_mongodb
 if "%PORT%"=="" set "PORT=27017"
 set "MONGO_ARGS=--host %HOST% --port %PORT%"
@@ -110,6 +141,8 @@ set "JS_CHECK=var res = db.getSiblingDB('%SCHEMA_NAME%').getUser('%TENANT_USER%'
 mongosh %MONGO_ARGS% --eval "%JS_CHECK%" --quiet
 exit /b 0
 
+:: ## do_sqlite
+:: Executes do_sqlite functionality.
 :do_sqlite
 :: schema_name is treated as the file path
 for %%I in ("%SCHEMA_NAME%") do set "DB_DIR=%%~dpI"

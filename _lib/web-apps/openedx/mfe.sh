@@ -36,16 +36,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
@@ -72,8 +69,7 @@ mkdir -p "${MFE_ROOT_DIR}" "${MFE_DIST_DIR}"
 # ## resolve_python
 resolve_python() {
   if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/python" ]; then
-    printf '%s
-' "${OPENEDX_INSTALL_DIR}/.venv/bin/python"
+    printf '%s\n' "${OPENEDX_INSTALL_DIR}/.venv/bin/python"
   elif command -v python3 >/dev/null 2>&1; then
     command -v python3
   elif command -v python >/dev/null 2>&1; then
@@ -85,27 +81,24 @@ resolve_python() {
 
 # ## get_mfe_repo
 # Returns git URL for standard MFEs.
+# ## get_mfe_repo
+# Executes the get_mfe_repo logic.
 get_mfe_repo() {
   case "$1" in
     learning|frontend-app-learning)
-      printf '%s
-' "https://github.com/openedx/frontend-app-learning.git"
+      printf '%s\n' "https://github.com/openedx/frontend-app-learning.git"
       ;;
     authn|frontend-app-authn)
-      printf '%s
-' "https://github.com/openedx/frontend-app-authn.git"
+      printf '%s\n' "https://github.com/openedx/frontend-app-authn.git"
       ;;
     account|frontend-app-account)
-      printf '%s
-' "https://github.com/openedx/frontend-app-account.git"
+      printf '%s\n' "https://github.com/openedx/frontend-app-account.git"
       ;;
     course-authoring|frontend-app-course-authoring)
-      printf '%s
-' "https://github.com/openedx/frontend-app-course-authoring.git"
+      printf '%s\n' "https://github.com/openedx/frontend-app-course-authoring.git"
       ;;
     *)
-      printf '%s
-' "https://github.com/openedx/frontend-app-$1.git"
+      printf '%s\n' "https://github.com/openedx/frontend-app-$1.git"
       ;;
   esac
 }
@@ -116,6 +109,8 @@ get_mfe_repo() {
 # Inputs:
 #   $1 - name
 #   --version <version>
+# ## mfe_build
+# Executes the mfe_build logic.
 mfe_build() {
   if [ $# -lt 1 ]; then
     log_err "Usage: $0 build <mfe_name> [--version <version>]"
@@ -189,6 +184,8 @@ EOF
 # Inputs:
 #   $1 - name
 #   --dest <path>
+# ## mfe_deploy
+# Executes the mfe_deploy logic.
 mfe_deploy() {
   if [ $# -lt 1 ]; then
     log_err "Usage: $0 deploy <mfe_name> [--dest <path>]"
@@ -252,6 +249,8 @@ EOF
 
 # ## mfe_list
 # Lists all managed MFEs.
+# ## mfe_list
+# Executes the mfe_list logic.
 mfe_list() {
   log_info "Listing Open edX Micro-Frontends (MFEs)..."
   _py="$(resolve_python)"
@@ -265,19 +264,18 @@ for k, v in d.items():
     print(f"{k:<24} {str(v.get('built', False)):<8} {str(v.get('deployed', False)):<10} {v.get('version', 'master'):<12}")
 EOF
   else
-    printf '%-24s %-8s %-10s %-12s
-' "MFE IDENTIFIER" "BUILT" "DEPLOYED" "VERSION"
-    printf '%s
-' "------------------------------------------------------------"
+    printf '%-24s %-8s %-10s %-12s\n' "MFE IDENTIFIER" "BUILT" "DEPLOYED" "VERSION"
+    printf '%s\n' "------------------------------------------------------------"
     for m in learning authn account course-authoring; do
-      printf '%-24s %-8s %-10s %-12s
-' "${m}" "no" "no" "master"
+      printf '%-24s %-8s %-10s %-12s\n' "${m}" "no" "no" "master"
     done
   fi
 }
 
 # ## show_help
 # Displays usage guide.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
   cat <<EOF
 Open edX Micro-Frontend (MFE) Pipeline CLI

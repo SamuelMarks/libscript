@@ -23,26 +23,22 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 # ## show_help
 # Displays usage documentation.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") start <run_dir> <log_dir> <py_bin> <install_dir>"
-  printf '%s
-' "       $(basename "$THIS_FILE") stop <run_dir>"
-  printf '%s
-' "       $(basename "$THIS_FILE") status <run_dir>"
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") start <run_dir> <log_dir> <py_bin> <install_dir>"
+  printf '%s\n' "       $(basename "$THIS_FILE") stop <run_dir>"
+  printf '%s\n' "       $(basename "$THIS_FILE") status <run_dir>"
   exit 0
 }
 
@@ -51,6 +47,8 @@ show_help() {
 #
 # Inputs:
 #   $1 - Process ID
+# ## is_pid_alive
+# Executes the is_pid_alive logic.
 is_pid_alive() {
   _pid="$1"
   kill -0 "${_pid}" 2>/dev/null
@@ -64,6 +62,8 @@ is_pid_alive() {
 #   $2 - Log directory
 #   $3 - Python executable
 #   $4 - Installation directory
+# ## do_start
+# Executes the do_start logic.
 do_start() {
   _run_dir="$1"
   _log_dir="$2"
@@ -80,8 +80,7 @@ do_start() {
     if [ -f "${_pid_file}" ]; then
       _pid=$(head -n 1 "${_pid_file}" 2>/dev/null || true)
       if [ -n "${_pid}" ] && is_pid_alive "${_pid}"; then
-        printf 'Daemon %s is already running (PID %s).
-' "${_svc}" "${_pid}"
+        printf 'Daemon %s is already running (PID %s).\n' "${_svc}" "${_pid}"
         continue
       fi
     fi
@@ -94,10 +93,8 @@ do_start() {
       _new_pid=$!
     fi
 
-    printf '%s
-' "${_new_pid}" > "${_pid_file}"
-    printf 'Started %s (PID %s).
-' "${_svc}" "${_new_pid}"
+    printf '%s\n' "${_new_pid}" > "${_pid_file}"
+    printf 'Started %s (PID %s).\n' "${_svc}" "${_new_pid}"
   done
 }
 
@@ -106,6 +103,8 @@ do_start() {
 #
 # Inputs:
 #   $1 - Run directory
+# ## do_stop
+# Executes the do_stop logic.
 do_stop() {
   _run_dir="$1"
 
@@ -115,8 +114,7 @@ do_stop() {
       _pid=$(head -n 1 "${_pid_file}" 2>/dev/null || true)
       if [ -n "${_pid}" ]; then
         kill -15 "${_pid}" 2>/dev/null || kill -9 "${_pid}" 2>/dev/null || true
-        printf 'Stopped %s (PID %s).
-' "${_svc}" "${_pid}"
+        printf 'Stopped %s (PID %s).\n' "${_svc}" "${_pid}"
       fi
       rm -f "${_pid_file}"
     fi
@@ -128,6 +126,8 @@ do_stop() {
 #
 # Inputs:
 #   $1 - Run directory
+# ## do_status
+# Executes the do_status logic.
 do_status() {
   _run_dir="$1"
 
@@ -147,13 +147,14 @@ do_status() {
       fi
     fi
 
-    printf '%-20s %-12s %s
-' "${_svc}" "${_status}" "${_details}"
+    printf '%-20s %-12s %s\n' "${_svc}" "${_status}" "${_details}"
   done
 }
 
 # ## main
 # Main entrypoint parsing action commands.
+# ## main
+# Executes the main logic.
 main() {
   if [ $# -lt 1 ]; then
     show_help
@@ -179,8 +180,7 @@ main() {
       show_help
       ;;
     *)
-      printf 'Error: Unknown action %s
-' "${_action}" >&2
+      printf 'Error: Unknown action %s\n' "${_action}" >&2
       exit 1
       ;;
   esac

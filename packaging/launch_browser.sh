@@ -26,16 +26,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 URL="${1:-}"
 LABEL="${2:-Open edX Portal}"
@@ -44,8 +41,7 @@ if [ -z "$URL" ] || [ "$URL" = "-h" ] || [ "$URL" = "--help" ]; then
   printf 'Usage: %s <url> [label]
 
 ' "$(basename "$THIS_FILE")"
-  printf 'Launches default web browser or displays URL.
-'
+  printf 'Launches default web browser or displays URL.\n'
   exit 0
 fi
 
@@ -56,8 +52,7 @@ elif command -v open >/dev/null 2>&1; then
 elif command -v sensible-browser >/dev/null 2>&1; then
   sensible-browser "$URL" >/dev/null 2>&1 &
 else
-  printf '[INFO] %s available at: %s
-' "$LABEL" "$URL"
+  printf '[INFO] %s available at: %s\n' "$LABEL" "$URL"
 fi
 
 exit 0

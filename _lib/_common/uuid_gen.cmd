@@ -1,16 +1,17 @@
 @echo off
-rem ## Overview
+:: # uuid_gen.cmd
+:: ## Overview
 rem Deterministic UUIDv5 generator utility for LibScript Windows Installer packaging.
 rem Generates reproducible GUIDs based on namespace and component name/version.
 rem
-rem ## Usage
+:: ## Usage
 rem   call _lib\_common\uuid_gen.cmd <NAMESPACE_UUID> <NAME>
 rem
-rem ## Parameters
+:: ## Parameters
 rem   NAMESPACE_UUID  Base UUID namespace (e.g. 6ba7b810-9dad-11d1-80b4-00c04fd430c8)
 rem   NAME            Unique string seed (e.g. "libscript.mysql.8.0.39")
 
-setlocal enabledelayedexpansion
+setlocal EnableDelayedExpansion
 
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -23,7 +24,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"

@@ -21,16 +21,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 ACTION="${1:-install}"
@@ -41,40 +38,33 @@ mkdir -p "$STAMPS_DIR"
 STAMP_KERNEL="${STAMPS_DIR}/.stamp.lfs_kernel"
 
 if [ "$ACTION" = "clean" ]; then
-  printf '[CLEAN] Removing LFS kernel stamp...
-'
+  printf '[CLEAN] Removing LFS kernel stamp...\n'
   rm -f "$STAMP_KERNEL"
   exit 0
 fi
 
 if [ "$ACTION" = "status" ]; then
   if [ -f "$STAMP_KERNEL" ]; then
-    printf 'LFS Kernel: INSTALLED (%s)
-' "$(cat "$STAMP_KERNEL")"
+    printf 'LFS Kernel: INSTALLED (%s)\n' "$(cat "$STAMP_KERNEL")"
   else
-    printf 'LFS Kernel: NOT INSTALLED
-'
+    printf 'LFS Kernel: NOT INSTALLED\n'
   fi
   exit 0
 fi
 
 if [ -f "$STAMP_KERNEL" ] && [ -f "${ROOTFS}/boot/vmlinuz" ] && [ -f "${ROOTFS}/boot/initramfs.img" ]; then
-  printf '[SKIP]  LFS kernel and initramfs already built (%s)
-' "$STAMP_KERNEL"
+  printf '[SKIP]  LFS kernel and initramfs already built (%s)\n' "$STAMP_KERNEL"
   exit 0
 fi
 
-printf '=== LibScript LFS Kernel & Initramfs Assembler ===
-'
-printf '[INFO] Target Rootfs: %s
-' "$ROOTFS"
+printf '=== LibScript LFS Kernel & Initramfs Assembler ===\n'
+printf '[INFO] Target Rootfs: %s\n' "$ROOTFS"
 
 mkdir -p "${ROOTFS}/boot"
 mkdir -p "${ROOTFS}/lib/modules"
 
 # 1. Assemble Modular Kernel Configuration Fragments
-printf '[STAGE] Assembling kernel configuration fragments...
-'
+printf '[STAGE] Assembling kernel configuration fragments...\n'
 cat << 'EOF' > "${ROOTFS}/boot/config"
 # LibScript Modular LFS Kernel Configuration
 # VirtIO Hypervisor Drivers
@@ -110,15 +100,12 @@ EOF
 
 # 2. Kernel Binary Staging
 if [ ! -f "${ROOTFS}/boot/vmlinuz" ]; then
-  printf '[STAGE] Staging kernel executable...
-'
-  printf 'LibScript Linux Kernel (x86_64 virtio)
-' > "${ROOTFS}/boot/vmlinuz"
+  printf '[STAGE] Staging kernel executable...\n'
+  printf 'LibScript Linux Kernel (x86_64 virtio)\n' > "${ROOTFS}/boot/vmlinuz"
 fi
 
 # 3. Initramfs Synthesis
-printf '[STAGE] Synthesizing modular early-boot initramfs...
-'
+printf '[STAGE] Synthesizing modular early-boot initramfs...\n'
 INITRAMFS_TMP="${ROOTFS}/tmp/initramfs_stage_$$"
 mkdir -p "${INITRAMFS_TMP}/bin"
 mkdir -p "${INITRAMFS_TMP}/dev"
@@ -159,13 +146,11 @@ if command -v cpio >/dev/null 2>&1; then
     find . | cpio -H newc -o 2>/dev/null | gzip -9 > "${ROOTFS}/boot/initramfs.img"
   )
 else
-  printf 'LibScript Mock Initramfs
-' > "${ROOTFS}/boot/initramfs.img"
+  printf 'LibScript Mock Initramfs\n' > "${ROOTFS}/boot/initramfs.img"
 fi
 rm -rf "$INITRAMFS_TMP"
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_KERNEL}.tmp"
 mv "${STAMP_KERNEL}.tmp" "$STAMP_KERNEL"
-printf '[DONE]  LFS Kernel and Initramfs assembled successfully.
-'
+printf '[DONE]  LFS Kernel and Initramfs assembled successfully.\n'
 exit 0

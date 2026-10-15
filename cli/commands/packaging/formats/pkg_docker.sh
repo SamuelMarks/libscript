@@ -29,16 +29,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 base_image="debian:bookworm-slim"
 layer_filter=""
@@ -96,8 +93,7 @@ while [ $# -gt 0 ]; do
       shift 2
       ;;
     *)
-      printf '%s
-' "$1" >> "$tmp_args"
+      printf '%s\n' "$1" >> "$tmp_args"
       shift
       ;;
   esac
@@ -105,8 +101,7 @@ done
 
 if [ "$is_offline" -eq 1 ]; then
   if [ ! -d "cache" ] && [ ! -d "${LIBSCRIPT_CACHE_DIR:-}" ]; then
-    printf '[WARN] Local cache directory not found. Run hydrate_offline_cache.sh prior to air-gapped build.
-' >&2
+    printf '[WARN] Local cache directory not found. Run hydrate_offline_cache.sh prior to air-gapped build.\n' >&2
   fi
 fi
 
@@ -154,29 +149,25 @@ if [ "$is_offline" -ne 1 ] && [ -n "$bundle_file" ] && command -v jq >/dev/null 
   # Extract runtimes
   jq -r '.runtimes[]? | "\(.extract_dir // "runtimes") \(.filename) \(.url)"' "$bundle_file" 2>/dev/null | while read -r _dir _fn _url; do
     if [ -n "$_url" ] && [ "$_url" != "null" ]; then
-      printf 'ADD %s /opt/libscript_cache/%s/%s
-' "$_url" "$_dir" "$_fn" >> "$tmp_add"
+      printf 'ADD %s /opt/libscript_cache/%s/%s\n' "$_url" "$_dir" "$_fn" >> "$tmp_add"
     fi
   done
   # Extract databases
   jq -r '.databases[]? | "\(.extract_dir // "databases") \(.filename) \(.url)"' "$bundle_file" 2>/dev/null | while read -r _dir _fn _url; do
     if [ -n "$_url" ] && [ "$_url" != "null" ]; then
-      printf 'ADD %s /opt/libscript_cache/%s/%s
-' "$_url" "$_dir" "$_fn" >> "$tmp_add"
+      printf 'ADD %s /opt/libscript_cache/%s/%s\n' "$_url" "$_dir" "$_fn" >> "$tmp_add"
     fi
   done
   # Extract wheels
   jq -r '.wheels.packages[]? | "\("wheels") \(.filename) \(.url)"' "$bundle_file" 2>/dev/null | while read -r _dir _fn _url; do
     if [ -n "$_url" ] && [ "$_url" != "null" ]; then
-      printf 'ADD %s /opt/libscript_cache/%s/%s
-' "$_url" "$_dir" "$_fn" >> "$tmp_add"
+      printf 'ADD %s /opt/libscript_cache/%s/%s\n' "$_url" "$_dir" "$_fn" >> "$tmp_add"
     fi
   done
   # Extract codebase
   jq -r 'if .codebase.archive_url then "codebase \(.codebase.archive_filename) \(.codebase.archive_url)" else empty end' "$bundle_file" 2>/dev/null | while read -r _dir _fn _url; do
     if [ -n "$_url" ] && [ "$_url" != "null" ]; then
-      printf 'ADD %s /opt/libscript_cache/%s/%s
-' "$_url" "$_dir" "$_fn" >> "$tmp_add"
+      printf 'ADD %s /opt/libscript_cache/%s/%s\n' "$_url" "$_dir" "$_fn" >> "$tmp_add"
     fi
   done
 fi
@@ -238,8 +229,7 @@ fi
 
 # Process dependencies and emit instructions without eval
 if [ -n "$deps_list" ]; then
-  printf '%b
-' "$deps_list" | while read -r _layer pkg ver override; do
+  printf '%b\n' "$deps_list" | while read -r _layer pkg ver override; do
     [ -z "$pkg" ] && continue
     if [ -n "$layer_filter" ] && [ "$_layer" != "cli" ] && [ "$_layer" != "$layer_filter" ] && [ "${_layer}s" != "$layer_filter" ]; then
       continue
@@ -249,44 +239,33 @@ if [ -n "$deps_list" ]; then
     pkg_up=$(printf '%s' "$pkg_clean" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
     [ "$ver" = "null" ] || [ -z "$ver" ] && ver="latest"
 
-    printf 'ENV %s_VERSION="%s"
-' "$pkg_up" "$ver" >> "$tmp_env_add"
+    printf 'ENV %s_VERSION="%s"\n' "$pkg_up" "$ver" >> "$tmp_env_add"
 
     if [ -n "$override" ] && [ "$override" != "null" ]; then
       filename=$(basename "${override%%\?*}")
       if [ "$is_offline" -ne 1 ]; then
-        printf 'ENV %s_URL="%s"
-' "$pkg_up" "$override" >> "$tmp_env_add"
-        printf 'ADD ${%s_URL} /opt/libscript_cache/%s/%s
-' "$pkg_up" "$pkg_clean" "$filename" >> "$tmp_add"
+        printf 'ENV %s_URL="%s"\n' "$pkg_up" "$override" >> "$tmp_env_add"
+        printf 'ADD ${%s_URL} /opt/libscript_cache/%s/%s\n' "$pkg_up" "$pkg_clean" "$filename" >> "$tmp_add"
       fi
     fi
 
     if [ "$artifact_type" = "deb" ]; then
-      printf 'RUN dpkg -s %s >/dev/null 2>&1 || (apt-get update && apt-get install -y /opt/libscript/*-%s_*.deb)
-' "$pkg_clean" "$pkg_clean" >> "$tmp_run"
+      printf 'RUN dpkg -s %s >/dev/null 2>&1 || (apt-get update && apt-get install -y /opt/libscript/*-%s_*.deb)\n' "$pkg_clean" "$pkg_clean" >> "$tmp_run"
     elif [ "$artifact_type" = "rpm" ]; then
-      printf 'RUN rpm -q %s >/dev/null 2>&1 || dnf install -y /opt/libscript/*-%s-*.rpm
-' "$pkg_clean" "$pkg_clean" >> "$tmp_run"
+      printf 'RUN rpm -q %s >/dev/null 2>&1 || dnf install -y /opt/libscript/*-%s-*.rpm\n' "$pkg_clean" "$pkg_clean" >> "$tmp_run"
     elif [ "$artifact_type" = "apk" ]; then
-      printf 'RUN apk info -e %s >/dev/null 2>&1 || apk add --allow-untrusted /opt/libscript/*-%s-*.apk
-' "$pkg_clean" "$pkg_clean" >> "$tmp_run"
+      printf 'RUN apk info -e %s >/dev/null 2>&1 || apk add --allow-untrusted /opt/libscript/*-%s-*.apk\n' "$pkg_clean" "$pkg_clean" >> "$tmp_run"
     elif [ "$artifact_type" = "txz" ]; then
-      printf 'RUN pkg install -y /opt/libscript/*-%s*.txz /opt/libscript/*-%s*.pkg || true
-' "$pkg_clean" "$pkg_clean" >> "$tmp_run"
+      printf 'RUN pkg install -y /opt/libscript/*-%s*.txz /opt/libscript/*-%s*.pkg || true\n' "$pkg_clean" "$pkg_clean" >> "$tmp_run"
     elif [ "$artifact_type" = "msi" ]; then
-      printf 'RUN for %%I in (C:\opt\libscript\*-%s-*.msi) do msiexec /i "%%I" /qn /norestart
-' "$pkg_clean" >> "$tmp_run"
+      printf 'RUN for %%I in (C:\opt\libscript\*-%s-*.msi) do msiexec /i "%%I" /qn /norestart\n' "$pkg_clean" >> "$tmp_run"
     elif [ "$artifact_type" = "exe" ]; then
-      printf 'RUN for %%I in (C:\opt\libscript\*-%s-*.exe) do "%%I" /SILENT /VERYSILENT
-' "$pkg_clean" >> "$tmp_run"
+      printf 'RUN for %%I in (C:\opt\libscript\*-%s-*.exe) do "%%I" /SILENT /VERYSILENT\n' "$pkg_clean" >> "$tmp_run"
     else
       if [ "$is_offline" -eq 1 ]; then
-        printf 'RUN ./libscript.sh install %s ${%s_VERSION} --offline
-' "$pkg" "$pkg_up" >> "$tmp_run"
+        printf 'RUN ./libscript.sh install %s ${%s_VERSION} --offline\n' "$pkg" "$pkg_up" >> "$tmp_run"
       else
-        printf 'RUN ./libscript.sh install %s ${%s_VERSION}
-' "$pkg" "$pkg_up" >> "$tmp_run"
+        printf 'RUN ./libscript.sh install %s ${%s_VERSION}\n' "$pkg" "$pkg_up" >> "$tmp_run"
       fi
     fi
 
@@ -296,11 +275,9 @@ if [ -n "$deps_list" ]; then
   done
 else
   if [ "$is_offline" -eq 1 ]; then
-    printf '%s
-' "RUN ./install_gen.sh --offline" >> "$tmp_run"
+    printf '%s\n' "RUN ./install_gen.sh --offline" >> "$tmp_run"
   else
-    printf '%s
-' "RUN ./install_gen.sh" >> "$tmp_run"
+    printf '%s\n' "RUN ./install_gen.sh" >> "$tmp_run"
   fi
 fi
 
@@ -311,10 +288,8 @@ if [ -s "$tmp_add" ]; then
   cat "$tmp_add"
 fi
 
-printf '%s
-' "COPY . /opt/libscript"
-printf '%s
-' "WORKDIR /opt/libscript"
+printf '%s\n' "COPY . /opt/libscript"
+printf '%s\n' "WORKDIR /opt/libscript"
 
 if [ -s "$tmp_run" ]; then
   cat "$tmp_run"

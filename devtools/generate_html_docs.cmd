@@ -21,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -73,6 +73,21 @@ exit /b 0
 :: ## main
 :: Executes main functionality.
 :main
-:: ## main
-:: Executes main functionality.
-exit /b 0
+setlocal EnableDelayedExpansion
+set "REPO_ROOT=%SCRIPT_DIR%.."
+set "LIBSCRIPT_EXTENDED_SCHEMAS=topologies/topology.schema.json topologies/topology-state.schema.json payloads/payload.schema.json traits/trait.schema.json _lib/_common/manifest.schema.json"
+
+where powershell >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%generate_html_docs.ps1" %*
+    exit /b %ERRORLEVEL%
+)
+
+where pwsh >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    pwsh -NoProfile -File "%SCRIPT_DIR%generate_html_docs.ps1" %*
+    exit /b %ERRORLEVEL%
+)
+
+echo [ERROR] PowerShell interpreter not found. >&2
+exit /b 1

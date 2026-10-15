@@ -44,6 +44,8 @@ export PKG_MGR_UPDATE_REGISTRY
 
 # ## libscript_resolve_install_method
 # Executes libscript_resolve_install_method functionality.
+# ## libscript_resolve_install_method
+# Executes the libscript_resolve_install_method logic.
 libscript_resolve_install_method() {
   comp_method_var="${1}_INSTALL_METHOD"
   requested="$(printenv "$comp_method_var" 2>/dev/null || true)"
@@ -86,12 +88,16 @@ libscript_resolve_install_method() {
 
 # ## libscript_cmd_avail
 # Executes libscript_cmd_avail functionality.
+# ## libscript_cmd_avail
+# Executes the libscript_cmd_avail logic.
 libscript_cmd_avail() {
   command -v -- "${1}" >/dev/null 2>&1
 }
 
 # ## detect_pkg_mgr
 # Executes detect_pkg_mgr functionality.
+# ## detect_pkg_mgr
+# Executes the detect_pkg_mgr logic.
 detect_pkg_mgr() {
   if libscript_cmd_avail apt-get; then
     PKG_MGR='apt-get' # Debian, Ubuntu, and other derivatives
@@ -144,6 +150,8 @@ detect_pkg_mgr() {
 
 # ## is_installed
 # Executes is_installed functionality.
+# ## is_installed
+# Executes the is_installed logic.
 is_installed() {
   pkg="${1}"
   case "${PKG_MGR}" in
@@ -172,6 +180,8 @@ is_installed() {
 
 # ## libscript_depends
 # Executes libscript_depends functionality.
+# ## libscript_depends
+# Executes the libscript_depends logic.
 libscript_depends() {
   if [ "${LIBSCRIPT_SKIP_SYSTEM_DEPS:-0}" = "1" ]; then
     log_info "Skipping system dependencies due to LIBSCRIPT_SKIP_SYSTEM_DEPS=1"
@@ -285,6 +295,8 @@ fi
 
 # ## libscript_download
 # Unified Caching Downloader for remote artifacts.
+# ## libscript_download
+# Executes the libscript_download logic.
 libscript_download() {
   export url="${1:-}"
   dest="${2:-}"
@@ -501,6 +513,8 @@ libscript_download() {
 
 # ## libscript_fetch
 # Executes libscript_fetch functionality.
+# ## libscript_fetch
+# Executes the libscript_fetch logic.
 libscript_fetch() {
   libscript_download "$@"
 }
@@ -508,6 +522,8 @@ libscript_fetch() {
 
 # ## libscript_process_aria2_file
 # Executes libscript_process_aria2_file functionality.
+# ## libscript_process_aria2_file
+# Executes the libscript_process_aria2_file logic.
 libscript_process_aria2_file() {
   list_file="${1:-}"
   if [ -z "$list_file" ] || [ ! -f "$list_file" ]; then

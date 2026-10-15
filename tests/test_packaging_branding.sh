@@ -19,16 +19,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 TEST_TMP_DIR="${LIBSCRIPT_ROOT_DIR}/tests_tmp/test_branding_$$"
 mkdir -p "$TEST_TMP_DIR"
@@ -37,8 +34,7 @@ mkdir -p "$TEST_TMP_DIR"
 # Cleans up temporary test artifacts upon exit or preserves them on error.
 trap cleanup EXIT INT TERM
 
-printf '=== Testing Cross-Platform Installer Branding ===
-'
+printf '=== Testing Cross-Platform Installer Branding ===\n'
 
 # 1. Setup mock assets
 echo "Custom Enterprise License Agreement terms" > "$TEST_TMP_DIR/CUSTOM_LICENSE.txt"
@@ -63,8 +59,7 @@ INNO_FILE="${TEST_TMP_DIR}/BrandApp.iss"
 grep -q "WizardSmallImageFile=$BANNER_TOP_PATH" "$INNO_FILE" || { echo "[FAIL] Inno missing WizardSmallImageFile"; exit 1; }
 grep -q "WizardImageFile=$BANNER_SIDE_PATH" "$INNO_FILE" || { echo "[FAIL] Inno missing WizardImageFile"; exit 1; }
 grep -q "LicenseFile=$LICENSE_PATH" "$INNO_FILE" || { echo "[FAIL] Inno missing LicenseFile"; exit 1; }
-printf '[PASS] Inno Setup branding assertions passed
-'
+printf '[PASS] Inno Setup branding assertions passed\n'
 
 # 3. Test NSIS generation
 NSIS_FILE="${TEST_TMP_DIR}/BrandApp.nsi"
@@ -81,9 +76,7 @@ grep -q 'WixVariable Id="WixUIBannerBmp"' "$WXS_FILE" || { echo "[FAIL] MSI miss
 grep -q 'WixVariable Id="WixUIDialogBmp"' "$WXS_FILE" || { echo "[FAIL] MSI missing WixUIDialogBmp"; exit 1; }
 grep -q 'WixVariable Id="WixUILicenseRtf"' "$WXS_FILE" || { echo "[FAIL] MSI missing WixUILicenseRtf"; exit 1; }
 grep -q 'Dialog Id="Dlg_License"' "$WXS_FILE" || { echo "[FAIL] MSI missing Dlg_License"; exit 1; }
-printf '[PASS] WiX MSI branding assertions passed
-'
+printf '[PASS] WiX MSI branding assertions passed\n'
 
-printf '=== All branding tests completed successfully! ===
-'
+printf '=== All branding tests completed successfully! ===\n'
 exit 0

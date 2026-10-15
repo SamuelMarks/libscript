@@ -21,16 +21,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 ROOTFS="${1:-${LIBSCRIPT_ROOT_DIR}/build/lfs/rootfs}"
@@ -44,39 +41,30 @@ mkdir -p "$(dirname "$OUT_RAW")"
 STAMP_DISK="${STAMPS_DIR}/.stamp.lfs_disk_assembled"
 
 if [ -f "$STAMP_DISK" ] && [ -f "$OUT_RAW" ]; then
-  printf '[SKIP]  Disk image already assembled (%s)
-' "$STAMP_DISK"
+  printf '[SKIP]  Disk image already assembled (%s)\n' "$STAMP_DISK"
   exit 0
 fi
 
-printf '=== LibScript Disk Layout & Assembly ===
-'
-printf '[INFO] Rootfs:     %s
-' "$ROOTFS"
-printf '[INFO] Output Raw: %s
-' "$OUT_RAW"
-printf '[INFO] Size:       %sG
-' "$SIZE_GIB"
-printf '[INFO] Bootloader: %s
-' "$BOOTLOADER"
+printf '=== LibScript Disk Layout & Assembly ===\n'
+printf '[INFO] Rootfs:     %s\n' "$ROOTFS"
+printf '[INFO] Output Raw: %s\n' "$OUT_RAW"
+printf '[INFO] Size:       %sG\n' "$SIZE_GIB"
+printf '[INFO] Bootloader: %s\n' "$BOOTLOADER"
 
 # 1. Allocate sparse disk container
-printf '[STAGE] Allocating %sG sparse container...
-' "$SIZE_GIB"
+printf '[STAGE] Allocating %sG sparse container...\n' "$SIZE_GIB"
 if command -v fallocate >/dev/null 2>&1; then
   fallocate -l "${SIZE_GIB}G" "$OUT_RAW" 2>/dev/null || truncate -s "${SIZE_GIB}G" "$OUT_RAW"
 elif command -v truncate >/dev/null 2>&1; then
   truncate -s "${SIZE_GIB}G" "$OUT_RAW"
 else
   # Portable dd fallback
-  dd if=/dev/zero of="$OUT_RAW" bs=1M count=1 seek=$((SIZE_GIB * 1024)) 2>/dev/null || printf 'LibScript Raw Disk Stub
-' > "$OUT_RAW"
+  dd if=/dev/zero of="$OUT_RAW" bs=1M count=1 seek=$((SIZE_GIB * 1024)) 2>/dev/null || printf 'LibScript Raw Disk Stub\n' > "$OUT_RAW"
 fi
 
 # 2. Partition and format with parted / sfdisk if available on Linux
 if [ "$(id -u)" -eq 0 ] && command -v parted >/dev/null 2>&1 && [ "$(uname -s)" = "Linux" ]; then
-  printf '[STAGE] Writing GPT partition table and EFI/Root volumes...
-'
+  printf '[STAGE] Writing GPT partition table and EFI/Root volumes...\n'
   parted -s "$OUT_RAW" mklabel gpt
   parted -s "$OUT_RAW" mkpart ESP fat32 1MiB 513MiB
   parted -s "$OUT_RAW" set 1 esp on
@@ -96,8 +84,7 @@ if [ "$(id -u)" -eq 0 ] && command -v parted >/dev/null 2>&1 && [ "$(uname -s)" 
     fi
   fi
 else
-  printf '[INFO] Partition table assembled (simulated in unprivileged host environment).
-'
+  printf '[INFO] Partition table assembled (simulated in unprivileged host environment).\n'
 fi
 
 # 3. Bootloader synchronization
@@ -107,6 +94,5 @@ fi
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_DISK}.tmp"
 mv "${STAMP_DISK}.tmp" "$STAMP_DISK"
-printf '[DONE]  LFS disk image assembled successfully: %s
-' "$OUT_RAW"
+printf '[DONE]  LFS disk image assembled successfully: %s\n' "$OUT_RAW"
 exit 0

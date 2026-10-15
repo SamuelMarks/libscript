@@ -46,6 +46,8 @@ ACTION="${ACTION:-install}"
 
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
+# ## resolve_exact_version
+# Executes the resolve_exact_version logic.
 resolve_exact_version() {
   if [ "${JUST_VERSION}" = "latest" ] || [ "${JUST_VERSION}" = "lts" ] || [ -z "${JUST_VERSION}" ]; then
     libscript_depends "curl"

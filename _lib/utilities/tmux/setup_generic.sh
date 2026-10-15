@@ -47,6 +47,8 @@ ACTION="${ACTION:-install}"
 
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
+# ## resolve_exact_version
+# Executes the resolve_exact_version logic.
 resolve_exact_version() {
   if [ "${TMUX_VERSION}" = "latest" ] || [ "${TMUX_VERSION}" = "lts" ]; then
     EXACT_VERSION=$(curl -sL https://api.github.com/repos/tmux/tmux/releases/latest | grep '"tag_name":' | head -n 1 | cut -d '"' -f 4 | sed 's/^v//')
@@ -134,6 +136,10 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/tmux/${VERSION:-latest}/bin/tmux" ]; then
+      log_info "tmux ${VERSION:-latest} is already installed."
+      exit 0
+    fi
 
     if [ "${TMUX_INSTALL_METHOD}" = "system" ]; then
       libscript_depends 'tmux'

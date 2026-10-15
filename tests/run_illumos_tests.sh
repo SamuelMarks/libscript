@@ -24,16 +24,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 set +f
 VAGRANT_DIR="$REPO_ROOT/vagrant/omnios"
@@ -48,6 +45,8 @@ LOOP_MODE=""
 
 # ## sync_repo_to_guest
 # Synchronizes the libscript codebase to the guest VM using vagrant rsync.
+# ## sync_repo_to_guest
+# Executes the sync_repo_to_guest logic.
 sync_repo_to_guest() {
     echo "=== Syncing LibScript repository to SunOS/OmniOS ==="
     (cd "$VAGRANT_DIR" && vagrant rsync)
@@ -55,6 +54,8 @@ sync_repo_to_guest() {
 
 # ## update_component_in_readme
 # Updates the status of a single component in README.md Supported Components table (illumos/SunOS column).
+# ## update_component_in_readme
+# Executes the update_component_in_readme logic.
 update_component_in_readme() {
     _comp="$1"
     _status="$2"

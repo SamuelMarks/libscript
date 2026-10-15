@@ -21,16 +21,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 ACTION="${1:-compile}"
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
@@ -71,15 +68,12 @@ if ! command -v modprobe >/dev/null 2>&1 && ! command -v lsmod >/dev/null 2>&1; 
 fi
 
 if [ -f "$STAMP_FILE" ]; then
-  printf '[SKIP]  %s already installed (%s)
-' "kmod" "$STAMP_FILE"
+  printf '[SKIP]  %s already installed (%s)\n' "kmod" "$STAMP_FILE"
   exit 0
 fi
 
-printf '[RECIPE] Staging %s into %s (action: %s)
-' "Kmod" "$TARGET_SYSROOT" "$ACTION"
+printf '[RECIPE] Staging %s into %s (action: %s)\n' "Kmod" "$TARGET_SYSROOT" "$ACTION"
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
 mv "${STAMP_FILE}.tmp" "$STAMP_FILE"
-printf '[OK]    %s staged successfully: %s
-' "kmod" "$STAMP_FILE"
+printf '[OK]    %s staged successfully: %s\n' "kmod" "$STAMP_FILE"

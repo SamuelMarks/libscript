@@ -19,11 +19,9 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
@@ -34,8 +32,7 @@ if ! command -v vagrant >/dev/null 2>&1; then
     printf '%s\n' "Vagrant is unsupported upstream on Linux aarch64, skipping."
     exit 0
   fi
-  printf '%s
-' "vagrant binary not found in PATH" >&2
+  printf '%s\n' "vagrant binary not found in PATH" >&2
   exit 1
 fi
 

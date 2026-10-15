@@ -36,6 +36,8 @@ NETCTL_STATE_FILE="${NETCTL_STATE_FILE:-.netctl.json}"
 
 # ## netctl_init
 # Executes netctl_init functionality.
+# ## netctl_init
+# Executes the netctl_init logic.
 netctl_init() {
   if [ ! -s "$NETCTL_STATE_FILE" ]; then
     printf '%s\n' '{"listen":[],"routes":{}}' > "$NETCTL_STATE_FILE"
@@ -44,6 +46,8 @@ netctl_init() {
 
 # ## netctl_state_write
 # Executes netctl_state_write functionality.
+# ## netctl_state_write
+# Executes the netctl_state_write logic.
 netctl_state_write() {
   # Write stdin to state file safely
   cat > "${NETCTL_STATE_FILE}.tmp"
@@ -52,6 +56,8 @@ netctl_state_write() {
 
 # ## netctl_add_listen
 # Executes netctl_add_listen functionality.
+# ## netctl_add_listen
+# Executes the netctl_add_listen logic.
 netctl_add_listen() {
   port="$1"
   netctl_init
@@ -60,6 +66,8 @@ netctl_add_listen() {
 
 # ## netctl_add_static
 # Executes netctl_add_static functionality.
+# ## netctl_add_static
+# Executes the netctl_add_static logic.
 netctl_add_static() {
   path="$1"
   target="$2"
@@ -69,6 +77,8 @@ netctl_add_static() {
 
 # ## netctl_add_proxy
 # Executes netctl_add_proxy functionality.
+# ## netctl_add_proxy
+# Executes the netctl_add_proxy logic.
 netctl_add_proxy() {
   path="$1"
   target="$2"
@@ -78,6 +88,8 @@ netctl_add_proxy() {
 
 # ## netctl_add_rewrite
 # Executes netctl_add_rewrite functionality.
+# ## netctl_add_rewrite
+# Executes the netctl_add_rewrite logic.
 netctl_add_rewrite() {
   path="$1"
   pattern="$2"

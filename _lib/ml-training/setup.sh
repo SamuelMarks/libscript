@@ -52,6 +52,6 @@ printf '%s\n' "Setting up Comprehensive ML Training Stack on $TPU_NAME..."
 gcloud auth print-access-token >/dev/null 2>&1 || gcloud auth login
 
 printf '%s\n' "Provisioning TPU VM with $TPU_DATA_DISK_SIZE GB persistent disk..."
-"${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp/tpu-vm/cli.sh" create "$TPU_NAME"
+"${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp-tpu-vm/cli.sh" create "$TPU_NAME"
 
 printf '%s\n' "Setup complete."

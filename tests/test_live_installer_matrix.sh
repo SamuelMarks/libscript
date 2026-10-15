@@ -37,6 +37,8 @@ TARGET_PLATFORM="all"
 
 # ## show_help
 # Displays usage instructions and supported CLI parameters.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [OPTIONS]"
   printf '%s\n' "Runs multi-platform live installer verification strictly inside Vagrant VMs."
@@ -85,6 +87,8 @@ fi
 
 # ## run_vagrant_suite
 # Runs the live installer verification scenarios inside a target Vagrant guest VM.
+# ## run_vagrant_suite
+# Executes the run_vagrant_suite logic.
 run_vagrant_suite() {
   _os="$1"
 

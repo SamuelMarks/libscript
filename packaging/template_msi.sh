@@ -28,22 +28,18 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 TARGET_SPEC="${1:-}"
 if [ -z "$TARGET_SPEC" ]; then
-  printf '[ERROR] Target stack directory or packaging.json required
-' >&2
+  printf '[ERROR] Target stack directory or packaging.json required\n' >&2
   exit 1
 fi
 shift
@@ -72,16 +68,14 @@ while [ $# -gt 0 ]; do
       shift 2
       ;;
     *)
-      printf '[WARN] Unknown option: %s
-' "$1" >&2
+      printf '[WARN] Unknown option: %s\n' "$1" >&2
       shift
       ;;
   esac
 done
 
 if [ -z "$OUT_FILE" ]; then
-  printf '[ERROR] --out parameter is required
-' >&2
+  printf '[ERROR] --out parameter is required\n' >&2
   exit 1
 fi
 
@@ -91,8 +85,7 @@ if [ -d "$TARGET_SPEC" ]; then
 fi
 
 if [ ! -f "$PKG_JSON" ]; then
-  printf '[ERROR] packaging.json not found at: %s
-' "$PKG_JSON" >&2
+  printf '[ERROR] packaging.json not found at: %s\n' "$PKG_JSON" >&2
   exit 1
 fi
 
@@ -287,5 +280,4 @@ cat << EOF_CLOSE >> "$OUT_FILE"
 </Wix>
 EOF_CLOSE
 
-printf '[SUCCESS] Generated universal WiX XML manifest: %s
-' "$OUT_FILE"
+printf '[SUCCESS] Generated universal WiX XML manifest: %s\n' "$OUT_FILE"

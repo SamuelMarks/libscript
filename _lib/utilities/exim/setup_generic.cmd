@@ -1,4 +1,5 @@
 @echo off
+:: # setup_generic.cmd
 :: ## Overview
 :: Windows setup script for Exim / local SMTP relay.
 
@@ -18,7 +19,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -57,6 +58,10 @@ if "%ACTION%"=="install" (
     exit /b 0
 ) else if "%ACTION%"=="test" (
     call "%~dp0\..\hmailserver\test.cmd"
+if exist "%LIBSCRIPT_HOME%\exim\%VERSION%" (
+    echo [INFO] exim %VERSION% is already installed.
+    exit /b 0
+)
     exit /b %ERRORLEVEL%
 )
 

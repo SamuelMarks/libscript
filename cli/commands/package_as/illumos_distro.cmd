@@ -21,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -85,6 +85,8 @@ set "FORMAT=qcow2"
 set "PROFILE=%REPO_ROOT%\profiles\illumos\minimal-server.json"
 set "OUTPUT="
 
+:: ## parse_loop
+:: Executes parse_loop functionality.
 :parse_loop
 if "%~1"=="" goto parse_done
 if /I "%~1"=="--format" (
@@ -125,6 +127,8 @@ if /I "%~1"=="-o" (
 )
 shift
 goto parse_loop
+:: ## parse_done
+:: Executes parse_done functionality.
 :parse_done
 
 set "SYSROOT=%REPO_ROOT%\build\illumos-sysroot"

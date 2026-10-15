@@ -19,16 +19,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
@@ -53,6 +50,8 @@ VAGRANT_INSTALL_QEMU_PLUGIN="${VAGRANT_INSTALL_QEMU_PLUGIN:-1}"
 
 # ## configure_hashicorp_repo_debian
 # Configures the official HashiCorp apt repository on Debian/Ubuntu systems.
+# ## configure_hashicorp_repo_debian
+# Executes the configure_hashicorp_repo_debian logic.
 configure_hashicorp_repo_debian() {
   if [ -f /etc/apt/sources.list.d/hashicorp.list ]; then
     return 0
@@ -78,6 +77,8 @@ configure_hashicorp_repo_debian() {
 
 # ## install_libvirt_plugin
 # Installs vagrant-libvirt provider plugin and required build headers.
+# ## install_libvirt_plugin
+# Executes the install_libvirt_plugin logic.
 install_libvirt_plugin() {
   if ! command -v vagrant >/dev/null 2>&1; then
     return 0
@@ -106,6 +107,8 @@ install_libvirt_plugin() {
 
 # ## install_qemu_plugin
 # Installs vagrant-qemu provider plugin.
+# ## install_qemu_plugin
+# Executes the install_qemu_plugin logic.
 install_qemu_plugin() {
   if ! command -v vagrant >/dev/null 2>&1; then
     return 0
@@ -127,14 +130,12 @@ case "$ACTION" in
     if command -v vagrant >/dev/null 2>&1; then
       vagrant --version
     else
-      printf '%s
-' "Vagrant not installed."
+      printf '%s\n' "Vagrant not installed."
     fi
     exit 0
     ;;
   ls-remote)
-    curl -fsSL https://checkpoint-api.hashicorp.com/v1/check/vagrant | grep -oE '"current_version":"[^"]+"' | cut -d'"' -f4 || printf '%s
-' "latest"
+    curl -fsSL https://checkpoint-api.hashicorp.com/v1/check/vagrant | grep -oE '"current_version":"[^"]+"' | cut -d'"' -f4 || printf '%s\n' "latest"
     exit 0
     ;;
   install)

@@ -19,16 +19,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
@@ -51,6 +48,8 @@ VERSION="${MYSQL_VERSION:-8.4.11}"
 
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
+# ## resolve_exact_version
+# Executes the resolve_exact_version logic.
 resolve_exact_version() {
   if [ "${VERSION:-}" = "latest" ]; then
     EXACT_VERSION="8.4.11"
@@ -64,8 +63,7 @@ case "$ACTION" in
     if command -v mysql >/dev/null 2>&1; then
       mysql --version
     else
-      printf 'mysql not installed
-'
+      printf 'mysql not installed\n'
     fi
     exit 0
     ;;
@@ -77,6 +75,10 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/mysql/${VERSION:-latest}/bin/mysql" ]; then
+      log_info "mysql ${VERSION:-latest} is already installed."
+      exit 0
+    fi
     resolve_exact_version
     log_info "Installing MySQL (${VERSION}) via ${MYSQL_INSTALL_METHOD}..."
     if [ "$MYSQL_INSTALL_METHOD" = "system" ]; then
@@ -158,8 +160,7 @@ case "$ACTION" in
       mysqld --version
       exit 0
     else
-      printf 'mysql binary not found in PATH
-' >&2
+      printf 'mysql binary not found in PATH\n' >&2
       exit 1
     fi
     ;;

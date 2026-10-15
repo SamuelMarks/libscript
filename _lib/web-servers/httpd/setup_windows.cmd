@@ -1,4 +1,5 @@
 @echo off
+:: # setup_windows.cmd
 setlocal EnableDelayedExpansion
 :: ## Overview
 :: Setup script for Apache HTTP Server (httpd) on Windows.
@@ -19,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -63,6 +64,8 @@ if not errorlevel 1 (
     choco install apache-httpd -y --no-progress
 )
 
+:: ## create_shims
+:: Executes create_shims functionality.
 :create_shims
 set "HTTPD_BIN="
 if exist "%APPDATA%\Apache24\bin\httpd.exe" set "HTTPD_BIN=%APPDATA%\Apache24\bin"

@@ -20,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -59,6 +59,8 @@ set "PROVIDER=all"
 set "INPUT=%LIBSCRIPT_ROOT_DIR%\build\target.img"
 set "OUT_DIR=%LIBSCRIPT_ROOT_DIR%\build\cloud_images"
 
+:: ## parse_loop
+:: Executes parse_loop functionality.
 :parse_loop
 if "%~1"=="" goto run_pkg
 if /i "%~1"=="--provider=aws" ( set "PROVIDER=aws" & shift & goto parse_loop )
@@ -72,6 +74,8 @@ set "OUT_DIR=%~1"
 shift
 goto parse_loop
 
+:: ## run_pkg
+:: Executes run_pkg functionality.
 :run_pkg
 if not exist "%OUT_DIR%" mkdir "%OUT_DIR%"
 
@@ -82,24 +86,34 @@ if /i "%PROVIDER%"=="aws" goto do_aws
 if /i "%PROVIDER%"=="azure" goto do_azure
 if /i "%PROVIDER%"=="gcp" goto do_gcp
 
+:: ## do_all
+:: Executes do_all functionality.
 :do_all
 call "%SCRIPT_DIR%\aws_ami.cmd" "%INPUT%" "%OUT_DIR%\aws-ebs-root.raw"
 call "%SCRIPT_DIR%\azure_vhd.cmd" "%INPUT%" "%OUT_DIR%\disk.vhd"
 call "%SCRIPT_DIR%\gcp_image.cmd" "%INPUT%" "%OUT_DIR%\gcp-disk.raw.tar.gz"
 goto finish
 
+:: ## do_aws
+:: Executes do_aws functionality.
 :do_aws
 call "%SCRIPT_DIR%\aws_ami.cmd" "%INPUT%" "%OUT_DIR%\aws-ebs-root.raw"
 goto finish
 
+:: ## do_azure
+:: Executes do_azure functionality.
 :do_azure
 call "%SCRIPT_DIR%\azure_vhd.cmd" "%INPUT%" "%OUT_DIR%\disk.vhd"
 goto finish
 
+:: ## do_gcp
+:: Executes do_gcp functionality.
 :do_gcp
 call "%SCRIPT_DIR%\gcp_image.cmd" "%INPUT%" "%OUT_DIR%\gcp-disk.raw.tar.gz"
 goto finish
 
+:: ## finish
+:: Executes finish functionality.
 :finish
 echo [OK] Cloud packaging completed under: %OUT_DIR%
 exit /b 0

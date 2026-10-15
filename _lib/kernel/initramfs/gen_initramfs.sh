@@ -21,16 +21,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 TARGET_DIR="${1:-${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}}"
@@ -38,13 +35,11 @@ STAMP_DIR="$TARGET_DIR/var/lib/libscript/stamps"
 mkdir -p "$STAMP_DIR"
 
 if [ -f "$STAMP_DIR/.stamp.initramfs" ] && [ -f "$TARGET_DIR/boot/initramfs.img" ]; then
-  printf '[INFO] Initramfs already generated at %s/boot/initramfs.img. Skipping.
-' "$TARGET_DIR"
+  printf '[INFO] Initramfs already generated at %s/boot/initramfs.img. Skipping.\n' "$TARGET_DIR"
   exit 0
 fi
 
-printf '[INFO] Synthesizing initramfs for target sysroot: %s
-' "$TARGET_DIR"
+printf '[INFO] Synthesizing initramfs for target sysroot: %s\n' "$TARGET_DIR"
 
 INIT_TMP_DIR="${TARGET_DIR}/tmp/initramfs_staging_$$"
 mkdir -p "$INIT_TMP_DIR/bin"
@@ -135,11 +130,9 @@ fi
 
 if [ ! -f "$INITRAMFS_OUT" ] || [ ! -s "$INITRAMFS_OUT" ]; then
   # Fallback stub for build targets without host cpio
-  printf 'LibScript Minimal Initramfs Archive
-' > "$INITRAMFS_OUT"
+  printf 'LibScript Minimal Initramfs Archive\n' > "$INITRAMFS_OUT"
 fi
 
 touch "$STAMP_DIR/.stamp.initramfs"
-printf '[INFO] Initramfs generated successfully: %s
-' "$INITRAMFS_OUT"
+printf '[INFO] Initramfs generated successfully: %s\n' "$INITRAMFS_OUT"
 exit 0

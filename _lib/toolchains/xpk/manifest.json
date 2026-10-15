@@ -1,12 +1,16 @@
 {
   "$schema": "../../_common/manifest.schema.json",
   "name": "xpk",
-  "title": "xpk",
-  "description": "A fast, scalable, multi-language and extensible build system, installed via xpkisk.",
-  "category": "toolchain",
-  "provides": ["build-system", "xpk", "xpkisk"],
+  "title": "Google Cloud Accelerated Processing Kit (XPK)",
+  "description": "Google Cloud Accelerated Processing Kit (xpk) for provisioning GKE TPU/GPU clusters and scheduling distributed AI/ML training and inference workloads.",
+  "category": "toolchains",
+  "provides": ["xpk"],
   "conflicts": [],
   "os_whitelist": ["linux", "darwin"],
   "os_blacklist": [],
-  "ports": []
+  "ports": [],
+  "dependencies": {
+    "runtime_deps": ["python", "google-cloud-sdk"],
+    "tier": "optional"
+  }
 }

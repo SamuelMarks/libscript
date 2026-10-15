@@ -11,6 +11,24 @@ the entire lifecycle of a stack. By treating every component (databases, runtime
 autonomous, self-healing package manager, LibScript provides a decentralized PaaS experience that
 can run on any infrastructure—from a single laptop to a distributed multicloud cluster.
 
+```mermaid
+flowchart TD
+    ControlPlane["Control Plane: libscript CLI + libscript-rest-api (OpenAPI 3.0)"]
+    Tier4["Tier 4 Payloads & Schedulers: K8s | Nomad | Mesos | 8+ Native Inits | MicroVMs | XPK/Slurm"]
+    Tier35["Tier 3.5 Topologies: .topology_state.json + Lease Locking + Split-Brain Fencing"]
+    Traits["Unified Traits: Storage | Zero-Leak Secrets | Firewall | Mesh/Cloud DNS | netctl Ingress | CoW/Object Backup"]
+    Tier3["Tier 3 Multicloud IaaS: AWS | Azure | GCP (TPU/GPU) | Hetzner | Proxmox | Vagrant"]
+    Tier1Hooks["Tier 1 Component Hooks: Physical (configure/probe/announce/backup) + Logical Multi-Tenant (provision_tenant)"]
+
+    ControlPlane --> Tier4
+    ControlPlane --> Tier35
+    ControlPlane --> Traits
+    Tier4 --> Tier35
+    Tier35 --> Tier3
+    Tier35 --> Traits
+    Traits --> Tier1Hooks
+```
+
 ## PaaS Capabilities
 
 - **Multicloud Orchestration:** Native support for provisioning compute, network, and storage

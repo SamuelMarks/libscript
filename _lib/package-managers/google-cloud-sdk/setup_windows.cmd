@@ -1,4 +1,5 @@
 @echo off
+:: # setup_windows.cmd
 setlocal EnableDelayedExpansion
 :: ## Overview
 :: Setup script for Google Cloud SDK on Windows.
@@ -19,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -61,6 +62,8 @@ if exist "%ProgramFiles%\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.cmd" goto 
 echo Installing Google Cloud SDK via winget...
 winget install --id Google.CloudSDK --silent --accept-package-agreements --accept-source-agreements --override "/S /D=C:\GoogleCloudSDK"
 
+:: ## create_shims
+:: Executes create_shims functionality.
 :create_shims
 set "GCLOUD_BIN="
 if exist "C:\GoogleCloudSDK\google-cloud-sdk\bin\gcloud.cmd" set "GCLOUD_BIN=C:\GoogleCloudSDK\google-cloud-sdk\bin"

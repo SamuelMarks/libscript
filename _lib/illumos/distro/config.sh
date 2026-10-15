@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 SYSROOT="${1:-${LIBSCRIPT_TARGET_SYSROOT:-${REPO_ROOT}/build/illumos-sysroot}}"
@@ -47,17 +44,14 @@ mkdir -p "${SYSROOT}/etc/default"
 mkdir -p "${SYSROOT}/boot"
 
 if [ -f "${STAMP_FILE}" ]; then
-  printf '[SKIP]     illumos core configuration already applied in %s
-' "${SYSROOT}"
+  printf '[SKIP]     illumos core configuration already applied in %s\n' "${SYSROOT}"
   exit 0
 fi
 
-printf '[CONFIG]   Configuring core illumos files (hostname=%s, dhcp=%s)...
-' "${HOSTNAME}" "${USE_DHCP}"
+printf '[CONFIG]   Configuring core illumos files (hostname=%s, dhcp=%s)...\n' "${HOSTNAME}" "${USE_DHCP}"
 
 # 1. /etc/nodename and /etc/hosts
-printf '%s
-' "${HOSTNAME}" > "${SYSROOT}/etc/nodename"
+printf '%s\n' "${HOSTNAME}" > "${SYSROOT}/etc/nodename"
 
 cat << EOF > "${SYSROOT}/etc/hosts"
 # IPv4 and IPv6 hosts table (managed by LibScript)
@@ -145,5 +139,4 @@ chmod +x "${SYSROOT}/etc/ipadm-bootstrap.sh" 2>/dev/null || true
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
 mv "${STAMP_FILE}.tmp" "${STAMP_FILE}"
 
-printf '[OK]       illumos core configuration complete: %s
-' "${SYSROOT}"
+printf '[OK]       illumos core configuration complete: %s\n' "${SYSROOT}"

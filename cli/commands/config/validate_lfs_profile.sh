@@ -22,23 +22,19 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 SCHEMA_FILE="${LIBSCRIPT_ROOT_DIR}/os-config.schema.json"
 
 if [ $# -lt 1 ]; then
-  printf 'Usage: %s <profile.json>
-' "$0" >&2
+  printf 'Usage: %s <profile.json>\n' "$0" >&2
   exit 1
 fi
 
@@ -50,16 +46,13 @@ if [ ! -f "$PROFILE_FILE" ]; then
   elif [ -f "${LIBSCRIPT_ROOT_DIR}/profiles/${PROFILE_FILE}.json" ]; then
     PROFILE_FILE="${LIBSCRIPT_ROOT_DIR}/profiles/${PROFILE_FILE}.json"
   else
-    printf '[ERROR] Profile not found: %s
-' "$1" >&2
+    printf '[ERROR] Profile not found: %s\n' "$1" >&2
     exit 1
   fi
 fi
 
-printf '=== LibScript LFS Profile Validator ===
-'
-printf '[INFO] Validating profile: %s
-' "$PROFILE_FILE"
+printf '=== LibScript LFS Profile Validator ===\n'
+printf '[INFO] Validating profile: %s\n' "$PROFILE_FILE"
 
 # Top-level required keys check
 if command -v jq >/dev/null 2>&1; then
@@ -68,8 +61,7 @@ if command -v jq >/dev/null 2>&1; then
     $schema[0].required - keys | .[]
   ' "$PROFILE_FILE" 2>/dev/null || true)
   if [ -n "$missing_fields" ]; then
-    printf '[ERROR] Missing required top-level schema fields: %s
-' "$missing_fields" >&2
+    printf '[ERROR] Missing required top-level schema fields: %s\n' "$missing_fields" >&2
     exit 1
   fi
 
@@ -91,30 +83,21 @@ else
   TARGET_LIBC=$(grep -o '"libc"[^,}]*' "$PROFILE_FILE" | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/' || echo "glibc")
 fi
 
-printf '[CHECK] Target Libc:       %s
-' "$TARGET_LIBC"
-printf '[CHECK] Init System:       %s
-' "$INIT_PROVIDER"
-printf '[CHECK] Display Server:    %s
-' "$DISPLAY_SERVER"
-printf '[CHECK] Compositor:        %s
-' "$COMPOSITOR"
-printf '[CHECK] Desktop Suite:     %s
-' "$DESKTOP_SUITE"
-printf '[CHECK] Greeter:           %s
-' "$GREETER"
-printf '[CHECK] Bootloader:        %s
-' "$BOOTLOADER"
+printf '[CHECK] Target Libc:       %s\n' "$TARGET_LIBC"
+printf '[CHECK] Init System:       %s\n' "$INIT_PROVIDER"
+printf '[CHECK] Display Server:    %s\n' "$DISPLAY_SERVER"
+printf '[CHECK] Compositor:        %s\n' "$COMPOSITOR"
+printf '[CHECK] Desktop Suite:     %s\n' "$DESKTOP_SUITE"
+printf '[CHECK] Greeter:           %s\n' "$GREETER"
+printf '[CHECK] Bootloader:        %s\n' "$BOOTLOADER"
 
 # 1. Validate Init System
 case "$INIT_PROVIDER" in
   systemd|openrc|sysvinit|runit|s6|dinit|bsd-init|none)
-    printf '[PASS] Init system provider valid: %s
-' "$INIT_PROVIDER"
+    printf '[PASS] Init system provider valid: %s\n' "$INIT_PROVIDER"
     ;;
   *)
-    printf '[ERROR] Unsupported init system provider: %s
-' "$INIT_PROVIDER" >&2
+    printf '[ERROR] Unsupported init system provider: %s\n' "$INIT_PROVIDER" >&2
     exit 1
     ;;
 esac
@@ -122,12 +105,10 @@ esac
 # 2. Validate Display Server
 case "$DISPLAY_SERVER" in
   wayland|x11|hybrid-xwayland|headless|none)
-    printf '[PASS] Display server valid: %s
-' "$DISPLAY_SERVER"
+    printf '[PASS] Display server valid: %s\n' "$DISPLAY_SERVER"
     ;;
   *)
-    printf '[ERROR] Unsupported display server: %s
-' "$DISPLAY_SERVER" >&2
+    printf '[ERROR] Unsupported display server: %s\n' "$DISPLAY_SERVER" >&2
     exit 1
     ;;
 esac
@@ -135,12 +116,10 @@ esac
 # 3. Validate Compositor / Window Manager
 case "$COMPOSITOR" in
   sway|hyprland|weston|labwc|openbox|none)
-    printf '[PASS] Compositor/WM valid: %s
-' "$COMPOSITOR"
+    printf '[PASS] Compositor/WM valid: %s\n' "$COMPOSITOR"
     ;;
   *)
-    printf '[ERROR] Unsupported compositor: %s
-' "$COMPOSITOR" >&2
+    printf '[ERROR] Unsupported compositor: %s\n' "$COMPOSITOR" >&2
     exit 1
     ;;
 esac
@@ -148,12 +127,10 @@ esac
 # 4. Validate Desktop Suite
 case "$DESKTOP_SUITE" in
   gnome|kde-plasma-6|xfce4|lxqt|none)
-    printf '[PASS] Desktop suite valid: %s
-' "$DESKTOP_SUITE"
+    printf '[PASS] Desktop suite valid: %s\n' "$DESKTOP_SUITE"
     ;;
   *)
-    printf '[ERROR] Unsupported desktop suite: %s
-' "$DESKTOP_SUITE" >&2
+    printf '[ERROR] Unsupported desktop suite: %s\n' "$DESKTOP_SUITE" >&2
     exit 1
     ;;
 esac
@@ -161,12 +138,10 @@ esac
 # 5. Validate Greeter
 case "$GREETER" in
   greetd|sddm|gdm|lightdm|none)
-    printf '[PASS] Greeter valid: %s
-' "$GREETER"
+    printf '[PASS] Greeter valid: %s\n' "$GREETER"
     ;;
   *)
-    printf '[ERROR] Unsupported greeter: %s
-' "$GREETER" >&2
+    printf '[ERROR] Unsupported greeter: %s\n' "$GREETER" >&2
     exit 1
     ;;
 esac
@@ -174,12 +149,10 @@ esac
 # 6. Validate Bootloader
 case "$BOOTLOADER" in
   grub2-efi|grub2-bios|systemd-boot|limine|freebsd-bootcode|none)
-    printf '[PASS] Bootloader valid: %s
-' "$BOOTLOADER"
+    printf '[PASS] Bootloader valid: %s\n' "$BOOTLOADER"
     ;;
   *)
-    printf '[ERROR] Unsupported bootloader: %s
-' "$BOOTLOADER" >&2
+    printf '[ERROR] Unsupported bootloader: %s\n' "$BOOTLOADER" >&2
     exit 1
     ;;
 esac
@@ -187,25 +160,21 @@ esac
 # 7. Cross-Subsystem Compatibility Rules
 if [ "$COMPOSITOR" = "sway" ] || [ "$COMPOSITOR" = "hyprland" ] || [ "$COMPOSITOR" = "weston" ] || [ "$COMPOSITOR" = "labwc" ]; then
   if [ "$DISPLAY_SERVER" != "wayland" ] && [ "$DISPLAY_SERVER" != "hybrid-xwayland" ]; then
-    printf '[ERROR] Compositor %s requires display.server=wayland or hybrid-xwayland
-' "$COMPOSITOR" >&2
+    printf '[ERROR] Compositor %s requires display.server=wayland or hybrid-xwayland\n' "$COMPOSITOR" >&2
     exit 1
   fi
 fi
 
 if [ "$COMPOSITOR" = "openbox" ]; then
   if [ "$DISPLAY_SERVER" != "x11" ] && [ "$DISPLAY_SERVER" != "hybrid-xwayland" ]; then
-    printf '[ERROR] Compositor openbox requires display.server=x11 or hybrid-xwayland
-' >&2
+    printf '[ERROR] Compositor openbox requires display.server=x11 or hybrid-xwayland\n' >&2
     exit 1
   fi
 fi
 
 if [ "$BOOTLOADER" = "systemd-boot" ] && [ "$INIT_PROVIDER" != "systemd" ]; then
-  printf '[WARN] systemd-boot selected without systemd init provider; ensure systemd-boot standalone binary is packaged.
-'
+  printf '[WARN] systemd-boot selected without systemd init provider; ensure systemd-boot standalone binary is packaged.\n'
 fi
 
-printf '[PASS] All modular axes and compatibility rules satisfied.
-'
+printf '[PASS] All modular axes and compatibility rules satisfied.\n'
 exit 0

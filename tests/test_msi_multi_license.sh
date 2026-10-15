@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 TEST_TMP_DIR="${LIBSCRIPT_ROOT_DIR}/tests_tmp/test_msi_multi_license_$$"
 mkdir -p "$TEST_TMP_DIR"
@@ -39,6 +36,8 @@ mkdir -p "$TEST_TMP_DIR"
 # ## cleanup
 # Removes temporary test directory on script exit.
 # shellcheck disable=SC2329
+# ## cleanup
+# Executes the cleanup logic.
 cleanup() {
   rm -rf "$TEST_TMP_DIR"
 }
@@ -48,17 +47,16 @@ printf '=== Testing WiX MSI Multi-License Dialog Sequence ===\n'
 
 # ## assert_wxs_contains
 # Asserts that the generated WiX manifest contains a specified string pattern.
+# ## assert_wxs_contains
+# Executes the assert_wxs_contains logic.
 assert_wxs_contains() {
   _pattern="$1"
   _desc="$2"
   if grep -Fq "$_pattern" "$TEST_WXS"; then
-    printf '[PASS] Verified: %s
-' "$_desc"
+    printf '[PASS] Verified: %s\n' "$_desc"
   else
-    printf '[FAIL] Missing expected pattern in WiX manifest: %s
-' "$_pattern" >&2
-    printf 'Description: %s
-' "$_desc" >&2
+    printf '[FAIL] Missing expected pattern in WiX manifest: %s\n' "$_pattern" >&2
+    printf 'Description: %s\n' "$_desc" >&2
     exit 1
   fi
 }
@@ -75,8 +73,7 @@ if [ -f "${TEST_TMP_DIR}/test_openedx.wxs" ]; then
 elif [ -f "${TEST_TMP_DIR}/test_openedx.candle.wxs" ]; then
   cp "${TEST_TMP_DIR}/test_openedx.candle.wxs" "$TEST_WXS"
 else
-  printf '[FAIL] Could not find generated WiX manifest at %s
-' "${TEST_TMP_DIR}/test_openedx.wxs" >&2
+  printf '[FAIL] Could not find generated WiX manifest at %s\n' "${TEST_TMP_DIR}/test_openedx.wxs" >&2
   exit 1
 fi
 
@@ -106,6 +103,5 @@ assert_wxs_contains 'CustomAction Id="CA_AbortNoLicense"' "Unattended install li
 assert_wxs_contains 'AGREE_ALL_LICENSES="1"' "Blanket opt-in property AGREE_ALL_LICENSES supported"
 assert_wxs_contains '<Custom Action="CA_AbortNoLicense" Before="InstallInitialize">' "License agreement check scheduled before InstallInitialize"
 
-printf '=== All WiX MSI multi-license tests passed successfully! ===
-'
+printf '=== All WiX MSI multi-license tests passed successfully! ===\n'
 exit 0

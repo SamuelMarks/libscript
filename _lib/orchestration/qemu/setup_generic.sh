@@ -19,16 +19,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
@@ -52,6 +49,8 @@ QEMU_SETUP_UEFI_FIRMWARE="${QEMU_SETUP_UEFI_FIRMWARE:-1}"
 
 # ## setup_uefi_symlinks
 # Configures standard UEFI firmware symlinks for QEMU/KVM.
+# ## setup_uefi_symlinks
+# Executes the setup_uefi_symlinks logic.
 setup_uefi_symlinks() {
   log_info "Configuring QEMU/OVMF UEFI firmware symlinks in /usr/local/share/qemu..."
   priv mkdir -p /usr/local/share/qemu
@@ -91,6 +90,8 @@ setup_uefi_symlinks() {
 
 # ## setup_kvm_permissions
 # Configures /dev/kvm permissions and group access.
+# ## setup_kvm_permissions
+# Executes the setup_kvm_permissions logic.
 setup_kvm_permissions() {
   if [ -e "/dev/kvm" ]; then
     priv chmod 666 /dev/kvm 2>/dev/null || true
@@ -102,6 +103,8 @@ setup_kvm_permissions() {
 
 # ## setup_libvirt_network
 # Ensures default libvirt NAT network is configured and started.
+# ## setup_libvirt_network
+# Executes the setup_libvirt_network logic.
 setup_libvirt_network() {
   if command -v virsh >/dev/null 2>&1; then
     for net_file in /etc/libvirt/qemu/networks/default.xml /usr/share/libvirt/networks/default.xml; do
@@ -117,6 +120,8 @@ setup_libvirt_network() {
 
 # ## setup_user_groups
 # Adds the current user to libvirt and kvm groups.
+# ## setup_user_groups
+# Executes the setup_user_groups logic.
 setup_user_groups() {
   target_user="${SUDO_USER:-$(id -un)}"
   if [ "$target_user" = "root" ]; then
@@ -138,17 +143,19 @@ case "$ACTION" in
     elif command -v qemu-img >/dev/null 2>&1; then
       qemu-img --version | head -n 1
     else
-      printf '%s
-' "QEMU not installed."
+      printf '%s\n' "QEMU not installed."
     fi
     exit 0
     ;;
   ls-remote)
-    printf '%s
-' "Managed via system package manager."
+    printf '%s\n' "Managed via system package manager."
     exit 0
     ;;
   install)
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/qemu/${VERSION:-latest}/bin/qemu" ]; then
+      log_info "qemu ${VERSION:-latest} is already installed."
+      exit 0
+    fi
     log_info "Installing QEMU and virtualization packages via ${QEMU_INSTALL_METHOD}..."
     if [ "$QEMU_INSTALL_METHOD" = "system" ]; then
       libscript_depends "qemu"

@@ -26,16 +26,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 TEST_TMP_DIR="${LIBSCRIPT_ROOT_DIR}/tests_tmp/test_hydrate_$$"
 mkdir -p "$TEST_TMP_DIR"
@@ -44,15 +41,13 @@ mkdir -p "$TEST_TMP_DIR"
 # Cleans up temporary test directory if tests succeeded.
 trap cleanup EXIT INT TERM
 
-printf '=== Testing LibScript Offline Cache Hydration Engine ===
-'
+printf '=== Testing LibScript Offline Cache Hydration Engine ===\n'
 
 # Setup dummy source artifact
 SRC_DIR="${TEST_TMP_DIR}/upstream"
 mkdir -p "$SRC_DIR"
 TEST_CONTENT="LibScript Offline Bundle Test Content - Version 1.0.0"
-printf '%s
-' "$TEST_CONTENT" > "${SRC_DIR}/dummy-runtime.zip"
+printf '%s\n' "$TEST_CONTENT" > "${SRC_DIR}/dummy-runtime.zip"
 
 if command -v sha256sum >/dev/null 2>&1; then
   DUMMY_SHA256=$(sha256sum "${SRC_DIR}/dummy-runtime.zip" | awk '{print $1}')
@@ -91,82 +86,65 @@ EOF
 CACHE_TARGET="${TEST_TMP_DIR}/cache"
 
 # Test 1: Verify-only fails when file is missing
-printf '[TEST 1/4] Verifying --verify-only reports missing artifact and exits non-zero...
-'
+printf '[TEST 1/4] Verifying --verify-only reports missing artifact and exits non-zero...\n'
 set +e
 "${LIBSCRIPT_ROOT_DIR}/packaging/hydrate_offline_cache.sh" --manifest "$TEST_MANIFEST" --cache-dir "$CACHE_TARGET" --verify-only > "${TEST_TMP_DIR}/t1.log" 2>&1
 T1_EXIT=$?
 set -e
 if [ "$T1_EXIT" -ne 0 ]; then
-  printf '[PASS] Correctly failed when cache is empty in verify-only mode (exit code %d)
-' "$T1_EXIT"
+  printf '[PASS] Correctly failed when cache is empty in verify-only mode (exit code %d)\n' "$T1_EXIT"
 else
-  printf '[FAIL] Expected non-zero exit code in verify-only mode on empty cache
-' >&2
+  printf '[FAIL] Expected non-zero exit code in verify-only mode on empty cache\n' >&2
   cat "${TEST_TMP_DIR}/t1.log" >&2
   exit 1
 fi
 
 # Test 2: Hydrate cache from local source
-printf '[TEST 2/4] Verifying cache hydration and SHA-256 verification...
-'
+printf '[TEST 2/4] Verifying cache hydration and SHA-256 verification...\n'
 "${LIBSCRIPT_ROOT_DIR}/packaging/hydrate_offline_cache.sh" --manifest "$TEST_MANIFEST" --cache-dir "$CACHE_TARGET" > "${TEST_TMP_DIR}/t2.log" 2>&1
 
 if [ -f "${CACHE_TARGET}/runtimes/dummy-runtime.zip" ]; then
-  printf '[PASS] Artifact downloaded and placed in cache/runtimes/
-'
+  printf '[PASS] Artifact downloaded and placed in cache/runtimes/\n'
 else
-  printf '[FAIL] Target artifact not found in cache
-' >&2
+  printf '[FAIL] Target artifact not found in cache\n' >&2
   cat "${TEST_TMP_DIR}/t2.log" >&2
   exit 1
 fi
 
 if [ -f "${CACHE_TARGET}/manifest.json" ] && [ -f "${CACHE_TARGET}/checksums.sha256" ]; then
-  printf '[PASS] manifest.json and checksums.sha256 generated in cache root
-'
+  printf '[PASS] manifest.json and checksums.sha256 generated in cache root\n'
 else
-  printf '[FAIL] Metadata files missing from cache root
-' >&2
+  printf '[FAIL] Metadata files missing from cache root\n' >&2
   exit 1
 fi
 
 # Test 3: Verify-only succeeds when cache is fully intact
-printf '[TEST 3/4] Verifying --verify-only succeeds on intact cache...
-'
+printf '[TEST 3/4] Verifying --verify-only succeeds on intact cache...\n'
 "${LIBSCRIPT_ROOT_DIR}/packaging/hydrate_offline_cache.sh" --manifest "$TEST_MANIFEST" --cache-dir "$CACHE_TARGET" --verify-only > "${TEST_TMP_DIR}/t3.log" 2>&1
 if grep -q "\[VALID\]" "${TEST_TMP_DIR}/t3.log"; then
-  printf '[PASS] Cache verified successfully
-'
+  printf '[PASS] Cache verified successfully\n'
 else
-  printf '[FAIL] Expected VALID status in verify log
-' >&2
+  printf '[FAIL] Expected VALID status in verify log\n' >&2
   cat "${TEST_TMP_DIR}/t3.log" >&2
   exit 1
 fi
 
 # Test 4: Corrupted file detection
-printf '[TEST 4/4] Verifying corrupted artifact detection...
-'
+printf '[TEST 4/4] Verifying corrupted artifact detection...\n'
 printf 'corrupted data truncated' > "${CACHE_TARGET}/runtimes/dummy-runtime.zip"
 set +e
 "${LIBSCRIPT_ROOT_DIR}/packaging/hydrate_offline_cache.sh" --manifest "$TEST_MANIFEST" --cache-dir "$CACHE_TARGET" --verify-only > "${TEST_TMP_DIR}/t4.log" 2>&1
 T4_EXIT=$?
 set -e
 if [ "$T4_EXIT" -ne 0 ] && grep -q "CORRUPT" "${TEST_TMP_DIR}/t4.log"; then
-  printf '[PASS] Successfully detected corrupted artifact with hash mismatch
-'
+  printf '[PASS] Successfully detected corrupted artifact with hash mismatch\n'
 else
-  printf '[FAIL] Failed to detect corrupted artifact
-' >&2
+  printf '[FAIL] Failed to detect corrupted artifact\n' >&2
   cat "${TEST_TMP_DIR}/t4.log" >&2
   exit 1
 fi
 
-printf '==========================================================
-'
-printf '[SUCCESS] All cache hydration unit tests passed!
-'
-printf '==========================================================
-'
+printf '==========================================================\n'
+printf '[SUCCESS] All cache hydration unit tests passed!\n'
+printf '==========================================================\n'
 exit 0

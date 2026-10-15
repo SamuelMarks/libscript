@@ -20,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -112,94 +112,140 @@ if /i "%PKG_TYPE%"=="disk_builder" goto do_disk_builder
 echo Error: Unsupported package format '%PKG_TYPE%'. >&2
 exit /b 1
 
+:: ## do_vagrant_box
+:: Executes do_vagrant_box functionality.
 :do_vagrant_box
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\vagrant_box.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_disk_builder
+:: Executes do_disk_builder functionality.
 :do_disk_builder
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\disk_builder.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_container_base
+:: Executes do_container_base functionality.
 :do_container_base
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\container_base.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_qemu_img
+:: Executes do_qemu_img functionality.
 :do_qemu_img
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\qemu_img.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_vmware_img
+:: Executes do_vmware_img functionality.
 :do_vmware_img
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\vmware_img.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_hyperv_img
+:: Executes do_hyperv_img functionality.
 :do_hyperv_img
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\hyperv_img.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_proxmox_img
+:: Executes do_proxmox_img functionality.
 :do_proxmox_img
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\proxmox_img.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_virtualbox_img
+:: Executes do_virtualbox_img functionality.
 :do_virtualbox_img
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\virtualbox_img.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_xen_img
+:: Executes do_xen_img functionality.
 :do_xen_img
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\xen_img.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_microvm_img
+:: Executes do_microvm_img functionality.
 :do_microvm_img
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\microvm_img.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_aws_ami
+:: Executes do_aws_ami functionality.
 :do_aws_ami
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\aws_ami.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_azure_vhd
+:: Executes do_azure_vhd functionality.
 :do_azure_vhd
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\azure_vhd.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_gcp_image
+:: Executes do_gcp_image functionality.
 :do_gcp_image
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\gcp_image.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_cloud_img
+:: Executes do_cloud_img functionality.
 :do_cloud_img
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\cloud_img.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_raw_img
+:: Executes do_raw_img functionality.
 :do_raw_img
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\raw_img.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_qcow2
+:: Executes do_qcow2 functionality.
 :do_qcow2
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\qcow2.cmd" %* %PKG_TYPE%
 exit /b %ERRORLEVEL%
 
+:: ## do_iso
+:: Executes do_iso functionality.
 :do_iso
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\iso.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_rootfs_tar
+:: Executes do_rootfs_tar functionality.
 :do_rootfs_tar
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\rootfs_tar.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_bsd_img
+:: Executes do_bsd_img functionality.
 :do_bsd_img
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\bsd_img.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_unikernel
+:: Executes do_unikernel functionality.
 :do_unikernel
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\unikernel.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_docker
+:: Executes do_docker functionality.
 :do_docker
 call "%SCRIPT_DIR%\formats\pkg_docker.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_docker_compose
+:: Executes do_docker_compose functionality.
 :do_docker_compose
 call "%SCRIPT_DIR%\formats\pkg_docker_compose.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_msi
+:: Executes do_msi functionality.
 :do_msi
 set "FIRST_ARG=%~1"
 if "!FIRST_ARG:~0,6!"=="stacks" (
@@ -213,38 +259,56 @@ if /i "!FIRST_ARG!"=="openedx" (
 call "%SCRIPT_DIR%\formats\pkg_msi.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_innosetup
+:: Executes do_innosetup functionality.
 :do_innosetup
 call "%SCRIPT_DIR%\formats\pkg_innosetup.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_nsis
+:: Executes do_nsis functionality.
 :do_nsis
 call "%SCRIPT_DIR%\formats\pkg_nsis.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_deb
+:: Executes do_deb functionality.
 :do_deb
 call "%SCRIPT_DIR%\formats\pkg_deb.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_rpm
+:: Executes do_rpm functionality.
 :do_rpm
 call "%SCRIPT_DIR%\formats\pkg_rpm.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_apk
+:: Executes do_apk functionality.
 :do_apk
 call "%SCRIPT_DIR%\formats\pkg_apk.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_txz
+:: Executes do_txz functionality.
 :do_txz
 call "%SCRIPT_DIR%\formats\pkg_txz.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_pkg
+:: Executes do_pkg functionality.
 :do_pkg
 call "%SCRIPT_DIR%\formats\pkg_pkg.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_dmg
+:: Executes do_dmg functionality.
 :do_dmg
 call "%SCRIPT_DIR%\formats\pkg_dmg.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_tui
+:: Executes do_tui functionality.
 :do_tui
 call "%SCRIPT_DIR%\formats\pkg_tui.cmd" %*
 exit /b %ERRORLEVEL%

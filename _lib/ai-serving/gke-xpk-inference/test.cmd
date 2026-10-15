@@ -1,11 +1,12 @@
 @echo off
+:: # test.cmd
 :: ## Overview
 :: Test script for the stacks/ai-serving/gke-xpk-inference stack.
 ::
 :: ## Usage
 :: Run locally to verify the stack.
 
-setlocal enabledelayedexpansion
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
@@ -18,7 +19,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"

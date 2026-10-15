@@ -22,25 +22,23 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-printf '=== LibScript POSIX Compliance & Bashism Prohibition Audit ===
-'
+printf '=== LibScript POSIX Compliance & Bashism Prohibition Audit ===\n'
 
 ERRORS=0
 
 # ## audit_file
 # Validates individual file against strict POSIX /bin/sh invariants and Windows batch pairing.
+# ## audit_file
+# Executes the audit_file logic.
 audit_file() {
   file="$1"
   [ -f "$file" ] || return 0
@@ -51,22 +49,19 @@ audit_file() {
   # 1. Shebang check
   first_line=$(head -n 1 "$file")
   if [ "$first_line" != "#!/bin/sh" ]; then
-    printf '[FAIL] [%s] Line 1 must be #!/bin/sh (found: %s)
-' "$file" "$first_line" >&2
+    printf '[FAIL] [%s] Line 1 must be #!/bin/sh (found: %s)\n' "$file" "$first_line" >&2
     ERRORS=$((ERRORS + 1))
   fi
 
   # 2. set -feu check
   if ! head -n 35 "$file" | grep -q "set -feu"; then
-    printf '[FAIL] [%s] Missing `set -feu` declaration in header
-' "$file" >&2
+    printf '[FAIL] [%s] Missing `set -feu` declaration in header\n' "$file" >&2
     ERRORS=$((ERRORS + 1))
   fi
 
   # 3. Canonical THIS_FILE= dance check
   if ! head -n 65 "$file" | grep -q 'THIS_FILE='; then
-    printf '[FAIL] [%s] Missing canonical THIS_FILE= resolution dance in first 65 lines
-' "$file" >&2
+    printf '[FAIL] [%s] Missing canonical THIS_FILE= resolution dance in first 65 lines\n' "$file" >&2
     ERRORS=$((ERRORS + 1))
   fi
 
@@ -94,18 +89,15 @@ audit_file() {
   # 5. Matching .cmd companion check
   cmd_companion="${file%.sh}.cmd"
   if [ ! -f "$cmd_companion" ]; then
-    printf '[FAIL] [%s] Missing paired Windows batch companion: %s
-' "$file" "$cmd_companion" >&2
+    printf '[FAIL] [%s] Missing paired Windows batch companion: %s\n' "$file" "$cmd_companion" >&2
     ERRORS=$((ERRORS + 1))
   else
     if ! head -n 25 "$cmd_companion" | grep -qi "EnableDelayedExpansion"; then
-      printf '[FAIL] [%s] Windows companion missing EnableDelayedExpansion
-' "$cmd_companion" >&2
+      printf '[FAIL] [%s] Windows companion missing EnableDelayedExpansion\n' "$cmd_companion" >&2
       ERRORS=$((ERRORS + 1))
     fi
     if ! head -n 25 "$cmd_companion" | grep -qi "THIS_FILE="; then
-      printf '[FAIL] [%s] Windows companion missing THIS_FILE= definition
-' "$cmd_companion" >&2
+      printf '[FAIL] [%s] Windows companion missing THIS_FILE= definition\n' "$cmd_companion" >&2
       ERRORS=$((ERRORS + 1))
     fi
   fi
@@ -145,11 +137,9 @@ else
 fi
 
 if [ "$ERRORS" -gt 0 ]; then
-  printf '[ERROR] Audit failed with %d standards violations!
-' "$ERRORS" >&2
+  printf '[ERROR] Audit failed with %d standards violations!\n' "$ERRORS" >&2
   exit 1
 fi
 
-printf '[PASS] All audited scripts strictly adhere to POSIX /bin/sh and companion requirements.
-'
+printf '[PASS] All audited scripts strictly adhere to POSIX /bin/sh and companion requirements.\n'
 exit 0

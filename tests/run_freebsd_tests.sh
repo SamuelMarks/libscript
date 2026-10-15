@@ -24,16 +24,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 set +f
 VAGRANT_DIR="$REPO_ROOT/vagrant/freebsd-15.1"
@@ -49,6 +46,8 @@ USE_SNAPSHOT="1"
 
 # ## find_disk_image
 # Finds the active qcow2 disk image for the FreeBSD Vagrant machine.
+# ## find_disk_image
+# Executes the find_disk_image logic.
 find_disk_image() {
     for _id_file in "$VAGRANT_DIR"/.vagrant/machines/*/qemu/id; do
         if [ -f "$_id_file" ]; then
@@ -56,8 +55,7 @@ find_disk_image() {
             _m_dir=$(dirname "$_id_file")
             _img="$_m_dir/$_id/linked-box.img"
             if [ -f "$_img" ]; then
-                printf '%s
-' "$_img"
+                printf '%s\n' "$_img"
                 return 0
             fi
         fi
@@ -67,14 +65,15 @@ find_disk_image() {
 
 # ## find_qemu_socket
 # Finds the active QEMU monitor UNIX socket for live snapshot control.
+# ## find_qemu_socket
+# Executes the find_qemu_socket logic.
 find_qemu_socket() {
     for _id_file in "$VAGRANT_DIR"/.vagrant/machines/*/qemu/id; do
         if [ -f "$_id_file" ]; then
             _id=$(cat "$_id_file")
             _sock="$HOME/.vagrant.d/tmp/vagrant-qemu/$_id/qemu_socket"
             if [ -S "$_sock" ]; then
-                printf '%s
-' "$_sock"
+                printf '%s\n' "$_sock"
                 return 0
             fi
         fi
@@ -84,6 +83,8 @@ find_qemu_socket() {
 
 # ## restore_vanilla_snapshot
 # Restores the vanilla snapshot on the FreeBSD VM via qemu-img.
+# ## restore_vanilla_snapshot
+# Executes the restore_vanilla_snapshot logic.
 restore_vanilla_snapshot() {
     _img=$(find_disk_image || true)
     if [ -n "$_img" ] && command -v qemu-img >/dev/null 2>&1; then
@@ -102,6 +103,8 @@ restore_vanilla_snapshot() {
 
 # ## sync_repo_to_guest
 # Synchronizes the libscript codebase to the guest VM using vagrant rsync.
+# ## sync_repo_to_guest
+# Executes the sync_repo_to_guest logic.
 sync_repo_to_guest() {
     echo "=== Syncing LibScript repository to FreeBSD ==="
     (cd "$VAGRANT_DIR" && vagrant rsync)
@@ -109,6 +112,8 @@ sync_repo_to_guest() {
 
 # ## update_component_in_readme
 # Updates the status of a single component in README.md Supported Components table (FreeBSD column).
+# ## update_component_in_readme
+# Executes the update_component_in_readme logic.
 update_component_in_readme() {
     _comp="$1"
     _status="$2"

@@ -53,7 +53,7 @@ echo "[INFO] Extracting archive on VM..."
 $SSH_CMD "powershell -Command \"cd C:\libscript; tar -xzf payload.tar.gz\""
 
 cat << 'PS1_EOF' > build.ps1
-$env:PATH += ';C:\wix'
+$env:PATH += ';' + $env:USERPROFILE + '\.libscript\wix\3.14\bin'
 cd C:\libscript
 cmd.exe /c packaging\build_msi.cmd stacks\cms\openedx --online --out OpenEdX-Setup --use-wix
 cmd.exe /c packaging\build_msi.cmd stacks\cms\openedx --offline --out OpenEdX-Setup-Offline --use-wix

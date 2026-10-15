@@ -9,7 +9,7 @@
 # ## Parameters
 # $1 - Component name (e.g., databases/mysql)
 
-set -eu
+set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

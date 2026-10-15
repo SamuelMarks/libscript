@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 SYSROOT="${1:-${LIBSCRIPT_TARGET_SYSROOT:-${REPO_ROOT}/build/illumos-sysroot}}"
@@ -44,20 +41,17 @@ STAMP_FILE="${STAMP_DIR}/display.stamp"
 mkdir -p "${STAMP_DIR}"
 
 if [ -f "${STAMP_FILE}" ]; then
-  printf '[SKIP]     illumos display protocol %s already configured in %s
-' "${PROTOCOL}" "${SYSROOT}"
+  printf '[SKIP]     illumos display protocol %s already configured in %s\n' "${PROTOCOL}" "${SYSROOT}"
   exit 0
 fi
 
-printf '[DISPLAY]  Configuring illumos display protocol %s (driver: %s)...
-' "${PROTOCOL}" "${DRIVER}"
+printf '[DISPLAY]  Configuring illumos display protocol %s (driver: %s)...\n' "${PROTOCOL}" "${DRIVER}"
 
 case "${PROTOCOL}" in
   none)
     # Headless server: serial console on ttya
     mkdir -p "${SYSROOT}/etc"
-    printf 'DISPLAY_MODE="headless"
-' > "${SYSROOT}/etc/display.conf"
+    printf 'DISPLAY_MODE="headless"\n' > "${SYSROOT}/etc/display.conf"
     ;;
 
   x11)
@@ -93,8 +87,7 @@ Section "Monitor"
     VertRefresh     50.0 - 75.0
 EndSection
 EOF
-    printf 'DISPLAY_MODE="x11"
-' > "${SYSROOT}/etc/display.conf"
+    printf 'DISPLAY_MODE="x11"\n' > "${SYSROOT}/etc/display.conf"
     ;;
 
   wayland)
@@ -110,20 +103,16 @@ require-input=false
 locking=false
 animation=zoom
 EOF
-    printf 'DISPLAY_MODE="wayland"
-' > "${SYSROOT}/etc/display.conf"
+    printf 'DISPLAY_MODE="wayland"\n' > "${SYSROOT}/etc/display.conf"
     ;;
 
   *)
-    printf '[WARN]     Unknown display protocol: %s, defaulting to headless
-' "${PROTOCOL}" >&2
-    printf 'DISPLAY_MODE="headless"
-' > "${SYSROOT}/etc/display.conf"
+    printf '[WARN]     Unknown display protocol: %s, defaulting to headless\n' "${PROTOCOL}" >&2
+    printf 'DISPLAY_MODE="headless"\n' > "${SYSROOT}/etc/display.conf"
     ;;
 esac
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
 mv "${STAMP_FILE}.tmp" "${STAMP_FILE}"
 
-printf '[OK]       illumos display configuration complete: %s
-' "${SYSROOT}"
+printf '[OK]       illumos display configuration complete: %s\n' "${SYSROOT}"

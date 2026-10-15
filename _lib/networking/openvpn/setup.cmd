@@ -21,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -61,6 +61,8 @@ if exist "%ProgramFiles(x86)%\OpenVPN\bin\openvpn.exe" goto :create_shims
 echo Installing OpenVPN via winget...
 winget install --id OpenVPNTechnologies.OpenVPN --silent --accept-package-agreements --accept-source-agreements
 
+:: ## create_shims
+:: Executes create_shims functionality.
 :create_shims
 set "OPENVPN_EXE="
 if exist "%ProgramFiles%\OpenVPN\bin\openvpn.exe" set "OPENVPN_EXE=%ProgramFiles%\OpenVPN\bin\openvpn.exe"

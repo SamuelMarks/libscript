@@ -19,7 +19,7 @@ For high-level provisioning and deprovisioning:
 ### High-Level Orchestrator Flags
 
 - `--tpu` / `--accelerator`: Routes the deployment to utilize specialized TPU VM components (e.g.
-  `gcp/tpu-vm`), attaching the necessary network topology, queue pooling, and concurrent pod syncing
+  `gcp-tpu-vm`), attaching the necessary network topology, queue pooling, and concurrent pod syncing
   operations natively.
 - `--shared-storage`: When passed alongside `--tpu`, provisions and automatically mounts
   high-throughput NFS/Shared Disk arrays (e.g., GCP Filestore) across all cluster workers.

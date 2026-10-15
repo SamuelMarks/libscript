@@ -41,7 +41,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -157,7 +157,17 @@ if /I "%~1"=="--update-hosts" ( set "WORDPRESS_UPDATE_HOSTS_FILE=1" & shift & go
 shift
 goto parse_args
 
+:: ## after_args
+:: Executes after_args functionality.
 :after_args
+if exist "%WORDPRESS_WWWROOT%\wp-config.php" (
+    echo [INFO] wordpress is already installed at %WORDPRESS_WWWROOT%.
+    exit /b 0
+)
+if exist "%LIBSCRIPT_HOME%\wordpress\%VERSION%" (
+    echo [INFO] wordpress %VERSION% is already installed.
+    exit /b 0
+)
 echo [INFO] Provisioning WordPress %WORDPRESS_VERSION% on Windows...
 
 :: 1. Stage Directory Structure

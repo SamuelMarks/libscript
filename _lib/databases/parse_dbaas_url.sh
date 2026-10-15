@@ -25,29 +25,27 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 RAW_URL="${1:-}"
 MODE="${2:---eval}"
 
 if [ -z "$RAW_URL" ]; then
-  printf '[ERROR] No connection URL provided to parse_dbaas_url.sh
-' >&2
+  printf '[ERROR] No connection URL provided to parse_dbaas_url.sh\n' >&2
   exit 1
 fi
 
 # ## urldecode
 # Decodes percent-encoded characters in a URI component.
+# ## urldecode
+# Executes the urldecode logic.
 urldecode() {
   _val="$1"
   printf '%s' "$_val" | awk '
@@ -196,25 +194,15 @@ case "$MODE" in
       "$db_ssl_ca" "$db_ssl_cert" "$db_ssl_key" "$db_ssl_mode"
     ;;
   --eval|*)
-    printf 'DB_HOST="%s"
-' "$db_host"
-    printf 'DB_PORT="%s"
-' "$db_port"
-    printf 'DB_NAME="%s"
-' "$db_name"
-    printf 'DB_USER="%s"
-' "$db_user"
-    printf 'DB_PASSWORD="%s"
-' "$db_pass"
-    printf 'DB_USE_SSL=%d
-' "$db_use_ssl"
-    printf 'DB_SSL_CA="%s"
-' "$db_ssl_ca"
-    printf 'DB_SSL_CERT="%s"
-' "$db_ssl_cert"
-    printf 'DB_SSL_KEY="%s"
-' "$db_ssl_key"
-    printf 'DB_SSL_MODE="%s"
-' "$db_ssl_mode"
+    printf 'DB_HOST="%s"\n' "$db_host"
+    printf 'DB_PORT="%s"\n' "$db_port"
+    printf 'DB_NAME="%s"\n' "$db_name"
+    printf 'DB_USER="%s"\n' "$db_user"
+    printf 'DB_PASSWORD="%s"\n' "$db_pass"
+    printf 'DB_USE_SSL=%d\n' "$db_use_ssl"
+    printf 'DB_SSL_CA="%s"\n' "$db_ssl_ca"
+    printf 'DB_SSL_CERT="%s"\n' "$db_ssl_cert"
+    printf 'DB_SSL_KEY="%s"\n' "$db_ssl_key"
+    printf 'DB_SSL_MODE="%s"\n' "$db_ssl_mode"
     ;;
 esac

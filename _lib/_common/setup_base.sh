@@ -57,6 +57,8 @@ resolve_component_paths
 
 # ## libscript_install_binary
 # Helper for installing a binary to a local or system bin directory
+# ## libscript_install_binary
+# Executes the libscript_install_binary logic.
 libscript_install_binary() {
   src_path="$1"
   bin_name="$2"

@@ -1,4 +1,5 @@
 @echo off
+:: # status.cmd
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -10,22 +11,42 @@ if defined STACK (
 )
 set "STACK=%STACK%:%THIS_FILE%:"
 
-rem ## Overview
+:: ## Overview
 rem Status check for desktops/gnome.
 rem
-rem ## Usage
+:: ## Usage
 rem status.cmd
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
-for %%I in ("%SCRIPT_DIR%") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
-:find_root_loop
-if exist "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" goto found_root
-for %%I in ("%LIBSCRIPT_ROOT_DIR%\..") do set "PARENT_DIR=%%~fI"
-if "%PARENT_DIR%"=="%LIBSCRIPT_ROOT_DIR%" goto found_root
-set "LIBSCRIPT_ROOT_DIR=%PARENT_DIR%"
-goto find_root_loop
-:found_root
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "d=%SCRIPT_DIR%"
+    call :find_root
+)
+goto :root_found
+
+:: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
+:find_root
+if exist "!d!\libscript.cmd" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+if exist "!d!\ROOT" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+for %%P in ("!d!") do set "parent=%%~dpP"
+set "d=!parent:~0,-1!"
+if "!d!"=="" (
+    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
+    exit /b 1
+)
+goto :find_root
+
+:: ## root_found
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
+:root_found
 
 if exist "%SCRIPT_DIR%\test.cmd" (
   call "%SCRIPT_DIR%\test.cmd" %*

@@ -22,7 +22,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -116,6 +116,8 @@ if "%DRY_RUN%"=="0" (
 for /f %%S in ('jq ".stages | length" "%PLAN_FILE%"') do set "TOTAL_STAGES=%%S"
 set "STAGE_IDX=0"
 
+:: ## stage_loop
+:: Executes stage_loop functionality.
 :stage_loop
 if !STAGE_IDX! geq !TOTAL_STAGES! goto all_done
 
@@ -129,6 +131,8 @@ if not "!STAGE_DESC!"=="" echo [INFO]  !STAGE_DESC!
 for /f %%T in ('jq ".stages[!STAGE_IDX!].tasks | length" "%PLAN_FILE%"') do set "TOTAL_TASKS=%%T"
 set "TASK_IDX=0"
 
+:: ## task_loop
+:: Executes task_loop functionality.
 :task_loop
 if !TASK_IDX! geq !TOTAL_TASKS! (
     set /a STAGE_IDX+=1
@@ -163,6 +167,8 @@ if exist "!STAMP_FILE!" (
 set /a TASK_IDX+=1
 goto task_loop
 
+:: ## all_done
+:: Executes all_done functionality.
 :all_done
 echo.
 echo [SUCCESS] All execution plan stages processed successfully.

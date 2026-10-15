@@ -32,6 +32,8 @@ export DIR="${SCRIPT_DIR}"
 
 # ## discover_python
 # Probes for Python in standard PATH, common installation prefixes, and legacy libscript bundles.
+# ## discover_python
+# Executes the discover_python logic.
 discover_python() {
   local py_path=""
   if command -v python3 >/dev/null 2>&1; then

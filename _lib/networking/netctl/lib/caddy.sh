@@ -34,6 +34,8 @@ export SCRIPT_NAME
 
 # ## netctl_emit_caddy
 # Executes netctl_emit_caddy functionality.
+# ## netctl_emit_caddy
+# Executes the netctl_emit_caddy logic.
 netctl_emit_caddy() {
   state_file="${1:-$NETCTL_STATE_FILE}"
 

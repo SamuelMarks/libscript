@@ -23,16 +23,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 case "${1:-}" in
@@ -106,8 +103,7 @@ case "${1:-}" in
     elif [ -f "${LIBSCRIPT_ROOT_DIR}/cache/wp-cli.phar" ]; then
       exec php "${LIBSCRIPT_ROOT_DIR}/cache/wp-cli.phar" --path="${WWWROOT}" "$@"
     else
-      printf '[ERROR] WP-CLI binary not found in PATH or cache.
-' >&2
+      printf '[ERROR] WP-CLI binary not found in PATH or cache.\n' >&2
       exit 1
     fi
     ;;
@@ -133,10 +129,8 @@ EOF_HELP
     exit 0
     ;;
   *)
-    printf '[ERROR] Unknown subcommand: %s
-' "$1" >&2
-    printf 'Run "./cli.sh help" for available commands.
-' >&2
+    printf '[ERROR] Unknown subcommand: %s\n' "$1" >&2
+    printf 'Run "./cli.sh help" for available commands.\n' >&2
     exit 1
     ;;
 esac

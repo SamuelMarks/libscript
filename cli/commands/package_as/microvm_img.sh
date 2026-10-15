@@ -21,16 +21,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 SYSROOT="${1:-${LIBSCRIPT_ROOT_DIR}/build/rootfs}"
@@ -43,18 +40,15 @@ VMLINUX_BIN="${OUT_DIR}/vmlinux"
 CONFIG_JSON="${OUT_DIR}/vm_config.json"
 
 if [ -f "$ROOTFS_IMG" ] && [ -f "$VMLINUX_BIN" ] && [ -f "$CONFIG_JSON" ]; then
-  printf '[IDEMPOTENT] MicroVM appliance artifacts already exist at: %s
-' "$OUT_DIR"
+  printf '[IDEMPOTENT] MicroVM appliance artifacts already exist at: %s\n' "$OUT_DIR"
   exit 0
 fi
 
-printf '[MICROVM-IMG] Synthesizing MicroVM appliance in %s...
-' "$OUT_DIR"
+printf '[MICROVM-IMG] Synthesizing MicroVM appliance in %s...\n' "$OUT_DIR"
 
 # 1. Provide minimal uncompressed kernel stub
 if [ ! -f "$VMLINUX_BIN" ]; then
-  printf 'LibScript Uncompressed MicroVM Kernel Stub (vmlinux)
-' > "$VMLINUX_BIN"
+  printf 'LibScript Uncompressed MicroVM Kernel Stub (vmlinux)\n' > "$VMLINUX_BIN"
 fi
 
 # 2. Provide raw ext4 rootfs formatted with 4096 block size
@@ -63,8 +57,7 @@ if [ ! -f "$ROOTFS_IMG" ]; then
     truncate -s 256M "$ROOTFS_IMG" 2>/dev/null || dd if=/dev/zero of="$ROOTFS_IMG" bs=1M count=256 2>/dev/null
     mkfs.ext4 -F -b 4096 -L rootfs "$ROOTFS_IMG" >/dev/null 2>&1 || true
   else
-    printf 'MicroVM 4096-block ext4 Rootfs Stub
-' > "$ROOTFS_IMG"
+    printf 'MicroVM 4096-block ext4 Rootfs Stub\n' > "$ROOTFS_IMG"
   fi
 fi
 
@@ -97,6 +90,5 @@ cat <<EOF > "$CONFIG_JSON"
 }
 EOF
 
-printf '[OK] MicroVM appliance synthesized successfully: %s
-' "$OUT_DIR"
+printf '[OK] MicroVM appliance synthesized successfully: %s\n' "$OUT_DIR"
 exit 0

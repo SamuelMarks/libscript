@@ -1,3 +1,9 @@
+# ## Overview
+# Installs and tests Open edX in the Windows 11 Vagrant environment.
+#
+# ## Usage
+# .\install_openedx.ps1
+
 $ErrorActionPreference = "Continue"
 Write-Host "Installing openedx..."
 & "C:\libscript\libscript.cmd" install openedx

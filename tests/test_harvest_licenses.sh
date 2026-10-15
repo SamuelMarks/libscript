@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 TEST_TMP_DIR="${LIBSCRIPT_ROOT_DIR}/tests_tmp/test_harvest_licenses_$$"
 mkdir -p "$TEST_TMP_DIR"
@@ -39,40 +36,36 @@ mkdir -p "$TEST_TMP_DIR"
 # ## cleanup
 # Cleans up temporary test files upon exit.
 # shellcheck disable=SC2329
+# ## cleanup
+# Executes the cleanup logic.
 cleanup() {
   rm -rf "$TEST_TMP_DIR"
 }
 trap cleanup EXIT INT TERM
 
-printf '=== Testing Universal Dependency License Harvester ===
-'
+printf '=== Testing Universal Dependency License Harvester ===\n'
 
 # Test 1: Single leaf component harvesting (caches/redis)
-printf '[TEST 1] Harvesting single leaf component (_lib/caches/redis)...
-'
+printf '[TEST 1] Harvesting single leaf component (_lib/caches/redis)...\n'
 OUT_REDIS="${TEST_TMP_DIR}/redis_licenses"
 "${LIBSCRIPT_ROOT_DIR}/packaging/harvest_licenses.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/caches/redis" --out-dir "$OUT_REDIS" --force
 
 if [ ! -f "$OUT_REDIS/licenses_manifest.json" ]; then
-  printf '[FAIL] Expected licenses_manifest.json not found in %s
-' "$OUT_REDIS" >&2
+  printf '[FAIL] Expected licenses_manifest.json not found in %s\n' "$OUT_REDIS" >&2
   exit 1
 fi
 
 _redis_count=$(jq '.count' "$OUT_REDIS/licenses_manifest.json")
 if [ "$_redis_count" -lt 1 ]; then
-  printf '[FAIL] Expected at least 1 license, got %s
-' "$_redis_count" >&2
+  printf '[FAIL] Expected at least 1 license, got %s\n' "$_redis_count" >&2
   exit 1
 fi
 
 _redis_spdx=$(jq -r '.licenses[0].spdx' "$OUT_REDIS/licenses_manifest.json")
-printf '[PASS] Leaf component harvested: %s (%s)
-' "$(jq -r '.licenses[0].name' "$OUT_REDIS/licenses_manifest.json")" "$_redis_spdx"
+printf '[PASS] Leaf component harvested: %s (%s)\n' "$(jq -r '.licenses[0].name' "$OUT_REDIS/licenses_manifest.json")" "$_redis_spdx"
 
 if [ ! -f "$OUT_REDIS/redis_license.rtf" ] || [ ! -f "$OUT_REDIS/redis_license.txt" ]; then
-  printf '[FAIL] Missing expected RTF or TXT output file in %s
-' "$OUT_REDIS" >&2
+  printf '[FAIL] Missing expected RTF or TXT output file in %s\n' "$OUT_REDIS" >&2
   exit 1
 fi
 
@@ -81,58 +74,47 @@ if ! head -n 1 "$OUT_REDIS/redis_license.rtf" | grep -q 'rtf1'; then
   printf '[FAIL] Invalid RTF header in %s\n' "$OUT_REDIS/redis_license.rtf" >&2
   exit 1
 fi
-printf '[PASS] Verified RTF file structure for redis
-'
+printf '[PASS] Verified RTF file structure for redis\n'
 
 # Test 2: Composite stack harvesting (stacks/cms/openedx)
-printf '[TEST 2] Harvesting composite stack (stacks/cms/openedx)...
-'
+printf '[TEST 2] Harvesting composite stack (stacks/cms/openedx)...\n'
 OUT_OPENEDX="${TEST_TMP_DIR}/openedx_licenses"
 "${LIBSCRIPT_ROOT_DIR}/packaging/harvest_licenses.sh" "${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx" --out-dir "$OUT_OPENEDX" --force
 
 if [ ! -f "$OUT_OPENEDX/licenses_manifest.json" ]; then
-  printf '[FAIL] Missing licenses_manifest.json for Open edX
-' >&2
+  printf '[FAIL] Missing licenses_manifest.json for Open edX\n' >&2
   exit 1
 fi
 
 _openedx_count=$(jq '.count' "$OUT_OPENEDX/licenses_manifest.json")
 if [ "$_openedx_count" -lt 9 ]; then
-  printf '[FAIL] Expected at least 9 bundled licenses for Open edX, got %s
-' "$_openedx_count" >&2
+  printf '[FAIL] Expected at least 9 bundled licenses for Open edX, got %s\n' "$_openedx_count" >&2
   exit 1
 fi
-printf '[PASS] Composite stack harvested %s licenses successfully
-' "$_openedx_count"
+printf '[PASS] Composite stack harvested %s licenses successfully\n' "$_openedx_count"
 
 # Verify all key bundled components are present in the manifest
 for comp in openedx mysql redis mongodb python nodejs meilisearch; do
   _found=$(jq --arg c "$comp" '[.licenses[] | select(.name == $c)] | length' "$OUT_OPENEDX/licenses_manifest.json")
   if [ "$_found" -ne 1 ]; then
-    printf '[FAIL] Bundled component %s was not found in manifest
-' "$comp" >&2
+    printf '[FAIL] Bundled component %s was not found in manifest\n' "$comp" >&2
     exit 1
   fi
-  printf '[PASS] Verified component in bundle manifest: %s
-' "$comp"
+  printf '[PASS] Verified component in bundle manifest: %s\n' "$comp"
 done
 
 # Test 3: Idempotency verification
-printf '[TEST 3] Testing idempotency of license harvester...
-'
+printf '[TEST 3] Testing idempotency of license harvester...\n'
 _stamp_before=$(stat -f %m "$OUT_OPENEDX/.stamp.licenses_harvested" 2>/dev/null || stat -c %Y "$OUT_OPENEDX/.stamp.licenses_harvested")
 sleep 1
 "${LIBSCRIPT_ROOT_DIR}/packaging/harvest_licenses.sh" "${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx" --out-dir "$OUT_OPENEDX"
 _stamp_after=$(stat -f %m "$OUT_OPENEDX/.stamp.licenses_harvested" 2>/dev/null || stat -c %Y "$OUT_OPENEDX/.stamp.licenses_harvested")
 
 if [ "$_stamp_before" != "$_stamp_after" ]; then
-  printf '[FAIL] Harvester modified stamp without --force; not idempotent!
-' >&2
+  printf '[FAIL] Harvester modified stamp without --force; not idempotent!\n' >&2
   exit 1
 fi
-printf '[PASS] Idempotency confirmed: stamp unchanged on subsequent execution
-'
+printf '[PASS] Idempotency confirmed: stamp unchanged on subsequent execution\n'
 
-printf '=== All license harvester tests completed successfully! ===
-'
+printf '=== All license harvester tests completed successfully! ===\n'
 exit 0

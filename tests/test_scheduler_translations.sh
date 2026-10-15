@@ -1,0 +1,42 @@
+#!/bin/sh
+# ## Overview
+# Verifies payload.json compilation across K8s, Nomad, Mesos, all 8+ native init systems, Firecracker MicroVMs, XPK, and Slurm.
+#
+# ## Usage
+# ./tests/test_scheduler_translations.sh
+
+set -feu
+
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}:"
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+export LIBSCRIPT_ROOT_DIR
+
+PAYLOAD_FILE="${LIBSCRIPT_ROOT_DIR}/payloads/ai/vllm/payload.json"
+
+for sched in kubernetes nomad mesos microvm xpk slurm_ray; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" sh "${LIBSCRIPT_ROOT_DIR}/payloads/engine.sh" compile "$PAYLOAD_FILE" --scheduler "$sched" >/dev/null
+done
+
+for init_sys in systemd openrc runit s6 dinit sysvinit bsd-rc smf launchd sc; do
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/native.sh" sh "${LIBSCRIPT_ROOT_DIR}/payloads/schedulers/native.sh" compile "$PAYLOAD_FILE" --init "$init_sys" >/dev/null
+done
+
+printf '[PASS] Tier 4 scheduler translations verified across all orchestrators and 8+ init systems.\n'

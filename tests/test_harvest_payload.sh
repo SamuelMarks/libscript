@@ -23,16 +23,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 TEST_TMP_DIR="${LIBSCRIPT_ROOT_DIR}/tests_tmp/test_harvest_payload_$$"
 mkdir -p "$TEST_TMP_DIR"
@@ -40,19 +37,19 @@ mkdir -p "$TEST_TMP_DIR"
 # ## cleanup
 # Cleans up temporary test directory upon exit or preserves on error.
 # shellcheck disable=SC2317,SC2329
+# ## cleanup
+# Executes the cleanup logic.
 cleanup() {
   _status=$?
   if [ "$_status" -eq 0 ]; then
     rm -rf "$TEST_TMP_DIR"
   else
-    printf '[WARN] Preserving test artifacts in %s for diagnosis
-' "$TEST_TMP_DIR" >&2
+    printf '[WARN] Preserving test artifacts in %s for diagnosis\n' "$TEST_TMP_DIR" >&2
   fi
 }
 trap cleanup EXIT INT TERM
 
-printf '=== Testing LibScript Repository Harvester ===
-'
+printf '=== Testing LibScript Repository Harvester ===\n'
 
 MANIFEST_FILE="${TEST_TMP_DIR}/manifest.txt"
 WIX_FILE="${TEST_TMP_DIR}/fragment.wxs"
@@ -63,55 +60,45 @@ WIX_FILE="${TEST_TMP_DIR}/fragment.wxs"
 
 # Test 1: Manifest exists and has non-zero size
 if [ ! -s "${MANIFEST_FILE}" ]; then
-  printf '[FAIL] Manifest file was not created or is empty
-' >&2
+  printf '[FAIL] Manifest file was not created or is empty\n' >&2
   exit 1
 fi
-printf '[PASS] Manifest generated with %s files
-' "$(wc -l < "${MANIFEST_FILE}" | tr -d ' ')"
+printf '[PASS] Manifest generated with %s files\n' "$(wc -l < "${MANIFEST_FILE}" | tr -d ' ')"
 
 # Test 2: Essential engine files are included
 for _req in "libscript.sh" "libscript.cmd" "_lib/_common/component_core.cmd" "stacks/cms/openedx/setup_generic.cmd" "stacks/cms/openedx/cli.cmd"; do
   if ! grep -Fxq "$_req" "${MANIFEST_FILE}"; then
-    printf '[FAIL] Required file missing from harvest manifest: %s
-' "$_req" >&2
+    printf '[FAIL] Required file missing from harvest manifest: %s\n' "$_req" >&2
     exit 1
   fi
 done
-printf '[PASS] All essential engine and stack files present in manifest
-'
+printf '[PASS] All essential engine and stack files present in manifest\n'
 
 # Test 3: Excluded directories and patterns are strictly absent
 for _bad in ".git/" "tests_tmp/" ".vagrant/" ".tmp" ".log" ".ppm" ".msi" ".wixobj"; do
   if grep -Fq "$_bad" "${MANIFEST_FILE}"; then
-    printf '[FAIL] Prohibited pattern present in harvest manifest: %s
-' "$_bad" >&2
+    printf '[FAIL] Prohibited pattern present in harvest manifest: %s\n' "$_bad" >&2
     exit 1
   fi
 done
-printf '[PASS] Prohibited patterns and directories correctly excluded
-'
+printf '[PASS] Prohibited patterns and directories correctly excluded\n'
 
 # Test 4: WiX fragment exists and has valid structure
 if [ ! -s "${WIX_FILE}" ]; then
-  printf '[FAIL] WiX fragment was not created or is empty
-' >&2
+  printf '[FAIL] WiX fragment was not created or is empty\n' >&2
   exit 1
 fi
 
 if ! grep -Fq '<ComponentGroup Id="LibscriptHarvestedComponents">' "${WIX_FILE}"; then
-  printf '[FAIL] ComponentGroup element missing from WiX fragment
-' >&2
+  printf '[FAIL] ComponentGroup element missing from WiX fragment\n' >&2
   exit 1
 fi
 
 if ! grep -Fq 'KeyPath="yes"' "${WIX_FILE}"; then
-  printf '[FAIL] File KeyPath attribute missing from WiX fragment
-' >&2
+  printf '[FAIL] File KeyPath attribute missing from WiX fragment\n' >&2
   exit 1
 fi
-printf '[PASS] WiX fragment validated successfully
-'
+printf '[PASS] WiX fragment validated successfully\n'
 
 # Test 5: Verify --include-cache and WiX multi-cab DiskId partitioning
 printf '[TEST 5] Verifying --include-cache and WiX multi-cab DiskId partitioning...\n'
@@ -204,6 +191,5 @@ if [ -n "$_invalid_id" ]; then
 fi
 printf '[PASS] WiX identifiers are legal, sanitized, and within the 72-character limit\n'
 
-printf '=== All Harvest Payload Tests Passed ===
-'
+printf '=== All Harvest Payload Tests Passed ===\n'
 exit 0

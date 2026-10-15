@@ -19,16 +19,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 TEST_TMP_DIR="${LIBSCRIPT_ROOT_DIR}/tests_tmp/test_msi_gen_$$"
 mkdir -p "$TEST_TMP_DIR"
@@ -37,8 +34,7 @@ mkdir -p "$TEST_TMP_DIR"
 # Cleans up temporary test artifacts upon exit or preserves them on error.
 trap cleanup EXIT INT TERM
 
-printf '=== Testing WiX MSI Installer Generation ===
-'
+printf '=== Testing WiX MSI Installer Generation ===\n'
 
 # 1. Create a dummy test license and test icon
 echo "LibScript Test License Agreement" > "$TEST_TMP_DIR/LICENSE.txt"
@@ -66,12 +62,10 @@ export AGREEMENT_TEXT="I accept the test terms"
 
 WXS_FILE="${TEST_TMP_DIR}/TestPackage.wxs"
 if [ ! -f "$WXS_FILE" ]; then
-  printf '[FAIL] Expected .wxs file was not generated
-' >&2
+  printf '[FAIL] Expected .wxs file was not generated\n' >&2
   exit 1
 fi
-printf '[PASS] Generated %s
-' "$WXS_FILE"
+printf '[PASS] Generated %s\n' "$WXS_FILE"
 
 # 3. Verify XML contents
 grep -q 'WixVariable Id="WixUILicenseRtf"' "$WXS_FILE" || { echo "[FAIL] Missing WixUILicenseRtf"; exit 1; }
@@ -85,8 +79,7 @@ grep -q 'Control Id="Chk_python"' "$WXS_FILE" || { echo "[FAIL] Missing Chk_pyth
 grep -q 'MsiHiddenProperties' "$WXS_FILE" || { echo "[FAIL] Missing MsiHiddenProperties"; exit 1; }
 grep -q 'Type="PathEdit"' "$WXS_FILE" || { echo "[FAIL] Missing PathEdit browse control for python"; exit 1; }
 
-printf '[PASS] All XML assertions passed!
-'
+printf '[PASS] All XML assertions passed!\n'
 
 # 4. If an MSI was generated (e.g. via msi-rs, candle/light, or wixl), verify its existence
 MSI_FILE="${TEST_TMP_DIR}/TestPackage.msi"

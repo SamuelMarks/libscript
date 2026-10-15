@@ -51,6 +51,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## parse_args
 # Executes parse_args functionality.
+# ## parse_args
+# Executes the parse_args logic.
 parse_args() {
   USE_DEFAULT_TAGS=true
   CUSTOM_TAGS=""

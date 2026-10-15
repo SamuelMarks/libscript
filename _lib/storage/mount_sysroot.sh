@@ -23,41 +23,35 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 # ## show_help
 # Displays usage instructions and supported options.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") [OPTIONS]"
-  printf '%s
-' "Manages hierarchical mount operations and sysroot staging under /mnt/target."
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") [OPTIONS]"
+  printf '%s\n' "Manages hierarchical mount operations and sysroot staging under /mnt/target."
   printf '
 '
-  printf '%s
-' "Options:"
-  printf '%s
-' "  --mount <root_dev> [esp_dev]   Mount root and optional ESP partition."
-  printf '%s
-' "  --unmount                      Recursively and cleanly unmount all target paths."
-  printf '%s
-' "  --fstab <target_dir>           Generate /etc/fstab or /etc/vfstab in target dir."
-  printf '%s
-' "  --help, -h, /?, -?             Show this help message."
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --mount <root_dev> [esp_dev]   Mount root and optional ESP partition."
+  printf '%s\n' "  --unmount                      Recursively and cleanly unmount all target paths."
+  printf '%s\n' "  --fstab <target_dir>           Generate /etc/fstab or /etc/vfstab in target dir."
+  printf '%s\n' "  --help, -h, /?, -?             Show this help message."
 }
 
 # ## detect_os
 # Identifies the active operating system kernel family.
+# ## detect_os
+# Executes the detect_os logic.
 detect_os() {
   uname -s | tr '[:upper:]' '[:lower:]'
 }
@@ -69,6 +63,8 @@ ESP_DEV=""
 
 # ## is_mounted
 # Checks if the specified mountpoint is currently active.
+# ## is_mounted
+# Executes the is_mounted logic.
 is_mounted() {
   _dir="$1"
   if command -v mountpoint >/dev/null 2>&1; then
@@ -89,6 +85,8 @@ is_mounted() {
 
 # ## safe_mount
 # Mounts a filesystem only if the destination is not already mounted.
+# ## safe_mount
+# Executes the safe_mount logic.
 safe_mount() {
   _src="$1"
   _dest="$2"
@@ -96,13 +94,11 @@ safe_mount() {
 
   mkdir -p "$_dest"
   if is_mounted "$_dest"; then
-    printf '[INFO] Destination %s already mounted. Skipping.
-' "$_dest"
+    printf '[INFO] Destination %s already mounted. Skipping.\n' "$_dest"
     return 0
   fi
 
-  printf '[INFO] Mounting %s on %s...
-' "$_src" "$_dest"
+  printf '[INFO] Mounting %s on %s...\n' "$_src" "$_dest"
   if [ -n "$_fstype" ]; then
     mount -t "$_fstype" "$_src" "$_dest"
   else
@@ -112,6 +108,8 @@ safe_mount() {
 
 # ## mount_virtual_filesystems
 # Bind-mounts kernel pseudo-filesystems (/dev, /proc, /sys) into target sysroot.
+# ## mount_virtual_filesystems
+# Executes the mount_virtual_filesystems logic.
 mount_virtual_filesystems() {
   _tgt="$1"
   _os=$(detect_os)
@@ -138,33 +136,33 @@ mount_virtual_filesystems() {
 
 # ## unmount_all
 # Cleanly unmounts all target partitions and virtual filesystems in reverse order.
+# ## unmount_all
+# Executes the unmount_all logic.
 unmount_all() {
   _tgt="$1"
-  printf '[INFO] Unmounting target filesystems from %s...
-' "$_tgt"
+  printf '[INFO] Unmounting target filesystems from %s...\n' "$_tgt"
 
   for sub in /dev/pts /dev/fd /dev /proc /sys /devices /boot/efi /boot ""; do
     _mp="${_tgt}${sub}"
     if is_mounted "$_mp"; then
-      printf '       Unmounting %s...
-' "$_mp"
+      printf '       Unmounting %s...\n' "$_mp"
       umount "$_mp" 2>/dev/null || umount -f "$_mp" 2>/dev/null || true
     fi
   done
-  printf '[OK] All filesystems under %s unmounted.
-' "$_tgt"
+  printf '[OK] All filesystems under %s unmounted.\n' "$_tgt"
 }
 
 # ## generate_fstab
 # Synthesizes persistent fstab or vfstab table for target sysroot.
+# ## generate_fstab
+# Executes the generate_fstab logic.
 generate_fstab() {
   _tgt="$1"
   _rdev="${2:-/dev/sda2}"
   _edev="${3:-/dev/sda1}"
   _os=$(detect_os)
 
-  printf '[INFO] Generating filesystem table in %s (%s)...
-' "$_tgt" "$_os"
+  printf '[INFO] Generating filesystem table in %s (%s)...\n' "$_tgt" "$_os"
   mkdir -p "${_tgt}/etc"
 
   case "$_os" in
@@ -179,8 +177,7 @@ ctfs            -               /system/contract ctfs   -       no      -
 objfs           -               /system/object  objfs   -       no      -
 swap            -               /tmp            tmpfs   -       yes     -
 EOF
-      printf '[OK] Generated %s/etc/vfstab
-' "$_tgt"
+      printf '[OK] Generated %s/etc/vfstab\n' "$_tgt"
       ;;
     freebsd*)
       cat << EOF > "${_tgt}/etc/fstab"
@@ -188,11 +185,9 @@ EOF
 $_rdev          /               ufs     rw,noatime      1       1
 EOF
       if [ -n "$_edev" ]; then
-        printf '%s          /boot/efi       msdosfs rw              2       2
-' "$_edev" >> "${_tgt}/etc/fstab"
+        printf '%s          /boot/efi       msdosfs rw              2       2\n' "$_edev" >> "${_tgt}/etc/fstab"
       fi
-      printf '[OK] Generated %s/etc/fstab
-' "$_tgt"
+      printf '[OK] Generated %s/etc/fstab\n' "$_tgt"
       ;;
     *)
       cat << EOF > "${_tgt}/etc/fstab"
@@ -200,13 +195,10 @@ EOF
 $_rdev          /               ext4    errors=remount-ro 0       1
 EOF
       if [ -n "$_edev" ]; then
-        printf '%s       /boot/efi       vfat    umask=0077      0       1
-' "$_edev" >> "${_tgt}/etc/fstab"
+        printf '%s       /boot/efi       vfat    umask=0077      0       1\n' "$_edev" >> "${_tgt}/etc/fstab"
       fi
-      printf 'tmpfs           /tmp            tmpfs   defaults,nodev,nosuid 0       0
-' >> "${_tgt}/etc/fstab"
-      printf '[OK] Generated %s/etc/fstab
-' "$_tgt"
+      printf 'tmpfs           /tmp            tmpfs   defaults,nodev,nosuid 0       0\n' >> "${_tgt}/etc/fstab"
+      printf '[OK] Generated %s/etc/fstab\n' "$_tgt"
       ;;
   esac
 }
@@ -261,8 +253,7 @@ case "$ACTION" in
     ;;
   mount)
     if [ -z "$ROOT_DEV" ]; then
-      printf '[ERROR] Root device required for --mount
-' >&2
+      printf '[ERROR] Root device required for --mount\n' >&2
       exit 1
     fi
     safe_mount "$ROOT_DEV" "$TARGET_DIR"
@@ -270,8 +261,7 @@ case "$ACTION" in
       safe_mount "$ESP_DEV" "${TARGET_DIR}/boot/efi"
     fi
     mount_virtual_filesystems "$TARGET_DIR"
-    printf '[OK] Target sysroot mounted and ready under %s
-' "$TARGET_DIR"
+    printf '[OK] Target sysroot mounted and ready under %s\n' "$TARGET_DIR"
     ;;
   unmount)
     unmount_all "$TARGET_DIR"

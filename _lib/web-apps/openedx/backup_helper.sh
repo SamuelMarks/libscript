@@ -22,24 +22,21 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 # ## show_help
 # Displays usage documentation.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") backup <backup_dir> <install_dir> [out_path]"
-  printf '%s
-' "       $(basename "$THIS_FILE") restore <archive> <install_dir> [force]"
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") backup <backup_dir> <install_dir> [out_path]"
+  printf '%s\n' "       $(basename "$THIS_FILE") restore <archive> <install_dir> [force]"
   exit 0
 }
 
@@ -50,6 +47,8 @@ show_help() {
 #   $1 - Path to file
 # Outputs:
 #   Prints SHA-256 hex string
+# ## compute_sha256
+# Executes the compute_sha256 logic.
 compute_sha256() {
   _file="$1"
   if command -v sha256sum >/dev/null 2>&1; then
@@ -70,6 +69,8 @@ compute_sha256() {
 #   $1 - Backup root directory
 #   $2 - Open edX installation directory
 #   $3 - (Optional) Destination archive path
+# ## do_backup
+# Executes the do_backup logic.
 do_backup() {
   _backup_dir="$1"
   _install_dir="$2"
@@ -116,13 +117,10 @@ do_backup() {
 
   _hash=$(compute_sha256 "${_archive}")
   _base=$(basename "${_archive}")
-  printf '%s  %s
-' "${_hash}" "${_base}" > "${_archive}.sha256"
+  printf '%s  %s\n' "${_hash}" "${_base}" > "${_archive}.sha256"
 
-  printf 'Backup created: %s
-' "${_archive}"
-  printf 'SHA-256 Checksum: %s
-' "${_hash}"
+  printf 'Backup created: %s\n' "${_archive}"
+  printf 'SHA-256 Checksum: %s\n' "${_hash}"
 }
 
 # ## do_restore
@@ -132,14 +130,15 @@ do_backup() {
 #   $1 - Backup archive path
 #   $2 - Open edX installation directory
 #   $3 - Force overwrite flag (1 or 0)
+# ## do_restore
+# Executes the do_restore logic.
 do_restore() {
   _archive="$1"
   _install_dir="$2"
   _force="${3:-0}"
 
   if [ ! -f "${_archive}" ]; then
-    printf 'Error: Archive not found: %s
-' "${_archive}" >&2
+    printf 'Error: Archive not found: %s\n' "${_archive}" >&2
     exit 1
   fi
 
@@ -173,12 +172,13 @@ do_restore() {
   done
 
   rm -rf "${_stage}"
-  printf 'Restore applied successfully.
-'
+  printf 'Restore applied successfully.\n'
 }
 
 # ## main
 # Main entrypoint parsing subcommands.
+# ## main
+# Executes the main logic.
 main() {
   if [ $# -lt 1 ]; then
     show_help
@@ -204,8 +204,7 @@ main() {
       show_help
       ;;
     *)
-      printf 'Error: Unknown action %s
-' "${_action}" >&2
+      printf 'Error: Unknown action %s\n' "${_action}" >&2
       exit 1
       ;;
   esac

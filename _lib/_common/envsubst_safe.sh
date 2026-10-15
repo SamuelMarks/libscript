@@ -39,6 +39,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 # recommend using within a `clear_environment` (`env -i`); see my `environ.sh`
 # ## envsubst_safe
 # Executes safe environment substitution without eval or subshell vulnerabilities.
+# ## envsubst_safe
+# Executes the envsubst_safe logic.
 envsubst_safe() {
   # Read input from file, argument, or stdin
   if [ "$#" -gt 0 ] && [ -n "${1}" ]; then

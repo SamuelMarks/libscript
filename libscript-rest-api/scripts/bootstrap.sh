@@ -56,6 +56,8 @@ fi
 
 # ## detect_os
 # Executes detect_os functionality.
+# ## detect_os
+# Executes the detect_os logic.
 detect_os() {
   OS="$(uname -s)"
   case "$OS" in
@@ -68,6 +70,8 @@ detect_os() {
 
 # ## check_deps
 # Executes check_deps functionality.
+# ## check_deps
+# Executes the check_deps logic.
 check_deps() {
   for cmd in gcc clang git cmake make jq pkg-config; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
@@ -82,45 +86,42 @@ check_deps() {
 
 # ## install_deps_linux
 # Executes install_deps_linux functionality.
+# ## install_deps_linux
+# Executes the install_deps_linux logic.
 install_deps_linux() {
   log_info "Detected Linux. Checking dependencies..."
   if check_deps; then
     log_info "All dependencies are already installed."
     return 0
   fi
-  log_info "Installing dependencies..."
-  if command -v apt-get >/dev/null 2>&1; then
-    sudo apt-get update
-    sudo apt-get install -y gcc clang git cmake make jq pkg-config
-  elif command -v yum >/dev/null 2>&1; then
-    sudo yum update -y
-    sudo yum install -y gcc clang git cmake make jq pkgconfig
-  elif command -v apk >/dev/null 2>&1; then
-    sudo apk add --no-cache gcc clang git cmake make jq pkgconf musl-dev
-  else
-    log_error "Unsupported Linux package manager. Please install gcc, git, and cmake manually."
-    exit 1
-  fi
+  log_info "Installing dependencies via libscript..."
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install c latest
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install git latest
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install cmake latest
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install jq latest
 }
 
 # ## install_deps_macos
 # Executes install_deps_macos functionality.
+# ## install_deps_macos
+# Executes the install_deps_macos logic.
 install_deps_macos() {
   log_info "Detected macOS. Checking dependencies..."
   if check_deps; then
     log_info "All dependencies are already installed."
     return 0
   fi
-  log_info "Installing dependencies via Homebrew..."
-  if ! command -v brew >/dev/null 2>&1; then
-    log_error "Homebrew not found. Please install Homebrew first: https://brew.sh/"
-    exit 1
-  fi
-  brew install gcc llvm git cmake make jq pkg-config
+  log_info "Installing dependencies via libscript..."
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install c latest
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install git latest
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install cmake latest
+  "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install jq latest
 }
 
 # ## install_deps_windows
 # Executes install_deps_windows functionality.
+# ## install_deps_windows
+# Executes the install_deps_windows logic.
 install_deps_windows() {
   log_info "Detected Windows environment in shell. Suggesting use of bootstrap.cmd."
   log_error "Please run scripts\bootstrap.cmd from a Command Prompt or PowerShell."

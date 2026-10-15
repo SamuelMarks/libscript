@@ -26,22 +26,18 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 TARGET_SPEC="${1:-}"
 if [ -z "$TARGET_SPEC" ]; then
-  printf '[ERROR] No stack directory or packaging.json specified
-' >&2
+  printf '[ERROR] No stack directory or packaging.json specified\n' >&2
   exit 1
 fi
 shift
@@ -67,8 +63,7 @@ if [ -d "$TARGET_SPEC" ]; then
 fi
 
 if [ ! -f "$PKG_JSON" ]; then
-  printf '[ERROR] packaging.json not found at: %s
-' "$PKG_JSON" >&2
+  printf '[ERROR] packaging.json not found at: %s\n' "$PKG_JSON" >&2
   exit 1
 fi
 
@@ -117,6 +112,8 @@ EOF
 #
 # ## Parameters
 #   $1 - 6-character hex color string (e.g. 00263E)
+# ## hex_to_r
+# Executes the hex_to_r logic.
 hex_to_r() { printf '%d' "0x$(printf '%s' "$1" | cut -c1-2)"; }
 
 # ## hex_to_g
@@ -124,6 +121,8 @@ hex_to_r() { printf '%d' "0x$(printf '%s' "$1" | cut -c1-2)"; }
 #
 # ## Parameters
 #   $1 - 6-character hex color string (e.g. 00263E)
+# ## hex_to_g
+# Executes the hex_to_g logic.
 hex_to_g() { printf '%d' "0x$(printf '%s' "$1" | cut -c3-4)"; }
 
 # ## hex_to_b
@@ -131,6 +130,8 @@ hex_to_g() { printf '%d' "0x$(printf '%s' "$1" | cut -c3-4)"; }
 #
 # ## Parameters
 #   $1 - 6-character hex color string (e.g. 00263E)
+# ## hex_to_b
+# Executes the hex_to_b logic.
 hex_to_b() { printf '%d' "0x$(printf '%s' "$1" | cut -c5-6)"; }
 
 PR_R=$(hex_to_r "$PRIMARY_HEX"); PR_G=$(hex_to_g "$PRIMARY_HEX"); PR_B=$(hex_to_b "$PRIMARY_HEX")
@@ -139,6 +140,8 @@ DK_R=$(hex_to_r "$DARK_HEX"); DK_G=$(hex_to_g "$DARK_HEX"); DK_B=$(hex_to_b "$DA
 
 # ## generate_side_banner
 # Synthesizes 164x312 24-bit uncompressed RGB BMP side splash banner.
+# ## generate_side_banner
+# Executes the generate_side_banner logic.
 generate_side_banner() {
   _out="$1"
   awk -v pr_r="$PR_R" -v pr_g="$PR_G" -v pr_b="$PR_B" -v sc_r="$SC_R" -v sc_g="$SC_G" -v sc_b="$SC_B" -v dk_r="$DK_R" -v dk_g="$DK_G" -v dk_b="$DK_B" '
@@ -183,6 +186,8 @@ generate_side_banner() {
 
 # ## generate_top_banner
 # Synthesizes 493x58 24-bit uncompressed RGB BMP top header banner.
+# ## generate_top_banner
+# Executes the generate_top_banner logic.
 generate_top_banner() {
   _out="$1"
   awk -v pr_r="$PR_R" -v pr_g="$PR_G" -v pr_b="$PR_B" '
@@ -217,12 +222,13 @@ generate_top_banner() {
       for (p = 0; p < pad; p++) printf "%c", 0
     }
   }' > "$_out"
-  printf '[OK] Generated top banner: %s (493x58)
-' "$_out"
+  printf '[OK] Generated top banner: %s (493x58)\n' "$_out"
 }
 
 # ## generate_ico
 # Synthesizes multi-resolution application icon (.ico).
+# ## generate_ico
+# Executes the generate_ico logic.
 generate_ico() {
   _out="$1"
   awk -v pr_r="$PR_R" -v pr_g="$PR_G" -v pr_b="$PR_B" -v sc_r="$SC_R" -v sc_g="$SC_G" -v sc_b="$SC_B" -v dk_r="$DK_R" -v dk_g="$DK_G" -v dk_b="$DK_B" '
@@ -286,12 +292,13 @@ generate_ico() {
       for (m = 0; m < mask_size; m++) printf "%c", 0
     }
   }' > "$_out"
-  printf '[OK] Generated multi-res icon: %s
-' "$_out"
+  printf '[OK] Generated multi-res icon: %s\n' "$_out"
 }
 
 # ## generate_eula
 # Synthesizes Rich Text Format (.rtf) EULA.
+# ## generate_eula
+# Executes the generate_eula logic.
 generate_eula() {
   _out="$1"
   cat << EOF > "$_out"
@@ -306,8 +313,7 @@ $EULA_COMPS\par
 By continuing the installation, you agree to comply with all applicable open-source and commercial licensing terms.\par
 }
 EOF
-  printf '[OK] Generated EULA: %s
-' "$_out"
+  printf '[OK] Generated EULA: %s\n' "$_out"
 }
 
 generate_side_banner "${OUTPUT_DIR}/banner_side.bmp"
@@ -315,5 +321,4 @@ generate_top_banner "${OUTPUT_DIR}/banner_top.bmp"
 generate_ico "${OUTPUT_DIR}/app.ico"
 generate_eula "${OUTPUT_DIR}/license.rtf"
 
-printf '[SUCCESS] Branding synthesis complete in %s
-' "$OUTPUT_DIR"
+printf '[SUCCESS] Branding synthesis complete in %s\n' "$OUTPUT_DIR"

@@ -34,6 +34,8 @@ export SCRIPT_NAME
 
 # ## netctl_emit_apache
 # Executes netctl_emit_apache functionality.
+# ## netctl_emit_apache
+# Executes the netctl_emit_apache logic.
 netctl_emit_apache() {
   state_file="${1:-$NETCTL_STATE_FILE}"
 

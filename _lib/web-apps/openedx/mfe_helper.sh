@@ -23,26 +23,22 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 # ## show_help
 # Displays command usage documentation.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") build <root_dir> <mfe_name> [version]"
-  printf '%s
-' "       $(basename "$THIS_FILE") deploy <root_dir> <dist_root> <mfe_name> [dest_path]"
-  printf '%s
-' "       $(basename "$THIS_FILE") list <root_dir>"
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") build <root_dir> <mfe_name> [version]"
+  printf '%s\n' "       $(basename "$THIS_FILE") deploy <root_dir> <dist_root> <mfe_name> [dest_path]"
+  printf '%s\n' "       $(basename "$THIS_FILE") list <root_dir>"
   exit 0
 }
 
@@ -53,6 +49,8 @@ show_help() {
 #   $1 - MFE root directory
 #   $2 - MFE identifier name
 #   $3 - Version branch or tag (default: master)
+# ## do_build
+# Executes the do_build logic.
 do_build() {
   _root_dir="$1"
   _mfe_name="$2"
@@ -74,8 +72,7 @@ do_build() {
   _dist_dir="${_target_dir}/dist"
   mkdir -p "${_dist_dir}"
   if [ ! -f "${_dist_dir}/index.html" ]; then
-    printf '<!DOCTYPE html><html><body><h1>Open edX %s MFE</h1></body></html>
-' "${_mfe_name}" > "${_dist_dir}/index.html"
+    printf '<!DOCTYPE html><html><body><h1>Open edX %s MFE</h1></body></html>\n' "${_mfe_name}" > "${_dist_dir}/index.html"
   fi
 
   _reg_file="${_root_dir}/registry.json"
@@ -110,6 +107,8 @@ do_build() {
 #   $2 - Dist root directory
 #   $3 - MFE identifier name
 #   $4 - Optional explicit destination path
+# ## do_deploy
+# Executes the do_deploy logic.
 do_deploy() {
   _root_dir="$1"
   _dist_root="$2"
@@ -130,8 +129,7 @@ do_deploy() {
   mkdir -p "${_out_dest}"
   cp -R "${_src_dist}/." "${_out_dest}/" 2>/dev/null || true
 
-  printf 'window.MFE_CONFIG = { LMS_BASE_URL: "http://openedx.local:8000", MFE_NAME: "%s" };
-' "${_mfe_name}" > "${_out_dest}/env.config.js"
+  printf 'window.MFE_CONFIG = { LMS_BASE_URL: "http://openedx.local:8000", MFE_NAME: "%s" };\n' "${_mfe_name}" > "${_out_dest}/env.config.js"
 
   _reg_file="${_root_dir}/registry.json"
   if command -v jq >/dev/null 2>&1 && [ -f "${_reg_file}" ]; then
@@ -151,6 +149,8 @@ do_deploy() {
 #
 # Inputs:
 #   $1 - MFE root directory
+# ## do_list
+# Executes the do_list logic.
 do_list() {
   _root_dir="$1"
   _reg_file="${_root_dir}/registry.json"
@@ -160,14 +160,15 @@ do_list() {
 
   if [ -f "${_reg_file}" ] && command -v jq >/dev/null 2>&1; then
     jq -r 'to_entries[] | "\(.key) \(.value.built // false) \(.value.deployed // false) \(.value.version // "master")"' "${_reg_file}" 2>/dev/null | while read -r _name _built _dep _ver; do
-      printf '%-24s %-8s %-10s %-12s
-' "${_name}" "${_built}" "${_dep}" "${_ver}"
+      printf '%-24s %-8s %-10s %-12s\n' "${_name}" "${_built}" "${_dep}" "${_ver}"
     done
   fi
 }
 
 # ## main
 # Main entrypoint parsing action commands.
+# ## main
+# Executes the main logic.
 main() {
   if [ $# -lt 1 ]; then
     show_help
@@ -193,8 +194,7 @@ main() {
       show_help
       ;;
     *)
-      printf 'Error: Unknown action %s
-' "${_action}" >&2
+      printf 'Error: Unknown action %s\n' "${_action}" >&2
       exit 1
       ;;
   esac

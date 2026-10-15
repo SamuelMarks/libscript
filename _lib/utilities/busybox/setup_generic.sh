@@ -47,6 +47,8 @@ ACTION="${ACTION:-install}"
 
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
+# ## resolve_exact_version
+# Executes the resolve_exact_version logic.
 resolve_exact_version() {
   if [ "${BUSYBOX_VERSION}" = "latest" ] || [ "${BUSYBOX_VERSION}" = "lts" ]; then
     EXACT_VERSION=$(curl -sL 'https://busybox.net/' | grep -o 'BusyBox [0-9.]* (stable)' | head -n1 | grep -o '[0-9.]*')
@@ -134,6 +136,10 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/busybox/${VERSION:-latest}/bin/busybox" ]; then
+      log_info "busybox ${VERSION:-latest} is already installed."
+      exit 0
+    fi
     if [ "${BUSYBOX_INSTALL_METHOD}" = "system" ]; then
       if command -v dnf >/dev/null 2>&1; then
         priv dnf install -y epel-release || true

@@ -78,6 +78,8 @@ fi
 
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
+# ## resolve_exact_version
+# Executes the resolve_exact_version logic.
 resolve_exact_version() {
   clean_version=$(printf '%s\n' "$NODEJS_VERSION" | sed 's/^v//')
   if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ]; then
@@ -177,6 +179,10 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/nodejs/${VERSION:-latest}/bin/nodejs" ]; then
+      log_info "nodejs ${VERSION:-latest} is already installed."
+      exit 0
+    fi
     if [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
       libscript_depends 'nodejs'
     elif [ "$NODEJS_INSTALL_METHOD" = "mise" ]; then

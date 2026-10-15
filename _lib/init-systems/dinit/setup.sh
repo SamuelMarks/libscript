@@ -21,16 +21,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 ACTION="${1:-install}"
@@ -41,33 +38,27 @@ mkdir -p "$STAMPS_DIR"
 STAMP_DINIT="${STAMPS_DIR}/.stamp.lfs_init_dinit"
 
 if [ "$ACTION" = "clean" ]; then
-  printf '[CLEAN] Removing Dinit stamp...
-'
+  printf '[CLEAN] Removing Dinit stamp...\n'
   rm -f "$STAMP_DINIT"
   exit 0
 fi
 
 if [ "$ACTION" = "status" ]; then
   if [ -f "$STAMP_DINIT" ]; then
-    printf 'Dinit: INSTALLED (%s)
-' "$(cat "$STAMP_DINIT")"
+    printf 'Dinit: INSTALLED (%s)\n' "$(cat "$STAMP_DINIT")"
   else
-    printf 'Dinit: NOT INSTALLED
-'
+    printf 'Dinit: NOT INSTALLED\n'
   fi
   exit 0
 fi
 
 if [ -f "$STAMP_DINIT" ]; then
-  printf '[SKIP]  Dinit already installed (%s)
-' "$STAMP_DINIT"
+  printf '[SKIP]  Dinit already installed (%s)\n' "$STAMP_DINIT"
   exit 0
 fi
 
-printf '=== LibScript Dinit Init Provider ===
-'
-printf '[INFO] Target Rootfs: %s
-' "$ROOTFS"
+printf '=== LibScript Dinit Init Provider ===\n'
+printf '[INFO] Target Rootfs: %s\n' "$ROOTFS"
 
 mkdir -p "${ROOTFS}/etc/dinit.d"
 mkdir -p "${ROOTFS}/sbin"
@@ -90,8 +81,7 @@ if [ ! -f "${ROOTFS}/sbin/init" ]; then
   cat << 'EOF' > "${ROOTFS}/sbin/init"
 #!/bin/sh
 echo "[dinit] Service boot started"
-printf '[DINIT] Dinit supervisor initialized.
-'
+printf '[DINIT] Dinit supervisor initialized.\n'
 exec /sbin/agetty -L 115200 ttyS0 vt102 2>/dev/null || exec /bin/sh
 EOF
   chmod +x "${ROOTFS}/sbin/init"
@@ -99,6 +89,5 @@ fi
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_DINIT}.tmp"
 mv "${STAMP_DINIT}.tmp" "$STAMP_DINIT"
-printf '[DONE]  Dinit configured successfully.
-'
+printf '[DONE]  Dinit configured successfully.\n'
 exit 0

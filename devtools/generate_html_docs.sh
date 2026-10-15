@@ -52,6 +52,7 @@ if [ -z "${HTML_ROOT+x}" ]; then
 fi
 
 export GIT_REPO="${GIT_REPO:-https://github.com/SamuelMarks/libscript}"
+export LIBSCRIPT_EXTENDED_SCHEMAS="topologies/topology.schema.json topologies/topology-state.schema.json payloads/payload.schema.json traits/trait.schema.json _lib/_common/manifest.schema.json"
 
 _envsubst_dirs=""
 for _tool in awk cat env printenv sort grep; do
@@ -152,6 +153,8 @@ URLS_JS="${URLS_JS%,}"']'
 
 # ## to_html_tree
 # Executes to_html_tree functionality.
+# ## to_html_tree
+# Executes the to_html_tree logic.
 to_html_tree() {
   # Read input from argument or stdin
   if [ "$#" -gt 0 ] && [ -n "$1" ]; then
@@ -408,7 +411,7 @@ fi
 env -i PATH="${ENVSUBST_PATH}" \
         URLS="${URLS_JS}" \
         "${LIBSCRIPT_ROOT_DIR}"'/_lib/_common/envsubst_safe_exec.sh' < "${HTML_ROOT}"'/assets/first_scripts.js' > "${LIBSCRIPT_ASSETS_DIR}"'/first_scripts.js'
-[ -d "${LIBSCRIPT_ROOT_DIR}"'/assets/' ] || mkdir -- "${LIBSCRIPT_ROOT_DIR}"'/assets/'
+[ -d "${LIBSCRIPT_ROOT_DIR}"'/assets/' ] || mkdir -p "${LIBSCRIPT_ROOT_DIR}"'/assets/'
 
 set +f
 LIBSCRIPT_ASSETS_DIR=$(CDPATH='' cd -P -- "${LIBSCRIPT_ASSETS_DIR}" && pwd -P)

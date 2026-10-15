@@ -23,49 +23,36 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 # ## show_help
 # Displays usage and CLI option details for Vagrant msi-rs testing.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") [--all | --platform <macos|windows|freebsd|sunos|linux>]"
-  printf '%s
-' "Runs msi-rs verification exclusively inside isolated Vagrant virtual machines."
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") [--all | --platform <macos|windows|freebsd|sunos|linux>]"
+  printf '%s\n' "Runs msi-rs verification exclusively inside isolated Vagrant virtual machines."
   printf '
 '
-  printf '%s
-' "Platforms:"
-  printf '%s
-' "  macos    - Apple Silicon macOS 14 (vagrant/macos-14-arm64)"
-  printf '%s
-' "  windows  - Windows 11 (vagrant/windows-11)"
-  printf '%s
-' "  freebsd  - FreeBSD 15.1 (vagrant/freebsd-15.1)"
-  printf '%s
-' "  sunos    - OmniOS / illumos (vagrant/omnios)"
-  printf '%s
-' "  linux    - Debian 13 / Alpine Linux (vagrant/debian-13)"
+  printf '%s\n' "Platforms:"
+  printf '%s\n' "  macos    - Apple Silicon macOS 14 (vagrant/macos-14-arm64)"
+  printf '%s\n' "  windows  - Windows 11 (vagrant/windows-11)"
+  printf '%s\n' "  freebsd  - FreeBSD 15.1 (vagrant/freebsd-15.1)"
+  printf '%s\n' "  sunos    - OmniOS / illumos (vagrant/omnios)"
+  printf '%s\n' "  linux    - Debian 13 / Alpine Linux (vagrant/debian-13)"
   printf '
 '
-  printf '%s
-' "Options:"
-  printf '%s
-' "  --all                 Test across all 5 target Vagrant platforms sequentially."
-  printf '%s
-' "  --platform <name>     Test specifically on one target platform."
-  printf '%s
-' "  --help, -h, /?, -?    Show this help message."
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --all                 Test across all 5 target Vagrant platforms sequentially."
+  printf '%s\n' "  --platform <name>     Test specifically on one target platform."
+  printf '%s\n' "  --help, -h, /?, -?    Show this help message."
 }
 
 TARGET_PLATFORM="all"
@@ -95,18 +82,18 @@ SUMMARY_FILE="${REPO_ROOT}/tests_tmp/msi_rs_matrix_summary.json"
 
 # ## run_platform_test
 # Executes msi-rs installation and test on a given platform runner script.
+# ## run_platform_test
+# Executes the run_platform_test logic.
 run_platform_test() {
   plat="$1"
   runner="$2"
-  printf '[VAGRANT-MATRIX] Testing msi-rs on %s VM via %s...
-' "$plat" "$runner"
+  printf '[VAGRANT-MATRIX] Testing msi-rs on %s VM via %s...\n' "$plat" "$runner"
   if [ -x "${REPO_ROOT}/tests/${runner}" ]; then
     "${REPO_ROOT}/tests/${runner}" msi-rs || return 1
   elif [ -f "${REPO_ROOT}/tests/${runner}" ]; then
     sh "${REPO_ROOT}/tests/${runner}" msi-rs || return 1
   else
-    printf '[WARN] Runner %s not found; skipping %s
-' "$runner" "$plat"
+    printf '[WARN] Runner %s not found; skipping %s\n' "$runner" "$plat"
     return 0
   fi
 }
@@ -179,14 +166,11 @@ cat << EOF > "${SUMMARY_FILE}"
 }
 EOF
 
-printf '[VAGRANT-MATRIX] Summary written to %s
-' "${SUMMARY_FILE}"
+printf '[VAGRANT-MATRIX] Summary written to %s\n' "${SUMMARY_FILE}"
 if [ "$OVERALL_SUCCESS" -eq 1 ]; then
-  printf '[OK] Vagrant testing for msi-rs completed successfully.
-'
+  printf '[OK] Vagrant testing for msi-rs completed successfully.\n'
   exit 0
 else
-  printf '[ERROR] One or more Vagrant tests failed.
-' >&2
+  printf '[ERROR] One or more Vagrant tests failed.\n' >&2
   exit 1
 fi

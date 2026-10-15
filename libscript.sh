@@ -40,6 +40,8 @@ done
 
 # ## show_help
 # Executes show_help functionality.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
   printf '%s\n' "LibScript Global CLI"
   printf '%s\n' "===================="
@@ -100,6 +102,8 @@ show_help() {
 
 # ## find_components
 # Executes find_components functionality.
+# ## find_components
+# Executes the find_components logic.
 find_components() {
   find "$LIBSCRIPT_CLI_DIR" -name "cli.sh" ! -path "*/tmp/*" ! -path "*/.*" | while read -r cli_script; do
     dir=$(dirname "$cli_script")
@@ -114,6 +118,8 @@ find_components() {
 
 # ## get_desc
 # Executes get_desc functionality.
+# ## get_desc
+# Executes the get_desc logic.
 get_desc() {
   schema="$LIBSCRIPT_CLI_DIR/$1/vars.schema.json"
   if command -v jq >/dev/null 2>&1; then
@@ -252,6 +258,9 @@ case "$CMD" in
   config) . "$LIBSCRIPT_ROOT_DIR/cli/commands/config/config.sh" ;;
   repogen) . "$LIBSCRIPT_ROOT_DIR/_lib/orchestration/repogen/repogen.sh" ;;
   distro) . "$LIBSCRIPT_ROOT_DIR/_lib/orchestration/distro/distro.sh" ;;
+  payload) exec "$LIBSCRIPT_ROOT_DIR/payloads/engine.sh" "$@" ;;
+  topology) exec "$LIBSCRIPT_ROOT_DIR/topologies/engine.sh" "$@" ;;
+  trait) exec "$LIBSCRIPT_ROOT_DIR/traits/engine.sh" "$@" ;;
 esac
 
 IS_ACTION=0

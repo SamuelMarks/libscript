@@ -1,0 +1,41 @@
+{
+  "$schema": "../../payload.schema.json",
+  "name": "jetstream",
+  "version": "1.0.0",
+  "description": "Memory- and throughput-optimized XLA/TPU and GPU LLM inference engine (Google JetStream).",
+  "type": "ai-inference",
+  "artifact": {
+    "format": "oci-image",
+    "image": "us-docker.pkg.dev/cloud-tpu-images/inference/jetstream-http:latest",
+    "entrypoint": ["python3", "-m", "jetstream.core.implementations.mock.server"],
+    "args": ["--port", "9000"],
+    "working_dir": "/workspace"
+  },
+  "resources": {
+    "cpu_cores": 16,
+    "memory_mb": 65536,
+    "tpu_accelerator_type": "v5litepod-8",
+    "tpu_topology": "2x4",
+    "tpu_slice_count": 1
+  },
+  "scaling": {
+    "replicas": 1,
+    "strategy": "RollingUpdate",
+    "gang_scheduling": true,
+    "restart_policy": "Always"
+  },
+  "ports": [
+    {
+      "name": "grpc-inference",
+      "port": 9000,
+      "protocol": "grpc",
+      "visibility": "internal"
+    },
+    {
+      "name": "http-proxy",
+      "port": 8000,
+      "protocol": "http",
+      "visibility": "public"
+    }
+  ]
+}

@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 ACTION="${1:-deploy-rescue}"
@@ -45,41 +42,33 @@ mkdir -p "$STAMPS_DIR"
 STAMP_FILE="${STAMPS_DIR}/.stamp.hetzner"
 
 if [ "$ACTION" = "install" ] && [ -f "$STAMP_FILE" ]; then
-  printf '[SKIP]  Hetzner provider already configured (%s)
-' "$STAMP_FILE"
+  printf '[SKIP]  Hetzner provider already configured (%s)\n' "$STAMP_FILE"
   exit 0
 fi
 
-printf '[CLOUD] Hetzner provider action: %s (server: %s)
-' "$ACTION" "$SERVER"
+printf '[CLOUD] Hetzner provider action: %s (server: %s)\n' "$ACTION" "$SERVER"
 
 case "$ACTION" in
   install|configure)
     date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
     mv "${STAMP_FILE}.tmp" "$STAMP_FILE"
-    printf '[OK] Configured Hetzner provider engine: %s
-' "$STAMP_FILE"
+    printf '[OK] Configured Hetzner provider engine: %s\n' "$STAMP_FILE"
     ;;
 
   deploy-rescue|stream-disk)
     if [ ! -f "$DISK_IMG" ]; then
-      printf '[WARN] Target disk image not found: %s. Using stub.
-' "$DISK_IMG" >&2
+      printf '[WARN] Target disk image not found: %s. Using stub.\n' "$DISK_IMG" >&2
       mkdir -p "$(dirname "$DISK_IMG")"
-      printf 'Hetzner Disk Image Stub
-' > "$DISK_IMG"
+      printf 'Hetzner Disk Image Stub\n' > "$DISK_IMG"
     fi
 
-    printf '[CLOUD] Streaming disk image %s to %s on %s...
-' "$DISK_IMG" "$TARGET_DEV" "$SERVER"
+    printf '[CLOUD] Streaming disk image %s to %s on %s...\n' "$DISK_IMG" "$TARGET_DEV" "$SERVER"
     if command -v ssh >/dev/null 2>&1 && [ "$SERVER" != "127.0.0.1" ]; then
       # Stream compressed image directly to target block device over SSH
       cat "$DISK_IMG" | ssh -o BatchMode=yes -o StrictHostKeyChecking=no "root@${SERVER}" "dd of=${TARGET_DEV} bs=4M status=progress conv=fsync && reboot" 2>/dev/null || true
-      printf '[OK] Successfully deployed and rebooted Hetzner server: %s
-' "$SERVER"
+      printf '[OK] Successfully deployed and rebooted Hetzner server: %s\n' "$SERVER"
     else
-      printf '[INFO] SSH connection unavailable or mock server specified. Deployment staged for: %s -> %s:%s
-' "$DISK_IMG" "$SERVER" "$TARGET_DEV"
+      printf '[INFO] SSH connection unavailable or mock server specified. Deployment staged for: %s -> %s:%s\n' "$DISK_IMG" "$SERVER" "$TARGET_DEV"
     fi
     ;;
 
@@ -87,8 +76,7 @@ case "$ACTION" in
     if command -v hcloud >/dev/null 2>&1; then
       hcloud server create --name "libscript-server" --type cpx21 --image debian-12 2>/dev/null || true
     fi
-    printf '[OK] Hetzner cloud server provisioned.
-'
+    printf '[OK] Hetzner cloud server provisioned.\n'
     ;;
 esac
 

@@ -1,18 +1,19 @@
 @echo off
-rem ## Overview
+:: # build_component_msi.cmd
+:: ## Overview
 rem Builds a standalone Windows Installer (.msi) package for an individual LibScript dependency.
 rem Supports lightweight online installer and air-gapped offline installer with pre-bundled dependencies.
 rem
-rem ## Usage
+:: ## Usage
 rem   call packaging\build_component_msi.cmd [OPTIONS]
 rem
-rem ## Parameters
+:: ## Parameters
 rem   --component <name>       Component to package (mysql, redis, mongodb, python, nodejs, meilisearch)
 rem   --version <ver>          Component release version (default: auto-detected from offline bundle)
 rem   --variant <var>          Installer variant: online, offline, or all (default: all)
 rem   --help, -h               Show this help text
 
-setlocal enabledelayedexpansion
+setlocal EnableDelayedExpansion
 
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -25,7 +26,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -485,10 +486,14 @@ for %%I in ("%TARGET_MSI%") do (
 echo [PASS] Successfully processed standalone component MSI (%CURR_VAR%): %TARGET_MSI%
 goto cleanup
 
+:: ## compile_err
+:: Executes compile_err functionality.
 :compile_err
 set "ERR=1"
 goto cleanup
 
+:: ## cleanup
+:: Executes cleanup functionality.
 :cleanup
 del /f /q "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_main.wixobj" >nul 2>&1
 del /f /q "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_payload.wixobj" >nul 2>&1

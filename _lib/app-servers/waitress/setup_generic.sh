@@ -19,16 +19,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
@@ -52,15 +49,17 @@ export VERSION="${WAITRESS_VERSION:-latest}"
 case "$ACTION" in
   ls)
     if command -v waitress-serve >/dev/null 2>&1; then
-      printf 'waitress installed
-'
+      printf 'waitress installed\n'
     else
-      printf 'waitress not installed
-'
+      printf 'waitress not installed\n'
     fi
     exit 0
     ;;
   install)
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/waitress/${VERSION:-latest}/bin/waitress" ]; then
+      log_info "waitress ${VERSION:-latest} is already installed."
+      exit 0
+    fi
     log_info "Installing Waitress WSGI server via ${WAITRESS_INSTALL_METHOD}..."
     if command -v waitress-serve >/dev/null 2>&1; then
       log_info "waitress is already available on the system."
@@ -89,12 +88,10 @@ case "$ACTION" in
   test)
     if command -v waitress-serve >/dev/null 2>&1; then
       waitress-serve --help >/dev/null 2>&1
-      printf 'waitress verified
-'
+      printf 'waitress verified\n'
       exit 0
     else
-      printf 'waitress-serve not found in PATH
-' >&2
+      printf 'waitress-serve not found in PATH\n' >&2
       exit 1
     fi
     ;;

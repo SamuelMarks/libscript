@@ -1,4 +1,5 @@
 @echo off
+:: # vagrant_box_test.cmd
 :: ## Overview
 :: Windows Batch companion for Vagrant box lifecycle verification.
 :: Implements Option A Win32 Hard-Fail boundary proforma.
@@ -19,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -81,5 +82,7 @@ echo [ERROR] Native Linux Vagrant box lifecycle test is unavailable on Win32. >&
 echo [ERROR] Please execute via container or VM builder: vm_builder.cmd >&2
 exit /b 86
 
+:: ## end
+:: Executes end functionality.
 :end
 exit /b 0

@@ -32,6 +32,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## libscript_cdn_create
 # Executes libscript_cdn_create functionality.
+# ## libscript_cdn_create
+# Executes the libscript_cdn_create logic.
 libscript_cdn_create() {
   provider="$1"
   bucket="$2"
@@ -173,6 +175,8 @@ POLICY_EOF
 
 # ## libscript_cdn_delete
 # Executes libscript_cdn_delete functionality.
+# ## libscript_cdn_delete
+# Executes the libscript_cdn_delete logic.
 libscript_cdn_delete() {
   provider="$1"
   dist_id="$2"
@@ -205,6 +209,8 @@ libscript_cdn_delete() {
 
 # ## libscript_cdn_list
 # Executes libscript_cdn_list functionality.
+# ## libscript_cdn_list
+# Executes the libscript_cdn_list logic.
 libscript_cdn_list() {
   provider="$1"
   
@@ -224,6 +230,8 @@ libscript_cdn_list() {
 
 # ## libscript_cdn_invalidate
 # Executes libscript_cdn_invalidate functionality.
+# ## libscript_cdn_invalidate
+# Executes the libscript_cdn_invalidate logic.
 libscript_cdn_invalidate() {
   provider="$1"
   dist_id="$2"

@@ -20,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -86,6 +86,8 @@ exit /b 1
 :: Iterates over all artifact file paths passed on the command line.
 :main
 set "ERRORS=0"
+:: ## process_loop
+:: Executes process_loop functionality.
 :process_loop
 if "%~1"=="" goto :finish
 call :process_single "%~1"
@@ -134,6 +136,8 @@ if not defined SHA256_HASH (
         )
     )
 )
+:: ## skip_hash
+:: Executes skip_hash functionality.
 :skip_hash
 
 if not defined SHA256_HASH (

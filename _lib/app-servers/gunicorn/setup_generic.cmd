@@ -1,4 +1,5 @@
 @echo off
+:: # setup_generic.cmd
 :: ## Overview
 :: Windows setup script for Gunicorn.
 ::
@@ -17,7 +18,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -56,6 +57,10 @@ if "%ACTION%"=="install" (
     echo [INFO] Gunicorn uses POSIX fork^(^). On Windows, installing Waitress and Uvicorn for native WSGI/ASGI execution...
     call "%~dp0\..\waitress\setup.cmd" install
     call "%~dp0\..\uvicorn\setup.cmd" install
+if exist "%LIBSCRIPT_HOME%\gunicorn\%VERSION%" (
+    echo [INFO] gunicorn %VERSION% is already installed.
+    exit /b 0
+)
     where gunicorn >nul 2>&1
     if not errorlevel 1 (
         echo [INFO] gunicorn is also installed on the system.

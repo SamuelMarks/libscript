@@ -29,6 +29,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## libscript_check_preflight
 # Executes libscript_check_preflight functionality.
+# ## libscript_check_preflight
+# Executes the libscript_check_preflight logic.
 libscript_check_preflight() {
   provider="${1:-}"
   

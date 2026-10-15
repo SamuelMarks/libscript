@@ -46,6 +46,8 @@ mkdir -p "${REPO_ROOT}/tests_tmp"
 
 # ## show_help
 # Displays usage information.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE")"
   printf '%s\n' "Renders live installer screenshots into ../cc0-assets."
@@ -58,6 +60,8 @@ fi
 
 # ## save_rendered_asset
 # Saves a generated PNG file to both cc0-assets locations.
+# ## save_rendered_asset
+# Executes the save_rendered_asset logic.
 save_rendered_asset() {
   _src="$1"
   _name="$2"

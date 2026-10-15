@@ -21,16 +21,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 ACTION="${1:-install}"
@@ -41,33 +38,27 @@ mkdir -p "$STAMPS_DIR"
 STAMP_S6="${STAMPS_DIR}/.stamp.lfs_init_s6"
 
 if [ "$ACTION" = "clean" ]; then
-  printf '[CLEAN] Removing S6 stamp...
-'
+  printf '[CLEAN] Removing S6 stamp...\n'
   rm -f "$STAMP_S6"
   exit 0
 fi
 
 if [ "$ACTION" = "status" ]; then
   if [ -f "$STAMP_S6" ]; then
-    printf 'S6: INSTALLED (%s)
-' "$(cat "$STAMP_S6")"
+    printf 'S6: INSTALLED (%s)\n' "$(cat "$STAMP_S6")"
   else
-    printf 'S6: NOT INSTALLED
-'
+    printf 'S6: NOT INSTALLED\n'
   fi
   exit 0
 fi
 
 if [ -f "$STAMP_S6" ]; then
-  printf '[SKIP]  S6 already installed (%s)
-' "$STAMP_S6"
+  printf '[SKIP]  S6 already installed (%s)\n' "$STAMP_S6"
   exit 0
 fi
 
-printf '=== LibScript S6 & S6-rc Init Provider ===
-'
-printf '[INFO] Target Rootfs: %s
-' "$ROOTFS"
+printf '=== LibScript S6 & S6-rc Init Provider ===\n'
+printf '[INFO] Target Rootfs: %s\n' "$ROOTFS"
 
 mkdir -p "${ROOTFS}/etc/s6"
 mkdir -p "${ROOTFS}/etc/s6-rc/sources/top"
@@ -89,8 +80,7 @@ if [ ! -f "${ROOTFS}/sbin/init" ]; then
   cat << 'EOF' > "${ROOTFS}/sbin/init"
 #!/bin/sh
 echo "s6-rc: info: startup successful"
-printf '[S6] s6-svscan supervision loop initialized.
-'
+printf '[S6] s6-svscan supervision loop initialized.\n'
 exec /sbin/agetty -L 115200 ttyS0 vt102 2>/dev/null || exec /bin/sh
 EOF
   chmod +x "${ROOTFS}/sbin/init"
@@ -98,6 +88,5 @@ fi
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_S6}.tmp"
 mv "${STAMP_S6}.tmp" "$STAMP_S6"
-printf '[DONE]  S6 configured successfully.
-'
+printf '[DONE]  S6 configured successfully.\n'
 exit 0

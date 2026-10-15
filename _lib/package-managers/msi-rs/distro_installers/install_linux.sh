@@ -23,16 +23,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 TARGET_DEV="${1:-}"
@@ -41,29 +38,22 @@ TARGET_DIR="${3:-/mnt/target}"
 
 # ## show_help
 # Displays usage instructions and supported Linux distributions.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") <target_dev> [flavor] [target_dir]"
-  printf '%s
-' "Installs a complete Linux base operating system to target storage."
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") <target_dev> [flavor] [target_dir]"
+  printf '%s\n' "Installs a complete Linux base operating system to target storage."
   printf '
 '
-  printf '%s
-' "Flavors:"
-  printf '%s
-' "  alpine    - Alpine Linux minimal Musl system (default)"
-  printf '%s
-' "  debian    - Debian GNU/Linux standard glibc system"
-  printf '%s
-' "  rocky     - Rocky Linux Enterprise RPM system"
-  printf '%s
-' "  lfs       - Linux From Scratch minimal synthesized sysroot"
+  printf '%s\n' "Flavors:"
+  printf '%s\n' "  alpine    - Alpine Linux minimal Musl system (default)"
+  printf '%s\n' "  debian    - Debian GNU/Linux standard glibc system"
+  printf '%s\n' "  rocky     - Rocky Linux Enterprise RPM system"
+  printf '%s\n' "  lfs       - Linux From Scratch minimal synthesized sysroot"
   printf '
 '
-  printf '%s
-' "Options:"
-  printf '%s
-' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
@@ -72,21 +62,18 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "$
 fi
 
 if [ -z "$TARGET_DEV" ]; then
-  printf '[ERROR] Target device or disk path required.
-' >&2
+  printf '[ERROR] Target device or disk path required.\n' >&2
   show_help
   exit 1
 fi
 
 STAMP_FILE="${TARGET_DIR}/.libscript_installed.stamp"
 if [ -f "$STAMP_FILE" ]; then
-  printf '[INFO] Target system already installed in %s. Skipping.
-' "$TARGET_DIR"
+  printf '[INFO] Target system already installed in %s. Skipping.\n' "$TARGET_DIR"
   exit 0
 fi
 
-printf '[INSTALL-LINUX] Initiating %s installation to %s (root: %s)...
-' "$FLAVOR" "$TARGET_DEV" "$TARGET_DIR"
+printf '[INSTALL-LINUX] Initiating %s installation to %s (root: %s)...\n' "$FLAVOR" "$TARGET_DEV" "$TARGET_DIR"
 
 # 1. Mount target sysroot
 mkdir -p "$TARGET_DIR"
@@ -96,8 +83,7 @@ fi
 
 # 2. Deploy distribution userland
 mkdir -p "$TARGET_DIR/bin" "$TARGET_DIR/sbin" "$TARGET_DIR/etc" "$TARGET_DIR/boot/efi" "$TARGET_DIR/var" "$TARGET_DIR/home"
-printf 'libscript-linux-%s
-' "$FLAVOR" > "$TARGET_DIR/etc/hostname"
+printf 'libscript-linux-%s\n' "$FLAVOR" > "$TARGET_DIR/etc/hostname"
 
 case "$FLAVOR" in
   debian)
@@ -163,14 +149,12 @@ if [ -x "${REPO_ROOT}/_lib/storage/mount_sysroot.sh" ]; then
 fi
 
 # 4. Install GRUB Bootloader
-printf '[STAGE] Configuring GRUB bootloader...
-'
+printf '[STAGE] Configuring GRUB bootloader...\n'
 if command -v grub-install >/dev/null 2>&1; then
   grub-install --target=x86_64-efi --efi-directory="$TARGET_DIR/boot/efi" --bootloader-id=libscript --root-directory="$TARGET_DIR" 2>/dev/null || true
   grub-mkconfig -o "$TARGET_DIR/boot/grub/grub.cfg" 2>/dev/null || true
 fi
 
 touch "$STAMP_FILE"
-printf '[OK] Linux (%s) installation completed successfully on %s.
-' "$FLAVOR" "$TARGET_DEV"
+printf '[OK] Linux (%s) installation completed successfully on %s.\n' "$FLAVOR" "$TARGET_DEV"
 exit 0

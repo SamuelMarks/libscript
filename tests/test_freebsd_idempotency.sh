@@ -23,16 +23,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 PROFILE="${1:-${REPO_ROOT}/profiles/freebsd/minimal-server.json}"
@@ -43,27 +40,22 @@ mkdir -p "${REPO_ROOT}/tests_tmp"
 LOG_PASS1="${REPO_ROOT}/tests_tmp/pass1.log"
 LOG_PASS2="${REPO_ROOT}/tests_tmp/pass2.log"
 
-printf '[TEST]     Starting FreeBSD idempotency matrix test (Pass 1)...
-'
+printf '[TEST]     Starting FreeBSD idempotency matrix test (Pass 1)...\n'
 "${REPO_ROOT}/_lib/freebsd/distro/assemble.sh" "${PROFILE}" "${TEST_SYSROOT}" > "${LOG_PASS1}" 2>&1
 "${REPO_ROOT}/cli/commands/package_as/freebsd_qcow2.sh" "${TEST_SYSROOT}" "${TEST_IMG}" 10 >> "${LOG_PASS1}" 2>&1
 
-printf '[TEST]     Starting FreeBSD idempotency matrix test (Pass 2)...
-'
+printf '[TEST]     Starting FreeBSD idempotency matrix test (Pass 2)...\n'
 "${REPO_ROOT}/_lib/freebsd/distro/assemble.sh" "${PROFILE}" "${TEST_SYSROOT}" > "${LOG_PASS2}" 2>&1
 "${REPO_ROOT}/cli/commands/package_as/freebsd_qcow2.sh" "${TEST_SYSROOT}" "${TEST_IMG}" 10 >> "${LOG_PASS2}" 2>&1
 
 # Assert Pass 2 emitted [SKIP]
 if ! grep -q "\[SKIP\]" "${LOG_PASS2}"; then
-  printf '[FAIL]     Pass 2 did not skip completed synthesis tasks!
-' >&2
+  printf '[FAIL]     Pass 2 did not skip completed synthesis tasks!\n' >&2
   rm -rf "${TEST_SYSROOT}" "${TEST_IMG}" "${LOG_PASS1}" "${LOG_PASS2}"
   exit 1
 fi
-printf '[PASS]     Pass 2 skipped previously completed tasks.
-'
+printf '[PASS]     Pass 2 skipped previously completed tasks.\n'
 
 # Cleanup
 rm -rf "${TEST_SYSROOT}" "${TEST_IMG}" "${LOG_PASS1}" "${LOG_PASS2}" "${TEST_IMG}.stamp"
-printf '[OK]       FreeBSD idempotency matrix test PASSED.
-'
+printf '[OK]       FreeBSD idempotency matrix test PASSED.\n'

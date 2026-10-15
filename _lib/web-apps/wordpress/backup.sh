@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 WWWROOT="${WORDPRESS_WWWROOT:-/var/www/wordpress}"
@@ -74,12 +71,10 @@ if [ -z "$OUT_FILE" ]; then
 fi
 
 TMP_DIR=$(mktemp -d)
-printf '[INFO] Initiating WordPress snapshot backup...
-'
+printf '[INFO] Initiating WordPress snapshot backup...\n'
 
 # 1. Export MySQL Database
-printf '[INFO] Dumping WordPress database...
-'
+printf '[INFO] Dumping WordPress database...\n'
 if [ -x "$DBSHELL" ]; then
   "$DBSHELL" export "${TMP_DIR}/database.sql"
 fi
@@ -93,11 +88,9 @@ if [ -f "${WWWROOT}/wp-config.php" ]; then
 fi
 
 # 3. Create compressed tarball
-printf '[INFO] Archiving snapshot payload into %s...
-' "$OUT_FILE"
+printf '[INFO] Archiving snapshot payload into %s...\n' "$OUT_FILE"
 tar -czf "$OUT_FILE" -C "$TMP_DIR" .
 rm -rf "$TMP_DIR"
 
-printf '[OK] WordPress snapshot backup created successfully: %s
-' "$OUT_FILE"
+printf '[OK] WordPress snapshot backup created successfully: %s\n' "$OUT_FILE"
 exit 0

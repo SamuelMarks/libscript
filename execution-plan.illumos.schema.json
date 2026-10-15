@@ -236,8 +236,47 @@
     },
     "packages": {
       "type": "array",
-      "items": { "type": "string" },
+      "items": { "type": "string", "description": "IPS or pkgin package name" },
       "description": "Explicit list of IPS or pkgin packages to install"
+    },
+    "traits": {
+      "type": "array",
+      "description": "List of node-level traits pre-baked into the illumos target sysroot",
+      "items": {
+        "type": "string",
+        "description": "Trait identifier (e.g. storage, secrets, firewall, mesh, discovery, tls, ingress, logging, metrics, backup, maintenance)"
+      }
+    },
+    "tenant_provisions": {
+      "type": "array",
+      "description": "Declarative logical multi-tenant provisioning entries executed during illumos image baking",
+      "items": {
+        "type": "object",
+        "description": "Logical multi-tenant provisioning specification",
+        "required": ["tenant_id", "component"],
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "description": "Unique logical tenant identifier"
+          },
+          "component": {
+            "type": "string",
+            "description": "Target multitenant _lib component hosting the logical resource"
+          },
+          "db_name": {
+            "type": "string",
+            "description": "Logical database or schema name to provision"
+          },
+          "db_user": {
+            "type": "string",
+            "description": "Database role or user granted access to the tenant schema"
+          },
+          "server_name": {
+            "type": "string",
+            "description": "Virtual host domain name routed via netctl"
+          }
+        }
+      }
     }
   }
 }

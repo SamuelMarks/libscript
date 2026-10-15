@@ -36,16 +36,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 COMPONENT=""
 VERSION=""
@@ -60,6 +57,8 @@ HYDRATE=0
 # ## cleanup_artifacts
 # ## Overview
 # Removes transient MSI compilation artifacts.
+# ## cleanup_artifacts
+# Executes the cleanup_artifacts logic.
 cleanup_artifacts() {
   rm -f "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v:-}_main.wixobj" \
         "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v:-}_payload.wixobj" \
@@ -73,6 +72,8 @@ trap cleanup_artifacts EXIT INT TERM
 # Displays usage and supported parameters.
 # ## Usage
 #   Internal function.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
   cat << EOF_HELP
 LibScript Standalone Component MSI Builder
@@ -151,8 +152,7 @@ while [ $# -gt 0 ]; do
       exit 0
       ;;
     *)
-      printf '[ERROR] Unknown parameter: %s
-' "$1" >&2
+      printf '[ERROR] Unknown parameter: %s\n' "$1" >&2
       exit 1
       ;;
   esac
@@ -161,8 +161,7 @@ done
 : "${BRANCH:=}"
 
 if [ -z "$COMPONENT" ]; then
-  printf '[ERROR] --component is mandatory.
-' >&2
+  printf '[ERROR] --component is mandatory.\n' >&2
   show_help
   exit 1
 fi
@@ -192,6 +191,8 @@ fi
 #   $@ - Glob patterns or file paths
 # ## Usage
 #   Internal function.
+# ## find_first_file
+# Executes the find_first_file logic.
 find_first_file() {
   set +f
   for _pat in "$@"; do
@@ -216,6 +217,8 @@ find_first_file() {
 #   $1 - Variant ("online" or "offline")
 # ## Usage
 #   Internal function.
+# ## build_single_variant
+# Executes the build_single_variant logic.
 build_single_variant() {
   _v="$1"
   STAGE_ROOT="${LIBSCRIPT_ROOT_DIR}/tmp/stage_component_${COMPONENT}_${_v}"
@@ -375,13 +378,10 @@ build_single_variant() {
     set -f
   else
     # Online variant: lightweight manifest and stub
-    printf '{"component":"%s","version":"%s","variant":"online"}
-' "$COMPONENT" "$VERSION" > "$STAGE_ROOT/component.json"
-    printf 'LibScript %s Online Standalone Installer
-' "$COMPONENT" > "$STAGE_ROOT/README.txt"
+    printf '{"component":"%s","version":"%s","variant":"online"}\n' "$COMPONENT" "$VERSION" > "$STAGE_ROOT/component.json"
+    printf 'LibScript %s Online Standalone Installer\n' "$COMPONENT" > "$STAGE_ROOT/README.txt"
     mkdir -p "$STAGE_ROOT/bin"
-    printf 'LibScript %s Online Stub
-' "$COMPONENT" > "$STAGE_ROOT/bin/README.txt"
+    printf 'LibScript %s Online Stub\n' "$COMPONENT" > "$STAGE_ROOT/bin/README.txt"
   fi
 
   MAIN_WXS="${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_main.wxs"
@@ -460,8 +460,7 @@ build_single_variant() {
 
 
   if [ ! -f "$TARGET_MSI" ]; then
-    printf '[ERROR] Target MSI was not generated: %s
-' "$TARGET_MSI" >&2
+    printf '[ERROR] Target MSI was not generated: %s\n' "$TARGET_MSI" >&2
     exit 1
   fi
 
@@ -474,8 +473,7 @@ build_single_variant() {
 
   rm -f "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_main.wixobj" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_payload.wixobj" "${MAIN_WXS}" "${PAYLOAD_WXS}"
   _fsize=$(wc -c < "$TARGET_MSI" | tr -d ' ')
-  printf '[PASS] Successfully processed standalone component MSI (%s): %s (%s bytes)
-' "$_v" "$TARGET_MSI" "$_fsize"
+  printf '[PASS] Successfully processed standalone component MSI (%s): %s (%s bytes)\n' "$_v" "$TARGET_MSI" "$_fsize"
 }
 
 case "$VARIANT" in
@@ -490,8 +488,7 @@ case "$VARIANT" in
     build_single_variant "offline"
     ;;
   *)
-    printf '[ERROR] Unknown variant: %s. Use online, offline, or all.
-' "$VARIANT" >&2
+    printf '[ERROR] Unknown variant: %s. Use online, offline, or all.\n' "$VARIANT" >&2
     exit 1
     ;;
 esac

@@ -21,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -111,12 +111,10 @@ if "%PROVIDER%"=="smf" (
         echo ENABLED_SERVICES="%SERVICES%"
     ) > "%SYSROOT%/etc/svc/profile/services.conf"
 ) else if "%PROVIDER%"=="runit" (
-    if not exist "%SYSROOT%\etc
-unit" mkdir "%SYSROOT%\etc
-unit"
+    if not exist "%SYSROOT%\etc\runit" mkdir "%SYSROOT%\etc\runit"
     if not exist "%SYSROOT%\service" mkdir "%SYSROOT%\service"
-    findstr /C:"init_path=" "%SYSROOT%oot\loader.conf" >nul 2>&1
-    if errorlevel 1 echo init_path="/usr/local/sbin/runit-init:/sbin/init">> "%SYSROOT%oot\loader.conf"
+    findstr /C:"init_path=" "%SYSROOT%\boot\loader.conf" >nul 2>&1
+    if errorlevel 1 echo init_path="/usr/local/sbin/runit-init:/sbin/init">> "%SYSROOT%\boot\loader.conf"
 )
 
 echo %DATE% %TIME%> "%STAMP_FILE%"

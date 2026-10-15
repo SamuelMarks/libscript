@@ -34,6 +34,8 @@ export SCRIPT_NAME
 
 # ## netctl_emit_vagrantfile
 # Executes netctl_emit_vagrantfile functionality.
+# ## netctl_emit_vagrantfile
+# Executes the netctl_emit_vagrantfile logic.
 netctl_emit_vagrantfile() {
   state_file="${1:-$NETCTL_STATE_FILE}"
 

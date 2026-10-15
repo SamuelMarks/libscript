@@ -20,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -96,6 +96,8 @@ set "REL_TITLE="
 set "IS_DRAFT=false"
 set "IS_PRERELEASE=false"
 
+:: ## args_loop
+:: Executes args_loop functionality.
 :args_loop
 if "%~1"=="" goto :validate_args
 if /I "%~1"=="--tag" (

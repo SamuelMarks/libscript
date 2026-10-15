@@ -10,6 +10,16 @@
 setlocal EnableDelayedExpansion
 
 set "THIS_FILE=%~f0"
+
+if defined STACK (
+    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2^>^&1
+    if not errorlevel 1 (
+        echo [STOP] processing "%THIS_FILE%" ^>^&2
+        exit /b 0
+    )
+)
+set "STACK=%STACK%:%THIS_FILE%:"
+
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 

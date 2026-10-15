@@ -25,7 +25,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -81,6 +81,8 @@ if /I "%~1"=="-?" goto :show_help
 set "TARGETS=%*"
 goto :run_tests
 
+:: ## usage_all
+:: Executes usage_all functionality.
 :usage_all
 set "TARGETS=all"
 goto :run_tests

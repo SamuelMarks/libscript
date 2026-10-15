@@ -1,0 +1,49 @@
+{
+  "$schema": "../topology.schema.json",
+  "name": "gke-tpu-cluster",
+  "version": "1.0.0",
+  "description": "Multi-pool Google Kubernetes Engine (GKE) + Cloud TPU multi-slice cluster topology managed via XPK and gcloud.",
+  "quorum_strategy": "raft",
+  "fencing_policy": "cloud-api-poweroff",
+  "node_groups": [
+    {
+      "name": "gke-control-plane",
+      "provider": "gcp",
+      "region": "us-central2-b",
+      "size": "e2-standard-8",
+      "count": 1,
+      "role": "leader",
+      "components": ["cloud-providers/gcp-cli", "orchestration/kubectl", "toolchains/xpk"],
+      "traits": ["secrets", "discovery", "metrics"]
+    },
+    {
+      "name": "tpu-slice-workers",
+      "provider": "gcp",
+      "region": "us-central2-b",
+      "size": "ct4p-hightpu-4t",
+      "count": 2,
+      "role": "worker",
+      "components": ["storage-layers/gcsfuse", "logging/tensorboard"],
+      "traits": ["storage", "metrics"],
+      "accelerators": {
+        "tpu_accelerator_type": "v4-8",
+        "tpu_topology": "2x2x1",
+        "tpu_slice_count": 2
+      }
+    }
+  ],
+  "network": {
+    "vpc_cidr": "10.128.0.0/16",
+    "mesh_overlay": "none",
+    "internal_domain": "gke-tpu.internal"
+  },
+  "choreography": {
+    "pre_provision": ["gcloud container clusters describe"],
+    "substrate_prep": ["storage", "secrets"],
+    "leader_bootstrap": ["xpk cluster create"],
+    "follower_join": ["gcloud container node-pools list"],
+    "post_cluster": ["kubectl get nodes"],
+    "pre_drain": ["kubectl drain --ignore-daemonsets"],
+    "post_destroy": ["xpk cluster delete"]
+  }
+}

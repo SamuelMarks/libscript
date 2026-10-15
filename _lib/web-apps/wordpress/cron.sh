@@ -21,16 +21,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 WWWROOT="${WORDPRESS_WWWROOT:-/var/www/wordpress}"
@@ -43,32 +40,26 @@ case "$CMD" in
     elif [ -f "${WWWROOT}/wp-cron.php" ] && command -v php >/dev/null 2>&1; then
       php "${WWWROOT}/wp-cron.php" >/dev/null 2>&1 || true
     fi
-    printf '[OK] WordPress cron execution completed.
-'
+    printf '[OK] WordPress cron execution completed.\n'
     ;;
   install)
     CRON_LINE="*/5 * * * * cd ${WWWROOT} && php wp-cron.php >/dev/null 2>&1"
     if command -v crontab >/dev/null 2>&1; then
-      ( crontab -l 2>/dev/null | grep -v 'wp-cron\.php' || true; printf '%s
-' "$CRON_LINE" ) | crontab -
-      printf '[OK] Registered WP-Cron scheduler in system crontab.
-'
+      ( crontab -l 2>/dev/null | grep -v 'wp-cron\.php' || true; printf '%s\n' "$CRON_LINE" ) | crontab -
+      printf '[OK] Registered WP-Cron scheduler in system crontab.\n'
     else
-      printf '[WARN] crontab command not available on this host.
-'
+      printf '[WARN] crontab command not available on this host.\n'
     fi
     ;;
   uninstall)
     if command -v crontab >/dev/null 2>&1; then
       crontab -l 2>/dev/null | grep -v 'wp-cron\.php' | crontab - 2>/dev/null || true
-      printf '[OK] Removed WP-Cron scheduler from system crontab.
-'
+      printf '[OK] Removed WP-Cron scheduler from system crontab.\n'
     fi
     ;;
   status)
     if command -v crontab >/dev/null 2>&1; then
-      crontab -l 2>/dev/null | grep 'wp-cron\.php' || printf '[INFO] No WP-Cron entry found in crontab.
-'
+      crontab -l 2>/dev/null | grep 'wp-cron\.php' || printf '[INFO] No WP-Cron entry found in crontab.\n'
     fi
     ;;
   help|--help|-h)
@@ -84,8 +75,7 @@ EOF_HELP
     exit 0
     ;;
   *)
-    printf '[ERROR] Unknown cron command: %s
-' "$CMD" >&2
+    printf '[ERROR] Unknown cron command: %s\n' "$CMD" >&2
     exit 1
     ;;
 esac

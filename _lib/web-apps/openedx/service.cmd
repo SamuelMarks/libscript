@@ -31,7 +31,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -104,6 +104,8 @@ if "%ACTION%"=="cms" goto do_studio
 echo [ERROR] Unknown subcommand: %ACTION% >&2
 goto show_help
 
+:: ## show_help
+:: Executes show_help functionality.
 :show_help
 echo Open edX Service Manager (Windows)
 echo.
@@ -119,6 +121,8 @@ echo   studio    Check Studio status or launch in browser
 echo   help, -h  Show this help text
 exit /b 0
 
+:: ## do_start
+:: Executes do_start functionality.
 :do_start
 echo [INFO] Starting Open edX platform services...
 
@@ -163,6 +167,8 @@ if %ERRORLEVEL% neq 0 (
 
 exit /b 0
 
+:: ## do_stop
+:: Executes do_stop functionality.
 :do_stop
 echo [INFO] Stopping Open edX platform services...
 
@@ -180,11 +186,15 @@ if exist "%CMS_PID_FILE%" del /f /q "%CMS_PID_FILE%" 2>nul
 echo [PASS] Open edX platform services stopped.
 exit /b 0
 
+:: ## do_restart
+:: Executes do_restart functionality.
 :do_restart
 call :do_stop
 call :do_start
 exit /b 0
 
+:: ## do_status
+:: Executes do_status functionality.
 :do_status
 echo ======================================================
 echo              Open edX Platform Status (Windows)
@@ -194,16 +204,22 @@ if exist "%SCRIPT_DIR%\workers.cmd" call "%SCRIPT_DIR%\workers.cmd" status
 echo ======================================================
 exit /b 0
 
+:: ## do_lms
+:: Executes do_lms functionality.
 :do_lms
 call :do_status
 start http://localhost:%OPENEDX_LMS_PORT%
 exit /b 0
 
+:: ## do_studio
+:: Executes do_studio functionality.
 :do_studio
 call :do_status
 start http://localhost:%OPENEDX_CMS_PORT%
 exit /b 0
 
+:: ## do_install_service
+:: Executes do_install_service functionality.
 :do_install_service
 echo [INFO] Installing Open edX native services...
 
@@ -217,6 +233,8 @@ call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" "openedx-celery-bea
 echo [PASS] Successfully installed Open edX services.
 exit /b 0
 
+:: ## do_uninstall_service
+:: Executes do_uninstall_service functionality.
 :do_uninstall_service
 echo [INFO] Uninstalling Open edX native services...
 call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" --uninstall "openedx-lms"

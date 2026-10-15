@@ -35,6 +35,8 @@ REMOTE_STATE_URI="${REMOTE_STATE_URI:-}"
 
 # ## lock_state
 # Executes lock_state functionality.
+# ## lock_state
+# Executes the lock_state logic.
 lock_state() {
   if [ -z "$REMOTE_STATE_URI" ]; then
     if [ -f "${STATE_FILE}.lock" ]; then
@@ -66,6 +68,8 @@ lock_state() {
 
 # ## unlock_state
 # Executes unlock_state functionality.
+# ## unlock_state
+# Executes the unlock_state logic.
 unlock_state() {
   if [ -z "$REMOTE_STATE_URI" ]; then
     rm -f "${STATE_FILE}.lock"
@@ -88,6 +92,8 @@ unlock_state() {
 
 # ## pull_state
 # Executes pull_state functionality.
+# ## pull_state
+# Executes the pull_state logic.
 pull_state() {
   if [ -n "$REMOTE_STATE_URI" ]; then
     printf '%s\n' "[STATE] Pulling state from $REMOTE_STATE_URI..."
@@ -97,6 +103,8 @@ pull_state() {
 
 # ## push_state
 # Executes push_state functionality.
+# ## push_state
+# Executes the push_state logic.
 push_state() {
   if [ -n "$REMOTE_STATE_URI" ]; then
     printf '%s\n' "[STATE] Pushing state to $REMOTE_STATE_URI..."

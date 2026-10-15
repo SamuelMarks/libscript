@@ -1,4 +1,5 @@
 @echo off
+:: # provision_logical_db.cmd
 setlocal EnableDelayedExpansion
 
 :: ## Overview
@@ -20,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -56,6 +57,8 @@ set "DB_PORT=3306"
 set "DB_NAME="
 set "DB_URL="
 
+:: ## ParseArgs
+:: Executes ParseArgs functionality.
 :ParseArgs
 if "%~1"=="" goto ValidateArgs
 if "%~1"=="--host" (
@@ -85,6 +88,8 @@ if "%~1"=="--db-url" (
 echo [ERROR] Unknown argument: %~1 >&2
 exit /b 1
 
+:: ## ValidateArgs
+:: Executes ValidateArgs functionality.
 :ValidateArgs
 :: Validates the parsed arguments
 if "!DB_NAME!"=="" (
@@ -93,6 +98,8 @@ if "!DB_NAME!"=="" (
 )
 goto ProvisionDB
 
+:: ## ProvisionDB
+:: Executes ProvisionDB functionality.
 :ProvisionDB
 :: Provisions the database
 :: Connects to the host (local or remote) and conditionally executes CREATE DATABASE.

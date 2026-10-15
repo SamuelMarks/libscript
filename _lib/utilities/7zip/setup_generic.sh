@@ -47,6 +47,8 @@ ACTION="${ACTION:-install}"
 
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
+# ## resolve_exact_version
+# Executes the resolve_exact_version logic.
 resolve_exact_version() {
   if [ "${SEVENZIP_VERSION}" = "latest" ] || [ "${SEVENZIP_VERSION}" = "lts" ]; then
     EXACT_VERSION=$(curl -sL 'https://www.7-zip.org/download.html' | grep -o 'Download 7-Zip [0-9.]*' | head -n1 | sed 's/Download 7-Zip //')
@@ -134,6 +136,10 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/7zip/${VERSION:-latest}/bin/7zip" ]; then
+      log_info "7zip ${VERSION:-latest} is already installed."
+      exit 0
+    fi
     if [ "${SEVENZIP_INSTALL_METHOD}" = "system" ]; then
       if command -v dnf >/dev/null 2>&1; then
         priv dnf install -y epel-release || true

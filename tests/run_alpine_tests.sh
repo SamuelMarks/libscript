@@ -48,6 +48,8 @@ USE_SNAPSHOT="1"
 
 # ## find_disk_image
 # Finds the active qcow2 disk image for the Alpine Vagrant machine.
+# ## find_disk_image
+# Executes the find_disk_image logic.
 find_disk_image() {
     for _id_file in "$VAGRANT_DIR"/.vagrant/machines/*/qemu/id; do
         if [ -f "$_id_file" ]; then
@@ -55,8 +57,7 @@ find_disk_image() {
             _m_dir=$(dirname "$_id_file")
             _img="$_m_dir/$_id/linked-box.img"
             if [ -f "$_img" ]; then
-                printf '%s
-' "$_img"
+                printf '%s\n' "$_img"
                 return 0
             fi
         fi
@@ -66,6 +67,8 @@ find_disk_image() {
 
 # ## restore_vanilla_snapshot
 # Halts the VM, restores the vanilla snapshot on the disk image, and starts the VM.
+# ## restore_vanilla_snapshot
+# Executes the restore_vanilla_snapshot logic.
 restore_vanilla_snapshot() {
     _img=$(find_disk_image || true)
     if [ -n "$_img" ] && command -v qemu-img >/dev/null 2>&1; then
@@ -84,6 +87,8 @@ restore_vanilla_snapshot() {
 
 # ## sync_repo_to_guest
 # Synchronizes the libscript codebase to the guest Alpine VM using rsync over SSH.
+# ## sync_repo_to_guest
+# Executes the sync_repo_to_guest logic.
 sync_repo_to_guest() {
     echo "=== Syncing LibScript repository to Alpine Linux ==="
     _ssh_info=$(cd "$VAGRANT_DIR" && vagrant ssh-config 2>/dev/null || true)
@@ -100,6 +105,8 @@ sync_repo_to_guest() {
 
 # ## update_component_in_readme
 # Updates the status of a single component in the Linux (apk) column of README.md.
+# ## update_component_in_readme
+# Executes the update_component_in_readme logic.
 update_component_in_readme() {
     _comp="$1"
     _status="$2"

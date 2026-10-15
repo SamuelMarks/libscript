@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/traits/trait.schema.json",
+  "title": "LibScript Unified Node & Sysroot Trait Specification",
+  "description": "Declarative contract defining composable cross-cutting traits that orchestrate _lib components across both Tier 2 offline sysroot image baking and Tier 3 live node execution.",
+  "type": "object",
+  "required": [
+    "id",
+    "category",
+    "priority",
+    "description",
+    "execution_modes",
+    "os_support",
+    "win32_boundary"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the trait (e.g. storage, secrets, firewall, mesh, discovery, ingress, tls, logging, metrics, backup, maintenance)"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "storage",
+        "secrets",
+        "firewall",
+        "mesh",
+        "discovery",
+        "ingress",
+        "tls",
+        "logging",
+        "metrics",
+        "backup",
+        "maintenance"
+      ],
+      "description": "Functional classification category of the trait"
+    },
+    "priority": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000,
+      "description": "Deterministic execution order priority (lower numbers run first: storage=10, secrets=20, mesh=30, firewall=40, discovery=50, tls=60, ingress=70, logging=80, metrics=90, backup=100, maintenance=110)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable explanation of the trait's responsibilities and delegated _lib components"
+    },
+    "delegates_to": {
+      "type": "array",
+      "description": "List of underlying _lib components or common utilities composed by this trait",
+      "items": {
+        "type": "string",
+        "description": "Relative path or component identifier in _lib/"
+      }
+    },
+    "execution_modes": {
+      "type": "object",
+      "description": "Dual-mode execution capability flags for Tier 2 offline sysroots vs Tier 3 live hosts",
+      "required": ["supports_offline_sysroot_bake", "supports_live_runtime"],
+      "properties": {
+        "supports_offline_sysroot_bake": {
+          "type": "boolean",
+          "description": "Whether the trait can pre-bake static configurations into LIBSCRIPT_TARGET_SYSROOT during offline OS image synthesis without live kernel syscalls"
+        },
+        "supports_live_runtime": {
+          "type": "boolean",
+          "description": "Whether the trait can execute live mutations and service reloads on a running Tier 3 host"
+        }
+      }
+    },
+    "os_support": {
+      "type": "object",
+      "description": "Operating system kernel compatibility matrix for this trait",
+      "required": ["linux", "freebsd", "illumos", "darwin", "windows"],
+      "properties": {
+        "linux": {
+          "type": "boolean",
+          "description": "Supported on Linux kernels (glibc and musl)"
+        },
+        "freebsd": {
+          "type": "boolean",
+          "description": "Supported on FreeBSD kernels"
+        },
+        "illumos": {
+          "type": "boolean",
+          "description": "Supported on illumos / SunOS kernels"
+        },
+        "darwin": {
+          "type": "boolean",
+          "description": "Supported on macOS / Darwin kernels"
+        },
+        "windows": {
+          "type": "boolean",
+          "description": "Supported natively on Windows (or via Option A proforma boundary)"
+        }
+      }
+    },
+    "win32_boundary": {
+      "type": "string",
+      "enum": ["native", "exit_86_proforma"],
+      "description": "Behavior of the .cmd implementation on Windows: native execution or Option A hard-fail with exit code 86 when Linux/Unix kernel primitives are required"
+    },
+    "parameters": {
+      "type": "object",
+      "description": "Trait-specific configuration parameters and overrides",
+      "additionalProperties": {
+        "type": "string",
+        "description": "Parameter configuration value"
+      }
+    }
+  }
+}

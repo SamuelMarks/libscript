@@ -38,6 +38,8 @@ done
 
 # ## libscript_install_service
 # Executes libscript_install_service functionality.
+# ## libscript_install_service
+# Executes the libscript_install_service logic.
 libscript_install_service() {
   _service_name="$1"
   _exec_start="$2"
@@ -95,6 +97,8 @@ directory="$_working_dir"
 output_log="/var/log/${_service_name}.log"
 error_log="/var/log/${_service_name}_err.log"
 
+# ## depend
+# Executes the depend logic.
 depend() {
     need net
 }
@@ -166,6 +170,8 @@ EOF
 
 # ## libscript_uninstall_service
 # Executes libscript_uninstall_service functionality.
+# ## libscript_uninstall_service
+# Executes the libscript_uninstall_service logic.
 libscript_uninstall_service() {
   _service_name="$1"
   _rc_name=$(printf '%s\n' "$_service_name" | tr '-' '_')

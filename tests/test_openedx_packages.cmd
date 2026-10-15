@@ -1,4 +1,5 @@
 @echo off
+:: # test_openedx_packages.cmd
 setlocal EnableDelayedExpansion
 
 :: ## Overview
@@ -22,6 +23,8 @@ set "SCRIPT_DIR=%~dp0"
 
 :: Resolve LIBSCRIPT_ROOT_DIR
 set "LIBSCRIPT_ROOT_DIR=!SCRIPT_DIR!"
+:: ## find_root
+:: Executes find_root functionality.
 :find_root
 if exist "!LIBSCRIPT_ROOT_DIR!libscript.cmd" goto root_found
 set "PARENT_DIR=!LIBSCRIPT_ROOT_DIR!..\"
@@ -31,10 +34,14 @@ if "!LIBSCRIPT_ROOT_DIR!"=="!PARENT_DIR!" (
     exit /b 1
 )
 goto find_root
+:: ## root_found
+:: Executes root_found functionality.
 :root_found
 
 set "TARGET_OS=debian-13"
 
+:: ## parse_args
+:: Executes parse_args functionality.
 :parse_args
 if "%~1"=="" goto args_done
 if /i "%~1"=="-o" (
@@ -51,6 +58,8 @@ if /i "%~1"=="--os" (
 )
 echo [ERROR] Unknown option %~1 >&2
 exit /b 1
+:: ## args_done
+:: Executes args_done functionality.
 :args_done
 
 set "VAGRANT_DIR=!LIBSCRIPT_ROOT_DIR!vagrant\!TARGET_OS!"
@@ -109,6 +118,8 @@ if not errorlevel 1 (
     goto step1
 )
 
+:: ## step1
+:: Executes step1 functionality.
 :step1
 echo === Step 1: Initialization (!TARGET_OS!) ===
 echo [INFO] Ensuring clean machine state...
@@ -143,6 +154,8 @@ if not errorlevel 1 (
     goto sync_pkg
 )
 
+:: ## sync_pkg
+:: Executes sync_pkg functionality.
 :sync_pkg
 echo [INFO] Syncing packages to target machine...
 vagrant rsync || ( echo [ERROR] Failed to rsync to Vagrant. >&2 & exit /b 1 )
@@ -176,6 +189,8 @@ if not errorlevel 1 (
 echo [ERROR] Unsupported OS: !TARGET_OS! >&2
 exit /b 1
 
+:: ## verify
+:: Executes verify functionality.
 :verify
 echo === Step 3: Verification (!TARGET_OS!) ===
 echo !TARGET_OS! | findstr /b /i "windows" >nul
@@ -218,6 +233,8 @@ if not errorlevel 1 (
     goto end_uninstall
 )
 
+:: ## end_uninstall
+:: Executes end_uninstall functionality.
 :end_uninstall
 echo [PASS] Uninstallation complete.
 exit /b 0

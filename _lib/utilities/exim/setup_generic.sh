@@ -19,16 +19,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
@@ -56,8 +53,7 @@ case "$ACTION" in
     elif command -v exim4 >/dev/null 2>&1; then
       exim4 -bV
     else
-      printf 'exim not installed
-'
+      printf 'exim not installed\n'
     fi
     exit 0
     ;;
@@ -68,6 +64,10 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/exim/${VERSION:-latest}/bin/exim" ]; then
+      log_info "exim ${VERSION:-latest} is already installed."
+      exit 0
+    fi
     log_info "Installing Exim SMTP relay via ${EXIM_INSTALL_METHOD}..."
     if [ "${UNAME_LOWER}" = "freebsd" ]; then
       libscript_depends "mail/exim" || libscript_depends "exim"
@@ -119,8 +119,7 @@ case "$ACTION" in
       exim4 -bV
       exit 0
     else
-      printf 'exim binary not found in PATH
-' >&2
+      printf 'exim binary not found in PATH\n' >&2
       exit 1
     fi
     ;;

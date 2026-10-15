@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 ACTION="${1:-compile}"
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
@@ -43,13 +40,11 @@ if [ ! -d "$STAMPS_DIR" ]; then
 fi
 
 if [ -f "$STAMP_FILE" ]; then
-  printf '[SKIP]  %s already installed (%s)
-' "kernel_linux" "$STAMP_FILE"
+  printf '[SKIP]  %s already installed (%s)\n' "kernel_linux" "$STAMP_FILE"
   exit 0
 fi
 
-printf '[RECIPE] Staging %s into %s (action: %s)
-' "Linux Kernel Engine" "$TARGET_SYSROOT" "$ACTION"
+printf '[RECIPE] Staging %s into %s (action: %s)\n' "Linux Kernel Engine" "$TARGET_SYSROOT" "$ACTION"
 
 mkdir -p "$TARGET_SYSROOT/boot"
 mkdir -p "$TARGET_SYSROOT/lib/modules"
@@ -59,10 +54,8 @@ KERNEL_TARGET="$TARGET_SYSROOT/boot/vmlinuz"
 if [ ! -f "$KERNEL_TARGET" ]; then
   # If kernel source tree is present in cache or build, compile it
   # Otherwise create kernel stub for bootstrapping
-  printf 'LibScript Linux Kernel
-' > "$KERNEL_TARGET"
-  printf 'System.map stub
-' > "$TARGET_SYSROOT/boot/System.map"
+  printf 'LibScript Linux Kernel\n' > "$KERNEL_TARGET"
+  printf 'System.map stub\n' > "$TARGET_SYSROOT/boot/System.map"
   printf 'CONFIG_BINFMT_ELF=y
 CONFIG_DEVTMPFS=y
 ' > "$TARGET_SYSROOT/boot/config"
@@ -80,6 +73,5 @@ fi
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
 mv "${STAMP_FILE}.tmp" "$STAMP_FILE"
-printf '[OK]    %s staged successfully: %s
-' "kernel_linux" "$STAMP_FILE"
+printf '[OK]    %s staged successfully: %s\n' "kernel_linux" "$STAMP_FILE"
 exit 0

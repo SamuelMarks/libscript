@@ -23,31 +23,26 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 # ## show_help
 # Displays usage instructions and safety guidelines.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") <image_path> <target_usb_device>"
-  printf '%s
-' "Flashes a bootable ISO or disk image to a removable USB block device."
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") <image_path> <target_usb_device>"
+  printf '%s\n' "Flashes a bootable ISO or disk image to a removable USB block device."
   printf '
 '
-  printf '%s
-' "Options:"
-  printf '%s
-' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
@@ -59,20 +54,20 @@ IMAGE_PATH="${1:-}"
 TARGET_DEV="${2:-}"
 
 if [ -z "$IMAGE_PATH" ] || [ -z "$TARGET_DEV" ]; then
-  printf '[ERROR] Both image_path and target_usb_device are required.
-' >&2
+  printf '[ERROR] Both image_path and target_usb_device are required.\n' >&2
   show_help
   exit 1
 fi
 
 if [ ! -f "$IMAGE_PATH" ]; then
-  printf '[ERROR] Source image "%s" does not exist!
-' "$IMAGE_PATH" >&2
+  printf '[ERROR] Source image "%s" does not exist!\n' "$IMAGE_PATH" >&2
   exit 1
 fi
 
 # ## is_boot_drive
 # Ensures target device is not an active system drive.
+# ## is_boot_drive
+# Executes the is_boot_drive logic.
 is_boot_drive() {
   _dev="$1"
   if [ -f /proc/mounts ]; then
@@ -85,13 +80,11 @@ is_boot_drive() {
 }
 
 if is_boot_drive "$TARGET_DEV"; then
-  printf '[ERROR] Safety violation: %s is the system root drive! Aborting.
-' "$TARGET_DEV" >&2
+  printf '[ERROR] Safety violation: %s is the system root drive! Aborting.\n' "$TARGET_DEV" >&2
   exit 1
 fi
 
-printf '[FLASH] Writing %s to USB device %s (4MB block size)...
-' "$IMAGE_PATH" "$TARGET_DEV"
+printf '[FLASH] Writing %s to USB device %s (4MB block size)...\n' "$IMAGE_PATH" "$TARGET_DEV"
 
 # Execute dd write
 if [ -b "$TARGET_DEV" ] || [ -c "$TARGET_DEV" ]; then
@@ -100,6 +93,5 @@ if [ -b "$TARGET_DEV" ] || [ -c "$TARGET_DEV" ]; then
   sync
 fi
 
-printf '[OK] USB flashing completed successfully.
-'
+printf '[OK] USB flashing completed successfully.\n'
 exit 0

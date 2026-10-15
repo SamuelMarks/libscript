@@ -21,16 +21,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 REPO_BASE="${LIBSCRIPT_ROOT_DIR}/build/packages"
@@ -63,8 +60,7 @@ done
 
 mkdir -p "$REPO_BASE/apk" "$REPO_BASE/deb" "$REPO_BASE/rpm"
 
-printf '[REPOGEN] Running repository generator for mode: %s...
-' "$ACTION"
+printf '[REPOGEN] Running repository generator for mode: %s...\n' "$ACTION"
 
 if [ "$ACTION" = "all" ] || [ "$ACTION" = "apk" ]; then
   "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/repogen/apk_index.sh" "$REPO_BASE/apk"
@@ -83,8 +79,7 @@ KEY_DIR="${REPO_BASE}/keys"
 mkdir -p "$KEY_DIR"
 
 if [ ! -f "$KEY_DIR/libscript-archive-keyring.gpg" ]; then
-  printf 'LibScript Universal APT/RPM Keyring Stub
-' > "$KEY_DIR/libscript-archive-keyring.gpg"
+  printf 'LibScript Universal APT/RPM Keyring Stub\n' > "$KEY_DIR/libscript-archive-keyring.gpg"
 fi
 
 if [ ! -f "$KEY_DIR/libscript-alpine.rsa.pub" ]; then
@@ -95,19 +90,16 @@ MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE
 EOF
 fi
 
-printf '[OK] All repository metadata generated under: %s
-' "$REPO_BASE"
+printf '[OK] All repository metadata generated under: %s\n' "$REPO_BASE"
 
 if [ "$SERVE" -eq 1 ]; then
-  printf '[REPOGEN-SERVER] Launching static HTTP repository server on port %s...
-' "$PORT"
+  printf '[REPOGEN-SERVER] Launching static HTTP repository server on port %s...\n' "$PORT"
   if command -v python3 >/dev/null 2>&1; then
     exec python3 -m http.server "$PORT" --directory "$REPO_BASE"
   elif command -v python >/dev/null 2>&1; then
     exec python -m SimpleHTTPServer "$PORT"
   else
-    printf '[WARN] python3 not found; unable to start background HTTP server.
-' >&2
+    printf '[WARN] python3 not found; unable to start background HTTP server.\n' >&2
   fi
 fi
 

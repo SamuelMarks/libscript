@@ -34,6 +34,8 @@ REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 # ## run_tests
 # Creates a temporary mock environment and verifies update_results.sh behavior.
+# ## run_tests
+# Executes the run_tests logic.
 run_tests() {
   _test_tmp=$(mktemp -d "${TMPDIR:-/tmp}/test_update_results.XXXXXX")
 

@@ -21,19 +21,15 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
-printf '==> Testing WordPress Reverse-Proxy Ingress Configuration...
-'
+printf '==> Testing WordPress Reverse-Proxy Ingress Configuration...\n'
 
 TMP_WWW=$(mktemp -d)
 
@@ -42,27 +38,23 @@ TMP_WWW=$(mktemp -d)
 WP_CONFIG="${TMP_WWW}/wp-config.php"
 
 if ! grep -q "HTTP_X_FORWARDED_PROTO" "$WP_CONFIG"; then
-  printf '[ERROR] HTTP_X_FORWARDED_PROTO stanza missing from wp-config.php!
-' >&2
+  printf '[ERROR] HTTP_X_FORWARDED_PROTO stanza missing from wp-config.php!\n' >&2
   rm -rf "$TMP_WWW"
   exit 1
 fi
 
 if ! grep -q "HTTP_X_FORWARDED_HOST" "$WP_CONFIG"; then
-  printf '[ERROR] HTTP_X_FORWARDED_HOST stanza missing from wp-config.php!
-' >&2
+  printf '[ERROR] HTTP_X_FORWARDED_HOST stanza missing from wp-config.php!\n' >&2
   rm -rf "$TMP_WWW"
   exit 1
 fi
 
 if ! grep -q "define( *'WP_SITEURL', *'https://wp.example.com'" "$WP_CONFIG"; then
-  printf '[ERROR] Canonical HTTPS WP_SITEURL not configured!
-' >&2
+  printf '[ERROR] Canonical HTTPS WP_SITEURL not configured!\n' >&2
   rm -rf "$TMP_WWW"
   exit 1
 fi
 
 rm -rf "$TMP_WWW"
-printf '==> Reverse-proxy ingress verification succeeded!
-'
+printf '==> Reverse-proxy ingress verification succeeded!\n'
 exit 0

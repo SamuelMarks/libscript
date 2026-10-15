@@ -20,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -66,6 +66,8 @@ if /i "%ACTION%"=="alpine" goto do_alpine
 if /i "%ACTION%"=="build-redhat" goto do_redhat
 if /i "%ACTION%"=="redhat" goto do_redhat
 
+:: ## show_help
+:: Executes show_help functionality.
 :show_help
 echo Usage: distro.cmd ^<build-debian ^| build-alpine ^| build-redhat^> [options...]
 echo Commands:
@@ -74,14 +76,20 @@ echo   build-alpine   Synthesizes Alpine-style distribution (.apk, apk-tools, op
 echo   build-redhat   Synthesizes Red Hat-style distribution (.rpm, dnf, rpmbuild)
 exit /b 1
 
+:: ## do_debian
+:: Executes do_debian functionality.
 :do_debian
 call "%SCRIPT_DIR%\build_debian.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_alpine
+:: Executes do_alpine functionality.
 :do_alpine
 call "%SCRIPT_DIR%\build_alpine.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_redhat
+:: Executes do_redhat functionality.
 :do_redhat
 call "%SCRIPT_DIR%\build_redhat.cmd" %*
 exit /b %ERRORLEVEL%

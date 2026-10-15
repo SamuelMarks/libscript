@@ -21,16 +21,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 PROVIDER="all"
@@ -54,8 +51,7 @@ done
 
 mkdir -p "$OUT_DIR"
 
-printf '[CLOUD-IMG] Packaging cloud images for provider: %s...
-' "$PROVIDER"
+printf '[CLOUD-IMG] Packaging cloud images for provider: %s...\n' "$PROVIDER"
 
 if [ "$PROVIDER" = "all" ] || [ "$PROVIDER" = "aws" ]; then
   "${SCRIPT_DIR}/aws_ami.sh" "$INPUT" "${OUT_DIR}/aws-ebs-root.raw"
@@ -69,6 +65,5 @@ if [ "$PROVIDER" = "all" ] || [ "$PROVIDER" = "gcp" ]; then
   "${SCRIPT_DIR}/gcp_image.sh" "$INPUT" "${OUT_DIR}/gcp-disk.raw.tar.gz"
 fi
 
-printf '[OK] Cloud packaging completed under: %s
-' "$OUT_DIR"
+printf '[OK] Cloud packaging completed under: %s\n' "$OUT_DIR"
 exit 0

@@ -19,16 +19,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
@@ -50,6 +47,8 @@ BENTO_DIR="${BENTO_DIR:-}"
 
 # ## find_bento_dir
 # Locates the bento project directory on the filesystem.
+# ## find_bento_dir
+# Executes the find_bento_dir logic.
 find_bento_dir() {
   if [ -n "$BENTO_DIR" ] && [ -d "$BENTO_DIR" ]; then
     printf '%s\n' "$BENTO_DIR"
@@ -66,6 +65,8 @@ find_bento_dir() {
 
 # ## configure_bento_repo
 # Configures the local Bento repository dependencies and plugins.
+# ## configure_bento_repo
+# Executes the configure_bento_repo logic.
 configure_bento_repo() {
   if b_dir=$(find_bento_dir); then
     log_info "Found Bento repository at $b_dir"
@@ -89,6 +90,10 @@ case "$ACTION" in
     printf '%s\n' "Bento Builder virtualization environment"
     ;;
   install)
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/bento-builder/${VERSION:-latest}/bin/bento-builder" ]; then
+      log_info "bento-builder ${VERSION:-latest} is already installed."
+      exit 0
+    fi
     log_info "Starting Bento Builder environment provisioning..."
     configure_bento_repo
     log_info "Bento Builder environment successfully provisioned!"

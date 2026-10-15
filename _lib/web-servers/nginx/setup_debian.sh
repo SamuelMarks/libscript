@@ -62,6 +62,8 @@ fi
 
 # ## rtrim
 # Executes rtrim functionality.
+# ## rtrim
+# Executes the rtrim logic.
 rtrim() {
   trimmed="${1}"
   while :
@@ -80,6 +82,8 @@ rtrim() {
 
 # ## remove_last
 # Executes remove_last functionality.
+# ## remove_last
+# Executes the remove_last logic.
 remove_last() {
   c="${1}"
   s="${2}"
@@ -106,6 +110,8 @@ remove_last() {
 
 # ## merge_location_into_nginx_server
 # Executes merge_location_into_nginx_server functionality.
+# ## merge_location_into_nginx_server
+# Executes the merge_location_into_nginx_server logic.
 merge_location_into_nginx_server() {
   conf_existing="${1}"
   location_conf="${2}"

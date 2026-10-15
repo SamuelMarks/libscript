@@ -21,22 +21,21 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 THIS_DIR="${SCRIPT_DIR}"
 : "${THIS_DIR}"
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 # ## run_tests
 # Creates a temporary mock environment and verifies run_native_tests.sh execution.
+# ## run_tests
+# Executes the run_tests logic.
 run_tests() {
   _test_tmp=$(mktemp -d "${TMPDIR:-/tmp}/test_run_native.XXXXXX")
 
@@ -100,8 +99,7 @@ EOF_README
   )
 
   if [ ! -f "${_test_tmp}/tests_tmp/compA.linux.alpine.success" ]; then
-    printf 'Error: compA.linux.alpine.success not created
-' >&2
+    printf 'Error: compA.linux.alpine.success not created\n' >&2
     rm -rf "${_test_tmp}"
     exit 1
   fi
@@ -113,8 +111,7 @@ EOF_README
   )
 
   if [ -f "${_test_tmp}/tests_tmp/compB.freebsd.success" ]; then
-    printf 'Error: compB should have been skipped on freebsd
-' >&2
+    printf 'Error: compB should have been skipped on freebsd\n' >&2
     rm -rf "${_test_tmp}"
     exit 1
   fi

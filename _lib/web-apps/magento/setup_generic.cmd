@@ -20,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -59,6 +59,10 @@ if exist "%~dp0setup.cmd" (
 where powershell >nul 2>&1
 if %ERRORLEVEL% EQU 0 (
     powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup.ps1" %*
+if exist "%LIBSCRIPT_HOME%\magento\%VERSION%" (
+    echo [INFO] magento %VERSION% is already installed.
+    exit /b 0
+)
     exit /b %ERRORLEVEL%
 )
 

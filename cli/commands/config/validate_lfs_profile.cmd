@@ -1,4 +1,5 @@
 @echo off
+:: # validate_lfs_profile.cmd
 :: ## Overview
 :: Windows Batch companion validating declarative Linux From Scratch (LFS)
 :: profile specifications against os-config.schema.json, checking modular
@@ -20,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -117,5 +118,7 @@ IF ERRORLEVEL 1 (
 echo [PASS] Top-level schema validation passed for %PROFILE_FILE%
 echo [PASS] All modular axes and compatibility rules satisfied.
 
+:: ## end
+:: Executes end functionality.
 :end
 exit /b 0

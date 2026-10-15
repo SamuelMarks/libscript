@@ -9,7 +9,7 @@
 # ## Parameters
 # $1 - Component name (e.g., runtimes/python, runtimes/nodejs)
 
-set -eu
+set -feu
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"
 elif [ "${BASH_SOURCE-}" ]; then

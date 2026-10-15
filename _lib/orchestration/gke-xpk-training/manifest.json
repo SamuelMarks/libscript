@@ -2,9 +2,9 @@
   "name": "gke-xpk-training",
   "description": "Deploys a generic ML training job to a Google Cloud TPU or GPU Pod via XPK.",
   "components": [
-    "cloud-providers/gcp/cli",
+    "cloud-providers/gcp-cli",
     "toolchains/python",
-    "orchestration/kubernetes/kubectl",
+    "orchestration/kubectl",
     "toolchains/xpk"
   ],
   "variables": {

@@ -68,6 +68,8 @@ fi
 
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
+# ## resolve_exact_version
+# Executes the resolve_exact_version logic.
 resolve_exact_version() {
   if [ "${PYTHON_VERSION}" = "latest" ]; then
     if [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ]; then
@@ -159,6 +161,10 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/python/${VERSION:-latest}/bin/python" ]; then
+      log_info "python ${VERSION:-latest} is already installed."
+      exit 0
+    fi
 
     if [ "$PYTHON_INSTALL_METHOD" = "system" ]; then
       libscript_depends 'python'

@@ -22,7 +22,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -60,8 +60,7 @@ goto :find_root
 :: with their step numbers directly into ../cc0-assets.
 ::
 :: ## Usage
-:: call devtools
-ender_actual_screenshots.cmd
+:: call devtools\render_actual_screenshots.cmd
 
 setlocal EnableDelayedExpansion
 

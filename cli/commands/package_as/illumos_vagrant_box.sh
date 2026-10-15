@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 DISK_IMG="${1:-${REPO_ROOT}/build/images/qemu/illumos.qcow2}"
@@ -43,13 +40,11 @@ OUT_DIR="${OUT_BOX%/*}"
 
 STAMP_FILE="${OUT_BOX}.stamp"
 if [ -f "${STAMP_FILE}" ] && [ -f "${OUT_BOX}" ]; then
-  printf '[SKIP]     illumos Vagrant box %s already packaged
-' "${OUT_BOX}"
+  printf '[SKIP]     illumos Vagrant box %s already packaged\n' "${OUT_BOX}"
   exit 0
 fi
 
-printf '[PACKAGE]  Packaging illumos Vagrant box (%s): %s...
-' "${PROVIDER}" "${OUT_BOX}"
+printf '[PACKAGE]  Packaging illumos Vagrant box (%s): %s...\n' "${PROVIDER}" "${OUT_BOX}"
 
 TMP_BOX_DIR="${REPO_ROOT}/build/tmp_box_$$"
 mkdir -p "${TMP_BOX_DIR}"
@@ -98,5 +93,4 @@ fi
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
 mv "${STAMP_FILE}.tmp" "${STAMP_FILE}"
-printf '[OK]       Vagrant box generated successfully: %s
-' "${OUT_BOX}"
+printf '[OK]       Vagrant box generated successfully: %s\n' "${OUT_BOX}"

@@ -81,10 +81,10 @@ gcsfuse --implicit-dirs "$BUCKET_NAME" /mnt/ml_data
 # The training script will be executed via the detached SSH wrapper
 EOF
 
-"${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp/tpu-vm/cli.sh" ssh "$TPU_NAME" "sh -s" < /tmp/ml_deploy.sh "$BUCKET_NAME"
+"${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp-tpu-vm/cli.sh" ssh "$TPU_NAME" "sh -s" < /tmp/ml_deploy.sh "$BUCKET_NAME"
 
 printf '%s\n' "Triggering detached training session and port-forwarding TensorBoard..."
-"${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp/tpu-vm/cli.sh" ssh "$TPU_NAME" --detached --forward-port 6006:localhost:6006 "cd /mnt/ml_data && $ML_SCRIPT"
+"${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp-tpu-vm/cli.sh" ssh "$TPU_NAME" --detached --forward-port 6006:localhost:6006 "cd /mnt/ml_data && $ML_SCRIPT"
 
 printf '%s\n' "Deploy complete. TensorBoard is available at http://localhost:6006"
 printf '%s\n' "To re-attach to the training session, run: tpu-vm ssh $TPU_NAME 'tmux attach'"

@@ -25,16 +25,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 WWWROOT="${WORDPRESS_WWWROOT:-/var/www/wordpress}"
@@ -53,8 +50,7 @@ case "$CMD" in
   create)
     shift
     if [ $# -lt 2 ]; then
-      printf '[ERROR] Usage: %s create <username> <email> [--password <pass>] [--role <role>]
-' "$THIS_FILE" >&2
+      printf '[ERROR] Usage: %s create <username> <email> [--password <pass>] [--role <role>]\n' "$THIS_FILE" >&2
       exit 1
     fi
     USER="$1"
@@ -87,14 +83,12 @@ case "$CMD" in
       # Direct SQL fallback insertion
       "$DBSHELL" query "INSERT INTO wp_users (user_login, user_pass, user_nicename, user_email, user_registered, user_status, display_name) VALUES ('$USER', MD5('$PASSWORD'), '$USER', '$EMAIL', NOW(), 0, '$USER') ON DUPLICATE KEY UPDATE user_email='$EMAIL';" >/dev/null 2>&1 || true
     fi
-    printf '[OK] WordPress user %s (%s) provisioned with role %s
-' "$USER" "$EMAIL" "$ROLE"
+    printf '[OK] WordPress user %s (%s) provisioned with role %s\n' "$USER" "$EMAIL" "$ROLE"
     ;;
   set-password)
     shift
     if [ $# -lt 1 ]; then
-      printf '[ERROR] Usage: %s set-password <username> [--password <pass>]
-' "$THIS_FILE" >&2
+      printf '[ERROR] Usage: %s set-password <username> [--password <pass>]\n' "$THIS_FILE" >&2
       exit 1
     fi
     USER="$1"
@@ -110,23 +104,20 @@ case "$CMD" in
     else
       "$DBSHELL" query "UPDATE wp_users SET user_pass = MD5('$PASSWORD') WHERE user_login = '$USER';" >/dev/null 2>&1 || true
     fi
-    printf '[OK] Password updated for user %s
-' "$USER"
+    printf '[OK] Password updated for user %s\n' "$USER"
     ;;
   list)
     if [ -n "$WP_CLI" ]; then
       $WP_CLI user list
     else
-      printf 'ID	Login	Email	Registered
-'
+      printf 'ID	Login	Email	Registered\n'
       "$DBSHELL" query "SELECT ID, user_login, user_email, user_registered FROM wp_users;" 2>/dev/null || true
     fi
     ;;
   delete)
     shift
     if [ $# -lt 1 ]; then
-      printf '[ERROR] Usage: %s delete <username>
-' "$THIS_FILE" >&2
+      printf '[ERROR] Usage: %s delete <username>\n' "$THIS_FILE" >&2
       exit 1
     fi
     USER="$1"
@@ -135,8 +126,7 @@ case "$CMD" in
     else
       "$DBSHELL" query "DELETE FROM wp_users WHERE user_login = '$USER';" >/dev/null 2>&1 || true
     fi
-    printf '[OK] WordPress user %s removed
-' "$USER"
+    printf '[OK] WordPress user %s removed\n' "$USER"
     ;;
   help|--help|-h)
     cat << 'EOF_HELP'
@@ -151,8 +141,7 @@ EOF_HELP
     exit 0
     ;;
   *)
-    printf '[ERROR] Unknown command: %s
-' "$CMD" >&2
+    printf '[ERROR] Unknown command: %s\n' "$CMD" >&2
     exit 1
     ;;
 esac

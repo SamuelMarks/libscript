@@ -352,6 +352,58 @@
           "description": "Criticality tier of this component in standard stacks"
         }
       }
+    },
+    "stateful": {
+      "type": "boolean",
+      "description": "Indicates whether this component persists mutable application or database state requiring transactional backup and upgrade hooks"
+    },
+    "multitenant": {
+      "type": "boolean",
+      "description": "Indicates whether this physical component can host multiple isolated logical tenants via provision_tenant and deprovision_tenant hooks"
+    },
+    "hooks": {
+      "type": "object",
+      "description": "Declaration of supported physical instance and logical multi-tenant lifecycle hooks",
+      "properties": {
+        "physical": {
+          "type": "array",
+          "description": "List of physical instance lifecycle hooks implemented by this component",
+          "items": {
+            "type": "string",
+            "enum": [
+              "configure",
+              "probe",
+              "announce",
+              "log_stream",
+              "metrics",
+              "backup",
+              "restore",
+              "upgrade",
+              "rollback",
+              "maintenance"
+            ],
+            "description": "Physical lifecycle hook identifier"
+          }
+        },
+        "logical": {
+          "type": "array",
+          "description": "List of logical multi-tenant lifecycle hooks implemented by this component",
+          "items": {
+            "type": "string",
+            "enum": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
+            "description": "Logical multi-tenant hook identifier"
+          }
+        },
+        "probe_timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Default timeout in seconds when polling hooks/probe readiness"
+        },
+        "metrics_scrape_path": {
+          "type": "string",
+          "description": "Default HTTP URI path exposed for Prometheus/OpenTelemetry metrics scraping"
+        }
+      }
     }
   }
 }

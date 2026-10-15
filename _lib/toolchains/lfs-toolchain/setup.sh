@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 ACTION="install"
@@ -50,8 +47,7 @@ for arg in "$@"; do
       TARGET_ARCH="${arg#*=}"
       ;;
     -h|--help)
-      printf 'Usage: %s [install|clean|status] [--libc=glibc|musl] [--arch=x86_64|aarch64]
-' "$0"
+      printf 'Usage: %s [install|clean|status] [--libc=glibc|musl] [--arch=x86_64|aarch64]\n' "$0"
       exit 0
       ;;
     *)
@@ -68,51 +64,40 @@ STAMPS_DIR="${LIBSCRIPT_ROOT_DIR}/build/stamps"
 mkdir -p "$STAMPS_DIR"
 
 if [ "$ACTION" = "clean" ]; then
-  printf '[CLEAN] Removing LFS toolchain stamps and build artifacts...
-'
+  printf '[CLEAN] Removing LFS toolchain stamps and build artifacts...\n'
   rm -f "${STAMPS_DIR}/.stamp.lfs_sysroot"
   rm -f "${STAMPS_DIR}/.stamp.lfs_binutils_stage1"
   rm -f "${STAMPS_DIR}/.stamp.lfs_gcc_stage1"
   rm -f "${STAMPS_DIR}/.stamp.lfs_kernel_headers"
   rm -f "${STAMPS_DIR}/.stamp.lfs_libc_stage1"
   rm -f "${STAMPS_DIR}/.stamp.lfs_gcc_stage2"
-  printf '[CLEAN] Completed.
-'
+  printf '[CLEAN] Completed.\n'
   exit 0
 fi
 
 if [ "$ACTION" = "status" ]; then
-  printf '=== LFS Toolchain Status ===
-'
+  printf '=== LFS Toolchain Status ===\n'
   for comp in sysroot binutils_stage1 gcc_stage1 kernel_headers libc_stage1 gcc_stage2; do
     if [ -f "${STAMPS_DIR}/.stamp.lfs_${comp}" ]; then
-      printf '  %-20s: INSTALLED (%s)
-' "$comp" "$(cat "${STAMPS_DIR}/.stamp.lfs_${comp}")"
+      printf '  %-20s: INSTALLED (%s)\n' "$comp" "$(cat "${STAMPS_DIR}/.stamp.lfs_${comp}")"
     else
-      printf '  %-20s: MISSING
-' "$comp"
+      printf '  %-20s: MISSING\n' "$comp"
     fi
   done
   exit 0
 fi
 
-printf '=== LibScript LFS Toolchain Bootstrap ===
-'
-printf '[INFO] Target Architecture: %s
-' "$TARGET_ARCH"
-printf '[INFO] Target C Library:    %s
-' "$TARGET_LIBC"
-printf '[INFO] Sysroot Directory:   %s
-' "$SYSROOT"
+printf '=== LibScript LFS Toolchain Bootstrap ===\n'
+printf '[INFO] Target Architecture: %s\n' "$TARGET_ARCH"
+printf '[INFO] Target C Library:    %s\n' "$TARGET_LIBC"
+printf '[INFO] Sysroot Directory:   %s\n' "$SYSROOT"
 
 # Step 1: Layout Sysroot Directories
 STAMP_SYSROOT="${STAMPS_DIR}/.stamp.lfs_sysroot"
 if [ -f "$STAMP_SYSROOT" ]; then
-  printf '[SKIP]  LFS sysroot layout already prepared (%s)
-' "$STAMP_SYSROOT"
+  printf '[SKIP]  LFS sysroot layout already prepared (%s)\n' "$STAMP_SYSROOT"
 else
-  printf '[STAGE] Initializing LFS directory layout...
-'
+  printf '[STAGE] Initializing LFS directory layout...\n'
   mkdir -p "${SYSROOT}/usr/include"
   mkdir -p "${SYSROOT}/usr/lib"
   mkdir -p "${SYSROOT}/lib"
@@ -123,18 +108,15 @@ else
   mkdir -p "$CROSS_DIR"
   date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_SYSROOT}.tmp"
   mv "${STAMP_SYSROOT}.tmp" "$STAMP_SYSROOT"
-  printf '[DONE]  Sysroot directories initialized.
-'
+  printf '[DONE]  Sysroot directories initialized.\n'
 fi
 
 # Step 2: Binutils Stage 1
 STAMP_BINUTILS="${STAMPS_DIR}/.stamp.lfs_binutils_stage1"
 if [ -f "$STAMP_BINUTILS" ]; then
-  printf '[SKIP]  Binutils Stage 1 already built (%s)
-' "$STAMP_BINUTILS"
+  printf '[SKIP]  Binutils Stage 1 already built (%s)\n' "$STAMP_BINUTILS"
 else
-  printf '[STAGE] Building Binutils Stage 1 (cross-assembler and linker)...
-'
+  printf '[STAGE] Building Binutils Stage 1 (cross-assembler and linker)...\n'
   # Simulated / idempotent stage 1 pass: verify host toolchain or cross-binaries
   mkdir -p "${CROSS_DIR}/bin"
   if command -v ld >/dev/null 2>&1; then
@@ -145,18 +127,15 @@ else
   fi
   date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_BINUTILS}.tmp"
   mv "${STAMP_BINUTILS}.tmp" "$STAMP_BINUTILS"
-  printf '[DONE]  Binutils Stage 1 complete.
-'
+  printf '[DONE]  Binutils Stage 1 complete.\n'
 fi
 
 # Step 3: Linux Kernel API Headers
 STAMP_KERNEL_HDR="${STAMPS_DIR}/.stamp.lfs_kernel_headers"
 if [ -f "$STAMP_KERNEL_HDR" ]; then
-  printf '[SKIP]  Kernel API headers already installed (%s)
-' "$STAMP_KERNEL_HDR"
+  printf '[SKIP]  Kernel API headers already installed (%s)\n' "$STAMP_KERNEL_HDR"
 else
-  printf '[STAGE] Sanitizing and installing Linux kernel headers...
-'
+  printf '[STAGE] Sanitizing and installing Linux kernel headers...\n'
   mkdir -p "${SYSROOT}/usr/include/linux"
   mkdir -p "${SYSROOT}/usr/include/asm"
   mkdir -p "${SYSROOT}/usr/include/asm-generic"
@@ -171,18 +150,15 @@ else
   fi
   date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_KERNEL_HDR}.tmp"
   mv "${STAMP_KERNEL_HDR}.tmp" "$STAMP_KERNEL_HDR"
-  printf '[DONE]  Kernel API headers installed.
-'
+  printf '[DONE]  Kernel API headers installed.\n'
 fi
 
 # Step 4: GCC Stage 1
 STAMP_GCC1="${STAMPS_DIR}/.stamp.lfs_gcc_stage1"
 if [ -f "$STAMP_GCC1" ]; then
-  printf '[SKIP]  GCC Stage 1 already built (%s)
-' "$STAMP_GCC1"
+  printf '[SKIP]  GCC Stage 1 already built (%s)\n' "$STAMP_GCC1"
 else
-  printf '[STAGE] Building GCC Stage 1 (static cross-compiler)...
-'
+  printf '[STAGE] Building GCC Stage 1 (static cross-compiler)...\n'
   if command -v gcc >/dev/null 2>&1; then
     ln -sf "$(command -v gcc)" "${CROSS_DIR}/bin/${TARGET_ARCH}-lfs-linux-gnu-gcc" 2>/dev/null || true
   elif command -v cc >/dev/null 2>&1; then
@@ -190,18 +166,15 @@ else
   fi
   date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_GCC1}.tmp"
   mv "${STAMP_GCC1}.tmp" "$STAMP_GCC1"
-  printf '[DONE]  GCC Stage 1 complete.
-'
+  printf '[DONE]  GCC Stage 1 complete.\n'
 fi
 
 # Step 5: Target Standard C Library (Glibc or Musl)
 STAMP_LIBC="${STAMPS_DIR}/.stamp.lfs_libc_stage1"
 if [ -f "$STAMP_LIBC" ]; then
-  printf '[SKIP]  C library (%s) already installed (%s)
-' "$TARGET_LIBC" "$STAMP_LIBC"
+  printf '[SKIP]  C library (%s) already installed (%s)\n' "$TARGET_LIBC" "$STAMP_LIBC"
 else
-  printf '[STAGE] Building & installing Standard C Library (%s)...
-' "$TARGET_LIBC"
+  printf '[STAGE] Building & installing Standard C Library (%s)...\n' "$TARGET_LIBC"
   mkdir -p "${SYSROOT}/usr/include"
   mkdir -p "${SYSROOT}/lib"
   # Standard C header stubs
@@ -209,24 +182,20 @@ else
     dir="${SYSROOT}/usr/include/$(dirname "$h")"
     mkdir -p "$dir"
     if [ ! -f "${SYSROOT}/usr/include/${h}" ]; then
-      printf '/* LibScript %s header */
-' "$h" > "${SYSROOT}/usr/include/${h}"
+      printf '/* LibScript %s header */\n' "$h" > "${SYSROOT}/usr/include/${h}"
     fi
   done
   date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_LIBC}.tmp"
   mv "${STAMP_LIBC}.tmp" "$STAMP_LIBC"
-  printf '[DONE]  C Library (%s) installed.
-' "$TARGET_LIBC"
+  printf '[DONE]  C Library (%s) installed.\n' "$TARGET_LIBC"
 fi
 
 # Step 6: GCC Stage 2 & Libstdc++
 STAMP_GCC2="${STAMPS_DIR}/.stamp.lfs_gcc_stage2"
 if [ -f "$STAMP_GCC2" ]; then
-  printf '[SKIP]  GCC Stage 2 already built (%s)
-' "$STAMP_GCC2"
+  printf '[SKIP]  GCC Stage 2 already built (%s)\n' "$STAMP_GCC2"
 else
-  printf '[STAGE] Building GCC Stage 2 (full C/C++ cross-compiler & libstdc++)...
-'
+  printf '[STAGE] Building GCC Stage 2 (full C/C++ cross-compiler & libstdc++)...\n'
   if command -v g++ >/dev/null 2>&1; then
     ln -sf "$(command -v g++)" "${CROSS_DIR}/bin/${TARGET_ARCH}-lfs-linux-gnu-g++" 2>/dev/null || true
   elif command -v c++ >/dev/null 2>&1; then
@@ -234,10 +203,8 @@ else
   fi
   date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_GCC2}.tmp"
   mv "${STAMP_GCC2}.tmp" "$STAMP_GCC2"
-  printf '[DONE]  GCC Stage 2 complete.
-'
+  printf '[DONE]  GCC Stage 2 complete.\n'
 fi
 
-printf '=== LFS Toolchain Bootstrap Succeeded ===
-'
+printf '=== LFS Toolchain Bootstrap Succeeded ===\n'
 exit 0

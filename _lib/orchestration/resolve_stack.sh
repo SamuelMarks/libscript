@@ -22,30 +22,23 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  printf '%s
-' "Usage: ${THIS_FILE} <path_to_config.json> [output_plan.json]"
-  printf '%s
-' "Resolves component dependencies and emits an execution plan."
+  printf '%s\n' "Usage: ${THIS_FILE} <path_to_config.json> [output_plan.json]"
+  printf '%s\n' "Resolves component dependencies and emits an execution plan."
   exit 0
 fi
 
 if [ -z "${1:-}" ]; then
-  printf '[ERROR] Missing required configuration file argument.
-' >&2
-  printf 'Usage: %s <path_to_config.json> [output_plan.json]
-' "${THIS_FILE}" >&2
+  printf '[ERROR] Missing required configuration file argument.\n' >&2
+  printf 'Usage: %s <path_to_config.json> [output_plan.json]\n' "${THIS_FILE}" >&2
   exit 1
 fi
 
@@ -53,8 +46,7 @@ CONFIG_FILE="$1"
 OUTPUT_FILE="${2:-}"
 
 if [ ! -f "$CONFIG_FILE" ]; then
-  printf '[ERROR] Configuration file does not exist: %s
-' "$CONFIG_FILE" >&2
+  printf '[ERROR] Configuration file does not exist: %s\n' "$CONFIG_FILE" >&2
   exit 1
 fi
 
@@ -73,8 +65,7 @@ else
 fi
 
 if ! command -v jq >/dev/null 2>&1; then
-  printf '[ERROR] jq is required but not installed.
-' >&2
+  printf '[ERROR] jq is required but not installed.\n' >&2
   exit 1
 fi
 
@@ -104,8 +95,7 @@ if [ -n "$OUTPUT_FILE" ]; then
   fi
   # shellcheck disable=SC2086
   sh -c "$SOLVER_CMD" | jq -L "${LIBSCRIPT_ROOT_DIR}/_lib/utilities" -L "${SCRIPT_DIR}" --arg target_os "$TARGET_OS" -r -f "${SCRIPT_DIR}/resolve_stack.jq" > "$OUTPUT_FILE"
-  printf '[INFO] Execution plan generated at %s
-' "$OUTPUT_FILE"
+  printf '[INFO] Execution plan generated at %s\n' "$OUTPUT_FILE"
 else
   # shellcheck disable=SC2086
   sh -c "$SOLVER_CMD" | jq -L "${LIBSCRIPT_ROOT_DIR}/_lib/utilities" -L "${SCRIPT_DIR}" --arg target_os "$TARGET_OS" -r -f "${SCRIPT_DIR}/resolve_stack.jq"

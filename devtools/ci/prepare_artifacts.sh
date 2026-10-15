@@ -21,30 +21,25 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 # ## show_help
 # Displays usage instructions and available parameters.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") <artifact_path> [artifact_path...]"
-  printf '%s
-' "Validates artifact files and produces companion .sha256 checksum files."
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") <artifact_path> [artifact_path...]"
+  printf '%s\n' "Validates artifact files and produces companion .sha256 checksum files."
   printf '
 '
-  printf '%s
-' "Options:"
-  printf '%s
-' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
@@ -53,14 +48,15 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "$
 fi
 
 if [ $# -lt 1 ]; then
-  printf '[ERROR] No artifact paths specified.
-' >&2
+  printf '[ERROR] No artifact paths specified.\n' >&2
   show_help >&2
   exit 1
 fi
 
 # ## compute_sha256
 # Computes the SHA256 cryptographic hash of a file using available system tools.
+# ## compute_sha256
+# Executes the compute_sha256 logic.
 compute_sha256() {
   _target="$1"
   if command -v sha256sum >/dev/null 2>&1; then
@@ -70,26 +66,25 @@ compute_sha256() {
   elif command -v openssl >/dev/null 2>&1; then
     openssl dgst -sha256 "$_target" | awk '{print $NF}'
   else
-    printf '[ERROR] No SHA256 utility found (sha256sum, shasum, openssl)
-' >&2
+    printf '[ERROR] No SHA256 utility found (sha256sum, shasum, openssl)\n' >&2
     return 1
   fi
 }
 
 # ## prepare_single_artifact
 # Verifies target artifact file exists and generates companion .sha256 checksum file.
+# ## prepare_single_artifact
+# Executes the prepare_single_artifact logic.
 prepare_single_artifact() {
   _file="$1"
   if [ ! -f "$_file" ]; then
-    printf '[ERROR] Artifact not found: %s
-' "$_file" >&2
+    printf '[ERROR] Artifact not found: %s\n' "$_file" >&2
     return 1
   fi
 
   _size=$(wc -c < "$_file" 2>/dev/null | tr -d ' ' || printf '0')
   if [ "$_size" = "0" ]; then
-    printf '[ERROR] Artifact file is empty: %s
-' "$_file" >&2
+    printf '[ERROR] Artifact file is empty: %s\n' "$_file" >&2
     return 1
   fi
 
@@ -97,10 +92,8 @@ prepare_single_artifact() {
   _hash=$(compute_sha256 "$_file")
   _sha_file="${_file}.sha256"
 
-  printf '%s  %s
-' "$_hash" "$_base" > "$_sha_file"
-  printf '[INFO] Successfully prepared: %s (%s bytes, SHA256: %s)
-' "$_file" "$_size" "$_hash"
+  printf '%s  %s\n' "$_hash" "$_base" > "$_sha_file"
+  printf '[INFO] Successfully prepared: %s (%s bytes, SHA256: %s)\n' "$_file" "$_size" "$_hash"
 }
 
 for artifact in "$@"; do

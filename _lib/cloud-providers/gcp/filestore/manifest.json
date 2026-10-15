@@ -1,9 +1,0 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://libscript.org/schema/cloud-providers/gcp/filestore/manifest.json",
-  "title": "GCP Filestore Component",
-  "description": "Component for managing Google Cloud Filestore (NFS) instances.",
-  "type": "object",
-  "properties": {},
-  "additionalProperties": true
-}

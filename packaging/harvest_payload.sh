@@ -57,6 +57,8 @@ INCLUDE_MSI=0
 
 # ## show_help
 # Prints usage and parameter documentation.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
   printf 'Usage: %s [OPTIONS]\n\n' "$(basename "$THIS_FILE")"
   printf 'Options:\n'
@@ -134,6 +136,8 @@ done
 # ## sanitize_wix_id
 # Sanitizes arbitrary path strings into valid WiX Id tokens (alphanumeric and underscores).
 # shellcheck disable=SC2329
+# ## sanitize_wix_id
+# Executes the sanitize_wix_id logic.
 sanitize_wix_id() {
   _val="$1"
   printf '%s' "$_val" | tr -c 'A-Za-z0-9_' '_'
@@ -219,8 +223,7 @@ if [ -n "${MANIFEST_FILE}" ]; then
   _manifest_dir="$(dirname "${MANIFEST_FILE}")"
   [ -d "$_manifest_dir" ] || mkdir -p "$_manifest_dir"
   cp "${TMP_FILTERED}" "${MANIFEST_FILE}"
-  printf '[INFO] Wrote manifest to: %s (%s files)
-' "${MANIFEST_FILE}" "$(wc -l < "${MANIFEST_FILE}" | tr -d ' ')"
+  printf '[INFO] Wrote manifest to: %s (%s files)\n' "${MANIFEST_FILE}" "$(wc -l < "${MANIFEST_FILE}" | tr -d ' ')"
 fi
 
 # ## copy_payload
@@ -239,8 +242,7 @@ if [ -n "${OUTPUT_DIR}" ]; then
     [ -d "$_dst_dir" ] || mkdir -p "$_dst_dir"
     cp -p "$_src" "$_dst"
   done < "${TMP_FILTERED}"
-  printf '[INFO] Harvested files copied to: %s
-' "${OUTPUT_DIR}"
+  printf '[INFO] Harvested files copied to: %s\n' "${OUTPUT_DIR}"
 fi
 
 # ## generate_wix_fragment
@@ -400,6 +402,5 @@ if [ "$(wc -l < "${TMP_FILTERED}" | tr -d ' ')" -eq 0 ]; then
   exit 1
 fi
 
-printf '[PASS] Harvesting complete (%s files identified).
-' "$(wc -l < "${TMP_FILTERED}" | tr -d ' ')"
+printf '[PASS] Harvesting complete (%s files identified).\n' "$(wc -l < "${TMP_FILTERED}" | tr -d ' ')"
 exit 0

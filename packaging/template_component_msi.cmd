@@ -1,20 +1,21 @@
 @echo off
-rem ## Overview
+:: # template_component_msi.cmd
+:: ## Overview
 rem Generates a pure WiX XML (.wxs) manifest for a standalone LibScript component MSI.
 rem Utilizes deterministic GUIDs and reference-counted services from packaging\guid_registry.json.
 rem Supports 100% pure Windows Installer with zero external .exe dependencies.
 rem
-rem ## Usage
-rem   call packaging	emplate_component_msi.cmd [OPTIONS]
+:: ## Usage
+rem   call packaging\template_component_msi.cmd [OPTIONS]
 rem
-rem ## Parameters
+:: ## Parameters
 rem   --component <name>    Component identifier (e.g. mysql, redis, mongodb, python, nodejs, meilisearch)
 rem   --version <version>   Component release version (e.g. 8.0.39, 20.17.0)
 rem   --out <file.wxs>      Output path for the generated WiX XML file
 rem   --source-dir <dir>    Directory containing component payload binaries to package
 rem   --help, -h            Show this help text
 
-setlocal enabledelayedexpansion
+setlocal EnableDelayedExpansion
 
 set "THIS_FILE=%~f0"
 if defined STACK (
@@ -27,7 +28,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"

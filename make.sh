@@ -21,11 +21,9 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
@@ -40,8 +38,7 @@ case "$target" in
     ;;
   test_component)
     if [ -z "${2:-}" ]; then
-      printf '%s
-' "Usage: ./make.sh test_component <component_name>" >&2
+      printf '%s\n' "Usage: ./make.sh test_component <component_name>" >&2
       exit 1
     fi
     "$SCRIPT_DIR/tests/run_local_tests.sh" "$2"
@@ -56,17 +53,13 @@ case "$target" in
     "$SCRIPT_DIR/tests/run_local_tests.sh" databases
     ;;
   --help|-h|"/?")
-    printf '%s
-' "Usage: ./make.sh <target> [component_name]"
-    printf '%s
-' "Targets: test, local_tests_all, test_component, local_tests_toolchain, local_tests_languages, local_tests_databases"
+    printf '%s\n' "Usage: ./make.sh <target> [component_name]"
+    printf '%s\n' "Targets: test, local_tests_all, test_component, local_tests_toolchain, local_tests_languages, local_tests_databases"
     exit 0
     ;;
   *)
-    printf '%s
-' "Unknown target: $target" >&2
-    printf '%s
-' "Usage: ./make.sh <target> [component_name]" >&2
+    printf '%s\n' "Unknown target: $target" >&2
+    printf '%s\n' "Usage: ./make.sh <target> [component_name]" >&2
     exit 1
     ;;
 esac

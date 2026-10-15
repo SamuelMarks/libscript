@@ -26,7 +26,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -69,6 +69,8 @@ if "%NAME%"=="" set "NAME=Open edX Portal"
 powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\launch_browser.ps1" -Url "%URL%" -ShortcutName "%NAME%"
 exit /b 0
 
+:: ## show_help
+:: Executes show_help functionality.
 :show_help
 echo Usage: %~nx0 ^<url^> [shortcut_name]
 echo.

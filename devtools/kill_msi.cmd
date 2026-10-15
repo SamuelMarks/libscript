@@ -1,10 +1,13 @@
 @echo off
+:: # kill_msi.cmd
+::
 :: ## Overview
-:: Windows batch wrapper for the associated bash script.
+:: Kills msiexec and cleans up msi artifacts on Vagrant guest.
 ::
 :: ## Usage
-::   call script.cmd
+::   call kill_msi.cmd
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -16,7 +19,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -47,5 +50,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-sh "%~dpn0.sh" %*
+cd /d "%LIBSCRIPT_ROOT_DIR%\vagrant\windows-11"
+vagrant ssh -c "powershell -Command \"taskkill /F /IM msiexec.exe /T; Remove-Item C:\libscript\packaging\*.msi -Force -ErrorAction SilentlyContinue; Remove-Item C:\libscript\msi_error.txt -Force -ErrorAction SilentlyContinue\""
 exit /b %ERRORLEVEL%

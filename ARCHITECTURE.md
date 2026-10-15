@@ -40,17 +40,34 @@ flowchart TD
 
 ---
 
-## 🏛️ The Three-Tier Architectural Division of Concerns
+## 🏛️ The Extended Multi-Tier Architectural Division of Concerns
 
 To prevent scope creep and ensure deterministic reproducibility, LibScript codifies strict boundary
-contracts between its functional layers.
+contracts between its functional layers—spanning from Tier 1 leaf recipes to Tier 2 OS synthesizers,
+Tier 3 multicloud IaaS provisioners, Tier 3.5 consensus topologies, Tier 4 universal workload
+schedulers, and the cross-cutting Unified Traits Subsystem.
 
 ```mermaid
 flowchart TD
-    subgraph Tier3[Tier 3: Operators & Multicloud Deployers]
+    subgraph Tier4[Tier 4: Payloads & Universal Schedulers]
+        Payloads[Declarative Workloads: Services, Stateful, Batch, AI/ML XPK, vLLM, JetStream, Unikernels]
+        Schedulers[Scheduler Drivers: K8s, Nomad, Mesos, 8+ Native Inits, Firecracker/Cloud-Hypervisor/Solo5, XPK/Slurm/Ray]
+    end
+
+    subgraph Tier35[Tier 3.5: Topologies & Consensus Choreography]
+        StateMachine[DAG State Machine: .topology_state.json + Distributed Lease Locking]
+        Fencing[Split-Brain Fencing + Leader/Follower Quorum Choreography]
+        Blueprints[HA Blueprints: postgres-ha, valkey-cluster, redis-cluster, k0s-ha, minio-distributed, gke-tpu-cluster]
+    end
+
+    subgraph Traits[Unified Traits Subsystem]
+        NodeTraits[Storage, Zero-Env-Leak Secrets, Host Firewall, Encrypted Mesh, Discovery/Cloud DNS, netctl Ingress, TLS, Logging, Metrics, CoW/Object Backup]
+    end
+
+    subgraph Tier3[Tier 3: Operators & Multicloud IaaS Deployers]
         CloudOps[Cloud Provisioning: AWS, Azure, GCP, Proxmox, Hetzner, Vagrant]
-        AIOps[AI Infrastructure: TPU VMs, GKE + XPK Training, vLLM / JetStream]
-        PaaSOps[Built-in PaaS & Universal Routing: netctl, TLS, Service Daemons]
+        AccelIaaS[Accelerator Hardware IaaS: GCP TPU VMs, GPU VMs, Cloud Block/Filestore]
+        PaaSOps[Built-in PaaS & Control Plane: libscript-rest-api OpenAPI 3.0]
     end
 
     subgraph Tier2[Tier 2: Synthesizers, Assemblers & Image Builders]
@@ -66,8 +83,15 @@ flowchart TD
         VersionManagers[Universal Version Managers: nodejs, python, rust, ruby, go, java]
         ToolchainBootstrap[Cross-Toolchain Bootstrap: Stage 0 /tools, Stage 1 Userland]
         BaseCatalogs[Catalog Recipes: Glibc, Musl, Wayland, X11, Desktops, PipeWire, Net]
+        LifecycleHooks[Dual-Layer Hooks: Physical Instance Hooks + Logical Multi-Tenant Hooks]
     end
 
+    Payloads -->|Compiles via| Schedulers
+    Schedulers -->|Schedules onto| Tier35
+    Tier35 -->|Provisions & Fencing via| Tier3
+    Tier35 -->|Binds & Orchestrates| Traits
+    Traits -->|Offline Bake Mode: LIBSCRIPT_TARGET_SYSROOT| Tier2
+    Traits -->|Live Runtime Mode & Hooks| Tier1
     Tier3 -->|Deploys Images & Orchestrates Nodes| Tier2
     Tier2 -->|Directs Compilation & Stages Artifacts| Tier1
     Tier1 -->|Context Contract: LIBSCRIPT_TARGET_SYSROOT| Tier2
@@ -489,9 +513,141 @@ REST API microservice located in `libscript-rest-api/`:
 
 - **OpenAPI 3.0 Conformance**: Fully typed API contract defined in `openapi.yaml`.
 - **Remote Lifecycle Control**: Endpoints for component installs, stack provisioning, packaging
-  jobs, and real-time log streaming over HTTP.
+  jobs, topologies (`/api/v1/topologies`), payloads (`/api/v1/payloads`), traits (`/api/v1/traits`),
+  and component lifecycle hooks (`/api/v1/components/{name}/hooks/{hook}`), plus real-time log
+  streaming over HTTP.
 - **Embedded Lightweight Server**: Zero heavy dependencies, compilable via CMake, with system
   service integration scripts.
+
+---
+
+## 🔌 Dual-Layer Component Lifecycle Hooks (`_lib/<category>/<component>/hooks/`)
+
+To enable higher-order cluster topologies, traits, and multi-tenant installer chainers (`msi-rs`) to
+inspect and drive Tier 1 components without hardcoding software-specific internals, LibScript
+codifies a **Dual-Layer Component Lifecycle Hook Contract** dispatched via `_lib/_common/hooks.sh`
+and `_lib/_common/hooks.cmd`:
+
+### 1. Physical Instance Hooks
+
+Manage the lifecycle of the underlying daemon process and physical data directory:
+
+- **`configure`**: Renders configuration templates (`postgresql.conf`, `redis.conf`, `nginx.conf`)
+  via `_lib/_common/envsubst_safe.{sh,cmd}`, supporting
+  `--role <standalone|leader|follower|arbiter>` and `--sysroot <path>`.
+- **`probe`**: Executes deep health verification across three subcommands (`startup`, `liveness`,
+  `readiness`) with deterministic exit codes (`0` = Healthy/Ready, `1` = Starting/Degraded, `2` =
+  Unhealthy/Dead) and `--remote-host` support when `[USER_DB_STRATEGY] = remote`.
+- **`announce`**: Emits structured JSON describing bound interfaces, ports, protocols (`tcp`, `udp`,
+  `http`, `https`, `grpc`), internal vs. external visibility, and health probe URIs.
+- **`log_stream`**: Emits structured JSON listing active log file paths, journald/SMF/Windows Event
+  Log identifiers, and log format (`json`, `clf`, `syslog`, `postgres`).
+- **`metrics`**: Emits structured JSON specifying Prometheus/OpenTelemetry scrape port, path
+  (`/metrics`, `/stub_status`), and exporter status.
+- **`backup` & `restore`**: Executes full-instance consistent snapshots (`pg_basebackup`,
+  `redis-cli BGSAVE`, `etcdctl snapshot save`) with SHA-256 manifest verification.
+- **`upgrade` & `rollback`**: Performs stateful major/minor data directory migrations (`pg_upgrade`)
+  and atomic rollback on failure.
+- **`maintenance`**: Runs idempotent periodic housekeeping (`VACUUM (ANALYZE)`, WAL pruning, cache
+  compaction, log rotation).
+
+### 2. Logical Multi-Tenant Hooks
+
+Manage isolated logical resources hosted inside a shared physical engine (`"multitenant": true` in
+`manifest.json`), aligning with `packaging/ARCHITECTURE_LOGICAL_PROVISIONING.md`:
+
+- **`provision_tenant`**: Idempotently checks whether a tenant schema, role, keyspace, or virtual
+  host block (`# BEGIN libscript-managed: <tenant>`) exists and creates it only if missing.
+- **`deprovision_tenant`**: Removes a tenant virtual host or drops a tenant schema upon explicit
+  tenant uninstallation while preserving the shared physical engine for peer stacks (e.g.,
+  uninstalling WordPress while Open edX remains active).
+- **`backup_tenant` & `restore_tenant`**: Exports and restores tenant-scoped logical dumps
+  (`pg_dump --schema`, `mysqldump`) without disrupting co-tenant workloads.
+
+---
+
+## 🧩 The Unified Traits Subsystem (`traits/`)
+
+Traits (`traits/engine.sh` and `traits/engine.cmd`) provide composable, cross-cutting node
+capabilities by orchestrating existing `_lib/` components in a deterministic priority order
+(`storage` -> `secrets` -> `mesh` -> `firewall` -> `discovery` -> `tls` -> `ingress` -> `logging` ->
+`metrics` -> `backup` -> `maintenance`):
+
+1. **Dual-Mode Execution Contract**:
+   - **Tier 2 Offline Sysroot Bake Mode (`LIBSCRIPT_TARGET_SYSROOT != /`)**: Pre-bakes `/etc/fstab`,
+     `/etc/vfstab`, `/etc/nftables.conf`, `/etc/pf.conf`, cron/systemd timers, and proxy configs
+     directly into an offline OS rootfs during `package-as` image synthesis without invoking live
+     kernel syscalls.
+   - **Tier 3 Live Runtime Mode (`LIBSCRIPT_TARGET_SYSROOT == /`)**: Formats unformatted disks,
+     mounts filesystems, reloads firewalls, brings up WireGuard interfaces, and reloads reverse
+     proxies zero-downtime on active nodes.
+2. **Core Traits Composition**:
+   - **Storage (`traits/storage/`)**: Delegates to `_lib/storage/disk_discovery` and `format_fs`,
+     plus NFS (`nfs.{sh,cmd}`), SMB (`smb.{sh,cmd}`), and `gcsfuse` (`gcsfuse.{sh,cmd}`).
+   - **Secrets (`traits/secrets/`)**: Delegates template rendering to `_lib/_common/envsubst_safe`
+     and secret retrieval to `_lib/security/openbao/`, SOPS, and `.env` files. Enforces a
+     **Zero-Env-Leak Guarantee** (`exec_with_secrets.{sh,cmd}`) using RAM-backed FIFOs (`0600`) or
+     ACL-locked temporary files so plaintext credentials never appear in `/proc/<pid>/environ`.
+   - **Firewall (`traits/firewall/`)**: Queries `hooks/announce` and compiles rules for `nftables`,
+     `iptables`, `pf` (FreeBSD/macOS/illumos), and Windows `netsh advfirewall`, enforcing an
+     **Anti-Lockout Safeguard** for active SSH, WinRM, RDP, and REST API management ports.
+   - **Mesh & Discovery (`traits/mesh/`, `traits/discovery/`)**: Establishes encrypted cross-cloud
+     WireGuard (`wg0`) or Tailscale overlays, maintains atomic `/etc/hosts` blocks, and pairs
+     `dns map-node` with `dns unmap-node` across Route53, Google Cloud DNS, and Azure DNS to prevent
+     subdomain takeovers.
+   - **Ingress & TLS (`traits/ingress/`, `traits/tls/`)**: Bridges `hooks/announce` and tenant
+     `virtual_hosts` into `_lib/networking/netctl/` (`nginx`, `caddy`, `apache`, `iis`, `traefik`)
+     with syntax validation rollback and `_lib/cloud/cert/` PKI/ACME automation.
+   - **Observability, Backup & Maintenance (`traits/logging/`, `traits/metrics/`, `traits/backup/`,
+     `traits/maintenance/`)**: Wires FluentBit inputs, Prometheus `file_sd_configs`, ZFS/Btrfs CoW
+     snapshots + PaaS object storage shipping (`s3://`, `gs://`, `azure://`, `rclone://`,
+     `restic://`, `borg://`), and scheduled maintenance timers.
+
+---
+
+## 🏗️ Tier 3.5: Topologies & Consensus Choreography (`topologies/`)
+
+Tier 3.5 bridges the gap between single-node Tier 3 cloud provisioning and distributed multi-node
+stateful clusters (`topologies/engine.sh` and `topologies/engine.cmd`):
+
+- **Deterministic State Machine (`.topology_state.json`)**: Tracks cluster epoch/term counters,
+  active leader IDs, per-node lifecycle transitions (`PENDING` -> `PROVISIONED` -> `SUBSTRATE_READY`
+  -> `CONFIGURED` -> `JOINED` -> `DRAINING` -> `FENCED` -> `DESTROYED`), and cloud resource IDs
+  using atomic write-then-rename (`mv -f`) checkpointing.
+- **Distributed Lease Locking (`topologies/lock.{sh,cmd}`)**: Acquires exclusive locks in shared
+  state storage (`s3://`, `gs://`, `azure://`, `etcd`, or local lockfiles) prior to mutating cluster
+  topology.
+- **Split-Brain Fencing (`topologies/fence.{sh,cmd}`)**: Guarantees zero split-brain writes during
+  leader failover or rolling upgrades by demoting and firewall-isolating the former leader, or
+  invoking Tier 3 Cloud IaaS APIs (NIC/volume detach or instance power-off) if the node is
+  unreachable over both private VPC and WireGuard mesh networks.
+- **Production HA Blueprints**: Turnkey topologies for `postgres-ha` (Patroni + etcd + PgBouncer +
+  `netctl`), `valkey-cluster`, `redis-cluster`, `k0s-ha`, `minio-distributed`, and
+  `gke-tpu-cluster`.
+
+---
+
+## 🚀 Tier 4: Payloads & Universal Schedulers (`payloads/`)
+
+Tier 4 decouples declarative workload definitions (`payloads/payload.schema.json`) from the
+underlying execution runtime via pluggable translation drivers in `payloads/schedulers/`:
+
+- **Container & Cluster Orchestrators**:
+  - `kubernetes.{sh,cmd}`: Compiles `payload.json` into Kubernetes `Deployment`, `StatefulSet`,
+    `Job`, `Service`, `PVC`, and `Ingress` manifests applied via `kubectl`.
+  - `nomad.{sh,cmd}`: Translates payloads into HashiCorp Nomad job specifications.
+  - `mesos.{sh,cmd}`: Translates payloads into Apache Mesos / Marathon application definitions.
+- **Universal Native Init Scheduler (`native.{sh,cmd}`)**: Delegates to
+  `_lib/_common/service_install.{sh,cmd}` and `_lib/init-systems/` to synthesize native service
+  units across all 8+ supported init supervisors (`systemd`, `openrc`, `runit`, `s6`, `dinit`,
+  `sysvinit`, FreeBSD `bsd-rc`, illumos `smf`, macOS `launchd`, and Windows `sc.exe`), supporting
+  both live runtime execution and Tier 2 offline sysroot image baking.
+- **MicroVM & Unikernel Scheduler (`microvm.{sh,cmd}`)**: Compiles workloads into Firecracker,
+  Cloud-Hypervisor, or Solo5 microVM/unikernel execution specs.
+- **AI/HPC Gang Schedulers (`xpk.{sh,cmd}`, `slurm_ray.{sh,cmd}`)**: Translates distributed AI
+  training and inference workloads (`payloads/ai/gke-xpk-training`, `gke-xpk-inference`, `vllm`,
+  `jetstream`, `ollama`) into Google Cloud `xpk` TPU slice jobs, Ray jobs, or Slurm `sbatch`
+  allocations.
 
 ---
 

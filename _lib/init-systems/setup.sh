@@ -23,16 +23,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 PROVIDER="openrc"
@@ -60,30 +57,25 @@ STAMP_DISPATCH="${STAMPS_DIR}/.stamp.lfs_init_${PROVIDER}"
 
 if [ "$ACTION" = "status" ]; then
   if [ -f "$STAMP_DISPATCH" ]; then
-    printf 'Init Provider %s: INSTALLED (%s)
-' "$PROVIDER" "$(cat "$STAMP_DISPATCH")"
+    printf 'Init Provider %s: INSTALLED (%s)\n' "$PROVIDER" "$(cat "$STAMP_DISPATCH")"
   else
-    printf 'Init Provider %s: NOT INSTALLED
-' "$PROVIDER"
+    printf 'Init Provider %s: NOT INSTALLED\n' "$PROVIDER"
   fi
   exit 0
 fi
 
 if [ "$ACTION" = "clean" ]; then
-  printf '[CLEAN] Removing init stamp for %s...
-' "$PROVIDER"
+  printf '[CLEAN] Removing init stamp for %s...\n' "$PROVIDER"
   rm -f "$STAMP_DISPATCH"
   exit 0
 fi
 
 if [ -f "$STAMP_DISPATCH" ]; then
-  printf '[SKIP]  Init provider %s already configured (%s)
-' "$PROVIDER" "$STAMP_DISPATCH"
+  printf '[SKIP]  Init provider %s already configured (%s)\n' "$PROVIDER" "$STAMP_DISPATCH"
   exit 0
 fi
 
-printf '=== Configuring Init System: %s ===
-' "$PROVIDER"
+printf '=== Configuring Init System: %s ===\n' "$PROVIDER"
 
 case "$PROVIDER" in
   systemd)
@@ -95,8 +87,7 @@ case "$PROVIDER" in
 #!/bin/sh
 echo "Startup finished in 1.234s (kernel) + 0.567s (userspace) = 1.801s"
 echo "Reached target Multi-User System"
-printf '[SYSTEMD] Systemd PID 1 active.
-'
+printf '[SYSTEMD] Systemd PID 1 active.\n'
 exec /sbin/agetty -L 115200 ttyS0 vt102 2>/dev/null || exec /bin/sh
 EOF
       chmod +x "${ROOTFS}/sbin/init"
@@ -112,8 +103,7 @@ EOF
 #!/bin/sh
 echo "* Starting local ... [ ok ]"
 echo "Welcome to OpenRC"
-printf '[OPENRC] OpenRC service manager ready.
-'
+printf '[OPENRC] OpenRC service manager ready.\n'
 exec /sbin/agetty -L 115200 ttyS0 vt102 2>/dev/null || exec /bin/sh
 EOF
       chmod +x "${ROOTFS}/sbin/init"
@@ -140,22 +130,19 @@ EOF
     mkdir -p "${ROOTFS}/sbin"
     cat << 'EOF' > "${ROOTFS}/sbin/init"
 #!/bin/sh
-printf '[INIT] Direct PID 1 launcher active.
-'
+printf '[INIT] Direct PID 1 launcher active.\n'
 exec /bin/sh
 EOF
     chmod +x "${ROOTFS}/sbin/init"
     ;;
 
   *)
-    printf '[ERROR] Unknown init system provider: %s
-' "$PROVIDER" >&2
+    printf '[ERROR] Unknown init system provider: %s\n' "$PROVIDER" >&2
     exit 1
     ;;
 esac
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_DISPATCH}.tmp"
 mv "${STAMP_DISPATCH}.tmp" "$STAMP_DISPATCH"
-printf '[DONE]  Init system provider %s configured successfully.
-' "$PROVIDER"
+printf '[DONE]  Init system provider %s configured successfully.\n' "$PROVIDER"
 exit 0

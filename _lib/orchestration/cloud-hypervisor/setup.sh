@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 ACTION="${1:-boot}"
@@ -45,13 +42,11 @@ mkdir -p "$STAMPS_DIR"
 STAMP_FILE="${STAMPS_DIR}/.stamp.cloud-hypervisor"
 
 if [ -f "$STAMP_FILE" ]; then
-  printf '[SKIP]  Cloud-Hypervisor provider already configured (%s)
-' "$STAMP_FILE"
+  printf '[SKIP]  Cloud-Hypervisor provider already configured (%s)\n' "$STAMP_FILE"
   exit 0
 fi
 
-printf '[ORCHESTRATION] Cloud-Hypervisor provider action: %s
-' "$ACTION"
+printf '[ORCHESTRATION] Cloud-Hypervisor provider action: %s\n' "$ACTION"
 
 case "$ACTION" in
   install|configure|compile)
@@ -68,8 +63,7 @@ case "$ACTION" in
 EOF
     date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
     mv "${STAMP_FILE}.tmp" "$STAMP_FILE"
-    printf '[OK] Configured Cloud-Hypervisor template: %s
-' "$CFG_FILE"
+    printf '[OK] Configured Cloud-Hypervisor template: %s\n' "$CFG_FILE"
     ;;
 
   boot)
@@ -80,8 +74,7 @@ EOF
       DISK="${LIBSCRIPT_ROOT_DIR}/build/disk.img"
     fi
 
-    printf '[ORCHESTRATION] Launching Cloud-Hypervisor guest (pmem / VirtIO-fs)...
-'
+    printf '[ORCHESTRATION] Launching Cloud-Hypervisor guest (pmem / VirtIO-fs)...\n'
     if command -v cloud-hypervisor >/dev/null 2>&1; then
       cloud-hypervisor \
         --kernel "$KERNEL" \
@@ -90,8 +83,7 @@ EOF
         --cpus boot_vcpus=2 \
         --memory size=1024M 2>/dev/null || true
     else
-      printf '[INFO] cloud-hypervisor binary not present in host PATH. VM definition ready.
-'
+      printf '[INFO] cloud-hypervisor binary not present in host PATH. VM definition ready.\n'
     fi
     ;;
 esac

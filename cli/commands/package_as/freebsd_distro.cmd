@@ -20,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -84,6 +84,8 @@ set "FORMAT=qcow2"
 set "PROFILE=%REPO_ROOT%\profiles\freebsd\minimal-server.json"
 set "OUTPUT="
 
+:: ## parse_loop
+:: Executes parse_loop functionality.
 :parse_loop
 if "%~1"=="" goto after_parse
 if "%~1"=="--format" (
@@ -125,6 +127,8 @@ if "%~1"=="-o" (
 shift
 goto parse_loop
 
+:: ## after_parse
+:: Executes after_parse functionality.
 :after_parse
 set "SYSROOT=%REPO_ROOT%\build\freebsd-sysroot"
 

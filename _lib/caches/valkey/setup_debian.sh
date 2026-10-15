@@ -62,6 +62,8 @@ HASH="$(git rev-list HEAD -1)"
 
 # ## build_install
 # Executes build_install functionality.
+# ## build_install
+# Executes the build_install logic.
 build_install() {
   [ -d 'build' ] || mkdir -p -- 'build'
   touch 'build/'"${HASH}"

@@ -23,16 +23,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 SYSROOT="${1:-${LIBSCRIPT_TARGET_SYSROOT:-${REPO_ROOT}/build/freebsd-sysroot}}"
@@ -47,18 +44,15 @@ USER_HOME="${SYSROOT}/home/${PRIMARY_USER}"
 mkdir -p "${USER_HOME}"
 
 if [ -f "${STAMP_FILE}" ]; then
-  printf '[SKIP]     FreeBSD desktop %s already configured in %s
-' "${DESKTOP}" "${SYSROOT}"
+  printf '[SKIP]     FreeBSD desktop %s already configured in %s\n' "${DESKTOP}" "${SYSROOT}"
   exit 0
 fi
 
-printf '[DESKTOP]  Configuring desktop environment: %s...
-' "${DESKTOP}"
+printf '[DESKTOP]  Configuring desktop environment: %s...\n' "${DESKTOP}"
 
 case "${DESKTOP}" in
   none)
-    printf '[DESKTOP]  CLI mode active; zero desktop startup scripts generated.
-'
+    printf '[DESKTOP]  CLI mode active; zero desktop startup scripts generated.\n'
     ;;
 
   xfce4)
@@ -103,18 +97,15 @@ EOF
     ;;
 
   hyprland|labwc|lxqt|gnome|weston)
-    printf '[DESKTOP]  Staging base configuration for %s...
-' "${DESKTOP}"
+    printf '[DESKTOP]  Staging base configuration for %s...\n' "${DESKTOP}"
     mkdir -p "${USER_HOME}/.config/${DESKTOP}"
     ;;
 
   *)
-    printf '[WARN]     Unknown desktop "%s", skipping config generation.
-' "${DESKTOP}" >&2
+    printf '[WARN]     Unknown desktop "%s", skipping config generation.\n' "${DESKTOP}" >&2
     ;;
 esac
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
 mv "${STAMP_FILE}.tmp" "${STAMP_FILE}"
-printf '[OK]       Desktop %s configured.
-' "${DESKTOP}"
+printf '[OK]       Desktop %s configured.\n' "${DESKTOP}"

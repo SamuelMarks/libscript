@@ -21,16 +21,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 INPUT_IMAGE="${1:-${LIBSCRIPT_ROOT_DIR}/build/output/lfs-disk.qcow2}"
@@ -46,8 +43,7 @@ mkdir -p "$(dirname "$OUT_BOX")"
 STAMP_BOX="${STAMPS_DIR}/.stamp.export_vagrant_box"
 
 if [ -f "$STAMP_BOX" ] && [ -f "$OUT_BOX" ]; then
-  printf '[SKIP]  Vagrant box already packaged (%s)
-' "$STAMP_BOX"
+  printf '[SKIP]  Vagrant box already packaged (%s)\n' "$STAMP_BOX"
   exit 0
 fi
 
@@ -55,26 +51,19 @@ fi
 if [ ! -f "$INPUT_IMAGE" ]; then
   RAW_IMG="${LIBSCRIPT_ROOT_DIR}/build/images/raw/lfs-disk.raw"
   if [ -f "$RAW_IMG" ]; then
-    printf '[INFO] Converting raw disk to qcow2 for Vagrant box packaging...
-'
+    printf '[INFO] Converting raw disk to qcow2 for Vagrant box packaging...\n'
     "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/qcow2.sh" "$RAW_IMG" "$INPUT_IMAGE" "qcow2"
   else
-    printf '[INFO] Synthesizing mock disk image for Vagrant box packaging...
-'
+    printf '[INFO] Synthesizing mock disk image for Vagrant box packaging...\n'
     mkdir -p "$(dirname "$INPUT_IMAGE")"
-    printf 'LibScript QEMU Disk Image Stub
-' > "$INPUT_IMAGE"
+    printf 'LibScript QEMU Disk Image Stub\n' > "$INPUT_IMAGE"
   fi
 fi
 
-printf '=== LibScript Vagrant Box Packaging ===
-'
-printf '[INFO] Input Image: %s
-' "$INPUT_IMAGE"
-printf '[INFO] Output Box:  %s
-' "$OUT_BOX"
-printf '[INFO] Provider:    %s
-' "$PROVIDER"
+printf '=== LibScript Vagrant Box Packaging ===\n'
+printf '[INFO] Input Image: %s\n' "$INPUT_IMAGE"
+printf '[INFO] Output Box:  %s\n' "$OUT_BOX"
+printf '[INFO] Provider:    %s\n' "$PROVIDER"
 
 BOX_TMP_DIR="${LIBSCRIPT_ROOT_DIR}/build/tmp/vagrant_box_$$"
 mkdir -p "$BOX_TMP_DIR"
@@ -132,8 +121,7 @@ EOF
 cp -f "$INPUT_IMAGE" "${BOX_TMP_DIR}/box.img"
 
 # 4. Package tar archive
-printf '[STAGE] Compressing into .box archive...
-'
+printf '[STAGE] Compressing into .box archive...\n'
 (
   cd "$BOX_TMP_DIR"
   tar --numeric-owner -czf "$OUT_BOX" metadata.json Vagrantfile box.img
@@ -141,6 +129,5 @@ printf '[STAGE] Compressing into .box archive...
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_BOX}.tmp"
 mv "${STAMP_BOX}.tmp" "$STAMP_BOX"
-printf '[DONE]  Vagrant box exported successfully: %s
-' "$OUT_BOX"
+printf '[DONE]  Vagrant box exported successfully: %s\n' "$OUT_BOX"
 exit 0

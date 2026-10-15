@@ -42,16 +42,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh"; do
@@ -66,6 +63,8 @@ done
 #
 # ## Parameters
 #   $@ - Arguments to pass to mkdir
+# ## safe_mkdir
+# Executes the safe_mkdir logic.
 safe_mkdir() {
   mkdir -p "$@" 2>/dev/null || sudo mkdir -p "$@" 2>/dev/null || mkdir -p "$@"
 }
@@ -75,6 +74,8 @@ safe_mkdir() {
 #
 # ## Parameters
 #   $@ - Arguments to pass to tee
+# ## safe_tee
+# Executes the safe_tee logic.
 safe_tee() {
   tee "$@" 2>/dev/null || sudo tee "$@" 2>/dev/null || tee "$@"
 }
@@ -84,6 +85,8 @@ safe_tee() {
 #
 # ## Parameters
 #   $@ - Arguments to pass to cp
+# ## safe_cp
+# Executes the safe_cp logic.
 safe_cp() {
   cp "$@" 2>/dev/null || sudo cp "$@" 2>/dev/null || cp "$@"
 }
@@ -93,6 +96,8 @@ safe_cp() {
 #
 # ## Parameters
 #   $@ - Arguments to pass to rm
+# ## safe_rm
+# Executes the safe_rm logic.
 safe_rm() {
   rm "$@" 2>/dev/null || sudo rm "$@" 2>/dev/null || rm "$@"
 }
@@ -102,6 +107,8 @@ safe_rm() {
 #
 # ## Parameters
 #   $@ - Arguments to pass to tar
+# ## safe_tar
+# Executes the safe_tar logic.
 safe_tar() {
   tar "$@" 2>/dev/null || sudo tar "$@" 2>/dev/null || tar "$@"
 }
@@ -235,6 +242,8 @@ export WORDPRESS_DB_NAME WORDPRESS_DB_USER WORDPRESS_DB_PASS
 
 # ## generate_salt
 # Generates a cryptographically strong 64-character random string.
+# ## generate_salt
+# Executes the generate_salt logic.
 generate_salt() {
   if [ -c /dev/urandom ]; then
     LC_ALL=C tr -dc 'a-zA-Z0-9!@#$%&*()-_=+' < /dev/urandom 2>/dev/null | head -c 64 || true
@@ -247,8 +256,7 @@ generate_salt() {
 
 # 1. Download and extract WordPress 7.1.2 core
 if [ ! -d "${WORDPRESS_WWWROOT}/wp-admin" ]; then
-  printf '[INFO] Staging WordPress (%s) into %s...
-' "${WORDPRESS_VERSION}" "${WORDPRESS_WWWROOT}"
+  printf '[INFO] Staging WordPress (%s) into %s...\n' "${WORDPRESS_VERSION}" "${WORDPRESS_WWWROOT}"
   safe_mkdir -p "${WORDPRESS_WWWROOT}"
   if [ "${WORDPRESS_VERSION}" = "latest" ]; then
     dl_url="https://wordpress.org/latest.tar.gz"
@@ -275,8 +283,7 @@ if [ ! -d "${WORDPRESS_WWWROOT}/wp-admin" ]; then
 fi
 
 # 2. Database Provisioning & Intelligence
-printf '[INFO] Configuring Relational Database Strategy...
-'
+printf '[INFO] Configuring Relational Database Strategy...\n'
 
 if [ -n "${WORDPRESS_DBAAS_URL}" ]; then
   # Mode A: Hosted DBaaS Connection URI
@@ -364,8 +371,7 @@ elif [ "${WORDPRESS_DB_ENGINE}" = "postgres" ] || [ "${WORDPRESS_DB_ENGINE}" = "
   fi
 else
   # Mode E: Dedicated Standalone Local MariaDB/MySQL
-  printf '[INFO] Provisioning standalone local database server...
-'
+  printf '[INFO] Provisioning standalone local database server...\n'
 # # libscript_depends 'mariadb' || libscript_depends 'mysql'
   _sql_client="mysql"
   command -v mariadb >/dev/null 2>&1 && _sql_client="mariadb"
@@ -386,8 +392,7 @@ SALT_7="$(generate_salt)"
 SALT_8="$(generate_salt)"
 
 # 4. Synthesize Canonical wp-config.php
-printf '[INFO] Generating hardened wp-config.php...
-'
+printf '[INFO] Generating hardened wp-config.php...\n'
 WP_CONFIG_PATH="${WORDPRESS_WWWROOT}/wp-config.php"
 
 cat << EOF_WP_CONFIG | safe_tee "${WP_CONFIG_PATH}" >/dev/null
@@ -488,8 +493,7 @@ chown -R www:www "${WORDPRESS_WWWROOT}" 2>/dev/null ||
 chown -R nginx:nginx "${WORDPRESS_WWWROOT}" 2>/dev/null || true
 
 # 5. WAMP-Class PHP Runtime Optimization
-printf '[INFO] Applying WAMP-class PHP optimization tuning...
-'
+printf '[INFO] Applying WAMP-class PHP optimization tuning...\n'
 for php_ini in /etc/php/*/fpm/php.ini /etc/php/*/cli/php.ini /etc/php.ini /usr/local/etc/php.ini; do
   if [ -f "$php_ini" ]; then
     priv sed -i.bak "s|^memory_limit =.*|memory_limit = ${WORDPRESS_PHP_MEMORY_LIMIT}|" "$php_ini" 2>/dev/null || true
@@ -529,8 +533,7 @@ EOF_FPM
 fi
 
 # 6. Configure Ingress Webserver
-printf '[INFO] Configuring Ingress Web Server (%s)...
-' "${WORDPRESS_WEBSERVER}"
+printf '[INFO] Configuring Ingress Web Server (%s)...\n' "${WORDPRESS_WEBSERVER}"
 
 if [ "${WORDPRESS_WEBSERVER}" = "nginx" ]; then
   NGINX_CONF_TMP=$(mktemp)
@@ -625,11 +628,9 @@ fi
 # 8. Update /etc/hosts if requested
 if [ "${WORDPRESS_UPDATE_HOSTS_FILE}" -eq 1 ] && [ "${WORDPRESS_SERVER_NAME}" != "localhost" ]; then
   if ! grep -q "${WORDPRESS_SERVER_NAME}" /etc/hosts 2>/dev/null; then
-    printf '127.0.0.1 %s
-' "${WORDPRESS_SERVER_NAME}" | safe_tee -a /etc/hosts >/dev/null || true
+    printf '127.0.0.1 %s\n' "${WORDPRESS_SERVER_NAME}" | safe_tee -a /etc/hosts >/dev/null || true
   fi
 fi
 
-printf '[OK] WordPress 7.1.2 stack setup completed successfully on %s
-' "${WORDPRESS_SITE_URL}"
+printf '[OK] WordPress 7.1.2 stack setup completed successfully on %s\n' "${WORDPRESS_SITE_URL}"
 exit 0

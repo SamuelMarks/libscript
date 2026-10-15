@@ -40,7 +40,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -154,6 +154,14 @@ goto parse_args
 :: ## after_args
 :: Dispatches actions after command-line argument processing.
 :after_args
+if exist "%OPENEDX_INSTALL_DIR%\lms\envs\libscript.py" (
+    echo [INFO] openedx is already installed at %OPENEDX_INSTALL_DIR%.
+    exit /b 0
+)
+if exist "%LIBSCRIPT_HOME%\openedx\%VERSION%" (
+    echo [INFO] openedx %VERSION% is already installed.
+    exit /b 0
+)
 
 :: Resolve Cache Directory if offline mode active
 if "%IS_OFFLINE%"=="1" (

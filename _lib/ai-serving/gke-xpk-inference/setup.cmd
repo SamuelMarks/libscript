@@ -2,13 +2,14 @@
 :: # setup.cmd
 ::
 :: ## Overview
-:: Orchestrates the setup and installation process for the GKE XPK inference stack stack.
-:: 
+:: Backward-compatible forwarding shim for GKE XPK inference setup on Windows.
+::
 :: ## Usage
-:: Execute this script to install and configure gke-xpk-inference on the local system.
+:: _lib\ai-serving\gke-xpk-inference\setup.cmd [args]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
+
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
     if not errorlevel 1 (
@@ -19,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -50,36 +51,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if "%~1"=="--help" (
-    echo Usage: %~nx0
-    echo See README.md for details.
-    exit /b 0
-)
-if "%~1"=="-h" (
-    echo Usage: %~nx0
-    echo See README.md for details.
-    exit /b 0
-)
-
-
-set "CLUSTER_NAME=%XPK_CLUSTER_NAME%"
-if "%CLUSTER_NAME%"=="" set "CLUSTER_NAME=ml-xpk-cluster"
-
-if "%GCP_PROJECT_ID%"=="" (
-    echo [ERROR] GCP_PROJECT_ID must be explicitly specified.
-    exit /b 1
-)
-if "%GCP_ZONE%"=="" (
-    echo [ERROR] GCP_ZONE must be explicitly specified.
-    exit /b 1
-)
-
-echo Setting up XPK Production Cluster Stack...
-
-call gcloud auth print-access-token >nul 2>&1
-if %errorlevel% neq 0 call gcloud auth login
-
-echo Creating GKE cluster %CLUSTER_NAME% via xpk...
-call "%~dp0\..\..\..\_lib\cloud-providers\gcp\gke-tpu-cluster\cli.cmd" create "%CLUSTER_NAME%"
-
-echo Setup complete.
+echo [WARN] DEPRECATED: _lib\ai-serving\gke-xpk-inference has moved to payloads\ai\gke-xpk-inference. 1>&2
+call "%LIBSCRIPT_ROOT_DIR%\payloads\ai\gke-xpk-inference\setup.cmd" %*
+exit /b %errorlevel%

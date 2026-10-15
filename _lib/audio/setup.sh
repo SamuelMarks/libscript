@@ -21,16 +21,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 ACTION="${1:-install}"
@@ -41,33 +38,27 @@ mkdir -p "$STAMPS_DIR"
 STAMP_AUDIO="${STAMPS_DIR}/.stamp.lfs_audio_pipewire"
 
 if [ "$ACTION" = "clean" ]; then
-  printf '[CLEAN] Removing audio stack stamp...
-'
+  printf '[CLEAN] Removing audio stack stamp...\n'
   rm -f "$STAMP_AUDIO"
   exit 0
 fi
 
 if [ "$ACTION" = "status" ]; then
   if [ -f "$STAMP_AUDIO" ]; then
-    printf 'Audio Stack: INSTALLED (%s)
-' "$(cat "$STAMP_AUDIO")"
+    printf 'Audio Stack: INSTALLED (%s)\n' "$(cat "$STAMP_AUDIO")"
   else
-    printf 'Audio Stack: NOT INSTALLED
-'
+    printf 'Audio Stack: NOT INSTALLED\n'
   fi
   exit 0
 fi
 
 if [ -f "$STAMP_AUDIO" ]; then
-  printf '[SKIP]  Audio stack already installed (%s)
-' "$STAMP_AUDIO"
+  printf '[SKIP]  Audio stack already installed (%s)\n' "$STAMP_AUDIO"
   exit 0
 fi
 
-printf '=== LibScript Audio & Multimedia Subsystem ===
-'
-printf '[INFO] Target Rootfs: %s
-' "$ROOTFS"
+printf '=== LibScript Audio & Multimedia Subsystem ===\n'
+printf '[INFO] Target Rootfs: %s\n' "$ROOTFS"
 
 mkdir -p "${ROOTFS}/etc/alsa/conf.d"
 mkdir -p "${ROOTFS}/etc/pipewire"
@@ -95,8 +86,7 @@ EOF
 if [ ! -f "${ROOTFS}/usr/bin/pipewire" ]; then
   cat << 'EOF' > "${ROOTFS}/usr/bin/pipewire"
 #!/bin/sh
-printf '[PIPEWIRE] PipeWire multimedia daemon running.
-'
+printf '[PIPEWIRE] PipeWire multimedia daemon running.\n'
 exit 0
 EOF
   chmod +x "${ROOTFS}/usr/bin/pipewire"
@@ -105,8 +95,7 @@ fi
 if [ ! -f "${ROOTFS}/usr/bin/wireplumber" ]; then
   cat << 'EOF' > "${ROOTFS}/usr/bin/wireplumber"
 #!/bin/sh
-printf '[WIREPLUMBER] WirePlumber session manager running.
-'
+printf '[WIREPLUMBER] WirePlumber session manager running.\n'
 exit 0
 EOF
   chmod +x "${ROOTFS}/usr/bin/wireplumber"
@@ -117,6 +106,5 @@ touch "${ROOTFS}/run/user/1000/pipewire-0" 2>/dev/null || true
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_AUDIO}.tmp"
 mv "${STAMP_AUDIO}.tmp" "$STAMP_AUDIO"
-printf '[DONE]  Audio multimedia stack staged successfully.
-'
+printf '[DONE]  Audio multimedia stack staged successfully.\n'
 exit 0

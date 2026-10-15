@@ -60,6 +60,8 @@ fi
 
 # ## assert_version
 # Usage: assert_version <cmd> <expected_pattern>
+# ## assert_version
+# Executes the assert_version logic.
 assert_version() {
   cmd="${1:-}"
   expected="${2:-}"
@@ -78,6 +80,8 @@ assert_version() {
 
 # ## assert_service_up
 # Usage: assert_service_up <host> <port> [timeout]
+# ## assert_service_up
+# Executes the assert_service_up logic.
 assert_service_up() {
   host="${1:-}"
   port="${2:-}"
@@ -102,6 +106,8 @@ assert_service_up() {
 
 # ## assert_exists
 # Usage: assert_exists <path>
+# ## assert_exists
+# Executes the assert_exists logic.
 assert_exists() {
   if [ -e "${1:-}" ]; then
     printf "[PASS] Exists: %s\n" "${1:-}" >&2

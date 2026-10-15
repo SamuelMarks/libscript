@@ -23,16 +23,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 TARGET_DEV="${1:-}"
@@ -40,17 +37,15 @@ TARGET_DIR="${2:-/mnt/target}"
 
 # ## show_help
 # Displays usage instructions and supported options.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") <target_dev> [target_dir]"
-  printf '%s
-' "Installs a complete FreeBSD base operating system to target storage."
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") <target_dev> [target_dir]"
+  printf '%s\n' "Installs a complete FreeBSD base operating system to target storage."
   printf '
 '
-  printf '%s
-' "Options:"
-  printf '%s
-' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
@@ -59,21 +54,18 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "$
 fi
 
 if [ -z "$TARGET_DEV" ]; then
-  printf '[ERROR] Target device or disk path required.
-' >&2
+  printf '[ERROR] Target device or disk path required.\n' >&2
   show_help
   exit 1
 fi
 
 STAMP_FILE="${TARGET_DIR}/.libscript_freebsd_installed.stamp"
 if [ -f "$STAMP_FILE" ]; then
-  printf '[INFO] FreeBSD already installed in %s. Skipping.
-' "$TARGET_DIR"
+  printf '[INFO] FreeBSD already installed in %s. Skipping.\n' "$TARGET_DIR"
   exit 0
 fi
 
-printf '[INSTALL-FREEBSD] Initiating FreeBSD installation to %s (root: %s)...
-' "$TARGET_DEV" "$TARGET_DIR"
+printf '[INSTALL-FREEBSD] Initiating FreeBSD installation to %s (root: %s)...\n' "$TARGET_DEV" "$TARGET_DIR"
 
 # 1. Mount target sysroot
 mkdir -p "$TARGET_DIR"
@@ -85,15 +77,13 @@ fi
 mkdir -p "$TARGET_DIR/bin" "$TARGET_DIR/sbin" "$TARGET_DIR/etc" "$TARGET_DIR/boot/defaults" "$TARGET_DIR/var"
 for archive in /usr/freebsd-dist/base.txz /usr/freebsd-dist/kernel.txz; do
   if [ -f "$archive" ]; then
-    printf '[STAGE] Extracting %s...
-' "$archive"
+    printf '[STAGE] Extracting %s...\n' "$archive"
     tar -xf "$archive" -C "$TARGET_DIR"
   fi
 done
 
 # 3. Host configuration: rc.conf and loader.conf
-printf '[STAGE] Writing /etc/rc.conf and /boot/loader.conf...
-'
+printf '[STAGE] Writing /etc/rc.conf and /boot/loader.conf...\n'
 cat << 'EOF' > "$TARGET_DIR/etc/os-release"
 NAME="FreeBSD"
 VERSION="15.0-CURRENT"
@@ -132,6 +122,5 @@ if [ -f "$TARGET_DIR/boot/loader.efi" ]; then
 fi
 
 touch "$STAMP_FILE"
-printf '[OK] FreeBSD installation completed successfully on %s.
-' "$TARGET_DEV"
+printf '[OK] FreeBSD installation completed successfully on %s.\n' "$TARGET_DEV"
 exit 0

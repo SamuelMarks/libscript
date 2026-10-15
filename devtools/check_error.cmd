@@ -1,10 +1,13 @@
 @echo off
+:: # check_error.cmd
+::
 :: ## Overview
-:: Windows batch wrapper for the associated bash script.
+:: Checks for MSI error logs on the Vagrant guest.
 ::
 :: ## Usage
-::   call script.cmd
+::   call check_error.cmd
 
+setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
     echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
@@ -16,7 +19,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -47,5 +50,6 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-sh "%~dpn0.sh" %*
+cd /d "%LIBSCRIPT_ROOT_DIR%\vagrant\windows-11"
+vagrant ssh -c "powershell -Command \"if (Test-Path C:\libscript\msi_error.txt) { Get-Content C:\libscript\msi_error.txt } else { Write-Host 'No error file' }\""
 exit /b %ERRORLEVEL%

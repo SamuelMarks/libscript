@@ -21,16 +21,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 TARGET_SYSROOT="${1:-${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}}"
@@ -40,8 +37,7 @@ VOL_ID="${3:-LIBSCRIPT_LIVE}"
 OUT_DIR="${OUT_ISO%/*}"
 [ -z "$OUT_DIR" ] || mkdir -p "$OUT_DIR"
 
-printf '[PACKAGE] Synthesizing live bootable ISO: %s (volid: %s)...
-' "$OUT_ISO" "$VOL_ID"
+printf '[PACKAGE] Synthesizing live bootable ISO: %s (volid: %s)...\n' "$OUT_ISO" "$VOL_ID"
 
 ISO_STAGING="${LIBSCRIPT_ROOT_DIR}/build/iso_staging_$$"
 mkdir -p "$ISO_STAGING/live"
@@ -77,10 +73,8 @@ if command -v grub-mkrescue >/dev/null 2>&1; then
 elif command -v xorriso >/dev/null 2>&1; then
   xorriso -as mkisofs -iso-level 3 -full-iso9660-filenames -volid "$VOL_ID" -o "$OUT_ISO" "$ISO_STAGING" 2>/dev/null || true
 else
-  printf 'LibScript Live ISO Image Stub
-' > "$OUT_ISO"
+  printf 'LibScript Live ISO Image Stub\n' > "$OUT_ISO"
 fi
 
-printf '[OK] Successfully synthesized live ISO image: %s
-' "$OUT_ISO"
+printf '[OK] Successfully synthesized live ISO image: %s\n' "$OUT_ISO"
 exit 0

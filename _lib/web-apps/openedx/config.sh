@@ -40,16 +40,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
@@ -74,10 +71,11 @@ SCHEMA_FILE="${SCRIPT_DIR}/vars.schema.json"
 
 # ## resolve_python
 # Resolves python interpreter.
+# ## resolve_python
+# Executes the resolve_python logic.
 resolve_python() {
   if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/python" ]; then
-    printf '%s
-' "${OPENEDX_INSTALL_DIR}/.venv/bin/python"
+    printf '%s\n' "${OPENEDX_INSTALL_DIR}/.venv/bin/python"
   elif command -v python3 >/dev/null 2>&1; then
     command -v python3
   elif command -v python >/dev/null 2>&1; then
@@ -92,6 +90,8 @@ resolve_python() {
 #
 # Inputs:
 #   $1 - key name (supports dot notation like DATABASES.default.HOST)
+# ## config_get
+# Executes the config_get logic.
 config_get() {
   if [ $# -lt 1 ]; then
     log_err "Usage: $0 get <key>"
@@ -136,6 +136,8 @@ EOF
 # Inputs:
 #   $1 - key name (supports dot notation)
 #   $2 - value (string, int, or json)
+# ## config_set
+# Executes the config_set logic.
 config_set() {
   if [ $# -lt 2 ]; then
     log_err "Usage: $0 set <key> <value>"
@@ -187,6 +189,8 @@ EOF
 
 # ## config_list
 # Lists configuration in JSON format.
+# ## config_list
+# Executes the config_list logic.
 config_list() {
   if [ ! -f "${LMS_CONF}" ]; then
     log_warn "No configuration file found at ${LMS_CONF}."
@@ -197,6 +201,8 @@ config_list() {
 
 # ## config_generate
 # Idempotently synthesizes configuration files preserving existing overrides.
+# ## config_generate
+# Executes the config_generate logic.
 config_generate() {
   mkdir -p "${CONF_DIR}"
   log_info "Generating Open edX configuration files at ${CONF_DIR}..."
@@ -267,6 +273,8 @@ EOF
 
 # ## config_validate
 # Validates configuration against vars.schema.json.
+# ## config_validate
+# Executes the config_validate logic.
 config_validate() {
   log_info "Validating configuration files..."
   if [ ! -f "${LMS_CONF}" ]; then
@@ -315,6 +323,8 @@ EOF
 
 # ## show_help
 # Displays usage guide.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
   cat <<EOF
 Open edX Configuration Management Engine

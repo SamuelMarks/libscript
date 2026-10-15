@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 FORMAT="qcow2"
@@ -53,13 +50,11 @@ while [ $# -gt 0 ]; do
       shift 2
       ;;
     --help|-h)
-      printf 'Usage: %s --format <qcow2|box|raw|vhd|vmdk|iso> --profile <path> [--output <path>]
-' "$0"
+      printf 'Usage: %s --format <qcow2|box|raw|vhd|vmdk|iso> --profile <path> [--output <path>]\n' "$0"
       exit 0
       ;;
     *)
-      printf '[ERROR] Unknown argument: %s
-' "$1" >&2
+      printf '[ERROR] Unknown argument: %s\n' "$1" >&2
       exit 1
       ;;
   esac
@@ -68,8 +63,7 @@ done
 SYSROOT="${REPO_ROOT}/build/freebsd-sysroot"
 
 # Step 1: Assemble sysroot from profile
-printf '[DISTRO]   Synthesizing FreeBSD sysroot from %s...
-' "${PROFILE}"
+printf '[DISTRO]   Synthesizing FreeBSD sysroot from %s...\n' "${PROFILE}"
 "${REPO_ROOT}/_lib/freebsd/distro/assemble.sh" "${PROFILE}" "${SYSROOT}"
 
 # Step 2: Dispatch to requested format exporter
@@ -101,11 +95,9 @@ case "${FORMAT}" in
     "${SCRIPT_DIR}/freebsd_iso.sh" "${SYSROOT}" "${OUTPUT}"
     ;;
   *)
-    printf '[ERROR] Unsupported export format "%s"!
-' "${FORMAT}" >&2
+    printf '[ERROR] Unsupported export format "%s"!\n' "${FORMAT}" >&2
     exit 1
     ;;
 esac
 
-printf '[OK]       FreeBSD distribution packaged successfully as %s: %s
-' "${FORMAT}" "${OUTPUT}"
+printf '[OK]       FreeBSD distribution packaged successfully as %s: %s\n' "${FORMAT}" "${OUTPUT}"

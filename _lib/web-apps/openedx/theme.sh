@@ -40,16 +40,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
@@ -76,10 +73,11 @@ mkdir -p "${THEMES_DIR}"
 
 # ## resolve_python
 # Resolves python interpreter.
+# ## resolve_python
+# Executes the resolve_python logic.
 resolve_python() {
   if [ -x "${PYTHON_BIN}" ]; then
-    printf '%s
-' "${PYTHON_BIN}"
+    printf '%s\n' "${PYTHON_BIN}"
   elif command -v python3 >/dev/null 2>&1; then
     command -v python3
   elif command -v python >/dev/null 2>&1; then
@@ -96,6 +94,8 @@ resolve_python() {
 #   $1 - name
 #   $2 - git_url
 #   --branch <branch>
+# ## theme_install
+# Executes the theme_install logic.
 theme_install() {
   if [ $# -lt 2 ]; then
     log_err "Usage: $0 install <name> <git_url> [--branch <branch>]"
@@ -155,6 +155,8 @@ EOF
 #
 # Inputs:
 #   $1 - name
+# ## theme_build
+# Executes the theme_build logic.
 theme_build() {
   if [ $# -lt 1 ]; then
     log_err "Usage: $0 build <name>"
@@ -191,6 +193,8 @@ theme_build() {
 # Inputs:
 #   $1 - name
 #   --site <domain>
+# ## theme_apply
+# Executes the theme_apply logic.
 theme_apply() {
   if [ $# -lt 1 ]; then
     log_err "Usage: $0 apply <name> [--site <domain>]"
@@ -258,6 +262,8 @@ EOF
 
 # ## theme_list
 # Lists all themes.
+# ## theme_list
+# Executes the theme_list logic.
 theme_list() {
   log_info "Listing installed Open edX themes..."
   _py="$(resolve_python)"
@@ -271,15 +277,12 @@ for k, v in d.items():
     print(f"{k:<24} {str(v.get('active', False)):<10} {v.get('url', 'local'):<40}")
 EOF
   else
-    printf '%-24s %-10s %-40s
-' "THEME NAME" "ACTIVE" "SOURCE URL"
-    printf '%s
-' "----------------------------------------------------------------------------"
+    printf '%-24s %-10s %-40s\n' "THEME NAME" "ACTIVE" "SOURCE URL"
+    printf '%s\n' "----------------------------------------------------------------------------"
     set +f
     for d in "${THEMES_DIR}"/*; do
       if [ -d "$d" ]; then
-        printf '%-24s %-10s %-40s
-' "$(basename "$d")" "false" "local"
+        printf '%-24s %-10s %-40s\n' "$(basename "$d")" "false" "local"
       fi
     done
     set -f
@@ -291,6 +294,8 @@ EOF
 #
 # Inputs:
 #   $1 - name
+# ## theme_remove
+# Executes the theme_remove logic.
 theme_remove() {
   if [ $# -lt 1 ]; then
     log_err "Usage: $0 remove <name>"
@@ -318,6 +323,8 @@ EOF
 
 # ## show_help
 # Displays usage guide.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
   cat <<EOF
 Open edX Theming & Branding CLI

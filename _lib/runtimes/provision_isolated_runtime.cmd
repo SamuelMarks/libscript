@@ -1,4 +1,5 @@
 @echo off
+:: # provision_isolated_runtime.cmd
 setlocal EnableDelayedExpansion
 
 :: ## Overview
@@ -20,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -54,6 +55,8 @@ goto :find_root
 set "RUNTIME_TYPE="
 set "ISOLATION_PATH="
 
+:: ## ParseArgs
+:: Executes ParseArgs functionality.
 :ParseArgs
 if "%~1"=="" goto ValidateArgs
 if "%~1"=="--runtime" (
@@ -71,6 +74,8 @@ if "%~1"=="--path" (
 echo [ERROR] Unknown argument: %~1 >&2
 exit /b 1
 
+:: ## ValidateArgs
+:: Executes ValidateArgs functionality.
 :ValidateArgs
 :: Validates the parsed arguments
 if "!RUNTIME_TYPE!"=="" (
@@ -83,6 +88,8 @@ if "!ISOLATION_PATH!"=="" (
 )
 goto ProvisionRuntime
 
+:: ## ProvisionRuntime
+:: Executes ProvisionRuntime functionality.
 :ProvisionRuntime
 :: Provisions the isolated runtime
 echo [INFO] Provisioning isolated !RUNTIME_TYPE! runtime at !ISOLATION_PATH!

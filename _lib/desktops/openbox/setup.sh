@@ -21,16 +21,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 ACTION="${1:-install}"
@@ -41,33 +38,27 @@ mkdir -p "$STAMPS_DIR"
 STAMP_OPENBOX="${STAMPS_DIR}/.stamp.lfs_desktop_openbox"
 
 if [ "$ACTION" = "clean" ]; then
-  printf '[CLEAN] Removing Openbox stamp...
-'
+  printf '[CLEAN] Removing Openbox stamp...\n'
   rm -f "$STAMP_OPENBOX"
   exit 0
 fi
 
 if [ "$ACTION" = "status" ]; then
   if [ -f "$STAMP_OPENBOX" ]; then
-    printf 'Openbox: INSTALLED (%s)
-' "$(cat "$STAMP_OPENBOX")"
+    printf 'Openbox: INSTALLED (%s)\n' "$(cat "$STAMP_OPENBOX")"
   else
-    printf 'Openbox: NOT INSTALLED
-'
+    printf 'Openbox: NOT INSTALLED\n'
   fi
   exit 0
 fi
 
 if [ -f "$STAMP_OPENBOX" ]; then
-  printf '[SKIP]  Openbox already installed (%s)
-' "$STAMP_OPENBOX"
+  printf '[SKIP]  Openbox already installed (%s)\n' "$STAMP_OPENBOX"
   exit 0
 fi
 
-printf '=== LibScript Openbox Window Manager ===
-'
-printf '[INFO] Target Rootfs: %s
-' "$ROOTFS"
+printf '=== LibScript Openbox Window Manager ===\n'
+printf '[INFO] Target Rootfs: %s\n' "$ROOTFS"
 
 mkdir -p "${ROOTFS}/etc/xdg/openbox"
 mkdir -p "${ROOTFS}/usr/bin"
@@ -92,8 +83,7 @@ chmod +x "${ROOTFS}/etc/xdg/openbox/autostart"
 if [ ! -f "${ROOTFS}/usr/bin/openbox" ]; then
   cat << 'EOF' > "${ROOTFS}/usr/bin/openbox"
 #!/bin/sh
-printf '[OPENBOX] Openbox X11 Window Manager running.
-'
+printf '[OPENBOX] Openbox X11 Window Manager running.\n'
 exit 0
 EOF
   chmod +x "${ROOTFS}/usr/bin/openbox"
@@ -101,6 +91,5 @@ fi
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_OPENBOX}.tmp"
 mv "${STAMP_OPENBOX}.tmp" "$STAMP_OPENBOX"
-printf '[DONE]  Openbox configured successfully.
-'
+printf '[DONE]  Openbox configured successfully.\n'
 exit 0

@@ -1,10 +1,11 @@
 @echo off
+:: # setup.cmd
 :: ## Overview
 :: Windows Batch companion for LFS cross-toolchain bootstrap.
 :: Implements Option A Win32 Hard-Fail boundary proforma.
 ::
 :: ## Usage
-:: _lib	oolchains\lfs-toolchain\setup.cmd [install|clean|status]
+:: _lib\toolchains\lfs-toolchain\setup.cmd [install|clean|status]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -19,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -80,5 +81,7 @@ echo [ERROR] Native Linux kernel assembly (mount/unshare) and LFS toolchain cros
 echo [ERROR] Please execute via container or VM builder: vm_builder.cmd >&2
 exit /b 86
 
+:: ## end
+:: Executes end functionality.
 :end
 exit /b 0

@@ -1,17 +1,17 @@
 @echo off
-REM ==============================================================================
-REM ## Overview
-REM Provisions a reverse proxy virtual host (Nginx or Apache httpd).
-REM Windows Batch equivalent of provision_vhost_abstract.sh
-REM Includes idempotent interpolation using block markers and tests.
-REM
-REM ## Usage
-REM provision_vhost_abstract.cmd --app-id <id> --server-name <domain>
-REM        [--proxy-engine <nginx|apache2>] [--listen-port <port>]
-REM        [--target <url>] [--doc-root <path>] --conf-file <path>
-REM ==============================================================================
+:: # provision_vhost_abstract.cmd
+::
+:: ## Overview
+:: Provisions a reverse proxy virtual host (Nginx or Apache httpd).
+:: Windows Batch equivalent of provision_vhost_abstract.sh
+:: Includes idempotent interpolation using block markers and tests.
+::
+:: ## Usage
+:: provision_vhost_abstract.cmd --app-id <id> --server-name <domain>
+::        [--proxy-engine <nginx|apache2>] [--listen-port <port>]
+::        [--target <url>] [--doc-root <path>] --conf-file <path>
 
-setlocal EnableExtensions EnableDelayedExpansion
+setlocal EnableDelayedExpansion
 
 set "THIS_DIR=%~dp0"
 set "THIS_FILE=%~f0"
@@ -26,7 +26,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -65,6 +65,8 @@ set "TARGET="
 set "DOC_ROOT="
 set "CONF_FILE="
 
+:: ## parse_args
+:: Executes parse_args functionality.
 :parse_args
 if "%~1"=="" goto validate_args
 if /I "%~1"=="--app-id" (
@@ -105,6 +107,8 @@ if /I "%~1"=="--conf-file" (
 echo [ERROR] Unknown argument: %~1 >&2
 exit /b 1
 
+:: ## validate_args
+:: Executes validate_args functionality.
 :validate_args
 if "%APP_ID%"=="" (
     echo [ERROR] --app-id is required >&2
@@ -120,6 +124,8 @@ if "%CONF_FILE%"=="" (
 )
 goto interpolate_block
 
+:: ## generate_nginx_block
+:: Executes generate_nginx_block functionality.
 :generate_nginx_block
 (
     echo # BEGIN libscript-managed: %APP_ID%
@@ -142,6 +148,8 @@ goto interpolate_block
 ) > "%NEW_BLOCK_FILE%"
 exit /b 0
 
+:: ## generate_apache2_block
+:: Executes generate_apache2_block functionality.
 :generate_apache2_block
 (
     echo # BEGIN libscript-managed: %APP_ID%
@@ -160,6 +168,8 @@ exit /b 0
 ) > "%NEW_BLOCK_FILE%"
 exit /b 0
 
+:: ## interpolate_block
+:: Executes interpolate_block functionality.
 :interpolate_block
 set "NEW_BLOCK_FILE=%THIS_DIR%.tmp_block_%APP_ID%"
 set "BACKUP_FILE=%CONF_FILE%.bak"
@@ -222,6 +232,8 @@ if not exist "%CONF_FILE%" (
 del /f /q "%NEW_BLOCK_FILE%"
 goto test_and_reload
 
+:: ## test_and_reload
+:: Executes test_and_reload functionality.
 :test_and_reload
 set "TEST_CMD="
 set "RELOAD_CMD="

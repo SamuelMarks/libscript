@@ -1,11 +1,11 @@
 #!/bin/sh
-set -feu
-
 # ## Overview
 # Helper to compile MSI remotely via an external or remote service.
 #
 # ## Usage
 #   ./compile_msi_remote.sh <WXS_FILE>
+
+set -feu
 
 if [ "${SCRIPT_NAME-}" ]; then
   THIS_FILE="${SCRIPT_NAME}"

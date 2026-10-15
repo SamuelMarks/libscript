@@ -49,57 +49,38 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 # ## show_help
 # ## Overview
 # Prints script usage instructions and available command-line switches.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
-  printf '%s
-' "Usage: $0 [TARGET_DIR] [OPTIONS]"
-  printf '%s
-' "Generates a generic WiX Windows Installer (.msi) package."
-  printf '%s
-' "Options:"
-  printf '%s
-' "  --out <name>          Output base file name"
-  printf '%s
-' "  --version <ver>       Package version"
-  printf '%s
-' "  --upgrade-code <guid> Upgrade code GUID"
-  printf '%s
-' "  --icon <path>         Path to .ico icon file"
-  printf '%s
-' "  --banner-top <path>   Path to 493x58 top banner BMP"
-  printf '%s
-' "  --banner-side <path>  Path to 164x312 side splash BMP"
-  printf '%s
-' "  --license <path>      Path to EULA (RTF or TXT)"
-  printf '%s
-' "  --install-dir <dir>   Default application installation folder"
-  printf '%s
-' "  --data-dir <dir>      Default mutable datastore folder"
-  printf '%s
-' "  --log-dir <dir>       Default logs folder"
-  printf '%s
-' "  --repo <url>          Source Git repository URL"
-  printf '%s
-' "  --branch <branch>     Target Git release branch or tag"
-  printf '%s
-' "  --auth-token <token>  Private repository authentication token"
-  printf '%s
-' "  --mode <mode>         Default setup mode (Simple or Advanced)"
-  printf '%s
-' "  --help, -h            Show this help text"
+  printf '%s\n' "Usage: $0 [TARGET_DIR] [OPTIONS]"
+  printf '%s\n' "Generates a generic WiX Windows Installer (.msi) package."
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --out <name>          Output base file name"
+  printf '%s\n' "  --version <ver>       Package version"
+  printf '%s\n' "  --upgrade-code <guid> Upgrade code GUID"
+  printf '%s\n' "  --icon <path>         Path to .ico icon file"
+  printf '%s\n' "  --banner-top <path>   Path to 493x58 top banner BMP"
+  printf '%s\n' "  --banner-side <path>  Path to 164x312 side splash BMP"
+  printf '%s\n' "  --license <path>      Path to EULA (RTF or TXT)"
+  printf '%s\n' "  --install-dir <dir>   Default application installation folder"
+  printf '%s\n' "  --data-dir <dir>      Default mutable datastore folder"
+  printf '%s\n' "  --log-dir <dir>       Default logs folder"
+  printf '%s\n' "  --repo <url>          Source Git repository URL"
+  printf '%s\n' "  --branch <branch>     Target Git release branch or tag"
+  printf '%s\n' "  --auth-token <token>  Private repository authentication token"
+  printf '%s\n' "  --mode <mode>         Default setup mode (Simple or Advanced)"
+  printf '%s\n' "  --help, -h            Show this help text"
 }
 
 TARGET_DIR=""
@@ -223,8 +204,7 @@ while [ $# -gt 0 ]; do
       shift 2
       ;;
     -*)
-      printf '[WARN] Unknown option: %s
-' "$1" >&2
+      printf '[WARN] Unknown option: %s\n' "$1" >&2
       shift
       ;;
     *)
@@ -246,8 +226,7 @@ if [ -d "${LIBSCRIPT_ROOT_DIR}/${TARGET_DIR}" ]; then
 elif [ -d "$TARGET_DIR" ]; then
   RESOLVED_TARGET_DIR="$(cd -- "$TARGET_DIR" && pwd)"
 else
-  printf '[FAIL] Target directory does not exist: %s
-' "$TARGET_DIR" >&2
+  printf '[FAIL] Target directory does not exist: %s\n' "$TARGET_DIR" >&2
   exit 1
 fi
 
@@ -341,6 +320,8 @@ mkdir -p "$TMP_WORK_DIR"
 # shellcheck disable=SC2317,SC2329
 # ## Usage
 #   Internal function.
+# ## cleanup_tmp
+# Executes the cleanup_tmp logic.
 cleanup_tmp() {
   rm -rf "$TMP_WORK_DIR"
   rm -f "${OUT_FILE}.wixobj" "${OUT_FILE}_payload.wixobj" "${OUT_FILE}.candle.wxs" "${OUT_FILE}_wixl.wxs" "${OUT_FILE}_payload_wixl.wxs"
@@ -352,6 +333,8 @@ trap cleanup_tmp EXIT INT TERM
 # Validates or synthesizes placeholder branding assets via synthesize_branding.sh.
 # ## Usage
 #   Internal function.
+# ## ensure_branding_assets
+# Executes the ensure_branding_assets logic.
 ensure_branding_assets() {
   synth_script="${LIBSCRIPT_ROOT_DIR}/packaging/synthesize_branding.sh"
 
@@ -421,6 +404,8 @@ WXS_FILE="${OUT_FILE}.wxs"
 # Generates the WiX XML (.wxs) manifest synthesizing properties from schema and packaging config.
 # ## Usage
 #   Internal function.
+# ## generate_wxs
+# Executes the generate_wxs logic.
 generate_wxs() {
   _esc_pub=$(printf '%s\n' "$APP_PUBLISHER" | sed 's/&/\&amp;/g')
   _esc_name=$(printf '%s\n' "$APP_NAME" | sed 's/&/\&amp;/g')
@@ -553,8 +538,7 @@ EOF_UPGRADE
     printf '    <Binary Id="WixUIDialogBmp" SourceFile="%s" />\n    <WixVariable Id="WixUIDialogBmp" Value="%s" />\n' "$BANNER_SIDE_PATH" "$BANNER_SIDE_PATH" >> "$WXS_FILE"
   fi
   if [ -n "$rtf_license_file" ] && [ -f "$rtf_license_file" ]; then
-    printf '    <WixVariable Id="WixUILicenseRtf" Value="%s" />
-' "$rtf_license_file" >> "$WXS_FILE"
+    printf '    <WixVariable Id="WixUILicenseRtf" Value="%s" />\n' "$rtf_license_file" >> "$WXS_FILE"
   fi
 
   cat << EOF_PROPS >> "$WXS_FILE"
@@ -1195,6 +1179,8 @@ fi
 # Builds the .msi binary using cross-platform msi-rs, 
 # ## Usage
 #   Internal function.
+# ## compile_msi
+# Executes the compile_msi logic.
 compile_msi() {
   if [ "$USE_WIX" = "1" ]; then
     printf '[INFO] Using traditional WiX Toolset...\n'

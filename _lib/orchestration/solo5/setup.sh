@@ -21,16 +21,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 ACTION="${1:-boot}"
@@ -53,24 +50,20 @@ case "$ACTION" in
   install|configure|compile)
     date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
     mv "${STAMP_FILE}.tmp" "$STAMP_FILE"
-    printf '[OK] Configured Solo5 tender engine: %s
-' "$STAMP_FILE"
+    printf '[OK] Configured Solo5 tender engine: %s\n' "$STAMP_FILE"
     ;;
 
   boot)
     if [ ! -f "$BIN" ]; then
-      printf 'LibScript MirageOS Unikernel Binary
-' > "$BIN"
+      printf 'LibScript MirageOS Unikernel Binary\n' > "$BIN"
     fi
 
     TENDER_BIN="solo5-${TENDER}"
     if command -v "$TENDER_BIN" >/dev/null 2>&1; then
-      printf '[ORCHESTRATION] Booting unikernel with %s...
-' "$TENDER_BIN"
+      printf '[ORCHESTRATION] Booting unikernel with %s...\n' "$TENDER_BIN"
       "$TENDER_BIN" "$BIN" 2>/dev/null || true
     else
-      printf '[INFO] %s not found in PATH. Unikernel payload ready at %s
-' "$TENDER_BIN" "$BIN"
+      printf '[INFO] %s not found in PATH. Unikernel payload ready at %s\n' "$TENDER_BIN" "$BIN"
     fi
     ;;
 esac

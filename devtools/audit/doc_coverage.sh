@@ -1,6 +1,6 @@
 #!/bin/sh
 # ## Overview
-# Audits documentation coverage of schema keys, CLI flags, and shell functions.
+# Audits documentation coverage of schema keys, CLI flags, shell functions, and batch/powershell files.
 #
 # ## Usage
 #   ./devtools/audit/doc_coverage.sh
@@ -48,19 +48,72 @@ tmp_sh=$(mktemp)
 find "${LIBSCRIPT_ROOT_DIR}" -name "*.sh" -type f | grep -v "node_modules" > "$tmp_sh" || true
 
 while IFS= read -r sh_file; do
-  if grep -E '^[a-zA-Z_][a-zA-Z0-9_]*\(\) \{' "$sh_file" >/dev/null; then
-    if ! grep -q "^# ## " "$sh_file"; then
-       printf '[WARN] Shell file %s has functions but no docstrings (##).\n' "${sh_file#${LIBSCRIPT_ROOT_DIR}/}"
-       MISSING_FUNC_DOCS=$((MISSING_FUNC_DOCS + 1))
-    fi
+  missing_in_file=$(awk -v file="${sh_file#${LIBSCRIPT_ROOT_DIR}/}" '
+    BEGIN { has_doc = 0 }
+    /^# ##/ { has_doc = 1 }
+    /^[a-zA-Z_][a-zA-Z0-9_]*\(\) *\{/ {
+        if (!has_doc) {
+            print file ":" NR;
+        }
+        has_doc = 0
+    }
+    /^[^#]/ && NF > 0 && !/^[a-zA-Z_][a-zA-Z0-9_]*\(\) *\{/ { has_doc = 0 }
+  ' "$sh_file")
+  
+  if [ -n "$missing_in_file" ]; then
+    printf '[WARN] Missing function docstring(s) in %s:\n%s\n' "${sh_file#${LIBSCRIPT_ROOT_DIR}/}" "$missing_in_file"
+    MISSING_FUNC_DOCS=$((MISSING_FUNC_DOCS + 1))
   fi
 done < "$tmp_sh"
 rm -f "$tmp_sh"
 
-if [ "$MISSING_SCHEMA_DOCS" -eq 0 ] && [ "$MISSING_FUNC_DOCS" -eq 0 ]; then
+printf '==> Auditing Batch Label Docstring Coverage...\n'
+MISSING_CMD_DOCS=0
+tmp_cmd=$(mktemp)
+find "${LIBSCRIPT_ROOT_DIR}" -name "*.cmd" -type f | grep -v "node_modules" > "$tmp_cmd" || true
+
+while IFS= read -r cmd_file; do
+  missing_in_file=$(awk -v file="${cmd_file#${LIBSCRIPT_ROOT_DIR}/}" '
+    BEGIN { has_doc = 0 }
+    /^:: ##/ { has_doc = 1 }
+    /^:[a-zA-Z0-9_]+/ && !/^:EOF/ && !/^:eof/ && !/^:root_found/ && !/^:find_root/ { 
+        if (!has_doc) {
+            print file ":" NR;
+        }
+        has_doc = 0 
+    }
+    /^[^:]/ && NF > 0 { has_doc = 0 }
+  ' "$cmd_file")
+  
+  if [ -n "$missing_in_file" ]; then
+    printf '[WARN] Missing label docstring(s) in %s:\n%s\n' "${cmd_file#${LIBSCRIPT_ROOT_DIR}/}" "$missing_in_file"
+    MISSING_CMD_DOCS=$((MISSING_CMD_DOCS + 1))
+  fi
+done < "$tmp_cmd"
+rm -f "$tmp_cmd"
+
+printf '==> Auditing PowerShell Header Coverage...\n'
+MISSING_PS1_DOCS=0
+tmp_ps1=$(mktemp)
+find "${LIBSCRIPT_ROOT_DIR}" -name "*.ps1" -type f | grep -v "node_modules" > "$tmp_ps1" || true
+
+while IFS= read -r ps1_file; do
+  if ! head -n 30 "$ps1_file" | grep -q "## Overview"; then
+    printf '[WARN] Missing ## Overview in %s\n' "${ps1_file#${LIBSCRIPT_ROOT_DIR}/}"
+    MISSING_PS1_DOCS=$((MISSING_PS1_DOCS + 1))
+  elif ! head -n 30 "$ps1_file" | grep -q "## Usage"; then
+    printf '[WARN] Missing ## Usage in %s\n' "${ps1_file#${LIBSCRIPT_ROOT_DIR}/}"
+    MISSING_PS1_DOCS=$((MISSING_PS1_DOCS + 1))
+  fi
+done < "$tmp_ps1"
+rm -f "$tmp_ps1"
+
+TOTAL_ERRORS=$((MISSING_SCHEMA_DOCS + MISSING_FUNC_DOCS + MISSING_CMD_DOCS + MISSING_PS1_DOCS))
+
+if [ "$TOTAL_ERRORS" -eq 0 ]; then
   printf '[PASS] 100%% Documentation Coverage Audit Passed!\n'
   exit 0
 else
-  printf '[WARN] Found %d schema files and %d shell scripts with potential missing docs.\n' "$MISSING_SCHEMA_DOCS" "$MISSING_FUNC_DOCS"
+  printf '[WARN] Found %d schema files, %d shell scripts, %d batch files, and %d powershell scripts with potential missing docs.\n' "$MISSING_SCHEMA_DOCS" "$MISSING_FUNC_DOCS" "$MISSING_CMD_DOCS" "$MISSING_PS1_DOCS"
   exit 0
 fi

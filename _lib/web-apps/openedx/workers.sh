@@ -38,16 +38,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
@@ -84,6 +81,8 @@ mkdir -p "${RUN_DIR}" "${LOG_DIR}"
 #
 # Inputs:
 #   $1 - PID
+# ## is_pid_running
+# Executes the is_pid_running logic.
 is_pid_running() {
   _pid="$1"
   [ -n "${_pid}" ] && kill -0 "${_pid}" 2>/dev/null
@@ -95,6 +94,8 @@ is_pid_running() {
 # Inputs:
 #   $1 - service identifier (e.g. lms-worker, cms-worker, celery-beat)
 #   $2 - settings module / service target
+# ## start_daemon
+# Executes the start_daemon logic.
 start_daemon() {
   _svc="$1"
   _target="$2"
@@ -133,8 +134,7 @@ start_daemon() {
     return 1
   fi
 
-  printf '%s
-' "${_new_pid}" > "${_pidfile}"
+  printf '%s\n' "${_new_pid}" > "${_pidfile}"
   log_success "Daemon '${_svc}' launched successfully (PID: ${_new_pid})."
 }
 
@@ -143,6 +143,8 @@ start_daemon() {
 #
 # Inputs:
 #   $1 - service identifier
+# ## stop_daemon
+# Executes the stop_daemon logic.
 stop_daemon() {
   _svc="$1"
   _pidfile="${RUN_DIR}/${_svc}.pid"
@@ -173,23 +175,25 @@ stop_daemon() {
 #
 # Inputs:
 #   $1 - service identifier
+# ## status_daemon
+# Executes the status_daemon logic.
 status_daemon() {
   _svc="$1"
   _pidfile="${RUN_DIR}/${_svc}.pid"
   if [ -f "${_pidfile}" ]; then
     _pid=$(cat "${_pidfile}" 2>/dev/null || printf '')
     if is_pid_running "${_pid}"; then
-      printf '%-20s %-12s (PID: %s)
-' "${_svc}" "RUNNING" "${_pid}"
+      printf '%-20s %-12s (PID: %s)\n' "${_svc}" "RUNNING" "${_pid}"
       return 0
     fi
   fi
-  printf '%-20s %-12s
-' "${_svc}" "STOPPED"
+  printf '%-20s %-12s\n' "${_svc}" "STOPPED"
 }
 
 # ## workers_start
 # Starts all workers.
+# ## workers_start
+# Executes the workers_start logic.
 workers_start() {
   log_info "Starting Open edX Celery workers and scheduler..."
   start_daemon "lms-worker" "lms"
@@ -200,6 +204,8 @@ workers_start() {
 
 # ## workers_stop
 # Stops all workers.
+# ## workers_stop
+# Executes the workers_stop logic.
 workers_stop() {
   log_info "Stopping Open edX Celery workers and scheduler..."
   stop_daemon "lms-worker"
@@ -210,22 +216,22 @@ workers_stop() {
 
 # ## workers_status
 # Displays status report for workers.
+# ## workers_status
+# Executes the workers_status logic.
 workers_status() {
-  printf '======================================================
-'
-  printf '             Open edX Background Workers Status        
-'
-  printf '======================================================
-'
+  printf '======================================================\n'
+  printf '             Open edX Background Workers Status        \n'
+  printf '======================================================\n'
   status_daemon "lms-worker"
   status_daemon "cms-worker"
   status_daemon "celery-beat"
-  printf '======================================================
-'
+  printf '======================================================\n'
 }
 
 # ## show_help
 # Displays usage guide.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
   cat <<EOF
 Open edX Worker & Scheduler Management CLI

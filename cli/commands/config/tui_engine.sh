@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 # Backend detection
@@ -44,6 +41,8 @@ fi
 
 # ## tui_msgbox
 # Displays an informational message box.
+# ## tui_msgbox
+# Executes the tui_msgbox logic.
 tui_msgbox() {
   _title="$1"
   _text="$2"
@@ -67,6 +66,8 @@ Press ENTER to continue...' "$_title" "$_text"
 
 # ## tui_menu
 # Displays a single-choice menu and returns the selected tag to stdout.
+# ## tui_menu
+# Executes the tui_menu logic.
 tui_menu() {
   _title="$1"
   _text="$2"
@@ -89,20 +90,20 @@ tui_menu() {
         _tag="$1"
         _desc="$2"
         shift 2
-        printf '  [%s] %s
-' "$_tag" "$_desc" >&2
+        printf '  [%s] %s\n' "$_tag" "$_desc" >&2
         _tags="${_tags} ${_tag}"
       done
       printf 'Select option: ' >&2
       read -r _choice || true
-      printf '%s
-' "$_choice"
+      printf '%s\n' "$_choice"
       ;;
   esac
 }
 
 # ## tui_input
 # Prompts for text input and returns the value to stdout.
+# ## tui_input
+# Executes the tui_input logic.
 tui_input() {
   _title="$1"
   _prompt="$2"
@@ -118,11 +119,9 @@ tui_input() {
       printf '%s [%s]: ' "$_prompt" "$_default" >&2
       read -r _val || true
       if [ -z "$_val" ]; then
-        printf '%s
-' "$_default"
+        printf '%s\n' "$_default"
       else
-        printf '%s
-' "$_val"
+        printf '%s\n' "$_val"
       fi
       ;;
   esac

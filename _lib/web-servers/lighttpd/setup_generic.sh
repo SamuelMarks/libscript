@@ -47,6 +47,8 @@ ACTION="${ACTION:-install}"
 
 # ## resolve_exact_version
 # Executes resolve_exact_version functionality.
+# ## resolve_exact_version
+# Executes the resolve_exact_version logic.
 resolve_exact_version() {
   if [ "${LIGHTTPD_VERSION}" = "latest" ] || [ "${LIGHTTPD_VERSION}" = "lts" ]; then
     EXACT_VERSION="1.4.74"
@@ -134,6 +136,10 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/lighttpd/${VERSION:-latest}/bin/lighttpd" ]; then
+      log_info "lighttpd ${VERSION:-latest} is already installed."
+      exit 0
+    fi
     if [ "${LIGHTTPD_INSTALL_METHOD}" = "system" ]; then
       if command -v dnf >/dev/null 2>&1; then
         priv dnf install -y epel-release || true

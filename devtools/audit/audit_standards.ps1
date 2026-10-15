@@ -153,25 +153,25 @@ function Audit-File {
     # 3. Idempotency checks
     $allContent = Get-Content -Path $FilePath -Raw -ErrorAction SilentlyContinue
     if ($ext -eq "sh") {
-        if ($allContent -match '(?m)^[ 	]*mkdir[ 	]+[^-]' -and $allContent -notmatch '(?m)^[ 	]*mkdir[ 	]+.*lock' -and $allContent -notmatch 'while[ 	]+![ 	]+mkdir') {
+        if ($allContent -match '(?m)^[ \t]*mkdir[ \t]+[^-]' -and $allContent -notmatch '(?m)^[ \t]*mkdir[ \t]+.*lock' -and $allContent -notmatch 'while[ \t]+![ \t]+mkdir') {
             Log-Violation -File $FilePath -Rule "IDEMPOTENCY" -Details "Unguarded 'mkdir' found without '-p'. Use 'mkdir -p' for idempotency."
         }
-        if ($allContent -match '(?m)^[ 	]*ln[ 	]+-s[ 	]+[^-]') {
+        if ($allContent -match '(?m)^[ \t]*ln[ \t]+-s[ \t]+[^-]') {
             Log-Violation -File $FilePath -Rule "IDEMPOTENCY" -Details "Unguarded 'ln -s' found without '-f'. Use 'ln -sf' for idempotency."
         }
     } elseif ($ext -eq "cmd" -or $ext -eq "bat") {
-        if ($allContent -match '(?mi)^[ 	]*(mkdir|md)[ 	]+' -and $allContent -notmatch '(?mi)if[ 	]+not[ 	]+exist') {
+        if ($allContent -match '(?mi)^[ \t]*(mkdir|md)[ \t]+' -and $allContent -notmatch '(?mi)if[ \t]+not[ \t]+exist') {
             Log-Violation -File $FilePath -Rule "IDEMPOTENCY" -Details "Unguarded 'mkdir' in batch script. Wrap with 'if not exist <dir> mkdir <dir>'."
         }
     }
 
     # 4. Ban eval checks
     if ($ext -eq "sh") {
-        if ($allContent -match '(?m)^[ 	]*eval([ 	]|$)|;[ 	]*eval([ 	]|$)' -and $allContent -notmatch 'libscript-allow-eval') {
+        if ($allContent -match '(?m)^[ \t]*eval([ \t]|$)|;[ \t]*eval([ \t]|$)' -and $allContent -notmatch 'libscript-allow-eval') {
             Log-Violation -File $FilePath -Rule "BAN_EVAL" -Details "Disallowed use of 'eval' found."
         }
     } elseif ($ext -eq "ps1") {
-        if ($allContent -match '(?mi)^[ 	]*(Invoke-Expression|iex)\b|;[ 	]*(Invoke-Expression|iex)\b' -and $allContent -notmatch 'libscript-allow-eval') {
+        if ($allContent -match '(?mi)^[ \t]*(Invoke-Expression|iex)\b|;[ \t]*(Invoke-Expression|iex)\b' -and $allContent -notmatch 'libscript-allow-eval') {
             Log-Violation -File $FilePath -Rule "BAN_EVAL" -Details "Disallowed use of 'Invoke-Expression' found."
         }
     }

@@ -1,0 +1,35 @@
+{
+  "$schema": "../topology.schema.json",
+  "name": "postgres-ha",
+  "version": "1.0.0",
+  "description": "High-availability PostgreSQL cluster orchestrated with Patroni, etcd Raft quorum, PgBouncer connection pooling, and netctl VIP routing.",
+  "quorum_strategy": "patroni-etcd",
+  "fencing_policy": "cloud-api-poweroff",
+  "node_groups": [
+    {
+      "name": "pg-primary",
+      "provider": "aws",
+      "region": "us-east-1",
+      "size": "m6i.xlarge",
+      "count": 1,
+      "role": "leader",
+      "components": ["databases/etcd", "databases/postgres", "networking/netctl"],
+      "traits": ["storage", "secrets", "mesh", "firewall", "discovery", "tls", "backup"]
+    },
+    {
+      "name": "pg-replicas",
+      "provider": "aws",
+      "region": "us-east-1",
+      "size": "m6i.xlarge",
+      "count": 2,
+      "role": "follower",
+      "components": ["databases/etcd", "databases/postgres", "networking/netctl"],
+      "traits": ["storage", "secrets", "mesh", "firewall", "discovery", "tls", "backup"]
+    }
+  ],
+  "network": {
+    "vpc_cidr": "10.42.0.0/16",
+    "mesh_overlay": "wireguard",
+    "internal_domain": "postgres-ha.internal"
+  }
+}

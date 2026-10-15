@@ -23,38 +23,31 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 TARGET_DIR="${1:-${LIBSCRIPT_TARGET_SYSROOT:-}}"
 
 if [ -z "$TARGET_DIR" ]; then
-  printf '[ERROR] Target sysroot directory required.
-' >&2
-  printf 'Usage: %s <target_sysroot>
-' "$THIS_FILE" >&2
+  printf '[ERROR] Target sysroot directory required.\n' >&2
+  printf 'Usage: %s <target_sysroot>\n' "$THIS_FILE" >&2
   exit 1
 fi
 
 STAMP_DIR="$TARGET_DIR/var/lib/libscript/stamps"
 mkdir -p "$STAMP_DIR"
 if [ -f "$STAMP_DIR/.stamp.fhs_layout" ]; then
-  printf '[INFO] FHS layout already initialized at %s. Skipping.
-' "$TARGET_DIR"
+  printf '[INFO] FHS layout already initialized at %s. Skipping.\n' "$TARGET_DIR"
   exit 0
 fi
 
-printf '[INFO] Creating standard FHS layout in %s...
-' "$TARGET_DIR"
+printf '[INFO] Creating standard FHS layout in %s...\n' "$TARGET_DIR"
 
 # 1. Standard directories
 mkdir -p "$TARGET_DIR/bin"
@@ -175,6 +168,5 @@ if [ "$(id -u 2>/dev/null || printf '%s' '1000')" -eq 0 ]; then
 fi
 
 touch "$STAMP_DIR/.stamp.fhs_layout"
-printf '[INFO] FHS layout successfully initialized: %s
-' "$TARGET_DIR"
+printf '[INFO] FHS layout successfully initialized: %s\n' "$TARGET_DIR"
 exit 0

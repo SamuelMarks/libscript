@@ -1,0 +1,323 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/payloads/payload.schema.json",
+  "title": "LibScript Tier 4 Declarative Workload Payload Specification",
+  "description": "Technology-agnostic workload schema translated by Tier 4 schedulers into Kubernetes, Nomad, Mesos, 8+ Native Init supervisors, MicroVMs/Unikernels, and XPK/Slurm AI/HPC jobs.",
+  "type": "object",
+  "required": ["name", "version", "type", "artifact", "resources", "scaling"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Unique identifier for the workload payload"
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of the workload payload specification"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable summary of the workload's function"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["service", "stateful", "batch", "ai-training", "ai-inference", "unikernel"],
+      "description": "Workload scheduling classification determining lifecycle and orchestration semantics"
+    },
+    "artifact": {
+      "type": "object",
+      "description": "Execution artifact definition supporting OCI containers, Tier 1 _lib components, or Tier 2 unikernel images",
+      "required": ["format"],
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": ["oci-image", "libscript-component", "unikernel-binary"],
+          "description": "Packaging format of the executable workload artifact"
+        },
+        "image": {
+          "type": "string",
+          "description": "OCI container image URI when format is oci-image"
+        },
+        "component": {
+          "type": "string",
+          "description": "Tier 1 _lib/<category>/<component> identifier when format is libscript-component"
+        },
+        "kernel_path": {
+          "type": "string",
+          "description": "Path to compiled unikernel or microVM vmlinux binary when format is unikernel-binary"
+        },
+        "entrypoint": {
+          "type": "array",
+          "description": "Executable entrypoint command array overriding default artifact entrypoint",
+          "items": {
+            "type": "string",
+            "description": "Entrypoint command token"
+          }
+        },
+        "args": {
+          "type": "array",
+          "description": "Command-line arguments passed to the workload entrypoint",
+          "items": {
+            "type": "string",
+            "description": "Command-line argument string"
+          }
+        },
+        "working_dir": {
+          "type": "string",
+          "description": "Working directory path for workload execution"
+        },
+        "env": {
+          "type": "object",
+          "description": "Non-sensitive environment variables injected into the workload runtime",
+          "additionalProperties": {
+            "type": "string",
+            "description": "Environment variable string value"
+          }
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "description": "Compute, memory, GPU, and TPU accelerator requirements per replica or slice",
+      "required": ["cpu_cores", "memory_mb"],
+      "properties": {
+        "cpu_cores": {
+          "type": "number",
+          "minimum": 0.1,
+          "description": "Number of CPU cores requested per workload instance"
+        },
+        "memory_mb": {
+          "type": "integer",
+          "minimum": 16,
+          "description": "Memory allocation in megabytes requested per workload instance"
+        },
+        "gpu_type": {
+          "type": "string",
+          "description": "Optional GPU model identifier (e.g. nvidia-h100-80gb, nvidia-l4)"
+        },
+        "gpu_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of GPUs requested per workload instance"
+        },
+        "tpu_accelerator_type": {
+          "type": "string",
+          "description": "Google Cloud TPU accelerator type for AI training or inference (e.g. v4-8, v5litepod-16, v5p-128)"
+        },
+        "tpu_topology": {
+          "type": "string",
+          "description": "Physical TPU interconnect topology string (e.g. 2x2x1, 2x4)"
+        },
+        "tpu_slice_count": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of TPU slices scheduled together for multi-slice training"
+        }
+      }
+    },
+    "scaling": {
+      "type": "object",
+      "description": "Replication count, deployment rollout strategy, gang scheduling, and restart policies",
+      "required": ["replicas", "strategy", "restart_policy"],
+      "properties": {
+        "replicas": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Desired number of concurrent workload instances or workers"
+        },
+        "strategy": {
+          "type": "string",
+          "enum": ["RollingUpdate", "Recreate", "BlueGreen"],
+          "description": "Rollout replacement strategy during workload updates"
+        },
+        "gang_scheduling": {
+          "type": "boolean",
+          "default": false,
+          "description": "Require all replicas/slices to be scheduled simultaneously as an atomic gang (used by XPK, Ray, and Slurm)"
+        },
+        "restart_policy": {
+          "type": "string",
+          "enum": ["Always", "OnFailure", "Never"],
+          "description": "Supervisor restart behavior upon process exit"
+        }
+      }
+    },
+    "ports": {
+      "type": "array",
+      "description": "Network ports exposed by the workload for service discovery and ingress routing",
+      "items": {
+        "type": "object",
+        "description": "Exposed port mapping specification",
+        "required": ["name", "port", "protocol"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Logical port name (e.g. http, grpc, metrics)"
+          },
+          "port": {
+            "type": "integer",
+            "description": "Listening TCP/UDP port number"
+          },
+          "protocol": {
+            "type": "string",
+            "enum": ["tcp", "udp", "http", "https", "grpc"],
+            "description": "Network transport or application protocol"
+          },
+          "visibility": {
+            "type": "string",
+            "enum": ["internal", "public"],
+            "default": "internal",
+            "description": "Whether the port is restricted to internal cluster mesh or exposed via public ingress"
+          }
+        }
+      }
+    },
+    "tenant_bindings": {
+      "type": "object",
+      "description": "Logical multi-tenant resource bindings for databases, virtual hosts, zero-leak secrets, and persistent volumes",
+      "properties": {
+        "tenant_id": {
+          "type": "string",
+          "description": "Unique tenant identifier passed to logical lifecycle hooks (provision_tenant)"
+        },
+        "requires_database": {
+          "type": "object",
+          "description": "Single logical database requirement provisioned via hooks/provision_tenant",
+          "required": ["engine", "db_name", "db_user"],
+          "properties": {
+            "engine": {
+              "type": "string",
+              "enum": ["postgres", "mysql", "mariadb", "mongodb", "redis", "valkey", "sqlite"],
+              "description": "Database engine provider name"
+            },
+            "db_name": {
+              "type": "string",
+              "description": "Logical database or schema name to provision"
+            },
+            "db_user": {
+              "type": "string",
+              "description": "Database role or user granted access to the tenant schema"
+            }
+          }
+        },
+        "requires_databases": {
+          "type": "array",
+          "description": "Multiple logical database requirements for polyglot workloads",
+          "items": {
+            "type": "object",
+            "description": "Logical database requirement item",
+            "required": ["engine", "db_name", "db_user"],
+            "properties": {
+              "engine": {
+                "type": "string",
+                "enum": [
+                  "postgres",
+                  "mysql",
+                  "mariadb",
+                  "mongodb",
+                  "redis",
+                  "valkey",
+                  "sqlite",
+                  "meilisearch"
+                ],
+                "description": "Database engine provider name"
+              },
+              "db_name": {
+                "type": "string",
+                "description": "Logical database or keyspace name"
+              },
+              "db_user": {
+                "type": "string",
+                "description": "Database user account name"
+              }
+            }
+          }
+        },
+        "virtual_hosts": {
+          "type": "array",
+          "description": "Ingress virtual host rules bridged to _lib/networking/netctl via traits/ingress",
+          "items": {
+            "type": "object",
+            "description": "Virtual host routing rule",
+            "required": ["server_name", "target_port"],
+            "properties": {
+              "server_name": {
+                "type": "string",
+                "description": "Fully qualified domain name for the virtual host"
+              },
+              "path": {
+                "type": "string",
+                "default": "/",
+                "description": "URL path prefix routed to the workload"
+              },
+              "target_port": {
+                "type": "integer",
+                "description": "Backend workload port receiving proxied traffic"
+              },
+              "tls": {
+                "type": "boolean",
+                "default": true,
+                "description": "Enable automated TLS termination via traits/tls"
+              }
+            }
+          }
+        },
+        "secret_refs": {
+          "type": "array",
+          "description": "Secret references fetched and injected via traits/secrets/exec_with_secrets with zero environment variable leakage",
+          "items": {
+            "type": "object",
+            "description": "Secret provider reference mapping",
+            "required": ["name", "provider", "key_path"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Logical placeholder name substituted into configuration templates"
+              },
+              "provider": {
+                "type": "string",
+                "enum": ["openbao", "sops", "env_file"],
+                "description": "Secret backend driver in traits/secrets/"
+              },
+              "key_path": {
+                "type": "string",
+                "description": "Path or key identifier within the secret store"
+              }
+            }
+          }
+        },
+        "volume_claims": {
+          "type": "array",
+          "description": "Persistent storage mounts managed by traits/storage",
+          "items": {
+            "type": "object",
+            "description": "Persistent volume claim mount specification",
+            "required": ["name", "mount_path", "driver"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Volume claim identifier"
+              },
+              "mount_path": {
+                "type": "string",
+                "description": "Target path inside the workload runtime"
+              },
+              "driver": {
+                "type": "string",
+                "enum": ["block", "nfs", "smb", "gcsfuse"],
+                "description": "Storage trait backend driver"
+              },
+              "source": {
+                "type": "string",
+                "description": "Device path, NFS export, SMB share, or GCS bucket URI"
+              },
+              "size_gb": {
+                "type": "integer",
+                "description": "Requested volume capacity in gigabytes"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

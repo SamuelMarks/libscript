@@ -32,16 +32,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 COMPONENT=""
 VERSION="1.0.0"
@@ -52,6 +49,8 @@ SERVICE_GUID=""
 
 # ## show_help
 # Displays usage information and supported flags.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
   cat << EOF_HELP
 Standalone Component WiX Generator
@@ -106,8 +105,7 @@ while [ $# -gt 0 ]; do
       exit 0
       ;;
     *)
-      printf '[ERROR] Unknown parameter: %s
-' "$1" >&2
+      printf '[ERROR] Unknown parameter: %s\n' "$1" >&2
       exit 1
       ;;
   esac
@@ -116,16 +114,14 @@ done
 : "${SOURCE_DIR:=}"
 
 if [ -z "$COMPONENT" ] || [ -z "$OUT_FILE" ]; then
-  printf '[ERROR] --component and --out are mandatory parameters.
-' >&2
+  printf '[ERROR] --component and --out are mandatory parameters.\n' >&2
   show_help
   exit 1
 fi
 
 REGISTRY_JSON="${LIBSCRIPT_ROOT_DIR}/packaging/guid_registry.json"
 if [ ! -f "$REGISTRY_JSON" ]; then
-  printf '[ERROR] Registry file not found: %s
-' "$REGISTRY_JSON" >&2
+  printf '[ERROR] Registry file not found: %s\n' "$REGISTRY_JSON" >&2
   exit 1
 fi
 
@@ -323,5 +319,4 @@ cat << 'EOF_CLOSE' >> "$OUT_FILE"
 </Wix>
 EOF_CLOSE
 
-printf '[INFO] Generated standalone WiX manifest: %s
-' "$OUT_FILE"
+printf '[INFO] Generated standalone WiX manifest: %s\n' "$OUT_FILE"

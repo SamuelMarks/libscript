@@ -21,29 +21,27 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 TARGET_DIR="${1:-${LIBSCRIPT_TARGET_SYSROOT:-}}"
 
 if [ -z "$TARGET_DIR" ]; then
-  printf '[ERROR] Target sysroot directory must be provided.
-' >&2
+  printf '[ERROR] Target sysroot directory must be provided.\n' >&2
   printf 'Usage: %s <target_sysroot>\n' "$THIS_FILE" >&2
   exit 1
 fi
 
 # ## is_mounted
 # Checks if a directory is mounted according to /proc/mounts.
+# ## is_mounted
+# Executes the is_mounted logic.
 is_mounted() {
   _dir="$1"
   if [ -r /proc/mounts ]; then
@@ -55,6 +53,8 @@ is_mounted() {
 
 # ## safe_umount
 # Safely unmounts a target mount point if currently mounted.
+# ## safe_umount
+# Executes the safe_umount logic.
 safe_umount() {
   _mount_point="$1"
   if is_mounted "$_mount_point"; then
@@ -70,6 +70,5 @@ safe_umount "$TARGET_DIR/dev/shm"
 safe_umount "$TARGET_DIR/dev/pts"
 safe_umount "$TARGET_DIR/dev"
 
-printf '[INFO] Target VFS unmount complete for: %s
-' "$TARGET_DIR"
+printf '[INFO] Target VFS unmount complete for: %s\n' "$TARGET_DIR"
 exit 0

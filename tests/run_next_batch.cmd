@@ -1,4 +1,5 @@
 @echo off
+:: # run_next_batch.cmd
 :: ## Overview
 :: Reads TODO_PLAN.md and returns the next batch of up to 5 uncompleted tasks.
 ::
@@ -17,7 +18,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"

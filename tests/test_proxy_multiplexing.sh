@@ -21,11 +21,9 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
@@ -47,6 +45,8 @@ TARGET_PLATFORM="all"
 
 ## parse_args
 ## Parses arguments
+# ## parse_args
+# Executes the parse_args logic.
 parse_args() {
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -59,6 +59,8 @@ parse_args() {
 
 ## run_vagrant_suite
 ## Orchestrates validation for a specific OS within Vagrant
+# ## run_vagrant_suite
+# Executes the run_vagrant_suite logic.
 run_vagrant_suite() {
   _os="$1"
   _proxy_engine="${2:-nginx}"
@@ -90,6 +92,8 @@ run_vagrant_suite() {
 
 ## main
 ## Main execution routine
+# ## main
+# Executes the main logic.
 main() {
   parse_args "$@"
   

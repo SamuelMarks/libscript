@@ -19,16 +19,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export DIR="${SCRIPT_DIR}"
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
@@ -51,6 +48,8 @@ VIRTUALBOX_INSTALL_EXTPACK="${VIRTUALBOX_INSTALL_EXTPACK:-1}"
 
 # ## configure_virtualbox_repo_debian
 # Configures the Oracle VirtualBox apt repository on Debian/Ubuntu systems.
+# ## configure_virtualbox_repo_debian
+# Executes the configure_virtualbox_repo_debian logic.
 configure_virtualbox_repo_debian() {
   if [ -f /etc/apt/sources.list.d/virtualbox.list ]; then
     return 0
@@ -69,14 +68,15 @@ configure_virtualbox_repo_debian() {
     codename=$(lsb_release -cs 2>/dev/null || printf '%s' "jammy")
   fi
 
-  printf 'deb [arch=amd64 signed-by=/usr/share/keyrings/virtualbox-archive-keyring.gpg] https://download.virtualbox.org/virtualbox/debian %s contrib
-' "$codename" | priv tee /etc/apt/sources.list.d/virtualbox.list >/dev/null
+  printf 'deb [arch=amd64 signed-by=/usr/share/keyrings/virtualbox-archive-keyring.gpg] https://download.virtualbox.org/virtualbox/debian %s contrib\n' "$codename" | priv tee /etc/apt/sources.list.d/virtualbox.list >/dev/null
 
   priv apt-get update -y
 }
 
 # ## install_extension_pack
 # Downloads and installs the Oracle VM VirtualBox Extension Pack.
+# ## install_extension_pack
+# Executes the install_extension_pack logic.
 install_extension_pack() {
   if ! command -v VBoxManage >/dev/null 2>&1; then
     return 0
@@ -109,6 +109,8 @@ install_extension_pack() {
 
 # ## setup_user_groups
 # Adds the current user to the vboxusers group.
+# ## setup_user_groups
+# Executes the setup_user_groups logic.
 setup_user_groups() {
   target_user="${SUDO_USER:-$(id -un)}"
   if [ "$target_user" = "root" ]; then
@@ -126,16 +128,13 @@ case "$ACTION" in
     if command -v VBoxManage >/dev/null 2>&1; then
       VBoxManage --version
     else
-      printf '%s
-' "VirtualBox not installed."
+      printf '%s\n' "VirtualBox not installed."
     fi
     exit 0
     ;;
   ls-remote)
-    printf '%s
-' "7.0"
-    printf '%s
-' "7.1"
+    printf '%s\n' "7.0"
+    printf '%s\n' "7.1"
     exit 0
     ;;
   install)

@@ -1,4 +1,5 @@
 @echo off
+:: # cli.cmd
 :: # netctl.cmd
 ::
 :: ## Overview
@@ -20,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -182,6 +183,8 @@ echo   --proxy ^<path^> ^<target^>        Add a proxy route
 echo   --rewrite ^<path^> ^<pattern^>     Add a rewrite rule
 echo   --emit ^<format^>                Emit to specified format and exit
 exit /b 1
+:: ## noop
+:: Executes noop functionality.
 :noop
 echo netctl is a native shell module. No installation or daemon management required.
 exit /b 0

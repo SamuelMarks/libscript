@@ -21,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -100,16 +100,13 @@ if exist "%STAMP_FILE%" (
 echo [DM]       Configuring display manager: %DM%...
 
 if "%DM%"=="lightdm" (
-    echo lightdm_enable="YES">> "%SYSROOT%\etc
-c.conf"
+    echo lightdm_enable="YES">> "%SYSROOT%\etc\rc.conf"
 )
 if "%DM%"=="sddm" (
-    echo sddm_enable="YES">> "%SYSROOT%\etc
-c.conf"
+    echo sddm_enable="YES">> "%SYSROOT%\etc\rc.conf"
 )
 if "%DM%"=="greetd" (
-    echo greetd_enable="YES">> "%SYSROOT%\etc
-c.conf"
+    echo greetd_enable="YES">> "%SYSROOT%\etc\rc.conf"
 )
 
 echo %DATE% %TIME%> "%STAMP_FILE%"

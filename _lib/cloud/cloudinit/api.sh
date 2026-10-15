@@ -29,6 +29,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## libscript_cloudinit_generate_mount
 # Executes libscript_cloudinit_generate_mount functionality.
+# ## libscript_cloudinit_generate_mount
+# Executes the libscript_cloudinit_generate_mount logic.
 libscript_cloudinit_generate_mount() {
   device="$1"
   mount_point="$2"

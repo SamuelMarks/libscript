@@ -19,7 +19,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -176,6 +176,9 @@ if /i "%cmd%"=="semver" ( call "%SCRIPT_DIR%\cli\commands\core\semver.cmd" %* & 
 if /i "%cmd%"=="config" ( call "%SCRIPT_DIR%\cli\commands\config\config.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="repogen" ( call "%SCRIPT_DIR%\_lib\orchestration\repogen\repogen.cmd" %* & exit /b !errorlevel! )
 if /i "%cmd%"=="distro" ( call "%SCRIPT_DIR%\_lib\orchestration\distro\distro.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="payload" ( call "%SCRIPT_DIR%\payloads\engine.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
+if /i "%cmd%"=="topology" ( call "%SCRIPT_DIR%\topologies\engine.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
+if /i "%cmd%"=="trait" ( call "%SCRIPT_DIR%\traits\engine.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
 
 if /i "%cmd%"=="start" set "is_docker_cmd=1"
 if /i "%cmd%"=="stop" set "is_docker_cmd=1"

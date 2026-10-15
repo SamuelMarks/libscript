@@ -21,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -61,6 +61,8 @@ set "BACKUP_DIR=%USERPROFILE%\.libscript\wordpress\backups"
 if not exist "%BACKUP_DIR%" mkdir "%BACKUP_DIR%"
 
 set "OUT_FILE="
+:: ## parse_args
+:: Executes parse_args functionality.
 :parse_args
 if "%~1"=="" goto run_backup
 if /I "%~1"=="create" ( shift & goto parse_args )
@@ -69,6 +71,8 @@ if /I "%~1"=="-o" ( set "OUT_FILE=%~2" & shift & shift & goto parse_args )
 shift
 goto parse_args
 
+:: ## run_backup
+:: Executes run_backup functionality.
 :run_backup
 if "%OUT_FILE%"=="" (
     for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value 2^>nul') do set "DT=%%I"

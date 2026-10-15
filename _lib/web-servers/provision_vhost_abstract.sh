@@ -41,6 +41,8 @@ DOC_ROOT=""
 CONF_FILE=""
 
 ## Parses command-line arguments for virtual host provisioning
+# ## parse_args
+# Executes the parse_args logic.
 parse_args() {
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -57,6 +59,8 @@ parse_args() {
 }
 
 ## Validates the parsed arguments
+# ## validate_args
+# Executes the validate_args logic.
 validate_args() {
   if [ -z "$APP_ID" ]; then
     printf '[ERROR] --app-id is required\n' >&2
@@ -73,6 +77,8 @@ validate_args() {
 }
 
 ## Generates the Nginx block configuration
+# ## generate_nginx_block
+# Executes the generate_nginx_block logic.
 generate_nginx_block() {
   cat <<EOF
 # BEGIN libscript-managed: ${APP_ID}
@@ -102,6 +108,8 @@ EOF
 }
 
 ## Generates the Apache httpd block configuration
+# ## generate_apache2_block
+# Executes the generate_apache2_block logic.
 generate_apache2_block() {
   cat <<EOF
 # BEGIN libscript-managed: ${APP_ID}
@@ -127,6 +135,8 @@ EOF
 }
 
 ## Safely interpolates the generated block into the target configuration file
+# ## interpolate_block
+# Executes the interpolate_block logic.
 interpolate_block() {
   new_block_file="${THIS_DIR}/.tmp_block_${APP_ID}"
   backup_file="${CONF_FILE}.bak"
@@ -184,6 +194,8 @@ interpolate_block() {
 }
 
 ## Validates syntax and rolls back if necessary
+# ## test_and_reload
+# Executes the test_and_reload logic.
 test_and_reload() {
   backup_file="${CONF_FILE}.bak"
   test_cmd=""
@@ -225,6 +237,8 @@ test_and_reload() {
 }
 
 ## Main execution flow
+# ## main
+# Executes the main logic.
 main() {
   parse_args "$@"
   validate_args

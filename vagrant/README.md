@@ -52,23 +52,19 @@ vagrant ssh -c '"${LIBSCRIPT_ROOT_DIR}"/\_lib/databases/postgres/setup.sh'
 
 …and to test PostgreSQL:
 
-vagrant ssh -c '.
-"${LIBSCRIPT_ROOT_DIR}"/env.sh && "${LIBSCRIPT_ROOT_DIR}"/\_lib/databases/postgres/test.sh'
+vagrant ssh -c '. "${LIBSCRIPT_ROOT_DIR}"/env.sh &&
+"${LIBSCRIPT_ROOT_DIR}"/\_lib/databases/postgres/test.sh'
 
 ---
 
 So you can run it in a loop, like:
 
-previous_wd="$(pwd)"
- for dir in *; do
- if [ -f "${dir}"'/Vagrantfile' ]; then cd -- "${dir}"
+previous_wd="$(pwd)" for dir in *; do if [ -f "${dir}"'/Vagrantfile' ]; then cd -- "${dir}"
 
 # then aforementioned vagrant ssh commands
 
-vagrant up vagrant ssh -c
-'"${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/setup.sh'
- vagrant ssh -c '. "${LIBSCRIPT_ROOT_DIR}"/env.sh
-&& "${LIBSCRIPT_ROOT_DIR}"/\_lib/databases/postgres/test.sh'
+vagrant up vagrant ssh -c '"${LIBSCRIPT_ROOT_DIR}"/_lib/databases/postgres/setup.sh' vagrant ssh -c
+'. "${LIBSCRIPT_ROOT_DIR}"/env.sh && "${LIBSCRIPT_ROOT_DIR}"/\_lib/databases/postgres/test.sh'
 
 cd -- "${previous_wd}" fi done
 

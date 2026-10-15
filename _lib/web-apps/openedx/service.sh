@@ -32,17 +32,14 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 APP_DIR="${SCRIPT_DIR}"
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 : "${OPENEDX_INSTALL_DIR:=${LIBSCRIPT_HOME:-${HOME}/.libscript}/openedx}"
 RUN_DIR="${OPENEDX_INSTALL_DIR}/run"
@@ -57,6 +54,8 @@ CMS_PORT="${OPENEDX_CMS_PORT:-8001}"
 
 # ## show_help
 # Displays service management command options.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
   printf 'Open edX Service Manager
 
@@ -64,27 +63,21 @@ show_help() {
   printf 'Usage: %s <subcommand>
 
 ' "$(basename "$THIS_FILE")"
-  printf 'Subcommands:
-'
-  printf '  start     Start LMS, Studio, and worker background services
-'
-  printf '  stop      Stop all running Open edX services
-'
-  printf '  restart   Restart all Open edX services
-'
-  printf '  status    Display health and listening status of all services
-'
-  printf '  lms       Check LMS status or run LMS in foreground
-'
-  printf '  studio    Check Studio status or run Studio in foreground
-'
-  printf '  help, -h  Show this help text
-'
+  printf 'Subcommands:\n'
+  printf '  start     Start LMS, Studio, and worker background services\n'
+  printf '  stop      Stop all running Open edX services\n'
+  printf '  restart   Restart all Open edX services\n'
+  printf '  status    Display health and listening status of all services\n'
+  printf '  lms       Check LMS status or run LMS in foreground\n'
+  printf '  studio    Check Studio status or run Studio in foreground\n'
+  printf '  help, -h  Show this help text\n'
   exit 0
 }
 
 # ## is_port_listening
 # Tests if a given TCP port is currently accepting connections.
+# ## is_port_listening
+# Executes the is_port_listening logic.
 is_port_listening() {
   _port="$1"
   if command -v nc >/dev/null 2>&1; then
@@ -98,9 +91,10 @@ is_port_listening() {
 
 # ## start_services
 # Starts Open edX LMS, Studio CMS, and worker services idempotently.
+# ## start_services
+# Executes the start_services logic.
 start_services() {
-  printf '[INFO] Starting Open edX platform services...
-'
+  printf '[INFO] Starting Open edX platform services...\n'
 
   # Start LMS if not already listening
   if is_port_listening "$LMS_PORT"; then
@@ -157,9 +151,10 @@ start_services() {
 
 # ## stop_services
 # Stops all running Open edX processes.
+# ## stop_services
+# Executes the stop_services logic.
 stop_services() {
-  printf '[INFO] Stopping Open edX platform services...
-'
+  printf '[INFO] Stopping Open edX platform services...\n'
 
   if [ -f "${LMS_PID_FILE}" ]; then
     _pid=$(cat "${LMS_PID_FILE}")
@@ -181,76 +176,63 @@ stop_services() {
     "${SCRIPT_DIR}/workers.sh" stop
   fi
 
-  printf '[PASS] Open edX platform services stopped.
-'
+  printf '[PASS] Open edX platform services stopped.\n'
 }
 
 # ## print_status
 # Prints formatted operational status of all services.
+# ## print_status
+# Executes the print_status logic.
 print_status() {
-  printf '======================================================
-'
-  printf '              Open edX Platform Status
-'
-  printf '======================================================
-'
+  printf '======================================================\n'
+  printf '              Open edX Platform Status\n'
+  printf '======================================================\n'
   if is_port_listening "$LMS_PORT"; then
-    printf '  LMS Portal (Port %s):        [RUNNING]
-' "$LMS_PORT"
+    printf '  LMS Portal (Port %s):        [RUNNING]\n' "$LMS_PORT"
   else
-    printf '  LMS Portal (Port %s):        [STOPPED]
-' "$LMS_PORT"
+    printf '  LMS Portal (Port %s):        [STOPPED]\n' "$LMS_PORT"
   fi
 
   if is_port_listening "$CMS_PORT"; then
-    printf '  Studio CMS (Port %s):        [RUNNING]
-' "$CMS_PORT"
+    printf '  Studio CMS (Port %s):        [RUNNING]\n' "$CMS_PORT"
   else
-    printf '  Studio CMS (Port %s):        [STOPPED]
-' "$CMS_PORT"
+    printf '  Studio CMS (Port %s):        [STOPPED]\n' "$CMS_PORT"
   fi
 
   if is_port_listening "3306"; then
-    printf '  MySQL Database (Port 3306):   [LISTENING]
-'
+    printf '  MySQL Database (Port 3306):   [LISTENING]\n'
   else
-    printf '  MySQL Database (Port 3306):   [INACTIVE / REMOTE]
-'
+    printf '  MySQL Database (Port 3306):   [INACTIVE / REMOTE]\n'
   fi
 
   if is_port_listening "6379"; then
-    printf '  Redis Cache (Port 6379):      [LISTENING]
-'
+    printf '  Redis Cache (Port 6379):      [LISTENING]\n'
   else
-    printf '  Redis Cache (Port 6379):      [INACTIVE / REMOTE]
-'
+    printf '  Redis Cache (Port 6379):      [INACTIVE / REMOTE]\n'
   fi
 
   if is_port_listening "27017"; then
-    printf '  MongoDB Store (Port 27017):   [LISTENING]
-'
+    printf '  MongoDB Store (Port 27017):   [LISTENING]\n'
   else
-    printf '  MongoDB Store (Port 27017):   [INACTIVE / REMOTE]
-'
+    printf '  MongoDB Store (Port 27017):   [INACTIVE / REMOTE]\n'
   fi
 
   if is_port_listening "7700"; then
-    printf '  Meilisearch (Port 7700):      [LISTENING]
-'
+    printf '  Meilisearch (Port 7700):      [LISTENING]\n'
   else
-    printf '  Meilisearch (Port 7700):      [INACTIVE / REMOTE]
-'
+    printf '  Meilisearch (Port 7700):      [INACTIVE / REMOTE]\n'
   fi
 
   if [ -f "${SCRIPT_DIR}/workers.sh" ]; then
     "${SCRIPT_DIR}/workers.sh" status
   fi
-  printf '======================================================
-'
+  printf '======================================================\n'
 }
 
 # ## install_services
 # Registers Open edX components as native OS services.
+# ## install_services
+# Executes the install_services logic.
 install_services() {
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
   export SCRIPT_NAME
@@ -284,27 +266,26 @@ install_services() {
   libscript_install_service "openedx-cms-worker" "${_exec_cms_worker}" "${OPENEDX_INSTALL_DIR}/codebase" "Open edX CMS Celery Worker" ""
   libscript_install_service "openedx-celery-beat" "${_exec_beat}" "${OPENEDX_INSTALL_DIR}/codebase" "Open edX Celery Beat Scheduler" ""
 
-  printf '[PASS] Successfully installed Open edX services.
-'
+  printf '[PASS] Successfully installed Open edX services.\n'
 }
 
 # ## uninstall_services
 # Unregisters Open edX components from native OS services.
+# ## uninstall_services
+# Executes the uninstall_services logic.
 uninstall_services() {
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/service_install.sh"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 
-  printf '[INFO] Uninstalling Open edX native services...
-'
+  printf '[INFO] Uninstalling Open edX native services...\n'
   libscript_uninstall_service "openedx-lms"
   libscript_uninstall_service "openedx-cms"
   libscript_uninstall_service "openedx-lms-worker"
   libscript_uninstall_service "openedx-cms-worker"
   libscript_uninstall_service "openedx-celery-beat"
-  printf '[PASS] Successfully uninstalled Open edX services.
-'
+  printf '[PASS] Successfully uninstalled Open edX services.\n'
 }
 
 ACTION="${1:-status}"
@@ -330,16 +311,14 @@ case "$ACTION" in
     ;;
   lms)
     if is_port_listening "$LMS_PORT"; then
-      printf '[INFO] LMS is active at http://localhost:%s
-' "$LMS_PORT"
+      printf '[INFO] LMS is active at http://localhost:%s\n' "$LMS_PORT"
     else
       start_services
     fi
     ;;
   studio|cms)
     if is_port_listening "$CMS_PORT"; then
-      printf '[INFO] Studio CMS is active at http://localhost:%s
-' "$CMS_PORT"
+      printf '[INFO] Studio CMS is active at http://localhost:%s\n' "$CMS_PORT"
     else
       start_services
     fi
@@ -348,8 +327,7 @@ case "$ACTION" in
     show_help
     ;;
   *)
-    printf '[ERROR] Unknown subcommand: %s
-' "$ACTION" >&2
+    printf '[ERROR] Unknown subcommand: %s\n' "$ACTION" >&2
     show_help
     ;;
 esac

@@ -32,6 +32,8 @@ OUTPUT_CFG="${1:-/boot/grub/grub.cfg}"
 
 # ## show_help
 # Displays usage instructions.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
   printf '%s\n' "Usage: $(basename "$THIS_FILE") [output_cfg]"
   printf '%s\n' "Generates a GRUB2 multiboot configuration file."

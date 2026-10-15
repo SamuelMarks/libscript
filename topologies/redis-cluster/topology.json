@@ -1,0 +1,35 @@
+{
+  "$schema": "../topology.schema.json",
+  "name": "redis-cluster",
+  "version": "1.0.0",
+  "description": "Distributed Redis cluster with Sentinel/Cluster quorum failover and encrypted mesh peering.",
+  "quorum_strategy": "sentinel",
+  "fencing_policy": "firewall-isolate",
+  "node_groups": [
+    {
+      "name": "redis-leader",
+      "provider": "azure",
+      "region": "eastus",
+      "size": "Standard_D4s_v5",
+      "count": 1,
+      "role": "leader",
+      "components": ["caches/redis"],
+      "traits": ["storage", "secrets", "mesh", "firewall", "discovery", "backup"]
+    },
+    {
+      "name": "redis-followers",
+      "provider": "azure",
+      "region": "eastus",
+      "size": "Standard_D4s_v5",
+      "count": 2,
+      "role": "follower",
+      "components": ["caches/redis"],
+      "traits": ["storage", "secrets", "mesh", "firewall", "discovery", "backup"]
+    }
+  ],
+  "network": {
+    "vpc_cidr": "10.44.0.0/16",
+    "mesh_overlay": "wireguard",
+    "internal_domain": "redis.internal"
+  }
+}

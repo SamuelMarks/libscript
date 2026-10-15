@@ -84,6 +84,8 @@ LOG_FILE="$LOG_DIR/teardown-${TIMESTAMP}.log"
 
 # ## log
 # Executes log functionality.
+# ## log
+# Executes the log logic.
 log() {
   printf '%s\n' "$(date '+%Y-%m-%d %H:%M:%S') [$1] $2" | tee -a "$LOG_FILE"
 }
@@ -93,6 +95,8 @@ log "INIT" "Starting $PROVIDER teardown for $NODE..."
 STATE_FILE="$REPO_PATH/.deploy_state"
 # ## get_state
 # Executes get_state functionality.
+# ## get_state
+# Executes the get_state logic.
 get_state() {
 key=$1
   if [ -f "$STATE_FILE" ]; then
@@ -123,6 +127,8 @@ if [ ! -f "$CLI" ]; then printf '%s\n' "Provider $PROVIDER not supported."; exit
 # -----------------------------------------------------------------------------
 # ## ensure_cli
 # Ensures required CLI commands and packages are installed.
+# ## ensure_cli
+# Executes the ensure_cli logic.
 ensure_cli() {
   cmd=$1
   pkg=$2
@@ -147,6 +153,8 @@ fi
 
 # ## run_with_auth_check
 # Executes run_with_auth_check functionality.
+# ## run_with_auth_check
+# Executes the run_with_auth_check logic.
 run_with_auth_check() {
   cmd="$1"
   shift
@@ -279,7 +287,7 @@ fi
 
 log "INFRA" "Deleting Node..."
 if [ "$IS_TPU" -eq 1 ] && [ "$PROVIDER" = "gcp" ]; then
-  TPU_CLI="$SCRIPT_DIR/../../cloud-providers/gcp/tpu-vm/cli.sh"
+  TPU_CLI="$SCRIPT_DIR/../../cloud-providers/gcp-tpu-vm/cli.sh"
   run_with_auth_check "$TPU_CLI" delete "$NODE" || true
 else
   run_with_auth_check "$CLI" node delete "$NODE" "$CTX" || true

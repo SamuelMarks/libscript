@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 SYSROOT="${1:-${LIBSCRIPT_TARGET_SYSROOT:-${REPO_ROOT}/build/illumos-sysroot}}"
@@ -46,13 +43,11 @@ mkdir -p "${SYSROOT}/etc/sudoers.d"
 mkdir -p "${SYSROOT}/export/home/${PRIMARY_USER}/.ssh"
 
 if [ -f "${STAMP_FILE}" ]; then
-  printf '[SKIP]     illumos users and RBAC already provisioned in %s
-' "${SYSROOT}"
+  printf '[SKIP]     illumos users and RBAC already provisioned in %s\n' "${SYSROOT}"
   exit 0
 fi
 
-printf '[USERS]    Provisioning illumos user accounts and RBAC (user: %s)...
-' "${PRIMARY_USER}"
+printf '[USERS]    Provisioning illumos user accounts and RBAC (user: %s)...\n' "${PRIMARY_USER}"
 
 # 1. Base /etc/passwd and /etc/shadow
 if [ ! -f "${SYSROOT}/etc/passwd" ]; then
@@ -85,8 +80,7 @@ EOF
 fi
 
 if ! grep -q "^${PRIMARY_USER}:" "${SYSROOT}/etc/shadow" 2>/dev/null; then
-  printf '%s::19000::::::
-' "${PRIMARY_USER}" >> "${SYSROOT}/etc/shadow"
+  printf '%s::19000::::::\n' "${PRIMARY_USER}" >> "${SYSROOT}/etc/shadow"
 fi
 
 # 2. Base /etc/group
@@ -136,8 +130,7 @@ chmod 0644 "${SYSROOT}/etc/doas.conf" 2>/dev/null || true
 
 # 5. SSH authorized keys (Vagrant standard key)
 VAGRANT_INSECURE_KEY="ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjQKHWqvaDAfRqNVuiWCZCijNUQT7qvLo+8M8kXmZgHn8d79k0wE4bUu4f3t+48uXj0j4uC6K3yB7a1x2N9Z4aC8a0j7sF0r1d5V9o0K3l+2X1r3B5a8u9V0p1m8e4h7N6a7u9x3c1 vagrant insecure public key"
-printf '%s
-' "${VAGRANT_INSECURE_KEY}" > "${SYSROOT}/export/home/${PRIMARY_USER}/.ssh/authorized_keys"
+printf '%s\n' "${VAGRANT_INSECURE_KEY}" > "${SYSROOT}/export/home/${PRIMARY_USER}/.ssh/authorized_keys"
 chmod 0700 "${SYSROOT}/export/home/${PRIMARY_USER}/.ssh" 2>/dev/null || true
 chmod 0600 "${SYSROOT}/export/home/${PRIMARY_USER}/.ssh/authorized_keys" 2>/dev/null || true
 
@@ -152,5 +145,4 @@ EOF
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
 mv "${STAMP_FILE}.tmp" "${STAMP_FILE}"
 
-printf '[OK]       illumos user accounts and RBAC provisioned: %s
-' "${SYSROOT}"
+printf '[OK]       illumos user accounts and RBAC provisioned: %s\n' "${SYSROOT}"

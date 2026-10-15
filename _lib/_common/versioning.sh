@@ -36,6 +36,8 @@ _SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 # ## libscript_get_version_dir
 # Executes libscript_get_version_dir functionality.
+# ## libscript_get_version_dir
+# Executes the libscript_get_version_dir logic.
 libscript_get_version_dir() {
   component="$1"
   version="$2"
@@ -44,6 +46,8 @@ libscript_get_version_dir() {
 
 # ## libscript_symlink_alias
 # Executes libscript_symlink_alias functionality.
+# ## libscript_symlink_alias
+# Executes the libscript_symlink_alias logic.
 libscript_symlink_alias() {
   component="$1"
   alias_name="$2"

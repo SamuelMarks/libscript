@@ -21,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -86,6 +86,8 @@ if /i "%ACTION%"=="image" goto do_register_image
 call "%~dp0\..\..\_common\setup_base.cmd" %*
 exit /b %ERRORLEVEL%
 
+:: ## do_register_image
+:: Executes do_register_image functionality.
 :do_register_image
 set "IMG_PATH=%~2"
 if "%IMG_PATH%"=="" set "IMG_PATH=%LIBSCRIPT_ROOT_DIR%\build\disk.img"

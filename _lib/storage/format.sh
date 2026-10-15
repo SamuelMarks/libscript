@@ -23,47 +23,35 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 # ## show_help
 # Displays usage instructions and supported filesystem options.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") <device_or_slice> [fs_type] [pool_name]"
-  printf '%s
-' "Formats block partitions or creates structured ZFS root pools."
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") <device_or_slice> [fs_type] [pool_name]"
+  printf '%s\n' "Formats block partitions or creates structured ZFS root pools."
   printf '
 '
-  printf '%s
-' "Filesystem Types:"
-  printf '%s
-' "  fat32     - EFI System Partition (FAT32)"
-  printf '%s
-' "  ext4      - Linux Fourth Extended Filesystem (default)"
-  printf '%s
-' "  xfs       - Linux XFS high-performance filesystem"
-  printf '%s
-' "  btrfs     - Linux Btrfs copy-on-write filesystem"
-  printf '%s
-' "  ufs2      - FreeBSD Unix File System 2 with soft-updates"
-  printf '%s
-' "  zfs       - OpenZFS root pool with canonical dataset hierarchy"
+  printf '%s\n' "Filesystem Types:"
+  printf '%s\n' "  fat32     - EFI System Partition (FAT32)"
+  printf '%s\n' "  ext4      - Linux Fourth Extended Filesystem (default)"
+  printf '%s\n' "  xfs       - Linux XFS high-performance filesystem"
+  printf '%s\n' "  btrfs     - Linux Btrfs copy-on-write filesystem"
+  printf '%s\n' "  ufs2      - FreeBSD Unix File System 2 with soft-updates"
+  printf '%s\n' "  zfs       - OpenZFS root pool with canonical dataset hierarchy"
   printf '
 '
-  printf '%s
-' "Options:"
-  printf '%s
-' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
@@ -76,20 +64,23 @@ FS_TYPE="${2:-ext4}"
 POOL_NAME="${3:-rpool}"
 
 if [ -z "$TARGET_DEV" ]; then
-  printf '[ERROR] Target device or partition path is required.
-' >&2
+  printf '[ERROR] Target device or partition path is required.\n' >&2
   show_help
   exit 1
 fi
 
 # ## detect_os
 # Identifies the active operating system kernel family.
+# ## detect_os
+# Executes the detect_os logic.
 detect_os() {
   uname -s | tr '[:upper:]' '[:lower:]'
 }
 
 # ## probe_existing_fs
 # Determines if the target partition is already formatted.
+# ## probe_existing_fs
+# Executes the probe_existing_fs logic.
 probe_existing_fs() {
   _dev="$1"
   if command -v blkid >/dev/null 2>&1; then
@@ -101,10 +92,11 @@ probe_existing_fs() {
 
 # ## format_fat32
 # Formats partition as FAT32 for EFI ESP.
+# ## format_fat32
+# Executes the format_fat32 logic.
 format_fat32() {
   _dev="$1"
-  printf '[INFO] Formatting %s as FAT32 EFI System Partition...
-' "$_dev"
+  printf '[INFO] Formatting %s as FAT32 EFI System Partition...\n' "$_dev"
   if command -v mkfs.vfat >/dev/null 2>&1; then
     mkfs.vfat -F 32 -n "EFI" "$_dev"
   elif command -v newfs_msdos >/dev/null 2>&1; then
@@ -116,55 +108,59 @@ format_fat32() {
 
 # ## format_ext4
 # Formats partition as Linux ext4.
+# ## format_ext4
+# Executes the format_ext4 logic.
 format_ext4() {
   _dev="$1"
-  printf '[INFO] Formatting %s as ext4...
-' "$_dev"
+  printf '[INFO] Formatting %s as ext4...\n' "$_dev"
   mkfs.ext4 -F -O 64bit -L "rootfs" "$_dev"
 }
 
 # ## format_xfs
 # Formats partition as Linux XFS.
+# ## format_xfs
+# Executes the format_xfs logic.
 format_xfs() {
   _dev="$1"
-  printf '[INFO] Formatting %s as xfs...
-' "$_dev"
+  printf '[INFO] Formatting %s as xfs...\n' "$_dev"
   mkfs.xfs -f -L "rootfs" "$_dev"
 }
 
 # ## format_btrfs
 # Formats partition as Linux Btrfs.
+# ## format_btrfs
+# Executes the format_btrfs logic.
 format_btrfs() {
   _dev="$1"
-  printf '[INFO] Formatting %s as btrfs...
-' "$_dev"
+  printf '[INFO] Formatting %s as btrfs...\n' "$_dev"
   mkfs.btrfs -f -L "rootfs" "$_dev"
 }
 
 # ## format_ufs2
 # Formats partition as FreeBSD UFS2 with soft updates.
+# ## format_ufs2
+# Executes the format_ufs2 logic.
 format_ufs2() {
   _dev="$1"
-  printf '[INFO] Formatting %s as FreeBSD UFS2...
-' "$_dev"
+  printf '[INFO] Formatting %s as FreeBSD UFS2...\n' "$_dev"
   newfs -U -j -t -L "rootfs" "$_dev"
 }
 
 # ## init_zfs_pool
 # Initializes canonical OpenZFS root pool and builds structured dataset hierarchy.
+# ## init_zfs_pool
+# Executes the init_zfs_pool logic.
 init_zfs_pool() {
   _dev="$1"
   _pool="$2"
   _os=$(detect_os)
 
-  printf '[INFO] Initializing OpenZFS root pool %s on %s (%s)...
-' "$_pool" "$_dev" "$_os"
+  printf '[INFO] Initializing OpenZFS root pool %s on %s (%s)...\n' "$_pool" "$_dev" "$_os"
 
   # Idempotency: check if pool already exists
   if command -v zpool >/dev/null 2>&1; then
     if zpool list "$_pool" >/dev/null 2>&1; then
-      printf '[INFO] ZFS pool %s already active. Skipping creation.
-' "$_pool"
+      printf '[INFO] ZFS pool %s already active. Skipping creation.\n' "$_pool"
       return 0
     fi
   fi
@@ -204,8 +200,7 @@ current_fs=$(probe_existing_fs "$TARGET_DEV" || true)
 if [ -n "$current_fs" ] && [ "$FS_TYPE" != "zfs" ]; then
   case "$current_fs" in
     vfat|fat32|ext4|xfs|btrfs|ufs|ufs2)
-      printf '[INFO] Device %s already formatted with %s. Preserving.
-' "$TARGET_DEV" "$current_fs"
+      printf '[INFO] Device %s already formatted with %s. Preserving.\n' "$TARGET_DEV" "$current_fs"
       exit 0
       ;;
   esac
@@ -231,12 +226,10 @@ case "$FS_TYPE" in
     init_zfs_pool "$TARGET_DEV" "$POOL_NAME"
     ;;
   *)
-    printf '[ERROR] Unknown filesystem type: %s
-' "$FS_TYPE" >&2
+    printf '[ERROR] Unknown filesystem type: %s\n' "$FS_TYPE" >&2
     exit 1
     ;;
 esac
 
-printf '[OK] Formatting of %s as %s completed successfully.
-' "$TARGET_DEV" "$FS_TYPE"
+printf '[OK] Formatting of %s as %s completed successfully.\n' "$TARGET_DEV" "$FS_TYPE"
 exit 0

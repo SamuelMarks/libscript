@@ -21,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -92,9 +92,7 @@ set "STAMP_FILE=%STAMP_DIR%\users.stamp"
 if not exist "%STAMP_DIR%" mkdir "%STAMP_DIR%"
 if not exist "%SYSROOT%\usr\local\etc\sudoers.d" mkdir "%SYSROOT%\usr\local\etc\sudoers.d"
 if not exist "%SYSROOT%\home\%PRIMARY_USER%\.ssh" mkdir "%SYSROOT%\home\%PRIMARY_USER%\.ssh"
-if not exist "%SYSROOT%
-oot\.ssh" mkdir "%SYSROOT%
-oot\.ssh"
+if not exist "%SYSROOT%\root\.ssh" mkdir "%SYSROOT%\root\.ssh"
 
 if exist "%STAMP_FILE%" (
     echo [SKIP]     FreeBSD users already provisioned in %SYSROOT%
@@ -117,8 +115,7 @@ echo [USERS]    Provisioning user accounts and security policies (%PRIMARY_USER%
 set "KEY=ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLX6OKMQe1tRJyUk2LaKOqq4TLncREaqq5461b4wuSiUcMSKncsysyrsF21jrr5RsMtZVCnB955iVDD57Gh/O5KeGq88hEl7ZgpTNY4LCmpMZPV3NFWWDtYnuUIIggbJYJvKeOtnBgN+/yV+JQVCyb++t5xRQ3CzCd5KsvYXvRauMQBQjzcUuc276Q== vagrant insecure public key"
 
 echo !KEY!> "%SYSROOT%\home\%PRIMARY_USER%\.ssh\authorized_keys"
-echo !KEY!> "%SYSROOT%
-oot\.ssh\authorized_keys"
+echo !KEY!> "%SYSROOT%\root\.ssh\authorized_keys"
 
 echo %DATE% %TIME%> "%STAMP_FILE%"
 echo [OK]       FreeBSD user provisioning completed.

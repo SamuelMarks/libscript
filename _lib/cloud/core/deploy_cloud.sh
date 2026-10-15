@@ -80,6 +80,8 @@ LOG_FILE="$LOG_DIR/provision-${TIMESTAMP}.log"
 
 # ## log
 # Executes log functionality.
+# ## log
+# Executes the log logic.
 log() {
   printf '%s\n' "$(date '+%Y-%m-%d %H:%M:%S') [$1] $2" | tee -a "$LOG_FILE"
 }
@@ -92,6 +94,8 @@ log "INIT" "Logging to $LOG_FILE"
 # -----------------------------------------------------------------------------
 # ## with_retry
 # Executes a command with exponential backoff and retry logic.
+# ## with_retry
+# Executes the with_retry logic.
 with_retry() {
   max_attempts=5
   timeout=5
@@ -167,6 +171,8 @@ STATE_FILE="$REPO_PATH/.deploy_state"
 
 # ## wait_for_tpu_active
 # Executes wait_for_tpu_active functionality.
+# ## wait_for_tpu_active
+# Executes the wait_for_tpu_active logic.
 wait_for_tpu_active() {
   target_node=$1
   target_loc=$2
@@ -191,6 +197,8 @@ wait_for_tpu_active() {
 
 # ## record_state
 # Executes record_state functionality.
+# ## record_state
+# Executes the record_state logic.
 record_state() {
   key=$1
   val=$2
@@ -283,6 +291,8 @@ record_state "REGION" "$LOC"
 # -----------------------------------------------------------------------------
 # ## ensure_cli
 # Ensures required CLI commands and packages are installed.
+# ## ensure_cli
+# Executes the ensure_cli logic.
 ensure_cli() {
   cmd=$1
   pkg=$2
@@ -358,14 +368,14 @@ elif [ "$PROVIDER" = "gcp" ]; then
 
   if [ "$IS_TPU" -eq 1 ]; then
     log "INFRA" "Provisioning GCP TPU VM..."
-    TPU_CLI="$SCRIPT_DIR/../../cloud-providers/gcp/tpu-vm/cli.sh"
+    TPU_CLI="$SCRIPT_DIR/../../cloud-providers/gcp-tpu-vm/cli.sh"
     export TPU_NETWORK="${NODE}-vpc"
     
     if [ "$SHARED_STORAGE" -eq 1 ]; then
       log "INFRA" "Provisioning Filestore..."
       export FILESTORE_ZONE="$LOC"
       export FILESTORE_NETWORK="${NODE}-vpc"
-      with_retry "$SCRIPT_DIR/../../cloud-providers/gcp/filestore/cli.sh" create "${NODE}-nfs"
+      with_retry "$SCRIPT_DIR/../../cloud-providers/gcp-filestore/cli.sh" create "${NODE}-nfs"
       record_state "GCP_FILESTORE" "${NODE}-nfs"
     fi
     
@@ -398,6 +408,8 @@ if [ "$PROVIDER" = "gcp" ] || [ "$PROVIDER" = "aws" ]; then CTX="$LOC"; fi
 
 # ## wait_for_ssh
 # Executes wait_for_ssh functionality.
+# ## wait_for_ssh
+# Executes the wait_for_ssh logic.
 wait_for_ssh() {
   target_node=$1
   target_ctx=$2
@@ -431,6 +443,8 @@ with_retry "$CLI" node exec "$NODE" "$CTX" "mkdir -p $REMOTE_DEST"
 
 # ## transfer_files
 # Explicit rsync fallback to scp/winrm behavior
+# ## transfer_files
+# Executes the transfer_files logic.
 transfer_files() {
   src=$1
   dst=$2
@@ -538,6 +552,8 @@ fi
 
 # ## wait_for_health
 # Executes wait_for_health functionality.
+# ## wait_for_health
+# Executes the wait_for_health logic.
 wait_for_health() {
   log "HEALTH" "Polling application health (via libscript health)..."
   max_attempts=12

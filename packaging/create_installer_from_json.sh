@@ -58,6 +58,8 @@ REMAINING="$*"
 
 # ## help
 # Executes help functionality.
+# ## help
+# Executes the help logic.
 help() {
     >&2 printf 'Create install scripts from JSON.\n
 \t-a whether to install all dependencies (required AND optional)

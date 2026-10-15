@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://libscript.org/schema/cloud-providers/gcp-filestore/vars.schema.json",
+  "title": "GCP Filestore Configuration",
+  "description": "Environment variables to configure GCP Filestore instances",
+  "type": "object",
+  "properties": {
+    "GCP_PROJECT_ID": {
+      "type": "string",
+      "description": "Google Cloud Platform project ID for Filestore instance provisioning."
+    },
+    "FILESTORE_ZONE": {
+      "type": "string",
+      "description": "Google Cloud zone where the Filestore instance is deployed."
+    },
+    "FILESTORE_TIER": {
+      "type": "string",
+      "default": "BASIC_HDD",
+      "description": "Service tier for Filestore instance performance and storage capacity."
+    },
+    "FILESTORE_CAPACITY_GB": {
+      "type": "string",
+      "default": "1024",
+      "description": "Allocated storage capacity for the Filestore volume in gigabytes."
+    },
+    "FILESTORE_NETWORK": {
+      "type": "string",
+      "default": "default",
+      "description": "VPC network name connected to the Filestore instance."
+    }
+  },
+  "additionalProperties": false
+}

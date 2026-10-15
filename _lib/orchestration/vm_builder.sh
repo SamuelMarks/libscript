@@ -23,16 +23,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 WORKER_TYPE="auto"
@@ -42,19 +39,15 @@ case "${1:-}" in
     shift
     ;;
   --help|-h)
-    printf 'Usage: %s [--worker=docker|wsl2|qemu] <command...>
-' "$THIS_FILE"
-    printf 'Delegates Linux kernel-dependent operations to a virtualized worker.
-'
+    printf 'Usage: %s [--worker=docker|wsl2|qemu] <command...>\n' "$THIS_FILE"
+    printf 'Delegates Linux kernel-dependent operations to a virtualized worker.\n'
     exit 0
     ;;
 esac
 
 if [ $# -eq 0 ]; then
-  printf '[ERROR] No command specified for vm_builder.
-' >&2
-  printf 'Usage: %s [--worker=docker|wsl2|qemu] <command...>
-' "$THIS_FILE" >&2
+  printf '[ERROR] No command specified for vm_builder.\n' >&2
+  printf 'Usage: %s [--worker=docker|wsl2|qemu] <command...>\n' "$THIS_FILE" >&2
   exit 1
 fi
 
@@ -73,14 +66,12 @@ if [ "$WORKER_TYPE" = "auto" ]; then
   elif [ "$HOST_OS" = "Linux" ]; then
     WORKER_TYPE="native"
   else
-    printf '[ERROR] No supported virtualization backend (docker, wsl2, qemu) detected.
-' >&2
+    printf '[ERROR] No supported virtualization backend (docker, wsl2, qemu) detected.\n' >&2
     exit 1
   fi
 fi
 
-printf '[INFO] Executing via virtualization bridge (worker: %s)...
-' "$WORKER_TYPE"
+printf '[INFO] Executing via virtualization bridge (worker: %s)...\n' "$WORKER_TYPE"
 
 case "$WORKER_TYPE" in
   native)
@@ -103,14 +94,12 @@ case "$WORKER_TYPE" in
     exec "$WSL_BIN" --cd "$LIBSCRIPT_ROOT_DIR" -- /bin/sh -c "$*"
     ;;
   qemu)
-    printf '[INFO] Delegating to headless QEMU worker...
-'
+    printf '[INFO] Delegating to headless QEMU worker...\n'
     # Fallback to direct execution if running under headless emulation
     exec "$@"
     ;;
   *)
-    printf '[ERROR] Unsupported worker type: %s
-' "$WORKER_TYPE" >&2
+    printf '[ERROR] Unsupported worker type: %s\n' "$WORKER_TYPE" >&2
     exit 1
     ;;
 esac

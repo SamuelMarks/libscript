@@ -181,6 +181,45 @@
           "description": "Enable automated DHCP on primary network interface"
         }
       }
+    },
+    "traits": {
+      "type": "array",
+      "description": "List of node-level traits applied during live installer target provisioning",
+      "items": {
+        "type": "string",
+        "description": "Trait identifier (e.g. storage, secrets, firewall, mesh, discovery, tls, ingress, logging, metrics, backup, maintenance)"
+      }
+    },
+    "tenant_provisions": {
+      "type": "array",
+      "description": "Declarative logical multi-tenant provisioning entries executed by the live installer",
+      "items": {
+        "type": "object",
+        "description": "Logical multi-tenant provisioning specification",
+        "required": ["tenant_id", "component"],
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "description": "Unique logical tenant identifier"
+          },
+          "component": {
+            "type": "string",
+            "description": "Target multitenant _lib component hosting the logical resource"
+          },
+          "db_name": {
+            "type": "string",
+            "description": "Logical database or schema name to provision"
+          },
+          "db_user": {
+            "type": "string",
+            "description": "Database role or user granted access to the tenant schema"
+          },
+          "server_name": {
+            "type": "string",
+            "description": "Virtual host domain name routed via netctl"
+          }
+        }
+      }
     }
   }
 }

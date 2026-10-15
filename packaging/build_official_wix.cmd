@@ -20,7 +20,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -51,10 +51,43 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-cd "%LIBSCRIPT_ROOT_DIR%\vagrant\windows-11"
+call :build_msi
+exit /b 0
+
+:: ## build_msi
+:: Builds the nodejs MSI artifact via Vagrant using the WiX toolchain.
+:build_msi
+set COMPONENT=nodejs
+set VERSION=20.17.0
+set "STAGE_ROOT=%LIBSCRIPT_ROOT_DIR%\tmp\stage_component_%COMPONENT%_offline"
+
+if not exist "%LIBSCRIPT_ROOT_DIR%\cache\runtimes" mkdir "%LIBSCRIPT_ROOT_DIR%\cache\runtimes"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "https://nodejs.org/dist/v%VERSION%/node-v%VERSION%-win-x64.zip" "%LIBSCRIPT_ROOT_DIR%\cache\runtimes\node-v%VERSION%-win-x64.zip"
+
+if exist "%STAGE_ROOT%" rmdir /s /q "%STAGE_ROOT%"
+if not exist "%STAGE_ROOT%\bin" mkdir "%STAGE_ROOT%\bin"
+tar -xf "%LIBSCRIPT_ROOT_DIR%\cache\runtimes\node-v%VERSION%-win-x64.zip" -C "%STAGE_ROOT%"
+
+for /d %%I in ("%STAGE_ROOT%\node-*") do (
+    xcopy /s /e /y "%%I\*" "%STAGE_ROOT%\"
+    rmdir /s /q "%%I"
+)
+
+if exist "%STAGE_ROOT%\node.exe" if not exist "%STAGE_ROOT%\bin\node.exe" (
+    copy /y "%STAGE_ROOT%\node.exe" "%STAGE_ROOT%\bin\node.exe"
+)
+
+set "MAIN_WXS=%STAGE_ROOT%\%COMPONENT%_offline_main.wxs"
+set "PAYLOAD_WXS=%STAGE_ROOT%\%COMPONENT%_offline_payload.wxs"
+
+call "%LIBSCRIPT_ROOT_DIR%\packaging\template_component_msi.cmd" --component "%COMPONENT%" --version "%VERSION%" --variant offline --out "%MAIN_WXS%"
+call "%LIBSCRIPT_ROOT_DIR%\packaging\harvest_payload.cmd" --source-dir "%STAGE_ROOT%" --wix-fragment "%PAYLOAD_WXS%" --component-group PayloadComponents --directory-id INSTALLFOLDER
+
+echo [INFO] Syncing files to guest...
+cd /d "%LIBSCRIPT_ROOT_DIR%\vagrant\windows-11"
 call vagrant rsync
 for /f "tokens=2" %%i in ('vagrant ssh-config ^| findstr /C:"Port "') do set PORT=%%i
-cd "%SCRIPT_DIR%"
+cd /d "%SCRIPT_DIR%"
 
 set VM_IP=127.0.0.1
 set "KEY=%USERPROFILE%\.vagrant.d\insecure_private_key"
@@ -65,10 +98,10 @@ echo [INFO] Building MSI via official WiX on guest...
 (
 echo $ErrorActionPreference = 'Stop'
 echo Set-Location C:\libscript\tmp\stage_component_nodejs_offline
-echo C:\wix\candle.exe -nologo -arch x64 -out nodejs_offline_main.wixobj nodejs_offline_main.wxs
-echo C:\wix\candle.exe -nologo -arch x64 -out nodejs_offline_payload.wixobj nodejs_offline_payload.wxs
-echo C:\wix\light.exe -nologo -sval -ext WixUIExtension -out nodejs-official.msi nodejs_offline_main.wixobj nodejs_offline_payload.wixobj
-echo if (-not (Test-Path nodejs-official.msi^)^) {
+echo ^& "$env:USERPROFILE\.libscript\wix\3.14\bin\candle.exe" -nologo -arch x64 -out nodejs_offline_main.wixobj nodejs_offline_main.wxs
+echo ^& "$env:USERPROFILE\.libscript\wix\3.14\bin\candle.exe" -nologo -arch x64 -out nodejs_offline_payload.wixobj nodejs_offline_payload.wxs
+echo ^& "$env:USERPROFILE\.libscript\wix\3.14\bin\light.exe" -nologo -sval -ext WixUIExtension -out nodejs-official.msi nodejs_offline_main.wixobj nodejs_offline_payload.wixobj
+echo if (-not (Test-Path nodejs-official.msi^^)^^) {
 echo   Write-Error "Failed to build nodejs-official.msi"
 echo   exit 1
 echo } else {
@@ -79,3 +112,4 @@ echo }
 
 %SCP_CMD% "%LIBSCRIPT_ROOT_DIR%\tmp\build_wix.ps1" vagrant@%VM_IP%:C:/build_wix.ps1
 %SSH_CMD% "powershell -ExecutionPolicy Bypass -File C:\build_wix.ps1"
+exit /b 0

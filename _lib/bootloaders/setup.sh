@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 ACTION="${1:-compile}"
 TARGET_SYSROOT="${2:-${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}}"
@@ -43,13 +40,11 @@ mkdir -p "$STAMPS_DIR"
 STAMP_FILE="${STAMPS_DIR}/.stamp.bootloader"
 
 if [ -f "$STAMP_FILE" ]; then
-  printf '[SKIP]  bootloader already installed (%s)
-' "$STAMP_FILE"
+  printf '[SKIP]  bootloader already installed (%s)\n' "$STAMP_FILE"
   exit 0
 fi
 
-printf '[RECIPE] Staging bootloader (%s) into %s (action: %s)
-' "$BOOTLOADER" "$TARGET_SYSROOT" "$ACTION"
+printf '[RECIPE] Staging bootloader (%s) into %s (action: %s)\n' "$BOOTLOADER" "$TARGET_SYSROOT" "$ACTION"
 
 mkdir -p "$TARGET_SYSROOT/boot"
 mkdir -p "$TARGET_SYSROOT/boot/efi"
@@ -77,8 +72,7 @@ GRUB_CFG_EOF
     fi
     mkdir -p "$TARGET_SYSROOT/boot/efi/EFI/libscript"
     if [ ! -f "$TARGET_SYSROOT/boot/efi/EFI/libscript/grubx64.efi" ]; then
-      printf 'GRUB2 EFI Stub
-' > "$TARGET_SYSROOT/boot/efi/EFI/libscript/grubx64.efi"
+      printf 'GRUB2 EFI Stub\n' > "$TARGET_SYSROOT/boot/efi/EFI/libscript/grubx64.efi"
     fi
     ;;
 
@@ -120,15 +114,12 @@ if [ "${LIBSCRIPT_UKI:-0}" = "1" ] || [ "${LIBSCRIPT_UKI:-false}" = "true" ]; th
   mkdir -p "$TARGET_SYSROOT/boot/efi/EFI/Linux"
   UKI_TARGET="$TARGET_SYSROOT/boot/efi/EFI/Linux/libscript.efi"
   if [ ! -f "$UKI_TARGET" ]; then
-    printf '[INFO] Synthesizing Unified Kernel Image (UKI): %s
-' "$UKI_TARGET"
-    printf 'LibScript Unified Kernel Image (UKI)
-' > "$UKI_TARGET"
+    printf '[INFO] Synthesizing Unified Kernel Image (UKI): %s\n' "$UKI_TARGET"
+    printf 'LibScript Unified Kernel Image (UKI)\n' > "$UKI_TARGET"
   fi
 fi
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
 mv "${STAMP_FILE}.tmp" "$STAMP_FILE"
-printf '[OK]    bootloader staged successfully: %s
-' "$STAMP_FILE"
+printf '[OK]    bootloader staged successfully: %s\n' "$STAMP_FILE"
 exit 0

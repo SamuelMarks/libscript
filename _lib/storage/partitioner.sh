@@ -23,49 +23,37 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 # ## show_help
 # Displays usage information and supported options.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") <device_or_image> [scheme] [boot_mode] [swap_mib]"
-  printf '%s
-' "Partitions storage media for Linux, FreeBSD, or illumos installations."
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") <device_or_image> [scheme] [boot_mode] [swap_mib]"
+  printf '%s\n' "Partitions storage media for Linux, FreeBSD, or illumos installations."
   printf '
 '
-  printf '%s
-' "Schemes:"
-  printf '%s
-' "  gpt       - GUID Partition Table for modern UEFI and hybrid systems (default)"
-  printf '%s
-' "  mbr       - Master Boot Record for legacy BIOS hardware"
-  printf '%s
-' "  vtoc      - Solaris / illumos SMI VTOC slice partition table"
+  printf '%s\n' "Schemes:"
+  printf '%s\n' "  gpt       - GUID Partition Table for modern UEFI and hybrid systems (default)"
+  printf '%s\n' "  mbr       - Master Boot Record for legacy BIOS hardware"
+  printf '%s\n' "  vtoc      - Solaris / illumos SMI VTOC slice partition table"
   printf '
 '
-  printf '%s
-' "Boot Modes:"
-  printf '%s
-' "  uefi      - UEFI boot (creates 512MB FAT32 ESP partition)"
-  printf '%s
-' "  bios      - Legacy BIOS boot (creates 1MB BIOS boot partition on GPT)"
+  printf '%s\n' "Boot Modes:"
+  printf '%s\n' "  uefi      - UEFI boot (creates 512MB FAT32 ESP partition)"
+  printf '%s\n' "  bios      - Legacy BIOS boot (creates 1MB BIOS boot partition on GPT)"
   printf '
 '
-  printf '%s
-' "Options:"
-  printf '%s
-' "  --help, -h, /?, -?  Show this help message."
+  printf '%s\n' "Options:"
+  printf '%s\n' "  --help, -h, /?, -?  Show this help message."
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "/?" ] || [ "${1:-}" = "-?" ]; then
@@ -79,20 +67,23 @@ BOOT_MODE="${3:-uefi}"
 SWAP_MIB="${4:-2048}"
 
 if [ -z "$TARGET_DEV" ]; then
-  printf '[ERROR] Target device or disk image path is required.
-' >&2
+  printf '[ERROR] Target device or disk image path is required.\n' >&2
   show_help
   exit 1
 fi
 
 # ## detect_os
 # Identifies the active operating system kernel family.
+# ## detect_os
+# Executes the detect_os logic.
 detect_os() {
   uname -s | tr '[:upper:]' '[:lower:]'
 }
 
 # ## check_existing_partitions
 # Checks if the target device already has valid partitions configured.
+# ## check_existing_partitions
+# Executes the check_existing_partitions logic.
 check_existing_partitions() {
   _dev="$1"
   if command -v parted >/dev/null 2>&1; then
@@ -112,13 +103,14 @@ check_existing_partitions() {
 
 # ## partition_linux_gpt
 # Creates standardized GPT partitions using sgdisk or parted on Linux.
+# ## partition_linux_gpt
+# Executes the partition_linux_gpt logic.
 partition_linux_gpt() {
   _dev="$1"
   _boot="$2"
   _swap="$3"
 
-  printf '[INFO] Partitioning %s via GPT for %s...
-' "$_dev" "$_boot"
+  printf '[INFO] Partitioning %s via GPT for %s...\n' "$_dev" "$_boot"
 
   if command -v sgdisk >/dev/null 2>&1; then
     # Zap existing tables cleanly
@@ -166,14 +158,15 @@ partition_linux_gpt() {
 
 # ## partition_freebsd_gpt
 # Creates standardized GPT partitions using gpart on FreeBSD.
+# ## partition_freebsd_gpt
+# Executes the partition_freebsd_gpt logic.
 partition_freebsd_gpt() {
   _dev="$1"
   _boot="$2"
   _swap="$3"
   _geom=$(basename "$_dev")
 
-  printf '[INFO] Partitioning %s via FreeBSD gpart...
-' "$_dev"
+  printf '[INFO] Partitioning %s via FreeBSD gpart...\n' "$_dev"
   gpart destroy -F "$_geom" >/dev/null 2>&1 || true
   gpart create -s gpt "$_geom"
 
@@ -193,18 +186,20 @@ partition_freebsd_gpt() {
 
 # ## partition_illumos_vtoc
 # Creates standardized VTOC slice layout on illumos.
+# ## partition_illumos_vtoc
+# Executes the partition_illumos_vtoc logic.
 partition_illumos_vtoc() {
   _dev="$1"
-  printf '[INFO] Configuring illumos partition slices for %s...
-' "$_dev"
+  printf '[INFO] Configuring illumos partition slices for %s...\n' "$_dev"
   if command -v format >/dev/null 2>&1; then
-    printf 'fdisk
-' | format "$_dev" >/dev/null 2>&1 || true
+    printf 'fdisk\n' | format "$_dev" >/dev/null 2>&1 || true
   fi
 }
 
 # ## partition_dual_os_gpt
 # Partitions storage media with dual root partitions for concurrent Linux and FreeBSD installations.
+# ## partition_dual_os_gpt
+# Executes the partition_dual_os_gpt logic.
 partition_dual_os_gpt() {
   _dev="$1"
   _swap="$2"
@@ -270,6 +265,5 @@ case "$current_os" in
     ;;
 esac
 
-printf '[OK] Partitioning of %s completed successfully.
-' "$TARGET_DEV"
+printf '[OK] Partitioning of %s completed successfully.\n' "$TARGET_DEV"
 exit 0

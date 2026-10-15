@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 PKG_NAME="${1:-sample-pkg}"
@@ -45,13 +42,11 @@ mkdir -p "$OUT_DIR"
 TARGET_APK="${OUT_DIR}/${PKG_NAME}-${TARGET_ARCH}-${PKG_VER}-${VARIANT}.apk"
 
 if [ -f "$TARGET_APK" ]; then
-  printf '[IDEMPOTENT] Target APK already exists: %s
-' "$TARGET_APK"
+  printf '[IDEMPOTENT] Target APK already exists: %s\n' "$TARGET_APK"
   exit 0
 fi
 
-printf '[BUILD-APK] Building APK package %s version %s...
-' "$PKG_NAME" "$PKG_VER"
+printf '[BUILD-APK] Building APK package %s version %s...\n' "$PKG_NAME" "$PKG_VER"
 
 WORK_DIR="${LIBSCRIPT_ROOT_DIR}/build/tmp_apk_${PKG_NAME}"
 rm -rf "$WORK_DIR"
@@ -99,6 +94,5 @@ EOF
 
 rm -rf "$WORK_DIR"
 
-printf '[OK] APK package generated successfully: %s
-' "$TARGET_APK"
+printf '[OK] APK package generated successfully: %s\n' "$TARGET_APK"
 exit 0

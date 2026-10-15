@@ -21,16 +21,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 ACTION="${1:-install}"
@@ -41,33 +38,27 @@ mkdir -p "$STAMPS_DIR"
 STAMP_SYSVINIT="${STAMPS_DIR}/.stamp.lfs_init_sysvinit"
 
 if [ "$ACTION" = "clean" ]; then
-  printf '[CLEAN] Removing SysVinit stamp...
-'
+  printf '[CLEAN] Removing SysVinit stamp...\n'
   rm -f "$STAMP_SYSVINIT"
   exit 0
 fi
 
 if [ "$ACTION" = "status" ]; then
   if [ -f "$STAMP_SYSVINIT" ]; then
-    printf 'SysVinit: INSTALLED (%s)
-' "$(cat "$STAMP_SYSVINIT")"
+    printf 'SysVinit: INSTALLED (%s)\n' "$(cat "$STAMP_SYSVINIT")"
   else
-    printf 'SysVinit: NOT INSTALLED
-'
+    printf 'SysVinit: NOT INSTALLED\n'
   fi
   exit 0
 fi
 
 if [ -f "$STAMP_SYSVINIT" ]; then
-  printf '[SKIP]  SysVinit already installed (%s)
-' "$STAMP_SYSVINIT"
+  printf '[SKIP]  SysVinit already installed (%s)\n' "$STAMP_SYSVINIT"
   exit 0
 fi
 
-printf '=== LibScript SysVinit Init Provider ===
-'
-printf '[INFO] Target Rootfs: %s
-' "$ROOTFS"
+printf '=== LibScript SysVinit Init Provider ===\n'
+printf '[INFO] Target Rootfs: %s\n' "$ROOTFS"
 
 mkdir -p "${ROOTFS}/etc/init.d"
 mkdir -p "${ROOTFS}/etc/rc.d/rc0.d"
@@ -105,8 +96,7 @@ cat << 'EOF' > "${ROOTFS}/etc/init.d/rc"
 #!/bin/sh
 # SysV runlevel controller
 RUNLEVEL="$1"
-printf '[INIT] Entering runlevel %s
-' "$RUNLEVEL"
+printf '[INIT] Entering runlevel %s\n' "$RUNLEVEL"
 exit 0
 EOF
 chmod +x "${ROOTFS}/etc/init.d/rc"
@@ -124,6 +114,5 @@ fi
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_SYSVINIT}.tmp"
 mv "${STAMP_SYSVINIT}.tmp" "$STAMP_SYSVINIT"
-printf '[DONE]  SysVinit configured successfully.
-'
+printf '[DONE]  SysVinit configured successfully.\n'
 exit 0

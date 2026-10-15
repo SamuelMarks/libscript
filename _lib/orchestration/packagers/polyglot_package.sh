@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 PKG_NAME="${1:-sample-pkg}"
@@ -41,8 +38,7 @@ OUT_BASE="${4:-${LIBSCRIPT_ROOT_DIR}/build/packages}"
 
 mkdir -p "$OUT_BASE/apk" "$OUT_BASE/deb" "$OUT_BASE/rpm"
 
-printf '[POLYGLOT] Starting multi-distribution cross-packaging for %s %s...
-' "$PKG_NAME" "$PKG_VER"
+printf '[POLYGLOT] Starting multi-distribution cross-packaging for %s %s...\n' "$PKG_NAME" "$PKG_VER"
 
 # 1. Build APK
 "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/packagers/build_apk.sh" "$PKG_NAME" "$PKG_VER" "$STAGE_DIR" "$OUT_BASE/apk"
@@ -59,11 +55,9 @@ DEB_FILE="${OUT_BASE}/deb/${PKG_NAME}_${PKG_VER}_amd64.deb"
 RPM_FILE="${OUT_BASE}/rpm/${PKG_NAME}-${PKG_VER}-1.x86_64.rpm"
 
 if [ -f "$APK_FILE" ] && [ -f "$DEB_FILE" ] && [ -f "$RPM_FILE" ]; then
-  printf '[OK] Polyglot cross-packaging succeeded for %s across APK, DEB, and RPM.
-' "$PKG_NAME"
+  printf '[OK] Polyglot cross-packaging succeeded for %s across APK, DEB, and RPM.\n' "$PKG_NAME"
 else
-  printf '[ERROR] One or more package formats failed to generate.
-' >&2
+  printf '[ERROR] One or more package formats failed to generate.\n' >&2
   exit 1
 fi
 

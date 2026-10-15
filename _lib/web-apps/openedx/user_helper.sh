@@ -23,26 +23,22 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 # ## show_help
 # Displays user helper usage instructions.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") create <install_dir> <username> <email> <password> <is_staff> <is_superuser>"
-  printf '%s
-' "       $(basename "$THIS_FILE") set_password <install_dir> <username> <password>"
-  printf '%s
-' "       $(basename "$THIS_FILE") list <install_dir>"
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") create <install_dir> <username> <email> <password> <is_staff> <is_superuser>"
+  printf '%s\n' "       $(basename "$THIS_FILE") set_password <install_dir> <username> <password>"
+  printf '%s\n' "       $(basename "$THIS_FILE") list <install_dir>"
   exit 0
 }
 
@@ -56,6 +52,8 @@ show_help() {
 #   $4 - Password
 #   $5 - Is staff (true/false)
 #   $6 - Is superuser (true/false)
+# ## do_create
+# Executes the do_create logic.
 do_create() {
   _install_dir="$1"
   _username="$2"
@@ -99,6 +97,8 @@ do_create() {
 #   $1 - Installation directory
 #   $2 - Username
 #   $3 - Password
+# ## do_set_password
+# Executes the do_set_password logic.
 do_set_password() {
   _install_dir="$1"
   _username="$2"
@@ -128,8 +128,7 @@ do_set_password() {
       exit 1
     fi
   fi
-  printf 'Password updated.
-'
+  printf 'Password updated.\n'
 }
 
 # ## do_list
@@ -137,6 +136,8 @@ do_set_password() {
 #
 # Inputs:
 #   $1 - Installation directory
+# ## do_list
+# Executes the do_list logic.
 do_list() {
   _install_dir="$1"
   _p="${_install_dir}/users.json"
@@ -146,14 +147,15 @@ do_list() {
 
   if [ -f "${_p}" ] && command -v jq >/dev/null 2>&1; then
     jq -r 'to_entries[] | "\(.key) \(.value.email // "") \(.value.is_staff // false) \(.value.is_superuser // false)"' "${_p}" 2>/dev/null | while read -r _u _e _s _su; do
-      printf '%-20s %-30s %-8s %-10s
-' "${_u}" "${_e}" "${_s}" "${_su}"
+      printf '%-20s %-30s %-8s %-10s\n' "${_u}" "${_e}" "${_s}" "${_su}"
     done
   fi
 }
 
 # ## main
 # Main entrypoint parsing user commands.
+# ## main
+# Executes the main logic.
 main() {
   if [ $# -lt 1 ]; then
     show_help
@@ -179,8 +181,7 @@ main() {
       show_help
       ;;
     *)
-      printf 'Error: Unknown action %s
-' "${_action}" >&2
+      printf 'Error: Unknown action %s\n' "${_action}" >&2
       exit 1
       ;;
   esac

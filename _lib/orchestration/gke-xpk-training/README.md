@@ -4,9 +4,9 @@ Deploys a generic ML training job to a Google Cloud TPU or GPU Pod via XPK.
 
 ## Components
 
-- cloud-providers/gcp/cli
+- cloud-providers/gcp-cli
 - toolchains/python
-- orchestration/kubernetes/kubectl
+- orchestration/kubectl
 - toolchains/xpk
 
 ## Configuration Options

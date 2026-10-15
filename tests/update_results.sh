@@ -37,31 +37,25 @@ set +f
 
 # ## show_help
 # Displays usage instructions and supported CLI parameters.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") [REPO_ROOT] [--output <markdown_file>] [--json [json_file]] [--help]"
-  printf '%s
-' ""
-  printf '%s
-' "Aggregates test result marker files (*.success, *.failure) from tests_tmp/"
-  printf '%s
-' "and updates the Supported Components table in README.md."
-  printf '%s
-' ""
-  printf '%s
-' "Options:"
-  printf '%s
-' "  REPO_ROOT              Target repository root path (default: auto-detected)."
-  printf '%s
-' "  --output <file>        Custom markdown file to update (default: README.md)."
-  printf '%s
-' "  --json [json_file]     Export matrix results as JSON (default: tests_tmp/matrix_results.json)."
-  printf '%s
-' "  --help, -h, /?         Show this help message."
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") [REPO_ROOT] [--output <markdown_file>] [--json [json_file]] [--help]"
+  printf '%s\n' ""
+  printf '%s\n' "Aggregates test result marker files (*.success, *.failure) from tests_tmp/"
+  printf '%s\n' "and updates the Supported Components table in README.md."
+  printf '%s\n' ""
+  printf '%s\n' "Options:"
+  printf '%s\n' "  REPO_ROOT              Target repository root path (default: auto-detected)."
+  printf '%s\n' "  --output <file>        Custom markdown file to update (default: README.md)."
+  printf '%s\n' "  --json [json_file]     Export matrix results as JSON (default: tests_tmp/matrix_results.json)."
+  printf '%s\n' "  --help, -h, /?         Show this help message."
 }
 
 # ## handle_interrupt
 # Signal handler to abort test results updating immediately on interruption.
+# ## handle_interrupt
+# Executes the handle_interrupt logic.
 handle_interrupt() {
   trap - INT TERM HUP EXIT
   exit 130
@@ -71,6 +65,8 @@ trap 'handle_interrupt' INT TERM HUP
 
 # ## check_manifest_support
 # Checks if a component supports the given OS based on its manifest.json
+# ## check_manifest_support
+# Executes the check_manifest_support logic.
 check_manifest_support() {
   _m_file="$1"
   _m_os="$2"
@@ -120,6 +116,8 @@ check_manifest_support() {
 
 # ## update_supported_components
 # Discovers components, aggregates test results from tests_tmp/, updates Markdown file and JSON export.
+# ## update_supported_components
+# Executes the update_supported_components logic.
 update_supported_components() {
   _repo_root="$1"
   _readme_file="$2"
@@ -134,8 +132,7 @@ update_supported_components() {
   _tmp_json=""
   if [ -n "${_json_file}" ]; then
     _tmp_json=$(mktemp "${TMPDIR:-/tmp}/components_json.XXXXXX")
-    printf '[
-' >"${_tmp_json}"
+    printf '[\n' >"${_tmp_json}"
   fi
 
   cat <<'TABLE_HDR' >"${_tmp_table}"
@@ -346,6 +343,8 @@ JSON_ROW
 
 # ## update_todo_plan
 # Updates TODO_PLAN.md to mark completed tasks when result files exist in tests_tmp/.
+# ## update_todo_plan
+# Executes the update_todo_plan logic.
 update_todo_plan() {
   _repo_root="$1"
   _todo_file="${_repo_root}/TODO_PLAN.md"
@@ -518,6 +517,8 @@ update_todo_plan() {
 
 # ## main
 # Parses command-line flags and invokes update functions.
+# ## main
+# Executes the main logic.
 main() {
   _repo="${REPO_ROOT}"
   _output=""

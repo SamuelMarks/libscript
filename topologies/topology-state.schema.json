@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/topologies/topology-state.schema.json",
+  "title": "LibScript Tier 3.5 Topology Runtime State Machine (.topology_state.json)",
+  "description": "Persistent checkpoint state schema tracking cluster epochs, active leader IDs, distributed lease locks, per-node state transitions, and provisioned cloud resource IDs.",
+  "type": "object",
+  "required": ["topology_name", "epoch", "status", "lock", "nodes"],
+  "properties": {
+    "topology_name": {
+      "type": "string",
+      "description": "Identifier of the cluster topology instance"
+    },
+    "epoch": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Monotonically increasing cluster consensus term or state mutation epoch counter"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "INITIALIZING",
+        "PROVISIONING",
+        "BOOTSTRAPPING",
+        "HEALTHY",
+        "DEGRADED",
+        "FAILING_OVER",
+        "UPGRADING",
+        "DESTROYING",
+        "DESTROYED"
+      ],
+      "description": "Overall lifecycle state of the topology deployment"
+    },
+    "active_leader_id": {
+      "type": "string",
+      "description": "Node identifier of the currently elected or active cluster leader"
+    },
+    "updated_at": {
+      "type": "string",
+      "description": "ISO-8601 UTC timestamp of the last atomic checkpoint write"
+    },
+    "lock": {
+      "type": "object",
+      "description": "Distributed lease lock metadata preventing concurrent topology mutations",
+      "required": ["holder_id", "acquired_at", "expires_at", "lock_backend"],
+      "properties": {
+        "holder_id": {
+          "type": "string",
+          "description": "Unique identifier of the CLI or REST API operator holding the lease"
+        },
+        "acquired_at": {
+          "type": "string",
+          "description": "ISO-8601 UTC timestamp when the lease lock was acquired"
+        },
+        "expires_at": {
+          "type": "string",
+          "description": "ISO-8601 UTC timestamp when the lease lock expires if not renewed"
+        },
+        "lock_backend": {
+          "type": "string",
+          "enum": ["local", "s3", "gs", "azure", "etcd"],
+          "description": "Storage backend coordinating the distributed lock lease"
+        }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "description": "Per-node state machine records and cloud resource mappings",
+      "items": {
+        "type": "object",
+        "description": "State record for an individual node in the topology",
+        "required": ["node_id", "group", "role", "state", "provider"],
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "description": "Unique node instance identifier within the topology"
+          },
+          "group": {
+            "type": "string",
+            "description": "Originating node group name from topology.schema.json"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["leader", "follower", "arbiter", "worker"],
+            "description": "Current consensus role assigned to the node"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "PROVISIONED",
+              "SUBSTRATE_READY",
+              "CONFIGURED",
+              "JOINED",
+              "DRAINING",
+              "FENCED",
+              "DESTROYED"
+            ],
+            "description": "Deterministic node lifecycle state transition marker"
+          },
+          "provider": {
+            "type": "string",
+            "description": "Cloud or hypervisor provider hosting this node"
+          },
+          "public_ip": {
+            "type": "string",
+            "description": "External routable IPv4/IPv6 address assigned to the node"
+          },
+          "private_ip": {
+            "type": "string",
+            "description": "VPC private IPv4/IPv6 address assigned to the node"
+          },
+          "mesh_ip": {
+            "type": "string",
+            "description": "Encrypted overlay IPv4/IPv6 address on the WireGuard/Tailscale mesh (e.g. 100.64.0.1)"
+          },
+          "wireguard_pubkey": {
+            "type": "string",
+            "description": "Base64-encoded WireGuard public key for peer mesh configuration"
+          },
+          "resources": {
+            "type": "object",
+            "description": "Cloud provider resource identifiers tracked for deterministic cascade deprovisioning and API fencing",
+            "properties": {
+              "vm_id": {
+                "type": "string",
+                "description": "Cloud provider virtual machine or instance identifier"
+              },
+              "nic_ids": {
+                "type": "array",
+                "description": "Provisioned network interface identifiers attached to the node",
+                "items": {
+                  "type": "string",
+                  "description": "Network interface resource ID"
+                }
+              },
+              "volume_ids": {
+                "type": "array",
+                "description": "Provisioned persistent block storage volume identifiers",
+                "items": {
+                  "type": "string",
+                  "description": "Block storage volume resource ID"
+                }
+              },
+              "dns_record_ids": {
+                "type": "array",
+                "description": "Cloud DNS A/AAAA record identifiers mapped to this node for clean teardown via dns unmap-node",
+                "items": {
+                  "type": "string",
+                  "description": "Cloud DNS record resource ID or FQDN mapping"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 BOX_FILE="${LIBSCRIPT_ROOT_DIR}/build/output/lfs-custom.box"
@@ -47,8 +44,7 @@ for arg in "$@"; do
       PROVIDER="${arg#*=}"
       ;;
     -h|--help)
-      printf 'Usage: %s [box_path] [--provider=qemu] [--dry-run]
-' "$0"
+      printf 'Usage: %s [box_path] [--provider=qemu] [--dry-run]\n' "$0"
       exit 0
       ;;
     *)
@@ -59,14 +55,11 @@ for arg in "$@"; do
   esac
 done
 
-printf '=== LibScript Vagrant Box Lifecycle Verification ===
-'
-printf '[TEST] Target Box: %s (Provider: %s, Dry-run: %s)
-' "$BOX_FILE" "$PROVIDER" "$DRY_RUN"
+printf '=== LibScript Vagrant Box Lifecycle Verification ===\n'
+printf '[TEST] Target Box: %s (Provider: %s, Dry-run: %s)\n' "$BOX_FILE" "$PROVIDER" "$DRY_RUN"
 
 if [ ! -f "$BOX_FILE" ]; then
-  printf '[INFO] Box file not found; packaging box...
-'
+  printf '[INFO] Box file not found; packaging box...\n'
   "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/vagrant_box.sh"
 fi
 
@@ -77,6 +70,8 @@ mkdir -p "$TEST_DIR"
 # ## cleanup
 # Cleans up temporary test directory and destroys test Vagrant VM instances.
 # shellcheck disable=SC2329
+# ## cleanup
+# Executes the cleanup logic.
 cleanup() {
   if [ "$DRY_RUN" -eq 0 ] && command -v vagrant >/dev/null 2>&1; then
     (cd "$TEST_DIR" && vagrant destroy -f 2>/dev/null || true)
@@ -87,41 +82,30 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 if [ "$DRY_RUN" -eq 1 ] || ! command -v vagrant >/dev/null 2>&1; then
-  printf '[SIMULATED] Asserting Vagrant box archive structure...
-'
+  printf '[SIMULATED] Asserting Vagrant box archive structure...\n'
   tar -tzf "$BOX_FILE" > "${TEST_DIR}/contents.txt" 2>/dev/null || printf 'metadata.json
 Vagrantfile
 box.img
 ' > "${TEST_DIR}/contents.txt"
   if grep -q "metadata.json" "${TEST_DIR}/contents.txt" && grep -q "Vagrantfile" "${TEST_DIR}/contents.txt"; then
-    printf '[PASS] Verified: Vagrant box metadata and descriptor present.
-'
+    printf '[PASS] Verified: Vagrant box metadata and descriptor present.\n'
   else
-    printf '[FAIL] Missing metadata.json or Vagrantfile in box archive!
-' >&2
+    printf '[FAIL] Missing metadata.json or Vagrantfile in box archive!\n' >&2
     exit 1
   fi
 
-  printf '[SIMULATED] Testing vagrant box add %s...
-' "$BOX_NAME"
-  printf '[SIMULATED] Testing vagrant up --provider %s...
-' "$PROVIDER"
-  printf '[SIMULATED] Testing in-guest SSH execution: uid=1000(vagrant) gid=1000(vagrant)
-'
-  printf '[SIMULATED] Testing passwordless sudo: root
-'
-  printf '[SIMULATED] Testing init system supervisor active
-'
-  printf '[SIMULATED] Testing clean teardown: vagrant halt && vagrant destroy
-'
-  printf '=== Vagrant Box Lifecycle Verification Succeeded! ===
-'
+  printf '[SIMULATED] Testing vagrant box add %s...\n' "$BOX_NAME"
+  printf '[SIMULATED] Testing vagrant up --provider %s...\n' "$PROVIDER"
+  printf '[SIMULATED] Testing in-guest SSH execution: uid=1000(vagrant) gid=1000(vagrant)\n'
+  printf '[SIMULATED] Testing passwordless sudo: root\n'
+  printf '[SIMULATED] Testing init system supervisor active\n'
+  printf '[SIMULATED] Testing clean teardown: vagrant halt && vagrant destroy\n'
+  printf '=== Vagrant Box Lifecycle Verification Succeeded! ===\n'
   exit 0
 fi
 
 # Live execution if vagrant is present
-printf '[STAGE] Importing test box...
-'
+printf '[STAGE] Importing test box...\n'
 vagrant box add --name "$BOX_NAME" --provider "$PROVIDER" --force "$BOX_FILE"
 
 cat << EOF > "${TEST_DIR}/Vagrantfile"
@@ -131,25 +115,19 @@ Vagrant.configure("2") do |config|
 end
 EOF
 
-printf '[STAGE] Starting VM...
-'
+printf '[STAGE] Starting VM...\n'
 (cd "$TEST_DIR" && vagrant up --provider "$PROVIDER")
 
-printf '[STAGE] Verifying SSH and identity...
-'
+printf '[STAGE] Verifying SSH and identity...\n'
 (cd "$TEST_DIR" && vagrant ssh -c "id")
 
-printf '[STAGE] Verifying passwordless sudo...
-'
+printf '[STAGE] Verifying passwordless sudo...\n'
 SUDO_OUT=$(cd "$TEST_DIR" && vagrant ssh -c "sudo whoami")
 if [ "$SUDO_OUT" != "root" ]; then
-  printf '[FAIL] Sudoers failed to escalate to root without password!
-' >&2
+  printf '[FAIL] Sudoers failed to escalate to root without password!\n' >&2
   exit 1
 fi
-printf '[PASS] Verified passwordless sudo escalation.
-'
+printf '[PASS] Verified passwordless sudo escalation.\n'
 
-printf '=== Vagrant Box Lifecycle Verification Succeeded! ===
-'
+printf '=== Vagrant Box Lifecycle Verification Succeeded! ===\n'
 exit 0

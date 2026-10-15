@@ -21,16 +21,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 CC0_DIR="${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/screenshots"
 
@@ -45,6 +42,8 @@ fi
 
 # ## regen_desktop_icons
 # Renders 10b_desktop_icons.png with clear "CMS" and "LMS" lettered desktop icons.
+# ## regen_desktop_icons
+# Executes the regen_desktop_icons logic.
 regen_desktop_icons() {
   _out="$1"
   $MAGICK_CMD -size 800x600 xc:"rgb(140,180,210)"  \
@@ -64,12 +63,13 @@ regen_desktop_icons() {
     -fill "rgb(2,132,199)" -pointsize 9 -draw "text 35,240 'CLI'"  \
     -fill "white" -stroke "rgb(0,0,0)" -strokewidth 1 -pointsize 10 -draw "text 18,276 'Management CLI'"  \
     "$_out"
-  printf '[OK] Regenerated %s
-' "$_out"
+  printf '[OK] Regenerated %s\n' "$_out"
 }
 
 # ## regen_lms_auth
 # Renders 13_browser_lms_authenticated.png showing the logged in dashboard.
+# ## regen_lms_auth
+# Executes the regen_lms_auth logic.
 regen_lms_auth() {
   _out="$1"
   $MAGICK_CMD -size 800x600 xc:"rgb(140,180,210)"  \
@@ -106,12 +106,13 @@ regen_lms_auth() {
     -fill "rgb(5,150,105)" -draw "roundrectangle 433,405 575,435 4,4"  \
     -fill "white" -pointsize 11 -draw "text 450,425 'View Material'"  \
     "$_out"
-  printf '[OK] Regenerated %s
-' "$_out"
+  printf '[OK] Regenerated %s\n' "$_out"
 }
 
 # ## regen_studio_auth
 # Renders 14_browser_studio_authenticated.png showing the logged in Studio authoring catalog.
+# ## regen_studio_auth
+# Executes the regen_studio_auth logic.
 regen_studio_auth() {
   _out="$1"
   $MAGICK_CMD -size 800x600 xc:"rgb(140,180,210)"  \
@@ -157,6 +158,8 @@ regen_studio_auth() {
 
 # ## regen_lms_login
 # Renders 11_browser_lms_focused.png showing the LMS login screen.
+# ## regen_lms_login
+# Executes the regen_lms_login logic.
 regen_lms_login() {
   _out="$1"
   $MAGICK_CMD -size 800x600 xc:"rgb(140,180,210)"  \
@@ -192,6 +195,8 @@ regen_lms_login() {
 
 # ## regen_studio_login
 # Renders 12_browser_studio_focused.png showing the Studio login screen.
+# ## regen_studio_login
+# Executes the regen_studio_login logic.
 regen_studio_login() {
   _out="$1"
   $MAGICK_CMD -size 800x600 xc:"rgb(140,180,210)"  \

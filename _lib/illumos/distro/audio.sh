@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 SYSROOT="${1:-${LIBSCRIPT_TARGET_SYSROOT:-${REPO_ROOT}/build/illumos-sysroot}}"
@@ -44,18 +41,15 @@ mkdir -p "${STAMP_DIR}"
 mkdir -p "${SYSROOT}/etc"
 
 if [ -f "${STAMP_FILE}" ]; then
-  printf '[SKIP]     illumos audio subsystem %s already configured in %s
-' "${SUBSYSTEM}" "${SYSROOT}"
+  printf '[SKIP]     illumos audio subsystem %s already configured in %s\n' "${SUBSYSTEM}" "${SYSROOT}"
   exit 0
 fi
 
-printf '[AUDIO]    Configuring illumos audio subsystem %s...
-' "${SUBSYSTEM}"
+printf '[AUDIO]    Configuring illumos audio subsystem %s...\n' "${SUBSYSTEM}"
 
 case "${SUBSYSTEM}" in
   none)
-    printf 'AUDIO_SUBSYSTEM="none"
-' > "${SYSROOT}/etc/audio.conf"
+    printf 'AUDIO_SUBSYSTEM="none"\n' > "${SYSROOT}/etc/audio.conf"
     ;;
 
   boomer)
@@ -88,15 +82,12 @@ EOF
     ;;
 
   *)
-    printf '[WARN]     Unknown audio subsystem: %s, defaulting to none
-' "${SUBSYSTEM}" >&2
-    printf 'AUDIO_SUBSYSTEM="none"
-' > "${SYSROOT}/etc/audio.conf"
+    printf '[WARN]     Unknown audio subsystem: %s, defaulting to none\n' "${SUBSYSTEM}" >&2
+    printf 'AUDIO_SUBSYSTEM="none"\n' > "${SYSROOT}/etc/audio.conf"
     ;;
 esac
 
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
 mv "${STAMP_FILE}.tmp" "${STAMP_FILE}"
 
-printf '[OK]       illumos audio configuration complete: %s
-' "${SYSROOT}"
+printf '[OK]       illumos audio configuration complete: %s\n' "${SYSROOT}"

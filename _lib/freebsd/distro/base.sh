@@ -27,16 +27,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
 
 SYSROOT="${1:-${LIBSCRIPT_TARGET_SYSROOT:-${REPO_ROOT}/build/freebsd-sysroot}}"
@@ -52,18 +49,15 @@ mkdir -p "${SYSROOT}"
 mkdir -p "${STAMP_DIR}"
 
 if [ -f "${STAMP_FILE}" ]; then
-  printf '[SKIP]     FreeBSD base system already bootstrapped in %s
-' "${SYSROOT}"
+  printf '[SKIP]     FreeBSD base system already bootstrapped in %s\n' "${SYSROOT}"
   exit 0
 fi
 
-printf '[BASE]     Bootstrapping FreeBSD %s (%s) into %s...
-' "${VERSION}" "${ARCH}" "${SYSROOT}"
+printf '[BASE]     Bootstrapping FreeBSD %s (%s) into %s...\n' "${VERSION}" "${ARCH}" "${SYSROOT}"
 
 # In native FreeBSD host environment with pre-existing world
 if [ "$(uname -s 2>/dev/null || true)" = "FreeBSD" ] && [ -d "/usr/share/zoneinfo" ] && [ -f "/bin/freebsd-version" ] && [ "${LIBSCRIPT_FORCE_FETCH:-0}" = "0" ]; then
-  printf '[BASE]     Detected native FreeBSD host, syncing local base system...
-'
+  printf '[BASE]     Detected native FreeBSD host, syncing local base system...\n'
   for dir in bin sbin lib libexec usr etc dev proc sys root var tmp boot; do
     mkdir -p "${SYSROOT}/${dir}"
   done
@@ -82,11 +76,9 @@ mkdir -p "${SYSROOT}/var/run" "${SYSROOT}/var/log" "${SYSROOT}/var/db" "${SYSROO
 chmod 1777 "${SYSROOT}/tmp" "${SYSROOT}/var/tmp"
 
 # Write release identifier
-printf '%s
-' "${VERSION}" > "${SYSROOT}/etc/libscript-freebsd-version"
+printf '%s\n' "${VERSION}" > "${SYSROOT}/etc/libscript-freebsd-version"
 
 # Atomic stamp recording
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"
 mv "${STAMP_FILE}.tmp" "${STAMP_FILE}"
-printf '[OK]       FreeBSD base bootstrap completed.
-'
+printf '[OK]       FreeBSD base bootstrap completed.\n'

@@ -21,22 +21,20 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 # ## show_help
 # Displays usage instructions.
+# ## show_help
+# Executes the show_help logic.
 show_help() {
-  printf '%s
-' "Usage: $(basename "$THIS_FILE") <is_json> <lms_h> <lms_p> <cms_h> <cms_p> <my_h> <my_p> <mg_h> <mg_p> <rd_h> <rd_p> <me_h> <me_p> <sm_h> <sm_p>"
+  printf '%s\n' "Usage: $(basename "$THIS_FILE") <is_json> <lms_h> <lms_p> <cms_h> <cms_p> <my_h> <my_p> <mg_h> <mg_p> <rd_h> <rd_p> <me_h> <me_p> <sm_h> <sm_p>"
   exit 0
 }
 
@@ -46,6 +44,8 @@ show_help() {
 # Inputs:
 #   $1 - Host
 #   $2 - Port
+# ## test_tcp
+# Executes the test_tcp logic.
 test_tcp() {
   _host="$1"
   _port="$2"
@@ -69,6 +69,8 @@ test_tcp() {
 #
 # Inputs:
 #   $1 - URL
+# ## test_http
+# Executes the test_http logic.
 test_http() {
   _url="$1"
   if command -v curl >/dev/null 2>&1; then
@@ -90,6 +92,8 @@ test_http() {
 
 # ## main
 # Main entrypoint parsing endpoint arguments and executing diagnostics.
+# ## main
+# Executes the main logic.
 main() {
   if [ $# -lt 15 ]; then
     show_help
@@ -145,40 +149,24 @@ main() {
 }
 EOF
   else
-    printf '========================================================================
-'
-    printf '               Open edX Full-Stack Health Diagnostics                   
-'
-    printf '========================================================================
-'
-    printf '%-20s %-32s %-16s
-' "SERVICE" "TARGET ENDPOINT" "STATUS"
-    printf '%-20s %-32s %-16s
-' "--------------------" "--------------------------------" "----------------"
-    printf '%-20s %-32s %-16s
-' "MySQL" "${_my_h}:${_my_p}" "${_mysql}"
-    printf '%-20s %-32s %-16s
-' "MongoDB" "${_mg_h}:${_mg_p}" "${_mongo}"
-    printf '%-20s %-32s %-16s
-' "Redis" "${_rd_h}:${_rd_p}" "${_redis}"
-    printf '%-20s %-32s %-16s
-' "Meilisearch" "http://${_me_h}:${_me_p}" "${_meili}"
-    printf '%-20s %-32s %-16s
-' "LMS Web" "http://${_lms_h}:${_lms_p}/" "${_lms}"
-    printf '%-20s %-32s %-16s
-' "Studio Web" "http://${_cms_h}:${_cms_p}/signin" "${_cms}"
-    printf '%-20s %-32s %-16s
-' "Celery Workers" "celery-lms, cms-worker" "${_workers}"
-    printf '%-20s %-32s %-16s
-' "SMTP Mail Relay" "${_sm_h}:${_sm_p}" "${_smtp}"
-    printf '========================================================================
-'
+    printf '========================================================================\n'
+    printf '               Open edX Full-Stack Health Diagnostics                   \n'
+    printf '========================================================================\n'
+    printf '%-20s %-32s %-16s\n' "SERVICE" "TARGET ENDPOINT" "STATUS"
+    printf '%-20s %-32s %-16s\n' "--------------------" "--------------------------------" "----------------"
+    printf '%-20s %-32s %-16s\n' "MySQL" "${_my_h}:${_my_p}" "${_mysql}"
+    printf '%-20s %-32s %-16s\n' "MongoDB" "${_mg_h}:${_mg_p}" "${_mongo}"
+    printf '%-20s %-32s %-16s\n' "Redis" "${_rd_h}:${_rd_p}" "${_redis}"
+    printf '%-20s %-32s %-16s\n' "Meilisearch" "http://${_me_h}:${_me_p}" "${_meili}"
+    printf '%-20s %-32s %-16s\n' "LMS Web" "http://${_lms_h}:${_lms_p}/" "${_lms}"
+    printf '%-20s %-32s %-16s\n' "Studio Web" "http://${_cms_h}:${_cms_p}/signin" "${_cms}"
+    printf '%-20s %-32s %-16s\n' "Celery Workers" "celery-lms, cms-worker" "${_workers}"
+    printf '%-20s %-32s %-16s\n' "SMTP Mail Relay" "${_sm_h}:${_sm_p}" "${_smtp}"
+    printf '========================================================================\n'
     if [ $_fails -eq 0 ]; then
-      printf '[SUCCESS] All Open edX core services and endpoints are healthy.
-'
+      printf '[SUCCESS] All Open edX core services and endpoints are healthy.\n'
     else
-      printf '[WARN] Healthcheck detected %d degraded or offline service(s).
-' "$_fails"
+      printf '[WARN] Healthcheck detected %d degraded or offline service(s).\n' "$_fails"
     fi
   fi
 

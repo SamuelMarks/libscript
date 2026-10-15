@@ -22,16 +22,13 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"
-' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"
-' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
-' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 PKG_NAME="${1:-sample-pkg}"
@@ -49,13 +46,11 @@ if [ "$VARIANT" = "offline" ]; then
 fi
 
 if [ -f "$TARGET_DEB" ]; then
-  printf '[IDEMPOTENT] Target DEB already exists: %s
-' "$TARGET_DEB"
+  printf '[IDEMPOTENT] Target DEB already exists: %s\n' "$TARGET_DEB"
   exit 0
 fi
 
-printf '[BUILD-DEB] Building Debian package %s version %s...
-' "$PKG_NAME" "$PKG_VER"
+printf '[BUILD-DEB] Building Debian package %s version %s...\n' "$PKG_NAME" "$PKG_VER"
 
 WORK_DIR="${LIBSCRIPT_ROOT_DIR}/build/tmp_deb_${PKG_NAME}"
 rm -rf "$WORK_DIR"
@@ -108,8 +103,7 @@ Description: ${PKG_NAME} synthesized by LibScript
 EOF
 
 if [ -n "$DETECTED_DEPS" ]; then
-  printf 'Depends: %s
-' "$DETECTED_DEPS" >> "$WORK_DIR/control/control"
+  printf 'Depends: %s\n' "$DETECTED_DEPS" >> "$WORK_DIR/control/control"
 fi
 
 # Generate md5sums
@@ -120,8 +114,7 @@ fi
   fi
 )
 
-printf '2.0
-' > "$WORK_DIR/debian-binary"
+printf '2.0\n' > "$WORK_DIR/debian-binary"
 
 (
   cd "$WORK_DIR/control"
@@ -148,6 +141,5 @@ fi
 
 rm -rf "$WORK_DIR"
 
-printf '[OK] Debian package generated successfully: %s
-' "$TARGET_DEB"
+printf '[OK] Debian package generated successfully: %s\n' "$TARGET_DEB"
 exit 0

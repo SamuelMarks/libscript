@@ -1,4 +1,5 @@
 @echo off
+:: # setup_generic.cmd
 :: ## Overview
 :: Windows setup for Bento Builder stack.
 ::
@@ -18,7 +19,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -57,6 +58,10 @@ if "%ACTION%"=="install" (
     call "%~dp0\..\..\..\_lib\orchestration\virtualbox\setup.cmd" install
     call "%~dp0\..\..\..\_lib\orchestration\packer\setup.cmd" install
     call "%~dp0\..\..\..\_lib\orchestration\vagrant\setup.cmd" install
+if exist "%LIBSCRIPT_HOME%\bento-builder\%VERSION%" (
+    echo [INFO] bento-builder %VERSION% is already installed.
+    exit /b 0
+)
 
     where 7z >nul 2>&1
     if !errorlevel! neq 0 (

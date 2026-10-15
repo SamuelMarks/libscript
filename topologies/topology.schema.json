@@ -1,0 +1,243 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/topologies/topology.schema.json",
+  "title": "LibScript Tier 3.5 Cluster Topology Specification",
+  "description": "Declarative schema defining multi-node cluster topologies, quorum choreography, split-brain fencing policies, encrypted mesh overlays, and node groups.",
+  "type": "object",
+  "required": ["name", "version", "quorum_strategy", "fencing_policy", "node_groups", "network"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Unique identifier for the cluster topology deployment"
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version string of the topology blueprint"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of the cluster topology and architecture"
+    },
+    "quorum_strategy": {
+      "type": "string",
+      "enum": [
+        "raft",
+        "paxos",
+        "patroni-etcd",
+        "sentinel",
+        "cluster-gossip",
+        "erasure-coded",
+        "none"
+      ],
+      "description": "Distributed consensus and quorum formation strategy used by the cluster"
+    },
+    "fencing_policy": {
+      "type": "string",
+      "enum": [
+        "cloud-api-poweroff",
+        "cloud-api-detach-nic",
+        "firewall-isolate",
+        "watchdog-reset",
+        "manual"
+      ],
+      "description": "Split-brain fencing mechanism invoked before promoting a follower to leader"
+    },
+    "node_groups": {
+      "type": "array",
+      "description": "List of homogeneous node pools participating in the cluster topology",
+      "items": {
+        "type": "object",
+        "description": "Specification for a group of cluster nodes sharing a role and hardware profile",
+        "required": ["name", "provider", "region", "size", "count", "role"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Identifier for this node group pool (e.g. primary, replicas, workers)"
+          },
+          "provider": {
+            "type": "string",
+            "enum": ["aws", "gcp", "azure", "hetzner", "proxmox", "vagrant", "local"],
+            "description": "Tier 3 cloud or hypervisor infrastructure provider"
+          },
+          "region": {
+            "type": "string",
+            "description": "Cloud region or availability zone placement identifier"
+          },
+          "size": {
+            "type": "string",
+            "description": "Machine instance type or sizing profile (e.g. Standard_D4s_v3, t3.xlarge, e2-standard-4)"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Number of nodes to provision in this node group"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["leader", "follower", "arbiter", "worker"],
+            "description": "Consensus and operational role assigned to nodes in this group"
+          },
+          "components": {
+            "type": "array",
+            "description": "Tier 1 _lib components installed and managed on nodes in this group",
+            "items": {
+              "type": "string",
+              "description": "Component identifier from the _lib catalog"
+            }
+          },
+          "traits": {
+            "type": "array",
+            "description": "Node-level substrate traits enabled on nodes in this group",
+            "items": {
+              "type": "string",
+              "description": "Trait identifier (e.g. storage, secrets, mesh, firewall, discovery, tls, ingress, backup)"
+            }
+          },
+          "disks": {
+            "type": "array",
+            "description": "Persistent block storage volumes attached to each node in the group",
+            "items": {
+              "type": "object",
+              "description": "Block storage disk attachment specification",
+              "required": ["name", "size_gb", "filesystem", "mount_point"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Logical volume identifier"
+                },
+                "size_gb": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "Disk capacity in gigabytes"
+                },
+                "filesystem": {
+                  "type": "string",
+                  "enum": ["ext4", "xfs", "btrfs", "zfs", "ntfs", "refs"],
+                  "description": "Filesystem format initialized by traits/storage"
+                },
+                "mount_point": {
+                  "type": "string",
+                  "description": "Target directory mount path on the host"
+                }
+              }
+            }
+          },
+          "accelerators": {
+            "type": "object",
+            "description": "Optional GPU or TPU hardware accelerators attached to nodes in this group",
+            "properties": {
+              "gpu_type": {
+                "type": "string",
+                "description": "GPU hardware model identifier (e.g. nvidia-tesla-a100, nvidia-h100-80gb)"
+              },
+              "gpu_count": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Number of GPU devices per node"
+              },
+              "tpu_accelerator_type": {
+                "type": "string",
+                "description": "Google Cloud TPU accelerator configuration (e.g. v4-8, v5litepod-16, v5p-128)"
+              },
+              "tpu_topology": {
+                "type": "string",
+                "description": "Physical TPU chip interconnect topology (e.g. 2x2x1, 2x4)"
+              },
+              "tpu_slice_count": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Number of multi-host TPU slices in the node pool"
+              }
+            }
+          }
+        }
+      }
+    },
+    "network": {
+      "type": "object",
+      "description": "Cluster network addressing, encrypted overlay mesh, and DNS zone settings",
+      "required": ["vpc_cidr", "mesh_overlay", "internal_domain"],
+      "properties": {
+        "vpc_cidr": {
+          "type": "string",
+          "description": "IPv4 CIDR block allocated for the private cluster network (e.g. 10.42.0.0/16)"
+        },
+        "mesh_overlay": {
+          "type": "string",
+          "enum": ["wireguard", "tailscale", "none"],
+          "description": "Cross-cloud encrypted mesh network driver"
+        },
+        "dns_zone": {
+          "type": "string",
+          "description": "Public Cloud DNS zone name for external service discovery records"
+        },
+        "internal_domain": {
+          "type": "string",
+          "description": "Private internal domain suffix mapped via /etc/hosts and service discovery (e.g. cluster.internal)"
+        }
+      }
+    },
+    "choreography": {
+      "type": "object",
+      "description": "Ordered lifecycle choreography hooks executed across the cluster state machine",
+      "properties": {
+        "pre_provision": {
+          "type": "array",
+          "description": "Commands or hooks executed before cloud infrastructure provisioning begins",
+          "items": {
+            "type": "string",
+            "description": "Hook script or command reference"
+          }
+        },
+        "substrate_prep": {
+          "type": "array",
+          "description": "Traits and setup actions executed on all nodes prior to service bootstrapping",
+          "items": {
+            "type": "string",
+            "description": "Trait or setup action identifier"
+          }
+        },
+        "leader_bootstrap": {
+          "type": "array",
+          "description": "Hooks executed on the designated leader node to initialize cluster quorum",
+          "items": {
+            "type": "string",
+            "description": "Leader bootstrap hook command"
+          }
+        },
+        "follower_join": {
+          "type": "array",
+          "description": "Hooks executed on follower and worker nodes to join the active leader quorum",
+          "items": {
+            "type": "string",
+            "description": "Follower join hook command"
+          }
+        },
+        "post_cluster": {
+          "type": "array",
+          "description": "Verification and ingress routing actions executed after cluster quorum is healthy",
+          "items": {
+            "type": "string",
+            "description": "Post-cluster hook command"
+          }
+        },
+        "pre_drain": {
+          "type": "array",
+          "description": "Graceful connection draining and replication sync steps run before node removal",
+          "items": {
+            "type": "string",
+            "description": "Pre-drain hook command"
+          }
+        },
+        "post_destroy": {
+          "type": "array",
+          "description": "Cleanup, final state backup, and DNS unmapping actions run during teardown",
+          "items": {
+            "type": "string",
+            "description": "Post-destroy hook command"
+          }
+        }
+      }
+    }
+  }
+}

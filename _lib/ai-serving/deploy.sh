@@ -51,11 +51,9 @@ printf '%s\n' "Deploying $MODEL_NAME to TPU VM $TPU_NAME..."
 cat << 'EOF' > /tmp/deploy_tpu.sh
 set -ex
 
-# Install docker if not present
+# Install docker via canonical LibScript component if not present
 if ! command -v docker >/dev/null 2>&1; then
-  sudo apt-get update
-  sudo apt-get install -y docker.io
-  sudo usermod -aG docker $USER
+  ~/_lib/orchestration/docker/setup.sh
 fi
 
 MODEL_NAME="$1"
@@ -76,6 +74,6 @@ sudo docker run -d --rm \
   --tensor-parallel-size 1
 EOF
 
-"${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp/tpu-vm/cli.sh" ssh "$TPU_NAME" "sh -s" < /tmp/deploy_tpu.sh "$MODEL_NAME"
+"${LIBSCRIPT_ROOT_DIR}/_lib/cloud-providers/gcp-tpu-vm/cli.sh" ssh "$TPU_NAME" "sh -s" < /tmp/deploy_tpu.sh "$MODEL_NAME"
 
 printf '%s\n' "Deploy complete."
