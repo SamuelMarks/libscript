@@ -15,7 +15,7 @@ vm_name = "freebsd-test-#{test_target}"
 
 Vagrant.configure("2") do |config|
   config.vm.define vm_name do |t|
-    t.vm.box = "bento/freebsd-14.1"
+    t.vm.box = "bento/freebsd-15.1"
     t.vm.box_version = "0"
 
     t.ssh.username = "vagrant"

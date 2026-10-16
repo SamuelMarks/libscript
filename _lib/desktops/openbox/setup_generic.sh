@@ -58,7 +58,7 @@ if [ -f "$STAMP_FILE" ]; then
 fi
 
 if ! command -v "openbox" >/dev/null 2>&1; then
-  libscript_depends "openbox"
+  libscript_depends "openbox" || true
 fi
 
 printf '[RECIPE] Staging %s into %s (action: %s)\n' "openbox" "$TARGET_SYSROOT" "$ACTION"

@@ -142,7 +142,32 @@ libscript_service() {
     return 0
   fi
 
-  # 5. Fallback: POSIX-compatible background process management (PID files)
+  # 5. illumos / Solaris SMF (svcadm / svcs)
+  if command -v svcadm >/dev/null 2>&1; then
+    _fmri="$_service"
+    if ! svcs "$_fmri" >/dev/null 2>&1 && svcs "application/libscript/$_service" >/dev/null 2>&1; then
+      _fmri="application/libscript/$_service"
+    fi
+    case "$_action" in
+      start|enable)   priv svcadm enable -s "$_fmri" ;;
+      stop|disable)   priv svcadm disable -s "$_fmri" ;;
+      restart)        priv svcadm restart "$_fmri" ;;
+      status)         svcs -xv "$_fmri" ;;
+      logs)
+        _smf_log=$(svcs -L "$_fmri" 2>/dev/null || true)
+        if [ -n "$_smf_log" ] && [ -f "$_smf_log" ]; then
+          tail "$@" "$_smf_log"
+        else
+          log_warn "SMF log file for $_fmri not found."
+        fi
+        ;;
+      health)         libscript_check_health "$_service" "$@" ;;
+      *) log_error "Unknown action: $_action"; return 1 ;;
+    esac
+    return 0
+  fi
+
+  # 6. Fallback: POSIX-compatible background process management (PID files)
   # This is a very basic fallback for systems without a real init system
   _pid_file="/var/run/${_service}.pid"
   [ -w "/var/run" ] || _pid_file="/tmp/${_service}.pid"
@@ -215,6 +240,20 @@ libscript_check_health() {
   elif command -v rc-service >/dev/null 2>&1; then
     if priv rc-service "$_service" status | grep -q "started"; then
       log_info "$_service is started"
+      return 0
+    fi
+  elif command -v svcs >/dev/null 2>&1; then
+    _fmri="$_service"
+    if ! svcs "$_fmri" >/dev/null 2>&1 && svcs "application/libscript/$_service" >/dev/null 2>&1; then
+      _fmri="application/libscript/$_service"
+    fi
+    if [ "$(svcs -H -o state "$_fmri" 2>/dev/null)" = "online" ]; then
+      log_info "$_service is online"
+      return 0
+    fi
+  elif [ "${UNAME_LOWER:-}" = "freebsd" ] || command -v sysrc >/dev/null 2>&1; then
+    if priv service "$_service" status >/dev/null 2>&1; then
+      log_info "$_service is running"
       return 0
     fi
   elif command -v sc.exe >/dev/null 2>&1; then

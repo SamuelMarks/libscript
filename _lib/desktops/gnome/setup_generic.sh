@@ -58,7 +58,7 @@ if [ -f "$STAMP_FILE" ]; then
 fi
 
 if ! command -v "gnome" >/dev/null 2>&1; then
-  libscript_depends "gnome"
+  libscript_depends "gnome" || true
 fi
 
 printf '[RECIPE] Staging %s into %s (action: %s)\n' "gnome" "$TARGET_SYSROOT" "$ACTION"

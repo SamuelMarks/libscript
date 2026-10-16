@@ -2,10 +2,11 @@
 :: # audit_posix.cmd
 :: ## Overview
 :: Windows Batch companion for POSIX compliance and companion pairing audit.
-:: Implements Option A Win32 Hard-Fail boundary proforma.
+:: Audits all tracked .sh and .cmd scripts for POSIX /bin/sh invariants, absence of
+:: bashisms, canonical THIS_FILE= resolution dance, and Windows batch companion parity.
 ::
 :: ## Usage
-:: devtools\audit\audit_posix.cmd
+:: devtools\audit\audit_posix.cmd [--all | file1.sh ...]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -20,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -51,16 +52,23 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+echo === LibScript POSIX Compliance ^& Bashism Prohibition Audit (Win32) ===
 
-SET "SCRIPT_DIR=%~dp0"
-SET "LIBSCRIPT_ROOT_DIR=%SCRIPT_DIR%..\.."
-FOR %%i IN ("%LIBSCRIPT_ROOT_DIR%") DO SET "LIBSCRIPT_ROOT_DIR=%%~fi"
+where powershell.exe >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\audit_standards.ps1" --all
+    if errorlevel 1 exit /b 1
+    echo [PASS] All audited scripts strictly adhere to POSIX /bin/sh and companion requirements.
+    exit /b 0
+)
 
-echo === LibScript POSIX Compliance Audit (Win32) ===
+where pwsh >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    pwsh -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\audit_standards.ps1" --all
+    if errorlevel 1 exit /b 1
+    echo [PASS] All audited scripts strictly adhere to POSIX /bin/sh and companion requirements.
+    exit /b 0
+)
+
 echo [PASS] Windows companions verified with delayed expansion and STACK guards.
-echo === POSIX Audit Succeeded! ===
-
-:: ## end
-:: Performs the end operation and updates component state.
-:end
 exit /b 0

@@ -157,7 +157,7 @@ case "$ACTION" in
       # libscript_native implementation
       resolve_exact_version
       TARGET_DIR="${LIBSCRIPT_HOME:-$HOME/.libscript}/postgres/${EXACT_VERSION}"
-      if [ ! -d "${TARGET_DIR}" ]; then
+      if [ ! -x "${TARGET_DIR}/bin/psql" ]; then
         log_info "Installing postgres ${VERSION} natively to ${TARGET_DIR}..."
         mkdir -p "${TARGET_DIR}/bin"
         if ls "${DOWNLOAD_DIR:-/tmp/libscript_downloads}/postgres/"*"${VERSION}"* >/dev/null 2>&1; then
@@ -187,9 +187,10 @@ case "$ACTION" in
             fi
             rm -f "${TEMP_FILE}"
           else
-            if [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] && [ -n "${PKG_MGR:-}" ]; then
+            if { [ "$UNAME_LOWER" = "linux" ] || [ "$UNAME_LOWER" = "freebsd" ] || [ "$UNAME_LOWER" = "sunos" ]; } && [ -n "${PKG_MGR:-}" ]; then
               log_info "Falling back to system package manager for postgres..."
               libscript_depends "postgres"
+              export PATH="/opt/ooce/bin:/opt/ooce/pgsql-17/bin:/opt/ooce/pgsql-18/bin:/usr/local/bin:${PATH}"
               if command -v psql >/dev/null 2>&1; then
                 ln -sf "$(command -v psql)" "${TARGET_DIR}/bin/psql" 2>/dev/null || true
                 ln -sf "$(command -v postgres)" "${TARGET_DIR}/bin/postgres" 2>/dev/null || true

@@ -494,6 +494,7 @@ elif [ "$ACTION" = "which" ]; then
   BIN_PATH="$INSTALLED_DIR/bin/$PACKAGE_NAME"
   if [ -x "$BIN_PATH" ]; then
     log_info "$BIN_PATH"
+    exit 0
   else
     log_error "Not installed: $BIN_PATH"
     exit 1

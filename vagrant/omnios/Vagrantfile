@@ -40,10 +40,8 @@ Vagrant.configure("2") do |config|
     # Disable default /vagrant folder so it does not collide or fail chown
     t.vm.synced_folder ".", "/vagrant", disabled: true
 
-    # Sync the repository root directory
-    t.vm.synced_folder repo_root, "/opt/repos/libscript", type: "rsync",
-      rsync_exclude: [".git/", "tests_tmp/", "vagrant/"],
-      owner: "vagrant", group: "staff"
+    # Sync the repository root directory (disabled during vagrant up when rsync is not preinstalled; run_omnios_tests.sh syncs over SSH)
+    t.vm.synced_folder repo_root, "/opt/repos/libscript", disabled: true
 
     # Provision the VM and run the test
     t.vm.provision "shell", inline: <<-SHELL

@@ -139,10 +139,10 @@ if [ -n "$first_target" ]; then
     bundle_file="$first_target/offline_bundle.json"
   elif [ -f "$first_target/manifest.json" ]; then
     bundle_file="$first_target/manifest.json"
-  elif [ -f "${LIBSCRIPT_ROOT_DIR}/stacks/cms/${first_target}/offline_bundle.json" ]; then
-    bundle_file="${LIBSCRIPT_ROOT_DIR}/stacks/cms/${first_target}/offline_bundle.json"
-  elif [ -f "${LIBSCRIPT_ROOT_DIR}/stacks/cms/${first_target}/manifest.json" ]; then
-    bundle_file="${LIBSCRIPT_ROOT_DIR}/stacks/cms/${first_target}/manifest.json"
+  elif [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/${first_target}/offline_bundle.json" ]; then
+    bundle_file="${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/${first_target}/offline_bundle.json"
+  elif [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/${first_target}/manifest.json" ]; then
+    bundle_file="${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/${first_target}/manifest.json"
   fi
 fi
 

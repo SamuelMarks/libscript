@@ -129,11 +129,21 @@ exit /b 0
 :: ## action_install
 :: Installs and configures the requested version of the component.
 :action_install
-if exist "%LIBSCRIPT_HOME%\kubectl\%VERSION%" (
+if "%VERSION%"=="" set "VERSION=%KUBECTL_VERSION%"
+if exist "%LIBSCRIPT_HOME%\kubectl\%VERSION%\bin\kubectl.exe" (
     echo [INFO] kubectl %VERSION% is already installed.
     exit /b 0
 )
 if "%KUBECTL_INSTALL_METHOD%"=="system" (
-    winget install kubectl --accept-package-agreements --accept-source-agreements
+    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends kubectl
     exit /b !errorlevel!
 )
+set "TARGET_DIR=%LIBSCRIPT_HOME%\kubectl\%VERSION%"
+if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
+set "_KVER=1.31.0"
+if not "%VERSION%"=="latest" if not "%VERSION%"=="lts" if not "%VERSION%"=="" set "_KVER=%VERSION%"
+set "_KARCH=amd64"
+if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "_KARCH=arm64"
+if "%KUBECTL_DOWNLOAD_URL%"=="" set "KUBECTL_DOWNLOAD_URL=https://dl.k8s.io/release/v!_KVER!/bin/windows/!_KARCH!/kubectl.exe"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!KUBECTL_DOWNLOAD_URL!" "%TARGET_DIR%\bin\kubectl.exe"
+exit /b !errorlevel!

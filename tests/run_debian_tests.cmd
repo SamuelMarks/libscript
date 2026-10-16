@@ -61,6 +61,7 @@ set "THIS_DIR=%~dp0"
 if "%THIS_DIR:~-1%"=="" set "THIS_DIR=%THIS_DIR:~0,-1%"
 
 set "REPO_ROOT=%THIS_DIR%\.."
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\test_matrix_driver.cmd"
 set "VAGRANT_DIR=%REPO_ROOT%\vagrant\debian-13"
 set "TESTS_TMP_DIR=%REPO_ROOT%\tests_tmp"
 

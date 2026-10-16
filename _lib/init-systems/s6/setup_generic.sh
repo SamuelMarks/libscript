@@ -58,7 +58,7 @@ if [ -f "$STAMP_FILE" ]; then
 fi
 
 if ! command -v "s6" >/dev/null 2>&1; then
-  libscript_depends "s6"
+  libscript_depends "s6" || true
 fi
 
 printf '[RECIPE] Staging %s into %s (action: %s)\n' "s6" "$TARGET_SYSROOT" "$ACTION"

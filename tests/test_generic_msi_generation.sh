@@ -39,7 +39,7 @@ trap 'rm -rf "$TMP_DIR"' EXIT INT TERM
 
 # 1. Test Open edX WiX generation
 printf '[TEST 1] Synthesizing WiX manifest for Open edX...\n'
-"$TEMPLATE_SH" "${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx" --out "$TMP_DIR/openedx.wxs"
+"$TEMPLATE_SH" "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/openedx" --out "$TMP_DIR/openedx.wxs"
 grep -q "Open edX Platform" "$TMP_DIR/openedx.wxs" || exit 1
 grep -q "PROP_DB_TYPE" "$TMP_DIR/openedx.wxs" || exit 1
 grep -q "USER_DB_HOST" "$TMP_DIR/openedx.wxs" || exit 1
@@ -49,20 +49,20 @@ grep -q "DatabaseConfigUI" "$TMP_DIR/openedx.wxs" || exit 1
 
 # 2. Test WordPress WiX generation
 printf '[TEST 2] Synthesizing WiX manifest for WordPress...\n'
-"$TEMPLATE_SH" "${LIBSCRIPT_ROOT_DIR}/stacks/cms/wordpress" --out "$TMP_DIR/wordpress.wxs"
+"$TEMPLATE_SH" "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/wordpress" --out "$TMP_DIR/wordpress.wxs"
 grep -q "WordPress" "$TMP_DIR/wordpress.wxs" || exit 1
 grep -q "USER_DB_HOST" "$TMP_DIR/wordpress.wxs" || exit 1
 grep -q "USER_DB_STRATEGY" "$TMP_DIR/wordpress.wxs" || exit 1
 
 # 3. Test Drupal WiX generation
 printf '[TEST 3] Synthesizing WiX manifest for Drupal...\n'
-"$TEMPLATE_SH" "${LIBSCRIPT_ROOT_DIR}/stacks/cms/drupal" --out "$TMP_DIR/drupal.wxs"
+"$TEMPLATE_SH" "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/drupal" --out "$TMP_DIR/drupal.wxs"
 grep -q "Drupal" "$TMP_DIR/drupal.wxs" || exit 1
 grep -q "USER_DB_STRATEGY" "$TMP_DIR/drupal.wxs" || exit 1
 
 # 4. Test Nextcloud WiX generation
 printf '[TEST 4] Synthesizing WiX manifest for Nextcloud...\n'
-"$TEMPLATE_SH" "${LIBSCRIPT_ROOT_DIR}/stacks/collaboration/nextcloud" --out "$TMP_DIR/nextcloud.wxs"
+"$TEMPLATE_SH" "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/nextcloud" --out "$TMP_DIR/nextcloud.wxs"
 grep -q "Nextcloud" "$TMP_DIR/nextcloud.wxs" || exit 1
 
 # 5. Test Suite Orchestrator Topology Generation

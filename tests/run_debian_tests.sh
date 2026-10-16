@@ -35,6 +35,10 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
+SCRIPT_NAME="${REPO_ROOT}/_lib/_common/test_matrix_driver.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
 set +f
 VAGRANT_DIR="$REPO_ROOT/vagrant/debian-13"
 TESTS_TMP_DIR="$REPO_ROOT/tests_tmp"
@@ -42,6 +46,7 @@ TESTS_TMP_DIR="$REPO_ROOT/tests_tmp"
 mkdir -p "$TESTS_TMP_DIR"
 
 TARGETS=""
+TIER_FILTER="all"
 STOP_AFTER=""
 SKIP_UNINSTALL=""
 LOOP_MODE=""
@@ -109,7 +114,7 @@ update_component_in_readme() {
     awk -v comp="$_comp" -v st="$_status" '
         BEGIN { FS="|"; OFS="|" }
         $2 ~ "^[ 	]*`" comp "`[ 	]*$" {
-            $4 = " " st " "
+            if (NF >= 10) { $5 = " " st " " } else { $4 = " " st " " }
         }
         { print }
     ' "$_rm" > "$_tmp_rm" && mv "$_tmp_rm" "$_rm"
@@ -139,6 +144,10 @@ while [ $# -gt 0 ]; do
         --loop|-l)
             LOOP_MODE="1"
             shift
+            ;;
+        --tier)
+            TIER_FILTER="$2"
+            shift 2
             ;;
         --stop-after)
             STOP_AFTER="$2"
@@ -337,8 +346,8 @@ while true; do
         echo "============================================================"
         test_count=$((test_count + 1))
 
-        # Restore vanilla snapshot before running if enabled and not the very first run
-        if [ "$USE_SNAPSHOT" = "1" ] && [ "$test_count" -gt 1 ]; then
+        # Restore vanilla snapshot before running if enabled
+        if [ "$USE_SNAPSHOT" = "1" ]; then
             restore_vanilla_snapshot || true
             sync_repo_to_guest
         fi
@@ -351,8 +360,8 @@ while true; do
 
         rm -f "$success_file" "$failure_file" "$idempotent_file"
 
-        # Execute test via ssh: install -> test -> install (idempotency) -> test (verification)
-        test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; timeout 600 /opt/repos/libscript/libscript.sh install $target && timeout 120 /opt/repos/libscript/libscript.sh test $target && timeout 600 /opt/repos/libscript/libscript.sh install $target && timeout 120 /opt/repos/libscript/libscript.sh test $target"
+        # Execute 4-stage contract test via ssh: install -> test -> env/which -> install (idempotency) -> test (verification)
+        test_cmd="export PATH=/usr/local/sbin:/usr/sbin:/sbin:\$PATH DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; timeout 600 /opt/repos/libscript/libscript.sh install $target && timeout 120 /opt/repos/libscript/libscript.sh test $target && (/opt/repos/libscript/libscript.sh env $target latest >/dev/null 2>&1 || true) && timeout 600 /opt/repos/libscript/libscript.sh install $target && timeout 120 /opt/repos/libscript/libscript.sh test $target"
 
         if ssh -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 "$test_cmd" > "$stdout_file" 2> "$stderr_file"; then
             echo "Success" > "$success_file"

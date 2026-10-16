@@ -198,7 +198,7 @@ if /i "%VARIANT%"=="offline" (
 )
 
 set "DOWNLOAD_URL="
-set "BUNDLE_JSON=%LIBSCRIPT_ROOT_DIR%\stacks\cms\openedx\offline_bundle.json"
+set "BUNDLE_JSON=%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\openedx\offline_bundle.json"
 if exist "%BUNDLE_JSON%" (
     if /i "%COMPONENT%"=="python" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).runtimes.python.url"`) do set "DOWNLOAD_URL=%%A"
     if /i "%COMPONENT%"=="nodejs" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).runtimes.nodejs.url"`) do set "DOWNLOAD_URL=%%A"

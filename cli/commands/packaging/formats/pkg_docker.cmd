@@ -187,7 +187,7 @@ set "BUNDLE_FILE="
 if defined PKG (
     if exist "%PKG%\offline_bundle.json" set "BUNDLE_FILE=%PKG%\offline_bundle.json"
     if not defined BUNDLE_FILE if exist "%PKG%\manifest.json" set "BUNDLE_FILE=%PKG%\manifest.json"
-    if not defined BUNDLE_FILE if exist "%LIBSCRIPT_ROOT_DIR%\stacks\cms\%PKG%\offline_bundle.json" set "BUNDLE_FILE=%LIBSCRIPT_ROOT_DIR%\stacks\cms\%PKG%\offline_bundle.json"
+    if not defined BUNDLE_FILE if exist "%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\%PKG%\offline_bundle.json" set "BUNDLE_FILE=%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\%PKG%\offline_bundle.json"
 )
 
 if "%IS_OFFLINE%"=="0" if defined BUNDLE_FILE (

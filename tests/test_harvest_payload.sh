@@ -65,7 +65,7 @@ fi
 printf '[PASS] Manifest generated with %s files\n' "$(wc -l < "${MANIFEST_FILE}" | tr -d ' ')"
 
 # Test 2: Essential engine files are included
-for _req in "libscript.sh" "libscript.cmd" "_lib/_common/component_core.cmd" "stacks/cms/openedx/setup_generic.cmd" "stacks/cms/openedx/cli.cmd"; do
+for _req in "libscript.sh" "libscript.cmd" "_lib/_common/component_core.cmd" "_lib/web-apps/openedx/setup_generic.cmd" "_lib/web-apps/openedx/cli.cmd"; do
   if ! grep -Fxq "$_req" "${MANIFEST_FILE}"; then
     printf '[FAIL] Required file missing from harvest manifest: %s\n' "$_req" >&2
     exit 1

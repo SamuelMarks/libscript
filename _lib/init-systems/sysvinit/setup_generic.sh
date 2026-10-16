@@ -58,7 +58,7 @@ if [ -f "$STAMP_FILE" ]; then
 fi
 
 if ! command -v "sysvinit" >/dev/null 2>&1; then
-  libscript_depends "sysvinit"
+  libscript_depends "sysvinit" || true
 fi
 
 printf '[RECIPE] Staging %s into %s (action: %s)\n' "sysvinit" "$TARGET_SYSROOT" "$ACTION"

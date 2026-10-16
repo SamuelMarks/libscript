@@ -30,8 +30,12 @@ case "${STACK+x}" in
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+COMP_DIR="${SCRIPT_DIR}"
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-. "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+export SCRIPT_NAME
+. "${SCRIPT_NAME}"
+SCRIPT_DIR="${COMP_DIR}"
 
 ACTION="${1:-}"
 
@@ -45,6 +49,24 @@ PROJECT_FLAG=""
 if [ -n "$GCP_PROJECT_ID" ]; then PROJECT_FLAG="--project=$GCP_PROJECT_ID"; fi
 
 case "$ACTION" in
+  --help|-h|/\?|-\?)
+    printf '%s\n' "Usage: gcp-filestore [create|delete|install|test] <name>"
+    exit 0
+    ;;
+  install)
+    SCRIPT_NAME="${SCRIPT_DIR}/setup.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+    exit 0
+    ;;
+  test)
+    SCRIPT_NAME="${SCRIPT_DIR}/test.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+    exit 0
+    ;;
   create)
     INSTANCE_NAME="${2:-}"
     if [ -z "$INSTANCE_NAME" ]; then log_error "Usage: filestore create <name>"; exit 1; fi
@@ -83,7 +105,7 @@ case "$ACTION" in
       log_info "Filestore '$INSTANCE_NAME' already deleted or not found."
     fi
     ;;
-  logs|status|use|env|ls|download|uninstall)
+  logs|status|use|env|ls|ls-remote|download|uninstall|which|exec|run)
     printf '%s\n' "Action not applicable for this provisioning module."
     exit 0
     ;;

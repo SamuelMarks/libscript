@@ -190,7 +190,7 @@ if "%COMPONENT%"=="" (
     exit /b 1
 )
 
-set "BUNDLE_JSON=%LIBSCRIPT_ROOT_DIR%\stacks\cms\openedx\offline_bundle.json"
+set "BUNDLE_JSON=%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\openedx\offline_bundle.json"
 if "%VERSION%"=="" if exist "%BUNDLE_JSON%" (
     if /i "%COMPONENT%"=="mysql" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.mysql.version"`) do set "VERSION=%%A"
     if /i "%COMPONENT%"=="redis" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.redis.version"`) do set "VERSION=%%A"
@@ -490,6 +490,9 @@ for %%I in ("%TARGET_MSI%") do (
         if not exist "%OUT_DIR%" mkdir "%OUT_DIR%" 2>nul
         copy /y "%TARGET_MSI%" "%OUT_DIR%" >nul 2>&1
     )
+)
+if not defined OUT_FILE (
+    copy /y "%TARGET_MSI%" "%OUT_DIR%\libscript-%COMPONENT%-%VERSION%-%CURR_VAR%.msi" >nul 2>&1
 )
 echo [PASS] Successfully processed standalone component MSI (%CURR_VAR%): %TARGET_MSI%
 goto cleanup

@@ -87,13 +87,13 @@ assert_not_contains "$DOCKERFILE_OFFLINE" 'git clone' "No git clone commands pre
 
 printf '=== Testing Open edX Online Dockerfile with Manifest ADD Caching ===\n'
 DOCKERFILE_OPENEDX_ONLINE="$TEST_TMP_DIR/Dockerfile.openedx.online"
-"${LIBSCRIPT_ROOT_DIR}/cli/commands/packaging/formats/pkg_docker.sh" --online "${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx" > "$DOCKERFILE_OPENEDX_ONLINE"
+"${LIBSCRIPT_ROOT_DIR}/cli/commands/packaging/formats/pkg_docker.sh" --online "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/openedx" > "$DOCKERFILE_OPENEDX_ONLINE"
 
 assert_contains "$DOCKERFILE_OPENEDX_ONLINE" 'ADD https://www.python.org/' "Python runtime ADD statement"
 assert_contains "$DOCKERFILE_OPENEDX_ONLINE" 'ADD https://nodejs.org/' "Node.js runtime ADD statement"
 assert_contains "$DOCKERFILE_OPENEDX_ONLINE" 'ADD https://cdn.mysql.com/' "MySQL datastore ADD statement"
 assert_contains "$DOCKERFILE_OPENEDX_ONLINE" 'ADD https://files.pythonhosted.org/' "Wheel package ADD statement"
-assert_contains "$DOCKERFILE_OPENEDX_ONLINE" 'ADD https://github.com/openedx/edx-platform/' "Codebase archive ADD statement"
+assert_contains "$DOCKERFILE_OPENEDX_ONLINE" 'ADD https://github.com/openedx/' "Codebase archive ADD statement"
 
 printf '=== Testing Open edX Air-Gapped Offline Docker Compose Generation ===\n'
 COMPOSE_OFFLINE="$TEST_TMP_DIR/docker-compose.yml"

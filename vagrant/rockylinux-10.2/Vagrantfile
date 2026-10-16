@@ -28,7 +28,6 @@ Vagrant.configure("2") do |config|
 
     t.vm.provider "qemu" do |qe|
       qe.net_mode = :user
-      qe.net_device = "virtio-net-pci"
       qe.firmware_format = nil
       bios_candidates = [
         ENV["QEMU_EDK2_CODE"],
@@ -37,13 +36,13 @@ Vagrant.configure("2") do |config|
         "/usr/share/edk2/aarch64/QEMU_EFI.fd"
       ].compact
       bios_path = bios_candidates.find { |path| File.exist?(path) }
-      qe.extra_qemu_args = bios_path ? ["-bios", bios_path, "-device", "virtio-gpu-pci"] : ["-device", "virtio-gpu-pci"]
+      qe.extra_qemu_args = ["-bios", bios_path] if bios_path
       qe.ssh_auto_correct = true
       qe.ssh_port = 2225
       qe.memory = "4G"
       qe.smp = "2"
     end
-    t.vm.usable_port_range = 2200..2220
+    t.vm.usable_port_range = 2210..2260
     t.vm.allowed_synced_folder_types = [:rsync]
 
     # Sync the repository root directory

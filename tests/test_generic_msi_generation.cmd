@@ -54,9 +54,9 @@ set "TMP_DIR=%TEMP%\msi_test_%RANDOM%"
 if not exist "%TMP_DIR%" mkdir "%TMP_DIR%"
 
 echo ==> Testing Declarative WiX Generation on Windows...
-call "%LIBSCRIPT_ROOT_DIR%\packaging\template_msi.cmd" "%LIBSCRIPT_ROOT_DIR%\stacks\cms\openedx" --out "%TMP_DIR%\openedx.wxs"
-call "%LIBSCRIPT_ROOT_DIR%\packaging\template_msi.cmd" "%LIBSCRIPT_ROOT_DIR%\stacks\cms\wordpress" --out "%TMP_DIR%\wordpress.wxs"
-call "%LIBSCRIPT_ROOT_DIR%\packaging\template_msi.cmd" "%LIBSCRIPT_ROOT_DIR%\stacks\cms\drupal" --out "%TMP_DIR%\drupal.wxs"
+call "%LIBSCRIPT_ROOT_DIR%\packaging\template_msi.cmd" "%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\openedx" --out "%TMP_DIR%\openedx.wxs"
+call "%LIBSCRIPT_ROOT_DIR%\packaging\template_msi.cmd" "%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\wordpress" --out "%TMP_DIR%\wordpress.wxs"
+call "%LIBSCRIPT_ROOT_DIR%\packaging\template_msi.cmd" "%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\drupal" --out "%TMP_DIR%\drupal.wxs"
 
 if not exist "%TMP_DIR%\openedx.wxs" (
     echo [ERROR] openedx.wxs was not generated >&2

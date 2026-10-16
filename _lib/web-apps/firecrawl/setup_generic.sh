@@ -63,10 +63,9 @@ elif [ -z "${DEST+x}" ]; then
   mkdir -p -- "${DEST}"
 fi
 
-# # libscript_depends 'nodejs'
-# # libscript_depends 'git' || true
+libscript_depends 'git' || true
 
-if ! libscript_cmd_avail pnpm; then
+if ! libscript_cmd_avail pnpm && libscript_cmd_avail npm; then
   _node_maj=$(node -v 2>/dev/null | sed -E 's/^v([0-9]+).*/\1/' || echo 0)
   if [ "$_node_maj" -lt 22 ]; then
     priv env "PATH=$PATH:/usr/local/bin" npm install -g pnpm@9 || true
@@ -77,15 +76,17 @@ fi
 
 git_get https://github.com/mendableai/firecrawl "${DEST}"
 
-HASH="$(cd -- "${DEST}" && git rev-list HEAD -1)"
+HASH="$(cd -- "${DEST}" && git rev-list HEAD -1 2>/dev/null || echo 'latest')"
 HASH_LOC="${DEST}"'/apps/api/node_modules/'"${HASH}"
 if [ ! -f "${HASH_LOC}" ]; then
   mkdir -p -- "$(dirname -- "${HASH_LOC}")"
   touch -- "${HASH_LOC}"
-  (
-    cd -- "${DEST}/apps/api" || exit 1
-    pnpm install || pnpm install --ignore-scripts || true
-  )
+  if libscript_cmd_avail pnpm && [ -d "${DEST}/apps/api" ]; then
+    (
+      cd -- "${DEST}/apps/api" || exit 1
+      pnpm install || pnpm install --ignore-scripts || true
+    )
+  fi
 fi
 
 if [ "${VARS-}" ]; then
@@ -98,7 +99,7 @@ if [ -f "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' ]; then
   ENV="$(cut -c8- "${LIBSCRIPT_DATA_DIR}"'/dyn_env.sh' | awk -- '{arr[i++]=$0} END {while (i>0) print arr[--i] }' | tr -d "'" | awk -F= '!seen[$1]++' | xargs printf 'Environment="%s"\n')"
 fi
 
-if [ -d '/etc/systemd/system' ]; then
+if [ -d '/etc/systemd/system' ] && command -v envsubst >/dev/null 2>&1 && command -v pnpm >/dev/null 2>&1; then
   name_file="$(mktemp)"
   trap 'rm -f -- "${name_file}"' EXIT HUP INT QUIT TERM
   service_name='firecrawl_workers'

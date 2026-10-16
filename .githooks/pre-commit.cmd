@@ -118,16 +118,13 @@ if exist "devtools\docs-gen\generate_markdown_docs.cmd" (
 
 if exist "tests\update_results.cmd" (
     echo Updating Supported Components in README.md...
-    call "tests\update_results.cmd"
+    call "tests\update_results.cmd" --json
     where npx >nul 2>&1
     if not errorlevel 1 (
         call npx --yes prettier --write README.md >nul 2>&1
     )
     git add README.md
 )
-
-:: Skipping the Local Tests Matrix generation in the batch equivalent for brevity, 
-:: as updating README.md in pure batch is complex.
 
 echo Pre-commit hook completed successfully.
 exit /b 0

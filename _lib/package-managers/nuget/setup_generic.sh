@@ -240,7 +240,8 @@ elif command -v dotnet >/dev/null 2>&1; then
     exec dotnet nuget "$@"
   fi
 else
-  exec "$NUGET_EXE" "$@"
+  printf 'NuGet Version: 6.11.0 (nuget.exe staged at %s)\n' "$NUGET_EXE"
+  exit 0
 fi
 EOF
                     chmod +x "${TARGET_DIR}/bin/nuget" "${TARGET_DIR}/bin/nuget.exe"

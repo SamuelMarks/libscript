@@ -35,6 +35,10 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
+SCRIPT_NAME="${REPO_ROOT}/_lib/_common/test_matrix_driver.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
 set +f
 VAGRANT_DIR="$REPO_ROOT/vagrant/rockylinux-10.2"
 TESTS_TMP_DIR="$REPO_ROOT/tests_tmp"
@@ -42,6 +46,7 @@ TESTS_TMP_DIR="$REPO_ROOT/tests_tmp"
 mkdir -p "$TESTS_TMP_DIR"
 
 TARGETS=""
+TIER_FILTER="all"
 STOP_AFTER=""
 SKIP_UNINSTALL=""
 LOOP_MODE=""
@@ -109,7 +114,7 @@ update_component_in_readme() {
     awk -v comp="$_comp" -v st="$_status" '
         BEGIN { FS="|"; OFS="|" }
         $2 ~ "^[ 	]*`" comp "`[ 	]*$" {
-            $5 = " " st " "
+            if (NF >= 10) { $6 = " " st " " } else { $5 = " " st " " }
         }
         { print }
     ' "$_rm" > "$_tmp_rm" && mv "$_tmp_rm" "$_rm"
@@ -139,6 +144,10 @@ while [ $# -gt 0 ]; do
         --loop|-l)
             LOOP_MODE="1"
             shift
+            ;;
+        --tier)
+            TIER_FILTER="$2"
+            shift 2
             ;;
         --stop-after)
             STOP_AFTER="$2"

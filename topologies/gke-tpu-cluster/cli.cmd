@@ -56,6 +56,10 @@ set "LOG_CMD=%LIBSCRIPT_ROOT_DIR%\_lib\_common\log.cmd"
 set "ACTION=%~1"
 if "%ACTION%"=="--help" goto :help
 if "%ACTION%"=="-h" goto :help
+if "%ACTION%"=="/?" goto :help
+for %%V in (install test logs use env ls ls-remote download uninstall which exec run) do (
+    if /i "%ACTION%"=="%%V" goto :status
+)
 
 if not "%~2"=="" (
     set "CLUSTER_NAME=%~2"

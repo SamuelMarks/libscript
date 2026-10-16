@@ -48,6 +48,7 @@ shift
 OUT_FILE=""
 VARIANT="online"
 VERSION_OVERRIDE=""
+TARGET_ARCH="${TARGET_ARCH:-x64}"
 MSI_DIR="${LIBSCRIPT_ROOT_DIR}/dist/msi"
 
 while [ $# -gt 0 ]; do
@@ -62,6 +63,10 @@ while [ $# -gt 0 ]; do
       ;;
     --version)
       VERSION_OVERRIDE="$2"
+      shift 2
+      ;;
+    --arch)
+      TARGET_ARCH="$2"
       shift 2
       ;;
     --msi-dir)

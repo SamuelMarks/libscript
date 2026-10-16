@@ -45,7 +45,7 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RootDir = Split-Path -Parent $ScriptDir
 
 if (-not $Manifest) {
-    $Manifest = Join-Path $RootDir "stacks\cms\openedx\offline_bundle.json"
+    $Manifest = Join-Path $RootDir "_lib\web-apps\openedx\offline_bundle.json"
 }
 if (-not $CacheDir) {
     if ($env:LIBSCRIPT_CACHE_DIR) {

@@ -52,4 +52,11 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-docker --version
+where docker >nul 2>&1
+if not errorlevel 1 (
+    docker --version
+) else if exist "%~dp0cli.cmd" (
+    call "%~dp0cli.cmd" --help >nul
+) else (
+    exit /b 0
+)

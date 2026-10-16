@@ -33,6 +33,10 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 export LIBSCRIPT_REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/test_matrix_driver.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
 
 printf '==> LibScript Vagrant Test Matrix Orchestrator\n'
 

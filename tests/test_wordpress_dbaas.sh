@@ -90,7 +90,7 @@ printf '[OK] DBaaS URL parser validated successfully!\n'
 TMP_WWW=$(mktemp -d)
 printf '[INFO] Testing wp-config synthesis with DBaaS URL in %s...\n' "$TMP_WWW"
 
-"${LIBSCRIPT_ROOT_DIR}/stacks/cms/wordpress/setup_generic.sh" --wwwroot "$TMP_WWW" --mysql-url "$DBAAS_TEST_URL" --skip-deps --server-name "wordpress.local"
+"${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/wordpress/setup_generic.sh" --wwwroot "$TMP_WWW" --mysql-url "$DBAAS_TEST_URL" --skip-deps --server-name "wordpress.local"
 
 if ! grep -q "define( *'DB_HOST', *'db-cluster.us-east-1.rds.amazonaws.com:3307'" "${TMP_WWW}/wp-config.php"; then
   printf '[ERROR] DB_HOST with custom port not present in wp-config.php!\n' >&2

@@ -71,7 +71,9 @@ stage_system_gcc_shim() {
   fi
 
   if ! command -v gcc >/dev/null 2>&1; then
-    libscript_depends "gcc" || true
+    libscript_depends "gcc" "c" || true
+  elif [ -f /etc/alpine-release ] && [ ! -f /usr/include/stdio.h ]; then
+    libscript_depends "c" || true
   fi
 
   _sys_gcc="$(command -v gcc 2>/dev/null || command -v cc 2>/dev/null || true)"

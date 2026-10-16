@@ -71,7 +71,7 @@ echo [PASS] Verified guid_registry.json exists.
 
 for %%C in (mysql redis mongodb python nodejs meilisearch) do (
     echo [INFO] Building standalone MSI for %%C...
-    call "%LIBSCRIPT_ROOT_DIR%\packaging\build_component_msi.cmd" --component %%C >nul 2>&1
+    call "%LIBSCRIPT_ROOT_DIR%\packaging\build_component_msi.cmd" --component %%C --variant online >nul 2>&1
     if not exist "%LIBSCRIPT_ROOT_DIR%\dist\msi\libscript-%%C-*.msi" (
         echo [FAIL] Missing expected standalone MSI for component %%C >&2
         exit /b 1
@@ -80,12 +80,12 @@ for %%C in (mysql redis mongodb python nodejs meilisearch) do (
 echo [PASS] All 6 standalone component MSIs built successfully.
 
 echo [INFO] Building Master Orchestrator MSIs...
-call "%LIBSCRIPT_ROOT_DIR%\packaging\build_msi.cmd" stacks\cms\openedx --version "22.1.0" --variant "online" --out "%LIBSCRIPT_ROOT_DIR%\dist\msi\openedx-22.1.0" >nul 2>&1
+call "%LIBSCRIPT_ROOT_DIR%\packaging\build_msi.cmd" _lib\web-apps\openedx --version "22.1.0" --variant "online" --out "%LIBSCRIPT_ROOT_DIR%\dist\msi\openedx-22.1.0" >nul 2>&1
 if not exist "%LIBSCRIPT_ROOT_DIR%\dist\msi\openedx-22.1.0.msi" (
     echo [FAIL] Missing openedx-22.1.0.msi (online) >&2
     exit /b 1
 )
-call "%LIBSCRIPT_ROOT_DIR%\packaging\build_msi.cmd" stacks\cms\openedx --version "22.1.0" --variant "offline" --out "%LIBSCRIPT_ROOT_DIR%\dist\msi\openedx-offline-22.1.0" >nul 2>&1
+call "%LIBSCRIPT_ROOT_DIR%\packaging\build_msi.cmd" _lib\web-apps\openedx --version "22.1.0" --variant "offline" --out "%LIBSCRIPT_ROOT_DIR%\dist\msi\openedx-offline-22.1.0" >nul 2>&1
 if not exist "%LIBSCRIPT_ROOT_DIR%\dist\msi\openedx-offline-22.1.0.msi" (
     echo [FAIL] Missing openedx-offline-22.1.0.msi (offline) >&2
     exit /b 1

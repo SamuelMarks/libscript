@@ -62,8 +62,10 @@ else
         
         # Enforce Indent via Prettier where applicable
         if [ "$ext" = "json" ] || [ "$ext" = "yml" ] || [ "$ext" = "yaml" ] || [ "$ext" = "md" ]; then
-             if command -v npx >/dev/null 2>&1; then
-                 npx --yes prettier --write "$file" >/dev/null 2>&1 || true
+             if command -v prettier >/dev/null 2>&1; then
+                 prettier --write "$file" >/dev/null 2>&1 || true
+             elif [ -x "node_modules/.bin/prettier" ]; then
+                 node_modules/.bin/prettier --write "$file" >/dev/null 2>&1 || true
              fi
         fi
         
@@ -73,7 +75,13 @@ else
 
     # 2. Spellcheck
     printf '%s\n' "Running spellcheck..."
-    if command -v npx >/dev/null 2>&1; then
+    _cspell_cmd=""
+    if command -v cspell >/dev/null 2>&1; then
+        _cspell_cmd="cspell"
+    elif [ -x "node_modules/.bin/cspell" ]; then
+        _cspell_cmd="node_modules/.bin/cspell"
+    fi
+    if [ -n "$_cspell_cmd" ]; then
         tmp_files=$(mktemp)
         trap 'rm -f "$tmp_files" 2>/dev/null || true' EXIT INT TERM HUP
         printf '%s\n' "$STAGED_FILES" | while IFS= read -r file; do
@@ -83,7 +91,7 @@ else
         done > "$tmp_files"
         
         if [ -s "$tmp_files" ]; then
-             if ! npx --yes --quiet cspell lint --no-progress --no-summary --no-must-find-files --file-list stdin < "$tmp_files"; then
+             if ! "$_cspell_cmd" lint --no-progress --no-summary --no-must-find-files --file-list stdin < "$tmp_files"; then
                  rm -f "$tmp_files"
                  trap - EXIT INT TERM HUP
                  printf '%s\n' "[ERROR] Spellcheck failed. Please fix spelling errors or update .cspell.json." >&2
@@ -114,7 +122,7 @@ if [ -x "devtools/docs-gen/generate_markdown_docs.sh" ]; then
     # Re-add any modified README.md files
     for rfile in $(git ls-files -m | grep "README.md$" || true); do
         if command -v dos2unix >/dev/null 2>&1; then dos2unix -q "$rfile" 2>/dev/null || true; fi
-        if command -v npx >/dev/null 2>&1; then npx --yes prettier --write "$rfile" >/dev/null 2>&1 || true; fi
+        if command -v prettier >/dev/null 2>&1; then prettier --write "$rfile" >/dev/null 2>&1 || true; fi
         git add "$rfile"
     done
 fi
@@ -127,8 +135,8 @@ fi
 if command -v dos2unix >/dev/null 2>&1; then
     dos2unix -q README.md 2>/dev/null || true
 fi
-if command -v npx >/dev/null 2>&1; then
-    npx --yes prettier --write README.md >/dev/null 2>&1 || true
+if command -v prettier >/dev/null 2>&1; then
+    prettier --write README.md >/dev/null 2>&1 || true
 fi
 
 git add README.md

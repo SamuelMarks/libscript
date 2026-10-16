@@ -34,7 +34,7 @@ printf '==> Testing WordPress Reverse-Proxy Ingress Configuration...\n'
 
 TMP_WWW=$(mktemp -d)
 
-"${LIBSCRIPT_ROOT_DIR}/stacks/cms/wordpress/setup_generic.sh" --wwwroot "$TMP_WWW" --skip-deps --server-name "wp.example.com" --site-url "https://wp.example.com" --home-url "https://wp.example.com"
+"${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/wordpress/setup_generic.sh" --wwwroot "$TMP_WWW" --skip-deps --server-name "wp.example.com" --site-url "https://wp.example.com" --home-url "https://wp.example.com"
 
 WP_CONFIG="${TMP_WWW}/wp-config.php"
 

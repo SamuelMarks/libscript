@@ -39,8 +39,14 @@ for LIB in "_lib/_common/pkg_mgr.sh" "_lib/git-servers/utils/git.sh" "_lib/langu
   . "${SCRIPT_NAME}"
 done
 
-# # libscript_depends 'git'
-# # libscript_depends 'libpq-dev' 'libsqlite3-dev' 'default-libmysqlclient-dev'
+if [ -f "${SCRIPT_DIR}/env.sh" ]; then
+  SCRIPT_NAME="${SCRIPT_DIR}/env.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+fi
+
+libscript_depends 'git' || true
 git_get https://github.com/SamuelMarks/serve-actix-diesel-auth-scaffold "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}"
 D="$( dirname -- "${SERVE_ACTIX_DIESEL_AUTH_SCAFFOLD_DEST}" )"'/rust-actix-diesel-auth-scaffold'
 # # libscript_depends 'libpq-dev' 'libsqlite3-dev' 'default-libmysqlclient-dev'

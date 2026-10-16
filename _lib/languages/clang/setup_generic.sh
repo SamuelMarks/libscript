@@ -54,8 +54,13 @@ EXACT_VERSION="${VERSION}"
 stage_host_clang_shim() {
   _target_dir="${1}"
   mkdir -p "${_target_dir}/bin"
+  if ! command -v clang >/dev/null 2>&1 && ! command -v cc >/dev/null 2>&1; then
+    libscript_depends "clang" "c" || true
+  elif [ -f /etc/alpine-release ] && [ ! -f /usr/include/stdio.h ]; then
+    libscript_depends "c" || true
+  fi
   _host_clang=""
-  for _cand in clang-19 clang-18 clang-17 clang-16 clang cc; do
+  for _cand in clang-19 clang-18 clang-17 clang-16 clang cc gcc; do
     if command -v "${_cand}" >/dev/null 2>&1; then
       _host_clang="$(command -v "${_cand}")"
       break

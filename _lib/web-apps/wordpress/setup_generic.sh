@@ -286,6 +286,7 @@ printf '[INFO] Configuring Relational Database Strategy...\n'
 if [ -n "${WORDPRESS_DBAAS_URL}" ]; then
   # Mode A: Hosted DBaaS Connection URI
   printf '[INFO] Using Hosted DBaaS: Parsing connection URI...\n'
+  DB_PASSWORD=""
   _db_parsed=$("${LIBSCRIPT_ROOT_DIR}/_lib/databases/parse_connection_uri.sh" "${WORDPRESS_DBAAS_URL}" --eval)
   while IFS='=' read -r _k _v; do
     _v="${_v%\"}"
@@ -295,7 +296,7 @@ if [ -n "${WORDPRESS_DBAAS_URL}" ]; then
       DB_PORT) DB_PORT="$_v" ;;
       DB_NAME) DB_NAME="$_v" ;;
       DB_USER) DB_USER="$_v" ;;
-      DB_PASSWORD) DB_PASSWORD="$_v" ;;
+      DB_PASSWORD|DB_PASS) DB_PASSWORD="$_v" ;;
       DB_USE_SSL) DB_USE_SSL="$_v" ;;
       DB_SSL_CA) DB_SSL_CA="$_v" ;;
     esac

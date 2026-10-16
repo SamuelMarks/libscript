@@ -31,6 +31,13 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 export PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:${PATH:-}"
 
+TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
+STAMP_FILE="${TARGET_SYSROOT}/var/lib/libscript/stamps/.stamp.gnome"
+
+if [ -f "$STAMP_FILE" ]; then
+  exit 0
+fi
+
 command -v gnome-shell >/dev/null 2>&1 || exit 1
 gnome-shell --version >/dev/null 2>&1 || true
 exit 0

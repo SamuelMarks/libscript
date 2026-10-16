@@ -1228,7 +1228,60 @@ map_package() {
     'guix')
       case "${PKG_MGR}" in
         'apk') printf 'guix\n' ;;
+        'apt-get') printf 'guix\n' ;;
         *) return 1 ;;
+      esac
+      ;;
+    'gnome')
+      case "${PKG_MGR}" in
+        'apk') printf 'gnome-shell\n' ;;
+        'apt-get') printf 'gnome-shell-common\n' ;;
+        'dnf'|'yum') printf 'gnome-shell\n' ;;
+        'pkg') printf 'gnome-shell\n' ;;
+        *) return 1 ;;
+      esac
+      ;;
+    'porg')
+      case "${PKG_MGR}" in
+        'apk'|'apt-get'|'dnf'|'yum') printf 'make\n' ;;
+        *) printf 'porg\n' ;;
+      esac
+      ;;
+    's6')
+      case "${PKG_MGR}" in
+        'apk'|'apt-get') printf 's6\n' ;;
+        'dnf'|'yum') printf 'procps-ng\n' ;;
+        *) printf 's6\n' ;;
+      esac
+      ;;
+    'sysvinit')
+      case "${PKG_MGR}" in
+        'apk') printf 'openrc\n' ;;
+        'apt-get') printf 'sysvinit-utils\n' ;;
+        'dnf'|'yum') printf 'procps-ng\n' ;;
+        *) printf 'sysvinit\n' ;;
+      esac
+      ;;
+    'dinit')
+      case "${PKG_MGR}" in
+        'apk') printf 'dinit\n' ;;
+        'apt-get') printf 'sysvinit-utils\n' ;;
+        'dnf'|'yum') printf 'procps-ng\n' ;;
+        *) printf 'dinit\n' ;;
+      esac
+      ;;
+    'runit')
+      case "${PKG_MGR}" in
+        'apk'|'apt-get') printf 'runit\n' ;;
+        'dnf'|'yum') printf 'procps-ng\n' ;;
+        *) printf 'runit\n' ;;
+      esac
+      ;;
+    'openbox')
+      case "${PKG_MGR}" in
+        'apk'|'apt-get') printf 'openbox\n' ;;
+        'dnf'|'yum') printf 'xorg-x11-server-utils\n' ;;
+        *) printf 'openbox\n' ;;
       esac
       ;;
     'hatch')

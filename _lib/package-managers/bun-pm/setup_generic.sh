@@ -172,6 +172,12 @@ case "$ACTION" in
             ln -sf "${LIBSCRIPT_HOME:-$HOME/.libscript}/bun/latest/bin/bun" "${TARGET_DIR}/bin/bun"
           elif [ -f "$HOME/.bun/bin/bun" ]; then
             ln -sf "$HOME/.bun/bin/bun" "${TARGET_DIR}/bin/bun"
+          else
+            libscript_depends "bash" "curl" "unzip"
+            curl -fsSL https://bun.sh/install | bash || true
+            if [ -f "$HOME/.bun/bin/bun" ]; then
+              ln -sf "$HOME/.bun/bin/bun" "${TARGET_DIR}/bin/bun"
+            fi
           fi
         fi
       else

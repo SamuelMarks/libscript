@@ -58,9 +58,34 @@ case "$target" in
   local_tests_databases)
     "$SCRIPT_DIR/tests/run_local_tests.sh" databases
     ;;
+  audit)
+    "$SCRIPT_DIR/devtools/audit/audit_standards.sh" --all
+    "$SCRIPT_DIR/devtools/audit/audit_posix.sh"
+    "$SCRIPT_DIR/devtools/audit/audit_version_manager.sh"
+    "$SCRIPT_DIR/devtools/audit/doc_coverage.sh" --strict
+    "$SCRIPT_DIR/tests/test_vm_contract.sh"
+    "$SCRIPT_DIR/tests/test_update_results.sh"
+    ;;
+  update_results)
+    "$SCRIPT_DIR/tests/update_results.sh" --json
+    ;;
+  register_bento_boxes)
+    "$SCRIPT_DIR/tests/register_bento_boxes.sh"
+    ;;
+  test_canary_6os)
+    "$SCRIPT_DIR/tests/run_omnios_tests.sh" jq curl sqlite c cmake nodejs python rust postgres nginx
+    "$SCRIPT_DIR/tests/run_alpine_tests.sh" jq curl sqlite c cmake nodejs python rust postgres nginx
+    "$SCRIPT_DIR/tests/run_debian_tests.sh" jq curl sqlite c cmake nodejs python rust postgres nginx
+    "$SCRIPT_DIR/tests/run_rockylinux_tests.sh" jq curl sqlite c cmake nodejs python rust postgres nginx
+    "$SCRIPT_DIR/tests/run_freebsd_tests.sh" jq curl sqlite c cmake nodejs python rust postgres nginx
+    "$SCRIPT_DIR/tests/run_windows_tests.sh" jq curl sqlite c cmake nodejs python rust postgres nginx
+    ;;
+  test_matrix_6os)
+    "$SCRIPT_DIR/tests/run_vagrant_matrix.sh"
+    ;;
   --help|-h|"/?")
     printf '%s\n' "Usage: ./make.sh <target> [component_name]"
-    printf '%s\n' "Targets: test, local_tests_all, test_component, local_tests_toolchain, local_tests_languages, local_tests_databases"
+    printf '%s\n' "Targets: audit, update_results, register_bento_boxes, test_canary_6os, test_matrix_6os, test, local_tests_all, test_component, local_tests_toolchain, local_tests_languages, local_tests_databases"
     exit 0
     ;;
   *)

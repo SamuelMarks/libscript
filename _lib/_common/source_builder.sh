@@ -254,8 +254,15 @@ libscript_fetch_and_extract_source() {
 
   case "${_archive_name}" in
     *.zip)
+      if ! command -v unzip >/dev/null 2>&1; then
+        pkg_mgr_install unzip >/dev/null 2>&1 || true
+      fi
       if command -v unzip >/dev/null 2>&1; then
         unzip -q -o "${_archive_file}" -d "${LIBSCRIPT_SOURCE_WORKDIR}"
+      elif command -v python3 >/dev/null 2>&1; then
+        python3 -c 'import sys, zipfile; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])' "${_archive_file}" "${LIBSCRIPT_SOURCE_WORKDIR}"
+      elif command -v bsdtar >/dev/null 2>&1; then
+        bsdtar -xf "${_archive_file}" -C "${LIBSCRIPT_SOURCE_WORKDIR}"
       elif command -v tar >/dev/null 2>&1; then
         tar -xf "${_archive_file}" -C "${LIBSCRIPT_SOURCE_WORKDIR}"
       else

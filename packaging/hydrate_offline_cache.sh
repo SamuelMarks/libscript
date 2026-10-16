@@ -57,7 +57,7 @@ else
   log_error() { printf '[ERROR] %s\n' "$*" >&2; }
 fi
 
-MANIFEST_PATH="${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx/offline_bundle.json"
+MANIFEST_PATH="${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/openedx/offline_bundle.json"
 CACHE_DIR="${LIBSCRIPT_CACHE_DIR:-${LIBSCRIPT_ROOT_DIR}/cache}"
 VERIFY_ONLY=0
 HYDRATE_WHEELS=0

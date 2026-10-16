@@ -30,23 +30,45 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
+COMP_DIR="${SCRIPT_DIR}"
 for LIB in _lib/_common/pkg_mgr.sh _lib/_common/log.sh; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090
   . "${SCRIPT_NAME}"
 done
+SCRIPT_DIR="${COMP_DIR}"
+
+case "${1:-}" in
+  --help|-h|/\?|-\?)
+    printf '%s\n' "Usage: $0 <action> [args...]"
+    printf '%s\n' "See README.md for details."
+    exit 0
+    ;;
+  install)
+    SCRIPT_NAME="${SCRIPT_DIR}/setup.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+    exit 0
+    ;;
+  test)
+    SCRIPT_NAME="${SCRIPT_DIR}/test.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+    exit 0
+    ;;
+  logs|status|use|env|ls|ls-remote|download|uninstall|which|exec|run)
+    printf '%s\n' "Action not applicable for this provisioning module."
+    exit 0
+    ;;
+esac
 
 # Ensure gcloud is available
 if ! command -v gcloud >/dev/null 2>&1; then
   log_error "gcloud not found in PATH. Please install the gcp-cli component first."
   exit 1
-fi
-
-if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-  printf '%s\n' "Usage: $0 <action> [args...]"
-  printf '%s\n' "See README.md for details."
-  exit 0
 fi
 
 ACTION="${1:-}"

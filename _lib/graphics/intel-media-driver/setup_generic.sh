@@ -57,9 +57,17 @@ if [ -f "$STAMP_FILE" ]; then
   exit 0
 fi
 
-if ! command -v "intel-media-driver" >/dev/null 2>&1; then
-  libscript_depends "intel-media-driver"
-fi
+_arch=$(uname -m 2>/dev/null || printf 'unknown')
+case "$_arch" in
+  x86_64|amd64)
+    if ! command -v "intel-media-driver" >/dev/null 2>&1; then
+      libscript_depends "intel-media-driver"
+    fi
+    ;;
+  *)
+    log_info "intel-media-driver is an x86_64/amd64 hardware VAAPI driver; staging stamp on ${_arch}."
+    ;;
+esac
 
 printf '[RECIPE] Staging %s into %s (action: %s)\n' "intel-media-driver" "$TARGET_SYSROOT" "$ACTION"
 date -u +"%Y-%m-%dT%H:%M:%SZ" > "${STAMP_FILE}.tmp"

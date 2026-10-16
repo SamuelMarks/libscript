@@ -42,6 +42,7 @@ libscript_print_env() {
   case "$_format" in
     dockerfile) _format="docker" ;;
     envfile)    _format="docker_compose" ;;
+    ps1)        _format="powershell" ;;
   esac
 
   # 1. Print PATH modification if prefix provided
@@ -61,7 +62,15 @@ EOF
 echo %PATH% | findstr /i /c:"$_prefix_path/bin" >nul || SET "PATH=$_prefix_path/bin;%PATH%"
 EOF
         ;;
-      json)           # Handled later in the full env dump
+      fish)
+        cat <<EOF
+if not contains "$_prefix_path/bin" \$PATH
+  set -gx PATH "$_prefix_path/bin" \$PATH
+end
+EOF
+        ;;
+      json)
+        printf '{"PATH":"%s/bin"}\n' "$_prefix_path"
         ;;
       *)
         cat <<EOF

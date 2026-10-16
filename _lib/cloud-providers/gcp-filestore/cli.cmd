@@ -66,6 +66,32 @@ if "%FILESTORE_NETWORK%"=="" set "FILESTORE_NETWORK=default"
 set "PROJECT_FLAG="
 if not "%GCP_PROJECT_ID%"=="" set "PROJECT_FLAG=--project=%GCP_PROJECT_ID%"
 
+if "%ACTION%"=="--help" (
+    echo Usage: gcp-filestore [create^|delete^|install^|test] ^<name^>
+    exit /b 0
+)
+if "%ACTION%"=="-h" (
+    echo Usage: gcp-filestore [create^|delete^|install^|test] ^<name^>
+    exit /b 0
+)
+if "%ACTION%"=="/?" (
+    echo Usage: gcp-filestore [create^|delete^|install^|test] ^<name^>
+    exit /b 0
+)
+if "%ACTION%"=="install" (
+    call "%~dp0setup.cmd" %*
+    exit /b !errorlevel!
+)
+if "%ACTION%"=="test" (
+    call "%~dp0test.cmd" %*
+    exit /b !errorlevel!
+)
+for %%V in (logs status use env ls ls-remote download uninstall which exec run) do (
+    if /i "%ACTION%"=="%%V" (
+        echo Action not applicable for this provisioning module.
+        exit /b 0
+    )
+)
 if "%ACTION%"=="create" goto :create
 if "%ACTION%"=="delete" goto :delete
 

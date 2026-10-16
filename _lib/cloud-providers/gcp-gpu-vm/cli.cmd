@@ -73,6 +73,33 @@ goto :parse_args
 :: Performs the done_parse operation and updates component state.
 :done_parse
 
+if "%ACTION%"=="--help" (
+    echo Usage: gcp-gpu-vm ^<create^|delete^|start^|stop^|ssh^|install^|test^> [name]
+    exit /b 0
+)
+if "%ACTION%"=="-h" (
+    echo Usage: gcp-gpu-vm ^<create^|delete^|start^|stop^|ssh^|install^|test^> [name]
+    exit /b 0
+)
+if "%ACTION%"=="/?" (
+    echo Usage: gcp-gpu-vm ^<create^|delete^|start^|stop^|ssh^|install^|test^> [name]
+    exit /b 0
+)
+if "%ACTION%"=="install" (
+    call "%~dp0setup.cmd" %*
+    exit /b !errorlevel!
+)
+if "%ACTION%"=="test" (
+    call "%~dp0test.cmd" %*
+    exit /b !errorlevel!
+)
+for %%V in (logs status use env ls ls-remote download uninstall which exec run) do (
+    if /i "%ACTION%"=="%%V" (
+        echo Action not applicable for this provisioning module.
+        exit /b 0
+    )
+)
+
 if "%GPU_ZONE%"=="" (
     call "%LOG_CMD%" :log_error "GPU_ZONE must be explicitly specified."
     exit /b 1

@@ -245,7 +245,7 @@ if [ -n "$MAN_JSON" ] && [ -f "$MAN_JSON" ]; then
   _self_spdx=$(jq -r '.license // "Proprietary"' "$MAN_JSON")
 
   # Add to ITEMS_JSON if not already present
-  if ! jq -e --arg name "$_self_name" '.[].name == $name' "$ITEMS_JSON" >/dev/null 2>&1; then
+  if ! jq -e --arg name "$_self_name" 'any(.[]; .name == $name)' "$ITEMS_JSON" >/dev/null 2>&1; then
     jq --arg name "$_self_name" \
        --arg title "$_self_title" \
        --arg spdx "$_self_spdx" \
@@ -272,7 +272,7 @@ if [ -n "$MAN_JSON" ] && [ -f "$MAN_JSON" ]; then
       _req_spdx=$(jq -r '.license // "MIT"' "$_req_man")
       _req_lic_file=$(jq -r '.license_file // ""' "$_req_man")
 
-      if ! jq -e --arg name "$_req_name" '.[].name == $name' "$ITEMS_JSON" >/dev/null 2>&1; then
+      if ! jq -e --arg name "$_req_name" 'any(.[]; .name == $name)' "$ITEMS_JSON" >/dev/null 2>&1; then
         jq --arg name "$_req_name" \
            --arg title "$_req_title" \
            --arg spdx "$_req_spdx" \
@@ -301,7 +301,7 @@ if [ -n "$PKG_JSON" ] && [ -f "$PKG_JSON" ]; then
       _req_spdx=$(jq -r '.license // "MIT"' "$_comp_man")
       _req_lic_file=$(jq -r '.license_file // ""' "$_comp_man")
 
-      if ! jq -e --arg name "$_req_name" '.[].name == $name' "$ITEMS_JSON" >/dev/null 2>&1; then
+      if ! jq -e --arg name "$_req_name" 'any(.[]; .name == $name)' "$ITEMS_JSON" >/dev/null 2>&1; then
         jq --arg name "$_req_name" \
            --arg title "$_req_title" \
            --arg spdx "$_req_spdx" \

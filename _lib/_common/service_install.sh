@@ -108,6 +108,7 @@ EOF
   elif command -v svccfg >/dev/null 2>&1; then
     log_info "Installing SMF manifest: $_service_name"
     _tmp_file=$(mktemp)
+    _xml_exec=$(printf '%s' "$_exec_start" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
     cat > "$_tmp_file" <<EOF
 <?xml version="1.0"?>
 <!DOCTYPE service_bundle SYSTEM "/usr/share/lib/xml/dtd/service_bundle.dtd.1">
@@ -115,12 +116,12 @@ EOF
   <service name='application/libscript/$_service_name' type='service' version='1'>
     <create_default_instance enabled='true' />
     <single_instance />
-    <exec_method type='method' name='start' exec='$_exec_start' timeout_seconds='60'>
+    <exec_method type='method' name='start' exec='$_xml_exec' timeout_seconds='60'>
       <method_context working_directory='$_working_dir' />
     </exec_method>
     <exec_method type='method' name='stop' exec=':kill' timeout_seconds='60' />
     <property_group name='startd' type='framework'>
-      <propval name='duration' type='astring' value='contract' />
+      <propval name='duration' type='astring' value='child' />
     </property_group>
   </service>
 </service_bundle>
@@ -147,7 +148,7 @@ command="/usr/sbin/daemon"
 command_args="-P \${pidfile} -r -f -o /var/log/\${name}.log $_exec_start"
 
 load_rc_config \$name
-: \${\${name}_enable:="NO"}
+: \${${_rc_name}_enable:="NO"}
 
 run_rc_command "\$1"
 EOF

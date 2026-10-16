@@ -58,6 +58,7 @@ if not defined LIBSCRIPT_ROOT_DIR (
     for %%I in ("!LIBSCRIPT_ROOT_DIR!") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 )
 set "LIBSCRIPT_REPO_ROOT=%LIBSCRIPT_ROOT_DIR%"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\test_matrix_driver.cmd"
 
 echo ==^> LibScript Vagrant Test Matrix Orchestrator
 

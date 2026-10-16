@@ -59,7 +59,7 @@ set "TMP_DIR=%TEMP%\wp_idem_%RANDOM%"
 if not exist "%TMP_DIR%" mkdir "%TMP_DIR%"
 
 echo [INFO] Executing Windows Setup Pass 1...
-call "%LIBSCRIPT_ROOT_DIR%\stacks\cms\wordpress\setup_generic.cmd" --wwwroot "%TMP_DIR%" --server-name "wordpress.local"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\wordpress\setup_generic.cmd" --wwwroot "%TMP_DIR%" --server-name "wordpress.local"
 if not exist "%TMP_DIR%\wp-config.php" (
     echo [ERROR] Pass 1 failed to create wp-config.php >&2
     rd /s /q "%TMP_DIR%" >nul 2>&1
@@ -67,7 +67,7 @@ if not exist "%TMP_DIR%\wp-config.php" (
 )
 
 echo [INFO] Executing Windows Setup Pass 2...
-call "%LIBSCRIPT_ROOT_DIR%\stacks\cms\wordpress\setup_generic.cmd" --wwwroot "%TMP_DIR%" --server-name "wordpress.local"
+call "%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\wordpress\setup_generic.cmd" --wwwroot "%TMP_DIR%" --server-name "wordpress.local"
 
 rd /s /q "%TMP_DIR%" >nul 2>&1
 echo ==> Two-pass idempotency verification succeeded on Windows!

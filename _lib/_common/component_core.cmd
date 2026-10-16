@@ -277,27 +277,6 @@ goto :parse_loop
 :: ## resolve_deps
 :: Resolves and installs declared schema dependencies before executing setup or install.
 :resolve_deps
-if not "%LIBSCRIPT_SKIP_DEPENDENCIES%"=="1" (
-    if /i "!ACTION!"=="install" set "_do_deps=1"
-    if /i "!ACTION!"=="setup" set "_do_deps=1"
-    if "!_do_deps!"=="1" (
-        where jq >nul 2>&1
-        if !errorlevel! equ 0 if exist "%SCHEMA_FILE%" (
-            for /f "tokens=1,2 delims=|" %%K in ('jq -r ".properties // {} | to_entries[] | select(.value.is_libscript_dependency == true) | \"\(.key)|\(.value.default // \"\")\"" "%SCHEMA_FILE%" 2^>nul') do (
-                set "_dep_val=!%%K!"
-                if "!_dep_val!"=="" set "_dep_val=%%L"
-                if not "!_dep_val!"=="" (
-                    where "!_dep_val!" >nul 2>&1
-                    if errorlevel 1 (
-                        set "LIBSCRIPT_SKIP_DEPENDENCIES=1"
-                        call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install "!_dep_val!" latest
-                        set "LIBSCRIPT_SKIP_DEPENDENCIES="
-                    )
-                )
-            )
-        )
-    )
-)
 goto :routing
 
 :: ## routing
@@ -392,6 +371,16 @@ if /i "!ACTION!"=="env" (
 
 if /i "!ACTION!"=="test" (
     if exist "!INSTALLED_DIR!\bin" set "PATH=!INSTALLED_DIR!\bin;!PATH!"
+    if exist "%LOCALAPPDATA%\Microsoft\WinGet\Links" set "PATH=%LOCALAPPDATA%\Microsoft\WinGet\Links;!PATH!"
+    if exist "%ProgramFiles%\CMake\bin" set "PATH=%ProgramFiles%\CMake\bin;!PATH!"
+    if exist "%ProgramFiles%\nodejs" set "PATH=%ProgramFiles%\nodejs;!PATH!"
+    if exist "%LOCALAPPDATA%\Programs\Python\Python312" set "PATH=%LOCALAPPDATA%\Programs\Python\Python312;%LOCALAPPDATA%\Programs\Python\Python312\Scripts;!PATH!"
+    if exist "%ProgramFiles%\Python312" set "PATH=%ProgramFiles%\Python312;%ProgramFiles%\Python312\Scripts;!PATH!"
+    if exist "%USERPROFILE%\.cargo\bin" set "PATH=%USERPROFILE%\.cargo\bin;!PATH!"
+    for /d %%P in ("%LOCALAPPDATA%\Microsoft\WinGet\Packages\MartinStorsjo.LLVM-MinGW*\llvm-mingw*\bin") do (
+        if exist "%%~fP" set "PATH=%%~fP;!PATH!"
+    )
+    set "STACK="
     if exist "%COMP_DIR%\test.cmd" (
         call "%COMP_DIR%\test.cmd"
         exit /b !errorlevel!
@@ -456,6 +445,7 @@ exit /b 0
 :: ## default_action
 :: Routes download, install, setup, or custom verbs to component scripts.
 :default_action
+set "STACK="
 if /i not "!ACTION!"=="install" if /i not "!ACTION!"=="setup" (
     if exist "%COMP_DIR%\!ACTION!.cmd" (
         call "%COMP_DIR%\!ACTION!.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9

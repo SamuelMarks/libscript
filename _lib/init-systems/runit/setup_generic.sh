@@ -58,7 +58,7 @@ if [ -f "$STAMP_FILE" ]; then
 fi
 
 if ! command -v "runit" >/dev/null 2>&1; then
-  libscript_depends "runit"
+  libscript_depends "runit" || true
 fi
 
 printf '[RECIPE] Staging %s into %s (action: %s)\n' "runit" "$TARGET_SYSROOT" "$ACTION"

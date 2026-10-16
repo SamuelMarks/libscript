@@ -128,7 +128,7 @@ fi
 UPGRADE_CODE=$(jq -r --arg comp "$COMPONENT" '.components[$comp].upgrade_code // empty' "$REGISTRY_JSON")
 COMPONENT_GUID=$(jq -r --arg comp "$COMPONENT" '.components[$comp].component_guid // empty' "$REGISTRY_JSON")
 TITLE=$(jq -r --arg comp "$COMPONENT" '.components[$comp].title // $comp' "$REGISTRY_JSON")
-TITLE=$(printf '%s\n' "$TITLE" | sed 's/&amp;/\&/g; s/&/\&amp;/g')
+TITLE=$(printf '%s\n' "$TITLE" | awk '{ gsub(/&amp;/, "\\&"); gsub(/&/, "\\&amp;"); print }')
 SERVICE_NAME=$(jq -r --arg comp "$COMPONENT" '.components[$comp].service_name // empty' "$REGISTRY_JSON")
 DEFAULT_PORT=$(jq -r --arg comp "$COMPONENT" '.components[$comp].default_port // empty' "$REGISTRY_JSON")
 SHARED_REF=$(jq -r --arg comp "$COMPONENT" '.components[$comp].shared_dll_ref_count // true' "$REGISTRY_JSON")
@@ -167,7 +167,7 @@ elif [ "$VARIANT" = "offline" ]; then
   PKG_DESC="LibScript ${TITLE} Offline Air-Gapped Standalone Installer"
 fi
 
-BUNDLE_JSON="${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx/offline_bundle.json"
+BUNDLE_JSON="${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/openedx/offline_bundle.json"
 DOWNLOAD_URL=""
 if [ -f "$BUNDLE_JSON" ] && command -v jq >/dev/null 2>&1; then
   case "$COMPONENT" in
@@ -203,7 +203,7 @@ cat << EOF_WXS > "$OUT_FILE"
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <Product Id="${PRODUCT_CODE}"
-           Name="${TITLE}"
+           Name="${DISPLAY_TITLE}"
            Language="1033"
            Version="${WIX_VERSION}"
            Manufacturer="LibScript"

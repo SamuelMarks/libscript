@@ -513,295 +513,353 @@ at your option.
 
 ## Supported Components
 
-| Component                          | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
-| ---------------------------------- | ----------- | ----------- | ----------- | ------- | ----- | ------- | ----- |
-| `7zip`                             | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `alsa-lib`                         | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `alsa-ucm-conf`                    | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `alsa-utils`                       | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `ansible-galaxy`                   | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `apk`                              | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `apt`                              | -           | ✅          | -           | -       | -     | -       | -     |
-| `aqua`                             | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `aria2`                            | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `asdf`                             | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `aws`                              | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `awscli`                           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `azure`                            | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `azure-cli`                        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `bazel`                            | -           | ❓          | ✅          | ✅      | -     | ✅      | ✅    |
-| `bento-builder`                    | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `bootstrap`                        | ✅          | ❓          | ✅          | -       | -     | -       | -     |
-| `brew`                             | -           | -           | -           | -       | -     | -       | ✅    |
-| `btrfs-progs`                      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `bun`                              | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `bun-pm`                           | ✅          | ❌          | ✅          | ✅      | -     | -       | ✅    |
-| `bundler`                          | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `busybox`                          | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `c`                                | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `cabal`                            | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `caddy`                            | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `cargo`                            | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `cargo-binstall`                   | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `cc`                               | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `cdn`                              | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `celery`                           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `cert`                             | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `choco`                            | -           | -           | -           | ✅      | -     | -       | -     |
-| `chrony`                           | ✅          | ✅          | ✅          | -       | -     | ✅      | ✅    |
-| `clang`                            | ❌          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `cloud`                            | ✅          | ❓          | ✅          | ✅      | -     | -       | ✅    |
-| `cloud-hypervisor`                 | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `cloudinit`                        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `cmake`                            | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `composer`                         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `conan`                            | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `conda`                            | -           | ✅          | ✅          | -       | -     | -       | ✅    |
-| `core`                             | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `coreutils`                        | ✅          | ✅          | ✅          | -       | -     | ✅      | ✅    |
-| `coursier`                         | -           | ❓          | ✅          | -       | -     | -       | ✅    |
-| `cpanm`                            | ✅          | ✅          | ✅          | ✅      | ✅    | -       | ✅    |
-| `cpp`                              | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `csharp`                           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `curl`                             | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `custom-cc`                        | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `cygwin`                           | -           | -           | -           | ✅      | -     | -       | -     |
-| `dash`                             | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `deno`                             | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `deno-pm`                          | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `dhcpcd`                           | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `dinit`                            | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `distro`                           | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `dnf`                              | -           | -           | ✅          | -       | -     | -       | -     |
-| `doas`                             | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `docker`                           | ✅          | ❓          | ✅          | -       | -     | -       | ✅    |
-| `dosfstools`                       | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `drupal`                           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `duckdb`                           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `e2fsprogs`                        | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `elasticsearch`                    | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `elixir`                           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `emerge`                           | -           | -           | -           | -       | -     | -       | -     |
-| `eopkg`                            | -           | -           | -           | -       | -     | -       | -     |
-| `etcd`                             | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `eudev`                            | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `exim`                             | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `firecracker`                      | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `firecrawl`                        | ❌          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `flatpak`                          | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `fluentbit`                        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `fnm`                              | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `gcc`                              | ❌          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `gcp`                              | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `gcp-cli`                          | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `gcp-filestore`                    | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `gcp-gke-tpu-cluster`              | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `gcp-gpu-vm`                       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `gcp-tpu-vm`                       | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `gcsfuse`                          | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `gdm`                              | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `gem`                              | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `ghcup`                            | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `gitea`                            | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `gitlab`                           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | -     |
-| `gke-xpk-inference`                | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `gke-xpk-training`                 | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `glibc`                            | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `gnome`                            | ✅          | ❓          | ✅          | -       | -     | ✅      | -     |
-| `go`                               | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `go-pm`                            | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `google-cloud-sdk`                 | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `gradle`                           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `greetd`                           | ✅          | ✅          | -           | -       | -     | -       | -     |
-| `guix`                             | -           | ❓          | ✅          | -       | -     | -       | -     |
-| `gunicorn`                         | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `hatch`                            | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `helm`                             | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `hetzner`                          | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `hmailserver`                      | ✅          | ❓          | ✅          | ✅      | -     | -       | -     |
-| `httpd`                            | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `huggingface-cli`                  | ✅          | ✅          | ✅          | ✅      | ✅    | -       | ✅    |
-| `hyprland`                         | ✅          | ✅          | -           | -       | -     | -       | -     |
-| `iis`                              | -           | -           | -           | ✅      | -     | -       | -     |
-| `initramfs`                        | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `intel-media-driver`               | ❌          | -           | -           | -       | -     | -       | -     |
-| `iptables`                         | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `iwd`                              | ✅          | ✅          | -           | -       | -     | -       | -     |
-| `java`                             | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `jetstream`                        | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `joomla`                           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `jq`                               | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `julia`                            | -           | ❓          | ✅          | ✅      | -     | -       | ✅    |
-| `jupyterhub`                       | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `just`                             | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `kafka`                            | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `kde-plasma-6`                     | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `kmod`                             | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `kotlin`                           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `krew`                             | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `kubectl`                          | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `kubernetes`                       | ✅          | ❓          | ✅          | ✅      | -     | ✅      | ✅    |
-| `kubernetes-k0s`                   | ✅          | ❓          | ✅          | -       | -     | -       | -     |
-| `kubernetes-thw`                   | ✅          | ❓          | ✅          | -       | -     | -       | ✅    |
-| `labwc`                            | ✅          | ✅          | -           | -       | -     | ✅      | -     |
-| `lfs-base`                         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `lfs-temp-tools`                   | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `lfs-toolchain`                    | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❌    |
-| `libdrm`                           | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `libseat`                          | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `libva`                            | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `libvdpau`                         | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `libxkbcommon`                     | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `lightdm`                          | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `lighttpd`                         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `linux`                            | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `luarocks`                         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `lxqt`                             | ✅          | ✅          | -           | -       | -     | ✅      | -     |
-| `macports`                         | -           | -           | -           | -       | -     | -       | ✅    |
-| `magento`                          | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ❓    |
-| `mamba`                            | -           | ❓          | ✅          | ✅      | -     | -       | ✅    |
-| `mariadb`                          | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `mas`                              | -           | -           | -           | -       | -     | -       | ✅    |
-| `maven`                            | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `meilisearch`                      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `memcached`                        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `mesa`                             | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `minio`                            | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `mise`                             | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `mix`                              | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `mongodb`                          | -           | ✅          | ✅          | -       | -     | -       | ✅    |
-| `mosquitto`                        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `msi-rs`                           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `msvc`                             | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `msys2`                            | -           | -           | -           | ✅      | -     | -       | -     |
-| `musl`                             | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `mysql`                            | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `nats`                             | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `netctl`                           | ✅          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `networkmanager`                   | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `nextcloud`                        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `nftables`                         | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `nginx`                            | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `nimble`                           | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `nix`                              | -           | ✅          | ✅          | -       | -     | -       | -     |
-| `nodeenv`                          | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `nodejs`                           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `nodejs-server`                    | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `npm`                              | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `nuget`                            | -           | ❓          | ✅          | ✅      | -     | -       | ✅    |
-| `nvidia`                           | -           | ✅          | ✅          | -       | -     | -       | -     |
-| `nvm`                              | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `odoo`                             | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ❓    |
-| `ollama`                           | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `opam`                             | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `openbao`                          | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `openbox`                          | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `openedx`                          | -           | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `openrc`                           | ✅          | ✅          | ✅          | ✅      | -     | -       | -     |
-| `openssh`                          | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `openvpn`                          | ✅          | ✅          | ✅          | ✅      | -     | ✅      | -     |
-| `packagers`                        | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `packer`                           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `pacman`                           | -           | -           | -           | -       | -     | -       | -     |
-| `pam`                              | ✅          | ✅          | ✅          | ✅      | -     | ✅      | -     |
-| `paru`                             | -           | -           | -           | -       | -     | -       | -     |
-| `pdm`                              | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `pf`                               | -           | -           | -           | -       | -     | ✅      | ✅    |
-| `php`                              | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `phpbb`                            | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `pip`                              | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `pipewire`                         | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `pipx`                             | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `pkg`                              | -           | -           | -           | -       | -     | ✅      | -     |
-| `pkgx`                             | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `pnpm`                             | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `poetry`                           | ✅          | ✅          | ✅          | ✅      | ✅    | -       | ✅    |
-| `porg`                             | ✅          | ❓          | ✅          | -       | -     | ✅      | -     |
-| `postgres`                         | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `powershell`                       | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `prestashop`                       | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ❓    |
-| `proxmox`                          | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `psmux`                            | -           | -           | -           | ✅      | -     | -       | -     |
-| `pub`                              | -           | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `pulseaudio`                       | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `pyenv`                            | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `python`                           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `python-server`                    | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `qemu`                             | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `r`                                | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `rabbitmq`                         | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `rbenv`                            | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `rebar3`                           | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `redis`                            | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `repogen`                          | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `ruby`                             | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `runit`                            | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `runner`                           | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `rust`                             | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `rust-server`                      | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `rustup`                           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `rvm`                              | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `rye`                              | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `s6`                               | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `sbt`                              | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `scoop`                            | -           | -           | -           | ✅      | -     | -       | -     |
-| `sddm`                             | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `sdkman`                           | ✅          | ✅          | ✅          | -       | -     | ✅      | ✅    |
-| `seatd`                            | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `serve-actix-diesel-auth-scaffold` | ✅          | ❌          | ✅          | ✅      | -     | ✅      | ✅    |
-| `sh`                               | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `shadow`                           | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `snap`                             | -           | ✅          | ✅          | -       | -     | -       | -     |
-| `solo5`                            | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `spack`                            | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `sqlite`                           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `stack`                            | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `storage`                          | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `sudo`                             | ✅          | ✅          | ✅          | -       | ✅    | ✅      | ✅    |
-| `sway`                             | ✅          | ✅          | -           | -       | -     | -       | -     |
-| `swift`                            | -           | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `swupd`                            | -           | -           | -           | -       | -     | -       | -     |
-| `systemd`                          | -           | ✅          | ✅          | -       | -     | -       | -     |
-| `systemd-networkd`                 | -           | ✅          | ✅          | -       | -     | -       | -     |
-| `sysvinit`                         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `tcc`                              | ❌          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `tensorboard`                      | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `tmux`                             | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `util-linux`                       | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `utils`                            | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `uv`                               | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `uvicorn`                          | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `uwsgi`                            | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `vagrant`                          | -           | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `valkey`                           | ✅          | ✅          | ✅          | -       | -     | ✅      | ✅    |
-| `vcpkg`                            | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `vcredist`                         | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `vfox`                             | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `vfs`                              | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `virtualbox`                       | -           | -           | -           | ✅      | -     | -       | -     |
-| `vllm`                             | -           | ✅          | -           | -       | -     | -       | -     |
-| `volume`                           | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `vulkan-loader`                    | ✅          | ✅          | ✅          | ✅      | -     | ✅      | -     |
-| `wait4x`                           | ✅          | ✅          | ✅          | ✅      | -     | -       | ✅    |
-| `waitress`                         | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `wayland`                          | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `wayland-protocols`                | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `weston`                           | ✅          | ✅          | ✅          | -       | -     | -       | -     |
-| `wget`                             | ✅          | ✅          | ✅          | ✅      | ✅    | ✅      | ✅    |
-| `winget`                           | -           | -           | -           | ✅      | -     | -       | -     |
-| `wireplumber`                      | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `wix`                              | ❓          | ❓          | ❓          | ❓      | ❓    | ❓      | ❓    |
-| `wlroots`                          | ✅          | ✅          | -           | -       | -     | ✅      | -     |
-| `woocommerce`                      | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ❓    |
-| `wordpress`                        | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `wpa_supplicant`                   | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `xbps`                             | -           | -           | -           | -       | -     | -       | -     |
-| `xfce4`                            | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `xfsprogs`                         | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `xorg-server`                      | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `xpk`                              | ✅          | ✅          | ✅          | -       | -     | -       | ✅    |
-| `xwayland`                         | ✅          | ✅          | ✅          | -       | -     | ✅      | -     |
-| `yarn`                             | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `yay`                              | -           | -           | -           | -       | -     | -       | -     |
-| `zig`                              | ✅          | ✅          | ✅          | ✅      | -     | ✅      | ✅    |
-| `zypper`                           | -           | -           | -           | -       | -     | -       | -     |
+Components are organized into LibScript's 5 architectural tiers (see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
+
+### Tier 1: Leaf Recipes, Toolchains & Native Version Managers
+
+| Component | Category | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
+|---|---|---|---|---|---|---|---|---|
+| `7zip` | `utilities` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ansible-galaxy` | `package-managers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `apk` | `package-managers` | ✅ | ✅ | ✅ | - | - | - | - |
+| `apt` | `package-managers` | - | ✅ | - | - | - | - | - |
+| `aqua` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | - | ✅ |
+| `aria2` | `utilities` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `asdf` | `package-managers` | ✅ | ✅ | ✅ | - | - | - | ✅ |
+| `awscli` | `package-managers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `azure-cli` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `bazel` | `toolchains` | - | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `bootstrap` | `toolchains` | ✅ | ✅ | ✅ | - | - | - | - |
+| `brew` | `package-managers` | - | - | - | - | - | - | ✅ |
+| `bun` | `languages` | ✅ | ✅ | ✅ | ✅ | - | - | ✅ |
+| `bun-pm` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | - | ✅ |
+| `bundler` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `busybox` | `utilities` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `c` | `languages` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cabal` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `caddy` | `web-servers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `cargo` | `package-managers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cargo-binstall` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | - | ✅ |
+| `cc` | `languages` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `celery` | `web-apps` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `choco` | `package-managers` | - | - | - | ✅ | - | - | - |
+| `clang` | `languages` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cmake` | `toolchains` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `composer` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `conan` | `package-managers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `conda` | `package-managers` | - | ✅ | ✅ | - | - | - | ✅ |
+| `coursier` | `toolchains` | - | ✅ | ✅ | - | - | - | ✅ |
+| `cpanm` | `package-managers` | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ |
+| `cpp` | `languages` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `csharp` | `languages` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `curl` | `utilities` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `custom-cc` | `languages` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cygwin` | `package-managers` | - | - | - | ✅ | - | - | - |
+| `dash` | `utilities` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `deno` | `languages` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `deno-pm` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `dnf` | `package-managers` | - | - | ✅ | - | - | - | - |
+| `drupal` | `web-apps` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `duckdb` | `databases` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `elasticsearch` | `search` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `elixir` | `languages` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `emerge` | `package-managers` | - | - | - | - | - | - | - |
+| `eopkg` | `package-managers` | - | - | - | - | - | - | - |
+| `etcd` | `databases` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `exim` | `utilities` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `firecrawl` | `web-apps` | ✅ | ✅ | ✅ | - | - | ✅ | ✅ |
+| `flatpak` | `package-managers` | ✅ | ✅ | ✅ | - | - | - | - |
+| `fluentbit` | `logging` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `fnm` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `gcc` | `languages` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `gcsfuse` | `storage-layers` | ✅ | ✅ | ✅ | - | - | - | ✅ |
+| `gem` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `ghcup` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `gitea` | `git-servers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `gitlab` | `git-servers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | - |
+| `go` | `languages` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `go-pm` | `package-managers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `google-cloud-sdk` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `gradle` | `toolchains` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `guix` | `package-managers` | - | ✅ | ✅ | - | - | - | - |
+| `gunicorn` | `app-servers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `hatch` | `package-managers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `helm` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `hmailserver` | `utilities` | - | - | - | ✅ | - | - | - |
+| `httpd` | `web-servers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `huggingface-cli` | `toolchains` | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ |
+| `iis` | `web-servers` | - | - | - | ✅ | - | - | - |
+| `java` | `languages` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `jetstream` | `app-servers` | ✅ | ✅ | ✅ | - | - | - | ✅ |
+| `joomla` | `web-apps` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `jq` | `utilities` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `julia` | `package-managers` | - | ✅ | ✅ | ✅ | - | - | ✅ |
+| `jupyterhub` | `web-apps` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `just` | `toolchains` | ✅ | ✅ | ✅ | ✅ | - | - | ✅ |
+| `kafka` | `message-brokers` | ✅ | ✅ | ✅ | - | - | - | ✅ |
+| `kotlin` | `languages` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `krew` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | - | ✅ |
+| `lfs-toolchain` | `toolchains` | ✅ | ✅ | ✅ | - | - | - | - |
+| `lighttpd` | `web-servers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `luarocks` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `macports` | `package-managers` | - | - | - | - | - | - | ✅ |
+| `magento` | `web-apps` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ❓ |
+| `mamba` | `package-managers` | - | ✅ | ✅ | ✅ | - | - | ✅ |
+| `mariadb` | `databases` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `mas` | `package-managers` | - | - | - | - | - | - | ✅ |
+| `maven` | `toolchains` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `meilisearch` | `search` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `memcached` | `caches` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `minio` | `storage-layers` | ✅ | ✅ | ✅ | - | - | - | ✅ |
+| `mise` | `package-managers` | ✅ | ✅ | ✅ | - | - | - | ✅ |
+| `mix` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `mongodb` | `databases` | - | ✅ | ✅ | - | - | - | ✅ |
+| `mosquitto` | `message-brokers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `msi-rs` | `package-managers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `msvc` | `toolchains` | - | - | - | ✅ | - | - | - |
+| `msys2` | `package-managers` | - | - | - | ✅ | - | - | - |
+| `mysql` | `databases` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `nats` | `message-brokers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `nextcloud` | `web-apps` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `nginx` | `web-servers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `nimble` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | - | ✅ |
+| `nix` | `package-managers` | - | ✅ | ✅ | - | - | - | - |
+| `nodeenv` | `package-managers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `nodejs` | `languages` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `nodejs-server` | `app-servers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `npm` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `nuget` | `package-managers` | - | ✅ | ✅ | ✅ | - | - | ✅ |
+| `nvm` | `package-managers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `odoo` | `web-apps` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ❓ |
+| `ollama` | `app-servers` | ✅ | ✅ | ✅ | ✅ | - | - | ✅ |
+| `opam` | `package-managers` | ✅ | ✅ | ✅ | - | - | - | ✅ |
+| `openbao` | `security` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `openedx` | `web-apps` | - | ✅ | ✅ | ✅ | - | - | ✅ |
+| `pacman` | `package-managers` | - | - | - | - | - | - | - |
+| `paru` | `package-managers` | - | - | - | - | - | - | - |
+| `pdm` | `package-managers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `php` | `languages` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `phpbb` | `web-apps` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `pip` | `package-managers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `pipx` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | - | ✅ |
+| `pkg` | `package-managers` | - | - | - | - | - | ✅ | - |
+| `pkgx` | `package-managers` | ✅ | ✅ | ✅ | - | - | - | ✅ |
+| `pnpm` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | - | ✅ |
+| `poetry` | `package-managers` | ✅ | ✅ | ✅ | ✅ | ✅ | - | ✅ |
+| `porg` | `package-managers` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `postgres` | `databases` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `powershell` | `utilities` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `prestashop` | `web-apps` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ❓ |
+| `psmux` | `utilities` | - | - | - | ✅ | - | - | - |
+| `pub` | `package-managers` | - | ✅ | ✅ | ✅ | - | - | ✅ |
+| `pyenv` | `package-managers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `python` | `languages` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `python-server` | `app-servers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `r` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | - | ✅ |
+| `rabbitmq` | `message-brokers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `rbenv` | `package-managers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `rebar3` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `redis` | `caches` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `ruby` | `languages` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `runtimes/provision_isolated_runtime` | `runtimes` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `rust` | `languages` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `rust-server` | `app-servers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `rustup` | `package-managers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `rvm` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | - | ✅ |
+| `rye` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | - | ✅ |
+| `sbt` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `scoop` | `package-managers` | - | - | - | ✅ | - | - | - |
+| `sdkman` | `package-managers` | ✅ | ✅ | ✅ | - | - | ✅ | ✅ |
+| `serve-actix-diesel-auth-scaffold` | `web-apps` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `sh` | `languages` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `snap` | `package-managers` | - | ✅ | ✅ | - | - | - | - |
+| `spack` | `package-managers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `sqlite` | `databases` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `stack` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `swift` | `languages` | - | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `swupd` | `package-managers` | - | - | - | - | - | - | - |
+| `tcc` | `languages` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `tensorboard` | `logging` | ✅ | ✅ | ✅ | - | - | - | ✅ |
+| `tmux` | `utilities` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `utils` | `git-servers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `uv` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | - | ✅ |
+| `uvicorn` | `app-servers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `uwsgi` | `app-servers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `valkey` | `caches` | ✅ | ✅ | ✅ | - | - | ✅ | ✅ |
+| `vcpkg` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | - | ✅ |
+| `vcredist` | `utilities` | - | - | - | ✅ | - | - | - |
+| `vfox` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | - | ✅ |
+| `vllm` | `app-servers` | - | ✅ | - | - | - | - | - |
+| `wait4x` | `utilities` | ✅ | ✅ | ✅ | ✅ | - | - | ✅ |
+| `waitress` | `app-servers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `wget` | `utilities` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `winget` | `package-managers` | - | - | - | ✅ | - | - | - |
+| `wix` | `toolchains` | - | - | - | ✅ | - | - | - |
+| `woocommerce` | `web-apps` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ❓ |
+| `wordpress` | `web-apps` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `xbps` | `package-managers` | - | - | - | - | - | - | - |
+| `xpk` | `toolchains` | ✅ | ✅ | ✅ | - | - | - | ✅ |
+| `yarn` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `yay` | `package-managers` | - | - | - | - | - | - | - |
+| `zig` | `languages` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `zypper` | `package-managers` | - | - | - | - | - | - | - |
+
+### Tier 1.5: Base OS Userland, Init Systems, Networking, Audio, Graphics & Desktops
+
+| Component | Category | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
+|---|---|---|---|---|---|---|---|---|
+| `alsa-lib` | `audio` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `alsa-ucm-conf` | `audio` | ✅ | ✅ | ✅ | - | - | - | - |
+| `alsa-utils` | `audio` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `btrfs-progs` | `base-system` | ✅ | ✅ | ✅ | - | - | - | - |
+| `chrony` | `networking` | ✅ | ✅ | ✅ | - | - | ✅ | ✅ |
+| `coreutils` | `base-system` | ✅ | ✅ | ✅ | - | - | ✅ | ✅ |
+| `dhcpcd` | `networking` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `dinit` | `init-systems` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `doas` | `base-system` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `dosfstools` | `base-system` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `e2fsprogs` | `base-system` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `eudev` | `base-system` | ✅ | ✅ | ✅ | - | - | - | - |
+| `gdm` | `display-managers` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `glibc` | `base-system` | ✅ | ✅ | ✅ | - | - | - | - |
+| `gnome` | `desktops` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `greetd` | `display-managers` | ✅ | ✅ | - | - | - | - | - |
+| `hyprland` | `desktops` | ✅ | ✅ | - | - | - | - | - |
+| `intel-media-driver` | `graphics` | ✅ | ✅ | ✅ | - | - | - | - |
+| `iptables` | `networking` | ✅ | ✅ | ✅ | - | - | - | - |
+| `iwd` | `networking` | ✅ | ✅ | - | - | - | - | - |
+| `kde-plasma-6` | `desktops` | ✅ | ✅ | ✅ | - | - | - | - |
+| `kmod` | `base-system` | ✅ | ✅ | ✅ | - | - | - | - |
+| `labwc` | `desktops` | ✅ | ✅ | - | - | - | ✅ | - |
+| `lfs-base` | `base-system` | ✅ | ✅ | ✅ | - | - | - | - |
+| `lfs-temp-tools` | `base-system` | ✅ | ✅ | ✅ | - | - | - | - |
+| `libdrm` | `graphics` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `libseat` | `display-servers` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `libva` | `graphics` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `libvdpau` | `graphics` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `libxkbcommon` | `display-servers` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `lightdm` | `display-managers` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `lxqt` | `desktops` | ✅ | ✅ | - | - | - | ✅ | - |
+| `mesa` | `graphics` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `musl` | `base-system` | ✅ | ✅ | ✅ | - | - | - | - |
+| `netctl` | `networking` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `networkmanager` | `networking` | ✅ | ✅ | ✅ | - | - | - | - |
+| `nftables` | `networking` | ✅ | ✅ | ✅ | - | - | - | - |
+| `nvidia` | `graphics` | - | ✅ | ✅ | - | - | - | - |
+| `openbox` | `desktops` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `openrc` | `init-systems` | ✅ | ✅ | ✅ | - | - | - | - |
+| `openssh` | `networking` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `openvpn` | `networking` | ✅ | ✅ | ✅ | ✅ | - | ✅ | - |
+| `pam` | `base-system` | ✅ | ✅ | ✅ | - | - | - | - |
+| `pf` | `networking` | - | - | - | - | - | ✅ | ✅ |
+| `pipewire` | `audio` | ✅ | ✅ | ✅ | - | - | - | - |
+| `pulseaudio` | `audio` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `runit` | `init-systems` | ✅ | ✅ | ✅ | - | - | ✅ | ✅ |
+| `s6` | `init-systems` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `sddm` | `display-managers` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `seatd` | `display-servers` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `shadow` | `base-system` | ✅ | ✅ | ✅ | - | - | - | - |
+| `sudo` | `base-system` | ✅ | ✅ | ✅ | - | ✅ | ✅ | ✅ |
+| `sway` | `desktops` | ✅ | ✅ | - | - | - | - | - |
+| `systemd` | `init-systems` | - | ✅ | ✅ | - | - | - | - |
+| `systemd-networkd` | `networking` | - | ✅ | ✅ | - | - | - | - |
+| `sysvinit` | `init-systems` | ✅ | ✅ | ✅ | - | - | - | - |
+| `util-linux` | `base-system` | ✅ | ✅ | ✅ | - | - | - | - |
+| `vulkan-loader` | `graphics` | ✅ | ✅ | ✅ | ✅ | - | ✅ | - |
+| `wayland` | `display-servers` | ✅ | ✅ | ✅ | - | - | - | - |
+| `wayland-protocols` | `display-servers` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `weston` | `desktops` | ✅ | ✅ | ✅ | - | - | - | - |
+| `wireplumber` | `audio` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `wlroots` | `display-servers` | ✅ | ✅ | - | - | - | ✅ | - |
+| `wpa_supplicant` | `networking` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `xfce4` | `desktops` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `xfsprogs` | `base-system` | ✅ | ✅ | ✅ | - | - | - | - |
+| `xorg-server` | `display-servers` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `xwayland` | `display-servers` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+
+### Tier 2: OS Synthesizers, Kernels, Bootloaders, Storage & Image Builders
+
+| Component | Category | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
+|---|---|---|---|---|---|---|---|---|
+| `bento-builder` | `virtualization` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `bootloaders/grub` | `bootloaders` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `bootloaders/limine` | `bootloaders` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `bootloaders/refind` | `bootloaders` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `bootloaders/systemd-boot` | `bootloaders` | ✅ | ✅ | ✅ | - | - | ✅ | - |
+| `distro` | `orchestration` | ✅ | ✅ | ✅ | - | - | - | - |
+| `freebsd/distro` | `freebsd` | ✅ | ✅ | ✅ | - | - | - | - |
+| `illumos/distro` | `illumos` | ✅ | ✅ | ✅ | - | - | - | - |
+| `initramfs` | `kernel` | ✅ | ✅ | ✅ | - | - | - | - |
+| `linux` | `kernel` | ✅ | ✅ | ✅ | - | - | - | - |
+| `packagers` | `orchestration` | ✅ | ✅ | ✅ | - | - | - | - |
+| `repogen` | `orchestration` | ✅ | ✅ | ✅ | - | - | - | - |
+| `runner` | `orchestration` | ✅ | ✅ | ✅ | - | - | - | - |
+| `solo5` | `orchestration` | ✅ | ✅ | ✅ | - | - | - | - |
+| `storage/provision_disk` | `storage` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `vfs` | `orchestration` | ✅ | ✅ | ✅ | - | - | - | - |
+
+### Tier 3: Cloud Operators, Hypervisors & IaaS Provisioners
+
+| Component | Category | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
+|---|---|---|---|---|---|---|---|---|
+| `aws` | `cloud-providers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `azure` | `cloud-providers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cdn` | `cloud` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cert` | `cloud` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cloud` | `orchestration` | ✅ | ✅ | ✅ | - | - | - | ✅ |
+| `cloud-hypervisor` | `orchestration` | ✅ | ✅ | ✅ | - | - | - | - |
+| `cloudinit` | `cloud` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `core` | `cloud` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `docker` | `orchestration` | ✅ | ✅ | ✅ | - | - | - | ✅ |
+| `firecracker` | `orchestration` | ✅ | ✅ | ✅ | - | - | - | - |
+| `gcp` | `cloud-providers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `gcp-cli` | `cloud-providers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `gcp-filestore` | `cloud-providers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `gcp-gke-tpu-cluster` | `cloud-providers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `gcp-gpu-vm` | `cloud-providers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `gcp-tpu-vm` | `cloud-providers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `hetzner` | `cloud-providers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `kubectl` | `orchestration` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `kubernetes` | `orchestration` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `kubernetes-k0s` | `orchestration` | ✅ | ✅ | ✅ | - | - | - | - |
+| `kubernetes-thw` | `orchestration` | ✅ | ✅ | ✅ | - | - | - | ✅ |
+| `packer` | `orchestration` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `proxmox` | `cloud-providers` | ✅ | ✅ | ✅ | - | - | - | - |
+| `qemu` | `orchestration` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `storage` | `cloud` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `vagrant` | `orchestration` | - | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `virtualbox` | `orchestration` | - | - | - | ✅ | - | - | - |
+| `volume` | `cloud` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+### Tier 3.5, Tier 4 & Cross-Cutting Traits: Topologies, Payloads, Schedulers & Traits
+
+| Component | Category | Linux (apk) | Linux (deb) | Linux (rpm) | Windows | SunOS | FreeBSD | macOS |
+|---|---|---|---|---|---|---|---|---|
+| `gke-xpk-inference` | `ai-serving` | ✅ | ✅ | ✅ | - | - | - | - |
+| `gke-xpk-training` | `orchestration` | ✅ | ✅ | ✅ | - | - | - | - |
+| `ml-training` | `ml-training` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `payloads/schedulers/kubernetes` | `payloads` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `payloads/schedulers/mesos` | `payloads` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `payloads/schedulers/microvm` | `payloads` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `payloads/schedulers/native` | `payloads` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `payloads/schedulers/nomad` | `payloads` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `payloads/schedulers/slurm_ray` | `payloads` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `payloads/schedulers/xpk` | `payloads` | ✅ | ✅ | ✅ | - | - | - | ✅ |
+| `topologies/gke-tpu-cluster` | `topologies` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `topologies/k0s-ha` | `topologies` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `topologies/minio-distributed` | `topologies` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `topologies/postgres-ha` | `topologies` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `topologies/redis-cluster` | `topologies` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `topologies/valkey-cluster` | `topologies` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `traits/backup` | `traits` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `traits/discovery` | `traits` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `traits/firewall` | `traits` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `traits/ingress` | `traits` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `traits/logging` | `traits` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `traits/maintenance` | `traits` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `traits/mesh` | `traits` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `traits/metrics` | `traits` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `traits/secrets` | `traits` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `traits/storage` | `traits` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `traits/tls` | `traits` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+

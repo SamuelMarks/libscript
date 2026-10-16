@@ -35,8 +35,11 @@ export LIBSCRIPT_ROOT_DIR
 set -feu
 
 # Ensure base variables are loaded if available
+COMP_DIR="${SCRIPT_DIR}"
 if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh" ]; then
-  . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
+  export SCRIPT_NAME
+  . "${SCRIPT_NAME}"
 else
   # ## log_info
   # Logs an informational message.
@@ -48,9 +51,36 @@ else
   # Logs an error message to stderr.
   log_error() { printf '%s\n' "[ERROR] $1" >&2; }
 fi
+SCRIPT_DIR="${COMP_DIR}"
 
 ACTION="${1:-}"
 shift || true
+
+case "$ACTION" in
+  --help|-h|/\?|-\?)
+    printf '%s\n' "Usage: gcp-gpu-vm <create|delete|start|stop|ssh|install|test> [name]"
+    exit 0
+    ;;
+  install)
+    SCRIPT_NAME="${SCRIPT_DIR}/setup.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+    exit 0
+    ;;
+  test)
+    SCRIPT_NAME="${SCRIPT_DIR}/test.sh"
+    export SCRIPT_NAME
+    # shellcheck disable=SC1090
+    . "${SCRIPT_NAME}"
+    exit 0
+    ;;
+  logs|status|use|env|ls|ls-remote|download|uninstall|which|exec|run)
+    printf '%s\n' "Action not applicable for this provisioning module."
+    exit 0
+    ;;
+esac
+
 GPU_NAME="${1:-}"
 if [ -n "$GPU_NAME" ]; then
   shift || true

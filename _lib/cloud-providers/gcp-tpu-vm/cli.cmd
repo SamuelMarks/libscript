@@ -64,6 +64,25 @@ if "%~1"=="-h" (
     echo See README.md for details.
     exit /b 0
 )
+if "%~1"=="/?" (
+    echo Usage: %~nx0 ^<action^> [args...]
+    echo See README.md for details.
+    exit /b 0
+)
+if "%~1"=="install" (
+    call "%~dp0setup.cmd" %*
+    exit /b !errorlevel!
+)
+if "%~1"=="test" (
+    call "%~dp0test.cmd" %*
+    exit /b !errorlevel!
+)
+for %%V in (logs status use env ls ls-remote download uninstall which exec run) do (
+    if /i "%~1"=="%%V" (
+        echo Action not applicable for this provisioning module.
+        exit /b 0
+    )
+)
 
 :: Ensure gcloud is available
 where gcloud >nul 2>nul

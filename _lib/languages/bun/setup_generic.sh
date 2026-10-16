@@ -196,7 +196,7 @@ case "$ACTION" in
             if [ "${TARGET_OS:-}" = "alpine" ]; then
               libscript_depends "bash" "curl" "unzip" "libstdc++"
             else
-              libscript_depends "curl" "unzip"
+              libscript_depends "bash" "curl" "unzip"
             fi
             _installer_sh="sh"
             if command -v bash >/dev/null 2>&1; then

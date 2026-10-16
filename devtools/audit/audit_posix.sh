@@ -103,35 +103,19 @@ audit_file() {
 }
 
 if [ $# -gt 0 ]; then
-  for target in "$@"; do
-    audit_file "$target"
-  done
+  if [ "${1:-}" = "--all" ]; then
+    shift
+    for script in $(cd "$LIBSCRIPT_ROOT_DIR" && git ls-files "*.sh"); do
+      audit_file "${LIBSCRIPT_ROOT_DIR}/${script}"
+    done
+  else
+    for target in "$@"; do
+      audit_file "$target"
+    done
+  fi
 else
-  # Audit all scripts created in LFS subdirectories
-  for script in \
-    cli/commands/config/validate_lfs_profile.sh \
-    _lib/toolchains/lfs-toolchain/setup.sh \
-    _lib/base-system/lfs-temp-tools/setup.sh \
-    _lib/base-system/lfs-mount-vfs.sh \
-    _lib/base-system/lfs-chroot.sh \
-    _lib/base-system/lfs-base/setup.sh \
-    _lib/kernel/setup.sh \
-    _lib/init-systems/setup.sh \
-    _lib/init-systems/sysvinit/setup.sh \
-    _lib/init-systems/runit/setup.sh \
-    _lib/init-systems/s6/setup.sh \
-    _lib/init-systems/dinit/setup.sh \
-    _lib/display-servers/setup.sh \
-    _lib/desktops/setup.sh \
-    _lib/desktops/openbox/setup.sh \
-    _lib/display-managers/setup.sh \
-    _lib/audio/setup.sh \
-    _lib/graphics/setup.sh \
-    _lib/networking/setup.sh \
-    cli/commands/package_as/disk_builder.sh \
-    cli/commands/package_as/vagrant_box.sh \
-    tests/vagrant_box_test.sh; do
-    audit_file "$script"
+  for script in $(cd "$LIBSCRIPT_ROOT_DIR" && git ls-files "*.sh"); do
+    audit_file "${LIBSCRIPT_ROOT_DIR}/${script}"
   done
 fi
 

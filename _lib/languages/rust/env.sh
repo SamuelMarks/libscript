@@ -32,4 +32,4 @@ RUST_VERSION="${RUST_VERSION:-latest}"
 if [ "${RUST_VERSION}" = "latest" ]; then
   RUST_VERSION="stable"
 fi
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/rust/${RUST_VERSION}/bin:${PATH}"
+export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/rust/${RUST_VERSION}/bin:/opt/ooce/rust/bin:/opt/ooce/bin:${PATH}"

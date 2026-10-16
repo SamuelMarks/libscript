@@ -168,7 +168,7 @@ if [ -z "$COMPONENT" ]; then
   exit 1
 fi
 
-BUNDLE_JSON="${LIBSCRIPT_ROOT_DIR}/stacks/cms/openedx/offline_bundle.json"
+BUNDLE_JSON="${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/openedx/offline_bundle.json"
 # Auto-detect version if not supplied
 if [ -z "$VERSION" ] && [ -f "$BUNDLE_JSON" ] && command -v jq >/dev/null 2>&1; then
   case "$COMPONENT" in
@@ -473,6 +473,9 @@ build_single_variant() {
   if [ -n "$_out_dir_abs" ] && [ "$(dirname "$_target_abs")" != "$_out_dir_abs" ]; then
     mkdir -p "$OUT_DIR"
     cp -f "$TARGET_MSI" "$OUT_DIR/" 2>/dev/null || true
+  fi
+  if [ -z "$OUT_FILE" ]; then
+    cp -f "$TARGET_MSI" "${OUT_DIR}/libscript-${COMPONENT}-${VERSION}-${_v}.msi" 2>/dev/null || true
   fi
 
   rm -f "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_main.wixobj" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_payload.wixobj" "${MAIN_WXS}" "${PAYLOAD_WXS}"

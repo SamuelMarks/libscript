@@ -61,7 +61,7 @@ assert_wxs_contains() {
 TEST_WXS="${TEST_TMP_DIR}/test_multi_license.wxs"
 
 # Generate Open edX WiX manifest which bundles MySQL, Redis, MongoDB, Python, Node, Meilisearch
-"${LIBSCRIPT_ROOT_DIR}/packaging/build_msi.sh" "stacks/cms/openedx" \
+"${LIBSCRIPT_ROOT_DIR}/packaging/build_msi.sh" "_lib/web-apps/openedx" \
   --out "${TEST_TMP_DIR}/test_openedx" \
   --variant online
 

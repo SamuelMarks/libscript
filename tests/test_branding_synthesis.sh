@@ -38,7 +38,7 @@ TEST_OUT="$(mktemp -d "${TMPDIR:-/tmp}/branding_test_XXXXXX")"
 trap 'rm -rf "$TEST_OUT"' EXIT INT TERM
 
 # Test synthesizing branding for WordPress
-"$SYNTH_SH" "${LIBSCRIPT_ROOT_DIR}/stacks/cms/wordpress" --output-dir "$TEST_OUT"
+"$SYNTH_SH" "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/wordpress" --output-dir "$TEST_OUT"
 
 [ -f "$TEST_OUT/banner_side.bmp" ] || exit 1
 [ -f "$TEST_OUT/banner_top.bmp" ] || exit 1

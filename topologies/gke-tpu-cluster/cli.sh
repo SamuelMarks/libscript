@@ -83,7 +83,7 @@ case "$ACTION" in
       ${PROJECT_FLAG:+"$PROJECT_FLAG"}
     log_info "Cluster $CLUSTER_NAME deleted."
     ;;
-  status|logs|use|env|ls|download|uninstall)
+  status|logs|use|env|ls|ls-remote|download|uninstall|install|test|which|exec|run)
     printf '%s\n' "Topology status check complete for gke-tpu-cluster."
     exit 0
     ;;

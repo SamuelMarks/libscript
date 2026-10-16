@@ -54,7 +54,7 @@ set "TEST_OUT=%TEMP%\branding_test_%RANDOM%"
 if not exist "%TEST_OUT%" mkdir "%TEST_OUT%"
 
 echo ==> Testing Universal Branding Synthesis on Windows...
-call "%LIBSCRIPT_ROOT_DIR%\packaging\synthesize_branding.cmd" "%LIBSCRIPT_ROOT_DIR%\stacks\cms\wordpress" --output-dir "%TEST_OUT%"
+call "%LIBSCRIPT_ROOT_DIR%\packaging\synthesize_branding.cmd" "%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\wordpress" --output-dir "%TEST_OUT%"
 
 if not exist "%TEST_OUT%\banner_side.bmp" (
     echo [ERROR] banner_side.bmp was not generated >&2

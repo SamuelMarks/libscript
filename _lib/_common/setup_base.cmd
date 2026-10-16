@@ -174,11 +174,25 @@ if not errorlevel 1 (
 
     if defined WINGET_ID (
         call "%LOG_CMD%" :log_info "Native setup failed. Installing !PACKAGE_NAME! via winget (!WINGET_ID!)..."
+        winget list --id "!WINGET_ID!" --accept-source-agreements >nul 2>&1
+        if not errorlevel 1 (
+            call "%LOG_CMD%" :log_info "!PACKAGE_NAME! (!WINGET_ID!) is already installed via winget."
+            exit /b 0
+        )
         winget install --id "!WINGET_ID!" --silent --accept-package-agreements --accept-source-agreements
+        if not errorlevel 1 exit /b 0
+        winget list --id "!WINGET_ID!" --accept-source-agreements >nul 2>&1
         if not errorlevel 1 exit /b 0
     ) else (
         call "%LOG_CMD%" :log_info "Native setup failed. Attempting winget install for !PACKAGE_NAME!..."
+        winget list --name "!PACKAGE_NAME!" --accept-source-agreements >nul 2>&1
+        if not errorlevel 1 (
+            call "%LOG_CMD%" :log_info "!PACKAGE_NAME! is already installed via winget."
+            exit /b 0
+        )
         winget install --name "!PACKAGE_NAME!" -e --silent --accept-package-agreements --accept-source-agreements
+        if not errorlevel 1 exit /b 0
+        winget list --name "!PACKAGE_NAME!" --accept-source-agreements >nul 2>&1
         if not errorlevel 1 exit /b 0
     )
 )

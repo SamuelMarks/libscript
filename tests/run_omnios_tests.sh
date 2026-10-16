@@ -33,6 +33,10 @@ export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 REPO_ROOT="${LIBSCRIPT_ROOT_DIR}"
+SCRIPT_NAME="${REPO_ROOT}/_lib/_common/test_matrix_driver.sh"
+export SCRIPT_NAME
+# shellcheck disable=SC1090
+. "${SCRIPT_NAME}"
 set +f
 VAGRANT_DIR="$REPO_ROOT/vagrant/omnios"
 TESTS_TMP_DIR="$REPO_ROOT/tests_tmp"
@@ -40,6 +44,7 @@ TESTS_TMP_DIR="$REPO_ROOT/tests_tmp"
 mkdir -p "$TESTS_TMP_DIR"
 
 TARGETS=""
+TIER_FILTER="all"
 STOP_AFTER=""
 SKIP_UNINSTALL=""
 LOOP_MODE=""
@@ -105,7 +110,7 @@ restore_vanilla_snapshot() {
 }
 
 # ## sync_repo_to_guest
-# Synchronizes the libscript codebase to the guest VM using rsync over ssh.
+# Synchronizes the libscript codebase to the guest VM using rsync over ssh (or tar over ssh if rsync is absent on OmniOS).
 sync_repo_to_guest() {
     echo "=== Syncing LibScript repository to OmniOS ==="
     _ssh_info=$(cd "$VAGRANT_DIR" && vagrant ssh-config 2>/dev/null || true)
@@ -114,10 +119,19 @@ sync_repo_to_guest() {
     : "${_port:=50022}"
     : "${_key:=$HOME/.vagrant.d/insecure_private_keys/vagrant.key.rsa}"
 
-    rsync -av --copy-links --no-owner --no-group \
-        -e "ssh -p $_port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $_key" \
-        --exclude ".vagrant" --exclude ".git" --exclude "tests_tmp" --exclude "*.msi" --exclude "cache" \
-        "$REPO_ROOT/" "vagrant@127.0.0.1:/opt/repos/libscript/"
+    ssh -n -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 \
+        "sudo mkdir -p /opt/repos/libscript /export/home/vagrant/.libscript && sudo chown -R vagrant /opt/repos/libscript /export/home/vagrant" >/dev/null 2>&1 || true
+
+    if ssh -n -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 "command -v rsync >/dev/null 2>&1"; then
+        rsync -av --copy-links --no-owner --no-group \
+            -e "ssh -p $_port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $_key" \
+            --exclude ".vagrant" --exclude ".git" --exclude "tests_tmp" --exclude "*.msi" --exclude "cache" --exclude "build" \
+            "$REPO_ROOT/" "vagrant@127.0.0.1:/opt/repos/libscript/"
+    else
+        (cd "$REPO_ROOT" && COPYFILE_DISABLE=1 tar -cf - --exclude='.vagrant' --exclude='.git' --exclude='tests_tmp' --exclude='*.msi' --exclude='cache' --exclude='build' .) | \
+            ssh -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 \
+            "cd /opt/repos/libscript && /usr/gnu/bin/tar -xf - 2>/dev/null || /usr/bin/tar -xf -"
+    fi
 }
 
 # ## update_component_in_readme
@@ -131,7 +145,7 @@ update_component_in_readme() {
     awk -v comp="$_comp" -v st="$_status" '
         BEGIN { FS="|"; OFS="|" }
         $2 ~ "^[ 	]*`" comp "`[ 	]*$" {
-            $7 = " " st " "
+            if (NF >= 10) { $8 = " " st " " } else { $7 = " " st " " }
         }
         { print }
     ' "$_rm" > "$_tmp_rm" && mv "$_tmp_rm" "$_rm"
@@ -160,6 +174,10 @@ while [ $# -gt 0 ]; do
         --loop|-l)
             LOOP_MODE="1"
             shift
+            ;;
+        --tier)
+            TIER_FILTER="$2"
+            shift 2
             ;;
         --stop-after)
             STOP_AFTER="$2"
@@ -328,6 +346,7 @@ while true; do
             if [ "$SUPPORTED" = "no" ]; then
                 echo "Skipping $target (not supported on sunos)"
                 skipped_count=$((skipped_count + 1))
+                echo "Skipped" > "$TESTS_TMP_DIR/$target.sunos.skipped"
                 update_component_in_readme "$target" "-"
                 continue
             fi
@@ -338,8 +357,8 @@ while true; do
         echo "============================================================"
         test_count=$((test_count + 1))
 
-        # Restore vanilla snapshot before running if enabled and not the very first run
-        if [ "$USE_SNAPSHOT" = "1" ] && [ "$test_count" -gt 1 ]; then
+        # Restore vanilla snapshot before running if enabled
+        if [ "$USE_SNAPSHOT" = "1" ]; then
             restore_vanilla_snapshot || true
             sync_repo_to_guest
         fi
@@ -352,8 +371,8 @@ while true; do
 
         rm -f "$success_file" "$failure_file" "$idempotent_file"
 
-        # Execute test via ssh: install -> test -> install (idempotency) -> test (verification)
-        test_cmd="export PATH=/usr/gnu/bin:/opt/ooce/bin:\$PATH; export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; timeout 600 /opt/repos/libscript/libscript.sh install $target && timeout 120 /opt/repos/libscript/libscript.sh test $target && timeout 600 /opt/repos/libscript/libscript.sh install $target && timeout 120 /opt/repos/libscript/libscript.sh test $target"
+        # Execute 4-stage contract test via ssh: install -> test -> env/which -> install (idempotency) -> test (verification)
+        test_cmd="export PATH=/usr/xpg4/bin:/usr/gnu/bin:/opt/ooce/bin:\$PATH; export LIBSCRIPT_ROOT_DIR=/opt/repos/libscript; timeout 600 /opt/repos/libscript/libscript.sh install $target && timeout 120 /opt/repos/libscript/libscript.sh test $target && (/opt/repos/libscript/libscript.sh env $target latest >/dev/null 2>&1 || true) && timeout 600 /opt/repos/libscript/libscript.sh install $target && timeout 120 /opt/repos/libscript/libscript.sh test $target"
 
         if ssh -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 "$test_cmd" > "$stdout_file" 2> "$stderr_file"; then
             echo "Success" > "$success_file"

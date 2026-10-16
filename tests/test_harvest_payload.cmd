@@ -83,7 +83,7 @@ for %%F in ("%MANIFEST_FILE%") do (
 echo [PASS] Manifest generated successfully
 
 :: Test 2: Essential engine files are included
-powershell -NoProfile -Command "$m = Get-Content '%MANIFEST_FILE%'; $reqs = @('libscript.sh', 'libscript.cmd', '_lib/_common/component_core.cmd', 'stacks/cms/openedx/setup_generic.cmd', 'stacks/cms/openedx/cli.cmd'); foreach ($r in $reqs) { if ($m -notcontains $r) { Write-Error ('Missing required file: ' + $r); exit 1 } }"
+powershell -NoProfile -Command "$m = Get-Content '%MANIFEST_FILE%'; $reqs = @('libscript.sh', 'libscript.cmd', '_lib/_common/component_core.cmd', '_lib/web-apps/openedx/setup_generic.cmd', '_lib/web-apps/openedx/cli.cmd'); foreach ($r in $reqs) { if ($m -notcontains $r) { Write-Error ('Missing required file: ' + $r); exit 1 } }"
 if errorlevel 1 (
     echo [FAIL] Required engine or stack files missing from manifest >&2
     exit /b 1

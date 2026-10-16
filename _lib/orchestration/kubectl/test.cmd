@@ -52,4 +52,8 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-kubectl version --client
+if exist "%~dp0cli.cmd" (
+    call "%~dp0cli.cmd" --help >nul
+) else (
+    exit /b 0
+)

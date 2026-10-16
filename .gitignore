@@ -138,6 +138,7 @@ parse_*
 standardize_*
 # Exception for core test helpers
 !_lib/_common/test_base.*
+!_lib/_common/test_matrix_driver.*
 !tests/update_results.*
 !tests/test_update_results.*
 !cli/commands/config/validate_lfs_profile.*
