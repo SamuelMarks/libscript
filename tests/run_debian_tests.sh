@@ -99,7 +99,7 @@ sync_repo_to_guest() {
 
     rsync -av --copy-links --no-owner --no-group \
         -e "ssh -p $_port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $_key" \
-        --exclude ".vagrant" --exclude ".git" --exclude "tests_tmp" --exclude "tmp" --exclude "*.msi" --exclude "cache" \
+        --exclude ".vagrant" --exclude ".git" --exclude "tests_tmp" --exclude "tmp" --exclude "*.msi" --exclude "cache" --exclude "vagrant" --exclude "build" --exclude "dist" \
         "$REPO_ROOT/" "vagrant@127.0.0.1:/opt/repos/libscript/"
 }
 
@@ -237,10 +237,17 @@ while true; do
         fi
 
         if [ "$_has_vanilla" = "0" ]; then
-            echo "Notice: No 'vanilla' snapshot found on $DISK_IMG. Creating it now..."
-            (cd "$VAGRANT_DIR" && vagrant halt) || true
-            qemu-img snapshot -c vanilla "$DISK_IMG"
-            _has_vanilla=1
+            if [ -z "$DISK_IMG" ]; then
+                echo "=== Initializing Debian Vagrant VM to create vanilla snapshot ==="
+                (cd "$VAGRANT_DIR" && vagrant up --no-provision)
+                DISK_IMG=$(find_disk_image || true)
+            fi
+            if [ -n "$DISK_IMG" ]; then
+                echo "Notice: No 'vanilla' snapshot found on $DISK_IMG. Creating it now..."
+                (cd "$VAGRANT_DIR" && vagrant halt) || true
+                qemu-img snapshot -c vanilla "$DISK_IMG"
+                _has_vanilla=1
+            fi
         fi
     fi
 

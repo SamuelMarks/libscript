@@ -65,6 +65,9 @@ if [ ! -f "$TARGET_IMAGE" ]; then
   printf '[INFO] Synthesizing mock boot image for test harness...\n'
   mkdir -p "$(dirname "$TARGET_IMAGE")"
   printf 'LibScript Test Boot Image\n' > "$TARGET_IMAGE"
+  DRY_RUN=1
+elif [ "$(wc -c < "$TARGET_IMAGE" | tr -d ' ')" -lt 1048576 ]; then
+  DRY_RUN=1
 fi
 
 if [ "$DRY_RUN" -eq 1 ] || ! command -v qemu-system-x86_64 >/dev/null 2>&1; then

@@ -67,7 +67,7 @@ if %ERRORLEVEL% NEQ 0 (
 set "TMP_DIR=%TEMP%\odoo_msi_test_%RANDOM%"
 if not exist "%TMP_DIR%" mkdir "%TMP_DIR%"
 
-call "%LIBSCRIPT_ROOT_DIR%\packaging\template_msi.cmd" "%LIBSCRIPT_ROOT_DIR%\stacks\erp\odoo" --out "%TMP_DIR%\odoo.wxs"
+call "%LIBSCRIPT_ROOT_DIR%\packaging\template_msi.cmd" "%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\odoo" --out "%TMP_DIR%\odoo.wxs"
 
 findstr /c:"USER_DB_STRATEGY=\"remote\"" "%TMP_DIR%\odoo.wxs" >nul
 if %ERRORLEVEL% NEQ 0 (
@@ -95,7 +95,7 @@ echo stub > "%ODOO_WWWROOT%\odoo-bin"
 echo ==> Simulating silent install with remote IP...
 
 :: Run setup_generic.cmd skipping dependencies
-call "%LIBSCRIPT_ROOT_DIR%\stacks\erp\odoo\setup_generic.cmd" --skip-deps
+call "%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\odoo\setup_generic.cmd" --skip-deps
 
 if not exist "%ODOO_WWWROOT%\odoo.conf" (
     echo [ERROR] odoo.conf was not created!

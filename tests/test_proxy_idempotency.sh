@@ -30,6 +30,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+THIS_DIR="${SCRIPT_DIR}"
 
 TEST_CONF="${THIS_DIR}/.tmp_test_proxy.conf"
 # PROVISION_SCRIPT="${REPO_ROOT}/_lib/web-servers/provision_vhost_abstract.sh"

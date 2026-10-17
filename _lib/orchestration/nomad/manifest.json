@@ -1,0 +1,32 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "nomad",
+  "title": "HashiCorp Nomad",
+  "description": "Flexible workload orchestrator to deploy and manage containers, microVMs, and non-containerized applications.",
+  "category": "orchestration",
+  "provides": ["nomad"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "versions": ["1.9.0", "1.8.4", "latest"],
+  "ports": [4646, 4647, 4648],
+  "stateful": true,
+  "multitenant": true,
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": [],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/v1/metrics"
+  }
+}

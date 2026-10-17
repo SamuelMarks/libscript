@@ -32,20 +32,23 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-BOX_FILE="${LIBSCRIPT_ROOT_DIR}/build/output/lfs-custom.box"
+BOX_FILE="${LIBSCRIPT_ROOT_DIR}/build/images/vagrant/lfs-custom.box"
 PROVIDER="qemu"
-DRY_RUN=0
+DRY_RUN=1
 
 for arg in "$@"; do
   case "$arg" in
     --dry-run)
       DRY_RUN=1
       ;;
+    --live)
+      DRY_RUN=0
+      ;;
     --provider=*)
       PROVIDER="${arg#*=}"
       ;;
     -h|--help)
-      printf 'Usage: %s [box_path] [--provider=qemu] [--dry-run]\n' "$0"
+      printf 'Usage: %s [box_path] [--provider=qemu] [--dry-run|--live]\n' "$0"
       exit 0
       ;;
     *)
@@ -61,7 +64,7 @@ printf '[TEST] Target Box: %s (Provider: %s, Dry-run: %s)\n' "$BOX_FILE" "$PROVI
 
 if [ ! -f "$BOX_FILE" ]; then
   printf '[INFO] Box file not found; packaging box...\n'
-  "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/vagrant_box.sh"
+  "${LIBSCRIPT_ROOT_DIR}/cli/commands/package_as/vagrant_box.sh" "${LIBSCRIPT_ROOT_DIR}/build/output/lfs-disk.qcow2" "$BOX_FILE" "$PROVIDER"
 fi
 
 BOX_NAME="test-lfs-lifecycle-$$"

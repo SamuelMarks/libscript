@@ -3,8 +3,8 @@
 # Unpacks backup zip archives and restores configurations, users, and datastores.
 #
 # ## Usage
-#   .estore.ps1 apply <archive_path> [-Yes]
-#   .estore.ps1 help
+#   .\restore.ps1 apply <archive_path> [-Yes]
+#   .\restore.ps1 help
 
 <#
 .SYNOPSIS
@@ -56,8 +56,8 @@ function Show-Help {
     Write-Host "Open edX Disaster Recovery & Restore Utility (PowerShell)"
     Write-Host ""
     Write-Host "Usage:"
-    Write-Host "  .estore.ps1 apply <archive_path> [-Yes]"
-    Write-Host "  .estore.ps1 help"
+    Write-Host "  .\restore.ps1 apply <archive_path> [-Yes]"
+    Write-Host "  .\restore.ps1 help"
 }
 
 # ## Invoke-Restore

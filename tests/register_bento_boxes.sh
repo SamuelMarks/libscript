@@ -1,9 +1,9 @@
 #!/bin/sh
 # ## Overview
-# Discovers built Vagrant .qemu.box / .libvirt.box images in ../bento/builds/build_complete/,
-# validates Packer templates in ../bento/os_pkrvars/, and registers all 6 target OS boxes
+# Discovers built Vagrant .qemu.box / .libvirt.box / .utm.box images in ../bento/builds/build_complete/,
+# validates Packer templates in ../bento/os_pkrvars/, and registers all 7 target OS boxes
 # (bento/omnios, bento/alpine-3.24, bento/debian-13, bento/rockylinux-10.2,
-# bento/freebsd-15.1, bento/windows-11) in the host's Vagrant installation.
+# bento/freebsd-15.1, bento/macos-14-arm64, bento/windows-11) in the host's Vagrant installation.
 #
 # ## Usage
 # ./tests/register_bento_boxes.sh [--bento-dir <path>] [--force] [--validate-only]
@@ -66,40 +66,37 @@ while [ $# -gt 0 ]; do
 done
 
 # ## validate_bento_pkrvars
-# Validates that all 6 target OS Packer variable templates exist in ../bento/os_pkrvars/.
+# Validates that all 7 target OS Packer variable templates exist in ../bento/os_pkrvars/.
 validate_bento_pkrvars() {
   if [ ! -d "$BENTO_DIR" ]; then
-    printf '[WARN] Bento directory not found at %s; skipping pkrvars check.
-' "$BENTO_DIR" >&2
+    printf '[WARN] Bento directory not found at %s; skipping pkrvars check.\n' "$BENTO_DIR" >&2
     return 0
   fi
-  printf '==> Validating 6-OS Packer templates in %s...
-' "$BENTO_DIR"
-  for _pkr in "os_pkrvars/omnios/omnios-braich-aarch64.pkrvars.hcl" "os_pkrvars/alpine/alpine-3.24-aarch64.pkrvars.hcl" "os_pkrvars/debian/debian-13-aarch64.pkrvars.hcl" "os_pkrvars/rockylinux/rockylinux-10-aarch64.pkrvars.hcl" "os_pkrvars/freebsd/freebsd-15-aarch64.pkrvars.hcl" "os_pkrvars/windows/windows-11-aarch64.pkrvars.hcl"; do
+  printf '==> Validating 7-OS Packer templates in %s...\n' "$BENTO_DIR"
+  for _pkr in "os_pkrvars/omnios/omnios-braich-aarch64.pkrvars.hcl" "os_pkrvars/alpine/alpine-3.24-aarch64.pkrvars.hcl" "os_pkrvars/debian/debian-13-aarch64.pkrvars.hcl" "os_pkrvars/rockylinux/rockylinux-10-aarch64.pkrvars.hcl" "os_pkrvars/freebsd/freebsd-15-aarch64.pkrvars.hcl" "os_pkrvars/macos/macos-14-aarch64.pkrvars.hcl" "os_pkrvars/windows/windows-11-aarch64.pkrvars.hcl"; do
     if [ -f "${BENTO_DIR}/${_pkr}" ]; then
-      printf '[PASS] Found %s
-' "$_pkr"
+      printf '[PASS] Found %s\n' "$_pkr"
     else
-      printf '[WARN] Missing %s in %s
-' "$_pkr" "$BENTO_DIR" >&2
+      printf '[WARN] Missing %s in %s\n' "$_pkr" "$BENTO_DIR" >&2
     fi
   done
 }
 
 # ## register_box_if_needed
-# Registers a .qemu.box artifact into host Vagrant if not already present (or if --force is passed).
+# Registers a .qemu.box or .utm.box artifact into host Vagrant if not already present (or if --force is passed).
 register_box_if_needed() {
   _box_name="$1"
   _box_file="$2"
   _existing_boxes="$3"
+  _provider="${4:-qemu}"
 
-  if [ -z "$FORCE_FLAG" ] && printf '%s\n' "$_existing_boxes" | grep -q "^${_box_name} .*qemu"; then
-    printf '[OK]   Box %s (qemu) is already registered in host Vagrant.\n' "$_box_name"
+  if [ -z "$FORCE_FLAG" ] && printf '%s\n' "$_existing_boxes" | grep -q "^${_box_name} .*${_provider}"; then
+    printf '[OK]   Box %s (%s) is already registered in host Vagrant.\n' "$_box_name" "$_provider"
   elif [ -f "$_box_file" ]; then
-    printf '==> Registering %s from %s...\n' "$_box_name" "$_box_file"
+    printf '==> Registering %s (%s) from %s...\n' "$_box_name" "$_provider" "$_box_file"
     # shellcheck disable=SC2086
-    vagrant box add --name "$_box_name" --provider qemu $FORCE_FLAG "$_box_file"
-    printf '[PASS] Registered %s (qemu).\n' "$_box_name"
+    vagrant box add --name "$_box_name" --provider "$_provider" $FORCE_FLAG "$_box_file"
+    printf '[PASS] Registered %s (%s).\n' "$_box_name" "$_provider"
   else
     printf '[WARN] Box file %s not found; cannot register %s.\n' "$_box_file" "$_box_name" >&2
     return 0
@@ -118,30 +115,28 @@ if [ "$VALIDATE_ONLY" -eq 1 ]; then
 fi
 
 if ! command -v vagrant >/dev/null 2>&1; then
-  printf '[WARN] vagrant CLI not found on host; skipping box registration.
-' >&2
+  printf '[WARN] vagrant CLI not found on host; skipping box registration.\n' >&2
   exit 0
 fi
 
 EXISTING_BOXES=$(vagrant box list 2>/dev/null || true)
 BUILD_COMPLETE="${BENTO_DIR}/builds/build_complete"
 
-register_box_if_needed "bento/omnios" "${BUILD_COMPLETE}/omnios-braich-aarch64.qemu.box" "$EXISTING_BOXES"
-register_box_if_needed "bento/alpine-3.24" "${BUILD_COMPLETE}/alpine-3.24-aarch64.qemu.box" "$EXISTING_BOXES"
-register_box_if_needed "bento/debian-13" "${BUILD_COMPLETE}/debian-13.6-aarch64.qemu.box" "$EXISTING_BOXES"
+register_box_if_needed "bento/omnios" "${BUILD_COMPLETE}/omnios-braich-aarch64.qemu.box" "$EXISTING_BOXES" "qemu"
+register_box_if_needed "bento/alpine-3.24" "${BUILD_COMPLETE}/alpine-3.24-aarch64.qemu.box" "$EXISTING_BOXES" "qemu"
+register_box_if_needed "bento/debian-13" "${BUILD_COMPLETE}/debian-13.6-aarch64.qemu.box" "$EXISTING_BOXES" "qemu"
 
 if [ -f "${BUILD_COMPLETE}/rockylinux-10.2-aarch64.qemu.box" ]; then
-  register_box_if_needed "bento/rockylinux-10.2" "${BUILD_COMPLETE}/rockylinux-10.2-aarch64.qemu.box" "$EXISTING_BOXES"
+  register_box_if_needed "bento/rockylinux-10.2" "${BUILD_COMPLETE}/rockylinux-10.2-aarch64.qemu.box" "$EXISTING_BOXES" "qemu"
 elif [ -f "${BUILD_COMPLETE}/almalinux-9.8-aarch64.qemu.box" ]; then
-  register_box_if_needed "bento/rockylinux-10.2" "${BUILD_COMPLETE}/almalinux-9.8-aarch64.qemu.box" "$EXISTING_BOXES"
+  register_box_if_needed "bento/rockylinux-10.2" "${BUILD_COMPLETE}/almalinux-9.8-aarch64.qemu.box" "$EXISTING_BOXES" "qemu"
 fi
 
-register_box_if_needed "bento/freebsd-15.1" "${BUILD_COMPLETE}/freebsd-15.1-aarch64.qemu.box" "$EXISTING_BOXES"
+register_box_if_needed "bento/freebsd-15.1" "${BUILD_COMPLETE}/freebsd-15.1-aarch64.qemu.box" "$EXISTING_BOXES" "qemu"
+register_box_if_needed "bento/macos-14-arm64" "${BUILD_COMPLETE}/macos-14-aarch64.utm.box" "$EXISTING_BOXES" "utm"
 
-if printf '%s
-' "$EXISTING_BOXES" | grep -q "^bento/windows-11 .*qemu"; then
-  printf '[OK]   Box bento/windows-11 (qemu) is already registered in host Vagrant.
-'
+if printf '%s\n' "$EXISTING_BOXES" | grep -q "^bento/windows-11 .*qemu"; then
+  printf '[OK]   Box bento/windows-11 (qemu) is already registered in host Vagrant.\n'
 fi
 
 printf '=== Host Vagrant Box Inventory ===

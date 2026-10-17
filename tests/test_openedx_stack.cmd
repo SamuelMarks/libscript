@@ -7,7 +7,7 @@
 :: configuration synthesis, and 2x idempotency.
 ::
 :: ## Usage
-:: call tests	est_openedx_stack.cmd
+:: call tests\test_openedx_stack.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -22,7 +22,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -70,7 +70,7 @@ if errorlevel 1 exit /b 1
 echo ==^> Testing Open edX Backup and Restore on Windows...
 call "%OPENEDX_DIR%\backup.cmd" help >nul
 if errorlevel 1 exit /b 1
-call "%OPENEDX_DIR%estore.cmd" help >nul
+call "%OPENEDX_DIR%\restore.cmd" help >nul
 if errorlevel 1 exit /b 1
 
 echo ==^> Testing Open edX Healthcheck on Windows...

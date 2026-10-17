@@ -1,0 +1,44 @@
+{
+  "$schema": "../topology.schema.json",
+  "name": "mesos-marathon-ha",
+  "version": "1.0.0",
+  "description": "High-availability Apache Mesos + Marathon cluster topology with ZooKeeper quorum leader election, Mesos agent fleet, and netctl service discovery / ingress bridge.",
+  "quorum_strategy": "raft",
+  "node_groups": [
+    {
+      "name": "zk-ensemble",
+      "role": "consensus",
+      "replicas": 3,
+      "anti_affinity": "zone",
+      "provider": "local",
+      "os_profile": "profiles/linux-minimal-headless-musl.json",
+      "components": ["zookeeper"],
+      "traits": ["storage", "secrets", "mesh", "firewall", "discovery"]
+    },
+    {
+      "name": "mesos-masters",
+      "role": "control-plane",
+      "replicas": 3,
+      "anti_affinity": "zone",
+      "provider": "local",
+      "os_profile": "profiles/linux-standard-server-glibc.json",
+      "components": ["mesos", "marathon", "netctl"],
+      "traits": ["storage", "secrets", "tls", "mesh", "firewall", "discovery", "ingress"]
+    },
+    {
+      "name": "mesos-agents",
+      "role": "worker",
+      "replicas": 3,
+      "anti_affinity": "host",
+      "provider": "local",
+      "os_profile": "profiles/linux-standard-server-glibc.json",
+      "components": ["mesos", "docker"],
+      "traits": ["storage", "secrets", "mesh", "firewall", "discovery", "logging", "metrics"]
+    }
+  ],
+  "network": {
+    "vpc_cidr": "10.50.0.0/16",
+    "mesh_overlay": "wireguard",
+    "internal_domain": "mesos.internal"
+  }
+}

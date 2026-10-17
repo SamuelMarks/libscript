@@ -7,7 +7,7 @@
 :: architectural tiers, exports valid JSON, and is strictly idempotent (2x run).
 ::
 :: ## Usage
-:: tests	est_update_results.cmd
+:: tests\test_update_results.cmd
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -22,7 +22,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -59,7 +59,7 @@ set "TMP_TEST_DIR=%TEMP%\libscript_update_res_%RANDOM%"
 if not exist "%TMP_TEST_DIR%" mkdir "%TMP_TEST_DIR%"
 copy /y "%LIBSCRIPT_ROOT_DIR%\README.md" "%TMP_TEST_DIR%\README.md" >nul
 
-call "%LIBSCRIPT_ROOT_DIR%	ests\update_results.cmd" "%LIBSCRIPT_ROOT_DIR%" --output "%TMP_TEST_DIR%\README.md" --json "%TMP_TEST_DIR%\matrix_results.json"
+call "%LIBSCRIPT_ROOT_DIR%\tests\update_results.cmd" "%LIBSCRIPT_ROOT_DIR%" --output "%TMP_TEST_DIR%\README.md" --json "%TMP_TEST_DIR%\matrix_results.json"
 if errorlevel 1 (
     echo [FAIL] update_results.cmd failed >&2
     rmdir /s /q "%TMP_TEST_DIR%" 2>nul

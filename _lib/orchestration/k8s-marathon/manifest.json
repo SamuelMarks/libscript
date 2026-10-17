@@ -1,0 +1,36 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "k8s-marathon",
+  "title": "Kubernetes Marathon-Equivalent PaaS Controller",
+  "description": "Marathon v2-compatible PaaS application controller reconciling Application specs into Kubernetes Deployment, StatefulSet, Job, Service, and Ingress resources.",
+  "category": "orchestration",
+  "provides": ["k8s-marathon"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "versions": ["1.0.0", "latest"],
+  "ports": [8081],
+  "stateful": true,
+  "multitenant": true,
+  "dependencies": {
+    "runtime_deps": ["kubectl"],
+    "tier": "recommended"
+  },
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": [],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

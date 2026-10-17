@@ -19,15 +19,16 @@ else
   THIS_FILE="${0}"
 fi
 
-case "${STACK+x}" in
-  *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
-    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
-esac
-export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2 ;;
+  *)
+    printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2
+    export STACK="${STACK:-}${THIS_FILE}"':' ;;
+esac
     export install_scope="perMachine"
     export inno_priv="admin"
     export nsis_admin="admin"
@@ -98,6 +99,11 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
       esac
     done
     eval "set -- ${pos_args:-}" # libscript-allow-eval
+
+    if [ -n "${OUT_FILE:-}" ]; then
+      _out_parent=$(dirname -- "$OUT_FILE")
+      [ -z "$_out_parent" ] || mkdir -p "$_out_parent" 2>/dev/null || true
+    fi
 
 
 

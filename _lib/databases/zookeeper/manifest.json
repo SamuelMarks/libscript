@@ -1,0 +1,32 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "zookeeper",
+  "title": "Apache ZooKeeper",
+  "description": "Centralized service for maintaining configuration information, naming, distributed synchronization, and quorum leader election.",
+  "category": "databases",
+  "provides": ["zookeeper", "zk"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "versions": ["3.9.2", "3.8.4", "latest"],
+  "ports": [2181, 2888, 3888],
+  "stateful": true,
+  "multitenant": false,
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": [],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

@@ -3,12 +3,12 @@
 # Manages installation, compilation, site binding, listing, and removal of themes.
 #
 # ## Usage
-#   .	heme.ps1 install <name> <git_url> [-Branch <branch>]
-#   .	heme.ps1 build <name>
-#   .	heme.ps1 apply <name> [-Site <domain>]
-#   .	heme.ps1 list
-#   .	heme.ps1 remove <name>
-#   .	heme.ps1 help
+#   .\theme.ps1 install <name> <git_url> [-Branch <branch>]
+#   .\theme.ps1 build <name>
+#   .\theme.ps1 apply <name> [-Site <domain>]
+#   .\theme.ps1 list
+#   .\theme.ps1 remove <name>
+#   .\theme.ps1 help
 
 <#
 .SYNOPSIS
@@ -58,12 +58,12 @@ function Show-Help {
     Write-Host "Open edX Theming & Branding CLI (PowerShell)"
     Write-Host ""
     Write-Host "Usage:"
-    Write-Host "  .	heme.ps1 install <name> <git_url> [-Branch <branch>]"
-    Write-Host "  .	heme.ps1 build <name>"
-    Write-Host "  .	heme.ps1 apply <name> [-Site <domain>]"
-    Write-Host "  .	heme.ps1 list"
-    Write-Host "  .	heme.ps1 remove <name>"
-    Write-Host "  .	heme.ps1 help"
+    Write-Host "  .\theme.ps1 install <name> <git_url> [-Branch <branch>]"
+    Write-Host "  .\theme.ps1 build <name>"
+    Write-Host "  .\theme.ps1 apply <name> [-Site <domain>]"
+    Write-Host "  .\theme.ps1 list"
+    Write-Host "  .\theme.ps1 remove <name>"
+    Write-Host "  .\theme.ps1 help"
 }
 
 # ## Get-Registry

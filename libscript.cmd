@@ -179,6 +179,7 @@ if /i "%cmd%"=="distro" ( call "%SCRIPT_DIR%\_lib\orchestration\distro\distro.cm
 if /i "%cmd%"=="payload" ( call "%SCRIPT_DIR%\payloads\engine.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
 if /i "%cmd%"=="topology" ( call "%SCRIPT_DIR%\topologies\engine.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
 if /i "%cmd%"=="trait" ( call "%SCRIPT_DIR%\traits\engine.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
+if /i "%cmd%"=="cloud" ( call "%SCRIPT_DIR%\_lib\cloud\core\cli.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
 
 if /i "%cmd%"=="start" set "is_docker_cmd=1"
 if /i "%cmd%"=="stop" set "is_docker_cmd=1"

@@ -245,8 +245,20 @@ while true; do
         fi
 
         if [ "$_has_vanilla" = "0" ]; then
-            echo "Notice: No 'vanilla' snapshot found. Disabling snapshot restoration."
-            USE_SNAPSHOT="0"
+            if [ -z "$DISK_IMG" ]; then
+                echo "=== Initializing FreeBSD Vagrant VM to create vanilla snapshot ==="
+                (cd "$VAGRANT_DIR" && vagrant up --no-provision)
+                DISK_IMG=$(find_disk_image || true)
+            fi
+            if [ -n "$DISK_IMG" ]; then
+                echo "Notice: No 'vanilla' snapshot found on $DISK_IMG. Creating it now..."
+                (cd "$VAGRANT_DIR" && vagrant halt) || true
+                qemu-img snapshot -c vanilla "$DISK_IMG"
+                _has_vanilla=1
+            else
+                echo "Notice: No 'vanilla' snapshot found. Disabling snapshot restoration."
+                USE_SNAPSHOT="0"
+            fi
         fi
     fi
 

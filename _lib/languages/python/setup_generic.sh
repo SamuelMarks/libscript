@@ -95,7 +95,7 @@ case "$ACTION" in
     elif [ "$PYTHON_INSTALL_METHOD" = "vfox" ]; then
       vfox ls python
     elif [ "$PYTHON_INSTALL_METHOD" = "system" ]; then
-      python3 --version
+      python3 --version 2>/dev/null || true
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/python/" 2>/dev/null || true
     fi

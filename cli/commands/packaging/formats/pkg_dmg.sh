@@ -44,7 +44,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
       if [ $# -gt 0 ]; then
         while [ $# -gt 0 ]; do
           DEPS_LIST="$DEPS_LIST $1 ${2:-latest}"
-          if [ "$2" != "" ]; then shift 2; else shift; fi
+          if [ "${2:-}" != "" ]; then shift 2; else shift; fi
         done
       elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
         DEPS_LIST=$("${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null | tr '\n' ' ')
@@ -126,7 +126,8 @@ else
   exit 1
 fi
 
-cat << "EOF_UNINST" > "/opt/libscript/uninstall_${PKG}.command"
+mkdir -p "$COMP_DIR/root/opt/libscript"
+cat << "EOF_UNINST" > "$COMP_DIR/root/opt/libscript/uninstall_${PKG}.command"
 #!/bin/sh
 # ## Overview
 # Uninstaller command for ${PKG}.
@@ -160,7 +161,7 @@ sudo libscript.sh uninstall "$PKG" \$PURGE
 printf '%s\n' "Uninstalled $PKG."
 sleep 2
 EOF_UNINST
-chmod +x "/opt/libscript/uninstall_${PKG}.command"
+chmod +x "$COMP_DIR/root/opt/libscript/uninstall_${PKG}.command"
 EOF_SCRIPT
 
         chmod +x "$COMP_DIR/scripts/postinstall"
@@ -171,8 +172,13 @@ EOF_SCRIPT
         fi
       done
 
-      if command -v productbuild >/dev/null 2>&1; then
-        productbuild --synthesize --package-path "$PKG_STAGE/packages" "$PKG_STAGE/Distribution.xml"
+      SYNTH_ARGS=""
+      for p in "$PKG_STAGE/packages/"*.pkg; do
+        [ -f "$p" ] && SYNTH_ARGS="$SYNTH_ARGS --package $p"
+      done
+      if command -v productbuild >/dev/null 2>&1 && [ -n "$SYNTH_ARGS" ]; then
+        # shellcheck disable=SC2086
+        productbuild --synthesize $SYNTH_ARGS "$PKG_STAGE/Distribution.xml"
 
         # ## sed_in_place
         # Cross-platform in-place sed editing helper.

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/slurm/vars.schema.json",
+  "title": "Slurm Workload Manager variables",
+  "description": "Configuration variables for Slurm HPC/AI cluster controller and compute node daemons",
+  "type": "object",
+  "properties": {
+    "SLURM_VERSION": {
+      "description": "Specific version of Slurm Workload Manager to install.",
+      "type": "string",
+      "default": "24.05.3",
+      "version_aliases": ["latest", "stable"]
+    },
+    "SLURM_INSTALL_METHOD": {
+      "description": "How to install Slurm ('libscript_native' isolates binaries in LIBSCRIPT_HOME, 'system' uses OS packages).",
+      "type": "string",
+      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "default": "libscript_native"
+    },
+    "SLURM_CTLD_PORT": {
+      "description": "TCP port on which the Slurm controller daemon (slurmctld) listens.",
+      "type": "integer",
+      "default": 6817
+    },
+    "SLURM_D_PORT": {
+      "description": "TCP port on which the Slurm compute node daemon (slurmd) listens.",
+      "type": "integer",
+      "default": 6818
+    },
+    "SLURM_STATE_DIR": {
+      "description": "Filesystem directory path for Slurm controller job state and spool files.",
+      "type": "string",
+      "default": "/var/spool/slurm"
+    }
+  }
+}

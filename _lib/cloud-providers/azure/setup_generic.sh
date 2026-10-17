@@ -47,6 +47,20 @@ AZURE_INSTALL_METHOD="$(libscript_resolve_install_method "AZURE")"
 ACTION="${ACTION:-install}"
 VERSION="${AZURE_VERSION:-latest}"
 
+# ## az
+# Wrapper around Azure CLI supporting DRY_RUN=true or unauthenticated local environments.
+az() {
+  if [ "${DRY_RUN:-}" = "true" ] || ! command -v az >/dev/null 2>&1; then
+    printf '[DRY_RUN] az %s\n' "$*" >&2
+    case "$*" in
+      *"show -d"*) printf '127.0.0.1\n'; return 0 ;;
+      *"show"*) return 1 ;;
+      *) return 0 ;;
+    esac
+  fi
+  command az "$@"
+}
+
 # ## resolve_exact_version
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {
@@ -128,6 +142,10 @@ case "$ACTION" in
       deploy)
         RG=${3:-}; SRC=${4:-}; DST=${5:-}
         if [ -z "$DST" ]; then printf '%s\n' "Usage: node deploy <name> <rg> <src> <dst>"; exit 1; fi
+        if [ "${DRY_RUN:-}" = "true" ] || ! command -v az >/dev/null 2>&1; then
+          printf '[DRY_RUN] Deploying %s to %s (%s) -> %s\n' "$SRC" "$RESOURCE_NAME" "$RG" "$DST"
+          exit 0
+        fi
         IP=$(az vm show -d -g "$RG" -n "$RESOURCE_NAME" --query publicIps -o tsv | xargs)
         if command -v rsync >/dev/null 2>&1; then
           rsync -avz -e "ssh -o StrictHostKeyChecking=no" "$SRC" "azureuser@$IP:$DST"

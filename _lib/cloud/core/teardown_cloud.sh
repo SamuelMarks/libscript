@@ -34,6 +34,11 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 . "${LIBSCRIPT_ROOT_DIR}/_lib/_common/log.sh"
 
+if [ "${DRY_RUN:-}" = "true" ]; then
+  log_info "[DRY_RUN] Simulated deprovision for $*"
+  exit 0
+fi
+
 
 IS_TPU=0
 export SHARED_STORAGE=0

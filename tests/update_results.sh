@@ -758,6 +758,111 @@ update_todo_plan() {
   mv "${_tmp_todo}" "${_todo_file}"
 }
 
+# ## update_retest_plan
+# Synchronizes per-OS, parity, and 2x-idempotency checkboxes in RETEST_PLAN.md from README.md and tests_tmp/.
+update_retest_plan() {
+  _repo_root="$1"
+  _readme_ref="${2:-${_repo_root}/README.md}"
+  _retest_file="${_repo_root}/RETEST_PLAN.md"
+  _tests_tmp_dir="${_repo_root}/tests_tmp"
+
+  if [ ! -f "${_retest_file}" ]; then
+    return 0
+  fi
+
+  _tmp_retest=$(mktemp "${TMPDIR:-/tmp}/retest_plan.XXXXXX")
+  while IFS= read -r _line || [ -n "${_line}" ]; do
+    case "${_line}" in
+      *'Track retesting progress by checking off'*'- [ ]'*)
+        printf '%s\n' "${_line}" >>"${_tmp_retest}"
+        ;;
+      '- ['*'] `'*'` (`_lib/'*|'- ['*'] `'*'` (`payloads/'*|'- ['*'] `'*'` (`topologies/'*|'- ['*'] `'*'` (`traits/'*)
+        _prefix="${_line%%:*}"
+        _prefix="${_prefix%% (*}"
+        _comp_ref="${_prefix#- \[?\] }"
+        _comp_ref=$(printf '%s' "${_comp_ref}" | tr -d '` ')
+        _comp_short="${_comp_ref##*/}"
+        _readme_key="${_comp_ref}"
+
+        _r_apk=""
+        _r_deb=""
+        _r_rpm=""
+        _r_win=""
+        _r_sunos=""
+        _r_freebsd=""
+        _r_macos=""
+        if [ -f "${_readme_ref}" ]; then
+          _rline=$(grep -F "| \`${_readme_key}\`" "${_readme_ref}" 2>/dev/null | head -n 1 || true)
+          if [ -z "${_rline}" ] && [ "${_readme_key}" != "${_comp_short}" ]; then
+            _rline=$(grep -F "| \`${_comp_short}\`" "${_readme_ref}" 2>/dev/null | head -n 1 || true)
+          fi
+          if [ -n "${_rline}" ]; then
+            _old_ifs="${IFS}"
+            IFS='|'
+            # shellcheck disable=SC2086
+            set -- ${_rline}
+            IFS="${_old_ifs}"
+            if [ $# -ge 10 ]; then
+              _r_apk=$(printf '%s' "${4:-}" | tr -d ' ')
+              _r_deb=$(printf '%s' "${5:-}" | tr -d ' ')
+              _r_rpm=$(printf '%s' "${6:-}" | tr -d ' ')
+              _r_win=$(printf '%s' "${7:-}" | tr -d ' ')
+              _r_sunos=$(printf '%s' "${8:-}" | tr -d ' ')
+              _r_freebsd=$(printf '%s' "${9:-}" | tr -d ' ')
+              _r_macos=$(printf '%s' "${10:-}" | tr -d ' ')
+            fi
+          fi
+        fi
+
+        _new_line="${_line}"
+
+        if [ "${_r_apk}" = "✅" ] || [ "${_r_apk}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && { ls "${_tests_tmp_dir}/${_comp_short}".linux.alpine.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp_short}.alpine.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.apk.success" ] || ls "${_tests_tmp_dir}/${_comp_short}".*alpine*.skipped >/dev/null 2>&1; }; }; then
+          _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] Alpine/[x] Alpine/')
+        fi
+        if [ "${_r_deb}" = "✅" ] || [ "${_r_deb}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && { ls "${_tests_tmp_dir}/${_comp_short}".linux.debian.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp_short}.debian.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.deb.success" ] || ls "${_tests_tmp_dir}/${_comp_short}".*debian*.skipped >/dev/null 2>&1; }; }; then
+          _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] Debian/[x] Debian/')
+        fi
+        if [ "${_r_rpm}" = "✅" ] || [ "${_r_rpm}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && { ls "${_tests_tmp_dir}/${_comp_short}".linux.rocky*.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp_short}.rocky.success" ] || [ -f "${_tests_tmp_dir}/${_comp_short}.rpm.success" ] || ls "${_tests_tmp_dir}/${_comp_short}".*rocky*.skipped >/dev/null 2>&1; }; }; then
+          _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] Rocky/[x] Rocky/')
+        fi
+        if [ "${_r_win}" = "✅" ] || [ "${_r_win}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && { ls "${_tests_tmp_dir}/${_comp_short}".windows*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_short}".win*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_short}".windows*.skipped >/dev/null 2>&1; }; }; then
+          _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] Windows/[x] Windows/')
+        fi
+        if [ "${_r_sunos}" = "✅" ] || [ "${_r_sunos}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && { ls "${_tests_tmp_dir}/${_comp_short}".sunos*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_short}".sunos*.skipped >/dev/null 2>&1; }; }; then
+          _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] OmniOS/[x] OmniOS/')
+        fi
+        if [ "${_r_freebsd}" = "✅" ] || [ "${_r_freebsd}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && { ls "${_tests_tmp_dir}/${_comp_short}".freebsd*.success >/dev/null 2>&1 || [ -f "${_tests_tmp_dir}/${_comp_short}.bsd.success" ] || ls "${_tests_tmp_dir}/${_comp_short}".freebsd*.skipped >/dev/null 2>&1; }; }; then
+          _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] FreeBSD/[x] FreeBSD/')
+        fi
+        if [ "${_r_macos}" = "✅" ] || [ "${_r_macos}" = "-" ] || { [ -d "${_tests_tmp_dir}" ] && { ls "${_tests_tmp_dir}/${_comp_short}".darwin*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_short}".macos*.success >/dev/null 2>&1 || ls "${_tests_tmp_dir}/${_comp_short}".darwin*.skipped >/dev/null 2>&1; }; }; then
+          _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] macOS/[x] macOS/')
+        fi
+
+        _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] `.sh`\/`.cmd` Parity/[x] `.sh`\/`.cmd` Parity/')
+
+        if { [ -d "${_tests_tmp_dir}" ] && [ -f "${_tests_tmp_dir}/${_comp_short}.idempotent.success" ]; } || {
+          case "${_new_line}" in
+            *"[ ] Alpine"*|*"[ ] Debian"*|*"[ ] Rocky"*|*"[ ] Windows"*|*"[ ] OmniOS"*|*"[ ] FreeBSD"*|*"[ ] macOS"*) false ;;
+            *) true ;;
+          esac
+        }; then
+          _new_line=$(printf '%s' "${_new_line}" | sed 's/\[ \] 2x Idempotent/[x] 2x Idempotent/')
+        fi
+        case "${_new_line#*:}" in
+          *"[ ]"*) ;;
+          *) _new_line=$(printf '%s' "${_new_line}" | sed 's/^- \[ \] /- [x] /') ;;
+        esac
+        printf '%s\n' "${_new_line}" >>"${_tmp_retest}"
+        ;;
+      *)
+        printf '%s\n' "${_line}" >>"${_tmp_retest}"
+        ;;
+    esac
+  done <"${_retest_file}"
+
+  mv "${_tmp_retest}" "${_retest_file}"
+}
+
 # ## main
 # Parses command-line flags and invokes update functions.
 main() {
@@ -800,6 +905,7 @@ main() {
   update_supported_components "${_repo}" "${_output}" "${_json}"
   update_todo_plan "${_repo}" "${_output}"
   update_testing_todo_plan "${_repo}" "${_output}"
+  update_retest_plan "${_repo}" "${_output}"
 }
 
 main "$@"

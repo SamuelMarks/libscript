@@ -81,15 +81,21 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-# Mode 1: Validate file against os-config.schema.json
+# Mode 1: Validate file against os-config.schema.json or OS-specific execution plan schema
 if [ -n "$VALIDATE_FILE" ]; then
   if [ ! -f "$VALIDATE_FILE" ]; then
     printf '[ERROR] File to validate not found: %s\n' "$VALIDATE_FILE" >&2
     exit 1
   fi
   if command -v jq >/dev/null 2>&1; then
+    active_schema="$SCHEMA_FILE"
+    if jq -e '.freebsd_version != null or (.target.os_family == "freebsd" and .init_system != null)' "$VALIDATE_FILE" >/dev/null 2>&1; then
+      active_schema="${LIBSCRIPT_ROOT_DIR}/execution-plan.freebsd.schema.json"
+    elif jq -e '.illumos_version != null or (.target.os_family == "illumos" or .target.os_family == "sunos")' "$VALIDATE_FILE" >/dev/null 2>&1; then
+      active_schema="${LIBSCRIPT_ROOT_DIR}/execution-plan.illumos.schema.json"
+    fi
     # Check top-level required fields
-    missing_fields=$(jq -r --slurpfile schema "$SCHEMA_FILE" '
+    missing_fields=$(jq -r --slurpfile schema "$active_schema" '
       $schema[0].required - keys | .[]
     ' "$VALIDATE_FILE" 2>/dev/null || true)
     if [ -n "$missing_fields" ]; then
@@ -97,7 +103,7 @@ if [ -n "$VALIDATE_FILE" ]; then
       exit 1
     fi
   fi
-  printf '[INFO] Schema validation successful: %s conforms to os-config.schema.json\n' "$VALIDATE_FILE"
+  printf '[INFO] Schema validation successful: %s conforms to schema\n' "$VALIDATE_FILE"
   exit 0
 fi
 

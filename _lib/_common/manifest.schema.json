@@ -213,7 +213,9 @@
         "audio",
         "networking",
         "bootloaders",
-        "kernel"
+        "kernel",
+        "orchestration",
+        "message-brokers"
       ]
     },
     "license": {

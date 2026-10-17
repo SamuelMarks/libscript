@@ -3,7 +3,7 @@
 # Validates Inno, NSIS, and WiX branding bitmaps and license file integration.
 #
 # ## Usage
-#   powershell -File tests	est_packaging_branding.ps1
+#   powershell -File tests\test_packaging_branding.ps1
 
 <#
 .SYNOPSIS
@@ -16,7 +16,7 @@ $ErrorActionPreference = "Stop"
 $ScriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
 $LibscriptRootDir = (Resolve-Path (Join-Path $ScriptDir "..")).Path
 
-$TestTmpDir = Join-Path $LibscriptRootDir "tests_tmp	est_brand_ps1_$(Get-Random)"
+$TestTmpDir = Join-Path $LibscriptRootDir "tests_tmp\test_brand_ps1_$(Get-Random)"
 if (-not (Test-Path $TestTmpDir)) {
     New-Item -ItemType Directory -Path $TestTmpDir -Force | Out-Null
 }
@@ -52,7 +52,7 @@ function Test-BrandingGeneration {
 
     # 1. Inno
     $innoFile = Join-Path $TestTmpDir "BrandApp.iss"
-    $innoCmd = Join-Path $LibscriptRootDir "packaging	emplate_inno.cmd"
+    $innoCmd = Join-Path $LibscriptRootDir "packaging\template_inno.cmd"
     if (Test-Path $innoCmd) {
         & cmd.exe /c "call `"$innoCmd`"" > $innoFile
     } else {
@@ -68,7 +68,7 @@ function Test-BrandingGeneration {
 
     # 2. NSIS
     $nsiFile = Join-Path $TestTmpDir "BrandApp.nsi"
-    $nsisCmd = Join-Path $LibscriptRootDir "packaging	emplate_nsis.cmd"
+    $nsisCmd = Join-Path $LibscriptRootDir "packaging\template_nsis.cmd"
     if (Test-Path $nsisCmd) {
         & cmd.exe /c "call `"$nsisCmd`"" > $nsiFile
     } else {
@@ -83,7 +83,7 @@ function Test-BrandingGeneration {
     }
 
     # 3. WiX MSI
-    $templateMsiCmd = Join-Path $LibscriptRootDir "packaging	emplate_msi.cmd"
+    $templateMsiCmd = Join-Path $LibscriptRootDir "packaging\template_msi.cmd"
     if (Test-Path $templateMsiCmd) {
         & cmd.exe /c "call `"$templateMsiCmd`""
     } else {

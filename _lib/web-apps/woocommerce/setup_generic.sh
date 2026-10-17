@@ -31,7 +31,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export DIR="${SCRIPT_DIR}"
 
 # Delegate core WP setup
-for LIB in "stacks/cms/wordpress/setup_generic.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
+for LIB in "_lib/web-apps/wordpress/setup_generic.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090

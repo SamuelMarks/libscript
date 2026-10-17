@@ -31,9 +31,15 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-INPUT="${1:-${LIBSCRIPT_ROOT_DIR}/build/images/raw/disk.img}"
-FMT="${3:-qcow2}"
-OUT_FILE="${2:-${LIBSCRIPT_ROOT_DIR}/build/disk.${FMT}}"
+if [ "${1:-}" = "qcow2" ] || [ "${1:-}" = "vmdk" ] || [ "${1:-}" = "vdi" ]; then
+  FMT="$1"
+  INPUT="${LIBSCRIPT_ROOT_DIR}/build/images/raw/disk.img"
+  OUT_FILE="${LIBSCRIPT_ROOT_DIR}/build/disk.${FMT}"
+else
+  INPUT="${1:-${LIBSCRIPT_ROOT_DIR}/build/images/raw/disk.img}"
+  FMT="${3:-qcow2}"
+  OUT_FILE="${2:-${LIBSCRIPT_ROOT_DIR}/build/disk.${FMT}}"
+fi
 
 OUT_DIR="${OUT_FILE%/*}"
 [ -z "$OUT_DIR" ] || mkdir -p "$OUT_DIR"
@@ -43,6 +49,8 @@ if [ -d "$INPUT" ]; then
   TMP_RAW="${LIBSCRIPT_ROOT_DIR}/build/disk_intermediate.raw"
   "${SCRIPT_DIR}/raw_img.sh" "$INPUT" "$TMP_RAW"
   INPUT="$TMP_RAW"
+elif [ ! -f "$INPUT" ]; then
+  "${SCRIPT_DIR}/raw_img.sh" "${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}" "$INPUT"
 fi
 
 if [ ! -f "$INPUT" ]; then
@@ -53,7 +61,11 @@ fi
 printf '[PACKAGE] Converting %s to compressed %s format (%s)...\n' "$INPUT" "$FMT" "$OUT_FILE"
 
 if command -v qemu-img >/dev/null 2>&1; then
-  qemu-img convert -c -O "$FMT" "$INPUT" "$OUT_FILE"
+  if [ "$FMT" = "qcow2" ]; then
+    qemu-img convert -c -O "$FMT" "$INPUT" "$OUT_FILE"
+  else
+    qemu-img convert -O "$FMT" "$INPUT" "$OUT_FILE"
+  fi
 else
   printf '[WARN] qemu-img not found in PATH; copying raw image stub as %s\n' "$OUT_FILE" >&2
   cp -f "$INPUT" "$OUT_FILE" 2>/dev/null || printf 'QEMU Image Stub (%s)\n' "$FMT" > "$OUT_FILE"

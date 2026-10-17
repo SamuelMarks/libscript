@@ -64,6 +64,7 @@ printf '[TEST-ROUNDTRIP] Testing Alpine (.apk) package packaging and indexing...
 "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/repogen/apk_index.sh" "$OUT_BASE/apk" "x86_64" "main"
 
 APK_FILE="$OUT_BASE/apk/main/x86_64/test-apk-1.0.0.apk"
+[ -f "$APK_FILE" ] || APK_FILE="$OUT_BASE/apk/main/x86_64/test-apk-x86_64-1.0.0-online.apk"
 if [ ! -f "$APK_FILE" ]; then
   printf '[FAIL] Alpine package not found in indexed repository.\n' >&2
   exit 1
@@ -76,6 +77,8 @@ printf '[TEST-ROUNDTRIP] Testing Red Hat (.rpm) package packaging and indexing..
 "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/repogen/rpm_index.sh" "$OUT_BASE/rpm"
 
 RPM_FILE="$OUT_BASE/rpm/Packages/test-rpm-1.0.0-1.x86_64.rpm"
+[ -f "$RPM_FILE" ] || RPM_FILE="$OUT_BASE/rpm/Packages/test-rpm-x86_64-1.0.0-online.rpm"
+[ -f "$RPM_FILE" ] || RPM_FILE="$OUT_BASE/rpm/test-rpm-x86_64-1.0.0-online.rpm"
 if [ ! -f "$RPM_FILE" ]; then
   printf '[FAIL] RPM package not found in repository pool.\n' >&2
   exit 1

@@ -2,7 +2,7 @@
 # Validates the 'pyenv' backend integration for Python virtual environments (PowerShell).
 # 
 # ## Usage
-# powershell -File tests	est_python_pyenv_integration.ps1
+# powershell -File tests\test_python_pyenv_integration.ps1
 
 <#
 .SYNOPSIS

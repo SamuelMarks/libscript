@@ -603,7 +603,7 @@ Components are organized into LibScript's 5 architectural tiers (see [`ARCHITECT
 | `lighttpd` | `web-servers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
 | `luarocks` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
 | `macports` | `package-managers` | - | - | - | - | - | - | ✅ |
-| `magento` | `web-apps` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ❓ |
+| `magento` | `web-apps` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
 | `mamba` | `package-managers` | - | ✅ | ✅ | ✅ | - | - | ✅ |
 | `mariadb` | `databases` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `mas` | `package-managers` | - | - | - | - | - | - | ✅ |
@@ -630,7 +630,7 @@ Components are organized into LibScript's 5 architectural tiers (see [`ARCHITECT
 | `npm` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
 | `nuget` | `package-managers` | - | ✅ | ✅ | ✅ | - | - | ✅ |
 | `nvm` | `package-managers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `odoo` | `web-apps` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ❓ |
+| `odoo` | `web-apps` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
 | `ollama` | `app-servers` | ✅ | ✅ | ✅ | ✅ | - | - | ✅ |
 | `opam` | `package-managers` | ✅ | ✅ | ✅ | - | - | - | ✅ |
 | `openbao` | `security` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
@@ -649,7 +649,7 @@ Components are organized into LibScript's 5 architectural tiers (see [`ARCHITECT
 | `porg` | `package-managers` | ✅ | ✅ | ✅ | - | - | ✅ | - |
 | `postgres` | `databases` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `powershell` | `utilities` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
-| `prestashop` | `web-apps` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ❓ |
+| `prestashop` | `web-apps` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
 | `psmux` | `utilities` | - | - | - | ✅ | - | - | - |
 | `pub` | `package-managers` | - | ✅ | ✅ | ✅ | - | - | ✅ |
 | `pyenv` | `package-managers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -695,13 +695,14 @@ Components are organized into LibScript's 5 architectural tiers (see [`ARCHITECT
 | `wget` | `utilities` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `winget` | `package-managers` | - | - | - | ✅ | - | - | - |
 | `wix` | `toolchains` | - | - | - | ✅ | - | - | - |
-| `woocommerce` | `web-apps` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ❓ |
+| `woocommerce` | `web-apps` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
 | `wordpress` | `web-apps` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
 | `xbps` | `package-managers` | - | - | - | - | - | - | - |
 | `xpk` | `toolchains` | ✅ | ✅ | ✅ | - | - | - | ✅ |
 | `yarn` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
 | `yay` | `package-managers` | - | - | - | - | - | - | - |
 | `zig` | `languages` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
+| `zookeeper` | `databases` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `zypper` | `package-managers` | - | - | - | - | - | - | - |
 
 ### Tier 1.5: Base OS Userland, Init Systems, Networking, Audio, Graphics & Desktops
@@ -819,13 +820,18 @@ Components are organized into LibScript's 5 architectural tiers (see [`ARCHITECT
 | `gcp-gpu-vm` | `cloud-providers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `gcp-tpu-vm` | `cloud-providers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `hetzner` | `cloud-providers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `k8s-marathon` | `orchestration` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `kubectl` | `orchestration` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
 | `kubernetes` | `orchestration` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
 | `kubernetes-k0s` | `orchestration` | ✅ | ✅ | ✅ | - | - | - | - |
 | `kubernetes-thw` | `orchestration` | ✅ | ✅ | ✅ | - | - | - | ✅ |
+| `marathon` | `orchestration` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `mesos` | `orchestration` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `nomad` | `orchestration` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `packer` | `orchestration` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
 | `proxmox` | `cloud-providers` | ✅ | ✅ | ✅ | - | - | - | - |
 | `qemu` | `orchestration` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `slurm` | `orchestration` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `storage` | `cloud` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `vagrant` | `orchestration` | - | ✅ | ✅ | ✅ | - | ✅ | ✅ |
 | `virtualbox` | `orchestration` | - | - | - | ✅ | - | - | - |
@@ -847,6 +853,8 @@ Components are organized into LibScript's 5 architectural tiers (see [`ARCHITECT
 | `payloads/schedulers/xpk` | `payloads` | ✅ | ✅ | ✅ | - | - | - | ✅ |
 | `topologies/gke-tpu-cluster` | `topologies` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `topologies/k0s-ha` | `topologies` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `topologies/k8s-marathon-paas` | `topologies` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `topologies/mesos-marathon-ha` | `topologies` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `topologies/minio-distributed` | `topologies` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `topologies/postgres-ha` | `topologies` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `topologies/redis-cluster` | `topologies` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |

@@ -2,7 +2,7 @@
 :: # test_topology_state_machine.cmd
 ::
 :: ## Overview
-:: Verifies .topology_state.json checkpointing, locking, and fencing on Windows.
+:: Verifies .topology_state.json checkpointing, locking, and fencing on Windows across all 8 topologies.
 ::
 :: ## Usage
 :: tests\test_topology_state_machine.cmd
@@ -51,7 +51,15 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "%LIBSCRIPT_ROOT_DIR%\topologies\engine.cmd" up "%LIBSCRIPT_ROOT_DIR%\topologies\valkey-cluster\topology.json" >nul
+for %%T in (valkey-cluster postgres-ha redis-cluster k0s-ha minio-distributed mesos-marathon-ha k8s-marathon-paas) do (
+    call "%LIBSCRIPT_ROOT_DIR%\topologies\%%T\cli.cmd" up >nul
+    if errorlevel 1 exit /b 1
+    call "%LIBSCRIPT_ROOT_DIR%\topologies\%%T\cli.cmd" status >nul
+    if errorlevel 1 exit /b 1
+    call "%LIBSCRIPT_ROOT_DIR%\topologies\%%T\cli.cmd" down >nul
+    if errorlevel 1 exit /b 1
+)
+call "%LIBSCRIPT_ROOT_DIR%\topologies\gke-tpu-cluster\cli.cmd" --help >nul
 if errorlevel 1 exit /b 1
-echo [PASS] Topology state machine checkpointing, locking, and fencing verified.
+echo [PASS] Topology state machine checkpointing, locking, and fencing verified across all 8 topologies.
 exit /b 0

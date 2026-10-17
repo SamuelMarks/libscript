@@ -38,7 +38,7 @@ EOF
         pkg="$1"
         ver="${2:-latest}"
         printf '%s\n' "  \"$pkg\" \"$ver\" ON \\"
-        if [ "$2" != "" ]; then shift 2; else shift; fi
+        if [ "${2:-}" != "" ]; then shift 2; else shift; fi
       done
     elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
       deps=$("${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null || true)
@@ -124,6 +124,7 @@ else
   printf '%s\n' "Installation cancelled."
 fi
 EOF
+    exit 0
     APP_NAME="libscript"
     APP_VERSION="1.0.0"
     export APP_PUBLISHER="LibScript"

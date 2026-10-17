@@ -55,7 +55,7 @@ EOF2
       if [ $# -gt 0 ]; then
         while [ $# -gt 0 ]; do
           deps_list="$deps_list $1 ${2:-latest}"
-          if [ "$2" != "" ]; then shift 2; else shift; fi
+          if [ "${2:-}" != "" ]; then shift 2; else shift; fi
         done
       elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
         deps_list=$("${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null | tr '\n' ' ')
@@ -75,7 +75,8 @@ EOF2
       printf '%s\n' "Name: \"full\"; Description: \"Full installation\""
       printf '%s\n' ""
       printf '%s\n' "[Components]"
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "Name: \"$pkg\"; Description: \"$pkg\"; Types: full custom"
@@ -85,7 +86,8 @@ EOF2
       printf '%s\n' "[Code]"
       printf '%s\n' "var"
 
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
@@ -123,7 +125,8 @@ EOF2
       printf '%s\n' "  OfflinePage.Add('Target: BSD');"
       printf '%s\n' "  OfflinePage.Values[1] := True;"
       printf '%s\n' "  OfflinePage.Values[3] := True;"
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
@@ -152,7 +155,8 @@ EOF2
       printf '%s\n' "function ShouldSkipPage(PageID: Integer): Boolean;"
       printf '%s\n' "begin"
       printf '%s\n' "  Result := False;"
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
@@ -170,7 +174,8 @@ EOF2
       printf '%s\n' "  ResultCode: Integer;"
       printf '%s\n' "begin"
       printf '%s\n' "  Result := True;"
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
@@ -205,7 +210,8 @@ EOF2
       printf '%s\n' "  ResultCode: Integer;"
       printf '%s\n' "begin"
       printf '%s\n' "  if CurUninstallStep = usUninstall then begin"
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "    if MsgBox('Do you want to completely remove the Data Directory and all records for $pkg?', mbConfirmation, MB_YESNO) = idYes then begin"
@@ -227,7 +233,8 @@ EOF2
       printf '%s\n' "  ActionPage: TInputOptionWizardPage;"
       printf '%s\n' "  OfflinePage: TInputOptionWizardPage;"
 
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
@@ -283,7 +290,8 @@ EOF2
       printf '%s\n' "    S := '/c \"\"\"{app}\\libscript.cmd\"\"\" package-as ' + GetAction('') + ' ';";
       printf '%s\n' "  else";
       printf '%s\n' "    S := '/c libscript.cmd package-as ' + GetAction('') + ' ';";
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "  if IsComponentSelected('$pkg') then S := S + '$pkg $ver ';";
@@ -292,7 +300,8 @@ EOF2
       printf '%s\n' "  Result := S;"
       printf '%s\n' "end;"
       printf '%s\n' "[Run]"
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         if [ "$OFFLINE" = "1" ]; then

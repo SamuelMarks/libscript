@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/mesos/vars.schema.json",
+  "title": "Apache Mesos variables",
+  "description": "Configuration variables for Apache Mesos cluster master and agent daemons",
+  "type": "object",
+  "properties": {
+    "MESOS_VERSION": {
+      "description": "Specific version of Apache Mesos to install.",
+      "type": "string",
+      "default": "1.11.0",
+      "version_aliases": ["latest", "stable"]
+    },
+    "MESOS_INSTALL_METHOD": {
+      "description": "How to install Apache Mesos ('libscript_native' isolates binaries in LIBSCRIPT_HOME, 'system' uses OS packages).",
+      "type": "string",
+      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "default": "libscript_native"
+    },
+    "MESOS_ROLE": {
+      "description": "Operational role of this Mesos node ('master', 'agent', or 'local' combined master+agent).",
+      "type": "string",
+      "enum": ["master", "agent", "local"],
+      "default": "local"
+    },
+    "MESOS_MASTER_PORT": {
+      "description": "TCP port on which the Mesos Master HTTP/Protobuf endpoint listens.",
+      "type": "integer",
+      "default": 5050
+    },
+    "MESOS_AGENT_PORT": {
+      "description": "TCP port on which the Mesos Agent HTTP/Protobuf endpoint listens.",
+      "type": "integer",
+      "default": 5051
+    },
+    "MESOS_ZK_URL": {
+      "description": "ZooKeeper connection URI for Mesos master leader election and agent discovery.",
+      "type": "string",
+      "default": "zk://127.0.0.1:2181/mesos"
+    },
+    "MESOS_QUORUM": {
+      "description": "Minimum size of the replicated log quorum required for Mesos master leader election.",
+      "type": "integer",
+      "default": 1
+    },
+    "MESOS_WORK_DIR": {
+      "description": "Filesystem directory path for Mesos master replicated log and agent task sandboxes.",
+      "type": "string",
+      "default": "/var/lib/mesos"
+    },
+    "MESOS_CONTAINERIZERS": {
+      "description": "Comma-separated list of enabled Mesos containerizers (e.g. 'docker,mesos').",
+      "type": "string",
+      "default": "docker,mesos"
+    }
+  }
+}

@@ -60,6 +60,12 @@ if [ "$CMD" = "package-as" ]; then
     . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_apk.sh"
   elif [ "${pkg_type:-}" = "txz" ]; then
     . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_txz.sh"
+  elif [ "${pkg_type:-}" = "tui" ]; then
+    . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_tui.sh"
+  elif [ "${pkg_type:-}" = "illumos-distro" ] || [ "${pkg_type:-}" = "illumos_distro" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/illumos_distro.sh" "$@"
+  elif [ "${pkg_type:-}" = "freebsd-distro" ] || [ "${pkg_type:-}" = "freebsd_distro" ]; then
+    exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/freebsd_distro.sh" "$@"
   elif [ "${pkg_type:-}" = "raw-img" ] || [ "${pkg_type:-}" = "raw_img" ] || [ "${pkg_type:-}" = "img" ]; then
     exec "$LIBSCRIPT_ROOT_DIR/cli/commands/package_as/raw_img.sh" "$@"
   elif [ "${pkg_type:-}" = "qcow2" ] || [ "${pkg_type:-}" = "vmdk" ] || [ "${pkg_type:-}" = "vdi" ]; then

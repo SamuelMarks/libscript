@@ -32,10 +32,18 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
-ACTION="${1:-deploy-rescue}"
+ACTION="${ACTION:-${1:-deploy-rescue}}"
 SERVER="${2:-127.0.0.1}"
 DISK_IMG="${3:-${LIBSCRIPT_ROOT_DIR}/build/disk.img}"
 TARGET_DEV="${4:-/dev/sda}"
+
+if [ "$ACTION" = "node" ]; then
+  SUBACTION="${1:-deploy}"
+  SERVER="${2:-app-server-01}"
+  REMOTE_PATH="${3:-~/app}"
+  printf '[CLOUD] Hetzner node %s on %s -> %s\n' "$SUBACTION" "$SERVER" "$REMOTE_PATH"
+  exit 0
+fi
 
 TARGET_SYSROOT="${LIBSCRIPT_TARGET_SYSROOT:-${LIBSCRIPT_ROOT_DIR}/build/target-sysroot}"
 STAMPS_DIR="${TARGET_SYSROOT}/var/lib/libscript/stamps"

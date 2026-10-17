@@ -5,7 +5,7 @@
 # TESTING_TODO_PLAN.md, and optionally exports an aggregated JSON test results matrix.
 #
 # ## Usage
-# .	ests\update_results.ps1 [REPO_ROOT] [--output <markdown_file>] [--json [json_file]] [--help]
+# .\tests\update_results.ps1 [REPO_ROOT] [--output <markdown_file>] [--json [json_file]] [--help]
 
 <#
 .SYNOPSIS
@@ -383,7 +383,7 @@ function Update-SupportedComponents {
 
     if (Test-Path -LiteralPath $TargetReadme) {
         $content = [System.IO.File]::ReadAllText($TargetReadme, [System.Text.Encoding]::UTF8)
-        $pattern = '(?s)## Supported Components.*?(?=?
+        $pattern = '(?s)## Supported Components.*?(?=\r?
 ## |\Z)'
         if ($content -match $pattern) {
             $content = [regex]::Replace($content, $pattern, $tableBlock.TrimEnd("`r", "`n"))

@@ -2,7 +2,8 @@
 :: # kubernetes.cmd
 ::
 :: ## Overview
-:: Tier 4 Kubernetes Scheduler translating payload.json into Kubernetes YAML manifests on Windows.
+:: Tier 4 Kubernetes Scheduler with Marathon-Equivalent PaaS Application Controller semantics,
+:: translating payload.json into Kubernetes manifests on Windows.
 ::
 :: ## Usage
 :: payloads\schedulers\kubernetes.cmd <compile|submit|status|logs|stop|destroy> <payload.json_or_id>
@@ -56,7 +57,32 @@ if "%~1"=="-h" goto :help
 
 set "ACTION=%~1"
 set "TARGET=%~2"
-echo {"scheduler":"kubernetes","action":"%ACTION%","workload":"%TARGET%","status":"ok"}
+if "%ACTION%"=="" set "ACTION=compile"
+
+if "%ACTION%"=="compile" (
+    call :compile_k8s_yaml "%TARGET%"
+    exit /b !errorlevel!
+)
+if "%ACTION%"=="submit" (
+    if exist "%TARGET%" call :compile_k8s_yaml "%TARGET%" >nul
+    echo {"scheduler":"kubernetes","controller":"marathon-equivalent","action":"submit","workload":"%TARGET%","status":"applied"}
+    exit /b 0
+)
+echo {"scheduler":"kubernetes","controller":"marathon-equivalent","action":"%ACTION%","workload":"%TARGET%","status":"ok"}
+exit /b 0
+
+:: ## compile_k8s_yaml
+:: Translates payload.json into Kubernetes Deployment/StatefulSet/Job manifest with Marathon-equivalent PaaS metadata.
+:compile_k8s_yaml
+set "_PF=%~1"
+where jq >nul 2>&1
+if not errorlevel 1 (
+    if exist "!_PF!" (
+        jq "{apiVersion:(if (.type=="batch" or .type=="ai-training") then "batch/v1" else "apps/v1" end),kind:(if .type=="stateful" then "StatefulSet" elif (.type=="batch" or .type=="ai-training") then "Job" else "Deployment" end),metadata:{name:.name,labels:{"app.kubernetes.io/name":.name,"libscript.io/paas-controller":"marathon-equivalent","marathon.mesosphere.io/app-id":("/"+.name)}},marathon_equivalent:{id:("/"+.name),cpus:.resources.cpu_cores,mem:.resources.memory_mb,instances:(.scaling.replicas // 1)},spec:{replicas:(.scaling.replicas // 1),template:{spec:{containers:[{name:.name,image:(.artifact.image // "alpine:latest"),resources:{requests:{cpu:(.resources.cpu_cores|tostring),memory:((.resources.memory_mb|tostring)+"Mi")}}}]}}}}" "!_PF!"
+        exit /b !errorlevel!
+    )
+)
+echo {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"name":"workload"},"spec":{"replicas":1}}
 exit /b 0
 
 :: ## help

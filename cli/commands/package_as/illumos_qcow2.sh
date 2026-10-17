@@ -52,6 +52,8 @@ if [ -d "${INPUT}" ]; then
   RAW_TMP="${REPO_ROOT}/build/illumos_temp.raw"
   "${SCRIPT_DIR}/illumos_raw.sh" "${INPUT}" "${RAW_TMP}" "${SIZE_GIB}"
   INPUT="${RAW_TMP}"
+elif [ ! -f "${INPUT}" ]; then
+  "${SCRIPT_DIR}/illumos_raw.sh" "${REPO_ROOT}/build/illumos-sysroot" "${INPUT}" "${SIZE_GIB}"
 fi
 
 if command -v qemu-img >/dev/null 2>&1; then

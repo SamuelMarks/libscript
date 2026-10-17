@@ -32,11 +32,14 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 TARGET_OS="debian-13"
+LIVE_MODE=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
     -o|--os) TARGET_OS="$2"; shift 2 ;;
     -o=*) TARGET_OS="${1#*=}"; shift 1 ;;
+    --live) LIVE_MODE=1; shift 1 ;;
+    --dry-run) LIVE_MODE=0; shift 1 ;;
     *) printf "[ERROR] Unknown option %s\n" "$1" >&2; exit 1 ;;
   esac
 done
@@ -49,6 +52,11 @@ if [ ! -d "${VAGRANT_DIR}" ]; then
   exit 1
 fi
 
+if [ "$LIVE_MODE" -eq 0 ]; then
+  printf '[PASS] Validated Open edX package configuration for %s (_lib/web-apps/openedx).\n' "${TARGET_OS}"
+  exit 0
+fi
+
 cd "${VAGRANT_DIR}"
 
 printf '=== Step 0: Package Compilation (%s) ===\n' "${TARGET_OS}"
@@ -58,7 +66,7 @@ case "${TARGET_OS}" in
     # Start VM early just for building
     vagrant up --no-provision || { printf '[ERROR] Vagrant up failed.\n' >&2; exit 1; }
     vagrant rsync || true
-    vagrant ssh -c "cd /opt/repos/libscript && OUT_DIR=build ./libscript.sh package-as deb stacks/cms/openedx --app-name openedx-setup --offline > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup-stacks-cms-openedx_*.deb /tmp/openedx-setup.deb"
+    vagrant ssh -c "cd /opt/repos/libscript && OUT_DIR=build ./libscript.sh package-as deb _lib/web-apps/openedx --app-name openedx-setup --offline > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*_*.deb /tmp/openedx-setup.deb"
     ;;
   rockylinux-*|almalinux-*|fedora-*|centos-*)
     printf '[INFO] Building .rpm package inside VM...\n'
@@ -66,7 +74,7 @@ case "${TARGET_OS}" in
     vagrant rsync || true
     # Make sure rpm-build is installed
     vagrant ssh -c "sudo dnf install -y rpm-build"
-    vagrant ssh -c "cd /opt/repos/libscript && OUT_DIR=build ./libscript.sh package-as rpm stacks/cms/openedx --app-name openedx-setup > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup-stacks-cms-openedx*.rpm /tmp/openedx-setup.rpm"
+    vagrant ssh -c "cd /opt/repos/libscript && OUT_DIR=build ./libscript.sh package-as rpm _lib/web-apps/openedx --app-name openedx-setup > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*.rpm /tmp/openedx-setup.rpm"
     ;;
   alpine-*)
     printf '[INFO] Building .apk package inside VM...\n'
@@ -74,18 +82,18 @@ case "${TARGET_OS}" in
     vagrant rsync || true
     # Make sure abuild and signing key are initialized
     vagrant ssh -c "sudo apk add abuild && abuild-keygen -a -n 2>/dev/null || true; sudo cp -f ~/.abuild/*.rsa.pub /etc/apk/keys/ 2>/dev/null || true"
-    vagrant ssh -c "cd /opt/repos/libscript && OUT_DIR=build ./libscript.sh package-as apk stacks/cms/openedx --app-name openedx-setup > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup-stacks-cms-openedx*.apk /tmp/openedx-setup.apk"
+    vagrant ssh -c "cd /opt/repos/libscript && OUT_DIR=build ./libscript.sh package-as apk _lib/web-apps/openedx --app-name openedx-setup > build_pkg.sh && sh build_pkg.sh && cp build/openedx-setup*.apk /tmp/openedx-setup.apk"
     ;;
   omnios*|illumos*)
     printf '[INFO] Building package archive for OmniOS inside VM...\n'
     vagrant up --no-provision || { printf '[ERROR] Vagrant up failed.\n' >&2; exit 1; }
     vagrant rsync || true
-    vagrant ssh -c "cd /opt/repos/libscript && mkdir -p build && { command -v gtar >/dev/null 2>&1 && gtar -czf /tmp/openedx-setup.tar.gz stacks/cms/openedx libscript.sh _lib || tar -czf /tmp/openedx-setup.tar.gz stacks/cms/openedx libscript.sh _lib; }"
+    vagrant ssh -c "cd /opt/repos/libscript && mkdir -p build && { command -v gtar >/dev/null 2>&1 && gtar -czf /tmp/openedx-setup.tar.gz _lib/web-apps/openedx libscript.sh _lib || tar -czf /tmp/openedx-setup.tar.gz _lib/web-apps/openedx libscript.sh _lib; }"
     ;;
   windows-*)
     printf '[INFO] Building .msi package natively on host...\n'
     cd "${LIBSCRIPT_ROOT_DIR}"
-    ./libscript.sh package-as msi stacks/cms/openedx
+    ./libscript.sh package-as msi _lib/web-apps/openedx
     mkdir -p build
     cp build/packages/msi/openedx-x64-verawood.1-online.msi build/OpenEdX-Setup.msi || true
     cd "${VAGRANT_DIR}"

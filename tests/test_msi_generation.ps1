@@ -3,7 +3,7 @@
 # Validates template generation and XML control structures.
 #
 # ## Usage
-#   powershell -File tests	est_msi_generation.ps1
+#   powershell -File tests\test_msi_generation.ps1
 
 <#
 .SYNOPSIS
@@ -16,7 +16,7 @@ $ErrorActionPreference = "Stop"
 $ScriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
 $LibscriptRootDir = (Resolve-Path (Join-Path $ScriptDir "..")).Path
 
-$TestTmpDir = Join-Path $LibscriptRootDir "tests_tmp	est_msi_ps1_$(Get-Random)"
+$TestTmpDir = Join-Path $LibscriptRootDir "tests_tmp\test_msi_ps1_$(Get-Random)"
 if (-not (Test-Path $TestTmpDir)) {
     New-Item -ItemType Directory -Path $TestTmpDir -Force | Out-Null
 }
@@ -52,7 +52,7 @@ function Test-MsiGeneration {
     $env:BANNER_SIDE_PATH = Join-Path $TestTmpDir "test_banner_side.bmp"
     $env:LICENSE_PATH = Join-Path $TestTmpDir "LICENSE.txt"
 
-    $templateMsiCmd = Join-Path $LibscriptRootDir "packaging	emplate_msi.cmd"
+    $templateMsiCmd = Join-Path $LibscriptRootDir "packaging\template_msi.cmd"
     if (Test-Path $templateMsiCmd) {
         & cmd.exe /c "call `"$templateMsiCmd`""
     } else {

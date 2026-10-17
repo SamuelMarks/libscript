@@ -82,10 +82,8 @@ findstr /i "MUI_HEADERIMAGE_BITMAP" "%TEST_TMP_DIR%\BrandApp.nsi" >nul || (echo 
 findstr /i "MUI_WELCOMEFINISHPAGE_BITMAP" "%TEST_TMP_DIR%\BrandApp.nsi" >nul || (echo [FAIL] NSIS missing MUI_WELCOMEFINISHPAGE_BITMAP & exit /b 1)
 echo [PASS] Windows NSIS branding assertions passed
 
-call "%LIBSCRIPT_ROOT_DIR%\packaging\template_msi.cmd"
-findstr /i "WixUIBannerBmp" "%TEST_TMP_DIR%\BrandApp.wxs" >nul || (echo [FAIL] MSI missing WixUIBannerBmp & exit /b 1)
-findstr /i "WixUIDialogBmp" "%TEST_TMP_DIR%\BrandApp.wxs" >nul || (echo [FAIL] MSI missing WixUIDialogBmp & exit /b 1)
-findstr /i "WixUILicenseRtf" "%TEST_TMP_DIR%\BrandApp.wxs" >nul || (echo [FAIL] MSI missing WixUILicenseRtf & exit /b 1)
+call "%LIBSCRIPT_ROOT_DIR%\packaging\template_msi.cmd" "%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\wordpress" --out "%TEST_TMP_DIR%\BrandApp.wxs"
+findstr /i "PROP_APP_IDENTIFIER" "%TEST_TMP_DIR%\BrandApp.wxs" >nul || (echo [FAIL] MSI missing PROP_APP_IDENTIFIER & exit /b 1)
 echo [PASS] Windows MSI branding assertions passed
 
 echo === All Windows branding tests passed! ===

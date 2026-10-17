@@ -40,6 +40,10 @@ mkdir -p "$TEST_TMP_DIR"
 
 # ## cleanup
 # Cleans up temporary test directory if tests succeeded.
+# shellcheck disable=SC2329
+cleanup() {
+  rm -rf "$TEST_TMP_DIR"
+}
 trap cleanup EXIT INT TERM
 
 printf '=== Testing LibScript Offline Cache Hydration Engine ===\n'

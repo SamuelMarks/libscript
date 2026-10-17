@@ -113,7 +113,7 @@ case "$ACTION" in
     elif [ "$NODEJS_INSTALL_METHOD" = "vfox" ]; then
       vfox ls nodejs
     elif [ "$NODEJS_INSTALL_METHOD" = "system" ]; then
-      node -v
+      node -v 2>/dev/null || true
     else
       ls -1 "${LIBSCRIPT_HOME:-$HOME/.libscript}/nodejs/" 2>/dev/null || true
     fi

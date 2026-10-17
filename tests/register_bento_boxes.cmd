@@ -23,7 +23,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -63,11 +63,12 @@ if errorlevel 1 (
     exit /b 0
 )
 
-call :register_box "bento/omnios" "%BUILD_COMPLETE%\omnios-braich-aarch64.qemu.box"
-call :register_box "bento/alpine-3.24" "%BUILD_COMPLETE%\alpine-3.24-aarch64.qemu.box"
-call :register_box "bento/debian-13" "%BUILD_COMPLETE%\debian-13.6-aarch64.qemu.box"
-call :register_box "bento/rockylinux-10.2" "%BUILD_COMPLETE%\almalinux-9.8-aarch64.qemu.box"
-call :register_box "bento/freebsd-15.1" "%BUILD_COMPLETE%\freebsd-15.1-aarch64.qemu.box"
+call :register_box "bento/omnios" "%BUILD_COMPLETE%\omnios-braich-aarch64.qemu.box" "qemu"
+call :register_box "bento/alpine-3.24" "%BUILD_COMPLETE%\alpine-3.24-aarch64.qemu.box" "qemu"
+call :register_box "bento/debian-13" "%BUILD_COMPLETE%\debian-13.6-aarch64.qemu.box" "qemu"
+call :register_box "bento/rockylinux-10.2" "%BUILD_COMPLETE%\almalinux-9.8-aarch64.qemu.box" "qemu"
+call :register_box "bento/freebsd-15.1" "%BUILD_COMPLETE%\freebsd-15.1-aarch64.qemu.box" "qemu"
+call :register_box "bento/macos-14-arm64" "%BUILD_COMPLETE%\macos-14-aarch64.utm.box" "utm"
 
 echo === Host Vagrant Box Inventory ===
 vagrant box list
@@ -78,6 +79,8 @@ exit /b 0
 :register_box
 set "_BNAME=%~1"
 set "_BFILE=%~2"
+set "_BPROV=%~3"
+if "!_BPROV!"=="" set "_BPROV=qemu"
 vagrant box list 2>nul | findstr /C:"!_BNAME!" >nul 2>&1
 if not errorlevel 1 (
     echo [OK]   Box !_BNAME! is already registered in host Vagrant.
@@ -85,6 +88,6 @@ if not errorlevel 1 (
 )
 if exist "!_BFILE!" (
     echo ==^> Registering !_BNAME! from !_BFILE!...
-    vagrant box add --name "!_BNAME!" --provider qemu "!_BFILE!"
+    vagrant box add --name "!_BNAME!" --provider "!_BPROV!" "!_BFILE!"
 )
 exit /b 0

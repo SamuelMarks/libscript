@@ -2,7 +2,7 @@
 # Validates the 'uv' backend integration for Python virtual environments (PowerShell).
 # 
 # ## Usage
-# powershell -File tests	est_python_uv_integration.ps1
+# powershell -File tests\test_python_uv_integration.ps1
 
 <#
 .SYNOPSIS

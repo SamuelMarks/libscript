@@ -89,13 +89,14 @@ case "$action" in
   restore)
     exec "$SCRIPT_DIR/restore_cloud.sh" "$@"
     ;;
-  aws|azure|gcp)
+  aws|azure|gcp|hetzner|proxmox)
     PROVIDER="$action"
     CLI_PATH="$LIBSCRIPT_ROOT_DIR/_lib/cloud-providers/$PROVIDER/cli.sh"
     if [ ! -f "$CLI_PATH" ]; then
       printf '%s\n' "Error: Provider $PROVIDER not supported or installed." >&2
       exit 1
     fi
+    unset SCRIPT_NAME || true
     exec "$CLI_PATH" "$@"
     ;;
   cleanup)

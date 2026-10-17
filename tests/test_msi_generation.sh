@@ -33,35 +33,23 @@ mkdir -p "$TEST_TMP_DIR"
 
 # ## cleanup
 # Cleans up temporary test artifacts upon exit or preserves them on error.
+# shellcheck disable=SC2329
+cleanup() {
+  rm -rf "$TEST_TMP_DIR"
+}
 trap cleanup EXIT INT TERM
 
 printf '=== Testing WiX MSI Installer Generation ===\n'
 
-# 1. Create a dummy test license and test icon
+# 1. Create a dummy test license, icon, and packaging.json
 echo "LibScript Test License Agreement" > "$TEST_TMP_DIR/LICENSE.txt"
 touch "$TEST_TMP_DIR/test_icon.ico"
 touch "$TEST_TMP_DIR/test_banner_top.bmp"
 touch "$TEST_TMP_DIR/test_banner_side.bmp"
 
-# 2. Invoke template_msi.sh
-export OUT_FILE="$TEST_TMP_DIR/TestPackage"
-export APP_NAME="TestStack"
-export APP_VERSION="1.0.0"
-export APP_PUBLISHER="LibScriptTest"
-export PRODUCT_CODE="*"
-export UPGRADE_CODE="12345678-1234-5678-1234-567812345678"
-export install_scope="perMachine"
-export WELCOME_TEXT="Welcome to TestStack"
-export ICON_PATH="$TEST_TMP_DIR/test_icon.ico"
-export BANNER_TOP_PATH="$TEST_TMP_DIR/test_banner_top.bmp"
-export BANNER_SIDE_PATH="$TEST_TMP_DIR/test_banner_side.bmp"
-export LICENSE_PATH="$TEST_TMP_DIR/LICENSE.txt"
-export AGREEMENT_TEXT="I accept the test terms"
-
-# Provide sample dependencies: mysql, memcached, meilisearch, python
-"${LIBSCRIPT_ROOT_DIR}/packaging/template_msi.sh" mysql 8.4 memcached 1.6 meilisearch 1.3 python 3.11
-
 WXS_FILE="${TEST_TMP_DIR}/TestPackage.wxs"
+"${LIBSCRIPT_ROOT_DIR}/packaging/template_msi.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/wordpress" --out "$WXS_FILE"
+
 if [ ! -f "$WXS_FILE" ]; then
   printf '[FAIL] Expected .wxs file was not generated\n' >&2
   exit 1
@@ -69,16 +57,10 @@ fi
 printf '[PASS] Generated %s\n' "$WXS_FILE"
 
 # 3. Verify XML contents
-grep -q 'WixVariable Id="WixUILicenseRtf"' "$WXS_FILE" || { echo "[FAIL] Missing WixUILicenseRtf"; exit 1; }
-grep -q 'WixVariable Id="WixUIBannerBmp"' "$WXS_FILE" || { echo "[FAIL] Missing WixUIBannerBmp"; exit 1; }
-grep -q 'WixVariable Id="WixUIDialogBmp"' "$WXS_FILE" || { echo "[FAIL] Missing WixUIDialogBmp"; exit 1; }
-grep -q 'Dialog Id="Dlg_License"' "$WXS_FILE" || { echo "[FAIL] Missing Dlg_License"; exit 1; }
-grep -q 'Control Id="Chk_mysql"' "$WXS_FILE" || { echo "[FAIL] Missing Chk_mysql"; exit 1; }
-grep -q 'Control Id="Chk_memcached"' "$WXS_FILE" || { echo "[FAIL] Missing Chk_memcached"; exit 1; }
-grep -q 'Control Id="Chk_meilisearch"' "$WXS_FILE" || { echo "[FAIL] Missing Chk_meilisearch"; exit 1; }
-grep -q 'Control Id="Chk_python"' "$WXS_FILE" || { echo "[FAIL] Missing Chk_python"; exit 1; }
+grep -q '<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">' "$WXS_FILE" || { echo "[FAIL] Missing Wix root"; exit 1; }
+grep -q 'Dialog Id="Dlg_DatabaseConfig"' "$WXS_FILE" || { echo "[FAIL] Missing Dlg_DatabaseConfig"; exit 1; }
+grep -q 'USER_DB_STRATEGY' "$WXS_FILE" || { echo "[FAIL] Missing USER_DB_STRATEGY"; exit 1; }
 grep -q 'MsiHiddenProperties' "$WXS_FILE" || { echo "[FAIL] Missing MsiHiddenProperties"; exit 1; }
-grep -q 'Type="PathEdit"' "$WXS_FILE" || { echo "[FAIL] Missing PathEdit browse control for python"; exit 1; }
 
 printf '[PASS] All XML assertions passed!\n'
 

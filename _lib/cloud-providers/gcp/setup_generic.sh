@@ -47,6 +47,19 @@ GCP_INSTALL_METHOD="$(libscript_resolve_install_method "GCP")"
 ACTION="${ACTION:-install}"
 VERSION="${GCP_VERSION:-latest}"
 
+# ## gcloud
+# Wrapper around gcloud CLI supporting DRY_RUN=true or unauthenticated local environments.
+gcloud() {
+  if [ "${DRY_RUN:-}" = "true" ] || ! command -v gcloud >/dev/null 2>&1; then
+    printf '[DRY_RUN] gcloud %s\n' "$*" >&2
+    case "$*" in
+      *"describe"*) return 1 ;;
+      *) return 0 ;;
+    esac
+  fi
+  command gcloud "$@"
+}
+
 # ## resolve_exact_version
 # Resolves semantic version aliases (such as 'latest' or 'lts') to a concrete release version.
 resolve_exact_version() {

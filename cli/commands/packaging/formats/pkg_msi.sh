@@ -52,7 +52,7 @@ EOF2
       if [ $# -gt 0 ]; then
         while [ $# -gt 0 ]; do
           deps_list="$deps_list $1 ${2:-latest}"
-          if [ "$2" != "" ]; then shift 2; else shift; fi
+          if [ "${2:-}" != "" ]; then shift 2; else shift; fi
         done
       elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
         deps_list=$("${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null | tr '\n' ' ')
@@ -66,7 +66,8 @@ EOF2
       printf '%s\n' "      </Directory>"
       printf '%s\n' "    </Directory>"
 
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         {
@@ -103,7 +104,8 @@ EOF2
       done
 
       # Features
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "    <Feature Id=\"Feature_$pkg\" Title=\"Install $pkg\" Level=\"1\">"
@@ -118,7 +120,8 @@ EOF2
       printf '%s\n' "      <Dialog Id=\"Dlg_Features\" Width=\"370\" Height=\"270\" Title=\"Select Components\">"
       printf '%s\n' "        <Control Id=\"Lbl_Select\" Type=\"Text\" X=\"20\" Y=\"10\" Width=\"330\" Height=\"15\" Text=\"Select the components you want to install:\" />"
       y=30
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "        <Control Id=\"Chk_$pkg\" Type=\"CheckBox\" X=\"20\" Y=\"${y}\" Width=\"330\" Height=\"15\" Property=\"INSTALL_$pkg\" CheckBoxValue=\"1\" Text=\"Install $pkg\" />"
@@ -129,13 +132,15 @@ EOF2
       printf '%s\n' "        </Control>"
       printf '%s\n' "      </Dialog>"
 
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "      <Property Id=\"INSTALL_$pkg\" Value=\"1\" Secure=\"yes\" />"
       done
 
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       export has_custom_ui=0
       dialogs=""
       while [ $# -gt 0 ]; do
@@ -181,7 +186,8 @@ EOF2
       done
 
       # MSI Uninstaller Confirmations
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "      <Dialog Id=\"Dlg_Uninst_${pkg}\" Width=\"370\" Height=\"270\" Title=\"Uninstall $pkg\">"
@@ -237,7 +243,8 @@ EOF2
       printf '%s\n' "      <InstallUISequence>"
       printf '%s\n' "        <Show Dialog=\"Dlg_Features\" After=\"CostFinalize\">NOT Installed</Show>"
       last_dlg="Dlg_Features"
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         has_dlg=0
@@ -254,7 +261,8 @@ EOF2
       printf '%s\n' "        <Show Dialog=\"Dlg_Options\" After=\"Dlg_Action\">NOT Installed</Show>"
       # UI sequence for uninstall
       last_uninst_dlg="CostFinalize"
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "        <Show Dialog=\"Dlg_Uninst_${pkg}\" After=\"$last_uninst_dlg\">REMOVE=\"ALL\"</Show>"
@@ -264,7 +272,8 @@ EOF2
       printf '%s\n' "    </UI>"
 
       # Install Actions
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         if [ "$OFFLINE" = "1" ]; then
@@ -310,7 +319,8 @@ EOF2
         printf '%s\n' "  cmd = ""cmd.exe /c libscript.cmd package-as "" & action" >> "generate_stack.vbs"
       fi
       printf '%s\n' "  cmd = cmd & "" """ >> "generate_stack.vbs"
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "  If Session.Property(""INSTALL_$pkg"") = ""1"" Then cmd = cmd & ""$pkg $ver """ >> "generate_stack.vbs"
@@ -323,7 +333,8 @@ EOF2
       printf '%s\n' "    <Binary Id=\"Bin_GenStack\" SourceFile=\"generate_stack.vbs\" />"
       printf '%s\n' "    <CustomAction Id=\"CA_GenStack\" BinaryKey=\"Bin_GenStack\" VBScriptCall=\"GenerateStack\" Return=\"ignore\" Impersonate=\"no\" Execute=\"deferred\" />"
       printf '%s\n' "    <InstallExecuteSequence>"
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "      <Custom Action=\"Install$pkg\" Before=\"InstallFinalize\"><![CDATA[NOT Installed AND ACTION_CHOICE=\"install\" AND INSTALL_$pkg=\"1\"]]></Custom>"

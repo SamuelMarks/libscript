@@ -51,7 +51,7 @@ EOF2
       if [ $# -gt 0 ]; then
         while [ $# -gt 0 ]; do
           deps_list="$deps_list $1 ${2:-latest}"
-          if [ "$2" != "" ]; then shift 2; else shift; fi
+          if [ "${2:-}" != "" ]; then shift 2; else shift; fi
         done
       elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
         deps_list=$("${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null | tr '\n' ' ')
@@ -68,7 +68,8 @@ EOF2
       printf '%s\n' "Include nsDialogs.nsh"
       printf '%s\n' "Page components"
 
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
@@ -92,7 +93,8 @@ EOF2
       printf '%s\n' "Page instfiles"
       printf '%s\n' ""
 
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "Section \"$pkg\" SEC_$pkg"
@@ -115,7 +117,8 @@ EOF2
         printf '%s\n' "SectionEnd"
       done
 
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         schema_file=$(find "$LIBSCRIPT_ROOT_DIR/_lib" -name "vars.schema.json" | grep "/$pkg/" | head -n 1)
@@ -313,7 +316,8 @@ EOF2
       printf '%s\n' "    \${EndIf}"
       printf '%s\n' "    Var /GLOBAL PkgArgs"
       printf '%s\n' "    StrCpy \$PkgArgs \"\""
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "    SectionGetFlags \${SEC_$pkg} \$0"
@@ -331,7 +335,8 @@ EOF2
       printf '%s\n' "SectionEnd"
       # Uninstaller
       printf '%s\n' "Section \"Uninstall\""
-      set -- "$deps_list"
+# shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         printf '%s\n' "  MessageBox MB_YESNO \"Do you want to completely remove the Data Directory and all records for $pkg?\" IDYES purge_$pkg IDNO keep_$pkg"

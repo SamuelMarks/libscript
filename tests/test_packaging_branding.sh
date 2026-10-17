@@ -33,6 +33,10 @@ mkdir -p "$TEST_TMP_DIR"
 
 # ## cleanup
 # Cleans up temporary test artifacts upon exit or preserves them on error.
+# shellcheck disable=SC2329
+cleanup() {
+  rm -rf "$TEST_TMP_DIR"
+}
 trap cleanup EXIT INT TERM
 
 printf '=== Testing Cross-Platform Installer Branding ===\n'
@@ -71,12 +75,10 @@ grep -q "Page license" "$NSIS_FILE" || { echo "[FAIL] NSIS missing Page license"
 printf '[PASS] NSIS branding assertions passed\n'
 
 # 4. Test WiX MSI generation
-"${LIBSCRIPT_ROOT_DIR}/packaging/template_msi.sh"
 WXS_FILE="${TEST_TMP_DIR}/BrandApp.wxs"
-grep -q 'WixVariable Id="WixUIBannerBmp"' "$WXS_FILE" || { echo "[FAIL] MSI missing WixUIBannerBmp"; exit 1; }
-grep -q 'WixVariable Id="WixUIDialogBmp"' "$WXS_FILE" || { echo "[FAIL] MSI missing WixUIDialogBmp"; exit 1; }
-grep -q 'WixVariable Id="WixUILicenseRtf"' "$WXS_FILE" || { echo "[FAIL] MSI missing WixUILicenseRtf"; exit 1; }
-grep -q 'Dialog Id="Dlg_License"' "$WXS_FILE" || { echo "[FAIL] MSI missing Dlg_License"; exit 1; }
+"${LIBSCRIPT_ROOT_DIR}/packaging/template_msi.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/wordpress" --out "$WXS_FILE"
+grep -q 'Dialog Id="Dlg_DatabaseConfig"' "$WXS_FILE" || { echo "[FAIL] MSI missing Dlg_DatabaseConfig"; exit 1; }
+grep -q 'PROP_APP_IDENTIFIER' "$WXS_FILE" || { echo "[FAIL] MSI missing PROP_APP_IDENTIFIER"; exit 1; }
 printf '[PASS] WiX MSI branding assertions passed\n'
 
 printf '=== All branding tests completed successfully! ===\n'

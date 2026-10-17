@@ -1,0 +1,52 @@
+#!/bin/sh
+# ## Overview
+# Environment initialization for HashiCorp Nomad.
+#
+# ## Usage
+# . ./_lib/orchestration/nomad/env.sh
+
+set -feu
+
+if [ "${SCRIPT_NAME-}" ]; then
+  THIS_FILE="${SCRIPT_NAME}"
+elif [ "${BASH_SOURCE-}" ]; then
+  THIS_FILE="${BASH_SOURCE}"
+elif [ "${ZSH_VERSION-}" ]; then
+  # libscript-allow-eval
+  # shellcheck disable=SC2296
+  THIS_FILE="${(%):-%x}"
+else
+  THIS_FILE="${0}"
+fi
+
+case "${STACK+x}" in
+  *':'"${THIS_FILE}"':'*)
+    printf '[STOP]     processing "%s"
+' "${THIS_FILE}" >&2
+    if (return 0 2>/dev/null); then return; else exit 0; fi ;;
+  *) printf '[CONTINUE] processing "%s"
+' "${THIS_FILE}" >&2 ;;
+esac
+export STACK="${STACK:-}${THIS_FILE}"':'
+SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
+' "$d")}"
+
+: "${LIBSCRIPT_HOME:=${HOME:-/tmp}/.libscript}"
+: "${NOMAD_VERSION:=latest}"
+: "${NOMAD_HOME:=${LIBSCRIPT_HOME}/nomad/${NOMAD_VERSION}}"
+: "${NOMAD_HTTP_PORT:=4646}"
+: "${NOMAD_ADDR:=http://127.0.0.1:${NOMAD_HTTP_PORT}}"
+
+export NOMAD_VERSION
+export NOMAD_HOME
+export NOMAD_HTTP_PORT
+export NOMAD_ADDR
+
+if [ -d "${NOMAD_HOME}/bin" ]; then
+  case ":${PATH:-}:" in
+    *":${NOMAD_HOME}/bin:"*) ;;
+    *) PATH="${NOMAD_HOME}/bin:${PATH:-}" ;;
+  esac
+  export PATH
+fi

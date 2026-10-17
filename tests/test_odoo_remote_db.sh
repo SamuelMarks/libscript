@@ -49,7 +49,7 @@ trap 'rm -rf "$TMP_DIR"' EXIT INT TERM
 printf '==> Testing Odoo DBaaS Strategy...\n'
 
 # Synthesize the MSI manifest using template_msi.sh
-"${LIBSCRIPT_ROOT_DIR}/packaging/template_msi.sh" "${LIBSCRIPT_ROOT_DIR}/stacks/erp/odoo" --out "$TMP_DIR/odoo.wxs"
+"${LIBSCRIPT_ROOT_DIR}/packaging/template_msi.sh" "${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/odoo" --out "$TMP_DIR/odoo.wxs"
 
 if ! grep -q "USER_DB_STRATEGY=\"remote\"" "$TMP_DIR/odoo.wxs"; then
   printf '[ERROR] USER_DB_STRATEGY remote switch not correctly mapped.\n' >&2
@@ -77,7 +77,7 @@ touch "$ODOO_WWWROOT/odoo-bin"
 chmod +x "$ODOO_WWWROOT/odoo-bin"
 
 # Run setup_generic.sh
-"${LIBSCRIPT_ROOT_DIR}/stacks/erp/odoo/setup_generic.sh" --skip-deps || true
+"${LIBSCRIPT_ROOT_DIR}/_lib/web-apps/odoo/setup_generic.sh" --skip-deps || true
 
 if ! grep -q "db_host = 192.168.200.99" "${ODOO_WWWROOT}/odoo.conf"; then
   printf '[ERROR] db_host not properly written to odoo.conf!\n' >&2

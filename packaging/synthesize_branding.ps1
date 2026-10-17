@@ -83,7 +83,7 @@ $topBmp.Dispose()
 # 3. Generate RTF EULA
 $rtfPath = Join-Path $OutputDir "license.rtf"
 $compsStr = ($eulaComps -join "\par `n")
-$rtfContent = "{tf1\ansi\deff0 {\fonttbl {\f0 Arial;}}\fs20\par {\b $title End User License Agreement}\par \par This deployment package provisions $title along with its declared dependencies.\par \par Licensed components:\par $compsStr\par \par By continuing installation, you agree to comply with all applicable terms.\par }"
+$rtfContent = "{\rtf1\ansi\deff0 {\fonttbl {\f0 Arial;}}\fs20\par {\b $title End User License Agreement}\par \par This deployment package provisions $title along with its declared dependencies.\par \par Licensed components:\par $compsStr\par \par By continuing installation, you agree to comply with all applicable terms.\par }"
 [System.IO.File]::WriteAllText($rtfPath, $rtfContent)
 
 Write-Output "[SUCCESS] Branding synthesis complete in $OutputDir"

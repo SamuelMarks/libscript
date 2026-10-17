@@ -64,9 +64,25 @@ if /i "%action%"=="restore" (
     call "%~dp0restore_cloud.cmd" %*
     exit /b %errorlevel%
 )
+if /i "%action%"=="aws" goto :route_provider
+if /i "%action%"=="azure" goto :route_provider
+if /i "%action%"=="gcp" goto :route_provider
+if /i "%action%"=="hetzner" goto :route_provider
+if /i "%action%"=="proxmox" goto :route_provider
 
 :: Default behavior (no-op)
 goto :eof
+
+:: ## route_provider
+:: Dispatches cloud provider commands to the corresponding provider cli.cmd.
+:route_provider
+set "CLI_PATH=%LIBSCRIPT_ROOT_DIR%\_lib\cloud-providers\%action%\cli.cmd"
+if not exist "%CLI_PATH%" (
+    echo Error: Provider %action% not supported or installed. 1>&2
+    exit /b 1
+)
+call "%CLI_PATH%" %*
+exit /b %errorlevel%
 
 :: ## handle_diff
 :: Performs the handle_diff operation and updates component state.

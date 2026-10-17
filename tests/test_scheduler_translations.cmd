@@ -2,7 +2,8 @@
 :: # test_scheduler_translations.cmd
 ::
 :: ## Overview
-:: Verifies payload.json compilation across K8s, Nomad, Mesos, Native Inits, and XPK on Windows.
+:: Verifies payload.json compilation and 6-verb lifecycle across K8s (with Marathon-equivalent PaaS controller),
+:: Apache Mesos + Marathon, Nomad, Native Inits, Slurm/Ray, and XPK on Windows.
 ::
 :: ## Usage
 :: tests\test_scheduler_translations.cmd
@@ -51,7 +52,11 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-call "%LIBSCRIPT_ROOT_DIR%\payloads\engine.cmd" compile "%LIBSCRIPT_ROOT_DIR%\payloads\ai\vllm\payload.json" --scheduler kubernetes >nul
-if errorlevel 1 exit /b 1
-echo [PASS] Tier 4 scheduler translations verified.
+for %%S in (kubernetes mesos nomad native xpk slurm_ray) do (
+    for %%V in (compile submit status logs stop destroy) do (
+        call "%LIBSCRIPT_ROOT_DIR%\payloads\engine.cmd" %%V "%LIBSCRIPT_ROOT_DIR%\payloads\ai\vllm\payload.json" --scheduler %%S >nul
+        if errorlevel 1 exit /b 1
+    )
+)
+echo [PASS] Tier 4 scheduler translations verified across K8s (Marathon-equivalent), Mesos+Marathon, Nomad, Native, XPK, and Slurm/Ray.
 exit /b 0

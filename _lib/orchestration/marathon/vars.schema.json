@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/_lib/orchestration/marathon/vars.schema.json",
+  "title": "Marathon Framework variables",
+  "description": "Configuration variables for the Marathon application orchestration framework on Apache Mesos",
+  "type": "object",
+  "properties": {
+    "MARATHON_VERSION": {
+      "description": "Specific version of Marathon to install.",
+      "type": "string",
+      "default": "1.11.28",
+      "version_aliases": ["latest", "stable"]
+    },
+    "MARATHON_INSTALL_METHOD": {
+      "description": "How to install Marathon ('libscript_native' isolates binaries in LIBSCRIPT_HOME, 'system' uses OS packages).",
+      "type": "string",
+      "enum": ["libscript_native", "system", "mise", "asdf", "pkgx", "vfox"],
+      "default": "libscript_native"
+    },
+    "MARATHON_HTTP_PORT": {
+      "description": "TCP port on which the Marathon v2 REST API and UI listen.",
+      "type": "integer",
+      "default": 8080
+    },
+    "MARATHON_MASTER": {
+      "description": "Apache Mesos master connection URL or ZooKeeper master path (e.g. 'zk://127.0.0.1:2181/mesos' or '127.0.0.1:5050').",
+      "type": "string",
+      "default": "zk://127.0.0.1:2181/mesos"
+    },
+    "MARATHON_ZK": {
+      "description": "ZooKeeper connection URI for Marathon framework state persistence and HA leader election.",
+      "type": "string",
+      "default": "zk://127.0.0.1:2181/marathon"
+    },
+    "MARATHON_HOSTNAME": {
+      "description": "Advertised hostname or IP address for the Marathon scheduler node.",
+      "type": "string",
+      "default": "127.0.0.1"
+    }
+  }
+}

@@ -74,20 +74,17 @@ set "BANNER_TOP_PATH=%TEST_TMP_DIR%\test_banner_top.bmp"
 set "BANNER_SIDE_PATH=%TEST_TMP_DIR%\test_banner_side.bmp"
 set "LICENSE_PATH=%TEST_TMP_DIR%\LICENSE.txt"
 
-call "%LIBSCRIPT_ROOT_DIR%\packaging\template_msi.cmd"
-
 set "WXS_FILE=%TEST_TMP_DIR%\TestPackage.wxs"
+call "%LIBSCRIPT_ROOT_DIR%\packaging\template_msi.cmd" "%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\wordpress" --out "%WXS_FILE%"
+
 if not exist "%WXS_FILE%" (
     echo [FAIL] Expected .wxs file was not generated
     exit /b 1
 )
 echo [PASS] Generated %WXS_FILE%
 
-findstr /i "WixUILicenseRtf" "%WXS_FILE%" >nul || (echo [FAIL] Missing WixUILicenseRtf & exit /b 1)
-findstr /i "WixUIBannerBmp" "%WXS_FILE%" >nul || (echo [FAIL] Missing WixUIBannerBmp & exit /b 1)
-findstr /i "WixUIDialogBmp" "%WXS_FILE%" >nul || (echo [FAIL] Missing WixUIDialogBmp & exit /b 1)
-findstr /i "Dlg_License" "%WXS_FILE%" >nul || (echo [FAIL] Missing Dlg_License & exit /b 1)
-findstr /i "Dlg_Features" "%WXS_FILE%" >nul || (echo [FAIL] Missing Dlg_Features & exit /b 1)
+findstr /i "MsiHiddenProperties" "%WXS_FILE%" >nul || (echo [FAIL] Missing MsiHiddenProperties & exit /b 1)
+findstr /i "INSTALLFOLDER" "%WXS_FILE%" >nul || (echo [FAIL] Missing INSTALLFOLDER & exit /b 1)
 
 echo [PASS] All Windows WiX assertions passed!
 rmdir /s /q "%TEST_TMP_DIR%"

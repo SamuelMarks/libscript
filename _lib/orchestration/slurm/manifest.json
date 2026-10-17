@@ -1,0 +1,32 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "slurm",
+  "title": "Slurm Workload Manager",
+  "description": "Fault-tolerant, highly scalable cluster management and job scheduling system for HPC and AI training clusters.",
+  "category": "orchestration",
+  "provides": ["slurm", "sbatch", "srun", "squeue", "scancel", "slurmctld", "slurmd"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "versions": ["24.05.3", "23.11.9", "latest"],
+  "ports": [6817, 6818],
+  "stateful": true,
+  "multitenant": true,
+  "hooks": {
+    "physical": [
+      "configure",
+      "probe",
+      "announce",
+      "log_stream",
+      "metrics",
+      "backup",
+      "restore",
+      "upgrade",
+      "rollback",
+      "maintenance"
+    ],
+    "logical": [],
+    "probe_timeout_seconds": 30,
+    "metrics_scrape_path": "/metrics"
+  }
+}

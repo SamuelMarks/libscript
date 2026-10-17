@@ -1,0 +1,34 @@
+{
+  "$schema": "../topology.schema.json",
+  "name": "k8s-marathon-paas",
+  "version": "1.0.0",
+  "description": "High-availability Kubernetes + k8s-marathon PaaS application controller topology with netctl ingress routing.",
+  "quorum_strategy": "raft",
+  "node_groups": [
+    {
+      "name": "k8s-control-plane",
+      "role": "control-plane",
+      "replicas": 3,
+      "anti_affinity": "zone",
+      "provider": "local",
+      "os_profile": "profiles/linux-minimal-headless-musl.json",
+      "components": ["kubernetes", "kubectl", "k8s-marathon", "netctl"],
+      "traits": ["storage", "secrets", "tls", "mesh", "firewall", "discovery", "ingress"]
+    },
+    {
+      "name": "k8s-workers",
+      "role": "worker",
+      "replicas": 3,
+      "anti_affinity": "host",
+      "provider": "local",
+      "os_profile": "profiles/linux-standard-server-glibc.json",
+      "components": ["kubernetes", "docker"],
+      "traits": ["storage", "secrets", "mesh", "firewall", "discovery", "logging", "metrics"]
+    }
+  ],
+  "network": {
+    "vpc_cidr": "10.51.0.0/16",
+    "mesh_overlay": "wireguard",
+    "internal_domain": "k8s-marathon.internal"
+  }
+}

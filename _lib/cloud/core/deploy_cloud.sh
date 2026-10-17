@@ -88,6 +88,11 @@ log() {
 log "INIT" "Starting $PROVIDER deployment for $NODE..."
 log "INIT" "Logging to $LOG_FILE"
 
+if [ "${DRY_RUN:-}" = "true" ]; then
+  log "DRY_RUN" "Simulated provision of $PROVIDER stack '$NODE' in network '$RG' ($LOC): $REPO_PATH -> $REMOTE_DEST"
+  exit 0
+fi
+
 # -----------------------------------------------------------------------------
 # Retries & Fault Tolerance
 # -----------------------------------------------------------------------------

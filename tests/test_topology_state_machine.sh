@@ -1,6 +1,8 @@
 #!/bin/sh
 # ## Overview
-# Verifies .topology_state.json checkpoint resume, lease locking, and split-brain fencing in topologies/engine.sh.
+# Verifies .topology_state.json checkpoint resume, lease locking, and split-brain fencing in topologies/engine.sh
+# across `valkey-cluster`, `postgres-ha`, `redis-cluster`, `k0s-ha`, `minio-distributed`, `gke-tpu-cluster`,
+# `mesos-marathon-ha`, and `k8s-marathon-paas`.
 #
 # ## Usage
 # ./tests/test_topology_state_machine.sh
@@ -21,13 +23,16 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"
+' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"
+' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}:"
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
+' "$d")}"
 export LIBSCRIPT_ROOT_DIR
 
 TSM_TMP="$(mktemp -d "${TMPDIR:-/tmp}/libscript-tsm.XXXXXX")"
@@ -38,20 +43,47 @@ cleanup_tsm_test() {
 }
 trap cleanup_tsm_test EXIT INT TERM
 
-export LIBSCRIPT_TOPOLOGY_STATE_FILE="${TSM_TMP}/.topology_state.json"
-TOPO_JSON="${LIBSCRIPT_ROOT_DIR}/topologies/valkey-cluster/topology.json"
+for TOPO_NAME in valkey-cluster postgres-ha redis-cluster k0s-ha minio-distributed mesos-marathon-ha k8s-marathon-paas; do
+  export LIBSCRIPT_TOPOLOGY_STATE_FILE="${TSM_TMP}/${TOPO_NAME}.state.json"
+  TOPO_CLI="${LIBSCRIPT_ROOT_DIR}/topologies/${TOPO_NAME}/cli.sh"
+  unset SCRIPT_NAME || true
+  sh "$TOPO_CLI" up >/dev/null
+  unset SCRIPT_NAME || true
+  sh "$TOPO_CLI" up >/dev/null
+  jq -e '.status == "HEALTHY"' "$LIBSCRIPT_TOPOLOGY_STATE_FILE" >/dev/null
+  unset SCRIPT_NAME || true
+  sh "$TOPO_CLI" status >/dev/null
+  unset SCRIPT_NAME || true
+  sh "$TOPO_CLI" destroy >/dev/null
+  jq -e '.status == "DESTROYED"' "$LIBSCRIPT_TOPOLOGY_STATE_FILE" >/dev/null
+done
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/topologies/engine.sh" sh "${LIBSCRIPT_ROOT_DIR}/topologies/engine.sh" up "$TOPO_JSON" >/dev/null
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/topologies/engine.sh" sh "${LIBSCRIPT_ROOT_DIR}/topologies/engine.sh" up "$TOPO_JSON" >/dev/null
-jq -e '.status == "HEALTHY"' "$LIBSCRIPT_TOPOLOGY_STATE_FILE" >/dev/null
+unset SCRIPT_NAME || true
+sh "${LIBSCRIPT_ROOT_DIR}/topologies/gke-tpu-cluster/cli.sh" --help >/dev/null
 
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/topologies/engine.sh" sh "${LIBSCRIPT_ROOT_DIR}/topologies/engine.sh" failover "$TOPO_JSON" "valkey-replicas-1" >/dev/null
-jq -e '.active_leader_id == "valkey-replicas-1"' "$LIBSCRIPT_TOPOLOGY_STATE_FILE" >/dev/null
-
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/topologies/engine.sh" sh "${LIBSCRIPT_ROOT_DIR}/topologies/engine.sh" drain "$TOPO_JSON" "valkey-replicas-2" >/dev/null
-jq -e '.nodes[] | select(.node_id == "valkey-replicas-2") | .state == "DRAINING"' "$LIBSCRIPT_TOPOLOGY_STATE_FILE" >/dev/null
-
-SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/topologies/engine.sh" sh "${LIBSCRIPT_ROOT_DIR}/topologies/engine.sh" destroy "$TOPO_JSON" >/dev/null
+export LIBSCRIPT_TOPOLOGY_STATE_FILE="${TSM_TMP}/mesos-ha.state.json"
+unset SCRIPT_NAME || true
+sh "${LIBSCRIPT_ROOT_DIR}/topologies/mesos-marathon-ha/cli.sh" up >/dev/null
+unset SCRIPT_NAME || true
+sh "${LIBSCRIPT_ROOT_DIR}/topologies/mesos-marathon-ha/cli.sh" scale mesos-agents 5 >/dev/null
+unset SCRIPT_NAME || true
+sh "${LIBSCRIPT_ROOT_DIR}/topologies/mesos-marathon-ha/cli.sh" failover mesos-masters-1 >/dev/null
+jq -e '.active_leader_id == "mesos-masters-1"' "$LIBSCRIPT_TOPOLOGY_STATE_FILE" >/dev/null
+unset SCRIPT_NAME || true
+sh "${LIBSCRIPT_ROOT_DIR}/topologies/mesos-marathon-ha/cli.sh" down >/dev/null
 jq -e '.status == "DESTROYED"' "$LIBSCRIPT_TOPOLOGY_STATE_FILE" >/dev/null
 
-printf '[PASS] Topology state machine checkpointing, locking, and fencing verified.\n'
+export LIBSCRIPT_TOPOLOGY_STATE_FILE="${TSM_TMP}/k8s-paas.state.json"
+unset SCRIPT_NAME || true
+sh "${LIBSCRIPT_ROOT_DIR}/topologies/k8s-marathon-paas/cli.sh" up >/dev/null
+unset SCRIPT_NAME || true
+sh "${LIBSCRIPT_ROOT_DIR}/topologies/k8s-marathon-paas/cli.sh" scale k8s-workers 4 >/dev/null
+unset SCRIPT_NAME || true
+sh "${LIBSCRIPT_ROOT_DIR}/topologies/k8s-marathon-paas/cli.sh" failover k8s-control-plane-1 >/dev/null
+jq -e '.active_leader_id == "k8s-control-plane-1"' "$LIBSCRIPT_TOPOLOGY_STATE_FILE" >/dev/null
+unset SCRIPT_NAME || true
+sh "${LIBSCRIPT_ROOT_DIR}/topologies/k8s-marathon-paas/cli.sh" down >/dev/null
+jq -e '.status == "DESTROYED"' "$LIBSCRIPT_TOPOLOGY_STATE_FILE" >/dev/null
+
+printf '[PASS] Topology state machine checkpointing, locking, and fencing verified across all 8 topologies.
+'

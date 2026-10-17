@@ -33,7 +33,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
   if [ $# -gt 0 ]; then
     while [ $# -gt 0 ]; do
       deps_list="$deps_list $1 ${2:-latest}"
-      if [ "$2" != "" ]; then shift 2; else shift; fi
+      if [ "${2:-}" != "" ]; then shift 2; else shift; fi
     done
   elif [ -f "libscript.json" ] && command -v jq >/dev/null 2>&1; then
     deps_list=$("${LIBSCRIPT_ROOT_DIR:-.}/_lib/orchestration/resolve_stack.sh" "libscript.json" 2>/dev/null | jq -r '.selected[] | "\(.name) \(.version // "latest")"' 2>/dev/null | tr '\n' ' ')
@@ -45,7 +45,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
       printf '%s\n' "OUT_DIR=\"${OUT_DIR:-.}\""
       printf '%s\n' "mkdir -p \"\$OUT_DIR\""
       meta_depends=""
-      set -- "$deps_list"
+      # shellcheck disable=SC2086
+      set -- $deps_list
       while [ $# -gt 0 ]; do
         pkg=$1; ver=$2; shift 2
         pkg_name="${APP_NAME}-${pkg}"

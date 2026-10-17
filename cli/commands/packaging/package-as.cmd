@@ -87,6 +87,10 @@ if /i "%PKG_TYPE%"=="rootfs-tar" goto do_rootfs_tar
 if /i "%PKG_TYPE%"=="rootfs_tar" goto do_rootfs_tar
 if /i "%PKG_TYPE%"=="bsd-img" goto do_bsd_img
 if /i "%PKG_TYPE%"=="bsd_img" goto do_bsd_img
+if /i "%PKG_TYPE%"=="illumos-distro" goto do_illumos_distro
+if /i "%PKG_TYPE%"=="illumos_distro" goto do_illumos_distro
+if /i "%PKG_TYPE%"=="freebsd-distro" goto do_freebsd_distro
+if /i "%PKG_TYPE%"=="freebsd_distro" goto do_freebsd_distro
 if /i "%PKG_TYPE%"=="unikernel" goto do_unikernel
 if /i "%PKG_TYPE%"=="docker-image" goto do_container_base
 if /i "%PKG_TYPE%"=="oci-image" goto do_container_base
@@ -224,6 +228,18 @@ exit /b %ERRORLEVEL%
 :: Performs the do_bsd_img operation and updates component state.
 :do_bsd_img
 call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\bsd_img.cmd" %*
+exit /b %ERRORLEVEL%
+
+:: ## do_illumos_distro
+:: Performs the do_illumos_distro operation and updates component state.
+:do_illumos_distro
+call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\illumos_distro.cmd" %*
+exit /b %ERRORLEVEL%
+
+:: ## do_freebsd_distro
+:: Performs the do_freebsd_distro operation and updates component state.
+:do_freebsd_distro
+call "%LIBSCRIPT_ROOT_DIR%\cli\commands\package_as\freebsd_distro.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_unikernel
