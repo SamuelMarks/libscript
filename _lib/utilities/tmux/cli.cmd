@@ -11,19 +11,19 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -86,7 +86,7 @@ if %errorlevel% equ 0 (
 )
 
 if "!TMUX_CMD!"=="" (
-    call "%LOG_CMD%" :log_error "Neither psmux nor tmux found. Please ensure one is installed and in your PATH."
+    call "!LOG_CMD!" :log_error "Neither psmux nor tmux found. Please ensure one is installed and in your PATH."
     exit /b 1
 )
 
@@ -97,7 +97,7 @@ if "%ACTION%"=="attach" goto :attach
 if "%ACTION%"=="kill" goto :kill
 if "%ACTION%"=="list" goto :list
 
-call "%LOG_CMD%" :log_error "Unknown action: %ACTION%. Supported: new-session, attach, kill, list."
+call "!LOG_CMD!" :log_error "Unknown action: %ACTION%. Supported: new-session, attach, kill, list."
 exit /b 1
 
 :: ## new_session
@@ -121,16 +121,16 @@ goto loop
 :run
 !TMUX_CMD! has-session -t "%SESSION_NAME%" >nul 2>&1
 if %errorlevel% equ 0 (
-    call "%LOG_CMD%" :log_info "Session %SESSION_NAME% already exists. Attaching..."
+    call "!LOG_CMD!" :log_info "Session %SESSION_NAME% already exists. Attaching..."
     !TMUX_CMD! attach-session -t "%SESSION_NAME%"
 ) else (
-    call "%LOG_CMD%" :log_info "Creating new detached session: %SESSION_NAME%"
+    call "!LOG_CMD!" :log_info "Creating new detached session: %SESSION_NAME%"
     if "%REST_ARGS%"=="" (
         !TMUX_CMD! new-session -d -s "%SESSION_NAME%"
     ) else (
         !TMUX_CMD! new-session -d -s "%SESSION_NAME%" "%REST_ARGS:~1%"
     )
-    call "%LOG_CMD%" :log_info "Started successfully."
+    call "!LOG_CMD!" :log_info "Started successfully."
 )
 exit /b 0
 
@@ -139,7 +139,7 @@ exit /b 0
 :attach
 set "SESSION_NAME=%~2"
 if "%SESSION_NAME%"=="" set "SESSION_NAME=ml-session"
-call "%LOG_CMD%" :log_info "Attaching to session: %SESSION_NAME%"
+call "!LOG_CMD!" :log_info "Attaching to session: %SESSION_NAME%"
 !TMUX_CMD! attach-session -t "%SESSION_NAME%"
 exit /b 0
 
@@ -148,7 +148,7 @@ exit /b 0
 :kill
 set "SESSION_NAME=%~2"
 if "%SESSION_NAME%"=="" set "SESSION_NAME=ml-session"
-call "%LOG_CMD%" :log_info "Killing session: %SESSION_NAME%"
+call "!LOG_CMD!" :log_info "Killing session: %SESSION_NAME%"
 !TMUX_CMD! kill-session -t "%SESSION_NAME%" >nul 2>&1
 exit /b 0
 

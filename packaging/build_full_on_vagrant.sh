@@ -52,15 +52,18 @@ $SCP_CMD payload.tar.gz vagrant@$VM_IP:C:/libscript/payload.tar.gz
 
 echo "[INFO] Extracting archive on VM..."
 $SSH_CMD "powershell -Command \"cd C:\libscript; tar -xzf payload.tar.gz\""
-
-cat << 'PS1_EOF' > build.ps1
-$env:PATH += ';' + $env:USERPROFILE + '\.libscript\wix\3.14\bin'
+if [ -d "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets" ]; then
+    $SCP_CMD "${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/openedx/assets/"* vagrant@$VM_IP:C:/libscript/packaging/assets/
+fi
+cat << 'EOF' > build.ps1
+$env:PATH += ';' + $env:USERPROFILE + '\.libscript\msi-rs\default\bin;' + $env:USERPROFILE + '\.libscript\msi-rs\v0.0.1\bin'
 cd C:\libscript
-cmd.exe /c packaging\build_msi.cmd stacks\cms\openedx --online --out OpenEdX-Setup --use-wix
-cmd.exe /c packaging\build_msi.cmd stacks\cms\openedx --offline --out OpenEdX-Setup-Offline --use-wix
-PS1_EOF
+cmd.exe /c packaging\build_msi.cmd _lib\web-apps\openedx --online --out OpenEdX-Setup
+cmd.exe /c packaging\build_msi.cmd _lib\web-apps\openedx --offline --out OpenEdX-Setup-Offline
+EOF
 
 $SCP_CMD build.ps1 vagrant@$VM_IP:C:/libscript/build.ps1
+rm -f payload.tar.gz build.ps1
 $SSH_CMD "powershell -ExecutionPolicy Bypass -File C:\libscript\build.ps1"
 
 echo "[INFO] Downloading MSIs..."

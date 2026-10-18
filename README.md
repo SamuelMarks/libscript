@@ -10,48 +10,91 @@ LibScript is a unified software delivery substrate written in pure, zero-depende
 (`/bin/sh`) and native Windows Batch (`.cmd`) / PowerShell (`.ps1`). It bridges the gap between
 everyday developer toolchain management and full-system operating system engineering.
 
-Whether you need a lightweight, universal replacement for `nvm`, `pyenv`, `rustup`, and `rvm`, an
-automated pipeline to compile and bake customized Linux, FreeBSD, and illumos systems into bootable
-images (`package-as`), or a multicloud operator to orchestrate distributed TPU training clusters and
-inference engines, LibScript handles the entire lifecycle through a single, idempotent interface.
+Whether you need a lightweight, universal replacement for `nvm`, `pyenv`, `rustup`, and `rvm` (for
+everything from Node.js to PostgreSQL), an automated pipeline to export native installers (`.msi`,
+`.exe`, `.rpm`, `.deb`, `.pkg`, `.dmg`, `.apk`, `Dockerfile`, `docker-compose.yml`) and disk images
+(`qcow2`, `raw-img`) or bake customized Unikernels (`OSv`, `MirageOS`), Linux, FreeBSD, and illumos
+kernels, or a multicloud operator to deploy across Google Cloud, AWS, and Azure, run multi-node
+clusters (Kubernetes, Apache Mesos, HashiCorp Nomad), execute batch jobs (ML training, search-engine
+reindexing), manage stateful lifecycles (backup/restore, zero-downtime upgrade/downgrade), and
+orchestrate high-availability topologies (PostgreSQL HA, Redis HA, RabbitMQ HA), LibScript handles
+the entire lifecycle through a single, idempotent interface.
 
 ```mermaid
 flowchart TD
-    subgraph T3["3. Multicloud & TPU Deployment"]
+    subgraph T0["0. Universal Version Managers (nvm / rustup / rvm / pyenv replacement)"]
         direction LR
-        c1["Google Cloud"] ~~~ c2["Microsoft Azure"] ~~~ c3["Amazon AWS"] ~~~ c4["TPU Clusters (xpk)"] ~~~ c5["ML Training & vLLM"] ~~~ c6["..."]
+        r1["Node.js"] ~~~ r2["Python"] ~~~ r3["Rust"] ~~~ r4["Ruby"] ~~~ r5["PostgreSQL"] ~~~ r6["Redis & RabbitMQ"] ~~~ r7["160+ Recipes..."]
     end
 
-    subgraph T2["2. OS Bakery"]
+    subgraph T1["1. Native Installers & Container Packages (package-as)"]
         direction LR
-        k1["Linux Kernel & UKI"] ~~~ k2["FreeBSD & illumos"] ~~~ k3["Unikernels (OSv, MirageOS, ...)"] ~~~ k4["LUKS2 / ZFS"] ~~~ k5["..."]
+        p1[".msi / .exe"] ~~~ p2[".rpm / .deb / .apk"] ~~~ p3[".pkg / .dmg"] ~~~ p4["Dockerfile"] ~~~ p5["Docker Compose"] ~~~ p6["..."]
     end
 
-    subgraph T1["1. package-as Formats"]
+    subgraph T2["2. Virtual Machine & Disk Images (package-as)"]
         direction LR
-        p1["Docker / Compose"] ~~~ p2[".msi"] ~~~ p3[".deb"] ~~~ p4[".apk"] ~~~ p5["qcow2"] ~~~ p6["raw-img"] ~~~ p7["..."]
+        v1["qcow2"] ~~~ v2["raw-img"] ~~~ v3["vmdk / vdi"] ~~~ v4["iso / vagrant-box"] ~~~ v5["bsd-img"] ~~~ v6["..."]
     end
 
-    subgraph T0["0. Version Managers & Catalog Recipes"]
+    subgraph T3["3. Kernel & Unikernel OS Bakery"]
         direction LR
-        r1["Python"] ~~~ r2["Node.js"] ~~~ r3["nginx"] ~~~ r4["Redis"] ~~~ r5["PostgreSQL"] ~~~ r6["Open edX"] ~~~ r7["..."]
+        k1["Unikernels (OSv, MirageOS)"] ~~~ k2["Linux Kernel & UKI"] ~~~ k3["FreeBSD Kernel & World"] ~~~ k4["illumos Kernel & IPS"]
     end
 
-    T0 ==>|Package Into| T1
-    T1 ==>|Bake Into| T2
-    T2 ==>|Deploy Onto| T3
+    subgraph T4["4. Multicloud & Hardware Accelerator Deployment"]
+        direction LR
+        c1["Google Cloud (GCP)"] ~~~ c2["Amazon Web Services (AWS)"] ~~~ c3["Microsoft Azure"] ~~~ c4["Hetzner / Proxmox / Bare Metal"]
+    end
+
+    subgraph T5["5. Multi-Node Cluster Schedulers (Side-by-Side Execution)"]
+        direction LR
+        s1["Kubernetes (k8s / k0s / k8s-thw)"] ~~~ s2["Apache Mesos & Marathon"] ~~~ s3["HashiCorp Nomad"] ~~~ s4["Slurm / Ray / XPK"]
+    end
+
+    subgraph T6["6. Distributed Batch & AI Jobs"]
+        direction LR
+        j1["ML Training (TPU / GPU)"] ~~~ j2["Search-Engine Reindexing (Elasticsearch / Meilisearch)"] ~~~ j3["vLLM & JetStream Inference"]
+    end
+
+    subgraph T7["7. Stateful Backup & Restore"]
+        direction LR
+        b1["Physical & Tenant Backups"] ~~~ b2["CoW Snapshots (ZFS / Btrfs)"] ~~~ b3["Object Storage Sync (S3 / GCS / Azure / Restic)"] ~~~ b4["Point-in-Time Restore"]
+    end
+
+    subgraph T8["8. Application Upgrade & Downgrade"]
+        direction LR
+        u1["Stateful Schema & Data Migration"] ~~~ u2["Rolling / Blue-Green / Canary"] ~~~ u3["Atomic Version Rollback / Downgrade"]
+    end
+
+    subgraph T9["9. High-Availability (HA) Topologies"]
+        direction LR
+        h1["PostgreSQL HA (Patroni / etcd)"] ~~~ h2["Redis & Valkey HA (Sentinel / Cluster)"] ~~~ h3["RabbitMQ HA (Quorum Queues)"] ~~~ h4["Split-Brain Fencing & VIP"]
+    end
+
+    T0 ==>|Export Packages| T1
+    T1 ==>|Assemble Disks| T2
+    T2 ==>|Embed & Bake Into| T3
+    T3 ==>|Deploy Images Onto| T4
+    T4 ==>|Run Multi-Node Clusters| T5
+    T5 ==>|Schedule Workloads| T6
+    T5 ==>|Snapshot & Ship| T7
+    T5 ==>|Migrate & Rollback| T8
+    T6 & T7 & T8 ==>|Converge Into| T9
 ```
 
 ---
 
-## 🌟 The Core Experience: Native Version Management
+## 🌟 The Core Experience: Native Version Management (Stage 0)
 
 Before building operating systems or provisioning cloud fleets, developers need clean, isolated,
 multi-version runtime environments without installing dozens of separate, conflicting version
 managers.
 
 LibScript natively replaces **`nvm`**, **`pyenv`**, **`rustup`**, **`rvm`**, **`sdkman`**,
-**`fnm`**, and **`go` version managers** with a single unified, cross-platform CLI.
+**`fnm`**, and **`go` version managers** with a single unified, cross-platform CLI covering
+everything from **Node.js**, **Python**, **Rust**, and **Ruby** to **PostgreSQL**, **Redis**,
+**RabbitMQ**, **Elasticsearch**, and **Kubernetes**.
 
 ### ⚡ Why Drop Third-Party Version Managers?
 
@@ -65,7 +108,7 @@ LibScript natively replaces **`nvm`**, **`pyenv`**, **`rustup`**, **`rvm`**, **`
 
 ### 🛠️ Universal Workflow (`ls-remote`, `install`, `ls`, `use`, `uninstall`)
 
-Manage any language, runtime, or database with the exact same five commands:
+Manage any language, runtime, database, or cluster orchestrator with the exact same five commands:
 
 ```mermaid
 flowchart LR
@@ -77,9 +120,9 @@ flowchart LR
     subgraph Sandbox["Isolated LIBSCRIPT_HOME (~/.libscript)"]
         Node20["nodejs/20.0.0/bin/node"]
         Node22["nodejs/22.14.0/bin/node"]
-        Py311["python/3.11.9/bin/python"]
         Py312["python/3.12.3/bin/python"]
         Rust185["rust/1.85.0/bin/rustc"]
+        Pg16["postgres/16/bin/postgres"]
     end
 
     CMD -->|Activates & Prepends| Node22
@@ -92,6 +135,7 @@ flowchart LR
 ./libscript.sh ls-remote python
 ./libscript.sh ls-remote rust
 ./libscript.sh ls-remote ruby
+./libscript.sh ls-remote postgres
 
 # 2. Install specific versions side-by-side without global pollution
 ./libscript.sh install nodejs 22.14.0
@@ -101,7 +145,7 @@ flowchart LR
 
 # 3. Inspect locally installed versions
 ./libscript.sh ls nodejs
-./libscript.sh ls python
+./libscript.sh ls postgres
 
 # 4. Activate a specific version in the current shell session
 ./libscript.sh use nodejs 22.14.0
@@ -127,40 +171,45 @@ the global orchestrator or directly within each component's directory:
 
 ---
 
-## 🏛️ The Three-Tier Architecture
+## 🏛️ The Five-Tier Architecture
 
-LibScript organizes systems into three strictly decoupled, composable tiers to prevent cross-layer
-pollution while enabling seamless escalation from a single CLI tool to a distributed cloud cluster.
+LibScript organizes systems into five strictly decoupled, composable architectural tiers (plus
+cross-cutting traits) to prevent cross-layer pollution while enabling seamless escalation from a
+single CLI tool to a multi-node high-availability cloud cluster.
 
 ```mermaid
 flowchart TD
-    subgraph Tier1["Tier 1: Leaf Recipes, Toolchains & Native Version Managers"]
-        T1_VM["Universal Version Managers<br/>(Node.js, Python, Rust, Ruby, Go, Java, Postgres)"]
-        T1_Bootstrap["Toolchain Bootstrap<br/>(Stage 0 /tools, Stage 1 minimal userland)"]
-        T1_Base["Base Catalogs & Desktops<br/>(Glibc, Musl, Wayland, Sway, KDE Plasma, PipeWire, Net)"]
+    subgraph Tier1["Tier 1 & 1.5: Leaf Recipes, Toolchains, Version Managers & Base OS Userland"]
+        T1_VM["0. Universal Version Managers<br/>(Node.js, Python, Rust, Ruby, Go, Java, PostgreSQL, Redis, RabbitMQ)"]
+        T1_Hooks["Dual-Layer Lifecycle Hooks<br/>(7. backup/restore, 8. upgrade/rollback, provision_tenant, probe)"]
+        T1_Base["Base Catalogs, Init Systems & Desktops<br/>(Glibc, Musl, systemd, OpenRC, Wayland, Sway, KDE Plasma, PipeWire)"]
     end
 
-    subgraph Tier2["Tier 2: Synthesizers, Assemblers & Image Builders"]
-        T2_Config["Configurator & Solver<br/>(libscript config os, os-config.schema.json, resolve_stack.jq)"]
-        T2_VFS["Rootfs & VFS Sandbox<br/>(mount_target_vfs, chroot namespaces, FHS layout)"]
-        T2_Storage["Storage & Encryption<br/>(GPT/MBR, LUKS2 argon2id, Ext4, Btrfs, XFS, ZFS)"]
-        T2_Kernel["Kernel & Distro Subsystem<br/>(Linux vmlinuz + UKI, FreeBSD World, illumos IPS)"]
-        T2_Package["package-as Factory<br/>(raw-img, qcow2, iso, vmdk, bsd-img, docker, unikernel)"]
+    subgraph Tier2["Tier 2: OS Synthesizers, Kernels, Unikernels & Image Builders"]
+        T2_Pkg["1. Installer & Container Exporters<br/>(.msi, .exe, .rpm, .deb, .pkg, .dmg, .apk, Dockerfile, Docker Compose)"]
+        T2_Disk["2. VM & Disk Image Factory<br/>(qcow2, raw-img, vmdk, vdi, iso, vagrant-box, bsd-img)"]
+        T2_Kernel["3. Kernel & Unikernel Bakery<br/>(Unikernels: OSv & MirageOS; Linux UKI; FreeBSD World; illumos IPS)"]
     end
 
-    subgraph Tier3["Tier 3: Operators & Multicloud Deployers"]
-        T3_Cloud["Cloud Providers<br/>(AWS EC2, GCP, Azure, Proxmox, Hetzner, Vagrant)"]
-        T3_AI["AI Acceleration<br/>(TPU VMs, GKE + XPK Training, vLLM, JetStream)"]
-        T3_PaaS["Universal PaaS & Ingress<br/>(netctl, Automated TLS, systemd / launchd)"]
+    subgraph Tier3["Tier 3: Multicloud Operators & Hypervisors"]
+        T3_Cloud["4. Public Clouds & Bare Metal<br/>(Google Cloud, AWS, Azure, Hetzner, Proxmox, QEMU, Firecracker)"]
+        T3_Traits["Unified Node Traits<br/>(storage, secrets, WireGuard mesh, firewall, discovery, tls, ingress, backup, maintenance)"]
     end
 
-    T1_Base -->|Context Contract: LIBSCRIPT_TARGET_SYSROOT| T2_VFS
-    T2_Package -->|Deploys Images & Orchestrates Nodes| T3_Cloud
+    subgraph Tier35_4["Tier 3.5 & Tier 4: Multi-Node Schedulers, Jobs & HA Topologies"]
+        T4_Sched["5. Multi-Node Cluster Schedulers<br/>(Kubernetes, Apache Mesos & Marathon, HashiCorp Nomad, Slurm/Ray, XPK)"]
+        T4_Jobs["6. Declarative Payloads & Batch Jobs<br/>(ML Training on TPU/GPU, Search-Engine Reindexing, vLLM Serving)"]
+        T35_HA["9. High-Availability Topologies & Consensus<br/>(PostgreSQL HA, Redis/Valkey HA, RabbitMQ HA, Split-Brain Fencing)"]
+    end
+
+    Tier1 -->|Context Contract: LIBSCRIPT_TARGET_SYSROOT| Tier2
+    Tier2 -->|Deploys Baked Images Onto| Tier3
+    Tier3 -->|Bootstraps & Connects Multi-Node Fleets| Tier35_4
 ```
 
 ---
 
-### Tier 1: Leaf Recipes & Cross-Toolchain Compilation
+### Tier 1 & 1.5: Leaf Recipes, Cross-Toolchains & Base Userland
 
 Tier 1 components are modular, autonomous recipes located in `_lib/`. They adhere to a strict
 **Context Contract**:
@@ -189,200 +238,303 @@ Tier 1 components are modular, autonomous recipes located in `_lib/`. They adher
 
 ---
 
-### Tier 2: Synthesizers, Assemblers & Kernel Image Baking
+### Tier 2: Package Exporters, Disk Images & Kernel/Unikernel Baking (Stages 1, 2 & 3)
 
-Tier 2 elevates LibScript from software provisioning to full operating system synthesis. Instead of
-relying on pre-baked generic cloud images, Tier 2 builds custom, lean OS images from the ground up.
+Tier 2 elevates LibScript from software provisioning to universal artifact packaging and full
+operating system synthesis. Instead of relying on pre-baked generic cloud images, Tier 2 exports
+native packages, virtual disk images, and custom kernels or unikernels from the ground up.
 
 ```mermaid
 flowchart TD
-    Config["os-config.json<br/>(Profile Spec)"] --> Solver["resolve_stack.jq<br/>(Tarjan SCC Solver)"]
+    Stack["libscript.json / os-config.json"] --> Solver["resolve_stack.jq<br/>(Tarjan SCC Solver)"]
     Solver --> VFS["Isolated VFS Sandbox<br/>(mount_target_vfs.sh)"]
-    VFS --> Staged["Staged Sysroot<br/>(Tier 1 Recipes)"]
-    VFS --> Kernel["Kernel Baking Subsystem<br/>(vmlinuz + initramfs + UKI)"]
-    Staged --> Disk["Storage & Partitioning<br/>(GPT, LUKS2, Btrfs / ZFS)"]
-    Kernel --> Disk
-    Disk --> Packaging["package-as Factory<br/>(raw-img, qcow2, iso, bsd-img)"]
+
+    VFS --> Stage1["1. Native Installers & Containers<br/>(.msi, .exe, .rpm, .deb, .pkg, .dmg, .apk, Dockerfile, Compose)"]
+    VFS --> Stage3["3. Kernel & Unikernel Bakery<br/>(OSv, MirageOS, Linux vmlinuz+UKI, FreeBSD, illumos)"]
+    Stage3 --> Stage2["2. Bootable Disk Images<br/>(qcow2, raw-img, vmdk, vdi, iso, bsd-img)"]
 ```
 
-#### 1. Declarative OS Configurator (`libscript config os`)
+#### 1. Export to Native Installers & Container Formats (Stage 1)
 
-Configure complete operating systems interactively via a terminal TUI (matching `menuconfig`) or
-non-interactively via validated JSON schemas (`os-config.schema.json`):
-
-```sh
-# Launch the interactive terminal configuration menu
-./libscript.sh config os
-
-# Load a curated profile template
-./libscript.sh config os --profile=linux-desktop-sway-wayland
-
-# Headless validation and JSON export
-./libscript.sh config os --validate=my-os.json
-./libscript.sh config os --export=production-os.json
-```
-
-Curated profiles ship out-of-the-box in `profiles/`:
-
-- `linux-minimal-headless-musl.json` (ultra-compact, Musl/BusyBox server)
-- `linux-standard-server-glibc.json` (production Glibc enterprise server)
-- `linux-desktop-sway-wayland.json` (Wayland, Sway, PipeWire, seatd, greetd)
-- `linux-desktop-hyprland.json` (dynamic tiling Wayland compositor, SDDM)
-- `linux-desktop-kde-plasma.json` (KDE Plasma 6, SDDM, PipeWire)
-- `linux-desktop-xfce-x11.json` (lightweight XFCE4, X11, LightDM)
-- `freebsd-server-standard.json` (FreeBSD 14.x, ZFS root pool, OpenSSH)
-- `freebsd-desktop-xfce.json` (FreeBSD desktop with DRM KMS graphics)
-- `profiles/illumos/` (illumos / OpenIndiana / OmniOS minimal and server profiles)
-- `firecracker-microvm-appliance.json` (sub-15ms boot MicroVM appliance)
-- `unikraft-nginx-redis.json` & `osv-cloud-runtime.json` (specialized unikernels)
-
-#### 2. Rootfs Staging, VFS & Chroot Isolation
-
-- Initializes standard FHS hierarchies (`_lib/orchestration/create_fhs_layout.sh`) with merged or
-  split `/usr`.
-- Automates virtual kernel filesystem mounting (`_lib/orchestration/vfs/mount_target_vfs.sh`):
-  mounts `devtmpfs`, `devpts`, `proc`, `sysfs`, and `tmpfs` idempotently with cleanup traps.
-- Executes build phases in isolated chroot namespaces (`_lib/orchestration/runner/runner.sh`).
-
-#### 3. Storage, Partitioning & Encryption
-
-Automates virtual disk provisioning (`_lib/storage/`):
-
-- **Partitioning Schemes**: Modern UEFI (GPT + EFI System Partition), Legacy BIOS (MBR), or Hybrid
-  BIOS/UEFI.
-- **Full Disk Encryption**: LUKS2 containers with `argon2id` key derivation and automated
-  `/etc/crypttab`.
-- **Filesystem Assembly**: High-performance formatting for Ext4, Btrfs (with subvolumes `@`,
-  `@home`, `@snapshots`), XFS, VFAT, and ZFS datasets.
-
-#### 4. Linux, FreeBSD & illumos Kernel/Distro Baking
-
-LibScript bakes custom kernels and operating system environments directly into bootable media:
-
-- **Linux Kernel Engine (`_lib/kernel/linux/`)**:
-  - Cryptographically verifies kernel sources.
-  - Merges modular `.cfg` fragments (`virtio.cfg`, `wayland_drm.cfg`, `sound.cfg`, `zfs.cfg`).
-  - Compiles `bzImage`, modules, and device tree blobs (`dtbs`).
-  - Installs kernel, System.map, and runs `depmod` in the target sysroot.
-- **Initramfs Generation (`_lib/kernel/initramfs/`)**:
-  - Packs a minimal static BusyBox/Toybox environment, device nodes, and essential drivers (`nvme`,
-    `virtio_blk`, `dm-crypt`, filesystems).
-  - Generates a robust POSIX `/init` script supporting UUID/PARTUUID discovery, LUKS decryption, and
-    clean `switch_root`.
-  - Emits compressed CPIO images (`zstd -19`).
-- **FreeBSD Kernel & World Engine (`_lib/freebsd/`)**:
-  - Automates FreeBSD source checkout and `/etc/src.conf` / `/etc/make.conf` generation.
-  - Orchestrates isolated `buildworld` and `buildkernel` with `MAKEOBJDIRPREFIX`.
-  - Installs world and distribution files into the target rootfs.
-- **illumos Distro & Packaging Engine (`_lib/illumos/distro/`)**:
-  - Orchestrates bootable illumos image synthesis (OpenIndiana and OmniOS userland and kernel).
-  - Configures IPS (Image Packaging System) repositories, ZFS boot environments, and SMF services.
-  - Generates bootable raw disk images, ISOs, and Vagrant boxes.
-- **Bootloaders & Unified Kernel Images (UKI)**:
-  - Installs GRUB2 (UEFI/BIOS), `systemd-boot`, or Limine.
-  - Combines kernel, initramfs, cmdline, and OS release into single signed `.efi` Unified Kernel
-    Images.
-
-#### 5. Universal Artifact Packaging (`package-as`)
-
-Turn any stack or synthesized operating system into ready-to-deploy bootable media:
+Package any software stack or runtime into native OS installers and container definitions via
+`package-as`:
 
 ```sh
-# Generate a raw partitioned disk image for bare-metal flashing (dd if=... of=/dev/sdX)
-./libscript.sh package-as raw-img
+# Windows Installers (.msi and .exe via WiX / msi-rs / NSIS / Inno Setup)
+./libscript.sh package-as msi        # Windows Installer (.msi)
+./libscript.sh package-as nsis       # Windows NSIS executable (.exe)
+./libscript.sh package-as innosetup  # Windows Inno Setup executable (.exe)
 
-# Generate compressed virtual machine disks
-./libscript.sh package-as qcow2      # QEMU / KVM / Proxmox
-./libscript.sh package-as vmdk       # VMware ESXi / Workstation
-./libscript.sh package-as vdi        # VirtualBox
-./libscript.sh package-as vagrant-box # Vagrant Box (QEMU / Libvirt / VirtualBox)
+# Linux & BSD System Packages (.rpm, .deb, .apk, .txz)
+./libscript.sh package-as rpm        # Red Hat / Fedora / Enterprise Linux (.rpm)
+./libscript.sh package-as deb        # Debian / Ubuntu (.deb)
+./libscript.sh package-as apk        # Alpine Linux (.apk)
+./libscript.sh package-as txz        # FreeBSD / illumos archive package (.txz)
 
-# Generate a live bootable hybrid ISO (UEFI + BIOS) with SquashFS and OverlayFS
-./libscript.sh package-as iso
-
-# Export clean rootfs archives and multi-container environments
-./libscript.sh package-as rootfs-tar
-./libscript.sh package-as docker
-./libscript.sh package-as docker-compose
-
-# Generate bootable FreeBSD & illumos images (UFS/ZFS) for bhyve or bare metal
-./libscript.sh package-as bsd-img
-./libscript.sh package-as illumos-distro
-
-# Emit microVM direct boot kernels for Firecracker or Cloud-Hypervisor
-./libscript.sh package-as unikernel
-
-# Generate native enterprise installers
-./libscript.sh package-as msi        # Windows Installer (msi-rs)
-./libscript.sh package-as nsis       # Windows NSIS installer
-./libscript.sh package-as innosetup  # Windows Inno Setup installer
-./libscript.sh package-as deb        # Debian / Ubuntu package
-./libscript.sh package-as rpm        # Red Hat / Fedora package
-./libscript.sh package-as apk        # Alpine Linux package
-./libscript.sh package-as txz        # FreeBSD / illumos archive package
+# macOS Native Bundles (.pkg, .dmg)
 ./libscript.sh package-as pkg        # macOS flat installer (.pkg)
 ./libscript.sh package-as dmg        # macOS disk image (.dmg)
-./libscript.sh package-as tui        # Interactive Terminal UI installer
+
+# Container & Multi-Container Orchestration
+./libscript.sh package-as docker         # Hermetic multi-stage Dockerfile
+./libscript.sh package-as docker-compose # Multi-service docker-compose.yml
+./libscript.sh package-as rootfs-tar     # Clean rootfs tarball archive
+./libscript.sh package-as tui            # Interactive Terminal UI installer
+```
+
+#### 2. Export to Virtual Machine & Raw Disk Images (Stage 2)
+
+```sh
+# Generate compressed & raw virtual machine disks
+./libscript.sh package-as qcow2       # QEMU / KVM / Proxmox (qcow2)
+./libscript.sh package-as raw-img     # Partitioned bare-metal / cloud disk image (raw-img)
+./libscript.sh package-as vmdk        # VMware ESXi / Workstation (vmdk)
+./libscript.sh package-as vdi         # Oracle VirtualBox (vdi)
+./libscript.sh package-as vagrant-box # Vagrant Box (QEMU / Libvirt / VirtualBox)
+./libscript.sh package-as iso         # Live bootable hybrid ISO (UEFI + BIOS, SquashFS + OverlayFS)
+```
+
+Automates virtual disk provisioning (`_lib/storage/`) with UEFI (GPT + ESP) or Hybrid BIOS/UEFI
+partitioning, **LUKS2** full-disk encryption (`argon2id`), and **Ext4**, **Btrfs** (`@`, `@home`,
+`@snapshots`), **XFS**, or **ZFS** filesystems.
+
+#### 3. Embed Into Unikernels, Linux, FreeBSD & illumos Kernels (Stage 3)
+
+LibScript embeds staged applications directly into specialized unikernels and custom-compiled
+operating system kernels:
+
+- **Unikernels (`OSv`, `MirageOS`, `Unikraft`, `Solo5`)**:
+  - Compiles single-address-space unikernel images (`./libscript.sh package-as unikernel`) and Solo5
+    tenders (`_lib/orchestration/solo5/`) for sub-15ms boot on Firecracker, Cloud-Hypervisor, and
+    KVM.
+  - Ships curated profiles including `profiles/osv-cloud-runtime.json`,
+    `profiles/unikraft-nginx-redis.json`, and `profiles/firecracker-microvm-appliance.json`.
+- **Linux Kernel Engine (`_lib/kernel/linux/` & `_lib/kernel/initramfs/`)**:
+  - Cryptographically verifies kernel sources, merges modular `.cfg` fragments (`virtio.cfg`,
+    `wayland_drm.cfg`, `sound.cfg`, `zfs.cfg`), compiles `bzImage` + `dtbs`, packs a `zstd -19`
+    initramfs, and signs single-file `.efi` Unified Kernel Images (UKI) with GRUB2, `systemd-boot`,
+    or Limine.
+- **FreeBSD Kernel & World Engine (`_lib/freebsd/`)**:
+  - Automates FreeBSD source checkout, isolated `buildworld` and `buildkernel`, and ZFS/UFS image
+    generation (`./libscript.sh package-as bsd-img`).
+- **illumos Kernel & Distro Engine (`_lib/illumos/distro/`)**:
+  - Synthesizes bootable OpenIndiana and OmniOS kernel/userland images with IPS repositories, ZFS
+    boot environments, and SMF services (`./libscript.sh package-as illumos-distro`).
+
+```sh
+# Configure OS profiles interactively or declaratively
+./libscript.sh config os --profile=osv-cloud-runtime --export=unikernel-os.json
+./libscript.sh config os --profile=linux-minimal-headless-musl --export=linux-os.json
+./libscript.sh config os --profile=freebsd-server-standard --export=freebsd-os.json
 ```
 
 ---
 
-### Tier 3: Operators, Multicloud Deployers & AI Infrastructure
+### Tier 3: Multicloud Deployment: Google Cloud, AWS & Azure (Stage 4)
 
-Tier 3 deploys synthesized images, containers, and applications across public clouds, private
-virtualization hypervisors, and distributed AI accelerators.
-
-#### 🌍 Multicloud Provisioning & Lifecycle
-
-Manage cloud infrastructure idempotently across AWS, Azure, GCP, Proxmox VE, Hetzner Cloud, and
-local Vagrant environments without proprietary lock-in:
+Tier 3 deploys synthesized OS images, unikernels, containers, and application stacks directly onto
+**Google Cloud (GCP)**, **Amazon Web Services (AWS)**, **Microsoft Azure**, as well as **Hetzner
+Cloud**, **Proxmox VE**, and local hypervisors.
 
 ```sh
-# Provision a complete stack on AWS: <provider> <stack-name> <network> <region> <local-path> <remote-path>
-./libscript.sh provision aws production-stack vpc-main us-east-1 ./ ~/app
+# Deploy onto Google Cloud (GCP)
+./libscript.sh provision gcp prod-cluster vpc-main us-central1-a ./ ~/app
+./libscript.sh cloud gcp firewall create allow-ingress --network vpc-main --allow tcp:80,tcp:443
 
-# Deprovision resources and tear down stack
-./libscript.sh deprovision aws production-stack vpc-main us-east-1
-
-# Manage cloud networking and security groups
+# Deploy onto Amazon Web Services (AWS)
+./libscript.sh provision aws prod-cluster vpc-main us-east-1 ./ ~/app
 ./libscript.sh cloud aws network create vpc-main
-./libscript.sh cloud gcp firewall create allow-http --network vpc-main --allow tcp:80,tcp:443
 
-# Deploy compute nodes directly to Azure or Hetzner
-./libscript.sh cloud azure node deploy worker-node-01 resource-grp ./src ~/app
-./libscript.sh cloud hetzner node deploy app-server-01 ~/app
+# Deploy onto Microsoft Azure
+./libscript.sh provision azure prod-cluster rg-east eastus ./ ~/app
+./libscript.sh cloud azure node deploy worker-node-01 rg-east ./src ~/app
+
+# Clean multicloud teardown
+./libscript.sh deprovision aws prod-cluster vpc-main us-east-1
 ```
 
-#### 🧠 Distributed AI & TPU Training Infrastructure
+---
 
-LibScript provides native integration with hardware accelerators (Google Cloud TPUs and NVIDIA GPUs)
-for distributed model training and high-throughput inference:
+### Tier 3.5 & Tier 4: Multi-Node Schedulers, Jobs, Lifecycle & High Availability (Stages 5–9)
+
+Once images are running on cloud or bare-metal nodes, LibScript coordinates multi-node clusters,
+batch jobs, stateful lifecycle operations, and high-availability consensus topologies.
 
 ```mermaid
-flowchart TD
-    OpsCLI["libscript cloud / provision"] --> Provider{Hardware Accelerator Target}
+flowchart LR
+    subgraph Schedulers["5. Multi-Node Cluster Schedulers"]
+        K8s["Kubernetes<br/>(k8s / k0s / k8s-thw / k8s-marathon)"]
+        Mesos["Apache Mesos<br/>(& Marathon v2 PaaS)"]
+        Nomad["HashiCorp Nomad<br/>(docker & raw_exec)"]
+    end
 
-    Provider -->|GCP Cloud TPUs| TPUCluster["Cloud TPU Pod Slices (v4-128, v5p-2048)<br/>Managed via GKE + xpk"]
-    Provider -->|NVIDIA GPUs| GPUCluster["Multi-Node GPU Instances<br/>(AWS EC2, Azure, On-Prem)"]
+    subgraph Workloads["6, 7 & 8. Jobs & Lifecycle Operations"]
+        Jobs["6. Batch & AI Jobs<br/>(ML Training, Search Reindexing)"]
+        Backup["7. Backup & Restore<br/>(CoW Snapshots, S3/GCS/Restic)"]
+        Upgrade["8. Upgrade & Downgrade<br/>(Rolling Migration & Rollback)"]
+    end
 
-    TPUCluster --> DataStream["Streaming Storage (GCS FUSE) & Telemetry (TensorBoard)"]
-    GPUCluster --> DataStream
+    subgraph HA["9. High-Availability Topologies"]
+        PG_HA["PostgreSQL HA<br/>(Patroni + etcd Raft)"]
+        Redis_HA["Redis & Valkey HA<br/>(Sentinel & 16384-Slot Cluster)"]
+        RMQ_HA["RabbitMQ HA<br/>(Quorum Queues & Clustering)"]
+    end
 
-    DataStream --> Serving["Accelerated Inference Pipelines<br/>(vLLM PagedAttention / JetStream TPU Engine / Ollama)"]
+    Schedulers ==>|Orchestrates| Workloads
+    Schedulers ==>|Maintains Quorum| HA
+    Workloads ==>|Protects & Updates| HA
 ```
 
-- **TPU VM Provisioning**: Automated deployment of single-board and pod TPU VMs pre-wired with
-  [GCS FUSE](https://cloud.google.com/storage/docs/gcs-fuse) for streaming datasets and
-  [TensorBoard](https://www.tensorflow.org/tensorboard) monitoring.
-- **Distributed Training via XPK & GKE**: First-class support for Google's Accelerated Processing
-  Kit ([`xpk`](https://github.com/google/xpk)) to provision and manage large-scale training
-  workloads across TPU Pod slices (`v4-128`, `v5p-2048`) on Google Kubernetes Engine (GKE).
-- **Inference Engine Orchestration**: Turnkey deployment recipes for high-performance LLM serving:
-  - [`vLLM`](https://github.com/vllm-project/vllm): PagedAttention GPU/TPU serving with
-    OpenAI-compatible endpoints.
-  - [`JetStream`](https://github.com/google/JetStream): High-throughput memory-efficient inference
-    engine optimized for TPUs.
-  - [`Ollama`](https://ollama.com/): Local hardware-accelerated LLM execution.
+#### 5. Multi-Node Cluster Orchestration: Kubernetes, Mesos & Nomad (Stage 5)
+
+Run multiple synthesized images side-by-side across multi-node clusters using first-class Tier 1/3
+cluster managers and the Tier 4 declarative payload compiler (`payloads/engine.sh`):
+
+- **Kubernetes (`kubernetes`, `kubernetes-k0s`, `kubernetes-thw`, `k8s-marathon`)**: Full upstream
+  Kubernetes, zero-friction `k0s`, Kubernetes The Hard Way (`k8s-thw`), and the Marathon-equivalent
+  PaaS controller (`k8s-marathon`) translating `payload.json` into `Deployment`, `StatefulSet`,
+  `Job`, `Service`, and `Ingress` manifests.
+- **Apache Mesos & Marathon (`mesos`, `marathon`)**: Two-level distributed systems kernel with
+  ZooKeeper quorum leader election (`topologies/mesos-marathon-ha/topology.json`), supporting both
+  `DOCKER` and `MESOS` Universal Containerizer / native LibScript sandboxes.
+- **HashiCorp Nomad (`nomad`)**: Unified multi-node orchestrator scheduling containerized (`docker`)
+  and isolated native (`raw_exec`) service and batch allocations across Linux, macOS, FreeBSD, and
+  Windows.
+
+```sh
+# Provision multi-node schedulers side-by-side via native version managers or HA topologies
+./libscript.sh install kubernetes latest
+./libscript.sh install mesos 1.11.0
+./libscript.sh install nomad 1.9.0
+
+# Bring up multi-node Mesos+Marathon or Kubernetes HA clusters
+./libscript.sh topology up topologies/mesos-marathon-ha/topology.json
+./libscript.sh topology up topologies/k8s-marathon-paas/topology.json
+./libscript.sh topology up topologies/k0s-ha/topology.json
+
+# Compile and submit the exact same workload payload to Kubernetes, Mesos, or Nomad
+./libscript.sh payload submit payloads/web/stateless-api/payload.json --scheduler kubernetes
+./libscript.sh payload submit payloads/web/stateless-api/payload.json --scheduler mesos
+./libscript.sh payload submit payloads/web/stateless-api/payload.json --scheduler nomad
+```
+
+#### 6. Deploying Distributed Jobs: ML Training & Search-Engine Reindexing (Stage 6)
+
+Schedule one-shot or recurring batch, AI training, and indexing jobs (`"type": "batch"` or
+`"type": "ai-training"`) across Kubernetes Jobs, Nomad Batch allocations, Mesos tasks, Slurm/Ray, or
+Google Cloud TPU Pods (`xpk`):
+
+- **Distributed ML Training & Inference**:
+  - Orchestrates multi-slice TPU Pod training (`v4-128`, `v5p-2048`) via GKE + `xpk` and multi-node
+    GPU training with gang scheduling (`payloads/ai/gke-xpk-training/payload.json`,
+    `_lib/ml-training/`).
+  - Pre-wires [GCS FUSE](https://cloud.google.com/storage/docs/gcs-fuse) dataset streaming,
+    [TensorBoard](https://www.tensorflow.org/tensorboard) telemetry, and high-throughput serving via
+    [`vLLM`](https://github.com/vllm-project/vllm),
+    [`JetStream`](https://github.com/google/JetStream), and [`Ollama`](https://ollama.com/).
+- **Search-Engine Reindexing & Batch Pipelines**:
+  - Provisions and manages **Elasticsearch** (`_lib/search/elasticsearch`) and **Meilisearch**
+    (`_lib/search/meilisearch`), executing zero-downtime index rebuilds, alias swaps, and batch ETL
+    workers (`payloads/batch/etl-worker/payload.json`) across Kubernetes, Nomad, or Mesos.
+
+```sh
+# Submit a distributed ML training job to GKE TPU slices (XPK), Slurm/Ray, or Nomad
+./libscript.sh payload submit payloads/ai/gke-xpk-training/payload.json --scheduler xpk
+./libscript.sh payload submit payloads/ai/gke-xpk-training/payload.json --scheduler slurm_ray
+
+# Submit batch worker & search-engine reindexing jobs to Nomad, Kubernetes, or Mesos
+./libscript.sh payload submit payloads/batch/etl-worker/payload.json --scheduler nomad
+./libscript.sh payload submit payloads/batch/etl-worker/payload.json --scheduler kubernetes
+./libscript.sh payload submit payloads/batch/etl-worker/payload.json --scheduler mesos
+```
+
+#### 7. Stateful Backup & Restore (Stage 7)
+
+LibScript unifies physical instance snapshots, logical multi-tenant backups, Copy-on-Write (CoW)
+filesystem snapshots, and encrypted off-site object storage replication (`traits/backup/` &
+`_lib/_common/hooks.sh`):
+
+- **Physical & Multi-Tenant Hooks**: Every stateful component (`postgres`, `redis`, `valkey`,
+  `mariadb`, `mysql`, `mongodb`, `sqlite`, `etcd`, `openbao`) implements `hooks/backup`,
+  `hooks/restore`, `hooks/backup_tenant`, and `hooks/restore_tenant` with SHA-256 manifest
+  verification.
+- **Filesystem CoW Snapshots**: Atomic ZFS and Btrfs snapshots via `traits/backup/cow_snapshot.sh`.
+- **Multi-Backend Cloud Shipping**: Automated encryption and upload to `s3://`, `gs://`, `azure://`,
+  `rclone://`, `restic://`, and `borg://` via `traits/backup/ship.sh`, scheduled continuously via
+  `traits/maintenance/`.
+
+```sh
+# Execute a physical or tenant-scoped backup with SHA-256 manifest verification
+./_lib/_common/hooks.sh --exec postgres backup /var/backups/postgres
+./_lib/_common/hooks.sh --exec postgres backup_tenant --tenant-id acme_corp
+
+# Take an atomic ZFS/Btrfs CoW snapshot and ship encrypted backups to S3 / GCS / Azure
+./libscript.sh trait apply backup
+./traits/backup/orchestrate.sh postgres /var/backups/postgres s3://my-enterprise-backups/pg
+
+# Verify manifest checksums and restore state
+./_lib/_common/hooks.sh --exec postgres restore /var/backups/postgres
+```
+
+#### 8. Application Upgrade & Downgrade / Rollback (Stage 8)
+
+Transition applications and stateful clusters between versions safely with zero-downtime rollout
+strategies and deterministic rollback hooks:
+
+- **Stateful Upgrade & Downgrade (`hooks/upgrade` & `hooks/rollback`)**: Executes automated data
+  directory and schema migrations when moving forward (`upgrade`), and atomic state reversion when
+  downgrading or recovering from a failed deployment (`rollback`).
+- **Cluster-Wide Rolling Upgrades (`topologies/engine.sh upgrade`)**: Orchestrates epoch-tracked
+  rolling upgrades across multi-node topologies with `RollingUpdate`, `BlueGreen`, or `Recreate`
+  strategies and health-probe gating (`hooks/probe readiness`).
+- **Instant Side-by-Side Version Switching**: Switch active runtime versions instantly via
+  `./libscript.sh use <component> <version>`.
+
+```sh
+# Upgrade a stateful component across versions (with automatic data/schema migration)
+./_lib/_common/hooks.sh --exec postgres upgrade 15 16
+
+# Atomically downgrade / roll back to the previous version if a deployment check fails
+./_lib/_common/hooks.sh --exec postgres rollback 15 16
+
+# Perform a zero-downtime rolling upgrade across an entire multi-node HA cluster topology
+./libscript.sh topology upgrade topologies/postgres-ha/topology.json 16.4
+```
+
+#### 9. High-Availability (HA) Topologies: PostgreSQL HA, Redis HA & RabbitMQ HA (Stage 9)
+
+Tier 3.5 (`topologies/`) orchestrates multi-node consensus clusters with distributed lease locking
+(`topologies/lock.sh`), encrypted **WireGuard** mesh overlays (`traits/mesh/`), automated
+split-brain fencing (`cloud-api-poweroff`, `cloud-api-detach-nic`, `firewall-isolate`,
+`watchdog-reset` in `topologies/fence.sh`), and VIP/DNS ingress routing (`netctl`):
+
+- **PostgreSQL HA (`topologies/postgres-ha/`)**: Multi-node primary/replica streaming replication
+  orchestrated with **Patroni**, **etcd** Raft quorum, **PgBouncer** connection pooling, and
+  automated leader failover.
+- **Redis HA & Valkey HA (`topologies/redis-cluster/`, `topologies/valkey-cluster/`)**: Distributed
+  in-memory caching with **Redis Sentinel** quorum failover and 16384-hash-slot cluster sharding
+  over encrypted WireGuard peering.
+- **RabbitMQ HA (`_lib/message-brokers/rabbitmq/` + HA Topologies)**: Multi-node Erlang cookie
+  clustering, Raft-backed **Quorum Queues**, mirrored exchanges, and `netctl` AMQP load balancing.
+- **Distributed Storage & Compute Topologies**: Turnkey blueprints for `minio-distributed`
+  (erasure-coded object storage), `mesos-marathon-ha`, `k8s-marathon-paas`, `k0s-ha`, and
+  `gke-tpu-cluster`.
+
+```sh
+# Provision High-Availability PostgreSQL, Redis, and Valkey clusters
+./libscript.sh topology up topologies/postgres-ha/topology.json
+./libscript.sh topology up topologies/redis-cluster/topology.json
+./libscript.sh topology up topologies/valkey-cluster/topology.json
+
+# Provision and cluster RabbitMQ HA nodes
+./libscript.sh install rabbitmq latest
+./libscript.sh start rabbitmq
+
+# Inspect quorum health, scale worker pools, or trigger fenced leader failover
+./libscript.sh topology status topologies/postgres-ha/topology.json
+./libscript.sh topology scale topologies/postgres-ha/topology.json pg-replicas=4
+./libscript.sh topology failover topologies/postgres-ha/topology.json pg-replicas-1
+```
 
 #### 🌐 Built-in PaaS & Universal Routing (`netctl`)
 
@@ -391,8 +543,9 @@ Turn raw virtual machines or bare-metal servers into self-healing application pl
 - **Universal Reverse Proxy**: Define routes, static directories, and proxy passes once; emit
   configurations for Nginx, Caddy, Apache, or Windows IIS.
 - **Automatic TLS**: Automated certificate acquisition and renewal via Let's Encrypt / Certbot.
-- **Native OS Daemon Supervision**: Automatically generates and registers system services (`systemd`
-  on Linux, `launchd` on macOS, and Windows Service Manager on Windows).
+- **Native OS Daemon Supervision**: Automatically generates and registers system services
+  (`systemd`, `openrc`, `runit`, `s6`, `dinit`, `sysvinit` on Linux/BSD, `launchd` on macOS, `smf`
+  on illumos, and Windows Service Manager on Windows).
 
 ```sh
 # Define ingress routes and emit an Nginx configuration instantly
@@ -469,11 +622,15 @@ cd libscript
 ./libscript.sh install postgres 16
 ./libscript.sh start postgres
 
-# 4. Bake a custom minimal bootable OS disk image
+# 4. Bake a custom minimal bootable OS disk image or unikernel
 ./libscript.sh config os --profile=linux-minimal-headless-musl --export=custom.json
 ./libscript.sh package-as qcow2
 
-# 5. Run automated QEMU headless verification
+# 5. Deploy workloads across Kubernetes, Mesos, or Nomad and bring up HA topologies
+./libscript.sh payload submit payloads/web/stateless-api/payload.json --scheduler nomad
+./libscript.sh topology up topologies/postgres-ha/topology.json
+
+# 6. Run automated QEMU headless verification
 ./tests/os_boot_test.sh build/disk.qcow2 60
 ```
 
@@ -481,9 +638,16 @@ cd libscript
 
 ## 📖 Documentation & Architecture Guides
 
-- [ARCHITECTURE.md](ARCHITECTURE.md): Comprehensive architectural breakdown and design principles.
+- [ARCHITECTURE.md](ARCHITECTURE.md): Comprehensive 5-tier architectural breakdown and design
+  principles.
 - [WHAT_A_VERSION_MANAGER_SHOULD_LOOK_LIKE.md](WHAT_A_VERSION_MANAGER_SHOULD_LOOK_LIKE.md):
   Specification for native toolchain version isolation.
+- [topologies/README.md](topologies/README.md): Tier 3.5 multi-node HA consensus topologies, lease
+  locking, and split-brain fencing.
+- [payloads/README.md](payloads/README.md): Tier 4 declarative workload payloads and scheduler
+  drivers (Kubernetes, Mesos/Marathon, Nomad, Slurm/Ray, XPK, MicroVM).
+- [traits/README.md](traits/README.md): Cross-cutting node traits (`storage`, `secrets`, `mesh`,
+  `firewall`, `discovery`, `tls`, `ingress`, `logging`, `metrics`, `backup`, `maintenance`).
 - [ROADMAP.md](ROADMAP.md): Master development roadmap across all tiers and release phases.
 - [TODO_PLAN.md](TODO_PLAN.md): Engineering roadmap for universal database discovery and
   multi-tenant packaging.
@@ -543,7 +707,7 @@ Components are organized into LibScript's 5 architectural tiers (see [`ARCHITECT
 | `cc` | `languages` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `celery` | `web-apps` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `choco` | `package-managers` | - | - | - | ✅ | - | - | - |
-| `clang` | `languages` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `clang` | `languages` | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `cmake` | `toolchains` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `composer` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
 | `conan` | `package-managers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -571,7 +735,7 @@ Components are organized into LibScript's 5 architectural tiers (see [`ARCHITECT
 | `flatpak` | `package-managers` | ✅ | ✅ | ✅ | - | - | - | - |
 | `fluentbit` | `logging` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
 | `fnm` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
-| `gcc` | `languages` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `gcc` | `languages` | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `gcsfuse` | `storage-layers` | ✅ | ✅ | ✅ | - | - | - | ✅ |
 | `gem` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
 | `ghcup` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
@@ -634,7 +798,7 @@ Components are organized into LibScript's 5 architectural tiers (see [`ARCHITECT
 | `ollama` | `app-servers` | ✅ | ✅ | ✅ | ✅ | - | - | ✅ |
 | `opam` | `package-managers` | ✅ | ✅ | ✅ | - | - | - | ✅ |
 | `openbao` | `security` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
-| `openedx` | `web-apps` | - | ✅ | ✅ | ✅ | - | - | ✅ |
+| `openedx` | `web-apps` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `pacman` | `package-managers` | - | - | - | - | - | - | - |
 | `paru` | `package-managers` | - | - | - | - | - | - | - |
 | `pdm` | `package-managers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -678,7 +842,7 @@ Components are organized into LibScript's 5 architectural tiers (see [`ARCHITECT
 | `stack` | `package-managers` | ✅ | ✅ | ✅ | ✅ | - | ✅ | ✅ |
 | `swift` | `languages` | - | ✅ | ✅ | ✅ | - | ✅ | ✅ |
 | `swupd` | `package-managers` | - | - | - | - | - | - | - |
-| `tcc` | `languages` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `tcc` | `languages` | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `tensorboard` | `logging` | ✅ | ✅ | ✅ | - | - | - | ✅ |
 | `tmux` | `utilities` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `utils` | `git-servers` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -856,6 +1020,7 @@ Components are organized into LibScript's 5 architectural tiers (see [`ARCHITECT
 | `topologies/k8s-marathon-paas` | `topologies` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `topologies/mesos-marathon-ha` | `topologies` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `topologies/minio-distributed` | `topologies` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `topologies/openedx-ha` | `topologies` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `topologies/postgres-ha` | `topologies` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `topologies/redis-cluster` | `topologies` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `topologies/valkey-cluster` | `topologies` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |

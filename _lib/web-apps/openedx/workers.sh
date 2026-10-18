@@ -113,18 +113,18 @@ start_daemon() {
   if [ -x "${PYTHON_BIN}" ] && [ -f "${MANAGE_PY}" ]; then
     case "${_svc}" in
       celery-beat)
-        nohup "${PYTHON_BIN}" -m celery -A "${_target}" beat --loglevel=INFO > "${_logfile}" 2>&1 &
+        nohup "${PYTHON_BIN}" -m celery -A "${_target}" beat --loglevel=INFO < /dev/null > "${_logfile}" 2>&1 &
         ;;
       *)
-        nohup "${PYTHON_BIN}" -m celery -A "${_target}" worker --loglevel=INFO -c 2 > "${_logfile}" 2>&1 &
+        nohup "${PYTHON_BIN}" -m celery -A "${_target}" worker --loglevel=INFO -c 2 < /dev/null > "${_logfile}" 2>&1 &
         ;;
     esac
     _new_pid="$!"
   elif [ -x "${PYTHON_BIN}" ]; then
-    nohup "${PYTHON_BIN}" -c "import time, sys; sys.stdout.write('Worker ${_svc} active\n'); sys.stdout.flush(); [time.sleep(3600) for _ in iter(int, 1)]" > "${_logfile}" 2>&1 &
+    nohup "${PYTHON_BIN}" -c "import time, sys; sys.stdout.write('Worker ${_svc} active\n'); sys.stdout.flush(); [time.sleep(3600) for _ in iter(int, 1)]" < /dev/null > "${_logfile}" 2>&1 &
     _new_pid="$!"
   elif command -v python3 >/dev/null 2>&1; then
-    nohup python3 -c "import time, sys; sys.stdout.write('Worker ${_svc} active\n'); sys.stdout.flush(); [time.sleep(3600) for _ in iter(int, 1)]" > "${_logfile}" 2>&1 &
+    nohup python3 -c "import time, sys; sys.stdout.write('Worker ${_svc} active\n'); sys.stdout.flush(); [time.sleep(3600) for _ in iter(int, 1)]" < /dev/null > "${_logfile}" 2>&1 &
     _new_pid="$!"
   else
     log_err "Genuine Open edX codebase or python not found. Cannot start worker '${_svc}'."

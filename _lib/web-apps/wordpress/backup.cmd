@@ -12,19 +12,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -84,7 +84,7 @@ echo [INFO] Creating WordPress backup archive at %OUT_FILE%...
 set "TMP_BACKUP=%TEMP%\wp_backup_%RANDOM%"
 if not exist "%TMP_BACKUP%" mkdir "%TMP_BACKUP%"
 
-call "%SCRIPT_DIR%\dbshell.cmd" export "%TMP_BACKUP%\database.sql"
+call "!SCRIPT_DIR!\dbshell.cmd" export "%TMP_BACKUP%\database.sql"
 if exist "%WORDPRESS_WWWROOT%\wp-content" xcopy "%WORDPRESS_WWWROOT%\wp-content" "%TMP_BACKUP%\wp-content" /E /I /Q /Y >nul 2>&1
 if exist "%WORDPRESS_WWWROOT%\wp-config.php" copy "%WORDPRESS_WWWROOT%\wp-config.php" "%TMP_BACKUP%\wp-config.php" >nul 2>&1
 

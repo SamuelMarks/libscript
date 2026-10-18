@@ -317,15 +317,14 @@ Deploy stacks and custom synthesized OS images across public clouds, hypervisors
 ### Hardware-Accelerated AI & TPU Workloads
 
 ```sh
-# Provision a Google Cloud TPU VM with GCS FUSE and TensorBoard telemetry
-export TPU_NAME="vllm-node"
-export ACCELERATOR_TYPE="v4-8"
-./stacks/ai-serving/tpu-vm-vllm/setup.sh
-./stacks/ai-serving/tpu-vm-vllm/deploy.sh
+# Provision a Google Cloud TPU VM or GPU VM with GCS FUSE and TensorBoard telemetry
+./payloads/ai/gcp-tpu-vm/deploy.sh
+./payloads/ai/gcp-gpu-vm/deploy.sh
 
-# Launch distributed training across TPU Pod slices via GKE and XPK
-xpk cluster create --cluster my-tpu-cluster --tpu-type=v5p-128
-xpk workload create --workload train-job --cluster my-tpu-cluster --command "python3 train.py"
+# Launch distributed training or serving across TPU Pod slices via GKE and XPK
+./libscript.sh payload submit payloads/ai/gke-xpk-training/payload.json --scheduler xpk
+./libscript.sh payload submit payloads/ai/gke-xpk-inference/payload.json --scheduler xpk
+./libscript.sh payload submit payloads/ai/vllm/payload.json --scheduler kubernetes
 ```
 
 ### Reverse Proxy & Ingress Management (`netctl`)
@@ -357,7 +356,110 @@ curl -X POST http://localhost:8080/api/v1/install -H "Content-Type: application/
 
 ---
 
-## 7. Testing, Idempotency & Audit Matrix
+## 7. Multi-Node Cluster Schedulers & Declarative Payloads (Tier 4)
+
+Compile and submit declarative workloads (`payloads/payload.schema.json`)—including stateless web
+APIs, stateful services, distributed ML training, search-engine reindexing, and unikernels—to
+**Kubernetes**, **Apache Mesos / Marathon**, **HashiCorp Nomad**, **Slurm / Ray**, **Google XPK**,
+**MicroVMs**, or **8+ Native OS Init Supervisors**:
+
+```sh
+# Compile a workload definition into a target scheduler manifest (YAML/JSON/HCL/systemd)
+./libscript.sh payload compile payloads/web/stateless-api/payload.json --scheduler kubernetes
+./libscript.sh payload compile payloads/web/stateless-api/payload.json --scheduler mesos
+./libscript.sh payload compile payloads/web/stateless-api/payload.json --scheduler nomad
+
+# Submit workloads across multi-node schedulers
+./libscript.sh payload submit payloads/web/stateless-api/payload.json --scheduler kubernetes
+./libscript.sh payload submit payloads/web/stateless-api/payload.json --scheduler mesos
+./libscript.sh payload submit payloads/web/stateless-api/payload.json --scheduler nomad
+./libscript.sh payload submit payloads/batch/etl-worker/payload.json --scheduler nomad
+./libscript.sh payload submit payloads/unikernel/osv-microservice/payload.json --scheduler microvm
+
+# Inspect workload status, tail logs, or stop/destroy deployments
+./libscript.sh payload status stateless-api --scheduler kubernetes
+./libscript.sh payload logs stateless-api --scheduler nomad
+./libscript.sh payload stop stateless-api --scheduler mesos
+./libscript.sh payload destroy stateless-api --scheduler kubernetes
+```
+
+---
+
+## 8. High-Availability (HA) Topologies & Consensus Choreography (Tier 3.5)
+
+Orchestrate multi-node stateful clusters with distributed lease locking, WireGuard mesh overlays,
+and automated split-brain fencing (`topologies/`):
+
+```sh
+# Bootstrap multi-node High-Availability clusters
+./libscript.sh topology up topologies/postgres-ha/topology.json
+./libscript.sh topology up topologies/redis-cluster/topology.json
+./libscript.sh topology up topologies/valkey-cluster/topology.json
+./libscript.sh topology up topologies/mesos-marathon-ha/topology.json
+./libscript.sh topology up topologies/k8s-marathon-paas/topology.json
+./libscript.sh topology up topologies/k0s-ha/topology.json
+./libscript.sh topology up topologies/minio-distributed/topology.json
+
+# Inspect cluster quorum and node state (.topology_state.json)
+./libscript.sh topology status topologies/postgres-ha/topology.json
+
+# Scale worker/replica pools, drain nodes, or trigger fenced leader failover
+./libscript.sh topology scale topologies/postgres-ha/topology.json pg-replicas=4
+./libscript.sh topology drain topologies/postgres-ha/topology.json pg-replicas-2
+./libscript.sh topology failover topologies/postgres-ha/topology.json pg-replicas-1
+
+# Perform a zero-downtime rolling upgrade across the topology
+./libscript.sh topology upgrade topologies/postgres-ha/topology.json 16.4
+
+# Destroy topology and release cloud resources
+./libscript.sh topology destroy topologies/postgres-ha/topology.json
+```
+
+---
+
+## 9. Unified Cross-Cutting Node Traits & Lifecycle Hooks
+
+### Unified Traits (`traits/`)
+
+Apply composable host and sysroot capabilities in deterministic priority order (`storage` ->
+`secrets` -> `mesh` -> `firewall` -> `discovery` -> `tls` -> `ingress` -> `logging` -> `metrics` ->
+`backup` -> `maintenance`):
+
+```sh
+# List all available traits and their priority order
+./libscript.sh trait list
+
+# Apply or verify specific traits on the current host or target sysroot
+./libscript.sh trait apply storage
+./libscript.sh trait apply mesh
+./libscript.sh trait apply firewall
+./libscript.sh trait apply backup
+./libscript.sh trait verify firewall
+./libscript.sh trait teardown ingress
+```
+
+### Stateful Component Hooks: Backup, Restore, Upgrade & Rollback (`_lib/_common/hooks.sh`)
+
+```sh
+# Physical & multi-tenant backups and point-in-time restores
+./_lib/_common/hooks.sh --exec postgres backup /var/backups/postgres
+./_lib/_common/hooks.sh --exec postgres restore /var/backups/postgres
+./_lib/_common/hooks.sh --exec postgres backup_tenant --tenant-id acme_corp
+./_lib/_common/hooks.sh --exec postgres restore_tenant --tenant-id acme_corp
+
+# Stateful application/database version upgrade and atomic downgrade/rollback
+./_lib/_common/hooks.sh --exec postgres upgrade 15 16
+./_lib/_common/hooks.sh --exec postgres rollback 15 16
+
+# Health probes, endpoint announcement, and periodic maintenance
+./_lib/_common/hooks.sh --exec postgres probe readiness
+./_lib/_common/hooks.sh --exec postgres announce
+./_lib/_common/hooks.sh --exec postgres maintenance
+```
+
+---
+
+## 10. Testing, Idempotency & Audit Matrix
 
 Verify compliance, boot reliability, and idempotency locally before deploying:
 

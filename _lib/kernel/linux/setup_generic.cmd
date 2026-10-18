@@ -12,19 +12,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -62,7 +62,7 @@ if "!COMPILER_ID!"=="" set "COMPILER_ID=%LINUX_COMPILER%"
 if "!COMPILER_ID!"=="" set "COMPILER_ID=default"
 
 if "%LIBSCRIPT_TARGET_SYSROOT%"=="" (
-    set "TARGET_SYSROOT=%LIBSCRIPT_ROOT_DIR%\build\target-sysroot"
+    set "TARGET_SYSROOT=!LIBSCRIPT_ROOT_DIR!\build\target-sysroot"
 ) else (
     set "TARGET_SYSROOT=%LIBSCRIPT_TARGET_SYSROOT%"
 )
@@ -70,7 +70,7 @@ if "%LIBSCRIPT_TARGET_SYSROOT%"=="" (
 set "STAMPS_DIR=%TARGET_SYSROOT%\var\lib\libscript\stamps"
 if not exist "%STAMPS_DIR%" mkdir "%STAMPS_DIR%"
 set "STAMP_FILE=%STAMPS_DIR%\.stamp.kernel_linux.!COMPILER_ID!.%LINUX_VERSION%.%LINUX_CONFIG_TARGET%"
-set "KERNEL_BUILD_DIR=%LIBSCRIPT_ROOT_DIR%\build\kernel\!COMPILER_ID!-%LINUX_VERSION%-%LINUX_CONFIG_TARGET%"
+set "KERNEL_BUILD_DIR=!LIBSCRIPT_ROOT_DIR!\build\kernel\!COMPILER_ID!-%LINUX_VERSION%-%LINUX_CONFIG_TARGET%"
 
 call :stage_kernel_artifacts
 exit /b !errorlevel!
@@ -99,7 +99,7 @@ set "LIBSCRIPT_BUILD_TARGET_DIR=%KERNEL_BUILD_DIR%"
 set "LIBSCRIPT_RESOLVED_CC_ID=!COMPILER_ID!"
 set "LIBSCRIPT_RESOLVED_CC_BIN=!COMPILER_ID!"
 set "LIBSCRIPT_LAST_COMPILE_TIME_MS=50"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_emit_build_metrics "linux-kernel" "%LINUX_VERSION%" "%KERNEL_BUILD_DIR%\vmlinux" "-O2" ""
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_emit_build_metrics "linux-kernel" "%LINUX_VERSION%" "%KERNEL_BUILD_DIR%\vmlinux" "-O2" ""
 
 echo ok > "%STAMP_FILE%.tmp"
 move /y "%STAMP_FILE%.tmp" "%STAMP_FILE%" >nul

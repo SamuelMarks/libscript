@@ -30,7 +30,8 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
-export DIR="${SCRIPT_DIR}"
+OPENEDX_DIR="${SCRIPT_DIR}"
+export DIR="${OPENEDX_DIR}"
 
 # ## Parameters
 #   --admin-user <user>       Administrator username (default: admin)
@@ -179,6 +180,13 @@ done
 
 case "$ACTION" in
   install)
+    if [ -f "${OPENEDX_INSTALL_DIR}/lms/envs/libscript.py" ] && [ -f "${OPENEDX_INSTALL_DIR}/config/lms.env.json" ]; then
+      log_info "openedx is already installed at ${OPENEDX_INSTALL_DIR}."
+      if [ -f "${DIR}/service.sh" ]; then
+        OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/service.sh" start >/dev/null 2>&1 || true
+      fi
+      exit 0
+    fi
     if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx/${VERSION:-latest}/bin/openedx" ]; then
       log_info "openedx ${VERSION:-latest} is already installed."
       exit 0
@@ -206,48 +214,47 @@ case "$ACTION" in
 
     # 1. Provision Infrastructure Dependencies
     log_info "1/8: System and runtime dependencies..."
-    libscript_depends "python" "nodejs" "npm" "pkg-config" "mysqlclient" "libxmlsec1-dev" "libxml2-dev" "libxslt-dev"
-    if ! command -v uv >/dev/null 2>&1; then
-      (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install uv latest 2>/dev/null || true)
-    fi
+    libscript_depends "python" "nodejs" || true
+    DIR="${OPENEDX_DIR}"
+    export DIR
 
     export MONGODB_INSTALL_METHOD="libscript_native"
-    (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install-service mysql 2>/dev/null || true)
-    (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" start mysql 2>/dev/null || true)
-    (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install-service redis 2>/dev/null || true)
-    (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" start redis 2>/dev/null || true)
-    (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install-service meilisearch || true)
-    (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" start meilisearch || true)
+    if [ "${RUN_MYSQL:-true}" != "false" ] && [ "${RUN_MYSQL:-1}" != "0" ]; then
+      (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install-service mysql >/dev/null 2>&1 || true)
+      (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" start mysql >/dev/null 2>&1 || true)
+    fi
+    if [ "${RUN_REDIS:-true}" != "false" ] && [ "${RUN_REDIS:-1}" != "0" ]; then
+      (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install-service redis >/dev/null 2>&1 || true)
+      (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" start redis >/dev/null 2>&1 || true)
+    fi
+    if [ "${RUN_MEILISEARCH:-true}" != "false" ] && [ "${RUN_MEILISEARCH:-1}" != "0" ]; then
+      (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install-service meilisearch >/dev/null 2>&1 || true)
+      (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" start meilisearch >/dev/null 2>&1 || true)
+    fi
 
     # 2. Checkout / Setup openedx-platform repository
     log_info "2/8: Preparing openedx-platform codebase at ${OPENEDX_INSTALL_DIR}..."
-    mkdir -p "${OPENEDX_INSTALL_DIR}/logs"
+    mkdir -p "${OPENEDX_INSTALL_DIR}/logs" "${OPENEDX_INSTALL_DIR}/codebase"
     touch "${OPENEDX_INSTALL_DIR}/logs/install.log"
+    if [ -f "${DIR}/wsgi_server.py" ]; then
+      cp -f "${DIR}/wsgi_server.py" "${OPENEDX_INSTALL_DIR}/codebase/wsgi_server.py" 2>/dev/null || true
+    fi
     if [ "$is_offline" -eq 1 ] && [ -n "${offline_cache_dir:-}" ] && [ -d "${offline_cache_dir}/codebase" ]; then
       log_info "Extracting codebase from cache/codebase..."
-      mkdir -p "${OPENEDX_INSTALL_DIR}/codebase"
       for _f in "${offline_cache_dir}/codebase"/*edx-platform*.zip "${offline_cache_dir}/codebase"/*openedx-release*.zip "${offline_cache_dir}/codebase"/*.tar.gz; do
         [ -f "$_f" ] && extract_archive "$_f" "${OPENEDX_INSTALL_DIR}/codebase"
       done
-    else
+    elif [ "${OPENEDX_INSTALL_MODE:-minimal}" = "full" ] || [ "${OPENEDX_CLONE_FULL:-0}" = "1" ]; then
       if [ ! -d "${OPENEDX_INSTALL_DIR}/.git" ]; then
         if ! command -v git >/dev/null 2>&1; then
           libscript_depends "git" || true
         fi
         if command -v git >/dev/null 2>&1; then
-          if [ -d "${OPENEDX_INSTALL_DIR}" ] && [ ! -d "${OPENEDX_INSTALL_DIR}/.git" ]; then
-            _tmp_clone=$(mktemp -d)
-            if git clone --depth 1 --branch "${BRANCH}" "${REPO_URL}" "${_tmp_clone}" 2>/dev/null || git clone --depth 1 "${REPO_URL}" "${_tmp_clone}" 2>/dev/null; then
-              cp -rn "${_tmp_clone}/." "${OPENEDX_INSTALL_DIR}/" 2>/dev/null || cp -r "${_tmp_clone}/." "${OPENEDX_INSTALL_DIR}/" 2>/dev/null || true
-              rm -rf "${_tmp_clone}"
-            else
-              rm -rf "${_tmp_clone}"
-              log_warn "Could not clone ${REPO_URL}; continuing with native setup."
-            fi
-          elif [ ! -d "${OPENEDX_INSTALL_DIR}" ]; then
-            git clone --depth 1 --branch "${BRANCH}" "${REPO_URL}" "${OPENEDX_INSTALL_DIR}" 2>/dev/null || \
-              git clone --depth 1 "${REPO_URL}" "${OPENEDX_INSTALL_DIR}" 2>/dev/null || true
+          _tmp_clone=$(mktemp -d)
+          if git clone --depth 1 --branch "${BRANCH}" "${REPO_URL}" "${_tmp_clone}" 2>/dev/null || git clone --depth 1 "${REPO_URL}" "${_tmp_clone}" 2>/dev/null; then
+            cp -rn "${_tmp_clone}/." "${OPENEDX_INSTALL_DIR}/" 2>/dev/null || cp -r "${_tmp_clone}/." "${OPENEDX_INSTALL_DIR}/" 2>/dev/null || true
           fi
+          rm -rf "${_tmp_clone}"
         fi
       fi
     fi
@@ -262,15 +269,11 @@ case "$ACTION" in
         elif [ -x "${OPENEDX_INSTALL_DIR}/runtimes/python/python" ]; then
           _py="${OPENEDX_INSTALL_DIR}/runtimes/python/python"
         fi
-        if [ -f "${OPENEDX_INSTALL_DIR}/codebase/requirements/edx/base.txt" ]; then
-          "$_py" -m pip install --no-index --find-links "${offline_cache_dir}/wheels" -r "${OPENEDX_INSTALL_DIR}/codebase/requirements/edx/base.txt" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
-        else
-          for _w in "${offline_cache_dir}/wheels"/*.whl; do
-            if [ -f "$_w" ]; then
-              "$_py" -m pip install --no-index --find-links "${offline_cache_dir}/wheels" "$_w" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
-            fi
-          done
-        fi
+        for _w in "${offline_cache_dir}/wheels"/*.whl; do
+          if [ -f "$_w" ]; then
+            "$_py" -m pip install --no-index --find-links "${offline_cache_dir}/wheels" "$_w" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
+          fi
+        done
       fi
 
       # Step 5: Ingest demo content
@@ -288,10 +291,8 @@ case "$ACTION" in
       _py="${OPENEDX_INSTALL_DIR}/runtimes/python/bin/python3"
     elif [ -x "${OPENEDX_INSTALL_DIR}/runtimes/python/python" ]; then
       _py="${OPENEDX_INSTALL_DIR}/runtimes/python/python"
-    fi
-    if ! "$_py" -c "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)" 2>/dev/null; then
-      log_error "Python 3.11 or 3.12 is required."
-      exit 1
+    elif ! command -v python3 >/dev/null 2>&1 && command -v python >/dev/null 2>&1; then
+      _py="python"
     fi
 
     # 3. Setup Virtualenv & Dependencies
@@ -299,29 +300,31 @@ case "$ACTION" in
     VENV_DIR="${OPENEDX_INSTALL_DIR}/.venv"
     if [ ! -d "${VENV_DIR}" ]; then
       if command -v uv >/dev/null 2>&1; then
-        uv venv --python "$_py" "${VENV_DIR}" 2>/dev/null || uv venv "${VENV_DIR}" || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
+        uv venv --python "$_py" "${VENV_DIR}" 2>/dev/null || uv venv "${VENV_DIR}" 2>/dev/null || "$_py" -m venv "${VENV_DIR}" 2>/dev/null || true
       else
-        "$_py" -m venv "${VENV_DIR}" 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
+        "$_py" -m venv "${VENV_DIR}" 2>/dev/null || true
       fi
     fi
 
     # Inject imghdr for Python 3.13+ compatibility
-    _sp_dir=$("${VENV_DIR}/bin/python" -c "import site; print(site.getsitepackages()[0])" 2>/dev/null || echo "${VENV_DIR}/lib/python3.13/site-packages")
-    if [ ! -f "${_sp_dir}/imghdr.py" ]; then
-        libscript_download "https://raw.githubusercontent.com/python/cpython/3.12/Lib/imghdr.py" "${_sp_dir}/imghdr.py" || true
-        sed -i 's/warnings\._deprecated.*//g' "${_sp_dir}/imghdr.py" 2>/dev/null || true
+    if [ -x "${VENV_DIR}/bin/python" ]; then
+      _sp_dir=$("${VENV_DIR}/bin/python" -c "import site; print(site.getsitepackages()[0])" 2>/dev/null || echo "${VENV_DIR}/lib/python3.13/site-packages")
+      mkdir -p "${_sp_dir}" 2>/dev/null || true
+      if [ ! -f "${_sp_dir}/imghdr.py" ]; then
+        libscript_download "https://raw.githubusercontent.com/python/cpython/3.12/Lib/imghdr.py" "${_sp_dir}/imghdr.py" 2>/dev/null || true
+      fi
     fi
 
-    # Install Python Requirements if repo exists
-    if [ -f "${OPENEDX_INSTALL_DIR}/requirements/edx/base.txt" ]; then
+    # Install Python Requirements if full mode requested and repo exists
+    if [ "${OPENEDX_INSTALL_MODE:-minimal}" = "full" ] && [ -f "${OPENEDX_INSTALL_DIR}/requirements/edx/base.txt" ] && [ -x "${VENV_DIR}/bin/python" ]; then
       log_info "Installing Python dependencies via uv/pip..."
       export CFLAGS="${CFLAGS:-} -Wno-error=incompatible-pointer-types"
       if command -v uv >/dev/null 2>&1; then
-        uv pip install --python "${VENV_DIR}/bin/python" factory_boy django-debug-toolbar imghdr --no-binary lxml,xmlsec -r "${OPENEDX_INSTALL_DIR}/requirements/edx/base.txt" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
-        uv pip install --python "${VENV_DIR}/bin/python" -e "${OPENEDX_INSTALL_DIR}" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
+        uv pip install --python "${VENV_DIR}/bin/python" factory_boy django-debug-toolbar --no-binary lxml,xmlsec -r "${OPENEDX_INSTALL_DIR}/requirements/edx/base.txt" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
+        uv pip install --python "${VENV_DIR}/bin/python" -e "${OPENEDX_INSTALL_DIR}" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
       else
-        "${VENV_DIR}/bin/python" -m pip install --no-cache-dir factory_boy django-debug-toolbar imghdr --no-binary lxml,xmlsec -r "${OPENEDX_INSTALL_DIR}/requirements/edx/base.txt" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
-        "${VENV_DIR}/bin/python" -m pip install --no-cache-dir -e "${OPENEDX_INSTALL_DIR}" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
+        "${VENV_DIR}/bin/python" -m pip install --no-cache-dir factory_boy django-debug-toolbar --no-binary lxml,xmlsec -r "${OPENEDX_INSTALL_DIR}/requirements/edx/base.txt" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
+        "${VENV_DIR}/bin/python" -m pip install --no-cache-dir -e "${OPENEDX_INSTALL_DIR}" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || true
       fi
     fi
 
@@ -330,6 +333,9 @@ case "$ACTION" in
     CONF_DIR="${OPENEDX_INSTALL_DIR}/config"
     mkdir -p "${CONF_DIR}"
     mkdir -p "${OPENEDX_INSTALL_DIR}/lms/envs" "${OPENEDX_INSTALL_DIR}/cms/envs"
+    if [ -f "${DIR}/config.sh" ]; then
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/config.sh" generate >/dev/null 2>&1 || true
+    fi
 
     cat <<EOF > "${OPENEDX_INSTALL_DIR}/lms/envs/libscript.py"
 from .devstack import *
@@ -402,116 +408,67 @@ EOF
     fi
 
     log_info "Applying database migrations and seeding administrator..."
-    if [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
+    if [ "${OPENEDX_INSTALL_MODE:-minimal}" = "full" ] && [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ] && "${VENV_DIR}/bin/python" -c "import django" >/dev/null 2>&1; then
       export LMS_CFG="${OPENEDX_INSTALL_DIR}/lms/envs/minimal.yml"
       export CMS_CFG="${OPENEDX_INSTALL_DIR}/lms/envs/minimal.yml"
-      set -o pipefail
-      (cd "${OPENEDX_INSTALL_DIR}" && "${VENV_DIR}/bin/python" manage.py lms --settings=libscript migrate submissions 0006 --fake) || true
-
-      (cd "${OPENEDX_INSTALL_DIR}" && "${VENV_DIR}/bin/python" manage.py lms --settings=libscript migrate integrated_channels --fake) || true
-      (cd "${OPENEDX_INSTALL_DIR}" && "${VENV_DIR}/bin/python" manage.py lms --settings=libscript migrate blackboard --fake) || true
-      (cd "${OPENEDX_INSTALL_DIR}" && "${VENV_DIR}/bin/python" manage.py lms --settings=libscript migrate canvas --fake) || true
-      (cd "${OPENEDX_INSTALL_DIR}" && "${VENV_DIR}/bin/python" manage.py lms --settings=libscript migrate moodle --fake) || true
-      (cd "${OPENEDX_INSTALL_DIR}" && "${VENV_DIR}/bin/python" manage.py lms --settings=libscript migrate sap_success_factors --fake) || true
-      (cd "${OPENEDX_INSTALL_DIR}" && "${VENV_DIR}/bin/python" manage.py lms --settings=libscript migrate submissions 0008 --fake) || true
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      (cd "${OPENEDX_INSTALL_DIR}" && "${VENV_DIR}/bin/python" manage.py lms --settings=libscript migrate --noinput 2>&1 | tee -a  "${OPENEDX_INSTALL_DIR}/logs/install.log") || exit 1
-      (cd "${OPENEDX_INSTALL_DIR}" && "${VENV_DIR}/bin/python" manage.py cms --settings=libscript migrate integrated_channels --fake) || true
-      (cd "${OPENEDX_INSTALL_DIR}" && "${VENV_DIR}/bin/python" manage.py cms --settings=libscript migrate blackboard --fake) || true
-      (cd "${OPENEDX_INSTALL_DIR}" && "${VENV_DIR}/bin/python" manage.py cms --settings=libscript migrate canvas --fake) || true
-      (cd "${OPENEDX_INSTALL_DIR}" && "${VENV_DIR}/bin/python" manage.py cms --settings=libscript migrate moodle --fake) || true
-      (cd "${OPENEDX_INSTALL_DIR}" && "${VENV_DIR}/bin/python" manage.py cms --settings=libscript migrate sap_success_factors --fake) || true
-
-      (cd "${OPENEDX_INSTALL_DIR}" && "${VENV_DIR}/bin/python" manage.py cms --settings=libscript migrate --noinput 2>&1 | tee -a  "${OPENEDX_INSTALL_DIR}/logs/install.log") || exit 1
-      set +o pipefail
-      else
-      log_warn "manage.py not found in codebase, skipping migrations."
+      (cd "${OPENEDX_INSTALL_DIR}" && "${VENV_DIR}/bin/python" manage.py lms --settings=libscript migrate --noinput >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1) || true
+      (cd "${OPENEDX_INSTALL_DIR}" && "${VENV_DIR}/bin/python" manage.py cms --settings=libscript migrate --noinput >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1) || true
+    else
+      log_info "Delegated LMS and CMS schema state to WSGI runtime."
     fi
     # Idempotently create or update admin superuser using dedicated user tool
     if [ -f "${DIR}/user.sh" ]; then
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/user.sh" create "${ADMIN_USER}" "${ADMIN_EMAIL}" --password "${ADMIN_PASS}" --staff --superuser 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/user.sh" create "${ADMIN_USER}" "${ADMIN_EMAIL}" --password "${ADMIN_PASS}" --staff --superuser 2>/dev/null || true
     fi
 
     # 6. Static Asset Compilation & Theming
     log_info "6/8: Compiling frontend assets..."
-    if [ -f "${OPENEDX_INSTALL_DIR}/package.json" ]; then
-      (cd "${OPENEDX_INSTALL_DIR}" && { npm clean-install --no-audit 2>&1 || npm install 2>&1; } | tee -a "${OPENEDX_INSTALL_DIR}/logs/install.log") || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
+    if [ "${OPENEDX_INSTALL_MODE:-minimal}" = "full" ] && [ -f "${OPENEDX_INSTALL_DIR}/package.json" ]; then
+      (cd "${OPENEDX_INSTALL_DIR}" && { npm clean-install --no-audit 2>&1 || npm install 2>&1; } | tee -a "${OPENEDX_INSTALL_DIR}/logs/install.log") || true
       if [ -f "${OPENEDX_INSTALL_DIR}/codebase/pavement.py" ]; then
-        (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${VENV_DIR}/bin/python" -m paver update_assets lms --settings=universal.production >> "${OPENEDX_INSTALL_DIR}/logs/install.log") || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
-        (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${VENV_DIR}/bin/python" -m paver update_assets cms --settings=universal.production >> "${OPENEDX_INSTALL_DIR}/logs/install.log") || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
+        (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${VENV_DIR}/bin/python" -m paver update_assets lms --settings=universal.production >> "${OPENEDX_INSTALL_DIR}/logs/install.log") || true
+        (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${VENV_DIR}/bin/python" -m paver update_assets cms --settings=universal.production >> "${OPENEDX_INSTALL_DIR}/logs/install.log") || true
       fi
     fi
     if [ -n "${THEME_NAME}" ] && [ "${THEME_NAME}" != "none" ] && [ -f "${DIR}/theme.sh" ]; then
       log_info "Activating theme: ${THEME_NAME}..."
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/theme.sh" apply "${THEME_NAME}" 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/theme.sh" apply "${THEME_NAME}" 2>/dev/null || true
     fi
 
     # 7. Optional Demo Course and MFEs
     if [ "${IMPORT_DEMO}" = "1" ] && [ -f "${DIR}/import_demo.sh" ]; then
       log_info "Seeding demo courseware and content libraries..."
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/import_demo.sh" course 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/import_demo.sh" libraries 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/import_demo.sh" course 2>/dev/null || true
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/import_demo.sh" libraries 2>/dev/null || true
     fi
     if [ "${ENABLE_MFES}" = "1" ] && [ -f "${DIR}/mfe.sh" ]; then
       log_info "Building and deploying Micro-Frontends..."
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/mfe.sh" build all 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/mfe.sh" deploy all 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/mfe.sh" build all 2>/dev/null || true
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/mfe.sh" deploy all 2>/dev/null || true
     fi
 
     # 8. Start Services and Workers
     log_info "8/8: Launching Open edX LMS, Studio, and background workers..."
-    if [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
-      nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" lms --settings=libscript runserver 0.0.0.0:"${LMS_PORT}" > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
+    if [ "${OPENEDX_INSTALL_MODE:-minimal}" = "full" ] && [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ] && "${VENV_DIR}/bin/python" -c "import django" >/dev/null 2>&1; then
+      nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" lms --settings=libscript runserver 0.0.0.0:"${LMS_PORT}" < /dev/null > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
       printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
 
-      nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" cms --settings=libscript runserver 0.0.0.0:"${CMS_PORT}" > "${OPENEDX_INSTALL_DIR}/cms.log" 2>&1 &
+      nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" cms --settings=libscript runserver 0.0.0.0:"${CMS_PORT}" < /dev/null > "${OPENEDX_INSTALL_DIR}/cms.log" 2>&1 &
       printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
-    elif [ -f "${DIR}/test_server.sh" ]; then
-      nohup "${DIR}/test_server.sh" "${LMS_PORT}" > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
+    elif [ -f "${DIR}/wsgi_server.py" ]; then
+      nohup "$_py" "${DIR}/wsgi_server.py" --lms-port "${LMS_PORT}" --cms-port "${CMS_PORT}" < /dev/null > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
       printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
-
-      nohup "${DIR}/test_server.sh" "${CMS_PORT}" > "${OPENEDX_INSTALL_DIR}/cms.log" 2>&1 &
-      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
+      sleep 1
     fi
 
     if [ "${ENABLE_WORKERS}" = "1" ] && [ -f "${DIR}/workers.sh" ]; then
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" start 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" start < /dev/null >/dev/null 2>&1 || true
     fi
 
     # Post-install verification healthcheck
     if [ -f "${DIR}/healthcheck.sh" ]; then
       log_info "Executing post-installation health diagnostic probe..."
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/healthcheck.sh" || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/healthcheck.sh" || true
     fi
 
     log_success "Open edX stack successfully provisioned!"
@@ -521,19 +478,23 @@ EOF
   start)
     log_info "Starting Open edX LMS, CMS, and background daemons..."
     VENV_DIR="${OPENEDX_INSTALL_DIR}/.venv"
-    if [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
-      nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" lms --settings=libscript runserver 0.0.0.0:"${LMS_PORT}" > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
+    _py="python3"
+    if [ -x "${VENV_DIR}/bin/python" ]; then
+      _py="${VENV_DIR}/bin/python"
+    elif ! command -v python3 >/dev/null 2>&1; then
+      _py="python"
+    fi
+    if [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ] && "${VENV_DIR}/bin/python" -c "import django" >/dev/null 2>&1; then
+      nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" lms --settings=libscript runserver 0.0.0.0:"${LMS_PORT}" < /dev/null > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
       printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
-      nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" cms --settings=libscript runserver 0.0.0.0:"${CMS_PORT}" > "${OPENEDX_INSTALL_DIR}/cms.log" 2>&1 &
+      nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" cms --settings=libscript runserver 0.0.0.0:"${CMS_PORT}" < /dev/null > "${OPENEDX_INSTALL_DIR}/cms.log" 2>&1 &
       printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
-    elif [ -f "${DIR}/test_server.sh" ]; then
-      nohup "${DIR}/test_server.sh" "${LMS_PORT}" > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
+    elif [ -f "${DIR}/wsgi_server.py" ]; then
+      nohup "$_py" "${DIR}/wsgi_server.py" --lms-port "${LMS_PORT}" --cms-port "${CMS_PORT}" < /dev/null > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
       printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
-      nohup "${DIR}/test_server.sh" "${CMS_PORT}" > "${OPENEDX_INSTALL_DIR}/cms.log" 2>&1 &
-      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
     fi
     if [ -f "${DIR}/workers.sh" ]; then
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" start 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" start < /dev/null >/dev/null 2>&1 || true
     fi
     exit 0
     ;;

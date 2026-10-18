@@ -7,25 +7,25 @@
 :: from source with an explicit custom C toolchain such as gcc, clang, tcc, or custom-cc).
 ::
 :: ## Usage
-:: call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_resolve_build_toolchain <comp> <ver>
+:: call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_resolve_build_toolchain <comp> <ver>
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -101,7 +101,7 @@ if /i "!_tc_spec!"=="default" (
             if !errorlevel! equ 0 (
                 set "LIBSCRIPT_RESOLVED_CC_BIN=cl"
             ) else (
-                call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install c latest
+                call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install c latest
                 set "LIBSCRIPT_RESOLVED_CC_BIN=gcc"
             )
         )
@@ -113,10 +113,10 @@ if /i "!_tc_spec!"=="default" (
     )
 ) else (
     set "LIBSCRIPT_RESOLVED_CC_ID=!_tc_spec!"
-    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\languages\!_tc_spec!\setup.cmd" (
-        call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install "!_tc_spec!" latest
-        if exist "%LIBSCRIPT_ROOT_DIR%\_lib\languages\!_tc_spec!\env.cmd" (
-            call "%LIBSCRIPT_ROOT_DIR%\_lib\languages\!_tc_spec!\env.cmd"
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\languages\!_tc_spec!\setup.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install "!_tc_spec!" latest
+        if exist "!LIBSCRIPT_ROOT_DIR!\_lib\languages\!_tc_spec!\env.cmd" (
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\languages\!_tc_spec!\env.cmd"
         )
     )
     if /i "!_tc_spec!"=="custom-cc" (
@@ -125,7 +125,7 @@ if /i "!_tc_spec!"=="default" (
         ) else if exist "!_sb_home!\custom-cc\default\bin\custom-cc.cmd" (
             set "LIBSCRIPT_RESOLVED_CC_BIN=!_sb_home!\custom-cc\default\bin\custom-cc.cmd"
         ) else (
-            set "LIBSCRIPT_RESOLVED_CC_BIN=%LIBSCRIPT_ROOT_DIR%\_lib\languages\custom-cc\cc_wrapper.cmd"
+            set "LIBSCRIPT_RESOLVED_CC_BIN=!LIBSCRIPT_ROOT_DIR!\_lib\languages\custom-cc\cc_wrapper.cmd"
         )
     ) else (
         set "LIBSCRIPT_RESOLVED_CC_BIN=!_tc_spec!"
@@ -169,12 +169,12 @@ set "_src_checksum=%~3"
 if not "%DOWNLOAD_DIR%"=="" (
     set "_src_cache_dir=%DOWNLOAD_DIR%"
 ) else (
-    set "_src_cache_dir=%LIBSCRIPT_ROOT_DIR%\cache\downloads\%_src_comp%"
+    set "_src_cache_dir=!LIBSCRIPT_ROOT_DIR!\cache\downloads\%_src_comp%"
 )
 if not exist "!_src_cache_dir!" mkdir "!_src_cache_dir!"
 for %%F in ("!_src_url!") do set "_archive_name=%%~nxF"
 set "_archive_file=!_src_cache_dir!\!_archive_name!"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!_src_url!" "!_archive_file!" "!_src_checksum!"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!_src_url!" "!_archive_file!" "!_src_checksum!"
 if errorlevel 1 exit /b 1
 
 set "LIBSCRIPT_SOURCE_WORKDIR=%TEMP%\libscript_srcbuild_%_src_comp%_%LIBSCRIPT_RESOLVED_CC_ID%_%RANDOM%"

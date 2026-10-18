@@ -13,19 +13,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -57,7 +57,7 @@ if "%ACTION%"=="" set "ACTION=install"
 if "%SQLITE_VERSION%"=="" set "SQLITE_VERSION=latest"
 if "%SQLITE_VERSION%"=="latest" (set "EXACT_VERSION=3.46.1") else (set "EXACT_VERSION=%SQLITE_VERSION%")
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
-if "%DOWNLOAD_DIR%"=="" set "DOWNLOAD_DIR=%LIBSCRIPT_ROOT_DIR%\cache\downloads"
+if "%DOWNLOAD_DIR%"=="" set "DOWNLOAD_DIR=!LIBSCRIPT_ROOT_DIR!\cache\downloads"
 if not "%SQLITE_PKG_MGR%"=="" set "LIBSCRIPT_PKG_MGR=%SQLITE_PKG_MGR%"
 
 if "%SQLITE_INSTALL_METHOD%"=="" (
@@ -103,7 +103,7 @@ exit /b 0
 :: ## action_use
 :: Activates the specified SQLite version junction.
 :action_use
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "sqlite" "default" "%EXACT_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "sqlite" "default" "%EXACT_VERSION%"
 exit /b 0
 
 :: ## action_download
@@ -112,7 +112,7 @@ exit /b 0
 if not exist "%DOWNLOAD_DIR%\sqlite" mkdir "%DOWNLOAD_DIR%\sqlite"
 set "_dl_url=%SQLITE_AMALGAMATION_URL%"
 if "!_dl_url!"=="" set "_dl_url=https://www.sqlite.org/2024/sqlite-amalgamation-3460100.zip"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!_dl_url!" "%DOWNLOAD_DIR%\sqlite\sqlite-amalgamation-3460100.zip"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!_dl_url!" "%DOWNLOAD_DIR%\sqlite\sqlite-amalgamation-3460100.zip"
 exit /b !errorlevel!
 
 :: ## action_install
@@ -132,13 +132,13 @@ if /i "%SQLITE_INSTALL_METHOD%"=="vfox" ( vfox add sqlite & vfox install "sqlite
 set "TARGET_DIR=%LIBSCRIPT_HOME%\sqlite\%EXACT_VERSION%"
 if exist "%TARGET_DIR%\bin\sqlite3.exe" (
     echo [INFO] sqlite %EXACT_VERSION% is already installed at %TARGET_DIR%.
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "sqlite" "default" "%EXACT_VERSION%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "sqlite" "default" "%EXACT_VERSION%"
     exit /b 0
 )
 if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
 set "_win_url=%SQLITE_DOWNLOAD_URL%"
 if "!_win_url!"=="" set "_win_url=https://www.sqlite.org/2024/sqlite-tools-win-x64-3460100.zip"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!_win_url!" "%DOWNLOAD_DIR%\sqlite\sqlite-tools-%EXACT_VERSION%.zip"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!_win_url!" "%DOWNLOAD_DIR%\sqlite\sqlite-tools-%EXACT_VERSION%.zip"
 tar -xf "%DOWNLOAD_DIR%\sqlite\sqlite-tools-%EXACT_VERSION%.zip" -C "%TARGET_DIR%\bin"
 for /d %%D in ("%TARGET_DIR%\bin\sqlite-tools-*") do (
     if exist "%%~fD\sqlite3.exe" (
@@ -146,27 +146,27 @@ for /d %%D in ("%TARGET_DIR%\bin\sqlite-tools-*") do (
         rmdir "%%~fD" >nul 2>&1
     )
 )
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "sqlite" "%SQLITE_VERSION%" "%EXACT_VERSION%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "sqlite" "default" "%EXACT_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "sqlite" "%SQLITE_VERSION%" "%EXACT_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "sqlite" "default" "%EXACT_VERSION%"
 exit /b 0
 
 :: ## install_sqlite_via_pkg_mgr
 :: Installs SQLite on Windows via the selected package manager (winget, choco, scoop, vcpkg).
 :install_sqlite_via_pkg_mgr
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends "sqlite"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends "sqlite"
 exit /b !errorlevel!
 
 :: ## build_sqlite_from_source
 :: Compiles the SQLite C amalgamation from source on Windows using the resolved C toolchain.
 :build_sqlite_from_source
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_resolve_build_toolchain "sqlite" "%EXACT_VERSION%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_check_source_build_idempotency "sqlite" "%EXACT_VERSION%" "sqlite3.exe"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_resolve_build_toolchain "sqlite" "%EXACT_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_check_source_build_idempotency "sqlite" "%EXACT_VERSION%" "sqlite3.exe"
 if !errorlevel! equ 0 exit /b 0
 
 set "_amal_url=%SQLITE_AMALGAMATION_URL%"
 if "!_amal_url!"=="" set "_amal_url=https://www.sqlite.org/2024/sqlite-amalgamation-3460100.zip"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_fetch_and_extract_source "sqlite" "!_amal_url!" ""
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_execute_source_build "custom" "!LIBSCRIPT_EXTRACTED_SRC_DIR!"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_fetch_and_extract_source "sqlite" "!_amal_url!" ""
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_execute_source_build "custom" "!LIBSCRIPT_EXTRACTED_SRC_DIR!"
 
 if /i "!LIBSCRIPT_RESOLVED_CC_BIN!"=="cl" (
     cl /O2 /Fe:"!LIBSCRIPT_BUILD_TARGET_DIR!\bin\sqlite3.exe" "!LIBSCRIPT_EXTRACTED_SRC_DIR!\shell.c" "!LIBSCRIPT_EXTRACTED_SRC_DIR!\sqlite3.c"
@@ -174,9 +174,9 @@ if /i "!LIBSCRIPT_RESOLVED_CC_BIN!"=="cl" (
     "!LIBSCRIPT_RESOLVED_CC_BIN!" -O2 -DSQLITE_ENABLE_MATH_FUNCTIONS -DSQLITE_ENABLE_FTS5 -DSQLITE_ENABLE_RTREE "!LIBSCRIPT_EXTRACTED_SRC_DIR!\shell.c" "!LIBSCRIPT_EXTRACTED_SRC_DIR!\sqlite3.c" -o "!LIBSCRIPT_BUILD_TARGET_DIR!\bin\sqlite3.exe"
 )
 copy /y "!LIBSCRIPT_EXTRACTED_SRC_DIR!\sqlite3.h" "!LIBSCRIPT_BUILD_TARGET_DIR!\include\sqlite3.h" >nul 2>&1
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\source_builder.cmd" :libscript_emit_build_metrics "sqlite" "%EXACT_VERSION%" "!LIBSCRIPT_BUILD_TARGET_DIR!\bin\sqlite3.exe" "-O2" ""
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_emit_build_metrics "sqlite" "%EXACT_VERSION%" "!LIBSCRIPT_BUILD_TARGET_DIR!\bin\sqlite3.exe" "-O2" ""
 for %%D in ("!LIBSCRIPT_BUILD_TARGET_DIR!") do set "_leaf_dir=%%~nxD"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "sqlite" "default" "!_leaf_dir!"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "sqlite" "default" "!_leaf_dir!"
 exit /b 0
 
 :: ## action_uninstall
@@ -190,7 +190,7 @@ exit /b 0
 :action_service
 set "SVC_NAME=libscript_sqlite"
 if not "%LIBSCRIPT_SERVICE_NAME%"=="" set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
 exit /b 0
 
 :: ## action_install_service
@@ -198,7 +198,7 @@ exit /b 0
 :action_install_service
 set "SVC_NAME=libscript_sqlite"
 if not "%LIBSCRIPT_SERVICE_NAME%"=="" set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" install "%SVC_NAME%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
 exit /b 0
 
 :: ## action_uninstall_service
@@ -206,5 +206,5 @@ exit /b 0
 :action_uninstall_service
 set "SVC_NAME=libscript_sqlite"
 if not "%LIBSCRIPT_SERVICE_NAME%"=="" set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
 exit /b 0

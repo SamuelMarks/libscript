@@ -11,19 +11,19 @@ setlocal EnableDelayedExpansion
 
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -52,13 +52,13 @@ goto :find_root
 :root_found
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    for %%i in ("%SCRIPT_DIR%\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
+    for %%i in ("!SCRIPT_DIR!\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
 set "SYSROOT=%~1"
-if "%SYSROOT%"=="" set "SYSROOT=%LIBSCRIPT_ROOT_DIR%\build\rootfs"
+if "%SYSROOT%"=="" set "SYSROOT=!LIBSCRIPT_ROOT_DIR!\build\rootfs"
 set "OUT_FILE=%~2"
-if "%OUT_FILE%"=="" set "OUT_FILE=%LIBSCRIPT_ROOT_DIR%\build\container_image.tar"
+if "%OUT_FILE%"=="" set "OUT_FILE=!LIBSCRIPT_ROOT_DIR!\build\container_image.tar"
 set "IMAGE_TAG=%~3"
 if "%IMAGE_TAG%"=="" set "IMAGE_TAG=libscript-app:latest"
 
@@ -72,7 +72,7 @@ if exist "%OUT_FILE%" (
 
 echo [CONTAINER-BASE] Synthesizing OCI layout and Docker archive for %IMAGE_TAG%...
 
-set "DOCKER_STAGE=%LIBSCRIPT_ROOT_DIR%\build\tmp_docker_stage"
+set "DOCKER_STAGE=!LIBSCRIPT_ROOT_DIR!\build\tmp_docker_stage"
 if exist "%DOCKER_STAGE%" rmdir /s /q "%DOCKER_STAGE%"
 if not exist "%DOCKER_STAGE%" mkdir "%DOCKER_STAGE%"
 

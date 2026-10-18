@@ -1,10 +1,22 @@
 #!/bin/sh
 # ## Overview
 # Configuration management engine for Open edX.
-# Provides get, set, list, generate, and validate operations for environment configurations.
+# Provides get, set, list, generate, validate, save, printvalue, printroot, and patches
+# operations for environment configurations with full Tutor `config` CLI parity.
 #
 # ## Usage
-#   ./config.sh [get|set|list|generate|validate|help] [args...]
+#   ./config.sh [get|set|list|generate|validate|save|printvalue|printroot|patches|help] [options]
+#
+# ## Parameters
+# - `get <key>`: Prints the current value of a dot-separated configuration key.
+# - `set <key> <value>`: Updates a configuration key across LMS and Studio configs.
+# - `list`: Lists all active configuration parameters.
+# - `generate` / `save`: Generates or saves default LMS, Studio, and Caddy configurations.
+# - `printvalue <key>`: Prints a configuration value (Tutor parity).
+# - `printroot`: Prints the root Open edX configuration directory (Tutor parity).
+# - `patches [list|show <name>]`: Lists or displays Tutor patch slots.
+# - `validate`: Validates configuration files against `vars.schema.json`.
+# - `help`: Displays usage instructions.
 
 set -feu
 if [ "${SCRIPT_NAME-}" ]; then
@@ -21,29 +33,17 @@ fi
 
 case "${STACK+x}" in
   *':'"${THIS_FILE}"':'*)
-    printf '[STOP]     processing "%s"\n' "${THIS_FILE}" >&2
+    printf '[STOP]     processing "%s"
+' "${THIS_FILE}" >&2
     if (return 0 2>/dev/null); then return; else exit 0; fi ;;
-  *) printf '[CONTINUE] processing "%s"\n' "${THIS_FILE}" >&2 ;;
+  *) printf '[CONTINUE] processing "%s"
+' "${THIS_FILE}" >&2 ;;
 esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
-: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
+: "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s
+' "$d")}"
 export DIR="${SCRIPT_DIR}"
-
-# ## Parameters
-# - `get`: Retrieves configuration value from lms.env.json.
-# - `set`: Sets or updates a key/value pair in lms.env.json and cms.env.json idempotently.
-# - `list`: Outputs active configuration JSON settings.
-# - `generate`: Synthesizes default configuration files without overwriting existing keys.
-# - `validate`: Validates configuration structure against vars.schema.json.
-#
-# ## Environment Variables
-# - `OPENEDX_INSTALL_DIR`: Path to openedx installation directory.
-# - `LIBSCRIPT_ROOT_DIR`: Root directory of LibScript repository.
-#
-# ## Exit Codes
-# - `0`: Success.
-# - `1`: Invalid configuration key, parse error, or validation failure.
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/env.sh"
@@ -63,250 +63,130 @@ OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/
 CONF_DIR="${OPENEDX_INSTALL_DIR}/config"
 LMS_CONF="${CONF_DIR}/lms.env.json"
 CMS_CONF="${CONF_DIR}/cms.env.json"
-SCHEMA_FILE="${SCRIPT_DIR}/vars.schema.json"
+SCHEMA_FILE="${DIR}/vars.schema.json"
+CONFIG_HELPER="${DIR}/config_helper.sh"
 
-# ## resolve_python
-# Resolves python interpreter.
-resolve_python() {
-  if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/python" ]; then
-    printf '%s\n' "${OPENEDX_INSTALL_DIR}/.venv/bin/python"
-  elif command -v python3 >/dev/null 2>&1; then
-    command -v python3
-  elif command -v python >/dev/null 2>&1; then
-    command -v python
-  else
-    printf ''
+PATCH_SLOTS="openedx-common-settings openedx-lms-production-settings openedx-cms-production-settings openedx-lms-development-settings openedx-cms-development-settings lms-env cms-env openedx-auth caddyfile"
+
+# ## ensure_conf_dir
+# Creates config directory and initializes baseline JSON if absent.
+ensure_conf_dir() {
+  mkdir -p "${CONF_DIR}"
+  if [ ! -f "${LMS_CONF}" ]; then
+    config_generate >/dev/null 2>&1 || true
   fi
 }
 
 # ## config_get
-# Retrieves a configuration value by key.
+# Reads a dot-separated key from lms.env.json.
 #
 # Inputs:
-#   $1 - key name (supports dot notation like DATABASES.default.HOST)
+#   $1 - dot-separated key (e.g. DATABASES.default.HOST)
 config_get() {
-  if [ $# -lt 1 ]; then
-    log_err "Usage: $0 get <key>"
-    return 1
+  _key="${1:-}"
+  if [ -z "${_key}" ]; then
+    log_err "Key parameter is required."
+    exit 1
   fi
-  _key="$1"
-  if [ ! -f "${LMS_CONF}" ]; then
-    log_err "Configuration file not found at ${LMS_CONF}. Run '$0 generate' first."
-    return 1
+  ensure_conf_dir
+
+  if ! "${CONFIG_HELPER}" get "${LMS_CONF}" "${_key}"; then
+    log_err "Failed to read key '${_key}'."
+    exit 1
   fi
-  _py="$(resolve_python)"
-  if [ -z "${_py}" ]; then
-    log_err "Python is required for config inspection."
-    return 1
-  fi
-  "${_py}" - <<EOF
-import json, sys
-try:
-    with open("${LMS_CONF}") as f:
-        cfg = json.load(f)
-    parts = "${_key}".split(".")
-    curr = cfg
-    for p in parts:
-        if isinstance(curr, dict) and p in curr:
-            curr = curr[p]
-        else:
-            print("null")
-            sys.exit(0)
-    if isinstance(curr, (dict, list)):
-        print(json.dumps(curr, indent=2))
-    else:
-        print(curr)
-except Exception as e:
-    print(f"Error: {e}", file=sys.stderr)
-    sys.exit(1)
-EOF
 }
 
 # ## config_set
-# Sets a configuration key/value in LMS and CMS JSON files.
+# Sets a dot-separated key across LMS and Studio configurations.
 #
 # Inputs:
-#   $1 - key name (supports dot notation)
-#   $2 - value (string, int, or json)
+#   $1 - dot-separated key
+#   $2 - value
 config_set() {
-  if [ $# -lt 2 ]; then
-    log_err "Usage: $0 set <key> <value>"
-    return 1
+  _key="${1:-}"
+  _val="${2:-}"
+  if [ -z "${_key}" ]; then
+    log_err "Key parameter is required."
+    exit 1
   fi
-  _key="$1"
-  _val="$2"
+  ensure_conf_dir
 
-  mkdir -p "${CONF_DIR}"
-  _py="$(resolve_python)"
-  if [ -z "${_py}" ]; then
-    log_err "Python is required for config manipulation."
-    return 1
+  if "${CONFIG_HELPER}" set "${LMS_CONF}" "${CMS_CONF}" "${_key}" "${_val}" >/dev/null; then
+    log_success "Configuration key '${_key}' updated to '${_val}'."
+  else
+    log_err "Failed to set key '${_key}'."
+    exit 1
   fi
-
-  for _conf in "${LMS_CONF}" "${CMS_CONF}"; do
-    "${_py}" - <<EOF
-import json, os, sys
-
-def parse_val(v):
-    try:
-        return json.loads(v)
-    except Exception:
-        return v
-
-conf_file = "${_conf}"
-cfg = {}
-if os.path.exists(conf_file):
-    try:
-        with open(conf_file) as f:
-            cfg = json.load(f)
-    except Exception:
-        cfg = {}
-
-parts = "${_key}".split(".")
-curr = cfg
-for p in parts[:-1]:
-    if p not in curr or not isinstance(curr[p], dict):
-        curr[p] = {}
-    curr = curr[p]
-curr[parts[-1]] = parse_val("""${_val}""")
-
-with open(conf_file, "w") as f:
-    json.dump(cfg, f, indent=2)
-EOF
-  done
-  log_success "Set '${_key}' = '${_val}' in ${LMS_CONF} and ${CMS_CONF}."
 }
 
 # ## config_list
-# Lists configuration in JSON format.
+# Outputs the full active configuration.
 config_list() {
-  if [ ! -f "${LMS_CONF}" ]; then
+  ensure_conf_dir
+  if [ -f "${LMS_CONF}" ]; then
+    cat "${LMS_CONF}"
+    printf '
+'
+  else
     log_warn "No configuration file found at ${LMS_CONF}."
-    return 0
   fi
-  cat "${LMS_CONF}"
 }
 
 # ## config_generate
-# Idempotently synthesizes configuration files preserving existing overrides.
+# Generates default LMS and Studio JSON configuration files.
 config_generate() {
   mkdir -p "${CONF_DIR}"
-  log_info "Generating Open edX configuration files at ${CONF_DIR}..."
-
-  _py="$(resolve_python)"
-  if [ -z "${_py}" ]; then
-    log_err "Python is required to generate configuration."
-    return 1
+  if "${CONFIG_HELPER}" generate "${LMS_CONF}" "${CMS_CONF}" >/dev/null; then
+    log_success "Default configurations ensured at ${CONF_DIR}."
+  else
+    log_err "Failed to generate configurations."
+    exit 1
   fi
-
-  "${_py}" - <<EOF
-import json, os, secrets
-
-secret_key = os.environ.get("OPENEDX_SECRET_KEY") or secrets.token_hex(24)
-mysql_pass = os.environ.get("MYSQL_PASSWORD") or secrets.token_hex(16)
-jwt_secret = os.environ.get("JWT_COMMON_SECRET_KEY") or secrets.token_hex(32)
-
-defaults = {
-  "SITE_NAME": "${LMS_HOST:-openedx.local}",
-  "LMS_BASE": "${LMS_HOST:-openedx.local}",
-  "CMS_BASE": "${CMS_HOST:-studio.openedx.local}",
-  "SECRET_KEY": secret_key,
-  "DATABASES": {
-    "default": {
-      "ENGINE": "django.db.backends.mysql",
-      "NAME": "${MYSQL_DATABASE:-openedx}",
-      "USER": "${MYSQL_USER:-openedx}",
-      "PASSWORD": "${MYSQL_PASSWORD:-}" or mysql_pass,
-      "HOST": "${MYSQL_HOST:-127.0.0.1}",
-      "PORT": "${MYSQL_PORT:-3306}"
-    }
-  },
-  "CACHES": {
-    "default": {
-      "BACKEND": "django_redis.cache.RedisCache",
-      "LOCATION": "redis://${REDIS_HOST:-127.0.0.1}:${REDIS_PORT:-6379}/1"
-    }
-  },
-  "MEILISEARCH_URL": "http://${MEILISEARCH_HOST:-127.0.0.1}:${MEILISEARCH_PORT:-7700}",
-  "EMAIL_HOST": "${SMTP_HOST:-127.0.0.1}",
-  "EMAIL_PORT": ${SMTP_PORT:-25},
-  "JWT_COMMON_SECRET_KEY": jwt_secret
-}
-
-def deep_merge(orig, new):
-    for k, v in new.items():
-        if k in orig and isinstance(orig[k], dict) and isinstance(v, dict):
-            deep_merge(orig[k], v)
-        elif k not in orig:
-            orig[k] = v
-
-for fn in ["${LMS_CONF}", "${CMS_CONF}"]:
-    data = {}
-    if os.path.exists(fn):
-        try:
-            with open(fn) as f:
-                data = json.load(f)
-        except Exception:
-            data = {}
-    deep_merge(data, defaults)
-    with open(fn, "w") as f:
-        json.dump(data, f, indent=2)
-
-print("Configuration synthesized successfully.")
-EOF
-  log_success "Open edX environment configurations generated."
 }
 
 # ## config_validate
-# Validates configuration against vars.schema.json.
+# Validates configuration syntax and schema compliance.
 config_validate() {
-  log_info "Validating configuration files..."
-  if [ ! -f "${LMS_CONF}" ]; then
-    log_err "LMS configuration file not found at ${LMS_CONF}."
-    return 1
+  ensure_conf_dir
+  log_info "Validating ${LMS_CONF} against ${SCHEMA_FILE}..."
+  if "${CONFIG_HELPER}" validate "${LMS_CONF}" "${SCHEMA_FILE}" >/dev/null; then
+    log_success "Configuration validation PASSED."
+  else
+    log_err "Configuration validation FAILED."
+    exit 1
   fi
-  _py="$(resolve_python)"
-  if [ -z "${_py}" ]; then
-    log_err "Python is required for validation."
-    return 1
-  fi
+}
 
-  "${_py}" - <<EOF
-import json, sys, os
-schema_file = "${SCHEMA_FILE}"
-conf_file = "${LMS_CONF}"
-
-try:
-    with open(conf_file) as f:
-        cfg = json.load(f)
-except Exception as e:
-    print(f"JSON syntax error in {conf_file}: {e}", file=sys.stderr)
-    sys.exit(1)
-
-if os.path.exists(schema_file):
-    try:
-        with open(schema_file) as f:
-            schema = json.load(f)
-        props = schema.get("properties", {})
-        # Verify required or known properties if present
-        for k, v in props.items():
-            if k in cfg:
-                expected_type = v.get("type")
-                val = cfg[k]
-                if expected_type == "string" and not isinstance(val, str):
-                    print(f"Validation Warning: '{k}' expected string, got {type(val).__name__}")
-                elif expected_type == "integer" and not isinstance(val, int):
-                    print(f"Validation Warning: '{k}' expected integer, got {type(val).__name__}")
-    except Exception as e:
-        print(f"Schema load warning: {e}")
-
-print("Configuration validation PASSED.")
-EOF
-  log_success "Configuration schema validation completed successfully."
+# ## config_patches
+# Lists or displays Tutor-compatible patch slots.
+config_patches() {
+  _sub="${1:-list}"
+  shift || true
+  case "${_sub}" in
+    list|ls)
+      for _slot in ${PATCH_SLOTS}; do
+        printf '%s
+' "${_slot}"
+      done
+      ;;
+    show)
+      _name="${1:-}"
+      if [ -z "${_name}" ]; then
+        log_err "Patch slot name is required."
+        exit 1
+      fi
+      ensure_conf_dir
+      "${CONFIG_HELPER}" get "${LMS_CONF}" "PATCHES.${_name}" || true
+      ;;
+    *)
+      log_err "Unknown patches subcommand: ${_sub}"
+      exit 1
+      ;;
+  esac
 }
 
 # ## show_help
-# Displays usage guide.
+# Displays usage instructions.
 show_help() {
   cat <<EOF
 Open edX Configuration Management Engine
@@ -316,16 +196,24 @@ Usage:
   $0 set <key> <value>
   $0 list
   $0 generate
+  $0 save
+  $0 printvalue <key>
+  $0 printroot
+  $0 patches [list|show <name>]
   $0 validate
   $0 help
 
 Commands:
-  get         Read value from lms.env.json
-  set         Set key and value idempotently in lms and cms config
-  list        Display active configuration JSON
-  generate    Generate default configurations preserving overrides
-  validate    Validate configuration schema against vars.schema.json
-  help        Show this help message
+  get          Get a configuration parameter (dot notation supported)
+  set          Set a configuration parameter across LMS & CMS
+  list         Print full current configuration
+  generate     Generate default configuration files
+  save         Save and synthesize environment configurations (Tutor parity)
+  printvalue   Print a configuration parameter value (Tutor parity)
+  printroot    Print the root Open edX installation directory (Tutor parity)
+  patches      List or inspect Tutor-compatible patch slots
+  validate     Validate configuration syntax and schema
+  help         Show this help message
 EOF
 }
 
@@ -333,20 +221,42 @@ COMMAND="${1:-help}"
 shift || true
 
 case "${COMMAND}" in
-  printvalue|get)
+  get|printvalue)
     config_get "$@"
     ;;
-  save|set)
+  set)
     config_set "$@"
-    ;;
-  printroot)
-    printf '%s\n' "${OPENEDX_INSTALL_DIR}"
     ;;
   list)
     config_list
     ;;
-  generate)
+  generate|save)
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --set)
+          if [ $# -ge 2 ]; then
+            _kv="$2"
+            _k="${_kv%%=*}"
+            _v="${_kv#*=}"
+            config_set "${_k}" "${_v}"
+            shift 2
+          else
+            shift
+          fi
+          ;;
+        *)
+          shift
+          ;;
+      esac
+    done
     config_generate
+    ;;
+  printroot)
+    printf '%s
+' "${OPENEDX_INSTALL_DIR}"
+    ;;
+  patches)
+    config_patches "$@"
     ;;
   validate)
     config_validate

@@ -97,6 +97,9 @@ sync_repo_to_guest() {
     : "${_port:=50022}"
     : "${_key:=$HOME/.vagrant.d/insecure_private_keys/vagrant.key.ed25519}"
 
+    ssh -n -p "$_port" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i "$_key" vagrant@127.0.0.1 \
+        "sudo mkdir -p /opt/repos/libscript && sudo chown -R vagrant /opt/repos/libscript" >/dev/null 2>&1 || true
+
     rsync -av --copy-links --no-owner --no-group \
         -e "ssh -p $_port -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $_key" \
         --exclude ".vagrant" --exclude ".git" --exclude "tests_tmp" --exclude "tmp" --exclude "*.msi" --exclude "cache" --exclude "vagrant" --exclude "build" --exclude "dist" \

@@ -68,6 +68,32 @@ All notable changes to the LibScript framework are documented here.
       IIS with automated Let's Encrypt TLS and OS init supervision (`systemd`, `launchd`, Windows
       Services).
     - Programmatic REST API and OpenAPI 3.0 control plane via `libscript-rest-api`.
+  - **Tier 3.5: High-Availability Topologies & Consensus Choreography (`topologies/`)**:
+    - DAG state machine (`topologies/engine.{sh,cmd}`) managing `.topology_state.json` with atomic
+      write-then-rename checkpointing, distributed lease locking (`topologies/lock.{sh,cmd}`), and
+      automated split-brain fencing (`topologies/fence.{sh,cmd}`).
+    - Turnkey HA cluster blueprints: `postgres-ha` (Patroni + etcd Raft + PgBouncer),
+      `redis-cluster`, `valkey-cluster`, `mesos-marathon-ha` (ZooKeeper + Mesos + Marathon),
+      `k8s-marathon-paas`, `k0s-ha`, `minio-distributed`, and `gke-tpu-cluster`.
+  - **Tier 4: Declarative Payloads & Multi-Node Cluster Schedulers (`payloads/`)**:
+    - Universal workload schema (`payloads/payload.schema.json`) and dispatcher
+      (`payloads/engine.{sh,cmd}`) supporting stateless services, stateful sets, batch ETL/search
+      reindexing jobs, distributed AI training (`xpk` / `slurm_ray`), and unikernels.
+    - Pluggable scheduler drivers (`payloads/schedulers/`) and standalone Tier 1/3 orchestrator
+      recipes for **Kubernetes** (`kubernetes`, `kubernetes-k0s`, `kubernetes-thw`, `k8s-marathon`),
+      **Apache Mesos & Marathon** (`mesos`, `marathon`), **HashiCorp Nomad** (`nomad`),
+      **Slurm/Ray** (`slurm_ray`), **Google Cloud XPK** (`xpk`), **MicroVMs** (`microvm`), and **8+
+      Native Init Systems** (`native`).
+  - **Unified Cross-Cutting Traits (`traits/`) & Dual-Layer Lifecycle Hooks (`hooks/`)**:
+    - Deterministic trait engine (`traits/engine.{sh,cmd}`) supporting both Tier 2 offline sysroot
+      baking and Tier 3 live runtime execution across `storage`, `secrets` (zero-env-leak FIFO
+      injection), `mesh` (WireGuard/Tailscale), `firewall` (`nftables`/`iptables`/`pf`/`netsh` with
+      anti-lockout safeguards), `discovery`, `tls`, `ingress`, `logging`, `metrics`, `backup`
+      (ZFS/Btrfs CoW snapshots + S3/GCS/Azure/Rclone/Restic/Borg shipping), and `maintenance`.
+    - Dual-layer component lifecycle hook dispatcher (`_lib/_common/hooks.{sh,cmd}`) implementing
+      physical hooks (`configure`, `probe`, `announce`, `log_stream`, `metrics`, `backup`,
+      `restore`, `upgrade`, `rollback`, `maintenance`) and multi-tenant logical hooks
+      (`provision_tenant`, `deprovision_tenant`, `backup_tenant`, `restore_tenant`).
   - **Declarative Constraint Solver & Tarjan SCC Cycle Breaking**:
     - Extended manifest schema (`manifest.schema.json`) with USE flag variants (`configure_args`,
       `meson_args`, `cmake_args`, `cflags`, `ldflags`) and dependency classifications (`host_tools`,

@@ -7,30 +7,36 @@ LibScript enforces strict reproducibility, air-gapped isolation, and cross-platf
 
 ---
 
-## 🏛️ Dependency Topology & The Three-Tier Model
+## 🏛️ Dependency Topology & The Five-Tier Model
 
-Dependencies in LibScript are classified across three distinct operational tiers to prevent scope
-creep, cross-layer leakage, and host contamination:
+Dependencies in LibScript are classified across five distinct operational tiers (plus cross-cutting
+traits) to prevent scope creep, cross-layer leakage, and host contamination:
 
 ```mermaid
 flowchart TD
-    subgraph Tier3[Tier 3: Operators & Deployers]
-        CloudDeps["Cloud Infrastructure Dependencies<br/>(AWS VPCs, GCP TPUs, Azure VNets, Proxmox VMs, Netctl Ingress)"]
+    subgraph Tier35_4[Tier 3.5 & Tier 4: Topologies, Payloads & Multi-Node Schedulers]
+        SchedDeps["Cluster & Workload Schedulers<br/>(Kubernetes, Apache Mesos & Marathon, HashiCorp Nomad, Slurm/Ray, XPK)"]
+        HADeps["HA Consensus & Quorum Topologies<br/>(PostgreSQL HA, Redis/Valkey HA, RabbitMQ HA, Split-Brain Fencing)"]
+    end
+
+    subgraph Tier3[Tier 3: Multicloud Operators & Unified Traits]
+        CloudDeps["Cloud Infrastructure & Node Traits<br/>(AWS VPCs, GCP TPUs, Azure VNets, Proxmox VMs, WireGuard Mesh, Netctl Ingress)"]
     end
 
     subgraph Tier2[Tier 2: Synthesizers & Assemblers]
-        OSDeps["Operating System Assembly Constraints<br/>(Rootfs FHS, Storage/LUKS2, Linux/FreeBSD/illumos Kernel, UKI, package-as)"]
+        OSDeps["Operating System & Package Assembly Constraints<br/>(Rootfs FHS, Storage/LUKS2, Unikernels, Linux/FreeBSD/illumos Kernel, UKI, package-as)"]
         SolverEngine["Constraint Solver: resolve_stack.jq<br/>(Tarjan SCC Cycle Breaking & USE Flag Variant Propagation)"]
     end
 
-    subgraph Tier1[Tier 1: Leaf Recipes & Version Managers]
+    subgraph Tier1[Tier 1 & Tier 1.5: Leaf Recipes, Version Managers & Base Userland]
         HostTools["Host Tools (bison, flex, meson, ninja, python3, m4)"]
         BuildDeps["Build Sysroot Headers & Libs (glibc, musl, libdrm, wayland, alsa-lib)"]
-        RuntimeDeps["Runtime Rootfs Daemons (sshd, seatd, pipewire, dbus, chrony)"]
-        VersionSandboxes["Native Version Sandboxes (nodejs/22, python/3.12, rust/1.85)"]
+        RuntimeDeps["Runtime Rootfs Daemons & Hooks (sshd, seatd, pipewire, backup/restore, upgrade/rollback)"]
+        VersionSandboxes["Native Version Sandboxes (nodejs/22, python/3.12, rust/1.85, postgres/16)"]
     end
 
-    Tier3 -->|Requires OS Media| Tier2
+    Tier35_4 -->|Schedules & Orchestrates| Tier3
+    Tier3 -->|Requires OS Media & Packages| Tier2
     Tier2 --> SolverEngine
     SolverEngine -->|Resolves Graph| Tier1
     HostTools --> BuildDeps

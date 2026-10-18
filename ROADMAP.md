@@ -5,15 +5,17 @@ or operating system.
 
 ## Phase 3: Advanced PaaS & Cluster Mesh (Current)
 
-- [ ] High-availability cluster orchestration blueprints (Master/Slave election, Raft-based state,
-      Cross-cloud mesh).
-- [ ] Automated global load balancer and reverse proxy configuration.
+- [x] High-availability cluster orchestration blueprints (Master/Slave election, Raft-based state,
+      Cross-cloud mesh: `postgres-ha`, `redis-cluster`, `valkey-cluster`, `mesos-marathon-ha`,
+      `k8s-marathon-paas`, `k0s-ha`, `minio-distributed`).
+- [x] Automated global load balancer and reverse proxy configuration (`traits/ingress/`, `netctl`).
 - [ ] Provider Expansion: Add support for DigitalOcean, Linode, and Vultr to the multicloud wrapper.
-- [ ] Unified Deployment Grammar: A high-level DSL (extending `libscript.json`) to describe a
-      globally distributed stack.
-- [ ] Encrypted cross-node mesh networking / Zero-Trust Sidecars (WireGuard, Tailscale).
+- [x] Unified Deployment Grammar: High-level declarative DSLs (`payloads/payload.schema.json` and
+      `topologies/topology.schema.json`) to describe globally distributed stacks and clusters.
+- [x] Encrypted cross-node mesh networking / Zero-Trust Sidecars (`traits/mesh/` WireGuard &
+      Tailscale overlays).
 - [ ] Git-driven deployment workflows (`libscript deploy`).
-- [x] Cross-cloud persistent volume and state management.
+- [x] Cross-cloud persistent volume and state management (`traits/storage/`, `traits/backup/`).
 
 ## Phase 4: Hardware & Observability (Next)
 
@@ -91,5 +93,28 @@ or operating system.
       differential benchmark (`_lib/databases/sqlite/compare_compilers.{sh,cmd}`).
 - [x] Linux kernel multi-toolchain Kbuild engine, ELF/`System.map` ABI differential harness
       (`_lib/kernel/linux/compare_compilers.{sh,cmd}`), and declarative kernel compiler profiles.
+
+## Phase 11: Multi-Node Cluster Schedulers, HA Topologies, Traits & Lifecycle Hooks
+
+- [x] Tier 4 Declarative Workload Engine (`payloads/`) and pluggable scheduler drivers for
+      **Kubernetes** (`kubernetes`, `k8s-marathon`, `kubernetes-k0s`, `kubernetes-thw`), **Apache
+      Mesos & Marathon** (`mesos`, `marathon`), **HashiCorp Nomad** (`nomad`), **Slurm/Ray**
+      (`slurm_ray`), **Google Cloud XPK** (`xpk`), **MicroVMs/Unikernels** (`microvm`), and **8+
+      Native OS Init Systems** (`native`).
+- [x] Tier 3.5 High-Availability Topology Engine (`topologies/engine.{sh,cmd}`), distributed lease
+      locking (`topologies/lock.{sh,cmd}`), and automated split-brain fencing
+      (`topologies/fence.{sh,cmd}`).
+- [x] Turnkey HA blueprints for `postgres-ha`, `redis-cluster`, `valkey-cluster`,
+      `mesos-marathon-ha`, `k8s-marathon-paas`, `k0s-ha`, `minio-distributed`, and
+      `gke-tpu-cluster`.
+- [x] Unified Cross-Cutting Node Traits (`traits/engine.{sh,cmd}`): `storage`, `secrets`
+      (zero-env-leak FIFO injection), `mesh` (WireGuard/Tailscale), `firewall` (anti-lockout
+      `nftables`/`iptables`/`pf`/`netsh`), `discovery` (Cloud DNS + `/etc/hosts`), `tls`, `ingress`,
+      `logging`, `metrics`, `backup` (ZFS/Btrfs CoW snapshots + S3/GCS/Azure/Restic shipping), and
+      `maintenance`.
+- [x] Dual-Layer Component Lifecycle Hooks (`_lib/_common/hooks.{sh,cmd}`): physical hooks
+      (`configure`, `probe`, `announce`, `log_stream`, `metrics`, `backup`, `restore`, `upgrade`,
+      `rollback`, `maintenance`) and logical multi-tenant hooks (`provision_tenant`,
+      `deprovision_tenant`, `backup_tenant`, `restore_tenant`).
 
 _For completed phases (Phase 1 and 2), please see the [CHANGELOG.md](CHANGELOG.md)._

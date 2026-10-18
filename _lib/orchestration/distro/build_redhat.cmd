@@ -12,19 +12,19 @@ setlocal EnableDelayedExpansion
 
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -53,10 +53,10 @@ goto :find_root
 :root_found
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    for %%i in ("%SCRIPT_DIR%\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
+    for %%i in ("!SCRIPT_DIR!\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
-set "TARGET_ROOTFS=%LIBSCRIPT_ROOT_DIR%\build\rootfs_redhat"
+set "TARGET_ROOTFS=!LIBSCRIPT_ROOT_DIR!\build\rootfs_redhat"
 if not "%~1"=="" set "TARGET_ROOTFS=%~1"
 
 echo [DISTRO-REDHAT] Initializing Red Hat-inspired distribution synthesis pipeline...
@@ -71,7 +71,7 @@ if exist "%STAMP_FILE%" (
 )
 
 echo [DISTRO-REDHAT] Phase 1: Creating FHS directory layout...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\create_fhs_layout.cmd" "%TARGET_ROOTFS%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\create_fhs_layout.cmd" "%TARGET_ROOTFS%"
 
 echo [DISTRO-REDHAT] Phase 2: Initializing RPM database and DNF repository configs...
 if not exist "%TARGET_ROOTFS%\var\lib\rpm" mkdir "%TARGET_ROOTFS%\var\lib\rpm"
@@ -93,11 +93,11 @@ if not exist "%TARGET_ROOTFS%\etc\dnf" mkdir "%TARGET_ROOTFS%\etc\dnf"
 ) > "%TARGET_ROOTFS%\etc\yum.repos.d\libscript.repo"
 
 echo [DISTRO-REDHAT] Phase 3 and 4: Generating base RPM packages and repodata...
-set "PACKAGES_OUT=%LIBSCRIPT_ROOT_DIR%\build\packages\rpm"
+set "PACKAGES_OUT=!LIBSCRIPT_ROOT_DIR!\build\packages\rpm"
 if not exist "%PACKAGES_OUT%" mkdir "%PACKAGES_OUT%"
 
-call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\packagers\build_rpm.cmd" "redhat-release" "9.4" "%TARGET_ROOTFS%" "%PACKAGES_OUT%"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\orchestration\repogen\rpm_index.cmd" "%PACKAGES_OUT%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\packagers\build_rpm.cmd" "redhat-release" "9.4" "%TARGET_ROOTFS%" "%PACKAGES_OUT%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\orchestration\repogen\rpm_index.cmd" "%PACKAGES_OUT%"
 
 echo [DISTRO-REDHAT] Phase 5: Finalizing Red Hat system identity...
 (

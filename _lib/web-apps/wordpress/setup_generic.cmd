@@ -11,19 +11,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -53,8 +53,8 @@ goto :find_root
 
 
 
-if "%LIBSCRIPT_ROOT_DIR%"=="" (
-    for %%i in ("%SCRIPT_DIR%\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
+if "!LIBSCRIPT_ROOT_DIR!"=="" (
+    for %%i in ("!SCRIPT_DIR!\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
 if "%WORDPRESS_VERSION%"=="" set "WORDPRESS_VERSION=7.1.2"
@@ -135,7 +135,7 @@ set "WORDPRESS_DB_SSL_CA="
 
 if defined WORDPRESS_DBAAS_URL (
     echo [INFO] Parsing remote DBaaS URL...
-    for /f "tokens=1,2 delims==" %%a in ('call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\parse_connection_uri.cmd" "%WORDPRESS_DBAAS_URL%" --eval') do (
+    for /f "tokens=1,2 delims==" %%a in ('call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\parse_connection_uri.cmd" "%WORDPRESS_DBAAS_URL%" --eval') do (
         if "%%a"=="DB_HOST" set "WORDPRESS_DB_HOST=%%b"
         if "%%a"=="DB_PORT" set "WORDPRESS_DB_PORT=%%b"
         if "%%a"=="DB_NAME" set "WORDPRESS_DB_NAME=%%b"
@@ -146,15 +146,15 @@ if defined WORDPRESS_DBAAS_URL (
     )
     if defined WORDPRESS_DB_PORT set "WORDPRESS_DB_HOST=!WORDPRESS_DB_HOST!:!WORDPRESS_DB_PORT!"
 ) else if "%WORDPRESS_REUSE_OPENEDX_DB%"=="1" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\discover_databases.cmd" --check --engine mysql >nul 2>&1
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\discover_databases.cmd" --check --engine mysql >nul 2>&1
     if not errorlevel 1 (
         echo [INFO] Shared MySQL database detected! Provisioning isolated WordPress schema in shared instance...
-        for /f "tokens=1,2 delims==" %%a in ('call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\discover_databases.cmd" --eval --engine mysql') do (
+        for /f "tokens=1,2 delims==" %%a in ('call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\discover_databases.cmd" --eval --engine mysql') do (
             if "%%a"=="DETECTED_DB_HOST" set "WORDPRESS_DB_HOST=%%b"
             if "%%a"=="DETECTED_DB_PORT" set "WORDPRESS_DB_PORT=%%b"
         )
         if defined WORDPRESS_DB_PORT set "WORDPRESS_DB_HOST=!WORDPRESS_DB_HOST!:!WORDPRESS_DB_PORT!"
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\databases\provision_schema.cmd" --engine mysql --host "!WORDPRESS_DB_HOST!" --schema "%WORDPRESS_DB_NAME%" --user "%WORDPRESS_DB_USER%" --password "%WORDPRESS_DB_PASS%" --charset utf8mb4 --collation utf8mb4_unicode_520_ci >nul 2>&1
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" --engine mysql --host "!WORDPRESS_DB_HOST!" --schema "%WORDPRESS_DB_NAME%" --user "%WORDPRESS_DB_USER%" --password "%WORDPRESS_DB_PASS%" --charset utf8mb4 --collation utf8mb4_unicode_520_ci >nul 2>&1
     )
 )
 
@@ -246,8 +246,8 @@ set "WP_CFG=%WORDPRESS_WWWROOT%\wp-config.php"
 :: 5. Configure IIS FastCGI (if webserver is IIS)
 if /I "%WORDPRESS_WEBSERVER%"=="iis" (
     echo [INFO] Configuring IIS FastCGI for PHP...
-    %SystemRoot%\System32\inetsrv\appcmd.exe set config /section:system.webServer/fastCgi /+[fullPath='%LIBSCRIPT_ROOT_DIR%\runtimes\php\php-cgi.exe'] 2>nul
-    %SystemRoot%\System32\inetsrv\appcmd.exe set config /section:system.webServer/handlers /+[name='PHP_via_FastCGI',path='*.php',verb='*',modules='FastCgiModule',scriptProcessor='%LIBSCRIPT_ROOT_DIR%\runtimes\php\php-cgi.exe',resourceType='Either'] 2>nul
+    %SystemRoot%\System32\inetsrv\appcmd.exe set config /section:system.webServer/fastCgi /+[fullPath='!LIBSCRIPT_ROOT_DIR!\runtimes\php\php-cgi.exe'] 2>nul
+    %SystemRoot%\System32\inetsrv\appcmd.exe set config /section:system.webServer/handlers /+[name='PHP_via_FastCGI',path='*.php',verb='*',modules='FastCgiModule',scriptProcessor='!LIBSCRIPT_ROOT_DIR!\runtimes\php\php-cgi.exe',resourceType='Either'] 2>nul
 )
 
 :: 6. Ensure authentic core structure exists

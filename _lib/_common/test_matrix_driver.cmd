@@ -8,25 +8,25 @@
 :: `2x idempotent install+test` -> `uninstall`), and live `tests\update_results.cmd` updates.
 ::
 :: ## Usage
-:: call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\test_matrix_driver.cmd" [subroutine] [args...]
+:: call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\test_matrix_driver.cmd" [subroutine] [args...]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -66,15 +66,15 @@ exit /b 0
 :run_4stage_probe
 set "PROBE_TARGET=%~1"
 if "%PROBE_TARGET%"=="" exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install "%PROBE_TARGET%"
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install "%PROBE_TARGET%"
 if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" test "%PROBE_TARGET%"
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" test "%PROBE_TARGET%"
 if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" which "%PROBE_TARGET%" latest >nul 2>&1
-call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" env "%PROBE_TARGET%" latest >nul 2>&1
-call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" ls "%PROBE_TARGET%" >nul 2>&1
-call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install "%PROBE_TARGET%"
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" which "%PROBE_TARGET%" latest >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" env "%PROBE_TARGET%" latest >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" ls "%PROBE_TARGET%" >nul 2>&1
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install "%PROBE_TARGET%"
 if errorlevel 1 exit /b 1
-call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" test "%PROBE_TARGET%"
+call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" test "%PROBE_TARGET%"
 if errorlevel 1 exit /b 1
 exit /b 0

@@ -9,19 +9,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -178,8 +178,21 @@ if not exist "%TARGET_DIR%\bin" (
         curl -sSL "%MONGODB_DOWNLOAD_URL%" -o "%TEMP%\mongodb.zip"
         tar -xf "%TEMP%\mongodb.zip" -C "%TARGET_DIR%"
     ) else (
-        echo No download URL or cache available for mongodb.
-        exit /b 1
+        set "_MONGO_URL=https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-8.0.4.zip"
+        echo Downloading MongoDB from !_MONGO_URL!...
+        curl -f -sSL "!_MONGO_URL!" -o "%TEMP%\mongodb.zip" 2>nul
+        if not errorlevel 1 (
+            tar -xf "%TEMP%\mongodb.zip" -C "%TARGET_DIR%" --strip-components=1 2>nul || tar -xf "%TEMP%\mongodb.zip" -C "%TARGET_DIR%"
+            del /f /q "%TEMP%\mongodb.zip" 2>nul
+        ) else (
+            where winget >nul 2>&1
+            if not errorlevel 1 (
+                winget install --id MongoDB.Server -e --silent --accept-package-agreements --accept-source-agreements
+            ) else (
+                echo No download URL or cache available for mongodb.
+                exit /b 1
+            )
+        )
     )
 ) else (
     echo mongodb %MONGODB_VERSION% is already installed.
@@ -204,9 +217,9 @@ if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
 )
 if "%MONGODB_INSTALL_METHOD%"=="libscript_native" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
 ) else if "%MONGODB_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
 ) else (
     echo %ACTION% not natively implemented for %MONGODB_INSTALL_METHOD%.
 )
@@ -225,9 +238,9 @@ if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
 )
 if "%MONGODB_INSTALL_METHOD%"=="libscript_native" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" install "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
 ) else if "%MONGODB_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" install "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
 ) else (
     echo install-service not implemented for %MONGODB_INSTALL_METHOD%.
 )
@@ -246,9 +259,9 @@ if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
 )
 if "%MONGODB_INSTALL_METHOD%"=="libscript_native" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
 ) else if "%MONGODB_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
 ) else (
     echo uninstall-service not implemented for %MONGODB_INSTALL_METHOD%.
 )

@@ -12,19 +12,19 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -68,8 +68,8 @@ goto parse_args
 
 if "!PURGE_DATA!"=="1" (
     echo [WARN] Purging data directories for %PACKAGE_NAME%...
-    if exist "%LIBSCRIPT_ROOT_DIR%\data\%PACKAGE_NAME%" (
-        rmdir /s /q "%LIBSCRIPT_ROOT_DIR%\data\%PACKAGE_NAME%"
+    if exist "!LIBSCRIPT_ROOT_DIR!\data\%PACKAGE_NAME%" (
+        rmdir /s /q "!LIBSCRIPT_ROOT_DIR!\data\%PACKAGE_NAME%"
     )
     REM Try to read DATA_DIR from schema defaults or env if possible
     set "pkg_upper=!PACKAGE_NAME!"
@@ -88,8 +88,8 @@ if "!PURGE_DATA!"=="1" (
     sc config "libscript_!PACKAGE_NAME!" start= demand >nul 2>&1
 )
 
-if exist "%LIBSCRIPT_ROOT_DIR%\installed\%PACKAGE_NAME%" (
-    rmdir /s /q "%LIBSCRIPT_ROOT_DIR%\installed\%PACKAGE_NAME%"
+if exist "!LIBSCRIPT_ROOT_DIR!\installed\%PACKAGE_NAME%" (
+    rmdir /s /q "!LIBSCRIPT_ROOT_DIR!\installed\%PACKAGE_NAME%"
 )
 echo Uninstalled %PACKAGE_NAME%.
 exit /b 0

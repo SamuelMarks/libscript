@@ -15,17 +15,17 @@ setlocal EnableDelayedExpansion
 :: call "%~dp0\..\..\..\_lib\_common\setup_base.cmd"
 :: ```
 
-set "CALLER_FILE=%THIS_FILE%"
+set "CALLER_FILE=!THIS_FILE!"
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2^>^&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2^>^&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" ^>^&2
+        echo [STOP] processing "!THIS_FILE!" ^>^&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 
 if not defined LIBSCRIPT_ROOT_DIR (
@@ -54,7 +54,7 @@ goto :find_root
 :root_found
 
 :: Source logging
-set "LOG_CMD=%LIBSCRIPT_ROOT_DIR%\_lib\_common\log.cmd"
+set "LOG_CMD=!LIBSCRIPT_ROOT_DIR!\_lib\_common\log.cmd"
 
 :: Resolve target component directory
 set "TARGET_DIR="
@@ -63,13 +63,13 @@ if not "%CALLER_FILE%"=="" (
 )
 if "%TARGET_DIR:~-1%"=="\" set "TARGET_DIR=%TARGET_DIR:~0,-1%"
 if "%TARGET_DIR%"=="" set "TARGET_DIR=%CD%"
-if /i "%TARGET_DIR%"=="%LIBSCRIPT_ROOT_DIR%\_lib\_common" set "TARGET_DIR=%CD%"
+if /i "%TARGET_DIR%"=="!LIBSCRIPT_ROOT_DIR!\_lib\_common" set "TARGET_DIR=%CD%"
 
 :: Privilege Check
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\priv.cmd" :check_admin
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\priv.cmd" :check_admin
 if errorlevel 1 (
-    call "%LOG_CMD%" :log_info "Elevating to administrator..."
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\priv.cmd" :priv "%~f0"
+    call "!LOG_CMD!" :log_info "Elevating to administrator..."
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\priv.cmd" :priv "%~f0"
     exit /b %errorlevel%
 )
 
@@ -82,11 +82,11 @@ if exist "%TARGET_DIR%\setup_windows.cmd" (
     call "%TARGET_DIR%\setup_generic.cmd" %*
     set "SETUP_ERR=!errorlevel!"
 ) else if exist "%TARGET_DIR%\setup.ps1" (
-    set "COMMON_DIR=%LIBSCRIPT_ROOT_DIR%\_lib\_common"
+    set "COMMON_DIR=!LIBSCRIPT_ROOT_DIR!\_lib\_common"
     powershell -ExecutionPolicy Bypass -Command "& { . '!COMMON_DIR!\log.ps1'; . '!COMMON_DIR!\pkg_mgr.ps1'; & '%TARGET_DIR%\setup.ps1' }"
     set "SETUP_ERR=!errorlevel!"
 ) else (
-    call "%LOG_CMD%" :log_error "No setup script found in %TARGET_DIR%"
+    call "!LOG_CMD!" :log_error "No setup script found in %TARGET_DIR%"
     exit /b 1
 )
 
@@ -173,10 +173,10 @@ if not errorlevel 1 (
     if /i "%PACKAGE_NAME%"=="stack" set "WINGET_ID=commercialhaskell.stack"
 
     if defined WINGET_ID (
-        call "%LOG_CMD%" :log_info "Native setup failed. Installing !PACKAGE_NAME! via winget (!WINGET_ID!)..."
+        call "!LOG_CMD!" :log_info "Native setup failed. Installing !PACKAGE_NAME! via winget (!WINGET_ID!)..."
         winget list --id "!WINGET_ID!" --accept-source-agreements >nul 2>&1
         if not errorlevel 1 (
-            call "%LOG_CMD%" :log_info "!PACKAGE_NAME! (!WINGET_ID!) is already installed via winget."
+            call "!LOG_CMD!" :log_info "!PACKAGE_NAME! (!WINGET_ID!) is already installed via winget."
             exit /b 0
         )
         winget install --id "!WINGET_ID!" --silent --accept-package-agreements --accept-source-agreements
@@ -184,10 +184,10 @@ if not errorlevel 1 (
         winget list --id "!WINGET_ID!" --accept-source-agreements >nul 2>&1
         if not errorlevel 1 exit /b 0
     ) else (
-        call "%LOG_CMD%" :log_info "Native setup failed. Attempting winget install for !PACKAGE_NAME!..."
+        call "!LOG_CMD!" :log_info "Native setup failed. Attempting winget install for !PACKAGE_NAME!..."
         winget list --name "!PACKAGE_NAME!" --accept-source-agreements >nul 2>&1
         if not errorlevel 1 (
-            call "%LOG_CMD%" :log_info "!PACKAGE_NAME! is already installed via winget."
+            call "!LOG_CMD!" :log_info "!PACKAGE_NAME! is already installed via winget."
             exit /b 0
         )
         winget install --name "!PACKAGE_NAME!" -e --silent --accept-package-agreements --accept-source-agreements
@@ -219,22 +219,22 @@ if not exist "%dest_dir%" mkdir "%dest_dir%"
 :: Try SystemRoot if requested and admin
 copy /y "%src_path%" "%SystemRoot%\" >nul 2>&1
 if not errorlevel 1 (
-    call "%LOG_CMD%" :log_info "%bin_name% installed to %SystemRoot%"
+    call "!LOG_CMD!" :log_info "%bin_name% installed to %SystemRoot%"
     exit /b 0
 )
 
 :: Fallback to user bin
 copy /y "%src_path%" "%dest_dir%\%bin_name%" >nul 2>&1
 if not errorlevel 1 (
-    call "%LOG_CMD%" :log_info "%bin_name% installed to %dest_dir%"
+    call "!LOG_CMD!" :log_info "%bin_name% installed to %dest_dir%"
     
     REM Check if dest_dir is in PATH
     echo %PATH% | findstr /i /c:"%dest_dir%" >nul
     if errorlevel 1 (
-        call "%LOG_CMD%" :log_warn "%dest_dir% is not in your PATH."
+        call "!LOG_CMD!" :log_warn "%dest_dir% is not in your PATH."
     )
     exit /b 0
 )
 
-call "%LOG_CMD%" :log_error "Failed to install %bin_name% to %dest_dir%"
+call "!LOG_CMD!" :log_error "Failed to install %bin_name% to %dest_dir%"
 exit /b 1

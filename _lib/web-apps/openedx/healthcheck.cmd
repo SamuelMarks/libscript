@@ -16,19 +16,19 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -56,7 +56,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if "%LIBSCRIPT_ROOT_DIR%"=="" (
+if "!LIBSCRIPT_ROOT_DIR!"=="" (
     for %%i in ("%~dp0..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
@@ -83,7 +83,7 @@ if "%MEILISEARCH_PORT%"=="" set "MEILISEARCH_PORT=7700"
 if "%SMTP_HOST%"=="" set "SMTP_HOST=127.0.0.1"
 if "%SMTP_PORT%"=="" set "SMTP_PORT=25"
 
-set "HEALTH_HELPER=%SCRIPT_DIR%\health_helper.cmd"
+set "HEALTH_HELPER=!SCRIPT_DIR!\health_helper.cmd"
 
 set "ARG1=%~1"
 if "%ARG1%"=="" goto run_probes
@@ -98,8 +98,12 @@ if "%ARG1%"=="-h" goto show_help
 set "JSON_OUTPUT=0"
 if "%ARG1%"=="--json" set "JSON_OUTPUT=1"
 
+set "_HC_STACK=%STACK%"
+set "STACK="
 call "%HEALTH_HELPER%" "%JSON_OUTPUT%" "%LMS_HOST%" "%LMS_PORT%" "%CMS_HOST%" "%CMS_PORT%" "%MYSQL_HOST%" "%MYSQL_PORT%" "%MONGODB_HOST%" "%MONGODB_PORT%" "%REDIS_HOST%" "%REDIS_PORT%" "%MEILISEARCH_HOST%" "%MEILISEARCH_PORT%" "%SMTP_HOST%" "%SMTP_PORT%"
-exit /b %errorlevel%
+set "_HC_ERR=%errorlevel%"
+set "STACK=%_HC_STACK%"
+exit /b %_HC_ERR%
 
 :: ## show_help
 :: Displays healthcheck utility command usage.

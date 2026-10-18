@@ -13,19 +13,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2^>^&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2^>^&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" ^>^&2
+        echo [STOP] processing "!THIS_FILE!" ^>^&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -61,7 +61,7 @@ if "%MSI_RS_VERSION%"=="" (
 )
 
 set "EXTRA_PATHS="
-if exist "%LIBSCRIPT_ROOT_DIR%\tools\wix" set "EXTRA_PATHS=%LIBSCRIPT_ROOT_DIR%\tools\wix;"
+if exist "!LIBSCRIPT_ROOT_DIR!\tools\wix" set "EXTRA_PATHS=!LIBSCRIPT_ROOT_DIR!\tools\wix;"
 if exist "%LIBSCRIPT_HOME%\msi-rs\default\bin" set "EXTRA_PATHS=%EXTRA_PATHS%%LIBSCRIPT_HOME%\msi-rs\default\bin;"
 
 endlocal & set "PATH=%EXTRA_PATHS%%LIBSCRIPT_HOME%\msi-rs\%MSI_RS_VERSION%\bin;%PATH%"

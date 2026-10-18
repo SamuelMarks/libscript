@@ -10,19 +10,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -60,7 +60,7 @@ set "bucket=%~3"
 set "public_web=%~4"
 if "%public_web%"=="" set "public_web=false"
 
-call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :init
+call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" :init
 
 if "%provider%"=="aws" (
     aws s3api head-bucket --bucket "%bucket%" >nul 2>&1
@@ -115,8 +115,8 @@ exit /b 0
 set "provider=%~2"
 set "bucket=%~3"
 
-if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :libscript_verify_managed "%provider%" storage "%bucket%" "%LIBSCRIPT_AZURE_ACCOUNT_NAME%"
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" :libscript_verify_managed "%provider%" storage "%bucket%" "%LIBSCRIPT_AZURE_ACCOUNT_NAME%"
     if errorlevel 1 exit /b 1
 )
 
@@ -137,7 +137,7 @@ exit /b 0
 :: Performs the libscript_storage_list operation and updates component state.
 :libscript_storage_list
 set "provider=%~2"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :init
+call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" :init
 
 if "%provider%"=="aws" (
     if "%LIBSCRIPT_TAG_ENABLE%"=="true" (

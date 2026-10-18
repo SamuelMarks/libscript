@@ -211,6 +211,7 @@ cat << EOF_WXS > "$OUT_FILE"
 
     <Package Id="*" Platform="${TARGET_ARCH}"
              InstallerVersion="500"
+             SummaryCodepage="1252"
              Compressed="yes"
              InstallScope="perMachine"
              Description="${PKG_DESC}" />

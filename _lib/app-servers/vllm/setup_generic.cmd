@@ -9,19 +9,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -144,7 +144,7 @@ if "%VLLM_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading vllm %VLLM_VERSION% to %DOWNLOAD_DIR%\vllm...
     if not exist "%DOWNLOAD_DIR%\vllm" mkdir "%DOWNLOAD_DIR%\vllm"
     if not "%VLLM_DOWNLOAD_URL%"=="" (
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "%VLLM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\vllm\vllm-%VLLM_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%VLLM_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\vllm\vllm-%VLLM_VERSION%.zip"
     ) else (
         echo VLLM_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs the requested vllm version using the configured installation method.
 :action_install
 if "%VLLM_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends vllm
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends vllm
     exit /b !errorlevel!
 )
 if "%VLLM_INSTALL_METHOD%"=="mise" ( mise install "vllm@%VLLM_VERSION%" & exit /b 0 )
@@ -177,7 +177,7 @@ if exist "%TARGET_DIR%\Scripts" (
 )
 
 echo Installing vllm %VLLM_VERSION% natively to %TARGET_DIR%...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\python_env.cmd" libscript_python_venv "%TARGET_DIR%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\python_env.cmd" libscript_python_venv "%TARGET_DIR%"
 
 if "%EXACT_VERSION%"=="latest" (
     "%TARGET_DIR%\Scripts\pip.exe" install --upgrade vllm
@@ -233,9 +233,9 @@ if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
 )
 if "%VLLM_INSTALL_METHOD%"=="libscript_native" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
 ) else if "%VLLM_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
 ) else (
     echo %ACTION% not natively implemented for %VLLM_INSTALL_METHOD%.
 )
@@ -254,9 +254,9 @@ if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
 )
 if "%VLLM_INSTALL_METHOD%"=="libscript_native" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" install "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
 ) else if "%VLLM_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" install "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
 ) else (
     echo install-service not implemented for %VLLM_INSTALL_METHOD%.
 )
@@ -275,9 +275,9 @@ if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
 )
 if "%VLLM_INSTALL_METHOD%"=="libscript_native" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
 ) else if "%VLLM_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
 ) else (
     echo uninstall-service not implemented for %VLLM_INSTALL_METHOD%.
 )

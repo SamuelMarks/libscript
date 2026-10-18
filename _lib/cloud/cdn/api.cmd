@@ -10,19 +10,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -60,7 +60,7 @@ set "bucket=%~3"
 set "domain=%~4"
 set "cert_id=%~5"
 
-call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :init
+call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" :init
 
 if "%provider%"=="aws" (
     for /f "tokens=*" %%i in ('aws cloudfront list-distributions --query "DistributionList.Items[?Origins.Items[?Id=='S3-%bucket%']].DomainName | [0]" --output text 2^>nul') do set "existing_dist=%%i"
@@ -158,8 +158,8 @@ exit /b 0
 set "provider=%~2"
 set "dist_id=%~3"
 
-if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :libscript_verify_managed "%provider%" cdn "%dist_id%"
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" :libscript_verify_managed "%provider%" cdn "%dist_id%"
     if errorlevel 1 exit /b 1
 )
 

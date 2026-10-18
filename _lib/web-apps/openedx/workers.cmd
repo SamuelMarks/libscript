@@ -19,19 +19,20 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+set "WORKERS_SCRIPT_DIR=!SCRIPT_DIR!"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -59,7 +60,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if "%LIBSCRIPT_ROOT_DIR%"=="" (
+if "!LIBSCRIPT_ROOT_DIR!"=="" (
     for %%i in ("%~dp0..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
@@ -79,7 +80,7 @@ if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
 set "PYTHON_BIN=%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe"
 if not exist "%PYTHON_BIN%" set "PYTHON_BIN=python"
 
-set "WORKERS_HELPER=%SCRIPT_DIR%\workers_helper.cmd"
+set "WORKERS_HELPER=!SCRIPT_DIR!\workers_helper.cmd"
 
 set "CMD=%~1"
 if "%CMD%"=="" goto show_help
@@ -99,15 +100,23 @@ goto show_help
 :: Starts Celery background workers and beat scheduler daemon.
 :do_start
 echo [INFO] Starting Open edX background workers...
+set "_W_STACK=%STACK%"
+set "STACK="
 call "%WORKERS_HELPER%" start "%RUN_DIR%" "%LOG_DIR%" "%PYTHON_BIN%" "%OPENEDX_INSTALL_DIR%"
-exit /b %errorlevel%
+set "_W_ERR=%errorlevel%"
+set "STACK=%_W_STACK%"
+exit /b %_W_ERR%
 
 :: ## do_stop
 :: Stops all active Open edX background worker daemons.
 :do_stop
 echo [INFO] Stopping Open edX background workers...
+set "_W_STACK=%STACK%"
+set "STACK="
 call "%WORKERS_HELPER%" stop "%RUN_DIR%"
-exit /b %errorlevel%
+set "_W_ERR=%errorlevel%"
+set "STACK=%_W_STACK%"
+exit /b %_W_ERR%
 
 :: ## do_restart
 :: Restarts Open edX background workers.
@@ -122,9 +131,13 @@ exit /b 0
 echo ======================================================
 echo              Open edX Background Workers Status
 echo ======================================================
+set "_W_STACK=%STACK%"
+set "STACK="
 call "%WORKERS_HELPER%" status "%RUN_DIR%"
+set "_W_ERR=%errorlevel%"
+set "STACK=%_W_STACK%"
 echo ======================================================
-exit /b 0
+exit /b %_W_ERR%
 
 :: ## show_help
 :: Displays worker management CLI command usage.

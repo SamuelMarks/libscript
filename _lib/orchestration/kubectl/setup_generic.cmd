@@ -9,19 +9,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -135,7 +135,7 @@ if exist "%LIBSCRIPT_HOME%\kubectl\%VERSION%\bin\kubectl.exe" (
     exit /b 0
 )
 if "%KUBECTL_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends kubectl
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends kubectl
     exit /b !errorlevel!
 )
 set "TARGET_DIR=%LIBSCRIPT_HOME%\kubectl\%VERSION%"
@@ -145,5 +145,5 @@ if not "%VERSION%"=="latest" if not "%VERSION%"=="lts" if not "%VERSION%"=="" se
 set "_KARCH=amd64"
 if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "_KARCH=arm64"
 if "%KUBECTL_DOWNLOAD_URL%"=="" set "KUBECTL_DOWNLOAD_URL=https://dl.k8s.io/release/v!_KVER!/bin/windows/!_KARCH!/kubectl.exe"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!KUBECTL_DOWNLOAD_URL!" "%TARGET_DIR%\bin\kubectl.exe"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!KUBECTL_DOWNLOAD_URL!" "%TARGET_DIR%\bin\kubectl.exe"
 exit /b !errorlevel!

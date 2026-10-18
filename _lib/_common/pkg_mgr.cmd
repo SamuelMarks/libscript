@@ -8,25 +8,25 @@ setlocal EnableDelayedExpansion
 ::
 :: ## Usage
 :: ```batch
-:: call "%LIBSCRIPT_ROOT_DIR%\\_lib\\_common\\pkg_mgr.cmd" :libscript_download <url> <dest>
+:: call "!LIBSCRIPT_ROOT_DIR!\\_lib\\_common\\pkg_mgr.cmd" :libscript_download <url> <dest>
 :: ```
 set "THIS_FILE=%~f0"
 
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -59,8 +59,8 @@ if not defined LIBSCRIPT_ROOT_DIR (
 )
 
 :: Source logging
-set "LOG_CMD=%LIBSCRIPT_ROOT_DIR%\_lib\_common\log.cmd"
-set "MAPPER_CMD=%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mapper.cmd"
+set "LOG_CMD=!LIBSCRIPT_ROOT_DIR!\_lib\_common\log.cmd"
+set "MAPPER_CMD=!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mapper.cmd"
 
 if not "%~1"=="" (
     set "_pm_sub=%~1"
@@ -177,7 +177,7 @@ set "provided_checksum=%~3"
 if "!dest!"=="" for %%F in ("!url!") do set "dest=%%~nxF"
 
 :: 1. Checksum Resolution
-set "checksum_db=%LIBSCRIPT_ROOT_DIR%\_lib/checksums.txt"
+set "checksum_db=!LIBSCRIPT_ROOT_DIR!\_lib/checksums.txt"
 set "expected_checksum=!provided_checksum!"
 if "!expected_checksum!"=="" (
         if exist "!checksum_db!" (
@@ -208,7 +208,7 @@ if defined LIBSCRIPT_ARIA2_EXPORT_FILE (
 
 :: 3. Cache Path Resolution
 set "cache_dir=%LIBSCRIPT_CACHE_DIR%"
-if "!cache_dir!"=="" set "cache_dir=%LIBSCRIPT_ROOT_DIR%\cache\downloads"
+if "!cache_dir!"=="" set "cache_dir=!LIBSCRIPT_ROOT_DIR!\cache\downloads"
 
 if "%DOWNLOAD_DIR%"=="" (
         set "dl_dir=!cache_dir!"
@@ -228,43 +228,43 @@ set "cache_file=!dl_dir!\!filename!"
 :: 4. Cache Check & Download
 set "download_needed=1"
 if exist "!cache_file!" (
-        call "%LOG_CMD%" :log_info "[CACHED] !url!"
+        call "!LOG_CMD!" :log_info "[CACHED] !url!"
         set "download_needed=0"
 ) else (
         if exist "!cache_dir!\!filename!" (
-                call "%LOG_CMD%" :log_info "[CACHED] !url! (found in !cache_dir!\!filename!)"
+                call "!LOG_CMD!" :log_info "[CACHED] !url! (found in !cache_dir!\!filename!)"
                 copy /y "!cache_dir!\!filename!" "!cache_file!" >nul 2>&1
                 set "download_needed=0"
         ) else if exist "!cache_dir!\runtimes\!filename!" (
-                call "%LOG_CMD%" :log_info "[CACHED] !url! (found in !cache_dir!\runtimes\!filename!)"
+                call "!LOG_CMD!" :log_info "[CACHED] !url! (found in !cache_dir!\runtimes\!filename!)"
                 copy /y "!cache_dir!\runtimes\!filename!" "!cache_file!" >nul 2>&1
                 set "download_needed=0"
         ) else if exist "!cache_dir!\databases\!filename!" (
-                call "%LOG_CMD%" :log_info "[CACHED] !url! (found in !cache_dir!\databases\!filename!)"
+                call "!LOG_CMD!" :log_info "[CACHED] !url! (found in !cache_dir!\databases\!filename!)"
                 copy /y "!cache_dir!\databases\!filename!" "!cache_file!" >nul 2>&1
                 set "download_needed=0"
         ) else if exist "!cache_dir!\wheels\!filename!" (
-                call "%LOG_CMD%" :log_info "[CACHED] !url! (found in !cache_dir!\wheels\!filename!)"
+                call "!LOG_CMD!" :log_info "[CACHED] !url! (found in !cache_dir!\wheels\!filename!)"
                 copy /y "!cache_dir!\wheels\!filename!" "!cache_file!" >nul 2>&1
                 set "download_needed=0"
         ) else if exist "!cache_dir!\npm\!filename!" (
-                call "%LOG_CMD%" :log_info "[CACHED] !url! (found in !cache_dir!\npm\!filename!)"
+                call "!LOG_CMD!" :log_info "[CACHED] !url! (found in !cache_dir!\npm\!filename!)"
                 copy /y "!cache_dir!\npm\!filename!" "!cache_file!" >nul 2>&1
                 set "download_needed=0"
         ) else if exist "!cache_dir!\codebase\!filename!" (
-                call "%LOG_CMD%" :log_info "[CACHED] !url! (found in !cache_dir!\codebase\!filename!)"
+                call "!LOG_CMD!" :log_info "[CACHED] !url! (found in !cache_dir!\codebase\!filename!)"
                 copy /y "!cache_dir!\codebase\!filename!" "!cache_file!" >nul 2>&1
                 set "download_needed=0"
-        ) else if exist "%LIBSCRIPT_ROOT_DIR%\cache\!filename!" (
-                call "%LOG_CMD%" :log_info "[CACHED] !url! (found in %LIBSCRIPT_ROOT_DIR%\cache\!filename!)"
-                copy /y "%LIBSCRIPT_ROOT_DIR%\cache\!filename!" "!cache_file!" >nul 2>&1
+        ) else if exist "!LIBSCRIPT_ROOT_DIR!\cache\!filename!" (
+                call "!LOG_CMD!" :log_info "[CACHED] !url! (found in !LIBSCRIPT_ROOT_DIR!\cache\!filename!)"
+                copy /y "!LIBSCRIPT_ROOT_DIR!\cache\!filename!" "!cache_file!" >nul 2>&1
                 set "download_needed=0"
         )
 )
 
 if "!download_needed!"=="1" (
         if "%LIBSCRIPT_OFFLINE%"=="1" (
-                call "%LOG_CMD%" :log_error "Error: [OFFLINE] Cannot download '!url!'. Artifact not found in local cache at '!cache_file!'."
+                call "!LOG_CMD!" :log_error "Error: [OFFLINE] Cannot download '!url!'. Artifact not found in local cache at '!cache_file!'."
                 echo Error: [OFFLINE] Cannot download '!url!'. Artifact not found in local cache at '!cache_file!'. >&2
                 if "%LIBSCRIPT_FORCE_OFFLINE%"=="1" (
                         echo Fatal: LIBSCRIPT_FORCE_OFFLINE=1 strictly prohibits network requests. >&2
@@ -273,12 +273,12 @@ if "!download_needed!"=="1" (
                 exit /b 1
         )
         if "%LIBSCRIPT_FORCE_OFFLINE%"=="1" (
-                call "%LOG_CMD%" :log_error "Fatal: LIBSCRIPT_FORCE_OFFLINE=1 strictly prohibits network requests."
+                call "!LOG_CMD!" :log_error "Fatal: LIBSCRIPT_FORCE_OFFLINE=1 strictly prohibits network requests."
                 echo Fatal: LIBSCRIPT_FORCE_OFFLINE=1 strictly prohibits network requests. >&2
                 exit /b 1
         )
 
-        call "%LOG_CMD%" :log_info "[DOWNLOADING] !url!"
+        call "!LOG_CMD!" :log_info "[DOWNLOADING] !url!"
     
         set "download_success=0"
     
@@ -305,13 +305,13 @@ if "!download_needed!"=="1" (
         )
 
         if !download_success! equ 0 (
-                call "%LOG_CMD%" :log_error "Download failed for !url!"
+                call "!LOG_CMD!" :log_error "Download failed for !url!"
                 exit /b 1
         )
     
         for %%A in ("!cache_file!") do set size=%%~zA
         if "!size!"=="0" (
-                call "%LOG_CMD%" :log_error "Downloaded file is empty"
+                call "!LOG_CMD!" :log_error "Downloaded file is empty"
                 del "!cache_file!"
                 exit /b 1
         )
@@ -323,7 +323,7 @@ if not "!expected_checksum!"=="" (
                 set "clean_expected=!expected_checksum:sha-256=!"
                 for /f "tokens=*" %%a in ('powershell -Command "(Get-FileHash -Path '!cache_file!' -Algorithm SHA256).Hash.ToLower()"') do set "actual_checksum=%%a"
                 if not "!actual_checksum!"=="!clean_expected!" (
-                        call "%LOG_CMD%" :log_error "Checksum mismatch for !cache_file!. Expected: !clean_expected!, Got: !actual_checksum!"
+                        call "!LOG_CMD!" :log_error "Checksum mismatch for !cache_file!. Expected: !clean_expected!, Got: !actual_checksum!"
                         del "!cache_file!"
                         exit /b 1
                 )

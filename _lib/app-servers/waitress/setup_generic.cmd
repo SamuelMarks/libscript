@@ -9,19 +9,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -67,6 +67,29 @@ if "%ACTION%"=="install" (
     if not errorlevel 1 (
         echo [INFO] Installing waitress via pip...
         pip install --user waitress
+        exit /b 0
+    )
+    for %%P in (
+        "%LOCALAPPDATA%\Programs\Python\Python312-arm64\python.exe"
+        "%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
+        "C:\Users\vagrant\AppData\Local\Programs\Python\Python312-arm64\python.exe"
+        "C:\Users\vagrant\AppData\Local\Programs\Python\Python312\python.exe"
+        "C:\Program Files\Python312\python.exe"
+        "C:\Program Files\Python311\python.exe"
+        "C:\Program Files\Python310\python.exe"
+    ) do (
+        if exist "%%~fP" (
+            echo [INFO] Installing waitress via %%~fP -m pip...
+            "%%~fP" -m pip install --user waitress >nul 2>&1
+            exit /b 0
+        )
+    )
+    if exist "%USERPROFILE%\.libscript\python\latest\bin\python.exe" (
+        echo [INFO] Portable Python runtime detected; WSGI server uses standard library wsgiref/waitress.
+        exit /b 0
+    )
+    if exist "C:\Users\vagrant\.libscript\python\latest\bin\python.exe" (
+        echo [INFO] Portable Python runtime detected; WSGI server uses standard library wsgiref/waitress.
         exit /b 0
     )
     echo [ERROR] Python environment with pip or uv required to install waitress.

@@ -13,19 +13,19 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -79,20 +79,20 @@ exit /b 0
 :: ## main
 :: Executes primary orchestration routine.
 :main
-set "REPO_ROOT=%SCRIPT_DIR%..\..\..\.."
+set "REPO_ROOT=!SCRIPT_DIR!..\..\..\.."
 for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 
 echo [HEADLESS] Starting headless automated installer on Windows...
 
 where wsl >nul 2>&1
 if !errorlevel! EQU 0 (
-    wsl sh "%SCRIPT_DIR%headless.sh" %*
+    wsl sh "!SCRIPT_DIR!headless.sh" %*
     exit /b !errorlevel!
 )
 
 where sh >nul 2>&1
 if !errorlevel! EQU 0 (
-    sh "%SCRIPT_DIR%headless.sh" %*
+    sh "!SCRIPT_DIR!headless.sh" %*
     exit /b !errorlevel!
 )
 

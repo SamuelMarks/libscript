@@ -22,19 +22,19 @@ setlocal EnableDelayedExpansion
 
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -62,7 +62,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-for %%I in ("%SCRIPT_DIR%..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
+for %%I in ("!SCRIPT_DIR!..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 
 set "COMPONENT="
 set "VERSION=1.0.0"
@@ -150,7 +150,7 @@ if "%OUT_FILE%"=="" (
     exit /b 1
 )
 
-set "REGISTRY_JSON=%LIBSCRIPT_ROOT_DIR%\packaging\guid_registry.json"
+set "REGISTRY_JSON=!LIBSCRIPT_ROOT_DIR!\packaging\guid_registry.json"
 if not exist "%REGISTRY_JSON%" (
     echo [ERROR] Registry file not found: %REGISTRY_JSON% >&2
     exit /b 1
@@ -184,7 +184,7 @@ if "%UPGRADE_CODE%"=="" (
 )
 
 :: Generate deterministic ProductCode
-for /f "usebackq delims=" %%A in (`call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\uuid_gen.cmd" 6ba7b810-9dad-11d1-80b4-00c04fd430c8 "libscript.%COMPONENT%.%VARIANT%.%VERSION%"`) do set "PRODUCT_CODE=%%A"
+for /f "usebackq delims=" %%A in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\uuid_gen.cmd" 6ba7b810-9dad-11d1-80b4-00c04fd430c8 "libscript.%COMPONENT%.%VARIANT%.%VERSION%"`) do set "PRODUCT_CODE=%%A"
 
 set "DISPLAY_TITLE=LibScript %TITLE%"
 set "PKG_DESC=LibScript %TITLE% Standalone Installer"
@@ -198,7 +198,7 @@ if /i "%VARIANT%"=="offline" (
 )
 
 set "DOWNLOAD_URL="
-set "BUNDLE_JSON=%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\openedx\offline_bundle.json"
+set "BUNDLE_JSON=!LIBSCRIPT_ROOT_DIR!\_lib\web-apps\openedx\offline_bundle.json"
 if exist "%BUNDLE_JSON%" (
     if /i "%COMPONENT%"=="python" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).runtimes.python.url"`) do set "DOWNLOAD_URL=%%A"
     if /i "%COMPONENT%"=="nodejs" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).runtimes.nodejs.url"`) do set "DOWNLOAD_URL=%%A"
@@ -241,6 +241,7 @@ for /f "tokens=1,2,3,4 delims=." %%a in ("%VERSION%") do (
     echo.
     echo     ^<Package Id="*" Platform="%TARGET_ARCH%"
     echo              InstallerVersion="500"
+    echo              SummaryCodepage="1252"
     echo              Compressed="yes"
     echo              InstallScope="perMachine"
     echo              Description="%PKG_DESC%" /^>
@@ -333,7 +334,7 @@ if /i "%VARIANT%"=="online" if not "%DOWNLOAD_URL%"=="" (
 )
 
 if not "%SERVICE_NAME%"=="" (
-    for /f "usebackq delims=" %%A in (`call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\uuid_gen.cmd" 6ba7b810-9dad-11d1-80b4-00c04fd430c8 "service.%COMPONENT%"`) do set "SERVICE_GUID=%%A"
+    for /f "usebackq delims=" %%A in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\uuid_gen.cmd" 6ba7b810-9dad-11d1-80b4-00c04fd430c8 "service.%COMPONENT%"`) do set "SERVICE_GUID=%%A"
     (
         echo     ^<DirectoryRef Id="BIN_DIR"^>
         if defined SHARED_ATTR (

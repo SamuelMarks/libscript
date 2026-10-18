@@ -20,19 +20,19 @@ setlocal EnableDelayedExpansion
 
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -60,7 +60,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-for %%I in ("%SCRIPT_DIR%\..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
+for %%I in ("!SCRIPT_DIR!\..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 
 set "MANIFEST="
 set "CACHE_DIR="
@@ -136,5 +136,5 @@ if "%VERIFY_ONLY%"=="1" set PS_ARGS=!PS_ARGS! -VerifyOnly
 if "%WHEELS%"=="1" set PS_ARGS=!PS_ARGS! -Wheels
 if "%CODEBASE%"=="1" set PS_ARGS=!PS_ARGS! -Codebase
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\hydrate_offline_cache.ps1" !PS_ARGS!
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\hydrate_offline_cache.ps1" !PS_ARGS!
 exit /b %errorlevel%

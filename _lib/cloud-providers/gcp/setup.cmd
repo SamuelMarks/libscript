@@ -12,19 +12,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -76,7 +76,7 @@ exit /b %ERRORLEVEL%
 :: Performs the do_register_image operation and updates component state.
 :do_register_image
 set "IMG_PATH=%~2"
-if "%IMG_PATH%"=="" set "IMG_PATH=%LIBSCRIPT_ROOT_DIR%\build\disk.img"
+if "%IMG_PATH%"=="" set "IMG_PATH=!LIBSCRIPT_ROOT_DIR!\build\disk.img"
 set "GCS_BUCKET=%~3"
 if "%GCS_BUCKET%"=="" set "GCS_BUCKET=%GCP_GCS_BUCKET%"
 if "%GCS_BUCKET%"=="" set "GCS_BUCKET=libscript-images"

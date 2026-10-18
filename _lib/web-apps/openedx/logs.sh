@@ -45,6 +45,7 @@ while [ $# -gt 0 ]; do
       printf "Usage: logs.sh [install|lms|cms|worker] [-n NUM|--tail NUM] [-f|--follow]\n"
       exit 0
       ;;
+    logs|openedx|latest) shift ;;
     -*) printf "Unknown option %s\n" "$1" >&2; exit 1 ;;
     *) TARGET="$1"; shift ;;
   esac

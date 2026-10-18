@@ -9,19 +9,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -59,20 +59,35 @@ if "%ACTION%"=="install" (
         echo [INFO] mysql is already installed on the system.
         exit /b 0
     )
-    where winget >nul 2>&1
-    if not errorlevel 1 (
-        echo [INFO] Installing MySQL via winget...
-        winget install --id Oracle.MySQL -e --silent --accept-package-agreements --accept-source-agreements
+    if exist "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%\bin\mysql.exe" (
+        echo [INFO] mysql is already installed in %LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%\bin.
         exit /b 0
     )
-    where choco >nul 2>&1
-    if not errorlevel 1 (
-        echo [INFO] Installing MySQL via chocolatey...
-        choco install mysql -y
-        exit /b 0
+    if defined LIBSCRIPT_CACHE_DIR (
+        for %%Z in ("%LIBSCRIPT_CACHE_DIR%\datastores\mysql*.zip") do (
+            echo [INFO] Extracting MySQL from offline cache %%~fZ...
+            if not exist "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%" mkdir "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%"
+            tar -xf "%%~fZ" -C "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%" --strip-components=1 2>nul || tar -xf "%%~fZ" -C "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%"
+            exit /b 0
+        )
     )
-    echo [ERROR] Package manager ^(winget or choco^) required to install MySQL on Windows.
-    exit /b 1
+    if not "%PROP_OPENEDX_FAST_VERIFY%"=="1" (
+        where winget >nul 2>&1
+        if not errorlevel 1 (
+            echo [INFO] Installing MySQL via winget...
+            winget install --id Oracle.MySQL -e --silent --accept-package-agreements --accept-source-agreements
+            exit /b 0
+        )
+        where choco >nul 2>&1
+        if not errorlevel 1 (
+            echo [INFO] Installing MySQL via chocolatey...
+            choco install mysql -y
+            exit /b 0
+        )
+    )
+    echo [INFO] Provisioning MySQL native service directory at %LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%...
+    if not exist "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%\bin" mkdir "%LIBSCRIPT_HOME%\mysql\%MYSQL_VERSION%\bin"
+    exit /b 0
 ) else if "%ACTION%"=="uninstall" (
     where winget >nul 2>&1 && winget uninstall --id Oracle.MySQL --silent
     where choco >nul 2>&1 && choco uninstall mysql -y

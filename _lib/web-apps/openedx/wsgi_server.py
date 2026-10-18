@@ -23,12 +23,12 @@ LMS_LOGIN_HTML = """<!DOCTYPE html>
   .logo span { color: #d12d35; }
   .divider { opacity: 0.5; font-size: 18px; }
   .tagline { font-size: 14px; opacity: 0.9; }
-  .container { max-width: 440px; margin: 60px auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 36px; }
-  h1 { font-size: 20px; margin-top: 0; margin-bottom: 24px; }
-  .form-group { margin-bottom: 16px; }
+  .container { max-width: 440px; margin: 28px auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 28px 36px; }
+  h1 { font-size: 20px; margin-top: 0; margin-bottom: 18px; }
+  .form-group { margin-bottom: 14px; }
   label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px; }
   input[type="text"], input[type="password"] { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; }
-  .btn { display: block; width: 100%; padding: 12px; background: #0075b4; color: #ffffff; border: none; border-radius: 4px; font-size: 15px; font-weight: 600; cursor: pointer; text-align: center; margin-top: 20px; text-decoration: none; }
+  .btn { display: block; width: 100%; padding: 12px; background: #0075b4; color: #ffffff; border: none; border-radius: 4px; font-size: 15px; font-weight: 600; cursor: pointer; text-align: center; margin-top: 16px; text-decoration: none; box-sizing: border-box; }
 </style>
 </head>
 <body>
@@ -69,14 +69,14 @@ LMS_DASHBOARD_HTML = """<!DOCTYPE html>
   .divider { opacity: 0.5; font-size: 18px; }
   .tagline { font-size: 14px; opacity: 0.9; }
   .user-badge { font-size: 14px; background: #0075b4; padding: 6px 14px; border-radius: 20px; font-weight: 600; }
-  .main { max-width: 1080px; margin: 36px auto; padding: 0 20px; }
-  .welcome-banner { background: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; padding: 24px 28px; margin-bottom: 24px; }
-  .welcome-banner h1 { margin: 0 0 8px 0; font-size: 22px; color: #00263e; }
+  .main { max-width: 1080px; margin: 18px auto; padding: 0 20px; }
+  .welcome-banner { background: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; padding: 16px 24px; margin-bottom: 16px; }
+  .welcome-banner h1 { margin: 0 0 6px 0; font-size: 20px; color: #00263e; }
   .welcome-banner p { margin: 0; color: #64748b; font-size: 14px; }
-  .courses-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+  .courses-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
   .course-card { background: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
-  .course-hero { background: #0075b4; color: #ffffff; height: 110px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; }
-  .course-body { padding: 18px; }
+  .course-hero { background: #0075b4; color: #ffffff; height: 80px; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: bold; }
+  .course-body { padding: 14px 16px; }
   .course-title { font-size: 16px; font-weight: 600; margin: 0 0 8px 0; color: #0f172a; }
   .course-meta { font-size: 12px; color: #64748b; margin-bottom: 14px; }
   .btn-resume { display: inline-block; padding: 8px 18px; background: #059669; color: #ffffff; border-radius: 4px; font-size: 13px; font-weight: 600; text-decoration: none; }
@@ -131,12 +131,12 @@ STUDIO_LOGIN_HTML = """<!DOCTYPE html>
   .logo span { color: #d12d35; }
   .divider { opacity: 0.5; font-size: 18px; }
   .tagline { font-size: 14px; opacity: 0.9; }
-  .container { max-width: 440px; margin: 60px auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 36px; }
-  h1 { font-size: 20px; margin-top: 0; margin-bottom: 24px; }
-  .form-group { margin-bottom: 16px; }
+  .container { max-width: 440px; margin: 28px auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); padding: 28px 36px; }
+  h1 { font-size: 20px; margin-top: 0; margin-bottom: 18px; }
+  .form-group { margin-bottom: 14px; }
   label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px; }
   input[type="text"], input[type="password"] { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; }
-  .btn { display: block; width: 100%; padding: 12px; background: #0284c7; color: #ffffff; border: none; border-radius: 4px; font-size: 15px; font-weight: 600; cursor: pointer; text-align: center; margin-top: 20px; text-decoration: none; }
+  .btn { display: block; width: 100%; padding: 12px; background: #0284c7; color: #ffffff; border: none; border-radius: 4px; font-size: 15px; font-weight: 600; cursor: pointer; text-align: center; margin-top: 16px; text-decoration: none; box-sizing: border-box; }
 </style>
 </head>
 <body>
@@ -244,12 +244,12 @@ def application(environ, start_response):
         return [body]
 
     if is_cms:
-        if path == "/home" or (path == "/signin" and environ.get("REQUEST_METHOD") == "POST"):
+        if path in ("/home", "/home/") or (path == "/signin" and environ.get("REQUEST_METHOD") == "POST"):
             html = STUDIO_DASHBOARD_HTML
         else:
             html = STUDIO_LOGIN_HTML
     else:
-        if path == "/dashboard" or (path == "/login" and environ.get("REQUEST_METHOD") == "POST"):
+        if path in ("/dashboard", "/dashboard/") or (path == "/login" and environ.get("REQUEST_METHOD") == "POST"):
             html = LMS_DASHBOARD_HTML
         else:
             html = LMS_LOGIN_HTML
@@ -266,9 +266,9 @@ def application(environ, start_response):
 
 def main():
     parser = argparse.ArgumentParser(description="Open edX WSGI Server")
-    parser.add_argument("--port", type=int, default=8000, help="Primary port (default: 8000)")
+    parser.add_argument("--port", "--lms-port", dest="port", type=int, default=8000, help="Primary LMS port (default: 8000)")
     parser.add_argument("--cms-port", type=int, default=8001, help="CMS port (default: 8001)")
-    parser.add_argument("--host", default="127.0.0.1", help="Host interface (default: 127.0.0.1)")
+    parser.add_argument("--host", default="0.0.0.0", help="Host interface (default: 0.0.0.0)")
     args = parser.parse_args()
 
     import threading

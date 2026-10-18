@@ -11,19 +11,19 @@ setlocal EnableDelayedExpansion
 
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -52,13 +52,13 @@ goto :find_root
 :root_found
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    for %%i in ("%SCRIPT_DIR%\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
+    for %%i in ("!SCRIPT_DIR!\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
 set "INPUT=%~1"
-if "%INPUT%"=="" set "INPUT=%LIBSCRIPT_ROOT_DIR%\build\target.img"
+if "%INPUT%"=="" set "INPUT=!LIBSCRIPT_ROOT_DIR!\build\target.img"
 set "OUT_FILE=%~2"
-if "%OUT_FILE%"=="" set "OUT_FILE=%LIBSCRIPT_ROOT_DIR%\build\gcp-image.tar.gz"
+if "%OUT_FILE%"=="" set "OUT_FILE=!LIBSCRIPT_ROOT_DIR!\build\gcp-image.tar.gz"
 set "SIZE_GIB=%~3"
 if "%SIZE_GIB%"=="" set "SIZE_GIB=10"
 
@@ -72,7 +72,7 @@ if exist "%OUT_FILE%" (
 
 echo [GCP-IMG] Synthesizing GCP disk.raw.tar.gz archive at %OUT_FILE%...
 
-set "GCP_STAGE=%LIBSCRIPT_ROOT_DIR%\build\tmp_gcp_stage"
+set "GCP_STAGE=!LIBSCRIPT_ROOT_DIR!\build\tmp_gcp_stage"
 if exist "%GCP_STAGE%" rmdir /s /q "%GCP_STAGE%"
 if not exist "%GCP_STAGE%" mkdir "%GCP_STAGE%"
 

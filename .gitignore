@@ -150,6 +150,8 @@ standardize_*
 !tests/test_package_as_docker_offline.*
 !stacks/cms/openedx/test_harness.*
 !stacks/cms/openedx/test_server.*
+!_lib/web-apps/openedx/test_harness.*
+!_lib/web-apps/openedx/test_server.*
 !tests/test_packaging_branding.*
 !test_table.*
 !packaging/create_desktop_shortcuts.*

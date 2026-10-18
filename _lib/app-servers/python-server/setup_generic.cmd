@@ -9,19 +9,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -144,7 +144,7 @@ if "%PYTHON_SERVER_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading python-server %PYTHON_SERVER_VERSION% to %DOWNLOAD_DIR%\python-server...
     if not exist "%DOWNLOAD_DIR%\python-server" mkdir "%DOWNLOAD_DIR%\python-server"
     if not "%PYTHON_SERVER_DOWNLOAD_URL%"=="" (
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "%PYTHON_SERVER_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\python-server\python-server-%PYTHON_SERVER_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PYTHON_SERVER_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\python-server\python-server-%PYTHON_SERVER_VERSION%.zip"
     ) else (
         echo PYTHON_SERVER_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs the requested python-server version using the configured installation method.
 :action_install
 if "%PYTHON_SERVER_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends python-server
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends python-server
     exit /b !errorlevel!
 )
 if "%PYTHON_SERVER_INSTALL_METHOD%"=="mise" ( mise install "python-server@%PYTHON_SERVER_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\python-server\python-server-%PYTHON_SERVER_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%PYTHON_SERVER_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "%PYTHON_SERVER_DOWNLOAD_URL%" "%TEMP%\python-server.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%PYTHON_SERVER_DOWNLOAD_URL%" "%TEMP%\python-server.zip"
         tar -xf "%TEMP%\python-server.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for python-server.
@@ -204,9 +204,9 @@ if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
 )
 if "%PYTHON_SERVER_INSTALL_METHOD%"=="libscript_native" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
 ) else if "%PYTHON_SERVER_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
 ) else (
     echo %ACTION% not natively implemented for %PYTHON_SERVER_INSTALL_METHOD%.
 )
@@ -225,9 +225,9 @@ if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
 )
 if "%PYTHON_SERVER_INSTALL_METHOD%"=="libscript_native" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" install "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
 ) else if "%PYTHON_SERVER_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" install "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
 ) else (
     echo install-service not implemented for %PYTHON_SERVER_INSTALL_METHOD%.
 )
@@ -246,9 +246,9 @@ if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
 )
 if "%PYTHON_SERVER_INSTALL_METHOD%"=="libscript_native" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
 ) else if "%PYTHON_SERVER_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
 ) else (
     echo uninstall-service not implemented for %PYTHON_SERVER_INSTALL_METHOD%.
 )

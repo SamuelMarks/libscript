@@ -12,19 +12,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -52,11 +52,11 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-set "PS_SCRIPT=%SCRIPT_DIR%\click_button.ps1"
+set "PS_SCRIPT=!SCRIPT_DIR!\click_button.ps1"
 if not exist "%PS_SCRIPT%" set "PS_SCRIPT=C:\libscript\click_button.ps1"
 
 set "LOG_FILE=%TEMP%\libscript_click.log"
-if not exist "%TEMP%" set "LOG_FILE=%SCRIPT_DIR%\click.log"
+if not exist "%TEMP%" set "LOG_FILE=!SCRIPT_DIR!\click.log"
 
 if not "%~1"=="" (
   echo %~1> "%TEMP%\target_btn.txt"

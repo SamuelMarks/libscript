@@ -101,10 +101,18 @@ function Test-HttpEndpoint {
 # Probes for running Celery, Waitress, or Gunicorn worker processes.
 function Test-Workers {
     try {
-        $procs = Get-Process -Name celery, waitress, gunicorn, python, node -ErrorAction SilentlyContinue
+        $openEdxDir = if ($env:OPENEDX_INSTALL_DIR) { $env:OPENEDX_INSTALL_DIR } else { Join-Path $env:USERPROFILE ".libscript\openedx" }
+        $lmsPidFile = Join-Path $openEdxDir "run\lms-worker.pid"
+        if (Test-Path $lmsPidFile) {
+            $wPid = [int](Get-Content $lmsPidFile -Raw).Trim()
+            if (Get-Process -Id $wPid -ErrorAction SilentlyContinue) {
+                return "OK"
+            }
+        }
+        $procs = Get-Process -Name celery, waitress, gunicorn, python, pythonw, node -ErrorAction SilentlyContinue
         foreach ($p in $procs) {
             $cmd = $p.CommandLine -as [string]
-            if ($cmd -match "celery" -or $cmd -match "waitress" -or $cmd -match "gunicorn") {
+            if ($cmd -match "celery" -or $cmd -match "waitress" -or $cmd -match "gunicorn" -or $cmd -match "wsgi_server") {
                 return "OK"
             }
         }
@@ -131,7 +139,7 @@ function Test-LibscriptStatus {
             $libscript = Join-Path (Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent) "libscript.cmd"
         }
         
-        $p = Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$libscript`" status $Component" -NoNewWindow -Wait -PassThru
+        $p = Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$libscript`" status $Component >nul 2>&1" -NoNewWindow -Wait -PassThru
         if ($p.ExitCode -eq 0) {
             return "OK"
         }

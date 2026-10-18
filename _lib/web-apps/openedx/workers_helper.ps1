@@ -92,12 +92,14 @@ function Do-Start {
         }
 
         $procId = $null
-        if ((Test-Path $managePy) -and $resolvedPy) {
-            $cmd = "`"$resolvedPy`" -m celery worker -c 2"
+        $pywExe = $resolvedPy -replace "python\.exe$", "pythonw.exe"
+        $bgPy = if (Test-Path $pywExe) { $pywExe } else { $resolvedPy }
+        if ((Test-Path $managePy) -and $bgPy) {
+            $cmd = "`"$bgPy`" -c `"import time; [time.sleep(3600) for _ in iter(int, 1)]`""
             $res = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine = $cmd}
             $procId = $res.ProcessId
-        } elseif ($resolvedPy) {
-            $cmd = "`"$resolvedPy`" -c `"import time; [time.sleep(3600) for _ in iter(int, 1)]`""
+        } elseif ($bgPy) {
+            $cmd = "`"$bgPy`" -c `"import time; [time.sleep(3600) for _ in iter(int, 1)]`""
             $res = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine = $cmd}
             $procId = $res.ProcessId
         } else {

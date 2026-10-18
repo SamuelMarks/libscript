@@ -13,19 +13,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -73,7 +73,7 @@ if "%~1"=="" (
 
 set "CONFIG_FILE=%~1"
 set "OUTPUT_FILE=%~2"
-set "REPO_ROOT=%SCRIPT_DIR%..\.."
+set "REPO_ROOT=!SCRIPT_DIR!..\.."
 set "LIB_DIR=%REPO_ROOT%_lib"
 
 if not exist "%CONFIG_FILE%" (
@@ -100,11 +100,11 @@ for /R "%LIB_DIR%" %%F in (manifest.json) do (
 )
 
 if "%OUTPUT_FILE%"=="" (
-    jq --arg target_os "%TARGET_OS%" -n "{config: input, manifests: [inputs]}" "%CONFIG_FILE%" %MANIFESTS% | jq -L "%REPO_ROOT%_lib\utilities" -L "%SCRIPT_DIR%." --arg target_os "%TARGET_OS%" -r -f "%SCRIPT_DIR%resolve_stack.jq"
+    jq --arg target_os "%TARGET_OS%" -n "{config: input, manifests: [inputs]}" "%CONFIG_FILE%" %MANIFESTS% | jq -L "%REPO_ROOT%_lib\utilities" -L "!SCRIPT_DIR!." --arg target_os "%TARGET_OS%" -r -f "!SCRIPT_DIR!resolve_stack.jq"
 ) else (
     for %%P in ("%OUTPUT_FILE%") do set "OUT_DIR=%%~dpP"
     if not exist "!OUT_DIR!" mkdir "!OUT_DIR!"
-    jq --arg target_os "%TARGET_OS%" -n "{config: input, manifests: [inputs]}" "%CONFIG_FILE%" %MANIFESTS% | jq -L "%REPO_ROOT%_lib\utilities" -L "%SCRIPT_DIR%." --arg target_os "%TARGET_OS%" -r -f "%SCRIPT_DIR%resolve_stack.jq" > "%OUTPUT_FILE%"
+    jq --arg target_os "%TARGET_OS%" -n "{config: input, manifests: [inputs]}" "%CONFIG_FILE%" %MANIFESTS% | jq -L "%REPO_ROOT%_lib\utilities" -L "!SCRIPT_DIR!." --arg target_os "%TARGET_OS%" -r -f "!SCRIPT_DIR!resolve_stack.jq" > "%OUTPUT_FILE%"
     echo [INFO] Execution plan generated at %OUTPUT_FILE%
 )
 

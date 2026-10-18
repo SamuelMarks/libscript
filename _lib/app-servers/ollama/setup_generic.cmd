@@ -9,19 +9,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -144,7 +144,7 @@ if "%OLLAMA_INSTALL_METHOD%"=="libscript_native" (
     echo Downloading ollama %OLLAMA_VERSION% to %DOWNLOAD_DIR%\ollama...
     if not exist "%DOWNLOAD_DIR%\ollama" mkdir "%DOWNLOAD_DIR%\ollama"
     if not "%OLLAMA_DOWNLOAD_URL%"=="" (
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "%OLLAMA_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\ollama\ollama-%OLLAMA_VERSION%.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%OLLAMA_DOWNLOAD_URL%" "%DOWNLOAD_DIR%\ollama\ollama-%OLLAMA_VERSION%.zip"
     ) else (
         echo OLLAMA_DOWNLOAD_URL is not defined. Skipping.
     )
@@ -155,7 +155,7 @@ exit /b 0
 :: Installs the requested ollama version using the configured installation method.
 :action_install
 if "%OLLAMA_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends ollama
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends ollama
     exit /b !errorlevel!
 )
 if "%OLLAMA_INSTALL_METHOD%"=="mise" ( mise install "ollama@%OLLAMA_VERSION%" & exit /b 0 )
@@ -175,7 +175,7 @@ if not exist "%TARGET_DIR%\bin" (
         tar -xf "%DOWNLOAD_DIR%\ollama\ollama-%OLLAMA_VERSION%.tar.gz" -C "%TARGET_DIR%"
     ) else if not "%OLLAMA_DOWNLOAD_URL%"=="" (
         echo Downloading and extracting...
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "%OLLAMA_DOWNLOAD_URL%" "%TEMP%\ollama.zip"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%OLLAMA_DOWNLOAD_URL%" "%TEMP%\ollama.zip"
         tar -xf "%TEMP%\ollama.zip" -C "%TARGET_DIR%"
     ) else (
         echo No download URL or cache available for ollama.
@@ -204,9 +204,9 @@ if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
 )
 if "%OLLAMA_INSTALL_METHOD%"=="libscript_native" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
 ) else if "%OLLAMA_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
 ) else (
     echo %ACTION% not natively implemented for %OLLAMA_INSTALL_METHOD%.
 )
@@ -225,9 +225,9 @@ if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
 )
 if "%OLLAMA_INSTALL_METHOD%"=="libscript_native" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" install "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
 ) else if "%OLLAMA_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" install "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
 ) else (
     echo install-service not implemented for %OLLAMA_INSTALL_METHOD%.
 )
@@ -246,9 +246,9 @@ if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
 )
 if "%OLLAMA_INSTALL_METHOD%"=="libscript_native" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
 ) else if "%OLLAMA_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
 ) else (
     echo uninstall-service not implemented for %OLLAMA_INSTALL_METHOD%.
 )

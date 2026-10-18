@@ -10,32 +10,40 @@ The architecture follows two foundational design patterns:
 1. **Decentralized Routing**: The global CLI (`libscript.sh` / `libscript.cmd`) acts as a
    high-speed, zero-dependency router that delegates to autonomous, component-specific package
    managers in `_lib/`.
-2. **Three-Tier Architectural Division of Concerns**: A strict separation of responsibilities
-   between leaf recipes (Tier 1), system synthesizers and kernel image builders (Tier 2), and
-   multicloud AI operators (Tier 3) to prevent combinatorial explosion, cross-layer leakage, and
-   host contamination.
+2. **Five-Tier Architectural Division of Concerns**: A strict separation of responsibilities
+   between leaf recipes & base userland (Tier 1 & Tier 1.5), system synthesizers & kernel/unikernel
+   image builders (Tier 2), multicloud IaaS operators (Tier 3), consensus & high-availability
+   topologies (Tier 3.5), declarative payloads & multi-node cluster schedulers (Tier 4), and the
+   cross-cutting Unified Traits Subsystem (`traits/`) to prevent combinatorial explosion,
+   cross-layer leakage, and host contamination.
 
 ---
 
-## 🗺️ System Capabilities: From Toolchains to Multicloud & OS Images
+## 🗺️ System Capabilities: From Toolchains to Multicloud, Multi-Node Schedulers & HA Topologies
 
 LibScript provides an end-to-end operational substrate spanning from individual language runtimes
-and full-stack applications to cross-vendor cloud orchestrators, custom OS kernels, and native
-installer generators.
+and full-stack applications to native installers, custom OS kernels/unikernels, multicloud
+orchestrators, multi-node cluster schedulers, and high-availability topologies.
 
 ```mermaid
 flowchart TD
-    UI["<b>3. GUI / TUI / CLI DELIVERY</b><hr/>CLI Shell Router<hr/>TUI Dialog Menus<hr/>Windows MSI & EXE<hr/>macOS PKG & DMG"]
+    VMS["<b>0. UNIVERSAL VERSION MANAGERS</b><hr/>Node.js, Python, Rust, Ruby<hr/>PostgreSQL, Redis, RabbitMQ<hr/>160+ Isolated Recipes"]
 
-    APP["<b>0. STACKS & SERVICES</b><hr/>PostgreSQL<hr/>Node.js<hr/>Python<hr/>WordPress<hr/>Open edX<hr/>Service Daemons"]
+    PKG["<b>1 & 2. PACKAGE & DISK EXPORTERS</b><hr/>.msi, .exe, .rpm, .deb, .pkg, .dmg, .apk<hr/>Dockerfile & Docker Compose<hr/>qcow2, raw-img, vmdk, vdi, iso"]
 
-    OS["<b>2. MULTI-OS IMAGE BAKERY</b><hr/>Linux (Kernel + UKI)<hr/>FreeBSD (World + ZFS)<hr/>illumos (SMF + rpool)<hr/>Live Hybrid ISO<hr/>QCOW2, VMDK & Vagrant"]
+    OS["<b>3. KERNEL & UNIKERNEL BAKERY</b><hr/>Unikernels (OSv, MirageOS, Unikraft)<hr/>Linux (Kernel + UKI)<hr/>FreeBSD (World + ZFS) & illumos (SMF + rpool)"]
 
-    CLOUD["<b>1. MULTICLOUD & AI FLEETS</b><hr/>AWS & Azure<hr/>GCP & Hetzner<hr/>Proxmox VE & Vagrant<hr/>TPU Pods & GPUs<hr/>vLLM & JetStream"]
+    CLOUD["<b>4. MULTICLOUD & AI FLEETS</b><hr/>Google Cloud (GCP), AWS & Azure<hr/>Hetzner, Proxmox VE & Vagrant<hr/>TPU Pods & GPU Clusters"]
 
-    UI ==>|"Configure & Run"| APP
-    APP ==>|"Bake into Image"| OS
-    OS ==>|"Provision onto"| CLOUD
+    SCHED["<b>5, 6, 7 & 8. MULTI-NODE SCHEDULERS & LIFECYCLE</b><hr/>Kubernetes, Apache Mesos & HashiCorp Nomad<hr/>ML Training & Search Reindexing Jobs<hr/>CoW/Object Backup & Zero-Downtime Upgrade/Rollback"]
+
+    HA["<b>9. HIGH-AVAILABILITY TOPOLOGIES</b><hr/>PostgreSQL HA (Patroni + etcd)<hr/>Redis & Valkey HA (Sentinel / Cluster)<hr/>RabbitMQ HA & Split-Brain Fencing"]
+
+    VMS ==>|"Package & Export"| PKG
+    PKG ==>|"Embed Into"| OS
+    OS ==>|"Deploy Onto"| CLOUD
+    CLOUD ==>|"Orchestrate Multi-Node"| SCHED
+    SCHED ==>|"Converge Quorum"| HA
 ```
 
 ---
@@ -50,14 +58,14 @@ schedulers, and the cross-cutting Unified Traits Subsystem.
 ```mermaid
 flowchart TD
     subgraph Tier4[Tier 4: Payloads & Universal Schedulers]
-        Payloads[Declarative Workloads: Services, Stateful, Batch, AI/ML XPK, vLLM, JetStream, Unikernels]
-        Schedulers[Scheduler Drivers: K8s, Nomad, Mesos, 8+ Native Inits, Firecracker/Cloud-Hypervisor/Solo5, XPK/Slurm/Ray]
+        Payloads[Declarative Workloads: Services, Stateful, Batch, Search Reindexing, AI/ML XPK, vLLM, JetStream, Unikernels]
+        Schedulers[Scheduler Drivers: Kubernetes, Nomad, Mesos/Marathon, 8+ Native Inits, Firecracker/Cloud-Hypervisor/Solo5, XPK/Slurm/Ray]
     end
 
     subgraph Tier35[Tier 3.5: Topologies & Consensus Choreography]
         StateMachine[DAG State Machine: .topology_state.json + Distributed Lease Locking]
         Fencing[Split-Brain Fencing + Leader/Follower Quorum Choreography]
-        Blueprints[HA Blueprints: postgres-ha, valkey-cluster, redis-cluster, k0s-ha, minio-distributed, gke-tpu-cluster]
+        Blueprints[HA Blueprints: postgres-ha, valkey-cluster, redis-cluster, mesos-marathon-ha, k8s-marathon-paas, k0s-ha, minio-distributed, gke-tpu-cluster]
     end
 
     subgraph Traits[Unified Traits Subsystem]
@@ -644,8 +652,8 @@ stateful clusters (`topologies/engine.sh` and `topologies/engine.cmd`):
   invoking Tier 3 Cloud IaaS APIs (NIC/volume detach or instance power-off) if the node is
   unreachable over both private VPC and WireGuard mesh networks.
 - **Production HA Blueprints**: Turnkey topologies for `postgres-ha` (Patroni + etcd + PgBouncer +
-  `netctl`), `valkey-cluster`, `redis-cluster`, `k0s-ha`, `minio-distributed`, and
-  `gke-tpu-cluster`.
+  `netctl`), `valkey-cluster`, `redis-cluster`, `mesos-marathon-ha`, `k8s-marathon-paas`, `k0s-ha`,
+  `minio-distributed`, `gke-tpu-cluster`, and RabbitMQ HA quorum clustering.
 
 ---
 

@@ -11,19 +11,19 @@ setlocal EnableDelayedExpansion
 
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -52,7 +52,7 @@ goto :find_root
 :root_found
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    for %%i in ("%SCRIPT_DIR%\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
+    for %%i in ("!SCRIPT_DIR!\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
 set "PKG_NAME=%~1"
@@ -60,9 +60,9 @@ if "%PKG_NAME%"=="" set "PKG_NAME=sample-pkg"
 set "PKG_VER=%~2"
 if "%PKG_VER%"=="" set "PKG_VER=1.0.0"
 set "STAGE_DIR=%~3"
-if "%STAGE_DIR%"=="" set "STAGE_DIR=%LIBSCRIPT_ROOT_DIR%\build\stage_polyglot"
+if "%STAGE_DIR%"=="" set "STAGE_DIR=!LIBSCRIPT_ROOT_DIR!\build\stage_polyglot"
 set "OUT_BASE=%~4"
-if "%OUT_BASE%"=="" set "OUT_BASE=%LIBSCRIPT_ROOT_DIR%\build\packages"
+if "%OUT_BASE%"=="" set "OUT_BASE=!LIBSCRIPT_ROOT_DIR!\build\packages"
 
 if not exist "%OUT_BASE%\apk" mkdir "%OUT_BASE%\apk"
 if not exist "%OUT_BASE%\deb" mkdir "%OUT_BASE%\deb"
@@ -70,9 +70,9 @@ if not exist "%OUT_BASE%\rpm" mkdir "%OUT_BASE%\rpm"
 
 echo [POLYGLOT] Starting multi-distribution cross-packaging for %PKG_NAME% %PKG_VER%...
 
-call "%SCRIPT_DIR%\build_apk.cmd" "%PKG_NAME%" "%PKG_VER%" "%STAGE_DIR%" "%OUT_BASE%\apk"
-call "%SCRIPT_DIR%\build_deb.cmd" "%PKG_NAME%" "%PKG_VER%" "%STAGE_DIR%" "%OUT_BASE%\deb"
-call "%SCRIPT_DIR%\build_rpm.cmd" "%PKG_NAME%" "%PKG_VER%" "%STAGE_DIR%" "%OUT_BASE%\rpm"
+call "!SCRIPT_DIR!\build_apk.cmd" "%PKG_NAME%" "%PKG_VER%" "%STAGE_DIR%" "%OUT_BASE%\apk"
+call "!SCRIPT_DIR!\build_deb.cmd" "%PKG_NAME%" "%PKG_VER%" "%STAGE_DIR%" "%OUT_BASE%\deb"
+call "!SCRIPT_DIR!\build_rpm.cmd" "%PKG_NAME%" "%PKG_VER%" "%STAGE_DIR%" "%OUT_BASE%\rpm"
 
 set "APK_FILE=%OUT_BASE%\apk\%PKG_NAME%-%PKG_VER%.apk"
 set "DEB_FILE=%OUT_BASE%\deb\%PKG_NAME%_%PKG_VER%_amd64.deb"

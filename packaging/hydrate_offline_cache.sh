@@ -3,13 +3,13 @@
 # Hydrates and verifies the offline air-gapped artifact cache for LibScript installers.
 # Downloads runtimes (Python, Node.js), datastores (MySQL, Redis, MongoDB, Meilisearch),
 # pre-compiled wheels, codebase archives, and demo courseware as defined in an offline
-# manifest schema (e.g., stacks/cms/openedx/offline_bundle.json).
+# manifest schema (e.g., _lib/web-apps/openedx/offline_bundle.json).
 #
 # ## Usage
 # ./packaging/hydrate_offline_cache.sh [OPTIONS]
 #
 # Options:
-#   --manifest <path>      Path to offline_bundle.json manifest (default: stacks/cms/openedx/offline_bundle.json)
+#   --manifest <path>      Path to offline_bundle.json manifest (default: _lib/web-apps/openedx/offline_bundle.json)
 #   --cache-dir <dir>      Target directory to stage artifacts (default: cache/)
 #   --verify-only          Verify SHA-256 checksums of existing cached artifacts without downloading
 #   --wheels               Download Python wheels matching requirements into cache/wheels/

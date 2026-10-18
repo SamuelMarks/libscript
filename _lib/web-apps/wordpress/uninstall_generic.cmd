@@ -13,19 +13,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -64,7 +64,7 @@ schtasks /delete /tn "WordPressCronTask" /f >nul 2>&1
 :: 2. Purge DB if requested
 if "%~1"=="--purge-db" (
     echo [INFO] Dropping WordPress database without touching Open edX...
-    call "%SCRIPT_DIR%\dbshell.cmd" query "DROP DATABASE IF EXISTS wordpress; DROP USER IF EXISTS 'wordpress'@'localhost'; DROP USER IF EXISTS 'wordpress'@'127.0.0.1'; FLUSH PRIVILEGES;" >nul 2>&1
+    call "!SCRIPT_DIR!\dbshell.cmd" query "DROP DATABASE IF EXISTS wordpress; DROP USER IF EXISTS 'wordpress'@'localhost'; DROP USER IF EXISTS 'wordpress'@'127.0.0.1'; FLUSH PRIVILEGES;" >nul 2>&1
 )
 
 :: 3. Remove document root

@@ -5,7 +5,8 @@
 # powershell -ExecutionPolicy Bypass -File packaging/open_browser.ps1 -Url <http://...>
 
 param(
-    [string]$Url = "http://localhost:8000/login"
+    [string]$Url = "http://localhost:8000/login",
+    [string]$Url2 = ""
 )
 
 # 1. Kill any existing browser or terminal window
@@ -20,6 +21,7 @@ if (-not (Test-Path $browserExe)) {
 if (-not (Test-Path $browserExe)) {
     Write-Host "[INFO] Browser not detected; installing Google Chrome via winget..."
     & winget install --id Google.Chrome --silent --accept-package-agreements --accept-source-agreements > $null 2>&1
+    Remove-Item -Path "C:\Users\Public\Desktop\Google Chrome.lnk", "C:\Users\vagrant\Desktop\Google Chrome.lnk" -Force -ErrorAction SilentlyContinue
     $browserExe = "C:\Program Files\Google\Chrome\Application\chrome.exe"
 }
 
@@ -31,7 +33,11 @@ if (-not (Test-Path $profileDir)) {
 }
 
 # 4. Launch browser
-$browserArgs = "--user-data-dir=`"$profileDir`" --no-first-run --no-default-browser-check --disable-fre --disable-search-engine-choice-screen --disable-features=SearchEngineChoice,msEdgeFirstRunExperience --disable-session-crashed-bubble --hide-crash-restore-bubble --disable-gpu --start-maximized `"$Url`""
+$urlArgs = "`"$Url`""
+if ($Url2) {
+    $urlArgs = "`"$Url`" `"$Url2`""
+}
+$browserArgs = "--user-data-dir=`"$profileDir`" --no-first-run --no-default-browser-check --disable-fre --disable-search-engine-choice-screen --disable-features=SearchEngineChoice,msEdgeFirstRunExperience --disable-session-crashed-bubble --hide-crash-restore-bubble --disable-gpu --window-position=10,10 --window-size=780,535 $urlArgs"
 $action = New-ScheduledTaskAction -Execute $browserExe -Argument $browserArgs
 $principal = New-ScheduledTaskPrincipal -UserId "vagrant" -LogonType Interactive
 Register-ScheduledTask -TaskName "ShowBrowser" -Action $action -Principal $principal -Force | Out-Null

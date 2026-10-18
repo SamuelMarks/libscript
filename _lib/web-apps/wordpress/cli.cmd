@@ -14,19 +14,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -54,8 +54,8 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if "%LIBSCRIPT_ROOT_DIR%"=="" (
-    for %%i in ("%SCRIPT_DIR%\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
+if "!LIBSCRIPT_ROOT_DIR!"=="" (
+    for %%i in ("!SCRIPT_DIR!\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
 set "CMD=%~1"
@@ -84,61 +84,61 @@ if /I "%CMD%"=="upgrade" goto do_upgrade
 if /I "%CMD%"=="wp" goto do_wp
 
 set "PACKAGE_NAME=wordpress"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\component_core.cmd" %*
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\component_core.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_service
 :: Dispatches service lifecycle actions (start, stop, restart, status) to service.cmd.
 :do_service
-call "%SCRIPT_DIR%\service.cmd" %CMD% %*
+call "!SCRIPT_DIR!\service.cmd" %CMD% %*
 exit /b %ERRORLEVEL%
 
 :: ## do_user
 :: Dispatches WordPress user administration subcommands to user.cmd.
 :do_user
-call "%SCRIPT_DIR%\user.cmd" %*
+call "!SCRIPT_DIR!\user.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_config
 :: Dispatches wp-config.php and environment configuration subcommands to config.cmd.
 :do_config
-call "%SCRIPT_DIR%\config.cmd" %*
+call "!SCRIPT_DIR!\config.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_dbshell
 :: Dispatches interactive MySQL shell and SQL query execution to dbshell.cmd.
 :do_dbshell
-call "%SCRIPT_DIR%\dbshell.cmd" %*
+call "!SCRIPT_DIR!\dbshell.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_healthcheck
 :: Dispatches system diagnostics and connectivity checks to healthcheck.cmd.
 :do_healthcheck
-call "%SCRIPT_DIR%\healthcheck.cmd" %*
+call "!SCRIPT_DIR!\healthcheck.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_backup
 :: Dispatches snapshot archive creation to backup.cmd.
 :do_backup
-call "%SCRIPT_DIR%\backup.cmd" %*
+call "!SCRIPT_DIR!\backup.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_restore
 :: Dispatches snapshot archive restoration to restore.cmd.
 :do_restore
-call "%SCRIPT_DIR%\restore.cmd" %*
+call "!SCRIPT_DIR!\restore.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_cron
 :: Dispatches WP-Cron background task management to cron.cmd.
 :do_cron
-call "%SCRIPT_DIR%\cron.cmd" %*
+call "!SCRIPT_DIR!\cron.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_upgrade
 :: Dispatches WordPress core/plugin upgrade pipelines to upgrade.cmd.
 :do_upgrade
-call "%SCRIPT_DIR%\upgrade.cmd" %*
+call "!SCRIPT_DIR!\upgrade.cmd" %*
 exit /b %ERRORLEVEL%
 
 :: ## do_wp
@@ -149,8 +149,8 @@ if not errorlevel 1 (
     wp %*
     exit /b %ERRORLEVEL%
 )
-if exist "%LIBSCRIPT_ROOT_DIR%\cache\wp-cli.phar" (
-    php "%LIBSCRIPT_ROOT_DIR%\cache\wp-cli.phar" %*
+if exist "!LIBSCRIPT_ROOT_DIR!\cache\wp-cli.phar" (
+    php "!LIBSCRIPT_ROOT_DIR!\cache\wp-cli.phar" %*
     exit /b %ERRORLEVEL%
 )
 echo [ERROR] WP-CLI executable or phar not found. >&2

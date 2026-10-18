@@ -21,19 +21,19 @@ setlocal EnableDelayedExpansion
 :: Subroutine dispatcher
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -109,12 +109,12 @@ if "%_backend%"=="uv" (
             )
         )
         REM Fallback to libscript_native installation check
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" libscript_get_version_dir python "%_version%" > "%TEMP%\libscript_py_dir.txt"
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" libscript_get_version_dir python "%_version%" > "%TEMP%\libscript_py_dir.txt"
         set /p _py_dir=<"%TEMP%\libscript_py_dir.txt"
         del "%TEMP%\libscript_py_dir.txt"
         if not exist "!_py_dir!" (
             echo [INFO] Python version %_version% not found locally. Installing via libscript... >&2
-            call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install python "%_version%" >&2
+            call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install python "%_version%" >&2
             if errorlevel 1 exit /b 1
         )
         if exist "!_py_dir!\python.exe" (

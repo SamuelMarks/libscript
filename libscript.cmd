@@ -10,19 +10,19 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -51,7 +51,7 @@ goto :find_root
 :root_found
 
 :: Source logging (must be after SCRIPT_DIR)
-set "LOG_CMD=%SCRIPT_DIR%\_lib\_common\log.cmd"
+set "LOG_CMD=!SCRIPT_DIR!\_lib\_common\log.cmd"
 
 :: Pre-scan arguments for global offline and cache flags
 for %%A in (%*) do (
@@ -163,23 +163,23 @@ if /i "%cmd%"=="-v" (
 )
 
 :: Delegate commands to sub-scripts
-if /i "%cmd%"=="list" ( call "%SCRIPT_DIR%\cli\commands\core\list.cmd" %* & exit /b !errorlevel! )
-if /i "%cmd%"=="search" ( call "%SCRIPT_DIR%\cli\commands\core\search.cmd" %* & exit /b !errorlevel! )
-if /i "%cmd%"=="provision" ( call "%SCRIPT_DIR%\cli\commands\cloud\provision.cmd" %* & exit /b !errorlevel! )
-if /i "%cmd%"=="deprovision" ( call "%SCRIPT_DIR%\cli\commands\cloud\deprovision.cmd" %* & exit /b !errorlevel! )
-if /i "%cmd%"=="deploy-remote" ( call "%SCRIPT_DIR%\cli\commands\cloud\deploy-remote.cmd" %* & exit /b !errorlevel! )
-if /i "%cmd%"=="package-as" ( call "%SCRIPT_DIR%\cli\commands\packaging\package-as.cmd" %* & exit /b !errorlevel! )
-if /i "%cmd%"=="install-deps" ( call "%SCRIPT_DIR%\cli\commands\deps\install.cmd" %* & exit /b !errorlevel! )
-if /i "%cmd%"=="db-search" ( call "%SCRIPT_DIR%\cli\commands\registry\search.cmd" %* & exit /b !errorlevel! )
-if /i "%cmd%"=="update-db" ( call "%SCRIPT_DIR%\cli\commands\registry\update.cmd" %* & exit /b !errorlevel! )
-if /i "%cmd%"=="semver" ( call "%SCRIPT_DIR%\cli\commands\core\semver.cmd" %* & exit /b !errorlevel! )
-if /i "%cmd%"=="config" ( call "%SCRIPT_DIR%\cli\commands\config\config.cmd" %* & exit /b !errorlevel! )
-if /i "%cmd%"=="repogen" ( call "%SCRIPT_DIR%\_lib\orchestration\repogen\repogen.cmd" %* & exit /b !errorlevel! )
-if /i "%cmd%"=="distro" ( call "%SCRIPT_DIR%\_lib\orchestration\distro\distro.cmd" %* & exit /b !errorlevel! )
-if /i "%cmd%"=="payload" ( call "%SCRIPT_DIR%\payloads\engine.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
-if /i "%cmd%"=="topology" ( call "%SCRIPT_DIR%\topologies\engine.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
-if /i "%cmd%"=="trait" ( call "%SCRIPT_DIR%\traits\engine.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
-if /i "%cmd%"=="cloud" ( call "%SCRIPT_DIR%\_lib\cloud\core\cli.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
+if /i "%cmd%"=="list" ( call "!SCRIPT_DIR!\cli\commands\core\list.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="search" ( call "!SCRIPT_DIR!\cli\commands\core\search.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="provision" ( call "!SCRIPT_DIR!\cli\commands\cloud\provision.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="deprovision" ( call "!SCRIPT_DIR!\cli\commands\cloud\deprovision.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="deploy-remote" ( call "!SCRIPT_DIR!\cli\commands\cloud\deploy-remote.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="package-as" ( call "!SCRIPT_DIR!\cli\commands\packaging\package-as.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="install-deps" ( call "!SCRIPT_DIR!\cli\commands\deps\install.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="db-search" ( call "!SCRIPT_DIR!\cli\commands\registry\search.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="update-db" ( call "!SCRIPT_DIR!\cli\commands\registry\update.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="semver" ( call "!SCRIPT_DIR!\cli\commands\core\semver.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="config" ( call "!SCRIPT_DIR!\cli\commands\config\config.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="repogen" ( call "!SCRIPT_DIR!\_lib\orchestration\repogen\repogen.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="distro" ( call "!SCRIPT_DIR!\_lib\orchestration\distro\distro.cmd" %* & exit /b !errorlevel! )
+if /i "%cmd%"=="payload" ( call "!SCRIPT_DIR!\payloads\engine.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
+if /i "%cmd%"=="topology" ( call "!SCRIPT_DIR!\topologies\engine.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
+if /i "%cmd%"=="trait" ( call "!SCRIPT_DIR!\traits\engine.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
+if /i "%cmd%"=="cloud" ( call "!SCRIPT_DIR!\_lib\cloud\core\cli.cmd" %2 %3 %4 %5 %6 %7 %8 %9 & exit /b !errorlevel! )
 
 if /i "%cmd%"=="start" set "is_docker_cmd=1"
 if /i "%cmd%"=="stop" set "is_docker_cmd=1"
@@ -190,7 +190,7 @@ if /i "%cmd%"=="down" set "is_docker_cmd=1"
 
 if "!is_docker_cmd!"=="1" (
     if not "%LIBSCRIPT_INTERNAL_START%"=="1" (
-        call "%SCRIPT_DIR%\cli\commands\services\actions.cmd" %*
+        call "!SCRIPT_DIR!\cli\commands\services\actions.cmd" %*
         exit /b !errorlevel!
     )
 )
@@ -250,23 +250,28 @@ if "%is_action%"=="1" (
 :: Performs the match_component operation and updates component state.
 :match_component
 set "target="
-if /i "%action_pkg%"=="cloud" (
-    set "target=%SCRIPT_DIR%\_lib\cloud\core"
+set "action_pkg=!action_pkg:/=\!"
+if /i "!action_pkg!"=="cloud" (
+    set "target=!SCRIPT_DIR!\_lib\cloud\core"
     goto run_target
 )
-if exist "%SCRIPT_DIR%\_lib\%action_pkg%\cli.cmd" (
-    set "target=%SCRIPT_DIR%\_lib\%action_pkg%"
+if exist "!SCRIPT_DIR!\!action_pkg!\cli.cmd" (
+    set "target=!SCRIPT_DIR!\!action_pkg!"
     goto run_target
 )
-if exist "%SCRIPT_DIR%\_lib\_common\%action_pkg%\cli.cmd" (
-    set "target=%SCRIPT_DIR%\_lib\_common\%action_pkg%"
+if exist "!SCRIPT_DIR!\_lib\!action_pkg!\cli.cmd" (
+    set "target=!SCRIPT_DIR!\_lib\!action_pkg!"
+    goto run_target
+)
+if exist "!SCRIPT_DIR!\_lib\_common\!action_pkg!\cli.cmd" (
+    set "target=!SCRIPT_DIR!\_lib\_common\!action_pkg!"
     goto run_target
 )
 
 :: Direct category search: _lib\<cat>\<pkg>\cli.cmd or stacks\<cat>\<pkg>\cli.cmd
-for /d %%C in ("%SCRIPT_DIR%\_lib\*" "%SCRIPT_DIR%\stacks\*") do (
-    if exist "%%C\%action_pkg%\cli.cmd" (
-        set "target=%%C\%action_pkg%"
+for /d %%C in ("!SCRIPT_DIR!\_lib\*" "!SCRIPT_DIR!\stacks\*") do (
+    if exist "%%C\!action_pkg!\cli.cmd" (
+        set "target=%%C\!action_pkg!"
         goto run_target
     )
 )
@@ -274,15 +279,15 @@ for /d %%C in ("%SCRIPT_DIR%\_lib\*" "%SCRIPT_DIR%\stacks\*") do (
 set "match_count=0"
 set "last_match="
 
-for /d %%C in ("%SCRIPT_DIR%\_lib\*" "%SCRIPT_DIR%\stacks\*") do (
+for /d %%C in ("!SCRIPT_DIR!\_lib\*" "!SCRIPT_DIR!\stacks\*") do (
     for /d %%D in ("%%C\*") do (
         if exist "%%D\cli.cmd" (
             set "cname=%%~nxD"
-            if "!cname!"=="%action_pkg%" (
+            if "!cname!"=="!action_pkg!" (
                 set "target=%%D"
                 goto run_target
             )
-            echo !cname! | findstr /i "%action_pkg%" >nul 2>&1
+            echo "!cname!" | findstr /i "!action_pkg!" >nul 2>&1
             if not errorlevel 1 (
                 set /a match_count+=1
                 set "last_match=%%D"
@@ -297,16 +302,16 @@ if !match_count! equ 1 (
 )
 
 if !match_count! equ 0 (
-    echo Error: Unknown component '%action_pkg%'. >&2
+    echo Error: Unknown component '!action_pkg!'. >&2
     exit /b 1
 )
 
-echo Error: Component '%action_pkg%' is ambiguous. Matches: >&2
-for /d %%C in ("%SCRIPT_DIR%\_lib\*") do (
+echo Error: Component '!action_pkg!' is ambiguous. Matches: >&2
+for /d %%C in ("!SCRIPT_DIR!\_lib\*") do (
     for /d %%D in ("%%C\*") do (
         if exist "%%D\cli.cmd" (
             set "cname=%%~nxD"
-            echo !cname! | findstr /i "%action_pkg%" >nul 2>&1
+            echo "!cname!" | findstr /i "!action_pkg!" >nul 2>&1
             if not errorlevel 1 (
                 echo   %%~nxC\!cname! >&2
             )
@@ -318,11 +323,11 @@ exit /b 1
 :: ## run_target
 :: Performs the run_target operation and updates component state.
 :run_target
-if exist "%target%\cli.cmd" (
-    call "%target%\cli.cmd" %*
+if exist "!target!\cli.cmd" (
+    call "!target!\cli.cmd" %*
     exit /b !errorlevel!
 ) else (
-    echo Error: Local CLI not found in %target% >&2
+    echo Error: Local CLI not found in "!target!" >&2
     exit /b 1
 )
 

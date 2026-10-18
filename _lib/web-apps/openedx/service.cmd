@@ -22,19 +22,20 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+set "SVC_SCRIPT_DIR=!SCRIPT_DIR!"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -62,7 +63,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if "%LIBSCRIPT_ROOT_DIR%"=="" (
+if "!LIBSCRIPT_ROOT_DIR!"=="" (
     for %%i in ("%~dp0..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
@@ -132,11 +133,11 @@ if %ERRORLEVEL%==0 (
     echo [INFO] Open edX LMS is already listening on port %OPENEDX_LMS_PORT%
 ) else (
     echo [INFO] Launching Open edX LMS on port %OPENEDX_LMS_PORT%...
-    if exist "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe" if exist "%OPENEDX_INSTALL_DIR%\codebase" (
+    if exist "!SCRIPT_DIR!\service_worker.ps1" (
+        powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\service_worker.ps1" start %OPENEDX_LMS_PORT% %OPENEDX_CMS_PORT%
+    ) else if exist "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe" if exist "%OPENEDX_INSTALL_DIR%\codebase" (
         cd /D "%OPENEDX_INSTALL_DIR%\codebase"
         powershell -WindowStyle Hidden -Command "Start-Process '%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe' -ArgumentList '--listen=0.0.0.0:%OPENEDX_LMS_PORT% lms.wsgi:application' -RedirectStandardOutput '%LOG_DIR%\lms.log' -RedirectStandardError '%LOG_DIR%\lms_err.log' -WindowStyle Hidden"
-    ) else if exist "%SCRIPT_DIR%\service_worker.ps1" (
-        powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\service_worker.ps1" start %OPENEDX_LMS_PORT% %OPENEDX_CMS_PORT%
     ) else (
         echo [ERROR] Genuine Open edX codebase or waitress not found for LMS. >&2
         exit /b 1
@@ -156,7 +157,7 @@ if %ERRORLEVEL%==0 (
 )
 
 :: Start Workers
-if exist "%SCRIPT_DIR%\workers.cmd" call "%SCRIPT_DIR%\workers.cmd" start
+if exist "%SVC_SCRIPT_DIR%\workers.cmd" call "%SVC_SCRIPT_DIR%\workers.cmd" start
 
 echo [INFO] Waiting for LMS and CMS to become responsive...
 powershell -NoProfile -Command "$ports = @(%OPENEDX_LMS_PORT%, %OPENEDX_CMS_PORT%); $timeout = 30; $sw = [System.Diagnostics.Stopwatch]::StartNew(); while ($sw.Elapsed.TotalSeconds -lt $timeout) { $allUp = $true; foreach ($p in $ports) { try { $c = [System.Net.Sockets.TcpClient]::new('127.0.0.1', $p); $c.Close() } catch { $allUp = $false } }; if ($allUp) { Write-Host '[PASS] Open edX platform services started and listening.'; exit 0 }; Start-Sleep -Seconds 2 }; Write-Error '[ERROR] Timeout waiting for Open edX services to start listening.'; exit 1"
@@ -173,11 +174,11 @@ exit /b 0
 echo [INFO] Stopping Open edX platform services...
 
 :: Stop workers
-if exist "%SCRIPT_DIR%\workers.cmd" call "%SCRIPT_DIR%\workers.cmd" stop
+if exist "!SCRIPT_DIR!\workers.cmd" call "!SCRIPT_DIR!\workers.cmd" stop
 
 :: Terminate background python waitress WSGI listeners on ports if tracked
-if exist "%SCRIPT_DIR%\service_worker.ps1" (
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\service_worker.ps1" stop %OPENEDX_LMS_PORT% %OPENEDX_CMS_PORT%
+if exist "!SCRIPT_DIR!\service_worker.ps1" (
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!SCRIPT_DIR!\service_worker.ps1" stop %OPENEDX_LMS_PORT% %OPENEDX_CMS_PORT%
 )
 powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort %OPENEDX_LMS_PORT%, %OPENEDX_CMS_PORT% -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }"
 
@@ -200,7 +201,7 @@ echo ======================================================
 echo              Open edX Platform Status (Windows)
 echo ======================================================
 powershell -NoProfile -Command "$ports = @{ 'LMS Portal' = %OPENEDX_LMS_PORT%; 'Studio CMS' = %OPENEDX_CMS_PORT%; 'MySQL' = 3306; 'Redis' = 6379; 'MongoDB' = 27017; 'Meilisearch' = 7700 }; foreach ($k in $ports.Keys) { $p = $ports[$k]; try { $c = [System.Net.Sockets.TcpClient]::new('127.0.0.1', $p); $c.Close(); Write-Host ('  ' + $k.PadRight(20) + ' (Port ' + $p + '): [RUNNING]') } catch { Write-Host ('  ' + $k.PadRight(20) + ' (Port ' + $p + '): [STOPPED]') } }"
-if exist "%SCRIPT_DIR%\workers.cmd" call "%SCRIPT_DIR%\workers.cmd" status
+if exist "!SCRIPT_DIR!\workers.cmd" call "!SCRIPT_DIR!\workers.cmd" status
 echo ======================================================
 exit /b 0
 
@@ -223,12 +224,12 @@ exit /b 0
 :do_install_service
 echo [INFO] Installing Open edX native services...
 
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" "openedx-lms" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe --listen=0.0.0.0:%OPENEDX_LMS_PORT% lms.wsgi:application" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX LMS Service" ""
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" "openedx-cms" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe --listen=0.0.0.0:%OPENEDX_CMS_PORT% cms.wsgi:application" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX Studio CMS Service" ""
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-lms" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe --listen=0.0.0.0:%OPENEDX_LMS_PORT% lms.wsgi:application" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX LMS Service" ""
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-cms" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe --listen=0.0.0.0:%OPENEDX_CMS_PORT% cms.wsgi:application" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX Studio CMS Service" ""
 
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" "openedx-lms-worker" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe -m celery -A lms worker --loglevel=INFO -c 2" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX LMS Celery Worker" ""
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" "openedx-cms-worker" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe -m celery -A cms worker --loglevel=INFO -c 2" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX CMS Celery Worker" ""
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" "openedx-celery-beat" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe -m celery -A lms beat --loglevel=INFO" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX Celery Beat Scheduler" ""
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-lms-worker" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe -m celery -A lms worker --loglevel=INFO -c 2" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX LMS Celery Worker" ""
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-cms-worker" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe -m celery -A cms worker --loglevel=INFO -c 2" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX CMS Celery Worker" ""
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-celery-beat" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe -m celery -A lms beat --loglevel=INFO" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX Celery Beat Scheduler" ""
 
 echo [PASS] Successfully installed Open edX services.
 exit /b 0
@@ -237,10 +238,10 @@ exit /b 0
 :: Performs the do_uninstall_service operation and updates component state.
 :do_uninstall_service
 echo [INFO] Uninstalling Open edX native services...
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" --uninstall "openedx-lms"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" --uninstall "openedx-cms"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" --uninstall "openedx-lms-worker"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" --uninstall "openedx-cms-worker"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" --uninstall "openedx-celery-beat"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" --uninstall "openedx-lms"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" --uninstall "openedx-cms"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" --uninstall "openedx-lms-worker"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" --uninstall "openedx-cms-worker"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" --uninstall "openedx-celery-beat"
 echo [PASS] Successfully uninstalled Open edX services.
 exit /b 0

@@ -37,7 +37,7 @@ if [ "$CMD" = "package-as" ]; then
     . "$LIBSCRIPT_ROOT_DIR/cli/commands/packaging/formats/pkg_docker_compose.sh"
   elif [ "${pkg_type:-}" = "msi" ]; then
     case "${1:-}" in
-      stacks/*|openedx)
+      stacks/*|_lib/web-apps/openedx*|web-apps/openedx*|openedx)
         exec "$LIBSCRIPT_ROOT_DIR/packaging/build_msi.sh" "$@"
         ;;
       *)

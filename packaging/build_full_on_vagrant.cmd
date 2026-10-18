@@ -10,19 +10,19 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -50,39 +50,39 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-cd /d "%LIBSCRIPT_ROOT_DIR%\vagrant\windows-11"
+cd /d "!LIBSCRIPT_ROOT_DIR!\vagrant\windows-11"
 
 echo [INFO] Creating directories on VM...
 vagrant ssh -c "powershell -Command \"New-Item -ItemType Directory -Force -Path C:\libscript\""
 
-cd /d "%LIBSCRIPT_ROOT_DIR%"
+cd /d "!LIBSCRIPT_ROOT_DIR!"
 echo [INFO] Archiving repo...
 tar -czf payload.tar.gz --exclude=".git" --exclude="vagrant" --exclude="tests_tmp" .
 
 echo [INFO] Uploading archive...
-cd /d "%LIBSCRIPT_ROOT_DIR%\vagrant\windows-11"
-vagrant upload "%LIBSCRIPT_ROOT_DIR%\payload.tar.gz" "C:\libscript\payload.tar.gz"
+cd /d "!LIBSCRIPT_ROOT_DIR!\vagrant\windows-11"
+vagrant upload "!LIBSCRIPT_ROOT_DIR!\payload.tar.gz" "C:\libscript\payload.tar.gz"
 
 echo [INFO] Extracting archive on VM...
 vagrant ssh -c "powershell -Command \"cd C:\libscript; tar -xzf payload.tar.gz\""
 
 echo [INFO] Generating build script...
 (
-echo $env:PATH += ';' + $env:USERPROFILE + '\.libscript\wix\3.14\bin'
+echo $env:PATH += ';' + $env:USERPROFILE + '\.libscript\msi-rs\default\bin;' + $env:USERPROFILE + '\.libscript\msi-rs\v0.0.1\bin'
 echo cd C:\libscript
-echo cmd.exe /c packaging\build_msi.cmd stacks\cms\openedx --online --out OpenEdX-Setup --use-wix
-echo cmd.exe /c packaging\build_msi.cmd stacks\cms\openedx --offline --out OpenEdX-Setup-Offline --use-wix
-) > "%LIBSCRIPT_ROOT_DIR%\build.ps1"
+echo cmd.exe /c packaging\build_msi.cmd _lib\web-apps\openedx --online --out OpenEdX-Setup
+echo cmd.exe /c packaging\build_msi.cmd _lib\web-apps\openedx --offline --out OpenEdX-Setup-Offline
+) > "!LIBSCRIPT_ROOT_DIR!\build.ps1"
 
-vagrant upload "%LIBSCRIPT_ROOT_DIR%\build.ps1" "C:\libscript\build.ps1"
+vagrant upload "!LIBSCRIPT_ROOT_DIR!\build.ps1" "C:\libscript\build.ps1"
 
 echo [INFO] Running build script...
 vagrant ssh -c "powershell -ExecutionPolicy Bypass -File C:\libscript\build.ps1"
 
 echo [INFO] Downloading MSIs...
 vagrant ssh -c "powershell -Command \"Copy-Item C:\libscript\*.msi C:\vagrant\ -Force\""
-copy /y "%LIBSCRIPT_ROOT_DIR%\vagrant\windows-11\OpenEdX-Setup.msi" "%LIBSCRIPT_ROOT_DIR%\packaging\"
-copy /y "%LIBSCRIPT_ROOT_DIR%\vagrant\windows-11\OpenEdX-Setup-Offline.msi" "%LIBSCRIPT_ROOT_DIR%\packaging\"
+copy /y "!LIBSCRIPT_ROOT_DIR!\vagrant\windows-11\OpenEdX-Setup.msi" "!LIBSCRIPT_ROOT_DIR!\packaging\"
+copy /y "!LIBSCRIPT_ROOT_DIR!\vagrant\windows-11\OpenEdX-Setup-Offline.msi" "!LIBSCRIPT_ROOT_DIR!\packaging\"
 
 echo [PASS] Done!
 exit /b 0

@@ -8,19 +8,19 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -78,7 +78,7 @@ if "%LIBSCRIPT_OFFLINE%"=="1" (
         ) else if not "%LIBSCRIPT_CACHE_DIR%"=="" (
             set "PIP_FIND_LINKS=%LIBSCRIPT_CACHE_DIR%\wheels"
         ) else (
-            set "PIP_FIND_LINKS=%LIBSCRIPT_ROOT_DIR%\cache\wheels"
+            set "PIP_FIND_LINKS=!LIBSCRIPT_ROOT_DIR!\cache\wheels"
         )
     )
 )
@@ -189,7 +189,11 @@ exit /b 0
 :: Installs and configures the requested version of the component.
 :action_install
 if "%PYTHON_INSTALL_METHOD%"=="system" (
-    winget install --id Python.Python.3.10 -e --source winget -a x64 --accept-package-agreements --accept-source-agreements
+    if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" (
+        winget install --id Python.Python.3.12 -e --source winget --accept-package-agreements --accept-source-agreements
+    ) else (
+        winget install --id Python.Python.3.12 -e --source winget --accept-package-agreements --accept-source-agreements || winget install --id Python.Python.3.10 -e --source winget -a x64 --accept-package-agreements --accept-source-agreements
+    )
     exit /b !errorlevel!
 )
 if "%PYTHON_INSTALL_METHOD%"=="mise" ( mise install "python@%PYTHON_VERSION%" & exit /b 0 )
@@ -198,10 +202,21 @@ if "%PYTHON_INSTALL_METHOD%"=="pkgx" ( pkgx install "python@%PYTHON_VERSION%" & 
 if "%PYTHON_INSTALL_METHOD%"=="vfox" ( vfox add python & vfox install "python@%PYTHON_VERSION%" & exit /b 0 )
 
 set "TARGET_DIR=%LIBSCRIPT_HOME%\python\%PYTHON_VERSION%"
-if not exist "%TARGET_DIR%\bin" (
+if not exist "%TARGET_DIR%\bin\python.exe" if not exist "%TARGET_DIR%\python.exe" if not exist "C:\Program Files\Python312\python.exe" if not exist "C:\Users\vagrant\AppData\Local\Programs\Python\Python312-arm64\python.exe" if not exist "C:\Users\vagrant\AppData\Local\Programs\Python\Python312\python.exe" (
     echo Installing python %PYTHON_VERSION% natively to %TARGET_DIR%...
     if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
-    if exist "%DOWNLOAD_DIR%\python\python-%PYTHON_VERSION%.zip" (
+    set "_PY_CACHED="
+    if defined LIBSCRIPT_CACHE_DIR (
+        for %%Z in ("%LIBSCRIPT_CACHE_DIR%\runtimes\python*.zip") do set "_PY_CACHED=%%~fZ"
+    )
+    if exist "!LIBSCRIPT_ROOT_DIR!\cache\runtimes" (
+        for %%Z in ("!LIBSCRIPT_ROOT_DIR!\cache\runtimes\python*.zip") do set "_PY_CACHED=%%~fZ"
+    )
+    if defined _PY_CACHED (
+        echo Extracting Python from offline cache !_PY_CACHED!...
+        tar -xf "!_PY_CACHED!" -C "%TARGET_DIR%\bin" 2>nul || powershell -NoProfile -Command "Expand-Archive -Path '!_PY_CACHED!' -DestinationPath '%TARGET_DIR%\bin' -Force"
+        copy /y "%TARGET_DIR%\bin\python.exe" "%TARGET_DIR%\python.exe" >nul 2>&1
+    ) else if exist "%DOWNLOAD_DIR%\python\python-%PYTHON_VERSION%.zip" (
         echo Extracting from cache...
         tar -xf "%DOWNLOAD_DIR%\python\python-%PYTHON_VERSION%.zip" -C "%TARGET_DIR%"
     ) else if exist "%DOWNLOAD_DIR%\python\python-%PYTHON_VERSION%.tar.gz" (
@@ -212,8 +227,23 @@ if not exist "%TARGET_DIR%\bin" (
         curl -sSL "%PYTHON_DOWNLOAD_URL%" -o "%TEMP%\python.zip"
         tar -xf "%TEMP%\python.zip" -C "%TARGET_DIR%"
     ) else (
-        echo No download URL or cache available for python.
-        exit /b 1
+        if not "%PROP_OPENEDX_FAST_VERIFY%"=="1" (
+            where winget >nul 2>&1
+            if not errorlevel 1 (
+                echo Installing Python 3.12 via winget...
+                winget install --id Python.Python.3.12 -e --silent --accept-package-agreements --accept-source-agreements
+            )
+        )
+        if not exist "C:\Program Files\Python312\python.exe" if not exist "%LOCALAPPDATA%\Programs\Python\Python312-arm64\python.exe" if not exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" if not exist "C:\Users\vagrant\AppData\Local\Programs\Python\Python312-arm64\python.exe" (
+            echo Downloading portable Python 3.12...
+            set "_PY_ARCH=amd64"
+            if /I "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "_PY_ARCH=arm64"
+            curl -fSL "https://www.python.org/ftp/python/3.12.8/python-3.12.8-embed-!_PY_ARCH!.zip" -o "%TEMP%\python-embed.zip"
+            if exist "%TEMP%\python-embed.zip" (
+                tar -xf "%TEMP%\python-embed.zip" -C "%TARGET_DIR%\bin" 2>nul || powershell -NoProfile -Command "Expand-Archive -Path '%TEMP%\python-embed.zip' -DestinationPath '%TARGET_DIR%\bin' -Force"
+                copy /y "%TARGET_DIR%\bin\python.exe" "%TARGET_DIR%\python.exe" >nul 2>&1
+            )
+        )
     )
 ) else (
     echo python %PYTHON_VERSION% is already installed.
@@ -238,9 +268,9 @@ if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
 )
 if "%PYTHON_INSTALL_METHOD%"=="libscript_native" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
 ) else if "%PYTHON_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
 ) else (
     echo %ACTION% not natively implemented for %PYTHON_INSTALL_METHOD%.
 )
@@ -259,9 +289,9 @@ if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
 )
 if "%PYTHON_INSTALL_METHOD%"=="libscript_native" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" install "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
 ) else if "%PYTHON_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" install "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
 ) else (
     echo install-service not implemented for %PYTHON_INSTALL_METHOD%.
 )
@@ -280,9 +310,9 @@ if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
 )
 if "%PYTHON_INSTALL_METHOD%"=="libscript_native" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
 ) else if "%PYTHON_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
 ) else (
     echo uninstall-service not implemented for %PYTHON_INSTALL_METHOD%.
 )

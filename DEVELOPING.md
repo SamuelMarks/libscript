@@ -21,32 +21,38 @@ standard files:
 ```text
 _lib/<category>/<component>/
 ├── manifest.json            # Strictly typed metadata (manifest.schema.json)
+├── vars.schema.json         # Component configuration variable schema
+├── README.md                # Component documentation and auto-generated tables
 ├── cli.sh                   # POSIX entry point implementing standard verbs
 ├── cli.cmd                  # Windows batch entry point with matching verbs
 ├── setup.sh                 # POSIX installation and build logic
 ├── setup.cmd                # Windows batch installation logic
-├── service.sh               # POSIX daemon management (systemd, launchd)
+├── service.sh               # POSIX daemon management (systemd, launchd, openrc, smf)
 ├── service.cmd              # Windows service management (sc.exe, PowerShell)
 ├── env.sh                   # POSIX environment activation (PATH injection)
 ├── env.cmd                  # Windows environment activation (PATH injection)
 ├── test.sh                  # POSIX health and smoke test script
-└── test.cmd                 # Windows health and smoke test script
+├── test.cmd                 # Windows health and smoke test script
+└── hooks/                   # Optional dual-layer lifecycle hooks (configure, probe,
+                             # announce, backup, restore, upgrade, rollback, provision_tenant)
 ```
 
 ```mermaid
 flowchart TD
     subgraph ComponentAnatomy[_lib/<category>/<component>/]
-        Manifest["manifest.json<br/>(Variants, Dependencies, Ports)"]
+        Manifest["manifest.json & vars.schema.json<br/>(Variants, Dependencies, Ports, Config)"]
         CLI["cli.sh / cli.cmd<br/>(Universal Router Interface)"]
         Setup["setup.sh / setup.cmd<br/>(Download, Compile, Stage)"]
         Env["env.sh / env.cmd<br/>(Session PATH Injection)"]
         Service["service.sh / service.cmd<br/>(Daemonize with OS Init)"]
+        Hooks["hooks/*.{sh,cmd}<br/>(backup/restore, upgrade/rollback, probe, tenant)"]
         Test["test.sh / test.cmd<br/>(Verification Harness)"]
     end
 
     CLI --> Setup
     CLI --> Env
     CLI --> Service
+    CLI --> Hooks
     CLI --> Test
     Manifest -.->|Metadata & Dependencies| CLI
 ```

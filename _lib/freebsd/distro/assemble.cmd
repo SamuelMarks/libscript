@@ -12,19 +12,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -64,7 +64,7 @@ if "%~1"=="-h" (
     exit /b 0
 )
 
-set "REPO_ROOT=%SCRIPT_DIR%..\..\.."
+set "REPO_ROOT=!SCRIPT_DIR!..\..\.."
 for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 
 set "PROFILE=%~1"
@@ -84,15 +84,15 @@ if exist "%STAMP_FILE%" (
 
 echo [ASSEMBLE] Synthesizing FreeBSD distribution using profile: %PROFILE%...
 
-call "%SCRIPT_DIR%base.cmd" "%SYSROOT%" "14.1-RELEASE" "amd64"
-call "%SCRIPT_DIR%config.cmd" "%SYSROOT%" "freebsd-distro" "ufs2"
-call "%SCRIPT_DIR%pkg.cmd" "%SYSROOT%" "quarterly"
-call "%SCRIPT_DIR%users.cmd" "%SYSROOT%" "vagrant"
-call "%SCRIPT_DIR%init.cmd" "%SYSROOT%" "bsd-rc" "sshd,cron,devd"
-call "%SCRIPT_DIR%display.cmd" "%SYSROOT%" "none" "none"
-call "%SCRIPT_DIR%desktop.cmd" "%SYSROOT%" "none" "vagrant"
-call "%SCRIPT_DIR%dm.cmd" "%SYSROOT%" "none" ""
-call "%SCRIPT_DIR%audio.cmd" "%SYSROOT%" "none"
+call "!SCRIPT_DIR!base.cmd" "%SYSROOT%" "14.1-RELEASE" "amd64"
+call "!SCRIPT_DIR!config.cmd" "%SYSROOT%" "freebsd-distro" "ufs2"
+call "!SCRIPT_DIR!pkg.cmd" "%SYSROOT%" "quarterly"
+call "!SCRIPT_DIR!users.cmd" "%SYSROOT%" "vagrant"
+call "!SCRIPT_DIR!init.cmd" "%SYSROOT%" "bsd-rc" "sshd,cron,devd"
+call "!SCRIPT_DIR!display.cmd" "%SYSROOT%" "none" "none"
+call "!SCRIPT_DIR!desktop.cmd" "%SYSROOT%" "none" "vagrant"
+call "!SCRIPT_DIR!dm.cmd" "%SYSROOT%" "none" ""
+call "!SCRIPT_DIR!audio.cmd" "%SYSROOT%" "none"
 
 echo %DATE% %TIME%> "%STAMP_FILE%"
 echo [OK]       FreeBSD distribution assembly complete.

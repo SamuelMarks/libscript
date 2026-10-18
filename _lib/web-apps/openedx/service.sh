@@ -97,13 +97,13 @@ start_services() {
   else
     printf '[INFO] Launching Open edX LMS on port %s...\n' "$LMS_PORT"
     if [ -f "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" ] && [ -d "${OPENEDX_INSTALL_DIR}/codebase" ]; then
-      (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" --bind "0.0.0.0:${LMS_PORT}" --workers 4 lms.wsgi:application > "${LOG_DIR}/lms.log" 2>&1 & printf '%s\n' "$!" > "${LMS_PID_FILE}")
+      (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" --bind "0.0.0.0:${LMS_PORT}" --workers 4 lms.wsgi:application < /dev/null > "${LOG_DIR}/lms.log" 2>&1 & printf '%s\n' "$!" > "${LMS_PID_FILE}")
     elif [ -f "${APP_DIR}/wsgi_server.py" ]; then
       _py="python3"
       if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/python" ]; then
         _py="${OPENEDX_INSTALL_DIR}/.venv/bin/python"
       fi
-      nohup "$_py" "${APP_DIR}/wsgi_server.py" --port "$LMS_PORT" --cms-port "$CMS_PORT" > "${LOG_DIR}/lms.log" 2>&1 &
+      nohup "$_py" "${APP_DIR}/wsgi_server.py" --port "$LMS_PORT" --cms-port "$CMS_PORT" < /dev/null > "${LOG_DIR}/lms.log" 2>&1 &
       printf '%s\n' "$!" > "${LMS_PID_FILE}"
     else
       printf '[ERROR] Genuine Open edX codebase or Gunicorn not found for LMS.\n' >&2
@@ -117,7 +117,7 @@ start_services() {
   else
     printf '[INFO] Launching Open edX Studio CMS on port %s...\n' "$CMS_PORT"
     if [ -f "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" ] && [ -d "${OPENEDX_INSTALL_DIR}/codebase" ]; then
-      (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" --bind "0.0.0.0:${CMS_PORT}" --workers 2 cms.wsgi:application > "${LOG_DIR}/cms.log" 2>&1 & printf '%s\n' "$!" > "${CMS_PID_FILE}")
+      (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" --bind "0.0.0.0:${CMS_PORT}" --workers 2 cms.wsgi:application < /dev/null > "${LOG_DIR}/cms.log" 2>&1 & printf '%s\n' "$!" > "${CMS_PID_FILE}")
     elif is_port_listening "$CMS_PORT"; then
       printf '[INFO] Open edX Studio CMS is already listening on port %s\n' "$CMS_PORT"
     fi

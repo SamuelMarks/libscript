@@ -11,19 +11,19 @@ setlocal EnableDelayedExpansion
 
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -52,12 +52,12 @@ goto :find_root
 :root_found
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    for %%i in ("%SCRIPT_DIR%\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
+    for %%i in ("!SCRIPT_DIR!\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
 set "PROVIDER=all"
-set "INPUT=%LIBSCRIPT_ROOT_DIR%\build\target.img"
-set "OUT_DIR=%LIBSCRIPT_ROOT_DIR%\build\cloud_images"
+set "INPUT=!LIBSCRIPT_ROOT_DIR!\build\target.img"
+set "OUT_DIR=!LIBSCRIPT_ROOT_DIR!\build\cloud_images"
 
 :: ## parse_loop
 :: Parses command-line arguments and populates configuration variables.
@@ -89,27 +89,27 @@ if /i "%PROVIDER%"=="gcp" goto do_gcp
 :: ## do_all
 :: Performs the do_all operation and updates component state.
 :do_all
-call "%SCRIPT_DIR%\aws_ami.cmd" "%INPUT%" "%OUT_DIR%\aws-ebs-root.raw"
-call "%SCRIPT_DIR%\azure_vhd.cmd" "%INPUT%" "%OUT_DIR%\disk.vhd"
-call "%SCRIPT_DIR%\gcp_image.cmd" "%INPUT%" "%OUT_DIR%\gcp-disk.raw.tar.gz"
+call "!SCRIPT_DIR!\aws_ami.cmd" "%INPUT%" "%OUT_DIR%\aws-ebs-root.raw"
+call "!SCRIPT_DIR!\azure_vhd.cmd" "%INPUT%" "%OUT_DIR%\disk.vhd"
+call "!SCRIPT_DIR!\gcp_image.cmd" "%INPUT%" "%OUT_DIR%\gcp-disk.raw.tar.gz"
 goto finish
 
 :: ## do_aws
 :: Performs the do_aws operation and updates component state.
 :do_aws
-call "%SCRIPT_DIR%\aws_ami.cmd" "%INPUT%" "%OUT_DIR%\aws-ebs-root.raw"
+call "!SCRIPT_DIR!\aws_ami.cmd" "%INPUT%" "%OUT_DIR%\aws-ebs-root.raw"
 goto finish
 
 :: ## do_azure
 :: Performs the do_azure operation and updates component state.
 :do_azure
-call "%SCRIPT_DIR%\azure_vhd.cmd" "%INPUT%" "%OUT_DIR%\disk.vhd"
+call "!SCRIPT_DIR!\azure_vhd.cmd" "%INPUT%" "%OUT_DIR%\disk.vhd"
 goto finish
 
 :: ## do_gcp
 :: Performs the do_gcp operation and updates component state.
 :do_gcp
-call "%SCRIPT_DIR%\gcp_image.cmd" "%INPUT%" "%OUT_DIR%\gcp-disk.raw.tar.gz"
+call "!SCRIPT_DIR!\gcp_image.cmd" "%INPUT%" "%OUT_DIR%\gcp-disk.raw.tar.gz"
 goto finish
 
 :: ## finish

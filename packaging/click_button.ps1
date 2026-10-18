@@ -59,6 +59,31 @@ public class Win32Helper {
     [DllImport("user32.dll", CharSet = CharSet.Auto)]
     public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, string lParam);
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RECT {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    [DllImport("user32.dll")]
+    public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetDesktopWindow();
+
+    [DllImport("user32.dll")]
+    public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    [DllImport("user32.dll")]
+    public static extern bool SetCursorPos(int X, int Y);
+
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmGetWindowAttribute(IntPtr hwnd, int dwAttribute, out RECT pvAttribute, int cbAttribute);
+
+    public const int DWMWA_EXTENDED_FRAME_BOUNDS = 9;
+
     public const uint BM_CLICK = 0x00F5;
     public const uint BM_SETCHECK = 0x00F1;
     public const uint BST_UNCHECKED = 0;
@@ -108,6 +133,8 @@ public class Win32Helper {
         }
 
         if (proc.Equals("msiexec", StringComparison.OrdinalIgnoreCase)) return true;
+        if (proc.Equals("chrome", StringComparison.OrdinalIgnoreCase) ||
+            proc.Equals("msedge", StringComparison.OrdinalIgnoreCase)) return false;
         if (s.IndexOf("Windows Security", StringComparison.OrdinalIgnoreCase) >= 0 ||
             s.IndexOf("Open edX", StringComparison.OrdinalIgnoreCase) >= 0 ||
             s.IndexOf("WordPress", StringComparison.OrdinalIgnoreCase) >= 0 ||
@@ -249,11 +276,12 @@ public class Win32Helper {
 
         if (targetCtrl != IntPtr.Zero) {
             SetForegroundWindow(targetWin);
-            uint val = check ? BST_CHECKED : BST_UNCHECKED;
-            SendMessage(targetCtrl, BM_SETCHECK, (IntPtr)val, IntPtr.Zero);
-            int ctrlId = GetDlgCtrlID(targetCtrl);
-            SendMessage(targetWin, WM_COMMAND, (IntPtr)((BN_CLICKED << 16) | (ctrlId & 0xFFFF)), targetCtrl);
-            SafeLog("Checkbox [" + text + "] set to " + check);
+            int curState = SendMessage(targetCtrl, 0x00F0, IntPtr.Zero, IntPtr.Zero).ToInt32();
+            bool isChecked = (curState & 1) != 0;
+            if (isChecked != check) {
+                SendMessage(targetCtrl, BM_CLICK, IntPtr.Zero, IntPtr.Zero);
+            }
+            SafeLog("Checkbox [" + text + "] set to " + check + " (was " + isChecked + ")");
             return true;
         }
         return false;
@@ -285,7 +313,7 @@ public class Win32Helper {
         bool found = false;
         string cleanTitle = NormalizeText(titlePart);
         EnumWindows((hWnd, lParam) => {
-            if (!IsWindowVisible(hWnd)) return true;
+            if (!IsInstallerWindow(hWnd)) return true;
             StringBuilder sb = new StringBuilder(256);
             GetWindowText(hWnd, sb, 256);
             string cleanWin = NormalizeText(sb.ToString());
@@ -293,20 +321,18 @@ public class Win32Helper {
                 found = true;
                 return false;
             }
-            if (IsInstallerWindow(hWnd)) {
-                EnumChildWindows(hWnd, (hChild, lChildParam) => {
-                    if (!IsWindowVisible(hChild)) return true;
-                    StringBuilder csb = new StringBuilder(256);
-                    GetWindowText(hChild, csb, 256);
-                    string cleanCs = NormalizeText(csb.ToString());
-                    if (cleanCs.IndexOf(cleanTitle, StringComparison.OrdinalIgnoreCase) >= 0) {
-                        found = true;
-                        return false;
-                    }
-                    return true;
-                }, IntPtr.Zero);
-                if (found) return false;
-            }
+            EnumChildWindows(hWnd, (hChild, lChildParam) => {
+                if (!IsWindowVisible(hChild)) return true;
+                StringBuilder csb = new StringBuilder(256);
+                GetWindowText(hChild, csb, 256);
+                string cleanCs = NormalizeText(csb.ToString());
+                if (cleanCs.IndexOf(cleanTitle, StringComparison.OrdinalIgnoreCase) >= 0) {
+                    found = true;
+                    return false;
+                }
+                return true;
+            }, IntPtr.Zero);
+            if (found) return false;
             return true;
         }, IntPtr.Zero);
         return found;
@@ -324,7 +350,11 @@ public class Win32Helper {
                 string cls = clsb.ToString();
                 if (cls.IndexOf("Edit", StringComparison.OrdinalIgnoreCase) >= 0) {
                     if (curIdx == editIndex) {
+                        SetForegroundWindow(hWnd);
                         SendMessage(hChild, WM_SETTEXT, IntPtr.Zero, newText);
+                        int ctrlId = GetDlgCtrlID(hChild);
+                        SendMessage(hWnd, WM_COMMAND, (IntPtr)((0x0300 << 16) | (ctrlId & 0xFFFF)), hChild);
+                        SendMessage(hWnd, WM_COMMAND, (IntPtr)((0x0200 << 16) | (ctrlId & 0xFFFF)), hChild);
                         set = true;
                         SafeLog("Set Edit[" + editIndex + "] = " + newText);
                         return false;
@@ -338,6 +368,105 @@ public class Win32Helper {
         }, IntPtr.Zero);
         return set;
     }
+
+    public static bool WriteWindowBounds(string mode) {
+        SetCursorPos(799, 1);
+        EnumWindows((hWnd, lParam) => {
+            if (!IsWindowVisible(hWnd)) return true;
+            StringBuilder csb = new StringBuilder(256);
+            GetClassName(hWnd, csb, 256);
+            string cls = csb.ToString();
+            StringBuilder tsb = new StringBuilder(256);
+            GetWindowText(hWnd, tsb, 256);
+            string title = tsb.ToString();
+            if (cls.IndexOf("CoreWindow", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                title.IndexOf("New notification", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                title.IndexOf("Windows Security", StringComparison.OrdinalIgnoreCase) >= 0) {
+                ShowWindow(hWnd, 0);
+            }
+            return true;
+        }, IntPtr.Zero);
+
+        if (mode == "FULL") {
+            SetForegroundWindow(GetDesktopWindow());
+            return true;
+        }
+
+        IntPtr found = IntPtr.Zero;
+        EnumWindows((hWnd, lParam) => {
+            if (!IsWindowVisible(hWnd)) return true;
+            if (mode == "INSTALLER") {
+                if (IsInstallerWindow(hWnd)) {
+                    RECT r;
+                    if (GetWindowRect(hWnd, out r) && (r.Right - r.Left) > 200 && (r.Bottom - r.Top) > 150) {
+                        found = hWnd;
+                        return false;
+                    }
+                }
+            } else if (mode == "BROWSER") {
+                uint pid = 0;
+                GetWindowThreadProcessId(hWnd, out pid);
+                try {
+                    using (Process p = Process.GetProcessById((int)pid)) {
+                        if (p != null && p.ProcessName != null &&
+                            (p.ProcessName.Equals("chrome", StringComparison.OrdinalIgnoreCase) ||
+                             p.ProcessName.Equals("msedge", StringComparison.OrdinalIgnoreCase))) {
+                            RECT r;
+                            if (GetWindowRect(hWnd, out r) && (r.Right - r.Left) > 400 && (r.Bottom - r.Top) > 300) {
+                                found = hWnd;
+                                return false;
+                            }
+                        }
+                    }
+                } catch {}
+            } else if (mode == "TERMINAL") {
+                StringBuilder sb = new StringBuilder(256);
+                GetWindowText(hWnd, sb, 256);
+                string title = sb.ToString();
+                uint pid = 0;
+                GetWindowThreadProcessId(hWnd, out pid);
+                string proc = "";
+                try {
+                    using (Process p = Process.GetProcessById((int)pid)) {
+                        if (p != null && p.ProcessName != null) proc = p.ProcessName;
+                    }
+                } catch {}
+                if (proc.IndexOf("WindowsTerminal", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    proc.IndexOf("OpenConsole", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    proc.Equals("cmd", StringComparison.OrdinalIgnoreCase) ||
+                    title.IndexOf("cmd.exe", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    title.IndexOf("System32", StringComparison.OrdinalIgnoreCase) >= 0) {
+                    RECT r;
+                    if (GetWindowRect(hWnd, out r) && (r.Right - r.Left) > 300 && (r.Bottom - r.Top) > 200) {
+                        found = hWnd;
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }, IntPtr.Zero);
+
+        if (found != IntPtr.Zero) {
+            SetForegroundWindow(found);
+            RECT r;
+            if (DwmGetWindowAttribute(found, DWMWA_EXTENDED_FRAME_BOUNDS, out r, Marshal.SizeOf(typeof(RECT))) != 0) {
+                GetWindowRect(found, out r);
+            }
+            RECT desk;
+            GetWindowRect(GetDesktopWindow(), out desk);
+            int deskW = desk.Right - desk.Left;
+            int deskH = desk.Bottom - desk.Top;
+            int left = Math.Max(0, r.Left);
+            int top = Math.Max(0, r.Top);
+            int right = Math.Min(deskW, r.Right);
+            int bottom = Math.Min(deskH, r.Bottom);
+            string line = string.Format("{0},{1},{2},{3},{4},{5}", left, top, right - left, bottom - top, deskW, deskH);
+            System.IO.File.WriteAllText(@"C:\libscript\window_rect.txt", line);
+            SafeLog("Bounds [" + mode + "] = " + line);
+            return true;
+        }
+        return false;
+    }
 }
 '@
 
@@ -345,18 +474,24 @@ Add-Type -TypeDefinition $code -Language CSharp
 
 $sw = [System.Diagnostics.Stopwatch]::StartNew()
 $res = $false
-$timeoutSec = 5
+$timeoutSec = 12
 
-if ($target.StartsWith("WAIT_DIALOG:")) {
+if ($target.StartsWith("BOUNDS:")) {
+    $bmode = $target.Substring(7)
+    while ($sw.Elapsed.TotalSeconds -lt $timeoutSec) {
+        if ([Win32Helper]::WriteWindowBounds($bmode)) { $res = $true; break }
+        Start-Sleep -Milliseconds 300
+    }
+} elseif ($target.StartsWith("WAIT_DIALOG:")) {
     $title = $target.Substring(12)
-    $timeoutSec = if ($title -like "*Setup Complete*") { 180 } else { 20 }
+    $timeoutSec = if ($title -like "*Setup Complete*") { 300 } else { 20 }
     while ($sw.Elapsed.TotalSeconds -lt $timeoutSec) {
         if ([Win32Helper]::FindDialog($title)) { $res = $true; break }
         Start-Sleep -Milliseconds 400
     }
 } elseif ($target.StartsWith("WAIT:")) {
     $btn = $target.Substring(5)
-    $timeoutSec = if ($btn -eq "Finish") { 90 } else { 15 }
+    $timeoutSec = if ($btn -eq "Finish") { 180 } else { 15 }
     while ($sw.Elapsed.TotalSeconds -lt $timeoutSec) {
         if ([Win32Helper]::FindControl($btn)) { $res = $true; break }
         Start-Sleep -Milliseconds 400
@@ -398,3 +533,4 @@ if ($target.StartsWith("WAIT_DIALOG:")) {
 
 Write-Host "Action: $target | Result: $res in $($sw.Elapsed.TotalSeconds)s"
 [Win32Helper]::SafeLog("Action: $target | Result: $res in $($sw.Elapsed.TotalSeconds)s")
+if (-not $res) { exit 1 }

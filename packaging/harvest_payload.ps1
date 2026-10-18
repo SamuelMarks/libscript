@@ -104,7 +104,7 @@ try {
     # 2. Filter prohibited patterns and directories (always exclude cache/ from repo)
     $filtered = [System.Collections.Generic.List[string]]::new()
     $excludeRegex = '(^|/)(\.git|\.github|\.githooks|\.vagrant|tests_tmp|dist|build|tmp|node_modules|cache|kubernetes-the-hard-way)(/|$)'
-    $excludeExtRegex = '\.(tmp|log|ppm|bak|swp|wixobj|pruned)$'
+    $excludeExtRegex = '\.(tmp|log|ppm|bak|swp|wixobj|wxs|pruned)$'
 
     foreach ($f in $allFiles) {
         if (-not $f) { continue }
@@ -250,6 +250,7 @@ try {
             $cId = Get-WixIdentifier 'CMP_H_' $f
             $fId = Get-WixIdentifier 'FIL_H_' $f
             $d = Split-Path $f -Parent
+            $baseName = Split-Path $f -Leaf
             $targetDir = if ($d -and $d -ne '.') { Get-WixIdentifier 'DIR_' ($d.Replace('\', '/')) } else { $DirectoryId }
             
             if ($f.StartsWith('cache/') -and $cacheReal) {
@@ -270,7 +271,7 @@ try {
 
             $sw.WriteLine("    <DirectoryRef Id=""$targetDir"">")
             $sw.WriteLine("      <Component Id=""$cId"" Guid=""*"">")
-            $sw.WriteLine("        <File Id=""$fId"" Source=""$srcPath"" KeyPath=""yes"" DiskId=""$diskId"" />")
+            $sw.WriteLine("        <File Id=""$fId"" Name=""$baseName"" Source=""$srcPath"" KeyPath=""yes"" DiskId=""$diskId"" />")
             $sw.WriteLine("      </Component>")
             $sw.WriteLine("    </DirectoryRef>")
         }

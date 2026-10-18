@@ -15,19 +15,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -55,7 +55,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if "%LIBSCRIPT_ROOT_DIR%"=="" (
+if "!LIBSCRIPT_ROOT_DIR!"=="" (
     set "LIBSCRIPT_ROOT_DIR=%~dp0\..\..\.."
 )
 if "%LIBSCRIPT_HOME%"=="" (
@@ -74,7 +74,7 @@ if "%MSI_RS_VERSION%"=="" (
     set "MSI_RS_VERSION=latest"
 )
 
-set "ACTION=%~1"
+if "%ACTION%"=="" set "ACTION=%~1"
 if "%ACTION%"=="" set "ACTION=install"
 
 if /i "%ACTION%"=="ls" goto action_ls
@@ -149,9 +149,9 @@ set "CACHE_DIR=%DOWNLOAD_DIR%\msi-rs"
 if not exist "%CACHE_DIR%" mkdir "%CACHE_DIR%"
 echo Downloading msi-rs %MSI_RS_VERSION% artifacts to %CACHE_DIR%...
 if not "%MSI_RS_DOWNLOAD_URL%"=="" (
-    curl -sSL "%MSI_RS_DOWNLOAD_URL%" -o "%CACHE_DIR%\msi-rs-%EXACT_VERSION%.zip"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MSI_RS_DOWNLOAD_URL%" "%CACHE_DIR%\msi-rs-%EXACT_VERSION%.zip"
 ) else (
-    curl -sSL "%MSI_RS_REPO_URL%/archive/refs/tags/%EXACT_VERSION%.zip" -o "%CACHE_DIR%\msi-rs-%EXACT_VERSION%.zip"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%MSI_RS_REPO_URL%/archive/refs/tags/%EXACT_VERSION%.zip" "%CACHE_DIR%\msi-rs-%EXACT_VERSION%.zip"
 )
 exit /b 0
 
@@ -181,7 +181,10 @@ set "WIN_ARCH=x86_64"
 if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "WIN_ARCH=aarch64"
 set "RELEASE_URL=%MSI_RS_REPO_URL%/releases/download/%EXACT_VERSION%/msi-tools-%EXACT_VERSION%-%WIN_ARCH%-pc-windows-msvc.zip"
 echo [INFO] Attempting to download pre-compiled binary release: %RELEASE_URL%
-curl -sSLf "%RELEASE_URL%" -o "%TEMP%\msi_rs_prebuilt.zip"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%RELEASE_URL%" "%TEMP%\msi_rs_prebuilt.zip"
+if errorlevel 1 (
+    curl -sSLf "%RELEASE_URL%" -o "%TEMP%\msi_rs_prebuilt.zip"
+)
 if not errorlevel 1 (
     echo Extracting pre-compiled binary release...
     if exist "%TEMP%\msi_rs_extracted" rmdir /s /q "%TEMP%\msi_rs_extracted" >nul 2>&1
@@ -207,8 +210,8 @@ if errorlevel 1 (
         where clang.exe >nul 2>&1
         if errorlevel 1 (
             echo C compiler not found; attempting setup via libscript languages\c...
-            if exist "%LIBSCRIPT_ROOT_DIR%\_lib\languages\c\setup.cmd" (
-                call "%LIBSCRIPT_ROOT_DIR%\_lib\languages\c\setup.cmd" install c latest
+            if exist "!LIBSCRIPT_ROOT_DIR!\_lib\languages\c\setup.cmd" (
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\languages\c\setup.cmd" install c latest
             )
         )
     )
@@ -221,8 +224,8 @@ if exist "%USERPROFILE%\.cargo\bin\cargo.exe" (
 where cargo.exe >nul 2>&1
 if errorlevel 1 (
     echo Cargo not found; attempting setup via libscript languages\rust...
-    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\languages\rust\setup.cmd" (
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\languages\rust\setup.cmd" install rust latest
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\languages\rust\setup.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\languages\rust\setup.cmd" install rust latest
         if exist "%USERPROFILE%\.cargo\bin\cargo.exe" (
             set "PATH=%USERPROFILE%\.cargo\bin;%PATH%"
         )
@@ -294,8 +297,8 @@ exit /b 0
 :action_service
 set "SVC_NAME=libscript_msi-rs"
 if not "%LIBSCRIPT_SERVICE_NAME%"=="" set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-if exist "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
 )
 exit /b 0
 
@@ -304,8 +307,8 @@ exit /b 0
 :action_install_service
 set "SVC_NAME=libscript_msi-rs"
 if not "%LIBSCRIPT_SERVICE_NAME%"=="" set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-if exist "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" install "%SVC_NAME%"
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
 )
 exit /b 0
 
@@ -314,8 +317,8 @@ exit /b 0
 :action_uninstall_service
 set "SVC_NAME=libscript_msi-rs"
 if not "%LIBSCRIPT_SERVICE_NAME%"=="" set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
-if exist "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
 )
 exit /b 0
 

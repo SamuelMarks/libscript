@@ -12,19 +12,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -64,7 +64,7 @@ if "%~1"=="-h" (
     exit /b 0
 )
 
-set "REPO_ROOT=%SCRIPT_DIR%..\..\.."
+set "REPO_ROOT=!SCRIPT_DIR!..\..\.."
 for %%i in ("%REPO_ROOT%") do set "REPO_ROOT=%%~fi"
 
 set "FORMAT=qcow2"
@@ -124,24 +124,24 @@ call "%REPO_ROOT%\_lib\illumos\distro\assemble.cmd" "%PROFILE%" "%SYSROOT%"
 
 if "%FORMAT%"=="qcow2" (
     if "%OUTPUT%"=="" set "OUTPUT=%REPO_ROOT%\build\illumos.qcow2"
-    call "%SCRIPT_DIR%illumos_qcow2.cmd" "%SYSROOT%" "%OUTPUT%" 20
+    call "!SCRIPT_DIR!illumos_qcow2.cmd" "%SYSROOT%" "%OUTPUT%" 20
 ) else if "%FORMAT%"=="box" (
     if "%OUTPUT%"=="" set "OUTPUT=%REPO_ROOT%\build\illumos.box"
     set "QCOW_TMP=%REPO_ROOT%\build\illumos.qcow2"
-    call "%SCRIPT_DIR%illumos_qcow2.cmd" "%SYSROOT%" "%QCOW_TMP%" 20
-    call "%SCRIPT_DIR%illumos_vagrant_box.cmd" "%QCOW_TMP%" "%OUTPUT%" "qemu"
+    call "!SCRIPT_DIR!illumos_qcow2.cmd" "%SYSROOT%" "%QCOW_TMP%" 20
+    call "!SCRIPT_DIR!illumos_vagrant_box.cmd" "%QCOW_TMP%" "%OUTPUT%" "qemu"
 ) else if "%FORMAT%"=="raw" (
     if "%OUTPUT%"=="" set "OUTPUT=%REPO_ROOT%\build\illumos.raw"
-    call "%SCRIPT_DIR%illumos_raw.cmd" "%SYSROOT%" "%OUTPUT%" 20
+    call "!SCRIPT_DIR!illumos_raw.cmd" "%SYSROOT%" "%OUTPUT%" 20
 ) else if "%FORMAT%"=="vhd" (
     if "%OUTPUT%"=="" set "OUTPUT=%REPO_ROOT%\build\illumos.vhd"
-    call "%SCRIPT_DIR%illumos_vhd.cmd" "%SYSROOT%" "%OUTPUT%" 20
+    call "!SCRIPT_DIR!illumos_vhd.cmd" "%SYSROOT%" "%OUTPUT%" 20
 ) else if "%FORMAT%"=="vmdk" (
     if "%OUTPUT%"=="" set "OUTPUT=%REPO_ROOT%\build\illumos.vmdk"
-    call "%SCRIPT_DIR%illumos_vmdk.cmd" "%SYSROOT%" "%OUTPUT%" 20
+    call "!SCRIPT_DIR!illumos_vmdk.cmd" "%SYSROOT%" "%OUTPUT%" 20
 ) else if "%FORMAT%"=="iso" (
     if "%OUTPUT%"=="" set "OUTPUT=%REPO_ROOT%\build\illumos.iso"
-    call "%SCRIPT_DIR%illumos_iso.cmd" "%SYSROOT%" "%OUTPUT%"
+    call "!SCRIPT_DIR!illumos_iso.cmd" "%SYSROOT%" "%OUTPUT%"
 )
 
 echo [OK]       Packaging complete: %OUTPUT%

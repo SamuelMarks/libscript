@@ -10,19 +10,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -69,7 +69,7 @@ if "%zone%"=="" (
     exit /b 1
 )
 
-call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :init
+call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" :init
 
 if "%provider%"=="aws" (
     if "%vtype%"=="" set "vtype=gp3"
@@ -129,8 +129,8 @@ set "provider=%~2"
 set "vid=%~3"
 
 if "%provider%"=="aws" (
-    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :libscript_verify_managed aws volume "%vid%"
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" :libscript_verify_managed aws volume "%vid%"
         if errorlevel 1 exit /b 1
     )
     aws ec2 delete-volume --volume-id "%vid%"
@@ -139,8 +139,8 @@ if "%provider%"=="aws" (
         echo Error: --zone ^(or LIBSCRIPT_VOLUME_ZONE^) is required for GCP delete. >&2
         exit /b 1
     )
-    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :libscript_verify_managed gcp volume "%vid%" "%LIBSCRIPT_VOLUME_ZONE%"
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" :libscript_verify_managed gcp volume "%vid%" "%LIBSCRIPT_VOLUME_ZONE%"
         if errorlevel 1 exit /b 1
     )
     gcloud compute disks delete "%vid%" --zone="%LIBSCRIPT_VOLUME_ZONE%" --quiet
@@ -149,8 +149,8 @@ if "%provider%"=="aws" (
         echo Error: LIBSCRIPT_AZURE_RESOURCE_GROUP must be set for Azure operations. >&2
         exit /b 1
     )
-    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :libscript_verify_managed azure volume "%vid%" "%LIBSCRIPT_AZURE_RESOURCE_GROUP%"
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" :libscript_verify_managed azure volume "%vid%" "%LIBSCRIPT_AZURE_RESOURCE_GROUP%"
         if errorlevel 1 exit /b 1
     )
     az disk delete --name "%vid%" --resource-group "%LIBSCRIPT_AZURE_RESOURCE_GROUP%" --yes
@@ -161,7 +161,7 @@ exit /b 0
 :: Performs the libscript_volume_list operation and updates component state.
 :libscript_volume_list
 set "provider=%~2"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :init
+call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" :init
 
 if "%provider%"=="aws" (
     if "%LIBSCRIPT_TAG_ENABLE%"=="true" (

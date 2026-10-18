@@ -11,19 +11,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -61,15 +61,15 @@ set "APP_URL="
 set "UPGRADE_CODE=PUT-GUID-HERE"
 set "OUT_FILE=LibScriptInstaller"
 if defined pkg_type (
-  if "%pkg_type%"=="msi" set "OUT_FILE=%LIBSCRIPT_ROOT_DIR%\build\packages\msi\LibScriptInstaller"
-  if "%pkg_type%"=="exe" set "OUT_FILE=%LIBSCRIPT_ROOT_DIR%\build\packages\exe\LibScriptInstaller"
-  if "%pkg_type%"=="innosetup" set "OUT_FILE=%LIBSCRIPT_ROOT_DIR%\build\packages\exe\LibScriptInstaller"
-  if "%pkg_type%"=="nsis" set "OUT_FILE=%LIBSCRIPT_ROOT_DIR%\build\packages\exe\LibScriptInstaller"
-  if "%pkg_type%"=="pkg" set "OUT_FILE=%LIBSCRIPT_ROOT_DIR%\build\packages\pkg\LibScriptInstaller"
-  if "%pkg_type%"=="dmg" set "OUT_FILE=%LIBSCRIPT_ROOT_DIR%\build\packages\dmg\LibScriptInstaller"
-  if not exist "%LIBSCRIPT_ROOT_DIR%\build\packages\%pkg_type%" mkdir "%LIBSCRIPT_ROOT_DIR%\build\packages\%pkg_type%" 2>nul
-  if "%pkg_type%"=="innosetup" if not exist "%LIBSCRIPT_ROOT_DIR%\build\packages\exe" mkdir "%LIBSCRIPT_ROOT_DIR%\build\packages\exe" 2>nul
-  if "%pkg_type%"=="nsis" if not exist "%LIBSCRIPT_ROOT_DIR%\build\packages\exe" mkdir "%LIBSCRIPT_ROOT_DIR%\build\packages\exe" 2>nul
+  if "%pkg_type%"=="msi" set "OUT_FILE=!LIBSCRIPT_ROOT_DIR!\build\packages\msi\LibScriptInstaller"
+  if "%pkg_type%"=="exe" set "OUT_FILE=!LIBSCRIPT_ROOT_DIR!\build\packages\exe\LibScriptInstaller"
+  if "%pkg_type%"=="innosetup" set "OUT_FILE=!LIBSCRIPT_ROOT_DIR!\build\packages\exe\LibScriptInstaller"
+  if "%pkg_type%"=="nsis" set "OUT_FILE=!LIBSCRIPT_ROOT_DIR!\build\packages\exe\LibScriptInstaller"
+  if "%pkg_type%"=="pkg" set "OUT_FILE=!LIBSCRIPT_ROOT_DIR!\build\packages\pkg\LibScriptInstaller"
+  if "%pkg_type%"=="dmg" set "OUT_FILE=!LIBSCRIPT_ROOT_DIR!\build\packages\dmg\LibScriptInstaller"
+  if not exist "!LIBSCRIPT_ROOT_DIR!\build\packages\%pkg_type%" mkdir "!LIBSCRIPT_ROOT_DIR!\build\packages\%pkg_type%" 2>nul
+  if "%pkg_type%"=="innosetup" if not exist "!LIBSCRIPT_ROOT_DIR!\build\packages\exe" mkdir "!LIBSCRIPT_ROOT_DIR!\build\packages\exe" 2>nul
+  if "%pkg_type%"=="nsis" if not exist "!LIBSCRIPT_ROOT_DIR!\build\packages\exe" mkdir "!LIBSCRIPT_ROOT_DIR!\build\packages\exe" 2>nul
 )
 set "ICON_PATH="
 set "IMAGE_PATH="

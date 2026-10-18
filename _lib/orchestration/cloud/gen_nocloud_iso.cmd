@@ -11,19 +11,19 @@ setlocal EnableDelayedExpansion
 
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -52,14 +52,14 @@ goto :find_root
 :root_found
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    for %%i in ("%SCRIPT_DIR%\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
+    for %%i in ("!SCRIPT_DIR!\..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
 set "HOSTNAME=%~1"
 if "%HOSTNAME%"=="" set "HOSTNAME=libscript-vm"
 set "USER_DATA=%~2"
 set "OUT_ISO=%~3"
-if "%OUT_ISO%"=="" set "OUT_ISO=%LIBSCRIPT_ROOT_DIR%\build\cidata.iso"
+if "%OUT_ISO%"=="" set "OUT_ISO=!LIBSCRIPT_ROOT_DIR!\build\cidata.iso"
 
 for %%I in ("%OUT_ISO%") do set "OUT_DIR=%%~dpI"
 if not exist "%OUT_DIR%" mkdir "%OUT_DIR%"
@@ -69,7 +69,7 @@ if exist "%OUT_ISO%" (
     exit /b 0
 )
 
-set "TMP_STAGING=%LIBSCRIPT_ROOT_DIR%\build\tmp_nocloud_staging"
+set "TMP_STAGING=!LIBSCRIPT_ROOT_DIR!\build\tmp_nocloud_staging"
 if exist "%TMP_STAGING%" rmdir /s /q "%TMP_STAGING%"
 if not exist "%TMP_STAGING%" mkdir "%TMP_STAGING%"
 

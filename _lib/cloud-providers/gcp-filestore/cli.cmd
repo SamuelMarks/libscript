@@ -14,19 +14,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -95,21 +95,21 @@ for %%V in (logs status use env ls ls-remote download uninstall which exec run) 
 if "%ACTION%"=="create" goto :create
 if "%ACTION%"=="delete" goto :delete
 
-call "%LOG_CMD%" :log_error "Unknown action: %ACTION%"
+call "!LOG_CMD!" :log_error "Unknown action: %ACTION%"
 exit /b 1
 
 :: ## create
 :: Performs the create operation and updates component state.
 :create
 if "%INSTANCE_NAME%"=="" (
-    call "%LOG_CMD%" :log_error "Usage: filestore create <name>"
+    call "!LOG_CMD!" :log_error "Usage: filestore create <name>"
     exit /b 1
 )
-call "%LOG_CMD%" :log_info "Creating GCP Filestore %INSTANCE_NAME% in %FILESTORE_ZONE%..."
+call "!LOG_CMD!" :log_info "Creating GCP Filestore %INSTANCE_NAME% in %FILESTORE_ZONE%..."
 
 set "TAGS_ARG="
-if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :init
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" :init
     if "!LIBSCRIPT_TAG_ENABLE!"=="true" (
         set "TAGS_ARG=--labels=!LIBSCRIPT_TAG_KEY!=!LIBSCRIPT_TAG_VALUE!"
     )
@@ -117,7 +117,7 @@ if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
 
 gcloud filestore instances describe "%INSTANCE_NAME%" --zone="%FILESTORE_ZONE%" %PROJECT_FLAG% >nul 2>&1
 if %errorlevel% equ 0 (
-    call "%LOG_CMD%" :log_info "Filestore '%INSTANCE_NAME%' already exists in %FILESTORE_ZONE%."
+    call "!LOG_CMD!" :log_info "Filestore '%INSTANCE_NAME%' already exists in %FILESTORE_ZONE%."
 ) else (
     gcloud filestore instances create "%INSTANCE_NAME%" --zone="%FILESTORE_ZONE%" --tier="%FILESTORE_TIER%" --file-share="name=vol1,capacity=%FILESTORE_CAPACITY_GB%GB" --network="name=%FILESTORE_NETWORK%" %PROJECT_FLAG% %TAGS_ARG%
 )
@@ -127,18 +127,18 @@ exit /b 0
 :: Performs the delete operation and updates component state.
 :delete
 if "%INSTANCE_NAME%"=="" (
-    call "%LOG_CMD%" :log_error "Usage: filestore delete <name>"
+    call "!LOG_CMD!" :log_error "Usage: filestore delete <name>"
     exit /b 1
 )
-if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :libscript_verify_managed gcp filestore "%INSTANCE_NAME%" "%FILESTORE_ZONE%"
+if exist "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" :libscript_verify_managed gcp filestore "%INSTANCE_NAME%" "%FILESTORE_ZONE%"
     if errorlevel 1 exit /b 1
 )
-call "%LOG_CMD%" :log_info "Deleting GCP Filestore %INSTANCE_NAME% in %FILESTORE_ZONE%..."
+call "!LOG_CMD!" :log_info "Deleting GCP Filestore %INSTANCE_NAME% in %FILESTORE_ZONE%..."
 gcloud filestore instances describe "%INSTANCE_NAME%" --zone="%FILESTORE_ZONE%" %PROJECT_FLAG% >nul 2>&1
 if %errorlevel% equ 0 (
     gcloud filestore instances delete "%INSTANCE_NAME%" --zone="%FILESTORE_ZONE%" --quiet %PROJECT_FLAG%
 ) else (
-    call "%LOG_CMD%" :log_info "Filestore '%INSTANCE_NAME%' already deleted or not found."
+    call "!LOG_CMD!" :log_info "Filestore '%INSTANCE_NAME%' already deleted or not found."
 )
 exit /b 0

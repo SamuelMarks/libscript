@@ -10,19 +10,19 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -52,7 +52,7 @@ goto :find_root
 
 set "query=%~2"
 set "DB_FILE=!LIBSCRIPT_ROOT_DIR!\libscript.sqlite"
-if "!LIBSCRIPT_ROOT_DIR!"=="" set "DB_FILE=%SCRIPT_DIR%libscript.sqlite"
+if "!LIBSCRIPT_ROOT_DIR!"=="" set "DB_FILE=!SCRIPT_DIR!libscript.sqlite"
 if not exist "!DB_FILE!" (
     echo Error: Database not found. Run update-db first. 1>&2
     exit /b 1

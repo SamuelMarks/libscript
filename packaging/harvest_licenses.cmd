@@ -19,13 +19,13 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
@@ -33,7 +33,7 @@ set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 :: ## find_root
 :: Traverses parent directories to identify LIBSCRIPT_ROOT_DIR.
 set "LIBSCRIPT_ROOT_DIR="
-set "CURR_DIR=%SCRIPT_DIR%"
+set "CURR_DIR=!SCRIPT_DIR!"
 :: ## find_root_loop
 :: Performs the find_root_loop operation and updates component state.
 :find_root_loop
@@ -59,7 +59,7 @@ if "%~1"=="-h" goto show_help
 if "%~1"=="/?" goto show_help
 
 set "PS_CMD=powershell -NoProfile -ExecutionPolicy Bypass"
-%PS_CMD% -File "%LIBSCRIPT_ROOT_DIR%\packaging\harvest_licenses.ps1" %*
+%PS_CMD% -File "!LIBSCRIPT_ROOT_DIR!\packaging\harvest_licenses.ps1" %*
 exit /b %ERRORLEVEL%
 
 :: ## show_help

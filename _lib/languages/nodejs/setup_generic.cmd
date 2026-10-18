@@ -8,19 +8,19 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -76,7 +76,7 @@ if "%LIBSCRIPT_OFFLINE%"=="1" (
         if not "%LIBSCRIPT_CACHE_DIR%"=="" (
             set "NPM_CACHE=%LIBSCRIPT_CACHE_DIR%\npm"
         ) else (
-            set "NPM_CACHE=%LIBSCRIPT_ROOT_DIR%\cache\npm"
+            set "NPM_CACHE=!LIBSCRIPT_ROOT_DIR!\cache\npm"
         )
     )
     set "npm_config_cache=%NPM_CACHE%"
@@ -212,8 +212,28 @@ if not exist "%TARGET_DIR%\bin" (
         curl -sSL "%NODEJS_DOWNLOAD_URL%" -o "%TEMP%\nodejs.zip"
         tar -xf "%TEMP%\nodejs.zip" -C "%TARGET_DIR%"
     ) else (
-        echo No download URL or cache available for nodejs.
-        exit /b 1
+        set "_NODE_ARCH=x64"
+        if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "_NODE_ARCH=arm64"
+        set "_NODE_VER=%NODEJS_VERSION%"
+        if /i "!_NODE_VER!"=="latest" set "_NODE_VER=v20.18.0"
+        if /i "!_NODE_VER!"=="lts" set "_NODE_VER=v20.18.0"
+        if not "!_NODE_VER:~0,1!"=="v" set "_NODE_VER=v!_NODE_VER!"
+        set "_NODE_URL=https://nodejs.org/dist/!_NODE_VER!/node-!_NODE_VER!-win-!_NODE_ARCH!.zip"
+        echo Downloading Node.js from !_NODE_URL!...
+        curl -f -sSL "!_NODE_URL!" -o "%TEMP%\nodejs.zip" 2>nul
+        if not errorlevel 1 (
+            tar -xf "%TEMP%\nodejs.zip" -C "%TARGET_DIR%" --strip-components=1 2>nul || tar -xf "%TEMP%\nodejs.zip" -C "%TARGET_DIR%"
+            if exist "%TARGET_DIR%\node.exe" copy /y "%TARGET_DIR%\node.exe" "%TARGET_DIR%\bin\node.exe" >nul 2>&1
+            del /f /q "%TEMP%\nodejs.zip" 2>nul
+        ) else (
+            where winget >nul 2>&1
+            if not errorlevel 1 (
+                winget install --id OpenJS.NodeJS.LTS -e --silent --accept-package-agreements --accept-source-agreements
+            ) else (
+                echo No download URL or cache available for nodejs.
+                exit /b 1
+            )
+        )
     )
 ) else (
     echo nodejs %NODEJS_VERSION% is already installed.
@@ -238,9 +258,9 @@ if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
 )
 if "%NODEJS_INSTALL_METHOD%"=="libscript_native" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
 ) else if "%NODEJS_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service.cmd" "%ACTION%" "%SVC_NAME%"
 ) else (
     echo %ACTION% not natively implemented for %NODEJS_INSTALL_METHOD%.
 )
@@ -259,9 +279,9 @@ if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
 )
 if "%NODEJS_INSTALL_METHOD%"=="libscript_native" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" install "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
 ) else if "%NODEJS_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" install "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" install "%SVC_NAME%"
 ) else (
     echo install-service not implemented for %NODEJS_INSTALL_METHOD%.
 )
@@ -280,9 +300,9 @@ if "%LIBSCRIPT_SERVICE_NAME%"=="" (
     set "SVC_NAME=%LIBSCRIPT_SERVICE_NAME%"
 )
 if "%NODEJS_INSTALL_METHOD%"=="libscript_native" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
 ) else if "%NODEJS_INSTALL_METHOD%"=="system" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" uninstall "%SVC_NAME%"
 ) else (
     echo uninstall-service not implemented for %NODEJS_INSTALL_METHOD%.
 )

@@ -20,19 +20,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -60,7 +60,7 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-if "%LIBSCRIPT_ROOT_DIR%"=="" (
+if "!LIBSCRIPT_ROOT_DIR!"=="" (
     for %%i in ("%~dp0..\..\..") do set "LIBSCRIPT_ROOT_DIR=%%~fi"
 )
 
@@ -83,16 +83,6 @@ if "%MONGODB_DATABASE%"=="" set "MONGODB_DATABASE=openedx"
 
 if "%REDIS_HOST%"=="" set "REDIS_HOST=127.0.0.1"
 if "%REDIS_PORT%"=="" set "REDIS_PORT=6379"
-
-set "CONFIG_JSON=%OPENEDX_INSTALL_DIR%\config\lms.env.json"
-if exist "%CONFIG_JSON%" (
-    where powershell >nul 2>nul
-    if not errorlevel 1 (
-        for /f "tokens=1,2 delims==" %%a in ('powershell -NoProfile -Command "$raw = Get-Content -Raw '%CONFIG_JSON%' -ErrorAction SilentlyContinue; if ($raw) { try { $cfg = (ConvertFrom-Json $raw).DATABASES.default; if ($cfg.HOST) { \"MYSQL_HOST=$($cfg.HOST)\" }; if ($cfg.PORT) { \"MYSQL_PORT=$($cfg.PORT)\" }; if ($cfg.USER) { \"MYSQL_USER=$($cfg.USER)\" }; if ($cfg.NAME) { \"MYSQL_DATABASE=$($cfg.NAME)\" } } catch {} }"') do (
-            set "%%a=%%b"
-        )
-    )
-)
 
 set "CMD=%~1"
 if "%CMD%"=="" goto show_help

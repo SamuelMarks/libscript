@@ -1,0 +1,44 @@
+{
+  "$schema": "../../payload.schema.json",
+  "name": "openedx",
+  "version": "22.1.0",
+  "description": "Docker-free Open edX LMS, Studio/CMS, and Celery worker enterprise learning workload.",
+  "type": "service",
+  "execution": {
+    "component": "openedx",
+    "command": "./_lib/web-apps/openedx/service.sh",
+    "args": ["start"],
+    "env": {
+      "LMS_PORT": "8000",
+      "CMS_PORT": "8001",
+      "OPENEDX_INSTALL_MODE": "minimal"
+    }
+  },
+  "resources": {
+    "cpu_cores": 4,
+    "memory_mb": 8192,
+    "disk_gb": 40
+  },
+  "scaling": {
+    "replicas": 2,
+    "min_replicas": 1,
+    "max_replicas": 10,
+    "rollout_strategy": "RollingUpdate",
+    "gang_scheduling": false,
+    "restart_policy": "Always"
+  },
+  "ports": [
+    {
+      "name": "lms-http",
+      "port": 8000,
+      "protocol": "http",
+      "visibility": "public"
+    },
+    {
+      "name": "cms-http",
+      "port": 8001,
+      "protocol": "http",
+      "visibility": "public"
+    }
+  ]
+}

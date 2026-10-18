@@ -10,19 +10,19 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -51,7 +51,7 @@ goto :find_root
 :root_found
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "LIBSCRIPT_ROOT_DIR=%SCRIPT_DIR%\..\..\.."
+    set "LIBSCRIPT_ROOT_DIR=!SCRIPT_DIR!\..\..\.."
 )
 
 set "list_file=%~1"
@@ -70,7 +70,7 @@ for /f "usebackq tokens=1,2,3 delims= " %%A in ("%list_file%") do (
     set "c=%%C"
     if not "!u!"=="" (
         if not "!u:~0,1!"=="#" (
-            call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "!u!" "!d!" "!c!"
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "!u!" "!d!" "!c!"
         )
     )
 )

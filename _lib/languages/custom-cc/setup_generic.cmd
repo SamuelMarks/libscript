@@ -11,19 +11,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -79,14 +79,14 @@ exit /b 0
 :: ## action_use
 :: Updates the active custom-cc version alias junction.
 :action_use
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "custom-cc" "default" "%EXACT_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "custom-cc" "default" "%EXACT_VERSION%"
 exit /b 0
 
 :: ## action_download
 :: Downloads custom-cc archive into the local offline cache.
 :action_download
 if not "%CUSTOM_CC_DOWNLOAD_URL%"=="" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "%CUSTOM_CC_DOWNLOAD_URL%" "%LIBSCRIPT_ROOT_DIR%\cache\downloads\custom-cc\custom-cc-%EXACT_VERSION%.zip"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%CUSTOM_CC_DOWNLOAD_URL%" "!LIBSCRIPT_ROOT_DIR!\cache\downloads\custom-cc\custom-cc-%EXACT_VERSION%.zip"
 )
 exit /b 0
 
@@ -95,8 +95,8 @@ exit /b 0
 :action_install
 set "TARGET_DIR=%LIBSCRIPT_HOME%\custom-cc\%EXACT_VERSION%"
 if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
-copy /y "%SCRIPT_DIR%\cc_wrapper.cmd" "%TARGET_DIR%\bin\custom-cc.cmd" >nul
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "custom-cc" "default" "%EXACT_VERSION%"
+copy /y "!SCRIPT_DIR!\cc_wrapper.cmd" "%TARGET_DIR%\bin\custom-cc.cmd" >nul
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "custom-cc" "default" "%EXACT_VERSION%"
 exit /b 0
 
 :: ## action_uninstall

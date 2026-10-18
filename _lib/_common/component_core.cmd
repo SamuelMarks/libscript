@@ -10,23 +10,23 @@
 :: call "%~dp0\..\..\_common\component_core.cmd" %*
 
 setlocal EnableDelayedExpansion
-set "CALLER_FILE=%THIS_FILE%"
+set "CALLER_FILE=!THIS_FILE!"
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -59,14 +59,14 @@ if not "%CALLER_FILE%"=="" (
     for %%I in ("%CALLER_FILE%") do set "COMP_DIR=%%~dpI"
 )
 if "%COMP_DIR:~-1%"=="\" set "COMP_DIR=%COMP_DIR:~0,-1%"
-if "%COMP_DIR%"=="" set "COMP_DIR=%CD%"
-for %%I in ("%COMP_DIR%") do set "COMP_BASENAME=%%~nxI"
+if "!COMP_DIR!"=="" set "COMP_DIR=%CD%"
+for %%I in ("!COMP_DIR!") do set "COMP_BASENAME=%%~nxI"
 if not defined PACKAGE_NAME set "PACKAGE_NAME=%COMP_BASENAME%"
 
-set "SCHEMA_FILE=%COMP_DIR%\vars.schema.json"
-set "MANIFEST_FILE=%COMP_DIR%\manifest.json"
-set "BASE_SCHEMA_FILE=%LIBSCRIPT_ROOT_DIR%\_lib\_common\base_vars.schema.json"
-set "LOG_CMD=%LIBSCRIPT_ROOT_DIR%\_lib\_common\log.cmd"
+set "SCHEMA_FILE=!COMP_DIR!\vars.schema.json"
+set "MANIFEST_FILE=!COMP_DIR!\manifest.json"
+set "BASE_SCHEMA_FILE=!LIBSCRIPT_ROOT_DIR!\_lib\_common\base_vars.schema.json"
+set "LOG_CMD=!LIBSCRIPT_ROOT_DIR!\_lib\_common\log.cmd"
 
 set "ACTION=%~1"
 set "REQ_PKG=%~2"
@@ -88,7 +88,14 @@ if /i "%ACTION%"=="-v" (
     exit /b 0
 )
 
+set "REQ_BASENAME=!REQ_PKG!"
+for %%I in ("!REQ_PKG:/=\!") do set "REQ_BASENAME=%%~nxI"
+
 if "!REQ_PKG!"=="" (
+    set "REQ_PKG=!PACKAGE_NAME!"
+    set "VERSION=latest"
+    shift
+) else if "!REQ_PKG:~0,1!"=="-" (
     set "REQ_PKG=!PACKAGE_NAME!"
     set "VERSION=latest"
     shift
@@ -96,11 +103,37 @@ if "!REQ_PKG!"=="" (
     if "!VERSION!"=="" (
         set "VERSION=latest"
         shift & shift
+    ) else if "!VERSION:~0,1!"=="-" (
+        set "VERSION=latest"
+        shift & shift
     ) else (
         shift & shift & shift
     )
 ) else if /i "!REQ_PKG!"=="!COMP_BASENAME!" (
     if "!VERSION!"=="" (
+        set "VERSION=latest"
+        shift & shift
+    ) else if "!VERSION:~0,1!"=="-" (
+        set "VERSION=latest"
+        shift & shift
+    ) else (
+        shift & shift & shift
+    )
+) else if /i "!REQ_BASENAME!"=="!PACKAGE_NAME!" (
+    if "!VERSION!"=="" (
+        set "VERSION=latest"
+        shift & shift
+    ) else if "!VERSION:~0,1!"=="-" (
+        set "VERSION=latest"
+        shift & shift
+    ) else (
+        shift & shift & shift
+    )
+) else if /i "!REQ_BASENAME!"=="!COMP_BASENAME!" (
+    if "!VERSION!"=="" (
+        set "VERSION=latest"
+        shift & shift
+    ) else if "!VERSION:~0,1!"=="-" (
         set "VERSION=latest"
         shift & shift
     ) else (
@@ -265,10 +298,18 @@ if "!arg:~0,2!"=="--" (
     for /f "tokens=1* delims==" %%A in ("!key_val!") do (
         set "key=%%A"
         set "val=%%B"
-        if "!val!"=="" set "val=true"
-        set "key=!key:-=_!"
-        set "!key!=!val!"
     )
+    if "!val!"=="" (
+        set "_next_arg=%~2"
+        if not "!_next_arg!"=="" if not "!_next_arg:~0,1!"=="-" (
+            set "val=!_next_arg!"
+            shift
+        ) else (
+            set "val=true"
+        )
+    )
+    set "key=!key:-=_!"
+    set "!key!=!val!"
 )
 
 shift
@@ -332,8 +373,8 @@ if /i "!ACTION!"=="use" (
         echo Using !PACKAGE_NAME! !VERSION! at !INSTALLED_DIR!
         exit /b 0
     )
-    if exist "%COMP_DIR%\env.cmd" (
-        call "%COMP_DIR%\env.cmd"
+    if exist "!COMP_DIR!\env.cmd" (
+        call "!COMP_DIR!\env.cmd"
         exit /b !errorlevel!
     )
     exit /b 0
@@ -381,30 +422,30 @@ if /i "!ACTION!"=="test" (
         if exist "%%~fP" set "PATH=%%~fP;!PATH!"
     )
     set "STACK="
-    if exist "%COMP_DIR%\test.cmd" (
-        call "%COMP_DIR%\test.cmd"
+    if exist "!COMP_DIR!\test.cmd" (
+        call "!COMP_DIR!\test.cmd"
         exit /b !errorlevel!
     )
-    if exist "%COMP_DIR%\test.ps1" (
-        powershell -ExecutionPolicy Bypass -File "%COMP_DIR%\test.ps1"
+    if exist "!COMP_DIR!\test.ps1" (
+        powershell -ExecutionPolicy Bypass -File "!COMP_DIR!\test.ps1"
         exit /b !errorlevel!
     )
-    echo Error: test.cmd not found in %COMP_DIR% 1>&2
+    echo Error: test.cmd not found in !COMP_DIR! 1>&2
     exit /b 1
 )
 
 if /i "!ACTION!"=="uninstall" set "ACTION=remove"
 if /i "!ACTION!"=="remove" (
-    if exist "%COMP_DIR%\uninstall.cmd" (
-        call "%COMP_DIR%\uninstall.cmd"
+    if exist "!COMP_DIR!\uninstall.cmd" (
+        call "!COMP_DIR!\uninstall.cmd"
         exit /b !errorlevel!
     )
-    if exist "%COMP_DIR%\uninstall_generic.cmd" (
-        call "%COMP_DIR%\uninstall_generic.cmd"
+    if exist "!COMP_DIR!\uninstall_generic.cmd" (
+        call "!COMP_DIR!\uninstall_generic.cmd"
         exit /b !errorlevel!
     )
-    if exist "%COMP_DIR%\uninstall.ps1" (
-        powershell -ExecutionPolicy Bypass -File "%COMP_DIR%\uninstall.ps1"
+    if exist "!COMP_DIR!\uninstall.ps1" (
+        powershell -ExecutionPolicy Bypass -File "!COMP_DIR!\uninstall.ps1"
         exit /b !errorlevel!
     )
     if exist "!INSTALLED_DIR!" (
@@ -428,16 +469,16 @@ goto :default_action
 :: ## service_action
 :: Routes service daemon verbs (start, stop, status, logs, install-service) to component scripts.
 :service_action
-if exist "%COMP_DIR%\!ACTION!.cmd" (
-    call "%COMP_DIR%\!ACTION!.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
+if exist "!COMP_DIR!\!ACTION!.cmd" (
+    call "!COMP_DIR!\!ACTION!.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
     exit /b !errorlevel!
 )
-if exist "%COMP_DIR%\service.cmd" (
-    call "%COMP_DIR%\service.cmd" "!ACTION!" "!PACKAGE_NAME!" "!VERSION!"
+if exist "!COMP_DIR!\service.cmd" (
+    call "!COMP_DIR!\service.cmd" "!ACTION!" "!PACKAGE_NAME!" "!VERSION!"
     exit /b !errorlevel!
 )
-if exist "%COMP_DIR%\setup.cmd" (
-    call "%COMP_DIR%\setup.cmd" "!ACTION!"
+if exist "!COMP_DIR!\setup.cmd" (
+    call "!COMP_DIR!\setup.cmd" "!ACTION!"
     exit /b !errorlevel!
 )
 exit /b 0
@@ -447,16 +488,16 @@ exit /b 0
 :default_action
 set "STACK="
 if /i not "!ACTION!"=="install" if /i not "!ACTION!"=="setup" (
-    if exist "%COMP_DIR%\!ACTION!.cmd" (
-        call "%COMP_DIR%\!ACTION!.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
+    if exist "!COMP_DIR!\!ACTION!.cmd" (
+        call "!COMP_DIR!\!ACTION!.cmd" %1 %2 %3 %4 %5 %6 %7 %8 %9
         exit /b !errorlevel!
     )
 )
-if exist "%COMP_DIR%\setup.cmd" (
-    call "%COMP_DIR%\setup.cmd" "!ACTION!"
+if exist "!COMP_DIR!\setup.cmd" (
+    call "!COMP_DIR!\setup.cmd" "!ACTION!"
     exit /b !errorlevel!
 )
-echo Error: setup.cmd not found in %COMP_DIR% 1>&2
+echo Error: setup.cmd not found in !COMP_DIR! 1>&2
 exit /b 1
 
 :: ## show_help

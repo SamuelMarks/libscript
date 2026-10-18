@@ -3,7 +3,7 @@
 ::
 :: ## Overview
 :: End-to-end functional test runner for the Open edX stack and management CLI tools on Windows.
-:: Validates CLI routing, Tutor-parity commands, port readiness helpers (`wait_ports.cmd`),
+:: Validates CLI routing, Tutor-parity commands, mounts, plugins, hooks, port readiness helpers (`wait_ports.cmd`),
 :: configuration synthesis, and 2x idempotency.
 ::
 :: ## Usage
@@ -75,6 +75,14 @@ if errorlevel 1 exit /b 1
 
 echo ==^> Testing Open edX Healthcheck on Windows...
 call "%OPENEDX_DIR%\healthcheck.cmd" help >nul
+if errorlevel 1 exit /b 1
+
+echo ==^> Testing Open edX Mounts and Plugins on Windows...
+call "%OPENEDX_DIR%\mounts.cmd" help >nul
+if errorlevel 1 exit /b 1
+call "%OPENEDX_DIR%\plugins.cmd" list >nul
+if errorlevel 1 exit /b 1
+call "%OPENEDX_DIR%\hooks\configure.cmd" >nul
 if errorlevel 1 exit /b 1
 
 if not exist "%LIBSCRIPT_ROOT_DIR%\devtools\wait_ports.cmd" (

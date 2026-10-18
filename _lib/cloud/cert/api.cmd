@@ -10,19 +10,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -58,7 +58,7 @@ goto :%1
 set "provider=%~2"
 set "domain=%~3"
 
-call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :init
+call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" :init
 
 if "%provider%"=="aws" (
     for /f "tokens=*" %%i in ('aws acm request-certificate --domain-name "%domain%" --validation-method DNS --query "CertificateArn" --output text') do set "arn=%%i"
@@ -85,16 +85,16 @@ set "domain=%~3"
 if "%provider%"=="aws" (
     echo %domain% | findstr /b /c:"arn:aws:acm" >nul
     if not errorlevel 1 (
-        if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
-            call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :libscript_verify_managed aws cert "%domain%"
+        if exist "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" (
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" :libscript_verify_managed aws cert "%domain%"
             if errorlevel 1 exit /b 1
         )
         aws acm delete-certificate --certificate-arn "%domain%"
     ) else (
         for /f "tokens=*" %%i in ('aws acm list-certificates --query "CertificateSummaryList[?DomainName=='%domain%'].CertificateArn" --output text') do set "arn=%%i"
         if not "!arn!"=="" (
-            if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
-                call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :libscript_verify_managed aws cert "!arn!"
+            if exist "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" (
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" :libscript_verify_managed aws cert "!arn!"
                 if errorlevel 1 exit /b 1
             )
             aws acm delete-certificate --certificate-arn "!arn!"
@@ -105,8 +105,8 @@ if "%provider%"=="aws" (
     )
 ) else if "%provider%"=="gcp" (
     set "cert_name=%domain:.=-%"
-    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" (
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\cloud\core\tags.cmd" :libscript_verify_managed gcp cert "!cert_name!"
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\cloud\core\tags.cmd" :libscript_verify_managed gcp cert "!cert_name!"
         if errorlevel 1 exit /b 1
     )
     gcloud compute ssl-certificates delete "!cert_name!" --global --quiet

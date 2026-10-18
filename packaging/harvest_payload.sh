@@ -176,7 +176,7 @@ while IFS= read -r _rel || [ -n "$_rel" ]; do
 
   if [ -n "${SOURCE_DIR}" ]; then
     case "$_rel" in
-      .git*|.vagrant*|*.tmp|*.log|*.ppm|*.bak|*.swp|*.wixobj) continue ;;
+      .git*|.vagrant*|*.tmp|*.log|*.ppm|*.bak|*.swp|*.wixobj|*.wxs) continue ;;
       *)
         if [ "$INCLUDE_MSI" -eq 0 ]; then
           case "$_rel" in *.msi) continue ;; esac
@@ -189,7 +189,7 @@ while IFS= read -r _rel || [ -n "$_rel" ]; do
       .git*|.vagrant*|tests_tmp/*|dist/*|build/*|tmp/*|node_modules/*) continue ;;
       */.git/*|*/.git|*/.github/*|*/.githooks/*|*/.vagrant/*|*/tests_tmp/*|*/dist/*|*/build/*|*/tmp/*|*/node_modules/*) continue ;;
       cache/*|*/cache/*) continue ;;
-      *.tmp|*.log|*.ppm|*.bak|*.swp|*.wixobj) continue ;;
+      *.tmp|*.log|*.ppm|*.bak|*.swp|*.wixobj|*.wxs) continue ;;
       *.msi)
         [ "$INCLUDE_MSI" -eq 1 ] && printf '%s\n' "$_rel" >> "${TMP_FILTERED}"
         continue
@@ -336,6 +336,7 @@ END {
         for (j = 1; j < n; j++) {
             dir_path = (dir_path == "") ? parts[j] : (dir_path "/" parts[j])
         }
+        base_name = parts[n]
         target_dir = (dir_path == "") ? dir_id : make_id("DIR_", dir_path)
 
         if (inc_cache != "" && substr(f, 1, 6) == "cache/") {
@@ -356,7 +357,7 @@ END {
 
         print "    <DirectoryRef Id=\"" target_dir "\">"
         print "      <Component Id=\"" c_id "\" Guid=\"*\">"
-        print "        <File Id=\"" f_id "\" Source=\"" src "\" KeyPath=\"yes\" DiskId=\"" disk_id "\" />"
+        print "        <File Id=\"" f_id "\" Name=\"" base_name "\" Source=\"" src "\" KeyPath=\"yes\" DiskId=\"" disk_id "\" />"
         print "      </Component>"
         print "    </DirectoryRef>"
     }

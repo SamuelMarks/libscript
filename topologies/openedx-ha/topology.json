@@ -1,0 +1,35 @@
+{
+  "$schema": "../topology.schema.json",
+  "name": "openedx-ha",
+  "version": "1.0.0",
+  "description": "High-availability Docker-free Open edX cluster separating Caddy ingress, LMS/CMS WSGI servers, Celery background workers, and MySQL/MongoDB/Redis/Meilisearch datastores.",
+  "quorum_strategy": "raft",
+  "fencing_policy": "cloud-api-poweroff",
+  "node_groups": [
+    {
+      "name": "openedx-datastores",
+      "provider": "aws",
+      "region": "us-east-1",
+      "size": "m6i.xlarge",
+      "count": 3,
+      "role": "leader",
+      "components": ["databases/mysql", "databases/mongodb", "caches/redis", "search/meilisearch"],
+      "traits": ["storage", "secrets", "mesh", "firewall", "discovery", "tls", "backup"]
+    },
+    {
+      "name": "openedx-app",
+      "provider": "aws",
+      "region": "us-east-1",
+      "size": "m6i.xlarge",
+      "count": 2,
+      "role": "worker",
+      "components": ["languages/python", "languages/nodejs", "app-servers/gunicorn", "web-servers/caddy", "web-apps/openedx"],
+      "traits": ["secrets", "mesh", "firewall", "discovery", "tls", "telemetry"]
+    }
+  ],
+  "network": {
+    "vpc_cidr": "10.48.0.0/16",
+    "mesh_overlay": "wireguard",
+    "internal_domain": "openedx-ha.internal"
+  }
+}

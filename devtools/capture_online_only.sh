@@ -201,7 +201,7 @@ clean_guest_installations() {
 # Transfers packaging tooling, assets, stacks, and MSIs to the Windows guest.
 sync_guest_environment() {
   printf '=== Syncing packaging and stack files to Windows guest ===\n'
-  vm_run 'New-Item -ItemType Directory -Path "C:/libscript/packaging/assets", "C:/libscript/stacks/cms/openedx" -Force -ErrorAction SilentlyContinue | Out-Null'
+  vm_run 'New-Item -ItemType Directory -Path "C:/libscript/packaging/assets", "C:/libscript/_lib/web-apps/openedx" -Force -ErrorAction SilentlyContinue | Out-Null'
 
   scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" \
     "${REPO_ROOT}/packaging/build_msi.cmd" \
@@ -236,17 +236,17 @@ sync_guest_environment() {
     vagrant@127.0.0.1:C:/libscript/packaging/assets/
 
   scp -P "${SSH_PORT}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -i "${SSH_KEY}" \
-    "${REPO_ROOT}/stacks/cms/openedx/packaging.json" \
-    "${REPO_ROOT}/stacks/cms/openedx/offline_bundle.json" \
-    "${REPO_ROOT}/stacks/cms/openedx/manifest.json" \
-    "${REPO_ROOT}/stacks/cms/openedx/vars.schema.json" \
-    "${REPO_ROOT}/stacks/cms/openedx/cli.cmd" \
-    "${REPO_ROOT}/stacks/cms/openedx/cli.sh" \
-    "${REPO_ROOT}/stacks/cms/openedx/service.cmd" \
-    "${REPO_ROOT}/stacks/cms/openedx/service.sh" \
-    "${REPO_ROOT}/stacks/cms/openedx/setup_generic.cmd" \
-    "${REPO_ROOT}/stacks/cms/openedx/setup_generic.sh" \
-    vagrant@127.0.0.1:C:/libscript/stacks/cms/openedx/
+    "${REPO_ROOT}/_lib/web-apps/openedx/packaging.json" \
+    "${REPO_ROOT}/_lib/web-apps/openedx/offline_bundle.json" \
+    "${REPO_ROOT}/_lib/web-apps/openedx/manifest.json" \
+    "${REPO_ROOT}/_lib/web-apps/openedx/vars.schema.json" \
+    "${REPO_ROOT}/_lib/web-apps/openedx/cli.cmd" \
+    "${REPO_ROOT}/_lib/web-apps/openedx/cli.sh" \
+    "${REPO_ROOT}/_lib/web-apps/openedx/service.cmd" \
+    "${REPO_ROOT}/_lib/web-apps/openedx/service.sh" \
+    "${REPO_ROOT}/_lib/web-apps/openedx/setup_generic.cmd" \
+    "${REPO_ROOT}/_lib/web-apps/openedx/setup_generic.sh" \
+    vagrant@127.0.0.1:C:/libscript/_lib/web-apps/openedx/
 
   # Configure scheduled tasks on guest
   # shellcheck disable=SC2016

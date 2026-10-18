@@ -20,19 +20,19 @@ setlocal EnableDelayedExpansion
 
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -60,15 +60,15 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
-for %%I in ("%SCRIPT_DIR%..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
+for %%I in ("!SCRIPT_DIR!..") do set "LIBSCRIPT_ROOT_DIR=%%~fI"
 
 set "COMPONENT="
 set "VERSION="
 set "VARIANT=all"
 set "OUT_FILE="
 set "BRANCH="
-set "OUT_DIR=%LIBSCRIPT_ROOT_DIR%\dist\msi"
-set "OFFLINE_SOURCE=%LIBSCRIPT_ROOT_DIR%\cache"
+set "OUT_DIR=!LIBSCRIPT_ROOT_DIR!\dist\msi"
+set "OFFLINE_SOURCE=!LIBSCRIPT_ROOT_DIR!\cache"
 set "HYDRATE=0"
 if not defined LIBSCRIPT_TARGET_ARCH set "LIBSCRIPT_TARGET_ARCH=x64"
 set "TARGET_ARCH=%LIBSCRIPT_TARGET_ARCH%"
@@ -190,7 +190,7 @@ if "%COMPONENT%"=="" (
     exit /b 1
 )
 
-set "BUNDLE_JSON=%LIBSCRIPT_ROOT_DIR%\_lib\web-apps\openedx\offline_bundle.json"
+set "BUNDLE_JSON=!LIBSCRIPT_ROOT_DIR!\_lib\web-apps\openedx\offline_bundle.json"
 if "%VERSION%"=="" if exist "%BUNDLE_JSON%" (
     if /i "%COMPONENT%"=="mysql" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.mysql.version"`) do set "VERSION=%%A"
     if /i "%COMPONENT%"=="redis" for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw '%BUNDLE_JSON%' | ConvertFrom-Json).databases.redis.version"`) do set "VERSION=%%A"
@@ -231,7 +231,7 @@ exit /b 1
 ::   Internal function.
 :build_single_variant
 set "CURR_VAR=%~1"
-set "STAGE_ROOT=%LIBSCRIPT_ROOT_DIR%\tmp\stage_component_%COMPONENT%_%CURR_VAR%"
+set "STAGE_ROOT=!LIBSCRIPT_ROOT_DIR!\tmp\stage_component_%COMPONENT%_%CURR_VAR%"
 if exist "%STAGE_ROOT%" rmdir /s /q "%STAGE_ROOT%" 2>nul
 if not exist "%STAGE_ROOT%\bin" mkdir "%STAGE_ROOT%\bin" 2>nul
 if not exist "%OUT_DIR%" mkdir "%OUT_DIR%" 2>nul
@@ -277,7 +277,7 @@ if /i "%CURR_VAR%"=="offline" (
     if "%HYDRATE%"=="1" set "NEED_HYDRATE=1"
     if "!NEED_HYDRATE!"=="1" (
         echo [INFO] Hydrating %COMPONENT% offline cache before build...
-        call "%SCRIPT_DIR%hydrate_offline_cache.cmd" --manifest "%BUNDLE_JSON%" --cache-dir "%OFFLINE_SOURCE%" --component "%COMPONENT%"
+        call "!SCRIPT_DIR!hydrate_offline_cache.cmd" --manifest "%BUNDLE_JSON%" --cache-dir "%OFFLINE_SOURCE%" --component "%COMPONENT%"
     )
 
     if /i "%COMPONENT%"=="mysql" (
@@ -397,14 +397,14 @@ if /i "%CURR_VAR%"=="offline" (
     echo LibScript %COMPONENT% Online Stub > "%STAGE_ROOT%\bin\README.txt"
 )
 
-set "MAIN_WXS=%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_main.wxs"
-set "PAYLOAD_WXS=%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_payload.wxs"
+set "MAIN_WXS=!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_main.wxs"
+set "PAYLOAD_WXS=!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_payload.wxs"
 
-call "%SCRIPT_DIR%template_component_msi.cmd" --component "%COMPONENT%" --version "%VERSION%" --variant "%CURR_VAR%" --out "%MAIN_WXS%"
+call "!SCRIPT_DIR!template_component_msi.cmd" --component "%COMPONENT%" --version "%VERSION%" --variant "%CURR_VAR%" --out "%MAIN_WXS%"
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
-copy /y "%MAIN_WXS%" "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_main.wxs" >nul 2>&1
+copy /y "%MAIN_WXS%" "!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_main.wxs" >nul 2>&1
 
-call "%SCRIPT_DIR%harvest_payload.cmd" --source-dir "%STAGE_ROOT%" --wix-fragment "%PAYLOAD_WXS%" --component-group "PayloadComponents" --directory-id "INSTALLFOLDER"
+call "!SCRIPT_DIR!harvest_payload.cmd" --source-dir "%STAGE_ROOT%" --wix-fragment "%PAYLOAD_WXS%" --component-group "PayloadComponents" --directory-id "INSTALLFOLDER"
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 if defined OUT_FILE (
@@ -433,17 +433,17 @@ if exist "%USERPROFILE%\.libscript\msi-rs\default\bin\candle.exe" (
 
 where candle.exe >nul 2>&1
 if errorlevel 1 (
-    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\package-managers\msi-rs\env.cmd" (
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\package-managers\msi-rs\env.cmd" >nul 2>&1
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\env.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\env.cmd" >nul 2>&1
     )
 )
 
 where candle.exe >nul 2>&1
 if errorlevel 1 (
-    if exist "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" (
-        call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install msi-rs v0.0.1 >nul 2>&1
-        if exist "%LIBSCRIPT_ROOT_DIR%\_lib\package-managers\msi-rs\env.cmd" (
-            call "%LIBSCRIPT_ROOT_DIR%\_lib\package-managers\msi-rs\env.cmd" >nul 2>&1
+    if exist "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install msi-rs v0.0.1 >nul 2>&1
+        if exist "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\env.cmd" (
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\env.cmd" >nul 2>&1
         )
     )
 )
@@ -455,17 +455,17 @@ if errorlevel 1 (
 )
 
 echo [INFO] Compiling standalone %CURR_VAR% MSI via msi-rs: %TARGET_MSI%
-candle.exe -nologo -arch %TARGET_ARCH% -out "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_main.wixobj" "%MAIN_WXS%"
+candle.exe -nologo -arch %TARGET_ARCH% -out "!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_main.wixobj" "%MAIN_WXS%"
 if !ERRORLEVEL! neq 0 (
     echo [ERROR] msi-rs candle compilation failed for %MAIN_WXS%. >&2
     goto compile_err
 )
-candle.exe -nologo -arch %TARGET_ARCH% -out "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_payload.wixobj" "%PAYLOAD_WXS%"
+candle.exe -nologo -arch %TARGET_ARCH% -out "!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_payload.wixobj" "%PAYLOAD_WXS%"
 if !ERRORLEVEL! neq 0 (
     echo [ERROR] msi-rs candle compilation failed for %PAYLOAD_WXS%. >&2
     goto compile_err
 )
-light.exe -nologo -sval -ext WixUIExtension -out "%TARGET_MSI%" "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_main.wixobj" "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_payload.wixobj"
+light.exe -nologo -sval -ext WixUIExtension -out "%TARGET_MSI%" "!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_main.wixobj" "!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_payload.wixobj"
 if !ERRORLEVEL! neq 0 (
     echo [ERROR] msi-rs light linking failed. >&2
     goto compile_err
@@ -506,8 +506,8 @@ goto cleanup
 :: ## cleanup
 :: Cleans up temporary files, mounts, and background processes before exiting.
 :cleanup
-del /f /q "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_main.wixobj" >nul 2>&1
-del /f /q "%LIBSCRIPT_ROOT_DIR%\tmp\%COMPONENT%_%CURR_VAR%_payload.wixobj" >nul 2>&1
+del /f /q "!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_main.wixobj" >nul 2>&1
+del /f /q "!LIBSCRIPT_ROOT_DIR!\tmp\%COMPONENT%_%CURR_VAR%_payload.wixobj" >nul 2>&1
 del /f /q "%MAIN_WXS%" >nul 2>&1
 del /f /q "%PAYLOAD_WXS%" >nul 2>&1
 exit /b !ERR!

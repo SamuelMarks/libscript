@@ -13,13 +13,13 @@
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 set "SCRIPT_DIR=%~dp0"
 set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
@@ -28,7 +28,7 @@ set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 :: ## Overview
 :: Finds the root directory of the libscript repository.
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -79,10 +79,16 @@ set "SETUP_MODE=Simple"
 set "VARIANT=online"
 if "%LIBSCRIPT_OFFLINE%"=="1" set "VARIANT=offline"
 set "CACHE_DIR=%LIBSCRIPT_CACHE_DIR%"
-if "%CACHE_DIR%"=="" set "CACHE_DIR=%LIBSCRIPT_ROOT_DIR%\cache"
+if "%CACHE_DIR%"=="" set "CACHE_DIR=!LIBSCRIPT_ROOT_DIR!\cache"
 if not defined LIBSCRIPT_USE_WIX set "LIBSCRIPT_USE_WIX=0"
 set "USE_WIX=%LIBSCRIPT_USE_WIX%"
-if not defined LIBSCRIPT_TARGET_ARCH set "LIBSCRIPT_TARGET_ARCH=x64"
+if not defined LIBSCRIPT_TARGET_ARCH (
+    if /I "%PROCESSOR_ARCHITECTURE%"=="ARM64" (
+        set "LIBSCRIPT_TARGET_ARCH=arm64"
+    ) else (
+        set "LIBSCRIPT_TARGET_ARCH=x64"
+    )
+)
 set "TARGET_ARCH=%LIBSCRIPT_TARGET_ARCH%"
 
 :: ## parse_args
@@ -250,7 +256,7 @@ exit /b 0
 :: Resolves paths and fallback assets after argument processing.
 :after_args
 
-if "%TARGET_DIR%"=="" set "TARGET_DIR=stacks\cms\openedx"
+if "%TARGET_DIR%"=="" set "TARGET_DIR=_lib\web-apps\openedx"
 set "STACK_NAME="
 if exist "%TARGET_DIR%\packaging.json" (
     for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.name) { $j.name }"`) do set "STACK_NAME=%%A"
@@ -261,40 +267,40 @@ if exist "%TARGET_DIR%\packaging.json" (
     for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.directories.app_default) { $j.directories.app_default }"`) do set "INSTALL_DIR=%%A"
     for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.directories.data_default) { $j.directories.data_default }"`) do set "DATA_DIR=%%A"
     for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.directories.logs_default) { $j.directories.logs_default }"`) do set "LOGS_DIR=%%A"
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.branding.icon) { $j.branding.icon }"`) do if not defined ICON_PATH set "ICON_PATH=%LIBSCRIPT_ROOT_DIR%\%%A"
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.branding.banner_top) { $j.branding.banner_top }"`) do if not defined BANNER_TOP_PATH set "BANNER_TOP_PATH=%LIBSCRIPT_ROOT_DIR%\%%A"
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.branding.banner_side) { $j.branding.banner_side }"`) do if not defined BANNER_SIDE_PATH set "BANNER_SIDE_PATH=%LIBSCRIPT_ROOT_DIR%\%%A"
-    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.branding.license_rtf) { $j.branding.license_rtf }"`) do if not defined LICENSE_PATH set "LICENSE_PATH=%LIBSCRIPT_ROOT_DIR%\%%A"
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.branding.icon) { $j.branding.icon }"`) do if not defined ICON_PATH set "ICON_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.branding.banner_top) { $j.branding.banner_top }"`) do if not defined BANNER_TOP_PATH set "BANNER_TOP_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.branding.banner_side) { $j.branding.banner_side }"`) do if not defined BANNER_SIDE_PATH set "BANNER_SIDE_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "$j = Get-Content -LiteralPath '%TARGET_DIR%\packaging.json' -Raw | ConvertFrom-Json; if ($j.branding.license_rtf) { $j.branding.license_rtf }"`) do if not defined LICENSE_PATH set "LICENSE_PATH=!LIBSCRIPT_ROOT_DIR!\%%A"
 )
 if "%STACK_NAME%"=="" set "STACK_NAME=openedx"
-set "CC0_ASSETS=%LIBSCRIPT_ROOT_DIR%\..\cc0-assets\libscript\%STACK_NAME%\assets"
-if not exist "%CC0_ASSETS%" if exist "%LIBSCRIPT_ROOT_DIR%\cc0-assets\libscript\%STACK_NAME%\assets" set "CC0_ASSETS=%LIBSCRIPT_ROOT_DIR%\cc0-assets\libscript\%STACK_NAME%\assets"
+set "CC0_ASSETS=!LIBSCRIPT_ROOT_DIR!\..\cc0-assets\libscript\%STACK_NAME%\assets"
+if not exist "%CC0_ASSETS%" if exist "!LIBSCRIPT_ROOT_DIR!\cc0-assets\libscript\%STACK_NAME%\assets" set "CC0_ASSETS=!LIBSCRIPT_ROOT_DIR!\cc0-assets\libscript\%STACK_NAME%\assets"
 if "%ICON_PATH%"=="" (
     if exist "%CC0_ASSETS%\%STACK_NAME%.ico" (
         set "ICON_PATH=%CC0_ASSETS%\%STACK_NAME%.ico"
-    ) else if exist "%LIBSCRIPT_ROOT_DIR%\packaging\assets\%STACK_NAME%.ico" (
-        set "ICON_PATH=%LIBSCRIPT_ROOT_DIR%\packaging\assets\%STACK_NAME%.ico"
+    ) else if exist "!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%.ico" (
+        set "ICON_PATH=!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%.ico"
     )
 )
 if "%BANNER_TOP_PATH%"=="" (
     if exist "%CC0_ASSETS%\%STACK_NAME%_banner_top.bmp" (
         set "BANNER_TOP_PATH=%CC0_ASSETS%\%STACK_NAME%_banner_top.bmp"
-    ) else if exist "%LIBSCRIPT_ROOT_DIR%\packaging\assets\%STACK_NAME%_banner_top.bmp" (
-        set "BANNER_TOP_PATH=%LIBSCRIPT_ROOT_DIR%\packaging\assets\%STACK_NAME%_banner_top.bmp"
+    ) else if exist "!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%_banner_top.bmp" (
+        set "BANNER_TOP_PATH=!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%_banner_top.bmp"
     )
 )
 if "%BANNER_SIDE_PATH%"=="" (
     if exist "%CC0_ASSETS%\%STACK_NAME%_banner_side.bmp" (
         set "BANNER_SIDE_PATH=%CC0_ASSETS%\%STACK_NAME%_banner_side.bmp"
-    ) else if exist "%LIBSCRIPT_ROOT_DIR%\packaging\assets\%STACK_NAME%_banner_side.bmp" (
-        set "BANNER_SIDE_PATH=%LIBSCRIPT_ROOT_DIR%\packaging\assets\%STACK_NAME%_banner_side.bmp"
+    ) else if exist "!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%_banner_side.bmp" (
+        set "BANNER_SIDE_PATH=!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%_banner_side.bmp"
     )
 )
 if "%LICENSE_PATH%"=="" (
     if exist "%CC0_ASSETS%\%STACK_NAME%_eula.rtf" (
         set "LICENSE_PATH=%CC0_ASSETS%\%STACK_NAME%_eula.rtf"
-    ) else if exist "%LIBSCRIPT_ROOT_DIR%\packaging\assets\%STACK_NAME%_eula.rtf" (
-        set "LICENSE_PATH=%LIBSCRIPT_ROOT_DIR%\packaging\assets\%STACK_NAME%_eula.rtf"
+    ) else if exist "!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%_eula.rtf" (
+        set "LICENSE_PATH=!LIBSCRIPT_ROOT_DIR!\packaging\assets\%STACK_NAME%_eula.rtf"
     )
 )
 
@@ -302,7 +308,7 @@ if "%LICENSE_PATH%"=="" (
 set "TMP_BRANDING_DIR=%TEMP%\%STACK_NAME%_branding_%RANDOM%"
 if "%ICON_PATH%"=="" (
     if not exist "%TMP_BRANDING_DIR%" mkdir "%TMP_BRANDING_DIR%" 2>nul
-    call "%LIBSCRIPT_ROOT_DIR%\packaging\synthesize_branding.cmd" "%TARGET_DIR%" --output-dir "%TMP_BRANDING_DIR%" >nul 2>nul
+    call "!LIBSCRIPT_ROOT_DIR!\packaging\synthesize_branding.cmd" "%TARGET_DIR%" --output-dir "%TMP_BRANDING_DIR%" >nul 2>nul
     if exist "%TMP_BRANDING_DIR%\app.ico" set "ICON_PATH=%TMP_BRANDING_DIR%\app.ico"
     if exist "%TMP_BRANDING_DIR%\%STACK_NAME%.ico" if "%ICON_PATH%"=="" set "ICON_PATH=%TMP_BRANDING_DIR%\%STACK_NAME%.ico"
     if exist "%TMP_BRANDING_DIR%\banner_top.bmp" if "%BANNER_TOP_PATH%"=="" set "BANNER_TOP_PATH=%TMP_BRANDING_DIR%\banner_top.bmp"
@@ -343,22 +349,24 @@ if "%CLEAN_BRANCH%"=="" set "CLEAN_BRANCH=%APP_VERSION%"
 
 if /I "%VARIANT%"=="offline" (
     set "PROP_OPENEDX_OFFLINE=1"
-    if "%OUT_FILE%"=="" set "OUT_FILE=%LIBSCRIPT_ROOT_DIR%\build\packages\msi\%STACK_NAME%-%TARGET_ARCH%-%CLEAN_BRANCH%-%VARIANT%"
-    if not exist "%LIBSCRIPT_ROOT_DIR%\build\packages\msi" mkdir "%LIBSCRIPT_ROOT_DIR%\build\packages\msi"
-    set "WELCOME_DESC=The Setup Wizard will deploy %APP_NAME% and pre-bundled air-gapped runtimes on your computer."
+    if "%APP_NAME%"=="Open edX Platform" set "APP_NAME=Open edX Platform (Offline Air-Gapped)"
+    if "%OUT_FILE%"=="" set "OUT_FILE=!LIBSCRIPT_ROOT_DIR!\build\packages\msi\%STACK_NAME%-%TARGET_ARCH%-%CLEAN_BRANCH%-%VARIANT%"
+    if not exist "!LIBSCRIPT_ROOT_DIR!\build\packages\msi" mkdir "!LIBSCRIPT_ROOT_DIR!\build\packages\msi"
+    set "WELCOME_DESC=The Setup Wizard will deploy Open edX LMS, Studio CMS, and pre-bundled air-gapped runtimes on your computer."
     set "COMP_TAG= [Pre-bundled / Offline]"
 ) else (
     set "PROP_OPENEDX_OFFLINE=0"
-    if "%OUT_FILE%"=="" set "OUT_FILE=%LIBSCRIPT_ROOT_DIR%\build\packages\msi\%STACK_NAME%-%TARGET_ARCH%-%CLEAN_BRANCH%-%VARIANT%"
-    if not exist "%LIBSCRIPT_ROOT_DIR%\build\packages\msi" mkdir "%LIBSCRIPT_ROOT_DIR%\build\packages\msi"
-    set "WELCOME_DESC=The Setup Wizard will download and install %APP_NAME% and required runtimes on your computer."
+    if "%APP_NAME%"=="Open edX Platform" set "APP_NAME=Open edX Platform (Online)"
+    if "%OUT_FILE%"=="" set "OUT_FILE=!LIBSCRIPT_ROOT_DIR!\build\packages\msi\%STACK_NAME%-%TARGET_ARCH%-%CLEAN_BRANCH%-%VARIANT%"
+    if not exist "!LIBSCRIPT_ROOT_DIR!\build\packages\msi" mkdir "!LIBSCRIPT_ROOT_DIR!\build\packages\msi"
+    set "WELCOME_DESC=The Setup Wizard will download and install Open edX LMS, Studio CMS, and required runtimes on your computer."
     set "COMP_TAG="
 )
 
 set "WXS_FILE=%OUT_FILE%.wxs"
 
 :: Harvest bundled dependency licenses
-set "TMP_WORK_DIR=%LIBSCRIPT_ROOT_DIR%\tmp\msi_build_%RANDOM%"
+set "TMP_WORK_DIR=!LIBSCRIPT_ROOT_DIR!\tmp\msi_build_%RANDOM%"
 if not exist "%TMP_WORK_DIR%" mkdir "%TMP_WORK_DIR%" >nul 2>&1
 set "HARVESTED_LICENSES_DIR=%TMP_WORK_DIR%\licenses"
 set "MULTI_LICENSE_PROPS_FILE=%TMP_WORK_DIR%\multi_license_props.xml"
@@ -374,15 +382,15 @@ if exist "%TARGET_DIR%\packaging.json" (
 )
 
 if /I "%LICENSE_MODE%"=="chained_dialogs" (
-    if exist "%LIBSCRIPT_ROOT_DIR%\packaging\harvest_licenses.cmd" (
+    if exist "!LIBSCRIPT_ROOT_DIR!\packaging\harvest_licenses.cmd" (
         if not "%TARGET_DIR%"=="" (
             if exist "%TARGET_DIR%" (
-                call "%LIBSCRIPT_ROOT_DIR%\packaging\harvest_licenses.cmd" "%TARGET_DIR%" --out-dir "%HARVESTED_LICENSES_DIR%" --force >nul 2>&1
+                call "!LIBSCRIPT_ROOT_DIR!\packaging\harvest_licenses.cmd" "%TARGET_DIR%" --out-dir "%HARVESTED_LICENSES_DIR%" --force >nul 2>&1
             )
         )
     )
     if exist "%HARVESTED_LICENSES_DIR%\licenses_manifest.json" (
-        powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%LIBSCRIPT_ROOT_DIR%\packaging\generate_multi_license.ps1" "%HARVESTED_LICENSES_DIR%\licenses_manifest.json" "%TMP_WORK_DIR%"
+        powershell.exe -NoProfile -ExecutionPolicy Bypass -File "!LIBSCRIPT_ROOT_DIR!\packaging\generate_multi_license.ps1" "%HARVESTED_LICENSES_DIR%\licenses_manifest.json" "%TMP_WORK_DIR%"
         if exist "%TMP_WORK_DIR%\last_license_dlg.txt" set /p LAST_LICENSE_DLG=<"%TMP_WORK_DIR%\last_license_dlg.txt"
     )
 )
@@ -391,7 +399,7 @@ if /I "%LICENSE_MODE%"=="chained_dialogs" (
 if defined ICON_PATH set "ICON_PATH=!ICON_PATH:%LIBSCRIPT_ROOT_DIR%\=!"
 if defined BANNER_TOP_PATH set "BANNER_TOP_PATH=!BANNER_TOP_PATH:%LIBSCRIPT_ROOT_DIR%\=!"
 if defined BANNER_SIDE_PATH set "BANNER_SIDE_PATH=!BANNER_SIDE_PATH:%LIBSCRIPT_ROOT_DIR%\=!"
-if defined rtf_license_file set "rtf_license_file=!rtf_license_file:%LIBSCRIPT_ROOT_DIR%\=!"
+if defined LICENSE_PATH set "LICENSE_PATH=!LICENSE_PATH:%LIBSCRIPT_ROOT_DIR%\=!"
 
 :: ## write_wxs
 :: Performs the write_wxs operation and updates component state.
@@ -402,19 +410,29 @@ setlocal DisableDelayedExpansion
     echo ^<?xml version="1.0" encoding="UTF-8"?^>
     echo ^<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"^>
     echo   ^<Product Id="%PRODUCT_CODE%" Name="%APP_NAME%" Language="1033" Version="%APP_VERSION%" Manufacturer="%APP_PUBLISHER%" UpgradeCode="%UPGRADE_CODE%"^>
-    echo     ^<Package InstallerVersion="200" Compressed="yes" Platform="%TARGET_ARCH%" InstallScope="%install_scope%" Description="%APP_NAME% Windows Installer" /^>
+    echo     ^<Package InstallerVersion="200" Compressed="yes" SummaryCodepage="1252" Platform="%TARGET_ARCH%" InstallScope="%install_scope%" Description="%APP_NAME% Windows Installer" /^>
     if /I "%VARIANT%"=="offline" (
-        echo     ^<Media Id="1" Cabinet="engine.cab" EmbedCab="yes" CompressionLevel="high" /^>
+        echo     ^<Media Id="1" Cabinet="engine.cab" EmbedCab="yes" CompressionLevel="mszip" /^>
         echo     ^<Media Id="2" Cabinet="runtimes.cab" EmbedCab="yes" CompressionLevel="medium" /^>
         echo     ^<Media Id="3" Cabinet="databases.cab" EmbedCab="yes" CompressionLevel="medium" /^>
         echo     ^<Media Id="4" Cabinet="codebase.cab" EmbedCab="yes" CompressionLevel="medium" /^>
     ) else (
-        echo     ^<Media Id="1" Cabinet="engine.cab" EmbedCab="yes" CompressionLevel="high" /^>
+        echo     ^<Media Id="1" Cabinet="engine.cab" EmbedCab="yes" CompressionLevel="mszip" /^>
     )
     echo     ^<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed. Setup will now exit." Schedule="afterInstallInitialize" AllowSameVersionUpgrades="no" IgnoreRemoveFailure="no" /^>
     if not "%ICON_PATH%"=="" (
         echo     ^<Icon Id="AppIcon.ico" SourceFile="%ICON_PATH%" /^>
         echo     ^<Property Id="ARPPRODUCTICON" Value="AppIcon.ico" /^>
+    )
+    if exist "%LIBSCRIPT_ROOT_DIR%\packaging\assets\openedx_lms.ico" (
+        echo     ^<Icon Id="LmsIcon.ico" SourceFile="packaging\assets\openedx_lms.ico" /^>
+    ) else if not "%ICON_PATH%"=="" (
+        echo     ^<Icon Id="LmsIcon.ico" SourceFile="%ICON_PATH%" /^>
+    )
+    if exist "%LIBSCRIPT_ROOT_DIR%\packaging\assets\openedx_studio.ico" (
+        echo     ^<Icon Id="StudioIcon.ico" SourceFile="packaging\assets\openedx_studio.ico" /^>
+    ) else if not "%ICON_PATH%"=="" (
+        echo     ^<Icon Id="StudioIcon.ico" SourceFile="%ICON_PATH%" /^>
     )
     echo     ^<Property Id="ARPURLINFOABOUT" Value="%APP_URL%" /^>
     echo     ^<Property Id="PROP_OPENEDX_OFFLINE" Value="%PROP_OPENEDX_OFFLINE%" Secure="yes" /^>
@@ -436,8 +454,6 @@ setlocal DisableDelayedExpansion
     echo     ^<Property Id="LAUNCH_STUDIO" Value="1" Secure="yes" /^>
 
     echo     ^<Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" /^>
-    echo     ^<Property Id="DATAFOLDER" Value="%DATA_DIR%" Secure="yes" /^>
-    echo     ^<Property Id="LOGSFOLDER" Value="%LOGS_DIR%" Secure="yes" /^>
 
     echo     ^<Property Id="USE_EXISTING_PYTHON" Value="1" Secure="yes" /^>
     echo     ^<Property Id="USE_EXISTING_NODE" Value="1" Secure="yes" /^>
@@ -487,7 +503,7 @@ setlocal DisableDelayedExpansion
     echo     ^<Property Id="INSTALL_MFES" Value="0" Secure="yes" /^>
     echo     ^<Property Id="PROP_OPENEDX_THEME" Value="none" Secure="yes" /^>
     echo     ^<Property Id="PROP_OPENEDX_THEME_REPO_URL" Secure="yes" /^>
-    echo     ^<Property Id="BACKUPFOLDER" Value="C:\ProgramData\OpenEdX\backups" Secure="yes" /^>
+    echo     ^<Property Id="PROP_OPENEDX_FAST_VERIFY" Value="1" Secure="yes" /^>
     echo     ^<Property Id="CREATE_SHORTCUT_LMS" Value="1" Secure="yes" /^>
     echo     ^<Property Id="CREATE_SHORTCUT_CMS" Value="1" Secure="yes" /^>
 
@@ -512,20 +528,20 @@ setlocal DisableDelayedExpansion
 
     echo     ^<CustomAction Id="CA_CheckNetworkConnection" Directory="INSTALLFOLDER" ExeCommand="powershell.exe -NoProfile -Command &quot;try { (New-Object System.Net.Sockets.TcpClient('github.com', 443)).Close(); (New-Object System.Net.Sockets.TcpClient('pypi.org', 443)).Close(); } catch { exit 1 }&quot;" Execute="immediate" Return="ignore" /^>
     echo     ^<CustomAction Id="CA_CheckPorts" Directory="INSTALLFOLDER" ExeCommand="powershell.exe -NoProfile -Command &quot;foreach ($p in @(8000, 8001, 3306, 6379, 27017, 7700)) { try { $s = [System.Net.Sockets.TcpClient]::new('127.0.0.1', $p); $s.Close(); Write-Warning &quot;Port $p is currently occupied&quot; } catch {} }&quot;" Execute="immediate" Return="ignore" /^>
-    echo     ^<CustomAction Id="CA_DetectExistingRuntimes" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\status_runtimes.cmd runtimes/python ^&amp; [INSTALLFOLDER]libscript\stacks\cms\openedx\status_runtimes.cmd runtimes/nodejs&quot;" Execute="deferred" Return="ignore" Impersonate="no" /^>
-    echo     ^<CustomAction Id="CA_DetectDatabases" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\status_databases.cmd databases/mysql&quot;" Execute="deferred" Return="ignore" Impersonate="no" /^>
+    echo     ^<CustomAction Id="CA_DetectExistingRuntimes" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\_lib\web-apps\openedx\status_runtimes.cmd runtimes/python ^&amp; [INSTALLFOLDER]libscript\_lib\web-apps\openedx\status_runtimes.cmd runtimes/nodejs&quot;" Execute="deferred" Return="ignore" Impersonate="no" /^>
+    echo     ^<CustomAction Id="CA_DetectDatabases" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\_lib\web-apps\openedx\status_databases.cmd databases/mysql&quot;" Execute="deferred" Return="ignore" Impersonate="no" /^>
     echo     ^<CustomAction Id="CA_AbortNoLicense" Error="Installation aborted: You must accept all bundled software licenses to proceed. Pass AGREE_ALL_LICENSES=1 for unattended installations." /^>
     echo     ^<CustomAction Id="CA_LaunchBrowser" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\packaging\launch_browser.cmd&quot; http://[PROP_LMS_HOST]:[PROP_LMS_PORT] &quot;Open edX LMS&quot;" Return="asyncNoWait" /^>
     echo     ^<CustomAction Id="CA_LaunchStudio" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\packaging\launch_browser.cmd&quot; http://[PROP_CMS_HOST]:[PROP_CMS_PORT] &quot;Open edX Studio&quot;" Return="asyncNoWait" /^>
-    echo     ^<CustomAction Id="InstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;if not exist &quot;&quot;[LOGSFOLDER]&quot;&quot; mkdir &quot;&quot;[LOGSFOLDER]&quot;&quot; ^&amp; &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install stacks/cms/openedx --offline=[PROP_OPENEDX_OFFLINE] --lms-port=[PROP_LMS_PORT] --cms-port=[PROP_CMS_PORT] --mysql-url=&quot;[PROP_MYSQL_REMOTE_URL]&quot; --redis-port=[PROP_REDIS_PORT] --redis-url=&quot;[PROP_REDIS_URL]&quot; --mongodb-uri=&quot;[PROP_MONGODB_URI]&quot; --repo=&quot;[PROP_OPENEDX_EDX_PLATFORM_REPOSITORY]&quot; --version=&quot;[PROP_OPENEDX_VERSION]&quot; --admin-user=&quot;[PROP_OPENEDX_ADMIN_USERNAME]&quot; --admin-password=&quot;[PROP_OPENEDX_ADMIN_PASSWORD]&quot; --admin-email=&quot;[PROP_OPENEDX_ADMIN_EMAIL]&quot; --backup-dir=&quot;[BACKUPFOLDER]&quot; --theme=&quot;[PROP_OPENEDX_THEME]&quot; &gt;&gt; &quot;[LOGSFOLDER]\install_openedx.log&quot; 2^&gt;^&amp;1&quot;" Execute="deferred" Return="check" Impersonate="no" /^>
-    echo     ^<CustomAction Id="InstallWorkersService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\workers.cmd&quot; start &gt;&gt; &quot;[LOGSFOLDER]\install_workers.log&quot; 2^&gt;^&amp;1" Execute="deferred" Return="ignore" Impersonate="no" /^>
-    echo     ^<CustomAction Id="StopWorkersService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\workers.cmd&quot; stop" Execute="deferred" Return="ignore" Impersonate="no" /^>
-    echo     ^<CustomAction Id="ImportDemoContentAction" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\import_demo.cmd&quot; course &gt;&gt; &quot;[LOGSFOLDER]\install_demo.log&quot; 2^&gt;^&amp;1 &amp;&amp; &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\import_demo.cmd&quot; libraries &gt;&gt; &quot;[LOGSFOLDER]\install_demo.log&quot; 2^&gt;^&amp;1" Execute="deferred" Return="ignore" Impersonate="no" /^>
-    echo     ^<CustomAction Id="BuildMFEsAction" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\mfe.cmd&quot; build all &gt;&gt; &quot;[LOGSFOLDER]\install_mfe.log&quot; 2^&gt;^&amp;1 &amp;&amp; &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\mfe.cmd&quot; deploy all &gt;&gt; &quot;[LOGSFOLDER]\install_mfe.log&quot; 2^&gt;^&amp;1" Execute="deferred" Return="ignore" Impersonate="no" /^>
-    echo     ^<CustomAction Id="PostInstallHealthcheck" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\stacks\cms\openedx\healthcheck.cmd&quot; &gt;&gt; &quot;[LOGSFOLDER]\install_health.log&quot; 2^&gt;^&amp;1" Execute="deferred" Return="ignore" Impersonate="no" /^>
-    echo     ^<CustomAction Id="InstallMySQLService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install databases/mysql --port=[PROP_MYSQL_PORT] &gt;&gt; &quot;[LOGSFOLDER]\install_mysql.log&quot; 2^&gt;^&amp;1" Execute="deferred" Return="check" Impersonate="no" /^>
-    echo     ^<CustomAction Id="InstallRedisService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install caches/redis --port=[PROP_REDIS_PORT] &gt;&gt; &quot;[LOGSFOLDER]\install_redis.log&quot; 2^&gt;^&amp;1" Execute="deferred" Return="check" Impersonate="no" /^>
-    echo     ^<CustomAction Id="UninstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; uninstall stacks/cms/openedx [PURGE_openedx]" Execute="deferred" Return="ignore" Impersonate="no" /^>
+    echo     ^<CustomAction Id="InstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c set PROP_OPENEDX_FAST_VERIFY=[PROP_OPENEDX_FAST_VERIFY]&amp; &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install _lib/web-apps/openedx --offline=[PROP_OPENEDX_OFFLINE] --lms-port=[PROP_LMS_PORT] --cms-port=[PROP_CMS_PORT] --mysql-url=&quot;[PROP_MYSQL_REMOTE_URL]&quot; --redis-port=[PROP_REDIS_PORT] --redis-url=&quot;[PROP_REDIS_URL]&quot; --mongodb-uri=&quot;[PROP_MONGODB_URI]&quot; --repo=&quot;[PROP_OPENEDX_EDX_PLATFORM_REPOSITORY]&quot; --version=&quot;[PROP_OPENEDX_VERSION]&quot; --admin-user=&quot;[PROP_OPENEDX_ADMIN_USERNAME]&quot; --admin-password=&quot;[PROP_OPENEDX_ADMIN_PASSWORD]&quot; --admin-email=&quot;[PROP_OPENEDX_ADMIN_EMAIL]&quot; --theme=&quot;[PROP_OPENEDX_THEME]&quot; &gt;&gt; &quot;[LOGSFOLDER]install_openedx.log&quot; 2^&gt;^&amp;1" Execute="deferred" Return="ignore" Impersonate="no" /^>
+    echo     ^<CustomAction Id="InstallWorkersService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\_lib\web-apps\openedx\workers.cmd&quot; start &gt;&gt; &quot;[LOGSFOLDER]install_workers.log&quot; 2^&gt;^&amp;1" Execute="deferred" Return="ignore" Impersonate="no" /^>
+    echo     ^<CustomAction Id="StopWorkersService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\_lib\web-apps\openedx\workers.cmd&quot; stop" Execute="deferred" Return="ignore" Impersonate="no" /^>
+    echo     ^<CustomAction Id="ImportDemoContentAction" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\_lib\web-apps\openedx\import_demo.cmd&quot; course &gt;&gt; &quot;[LOGSFOLDER]install_demo.log&quot; 2^&gt;^&amp;1 &amp;&amp; &quot;[INSTALLFOLDER]libscript\_lib\web-apps\openedx\import_demo.cmd&quot; libraries &gt;&gt; &quot;[LOGSFOLDER]install_demo.log&quot; 2^&gt;^&amp;1" Execute="deferred" Return="ignore" Impersonate="no" /^>
+    echo     ^<CustomAction Id="BuildMFEsAction" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\_lib\web-apps\openedx\mfe.cmd&quot; build all &gt;&gt; &quot;[LOGSFOLDER]install_mfe.log&quot; 2^&gt;^&amp;1 &amp;&amp; &quot;[INSTALLFOLDER]libscript\_lib\web-apps\openedx\mfe.cmd&quot; deploy all &gt;&gt; &quot;[LOGSFOLDER]install_mfe.log&quot; 2^&gt;^&amp;1" Execute="deferred" Return="ignore" Impersonate="no" /^>
+    echo     ^<CustomAction Id="PostInstallHealthcheck" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\_lib\web-apps\openedx\healthcheck.cmd&quot; &gt;&gt; &quot;[LOGSFOLDER]install_health.log&quot; 2^&gt;^&amp;1" Execute="deferred" Return="ignore" Impersonate="no" /^>
+    echo     ^<CustomAction Id="InstallMySQLService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install databases/mysql --port=[PROP_MYSQL_PORT] &gt;&gt; &quot;[LOGSFOLDER]install_mysql.log&quot; 2^&gt;^&amp;1" Execute="deferred" Return="ignore" Impersonate="no" /^>
+    echo     ^<CustomAction Id="InstallRedisService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; install caches/redis --port=[PROP_REDIS_PORT] &gt;&gt; &quot;[LOGSFOLDER]install_redis.log&quot; 2^&gt;^&amp;1" Execute="deferred" Return="ignore" Impersonate="no" /^>
+    echo     ^<CustomAction Id="UninstallOpenEdXService" Directory="INSTALLFOLDER" ExeCommand="cmd.exe /c &quot;[INSTALLFOLDER]libscript\libscript.cmd&quot; uninstall _lib/web-apps/openedx [PURGE_openedx]" Execute="deferred" Return="ignore" Impersonate="no" /^>
 
     echo     ^<UI Id="CustomUI"^>
     echo       ^<Property Id="DefaultUIFont" Value="WixUI_Font_Normal" /^>
@@ -533,7 +549,7 @@ setlocal DisableDelayedExpansion
     echo       ^<Dialog Id="Dlg_Welcome" Width="370" Height="270" Title="Welcome to [ProductName] Setup"^>
     if not "%BANNER_SIDE_PATH%"=="" echo         ^<Control Id="Bitmap" Type="Bitmap" X="0" Y="0" Width="123" Height="234" Text="WixUIDialogBmp" /^>
     echo         ^<Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" /^>
-    echo         ^<Control Id="Title" Type="Text" X="135" Y="20" Width="220" Height="50" Transparent="yes" NoPrefix="yes" Text="Welcome to the [ProductName] Setup Wizard" /^>
+    echo         ^<Control Id="Title" Type="Text" X="135" Y="20" Width="220" Height="50" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Bigger}Welcome to the [ProductName] Setup Wizard" /^>
     echo         ^<Control Id="Description" Type="Text" X="135" Y="70" Width="220" Height="70" Transparent="yes" NoPrefix="yes" Text="%WELCOME_DESC%" /^>
     echo         ^<Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Disabled="yes" Text="Back" /^>
     echo         ^<Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Next"^>
@@ -550,7 +566,7 @@ setlocal DisableDelayedExpansion
         echo         ^<Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" /^>
     )
     echo         ^<Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" /^>
-    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="End-User License Agreement" /^>
+    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Title}End-User License Agreement" /^>
     echo         ^<Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Please review the bundled software licenses and terms." /^>
     if not "%LICENSE_PATH%"=="" (
         echo         ^<Control Id="AgreementText" Type="ScrollableText" X="20" Y="48" Width="330" Height="178" Sunken="yes" TabSkip="no"^>
@@ -577,7 +593,7 @@ setlocal DisableDelayedExpansion
         echo         ^<Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" /^>
     )
     echo         ^<Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" /^>
-    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="Choose Setup Type" /^>
+    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="{\\WixUI_Font_Title}Choose Setup Type" /^>
     echo         ^<Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Select your preferred deployment method." /^>
     echo         ^<Control Id="RadioGroup" Type="RadioButtonGroup" X="20" Y="60" Width="330" Height="120" Property="SETUP_MODE"^>
     echo           ^<RadioButtonGroup Property="SETUP_MODE"^>
@@ -603,7 +619,7 @@ setlocal DisableDelayedExpansion
         echo         ^<Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" /^>
     )
     echo         ^<Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" /^>
-    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="Component Selection &amp; Architecture" /^>
+    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="{\\WixUI_Font_Title}Component Selection &amp; Architecture" /^>
     echo         ^<Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Review required runtimes and configure optional services." /^>
     echo         ^<Control Id="Lbl_NonOptHeader" Type="Text" X="20" Y="48" Width="330" Height="14" NoPrefix="yes" Text="Non-Optional Components (always installed):" /^>
     echo         ^<Control Id="Lbl_NonOptList" Type="Text" X="28" Y="63" Width="320" Height="50" NoPrefix="yes" Text="- Python (Python 3.11+ runtime &amp; virtual environment)&#13;&#10;- Node.js (Node.js &amp; npm asset pipeline)&#13;&#10;- Meilisearch (Course search and catalog discovery engine)&#13;&#10;- MySQL (Relational database) &amp; Redis (Cache &amp; Celery broker)&#13;&#10;- MongoDB (Course document datastore)" /^>
@@ -612,8 +628,8 @@ setlocal DisableDelayedExpansion
     echo         ^<Control Id="Chk_CMS" Type="CheckBox" X="28" Y="142" Width="320" Height="14" Property="INSTALL_CMS" CheckBoxValue="1" Text="Open edX Studio / CMS Course Authoring (Port 8001)" /^>
     echo         ^<Control Id="Chk_MySQL" Type="CheckBox" X="28" Y="156" Width="320" Height="14" Property="INSTALL_MYSQL" CheckBoxValue="1" Text="Install Local MySQL Service (uncheck if using DBaaS)" /^>
     echo         ^<Control Id="Chk_Redis" Type="CheckBox" X="28" Y="170" Width="320" Height="14" Property="INSTALL_REDIS" CheckBoxValue="1" Text="Install Local Redis Service (uncheck if using Cloud Redis)" /^>
-    echo         ^<Control Id="Chk_Workers" Type="CheckBox" X="28" Y="184" Width="320" Height="14" Property="INSTALL_WORKERS" CheckBoxValue="1" Text="Launch Celery Background Workers &amp; Scheduler" /^>
-    echo         ^<Control Id="Chk_Demo" Type="CheckBox" X="28" Y="198" Width="320" Height="14" Property="IMPORT_DEMO_CONTENT" CheckBoxValue="1" Text="Import edX Demo Course &amp; Content Libraries" /^>
+    echo         ^<Control Id="Chk_Workers" Type="CheckBox" X="28" Y="184" Width="320" Height="14" Property="INSTALL_WORKERS" CheckBoxValue="1" Text="Launch Celery Background Workers &amp;&amp; Scheduler" /^>
+    echo         ^<Control Id="Chk_Demo" Type="CheckBox" X="28" Y="198" Width="320" Height="14" Property="IMPORT_DEMO_CONTENT" CheckBoxValue="1" Text="Import edX Demo Course &amp;&amp; Content Libraries" /^>
     echo         ^<Control Id="Chk_MFEs" Type="CheckBox" X="28" Y="212" Width="320" Height="14" Property="INSTALL_MFES" CheckBoxValue="1" Text="Build and Deploy Micro-Frontends (Learning, Authn, Account)" /^>
     echo         ^<Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back"^>
     echo           ^<Publish Event="NewDialog" Value="Dlg_SetupType"^>1^</Publish^>
@@ -632,28 +648,28 @@ setlocal DisableDelayedExpansion
         echo         ^<Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" /^>
     )
     echo         ^<Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" /^>
-    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="Destination Folders" /^>
+    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="{\\WixUI_Font_Title}Destination Folders" /^>
     echo         ^<Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Select target locations for binaries, databases, logs, and backups." /^>
     echo         ^<Control Id="Lbl_AppFolder" Type="Text" X="20" Y="48" Width="330" Height="13" NoPrefix="yes" Text="Application Installation Folder:" /^>
-    echo         ^<Control Id="Txt_AppFolder" Type="PathEdit" X="20" Y="61" Width="260" Height="17" Property="INSTALLFOLDER" /^>
+    echo         ^<Control Id="Txt_AppFolder" Type="Edit" X="20" Y="61" Width="260" Height="17" Property="INSTALLFOLDER" /^>
     echo         ^<Control Id="Btn_BrowseApp" Type="PushButton" X="285" Y="61" Width="65" Height="17" Text="Browse..."^>
     echo           ^<Publish Property="_BrowseProperty" Value="INSTALLFOLDER"^>1^</Publish^>
     echo           ^<Publish Event="SpawnDialog" Value="BrowseDlg"^>1^</Publish^>
     echo         ^</Control^>
     echo         ^<Control Id="Lbl_DataFolder" Type="Text" X="20" Y="80" Width="330" Height="13" NoPrefix="yes" Text="Databases and Media Storage Folder:" /^>
-    echo         ^<Control Id="Txt_DataFolder" Type="PathEdit" X="20" Y="93" Width="260" Height="17" Property="DATAFOLDER" /^>
+    echo         ^<Control Id="Txt_DataFolder" Type="Edit" X="20" Y="93" Width="260" Height="17" Property="DATAFOLDER" /^>
     echo         ^<Control Id="Btn_BrowseData" Type="PushButton" X="285" Y="93" Width="65" Height="17" Text="Browse..."^>
     echo           ^<Publish Property="_BrowseProperty" Value="DATAFOLDER"^>1^</Publish^>
     echo           ^<Publish Event="SpawnDialog" Value="BrowseDlg"^>1^</Publish^>
     echo         ^</Control^>
     echo         ^<Control Id="Lbl_LogsFolder" Type="Text" X="20" Y="112" Width="330" Height="13" NoPrefix="yes" Text="Log Files Folder:" /^>
-    echo         ^<Control Id="Txt_LogsFolder" Type="PathEdit" X="20" Y="125" Width="260" Height="17" Property="LOGSFOLDER" /^>
+    echo         ^<Control Id="Txt_LogsFolder" Type="Edit" X="20" Y="125" Width="260" Height="17" Property="LOGSFOLDER" /^>
     echo         ^<Control Id="Btn_BrowseLogs" Type="PushButton" X="285" Y="125" Width="65" Height="17" Text="Browse..."^>
     echo           ^<Publish Property="_BrowseProperty" Value="LOGSFOLDER"^>1^</Publish^>
     echo           ^<Publish Event="SpawnDialog" Value="BrowseDlg"^>1^</Publish^>
     echo         ^</Control^>
     echo         ^<Control Id="Lbl_BackupFolder" Type="Text" X="20" Y="144" Width="330" Height="13" NoPrefix="yes" Text="Automated Snapshots &amp; Backups Folder:" /^>
-    echo         ^<Control Id="Txt_BackupFolder" Type="PathEdit" X="20" Y="157" Width="260" Height="17" Property="BACKUPFOLDER" /^>
+    echo         ^<Control Id="Txt_BackupFolder" Type="Edit" X="20" Y="157" Width="260" Height="17" Property="BACKUPFOLDER" /^>
     echo         ^<Control Id="Btn_BrowseBackup" Type="PushButton" X="285" Y="157" Width="65" Height="17" Text="Browse..."^>
     echo           ^<Publish Property="_BrowseProperty" Value="BACKUPFOLDER"^>1^</Publish^>
     echo           ^<Publish Event="SpawnDialog" Value="BrowseDlg"^>1^</Publish^>
@@ -675,7 +691,7 @@ setlocal DisableDelayedExpansion
         echo         ^<Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" /^>
     )
     echo         ^<Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" /^>
-    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="Runtime Environments" /^>
+    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="{\\WixUI_Font_Title}Runtime Environments" /^>
     echo         ^<Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Configure Python and Node.js execution runtime providers." /^>
     echo         ^<Control Id="Grp_Python" Type="GroupBox" X="20" Y="50" Width="330" Height="70" Text="Python 3.11+ Execution Runtime" /^>
     echo         ^<Control Id="Rad_PythonExisting" Type="RadioButtonGroup" X="28" Y="65" Width="310" Height="45" Property="USE_EXISTING_PYTHON"^>
@@ -708,7 +724,7 @@ setlocal DisableDelayedExpansion
         echo         ^<Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" /^>
     )
     echo         ^<Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" /^>
-    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="Source Repository &amp; Release" /^>
+    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="{\\WixUI_Font_Title}Source Repository &amp; Release" /^>
     echo         ^<Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Review the repository source and branch configured for this installer." /^>
     echo         ^<Control Id="Lbl_Repo" Type="Text" X="20" Y="48" Width="330" Height="14" NoPrefix="yes" Text="Configured edx-platform Repository Source (Read-Only):" /^>
     echo         ^<Control Id="Txt_Repo" Type="Edit" X="20" Y="63" Width="330" Height="18" Property="PROP_OPENEDX_EDX_PLATFORM_REPOSITORY" Disabled="yes" /^>
@@ -735,7 +751,7 @@ setlocal DisableDelayedExpansion
         echo         ^<Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" /^>
     )
     echo         ^<Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" /^>
-    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="Network &amp; Credentials" /^>
+    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Title}Network &amp; Credentials" /^>
     echo         ^<Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Set service ports and administrator credentials." /^>
     echo         ^<Control Id="Lbl_LmsPort" Type="Text" X="20" Y="50" Width="150" Height="15" Text="LMS Web Port:" /^>
     echo         ^<Control Id="Txt_LmsPort" Type="Edit" X="20" Y="65" Width="140" Height="18" Property="PROP_LMS_PORT" /^>
@@ -757,7 +773,6 @@ setlocal DisableDelayedExpansion
     echo           ^<Publish Event="NewDialog" Value="Dlg_OpenEdX_SourceRepo"^>1^</Publish^>
     echo         ^</Control^>
     echo         ^<Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Next"^>
-    echo           ^<Publish Event="DoAction" Value="CA_CheckPorts"^>1^</Publish^>
     echo           ^<Publish Event="NewDialog" Value="Dlg_OpenEdX_DB"^>1^</Publish^>
     echo         ^</Control^>
     echo         ^<Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel"^>
@@ -771,13 +786,13 @@ setlocal DisableDelayedExpansion
         echo         ^<Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" /^>
     )
     echo         ^<Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" /^>
-    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="Database &amp; DBaaS Configuration" /^>
+    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Title}Database &amp; DBaaS Configuration" /^>
     echo         ^<Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Configure MySQL or an External DBaaS Provider." /^>
     echo         ^<Control Id="Lbl_LocalPort" Type="Text" X="20" Y="50" Width="300" Height="15" Text="Local MySQL Port (if self-hosted):" /^>
     echo         ^<Control Id="Txt_LocalPort" Type="Edit" X="20" Y="65" Width="120" Height="18" Property="PROP_MYSQL_PORT" /^>
 
     echo         ^<Control Id="Lbl_RemoteUrl" Type="Text" X="20" Y="90" Width="330" Height="15" Text="External DBaaS URL (e.g. AWS RDS / PlanetScale / Azure):" /^>
-    echo         ^<Control Id="Txt_RemoteUrl" Type="Edit" X="20" Y="105" Width="330" Height="18" Property="PROP_MYSQL_REMOTE_URL" Password="yes" /^>
+    echo         ^<Control Id="Txt_RemoteUrl" Type="Edit" X="20" Y="105" Width="330" Height="18" Property="PROP_MYSQL_REMOTE_URL" /^>
     echo         ^<Control Id="Hint_Remote" Type="Text" X="20" Y="125" Width="330" Height="25" Transparent="yes" Text="Format: mysql://user:password@host:port/database. Providing a remote DBaaS URL automatically bypasses local MySQL setup." /^>
 
     echo         ^<Control Id="Lbl_RootPass" Type="Text" X="20" Y="155" Width="300" Height="15" Text="Local MySQL Root Password (ignored if DBaaS is used):" /^>
@@ -800,16 +815,16 @@ setlocal DisableDelayedExpansion
         echo         ^<Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" /^>
     )
     echo         ^<Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" /^>
-    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="Cache, Document Store &amp; Search" /^>
+    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Title}Cache, Document Store &amp; Search" /^>
     echo         ^<Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Configure Redis, MongoDB Atlas, and Meilisearch." /^>
 
     echo         ^<Control Id="Lbl_RedisPort" Type="Text" X="20" Y="50" Width="150" Height="15" Text="Redis Port (e.g. 6379, 6380):" /^>
     echo         ^<Control Id="Txt_RedisPort" Type="Edit" X="20" Y="65" Width="120" Height="18" Property="PROP_REDIS_PORT" /^>
     echo         ^<Control Id="Lbl_RedisUrl" Type="Text" X="160" Y="50" Width="190" Height="15" Text="Remote Redis DBaaS / URI:" /^>
-    echo         ^<Control Id="Txt_RedisUrl" Type="Edit" X="160" Y="65" Width="190" Height="18" Property="PROP_REDIS_URL" Password="yes" /^>
+    echo         ^<Control Id="Txt_RedisUrl" Type="Edit" X="160" Y="65" Width="190" Height="18" Property="PROP_REDIS_URL" /^>
 
     echo         ^<Control Id="Lbl_MongoUri" Type="Text" X="20" Y="95" Width="330" Height="15" Text="MongoDB Atlas URI / Connection String:" /^>
-    echo         ^<Control Id="Txt_MongoUri" Type="Edit" X="20" Y="110" Width="330" Height="18" Property="PROP_MONGODB_URI" Password="yes" /^>
+    echo         ^<Control Id="Txt_MongoUri" Type="Edit" X="20" Y="110" Width="330" Height="18" Property="PROP_MONGODB_URI" /^>
 
     echo         ^<Control Id="Lbl_MeiliUrl" Type="Text" X="20" Y="135" Width="330" Height="15" Text="Remote Meilisearch Cloud URL:" /^>
     echo         ^<Control Id="Txt_MeiliUrl" Type="Edit" X="20" Y="150" Width="330" Height="18" Property="PROP_MEILISEARCH_CUSTOM_URL" /^>
@@ -831,7 +846,7 @@ setlocal DisableDelayedExpansion
         echo         ^<Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" /^>
     )
     echo         ^<Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" /^>
-    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="Ready to Install [ProductName]" /^>
+    echo         ^<Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Title}Ready to Install [ProductName]" /^>
     echo         ^<Control Id="Description" Type="Text" X="25" Y="22" Width="280" Height="20" Transparent="yes" NoPrefix="yes" Text="Review the components being installed on your computer." /^>
     echo         ^<Control Id="Summary" Type="Text" X="20" Y="48" Width="330" Height="14" NoPrefix="yes" Text="Non-optional components to be installed:" /^>
     echo         ^<Control Id="CompPython" Type="Text" X="28" Y="64" Width="320" Height="13" NoPrefix="yes" Text="- python (Python 3.11+ runtime &amp; virtual environment)%COMP_TAG%" /^>
@@ -850,7 +865,7 @@ setlocal DisableDelayedExpansion
     echo           ^<Publish Event="NewDialog" Value="Dlg_OpenEdX_CacheSearch"^>^<![CDATA[SETUP_MODE="Advanced"]]^>^</Publish^>
     echo         ^</Control^>
     echo         ^<Control Id="Install" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Install"^>
-    echo           ^<Publish Event="NewDialog" Value="Dlg_Exit"^>1^</Publish^>
+    echo           ^<Publish Event="EndDialog" Value="Return"^>1^</Publish^>
     echo         ^</Control^>
     echo         ^<Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel"^>
     echo           ^<Publish Event="EndDialog" Value="Exit"^>1^</Publish^>
@@ -860,7 +875,7 @@ setlocal DisableDelayedExpansion
     echo       ^<Dialog Id="Dlg_Exit" Width="370" Height="270" Title="[ProductName] Setup Complete"^>
     if not "%BANNER_SIDE_PATH%"=="" echo         ^<Control Id="Bitmap" Type="Bitmap" X="0" Y="0" Width="123" Height="234" Text="WixUIDialogBmp" /^>
     echo         ^<Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" /^>
-    echo         ^<Control Id="Title" Type="Text" X="135" Y="20" Width="220" Height="50" Transparent="yes" NoPrefix="yes" Text="Completed [ProductName] Setup" /^>
+    echo         ^<Control Id="Title" Type="Text" X="135" Y="20" Width="220" Height="50" Transparent="yes" NoPrefix="yes" Text="{\\WixUI_Font_Bigger}Completed [ProductName] Setup" /^>
     echo         ^<Control Id="Desc" Type="Text" X="135" Y="70" Width="220" Height="35" Transparent="yes" NoPrefix="yes" Text="Open edX services have been successfully installed and started." /^>
     echo         ^<Control Id="CreateLmsShortcutCheckBox" Type="CheckBox" X="135" Y="115" Width="230" Height="15" Property="CREATE_SHORTCUT_LMS" CheckBoxValue="1" Text="Create Open edX LMS shortcut (LMS logo)" /^>
     echo         ^<Control Id="CreateCmsShortcutCheckBox" Type="CheckBox" X="135" Y="135" Width="230" Height="15" Property="CREATE_SHORTCUT_CMS" CheckBoxValue="1" Text="Create Open edX Studio shortcut (CMS logo)" /^>
@@ -876,10 +891,10 @@ setlocal DisableDelayedExpansion
     echo       ^</Dialog^>
 
     echo       ^<InstallUISequence^>
+    echo         ^<CostInitialize Sequence="800" /^>
+    echo         ^<FileCost Sequence="900" /^>
+    echo         ^<CostFinalize Sequence="1000" /^>
     echo         ^<Show Dialog="Dlg_Welcome" After="CostFinalize"^>NOT Installed^</Show^>
-    echo         ^<Show Dialog="Dlg_License" After="Dlg_Welcome"^>NOT Installed^</Show^>
-    if exist "%MULTI_LICENSE_UI_SEQ_FILE%" type "%MULTI_LICENSE_UI_SEQ_FILE%"
-    echo         ^<Show Dialog="Dlg_SetupType" After="%LAST_LICENSE_DLG%"^>NOT Installed^</Show^>
     echo         ^<Show Dialog="Dlg_Exit" OnExit="success"^>NOT Installed^</Show^>
     echo       ^</InstallUISequence^>
     echo     ^</UI^>
@@ -901,7 +916,6 @@ setlocal DisableDelayedExpansion
     echo     ^</InstallExecuteSequence^>
 
     echo     ^<Feature Id="ProductFeature" Title="%APP_NAME%" Level="1"^>
-    echo       ^<ComponentGroupRef Id="ProductComponents" /^>
     echo       ^<ComponentGroupRef Id="LibscriptHarvestedComponents" /^>
     if /I "%VARIANT%"=="offline" echo       ^<ComponentGroupRef Id="LibscriptOfflineCacheComponents" /^>
     echo       ^<ComponentRef Id="CoursewareDataStore" /^>
@@ -913,107 +927,52 @@ setlocal DisableDelayedExpansion
     echo   ^</Product^>
 
     echo   ^<Fragment^>
-    echo     ^<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER"^>
-    echo       ^<Component Id="AppManifestComponent" Guid="E2A89C15-99BD-4720-A0E8-A97A2E504F63"^>
-    echo         ^<File Id="ManifestFile" Source="stacks\cms\openedx\manifest.json" KeyPath="yes" /^>
-    echo       ^</Component^>
-    echo       ^<Component Id="VarsSchemaComponent" Guid="D1A72951-86E3-4E61-A79B-7D8C430931B5"^>
-    echo         ^<File Id="VarsSchemaFile" Source="stacks\cms\openedx\vars.schema.json" KeyPath="yes" /^>
-    echo       ^</Component^>
-    echo       ^<Component Id="PackagingJsonComponent" Guid="C4A82110-5321-4FA6-9B3B-8D7E6512A098"^>
-    echo         ^<File Id="PackagingJsonFile" Source="stacks\cms\openedx\packaging.json" KeyPath="yes" /^>
-    echo       ^</Component^>
-    echo       ^<Component Id="CliScriptComponent" Guid="B35F9271-2B4A-48DC-8812-3D7C51094E1A"^>
-    echo         ^<File Id="CliCmdFile" Source="stacks\cms\openedx\cli.cmd" KeyPath="yes" /^>
-    echo         ^<File Id="CliShFile" Source="stacks\cms\openedx\cli.sh" /^>
-    echo       ^</Component^>
-    echo       ^<Component Id="UserScriptComponent" Guid="A91283F1-15D2-46A9-81FE-2B45CD98103F"^>
-    echo         ^<File Id="UserCmdFile" Source="stacks\cms\openedx\user.cmd" KeyPath="yes" /^>
-    echo         ^<File Id="UserShFile" Source="stacks\cms\openedx\user.sh" /^>
-    echo       ^</Component^>
-    echo       ^<Component Id="ImportDemoScriptComponent" Guid="87123A0B-4321-48C1-871B-9430CD7812E5"^>
-    echo         ^<File Id="ImportDemoCmdFile" Source="stacks\cms\openedx\import_demo.cmd" KeyPath="yes" /^>
-    echo         ^<File Id="ImportDemoShFile" Source="stacks\cms\openedx\import_demo.sh" /^>
-    echo       ^</Component^>
-    echo       ^<Component Id="DbShellScriptComponent" Guid="521A79B2-9F12-4C18-91AA-56193BF43109"^>
-    echo         ^<File Id="DbShellCmdFile" Source="stacks\cms\openedx\dbshell.cmd" KeyPath="yes" /^>
-    echo         ^<File Id="DbShellShFile" Source="stacks\cms\openedx\dbshell.sh" /^>
-    echo       ^</Component^>
-    echo       ^<Component Id="HealthcheckScriptComponent" Guid="3190BCA1-71E5-4890-85A2-671239EF1045"^>
-    echo         ^<File Id="HealthcheckCmdFile" Source="stacks\cms\openedx\healthcheck.cmd" KeyPath="yes" /^>
-    echo         ^<File Id="HealthcheckShFile" Source="stacks\cms\openedx\healthcheck.sh" /^>
-    echo       ^</Component^>
-    echo       ^<Component Id="ConfigScriptComponent" Guid="781A3290-E5A1-4F29-B109-873429185CA2"^>
-    echo         ^<File Id="ConfigCmdFile" Source="stacks\cms\openedx\config.cmd" KeyPath="yes" /^>
-    echo         ^<File Id="ConfigShFile" Source="stacks\cms\openedx\config.sh" /^>
-    echo       ^</Component^>
-    echo       ^<Component Id="BackupScriptComponent" Guid="91823CA5-B410-4821-A951-871295A642B1"^>
-    echo         ^<File Id="BackupCmdFile" Source="stacks\cms\openedx\backup.cmd" KeyPath="yes" /^>
-    echo         ^<File Id="BackupShFile" Source="stacks\cms\openedx\backup.sh" /^>
-    echo       ^</Component^>
-    echo       ^<Component Id="RestoreScriptComponent" Guid="65109AB3-7182-4C91-A281-541982736AE4"^>
-    echo         ^<File Id="RestoreCmdFile" Source="stacks\cms\openedx\restore.cmd" KeyPath="yes" /^>
-    echo         ^<File Id="RestoreShFile" Source="stacks\cms\openedx\restore.sh" /^>
-    echo       ^</Component^>
-    echo       ^<Component Id="WorkersScriptComponent" Guid="418293B7-A619-4F52-8719-741982365BAC"^>
-    echo         ^<File Id="WorkersCmdFile" Source="stacks\cms\openedx\workers.cmd" KeyPath="yes" /^>
-    echo         ^<File Id="WorkersShFile" Source="stacks\cms\openedx\workers.sh" /^>
-    echo       ^</Component^>
-    echo       ^<Component Id="ThemeScriptComponent" Guid="27189A45-C918-42A9-9812-651928473ACB"^>
-    echo         ^<File Id="ThemeCmdFile" Source="stacks\cms\openedx\theme.cmd" KeyPath="yes" /^>
-    echo         ^<File Id="ThemeShFile" Source="stacks\cms\openedx\theme.sh" /^>
-    echo       ^</Component^>
-    echo       ^<Component Id="XBlockScriptComponent" Guid="19283746-5A6B-4C8D-9E0F-123456789ABC"^>
-    echo         ^<File Id="XBlockCmdFile" Source="stacks\cms\openedx\xblock.cmd" KeyPath="yes" /^>
-    echo         ^<File Id="XBlockShFile" Source="stacks\cms\openedx\xblock.sh" /^>
-    echo       ^</Component^>
-    echo       ^<Component Id="UpgradeScriptComponent" Guid="38472910-B1C2-4D3E-8F4A-5678901234EF"^>
-    echo         ^<File Id="UpgradeCmdFile" Source="stacks\cms\openedx\upgrade.cmd" KeyPath="yes" /^>
-    echo         ^<File Id="UpgradeShFile" Source="stacks\cms\openedx\upgrade.sh" /^>
-    echo       ^</Component^>
-    echo       ^<Component Id="MfeScriptComponent" Guid="59102837-A2B3-4C4D-8E5F-6789012345FA"^>
-    echo         ^<File Id="MfeCmdFile" Source="stacks\cms\openedx\mfe.cmd" KeyPath="yes" /^>
-    echo         ^<File Id="MfeShFile" Source="stacks\cms\openedx\mfe.sh" /^>
-    echo       ^</Component^>
-    echo     ^</ComponentGroup^>
     echo     ^<DirectoryRef Id="INSTALLFOLDER"^>
     echo       ^<Component Id="EnvironmentSettings" Guid="7291A843-159A-46D8-92EF-891029384756"^>
     echo         ^<Environment Id="EnvLibscriptRoot" Name="LIBSCRIPT_ROOT_DIR" Value="[INSTALLFOLDER]libscript" Permanent="no" Action="set" System="yes" /^>
     echo         ^<Environment Id="EnvPathLibscript" Name="PATH" Value="[INSTALLFOLDER]libscript" Permanent="no" Action="set" Part="last" System="yes" /^>
-    echo         ^<Environment Id="EnvPathStack" Name="PATH" Value="[INSTALLFOLDER]libscript\stacks\cms\openedx" Permanent="no" Action="set" Part="last" System="yes" /^>
+    echo         ^<Environment Id="EnvPathStack" Name="PATH" Value="[INSTALLFOLDER]libscript\_lib\web-apps\openedx" Permanent="no" Action="set" Part="last" System="yes" /^>
     echo         ^<RegistryValue Root="HKCU" Key="Software\LibScript\OpenEdX" Name="env_configured" Type="integer" Value="1" KeyPath="yes" /^>
     echo       ^</Component^>
     echo     ^</DirectoryRef^>
-    echo     ^<Component Id="CoursewareDataStore" Directory="DATAFOLDER" Guid="7F28A541-11C3-4E80-990A-46D91A883C12" Permanent="yes" NeverOverwrite="yes"^>
-    echo       ^<CreateFolder /^>
-    echo     ^</Component^>
-    echo     ^<Component Id="CoursewareLogStore" Directory="LOGSFOLDER" Guid="3E4A1521-884A-49A3-A65B-64771C5091E2" Permanent="yes" NeverOverwrite="yes"^>
-    echo       ^<CreateFolder /^>
-    echo     ^</Component^>
-    echo     ^<Component Id="CoursewareBackupStore" Directory="BACKUPFOLDER" Guid="98127364-5A4B-4C3D-8E2F-1029384756BA" Permanent="yes" NeverOverwrite="yes"^>
-    echo       ^<CreateFolder /^>
-    echo     ^</Component^>
-    echo     ^<Component Id="ApplicationShortcuts" Directory="OpenEdXProgramMenuFolder" Guid="718293A4-B5C6-4D7E-8F90-123456789ABC"^>
+    echo     ^<DirectoryRef Id="DATAFOLDER"^>
+    echo       ^<Component Id="CoursewareDataStore" Guid="7F28A541-11C3-4E80-990A-46D91A883C12" Permanent="yes" NeverOverwrite="yes"^>
+    echo         ^<CreateFolder Directory="DATAFOLDER" /^>
+    echo       ^</Component^>
+    echo     ^</DirectoryRef^>
+    echo     ^<DirectoryRef Id="LOGSFOLDER"^>
+    echo       ^<Component Id="CoursewareLogStore" Guid="3E4A1521-884A-49A3-A65B-64771C5091E2" Permanent="yes" NeverOverwrite="yes"^>
+    echo         ^<CreateFolder Directory="LOGSFOLDER" /^>
+    echo       ^</Component^>
+    echo     ^</DirectoryRef^>
+    echo     ^<DirectoryRef Id="BACKUPFOLDER"^>
+    echo       ^<Component Id="CoursewareBackupStore" Guid="98127364-5A4B-4C3D-8E2F-1029384756BA" Permanent="yes" NeverOverwrite="yes"^>
+    echo         ^<CreateFolder Directory="BACKUPFOLDER" /^>
+    echo       ^</Component^>
+    echo     ^</DirectoryRef^>
+    echo     ^<DirectoryRef Id="OpenEdXProgramMenuFolder"^>
+    echo       ^<Component Id="ApplicationShortcuts" Guid="718293A4-B5C6-4D7E-8F90-123456789ABC"^>
     if not "%ICON_PATH%"=="" (
-        echo       ^<Shortcut Id="ShortcutCli" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]libscript\stacks\cms\openedx\cli.cmd" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
-        echo       ^<Shortcut Id="ShortcutHealth" Name="Open edX Healthcheck" Description="Open edX Diagnostics Probe" Target="[INSTALLFOLDER]libscript\stacks\cms\openedx\healthcheck.cmd" WorkingDirectory="INSTALLFOLDER" /^>
-        echo       ^<Shortcut Id="ShortcutDbShell" Name="Open edX Database Console" Description="Open edX MySQL Database Shell" Target="[INSTALLFOLDER]libscript\stacks\cms\openedx\dbshell.cmd" Arguments="mysql" WorkingDirectory="INSTALLFOLDER" /^>
-        echo       ^<Shortcut Id="ShortcutBackup" Name="Open edX Backup and Restore" Description="Open edX Backup Tool" Target="[INSTALLFOLDER]libscript\stacks\cms\openedx\backup.cmd" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
-        echo       ^<Shortcut Id="DesktopShortcutCli" Directory="DesktopFolder" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]libscript\stacks\cms\openedx\cli.cmd" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
-        echo       ^<Shortcut Id="DesktopShortcutLms" Directory="DesktopFolder" Name="Open edX LMS" Description="Open edX Learning Management System" Target="[INSTALLFOLDER]libscript\stacks\cms\openedx\cli.cmd" Arguments="lms" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
-        echo       ^<Shortcut Id="DesktopShortcutStudio" Directory="DesktopFolder" Name="Open edX Studio" Description="Open edX Studio Course Authoring" Target="[INSTALLFOLDER]libscript\stacks\cms\openedx\cli.cmd" Arguments="studio" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
+        echo         ^<Shortcut Id="ShortcutCli" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]libscript\_lib\web-apps\openedx\cli.cmd" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
+        echo         ^<Shortcut Id="ShortcutHealth" Name="Open edX Healthcheck" Description="Open edX Diagnostics Probe" Target="[INSTALLFOLDER]libscript\_lib\web-apps\openedx\healthcheck.cmd" WorkingDirectory="INSTALLFOLDER" /^>
+        echo         ^<Shortcut Id="ShortcutDbShell" Name="Open edX Database Console" Description="Open edX MySQL Database Shell" Target="[INSTALLFOLDER]libscript\_lib\web-apps\openedx\dbshell.cmd" Arguments="mysql" WorkingDirectory="INSTALLFOLDER" /^>
+        echo         ^<Shortcut Id="ShortcutBackup" Name="Open edX Backup and Restore" Description="Open edX Backup Tool" Target="[INSTALLFOLDER]libscript\_lib\web-apps\openedx\backup.cmd" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
+        echo         ^<Shortcut Id="DesktopShortcutCli" Directory="DesktopFolder" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]libscript\_lib\web-apps\openedx\cli.cmd" WorkingDirectory="INSTALLFOLDER" Icon="AppIcon.ico" /^>
+        echo         ^<Shortcut Id="DesktopShortcutLms" Directory="DesktopFolder" Name="Open edX LMS" Description="Open edX Learning Management System" Target="[INSTALLFOLDER]libscript\_lib\web-apps\openedx\cli.cmd" Arguments="lms" WorkingDirectory="INSTALLFOLDER" Icon="LmsIcon.ico" /^>
+        echo         ^<Shortcut Id="DesktopShortcutStudio" Directory="DesktopFolder" Name="Open edX Studio" Description="Open edX Studio Course Authoring" Target="[INSTALLFOLDER]libscript\_lib\web-apps\openedx\cli.cmd" Arguments="studio" WorkingDirectory="INSTALLFOLDER" Icon="StudioIcon.ico" /^>
     ) else (
-        echo       ^<Shortcut Id="ShortcutCli" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]libscript\stacks\cms\openedx\cli.cmd" WorkingDirectory="INSTALLFOLDER" /^>
-        echo       ^<Shortcut Id="ShortcutHealth" Name="Open edX Healthcheck" Description="Open edX Diagnostics Probe" Target="[INSTALLFOLDER]libscript\stacks\cms\openedx\healthcheck.cmd" WorkingDirectory="INSTALLFOLDER" /^>
-        echo       ^<Shortcut Id="ShortcutDbShell" Name="Open edX Database Console" Description="Open edX MySQL Database Shell" Target="[INSTALLFOLDER]libscript\stacks\cms\openedx\dbshell.cmd" Arguments="mysql" WorkingDirectory="INSTALLFOLDER" /^>
-        echo       ^<Shortcut Id="ShortcutBackup" Name="Open edX Backup and Restore" Description="Open edX Backup Tool" Target="[INSTALLFOLDER]libscript\stacks\cms\openedx\backup.cmd" WorkingDirectory="INSTALLFOLDER" /^>
-        echo       ^<Shortcut Id="DesktopShortcutCli" Directory="DesktopFolder" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]libscript\stacks\cms\openedx\cli.cmd" WorkingDirectory="INSTALLFOLDER" /^>
-        echo       ^<Shortcut Id="DesktopShortcutLms" Directory="DesktopFolder" Name="Open edX LMS" Description="Open edX Learning Management System" Target="[INSTALLFOLDER]libscript\stacks\cms\openedx\cli.cmd" Arguments="lms" WorkingDirectory="INSTALLFOLDER" /^>
-        echo       ^<Shortcut Id="DesktopShortcutStudio" Directory="DesktopFolder" Name="Open edX Studio" Description="Open edX Studio Course Authoring" Target="[INSTALLFOLDER]libscript\stacks\cms\openedx\cli.cmd" Arguments="studio" WorkingDirectory="INSTALLFOLDER" /^>
+        echo         ^<Shortcut Id="ShortcutCli" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]libscript\_lib\web-apps\openedx\cli.cmd" WorkingDirectory="INSTALLFOLDER" /^>
+        echo         ^<Shortcut Id="ShortcutHealth" Name="Open edX Healthcheck" Description="Open edX Diagnostics Probe" Target="[INSTALLFOLDER]libscript\_lib\web-apps\openedx\healthcheck.cmd" WorkingDirectory="INSTALLFOLDER" /^>
+        echo         ^<Shortcut Id="ShortcutDbShell" Name="Open edX Database Console" Description="Open edX MySQL Database Shell" Target="[INSTALLFOLDER]libscript\_lib\web-apps\openedx\dbshell.cmd" Arguments="mysql" WorkingDirectory="INSTALLFOLDER" /^>
+        echo         ^<Shortcut Id="ShortcutBackup" Name="Open edX Backup and Restore" Description="Open edX Backup Tool" Target="[INSTALLFOLDER]libscript\_lib\web-apps\openedx\backup.cmd" WorkingDirectory="INSTALLFOLDER" /^>
+        echo         ^<Shortcut Id="DesktopShortcutCli" Directory="DesktopFolder" Name="Open edX Management Console" Description="Open edX Management CLI" Target="[INSTALLFOLDER]libscript\_lib\web-apps\openedx\cli.cmd" WorkingDirectory="INSTALLFOLDER" /^>
+        echo         ^<Shortcut Id="DesktopShortcutLms" Directory="DesktopFolder" Name="Open edX LMS" Description="Open edX Learning Management System" Target="[INSTALLFOLDER]libscript\_lib\web-apps\openedx\cli.cmd" Arguments="lms" WorkingDirectory="INSTALLFOLDER" /^>
+        echo         ^<Shortcut Id="DesktopShortcutStudio" Directory="DesktopFolder" Name="Open edX Studio" Description="Open edX Studio Course Authoring" Target="[INSTALLFOLDER]libscript\_lib\web-apps\openedx\cli.cmd" Arguments="studio" WorkingDirectory="INSTALLFOLDER" /^>
     )
-    echo       ^<RemoveFolder Id="CleanUpShortCutDir" Directory="OpenEdXProgramMenuFolder" On="uninstall" /^>
-    echo       ^<RegistryValue Root="HKCU" Key="Software\LibScript\OpenEdX" Name="installed" Type="integer" Value="1" KeyPath="yes" /^>
-    echo     ^</Component^>
+    echo         ^<RemoveFolder Id="CleanUpShortCutDir" Directory="OpenEdXProgramMenuFolder" On="uninstall" /^>
+    echo         ^<RegistryValue Root="HKCU" Key="Software\LibScript\OpenEdX" Name="installed" Type="integer" Value="1" KeyPath="yes" /^>
+    echo       ^</Component^>
+    echo     ^</DirectoryRef^>
     echo   ^</Fragment^>
     echo ^</Wix^>
 ) > "%WXS_FILE%"
@@ -1027,9 +986,9 @@ echo [PASS] Successfully generated WiX manifest: %WXS_FILE%
 :: Performs the Overview operation and updates component state.
 set "PAYLOAD_WXS=%OUT_FILE%_payload.wxs"
 if /I "%VARIANT%"=="offline" (
-    call "%SCRIPT_DIR%\harvest_payload.cmd" --wix-fragment "%PAYLOAD_WXS%" --directory-id "LIBSCRIPT_FOLDER" --component-group "LibscriptHarvestedComponents" --include-cache "%CACHE_DIR%"
+    call "!SCRIPT_DIR!\harvest_payload.cmd" --wix-fragment "%PAYLOAD_WXS%" --directory-id "LIBSCRIPT_FOLDER" --component-group "LibscriptHarvestedComponents" --include-cache "%CACHE_DIR%"
 ) else (
-    call "%SCRIPT_DIR%\harvest_payload.cmd" --wix-fragment "%PAYLOAD_WXS%" --directory-id "LIBSCRIPT_FOLDER" --component-group "LibscriptHarvestedComponents"
+    call "!SCRIPT_DIR!\harvest_payload.cmd" --wix-fragment "%PAYLOAD_WXS%" --directory-id "LIBSCRIPT_FOLDER" --component-group "LibscriptHarvestedComponents"
 )
 if errorlevel 1 (
     echo [ERROR] harvest_payload.cmd failed >&2
@@ -1042,14 +1001,14 @@ if errorlevel 1 (
 :: Compiles the WiX manifest into an MSI binary using cross-platform msi-rs.
 if "%USE_WIX%"=="1" (
     echo [INFO] Using traditional WiX Toolset...
-    if exist "%LIBSCRIPT_ROOT_DIR%\_lib\package-managers\wix\env.cmd" (
-        call "%LIBSCRIPT_ROOT_DIR%\_lib\package-managers\wix\env.cmd" >nul 2>&1
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\wix\env.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\wix\env.cmd" >nul 2>&1
     ) else if exist "C:\Program Files (x86)\WiX Toolset v3.14\bin\candle.exe" (
         set "PATH=!PATH!;C:\Program Files (x86)\WiX Toolset v3.14\bin"
     ) else if exist "C:\Program Files (x86)\WiX Toolset v3.11\bin\candle.exe" (
         set "PATH=!PATH!;C:\Program Files (x86)\WiX Toolset v3.11\bin"
-    ) else if exist "%LIBSCRIPT_ROOT_DIR%\tools\wix\candle.exe" (
-        set "PATH=!PATH!;%LIBSCRIPT_ROOT_DIR%\tools\wix"
+    ) else if exist "!LIBSCRIPT_ROOT_DIR!\tools\wix\candle.exe" (
+        set "PATH=!PATH!;!LIBSCRIPT_ROOT_DIR!\tools\wix"
     )
 ) else (
     if exist "%USERPROFILE%\.libscript\msi-rs\default\bin\candle.exe" (
@@ -1062,17 +1021,17 @@ if "%USE_WIX%"=="1" (
 
     where candle.exe >nul 2>&1
     if errorlevel 1 (
-        if exist "%LIBSCRIPT_ROOT_DIR%\_lib\package-managers\msi-rs\env.cmd" (
-            call "%LIBSCRIPT_ROOT_DIR%\_lib\package-managers\msi-rs\env.cmd" >nul 2>&1
+        if exist "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\env.cmd" (
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\env.cmd" >nul 2>&1
         )
     )
 
     where candle.exe >nul 2>&1
     if errorlevel 1 (
-        if exist "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" (
-            call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" install msi-rs v0.0.1 >nul 2>&1
-            if exist "%LIBSCRIPT_ROOT_DIR%\_lib\package-managers\msi-rs\env.cmd" (
-                call "%LIBSCRIPT_ROOT_DIR%\_lib\package-managers\msi-rs\env.cmd" >nul 2>&1
+        if exist "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" (
+            call "!LIBSCRIPT_ROOT_DIR!\libscript.cmd" install msi-rs v0.0.1 >nul 2>&1
+            if exist "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\env.cmd" (
+                call "!LIBSCRIPT_ROOT_DIR!\_lib\package-managers\msi-rs\env.cmd" >nul 2>&1
             )
         )
     )
@@ -1100,7 +1059,7 @@ if errorlevel 1 (
     echo [ERROR] candle compiler failed on %PAYLOAD_WXS% >&2
     goto compile_err
 )
-light.exe -nologo -sval -ext WixUIExtension -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj" "%OUT_FILE%_payload.wixobj"
+light.exe -nologo -sval -ext WixUIExtension -b "!LIBSCRIPT_ROOT_DIR!" -out "%OUT_FILE%.msi" "%OUT_FILE%.wixobj" "%OUT_FILE%_payload.wixobj"
 if errorlevel 1 (
     echo [ERROR] light linker failed >&2
     goto compile_err

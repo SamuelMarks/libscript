@@ -21,6 +21,10 @@ framework's native execution and generation capabilities.
   hierarchy across OmniOS and OpenIndiana profiles.
 - **REST API & OpenAPI Documentation:** Document the programmatic C++ HTTP microservice and OpenAPI
   3.0 contract in `libscript-rest-api/`.
+- **Multi-Node Schedulers, Topologies & Traits Documentation:** Document Tier 3.5 HA topologies
+  ([topologies/README.md](topologies/README.md)), Tier 4 scheduler drivers for Kubernetes, Mesos,
+  and Nomad ([payloads/README.md](payloads/README.md)), and cross-cutting traits
+  ([traits/README.md](traits/README.md)).
 
 ## Future Enhancements
 
@@ -30,7 +34,8 @@ framework's native execution and generation capabilities.
    demonstrate stack building.
 3. **Configuration Management Integration:** Detail how LibScript can be called from existing tools
    (like Chef, Ansible, and Puppet) to simplify playbook complexity.
-4. **Stack Templates:** Document common stack definitions (e.g., LAMP, MEAN) using the
-   `libscript.json` format.
-5. **Machine Learning Infrastructure:** Document the usage of `stacks/ai-serving/*` and
-   `stacks/ml-training/*` to demonstrate TPU/GPU provisioning and vLLM deployment workflows.
+4. **Stack & Topology Templates:** Document common stack definitions (`libscript.json`), workload
+   payloads (`payloads/`), and HA cluster blueprints (`topologies/`).
+5. **Machine Learning Infrastructure:** Expand tutorials around `payloads/ai/*`,
+   `topologies/gke-tpu-cluster/`, and `_lib/ml-training/` to demonstrate TPU/GPU provisioning,
+   distributed XPK training, and vLLM/JetStream deployment workflows.

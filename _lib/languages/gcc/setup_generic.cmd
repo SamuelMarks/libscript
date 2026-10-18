@@ -11,19 +11,19 @@ setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
 
 if defined STACK (
-    echo !STACK! | findstr /C:":%THIS_FILE%:" >nul 2>&1
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
     if not errorlevel 1 (
-        echo [STOP] processing "%THIS_FILE%" >&2
+        echo [STOP] processing "!THIS_FILE!" >&2
         exit /b 0
     )
 )
-set "STACK=%STACK%:%THIS_FILE%:"
+set "STACK=%STACK%:!THIS_FILE!:"
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
-    set "d=%SCRIPT_DIR%"
+    set "d=!SCRIPT_DIR!"
     call :find_root
 )
 goto :root_found
@@ -88,14 +88,14 @@ exit /b 0
 :: ## action_use
 :: Updates the active GCC version alias junction.
 :action_use
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "gcc" "default" "%EXACT_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "gcc" "default" "%EXACT_VERSION%"
 exit /b 0
 
 :: ## action_download
 :: Downloads GCC archive into the local offline cache.
 :action_download
 if not "%GCC_DOWNLOAD_URL%"=="" (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_download "%GCC_DOWNLOAD_URL%" "%LIBSCRIPT_ROOT_DIR%\cache\downloads\gcc\gcc-%EXACT_VERSION%.zip"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%GCC_DOWNLOAD_URL%" "!LIBSCRIPT_ROOT_DIR!\cache\downloads\gcc\gcc-%EXACT_VERSION%.zip"
 )
 exit /b 0
 
@@ -109,10 +109,10 @@ if exist "%TARGET_DIR%\bin\gcc.exe" (
 )
 where gcc >nul 2>&1
 if errorlevel 1 (
-    call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\pkg_mgr.cmd" :libscript_depends "gcc"
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_depends "gcc"
 )
 if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
-call "%LIBSCRIPT_ROOT_DIR%\_lib\_common\versioning.cmd" :libscript_symlink_alias "gcc" "default" "%EXACT_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "gcc" "default" "%EXACT_VERSION%"
 exit /b 0
 
 :: ## action_uninstall
