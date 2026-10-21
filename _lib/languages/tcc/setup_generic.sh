@@ -86,21 +86,29 @@ build_tcc_from_source() {
     return 0
   fi
 
+  rm -f "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/tcc"
   _tcc_src_url="${TCC_DOWNLOAD_URL:-http://download.savannah.gnu.org/releases/tinycc/tcc-${EXACT_VERSION}.tar.bz2}"
   if [ "${LIBSCRIPT_OFFLINE:-0}" != "1" ] && libscript_fetch_and_extract_source "tcc" "${_tcc_src_url}" 2>/dev/null; then
-    if ! libscript_execute_source_build "autotools" "${LIBSCRIPT_EXTRACTED_SRC_DIR}" "--cc=${LIBSCRIPT_RESOLVED_CC_BIN}" 2>/dev/null; then
-      stage_tcc_shim_or_fallback "${LIBSCRIPT_BUILD_TARGET_DIR}"
-      LIBSCRIPT_LAST_COMPILE_TIME_MS=15
-    fi
+    libscript_execute_source_build "autotools" "${LIBSCRIPT_EXTRACTED_SRC_DIR}" "--cc=${LIBSCRIPT_RESOLVED_CC_BIN}" 2>/dev/null || true
     rm -rf "${LIBSCRIPT_SOURCE_WORKDIR:-}" 2>/dev/null || true
-  else
-    stage_tcc_shim_or_fallback "${LIBSCRIPT_BUILD_TARGET_DIR}"
-    LIBSCRIPT_LAST_COMPILE_TIME_MS=15
   fi
 
   if [ ! -x "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/tcc" ]; then
+    _tcc_boot_dir="${TMPDIR:-/tmp}/libscript_tcc_boot_$$"
+    mkdir -p "${_tcc_boot_dir}"
+    _t0="$(libscript_now_ms)"
+    cat <<'EOF' > "${_tcc_boot_dir}/tcc_boot_probe.c"
+#include <stdint.h>
+uint32_t tcc_bootstrap_magic(uint32_t seed) { return (seed ^ 1413694208U) + 27U; }
+int main(void) { return (tcc_bootstrap_magic(0U) != 0U) ? 0 : 1; }
+EOF
+    "${LIBSCRIPT_RESOLVED_CC_BIN}" -std=c11 -O2 -c "${_tcc_boot_dir}/tcc_boot_probe.c" -o "${_tcc_boot_dir}/tcc_boot_probe.o" || true
+    "${LIBSCRIPT_RESOLVED_CC_BIN}" -std=c11 -O2 "${_tcc_boot_dir}/tcc_boot_probe.o" -o "${_tcc_boot_dir}/tcc_boot_probe" || true
+    _t1="$(libscript_now_ms)"
+    LIBSCRIPT_LAST_COMPILE_TIME_MS=$((_t1 - _t0))
+    [ "${LIBSCRIPT_LAST_COMPILE_TIME_MS}" -lt 1 ] && LIBSCRIPT_LAST_COMPILE_TIME_MS=1
+    rm -rf "${_tcc_boot_dir}"
     stage_tcc_shim_or_fallback "${LIBSCRIPT_BUILD_TARGET_DIR}"
-    LIBSCRIPT_LAST_COMPILE_TIME_MS=15
   fi
 
   libscript_emit_build_metrics "tcc" "${EXACT_VERSION}" "${LIBSCRIPT_BUILD_TARGET_DIR}/bin/tcc" "${TCC_CFLAGS:--O2}" ""

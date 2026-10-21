@@ -43,7 +43,7 @@ for LIB in "_lib/_common/log.sh" "_lib/_common/source_builder.sh"; do
 done
 SCRIPT_DIR="${COMPARE_DIR}"
 
-COMPILERS_LIST="${SQLITE_COMPARE_COMPILERS:-default gcc clang tcc custom-cc}"
+COMPILERS_LIST="${SQLITE_COMPARE_COMPILERS:-default gcc clang tcc edgcpp custom-cc}"
 SQLITE_VER="${SQLITE_VERSION:-3.46.1}"
 [ "${SQLITE_VER}" = "latest" ] && SQLITE_VER="3.46.1"
 

@@ -90,7 +90,11 @@ fi
 
 # OS-specific delegation logic
 OS_SETUP_SCRIPT="${DIR}"'/setup_'"${TARGET_OS}"'.sh'
-if [ -f "${OS_SETUP_SCRIPT}" ]; then
+if [ "${LIBSCRIPT_DEFAULT_INSTALL_METHOD:-${LIBSCRIPT_INSTALL_METHOD:-}}" = "from-source" ] && [ -f "${DIR}/setup_generic.sh" ]; then
+  SCRIPT_NAME="${DIR}"'/setup_generic.sh'
+  export SCRIPT_NAME
+  . "${SCRIPT_NAME}"
+elif [ -f "${OS_SETUP_SCRIPT}" ]; then
   SCRIPT_NAME="${OS_SETUP_SCRIPT}"
   export SCRIPT_NAME
   . "${SCRIPT_NAME}"

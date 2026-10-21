@@ -433,6 +433,7 @@ build_single_variant() {
   fi
   if ! command -v candle >/dev/null 2>&1 && ! command -v candle.exe >/dev/null 2>&1; then
     if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" ]; then
+      # shellcheck disable=SC1091
       . "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" >/dev/null 2>&1 || true
     fi
   fi
@@ -440,6 +441,7 @@ build_single_variant() {
     if [ -x "${LIBSCRIPT_ROOT_DIR}/libscript.sh" ]; then
       "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install msi-rs v0.0.1 >/dev/null 2>&1 || true
       if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" ]; then
+        # shellcheck disable=SC1091
         . "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" >/dev/null 2>&1 || true
       fi
     fi
@@ -453,13 +455,13 @@ build_single_variant() {
   fi
 
   if ! command -v "$_candle" >/dev/null 2>&1; then
-    printf '[ERROR] msi-rs not found. Please install msi-rs.n' >&2
+    printf '[ERROR] msi-rs not found. Please install msi-rs.\n' >&2
     exit 1
   fi
 
-  printf '[INFO] Compiling standalone %s MSI via msi-rs: %sn' "$_v" "$TARGET_MSI"
-  "$_candle" -nologo -arch ${TARGET_ARCH} -out "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_main.wixobj" "$MAIN_WXS" || exit 1
-  "$_candle" -nologo -arch ${TARGET_ARCH} -out "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_payload.wixobj" "$PAYLOAD_WXS" || exit 1
+  printf '[INFO] Compiling standalone %s MSI via msi-rs: %s\n' "$_v" "$TARGET_MSI"
+  "$_candle" -nologo -arch "${TARGET_ARCH}" -out "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_main.wixobj" "$MAIN_WXS" || exit 1
+  "$_candle" -nologo -arch "${TARGET_ARCH}" -out "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_payload.wixobj" "$PAYLOAD_WXS" || exit 1
   "$_light" -nologo -sval -ext WixUIExtension -out "$TARGET_MSI" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_main.wixobj" "${LIBSCRIPT_ROOT_DIR}/tmp/${COMPONENT}_${_v}_payload.wixobj" || exit 1
 
 

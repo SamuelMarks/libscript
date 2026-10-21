@@ -43,12 +43,13 @@ printf '%s\n' ">>> RUNNING PRE-COMMIT DANCE <<<"
 # Stage all files so the pre-commit hook thinks they are staged
 git add -A
 
-# Run the pre-commit script
-.githooks/pre-commit.sh
+# Run the pre-commit script across the repository
+.githooks/pre-commit.sh --all
 
-# Check if anything changed
-if ! git diff --no-ext-diff --cached --exit-code; then
+# Check if anything changed in index or working tree
+if ! git diff --no-ext-diff --cached --exit-code || ! git diff --no-ext-diff --exit-code; then
   printf '%s\n' "Error: The pre-commit hook modified files. Please run the pre-commit hook locally and commit the changes."
+  git status --short -uno >&2
   exit 1
 fi
 

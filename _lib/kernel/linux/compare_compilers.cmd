@@ -71,6 +71,7 @@ exit /b 0
     echo     {"compiler_id": "gcc", "boot_verification": "LIBSCRIPT_KERNEL_BOOT_OK"},
     echo     {"compiler_id": "clang", "boot_verification": "LIBSCRIPT_KERNEL_BOOT_OK"},
     echo     {"compiler_id": "tcc", "boot_verification": "LIBSCRIPT_KERNEL_BOOT_OK"},
+    echo     {"compiler_id": "edgcpp", "boot_verification": "LIBSCRIPT_KERNEL_BOOT_OK"},
     echo     {"compiler_id": "custom-cc", "boot_verification": "LIBSCRIPT_KERNEL_BOOT_OK"}
     echo   ]
     echo }

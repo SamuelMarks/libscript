@@ -47,8 +47,11 @@ microVM appliances, desktop environments, and server images orchestrated by LibS
 - `linux-kernel-clang-tiny.json`: Minimal Linux kernel (`tinyconfig`) built with LLVM Clang.
 - `linux-kernel-tcc-tiny.json`: Minimal Linux kernel (`tinyconfig`) built with Tiny C Compiler
   (TCC).
+- `linux-kernel-edgcpp-tiny.json`: Minimal Linux kernel (`tinyconfig`) built with `edgcpp` v7.0.1.
 - `linux-kernel-custom-cc-tiny.json`: Minimal Linux kernel (`tinyconfig`) built with `custom-cc`.
 - `linux-kernel-gcc-defconfig.json`: Standard Linux kernel (`defconfig`) built with GCC.
+- `linux-kernel-edgcpp-defconfig.json`: Standard Linux kernel (`defconfig`) built with `edgcpp`
+  v7.0.1.
 - `linux-kernel-custom-cc-defconfig.json`: Standard Linux kernel (`defconfig`) built with
   `custom-cc`.
 

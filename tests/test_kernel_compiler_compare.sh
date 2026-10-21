@@ -33,12 +33,12 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 export LIBSCRIPT_ROOT_DIR
 
 # ## verify_kernel_profiles_resolution
-# Verifies that all 6 declarative Linux kernel compiler profiles resolve cleanly via resolve_stack.jq.
+# Verifies that all declarative Linux kernel compiler profiles resolve cleanly via resolve_stack.jq.
 verify_kernel_profiles_resolution() {
   if ! command -v jq >/dev/null 2>&1; then
     return 0
   fi
-  for _prof in linux-kernel-gcc-tiny.json linux-kernel-clang-tiny.json linux-kernel-tcc-tiny.json linux-kernel-custom-cc-tiny.json linux-kernel-gcc-defconfig.json linux-kernel-custom-cc-defconfig.json; do
+  for _prof in linux-kernel-gcc-tiny.json linux-kernel-clang-tiny.json linux-kernel-tcc-tiny.json linux-kernel-edgcpp-tiny.json linux-kernel-custom-cc-tiny.json linux-kernel-gcc-defconfig.json linux-kernel-edgcpp-defconfig.json linux-kernel-custom-cc-defconfig.json; do
     _prof_path="${LIBSCRIPT_ROOT_DIR}/profiles/${_prof}"
     [ -f "${_prof_path}" ]
     _plan="$(jq -L "${LIBSCRIPT_ROOT_DIR}/_lib/utilities" -L "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration" --arg target_os linux -f "${LIBSCRIPT_ROOT_DIR}/_lib/orchestration/resolve_stack.jq" "${_prof_path}")"
@@ -56,6 +56,7 @@ verify_kernel_compiler_matrix() {
   _kreport="${LIBSCRIPT_ROOT_DIR}/build/kernel-compiler-comparison.json"
   [ -f "${_kreport}" ]
   grep -q '"LIBSCRIPT_KERNEL_BOOT_OK"' "${_kreport}"
+  grep -q '"compiler_id": "edgcpp"' "${_kreport}"
   grep -q '"compiler_id": "custom-cc"' "${_kreport}"
 }
 

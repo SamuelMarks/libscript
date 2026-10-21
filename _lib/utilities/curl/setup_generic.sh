@@ -33,6 +33,12 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR:-$(cd "$(dirname "$THIS_FILE")/../../.." && pwd)}/_lib/_common/pkg_mgr.sh"
 # shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/versioning.sh"
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
+SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/_common/source_builder.sh"
+# shellcheck disable=SC1090,SC1091
+. "${SCRIPT_NAME}"
 
 CURL_INSTALL_METHOD="$(libscript_resolve_install_method "CURL")"
 ACTION="${ACTION:-install}"
@@ -101,6 +107,12 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ "${CURL_INSTALL_METHOD}" = "from-source" ]; then
+      EXACT_VERSION="${CURL_VERSION:-8.10.1}"
+      [ "${EXACT_VERSION}" = "latest" ] && EXACT_VERSION="8.10.1"
+      libscript_build_component_from_source "curl" "${EXACT_VERSION}" "curl" "c" "cmake" "${CURL_DOWNLOAD_URL:-}"
+      exit 0
+    fi
     if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/curl/${VERSION:-latest}/bin/curl" ]; then
       log_info "curl ${VERSION:-latest} is already installed."
       exit 0

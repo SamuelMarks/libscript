@@ -33,7 +33,7 @@
         },
         "compiler": {
           "type": "string",
-          "description": "Selected C compiler toolchain for kernel and target compilation ('default', 'gcc', 'clang', 'tcc', 'custom-cc')"
+          "description": "Selected C compiler toolchain for kernel and target compilation ('default', 'gcc', 'clang', 'tcc', 'edgcpp', 'custom-cc')"
         }
       }
     },

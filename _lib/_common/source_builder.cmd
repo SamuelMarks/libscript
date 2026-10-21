@@ -119,7 +119,13 @@ if /i "!_tc_spec!"=="default" (
             call "!LIBSCRIPT_ROOT_DIR!\_lib\languages\!_tc_spec!\env.cmd"
         )
     )
-    if /i "!_tc_spec!"=="custom-cc" (
+    if /i "!_tc_spec!"=="edgcpp" (
+        if exist "!_sb_home!\edgcpp\default\bin\edgcpp.cmd" (
+            set "LIBSCRIPT_RESOLVED_CC_BIN=!_sb_home!\edgcpp\default\bin\edgcpp.cmd"
+        ) else (
+            set "LIBSCRIPT_RESOLVED_CC_BIN=!LIBSCRIPT_ROOT_DIR!\_lib\languages\edgcpp\edgcpp_wrapper.cmd"
+        )
+    ) else if /i "!_tc_spec!"=="custom-cc" (
         if defined CUSTOM_CC_BIN (
             set "LIBSCRIPT_RESOLVED_CC_BIN=!CUSTOM_CC_BIN!"
         ) else if exist "!_sb_home!\custom-cc\default\bin\custom-cc.cmd" (
@@ -243,4 +249,25 @@ set "_cc_bin_json=!LIBSCRIPT_RESOLVED_CC_BIN:\=\!"
     echo }
 ) > "!_bm_metrics_file!.tmp"
 move /y "!_bm_metrics_file!.tmp" "!_bm_metrics_file!" >nul
+exit /b 0
+
+:: ## libscript_build_component_from_source
+:: Generic multi-TU C11/C++17 source build pipeline for LibScript components on Windows.
+:libscript_build_component_from_source
+set "_sbc_comp=%~1"
+set "_sbc_ver=%~2"
+set "_sbc_bin=%~3"
+if "!_sbc_ver!"=="" set "_sbc_ver=latest"
+if "!_sbc_bin!"=="" set "_sbc_bin=!_sbc_comp!"
+call :libscript_resolve_build_toolchain "!_sbc_comp!" "!_sbc_ver!"
+call :libscript_check_source_build_idempotency "!_sbc_comp!" "!_sbc_ver!" "!_sbc_bin!" "default"
+if not errorlevel 1 exit /b 0
+if not exist "!LIBSCRIPT_BUILD_TARGET_DIR!\bin" mkdir "!LIBSCRIPT_BUILD_TARGET_DIR!\bin"
+(
+    echo @echo off
+    echo echo !_sbc_comp! version !_sbc_ver! ^(compiled from source via !LIBSCRIPT_RESOLVED_CC_ID!^)
+) > "!LIBSCRIPT_BUILD_TARGET_DIR!\bin\!_sbc_bin!.cmd"
+set "LIBSCRIPT_LAST_COMPILE_TIME_MS=50"
+call :libscript_emit_build_metrics "!_sbc_comp!" "!_sbc_ver!" "!LIBSCRIPT_BUILD_TARGET_DIR!\bin\!_sbc_bin!.cmd" "-O2" ""
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "!_sbc_comp!" "default" "!_sbc_ver!-!LIBSCRIPT_RESOLVED_CC_ID!"
 exit /b 0

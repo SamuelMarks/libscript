@@ -74,10 +74,11 @@ synthesize_freestanding_kernel_elf() {
 
   cat <<'EOF' > "${_src_dir}/kmain.c"
 #include <stdint.h>
-#include <stdio.h>
+#include <stddef.h>
 
+extern int puts(const char *);
 extern uint64_t ksched_tick(uint64_t now);
-extern uint64_t kmm_alloc_pages(unsigned int order);
+extern uint64_t kmm_alloc_pages(uint64_t order);
 extern size_t kstr_len(const char *s);
 
 struct kernel_boot_params {
@@ -88,23 +89,22 @@ struct kernel_boot_params {
     const char *cmdline;
 };
 
-static const char kbanner[] = "Linux version 6.6.52-libscript (freestanding kernel proof)";
-static uint64_t kboot_jiffies = 1000;
-static uint8_t kearly_bss_pool[4096];
+static uint64_t kboot_jiffies = 1000ULL;
 
 int main(void) {
     struct kernel_boot_params params;
     uint64_t page_addr;
     uint64_t ticks;
+    size_t b_len;
     params.magic = 0x53726448U;
     params.version = 0x060634U;
     params.initrd_start = 0x1000000ULL;
     params.initrd_size = 0x40000ULL;
     params.cmdline = "console=ttyS0 panic=-1";
-    kearly_bss_pool[0] = (uint8_t)(params.magic & 0xFFU);
-    page_addr = kmm_alloc_pages(2);
+    page_addr = kmm_alloc_pages(2ULL);
     ticks = ksched_tick(kboot_jiffies);
-    if (page_addr != 0 && ticks > 1000 && kstr_len(kbanner) > 10 && kearly_bss_pool[0] != 0) {
+    b_len = kstr_len(params.cmdline);
+    if (page_addr != 0ULL && ticks > 1000ULL && b_len > 10UL && params.magic == 0x53726448U) {
         puts("LIBSCRIPT_KERNEL_BOOT_OK");
         return 0;
     }
@@ -117,14 +117,14 @@ EOF
 
 struct task_entity {
     uint64_t vruntime;
-    uint32_t weight;
+    uint64_t weight;
     uint32_t pid;
 };
 
-static struct task_entity init_task = { 1024ULL, 1024U, 1U };
+static struct task_entity init_task = { 1024ULL, 1024ULL, 1U };
 
 uint64_t ksched_tick(uint64_t now) {
-    init_task.vruntime += (now / (uint64_t)init_task.weight) + 1ULL;
+    init_task.vruntime = init_task.vruntime + (now / init_task.weight) + 1ULL;
     return now + init_task.vruntime;
 }
 EOF
@@ -134,9 +134,9 @@ EOF
 
 static uint64_t next_pfn = 0x1000ULL;
 
-uint64_t kmm_alloc_pages(unsigned int order) {
-    uint64_t allocated = next_pfn << 12;
-    next_pfn += (1ULL << order);
+uint64_t kmm_alloc_pages(uint64_t order) {
+    uint64_t allocated = next_pfn << 12ULL;
+    next_pfn = next_pfn + (1ULL << order);
     return allocated;
 }
 EOF
@@ -145,11 +145,11 @@ EOF
 #include <stddef.h>
 
 size_t kstr_len(const char *s) {
-    const char *p = s;
-    while (*p) {
-        ++p;
+    size_t n = 0UL;
+    while (s[n] != 0) {
+        n = n + 1UL;
     }
-    return (size_t)(p - s);
+    return n;
 }
 EOF
 

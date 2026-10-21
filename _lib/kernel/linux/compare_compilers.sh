@@ -43,7 +43,7 @@ for LIB in "_lib/_common/log.sh" "_lib/_common/source_builder.sh"; do
 done
 SCRIPT_DIR="${KERNEL_COMP_DIR}"
 
-COMPILERS_LIST="${LINUX_COMPARE_COMPILERS:-default gcc clang tcc custom-cc}"
+COMPILERS_LIST="${LINUX_COMPARE_COMPILERS:-default gcc clang tcc edgcpp custom-cc}"
 LINUX_VER="${LINUX_VERSION:-6.6.52}"
 [ "${LINUX_VER}" = "latest" ] && LINUX_VER="6.6.52"
 KCONFIG_TARGET="${LINUX_CONFIG_TARGET:-tinyconfig}"

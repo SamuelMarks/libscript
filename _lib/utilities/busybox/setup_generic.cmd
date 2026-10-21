@@ -154,6 +154,10 @@ exit /b 0
 :: ## action_install
 :: Installs and configures the requested version of the component.
 :action_install
+if /i "%BUSYBOX_INSTALL_METHOD%"=="from-source" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "busybox" "%BUSYBOX_VERSION%" "busybox" "c"
+    exit /b !errorlevel!
+)
 if "%BUSYBOX_INSTALL_METHOD%"=="system" (
     winget install busybox --accept-package-agreements --accept-source-agreements
     exit /b !errorlevel!

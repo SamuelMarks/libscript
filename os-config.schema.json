@@ -115,8 +115,8 @@
         },
         "compiler": {
           "type": "string",
-          "description": "C compiler backend used to compile the kernel ('default', 'gcc', 'clang', 'tcc', or 'custom-cc')",
-          "enum": ["default", "gcc", "clang", "tcc", "custom-cc"],
+          "description": "C compiler backend used to compile the kernel ('default', 'gcc', 'clang', 'tcc', 'edgcpp', or 'custom-cc')",
+          "enum": ["default", "gcc", "clang", "tcc", "edgcpp", "custom-cc"],
           "default": "default"
         },
         "kcflags": {

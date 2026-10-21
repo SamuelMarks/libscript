@@ -54,4 +54,10 @@ goto :find_root
 if "%CPP_INSTALL_METHOD%"=="" set "CPP_INSTALL_METHOD=system"
 if "%CPP_VERSION%"=="" set "CPP_VERSION=latest"
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
-set "PATH=%LIBSCRIPT_HOME%\cpp\%CPP_VERSION%\bin;%PATH%"
+if not "%CXX_BACKEND%"=="" if not "%CXX_BACKEND%"=="default" (
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\languages\%CXX_BACKEND%\env.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\languages\%CXX_BACKEND%\env.cmd"
+    )
+)
+endlocal & set "PATH=%LIBSCRIPT_HOME%\cpp\%CPP_VERSION%\bin;%PATH%"
+exit /b 0

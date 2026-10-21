@@ -63,6 +63,7 @@ case "$target" in
     "$SCRIPT_DIR/devtools/audit/audit_posix.sh"
     "$SCRIPT_DIR/devtools/audit/audit_version_manager.sh"
     "$SCRIPT_DIR/devtools/audit/doc_coverage.sh" --strict
+    "$SCRIPT_DIR/tests/test_doc_coverage.sh"
     "$SCRIPT_DIR/tests/test_vm_contract.sh"
     "$SCRIPT_DIR/tests/test_update_results.sh"
     ;;

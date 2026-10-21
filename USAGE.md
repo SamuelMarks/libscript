@@ -65,7 +65,7 @@ modes in addition to version manager fallbacks:
 1. **`libscript_native`** (Default: isolated binary download or compilation into
    `${LIBSCRIPT_HOME}`)
 2. **`from-source`** (Compiles from verified source archive using `--toolchain=default` or a custom
-   C toolchain: `gcc`, `clang`, `tcc`, `custom-cc`, or `--custom-cc=/path/to/cc`)
+   C/C++ toolchain: `gcc`, `clang`, `tcc`, `edgcpp`, `custom-cc`, or `--custom-cc=/path/to/cc`)
 3. **`system` / `--pkg-mgr=<pm>`** (Explicitly targets any OS or ecosystem package manager:
    `apt-get`, `apk`, `dnf`, `brew`, `winget`, `choco`, `scoop`, `nix`, `spack`, `vcpkg`, `pkgx`,
    auto-bootstrapping `_lib/package-managers/<pm>` if not yet installed)
@@ -81,13 +81,15 @@ Override globally or per component via CLI flags or environment variables:
 # Mode 2: Build from source with the default platform C toolchain
 ./libscript.sh install sqlite 3.46.1 --from-source --toolchain=default
 
-# Mode 3: Build from source with a custom C toolchain (gcc, clang, tcc, custom-cc)
+# Mode 3: Build from source with a custom C/C++ toolchain (gcc, clang, tcc, edgcpp, custom-cc)
+./libscript.sh install sqlite 3.46.1 --from-source --toolchain=edgcpp
 ./libscript.sh install sqlite 3.46.1 --from-source --toolchain=custom-cc
 ./libscript.sh install sqlite 3.46.1 --custom-cc=/path/to/my-c-compiler
 
-# Run 4-way differential C compiler verification (SQLite amalgamation & Linux kernel)
+# Run multi-compiler differential C/C++ verification (SQLite amalgamation, Linux kernel & 13-target corpus)
 ./_lib/databases/sqlite/compare_compilers.sh
 ./_lib/kernel/linux/compare_compilers.sh
+./tests/test_edgcpp_corpus_matrix.sh
 ```
 
 ### Inspecting Component Environment (`info` & `env`)
@@ -157,8 +159,9 @@ Available curated profiles include:
   `cloud-gcp-gce-base.json`, `hypervisor-vmware-esxi.json`, `hypervisor-proxmox-template.json`,
   `firecracker-microvm-appliance.json`, `unikraft-nginx-redis.json`, `osv-cloud-runtime.json`
 - **Multi-Compiler Linux Kernel Profiles**: `linux-kernel-gcc-tiny.json`,
-  `linux-kernel-clang-tiny.json`, `linux-kernel-tcc-tiny.json`, `linux-kernel-custom-cc-tiny.json`,
-  `linux-kernel-gcc-defconfig.json`, `linux-kernel-custom-cc-defconfig.json`
+  `linux-kernel-clang-tiny.json`, `linux-kernel-tcc-tiny.json`, `linux-kernel-edgcpp-tiny.json`,
+  `linux-kernel-custom-cc-tiny.json`, `linux-kernel-gcc-defconfig.json`,
+  `linux-kernel-edgcpp-defconfig.json`, `linux-kernel-custom-cc-defconfig.json`
 
 ---
 

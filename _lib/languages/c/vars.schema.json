@@ -17,9 +17,9 @@
       "default": "latest"
     },
     "CC_BACKEND": {
-      "description": "Active C compiler backend routed by c ('default', 'gcc', 'clang', 'tcc', 'custom-cc').",
+      "description": "Active C compiler backend routed by c ('default', 'gcc', 'clang', 'tcc', 'edgcpp', 'custom-cc').",
       "type": "string",
-      "enum": ["default", "gcc", "clang", "tcc", "custom-cc"],
+      "enum": ["default", "gcc", "clang", "tcc", "edgcpp", "custom-cc"],
       "default": "default"
     },
     "C_PKG_MGR": {

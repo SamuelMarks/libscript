@@ -139,6 +139,11 @@ if /i "!_cc_id!"=="custom-cc" (
     set "LIBSCRIPT_COMPILER_LDFLAGS="
     exit /b 0
 )
+if /i "!_cc_id!"=="edgcpp" (
+    set "LIBSCRIPT_COMPILER_CFLAGS=-O2"
+    set "LIBSCRIPT_COMPILER_LDFLAGS="
+    exit /b 0
+)
 set "LIBSCRIPT_COMPILER_CFLAGS=!LIBSCRIPT_SECURITY_CFLAGS! -O2"
 set "LIBSCRIPT_COMPILER_LDFLAGS=!LIBSCRIPT_SECURITY_LDFLAGS!"
 exit /b 0

@@ -10,12 +10,12 @@ The architecture follows two foundational design patterns:
 1. **Decentralized Routing**: The global CLI (`libscript.sh` / `libscript.cmd`) acts as a
    high-speed, zero-dependency router that delegates to autonomous, component-specific package
    managers in `_lib/`.
-2. **Five-Tier Architectural Division of Concerns**: A strict separation of responsibilities
-   between leaf recipes & base userland (Tier 1 & Tier 1.5), system synthesizers & kernel/unikernel
-   image builders (Tier 2), multicloud IaaS operators (Tier 3), consensus & high-availability
-   topologies (Tier 3.5), declarative payloads & multi-node cluster schedulers (Tier 4), and the
-   cross-cutting Unified Traits Subsystem (`traits/`) to prevent combinatorial explosion,
-   cross-layer leakage, and host contamination.
+2. **Five-Tier Architectural Division of Concerns**: A strict separation of responsibilities between
+   leaf recipes & base userland (Tier 1 & Tier 1.5), system synthesizers & kernel/unikernel image
+   builders (Tier 2), multicloud IaaS operators (Tier 3), consensus & high-availability topologies
+   (Tier 3.5), declarative payloads & multi-node cluster schedulers (Tier 4), and the cross-cutting
+   Unified Traits Subsystem (`traits/`) to prevent combinatorial explosion, cross-layer leakage, and
+   host contamination.
 
 ---
 
@@ -270,12 +270,14 @@ handled by `_lib/_common/pkg_mgr.{sh,cmd}`, `_lib/_common/source_builder.{sh,cmd
    the component from its cached source archive into `${LIBSCRIPT_HOME}/<pkg>/<version>/`, emitting
    `build-metrics.json`.
 3. **Mode 3 — Build from `<source>` with Custom Toolchain
-   (`--from-source --toolchain=gcc|clang|tcc|custom-cc` or `--custom-cc=<path>`)**: Activates the
-   specified compiler recipe (`_lib/languages/{gcc,clang,tcc,custom-cc}/`), injects the
-   flag-normalizing telemetry shim (`cc_wrapper.{sh,cmd}`), compiles into a compiler-namespaced
-   prefix (`${LIBSCRIPT_HOME}/<pkg>/<version>-<cc>/`), and supports 4-way differential verification
-   across the SQLite C amalgamation (`_lib/databases/sqlite/compare_compilers.{sh,cmd}`) and the
-   Linux kernel (`_lib/kernel/linux/compare_compilers.{sh,cmd}`).
+   (`--from-source --toolchain=gcc|clang|tcc|edgcpp|custom-cc` or `--custom-cc=<path>`)**: Activates
+   the specified compiler recipe (`_lib/languages/{gcc,clang,tcc,edgcpp,custom-cc}/`), injects the
+   flag-normalizing telemetry shim (`cc_wrapper.{sh,cmd}` / `edgcpp_wrapper.{sh,cmd}`), compiles
+   into a compiler-namespaced prefix (`${LIBSCRIPT_HOME}/<pkg>/<version>-<cc>/`), and supports
+   multi-compiler differential verification across the SQLite C amalgamation
+   (`_lib/databases/sqlite/compare_compilers.{sh,cmd}`), the Linux kernel
+   (`_lib/kernel/linux/compare_compilers.{sh,cmd}`), and the 13-target C11/C++17 corpus
+   (`tests/test_edgcpp_corpus_matrix.{sh,cmd}`).
 
 ---
 

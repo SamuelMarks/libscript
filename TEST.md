@@ -305,24 +305,27 @@ cross-platform matrix testing and screenshot verification:
 
 ---
 
-## 11. Generic Build Modes & 4-Way C Compiler Differential Verification Matrix
+## 11. Generic Build Modes & Multi-Compiler C/C++ Differential Verification Matrix
 
-LibScript validates its 3 generic installation/build modes and 4-way C compiler differential matrix
-(`gcc`, `clang`, `tcc`, `custom-cc`) across both userland C (SQLite amalgamation) and freestanding
-kernel C (Linux kernel):
+LibScript validates its 3 generic installation/build modes and C/C++ compiler differential matrix
+(`gcc`, `clang`, `tcc`, `edgcpp`, `custom-cc`) across userland C (SQLite amalgamation), freestanding
+kernel C (Linux kernel), and the 13-target C11/C++17 component corpus:
 
 ```sh
 # 1. Verify Mode 1 (--pkg-mgr), Mode 2 (--from-source default), and Mode 3 (--from-source custom-cc)
 ./tests/test_generic_build_modes.sh
 
-# 2. Verify lifecycle & C89/C99 conformance across gcc, clang, tcc, custom-cc, cc, and c
+# 2. Verify lifecycle & C/C++ conformance across gcc, clang, tcc, edgcpp, custom-cc, cc, and c
 ./tests/test_c_compilers_lifecycle.sh
 
-# 3. Verify 4-way SQLite amalgamation compilation & 6-stage SQL torture digest equivalence
+# 3. Verify SQLite amalgamation compilation & 6-stage SQL torture digest equivalence
 ./tests/test_sqlite_compiler_matrix.sh
 
-# 4. Verify multi-compiler Linux kernel Kbuild/ELF/System.map diff, profile resolution & boot proof
+# 4. Verify Linux kernel multi-compiler Kbuild / ELF synthesis, System.map diff & profile resolution
 ./tests/test_kernel_compiler_compare.sh
+
+# 5. Verify 13-target C11 & C++17 component corpus compilation with edgcpp v7.0.1
+./tests/test_edgcpp_corpus_matrix.sh
 ```
 
 ---

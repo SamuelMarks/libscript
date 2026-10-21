@@ -171,6 +171,10 @@ exit /b 0
 :: ## action_install
 :: Installs and configures the requested version of the component.
 :action_install
+if /i "%MEMCACHED_INSTALL_METHOD%"=="from-source" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "memcached" "%MEMCACHED_VERSION%" "memcached" "c"
+    exit /b !errorlevel!
+)
 if "%MEMCACHED_INSTALL_METHOD%"=="system" (
     winget install memcached --accept-package-agreements --accept-source-agreements 2>nul || choco install memcached -y
     exit /b !errorlevel!

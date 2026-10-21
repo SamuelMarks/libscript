@@ -35,7 +35,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/versioning.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/versioning.sh" "_lib/_common/source_builder.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   . "${SCRIPT_NAME}"
@@ -135,6 +135,12 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ "${BUSYBOX_INSTALL_METHOD}" = "from-source" ]; then
+      EXACT_VERSION="${BUSYBOX_VERSION:-1.36.1}"
+      [ "${EXACT_VERSION}" = "latest" ] && EXACT_VERSION="1.36.1"
+      libscript_build_component_from_source "busybox" "${EXACT_VERSION}" "busybox" "c" "make" "${BUSYBOX_DOWNLOAD_URL:-}"
+      exit 0
+    fi
     if [ -x "${LIBSCRIPT_HOME:-$HOME/.libscript}/busybox/${VERSION:-latest}/bin/busybox" ]; then
       log_info "busybox ${VERSION:-latest} is already installed."
       exit 0

@@ -37,12 +37,13 @@ export LIBSCRIPT_ROOT_DIR
 # Runs compare_compilers.sh twice consecutively and validates the JSON report.
 verify_sqlite_matrix_report() {
   unset SCRIPT_NAME || true
-  "${LIBSCRIPT_ROOT_DIR}/_lib/databases/sqlite/compare_compilers.sh" --compilers="default gcc clang tcc custom-cc"
-  "${LIBSCRIPT_ROOT_DIR}/_lib/databases/sqlite/compare_compilers.sh" --compilers="default gcc clang tcc custom-cc"
+  "${LIBSCRIPT_ROOT_DIR}/_lib/databases/sqlite/compare_compilers.sh" --compilers="default gcc clang tcc edgcpp custom-cc"
+  "${LIBSCRIPT_ROOT_DIR}/_lib/databases/sqlite/compare_compilers.sh" --compilers="default gcc clang tcc edgcpp custom-cc"
 
   _report="${LIBSCRIPT_ROOT_DIR}/build/sqlite-compiler-comparison.json"
   [ -f "${_report}" ]
   grep -q '"all_digests_identical": true' "${_report}"
+  grep -q '"compiler_id": "edgcpp"' "${_report}"
   grep -q '"compiler_id": "custom-cc"' "${_report}"
 }
 

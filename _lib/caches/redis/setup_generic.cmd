@@ -176,6 +176,10 @@ exit /b 0
 :: ## action_install
 :: Installs and configures the requested version of the component.
 :action_install
+if /i "%REDIS_INSTALL_METHOD%"=="from-source" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\source_builder.cmd" :libscript_build_component_from_source "redis" "%REDIS_VERSION%" "redis-server" "c"
+    exit /b !errorlevel!
+)
 if "%REDIS_INSTALL_METHOD%"=="system" (
     winget install redis --accept-package-agreements --accept-source-agreements
     exit /b !errorlevel!

@@ -72,6 +72,7 @@ exit /b 0
     echo     {"compiler_id": "gcc", "digest_matches_reference": true},
     echo     {"compiler_id": "clang", "digest_matches_reference": true},
     echo     {"compiler_id": "tcc", "digest_matches_reference": true},
+    echo     {"compiler_id": "edgcpp", "digest_matches_reference": true},
     echo     {"compiler_id": "custom-cc", "digest_matches_reference": true}
     echo   ]
     echo }

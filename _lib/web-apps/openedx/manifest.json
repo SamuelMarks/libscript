@@ -33,12 +33,7 @@
       "rollback",
       "maintenance"
     ],
-    "logical": [
-      "provision_tenant",
-      "deprovision_tenant",
-      "backup_tenant",
-      "restore_tenant"
-    ],
+    "logical": ["provision_tenant", "deprovision_tenant", "backup_tenant", "restore_tenant"],
     "probe_timeout_seconds": 30,
     "metrics_scrape_path": "/heartbeat"
   }

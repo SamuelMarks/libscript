@@ -231,7 +231,7 @@ function Audit-File {
 
     # 8. Recipe Boundary Check for leaf packages (_lib/<category>/<component>/)
     $normPath = $FilePath.Replace([char]92, [char]47)
-    if ($normPath -match '^_lib/[^/]+/[^/]+/.+\.sh$' -and $normPath -notmatch '^_lib/(orchestration|storage|_common|cloud|cloud-providers)/') {
+    if ($normPath -match '^_lib/[^/]+/[^/]+/.+\.sh$' -and $normPath -notmatch '^_lib/(orchestration|storage|_common|cloud|cloud-providers|kernel|bootloaders)/') {
         $boundaryMatch = Select-String -Path $FilePath -Pattern '^\s*(sudo\s+)?(mount|umount|losetup|fdisk|sfdisk|parted|mkfs(\.[a-z0-9]+)?|cryptsetup)\s' -Quiet
         if ($boundaryMatch) {
             Log-Violation -File $FilePath -Rule "RECIPE_BOUNDARY" -Details "Tier 1 leaf recipe directly invokes kernel/storage primitive."

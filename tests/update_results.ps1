@@ -228,7 +228,16 @@ function Update-SupportedComponents {
         }
     }
 
-    $entries = $entries | Sort-Object Tier, Comp -Unique
+    $dedupMap = @{}
+    foreach ($item in $entries) {
+        $key = "$($item.Tier)|$($item.Comp)"
+        if (-not $dedupMap.ContainsKey($key)) {
+            $dedupMap[$key] = $item
+        }
+    }
+    $sortedKeys = [string[]]@($dedupMap.Keys)
+    [System.Array]::Sort($sortedKeys, [System.StringComparer]::Ordinal)
+    $entries = foreach ($k in $sortedKeys) { $dedupMap[$k] }
 
     $existingMap = @{}
     if (Test-Path -LiteralPath $TargetReadme) {

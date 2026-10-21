@@ -430,10 +430,7 @@
         "type": "string",
         "description": "URL of a Tutor plugin index."
       },
-      "default": [
-        "https://overhang.io/tutor/main",
-        "https://overhang.io/tutor/contrib"
-      ],
+      "default": ["https://overhang.io/tutor/main", "https://overhang.io/tutor/contrib"],
       "description": "Remote plugin index URLs for discovering and installing Open edX plugins."
     },
     "MOUNTS": {

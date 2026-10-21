@@ -138,9 +138,6 @@ if /i "%~1"=="--arch" (
     shift
     goto parse_loop
 )
-    shift
-    goto parse_loop
-)
 if /i "%~1"=="--branch" (
     set "BRANCH=%~2"
     shift
@@ -212,9 +209,9 @@ if /i "%VARIANT%"=="offline" (
 )
 if /i "%VARIANT%"=="all" (
     call :build_single_variant online
-    if !ERRORLEVEL! neq 0 goto compile_err
+    if !ERRORLEVEL! neq 0 exit /b !ERRORLEVEL!
     call :build_single_variant offline
-    goto compile_err
+    exit /b !ERRORLEVEL!
 )
 
 echo [ERROR] Unknown variant: %VARIANT%. Use online, offline, or all. >&2

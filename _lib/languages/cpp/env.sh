@@ -31,4 +31,12 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 
 export CPP_INSTALL_METHOD="${CPP_INSTALL_METHOD:-system}"
 CPP_VERSION="${CPP_VERSION:-latest}"
-export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/cpp/${CPP_VERSION}/bin:${PATH}"
+_cxx_backend="${CXX_BACKEND:-${CC_BACKEND:-default}}"
+if [ "${_cxx_backend}" != "default" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/languages/${_cxx_backend}/env.sh" ]; then
+  SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}/_lib/languages/${_cxx_backend}/env.sh"
+  export SCRIPT_NAME
+  # shellcheck disable=SC1090,SC1091
+  . "${SCRIPT_NAME}"
+else
+  export PATH="${LIBSCRIPT_HOME:-$HOME/.libscript}/cpp/${CPP_VERSION}/bin:${PATH}"
+fi

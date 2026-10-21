@@ -59,7 +59,9 @@ foreach ($readme in $readmes) {
                 $key = $p.Name
                 $val = $p.Value
                 $desc = if ($val.description) { ($val.description -replace "`r?`n", " ") } else { "" }
-                $def = if ($null -ne $val.default -and "" -ne $val.default) { $val.default } else { "none" }
+                $def = if ($null -ne $val.default -and "" -ne $val.default) {
+                    if ($val.default -is [bool]) { $val.default.ToString().ToLowerInvariant() } else { [string]$val.default }
+                } else { "none" }
                 $aliases = @()
                 if ($val.version_aliases) { $aliases += $val.version_aliases }
                 if ($val.examples) { $aliases += $val.examples }
@@ -75,7 +77,9 @@ foreach ($readme in $readmes) {
             $key = $p.Name
             $val = $p.Value
             $desc = if ($val.description) { ($val.description -replace "`r?`n", " ") } else { "" }
-            $def = if ($null -ne $val.default -and "" -ne $val.default) { $val.default } else { "none" }
+            $def = if ($null -ne $val.default -and "" -ne $val.default) {
+                if ($val.default -is [bool]) { $val.default.ToString().ToLowerInvariant() } else { [string]$val.default }
+            } else { "none" }
             $aliases = @()
             if ($val.version_aliases) { $aliases += $val.version_aliases }
             if ($val.examples) { $aliases += $val.examples }

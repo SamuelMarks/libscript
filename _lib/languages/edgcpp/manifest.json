@@ -1,0 +1,12 @@
+{
+  "$schema": "../../_common/manifest.schema.json",
+  "name": "edgcpp",
+  "title": "EDG C/C++ Compiler Frontend (edgcpp)",
+  "description": "Standalone version manager, multi-flavor binary installer (edgcpp+llvm+gcc, edgcpp+llvm, edgcpp+gcc), source builder, and CC/CXX driver wrapper for the Edison Design Group C/C++ Front End (v7.0.1).",
+  "category": "languages",
+  "provides": ["compiler", "c", "cc", "cpp", "cxx", "edgcpp"],
+  "conflicts": [],
+  "os_whitelist": ["all"],
+  "os_blacklist": [],
+  "ports": []
+}

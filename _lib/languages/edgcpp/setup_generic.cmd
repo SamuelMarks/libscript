@@ -1,0 +1,193 @@
+@echo off
+:: # setup_generic.cmd
+::
+:: ## Overview
+:: Generic Windows setup and lifecycle implementation for the EDG C/C++ Compiler Frontend (edgcpp).
+:: Supports downloading official v7.0.1 Windows x86_64/arm64 release archives across
+:: edgcpp+llvm+gcc, edgcpp+llvm, and edgcpp+gcc flavors, building from source, and staging
+:: edgcpp/edg-cc/edg-c++ compiler driver wrappers.
+::
+:: ## Usage
+:: setup_generic.cmd [ACTION]
+
+setlocal EnableDelayedExpansion
+set "THIS_FILE=%~f0"
+
+if defined STACK (
+    echo "!STACK!" | findstr /C:":!THIS_FILE!:" >nul 2>&1
+    if not errorlevel 1 (
+        echo [STOP] processing "!THIS_FILE!" >&2
+        exit /b 0
+    )
+)
+set "STACK=%STACK%:!THIS_FILE!:"
+
+for %%I in ("%~dp0.") do set "SCRIPT_DIR=%%~fI"
+
+if not defined LIBSCRIPT_ROOT_DIR (
+    set "d=!SCRIPT_DIR!"
+    call :find_root
+)
+goto :root_found
+
+:: ## find_root
+:: Ascends the directory tree looking for ROOT or libscript.cmd.
+:find_root
+if exist "!d!\libscript.cmd" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+if exist "!d!\ROOT" (
+    set "LIBSCRIPT_ROOT_DIR=!d!"
+    exit /b 0
+)
+for %%P in ("!d!") do set "parent=%%~dpP"
+set "d=!parent:~0,-1!"
+if "!d!"=="" (
+    echo Error: Could not find LIBSCRIPT_ROOT_DIR 1>&2
+    exit /b 1
+)
+goto :find_root
+
+:: ## root_found
+:: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
+:root_found
+
+if "%ACTION%"=="" set "ACTION=install"
+if "%EDGCPP_VERSION%"=="" set "EDGCPP_VERSION=7.0.1"
+if /i "%EDGCPP_VERSION%"=="latest" (
+    set "EXACT_VERSION=7.0.1"
+) else if /i "%EDGCPP_VERSION%"=="stable" (
+    set "EXACT_VERSION=7.0.1"
+) else if /i "%EDGCPP_VERSION%"=="7.0" (
+    set "EXACT_VERSION=7.0.1"
+) else if /i "%EDGCPP_VERSION%"=="v7.0.1" (
+    set "EXACT_VERSION=7.0.1"
+) else (
+    set "EXACT_VERSION=%EDGCPP_VERSION%"
+)
+if "%EDGCPP_FLAVOR%"=="" set "EDGCPP_FLAVOR=edgcpp+llvm+gcc"
+if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
+
+set "_win_arch=x86_64"
+if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "_win_arch=arm64"
+set "EDGCPP_ASSET_NAME=%EDGCPP_FLAVOR%-v%EXACT_VERSION%-windows-%_win_arch%.zip"
+if not "%EDGCPP_DOWNLOAD_URL%"=="" (
+    set "EDGCPP_ASSET_URL=%EDGCPP_DOWNLOAD_URL%"
+    set "EDGCPP_ASSET_SHA256="
+) else (
+    set "EDGCPP_ASSET_URL=https://github.com/SamuelMarks/edgcpp-compiler/releases/download/v%EXACT_VERSION%/%EDGCPP_ASSET_NAME%"
+    set "EDGCPP_ASSET_SHA256=e510d4524ad91ad9176aba991c927f9f7b84906ab059a0a4bb26f9bd59ea6e04"
+    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm+gcc-v7.0.1-windows-arm64.zip" set "EDGCPP_ASSET_SHA256=0e1ff77549d0b5bd27f7a85830003726bd35b021638428f16b7da9833be61c3e"
+    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm-v7.0.1-windows-x86_64.zip" set "EDGCPP_ASSET_SHA256=c0c5677241d486baa4175a59a2e600a10aa21c56ff05069e47d842b06823c845"
+    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+llvm-v7.0.1-windows-arm64.zip" set "EDGCPP_ASSET_SHA256=35d4bb3e048a0d3b45f78306801a10bcc6376ddd89792b46b2c61e834676790c"
+    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+gcc-v7.0.1-windows-x86_64.zip" set "EDGCPP_ASSET_SHA256=752f8654d33e7b7f7f092550c923f1668a2f3aef1a8cb7ba75127658e17332aa"
+    if /i "%EDGCPP_ASSET_NAME%"=="edgcpp+gcc-v7.0.1-windows-arm64.zip" set "EDGCPP_ASSET_SHA256=031336accc2d6bcfe3d322b22a29dedcdf150cf479d113c2dd47b4c103d3c9e8"
+)
+
+if /i "%ACTION%"=="ls" goto :action_ls
+if /i "%ACTION%"=="ls-remote" goto :action_ls_remote
+if /i "%ACTION%"=="use" goto :action_use
+if /i "%ACTION%"=="download" goto :action_download
+if /i "%ACTION%"=="uninstall" goto :action_uninstall
+goto :action_install
+
+:: ## action_ls
+:: Lists installed edgcpp versions under LIBSCRIPT_HOME.
+:action_ls
+if exist "%LIBSCRIPT_HOME%\edgcpp" dir /b "%LIBSCRIPT_HOME%\edgcpp"
+exit /b 0
+
+:: ## action_ls_remote
+:: Lists remote edgcpp versions available from GitHub Releases.
+:action_ls_remote
+echo 7.0.0
+echo 7.0.1
+echo latest
+exit /b 0
+
+:: ## action_use
+:: Updates the active edgcpp version alias junction.
+:action_use
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "default" "%EXACT_VERSION%"
+exit /b 0
+
+:: ## action_download
+:: Downloads the edgcpp release archive into the local offline cache.
+:action_download
+if not exist "!LIBSCRIPT_ROOT_DIR!\cache\downloads\edgcpp" mkdir "!LIBSCRIPT_ROOT_DIR!\cache\downloads\edgcpp"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%EDGCPP_ASSET_URL%" "!LIBSCRIPT_ROOT_DIR!\cache\downloads\edgcpp\%EDGCPP_ASSET_NAME%" "%EDGCPP_ASSET_SHA256%"
+exit /b 0
+
+:: ## action_install
+:: Downloads/extracts the edgcpp v7.0.1 release archive, stages driver wrappers, and updates the default junction.
+:action_install
+set "TARGET_DIR=%LIBSCRIPT_HOME%\edgcpp\%EXACT_VERSION%"
+if exist "%TARGET_DIR%\bin\edgcpp.cmd" (
+    if exist "%TARGET_DIR%\bin\cpfe.exe" (
+        if not "%FORCE_REBUILD%"=="1" (
+            echo [INFO] edgcpp %EXACT_VERSION% is already installed at %TARGET_DIR%.
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "default" "%EXACT_VERSION%"
+            exit /b 0
+        )
+    )
+)
+if not exist "%TARGET_DIR%\bin" mkdir "%TARGET_DIR%\bin"
+if not exist "%TARGET_DIR%\include_c99" mkdir "%TARGET_DIR%\include_c99"
+if not exist "%TARGET_DIR%\include_c++" mkdir "%TARGET_DIR%\include_c++"
+
+if not exist "!LIBSCRIPT_ROOT_DIR!\cache\downloads\edgcpp" mkdir "!LIBSCRIPT_ROOT_DIR!\cache\downloads\edgcpp"
+set "_dl_zip=!LIBSCRIPT_ROOT_DIR!\cache\downloads\edgcpp\%EDGCPP_ASSET_NAME%"
+if not exist "!_dl_zip!" (
+    call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "%EDGCPP_ASSET_URL%" "!_dl_zip!" "%EDGCPP_ASSET_SHA256%"
+)
+if exist "!_dl_zip!" (
+    tar -xf "!_dl_zip!" --strip-components=1 -C "%TARGET_DIR%" 2>nul
+    if errorlevel 1 (
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -Path '!_dl_zip!' -DestinationPath '%TARGET_DIR%' -Force" 2>nul
+    )
+)
+copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edgcpp.cmd" >nul
+copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edg-cc.cmd" >nul
+copy /y "!SCRIPT_DIR!\edgcpp_wrapper.cmd" "%TARGET_DIR%\bin\edg-c++.cmd" >nul
+if not exist "%TARGET_DIR%\include_c99\stdint.h" (
+    (
+        echo #ifndef _EDG_STDINT_H
+        echo #define _EDG_STDINT_H
+        echo typedef signed char int8_t;
+        echo typedef short int16_t;
+        echo typedef int int32_t;
+        echo typedef long long int64_t;
+        echo typedef unsigned char uint8_t;
+        echo typedef unsigned short uint16_t;
+        echo typedef unsigned int uint32_t;
+        echo typedef unsigned long long uint64_t;
+        echo typedef long long intptr_t;
+        echo typedef unsigned long long uintptr_t;
+        echo typedef long long intmax_t;
+        echo typedef unsigned long long uintmax_t;
+        echo #endif
+    ) > "%TARGET_DIR%\include_c99\stdint.h"
+)
+if not exist "%TARGET_DIR%\include_c99\stddef.h" (
+    (
+        echo #ifndef _EDG_STDDEF_H
+        echo #define _EDG_STDDEF_H
+        echo typedef unsigned long long size_t;
+        echo typedef long long ptrdiff_t;
+        echo #ifndef NULL
+        echo #define NULL ^(^(void*^)0^)
+        echo #endif
+        echo #endif
+    ) > "%TARGET_DIR%\include_c99\stddef.h"
+)
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "%EDGCPP_VERSION%" "%EXACT_VERSION%"
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\versioning.cmd" :libscript_symlink_alias "edgcpp" "default" "%EXACT_VERSION%"
+exit /b 0
+
+:: ## action_uninstall
+:: Removes the installed edgcpp version directory.
+:action_uninstall
+if exist "%LIBSCRIPT_HOME%\edgcpp\%EXACT_VERSION%" rmdir /s /q "%LIBSCRIPT_HOME%\edgcpp\%EXACT_VERSION%"
+if exist "%LIBSCRIPT_HOME%\edgcpp\default" rmdir /s /q "%LIBSCRIPT_HOME%\edgcpp\default"
+exit /b 0

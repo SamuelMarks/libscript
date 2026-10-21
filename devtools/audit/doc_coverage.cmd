@@ -1,10 +1,12 @@
 @echo off
 :: # doc_coverage.cmd
 :: ## Overview
-:: Audits documentation coverage of schema keys, CLI flags, shell functions, and batch/powershell files on Windows.
+:: Audits documentation coverage of component README.md files, schema keys, CLI flags,
+:: shell functions, and batch/powershell files on Windows, and optionally updates
+:: the % doc coverage shield in README.md.
 ::
 :: ## Usage
-::   call devtools\audit\doc_coverage.cmd [--strict]
+::   call devtools\audit\doc_coverage.cmd [--strict] [--update-readme [README_PATH]] [--repo-root REPO_ROOT]
 
 setlocal EnableDelayedExpansion
 set "THIS_FILE=%~f0"
@@ -19,7 +21,7 @@ if defined STACK (
 set "STACK=%STACK%:%THIS_FILE%:"
 
 set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+if "%SCRIPT_DIR:~-1%"=="" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 if not defined LIBSCRIPT_ROOT_DIR (
     set "d=%SCRIPT_DIR%"
@@ -50,6 +52,28 @@ goto :find_root
 :: Continues execution once LIBSCRIPT_ROOT_DIR is verified.
 :root_found
 
+if /I "%~1"=="--help" goto :show_help
+if /I "%~1"=="-h" goto :show_help
+if /I "%~1"=="/?" goto :show_help
+if /I "%~1"=="-?" goto :show_help
+goto :main
+
+:: ## show_help
+:: Displays command-line usage instructions and available options.
+:show_help
+echo Usage: %~nx0 [--strict] [--update-readme [README_PATH]] [--repo-root REPO_ROOT] [--help]
+echo Audits documentation coverage and updates the %% doc coverage shield in README.md.
+echo.
+echo Options:
+echo   --strict                       Fail with exit code 1 if coverage is below 100%%.
+echo   --update-readme [README_PATH]  Update the Doc Coverage shield in README.md.
+echo   --repo-root REPO_ROOT          Override repository root directory.
+echo   --help, -h, /?, -?             Show this help message.
+exit /b 0
+
+:: ## main
+:: Dispatches execution to PowerShell implementation.
+:main
 set "PS_CMD="
 where powershell.exe >nul 2>&1
 if %ERRORLEVEL% EQU 0 set "PS_CMD=powershell.exe"
@@ -59,19 +83,7 @@ if not defined PS_CMD (
 )
 
 if defined PS_CMD (
-    "%PS_CMD%" -NoProfile -ExecutionPolicy Bypass -Command ^
-      "$ErrorActionPreference = 'Stop'; " ^
-      "$root = '%LIBSCRIPT_ROOT_DIR%'; " ^
-      "Write-Host '==> Auditing Schema Description Coverage...'; " ^
-      "$missingSchema = 0; " ^
-      "Get-ChildItem -Path $root -Filter '*.schema.json' -Recurse -File | ForEach-Object { " ^
-      "  $c = Get-Content $_.FullName -Raw; " ^
-      "  if ($c -match '"type":' -and $c -notmatch '"description":') { Write-Warning ('Missing description in ' + $_.FullName); $missingSchema++ } " ^
-      "}; " ^
-      "Write-Host '==> Auditing Header & Function Docstring Coverage...'; " ^
-      "& '%SCRIPT_DIR%\audit_standards.ps1' --all; " ^
-      "if ($LASTEXITCODE -ne 0 -or $missingSchema -gt 0) { exit 1 }; " ^
-      "Write-Host '[PASS] 100% Documentation Coverage Audit Passed!'"
+    "%PS_CMD%" -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\doc_coverage.ps1" %*
     exit /b %ERRORLEVEL%
 )
 

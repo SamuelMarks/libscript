@@ -57,9 +57,9 @@ echo [PASS] All C compiler recipes verified on Windows.
 exit /b 0
 
 :: ## verify_compilers_windows
-:: Verifies ls-remote on gcc, clang, tcc, and custom-cc on Windows.
+:: Verifies ls-remote on gcc, clang, tcc, edgcpp, and custom-cc on Windows.
 :verify_compilers_windows
-for %%C in (gcc clang tcc custom-cc) do (
+for %%C in (gcc clang tcc edgcpp custom-cc) do (
     call "%LIBSCRIPT_ROOT_DIR%\libscript.cmd" ls-remote %%C >nul
     if errorlevel 1 exit /b 1
 )

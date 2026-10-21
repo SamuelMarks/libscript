@@ -15,6 +15,17 @@
       "description": "Version of C++ Toolchain to install",
       "type": "string",
       "default": "latest"
+    },
+    "CXX_BACKEND": {
+      "description": "Active C++ compiler backend routed by cpp ('default', 'gcc', 'clang', 'edgcpp', 'custom-cc').",
+      "type": "string",
+      "enum": ["default", "gcc", "clang", "edgcpp", "custom-cc"],
+      "default": "default"
+    },
+    "CPP_BUILD_TOOLCHAIN": {
+      "description": "Bootstrap C++ toolchain used when building C++ toolchain from source.",
+      "type": "string",
+      "default": "default"
     }
   }
 }

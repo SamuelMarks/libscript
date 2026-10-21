@@ -36,7 +36,7 @@ if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   . "${SCRIPT_NAME}"
 fi
 
-for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh"; do
+for LIB in "_lib/_common/pkg_mgr.sh" "_lib/_common/os_info.sh" "_lib/_common/versioning.sh" "_lib/_common/source_builder.sh"; do
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/'"${LIB}"
   export SCRIPT_NAME
   # shellcheck disable=SC1090,SC1091
@@ -142,6 +142,12 @@ case "$ACTION" in
     exit 0
     ;;
   install)
+    if [ "$DUCKDB_INSTALL_METHOD" = "from-source" ]; then
+      EXACT_VERSION="${VERSION:-1.1.2}"
+      [ "${EXACT_VERSION}" = "latest" ] && EXACT_VERSION="1.1.2"
+      libscript_build_component_from_source "duckdb" "${EXACT_VERSION}" "duckdb" "c++" "cmake" "${DUCKDB_DOWNLOAD_URL:-}"
+      exit 0
+    fi
     if [ "$DUCKDB_INSTALL_METHOD" = "system" ]; then
       libscript_depends "duckdb"
     elif [ "$DUCKDB_INSTALL_METHOD" = "mise" ]; then

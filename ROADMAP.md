@@ -86,9 +86,14 @@ or operating system.
 
 - [x] Universal 3-mode build/install substrate (`_lib/_common/source_builder.{sh,cmd}`,
       `pkg_mgr.{sh,cmd}`, `component_core.{sh,cmd}`) supporting `--pkg-mgr=<pm>`,
-      `--from-source --toolchain=default`, and `--from-source --toolchain=gcc|clang|tcc|custom-cc`.
-- [x] Standalone Tier 1 C compiler recipes (`_lib/languages/{gcc,clang,tcc,custom-cc}/`) and unified
-      `cc` / `c` routers with `cc_wrapper.{sh,cmd}` JSONL telemetry.
+      `--from-source --toolchain=default`, and
+      `--from-source --toolchain=gcc|clang|tcc|edgcpp|custom-cc`.
+- [x] Standalone Tier 1 C/C++ compiler recipes (`_lib/languages/{gcc,clang,tcc,edgcpp,custom-cc}/`)
+      and unified `cc` / `c` / `cpp` routers with `cc_wrapper.{sh,cmd}` and
+      `edgcpp_wrapper.{sh,cmd}` JSONL telemetry.
+- [x] EDG C/C++ Compiler Frontend (`edgcpp` v7.0.1) multi-flavor installer (`edgcpp+llvm+gcc`,
+      `edgcpp+llvm`, `edgcpp+gcc`) and 13-target C11/C++17 corpus verification
+      (`tests/test_edgcpp_corpus_matrix.{sh,cmd}`).
 - [x] SQLite C amalgamation multi-compiler builder, 6-stage SQL torture suite, and 4-way
       differential benchmark (`_lib/databases/sqlite/compare_compilers.{sh,cmd}`).
 - [x] Linux kernel multi-toolchain Kbuild engine, ELF/`System.map` ABI differential harness
