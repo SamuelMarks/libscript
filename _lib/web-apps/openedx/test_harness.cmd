@@ -69,28 +69,31 @@ echo ======================================================================
 echo Open edX Real Service Coordination and Authentication Test (Windows)
 echo ======================================================================
 
-:: 1. Backing Services Check
+:: 1. Backing Services Check via Reusable status_databases.cmd
 echo [CHECK 1/6] Verifying backing services on Windows...
-sc query mysql >nul 2>&1
-if not errorlevel 1 echo   -^> MySQL Service: REGISTERED
+if exist "!SCRIPT_DIR!\status_databases.cmd" (
+    call "!SCRIPT_DIR!\status_databases.cmd" "databases/mysql" >nul 2>&1
+    if not errorlevel 1 echo   -^> MySQL Service: REGISTERED
+    call "!SCRIPT_DIR!\status_databases.cmd" "caches/redis" >nul 2>&1
+    if not errorlevel 1 echo   -^> Redis Service: REGISTERED
+    call "!SCRIPT_DIR!\status_databases.cmd" "search/meilisearch" >nul 2>&1
+    if not errorlevel 1 echo   -^> Meilisearch: ACTIVE (port 7700)
+)
 
-sc query redis >nul 2>&1
-if not errorlevel 1 echo   -^> Redis Service: REGISTERED
-
-curl.exe -s "http://127.0.0.1:7700/health" 2>nul | findstr /i "available" >nul 2>&1
-if not errorlevel 1 echo   -^> Meilisearch: ACTIVE (port 7700)
-
-:: 2. Ensure Real LMS & Studio Services
+:: 2. Ensure Real LMS & Studio Services via Reusable user.cmd, service.cmd & healthcheck.cmd
 echo [CHECK 2/6] Verifying LMS and Studio HTTP endpoints...
+if exist "!SCRIPT_DIR!\user.cmd" (
+    call "!SCRIPT_DIR!\user.cmd" create "%OPENEDX_ADMIN_USERNAME%" "admin@openedx.local" --password "%OPENEDX_ADMIN_PASSWORD%" --staff --superuser >nul 2>&1
+)
 curl.exe -s "http://127.0.0.1:%LMS_PORT%/" >nul 2>&1
 if errorlevel 1 (
-    set "PY_EXE=python"
-    if exist "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" set "PY_EXE=%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe"
-    if exist "!SCRIPT_DIR!\wsgi_server.py" (
-        echo   -^> Starting Open edX WSGI server on ports %LMS_PORT% and %CMS_PORT%...
-        start /B "" "!PY_EXE!" "!SCRIPT_DIR!\wsgi_server.py" --lms-port %LMS_PORT% --cms-port %CMS_PORT% >nul 2>&1
-        ping -n 4 127.0.0.1 >nul 2>&1
+    if exist "!SCRIPT_DIR!\service.cmd" (
+        echo   -^> Starting Open edX LMS and Studio services on ports %LMS_PORT% and %CMS_PORT%...
+        call "!SCRIPT_DIR!\service.cmd" start
     )
+)
+if exist "!SCRIPT_DIR!\healthcheck.cmd" (
+    call "!SCRIPT_DIR!\healthcheck.cmd" >nul 2>&1
 )
 
 pushd "%TMP_DIR%"

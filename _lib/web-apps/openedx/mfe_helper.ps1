@@ -69,10 +69,6 @@ function Do-Build {
     if (-not (Test-Path $distDir)) {
         New-Item -ItemType Directory -Path $distDir -Force | Out-Null
     }
-    $idxFile = Join-Path $distDir "index.html"
-    if (-not (Test-Path $idxFile)) {
-        Set-Content -Path $idxFile -Value "<!DOCTYPE html><html><body><h1>Open edX $MfeName MFE</h1></body></html>"
-    }
 
     $regFile = Join-Path $RootDir "registry.json"
     $dict = @{}

@@ -2252,7 +2252,14 @@
     "vprintf",
     "vsnprintf",
     "vsscanf",
-    "zeroinitializer"
+    "zeroinitializer",
+    "mongodump",
+    "mongorestore",
+    "noreload",
+    "opensearch",
+    "pymongo",
+    "Sumac",
+    "sumac"
   ],
   "ignorePaths": [
     "node_modules",

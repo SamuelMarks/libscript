@@ -45,9 +45,12 @@ SERVER_NAME="${WORDPRESS_SERVER_NAME:-wordpress.local}"
 DB_NAME="${WORDPRESS_DB_NAME:-wordpress}"
 DB_USER="${WORDPRESS_DB_USER:-wordpress}"
 
-# 1. Remove scheduled cron entries
+# 1. Remove scheduled cron entries and stop services via reusable submodules
 if [ -x "${SCRIPT_DIR}/cron.sh" ]; then
   "${SCRIPT_DIR}/cron.sh" uninstall >/dev/null 2>&1 || true
+fi
+if [ -x "${SCRIPT_DIR}/service.sh" ]; then
+  "${SCRIPT_DIR}/service.sh" stop >/dev/null 2>&1 || true
 fi
 
 # 2. Remove webserver configs
@@ -59,15 +62,19 @@ priv rm -f "/etc/nginx/http.d/${SERVER_NAME}.conf" \
 
 # 3. Clean up database if --purge-db specified
 if [ "${1:-}" = "--purge-db" ]; then
-  _client="mysql"
-  command -v mariadb >/dev/null 2>&1 && _client="mariadb"
-  if command -v "$_client" >/dev/null 2>&1; then
-    printf '[INFO] Purging WordPress database schema without touching Open edX...\n'
-    priv "$_client" -u root -e \
-      "DROP DATABASE IF EXISTS \`${DB_NAME}\`;
-       DROP USER IF EXISTS '${DB_USER}'@'localhost';
-       DROP USER IF EXISTS '${DB_USER}'@'127.0.0.1';
-       FLUSH PRIVILEGES;" 2>/dev/null || true
+  printf '[INFO] Purging WordPress database schema without touching Open edX...\n'
+  if [ -x "${SCRIPT_DIR}/dbshell.sh" ] && [ -f "${WWWROOT}/wp-config.php" ]; then
+    WORDPRESS_WWWROOT="${WWWROOT}" "${SCRIPT_DIR}/dbshell.sh" query "DROP DATABASE IF EXISTS \`${DB_NAME}\`; DROP USER IF EXISTS '${DB_USER}'@'localhost'; DROP USER IF EXISTS '${DB_USER}'@'127.0.0.1'; FLUSH PRIVILEGES;" 2>/dev/null || true
+  else
+    _client="mysql"
+    command -v mariadb >/dev/null 2>&1 && _client="mariadb"
+    if command -v "$_client" >/dev/null 2>&1; then
+      priv "$_client" -u root -e \
+        "DROP DATABASE IF EXISTS \`${DB_NAME}\`;
+         DROP USER IF EXISTS '${DB_USER}'@'localhost';
+         DROP USER IF EXISTS '${DB_USER}'@'127.0.0.1';
+         FLUSH PRIVILEGES;" 2>/dev/null || true
+    fi
   fi
 fi
 

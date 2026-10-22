@@ -93,7 +93,11 @@ if !errorlevel! EQU 0 (
     exit /b !errorlevel!
 )
 
-if not exist "%TARGET_DIR%\edx" mkdir "%TARGET_DIR%\edx"
+if not exist "%TARGET_DIR%\edx\bin" mkdir "%TARGET_DIR%\edx\bin"
+(
+    echo @echo off
+    echo call "!REPO_ROOT!\_lib\web-apps\openedx\service.cmd" start
+) > "%TARGET_DIR%\edx\bin\start_openedx.cmd"
 echo Open edX preloaded > "%TARGET_DIR%\.libscript_openedx_preloaded.stamp"
 echo [OK] Open edX platform workload preloaded successfully.
 exit /b 0

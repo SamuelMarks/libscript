@@ -55,9 +55,11 @@ EOF_HELP
   exit 0
 fi
 
-# 1. Probe PHP Runtime
+# 1. Probe PHP Runtime via status_runtimes.sh and CLI
 STATUS_PHP="FAIL"
-if command -v php >/dev/null 2>&1; then
+if [ -f "${SCRIPT_DIR}/status_runtimes.sh" ] && "${SCRIPT_DIR}/status_runtimes.sh" "languages/php" >/dev/null 2>&1; then
+  STATUS_PHP="OK ($(php -r 'echo PHP_VERSION;' 2>/dev/null || echo 'installed'))"
+elif command -v php >/dev/null 2>&1; then
   STATUS_PHP="OK ($(php -r 'echo PHP_VERSION;' 2>/dev/null || echo 'installed'))"
 fi
 
@@ -67,7 +69,7 @@ if [ -f "${WWWROOT}/index.php" ] && [ -f "${WP_CONFIG}" ]; then
   STATUS_CORE="OK"
 fi
 
-# 3. Probe Database Connectivity
+# 3. Probe Database Connectivity via status_databases.sh and dbshell.sh
 STATUS_DB="FAIL"
 DB_HOST="127.0.0.1"
 DB_PORT="3306"
@@ -96,12 +98,24 @@ if [ -f "$WP_CONFIG" ]; then
   fi
 fi
 
-_client="mysql"
-command -v mariadb >/dev/null 2>&1 && _client="mariadb"
-if command -v "$_client" >/dev/null 2>&1; then
-  export MYSQL_PWD="$DB_PASS"
-  if "$_client" -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -e "SELECT 1;" "$DB_NAME" >/dev/null 2>&1; then
+if [ -f "${SCRIPT_DIR}/dbshell.sh" ] && [ -f "$WP_CONFIG" ]; then
+  if WORDPRESS_WWWROOT="${WWWROOT}" "${SCRIPT_DIR}/dbshell.sh" query "SELECT 1;" >/dev/null 2>&1; then
     STATUS_DB="OK"
+  fi
+fi
+if [ "$STATUS_DB" = "FAIL" ] && [ -f "${SCRIPT_DIR}/status_databases.sh" ]; then
+  if "${SCRIPT_DIR}/status_databases.sh" "databases/mysql" >/dev/null 2>&1 || "${SCRIPT_DIR}/status_databases.sh" "databases/mariadb" >/dev/null 2>&1; then
+    STATUS_DB="OK"
+  fi
+fi
+if [ "$STATUS_DB" = "FAIL" ]; then
+  _client="mysql"
+  command -v mariadb >/dev/null 2>&1 && _client="mariadb"
+  if command -v "$_client" >/dev/null 2>&1; then
+    export MYSQL_PWD="$DB_PASS"
+    if "$_client" -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -e "SELECT 1;" "$DB_NAME" >/dev/null 2>&1; then
+      STATUS_DB="OK"
+    fi
   fi
 fi
 

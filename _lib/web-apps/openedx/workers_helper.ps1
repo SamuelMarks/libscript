@@ -92,16 +92,15 @@ function Do-Start {
         }
 
         $procId = $null
-        $pywExe = $resolvedPy -replace "python\.exe$", "pythonw.exe"
-        $bgPy = if (Test-Path $pywExe) { $pywExe } else { $resolvedPy }
-        if ((Test-Path $managePy) -and $bgPy) {
-            $cmd = "`"$bgPy`" -c `"import time; [time.sleep(3600) for _ in iter(int, 1)]`""
-            $res = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine = $cmd}
-            $procId = $res.ProcessId
-        } elseif ($bgPy) {
-            $cmd = "`"$bgPy`" -c `"import time; [time.sleep(3600) for _ in iter(int, 1)]`""
-            $res = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine = $cmd}
-            $procId = $res.ProcessId
+        $codebaseDir = if (Test-Path (Join-Path $InstallDir "codebase\manage.py")) { Join-Path $InstallDir "codebase" } else { $InstallDir }
+        if ($resolvedPy -and (Test-Path $resolvedPy)) {
+            $celeryArgList = switch ($svc) {
+                "lms-worker"  { @("-m", "celery", "-A", "lms.celery", "worker", "--pool=solo", "--loglevel=INFO") }
+                "cms-worker"  { @("-m", "celery", "-A", "cms.celery", "worker", "--pool=solo", "--loglevel=INFO") }
+                "celery-beat" { @("-m", "celery", "-A", "lms.celery", "beat", "--loglevel=INFO") }
+            }
+            $proc = Start-Process -FilePath $resolvedPy -ArgumentList $celeryArgList -WorkingDirectory $codebaseDir -RedirectStandardOutput $logFile -RedirectStandardError ($logFile -replace "\.log$", "_err.log") -WindowStyle Hidden -PassThru
+            $procId = $proc.Id
         } else {
             Write-Error "Genuine Open edX codebase or python not found. Cannot start worker $svc."
             exit 1

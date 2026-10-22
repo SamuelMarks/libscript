@@ -13,5 +13,9 @@ Execute this script to run the test suite for wordpress.
 #>
 
 $ErrorActionPreference = "Stop"
-
+$ScriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
+$healthCmd = Join-Path $ScriptDir "healthcheck.cmd"
+if (Test-Path $healthCmd) {
+    & cmd.exe /c "`"$healthCmd`"" | Out-Null
+}
 Write-Output "wordpress test pass"

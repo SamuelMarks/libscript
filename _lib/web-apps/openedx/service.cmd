@@ -227,9 +227,9 @@ echo [INFO] Installing Open edX native services...
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-lms" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe --listen=0.0.0.0:%OPENEDX_LMS_PORT% lms.wsgi:application" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX LMS Service" ""
 call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-cms" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\waitress-serve.exe --listen=0.0.0.0:%OPENEDX_CMS_PORT% cms.wsgi:application" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX Studio CMS Service" ""
 
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-lms-worker" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe -m celery -A lms worker --loglevel=INFO -c 2" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX LMS Celery Worker" ""
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-cms-worker" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe -m celery -A cms worker --loglevel=INFO -c 2" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX CMS Celery Worker" ""
-call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-celery-beat" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe -m celery -A lms beat --loglevel=INFO" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX Celery Beat Scheduler" ""
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-lms-worker" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe -m celery -A lms.celery worker --pool=solo --loglevel=INFO" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX LMS Celery Worker" ""
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-cms-worker" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe -m celery -A cms.celery worker --pool=solo --loglevel=INFO" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX CMS Celery Worker" ""
+call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\service_install.cmd" "openedx-celery-beat" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe -m celery -A lms.celery beat --loglevel=INFO" "%OPENEDX_INSTALL_DIR%\codebase" "Open edX Celery Beat Scheduler" ""
 
 echo [PASS] Successfully installed Open edX services.
 exit /b 0

@@ -60,29 +60,42 @@ do_create() {
   _is_super="$6"
 
   mkdir -p "${_install_dir}"
-  _p="${_install_dir}/users.json"
+  _py="${_install_dir}/.venv/bin/python"
+  if [ ! -x "${_py}" ]; then
+    _py=$(command -v python3 2>/dev/null || command -v python 2>/dev/null || true)
+  fi
+  _codebase="${_install_dir}/codebase"
+  if [ ! -f "${_codebase}/manage.py" ] && [ -f "${_install_dir}/manage.py" ]; then
+    _codebase="${_install_dir}"
+  fi
 
+  if [ -f "${_codebase}/manage.py" ] && [ -n "${_py}" ]; then
+    _staff_flags=""
+    if [ "${_is_staff}" = "true" ] || [ "${_is_staff}" = "True" ]; then
+      _staff_flags="${_staff_flags} --staff"
+    fi
+    if [ "${_is_super}" = "true" ] || [ "${_is_super}" = "True" ]; then
+      _staff_flags="${_staff_flags} --superuser"
+    fi
+    # shellcheck disable=SC2086
+    (cd "${_codebase}" && "${_py}" manage.py lms --settings=libscript manage_user "${_username}" "${_email}" ${_staff_flags} >/dev/null 2>&1) || true
+    (cd "${_codebase}" && "${_py}" -c "import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lms.envs.libscript'); django.setup(); from django.contrib.auth import get_user_model; User = get_user_model(); u, _ = User.objects.get_or_create(username='${_username}', defaults={'email': '${_email}'}); u.email = '${_email}'; u.is_staff = ('${_is_staff}'.lower() == 'true' or '${_is_super}'.lower() == 'true'); u.is_superuser = ('${_is_super}'.lower() == 'true'); u.set_password('${_password}'); u.save()" >/dev/null 2>&1) || true
+  fi
+
+  _p="${_install_dir}/users.json"
   if command -v jq >/dev/null 2>&1; then
     if [ ! -f "${_p}" ]; then
       printf '{}\n' > "${_p}"
     fi
     _tmp=$(mktemp)
     if jq --arg u "${_username}" --arg e "${_email}" --arg s "${_is_staff}" --arg su "${_is_super}" \
-      '.[$u] = {username: $u, email: $e, is_staff: ($s == "true"), is_superuser: ($su == "true")}' "${_p}" > "$_tmp" 2>/dev/null; then
+      '.[$u] = {username: $u, email: $e, is_staff: ($s == "true" or $s == "True"), is_superuser: ($su == "true" or $su == "True")}' "${_p}" > "$_tmp" 2>/dev/null; then
       mv "$_tmp" "${_p}"
     else
       rm -f "$_tmp"
     fi
   else
-    printf '{
-  "%s": {
-    "username": "%s",
-    "email": "%s",
-    "is_staff": %s,
-    "is_superuser": %s
-  }
-}
-' "${_username}" "${_username}" "${_email}" "${_is_staff}" "${_is_super}" > "${_p}"
+    printf '{\n  "%s": {\n    "username": "%s",\n    "email": "%s",\n    "is_staff": %s,\n    "is_superuser": %s\n  }\n}\n' "${_username}" "${_username}" "${_email}" "${_is_staff}" "${_is_super}" > "${_p}"
   fi
   printf 'User processed successfully.\n'
 }

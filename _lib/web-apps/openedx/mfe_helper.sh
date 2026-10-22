@@ -62,15 +62,14 @@ do_build() {
   fi
 
   if [ -f "${_target_dir}/package.json" ]; then
-    (cd "${_target_dir}" && npm install >/dev/null 2>&1) || true
-    (cd "${_target_dir}" && npm run build >/dev/null 2>&1) || true
+    if ! command -v npm >/dev/null 2>&1; then
+      "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install nodejs latest >/dev/null 2>&1 || true
+    fi
+    (cd "${_target_dir}" && npm install >/dev/null 2>&1 && npm run build >/dev/null 2>&1) || true
   fi
 
   _dist_dir="${_target_dir}/dist"
   mkdir -p "${_dist_dir}"
-  if [ ! -f "${_dist_dir}/index.html" ]; then
-    printf '<!DOCTYPE html><html><body><h1>Open edX %s MFE</h1></body></html>\n' "${_mfe_name}" > "${_dist_dir}/index.html"
-  fi
 
   _reg_file="${_root_dir}/registry.json"
   if [ ! -f "${_reg_file}" ]; then

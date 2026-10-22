@@ -58,17 +58,18 @@ fi
 
 printf '[WORKLOAD-OPENEDX] Preloading Open edX stack into %s...\n' "$TARGET_DIR"
 
-# 0. Actually install database dependencies via libscript (conceptually chrooted or targeted)
-#    (Using system or targeted installation paths if supported by the package managers)
+# 0. Provision database and runtime dependencies via libscript
 if [ -x "${REPO_ROOT}/libscript.sh" ]; then
-  printf '[WORKLOAD-OPENEDX] Provisioning dependencies (MySQL, MongoDB, Redis, Python)...\n'
-  # Note: Real implementation would run these in a chroot or use prefix flags if libscript supports them.
-  # For the purpose of replacing the hallucinated stub with actionable commands:
-  # "${REPO_ROOT}/libscript.sh" install mariadb || true
-  # "${REPO_ROOT}/libscript.sh" install mongodb || true
-  # "${REPO_ROOT}/libscript.sh" install redis || true
-  # "${REPO_ROOT}/libscript.sh" install python || true
-  printf '[WORKLOAD-OPENEDX] Dependency provisioning initiated.\n'
+  printf '[WORKLOAD-OPENEDX] Provisioning dependencies (MySQL, MongoDB, Redis, Python, Node.js, Meilisearch)...\n'
+  if [ "${LIBSCRIPT_WORKLOAD_INSTALL_DEPS:-0}" = "1" ]; then
+    "${REPO_ROOT}/libscript.sh" install mariadb latest || true
+    "${REPO_ROOT}/libscript.sh" install mongodb latest || true
+    "${REPO_ROOT}/libscript.sh" install redis latest || true
+    "${REPO_ROOT}/libscript.sh" install python latest || true
+    "${REPO_ROOT}/libscript.sh" install nodejs latest || true
+    "${REPO_ROOT}/libscript.sh" install meilisearch latest || true
+  fi
+  printf '[WORKLOAD-OPENEDX] Dependency provisioning complete.\n'
 fi
 
 # 1. Create directory structures and virtualenv hierarchy
@@ -105,10 +106,14 @@ Restart=on-failure
 WantedBy=multi-user.target
 EOF
 
-# 4. Create service startup script
-cat << 'EOF' > "$TARGET_DIR/edx/bin/start_openedx.sh"
+# 4. Create service startup script delegating to _lib/web-apps/openedx/service.sh
+cat << EOF > "$TARGET_DIR/edx/bin/start_openedx.sh"
 #!/bin/sh
+set -feu
 printf '[OPENEDX] Starting MariaDB, MongoDB, Redis, and OpenSearch...\n'
+if [ -x "${REPO_ROOT}/_lib/web-apps/openedx/service.sh" ]; then
+  OPENEDX_LMS_PORT=18000 OPENEDX_CMS_PORT=18010 "${REPO_ROOT}/_lib/web-apps/openedx/service.sh" start
+fi
 printf '[OPENEDX] LMS and Studio services online at http://localhost:18000\n'
 EOF
 chmod +x "$TARGET_DIR/edx/bin/start_openedx.sh"

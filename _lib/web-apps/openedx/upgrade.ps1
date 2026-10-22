@@ -23,7 +23,7 @@ param(
     [string]$From = "current",
 
     [Parameter()]
-    [string]$To = "master"
+    [string]$To = "release/verawood.1"
 )
 
 $ErrorActionPreference = "Stop"
@@ -67,16 +67,25 @@ function Invoke-UpgradePipeline {
     param([string]$FromRel, [string]$ToRel)
     Write-Host "[INFO] === Commencing Open edX Upgrade Pipeline ($FromRel -> $ToRel) ==="
 
-    Write-Host "[INFO] Step 1/8: Creating pre-upgrade state backup..."
-    $backupPs1 = Join-Path $ScriptDir "backup.ps1"
-    if (Test-Path $backupPs1) {
-        & $backupPs1 create
+    $codebaseDir = Join-Path $InstallDir "codebase"
+    if (-not (Test-Path $codebaseDir)) {
+        $codebaseDir = $InstallDir
+    }
+    $managePy = Join-Path $codebaseDir "manage.py"
+    if (-not (Test-Path $managePy)) {
+        $managePy = Join-Path $InstallDir "manage.py"
     }
 
-    Write-Host "[INFO] Step 2/8: Updating openedx-platform repository..."
-    $gitDir = Join-Path $InstallDir ".git"
+    Write-Host "[INFO] Step 1/8: Creating pre-upgrade state backup..."
+    $backupCmd = Join-Path $ScriptDir "backup.cmd"
+    if (Test-Path $backupCmd) {
+        & cmd.exe /c "`"$backupCmd`" create"
+    }
+
+    Write-Host "[INFO] Step 2/8: Updating openedx-platform repository to $ToRel..."
+    $gitDir = Join-Path $codebaseDir ".git"
     if (Test-Path $gitDir) {
-        Push-Location $InstallDir
+        Push-Location $codebaseDir
         try {
             & git fetch --all --tags 2>$null | Out-Null
             & git checkout $ToRel 2>$null | Out-Null
@@ -87,22 +96,21 @@ function Invoke-UpgradePipeline {
 
     $python = Find-Python
     Write-Host "[INFO] Step 3/8: Updating Python requirements..."
-    $reqFile = Join-Path $InstallDir "requirements\edx\base.txt"
+    $reqFile = Join-Path $codebaseDir "requirements\edx\base.txt"
     if (Test-Path $reqFile) {
         & $python -m pip install -r $reqFile 2>$null | Out-Null
     }
 
     Write-Host "[INFO] Step 4/8: Applying database migrations..."
-    $managePy = Join-Path $InstallDir "manage.py"
     if (Test-Path $managePy) {
         & $python $managePy lms migrate --noinput 2>$null | Out-Null
         & $python $managePy cms migrate --noinput 2>$null | Out-Null
     }
 
-    Write-Host "[INFO] Step 5/8: Rebuilding frontend static assets..."
-    $pkgJson = Join-Path $InstallDir "package.json"
+    Write-Host "[INFO] Step 5/8: Rebuilding frontend static assets and MFEs..."
+    $pkgJson = Join-Path $codebaseDir "package.json"
     if (Test-Path $pkgJson) {
-        Push-Location $InstallDir
+        Push-Location $codebaseDir
         try {
             npm clean-install --no-audit 2>$null | Out-Null
         } finally {
@@ -111,6 +119,11 @@ function Invoke-UpgradePipeline {
     }
     if (Test-Path $managePy) {
         & $python $managePy lms collectstatic --noinput 2>$null | Out-Null
+    }
+    $mfeCmd = Join-Path $ScriptDir "mfe.cmd"
+    $mfeDir = Join-Path $InstallDir "mfes"
+    if ((Test-Path $mfeCmd) -and (Test-Path $mfeDir)) {
+        & cmd.exe /c "`"$mfeCmd`" build all" 2>$null | Out-Null
     }
 
     Write-Host "[INFO] Step 6/8: Flushing cache stores..."
@@ -124,14 +137,18 @@ function Invoke-UpgradePipeline {
         & $python $managePy lms reindex_course --all 2>$null | Out-Null
     }
 
-    Write-Host "[INFO] Step 8/8: Restarting background workers and validating diagnostics..."
-    $workersPs1 = Join-Path $ScriptDir "workers.ps1"
-    if (Test-Path $workersPs1) {
-        & $workersPs1 restart
+    Write-Host "[INFO] Step 8/8: Restarting services, background workers, and validating diagnostics..."
+    $serviceCmd = Join-Path $ScriptDir "service.cmd"
+    if (Test-Path $serviceCmd) {
+        & cmd.exe /c "`"$serviceCmd`" restart"
     }
-    $healthPs1 = Join-Path $ScriptDir "healthcheck.ps1"
-    if (Test-Path $healthPs1) {
-        & $healthPs1
+    $workersCmd = Join-Path $ScriptDir "workers.cmd"
+    if (Test-Path $workersCmd) {
+        & cmd.exe /c "`"$workersCmd`" restart"
+    }
+    $healthCmd = Join-Path $ScriptDir "healthcheck.cmd"
+    if (Test-Path $healthCmd) {
+        & cmd.exe /c "`"$healthCmd`""
     }
 
     Write-Host "[SUCCESS] Open edX platform upgrade to '$ToRel' completed successfully."

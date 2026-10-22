@@ -14,6 +14,10 @@ $wsh = New-Object -ComObject WScript.Shell
 
 if ($Stack -eq "wordpress" -or ($Stack -ne "openedx" -and (Test-Path "C:\libscript\packaging\assets\wordpress.ico") -and -not (Test-Path "C:\libscript\packaging\assets\openedx.ico"))) {
     $iconPath = "C:\libscript\packaging\assets\wordpress.ico"
+    $cliIcon = if (Test-Path "C:\libscript\packaging\assets\wordpress_cli.ico") { "C:\libscript\packaging\assets\wordpress_cli.ico" } else { $iconPath }
+    $healthIcon = if (Test-Path "C:\libscript\packaging\assets\wordpress_health.ico") { "C:\libscript\packaging\assets\wordpress_health.ico" } else { $iconPath }
+    $dbIcon = if (Test-Path "C:\libscript\packaging\assets\wordpress_db.ico") { "C:\libscript\packaging\assets\wordpress_db.ico" } else { $iconPath }
+    $bkpIcon = if (Test-Path "C:\libscript\packaging\assets\wordpress_backup.ico") { "C:\libscript\packaging\assets\wordpress_backup.ico" } else { $iconPath }
     $wpDir = "C:\Program Files\WordPress"
     if (-not (Test-Path $wpDir)) { [void](New-Item -ItemType Directory -Path $wpDir -Force) }
     
@@ -21,7 +25,7 @@ if ($Stack -eq "wordpress" -or ($Stack -ne "openedx" -and (Test-Path "C:\libscri
     $s1.TargetPath = "cmd.exe"
     $s1.Arguments = '/c call "C:\Program Files\WordPress\cli.cmd"'
     $s1.WorkingDirectory = $wpDir
-    $s1.IconLocation = "$iconPath,0"
+    $s1.IconLocation = "$cliIcon,0"
     $s1.Description = "WordPress Administrative Management Console"
     $s1.Save()
 
@@ -29,7 +33,7 @@ if ($Stack -eq "wordpress" -or ($Stack -ne "openedx" -and (Test-Path "C:\libscri
     $s2.TargetPath = "cmd.exe"
     $s2.Arguments = '/c call "C:\Program Files\WordPress\healthcheck.cmd"'
     $s2.WorkingDirectory = $wpDir
-    $s2.IconLocation = "$iconPath,0"
+    $s2.IconLocation = "$healthIcon,0"
     $s2.Description = "WordPress Full-Stack Health Diagnostics Probe"
     $s2.Save()
 
@@ -37,7 +41,7 @@ if ($Stack -eq "wordpress" -or ($Stack -ne "openedx" -and (Test-Path "C:\libscri
     $s3.TargetPath = "cmd.exe"
     $s3.Arguments = '/c call "C:\Program Files\WordPress\dbshell.cmd"'
     $s3.WorkingDirectory = $wpDir
-    $s3.IconLocation = "$iconPath,0"
+    $s3.IconLocation = "$dbIcon,0"
     $s3.Description = "WordPress Relational Database Interactive Shell"
     $s3.Save()
 
@@ -45,7 +49,7 @@ if ($Stack -eq "wordpress" -or ($Stack -ne "openedx" -and (Test-Path "C:\libscri
     $s4.TargetPath = "cmd.exe"
     $s4.Arguments = '/c call "C:\Program Files\WordPress\backup.cmd"'
     $s4.WorkingDirectory = $wpDir
-    $s4.IconLocation = "$iconPath,0"
+    $s4.IconLocation = "$bkpIcon,0"
     $s4.Description = "WordPress Backup and Disaster Recovery Utility"
     $s4.Save()
 } else {

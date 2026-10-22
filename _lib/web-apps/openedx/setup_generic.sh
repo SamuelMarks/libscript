@@ -49,7 +49,7 @@ export DIR="${OPENEDX_DIR}"
 #   --redis-url <url>         Remote Redis DBaaS connection URI
 #   --mongodb-uri <uri>       MongoDB connection URI
 #   --repo <url>              Git repository URL for openedx-platform
-#   --version <ver>           Git release branch or tag (default: master)
+#   --version <ver>           Git release branch or tag (default: release/verawood.1)
 
 if [ -f "${LIBSCRIPT_ROOT_DIR}/env.sh" ]; then
   SCRIPT_NAME="${LIBSCRIPT_ROOT_DIR}"'/env.sh'
@@ -70,7 +70,7 @@ OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/
 LMS_PORT="${LMS_PORT:-8000}"
 CMS_PORT="${CMS_PORT:-8001}"
 REPO_URL="${OPENEDX_EDX_PLATFORM_REPOSITORY:-https://github.com/openedx/openedx-platform.git}"
-BRANCH="${OPENEDX_VERSION:-master}"
+BRANCH="${OPENEDX_VERSION:-release/verawood.1}"
 ADMIN_USER="${OPENEDX_ADMIN_USERNAME:-admin}"
 ADMIN_PASS="${OPENEDX_ADMIN_PASSWORD:-admin}"
 ADMIN_EMAIL="${OPENEDX_ADMIN_EMAIL:-admin@openedx.local}"
@@ -79,6 +79,10 @@ THEME_NAME="${OPENEDX_THEME:-none}"
 IMPORT_DEMO="${IMPORT_DEMO_CONTENT:-0}"
 ENABLE_WORKERS="${INSTALL_WORKERS:-1}"
 ENABLE_MFES="${INSTALL_MFES:-0}"
+MYSQL_URL="${MYSQL_URL:-}"
+REDIS_PORT="${REDIS_PORT:-6379}"
+REDIS_URL="${REDIS_URL:-}"
+MONGODB_URI="${MONGODB_URI:-}"
 is_offline=0
 if [ "${OPENEDX_OFFLINE:-0}" = "1" ] || [ "${LIBSCRIPT_OFFLINE:-0}" = "1" ]; then
   is_offline=1
@@ -146,6 +150,7 @@ while [ $# -gt 0 ]; do
       ;;
     --backup-dir)
       BACKUP_DIR="$2"
+      export BACKUP_DIR
       shift 2
       ;;
     --theme)
@@ -164,6 +169,22 @@ while [ $# -gt 0 ]; do
       CMS_PORT="$2"
       shift 2
       ;;
+    --mysql-url)
+      MYSQL_URL="$2"
+      shift 2
+      ;;
+    --redis-port)
+      REDIS_PORT="$2"
+      shift 2
+      ;;
+    --redis-url)
+      REDIS_URL="$2"
+      shift 2
+      ;;
+    --mongodb-uri)
+      MONGODB_URI="$2"
+      shift 2
+      ;;
     --repo)
       REPO_URL="$2"
       shift 2
@@ -177,6 +198,34 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
+
+MYSQL_HOST="${MYSQL_HOST:-127.0.0.1}"
+MYSQL_PORT="${MYSQL_PORT:-3306}"
+MYSQL_DATABASE="${MYSQL_DATABASE:-openedx}"
+MYSQL_USER="${MYSQL_USER:-openedx}"
+OPENEDX_DATABASE_PASSWORD="${OPENEDX_DATABASE_PASSWORD:-openedx_password}"
+
+if [ -n "${MYSQL_URL}" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/parse_connection_uri.sh" ]; then
+  _parsed_mysql=$("${LIBSCRIPT_ROOT_DIR}/_lib/databases/parse_connection_uri.sh" "${MYSQL_URL}" --env 2>/dev/null || true)
+  for _line in $_parsed_mysql; do
+    case "$_line" in
+      DB_HOST=*) MYSQL_HOST="${_line#DB_HOST=}" ;;
+      DB_PORT=*) [ -n "${_line#DB_PORT=}" ] && MYSQL_PORT="${_line#DB_PORT=}" ;;
+      DB_USER=*) [ -n "${_line#DB_USER=}" ] && MYSQL_USER="${_line#DB_USER=}" ;;
+      DB_PASS=*) [ -n "${_line#DB_PASS=}" ] && OPENEDX_DATABASE_PASSWORD="${_line#DB_PASS=}" ;;
+      DB_NAME=*) [ -n "${_line#DB_NAME=}" ] && MYSQL_DATABASE="${_line#DB_NAME=}" ;;
+    esac
+  done
+fi
+
+if [ -n "${REDIS_URL}" ] && [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/parse_connection_uri.sh" ]; then
+  _parsed_redis=$("${LIBSCRIPT_ROOT_DIR}/_lib/databases/parse_connection_uri.sh" "${REDIS_URL}" --env 2>/dev/null || true)
+  for _line in $_parsed_redis; do
+    case "$_line" in
+      DB_PORT=*) [ -n "${_line#DB_PORT=}" ] && REDIS_PORT="${_line#DB_PORT=}" ;;
+    esac
+  done
+fi
 
 case "$ACTION" in
   install)
@@ -219,11 +268,15 @@ case "$ACTION" in
     export DIR
 
     export MONGODB_INSTALL_METHOD="libscript_native"
-    if [ "${RUN_MYSQL:-true}" != "false" ] && [ "${RUN_MYSQL:-1}" != "0" ]; then
+    if [ "${RUN_MYSQL:-true}" != "false" ] && [ "${RUN_MYSQL:-1}" != "0" ] && [ -z "${MYSQL_URL}" ]; then
       (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install-service mysql >/dev/null 2>&1 || true)
       (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" start mysql >/dev/null 2>&1 || true)
     fi
-    if [ "${RUN_REDIS:-true}" != "false" ] && [ "${RUN_REDIS:-1}" != "0" ]; then
+    if [ "${RUN_MONGODB:-true}" != "false" ] && [ "${RUN_MONGODB:-1}" != "0" ] && [ -z "${MONGODB_URI}" ]; then
+      (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install-service mongodb >/dev/null 2>&1 || true)
+      (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" start mongodb >/dev/null 2>&1 || true)
+    fi
+    if [ "${RUN_REDIS:-true}" != "false" ] && [ "${RUN_REDIS:-1}" != "0" ] && [ -z "${REDIS_URL}" ]; then
       (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install-service redis >/dev/null 2>&1 || true)
       (unset SCRIPT_NAME; STACK="" "${LIBSCRIPT_ROOT_DIR}/libscript.sh" start redis >/dev/null 2>&1 || true)
     fi
@@ -233,29 +286,20 @@ case "$ACTION" in
     fi
 
     # 2. Checkout / Setup openedx-platform repository
-    log_info "2/8: Preparing openedx-platform codebase at ${OPENEDX_INSTALL_DIR}..."
+    log_info "2/8: Preparing openedx-platform (${BRANCH}) codebase at ${OPENEDX_INSTALL_DIR}..."
     mkdir -p "${OPENEDX_INSTALL_DIR}/logs" "${OPENEDX_INSTALL_DIR}/codebase"
     touch "${OPENEDX_INSTALL_DIR}/logs/install.log"
-    if [ -f "${DIR}/wsgi_server.py" ]; then
-      cp -f "${DIR}/wsgi_server.py" "${OPENEDX_INSTALL_DIR}/codebase/wsgi_server.py" 2>/dev/null || true
-    fi
     if [ "$is_offline" -eq 1 ] && [ -n "${offline_cache_dir:-}" ] && [ -d "${offline_cache_dir}/codebase" ]; then
       log_info "Extracting codebase from cache/codebase..."
-      for _f in "${offline_cache_dir}/codebase"/*edx-platform*.zip "${offline_cache_dir}/codebase"/*openedx-release*.zip "${offline_cache_dir}/codebase"/*.tar.gz; do
+      for _f in "${offline_cache_dir}/codebase"/*openedx-release*.zip "${offline_cache_dir}/codebase"/*edx-platform*.zip "${offline_cache_dir}/codebase"/*.tar.gz; do
         [ -f "$_f" ] && extract_archive "$_f" "${OPENEDX_INSTALL_DIR}/codebase"
       done
-    elif [ "${OPENEDX_INSTALL_MODE:-minimal}" = "full" ] || [ "${OPENEDX_CLONE_FULL:-0}" = "1" ]; then
-      if [ ! -d "${OPENEDX_INSTALL_DIR}/.git" ]; then
-        if ! command -v git >/dev/null 2>&1; then
-          libscript_depends "git" || true
-        fi
-        if command -v git >/dev/null 2>&1; then
-          _tmp_clone=$(mktemp -d)
-          if git clone --depth 1 --branch "${BRANCH}" "${REPO_URL}" "${_tmp_clone}" 2>/dev/null || git clone --depth 1 "${REPO_URL}" "${_tmp_clone}" 2>/dev/null; then
-            cp -rn "${_tmp_clone}/." "${OPENEDX_INSTALL_DIR}/" 2>/dev/null || cp -r "${_tmp_clone}/." "${OPENEDX_INSTALL_DIR}/" 2>/dev/null || true
-          fi
-          rm -rf "${_tmp_clone}"
-        fi
+    elif [ ! -f "${OPENEDX_INSTALL_DIR}/codebase/manage.py" ] && [ ! -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
+      if ! command -v git >/dev/null 2>&1; then
+        libscript_depends "git" || true
+      fi
+      if command -v git >/dev/null 2>&1; then
+        git clone --depth 1 --branch "${BRANCH}" "${REPO_URL}" "${OPENEDX_INSTALL_DIR}/codebase" 2>/dev/null || git clone --depth 1 "${REPO_URL}" "${OPENEDX_INSTALL_DIR}/codebase" 2>/dev/null || true
       fi
     fi
 
@@ -328,13 +372,16 @@ case "$ACTION" in
       fi
     fi
 
-    # 4. Generate Platform Settings
+    # 4. Generate Platform Settings via Reusable config.sh Component
     log_info "4/8: Generating Open edX environment configurations..."
     CONF_DIR="${OPENEDX_INSTALL_DIR}/config"
     mkdir -p "${CONF_DIR}"
     mkdir -p "${OPENEDX_INSTALL_DIR}/lms/envs" "${OPENEDX_INSTALL_DIR}/cms/envs"
     if [ -f "${DIR}/config.sh" ]; then
       OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/config.sh" generate >/dev/null 2>&1 || true
+      if [ -n "${BACKUP_DIR}" ]; then
+        OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/config.sh" set BACKUP_DIR "${BACKUP_DIR}" >/dev/null 2>&1 || true
+      fi
     fi
 
     cat <<EOF > "${OPENEDX_INSTALL_DIR}/lms/envs/libscript.py"
@@ -342,15 +389,15 @@ from .devstack import *
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "${MYSQL_DATABASE:-openedx}",
-        "USER": "${MYSQL_USER:-openedx}",
-        "PASSWORD": "${OPENEDX_DATABASE_PASSWORD:-openedx_password}",
-        "HOST": "127.0.0.1",
-        "PORT": "3306",
+        "NAME": "${MYSQL_DATABASE}",
+        "USER": "${MYSQL_USER}",
+        "PASSWORD": "${OPENEDX_DATABASE_PASSWORD}",
+        "HOST": "${MYSQL_HOST}",
+        "PORT": "${MYSQL_PORT}",
         "ATOMIC_REQUESTS": True,
     }
 }
-CACHES["default"]["LOCATION"] = "127.0.0.1:6379"
+CACHES["default"]["LOCATION"] = "127.0.0.1:${REDIS_PORT}"
 CONTENTSTORE["DOC_STORE_CONFIG"]["host"] = "127.0.0.1"
 CONTENTSTORE["DOC_STORE_CONFIG"]["user"] = ""
 CONTENTSTORE["DOC_STORE_CONFIG"]["password"] = ""
@@ -359,9 +406,9 @@ for store in MODULESTORE["default"]["OPTIONS"]["stores"]:
         store["DOC_STORE_CONFIG"]["host"] = "127.0.0.1"
         store["DOC_STORE_CONFIG"]["user"] = ""
         store["DOC_STORE_CONFIG"]["password"] = ""
-BROKER_URL = "redis://127.0.0.1:6379/0"
-CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
-EVENT_BUS_REDIS_CONNECTION_URL = "redis://127.0.0.1:6379/"
+BROKER_URL = "redis://127.0.0.1:${REDIS_PORT}/0"
+CELERY_RESULT_BACKEND = "redis://127.0.0.1:${REDIS_PORT}/0"
+EVENT_BUS_REDIS_CONNECTION_URL = "redis://127.0.0.1:${REDIS_PORT}/"
 EOF
 
     cat <<EOF > "${OPENEDX_INSTALL_DIR}/cms/envs/libscript.py"
@@ -369,15 +416,15 @@ from .devstack import *
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "${MYSQL_DATABASE:-openedx}",
-        "USER": "${MYSQL_USER:-openedx}",
-        "PASSWORD": "${OPENEDX_DATABASE_PASSWORD:-openedx_password}",
-        "HOST": "127.0.0.1",
-        "PORT": "3306",
+        "NAME": "${MYSQL_DATABASE}",
+        "USER": "${MYSQL_USER}",
+        "PASSWORD": "${OPENEDX_DATABASE_PASSWORD}",
+        "HOST": "${MYSQL_HOST}",
+        "PORT": "${MYSQL_PORT}",
         "ATOMIC_REQUESTS": True,
     }
 }
-CACHES["default"]["LOCATION"] = "127.0.0.1:6379"
+CACHES["default"]["LOCATION"] = "127.0.0.1:${REDIS_PORT}"
 CONTENTSTORE["DOC_STORE_CONFIG"]["host"] = "127.0.0.1"
 CONTENTSTORE["DOC_STORE_CONFIG"]["user"] = ""
 CONTENTSTORE["DOC_STORE_CONFIG"]["password"] = ""
@@ -386,35 +433,33 @@ for store in MODULESTORE["default"]["OPTIONS"]["stores"]:
         store["DOC_STORE_CONFIG"]["host"] = "127.0.0.1"
         store["DOC_STORE_CONFIG"]["user"] = ""
         store["DOC_STORE_CONFIG"]["password"] = ""
-BROKER_URL = "redis://127.0.0.1:6379/0"
-CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
-EVENT_BUS_REDIS_CONNECTION_URL = "redis://127.0.0.1:6379/"
+BROKER_URL = "redis://127.0.0.1:${REDIS_PORT}/0"
+CELERY_RESULT_BACKEND = "redis://127.0.0.1:${REDIS_PORT}/0"
+EVENT_BUS_REDIS_CONNECTION_URL = "redis://127.0.0.1:${REDIS_PORT}/"
 EOF
 
-    # 5. Database Migrations & Initial Data
-    log_info "5/8: Initializing databases..."
-    if command -v mysql >/dev/null 2>&1; then
-      if mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE:-openedx}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1; then
-        mysql -u root -e "CREATE USER IF NOT EXISTS '${MYSQL_USER:-openedx}'@'%' IDENTIFIED BY '${OPENEDX_DATABASE_PASSWORD:-openedx_password}'; CREATE USER IF NOT EXISTS '${MYSQL_USER:-openedx}'@'localhost' IDENTIFIED BY '${OPENEDX_DATABASE_PASSWORD:-openedx_password}'; GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE:-openedx}\`.* TO '${MYSQL_USER:-openedx}'@'%'; GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE:-openedx}\`.* TO '${MYSQL_USER:-openedx}'@'localhost'; FLUSH PRIVILEGES; CREATE USER IF NOT EXISTS 'edxapp001'@'%' IDENTIFIED BY 'password'; GRANT ALL PRIVILEGES ON *.* TO 'edxapp001'@'%'; FLUSH PRIVILEGES;" 2>/dev/null || true
-      else
-        log_warn "MySQL server not currently accessible on localhost; database initialization skipped."
-      fi
-    elif command -v mariadb >/dev/null 2>&1; then
-      if mariadb -u root -e "CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE:-openedx}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1; then
-        mariadb -u root -e "CREATE USER IF NOT EXISTS '${MYSQL_USER:-openedx}'@'%' IDENTIFIED BY '${OPENEDX_DATABASE_PASSWORD:-openedx_password}'; CREATE USER IF NOT EXISTS '${MYSQL_USER:-openedx}'@'localhost' IDENTIFIED BY '${OPENEDX_DATABASE_PASSWORD:-openedx_password}'; GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE:-openedx}\`.* TO '${MYSQL_USER:-openedx}'@'%'; GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE:-openedx}\`.* TO '${MYSQL_USER:-openedx}'@'localhost'; FLUSH PRIVILEGES; CREATE USER IF NOT EXISTS 'edxapp001'@'%' IDENTIFIED BY 'password'; GRANT ALL PRIVILEGES ON *.* TO 'edxapp001'@'%'; FLUSH PRIVILEGES;" 2>/dev/null || true
-      else
-        log_warn "MariaDB server not currently accessible on localhost; database initialization skipped."
-      fi
+    # 5. Database Schema Provisioning (via Reusable _lib/databases/provision_schema.sh) & Migrations
+    log_info "5/8: Initializing databases via reusable schema provisioner..."
+    if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
+      "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
+        --engine mysql \
+        --schema "${MYSQL_DATABASE}" \
+        --user "${MYSQL_USER}" \
+        --password "${OPENEDX_DATABASE_PASSWORD}" \
+        --host "${MYSQL_HOST}" \
+        --port "${MYSQL_PORT}" >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1 || log_warn "MySQL server not currently accessible; database schema provisioning skipped."
     fi
 
     log_info "Applying database migrations and seeding administrator..."
-    if [ "${OPENEDX_INSTALL_MODE:-minimal}" = "full" ] && [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ] && "${VENV_DIR}/bin/python" -c "import django" >/dev/null 2>&1; then
+    _codebase="${OPENEDX_INSTALL_DIR}/codebase"
+    if [ ! -f "${_codebase}/manage.py" ] && [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
+      _codebase="${OPENEDX_INSTALL_DIR}"
+    fi
+    if [ -f "${_codebase}/manage.py" ] && "${VENV_DIR}/bin/python" -c "import django" >/dev/null 2>&1; then
       export LMS_CFG="${OPENEDX_INSTALL_DIR}/lms/envs/minimal.yml"
       export CMS_CFG="${OPENEDX_INSTALL_DIR}/lms/envs/minimal.yml"
-      (cd "${OPENEDX_INSTALL_DIR}" && "${VENV_DIR}/bin/python" manage.py lms --settings=libscript migrate --noinput >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1) || true
-      (cd "${OPENEDX_INSTALL_DIR}" && "${VENV_DIR}/bin/python" manage.py cms --settings=libscript migrate --noinput >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1) || true
-    else
-      log_info "Delegated LMS and CMS schema state to WSGI runtime."
+      (cd "${_codebase}" && "${VENV_DIR}/bin/python" manage.py lms --settings=libscript migrate --noinput >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1) || true
+      (cd "${_codebase}" && "${VENV_DIR}/bin/python" manage.py cms --settings=libscript migrate --noinput >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1) || true
     fi
     # Idempotently create or update admin superuser using dedicated user tool
     if [ -f "${DIR}/user.sh" ]; then
@@ -423,11 +468,14 @@ EOF
 
     # 6. Static Asset Compilation & Theming
     log_info "6/8: Compiling frontend assets..."
-    if [ "${OPENEDX_INSTALL_MODE:-minimal}" = "full" ] && [ -f "${OPENEDX_INSTALL_DIR}/package.json" ]; then
-      (cd "${OPENEDX_INSTALL_DIR}" && { npm clean-install --no-audit 2>&1 || npm install 2>&1; } | tee -a "${OPENEDX_INSTALL_DIR}/logs/install.log") || true
-      if [ -f "${OPENEDX_INSTALL_DIR}/codebase/pavement.py" ]; then
-        (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${VENV_DIR}/bin/python" -m paver update_assets lms --settings=universal.production >> "${OPENEDX_INSTALL_DIR}/logs/install.log") || true
-        (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${VENV_DIR}/bin/python" -m paver update_assets cms --settings=universal.production >> "${OPENEDX_INSTALL_DIR}/logs/install.log") || true
+    if [ -f "${_codebase}/package.json" ]; then
+      (cd "${_codebase}" && { npm clean-install --no-audit 2>&1 || npm install 2>&1; } | tee -a "${OPENEDX_INSTALL_DIR}/logs/install.log") || true
+      if [ -f "${_codebase}/pavement.py" ]; then
+        (cd "${_codebase}" && "${VENV_DIR}/bin/python" -m paver update_assets lms --settings=universal.production >> "${OPENEDX_INSTALL_DIR}/logs/install.log") || true
+        (cd "${_codebase}" && "${VENV_DIR}/bin/python" -m paver update_assets cms --settings=universal.production >> "${OPENEDX_INSTALL_DIR}/logs/install.log") || true
+      elif [ -f "${_codebase}/manage.py" ]; then
+        (cd "${_codebase}" && "${VENV_DIR}/bin/python" manage.py lms --settings=libscript collectstatic --noinput >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1) || true
+        (cd "${_codebase}" && "${VENV_DIR}/bin/python" manage.py cms --settings=libscript collectstatic --noinput >> "${OPENEDX_INSTALL_DIR}/logs/install.log" 2>&1) || true
       fi
     fi
     if [ -n "${THEME_NAME}" ] && [ "${THEME_NAME}" != "none" ] && [ -f "${DIR}/theme.sh" ]; then
@@ -447,18 +495,10 @@ EOF
       OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/mfe.sh" deploy all 2>/dev/null || true
     fi
 
-    # 8. Start Services and Workers
+    # 8. Start Services and Workers via Reusable service.sh & workers.sh
     log_info "8/8: Launching Open edX LMS, Studio, and background workers..."
-    if [ "${OPENEDX_INSTALL_MODE:-minimal}" = "full" ] && [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ] && "${VENV_DIR}/bin/python" -c "import django" >/dev/null 2>&1; then
-      nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" lms --settings=libscript runserver 0.0.0.0:"${LMS_PORT}" < /dev/null > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
-      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
-
-      nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" cms --settings=libscript runserver 0.0.0.0:"${CMS_PORT}" < /dev/null > "${OPENEDX_INSTALL_DIR}/cms.log" 2>&1 &
-      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
-    elif [ -f "${DIR}/wsgi_server.py" ]; then
-      nohup "$_py" "${DIR}/wsgi_server.py" --lms-port "${LMS_PORT}" --cms-port "${CMS_PORT}" < /dev/null > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
-      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
-      sleep 1
+    if [ -f "${DIR}/service.sh" ]; then
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" OPENEDX_LMS_PORT="${LMS_PORT}" OPENEDX_CMS_PORT="${CMS_PORT}" "${DIR}/service.sh" start || true
     fi
 
     if [ "${ENABLE_WORKERS}" = "1" ] && [ -f "${DIR}/workers.sh" ]; then
@@ -468,7 +508,7 @@ EOF
     # Post-install verification healthcheck
     if [ -f "${DIR}/healthcheck.sh" ]; then
       log_info "Executing post-installation health diagnostic probe..."
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/healthcheck.sh" || true
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" LMS_PORT="${LMS_PORT}" CMS_PORT="${CMS_PORT}" "${DIR}/healthcheck.sh" || true
     fi
 
     log_success "Open edX stack successfully provisioned!"
@@ -477,21 +517,8 @@ EOF
     ;;
   start)
     log_info "Starting Open edX LMS, CMS, and background daemons..."
-    VENV_DIR="${OPENEDX_INSTALL_DIR}/.venv"
-    _py="python3"
-    if [ -x "${VENV_DIR}/bin/python" ]; then
-      _py="${VENV_DIR}/bin/python"
-    elif ! command -v python3 >/dev/null 2>&1; then
-      _py="python"
-    fi
-    if [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ] && "${VENV_DIR}/bin/python" -c "import django" >/dev/null 2>&1; then
-      nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" lms --settings=libscript runserver 0.0.0.0:"${LMS_PORT}" < /dev/null > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
-      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
-      nohup "${VENV_DIR}/bin/python" "${OPENEDX_INSTALL_DIR}/manage.py" cms --settings=libscript runserver 0.0.0.0:"${CMS_PORT}" < /dev/null > "${OPENEDX_INSTALL_DIR}/cms.log" 2>&1 &
-      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/cms.pid"
-    elif [ -f "${DIR}/wsgi_server.py" ]; then
-      nohup "$_py" "${DIR}/wsgi_server.py" --lms-port "${LMS_PORT}" --cms-port "${CMS_PORT}" < /dev/null > "${OPENEDX_INSTALL_DIR}/lms.log" 2>&1 &
-      printf '%s\n' "$!" > "${OPENEDX_INSTALL_DIR}/lms.pid"
+    if [ -f "${DIR}/service.sh" ]; then
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" OPENEDX_LMS_PORT="${LMS_PORT}" OPENEDX_CMS_PORT="${CMS_PORT}" "${DIR}/service.sh" start
     fi
     if [ -f "${DIR}/workers.sh" ]; then
       OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" start < /dev/null >/dev/null 2>&1 || true
@@ -501,34 +528,37 @@ EOF
   stop)
     log_info "Stopping Open edX LMS, CMS, and background daemons..."
     if [ -f "${DIR}/workers.sh" ]; then
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" stop 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" stop 2>/dev/null || true
     fi
-    if [ -f "${OPENEDX_INSTALL_DIR}/lms.pid" ]; then
-      kill "$(cat "${OPENEDX_INSTALL_DIR}/lms.pid")" 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
-      rm -f "${OPENEDX_INSTALL_DIR}/lms.pid"
-    fi
-    if [ -f "${OPENEDX_INSTALL_DIR}/cms.pid" ]; then
-      kill "$(cat "${OPENEDX_INSTALL_DIR}/cms.pid")" 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
-      rm -f "${OPENEDX_INSTALL_DIR}/cms.pid"
+    if [ -f "${DIR}/service.sh" ]; then
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/service.sh" stop 2>/dev/null || true
     fi
     exit 0
     ;;
   restart)
     log_info "Restarting Open edX services..."
-    "$THIS_FILE" stop
-    "$THIS_FILE" start
+    if [ -f "${DIR}/service.sh" ]; then
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" OPENEDX_LMS_PORT="${LMS_PORT}" OPENEDX_CMS_PORT="${CMS_PORT}" "${DIR}/service.sh" restart
+    fi
+    if [ -f "${DIR}/workers.sh" ]; then
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" restart < /dev/null >/dev/null 2>&1 || true
+    fi
     exit 0
     ;;
   status)
     log_info "Checking Open edX LMS status on port ${LMS_PORT}..."
     if [ -f "${DIR}/healthcheck.sh" ]; then
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/healthcheck.sh"
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" LMS_PORT="${LMS_PORT}" CMS_PORT="${CMS_PORT}" "${DIR}/healthcheck.sh"
     fi
     exit 0
     ;;
   test)
     log_info "Testing Open edX endpoints..."
-    if [ -d "${OPENEDX_INSTALL_DIR}" ]; then
+    if [ -f "${DIR}/healthcheck.sh" ] && [ -d "${OPENEDX_INSTALL_DIR}" ]; then
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" LMS_PORT="${LMS_PORT}" CMS_PORT="${CMS_PORT}" "${DIR}/healthcheck.sh" || true
+      log_success "Open edX directory verified at ${OPENEDX_INSTALL_DIR}."
+      exit 0
+    elif [ -d "${OPENEDX_INSTALL_DIR}" ]; then
       log_success "Open edX directory verified at ${OPENEDX_INSTALL_DIR}."
       exit 0
     else
@@ -538,10 +568,11 @@ EOF
     ;;
   uninstall)
     log_info "Removing Open edX stack from ${OPENEDX_INSTALL_DIR}..."
-    if [ -f "${DIR}/workers.sh" ]; then
-      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/workers.sh" stop 2>/dev/null || { tail -n 50 "${OPENEDX_INSTALL_DIR}/logs/install.log"; exit 1; }
+    if [ -f "${DIR}/uninstall_generic.sh" ]; then
+      OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${DIR}/uninstall_generic.sh"
+    else
+      rm -rf "${OPENEDX_INSTALL_DIR}"
     fi
-    rm -rf "${OPENEDX_INSTALL_DIR}"
     exit 0
     ;;
 esac

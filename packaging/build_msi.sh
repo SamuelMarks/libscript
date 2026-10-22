@@ -365,16 +365,16 @@ if [ -f "$PACKAGING_JSON" ] && command -v jq >/dev/null 2>&1; then
   _w_p2_def=$(jq -r '.wizard_copy.port_2_default // empty' "$PACKAGING_JSON")
   _w_email=$(jq -r '.wizard_copy.default_admin_email // empty' "$PACKAGING_JSON")
 
-  _sc1=$(jq -r '.shortcuts[0].title // empty' "$PACKAGING_JSON")
-  _sc2=$(jq -r '.shortcuts[1].title // empty' "$PACKAGING_JSON")
-  _bl1=$(jq -r '.browser_launch.targets[0].title // empty' "$PACKAGING_JSON")
-  _bl2=$(jq -r '.browser_launch.targets[1].title // empty' "$PACKAGING_JSON")
+  _sc1=$(jq -r '.shortcuts[0].title // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;\&amp;/g')
+  _sc2=$(jq -r '.shortcuts[1].title // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;\&amp;/g')
+  _bl1=$(jq -r '.browser_launch.targets[0].title // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;\&amp;/g')
+  _bl2=$(jq -r '.browser_launch.targets[1].title // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;\&amp;/g')
 
-  _f0=$(jq -r '.features[0].title // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;/g')
-  _f1=$(jq -r '.features[1].title // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;/g')
-  _f2=$(jq -r '.features[2].title // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;/g')
-  _f3=$(jq -r '.features[3].title // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;/g')
-  _f4=$(jq -r '.features[4].title // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;/g')
+  _f0=$(jq -r '.features[0].title // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;\&amp;/g')
+  _f1=$(jq -r '.features[1].title // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;\&amp;/g')
+  _f2=$(jq -r '.features[2].title // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;\&amp;/g')
+  _f3=$(jq -r '.features[3].title // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;\&amp;/g')
+  _f4=$(jq -r '.features[4].title // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;\&amp;/g')
 
   _rt1_title=$(jq -r '.runtime_searches[0].title // empty' "$PACKAGING_JSON" | sed 's/&/\&amp;/g')
   _rt1_name=$(jq -r '.runtime_searches[0].name // empty' "$PACKAGING_JSON")
@@ -443,20 +443,24 @@ ensure_branding_assets() {
   synth_script="${LIBSCRIPT_ROOT_DIR}/packaging/synthesize_branding.sh"
   cc0_assets_dir="${LIBSCRIPT_ROOT_DIR}/../cc0-assets/libscript/${APP_IDENTIFIER}/assets"
   if [ -d "$cc0_assets_dir" ]; then
+    set +f
     cp -f "$cc0_assets_dir"/* "$TMP_WORK_DIR"/ 2>/dev/null || true
+    set -f
   fi
 
-  if { [ -z "$ICON_PATH" ] || [ ! -f "$ICON_PATH" ]; } || \
-     { [ -z "$BANNER_TOP_PATH" ] || [ ! -f "$BANNER_TOP_PATH" ]; } || \
-     { [ -z "$BANNER_SIDE_PATH" ] || [ ! -f "$BANNER_SIDE_PATH" ]; } || \
-     { [ -z "$LICENSE_PATH" ] || [ ! -f "$LICENSE_PATH" ]; }; then
+  if { [ -z "$ICON_PATH" ] || [ ! -f "$ICON_PATH" ]; } && [ ! -f "${TMP_WORK_DIR}/${APP_IDENTIFIER}.ico" ] || \
+     { [ -z "$BANNER_TOP_PATH" ] || [ ! -f "$BANNER_TOP_PATH" ]; } && [ ! -f "${TMP_WORK_DIR}/${APP_IDENTIFIER}_banner_top.bmp" ] || \
+     { [ -z "$BANNER_SIDE_PATH" ] || [ ! -f "$BANNER_SIDE_PATH" ]; } && [ ! -f "${TMP_WORK_DIR}/${APP_IDENTIFIER}_banner_side.bmp" ] || \
+     { [ -z "$LICENSE_PATH" ] || [ ! -f "$LICENSE_PATH" ]; } && [ ! -f "${TMP_WORK_DIR}/${APP_IDENTIFIER}_eula.rtf" ]; then
     if [ -f "$synth_script" ]; then
       "$synth_script" "$RESOLVED_TARGET_DIR" --output-dir "$TMP_WORK_DIR" >/dev/null 2>&1 || true
     fi
   fi
 
   if [ -d "$cc0_assets_dir" ]; then
+    set +f
     cp -f "$cc0_assets_dir"/* "$TMP_WORK_DIR"/ 2>/dev/null || true
+    set -f
   fi
 
   if [ -n "$ICON_PATH" ] && [ -f "$ICON_PATH" ]; then
@@ -989,7 +993,7 @@ ${MULTI_LICENSE_XML}
         <Control Id="Title" Type="Text" X="15" Y="6" Width="260" Height="15" Transparent="yes" NoPrefix="yes" Text="{\\WixUI_Font_Title}Source Repository &amp; Release" />
         <Control Id="Description" Type="Text" X="25" Y="22" Width="260" Height="20" Transparent="yes" NoPrefix="yes" Text="Review the repository source and branch configured for this installer." />
 
-        <Control Id="Lbl_Repo" Type="Text" X="20" Y="48" Width="330" Height="14" NoPrefix="yes" Text="Configured edx-platform Repository Source (Read-Only):" />
+        <Control Id="Lbl_Repo" Type="Text" X="20" Y="48" Width="330" Height="14" NoPrefix="yes" Text="Configured ${_esc_name} Repository Source (Read-Only):" />
         <Control Id="Txt_Repo" Type="Edit" X="20" Y="63" Width="330" Height="18" Property="PROP_OPENEDX_EDX_PLATFORM_REPOSITORY" Disabled="yes" />
         <Control Id="Hint_Repo" Type="Text" X="20" Y="83" Width="330" Height="22" Transparent="yes" NoPrefix="yes" Text="Source repository, local path, or fork configured during installer build." />
 
@@ -1274,6 +1278,7 @@ compile_msi() {
   if [ "$USE_WIX" = "1" ]; then
     printf '[INFO] Using traditional WiX Toolset...\n'
     if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/wix/env.sh" ]; then
+      # shellcheck disable=SC1090,SC1091
       . "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/wix/env.sh" >/dev/null 2>&1 || true
     fi
   else
@@ -1293,6 +1298,7 @@ compile_msi() {
 
     if ! command -v candle >/dev/null 2>&1 && ! command -v candle.exe >/dev/null 2>&1; then
       if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" ]; then
+        # shellcheck disable=SC1090,SC1091
         . "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" >/dev/null 2>&1 || true
       fi
     fi
@@ -1301,6 +1307,7 @@ compile_msi() {
       if [ -x "${LIBSCRIPT_ROOT_DIR}/libscript.sh" ]; then
         "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install msi-rs v0.0.1 >/dev/null 2>&1 || true
         if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" ]; then
+          # shellcheck disable=SC1090,SC1091
           . "${LIBSCRIPT_ROOT_DIR}/_lib/package-managers/msi-rs/env.sh" >/dev/null 2>&1 || true
         fi
       fi
@@ -1325,12 +1332,12 @@ compile_msi() {
   else
     printf "[INFO] Compiling MSI with pure-Rust msi-rs (%s / %s)...\n" "$_candle_cmd" "$_light_cmd"
   fi
-  if ! "$_candle_cmd" -arch ${TARGET_ARCH} -out "${OUT_FILE}.wixobj" "$WXS_FILE"; then
+  if ! "$_candle_cmd" -arch "${TARGET_ARCH}" -out "${OUT_FILE}.wixobj" "$WXS_FILE"; then
     printf '[ERROR] candle compilation failed on %s\n' "$WXS_FILE" >&2
     return 1
   fi
 
-  if ! "$_candle_cmd" -arch ${TARGET_ARCH} -out "${OUT_FILE}_payload.wixobj" "${PAYLOAD_WXS}"; then
+  if ! "$_candle_cmd" -arch "${TARGET_ARCH}" -out "${OUT_FILE}_payload.wixobj" "${PAYLOAD_WXS}"; then
     printf '[ERROR] candle compilation failed on %s\n' "${PAYLOAD_WXS}" >&2
     return 1
   fi

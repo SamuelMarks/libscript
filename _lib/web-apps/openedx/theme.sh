@@ -120,6 +120,9 @@ theme_install() {
     (cd "${_dest}" && git pull 2>/dev/null) || true
   else
     rm -rf "${_dest}"
+    if ! command -v git >/dev/null 2>&1; then
+      "${LIBSCRIPT_ROOT_DIR}/libscript.sh" install git latest >/dev/null 2>&1 || true
+    fi
     if command -v git >/dev/null 2>&1; then
       git clone --depth 1 --branch "${_branch}" "${_url}" "${_dest}" 2>/dev/null ||
         git clone --depth 1 "${_url}" "${_dest}" 2>/dev/null || mkdir -p "${_dest}"

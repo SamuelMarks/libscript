@@ -100,10 +100,16 @@ function Import-DemoCourse {
     }
 
     $python = Find-Python
-    $managePy = Join-Path $InstallDir "manage.py"
+    $codebaseDir = if (Test-Path (Join-Path $InstallDir "codebase\manage.py")) { Join-Path $InstallDir "codebase" } else { $InstallDir }
+    $managePy = Join-Path $codebaseDir "manage.py"
     if (Test-Path $managePy) {
-        & $python $managePy cms import $dataDir $stagingDir 2>$null
-        & $python $managePy lms reindex_course --course-id $TargetId 2>$null
+        Push-Location $codebaseDir
+        try {
+            & $python $managePy cms import $dataDir $stagingDir 2>$null
+            & $python $managePy lms reindex_course --course-id $TargetId 2>$null
+        } finally {
+            Pop-Location
+        }
     }
 
     $list = @()

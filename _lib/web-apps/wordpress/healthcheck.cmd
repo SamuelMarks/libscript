@@ -58,7 +58,15 @@ if "%WORDPRESS_WWWROOT%"=="" (
 )
 set "WP_CONFIG=%WORDPRESS_WWWROOT%\wp-config.php"
 
+if "%~1"=="help" goto show_help
+if "%~1"=="--help" goto show_help
+if "%~1"=="-h" goto show_help
+
 set "STATUS_PHP=FAIL"
+if exist "!SCRIPT_DIR!\status_runtimes.cmd" (
+    call "!SCRIPT_DIR!\status_runtimes.cmd" "languages/php" >nul 2>&1
+    if not errorlevel 1 set "STATUS_PHP=OK"
+)
 where php >nul 2>&1
 if not errorlevel 1 (
     for /f "delims=" %%v in ('php -r "echo PHP_VERSION;" 2^>nul') do set "STATUS_PHP=OK (%%v)"
@@ -90,11 +98,21 @@ if exist "%WP_CONFIG%" (
     )
 )
 
-where mysql >nul 2>&1
-if not errorlevel 1 (
-    set "MYSQL_PWD=%DB_PASSWORD%"
-    mysql -h %DB_HOST% -P %DB_PORT% -u %DB_USER% -e "SELECT 1;" %DB_NAME% >nul 2>&1
+if exist "!SCRIPT_DIR!\dbshell.cmd" if exist "%WP_CONFIG%" (
+    call "!SCRIPT_DIR!\dbshell.cmd" query "SELECT 1;" >nul 2>&1
     if not errorlevel 1 set "STATUS_DB=OK"
+)
+if "!STATUS_DB!"=="FAIL" if exist "!SCRIPT_DIR!\status_databases.cmd" (
+    call "!SCRIPT_DIR!\status_databases.cmd" "databases/mysql" >nul 2>&1
+    if not errorlevel 1 set "STATUS_DB=OK"
+)
+if "!STATUS_DB!"=="FAIL" (
+    where mysql >nul 2>&1
+    if not errorlevel 1 (
+        set "MYSQL_PWD=%DB_PASSWORD%"
+        mysql -h %DB_HOST% -P %DB_PORT% -u %DB_USER% -e "SELECT 1;" %DB_NAME% >nul 2>&1
+        if not errorlevel 1 set "STATUS_DB=OK"
+    )
 )
 
 if "%~1"=="--json" (
@@ -117,3 +135,13 @@ if "%STATUS_CORE%"=="OK" (
     echo [WARN] WordPress core files or database not yet configured.
     exit /b 0
 )
+
+:: ## show_help
+:: Displays usage instructions for the WordPress healthcheck utility.
+:show_help
+echo WordPress Healthcheck Diagnostics (Windows)
+echo.
+echo Usage:
+echo   call healthcheck.cmd [--json]
+echo   call healthcheck.cmd help
+exit /b 0

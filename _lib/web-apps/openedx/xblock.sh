@@ -63,7 +63,10 @@ done
 OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
 VENV_DIR="${OPENEDX_INSTALL_DIR}/.venv"
 PYTHON_BIN="${VENV_DIR}/bin/python"
-MANAGE_PY="${OPENEDX_INSTALL_DIR}/manage.py"
+MANAGE_PY="${OPENEDX_INSTALL_DIR}/codebase/manage.py"
+if [ ! -f "${MANAGE_PY}" ] && [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
+  MANAGE_PY="${OPENEDX_INSTALL_DIR}/manage.py"
+fi
 XBLOCK_REGISTRY="${OPENEDX_INSTALL_DIR}/data/xblocks.json"
 
 mkdir -p "${OPENEDX_INSTALL_DIR}/data"

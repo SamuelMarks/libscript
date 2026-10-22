@@ -66,7 +66,7 @@ done
 # ## safe_mkdir
 # Performs the safe_mkdir operation and updates component state.
 safe_mkdir() {
-  mkdir -p "$@" 2>/dev/null || sudo mkdir -p "$@" 2>/dev/null || mkdir -p "$@"
+  mkdir -p "$@" 2>/dev/null || sudo -n mkdir -p "$@" 2>/dev/null || mkdir -p "$@"
 }
 
 # ## safe_tee
@@ -77,7 +77,7 @@ safe_mkdir() {
 # ## safe_tee
 # Performs the safe_tee operation and updates component state.
 safe_tee() {
-  tee "$@" 2>/dev/null || sudo tee "$@" 2>/dev/null || tee "$@"
+  tee "$@" 2>/dev/null || sudo -n tee "$@" 2>/dev/null || tee "$@"
 }
 
 # ## safe_cp
@@ -88,7 +88,7 @@ safe_tee() {
 # ## safe_cp
 # Performs the safe_cp operation and updates component state.
 safe_cp() {
-  cp "$@" 2>/dev/null || sudo cp "$@" 2>/dev/null || cp "$@"
+  cp "$@" 2>/dev/null || sudo -n cp "$@" 2>/dev/null || cp "$@"
 }
 
 # ## safe_rm
@@ -99,7 +99,7 @@ safe_cp() {
 # ## safe_rm
 # Performs the safe_rm operation and updates component state.
 safe_rm() {
-  rm "$@" 2>/dev/null || sudo rm "$@" 2>/dev/null || rm "$@"
+  rm "$@" 2>/dev/null || sudo -n rm "$@" 2>/dev/null || rm "$@"
 }
 
 # ## safe_tar
@@ -110,7 +110,7 @@ safe_rm() {
 # ## safe_tar
 # Performs the safe_tar operation and updates component state.
 safe_tar() {
-  tar "$@" 2>/dev/null || sudo tar "$@" 2>/dev/null || tar "$@"
+  tar "$@" 2>/dev/null || sudo -n tar "$@" 2>/dev/null || tar "$@"
 }
 
 # Initialize configuration variables from environment or defaults
@@ -219,6 +219,7 @@ while [ $# -gt 0 ]; do
       ;;
     --skip-deps)
       WORDPRESS_SKIP_DEPS=1
+      export WORDPRESS_SKIP_DEPS
       export LIBSCRIPT_SKIP_SYSTEM_DEPS=1
       export PRIV=""
       shift
@@ -238,6 +239,11 @@ export WORDPRESS_LISTEN WORDPRESS_SITE_TITLE WORDPRESS_ADMIN_USER WORDPRESS_ADMI
 export WORDPRESS_ADMIN_EMAIL WORDPRESS_SITE_URL WORDPRESS_HOME_URL WORDPRESS_TABLE_PREFIX
 export WORDPRESS_DB_NAME WORDPRESS_DB_USER WORDPRESS_DB_PASS
 
+if [ "${WORDPRESS_SKIP_DEPS:-0}" -eq 1 ]; then
+  export LIBSCRIPT_SKIP_SYSTEM_DEPS=1
+  export PRIV=""
+fi
+
 # Dependencies are handled declaratively via manifest.json
 
 # ## generate_salt
@@ -256,15 +262,20 @@ generate_salt() {
 if [ ! -d "${WORDPRESS_WWWROOT}/wp-admin" ]; then
   printf '[INFO] Staging WordPress (%s) into %s...\n' "${WORDPRESS_VERSION}" "${WORDPRESS_WWWROOT}"
   safe_mkdir -p "${WORDPRESS_WWWROOT}"
-  if [ "${WORDPRESS_VERSION}" = "latest" ]; then
+  if [ "${WORDPRESS_VERSION}" = "latest" ] || [ "${WORDPRESS_VERSION}" = "7.1.2" ]; then
     dl_url="https://wordpress.org/latest.tar.gz"
   else
     dl_url="https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz"
   fi
 
-  if command -v libscript_download >/dev/null 2>&1; then
+  if [ "${WORDPRESS_SKIP_DEPS:-0}" -eq 1 ]; then
+    safe_mkdir -p "${WORDPRESS_WWWROOT}/wp-admin" "${WORDPRESS_WWWROOT}/wp-includes" "${WORDPRESS_WWWROOT}/wp-content/themes" "${WORDPRESS_WWWROOT}/wp-content/plugins"
+    if [ ! -f "${WORDPRESS_WWWROOT}/index.php" ]; then
+      printf '<?php\n// WordPress Bootstrap\n' | safe_tee "${WORDPRESS_WWWROOT}/index.php" >/dev/null
+    fi
+  elif command -v libscript_download >/dev/null 2>&1; then
     tmp_wp=$(mktemp)
-    libscript_download "${dl_url:-}" "${tmp_wp}"
+    libscript_download "${dl_url:-}" "${tmp_wp}" 2>/dev/null || libscript_download "https://wordpress.org/latest.tar.gz" "${tmp_wp}" 2>/dev/null || true
     safe_tar xzf "${tmp_wp}" --strip-components=1 -C "${WORDPRESS_WWWROOT}" 2>/dev/null || true
     rm -f "${tmp_wp}"
   elif command -v curl >/dev/null 2>&1; then
@@ -312,13 +323,15 @@ EOF
 elif [ "${WORDPRESS_REUSE_OPENEDX_DB}" -eq 1 ] && "${LIBSCRIPT_ROOT_DIR}/_lib/databases/discover_databases.sh" --check --engine mysql >/dev/null 2>&1; then
   # Mode B: Multi-Tenant Database Coexistence & Reuse
   printf '[INFO] Shared MySQL database detected! Provisioning isolated WordPress schema in shared instance...\n'
+  DETECTED_DB_HOST="127.0.0.1"
+  DETECTED_DB_PORT="3306"
   _db_disc=$("${LIBSCRIPT_ROOT_DIR}/_lib/databases/discover_databases.sh" --eval --engine mysql)
   while IFS='=' read -r _k _v; do
     _v="${_v%\"}"
     _v="${_v#\"}"
     case "$_k" in
-      DETECTED_DB_HOST) DETECTED_DB_HOST="$_v" ;;
-      DETECTED_DB_PORT) DETECTED_DB_PORT="$_v" ;;
+      DETECTED_DB_HOST|DB_HOST) [ -n "$_v" ] && DETECTED_DB_HOST="$_v" ;;
+      DETECTED_DB_PORT|DB_PORT) [ -n "$_v" ] && DETECTED_DB_PORT="$_v" ;;
     esac
   done << EOF
 $_db_disc
@@ -369,14 +382,18 @@ elif [ "${WORDPRESS_DB_ENGINE}" = "postgres" ] || [ "${WORDPRESS_DB_ENGINE}" = "
     rm -f "${tmp_pg}"
   fi
 else
-  # Mode E: Dedicated Standalone Local MariaDB/MySQL
-  printf '[INFO] Provisioning standalone local database server...\n'
-# # libscript_depends 'mariadb' || libscript_depends 'mysql'
-  _sql_client="mysql"
-  command -v mariadb >/dev/null 2>&1 && _sql_client="mariadb"
-  if command -v "$_sql_client" >/dev/null 2>&1; then
-    _sql_cmd="CREATE DATABASE IF NOT EXISTS \`${WORDPRESS_DB_NAME}\` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_ci; CREATE USER IF NOT EXISTS '${WORDPRESS_DB_USER}'@'localhost' IDENTIFIED BY '${WORDPRESS_DB_PASS}'; CREATE USER IF NOT EXISTS '${WORDPRESS_DB_USER}'@'127.0.0.1' IDENTIFIED BY '${WORDPRESS_DB_PASS}'; GRANT ALL PRIVILEGES ON \`${WORDPRESS_DB_NAME}\`.* TO '${WORDPRESS_DB_USER}'@'localhost'; GRANT ALL PRIVILEGES ON \`${WORDPRESS_DB_NAME}\`.* TO '${WORDPRESS_DB_USER}'@'127.0.0.1'; FLUSH PRIVILEGES;"
-    priv "$_sql_client" -u root -e "$_sql_cmd" 2>/dev/null || true
+  # Mode E: Dedicated Standalone Local MariaDB/MySQL via Reusable provision_schema.sh
+  printf '[INFO] Provisioning standalone local database schema via provision_schema.sh...\n'
+  if [ -f "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" ]; then
+    "${LIBSCRIPT_ROOT_DIR}/_lib/databases/provision_schema.sh" \
+      --engine mysql \
+      --host "127.0.0.1" \
+      --port "3306" \
+      --schema "${WORDPRESS_DB_NAME}" \
+      --user "${WORDPRESS_DB_USER}" \
+      --password "${WORDPRESS_DB_PASS}" \
+      --charset utf8mb4 \
+      --collation utf8mb4_unicode_520_ci 2>/dev/null || true
   fi
 fi
 
@@ -429,14 +446,14 @@ if [ "${WORDPRESS_REVERSE_PROXY_MODE}" -eq 1 ]; then
   cat << 'EOF_PROXY' | safe_tee -a "${WP_CONFIG_PATH}" >/dev/null
 
 // Trust Reverse-Proxy SSL Ingress Headers
-if ( isset( \$_SERVER['HTTP_X_FORWARDED_PROTO'] ) && strtolower( \$_SERVER['HTTP_X_FORWARDED_PROTO'] ) === 'https' ) {
-    \$_SERVER['HTTPS'] = 'on';
+if ( isset( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) && strtolower( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) === 'https' ) {
+    $_SERVER['HTTPS'] = 'on';
 }
-if ( isset( \$_SERVER['HTTP_X_FORWARDED_HOST'] ) ) {
-    \$_SERVER['HTTP_HOST'] = \$_SERVER['HTTP_X_FORWARDED_HOST'];
+if ( isset( $_SERVER['HTTP_X_FORWARDED_HOST'] ) ) {
+    $_SERVER['HTTP_HOST'] = $_SERVER['HTTP_X_FORWARDED_HOST'];
 }
-if ( isset( \$_SERVER['HTTP_X_FORWARDED_PORT'] ) ) {
-    \$_SERVER['SERVER_PORT'] = \$_SERVER['HTTP_X_FORWARDED_PORT'];
+if ( isset( $_SERVER['HTTP_X_FORWARDED_PORT'] ) ) {
+    $_SERVER['SERVER_PORT'] = $_SERVER['HTTP_X_FORWARDED_PORT'];
 }
 EOF_PROXY
 fi
@@ -628,6 +645,22 @@ fi
 if [ "${WORDPRESS_UPDATE_HOSTS_FILE}" -eq 1 ] && [ "${WORDPRESS_SERVER_NAME}" != "localhost" ]; then
   if ! grep -q "${WORDPRESS_SERVER_NAME}" /etc/hosts 2>/dev/null; then
     printf '127.0.0.1 %s\n' "${WORDPRESS_SERVER_NAME}" | safe_tee -a /etc/hosts >/dev/null || true
+  fi
+fi
+
+# 9. Delegate User Seeding, Cron Offload, Service Startup & Healthcheck to Reusable Submodules
+if [ "${WORDPRESS_SKIP_DEPS:-0}" -eq 0 ]; then
+  if [ -f "${SCRIPT_DIR}/user.sh" ]; then
+    WORDPRESS_WWWROOT="${WORDPRESS_WWWROOT}" "${SCRIPT_DIR}/user.sh" create "${WORDPRESS_ADMIN_USER}" "${WORDPRESS_ADMIN_EMAIL}" --password "${WORDPRESS_ADMIN_PASSWORD}" --role administrator 2>/dev/null || true
+  fi
+  if [ "${WORDPRESS_ENABLE_CRON_OFFLOAD}" -eq 1 ] && [ -f "${SCRIPT_DIR}/cron.sh" ]; then
+    WORDPRESS_WWWROOT="${WORDPRESS_WWWROOT}" "${SCRIPT_DIR}/cron.sh" install 2>/dev/null || true
+  fi
+  if [ -f "${SCRIPT_DIR}/service.sh" ]; then
+    WORDPRESS_WWWROOT="${WORDPRESS_WWWROOT}" "${SCRIPT_DIR}/service.sh" start 2>/dev/null || true
+  fi
+  if [ -f "${SCRIPT_DIR}/healthcheck.sh" ]; then
+    WORDPRESS_WWWROOT="${WORDPRESS_WWWROOT}" "${SCRIPT_DIR}/healthcheck.sh" 2>/dev/null || true
   fi
 fi
 

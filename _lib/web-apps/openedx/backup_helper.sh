@@ -96,8 +96,15 @@ do_backup() {
     cp "${_install_dir}/users.json" "${_stage}/"
   fi
 
-  printf -- '-- Open edX snapshot
-' > "${_stage}/mysql_dump.sql"
+  if command -v mysqldump >/dev/null 2>&1; then
+    mysqldump -h 127.0.0.1 -u openedx openedx > "${_stage}/mysql_dump.sql" 2>/dev/null || mysqldump -u root openedx > "${_stage}/mysql_dump.sql" 2>/dev/null || printf -- '-- MySQL dump unavailable\n' > "${_stage}/mysql_dump.sql"
+  else
+    printf -- '-- mysqldump binary not found\n' > "${_stage}/mysql_dump.sql"
+  fi
+
+  if command -v mongodump >/dev/null 2>&1; then
+    mongodump --host 127.0.0.1 --port 27017 --db openedx --out "${_stage}/mongodb_dump" >/dev/null 2>&1 || true
+  fi
 
   _archive_dir=$(dirname "${_archive}")
   mkdir -p "${_archive_dir}"
@@ -152,13 +159,19 @@ do_restore() {
   esac
 
   mkdir -p "${_install_dir}"
+  if [ -f "${_stage}/mysql_dump.sql" ] && command -v mysql >/dev/null 2>&1; then
+    mysql -h 127.0.0.1 -u openedx openedx < "${_stage}/mysql_dump.sql" 2>/dev/null || mysql -u root openedx < "${_stage}/mysql_dump.sql" 2>/dev/null || true
+  fi
+  if [ -d "${_stage}/mongodb_dump" ] && command -v mongorestore >/dev/null 2>&1; then
+    mongorestore --host 127.0.0.1 --port 27017 --drop "${_stage}/mongodb_dump" >/dev/null 2>&1 || true
+  fi
   for _item in "${_stage}"/*; do
     if [ -e "${_item}" ]; then
       _base=$(basename "${_item}")
-      if [ -d "${_item}" ]; then
+      if [ -d "${_item}" ] && [ "${_base}" != "mongodb_dump" ]; then
         mkdir -p "${_install_dir}/${_base}"
         cp -R "${_item}/." "${_install_dir}/${_base}/" 2>/dev/null || true
-      elif [ "${_base}" != "mysql_dump.sql" ]; then
+      elif [ "${_base}" != "mysql_dump.sql" ] && [ "${_base}" != "mongodb_dump" ]; then
         cp -f "${_item}" "${_install_dir}/"
       fi
     fi

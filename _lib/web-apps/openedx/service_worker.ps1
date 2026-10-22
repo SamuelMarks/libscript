@@ -1,5 +1,5 @@
 # ## Overview
-# Manages persistent background WSGI processes for LMS and CMS via Windows Task Scheduler.
+# Manages persistent background WSGI processes for Open edX LMS and Studio CMS on Windows.
 #
 # ## Usage
 # powershell -File service_worker.ps1 [start|stop|status] [lmsPort] [cmsPort]
@@ -10,22 +10,23 @@ param(
     [int]$CmsPort = 8001
 )
 
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$wsgiPath = Join-Path $scriptDir "wsgi_server.py"
+$openEdxDir = if ($env:OPENEDX_INSTALL_DIR) { $env:OPENEDX_INSTALL_DIR } elseif (Test-Path "C:\Users\vagrant\.libscript\openedx") { "C:\Users\vagrant\.libscript\openedx" } else { Join-Path $env:USERPROFILE ".libscript\openedx" }
+$codebaseDir = if (Test-Path (Join-Path $openEdxDir "codebase\manage.py")) { Join-Path $openEdxDir "codebase" } else { $openEdxDir }
+$logDir = Join-Path $openEdxDir "logs"
+$runDir = Join-Path $openEdxDir "run"
+
+if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir -Force | Out-Null }
+if (-not (Test-Path $runDir)) { New-Item -ItemType Directory -Path $runDir -Force | Out-Null }
 
 $pyExe = $null
 $candidates = @(
+    (Join-Path $openEdxDir ".venv\Scripts\python.exe"),
+    "C:\Users\vagrant\.libscript\openedx\.venv\Scripts\python.exe",
+    "C:\OpenEdX\app\.venv\Scripts\python.exe",
+    "C:\Users\vagrant\.libscript\python\latest\bin\python.exe",
     "C:\Users\vagrant\AppData\Local\Programs\Python\Python312-arm64\python.exe",
     "C:\Users\vagrant\AppData\Local\Programs\Python\Python311-arm64\python.exe",
     "C:\Users\vagrant\AppData\Local\Programs\Python\Python312\python.exe",
-    "C:\Users\vagrant\.libscript\python\latest\bin\python.exe",
-    "C:\Users\vagrant\.libscript\openedx\.venv\Scripts\python.exe",
-    "C:\Windows\Temp\.libscript\python\latest\bin\python.exe",
-    "C:\Windows\Temp\.libscript\openedx\.venv\Scripts\python.exe",
-    "C:\OpenEdX\app\runtimes\python\python.exe",
-    "C:\OpenEdX\app\.venv\Scripts\python.exe",
-    "C:\libscript\tmp\stage_component_python_offline\python.exe",
-    "C:\libscript\tmp\stage_component_python_offline\bin\python.exe",
     "C:\Program Files\Python312\python.exe",
     "C:\Program Files\Python311\python.exe"
 )
@@ -40,61 +41,74 @@ if (-not $pyExe) {
     if ($pyCmd) { $pyExe = $pyCmd.Source }
 }
 
-if ($Action -eq "start") {
-    $openEdxDir = if ($env:OPENEDX_INSTALL_DIR) { $env:OPENEDX_INSTALL_DIR } elseif (Test-Path "C:\Users\vagrant") { "C:\Users\vagrant\.libscript\openedx" } else { Join-Path $env:USERPROFILE ".libscript\openedx" }
-    $logDir = Join-Path $openEdxDir "logs"
-    if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir -Force | Out-Null }
-
-    $svcPorts = @(3306, 6379, 27017, 7700, 25)
-    $missingPorts = @()
-    foreach ($sp in $svcPorts) {
-        try {
-            $tc = New-Object System.Net.Sockets.TcpClient
-            $iar = $tc.BeginConnect("127.0.0.1", $sp, $null, $null)
-            if ($iar.AsyncWaitHandle.WaitOne(300, $false)) {
-                $tc.EndConnect($iar)
-                $tc.Close()
-            } else {
-                $tc.Close()
-                $missingPorts += $sp
-            }
-        } catch {
-            $missingPorts += $sp
-        }
+# ## Start-OpenEdxServices
+# Starts real Open edX LMS and Studio CMS WSGI processes using waitress or Django runserver.
+function Start-OpenEdxServices {
+    $managePy = Join-Path $codebaseDir "manage.py"
+    if (-not (Test-Path $managePy)) {
+        Write-Error "[ERROR] Real Open edX codebase (manage.py) not found at $managePy."
+        exit 1
     }
-    $pywExe = $pyExe -replace "python\.exe$", "pythonw.exe"
-    $bgPy = if (Test-Path $pywExe) { $pywExe } else { $pyExe }
-    if ($missingPorts.Count -gt 0 -and $bgPy) {
-        $portList = $missingPorts -join ","
-        $svcScript = "import socket, threading, time`ndef serve(p):`n s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1);s.bind(('127.0.0.1',p));s.listen(5)`n while True:`n  try:`n   c,_=s.accept();c.sendall(b'HTTP/1.1 200 OK\r\nContent-Length: 19\r\n\r\n{""status"":""available""}');c.close()`n  except Exception: pass`nfor p in [$portList]: threading.Thread(target=serve,args=(p,),daemon=True).start()`nwhile True: time.sleep(3600)`n"
-        $svcScriptPath = Join-Path $openEdxDir "run\backing_services.py"
-        $runDir = Join-Path $openEdxDir "run"
-        if (-not (Test-Path $runDir)) { New-Item -ItemType Directory -Path $runDir -Force | Out-Null }
-        Set-Content -Path $svcScriptPath -Value $svcScript -Encoding Ascii
-        $svcCmd = "`"$bgPy`" `"$svcScriptPath`""
-        Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine = $svcCmd} | Out-Null
+    if (-not $pyExe -or -not (Test-Path $pyExe)) {
+        Write-Error "[ERROR] Python runtime not found."
+        exit 1
     }
 
-    $cmd = "`"$bgPy`" `"$wsgiPath`" --port $LmsPort --cms-port $CmsPort"
-    $res = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine = $cmd}
+    $waitressExe = Join-Path (Split-Path -Parent $pyExe) "waitress-serve.exe"
+    $env:LMS_CFG = Join-Path $openEdxDir "config\lms.env.json"
+    $env:CMS_CFG = Join-Path $openEdxDir "config\cms.env.json"
+
+    if (Test-Path $waitressExe) {
+        $lmsProc = Start-Process -FilePath $waitressExe -ArgumentList "--listen=0.0.0.0:$LmsPort", "lms.wsgi:application" -WorkingDirectory $codebaseDir -RedirectStandardOutput (Join-Path $logDir "lms.log") -RedirectStandardError (Join-Path $logDir "lms_err.log") -WindowStyle Hidden -PassThru
+        $cmsProc = Start-Process -FilePath $waitressExe -ArgumentList "--listen=0.0.0.0:$CmsPort", "cms.wsgi:application" -WorkingDirectory $codebaseDir -RedirectStandardOutput (Join-Path $logDir "cms.log") -RedirectStandardError (Join-Path $logDir "cms_err.log") -WindowStyle Hidden -PassThru
+    } else {
+        $lmsProc = Start-Process -FilePath $pyExe -ArgumentList "`"$managePy`"", "lms", "--settings=libscript", "runserver", "--insecure", "0.0.0.0:$LmsPort", "--noreload" -WorkingDirectory $codebaseDir -RedirectStandardOutput (Join-Path $logDir "lms.log") -RedirectStandardError (Join-Path $logDir "lms_err.log") -WindowStyle Hidden -PassThru
+        $cmsProc = Start-Process -FilePath $pyExe -ArgumentList "`"$managePy`"", "cms", "--settings=libscript", "runserver", "--insecure", "0.0.0.0:$CmsPort", "--noreload" -WorkingDirectory $codebaseDir -RedirectStandardOutput (Join-Path $logDir "cms.log") -RedirectStandardError (Join-Path $logDir "cms_err.log") -WindowStyle Hidden -PassThru
+    }
+
+    Set-Content -Path (Join-Path $runDir "lms.pid") -Value $lmsProc.Id -Encoding Ascii
+    Set-Content -Path (Join-Path $runDir "cms.pid") -Value $cmsProc.Id -Encoding Ascii
     Start-Sleep -Seconds 2
     $ts = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
-    Add-Content -Path (Join-Path $logDir "install.log") -Value "[$ts] [INFO] Started Open edX LMS (:$LmsPort) and Studio CMS (:$CmsPort) WSGI servers (PID $($res.ProcessId))."
-    Add-Content -Path (Join-Path $logDir "lms.log") -Value "[$ts] [INFO] Open edX LMS WSGI server listening on http://127.0.0.1:$LmsPort (PID $($res.ProcessId))"
-    Add-Content -Path (Join-Path $logDir "cms.log") -Value "[$ts] [INFO] Open edX Studio CMS WSGI server listening on http://127.0.0.1:$CmsPort (PID $($res.ProcessId))"
-    Write-Host "[PASS] Started Open edX WSGI servers on ports $LmsPort and $CmsPort (PID $($res.ProcessId))"
-} elseif ($Action -eq "stop") {
-    "OpenEdXWsgi", "LmsWsgi", "CmsWsgi" | ForEach-Object {
-        Stop-ScheduledTask -TaskName $_ -ErrorAction SilentlyContinue
-        Unregister-ScheduledTask -TaskName $_ -Confirm:$false -ErrorAction SilentlyContinue
+    Add-Content -Path (Join-Path $logDir "install.log") -Value "[$ts] [INFO] Started real Open edX LMS (:$LmsPort, PID $($lmsProc.Id)) and Studio CMS (:$CmsPort, PID $($cmsProc.Id))."
+    Write-Host "[PASS] Started Open edX LMS (:$LmsPort) and Studio CMS (:$CmsPort)"
+}
+
+# ## Stop-OpenEdxServices
+# Stops running Open edX LMS and Studio CMS processes.
+function Stop-OpenEdxServices {
+    foreach ($pf in @("lms.pid", "cms.pid")) {
+        $pPath = Join-Path $runDir $pf
+        if (Test-Path $pPath) {
+            $procId = (Get-Content $pPath -Raw).Trim()
+            if ($procId -match "^\d+$") {
+                Stop-Process -Id ([int]$procId) -Force -ErrorAction SilentlyContinue
+            }
+            Remove-Item -Path $pPath -Force -ErrorAction SilentlyContinue
+        }
     }
     Get-NetTCPConnection -LocalPort $LmsPort, $CmsPort -ErrorAction SilentlyContinue | ForEach-Object {
         Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue
     }
     Write-Host "[PASS] Stopped Open edX WSGI servers"
-} elseif ($Action -eq "status") {
+}
+
+# ## Get-OpenEdxServiceStatus
+# Prints the listening status of LMS and Studio CMS ports.
+function Get-OpenEdxServiceStatus {
     $lmsRunning = (Test-NetConnection -ComputerName 127.0.0.1 -Port $LmsPort -InformationLevel Quiet)
     $cmsRunning = (Test-NetConnection -ComputerName 127.0.0.1 -Port $CmsPort -InformationLevel Quiet)
     Write-Host "  LMS ($LmsPort): $(if ($lmsRunning) { '[RUNNING]' } else { '[STOPPED]' })"
     Write-Host "  CMS ($CmsPort): $(if ($cmsRunning) { '[RUNNING]' } else { '[STOPPED]' })"
+}
+
+if ($Action -eq "start") {
+    Start-OpenEdxServices
+} elseif ($Action -eq "stop") {
+    Stop-OpenEdxServices
+} elseif ($Action -eq "status") {
+    Get-OpenEdxServiceStatus
+} else {
+    Write-Error "Usage: service_worker.ps1 [start|stop|status] [lmsPort] [cmsPort]"
+    exit 1
 }

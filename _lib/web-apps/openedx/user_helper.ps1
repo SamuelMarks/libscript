@@ -50,6 +50,22 @@ function Do-Create {
         New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
     }
 
+    $pyExe = Join-Path $InstallDir ".venv\Scripts\python.exe"
+    $codebaseDir = if (Test-Path (Join-Path $InstallDir "codebase\manage.py")) { Join-Path $InstallDir "codebase" } else { $InstallDir }
+    $managePy = Join-Path $codebaseDir "manage.py"
+    if ((Test-Path $managePy) -and (Test-Path $pyExe)) {
+        $staffArgs = @("lms", "--settings=libscript", "manage_user", $Username, $Email)
+        if ($IsStaff.ToLower() -eq "true") { $staffArgs += "--staff" }
+        if ($IsSuperuser.ToLower() -eq "true") { $staffArgs += "--superuser" }
+        Push-Location $codebaseDir
+        try {
+            & $pyExe $managePy @staffArgs 2>$null | Out-Null
+            & $pyExe -c "import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lms.envs.libscript'); django.setup(); from django.contrib.auth import get_user_model; User = get_user_model(); u, _ = User.objects.get_or_create(username='$Username', defaults={'email': '$Email'}); u.email = '$Email'; u.is_staff = ('$IsStaff'.lower() == 'true' or '$IsSuperuser'.lower() == 'true'); u.is_superuser = ('$IsSuperuser'.lower() == 'true'); u.set_password('$Password'); u.save()" 2>$null | Out-Null
+        } finally {
+            Pop-Location
+        }
+    }
+
     $p = Join-Path $InstallDir "users.json"
     $dict = @{}
     if (Test-Path $p) {

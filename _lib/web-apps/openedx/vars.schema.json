@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "/_lib/web-apps/openedx/vars.schema.json",
   "title": "Open edX Stack Variables",
-  "description": "Variables for Open edX LMS and Studio/CMS stack deployment with full Tutor and openedx-platform parameter parity.",
+  "description": "Variables for Open edX LMS and Studio/CMS stack deployment with full Tutor and edx-platform parameter parity.",
   "type": "object",
   "properties": {
     "OPENEDX_INSTALL_MODE": {
@@ -14,7 +14,7 @@
     "OPENEDX_RELEASE": {
       "type": "string",
       "default": "release/verawood.1",
-      "description": "Open edX release branch or tag to install (e.g., release/verawood.1, open-release/sumac.master, master)."
+      "description": "Open edX release branch or tag to install (e.g., release/verawood.1, release/verawood, master)."
     },
     "OPENEDX_GIT_REPO": {
       "type": "string",

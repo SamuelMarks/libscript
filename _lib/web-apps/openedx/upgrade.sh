@@ -62,7 +62,14 @@ done
 OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
 VENV_DIR="${OPENEDX_INSTALL_DIR}/.venv"
 PYTHON_BIN="${VENV_DIR}/bin/python"
-MANAGE_PY="${OPENEDX_INSTALL_DIR}/manage.py"
+CODEBASE_DIR="${OPENEDX_INSTALL_DIR}/codebase"
+if [ ! -d "${CODEBASE_DIR}" ]; then
+  CODEBASE_DIR="${OPENEDX_INSTALL_DIR}"
+fi
+MANAGE_PY="${CODEBASE_DIR}/manage.py"
+if [ ! -f "${MANAGE_PY}" ]; then
+  MANAGE_PY="${OPENEDX_INSTALL_DIR}/manage.py"
+fi
 
 # ## resolve_python
 # Resolves python interpreter.
@@ -85,7 +92,7 @@ resolve_python() {
 #   [--from <release>] [--to <release>]
 upgrade_run() {
   _from="current"
-  _to="master"
+  _to="release/verawood.1"
 
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -115,18 +122,18 @@ upgrade_run() {
   fi
 
   # 2. Update codebase to target tag/branch
-  log_info "Step 2/8: Updating openedx-platform repository..."
-  if [ -d "${OPENEDX_INSTALL_DIR}/.git" ] && command -v git >/dev/null 2>&1; then
-    (if cd "${OPENEDX_INSTALL_DIR}"; then git fetch --all --tags 2>/dev/null && git checkout "${_to}" 2>/dev/null; fi) || true
+  log_info "Step 2/8: Updating openedx-platform repository to ${_to}..."
+  if [ -d "${CODEBASE_DIR}/.git" ] && command -v git >/dev/null 2>&1; then
+    (if cd "${CODEBASE_DIR}"; then git fetch --all --tags 2>/dev/null && git checkout "${_to}" 2>/dev/null; fi) || true
   fi
 
   # 3. Update Python dependencies
   log_info "Step 3/8: Updating Python requirements..."
-  if [ -f "${OPENEDX_INSTALL_DIR}/requirements/edx/base.txt" ]; then
+  if [ -f "${CODEBASE_DIR}/requirements/edx/base.txt" ]; then
     if command -v uv >/dev/null 2>&1 && [ -d "${VENV_DIR}" ]; then
-      uv pip install --python "${PYTHON_BIN}" -r "${OPENEDX_INSTALL_DIR}/requirements/edx/base.txt" 2>/dev/null || true
+      uv pip install --python "${PYTHON_BIN}" -r "${CODEBASE_DIR}/requirements/edx/base.txt" 2>/dev/null || true
     elif [ -x "${PYTHON_BIN}" ]; then
-      "${PYTHON_BIN}" -m pip install -r "${OPENEDX_INSTALL_DIR}/requirements/edx/base.txt" 2>/dev/null || true
+      "${PYTHON_BIN}" -m pip install -r "${CODEBASE_DIR}/requirements/edx/base.txt" 2>/dev/null || true
     fi
   fi
 
@@ -139,12 +146,15 @@ upgrade_run() {
   fi
 
   # 5. Frontend & Static Assets Compilation
-  log_info "Step 5/8: Rebuilding frontend static assets..."
-  if [ -f "${OPENEDX_INSTALL_DIR}/package.json" ] && command -v npm >/dev/null 2>&1; then
-    (cd "${OPENEDX_INSTALL_DIR}" && npm clean-install --no-audit 2>/dev/null) || true
+  log_info "Step 5/8: Rebuilding frontend static assets and MFEs..."
+  if [ -f "${CODEBASE_DIR}/package.json" ] && command -v npm >/dev/null 2>&1; then
+    (cd "${CODEBASE_DIR}" && npm clean-install --no-audit 2>/dev/null) || true
   fi
   if [ -f "${MANAGE_PY}" ] && [ -n "${_py}" ]; then
     "${_py}" "${MANAGE_PY}" lms collectstatic --noinput 2>/dev/null || true
+  fi
+  if [ -f "${SCRIPT_DIR}/mfe.sh" ] && [ -d "${OPENEDX_INSTALL_DIR}/mfes" ]; then
+    "${SCRIPT_DIR}/mfe.sh" build all 2>/dev/null || true
   fi
 
   # 6. Cache Flush
@@ -160,7 +170,10 @@ upgrade_run() {
   fi
 
   # 8. Restart Daemons & Healthcheck
-  log_info "Step 8/8: Restarting worker daemons and running healthcheck..."
+  log_info "Step 8/8: Restarting services, worker daemons, and running healthcheck..."
+  if [ -f "${SCRIPT_DIR}/service.sh" ]; then
+    "${SCRIPT_DIR}/service.sh" restart 2>/dev/null || true
+  fi
   if [ -f "${SCRIPT_DIR}/workers.sh" ]; then
     "${SCRIPT_DIR}/workers.sh" restart 2>/dev/null || true
   fi

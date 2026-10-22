@@ -66,7 +66,10 @@ do_start() {
   _install_dir="$4"
 
   mkdir -p "${_run_dir}" "${_log_dir}"
-  _manage_py="${_install_dir}/manage.py"
+  _codebase="${_install_dir}/codebase"
+  if [ ! -f "${_codebase}/manage.py" ] && [ -f "${_install_dir}/manage.py" ]; then
+    _codebase="${_install_dir}"
+  fi
 
   for _svc in lms-worker cms-worker celery-beat; do
     _pid_file="${_run_dir}/${_svc}.pid"
@@ -80,16 +83,23 @@ do_start() {
       fi
     fi
 
-    if [ -f "${_manage_py}" ] && [ -x "${_py_bin}" ]; then
-      nohup "${_py_bin}" -m celery worker -c 2 >> "${_log_file}" 2>&1 &
-      _new_pid=$!
+    if [ -x "${_py_bin}" ] && "${_py_bin}" -c "import celery" >/dev/null 2>&1; then
+      case "${_svc}" in
+        lms-worker)
+          (cd "${_codebase}" 2>/dev/null || true; nohup "${_py_bin}" -m celery -A lms.celery worker --loglevel=INFO -c 2 >> "${_log_file}" 2>&1 & printf '%s\n' "$!" > "${_pid_file}")
+          ;;
+        cms-worker)
+          (cd "${_codebase}" 2>/dev/null || true; nohup "${_py_bin}" -m celery -A cms.celery worker --loglevel=INFO -c 2 >> "${_log_file}" 2>&1 & printf '%s\n' "$!" > "${_pid_file}")
+          ;;
+        celery-beat)
+          (cd "${_codebase}" 2>/dev/null || true; nohup "${_py_bin}" -m celery -A lms.celery beat --loglevel=INFO >> "${_log_file}" 2>&1 & printf '%s\n' "$!" > "${_pid_file}")
+          ;;
+      esac
+      _new_pid=$(head -n 1 "${_pid_file}" 2>/dev/null || true)
+      printf 'Started %s (PID %s).\n' "${_svc}" "${_new_pid}"
     else
-      ( sleep 86400 ) >> "${_log_file}" 2>&1 &
-      _new_pid=$!
+      printf '[WARN] Celery package or Python runtime not installed at %s; skipping worker %s.\n' "${_py_bin}" "${_svc}" >&2
     fi
-
-    printf '%s\n' "${_new_pid}" > "${_pid_file}"
-    printf 'Started %s (PID %s).\n' "${_svc}" "${_new_pid}"
   done
 }
 

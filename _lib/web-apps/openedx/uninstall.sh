@@ -32,4 +32,5 @@ SCRIPT_NAME="${SCRIPT_DIR}/setup_generic.sh"
 export SCRIPT_NAME
 ACTION=uninstall
 export ACTION
+# shellcheck disable=SC1090,SC1091
 . "${SCRIPT_NAME}"

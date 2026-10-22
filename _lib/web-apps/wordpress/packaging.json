@@ -99,6 +99,21 @@
       "version_regex": "1\\.[0-9]+"
     }
   ],
+  "source_repository": {
+    "default_url": "https://github.com/WordPress/WordPress.git",
+    "default_branch": "7.1.2",
+    "presets": [
+      {
+        "label": "Stable (WordPress 7.1.2)",
+        "value": "7.1.2"
+      },
+      {
+        "label": "Development (master)",
+        "value": "master"
+      }
+    ],
+    "supports_auth_token": true
+  },
   "wizard_copy": {
     "welcome_description_online": "The Setup Wizard will download and install WordPress 7.1.2 Platform and required runtimes on your computer.",
     "welcome_description_offline": "The Setup Wizard will deploy WordPress 7.1.2 Platform and pre-bundled air-gapped runtimes on your computer.",

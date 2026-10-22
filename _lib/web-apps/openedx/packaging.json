@@ -254,7 +254,7 @@
           {
             "title": "Email or Username",
             "subtitle": "admin@openedx.local",
-            "detail": "Open edX Verawood Release (Port 8000) — Active & Healthy",
+            "detail": "Open edX Sumac Release (Port 8000) — Active & Healthy",
             "badge": "Sign in to LMS",
             "color": "#0075B4"
           }

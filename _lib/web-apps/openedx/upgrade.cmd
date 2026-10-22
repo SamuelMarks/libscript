@@ -97,7 +97,7 @@ goto show_help
 :do_run
 shift
 set "FROM_REL=current"
-set "TO_REL=master"
+set "TO_REL=release/verawood.1"
 
 :: ## parse_upgrade_args
 :: Parses command-line arguments for the release upgrade pipeline.
@@ -123,36 +123,44 @@ exit /b 1
 :run_upgrade_pipeline
 echo [INFO] === Commencing Open edX Upgrade Pipeline (%FROM_REL% -> %TO_REL%) ===
 
+set "CODEBASE_DIR=%OPENEDX_INSTALL_DIR%\codebase"
+if not exist "%CODEBASE_DIR%" set "CODEBASE_DIR=%OPENEDX_INSTALL_DIR%"
+set "MANAGE_PY=%CODEBASE_DIR%\manage.py"
+if not exist "%MANAGE_PY%" set "MANAGE_PY=%OPENEDX_INSTALL_DIR%\manage.py"
+
 echo [INFO] Step 1/8: Creating pre-upgrade state backup...
 if exist "%~dp0backup.cmd" call "%~dp0backup.cmd" create
 
-echo [INFO] Step 2/8: Updating openedx-platform repository...
-if exist "%OPENEDX_INSTALL_DIR%\.git" (
-    pushd "%OPENEDX_INSTALL_DIR%"
+echo [INFO] Step 2/8: Updating openedx-platform repository to %TO_REL%...
+if exist "%CODEBASE_DIR%\.git" (
+    pushd "%CODEBASE_DIR%"
     git fetch --all --tags 2>nul
     git checkout "%TO_REL%" 2>nul
     popd
 )
 
 echo [INFO] Step 3/8: Updating Python requirements...
-if exist "%OPENEDX_INSTALL_DIR%\requirements\edx\base.txt" (
-    "%PYTHON_BIN%" -m pip install -r "%OPENEDX_INSTALL_DIR%\requirements\edx\base.txt" 2>nul
+if exist "%CODEBASE_DIR%\requirements\edx\base.txt" (
+    "%PYTHON_BIN%" -m pip install -r "%CODEBASE_DIR%\requirements\edx\base.txt" 2>nul
 )
 
 echo [INFO] Step 4/8: Applying database migrations...
-if exist "%OPENEDX_INSTALL_DIR%\manage.py" (
-    "%PYTHON_BIN%" "%OPENEDX_INSTALL_DIR%\manage.py" lms migrate --noinput 2>nul
-    "%PYTHON_BIN%" "%OPENEDX_INSTALL_DIR%\manage.py" cms migrate --noinput 2>nul
+if exist "%MANAGE_PY%" (
+    "%PYTHON_BIN%" "%MANAGE_PY%" lms migrate --noinput 2>nul
+    "%PYTHON_BIN%" "%MANAGE_PY%" cms migrate --noinput 2>nul
 )
 
-echo [INFO] Step 5/8: Rebuilding frontend static assets...
-if exist "%OPENEDX_INSTALL_DIR%\package.json" (
-    pushd "%OPENEDX_INSTALL_DIR%"
+echo [INFO] Step 5/8: Rebuilding frontend static assets and MFEs...
+if exist "%CODEBASE_DIR%\package.json" (
+    pushd "%CODEBASE_DIR%"
     npm clean-install --no-audit 2>nul
     popd
 )
-if exist "%OPENEDX_INSTALL_DIR%\manage.py" (
-    "%PYTHON_BIN%" "%OPENEDX_INSTALL_DIR%\manage.py" lms collectstatic --noinput 2>nul
+if exist "%MANAGE_PY%" (
+    "%PYTHON_BIN%" "%MANAGE_PY%" lms collectstatic --noinput 2>nul
+)
+if exist "%~dp0mfe.cmd" (
+    if exist "%OPENEDX_INSTALL_DIR%\mfes" call "%~dp0mfe.cmd" build all 2>nul
 )
 
 echo [INFO] Step 6/8: Flushing cache stores...
@@ -162,11 +170,12 @@ if not errorlevel 1 (
 )
 
 echo [INFO] Step 7/8: Updating search indices...
-if exist "%OPENEDX_INSTALL_DIR%\manage.py" (
-    "%PYTHON_BIN%" "%OPENEDX_INSTALL_DIR%\manage.py" lms reindex_course --all 2>nul
+if exist "%MANAGE_PY%" (
+    "%PYTHON_BIN%" "%MANAGE_PY%" lms reindex_course --all 2>nul
 )
 
-echo [INFO] Step 8/8: Restarting background workers and validating diagnostics...
+echo [INFO] Step 8/8: Restarting services, background workers, and validating diagnostics...
+if exist "%~dp0service.cmd" call "%~dp0service.cmd" restart
 if exist "%~dp0workers.cmd" call "%~dp0workers.cmd" restart
 if exist "%~dp0healthcheck.cmd" call "%~dp0healthcheck.cmd"
 

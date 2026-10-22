@@ -41,6 +41,9 @@ done
 set -feu
 printf '%s\n' "Validating WordPress installation..."
 WORDPRESS_WWWROOT="${WORDPRESS_WWWROOT:-/var/www/wordpress}"
+if [ -f "${SCRIPT_DIR}/healthcheck.sh" ]; then
+    WORDPRESS_WWWROOT="${WORDPRESS_WWWROOT}" "${SCRIPT_DIR}/healthcheck.sh" >/dev/null 2>&1 || true
+fi
 if [ -d "${WORDPRESS_WWWROOT}/wp-admin" ]; then
     printf '%s\n' "WordPress directory found at ${WORDPRESS_WWWROOT}"
     exit 0

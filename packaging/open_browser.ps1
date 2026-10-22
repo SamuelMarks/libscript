@@ -13,15 +13,12 @@ param(
 Get-Process chrome, msedge, WindowsTerminal, OpenConsole -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
 Start-Sleep -Milliseconds 500
 
-# 2. Find browser
-$browserExe = "C:\Program Files\Google\Chrome\Application\chrome.exe"
+# 2. Find browser (built-in Microsoft Edge on Windows 11 or Chrome if preinstalled)
+$browserExe = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 if (-not (Test-Path $browserExe)) {
-    $browserExe = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+    $browserExe = "C:\Program Files\Microsoft\Edge\Application\msedge.exe"
 }
 if (-not (Test-Path $browserExe)) {
-    Write-Host "[INFO] Browser not detected; installing Google Chrome via winget..."
-    & winget install --id Google.Chrome --silent --accept-package-agreements --accept-source-agreements > $null 2>&1
-    Remove-Item -Path "C:\Users\Public\Desktop\Google Chrome.lnk", "C:\Users\vagrant\Desktop\Google Chrome.lnk" -Force -ErrorAction SilentlyContinue
     $browserExe = "C:\Program Files\Google\Chrome\Application\chrome.exe"
 }
 

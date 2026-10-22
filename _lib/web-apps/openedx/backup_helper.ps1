@@ -69,7 +69,22 @@ function Do-Backup {
     }
 
     $sqlPath = Join-Path $stage "mysql_dump.sql"
-    Set-Content -Path $sqlPath -Value "-- Open edX Windows snapshot`r`n" -Encoding Ascii
+    $mysqldumpCmd = Get-Command mysqldump.exe -ErrorAction SilentlyContinue
+    if ($mysqldumpCmd) {
+        & $mysqldumpCmd.Source -h 127.0.0.1 -u openedx openedx --result-file="$sqlPath" 2>$null
+        if (-not (Test-Path $sqlPath) -or ((Get-Item $sqlPath).Length -eq 0)) {
+            & $mysqldumpCmd.Source -u root openedx --result-file="$sqlPath" 2>$null
+        }
+    }
+    if (-not (Test-Path $sqlPath)) {
+        Set-Content -Path $sqlPath -Value "-- mysqldump not available`r`n" -Encoding Ascii
+    }
+
+    $mongodumpCmd = Get-Command mongodump.exe -ErrorAction SilentlyContinue
+    if ($mongodumpCmd) {
+        $mongoStage = Join-Path $stage "mongodb_dump"
+        & $mongodumpCmd.Source --host 127.0.0.1 --port 27017 --db openedx --out "$mongoStage" 2>$null | Out-Null
+    }
 
     $archiveParent = Split-Path -Parent $archive
     if (-not (Test-Path $archiveParent)) {
@@ -112,11 +127,22 @@ function Do-Restore {
 
     [System.IO.Compression.ZipFile]::ExtractToDirectory($Archive, $stage)
 
+    $sqlDump = Join-Path $stage "mysql_dump.sql"
+    $mysqlCmd = Get-Command mysql.exe -ErrorAction SilentlyContinue
+    if ((Test-Path $sqlDump) -and $mysqlCmd) {
+        cmd.exe /c "`"$($mysqlCmd.Source)`" -h 127.0.0.1 -u openedx openedx < `"$sqlDump`"" 2>$null
+    }
+    $mongoDump = Join-Path $stage "mongodb_dump"
+    $mongorestoreCmd = Get-Command mongorestore.exe -ErrorAction SilentlyContinue
+    if ((Test-Path $mongoDump) -and $mongorestoreCmd) {
+        & $mongorestoreCmd.Source --host 127.0.0.1 --port 27017 --drop "$mongoDump" 2>$null | Out-Null
+    }
+
     Get-ChildItem -Path $stage | ForEach-Object {
         $dest = Join-Path $InstallDir $_.Name
-        if ($_.PSIsContainer) {
+        if ($_.PSIsContainer -and $_.Name -ne "mongodb_dump") {
             Copy-Item -Path $_.FullName -Destination $dest -Recurse -Force
-        } elseif ($_.Name -ne "mysql_dump.sql") {
+        } elseif (-not $_.PSIsContainer -and $_.Name -ne "mysql_dump.sql") {
             Copy-Item -Path $_.FullName -Destination $dest -Force
         }
     }

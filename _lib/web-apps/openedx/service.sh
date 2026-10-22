@@ -40,6 +40,7 @@ esac
 export STACK="${STACK:-}${THIS_FILE}"':'
 SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 APP_DIR="${SCRIPT_DIR}"
+export APP_DIR
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 : "${OPENEDX_INSTALL_DIR:=${LIBSCRIPT_HOME:-${HOME}/.libscript}/openedx}"
@@ -91,22 +92,26 @@ is_port_listening() {
 start_services() {
   printf '[INFO] Starting Open edX platform services...\n'
 
+  _codebase="${OPENEDX_INSTALL_DIR}/codebase"
+  if [ ! -f "${_codebase}/manage.py" ] && [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
+    _codebase="${OPENEDX_INSTALL_DIR}"
+  fi
+  _py="python3"
+  if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/python" ]; then
+    _py="${OPENEDX_INSTALL_DIR}/.venv/bin/python"
+  fi
+
   # Start LMS if not already listening
   if is_port_listening "$LMS_PORT"; then
     printf '[INFO] Open edX LMS is already running on port %s\n' "$LMS_PORT"
   else
     printf '[INFO] Launching Open edX LMS on port %s...\n' "$LMS_PORT"
-    if [ -f "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" ] && [ -d "${OPENEDX_INSTALL_DIR}/codebase" ]; then
-      (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" --bind "0.0.0.0:${LMS_PORT}" --workers 4 lms.wsgi:application < /dev/null > "${LOG_DIR}/lms.log" 2>&1 & printf '%s\n' "$!" > "${LMS_PID_FILE}")
-    elif [ -f "${APP_DIR}/wsgi_server.py" ]; then
-      _py="python3"
-      if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/python" ]; then
-        _py="${OPENEDX_INSTALL_DIR}/.venv/bin/python"
-      fi
-      nohup "$_py" "${APP_DIR}/wsgi_server.py" --port "$LMS_PORT" --cms-port "$CMS_PORT" < /dev/null > "${LOG_DIR}/lms.log" 2>&1 &
-      printf '%s\n' "$!" > "${LMS_PID_FILE}"
+    if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" ] && [ -f "${_codebase}/manage.py" ]; then
+      (cd "${_codebase}" && "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" --bind "0.0.0.0:${LMS_PORT}" --workers 4 lms.wsgi:application < /dev/null > "${LOG_DIR}/lms.log" 2>&1 & printf '%s\n' "$!" > "${LMS_PID_FILE}")
+    elif [ -f "${_codebase}/manage.py" ]; then
+      (cd "${_codebase}" && nohup "${_py}" manage.py lms --settings=libscript runserver --insecure "0.0.0.0:${LMS_PORT}" --noreload < /dev/null > "${LOG_DIR}/lms.log" 2>&1 & printf '%s\n' "$!" > "${LMS_PID_FILE}")
     else
-      printf '[ERROR] Genuine Open edX codebase or Gunicorn not found for LMS.\n' >&2
+      printf '[ERROR] Real Open edX codebase (manage.py) not found at %s.\n' "${_codebase}" >&2
       exit 1
     fi
   fi
@@ -116,10 +121,13 @@ start_services() {
     printf '[INFO] Open edX Studio CMS is already running on port %s\n' "$CMS_PORT"
   else
     printf '[INFO] Launching Open edX Studio CMS on port %s...\n' "$CMS_PORT"
-    if [ -f "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" ] && [ -d "${OPENEDX_INSTALL_DIR}/codebase" ]; then
-      (cd "${OPENEDX_INSTALL_DIR}/codebase" && "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" --bind "0.0.0.0:${CMS_PORT}" --workers 2 cms.wsgi:application < /dev/null > "${LOG_DIR}/cms.log" 2>&1 & printf '%s\n' "$!" > "${CMS_PID_FILE}")
-    elif is_port_listening "$CMS_PORT"; then
-      printf '[INFO] Open edX Studio CMS is already listening on port %s\n' "$CMS_PORT"
+    if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" ] && [ -f "${_codebase}/manage.py" ]; then
+      (cd "${_codebase}" && "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" --bind "0.0.0.0:${CMS_PORT}" --workers 2 cms.wsgi:application < /dev/null > "${LOG_DIR}/cms.log" 2>&1 & printf '%s\n' "$!" > "${CMS_PID_FILE}")
+    elif [ -f "${_codebase}/manage.py" ]; then
+      (cd "${_codebase}" && nohup "${_py}" manage.py cms --settings=libscript runserver --insecure "0.0.0.0:${CMS_PORT}" --noreload < /dev/null > "${LOG_DIR}/cms.log" 2>&1 & printf '%s\n' "$!" > "${CMS_PID_FILE}")
+    else
+      printf '[ERROR] Real Open edX codebase (manage.py) not found at %s.\n' "${_codebase}" >&2
+      exit 1
     fi
   fi
 
@@ -231,23 +239,20 @@ install_services() {
   printf '[INFO] Installing Open edX native services...\n'
   mkdir -p "${OPENEDX_INSTALL_DIR}/codebase" "${OPENEDX_INSTALL_DIR}/logs" "${OPENEDX_INSTALL_DIR}/run"
   
-  if [ -f "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" ]; then
+  _py="python3"
+  if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/python" ]; then
+    _py="${OPENEDX_INSTALL_DIR}/.venv/bin/python"
+  fi
+  if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn" ]; then
     _exec_lms="${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn --bind 0.0.0.0:${LMS_PORT} --workers 4 lms.wsgi:application"
     _exec_cms="${OPENEDX_INSTALL_DIR}/.venv/bin/gunicorn --bind 0.0.0.0:${CMS_PORT} --workers 2 cms.wsgi:application"
-    _exec_lms_worker="${OPENEDX_INSTALL_DIR}/.venv/bin/python -m celery -A lms worker --loglevel=INFO -c 2"
-    _exec_cms_worker="${OPENEDX_INSTALL_DIR}/.venv/bin/python -m celery -A cms worker --loglevel=INFO -c 2"
-    _exec_beat="${OPENEDX_INSTALL_DIR}/.venv/bin/python -m celery -A lms beat --loglevel=INFO"
   else
-    _py="python3"
-    if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/python" ]; then
-      _py="${OPENEDX_INSTALL_DIR}/.venv/bin/python"
-    fi
-    _exec_lms="${_py} ${APP_DIR}/wsgi_server.py --port ${LMS_PORT} --cms-port ${CMS_PORT}"
-    _exec_cms="${_py} ${APP_DIR}/wsgi_server.py --port ${CMS_PORT} --cms-port ${LMS_PORT}"
-    _exec_lms_worker="${_py} -c import\ time;[time.sleep(3600)\ for\ _\ in\ iter(int,1)]"
-    _exec_cms_worker="${_py} -c import\ time;[time.sleep(3600)\ for\ _\ in\ iter(int,1)]"
-    _exec_beat="${_py} -c import\ time;[time.sleep(3600)\ for\ _\ in\ iter(int,1)]"
+    _exec_lms="${_py} manage.py lms --settings=libscript runserver --insecure 0.0.0.0:${LMS_PORT} --noreload"
+    _exec_cms="${_py} manage.py cms --settings=libscript runserver --insecure 0.0.0.0:${CMS_PORT} --noreload"
   fi
+  _exec_lms_worker="${_py} -m celery -A lms.celery worker --loglevel=INFO -c 2"
+  _exec_cms_worker="${_py} -m celery -A cms.celery worker --loglevel=INFO -c 2"
+  _exec_beat="${_py} -m celery -A lms.celery beat --loglevel=INFO"
   
   libscript_install_service "openedx-lms" "${_exec_lms}" "${OPENEDX_INSTALL_DIR}/codebase" "Open edX LMS Service" ""
   libscript_install_service "openedx-cms" "${_exec_cms}" "${OPENEDX_INSTALL_DIR}/codebase" "Open edX Studio CMS Service" ""

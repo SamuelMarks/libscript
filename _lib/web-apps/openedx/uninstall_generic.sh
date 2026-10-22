@@ -29,4 +29,10 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${THIS_FILE}")" && pwd)
 : "${LIBSCRIPT_ROOT_DIR:=$(d="$SCRIPT_DIR"; while [ ! -f "$d/libscript.sh" ]; do n="${d%/*}"; [ -z "$n" ] && n="/"; [ "$d" = "$n" ] && break; d="$n"; done; printf '%s\n' "$d")}"
 
 OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
+if [ -f "${SCRIPT_DIR}/workers.sh" ]; then
+  OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${SCRIPT_DIR}/workers.sh" stop 2>/dev/null || true
+fi
+if [ -f "${SCRIPT_DIR}/service.sh" ]; then
+  OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${SCRIPT_DIR}/service.sh" stop 2>/dev/null || true
+fi
 rm -rf "${OPENEDX_INSTALL_DIR}"

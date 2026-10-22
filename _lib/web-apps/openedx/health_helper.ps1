@@ -112,7 +112,7 @@ function Test-Workers {
         $procs = Get-Process -Name celery, waitress, gunicorn, python, pythonw, node -ErrorAction SilentlyContinue
         foreach ($p in $procs) {
             $cmd = $p.CommandLine -as [string]
-            if ($cmd -match "celery" -or $cmd -match "waitress" -or $cmd -match "gunicorn" -or $cmd -match "wsgi_server") {
+            if ($cmd -match "celery" -or $cmd -match "waitress" -or $cmd -match "gunicorn") {
                 return "OK"
             }
         }
@@ -128,32 +128,34 @@ function Test-Workers {
 }
 
 # ## Test-LibscriptStatus
-# Probes component using standard libscript status
+# Probes component using reusable status_databases.cmd wrapper or TCP fallback.
 function Test-LibscriptStatus {
-    param([string]$Component)
+    param([string]$Component, [string]$HostName = "127.0.0.1", [int]$Port = 0)
     try {
-        $libscript = ""
-        if ($env:LIBSCRIPT_ROOT_DIR) {
-            $libscript = Join-Path $env:LIBSCRIPT_ROOT_DIR "libscript.cmd"
-        } else {
-            $libscript = Join-Path (Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent) "libscript.cmd"
+        $statusDbCmd = Join-Path $PSScriptRoot "status_databases.cmd"
+        if (Test-Path $statusDbCmd) {
+            $p = Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$statusDbCmd`" $Component >nul 2>&1" -NoNewWindow -Wait -PassThru
+            if ($p.ExitCode -eq 0) {
+                return "OK"
+            }
         }
-        
-        $p = Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$libscript`" status $Component >nul 2>&1" -NoNewWindow -Wait -PassThru
-        if ($p.ExitCode -eq 0) {
-            return "OK"
+        if ($Port -gt 0) {
+            return (Test-TcpPort -HostName $HostName -Port $Port)
         }
         return "FAIL"
     } catch {
+        if ($Port -gt 0) {
+            return (Test-TcpPort -HostName $HostName -Port $Port)
+        }
         return "FAIL"
     }
 }
 
 $res = @{}
-$res["mysql"] = Test-LibscriptStatus -Component "databases/mysql"
-$res["mongodb"] = Test-LibscriptStatus -Component "databases/mongodb"
-$res["redis"] = Test-LibscriptStatus -Component "caches/redis"
-$res["meilisearch"] = Test-LibscriptStatus -Component "search/meilisearch"
+$res["mysql"] = Test-LibscriptStatus -Component "databases/mysql" -HostName $MyH -Port ([int]$MyP)
+$res["mongodb"] = Test-LibscriptStatus -Component "databases/mongodb" -HostName $MgH -Port ([int]$MgP)
+$res["redis"] = Test-LibscriptStatus -Component "caches/redis" -HostName $RdH -Port ([int]$RdP)
+$res["meilisearch"] = Test-LibscriptStatus -Component "search/meilisearch" -HostName $MeH -Port ([int]$MeP)
 $res["lms"] = Test-HttpEndpoint -Url "http://$LmsH`:$LmsP/"
 $res["cms"] = Test-HttpEndpoint -Url "http://$CmsH`:$CmsP/signin"
 $res["workers"] = Test-Workers

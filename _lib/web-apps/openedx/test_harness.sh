@@ -69,54 +69,36 @@ trap cleanup EXIT INT TERM
 
 printf '=== Open edX Real Service Coordination & Authentication Test ===\n'
 
-# 1. Verify Core Infrastructure Services Coordination
+# 1. Verify Core Infrastructure Services Coordination via Reusable status_databases.sh
 printf '[CHECK 1/6] Verifying backing datastores and caching daemons...\n'
-if command -v mysqladmin >/dev/null 2>&1; then
-  if mysqladmin ping -h 127.0.0.1 -P 3306 --silent >/dev/null 2>&1; then
+if [ -f "${SCRIPT_DIR}/status_databases.sh" ]; then
+  if "${SCRIPT_DIR}/status_databases.sh" "databases/mysql" >/dev/null 2>&1; then
     printf '  -> MySQL: ACTIVE (port 3306)\n'
   else
     printf '  -> MySQL: not responding on port 3306 (continuing)\n'
   fi
-fi
-
-if command -v redis-cli >/dev/null 2>&1; then
-  if redis-cli -h 127.0.0.1 -p 6379 ping 2>/dev/null | grep -i "PONG" >/dev/null 2>&1; then
+  if "${SCRIPT_DIR}/status_databases.sh" "caches/redis" >/dev/null 2>&1; then
     printf '  -> Redis: ACTIVE (port 6379)\n'
+  fi
+  if "${SCRIPT_DIR}/status_databases.sh" "search/meilisearch" >/dev/null 2>&1; then
+    printf '  -> Meilisearch: ACTIVE (port 7700)\n'
   fi
 fi
 
-if curl -s "http://127.0.0.1:7700/health" 2>/dev/null | grep -i "available" >/dev/null 2>&1; then
-  printf '  -> Meilisearch: ACTIVE (port 7700)\n'
+# 2. Ensure Real LMS & Studio Services are Running via Reusable service.sh & user.sh
+printf '[CHECK 2/6] Verifying LMS and Studio HTTP listeners...\n'
+MANAGE_PY="${OPENEDX_INSTALL_DIR}/codebase/manage.py"
+if [ ! -f "${MANAGE_PY}" ] && [ -f "${OPENEDX_INSTALL_DIR}/manage.py" ]; then
+  MANAGE_PY="${OPENEDX_INSTALL_DIR}/manage.py"
 fi
 
-# 2. Ensure Real LMS & Studio Services are Running
-printf '[CHECK 2/6] Verifying LMS and Studio HTTP listeners...\n'
-VENV_PYTHON="${OPENEDX_INSTALL_DIR}/.venv/bin/python"
-MANAGE_PY="${OPENEDX_INSTALL_DIR}/codebase/manage.py"
-WSGI_SERVER="${OPENEDX_INSTALL_DIR}/codebase/wsgi_server.py"
-if [ ! -f "${WSGI_SERVER}" ]; then
-  WSGI_SERVER="${SCRIPT_DIR}/wsgi_server.py"
+if [ -f "${SCRIPT_DIR}/user.sh" ]; then
+  OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" "${SCRIPT_DIR}/user.sh" create "${ADMIN_USER}" "admin@openedx.local" --password "${ADMIN_PASS}" --staff --superuser >/dev/null 2>&1 || true
 fi
 
 if ! curl -s "http://${CONNECT_IP}:${LMS_PORT}/" >/dev/null 2>&1; then
-  if [ -f "${MANAGE_PY}" ] && [ -x "${VENV_PYTHON}" ] && "${VENV_PYTHON}" -c "import django" >/dev/null 2>&1; then
-    printf '  -> Starting real LMS server via manage.py on port %s...\n' "$LMS_PORT"
-    nohup "${VENV_PYTHON}" "${MANAGE_PY}" lms runserver 0.0.0.0:"${LMS_PORT}" < /dev/null > "$TMP_DIR/lms_run.log" 2>&1 &
-    printf '%s\n' "$!" >> "$PID_FILE"
-    
-    printf '  -> Starting real Studio server via manage.py on port %s...\n' "$CMS_PORT"
-    nohup "${VENV_PYTHON}" "${MANAGE_PY}" cms runserver 0.0.0.0:"${CMS_PORT}" < /dev/null > "$TMP_DIR/cms_run.log" 2>&1 &
-    printf '%s\n' "$!" >> "$PID_FILE"
-  elif [ -f "${WSGI_SERVER}" ]; then
-    _py="python3"
-    if [ -x "${VENV_PYTHON}" ]; then
-      _py="${VENV_PYTHON}"
-    elif ! command -v python3 >/dev/null 2>&1; then
-      _py="python"
-    fi
-    printf '  -> Starting Open edX WSGI server on ports %s and %s...\n' "$LMS_PORT" "$CMS_PORT"
-    nohup "${_py}" "${WSGI_SERVER}" --lms-port "$LMS_PORT" --cms-port "$CMS_PORT" < /dev/null > "$TMP_DIR/wsgi_run.log" 2>&1 &
-    printf '%s\n' "$!" >> "$PID_FILE"
+  if [ -f "${MANAGE_PY}" ] && [ -f "${SCRIPT_DIR}/service.sh" ]; then
+    OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" OPENEDX_LMS_PORT="${LMS_PORT}" OPENEDX_CMS_PORT="${CMS_PORT}" "${SCRIPT_DIR}/service.sh" start || true
   fi
 
   # Await server startup
@@ -128,6 +110,10 @@ if ! curl -s "http://${CONNECT_IP}:${LMS_PORT}/" >/dev/null 2>&1; then
     sleep 1
     _retries=$((_retries + 1))
   done
+fi
+
+if [ -f "${SCRIPT_DIR}/healthcheck.sh" ]; then
+  OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR}" LMS_PORT="${LMS_PORT}" CMS_PORT="${CMS_PORT}" "${SCRIPT_DIR}/healthcheck.sh" >/dev/null 2>&1 || true
 fi
 
 # 3. Test Registration Screen GET

@@ -113,7 +113,9 @@ if not errorlevel 1 (
     cd /d "!LIBSCRIPT_ROOT_DIR!"
     call libscript.cmd package-as msi stacks/cms/openedx
     if not exist "build" mkdir "build"
-    copy /y "build\packages\msi\openedx-x64-verawood.1-online.msi" "build\OpenEdX-Setup.msi" >nul 2>&1
+    if exist "build\packages\msi\openedx-x64-verawood.1-online.msi" (
+        copy /y "build\packages\msi\openedx-x64-verawood.1-online.msi" "build\OpenEdX-Setup.msi" >nul 2>&1
+    )
     cd /d "!VAGRANT_DIR!"
     goto step1
 )

@@ -58,8 +58,13 @@ if "%WORDPRESS_WWWROOT%"=="" (
     if not defined ProgramFiles set "WORDPRESS_WWWROOT=C:\WordPress\www"
 )
 
-:: 1. Delete scheduled task
-schtasks /delete /tn "WordPressCronTask" /f >nul 2>&1
+:: 1. Delete scheduled task and stop services via reusable submodules
+if exist "!SCRIPT_DIR!\cron.cmd" (
+    call "!SCRIPT_DIR!\cron.cmd" uninstall >nul 2>&1
+)
+if exist "!SCRIPT_DIR!\service.cmd" (
+    call "!SCRIPT_DIR!\service.cmd" stop >nul 2>&1
+)
 
 :: 2. Purge DB if requested
 if "%~1"=="--purge-db" (

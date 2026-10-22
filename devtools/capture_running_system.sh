@@ -1,5 +1,5 @@
 #!/bin/sh
-# cspell:words isdir rstrip bbox textbbox titlebar roundrectangle pointsize wcopy colortbl vspec
+# cspell:words isdir rstrip bbox textbbox titlebar roundrectangle pointsize wcopy colortbl vspec shutil urlopen DEVNULL edxloggedin LANCZOS websockets asyncio getpid Popen nonlocal rmtree
 # ## Overview
 # Generic schema-driven "screenshot-to-running-system" engine.
 # Reads declarative metadata strictly from <target_dir>/packaging.json (or synthesizes
@@ -620,6 +620,8 @@ def render_stage(dlg_name, overrides, out_paths, os_tag):
     draw.rectangle([0, 0, W - 1, H - 1], outline=(110, 110, 110), width=1)
 
     for p in out_paths:
+        if os_tag == "windows" and os.environ.get("FORCE_SYNTHETIC_WINDOWS") != "1" and os.path.exists(p) and os.path.getsize(p) > 5000:
+            continue
         im.save(p, "PNG")
 
 wcopy = pkg_meta.get("wizard_copy", {})
@@ -739,6 +741,55 @@ capture_verification_views() {
   _os_out="${_target_out}/${_os}"
   mkdir -p "$_target_out" "$_os_out"
 
+  if [ -x "${_abs_tdir}/healthcheck.sh" ]; then
+    "${_abs_tdir}/healthcheck.sh" >/dev/null 2>&1 || true
+  fi
+
+  if [ "$_tname" = "openedx" ] && [ -z "${OPENEDX_SAFE_COOKIE:-}" ] && command -v docker >/dev/null 2>&1; then
+    OPENEDX_SAFE_COOKIE=$(docker exec libscript-openedx python -c '
+import os, django
+os.environ["DJANGO_SETTINGS_MODULE"] = "lms.envs.libscript"
+django.setup()
+from django.conf import settings
+from django.contrib.auth import get_user_model, BACKEND_SESSION_KEY, HASH_SESSION_KEY, SESSION_KEY
+from django.contrib.sessions.backends.db import SessionStore
+from openedx.core.djangoapps.safe_sessions.middleware import SafeCookieData
+User = get_user_model()
+u = User.objects.get(username="edx_admin")
+s = SessionStore()
+s[SESSION_KEY] = str(u.pk)
+s[BACKEND_SESSION_KEY] = "django.contrib.auth.backends.ModelBackend"
+s[HASH_SESSION_KEY] = u.get_session_auth_hash()
+s.save()
+if any("SafeSessionMiddleware" in m for m in settings.MIDDLEWARE):
+    print("SAFE_COOKIE=" + str(SafeCookieData.create(s.session_key, str(u.pk))))
+else:
+    print("SAFE_COOKIE=" + s.session_key)
+' 2>/dev/null | grep "^SAFE_COOKIE=" | cut -d= -f2- || true)
+    export OPENEDX_SAFE_COOKIE
+  fi
+
+  _wp_load=""
+  if [ -f "/Users/samuel/.gemini/tmp/libscript/wp_live/wp-load.php" ]; then
+    _wp_load="/Users/samuel/.gemini/tmp/libscript/wp_live/wp-load.php"
+  elif [ -f "/Users/samuel/.gemini/tmp/libscript/wordpress_www/wp-load.php" ]; then
+    _wp_load="/Users/samuel/.gemini/tmp/libscript/wordpress_www/wp-load.php"
+  fi
+  if [ "$_tname" = "wordpress" ] && [ -z "${WORDPRESS_COOKIES_JSON:-}" ] && [ -n "$_wp_load" ]; then
+    # shellcheck disable=SC2016
+    WORDPRESS_COOKIES_JSON=$(php -r "
+require '$_wp_load';
+\$user = get_user_by('login', 'wp_admin');
+\$exp = time() + 86400;
+echo 'WP_COOKIES_JSON=' . json_encode([
+    AUTH_COOKIE => wp_generate_auth_cookie(\$user->ID, \$exp, 'auth'),
+    LOGGED_IN_COOKIE => wp_generate_auth_cookie(\$user->ID, \$exp, 'logged_in'),
+    'wordpress_test_cookie' => 'WP Cookie check',
+]) . \"\\n\";
+" 2>/dev/null | grep "^WP_COOKIES_JSON=" | cut -d= -f2- || true)
+    export WORDPRESS_COOKIES_JSON
+  fi
+
   if [ "$LIVE_VAGRANT" = "1" ] && [ -f "$_pkg_json" ] && command -v jq >/dev/null 2>&1; then
     _ports=$(jq -r '.verification_screenshots[]?.service_port // empty' "$_pkg_json" | sort -u)
     for _p in $_ports; do
@@ -746,13 +797,206 @@ capture_verification_views() {
         "${SCRIPT_DIR}/wait_ports.sh" "$_p" 5 >/dev/null 2>&1 || true
       fi
     done
+    if [ "$_tname" = "openedx" ] && [ "$_os" = "windows" ] && [ -x "${SCRIPT_DIR}/capture_openedx_vagrant_screenshots.sh" ]; then
+      "${SCRIPT_DIR}/capture_openedx_vagrant_screenshots.sh" || true
+    fi
   fi
 
-  python3 - "$_tname" "$_os" "$_target_out" "$_os_out" "$_pkg_json" "$_manifest_json" << 'PY_EOF'
-import json, os, sys
+  python3 - "$_tname" "$_os" "$_target_out" "$_os_out" "$_pkg_json" "$_manifest_json" "${OPENEDX_SAFE_COOKIE:-}" "${WORDPRESS_COOKIES_JSON:-}" << 'PY_EOF'
+import asyncio, base64, io, json, os, shutil, subprocess, sys, tempfile, urllib.request
 from PIL import Image, ImageDraw, ImageFont
 
-target, os_name, target_out, os_out, pkg_json_path, manifest_json_path = sys.argv[1:7]
+target, os_name, target_out, os_out, pkg_json_path, manifest_json_path, openedx_cookie, wp_cookies_raw = sys.argv[1:9]
+
+def find_browser_bin():
+    for cand in [
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+        shutil.which("google-chrome"),
+        shutil.which("chromium"),
+        shutil.which("chromium-browser"),
+        shutil.which("microsoft-edge"),
+        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+    ]:
+        if cand and os.path.exists(cand):
+            return cand
+    return None
+
+def resolve_live_url(step):
+    sid = step.get("id", "")
+    url = step.get("url_template", "http://localhost:8000/")
+    if target == "openedx":
+        if sid == "11_browser_lms_focused":
+            return "http://localhost:8000/login"
+        if sid == "12_browser_studio_focused":
+            return "http://localhost:8001/"
+        if sid == "13_browser_lms_authenticated":
+            return "http://localhost:8000/dashboard"
+        if sid == "14_browser_studio_authenticated":
+            return "http://localhost:8001/home/"
+    elif target == "wordpress":
+        base = os.environ.get("WORDPRESS_LIVE_URL", "http://localhost:8080")
+        if sid == "11_browser_wordpress_home":
+            return f"{base}/"
+        if sid == "12_browser_wp_admin_login":
+            return f"{base}/wp-login.php"
+        if sid == "13_browser_wp_admin_authenticated":
+            return f"{base}/wp-admin/"
+        if sid == "14_browser_wp_site_health":
+            return f"{base}/wp-admin/site-health.php"
+    return url
+
+async def capture_cdp_step(browser_bin, step, url, out_paths):
+    import websockets
+    sid = step.get("id", "")
+    is_auth = bool(step.get("authenticated")) or "authenticated" in sid or "site_health" in sid
+    user_dir = tempfile.mkdtemp(prefix="libscript_cdp_")
+    dbg_port = 9240 + (os.getpid() % 50)
+    proc = subprocess.Popen(
+        [
+            browser_bin,
+            "--headless=new",
+            "--disable-gpu",
+            "--no-first-run",
+            "--no-default-browser-check",
+            "--window-size=1024,691",
+            f"--user-data-dir={user_dir}",
+            f"--remote-debugging-port={dbg_port}",
+            "about:blank",
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    try:
+        ws_url = None
+        for _ in range(30):
+            try:
+                with urllib.request.urlopen(f"http://127.0.0.1:{dbg_port}/json", timeout=1) as r:
+                    for t in json.loads(r.read().decode()):
+                        if t.get("type") == "page" and "webSocketDebuggerUrl" in t:
+                            ws_url = t["webSocketDebuggerUrl"]
+                            break
+                if ws_url:
+                    break
+            except Exception:
+                pass
+            await asyncio.sleep(0.25)
+        if not ws_url:
+            return False
+
+        async with websockets.connect(ws_url, max_size=50_000_000) as ws:
+            msg_id = 0
+            async def send(method, params=None):
+                nonlocal msg_id
+                msg_id += 1
+                await ws.send(json.dumps({"id": msg_id, "method": method, "params": params or {}}))
+                while True:
+                    resp = json.loads(await ws.recv())
+                    if resp.get("id") == msg_id:
+                        return resp.get("result", {})
+
+            await send("Page.enable")
+            await send("Network.enable")
+            await send("Emulation.setDeviceMetricsOverride", {"width": 1024, "height": 691, "deviceScaleFactor": 1, "mobile": False})
+
+            if is_auth and target == "openedx" and openedx_cookie:
+                await send("Network.setCookie", {
+                    "name": "sessionid",
+                    "value": f'"{openedx_cookie}"',
+                    "domain": "localhost",
+                    "path": "/",
+                    "httpOnly": True,
+                    "secure": False,
+                })
+                await send("Network.setCookie", {
+                    "name": "edxloggedin",
+                    "value": "true",
+                    "domain": "localhost",
+                    "path": "/",
+                    "secure": False,
+                })
+            elif is_auth and target == "wordpress" and wp_cookies_raw:
+                try:
+                    for k, v in json.loads(wp_cookies_raw).items():
+                        await send("Network.setCookie", {
+                            "name": k,
+                            "value": v,
+                            "domain": "localhost",
+                            "path": "/",
+                            "secure": False,
+                        })
+                except Exception:
+                    pass
+
+            await send("Page.navigate", {"url": url})
+            await asyncio.sleep(3.0)
+
+            if sid == "11_browser_lms_focused":
+                await send("Runtime.evaluate", {"expression": """
+                    (function() {
+                        var u = document.querySelector('#login-email, input[name="email"], input[name="email_or_username"]');
+                        var p = document.querySelector('#login-password, input[name="password"]');
+                        if (u) u.value = 'admin@openedx.local';
+                        if (p) p.value = 'admin_pass';
+                    })();
+                """})
+                await asyncio.sleep(0.4)
+            elif sid == "12_browser_wp_admin_login":
+                await send("Runtime.evaluate", {"expression": """
+                    (function() {
+                        var u = document.querySelector('#user_login');
+                        var p = document.querySelector('#user_pass');
+                        if (u) u.value = 'wp_admin';
+                        if (p) p.value = 'wp_admin_pass';
+                    })();
+                """})
+                await asyncio.sleep(0.4)
+
+            shot = await send("Page.captureScreenshot", {"format": "png"})
+            if "data" in shot:
+                raw = base64.b64decode(shot["data"])
+                im = Image.open(io.BytesIO(raw)).convert("RGB").resize((800, 540), Image.Resampling.LANCZOS)
+                for p in out_paths:
+                    im.save(p, "PNG")
+                return True
+    except Exception:
+        pass
+    finally:
+        proc.terminate()
+        shutil.rmtree(user_dir, ignore_errors=True)
+    return False
+
+_live_cache = {}
+
+def try_capture_live_browser(step, out_paths):
+    browser_bin = find_browser_bin()
+    url = resolve_live_url(step)
+    sid = step.get("id", "")
+    root_cached = os.path.join(target_out, f".live_{sid}.png")
+    if os.path.exists(root_cached) and os.path.getsize(root_cached) > 1000:
+        for p in out_paths:
+            shutil.copyfile(root_cached, p)
+        return True
+    if not browser_bin or not url:
+        return False
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "LibScript-Verify/1.0"})
+        with urllib.request.urlopen(req, timeout=2) as resp:
+            if resp.status >= 500:
+                return False
+    except urllib.error.HTTPError as he:
+        if he.code >= 500:
+            return False
+    except Exception:
+        return False
+    try:
+        if asyncio.run(capture_cdp_step(browser_bin, step, url, out_paths + [root_cached])):
+            return True
+    except Exception:
+        pass
+    return False
 
 pkg_meta = {}
 if os.path.exists(pkg_json_path):
@@ -1133,9 +1377,14 @@ for step in steps:
             outs.append(os.path.join(target_out, f"{st_name}.png"))
             outs.append(os.path.join(target_out, f"online_{st_name}.png"))
     if step.get("capture_type") == "desktop" or step.get("crop_mode") == "FULL":
+        if os_name == "windows" and os.environ.get("FORCE_SYNTHETIC_WINDOWS") != "1" and all(os.path.exists(p) and os.path.getsize(p) > 5000 for p in outs):
+            continue
         render_desktop_step(step, outs, os_name)
     else:
-        render_browser_step(step, outs, os_name)
+        if os_name == "windows" and os.environ.get("FORCE_SYNTHETIC_WINDOWS") != "1" and all(os.path.exists(p) and os.path.getsize(p) > 5000 for p in outs):
+            continue
+        if not try_capture_live_browser(step, outs):
+            render_browser_step(step, outs, os_name)
 PY_EOF
 
   printf '[POST-INSTALL] %s (%s) -> %s
@@ -1182,6 +1431,7 @@ for _tdir in $TARGET_DIRS; do
       capture_verification_views "$_tdir" "$_tname" "$_os"
     fi
   done
+  rm -f "${OUT_BASE}/${_tname}/screenshots"/.live_*.png 2>/dev/null || true
 done
 
 printf '[OK] Schema-driven screenshot-to-running-system pipeline complete in %s

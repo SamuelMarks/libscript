@@ -73,145 +73,48 @@ OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/
 RUN_DIR="${OPENEDX_INSTALL_DIR}/run"
 LOG_DIR="${OPENEDX_INSTALL_DIR}/logs"
 PYTHON_BIN="${OPENEDX_INSTALL_DIR}/.venv/bin/python"
-MANAGE_PY="${OPENEDX_INSTALL_DIR}/manage.py"
+WORKERS_HELPER="${SCRIPT_DIR}/workers_helper.sh"
 
 mkdir -p "${RUN_DIR}" "${LOG_DIR}"
 
-# ## is_pid_running
-# Tests if a process PID is currently alive.
-#
-# Inputs:
-#   $1 - PID
-is_pid_running() {
-  _pid="$1"
-  [ -n "${_pid}" ] && kill -0 "${_pid}" 2>/dev/null
-}
-
-# ## start_daemon
-# Launches a background worker daemon idempotently.
-#
-# Inputs:
-#   $1 - service identifier (e.g. lms-worker, cms-worker, celery-beat)
-#   $2 - settings module / service target
-start_daemon() {
-  _svc="$1"
-  _target="$2"
-  _pidfile="${RUN_DIR}/${_svc}.pid"
-  _logfile="${LOG_DIR}/${_svc}.log"
-
-  if [ -f "${_pidfile}" ]; then
-    _existing_pid=$(cat "${_pidfile}" 2>/dev/null || printf '')
-    if is_pid_running "${_existing_pid}"; then
-      log_info "Daemon '${_svc}' is already running (PID: ${_existing_pid}). Skipping."
-      return 0
-    fi
-    rm -f "${_pidfile}"
-  fi
-
-  log_info "Starting daemon '${_svc}'..."
-
-  if [ -x "${PYTHON_BIN}" ] && [ -f "${MANAGE_PY}" ]; then
-    case "${_svc}" in
-      celery-beat)
-        nohup "${PYTHON_BIN}" -m celery -A "${_target}" beat --loglevel=INFO < /dev/null > "${_logfile}" 2>&1 &
-        ;;
-      *)
-        nohup "${PYTHON_BIN}" -m celery -A "${_target}" worker --loglevel=INFO -c 2 < /dev/null > "${_logfile}" 2>&1 &
-        ;;
-    esac
-    _new_pid="$!"
-  elif [ -x "${PYTHON_BIN}" ]; then
-    nohup "${PYTHON_BIN}" -c "import time, sys; sys.stdout.write('Worker ${_svc} active\n'); sys.stdout.flush(); [time.sleep(3600) for _ in iter(int, 1)]" < /dev/null > "${_logfile}" 2>&1 &
-    _new_pid="$!"
+# ## resolve_python
+# Resolves the Python executable for worker execution.
+resolve_python() {
+  if [ -x "${PYTHON_BIN}" ]; then
+    printf '%s\n' "${PYTHON_BIN}"
   elif command -v python3 >/dev/null 2>&1; then
-    nohup python3 -c "import time, sys; sys.stdout.write('Worker ${_svc} active\n'); sys.stdout.flush(); [time.sleep(3600) for _ in iter(int, 1)]" < /dev/null > "${_logfile}" 2>&1 &
-    _new_pid="$!"
+    command -v python3
+  elif command -v python >/dev/null 2>&1; then
+    command -v python
   else
-    log_err "Genuine Open edX codebase or python not found. Cannot start worker '${_svc}'."
-    return 1
+    printf 'python3\n'
   fi
-
-  printf '%s\n' "${_new_pid}" > "${_pidfile}"
-  log_success "Daemon '${_svc}' launched successfully (PID: ${_new_pid})."
-}
-
-# ## stop_daemon
-# Gracefully terminates a running daemon process.
-#
-# Inputs:
-#   $1 - service identifier
-stop_daemon() {
-  _svc="$1"
-  _pidfile="${RUN_DIR}/${_svc}.pid"
-  if [ ! -f "${_pidfile}" ]; then
-    log_info "Daemon '${_svc}' is not running."
-    return 0
-  fi
-  _pid=$(cat "${_pidfile}" 2>/dev/null || printf '')
-  if [ -n "${_pid}" ] && is_pid_running "${_pid}"; then
-    log_info "Stopping daemon '${_svc}' (PID: ${_pid})..."
-    kill "${_pid}" 2>/dev/null || true
-    # Await termination
-    _timeout=5
-    while [ "${_timeout}" -gt 0 ] && is_pid_running "${_pid}"; do
-      sleep 1
-      _timeout=$((_timeout - 1))
-    done
-    if is_pid_running "${_pid}"; then
-      kill -9 "${_pid}" 2>/dev/null || true
-    fi
-  fi
-  rm -f "${_pidfile}"
-  log_success "Daemon '${_svc}' stopped."
-}
-
-# ## status_daemon
-# Inspects daemon state.
-#
-# Inputs:
-#   $1 - service identifier
-status_daemon() {
-  _svc="$1"
-  _pidfile="${RUN_DIR}/${_svc}.pid"
-  if [ -f "${_pidfile}" ]; then
-    _pid=$(cat "${_pidfile}" 2>/dev/null || printf '')
-    if is_pid_running "${_pid}"; then
-      printf '%-20s %-12s (PID: %s)\n' "${_svc}" "RUNNING" "${_pid}"
-      return 0
-    fi
-  fi
-  printf '%-20s %-12s\n' "${_svc}" "STOPPED"
 }
 
 # ## workers_start
-# Starts all workers.
+# Starts all workers via workers_helper.sh.
 workers_start() {
   log_info "Starting Open edX Celery workers and scheduler..."
-  start_daemon "lms-worker" "lms"
-  start_daemon "cms-worker" "cms"
-  start_daemon "celery-beat" "lms"
+  _py="$(resolve_python)"
+  "${WORKERS_HELPER}" start "${RUN_DIR}" "${LOG_DIR}" "${_py}" "${OPENEDX_INSTALL_DIR}"
   log_success "All Open edX background workers started."
 }
 
 # ## workers_stop
-# Stops all workers.
+# Stops all workers via workers_helper.sh.
 workers_stop() {
   log_info "Stopping Open edX Celery workers and scheduler..."
-  stop_daemon "lms-worker"
-  stop_daemon "cms-worker"
-  stop_daemon "celery-beat"
+  "${WORKERS_HELPER}" stop "${RUN_DIR}"
   log_success "All Open edX background workers stopped."
 }
 
 # ## workers_status
-# Displays status report for workers.
+# Displays status report for workers via workers_helper.sh.
 workers_status() {
   printf '======================================================\n'
   printf '             Open edX Background Workers Status        \n'
   printf '======================================================\n'
-  status_daemon "lms-worker"
-  status_daemon "cms-worker"
-  status_daemon "celery-beat"
+  "${WORKERS_HELPER}" status "${RUN_DIR}"
   printf '======================================================\n'
 }
 

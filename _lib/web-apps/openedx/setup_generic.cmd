@@ -90,6 +90,14 @@ if "%THEME_NAME%"=="" set "THEME_NAME=none"
 if "%IMPORT_DEMO%"=="" set "IMPORT_DEMO=0"
 if "%ENABLE_WORKERS%"=="" set "ENABLE_WORKERS=1"
 if "%ENABLE_MFES%"=="" set "ENABLE_MFES=0"
+if "%REPO_URL%"=="" set "REPO_URL=https://github.com/openedx/openedx-platform.git"
+if "%BRANCH%"=="" set "BRANCH=release/verawood.1"
+if "%MYSQL_HOST%"=="" set "MYSQL_HOST=127.0.0.1"
+if "%MYSQL_PORT%"=="" set "MYSQL_PORT=3306"
+if "%MYSQL_DB%"=="" set "MYSQL_DB=openedx"
+if "%MYSQL_USER%"=="" set "MYSQL_USER=openedx"
+if "%MYSQL_PASS%"=="" set "MYSQL_PASS="
+if "%REDIS_PORT%"=="" set "REDIS_PORT=6379"
 
 set "IS_OFFLINE=0"
 if "%OPENEDX_OFFLINE%"=="1" set "IS_OFFLINE=1"
@@ -125,38 +133,57 @@ if /I "%~1"=="--theme" ( set "THEME_NAME=%~2" & shift & shift & goto parse_args 
 if /I "%~1"=="--enable-mfes" ( set "ENABLE_MFES=1" & shift & goto parse_args )
 if /I "%~1"=="--lms-port" ( set "LMS_PORT=%~2" & shift & shift & goto parse_args )
 if /I "%~1"=="--cms-port" ( set "CMS_PORT=%~2" & shift & shift & goto parse_args )
+if /I "%~1"=="--mysql-url" ( set "MYSQL_URL=%~2" & shift & shift & goto parse_args )
+if /I "%~1"=="--redis-port" ( set "REDIS_PORT=%~2" & shift & shift & goto parse_args )
+if /I "%~1"=="--redis-url" ( set "REDIS_URL=%~2" & shift & shift & goto parse_args )
+if /I "%~1"=="--mongodb-uri" ( set "MONGODB_URI=%~2" & shift & shift & goto parse_args )
+if /I "%~1"=="--repo" ( set "REPO_URL=%~2" & shift & shift & goto parse_args )
+if /I "%~1"=="--version" ( set "BRANCH=%~2" & shift & shift & goto parse_args )
 shift
 goto parse_args
 
 :: ## after_args
 :: Dispatches actions after command-line argument processing.
 :after_args
-if exist "%OPENEDX_INSTALL_DIR%\lms\envs\libscript.py" (
-    echo [INFO] openedx is already installed at %OPENEDX_INSTALL_DIR%.
-    exit /b 0
-)
-if exist "%LIBSCRIPT_HOME%\openedx\%VERSION%" (
-    echo [INFO] openedx %VERSION% is already installed.
-    exit /b 0
-)
-
-:: Resolve Cache Directory if offline mode active
-if "%IS_OFFLINE%"=="1" (
-    if "%OFFLINE_CACHE_DIR%"=="" (
-        if defined INSTALLFOLDER if exist "!INSTALLFOLDER!\libscript\cache" set "OFFLINE_CACHE_DIR=!INSTALLFOLDER!\libscript\cache"
-        if not defined OFFLINE_CACHE_DIR if defined LIBSCRIPT_CACHE_DIR if exist "%LIBSCRIPT_CACHE_DIR%" set "OFFLINE_CACHE_DIR=%LIBSCRIPT_CACHE_DIR%"
-        if not defined OFFLINE_CACHE_DIR if exist "%OPENEDX_INSTALL_DIR%\libscript\cache" set "OFFLINE_CACHE_DIR=%OPENEDX_INSTALL_DIR%\libscript\cache"
-        if not defined OFFLINE_CACHE_DIR if exist "%OPENEDX_INSTALL_DIR%\cache" set "OFFLINE_CACHE_DIR=%OPENEDX_INSTALL_DIR%\cache"
-        if not defined OFFLINE_CACHE_DIR if exist "!LIBSCRIPT_ROOT_DIR!\cache" set "OFFLINE_CACHE_DIR=!LIBSCRIPT_ROOT_DIR!\cache"
-    )
-    if defined OFFLINE_CACHE_DIR (
-        echo [INFO] Detected Air-Gapped Offline Cache at: !OFFLINE_CACHE_DIR!
-    ) else (
-        echo [WARN] Offline mode requested but no cache directory found.
+if not "%MYSQL_URL%"=="" (
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\parse_connection_uri.cmd" (
+        for /f "usebackq tokens=1,* delims==" %%A in (`call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\parse_connection_uri.cmd" "%MYSQL_URL%" --env 2^>nul`) do (
+            if "%%A"=="DB_HOST" if not "%%B"=="" set "MYSQL_HOST=%%B"
+            if "%%A"=="DB_PORT" if not "%%B"=="" set "MYSQL_PORT=%%B"
+            if "%%A"=="DB_USER" if not "%%B"=="" set "MYSQL_USER=%%B"
+            if "%%A"=="DB_PASS" if not "%%B"=="" set "MYSQL_PASS=%%B"
+            if "%%A"=="DB_NAME" if not "%%B"=="" set "MYSQL_DB=%%B"
+        )
     )
 )
 
 if "%ACTION%"=="install" (
+    if exist "%OPENEDX_INSTALL_DIR%\lms\envs\libscript.py" (
+        echo [INFO] openedx is already installed at %OPENEDX_INSTALL_DIR%.
+        if exist "!OPENEDX_SCRIPT_DIR!\service.cmd" call "!OPENEDX_SCRIPT_DIR!\service.cmd" start >nul 2>&1
+        exit /b 0
+    )
+    if exist "%LIBSCRIPT_HOME%\openedx\%VERSION%" (
+        echo [INFO] openedx %VERSION% is already installed.
+        exit /b 0
+    )
+
+    :: Resolve Cache Directory if offline mode active
+    if "%IS_OFFLINE%"=="1" (
+        if "%OFFLINE_CACHE_DIR%"=="" (
+            if defined INSTALLFOLDER if exist "!INSTALLFOLDER!\libscript\cache" set "OFFLINE_CACHE_DIR=!INSTALLFOLDER!\libscript\cache"
+            if not defined OFFLINE_CACHE_DIR if defined LIBSCRIPT_CACHE_DIR if exist "%LIBSCRIPT_CACHE_DIR%" set "OFFLINE_CACHE_DIR=%LIBSCRIPT_CACHE_DIR%"
+            if not defined OFFLINE_CACHE_DIR if exist "%OPENEDX_INSTALL_DIR%\libscript\cache" set "OFFLINE_CACHE_DIR=%OPENEDX_INSTALL_DIR%\libscript\cache"
+            if not defined OFFLINE_CACHE_DIR if exist "%OPENEDX_INSTALL_DIR%\cache" set "OFFLINE_CACHE_DIR=%OPENEDX_INSTALL_DIR%\cache"
+            if not defined OFFLINE_CACHE_DIR if exist "!LIBSCRIPT_ROOT_DIR!\cache" set "OFFLINE_CACHE_DIR=!LIBSCRIPT_ROOT_DIR!\cache"
+        )
+        if defined OFFLINE_CACHE_DIR (
+            echo [INFO] Detected Air-Gapped Offline Cache at: !OFFLINE_CACHE_DIR!
+        ) else (
+            echo [WARN] Offline mode requested but no cache directory found.
+        )
+    )
+
     echo [INFO] === Initializing Open edX Windows Provisioning ===
 
     if not exist "%OPENEDX_INSTALL_DIR%" mkdir "%OPENEDX_INSTALL_DIR%" 2>nul
@@ -193,17 +220,13 @@ if "%ACTION%"=="install" (
     set "SCRIPT_DIR=!OPENEDX_SCRIPT_DIR!"
 
     if "!USE_OFFLINE!"=="1" (
-        :: Step 4 (Codebase): Extract edx-platform.zip into codebase
+        :: Step 4 (Codebase): Extract openedx-release-verawood.1.zip into codebase
         if exist "!OFFLINE_CACHE_DIR!\codebase" (
             echo [INFO] Extracting codebase from cache\codebase...
             if not exist "%OPENEDX_INSTALL_DIR%\codebase" mkdir "%OPENEDX_INSTALL_DIR%\codebase" 2>nul
-            for %%F in ("!OFFLINE_CACHE_DIR!\codebase\*edx-platform*.zip" "!OFFLINE_CACHE_DIR!\codebase\*openedx-release*.zip") do (
+            for %%F in ("!OFFLINE_CACHE_DIR!\codebase\*openedx-release*.zip" "!OFFLINE_CACHE_DIR!\codebase\*edx-platform*.zip") do (
                 call :extract_zip "%%~fF" "%OPENEDX_INSTALL_DIR%\codebase"
             )
-        )
-        if not exist "%OPENEDX_INSTALL_DIR%\codebase\wsgi_server.py" (
-            if not exist "%OPENEDX_INSTALL_DIR%\codebase" mkdir "%OPENEDX_INSTALL_DIR%\codebase" 2>nul
-            copy /y "!SCRIPT_DIR!\wsgi_server.py" "%OPENEDX_INSTALL_DIR%\codebase\wsgi_server.py" >nul 2>&1
         )
 
         :: Step 3 (Virtualenv & Pip): Install wheels offline
@@ -227,35 +250,21 @@ if "%ACTION%"=="install" (
             tar -xzf "!OFFLINE_CACHE_DIR!\codebase\demo-course.tar.gz" -C "%OPENEDX_INSTALL_DIR%" 2>nul
         )
     ) else (
-        echo [INFO] Cloning edx-platform codebase...
-        if not exist "%OPENEDX_INSTALL_DIR%\codebase" (
-            if "%PROP_OPENEDX_FAST_VERIFY%"=="1" (
-                if not exist "%OPENEDX_INSTALL_DIR%\codebase" mkdir "%OPENEDX_INSTALL_DIR%\codebase" 2>nul
-                copy /y "!SCRIPT_DIR!\wsgi_server.py" "%OPENEDX_INSTALL_DIR%\codebase\wsgi_server.py" >nul 2>&1
-            ) else if "%LIBSCRIPT_FAST_VERIFY%"=="1" (
-                if not exist "%OPENEDX_INSTALL_DIR%\codebase" mkdir "%OPENEDX_INSTALL_DIR%\codebase" 2>nul
-                copy /y "!SCRIPT_DIR!\wsgi_server.py" "%OPENEDX_INSTALL_DIR%\codebase\wsgi_server.py" >nul 2>&1
-            ) else (
-                where git >nul 2>&1
-                if errorlevel 1 (
-                    if exist "C:\Program Files\Git\cmd\git.exe" (
-                        set "PATH=C:\Program Files\Git\cmd;%PATH%"
-                    ) else (
-                        where winget >nul 2>&1
-                        if not errorlevel 1 (
-                            echo [INFO] Installing Git via winget...
-                            winget install --id Git.Git -e --silent --accept-package-agreements --accept-source-agreements
-                            if exist "C:\Program Files\Git\cmd\git.exe" set "PATH=C:\Program Files\Git\cmd;%PATH%"
-                        )
-                    )
-                )
-                where git >nul 2>&1
-                if not errorlevel 1 (
-                    git clone --depth 1 -b open-release/quince.master https://github.com/openedx/edx-platform.git "%OPENEDX_INSTALL_DIR%\codebase" || exit /b 1
+        echo [INFO] Cloning openedx-platform ^(%BRANCH%^) codebase...
+        if not exist "%OPENEDX_INSTALL_DIR%\codebase\manage.py" (
+            where git >nul 2>&1
+            if errorlevel 1 (
+                if exist "C:\Program Files\Git\cmd\git.exe" (
+                    set "PATH=C:\Program Files\Git\cmd;%PATH%"
                 ) else (
-                    if not exist "%OPENEDX_INSTALL_DIR%\codebase" mkdir "%OPENEDX_INSTALL_DIR%\codebase" 2>nul
-                    copy /y "!SCRIPT_DIR!\wsgi_server.py" "%OPENEDX_INSTALL_DIR%\codebase\wsgi_server.py" >nul 2>&1
+                    set "STACK="
+                    call "!LIBSCRIPT_BIN!" install git latest
+                    if exist "C:\Program Files\Git\cmd\git.exe" set "PATH=C:\Program Files\Git\cmd;%PATH%"
                 )
+            )
+            where git >nul 2>&1
+            if not errorlevel 1 (
+                git clone --depth 1 -b "%BRANCH%" "%REPO_URL%" "%OPENEDX_INSTALL_DIR%\codebase" 2>nul || git clone --depth 1 "%REPO_URL%" "%OPENEDX_INSTALL_DIR%\codebase" || exit /b 1
             )
         )
     )
@@ -317,39 +326,37 @@ if "%ACTION%"=="install" (
         echo [PASS] Installed Python dependencies ^(waitress, django, setuptools, wheel^). >> "%OPENEDX_INSTALL_DIR%\logs\install.log"
     )
 
-    (
-        echo {
-        echo   "SITE_NAME": "openedx.local",
-        echo   "LMS_BASE": "openedx.local",
-        echo   "CMS_BASE": "studio.openedx.local",
-        echo   "SECRET_KEY": "insecure-secret-key-change-in-production",
-        echo   "DATABASES": {
-        echo     "default": {
-        echo       "ENGINE": "django.db.backends.mysql",
-        echo       "NAME": "openedx",
-        echo       "USER": "openedx",
-        echo       "PASSWORD": "",
-        echo       "HOST": "127.0.0.1",
-        echo       "PORT": "3306"
-        echo     }
-        echo   },
-        echo   "CACHES": {
-        echo     "default": {
-        echo       "BACKEND": "django_redis.cache.RedisCache",
-        echo       "LOCATION": "redis://127.0.0.1:6379/1"
-        echo     }
-        echo   },
-        echo   "MEILISEARCH_URL": "http://127.0.0.1:7700",
-        echo   "EMAIL_HOST": "127.0.0.1",
-        echo   "EMAIL_PORT": 25,
-        echo   "BACKUP_DIR": "%BACKUP_DIR%"
-        echo }
-    ) > "%OPENEDX_INSTALL_DIR%\config\lms.env.json"
+    :: Delegate Configuration Synthesis to Reusable config.cmd
+    if exist "!OPENEDX_SCRIPT_DIR!\config.cmd" (
+        call "!OPENEDX_SCRIPT_DIR!\config.cmd" generate >nul 2>&1
+        if not "%BACKUP_DIR%"=="" call "!OPENEDX_SCRIPT_DIR!\config.cmd" set BACKUP_DIR "%BACKUP_DIR%" >nul 2>&1
+    )
+
+    :: Database Schema Provisioning via Reusable _lib\databases\provision_schema.cmd
+    echo [INFO] Initializing databases via reusable schema provisioner...
+    echo [INFO] Initializing MySQL database schema ^(%MYSQL_DB% utf8mb4^)... >> "%OPENEDX_INSTALL_DIR%\logs\install.log"
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" --engine mysql --schema "%MYSQL_DB%" --user "%MYSQL_USER%" --password "%MYSQL_PASS%" --host "%MYSQL_HOST%" --port "%MYSQL_PORT%" >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1
+    )
+
+    :: Database Migrations & Static Asset Collection
+    echo [INFO] Applying database migrations...
+    echo [INFO] Applying LMS and Studio CMS database migrations... >> "%OPENEDX_INSTALL_DIR%\logs\install.log"
+    set "CODEBASE_DIR=%OPENEDX_INSTALL_DIR%\codebase"
+    if not exist "!CODEBASE_DIR!\manage.py" set "CODEBASE_DIR=%OPENEDX_INSTALL_DIR%"
+    if exist "!CODEBASE_DIR!\manage.py" if exist "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" (
+        pushd "!CODEBASE_DIR!"
+        "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" manage.py lms --settings=libscript migrate --noinput >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1
+        "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" manage.py cms --settings=libscript migrate --noinput >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1
+        "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" manage.py lms --settings=libscript collectstatic --noinput >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1
+        "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" manage.py cms --settings=libscript collectstatic --noinput >> "%OPENEDX_INSTALL_DIR%\logs\install.log" 2>&1
+        popd
+    )
 
     echo [INFO] 4/7: Creating administrator superuser...
     echo [INFO] Creating administrator superuser ^(%ADMIN_USER% / %ADMIN_EMAIL%^)... >> "%OPENEDX_INSTALL_DIR%\logs\install.log"
-    if exist "!OPENEDX_SCRIPT_DIR!\user_helper.ps1" (
-        powershell -NoProfile -ExecutionPolicy Bypass -File "!OPENEDX_SCRIPT_DIR!\user_helper.ps1" create "%OPENEDX_INSTALL_DIR%" "%ADMIN_USER%" "%ADMIN_EMAIL%" "%ADMIN_PASS%" "True" "True" 2>nul
+    if exist "!OPENEDX_SCRIPT_DIR!\user.cmd" (
+        call "!OPENEDX_SCRIPT_DIR!\user.cmd" create "%ADMIN_USER%" "%ADMIN_EMAIL%" --password "%ADMIN_PASS%" --staff --superuser 2>nul
         echo [INFO] User '%ADMIN_USER%' created/updated successfully.
     )
 
@@ -378,62 +385,48 @@ if "%ACTION%"=="install" (
         )
     )
 
-    if exist "!OPENEDX_SCRIPT_DIR!\service_worker.ps1" (
+    if exist "!OPENEDX_SCRIPT_DIR!\service.cmd" (
         echo [INFO] Starting Open edX platform services...
-        powershell -NoProfile -ExecutionPolicy Bypass -File "!OPENEDX_SCRIPT_DIR!\service_worker.ps1" start %LMS_PORT% %CMS_PORT%
+        set "OPENEDX_LMS_PORT=%LMS_PORT%"
+        set "OPENEDX_CMS_PORT=%CMS_PORT%"
+        call "!OPENEDX_SCRIPT_DIR!\service.cmd" start
     )
-    if exist "!OPENEDX_SCRIPT_DIR!\workers_helper.ps1" (
+    if "%ENABLE_WORKERS%"=="1" if exist "!OPENEDX_SCRIPT_DIR!\workers.cmd" (
         echo [INFO] Starting Open edX background workers...
-        powershell -NoProfile -ExecutionPolicy Bypass -File "!OPENEDX_SCRIPT_DIR!\workers_helper.ps1" start "%OPENEDX_INSTALL_DIR%\run" "%OPENEDX_INSTALL_DIR%\logs" "%OPENEDX_INSTALL_DIR%\.venv\Scripts\python.exe" "%OPENEDX_INSTALL_DIR%"
+        call "!OPENEDX_SCRIPT_DIR!\workers.cmd" start
     )
 
-    :: Database Initialization
-    echo [INFO] Initializing databases...
-    echo [INFO] Initializing MySQL database schema ^(openedx utf8mb4^)... >> "%OPENEDX_INSTALL_DIR%\logs\install.log"
-
-    :: Database Migrations
-    echo [INFO] Applying database migrations...
-    echo [INFO] Applying LMS and Studio CMS database migrations... >> "%OPENEDX_INSTALL_DIR%\logs\install.log"
-    echo [INFO] Delegated LMS and CMS schema state to WSGI runtime. >> "%OPENEDX_INSTALL_DIR%\logs\install.log"
-
-    if exist "!OPENEDX_SCRIPT_DIR!\health_helper.ps1" (
+    if exist "!OPENEDX_SCRIPT_DIR!\healthcheck.cmd" (
         echo [INFO] Running healthcheck diagnostic probe...
-        powershell -NoProfile -ExecutionPolicy Bypass -File "!OPENEDX_SCRIPT_DIR!\health_helper.ps1" "0" "127.0.0.1" "%LMS_PORT%" "127.0.0.1" "%CMS_PORT%" "127.0.0.1" "3306" "127.0.0.1" "27017" "127.0.0.1" "6379" "127.0.0.1" "7700" "127.0.0.1" "25" 2>nul
+        set "LMS_PORT=%LMS_PORT%"
+        set "CMS_PORT=%CMS_PORT%"
+        call "!OPENEDX_SCRIPT_DIR!\healthcheck.cmd" 2>nul
     )
 
     echo [INFO] Open edX Windows provisioning complete. >> "%OPENEDX_INSTALL_DIR%\logs\install.log"
     echo [INFO] Open edX Windows provisioning complete.
     exit /b 0
 ) else if "%ACTION%"=="start" (
-    if exist "!SCRIPT_DIR!\service.cmd" (
-        call "!SCRIPT_DIR!\service.cmd" start
-        exit /b %errorlevel%
-    )
+    if exist "!SCRIPT_DIR!\service.cmd" call "!SCRIPT_DIR!\service.cmd" start
     if exist "!SCRIPT_DIR!\workers.cmd" call "!SCRIPT_DIR!\workers.cmd" start 2>nul
     exit /b 0
 ) else if "%ACTION%"=="stop" (
-    if exist "!SCRIPT_DIR!\service.cmd" (
-        call "!SCRIPT_DIR!\service.cmd" stop
-        exit /b %errorlevel%
-    )
     if exist "!SCRIPT_DIR!\workers.cmd" call "!SCRIPT_DIR!\workers.cmd" stop 2>nul
+    if exist "!SCRIPT_DIR!\service.cmd" call "!SCRIPT_DIR!\service.cmd" stop
     exit /b 0
 ) else if "%ACTION%"=="restart" (
-    if exist "!SCRIPT_DIR!\service.cmd" (
-        call "!SCRIPT_DIR!\service.cmd" restart
-        exit /b %errorlevel%
-    )
-    call "!THIS_FILE!" stop
-    call "!THIS_FILE!" start
-    exit /b %errorlevel%
-) else if "%ACTION%"=="status" (
-    if exist "!SCRIPT_DIR!\service.cmd" (
-        call "!SCRIPT_DIR!\service.cmd" status
-        exit /b %errorlevel%
-    )
-    if exist "!SCRIPT_DIR!\healthcheck.cmd" call "!SCRIPT_DIR!\healthcheck.cmd"
+    if exist "!SCRIPT_DIR!\service.cmd" call "!SCRIPT_DIR!\service.cmd" restart
+    if exist "!SCRIPT_DIR!\workers.cmd" call "!SCRIPT_DIR!\workers.cmd" restart 2>nul
     exit /b 0
+) else if "%ACTION%"=="status" (
+    if exist "!SCRIPT_DIR!\healthcheck.cmd" call "!SCRIPT_DIR!\healthcheck.cmd"
+    exit /b %errorlevel%
 ) else if "%ACTION%"=="test" (
+    if exist "!SCRIPT_DIR!\healthcheck.cmd" if exist "%OPENEDX_INSTALL_DIR%" (
+        call "!SCRIPT_DIR!\healthcheck.cmd" 2>nul
+        echo [INFO] Open edX directory exists at %OPENEDX_INSTALL_DIR%.
+        exit /b 0
+    )
     if exist "%OPENEDX_INSTALL_DIR%" (
         echo [INFO] Open edX directory exists at %OPENEDX_INSTALL_DIR%.
         exit /b 0
@@ -442,9 +435,13 @@ if "%ACTION%"=="install" (
         exit /b 0
     )
 ) else if "%ACTION%"=="uninstall" (
-    if exist "!SCRIPT_DIR!\service.cmd" call "!SCRIPT_DIR!\service.cmd" stop 2>nul
-    if exist "!SCRIPT_DIR!\workers.cmd" call "!SCRIPT_DIR!\workers.cmd" stop 2>nul
-    rmdir /s /q "%OPENEDX_INSTALL_DIR%" 2>nul
+    if exist "!SCRIPT_DIR!\uninstall_generic.cmd" (
+        call "!SCRIPT_DIR!\uninstall_generic.cmd"
+    ) else (
+        if exist "!SCRIPT_DIR!\service.cmd" call "!SCRIPT_DIR!\service.cmd" stop 2>nul
+        if exist "!SCRIPT_DIR!\workers.cmd" call "!SCRIPT_DIR!\workers.cmd" stop 2>nul
+        rmdir /s /q "%OPENEDX_INSTALL_DIR%" 2>nul
+    )
     exit /b 0
 )
 

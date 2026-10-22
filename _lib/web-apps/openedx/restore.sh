@@ -61,14 +61,10 @@ for LIB in "_lib/_common/log.sh" ${_LIBSCRIPT_DUMMY_NO_RUN:-}; do
 done
 
 OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
-MYSQL_HOST="${MYSQL_HOST:-127.0.0.1}"
-MYSQL_PORT="${MYSQL_PORT:-3306}"
-MYSQL_USER="${MYSQL_USER:-openedx}"
-MYSQL_PASSWORD="${MYSQL_PASSWORD:-}"
-MYSQL_DATABASE="${MYSQL_DATABASE:-openedx}"
+BACKUP_HELPER="${SCRIPT_DIR}/backup_helper.sh"
 
 # ## restore_apply
-# Extracts and restores backup archive into local installation.
+# Extracts and restores backup archive into local installation via backup_helper.sh.
 restore_apply() {
   if [ $# -lt 1 ]; then
     log_err "Usage: $0 apply <archive_path> [--yes]"
@@ -100,55 +96,13 @@ restore_apply() {
     printf 'WARNING: Restoring will overwrite database records and configurations in %s. Continue? [y/N]: ' "${OPENEDX_INSTALL_DIR}"
     read -r _resp
     case "${_resp}" in
-      [yY]|[yY][eE][sS]) ;;
+      [yY]|[yY][eE][sS]) _force="1" ;;
       *) log_info "Restore aborted by user."; return 0 ;;
     esac
   fi
 
   log_info "Initiating restore from '${_archive}'..."
-  _tmp_stage="${OPENEDX_INSTALL_DIR}/restore_staging_$$"
-  mkdir -p "${_tmp_stage}"
-  tar -xzf "${_archive}" -C "${_tmp_stage}"
-
-  # 1. Restore MySQL Dump
-  if [ -f "${_tmp_stage}/mysql_dump.sql" ]; then
-    log_info "Restoring MySQL relational records..."
-    if command -v mysql >/dev/null 2>&1; then
-      if [ -n "${MYSQL_PASSWORD}" ]; then export MYSQL_PWD="${MYSQL_PASSWORD}"; fi
-      mysql -h "${MYSQL_HOST}" -P "${MYSQL_PORT}" -u "${MYSQL_USER}" "${MYSQL_DATABASE}" < "${_tmp_stage}/mysql_dump.sql" 2>/dev/null || true
-    fi
-  fi
-
-  # 2. Restore MongoDB
-  if [ -d "${_tmp_stage}/mongo" ]; then
-    log_info "Restoring MongoDB collections..."
-    if command -v mongorestore >/dev/null 2>&1; then
-      mongorestore --host 127.0.0.1:27017 --db openedx --drop "${_tmp_stage}/mongo/openedx" >/dev/null 2>&1 || true
-    fi
-  fi
-
-  # 3. Restore Media Files
-  if [ -d "${_tmp_stage}/media" ]; then
-    log_info "Restoring media files..."
-    mkdir -p "${OPENEDX_INSTALL_DIR}/media"
-    cp -r "${_tmp_stage}/media/"* "${OPENEDX_INSTALL_DIR}/media/" 2>/dev/null || true
-  fi
-
-  # 4. Restore Configurations & Data
-  if [ -d "${_tmp_stage}/config" ]; then
-    log_info "Restoring configuration files..."
-    mkdir -p "${OPENEDX_INSTALL_DIR}/config"
-    cp -r "${_tmp_stage}/config/"* "${OPENEDX_INSTALL_DIR}/config/" 2>/dev/null || true
-  fi
-  if [ -f "${_tmp_stage}/users.json" ]; then
-    cp "${_tmp_stage}/users.json" "${OPENEDX_INSTALL_DIR}/" 2>/dev/null || true
-  fi
-  if [ -d "${_tmp_stage}/data" ]; then
-    mkdir -p "${OPENEDX_INSTALL_DIR}/data"
-    cp -r "${_tmp_stage}/data/"* "${OPENEDX_INSTALL_DIR}/data/" 2>/dev/null || true
-  fi
-
-  rm -rf "${_tmp_stage}"
+  "${BACKUP_HELPER}" restore "${_archive}" "${OPENEDX_INSTALL_DIR}" "${_force}"
   log_success "Restore completed successfully."
 }
 

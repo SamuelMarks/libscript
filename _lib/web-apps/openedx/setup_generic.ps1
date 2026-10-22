@@ -1,13 +1,35 @@
 # ## Overview
-# PowerShell script for setup_generic.ps1.
+# Generic setup and provisioning module for the Open edX platform stack on Windows (PowerShell).
+# Delegates lifecycle actions (install, start, stop, restart, status, test, uninstall) to setup_generic.cmd.
 #
 # ## Usage
-# Execute via PowerShell.
+# powershell -File _lib/web-apps/openedx/setup_generic.ps1 [ACTION] [OPTIONS]
 
-<#
-.SYNOPSIS
-    PowerShell generic setup script for Open edX on Windows.
-#>
-$Action = if ($env:ACTION) { $env:ACTION } else { "install" }
-Write-Host "Open edX setup action ($Action) on Windows."
-exit 0
+param(
+    [Parameter(ValueFromRemainingArguments = $true)]
+    [string[]]$RemainingArgs
+)
+
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$CmdScript = Join-Path $ScriptDir "setup_generic.cmd"
+
+# ## Invoke-SetupGenericCmd
+# Executes the canonical setup_generic.cmd batch workflow with forwarded arguments.
+function Invoke-SetupGenericCmd {
+    if (-not (Test-Path $CmdScript)) {
+        Write-Error "[ERROR] setup_generic.cmd not found at $CmdScript"
+        exit 1
+    }
+    $argStr = ""
+    if ($RemainingArgs -and $RemainingArgs.Count -gt 0) {
+        $argStr = ($RemainingArgs | ForEach-Object { "`"$_`"" }) -join " "
+    } elseif ($env:ACTION) {
+        $argStr = $env:ACTION
+    } else {
+        $argStr = "install"
+    }
+    & cmd.exe /c "`"$CmdScript`" $argStr"
+    exit $LASTEXITCODE
+}
+
+Invoke-SetupGenericCmd

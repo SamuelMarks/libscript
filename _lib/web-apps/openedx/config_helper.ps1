@@ -134,6 +134,9 @@ function Do-Generate {
         "SITE_NAME" = "openedx.local"
         "LMS_BASE" = "openedx.local"
         "CMS_BASE" = "studio.openedx.local"
+        "LMS_ROOT_URL" = "http://localhost:8000"
+        "CMS_ROOT_URL" = "http://localhost:8001"
+        "ALLOWED_HOSTS" = @("*")
         "SECRET_KEY" = $secretKey
         "DATABASES" = @{
             "default" = @{
@@ -143,7 +146,13 @@ function Do-Generate {
                 "PASSWORD" = ""
                 "HOST" = "127.0.0.1"
                 "PORT" = 3306
+                "ATOMIC_REQUESTS" = $true
             }
+        }
+        "DOC_STORE_CONFIG" = @{
+            "host" = "127.0.0.1"
+            "port" = 27017
+            "db" = "openedx"
         }
         "CACHES" = @{
             "default" = @{
@@ -151,6 +160,7 @@ function Do-Generate {
                 "LOCATION" = "redis://127.0.0.1:6379/1"
             }
         }
+        "CELERY_BROKER_URL" = "redis://127.0.0.1:6379/0"
         "MEILISEARCH_URL" = "http://127.0.0.1:7700"
         "EMAIL_HOST" = "127.0.0.1"
         "EMAIL_PORT" = 25

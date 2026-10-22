@@ -52,5 +52,8 @@ goto :find_root
 :root_found
 
 if "%LIBSCRIPT_HOME%"=="" set "LIBSCRIPT_HOME=%USERPROFILE%\.libscript"
-rmdir /s /q "%LIBSCRIPT_HOME%\openedx" 2>nul
+if "%OPENEDX_INSTALL_DIR%"=="" set "OPENEDX_INSTALL_DIR=%LIBSCRIPT_HOME%\openedx"
+if exist "!SCRIPT_DIR!\workers.cmd" call "!SCRIPT_DIR!\workers.cmd" stop 2>nul
+if exist "!SCRIPT_DIR!\service.cmd" call "!SCRIPT_DIR!\service.cmd" stop 2>nul
+rmdir /s /q "%OPENEDX_INSTALL_DIR%" 2>nul
 exit /b 0

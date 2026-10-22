@@ -95,7 +95,9 @@ case "${TARGET_OS}" in
     cd "${LIBSCRIPT_ROOT_DIR}"
     ./libscript.sh package-as msi _lib/web-apps/openedx
     mkdir -p build
-    cp build/packages/msi/openedx-x64-verawood.1-online.msi build/OpenEdX-Setup.msi || true
+    if [ -f build/packages/msi/openedx-x64-verawood.1-online.msi ]; then
+      cp build/packages/msi/openedx-x64-verawood.1-online.msi build/OpenEdX-Setup.msi || true
+    fi
     cd "${VAGRANT_DIR}"
     ;;
 esac

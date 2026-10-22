@@ -63,48 +63,12 @@ done
 OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
 MFE_ROOT_DIR="${OPENEDX_INSTALL_DIR}/mfes"
 MFE_DIST_DIR="${OPENEDX_INSTALL_DIR}/mfe_dist"
-MFE_REGISTRY="${MFE_ROOT_DIR}/registry.json"
+MFE_HELPER="${SCRIPT_DIR}/mfe_helper.sh"
 
 mkdir -p "${MFE_ROOT_DIR}" "${MFE_DIST_DIR}"
 
-# ## resolve_python
-# Locates a compatible Python interpreter or provisions one via LibScript.
-resolve_python() {
-  if [ -x "${OPENEDX_INSTALL_DIR}/.venv/bin/python" ]; then
-    printf '%s\n' "${OPENEDX_INSTALL_DIR}/.venv/bin/python"
-  elif command -v python3 >/dev/null 2>&1; then
-    command -v python3
-  elif command -v python >/dev/null 2>&1; then
-    command -v python
-  else
-    printf ''
-  fi
-}
-
-# ## get_mfe_repo
-# Returns git URL for standard MFEs.
-get_mfe_repo() {
-  case "$1" in
-    learning|frontend-app-learning)
-      printf '%s\n' "https://github.com/openedx/frontend-app-learning.git"
-      ;;
-    authn|frontend-app-authn)
-      printf '%s\n' "https://github.com/openedx/frontend-app-authn.git"
-      ;;
-    account|frontend-app-account)
-      printf '%s\n' "https://github.com/openedx/frontend-app-account.git"
-      ;;
-    course-authoring|frontend-app-course-authoring)
-      printf '%s\n' "https://github.com/openedx/frontend-app-course-authoring.git"
-      ;;
-    *)
-      printf '%s\n' "https://github.com/openedx/frontend-app-$1.git"
-      ;;
-  esac
-}
-
 # ## mfe_build
-# Builds an MFE bundle.
+# Builds an MFE bundle via mfe_helper.sh.
 #
 # Inputs:
 #   $1 - name
@@ -117,7 +81,7 @@ mfe_build() {
   _name="$1"
   shift
 
-  _version="master"
+  _version="release/verawood.1"
   while [ $# -gt 0 ]; do
     case "$1" in
       --version)
@@ -132,52 +96,12 @@ mfe_build() {
     esac
   done
 
-  _repo=$(get_mfe_repo "${_name}")
-  _target="${MFE_ROOT_DIR}/${_name}"
-
-  log_info "Building Micro-Frontend '${_name}' from '${_repo}' (version: ${_version})..."
-
-  if [ ! -d "${_target}/.git" ]; then
-    if command -v git >/dev/null 2>&1; then
-      git clone --depth 1 --branch "${_version}" "${_repo}" "${_target}" 2>/dev/null ||
-        git clone --depth 1 "${_repo}" "${_target}" 2>/dev/null || mkdir -p "${_target}"
-    else
-      mkdir -p "${_target}"
-    fi
-  fi
-
-  # Idempotent npm install & build
-  if command -v npm >/dev/null 2>&1 && [ -f "${_target}/package.json" ]; then
-    log_info "Compiling JavaScript/Webpack bundle for '${_name}'..."
-    (if cd "${_target}"; then npm install --silent 2>/dev/null && npm run build --silent 2>/dev/null; fi) || true
-  else
-    # Create minimal dist placeholder if node/npm is absent in headless environment
-    mkdir -p "${_target}/dist"
-    cat <<EOF > "${_target}/dist/index.html"
-<!DOCTYPE html>
-<html>
-<head><title>Open edX ${_name} MFE</title></head>
-<body><h1>Open edX ${_name} Micro-Frontend</h1></body>
-</html>
-EOF
-  fi
-
-  _py="$(resolve_python)"
-  if [ -n "${_py}" ]; then
-    "${_py}" - <<EOF
-import json, os
-p = "${MFE_REGISTRY}"
-d = json.load(open(p)) if os.path.exists(p) else {}
-d["${_name}"] = {"version": "${_version}", "repo": "${_repo}", "built": True, "deployed": False}
-json.dump(d, open(p, "w"), indent=2)
-EOF
-  fi
-
-  log_success "Micro-Frontend '${_name}' built successfully."
+  log_info "Building Micro-Frontend '${_name}' (version: ${_version})..."
+  "${MFE_HELPER}" build "${MFE_ROOT_DIR}" "${_name}" "${_version}"
 }
 
 # ## mfe_deploy
-# Publishes MFE dist directory.
+# Publishes MFE dist directory via mfe_helper.sh.
 #
 # Inputs:
 #   $1 - name
@@ -190,7 +114,7 @@ mfe_deploy() {
   _name="$1"
   shift
 
-  _dest="${MFE_DIST_DIR}/${_name}"
+  _dest=""
   while [ $# -gt 0 ]; do
     case "$1" in
       --dest)
@@ -205,65 +129,17 @@ mfe_deploy() {
     esac
   done
 
-  _src="${MFE_ROOT_DIR}/${_name}/dist"
-  if [ ! -d "${_src}" ]; then
-    log_warn "Build output not found at ${_src}. Triggering build first..."
-    mfe_build "${_name}"
-  fi
-
-  log_info "Deploying '${_name}' MFE to ${_dest}..."
-  mkdir -p "${_dest}"
-  cp -r "${_src}/"* "${_dest}/" 2>/dev/null || true
-
-  # Write runtime configuration env.config.js
-  cat <<EOF > "${_dest}/env.config.js"
-window.MFE_CONFIG = {
-  LMS_BASE_URL: "http://${LMS_HOST:-openedx.local}:${LMS_PORT:-8000}",
-  LOGIN_URL: "http://${LMS_HOST:-openedx.local}:${LMS_PORT:-8000}/login",
-  LOGOUT_URL: "http://${LMS_HOST:-openedx.local}:${LMS_PORT:-8000}/logout",
-  STUDIO_BASE_URL: "http://${CMS_HOST:-studio.openedx.local}:${CMS_PORT:-8001}",
-  MFE_NAME: "${_name}"
-};
-EOF
-
-  _py="$(resolve_python)"
-  if [ -n "${_py}" ]; then
-    "${_py}" - <<EOF
-import json, os
-p = "${MFE_REGISTRY}"
-if os.path.exists(p):
-    d = json.load(open(p))
-    if "${_name}" in d:
-        d["${_name}"]["deployed"] = True
-        d["${_name}"]["dest"] = "${_dest}"
-        json.dump(d, open(p, "w"), indent=2)
-EOF
-  fi
-
-  log_success "Micro-Frontend '${_name}' deployed to ${_dest}."
+  log_info "Deploying '${_name}' MFE..."
+  "${MFE_HELPER}" deploy "${MFE_ROOT_DIR}" "${MFE_DIST_DIR}" "${_name}" "${_dest}"
 }
 
 # ## mfe_list
-# Lists all managed MFEs.
+# Lists all managed MFEs via mfe_helper.sh.
 mfe_list() {
   log_info "Listing Open edX Micro-Frontends (MFEs)..."
-  _py="$(resolve_python)"
-  if [ -n "${_py}" ] && [ -f "${MFE_REGISTRY}" ]; then
-    "${_py}" - <<EOF
-import json
-d = json.load(open("${MFE_REGISTRY}"))
-print(f"{'MFE IDENTIFIER':<24} {'BUILT':<8} {'DEPLOYED':<10} {'VERSION':<12}")
-print("-" * 60)
-for k, v in d.items():
-    print(f"{k:<24} {str(v.get('built', False)):<8} {str(v.get('deployed', False)):<10} {v.get('version', 'master'):<12}")
-EOF
-  else
-    printf '%-24s %-8s %-10s %-12s\n' "MFE IDENTIFIER" "BUILT" "DEPLOYED" "VERSION"
-    printf '%s\n' "------------------------------------------------------------"
-    for m in learning authn account course-authoring; do
-      printf '%-24s %-8s %-10s %-12s\n' "${m}" "no" "no" "master"
-    done
-  fi
+  printf '============================================================\n'
+  "${MFE_HELPER}" list "${MFE_ROOT_DIR}"
+  printf '============================================================\n'
 }
 
 # ## show_help

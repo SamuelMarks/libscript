@@ -72,8 +72,7 @@ mounts_add() {
   touch "${MOUNTS_FILE}"
 
   if ! grep -qxF "${_spec}" "${MOUNTS_FILE}" 2>/dev/null; then
-    printf '%s
-' "${_spec}" >> "${MOUNTS_FILE}"
+    printf '%s\n' "${_spec}" >> "${MOUNTS_FILE}"
   fi
 
   # Extract host path if formatted as service:/host/path:/target/path or /host/path
@@ -87,7 +86,7 @@ mounts_add() {
   if [ -d "${_host_path}" ]; then
     _base=$(basename "${_host_path}")
     ln -sf "${_host_path}" "${MOUNTS_DIR}/${_base}"
-    if [ "${_base}" = "openedx-platform" ] || [ -f "${_host_path}/manage.py" ]; then
+    if [ "${_base}" = "openedx-platform" ] || [ "${_base}" = "edx-platform" ] || [ -f "${_host_path}/manage.py" ]; then
       ln -sf "${_host_path}" "${OPENEDX_INSTALL_DIR}/codebase_mount"
     fi
   fi
@@ -151,7 +150,7 @@ Usage:
   $0 help
 
 Commands:
-  add       Add a local host directory mount (e.g., ../openedx-platform)
+  add       Add a local host directory mount (e.g., ../edx-platform)
   remove    Remove a configured mount
   list      List all configured mounts
   clear     Remove all configured mounts

@@ -122,8 +122,18 @@ if exist "%LIBSCRIPT_HOME%\wordpress\%VERSION%" (
 )
 echo [INFO] Provisioning WordPress %WORDPRESS_VERSION% on Windows...
 
-:: 1. Stage Directory Structure
+:: 1. Stage Directory Structure & Download WordPress Core via Reusable pkg_mgr.cmd
 if not exist "%WORDPRESS_WWWROOT%" mkdir "%WORDPRESS_WWWROOT%"
+if not exist "%WORDPRESS_WWWROOT%\index.php" (
+    set "TMP_WP_ZIP=%TEMP%\wordpress_%RANDOM%.zip"
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\_common\pkg_mgr.cmd" :libscript_download "https://wordpress.org/latest.zip" "!TMP_WP_ZIP!" 2>nul
+    )
+    if exist "!TMP_WP_ZIP!" (
+        tar -xf "!TMP_WP_ZIP!" --strip-components=1 -C "%WORDPRESS_WWWROOT%" 2>nul
+        del /f /q "!TMP_WP_ZIP!" 2>nul
+    )
+)
 if not exist "%WORDPRESS_WWWROOT%\wp-admin" mkdir "%WORDPRESS_WWWROOT%\wp-admin"
 if not exist "%WORDPRESS_WWWROOT%\wp-includes" mkdir "%WORDPRESS_WWWROOT%\wp-includes"
 if not exist "%WORDPRESS_WWWROOT%\wp-content\themes" mkdir "%WORDPRESS_WWWROOT%\wp-content\themes"
@@ -155,6 +165,14 @@ if defined WORDPRESS_DBAAS_URL (
         )
         if defined WORDPRESS_DB_PORT set "WORDPRESS_DB_HOST=!WORDPRESS_DB_HOST!:!WORDPRESS_DB_PORT!"
         call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" --engine mysql --host "!WORDPRESS_DB_HOST!" --schema "%WORDPRESS_DB_NAME%" --user "%WORDPRESS_DB_USER%" --password "%WORDPRESS_DB_PASS%" --charset utf8mb4 --collation utf8mb4_unicode_520_ci >nul 2>&1
+    ) else (
+        if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" (
+            call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" --engine mysql --host "127.0.0.1" --port "3306" --schema "%WORDPRESS_DB_NAME%" --user "%WORDPRESS_DB_USER%" --password "%WORDPRESS_DB_PASS%" --charset utf8mb4 --collation utf8mb4_unicode_520_ci >nul 2>&1
+        )
+    )
+) else (
+    if exist "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" (
+        call "!LIBSCRIPT_ROOT_DIR!\_lib\databases\provision_schema.cmd" --engine mysql --host "127.0.0.1" --port "3306" --schema "%WORDPRESS_DB_NAME%" --user "%WORDPRESS_DB_USER%" --password "%WORDPRESS_DB_PASS%" --charset utf8mb4 --collation utf8mb4_unicode_520_ci >nul 2>&1
     )
 )
 
@@ -256,7 +274,7 @@ if not exist "%WORDPRESS_WWWROOT%\index.php" (
     exit /b 1
 )
 
-:: 6. Optional Adminer Staging
+:: 7. Optional Adminer Staging
 if "%WORDPRESS_ENABLE_PHPMYADMIN%"=="1" (
     if not exist "%WORDPRESS_WWWROOT%\db-admin" mkdir "%WORDPRESS_WWWROOT%\db-admin"
     if not exist "%WORDPRESS_WWWROOT%\db-admin\index.php" (
@@ -265,6 +283,20 @@ if "%WORDPRESS_ENABLE_PHPMYADMIN%"=="1" (
             echo echo "^<h3^>Adminer Database Console^</h3^>^<p^>Connected to WordPress Database Management Engine on Windows.^</p^>";
         ) > "%WORDPRESS_WWWROOT%\db-admin\index.php"
     )
+)
+
+:: 8. Delegate User Seeding, Cron Offload, Service Startup & Healthcheck to Reusable Submodules
+if exist "!SCRIPT_DIR!\user.cmd" (
+    call "!SCRIPT_DIR!\user.cmd" create "%WORDPRESS_ADMIN_USER%" "%WORDPRESS_ADMIN_EMAIL%" --password "%WORDPRESS_ADMIN_PASSWORD%" --role administrator 2>nul
+)
+if "%WORDPRESS_ENABLE_CRON_OFFLOAD%"=="1" if exist "!SCRIPT_DIR!\cron.cmd" (
+    call "!SCRIPT_DIR!\cron.cmd" install 2>nul
+)
+if exist "!SCRIPT_DIR!\service.cmd" (
+    call "!SCRIPT_DIR!\service.cmd" start 2>nul
+)
+if exist "!SCRIPT_DIR!\healthcheck.cmd" (
+    call "!SCRIPT_DIR!\healthcheck.cmd" 2>nul
 )
 
 echo [OK] WordPress 7.1.2 setup completed successfully on %WORDPRESS_SITE_URL%

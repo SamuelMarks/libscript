@@ -85,6 +85,26 @@ test_http() {
   return 1
 }
 
+# ## test_db_component
+# Tests a backing component via reusable status_databases.sh or TCP fallback.
+#
+# Inputs:
+#   $1 - Component path (e.g., databases/mysql)
+#   $2 - Host
+#   $3 - Port
+test_db_component() {
+  _comp="$1"
+  _host="$2"
+  _port="$3"
+  if [ -f "${SCRIPT_DIR}/status_databases.sh" ]; then
+    if "${SCRIPT_DIR}/status_databases.sh" "${_comp}" >/dev/null 2>&1; then
+      printf 'OK'
+      return 0
+    fi
+  fi
+  test_tcp "${_host}" "${_port}"
+}
+
 # ## main
 # Main entrypoint parsing endpoint arguments and executing diagnostics.
 main() {
@@ -101,13 +121,33 @@ main() {
   _me_h="${12}"; _me_p="${13}"
   _sm_h="${14}"; _sm_p="${15}"
 
-  _mysql=$(test_tcp "${_my_h}" "${_my_p}" || true)
-  _mongo=$(test_tcp "${_mg_h}" "${_mg_p}" || true)
-  _redis=$(test_tcp "${_rd_h}" "${_rd_p}" || true)
+  _mysql=$(test_db_component "databases/mysql" "${_my_h}" "${_my_p}" || true)
+  if [ "${_mysql}" = "OK" ] && command -v mysqladmin >/dev/null 2>&1; then
+    mysqladmin ping -h "${_my_h}" -P "${_my_p}" --silent >/dev/null 2>&1 || _mysql=$(test_tcp "${_my_h}" "${_my_p}" || true)
+  fi
+  _mongo=$(test_db_component "databases/mongodb" "${_mg_h}" "${_mg_p}" || true)
+  _redis=$(test_db_component "caches/redis" "${_rd_h}" "${_rd_p}" || true)
+  if [ "${_redis}" = "OK" ] && command -v redis-cli >/dev/null 2>&1; then
+    redis-cli -h "${_rd_h}" -p "${_rd_p}" ping 2>/dev/null | grep -qi "PONG" || _redis=$(test_tcp "${_rd_h}" "${_rd_p}" || true)
+  fi
   _meili=$(test_http "http://${_me_h}:${_me_p}/health" || true)
+  case "${_meili}" in
+    FAIL*) _meili=$(test_db_component "search/meilisearch" "${_me_h}" "${_me_p}" || true) ;;
+  esac
   _lms=$(test_http "http://${_lms_h}:${_lms_p}/" || true)
   _cms=$(test_http "http://${_cms_h}:${_cms_p}/signin" || true)
   _workers="WARN (inactive)"
+  _open_edx_dir="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
+  if [ -f "${SCRIPT_DIR}/workers.sh" ]; then
+    if OPENEDX_INSTALL_DIR="${_open_edx_dir}" "${SCRIPT_DIR}/workers.sh" status 2>/dev/null | grep -q "RUNNING"; then
+      _workers="OK"
+    fi
+  elif [ -f "${_open_edx_dir}/run/lms-worker.pid" ]; then
+    _worker_pid=$(cat "${_open_edx_dir}/run/lms-worker.pid" 2>/dev/null || true)
+    if [ -n "${_worker_pid}" ] && kill -0 "${_worker_pid}" 2>/dev/null; then
+      _workers="OK"
+    fi
+  fi
   _smtp=$(test_tcp "${_sm_h}" "${_sm_p}" || true)
   if [ "${_smtp}" = "FAIL" ]; then
     _smtp="WARN (offline)"

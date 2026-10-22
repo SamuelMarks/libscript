@@ -73,6 +73,9 @@ case "$engine" in
          CREATE USER IF NOT EXISTS '${tenant_user}'@'localhost' IDENTIFIED BY '${tenant_pass}';
          CREATE USER IF NOT EXISTS '${tenant_user}'@'127.0.0.1' IDENTIFIED BY '${tenant_pass}';
          CREATE USER IF NOT EXISTS '${tenant_user}'@'%' IDENTIFIED BY '${tenant_pass}';
+         ALTER USER '${tenant_user}'@'localhost' IDENTIFIED BY '${tenant_pass}';
+         ALTER USER '${tenant_user}'@'127.0.0.1' IDENTIFIED BY '${tenant_pass}';
+         ALTER USER '${tenant_user}'@'%' IDENTIFIED BY '${tenant_pass}';
          GRANT ALL PRIVILEGES ON \`${schema_name}\`.* TO '${tenant_user}'@'localhost';
          GRANT ALL PRIVILEGES ON \`${schema_name}\`.* TO '${tenant_user}'@'127.0.0.1';
          GRANT ALL PRIVILEGES ON \`${schema_name}\`.* TO '${tenant_user}'@'%';
@@ -80,7 +83,9 @@ case "$engine" in
     if [ -n "$admin_pass" ]; then
       mysql -h "$host" -P "$port" -u "$admin_user" -p"$admin_pass" -e "$sql"
     else
-      mysql -h "$host" -P "$port" -u "$admin_user" -e "$sql"
+      mysql -h "$host" -P "$port" -u "$admin_user" -e "$sql" 2>/dev/null || \
+        mysql -u "$admin_user" -e "$sql" 2>/dev/null || \
+        mysql -u "$(id -un)" -e "$sql"
     fi
     ;;
   postgres|postgresql)

@@ -65,29 +65,10 @@ done
 
 OPENEDX_INSTALL_DIR="${OPENEDX_INSTALL_DIR:-${LIBSCRIPT_HOME:-$HOME/.libscript}/openedx}"
 OPENEDX_BACKUP_DIR="${OPENEDX_BACKUP_DIR:-${OPENEDX_INSTALL_DIR}/backups}"
-MYSQL_HOST="${MYSQL_HOST:-127.0.0.1}"
-MYSQL_PORT="${MYSQL_PORT:-3306}"
-MYSQL_USER="${MYSQL_USER:-openedx}"
-MYSQL_PASSWORD="${MYSQL_PASSWORD:-}"
-MYSQL_DATABASE="${MYSQL_DATABASE:-openedx}"
-
-# ## compute_sha256
-# Computes sha256 checksum of a file portably.
-compute_sha256() {
-  _file="$1"
-  if command -v sha256sum >/dev/null 2>&1; then
-    sha256sum "${_file}" | awk '{print $1}'
-  elif command -v shasum >/dev/null 2>&1; then
-    shasum -a 256 "${_file}" | awk '{print $1}'
-  elif command -v openssl >/dev/null 2>&1; then
-    openssl dgst -sha256 "${_file}" | awk '{print $NF}'
-  else
-    printf '0000000000000000000000000000000000000000000000000000000000000000\n'
-  fi
-}
+BACKUP_HELPER="${SCRIPT_DIR}/backup_helper.sh"
 
 # ## backup_create
-# Orchestrates full state snapshot.
+# Orchestrates full state snapshot via backup_helper.sh.
 backup_create() {
   _out=""
   while [ $# -gt 0 ]; do
@@ -104,66 +85,8 @@ backup_create() {
     esac
   done
 
-  _ts=$(date +%Y%m%d_%H%M%S)
-  mkdir -p "${OPENEDX_BACKUP_DIR}"
-  if [ -z "${_out}" ]; then
-    _archive="${OPENEDX_BACKUP_DIR}/openedx_backup_${_ts}.tar.gz"
-  elif [ -d "${_out}" ]; then
-    _archive="${_out}/openedx_backup_${_ts}.tar.gz"
-  else
-    _archive="${_out}"
-  fi
-
-  log_info "Creating Open edX backup archive at '${_archive}'..."
-  _stage_dir="${OPENEDX_BACKUP_DIR}/staging_${_ts}"
-  mkdir -p "${_stage_dir}"
-
-  # 1. Relational Database Dump
-  log_info "Dumping MySQL schema and records..."
-  if command -v mysqldump >/dev/null 2>&1; then
-    if [ -n "${MYSQL_PASSWORD}" ]; then export MYSQL_PWD="${MYSQL_PASSWORD}"; fi
-    mysqldump --single-transaction --quick -h "${MYSQL_HOST}" -P "${MYSQL_PORT}" -u "${MYSQL_USER}" "${MYSQL_DATABASE}" > "${_stage_dir}/mysql_dump.sql" 2>/dev/null || true
-  fi
-  # Touch dummy dump if mysql is not active in staging
-  [ -f "${_stage_dir}/mysql_dump.sql" ] || printf '%s\n' '-- Open edX MySQL snapshot' > "${_stage_dir}/mysql_dump.sql"
-
-  # 2. Document Database Dump
-  log_info "Dumping MongoDB collections..."
-  if command -v mongodump >/dev/null 2>&1; then
-    mongodump --host 127.0.0.1:27017 --db openedx --out "${_stage_dir}/mongo" >/dev/null 2>&1 || true
-  fi
-  mkdir -p "${_stage_dir}/mongo"
-
-  # 3. Media & Uploads
-  log_info "Archiving media uploads..."
-  mkdir -p "${_stage_dir}/media"
-  if [ -d "${OPENEDX_INSTALL_DIR}/media" ]; then
-    cp -r "${OPENEDX_INSTALL_DIR}/media/"* "${_stage_dir}/media/" 2>/dev/null || true
-  fi
-
-  # 4. Configuration Files
-  log_info "Preserving configuration files..."
-  mkdir -p "${_stage_dir}/config"
-  if [ -d "${OPENEDX_INSTALL_DIR}/config" ]; then
-    cp -r "${OPENEDX_INSTALL_DIR}/config/"* "${_stage_dir}/config/" 2>/dev/null || true
-  fi
-  if [ -f "${OPENEDX_INSTALL_DIR}/users.json" ]; then
-    cp "${OPENEDX_INSTALL_DIR}/users.json" "${_stage_dir}/" 2>/dev/null || true
-  fi
-  if [ -d "${OPENEDX_INSTALL_DIR}/data" ]; then
-    mkdir -p "${_stage_dir}/data"
-    cp -r "${OPENEDX_INSTALL_DIR}/data/"* "${_stage_dir}/data/" 2>/dev/null || true
-  fi
-
-  # 5. Compress Archive
-  log_info "Compressing archive..."
-  (cd "${_stage_dir}" && tar -czf "${_archive}" .)
-  rm -rf "${_stage_dir}"
-
-  _hash=$(compute_sha256 "${_archive}")
-  printf '%s  %s\n' "${_hash}" "$(basename "${_archive}")" > "${_archive}.sha256"
-  log_success "Backup complete: ${_archive}"
-  log_info "SHA-256 Checksum: ${_hash}"
+  log_info "Creating Open edX backup archive..."
+  "${BACKUP_HELPER}" backup "${OPENEDX_BACKUP_DIR}" "${OPENEDX_INSTALL_DIR}" "${_out}"
 }
 
 # ## backup_list
@@ -176,7 +99,7 @@ backup_list() {
   fi
   _found=0
   set +f
-  for f in "${OPENEDX_BACKUP_DIR}"/*.tar.gz; do
+  for f in "${OPENEDX_BACKUP_DIR}"/*.tar.gz "${OPENEDX_BACKUP_DIR}"/*.zip; do
     if [ -f "$f" ]; then
       _found=1
       printf '%s (%s bytes)\n' "$(basename "$f")" "$(wc -c < "$f" | tr -d ' ')"
